@@ -128,6 +128,16 @@ HashMethod HashIdFromName(const char *hash_name);
 const char *HashNameFromId(HashMethod hash_id);
 
 /**
+  @brief Returns pointer to an openssl digest struct
+
+  Equivalent to EVP_get_digestbyname(HashNameFromId(type)),
+  but with added error checking.
+
+  Returns NULL in case of error.
+  */
+const EVP_MD *HashDigestFromId(HashMethod type);
+
+/**
   @brief Size of the hash
   @param method Hash method
   @return Returns the size of the hash or 0 in case of error.

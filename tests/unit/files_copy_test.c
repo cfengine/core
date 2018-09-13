@@ -78,6 +78,10 @@ static bool FsSupportsSparseFiles(const char *filename)
         " 'disk usage' than their true size, and this is verified by du");
     return false;
 #endif
+#ifdef __APPLE__
+    Log(LOG_LEVEL_NOTICE, "OS X detected, skipping sparseness tests!");
+    return false;
+#endif
 
     int fd = open(filename, O_CREAT | O_WRONLY | O_BINARY, 0700);
     assert_int_not_equal(fd, -1);

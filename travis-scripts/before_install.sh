@@ -6,6 +6,9 @@ then
     rvm get stable
     brew update
     brew install lmdb
+    brew install make
+    brew install autoconf
+    brew install automake
     # brew install gcc@7 || brew link --overwrite gcc@7
     set -e
     # gcc-7 --version
@@ -28,4 +31,5 @@ else
     sudo apt-get purge      -y bison
     sudo apt-get autoremove -y
     sudo apt-get install    -y byacc
+    sudo apt-get -qy install curl
 fi

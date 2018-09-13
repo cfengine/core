@@ -253,7 +253,7 @@ PackagePromiseContext *GetPackagePromiseContext(const EvalContext *ctx);
 
 /* This function is temporarily exported. It needs to be made an detail of
  * evaluator again, once variables promises are no longer specially handled */
-void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, PromiseResult status);
+void ClassAuditLog(EvalContext *ctx, const Promise *pp, const Attributes *attr, PromiseResult status);
 
 ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, TrackTotalCompliance, ARG_UNUSED PromiseResult, status, ARG_UNUSED const Promise *, pp);
 

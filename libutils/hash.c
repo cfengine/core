@@ -134,7 +134,6 @@ Hash *HashNew(const char *data, const unsigned int length, HashMethod method)
      * recommends moving to EVP_DigestInit_ex and EVP_DigestFinal_ex.
      */
     const EVP_MD *md = NULL;
-    int md_len = 0;
     md = EVP_get_digestbyname(CF_DIGEST_TYPES[method]);
     if (md == NULL)
     {
@@ -151,7 +150,8 @@ Hash *HashNew(const char *data, const unsigned int length, HashMethod method)
     Hash *hash = HashBasicInit(method);
     EVP_DigestInit_ex(context, md, NULL);
     EVP_DigestUpdate(context, data, (size_t) length);
-    EVP_DigestFinal_ex(context, hash->digest, &md_len);
+    unsigned int digest_length;
+    EVP_DigestFinal_ex(context, hash->digest, &digest_length);
     EVP_MD_CTX_destroy(context);
     /* Update the printable representation */
     HashCalculatePrintableRepresentation(hash);
@@ -255,7 +255,7 @@ Hash *HashNewFromKey(const RSA *rsa, HashMethod method)
     }
 
     unsigned char buffer[buf_len];
-    int md_len, actlen;
+    int actlen;
 
     actlen = BN_bn2bin(n, buffer);
     CF_ASSERT(actlen <= buf_len, "Buffer overflow n, %d > %zu!",
@@ -268,7 +268,8 @@ Hash *HashNewFromKey(const RSA *rsa, HashMethod method)
     EVP_DigestUpdate(context, buffer, actlen);
 
     Hash *hash = HashBasicInit(method);
-    EVP_DigestFinal_ex(context, hash->digest, &md_len);
+    unsigned int digest_length;
+    EVP_DigestFinal_ex(context, hash->digest, &digest_length);
 
     EVP_MD_CTX_free(context);
 

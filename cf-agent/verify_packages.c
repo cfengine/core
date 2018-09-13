@@ -144,7 +144,7 @@ PackageManager *INSTALLED_PACKAGE_LISTS = NULL; /* GLOBAL_X */
 
 #define PACKAGE_IGNORED_CFE_INTERNAL "cfe_internal_non_existing_package"
 
-/* Returns the old or new package promise type depending on promise 
+/* Returns the old or new package promise type depending on promise
    constraints. */
 static PackagePromiseType GetPackagePromiseVersion(const Packages *packages,
         const NewPackages *new_packages)
@@ -178,11 +178,11 @@ PromiseResult VerifyPackagesPromise(EvalContext *ctx, const Promise *pp)
     PromiseResult result = PROMISE_RESULT_FAIL;
     char *promise_log_message = NULL;
     LogLevel level;
-    
+
     Attributes a = GetPackageAttributes(ctx, pp);
     PackagePromiseType package_promise_type =
             GetPackagePromiseVersion(&a.packages, &a.new_packages);
-    
+
     switch (package_promise_type)
     {
         case PACKAGE_PROMISE_TYPE_NEW:
@@ -190,9 +190,9 @@ PromiseResult VerifyPackagesPromise(EvalContext *ctx, const Promise *pp)
 
             result = HandleNewPackagePromiseType(ctx, pp, a, &promise_log_message,
                     &level);
-            
+
             assert(promise_log_message != NULL);
-            
+
             if (result != PROMISE_RESULT_SKIPPED)
             {
                 cfPS(ctx, level, result, pp, a, "%s", promise_log_message);
@@ -207,8 +207,8 @@ PromiseResult VerifyPackagesPromise(EvalContext *ctx, const Promise *pp)
                 "will be directed toward the new implementation.");
 
             result = HandleOldPackagePromiseType(ctx, pp, a);
-        
-            /* Update new package promise cache in case we have mixed old and new 
+
+            /* Update new package promise cache in case we have mixed old and new
              * package promises in policy. */
             if (result == PROMISE_RESULT_CHANGE || result == PROMISE_RESULT_FAIL)
             {
@@ -216,15 +216,15 @@ PromiseResult VerifyPackagesPromise(EvalContext *ctx, const Promise *pp)
             }
             break;
         case PACKAGE_PROMISE_TYPE_NEW_ERROR:
-            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, 
+            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
                          "New package promise failed sanity check.");
             break;
         case PACKAGE_PROMISE_TYPE_OLD_ERROR:
-            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, 
+            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
                          "Old package promise failed sanity check.");
             break;
         case PACKAGE_PROMISE_TYPE_MIXED:
-            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, 
+            cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
                          "Mixed old and new package promise attributes inside "
                          "one package promise.");
             break;
@@ -262,7 +262,7 @@ PromiseResult HandleOldPackagePromiseType(EvalContext *ctx, const Promise *pp, A
     CfLock thislock;
     char lockname[CF_BUFSIZE];
     PromiseResult result = PROMISE_RESULT_NOOP;
-    
+
     const char *reserved_vars[] = { "name", "version", "arch", "firstrepo", NULL };
     for (int c = 0; reserved_vars[c]; c++)
     {
@@ -275,7 +275,7 @@ PromiseResult HandleOldPackagePromiseType(EvalContext *ctx, const Promise *pp, A
         }
         VarRefDestroy(var_ref);
     }
-    
+
 #ifdef __MINGW32__
 
     if(!a.packages.package_list_command)
@@ -295,11 +295,11 @@ PromiseResult HandleOldPackagePromiseType(EvalContext *ctx, const Promise *pp, A
     PromiseBanner(ctx, pp);
 
 // Now verify the package itself
-    
+
     PackagePromiseGlobalLock package_lock = AcquireGlobalPackagePromiseLock(ctx);
     if (package_lock.g_lock.lock == NULL)
     {
-        Log(LOG_LEVEL_VERBOSE, 
+        Log(LOG_LEVEL_VERBOSE,
             "Can not acquire global lock for package promise. Skipping promise "
             "evaluation");
         result = PROMISE_RESULT_SKIPPED;

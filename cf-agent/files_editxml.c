@@ -842,7 +842,7 @@ static bool XmlSelectNode(EvalContext *ctx, char *rawxpath, xmlDocPtr doc, xmlNo
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Unable to evaluate XPath expression '%s'", xpathExpr);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
-        xmlXPathFreeContext(xpathCtx); 
+        xmlXPathFreeContext(xpathCtx);
         return false;
     }
 

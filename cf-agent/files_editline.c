@@ -920,7 +920,7 @@ static int InsertMultipleLinesToRegion(EvalContext *ctx, Item **start, Item *beg
         /* As region was already selected by SelectRegion() and we know
          * what are the region boundaries (begin_ptr and end_ptr) there
          * is no reason to iterate over whole file. It is safe to start from
-         * begin_ptr. 
+         * begin_ptr.
          * As a bonus Redmine #7640 is fixed as we are not interested in
          * matching values outside of the region we are iterating over. */
         for (ip = begin_ptr; ip != NULL; ip = ip->next)
@@ -2009,7 +2009,7 @@ static int EditLineByColumn(EvalContext *ctx, Rlist **columns, Attributes a,
     {
         /* internal separator, single char so split again */
 
-        if (strstr(RlistScalarValue(rp), a.column.column_value) || strcmp(RlistScalarValue(rp), a.column.column_value) != 0) 
+        if (strstr(RlistScalarValue(rp), a.column.column_value) || strcmp(RlistScalarValue(rp), a.column.column_value) != 0)
         {
             this_column = RlistFromSplitString(RlistScalarValue(rp), a.column.value_separator);
             retval = DoEditColumn(&this_column, a, edcontext);

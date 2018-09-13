@@ -33,7 +33,7 @@ export DIST_TARBALL
 
 if [ "$JOB_TYPE" = compile_only ]
 then
-    make CFLAGS=-Werror
+    make CFLAGS="-Werror -Wno-pointer-sign" -k
 elif [ "$JOB_TYPE" = compile_and_unit_test ]
 then
     make CFLAGS="-Werror -Wno-pointer-sign"  &&

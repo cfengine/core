@@ -472,6 +472,10 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
             {
                 bool ret = SetCfenginePort(value);
                 assert(ret);
+                if (ret == false)
+                {
+                    Log(LOG_LEVEL_VERBOSE, "Could not set port number, continuing (See errors above)");
+                }
             }
             else if (IsControlBody(SERVER_CONTROL_BIND_TO_INTERFACE))
             {

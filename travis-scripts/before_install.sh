@@ -3,7 +3,13 @@ if [ "$TRAVIS_OS_NAME" = osx ]
 then
     brew update
     brew install lmdb
-    brew install gcc
+    set +e
+    rvm get stable
+    brew update
+    brew install lmdb
+    brew install gcc@7 || brew link --overwrite gcc@7
+    set -e
+    gcc-7 --version
     #brew install python
     #brew install openssl
     #brew install libxml2

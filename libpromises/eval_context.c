@@ -2784,16 +2784,17 @@ void NotifyDependantPromises(EvalContext *ctx, const Promise *pp, PromiseResult 
     }
 }
 
-void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, PromiseResult status)
+void ClassAuditLog(EvalContext *ctx, const Promise *pp, const Attributes *attr, PromiseResult status)
 {
+    assert(attr != NULL);
     if (IsPromiseValuableForStatus(pp))
     {
         TrackTotalCompliance(status, pp);
         UpdatePromiseCounters(status);
     }
 
-    SetPromiseOutcomeClasses(ctx, status, attr.classes);
-    DoSummarizeTransaction(ctx, status, pp, attr.transaction);
+    SetPromiseOutcomeClasses(ctx, status, attr->classes);
+    DoSummarizeTransaction(ctx, status, pp, attr->transaction);
 }
 
 static void LogPromiseContext(const EvalContext *ctx, const Promise *pp)
@@ -2876,7 +2877,7 @@ void cfPS(EvalContext *ctx, LogLevel level, PromiseResult status, const Promise 
 
     /* Now complete the exits status classes and auditing */
 
-    ClassAuditLog(ctx, pp, attr, status);
+    ClassAuditLog(ctx, pp, &attr, status);
     free(msg);
 }
 

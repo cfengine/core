@@ -117,7 +117,7 @@ PromiseResult VerifyReportPromise(EvalContext *ctx, const Promise *pp)
 
     YieldCurrentLock(thislock);
 
-    ClassAuditLog(ctx, pp, a, result);
+    ClassAuditLog(ctx, pp, &a, result);
     return result;
 }
 

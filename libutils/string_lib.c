@@ -61,7 +61,7 @@ char *StringFormat(const char *fmt, ...)
 
 unsigned int StringHash(const char *str, unsigned int seed)
 {
-    unsigned const char *p = str;
+    unsigned const char *p = (unsigned const char *) str;
     unsigned int h = seed;
     size_t len = strlen(str);
 

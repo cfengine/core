@@ -19,11 +19,7 @@ git remote add upstream https://github.com/cfengine/core.git  \
 
 if [ "$TRAVIS_OS_NAME" = osx ]
 then
-    set +e
-    # On osx the default gcc is actually LLVM
-    export CC=gcc-7
-    NO_CONFIGURE=1 ./autogen.sh
-    ./configure --enable-debug --prefix=$INSTDIR --bindir=$INSTDIR/var/cfengine/bin --with-init-script --with-lmdb=/usr/local/Cellar/lmdb
+    ./autogen.sh --enable-debug --prefix=$INSTDIR --bindir=$INSTDIR/var/cfengine/bin
 else
     NO_CONFIGURE=1 ./autogen.sh
     ./configure --enable-debug --with-tokyocabinet --prefix=$INSTDIR --bindir=$INSTDIR/var/cfengine/bin --with-init-script \
@@ -37,7 +33,7 @@ export DIST_TARBALL
 
 if [ "$JOB_TYPE" = compile_only ]
 then
-    make CFLAGS=-Werror
+    make CFLAGS="-Werror -Wno-pointer-sign" -k
 elif [ "$JOB_TYPE" = compile_and_unit_test ]
 then
     make CFLAGS="-Werror -Wno-pointer-sign"  &&

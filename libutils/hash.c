@@ -342,6 +342,16 @@ const char *HashNameFromId(HashMethod hash_id)
     return (hash_id >= HASH_METHOD_NONE) ? NULL : CF_DIGEST_TYPES[hash_id];
 }
 
+const EVP_MD *HashDigestFromId(HashMethod type)
+{
+    const char *const name = HashNameFromId(type);
+    if (name == NULL)
+    {
+        return NULL;
+    }
+    return EVP_get_digestbyname(name);
+}
+
 HashSize HashSizeFromId(HashMethod hash_id)
 {
     return (hash_id >= HASH_METHOD_NONE) ? CF_NO_HASH : CF_DIGEST_SIZES[hash_id];

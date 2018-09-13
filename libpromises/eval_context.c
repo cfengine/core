@@ -218,7 +218,7 @@ int PackageManagerSeqCompare(const void *a, const void *b, ARG_UNUSED void *data
 
 void AddPackageModuleToContext(const EvalContext *ctx, PackageModuleBody *pm)
 {
-    /* First check if the body is there added from previous pre-evaluation 
+    /* First check if the body is there added from previous pre-evaluation
      * iteration. If it is there update it as we can have new expanded variables. */
     ssize_t pm_seq_index;
     if ((pm_seq_index = SeqIndexOf(ctx->package_promise_context->package_modules_bodies,

@@ -502,7 +502,7 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp,
      * In order to support 'classes' body for variables as well, we call
      * ClassAuditLog explicitly.
      */
-    ClassAuditLog(ctx, pp, a, result);
+    ClassAuditLog(ctx, pp, &a, result);
 
     VarRefDestroy(ref);
     RvalDestroy(rval);

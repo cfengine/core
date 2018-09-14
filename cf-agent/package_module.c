@@ -49,11 +49,14 @@ static int NegotiateSupportedAPIVersion(PackageModuleWrapper *wrapper);
 
 void DeletePackageModuleWrapper(PackageModuleWrapper *wrapper)
 {
-    free(wrapper->path);
-    free(wrapper->script_path);
-    free(wrapper->script_exec_opts);
-    free(wrapper->name);
-    free(wrapper);
+    if (wrapper != NULL)
+    {
+        free(wrapper->path);
+        free(wrapper->script_path);
+        free(wrapper->script_exec_opts);
+        free(wrapper->name);
+        free(wrapper);
+    }
 }
 
 PackageModuleWrapper *NewPackageModuleWrapper(PackageModuleBody *package_module)

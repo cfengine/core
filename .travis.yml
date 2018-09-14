@@ -40,11 +40,7 @@ matrix:
       sudo: required
       env: JOB_TYPE=serverd_multi_versions COVERAGE=no
     - os: osx
-      env: JOB_TYPE=compile_only
-      sudo: false
-  allow_failures:
-    - os: osx
-      env: JOB_TYPE=compile_only
+      env: JOB_TYPE=compile_and_unit_test COVERAGE=no
       sudo: false
 
 before_install:

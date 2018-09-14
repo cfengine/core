@@ -121,7 +121,8 @@ PromiseResult VerifyStoragePromise(EvalContext *ctx, char *path, const Promise *
         }
     }
 
-    thislock = AcquireLock(ctx, path, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
+    thislock = AcquireLock(ctx, path, VUQNAME, CFSTARTTIME,
+        a.transaction.ifelapsed, a.transaction.expireafter, pp, false);
     if (thislock.lock == NULL)
     {
         return PROMISE_RESULT_SKIPPED;

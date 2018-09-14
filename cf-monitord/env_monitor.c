@@ -301,12 +301,7 @@ void MonitorStartServer(EvalContext *ctx, const Policy *policy)
 
 #endif /* !__MINGW32__ */
 
-    TransactionContext tc = {
-        .ifelapsed = 0,
-        .expireafter = 0,
-    };
-
-    thislock = AcquireLock(ctx, pp->promiser, VUQNAME, CFSTARTTIME, tc, pp, false);
+    thislock = AcquireLock(ctx, pp->promiser, VUQNAME, CFSTARTTIME, 0, 0, pp, false);
     if (thislock.lock == NULL)
     {
         PolicyDestroy(monitor_cfengine_policy);

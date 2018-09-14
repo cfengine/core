@@ -519,11 +519,7 @@ static CfLock AcquireServerLock(EvalContext *ctx,
     }
     assert(pp);
 
-    TransactionContext tc = {
-        .ifelapsed = 0,
-        .expireafter = 1,
-    };
-    return AcquireLock(ctx, pp->promiser, VUQNAME, CFSTARTTIME, tc, pp, false);
+    return AcquireLock(ctx, pp->promiser, VUQNAME, CFSTARTTIME, 0, 1, pp, false);
 }
 
 /* Final preparations for running as server */

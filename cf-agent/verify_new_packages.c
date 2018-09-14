@@ -94,7 +94,7 @@ PromiseResult HandleNewPackagePromiseType(EvalContext *ctx, const Promise *pp,
 
     package_promise_lock =
             AcquireLock(ctx, promise_lock, VUQNAME, CFSTARTTIME,
-            a.transaction, pp, false);
+            a.transaction.ifelapsed, a.transaction.expireafter, pp, false);
     if (package_promise_lock.lock == NULL)
     {
         Log(LOG_LEVEL_DEBUG, "Skipping promise execution due to locking.");

@@ -5102,11 +5102,12 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
                 if (SeqLength(s) >= 2)
                 {
                     const char *format_piece = BufferData(SeqAt(s, 1));
-                    bool percent = (strncmp(format_piece, "%%", 2) == 0);
+                    bool percent = StringSafeEqualN(format_piece, "%%", 2);
                     char *data = NULL;
 
                     if (percent)
                     {
+                        // "%%" in format string
                     }
                     else if (rp)
                     {
@@ -5126,8 +5127,9 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
 
                     // CfOut(OUTPUT_LEVEL_INFORM, "", "format: processing format piece = '%s' with data '%s'", format_piece, percent ? "%" : data);
 
-                    char bad_modifiers[] = "hLqjzt";
-                    for (int b = 0; b < strlen(bad_modifiers); b++)
+                    const char bad_modifiers[] = "hLqjzt";
+                    const size_t length = strlen(bad_modifiers);
+                    for (int b = 0; b < length; b++)
                     {
                         if (strchr(format_piece, bad_modifiers[b]) != NULL)
                         {
@@ -5150,6 +5152,7 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
                     }
                     else if (percent)
                     {
+                        // "%%" -> "%"
                         BufferAppend(buf, "%", 1);
                         // CfOut(OUTPUT_LEVEL_INFORM, "", "format: appending int format piece = '%s' with data '%s'", format_piece, data);
                     }

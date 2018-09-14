@@ -662,7 +662,7 @@ static CfLock CfLockNull(void)
 }
 
 CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host,
-                   time_t now, TransactionContext tc, const Promise *pp,
+                   time_t now, int ifelapsed, int expireafter, const Promise *pp,
                    bool ignoreProcesses)
 {
     if (now == 0)
@@ -707,7 +707,7 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host,
 
     Log(LOG_LEVEL_DEBUG,
         "AcquireLock(%s,%s), ExpireAfter = %d, IfElapsed = %d",
-        cc_operator, cc_operand, tc.expireafter, tc.ifelapsed);
+        cc_operator, cc_operand, expireafter, ifelapsed);
 
     int sum = 0;
     for (int i = 0; cc_operator[i] != '\0'; i++)
@@ -742,7 +742,7 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host,
 
     // For promises/locks with ifelapsed == 0, skip all detection logic of
     // previously acquired locks, whether in this agent or a parallel one.
-    if (tc.ifelapsed != 0)
+    if (ifelapsed != 0)
     {
         if (elapsedtime < 0)
         {
@@ -754,11 +754,11 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host,
             return CfLockNull();
         }
 
-        if (elapsedtime < tc.ifelapsed)
+        if (elapsedtime < ifelapsed)
         {
             Log(LOG_LEVEL_VERBOSE,
                 "Nothing promised here [%.40s] (%jd/%u minutes elapsed)",
-                cflast, (intmax_t) elapsedtime, tc.ifelapsed);
+                cflast, (intmax_t) elapsedtime, ifelapsed);
             ReleaseCriticalSection(CF_CRITIAL_SECTION);
             return CfLockNull();
         }
@@ -772,11 +772,11 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host,
 
         if (lastcompleted != 0)
         {
-            if (elapsedtime >= tc.expireafter)
+            if (elapsedtime >= expireafter)
             {
                 Log(LOG_LEVEL_INFO,
                     "Lock expired after %jd/%u minutes: %s",
-                    (intmax_t) elapsedtime, tc.expireafter, cflock);
+                    (intmax_t) elapsedtime, expireafter, cflock);
 
                 if (KillLockHolder(cflock))
                 {

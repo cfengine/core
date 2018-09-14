@@ -153,9 +153,7 @@ PackagePromiseGlobalLock AcquireGlobalPackagePromiseLock(EvalContext *ctx)
 
     package_promise_global_lock =
             AcquireLock(ctx, GLOBAL_PACKAGE_PROMISE_LOCK_NAME, VUQNAME, CFSTARTTIME,
-                        (TransactionContext) {.ifelapsed = 0,
-                                              .expireafter = VEXPIREAFTER},
-                        &pp, false);
+                        0, VEXPIREAFTER, &pp, false);
 
     return (PackagePromiseGlobalLock) {.g_lock = package_promise_global_lock,
                                        .lock_ctx = ctx};
@@ -1500,9 +1498,7 @@ bool UpdateSinglePackageModuleCache(EvalContext *ctx,
 
         cache_updates_lock =
                 AcquireLock(ctx, cache_updates_lock_name, VUQNAME, CFSTARTTIME,
-                            (TransactionContext) { .ifelapsed = ifelapsed_time,
-                                                   .expireafter = VEXPIREAFTER},
-                            &pp, false);
+                            ifelapsed_time, VEXPIREAFTER, &pp, false);
     }
     free(db_name);
 

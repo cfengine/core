@@ -1,7 +1,6 @@
 #!/bin/sh
 set +e
 cd $TRAVIS_BUILD_DIR || return 1
-sudo apt-get -qy install curl
 mkdir artifacts
 test "x$DIST_TARBALL" != x  &&  cp "$DIST_TARBALL" artifacts/
 mv config.log                   artifacts/ 2>/dev/null

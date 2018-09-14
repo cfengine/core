@@ -6,4 +6,6 @@ then
     exit 0;
 fi
 
+echo "Starting run_lastseen_threaded_load.sh test"
+
 ./lastseen_threaded_load -c 1   4 1 1

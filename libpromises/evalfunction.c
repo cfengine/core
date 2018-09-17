@@ -1366,9 +1366,7 @@ static JsonElement *VariablesMatching(const EvalContext *ctx, const FnCall *fp, 
     {
         char *expr = VarRefToString(v->ref, true);
 
-        /* FIXME: review this strcmp. Moved out from StringMatch */
-        if (!strcmp(regex, expr) ||
-            (rx && StringMatchFullWithPrecompiledRegex(rx, expr)))
+        if (rx != NULL && StringMatchFullWithPrecompiledRegex(rx, expr))
         {
             StringSet *tagset = EvalContextVariableTags(ctx, v->ref);
             bool pass = false;
@@ -1382,9 +1380,7 @@ static JsonElement *VariablesMatching(const EvalContext *ctx, const FnCall *fp, 
                     StringSetIterator it = StringSetIteratorInit(tagset);
                     while ((element = SetIteratorNext(&it)))
                     {
-                        /* FIXME: review this strcmp. Moved out from StringMatch */
-                        if (strcmp(tag_regex, element) == 0 ||
-                            StringMatchFull(tag_regex, element))
+                        if (StringMatchFull(tag_regex, element))
                         {
                             pass = true;
                             break;

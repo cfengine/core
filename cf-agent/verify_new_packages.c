@@ -36,20 +36,20 @@ static bool NewPackagePromiseSanityCheck(Attributes a)
         Log(LOG_LEVEL_ERR, "Can not find package module body in policy.");
         return false;
     }
-    
+
     if (a.new_packages.module_body->updates_ifelapsed == CF_NOINT ||
         a.new_packages.module_body->installed_ifelapsed == CF_NOINT)
     {
         Log(LOG_LEVEL_ERR,
                 "Invalid or missing arguments in package_module body '%s':  "
                 "query_installed_ifelapsed = %d query_updates_ifelapsed = %d",
-                a.new_packages.module_body->name, 
+                a.new_packages.module_body->name,
                 a.new_packages.module_body->installed_ifelapsed,
                 a.new_packages.module_body->updates_ifelapsed);
             return false;
         return false;
     }
-    
+
     if (a.new_packages.package_policy == NEW_PACKAGE_ACTION_NONE)
     {
         Log(LOG_LEVEL_ERR, "Unsupported package policy in package promise.");
@@ -63,8 +63,8 @@ PromiseResult HandleNewPackagePromiseType(EvalContext *ctx, const Promise *pp,
                                           LogLevel *log_lvl)
 {
     Log(LOG_LEVEL_DEBUG, "New package promise handler");
-    
-    
+
+
     if (!NewPackagePromiseSanityCheck(a))
     {
         *promise_log_msg =
@@ -72,11 +72,11 @@ PromiseResult HandleNewPackagePromiseType(EvalContext *ctx, const Promise *pp,
         *log_lvl = LOG_LEVEL_ERR;
         return PROMISE_RESULT_FAIL;
     }
-    
+
     PromiseBanner(ctx, pp);
-    
+
     PackagePromiseGlobalLock global_lock = AcquireGlobalPackagePromiseLock(ctx);
-    
+
     CfLock package_promise_lock;
     char promise_lock[CF_BUFSIZE];
     snprintf(promise_lock, sizeof(promise_lock), "new-package-%s-%s",
@@ -88,48 +88,48 @@ PromiseResult HandleNewPackagePromiseType(EvalContext *ctx, const Promise *pp,
                 SafeStringDuplicate("Can not acquire global lock for package "
                                     "promise. Skipping promise evaluation");
         *log_lvl = LOG_LEVEL_INFO;
-        
+
         return PROMISE_RESULT_SKIPPED;
     }
-    
+
     package_promise_lock =
             AcquireLock(ctx, promise_lock, VUQNAME, CFSTARTTIME,
-            a.transaction, pp, false);
+            a.transaction.ifelapsed, a.transaction.expireafter, pp, false);
     if (package_promise_lock.lock == NULL)
     {
         Log(LOG_LEVEL_DEBUG, "Skipping promise execution due to locking.");
         YieldGlobalPackagePromiseLock(global_lock);
-        
+
         *promise_log_msg =
                 StringFormat("Can not acquire lock for '%s' package promise. "
                              "Skipping promise evaluation",  pp->promiser);
         *log_lvl = LOG_LEVEL_VERBOSE;
-        
+
         return PROMISE_RESULT_SKIPPED;
     }
-    
+
     PackageModuleWrapper *package_module =
             NewPackageModuleWrapper(a.new_packages.module_body);
-    
+
     if (!package_module)
     {
         *promise_log_msg =
                 StringFormat("Some error occurred while contacting package "
                              "module - promise: %s", pp->promiser);
         *log_lvl = LOG_LEVEL_ERR;
-        
+
         YieldCurrentLock(package_promise_lock);
         YieldGlobalPackagePromiseLock(global_lock);
-    
+
         return PROMISE_RESULT_FAIL;
     }
-    
+
     PromiseResult result = PROMISE_RESULT_FAIL;
-    
+
     switch (a.new_packages.package_policy)
     {
         case NEW_PACKAGE_ACTION_ABSENT:
-            result = HandleAbsentPromiseAction(ctx, pp->promiser, 
+            result = HandleAbsentPromiseAction(ctx, pp->promiser,
                                                &a.new_packages,
                                                package_module,
                                                a.transaction.action);
@@ -170,7 +170,7 @@ PromiseResult HandleNewPackagePromiseType(EvalContext *ctx, const Promise *pp,
             }
             break;
         case NEW_PACKAGE_ACTION_PRESENT:
-            result = HandlePresentPromiseAction(ctx, pp->promiser, 
+            result = HandlePresentPromiseAction(ctx, pp->promiser,
                                                 &a.new_packages,
                                                 package_module,
                                                 a.transaction.action);
@@ -217,11 +217,11 @@ PromiseResult HandleNewPackagePromiseType(EvalContext *ctx, const Promise *pp,
                              a.new_packages.package_policy);
             break;
     }
-    
+
     DeletePackageModuleWrapper(package_module);
-    
+
     YieldCurrentLock(package_promise_lock);
     YieldGlobalPackagePromiseLock(global_lock);
-    
+
     return result;
 }

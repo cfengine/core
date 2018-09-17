@@ -284,7 +284,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
         return PROMISE_RESULT_NOOP;
     }
 
-    thislock = AcquireLock(ctx, path, VUQNAME, CFSTARTTIME, attr.transaction, pp, false);
+    thislock = AcquireLock(ctx, path, VUQNAME, CFSTARTTIME, attr.transaction.ifelapsed, attr.transaction.expireafter, pp, false);
     if (thislock.lock == NULL)
     {
         ClearFilesAttributes(&attr);
@@ -718,7 +718,7 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
     CfLock thislock;
 
     snprintf(lockname, CF_BUFSIZE - 1, "fileedit-%s", filename);
-    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction.ifelapsed, a.transaction.expireafter, pp, false);
 
     if (thislock.lock == NULL)
     {

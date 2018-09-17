@@ -128,7 +128,7 @@ PromiseResult VerifyEnvironmentsPromise(EvalContext *ctx, const Promise *pp)
     PromiseResult result = PROMISE_RESULT_NOOP;
     if (EnvironmentsSanityChecks(a, pp))
     {
-        thislock = AcquireLock(ctx, "virtual", VUQNAME, CFSTARTTIME, a.transaction, pp, false);
+        thislock = AcquireLock(ctx, "virtual", VUQNAME, CFSTARTTIME, a.transaction.ifelapsed, a.transaction.expireafter, pp, false);
 
         if (thislock.lock == NULL)
         {

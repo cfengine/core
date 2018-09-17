@@ -376,17 +376,17 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
                 const JsonElement *el;
                 while ((el = JsonIteratorNextValueByType(&iter, JSON_ELEMENT_TYPE_PRIMITIVE, true)) != NULL)
                 {
-                    char *filename = JsonPrimitiveToString(el);
-                    bool further_loaded = LoadAugmentsFiles(ctx, filename);
+                    char *nested_filename = JsonPrimitiveToString(el);
+                    bool further_loaded = LoadAugmentsFiles(ctx, nested_filename);
                     if (further_loaded)
                     {
-                        Log(LOG_LEVEL_VERBOSE, "Completed augmenting from file '%s'", filename);
+                        Log(LOG_LEVEL_VERBOSE, "Completed augmenting from file '%s'", nested_filename);
                     }
                     else
                     {
-                        Log(LOG_LEVEL_ERR, "Could not load requested further augments from file '%s'", filename);
+                        Log(LOG_LEVEL_ERR, "Could not load requested further augments from file '%s'", nested_filename);
                     }
-                    free(filename);
+                    free(nested_filename);
                 }
             }
             else

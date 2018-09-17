@@ -1,0 +1,6 @@
+Name=first_pkg
+Version=1.0
+Architecture=generic
+Name=second_pkg
+Version=1.0
+Architecture=generic

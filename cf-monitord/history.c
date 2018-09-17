@@ -193,14 +193,13 @@ static Item *NovaReSample(EvalContext *ctx, int slot, Attributes a, const Promis
         }
     }
 
-    TransactionContext tc = {
-        .expireafter = a.transaction.expireafter,
-        .ifelapsed = MONITOR_RESTARTED ? 0 : a.transaction.ifelapsed, // Force a measurement if restarted
-    };
+    // Force a measurement if restarted:
+    const int ifelapsed = MONITOR_RESTARTED ? 0 : a.transaction.ifelapsed;
+    const int expireafter = a.transaction.expireafter;
 
     CFSTARTTIME = time(NULL);
 
-    thislock = AcquireLock(ctx, pp->promiser, VUQNAME, CFSTARTTIME, tc, pp, false);
+    thislock = AcquireLock(ctx, pp->promiser, VUQNAME, CFSTARTTIME, ifelapsed, expireafter, pp, false);
 
     if (thislock.lock == NULL)
     {
@@ -398,12 +397,7 @@ void HistoryUpdate(EvalContext *ctx, const Averages *const newvals)
     }
     assert(pp);
 
-    TransactionContext tc = {
-        .expireafter = 0,
-        .ifelapsed = 59
-    };
-
-    thislock = AcquireLock(ctx, pp->promiser, VUQNAME, now, tc, pp, false);
+    thislock = AcquireLock(ctx, pp->promiser, VUQNAME, now, 59, 0, pp, false);
 
     if (thislock.lock == NULL)
     {

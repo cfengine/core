@@ -29,7 +29,7 @@
 
 
 CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host,
-                   time_t now, TransactionContext tc, const Promise *pp,
+                   time_t now, int ifelapsed, int expireafter, const Promise *pp,
                    bool ignoreProcesses);
 void YieldCurrentLock(CfLock lock);
 void YieldCurrentLockAndRemoveFromCache(EvalContext *ctx, CfLock lock,

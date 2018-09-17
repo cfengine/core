@@ -111,7 +111,7 @@ int ScheduleEditLineOperations(EvalContext *ctx, const Bundle *bp, Attributes a,
     assert(strcmp(bp->type, "edit_line") == 0);
 
     snprintf(lockname, CF_BUFSIZE - 1, "masterfilelock-%s", edcontext->filename);
-    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, parentp, true);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction.ifelapsed, a.transaction.expireafter, parentp, true);
 
     if (thislock.lock == NULL)
     {
@@ -398,7 +398,7 @@ static PromiseResult VerifyLineDeletions(EvalContext *ctx, const Promise *pp, Ed
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "deleteline-%s-%s", pp->promiser, edcontext->filename);
-    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction.ifelapsed, a.transaction.expireafter, pp, true);
 
     if (thislock.lock == NULL)
     {
@@ -467,7 +467,7 @@ static PromiseResult VerifyColumnEdits(EvalContext *ctx, const Promise *pp, Edit
 /* locate and split line */
 
     snprintf(lockname, CF_BUFSIZE - 1, "column-%s-%s", pp->promiser, edcontext->filename);
-    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction.ifelapsed, a.transaction.expireafter, pp, true);
     if (thislock.lock == NULL)
     {
         return PROMISE_RESULT_SKIPPED;
@@ -522,7 +522,7 @@ static PromiseResult VerifyPatterns(EvalContext *ctx, const Promise *pp, EditCon
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "replace-%s-%s", pp->promiser, edcontext->filename);
-    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction.ifelapsed, a.transaction.expireafter, pp, true);
 
     if (thislock.lock == NULL)
     {
@@ -704,7 +704,7 @@ static PromiseResult VerifyLineInsertions(EvalContext *ctx, const Promise *pp, E
         snprintf(lockname, CF_BUFSIZE - 1, "insertline-%s-%s", pp->promiser, edcontext->filename);
     }
 
-    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction.ifelapsed, a.transaction.expireafter, pp, true);
     if (thislock.lock == NULL)
     {
         return PROMISE_RESULT_SKIPPED;

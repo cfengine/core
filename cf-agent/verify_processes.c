@@ -117,7 +117,8 @@ static PromiseResult VerifyProcesses(EvalContext *ctx, Attributes a, const Promi
         snprintf(lockname, CF_BUFSIZE - 1, "proc-%s-norestart", pp->promiser);
     }
 
-    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME,
+        a.transaction.ifelapsed, a.transaction.expireafter, pp, false);
     if (thislock.lock == NULL)
     {
         return PROMISE_RESULT_SKIPPED;

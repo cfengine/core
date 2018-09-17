@@ -308,7 +308,8 @@ PromiseResult HandleOldPackagePromiseType(EvalContext *ctx, const Promise *pp, A
 
     snprintf(lockname, CF_BUFSIZE - 1, "package-%s-%s", pp->promiser, a.packages.package_list_command);
 
-    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME,
+        a.transaction.ifelapsed, a.transaction.expireafter, pp, false);
     if (thislock.lock == NULL)
     {
         YieldGlobalPackagePromiseLock(package_lock);

@@ -154,7 +154,7 @@ int ScheduleEditXmlOperations(EvalContext *ctx, const Bundle *bp, Attributes a, 
     int pass;
 
     snprintf(lockname, CF_BUFSIZE - 1, "masterfilelock-%s", edcontext->filename);
-    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, parentp, true);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction.ifelapsed, a.transaction.expireafter, parentp, true);
 
     if (thislock.lock == NULL)
     {
@@ -352,7 +352,7 @@ static bool VerifyXPathBuild(EvalContext *ctx, Attributes a, const Promise *pp, 
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "buildxpath-%s-%s", pp->promiser, edcontext->filename);
-    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction.ifelapsed, a.transaction.expireafter, pp, true);
 
     if (thislock.lock == NULL)
     {
@@ -418,7 +418,7 @@ static PromiseResult VerifyTreeDeletions(EvalContext *ctx, Attributes a, const P
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "deletetree-%s-%s", pp->promiser, edcontext->filename);
-    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction.ifelapsed, a.transaction.expireafter, pp, true);
 
     if (thislock.lock == NULL)
     {
@@ -479,7 +479,7 @@ static PromiseResult VerifyTreeInsertions(EvalContext *ctx, Attributes a, const 
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "inserttree-%s-%s", pp->promiser, edcontext->filename);
-    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction.ifelapsed, a.transaction.expireafter, pp, true);
 
     if (thislock.lock == NULL)
     {
@@ -545,7 +545,7 @@ static PromiseResult VerifyAttributeDeletions(EvalContext *ctx, Attributes a, co
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "deleteattribute-%s-%s", pp->promiser, edcontext->filename);
-    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction.ifelapsed, a.transaction.expireafter, pp, true);
 
     if (thislock.lock == NULL)
     {
@@ -603,7 +603,7 @@ static PromiseResult VerifyAttributeSet(EvalContext *ctx, Attributes a, const Pr
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "setattribute-%s-%s", pp->promiser, edcontext->filename);
-    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction.ifelapsed, a.transaction.expireafter, pp, true);
 
     if (thislock.lock == NULL)
     {
@@ -661,7 +661,7 @@ static PromiseResult VerifyTextDeletions(EvalContext *ctx, Attributes a, const P
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "deletetext-%s-%s", pp->promiser, edcontext->filename);
-    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction.ifelapsed, a.transaction.expireafter, pp, true);
 
     if (thislock.lock == NULL)
     {
@@ -719,7 +719,7 @@ static PromiseResult VerifyTextSet(EvalContext *ctx, Attributes a, const Promise
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "settext-%s-%s", pp->promiser, edcontext->filename);
-    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction.ifelapsed, a.transaction.expireafter, pp, true);
 
     if (thislock.lock == NULL)
     {
@@ -777,7 +777,7 @@ static PromiseResult VerifyTextInsertions(EvalContext *ctx, Attributes a, const 
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "inserttext-%s-%s", pp->promiser, edcontext->filename);
-    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction.ifelapsed, a.transaction.expireafter, pp, true);
 
     if (thislock.lock == NULL)
     {

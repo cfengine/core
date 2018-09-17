@@ -120,7 +120,7 @@ PromiseResult VerifyMethod(EvalContext *ctx, const Rval call, Attributes a, cons
     char lockname[CF_BUFSIZE];
     GetLockName(lockname, "method", pp->promiser, args);
 
-    CfLock thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
+    CfLock thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction.ifelapsed, a.transaction.expireafter, pp, false);
     if (thislock.lock == NULL)
     {
         BufferDestroy(method_name);

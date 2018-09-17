@@ -49,7 +49,8 @@ PromiseResult VerifyUsersPromise(EvalContext *ctx, const Promise *pp)
 
     snprintf(lockname, CF_BUFSIZE - 1, "user-%s-%d", pp->promiser, a.users.policy);
 
-    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME,
+        a.transaction.ifelapsed, a.transaction.expireafter, pp, false);
     if (thislock.lock == NULL)
     {
         return PROMISE_RESULT_SKIPPED;

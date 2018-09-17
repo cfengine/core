@@ -179,6 +179,78 @@ void ActAsDaemon()
 
 /**********************************************************************/
 
+/**
+ * Split the command string like "/bin/echo -n Hi!" in two parts -- the
+ * executable ("/bin/echo") and the arguments for the executable ("-n Hi!").
+ *
+ * @param[in]  comm  the whole command to split
+ * @param[out] exec  pointer to **a newly allocated** string with the executable
+ * @param[out] args  pointer to **a newly allocated** string with the args
+ *
+ * @note Whitespace between the executable and the arguments is skipped.
+ */
+void ArgGetExecutableAndArgs(const char *comm, char **exec, char **args)
+{
+    const char *s = comm;
+    while (*s != '\0')
+    {
+        const char *end = NULL;
+
+        if (isspace((int)*s))        /* Skip whitespace */
+        {
+            s++;
+            continue;
+        }
+
+        switch (*s)
+        {
+        case '"':              /* Look for matching quote */
+        case '\'':
+        case '`':
+        {
+            char delim = *(s++);  /* Skip first delimeter */
+
+            end = strchr(s, delim);
+            break;
+        }
+        default:               /* Look for whitespace */
+            end = strpbrk(s, " \f\n\r\t\v");
+            break;
+        }
+
+        if (end == NULL)        /* Delimeter was not found, remaining string is the executable */
+        {
+            *exec = xstrdup(s);
+            *args = NULL;
+            return;
+        }
+        else
+        {
+            assert(end > s);
+            const size_t length = end - s;
+            *exec = xstrndup(s, length);
+
+            const char *args_start = end;
+            if (*(args_start + 1) != '\0')
+            {
+                args_start++; /* Skip second delimeter */
+                args_start += strspn(args_start, " \f\n\r\t\v"); /* Skip whitespace */
+                *args = xstrdup(args_start);
+            }
+            else
+            {
+                *args = NULL;
+            }
+            return;
+        }
+    }
+
+    /* was not able to parse/split the command */
+    *exec = NULL;
+    *args = NULL;
+    return;
+}
+
 #define INITIAL_ARGS 8
 
 char **ArgSplitCommand(const char *comm)

@@ -1,0 +1,67 @@
+set -e
+
+remove_prefix()
+{
+    echo "$1" | sed "s/$2//"
+}
+
+case "$1" in
+    supports-api-version)
+        echo 1
+        ;;
+    get-package-data)
+        while read line; do
+            case "$line" in
+                File=*)
+                    echo PackageType=repo
+                    echo Name=`remove_prefix "${line}" "File="`
+                    ;;
+                *)
+                    true
+                    ;;
+            esac
+        done
+        ;;
+    list-installed)
+        while read line; do
+            case "$line" in
+                options=*)
+                    OUTPUT=`remove_prefix "${line}" "options="`
+                    ;;
+                *)
+                    exit 1
+                    ;;
+            esac
+        done
+        if [ -f "$OUTPUT" ]; then
+            cat "$OUTPUT"
+        fi
+        ;;
+    list-*)
+        # Drain input.
+        cat > /dev/null
+        ;;
+    repo-install)
+        while read line; do
+            case "$line" in
+                options=*)
+                    OUTPUT=`remove_prefix "${line}" "options="`
+                    ;;
+                Name=*)
+                    NAME=`remove_prefix "${line}" "Name="`
+                    ;;
+                *)
+                    exit 1
+                    ;;
+            esac
+        done
+        echo "Name=$NAME" >> "$OUTPUT"
+        echo "Version=1.0" >> "$OUTPUT"
+        echo "Architecture=generic" >> "$OUTPUT"
+        ;;
+    *)
+        exit 1
+        ;;
+esac
+
+exit 0

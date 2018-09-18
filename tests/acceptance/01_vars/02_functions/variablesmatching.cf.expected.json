@@ -9,6 +9,15 @@
     },
     "default:init.test_b37ce1b03955522848f0a82d0b2b2e21_3": "mydata"
   },
+  "tag_match": [
+    "default:init.test_variable_with_weird_tag"
+  ],
+  "tag_match_data": {
+    "default:init.test_variable_with_weird_tag": "some_data"
+  },
+  "tag_no_match": [],
+  "tag_no_match_data": {
+  },
   "vars": [
     "default:init.test_fbeae67f3e347b5e0032302200141131_1",
     "default:init.test_fbeae67f3e347b5e0032302200141131_2",

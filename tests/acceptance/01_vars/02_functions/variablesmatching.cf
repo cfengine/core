@@ -16,6 +16,8 @@ bundle common init
       "test_b37ce1b03955522848f0a82d0b2b2e21_1" slist => { "a", "b" }, meta => { "x" };
       "test_b37ce1b03955522848f0a82d0b2b2e21_2" data => '{ "a": "b" }', meta => { "x" };
       "test_b37ce1b03955522848f0a82d0b2b2e21_3" string => 'mydata', meta => { "y" };
+
+      "test_variable_with_weird_tag" string => 'some_data', meta => { "weird[tag]" };
 }
 
 bundle agent test
@@ -28,6 +30,11 @@ bundle agent test
       "fullvars" data => variablesmatching_as_data("default:init.test_b37ce1b03955522848f0a82d0b2b2e21.*");
       "x_fullvars" data => variablesmatching_as_data("default:init.test_b37ce1b03955522848f0a82d0b2b2e21.*", "x");
       "z_fullvars" data => variablesmatching_as_data("default:init.test_b37ce1b03955522848f0a82d0b2b2e21.*", "z");
+
+      "tag_match" slist => variablesmatching(".*", "weird\[tag\]");
+      "tag_no_match" slist => variablesmatching(".*", "weird[tag]");
+      "tag_match_data" data => variablesmatching_as_data(".*", "weird\[tag\]");
+      "tag_no_match_data" data => variablesmatching_as_data(".*", "weird[tag]");
 }
 
 bundle agent check

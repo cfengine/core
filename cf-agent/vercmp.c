@@ -92,6 +92,7 @@ static VersionCmpResult RunCmpCommand(EvalContext *ctx, const char *command, con
     Log(LOG_LEVEL_VERBOSE, "Executing '%s'", BufferData(expanded_command));
 
     int retcode = cf_pclose(pfp);
+    Log(LOG_LEVEL_VERBOSE, "returned: %d", retcode);
 
     if (retcode == -1)
     {

@@ -530,7 +530,7 @@ bool FileChangesCheckAndUpdateHash(EvalContext *ctx,
     assert(attr != NULL);
     bool ret = FileChangesCheckAndUpdateHash_impl(filename, digest, type, attr->change.update, pp, result);
     // TODO: Move cfPS even further up the call stack.
-    cfPS(ctx, LOG_LEVEL_DEBUG, *result, pp, *attr, "Updating promise status for files changes promise");
+    cfPS(ctx, LOG_LEVEL_DEBUG, *result, pp, attr, "Updating promise status for files changes promise");
     return ret;
 }
 

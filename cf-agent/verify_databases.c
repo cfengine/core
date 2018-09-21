@@ -123,7 +123,7 @@ static PromiseResult VerifySQLPromise(EvalContext *ctx, Attributes a, const Prom
 
             if (strlen(database) == 0)
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a,
                      "SQL database promiser syntax should be of the form \"database.table\"");
                 PromiseRef(LOG_LEVEL_ERR, pp);
                 YieldCurrentLock(thislock);
@@ -135,7 +135,7 @@ static PromiseResult VerifySQLPromise(EvalContext *ctx, Attributes a, const Prom
     PromiseResult result = PROMISE_RESULT_NOOP;
     if (count > 1)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "SQL database promiser syntax should be of the form \"database.table\"");
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "SQL database promiser syntax should be of the form \"database.table\"");
         PromiseRef(LOG_LEVEL_ERR, pp);
         result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
     }
@@ -147,7 +147,7 @@ static PromiseResult VerifySQLPromise(EvalContext *ctx, Attributes a, const Prom
 
     if (a.database.operation == NULL)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a,
              "Missing database_operation in database promise");
         PromiseRef(LOG_LEVEL_ERR, pp);
         YieldCurrentLock(thislock);
@@ -225,11 +225,11 @@ static PromiseResult VerifySQLPromise(EvalContext *ctx, Attributes a, const Prom
 
         if (VerifyTablePromise(ctx, &cfdb, query, a.database.columns, a, pp, &result))
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_NOOP, pp, a, "Table '%s' is as promised", query);
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_NOOP, pp, &a, "Table '%s' is as promised", query);
         }
         else
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Table '%s' is not as promised", query);
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Table '%s' is not as promised", query);
             result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         }
 
@@ -522,7 +522,7 @@ static int VerifyTablePromise(EvalContext *ctx, CfdbConn *cfdb, char *table_path
         {
             if ((!DONTDO) && ((a.transaction.action) != cfa_warn))
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_CHANGE, pp, a, "Database.table '%s' doesn't seem to exist, creating",
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_CHANGE, pp, &a, "Database.table '%s' doesn't seem to exist, creating",
                      table_path);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
                 return CreateTableColumns(cfdb, table, columns);
@@ -544,7 +544,7 @@ static int VerifyTablePromise(EvalContext *ctx, CfdbConn *cfdb, char *table_path
 
     if (cfdb->maxcolumns != 3)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Could not make sense of the columns");
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Could not make sense of the columns");
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
         CfDeleteQuery(cfdb);
         return false;
@@ -557,7 +557,7 @@ static int VerifyTablePromise(EvalContext *ctx, CfdbConn *cfdb, char *table_path
 
     if (!NewSQLColumns(table, columns, &name_table, &type_table, &size_table, &done))
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Could not make sense of the columns");
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Could not make sense of the columns");
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
         return false;
     }
@@ -586,7 +586,7 @@ static int VerifyTablePromise(EvalContext *ctx, CfdbConn *cfdb, char *table_path
 
         if (sizestr && (size == CF_NOINT))
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a,
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, &a,
                  "Integer size of SQL datatype could not be determined or was not specified - invalid promise.");
             DeleteSQLColumns(name_table, type_table, size_table, done, no_of_cols);
             CfDeleteQuery(cfdb);
@@ -608,7 +608,7 @@ static int VerifyTablePromise(EvalContext *ctx, CfdbConn *cfdb, char *table_path
 
                 if (size != size_table[i])
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
+                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a,
                          "Promised column '%s' in database.table '%s' has a non-matching array size (%d != %d)",
                          name, table_path, size, size_table[i]);
                     *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
@@ -628,13 +628,13 @@ static int VerifyTablePromise(EvalContext *ctx, CfdbConn *cfdb, char *table_path
 
         if (!identified)
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a,
                  "Column '%s' found in database.table '%s' is not part of its promise.", name, table_path);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
 
             if ((a.database.operation) && (strcmp(a.database.operation, "drop") == 0))
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a,
                      "CFEngine will not promise to repair this, as the operation is potentially too destructive.");
                 // Future allow deletion?
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
@@ -676,14 +676,14 @@ static int VerifyTablePromise(EvalContext *ctx, CfdbConn *cfdb, char *table_path
                     }
 
                     CfVoidQueryDB(cfdb, query);
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_CHANGE, pp, a, "Adding promised column '%s' to database table '%s'",
+                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_CHANGE, pp, &a, "Adding promised column '%s' to database table '%s'",
                          name_table[i], table);
                     *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
                     retval = true;
                 }
                 else
                 {
-                    cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a,
+                    cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, &a,
                          "Promised column '%s' missing from database table '%s' but only a warning was promised",
                          name_table[i], table);
                     *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);

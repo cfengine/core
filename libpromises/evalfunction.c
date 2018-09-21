@@ -7954,10 +7954,13 @@ static bool CheckID(const char *id)
     {
         if (!CheckIDChar(*sp))
         {
-            Log(LOG_LEVEL_ERR,
+            Log(LOG_LEVEL_WARNING,
                   "Module protocol contained an illegal character '%c' in class/variable identifier '%s'.", *sp,
                   id);
-            return false;
+
+            Log(LOG_LEVEL_VERBOSE, "Automatically canonifying '%s'", id);
+            CanonifyNameInPlace(id);
+            Log(LOG_LEVEL_VERBOSE, "Automatically canonified to '%s'", id);
         }
     }
 

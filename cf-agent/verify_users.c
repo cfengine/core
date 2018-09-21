@@ -60,17 +60,17 @@ PromiseResult VerifyUsersPromise(EvalContext *ctx, const Promise *pp)
 
     switch (result) {
     case PROMISE_RESULT_NOOP:
-        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "User promise kept");
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, &a, "User promise kept");
         break;
     case PROMISE_RESULT_FAIL:
     case PROMISE_RESULT_DENIED:
     case PROMISE_RESULT_TIMEOUT:
     case PROMISE_RESULT_INTERRUPTED:
     case PROMISE_RESULT_WARN:
-        cfPS(ctx, LOG_LEVEL_INFO, result, pp, a, "User promise not kept");
+        cfPS(ctx, LOG_LEVEL_INFO, result, pp, &a, "User promise not kept");
         break;
     case PROMISE_RESULT_CHANGE:
-        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "User promise repaired");
+        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, &a, "User promise repaired");
         break;
     default:
         ProgrammingError("Unknown promise result");

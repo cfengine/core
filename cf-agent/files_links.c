@@ -97,7 +97,7 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
     if ((!source_file_exists) && (attr.link.when_no_file != cfa_force) && (attr.link.when_no_file != cfa_delete))
     {
         Log(LOG_LEVEL_INFO, "Source '%s' for linking is absent", absto);
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Unable to create link '%s' -> '%s', no source", destination, to);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &attr, "Unable to create link '%s' -> '%s', no source", destination, to);
         return PROMISE_RESULT_FAIL;
     }
 
@@ -120,7 +120,7 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
 
         if (!MakeParentDirectory2(destination, attr.move_obstructions, EnforcePromise(attr.transaction.action)))
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Unable to create parent directory of link '%s' -> '%s' (enforce %d)",
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &attr, "Unable to create parent directory of link '%s' -> '%s' (enforce %d)",
                  destination, to, EnforcePromise(attr.transaction.action));
             return PROMISE_RESULT_FAIL;
         }
@@ -129,14 +129,14 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
             PromiseResult result = PROMISE_RESULT_NOOP;
             if (!MoveObstruction(ctx, destination, attr, pp, &result))
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Unable to create link '%s' -> '%s', failed to move obstruction", destination, to);
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &attr, "Unable to create link '%s' -> '%s', failed to move obstruction", destination, to);
                 result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                 return result;
             }
 
             if (!MakeLink(ctx, destination, source, attr, pp, &result))
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Unable to create link '%s' -> '%s'", destination, to);
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &attr, "Unable to create link '%s' -> '%s'", destination, to);
                 result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
             }
 
@@ -162,12 +162,12 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
             {
                 if (EnforcePromise(attr.transaction.action))
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Overriding incorrect link '%s'", destination);
+                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, &attr, "Overriding incorrect link '%s'", destination);
                     PromiseResult result = PROMISE_RESULT_CHANGE;
 
                     if (unlink(destination) == -1)
                     {
-                        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Link '%s' points to '%s' not '%s', error removing link",
+                        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &attr, "Link '%s' points to '%s' not '%s', error removing link",
                              destination, linkbuf, to);
                         return PROMISE_RESULT_FAIL;
                     }
@@ -183,14 +183,14 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
             }
             else
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Link '%s' points to '%s' not '%s', not authorized to override",
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &attr, "Link '%s' points to '%s' not '%s', not authorized to override",
                      destination, linkbuf, to);
                 return PROMISE_RESULT_FAIL;
             }
         }
         else
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, attr, "Link '%s' points to '%s', promise kept", destination, source);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, &attr, "Link '%s' points to '%s', promise kept", destination, source);
             return PROMISE_RESULT_NOOP;
         }
     }
@@ -259,7 +259,7 @@ PromiseResult VerifyRelativeLink(EvalContext *ctx, char *destination, const char
 
     if (!CompressPath(linkto, sizeof(linkto), source))
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, attr, "Failed to link '%s' to '%s'", destination, source);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, &attr, "Failed to link '%s' to '%s'", destination, source);
         return PROMISE_RESULT_INTERRUPTED;
     }
 
@@ -268,7 +268,7 @@ PromiseResult VerifyRelativeLink(EvalContext *ctx, char *destination, const char
 
     if (strcmp(commonto, commonfrom) == 0)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, attr, "Failed to link '%s' to '%s', can't link file '%s' to itself",
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, &attr, "Failed to link '%s' to '%s', can't link file '%s' to itself",
              destination, source, commonto);
         return PROMISE_RESULT_INTERRUPTED;
     }
@@ -357,13 +357,13 @@ PromiseResult VerifyHardLink(EvalContext *ctx, char *destination, const char *so
 
     if (stat(absto, &ssb) == -1)
     {
-        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp, attr, "Source file '%s' doesn't exist", source);
+        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp, &attr, "Source file '%s' doesn't exist", source);
         return PROMISE_RESULT_INTERRUPTED;
     }
 
     if (!S_ISREG(ssb.st_mode))
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &attr,
              "Source file '%s' is not a regular file, not appropriate to hard-link", to);
         return PROMISE_RESULT_FAIL;
     }
@@ -388,7 +388,7 @@ PromiseResult VerifyHardLink(EvalContext *ctx, char *destination, const char *so
 
         if ((dsb.st_mode == ssb.st_mode) && (dsb.st_size == ssb.st_size))
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, attr, "Hard link '%s' -> '%s' on different device appears okay", destination,
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, &attr, "Hard link '%s' -> '%s' on different device appears okay", destination,
                  to);
             return PROMISE_RESULT_NOOP;
         }
@@ -396,7 +396,7 @@ PromiseResult VerifyHardLink(EvalContext *ctx, char *destination, const char *so
 
     if ((dsb.st_ino == ssb.st_ino) && (dsb.st_dev == ssb.st_dev))
     {
-        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, attr, "Hard link '%s' -> '%s' exists and is okay", destination, to);
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, &attr, "Hard link '%s' -> '%s' exists and is okay", destination, to);
         return PROMISE_RESULT_NOOP;
     }
 
@@ -411,7 +411,7 @@ PromiseResult VerifyHardLink(EvalContext *ctx, char *destination, const char *so
     PromiseResult result = PROMISE_RESULT_NOOP;
     if (!MoveObstruction(ctx, destination, attr, pp, &result))
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Unable to create hard link '%s' -> '%s', unable to move obstruction", destination, to);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &attr, "Unable to create hard link '%s' -> '%s', unable to move obstruction", destination, to);
         result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         return result;
     }
@@ -422,7 +422,7 @@ PromiseResult VerifyHardLink(EvalContext *ctx, char *destination, const char *so
     }
     else
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Unable to create hard link '%s' -> '%s'", destination, to);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &attr, "Unable to create hard link '%s' -> '%s'", destination, to);
         result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
     }
 
@@ -438,7 +438,7 @@ PromiseResult VerifyHardLink(EvalContext *ctx, char *destination, const char *so
 bool KillGhostLink(EvalContext *ctx, const char *name, Attributes attr, const Promise *pp, PromiseResult *result)
 {
     Log(LOG_LEVEL_VERBOSE, "Windows does not support symbolic links (at KillGhostLink())");
-    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Windows does not support killing link '%s'", name);
+    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &attr, "Windows does not support killing link '%s'", name);
     PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
     return false;
 }
@@ -484,7 +484,7 @@ bool KillGhostLink(EvalContext *ctx, const char *name, Attributes attr, const Pr
             if (!DONTDO)
             {
                 unlink(name);   /* May not work on a client-mounted system ! */
-                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr,
+                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, &attr,
                      "Removing ghost '%s', reference to something that is not there", name);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
                 return true;
@@ -511,14 +511,14 @@ static bool MakeLink(EvalContext *ctx, const char *from, const char *to, Attribu
     {
         if (symlink(to, from) == -1)
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Couldn't link '%s' to '%s'. (symlink: %s)",
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &attr, "Couldn't link '%s' to '%s'. (symlink: %s)",
                  to, from, GetErrorStr());
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             return false;
         }
         else
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Linked files '%s' -> '%s'", from, to);
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, &attr, "Linked files '%s' -> '%s'", from, to);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
             return true;
         }
@@ -534,7 +534,7 @@ bool MakeHardLink(EvalContext *ctx, const char *from, const char *to, Attributes
                   PromiseResult *result)
 {                               // TODO: Implement ?
     Log(LOG_LEVEL_VERBOSE, "Hard links are not yet supported on Windows");
-    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Couldn't hard link '%s' to '%s'", to, from);
+    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &attr, "Couldn't hard link '%s' to '%s'", to, from);
     *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
     return false;
 }
@@ -553,14 +553,14 @@ bool MakeHardLink(EvalContext *ctx, const char *from, const char *to, Attributes
     {
         if (link(to, from) == -1)
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Couldn't hard link '%s' to '%s'. (link: %s)",
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &attr, "Couldn't hard link '%s' to '%s'. (link: %s)",
                  to, from, GetErrorStr());
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             return false;
         }
         else
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Hard linked files '%s' -> '%s'", from, to);
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, &attr, "Hard linked files '%s' -> '%s'", from, to);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
             return true;
         }

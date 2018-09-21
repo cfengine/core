@@ -1,0 +1,49 @@
+body common control
+{
+        inputs => { "../../default.cf.sub" };
+        bundlesequence  => { default("$(this.promise_filename)") };
+        version => "1.0";
+}
+
+bundle agent test
+{
+  meta:
+
+      "description"
+        string => "Test that classes defined via the module protocol are
+                   automatically canonified.";
+
+  classes:
+      "my-invalid-class"
+        expression => "any",
+        scope => "namespace";
+
+  commands:
+      "$(G.echo) +invalid-class@module"
+        module => "true";
+
+  reports:
+    (EXTRA|DEBUG).invalid_class_module::
+      "Class defined from module automatically canonified as expected";
+
+    (EXTRA|DEBUG).!invalid_class_module::
+      "Class defined from module NOT automatically canonified";
+
+    (EXTRA|DEBUG).my_invalid_class::
+      "My class was automatically canonified as expected";
+
+    (EXTRA|DEBUG).!my_invalid_class::
+      "My class was NOT automatically canonified";
+}
+bundle agent check
+{
+  classes:
+      "pass" and => { "my_invalid_class", "invalid_class_module" };
+
+  reports:
+    pass::
+      "$(this.promise_filename) Pass";
+
+    !pass::
+      "$(this.promise_filename) FAIL";
+}

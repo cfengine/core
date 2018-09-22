@@ -71,7 +71,7 @@ INOTIFYWAIT_OPTS="-r -m -e modify -e attrib -e moved_to -e create -e delete -e d
 SUMMARY=summary.log
 XML=test.xml
 WHOAMI=/c/Windows/System32/whoami.exe
-BASE_WORKDIR="$(pwd)/workdir"
+BASE_WORKDIR=${BASE_WORKDIR:-$(pwd)/workdir}
 QUIET=
 
 # Default test types to run if --tests= is not passed
@@ -261,6 +261,7 @@ usage() {
     echo " --inotifywait  Run tests and log filesystem events"
     echo " --no-clean does not clean workdir after test finishes"
     echo "            (by default it gets cleaned only if test passed)."
+    echo " --base-workdir Specify a local directory for all working files"
     echo " -j[n]"
     echo " -jobs=[n] Run tests in parallel, works like make -j option. Note that some"
     echo "           tests will always run one by one."
@@ -822,6 +823,8 @@ do
             # Internal option. Meant to keep sub invocations from interfering by
             # writing files only into the workdir.
             STAY_IN_WORKDIR=1;;
+        --base-workdir=*)
+            BASE_WORKDIR="${1#--base-workdir=}";;
         -*)
             echo "Unknown option: $1"
             exit 1;;

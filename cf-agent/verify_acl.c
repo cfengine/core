@@ -52,7 +52,7 @@ PromiseResult VerifyACL(EvalContext *ctx, const char *file, Attributes a, const 
 {
     if (!CheckACLSyntax(file, a.acl, pp))
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Syntax error in access control list for '%s'", file);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, &a, "Syntax error in access control list for '%s'", file);
         PromiseRef(LOG_LEVEL_ERR, pp);
         return PROMISE_RESULT_INTERRUPTED;
     }

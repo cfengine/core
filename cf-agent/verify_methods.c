@@ -143,7 +143,7 @@ PromiseResult VerifyMethod(EvalContext *ctx, const Rval call, Attributes a, cons
         if (a.transaction.action == cfa_warn) // don't skip for dry-runs (ie ignore DONTDO)
         {
             result = PROMISE_RESULT_WARN;
-            cfPS(ctx, LOG_LEVEL_WARNING, result, pp, a, "Bundle '%s' should be invoked, but only a warning was promised!", BufferData(method_name));
+            cfPS(ctx, LOG_LEVEL_WARNING, result, pp, &a, "Bundle '%s' should be invoked, but only a warning was promised!", BufferData(method_name));
         }
         else
         {
@@ -184,24 +184,24 @@ PromiseResult VerifyMethod(EvalContext *ctx, const Rval call, Attributes a, cons
                 // intentional fallthru
 
             case PROMISE_RESULT_NOOP:
-                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Method '%s' verified", bp->name);
+                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, &a, "Method '%s' verified", bp->name);
                 break;
 
             case PROMISE_RESULT_WARN:
-                cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a, "Method '%s' invoked repairs, but only warnings promised", bp->name);
+                cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, &a, "Method '%s' invoked repairs, but only warnings promised", bp->name);
                 break;
 
             case PROMISE_RESULT_CHANGE:
-                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Method '%s' invoked repairs", bp->name);
+                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, &a, "Method '%s' invoked repairs", bp->name);
                 break;
 
             case PROMISE_RESULT_FAIL:
             case PROMISE_RESULT_DENIED:
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Method '%s' failed in some repairs", bp->name);
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Method '%s' failed in some repairs", bp->name);
                 break;
 
             default: // PROMISE_RESULT_INTERRUPTED, TIMEOUT
-                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, "Method '%s' aborted in some repairs", bp->name);
+                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, &a, "Method '%s' aborted in some repairs", bp->name);
                 break;
             }
         }
@@ -222,7 +222,7 @@ PromiseResult VerifyMethod(EvalContext *ctx, const Rval call, Attributes a, cons
                 "A variable seems to have been used for the name of the method. In this case, the promiser also needs to contain the unique name of the method");
         }
 
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a,
              "A method attempted to use a bundle '%s' that was apparently not defined",
              BufferData(method_name));
         result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);

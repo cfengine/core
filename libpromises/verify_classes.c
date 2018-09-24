@@ -67,7 +67,7 @@ PromiseResult VerifyClassPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED
 
     if (a.context.nconstraints > 1)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Irreconcilable constraints in classes for '%s'", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Irreconcilable constraints in classes for '%s'", pp->promiser);
         return PROMISE_RESULT_FAIL;
     }
 
@@ -81,7 +81,7 @@ PromiseResult VerifyClassPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED
 
         if (!ValidClassName(pp->promiser))
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a,
                  "Attempted to name a class '%s', which is an illegal class identifier", pp->promiser);
             return PROMISE_RESULT_FAIL;
         }

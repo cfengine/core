@@ -183,7 +183,7 @@ static Item *NovaReSample(EvalContext *ctx, int slot, Attributes a, const Promis
     {
         if (!IsExecutable(CommandArg0(pp->promiser)))
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "%s promises to be executable but isn't\n", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "%s promises to be executable but isn't\n", pp->promiser);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             return NULL;
         }
@@ -312,7 +312,7 @@ static Item *NovaReSample(EvalContext *ctx, int slot, Attributes a, const Promis
 
         if (fin == NULL)
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a,
                  "Couldn't open pipe to command '%s'. (cf_popen: %s)", pp->promiser, GetErrorStr());
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             YieldCurrentLock(thislock);
@@ -330,7 +330,7 @@ static Item *NovaReSample(EvalContext *ctx, int slot, Attributes a, const Promis
             {
                 if (!feof(fin))
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_TIMEOUT, pp, a, "Sample stream '%s'. (fread: %s)",
+                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_TIMEOUT, pp, &a, "Sample stream '%s'. (fread: %s)",
                          pp->promiser, GetErrorStr());
                     *result = PromiseResultUpdate(*result, PROMISE_RESULT_TIMEOUT);
                     YieldCurrentLock(thislock);
@@ -543,7 +543,7 @@ static PromiseResult NovaExtractValueFromStream(EvalContext *ctx, const char *ha
 
     if (!found)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Could not locate the line for promise '%s'", handle);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Could not locate the line for promise '%s'", handle);
         *value_out = 0.0;
         return PROMISE_RESULT_FAIL;
     }
@@ -590,7 +590,7 @@ static PromiseResult NovaExtractValueFromStream(EvalContext *ctx, const char *ha
 
     if (!ok_conversion)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Unable to extract a value from the matched line '%s'", match->name);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Unable to extract a value from the matched line '%s'", match->name);
         PromiseRef(LOG_LEVEL_INFO, pp);
         *value_out = 0.0;
         return PROMISE_RESULT_FAIL;
@@ -673,7 +673,7 @@ static void NovaLogSymbolicValue(EvalContext *ctx, const char *handle, Item *str
 
     if (!found)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Promiser '%s' found no matching line.", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Promiser '%s' found no matching line.", pp->promiser);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
         return;
     }
@@ -707,7 +707,7 @@ static void NovaLogSymbolicValue(EvalContext *ctx, const char *handle, Item *str
 
         if ((fout = fopen(filename, "a")) == NULL)
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Unable to open the output log \"%s\"", filename);
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Unable to open the output log \"%s\"", filename);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             PromiseRef(LOG_LEVEL_ERR, pp);
             return;

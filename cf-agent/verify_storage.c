@@ -248,20 +248,20 @@ static PromiseResult VerifyFileSystem(EvalContext *ctx, char *name, Attributes a
 
         if (sizeinbytes < a.volume.sensible_size)
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "File system '%s' is suspiciously small! (%jd bytes)", name,
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, &a, "File system '%s' is suspiciously small! (%jd bytes)", name,
                  (intmax_t) sizeinbytes);
             return PROMISE_RESULT_INTERRUPTED;
         }
 
         if (filecount < a.volume.sensible_count)
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Filesystem '%s' has only %ld files/directories.", name,
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, &a, "Filesystem '%s' has only %ld files/directories.", name,
                  filecount);
             return PROMISE_RESULT_INTERRUPTED;
         }
     }
 
-    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_NOOP, pp, a, "Filesystem '%s' content seems to be sensible as promised", name);
+    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_NOOP, pp, &a, "Filesystem '%s' content seems to be sensible as promised", name);
     return result;
 }
 
@@ -302,7 +302,7 @@ static PromiseResult VerifyFreeSpace(EvalContext *ctx, char *file, Attributes a,
 
         if (free_percentage < threshold_percentage)
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a,
                  "Free disk space is under %d%% for volume containing '%s', %d%% free",
                  threshold_percentage, file, free_percentage);
             return PROMISE_RESULT_FAIL;
@@ -315,7 +315,7 @@ static PromiseResult VerifyFreeSpace(EvalContext *ctx, char *file, Attributes a,
 
         if (free_bytes < threshold)
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Disk space under %jd kB for volume containing '%s' (%jd kB free)",
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Disk space under %jd kB for volume containing '%s' (%jd kB free)",
                  (intmax_t) (threshold / 1024), file, (intmax_t) (free_bytes / 1024));
             return PROMISE_RESULT_FAIL;
         }
@@ -447,7 +447,7 @@ static PromiseResult VerifyMountPromise(EvalContext *ctx, char *name, Attributes
 
     if (!IsPrivileged())
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Only root can mount filesystems");
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, &a, "Only root can mount filesystems");
         return PROMISE_RESULT_INTERRUPTED;
     }
 
@@ -473,7 +473,7 @@ static PromiseResult VerifyMountPromise(EvalContext *ctx, char *name, Attributes
             }
             else
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a,
                      "Filesystem '%s' was not mounted as promised, and no edits were promised in '%s'", name,
                      VFSTAB[VSYSTEMHARDCLASS]);
                 result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
@@ -506,7 +506,7 @@ static PromiseResult VerifyMountPromise(EvalContext *ctx, char *name, Attributes
         }
         else
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_NOOP, pp, a, "Filesystem '%s' seems to be mounted as promised", name);
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_NOOP, pp, &a, "Filesystem '%s' seems to be mounted as promised", name);
         }
     }
 

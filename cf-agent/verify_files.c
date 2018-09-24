@@ -301,7 +301,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
     if (template_data_constraint != NULL &&
         template_data_constraint->rval.type != RVAL_TYPE_CONTAINER)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a,
              "No template data for the promise '%s'", pp->promiser);
         return PROMISE_RESULT_FAIL;
     }
@@ -327,7 +327,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
     {
         if ((a.create) || (a.touch))
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "File '%s' exists as promised", path);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, &a, "File '%s' exists as promised", path);
         }
         exists = true;
         link = true;
@@ -335,7 +335,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
 
     if ((a.havedelete) && (!exists))
     {
-        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "File '%s' does not exist as promised", path);
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, &a, "File '%s' does not exist as promised", path);
         goto exit;
     }
 
@@ -457,7 +457,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
             /* unless child nodes were repaired, set a promise kept class */
             if (result == PROMISE_RESULT_NOOP)
             {
-                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Basedir '%s' not promising anything", path);
+                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, &a, "Basedir '%s' not promising anything", path);
             }
         }
     }
@@ -490,7 +490,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
         }
         else
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Promised to edit '%s', but file does not exist", path);
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Promised to edit '%s', but file does not exist", path);
             result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         }
     }
@@ -507,7 +507,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
 
     if (!exists && a.havechange)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Promised to monitor '%s' for changes, but file does not exist", path);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Promised to monitor '%s' for changes, but file does not exist", path);
         result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
     }
 
@@ -635,13 +635,13 @@ static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp,
             {
                 if (SaveAsFile(SaveBufferCallback, output_buffer, edcontext->filename, a, edcontext->new_line_mode))
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Updated rendering of '%s' from mustache template '%s'",
+                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, &a, "Updated rendering of '%s' from mustache template '%s'",
                          pp->promiser, message);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
                 }
                 else
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Failed to update rendering of '%s' from mustache template '%s'",
+                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Failed to update rendering of '%s' from mustache template '%s'",
                          pp->promiser, message);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                 }
@@ -655,7 +655,7 @@ static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp,
     }
     else
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Error rendering mustache template '%s'", a.edit_template);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Error rendering mustache template '%s'", a.edit_template);
         result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         BufferDestroy(output_buffer);
         return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
@@ -669,7 +669,7 @@ static PromiseResult RenderTemplateMustacheFromFile(EvalContext *ctx, const Prom
 
     if (!FileCanOpen(a.edit_template, "r"))
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Template file '%s' could not be opened for reading", a.edit_template);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Template file '%s' could not be opened for reading", a.edit_template);
         return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
     }
 
@@ -683,7 +683,7 @@ static PromiseResult RenderTemplateMustacheFromFile(EvalContext *ctx, const Prom
     }
     if (template_writer == NULL)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Could not read template file '%s'", a.edit_template);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Could not read template file '%s'", a.edit_template);
         return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
     }
 
@@ -702,7 +702,7 @@ static PromiseResult RenderTemplateMustacheFromString(EvalContext *ctx, const Pr
     {
         PromiseResult result = PROMISE_RESULT_NOOP;
 
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "'edit_template_string' not set for promiser: '%s'", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "'edit_template_string' not set for promiser: '%s'", pp->promiser);
         return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
     }
 
@@ -730,7 +730,7 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
     PromiseResult result = PROMISE_RESULT_NOOP;
     if (edcontext == NULL)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "File '%s' was marked for editing but could not be opened", filename);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "File '%s' was marked for editing but could not be opened", filename);
         result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         goto exit;
     }

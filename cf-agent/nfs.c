@@ -411,7 +411,7 @@ int VerifyInFstab(EvalContext *ctx, char *name, Attributes a, const Promise *pp,
     {
         AppendItem(&FSTABLIST, fstab, NULL);
         FSTAB_EDITS++;
-        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Adding file system '%s:%s' to '%s'", host, rmountpt,
+        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, &a, "Adding file system '%s:%s' to '%s'", host, rmountpt,
              VFSTAB[VSYSTEMHARDCLASS]);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
     }
@@ -466,7 +466,7 @@ int VerifyNotInFstab(EvalContext *ctx, char *name, Attributes a, const Promise *
 
             if ((pfp = cf_popen(aixcomm, "r", true)) == NULL)
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Failed to invoke /usr/sbin/rmnfsmnt to edit fstab");
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Failed to invoke /usr/sbin/rmnfsmnt to edit fstab");
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
                 return 0;
             }
@@ -482,7 +482,7 @@ int VerifyNotInFstab(EvalContext *ctx, char *name, Attributes a, const Promise *
                 {
                     if (!feof(pfp))
                     {
-                        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Unable to read output of /bin/rmnfsmnt");
+                        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Unable to read output of /bin/rmnfsmnt");
                         *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
                         cf_pclose(pfp);
                         free(line);
@@ -501,7 +501,7 @@ int VerifyNotInFstab(EvalContext *ctx, char *name, Attributes a, const Promise *
 
                 if (strstr(line, "busy"))
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp, a, "The device under '%s' cannot be removed from '%s'",
+                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp, &a, "The device under '%s' cannot be removed from '%s'",
                          mountpt, VFSTAB[VSYSTEMHARDCLASS]);
                     *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
                     free(line);
@@ -522,7 +522,7 @@ int VerifyNotInFstab(EvalContext *ctx, char *name, Attributes a, const Promise *
                 next = ip->next;
                 if (FullTextMatch(ctx, regex, ip->name))
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Deleting file system mounted on '%s'", host);
+                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, &a, "Deleting file system mounted on '%s'", host);
                     *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
                     // Check host name matches too?
                     DeleteThisItem(&FSTABLIST, ip);
@@ -591,7 +591,7 @@ PromiseResult VerifyMount(EvalContext *ctx, char *name, Attributes a, const Prom
         }
         else if ((strstr(line, "busy")) || (strstr(line, "Busy")))
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp, a, "The device under '%s' cannot be mounted", mountpt);
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp, &a, "The device under '%s' cannot be mounted", mountpt);
             result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
             cf_pclose(pfp);
             free(line);
@@ -605,7 +605,7 @@ PromiseResult VerifyMount(EvalContext *ctx, char *name, Attributes a, const Prom
     /* Since opts is either Rlist2String or xstrdup'd, we need to always free it */
     free(opts);
 
-    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Mounting '%s' to keep promise", mountpt);
+    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, &a, "Mounting '%s' to keep promise", mountpt);
     result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
 
     return result;
@@ -649,7 +649,7 @@ PromiseResult VerifyUnmount(EvalContext *ctx, char *name, Attributes a, const Pr
         }
         else if (res > 0 && ((strstr(line, "busy")) || (strstr(line, "Busy"))))
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp, a, "The device under '%s' cannot be unmounted", mountpt);
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp, &a, "The device under '%s' cannot be unmounted", mountpt);
             result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
             cf_pclose(pfp);
             free(line);
@@ -657,7 +657,7 @@ PromiseResult VerifyUnmount(EvalContext *ctx, char *name, Attributes a, const Pr
         }
     }
 
-    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Unmounting '%s' to keep promise", mountpt);
+    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, &a, "Unmounting '%s' to keep promise", mountpt);
     result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
     return result;
 }

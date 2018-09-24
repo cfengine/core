@@ -2842,7 +2842,7 @@ static void LogPromiseContext(const EvalContext *ctx, const Promise *pp)
     WriterClose(w);
 }
 
-void cfPS(EvalContext *ctx, LogLevel level, PromiseResult status, const Promise *pp, Attributes attr, const char *fmt, ...)
+void cfPS(EvalContext *ctx, LogLevel level, PromiseResult status, const Promise *pp, const Attributes *attr, const char *fmt, ...)
 {
     /*
      * This stub implementation of cfPS delegates to the new logging backend.
@@ -2862,6 +2862,7 @@ void cfPS(EvalContext *ctx, LogLevel level, PromiseResult status, const Promise 
     /* FIXME: Ensure that NULL pp is never passed into cfPS */
 
     assert(pp);
+    assert(attr != NULL);
 
     if (level >= LOG_LEVEL_VERBOSE)
     {
@@ -2877,7 +2878,7 @@ void cfPS(EvalContext *ctx, LogLevel level, PromiseResult status, const Promise 
 
     /* Now complete the exits status classes and auditing */
 
-    ClassAuditLog(ctx, pp, &attr, status);
+    ClassAuditLog(ctx, pp, attr, status);
     free(msg);
 }
 

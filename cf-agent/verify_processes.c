@@ -149,7 +149,7 @@ static PromiseResult VerifyProcessOp(EvalContext *ctx, Attributes a, const Promi
     {
         if ((matches < a.process_count.min_range) || (matches > a.process_count.max_range))
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Process count for '%s' was out of promised range (%d found)", pp->promiser, matches);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, &a, "Process count for '%s' was out of promised range (%d found)", pp->promiser, matches);
             result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
             for (const Rlist *rp = a.process_count.out_of_range_define; rp != NULL; rp = rp->next)
             {
@@ -167,7 +167,7 @@ static PromiseResult VerifyProcessOp(EvalContext *ctx, Attributes a, const Promi
                 EvalContextClassPutSoft(ctx, RlistScalarValue(rp), CONTEXT_SCOPE_NAMESPACE, "source=promise");
                 ClassRefDestroy(ref);
             }
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Process promise for '%s' is kept", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, &a, "Process promise for '%s' is kept", pp->promiser);
             out_of_range = false;
         }
     }
@@ -200,7 +200,7 @@ static PromiseResult VerifyProcessOp(EvalContext *ctx, Attributes a, const Promi
         {
             if (DONTDO)
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a,
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, &a,
                      "Need to keep process-stop promise for '%s', but only a warning is promised", pp->promiser);
                 result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
             }
@@ -212,7 +212,7 @@ static PromiseResult VerifyProcessOp(EvalContext *ctx, Attributes a, const Promi
                 }
                 else
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
+                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a,
                          "Process promise to stop '%s' could not be kept because '%s' the stop operator failed",
                          pp->promiser, a.process_stop);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
@@ -233,21 +233,21 @@ static PromiseResult VerifyProcessOp(EvalContext *ctx, Attributes a, const Promi
 
     if (!need_to_restart)
     {
-        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "No restart promised for %s", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, &a, "No restart promised for %s", pp->promiser);
         return result;
     }
     else
     {
         if (a.transaction.action == cfa_warn)
         {
-            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a,
+            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, &a,
                  "Need to keep restart promise for '%s', but only a warning is promised", pp->promiser);
             result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
         }
         else
         {
             PromiseResult status = killed ? PROMISE_RESULT_CHANGE : PROMISE_RESULT_NOOP;
-            cfPS(ctx, LOG_LEVEL_VERBOSE, status, pp, a,
+            cfPS(ctx, LOG_LEVEL_VERBOSE, status, pp, &a,
                  "C:     +  Global class: %s ", a.restart_class);
             result = PromiseResultUpdate(result, status);
             EvalContextClassPutSoft(ctx, a.restart_class, CONTEXT_SCOPE_NAMESPACE, "source=promise");
@@ -294,14 +294,14 @@ int DoAllSignals(EvalContext *ctx, Item *siglist, Attributes a, const Promise *p
 
                 if (kill(pid, signal) < 0)
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a,
+                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, &a,
                          "Couldn't send promised signal '%s' (%d) to pid %jd (might be dead). (kill: %s)",
                          RlistScalarValue(rp), signal, (intmax_t)pid, GetErrorStr());
                     failure = true;
                 }
                 else
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a,
+                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, &a,
                          "Signalled '%s' (%d) to process %jd (%s)",
                          RlistScalarValue(rp), signal, (intmax_t) pid, ip->name);
                     *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);

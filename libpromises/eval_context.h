@@ -235,7 +235,7 @@ const char *EvalContextGetEntryPoint(EvalContext* ctx);
 bool Abort(EvalContext *ctx);
 void NotifyDependantPromises(EvalContext *ctx, const Promise *pp, PromiseResult result);
 bool MissingDependencies(EvalContext *ctx, const Promise *pp);
-void cfPS(EvalContext *ctx, LogLevel level, PromiseResult status, const Promise *pp, Attributes attr, const char *fmt, ...) FUNC_ATTR_PRINTF(6, 7);
+void cfPS(EvalContext *ctx, LogLevel level, PromiseResult status, const Promise *pp, const Attributes *attr, const char *fmt, ...) FUNC_ATTR_PRINTF(6, 7);
 
 PackagePromiseContext *GetPackageDefaultsFromCtx(const EvalContext *ctx);
 

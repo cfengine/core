@@ -82,7 +82,7 @@ static VersionCmpResult RunCmpCommand(EvalContext *ctx, const char *command, con
 
     if (pfp == NULL)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Can not start package version comparison command '%s'. (cf_popen: %s)",
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Can not start package version comparison command '%s'. (cf_popen: %s)",
              BufferData(expanded_command), GetErrorStr());
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
         BufferDestroy(expanded_command);
@@ -95,7 +95,7 @@ static VersionCmpResult RunCmpCommand(EvalContext *ctx, const char *command, con
 
     if (retcode == -1)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Error during package version comparison command execution '%s'. (cf_pclose: %s)",
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Error during package version comparison command execution '%s'. (cf_pclose: %s)",
             BufferData(expanded_command), GetErrorStr());
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
         BufferDestroy(expanded_command);

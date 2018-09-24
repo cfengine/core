@@ -60,7 +60,7 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise
     {
         if (!attr.move_obstructions)
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Object '%s' exists and is obstructing our promise", from);
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &attr, "Object '%s' exists and is obstructing our promise", from);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             return false;
         }
@@ -83,12 +83,12 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise
 
             strlcat(saved, CF_SAVED, sizeof(saved));
 
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, attr, "Moving file object '%s' to '%s'", from, saved);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, &attr, "Moving file object '%s' to '%s'", from, saved);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
 
             if (rename(from, saved) == -1)
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Can't rename '%s' to '%s'. (rename: %s)", from, saved, GetErrorStr());
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &attr, "Can't rename '%s' to '%s'. (rename: %s)", from, saved, GetErrorStr());
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
                 return false;
             }
@@ -103,7 +103,7 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise
 
         if (S_ISDIR(sb.st_mode))
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, attr, "Moving directory '%s' to '%s%s'", from, from, CF_SAVED);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, &attr, "Moving directory '%s' to '%s%s'", from, from, CF_SAVED);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
 
             if (DONTDO)
@@ -121,7 +121,7 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise
 
             if (stat(saved, &sb) != -1)
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Couldn't save directory '%s', since '%s' exists already", from,
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &attr, "Couldn't save directory '%s', since '%s' exists already", from,
                      saved);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
                 Log(LOG_LEVEL_ERR, "Unable to force link to existing directory '%s'", from);
@@ -130,7 +130,7 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise
 
             if (rename(from, saved) == -1)
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Can't rename '%s' to '%s'. (rename: %s)",
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &attr, "Can't rename '%s' to '%s'. (rename: %s)",
                      from, saved, GetErrorStr());
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
                 return false;
@@ -363,21 +363,21 @@ static int ItemListsEqual(EvalContext *ctx, const Item *list1, const Item *list2
             {
                 if ((ip1 == list1) || (ip2 == list2))
                 {
-                    cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a, "File content wants to change from from/to full/empty but only a warning promised");
+                    cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, &a, "File content wants to change from from/to full/empty but only a warning promised");
                     *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                 }
                 else
                 {
                     if (ip1 != NULL)
                     {
-                        cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a, " ! edit_line change warning promised: (remove) %s",
+                        cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, &a, " ! edit_line change warning promised: (remove) %s",
                              ip1->name);
                         *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                     }
 
                     if (ip2 != NULL)
                     {
-                        cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a, " ! edit_line change warning promised: (add) %s", ip2->name);
+                        cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, &a, " ! edit_line change warning promised: (add) %s", ip2->name);
                         *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                     }
                 }
@@ -408,7 +408,7 @@ static int ItemListsEqual(EvalContext *ctx, const Item *list1, const Item *list2
             {
                 // If we want to see warnings, we need to scan the whole file
 
-                cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a, "edit_line warning promised: - %s", ip1->name);
+                cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, &a, "edit_line warning promised: - %s", ip1->name);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                 retval = false;
             }

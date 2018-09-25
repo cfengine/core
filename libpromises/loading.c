@@ -308,7 +308,7 @@ static Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, cons
     char hashbuffer[CF_HOSTKEY_STRING_SIZE] = { 0 };
     char hashprintbuffer[CF_BUFSIZE] = { 0 };
 
-    HashFile(policy_file, digest, CF_DEFAULT_DIGEST);
+    HashFile(policy_file, digest, CF_DEFAULT_DIGEST, false);
     snprintf(hashprintbuffer, CF_BUFSIZE - 1, "{checksum}%s",
              HashPrintSafe(hashbuffer, sizeof(hashbuffer), digest,
                            CF_DEFAULT_DIGEST, true));

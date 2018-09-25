@@ -1131,7 +1131,7 @@ static FnCallResult FnCallHandlerHash(ARG_UNUSED EvalContext *ctx, ARG_UNUSED co
 
     if (filehash_mode)
     {
-        HashFile(string_or_filename, digest, type);
+        HashFile(string_or_filename, digest, type, false);
     }
     else
     {
@@ -1158,7 +1158,7 @@ static FnCallResult FnCallHashMatch(ARG_UNUSED EvalContext *ctx, ARG_UNUSED cons
     char *compare = RlistScalarValue(finalargs->next->next);
 
     type = HashIdFromName(typestring);
-    HashFile(string, digest, type);
+    HashFile(string, digest, type, false);
 
     char hashbuffer[CF_HOSTKEY_STRING_SIZE];
     HashPrintSafe(hashbuffer, sizeof(hashbuffer),

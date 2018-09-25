@@ -92,6 +92,7 @@ static VersionCmpResult RunCmpCommand(EvalContext *ctx, const char *command, con
     Log(LOG_LEVEL_VERBOSE, "Executing '%s'", BufferData(expanded_command));
 
     int retcode = cf_pclose(pfp);
+    Log(LOG_LEVEL_VERBOSE, "returned: %d", retcode);
 
     if (retcode == -1)
     {
@@ -104,7 +105,14 @@ static VersionCmpResult RunCmpCommand(EvalContext *ctx, const char *command, con
 
     BufferDestroy(expanded_command);
 
-    return retcode == 0;
+    if (retcode == 0)
+    {
+        return VERCMP_MATCH;
+    }
+    else
+    {
+        return VERCMP_NO_MATCH;
+    }
 }
 
 static VersionCmpResult CompareVersionsLess(EvalContext *ctx, const char *v1, const char *v2, Attributes a,

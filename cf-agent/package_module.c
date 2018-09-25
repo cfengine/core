@@ -1108,7 +1108,8 @@ PromiseResult RepoInstall(EvalContext *ctx,
                           bool *verified)
 {
     Log(LOG_LEVEL_DEBUG, "Installing repo type package: %d", is_in_cache);
-
+    const char *const package_version = package_info->version;
+    const char *const package_name = package_info->name;
     /* Package is not present in cache. */
     if (is_in_cache == 0)
     {
@@ -1119,9 +1120,8 @@ PromiseResult RepoInstall(EvalContext *ctx,
             Log(LOG_LEVEL_INFO, "Can not update packages cache.");
         }
 
-        const char *version = package_info->version;
-        if (package_info->version &&
-                StringSafeEqual(package_info->version, "latest"))
+        const char *version = package_version;
+        if (StringSafeEqual(version, "latest"))
         {
             Log(LOG_LEVEL_DEBUG, "Clearing latest package version");
             version = NULL;
@@ -1129,13 +1129,13 @@ PromiseResult RepoInstall(EvalContext *ctx,
         if (action == cfa_warn || DONTDO)
         {
             Log(LOG_LEVEL_VERBOSE, "Should install repo type package: %s",
-                package_info->name);
+                package_name);
             return PROMISE_RESULT_WARN;
         }
 
         *verified = false; /* Verification will be done in RepoInstallPackage(). */
         return InstallPackage(policy_data->package_options, PACKAGE_TYPE_REPO,
-                              package_info->name, version, package_info->arch,
+                              package_name, version, package_info->arch,
                               wrapper);
     }
 
@@ -1144,8 +1144,7 @@ PromiseResult RepoInstall(EvalContext *ctx,
 
 
     /* We have 'latest' version in policy. */
-    if (package_info->version &&
-        StringSafeEqual(package_info->version, "latest"))
+    if (StringSafeEqual(package_version, "latest"))
     {
         /* This can return more than one latest version if we have packages
          * with different architectures installed. */
@@ -1155,7 +1154,7 @@ PromiseResult RepoInstall(EvalContext *ctx,
         {
             Log(LOG_LEVEL_VERBOSE,
                 "Package '%s' is already in the latest version. "
-                "Skipping installation.", package_info->name);
+                "Skipping installation.", package_name);
 
             return PROMISE_RESULT_NOOP;
         }
@@ -1173,27 +1172,28 @@ PromiseResult RepoInstall(EvalContext *ctx,
              * in updates available but we are interested only in updating
              * package with specific architecture. */
             if (package_info->arch &&
-                    !StringSafeEqual(package_info->arch, update_package->arch))
+                !StringSafeEqual(package_info->arch, update_package->arch))
             {
                 Log(LOG_LEVEL_DEBUG,
                     "Skipping update check of package '%s' as updates"
                     "architecure doesn't match specified in policy: %s != %s.",
-                    package_info->name, package_info->arch,
+                    package_name, package_info->arch,
                     update_package->arch);
                 continue;
             }
 
+            const char *const update_version = update_package->version;
+
             Log(LOG_LEVEL_DEBUG,
                 "Checking for package '%s' version '%s' in available updates",
-                package_info->name, update_package->version);
+                package_name, update_version);
 
             /* Just in case some package managers will report highest possible
              * version in updates list instead of removing entry if package is
              * already in the latest version. */
-            int is_in_cache = IsPackageInCache(ctx, wrapper, package_info->name,
-                                               update_package->version,
-                                               update_package->arch);
-            if (is_in_cache == 1)
+            const int update_in_cache = IsPackageInCache(
+                ctx, wrapper, package_name, update_version, update_package->arch);
+            if (update_in_cache == 1)
             {
                 Log(LOG_LEVEL_VERBOSE,
                     "Package version from updates matches one installed. "
@@ -1201,7 +1201,7 @@ PromiseResult RepoInstall(EvalContext *ctx,
                 res = PromiseResultUpdate(res, PROMISE_RESULT_NOOP);
                 continue;
             }
-            else if (is_in_cache == -1)
+            else if (update_in_cache == -1)
             {
                 Log(LOG_LEVEL_INFO,
                     "Skipping package installation due to error with checking "
@@ -1214,7 +1214,7 @@ PromiseResult RepoInstall(EvalContext *ctx,
                 if (action == cfa_warn || DONTDO)
                 {
                     Log(LOG_LEVEL_VERBOSE, "Should install repo type package: %s",
-                        package_info->name);
+                        package_name);
                     res = PromiseResultUpdate(res, PROMISE_RESULT_WARN);
                     continue;
                 }
@@ -1227,8 +1227,8 @@ PromiseResult RepoInstall(EvalContext *ctx,
                  * architecture being removed. */
                 BufferAppendF(install_buffer,
                               "Name=%s\nVersion=%s\nArchitecture=%s\n",
-                              package_info->name,
-                              update_package->version,
+                              package_name,
+                              update_version,
                               update_package->arch);
 
                 /* Here we are adding latest_versions elements to different
@@ -1279,8 +1279,7 @@ PromiseResult RepoInstall(EvalContext *ctx,
     /* No version or explicit version specified. */
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "Package '%s' already installed",
-            package_info->name);
+        Log(LOG_LEVEL_VERBOSE, "Package '%s' already installed", package_name);
 
         return PROMISE_RESULT_NOOP;
     }

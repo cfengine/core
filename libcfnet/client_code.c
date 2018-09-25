@@ -462,7 +462,7 @@ int CompareHashNet(const char *file1, const char *file2, bool encrypt, AgentConn
     char *sp, sendbuffer[CF_BUFSIZE], recvbuffer[CF_BUFSIZE], in[CF_BUFSIZE], out[CF_BUFSIZE];
     int i, tosend, cipherlen;
 
-    HashFile(file2, d, CF_DEFAULT_DIGEST);
+    HashFile(file2, d, CF_DEFAULT_DIGEST, false);
 
     memset(recvbuffer, 0, CF_BUFSIZE);
 

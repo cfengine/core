@@ -68,7 +68,7 @@ PromiseResult VerifyACL(EvalContext *ctx, const char *file, Attributes a, const 
     case ACL_TYPE_GENERIC:
 
 #if defined(__linux__)
-        result = PromiseResultUpdate(result, CheckPosixLinuxACL(ctx, file, a.acl, a, pp));
+        result = PromiseResultUpdate(result, CheckPosixLinuxACL(ctx, file, a.acl, &a, pp));
 #elif defined(__MINGW32__)
         result = PromiseResultUpdate(result, Nova_CheckNtACL(ctx, file, a.acl, a, pp));
 #else
@@ -79,7 +79,7 @@ PromiseResult VerifyACL(EvalContext *ctx, const char *file, Attributes a, const 
     case ACL_TYPE_POSIX:
 
 #if defined(__linux__)
-        result = PromiseResultUpdate(result, CheckPosixLinuxACL(ctx, file, a.acl, a, pp));
+        result = PromiseResultUpdate(result, CheckPosixLinuxACL(ctx, file, a.acl, &a, pp));
 #else
         Log(LOG_LEVEL_INFO, "Posix ACLs are not supported on this system");
 #endif

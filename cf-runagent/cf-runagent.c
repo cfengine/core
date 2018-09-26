@@ -380,7 +380,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
         case 'x':
             Log(LOG_LEVEL_ERR, "Option \"-x\" has been deprecated");
-            DoCleanupAndExit(EXIT_SUCCESS);
+            DoCleanupAndExit(EXIT_FAILURE);
 
         case 'C':
             if (!GenericAgentConfigParseColor(config, optarg))

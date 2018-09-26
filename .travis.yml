@@ -37,7 +37,7 @@ matrix:
       # filesystem in Travis; so change OS to Trusty, which uses ext4.
     - os: linux
       sudo: required
-      env: JOB_TYPE=acceptance_tests_unsafe_serial_network_etc CFLAGS=""
+      env: JOB_TYPE=acceptance_tests_unsafe_serial_network_etc
     - os: linux
       sudo: required
       env: JOB_TYPE=serverd_multi_versions COVERAGE=no

@@ -507,5 +507,5 @@ In order to make behavior more explicit and predictable we migrated to always
 using a homegrown atexit system. RegisterAtExitFunction instead of atexit and
 CallAtExitFunctionsAndExit instead of exit.
 
-If _Exit or _exit need to be called that is fine as they don't call atexit or
+If `_Exit` or `_exit` need to be called that is fine as they don't call atexit or
 cleanup functions.

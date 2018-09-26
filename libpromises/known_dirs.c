@@ -113,7 +113,15 @@ const char *GetBinDir(void)
 
     if (workdir == NULL)
     {
+#ifdef __MINGW32__
+        /* Compile-time default bindir doesn't work on windows because during
+         * the build /var/cfengine/bin is used and only when the package is
+         * created, things are shuffled around */
+        snprintf(OVERRIDE_BINDIR, PATH_MAX, "%s%cbin", GetDefaultWorkDir(), FILE_SEPARATOR);
+        return OVERRIDE_BINDIR;
+#else
         return GetDefaultBinDir();
+#endif
     }
     else
     {

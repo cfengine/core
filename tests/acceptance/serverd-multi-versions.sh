@@ -121,11 +121,11 @@ function testit(){
         if [ "$result" != "passed" ]
         then
             echo "$file  FAIL"
-            mv work_here $logfile.workdir
-            mv /tmp/TESTDIR.cfengine $logfile.testdir
         else
             echo "$file  Pass"
         fi
+        mv work_here $logfile.workdir
+        mv /tmp/TESTDIR.cfengine $logfile.testdir
     done
 }
 

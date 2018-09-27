@@ -32,6 +32,7 @@
 #include <tls_client.h>
 #include <connection_info.h>
 #include <known_dirs.h>
+#include <cleanup.h>
 
 
 static SSL_CTX *SSLSERVERCONTEXT = NULL;
@@ -1398,7 +1399,7 @@ int main()
         exit(EXIT_FAILURE);
     }
 
-    atexit(tests_teardown);
+    RegisterCleanupFunction(tests_teardown);
 
     const UnitTest tests[] =
     {
@@ -1407,5 +1408,6 @@ int main()
         unit_test(test_TLSBasicIO)
     };
 
-    return run_tests(tests);
+    int result = run_tests(tests);
+    DoCleanupAndExit(result);
 }

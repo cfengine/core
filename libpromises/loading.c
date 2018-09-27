@@ -37,6 +37,7 @@
 #include <known_dirs.h>
 #include <ornaments.h>
 #include <policy.h>
+#include <cleanup.h>
 
 // TODO: remove
 #include <vars.h>                                         /* IsCf3VarString */
@@ -65,7 +66,7 @@ Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *input_path)
         }
 
         Log(LOG_LEVEL_ERR, "Can't stat file '%s' for parsing. (stat: %s)", input_path, GetErrorStr());
-        exit(EXIT_FAILURE);
+        DoCleanupAndExit(EXIT_FAILURE);
     }
     else if (S_ISDIR(statbuf.st_mode))
     {
@@ -75,14 +76,14 @@ Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *input_path)
         }
 
         Log(LOG_LEVEL_ERR, "Can't parse directory '%s'.", input_path);
-        exit(EXIT_FAILURE);
+        DoCleanupAndExit(EXIT_FAILURE);
     }
 
 #ifndef _WIN32
     if (config->check_not_writable_by_others && (statbuf.st_mode & (S_IWGRP | S_IWOTH)))
     {
         Log(LOG_LEVEL_ERR, "File %s (owner %ju) is writable by others (security exception)", input_path, (uintmax_t)statbuf.st_uid);
-        exit(EXIT_FAILURE);
+        DoCleanupAndExit(EXIT_FAILURE);
     }
 #endif
 
@@ -91,7 +92,7 @@ Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *input_path)
     if (!FileCanOpen(input_path, "r"))
     {
         Log(LOG_LEVEL_ERR, "Can't open file '%s' for parsing", input_path);
-        exit(EXIT_FAILURE);
+        DoCleanupAndExit(EXIT_FAILURE);
     }
 
     Policy *policy = NULL;
@@ -491,7 +492,7 @@ Policy *LoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
     if (StringSetSize(failed_files) > 0)
     {
         Log(LOG_LEVEL_ERR, "There are syntax errors in policy files");
-        exit(EXIT_FAILURE);
+        DoCleanupAndExit(EXIT_FAILURE);
     }
 
     StringSetDestroy(parsed_files_and_checksums);
@@ -520,7 +521,7 @@ Policy *LoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
                 PolicyErrorWrite(writer, errors->data[i]);
             }
             WriterClose(writer);
-            exit(EXIT_FAILURE); // TODO: do not exit
+            DoCleanupAndExit(EXIT_FAILURE); // TODO: do not exit
         }
 
         SeqDestroy(errors);

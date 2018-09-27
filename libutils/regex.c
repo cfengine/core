@@ -192,7 +192,7 @@ Seq *StringMatchCapturesWithPrecompiledRegex(const pcre *pattern, const char *st
                 int n = (tabptr[0] << 8) | tabptr[1];
                 if (n == i) // We found the position
                 {
-                    capture = BufferNewFrom(tabptr + 2, name_entry_size - 3);
+                    capture = BufferNewFrom((char *)(tabptr + 2), name_entry_size - 3);
                     break;
                 }
                 tabptr += name_entry_size;

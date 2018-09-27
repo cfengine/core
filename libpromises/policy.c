@@ -1138,8 +1138,8 @@ static SourceOffset PolicyElementSourceOffset(PolicyElementType type, const void
 
     case POLICY_ELEMENT_TYPE_PROMISE_TYPE:
     {
-        const PromiseType *type = (const PromiseType *)element;
-        return type->offset;
+        const PromiseType *promise_type = (const PromiseType *)element;
+        return promise_type->offset;
     }
 
     case POLICY_ELEMENT_TYPE_PROMISE:
@@ -1185,8 +1185,8 @@ static const char *PolicyElementSourceFile(PolicyElementType type, const void *e
 
     case POLICY_ELEMENT_TYPE_PROMISE_TYPE:
     {
-        const PromiseType *type = (const PromiseType *)element;
-        return PolicyElementSourceFile(POLICY_ELEMENT_TYPE_BUNDLE, type->parent_bundle);
+        const PromiseType *promise_type = (const PromiseType *)element;
+        return PolicyElementSourceFile(POLICY_ELEMENT_TYPE_BUNDLE, promise_type->parent_bundle);
     }
 
     case POLICY_ELEMENT_TYPE_PROMISE:
@@ -1309,11 +1309,11 @@ Body *PolicyAppendBody(Policy *policy, const char *ns, const char *name, const c
     // TODO: move to standard callback
     if (strcmp("service_method", body->name) == 0)
     {
-        Rlist *args = NULL;
-        RlistAppendRval(&args, RvalNew("$(this.promiser)", RVAL_TYPE_SCALAR));
-        RlistAppendRval(&args, RvalNew("$(this.service_policy)", RVAL_TYPE_SCALAR));
+        Rlist *bundle_args = NULL;
+        RlistAppendRval(&bundle_args, RvalNew("$(this.promiser)", RVAL_TYPE_SCALAR));
+        RlistAppendRval(&bundle_args, RvalNew("$(this.service_policy)", RVAL_TYPE_SCALAR));
 
-        FnCall *service_bundle = FnCallNew("standard_services", args);
+        FnCall *service_bundle = FnCallNew("standard_services", bundle_args);
         BodyAppendConstraint(body, "service_bundle", (Rval) { service_bundle, RVAL_TYPE_FNCALL }, "any", false);
     }
 

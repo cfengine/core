@@ -48,13 +48,13 @@
 #ifdef HAVE_LIBACL
 
 static int CheckPosixLinuxAccessACEs(EvalContext *ctx, Rlist *aces, AclMethod method, const char *file_path,
-                                     Attributes a, const Promise *pp, PromiseResult *result);
+                                     const Attributes *a, const Promise *pp, PromiseResult *result);
 static int CheckPosixLinuxDefaultACEs(EvalContext *ctx, Rlist *aces, AclMethod method, AclDefault acl_default,
-                                      const char *file_path, Attributes a, const Promise *pp, PromiseResult *result);
-static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, const char *file_path, acl_type_t acl_type, Attributes a,
+                                      const char *file_path, const Attributes *a, const Promise *pp, PromiseResult *result);
+static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, const char *file_path, acl_type_t acl_type, const Attributes *a,
                                const Promise *pp, PromiseResult *result);
-static int CheckDefaultEqualsAccessACL(EvalContext *ctx, const char *file_path, Attributes a, const Promise *pp, PromiseResult *result);
-static int CheckDefaultClearACL(EvalContext *ctx, const char *file_path, Attributes a, const Promise *pp, PromiseResult *result);
+static int CheckDefaultEqualsAccessACL(EvalContext *ctx, const char *file_path, const Attributes *a, const Promise *pp, PromiseResult *result);
+static int CheckDefaultClearACL(EvalContext *ctx, const char *file_path, const Attributes *a, const Promise *pp, PromiseResult *result);
 static int ParseEntityPosixLinux(char **str, acl_entry_t ace, int *is_mask);
 static int ParseModePosixLinux(char *mode, acl_permset_t old_perms);
 static acl_entry_t FindACE(acl_t acl, acl_entry_t ace_find);
@@ -63,13 +63,14 @@ static int ACECount(acl_t acl);
 static int PermsetEquals(acl_permset_t first, acl_permset_t second);
 
 
-PromiseResult CheckPosixLinuxACL(EvalContext *ctx, const char *file_path, Acl acl, Attributes a, const Promise *pp)
+PromiseResult CheckPosixLinuxACL(EvalContext *ctx, const char *file_path, Acl acl, const Attributes *a, const Promise *pp)
 {
+    assert(a != NULL);
     PromiseResult result = PROMISE_RESULT_NOOP;
 
     if (!CheckPosixLinuxAccessACEs(ctx, acl.acl_entries, acl.acl_method, file_path, a, pp, &result))
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Failed checking access ACL on %s", file_path);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Failed checking access ACL on %s", file_path);
         PromiseRef(LOG_LEVEL_ERR, pp);
         return PROMISE_RESULT_FAIL;
     }
@@ -79,7 +80,7 @@ PromiseResult CheckPosixLinuxACL(EvalContext *ctx, const char *file_path, Acl ac
         if (!CheckPosixLinuxDefaultACEs(ctx, acl.acl_default_entries, acl.acl_method, acl.acl_default,
                                         file_path, a, pp, &result))
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Failed checking default ACL on '%s'", file_path);
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Failed checking default ACL on '%s'", file_path);
             PromiseRef(LOG_LEVEL_ERR, pp);
             return PROMISE_RESULT_FAIL;
         }
@@ -88,14 +89,16 @@ PromiseResult CheckPosixLinuxACL(EvalContext *ctx, const char *file_path, Acl ac
 }
 
 static int CheckPosixLinuxAccessACEs(EvalContext *ctx, Rlist *aces, AclMethod method, const char *file_path,
-                                     Attributes a, const Promise *pp, PromiseResult *result)
+                                     const Attributes *a, const Promise *pp, PromiseResult *result)
 {
+    assert(a != NULL);
     return CheckPosixLinuxACEs(ctx, aces, method, file_path, ACL_TYPE_ACCESS, a, pp, result);
 }
 
 static int CheckPosixLinuxDefaultACEs(EvalContext *ctx, Rlist *aces, AclMethod method, AclDefault acl_default,
-                                      const char *file_path, Attributes a, const Promise *pp, PromiseResult *result)
+                                      const char *file_path, const Attributes *a, const Promise *pp, PromiseResult *result)
 {
+    assert(a != NULL);
     int retval;
 
     switch (acl_default)
@@ -135,9 +138,10 @@ static int CheckPosixLinuxDefaultACEs(EvalContext *ctx, Rlist *aces, AclMethod m
    set on the given file. If it doesn't, the ACL on the file is updated.
 */
 
-static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, const char *file_path, acl_type_t acl_type, Attributes a,
+static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, const char *file_path, acl_type_t acl_type, const Attributes *a,
                                const Promise *pp, PromiseResult *result)
 {
+    assert(a != NULL);
     acl_t acl_existing;
     acl_t acl_new;
     acl_t acl_tmp;
@@ -329,11 +333,11 @@ static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, 
     if (retv == 1)              // existing and new acl differ, update existing
     {
 
-        switch (a.transaction.action)
+        switch (a->transaction.action)
         {
         case cfa_warn:
 
-            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, &a,
+            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a,
                 "%s ACL on file '%s' needs to be updated", acl_type_str, file_path);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
             break;
@@ -375,7 +379,7 @@ static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, 
                 acl_free(acl_text_str);
             }
 
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, &a, "%s ACL on '%s' successfully changed.", acl_type_str, file_path);
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "%s ACL on '%s' successfully changed.", acl_type_str, file_path);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
 
             break;
@@ -387,7 +391,7 @@ static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, 
     }
     else
     {
-        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, &a, "'%s' ACL on '%s' needs no modification.", acl_type_str, file_path);
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "'%s' ACL on '%s' needs no modification.", acl_type_str, file_path);
     }
 
     acl_free(acl_existing);
@@ -402,8 +406,9 @@ static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, 
   Returns 0 on success and -1 on failure.
  */
 
-static int CheckDefaultEqualsAccessACL(EvalContext *ctx, const char *file_path, Attributes a, const Promise *pp, PromiseResult *result)
+static int CheckDefaultEqualsAccessACL(EvalContext *ctx, const char *file_path, const Attributes *a, const Promise *pp, PromiseResult *result)
 {
+    assert(a != NULL);
     acl_t acl_access;
     acl_t acl_default;
     int equals;
@@ -432,17 +437,17 @@ static int CheckDefaultEqualsAccessACL(EvalContext *ctx, const char *file_path, 
     switch (equals)
     {
     case 0:                    // they equal, as desired
-        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, &a, "Default ACL on '%s' needs no modification.", file_path);
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Default ACL on '%s' needs no modification.", file_path);
         retval = true;
         break;
 
     case 1:                    // set access ACL as default ACL
 
-        switch (a.transaction.action)
+        switch (a->transaction.action)
         {
         case cfa_warn:
 
-            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, &a, "Default ACL on '%s' needs to be copied from access ACL.",
+            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a, "Default ACL on '%s' needs to be copied from access ACL.",
                  file_path);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
             break;
@@ -463,7 +468,7 @@ static int CheckDefaultEqualsAccessACL(EvalContext *ctx, const char *file_path, 
                 }
             }
 
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, &a,
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a,
                 "Default ACL on '%s' successfully copied from access ACL.",
                  file_path);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
@@ -492,7 +497,7 @@ static int CheckDefaultEqualsAccessACL(EvalContext *ctx, const char *file_path, 
   Checks if the default ACL is empty. If not, it is cleared.
 */
 
-int CheckDefaultClearACL(EvalContext *ctx, const char *file_path, Attributes a, const Promise *pp, PromiseResult *result)
+int CheckDefaultClearACL(EvalContext *ctx, const char *file_path, const Attributes *a, const Promise *pp, PromiseResult *result)
 {
     acl_t acl_existing;
     acl_t acl_empty;
@@ -519,7 +524,7 @@ int CheckDefaultClearACL(EvalContext *ctx, const char *file_path, Attributes a, 
         break;
 
     case 0:                    // no entries, as desired
-        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, &a, "Default ACL on '%s' needs no modification.", file_path);
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Default ACL on '%s' needs no modification.", file_path);
         retval = true;
         break;
 
@@ -532,11 +537,11 @@ int CheckDefaultClearACL(EvalContext *ctx, const char *file_path, Attributes a, 
             break;
         }
 
-        switch (a.transaction.action)
+        switch (a->transaction.action)
         {
         case cfa_warn:
 
-            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, &a, "Default ACL on '%s' needs to be cleared", file_path);
+            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a, "Default ACL on '%s' needs to be cleared", file_path);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
             break;
 
@@ -552,7 +557,7 @@ int CheckDefaultClearACL(EvalContext *ctx, const char *file_path, Attributes a, 
                 }
             }
 
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, &a, "Default ACL on '%s' successfully cleared", file_path);
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Default ACL on '%s' successfully cleared", file_path);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
             retval = true;
 
@@ -1137,9 +1142,9 @@ static int ParseModePosixLinux(char *mode, acl_permset_t perms)
 
 #else /* !HAVE_LIBACL */
 
-PromiseResult CheckPosixLinuxACL(EvalContext *ctx, ARG_UNUSED const char *file_path, ARG_UNUSED Acl acl, Attributes a, const Promise *pp)
+PromiseResult CheckPosixLinuxACL(EvalContext *ctx, ARG_UNUSED const char *file_path, ARG_UNUSED Acl acl, const Attributes *a, const Promise *pp)
 {
-    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a,
+    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
          "Posix ACLs are not supported on this Linux system - install the Posix acl library");
     PromiseRef(LOG_LEVEL_ERR, pp);
     return PROMISE_RESULT_FAIL;

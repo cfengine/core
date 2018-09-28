@@ -720,7 +720,7 @@ static bool Render(Buffer *out, const char *start, const char *input, Seq *hash_
         case TAG_TYPE_INVERTED:
         case TAG_TYPE_SECTION:
             {
-                char *section = xstrndup(tag.content, tag.content_len);
+                char *cur_section = xstrndup(tag.content, tag.content_len);
                 JsonElement *var = LookupVariable(hash_stack, tag.content, tag.content_len);
                 SeqAppend(hash_stack, var);
 
@@ -729,12 +729,12 @@ static bool Render(Buffer *out, const char *start, const char *input, Seq *hash_
                     /* XXX: no variable with the name of the section, why are we renderning anything? */
                     const char *cur_section_end = NULL;
                     if (!Render(out, start, input, hash_stack, NULL, delim_start, delim_start_len, delim_end, delim_end_len,
-                                skip_content || tag.type != TAG_TYPE_INVERTED, section, &cur_section_end))
+                                skip_content || tag.type != TAG_TYPE_INVERTED, cur_section, &cur_section_end))
                     {
-                        free(section);
+                        free(cur_section);
                         return false;
                     }
-                    free(section);
+                    free(cur_section);
                     input = cur_section_end;
                     continue;
                 }
@@ -750,19 +750,19 @@ static bool Render(Buffer *out, const char *start, const char *input, Seq *hash_
 
                             const char *cur_section_end = NULL;
                             if (!Render(out, start, input, hash_stack, NULL, delim_start, delim_start_len, delim_end, delim_end_len,
-                                        skip, section, &cur_section_end))
+                                        skip, cur_section, &cur_section_end))
                             {
-                                free(section);
+                                free(cur_section);
                                 return false;
                             }
-                            free(section);
+                            free(cur_section);
                             input = cur_section_end;
                         }
                         continue;
 
                     default:
                         Log(LOG_LEVEL_WARNING, "Mustache sections can only take a boolean or a container (array or map) value, but section '%s' isn't getting one of those.",
-                            section);
+                            cur_section);
                         return false;
                     }
                     break;
@@ -780,13 +780,13 @@ static bool Render(Buffer *out, const char *start, const char *input, Seq *hash_
                                             hash_stack,
                                             NULL,
                                             delim_start, delim_start_len, delim_end, delim_end_len,
-                                            skip_content || tag.type == TAG_TYPE_INVERTED, section, &cur_section_end))
+                                            skip_content || tag.type == TAG_TYPE_INVERTED, cur_section, &cur_section_end))
                                 {
-                                    free(section);
+                                    free(cur_section);
                                     return false;
                                 }
                                 input = cur_section_end;
-                                free(section);
+                                free(cur_section);
                                 break;
                             }
                             /* else fall through to the case below because
@@ -816,9 +816,9 @@ static bool Render(Buffer *out, const char *start, const char *input, Seq *hash_
                                             hash_stack,
                                             BufferData(kstring),
                                             delim_start, delim_start_len, delim_end, delim_end_len,
-                                            skip_content || tag.type == TAG_TYPE_INVERTED, section, &cur_section_end))
+                                            skip_content || tag.type == TAG_TYPE_INVERTED, cur_section, &cur_section_end))
                                 {
-                                    free(section);
+                                    free(cur_section);
                                     BufferDestroy(kstring);
                                     return false;
                                 }
@@ -826,19 +826,19 @@ static bool Render(Buffer *out, const char *start, const char *input, Seq *hash_
                                 BufferDestroy(kstring);
                             }
                             input = cur_section_end;
-                            free(section);
+                            free(cur_section);
                         }
                         else
                         {
                             /* XXX: empty array -- why are we rendering anything? */
                             const char *cur_section_end = NULL;
                             if (!Render(out, start, input, hash_stack, NULL, delim_start, delim_start_len, delim_end, delim_end_len,
-                                        tag.type != TAG_TYPE_INVERTED, section, &cur_section_end))
+                                        tag.type != TAG_TYPE_INVERTED, cur_section, &cur_section_end))
                             {
-                                free(section);
+                                free(cur_section);
                                 return false;
                             }
-                            free(section);
+                            free(cur_section);
                             input = cur_section_end;
                         }
                         break;

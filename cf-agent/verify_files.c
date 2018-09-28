@@ -537,14 +537,14 @@ static PromiseResult RenderTemplateCFEngine(EvalContext *ctx, const Promise *pp,
 
     Policy *tmp_policy = PolicyNew();
     Bundle *bp = NULL;
-    if ((bp = MakeTemporaryBundleFromTemplate(ctx, tmp_policy, a, pp, &result)))
+    if ((bp = MakeTemporaryBundleFromTemplate(ctx, tmp_policy, &a, pp, &result)))
     {
         a.haveeditline = true;
 
         EvalContextStackPushBundleFrame(ctx, bp, bundle_args, a.edits.inherit);
         BundleResolve(ctx, bp);
 
-        ScheduleEditLineOperations(ctx, bp, a, pp, edcontext);
+        ScheduleEditLineOperations(ctx, bp, &a, pp, edcontext);
 
         EvalContextStackPopFrame(ctx);
 
@@ -764,7 +764,7 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
 
             BundleResolve(ctx, bp);
 
-            ScheduleEditLineOperations(ctx, bp, a, pp, edcontext);
+            ScheduleEditLineOperations(ctx, bp, &a, pp, edcontext);
 
             EvalContextStackPopFrame(ctx);
         }

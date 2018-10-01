@@ -76,17 +76,31 @@ static void HashFile_Stream(
     EVP_MD_CTX_free(context);
 }
 
+/**
+ * @param text_mode whether to read the file in text mode or not (binary mode)
+ * @note Reading/writing file in text mode on Windows changes Unix newlines
+ *       into Windows newlines.
+ */
 void HashFile(
     const char *const filename,
     unsigned char digest[EVP_MAX_MD_SIZE + 1],
-    HashMethod type)
+    HashMethod type,
+    bool text_mode)
 {
     assert(filename != NULL);
     assert(digest != NULL);
 
     memset(digest, 0, EVP_MAX_MD_SIZE + 1);
 
-    FILE *file = safe_fopen(filename, "rb");
+    FILE *file = NULL;
+    if (text_mode)
+    {
+        file = safe_fopen(filename, "rt");
+    }
+    else
+    {
+        file = safe_fopen(filename, "rb");
+    }
     if (file == NULL)
     {
         Log(LOG_LEVEL_INFO,

@@ -48,8 +48,8 @@ int CompareFileHashes(const char *file1, const char *file2, struct stat *sstat, 
 
     if (conn == NULL)
     {
-        HashFile(file1, digest1, CF_DEFAULT_DIGEST);
-        HashFile(file2, digest2, CF_DEFAULT_DIGEST);
+        HashFile(file1, digest1, CF_DEFAULT_DIGEST, false);
+        HashFile(file2, digest2, CF_DEFAULT_DIGEST, false);
 
         for (i = 0; i < EVP_MAX_MD_SIZE; i++)
         {

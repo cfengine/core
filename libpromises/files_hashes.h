@@ -32,7 +32,7 @@
 #define CF_HOSTKEY_STRING_SIZE (4 + 2 * EVP_MAX_MD_SIZE + 1)
 
 
-void HashFile(const char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type);
+void HashFile(const char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type, bool text_mode);
 void HashString(const char *buffer, int len, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type);
 int HashesMatch(const unsigned char digest1[EVP_MAX_MD_SIZE + 1],
                 const unsigned char digest2[EVP_MAX_MD_SIZE + 1],

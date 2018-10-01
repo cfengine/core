@@ -605,7 +605,8 @@ static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp,
     unsigned char existing_output_digest[EVP_MAX_MD_SIZE + 1] = { 0 };
     if (access(pp->promiser, R_OK) == 0)
     {
-        HashFile(pp->promiser, existing_output_digest, CF_DEFAULT_DIGEST);
+        HashFile(pp->promiser, existing_output_digest, CF_DEFAULT_DIGEST,
+                 edcontext->new_line_mode == NewLineMode_Native);
     }
 
     Buffer *output_buffer = BufferNew();

@@ -39,10 +39,10 @@
 #include <ornaments.h>
 #include <eval_context.h>
 
-static int ServicesSanityChecks(Attributes a, const Promise *pp);
+static int ServicesSanityChecks(const Attributes *a, const Promise *pp);
 static void SetServiceDefaults(Attributes *a);
 static PromiseResult DoVerifyServices(EvalContext *ctx, Attributes a, const Promise *pp);
-static PromiseResult VerifyServices(EvalContext *ctx, Attributes a, const Promise *pp);
+static PromiseResult VerifyServices(EvalContext *ctx, const Attributes *a, const Promise *pp);
 
 
 /*****************************************************************************/
@@ -53,9 +53,9 @@ PromiseResult VerifyServicesPromise(EvalContext *ctx, const Promise *pp)
 
     SetServiceDefaults(&a);
 
-    if (ServicesSanityChecks(a, pp))
+    if (ServicesSanityChecks(&a, pp))
     {
-        return VerifyServices(ctx, a, pp);
+        return VerifyServices(ctx, &a, pp);
     }
     else
     {
@@ -65,11 +65,11 @@ PromiseResult VerifyServicesPromise(EvalContext *ctx, const Promise *pp)
 
 /*****************************************************************************/
 
-static int ServicesSanityChecks(Attributes a, const Promise *pp)
+static int ServicesSanityChecks(const Attributes *a, const Promise *pp)
 {
     Rlist *dep;
 
-    for (dep = a.service.service_depend; dep != NULL; dep = dep->next)
+    for (dep = a->service.service_depend; dep != NULL; dep = dep->next)
     {
         if (strcmp(pp->promiser, RlistScalarValue(dep)) == 0)
         {
@@ -79,7 +79,7 @@ static int ServicesSanityChecks(Attributes a, const Promise *pp)
         }
     }
 
-    if (a.service.service_type == NULL)
+    if (a->service.service_type == NULL)
     {
         Log(LOG_LEVEL_ERR, "Service type for service '%s' is not known", pp->promiser);
         PromiseRef(LOG_LEVEL_ERR, pp);
@@ -88,10 +88,10 @@ static int ServicesSanityChecks(Attributes a, const Promise *pp)
 
 #ifdef __MINGW32__
 
-    if (strcmp(a.service.service_type, "windows") != 0)
+    if (strcmp(a->service.service_type, "windows") != 0)
     {
         Log(LOG_LEVEL_ERR, "Service type for promiser '%s' must be 'windows' on this system, but is '%s'",
-            pp->promiser, a.service.service_type);
+            pp->promiser, a->service.service_type);
         PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
     }
@@ -141,11 +141,12 @@ static void SetServiceDefaults(Attributes *a)
 /* Level                                                                     */
 /*****************************************************************************/
 
-static PromiseResult VerifyServices(EvalContext *ctx, Attributes a, const Promise *pp)
+static PromiseResult VerifyServices(EvalContext *ctx, const Attributes *a, const Promise *pp)
 {
+    assert(a != NULL);
     CfLock thislock;
 
-    thislock = AcquireLock(ctx, pp->promiser, VUQNAME, CFSTARTTIME, a.transaction.ifelapsed, a.transaction.expireafter, pp, false);
+    thislock = AcquireLock(ctx, pp->promiser, VUQNAME, CFSTARTTIME, a->transaction.ifelapsed, a->transaction.expireafter, pp, false);
     if (thislock.lock == NULL)
     {
         return PROMISE_RESULT_SKIPPED;
@@ -154,7 +155,7 @@ static PromiseResult VerifyServices(EvalContext *ctx, Attributes a, const Promis
     PromiseBanner(ctx, pp);
 
     PromiseResult result = PROMISE_RESULT_SKIPPED;
-    if (strcmp(a.service.service_type, "windows") == 0)
+    if (strcmp(a->service.service_type, "windows") == 0)
     {
 #ifdef __MINGW32__
         result = PromiseResultUpdate(result, VerifyWindowsService(ctx, a, pp));
@@ -164,7 +165,7 @@ static PromiseResult VerifyServices(EvalContext *ctx, Attributes a, const Promis
     }
     else
     {
-        result = PromiseResultUpdate(result, DoVerifyServices(ctx, a, pp));
+        result = PromiseResultUpdate(result, DoVerifyServices(ctx, *a, pp));
     }
 
     YieldCurrentLock(thislock);

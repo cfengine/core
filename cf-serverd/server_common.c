@@ -853,7 +853,7 @@ bool CompareLocalHash(const char *filename, const char digest[EVP_MAX_MD_SIZE + 
 
     unsigned char file_digest[EVP_MAX_MD_SIZE + 1] = { 0 };
     /* TODO connection might timeout if this takes long! */
-    HashFile(translated_filename, file_digest, CF_DEFAULT_DIGEST);
+    HashFile(translated_filename, file_digest, CF_DEFAULT_DIGEST, false);
 
     if (HashesMatch(digest, file_digest, CF_DEFAULT_DIGEST))
     {

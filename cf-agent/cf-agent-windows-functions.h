@@ -27,7 +27,7 @@
 
 #ifdef __MINGW32__
 
-PromiseResult VerifyWindowsService(EvalContext *ctx, Attributes a, Promise *pp);
+PromiseResult VerifyWindowsService(EvalContext *ctx, const Attributes *a, Promise *pp);
 PromiseResult Nova_CheckNtACL(EvalContext *ctx, const char *file_path, Acl acl,
                               Attributes a, const Promise *pp);
 

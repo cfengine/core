@@ -46,6 +46,6 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, str
                      Attributes attr, const Promise *pp, CompressedArray **inode_cache, AgentConnection *conn, PromiseResult *result);
 
 /* To be implemented in Nova for Win32 */
-bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, Attributes attr, struct stat *sb, PromiseResult *result);
+bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, const Attributes *attr, struct stat *sb, PromiseResult *result);
 
 #endif

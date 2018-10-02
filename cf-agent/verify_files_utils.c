@@ -2125,7 +2125,7 @@ static PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, st
 # endif
 #endif
 
-    if (VerifyOwner(ctx, file, pp, *attr, dstat, &result))
+    if (VerifyOwner(ctx, file, pp, attr, dstat, &result))
     {
         /* nop */
     }
@@ -3602,7 +3602,7 @@ static int SkipDirLinks(EvalContext *ctx, char *path, const char *lastnode, Dire
 
 #ifndef __MINGW32__
 
-bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, Attributes attr, struct stat *sb, PromiseResult *result)
+bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, const Attributes *attr, struct stat *sb, PromiseResult *result)
 {
     struct passwd *pw;
     struct group *gp;
@@ -3614,7 +3614,7 @@ bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, Attribut
     gid_t gid = CF_UNKNOWN_GROUP;
 
     /* SKIP if file is already owned by anyone of the promised owners. */
-    for (ulp = attr.perms.owners; ulp != NULL; ulp = ulp->next)
+    for (ulp = attr->perms.owners; ulp != NULL; ulp = ulp->next)
     {
         if (ulp->uid == CF_SAME_OWNER || sb->st_uid == ulp->uid)        /* "same" matches anything */
         {
@@ -3626,7 +3626,7 @@ bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, Attribut
     if (uid != CF_SAME_OWNER)
     {
         /* Change ownership to the first known user in the promised list. */
-        for (ulp = attr.perms.owners; ulp != NULL; ulp = ulp->next)
+        for (ulp = attr->perms.owners; ulp != NULL; ulp = ulp->next)
         {
             if (ulp->uid != CF_UNKNOWN_OWNER)
             {
@@ -3636,7 +3636,7 @@ bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, Attribut
         }
         if (ulp == NULL)
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &attr,
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
                  "None of the promised owners for '%s' exist -- see INFO logs for more",
                  file);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
@@ -3646,7 +3646,7 @@ bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, Attribut
     assert(uid != CF_UNKNOWN_OWNER);
 
     /* SKIP if file is already group owned by anyone of the promised groups. */
-    for (glp = attr.perms.groups; glp != NULL; glp = glp->next)
+    for (glp = attr->perms.groups; glp != NULL; glp = glp->next)
     {
         if (glp->gid == CF_SAME_GROUP || sb->st_gid == glp->gid)
         {
@@ -3658,7 +3658,7 @@ bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, Attribut
     /* Change group ownership to the first known group in the promised list. */
     if (gid != CF_SAME_GROUP)
     {
-        for (glp = attr.perms.groups; glp != NULL; glp = glp->next)
+        for (glp = attr->perms.groups; glp != NULL; glp = glp->next)
         {
             if (glp->gid != CF_UNKNOWN_GROUP)
             {
@@ -3668,7 +3668,7 @@ bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, Attribut
         }
         if (glp == NULL)
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &attr,
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
                  "None of the promised groups for '%s' exist -- see INFO logs for more",
                  file);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
@@ -3685,7 +3685,7 @@ bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, Attribut
     }
     else
     {
-        switch (attr.transaction.action)
+        switch (attr->transaction.action)
         {
         case cfa_fix:
 
@@ -3719,7 +3719,7 @@ bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, Attribut
             {
                 if (uid != CF_SAME_OWNER)
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, &attr,
+                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr,
                          "Owner of '%s' was %ju, setting to %ju",
                          file, (uintmax_t) sb->st_uid, (uintmax_t) uid);
                     *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
@@ -3727,7 +3727,7 @@ bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, Attribut
 
                 if (gid != CF_SAME_GROUP)
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, &attr,
+                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr,
                          "Group of '%s' was %ju, setting to %ju",
                          file, (uintmax_t)sb->st_gid, (uintmax_t)gid);
                     *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
@@ -3737,7 +3737,7 @@ bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, Attribut
                 {
                     if (safe_chown(file, uid, gid) == -1)
                     {
-                        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_DENIED, pp, &attr, "Cannot set ownership on file '%s'. (chown: %s)",
+                        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_DENIED, pp, attr, "Cannot set ownership on file '%s'. (chown: %s)",
                              file, GetErrorStr());
                         *result = PromiseResultUpdate(*result, PROMISE_RESULT_DENIED);
                     }
@@ -3761,13 +3761,13 @@ bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, Attribut
 
             if ((gp = getgrgid(sb->st_gid)) == NULL)
             {
-                cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, &attr, "File '%s' is not owned by any group in group database",
+                cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "File '%s' is not owned by any group in group database",
                      file);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                 break;
             }
 
-            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, &attr, "File '%s' is owned by '%s', group '%s'", file, pw->pw_name,
+            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "File '%s' is owned by '%s', group '%s'", file, pw->pw_name,
                  gp->gr_name);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
             break;

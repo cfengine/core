@@ -146,15 +146,18 @@ static int XmlAttributeCount(const xmlNodePtr node);
 /* Level                                                                     */
 /*****************************************************************************/
 
-int ScheduleEditXmlOperations(EvalContext *ctx, const Bundle *bp, Attributes a, const Promise *parentp, EditContext *edcontext)
+int ScheduleEditXmlOperations(EvalContext *ctx, const Bundle *bp, const Attributes *a, const Promise *parentp, EditContext *edcontext)
 {
+    assert(a != NULL);
     enum editxmltypesequence type;
     char lockname[CF_BUFSIZE];
     CfLock thislock;
     int pass;
 
     snprintf(lockname, CF_BUFSIZE - 1, "masterfilelock-%s", edcontext->filename);
-    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction.ifelapsed, a.transaction.expireafter, parentp, true);
+    const int ifelapsed = a->transaction.ifelapsed;
+    const int expireafter = a->transaction.expireafter;
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, ifelapsed, expireafter, parentp, true);
 
     if (thislock.lock == NULL)
     {

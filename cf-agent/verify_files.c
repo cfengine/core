@@ -802,7 +802,7 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
             EvalContextStackPushBundleFrame(ctx, bp, args, a.edits.inherit);
             BundleResolve(ctx, bp);
 
-            ScheduleEditXmlOperations(ctx, bp, a, pp, edcontext);
+            ScheduleEditXmlOperations(ctx, bp, &a, pp, edcontext);
 
             EvalContextStackPopFrame(ctx);
         }

@@ -62,9 +62,10 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
 
 /*****************************************************************************/
 
-static int FileSanityChecks(char *path, Attributes a, const Promise *pp)
+static int FileSanityChecks(char *path, const Attributes *a, const Promise *pp)
 {
-    if ((a.havelink) && (a.havecopy))
+    assert(a != NULL);
+    if ((a->havelink) && (a->havecopy))
     {
         Log(LOG_LEVEL_ERR,
             "Promise constraint conflicts - '%s' file cannot both be a copy of and a link to the source", path);
@@ -76,14 +77,14 @@ static int FileSanityChecks(char *path, Attributes a, const Promise *pp)
      * body, so we can't distinguish between link and copy source. In
      * post-verification all bodies are already expanded, so we don't have the
      * information either */
-    if ((a.havelink) && (!a.link.source))
+    if ((a->havelink) && (!a->link.source))
     {
         Log(LOG_LEVEL_ERR, "Promise to establish a link at '%s' has no source", path);
         PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
     }
 
-    if ((a.haveeditline) && (a.haveeditxml))
+    if ((a->haveeditline) && (a->haveeditxml))
     {
         Log(LOG_LEVEL_ERR, "Promise constraint conflicts - '%s' editing file as both line and xml makes no sense",
               path);
@@ -91,21 +92,21 @@ static int FileSanityChecks(char *path, Attributes a, const Promise *pp)
         return false;
     }
 
-    if ((a.havedepthsearch) && (a.haveedit))
+    if ((a->havedepthsearch) && (a->haveedit))
     {
         Log(LOG_LEVEL_ERR, "Recursive depth_searches are not compatible with general file editing");
         PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
     }
 
-    if ((a.havedelete) && ((a.create) || (a.havecopy) || (a.haveedit) || (a.haverename)))
+    if ((a->havedelete) && ((a->create) || (a->havecopy) || (a->haveedit) || (a->haverename)))
     {
         Log(LOG_LEVEL_ERR, "Promise constraint conflicts - '%s' cannot be deleted and exist at the same time", path);
         PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
     }
 
-    if ((a.haverename) && ((a.create) || (a.havecopy) || (a.haveedit)))
+    if ((a->haverename) && ((a->create) || (a->havecopy) || (a->haveedit)))
     {
         Log(LOG_LEVEL_ERR,
             "Promise constraint conflicts - '%s' cannot be renamed/moved and exist there at the same time", path);
@@ -113,7 +114,7 @@ static int FileSanityChecks(char *path, Attributes a, const Promise *pp)
         return false;
     }
 
-    if ((a.havedelete) && (a.havedepthsearch) && (!a.haveselect))
+    if ((a->havedelete) && (a->havedepthsearch) && (!a->haveselect))
     {
         Log(LOG_LEVEL_ERR,
             "Dangerous or ambiguous promise - '%s' specifies recursive deletion but has no file selection criteria",
@@ -122,21 +123,21 @@ static int FileSanityChecks(char *path, Attributes a, const Promise *pp)
         return false;
     }
 
-    if ((a.haveselect) && (!a.select.result))
+    if ((a->haveselect) && (!a->select.result))
     {
         Log(LOG_LEVEL_ERR, "File select constraint body promised no result (check body definition)");
         PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
     }
 
-    if ((a.havedelete) && (a.haverename))
+    if ((a->havedelete) && (a->haverename))
     {
         Log(LOG_LEVEL_ERR, "File '%s' cannot promise both deletion and renaming", path);
         PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
     }
 
-    if ((a.havecopy) && (a.havedepthsearch) && (a.havedelete))
+    if ((a->havecopy) && (a->havedepthsearch) && (a->havedelete))
     {
         Log(LOG_LEVEL_WARNING,
             "depth_search of '%s' applies to both delete and copy, but these refer to different searches (source/destination)",
@@ -144,14 +145,14 @@ static int FileSanityChecks(char *path, Attributes a, const Promise *pp)
         PromiseRef(LOG_LEVEL_INFO, pp);
     }
 
-    if ((a.transaction.background) && (a.transaction.audit))
+    if ((a->transaction.background) && (a->transaction.audit))
     {
         Log(LOG_LEVEL_ERR, "Auditing cannot be performed on backgrounded promises (this might change).");
         PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
     }
 
-    if (((a.havecopy) || (a.havelink)) && (a.transformer))
+    if (((a->havecopy) || (a->havelink)) && (a->transformer))
     {
         Log(LOG_LEVEL_ERR, "File object(s) '%s' cannot both be a copy of source and transformed simultaneously",
               pp->promiser);
@@ -159,21 +160,21 @@ static int FileSanityChecks(char *path, Attributes a, const Promise *pp)
         return false;
     }
 
-    if ((a.haveselect) && (a.select.result == NULL))
+    if ((a->haveselect) && (a->select.result == NULL))
     {
         Log(LOG_LEVEL_ERR, "Missing file_result attribute in file_select body");
         PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
     }
 
-    if ((a.havedepthsearch) && (a.change.report_diffs))
+    if ((a->havedepthsearch) && (a->change.report_diffs))
     {
         Log(LOG_LEVEL_ERR, "Difference reporting is not allowed during a depth_search");
         PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
     }
 
-    if ((a.haveedit) && (a.file_type) && (!strncmp(a.file_type, "fifo", 5)))
+    if ((a->haveedit) && (a->file_type) && (!strncmp(a->file_type, "fifo", 5)))
     {
         Log(LOG_LEVEL_ERR, "Editing is not allowed on fifos");
         PromiseRef(LOG_LEVEL_ERR, pp);
@@ -183,14 +184,15 @@ static int FileSanityChecks(char *path, Attributes a, const Promise *pp)
     return true;
 }
 
-static bool AttrHasNoAction(Attributes attr)
+static bool AttrHasNoAction(const Attributes *attr)
 {
+    assert(attr != NULL);
     /* Hopefully this includes all "actions" for a files promise. See struct
      * Attributes for reference. */
-    if (!(attr.transformer || attr.haverename || attr.havedelete ||
-          attr.havecopy || attr.create || attr.touch || attr.havelink ||
-          attr.haveperms || attr.havechange || attr.acl.acl_entries ||
-          attr.haveedit || attr.haveeditline || attr.haveeditxml))
+    if (!(attr->transformer || attr->haverename || attr->havedelete ||
+          attr->havecopy || attr->create || attr->touch || attr->havelink ||
+          attr->haveperms || attr->havechange || attr->acl.acl_entries ||
+          attr->haveedit || attr->haveeditline || attr->haveeditxml))
     {
         return true;
     }
@@ -278,7 +280,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
 
     Attributes attr = GetFilesAttributes(ctx, pp);
 
-    if (!FileSanityChecks(path, attr, pp))
+    if (!FileSanityChecks(path, &attr, pp))
     {
         ClearFilesAttributes(&attr);
         return PROMISE_RESULT_NOOP;
@@ -486,7 +488,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
     {
         if (exists)
         {
-            result = PromiseResultUpdate(result, ScheduleEditOperation(ctx, path, a, pp));
+            result = PromiseResultUpdate(result, ScheduleEditOperation(ctx, path, &a, pp));
         }
         else
         {
@@ -513,7 +515,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
 
 exit:
 
-    if (AttrHasNoAction(a))
+    if (AttrHasNoAction(&a))
     {
         Log(LOG_LEVEL_INFO,
             "No action was requested for file '%s'. Maybe a typo in the policy?", path);
@@ -530,9 +532,11 @@ exit:
 /*****************************************************************************/
 
 static PromiseResult RenderTemplateCFEngine(EvalContext *ctx, const Promise *pp,
-                                            const Rlist *bundle_args, Attributes a,
+                                            const Rlist *bundle_args, const Attributes *attr,
                                             EditContext *edcontext)
 {
+    assert(attr != NULL);
+    Attributes a = *attr; // TODO: Try to remove this copy
     PromiseResult result = PROMISE_RESULT_NOOP;
 
     Policy *tmp_policy = PolicyNew();
@@ -592,9 +596,11 @@ static bool SaveBufferCallback(const char *dest_filename, void *param, NewLineMo
 }
 
 
-static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp, Attributes a,
+static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp, const Attributes *attr,
                                             EditContext *edcontext, const char *template)
 {
+    assert(attr != NULL);
+    Attributes a = *attr; // TODO: Try to remove this copy
     PromiseResult result = PROMISE_RESULT_NOOP;
 
     if (a.template_data == NULL)
@@ -663,19 +669,20 @@ static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp,
     }
 }
 
-static PromiseResult RenderTemplateMustacheFromFile(EvalContext *ctx, const Promise *pp, Attributes a,
+static PromiseResult RenderTemplateMustacheFromFile(EvalContext *ctx, const Promise *pp, const Attributes *a,
                                             EditContext *edcontext)
 {
+    assert(a != NULL);
     PromiseResult result = PROMISE_RESULT_NOOP;
 
-    if (!FileCanOpen(a.edit_template, "r"))
+    if (!FileCanOpen(a->edit_template, "r"))
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Template file '%s' could not be opened for reading", a.edit_template);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Template file '%s' could not be opened for reading", a->edit_template);
         return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
     }
 
 
-    int template_fd = safe_open(a.edit_template, O_RDONLY | O_TEXT);
+    int template_fd = safe_open(a->edit_template, O_RDONLY | O_TEXT);
     Writer *template_writer = NULL;
     if (template_fd >= 0)
     {
@@ -684,7 +691,7 @@ static PromiseResult RenderTemplateMustacheFromFile(EvalContext *ctx, const Prom
     }
     if (template_writer == NULL)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Could not read template file '%s'", a.edit_template);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Could not read template file '%s'", a->edit_template);
         return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
     }
 
@@ -695,23 +702,24 @@ static PromiseResult RenderTemplateMustacheFromFile(EvalContext *ctx, const Prom
     return result;
 }
 
-static PromiseResult RenderTemplateMustacheFromString(EvalContext *ctx, const Promise *pp, Attributes a,
+static PromiseResult RenderTemplateMustacheFromString(EvalContext *ctx, const Promise *pp, const Attributes *a,
                                             EditContext *edcontext)
 {
-
-    if ( a.edit_template_string == NULL  )
+    assert(a != NULL);
+    if ( a->edit_template_string == NULL  )
     {
         PromiseResult result = PROMISE_RESULT_NOOP;
 
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "'edit_template_string' not set for promiser: '%s'", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "'edit_template_string' not set for promiser: '%s'", pp->promiser);
         return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
     }
 
-    return  RenderTemplateMustache(ctx, pp, a, edcontext, a.edit_template_string);
+    return  RenderTemplateMustache(ctx, pp, a, edcontext, a->edit_template_string);
 }
 
-PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, const Promise *pp)
+PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, const Attributes *a, const Promise *pp)
 {
+    assert(a != NULL);
     void *vp;
     FnCall *fp;
     Rlist *args = NULL;
@@ -719,26 +727,26 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
     CfLock thislock;
 
     snprintf(lockname, CF_BUFSIZE - 1, "fileedit-%s", filename);
-    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction.ifelapsed, a.transaction.expireafter, pp, false);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a->transaction.ifelapsed, a->transaction.expireafter, pp, false);
 
     if (thislock.lock == NULL)
     {
         return PROMISE_RESULT_SKIPPED;
     }
 
-    EditContext *edcontext = NewEditContext(filename, &a);
+    EditContext *edcontext = NewEditContext(filename, a);
 
     PromiseResult result = PROMISE_RESULT_NOOP;
     if (edcontext == NULL)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "File '%s' was marked for editing but could not be opened", filename);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "File '%s' was marked for editing but could not be opened", filename);
         result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         goto exit;
     }
 
     const Policy *policy = PolicyFromPromise(pp);
 
-    if (a.haveeditline)
+    if (a->haveeditline)
     {
         if ((vp = PromiseGetConstraintAsRval(pp, "edit_line", RVAL_TYPE_FNCALL)))
         {
@@ -761,11 +769,11 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
         const Bundle *bp = EvalContextResolveBundleExpression(ctx, policy, edit_bundle_name, "edit_line");
         if (bp)
         {
-            EvalContextStackPushBundleFrame(ctx, bp, args, a.edits.inherit);
+            EvalContextStackPushBundleFrame(ctx, bp, args, a->edits.inherit);
 
             BundleResolve(ctx, bp);
 
-            ScheduleEditLineOperations(ctx, bp, &a, pp, edcontext);
+            ScheduleEditLineOperations(ctx, bp, a, pp, edcontext);
 
             EvalContextStackPopFrame(ctx);
         }
@@ -776,7 +784,7 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
     }
 
 
-    if (a.haveeditxml)
+    if (a->haveeditxml)
     {
         if ((vp = PromiseGetConstraintAsRval(pp, "edit_xml", RVAL_TYPE_FNCALL)))
         {
@@ -799,43 +807,43 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
         const Bundle *bp = EvalContextResolveBundleExpression(ctx, policy, edit_bundle_name, "edit_xml");
         if (bp)
         {
-            EvalContextStackPushBundleFrame(ctx, bp, args, a.edits.inherit);
+            EvalContextStackPushBundleFrame(ctx, bp, args, a->edits.inherit);
             BundleResolve(ctx, bp);
 
-            ScheduleEditXmlOperations(ctx, bp, &a, pp, edcontext);
+            ScheduleEditXmlOperations(ctx, bp, a, pp, edcontext);
 
             EvalContextStackPopFrame(ctx);
         }
     }
 
-    if (strcmp("cfengine", a.template_method) == 0)
+    if (strcmp("cfengine", a->template_method) == 0)
     {
-        if (a.edit_template)
+        if (a->edit_template)
         {
             Log(LOG_LEVEL_VERBOSE, "Rendering '%s' using template '%s' with method '%s'",
-                filename, a.edit_template, a.template_method);
+                filename, a->edit_template, a->template_method);
 
             PromiseResult render_result = RenderTemplateCFEngine(ctx, pp, args, a, edcontext);
             result = PromiseResultUpdate(result, render_result);
         }
     }
-    else if (strcmp("mustache", a.template_method) == 0)
+    else if (strcmp("mustache", a->template_method) == 0)
     {
-        if (a.edit_template)
+        if (a->edit_template)
         {
             Log(LOG_LEVEL_VERBOSE, "Rendering '%s' using template '%s' with method '%s'",
-                filename, a.edit_template, a.template_method);
+                filename, a->edit_template, a->template_method);
 
             PromiseResult render_result = RenderTemplateMustacheFromFile(ctx, pp, a, edcontext);
             result = PromiseResultUpdate(result, render_result);
         }
     }
-    else if (strcmp("inline_mustache", a.template_method) == 0)
+    else if (strcmp("inline_mustache", a->template_method) == 0)
     {
-        if (a.edit_template_string)
+        if (a->edit_template_string)
         {
             Log(LOG_LEVEL_VERBOSE, "Rendering '%s' with method '%s'",
-                filename, a.template_method);
+                filename, a->template_method);
 
             PromiseResult render_result = RenderTemplateMustacheFromString(ctx, pp, a, edcontext);
             result = PromiseResultUpdate(result, render_result);
@@ -843,7 +851,7 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
     }
 
 exit:
-    FinishEditContext(ctx, edcontext, &a, pp, &result);
+    FinishEditContext(ctx, edcontext, a, pp, &result);
     YieldCurrentLock(thislock);
     return result;
 }

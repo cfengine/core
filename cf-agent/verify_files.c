@@ -726,7 +726,7 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
         return PROMISE_RESULT_SKIPPED;
     }
 
-    EditContext *edcontext = NewEditContext(filename, a);
+    EditContext *edcontext = NewEditContext(filename, &a);
 
     PromiseResult result = PROMISE_RESULT_NOOP;
     if (edcontext == NULL)
@@ -843,7 +843,7 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes
     }
 
 exit:
-    FinishEditContext(ctx, edcontext, a, pp, &result);
+    FinishEditContext(ctx, edcontext, &a, pp, &result);
     YieldCurrentLock(thislock);
     return result;
 }

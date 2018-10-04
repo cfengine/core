@@ -36,7 +36,7 @@
 
 /*****************************************************************************/
 
-EditContext *NewEditContext(char *filename, Attributes a)
+EditContext *NewEditContext(char *filename, const Attributes *a)
 {
     EditContext *ec;
 
@@ -49,21 +49,22 @@ EditContext *NewEditContext(char *filename, Attributes a)
     ec = xcalloc(1, sizeof(EditContext));
 
     ec->filename = filename;
+
     ec->new_line_mode = FileNewLineMode(filename);
 
-    if (a.haveeditline)
+    if (a->haveeditline)
     {
-        if (!LoadFileAsItemList(&(ec->file_start), filename, a.edits))
+        if (!LoadFileAsItemList(&(ec->file_start), filename, a->edits))
         {
             free(ec);
             return NULL;
         }
     }
 
-    if (a.haveeditxml)
+    if (a->haveeditxml)
     {
 #ifdef HAVE_LIBXML2
-        if (!LoadFileAsXmlDoc(&(ec->xmldoc), filename, a.edits))
+        if (!LoadFileAsXmlDoc(&(ec->xmldoc), filename, a->edits))
         {
             free(ec);
             return NULL;
@@ -75,7 +76,7 @@ EditContext *NewEditContext(char *filename, Attributes a)
 #endif
     }
 
-    if (a.edits.empty_before_use)
+    if (a->edits.empty_before_use)
     {
         Log(LOG_LEVEL_VERBOSE, "Build file model from a blank slate (emptying)");
         DeleteItemList(ec->file_start);
@@ -87,7 +88,7 @@ EditContext *NewEditContext(char *filename, Attributes a)
 
 /*****************************************************************************/
 
-void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, const Promise *pp,
+void FinishEditContext(EvalContext *ctx, EditContext *ec, const Attributes *a, const Promise *pp,
                        PromiseResult *result)
 {
     if (*result == PROMISE_RESULT_NOOP || *result == PROMISE_RESULT_CHANGE)
@@ -102,73 +103,73 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, const Pr
         goto end;
     }
 
-    if (DONTDO || (a.transaction.action == cfa_warn))
+    if (DONTDO || (a->transaction.action == cfa_warn))
     {
         if (ec &&
-            !CompareToFile(ctx, ec->file_start, ec->filename, a, pp, result) &&
+            !CompareToFile(ctx, ec->file_start, ec->filename, *a, pp, result) &&
             ec->num_edits > 0)
         {
-            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, &a,
+            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a,
                  "Should edit file '%s' but only a warning promised",
                  ec->filename);
             *result = PROMISE_RESULT_WARN;
         }
         else
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, &a,
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a,
                  "No edit changes to file '%s' need saving", ec->filename);
             *result = PROMISE_RESULT_NOOP;
         }
     }
     else if (ec && (ec->num_edits > 0))
     {
-        if (a.haveeditline || a.edit_template || a.edit_template_string)
+        if (a->haveeditline || a->edit_template || a->edit_template_string)
         {
-            if (CompareToFile(ctx, ec->file_start, ec->filename, a, pp, result))
+            if (CompareToFile(ctx, ec->file_start, ec->filename, *a, pp, result))
             {
-                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, &a,
+                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a,
                      "No edit changes to file '%s' need saving", ec->filename);
             }
-            else if (SaveItemListAsFile(ec->file_start, ec->filename, a, ec->new_line_mode))
+            else if (SaveItemListAsFile(ec->file_start, ec->filename, *a, ec->new_line_mode))
             {
-                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, &a,
+                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a,
                      "Edit file '%s'", ec->filename);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
             }
             else
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a,
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
                      "Unable to save file '%s' after editing", ec->filename);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             }
         }
 
-        if (a.haveeditxml)
+        if (a->haveeditxml)
         {
 #ifdef HAVE_LIBXML2
-            if (XmlCompareToFile(ec->xmldoc, ec->filename, a.edits))
+            if (XmlCompareToFile(ec->xmldoc, ec->filename, a->edits))
             {
                 if (ec)
                 {
-                    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, &a,
+                    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a,
                          "No edit changes to xml file '%s' need saving", ec->filename);
                 }
             }
             else if (SaveXmlDocAsFile(ec->xmldoc, ec->filename, a, ec->new_line_mode))
             {
-                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, &a,
+                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a,
                      "Edited xml file '%s'", ec->filename);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
             }
             else
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a,
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
                      "Failed to edit XML file '%s'", ec->filename);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             }
             xmlFreeDoc(ec->xmldoc);
 #else
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a,
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
                  "Cannot edit XML files without LIBXML2");
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
 #endif
@@ -176,7 +177,7 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, const Pr
     }
     else if (ec)
     {
-        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, &a,
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a,
              "No edit changes to file '%s' need saving", ec->filename);
     }
 
@@ -254,8 +255,8 @@ static bool SaveXmlCallback(const char *dest_filename, void *param,
 
 /*********************************************************************/
 
-bool SaveXmlDocAsFile(xmlDocPtr doc, const char *file, Attributes a, NewLineMode new_line_mode)
+bool SaveXmlDocAsFile(xmlDocPtr doc, const char *file, const Attributes *a, NewLineMode new_line_mode)
 {
-    return SaveAsFile(&SaveXmlCallback, doc, file, a, new_line_mode);
+    return SaveAsFile(&SaveXmlCallback, doc, file, *a, new_line_mode);
 }
 #endif /* HAVE_LIBXML2 */

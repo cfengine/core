@@ -70,14 +70,14 @@ static const char *const EDITXMLTYPESEQUENCE[] =
 
 static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp, void *param);
 #ifdef HAVE_LIBXML2
-static bool VerifyXPathBuild(EvalContext *ctx, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
-static PromiseResult VerifyTreeDeletions(EvalContext *ctx, Attributes a, const Promise *pp, EditContext *edcontext);
-static PromiseResult VerifyTreeInsertions(EvalContext *ctx, Attributes a, const Promise *pp, EditContext *edcontext);
-static PromiseResult VerifyAttributeDeletions(EvalContext *ctx, Attributes a, const Promise *pp, EditContext *edcontext);
-static PromiseResult VerifyAttributeSet(EvalContext *ctx, Attributes a, const Promise *pp, EditContext *edcontext);
-static PromiseResult VerifyTextDeletions(EvalContext *ctx, Attributes a, const Promise *pp, EditContext *edcontext);
-static PromiseResult VerifyTextSet(EvalContext *ctx, Attributes a, const Promise *pp, EditContext *edcontext);
-static PromiseResult VerifyTextInsertions(EvalContext *ctx, Attributes a, const Promise *pp, EditContext *edcontext);
+static bool VerifyXPathBuild(EvalContext *ctx, const Attributes *attr, const Promise *pp, EditContext *edcontext, PromiseResult *result);
+static PromiseResult VerifyTreeDeletions(EvalContext *ctx, const Attributes *attr, const Promise *pp, EditContext *edcontext);
+static PromiseResult VerifyTreeInsertions(EvalContext *ctx, const Attributes *attr, const Promise *pp, EditContext *edcontext);
+static PromiseResult VerifyAttributeDeletions(EvalContext *ctx, const Attributes *attr, const Promise *pp, EditContext *edcontext);
+static PromiseResult VerifyAttributeSet(EvalContext *ctx, const Attributes *attr, const Promise *pp, EditContext *edcontext);
+static PromiseResult VerifyTextDeletions(EvalContext *ctx, const Attributes *attr, const Promise *pp, EditContext *edcontext);
+static PromiseResult VerifyTextSet(EvalContext *ctx, const Attributes *attr, const Promise *pp, EditContext *edcontext);
+static PromiseResult VerifyTextInsertions(EvalContext *ctx, const Attributes *attr, const Promise *pp, EditContext *edcontext);
 static bool XmlSelectNode(EvalContext *ctx, char *xpath, xmlDocPtr doc, xmlNodePtr *docnode, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
 static bool BuildXPathInFile(EvalContext *ctx, char xpath[CF_BUFSIZE], xmlDocPtr doc, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
 static bool BuildXPathInNode(EvalContext *ctx, char xpath[CF_BUFSIZE], xmlDocPtr doc, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
@@ -217,7 +217,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp,
 #ifdef HAVE_LIBXML2
         EditContext *edcontext = param;
         PromiseResult result = PROMISE_RESULT_NOOP;
-        VerifyXPathBuild(ctx, a, pp, edcontext, &result);
+        VerifyXPathBuild(ctx, &a, pp, edcontext, &result);
         return result;
 #else
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Cannot edit XML files without LIBXML2.");
@@ -229,7 +229,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp,
         Attributes a = GetDeletionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
         EditContext *edcontext = param;
-        PromiseResult result = VerifyTreeDeletions(ctx, a, pp, edcontext);
+        PromiseResult result = VerifyTreeDeletions(ctx, &a, pp, edcontext);
         return result;
 #else
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Cannot edit XML files without LIBXML2");
@@ -241,7 +241,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp,
         Attributes a = GetInsertionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
         EditContext *edcontext = param;
-        PromiseResult result = VerifyTreeInsertions(ctx, a, pp, edcontext);
+        PromiseResult result = VerifyTreeInsertions(ctx, &a, pp, edcontext);
         return result;
 #else
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Cannot edit XML files without LIBXML2");
@@ -253,7 +253,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp,
         Attributes a = GetDeletionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
         EditContext *edcontext = param;
-        PromiseResult result = VerifyAttributeDeletions(ctx, a, pp, edcontext);
+        PromiseResult result = VerifyAttributeDeletions(ctx, &a, pp, edcontext);
         return result;
 #else
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Cannot edit XML files without LIBXML2");
@@ -265,7 +265,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp,
         Attributes a = GetInsertionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
         EditContext *edcontext = param;
-        PromiseResult result = VerifyAttributeSet(ctx, a, pp, edcontext);
+        PromiseResult result = VerifyAttributeSet(ctx, &a, pp, edcontext);
         return result;
 #else
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Cannot edit XML files without LIBXML2");
@@ -277,7 +277,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp,
         Attributes a = GetDeletionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
         EditContext *edcontext = param;
-        PromiseResult result = VerifyTextDeletions(ctx, a, pp, edcontext);
+        PromiseResult result = VerifyTextDeletions(ctx, &a, pp, edcontext);
         return result;
 #else
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Cannot edit XML files without LIBXML2");
@@ -289,7 +289,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp,
         Attributes a = GetInsertionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
         EditContext *edcontext = param;
-        PromiseResult result = VerifyTextSet(ctx, a, pp, edcontext);
+        PromiseResult result = VerifyTextSet(ctx, &a, pp, edcontext);
         return result;
 #else
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Cannot edit XML files without LIBXML2");
@@ -301,7 +301,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp,
         Attributes a = GetInsertionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
         EditContext *edcontext = param;
-        PromiseResult result = VerifyTextInsertions(ctx, a, pp, edcontext);
+        PromiseResult result = VerifyTextInsertions(ctx, &a, pp, edcontext);
         return result;
 #else
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Cannot edit XML files without LIBXML2");
@@ -322,8 +322,10 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp,
 
 /***************************************************************************/
 
-static bool VerifyXPathBuild(EvalContext *ctx, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result)
+static bool VerifyXPathBuild(EvalContext *ctx, const Attributes *attr, const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
+    assert(attr != NULL);
+    Attributes a = *attr; // TODO: Remove this copy
     xmlDocPtr doc = NULL;
     CfLock thislock;
     char lockname[CF_BUFSIZE], rawxpath[CF_BUFSIZE] = { 0 };
@@ -382,8 +384,10 @@ static bool VerifyXPathBuild(EvalContext *ctx, Attributes a, const Promise *pp, 
 
 /***************************************************************************/
 
-static PromiseResult VerifyTreeDeletions(EvalContext *ctx, Attributes a, const Promise *pp, EditContext *edcontext)
+static PromiseResult VerifyTreeDeletions(EvalContext *ctx, const Attributes *attr, const Promise *pp, EditContext *edcontext)
 {
+    assert(attr != NULL);
+    Attributes a = *attr; // TODO: Remove this copy
     xmlDocPtr doc = NULL;
     xmlNodePtr docnode = NULL;
     CfLock thislock;
@@ -399,7 +403,7 @@ static PromiseResult VerifyTreeDeletions(EvalContext *ctx, Attributes a, const P
     }
 
     PromiseResult result = PROMISE_RESULT_NOOP;
-    if (a.xml.havebuildxpath && !VerifyXPathBuild(ctx, a, pp, edcontext, &result))
+    if (a.xml.havebuildxpath && !VerifyXPathBuild(ctx, &a, pp, edcontext, &result))
     {
         return result;
     }
@@ -440,8 +444,10 @@ static PromiseResult VerifyTreeDeletions(EvalContext *ctx, Attributes a, const P
 
 /***************************************************************************/
 
-static PromiseResult VerifyTreeInsertions(EvalContext *ctx, Attributes a, const Promise *pp, EditContext *edcontext)
+static PromiseResult VerifyTreeInsertions(EvalContext *ctx, const Attributes *attr, const Promise *pp, EditContext *edcontext)
 {
+    assert(attr != NULL);
+    Attributes a = *attr; // TODO: Remove this copy
     xmlDocPtr doc = NULL;
     xmlNodePtr docnode = NULL;
     CfLock thislock;
@@ -458,7 +464,7 @@ static PromiseResult VerifyTreeInsertions(EvalContext *ctx, Attributes a, const 
         return result;
     }
 
-    if (a.xml.havebuildxpath && !VerifyXPathBuild(ctx, a, pp, edcontext, &result))
+    if (a.xml.havebuildxpath && !VerifyXPathBuild(ctx, &a, pp, edcontext, &result))
     {
         result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
         return result;
@@ -508,8 +514,10 @@ static PromiseResult VerifyTreeInsertions(EvalContext *ctx, Attributes a, const 
 
 /***************************************************************************/
 
-static PromiseResult VerifyAttributeDeletions(EvalContext *ctx, Attributes a, const Promise *pp, EditContext *edcontext)
+static PromiseResult VerifyAttributeDeletions(EvalContext *ctx, const Attributes *attr, const Promise *pp, EditContext *edcontext)
 {
+    assert(attr != NULL);
+    Attributes a = *attr; // TODO: Remove this copy
     xmlDocPtr doc = NULL;
     xmlNodePtr docnode = NULL;
     CfLock thislock;
@@ -526,7 +534,7 @@ static PromiseResult VerifyAttributeDeletions(EvalContext *ctx, Attributes a, co
         return result;
     }
 
-    if (a.xml.havebuildxpath && !VerifyXPathBuild(ctx, a, pp, edcontext, &result))
+    if (a.xml.havebuildxpath && !VerifyXPathBuild(ctx, &a, pp, edcontext, &result))
     {
         return result;
     }
@@ -566,8 +574,10 @@ static PromiseResult VerifyAttributeDeletions(EvalContext *ctx, Attributes a, co
 
 /***************************************************************************/
 
-static PromiseResult VerifyAttributeSet(EvalContext *ctx, Attributes a, const Promise *pp, EditContext *edcontext)
+static PromiseResult VerifyAttributeSet(EvalContext *ctx, const Attributes *attr, const Promise *pp, EditContext *edcontext)
 {
+    assert(attr != NULL);
+    Attributes a = *attr; // TODO: Remove this copy
     xmlDocPtr doc = NULL;
     xmlNodePtr docnode = NULL;
     CfLock thislock;
@@ -584,7 +594,7 @@ static PromiseResult VerifyAttributeSet(EvalContext *ctx, Attributes a, const Pr
         return result;
     }
 
-    if (a.xml.havebuildxpath && !VerifyXPathBuild(ctx, a, pp, edcontext, &result))
+    if (a.xml.havebuildxpath && !VerifyXPathBuild(ctx, &a, pp, edcontext, &result))
     {
         return result;
     }
@@ -624,8 +634,10 @@ static PromiseResult VerifyAttributeSet(EvalContext *ctx, Attributes a, const Pr
 
 /***************************************************************************/
 
-static PromiseResult VerifyTextDeletions(EvalContext *ctx, Attributes a, const Promise *pp, EditContext *edcontext)
+static PromiseResult VerifyTextDeletions(EvalContext *ctx, const Attributes *attr, const Promise *pp, EditContext *edcontext)
 {
+    assert(attr != NULL);
+    Attributes a = *attr; // TODO: Remove this copy
     xmlDocPtr doc = NULL;
     xmlNodePtr docnode = NULL;
     CfLock thislock;
@@ -642,7 +654,7 @@ static PromiseResult VerifyTextDeletions(EvalContext *ctx, Attributes a, const P
         return result;
     }
 
-    if (a.xml.havebuildxpath && !VerifyXPathBuild(ctx, a, pp, edcontext, &result))
+    if (a.xml.havebuildxpath && !VerifyXPathBuild(ctx, &a, pp, edcontext, &result))
     {
         return result;
     }
@@ -682,8 +694,10 @@ static PromiseResult VerifyTextDeletions(EvalContext *ctx, Attributes a, const P
 
 /***************************************************************************/
 
-static PromiseResult VerifyTextSet(EvalContext *ctx, Attributes a, const Promise *pp, EditContext *edcontext)
+static PromiseResult VerifyTextSet(EvalContext *ctx, const Attributes *attr, const Promise *pp, EditContext *edcontext)
 {
+    assert(attr != NULL);
+    Attributes a = *attr; // TODO: Remove this copy
     xmlDocPtr doc = NULL;
     xmlNodePtr docnode = NULL;
     CfLock thislock;
@@ -700,7 +714,7 @@ static PromiseResult VerifyTextSet(EvalContext *ctx, Attributes a, const Promise
         return result;
     }
 
-    if (a.xml.havebuildxpath && !VerifyXPathBuild(ctx, a, pp, edcontext, &result))
+    if (a.xml.havebuildxpath && !VerifyXPathBuild(ctx, &a, pp, edcontext, &result))
     {
         return result;
     }
@@ -740,8 +754,10 @@ static PromiseResult VerifyTextSet(EvalContext *ctx, Attributes a, const Promise
 
 /***************************************************************************/
 
-static PromiseResult VerifyTextInsertions(EvalContext *ctx, Attributes a, const Promise *pp, EditContext *edcontext)
+static PromiseResult VerifyTextInsertions(EvalContext *ctx, const Attributes *attr, const Promise *pp, EditContext *edcontext)
 {
+    assert(attr != NULL);
+    Attributes a = *attr; // TODO: Remove this copy
     xmlDocPtr doc = NULL;
     xmlNodePtr docnode = NULL;
     CfLock thislock;
@@ -758,7 +774,7 @@ static PromiseResult VerifyTextInsertions(EvalContext *ctx, Attributes a, const 
         return result;
     }
 
-    if (a.xml.havebuildxpath && !VerifyXPathBuild(ctx, a, pp, edcontext, &result))
+    if (a.xml.havebuildxpath && !VerifyXPathBuild(ctx, &a, pp, edcontext, &result))
     {
         return result;
     }

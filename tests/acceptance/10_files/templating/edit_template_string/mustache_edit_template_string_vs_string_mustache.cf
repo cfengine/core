@@ -1,0 +1,124 @@
+body common control
+{
+        inputs => { "../../../default.cf.sub" };
+        bundlesequence  => { default("$(this.promise_filename)") };
+        version => "1.0";
+}
+
+bundle agent init
+{
+  files:
+
+      "$(G.testdir)/pghba.conf-from-edit_template_string"
+        delete => tidy;
+
+      "$(G.testdir)/pghba.conf-from-string_mustache"
+        delete => tidy;
+}
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-2910" }
+        string => "Test that there is no difference when rendering the same
+        mustache template with edit_template and edit_template_string";
+
+  vars:
+
+      "pghbadirectives" data => '[
+        {
+          "type": "local",
+          "database": "all",
+          "user": "all",
+          "address": "",
+          "method": "trust"
+        },
+        {
+          "type": "host",
+          "database": "replication",
+          "user": "all",
+          "address": "primary-replication",
+          "method": "trust"
+        },
+        {
+          "type": "host",
+          "database": "replication",
+          "user": "all",
+          "address": "secondary-replication",
+          "method": "trust"
+        }
+      ]';
+
+      # Reparent the config so that we have a named key to iterate over.
+      "conf" data => mergedata( '{ "pghba": pghbadirectives }' );
+
+  files:
+
+      "$(G.testdir)/pghba.conf-from-edit_template_string"
+        create => "true",
+        template_method => "inline_mustache",
+        template_data => @(conf),
+        edit_template_string => readfile( '$(this.promise_dirname)/pghba.conf.mustache' );
+
+      "$(G.testdir)/pghba.conf-from-edit_template_string"
+        comment => "We need to append a blank line in order to match up with
+        report_to_file from string_mustache",
+        edit_line => lines_present( "" );
+
+reports:
+
+      # This is how we get a file from string_mustache
+      "$(with)"
+        with => string_mustache( readfile('$(this.promise_dirname)/pghba.conf.mustache'), @(conf) ),
+        report_to_file => "$(G.testdir)/pghba.conf-from-string_mustache",
+        if => not( fileexists( "$(G.testdir)/pghba.conf-from-string_mustache" ));
+
+      DEBUG|EXTRA::
+      "$(G.testdir)/pghba.conf-from-edit_template_string"
+        printfile => cat( "$(G.testdir)/pghba.conf-from-edit_template_string");
+
+      "$(G.testdir)/pghba.conf-from-string_mustache"
+        printfile => cat( "$(G.testdir)/pghba.conf-from-string_mustache" );
+}
+
+bundle agent check
+{
+  methods:
+
+      "Pass/FAIL"
+        usebundle => dcs_check_diff_expected("$(G.testdir)/pghba.conf-from-string_mustache",
+                                             "$(G.testdir)/pghba.conf-from-edit_template_string",
+                                             "$(this.promise_filename)",
+                                             "no");
+}
+
+
+body printfile cat(file)
+# @brief Report the contents of a file
+# @param file The full path of the file to report
+{
+        file_to_print => "$(file)";
+        number_of_lines => "inf";
+}
+bundle edit_line lines_present(lines)
+# @brief Ensure `lines` are present in the file. Lines that do not exist are appended to the file
+# @param List or string that should be present in the file
+#
+# **Example:**
+#
+# ```cf3
+# bundle agent example
+# {
+#  vars:
+#    "nameservers" slist => { "8.8.8.8", "8.8.4.4" };
+#
+#  files:
+#      "/etc/resolv.conf" edit_line => lines_present( @(nameservers) );
+#      "/etc/ssh/sshd_config" edit_line => lines_present( "PermitRootLogin no" );
+# }
+# ```
+{
+  insert_lines:
+
+      "$(lines)"
+        comment => "Append lines if they don't exist";
+}

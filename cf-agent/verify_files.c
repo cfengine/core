@@ -313,7 +313,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
     {
         if ((a.create) || (a.touch))
         {
-            if (!CfCreateFile(ctx, path, pp, a, &result))
+            if (!CfCreateFile(ctx, path, pp, &a, &result))
             {
                 goto exit;
             }
@@ -387,7 +387,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
     {
         if ((a.create) || (a.touch))
         {
-            if (!CfCreateFile(ctx, path, pp, a, &result))
+            if (!CfCreateFile(ctx, path, pp, &a, &result))
             {
                 goto exit;
             }
@@ -440,7 +440,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
     {
         lstat(path, &oslb);     /* if doesn't exist have to stat again anyway */
 
-        DepthSearch(ctx, path, &oslb, 0, a, pp, oslb.st_dev, &result);
+        DepthSearch(ctx, path, &oslb, 0, &a, pp, oslb.st_dev, &result);
 
         /* normally searches do not include the base directory */
 
@@ -451,7 +451,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
             /* Handle this node specially */
 
             a.havedepthsearch = false;
-            DepthSearch(ctx, path, &oslb, 0, a, pp, oslb.st_dev, &result);
+            DepthSearch(ctx, path, &oslb, 0, &a, pp, oslb.st_dev, &result);
             a.havedepthsearch = save_search;
         }
         else
@@ -468,18 +468,18 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
 
     if (a.havecopy)
     {
-        result = PromiseResultUpdate(result, ScheduleCopyOperation(ctx, path, a, pp));
+        result = PromiseResultUpdate(result, ScheduleCopyOperation(ctx, path, &a, pp));
     }
 
 /* Phase 2b link after copy in case need file first */
 
     if ((a.havelink) && (a.link.link_children))
     {
-        result = PromiseResultUpdate(result, ScheduleLinkChildrenOperation(ctx, path, a.link.source, 1, a, pp));
+        result = PromiseResultUpdate(result, ScheduleLinkChildrenOperation(ctx, path, a.link.source, 1, &a, pp));
     }
     else if (a.havelink)
     {
-        result = PromiseResultUpdate(result, ScheduleLinkOperation(ctx, path, a.link.source, a, pp));
+        result = PromiseResultUpdate(result, ScheduleLinkOperation(ctx, path, a.link.source, &a, pp));
     }
 
 /* Phase 3 - content editing */
@@ -504,7 +504,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
     if (exists && (S_ISREG(osb.st_mode))
         && (!a.haveselect || SelectLeaf(ctx, path, &osb, a.select)))
     {
-        VerifyFileLeaf(ctx, path, &osb, a, pp, &result);
+        VerifyFileLeaf(ctx, path, &osb, &a, pp, &result);
     }
 
     if (!exists && a.havechange)

@@ -53,15 +53,15 @@ typedef struct
 } EditContext;
 
 // filename must not be freed until FinishEditContext.
-EditContext *NewEditContext(char *filename, Attributes a);
+EditContext *NewEditContext(char *filename, const Attributes *a);
 void FinishEditContext(EvalContext *ctx, EditContext *ec,
-                       Attributes a, const Promise *pp,
+                       const Attributes *a, const Promise *pp,
                        PromiseResult *result);
 
 #ifdef HAVE_LIBXML2
 int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, EditDefaults ed);
 bool SaveXmlDocAsFile(xmlDocPtr doc, const char *file,
-                      Attributes a, NewLineMode new_line_mode);
+                      const Attributes *a, NewLineMode new_line_mode);
 #endif
 
 #endif

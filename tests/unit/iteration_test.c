@@ -8,27 +8,43 @@
 static void test_FindDollarParen(void)
 {
     /* not found */
-    assert_int_equal(FindDollarParen(""), 0);
-    assert_int_equal(FindDollarParen(" "), 1);
-    assert_int_equal(FindDollarParen("$"), 1);
-    assert_int_equal(FindDollarParen("("), 1);
-    assert_int_equal(FindDollarParen("{"), 1);
-    assert_int_equal(FindDollarParen("$ "), 2);
-    assert_int_equal(FindDollarParen("$$"), 2);
-    assert_int_equal(FindDollarParen("$["), 2);
-    assert_int_equal(FindDollarParen("($"), 2);
-    assert_int_equal(FindDollarParen(" $"), 2);
-    assert_int_equal(FindDollarParen(" $["), 3);
-    assert_int_equal(FindDollarParen("$ ("), 3);
-    assert_int_equal(FindDollarParen("$ {"), 3);
+    assert_int_equal(FindDollarParen("", 1), 0);
+    assert_int_equal(FindDollarParen(" ", 2), 1);
+    assert_int_equal(FindDollarParen("$", 2), 1);
+    assert_int_equal(FindDollarParen("(", 2), 1);
+    assert_int_equal(FindDollarParen("{", 2), 1);
+    assert_int_equal(FindDollarParen("$ ", 3), 2);
+    assert_int_equal(FindDollarParen("$$", 3), 2);
+    assert_int_equal(FindDollarParen("$[", 3), 2);
+    assert_int_equal(FindDollarParen("($", 3), 2);
+    assert_int_equal(FindDollarParen(" $", 3), 2);
+    assert_int_equal(FindDollarParen(" $[", 4), 3);
+    assert_int_equal(FindDollarParen("$ (", 4), 3);
+    assert_int_equal(FindDollarParen("$ {", 4), 3);
 
     /* found */
-    assert_int_equal(FindDollarParen("${"), 0);
-    assert_int_equal(FindDollarParen("$("), 0);
-    assert_int_equal(FindDollarParen(" $("), 1);
-    assert_int_equal(FindDollarParen(" ${"), 1);
-    assert_int_equal(FindDollarParen("$$("), 1);
-    assert_int_equal(FindDollarParen("$${"), 1);
+    assert_int_equal(FindDollarParen("${", 3), 0);
+    assert_int_equal(FindDollarParen("$(", 3), 0);
+    assert_int_equal(FindDollarParen(" $(", 4), 1);
+    assert_int_equal(FindDollarParen(" ${", 4), 1);
+    assert_int_equal(FindDollarParen("$$(", 4), 1);
+    assert_int_equal(FindDollarParen("$${", 4), 1);
+
+    // Detect out of bounds read:
+    // If max is 0, it shouldn't try to deref these invalid pointers:
+    char a = 'a';
+    assert_int_equal(FindDollarParen(0x1, 0), 0);
+    assert_int_equal(FindDollarParen((&a) + 1, 0), 0);
+
+    // Should not read past max bytes:
+    char b[1] = {'b'};
+    assert_int_equal(FindDollarParen(b, 1), 1);
+    char c[8] = {'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c'};
+    assert_int_equal(FindDollarParen(c, 8), 8);
+
+    // We had some problems with FindDollarParen reading outside a buffer
+    // so I added these cryptic but useful tests. Some of them will only
+    // fail if you run tests with ASAN, valgrind or similar.
 }
 
 

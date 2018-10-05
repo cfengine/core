@@ -72,6 +72,7 @@ libutils_la_SOURCES = \
 	unicode.c unicode.h \
 	hash.c hash.h \
 	queue.c queue.h \
+	threaded_queue.c threaded_queue.h \
 	stack.c stack.h \
 	ring_buffer.c ring_buffer.h \
 	regex.c regex.h \

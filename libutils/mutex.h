@@ -27,12 +27,26 @@
 
 #include <platform.h>
 
-#define ThreadLock(m)     __ThreadLock(m, __func__, __FILE__, __LINE__)
-#define ThreadUnlock(m) __ThreadUnlock(m, __func__, __FILE__, __LINE__)
+#define THREAD_BLOCK_INDEFINITELY  -1
 
-void __ThreadLock(pthread_mutex_t *name,
+#define ThreadLock(m)       __ThreadLock(m, __func__, __FILE__, __LINE__)
+#define ThreadUnlock(m)   __ThreadUnlock(m, __func__, __FILE__, __LINE__)
+#define ThreadWait(m, n, t) __ThreadWait(m, n, t, __func__, __FILE__, __LINE__)
+
+void __ThreadLock(pthread_mutex_t *mutex,
                   const char *funcname, const char *filename, int lineno);
-void __ThreadUnlock(pthread_mutex_t *name,
+void __ThreadUnlock(pthread_mutex_t *mutex,
                     const char *funcname, const char *filename, int lineno);
+
+/**
+  @brief Function to wait for `timeout` seconds or until signalled.
+  @note Can use THREAD_BLOCK_INDEFINITELY to block until a signal is received.
+  @param [in] cond Thread condition to wait for.
+  @param [in] mutex Mutex lock to acquire once condition is met.
+  @param [in] timeout Seconds to wait for, can be THREAD_BLOCK_INDEFINITELY
+  @return 0 on success, -1 if timed out, exits if locking fails
+ */
+int __ThreadWait(pthread_cond_t *cond, pthread_mutex_t *mutex, int timeout,
+                 const char *funcname, const char *filename, int lineno);
 
 #endif

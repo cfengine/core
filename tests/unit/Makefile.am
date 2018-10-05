@@ -170,6 +170,7 @@ check_PROGRAMS = \
 	key_test \
 	cf_upgrade_test \
 	queue_test \
+	threaded_queue_test \
 	stack_test \
 	matching_test \
 	ring_buffer_test \
@@ -483,6 +484,8 @@ cf_upgrade_test_SOURCES = cf_upgrade_test.c \
 cf_upgrade_test_CFLAGS = -I$(CFUPGRADE)
 
 queue_test_SOURCES = queue_test.c
+
+threaded_queue_test_SOURCES = threaded_queue_test.c
 
 stack_test_SOURCES = stack_test.c
 

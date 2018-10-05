@@ -37,6 +37,6 @@
 #define CF_VALID_NPERMS_POSIX "rwx"
 #define CF_VALID_NPERMS_NTFS "drtxTwabBpcoD"
 
-PromiseResult VerifyACL(EvalContext *ctx, const char *file, Attributes a, const Promise *pp);
+PromiseResult VerifyACL(EvalContext *ctx, const char *file, const Attributes *attr, const Promise *pp);
 
 #endif

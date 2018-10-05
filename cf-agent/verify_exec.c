@@ -53,27 +53,28 @@ typedef enum
     ACTION_RESULT_FAILED
 } ActionResult;
 
-static bool SyntaxCheckExec(Attributes a, const Promise *pp);
-static bool PromiseKeptExec(Attributes a, const Promise *pp);
-static char *GetLockNameExec(Attributes a, const Promise *pp);
-static ActionResult RepairExec(EvalContext *ctx, Attributes a, const Promise *pp, PromiseResult *result);
+static bool SyntaxCheckExec(const Attributes *attr, const Promise *pp);
+static bool PromiseKeptExec(const Attributes *a, const Promise *pp);
+static char *GetLockNameExec(const Attributes *a, const Promise *pp);
+static ActionResult RepairExec(EvalContext *ctx, const Attributes *a, const Promise *pp, PromiseResult *result);
 
 static void PreviewProtocolLine(char *line, char *comm);
 
-char* BuildCommandLine(Attributes a, const Promise *pp)
+char* BuildCommandLine(const Attributes *a, const Promise *pp)
 {
+    assert(a != NULL);
     Writer *w = StringWriter();
     WriterWriteF(w, "%s", pp->promiser);
 
-    if (a.args)
+    if (a->args)
     {
         WriterWrite(w, " ");
-        WriterWrite(w, a.args);
+        WriterWrite(w, a->args);
     }
 
-    if (a.arglist)
+    if (a->arglist)
     {
-        for (const Rlist *rp = a.arglist; rp != NULL; rp = rp->next)
+        for (const Rlist *rp = a->arglist; rp != NULL; rp = rp->next)
         {
             switch (rp->val.type)
             {
@@ -96,17 +97,17 @@ PromiseResult VerifyExecPromise(EvalContext *ctx, const Promise *pp)
 {
     Attributes a = GetExecAttributes(ctx, pp);
 
-    if (!SyntaxCheckExec(a, pp))
+    if (!SyntaxCheckExec(&a, pp))
     {
         return PROMISE_RESULT_FAIL;
     }
 
-    if (PromiseKeptExec(a, pp))
+    if (PromiseKeptExec(&a, pp))
     {
         return PROMISE_RESULT_NOOP;
     }
 
-    char *lock_name = GetLockNameExec(a, pp);
+    char *lock_name = GetLockNameExec(&a, pp);
     CfLock thislock = AcquireLock(ctx, lock_name, VUQNAME, CFSTARTTIME, a.transaction.ifelapsed, a.transaction.expireafter, pp, false);
     free(lock_name);
     if (thislock.lock == NULL)
@@ -121,7 +122,7 @@ PromiseResult VerifyExecPromise(EvalContext *ctx, const Promise *pp)
      * Unless overridden by attributes in body classes, an exit code 0 means
      * reparied (PROMISE_RESULT_CHANGE), an exit code != 0 means failure.
      */
-    switch (RepairExec(ctx, a, pp, &result))
+    switch (RepairExec(ctx, &a, pp, &result))
     {
     case ACTION_RESULT_OK:
         result = PromiseResultUpdate(result, PROMISE_RESULT_NOOP);
@@ -148,8 +149,11 @@ PromiseResult VerifyExecPromise(EvalContext *ctx, const Promise *pp)
 /* Level                                                                     */
 /*****************************************************************************/
 
-static bool SyntaxCheckExec(Attributes a, const Promise *pp)
+static bool SyntaxCheckExec(const Attributes *attr, const Promise *pp)
 {
+    assert(attr != NULL);
+    Attributes a = *attr; // TODO get rid of this, this function was probably
+                          // intended to have side effects on the attr struct
     if ((a.contain.nooutput) && (a.contain.preview))
     {
         Log(LOG_LEVEL_ERR, "no_output and preview are mutually exclusive (broken promise)");
@@ -181,26 +185,26 @@ static bool SyntaxCheckExec(Attributes a, const Promise *pp)
 #else /* !__MINGW32__ */
     if (a.contain.umask == (mode_t)CF_UNDEFINED)
     {
-        a.contain.umask = 077;
+        a.contain.umask = 077; // FIXME: This has no effect!
     }
 #endif /* !__MINGW32__ */
 
     return true;
 }
 
-static bool PromiseKeptExec(ARG_UNUSED Attributes a, ARG_UNUSED const Promise *pp)
+static bool PromiseKeptExec(ARG_UNUSED const Attributes *a, ARG_UNUSED const Promise *pp)
 {
     return false;
 }
 
-static char *GetLockNameExec(Attributes a, const Promise *pp)
+static char *GetLockNameExec(const Attributes *a, const Promise *pp)
 {
     return BuildCommandLine(a, pp);
 }
 
 /*****************************************************************************/
 
-static ActionResult RepairExec(EvalContext *ctx, Attributes a,
+static ActionResult RepairExec(EvalContext *ctx, const Attributes *a,
                                const Promise *pp, PromiseResult *result)
 {
     char eventname[CF_BUFSIZE];
@@ -218,11 +222,11 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a,
 
     module_context[0] = '\0';
 
-    if (IsAbsoluteFileName(CommandArg0(pp->promiser)) || a.contain.shelltype == SHELL_TYPE_NONE)
+    if (IsAbsoluteFileName(CommandArg0(pp->promiser)) || a->contain.shelltype == SHELL_TYPE_NONE)
     {
         if (!IsExecutable(CommandArg0(pp->promiser)))
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "'%s' promises to be executable but isn't", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "'%s' promises to be executable but isn't", pp->promiser);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
 
             if (strchr(pp->promiser, ' '))
@@ -239,25 +243,25 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a,
     }
 
     char timeout_str[CF_BUFSIZE];
-    if (a.contain.timeout == CF_NOINT)
+    if (a->contain.timeout == CF_NOINT)
     {
         snprintf(timeout_str, CF_BUFSIZE, "no timeout");
     }
     else
     {
-        snprintf(timeout_str, CF_BUFSIZE, "timeout=%ds", a.contain.timeout);
+        snprintf(timeout_str, CF_BUFSIZE, "timeout=%ds", a->contain.timeout);
     }
 
     char owner_str[CF_BUFSIZE] = "";
-    if (a.contain.owner != -1)
+    if (a->contain.owner != -1)
     {
-        snprintf(owner_str, CF_BUFSIZE, ",uid=%ju", (uintmax_t)a.contain.owner);
+        snprintf(owner_str, CF_BUFSIZE, ",uid=%ju", (uintmax_t)a->contain.owner);
     }
 
     char group_str[CF_BUFSIZE] = "";
-    if (a.contain.group != -1)
+    if (a->contain.group != -1)
     {
-        snprintf(group_str, CF_BUFSIZE, ",gid=%ju", (uintmax_t)a.contain.group);
+        snprintf(group_str, CF_BUFSIZE, ",gid=%ju", (uintmax_t)a->contain.group);
     }
 
     char* temp = BuildCommandLine(a, pp);
@@ -268,23 +272,23 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a,
 
     BeginMeasure();
 
-    if (DONTDO && (!a.contain.preview))
+    if (DONTDO && (!a->contain.preview))
     {
-        cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, &a, "Would execute script '%s'", cmdline);
+        cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a, "Would execute script '%s'", cmdline);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
         return ACTION_RESULT_OK;
     }
 
-    if (a.transaction.action != cfa_fix)
+    if (a->transaction.action != cfa_fix)
     {
-        cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, &a, "Command '%s' needs to be executed, but only warning was promised", cmdline);
+        cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a, "Command '%s' needs to be executed, but only warning was promised", cmdline);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
         return ACTION_RESULT_OK;
     }
 
     CommandPrefix(cmdline, comm);
 
-    if (a.transaction.background)
+    if (a->transaction.background)
     {
 #ifdef __MINGW32__
         outsourced = true;
@@ -298,46 +302,46 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a,
         outsourced = false;
     }
 
-    if (outsourced || (!a.transaction.background))    // work done here: either by child or non-background parent
+    if (outsourced || (!a->transaction.background))    // work done here: either by child or non-background parent
     {
-        if (a.contain.timeout != CF_NOINT)
+        if (a->contain.timeout != CF_NOINT)
         {
-            SetTimeOut(a.contain.timeout);
+            SetTimeOut(a->contain.timeout);
         }
 
 #ifndef __MINGW32__
-        Log(LOG_LEVEL_VERBOSE, "Setting umask to %jo", (uintmax_t)a.contain.umask);
-        maskval = umask(a.contain.umask);
+        Log(LOG_LEVEL_VERBOSE, "Setting umask to %jo", (uintmax_t)a->contain.umask);
+        maskval = umask(a->contain.umask);
 
-        if (a.contain.umask == 0)
+        if (a->contain.umask == 0)
         {
             Log(LOG_LEVEL_VERBOSE, "Programming '%s' running with umask 0! Use umask= to set", cmdline);
         }
 #endif /* !__MINGW32__ */
 
-        const char *open_mode = a.module ? "rt" : "r";
-        if (a.contain.shelltype == SHELL_TYPE_POWERSHELL)
+        const char *open_mode = a->module ? "rt" : "r";
+        if (a->contain.shelltype == SHELL_TYPE_POWERSHELL)
         {
 #ifdef __MINGW32__
             pfp =
-                cf_popen_powershell_setuid(cmdline, open_mode, a.contain.owner, a.contain.group, a.contain.chdir, a.contain.chroot,
-                                           a.transaction.background);
+                cf_popen_powershell_setuid(cmdline, open_mode, a->contain.owner, a->contain.group, a->contain.chdir, a->contain.chroot,
+                                           a->transaction.background);
 #else // !__MINGW32__
             Log(LOG_LEVEL_ERR, "Powershell is only supported on Windows");
             return ACTION_RESULT_FAILED;
 #endif // !__MINGW32__
         }
-        else if (a.contain.shelltype == SHELL_TYPE_USE)
+        else if (a->contain.shelltype == SHELL_TYPE_USE)
         {
             pfp =
-                cf_popen_shsetuid(cmdline, open_mode, a.contain.owner, a.contain.group, a.contain.chdir, a.contain.chroot,
-                                  a.transaction.background);
+                cf_popen_shsetuid(cmdline, open_mode, a->contain.owner, a->contain.group, a->contain.chdir, a->contain.chroot,
+                                  a->transaction.background);
         }
         else
         {
             pfp =
-                cf_popensetuid(cmdline, open_mode, a.contain.owner, a.contain.group, a.contain.chdir, a.contain.chroot,
-                               a.transaction.background);
+                cf_popensetuid(cmdline, open_mode, a->contain.owner, a->contain.group, a->contain.chdir, a->contain.chroot,
+                               a->transaction.background);
         }
 
         if (pfp == NULL)
@@ -375,17 +379,17 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a,
                 break;
             }
 
-            if (a.contain.preview)
+            if (a->contain.preview)
             {
                 PreviewProtocolLine(line, cmdline);
             }
 
-            if (a.module)
+            if (a->module)
             {
-                ModuleProtocol(ctx, cmdline, line, !a.contain.nooutput, module_context, sizeof(module_context), module_tags, &persistence);
+                ModuleProtocol(ctx, cmdline, line, !a->contain.nooutput, module_context, sizeof(module_context), module_tags, &persistence);
             }
 
-            if (!a.contain.nooutput && !EmptyString(line))
+            if (!a->contain.nooutput && !EmptyString(line))
             {
                 lineOutLen = strlen(comm) + strlen(line) + 12;
 
@@ -425,7 +429,7 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a,
 
             if (ret == -1)
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Finished script '%s' - failed (abnormal termination)", pp->promiser);
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Finished script '%s' - failed (abnormal termination)", pp->promiser);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             }
             else
@@ -445,7 +449,7 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a,
         Log(LOG_LEVEL_INFO, "Last %d quoted lines were generated by promiser '%s'", count, cmdline);
     }
 
-    if (a.contain.timeout != CF_NOINT)
+    if (a->contain.timeout != CF_NOINT)
     {
         alarm(0);
         signal(SIGALRM, SIG_DFL);
@@ -459,7 +463,7 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a,
     snprintf(eventname, CF_BUFSIZE - 1, "Exec(%s)", cmdline);
 
 #ifndef __MINGW32__
-    if ((a.transaction.background) && outsourced)
+    if ((a->transaction.background) && outsourced)
     {
         Log(LOG_LEVEL_VERBOSE, "Backgrounded command '%s' is done - exiting", cmdline);
         exit(EXIT_SUCCESS);

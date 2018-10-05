@@ -30,7 +30,7 @@
 
 
 PromiseResult VerifyMeasurement(EvalContext *ctx, double *this,
-                                Attributes a, const Promise *pp);
+                                const Attributes *a, const Promise *pp);
 void HistoryUpdate(EvalContext *ctx, const Averages *newvals);
 
 

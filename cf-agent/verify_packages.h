@@ -39,7 +39,7 @@ int PrependPackageItem(EvalContext *ctx, PackageItem **list,
 // For testing.
 VersionCmpResult ComparePackages(EvalContext *ctx,
                                  const char *n, const char *v, const char *arch,
-                                 PackageItem *pi, Attributes a,
+                                 PackageItem *pi, const Attributes *a,
                                  const Promise *pp,
                                  const char *mode,
                                  PromiseResult *result);

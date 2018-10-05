@@ -50,17 +50,18 @@
 #include <buffer.h>
 
 
-int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise *pp, PromiseResult *result)
+int MoveObstruction(EvalContext *ctx, char *from, const Attributes *attr, const Promise *pp, PromiseResult *result)
 {
+    assert(attr != NULL);
     struct stat sb;
     char stamp[CF_BUFSIZE], saved[CF_BUFSIZE];
     time_t now_stamp = time((time_t *) NULL);
 
     if (lstat(from, &sb) == 0)
     {
-        if (!attr.move_obstructions)
+        if (!attr->move_obstructions)
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &attr, "Object '%s' exists and is obstructing our promise", from);
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Object '%s' exists and is obstructing our promise", from);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             return false;
         }
@@ -75,7 +76,7 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise
             saved[0] = '\0';
             strlcpy(saved, from, sizeof(saved));
 
-            if (attr.copy.backup == BACKUP_OPTION_TIMESTAMP || attr.edits.backup == BACKUP_OPTION_TIMESTAMP)
+            if (attr->copy.backup == BACKUP_OPTION_TIMESTAMP || attr->edits.backup == BACKUP_OPTION_TIMESTAMP)
             {
                 snprintf(stamp, CF_BUFSIZE, "_%jd_%s", (intmax_t) CFSTARTTIME, CanonifyName(ctime(&now_stamp)));
                 strlcat(saved, stamp, sizeof(saved));
@@ -83,12 +84,12 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise
 
             strlcat(saved, CF_SAVED, sizeof(saved));
 
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, &attr, "Moving file object '%s' to '%s'", from, saved);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, attr, "Moving file object '%s' to '%s'", from, saved);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
 
             if (rename(from, saved) == -1)
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &attr, "Can't rename '%s' to '%s'. (rename: %s)", from, saved, GetErrorStr());
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Can't rename '%s' to '%s'. (rename: %s)", from, saved, GetErrorStr());
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
                 return false;
             }
@@ -103,7 +104,7 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise
 
         if (S_ISDIR(sb.st_mode))
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, &attr, "Moving directory '%s' to '%s%s'", from, from, CF_SAVED);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, attr, "Moving directory '%s' to '%s%s'", from, from, CF_SAVED);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
 
             if (DONTDO)
@@ -121,7 +122,7 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise
 
             if (stat(saved, &sb) != -1)
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &attr, "Couldn't save directory '%s', since '%s' exists already", from,
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Couldn't save directory '%s', since '%s' exists already", from,
                      saved);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
                 Log(LOG_LEVEL_ERR, "Unable to force link to existing directory '%s'", from);
@@ -130,7 +131,7 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise
 
             if (rename(from, saved) == -1)
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &attr, "Can't rename '%s' to '%s'. (rename: %s)",
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Can't rename '%s' to '%s'. (rename: %s)",
                      from, saved, GetErrorStr());
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
                 return false;
@@ -143,8 +144,9 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise
 
 /*********************************************************************/
 
-bool SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attributes a, NewLineMode new_line_mode)
+bool SaveAsFile(SaveCallbackFn callback, void *param, const char *file, const Attributes *a, NewLineMode new_line_mode)
 {
+    assert(a != NULL);
     struct stat statbuf;
     char new[CF_BUFSIZE], backup[CF_BUFSIZE];
     char stamp[CF_BUFSIZE];
@@ -203,7 +205,7 @@ bool SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attribut
 
     strcpy(backup, BufferData(deref_file));
 
-    if (a.edits.backup == BACKUP_OPTION_TIMESTAMP)
+    if (a->edits.backup == BACKUP_OPTION_TIMESTAMP)
     {
         snprintf(stamp, CF_BUFSIZE, "_%jd_%s", (intmax_t) CFSTARTTIME, CanonifyName(ctime(&stamp_now)));
         strcat(backup, stamp);
@@ -251,13 +253,13 @@ bool SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attribut
         }
     }
 
-    if (a.edits.backup == BACKUP_OPTION_ROTATE)
+    if (a->edits.backup == BACKUP_OPTION_ROTATE)
     {
-        RotateFiles(backup, a.edits.rotate);
+        RotateFiles(backup, a->edits.rotate);
         unlink(backup);
     }
 
-    if (a.edits.backup != BACKUP_OPTION_NO_BACKUP)
+    if (a->edits.backup != BACKUP_OPTION_NO_BACKUP)
     {
         if (ArchiveToRepository(backup, a))
         {
@@ -323,8 +325,9 @@ static bool SaveItemListCallback(const char *dest_filename, void *param, NewLine
 
 /*********************************************************************/
 
-bool SaveItemListAsFile(Item *liststart, const char *file, Attributes a, NewLineMode new_line_mode)
+bool SaveItemListAsFile(Item *liststart, const char *file, const Attributes *a, NewLineMode new_line_mode)
 {
+    assert(a != NULL);
     return SaveAsFile(&SaveItemListCallback, liststart, file, a, new_line_mode);
 }
 
@@ -343,8 +346,9 @@ static Item *NextItem(const Item *ip)
 }
 
 static int ItemListsEqual(EvalContext *ctx, const Item *list1, const Item *list2, int warnings,
-                          Attributes a, const Promise *pp, PromiseResult *result)
+                          const Attributes *a, const Promise *pp, PromiseResult *result)
 {
+    assert(a != NULL);
     int retval = true;
 
     const Item *ip1 = list1;
@@ -363,21 +367,21 @@ static int ItemListsEqual(EvalContext *ctx, const Item *list1, const Item *list2
             {
                 if ((ip1 == list1) || (ip2 == list2))
                 {
-                    cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, &a, "File content wants to change from from/to full/empty but only a warning promised");
+                    cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a, "File content wants to change from from/to full/empty but only a warning promised");
                     *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                 }
                 else
                 {
                     if (ip1 != NULL)
                     {
-                        cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, &a, " ! edit_line change warning promised: (remove) %s",
+                        cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a, " ! edit_line change warning promised: (remove) %s",
                              ip1->name);
                         *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                     }
 
                     if (ip2 != NULL)
                     {
-                        cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, &a, " ! edit_line change warning promised: (add) %s", ip2->name);
+                        cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a, " ! edit_line change warning promised: (add) %s", ip2->name);
                         *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                     }
                 }
@@ -408,7 +412,7 @@ static int ItemListsEqual(EvalContext *ctx, const Item *list1, const Item *list2
             {
                 // If we want to see warnings, we need to scan the whole file
 
-                cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, &a, "edit_line warning promised: - %s", ip1->name);
+                cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a, "edit_line warning promised: - %s", ip1->name);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                 retval = false;
             }
@@ -423,9 +427,10 @@ static int ItemListsEqual(EvalContext *ctx, const Item *list1, const Item *list2
 
 /* returns true if file on disk is identical to file in memory */
 
-int CompareToFile(EvalContext *ctx, const Item *liststart, const char *file, Attributes a, const Promise *pp,
+int CompareToFile(EvalContext *ctx, const Item *liststart, const char *file, const Attributes *a, const Promise *pp,
                   PromiseResult *result)
 {
+    assert(a != NULL);
     struct stat statbuf;
     Item *cmplist = NULL;
 
@@ -444,12 +449,12 @@ int CompareToFile(EvalContext *ctx, const Item *liststart, const char *file, Att
         return false;
     }
 
-    if (!LoadFileAsItemList(&cmplist, file, a.edits))
+    if (!LoadFileAsItemList(&cmplist, file, a->edits))
     {
         return false;
     }
 
-    if (!ItemListsEqual(ctx, cmplist, liststart, (a.transaction.action == cfa_warn), a, pp, result))
+    if (!ItemListsEqual(ctx, cmplist, liststart, (a->transaction.action == cfa_warn), a, pp, result))
     {
         DeleteItemList(cmplist);
         return false;

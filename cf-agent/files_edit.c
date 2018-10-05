@@ -106,7 +106,7 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, const Attributes *a, c
     if (DONTDO || (a->transaction.action == cfa_warn))
     {
         if (ec &&
-            !CompareToFile(ctx, ec->file_start, ec->filename, *a, pp, result) &&
+            !CompareToFile(ctx, ec->file_start, ec->filename, a, pp, result) &&
             ec->num_edits > 0)
         {
             cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a,
@@ -125,12 +125,12 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, const Attributes *a, c
     {
         if (a->haveeditline || a->edit_template || a->edit_template_string)
         {
-            if (CompareToFile(ctx, ec->file_start, ec->filename, *a, pp, result))
+            if (CompareToFile(ctx, ec->file_start, ec->filename, a, pp, result))
             {
                 cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a,
                      "No edit changes to file '%s' need saving", ec->filename);
             }
-            else if (SaveItemListAsFile(ec->file_start, ec->filename, *a, ec->new_line_mode))
+            else if (SaveItemListAsFile(ec->file_start, ec->filename, a, ec->new_line_mode))
             {
                 cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a,
                      "Edit file '%s'", ec->filename);
@@ -257,6 +257,6 @@ static bool SaveXmlCallback(const char *dest_filename, void *param,
 
 bool SaveXmlDocAsFile(xmlDocPtr doc, const char *file, const Attributes *a, NewLineMode new_line_mode)
 {
-    return SaveAsFile(&SaveXmlCallback, doc, file, *a, new_line_mode);
+    return SaveAsFile(&SaveXmlCallback, doc, file, a, new_line_mode);
 }
 #endif /* HAVE_LIBXML2 */

@@ -29,28 +29,29 @@
 #include <locks.h>
 #include <ornaments.h>
 
-static bool NewPackagePromiseSanityCheck(Attributes a)
+static bool NewPackagePromiseSanityCheck(const Attributes *a)
 {
-    if (!a.new_packages.module_body || !a.new_packages.module_body->name)
+    assert(a != NULL);
+    if (!a->new_packages.module_body || !a->new_packages.module_body->name)
     {
         Log(LOG_LEVEL_ERR, "Can not find package module body in policy.");
         return false;
     }
 
-    if (a.new_packages.module_body->updates_ifelapsed == CF_NOINT ||
-        a.new_packages.module_body->installed_ifelapsed == CF_NOINT)
+    if (a->new_packages.module_body->updates_ifelapsed == CF_NOINT ||
+        a->new_packages.module_body->installed_ifelapsed == CF_NOINT)
     {
         Log(LOG_LEVEL_ERR,
                 "Invalid or missing arguments in package_module body '%s':  "
                 "query_installed_ifelapsed = %d query_updates_ifelapsed = %d",
-                a.new_packages.module_body->name,
-                a.new_packages.module_body->installed_ifelapsed,
-                a.new_packages.module_body->updates_ifelapsed);
+                a->new_packages.module_body->name,
+                a->new_packages.module_body->installed_ifelapsed,
+                a->new_packages.module_body->updates_ifelapsed);
             return false;
         return false;
     }
 
-    if (a.new_packages.package_policy == NEW_PACKAGE_ACTION_NONE)
+    if (a->new_packages.package_policy == NEW_PACKAGE_ACTION_NONE)
     {
         Log(LOG_LEVEL_ERR, "Unsupported package policy in package promise.");
         return false;
@@ -59,9 +60,10 @@ static bool NewPackagePromiseSanityCheck(Attributes a)
 }
 
 PromiseResult HandleNewPackagePromiseType(EvalContext *ctx, const Promise *pp,
-                                          Attributes a, char **promise_log_msg,
+                                          const Attributes *a, char **promise_log_msg,
                                           LogLevel *log_lvl)
 {
+    assert(a != NULL);
     Log(LOG_LEVEL_DEBUG, "New package promise handler");
 
 
@@ -80,7 +82,7 @@ PromiseResult HandleNewPackagePromiseType(EvalContext *ctx, const Promise *pp,
     CfLock package_promise_lock;
     char promise_lock[CF_BUFSIZE];
     snprintf(promise_lock, sizeof(promise_lock), "new-package-%s-%s",
-             pp->promiser, a.new_packages.module_body->name);
+             pp->promiser, a->new_packages.module_body->name);
 
     if (global_lock.g_lock.lock == NULL)
     {
@@ -94,7 +96,7 @@ PromiseResult HandleNewPackagePromiseType(EvalContext *ctx, const Promise *pp,
 
     package_promise_lock =
             AcquireLock(ctx, promise_lock, VUQNAME, CFSTARTTIME,
-            a.transaction.ifelapsed, a.transaction.expireafter, pp, false);
+            a->transaction.ifelapsed, a->transaction.expireafter, pp, false);
     if (package_promise_lock.lock == NULL)
     {
         Log(LOG_LEVEL_DEBUG, "Skipping promise execution due to locking.");
@@ -109,7 +111,7 @@ PromiseResult HandleNewPackagePromiseType(EvalContext *ctx, const Promise *pp,
     }
 
     PackageModuleWrapper *package_module =
-            NewPackageModuleWrapper(a.new_packages.module_body);
+            NewPackageModuleWrapper(a->new_packages.module_body);
 
     if (!package_module)
     {
@@ -126,13 +128,13 @@ PromiseResult HandleNewPackagePromiseType(EvalContext *ctx, const Promise *pp,
 
     PromiseResult result = PROMISE_RESULT_FAIL;
 
-    switch (a.new_packages.package_policy)
+    switch (a->new_packages.package_policy)
     {
         case NEW_PACKAGE_ACTION_ABSENT:
             result = HandleAbsentPromiseAction(ctx, pp->promiser,
-                                               &a.new_packages,
+                                               &a->new_packages,
                                                package_module,
-                                               a.transaction.action);
+                                               a->transaction.action);
 
             switch (result)
             {
@@ -171,9 +173,9 @@ PromiseResult HandleNewPackagePromiseType(EvalContext *ctx, const Promise *pp,
             break;
         case NEW_PACKAGE_ACTION_PRESENT:
             result = HandlePresentPromiseAction(ctx, pp->promiser,
-                                                &a.new_packages,
+                                                &a->new_packages,
                                                 package_module,
-                                                a.transaction.action);
+                                                a->transaction.action);
 
             switch (result)
             {
@@ -214,7 +216,7 @@ PromiseResult HandleNewPackagePromiseType(EvalContext *ctx, const Promise *pp,
         case NEW_PACKAGE_ACTION_NONE:
         default:
             ProgrammingError("Unsupported package action: %d",
-                             a.new_packages.package_policy);
+                             a->new_packages.package_policy);
             break;
     }
 

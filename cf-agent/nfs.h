@@ -29,10 +29,10 @@
 
 bool LoadMountInfo(Seq *list);
 void DeleteMountInfo(Seq *list);
-int VerifyNotInFstab(EvalContext *ctx, char *name, Attributes a, const Promise *pp, PromiseResult *result);
-int VerifyInFstab(EvalContext *ctx, char *name, Attributes a, const Promise *pp, PromiseResult *result);
-PromiseResult VerifyMount(EvalContext *ctx, char *name, Attributes a, const Promise *pp);
-PromiseResult VerifyUnmount(EvalContext *ctx, char *name, Attributes a, const Promise *pp);
+int VerifyNotInFstab(EvalContext *ctx, char *name, const Attributes *a, const Promise *pp, PromiseResult *result);
+int VerifyInFstab(EvalContext *ctx, char *name, const Attributes *a, const Promise *pp, PromiseResult *result);
+PromiseResult VerifyMount(EvalContext *ctx, char *name, const Attributes *a, const Promise *pp);
+PromiseResult VerifyUnmount(EvalContext *ctx, char *name, const Attributes *a, const Promise *pp);
 void CleanupNFS(void);
 void MountAll(void);
 

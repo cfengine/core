@@ -347,15 +347,16 @@ void DeleteMountInfo(Seq *list)
 
 /*******************************************************************/
 
-int VerifyInFstab(EvalContext *ctx, char *name, Attributes a, const Promise *pp, PromiseResult *result)
+int VerifyInFstab(EvalContext *ctx, char *name, const Attributes *a, const Promise *pp, PromiseResult *result)
 /* Ensure filesystem IS in fstab, and return no of changes */
 {
+    assert(a != NULL);
     char fstab[CF_BUFSIZE];
     char *host, *rmountpt, *mountpt, *fstype, *opts;
 
     if (!FSTABLIST)
     {
-        if (!LoadFileAsItemList(&FSTABLIST, VFSTAB[VSYSTEMHARDCLASS], a.edits))
+        if (!LoadFileAsItemList(&FSTABLIST, VFSTAB[VSYSTEMHARDCLASS], a->edits))
         {
             Log(LOG_LEVEL_ERR, "Couldn't open '%s'", VFSTAB[VSYSTEMHARDCLASS]);
             return false;
@@ -366,19 +367,19 @@ int VerifyInFstab(EvalContext *ctx, char *name, Attributes a, const Promise *pp,
         }
     }
 
-    if (a.mount.mount_options)
+    if (a->mount.mount_options)
     {
-        opts = Rlist2String(a.mount.mount_options, ",");
+        opts = Rlist2String(a->mount.mount_options, ",");
     }
     else
     {
         opts = xstrdup(VMOUNTOPTS[VSYSTEMHARDCLASS]);
     }
 
-    host = a.mount.mount_server;
-    rmountpt = a.mount.mount_source;
+    host = a->mount.mount_server;
+    rmountpt = a->mount.mount_source;
     mountpt = name;
-    fstype = a.mount.mount_type;
+    fstype = a->mount.mount_type;
 
 #if defined(__QNX__) || defined(__QNXNTO__)
     snprintf(fstab, CF_BUFSIZE, "%s:%s \t %s %s\t%s 0 0", host, rmountpt, mountpt, fstype, opts);
@@ -411,7 +412,7 @@ int VerifyInFstab(EvalContext *ctx, char *name, Attributes a, const Promise *pp,
     {
         AppendItem(&FSTABLIST, fstab, NULL);
         FSTAB_EDITS++;
-        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, &a, "Adding file system '%s:%s' to '%s'", host, rmountpt,
+        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Adding file system '%s:%s' to '%s'", host, rmountpt,
              VFSTAB[VSYSTEMHARDCLASS]);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
     }
@@ -422,7 +423,7 @@ int VerifyInFstab(EvalContext *ctx, char *name, Attributes a, const Promise *pp,
 
 /*******************************************************************/
 
-int VerifyNotInFstab(EvalContext *ctx, char *name, Attributes a, const Promise *pp, PromiseResult *result)
+int VerifyNotInFstab(EvalContext *ctx, char *name, const Attributes *a, const Promise *pp, PromiseResult *result)
 /* Ensure filesystem is NOT in fstab, and return no of changes */
 {
     char regex[CF_BUFSIZE];
@@ -431,7 +432,7 @@ int VerifyNotInFstab(EvalContext *ctx, char *name, Attributes a, const Promise *
 
     if (!FSTABLIST)
     {
-        if (!LoadFileAsItemList(&FSTABLIST, VFSTAB[VSYSTEMHARDCLASS], a.edits))
+        if (!LoadFileAsItemList(&FSTABLIST, VFSTAB[VSYSTEMHARDCLASS], a->edits))
         {
             Log(LOG_LEVEL_ERR, "Couldn't open '%s'", VFSTAB[VSYSTEMHARDCLASS]);
             return false;
@@ -442,21 +443,21 @@ int VerifyNotInFstab(EvalContext *ctx, char *name, Attributes a, const Promise *
         }
     }
 
-    if (a.mount.mount_options)
+    if (a->mount.mount_options)
     {
-        opts = Rlist2String(a.mount.mount_options, ",");
+        opts = Rlist2String(a->mount.mount_options, ",");
     }
     else
     {
         opts = xstrdup(VMOUNTOPTS[VSYSTEMHARDCLASS]);
     }
 
-    host = a.mount.mount_server;
+    host = a->mount.mount_server;
     mountpt = name;
 
     if (MatchFSInFstab(mountpt))
     {
-        if (a.mount.editfstab)
+        if (a->mount.editfstab)
         {
 #if defined(_AIX)
             FILE *pfp;
@@ -466,7 +467,7 @@ int VerifyNotInFstab(EvalContext *ctx, char *name, Attributes a, const Promise *
 
             if ((pfp = cf_popen(aixcomm, "r", true)) == NULL)
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Failed to invoke /usr/sbin/rmnfsmnt to edit fstab");
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Failed to invoke /usr/sbin/rmnfsmnt to edit fstab");
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
                 return 0;
             }
@@ -482,7 +483,7 @@ int VerifyNotInFstab(EvalContext *ctx, char *name, Attributes a, const Promise *
                 {
                     if (!feof(pfp))
                     {
-                        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Unable to read output of /bin/rmnfsmnt");
+                        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Unable to read output of /bin/rmnfsmnt");
                         *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
                         cf_pclose(pfp);
                         free(line);
@@ -501,7 +502,7 @@ int VerifyNotInFstab(EvalContext *ctx, char *name, Attributes a, const Promise *
 
                 if (strstr(line, "busy"))
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp, &a, "The device under '%s' cannot be removed from '%s'",
+                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp, a, "The device under '%s' cannot be removed from '%s'",
                          mountpt, VFSTAB[VSYSTEMHARDCLASS]);
                     *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
                     free(line);
@@ -522,7 +523,7 @@ int VerifyNotInFstab(EvalContext *ctx, char *name, Attributes a, const Promise *
                 next = ip->next;
                 if (FullTextMatch(ctx, regex, ip->name))
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, &a, "Deleting file system mounted on '%s'", host);
+                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Deleting file system mounted on '%s'", host);
                     *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
                     // Check host name matches too?
                     DeleteThisItem(&FSTABLIST, ip);
@@ -533,7 +534,7 @@ int VerifyNotInFstab(EvalContext *ctx, char *name, Attributes a, const Promise *
         }
     }
 
-    if (a.mount.mount_options)
+    if (a->mount.mount_options)
     {
         free(opts);
     }
@@ -543,20 +544,20 @@ int VerifyNotInFstab(EvalContext *ctx, char *name, Attributes a, const Promise *
 
 /*******************************************************************/
 
-PromiseResult VerifyMount(EvalContext *ctx, char *name, Attributes a, const Promise *pp)
+PromiseResult VerifyMount(EvalContext *ctx, char *name, const Attributes *a, const Promise *pp)
 {
     char comm[CF_BUFSIZE];
     FILE *pfp;
     char *host, *rmountpt, *mountpt, *opts=NULL;
 
-    host = a.mount.mount_server;
-    rmountpt = a.mount.mount_source;
+    host = a->mount.mount_server;
+    rmountpt = a->mount.mount_source;
     mountpt = name;
 
     /* Check for options required for this mount - i.e., -o ro,rsize, etc. */
-    if (a.mount.mount_options)
+    if (a->mount.mount_options)
     {
-        opts = Rlist2String(a.mount.mount_options, ",");
+        opts = Rlist2String(a->mount.mount_options, ",");
     }
     else
     {
@@ -591,7 +592,7 @@ PromiseResult VerifyMount(EvalContext *ctx, char *name, Attributes a, const Prom
         }
         else if ((strstr(line, "busy")) || (strstr(line, "Busy")))
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp, &a, "The device under '%s' cannot be mounted", mountpt);
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp, a, "The device under '%s' cannot be mounted", mountpt);
             result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
             cf_pclose(pfp);
             free(line);
@@ -605,7 +606,7 @@ PromiseResult VerifyMount(EvalContext *ctx, char *name, Attributes a, const Prom
     /* Since opts is either Rlist2String or xstrdup'd, we need to always free it */
     free(opts);
 
-    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, &a, "Mounting '%s' to keep promise", mountpt);
+    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Mounting '%s' to keep promise", mountpt);
     result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
 
     return result;
@@ -613,7 +614,7 @@ PromiseResult VerifyMount(EvalContext *ctx, char *name, Attributes a, const Prom
 
 /*******************************************************************/
 
-PromiseResult VerifyUnmount(EvalContext *ctx, char *name, Attributes a, const Promise *pp)
+PromiseResult VerifyUnmount(EvalContext *ctx, char *name, const Attributes *a, const Promise *pp)
 {
     char comm[CF_BUFSIZE];
     FILE *pfp;
@@ -649,7 +650,7 @@ PromiseResult VerifyUnmount(EvalContext *ctx, char *name, Attributes a, const Pr
         }
         else if (res > 0 && ((strstr(line, "busy")) || (strstr(line, "Busy"))))
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp, &a, "The device under '%s' cannot be unmounted", mountpt);
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp, a, "The device under '%s' cannot be unmounted", mountpt);
             result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
             cf_pclose(pfp);
             free(line);
@@ -657,7 +658,7 @@ PromiseResult VerifyUnmount(EvalContext *ctx, char *name, Attributes a, const Pr
         }
     }
 
-    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, &a, "Unmounting '%s' to keep promise", mountpt);
+    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Unmounting '%s' to keep promise", mountpt);
     result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
     return result;
 }

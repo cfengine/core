@@ -7876,6 +7876,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
         if (CheckID(content))
         {
             Buffer *tagbuf = StringSetToBuffer(tags, ',');
+            CanonifyNameInPlace(content);
             EvalContextClassPutSoft(ctx, content, CONTEXT_SCOPE_NAMESPACE, BufferData(tagbuf));
             if (*persistence > 0)
             {

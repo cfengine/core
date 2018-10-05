@@ -463,6 +463,11 @@ static void test_platform_extra_table(void)
     };
     char *name[CF_PROCCOLS]; /* Headers */
     char *field[CF_PROCCOLS]; /* Content */
+    for (int i = 0; i < CF_PROCCOLS; ++i)
+    {
+        name[i] = NULL;
+        field[i] = NULL;
+    }
     int start[CF_PROCCOLS] = { 0 };
     int end[CF_PROCCOLS] = { 0 };
     int user = 0, pid = 1, sz = 4, rss = 5, command = 10;
@@ -599,6 +604,11 @@ static void test_platform_extra_table(void)
         assert_string_equal(field[sz], "0");
         assert_string_equal(field[rss], "0");
         assert_string_equal(field[command], "");
+    }
+    for (int i=0; i < CF_PROCCOLS; ++i)
+    {
+        free(field[i]);
+        field[i] = NULL;
     }
 
     fclose(cmd_output);

@@ -40,7 +40,7 @@ typedef bool (*CopyRegularFileFunction)(EvalContext *ctx,
                                        const char *dest,
                                        struct stat sstat,
                                        struct stat dstat,
-                                       Attributes attr,
+                                       const Attributes *attr,
                                        const Promise *pp,
                                        CompressedArray **inode_cache,
                                        AgentConnection *conn,
@@ -50,7 +50,7 @@ ENTERPRISE_FUNC_8ARG_DECLARE(PromiseResult, LogFileChange,
                              EvalContext *, ctx,
                              const char *, file,
                              int, change,
-                             Attributes, a,
+                             const Attributes *, attr,
                              const Promise *, pp,
                              CopyRegularFileFunction, CopyRegularFilePtr,
                              const char *, destination, DeleteCompressedArrayFunction, DeleteCompressedArrayPtr);
@@ -61,4 +61,3 @@ ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, GenerateReports, const GenericAgentConfi
 ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, Nova_NoteAgentExecutionPerformance, const char *,
                                   input_file, struct timespec, start);
 #endif
-

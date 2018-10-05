@@ -48,8 +48,10 @@ static int CheckPermTypeSyntax(char *permt, int deny_support, const Promise *pp)
 static int CheckAclDefault(const char *path, Acl *acl, const Promise *pp);
 
 
-PromiseResult VerifyACL(EvalContext *ctx, const char *file, Attributes a, const Promise *pp)
+PromiseResult VerifyACL(EvalContext *ctx, const char *file, const Attributes *attr, const Promise *pp)
 {
+    assert(attr != NULL);
+    Attributes a = *attr; // TODO: Remove this local copy
     if (!CheckACLSyntax(file, a.acl, pp))
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, &a, "Syntax error in access control list for '%s'", file);
@@ -70,7 +72,7 @@ PromiseResult VerifyACL(EvalContext *ctx, const char *file, Attributes a, const 
 #if defined(__linux__)
         result = PromiseResultUpdate(result, CheckPosixLinuxACL(ctx, file, a.acl, &a, pp));
 #elif defined(__MINGW32__)
-        result = PromiseResultUpdate(result, Nova_CheckNtACL(ctx, file, a.acl, a, pp));
+        result = PromiseResultUpdate(result, Nova_CheckNtACL(ctx, file, a.acl, &a, pp));
 #else
         Log(LOG_LEVEL_INFO, "ACLs are not yet supported on this system.");
 #endif
@@ -87,7 +89,7 @@ PromiseResult VerifyACL(EvalContext *ctx, const char *file, Attributes a, const 
 
     case ACL_TYPE_NTFS_:
 #ifdef __MINGW32__
-        result = PromiseResultUpdate(result, Nova_CheckNtACL(ctx, file, a.acl, a, pp));
+        result = PromiseResultUpdate(result, Nova_CheckNtACL(ctx, file, a.acl, &a, pp));
 #else
         Log(LOG_LEVEL_INFO, "NTFS ACLs are not supported on this system");
 #endif

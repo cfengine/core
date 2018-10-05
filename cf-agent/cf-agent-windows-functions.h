@@ -29,7 +29,7 @@
 
 PromiseResult VerifyWindowsService(EvalContext *ctx, const Attributes *a, Promise *pp);
 PromiseResult Nova_CheckNtACL(EvalContext *ctx, const char *file_path, Acl acl,
-                              Attributes a, const Promise *pp);
+                              const Attributes *a, const Promise *pp);
 
 #endif // __MINGW32__
 

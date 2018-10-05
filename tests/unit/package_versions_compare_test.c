@@ -20,7 +20,7 @@ void test_different_name(void)
         }
     };
 
-    assert_int_equal(ComparePackages(ctx, "pkgtwo", "1", "arch", &pi, attr, NULL, "test", &result), VERCMP_NO_MATCH);
+    assert_int_equal(ComparePackages(ctx, "pkgtwo", "1", "arch", &pi, &attr, NULL, "test", &result), VERCMP_NO_MATCH);
 
     EvalContextDestroy(ctx);
 }
@@ -41,7 +41,7 @@ void test_wildcard_arch(void)
         }
     };
 
-    assert_int_equal(ComparePackages(ctx, "foobar", "1", "*", &pi, attr, NULL, "test", &result), VERCMP_MATCH);
+    assert_int_equal(ComparePackages(ctx, "foobar", "1", "*", &pi, &attr, NULL, "test", &result), VERCMP_MATCH);
 
     EvalContextDestroy(ctx);
 }
@@ -62,7 +62,7 @@ void test_non_matching_arch(void)
         }
     };
 
-    assert_int_equal(ComparePackages(ctx, "foobar", "1", "s390", &pi, attr, NULL, "test", &result), VERCMP_NO_MATCH);
+    assert_int_equal(ComparePackages(ctx, "foobar", "1", "s390", &pi, &attr, NULL, "test", &result), VERCMP_NO_MATCH);
 
     EvalContextDestroy(ctx);
 }
@@ -83,7 +83,7 @@ VersionCmpResult DoCompare(const char *lhs, const char *rhs, PackageVersionCompa
         }
     };
 
-    VersionCmpResult cmp_result = ComparePackages(ctx, "foobar", rhs, "somearch", &pi, a, NULL, "test", &result);
+    VersionCmpResult cmp_result = ComparePackages(ctx, "foobar", rhs, "somearch", &pi, &a, NULL, "test", &result);
 
     EvalContextDestroy(ctx);
 

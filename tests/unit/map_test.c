@@ -134,7 +134,9 @@ static void test_remove_n_as_from_map(HashMap *hashmap, unsigned int i)
     s[i] = '\0';
 
     assert_true(HashMapGet(hashmap, s) != NULL);
-    assert_true(HashMapRemove(hashmap, xstrdup(s)));
+    char * dup = xstrdup(s);
+    assert_true(HashMapRemove(hashmap, dup));
+    free(dup);
     assert_true(HashMapGet(hashmap, s) == NULL);
 }
 

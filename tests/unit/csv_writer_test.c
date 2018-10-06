@@ -36,7 +36,9 @@ void test_several_fields(void)
     CsvWriterField(c, "test3");
 
     CsvWriterClose(c);
-    assert_string_equal(StringWriterClose(w), "test1,test2,test3\r\n");
+    char *result_string = StringWriterClose(w);
+    assert_string_equal(result_string, "test1,test2,test3\r\n");
+    free(result_string);
 }
 
 void test_two_records(void)

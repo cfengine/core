@@ -5,6 +5,27 @@
 #include <csv_parser.h>
 #include <writer.h>
 
+static void test_new_csv_reader_empty_string()
+{
+    char line[]=",Null is not empty string,,\"\",\"\"";
+
+    Seq *list = SeqParseCsvString(line);
+    assert_true(list != NULL);
+    assert_int_equal(list->length, 5);
+    assert_true(list->data[0] != NULL);
+    assert_true(list->data[1] != NULL);
+    assert_true(list->data[2] != NULL);
+    assert_true(list->data[3] != NULL);
+    assert_true(list->data[4] != NULL);
+    assert_string_equal(list->data[0], "");
+    assert_string_equal(list->data[1], "Null is not empty string");
+    assert_string_equal(list->data[2], "");
+    assert_string_equal(list->data[3], "");
+    assert_string_equal(list->data[4], "");
+    assert_string_equal(list->data[2], list->data[3]);
+    SeqDestroy(list);
+}
+
 static void test_new_csv_reader_basic()
 {
     Seq *list = NULL;
@@ -199,6 +220,7 @@ int main()
     PRINT_TEST_BANNER();
     const UnitTest tests[] =
     {
+        unit_test(test_new_csv_reader_empty_string),
         unit_test(test_new_csv_reader_basic),
         unit_test(test_new_csv_reader),
         unit_test(test_new_csv_reader_lfln),

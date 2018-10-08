@@ -56,18 +56,18 @@ void SetRepositoryChar(char c)
 
 /*********************************************************************/
 
-bool GetRepositoryPath(ARG_UNUSED const char *file, Attributes attr, char *destination)
+bool GetRepositoryPath(ARG_UNUSED const char *file, const Attributes *attr, char *destination)
 {
-    if ((attr.repository == NULL) && (VREPOSITORY == NULL))
+    if ((attr->repository == NULL) && (VREPOSITORY == NULL))
     {
         return false;
     }
 
     size_t repopathlen;
 
-    if (attr.repository != NULL)
+    if (attr->repository != NULL)
     {
-        repopathlen = strlcpy(destination, attr.repository, CF_BUFSIZE);
+        repopathlen = strlcpy(destination, attr->repository, CF_BUFSIZE);
     }
     else
     {
@@ -85,7 +85,7 @@ bool GetRepositoryPath(ARG_UNUSED const char *file, Attributes attr, char *desti
 
 /*********************************************************************/
 
-int ArchiveToRepository(const char *file, Attributes attr)
+int ArchiveToRepository(const char *file, const Attributes *attr)
  /* Returns true if the file was backup up and false if not */
 {
     char destination[CF_BUFSIZE];
@@ -96,7 +96,7 @@ int ArchiveToRepository(const char *file, Attributes attr)
         return false;
     }
 
-    if (attr.copy.backup == BACKUP_OPTION_NO_BACKUP)
+    if (attr->copy.backup == BACKUP_OPTION_NO_BACKUP)
     {
         return true;
     }
@@ -123,7 +123,7 @@ int ArchiveToRepository(const char *file, Attributes attr)
         return false;
     }
 
-    if (!MakeParentDirectory(destination, attr.move_obstructions))
+    if (!MakeParentDirectory(destination, attr->move_obstructions))
     {
         // Could not create parent directory, assume this is okay,
         // verbose logging in MakeParentDirectory()

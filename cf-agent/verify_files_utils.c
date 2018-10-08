@@ -1217,24 +1217,24 @@ static PromiseResult LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile
 
         if (*linkbuf == '.')
         {
-            status = VerifyRelativeLink(ctx, destfile, linkbuf, *attr, pp);
+            status = VerifyRelativeLink(ctx, destfile, linkbuf, attr, pp);
         }
         else
         {
-            status = VerifyLink(ctx, destfile, linkbuf, *attr, pp);
+            status = VerifyLink(ctx, destfile, linkbuf, attr, pp);
         }
         break;
 
     case FILE_LINK_TYPE_RELATIVE:
-        status = VerifyRelativeLink(ctx, destfile, linkbuf, *attr, pp);
+        status = VerifyRelativeLink(ctx, destfile, linkbuf, attr, pp);
         break;
 
     case FILE_LINK_TYPE_ABSOLUTE:
-        status = VerifyAbsoluteLink(ctx, destfile, linkbuf, *attr, pp);
+        status = VerifyAbsoluteLink(ctx, destfile, linkbuf, attr, pp);
         break;
 
     case FILE_LINK_TYPE_HARDLINK:
-        status = VerifyHardLink(ctx, destfile, linkbuf, *attr, pp);
+        status = VerifyHardLink(ctx, destfile, linkbuf, attr, pp);
         break;
 
     default:
@@ -1317,7 +1317,7 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, str
         if ((CompressedArrayElementExists(*inode_cache, sstat.st_ino)) && (strcmp(dest, linkable) != 0))
         {
             unlink(dest);
-            MakeHardLink(ctx, dest, linkable, *attr, pp, result);
+            MakeHardLink(ctx, dest, linkable, attr, pp, result);
             return true;
         }
     }
@@ -1602,7 +1602,7 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, str
     {
         Log(LOG_LEVEL_INFO, "Cannot move a directory to repository, leaving at '%s'", backup);
     }
-    else if ((!discardbackup) && (ArchiveToRepository(backup, *attr)))
+    else if ((!discardbackup) && (ArchiveToRepository(backup, attr)))
     {
         unlink(backup);
     }
@@ -1692,7 +1692,7 @@ static bool TransformFile(EvalContext *ctx, char *file, const Attributes *attr, 
 
         transRetcode = cf_pclose(pop);
 
-        if (VerifyCommandRetcode(ctx, transRetcode, *attr, pp, result))
+        if (VerifyCommandRetcode(ctx, transRetcode, attr, pp, result))
         {
             Log(LOG_LEVEL_INFO, "Transformer '%s' => '%s' seemed to work ok", file, BufferData(command));
         }
@@ -1886,7 +1886,7 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, struct stat *sb, c
                     result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
                 }
 
-                if (ArchiveToRepository(newname, *attr))
+                if (ArchiveToRepository(newname, attr))
                 {
                     unlink(newname);
                 }
@@ -2153,7 +2153,7 @@ static PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, st
 #ifndef __MINGW32__
     if (S_ISLNK(dstat->st_mode))        /* No point in checking permission on a link */
     {
-        KillGhostLink(ctx, file, *attr, pp, &result);
+        KillGhostLink(ctx, file, attr, pp, &result);
         umask(maskvalue);
         return result;
     }
@@ -2269,7 +2269,7 @@ static PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, st
 
     if (attr->acl.acl_entries)
     {
-        result = PromiseResultUpdate(result, VerifyACL(ctx, file, *attr, pp));
+        result = PromiseResultUpdate(result, VerifyACL(ctx, file, attr, pp));
     }
 
     if (attr->touch)
@@ -2392,7 +2392,7 @@ int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, const
 
         if (S_ISLNK(lsb.st_mode))       /* should we ignore links? */
         {
-            if (KillGhostLink(ctx, path, *attr, pp, result))
+            if (KillGhostLink(ctx, path, attr, pp, result))
             {
                 continue;
             }
@@ -2932,16 +2932,16 @@ PromiseResult ScheduleLinkOperation(EvalContext *ctx, char *destination, char *s
     switch (attr->link.link_type)
     {
     case FILE_LINK_TYPE_SYMLINK:
-        result = VerifyLink(ctx, destination, source, *attr, pp);
+        result = VerifyLink(ctx, destination, source, attr, pp);
         break;
     case FILE_LINK_TYPE_HARDLINK:
-        result = VerifyHardLink(ctx, destination, source, *attr, pp);
+        result = VerifyHardLink(ctx, destination, source, attr, pp);
         break;
     case FILE_LINK_TYPE_RELATIVE:
-        result = VerifyRelativeLink(ctx, destination, source, *attr, pp);
+        result = VerifyRelativeLink(ctx, destination, source, attr, pp);
         break;
     case FILE_LINK_TYPE_ABSOLUTE:
-        result = VerifyAbsoluteLink(ctx, destination, source, *attr, pp);
+        result = VerifyAbsoluteLink(ctx, destination, source, attr, pp);
         break;
     default:
         Log(LOG_LEVEL_ERR, "Unknown link type - should not happen.");
@@ -3116,7 +3116,7 @@ static PromiseResult VerifyFileIntegrity(EvalContext *ctx, const char *file, con
     if (attr->change.report_diffs)
     {
         char destination[CF_BUFSIZE];
-        if (!GetRepositoryPath(file, *attr, destination))
+        if (!GetRepositoryPath(file, attr, destination))
         {
             destination[0] = '\0';
         }

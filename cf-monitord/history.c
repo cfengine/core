@@ -171,8 +171,10 @@ static void Nova_HistoryUpdate(time_t time, const Averages *newvals)
     CloseDB(dbp);
 }
 
-static Item *NovaReSample(EvalContext *ctx, int slot, Attributes a, const Promise *pp, PromiseResult *result)
+static Item *NovaReSample(EvalContext *ctx, int slot, const Attributes *attr, const Promise *pp, PromiseResult *result)
 {
+    assert(attr != NULL);
+    Attributes a = *attr; // TODO: try to remove this local copy
     CfLock thislock;
     char eventname[CF_BUFSIZE];
     struct timespec start;
@@ -424,7 +426,7 @@ void HistoryUpdate(EvalContext *ctx, const Averages *const newvals)
     Nova_DumpSlowlyVaryingObservations();
 }
 
-static Item *NovaGetMeasurementStream(EvalContext *ctx, Attributes a, const Promise *pp, PromiseResult *result)
+static Item *NovaGetMeasurementStream(EvalContext *ctx, const Attributes *a, const Promise *pp, PromiseResult *result)
 {
     int i;
 
@@ -448,7 +450,7 @@ static Item *NovaGetMeasurementStream(EvalContext *ctx, Attributes a, const Prom
 }
 
 static PromiseResult NovaExtractValueFromStream(EvalContext *ctx, const char *handle,
-                                                Item *stream, Attributes a,
+                                                Item *stream, const Attributes *a,
                                                 const Promise *pp, double *value_out)
 {
     char value[CF_MAXVARSIZE];
@@ -459,34 +461,34 @@ static PromiseResult NovaExtractValueFromStream(EvalContext *ctx, const char *ha
 
     for (ip = stream; ip != NULL; ip = ip->next)
     {
-        if (count == a.measure.select_line_number)
+        if (count == a->measure.select_line_number)
         {
             found = true;
             match = ip;
             match_count++;
         }
 
-        if (a.measure.select_line_matching && StringMatchFull(a.measure.select_line_matching, ip->name))
+        if (a->measure.select_line_matching && StringMatchFull(a->measure.select_line_matching, ip->name))
         {
-            Log(LOG_LEVEL_VERBOSE, " ?? Look for %s regex %s", handle, a.measure.select_line_matching);
+            Log(LOG_LEVEL_VERBOSE, " ?? Look for %s regex %s", handle, a->measure.select_line_matching);
             found = true;
             match = ip;
 
-            if (a.measure.extraction_regex)
+            if (a->measure.extraction_regex)
             {
-                switch (a.measure.data_type)
+                switch (a->measure.data_type)
                 {
                 case CF_DATA_TYPE_INT:
                 case CF_DATA_TYPE_REAL:
                 case CF_DATA_TYPE_COUNTER:
 
-                    strncpy(value, ExtractFirstReference(a.measure.extraction_regex, match->name), CF_MAXVARSIZE - 1);
+                    strncpy(value, ExtractFirstReference(a->measure.extraction_regex, match->name), CF_MAXVARSIZE - 1);
 
                     if (strcmp(value, "CF_NOMATCH") == 0)
                     {
                         ok_conversion = false;
                         Log(LOG_LEVEL_VERBOSE, "Was not able to match a value with '%s' on '%s'",
-                            a.measure.extraction_regex, match->name);
+                            a->measure.extraction_regex, match->name);
                     }
                     else
                     {
@@ -494,7 +496,7 @@ static PromiseResult NovaExtractValueFromStream(EvalContext *ctx, const char *ha
                         {
                             Log(LOG_LEVEL_VERBOSE, "Found candidate match value of '%s'", value);
 
-                            if (a.measure.policy == MEASURE_POLICY_SUM || a.measure.policy == MEASURE_POLICY_AVERAGE)
+                            if (a->measure.policy == MEASURE_POLICY_SUM || a->measure.policy == MEASURE_POLICY_AVERAGE)
                             {
                                 double delta = 0;
                                 if (DoubleFromString(value, &delta))
@@ -518,7 +520,7 @@ static PromiseResult NovaExtractValueFromStream(EvalContext *ctx, const char *ha
 
                             match_count++;
 
-                            if (a.measure.policy == MEASURE_POLICY_FIRST)
+                            if (a->measure.policy == MEASURE_POLICY_FIRST)
                             {
                                 done = true;
                             }
@@ -527,7 +529,7 @@ static PromiseResult NovaExtractValueFromStream(EvalContext *ctx, const char *ha
                     break;
 
                 default:
-                    Log(LOG_LEVEL_ERR, "Unexpected data type in data_type attribute: %d", a.measure.data_type);
+                    Log(LOG_LEVEL_ERR, "Unexpected data type in data_type attribute: %d", a->measure.data_type);
                 }
             }
 
@@ -543,12 +545,12 @@ static PromiseResult NovaExtractValueFromStream(EvalContext *ctx, const char *ha
 
     if (!found)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Could not locate the line for promise '%s'", handle);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Could not locate the line for promise '%s'", handle);
         *value_out = 0.0;
         return PROMISE_RESULT_FAIL;
     }
 
-    switch (a.measure.data_type)
+    switch (a->measure.data_type)
     {
     case CF_DATA_TYPE_COUNTER:
 
@@ -560,10 +562,10 @@ static PromiseResult NovaExtractValueFromStream(EvalContext *ctx, const char *ha
         if (match_count > 1)
         {
             Log(LOG_LEVEL_INFO, "Warning: %d lines matched the line_selection \"%s\"- making best average",
-                  match_count, a.measure.select_line_matching);
+                  match_count, a->measure.select_line_matching);
         }
 
-        if (match_count > 0 && a.measure.policy == MEASURE_POLICY_AVERAGE) // If not "average" then "sum"
+        if (match_count > 0 && a->measure.policy == MEASURE_POLICY_AVERAGE) // If not "average" then "sum"
         {
             real_val /= match_count;
         }
@@ -574,7 +576,7 @@ static PromiseResult NovaExtractValueFromStream(EvalContext *ctx, const char *ha
         if (match_count > 1)
         {
             Log(LOG_LEVEL_INFO, "Warning: %d lines matched the line_selection \"%s\"- making best average",
-                  match_count, a.measure.select_line_matching);
+                  match_count, a->measure.select_line_matching);
         }
 
         if (match_count > 0)
@@ -585,12 +587,12 @@ static PromiseResult NovaExtractValueFromStream(EvalContext *ctx, const char *ha
         break;
 
     default:
-        Log(LOG_LEVEL_ERR, "Unexpected data type in data_type attribute: %d", a.measure.data_type);
+        Log(LOG_LEVEL_ERR, "Unexpected data type in data_type attribute: %d", a->measure.data_type);
     }
 
     if (!ok_conversion)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Unable to extract a value from the matched line '%s'", match->name);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Unable to extract a value from the matched line '%s'", match->name);
         PromiseRef(LOG_LEVEL_INFO, pp);
         *value_out = 0.0;
         return PROMISE_RESULT_FAIL;
@@ -602,7 +604,7 @@ static PromiseResult NovaExtractValueFromStream(EvalContext *ctx, const char *ha
 }
 
 static void NovaLogSymbolicValue(EvalContext *ctx, const char *handle, Item *stream,
-                                 Attributes a, const Promise *pp, PromiseResult *result)
+                                 const Attributes *a, const Promise *pp, PromiseResult *result)
 {
     char value[CF_BUFSIZE], sdate[CF_MAXVARSIZE], filename[CF_BUFSIZE];
     int count = 1, found = false, match_count = 0;
@@ -625,17 +627,17 @@ static void NovaLogSymbolicValue(EvalContext *ctx, const char *handle, Item *str
             continue;
         }
 
-        if (count == a.measure.select_line_number)
+        if (count == a->measure.select_line_number)
         {
             Log(LOG_LEVEL_VERBOSE, "Found line %d by number...", count);
             found = true;
             match_count = 1;
             match = ip;
 
-            if (a.measure.extraction_regex)
+            if (a->measure.extraction_regex)
             {
-                Log(LOG_LEVEL_VERBOSE, "Now looking for a matching extractor \"%s\"", a.measure.extraction_regex);
-                strncpy(value, ExtractFirstReference(a.measure.extraction_regex, match->name), CF_MAXVARSIZE - 1);
+                Log(LOG_LEVEL_VERBOSE, "Now looking for a matching extractor \"%s\"", a->measure.extraction_regex);
+                strncpy(value, ExtractFirstReference(a->measure.extraction_regex, match->name), CF_MAXVARSIZE - 1);
                 Log(LOG_LEVEL_INFO, "Extracted value \"%s\" for promise \"%s\"", value, handle);
                 AppendItem(&matches, value, NULL);
             }
@@ -647,17 +649,17 @@ static void NovaLogSymbolicValue(EvalContext *ctx, const char *handle, Item *str
             break;
         }
 
-        if (a.measure.select_line_matching && StringMatchFull(a.measure.select_line_matching, ip->name))
+        if (a->measure.select_line_matching && StringMatchFull(a->measure.select_line_matching, ip->name))
         {
             Log(LOG_LEVEL_VERBOSE, "Found line %d by pattern...", count);
             found = true;
             match = ip;
             match_count++;
 
-            if (a.measure.extraction_regex)
+            if (a->measure.extraction_regex)
             {
-                Log(LOG_LEVEL_VERBOSE, "Now looking for a matching extractor \"%s\"", a.measure.extraction_regex);
-                strncpy(value, ExtractFirstReference(a.measure.extraction_regex, match->name), CF_MAXVARSIZE - 1);
+                Log(LOG_LEVEL_VERBOSE, "Now looking for a matching extractor \"%s\"", a->measure.extraction_regex);
+                strncpy(value, ExtractFirstReference(a->measure.extraction_regex, match->name), CF_MAXVARSIZE - 1);
                 Log(LOG_LEVEL_INFO, "Extracted value \"%s\" for promise \"%s\"", value, handle);
                 AppendItem(&matches, value, NULL);
             }
@@ -673,7 +675,7 @@ static void NovaLogSymbolicValue(EvalContext *ctx, const char *handle, Item *str
 
     if (!found)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Promiser '%s' found no matching line.", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Promiser '%s' found no matching line.", pp->promiser);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
         return;
     }
@@ -681,10 +683,10 @@ static void NovaLogSymbolicValue(EvalContext *ctx, const char *handle, Item *str
     if (match_count > 1)
     {
         Log(LOG_LEVEL_INFO, "Warning: %d lines matched the line_selection \"%s\"- matching to last", match_count,
-              a.measure.select_line_matching);
+              a->measure.select_line_matching);
     }
 
-    switch (a.measure.data_type)
+    switch (a->measure.data_type)
     {
     case CF_DATA_TYPE_COUNTER:
         Log(LOG_LEVEL_VERBOSE, "Counted %d for %s", match_count, handle);
@@ -701,13 +703,13 @@ static void NovaLogSymbolicValue(EvalContext *ctx, const char *handle, Item *str
 
     DeleteItemList(matches);
 
-    if (a.measure.history_type && strcmp(a.measure.history_type, "log") == 0)
+    if (a->measure.history_type && strcmp(a->measure.history_type, "log") == 0)
     {
         snprintf(filename, CF_BUFSIZE, "%s%c%s_measure.log", GetStateDir(), FILE_SEPARATOR, handle);
 
         if ((fout = fopen(filename, "a")) == NULL)
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Unable to open the output log \"%s\"", filename);
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Unable to open the output log \"%s\"", filename);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             PromiseRef(LOG_LEVEL_ERR, pp);
             return;
@@ -734,14 +736,14 @@ static void NovaLogSymbolicValue(EvalContext *ctx, const char *handle, Item *str
             return;
         }
 
-        snprintf(id, CF_MAXVARSIZE - 1, "%s:%d", handle, a.measure.data_type);
+        snprintf(id, CF_MAXVARSIZE - 1, "%s:%d", handle, a->measure.data_type);
         WriteDB(dbp, id, value, strlen(value) + 1);
         CloseDB(dbp);
     }
 }
 
 PromiseResult VerifyMeasurement(EvalContext *ctx, double *this,
-                                Attributes a, const Promise *pp)
+                                const Attributes *a, const Promise *pp)
 {
     const char *handle = PromiseGetHandle(pp);
     Item *stream = NULL;
@@ -759,7 +761,7 @@ PromiseResult VerifyMeasurement(EvalContext *ctx, double *this,
     }
 
     PromiseResult result = PROMISE_RESULT_NOOP;
-    switch (a.measure.data_type)
+    switch (a->measure.data_type)
     {
     case CF_DATA_TYPE_COUNTER:
     case CF_DATA_TYPE_INT:
@@ -770,10 +772,10 @@ PromiseResult VerifyMeasurement(EvalContext *ctx, double *this,
 
         stream = NovaGetMeasurementStream(ctx, a, pp, &result);
 
-        if (strcmp(a.measure.history_type, "weekly") == 0)
+        if (strcmp(a->measure.history_type, "weekly") == 0)
         {
             if ((slot = NovaRegisterSlot(handle, pp->comment ? pp->comment : "User defined measure",
-                                         a.measure.units ? a.measure.units : "unknown", 0.0f, 100.0f, true)) < 0)
+                                         a->measure.units ? a->measure.units : "unknown", 0.0f, 100.0f, true)) < 0)
             {
                 return result;
             }
@@ -781,7 +783,7 @@ PromiseResult VerifyMeasurement(EvalContext *ctx, double *this,
             result = PromiseResultUpdate(result, NovaExtractValueFromStream(ctx, handle, stream, a, pp, &this[slot]));
             Log(LOG_LEVEL_VERBOSE, "Setting Nova slot %d=%s to %lf", slot, handle, this[slot]);
         }
-        else if (strcmp(a.measure.history_type, "log") == 0)
+        else if (strcmp(a->measure.history_type, "log") == 0)
         {
             Log(LOG_LEVEL_VERBOSE, "Promise to log a numerical value");
             NovaLogSymbolicValue(ctx, handle, stream, a, pp, &result);

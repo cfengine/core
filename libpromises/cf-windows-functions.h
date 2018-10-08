@@ -89,7 +89,7 @@ FnCallResult FnCallGroupExists(EvalContext *ctx, const Policy *policy, const FnC
 
 /* win_wmi.c */
 
-int NovaWin_PackageListInstalledFromAPI(EvalContext *ctx, PackageItem ** pkgList, Attributes a, Promise *pp);
+int NovaWin_PackageListInstalledFromAPI(EvalContext *ctx, PackageItem ** pkgList, const Attributes *a, Promise *pp);
 
 /* win_execd_pipe.c */
 

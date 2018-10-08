@@ -41,7 +41,7 @@
 
 static int ServicesSanityChecks(const Attributes *a, const Promise *pp);
 static void SetServiceDefaults(Attributes *a);
-static PromiseResult DoVerifyServices(EvalContext *ctx, Attributes a, const Promise *pp);
+static PromiseResult DoVerifyServices(EvalContext *ctx, const Attributes *attr, const Promise *pp);
 static PromiseResult VerifyServices(EvalContext *ctx, const Attributes *a, const Promise *pp);
 
 
@@ -165,7 +165,7 @@ static PromiseResult VerifyServices(EvalContext *ctx, const Attributes *a, const
     }
     else
     {
-        result = PromiseResultUpdate(result, DoVerifyServices(ctx, *a, pp));
+        result = PromiseResultUpdate(result, DoVerifyServices(ctx, a, pp));
     }
 
     YieldCurrentLock(thislock);
@@ -200,8 +200,10 @@ static FnCall *DefaultServiceBundleCall(const Promise *pp, const char *service_p
     return call;
 }
 
-static PromiseResult DoVerifyServices(EvalContext *ctx, Attributes a, const Promise *pp)
+static PromiseResult DoVerifyServices(EvalContext *ctx, const Attributes *attr, const Promise *pp)
 {
+    assert(attr != NULL);
+    Attributes a = *attr; // TODO: Remove this local copy
     Rval call;
     {
         const Constraint *cp = PromiseGetConstraint(pp, "service_bundle");
@@ -219,7 +221,7 @@ static PromiseResult DoVerifyServices(EvalContext *ctx, Attributes a, const Prom
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "service_policy", a.service.service_policy, CF_DATA_TYPE_STRING, "source=promise");
 
     PromiseResult result = PROMISE_RESULT_NOOP;
-    result = PromiseResultUpdate(result, VerifyMethod(ctx, call, a, pp));  // Send list of classes to set privately?
+    result = PromiseResultUpdate(result, VerifyMethod(ctx, call, &a, pp));  // Send list of classes to set privately?
 
     RvalDestroy(call);
 

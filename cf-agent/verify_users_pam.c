@@ -1209,7 +1209,7 @@ static bool DoCreateUser(const char *puser, User u, enum cfopaction action,
         if (a->havebundle)
         {
             const Constraint *method_attrib = PromiseGetConstraint(pp, "home_bundle");
-            VerifyMethod(ctx, method_attrib->rval, *a, pp);
+            VerifyMethod(ctx, method_attrib->rval, a, pp);
         }
 
         if (u.policy != USER_STATE_LOCKED && u.password != NULL && strcmp (u.password, ""))

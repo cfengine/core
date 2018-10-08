@@ -640,7 +640,7 @@ static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp,
             }
             else
             {
-                if (SaveAsFile(SaveBufferCallback, output_buffer, edcontext->filename, a, edcontext->new_line_mode))
+                if (SaveAsFile(SaveBufferCallback, output_buffer, edcontext->filename, &a, edcontext->new_line_mode))
                 {
                     cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, &a, "Updated rendering of '%s' from mustache template '%s'",
                          pp->promiser, message);

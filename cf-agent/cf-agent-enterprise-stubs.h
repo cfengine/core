@@ -32,7 +32,7 @@
 #include <generic_agent.h>
 
 #if defined(__MINGW32__)
-PromiseResult VerifyRegistryPromise(EvalContext *ctx, Attributes a, const Promise *pp);
+PromiseResult VerifyRegistryPromise(EvalContext *ctx, const Attributes *a, const Promise *pp);
 #endif
 
 typedef bool (*CopyRegularFileFunction)(EvalContext *ctx,

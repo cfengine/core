@@ -32,7 +32,7 @@ bundle agent init
       # In addition, RHEL4 seems to have some problem killing the test
       # afterwards, and HP-UX and Solaris 9 and 10 are too slow for timing
       # to be accurate.
-      "test_skip_needs_work" string => "windows|using_fakeroot|redhat_4|hpux|sunos_5_9|sunos_5_10";
+      "test_skip_needs_work" string => "windows|using_fakeroot|redhat_4|hpux|solaris";
 
   methods:
     test_pass_4::

@@ -49,7 +49,7 @@
 #include <probes.h>                      /* MonOtherInit,MonOtherGatherData */
 #include <history.h>                     /* HistoryUpdate */
 #include <monitoring.h>                  /* GetObservable */
-
+#include <cleanup.h>
 
 /*****************************************************************************/
 /* Globals                                                                   */
@@ -372,7 +372,7 @@ static Averages EvalAvQ(EvalContext *ctx, char *t)
     if ((lastweek_vals = GetCurrentAverages(t)) == NULL)
     {
         Log(LOG_LEVEL_ERR, "Error reading average database");
-        exit(EXIT_FAILURE);
+        DoCleanupAndExit(EXIT_FAILURE);
     }
 
 /* Discard any apparently anomalous behaviour before renormalizing database */

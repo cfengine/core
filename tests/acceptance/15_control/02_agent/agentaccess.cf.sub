@@ -1,0 +1,10 @@
+body agent control
+{
+    agentaccess => { "nobody" };
+}
+
+bundle agent main
+{
+    # it is not expected that this policy actually runs due to agentaccess
+    # attribute above causing exit of cf-agent
+}

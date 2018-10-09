@@ -1,0 +1,36 @@
+body common control
+{
+  inputs => { "../default.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+}
+
+bundle agent init
+{
+  commands:
+    "/usr/bin/id";
+
+# should fail on unprivileged user
+#    "/bin/sudo -u nobody $(sys.cf_agent) --bootstrap 127.0.0.1";
+# but loader problems make this tricky. TODO
+
+# should fail on loopback
+    "$(sys.cf_agent) --bootstrap 127.0.0.1" classes => repairfailed;
+# should fail on can't connect
+    "$(sys.cf_agent) --bootstrap 10.0.0.1" classes => repairfailed;
+# should fail on can't resolve
+    "$(sys.cf_agent) --bootstrap foo.cfengine.com" classes => repairfailed;
+}
+
+body classes repairfailed
+{
+  repair_failed => { "ok" };
+}
+
+bundle agent check
+{
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

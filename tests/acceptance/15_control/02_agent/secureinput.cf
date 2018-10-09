@@ -1,0 +1,40 @@
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+}
+
+body agent control
+{
+    secureinput => "true";
+}
+
+bundle agent init
+{
+  files:
+    "$(this.promise_dirname)/secureinput.cf.sub"
+    perms => bad_perms;
+      
+  commands:
+    "$(sys.cf_agent) --verbose --file $(this.promise_dirname)/secureinput.cf.sub"
+      classes => repairfailed;
+}
+
+body perms bad_perms
+{
+    owners => { "nobody" };
+}
+
+body classes repairfailed
+{
+  repair_failed => { "ok" };
+}
+
+bundle agent check
+{
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

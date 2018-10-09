@@ -40,6 +40,7 @@
 #include <syntax.h>
 #include <audit.h>
 #include <string_lib.h>
+#include <cleanup.h>
 
 typedef struct
 {
@@ -289,7 +290,7 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp,
         if (Epimenides(ctx, PromiseGetBundle(pp)->ns, PromiseGetBundle(pp)->name, pp->promiser, rval, 0))
         {
             Log(LOG_LEVEL_ERR, "Variable '%s' contains itself indirectly - an unkeepable promise", pp->promiser);
-            exit(EXIT_FAILURE);
+            DoCleanupAndExit(EXIT_FAILURE);
         }
         else
         {

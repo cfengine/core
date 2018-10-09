@@ -1,0 +1,46 @@
+# this tests primary purpose is to call simple command line options to increase
+# code coverage.
+bundle common g
+{
+  classes:
+    "ok" expression => "any";
+}
+
+body common control
+{
+  inputs => { "../default.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+}
+
+bundle agent init
+{
+  commands:
+    "$(sys.cf_execd) --version" classes => command_ok;
+    "$(sys.cf_execd) --help" classes => command_ok;
+    "$(sys.cf_execd) -M" classes => command_ok;
+    "$(sys.cf_execd) -x" classes => command_ok;
+    "$(sys.cf_execd) -Cfoobar" classes => expect_failure(1);
+    "$(sys.cf_execd) -l --once --verbose" classes => command_ok;
+    "$(sys.cf_execd) -z" classes => expect_failure(1);	# not an option, should show usage
+    "$(sys.cf_execd) too many arguments" classes => expect_failure(1);
+}
+
+body classes command_ok
+{
+  cancel_notkept => { "ok" };
+}
+
+body classes expect_failure(err)
+{
+  kept_returncodes => { "$(err)" };
+  cancel_notkept => { "ok" };
+}
+
+bundle agent check
+{
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

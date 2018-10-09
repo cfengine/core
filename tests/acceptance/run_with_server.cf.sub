@@ -25,7 +25,7 @@ bundle agent start_server(server_config)
 
   commands:
     !debug_server.!windows::
-      "$(sys.cf_serverd) -Kf $(server_config)"
+      "$(sys.cf_serverd) -Klf $(server_config)"
         classes => if_failed("server_failed");
     !debug_server.windows::
       # Windows cannot daemonize and needs to start in background.
@@ -34,7 +34,7 @@ bundle agent start_server(server_config)
         classes => if_failed("server_failed");
 
     debug_server::
-      "$(sys.cf_serverd) -Kdf $(server_config) > $(dlog) 2>&1"
+      "$(sys.cf_serverd) -Kdlf $(server_config) > $(dlog) 2>&1"
         contain => run_under_shell,
         action => in_background,
         classes => if_failed("server_failed");
@@ -60,10 +60,10 @@ bundle agent run_test(test_name)
 
   commands:
     !debug_client::
-      "$(sys.cf_agent) -KIf $(test_name) -D DEBUG,AUTO 2>&1 | $(G.tee) $(dlog)"
+      "$(sys.cf_agent) -KIlf $(test_name) -D DEBUG,AUTO 2>&1 | $(G.tee) $(dlog)"
         contain => run_under_shell;
     debug_client::
-      "$(sys.cf_agent) -Kdf $(test_name) -D DEBUG,EXTRA,AUTO 2>&1 | $(G.tee) $(dlog)"
+      "$(sys.cf_agent) -Kdlf $(test_name) -D DEBUG,EXTRA,AUTO 2>&1 | $(G.tee) $(dlog)"
         contain => run_under_shell;
 
   reports:
@@ -82,10 +82,10 @@ bundle agent run_runagent(runagent_params)
 
   commands:
     !debug_client::
-      "$(sys.cf_runagent) -I $(runagent_params) 2>&1 | $(G.tee) $(dlog)"
+      "$(sys.cf_runagent) -Il $(runagent_params) 2>&1 | $(G.tee) $(dlog)"
         contain => run_under_shell;
     debug_client::
-      "$(sys.cf_runagent) -d $(runagent_params) 2>&1 | $(G.tee) $(dlog)"
+      "$(sys.cf_runagent) -dl $(runagent_params) 2>&1 | $(G.tee) $(dlog)"
         contain => run_under_shell;
 
   reports:

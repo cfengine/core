@@ -1,0 +1,58 @@
+# This test has the goal of calling simple command line options which will help
+# increase code coverage.
+bundle common g
+{
+  classes:
+    "ok" expression => "any";
+}
+
+body common control
+{
+  inputs => { "../default.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+}
+
+bundle agent init
+{
+  commands:
+    "$(sys.cf_agent) -z" classes => expect_failure(1);       # unknown option should cause --help
+    "$(sys.cf_agent) --version" classes => command_ok;
+    "$(sys.cf_agent) --help" classes => command_ok;
+    "$(sys.cf_agent) --log-modules=help" classes => command_ok;
+
+    "$(sys.cf_agent) --show-evaluated-classes --file $(this.promise_dirname)/empty_policy.cf.sub" classes => command_ok;
+
+    # --show-evaluated-vars needs DoCleanupAndExit()
+    "$(sys.cf_agent) --show-evaluated-vars --file $(this.promise_dirname)/empty_policy.cf.sub" classes => command_ok;
+
+    # --color and any evaluation of policy (--file and not --help or --version) requires DoCleanupAndExit()
+
+    "$(sys.cf_agent) --color --file $(this.promise_dirname)/empty_policy.cf.sub" classes => command_ok;
+
+    "$(sys.cf_agent) --self-diagnostics" classes => command_ok;
+
+    # secret options! :p output man page!?
+
+    # should cause error, can't use --trust-server without --bootstrap
+    "$(sys.cf_agent) --trust-server" classes => expect_failure(1);
+}
+
+body classes command_ok
+{
+  cancel_notkept => { "ok" };
+}
+
+body classes expect_failure(err)
+{
+  kept_returncodes => { "$(err)" };
+  cancel_notkept => { "ok" };
+}
+
+bundle agent check
+{
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

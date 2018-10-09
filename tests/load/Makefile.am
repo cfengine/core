@@ -50,7 +50,7 @@ check_PROGRAMS = db_load lastseen_load lastseen_threaded_load
 
 
 db_load_SOURCES = db_load.c
-db_load_LDADD = ../unit/libdb.la
+db_load_LDADD = ../unit/libdb.la ../../libutils/libutils.la
 
 
 lastseen_load_SOURCES = lastseen_load.c \

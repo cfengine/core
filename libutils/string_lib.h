@@ -50,9 +50,12 @@ typedef struct
 #define SAFENULL(str)                           \
     (str != NULL ? str : "(null)")
 
-#define EMPTYNULL(str)                          \
-    (str != NULL ? str : "")
-
+#ifndef EMPTY_STRING_TO_NULL
+#define EMPTY_STRING_TO_NULL(string) ((SafeStringLength(string) != 0)? string : NULL)
+#endif
+#ifndef NULL_TO_EMPTY_STRING
+#define NULL_TO_EMPTY_STRING(string) (string? string : "")
+#endif
 
 unsigned int StringHash        (const char *str, unsigned int seed);
 unsigned int StringHash_untyped(const void *str, unsigned int seed);

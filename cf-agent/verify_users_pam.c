@@ -924,64 +924,65 @@ static void TransformGidsToGroups(StringSet **list)
     StringSetDestroy(old_list);
 }
 
-static bool VerifyIfUserNeedsModifs (const char *puser, User u, const struct passwd *passwd_info,
+static bool VerifyIfUserNeedsModifs (const char *puser, const User *u, const struct passwd *passwd_info,
                              uint32_t *changemap)
 {
-    if (u.description != NULL && strcmp (u.description, passwd_info->pw_gecos))
+    assert(u != NULL);
+    if (u->description != NULL && strcmp (u->description, passwd_info->pw_gecos))
     {
         CFUSR_SETBIT (*changemap, i_comment);
     }
-    if (u.uid != NULL && (atoi (u.uid) != passwd_info->pw_uid))
+    if (u->uid != NULL && (atoi (u->uid) != passwd_info->pw_uid))
     {
         CFUSR_SETBIT (*changemap, i_uid);
     }
-    if (u.home_dir != NULL && strcmp (u.home_dir, passwd_info->pw_dir))
+    if (u->home_dir != NULL && strcmp (u->home_dir, passwd_info->pw_dir))
     {
         CFUSR_SETBIT (*changemap, i_home);
     }
-    if (u.shell != NULL && strcmp (u.shell, passwd_info->pw_shell))
+    if (u->shell != NULL && strcmp (u->shell, passwd_info->pw_shell))
     {
         CFUSR_SETBIT (*changemap, i_shell);
     }
     bool account_is_locked = IsAccountLocked(puser, passwd_info);
-    if ((!account_is_locked && u.policy == USER_STATE_LOCKED)
-        || (account_is_locked && u.policy != USER_STATE_LOCKED))
+    if ((!account_is_locked && u->policy == USER_STATE_LOCKED)
+        || (account_is_locked && u->policy != USER_STATE_LOCKED))
     {
         CFUSR_SETBIT(*changemap, i_locked);
     }
     // Don't bother with passwords if the account is going to be locked anyway.
-    if (u.password != NULL && strcmp (u.password, "")
-        && u.policy != USER_STATE_LOCKED)
+    if (u->password != NULL && strcmp (u->password, "")
+        && u->policy != USER_STATE_LOCKED)
     {
-        if (!IsPasswordCorrect(puser, u.password, u.password_format, passwd_info))
+        if (!IsPasswordCorrect(puser, u->password, u->password_format, passwd_info))
         {
             CFUSR_SETBIT (*changemap, i_password);
         }
     }
 
-    if (SafeStringLength(u.group_primary))
+    if (SafeStringLength(u->group_primary))
     {
-        bool group_could_be_gid = (strlen(u.group_primary) == strspn(u.group_primary, "0123456789"));
+        bool group_could_be_gid = (strlen(u->group_primary) == strspn(u->group_primary, "0123456789"));
         int gid;
 
         // We try name first, even if it looks like a gid. Only fall back to gid.
         struct group *group_info;
         errno = 0;
-        group_info = GetGrEntry(u.group_primary, &EqualGroupName);
+        group_info = GetGrEntry(u->group_primary, &EqualGroupName);
         if (!group_info && errno != 0)
         {
-            Log(LOG_LEVEL_ERR, "Could not obtain information about group '%s': %s", u.group_primary, GetErrorStr());
+            Log(LOG_LEVEL_ERR, "Could not obtain information about group '%s': %s", u->group_primary, GetErrorStr());
             gid = -1;
         }
         else if (!group_info)
         {
             if (group_could_be_gid)
             {
-                gid = atoi(u.group_primary);
+                gid = atoi(u->group_primary);
             }
             else
             {
-                Log(LOG_LEVEL_ERR, "No such group '%s'.", u.group_primary);
+                Log(LOG_LEVEL_ERR, "No such group '%s'.", u->group_primary);
                 gid = -1;
             }
         }
@@ -996,10 +997,10 @@ static bool VerifyIfUserNeedsModifs (const char *puser, User u, const struct pas
         }
     }
 
-    if (u.groups_secondary_given)
+    if (u->groups_secondary_given)
     {
         StringSet *wanted_groups = StringSetNew();
-        for (Rlist *ptr = u.groups_secondary; ptr; ptr = ptr->next)
+        for (Rlist *ptr = u->groups_secondary; ptr; ptr = ptr->next)
         {
             StringSetAdd(wanted_groups, xstrdup(RvalScalarValue(ptr->val)));
         }
@@ -1087,9 +1088,10 @@ static bool ExecuteUserCommand(const char *puser, const char *cmd, size_t sizeof
     return true;
 }
 
-static bool DoCreateUser(const char *puser, User u, enum cfopaction action,
+static bool DoCreateUser(const char *puser, const User *u, enum cfopaction action,
                          EvalContext *ctx, const Attributes *a, const Promise *pp)
 {
+    assert(u != NULL);
     char cmd[CF_BUFSIZE];
     char sec_group_args[CF_BUFSIZE];
     if (puser == NULL || !strcmp (puser, ""))
@@ -1098,34 +1100,34 @@ static bool DoCreateUser(const char *puser, User u, enum cfopaction action,
     }
     strcpy (cmd, USERADD);
 
-    if (u.uid != NULL && strcmp (u.uid, ""))
+    if (u->uid != NULL && strcmp (u->uid, ""))
     {
         StringAppend(cmd, " -u \"", sizeof(cmd));
-        StringAppend(cmd, u.uid, sizeof(cmd));
+        StringAppend(cmd, u->uid, sizeof(cmd));
         StringAppend(cmd, "\"", sizeof(cmd));
     }
 
-    if (u.description != NULL)
+    if (u->description != NULL)
     {
         StringAppend(cmd, " -c \"", sizeof(cmd));
-        StringAppend(cmd, u.description, sizeof(cmd));
+        StringAppend(cmd, u->description, sizeof(cmd));
         StringAppend(cmd, "\"", sizeof(cmd));
     }
 
-    if (u.group_primary != NULL && strcmp (u.group_primary, ""))
+    if (u->group_primary != NULL && strcmp (u->group_primary, ""))
     {
         // TODO: Should check that group exists
         StringAppend(cmd, " -g \"", sizeof(cmd));
-        StringAppend(cmd, u.group_primary, sizeof(cmd));
+        StringAppend(cmd, u->group_primary, sizeof(cmd));
         StringAppend(cmd, "\"", sizeof(cmd));
     }
 
-    if (u.groups_secondary_given)
+    if (u->groups_secondary_given)
     {
         // TODO: Should check that groups exist
         strlcpy(sec_group_args, " -G \"", sizeof(sec_group_args));
         char sep[2] = { '\0', '\0' };
-        for (Rlist *i = u.groups_secondary; i; i = i->next)
+        for (Rlist *i = u->groups_secondary; i; i = i->next)
         {
             StringAppend(sec_group_args, sep, sizeof(sec_group_args));
             StringAppend(sec_group_args, RvalScalarValue(i->val), sizeof(sec_group_args));
@@ -1135,16 +1137,16 @@ static bool DoCreateUser(const char *puser, User u, enum cfopaction action,
         StringAppend(cmd, sec_group_args, sizeof(cmd));
     }
 
-    if (u.home_dir != NULL && strcmp (u.home_dir, ""))
+    if (u->home_dir != NULL && strcmp (u->home_dir, ""))
     {
         StringAppend(cmd, " -d \"", sizeof(cmd));
-        StringAppend(cmd, u.home_dir, sizeof(cmd));
+        StringAppend(cmd, u->home_dir, sizeof(cmd));
         StringAppend(cmd, "\"", sizeof(cmd));
     }
-    if (u.shell != NULL && strcmp (u.shell, ""))
+    if (u->shell != NULL && strcmp (u->shell, ""))
     {
         StringAppend(cmd, " -s \"", sizeof(cmd));
-        StringAppend(cmd, u.shell, sizeof(cmd));
+        StringAppend(cmd, u->shell, sizeof(cmd));
         StringAppend(cmd, "\"", sizeof(cmd));
     }
 
@@ -1176,7 +1178,7 @@ static bool DoCreateUser(const char *puser, User u, enum cfopaction action,
             return false;
         }
 
-        if (u.groups_secondary_given)
+        if (u->groups_secondary_given)
         {
             // Work around issue on AIX. Always set secondary groups a second time, because AIX
             // likes to assign the primary group as the secondary group as well, even if we didn't
@@ -1198,7 +1200,7 @@ static bool DoCreateUser(const char *puser, User u, enum cfopaction action,
             return false;
         }
 
-        if (u.policy == USER_STATE_LOCKED)
+        if (u->policy == USER_STATE_LOCKED)
         {
             if (!SetAccountLocked(puser, "x", true))
             {
@@ -1212,9 +1214,9 @@ static bool DoCreateUser(const char *puser, User u, enum cfopaction action,
             VerifyMethod(ctx, method_attrib->rval, a, pp);
         }
 
-        if (u.policy != USER_STATE_LOCKED && u.password != NULL && strcmp (u.password, ""))
+        if (u->policy != USER_STATE_LOCKED && u->password != NULL && strcmp (u->password, ""))
         {
-            if (!ChangePassword(puser, u.password, u.password_format))
+            if (!ChangePassword(puser, u->password, u->password_format))
             {
                 return false;
             }
@@ -1242,8 +1244,9 @@ static bool DoRemoveUser (const char *puser, enum cfopaction action)
     return ExecuteUserCommand(puser, cmd, sizeof(cmd), "removing", "Removing");
 }
 
-static bool DoModifyUser (const char *puser, User u, const struct passwd *passwd_info, uint32_t changemap, enum cfopaction action)
+static bool DoModifyUser (const char *puser, const User *u, const struct passwd *passwd_info, uint32_t changemap, enum cfopaction action)
 {
+    assert(u != NULL);
     char cmd[CF_BUFSIZE];
 
     strcpy (cmd, USERMOD);
@@ -1251,21 +1254,21 @@ static bool DoModifyUser (const char *puser, User u, const struct passwd *passwd
     if (CFUSR_CHECKBIT (changemap, i_uid) != 0)
     {
         StringAppend(cmd, " -u \"", sizeof(cmd));
-        StringAppend(cmd, u.uid, sizeof(cmd));
+        StringAppend(cmd, u->uid, sizeof(cmd));
         StringAppend(cmd, "\"", sizeof(cmd));
     }
 
     if (CFUSR_CHECKBIT (changemap, i_comment) != 0)
     {
         StringAppend(cmd, " -c \"", sizeof(cmd));
-        StringAppend(cmd, u.description, sizeof(cmd));
+        StringAppend(cmd, u->description, sizeof(cmd));
         StringAppend(cmd, "\"", sizeof(cmd));
     }
 
     if (CFUSR_CHECKBIT (changemap, i_group) != 0)
     {
         StringAppend(cmd, " -g \"", sizeof(cmd));
-        StringAppend(cmd, u.group_primary, sizeof(cmd));
+        StringAppend(cmd, u->group_primary, sizeof(cmd));
         StringAppend(cmd, "\"", sizeof(cmd));
     }
 
@@ -1286,14 +1289,14 @@ static bool DoModifyUser (const char *puser, User u, const struct passwd *passwd
     if (CFUSR_CHECKBIT (changemap, i_home) != 0)
     {
         StringAppend(cmd, " -d \"", sizeof(cmd));
-        StringAppend(cmd, u.home_dir, sizeof(cmd));
+        StringAppend(cmd, u->home_dir, sizeof(cmd));
         StringAppend(cmd, "\"", sizeof(cmd));
     }
 
     if (CFUSR_CHECKBIT (changemap, i_shell) != 0)
     {
         StringAppend(cmd, " -s \"", sizeof(cmd));
-        StringAppend(cmd, u.shell, sizeof(cmd));
+        StringAppend(cmd, u->shell, sizeof(cmd));
         StringAppend(cmd, "\"", sizeof(cmd));
     }
 
@@ -1309,7 +1312,7 @@ static bool DoModifyUser (const char *puser, User u, const struct passwd *passwd
         }
         else
         {
-            if (!ChangePassword(puser, u.password, u.password_format))
+            if (!ChangePassword(puser, u->password, u->password_format))
             {
                 return false;
             }
@@ -1321,7 +1324,7 @@ static bool DoModifyUser (const char *puser, User u, const struct passwd *passwd
         if (action == cfa_warn || DONTDO)
         {
             Log(LOG_LEVEL_WARNING, "Need to %s account for user '%s'.",
-                (u.policy == USER_STATE_LOCKED) ? "lock" : "unlock", puser);
+                (u->policy == USER_STATE_LOCKED) ? "lock" : "unlock", puser);
             return false;
         }
         else
@@ -1341,7 +1344,7 @@ static bool DoModifyUser (const char *puser, User u, const struct passwd *passwd
                 // account will already have been unlocked anyway.
                 hash = NULL;
             }
-            if (!SetAccountLocked(puser, hash, (u.policy == USER_STATE_LOCKED)))
+            if (!SetAccountLocked(puser, hash, (u->policy == USER_STATE_LOCKED)))
             {
                 return false;
             }
@@ -1378,7 +1381,7 @@ static bool DoModifyUser (const char *puser, User u, const struct passwd *passwd
             strcpy(cmd, USERMOD);
             StringAppend(cmd, " -G \"", sizeof(cmd));
             char sep[2] = { '\0', '\0' };
-            for (Rlist *i = u.groups_secondary; i; i = i->next)
+            for (Rlist *i = u->groups_secondary; i; i = i->next)
             {
                 StringAppend(cmd, sep, sizeof(cmd));
                 StringAppend(cmd, RvalScalarValue(i->val), sizeof(cmd));
@@ -1433,9 +1436,10 @@ static struct passwd *GetPwEntry(const char *puser)
     }
 }
 
-void VerifyOneUsersPromise (const char *puser, User u, PromiseResult *result, enum cfopaction action,
+void VerifyOneUsersPromise (const char *puser, const User *u, PromiseResult *result, enum cfopaction action,
                             EvalContext *ctx, const Attributes *a, const Promise *pp)
 {
+    assert(u != NULL);
     bool res;
 
     struct passwd *passwd_info;
@@ -1446,7 +1450,7 @@ void VerifyOneUsersPromise (const char *puser, User u, PromiseResult *result, en
         return;
     }
 
-    if (u.policy == USER_STATE_PRESENT || u.policy == USER_STATE_LOCKED)
+    if (u->policy == USER_STATE_PRESENT || u->policy == USER_STATE_LOCKED)
     {
         if (passwd_info)
         {
@@ -1481,7 +1485,7 @@ void VerifyOneUsersPromise (const char *puser, User u, PromiseResult *result, en
             }
         }
     }
-    else if (u.policy == USER_STATE_ABSENT)
+    else if (u->policy == USER_STATE_ABSENT)
     {
         if (passwd_info)
         {

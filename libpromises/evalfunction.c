@@ -1426,15 +1426,8 @@ static JsonElement *VariablesMatching(const EvalContext *ctx, const FnCall *fp, 
                     JsonObjectAppendElement(matching, expr, data);
                 }
             }
-            else
-            {
-                free(expr);
-            }
         }
-        else
-        {
-            free(expr);
-        }
+        free(expr);
     }
 
     if (rx)
@@ -4345,6 +4338,7 @@ static FnCallResult FnCallFindfiles(EvalContext *ctx, ARG_UNUSED const Policy *p
             Log(LOG_LEVEL_VERBOSE, "%s pattern '%s' found match '%s'", fp->name, pattern, fname);
             RlistAppendScalarIdemp(&returnlist, fname);
         }
+        StringSetDestroy(found);
     }
 
     return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };

@@ -37,6 +37,9 @@ void *xmemdup(const void *mem, size_t size);
 int xasprintf(char **strp, const char *fmt, ...) FUNC_ATTR_PRINTF(2, 3);
 int xvasprintf(char **strp, const char *fmt, va_list ap) FUNC_ATTR_PRINTF(2, 0);
 
+#define DESTROY_AND_NULL(destroy, ptr) { destroy(ptr); ptr = NULL; }
+#define FREE_AND_NULL(ptr) { DESTROY_AND_NULL(free, ptr); }
+
 /*
  * Prevent any code from using un-wrapped allocators.
  *

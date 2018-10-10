@@ -250,18 +250,12 @@ Attributes GetExpandedAttributes(EvalContext *ctx, const Promise *pp, const Attr
 
 void ClearExpandedAttributes(Attributes *a)
 {
-    free(a->transaction.log_string);
-    a->transaction.log_string = NULL;
-    free(a->transaction.log_kept);
-    a->transaction.log_kept = NULL;
-    free(a->transaction.log_repaired);
-    a->transaction.log_repaired = NULL;
-    free(a->transaction.log_failed);
-    a->transaction.log_failed = NULL;
-    free(a->transaction.measure_id);
-    a->transaction.measure_id = NULL;
-    free(a->edit_template);
-    a->edit_template = NULL;
+    FREE_AND_NULL(a->transaction.log_string);
+    FREE_AND_NULL(a->transaction.log_kept);
+    FREE_AND_NULL(a->transaction.log_repaired);
+    FREE_AND_NULL(a->transaction.log_failed);
+    FREE_AND_NULL(a->transaction.measure_id);
+    FREE_AND_NULL(a->edit_template);
 
     ClearFilesAttributes(a);
 }
@@ -291,6 +285,8 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", path, CF_DATA_TYPE_STRING, "source=promise");
     Attributes a = GetExpandedAttributes(ctx, pp, &attr);
 
+    PromiseResult result = PROMISE_RESULT_NOOP;
+
     /* if template_data was specified, it must have been resolved to a data
      * container by now */
     /* check this early to prevent creation of the file below in case of failure */
@@ -300,10 +296,10 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
              "No template data for the promise '%s'", pp->promiser);
-        return PROMISE_RESULT_FAIL;
+        result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+        goto exit;
     }
 
-    PromiseResult result = PROMISE_RESULT_NOOP;
     if (lstat(path, &oslb) == -1)       /* Careful if the object is a link */
     {
         if ((a.create) || (a.touch))

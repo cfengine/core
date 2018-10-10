@@ -24,7 +24,7 @@ bundle agent check
       # verbose: Adding persistent class 'Cx4eXfWrHT0zsSbrAXh5jFnRnDLKqNsP' to heap
 
       # note we check that Ax4eXfWrHT0zsSbrAXh5jFnRnDLKqNsP and Bx4eXfWrHT0zsSbrAXh5jFnRnDLKqNsP are not set persistently!
-      "check" usebundle => dcs_passif_output(".*Module set persistent class 'Cx4eXfWrHT0zsSbrAXh5jFnRnDLKqNsP' for 20 minutes.*Adding persistent class 'Cx4eXfWrHT0zsSbrAXh5jFnRnDLKqNsP' to heap", ".*Module set persistent class '[AB]x4eXfWrHT0zsSbrAXh5jFnRnDLKqNsP'.*", $(command), $(this.promise_filename));
+      "check" usebundle => dcs_passif_output(".*Module set persistent class 'Cx4eXfWrHT0zsSbrAXh5jFnRnDLKqNsP' for 20 minutes.*", ".*Module set persistent class '[AB]x4eXfWrHT0zsSbrAXh5jFnRnDLKqNsP'.*", $(command), $(this.promise_filename));
 
 }
 ### PROJECT_ID: core

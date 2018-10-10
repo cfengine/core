@@ -139,7 +139,7 @@ static bool SelectProcess(const char *procentry,
                           int *start,
                           int *end,
                           const char *process_regex,
-                          ProcessSelect a,
+                          const ProcessSelect *a,
                           bool attrselect)
 {
     bool result = true;
@@ -179,7 +179,7 @@ static bool SelectProcess(const char *procentry,
         goto cleanup;
     }
 
-    for (rp = a.owner; rp != NULL; rp = rp->next)
+    for (rp = a->owner; rp != NULL; rp = rp->next)
     {
         if (SelectProcRegexMatch("USER", "UID", RlistScalarValue(rp), true, names, column))
         {
@@ -188,68 +188,68 @@ static bool SelectProcess(const char *procentry,
         }
     }
 
-    if (SelectProcRangeMatch("PID", "PID", a.min_pid, a.max_pid, names, column))
+    if (SelectProcRangeMatch("PID", "PID", a->min_pid, a->max_pid, names, column))
     {
         StringSetAdd(process_select_attributes, xstrdup("pid"));
     }
 
-    if (SelectProcRangeMatch("PPID", "PPID", a.min_ppid, a.max_ppid, names, column))
+    if (SelectProcRangeMatch("PPID", "PPID", a->min_ppid, a->max_ppid, names, column))
     {
         StringSetAdd(process_select_attributes, xstrdup("ppid"));
     }
 
-    if (SelectProcRangeMatch("PGID", "PGID", a.min_pgid, a.max_pgid, names, column))
+    if (SelectProcRangeMatch("PGID", "PGID", a->min_pgid, a->max_pgid, names, column))
     {
         StringSetAdd(process_select_attributes, xstrdup("pgid"));
     }
 
-    if (SelectProcRangeMatch("VSZ", "SZ", a.min_vsize, a.max_vsize, names, column))
+    if (SelectProcRangeMatch("VSZ", "SZ", a->min_vsize, a->max_vsize, names, column))
     {
         StringSetAdd(process_select_attributes, xstrdup("vsize"));
     }
 
-    if (SelectProcRangeMatch("RSS", "RSS", a.min_rsize, a.max_rsize, names, column))
+    if (SelectProcRangeMatch("RSS", "RSS", a->min_rsize, a->max_rsize, names, column))
     {
         StringSetAdd(process_select_attributes, xstrdup("rsize"));
     }
 
-    if (SelectProcTimeCounterRangeMatch("TIME", "TIME", a.min_ttime, a.max_ttime, names, column))
+    if (SelectProcTimeCounterRangeMatch("TIME", "TIME", a->min_ttime, a->max_ttime, names, column))
     {
         StringSetAdd(process_select_attributes, xstrdup("ttime"));
     }
 
     if (SelectProcTimeAbsRangeMatch
-        ("STIME", "START", a.min_stime, a.max_stime, names, column))
+        ("STIME", "START", a->min_stime, a->max_stime, names, column))
     {
         StringSetAdd(process_select_attributes, xstrdup("stime"));
     }
 
-    if (SelectProcRangeMatch("NI", "PRI", a.min_pri, a.max_pri, names, column))
+    if (SelectProcRangeMatch("NI", "PRI", a->min_pri, a->max_pri, names, column))
     {
         StringSetAdd(process_select_attributes, xstrdup("priority"));
     }
 
-    if (SelectProcRangeMatch("NLWP", "NLWP", a.min_thread, a.max_thread, names, column))
+    if (SelectProcRangeMatch("NLWP", "NLWP", a->min_thread, a->max_thread, names, column))
     {
         StringSetAdd(process_select_attributes, xstrdup("threads"));
     }
 
-    if (SelectProcRegexMatch("S", "STAT", a.status, true, names, column))
+    if (SelectProcRegexMatch("S", "STAT", a->status, true, names, column))
     {
         StringSetAdd(process_select_attributes, xstrdup("status"));
     }
 
-    if (SelectProcRegexMatch("CMD", "COMMAND", a.command, true, names, column))
+    if (SelectProcRegexMatch("CMD", "COMMAND", a->command, true, names, column))
     {
         StringSetAdd(process_select_attributes, xstrdup("command"));
     }
 
-    if (SelectProcRegexMatch("TTY", "TTY", a.tty, true, names, column))
+    if (SelectProcRegexMatch("TTY", "TTY", a->tty, true, names, column))
     {
         StringSetAdd(process_select_attributes, xstrdup("tty"));
     }
 
-    if (!a.process_result)
+    if (!a->process_result)
     {
         if (StringSetSize(process_select_attributes) == 0)
         {
@@ -274,7 +274,7 @@ static bool SelectProcess(const char *procentry,
     }
     else
     {
-        result = EvalProcessResult(a.process_result, process_select_attributes);
+        result = EvalProcessResult(a->process_result, process_select_attributes);
     }
 
 cleanup:
@@ -288,8 +288,9 @@ cleanup:
     return result;
 }
 
-Item *SelectProcesses(const char *process_name, ProcessSelect a, bool attrselect)
+Item *SelectProcesses(const char *process_name, const ProcessSelect *a, bool attrselect)
 {
+    assert(a != NULL);
     const Item *processes = PROCESSTABLE;
     Item *result = NULL;
 

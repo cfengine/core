@@ -377,7 +377,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
      * (if we have one) then just exit. But continue if it's a directory and
      * depth_search is on, so that we can file_select into it. */
     if (exists
-        && (a.haveselect && !SelectLeaf(ctx, path, &oslb, a.select))
+        && (a.haveselect && !SelectLeaf(ctx, path, &oslb, &(a.select)))
         && !(a.havedepthsearch && S_ISDIR(oslb.st_mode)))
     {
         goto exit;
@@ -502,7 +502,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
     exists = (stat(path, &osb) != -1);
 
     if (exists && (S_ISREG(osb.st_mode))
-        && (!a.haveselect || SelectLeaf(ctx, path, &osb, a.select)))
+        && (!a.haveselect || SelectLeaf(ctx, path, &osb, &(a.select))))
     {
         VerifyFileLeaf(ctx, path, &osb, &a, pp, &result);
     }

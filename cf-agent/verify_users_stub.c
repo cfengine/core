@@ -24,7 +24,8 @@
 
 #include <verify_users.h>
 
-void VerifyOneUsersPromise (ARG_UNUSED const char *puser, ARG_UNUSED User u,
+void VerifyOneUsersPromise (ARG_UNUSED const char *puser,
+                            ARG_UNUSED const User *u,
                             ARG_UNUSED PromiseResult *result,
                             ARG_UNUSED enum cfopaction action,
                             ARG_UNUSED EvalContext *ctx,

@@ -39,7 +39,7 @@ struct AbstractDir_
     Item *listpos;
 };
 
-AbstractDir *AbstractDirOpen(const char *dirname, FileCopy fc, AgentConnection *conn)
+AbstractDir *AbstractDirOpen(const char *dirname, const FileCopy *fc, AgentConnection *conn)
 {
     AbstractDir *d = xcalloc(1, sizeof(AbstractDir));
     if (conn == NULL)
@@ -53,8 +53,8 @@ AbstractDir *AbstractDirOpen(const char *dirname, FileCopy fc, AgentConnection *
     }
     else
     {
-        assert(fc.servers && strcmp(RlistScalarValue(fc.servers), "localhost"));
-        d->list = RemoteDirList(dirname, fc.encrypt, conn);
+        assert(fc->servers && strcmp(RlistScalarValue(fc->servers), "localhost"));
+        d->list = RemoteDirList(dirname, fc->encrypt, conn);
         if (d->list == NULL)
         {
             free(d);

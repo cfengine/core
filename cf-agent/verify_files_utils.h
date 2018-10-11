@@ -33,8 +33,8 @@ extern const Rlist *SINGLE_COPY_LIST;
 
 void SetFileAutoDefineList(const Rlist *auto_define_list);
 
-void VerifyFileLeaf(EvalContext *ctx, char *path, const struct stat *sb, const Attributes *attr, const Promise *pp, PromiseResult *result);
-int DepthSearch(EvalContext *ctx, char *name, const struct stat *sb, int rlevel, const Attributes *attr, const Promise *pp, dev_t rootdevice, PromiseResult *result);
+void VerifyFileLeaf(EvalContext *ctx, char *path, struct stat *sb, const Attributes *attr, const Promise *pp, PromiseResult *result);
+int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, const Attributes *attr, const Promise *pp, dev_t rootdevice, PromiseResult *result);
 bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, const Attributes *attr, PromiseResult *result_out);
 void SetSearchDevice(struct stat *sb, const Promise *pp);
 
@@ -42,10 +42,10 @@ PromiseResult ScheduleCopyOperation(EvalContext *ctx, char *destination, const A
 PromiseResult ScheduleLinkChildrenOperation(EvalContext *ctx, char *destination, char *source, int rec, const Attributes *attr, const Promise *pp);
 PromiseResult ScheduleLinkOperation(EvalContext *ctx, char *destination, char *source, const Attributes *attr, const Promise *pp);
 
-bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, const struct stat *sstat,
+bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, struct stat sstat, struct stat dstat,
                      const Attributes *attr, const Promise *pp, CompressedArray **inode_cache, AgentConnection *conn, PromiseResult *result);
 
 /* To be implemented in Nova for Win32 */
-bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, const Attributes *attr, const struct stat *sb, PromiseResult *result);
+bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, const Attributes *attr, struct stat *sb, PromiseResult *result);
 
 #endif

@@ -28,7 +28,7 @@
 #ifndef CFENGINE_VERIFY_FILES_HASHES_H
 #define CFENGINE_VERIFY_FILES_HASHES_H
 
-int CompareFileHashes(const char *file1, const char *file2, const struct stat *sstat, const struct stat *dstat, const FileCopy *fc, AgentConnection *conn);
-int CompareBinaryFiles(const char *file1, const char *file2, const struct stat *sstat, const struct stat *dstat, const FileCopy *fc, AgentConnection *conn);
+int CompareFileHashes(const char *file1, const char *file2, struct stat *sstat, struct stat *dstat, FileCopy fc, AgentConnection *conn);
+int CompareBinaryFiles(const char *file1, const char *file2, struct stat *sstat, struct stat *dstat, FileCopy fc, AgentConnection *conn);
 
 #endif

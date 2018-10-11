@@ -638,7 +638,7 @@ void FileChangesCheckAndUpdateDirectory(const char *name, const Seq *file_set, c
     CloseDB(db);
 }
 
-void FileChangesCheckAndUpdateStats(const char *file, const struct stat *sb, bool update, const Promise *pp)
+void FileChangesCheckAndUpdateStats(const char *file, struct stat *sb, bool update, const Promise *pp)
 {
     struct stat cmpsb;
     CF_DB *dbp;

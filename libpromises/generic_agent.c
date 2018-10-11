@@ -249,10 +249,13 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
                     // map to slist if the data only has primitives
                     Log(LOG_LEVEL_VERBOSE, "Installing augments slist variable '%s.%s' from file '%s'",
                         SpecialScopeToString(SPECIAL_SCOPE_DEF), vkey, filename);
+
+                    Rlist *data_as_rlist = RlistFromContainer(data);
                     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_DEF,
-                                                  vkey, RlistFromContainer(data),
+                                                  vkey, data_as_rlist,
                                                   CF_DATA_TYPE_STRING_LIST,
                                                   "source=augments_file");
+                    RlistDestroy(data_as_rlist);
                 }
                 else // install as a data container
                 {

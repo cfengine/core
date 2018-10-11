@@ -297,6 +297,7 @@ void HashMapPrintStats(const HashMap *hmap, FILE *f)
                 longest_bucket_id, bucket_lengths[longest_bucket_id]);
         bucket_lengths[longest_bucket_id] = 0;
     }
+    free(bucket_lengths);
 }
 /******************************************************************************/
 

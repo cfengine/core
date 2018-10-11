@@ -32,5 +32,4 @@ else
     sudo apt-get autoremove -y
     sudo apt-get install    -y byacc
     sudo apt-get -qy install curl
-    sudo apt-get install    -y gdb
 fi

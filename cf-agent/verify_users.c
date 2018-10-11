@@ -57,7 +57,7 @@ PromiseResult VerifyUsersPromise(EvalContext *ctx, const Promise *pp)
     }
 
     PromiseResult result = PROMISE_RESULT_NOOP;
-    VerifyOneUsersPromise(pp->promiser, &(a.users), &result, a.transaction.action, ctx, &a, pp);
+    VerifyOneUsersPromise(pp->promiser, a.users, &result, a.transaction.action, ctx, &a, pp);
 
     switch (result) {
     case PROMISE_RESULT_NOOP:

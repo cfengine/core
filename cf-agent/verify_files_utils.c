@@ -78,40 +78,40 @@ const Rlist *SINGLE_COPY_LIST = NULL; /* GLOBAL_P */
 static Rlist *SINGLE_COPY_CACHE = NULL; /* GLOBAL_X */
 
 static bool TransformFile(EvalContext *ctx, char *file, const Attributes *attr, const Promise *pp, PromiseResult *result);
-static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat *sb, const Attributes *attr, const Promise *pp);
+static PromiseResult VerifyName(EvalContext *ctx, char *path, struct stat *sb, const Attributes *attr, const Promise *pp);
 static PromiseResult VerifyDelete(EvalContext *ctx,
                                   const char *path, const struct stat *sb,
                                   const Attributes *attr, const Promise *pp);
 static PromiseResult VerifyCopy(EvalContext *ctx, const char *source, char *destination, const Attributes *attr, const Promise *pp,
                                 CompressedArray **inode_cache, AgentConnection *conn);
 static PromiseResult TouchFile(EvalContext *ctx, char *path, const Attributes *attr, const Promise *pp);
-static PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, const struct stat *dstat, const Attributes *attr, const Promise *pp);
-static int PushDirState(EvalContext *ctx, char *name, const struct stat *sb);
-static bool PopDirState(int goback, char *name, const struct stat *sb, DirectoryRecursion r);
-static bool CheckLinkSecurity(const struct stat *sb, char *name);
-static int CompareForFileCopy(char *sourcefile, char *destfile, const struct stat *ssb, const struct stat *dsb, const FileCopy *fc, AgentConnection *conn);
+static PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, struct stat *dstat, const Attributes *attr, const Promise *pp);
+static int PushDirState(EvalContext *ctx, char *name, struct stat *sb);
+static bool PopDirState(int goback, char *name, struct stat *sb, DirectoryRecursion r);
+static bool CheckLinkSecurity(struct stat *sb, char *name);
+static int CompareForFileCopy(char *sourcefile, char *destfile, struct stat *ssb, struct stat *dsb, FileCopy fc, AgentConnection *conn);
 static void FileAutoDefine(EvalContext *ctx, char *destfile);
 static void TruncateFile(char *name);
 static void RegisterAHardLink(int i, char *value, const Attributes *attr, CompressedArray **inode_cache);
-static PromiseResult VerifyCopiedFileAttributes(EvalContext *ctx, const char *src, const char *dest, const struct stat *sstat, const struct stat *dstat, const Attributes *attr, const Promise *pp);
-static int cf_stat(const char *file, struct stat *buf, const FileCopy *fc, AgentConnection *conn);
+static PromiseResult VerifyCopiedFileAttributes(EvalContext *ctx, const char *src, const char *dest, struct stat *sstat, struct stat *dstat, const Attributes *attr, const Promise *pp);
+static int cf_stat(const char *file, struct stat *buf, FileCopy fc, AgentConnection *conn);
 #ifndef __MINGW32__
 static int cf_readlink(EvalContext *ctx, char *sourcefile, char *linkbuf, int buffsize, const Attributes *attr, const Promise *pp, AgentConnection *conn, PromiseResult *result);
 #endif
 static int SkipDirLinks(EvalContext *ctx, char *path, const char *lastnode, DirectoryRecursion r);
-static int DeviceBoundary(const struct stat *sb, dev_t rootdevice);
-static PromiseResult LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile, const struct stat *sb, const Attributes *attr,
+static int DeviceBoundary(struct stat *sb, dev_t rootdevice);
+static PromiseResult LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile, struct stat *sb, const Attributes *attr,
                               const Promise *pp, CompressedArray **inode_cache, AgentConnection *conn);
 
 #ifndef __MINGW32__
 static void LoadSetxid(void);
 static void SaveSetxid(bool modified);
-static PromiseResult VerifySetUidGid(EvalContext *ctx, const char *file, const struct stat *dstat, mode_t newperm, const Promise *pp, const Attributes *attr);
+static PromiseResult VerifySetUidGid(EvalContext *ctx, const char *file, struct stat *dstat, mode_t newperm, const Promise *pp, const Attributes *attr);
 #endif
 #ifdef __APPLE__
 static int VerifyFinderType(EvalContext *ctx, const char *file, const Attributes *a, const Promise *pp, PromiseResult *result);
 #endif
-static void VerifyFileChanges(const char *file, const struct stat *sb, const Attributes *attr, const Promise *pp);
+static void VerifyFileChanges(const char *file, struct stat *sb, const Attributes *attr, const Promise *pp);
 static PromiseResult VerifyFileIntegrity(EvalContext *ctx, const char *file, const Attributes *attr, const Promise *pp);
 
 extern Attributes GetExpandedAttributes(EvalContext *ctx, const Promise *pp, const Attributes *attr);
@@ -122,7 +122,7 @@ void SetFileAutoDefineList(const Rlist *auto_define_list)
     AUTO_DEFINE_LIST = auto_define_list;
 }
 
-void VerifyFileLeaf(EvalContext *ctx, char *path, const struct stat *sb, const Attributes *attr, const Promise *pp, PromiseResult *result)
+void VerifyFileLeaf(EvalContext *ctx, char *path, struct stat *sb, const Attributes *attr, const Promise *pp, PromiseResult *result)
 {
     // FIXME: This function completely ignores it's attr argument
     assert(attr != NULL);
@@ -202,7 +202,7 @@ static int MatchRlistItem(EvalContext *ctx, const Rlist *listofregex, const char
 
 /* (conn == NULL) then copy is from localhost. */
 static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
-                                char *destfile, const struct stat *ssb,
+                                char *destfile, struct stat ssb,
                                 const Attributes *a, const Promise *pp,
                                 CompressedArray **inode_cache,
                                 AgentConnection *conn)
@@ -211,7 +211,7 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
     const char *lastnode;
     struct stat dsb;
     int found;
-    const mode_t srcmode = ssb->st_mode;
+    mode_t srcmode = ssb.st_mode;
 
     const char *server;
     if (conn != NULL)
@@ -244,7 +244,7 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
         return PROMISE_RESULT_NOOP;
     }
 
-    if (attr.haveselect && !SelectLeaf(ctx, sourcefile, ssb, &(attr.select)))
+    if (attr.haveselect && !SelectLeaf(ctx, sourcefile, &ssb, attr.select))
     {
         Log(LOG_LEVEL_DEBUG, "Skipping non-selected file '%s'", sourcefile);
         return PROMISE_RESULT_NOOP;
@@ -279,7 +279,7 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
                     "Links are not yet supported on Windows"
                     " - copying '%s' instead", sourcefile);
 #else
-                return LinkCopy(ctx, sourcefile, destfile, ssb,
+                return LinkCopy(ctx, sourcefile, destfile, &ssb,
                                 &attr, pp, inode_cache, conn);
 #endif
             }
@@ -291,9 +291,9 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
     if (found != -1)
     {
         if ((S_ISLNK(dsb.st_mode) && attr.copy.link_type == FILE_LINK_TYPE_NONE)
-            || (S_ISLNK(dsb.st_mode) && !S_ISLNK(srcmode)))
+            || (S_ISLNK(dsb.st_mode) && !S_ISLNK(ssb.st_mode)))
         {
-            if (!S_ISLNK(srcmode) &&
+            if (!S_ISLNK(ssb.st_mode) &&
                 attr.copy.type_check &&
                 attr.copy.link_type != FILE_LINK_TYPE_NONE)
             {
@@ -334,8 +334,8 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
 
     if (attr.copy.min_size != CF_NOINT)
     {
-        if ((ssb->st_size < attr.copy.min_size)
-            || (ssb->st_size > attr.copy.max_size))
+        if ((ssb.st_size < attr.copy.min_size)
+            || (ssb.st_size > attr.copy.max_size))
         {
             cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, &attr,
                  "Source file '%s' size is not in the permitted safety range",
@@ -379,10 +379,10 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
             {
                 Log(LOG_LEVEL_VERBOSE, "'%s' is a symbolic link", sourcefile);
                 result = PromiseResultUpdate(
-                    result, LinkCopy(ctx, sourcefile, destfile, ssb,
+                    result, LinkCopy(ctx, sourcefile, destfile, &ssb,
                                      &attr, pp, inode_cache, conn));
             }
-            else if (CopyRegularFile(ctx, sourcefile, destfile, ssb, &attr,
+            else if (CopyRegularFile(ctx, sourcefile, destfile, ssb, dsb, &attr,
                                      pp, inode_cache, conn, &result))
             {
                 if (stat(destfile, &dsb) == -1)
@@ -395,7 +395,7 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
                 {
                     result = PromiseResultUpdate(
                         result, VerifyCopiedFileAttributes(ctx, sourcefile,
-                                                           destfile, ssb,
+                                                           destfile, &ssb,
                                                            &dsb, &attr, pp));
                 }
 
@@ -456,7 +456,7 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
                 {
                     Log(LOG_LEVEL_INFO, "Make BLK/CHR/SOCK '%s'", destfile);
                 }
-                else if (mknod(destfile, srcmode, ssb->st_rdev))
+                else if (mknod(destfile, srcmode, ssb.st_rdev))
                 {
                     cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &attr,
                          "Cannot create special file '%s'. (mknod: %s)",
@@ -475,7 +475,7 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
         if ((S_ISLNK(srcmode)) && (attr.copy.link_type != FILE_LINK_TYPE_NONE))
         {
             result = PromiseResultUpdate(
-                result, LinkCopy(ctx, sourcefile, destfile, ssb,
+                result, LinkCopy(ctx, sourcefile, destfile, &ssb,
                                  &attr, pp, inode_cache, conn));
         }
     }
@@ -495,8 +495,8 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
 
         if (!attr.copy.force_update)
         {
-            ok_to_copy = CompareForFileCopy(sourcefile, destfile, ssb,
-                                            &dsb, &attr.copy, conn);
+            ok_to_copy = CompareForFileCopy(sourcefile, destfile, &ssb,
+                                            &dsb, attr.copy, conn);
         }
         else
         {
@@ -506,13 +506,13 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
         if (attr.copy.type_check &&
             attr.copy.link_type != FILE_LINK_TYPE_NONE)
         {
-            if (((S_ISDIR(dsb.st_mode)) && (!S_ISDIR(srcmode))) ||
-                ((S_ISREG(dsb.st_mode)) && (!S_ISREG(srcmode))) ||
-                ((S_ISBLK(dsb.st_mode)) && (!S_ISBLK(srcmode))) ||
-                ((S_ISCHR(dsb.st_mode)) && (!S_ISCHR(srcmode))) ||
-                ((S_ISSOCK(dsb.st_mode)) && (!S_ISSOCK(srcmode))) ||
-                ((S_ISFIFO(dsb.st_mode)) && (!S_ISFIFO(srcmode))) ||
-                ((S_ISLNK(dsb.st_mode)) && (!S_ISLNK(srcmode))))
+            if (((S_ISDIR(dsb.st_mode)) && (!S_ISDIR(ssb.st_mode))) ||
+                ((S_ISREG(dsb.st_mode)) && (!S_ISREG(ssb.st_mode))) ||
+                ((S_ISBLK(dsb.st_mode)) && (!S_ISBLK(ssb.st_mode))) ||
+                ((S_ISCHR(dsb.st_mode)) && (!S_ISCHR(ssb.st_mode))) ||
+                ((S_ISSOCK(dsb.st_mode)) && (!S_ISSOCK(ssb.st_mode))) ||
+                ((S_ISFIFO(dsb.st_mode)) && (!S_ISFIFO(ssb.st_mode))) ||
+                ((S_ISLNK(dsb.st_mode)) && (!S_ISLNK(ssb.st_mode))))
             {
                 cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &attr,
                      "Promised file copy %s "
@@ -535,7 +535,7 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
 
         if (attr.copy.force_update ||
             ok_to_copy ||
-            S_ISLNK(srcmode))                     /* Always check links */
+            S_ISLNK(ssb.st_mode))                     /* Always check links */
         {
             if (S_ISREG(srcmode) ||
                 attr.copy.link_type == FILE_LINK_TYPE_NONE)
@@ -553,7 +553,7 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
                     FileAutoDefine(ctx, destfile);
                 }
 
-                if (CopyRegularFile(ctx, sourcefile, destfile, ssb, &attr,
+                if (CopyRegularFile(ctx, sourcefile, destfile, ssb, dsb, &attr,
                                     pp, inode_cache, conn, &result))
                 {
                     if (stat(destfile, &dsb) == -1)
@@ -574,7 +574,7 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
                             result, PROMISE_RESULT_CHANGE);
                         result = PromiseResultUpdate(
                             result, VerifyCopiedFileAttributes(ctx, sourcefile,
-                                                               destfile, ssb,
+                                                               destfile, &ssb,
                                                                &dsb, &attr, pp));
                     }
 
@@ -594,10 +594,10 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
                 return result;
             }
 
-            if (S_ISLNK(srcmode))
+            if (S_ISLNK(ssb.st_mode))
             {
                 result = PromiseResultUpdate(
-                    result, LinkCopy(ctx, sourcefile, destfile, ssb,
+                    result, LinkCopy(ctx, sourcefile, destfile, &ssb,
                                      &attr, pp, inode_cache, conn));
             }
         }
@@ -605,7 +605,7 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
         {
             result = PromiseResultUpdate(
                 result, VerifyCopiedFileAttributes(ctx, sourcefile, destfile,
-                                                   ssb, &dsb, &attr, pp));
+                                                   &ssb, &dsb, &attr, pp));
 
             /* Now we have to check for single copy, even though nothing was
                copied otherwise we can get oscillations between multipe
@@ -814,7 +814,7 @@ static PromiseResult SourceSearchAndCopy(EvalContext *ctx, const char *from, cha
     }
 
     /* Send OPENDIR command. */
-    if ((dirh = AbstractDirOpen(from, &(attr->copy), conn)) == NULL)
+    if ((dirh = AbstractDirOpen(from, attr->copy, conn)) == NULL)
     {
         cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp, attr, "copy can't open directory '%s'", from);
         return PROMISE_RESULT_INTERRUPTED;
@@ -827,7 +827,7 @@ static PromiseResult SourceSearchAndCopy(EvalContext *ctx, const char *from, cha
     for (dirp = AbstractDirRead(dirh); dirp != NULL; dirp = AbstractDirRead(dirh))
     {
         /* This sends 1st STAT command. */
-        if (!ConsiderAbstractFile(dirp->d_name, from, &(attr->copy), conn))
+        if (!ConsiderAbstractFile(dirp->d_name, from, attr->copy, conn))
         {
             if (conn != NULL &&
                 conn->conn_info->status != CONNECTIONINFO_STATUS_ESTABLISHED)
@@ -869,7 +869,7 @@ static PromiseResult SourceSearchAndCopy(EvalContext *ctx, const char *from, cha
             /* No point in checking if there are untrusted symlinks here,
                since this is from a trusted source, by definition */
 
-            if (cf_stat(newfrom, &sb, &(attr->copy), conn) == -1)
+            if (cf_stat(newfrom, &sb, attr->copy, conn) == -1)
             {
                 Log(LOG_LEVEL_VERBOSE, "Can't stat '%s'. (cf_stat: %s)", newfrom, GetErrorStr());
                 if (conn != NULL &&
@@ -888,7 +888,7 @@ static PromiseResult SourceSearchAndCopy(EvalContext *ctx, const char *from, cha
         }
         else
         {
-            if (cf_lstat(newfrom, &sb, &(attr->copy), conn) == -1)
+            if (cf_lstat(newfrom, &sb, attr->copy, conn) == -1)
             {
                 Log(LOG_LEVEL_VERBOSE, "Can't stat '%s'. (cf_stat: %s)", newfrom, GetErrorStr());
                 if (conn != NULL &&
@@ -1022,11 +1022,11 @@ static PromiseResult VerifyCopy(EvalContext *ctx,
     if (attr->copy.link_type == FILE_LINK_TYPE_NONE)
     {
         Log(LOG_LEVEL_DEBUG, "Treating links as files for '%s'", source);
-        found = cf_stat(source, &ssb, &(attr->copy), conn);
+        found = cf_stat(source, &ssb, attr->copy, conn);
     }
     else
     {
-        found = cf_lstat(source, &ssb, &(attr->copy), conn);
+        found = cf_lstat(source, &ssb, attr->copy, conn);
     }
 
     if (found == -1)
@@ -1050,7 +1050,7 @@ static PromiseResult VerifyCopy(EvalContext *ctx,
         strcpy(destdir, destination);
         AddSlash(destdir);
 
-        if ((dirh = AbstractDirOpen(sourcedir, &(attr->copy), conn)) == NULL)
+        if ((dirh = AbstractDirOpen(sourcedir, attr->copy, conn)) == NULL)
         {
             cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
                  "Can't open directory '%s'. (opendir: %s)",
@@ -1081,7 +1081,7 @@ static PromiseResult VerifyCopy(EvalContext *ctx,
              dirp = AbstractDirRead(dirh))
         {
             if (!ConsiderAbstractFile(dirp->d_name, sourcedir,
-                                      &(attr->copy), conn))
+                                      attr->copy, conn))
             {
                 if (conn != NULL &&
                     conn->conn_info->status != CONNECTIONINFO_STATUS_ESTABLISHED)
@@ -1116,7 +1116,7 @@ static PromiseResult VerifyCopy(EvalContext *ctx,
 
             if (attr->copy.link_type == FILE_LINK_TYPE_NONE)
             {
-                if (cf_stat(sourcefile, &ssb, &(attr->copy), conn) == -1)
+                if (cf_stat(sourcefile, &ssb, attr->copy, conn) == -1)
                 {
                     cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
                          "Can't stat source file (notlinked) '%s'. (stat: %s)",
@@ -1126,7 +1126,7 @@ static PromiseResult VerifyCopy(EvalContext *ctx,
             }
             else
             {
-                if (cf_lstat(sourcefile, &ssb, &(attr->copy), conn) == -1)
+                if (cf_lstat(sourcefile, &ssb, attr->copy, conn) == -1)
                 {
                     cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
                          "Can't stat source file '%s'. (lstat: %s)",
@@ -1136,7 +1136,7 @@ static PromiseResult VerifyCopy(EvalContext *ctx,
             }
 
             result = PromiseResultUpdate(
-                result, CfCopyFile(ctx, sourcefile, destfile, &ssb,
+                result, CfCopyFile(ctx, sourcefile, destfile, ssb,
                                    attr, pp, inode_cache, conn));
         }
 
@@ -1148,12 +1148,12 @@ static PromiseResult VerifyCopy(EvalContext *ctx,
         strcpy(sourcefile, source);
         strcpy(destfile, destination);
 
-        return CfCopyFile(ctx, sourcefile, destfile, &ssb,
+        return CfCopyFile(ctx, sourcefile, destfile, ssb,
                           attr, pp, inode_cache, conn);
     }
 }
 
-static PromiseResult LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile, const struct stat *sb, const Attributes *attr, const Promise *pp,
+static PromiseResult LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile, struct stat *sb, const Attributes *attr, const Promise *pp,
                               CompressedArray **inode_cache, AgentConnection *conn)
 /* Link the file to the source, instead of copying */
 #ifdef __MINGW32__
@@ -1207,7 +1207,7 @@ static PromiseResult LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile
         Log(LOG_LEVEL_VERBOSE, "Link item in copy '%s' marked for copying from '%s' instead", sourcefile,
               linkbuf);
         stat(linkbuf, &ssb);
-        return CfCopyFile(ctx, linkbuf, destfile, &ssb, attr, pp, inode_cache, conn);
+        return CfCopyFile(ctx, linkbuf, destfile, ssb, attr, pp, inode_cache, conn);
     }
 
     int status;
@@ -1273,7 +1273,7 @@ static PromiseResult LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile
 }
 #endif /* !__MINGW32__ */
 
-bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, const struct stat *sstat,
+bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, struct stat sstat, struct stat dstat,
                      const Attributes *attr, const Promise *pp, CompressedArray **inode_cache,
                      AgentConnection *conn, PromiseResult *result)
 {
@@ -1282,7 +1282,6 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
     char new[CF_BUFSIZE], *linkable;
     int remote = false, backupisdir = false, backupok = false, discardbackup;
     struct stat s;
-    struct stat dstat;
 
 #ifdef HAVE_UTIME_H
     struct utimbuf timebuf;
@@ -1311,11 +1310,11 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
 
     /* Make an assoc array of inodes used to preserve hard links */
 
-    linkable = CompressedArrayValue(*inode_cache, sstat->st_ino);
+    linkable = CompressedArrayValue(*inode_cache, sstat.st_ino);
 
-    if (sstat->st_nlink > 1)     /* Preserve hard links, if possible */
+    if (sstat.st_nlink > 1)     /* Preserve hard links, if possible */
     {
-        if ((CompressedArrayElementExists(*inode_cache, sstat->st_ino)) && (strcmp(dest, linkable) != 0))
+        if ((CompressedArrayElementExists(*inode_cache, sstat.st_ino)) && (strcmp(dest, linkable) != 0))
         {
             unlink(dest);
             MakeHardLink(ctx, dest, linkable, attr, pp, result);
@@ -1367,7 +1366,7 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
             return false;
         }
 
-        if (!CopyRegularFileNet(source, new, sstat->st_size, attr->copy.encrypt, conn))
+        if (!CopyRegularFileNet(source, new, sstat.st_size, attr->copy.encrypt, conn))
         {
             return false;
         }
@@ -1384,8 +1383,8 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
         if (attr->copy.stealth)
         {
 #ifdef HAVE_UTIME_H
-            timebuf.actime = sstat->st_atime;
-            timebuf.modtime = sstat->st_mtime;
+            timebuf.actime = sstat.st_atime;
+            timebuf.modtime = sstat.st_mtime;
             utime(source, &timebuf);
 #endif
         }
@@ -1463,11 +1462,11 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
         return false;
     }
 
-    if ((S_ISREG(dstat.st_mode)) && (dstat.st_size != sstat->st_size))
+    if ((S_ISREG(dstat.st_mode)) && (dstat.st_size != sstat.st_size))
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
              "New file '%s' seems to have been corrupted in transit, destination %d and source %d, aborting.", new,
-             (int) dstat.st_size, (int) sstat->st_size);
+             (int) dstat.st_size, (int) sstat.st_size);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
 
         if (backupok)
@@ -1482,7 +1481,7 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
     {
         Log(LOG_LEVEL_VERBOSE, "Final verification of transmission ...");
 
-        if (CompareFileHashes(source, new, sstat, &dstat, &(attr->copy), conn))
+        if (CompareFileHashes(source, new, &sstat, &dstat, attr->copy, conn))
         {
             cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
                  "New file '%s' seems to have been corrupted in transit, aborting.", new);
@@ -1611,8 +1610,8 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
     if (attr->copy.stealth)
     {
 #ifdef HAVE_UTIME_H
-        timebuf.actime = sstat->st_atime;
-        timebuf.modtime = sstat->st_mtime;
+        timebuf.actime = sstat.st_atime;
+        timebuf.modtime = sstat.st_mtime;
         utime(dest, &timebuf);
 #endif
     }
@@ -1713,7 +1712,7 @@ static bool TransformFile(EvalContext *ctx, char *file, const Attributes *attr, 
     return true;
 }
 
-static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat *sb, const Attributes *attr, const Promise *pp)
+static PromiseResult VerifyName(EvalContext *ctx, char *path, struct stat *sb, const Attributes *attr, const Promise *pp)
 {
     assert(attr != NULL);
     mode_t newperm;
@@ -2073,7 +2072,7 @@ static PromiseResult TouchFile(EvalContext *ctx, char *path, const Attributes *a
     return result;
 }
 
-static PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, const struct stat *dstat, const Attributes *attr, const Promise *pp)
+static PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, struct stat *dstat, const Attributes *attr, const Promise *pp)
 {
     PromiseResult result = PROMISE_RESULT_NOOP;
 
@@ -2295,7 +2294,7 @@ static PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, co
     return result;
 }
 
-int DepthSearch(EvalContext *ctx, char *name, const struct stat *sb, int rlevel, const Attributes *attr,
+int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, const Attributes *attr,
                 const Promise *pp, dev_t rootdevice, PromiseResult *result)
 {
     assert(attr != NULL);
@@ -2319,7 +2318,7 @@ int DepthSearch(EvalContext *ctx, char *name, const struct stat *sb, int rlevel,
             Log(LOG_LEVEL_ERR, "Failed to chdir into '%s'. (chdir: '%s')", basedir, GetErrorStr());
             return false;
         }
-        if (!attr->haveselect || SelectLeaf(ctx, name, sb, &(attr->select)))
+        if (!attr->haveselect || SelectLeaf(ctx, name, sb, attr->select))
         {
             VerifyFileLeaf(ctx, name, sb, attr, pp, result);
             return true;
@@ -2443,7 +2442,7 @@ int DepthSearch(EvalContext *ctx, char *name, const struct stat *sb, int rlevel,
             }
         }
 
-        if (!attr->haveselect || SelectLeaf(ctx, path, &lsb, &(attr->select)))
+        if (!attr->haveselect || SelectLeaf(ctx, path, &lsb, attr->select))
         {
             if (attr->havechange)
             {
@@ -2477,7 +2476,7 @@ end:
     return retval;
 }
 
-static int PushDirState(EvalContext *ctx, char *name, const struct stat *sb)
+static int PushDirState(EvalContext *ctx, char *name, struct stat *sb)
 {
     if (safe_chdir(name) == -1)
     {
@@ -2496,7 +2495,7 @@ static int PushDirState(EvalContext *ctx, char *name, const struct stat *sb)
 /**
  * @return true if safe for agent to continue
  */
-static bool PopDirState(int goback, char *name, const struct stat *sb, DirectoryRecursion r)
+static bool PopDirState(int goback, char *name, struct stat *sb, DirectoryRecursion r)
 {
     if (goback && (r.travlinks))
     {
@@ -2528,7 +2527,7 @@ static bool PopDirState(int goback, char *name, const struct stat *sb, Directory
 /**
  * @return true if it is safe for the agent to continue execution
  */
-static bool CheckLinkSecurity(const struct stat *sb, char *name)
+static bool CheckLinkSecurity(struct stat *sb, char *name)
 {
     struct stat security;
 
@@ -2552,8 +2551,8 @@ static bool CheckLinkSecurity(const struct stat *sb, char *name)
     return true;
 }
 
-static PromiseResult VerifyCopiedFileAttributes(EvalContext *ctx, const char *src, const char *dest, const struct stat *sstat,
-                                                const struct stat *dstat, const Attributes *a, const Promise *pp)
+static PromiseResult VerifyCopiedFileAttributes(EvalContext *ctx, const char *src, const char *dest, struct stat *sstat,
+                                                struct stat *dstat, const Attributes *a, const Promise *pp)
 {
     assert(a != NULL);
     Attributes attr = *a; // TODO: try to remove this copy
@@ -2654,7 +2653,7 @@ static PromiseResult CopyFileSources(EvalContext *ctx, char *destination, const 
         return PROMISE_RESULT_FAIL;
     }
 
-    if (cf_stat(BufferData(source), &ssb, &(attr->copy), conn) == -1)
+    if (cf_stat(BufferData(source), &ssb, attr->copy, conn) == -1)
     {
         if (attr->copy.missing_ok)
         {
@@ -2775,23 +2774,23 @@ static ProtocolVersion DecideProtocol(const EvalContext *ctx,
 
 static AgentConnection *FileCopyConnectionOpen(const EvalContext *ctx,
                                                const char *servername,
-                                               const FileCopy *fc, bool background)
+                                               FileCopy fc, bool background)
 {
     ConnectionFlags flags = {
-        .protocol_version = DecideProtocol(ctx, fc->protocol_version),
+        .protocol_version = DecideProtocol(ctx, fc.protocol_version),
         .cache_connection = !background,
-        .force_ipv4 = fc->force_ipv4,
-        .trust_server = fc->trustkey,
+        .force_ipv4 = fc.force_ipv4,
+        .trust_server = fc.trustkey,
         .off_the_record = false
     };
 
-    unsigned int conntimeout = fc->timeout;
-    if (fc->timeout == CF_NOINT || fc->timeout < 0)
+    unsigned int conntimeout = fc.timeout;
+    if (fc.timeout == CF_NOINT || fc.timeout < 0)
     {
         conntimeout = CONNTIMEOUT;
     }
 
-    const char *port = (fc->port != NULL) ? fc->port : CFENGINE_PORT_STR;
+    const char *port = (fc.port != NULL) ? fc.port : CFENGINE_PORT_STR;
 
     AgentConnection *conn = NULL;
     if (flags.cache_connection)
@@ -2883,7 +2882,7 @@ PromiseResult ScheduleCopyOperation(EvalContext *ctx, char *destination, const A
             break;
         }
 
-        conn = FileCopyConnectionOpen(ctx, servername, &(attr->copy),
+        conn = FileCopyConnectionOpen(ctx, servername, attr->copy,
                                       attr->transaction.background);
         if (conn == NULL)
         {
@@ -3127,11 +3126,11 @@ static PromiseResult VerifyFileIntegrity(EvalContext *ctx, const char *file, con
     return result;
 }
 
-static int CompareForFileCopy(char *sourcefile, char *destfile, const struct stat *ssb, const struct stat *dsb, const FileCopy *fc, AgentConnection *conn)
+static int CompareForFileCopy(char *sourcefile, char *destfile, struct stat *ssb, struct stat *dsb, FileCopy fc, AgentConnection *conn)
 {
     int ok_to_copy;
 
-    switch (fc->compare)
+    switch (fc.compare)
     {
     case FILE_COMPARATOR_CHECKSUM:
     case FILE_COMPARATOR_HASH:
@@ -3268,7 +3267,7 @@ static bool IsInSetxidList(const char *file)
     return IsItemIn(VSETXIDLIST, file);
 }
 
-static PromiseResult VerifySetUidGid(EvalContext *ctx, const char *file, const struct stat *dstat, mode_t newperm,
+static PromiseResult VerifySetUidGid(EvalContext *ctx, const char *file, struct stat *dstat, mode_t newperm,
                                      const Promise *pp, const Attributes *attr)
 {
     assert(attr != NULL);
@@ -3526,7 +3525,7 @@ static void RegisterAHardLink(int i, char *value, const Attributes *attr, Compre
     }
 }
 
-static int cf_stat(const char *file, struct stat *buf, const FileCopy *fc, AgentConnection *conn)
+static int cf_stat(const char *file, struct stat *buf, FileCopy fc, AgentConnection *conn)
 {
     if (!file)
     {
@@ -3539,10 +3538,10 @@ static int cf_stat(const char *file, struct stat *buf, const FileCopy *fc, Agent
     }
     else
     {
-        assert(fc->servers != NULL &&
-               strcmp(RlistScalarValue(fc->servers), "localhost") != 0);
+        assert(fc.servers != NULL &&
+               strcmp(RlistScalarValue(fc.servers), "localhost") != 0);
 
-        return cf_remote_stat(conn, fc->encrypt, file, buf, "file");
+        return cf_remote_stat(conn, fc.encrypt, file, buf, "file");
     }
 }
 
@@ -3615,7 +3614,7 @@ static int SkipDirLinks(EvalContext *ctx, char *path, const char *lastnode, Dire
 
 #ifndef __MINGW32__
 
-bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, const Attributes *attr, const struct stat *sb, PromiseResult *result)
+bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, const Attributes *attr, struct stat *sb, PromiseResult *result)
 {
     struct passwd *pw;
     struct group *gp;
@@ -3792,7 +3791,7 @@ bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, const At
 
 #endif /* !__MINGW32__ */
 
-static void VerifyFileChanges(const char *file, const struct stat *sb, const Attributes *attr, const Promise *pp)
+static void VerifyFileChanges(const char *file, struct stat *sb, const Attributes *attr, const Promise *pp)
 {
     if ((attr->change.report_changes != FILE_CHANGE_REPORT_STATS_CHANGE) && (attr->change.report_changes != FILE_CHANGE_REPORT_ALL))
     {
@@ -3946,7 +3945,7 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, const Attribu
     return true;
 }
 
-static int DeviceBoundary(const struct stat *sb, dev_t rootdevice)
+static int DeviceBoundary(struct stat *sb, dev_t rootdevice)
 {
     if (sb->st_dev == rootdevice)
     {

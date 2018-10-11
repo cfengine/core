@@ -22,56 +22,56 @@
   included file COSL.txt.
 */
 
-#include <alloc.h>
-#include <cleanup.h>
-#include <logging.h>
 #include <platform.h>
+#include <alloc.h>
+#include <atexit.h>
 
-typedef struct CleanupList
+#if defined(__MINGW32__)
+
+typedef struct AtExitList
 {
-    CleanupFn fn;
-    struct CleanupList *next;
-} CleanupList;
+    AtExitFn fn;
+    struct AtExitList *next;
+} AtExitList;
 
-static pthread_mutex_t cleanup_functions_mutex = PTHREAD_MUTEX_INITIALIZER;
-static CleanupList *cleanup_functions;
+static pthread_mutex_t atexit_functions_mutex = PTHREAD_MUTEX_INITIALIZER;
+static AtExitList *atexit_functions;
 
-/* To be called externally only by Windows binaries */
-void CallCleanupFunctions(void)
+/* To be called externally only by Windows service implementation */
+
+void CallAtExitFunctions(void)
 {
-    pthread_mutex_lock(&cleanup_functions_mutex);
+    pthread_mutex_lock(&atexit_functions_mutex);
 
-    CleanupList *p = cleanup_functions;
+    AtExitList *p = atexit_functions;
     while (p)
     {
-        Log(LOG_LEVEL_DEBUG, "CallCleanupFunctions() had a function to call @ %p", p);
-        CleanupList *cur = p;
+        AtExitList *cur = p;
         (cur->fn)();
         p = cur->next;
         free(cur);
     }
 
-    cleanup_functions = NULL;
+    atexit_functions = NULL;
 
-    pthread_mutex_unlock(&cleanup_functions_mutex);
+    pthread_mutex_unlock(&atexit_functions_mutex);
 }
 
-void DoCleanupAndExit(int ret)
-{
-    CallCleanupFunctions();
-    exit(ret);
-}
+#endif
 
-void RegisterCleanupFunction(CleanupFn fn)
+void RegisterAtExitFunction(AtExitFn fn)
 {
-    pthread_mutex_lock(&cleanup_functions_mutex);
+#if defined(__MINGW32__)
+    pthread_mutex_lock(&atexit_functions_mutex);
 
-    CleanupList *p = xmalloc(sizeof(CleanupList));
+    AtExitList *p = xmalloc(sizeof(AtExitList));
     p->fn = fn;
-    p->next = cleanup_functions;
+    p->next = atexit_functions;
 
-    cleanup_functions = p;
+    atexit_functions = p;
 
-    pthread_mutex_unlock(&cleanup_functions_mutex);
+    pthread_mutex_unlock(&atexit_functions_mutex);
+#endif
+
+    atexit(fn);
 }
-

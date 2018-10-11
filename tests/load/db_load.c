@@ -2,7 +2,6 @@
 #include <sys/stat.h>
 #include <cf3.defs.h>
 #include <known_dirs.h>
-#include <cleanup.h>
 
 #include <dbm_api.h>
 
@@ -208,7 +207,7 @@ int main(int argc, char **argv)
     }
 
     /* To clean up after databases are closed */
-    RegisterCleanupFunction(&Cleanup);
+    atexit(&Cleanup);
 
     tests_setup();
 
@@ -241,7 +240,7 @@ int main(int argc, char **argv)
 
     int failures = WriteReturnValues(retvals, tids, numthreads);
 
-    DoCleanupAndExit(failures);
+    exit(failures);
 }
 
 

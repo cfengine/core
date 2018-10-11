@@ -29,7 +29,6 @@
 #include <file_lib.h>
 
 #include <errno.h>
-#include <cleanup.h>
 
 int yyparse(void);
 
@@ -122,7 +121,7 @@ Policy *ParserParseFile(AgentType agent_type, const char *path, unsigned int war
     if (yyin == NULL)
     {
         Log(LOG_LEVEL_ERR, "While opening file '%s' for parsing. (fopen: %s)", path, GetErrorStr());
-        DoCleanupAndExit(EXIT_FAILURE);
+        exit(EXIT_FAILURE);
     }
 
     while (!feof(yyin))
@@ -132,7 +131,7 @@ Policy *ParserParseFile(AgentType agent_type, const char *path, unsigned int war
         if (ferror(yyin))
         {
             perror("cfengine");
-            DoCleanupAndExit(EXIT_FAILURE);
+            exit(EXIT_FAILURE);
         }
     }
 

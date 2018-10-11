@@ -2632,7 +2632,7 @@ ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, TrackTotalCompliance, ARG_UNUSED Pro
 {
 }
 
-static void SetPromiseOutcomeClasses(EvalContext *ctx, PromiseResult status, DefineClasses dc)
+static void SetPromiseOutcomeClasses(EvalContext *ctx, PromiseResult status, const DefineClasses *dc)
 {
     Rlist *add_classes = NULL;
     Rlist *del_classes = NULL;
@@ -2640,50 +2640,50 @@ static void SetPromiseOutcomeClasses(EvalContext *ctx, PromiseResult status, Def
     switch (status)
     {
     case PROMISE_RESULT_CHANGE:
-        add_classes = dc.change;
-        del_classes = dc.del_change;
+        add_classes = dc->change;
+        del_classes = dc->del_change;
         break;
 
     case PROMISE_RESULT_TIMEOUT:
-        add_classes = dc.timeout;
-        del_classes = dc.del_notkept;
+        add_classes = dc->timeout;
+        del_classes = dc->del_notkept;
         break;
 
     case PROMISE_RESULT_WARN:
     case PROMISE_RESULT_FAIL:
     case PROMISE_RESULT_INTERRUPTED:
-        add_classes = dc.failure;
-        del_classes = dc.del_notkept;
+        add_classes = dc->failure;
+        del_classes = dc->del_notkept;
         break;
 
     case PROMISE_RESULT_DENIED:
-        add_classes = dc.denied;
-        del_classes = dc.del_notkept;
+        add_classes = dc->denied;
+        del_classes = dc->del_notkept;
         break;
 
     case PROMISE_RESULT_NOOP:
-        add_classes = dc.kept;
-        del_classes = dc.del_kept;
+        add_classes = dc->kept;
+        del_classes = dc->del_kept;
         break;
 
     default:
         ProgrammingError("Unexpected status '%c' has been passed to SetPromiseOutcomeClasses", status);
     }
 
-    AddAllClasses(ctx, add_classes, dc.persist, dc.timer, dc.scope);
+    AddAllClasses(ctx, add_classes, dc->persist, dc->timer, dc->scope);
     DeleteAllClasses(ctx, del_classes);
 }
 
-static void SummarizeTransaction(EvalContext *ctx, TransactionContext tc, const char *logname)
+static void SummarizeTransaction(EvalContext *ctx, const TransactionContext *tc, const char *logname)
 {
-    if (logname && (tc.log_string))
+    if (logname && (tc->log_string))
     {
         Buffer *buffer = BufferNew();
-        ExpandScalar(ctx, NULL, NULL, tc.log_string, buffer);
+        ExpandScalar(ctx, NULL, NULL, tc->log_string, buffer);
 
         if (strcmp(logname, "udp_syslog") == 0)
         {
-            RemoteSysLog(tc.log_priority, BufferData(buffer));
+            RemoteSysLog(tc->log_priority, BufferData(buffer));
         }
         else if (strcmp(logname, "stdout") == 0)
         {
@@ -2722,11 +2722,14 @@ static void SummarizeTransaction(EvalContext *ctx, TransactionContext tc, const 
         }
 
         BufferDestroy(buffer);
-        tc.log_string = NULL;     /* To avoid repetition */
+        // FIXME: This was overwriting a local copy, with no side effects.
+        // The intention was clearly to skip this function if called
+        // repeatedly. Try to introduce this change:
+        // tc.log_string = NULL;     /* To avoid repetition */
     }
 }
 
-static void DoSummarizeTransaction(EvalContext *ctx, PromiseResult status, const Promise *pp, TransactionContext tc)
+static void DoSummarizeTransaction(EvalContext *ctx, PromiseResult status, const Promise *pp, const TransactionContext *tc)
 {
     if (!IsPromiseValuableForLogging(pp))
     {
@@ -2738,7 +2741,7 @@ static void DoSummarizeTransaction(EvalContext *ctx, PromiseResult status, const
     switch (status)
     {
     case PROMISE_RESULT_CHANGE:
-        log_name = tc.log_repaired;
+        log_name = tc->log_repaired;
         break;
 
     case PROMISE_RESULT_WARN:
@@ -2749,11 +2752,11 @@ static void DoSummarizeTransaction(EvalContext *ctx, PromiseResult status, const
     case PROMISE_RESULT_FAIL:
     case PROMISE_RESULT_DENIED:
     case PROMISE_RESULT_INTERRUPTED:
-        log_name = tc.log_failed;
+        log_name = tc->log_failed;
         break;
 
     case PROMISE_RESULT_NOOP:
-        log_name = tc.log_kept;
+        log_name = tc->log_kept;
         break;
 
     default:
@@ -2793,8 +2796,8 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, const Attributes *attr, 
         UpdatePromiseCounters(status);
     }
 
-    SetPromiseOutcomeClasses(ctx, status, attr->classes);
-    DoSummarizeTransaction(ctx, status, pp, attr->transaction);
+    SetPromiseOutcomeClasses(ctx, status, &(attr->classes));
+    DoSummarizeTransaction(ctx, status, pp, &(attr->transaction));
 }
 
 static void LogPromiseContext(const EvalContext *ctx, const Promise *pp)

@@ -330,7 +330,7 @@ static int FindPidMatches(Item **killlist, const Attributes *a, const char *prom
     int matches = 0;
     pid_t cfengine_pid = getpid();
 
-    Item *matched = SelectProcesses(promiser, a->process_select, a->haveselect);
+    Item *matched = SelectProcesses(promiser, &(a->process_select), a->haveselect);
 
     for (Item *ip = matched; ip != NULL; ip = ip->next)
     {

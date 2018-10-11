@@ -1478,7 +1478,7 @@ static void ApplyPlatformExtraTable(char **names, char **columns)
         }
     }
 
-    if (!StringMapHasKey(UCB_PS_MAP, columns[pidcol]))
+    if (pidcol == -1 || !StringMapHasKey(UCB_PS_MAP, columns[pidcol]))
     {
         return;
     }

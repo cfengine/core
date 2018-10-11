@@ -22,13 +22,11 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_CLEANUP_H
-#define CFENGINE_CLEANUP_H
+#ifndef CFENGINE_ATEXIT_H
+#define CFENGINE_ATEXIT_H
 
-typedef void (*CleanupFn)(void);
+typedef void (*AtExitFn)(void);
 
-void CallCleanupFunctions(void);
-void DoCleanupAndExit(int ret) FUNC_ATTR_NORETURN;
-void RegisterCleanupFunction(CleanupFn fn);
+void RegisterAtExitFunction(AtExitFn fn);
 
 #endif

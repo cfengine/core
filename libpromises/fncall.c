@@ -34,7 +34,6 @@
 #include <promises.h>
 #include <syntax.h>
 #include <audit.h>
-#include <cleanup.h>
 
 /******************************************************************/
 /* Argument propagation                                           */
@@ -77,7 +76,7 @@ Rlist *NewExpArgs(EvalContext *ctx, const Policy *policy, const FnCall *fp, cons
                 Log(LOG_LEVEL_ERR, "Arguments to function '%s' do not tally. Expected %d not %d",
                       fp->name, FnNumArgs(fn), len);
                 PromiseRef(LOG_LEVEL_ERR, fp->caller);
-                DoCleanupAndExit(EXIT_FAILURE);
+                exit(EXIT_FAILURE);
             }
         }
     }

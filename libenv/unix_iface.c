@@ -36,7 +36,6 @@
 #include <known_dirs.h>
 #include <ip_address.h>
 #include <file_lib.h>
-#include <cleanup.h>
 
 #ifdef HAVE_SYS_JAIL_H
 # include <sys/jail.h>
@@ -345,12 +344,10 @@ void GetInterfacesInfo(EvalContext *ctx)
 
     InitIgnoreInterfaces();
 
-    fd = socket(AF_INET, SOCK_DGRAM, 0);
-    // GDB: breakpoint for tests/acceptance/27_cf-agent/couldnt_open_socket.cf
-    if (fd == -1)
+    if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) == -1)
     {
         Log(LOG_LEVEL_ERR, "Couldn't open socket. (socket: %s)", GetErrorStr());
-        DoCleanupAndExit(EXIT_FAILURE);
+        exit(EXIT_FAILURE);
     }
 
     list.ifc_len = sizeof(ifbuf);
@@ -364,17 +361,13 @@ void GetInterfacesInfo(EvalContext *ctx)
 #else
     intmax_t request = OSIOCGIFCONF;
 #endif
-    // GDB: breakpoint for tests/acceptance/27_cf-agent/couldnt_ioctl_socket.cf
     int ret = ioctl(fd, request, &list);
     if (ret == -1)
     {
         Log(LOG_LEVEL_ERR,
             "Couldn't get interfaces (ioctl(SIOCGIFCONF): %s)",
             GetErrorStr());
-        // TODO do we really want to exit here? cf-execd, cf-monitord, cf-server
-        // maybe cf-agent all depend on DetectEnvironment so probably shouldn't
-        // just exit().
-        DoCleanupAndExit(EXIT_FAILURE);
+        exit(EXIT_FAILURE);
     }
 
     if (list.ifc_len < (int) sizeof(struct ifreq))

@@ -23,7 +23,7 @@
 */
 
 #include <findhub.h>
-#include <cleanup.h>
+#include <atexit.h>
 #include <string_lib.h>
 #include <misc_lib.h>
 #include <logging.h>
@@ -162,7 +162,7 @@ int ListHubs(List **list)
     spoll = NULL;
     avahi_handle = NULL;
 
-    RegisterCleanupFunction(&AtExitDlClose);
+    RegisterAtExitFunction(&AtExitDlClose);
 
     if (loadavahi() == -1)
     {

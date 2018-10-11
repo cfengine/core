@@ -523,7 +523,7 @@ static void Apoptosis(void)
             .process_result = "process_owner",
         };
 
-        Item *killlist = SelectProcesses(promiser_buf, process_select, true);
+        Item *killlist = SelectProcesses(promiser_buf, &(process_select), true);
         RlistDestroy(owners);
 
         for (Item *ip = killlist; ip != NULL; ip = ip->next)

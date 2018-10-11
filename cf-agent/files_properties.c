@@ -94,7 +94,7 @@ bool ConsiderLocalFile(const char *filename, const char *directory)
     }
 }
 
-bool ConsiderAbstractFile(const char *filename, const char *directory, const FileCopy *fc, AgentConnection *conn)
+bool ConsiderAbstractFile(const char *filename, const char *directory, FileCopy fc, AgentConnection *conn)
 {
     /* First check if the file should be avoided, e.g. ".." - before sending
      * anything over the network*/

@@ -35,7 +35,7 @@
 #include <eval_context.h>
 #include <known_dirs.h>
 
-int CompareFileHashes(const char *file1, const char *file2, const struct stat *sstat, const struct stat *dstat, const FileCopy *fc, AgentConnection *conn)
+int CompareFileHashes(const char *file1, const char *file2, struct stat *sstat, struct stat *dstat, FileCopy fc, AgentConnection *conn)
 {
     unsigned char digest1[EVP_MAX_MD_SIZE + 1] = { 0 }, digest2[EVP_MAX_MD_SIZE + 1] = { 0 };
     int i;
@@ -64,12 +64,12 @@ int CompareFileHashes(const char *file1, const char *file2, const struct stat *s
     }
     else
     {
-        assert(fc->servers && strcmp(RlistScalarValue(fc->servers), "localhost"));
-        return CompareHashNet(file1, file2, fc->encrypt, conn);  /* client.c */
+        assert(fc.servers && strcmp(RlistScalarValue(fc.servers), "localhost"));
+        return CompareHashNet(file1, file2, fc.encrypt, conn);  /* client.c */
     }
 }
 
-int CompareBinaryFiles(const char *file1, const char *file2, const struct stat *sstat, const struct stat *dstat, const FileCopy *fc, AgentConnection *conn)
+int CompareBinaryFiles(const char *file1, const char *file2, struct stat *sstat, struct stat *dstat, FileCopy fc, AgentConnection *conn)
 {
     int fd1, fd2, bytes1, bytes2;
     char buff1[BUFSIZ], buff2[BUFSIZ];
@@ -106,8 +106,8 @@ int CompareBinaryFiles(const char *file1, const char *file2, const struct stat *
     }
     else
     {
-        assert(fc->servers && strcmp(RlistScalarValue(fc->servers), "localhost"));
+        assert(fc.servers && strcmp(RlistScalarValue(fc.servers), "localhost"));
         Log(LOG_LEVEL_DEBUG, "Using network checksum instead");
-        return CompareHashNet(file1, file2, fc->encrypt, conn);  /* client.c */
+        return CompareHashNet(file1, file2, fc.encrypt, conn);  /* client.c */
     }
 }

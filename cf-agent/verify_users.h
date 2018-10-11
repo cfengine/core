@@ -29,6 +29,6 @@
 
 PromiseResult VerifyUsersPromise(EvalContext *ctx, const Promise *pp);
 
-void VerifyOneUsersPromise (const char *puser, const User *u, PromiseResult *result, enum cfopaction action,
+void VerifyOneUsersPromise (const char *puser, User u, PromiseResult *result, enum cfopaction action,
                             EvalContext *ctx, const Attributes *a, const Promise *pp);
 #endif

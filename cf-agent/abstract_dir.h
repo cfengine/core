@@ -31,7 +31,7 @@
 
 typedef struct AbstractDir_ AbstractDir;
 
-AbstractDir *AbstractDirOpen(const char *dirname, const FileCopy *fc, AgentConnection *pp);
+AbstractDir *AbstractDirOpen(const char *dirname, FileCopy fc, AgentConnection *pp);
 const struct dirent *AbstractDirRead(AbstractDir *dir);
 void AbstractDirClose(AbstractDir *dir);
 

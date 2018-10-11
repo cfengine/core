@@ -145,10 +145,14 @@ static void GenerateMd5Hash(const char *istring, char *ohash)
 
 static bool WriteLockData(CF_DB *dbp, const char *lock_id, LockData *lock_data)
 {
+    assert(lock_data != NULL);
+    assert(lock_id != NULL);
+    assert(strlen(lock_id) > 0);
+
     bool ret;
 
 #ifdef LMDB
-    unsigned char digest2[EVP_MAX_MD_SIZE*2 + 1];
+    unsigned char digest2[EVP_MAX_MD_SIZE*2 + 1] = { 0 };
 
     if (!strcmp(lock_id, "CF_CRITICAL_SECTION"))
     {
@@ -171,6 +175,9 @@ static bool WriteLockData(CF_DB *dbp, const char *lock_id, LockData *lock_data)
 
 static bool WriteLockDataCurrent(CF_DB *dbp, const char *lock_id)
 {
+    assert(lock_id != NULL);
+    assert(strlen(lock_id) > 0);
+
     LockData lock_data = {
         .pid = getpid(),
         .time = time(NULL),
@@ -341,6 +348,8 @@ void ReleaseCriticalSection(const char *section_id)
 
 static time_t FindLock(char *last)
 {
+    assert(last != NULL);
+    assert(strlen(last) > 0);
     time_t mtime;
 
     if ((mtime = FindLockTime(last)) == -1)
@@ -1107,6 +1116,8 @@ void PurgeLocks(void)
 
 int WriteLock(const char *name)
 {
+    assert(name != NULL);
+    assert(strlen(name) > 0);
     CF_DB *dbp = OpenLock();
 
     if (dbp == NULL)

@@ -47,6 +47,6 @@ bool FileChangesGetDirectoryList(const char *path, Seq *files);
 void FileChangesLogNewFile(const char *path, const Promise *pp);
 void FileChangesCheckAndUpdateDirectory(const char *name, const Seq *file_set, const Seq *db_file_set,
                                         bool update, const Promise *pp, PromiseResult *result);
-void FileChangesCheckAndUpdateStats(const char *file, struct stat *sb, bool update, const Promise *pp);
+void FileChangesCheckAndUpdateStats(const char *file, const struct stat *sb, bool update, const Promise *pp);
 
 #endif

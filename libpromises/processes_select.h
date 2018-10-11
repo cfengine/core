@@ -34,7 +34,7 @@ extern Item *PROCESSTABLE;
 int LoadProcessTable(void);
 void ClearProcessTable(void);
 
-Item *SelectProcesses(const char *process_name, const ProcessSelect *a, bool attrselect);
+Item *SelectProcesses(const char *process_name, ProcessSelect a, bool attrselect);
 bool IsProcessNameRunning(char *procNameRegex);
 
 const char *GetProcessTableLegend(void);

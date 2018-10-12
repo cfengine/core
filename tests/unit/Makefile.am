@@ -110,7 +110,6 @@ check_PROGRAMS = \
 	eval_context_test \
 	regex_test \
 	alloc_test \
-	alloc_checkresult_test \
 	string_writer_test \
 	file_writer_test \
 	xml_writer_test \
@@ -190,8 +189,7 @@ endif
 endif
 
 check_SCRIPTS = dynamic_dependency_test.sh \
-	tar_portability_test.sh \
-	alloc_checkresult_test.sh
+	tar_portability_test.sh
 
 if WITH_INIT_D_SCRIPT
 check_SCRIPTS += init_script_test.sh

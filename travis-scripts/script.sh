@@ -1,7 +1,15 @@
 #!/bin/sh
 set -e
-INSTDIR=$HOME/cf_install
+
 cd $TRAVIS_BUILD_DIR || exit 1
+
+if [ "$JOB_TYPE" = valgrind_health_check ]
+then
+    sudo bash travis-scripts/valgrind.sh
+    exit
+fi
+
+INSTDIR=$HOME/cf_install
 
 # if [ "$JOB_TYPE" = style_check ]
 # then

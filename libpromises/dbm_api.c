@@ -328,11 +328,13 @@ void CloseAllDBExit()
     {
         DBHandle *handle = db_dynamic_handles_list->handle;
         CloseDBInstance(handle);
+
+        DynamicDBHandles *next_free = db_dynamic_handles_list;
         db_dynamic_handles_list = db_dynamic_handles_list->next;
-        free(handle);
+
+        FREE_AND_NULL(handle);
+        FREE_AND_NULL(next_free);
     }
-    free(db_dynamic_handles);
-    db_dynamic_handles = NULL;
 }
 
 static void RegisterShutdownHandler(void)

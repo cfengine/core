@@ -1,0 +1,27 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent test
+{
+  meta:
+
+      "description" -> { "CFE-2000" }
+        string => "Test that classes can be defined without any
+                   constraints/attributes";
+
+  classes:
+
+      "supercalifragilisticexpialidocious";
+
+  reports:
+
+    supercalifragilisticexpialidocious::
+      "$(this.promise_filename) Pass";
+
+    !supercalifragilisticexpialidocious::
+      "$(this.promise_filename) FAIL";
+}

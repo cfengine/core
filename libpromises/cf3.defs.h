@@ -262,11 +262,15 @@ typedef struct
 
 /******************************************************************/
 
+// Please ensure the padding in this struct is initialized to 0
+// LockData lock = { 0 }; // Will zero padding as well as members
+// lock.pid = [...]
 typedef struct
 {
-    pid_t pid;
-    time_t time;
-    time_t process_start_time;
+    pid_t pid;                  // 4 bytes
+                                // 4 bytes padding
+    time_t time;                // 8 bytes
+    time_t process_start_time;  // 8 bytes
 } LockData;
 
 /*****************************************************************************/

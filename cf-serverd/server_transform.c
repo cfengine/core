@@ -222,24 +222,14 @@ void KeepPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *co
         UnexpectedError("ACLs are not NULL - we are probably leaking memory!");
     }
 
-    paths_acl     = calloc(1, sizeof(*paths_acl));
-    classes_acl   = calloc(1, sizeof(*classes_acl));
-    vars_acl      = calloc(1, sizeof(*vars_acl));
-    literals_acl  = calloc(1, sizeof(*literals_acl));
-    query_acl     = calloc(1, sizeof(*query_acl));
-    bundles_acl   = calloc(1, sizeof(*bundles_acl));
-    roles_acl     = calloc(1, sizeof(*roles_acl));
+    paths_acl     = xcalloc(1, sizeof(*paths_acl));
+    classes_acl   = xcalloc(1, sizeof(*classes_acl));
+    vars_acl      = xcalloc(1, sizeof(*vars_acl));
+    literals_acl  = xcalloc(1, sizeof(*literals_acl));
+    query_acl     = xcalloc(1, sizeof(*query_acl));
+    bundles_acl   = xcalloc(1, sizeof(*bundles_acl));
+    roles_acl     = xcalloc(1, sizeof(*roles_acl));
     SERVER_ACCESS.path_shortcuts = StringMapNew();
-
-    // GDB: breakpoint for tests/acceptance/16_cf-serverd/keep_promises_fail.cf
-
-    if (paths_acl    == NULL || classes_acl == NULL || vars_acl    == NULL ||
-        literals_acl == NULL || query_acl   == NULL || bundles_acl == NULL ||
-        roles_acl    == NULL || SERVER_ACCESS.path_shortcuts == NULL)
-    {
-        Log(LOG_LEVEL_CRIT, "calloc: %s", GetErrorStr());
-        exit(255);
-    }
 
     KeepControlPromises(ctx, policy, config);
     KeepPromiseBundles(ctx, policy);

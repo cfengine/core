@@ -34,6 +34,7 @@ libutils_la_LIBS     = $(PCRE_LIBS) $(OPENSSL_LIBS)
 libutils_la_SOURCES = \
 	alloc.c alloc.h \
 	atexit.c atexit.h \
+	cleanup.c cleanup.h \
 	compiler.h \
 	deprecated.h \
 	dir.h dir_priv.h \

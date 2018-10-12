@@ -81,5 +81,6 @@ int main(int argc, char *argv[])
         CleanReportBookFilterSet();
     }
 
+    putenv_static_destroy();
     return 0;
 }

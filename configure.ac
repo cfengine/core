@@ -1559,6 +1559,11 @@ if test "x$use_coverage" = "xyes"; then
   dnl Add the special gcc flags
   CFLAGS="$CFLAGS -fprofile-arcs -ftest-coverage"
   LDFLAGS="$LDFLAGS -lgcov"
+  # need to define ENABLE_COVERAGE for tests/unit/file_writer_test.c TODO why? Because sometimes(???) it needs some gcov stubs and sometimes not?
+  # as in sometimes we build and run tests/unit with non-coverage binaries and somehow file_writer_test needs them?
+  AM_CONDITIONAL([ENABLE_COVERAGE], true)
+else
+  AM_CONDITIONAL([ENABLE_COVERAGE], false)
 fi
 
 #

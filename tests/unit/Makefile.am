@@ -110,6 +110,7 @@ check_PROGRAMS = \
 	eval_context_test \
 	regex_test \
 	alloc_test \
+	alloc_checkresult_test \
 	string_writer_test \
 	file_writer_test \
 	xml_writer_test \
@@ -189,7 +190,8 @@ endif
 endif
 
 check_SCRIPTS = dynamic_dependency_test.sh \
-	tar_portability_test.sh
+	tar_portability_test.sh \
+	alloc_checkresult_test.sh
 
 if WITH_INIT_D_SCRIPT
 check_SCRIPTS += init_script_test.sh
@@ -291,7 +293,12 @@ endif
 endif
 
 #file_writer_test_CPPFLAGS = -I$(top_srcdir)/libutils
-file_writer_test_SOURCES = file_writer_test.c gcov-stub.c
+if ENABLE_COVERAGE		# defined in top-level configure.ac
+file_writer_test_SOURCES = file_writer_test.c
+else
+file_writer_test_SOURCES = file_writer_test.c \
+	gcov-stub.c
+endif
 
 db_test_SOURCES = db_test.c
 db_test_LDADD = libtest.la ../../libpromises/libpromises.la

@@ -82,7 +82,6 @@
 #include <package_module.h>
 #include <string_lib.h>
 #include <cfnet.h>
-#include <cleanup.h>
 
 #include <mod_common.h>
 
@@ -396,7 +395,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 if(IsLoopbackAddress(optarg))
                 {
                     Log(LOG_LEVEL_ERR, "Cannot bootstrap to a loopback address");
-                    CleanupAndExit(EXIT_FAILURE);
+                    exit(EXIT_FAILURE);
                 }
 
                 // temporary assure that network functions are working

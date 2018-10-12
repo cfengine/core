@@ -171,11 +171,10 @@ static bool WriteLockData(CF_DB *dbp, const char *lock_id, LockData *lock_data)
 
 static bool WriteLockDataCurrent(CF_DB *dbp, const char *lock_id)
 {
-    LockData lock_data = {
-        .pid = getpid(),
-        .time = time(NULL),
-        .process_start_time = GetProcessStartTime(getpid()),
-    };
+    LockData lock_data = { 0 };
+    lock_data.pid = getpid();
+    lock_data.time = time(NULL);
+    lock_data.process_start_time = GetProcessStartTime(getpid());
 
     return WriteLockData(dbp, lock_id, &lock_data);
 }
@@ -189,9 +188,8 @@ time_t FindLockTime(const char *name)
         return -1;
     }
 
-    LockData entry = {
-        .process_start_time = PROCESS_START_TIME_UNKNOWN,
-    };
+    LockData entry = { 0 };
+    entry.process_start_time = PROCESS_START_TIME_UNKNOWN;
 
 #ifdef LMDB
     unsigned char ohash[EVP_MAX_MD_SIZE*2 + 1];
@@ -446,9 +444,8 @@ static bool KillLockHolder(const char *lock)
         return false;
     }
 
-    LockData lock_data = {
-        .process_start_time = PROCESS_START_TIME_UNKNOWN,
-    };
+    LockData lock_data = { 0 };
+    lock_data.process_start_time = PROCESS_START_TIME_UNKNOWN;
 
 #ifdef LMDB
     unsigned char ohash[EVP_MAX_MD_SIZE*2 + 1];

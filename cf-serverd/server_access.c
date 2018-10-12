@@ -519,6 +519,7 @@ void acl_Free(struct acl *a)
     {
         StrList_Free(&a->acls[i].admit.ips);
         StrList_Free(&a->acls[i].admit.hostnames);
+        StrList_Free(&a->acls[i].admit.usernames);
         StrList_Free(&a->acls[i].admit.keys);
         StrList_Free(&a->acls[i].deny.ips);
         StrList_Free(&a->acls[i].deny.hostnames);

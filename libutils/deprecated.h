@@ -41,10 +41,6 @@
 int sprintf(char *str, const char *format, ...) \
     FUNC_DEPRECATED("Try snprintf() or xsnprintf() or xasprintf()");
 
-int setenv(const char *name, const char *value, int overwrite) \
-    FUNC_DEPRECATED("Always use putenv() in place of non-portable setenv()!");
-
-
 #endif  /* __linux__ && __GLIBC__ */
 
 

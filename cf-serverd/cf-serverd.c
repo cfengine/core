@@ -80,6 +80,5 @@ int main(int argc, char *argv[])
         GenericAgentFinalize(ctx, config);
         CleanReportBookFilterSet();
     }
-
     return 0;
 }

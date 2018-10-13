@@ -102,5 +102,7 @@ void __UnexpectedError(const char *file, int lineno, const char *format, ...) \
 void xclock_gettime(clockid_t clk_id, struct timespec *ts);
 void xsnprintf(char *str, size_t str_size, const char *format, ...);
 
+int putenv_static(char *s);
+void putenv_static_destroy();
 
 #endif

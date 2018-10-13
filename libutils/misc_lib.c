@@ -26,8 +26,10 @@
 
 #include <platform.h>
 #include <alloc.h>
+#include <string_lib.h>
 #include <logging.h>
 #include <cleanup.h>
+#include <sequence.h>
 
 #include <stdarg.h>
 
@@ -133,4 +135,50 @@ void xsnprintf(char *str, size_t str_size, const char *format, ...)
                          format, str_size);
 #endif
     }
+}
+
+int setenv_wrapper(const char *name, const char *value, int overwrite)
+{
+#if defined(__linux__) || defined(__APPLE__)
+    return setenv(name, value, overwrite);
+#else
+    if (NULL_OR_EMPTY(name) || strchr(name, '=') != NULL)
+    {
+        errno = EINVAL;
+        return -1;
+    }
+    if (overwrite == 0 && getenv(name) != NULL)
+    {
+        return 0; // Don't overwrite
+    }
+
+    const size_t buffer_size = 1024;
+    const char buf[buffer_size];
+    int string_length = snprintf(buf, buffer_size, "%s=%s", name, value);
+    if (string_length >= buffer_size)
+    {
+        errno = EINVAL;
+        return -1; // Combined string is too long
+    }
+
+    // Fixing this leak on platforms which don't have setenv is difficult(!)
+    return putenv(xstrdup(buf));
+#endif
+}
+
+int putenv_wrapper(const char* str)
+{
+    char *const name = xstrdup(str);
+    char *const equal_sign = strchr(name, '=');
+    if (equal_sign == NULL)
+    {
+        free(name);
+        errno = EINVAL;
+        return -1;
+    }
+    *equal_sign = '\0';
+    char *value = equal_sign + 1;
+    const int ret = setenv_wrapper(name, value, 1);
+    free(name);
+    return ret;
 }

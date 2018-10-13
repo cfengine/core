@@ -355,7 +355,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
         case 'w':
             Log(LOG_LEVEL_INFO, "Setting workdir to '%s'", optarg);
-            putenv(StringConcatenate(2, "CFENGINE_TEST_OVERRIDE_WORKDIR=", optarg));
+            setenv_wrapper("CFENGINE_TEST_OVERRIDE_WORKDIR", optarg, 1);
             break;
 
         case 'f':
@@ -963,13 +963,8 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_CHILDLIBPATH].lval) == 0)
             {
-                char output[CF_BUFSIZE];
-
-                snprintf(output, CF_BUFSIZE, "Setting LD_LIBRARY_PATH to '%s'", (const char *)value);
-                if (putenv(xstrdup(output)) == 0)
-                {
-                    Log(LOG_LEVEL_VERBOSE, "Setting '%s'", output);
-                }
+                Log(LOG_LEVEL_VERBOSE, "Setting 'LD_LIBRARY_PATH=%s'", (const char *)value);
+                setenv_wrapper("LD_LIBRARY_PATH", value, 1);
                 continue;
             }
 
@@ -1130,7 +1125,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
                 for (const Rlist *rp = value; rp != NULL; rp = rp->next)
                 {
                     assert(strchr(RlistScalarValue(rp), '=')); /* Valid for putenv() */
-                    if (putenv(xstrdup(RlistScalarValue(rp))) != 0)
+                    if (putenv_wrapper(RlistScalarValue(rp)) != 0)
                     {
                         Log(LOG_LEVEL_ERR, "Failed to set environment variable '%s'. (putenv: %s)",
                             RlistScalarValue(rp), GetErrorStr());

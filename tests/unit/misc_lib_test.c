@@ -1,6 +1,7 @@
 #include <test.h>
 
 #include <misc_lib.h>
+#include <alloc.h>
 
 
 static void test_unsigned_modulus(void)
@@ -190,6 +191,41 @@ static void test_ISPOW2(void)
     assert_false(ISPOW2(0xFFFFFFFF));
 }
 
+static void test_putenv_wrapper(void)
+{
+    assert_true(getenv("UNIT_TEST_VAR") == NULL);
+
+    putenv_wrapper("UNIT_TEST_VAR=VALUE");
+    assert_true(getenv("UNIT_TEST_VAR") != NULL);
+    assert_string_equal(getenv("UNIT_TEST_VAR"), "VALUE");
+
+    putenv_wrapper("UNIT_TEST_VAR=NEW_VALUE");
+    assert_true(getenv("UNIT_TEST_VAR") != NULL);
+    assert_string_equal(getenv("UNIT_TEST_VAR"), "NEW_VALUE");
+
+    unsetenv("UNIT_TEST_VAR");
+    assert_true(getenv("UNIT_TEST_VAR") == NULL);
+}
+
+static void test_setenv_wrapper(void)
+{
+    assert_true(getenv("UNIT_TEST_VAR") == NULL);
+
+    setenv_wrapper("UNIT_TEST_VAR", "VALUE", 0);
+    assert_true(getenv("UNIT_TEST_VAR") != NULL);
+    assert_string_equal(getenv("UNIT_TEST_VAR"), "VALUE");
+
+    setenv_wrapper("UNIT_TEST_VAR", "NEW_VALUE", 1);
+    assert_true(getenv("UNIT_TEST_VAR") != NULL);
+    assert_string_equal(getenv("UNIT_TEST_VAR"), "NEW_VALUE");
+
+    setenv_wrapper("UNIT_TEST_VAR", "NO_OVERWRITE", 0);
+    assert_true(getenv("UNIT_TEST_VAR") != NULL);
+    assert_string_equal(getenv("UNIT_TEST_VAR"), "NEW_VALUE");
+
+    unsetenv("UNIT_TEST_VAR");
+    assert_true(getenv("UNIT_TEST_VAR") == NULL);
+}
 
 int main()
 {
@@ -202,6 +238,8 @@ int main()
         unit_test(test_upper_power_of_two),
         unit_test(test_rand_ISPOW2),
         unit_test(test_ISPOW2),
+        unit_test(test_putenv_wrapper),
+        unit_test(test_setenv_wrapper),
     };
 
     return run_tests(tests);

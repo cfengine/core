@@ -308,7 +308,6 @@ int main(int argc, char *argv[])
         xmlCleanupParser();
 #endif
 
-    putenv_static_destroy();
     return ret;
 }
 

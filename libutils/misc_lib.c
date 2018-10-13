@@ -151,6 +151,7 @@ int putenv_static(char *s)
     return putenv(s);
 }
 
+// WARNING: This function might destroy shared environment
 void putenv_static_destroy()
 {
     if (PUTENV_STATIC_STRINGS == NULL)
@@ -161,6 +162,10 @@ void putenv_static_destroy()
     for (int i = 0; i < len; ++i)
     {
         const char *env_var = SeqAt(PUTENV_STATIC_STRINGS, len);
+        if (env_var == NULL)
+        {
+            continue;
+        }
         size_t len = strlen(env_var);
         char temp[len + 1];
         strncpy(temp, env_var, len);
@@ -174,5 +179,5 @@ void putenv_static_destroy()
         *equal_sign = '\0';
         unsetenv(env_var);
     }
-    SeqDestroy(PUTENV_STATIC_STRINGS);
+    DESTROY_AND_NULL(SeqDestroy, PUTENV_STATIC_STRINGS);
 }

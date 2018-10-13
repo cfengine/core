@@ -278,7 +278,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
 
         case 'w':
             Log(LOG_LEVEL_INFO, "Setting workdir to '%s'", optarg);
-            putenv_static(StringConcatenate(2, "CFENGINE_TEST_OVERRIDE_WORKDIR=", optarg));
+            putenv(StringConcatenate(2, "CFENGINE_TEST_OVERRIDE_WORKDIR=", optarg));
             break;
 
         case 'c':

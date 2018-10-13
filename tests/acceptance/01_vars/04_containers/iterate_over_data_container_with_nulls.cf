@@ -1,0 +1,77 @@
+body common control
+{
+        inputs => { "../../default.cf.sub" };
+        bundlesequence  => { default("$(this.promise_filename)") };
+        version => "1.0";
+}
+
+bundle agent init
+{
+
+  files:
+      "$(G.testdir)/actual.txt"
+        delete => tidy;
+}
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-2230" }
+        string => "Test that iteration over the getindices() of a data container
+                   is not interrupted by nulls.";
+
+  vars:
+      "data"            data => '{
+  "instanceId": "i-f444554e",
+  "billingProducts": null,
+  "instanceType": "m3.large",
+  "accountId": "444444444444",
+  "pendingTime": "2015-12-02T19:47:57Z",
+  "imageId": "ami-44444444",
+  "kernelId": "aki-44444444",
+  "ramdiskId": null,
+  "architecture": "x86_64",
+  "region": "eu-west-1",
+  "version": "2010-08-31",
+  "availabilityZone": "eu-west-1c",
+  "privateIp": "10.44.44.4",
+  "devpayProductCodes": null
+}';
+
+      "data2"           data => '{
+  "instanceId" : "i-f444554e",
+  "instanceType" : "m3.large",
+  "accountId" : "444444444444",
+  "pendingTime" : "2015-12-02T19:47:57Z",
+  "imageId" : "ami-44444444",
+  "kernelId" : "aki-44444444",
+  "architecture" : "x86_64",
+  "region" : "eu-west-1",
+  "version" : "2010-08-31",
+  "availabilityZone" : "eu-west-1c",
+  "privateIp" : "10.44.44.4",
+}';
+
+      "keys" slist => getindices("data");
+      "$(keys)" string => "$(data[$(keys)])";
+
+      "keys2" slist => getindices("data2");
+      "$(keys2)" string => "$(data2[$(keys2)])";
+
+  reports:
+
+      "with nulls: $(keys) = $(data[$(keys)])"
+        report_to_file => "$(G.testdir)/actual.txt";
+
+      "without nulls: $(keys2) = $(data2[$(keys2)])"
+        report_to_file => "$(G.testdir)/actual.txt";
+}
+
+bundle agent check
+{
+  methods:
+      "Pass/Fail"
+        usebundle => dcs_check_diff( "$(G.testdir)/actual.txt",
+                                     "$(this.promise_filename).expected",
+                                     $(this.promise_filename) );
+}

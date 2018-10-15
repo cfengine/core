@@ -765,7 +765,7 @@ void EvalContextHeapPersistentLoadAll(EvalContext *ctx)
         {
             Log(LOG_LEVEL_VERBOSE, "Persistent class '%s' for %jd more minutes",
                 key, (intmax_t) ((info.expires - now) / 60));
-            Log(LOG_LEVEL_VERBOSE, "Adding persistent class '%s' to heap", key);
+            Log(LOG_LEVEL_DEBUG, "Adding persistent class '%s'", key);
 
             ClassRef ref = ClassRefParse(key);
             EvalContextClassPut(ctx, ref.ns, ref.name, true, CONTEXT_SCOPE_NAMESPACE, tags);

@@ -1553,6 +1553,11 @@ if test "x$use_coverage" = "xyes"; then
   dnl Add the special gcc flags
   CFLAGS="$CFLAGS -fprofile-arcs -ftest-coverage"
   LDFLAGS="$LDFLAGS -lgcov"
+  # Need to set ENABLE_COVERAGE so that tests/unit/Makefile.am can adapt for one
+  # test which needs gcov stubs if core not built with coverage.
+  AM_CONDITIONAL([ENABLE_COVERAGE], true)
+else
+  AM_CONDITIONAL([ENABLE_COVERAGE], false)
 fi
 
 #

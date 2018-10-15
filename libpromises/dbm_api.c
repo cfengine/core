@@ -28,7 +28,7 @@
 #include <dbm_api.h>
 #include <dbm_priv.h>
 #include <dbm_migration.h>
-#include <atexit.h>
+#include <cleanup.h>
 #include <logging.h>
 #include <misc_lib.h>
 #include <known_dirs.h>
@@ -337,7 +337,7 @@ void CloseAllDBExit()
 
 static void RegisterShutdownHandler(void)
 {
-    RegisterAtExitFunction(&CloseAllDBExit);
+    RegisterCleanupFunction(&CloseAllDBExit);
 }
 
 /**

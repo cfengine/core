@@ -629,7 +629,9 @@ static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp,
         {
             if (a.transaction.action == cfa_warn || DONTDO)
             {
-                Log(LOG_LEVEL_WARNING, "Need to render '%s' from mustache template '%s' but policy is dry-run", pp->promiser, message);
+                cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a,
+                     "Need to update rendering of '%s' from mustache template '%s' but policy is dry-run",
+                     pp->promiser, message);
                 result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
             }
             else

@@ -5,6 +5,13 @@ addons:
     paths:
       - artifacts/
 
+# Build on pushes only to given branches
+branches:
+  only:
+    - master
+    - 3.10.x
+    - 3.12.x
+
 env:
   global:
     - CI_NODE_TOTAL=6

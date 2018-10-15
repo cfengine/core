@@ -162,7 +162,7 @@ int ListHubs(List **list)
     spoll = NULL;
     avahi_handle = NULL;
 
-    RegisterAtExitFunction(&AtExitDlClose);
+    RegisterCleanupFunction(&AtExitDlClose);
 
     if (loadavahi() == -1)
     {

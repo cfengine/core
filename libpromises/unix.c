@@ -204,7 +204,7 @@ bool ShellCommandReturnsZero(const char *command, ShellType shell)
             if (execl(SHELL_PATH, "sh", "-c", command, NULL) == -1)
             {
                 Log(LOG_LEVEL_ERR, "Command '%s' failed. (execl: %s)", command, GetErrorStr());
-                exit(EXIT_FAILURE);
+                exit(EXIT_FAILURE); /* OK since this is a forked proc and no registered cleanup functions */
             }
         }
         else
@@ -217,13 +217,13 @@ bool ShellCommandReturnsZero(const char *command, ShellType shell)
                 if ((devnull = open("/dev/null", O_WRONLY)) == -1)
                 {
                     Log(LOG_LEVEL_ERR, "Command '%s' failed. (open: %s)", command, GetErrorStr());
-                    exit(EXIT_FAILURE);
+                    exit(EXIT_FAILURE); /* OK since this is a forked proc and no registered cleanup functions */
                 }
 
                 if (dup2(devnull, STDOUT_FILENO) == -1 || dup2(devnull, STDERR_FILENO) == -1)
                 {
                     Log(LOG_LEVEL_ERR, "Command '%s' failed. (dup2: %s)", command, GetErrorStr());
-                    exit(EXIT_FAILURE);
+                    exit(EXIT_FAILURE); /* OK since this is a forked proc and no registered cleanup functions */
                 }
 
                 close(devnull);
@@ -232,7 +232,7 @@ bool ShellCommandReturnsZero(const char *command, ShellType shell)
             if (execv(argv[0], argv) == -1)
             {
                 Log(LOG_LEVEL_ERR, "Command '%s' failed. (execv: %s)", argv[0], GetErrorStr());
-                exit(EXIT_FAILURE);
+                exit(EXIT_FAILURE); /* OK since this is a forked proc and no registered cleanup functions */
             }
         }
     }

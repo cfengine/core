@@ -466,6 +466,9 @@ static ActionResult RepairExec(EvalContext *ctx, const Attributes *a,
     if ((a->transaction.background) && outsourced)
     {
         Log(LOG_LEVEL_VERBOSE, "Backgrounded command '%s' is done - exiting", cmdline);
+        /* typically we replace exit() with DoCleanupAndExit() to guard against problems */
+        /* with DLL unloading during atexit() functions. In this case though we are      */
+        /* exiting from a forked process which likely has no atexit() functions registered. */
         exit(EXIT_SUCCESS);
     }
 #endif /* !__MINGW32__ */

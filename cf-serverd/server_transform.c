@@ -55,6 +55,7 @@
 #include "server_common.h"                         /* PreprocessRequestPath */
 #include "server_access.h"
 #include "strlist.h"
+#include <cleanup.h>
 
 
 static PromiseResult KeepServerPromise(EvalContext *ctx, const Promise *pp, void *param);
@@ -236,7 +237,7 @@ void KeepPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *co
         roles_acl    == NULL || SERVER_ACCESS.path_shortcuts == NULL)
     {
         Log(LOG_LEVEL_CRIT, "calloc: %s", GetErrorStr());
-        exit(255);
+       DoCleanupAndExit(255);
     }
 
     KeepControlPromises(ctx, policy, config);
@@ -1157,7 +1158,7 @@ static void AccessPromise_AddAccessConstraints(const EvalContext *ctx,
             {
                 /* Should never happen, besides when allocation fails. */
                 Log(LOG_LEVEL_CRIT, "StrList_Append: %s", GetErrorStr());
-                exit(255);
+               DoCleanupAndExit(255);
             }
 
             break;
@@ -1265,7 +1266,7 @@ static void KeepFileAccessPromise(const EvalContext *ctx, const Promise *pp)
     {
         /* Should never happen, besides when allocation fails. */
         Log(LOG_LEVEL_CRIT, "acl_Insert: %s", GetErrorStr());
-        exit(255);
+       DoCleanupAndExit(255);
     }
 
     /* Legacy code */
@@ -1316,7 +1317,7 @@ void KeepLiteralAccessPromise(EvalContext *ctx, const Promise *pp, const char *t
         {
             /* Should never happen, besides when allocation fails. */
             Log(LOG_LEVEL_CRIT, "acl_Insert: %s", GetErrorStr());
-            exit(255);
+           DoCleanupAndExit(255);
         }
 
         AccessPromise_AddAccessConstraints(ctx, pp, &literals_acl->acls[pos],
@@ -1338,7 +1339,7 @@ void KeepLiteralAccessPromise(EvalContext *ctx, const Promise *pp, const char *t
             {
                 /* Should never happen, besides when allocation fails. */
                 Log(LOG_LEVEL_CRIT, "acl_Insert: %s", GetErrorStr());
-                exit(255);
+               DoCleanupAndExit(255);
             }
 
             AccessPromise_AddAccessConstraints(ctx, pp, &classes_acl->acls[pos],
@@ -1353,7 +1354,7 @@ void KeepLiteralAccessPromise(EvalContext *ctx, const Promise *pp, const char *t
             {
                 /* Should never happen, besides when allocation fails. */
                 Log(LOG_LEVEL_CRIT, "acl_Insert: %s", GetErrorStr());
-                exit(255);
+               DoCleanupAndExit(255);
             }
 
             AccessPromise_AddAccessConstraints(ctx, pp, &vars_acl->acls[pos],
@@ -1377,7 +1378,7 @@ static void KeepQueryAccessPromise(EvalContext *ctx, const Promise *pp)
     {
         /* Should never happen, besides when allocation fails. */
         Log(LOG_LEVEL_CRIT, "acl_Insert: %s", GetErrorStr());
-        exit(255);
+       DoCleanupAndExit(255);
     }
 
     AccessPromise_AddAccessConstraints(ctx, pp, &query_acl->acls[pos],
@@ -1391,7 +1392,7 @@ static void KeepBundlesAccessPromise(EvalContext *ctx, const Promise *pp)
     {
         /* Should never happen, besides when allocation fails. */
         Log(LOG_LEVEL_CRIT, "acl_Insert: %s", GetErrorStr());
-        exit(255);
+       DoCleanupAndExit(255);
     }
 
     /* Last params are NULL because we don't have
@@ -1415,7 +1416,7 @@ static void KeepServerRolePromise(EvalContext *ctx, const Promise *pp)
     {
         /* Should never happen, besides when allocation fails. */
         Log(LOG_LEVEL_CRIT, "acl_Insert: %s", GetErrorStr());
-        exit(255);
+       DoCleanupAndExit(255);
     }
 
     size_t i = SeqLength(pp->conlist);
@@ -1447,7 +1448,7 @@ static void KeepServerRolePromise(EvalContext *ctx, const Promise *pp)
                     {
                         /* Should never happen, besides when allocation fails. */
                         Log(LOG_LEVEL_CRIT, "StrList_Append: %s", GetErrorStr());
-                        exit(255);
+                       DoCleanupAndExit(255);
                     }
                 }
             }

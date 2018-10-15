@@ -6,6 +6,7 @@
 #include <printsize.h>                  // PRINTSIZE
 #include <systype.h>                    // CLASSTEXT
 #include <signals.h>                    // GetSignalPipe
+#include <cleanup.h>                    // DoCleanupAndExit
 
 /* Wait up to a minute for an in-coming connection.
  *
@@ -193,5 +194,5 @@ int InitServer(size_t queue_size, char *bind_address)
         return sd;
     }
 
-    exit(EXIT_FAILURE);
+    DoCleanupAndExit(EXIT_FAILURE);
 }

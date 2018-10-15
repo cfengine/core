@@ -25,6 +25,7 @@
 #include <mutex.h>
 
 #include <logging.h>                                            /* Log */
+#include <cleanup.h>
 
 
 void __ThreadLock(pthread_mutex_t *mutex,
@@ -45,7 +46,7 @@ void __ThreadLock(pthread_mutex_t *mutex,
         fflush(stderr);
         fsync(STDOUT_FILENO);
         fsync(STDERR_FILENO);
-        exit(101);
+        DoCleanupAndExit(101);
     }
 }
 
@@ -66,6 +67,6 @@ void __ThreadUnlock(pthread_mutex_t *mutex,
         fflush(stderr);
         fsync(STDOUT_FILENO);
         fsync(STDERR_FILENO);
-        exit(101);
+        DoCleanupAndExit(101);
     }
 }

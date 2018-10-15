@@ -1,0 +1,10 @@
+body agent control
+{
+    agentaccess => { "nobody" };
+}
+
+bundle agent main
+{
+  reports:
+    "I am here!";
+}

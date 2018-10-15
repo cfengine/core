@@ -1,6 +1,7 @@
 #include <test.h>
 
 #include <misc_lib.h>
+#include <alloc.h>
 
 
 static void test_unsigned_modulus(void)
@@ -190,6 +191,19 @@ static void test_ISPOW2(void)
     assert_false(ISPOW2(0xFFFFFFFF));
 }
 
+static void test_putenv_static(void)
+{
+    putenv_static(xstrdup("UNIT_TEST_VAR=TEST_VALUE"));
+    assert_string_equal(getenv("UNIT_TEST_VAR"), "TEST_VALUE");
+    putenv_static_destroy();
+    assert_int_equal(getenv("UNIT_TEST_VAR"), NULL);
+
+    putenv_static(xstrdup("UNIT_TEST_VAR=TEST_VALUE"));
+    assert_string_equal(getenv("UNIT_TEST_VAR"), "TEST_VALUE");
+    putenv_static(xstrdup("UNIT_TEST_VAR=NEW_TEST_VALUE"));
+    assert_string_equal(getenv("UNIT_TEST_VAR"), "NEW_TEST_VALUE");
+    putenv_static_destroy();
+}
 
 int main()
 {
@@ -202,6 +216,7 @@ int main()
         unit_test(test_upper_power_of_two),
         unit_test(test_rand_ISPOW2),
         unit_test(test_ISPOW2),
+        unit_test(test_putenv_static),
     };
 
     return run_tests(tests);

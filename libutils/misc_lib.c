@@ -27,6 +27,7 @@
 #include <platform.h>
 #include <alloc.h>
 #include <logging.h>
+#include <sequence.h>
 
 #include <stdarg.h>
 
@@ -132,4 +133,51 @@ void xsnprintf(char *str, size_t str_size, const char *format, ...)
                          format, str_size);
 #endif
     }
+}
+
+static Seq *PUTENV_STATIC_STRINGS;
+
+// Similar to putenv, but stores the string in a Sequence for free later
+// This doesn't make a copy - usually, but not always, you want to:
+// putenv_static(xstrdup(s));
+// The string is always stored, so you don't have to free on error
+int putenv_static(char *s)
+{
+    if (PUTENV_STATIC_STRINGS == NULL)
+    {
+        PUTENV_STATIC_STRINGS = SeqNew(10, free);
+    }
+    SeqAppend(PUTENV_STATIC_STRINGS, s);
+    return putenv(s);
+}
+
+// WARNING: This function might destroy shared environment
+void putenv_static_destroy()
+{
+    if (PUTENV_STATIC_STRINGS == NULL)
+    {
+        return;
+    }
+    size_t len = SeqLength(PUTENV_STATIC_STRINGS);
+    for (int i = 0; i < len; ++i)
+    {
+        const char *env_var = SeqAt(PUTENV_STATIC_STRINGS, len);
+        if (env_var == NULL)
+        {
+            continue;
+        }
+        size_t len = strlen(env_var);
+        char temp[len + 1];
+        strncpy(temp, env_var, len);
+        temp[len] = '\0'; // strncpy doesn't guarantee termination
+        char *equal_sign = strchr(temp, '=');
+        if (equal_sign == NULL)
+        {
+            // We don't care about errors, we're just cleaning up
+            continue;
+        }
+        *equal_sign = '\0';
+        unsetenv(env_var);
+    }
+    DESTROY_AND_NULL(SeqDestroy, PUTENV_STATIC_STRINGS);
 }

@@ -1,0 +1,27 @@
+body common control
+{
+  inputs => { "../default.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+}
+
+bundle agent init
+{
+  commands:
+    "$(sys.cf_agent) --bootstrap 127.0.0.1"
+      classes => keptcode;
+}
+
+body classes keptcode
+{
+  kept_returncodes => { "1" };
+  promise_kept => { "ok" };
+}
+
+bundle agent check
+{
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

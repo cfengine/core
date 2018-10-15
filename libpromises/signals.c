@@ -23,6 +23,7 @@
 */
 
 #include <signals.h>
+#include <cleanup.h>
 
 static bool PENDING_TERMINATION = false; /* GLOBAL_X */
 
@@ -76,10 +77,10 @@ void MakeSignalPipe(void)
     {
         Log(LOG_LEVEL_CRIT, "Could not create internal communication pipe. Cannot continue. (socketpair: '%s')",
             GetErrorStr());
-        exit(EXIT_FAILURE);
+        DoCleanupAndExit(EXIT_FAILURE);
     }
 
-    atexit(&CloseSignalPipe);
+    RegisterCleanupFunction(&CloseSignalPipe);
 
     for (int c = 0; c < 2; c++)
     {
@@ -98,7 +99,7 @@ void MakeSignalPipe(void)
                 "Could not unblock internal communication pipe. "
                 "Cannot continue. (" CNTLNAME ": '%s')",
                 GetErrorStr());
-            exit(EXIT_FAILURE);
+            DoCleanupAndExit(EXIT_FAILURE);
         }
 #undef CNTLNAME
     }
@@ -146,8 +147,8 @@ void HandleSignalsForAgent(int signum)
     case SIGTERM:
     case SIGINT:
         /* TODO don't exit from the signal handler, just set a flag. Reason is
-         * that all the atexit() hooks we register are not reentrant. */
-        exit(0);
+         * that all the cleanup() hooks we register are not reentrant. */
+        DoCleanupAndExit(0);
     case SIGUSR1:
         LogSetGlobalLevel(LOG_LEVEL_DEBUG);
         break;

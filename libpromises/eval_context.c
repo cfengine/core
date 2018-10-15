@@ -50,6 +50,7 @@
 #include <regex.h>
 #include <map.h>
 #include <conversion.h>                               /* DataTypeIsIterable */
+#include <cleanup.h>
 
 
 static const char *STACK_FRAME_TYPE_STR[STACK_FRAME_TYPE_MAX] = {
@@ -2397,7 +2398,7 @@ void EvalContextAppendBodyParentsAndArgs(const EvalContext *ctx, const Policy *p
     if (depth > 30) // sanity check
     {
         Log(LOG_LEVEL_ERR, "EvalContextAppendBodyParentsAndArgs: body inheritance chain depth %d in body %s is too much, aborting", depth, bp->name);
-        exit(EXIT_FAILURE);
+        DoCleanupAndExit(EXIT_FAILURE);
     }
 
     for (size_t k = 0; bp->conlist && k < SeqLength(bp->conlist); k++)
@@ -2423,7 +2424,7 @@ void EvalContextAppendBodyParentsAndArgs(const EvalContext *ctx, const Policy *p
             if (strcmp(parent_ref.name, bp->name) == 0)
             {
                 Log(LOG_LEVEL_ERR, "EvalContextAppendBodyParentsAndArgs: self body inheritance in %s->%s, aborting", bp->name, parent_ref.name);
-                exit(EXIT_FAILURE);
+                DoCleanupAndExit(EXIT_FAILURE);
             }
 
             const Body *parent = EvalContextFindFirstMatchingBody(policy, callee_type, parent_ref.ns, parent_ref.name);

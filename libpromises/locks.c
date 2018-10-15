@@ -27,7 +27,7 @@
 #include <string_lib.h>
 #include <files_interfaces.h>
 #include <files_lib.h>
-#include <atexit.h>
+#include <cleanup.h>
 #include <policy.h>
 #include <files_hashes.h>
 #include <rb-tree.h>
@@ -376,7 +376,7 @@ static void LocksCleanup(void)
 
 static void RegisterLockCleanup(void)
 {
-    RegisterAtExitFunction(&LocksCleanup);
+    RegisterCleanupFunction(&LocksCleanup);
 }
 
 /**

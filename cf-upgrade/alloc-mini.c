@@ -38,8 +38,7 @@ static void *CheckResult(void *ptr, const char *fn, bool check_result)
     {
         fputs(fn, stderr);
         fputs(": Unable to allocate memory\n", stderr);
-        /* No atexit() functions are registered in cf-upgrade so calling exit() is fine. */
-        exit(255); /* cf-upgrade doesn't register atexit() functions */
+        exit(255); /* no cleanup() functions are registered so exit() is OK */
     }
     return ptr;
 }

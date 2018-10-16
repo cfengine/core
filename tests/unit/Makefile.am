@@ -298,6 +298,7 @@ endif
 
 #file_writer_test_CPPFLAGS = -I$(top_srcdir)/libutils
 file_writer_test_SOURCES = file_writer_test.c
+# ENABLE_COVERAGE is set in top-level configure.ac
 if !ENABLE_COVERAGE
 file_writer_test_SOURCES += gcov-stub.c
 endif

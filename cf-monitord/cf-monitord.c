@@ -37,6 +37,7 @@
 #include <timeout.h>
 #include <time_classes.h>
 #include <loading.h>
+#include <cleanup.h>
 
 typedef enum
 {
@@ -191,7 +192,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             GenericAgentWriteVersion(w);
             FileWriterDetach(w);
         }
-        exit(EXIT_SUCCESS);
+        DoCleanupAndExit(EXIT_SUCCESS);
 
         case 'h':
         {
@@ -199,7 +200,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             WriterWriteHelp(w, "cf-monitord", OPTIONS, HINTS, true, NULL);
             FileWriterDetach(w);
         }
-        exit(EXIT_SUCCESS);
+        DoCleanupAndExit(EXIT_SUCCESS);
 
         case 'M':
         {
@@ -210,17 +211,17 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                          OPTIONS, HINTS,
                          true);
             FileWriterDetach(out);
-            exit(EXIT_SUCCESS);
+            DoCleanupAndExit(EXIT_SUCCESS);
         }
 
         case 'x':
             Log(LOG_LEVEL_ERR, "Self-diagnostic functionality is retired.");
-            exit(EXIT_SUCCESS);
+            DoCleanupAndExit(EXIT_SUCCESS);
 
         case 'C':
             if (!GenericAgentConfigParseColor(config, optarg))
             {
-                exit(EXIT_FAILURE);
+                DoCleanupAndExit(EXIT_FAILURE);
             }
             break;
 
@@ -234,14 +235,14 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             WriterWriteHelp(w, "cf-monitord", OPTIONS, HINTS, true, NULL);
             FileWriterDetach(w);
         }
-        exit(EXIT_FAILURE);
+        DoCleanupAndExit(EXIT_FAILURE);
         }
     }
 
     if (!GenericAgentConfigParseArguments(config, argc - optind, argv + optind))
     {
         Log(LOG_LEVEL_ERR, "Too many arguments");
-        exit(EXIT_FAILURE);
+        DoCleanupAndExit(EXIT_FAILURE);
     }
 
     return config;

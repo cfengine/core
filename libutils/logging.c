@@ -26,6 +26,7 @@
 #include <alloc.h>
 #include <string_lib.h>
 #include <misc_lib.h>
+#include <cleanup.h>
 
 
 char VPREFIX[1024] = ""; /* GLOBAL_C */
@@ -47,7 +48,7 @@ static void LoggingInitializeOnce(void)
          * that nothing else will work. */
 
         fprintf(stderr, "Unable to initialize logging subsystem\n");
-        exit(255);
+        DoCleanupAndExit(255);
     }
 }
 
@@ -512,7 +513,7 @@ void LogSetGlobalLevelArgOrExit(const char *const arg)
         // system. Using Log() can be considered incorrect, even though
         // it may "work". Let's just print an error to stderr:
         fprintf(stderr, "Invalid log level: '%s'\n", arg);
-        exit(1);
+        DoCleanupAndExit(1);
     }
     LogSetGlobalLevel(level);
 }

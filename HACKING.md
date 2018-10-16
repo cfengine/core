@@ -494,3 +494,22 @@ and run
     ln -s contrib/dir-locals.el .dir-locals.el
 
 in the top directory of the source code checkout.
+
+atexit() and Windows
+--------------------
+
+On Windows the atexit function works but the functions registered there are
+executed after or concurrently with DLL unloading. If registered functions
+rely on DLLs such as pthreads to do locking/unlocking deadlock scenarios can
+occur when exit is called. 
+
+In order to make behavior more explicit and predictable we migrated to always
+using a homegrown atexit system. RegisterCleanupFunction instead of atexit and
+DoCleanupAndExit instead of exit.
+
+If `_Exit` or `_exit` need to be called that is fine as they don't call atexit or
+cleanup functions.
+
+In some cases such as when exiting a forked process or in executables which don't
+register cleanup functions, exit() may be used but a comment should be added
+noting that this issue was considered.

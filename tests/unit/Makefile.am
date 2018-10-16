@@ -84,7 +84,7 @@ libdb_la_SOURCES = db_stubs.c \
 	../../libpromises/dbm_migration.c \
 	../../libpromises/dbm_migration_lastseen.c \
 	../../libutils/logging.c \
-	../../libutils/mutex.c \
+	../../libpromises/mutex.c \
 	../../libutils/cleanup.c
 if HPUX
 libdb_la_SOURCES += ../../libpromises/cf3globals.c

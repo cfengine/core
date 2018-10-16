@@ -449,3 +449,23 @@ changes, and they should be mentioned in the ChangeLog entries. In fact
 if anywhere in the commit message the string ```CFE-1234``` is found
 (referring to a ticket from https://tracker.mender.io ), it will be
 automatically added to the ChangeLog.
+
+
+atexit() and Windows
+--------------------
+
+On Windows the atexit function works but the functions registered there are
+executed after or concurrently with DLL unloading. If registered functions
+rely on DLLs such as pthreads to do locking/unlocking deadlock scenarios can
+occur when exit is called. 
+
+In order to make behavior more explicit and predictable we migrated to always
+using a homegrown atexit system. RegisterCleanupFunction instead of atexit and
+DoCleanupAndExit instead of exit.
+
+If `_Exit` or `_exit` need to be called that is fine as they don't call atexit or
+cleanup functions.
+
+In some cases such as when exiting a forked process or in executables which don't
+register cleanup functions, exit() may be used but a comment should be added
+noting that this issue was considered.

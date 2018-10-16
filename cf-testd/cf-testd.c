@@ -54,6 +54,7 @@
 #include <timeout.h>            // SetReferenceTime
 #include <tls_generic.h>        // TLSLogError
 #include <logging.h>            // thread-specific log prefix
+#include <cleanup.h>
 
 #ifndef __MINGW32__
 #include <sys/socket.h>
@@ -166,7 +167,7 @@ CFTestD_Config *CFTestD_CheckOpts(int argc, char **argv, long *n_threads)
             break;
         case 'h':
             CFTestD_Help();
-            exit(EXIT_SUCCESS);
+            DoCleanupAndExit(EXIT_SUCCESS);
         case 'I':
             LogSetGlobalLevel(LOG_LEVEL_INFO);
             break;
@@ -195,7 +196,7 @@ CFTestD_Config *CFTestD_CheckOpts(int argc, char **argv, long *n_threads)
             if (!ret)
             {
                 /* the function call above logs an error for us (if any) */
-                exit(EXIT_FAILURE);
+                DoCleanupAndExit(EXIT_FAILURE);
             }
             break;
         }
@@ -211,10 +212,10 @@ CFTestD_Config *CFTestD_CheckOpts(int argc, char **argv, long *n_threads)
             GenericAgentWriteVersion(w);
             FileWriterDetach(w);
         }
-            exit(EXIT_SUCCESS);
+            DoCleanupAndExit(EXIT_SUCCESS);
         default:
             CFTestD_Help();
-            exit(EXIT_FAILURE);
+            DoCleanupAndExit(EXIT_FAILURE);
         }
     }
 
@@ -625,14 +626,14 @@ static void *CFTestD_ServeReport(void *config_arg)
             Log(LOG_LEVEL_ERR,
                 "Can't open file '%s' for reading",
                 report_file);
-            exit(EXIT_FAILURE);
+            DoCleanupAndExit(EXIT_FAILURE);
         }
 
         Writer *contents = FileRead(report_file, SIZE_MAX, NULL);
         if (!contents)
         {
             Log(LOG_LEVEL_ERR, "Error reading report file '%s'", report_file);
-            exit(EXIT_FAILURE);
+            DoCleanupAndExit(EXIT_FAILURE);
         }
 
         size_t report_data_len = StringWriterLength(contents);
@@ -668,7 +669,7 @@ static void *CFTestD_ServeReport(void *config_arg)
         if (config->report_len <= 0)
         {
             Log(LOG_LEVEL_ERR, "Report file contained no bytes");
-            exit(EXIT_FAILURE);
+            DoCleanupAndExit(EXIT_FAILURE);
         }
     }
 

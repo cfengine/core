@@ -28,6 +28,7 @@
 
 #include <actuator.h>
 #include <audit.h>
+#include <cleanup.h>
 #include <eval_context.h>
 #include <verify_classes.h>
 #include <verify_databases.h>
@@ -251,7 +252,7 @@ int main(int argc, char *argv[])
     if (!policy)
     {
         Log(LOG_LEVEL_ERR, "Error reading CFEngine policy. Exiting...");
-        exit(EXIT_FAILURE);
+        DoCleanupAndExit(EXIT_FAILURE);
     }
 
     GenericAgentPostLoadInit(ctx);
@@ -370,7 +371,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 if (!BootstrapAllowed())
                 {
                     Log(LOG_LEVEL_ERR, "Not enough privileges to bootstrap CFEngine");
-                    exit(EXIT_FAILURE);
+                    DoCleanupAndExit(EXIT_FAILURE);
                 }
 
                 if(strcmp(optarg, ":avahi") == 0)
@@ -378,14 +379,14 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                     if(!HasAvahiSupport())
                     {
                         Log(LOG_LEVEL_ERR, "Avahi support is not built in, please see options to the configure script and rebuild CFEngine");
-                        exit(EXIT_FAILURE);
+                        DoCleanupAndExit(EXIT_FAILURE);
                     }
 
                     int err = AutomaticBootstrap(config);
                     if (err < 0)
                     {
                         Log(LOG_LEVEL_ERR, "Automatic bootstrap failed, error code '%d'", err);
-                        exit(EXIT_FAILURE);
+                        DoCleanupAndExit(EXIT_FAILURE);
                     }
                     break;
                 }
@@ -393,7 +394,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 if(IsLoopbackAddress(optarg))
                 {
                     Log(LOG_LEVEL_ERR, "Cannot bootstrap to a loopback address");
-                    exit(EXIT_FAILURE);
+                    DoCleanupAndExit(EXIT_FAILURE);
                 }
 
                 // temporary assure that network functions are working
@@ -410,7 +411,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                     Log(LOG_LEVEL_ERR,
                         "Could not resolve hostname '%s', unable to bootstrap",
                         host);
-                    exit(EXIT_FAILURE);
+                    DoCleanupAndExit(EXIT_FAILURE);
                 }
 
                 CloseNetwork();
@@ -490,7 +491,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 GenericAgentWriteVersion(w);
                 FileWriterDetach(w);
             }
-            exit(EXIT_SUCCESS);
+            DoCleanupAndExit(EXIT_SUCCESS);
 
         case 'h':
             {
@@ -498,7 +499,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 WriterWriteHelp(w, "cf-agent", OPTIONS, HINTS, true, NULL);
                 FileWriterDetach(w);
             }
-            exit(EXIT_SUCCESS);
+            DoCleanupAndExit(EXIT_SUCCESS);
 
         case 'M':
             {
@@ -509,7 +510,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                              OPTIONS, HINTS,
                              true);
                 FileWriterDetach(out);
-                exit(EXIT_SUCCESS);
+                DoCleanupAndExit(EXIT_SUCCESS);
             }
 
         case 'x':
@@ -528,12 +529,12 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 AgentDiagnosticsRunAllChecksNova(workdir, out, &AgentDiagnosticsRun, &AgentDiagnosticsResultNew);
                 FileWriterDetach(out);
             }
-            exit(EXIT_SUCCESS);
+            DoCleanupAndExit(EXIT_SUCCESS);
 
         case 'C':
             if (!GenericAgentConfigParseColor(config, optarg))
             {
-                exit(EXIT_FAILURE);
+                DoCleanupAndExit(EXIT_FAILURE);
             }
             break;
 
@@ -568,7 +569,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 bool ret = LogEnableModulesFromString(optarg);
                 if (!ret)
                 {
-                    exit(EXIT_FAILURE);
+                    DoCleanupAndExit(EXIT_FAILURE);
                 }
             }
             else if (strcmp(OPTIONS[longopt_idx].name, "show-evaluated-classes") == 0)
@@ -595,7 +596,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 WriterWriteHelp(w, "cf-agent", OPTIONS, HINTS, true, NULL);
                 FileWriterDetach(w);
             }
-            exit(EXIT_FAILURE);
+            DoCleanupAndExit(EXIT_FAILURE);
         }
     }
 
@@ -603,7 +604,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                                           argv_new + optind))
     {
         Log(LOG_LEVEL_ERR, "Too many arguments");
-        exit(EXIT_FAILURE);
+        DoCleanupAndExit(EXIT_FAILURE);
     }
 
     if (option_trust_server &&
@@ -611,7 +612,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     {
         Log(LOG_LEVEL_ERR,
             "Option --trust-server can only be used when bootstrapping");
-        exit(EXIT_FAILURE);
+        DoCleanupAndExit(EXIT_FAILURE);
     }
 
     FreeFixedStringArray(argc_new, argv_new);
@@ -1439,7 +1440,7 @@ static void CheckAgentAccess(const Rlist *list, const Policy *policy)
                 if (!access)
                 {
                     Log(LOG_LEVEL_ERR, "File '%s' is not owned by an authorized user (security exception)", input_file);
-                    exit(EXIT_FAILURE);
+                    DoCleanupAndExit(EXIT_FAILURE);
                 }
             }
             else if (CFPARANOID && IsPrivileged())
@@ -1448,7 +1449,7 @@ static void CheckAgentAccess(const Rlist *list, const Policy *policy)
                 {
                     Log(LOG_LEVEL_ERR, "File '%s' is not owned by uid %ju (security exception)", input_file,
                           (uintmax_t)getuid());
-                    exit(EXIT_FAILURE);
+                    DoCleanupAndExit(EXIT_FAILURE);
                 }
             }
         }
@@ -1457,7 +1458,7 @@ static void CheckAgentAccess(const Rlist *list, const Policy *policy)
     }
 
     Log(LOG_LEVEL_ERR, "You are denied access to run this policy");
-    exit(EXIT_FAILURE);
+    DoCleanupAndExit(EXIT_FAILURE);
 }
 #endif /* !__MINGW32__ */
 

@@ -462,6 +462,9 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a,
     if ((a.transaction.background) && outsourced)
     {
         Log(LOG_LEVEL_VERBOSE, "Backgrounded command '%s' is done - exiting", cmdline);
+
+        /* exit() OK since this is a forked process and no functions are
+           registered for cleanup */
         exit(EXIT_SUCCESS);
     }
 #endif /* !__MINGW32__ */

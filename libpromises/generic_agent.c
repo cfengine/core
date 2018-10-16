@@ -45,7 +45,7 @@
 #include <expand.h>
 #include <locks.h>
 #include <scope.h>
-#include <atexit.h>
+#include <cleanup.h>
 #include <unix.h>
 #include <client_code.h>
 #include <string_lib.h>
@@ -69,6 +69,7 @@
 #include <openssl/evp.h>
 #include <libcrypto-compat.h>
 #include <libgen.h>
+#include <cleanup.h>
 
 static pthread_once_t pid_cleanup_once = PTHREAD_ONCE_INIT; /* GLOBAL_T */
 
@@ -508,14 +509,14 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
         {
             Log(LOG_LEVEL_ERR,
                 "Error removing existing input files prior to bootstrap");
-            exit(EXIT_FAILURE);
+            DoCleanupAndExit(EXIT_FAILURE);
         }
 
         if (!WriteBuiltinFailsafePolicy(GetInputDir()))
         {
             Log(LOG_LEVEL_ERR,
                 "Error writing builtin failsafe to inputs prior to bootstrap");
-            exit(EXIT_FAILURE);
+            DoCleanupAndExit(EXIT_FAILURE);
         }
         GenericAgentConfigSetInputFile(config, GetInputDir(), "failsafe.cf");
 
@@ -535,7 +536,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
             {
                 Log(LOG_LEVEL_ERR, "In order to bootstrap as a policy server,"
                     " the file '%s/promises.cf' must exist.", GetMasterDir());
-                exit(EXIT_FAILURE);
+                DoCleanupAndExit(EXIT_FAILURE);
             }
 
             CheckAndSetHAState(GetWorkDir(), ctx);
@@ -1715,7 +1716,7 @@ static void CleanPidFile(void)
 
 static void RegisterPidCleanup(void)
 {
-    RegisterAtExitFunction(&CleanPidFile);
+    RegisterCleanupFunction(&CleanPidFile);
 }
 
 /********************************************************************/

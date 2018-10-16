@@ -38,7 +38,7 @@ static void *CheckResult(void *ptr, const char *fn, bool check_result)
     {
         fputs(fn, stderr);
         fputs(": Unable to allocate memory\n", stderr);
-        exit(255);
+        exit(255); /* no cleanup() functions are registered so exit() is OK */
     }
     return ptr;
 }

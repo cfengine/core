@@ -210,6 +210,9 @@ void MonNetworkGatherData(double *cf_this)
 
     if (!FileCanOpen(comm, "r"))
     {
+        Log(LOG_LEVEL_VERBOSE,
+            "Cannot open '%s', aborting gathering of network data (monitoring)",
+            comm);
         return;
     }
 
@@ -217,7 +220,9 @@ void MonNetworkGatherData(double *cf_this)
 
     if ((pp = cf_popen(comm, "r", true)) == NULL)
     {
-        /* FIXME: no logging */
+        Log(LOG_LEVEL_VERBOSE,
+            "Opening '%s' failed, aborting gathering of network data (monitoring)",
+            comm);
         return;
     }
 
@@ -234,7 +239,10 @@ void MonNetworkGatherData(double *cf_this)
         {
             if (!feof(pp))
             {
-                /* FIXME: no logging */
+                Log(LOG_LEVEL_DEBUG,
+                    "Error occured while reading '%s' "
+                    "(CfReadLine/getline returned -1 but no EOF found)",
+                    comm);
                 cf_pclose(pp);
                 free(vbuff);
                 return;

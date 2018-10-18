@@ -33,7 +33,7 @@ static void test_FindDollarParen(void)
     // Detect out of bounds read:
     // If max is 0, it shouldn't try to deref these invalid pointers:
     char a = 'a';
-    assert_int_equal(FindDollarParen(0x1, 0), 0);
+    assert_int_equal(FindDollarParen((char *)0x1, 0), 0);
     assert_int_equal(FindDollarParen((&a) + 1, 0), 0);
 
     // Should not read past max bytes:

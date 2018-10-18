@@ -57,6 +57,9 @@ typedef struct
 #define NULL_TO_EMPTY_STRING(string) (string? string : "")
 #endif
 
+#define STRINGIFY__INTERNAL_MACRO(x) #x
+#define TOSTRING(x) STRINGIFY__INTERNAL_MACRO(x)
+
 unsigned int StringHash        (const char *str, unsigned int seed);
 unsigned int StringHash_untyped(const void *str, unsigned int seed);
 

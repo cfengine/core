@@ -29,6 +29,7 @@ valgrind $VG_OPTS /var/cfengine/bin/cf-key 2>&1 | tee cf-key.txt
 valgrind $VG_OPTS /var/cfengine/bin/cf-agent -B "$(ifconfig | grep -A1 Ethernet | sed '2!d;s/.*addr:\([0-9.]*\).*/\1/')" 2>&1 | tee bootstrap.txt
 valgrind $VG_OPTS /var/cfengine/bin/cf-agent -K -f update.cf 2>&1 | tee update.txt
 valgrind $VG_OPTS /var/cfengine/bin/cf-agent -K -f promises.cf 2>&1 | tee promises.txt
+valgrind $VG_OPTS /var/cfengine/bin/cf-check lmdump -x /var/cfengine/state/cf_lock.lmdb 2>&1 | tee check.txt
 
 echo "Killing cfengine processes"
 ps aux | grep [c]f-

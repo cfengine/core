@@ -181,6 +181,46 @@ static void test_split_escaped(void)
     RlistDestroy(list);
 }
 
+static void test_split_lines(void)
+{
+    Rlist *list = RlistFromStringSplitLines("hello\nworld!\nCheers!\n");
+    assert_int_equal(3, RlistLen(list));
+    assert_string_equal("hello", RlistScalarValue(list));
+    assert_string_equal("world!", RlistScalarValue(list->next));
+    assert_string_equal("Cheers!", RlistScalarValue(list->next->next));
+    /* no empty string here as the last item */
+    RlistDestroy(list);
+
+    /* one extra blank line */
+    list = RlistFromStringSplitLines("hello\nworld!\nCheers!\n\n");
+    assert_int_equal(4, RlistLen(list));
+    assert_string_equal("hello", RlistScalarValue(list));
+    assert_string_equal("world!", RlistScalarValue(list->next));
+    assert_string_equal("Cheers!", RlistScalarValue(list->next->next));
+    assert_string_equal("", RlistScalarValue(list->next->next->next));
+    RlistDestroy(list);
+
+#ifdef __MINGW32__
+    /* on Windows, the above should work and this as well */
+    list = RlistFromStringSplitLines("hello\r\nworld!\r\nCheers!\r\n");
+    assert_int_equal(3, RlistLen(list));
+    assert_string_equal("hello", RlistScalarValue(list));
+    assert_string_equal("world!", RlistScalarValue(list->next));
+    assert_string_equal("Cheers!", RlistScalarValue(list->next->next));
+    /* no empty string here as the last item */
+    RlistDestroy(list);
+
+    /* one extra blank line */
+    list = RlistFromStringSplitLines("hello\r\nworld!\r\nCheers!\r\n\r\n");
+    assert_int_equal(4, RlistLen(list));
+    assert_string_equal("hello", RlistScalarValue(list));
+    assert_string_equal("world!", RlistScalarValue(list->next));
+    assert_string_equal("Cheers!", RlistScalarValue(list->next->next));
+    assert_string_equal("", RlistScalarValue(list->next->next->next));
+    RlistDestroy(list);
+#endif
+}
+
 static void test_split_long(void)
 {
     char buf[CF_MAXVARSIZE * 2], *tail = buf + CF_MAXVARSIZE;
@@ -679,6 +719,7 @@ int main()
         unit_test(test_filter_everything),
         unit_test(test_reverse),
         unit_test(test_split_escaped),
+        unit_test(test_split_lines),
         unit_test(test_split_long),
         unit_test(test_split_long_escaped),
         unit_test(test_new_parser_success),

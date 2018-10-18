@@ -119,7 +119,7 @@ Rlist *PipeReadData(const IOData *io, int pipe_timeout_secs, int pipe_terminatio
     }
 
     char *read_string = BufferClose(data);
-    Rlist *response_lines = RlistFromSplitString(read_string, '\n');
+    Rlist *response_lines = RlistFromStringSplitLines(read_string);
     free(read_string);
 
     return response_lines;

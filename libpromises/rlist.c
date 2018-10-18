@@ -980,9 +980,24 @@ void RlistDestroyEntry(Rlist **liststart, Rlist *entry)
  * than the length of the new entry in <to>.  The new entry is
  * prepended; the caller can reverse <to> once built.
  */
-static size_t SubStrnCopyChr(Rlist **to, const char *from, char sep)
+static size_t SubStrnCopyChr(Rlist **to, const char *from, char sep, char lstrip)
 {
     assert(from && from[0]);
+    size_t offset = 0;
+
+    while (lstrip != '\0' && from[0] == lstrip && from[0] != '\0')
+    {
+        /* Skip over all instances of the 'lstrip' character (e.g. ' ') if
+         * specified */
+        from++;
+        offset++;
+    }
+    if (from[0] == '\0')
+    {
+        /* Reached the end already so there's nothing to add to the result list,
+           just tell the caller how far they can move. */
+        return offset;
+    }
 
     const char *end = from;
     size_t escapes = 0;
@@ -1015,7 +1030,7 @@ static size_t SubStrnCopyChr(Rlist **to, const char *from, char sep)
     /* Prepend to the list and reverse when done, costing O(len),
      * instead of appending, which costs O(len**2). */
     RlistPrependRval(to, RvalCopyScalar((Rval) { copy, RVAL_TYPE_SCALAR }));
-    return consume;
+    return offset + consume;
 }
 
 Rlist *RlistFromSplitString(const char *string, char sep)
@@ -1031,7 +1046,7 @@ Rlist *RlistFromSplitString(const char *string, char sep)
 
     for (const char *sp = string; *sp != '\0';)
     {
-        sp += SubStrnCopyChr(&liststart, sp, sep);
+        sp += SubStrnCopyChr(&liststart, sp, sep, '\0');
         assert(sp - string <= strlen(string));
         if (*sp)
         {
@@ -1042,6 +1057,56 @@ Rlist *RlistFromSplitString(const char *string, char sep)
 
     RlistReverse(&liststart);
     return liststart;
+}
+
+/**
+ * Splits the given string into lines. On Windows, both \n and \r\n newlines are
+ * detected. Escaped newlines are respected/ignored too.
+ *
+ * @return: an #Rlist where items are the individual lines **without** the
+ *          trailing newline character(s)
+ * @note: Free the result with RlistDestroy()
+ * @warning: This function doesn't work properly if @string uses "\r\n" newlines
+ *           and contains '\r' characters that are not part of any "\r\n"
+ *           sequence because it first splits @string on '\r'.
+ */
+Rlist *RlistFromStringSplitLines(const char *string)
+{
+#ifndef __MINGW32__
+    /* UNIX is easy, just split on '\n'. */
+    return RlistFromSplitString(string, '\n');
+#else
+    /* On Windows, check if '\r\n' line endings are used. If not, then just do
+     * the same things as on UNIX-like systems above */
+    const char *const crlf = strstr(string, "\r\n");
+    if (crlf == NULL)
+    {
+        return RlistFromSplitString(string, '\n');
+    }
+
+    /* else we split on '\r' just like RlistFromSplitString() above, but
+     * strip leading '\n' in every chunk, thus effectively split on \r\n. See
+     * the warning in the function's documentation.*/
+    if (string == NULL || string[0] == '\0')
+    {
+        return NULL;
+    }
+    Rlist *liststart = NULL;
+
+    for (const char *sp = string; *sp != '\0';)
+    {
+        sp += SubStrnCopyChr(&liststart, sp, '\r', '\n');
+        assert(sp - string <= strlen(string));
+        if (*sp)
+        {
+            assert(*sp == '\r' && (sp == string || sp[-1] != '\\'));
+            sp++;
+        }
+    }
+
+    RlistReverse(&liststart);
+    return liststart;
+#endif
 }
 
 /*******************************************************************/

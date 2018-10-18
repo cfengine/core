@@ -6781,7 +6781,7 @@ static FnCallResult DataRead(EvalContext *ctx, const FnCall *fp, const Rlist *fi
 
     if (json == NULL)
     {
-        Log(LOG_LEVEL_INFO, "%s: error reading from file '%s'", fp->name, filename);
+        Log(LOG_LEVEL_ERR, "%s: error reading from file '%s'", fp->name, filename);
         return FnFailure();
     }
 
@@ -7384,7 +7384,7 @@ static char *CfReadFile(const char *filename, int maxsize)
     {
         if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
         {
-            Log(LOG_LEVEL_INFO, "CfReadFile: Could not examine file '%s'", filename);
+            Log(LOG_LEVEL_ERR, "CfReadFile: Could not examine file '%s'", filename);
         }
         else
         {
@@ -7395,7 +7395,7 @@ static char *CfReadFile(const char *filename, int maxsize)
             }
             else
             {
-                Log(LOG_LEVEL_INFO, "CfReadFile: Could not examine file '%s' (stat: %s)",
+                Log(LOG_LEVEL_ERR, "CfReadFile: Could not examine file '%s' (stat: %s)",
                       filename, GetErrorStr());
             }
         }
@@ -7415,7 +7415,7 @@ static char *CfReadFile(const char *filename, int maxsize)
 
     if (!w)
     {
-        Log(LOG_LEVEL_INFO, "CfReadFile: Error while reading file '%s' (%s)",
+        Log(LOG_LEVEL_ERR, "CfReadFile: Error while reading file '%s' (%s)",
             filename, GetErrorStr());
         return NULL;
     }

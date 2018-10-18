@@ -434,11 +434,11 @@ static void GetNameInfo3(EvalContext *ctx)
     long sz;
 #endif
 
-#define COMPONENTS_SIZE 14
+#define COMPONENTS_SIZE 15
     // This is used for $(sys.cf_agent), $(sys.cf_serverd) ... :
     char *components[COMPONENTS_SIZE] = { "cf-twin", "cf-agent", "cf-serverd", "cf-monitord", "cf-know",
         "cf-report", "cf-key", "cf-runagent", "cf-execd", "cf-hub",
-        "cf-promises", "cf-upgrade", "cf-net",
+        "cf-promises", "cf-upgrade", "cf-net", "cf-check",
         NULL
     };
     int have_component[COMPONENTS_SIZE];

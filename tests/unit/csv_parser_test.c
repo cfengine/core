@@ -215,6 +215,41 @@ static void test_new_csv_reader_zd3151_ENT3023()
     SeqDestroy(list);
 }
 
+static void test_new_csv_reader_carriage_return()
+{
+    const char *inputs[] =
+    {
+        "field_1,stuff,values are here\r\n",
+        "field_2,empty,\r\n",
+        "field_3,more stuff,more values are here\r\n",
+        "field_4,,\r\n",
+    };
+
+    // First entry
+    Seq *list = SeqParseCsvString(inputs[0]);
+    assert_int_equal(SeqLength(list), 3);
+    assert_string_equal(SeqAt(list, 2), "values are here");
+    SeqDestroy(list);
+
+    // Second entry
+    list = SeqParseCsvString(inputs[1]);
+    assert_int_equal(SeqLength(list), 3);
+    assert_string_equal(SeqAt(list, 2), "");
+    SeqDestroy(list);
+
+    // Third entry
+    list = SeqParseCsvString(inputs[2]);
+    assert_int_equal(SeqLength(list), 3);
+    assert_string_equal(SeqAt(list, 2), "more values are here");
+    SeqDestroy(list);
+
+    // Fourth entry
+    list = SeqParseCsvString(inputs[3]);
+    assert_int_equal(SeqLength(list), 3);
+    assert_string_equal(SeqAt(list, 2), "");
+    SeqDestroy(list);
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -229,6 +264,7 @@ int main()
         unit_test(test_new_csv_reader_lfln_at_end3),
         unit_test(test_get_next_line),
         unit_test(test_new_csv_reader_zd3151_ENT3023),
+        unit_test(test_new_csv_reader_carriage_return),
     };
 
     return run_tests(tests);

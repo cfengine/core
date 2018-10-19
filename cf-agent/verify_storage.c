@@ -424,7 +424,8 @@ static int IsForeignFileSystem(struct stat *childstat, char *dir)
 
             if (!strcmp(entry->mounton, dir))
             {
-                if ((entry->options) && (strstr(entry->options, "nfs")))
+                if ((entry->options) && (strstr(entry->options, "nfs")) && \
+                    (strstr(entry->options, "panfs")) && (strstr(entry->options, "cifs")))
                 {
                     return true;
                 }

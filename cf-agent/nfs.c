@@ -47,6 +47,7 @@
 static int FSTAB_EDITS = 0; /* GLOBAL_X */
 static Item *FSTABLIST = NULL; /* GLOBAL_X */
 
+void GetHostAndSource(char *buf, char *host, char *source);
 static void AugmentMountInfo(Seq *list, char *host, char *source, char *mounton, char *options);
 static int MatchFSInFstab(char *match);
 static void DeleteThisItem(Item **liststart, Item *entry);
@@ -126,13 +127,36 @@ static const char *const VMOUNTOPTS[] =
     [PLATFORM_CONTEXT_ANDROID] = "defaults",         /* android */
 };
 
+
+void GetHostAndSource(char *buf, char *host, char *source)
+/* Extracts from buffer host & source of cifs and panfs network systems */
+{
+    int i = 0, i2 = 0, bs = 0;
+
+    // copy host
+    while(bs != 3)
+    {
+        if (buf[i] == '/')
+            bs++;
+        host[i] = buf[i];
+        i++;
+    }
+    i--;
+    host[i] = '\0';
+
+    // copy source
+    while (buf[i] != ' ')
+        source[i2++] = buf[i++];
+    source[i2] = '\0';
+}
+
 bool LoadMountInfo(Seq *list)
 /* This is, in fact, the most portable way to read the mount info! */
 /* Depressing, isn't it? */
 {
     FILE *pp;
     char buf1[CF_BUFSIZE], buf2[CF_BUFSIZE], buf3[CF_BUFSIZE];
-    int i, nfs = false;
+    int i, nfs = false, panfs = false, cifs = false;
 
     for (i = 0; VMOUNTCOMM[VSYSTEMHARDCLASS][i] != ' '; i++)
     {
@@ -173,9 +197,17 @@ bool LoadMountInfo(Seq *list)
             }
         }
 
-        if (strstr(vbuff, "nfs"))
+        if (strstr(vbuff, "panfs"))
+        {
+            panfs = true;
+        }
+        else if (strstr(vbuff, "nfs"))
         {
             nfs = true;
+        }
+        else if (strstr(vbuff, "cifs"))
+        {
+            cifs = true;
         }
 
         // security note: buff is CF_BUFSIZE, so that is the max that can be written to buf1, buf2 or buf3
@@ -223,7 +255,7 @@ bool LoadMountInfo(Seq *list)
 
 
 #if defined(__sun) || defined(__hpux)
-        if (IsAbsoluteFileName(buf3))
+        if (IsAbsoluteFileName(buf3) && !cifs)
         {
             strlcpy(host, "localhost", sizeof(host));
             strlcpy(mounton, buf1, sizeof(mounton));
@@ -236,7 +268,7 @@ bool LoadMountInfo(Seq *list)
 #elif defined(_AIX)
         /* skip header */
 
-        if (IsAbsoluteFileName(buf1))
+        if (IsAbsoluteFileName(buf1) && !cifs)
         {
             strlcpy(host, "localhost", sizeof(host));
             strlcpy(mounton, buf2, sizeof(mounton));
@@ -253,23 +285,39 @@ bool LoadMountInfo(Seq *list)
 #elif defined(sco) || defined(__SCO_DS)
         Log(LOG_LEVEL_ERR, "Don't understand SCO mount format, no data");
 #else
-        if (IsAbsoluteFileName(buf1))
+        if (IsAbsoluteFileName(buf1) && !cifs)
         {
+            Log(LOG_LEVEL_VERBOSE, "SETTING LOCALHOST");
             strlcpy(host, "localhost", sizeof(host));
             strlcpy(mounton, buf3, sizeof(mounton));
         }
         else
         {
-            sscanf(buf1, "%255[^:]:%1023s", host, source);
+            if (panfs || cifs)
+            {
+                GetHostAndSource(buf1, host, source);
+            }
+            else if(nfs)
+            {
+                sscanf(buf1, "%255[^:]:%1023s", host, source);
+            }
             strlcpy(mounton, buf3, sizeof(mounton));
         }
 #endif
 
         Log(LOG_LEVEL_DEBUG, "LoadMountInfo: host '%s', source '%s', mounton '%s'", host, source, mounton);
 
-        if (nfs)
+        if (panfs)
+        {
+            AugmentMountInfo(list, host, source, mounton, "panfs");
+        }
+        else if(nfs)
         {
             AugmentMountInfo(list, host, source, mounton, "nfs");
+        }
+        else if(cifs)
+        {
+            AugmentMountInfo(list, host, source, mounton, "cifs");
         }
         else
         {
@@ -567,7 +615,19 @@ PromiseResult VerifyMount(EvalContext *ctx, char *name, const Attributes *a, con
     PromiseResult result = PROMISE_RESULT_NOOP;
     if (!DONTDO)
     {
-        snprintf(comm, CF_BUFSIZE, "%s -o %s %s:%s %s", CommandArg0(VMOUNTCOMM[VSYSTEMHARDCLASS]), opts, host, rmountpt, mountpt);
+
+        if (strcmp(a.mount.mount_type, "panfs") == 0)
+        {
+	    snprintf(comm, CF_BUFSIZE, "%s -t panfs -o %s %s%s %s", CommandArg0(VMOUNTCOMM[VSYSTEMHARDCLASS]), opts, host, rmountpt, mountpt);
+        }
+        else if(strcmp(a.mount.mount_type, "cifs") == 0)
+        {
+            snprintf(comm, CF_BUFSIZE, "%s -t cifs -o %s %s%s %s", CommandArg0(VMOUNTCOMM[VSYSTEMHARDCLASS]), opts, host, rmountpt, mountpt);
+        }
+        else
+        {
+            snprintf(comm, CF_BUFSIZE, "%s -o %s %s:%s %s", CommandArg0(VMOUNTCOMM[VSYSTEMHARDCLASS]), opts, host, rmountpt, mountpt);
+        }
 
         if ((pfp = cf_popen(comm, "r", true)) == NULL)
         {

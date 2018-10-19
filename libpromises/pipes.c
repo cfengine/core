@@ -79,9 +79,9 @@ Rlist *PipeReadData(const IOData *io, int pipe_timeout_secs, int pipe_terminatio
 
         if (fd < 0)
         {
-            Log(LOG_LEVEL_VERBOSE,
-                "Error reading data from application pipe");
-            return NULL;
+            Log(LOG_LEVEL_DEBUG,
+                "Error reading data from application pipe %d", fd);
+            break;
         }
         else if (fd == io->read_fd)
         {

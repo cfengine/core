@@ -47,13 +47,6 @@
 #endif
 
 
-/*******************************************************************/
-/* Preprocessor tricks                                             */
-/*******************************************************************/
-
-/* Convert integer constant to string */
-#define STRINGIFY__INTERNAL_MACRO(x) #x
-#define TOSTRING(x) STRINGIFY__INTERNAL_MACRO(x)
 
 /*******************************************************************/
 /* Various defines                                                 */

@@ -29,6 +29,7 @@
 #include <string_lib.h>
 #include <logging.h>
 #include <errno.h>
+#include <cleanup.h>
 
 #include <stdarg.h>
 

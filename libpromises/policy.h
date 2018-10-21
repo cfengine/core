@@ -55,6 +55,7 @@ struct Policy_
 
     Seq *bundles;
     Seq *bodies;
+    StringMap *policy_files_hashes;
 };
 
 typedef struct
@@ -145,6 +146,7 @@ void PolicyDestroy(Policy *policy);
 unsigned PolicyHash(const Policy *policy);
 
 StringSet *PolicySourceFiles(const Policy *policy);
+const char *PolicyGetPolicyFileHash(const Policy *policy, const char *policy_file_path);
 
 Policy *PolicyMerge(Policy *a, Policy *b);
 Body *PolicyGetBody(const Policy *policy, const char *ns, const char *type, const char *name);

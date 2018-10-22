@@ -819,17 +819,21 @@ void TLSSetDefaultOptions(SSL_CTX *ssl_ctx, const char *min_version)
     }
 #endif
 
-    const char *compiletime_min_version = "1.2";
+    const char *compiletime_min_version = "1.3";
 
-#ifndef  SSL_OP_NO_TLSv1_1
+#ifndef  SSL_OP_NO_TLSv1_2
+#   define SSL_OP_NO_TLSv1_2 0x0                                /* nop */
+    compiletime_min_version = "1.2";
+
+# ifndef  SSL_OP_NO_TLSv1_1
 #   define SSL_OP_NO_TLSv1_1 0x0                                /* nop */
     compiletime_min_version = "1.1";
 
-# ifndef  SSL_OP_NO_TLSv1
+#  ifndef  SSL_OP_NO_TLSv1
 #   define SSL_OP_NO_TLSv1 0x0                                  /* nop */
     compiletime_min_version = "1.0";
+#  endif
 # endif
-
 #endif
 
     /* In any case use only TLS v1 or later. */
@@ -868,6 +872,20 @@ void TLSSetDefaultOptions(SSL_CTX *ssl_ctx, const char *min_version)
         options |= SSL_OP_NO_TLSv1 | SSL_OP_NO_TLSv1_1;
         Log(LOG_LEVEL_VERBOSE,
             "Setting minimum acceptable TLS version: 1.2");
+    }
+    else if (strcmp(min_version, "1.3") == 0)
+    {
+        if (strcmp(compiletime_min_version, "1.0") == 0 ||
+            strcmp(compiletime_min_version, "1.1") == 0 ||
+            strcmp(compiletime_min_version, "1.2") == 0)
+        {
+            Log(LOG_LEVEL_WARNING, "Minimum requested TLS version is %s,"
+                " however because of old OpenSSL version it is set to: %s",
+                min_version, compiletime_min_version);
+        }
+        options |= SSL_OP_NO_TLSv1 | SSL_OP_NO_TLSv1_1 | SSL_OP_NO_TLSv1_2;
+        Log(LOG_LEVEL_VERBOSE,
+            "Setting minimum acceptable TLS version: 1.3");
     }
     else
     {

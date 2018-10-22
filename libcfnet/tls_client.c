@@ -102,20 +102,9 @@ bool TLSClientInitialize(const char *tls_min_version,
 
     TLSSetDefaultOptions(SSLCLIENTCONTEXT, tls_min_version);
 
-    if (ciphers != NULL)
+    if (!TLSSetCipherList(SSLCLIENTCONTEXT, ciphers))
     {
-        Log(LOG_LEVEL_VERBOSE,
-            "Setting cipher list for outgoing TLS connections to: %s",
-            ciphers);
-
-        ret = SSL_CTX_set_cipher_list(SSLCLIENTCONTEXT, ciphers);
-        if (ret != 1)
-        {
-            Log(LOG_LEVEL_ERR,
-                "No valid ciphers in cipher list: %s",
-                ciphers);
-            goto err2;
-        }
+        goto err2;
     }
 
     /* Create cert into memory and load it into SSL context. */

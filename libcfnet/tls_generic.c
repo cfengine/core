@@ -31,6 +31,7 @@
 
 #include <logging.h>                                            /* LogLevel */
 #include <misc_lib.h>
+#include <string_lib.h>
 
 /* TODO move crypto.h to libutils */
 #include <crypto.h>                                    /* HavePublicKeyByIP */
@@ -906,4 +907,75 @@ void TLSSetDefaultOptions(SSL_CTX *ssl_ctx, const char *min_version)
      * connection is established since OpenSSL can't pass a connection
      * specific pointer to the callback (so we would have to lock).  */
     SSL_CTX_set_cert_verify_callback(ssl_ctx, TLSVerifyCallback, NULL);
+}
+
+bool TLSSetCipherList(SSL_CTX *ssl_ctx, const char *cipher_list)
+{
+    assert(ssl_ctx);
+
+    if (cipher_list == NULL)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Using the OpenSSL's default cipher list");
+        /* nothing more to do */
+        return true;
+    }
+
+    Log(LOG_LEVEL_VERBOSE, "Setting cipher list for TLS connections to: %s",
+        cipher_list);
+
+    const size_t max_len = strlen(cipher_list) + 1; /* NUL byte */
+    size_t n_specs = StringCountTokens(cipher_list, max_len, ":");
+
+    /* TLS 1.3 defines cipher suites, they start with "TLS_" */
+    char ciphers[max_len];
+    size_t ciphers_len = 0;
+
+    char cipher_suites[max_len];
+    size_t cipher_suites_len = 0;
+
+    for (size_t i = 0; i < n_specs; i++)
+    {
+        StringRef spec_ref = StringGetToken(cipher_list, max_len, i, ":");
+        if (StringStartsWith(spec_ref.data, "TLS_"))
+        {
+            StrCat(cipher_suites, max_len, &cipher_suites_len, spec_ref.data, spec_ref.len + 1);
+        }
+        else
+        {
+            StrCat(ciphers, max_len, &ciphers_len, spec_ref.data, spec_ref.len + 1);
+        }
+    }
+
+    if (ciphers_len != 0)       /* TLS <= 1.2 ciphers */
+    {
+        int ret = SSL_CTX_set_cipher_list(ssl_ctx, ciphers);
+        if (ret != 1)
+        {
+            Log(LOG_LEVEL_ERR, "No valid ciphers in the cipher list: %s", cipher_list);
+            return false;
+        }
+    }
+
+    if (cipher_suites_len != 0) /* TLS >= 1.3 ciphers */
+    {
+        int ret = SSL_CTX_set_ciphersuites(ssl_ctx, cipher_suites);
+        if (ret != 1)
+        {
+            Log(LOG_LEVEL_ERR, "No valid cipher suites in the list: %s", cipher_list);
+            return false;
+        }
+    }
+    else
+    {
+        /* Allowed ciphers specified, but no TLS 1.3 ciphersuites among them.
+           Let's disable TLS 1.3 because otherwise OpenSSL uses the default
+           ciphersuites for TLS 1.3 and thus effectively extends the specified
+           list of allowed ciphers behind our back. */
+        Log(LOG_LEVEL_WARNING,
+            "Disabling TLS 1.3 because no TLS 1.3 ciphersuites specified in allowed ciphers: '%s'",
+            cipher_list);
+        SSL_CTX_set_options(ssl_ctx, SSL_OP_NO_TLSv1_3);
+    }
+
+    return true;
 }

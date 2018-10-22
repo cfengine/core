@@ -100,27 +100,22 @@ bool ServerTLSInitialize(RSA *priv_key, RSA *pub_key, SSL_CTX **ssl_ctx)
      * CFEngine is not a web server so it does not need to support many
      * ciphers. It only allows a safe but very common subset by default,
      * extensible via "allowciphers" in body server control. By default
-     * it allows:
+     * the server side allows:
      *
      *     AES256-GCM-SHA384: most high-grade RSA-based cipher from TLSv1.2
      *     AES256-SHA: most backwards compatible but high-grade, from SSLv3
+     *     TLS_AES_256_GCM_SHA384: most high-grade RSA-based cipher from TLSv1.3
+     *
+     * Client side is using the OpenSSL's defaults by default.
      */
     const char *cipher_list = SERVER_ACCESS.allowciphers;
     if (cipher_list == NULL)
     {
-        cipher_list ="AES256-GCM-SHA384:AES256-SHA";
+        cipher_list = "AES256-GCM-SHA384:AES256-SHA:TLS_AES_256_GCM_SHA384";
     }
 
-    Log(LOG_LEVEL_VERBOSE,
-        "Setting cipher list for incoming TLS connections to: %s",
-        cipher_list);
-
-    ret = SSL_CTX_set_cipher_list(*ssl_ctx, cipher_list);
-    if (ret != 1)
+    if (!TLSSetCipherList(*ssl_ctx, cipher_list))
     {
-        Log(LOG_LEVEL_ERR,
-            "No valid ciphers in cipher list: %s",
-            cipher_list);
         goto err;
     }
 

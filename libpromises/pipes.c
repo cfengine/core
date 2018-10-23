@@ -119,7 +119,14 @@ Rlist *PipeReadData(const IOData *io, int pipe_timeout_secs, int pipe_terminatio
     }
 
     char *read_string = BufferClose(data);
-    Rlist *response_lines = RlistFromSplitString(read_string, '\n');
+
+#ifdef __MINGW32__
+    bool detect_crlf = true;
+#else
+    bool detect_crlf = false;
+#endif
+
+    Rlist *response_lines = RlistFromStringSplitLines(read_string, detect_crlf);
     free(read_string);
 
     return response_lines;

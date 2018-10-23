@@ -89,6 +89,7 @@ Rlist *RlistAppend(Rlist **start, const void *item, RvalType type);
 Rlist *RlistAppendAllTypes(Rlist **start, const void *item, RvalType type, bool all_types);
 
 Rlist *RlistFromSplitString(const char *string, char sep);
+Rlist *RlistFromStringSplitLines(const char *string, bool detect_crlf);
 Rlist *RlistFromSplitRegex(const char *string, const char *regex, size_t max_entries, bool allow_blanks);
 Rlist *RlistFromRegexSplitNoOverflow(const char *string, const char *regex, int max);
 Rlist *RlistFromContainer(const JsonElement *container);

@@ -181,6 +181,57 @@ static void test_split_escaped(void)
     RlistDestroy(list);
 }
 
+static void test_split_lines(void)
+{
+    Rlist *list = RlistFromStringSplitLines(NULL, true);
+    assert_true(list == NULL);
+    list = RlistFromStringSplitLines(NULL, false);
+    assert_true(list == NULL);
+
+    list = RlistFromStringSplitLines("hello\nworld!\nCheers!\n", true);
+    assert_int_equal(3, RlistLen(list));
+    assert_string_equal("hello", RlistScalarValue(list));
+    assert_string_equal("world!", RlistScalarValue(list->next));
+    assert_string_equal("Cheers!", RlistScalarValue(list->next->next));
+    /* no empty string here as the last item */
+    RlistDestroy(list);
+
+    /* one extra blank line */
+    list = RlistFromStringSplitLines("hello\nworld!\nCheers!\n\n", true);
+    assert_int_equal(4, RlistLen(list));
+    assert_string_equal("hello", RlistScalarValue(list));
+    assert_string_equal("world!", RlistScalarValue(list->next));
+    assert_string_equal("Cheers!", RlistScalarValue(list->next->next));
+    assert_string_equal("", RlistScalarValue(list->next->next->next));
+    RlistDestroy(list);
+
+    list = RlistFromStringSplitLines("hello\r\nworld!\r\nCheers!\r\n", true);
+    assert_int_equal(3, RlistLen(list));
+    assert_string_equal("hello", RlistScalarValue(list));
+    assert_string_equal("world!", RlistScalarValue(list->next));
+    assert_string_equal("Cheers!", RlistScalarValue(list->next->next));
+    /* no empty string here as the last item */
+    RlistDestroy(list);
+
+    /* one extra blank line */
+    list = RlistFromStringSplitLines("hello\r\nworld!\r\nCheers!\r\n\r\n", true);
+    assert_int_equal(4, RlistLen(list));
+    assert_string_equal("hello", RlistScalarValue(list));
+    assert_string_equal("world!", RlistScalarValue(list->next));
+    assert_string_equal("Cheers!", RlistScalarValue(list->next->next));
+    assert_string_equal("", RlistScalarValue(list->next->next->next));
+    RlistDestroy(list);
+
+    /* UNIX-like newlines only */
+    list = RlistFromStringSplitLines("hello\r\nworld!\r\nCheers!\r\n\r\n", false);
+    assert_int_equal(4, RlistLen(list));
+    assert_string_equal("hello\r", RlistScalarValue(list));
+    assert_string_equal("world!\r", RlistScalarValue(list->next));
+    assert_string_equal("Cheers!\r", RlistScalarValue(list->next->next));
+    assert_string_equal("\r", RlistScalarValue(list->next->next->next));
+    RlistDestroy(list);
+}
+
 static void test_split_long(void)
 {
     char buf[CF_MAXVARSIZE * 2], *tail = buf + CF_MAXVARSIZE;
@@ -679,6 +730,7 @@ int main()
         unit_test(test_filter_everything),
         unit_test(test_reverse),
         unit_test(test_split_escaped),
+        unit_test(test_split_lines),
         unit_test(test_split_long),
         unit_test(test_split_long_escaped),
         unit_test(test_new_parser_success),

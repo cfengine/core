@@ -122,6 +122,7 @@ static void test_filter(void)
     {
         char *item = StringFromLong(i);
         RlistAppend(&list, item, RVAL_TYPE_SCALAR);
+        free(item);
     }
 
     assert_int_equal(10, RlistLen(list));
@@ -148,6 +149,7 @@ static void test_filter_everything(void)
     {
         char *item = StringFromLong(i);
         RlistAppend(&list, item, RVAL_TYPE_SCALAR);
+        free(item);
     }
 
     assert_int_equal(5, RlistLen(list));

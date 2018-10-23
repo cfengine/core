@@ -67,7 +67,8 @@ void test_stringset_join(void)
     {
         StringSet *set1 = StringSetNew();
         StringSet *set2 = StringSetNew();
-        StringSetJoin(set1, set2);
+        StringSetJoin(set1, set2, xstrdup);
+        StringSetDestroy(set2);
 
         assert_int_equal(0, StringSetSize(set1));
 
@@ -78,13 +79,12 @@ void test_stringset_join(void)
 
         BufferDestroy(buff);
         StringSetDestroy(set1);
-        StringSetDestroy(set2);
     }
 
     {
         StringSet *set = StringSetNew();
         StringSetAdd(set, xstrdup("foo"));
-        StringSetJoin(set, set);
+        StringSetJoin(set, set, xstrdup);
 
         assert_int_equal(1, StringSetSize(set));
 
@@ -102,16 +102,17 @@ void test_stringset_join(void)
         StringSet *set2 = StringSetNew();
         StringSetAdd(set1, xstrdup("foo"));
         StringSetAdd(set2, xstrdup("bar"));
-        StringSetJoin(set1, set2);
+        StringSetJoin(set1, set2, xstrdup);
+        StringSetDestroy(set2);
 
         assert_int_equal(2, StringSetSize(set1));
 
         Buffer *buff = StringSetToBuffer(set1, ',');
+        StringSetDestroy(set1);
 
         assert_true(buff);
         assert_string_equal(BufferData(buff), "foo,bar");
 
-        StringSetDestroy(set1);
         BufferDestroy(buff);
     }
 }

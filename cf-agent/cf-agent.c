@@ -449,8 +449,8 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 }
                 else
                 {
-                    StringSetJoin(config->heap_soft, defined_classes);
-                    free(defined_classes);
+                    StringSetJoin(config->heap_soft, defined_classes, xstrdup);
+                    StringSetDestroy(defined_classes);
                 }
             }
             break;
@@ -464,8 +464,8 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 }
                 else
                 {
-                    StringSetJoin(config->heap_negated, negated_classes);
-                    free(negated_classes);
+                    StringSetJoin(config->heap_negated, negated_classes, xstrdup);
+                    StringSetDestroy(negated_classes);
                 }
             }
             break;

@@ -8,7 +8,9 @@ void test_empty(void)
     CsvWriter *c = CsvWriterOpen(w);
 
     CsvWriterClose(c);
-    assert_string_equal(StringWriterClose(w), "");
+    char *result_string = StringWriterClose(w);
+    assert_string_equal(result_string, "");
+    free(result_string);
 }
 
 void test_single_field(void)
@@ -19,7 +21,9 @@ void test_single_field(void)
     CsvWriterField(c, "test");
 
     CsvWriterClose(c);
-    assert_string_equal(StringWriterClose(w), "test\r\n");
+    char *result_string = StringWriterClose(w);
+    assert_string_equal(result_string, "test\r\n");
+    free(result_string);
 }
 
 void test_several_fields(void)
@@ -46,7 +50,9 @@ void test_two_records(void)
     CsvWriterNewRecord(c);
 
     CsvWriterClose(c);
-    assert_string_equal(StringWriterClose(w), "test1\r\ntest2\r\n");
+    char *result_string = StringWriterClose(w);
+    assert_string_equal(result_string, "test1\r\ntest2\r\n");
+    free(result_string);
 }
 
 void test_empty_record(void)
@@ -59,7 +65,9 @@ void test_empty_record(void)
     CsvWriterNewRecord(c);
 
     CsvWriterClose(c);
-    assert_string_equal(StringWriterClose(w), "\r\ntest2\r\n");
+    char *result_string = StringWriterClose(w);
+    assert_string_equal(result_string, "\r\ntest2\r\n");
+    free(result_string);
 }
 
 void test_empty_last_record(void)
@@ -72,7 +80,9 @@ void test_empty_last_record(void)
     CsvWriterNewRecord(c);
 
     CsvWriterClose(c);
-    assert_string_equal(StringWriterClose(w), "test1\r\n\r\n");
+    char *result_string = StringWriterClose(w);
+    assert_string_equal(result_string, "test1\r\n\r\n");
+    free(result_string);
 }
 
 void test_escape(void)
@@ -83,7 +93,9 @@ void test_escape(void)
     CsvWriterField(c, ",\"\r\n");
 
     CsvWriterClose(c);
-    assert_string_equal(StringWriterClose(w), "\",\"\"\r\n\"\r\n");
+    char *result_string = StringWriterClose(w);
+    assert_string_equal(result_string, "\",\"\"\r\n\"\r\n");
+    free(result_string);
 }
 
 int main()

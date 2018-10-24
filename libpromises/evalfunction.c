@@ -7747,6 +7747,15 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
 
             BufferDestroy(tagbuf);
         }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "Automatically canonifying '%s'", content);
+            CanonifyNameInPlace(content);
+            Log(LOG_LEVEL_VERBOSE, "Automatically canonified to '%s'", content);
+            Buffer *tagbuf = StringSetToBuffer(tags, ',');
+            EvalContextClassPutSoft(ctx, content, CONTEXT_SCOPE_NAMESPACE, BufferData(tagbuf));
+            BufferDestroy(tagbuf);
+        }
         break;
     case '-':
         if (length > CF_MAXVARSIZE)
@@ -7954,10 +7963,9 @@ static bool CheckID(const char *id)
     {
         if (!CheckIDChar(*sp))
         {
-            Log(LOG_LEVEL_ERR,
+            Log(LOG_LEVEL_WARNING,
                   "Module protocol contained an illegal character '%c' in class/variable identifier '%s'.", *sp,
                   id);
-            return false;
         }
     }
 

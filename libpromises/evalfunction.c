@@ -7887,12 +7887,12 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
         }
         else
         {
-          Log(LOG_LEVEL_VERBOSE, "Automatically canonifying '%s'", content);
-          CanonifyNameInPlace(content);
-          Log(LOG_LEVEL_VERBOSE, "Automatically canonified to '%s'", content);
-          Buffer *tagbuf = StringSetToBuffer(tags, ',');
-          EvalContextClassPutSoft(ctx, content, CONTEXT_SCOPE_NAMESPACE, BufferData(tagbuf));
-          BufferDestroy(tagbuf);
+            Log(LOG_LEVEL_VERBOSE, "Automatically canonifying '%s'", content);
+            CanonifyNameInPlace(content);
+            Log(LOG_LEVEL_VERBOSE, "Automatically canonified to '%s'", content);
+            Buffer *tagbuf = StringSetToBuffer(tags, ',');
+            EvalContextClassPutSoft(ctx, content, CONTEXT_SCOPE_NAMESPACE, BufferData(tagbuf));
+            BufferDestroy(tagbuf);
         }
         break;
     case '-':

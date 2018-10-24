@@ -353,7 +353,7 @@ Seq *SeqGetRange(const Seq *seq, size_t start, size_t end)
 {
     assert (seq);
 
-    if ((start > end) || (seq->length < start) || (seq->length < end))
+    if ((start > end) || (start >= seq->length) || (end >= seq->length))
     {
         return NULL;
     }
@@ -362,6 +362,7 @@ Seq *SeqGetRange(const Seq *seq, size_t start, size_t end)
 
     for (size_t i = start; i <= end; i++)
     {
+        assert(i < SeqLength(seq));
         SeqAppend(sub, SeqAt(seq, i));
     }
 

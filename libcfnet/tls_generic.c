@@ -840,16 +840,16 @@ void TLSSetDefaultOptions(SSL_CTX *ssl_ctx, const char *min_version)
     long options = SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3;
 
     if (min_version == NULL
-        || strcmp(min_version, "1")   == 0
-        || strcmp(min_version, "1.0") == 0)
+        || StringSafeEqual(min_version, "1")
+        || StringSafeEqual(min_version, "1.0"))
     {
         /* Do nothing, that's our default setting */
         Log(LOG_LEVEL_VERBOSE,
             "Setting minimum acceptable TLS version: 1.0");
     }
-    else if (strcmp(min_version, "1.1") == 0)
+    else if (StringSafeEqual(min_version, "1.1"))
     {
-        if (strcmp(compiletime_min_version, "1.0") == 0)
+        if (StringSafeEqual(compiletime_min_version, "1.0"))
         {
             Log(LOG_LEVEL_WARNING, "Minimum requested TLS version is %s,"
                 " however because of old OpenSSL version it is set to: %s",
@@ -860,10 +860,10 @@ void TLSSetDefaultOptions(SSL_CTX *ssl_ctx, const char *min_version)
             "Setting minimum acceptable TLS version: 1.1");
 
     }
-    else if (strcmp(min_version, "1.2") == 0)
+    else if (StringSafeEqual(min_version, "1.2"))
     {
-        if (strcmp(compiletime_min_version, "1.0") == 0 ||
-            strcmp(compiletime_min_version, "1.1") == 0)
+        if (StringSafeEqual(compiletime_min_version, "1.0") ||
+            StringSafeEqual(compiletime_min_version, "1.1"))
         {
             Log(LOG_LEVEL_WARNING, "Minimum requested TLS version is %s,"
                 " however because of old OpenSSL version it is set to: %s",
@@ -873,11 +873,11 @@ void TLSSetDefaultOptions(SSL_CTX *ssl_ctx, const char *min_version)
         Log(LOG_LEVEL_VERBOSE,
             "Setting minimum acceptable TLS version: 1.2");
     }
-    else if (strcmp(min_version, "1.3") == 0)
+    else if (StringSafeEqual(min_version, "1.3"))
     {
-        if (strcmp(compiletime_min_version, "1.0") == 0 ||
-            strcmp(compiletime_min_version, "1.1") == 0 ||
-            strcmp(compiletime_min_version, "1.2") == 0)
+        if (StringSafeEqual(compiletime_min_version, "1.0") ||
+            StringSafeEqual(compiletime_min_version, "1.1") ||
+            StringSafeEqual(compiletime_min_version, "1.2"))
         {
             Log(LOG_LEVEL_WARNING, "Minimum requested TLS version is %s,"
                 " however because of old OpenSSL version it is set to: %s",

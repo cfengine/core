@@ -21,10 +21,27 @@ static void lmdump_print_usage(void)
     printf("Lmdb database dumper\n");
     printf("Usage: lmdump -d|-x|-a|-A filename\n\n");
     printf("Has three modes :\n");
-    printf("    -a : print keys in ascii form\n");
-    printf("    -A : print keys and values in ascii form\n");
+    printf("    -A : print keys in ascii form\n");
+    printf("    -a : print keys and values in ascii form\n");
     printf("    -x : print keys and values in hexadecimal form\n");
     printf("    -d : print only the size of keys and values\n");
+}
+
+lmdump_mode lmdump_char_to_mode(char mode)
+{
+    switch (mode) {
+        case 'A':
+            return LMDUMP_KEYS_ASCII;
+        case 'a':
+            return LMDUMP_VALUES_ASCII;
+        case 'x':
+            return LMDUMP_VALUES_HEX;
+        case 'd':
+            return LMDUMP_SIZES;
+        default:
+            break;
+    }
+    return LMDUMP_UNKNOWN;
 }
 
 static int lmdump_report_error(int rc)
@@ -33,84 +50,67 @@ static int lmdump_report_error(int rc)
     return rc;
 }
 
-int lmdump_main(int argc, char * argv[])
+void lmdump_print_line(lmdump_mode mode, MDB_val key, MDB_val data)
 {
-    int rc;
-    MDB_env *env;
-    MDB_dbi dbi;
-    MDB_val key, data;
-    MDB_txn *txn;
-    MDB_cursor *cursor;
+    assert(mode >= 0 && mode < LMDUMP_UNKNOWN);
 
-    if (argc < 3)
-    {
-        lmdump_print_usage();
-        return 1;
-    }
-    int mode = -1;
-    if (strcmp(argv[1],"-a") == 0)
-    {
-        mode = 'a';
-    }
-    else if (strcmp(argv[1], "-A") == 0)
-    {
-        mode = 'A';
-    }
-    else if (strcmp(argv[1], "-x") == 0)
-    {
-        mode = 'x';
-    }
-    else if (strcmp(argv[1], "-d") == 0)
-    {
-        mode = 'd';
-    }
-    else
-    {
-        lmdump_print_usage();
-        return 1;
-    }
-    rc = mdb_env_create(&env);
-    if (rc) return lmdump_report_error(rc);
-
-    rc = mdb_env_open(env, argv[2], MDB_NOSUBDIR, 0644);
-    if (rc) return lmdump_report_error(rc);
-
-    rc = mdb_txn_begin(env, NULL, MDB_RDONLY, &txn);
-    if (rc) return lmdump_report_error(rc);
-
-    rc = mdb_open(txn, NULL, 0, &dbi);
-    if (rc) return lmdump_report_error(rc);
-
-    rc = mdb_cursor_open(txn, dbi, &cursor);
-    if (rc) return lmdump_report_error(rc);
-
-    while ( (rc = mdb_cursor_get(cursor, &key, &data, MDB_NEXT)) == MDB_SUCCESS )
-    {
-        if (mode == 'A')
-        {
+    switch (mode) {
+        case LMDUMP_KEYS_ASCII:
             printf("key: %p[%d] %.*s\n",
                 key.mv_data, (int) key.mv_size, (int) key.mv_size, (char *) key.mv_data);
-        }
-        else if (mode == 'a')
-        {
+            break;
+        case LMDUMP_VALUES_ASCII:
             printf("key: %p[%d] %.*s, data: %p[%d] %.*s\n",
                 key.mv_data, (int) key.mv_size, (int) key.mv_size, (char *) key.mv_data,
                 data.mv_data, (int) data.mv_size, (int) data.mv_size, (char *) data.mv_data);
-        }
-        else if (mode == 'd')
-        {
-            printf("key: %p[%d] ,data: %p[%d]\n",
-                key.mv_data,  (int) key.mv_size,
-                data.mv_data, (int) data.mv_size);
-        }
-        else if (mode == 'x')
-        {
+            break;
+        case LMDUMP_VALUES_HEX:
             printf("key: %p[%d] ", key.mv_data,  (int) key.mv_size);
             lmdump_print_hex(key.mv_data,  (int) key.mv_size);
             printf(" ,data: %p[%d] ", data.mv_data,  (int) data.mv_size);
             lmdump_print_hex(data.mv_data,  (int) data.mv_size);
             printf("\n");
-        }
+            break;
+        case LMDUMP_SIZES:
+            printf("key: %p[%d] ,data: %p[%d]\n",
+                key.mv_data,  (int) key.mv_size,
+                data.mv_data, (int) data.mv_size);
+            break;
+        default:
+            break;
+    }
+}
+
+int lmdump(lmdump_mode mode, const char *file)
+{
+    assert(mode >= 0 && mode < LMDUMP_UNKNOWN);
+    assert(file != NULL);
+
+    int rc;
+
+    MDB_env *env;
+    rc = mdb_env_create(&env);
+    if (rc) return lmdump_report_error(rc);
+
+    rc = mdb_env_open(env, file, MDB_NOSUBDIR, 0644);
+    if (rc) return lmdump_report_error(rc);
+
+    MDB_txn *txn;
+    rc = mdb_txn_begin(env, NULL, MDB_RDONLY, &txn);
+    if (rc) return lmdump_report_error(rc);
+
+    MDB_dbi dbi;
+    rc = mdb_open(txn, NULL, 0, &dbi);
+    if (rc) return lmdump_report_error(rc);
+
+    MDB_cursor *cursor;
+    rc = mdb_cursor_open(txn, dbi, &cursor);
+    if (rc) return lmdump_report_error(rc);
+
+    MDB_val key, data;
+    while ( (rc = mdb_cursor_get(cursor, &key, &data, MDB_NEXT)) == MDB_SUCCESS )
+    {
+        lmdump_print_line(mode, key, data);
     }
     if (rc != MDB_NOTFOUND)
     {
@@ -124,6 +124,28 @@ int lmdump_main(int argc, char * argv[])
     mdb_env_close(env);
 
     return 0;
+}
+
+int lmdump_main(int argc, char * argv[])
+{
+    assert(argv != NULL);
+
+    if (argc != 3 || argv[1][0] != '-')
+    {
+        lmdump_print_usage();
+        return 1;
+    }
+
+    const char *filename = argv[2];
+    const lmdump_mode mode = lmdump_char_to_mode(argv[1][1]);
+
+    if (mode == LMDUMP_UNKNOWN)
+    {
+        lmdump_print_usage();
+        return 1;
+    }
+
+    return lmdump(mode, filename);
 }
 
 #else

@@ -259,7 +259,7 @@ static bool SetMaxOpenFiles(int n)
         Log(LOG_LEVEL_INFO, "Failed setting max open files limit"
             " (setrlimit(NOFILE, %d): %s)", n, GetErrorStr());
         Log(LOG_LEVEL_INFO,
-            "Please ensure that 'nofile' ulimit is at least 2x maxconnections");
+            "Please ensure that 'nofile' ulimit is at least 5x maxconnections");
         return false;
     }
     else
@@ -355,7 +355,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
                                                    + EnterpriseGetMaxCfHubProcesses() + 10);
 
                 /* Set RLIMIT_NOFILE to be enough for all threads. */
-                SetMaxOpenFiles(CFD_MAXPROCESSES * 2 + 10);
+                SetMaxOpenFiles(CFD_MAXPROCESSES * 5 + 10);
             }
             else if (IsControlBody(SERVER_CONTROL_CALL_COLLECT_INTERVAL))
             {

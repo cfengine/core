@@ -38,6 +38,7 @@
 #include <man.h>
 #include <signals.h>
 #include <string_lib.h>
+#include <cleanup.h>
 
 #include <cf-key-functions.h>
 
@@ -269,7 +270,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 GenericAgentWriteVersion(w);
                 FileWriterDetach(w);
             }
-            exit(EXIT_SUCCESS);
+            DoCleanupAndExit(EXIT_SUCCESS);
 
         case 'v':
             LogSetGlobalLevel(LOG_LEVEL_VERBOSE);
@@ -315,7 +316,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 WriterWriteHelp(w, "cf-key", OPTIONS, HINTS, false, NULL);
                 FileWriterDetach(w);
             }
-            exit(EXIT_SUCCESS);
+            DoCleanupAndExit(EXIT_SUCCESS);
 
         case 'M':
             {
@@ -326,13 +327,13 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                              OPTIONS, HINTS,
                              false);
                 FileWriterDetach(out);
-                exit(EXIT_SUCCESS);
+                DoCleanupAndExit(EXIT_SUCCESS);
             }
 
         case 'C':
             if (!GenericAgentConfigParseColor(config, optarg))
             {
-                exit(EXIT_FAILURE);
+                DoCleanupAndExit(EXIT_FAILURE);
             }
             break;
 
@@ -350,7 +351,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 WriterWriteHelp(w, "cf-key", OPTIONS, HINTS, false, NULL);
                 FileWriterDetach(w);
             }
-            exit(EXIT_FAILURE);
+            DoCleanupAndExit(EXIT_FAILURE);
 
         }
     }

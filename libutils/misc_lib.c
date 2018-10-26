@@ -27,6 +27,7 @@
 #include <platform.h>
 #include <alloc.h>
 #include <logging.h>
+#include <cleanup.h>
 
 #include <stdarg.h>
 
@@ -61,7 +62,7 @@ void __ProgrammingError(const char *file, int lineno, const char *format, ...)
 
     free(fmt);
 #ifdef NDEBUG
-    exit(255);
+    DoCleanupAndExit(255);
 #else
     abort();
 #endif

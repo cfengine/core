@@ -41,6 +41,7 @@
 #include <generic_agent.h>      // GenericAgentSetDefaultDigest TODO: rm dep
 #include <cf-windows-functions.h> // TODO: move this out of libpromises
 #include <known_dirs.h>           // TODO: move this 'out of libpromises
+#include <cleanup.h>
 
 #define ARG_UNUSED __attribute__((unused))
 
@@ -191,7 +192,7 @@ int main(int argc, char **argv)
     GenericAgentSetDefaultDigest(&CF_DEFAULT_DIGEST, &CF_DEFAULT_DIGEST_LEN);
     if (ret != 0)
     {
-        exit(EXIT_FAILURE);
+        DoCleanupAndExit(EXIT_FAILURE);
     }
     ret = CFNetRun(&opts, args, hostnames);  // Commands return exit code
     free(hostnames);
@@ -233,7 +234,7 @@ static char *RequireHostname(char *hostnames)
         if (policy_server == NULL)
         {
             printf("Error: no host name (and no policy_server.dat)\n");
-            exit(EXIT_FAILURE);
+            DoCleanupAndExit(EXIT_FAILURE);
         }
         return policy_server;
     }
@@ -276,7 +277,7 @@ static int CFNetParse(int argc, char **argv,
                              OPTIONS, HINTS,
                              true);
                 FileWriterDetach(out);
-                exit(EXIT_SUCCESS);
+                DoCleanupAndExit(EXIT_SUCCESS);
                 break;
             }
             case 'H':
@@ -315,7 +316,7 @@ static int CFNetParse(int argc, char **argv,
             {
                 // printf("Default optarg = '%s', c = '%c' = %i\n",
                 //        optarg, c, (int)c);
-                exit(EXIT_FAILURE);
+                DoCleanupAndExit(EXIT_FAILURE);
                 break;
             }
         }
@@ -358,7 +359,7 @@ static int CFNetCommandSwitch(CFNetOptions *opts, const char *hostname,
             break;
     }
     printf("Bug: CFNetCommandSwitch() is unable to pick a command\n");
-    exit(EXIT_FAILURE);
+    DoCleanupAndExit(EXIT_FAILURE);
     return -1;
 }
 
@@ -391,7 +392,7 @@ static int CFNetRun(CFNetOptions *opts, char **args, char *hostnames)
     if (NULL_OR_EMPTY(command_name))
     {
         printf("Error: Command missing, use cf-net --help for more info.\n");
-        exit(EXIT_FAILURE);
+        DoCleanupAndExit(EXIT_FAILURE);
     }
     ToUpperStrInplace(command_name);
 
@@ -526,7 +527,7 @@ static int CFNetHelp(const char *topic)
         Writer *w = FileWriter(stdout);
         WriterWriteHelp(w, "cf-net", OPTIONS, HINTS, false, COMMANDS);
         FileWriterDetach(w);
-        exit(EXIT_SUCCESS);
+        DoCleanupAndExit(EXIT_SUCCESS);
     }
     return 0;
 }

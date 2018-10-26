@@ -23,7 +23,7 @@
 */
 
 #include <findhub.h>
-#include <atexit.h>
+#include <cleanup.h>
 #include <string_lib.h>
 #include <misc_lib.h>
 #include <logging.h>
@@ -31,7 +31,7 @@
 
 List *hublist = NULL; 
 
-static void AtExitDlClose(void);
+static void CleanupDlClose(void);
 static int CompareHosts(const void  *a, const void *b);
 
 void client_callback(AvahiClient *c,
@@ -162,7 +162,7 @@ int ListHubs(List **list)
     spoll = NULL;
     avahi_handle = NULL;
 
-    RegisterAtExitFunction(&AtExitDlClose);
+    RegisterCleanupFunction(&CleanupDlClose);
 
     if (loadavahi() == -1)
     {
@@ -236,7 +236,7 @@ int ListHubs(List **list)
     return ListCount(*list);
 }
 
-static void AtExitDlClose(void)
+static void CleanupDlClose(void)
 {
     if (avahi_handle != NULL)
     {

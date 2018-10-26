@@ -27,6 +27,7 @@
 #include <platform.h>
 #include <alloc.h>
 #include <logging.h>
+#include <cleanup.h>
 
 #include <stdarg.h>
 

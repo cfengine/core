@@ -43,6 +43,8 @@
 # define WINVER 0x501
 # if defined(__CYGWIN__)
 #  undef FD_SETSIZE
+# else
+#   include <_mingw.h>
 # endif
   /* Increase select(2) FD limit from 64. It's documented and valid to do it
    * like that provided that we define it *before* including winsock2.h. */
@@ -52,6 +54,7 @@
 #endif
 
 #ifdef __MINGW32__
+# define OPENSSL_SYS_WIN32 1		/* to try and get around the mismatch between X509_NAME as struct (openssl) and LPCSTR (wincrypt.h) */
 # include <winsock2.h>
 # include <windows.h>
 # include <accctrl.h>

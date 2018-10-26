@@ -34,7 +34,7 @@ static double GetSplay(void)
 {
     char splay[CF_BUFSIZE];
     snprintf(splay, CF_BUFSIZE, "%s+%s+%ju", VFQNAME, VIPADDRESS, (uintmax_t)getuid());
-    return ((double) MAX(StringHash(splay, 0), UINT_MAX - 1)) / UINT_MAX;
+    return ((double) MIN(StringHash(splay, 0), UINT_MAX - 1)) / UINT_MAX;
 }
 
 ExecdConfig *ExecdConfigNew(const EvalContext *ctx, const Policy *policy)

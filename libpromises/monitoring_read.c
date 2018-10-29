@@ -164,7 +164,15 @@ void Nova_LoadSlots(void)
     {
         if (i < ob_spare)
         {
-            fscanf(f, "%*[^\n]\n");
+            int r;
+            do
+            {
+                r = fgetc(f);
+            } while (r != (int)'\n' && r != EOF);
+            if (r == EOF)
+            {
+                break;
+            }
         }
         else
         {
@@ -179,7 +187,7 @@ void Nova_LoadSlots(void)
             if (fgets(line, CF_MAXVARSIZE, f) == NULL)
             {
                 Log(LOG_LEVEL_ERR, "Error trying to read ts_key from file '%s'. (fgets: %s)", filename, GetErrorStr());
-                continue;
+                break;
             }
 
             int fields = sscanf(line, "%*d,%1023[^,],%1023[^,],%1023[^,],%lf,%lf,%d",

@@ -61,7 +61,7 @@ static int Dialogue(int sd, const char *s);
 
 static void *ThreadUniqueName(void)
 {
-    return pthread_self().p;
+    return (void *)pthread_self();
 }
 
 # else /* __MINGW32__ */

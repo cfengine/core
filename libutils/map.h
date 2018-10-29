@@ -144,53 +144,68 @@ void MapPrintStats(const Map *map, FILE *f);
                                                                         \
     bool Prefix##MapInsert(const Prefix##Map *map, KeyType key, ValueType value) \
     {                                                                   \
+        assert(map);                                                    \
         return MapInsert(map->impl, key, value);                        \
     }                                                                   \
                                                                         \
     bool Prefix##MapHasKey(const Prefix##Map *map, const KeyType key)   \
     {                                                                   \
+        assert(map);                                                    \
         return MapHasKey(map->impl, key);                               \
     }                                                                   \
                                                                         \
     ValueType Prefix##MapGet(const Prefix##Map *map, const KeyType key) \
     {                                                                   \
+        assert(map);                                                    \
         return MapGet(map->impl, key);                                  \
     }                                                                   \
                                                                         \
     bool Prefix##MapRemove(const Prefix##Map *map, const KeyType key)   \
     {                                                                   \
+        assert(map);                                                    \
         return MapRemove(map->impl, key);                               \
     }                                                                   \
                                                                         \
     void Prefix##MapClear(Prefix##Map *map)                             \
     {                                                                   \
+        assert(map);                                                    \
         MapClear(map->impl);                                            \
     }                                                                   \
                                                                         \
     size_t Prefix##MapSize(const Prefix##Map *map)                      \
     {                                                                   \
+        assert(map);                                                    \
         return MapSize(map->impl);                                      \
     }                                                                   \
                                                                         \
     void Prefix##MapDestroy(Prefix##Map *map)                           \
     {                                                                   \
-        MapDestroy(map->impl);                                          \
-        free(map);                                                      \
+        if (map != NULL)                                                \
+        {                                                               \
+          MapDestroy(map->impl);                                        \
+          free(map);                                                    \
+        }                                                               \
     }                                                                   \
                                                                         \
     void Prefix##MapSoftDestroy(Prefix##Map *map)                       \
     {                                                                   \
-        MapSoftDestroy(map->impl);                                      \
-        free(map);                                                      \
+        if (map != NULL)                                                \
+        {                                                               \
+          MapSoftDestroy(map->impl);                                    \
+          free(map);                                                    \
+        }                                                               \
     }                                                                   \
                                                                         \
     bool Prefix##MapContainsSameKeys(const Prefix##Map *map1, const Prefix##Map *map2) \
     {                                                                   \
+        assert(map1);                                                   \
+        assert(map2);                                                   \
         return MapContainsSameKeys(map1->impl, map2->impl);             \
     }                                                                   \
                                                                         \
     void Prefix##MapPrintStats(const Prefix##Map *map, FILE *f)         \
     {                                                                   \
+        assert(map);                                                    \
         return MapPrintStats(map->impl, f);                             \
     }                                                                   \
 

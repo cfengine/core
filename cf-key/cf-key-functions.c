@@ -209,52 +209,9 @@ int RemoveKeys(const char *input, bool must_be_coherent)
     return -1;
 }
 
-bool KeepKeyPromises(const char *public_key_file, const char *private_key_file, const int key_size)
+static bool KeepKeyPromisesRSA(RSA *pair, const char *public_key_file, const char *private_key_file)
 {
-#ifdef OPENSSL_NO_DEPRECATED
-    RSA *pair = RSA_new();
-    BIGNUM *rsa_bignum = BN_new();
-#else
-    RSA *pair;
-#endif
-    FILE *fp;
-    struct stat statbuf;
-    int fd;
-    const EVP_CIPHER *cipher;
-    char vbuff[CF_BUFSIZE];
-
-    cipher = EVP_des_ede3_cbc();
-
-    if (stat(public_key_file, &statbuf) != -1)
-    {
-        Log(LOG_LEVEL_ERR, "A key file already exists at %s", public_key_file);
-        return false;
-    }
-
-    if (stat(private_key_file, &statbuf) != -1)
-    {
-        Log(LOG_LEVEL_ERR, "A key file already exists at %s", private_key_file);
-        return false;
-    }
-
-    Log(LOG_LEVEL_INFO, "Making a key pair for CFEngine, please wait, this could take a minute...");
-
-#ifdef OPENSSL_NO_DEPRECATED
-    BN_set_word(rsa_bignum, RSA_F4);
-
-    if (!RSA_generate_key_ex(pair, key_size, rsa_bignum, NULL))
-#else
-    pair = RSA_generate_key(key_size, 65537, NULL, NULL);
-
-    if (pair == NULL)
-#endif
-    {
-        Log(LOG_LEVEL_ERR, "Unable to generate cryptographic key (RSA_generate_key: %s)",
-            CryptoLastErrorString());
-        return false;
-    }
-
-    fd = safe_open(private_key_file, O_WRONLY | O_CREAT | O_TRUNC, 0600);
+    int fd = safe_open(private_key_file, O_WRONLY | O_CREAT | O_TRUNC, 0600);
 
     if (fd < 0)
     {
@@ -262,7 +219,8 @@ bool KeepKeyPromises(const char *public_key_file, const char *private_key_file, 
         return false;
     }
 
-    if ((fp = fdopen(fd, "w")) == NULL)
+    FILE *fp = fdopen(fd, "w");
+    if (fp == NULL)
     {
         Log(LOG_LEVEL_ERR, "Error while writing private key file '%s' (fdopen: %s)", private_key_file, GetErrorStr());
         close(fd);
@@ -271,16 +229,18 @@ bool KeepKeyPromises(const char *public_key_file, const char *private_key_file, 
 
     Log(LOG_LEVEL_VERBOSE, "Writing private key to '%s'", private_key_file);
 
-    if (!PEM_write_RSAPrivateKey(fp, pair, cipher, (void *)PRIVKEY_PASSPHRASE,
-                                 PRIVKEY_PASSPHRASE_LEN, NULL, NULL))
+    const EVP_CIPHER *cipher = EVP_des_ede3_cbc();
+    int res = PEM_write_RSAPrivateKey(fp, pair, cipher, (void *)PRIVKEY_PASSPHRASE,
+                                 PRIVKEY_PASSPHRASE_LEN, NULL, NULL);
+    fclose(fp);
+
+    if (res == 0)
     {
         Log(LOG_LEVEL_ERR,
             "Couldn't write private key. (PEM_write_RSAPrivateKey: %s)",
             CryptoLastErrorString());
         return false;
     }
-
-    fclose(fp);
 
     fd = safe_open(public_key_file, O_WRONLY | O_CREAT | O_TRUNC, 0600);
 
@@ -310,6 +270,7 @@ bool KeepKeyPromises(const char *public_key_file, const char *private_key_file, 
 
     fclose(fp);
 
+    char vbuff[CF_BUFSIZE];
     snprintf(vbuff, CF_BUFSIZE, "%s%crandseed", GetWorkDir(), FILE_SEPARATOR);
     Log(LOG_LEVEL_VERBOSE, "Using '%s' for randseed", vbuff);
 
@@ -329,6 +290,58 @@ bool KeepKeyPromises(const char *public_key_file, const char *private_key_file, 
     }
 
     return true;
+}
+
+bool KeepKeyPromises(const char *public_key_file, const char *private_key_file, const int key_size)
+{
+    struct stat statbuf;
+
+    if (stat(public_key_file, &statbuf) != -1)
+    {
+        Log(LOG_LEVEL_ERR, "A key file already exists at %s", public_key_file);
+        return false;
+    }
+
+    if (stat(private_key_file, &statbuf) != -1)
+    {
+        Log(LOG_LEVEL_ERR, "A key file already exists at %s", private_key_file);
+        return false;
+    }
+
+    Log(LOG_LEVEL_INFO, "Making a key pair for CFEngine, please wait, this could take a minute...");
+
+#ifdef OPENSSL_NO_DEPRECATED
+    RSA *pair = RSA_new();
+    BIGNUM *rsa_bignum = BN_new();
+    if (pair != NULL && rsa_bignum != NULL)
+    {
+        BN_set_word(rsa_bignum, RSA_F4);
+        int res = RSA_generate_key_ex(pair, key_size, rsa_bignum, NULL);
+        if (res == 0)
+        {
+            DESTROY_AND_NULL(RSA_free, pair); // pair = NULL
+        }
+    }
+    else
+    {
+        DESTROY_AND_NULL(RSA_free, pair); // pair = NULL
+    }
+
+    BN_clear_free(rsa_bignum);
+
+#else
+    RSA *pair = RSA_generate_key(key_size, 65537, NULL, NULL);
+
+#endif
+    if (pair == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Unable to generate cryptographic key (RSA_generate_key: %s)",
+            CryptoLastErrorString());
+        return false;
+    }
+    bool ret = KeepKeyPromisesRSA(pair, public_key_file, private_key_file);
+    RSA_free(pair);
+    return ret;
 }
 
 

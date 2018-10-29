@@ -64,7 +64,7 @@ Attributes GetFilesAttributes(const EvalContext *ctx, const Promise *pp)
 
     if (!attr.template_method )
     {
-        xasprintf(&attr.template_method, "cfengine");
+        attr.template_method = "cfengine";
     }
 
     attr.haveeditline = PromiseBundleOrBodyConstraintExists(ctx, "edit_line", pp);

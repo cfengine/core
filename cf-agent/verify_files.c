@@ -251,20 +251,23 @@ Attributes GetExpandedAttributes(EvalContext *ctx, const Promise *pp, const Attr
 
 void ClearExpandedAttributes(Attributes *a)
 {
-    free(a->transaction.log_string);
-    a->transaction.log_string = NULL;
-    free(a->transaction.log_kept);
-    a->transaction.log_kept = NULL;
-    free(a->transaction.log_repaired);
-    a->transaction.log_repaired = NULL;
-    free(a->transaction.log_failed);
-    a->transaction.log_failed = NULL;
-    free(a->transaction.measure_id);
-    a->transaction.measure_id = NULL;
-    free(a->edit_template);
-    free(a->edit_template_string);
-    a->edit_template = NULL;
-    a->edit_template_string = NULL;
+    DESTROY_AND_NULL(RlistDestroy, a->classes.change);
+    DESTROY_AND_NULL(RlistDestroy, a->classes.failure);
+    DESTROY_AND_NULL(RlistDestroy, a->classes.denied);
+    DESTROY_AND_NULL(RlistDestroy, a->classes.timeout);
+    DESTROY_AND_NULL(RlistDestroy, a->classes.kept);
+    DESTROY_AND_NULL(RlistDestroy, a->classes.del_change);
+    DESTROY_AND_NULL(RlistDestroy, a->classes.del_kept);
+    DESTROY_AND_NULL(RlistDestroy, a->classes.del_notkept);
+
+    FREE_AND_NULL(a->transaction.log_string);
+    FREE_AND_NULL(a->transaction.log_kept);
+    FREE_AND_NULL(a->transaction.log_repaired);
+    FREE_AND_NULL(a->transaction.log_failed);
+    FREE_AND_NULL(a->transaction.measure_id);
+
+    FREE_AND_NULL(a->edit_template);
+    FREE_AND_NULL(a->edit_template_string);
 
     ClearFilesAttributes(a);
 }
@@ -294,6 +297,8 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", path, CF_DATA_TYPE_STRING, "source=promise");
     Attributes a = GetExpandedAttributes(ctx, pp, &attr);
 
+    PromiseResult result = PROMISE_RESULT_NOOP;
+
     /* if template_data was specified, it must have been resolved to a data
      * container by now */
     /* check this early to prevent creation of the file below in case of failure */
@@ -303,10 +308,10 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
              "No template data for the promise '%s'", pp->promiser);
-        return PROMISE_RESULT_FAIL;
+        result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+        goto exit;
     }
 
-    PromiseResult result = PROMISE_RESULT_NOOP;
     if (lstat(path, &oslb) == -1)       /* Careful if the object is a link */
     {
         if ((a.create) || (a.touch))
@@ -629,7 +634,9 @@ static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp,
         {
             if (a.transaction.action == cfa_warn || DONTDO)
             {
-                Log(LOG_LEVEL_WARNING, "Need to render '%s' from mustache template '%s' but policy is dry-run", pp->promiser, message);
+                cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a,
+                     "Need to update rendering of '%s' from mustache template '%s' but policy is dry-run",
+                     pp->promiser, message);
                 result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
             }
             else

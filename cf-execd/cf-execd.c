@@ -629,9 +629,7 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
         UpdateLastPolicyUpdateTime(ctx);
 
         DetectEnvironment(ctx);
-
-        Log(LOG_LEVEL_INFO, "Re-evaluating augments" );
-        LoadAugments(ctx, config);
+        GenericAgentDiscoverContext(ctx, config);
 
         EvalContextClassPutHard(ctx, CF_AGENTTYPES[AGENT_TYPE_EXECUTOR], "cfe_internal,source=agent");
 

@@ -455,6 +455,7 @@ static void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConf
             UpdateLastPolicyUpdateTime(ctx);
 
             DetectEnvironment(ctx);
+            GenericAgentDiscoverContext(ctx, config);
             KeepHardClasses(ctx);
             LoadAugments(ctx, config);
 

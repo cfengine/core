@@ -92,7 +92,7 @@ void *SetIteratorNext(SetIterator *i)
     return kv ? kv->key : NULL;
 }
 
-void SetJoin(Set *set, Set *otherset)
+void SetJoin(Set *set, Set *otherset, SetElementCopyFn copy_function)
 {
     assert(set != NULL);
     assert(otherset != NULL);
@@ -104,6 +104,10 @@ void SetJoin(Set *set, Set *otherset)
 
     for (ptr = SetIteratorNext(&si); ptr != NULL; ptr = SetIteratorNext(&si))
     {
+        if (copy_function != NULL)
+        {
+            ptr = copy_function(ptr);
+        }
         SetAdd(set, ptr);
     }
 }

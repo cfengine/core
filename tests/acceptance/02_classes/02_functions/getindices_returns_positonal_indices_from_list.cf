@@ -1,0 +1,53 @@
+body common control
+{
+        inputs => { "../../default.cf.sub" };
+        bundlesequence  => { default("$(this.promise_filename)") };
+        version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+
+  meta:
+      "description" -> { "CFE-2930" }
+        string => "Test that getindices() returns the positional indices from a list";
+
+      "test_soft_fail"
+        string => "any",
+        meta => { "CFE-2930" };
+
+  vars:
+      "list" slist => { "beta", "alpha", "gamma" };
+      "getindices_list" slist => getindices( list );
+}
+
+#######################################################
+bundle agent check
+{
+  vars:
+      "expected_indices"
+        slist => { 0, 1, 2 };
+
+      "diff_getindices_vs_expected"
+        comment => "Expect to find no elements from getindices that differ from expected",
+        slist => difference( "test.getindices_list", "expected_indices" );
+
+      "diff_expected_vs_getindices"
+        comment => "Expect to find no elements from expected that differ from getindices",
+        slist => difference(  "expected_indices", "test.getindices_list" );
+
+  reports:
+      "$(this.promise_filename) Pass"
+        if => strcmp( join( ", ", sort( expected_indices, lex) ), join( ", ", sort( "test.getindices_list", lex) ) );
+
+      "$(this.promise_filename) FAIL"
+        if => not( strcmp( join( ", ", sort( expected_indices, lex) ), join( ", ", sort( "test.getindices_list", lex) ) ));
+
+    DEBUG|EXTRA::
+      "diff_getindices_vs_expected";
+      "$(diff_getindices_vs_expected)";
+      "diff_expected_vs_getindices";
+      "$(diff_expected_vs_getindices)";
+}

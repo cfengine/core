@@ -53,6 +53,8 @@ typedef struct
 
 static inline void *SeqAt(const Seq *seq, int i)
 {
+    assert(seq != NULL);
+    assert(i < seq->length);
     return seq->data[i];
 }
 
@@ -221,6 +223,13 @@ void SeqClear(Seq *seq);
   */
 Seq *SeqGetRange(const Seq *seq, size_t start, size_t end);
 
+
+void SeqRemoveNulls(Seq *s);
+
+//////////////////////////////////////////////////////////////////////////////
+// SeqString - Sequence of strings (char *)
+//////////////////////////////////////////////////////////////////////////////
+
 /**
   @brief Create a new Sequence from splitting a string on a fixed delimiter
   @param [in] str String to split.
@@ -235,6 +244,27 @@ Seq *SeqStringFromString(const char *str, char delimiter);
  */
 int SeqStringLength(Seq *seq);
 
-void SeqRemoveNulls(Seq *s);
+
+/**
+ * @brief Serializes a sequence of strings to a length prefixed format
+ *
+ * (De)Serialize uses a length prefixed format.
+ * For every element in a string sequence,
+ * the serialized output includes:
+ * 1. 10 bytes of length prefix, where index 9 must be a space
+ * 2. The data, with no escaping / modifications
+ * 3. A single newline (\n) for readability
+ * It is assumed that the sequence contains ascii printable
+ * NUL terminated characters.
+ */
+char *SeqStringSerialize(Seq *seq);
+
+/**
+ * @brief Create a sequence of strings from the serialized format
+ *
+ * @param[in] serialized The input string, contents are copied
+ * @return A sequence of new allocated strings
+ */
+Seq *SeqStringDeserialize(const char *serialized);
 
 #endif

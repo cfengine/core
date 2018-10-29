@@ -183,8 +183,8 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
                 }
                 else
                 {
-                    StringSetJoin(config->heap_soft, defined_classes);
-                    free(defined_classes);
+                    StringSetJoin(config->heap_soft, defined_classes, xstrdup);
+                    StringSetDestroy(defined_classes);
                 }
             }
             break;
@@ -198,8 +198,8 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
                 }
                 else
                 {
-                    StringSetJoin(config->heap_negated, negated_classes);
-                    free(negated_classes);
+                    StringSetJoin(config->heap_negated, negated_classes, xstrdup);
+                    StringSetDestroy(negated_classes);
                 }
             }
             break;
@@ -223,10 +223,8 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
 
         case 'L':
         {
-            static char ld_library_path[CF_BUFSIZE]; /* GLOBAL_A */
             Log(LOG_LEVEL_VERBOSE, "Setting LD_LIBRARY_PATH to '%s'", optarg);
-            snprintf(ld_library_path, CF_BUFSIZE - 1, "LD_LIBRARY_PATH=%s", optarg);
-            putenv(ld_library_path);
+            setenv_wrapper("LD_LIBRARY_PATH", optarg, 1);
             break;
         }
 

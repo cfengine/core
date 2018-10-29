@@ -57,6 +57,7 @@ static void test_hostinnetgroup_found(void)
     res = FnCallHostInNetgroup(ctx, NULL, NULL, args);
     assert_string_equal("any", (char *) res.rval.item);
 
+    RlistDestroy(args);
     EvalContextDestroy(ctx);
 }
 
@@ -72,6 +73,7 @@ static void test_hostinnetgroup_not_found(void)
     res = FnCallHostInNetgroup(ctx, NULL, NULL, args);
     assert_string_equal("!any", (char *) res.rval.item);
 
+    RlistDestroy(args);
     EvalContextDestroy(ctx);
 }
 

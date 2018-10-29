@@ -39,7 +39,8 @@ bundle agent test
     "$(template_target)"
       edit_template => "$(this.promise_filename).mustache",
       template_method => "mustache",
-      action => warn_only;
+      action => warn_only,
+      classes => classes_generic("mustache_warn");
 }
 
 #######################################################
@@ -48,10 +49,11 @@ bundle agent check
 {
   classes:
     "fail" expression => regline("SHOULD NOT RENDER", $(test.template_target) );
+    "defined_class" expression => "mustache_warn_failed";
 
   reports:
-    !fail::
+    !fail.defined_class::
       "$(this.promise_filename) Pass";
-    fail::
+    fail|!defined_class::
       "$(this.promise_filename) FAIL";
 }

@@ -667,6 +667,9 @@ char *mkdtemp(char *template);
 #if !HAVE_DECL_STRRSTR
 char *strrstr(const char *haystack, const char *needle);
 #endif
+#if !HAVE_DECL_STPNCPY
+char *stpncpy(char *dst, const char *src, size_t len);
+#endif
 #if !HAVE_DECL_INET_NTOP
 const char *inet_ntop(int af, const void *src, char *dst, socklen_t size);
 #endif

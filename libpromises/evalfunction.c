@@ -6774,7 +6774,7 @@ static FnCallResult DataRead(EvalContext *ctx, const FnCall *fp, const Rlist *fi
 
     if (json == NULL)
     {
-        Log(LOG_LEVEL_INFO, "%s: error reading from file '%s'", fp->name, filename);
+        Log(LOG_LEVEL_ERR, "%s: error reading from file '%s'", fp->name, filename);
         return FnFailure();
     }
 
@@ -7410,7 +7410,7 @@ static char *CfReadFile(const char *filename, int maxsize)
     {
         if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
         {
-            Log(LOG_LEVEL_INFO, "CfReadFile: Could not examine file '%s'", filename);
+            Log(LOG_LEVEL_ERR, "CfReadFile: Could not examine file '%s'", filename);
         }
         else
         {
@@ -7421,7 +7421,7 @@ static char *CfReadFile(const char *filename, int maxsize)
             }
             else
             {
-                Log(LOG_LEVEL_INFO, "CfReadFile: Could not examine file '%s' (stat: %s)",
+                Log(LOG_LEVEL_ERR, "CfReadFile: Could not examine file '%s' (stat: %s)",
                       filename, GetErrorStr());
             }
         }
@@ -7441,7 +7441,7 @@ static char *CfReadFile(const char *filename, int maxsize)
 
     if (!w)
     {
-        Log(LOG_LEVEL_INFO, "CfReadFile: Error while reading file '%s' (%s)",
+        Log(LOG_LEVEL_ERR, "CfReadFile: Error while reading file '%s' (%s)",
             filename, GetErrorStr());
         return NULL;
     }
@@ -7879,6 +7879,15 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
 
             BufferDestroy(tagbuf);
         }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "Automatically canonifying '%s'", content);
+            CanonifyNameInPlace(content);
+            Log(LOG_LEVEL_VERBOSE, "Automatically canonified to '%s'", content);
+            Buffer *tagbuf = StringSetToBuffer(tags, ',');
+            EvalContextClassPutSoft(ctx, content, CONTEXT_SCOPE_NAMESPACE, BufferData(tagbuf));
+            BufferDestroy(tagbuf);
+        }
         break;
     case '-':
         if (length > CF_MAXVARSIZE)
@@ -8086,10 +8095,9 @@ static bool CheckID(const char *id)
     {
         if (!CheckIDChar(*sp))
         {
-            Log(LOG_LEVEL_ERR,
+            Log(LOG_LEVEL_WARNING,
                   "Module protocol contained an illegal character '%c' in class/variable identifier '%s'.", *sp,
                   id);
-            return false;
         }
     }
 

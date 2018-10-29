@@ -26,7 +26,9 @@
 #include <sequence.h>
 #include <alloc.h>
 #include <string_lib.h>
+#include <writer.h>
 
+#define SEQ_PREFIX_LEN 10
 
 static const size_t EXPAND_FACTOR = 2;
 
@@ -353,7 +355,7 @@ Seq *SeqGetRange(const Seq *seq, size_t start, size_t end)
 {
     assert (seq);
 
-    if ((start > end) || (seq->length < start) || (seq->length < end))
+    if ((start > end) || (start >= seq->length) || (end >= seq->length))
     {
         return NULL;
     }
@@ -362,13 +364,40 @@ Seq *SeqGetRange(const Seq *seq, size_t start, size_t end)
 
     for (size_t i = start; i <= end; i++)
     {
+        assert(i < SeqLength(seq));
         SeqAppend(sub, SeqAt(seq, i));
     }
 
     return sub;
 }
 
-void SeqStringAddSplit(Seq *seq, const char *str, char delimiter)
+void SeqRemoveNulls(Seq *s)
+{
+    int length = SeqLength(s);
+    int from = 0;
+    int to = 0;
+    while (from < length)
+    {
+        if (s->data[from] == NULL)
+        {
+            ++from; // Skip NULL elements
+        }
+        else
+        {
+            // Copy elements in place, DON'T use SeqSet, which will free()
+            s->data[to] = s->data[from];
+            ++from;
+            ++to;
+        }
+    }
+    s->length = to;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// SeqString - Sequence of strings (char *)
+//////////////////////////////////////////////////////////////////////////////
+
+static void SeqStringAddSplit(Seq *seq, const char *str, char delimiter)
 {
     if (str) // TODO: remove this inconsistency, add assert(str)
     {
@@ -424,24 +453,115 @@ int SeqStringLength(Seq *seq)
     return total_length;
 }
 
-void SeqRemoveNulls(Seq *s)
+// TODO: These static helper functions could be (re)moved
+static bool HasNulByte(const char *str, size_t n)
 {
-    int length = SeqLength(s);
-    int from = 0;
-    int to = 0;
-    while (from < length)
+    for (int i = 0; i < n; ++i)
     {
-        if (s->data[from] == NULL)
+        if (str[i] == '\0')
         {
-            ++from; // Skip NULL elements
-        }
-        else
-        {
-            // Copy elements in place, DON'T use SeqSet, which will free()
-            s->data[to] = s->data[from];
-            ++from;
-            ++to;
+            return true;
         }
     }
-    s->length = to;
+    return false;
+}
+
+static long GetLengthPrefix(const char *data)
+{
+    if (HasNulByte(data, 10))
+    {
+        return -1;
+    }
+
+    if (!isdigit(data[0]))
+    {
+        return -1;
+    }
+
+    if (data[SEQ_PREFIX_LEN-1] != ' ')
+    {
+        return -1;
+    }
+
+    // NOTE: This uses long because HPUX sscanf doesn't support %zu
+    long length;
+    int ret = sscanf(data, "%ld", &length);
+    if (ret != 1 || length < 0)
+    {
+        // Incorrect number of items matched, or
+        // negative length prefix(invalid)
+        return -1;
+    }
+
+    return length;
+}
+
+static char *ValidDuplicate(const char *src, long n)
+{
+    assert(src != NULL);
+    assert(n >= 0);
+    char *dst = xcalloc(n+1, sizeof(char));
+
+    size_t len = StringCopy(dst, src, n);
+    if (len < n) // string was too short
+    {
+        free(dst);
+        return NULL;
+    }
+
+    return dst;
+}
+
+char *SeqStringSerialize(Seq *seq)
+{
+    assert(seq != NULL);
+    size_t length = SeqLength(seq);
+    Writer *w = StringWriter();
+
+    for (int i = 0; i < length; ++i)
+    {
+        const char *s = SeqAt(seq, i);
+        const unsigned long str_length = strlen(s);
+        WriterWriteF(w, "%-" TOSTRING(SEQ_PREFIX_LEN) "lu%s\n", str_length, s);
+    }
+
+    return StringWriterClose(w);
+}
+
+Seq *SeqStringDeserialize(const char *const serialized)
+{
+    assert(serialized != NULL);
+    assert(SEQ_PREFIX_LEN > 0);
+
+    Seq *seq = SeqNew(128, free);
+
+    const char *src = serialized;
+    while (src[0] != '\0')
+    {
+        // Read length prefix first
+        long length = GetLengthPrefix(src);
+
+        // Advance the src pointer
+        src += SEQ_PREFIX_LEN;
+
+        char *new_str;
+
+        // Do validation and duplication in one pass
+        // ValidDuplicate checks for terminating byte up to src[length-1]
+        if (length < 0
+            || src[-1] != ' '
+            || NULL == (new_str = ValidDuplicate(src, length))
+            || src[length] != '\n')
+        {
+            SeqDestroy(seq);
+            return NULL;
+        }
+
+        SeqAppend(seq, new_str);
+
+        // Advance src pointer
+        src += length + 1; // +1 for the added newline
+    }
+
+    return seq;
 }

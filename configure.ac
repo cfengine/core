@@ -994,6 +994,9 @@ AC_REPLACE_FUNCS(mkdtemp)
 AC_CHECK_DECLS(strrstr)
 AC_REPLACE_FUNCS(strrstr)
 
+AC_CHECK_DECLS(stpncpy)
+AC_REPLACE_FUNCS(stpncpy)
+
 AC_CHECK_FUNCS(seteuid setegid setreuid setregid)
 AC_CHECK_FUNCS(uname gethostname chflags)
 AC_CHECK_FUNCS(mkfifo statfs statvfs door)
@@ -1712,6 +1715,7 @@ AC_CONFIG_FILES([Makefile
     libenv/Makefile
     libpromises/Makefile
     cf-agent/Makefile
+    cf-check/Makefile
     cf-promises/Makefile
     cf-execd/Makefile
     cf-key/Makefile

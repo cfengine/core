@@ -279,7 +279,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
 
         case 'w':
             Log(LOG_LEVEL_INFO, "Setting workdir to '%s'", optarg);
-            putenv(StringConcatenate(2, "CFENGINE_TEST_OVERRIDE_WORKDIR=", optarg));
+            putenv_wrapper(StringConcatenate(2, "CFENGINE_TEST_OVERRIDE_WORKDIR=", optarg));
             break;
 
         case 'c':
@@ -370,8 +370,8 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
                 }
                 else
                 {
-                    StringSetJoin(config->heap_soft, defined_classes);
-                    free(defined_classes);
+                    StringSetJoin(config->heap_soft, defined_classes, xstrdup);
+                    StringSetDestroy(defined_classes);
                 }
             }
             break;
@@ -385,8 +385,8 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
                 }
                 else
                 {
-                    StringSetJoin(config->heap_negated, negated_classes);
-                    free(negated_classes);
+                    StringSetJoin(config->heap_negated, negated_classes, xstrdup);
+                    StringSetDestroy(negated_classes);
                 }
             }
             break;

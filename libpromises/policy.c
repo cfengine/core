@@ -104,6 +104,7 @@ Policy *PolicyNew(void)
     policy->release_id = NULL;
     policy->bundles = SeqNew(100, BundleDestroy);
     policy->bodies = SeqNew(100, BodyDestroy);
+    policy->policy_files_hashes = NULL;
 
     return policy;
 }
@@ -124,6 +125,10 @@ void PolicyDestroy(Policy *policy)
         SeqDestroy(policy->bundles);
         SeqDestroy(policy->bodies);
         free(policy->release_id);
+        if (policy->policy_files_hashes != NULL)
+        {
+            StringMapDestroy(policy->policy_files_hashes);
+        }
 
         free(policy);
     }
@@ -259,6 +264,21 @@ StringSet *PolicySourceFiles(const Policy *policy)
 
 /*************************************************************************/
 
+/**
+ * Get hash digest of the given policy file.
+ *
+ * @param policy Policy that is supposed to contain (have loaded) the file
+ * @param policy_file_path Absolute path of the policy file to get the digest for
+ * @return Hash digest of the given policy file or %NULL if unknown
+ * @note   The returned hash digest is owned by the policy, **do not free it**.
+ */
+const char *PolicyGetPolicyFileHash(const Policy *policy, const char *policy_file_path)
+{
+    return StringMapGet(policy->policy_files_hashes, policy_file_path);
+}
+
+/*************************************************************************/
+
 static const char *StripNamespace(const char *full_symbol)
 {
     char *sep = strchr(full_symbol, CF_NS);
@@ -386,6 +406,39 @@ Policy *PolicyMerge(Policy *a, Policy *b)
     {
         Body *bdp = SeqAt(result->bodies, i);
         bdp->parent_policy = result;
+    }
+
+    StringMap *extra_hashes = NULL;
+    if (a->policy_files_hashes != NULL)
+    {
+        result->policy_files_hashes = a->policy_files_hashes;
+        a->policy_files_hashes = NULL;
+        extra_hashes = b->policy_files_hashes;
+        b->policy_files_hashes = NULL;
+    }
+    else if (b->policy_files_hashes != NULL)
+    {
+        result->policy_files_hashes = b->policy_files_hashes;
+        b->policy_files_hashes = NULL;
+    }
+    else
+    {
+        result->policy_files_hashes = NULL;
+    }
+
+    if (extra_hashes != NULL)
+    {
+        MapIterator it = MapIteratorInit((Map*) extra_hashes);
+        MapKeyValue *item;
+        while ((item = MapIteratorNext(&it)) != NULL)
+        {
+            /* Move data and duplicate just the keys (which are always owned by
+               the map). */
+            StringMapInsert(result->policy_files_hashes,
+                            xstrdup((char*) item->key), (char*) item->value);
+        }
+        /* Destroy only the map and the keys, data was moved. */
+        StringMapSoftDestroy(extra_hashes);
     }
 
     /* Should result take over a release_id ? */

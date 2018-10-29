@@ -628,6 +628,7 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
         UpdateLastPolicyUpdateTime(ctx);
 
         DetectEnvironment(ctx);
+        GenericAgentDiscoverContext(ctx, config);
 
         Log(LOG_LEVEL_INFO, "Re-evaluating augments" );
         LoadAugments(ctx, config);

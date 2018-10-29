@@ -12,9 +12,11 @@ coverage:
     patch: yes
     changes: yes
 
-comment:
-  layout: "header, diff, tree, changes, reach, footer"
-  behavior: default
+# comment:
+#   layout: "header, diff, tree, changes, reach, footer"
+#   behavior: default
+
+comment: off
 
 # Ignore source files connected to tests.
 ignore:

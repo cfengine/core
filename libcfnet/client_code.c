@@ -459,7 +459,9 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
 int CompareHashNet(const char *file1, const char *file2, bool encrypt, AgentConnection *conn)
 {
     unsigned char d[EVP_MAX_MD_SIZE + 1];
-    char *sp, sendbuffer[CF_BUFSIZE], recvbuffer[CF_BUFSIZE], in[CF_BUFSIZE], out[CF_BUFSIZE];
+    char *sp;
+    char sendbuffer[CF_BUFSIZE] = {0};
+    char recvbuffer[CF_BUFSIZE] = {0};
     int i, tosend, cipherlen;
 
     HashFile(file2, d, CF_DEFAULT_DIGEST, false);
@@ -472,6 +474,8 @@ int CompareHashNet(const char *file1, const char *file2, bool encrypt, AgentConn
 
     if (encrypt)
     {
+        char in[CF_BUFSIZE] = {0};
+        char out[CF_BUFSIZE] = {0};
         snprintf(in, CF_BUFSIZE, "MD5 %s", file1);
 
         sp = in + strlen(in) + CF_SMALL_OFFSET;

@@ -120,7 +120,7 @@ when developing new staging methods.
     - =https://gitlab.com/nickanderson/masterfiles_demo_3.7.git=
     - =git@gitlab.com:nickanderson/masterfiles_demo_3.7.git=
 
-- =GIT_BRANCH= :: The git refspec to checkout.
+- =GIT_REFSPEC= :: The git refspec to checkout.
   It can be a branch name, a tag name, a commit hash or a partial hash.
   - Example values:
     - =master=
@@ -161,25 +161,21 @@ when developing new staging methods.
 - =ROOT= :: Location where policy is staged.
   - =/opt/cfengine/masterfiles_staging=
 
-The following attributes are used by CFEngine Enterprise and currently
-have no effect on functionality of =masterfiles-stage.sh=
+The following attributes are used by CFEngine Enterprise and
+their usage for other means should be avoided to avoid collisions.
 
-- =GIT_WORKING_BRANCH= :: Branch for integrating write operations
-  - This is used by Design Center in CFEngine Enterprise
+- =PKEY= :: Private SSH Key used for authorization.
 
-- =GIT_EMAIL= :: Email address used to associate commits wit
-  - This is used by Design Center in CFEngine Enterprise
+- =GIT_USERNAME= :: Git username used for authorization.
 
-- =GIT_AUTHOR= :: The author that should be set when integrating write
-  operations (not used by =masterfiles-stage.sh=)
-  - This is used by Design Center in CFEngine Enterprise
+- =GIT_PASSWORD= :: Git password used for authorization.
 
-- =PKEY= :: Private SSH Key used for authorization when pushing
-  integrated write operations
-  - This is used by Design Center in CFEngine Enterprise
+- =SCRIPT_DIR= :: Directory contianing supporting scripts.
 
-- =SCRIPT_DIR= :: Directory contianing supporting scripts
-  - This is used by Design Center in CFEngine Enterprise
+- =GIT_SSH= :: Helper script to access SSH Git repositories (uses =PKEY=).
+
+- =GIT_ASKPASS= :: Helper script to provide HTTPS authorization details to Git
+  (uses =GIT_USERNAME= and =GIT_PASSWORD=).
 
 *** Special Note
 :PROPERTIES:

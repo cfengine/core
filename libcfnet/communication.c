@@ -54,9 +54,9 @@ void DeleteAgentConn(AgentConnection *conn)
 
     while (sp != NULL)
     {
-        Stat *sps = sp;
+        Stat *previous = sp;
         sp = sp->next;
-        free(sps);
+        DestroyStatCache(previous);
     }
 
     ConnectionInfoDestroy(&conn->conn_info);

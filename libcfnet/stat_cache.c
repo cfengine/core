@@ -41,6 +41,17 @@ static void NewStatCache(Stat *data, AgentConnection *conn)
     conn->cache = sp;
 }
 
+void DestroyStatCache(Stat *data)
+{
+    if (data != NULL)
+    {
+        free(data->cf_readlink);
+        free(data->cf_filename);
+        free(data->cf_server);
+        free(data);
+    }
+}
+
 /**
  * @brief Find remote stat information for #file in cache and
  *        return it in #statbuf.

@@ -62,7 +62,7 @@ struct Stat_
     Stat *next;
 };
 
-
+void DestroyStatCache(Stat *data);
 int cf_remote_stat(AgentConnection *conn, bool encrypt, const char *file,
                    struct stat *statbuf, const char *stattype);
 const Stat *StatCacheLookup(const AgentConnection *conn, const char *file_name,

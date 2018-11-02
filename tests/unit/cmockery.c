@@ -1679,8 +1679,10 @@ static LONG WINAPI exception_filter(EXCEPTION_POINTERS *exception_pointers)
 
 void vinit_xml (const char *const format, va_list args)
 {
+    char buffer[1024];
     FILE* xmlfile = fopen(global_xmlfile, "w");
-    vfprintf(xmlfile, format, args);
+    vsnprintf(buffer, sizeof(buffer), format, args);
+    fputs(buffer, xmlfile);
     fclose(xmlfile);
 #ifdef _WIN32
     OutputDebugString(buffer);
@@ -1700,8 +1702,10 @@ void init_xml (const char *const format, ...)
 
 void vprint_xml(const char *const format, va_list args)
 {
+    char buffer[1024];
     FILE* xmlfile = fopen(global_xmlfile, "a");
-    vfprintf(xmlfile, format, args);
+    vsnprintf(buffer, sizeof(buffer), format, args);
+    fputs(buffer, xmlfile);
     fclose(xmlfile);
 #ifdef _WIN32
     OutputDebugString(buffer);
@@ -1742,7 +1746,9 @@ void append_xml(const char *ofile, const char *ifile)
 // Standard output and error print methods.
 void vprint_message(const char *const format, va_list args)
 {
-    vprintf(format, args);
+    char buffer[1024];
+    vsnprintf(buffer, sizeof(buffer), format, args);
+    puts(buffer);
 #ifdef _WIN32
     OutputDebugString(buffer);
 #endif // _WIN32
@@ -1750,7 +1756,9 @@ void vprint_message(const char *const format, va_list args)
 
 void vprint_error(const char *const format, va_list args)
 {
-    vfprintf(stderr, format, args);
+    char buffer[1024];
+    vsnprintf(buffer, sizeof(buffer), format, args);
+    fputs(buffer, stderr);
 #ifdef _WIN32
     OutputDebugString(buffer);
 #endif // _WIN32

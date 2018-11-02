@@ -1,3 +1,26 @@
+3.10.5:
+	- Bundle name is now part of the log message when aborting a bundle
+	  (CFE-2793)
+	- Class names set by module protocol are automatically canonified
+	  (CFE-2877, CFE-2887)
+	- Correct log level for data_readstringarray* (CFE-2922)
+	- Do not iterate over JSON objects' properties in mustache (CFE-2125)
+	- Do not render templates when passed invalid data (CFE-2194)
+	- Eliminated error messages caused by attempting to kill expired processes
+	  (CFE-2824)
+	- Fix cf-runalerts systemd unit conditions so the service will run even
+	  when not executable (ENT-3929)
+	- Fix the off-by-one error in cf-runagent background process spawning
+	  (CFE-2873)
+	- Fixed a memory leak which occurred while loading augments files
+	  (CFE-2913)
+	- Fixed memory leak in lmdb cleanup (CFE-2918)
+	- Fixed memory leaks in cf-agent during bootstrap (CFE-2918)
+	- Fixed small memory leak in cf-serverd (CFE-2918)
+	- Prevent systemv script from managing processes inside other containers
+	  (ENT-3800)
+	- Fix mustache re-rendering files un-necessarily on windows (ENT-2526)
+
 3.10.4:
 	- Add IPv6 hard classes with the "ipv6_" prefix (CFE-2310)
 	- Add a debug log for computed class in splayclass

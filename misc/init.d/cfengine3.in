@@ -66,6 +66,10 @@ CFENTERPRISE_INITD=$PREFIX/bin/cfengine3-nova-hub-init-d.sh
 
 PATH=/sbin:/bin:/usr/sbin:/usr/bin:$PREFIX/bin
 
+# ensure that we use RPATH/loader entries from our binaries and not from the environment
+unset LIBPATH		# AIX < 5.3
+unset LD_LIBRARY_PATH
+
 # Has the package been 'removed' but not purged?
 test -f $CFEXECD || exit 0
 

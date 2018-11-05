@@ -855,9 +855,12 @@ void TLSSetDefaultOptions(SSL_CTX *ssl_ctx, const char *min_version)
                 " however because of old OpenSSL version it is set to: %s",
                 min_version, compiletime_min_version);
         }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE,
+                "Setting minimum acceptable TLS version: 1.1");
+        }
         options |= SSL_OP_NO_TLSv1;
-        Log(LOG_LEVEL_VERBOSE,
-            "Setting minimum acceptable TLS version: 1.1");
 
     }
     else if (StringSafeEqual(min_version, "1.2"))
@@ -869,9 +872,12 @@ void TLSSetDefaultOptions(SSL_CTX *ssl_ctx, const char *min_version)
                 " however because of old OpenSSL version it is set to: %s",
                 min_version, compiletime_min_version);
         }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE,
+                "Setting minimum acceptable TLS version: 1.2");
+        }
         options |= SSL_OP_NO_TLSv1 | SSL_OP_NO_TLSv1_1;
-        Log(LOG_LEVEL_VERBOSE,
-            "Setting minimum acceptable TLS version: 1.2");
     }
     else if (StringSafeEqual(min_version, "1.3"))
     {
@@ -883,9 +889,12 @@ void TLSSetDefaultOptions(SSL_CTX *ssl_ctx, const char *min_version)
                 " however because of old OpenSSL version it is set to: %s",
                 min_version, compiletime_min_version);
         }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE,
+                "Setting minimum acceptable TLS version: 1.3");
+        }
         options |= SSL_OP_NO_TLSv1 | SSL_OP_NO_TLSv1_1 | SSL_OP_NO_TLSv1_2;
-        Log(LOG_LEVEL_VERBOSE,
-            "Setting minimum acceptable TLS version: 1.3");
     }
     else
     {

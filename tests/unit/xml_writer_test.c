@@ -14,7 +14,9 @@ void test_comment(void)
     Writer *w = StringWriter();
 
     XmlComment(w, "foobar");
-    assert_string_equal(StringWriterClose(w), "<!-- foobar -->\n");
+    char *result = StringWriterClose(w);
+    assert_string_equal(result, "<!-- foobar -->\n");
+    free(result);
 }
 
 void test_no_attr(void)
@@ -22,7 +24,9 @@ void test_no_attr(void)
     Writer *w = StringWriter();
 
     XmlTag(w, "foobar", NULL, 0);
-    assert_string_equal(StringWriterClose(w), "<foobar></foobar>\n");
+    char *result = StringWriterClose(w);
+    assert_string_equal(result, "<foobar></foobar>\n");
+    free(result);
 }
 
 void test_tag(void)
@@ -32,7 +36,9 @@ void test_tag(void)
     XmlTag(w, "foobar", "some value", 1, (XmlAttribute)
            {
            "a", "b"});
-    assert_string_equal(StringWriterClose(w), "<foobar a=\"b\" >some value</foobar>\n");
+    char *result = StringWriterClose(w);
+    assert_string_equal(result, "<foobar a=\"b\" >some value</foobar>\n");
+    free(result);
 }
 
 void test_complex_tag(void)
@@ -46,9 +52,10 @@ void test_complex_tag(void)
                 "attr2", "value2"});
     XmlContent(w, "Some content");
     XmlEndTag(w, "complex-tag");
-
-    assert_string_equal(StringWriterClose(w),
+    char *result = StringWriterClose(w);
+    assert_string_equal(result,
                         "<complex-tag attr1=\"value1\" attr2=\"value2\" >\nSome content</complex-tag>\n");
+    free(result);
 }
 
 void test_escape(void)
@@ -56,7 +63,9 @@ void test_escape(void)
     Writer *w = StringWriter();
 
     XmlContent(w, "&>\"'<");
-    assert_string_equal(StringWriterClose(w), "&amp;&gt;&quot;&apos;&lt;");
+    char *result = StringWriterClose(w);
+    assert_string_equal(result, "&amp;&gt;&quot;&apos;&lt;");
+    free(result);
 }
 
 int main()

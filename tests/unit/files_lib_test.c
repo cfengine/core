@@ -98,6 +98,7 @@ void test_file_read_empty(void)
     assert_int_equal(StringWriterLength(w), 0);
     assert_string_equal(StringWriterData(w), "");
     assert_int_equal(truncated, false);
+    WriterClose(w);
 }
 
 void test_file_read_invalid(void)

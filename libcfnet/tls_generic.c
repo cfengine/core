@@ -974,6 +974,7 @@ bool TLSSetCipherList(SSL_CTX *ssl_ctx, const char *cipher_list)
         }
     }
 
+#ifdef SSL_OP_NO_TLSv1_3        /* defined if TLS 1.3 is supported */
     if (cipher_suites_len != 0) /* TLS >= 1.3 ciphers */
     {
         int ret = SSL_CTX_set_ciphersuites(ssl_ctx, cipher_suites);
@@ -994,6 +995,14 @@ bool TLSSetCipherList(SSL_CTX *ssl_ctx, const char *cipher_list)
             cipher_list);
         SSL_CTX_set_options(ssl_ctx, SSL_OP_NO_TLSv1_3);
     }
+#else
+    if (cipher_suites_len != 0)
+    {
+        Log(LOG_LEVEL_WARNING,
+            "Ignoring requested TLS 1.3 ciphersuites '%s', TLS 1.3 not supported",
+            cipher_suites);
+    }
+#endif
 
     return true;
 }

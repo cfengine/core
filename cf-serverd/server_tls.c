@@ -111,7 +111,11 @@ bool ServerTLSInitialize(RSA *priv_key, RSA *pub_key, SSL_CTX **ssl_ctx)
     const char *cipher_list = SERVER_ACCESS.allowciphers;
     if (cipher_list == NULL)
     {
+#ifdef SSL_OP_NO_TLSv1_3        /* defined if TLS 1.3 is supported */
         cipher_list = "AES256-GCM-SHA384:AES256-SHA:TLS_AES_256_GCM_SHA384";
+#else
+        cipher_list = "AES256-GCM-SHA384:AES256-SHA";
+#endif
     }
 
     if (!TLSSetCipherList(*ssl_ctx, cipher_list))

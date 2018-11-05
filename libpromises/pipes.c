@@ -71,13 +71,17 @@ Rlist *PipeReadData(const IOData *io, int pipe_timeout_secs, int pipe_terminatio
         return NULL;
     }
     Log(LOG_LEVEL_DEBUG,
-        "PipeReadData io->read_fd is %d pipe_timeout_secs is %d pipe_termination_check_secs is %d",
+        "PipeReadData() io->read_fd is %d pipe_timeout_secs is %d pipe_termination_check_secs is %d",
         io->read_fd, pipe_timeout_secs, pipe_termination_check_secs);
 
     int timeout_seconds_left = pipe_timeout_secs;
 
     while (!IsPendingTermination() && timeout_seconds_left > 0)
     {
+        Log(LOG_LEVEL_DEBUG,
+            "PipeReadData(), timeout_seconds_left is %d",
+            timeout_seconds_left);
+
         int fd = PipeIsReadWriteReady(io, pipe_termination_check_secs);
 
         if (fd < 0)

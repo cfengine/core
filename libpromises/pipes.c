@@ -70,6 +70,9 @@ Rlist *PipeReadData(const IOData *io, int pipe_timeout_secs, int pipe_terminatio
             "Unable to allocate buffer for handling pipe responses.");
         return NULL;
     }
+    Log(LOG_LEVEL_DEBUG,
+        "PipeReadData io->read_fd is %d pipe_timeout_secs is %d pipe_termination_check_secs is %d",
+        io->read_fd, pipe_timeout_secs, pipe_termination_check_secs);
 
     int timeout_seconds_left = pipe_timeout_secs;
 
@@ -111,7 +114,7 @@ Rlist *PipeReadData(const IOData *io, int pipe_timeout_secs, int pipe_terminatio
             BufferAppendString(data, buff);
             memset(buff, 0, sizeof(buff));
         }
-        else if (fd == 0) /* timeout */
+        else if (fd <= 0) /* timeout */
         {
             timeout_seconds_left -= pipe_termination_check_secs;
             continue;

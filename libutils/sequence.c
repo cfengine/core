@@ -544,7 +544,7 @@ Seq *SeqStringDeserialize(const char *const serialized)
         // Advance the src pointer
         src += SEQ_PREFIX_LEN;
 
-        char *new_str;
+        char *new_str = NULL;
 
         // Do validation and duplication in one pass
         // ValidDuplicate checks for terminating byte up to src[length-1]
@@ -553,6 +553,7 @@ Seq *SeqStringDeserialize(const char *const serialized)
             || NULL == (new_str = ValidDuplicate(src, length))
             || src[length] != '\n')
         {
+            free(new_str);
             SeqDestroy(seq);
             return NULL;
         }

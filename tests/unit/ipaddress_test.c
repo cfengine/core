@@ -277,6 +277,7 @@ static void test_generic_interface(void)
      */
     IPAddress *address = NULL;
     Buffer *buffer = NULL;
+    Buffer *tmp_buffer = NULL;
 
     buffer = BufferNew();
     assert_true(buffer != NULL);
@@ -284,7 +285,9 @@ static void test_generic_interface(void)
     address = IPAddressNew(buffer);
     assert_true(address != NULL);
     assert_int_equal(IP_ADDRESS_TYPE_IPV4, IPAddressType(address));
-    assert_string_equal("127.0.0.1", BufferData(IPAddressGetAddress(address)));
+    tmp_buffer = IPAddressGetAddress(address);
+    assert_string_equal("127.0.0.1", BufferData(tmp_buffer));
+    DESTROY_AND_NULL(BufferDestroy, tmp_buffer);
     assert_int_equal(0, IPAddressGetPort(address));
     assert_int_equal(0, IPAddressDestroy(&address));
 
@@ -292,7 +295,9 @@ static void test_generic_interface(void)
     address = IPAddressNew(buffer);
     assert_true(address != NULL);
     assert_int_equal(IP_ADDRESS_TYPE_IPV4, IPAddressType(address));
-    assert_string_equal("127.0.0.1", BufferData(IPAddressGetAddress(address)));
+    tmp_buffer = IPAddressGetAddress(address);
+    assert_string_equal("127.0.0.1", BufferData(tmp_buffer));
+    DESTROY_AND_NULL(BufferDestroy, tmp_buffer);
     assert_int_equal(8080, IPAddressGetPort(address));
     assert_int_equal(0, IPAddressDestroy(&address));
 
@@ -300,7 +305,9 @@ static void test_generic_interface(void)
     address = IPAddressNew(buffer);
     assert_true(address != NULL);
     assert_int_equal(IP_ADDRESS_TYPE_IPV6, IPAddressType(address));
-    assert_string_equal("0:1:2:3:4:5:6:7", BufferData(IPAddressGetAddress(address)));
+    tmp_buffer = IPAddressGetAddress(address);
+    assert_string_equal("0:1:2:3:4:5:6:7", BufferData(tmp_buffer));
+    DESTROY_AND_NULL(BufferDestroy, tmp_buffer);
     assert_int_equal(0, IPAddressGetPort(address));
     assert_int_equal(0, IPAddressDestroy(&address));
 
@@ -308,7 +315,9 @@ static void test_generic_interface(void)
     address = IPAddressNew(buffer);
     assert_true(address != NULL);
     assert_int_equal(IP_ADDRESS_TYPE_IPV6, IPAddressType(address));
-    assert_string_equal("0:1:2:3:4:5:6:7", BufferData(IPAddressGetAddress(address)));
+    tmp_buffer = IPAddressGetAddress(address);
+    assert_string_equal("0:1:2:3:4:5:6:7", BufferData(tmp_buffer));
+    DESTROY_AND_NULL(BufferDestroy, tmp_buffer);
     assert_int_equal(9090, IPAddressGetPort(address));
     assert_int_equal(0, IPAddressDestroy(&address));
 
@@ -565,6 +574,11 @@ static void test_ipv6_address_comparison(void)
     assert_true(b != NULL);
 
     assert_int_equal(IPAddressIsEqual(a, b), -1);
+
+    BufferDestroy(bufferA);
+    BufferDestroy(bufferB);
+    assert_int_equal(IPAddressDestroy(&a), 0);
+    assert_int_equal(IPAddressDestroy(&b), 0);
 }
 
 static void test_isipaddress(void)
@@ -657,6 +671,8 @@ static void test_isipaddress(void)
     assert_false(IPAddressIsIPAddress(bufferAddress, NULL));
     assert_false(IPAddressIsIPAddress(bufferAddress, &address));
     BufferClear(bufferAddress);
+
+    BufferDestroy(bufferAddress);
 }
 
 int main()

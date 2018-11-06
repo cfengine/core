@@ -44,8 +44,6 @@ void __ThreadLock(pthread_mutex_t *mutex,
                 filename, lineno, funcname, GetErrorStrFromCode(result));
         fflush(stdout);
         fflush(stderr);
-        fsync(STDOUT_FILENO);
-        fsync(STDERR_FILENO);
         DoCleanupAndExit(101);
     }
 }
@@ -65,8 +63,50 @@ void __ThreadUnlock(pthread_mutex_t *mutex,
                 filename, lineno, funcname, GetErrorStrFromCode(result));
         fflush(stdout);
         fflush(stderr);
-        fsync(STDOUT_FILENO);
-        fsync(STDERR_FILENO);
         DoCleanupAndExit(101);
     }
+}
+
+int __ThreadWait(pthread_cond_t *pcond, pthread_mutex_t *mutex, int timeout,
+                    const char *funcname, const char *filename, int lineno)
+{
+    int result = 0;
+
+    if (timeout == THREAD_BLOCK_INDEFINITELY)
+    {
+        result = pthread_cond_wait(pcond, mutex);
+    }
+    else
+    {
+        struct timespec ts;
+        clock_gettime(CLOCK_REALTIME, &ts);
+
+        ts.tv_sec += timeout;
+        result = pthread_cond_timedwait(pcond, mutex, &ts);
+    }
+
+    if (result != 0)
+    {
+        if (result == ETIMEDOUT)
+        {
+            Log(LOG_LEVEL_DEBUG,
+                "Thread condition timed out at %s:%d function %s! "
+                "(pthread_cond_timewait): %s)",
+                filename, lineno, funcname, GetErrorStrFromCode(result));
+        }
+        else
+        {
+            /* Since Log blocks on mutexes, using it would be unsafe.
+               Therefore, we use fprintf instead */
+            fprintf(stderr,
+                    "Failed to wait for thread condition at %s:%d function "
+                    "%s! (pthread_cond_(wait|timewait)): %s)",
+                    filename, lineno, funcname, GetErrorStrFromCode(result));
+            fflush(stdout);
+            fflush(stderr);
+            DoCleanupAndExit(101);
+        }
+    }
+
+    return result;
 }

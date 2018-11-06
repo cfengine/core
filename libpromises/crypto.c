@@ -193,6 +193,10 @@ bool LoadSecretKeys(const char *const priv_key_path,
              * global variable PRIVKEY */
             priv_key = &PRIVKEY;
         }
+        if (*priv_key != NULL)
+        {
+            DESTROY_AND_NULL(RSA_free, *priv_key);
+        }
         *priv_key = PEM_read_RSAPrivateKey(fp, NULL, NULL, (void*) priv_passphrase);
         if (*priv_key == NULL)
         {
@@ -231,6 +235,10 @@ bool LoadSecretKeys(const char *const priv_key_path,
             /* if no place to store the public key was specified, use the
              * global variable PUBKEY */
             pub_key = &PUBKEY;
+        }
+        if (*pub_key != NULL)
+        {
+            DESTROY_AND_NULL(RSA_free, *pub_key);
         }
         *pub_key = PEM_read_RSAPublicKey(fp, NULL, NULL, (void*) priv_passphrase);
         if (*pub_key == NULL)
@@ -523,6 +531,7 @@ char *LoadPubkeyDigest(const char *filename)
     HashPubKey(key, digest, CF_DEFAULT_DIGEST);
     HashPrintSafe(buffer, CF_HOSTKEY_STRING_SIZE,
                   digest, CF_DEFAULT_DIGEST, true);
+    RSA_free(key);
     return buffer;
 }
 
@@ -559,6 +568,7 @@ bool TrustKey(const char *filename, const char *ipaddress, const char *username)
     digest = GetPubkeyDigest(key);
     if (digest == NULL)
     {
+        RSA_free(key);
         return false;
     }
 
@@ -571,6 +581,7 @@ bool TrustKey(const char *filename, const char *ipaddress, const char *username)
     }
 
     bool ret = SavePublicKey(username, digest, key);
+    RSA_free(key);
     free(digest);
 
     return ret;

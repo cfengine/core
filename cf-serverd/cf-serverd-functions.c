@@ -333,22 +333,6 @@ static void DeleteAuthList(Auth **list, Auth **list_tail)
     *list_tail = NULL;
 }
 
-static void KeepHardClasses(EvalContext *ctx)
-{
-    char *existing_policy_server = PolicyServerReadFile(GetWorkDir());
-    if (existing_policy_server)
-    {
-        free(existing_policy_server);
-        if (GetAmPolicyHub())
-        {
-            MarkAsPolicyServer(ctx);
-        }
-    }
-
-    /* FIXME: why is it not in generic_agent?! */
-    GenericAgentAddEditionClasses(ctx);
-}
-
 /* Must not be called unless ACTIVE_THREADS is zero: */
 static void ClearAuthAndACLs(void)
 {
@@ -456,8 +440,7 @@ static void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConf
             UpdateLastPolicyUpdateTime(ctx);
 
             DetectEnvironment(ctx);
-            KeepHardClasses(ctx);
-            LoadAugments(ctx, config);
+            GenericAgentDiscoverContext(ctx, config);
 
             /* During startup this is done in GenericAgentDiscoverContext(). */
             EvalContextClassPutHard(ctx, CF_AGENTTYPES[AGENT_TYPE_SERVER], "cfe_internal,source=agent");

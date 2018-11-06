@@ -567,11 +567,6 @@ static int CFNetConnect(const char *hostname, char **args)
 
 static void CFNetDisconnect(AgentConnection *conn)
 {
-    if(conn->cache)
-    {
-        free(conn->cache->cf_filename);
-        free(conn->cache->cf_server);
-    }
     DisconnectServer(conn);
 }
 

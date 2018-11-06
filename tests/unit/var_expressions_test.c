@@ -105,27 +105,25 @@ static void test_array_with_dot_colon_in_index(void)
 
 static void test_special_scope(void)
 {
+    Policy *p = PolicyNew();
+    Bundle *bp = PolicyAppendBundle(p, "ns", "b", "agent", NULL, NULL);
+
     {
-        Policy *p = PolicyNew();
-        Bundle *bp = PolicyAppendBundle(p, "ns", "b", "agent", NULL, NULL);
-
-        {
-            VarRef *ref = VarRefParseFromBundle("c.lval", bp);
-            assert_string_equal("ns", ref->ns);
-            assert_string_equal("c", ref->scope);
-            assert_string_equal("lval", ref->lval);
-            VarRefDestroy(ref);
-        }
-
-        {
-            VarRef *ref = VarRefParseFromBundle("sys.lval", bp);
-            assert_false(ref->ns);
-            assert_string_equal("sys", ref->scope);
-            assert_string_equal("lval", ref->lval);
-            VarRefDestroy(ref);
-        }
+        VarRef *ref = VarRefParseFromBundle("c.lval", bp);
+        assert_string_equal("ns", ref->ns);
+        assert_string_equal("c", ref->scope);
+        assert_string_equal("lval", ref->lval);
+        VarRefDestroy(ref);
     }
 
+    {
+        VarRef *ref = VarRefParseFromBundle("sys.lval", bp);
+        assert_false(ref->ns);
+        assert_string_equal("sys", ref->scope);
+        assert_string_equal("lval", ref->lval);
+        VarRefDestroy(ref);
+    }
+    PolicyDestroy(p);
 }
 
 static void CheckToStringQualified(const char *str, const char *expect)

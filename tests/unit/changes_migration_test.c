@@ -135,6 +135,7 @@ static void test_migration(void)
     assert_int_equal(SeqLength(list), 2);
     assert_string_equal(SeqAt(list, 0), "file1");
     assert_string_equal(SeqAt(list, 1), "file2");
+    SeqDestroy(list);
 
     assert_true(OpenDB(&db, dbid_changes));
     for (int c = 0; c < NO_FILES; c++)

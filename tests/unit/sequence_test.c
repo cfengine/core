@@ -72,6 +72,7 @@ static void test_append_once(void)
 
     /* 10 should have been inserted (as the first instance) */
     assert_int_equal(seq->length, 11);
+    SeqDestroy(seq);
 }
 
 static void test_lookup(void)
@@ -190,6 +191,7 @@ static void test_binary_index_of(void)
     result = SeqBinaryIndexOf(seq, key, CompareNumbers);
     assert_true(result == -1);
 
+    SeqDestroy(seq);
     seq = SeqNew(5, free);
     SeqAppend(seq, xmalloc(sizeof(size_t))); *(size_t *)SeqAt(seq, 0) = 3;
     SeqAppend(seq, xmalloc(sizeof(size_t))); *(size_t *)SeqAt(seq, 1) = 3;
@@ -462,6 +464,7 @@ static void test_string_deserialize(void)
         Seq *seq = SeqStringDeserialize("");
         assert(seq != NULL);
         assert(SeqLength(seq) == 0);
+        SeqDestroy(seq);
     }
 }
 
@@ -492,6 +495,7 @@ static void test_string_serialize(void)
         assert_string_equal(def, "DEF");
         assert_string_equal(ghi, "GHI");
         SeqDestroy(seq);
+        SeqDestroy(seq2);
     }
 }
 

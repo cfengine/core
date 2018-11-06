@@ -38,6 +38,7 @@ static Seq *LoadAndCheck(const char *filename)
     PolicyCheckPartial(p, errs);
 
     DumpErrors(errs);
+    PolicyDestroy(p);
 
     return errs;
 }
@@ -61,6 +62,7 @@ static Seq *LoadAndCheckString(const char *policy_code)
     Seq *errs = SeqNew(10, PolicyErrorDestroy);
     PolicyCheckPartial(p, errs);
 
+    PolicyDestroy(p);
     unlink(tmp);
     return errs;
 }
@@ -263,6 +265,7 @@ static void test_policy_json_to_from(void)
             Constraint *mode = SeqAt(mode_cps, 0);
             assert_string_equal("mode", mode->lval);
             assert_string_equal("555", RvalScalarValue(mode->rval));
+            SeqDestroy(mode_cps);
         }
     }
 

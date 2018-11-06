@@ -414,8 +414,12 @@ static void test_string_to_long_compatibility(void)
 
 static void test_string_from_long(void)
 {
-    assert_string_equal("123456789", StringFromLong(123456789));
-    assert_string_equal("-123456789", StringFromLong(-123456789));
+    char *result = StringFromLong(123456789);
+    assert_string_equal("123456789", result);
+    free(result);
+    result = StringFromLong(-123456789);
+    assert_string_equal("-123456789", result);
+    free(result);
 }
 
 static void test_string_to_double(void)

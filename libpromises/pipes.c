@@ -118,7 +118,7 @@ Rlist *PipeReadData(const IOData *io, int pipe_timeout_secs, int pipe_terminatio
             BufferAppendString(data, buff);
             memset(buff, 0, sizeof(buff));
         }
-        else if (fd <= 0) /* timeout */
+        else if (fd == 0) /* timeout */
         {
             timeout_seconds_left -= pipe_termination_check_secs;
             continue;

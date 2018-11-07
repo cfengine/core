@@ -1,0 +1,32 @@
+body common control
+{
+        inputs => { "../../default.cf.sub" };
+        bundlesequence  => { default("$(this.promise_filename)") };
+        version => "1.0";
+}
+
+bundle agent test
+{
+  classes:
+      "etc_os_release_present" expression => fileexists( '/etc/os-release');
+
+  meta:
+      "description" -> { "ENT-3970" }
+        string => "Test that sys.flavor on aix is in the form aix_digit";
+
+      "test_skip_needs_work"
+        string => "!(aix|etc_os_release_present)",
+        meta => { "ENT-3970"};
+
+  methods:
+
+      # Probably the common case for this would be $(sys.os)_MAJOR or $(sys.os)_\d+
+    aix::
+      "Pass/Fail"
+        usebundle => dcs_check_regcmp( "aix_\d+", $(sys.flavor), $(this.promise_filename), "no" );
+
+    etc_os_release_present::
+      "Pass/Fail"
+        usebundle => dcs_check_regcmp( "$(sys.os_release[ID])_\d+", $(sys.flavor), $(this.promise_filename), "no" ),
+        if => fileexists( "/etc/os-release" );
+}

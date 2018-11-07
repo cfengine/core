@@ -283,6 +283,8 @@ static void test_iterate_indices(void)
         VariableTableIteratorDestroy(iter);
         VarRefDestroy(ref);
     }
+
+    VariableTableDestroy(t);
 }
 
 // Below test relies on the ordering items in RB tree which is strongly

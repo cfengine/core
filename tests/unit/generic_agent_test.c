@@ -107,6 +107,8 @@ void test_resolve_non_anchored_base_path(void)
     assert_string_equal(testpath, GenericAgentResolveInputPath(config, "./aux.cf"));
     xsnprintf(testpath, sizeof(testpath), "%s%s", TEMPDIR, "/inputs/./rel/aux.cf");
     assert_string_equal(testpath, GenericAgentResolveInputPath(config, "./rel/aux.cf"));
+
+    GenericAgentConfigDestroy(config);
 }
 
 void test_resolve_relative_base_path(void)
@@ -118,6 +120,8 @@ void test_resolve_relative_base_path(void)
     assert_string_equal("./inputs/rel/aux.cf", GenericAgentResolveInputPath(config, "rel/aux.cf"));
     assert_string_equal("./inputs/./aux.cf", GenericAgentResolveInputPath(config, "./aux.cf"));
     assert_string_equal("./inputs/./rel/aux.cf", GenericAgentResolveInputPath(config, "./rel/aux.cf"));
+
+    GenericAgentConfigDestroy(config);
 }
 
 int main()

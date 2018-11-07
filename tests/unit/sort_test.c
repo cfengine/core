@@ -12,11 +12,11 @@
 void test_sort_item_list_names(void)
 {
     Item *head = xcalloc(1, sizeof(Item));
-    head->name = "c";
+    head->name = xstrdup("c");
     head->next = xcalloc(1, sizeof(Item));
-    head->next->name = "b";
+    head->next->name = xstrdup("b");
     head->next->next = xcalloc(1, sizeof(Item));
-    head->next->next->name = "a";
+    head->next->next->name = xstrdup("a");
 
     Item *sorted = SortItemListNames(head);
 
@@ -24,16 +24,18 @@ void test_sort_item_list_names(void)
     assert_string_equal(sorted->next->name, "b");
     assert_string_equal(sorted->next->next->name, "c");
     assert_int_equal(sorted->next->next->next, NULL);
+
+    DeleteItemList(sorted);
 }
 
 void test_sort_item_list_classes(void)
 {
     Item *head = xcalloc(1, sizeof(Item));
-    head->classes = "b";
+    head->classes = xstrdup("b");
     head->next = xcalloc(1, sizeof(Item));
-    head->next->classes = "c";
+    head->next->classes = xstrdup("c");
     head->next->next = xcalloc(1, sizeof(Item));
-    head->next->next->classes = "a";
+    head->next->next->classes = xstrdup("a");
 
     Item *sorted = SortItemListClasses(head);
 
@@ -41,6 +43,8 @@ void test_sort_item_list_classes(void)
     assert_string_equal(sorted->next->classes, "b");
     assert_string_equal(sorted->next->next->classes, "c");
     assert_int_equal(sorted->next->next->next, NULL);
+
+    DeleteItemList(sorted);
 }
 
 void test_sort_item_list_counters(void)
@@ -59,6 +63,8 @@ void test_sort_item_list_counters(void)
     assert_int_equal(sorted->next->counter, 42);
     assert_int_equal(sorted->next->next->counter, -1);
     assert_int_equal(sorted->next->next->next, NULL);
+
+    DeleteItemList(sorted);
 }
 
 void test_sort_item_list_times(void)
@@ -76,6 +82,8 @@ void test_sort_item_list_times(void)
     assert_int_equal(sorted->next->time, 1998);
     assert_int_equal(sorted->next->next->time, 1);
     assert_int_equal(sorted->next->next->next, NULL);
+
+    DeleteItemList(sorted);
 }
 
 int FirstItemShorter(const char *lhs, const char *rhs)

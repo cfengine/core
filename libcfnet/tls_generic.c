@@ -39,6 +39,43 @@
 
 #include <assert.h>
 
+/* known TLS versions */
+enum tls_version {
+    TLS_1_0 = 0,
+    TLS_1_1 = 1,
+    TLS_1_2 = 2,
+    TLS_1_3 = 3,
+};
+#define TLS_LAST TLS_1_3
+
+/* determine the highest TLS version supported by the available/used version of
+ * OpenSSL */
+#if defined(SSL_OP_NO_TLSv1_3)
+#define HAVE_TLS_1_3
+#define TLS_HIGHEST_SUPPORTED TLS_1_3
+#elif defined(SSL_OP_NO_TLSv1_2)
+#define TLS_HIGHEST_SUPPORTED TLS_1_2
+#elif defined(SSL_OP_NO_TLSv1_1)
+#define TLS_HIGHEST_SUPPORTED TLS_1_1
+#else
+#define TLS_HIGHEST_SUPPORTED TLS_1_0
+#endif
+
+/* the lowest version of TLS we always require */
+#define TLS_LOWEST_REQUIRED TLS_1_0
+
+#ifndef SSL_OP_NO_TLSv1_3
+#define SSL_OP_NO_TLSv1_3 0     /* no-op when ORed with bit flags */
+#endif
+#ifndef SSL_OP_NO_TLSv1_2
+#define SSL_OP_NO_TLSv1_2 0
+#endif
+#ifndef SSL_OP_NO_TLSv1_1
+#define SSL_OP_NO_TLSv1_1 0
+#endif
+
+static const char *const tls_version_strings[TLS_LAST + 1] = {"1.0", "1.1", "1.2", "1.3"};
+static unsigned int tls_disable_flags[TLS_LAST + 1] = {0, SSL_OP_NO_TLSv1_1, SSL_OP_NO_TLSv1_2, SSL_OP_NO_TLSv1_3};
 
 int CONNECTIONINFO_SSL_IDX = -1;
 
@@ -819,90 +856,58 @@ void TLSSetDefaultOptions(SSL_CTX *ssl_ctx, const char *min_version)
     }
 #endif
 
-    const char *compiletime_min_version = "1.3";
-
-#ifndef  SSL_OP_NO_TLSv1_2
-#   define SSL_OP_NO_TLSv1_2 0x0                                /* nop */
-    compiletime_min_version = "1.2";
-
-# ifndef  SSL_OP_NO_TLSv1_1
-#   define SSL_OP_NO_TLSv1_1 0x0                                /* nop */
-    compiletime_min_version = "1.1";
-
-#  ifndef  SSL_OP_NO_TLSv1
-#   define SSL_OP_NO_TLSv1 0x0                                  /* nop */
-    compiletime_min_version = "1.0";
-#  endif
-# endif
-#endif
-
     /* In any case use only TLS v1 or later. */
     long options = SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3;
 
-    if (min_version == NULL
-        || StringSafeEqual(min_version, "1")
-        || StringSafeEqual(min_version, "1.0"))
+    enum tls_version min_tls_version = TLS_LOWEST_REQUIRED;
+    if (!NULL_OR_EMPTY(min_version))
     {
-        /* Do nothing, that's our default setting */
-        Log(LOG_LEVEL_VERBOSE,
-            "Setting minimum acceptable TLS version: 1.0");
-    }
-    else if (StringSafeEqual(min_version, "1.1"))
-    {
-        if (StringSafeEqual(compiletime_min_version, "1.0"))
+        bool found = false;
+        for (enum tls_version v = TLS_1_0; !found && v <= TLS_LAST; v++)
         {
-            Log(LOG_LEVEL_WARNING, "Minimum requested TLS version is %s,"
-                " however because of old OpenSSL version it is set to: %s",
-                min_version, compiletime_min_version);
+            if (StringSafeEqual(min_version, tls_version_strings[v]))
+            {
+                found = true;
+                if (v < TLS_LOWEST_REQUIRED)
+                {
+                    Log(LOG_LEVEL_WARNING, "Minimum requested TLS version is %s,"
+                        " but minimum version required by CFEngine is %s."
+                        " Using the minimum required version.",
+                        min_version, tls_version_strings[TLS_LOWEST_REQUIRED]);
+                    min_tls_version = TLS_LOWEST_REQUIRED;
+                }
+                else if (v > TLS_HIGHEST_SUPPORTED)
+                {
+                    Log(LOG_LEVEL_WARNING, "Minimum requested TLS version is %s,"
+                        " but maximum version supported by OpenSSL is %s."
+                        " Using the maximum supported version.",
+                        min_version, tls_version_strings[TLS_HIGHEST_SUPPORTED]);
+                    min_tls_version = TLS_HIGHEST_SUPPORTED;
+                }
+                else
+                {
+                    min_tls_version = v;
+                }
+            }
         }
-        else
+        if (!found)
         {
-            Log(LOG_LEVEL_VERBOSE,
-                "Setting minimum acceptable TLS version: 1.1");
+            Log(LOG_LEVEL_WARNING,
+                "Unrecognized requested minimum TLS version '%s',"
+                " using the minimum required version %s.",
+                min_version, tls_version_strings[TLS_LOWEST_REQUIRED]);
+            min_tls_version = TLS_LOWEST_REQUIRED;
         }
-        options |= SSL_OP_NO_TLSv1;
-
-    }
-    else if (StringSafeEqual(min_version, "1.2"))
-    {
-        if (StringSafeEqual(compiletime_min_version, "1.0") ||
-            StringSafeEqual(compiletime_min_version, "1.1"))
-        {
-            Log(LOG_LEVEL_WARNING, "Minimum requested TLS version is %s,"
-                " however because of old OpenSSL version it is set to: %s",
-                min_version, compiletime_min_version);
-        }
-        else
-        {
-            Log(LOG_LEVEL_VERBOSE,
-                "Setting minimum acceptable TLS version: 1.2");
-        }
-        options |= SSL_OP_NO_TLSv1 | SSL_OP_NO_TLSv1_1;
-    }
-    else if (StringSafeEqual(min_version, "1.3"))
-    {
-        if (StringSafeEqual(compiletime_min_version, "1.0") ||
-            StringSafeEqual(compiletime_min_version, "1.1") ||
-            StringSafeEqual(compiletime_min_version, "1.2"))
-        {
-            Log(LOG_LEVEL_WARNING, "Minimum requested TLS version is %s,"
-                " however because of old OpenSSL version it is set to: %s",
-                min_version, compiletime_min_version);
-        }
-        else
-        {
-            Log(LOG_LEVEL_VERBOSE,
-                "Setting minimum acceptable TLS version: 1.3");
-        }
-        options |= SSL_OP_NO_TLSv1 | SSL_OP_NO_TLSv1_1 | SSL_OP_NO_TLSv1_2;
-    }
-    else
-    {
-        Log(LOG_LEVEL_WARNING, "Unsupported TLS version '%s' requested,"
-            " minimum acceptable TLS version set to: 1.0",
-            min_version);
     }
 
+    Log(LOG_LEVEL_VERBOSE,
+        "Setting minimum acceptable TLS version: %s", tls_version_strings[min_tls_version]);
+
+    /* disable all the lower versions than the minimum requested/determined */
+    for (enum tls_version v = TLS_1_0; v < min_tls_version; v++)
+    {
+        options |= tls_disable_flags[v];
+    }
 
     /* No session resumption or renegotiation for now. */
     options |= SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION;
@@ -983,7 +988,7 @@ bool TLSSetCipherList(SSL_CTX *ssl_ctx, const char *cipher_list)
         }
     }
 
-#ifdef SSL_OP_NO_TLSv1_3        /* defined if TLS 1.3 is supported */
+#ifdef HAVE_TLS_1_3
     if (cipher_suites_len != 0) /* TLS >= 1.3 ciphers */
     {
         int ret = SSL_CTX_set_ciphersuites(ssl_ctx, cipher_suites);

@@ -94,7 +94,7 @@ static bool GetSysUsers( int *userListSz, int *numRootProcs, int *numOtherProcs)
         Log(LOG_LEVEL_DEBUG, "Users in the process table detected from the test: (%s)", s);
         free(s);
     }
-
+    DeleteItemList(userList);
     return true;
 }
 

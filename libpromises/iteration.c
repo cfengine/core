@@ -528,6 +528,7 @@ static char *ProcessVar(PromiseIterator *iterctx, const EvalContext *evalctx,
         }
     }
 
+    assert(s_end != NULL);
     if (*s_end == '\0')
     {
         Log(LOG_LEVEL_ERR, "No closing '%c' found for variable: %s",
@@ -574,6 +575,7 @@ static char *ProcessVar(PromiseIterator *iterctx, const EvalContext *evalctx,
         }
     }
 
+    assert(s_end != NULL);
     assert(*s_end == closing_paren);
     return s_end;
 }
@@ -595,8 +597,15 @@ void PromiseIteratorPrepare(PromiseIterator *iterctx,
     assert(s != NULL);
     LogDebug(LOG_MOD_ITERATIONS, "PromiseIteratorPrepare(\"%s\")", s);
     const size_t s_len = strlen(s);
-    char *var_start = s + FindDollarParen(s, s_len);
+    const size_t offset = FindDollarParen(s, s_len);
 
+    assert(offset <= s_len); // FindDollarParen guarantees this
+    if (offset == s_len)
+    {
+        return; // Don't search past NULL terminator
+    }
+
+    char *var_start = s + offset;
     while (*var_start != '\0')
     {
         char paren_or_brace = var_start[1];
@@ -605,10 +614,20 @@ void PromiseIteratorPrepare(PromiseIterator *iterctx,
         assert(paren_or_brace == '(' || paren_or_brace == '{');
 
         char *var_end = ProcessVar(iterctx, evalctx, var_start, paren_or_brace);
+        assert(var_end != NULL);
+        if (*var_end == '\0')
+        {
+            return; // Don't search past NULL terminator
+        }
         char *var_next = var_end + 1;
         const size_t var_next_len = s_len - (var_next - s);
-
-        var_start = var_next + FindDollarParen(var_next, var_next_len);
+        const size_t var_offset = FindDollarParen(var_next, var_next_len);
+        assert(var_offset <= var_next_len);
+        if (var_offset == var_next_len)
+        {
+            return; // Don't search past NULL terminator
+        }
+        var_start = var_next + var_offset;
     }
 }
 

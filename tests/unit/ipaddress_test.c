@@ -332,7 +332,7 @@ static void test_ipv4_address_comparison(void)
     IPAddress *b = NULL;
     Buffer *bufferA = NULL;
     Buffer *bufferB = NULL;
-            
+
     bufferA = BufferNew();
     assert_true(bufferA != NULL);
     BufferSet(bufferA, "1.1.1.1", strlen("1.1.1.1"));
@@ -344,15 +344,15 @@ static void test_ipv4_address_comparison(void)
     BufferSet(bufferB, "1.1.1.1", strlen("1.1.1.1"));
     b = IPAddressNew(bufferB);
     assert_true(b != NULL);
-    
+
     assert_true(IPAddressIsEqual(a, b));
-    
+
     BufferSet(bufferA, "1.2.3.4", strlen("1.2.3.4"));
     assert_int_equal(IPAddressDestroy(&a), 0);
     a = IPAddressNew(bufferA);
     assert_true(a != NULL);
-    
-    assert_false(IPAddressIsEqual(a, b));       
+
+    assert_false(IPAddressIsEqual(a, b));
 
     BufferSet(bufferB, "1.2.1.1", strlen("1.2.1.1"));
     assert_int_equal(IPAddressDestroy(&b), 0);
@@ -397,6 +397,12 @@ static void test_ipv4_address_comparison(void)
 
     assert_int_equal(IPAddressIsEqual(a, b), -1);
     assert_int_equal(IPAddressIsEqual(b, a), -1);
+
+    assert_int_equal(IPAddressDestroy(&a), 0);
+    assert_int_equal(IPAddressDestroy(&b), 0);
+
+    BufferDestroy(bufferA);
+    BufferDestroy(bufferB);
 }
 
 static void test_ipv6_address_comparison(void)

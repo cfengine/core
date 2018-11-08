@@ -526,6 +526,7 @@ Rlist *RlistAppendScalar(Rlist **start, const char *scalar)
     return RlistAppendRval(start, RvalCopyScalar((Rval) { (char *)scalar, RVAL_TYPE_SCALAR }));
 }
 
+// NOTE: Copies item, does NOT take ownership
 Rlist *RlistAppend(Rlist **start, const void *item, RvalType type)
 {
     return RlistAppendAllTypes(start, item, type, false);

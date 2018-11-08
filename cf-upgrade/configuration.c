@@ -61,12 +61,18 @@ void ConfigurationDestroy(Configuration **configuration)
     {
         return;
     }
-    free ((*configuration)->cf_upgrade);
-    free ((*configuration)->backup_path);
-    free ((*configuration)->backup_tool);
-    free ((*configuration)->copy_path);
-    free ((*configuration)->cfengine_path);
-    free (*configuration);
+    Configuration *config = *configuration;
+    for (int i = 0; i < config->number_of_arguments; ++i)
+    {
+        free(config->arguments[i]);
+        config->arguments[i] = NULL;
+    }
+    free(config->cf_upgrade);
+    free(config->backup_path);
+    free(config->backup_tool);
+    free(config->copy_path);
+    free(config->cfengine_path);
+    free(config);
     *configuration = NULL;
 }
 

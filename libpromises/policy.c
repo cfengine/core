@@ -2111,6 +2111,7 @@ static Rval RvalFromJson(JsonElement *json_rval)
         {
             Rval list_value = RvalFromJson(JsonArrayGetAsObject(json_list, i));
             RlistAppend(&rlist, list_value.item, list_value.type);
+            RvalDestroy(list_value);
         }
 
         return ((Rval) { rlist, RVAL_TYPE_LIST });
@@ -2127,6 +2128,7 @@ static Rval RvalFromJson(JsonElement *json_rval)
             Rval arg = RvalFromJson(json_arg);
 
             RlistAppend(&args, arg.item, arg.type);
+            RvalDestroy(arg);
         }
 
         FnCall *fn = FnCallNew(name, args);

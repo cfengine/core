@@ -4,11 +4,6 @@
 #include <mutex.h>
 #include <threaded_queue.h>
 
-static void test_dummy(void)
-{
-    assert_true(1);
-}
-
 /* Memory illustration legend:          *
  *      | : memory bounds               *
  *      > : head                        *
@@ -338,6 +333,8 @@ static void test_threads_wait_empty(void)
                                         thread_push, NULL);
         assert_int_equal(res_create, 0);
     }
+
+    sleep(1);
     pthread_t wait_thread = 0;
     int res_create = pthread_create(&wait_thread, NULL,
                                     thread_wait_empty, NULL);
@@ -384,15 +381,14 @@ int main()
     PRINT_TEST_BANNER();
     const UnitTest tests[] =
     {
-        unit_test(test_dummy)
-        // unit_test(test_push_pop),
-        // unit_test(test_pop_empty_and_push_null),
-        // unit_test(test_copy),
-        // unit_test(test_push_report_count),
-        // unit_test(test_expand),
-        // unit_test(test_popn),
-        // unit_test(test_threads_wait_empty),
-        // unit_test(test_threads_wait_pop),
+        unit_test(test_push_pop),
+        unit_test(test_pop_empty_and_push_null),
+        unit_test(test_copy),
+        unit_test(test_push_report_count),
+        unit_test(test_expand),
+        unit_test(test_popn),
+        unit_test(test_threads_wait_pop),
+        unit_test(test_threads_wait_empty),
     };
     return run_tests(tests);
 }

@@ -14,6 +14,17 @@ static const char* features[] = {
 #ifdef HAVE_LIBCURL
     "curl",
 #endif
+    "tls_1_0",                  /* we require versions of OpenSSL that support
+                                 * at least TLS 1.0 */
+#ifdef HAVE_TLS_1_1
+    "tls_1_1",
+#endif
+#ifdef HAVE_TLS_1_2
+    "tls_1_2",
+#endif
+#ifdef HAVE_TLS_1_3
+    "tls_1_3",
+#endif
     "def_json_preparse",
     NULL
 };

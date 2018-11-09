@@ -92,7 +92,7 @@ int lmdump(lmdump_mode mode, const char *file)
     rc = mdb_env_create(&env);
     if (rc) return lmdump_report_error(rc);
 
-    rc = mdb_env_open(env, file, MDB_NOSUBDIR, 0644);
+    rc = mdb_env_open(env, file, MDB_NOSUBDIR | MDB_RDONLY, 0644);
     if (rc) return lmdump_report_error(rc);
 
     MDB_txn *txn;

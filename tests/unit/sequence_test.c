@@ -537,6 +537,7 @@ void test_string_prefix(void)
     const char *eleven = "11        ABC\n";
 
     assert_int_equal(3,    GetLengthPrefix(three));
+    assert_int_equal(11,   GetLengthPrefix(eleven));
     assert_int_equal(1234, GetLengthPrefix("1234      H\n"));
     assert_true(three[SEQ_PREFIX_LEN] == 'A');
 }

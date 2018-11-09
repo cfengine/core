@@ -407,6 +407,9 @@ static void test_ipv4_address_comparison(void)
     assert_int_equal(IPAddressIsEqual(a, b), -1);
     assert_int_equal(IPAddressIsEqual(b, a), -1);
 
+    assert_int_equal(IPAddressDestroy(&a), 0);
+    assert_int_equal(IPAddressDestroy(&b), 0);
+
     BufferDestroy(bufferA);
     BufferDestroy(bufferB);
 }

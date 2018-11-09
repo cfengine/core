@@ -51,7 +51,6 @@ enum tls_version {
 /* determine the highest TLS version supported by the available/used version of
  * OpenSSL */
 #if defined(SSL_OP_NO_TLSv1_3)
-#define HAVE_TLS_1_3
 #define TLS_HIGHEST_SUPPORTED TLS_1_3
 #elif defined(SSL_OP_NO_TLSv1_2)
 #define TLS_HIGHEST_SUPPORTED TLS_1_2

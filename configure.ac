@@ -467,6 +467,19 @@ CF3_WITH_LIBRARY(openssl, [
       test "x$ac_cv_lib_crypto_RSA_generate_key" = "xno" ; then
       AC_MSG_ERROR(Cannot find OpenSSL)
    fi
+
+   AC_CHECK_DECL([SSL_OP_NO_TLSv1_1],
+    [AC_DEFINE([HAVE_TLS_1_1], [1], [Define if TLS 1.1 is supported by OpenSSL])],
+    [], [[#include <openssl/ssl.h>]]
+    )
+   AC_CHECK_DECL([SSL_OP_NO_TLSv1_2],
+    [AC_DEFINE([HAVE_TLS_1_2], [1], [Define if TLS 1.2 is supported by OpenSSL])],
+    [], [[#include <openssl/ssl.h>]]
+    )
+   AC_CHECK_DECL([SSL_OP_NO_TLSv1_3],
+    [AC_DEFINE([HAVE_TLS_1_3], [1], [Define if TLS 1.3 is supported by OpenSSL])],
+    [], [[#include <openssl/ssl.h>]]
+    )
 ])
 
 dnl PCRE

@@ -425,7 +425,9 @@ static void test_string_to_double(void)
 
 static void test_string_from_double(void)
 {
-    assert_string_equal("1234.12", StringFromDouble(1234.1234));
+    char *result = StringFromDouble(1234.1234);
+    assert_string_equal("1234.12", result);
+    free(result);
 }
 
 static void test_safe_compare(void)

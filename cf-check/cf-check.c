@@ -1,4 +1,5 @@
 #include <lmdump.h>
+#include <diagnose.h>
 #include <string_lib.h>
 
 int main(int argc, char **argv)
@@ -22,6 +23,10 @@ int main(int argc, char **argv)
     if (StringSafeEqual(command, "lmdump"))
     {
         return lmdump_main(cmd_argc, cmd_argv);
+    }
+    if (StringSafeEqual(command, "diagnose"))
+    {
+        return diagnose_main(cmd_argc, cmd_argv);
     }
 
     printf("Unrecognized command: '%s'\n", command);

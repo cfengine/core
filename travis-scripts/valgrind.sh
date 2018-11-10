@@ -156,7 +156,7 @@ echo "Running promises.cf:"
 valgrind $VG_OPTS /var/cfengine/bin/cf-agent -K -f promises.cf 2>&1 | tee promises.txt
 check_output promises.txt
 echo "Running cf-check:"
-valgrind $VG_OPTS /var/cfengine/bin/cf-check lmdump -x /var/cfengine/state/cf_lock.lmdb 2>&1 | tee check.txt
+valgrind $VG_OPTS /var/cfengine/bin/cf-check diagnose /var/cfengine/state/*.lmdb 2>&1 | tee check.txt
 check_output check.txt
 
 print_ps
@@ -165,8 +165,9 @@ echo "Checking that serverd and execd PIDs are still correct/alive:"
 ps -p $exec_pid
 ps -p $server_pid
 
-echo "Killing valgrind"
+echo "Killing valgrind cf-execd"
 kill $exec_pid
+echo "Killing valgrind cf-serverd"
 kill $server_pid
 sleep 10
 

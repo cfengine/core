@@ -39,6 +39,7 @@ libcf_check_la_LIBADD = ../libutils/libutils.la \
 
 libcf_check_la_SOURCES = \
 	lmdump.c lmdump.h \
+	diagnose.c diagnose.h \
 	cf-check.c
 
 if !BUILTIN_EXTENSIONS

@@ -44,6 +44,12 @@ then
     make -C tests/unit check
     make -C tests/load check
     exit
+elif [ "$JOB_TYPE" = compile_and_unit_test_asan ]
+then
+    make CFLAGS="-Werror -Wno-pointer-sign -fsanitize=address" LDFLAGS="-fsanitize=address -pthread"
+    make -C tests/unit CFLAGS="-fsanitize=address" LDFLAGS="-fsanitize=address -pthread" check
+    make -C tests/load CFLAGS="-fsanitize=address" LDFLAGS="-fsanitize=address -pthread" check
+    exit
 else
     make
 fi

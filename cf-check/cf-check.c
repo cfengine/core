@@ -20,11 +20,11 @@ int main(int argc, char **argv)
     char **cmd_argv = argv + 1;
     char *command = cmd_argv[0];
 
-    if (StringSafeEqual(command, "lmdump"))
+    if (StringSafeEqual_IgnoreCase(command, "lmdump"))
     {
         return lmdump_main(cmd_argc, cmd_argv);
     }
-    if (StringSafeEqual(command, "diagnose"))
+    if (StringSafeEqual_IgnoreCase(command, "diagnose"))
     {
         return diagnose_main(cmd_argc, cmd_argv);
     }

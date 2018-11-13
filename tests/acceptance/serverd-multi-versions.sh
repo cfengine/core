@@ -49,7 +49,7 @@ function install(){
     rm -rf "$1"
     if test -z "$2"
     then
-        ./configure --enable-debug --with-tokyocabinet --with-init-script --prefix=$PWD/$1/var/cfengine >/dev/null 2>&1
+        ./configure --enable-debug --with-init-script --prefix=$PWD/$1/var/cfengine >/dev/null 2>&1
         make >/dev/null 2>&1
         make install >/dev/null 2>&1
     else

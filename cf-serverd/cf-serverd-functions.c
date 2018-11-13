@@ -609,7 +609,8 @@ static void CollectCallIfDue(EvalContext *ctx)
         {
             ConnectionInfo *info = ConnectionInfoNew();
             assert(info);
-
+            Log(LOG_LEVEL_DEBUG,
+                "Hub has %d seconds to complete report collection (collect_window)", COLLECT_WINDOW);
             ConnectionInfoSetSocket(info, new_client);
             info->is_call_collect = true; /* Mark processed when done. */
             ServerEntryPoint(ctx, PolicyServerGetIP(), info);

@@ -5,6 +5,9 @@ if [ -d /var/cfengine ]; then
     rm -rf /var/cfengine
 fi
 
+echo "Checking for systemctl"
+systemctl --version
+
 echo "Building CFEngine core"
 set +e
 git fetch --unshallow 2>&1 >> /dev/null
@@ -12,7 +15,7 @@ git remote add upstream https://github.com/cfengine/core.git  \
     && git fetch upstream 'refs/tags/*:refs/tags/*' 2>&1 >> /dev/null
 set -e
 
-./autogen.sh --enable-debug
+./autogen.sh --enable-debug --with-systemd-service
 make
 make install
 
@@ -119,9 +122,8 @@ check_masterfiles_and_inputs
 
 print_ps
 
-echo "Killing serverd and execd to relaunch under valgrind"
-pkill -f cf-execd
-pkill -f cf-serverd
+echo "Stopping service to relaunch under valgrind"
+systemctl stop cfengine3
 sleep 10
 print_ps
 
@@ -181,8 +183,8 @@ cat serverd.txt
 check_serverd_valgrind_output serverd.txt
 check_daemon_output serverd_output.txt
 
-echo "Killing cf-monitord"
-pkill -f cf-monitord
+echo "Stopping cfengine3 service"
+systemctl stop cfengine3
 
 echo "Done killing"
 sleep 10

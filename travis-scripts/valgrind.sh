@@ -84,7 +84,7 @@ function check_serverd_valgrind_output {
     grep -i "ERROR SUMMARY" $1
     grep -i "definitely lost: 0 bytes in 0 blocks" $1
     grep -i "indirectly lost: 0 bytes in 0 blocks" $1
-    grep -i "ERROR SUMMARY: 1 errors" "$1" || grep -i "ERROR SUMMARY: 0 errors" "$1"
+    grep -i "ERROR SUMMARY: 0 errors" "$1"
 
     cat $1 | sed -e "/ERROR SUMMARY/d" -e "/and suppressed error/d" -e "/a memory error detector/d" > filtered.txt
 
@@ -106,9 +106,6 @@ function check_masterfiles_and_inputs {
 /var/cfengine/bin/cf-agent --version
 
 VG_OPTS="--leak-check=full --track-origins=yes --error-exitcode=1"
-# These options are needed for cf-serverd in travis only,
-# since their glibc is bugged: (TODO remove)
-OLD_VG_OPTS="--run-libc-freeres=no --show-possibly-lost=no"
 BOOTSTRAP_IP="$(ifconfig | grep -A1 Ethernet | sed '2!d;s/.*addr:\([0-9.]*\).*/\1/')"
 
 valgrind $VG_OPTS /var/cfengine/bin/cf-key 2>&1 | tee cf-key.txt
@@ -128,7 +125,7 @@ sleep 10
 print_ps
 
 echo "Starting cf-serverd with valgrind in background:"
-valgrind $VG_OPTS $OLD_VG_OPTS --log-file=serverd.txt /var/cfengine/bin/cf-serverd --no-fork 2>&1 > serverd_output.txt &
+valgrind $VG_OPTS --log-file=serverd.txt /var/cfengine/bin/cf-serverd --no-fork 2>&1 > serverd_output.txt &
 server_pid="$!"
 sleep 20
 

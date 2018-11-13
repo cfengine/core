@@ -26,7 +26,7 @@ then
     ./configure --enable-debug --prefix=$INSTDIR --bindir=$INSTDIR/var/cfengine/bin --with-init-script --with-lmdb=/usr/local/Cellar/lmdb
 else
     NO_CONFIGURE=1 ./autogen.sh
-    ./configure --enable-debug --with-tokyocabinet --prefix=$INSTDIR --with-systemd-service --bindir=$INSTDIR/var/cfengine/bin \
+    ./configure --enable-debug --prefix=$INSTDIR --with-systemd-service --bindir=$INSTDIR/var/cfengine/bin \
         `[ "x$COVERAGE" != xno ] && echo --enable-coverage`
 fi
 

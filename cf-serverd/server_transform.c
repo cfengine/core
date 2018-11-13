@@ -376,7 +376,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
                 COLLECT_WINDOW = (int) IntFromString(value);
                 Log(LOG_LEVEL_VERBOSE,
                     "Setting collect_window to %d (seconds)",
-                    COLLECT_INTERVAL);
+                    COLLECT_WINDOW);
             }
             else if (IsControlBody(SERVER_CONTROL_CFRUNCOMMAND))
             {

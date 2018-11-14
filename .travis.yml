@@ -30,13 +30,11 @@ matrix:
   fast_finish: true # Build will succeed once all linux jobs succeed
   include:
     - os: linux
-      sudo: required
       env: JOB_TYPE=compile_and_unit_test_asan
     - os: linux
       sudo: required
       env: JOB_TYPE=valgrind_health_check
     - os: linux
-      sudo: required
       env: JOB_TYPE=compile_and_unit_test COVERAGE=no
       compiler: clang
     - os: linux

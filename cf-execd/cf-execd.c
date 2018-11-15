@@ -105,7 +105,7 @@ static const char *const HINTS[] =
 {
     "Print the help message",
     "Enable debugging output",
-    "Output verbose information about the behaviour of the agent",
+    "Output verbose information about the behaviour of cf-execd",
     "All talk and no action mode - make no changes, only inform of promises not kept",
     "Output the version of the software",
     "Specify an alternative input file than the default. This option is overridden by FILE if supplied as argument.",

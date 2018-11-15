@@ -94,7 +94,7 @@ static const char *const HINTS[] =
     "Print the help message",
     "Print basic information about key generation",
     "Enable debugging output",
-    "Output verbose information about the behaviour of the agent",
+    "Output verbose information about the behaviour of cf-key",
     "Output the version of the software",
     "Specify how detailed logs should be. Possible values: 'error', 'warning', 'notice', 'info', 'verbose', 'debug'",
     "Specify an alternative output file than the default.",

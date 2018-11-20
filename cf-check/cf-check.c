@@ -2,6 +2,11 @@
 #include <diagnose.h>
 #include <string_lib.h>
 
+static void print_version()
+{
+    printf("cf-check BETA version %s\n", VERSION);
+}
+
 static void print_help()
 {
     printf(
@@ -13,6 +18,7 @@ static void print_help()
         "Commands:\n"
         "\tdump - Print the contents of a database file\n"
         "\tdiagnose - Assess the health of one or more database files\n"
+        "\tversion - Print version information\n"
         "\thelp - Print this help menu\n"
         "\n"
         "Usage:\n"
@@ -59,6 +65,14 @@ int main(int argc, char **argv)
         StringSafeEqual_IgnoreCase(command, "-h"))
     {
         print_help();
+        return 0;
+    }
+
+    if (StringSafeEqual_IgnoreCase(command, "version") ||
+        StringSafeEqual_IgnoreCase(command, "--version") ||
+        StringSafeEqual_IgnoreCase(command, "-V"))
+    {
+        print_version();
         return 0;
     }
 

@@ -1705,6 +1705,7 @@ AC_CONFIG_FILES([Makefile
     libenv/Makefile
     libpromises/Makefile
     cf-agent/Makefile
+    cf-check/Makefile
     cf-promises/Makefile
     cf-execd/Makefile
     cf-key/Makefile

@@ -63,6 +63,9 @@ fi
 #                    v                 v                 v
 for symbol in LogSetGlobalLevel GetInterfacesInfo ConnectionInfoNew; do
     for binary in cf-*; do
+        if test "$binary" = "cf-check" ; then
+            continue
+        fi
         if test -e "$binary/.libs/$binary"; then
             LOC="$binary/.libs/$binary"
         else

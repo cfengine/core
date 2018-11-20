@@ -53,7 +53,6 @@ libpromises_la_LIBADD = ../libutils/libutils.la ../libcfnet/libcfnet.la \
 libpromises_la_SOURCES = \
         cf3parse.y cf3parse.h \
         cf3lex.l \
-        acl_tools.h acl_tools_posix.c \
         actuator.c actuator.h \
         assoc.c assoc.h \
         audit.c audit.h \
@@ -81,7 +80,6 @@ libpromises_la_SOURCES = \
         expand.c expand.h \
         extensions.c extensions.h \
         feature.c feature.h \
-        files_copy.c files_copy.h \
         files_hashes.c files_hashes.h \
         files_interfaces.c files_interfaces.h \
         files_lib.c files_lib.h \

@@ -24,17 +24,10 @@
 
 
 #include <platform.h>
-
 #include <files_copy.h>
-
-#include <files_names.h>
-#include <files_interfaces.h>
-#include <instrumentation.h>
-#include <policy.h>
-#include <files_lib.h>
-#include <file_lib.h>
-#include <string_lib.h>
-#include <acl_tools.h>
+#include <file_lib.h>  // safe_open()
+#include <logging.h>   // Log()
+#include <acl_tools.h> // CopyACLs()
 
 
 bool CopyRegularFileDisk(const char *source, const char *destination)

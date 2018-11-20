@@ -25,7 +25,7 @@
 #ifndef CFENGINE_FILES_COPY_H
 #define CFENGINE_FILES_COPY_H
 
-#include <cf3.defs.h>
+#include <platform.h>
 
 #ifdef WITH_XATTR_EXTRA_ARGS
 #define llistxattr(__arg1, __arg2, __arg3) \

@@ -32,11 +32,13 @@ libutils_la_LIBADD = ../libcompat/libcompat.la
 libutils_la_LIBS     = $(PCRE_LIBS) $(OPENSSL_LIBS)
 
 libutils_la_SOURCES = \
+	acl_tools.h acl_tools_posix.c \
 	alloc.c alloc.h \
 	cleanup.c cleanup.h \
 	compiler.h \
 	deprecated.h \
 	dir.h dir_priv.h \
+	files_copy.c files_copy.h \
 	hash_method.h \
 	sequence.c sequence.h \
 	set.c set.h \

@@ -24,8 +24,8 @@
 
 #include <platform.h>
 
-#include <cf3.defs.h>
 #include <acl_tools.h>
+#include <logging.h>
 
 #ifdef HAVE_ACL_H
 # include <acl.h>

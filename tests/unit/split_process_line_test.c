@@ -25,7 +25,7 @@ static void test_split_line_challenges(void)
     char *field[CF_PROCCOLS] = { 0 }; /* Content */
     int start[CF_PROCCOLS] = { 0 };
     int end[CF_PROCCOLS] = { 0 };
-    int i, user = 0, nlwp = 5;
+    int user = 0, nlwp = 5;
 
     memset(name, 0, sizeof(name));
     memset(field, 0, sizeof(field));
@@ -56,7 +56,7 @@ static void test_split_line_elapsed(void)
     char *field[CF_PROCCOLS] = { 0 }; /* Content */
     int start[CF_PROCCOLS] = { 0 };
     int end[CF_PROCCOLS] = { 0 };
-    int i, user = 0, stime = 7;
+    int user = 0, stime = 7;
     time_t pstime = 1410000000;        /* 2014-09-06 12:40 */
     const char began[] = "1409641200"; /* 2014-09-02  9:0 */
 
@@ -93,7 +93,7 @@ static void test_split_line_noelapsed(void)
     char *field[CF_PROCCOLS] = { 0 }; /* Content */
     int start[CF_PROCCOLS] = { 0 };
     int end[CF_PROCCOLS] = { 0 };
-    int i, user = 0, stime = 7;
+    int user = 0, stime = 7;
     time_t pstime = 1410000000;
 
     /* Prepare data needed by tests and assert things tests can then assume: */
@@ -188,7 +188,7 @@ static void test_split_line_longcmd(void)
     char *field[CF_PROCCOLS] = { 0 }; /* Content */
     int start[CF_PROCCOLS] = { 0 };
     int end[CF_PROCCOLS] = { 0 };
-    int i, user = 0, command = 10;
+    int user = 0, command = 10;
     time_t pstime = 1410000000;
 
     /* Prepare data needed by tests and assert things assumed by test: */
@@ -238,7 +238,7 @@ static void test_split_line(void)
     char *field[CF_PROCCOLS] = { 0 }; /* Content */
     int start[CF_PROCCOLS] = { 0 };
     int end[CF_PROCCOLS] = { 0 };
-    int i, user = 0, vsz = 3, rss = 5, stime = 7, command = 10;
+    int user = 0, vsz = 3, rss = 5, stime = 7, command = 10;
     time_t pstime = 1410000000;
 
     /* Prepare data needed by tests and assert things tests can then assume: */
@@ -265,7 +265,7 @@ static void test_split_line(void)
             "basic", "923", "S", "32536", "0", "784", "1",
             "10:30", "71-00:07:43", "00:01:49", "true"
         };
-        for (i = 0; name[i] != NULL; i++)
+        for (int i = 0; name[i] != NULL; i++)
         {
             assert_in_range(i, 0, sizeof(each) / sizeof(char *) - 1);
             bool valid = field[i] != NULL && each[i] != NULL;

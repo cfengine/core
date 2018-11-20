@@ -2,6 +2,29 @@
 #include <diagnose.h>
 #include <string_lib.h>
 
+static void print_help()
+{
+    printf(
+        "\n"
+        "cf-check:\n"
+        "\tUtility for diagnosis and repair of local CFEngine databases.\n"
+        "\tThis BETA version of the tool is for testing purposes only.\n"
+        "\n"
+        "Commands:\n"
+        "\tdump - Print the contents of a database file\n"
+        "\tdiagnose - Assess the health of one or more database files\n"
+        "\thelp - Print this help menu\n"
+        "\n"
+        "Usage:\n"
+        "\t$ cf-check command [options]\n"
+        "\n"
+        "Examples:\n"
+        "\t$ cf-check dump -a /var/cfengine/state/cf_lastseen.lmdb\n"
+        "\t$ cf-check diagnose /var/cfengine/state/*.lmdb\n"
+        "\n"
+    );
+}
+
 int main(int argc, char **argv)
 {
     if (StringEndsWith(argv[0], "lmdump"))
@@ -12,7 +35,8 @@ int main(int argc, char **argv)
 
     if (argc < 2)
     {
-        printf("Need to supply a command, for example 'cf-check lmdump'\n");
+        print_help();
+        printf("No command given.\n");
         return 1;
     }
 
@@ -30,6 +54,15 @@ int main(int argc, char **argv)
         return diagnose_main(cmd_argc, cmd_argv);
     }
 
+    if (StringSafeEqual_IgnoreCase(command, "help") ||
+        StringSafeEqual_IgnoreCase(command, "--help") ||
+        StringSafeEqual_IgnoreCase(command, "-h"))
+    {
+        print_help();
+        return 0;
+    }
+
+    print_help();
     printf("Unrecognized command: '%s'\n", command);
     return 1;
 }

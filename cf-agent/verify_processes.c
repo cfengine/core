@@ -41,6 +41,7 @@
 #include <policy.h>
 #include <scope.h>
 #include <ornaments.h>
+#include <string_lib.h>
 
 static PromiseResult VerifyProcesses(EvalContext *ctx, const Attributes *a, const Promise *pp);
 static bool ProcessSanityChecks(const Attributes *a, const Promise *pp);

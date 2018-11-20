@@ -233,4 +233,8 @@ void StrCatDelim(char *dst, size_t dst_size, size_t *dst_len,
 
 void CanonifyNameInPlace(char *str);
 
+const char *CommandArg0(const char *execstr);
+size_t CommandArg0_bound(char *dst, const char *src, size_t dst_size);
+void CommandPrefix(char *execstr, char *comm);
+
 #endif

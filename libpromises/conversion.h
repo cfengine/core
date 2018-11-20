@@ -68,9 +68,6 @@ bool IsRealNumber(const char *s);
 char *Rlist2String(Rlist *list, char *sep); // TODO: Yet another Rlist serialization scheme.. Found 5 so far.
 DataType ConstraintSyntaxGetDataType(const ConstraintSyntax *body_syntax, const char *lval);
 const char *MapAddress(const char *addr);
-const char *CommandArg0(const char *execstr);
-size_t CommandArg0_bound(char *dst, const char *src, size_t dst_size);
-void CommandPrefix(char *execstr, char *comm);
 const char *DataTypeShortToType(char *short_type);
 bool DataTypeIsIterable(DataType t);
 

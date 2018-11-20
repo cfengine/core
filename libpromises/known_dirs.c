@@ -25,6 +25,7 @@
 #include <known_dirs.h>
 #include <cf3.defs.h>
 #include <file_lib.h>
+#include <string_lib.h>
 
 #include <cf-windows-functions.h>
 
@@ -169,3 +170,24 @@ const char *GetPidDir(void)
 const char *GetInputDir(void) GET_DIRECTORY_DEFINE_FUNC_BODY(Input, input, INPUT, inputs)
 const char *GetMasterDir(void) GET_DIRECTORY_DEFINE_FUNC_BODY(Master, master, MASTER, masterfiles)
 const char *GetStateDir(void) GET_DIRECTORY_DEFINE_FUNC_BODY(State, state, STATE, state)
+
+bool IsFileOutsideDefaultRepository(const char *f)
+{
+    return !StringStartsWith(f, GetInputDir());
+}
+
+/* Buffer should be at least CF_MAXVARSIZE large */
+const char *GetSoftwareCacheFilename(char *buffer)
+{
+    snprintf(buffer, CF_MAXVARSIZE, "%s/%s", GetStateDir(), SOFTWARE_PACKAGES_CACHE);
+    MapName(buffer);
+    return buffer;
+}
+
+/* Buffer should be at least CF_MAXVARSIZE large */
+const char *GetSoftwarePatchesFilename(char *buffer)
+{
+    snprintf(buffer, CF_MAXVARSIZE, "%s/%s", GetStateDir(), SOFTWARE_PATCHES_CACHE);
+    MapName(buffer);
+    return buffer;
+}

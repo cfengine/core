@@ -61,7 +61,6 @@
 #define CF_MAXSIDSIZE 2048      /* Windows only: Max size (bytes) of security identifiers */
 #define CF_MAXFRAGMENT 19       /* abbreviate long promise names to 2*MAXFRAGMENT+3 */
 #define CF_NONCELEN (CF_BUFSIZE/16)
-#define CF_MAXLINKSIZE 256
 #define CF_PROCCOLS 16
 #define CF_MACROALPHABET 61     /* a-z, A-Z plus a bit */
 #define CF_ALPHABETSIZE 256

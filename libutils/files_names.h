@@ -25,7 +25,7 @@
 #ifndef CFENGINE_FILES_NAMES_H
 #define CFENGINE_FILES_NAMES_H
 
-#include <cf3.defs.h>
+#include <platform.h>
 
 typedef enum
 {
@@ -56,10 +56,7 @@ const char *ReadLastNode(const char *str);
 bool CompressPath(char *dest, size_t dest_size, const char *src);
 char *GetAbsolutePath(const char *path);
 char *GetRealPath(const char *path);
-bool IsFileOutsideDefaultRepository(const char *f);
 int RootDirLength(const char *f);
-const char *GetSoftwareCacheFilename(char *buffer);
-const char *GetSoftwarePatchesFilename(char *buffer);
 
 /**
  * Detect whether package manager starts with an env command instead of package manager,

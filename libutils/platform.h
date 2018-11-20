@@ -38,6 +38,13 @@
 
 #define _GNU_SOURCE 1
 
+// DEFINITIONS / CONSTANTS
+/* max size of plaintext in one transaction, see
+   net.c:SendTransaction(), leave space for encryption padding
+   (assuming max 64*8 = 512-bit cipher block size). */
+#define CF_BUFSIZE 4096
+#define CF_MAXLINKSIZE 256
+
 #ifdef _WIN32
 # define MAX_FILENAME 227
 # define WINVER 0x501

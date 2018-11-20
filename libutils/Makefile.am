@@ -39,6 +39,7 @@ libutils_la_SOURCES = \
 	deprecated.h \
 	dir.h dir_priv.h \
 	files_copy.c files_copy.h \
+	files_names.c files_names.h \
 	hash_method.h \
 	sequence.c sequence.h \
 	set.c set.h \

@@ -83,7 +83,6 @@ libpromises_la_SOURCES = \
         files_hashes.c files_hashes.h \
         files_interfaces.c files_interfaces.h \
         files_lib.c files_lib.h \
-        files_names.c files_names.h \
         fncall.c fncall.h \
         generic_agent.c generic_agent.h \
         global_mutex.c global_mutex.h \

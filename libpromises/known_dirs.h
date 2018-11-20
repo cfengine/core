@@ -37,4 +37,8 @@ const char *GetMasterDir(void);
 const char *GetInputDir(void);
 const char *GetStateDir(void);
 
+bool IsFileOutsideDefaultRepository(const char *f);
+const char *GetSoftwareCacheFilename(char *buffer);
+const char *GetSoftwarePatchesFilename(char *buffer);
+
 #endif

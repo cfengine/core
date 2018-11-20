@@ -2,6 +2,7 @@
 
 #include <cmockery.h>
 #include <conversion.h>
+#include <string_lib.h>
 
 
 static void test_int_from_string(void)

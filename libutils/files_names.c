@@ -23,18 +23,11 @@
 */
 
 #include <files_names.h>
-
-#include <policy.h>
-#include <promises.h>
-#include <cf3.defs.h>
-#include <dir.h>
-#include <item_lib.h>
-#include <files_interfaces.h>
-#include <string_lib.h>
-#include <known_dirs.h>
-#include <conversion.h>
-
-#include <cf-windows-functions.h>
+#include <dir.h>        // Dir
+#include <logging.h>    // Log()
+#include <file_lib.h>   // FILE_SEPARATOR
+#include <string_lib.h> // Chop()
+#include <alloc.h>      // xstrdup()
 
 /*********************************************************************/
 
@@ -396,7 +389,7 @@ const char *FirstFileSeparator(const char *str)
 /*********************************************************************/
 
 const char *LastFileSeparator(const char *str)
-  /* Return pointer to last file separator in string, or NULL if 
+  /* Return pointer to last file separator in string, or NULL if
      string does not contains any file separtors */
 {
     const char *sp;
@@ -421,7 +414,7 @@ const char *LastFileSeparator(const char *str)
 
 bool ChopLastNode(char *str)
   /* Chop off trailing node name (possible blank) starting from
-     last character and removing up to the first / encountered 
+     last character and removing up to the first / encountered
      e.g. /a/b/c -> /a/b
      /a/b/ -> /a/b
      Will also collapse redundant/repeating path separators.
@@ -719,11 +712,6 @@ FilePathType FilePathGetType(const char *file_path)
     }
 }
 
-bool IsFileOutsideDefaultRepository(const char *f)
-{
-    return !StringStartsWith(f, GetInputDir());
-}
-
 /*******************************************************************/
 
 static int UnixRootDirLength(const char *f)
@@ -792,22 +780,6 @@ int RootDirLength(const char *f)
 #else
     return UnixRootDirLength(f);
 #endif
-}
-
-/* Buffer should be at least CF_MAXVARSIZE large */
-const char *GetSoftwareCacheFilename(char *buffer)
-{
-    snprintf(buffer, CF_MAXVARSIZE, "%s/%s", GetStateDir(), SOFTWARE_PACKAGES_CACHE);
-    MapName(buffer);
-    return buffer;
-}
-
-/* Buffer should be at least CF_MAXVARSIZE large */
-const char *GetSoftwarePatchesFilename(char *buffer)
-{
-    snprintf(buffer, CF_MAXVARSIZE, "%s/%s", GetStateDir(), SOFTWARE_PATCHES_CACHE);
-    MapName(buffer);
-    return buffer;
 }
 
 const char *RealPackageManager(const char *manager)

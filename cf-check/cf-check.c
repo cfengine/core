@@ -20,7 +20,8 @@ int main(int argc, char **argv)
     char **cmd_argv = argv + 1;
     char *command = cmd_argv[0];
 
-    if (StringSafeEqual_IgnoreCase(command, "lmdump"))
+    if (StringSafeEqual_IgnoreCase(command, "lmdump") ||
+        StringSafeEqual_IgnoreCase(command, "dump"))
     {
         return lmdump_main(cmd_argc, cmd_argv);
     }

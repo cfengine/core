@@ -43,7 +43,7 @@ libutils_la_SOURCES = \
 	statistics.c statistics.h \
 	string_lib.c string_lib.h \
 	pcre_include.h \
-	platform.h \
+	platform.h condition_macros.h \
 	proc_keyvalue.c proc_keyvalue.h \
 	bool.h \
 	json.c json.h json-priv.h \

@@ -1,3 +1,44 @@
+3.12.1:
+	- Added a new binary: cf-check
+	  Corrupt local databases (LMDB) continues to be a problem.
+	  cf-check will be used to diagnose and remediate problems
+	  with corrupt databases. It is a standalone binary, which
+	  doesn't evaluate policy or use the local databases, thus
+	  it can be used in situations where the other binaries
+	  like cf-agent would hang.
+	  cf-check replaces our lmdb database dumper, lmdump.
+	  `cf-check lmdump` or symlinking / renaming it to lmdump
+	  will make cf-check have the exact same behavior as lmdump.
+	  cf-check will include much more functionality in the future
+	  and some of the code will be added to other binaries,
+	  for example to do health checks of databases on startup.
+	  Ticket: (ENT-4064)
+	- Class names set by module protocol are automatically canonified
+	  (CFE-2877, CFE-2887)
+	- Correct log level for data_readstringarray* (CFE-2922)
+	- Eliminated error messages caused by attempting to kill expired processes
+	  (CFE-2824)
+	- Fix cf-runalerts systemd unit conditions so the service will run
+	  (ENT-3929)
+	- Fix the off-by-one error in cf-runagent background process spawning
+	  (CFE-2873)
+	- Fixed a memory leak which occurred when reloading RSA keys from disk
+	- Fixed a memory leak which occurred while loading augments files
+	  (CFE-2913)
+	- Fixed an issue with splay time in cf-execd (CFE-2931)
+	- Fixed error handling and memory leak in cf-key (CFE-2918)
+	- Fixed memory leak in lmdb cleanup (CFE-2918)
+	- Fixed memory leaks in cf-agent during bootstrap (CFE-2918)
+	- Fixed memory leaks in variablesmatching() and findfiles() (CFE-2918)
+	- Fixed missing class with mustache templates in warn_only mode (CFE-2600)
+	- Fixed small memory leak in cf-serverd (CFE-2918)
+	- Fixed valgrind warning about lmdb writing uninitialized memory (CFE-2591)
+	- Read mustache-rendered files in text mode when comparing digest (ENT-2526)
+	- Reload persistent classes on config reload in cf-execd and cf-serverd
+	  (CFE-2857)
+	- Started using custom cleanup function instead of atexit due to race
+	  condition with unloading DLLs on Windows (ENT-3756)
+
 3.12.0:
 	New Features:
 	- Add a --key-type option to specify RSA key size to cf-key

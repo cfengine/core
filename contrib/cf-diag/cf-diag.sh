@@ -34,11 +34,15 @@ outcome() {
 }
 
 succeed() {
+  [ -t 1 ] && printf '\e[0;32m'
   outcome ok "$@"
+  [ -t 1 ] && printf '\e[0m'
 }
 
 fail() {
+  [ -t 1 ] && printf '\e[0;31m'
   outcome 'not ok' "$@"
+  [ -t 1 ] && printf '\e[0m'
 }
 
 bail() {

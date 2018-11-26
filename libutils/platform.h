@@ -1022,7 +1022,7 @@ struct timespec
 #  define SUNOS_5
 # endif
 
-
+#include <condition_macros.h>
 
 /* Must be always the last one! */
 #include <deprecated.h>

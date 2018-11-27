@@ -123,7 +123,7 @@ static const char *const HINTS[] =
     "Print the help message",
     "Parallelize connections (50 by default)",
     "Enable debugging output",
-    "Output verbose information about the behaviour of the agent",
+    "Output verbose information about the behaviour of cf-runagent",
     "Specify how detailed logs should be. Possible values: 'error', 'warning', 'notice', 'info', 'verbose', 'debug'",
     "All talk and no action mode - make no changes, only inform of promises not kept",
     "Output the version of the software",

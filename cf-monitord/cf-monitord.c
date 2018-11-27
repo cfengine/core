@@ -96,7 +96,7 @@ static const char *const HINTS[] =
 {
     "Print the help message",
     "Enable debugging output",
-    "Output verbose information about the behaviour of the agent",
+    "Output verbose information about the behaviour of cf-monitord",
     "All talk and no action mode - make no changes, only inform of promises not kept",
     "Output the version of the software",
     "Ignore system lock",

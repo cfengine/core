@@ -698,14 +698,28 @@ static bool SplitProcLine(const char *line,
       have memory usage which can produce large, potentially alignment-altering
       numbers. However, we cannot do this whitespace check in general, because
       non-zombie processes may shift columns in a way that leaves some columns
-      apparently (but not actually) empty.
+      apparently (but not actually) empty. Zombie processes have state Z and
+      command <defunct> on AIX. Similarly processes marked with command
+      <exiting> also have missing columns and need to be skipped. (AIX only).
 
       Take these two examples:
 
 AIX:
-    USER     PID    PPID    PGID  %CPU  %MEM   VSZ NI ST    STIME        TIME COMMAND
- jenkins 1036484  643150 1036484   0.0   0.0   584 20 A  09:29:20    00:00:00 bash
-          254232  729146  729146                   20 Z              00:00:00 <defunct>
+    USER      PID     PPID     PGID  %CPU  %MEM   VSZ NI S    STIME        TIME COMMAND
+    root        1        0        0   0.0   0.0   784 20 A   Nov 28    00:00:00 /etc/init
+    root  1835344        1  1835344   0.0   0.0   944 20 A   Nov 28    00:00:00 /usr/lib/errdemon
+    root  2097594        1  1638802   0.0   0.0   596 20 A   Nov 28    00:00:05 /usr/sbin/syncd 60
+    root  3408328        1  3408328   0.0   0.0   888 20 A   Nov 28    00:00:00 /usr/sbin/srcmstr
+    root  4325852  3408328  4325852   0.0   0.0   728 20 A   Nov 28    00:00:00 /usr/sbin/syslogd
+    root  4784534  3408328  4784534   0.0   0.0  1212 20 A   Nov 28    00:00:00 sendmail: accepting connections
+    root  5898690        1  5898690   0.0   0.0  1040 20 A   Nov 28    00:00:00 /usr/sbin/cron
+          6095244  8913268  8913268                   20 Z             00:00:00 <defunct>
+    root  6160866  3408328  6160866   0.0   0.0  1612 20 A   Nov 28    00:00:00 /opt/rsct/bin/IBM.ServiceRMd
+          6750680 17826152 17826152                   20 Z             00:00:00 <defunct>
+    root  7143692  3408328  7143692   0.0   0.0   476 20 A   Nov 28    00:00:00 /var/perf/pm/bin/pmperfrec
+    root  7340384  8651136  8651136   0.0   0.0   500 20 A   Nov 28    00:00:00 [trspoolm]
+    root  7602560  8978714  7602560   0.0   0.0   636 20 A   Nov 28    00:00:00 sshd: u0013628 [priv]
+          7733720        -        -                    - A                    - <exiting>
 
 Solaris 9:
     USER   PID %CPU %MEM   SZ  RSS TT      S    STIME        TIME COMMAND
@@ -723,21 +737,21 @@ Solaris 9:
           (see PCA_ZombieSkipEmptyColumns)
         * The platform is known to not shift columns when the process is a
           zombie.
-        * The process is a zombie.
+        * The process is a zombie / exiting process
     */
 
-    bool zombie = false;
+    bool skip = false;
 
     if (pca == PCA_ZombieSkipEmptyColumns)
     {
         // Find out if the process is a zombie.
-        for (int field = 0; names[field]; field++)
+        for (int field = 0; names[field] && !skip; field++)
         {
             if (strcmp(names[field], "S") == 0 ||
                 strcmp(names[field], "ST") == 0)
             {
                 // Check for zombie state.
-                for (int pos = start[field]; pos <= end[field] && pos < linelen; pos++)
+                for (int pos = start[field]; pos <= end[field] && pos < linelen && !skip; pos++)
                 {
                     // 'Z' letter with word boundary on each side.
                     if (isspace(line[pos - 1])
@@ -747,10 +761,29 @@ Solaris 9:
                     {
                         LogDebug(LOG_MOD_PS, "Detected zombie process, "
                                  "skipping parsing of empty ps fields.");
-                        zombie = true;
+                        skip = true;
                     }
                 }
-                break;
+            }
+            else if (strcmp(names[field], "COMMAND") == 0)
+            {
+                // Check for exiting state.
+                for (int pos = start[field]; pos <= end[field] && pos < linelen && !skip; pos++)
+                {
+                    if (!isspace(line[pos])) // Skip spaces
+                    {
+                        if (strncmp(line + pos, "<exiting>", 9) == 0)
+                        {
+                            LogDebug(LOG_MOD_PS, "Detected exiting process, "
+                                     "skipping parsing of empty ps fields.");
+                            skip = true;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                }
             }
         }
     }
@@ -762,7 +795,7 @@ Solaris 9:
         // Some sanity checks.
         if (pos >= linelen)
         {
-            if (pca == PCA_ZombieSkipEmptyColumns && zombie)
+            if (pca == PCA_ZombieSkipEmptyColumns && skip)
             {
                 LogDebug(LOG_MOD_PS, "Assuming '%s' field is empty, "
                     "since ps line '%s' is not long enough to reach under its "
@@ -794,8 +827,8 @@ Solaris 9:
             return false;
         }
 
-        // If zombie, check if field is empty.
-        if (pca == PCA_ZombieSkipEmptyColumns && zombie)
+        // If zombie/exiting, check if field is empty.
+        if (pca == PCA_ZombieSkipEmptyColumns && skip)
         {
             int empty_pos = start[field];
             bool empty = true;

@@ -25,6 +25,7 @@
 	- Fixed a memory leak which occurred when reloading RSA keys from disk
 	- Fixed a memory leak which occurred while loading augments files
 	  (CFE-2913)
+	- Fixed an issue while parsing ps output on AIX (ENT-4295)
 	- Fixed an issue with splay time in cf-execd (CFE-2931)
 	- Fixed error handling and memory leak in cf-key (CFE-2918)
 	- Fixed memory leak in lmdb cleanup (CFE-2918)

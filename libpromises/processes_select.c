@@ -737,7 +737,8 @@ Solaris 9:
           (see PCA_ZombieSkipEmptyColumns)
         * The platform is known to not shift columns when the process is a
           zombie.
-        * The process is a zombie / exiting process
+        * It is a zombie / exiting / idle process
+          (These states provide almost no useful info in ps output)
     */
 
     bool skip = false;
@@ -767,14 +768,15 @@ Solaris 9:
             }
             else if (strcmp(names[field], "COMMAND") == 0)
             {
-                // Check for exiting state.
+                // Check for exiting or idle state.
                 for (int pos = start[field]; pos <= end[field] && pos < linelen && !skip; pos++)
                 {
                     if (!isspace(line[pos])) // Skip spaces
                     {
-                        if (strncmp(line + pos, "<exiting>", 9) == 0)
+                        if (strncmp(line + pos, "<exiting>", 9) == 0 ||
+                            strncmp(line + pos, "<idle>", 6) == 0)
                         {
-                            LogDebug(LOG_MOD_PS, "Detected exiting process, "
+                            LogDebug(LOG_MOD_PS, "Detected exiting/idle process, "
                                      "skipping parsing of empty ps fields.");
                             skip = true;
                         }

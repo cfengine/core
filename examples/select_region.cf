@@ -48,9 +48,9 @@ bundle edit_line myedit(parameter)
 {
   vars:
 
-      "edit_variable" string => "private edit variable is $(parameter)"; 
+      "edit_variable" string => "private edit variable is $(parameter)";
 
-      
+
   replace_patterns:
 
       # comment out lines after start

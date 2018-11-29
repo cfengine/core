@@ -1,7 +1,6 @@
-Run detect_duplicate_keys.sh and wait 30-40 minutes.
+Reports IP addresses of hosts that have the same key (as happens
+when a VM is cloned or CFEngine key burned onto an image).
 
-It will run `cf-key -s` multiple times and will use
-`detect_duplicate_keys.pl` to parse the output.
+Use --module flag to use CFEngine module protocol.
 
-When done, it will show you the IP addresses of hosts that have the same
-key (as happens when a VM is cloned or CFEngine key burned onto an image).
+Takes 30 minutes to run.

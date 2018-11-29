@@ -20,63 +20,73 @@
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
 
+#+begin_src prep
+#@ ```
+#@ echo "MATCHING before region" > /tmp/example_select_region.txt
+#@ echo "BEGIN" >> /tmp/example_select_region.txt
+#@ echo "MATCHING inside region" >> /tmp/example_select_region.txt
+#@ echo "END" >> /tmp/example_select_region.txt
+#@ echo "MATCHING after region" >> /tmp/example_select_region.txt
+#@ ```
+#+end_src
 
-body common control
-
+bundle agent main
+# @brief Demonstrate how edit_line can operate within a region of a file
 {
-      version => "1.2.3";
-      bundlesequence  => { "example"  };
-}
 
-########################################################
-
-bundle agent example
-
-{
-
+  vars:
+      "file" string => "/tmp/example_select_region.txt";
   files:
 
-      "/tmp/testfile"
+      "$(file)"
+        comment => "We want to delete any lines that begin with the string
+                  MATCHING inside the region described by regular expressions
+                  matching the beginning and end of the region.",
+        create    => "true",
+        edit_line => delete_inside_region("^MATCHING.*",
+                                          "^BEGIN.*",
+                                          "^END.*");
 
-      create    => "true",
-      edit_line => myedit("second");
+  reports:
+      "$(file)" printfile => cat( $(this.promiser) );
 }
 
 ########################################################
 
-bundle edit_line myedit(parameter)
+bundle edit_line delete_inside_region(line_reg, begin_reg, end_reg)
+# @brief Delete lines matching `line_reg` when found within the expected region starting with `begin_reg` and `end_reg`
 {
-  vars:
+  delete_lines:
 
-      "edit_variable" string => "private edit variable is $(parameter)";
-
-
-  replace_patterns:
-
-      # comment out lines after start
-
-      "([^#].*)"
-
-      replace_with => comment,
-      select_region => ToEnd("Start.*");
+      "$(line_reg)"
+        select_region => between( $(begin_reg), $(end_reg) );
 
 }
 
-########################################
-# Bodies
-########################################
-
-body replace_with comment
-
+body select_region between(start, end)
+# @brief Select a region exclusively between regular expressions `start` and `end`.
 {
-      replace_value => "# $(match.1)"; # backreference 0
-      occurrences => "all";  # first, last all
+      select_start => "$(start)";
+      select_end => "$(end)";
+@if minimum_version(3.10)
+      select_end_match_eof => "false";
+@endif
 }
 
-########################################################
-
-body select_region ToEnd(x)
-
+body printfile cat(file)
+# @brief Report the contents of a file
+# @param file The full path of the file to report
 {
-      select_start => "$(x)";
+        file_to_print => "$(file)";
+        number_of_lines => "inf";
 }
+
+#+begin_src example_output
+#@ ```
+#@ R: /tmp/example_select_region.txt
+#@ MATCHING before region
+#@ BEGIN
+#@ END
+#@ MATCHING after region
+#@ ```
+#+end_src

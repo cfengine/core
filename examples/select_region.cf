@@ -30,6 +30,7 @@
 #@ ```
 #+end_src
 
+#+begin_src cfengine3
 bundle agent main
 # @brief Demonstrate how edit_line can operate within a region of a file
 {
@@ -80,6 +81,7 @@ body printfile cat(file)
         file_to_print => "$(file)";
         number_of_lines => "inf";
 }
+#+end_src
 
 #+begin_src example_output
 #@ ```

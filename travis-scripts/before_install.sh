@@ -17,7 +17,8 @@ else
     sudo rm -vf /etc/apt/sources.list.d/*riak*
     sudo apt-get --quiet update
     # Needed to build
-    sudo apt-get install -y libssl-dev libpam0g-dev libtokyocabinet-dev
+    sudo apt-get install -y libssl-dev libpam0g-dev
+    sudo apt-get install -y liblmdb-dev
     # Needed to test
     sudo apt-get install -y fakeroot
     # Optional

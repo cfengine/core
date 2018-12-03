@@ -69,9 +69,7 @@ body select_region between(start, end)
 {
       select_start => "$(start)";
       select_end => "$(end)";
-@if minimum_version(3.10)
-      select_end_match_eof => "false";
-@endif
+      select_end_match_eof => "false"; # Valid as of 3.10.0
 }
 
 body printfile cat(file)

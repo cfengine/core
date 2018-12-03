@@ -229,7 +229,7 @@ sub run_example
 
     $ENV{EXAMPLE} = $base;
     $ENV{CFENGINE_COLOR} = 0;
-    my $cmd = "$options{cfagent} -D_cfe_output_testing -nKf $tempfile 2>&1";
+    my $cmd = "$options{cfagent} -D_cfe_output_testing -Kf $tempfile 2>&1";
     open my $ofh, '-|', $cmd;
     my $output = join '', <$ofh>;
     close $ofh;

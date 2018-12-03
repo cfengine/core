@@ -7094,6 +7094,7 @@ static FnCallResult FnCallFileSexist(EvalContext *ctx, ARG_UNUSED const Policy *
         {
             file_found = false;
         }
+        free(val);
         el = JsonIteratorNextValueByType(&iter, JSON_ELEMENT_TYPE_PRIMITIVE, true);
     }
 

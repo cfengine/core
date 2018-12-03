@@ -86,9 +86,9 @@ body printfile cat(file)
 #+begin_src example_output
 #@ ```
 #@ R: /tmp/example_select_region.txt
-#@ MATCHING before region
-#@ BEGIN
-#@ END
-#@ MATCHING after region
+#@ R: MATCHING before region
+#@ R: BEGIN
+#@ R: END
+#@ R: MATCHING after region
 #@ ```
 #+end_src

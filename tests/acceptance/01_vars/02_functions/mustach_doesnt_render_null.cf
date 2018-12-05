@@ -29,7 +29,7 @@ bundle agent check
 
   methods:
 
-      "check" usebundle => dcs_check_regcmp("one two three ", $(test.mustache_string), $(this.promise_filename), "yes");
+      "check" usebundle => dcs_check_regcmp("one two three ", $(test.mustache_string), $(this.promise_filename), "no");
 
     DEBUG|EXTRA::
       "Diff string: $(test.diff_string)";

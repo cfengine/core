@@ -677,7 +677,9 @@ case "$1" in
         $0 start
         ;;
     *)
-        echo "Usage: $0 {start|stop|status|restart|reload|force-reload}" >&2
-        exit 1
+        if [ "x$CALLED_FROM_STATE_RESTORE" != "x1" ]; then
+          echo "Usage: $0 {start|stop|status|restart|reload|force-reload}" >&2
+          exit 1
+        fi
         ;;
 esac

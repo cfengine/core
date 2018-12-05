@@ -38,9 +38,10 @@ libcf_check_la_LIBADD = ../libutils/libutils.la \
 	$(PTHREAD_LIBS)
 
 libcf_check_la_SOURCES = \
-	lmdump.c lmdump.h \
+	backup.c backup.h \
+	cf-check.c \
 	diagnose.c diagnose.h \
-	cf-check.c
+	lmdump.c lmdump.h
 
 if !BUILTIN_EXTENSIONS
   bin_PROGRAMS = cf-check

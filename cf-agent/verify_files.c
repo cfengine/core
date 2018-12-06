@@ -602,9 +602,12 @@ static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp,
 {
     PromiseResult result = PROMISE_RESULT_NOOP;
 
+    JsonElement *destroy_this = NULL;
+
     if (a.template_data == NULL)
     {
         a.template_data = DefaultTemplateData(ctx, NULL);
+        destroy_this = a.template_data;
     }
 
     unsigned char existing_output_digest[EVP_MAX_MD_SIZE + 1] = { 0 };
@@ -658,7 +661,7 @@ static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp,
 
         BufferDestroy(output_buffer);
         free(message);
-
+        JsonDestroy(destroy_this);
         return result;
     }
     else
@@ -666,6 +669,7 @@ static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp,
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Error rendering mustache template '%s'", a.edit_template);
         result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         BufferDestroy(output_buffer);
+        JsonDestroy(destroy_this);
         return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
     }
 }

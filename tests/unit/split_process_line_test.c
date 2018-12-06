@@ -4,6 +4,15 @@
 
 #include <processes_select.c>
 
+static void free_and_null_strings(char **strings)
+{
+    for (int i = 0; i < CF_PROCCOLS; ++i)
+    {
+        free(strings[i]);
+        strings[i] = NULL;
+    }
+}
+
 /* Actual ps output witnessed. */
 static void test_split_line_challenges(void)
 {
@@ -12,8 +21,8 @@ static void test_split_line_challenges(void)
         "USER       PID    SZ    VSZ   RSS NLWP STIME     ELAPSED     TIME COMMAND",
         "operatic 14338 1042534 4170136 2122012 9 Sep15 4-06:11:34 2-09:27:49 /usr/lib/opera/opera"
     };
-    char *name[CF_PROCCOLS]; /* Headers */
-    char *field[CF_PROCCOLS]; /* Content */
+    char *name[CF_PROCCOLS] = { 0 }; /* Headers */
+    char *field[CF_PROCCOLS] = { 0 }; /* Content */
     int start[CF_PROCCOLS] = { 0 };
     int end[CF_PROCCOLS] = { 0 };
     int i, user = 0, nlwp = 5;
@@ -31,14 +40,8 @@ static void test_split_line_challenges(void)
     assert_string_equal(field[nlwp], "9");
 
     /* Finally, tidy away fields and headers: */
-    for (i = 0; field[i] != NULL; i++)
-    {
-        free(field[i]);
-    }
-    for (i = 0; name[i] != NULL; i++)
-    {
-        free(name[i]);
-    }
+    free_and_null_strings(field);
+    free_and_null_strings(name);
 }
 
 static void test_split_line_elapsed(void)
@@ -49,8 +52,8 @@ static void test_split_line_elapsed(void)
         "space    14604 S         0   0     0    1 Sep 02 4-03:40:00 00:00:01 true",
         "block    14604 S         0   0     0    1 Sep02  4-03:40:00 00:00:01 true"
     };
-    char *name[CF_PROCCOLS]; /* Headers */
-    char *field[CF_PROCCOLS]; /* Content */
+    char *name[CF_PROCCOLS] = { 0 }; /* Headers */
+    char *field[CF_PROCCOLS] = { 0 }; /* Content */
     int start[CF_PROCCOLS] = { 0 };
     int end[CF_PROCCOLS] = { 0 };
     int i, user = 0, stime = 7;
@@ -67,16 +70,15 @@ static void test_split_line_elapsed(void)
     /* Copes when STIME is a date with a space in it. */
     assert_string_equal(field[stime], began);
 
+    free_and_null_strings(field);
     assert_true(SplitProcLine(lines[1], pstime, name, start, end, PCA_AllColumnsPresent, field));
     assert_string_equal(field[user], "space");
     /* Copes when STIME is a date with a space in it. */
     assert_string_equal(field[stime], began);
 
     /* Finally, tidy away headers: */
-    for (i = 0; name[i] != NULL; i++)
-    {
-        free(name[i]);
-    }
+    free_and_null_strings(name);
+    free_and_null_strings(field);
 }
 
 static void test_split_line_noelapsed(void)
@@ -87,8 +89,8 @@ static void test_split_line_noelapsed(void)
         "space    14604 S         0   0     0   1 Jul 02 00:00:01 true",
         "block    14604 S         0   0     0   1  Jul02 00:00:01 true"
     };
-    char *name[CF_PROCCOLS]; /* Headers */
-    char *field[CF_PROCCOLS]; /* Content */
+    char *name[CF_PROCCOLS] = { 0 }; /* Headers */
+    char *field[CF_PROCCOLS] = { 0 }; /* Content */
     int start[CF_PROCCOLS] = { 0 };
     int end[CF_PROCCOLS] = { 0 };
     int i, user = 0, stime = 7;
@@ -104,16 +106,15 @@ static void test_split_line_noelapsed(void)
     /* Copes when STIME is a date with a space in it. */
     assert_string_equal(field[stime], "Jul02");
 
+    free_and_null_strings(field);
     assert_true(SplitProcLine(lines[1], pstime, name, start, end, PCA_AllColumnsPresent, field));
     assert_string_equal(field[user], "space");
     /* Copes when STIME is a date with a space in it. */
     assert_string_equal(field[stime], "Jul 02");
 
     /* Finally, tidy away headers: */
-    for (i = 0; name[i] != NULL; i++)
-    {
-        free(name[i]);
-    }
+    free_and_null_strings(name);
+    free_and_null_strings(field);
 }
 
 static void test_split_line_longcmd(void)
@@ -183,8 +184,8 @@ static void test_split_line_longcmd(void)
           " the quick brown fox jumped over the lazy dogs after eating the chickens"
           " the quick brown fox jumped over the lazy dogs after eating the chickens",
     };
-    char *name[CF_PROCCOLS]; /* Headers */
-    char *field[CF_PROCCOLS]; /* Content */
+    char *name[CF_PROCCOLS] = { 0 }; /* Headers */
+    char *field[CF_PROCCOLS] = { 0 }; /* Content */
     int start[CF_PROCCOLS] = { 0 };
     int end[CF_PROCCOLS] = { 0 };
     int i, user = 0, command = 10;
@@ -201,10 +202,8 @@ static void test_split_line_longcmd(void)
     assert_string_equal(field[command], lines[1] + start[command]);
 
     /* Finally, tidy away headers: */
-    for (i = 0; name[i] != NULL; i++)
-    {
-        free(name[i]);
-    }
+    free_and_null_strings(name);
+    free_and_null_strings(field);
 }
 
 static void test_split_line(void)
@@ -235,8 +234,8 @@ static void test_split_line(void)
         "",
         NULL
     };
-    char *name[CF_PROCCOLS]; /* Headers */
-    char *field[CF_PROCCOLS]; /* Content */
+    char *name[CF_PROCCOLS] = { 0 }; /* Headers */
+    char *field[CF_PROCCOLS] = { 0 }; /* Content */
     int start[CF_PROCCOLS] = { 0 };
     int end[CF_PROCCOLS] = { 0 };
     int i, user = 0, vsz = 3, rss = 5, stime = 7, command = 10;
@@ -254,8 +253,11 @@ static void test_split_line(void)
     size_t line = sizeof(lines) / sizeof(const char *);
     /* Higher indexed tests first; test lines[line] then decrement line. */
     assert_false(SplitProcLine(lines[--line], pstime, name, start, end, PCA_AllColumnsPresent, field)); /* NULL */
+
+    free_and_null_strings(field);
     assert_false(SplitProcLine(lines[--line], pstime, name, start, end, PCA_AllColumnsPresent, field)); /* empty */
 
+    free_and_null_strings(field);
     assert_true(SplitProcLine(lines[--line], pstime, name, start, end, PCA_AllColumnsPresent, field)); /* basic */
     {
         /* Each field is as expected: */
@@ -276,28 +278,33 @@ static void test_split_line(void)
     }
     /* See field[user] checks for names of remaining tests. */
 
+    free_and_null_strings(field);
     assert_true(SplitProcLine(lines[--line], pstime, name, start, end, PCA_AllColumnsPresent, field));
     assert_string_equal(field[user], "spacey");
     /* Discards leading and dangling space in command. */
     assert_string_equal(field[command], "echo");
 
+    free_and_null_strings(field);
     assert_true(SplitProcLine(lines[--line], pstime, name, start, end, PCA_AllColumnsPresent, field));
     assert_string_equal(field[user], "inspace");
     /* Preserves spaces within a text field. */
     assert_string_equal(field[command], lines[line] + start[command]);
 
+    free_and_null_strings(field);
     assert_true(SplitProcLine(lines[--line], pstime, name, start, end, PCA_AllColumnsPresent, field));
     /* Handle a text field overflowing to the right. */
     assert_string_equal(field[user], "wordright");
     /* Shouldn't pollute PID: */
     assert_string_equal(field[user + 1], "4");
 
+    free_and_null_strings(field);
     assert_true(SplitProcLine(lines[--line], pstime, name, start, end, PCA_AllColumnsPresent, field));
     /* Handle a text field overflowing under next header. */
     assert_string_equal(field[user], "wordytoright");
     /* Shouldn't pollute PID: */
     assert_string_equal(field[user + 1], "4");
 
+    free_and_null_strings(field);
     assert_true(SplitProcLine(lines[--line], pstime, name, start, end, PCA_AllColumnsPresent, field));
     assert_string_equal(field[user], "numleft");
     /* Handle numeric field overflowing under previous header. */
@@ -305,6 +312,7 @@ static void test_split_line(void)
     /* Shouldn't pollute STAT: */
     assert_string_equal(field[vsz - 1], "S");
 
+    free_and_null_strings(field);
     assert_true(SplitProcLine(lines[--line], pstime, name, start, end, PCA_AllColumnsPresent, field));
     assert_string_equal(field[user], "numboth");
     /* Handle numeric field overflowing under previous header. */
@@ -313,6 +321,7 @@ static void test_split_line(void)
     assert_string_equal(field[rss - 1], "0");
     assert_string_equal(field[rss + 1], "1");
 
+    free_and_null_strings(field);
     assert_true(SplitProcLine(lines[--line], pstime, name, start, end, PCA_AllColumnsPresent, field));
     assert_string_equal(field[user], "timeleft");
     /* Handle time fields overflowing almost under previous header. */
@@ -321,6 +330,7 @@ static void test_split_line(void)
     /* Shouldn't pollute NLWP: */
     assert_string_equal(field[stime - 1], "1");
 
+    free_and_null_strings(field);
     assert_true(SplitProcLine(lines[--line], pstime, name, start, end, PCA_AllColumnsPresent, field));
     assert_string_equal(field[user], "timesleft");
     /* Handle time fields overflowing under previous header. */
@@ -329,6 +339,7 @@ static void test_split_line(void)
     /* Shouldn't pollute NLWP: */
     assert_string_equal(field[stime - 1], "1");
 
+    free_and_null_strings(field);
     assert_true(SplitProcLine(lines[--line], pstime, name, start, end, PCA_AllColumnsPresent, field));
     assert_string_equal(field[user], "timeright");
     /* Handle time field overflowing under next header. */
@@ -337,6 +348,7 @@ static void test_split_line(void)
     assert_string_equal(field[stime + 1], "92-21:17:55");
     assert_string_equal(field[command], "true");
 
+    free_and_null_strings(field);
     assert_true(SplitProcLine(lines[--line], pstime, name, start, end, PCA_AllColumnsPresent, field));
     assert_string_equal(field[user], "timeboth");
     assert_int_equal(command, stime + 3); /* with elapsed and time between */
@@ -353,10 +365,8 @@ static void test_split_line(void)
 
     assert_int_equal(line, 1);
     /* Finally, tidy away headers: */
-    for (i = 0; name[i] != NULL; i++)
-    {
-        free(name[i]);
-    }
+    free_and_null_strings(name);
+    free_and_null_strings(field);
 }
 
 static void test_split_line_serious_overspill(void)
@@ -374,8 +384,8 @@ static void test_split_line_serious_overspill(void)
         NULL
     };
 
-    char *name[CF_PROCCOLS]; /* Headers */
-    char *field[CF_PROCCOLS]; /* Content */
+    char *name[CF_PROCCOLS] = { 0 }; /* Headers */
+    char *field[CF_PROCCOLS] = { 0 }; /* Content */
     int start[CF_PROCCOLS] = { 0 };
     int end[CF_PROCCOLS] = { 0 };
     int user = 0, pid = 1, sz = 4, rss = 5, command = 10;
@@ -398,6 +408,7 @@ static void test_split_line_serious_overspill(void)
         assert_string_equal(field[sz], "19890");
         assert_string_equal(field[rss], "116241");
         assert_string_equal(field[command], lines[1] + 69);
+        free_and_null_strings(field);
     }
 
     {
@@ -407,6 +418,7 @@ static void test_split_line_serious_overspill(void)
         assert_string_equal(field[sz], "19890");
         assert_string_equal(field[rss], "116242");
         assert_string_equal(field[command], lines[2] + 69);
+        free_and_null_strings(field);
     }
 
     {
@@ -416,7 +428,9 @@ static void test_split_line_serious_overspill(void)
         assert_string_equal(field[sz], "19890");
         assert_string_equal(field[rss], "116243");
         assert_string_equal(field[command], lines[3] + 69);
+        free_and_null_strings(field);
     }
+    free_and_null_strings(name);
 }
 
 typedef struct
@@ -461,13 +475,8 @@ static void test_platform_extra_table(void)
         " 22308          Z  0:00",
         NULL
     };
-    char *name[CF_PROCCOLS]; /* Headers */
-    char *field[CF_PROCCOLS]; /* Content */
-    for (int i = 0; i < CF_PROCCOLS; ++i)
-    {
-        name[i] = NULL;
-        field[i] = NULL;
-    }
+    char *name[CF_PROCCOLS] = { 0 }; /* Headers */
+    char *field[CF_PROCCOLS] = { 0 }; /* Content */
     int start[CF_PROCCOLS] = { 0 };
     int end[CF_PROCCOLS] = { 0 };
     int user = 0, pid = 1, sz = 4, rss = 5, command = 10;
@@ -519,6 +528,7 @@ static void test_platform_extra_table(void)
         assert_string_equal(field[sz], "19890");
         assert_string_equal(field[rss], "116241");
         assert_string_equal(field[command], ucb_lines[1] + 25);
+        free_and_null_strings(field);
     }
 
     {
@@ -536,6 +546,7 @@ static void test_platform_extra_table(void)
         assert_string_equal(field[sz], "19890");
         assert_string_equal(field[rss], "116242");
         assert_string_equal(field[command], ucb_lines[2] + 25);
+        free_and_null_strings(field);
     }
 
     {
@@ -553,6 +564,7 @@ static void test_platform_extra_table(void)
         assert_string_equal(field[sz], "19890");
         assert_string_equal(field[rss], "116243");
         assert_string_equal(field[command], ucb_lines[3] + 25);
+        free_and_null_strings(field);
     }
 
     {
@@ -570,6 +582,7 @@ static void test_platform_extra_table(void)
         assert_string_equal(field[sz], "0");
         assert_string_equal(field[rss], "0");
         assert_string_equal(field[command], "<defunct>");
+        free_and_null_strings(field);
     }
 
     {
@@ -587,6 +600,7 @@ static void test_platform_extra_table(void)
         assert_string_equal(field[sz], "0");
         assert_string_equal(field[rss], "0");
         assert_string_equal(field[command], "");
+        free_and_null_strings(field);
     }
 
     {
@@ -604,13 +618,9 @@ static void test_platform_extra_table(void)
         assert_string_equal(field[sz], "0");
         assert_string_equal(field[rss], "0");
         assert_string_equal(field[command], "");
+        free_and_null_strings(field);
     }
-    for (int i=0; i < CF_PROCCOLS; ++i)
-    {
-        free(field[i]);
-        field[i] = NULL;
-    }
-
+    free_and_null_strings(name);
     fclose(cmd_output);
 }
 
@@ -763,10 +773,10 @@ static void test_platform_specific_ps_examples(void)
         }
     };
 
-    char *names[CF_PROCCOLS];
-    char *fields[CF_PROCCOLS];
-    int start[CF_PROCCOLS];
-    int end[CF_PROCCOLS];
+    char *names[CF_PROCCOLS] = { 0 };
+    char *fields[CF_PROCCOLS] = { 0 };
+    int start[CF_PROCCOLS] = { 0 };
+    int end[CF_PROCCOLS] = { 0 };
 
     memset(names, 0, sizeof(names));
     memset(fields, 0, sizeof(fields));
@@ -884,18 +894,10 @@ static void test_platform_specific_ps_examples(void)
                 }
             }
 
-            for (int i = 0; i < CF_PROCCOLS; i++)
-            {
-                free(fields[i]);
-                fields[i] = NULL;
-            }
+            free_and_null_strings(fields);
         }
 
-        for (int i = 0; i < CF_PROCCOLS; i++)
-        {
-            free(names[i]);
-            names[i] = NULL;
-        }
+        free_and_null_strings(names);
     }
 }
 

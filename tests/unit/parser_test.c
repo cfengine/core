@@ -5,19 +5,19 @@
 #include <parser.h>
 
 
-static Policy *TestParsePolicy(const char *filename)
+static bool TestParsePolicy(const char *filename)
 {
     char path[PATH_MAX];
     xsnprintf(path, sizeof(path), "%s/%s", TESTDATADIR, filename);
-
-    return ParserParseFile(AGENT_TYPE_COMMON, path, PARSER_WARNING_ALL, PARSER_WARNING_ALL);
+    Policy *p = ParserParseFile(AGENT_TYPE_COMMON, path, PARSER_WARNING_ALL, PARSER_WARNING_ALL);
+    bool res = (p != NULL);
+    PolicyDestroy(p);
+    return res;
 }
 
 void test_benchmark(void)
 {
-    Policy *p = TestParsePolicy("benchmark.cf");
-    assert_true(p);
-    PolicyDestroy(p);
+    assert_true(TestParsePolicy("benchmark.cf"));
 }
 
 void test_no_bundle_or_body_keyword(void)
@@ -37,8 +37,7 @@ void test_body_invalid_type(void)
 
 void test_constraint_ifvarclass_invalid(void)
 {
-    Policy *p = TestParsePolicy("constraint_ifvarclass_invalid.cf");
-    assert_false(p);
+    assert_false(TestParsePolicy("constraint_ifvarclass_invalid.cf"));
 }
 
 void test_bundle_args_invalid_type(void)

@@ -654,7 +654,7 @@ bundle agent dcs_check_regcmp(regex, thestring, test, expected_mismatch)
       "expected_mismatch" or => { strcmp($(expected_mismatch), "yes"),
                                   strcmp($(expected_mismatch), "true") };
 
-      "__passif" xor => { "equal", "expected_mismatch" };
+      "__passif" xor => { "matched", "expected_mismatch" };
 reports:
     EXTRA|!__passif::
       "$(this.bundle): REGEX: '$(regex)'";

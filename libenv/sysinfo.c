@@ -1350,7 +1350,13 @@ static void OSClasses(EvalContext *ctx)
 #else
 
     char vbuff[CF_MAXVARSIZE];
+
+#ifdef _AIX
+    strlcpy(vbuff, VSYSNAME.version, CF_MAXVARSIZE);
+#else
     strlcpy(vbuff, VSYSNAME.release, CF_MAXVARSIZE);
+#endif
+
 
     for (char *sp = vbuff; *sp != '\0'; sp++)
     {

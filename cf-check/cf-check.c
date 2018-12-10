@@ -1,5 +1,6 @@
 #include <lmdump.h>
 #include <diagnose.h>
+#include <backup.h>
 #include <string_lib.h>
 
 static void print_version()
@@ -18,6 +19,7 @@ static void print_help()
         "Commands:\n"
         "\tdump - Print the contents of a database file\n"
         "\tdiagnose - Assess the health of one or more database files\n"
+        "\tbackup - Copy database files to a timestamped folder\n"
         "\tversion - Print version information\n"
         "\thelp - Print this help menu\n"
         "\n"
@@ -58,6 +60,10 @@ int main(int argc, char **argv)
     if (StringSafeEqual_IgnoreCase(command, "diagnose"))
     {
         return diagnose_main(cmd_argc, cmd_argv);
+    }
+    if (StringSafeEqual_IgnoreCase(command, "backup"))
+    {
+        return backup_main(cmd_argc, cmd_argv);
     }
 
     if (StringSafeEqual_IgnoreCase(command, "help") ||

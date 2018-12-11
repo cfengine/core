@@ -66,6 +66,19 @@ LoggingContext *GetCurrentThreadContext(void)
     return lctx;
 }
 
+void LoggingFreeCurrentThreadContext(void)
+{
+    pthread_once(&log_context_init_once, &LoggingInitializeOnce);
+    LoggingContext *lctx = pthread_getspecific(log_context_key);
+    if (lctx == NULL)
+    {
+        return;
+    }
+    // lctx->pctx is usually stack allocated and shouldn't be freed
+    FREE_AND_NULL(lctx);
+    pthread_setspecific(log_context_key, NULL);
+}
+
 void LoggingSetAgentType(const char *type)
 {
     strlcpy(AgentType, type, sizeof(AgentType));

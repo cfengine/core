@@ -41,7 +41,8 @@ libcf_check_la_SOURCES = \
 	backup.c backup.h \
 	cf-check.c \
 	diagnose.c diagnose.h \
-	lmdump.c lmdump.h
+	lmdump.c lmdump.h \
+	utilities.c utilities.h
 
 if !BUILTIN_EXTENSIONS
   bin_PROGRAMS = cf-check

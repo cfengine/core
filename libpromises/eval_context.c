@@ -1007,11 +1007,13 @@ void EvalContextDestroy(EvalContext *ctx)
         free(ctx->launch_directory);
         free(ctx->entry_point);
 
+        // Freeing logging context doesn't belong here...
         {
             LoggingPrivContext *pctx = LoggingPrivGetContext();
             free(pctx);
             LoggingPrivSetContext(NULL);
         }
+        LoggingFreeCurrentThreadContext();
 
         EvalContextDeleteIpAddresses(ctx);
 

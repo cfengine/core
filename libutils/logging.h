@@ -92,6 +92,7 @@ LogLevel LogLevelFromString(const char *level);
 bool LoggingFormatTimestamp(char dest[64], size_t n, struct tm *timestamp);
 
 LoggingContext *GetCurrentThreadContext(void);
+void LoggingFreeCurrentThreadContext(void);
 
 void Log(LogLevel level, const char *fmt, ...) FUNC_ATTR_PRINTF(2, 3);
 void LogDebug(enum LogModule mod, const char *fmt, ...) FUNC_ATTR_PRINTF(2, 3);

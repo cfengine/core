@@ -624,6 +624,7 @@ int ExpandLinks(char *dest, const char *from, int level)
 
         if (strcmp(node, "..") == 0)
         {
+            strcat(dest, "/..");
             continue;
         }
         else

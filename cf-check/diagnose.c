@@ -24,6 +24,8 @@ int diagnose_main(int argc, char **argv)
 #include <lmdb.h>
 #include <sys/wait.h>
 #include <signal.h>
+#include <utilities.h>
+#include <sequence.h>
 
 #define CF_CHECK_RUN_CODES(macro)                         \
     macro(OK)                                             \
@@ -316,19 +318,15 @@ static int fork_and_diagnose(const char *path)
     return CF_CHECK_OK;
 }
 
-int diagnose_main(int argc, char **argv)
+size_t diagnose_files(Seq* filenames)
 {
-    if (argc <= 1)
+    size_t corruptions = 0;
+    const size_t length = SeqLength(filenames);
+    for (int i = 0; i < length; ++i)
     {
-        printf("Need to supply filename(s)\n");
-        return 1;
-    }
-    int corruptions = 0;
-    const int total = argc - 1;
-    for (int i = 1; i < argc; ++i)
-    {
-        const int r = fork_and_diagnose(argv[i]);
-        printf("Status of '%s': %s\n", argv[i], CF_CHECK_STRING(r));
+        const char *filename = SeqAt(filenames, i);
+        const int r = fork_and_diagnose(filename);
+        printf("Status of '%s': %s\n", filename, CF_CHECK_STRING(r));
 
         if (r != CF_CHECK_OK)
         {
@@ -337,13 +335,21 @@ int diagnose_main(int argc, char **argv)
     }
     if (corruptions == 0)
     {
-        printf("All %d databases healthy\n", total);
+        printf("All %zu databases healthy\n", length);
     }
     else
     {
-        printf("Problems detected in %d/%d databases\n", corruptions, total);
+        printf("Problems detected in %zu/%zu databases\n", corruptions, length);
     }
     return corruptions;
+}
+
+int diagnose_main(int argc, char **argv)
+{
+    Seq *files = argv_to_lmdb_files(argc, argv);
+    const int ret = diagnose_files(files);
+    SeqDestroy(files);
+    return ret;
 }
 
 #endif

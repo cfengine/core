@@ -1,0 +1,6 @@
+ClassExpr,SORT,Token,Value
+any,1,net.ipv4.ip_forward,ANYVALUE-sort1
+any,a,net.ipv4.ip_forward,ANYVALUE-sorta
+any,A,net.ipv4.ip_forward,ANYVALUE-sortA
+supercalifragilisticexpialidociousNOTDEFINED,0,net.ipv4.ip_forward,SHOULD_BE_FILTERED_OUT
+any,0,net.ipv4.ip_forward,ANYVALUE-sort0

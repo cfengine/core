@@ -1,0 +1,5 @@
+ClassExpr,Token,Value
+any,net.ipv4.ip_forward,ANYVALUE
+supercalifragilisticexpialidociousNOTDEFINED,net.ipv4.ip_forward,SHOULD_BE_FILTERED_OUT
+supercalifragilisticexpialidociousNOTDEFINED,net.ipv4.ip_forward,SHOULD,BE,FILTERED,OUT
+cfengine,net.ipv4.ip_forward,INVALID,SHOULD,BE,FILTERED,OUT

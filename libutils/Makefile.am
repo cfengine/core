@@ -78,6 +78,7 @@ libutils_la_SOURCES = \
 	stack.c stack.h \
 	statistics.c statistics.h \
 	string_lib.c string_lib.h \
+	threaded_deque.c threaded_deque.h \
 	threaded_queue.c threaded_queue.h \
 	unicode.c unicode.h \
 	writer.c writer.h \

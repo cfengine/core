@@ -8,11 +8,8 @@ body common control
 bundle agent test
 {
   meta:
-      "description" string => "Test that arrays defined by modules can contain slashes just like classic arrays.";
-
-      "test_soft_fail"
-        string => "any",
-        meta => { "CFE-2478" };
+      "description" -> { "CFE-2768" }
+        string => "Test that arrays defined by modules can contain slashes just like classic arrays.";
 
   commands:
 
@@ -48,7 +45,7 @@ bundle agent check
 {
   vars:
     # Construct strings from the array values for comparison and test pass/fail
-    "expected" string => "array_value array_path_key_value another_array_path_key_value";
+    "expected" string => "array_key_value array_path_key_value another_array_path_key_value";
     "actual" string => "$(echo.array[key]) $(echo.array[/path/key]) $(test.array[/path/key])";
 
   methods:

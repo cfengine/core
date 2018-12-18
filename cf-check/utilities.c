@@ -1,5 +1,9 @@
 #include <platform.h>
 #include <utilities.h>
+#include <dir.h>
+#include <sequence.h>
+#include <string_lib.h>
+#include <alloc.h>
 
 bool copy_file(const char *src, const char *dst)
 {
@@ -120,4 +124,74 @@ bool copy_file_to_folder(const char *src, const char *dst_dir)
     }
 
     return true;
+}
+
+Seq *argv_to_seq(int argc, char **argv)
+{
+    assert(argc > 0);
+    assert(argv != NULL);
+    assert(argv[0] != NULL);
+
+    Seq *args = SeqNew(argc, NULL);
+    for(int i = 0; i < argc; ++i)
+    {
+        SeqAppend(args, argv[i]);
+    }
+    return args;
+}
+
+char *join_paths_alloc(const char *dir, const char *leaf)
+{
+    if (StringEndsWith(dir, "/"))
+    {
+        return StringConcatenate(2, dir, leaf);
+    }
+    return StringConcatenate(3, dir, "/", leaf);
+}
+
+Seq *ls(const char *dir, const char *extension)
+{
+    Dir *dirh = DirOpen(dir);
+    if (dirh == NULL)
+    {
+        return NULL;
+    }
+
+    Seq *contents = SeqNew(10, free);
+
+    const struct dirent *dirp;
+
+    while ((dirp = DirRead(dirh)) != NULL)
+    {
+        const char *name = dirp->d_name;
+        if (extension == NULL || StringEndsWithCase(name, extension, true))
+        {
+            SeqAppend(contents, join_paths_alloc(dir, name));
+        }
+    }
+    DirClose(dirh);
+
+    return contents;
+}
+
+Seq *default_lmdb_files()
+{
+    const char *state = "/var/cfengine/state/";
+    printf("No filenames specified, defaulting to .lmdb files in %s\n", state);
+    Seq *files = ls(state, ".lmdb");
+    if (files == NULL)
+    {
+        printf("Could not open %s\n", state);
+    }
+    return files;
+}
+
+Seq *argv_to_lmdb_files(int argc, char **argv)
+{
+    if (argc <= 1)
+    {
+        return default_lmdb_files();
+    }
+
+    return argv_to_seq(argc - 1, argv + 1);
 }

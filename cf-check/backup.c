@@ -58,36 +58,32 @@ const char *create_backup_dir()
     return backup_dir;
 }
 
-int backup_files(Seq *filenames)
+int backup_files(int count, char **files)
 {
-    assert(filenames != NULL);
-    const size_t length = SeqLength(filenames);
-
-    // Attempting to back up 0 files is considered a failure:
-    assert_or_return(length > 0, 1);
+    if (count <= 0)
+    {
+        printf("Need to supply filename(s)\n");
+        return 1;
+    }
 
     const char *backup_dir = create_backup_dir();
 
     printf("Backing up to '%s'\n", backup_dir);
 
-    for (int i = 0; i < length; ++i)
+    for (int i = 0; i < count; ++i)
     {
-        const char *file = SeqAt(filenames, i);
-        if (!copy_file_to_folder(file, backup_dir))
+        if (!copy_file_to_folder(files[i], backup_dir))
         {
-            printf("Copying '%s' failed\n", file);
+            printf("Copying '%s' failed\n", files[i]);
             return 1;
         }
     }
     return 0;
 }
 
-int backup_main(int argc, char **argv)
+int backup_main(int count, char **argv)
 {
-    Seq *files = argv_to_lmdb_files(argc, argv);
-    const int ret = backup_files(files);
-    SeqDestroy(files);
-    return ret;
+    return backup_files(count - 1, argv + 1);
 }
 
 #endif

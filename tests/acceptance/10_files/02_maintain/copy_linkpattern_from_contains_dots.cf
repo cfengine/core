@@ -1,0 +1,97 @@
+#######################################################
+#
+# Test copylink_pattern can handle source symlink that contains '/../'
+# CFE-2960
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  files:
+      "$(G.testdir)/linkdir/"
+      comment => "Create a directory.";
+      "$(G.testdir)/linkdir/another/"
+      comment => "Create another directory.";
+      "$(G.testdir)/linkdir/another/target"
+      comment => "A target file.",
+      create => "true";
+      "$(G.testdir)/linkdir/link"
+      comment => "Create a relative link to the target.",
+      link_from => ln_s("$(G.testdir)/linkdir/another/target");
+}
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+      "description"
+        string => "Test copylink_pattern can handle source symlink that contains'/../'",
+        meta => { "CFE-2960" };
+
+  vars:
+      "mode" int => "0600";
+      "from" string => "$(G.testdir)/linkdir/../linkdir/link";
+
+  files:
+      "$(G.testdir)/copy_file"
+      comment => "Copy the file behind the link.",
+      perms => test_perms($(mode)),
+      copy_from => cp_2_file("$(from)");
+}
+
+body link_from ln_s(x) {
+      link_type => "relative";
+      source => "$(x)";
+      when_no_source => "nop";
+}
+
+body copy_from cp_2_file(x) {
+      source => "$(x)";
+      compare => "binary";
+      copy_backup => "false";
+      copylink_patterns => { ".*" };
+}
+
+body perms test_perms(m) {
+      mode => "$(m)";
+      owners => { "0" };
+      groups => { "0" };
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+    !windows::
+      "expect[modeoct]" string => "\d+$(test.mode)";
+      "expect[uid]" string => "0";
+      "expect[gid]" string => "0";
+    any::
+      "expect[nlink]" string => "1";
+      "expect[size]" string => "0";
+
+      "fields" slist => getindices("expect");
+      "result[$(fields)]" string => filestat("$(G.testfile)$(const.dirsep)copy_file", "$(fields)");
+
+  classes:
+      "not_ok" not => regcmp("$(expect[$(fields)])", "$(result[$(fields)])");
+
+  reports:
+    DEBUG::
+      "expected: $(fields) = '$(expect[$(fields)])'";
+      "got:      $(fields) = '$(result[$(fields)])'";
+    !not_ok::
+      "$(this.promise_filename) Pass";
+    not_ok::
+      "$(this.promise_filename) FAIL";
+}

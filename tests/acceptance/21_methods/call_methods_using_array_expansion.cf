@@ -1,0 +1,66 @@
+#######################################################
+#
+# Redmine 6369 - make sure that arrays don't accumulate
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  files:
+      "$(G.testdir)/reports.txt"
+        delete => tidy;
+}
+bundle agent test
+{
+  meta:
+
+      "description" -> { "CFE-636" }
+        string => "Check that methods can be called by expanding classic
+                   arrays";
+
+  vars:
+
+      "b1" string => "b1";
+      "b2" string => "b2";
+      "b[b2]" string => "b2";
+
+  methods:
+
+      "${b1}"
+        usebundle => ${b1};
+      "${b[b2]}"
+        usebundle => ${b[b2]}("param");
+      "${b[b2]}"
+        usebundle => ${b[${b2}]}("param2");
+}
+
+bundle agent check
+{
+  methods:
+
+      "Pass/Fail"
+        usebundle => dcs_check_diff( "$(G.testdir)/reports.txt",
+                                     "$(this.promise_filename).expected.txt",
+                                     $(this.promise_filename));
+}
+
+bundle agent b1{
+  reports:
+    cfengine::
+      "Bundle b1"
+        report_to_file => "$(G.testdir)/reports.txt";
+}
+
+bundle agent b2(ref){
+  reports:
+    cfengine::
+      "Bundle b2 ${ref}"
+        report_to_file => "$(G.testdir)/reports.txt";
+}

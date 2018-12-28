@@ -84,29 +84,6 @@ endnetgrent(void)
 
 #endif
 
-#ifndef HAVE_SETEUID
-
-# if !defined __STDC__ || !__STDC__
-/* This is a separate conditional since some stdc systems
-   reject `defined (const)'.  */
-
-#  ifndef const
-#   define const
-#  endif
-# endif
-
-int seteuid(uid_t uid)
-{
-# ifdef HAVE_SETREUID
-    return setreuid(-1, uid);
-# else
-    Log(LOG_LEVEL_VERBOSE, "(This system does not have setreuid (patches.c)");
-    return -1;
-# endif
-}
-
-#endif
-
 /***********************************************************/
 
 #ifndef HAVE_SETEGID

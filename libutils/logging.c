@@ -208,14 +208,13 @@ bool LoggingFormatTimestamp(char dest[64], size_t n, struct tm *timestamp)
 
 static void LogToConsole(const char *msg, LogLevel level, bool color)
 {
-    FILE *output_file = stdout; // Messages should ALL go to stdout else they are disordered
     struct tm now;
     time_t now_seconds = time(NULL);
     localtime_r(&now_seconds, &now);
 
     if (color)
     {
-        fprintf(output_file, "%s", LogLevelToColor(level));
+        fprintf(stdout, "%s", LogLevelToColor(level));
     }
     if (level >= LOG_LEVEL_INFO && VPREFIX[0])
     {
@@ -233,7 +232,7 @@ static void LogToConsole(const char *msg, LogLevel level, bool color)
     if (color)
     {
         // Turn off the color again.
-        fprintf(output_file, "\x1b[0m");
+        fprintf(stdout, "\x1b[0m");
     }
 
     fflush(stdout);

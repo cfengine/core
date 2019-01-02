@@ -756,6 +756,9 @@ AC_REPLACE_FUNCS(strnlen)
 
 cf3_FUNC_STRNDUP
 
+AC_CHECK_DECLS(seteuid)
+AC_REPLACE_FUNCS(seteuid)
+
 AC_CHECK_DECLS(setlinebuf)
 AC_REPLACE_FUNCS(setlinebuf)
 

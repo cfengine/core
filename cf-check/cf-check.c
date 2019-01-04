@@ -1,6 +1,7 @@
 #include <lmdump.h>
 #include <diagnose.h>
 #include <backup.h>
+#include <repair.h>
 #include <string_lib.h>
 
 static void print_version()
@@ -20,6 +21,7 @@ static void print_help()
         "\tdump - Print the contents of a database file\n"
         "\tdiagnose - Assess the health of one or more database files\n"
         "\tbackup - Copy database files to a timestamped folder\n"
+        "\trepair - Diagnose, then backup and delete any corrupt databases\n"
         "\tversion - Print version information\n"
         "\thelp - Print this help menu\n"
         "\n"
@@ -28,7 +30,8 @@ static void print_help()
         "\n"
         "Examples:\n"
         "\t$ cf-check dump -a /var/cfengine/state/cf_lastseen.lmdb\n"
-        "\t$ cf-check diagnose /var/cfengine/state/*.lmdb\n"
+        "\t$ cf-check diagnose\n"
+        "\t$ cf-check repair\n"
         "\n"
     );
 }
@@ -64,6 +67,11 @@ int main(int argc, char **argv)
     if (StringSafeEqual_IgnoreCase(command, "backup"))
     {
         return backup_main(cmd_argc, cmd_argv);
+    }
+    if (StringSafeEqual_IgnoreCase(command, "repair")
+        || StringSafeEqual_IgnoreCase(command, "remediate"))
+    {
+        return repair_main(cmd_argc, cmd_argv);
     }
 
     if (StringSafeEqual_IgnoreCase(command, "help") ||

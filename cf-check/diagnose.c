@@ -26,6 +26,7 @@ int diagnose_main(int argc, char **argv)
 #include <signal.h>
 #include <utilities.h>
 #include <sequence.h>
+#include <alloc.h>
 
 #define CF_CHECK_RUN_CODES(macro)                         \
     macro(OK)                                             \
@@ -318,8 +319,9 @@ static int fork_and_diagnose(const char *path)
     return CF_CHECK_OK;
 }
 
-size_t diagnose_files(Seq* filenames)
+size_t diagnose_files(Seq* filenames, Seq** corrupt)
 {
+    assert(corrupt == NULL || *corrupt == NULL);
     size_t corruptions = 0;
     const size_t length = SeqLength(filenames);
     for (int i = 0; i < length; ++i)
@@ -331,6 +333,14 @@ size_t diagnose_files(Seq* filenames)
         if (r != CF_CHECK_OK)
         {
             ++corruptions;
+            if (corrupt != NULL)
+            {
+                if (*corrupt == NULL)
+                {
+                    *corrupt = SeqNew(length, free);
+                }
+                SeqAppend(*corrupt, xstrdup(filename));
+            }
         }
     }
     if (corruptions == 0)
@@ -347,7 +357,7 @@ size_t diagnose_files(Seq* filenames)
 int diagnose_main(int argc, char **argv)
 {
     Seq *files = argv_to_lmdb_files(argc, argv);
-    const int ret = diagnose_files(files);
+    const int ret = diagnose_files(files, NULL);
     SeqDestroy(files);
     return ret;
 }

@@ -83,6 +83,7 @@
 #include <package_module.h>
 #include <string_lib.h>
 #include <cfnet.h>
+#include <repair.h>
 
 #include <mod_common.h>
 
@@ -102,6 +103,7 @@ extern int PR_NOTKEPT;
 static bool ALLCLASSESREPORT = false; /* GLOBAL_P */
 static bool ALWAYS_VALIDATE = false; /* GLOBAL_P */
 static bool CFPARANOID = false; /* GLOBAL_P */
+static bool PERFORM_DB_CHECK = false;
 
 static const Rlist *ACCESSLIST = NULL; /* GLOBAL_P */
 
@@ -195,6 +197,7 @@ static const struct option OPTIONS[] =
     {"show-evaluated-classes", optional_argument, 0, 0 },
     {"show-evaluated-vars", optional_argument, 0, 0 },
     {"skip-bootstrap-policy-run", no_argument, 0, 0 },
+    {"skip-db-check", optional_argument, 0, 0 },
     {NULL, 0, 0, '\0'}
 };
 
@@ -224,6 +227,7 @@ static const char *const HINTS[] =
     "Show *final* evaluated classes, including those defined in common bundles in policy. Optionally can take a regular expression.",
     "Show *final* evaluated variables, including those defined without dependency to user-defined classes in policy. Optionally can take a regular expression.",
     "Do not run policy as the last step of the bootstrap process",
+    "Do not run database integrity checks and repairs at startup",
     NULL
 };
 
@@ -238,6 +242,10 @@ int main(int argc, char *argv[])
     struct timespec start = BeginMeasure();
 
     GenericAgentConfig *config = CheckOpts(argc, argv);
+    if (PERFORM_DB_CHECK)
+    {
+        repair_default();
+    }
     EvalContext *ctx = EvalContextNew();
 
     // Enable only for cf-agent eval context.
@@ -565,8 +573,9 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
         /* long options only */
         case 0:
-
-            if (strcmp(OPTIONS[longopt_idx].name, "log-modules") == 0)
+        {
+            const char *const option_name = OPTIONS[longopt_idx].name;
+            if (StringSafeEqual(option_name, "log-modules"))
             {
                 bool ret = LogEnableModulesFromString(optarg);
                 if (!ret)
@@ -574,7 +583,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                     DoCleanupAndExit(EXIT_FAILURE);
                 }
             }
-            else if (strcmp(OPTIONS[longopt_idx].name, "show-evaluated-classes") == 0)
+            else if (StringSafeEqual(option_name, "show-evaluated-classes"))
             {
                 if (optarg == NULL)
                 {
@@ -582,7 +591,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 }
                 config->agent_specific.agent.show_evaluated_classes = xstrdup(optarg);
             }
-            else if (strcmp(OPTIONS[longopt_idx].name, "show-evaluated-vars") == 0)
+            else if (StringSafeEqual(option_name, "show-evaluated-vars"))
             {
                 if (optarg == NULL)
                 {
@@ -590,12 +599,34 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 }
                 config->agent_specific.agent.show_evaluated_variables = xstrdup(optarg);
             }
-            else if (strcmp(OPTIONS[longopt_idx].name, "skip-bootstrap-policy-run") == 0)
+            else if (StringSafeEqual(option_name, "skip-bootstrap-policy-run"))
             {
                 config->agent_specific.agent.bootstrap_trigger_policy = false;
             }
-    break;
-
+            else if (StringSafeEqual(option_name, "skip-db-check"))
+            {
+                if (optarg == NULL)
+                {
+                    PERFORM_DB_CHECK = false; // Skip (no arg), check = false
+                }
+                else if (StringSafeEqual_IgnoreCase(optarg, "yes"))
+                {
+                    PERFORM_DB_CHECK = false; // Skip = yes, check = false
+                }
+                else if (StringSafeEqual_IgnoreCase(optarg, "no"))
+                {
+                    PERFORM_DB_CHECK = true; // Skip = no, check = true
+                }
+                else
+                {
+                    Log(LOG_LEVEL_ERR,
+                        "Invalid argument for --skip-db-check(yes/no): '%s'",
+                        optarg);
+                    DoCleanupAndExit(EXIT_FAILURE);
+                }
+            }
+            break;
+        }
         default:
             {
                 Writer *w = FileWriter(stdout);

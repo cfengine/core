@@ -116,8 +116,30 @@ int repair_files(Seq *files)
 int repair_main(int argc, char **argv)
 {
     Seq *files = argv_to_lmdb_files(argc, argv);
+    if (files == NULL)
+    {
+        return 1;
+    }
     const int ret = repair_files(files);
     SeqDestroy(files);
+    return ret;
+}
+
+int repair_default()
+{
+    Seq *files = default_lmdb_files();
+    if (files == NULL)
+    {
+        return 1;
+    }
+    const int ret = repair_files(files);
+    SeqDestroy(files);
+
+    if (ret != 0)
+    {
+        Log(LOG_LEVEL_ERR, "Something went wrong during database repair");
+        Log(LOG_LEVEL_ERR, "Try running `cf-check repair` manually");
+    }
     return ret;
 }
 

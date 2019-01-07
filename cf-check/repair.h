@@ -2,5 +2,6 @@
 #define __REPAIR_H__
 
 int repair_main(int argc, char **argv);
+int repair_default();
 
 #endif

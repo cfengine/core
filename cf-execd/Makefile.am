@@ -29,6 +29,7 @@ AM_CPPFLAGS = \
 	-I$(srcdir)/../libutils \
 	-I$(srcdir)/../libcfnet \
 	-I$(srcdir)/../libenv \
+	-I$(srcdir)/../cf-check \
 	$(PCRE_CPPFLAGS) \
 	$(ENTERPRISE_CPPFLAGS)
 

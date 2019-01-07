@@ -32,8 +32,8 @@ SUBDIRS = libcompat \
 	libcfnet \
 	libenv \
 	libpromises \
-	cf-agent \
 	cf-check \
+	cf-agent \
 	cf-execd \
 	cf-key \
 	cf-monitord \

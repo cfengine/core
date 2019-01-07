@@ -24,23 +24,34 @@
 noinst_LTLIBRARIES = libcf-check.la
 
 AM_CPPFLAGS = -I$(srcdir)/../libutils \
+	$(PCRE_CPPFLAGS) \
+	$(LIBYAML_CPPFLAGS) \
 	$(LMDB_CPPFLAGS)
 
 AM_CFLAGS = \
 	$(LMDB_CFLAGS) \
+	$(PCRE_CFLAGS) \
+	$(LIBYAML_CFLAGS) \
 	$(PTHREAD_CFLAGS)
 
 AM_LDFLAGS = \
+	$(PCRE_LDFLAGS) \
+	$(LIBYAML_LDFLAGS) \
 	$(LMDB_LDFLAGS)
 
 libcf_check_la_LIBADD = ../libutils/libutils.la \
 	$(LMDB_LIBS) \
+	$(PCRE_LIBS) \
+	$(LIBYAML_LIBS) \
 	$(PTHREAD_LIBS)
 
 libcf_check_la_SOURCES = \
-	lmdump.c lmdump.h \
+	backup.c backup.h \
+	cf-check.c \
 	diagnose.c diagnose.h \
-	cf-check.c
+	lmdump.c lmdump.h \
+	utilities.c utilities.h \
+	repair.c repair.h
 
 if !BUILTIN_EXTENSIONS
   bin_PROGRAMS = cf-check

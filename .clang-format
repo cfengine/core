@@ -24,12 +24,6 @@ AllowAllParametersOfDeclarationOnNextLine: true
 IndentCaseLabels: false
 AllowShortCaseLabelsOnASingleLine: false
 AllowShortIfStatementsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
 BreakBeforeBraces: Allman
-BraceWrapping:
-  AfterControlStatement: true
-  AfterFunction: true
-  AfterStruct: true
-  AfterUnion: true
-  AfterEnum: true
-  BeforeElse: true
 ---

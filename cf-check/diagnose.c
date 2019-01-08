@@ -1,11 +1,12 @@
 #include <platform.h>
 #include <diagnose.h>
+#include <logging.h>
 
 #if defined(__MINGW32__)
 
 int diagnose_main(int argc, char **argv)
 {
-    printf("diagnose not supported on Windows\n");
+    Log(LOG_LEVEL_ERR, "cf-check diagnose not supported on Windows\n");
     return 1;
 }
 
@@ -13,7 +14,7 @@ int diagnose_main(int argc, char **argv)
 
 int diagnose_main(int argc, char **argv)
 {
-    printf("diagnose only implemented for LMDB.\n");
+    Log(LOG_LEVEL_ERR, "cf-check diagnose only implemented for LMDB.\n");
     return 1;
 }
 
@@ -332,7 +333,10 @@ size_t diagnose_files(Seq *filenames, Seq **corrupt)
     {
         const char *filename = SeqAt(filenames, i);
         const int r = fork_and_diagnose(filename);
-        printf("Status of '%s': %s\n", filename, CF_CHECK_STRING(r));
+        Log(LOG_LEVEL_INFO,
+            "Status of '%s': %s\n",
+            filename,
+            CF_CHECK_STRING(r));
 
         if (r != CF_CHECK_OK)
         {
@@ -349,12 +353,14 @@ size_t diagnose_files(Seq *filenames, Seq **corrupt)
     }
     if (corruptions == 0)
     {
-        printf("All %zu databases healthy\n", length);
+        Log(LOG_LEVEL_INFO, "All %zu databases healthy", length);
     }
     else
     {
-        printf(
-            "Problems detected in %zu/%zu databases\n", corruptions, length);
+        Log(LOG_LEVEL_ERR,
+            "Problems detected in %zu/%zu databases",
+            corruptions,
+            length);
     }
     return corruptions;
 }

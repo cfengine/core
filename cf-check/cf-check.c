@@ -32,8 +32,7 @@ static void print_help()
         "\t$ cf-check dump -a /var/cfengine/state/cf_lastseen.lmdb\n"
         "\t$ cf-check diagnose\n"
         "\t$ cf-check repair\n"
-        "\n"
-    );
+        "\n");
 }
 
 int main(int argc, char **argv)
@@ -68,8 +67,8 @@ int main(int argc, char **argv)
     {
         return backup_main(cmd_argc, cmd_argv);
     }
-    if (StringSafeEqual_IgnoreCase(command, "repair")
-        || StringSafeEqual_IgnoreCase(command, "remediate"))
+    if (StringSafeEqual_IgnoreCase(command, "repair") ||
+        StringSafeEqual_IgnoreCase(command, "remediate"))
     {
         return repair_main(cmd_argc, cmd_argv);
     }

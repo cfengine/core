@@ -32,16 +32,18 @@ bool copy_file(const char *src, const char *dst)
     bool ret = true;
     do
     {
-        #define BUFSIZE 1024
-        char buf[BUFSIZE] = { 0 };
+#define BUFSIZE 1024
+        char buf[BUFSIZE] = {0};
 
         bytes_in = fread(buf, sizeof(char), sizeof(buf), in);
         bytes_out = fwrite(buf, sizeof(char), bytes_in, out);
         while (bytes_out < bytes_in && !ferror(out))
         {
-            bytes_out += fwrite(buf + bytes_out, sizeof(char), bytes_in - bytes_out, out);
+            bytes_out += fwrite(
+                buf + bytes_out, sizeof(char), bytes_in - bytes_out, out);
         }
-    } while (!feof(in) && !ferror(in) && !ferror(out) && bytes_in == bytes_out);
+    } while (!feof(in) && !ferror(in) && !ferror(out) &&
+             bytes_in == bytes_out);
 
     if (ferror(in))
     {
@@ -62,13 +64,19 @@ bool copy_file(const char *src, const char *dst)
     const int i = fclose(in);
     if (i != 0)
     {
-        printf("Error encountered while closing '%s' (%s)\n", src, strerror(errno));
+        printf(
+            "Error encountered while closing '%s' (%s)\n",
+            src,
+            strerror(errno));
         ret = false;
     }
     const int o = fclose(out);
     if (o != 0)
     {
-        printf("Error encountered while closing '%s' (%s)\n", dst, strerror(errno));
+        printf(
+            "Error encountered while closing '%s' (%s)\n",
+            dst,
+            strerror(errno));
         ret = false;
     }
     return ret;
@@ -109,7 +117,7 @@ bool copy_file_to_folder(const char *src, const char *dst_dir)
         return false;
     }
 
-    char dst[PATH_MAX] = { 0 };
+    char dst[PATH_MAX] = {0};
     const int s = snprintf(dst, PATH_MAX, "%s%s", dst_dir, filename);
     if (s >= PATH_MAX)
     {
@@ -133,7 +141,7 @@ Seq *argv_to_seq(int argc, char **argv)
     assert(argv[0] != NULL);
 
     Seq *args = SeqNew(argc, NULL);
-    for(int i = 0; i < argc; ++i)
+    for (int i = 0; i < argc; ++i)
     {
         SeqAppend(args, argv[i]);
     }
@@ -177,7 +185,8 @@ Seq *ls(const char *dir, const char *extension)
 Seq *default_lmdb_files()
 {
     const char *state = "/var/cfengine/state/";
-    printf("No filenames specified, defaulting to .lmdb files in %s\n", state);
+    printf(
+        "No filenames specified, defaulting to .lmdb files in %s\n", state);
     Seq *files = ls(state, ".lmdb");
     if (files == NULL)
     {

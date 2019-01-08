@@ -1,7 +1,7 @@
 #include <platform.h>
 #include <diagnose.h>
 
-#if defined (__MINGW32__)
+#if defined(__MINGW32__)
 
 int diagnose_main(int argc, char **argv)
 {
@@ -9,7 +9,7 @@ int diagnose_main(int argc, char **argv)
     return 1;
 }
 
-#elif ! defined (LMDB)
+#elif !defined(LMDB)
 
 int diagnose_main(int argc, char **argv)
 {
@@ -28,6 +28,7 @@ int diagnose_main(int argc, char **argv)
 #include <sequence.h>
 #include <alloc.h>
 
+// clang-format off
 #define CF_CHECK_RUN_CODES(macro)                         \
     macro(OK)                                             \
     macro(SIGNAL_HANGUP)                                  \
@@ -101,6 +102,7 @@ typedef enum {
 static const char *CF_CHECK_STR[] = {
     CF_CHECK_RUN_CODES(CF_CHECK_CREATE_STRING)
 };
+// clang-format on
 
 static bool code_is_errno(int r)
 {
@@ -160,7 +162,8 @@ static const char *CF_CHECK_STRING(int code)
 
 static int signal_to_code(int sig)
 {
-    switch (sig) {
+    switch (sig)
+    {
     case SIGHUP:
         return CF_CHECK_SIGNAL_HANGUP;
     case SIGINT:
@@ -228,7 +231,8 @@ static int signal_to_code(int sig)
 
 static int lmdump_errno_to_code(int r)
 {
-    switch (r) {
+    switch (r)
+    {
     case 0:
         return CF_CHECK_OK;
     // LMDB-specific error codes:
@@ -319,7 +323,7 @@ static int fork_and_diagnose(const char *path)
     return CF_CHECK_OK;
 }
 
-size_t diagnose_files(Seq* filenames, Seq** corrupt)
+size_t diagnose_files(Seq *filenames, Seq **corrupt)
 {
     assert(corrupt == NULL || *corrupt == NULL);
     size_t corruptions = 0;
@@ -349,7 +353,8 @@ size_t diagnose_files(Seq* filenames, Seq** corrupt)
     }
     else
     {
-        printf("Problems detected in %zu/%zu databases\n", corruptions, length);
+        printf(
+            "Problems detected in %zu/%zu databases\n", corruptions, length);
     }
     return corruptions;
 }

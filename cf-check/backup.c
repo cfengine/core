@@ -3,7 +3,7 @@
 #include <utilities.h>
 #include <backup.h>
 
-#if defined (__MINGW32__)
+#if defined(__MINGW32__)
 
 int backup_main(int argc, char **argv)
 {
@@ -11,7 +11,7 @@ int backup_main(int argc, char **argv)
     return 1;
 }
 
-#elif ! defined (LMDB)
+#elif !defined(LMDB)
 
 int backup_main(int argc, char **argv)
 {
@@ -30,28 +30,38 @@ const char *create_backup_dir()
     {
         if (errno != EEXIST)
         {
-            printf("Could not create directory '%s' (%s)\n", backup_root, strerror(errno));
+            printf(
+                "Could not create directory '%s' (%s)\n",
+                backup_root,
+                strerror(errno));
             return NULL;
         }
     }
 
     time_t ts = time(NULL);
-    if (ts == (time_t) -1)
+    if (ts == (time_t)-1)
     {
         printf("Could not get current time\n");
         return NULL;
     }
 
-    const int n = snprintf(backup_dir, PATH_MAX, "%s%jd/", backup_root, (intmax_t) ts);
+    const int n =
+        snprintf(backup_dir, PATH_MAX, "%s%jd/", backup_root, (intmax_t)ts);
     if (n >= PATH_MAX)
     {
-        printf("Backup path too long: %jd/%jd\n", (intmax_t) n, (intmax_t) PATH_MAX);
+        printf(
+            "Backup path too long: %jd/%jd\n",
+            (intmax_t)n,
+            (intmax_t)PATH_MAX);
         return NULL;
     }
 
     if (mkdir(backup_dir, 0700) != 0)
     {
-        printf("Could not create directory '%s' (%s)\n", backup_dir, strerror(errno));
+        printf(
+            "Could not create directory '%s' (%s)\n",
+            backup_dir,
+            strerror(errno));
         return NULL;
     }
 

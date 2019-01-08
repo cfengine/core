@@ -1,7 +1,7 @@
 #include <platform.h>
 #include <repair.h>
 
-#if defined (__MINGW32__)
+#if defined(__MINGW32__)
 
 int repair_main(int argc, char **argv)
 {
@@ -9,7 +9,7 @@ int repair_main(int argc, char **argv)
     return 1;
 }
 
-#elif ! defined (LMDB)
+#elif !defined(LMDB)
 
 int repair_main(int argc, char **argv)
 {
@@ -44,7 +44,11 @@ int remove_files(Seq *files)
 
         if (unlink(filename) != 0)
         {
-            printf("Failed to remove '%s' (%d - %s).\n", filename, errno, strerror(errno));
+            printf(
+                "Failed to remove '%s' (%d - %s).\n",
+                filename,
+                errno,
+                strerror(errno));
             ++failures;
             continue;
         }
@@ -76,7 +80,10 @@ int repair_files(Seq *files)
     if (corruptions != 0)
     {
         assert(corrupt != NULL);
-        printf("%d corrupt database%s to fix.\n", corruptions, corruptions != 1 ? "s" : "");
+        printf(
+            "%d corrupt database%s to fix.\n",
+            corruptions,
+            corruptions != 1 ? "s" : "");
 
         if (backup_files(files) != 0)
         {

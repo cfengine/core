@@ -2,20 +2,20 @@
 #include <repair.h>
 #include <logging.h>
 
-#if defined(__MINGW32__)
+#if defined(__MINGW32__) || !defined(LMDB)
 
 int repair_main(int argc, char **argv)
 {
-    Log(LOG_LEVEL_ERR, "cf-check repair not supported on Windows\n");
+    Log(LOG_LEVEL_ERR,
+        "cf-check repair not available on this platform/build");
     return 1;
 }
 
-#elif !defined(LMDB)
-
-int repair_main(int argc, char **argv)
+int repair_default()
 {
-    Log(LOG_LEVEL_ERR, "cf-check repair only implemented for LMDB");
-    return 1;
+    Log(LOG_LEVEL_INFO,
+        "database repair not available on this platform/build");
+    return 0;
 }
 
 #else

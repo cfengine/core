@@ -1,11 +1,12 @@
 #include <platform.h>
 #include <repair.h>
+#include <logging.h>
 
 #if defined(__MINGW32__)
 
 int repair_main(int argc, char **argv)
 {
-    printf("repair not supported on Windows\n");
+    Log(LOG_LEVEL_ERR, "cf-check repair not supported on Windows\n");
     return 1;
 }
 
@@ -13,7 +14,7 @@ int repair_main(int argc, char **argv)
 
 int repair_main(int argc, char **argv)
 {
-    printf("repair only implemented for LMDB.\n");
+    Log(LOG_LEVEL_ERR, "cf-check repair only implemented for LMDB");
     return 1;
 }
 
@@ -40,12 +41,12 @@ int remove_files(Seq *files)
     {
         const char *filename = SeqAt(files, i);
         assert(filename != NULL);
-        printf("Removing: '%s'\n", filename);
+        Log(LOG_LEVEL_INFO, "Removing: '%s'", filename);
 
         if (unlink(filename) != 0)
         {
-            printf(
-                "Failed to remove '%s' (%d - %s).\n",
+            Log(LOG_LEVEL_ERR,
+                "Failed to remove '%s' (%d - %s)",
                 filename,
                 errno,
                 strerror(errno));
@@ -63,7 +64,7 @@ int remove_files(Seq *files)
     }
     if (failures != 0)
     {
-        printf("Failed to remove %d files.\n", failures);
+        Log(LOG_LEVEL_ERR, "Failed to remove %d files", failures);
     }
     return failures;
 }
@@ -80,14 +81,14 @@ int repair_files(Seq *files)
     if (corruptions != 0)
     {
         assert(corrupt != NULL);
-        printf(
-            "%d corrupt database%s to fix.\n",
+        Log(LOG_LEVEL_NOTICE,
+            "%d corrupt database%s to fix",
             corruptions,
             corruptions != 1 ? "s" : "");
 
         if (backup_files(files) != 0)
         {
-            printf("Backup failed, stopping.\n");
+            Log(LOG_LEVEL_ERR, "Backup failed, stopping");
             SeqDestroy(corrupt);
             return 1;
         }
@@ -97,18 +98,18 @@ int repair_files(Seq *files)
         SeqDestroy(corrupt);
         if (ret == 0)
         {
-            printf("Database repair successful.\n");
+            Log(LOG_LEVEL_NOTICE, "Database repair successful");
         }
         else
         {
-            printf("Database repair failed.\n");
+            Log(LOG_LEVEL_ERR, "Database repair failed");
         }
 
         return ret;
     }
 
     assert(corrupt == NULL);
-    printf("No corruption - nothing to do.\n");
+    Log(LOG_LEVEL_INFO, "No corruption - nothing to do");
     return 0;
 }
 

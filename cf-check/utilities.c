@@ -4,25 +4,26 @@
 #include <sequence.h>
 #include <string_lib.h>
 #include <alloc.h>
+#include <logging.h>
 
 bool copy_file(const char *src, const char *dst)
 {
     assert(src != NULL);
     assert(dst != NULL);
 
-    printf("Copying: '%s' -> '%s'\n", src, dst);
+    Log(LOG_LEVEL_INFO, "Copying: '%s' -> '%s'", src, dst);
 
     FILE *in = fopen(src, "r");
     if (in == NULL)
     {
-        printf("Could not open '%s' (%s)\n", src, strerror(errno));
+        Log(LOG_LEVEL_ERR, "Could not open '%s' (%s)", src, strerror(errno));
         return false;
     }
 
     FILE *out = fopen(dst, "w");
     if (out == NULL)
     {
-        printf("Could not open '%s' (%s)\n", dst, strerror(errno));
+        Log(LOG_LEVEL_ERR, "Could not open '%s' (%s)", dst, strerror(errno));
         fclose(in);
         return false;
     }
@@ -47,25 +48,25 @@ bool copy_file(const char *src, const char *dst)
 
     if (ferror(in))
     {
-        printf("Error encountered while reading '%s'\n", src);
+        Log(LOG_LEVEL_ERR, "Error encountered while reading '%s'", src);
         ret = false;
     }
     else if (ferror(out))
     {
-        printf("Error encountered while writing '%s'\n", dst);
+        Log(LOG_LEVEL_ERR, "Error encountered while writing '%s'", dst);
         ret = false;
     }
     else if (bytes_in != bytes_out)
     {
-        printf("Did not copy the whole file\n");
+        Log(LOG_LEVEL_ERR, "Did not copy the whole file");
         ret = false;
     }
 
     const int i = fclose(in);
     if (i != 0)
     {
-        printf(
-            "Error encountered while closing '%s' (%s)\n",
+        Log(LOG_LEVEL_ERR,
+            "Error encountered while closing '%s' (%s)",
             src,
             strerror(errno));
         ret = false;
@@ -73,8 +74,8 @@ bool copy_file(const char *src, const char *dst)
     const int o = fclose(out);
     if (o != 0)
     {
-        printf(
-            "Error encountered while closing '%s' (%s)\n",
+        Log(LOG_LEVEL_ERR,
+            "Error encountered while closing '%s' (%s)",
             dst,
             strerror(errno));
         ret = false;
@@ -113,7 +114,7 @@ bool copy_file_to_folder(const char *src, const char *dst_dir)
     const char *filename = filename_part(src);
     if (filename == NULL)
     {
-        printf("Cannot find filename in '%s'\n", src);
+        Log(LOG_LEVEL_ERR, "Cannot find filename in '%s'", src);
         return false;
     }
 
@@ -121,13 +122,13 @@ bool copy_file_to_folder(const char *src, const char *dst_dir)
     const int s = snprintf(dst, PATH_MAX, "%s%s", dst_dir, filename);
     if (s >= PATH_MAX)
     {
-        printf("Copy destination path too long: '%s...'\n", dst);
+        Log(LOG_LEVEL_ERR, "Copy destination path too long: '%s...'", dst);
         return false;
     }
 
     if (!copy_file(src, dst))
     {
-        printf("Copying '%s' failed\n", filename);
+        Log(LOG_LEVEL_ERR, "Copying '%s' failed", filename);
         return false;
     }
 
@@ -185,12 +186,13 @@ Seq *ls(const char *dir, const char *extension)
 Seq *default_lmdb_files()
 {
     const char *state = "/var/cfengine/state/";
-    printf(
-        "No filenames specified, defaulting to .lmdb files in %s\n", state);
+    Log(LOG_LEVEL_INFO,
+        "No filenames specified, defaulting to .lmdb files in %s",
+        state);
     Seq *files = ls(state, ".lmdb");
     if (files == NULL)
     {
-        printf("Could not open %s\n", state);
+        Log(LOG_LEVEL_ERR, "Could not open %s", state);
     }
     return files;
 }

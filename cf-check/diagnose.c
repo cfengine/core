@@ -2,20 +2,20 @@
 #include <diagnose.h>
 #include <logging.h>
 
-#if defined(__MINGW32__)
+#if defined(__MINGW32__) || !defined(LMDB)
 
 int diagnose_main(int argc, char **argv)
 {
-    Log(LOG_LEVEL_ERR, "cf-check diagnose not supported on Windows\n");
+    Log(LOG_LEVEL_ERR,
+        "cf-check diagnose not available on this platform/build");
     return 1;
 }
 
-#elif !defined(LMDB)
-
-int diagnose_main(int argc, char **argv)
+size_t diagnose_files(Seq *filenames, Seq **corrupt)
 {
-    Log(LOG_LEVEL_ERR, "cf-check diagnose only implemented for LMDB.\n");
-    return 1;
+    Log(LOG_LEVEL_INFO,
+        "database diagnosis not available on this platform/build");
+    return 0;
 }
 
 #else

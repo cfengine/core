@@ -3,6 +3,7 @@
 #include <utilities.h>
 #include <backup.h>
 #include <logging.h>
+#include <file_lib.h>
 
 #if defined(__MINGW32__) || !defined(LMDB)
 
@@ -84,7 +85,7 @@ int backup_files(Seq *filenames)
     for (int i = 0; i < length; ++i)
     {
         const char *file = SeqAt(filenames, i);
-        if (!copy_file_to_folder(file, backup_dir))
+        if (!File_CopyToDir(file, backup_dir))
         {
             Log(LOG_LEVEL_ERR, "Copying '%s' failed", file);
             return 1;

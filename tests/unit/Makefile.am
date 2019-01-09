@@ -343,6 +343,7 @@ file_lib_test_SOURCES = file_lib_test.c \
 	../../libutils/file_lib.c \
 	../../libutils/logging.c \
 	../../libutils/misc_lib.c \
+	../../libutils/path.c \
 	../../libutils/string_lib.c \
 	../../libutils/sequence.c \
 	../../libutils/set.c \

@@ -446,3 +446,17 @@ void SeqRemoveNulls(Seq *s)
     }
     s->length = to;
 }
+
+Seq *SeqFromArgv(int argc, char **argv)
+{
+    assert(argc > 0);
+    assert(argv != NULL);
+    assert(argv[0] != NULL);
+
+    Seq *args = SeqNew(argc, NULL);
+    for (int i = 0; i < argc; ++i)
+    {
+        SeqAppend(args, argv[i]);
+    }
+    return args;
+}

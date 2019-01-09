@@ -39,6 +39,18 @@ typedef enum
  * Reads up to size_max bytes from filename and returns a Writer.
  */
 Writer *FileRead(const char *filename, size_t size_max, bool *truncated);
+
+/**
+ * Copies a files content, without preserving metadata, times or permissions
+ */
+bool File_Copy(const char *src, const char *dst);
+
+/**
+ * Same as CopyFile, except destination is a directory,
+ * and filename will match source
+ */
+bool File_CopyToDir(const char *src, const char *dst_dir);
+
 /**
  * Reads up to size_max bytes from fd and returns a Writer.
  */
@@ -88,6 +100,7 @@ char *MapName(char *s);
 char *MapNameCopy(const char *s);
 char *MapNameForward(char *s);
 
+Seq *ls(const char *dir, const char *extension);
 int safe_open(const char *pathname, int flags, ...);
 FILE *safe_fopen(const char *path, const char *mode);
 

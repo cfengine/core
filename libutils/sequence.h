@@ -237,4 +237,13 @@ int SeqStringLength(Seq *seq);
 
 void SeqRemoveNulls(Seq *s);
 
+/**
+ * @brief Convert the argc + argv in main function to a sequence of strings
+ *
+ * Does not copy, edit or free the elements in argv.
+ * Shallow copy. SeqDestroy is safe, it will not free the contents of argv.
+ *
+ */
+Seq *SeqFromArgv(int argc, char **argv);
+
 #endif

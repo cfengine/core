@@ -29,7 +29,7 @@ AM_CPPFLAGS = $(PCRE_CPPFLAGS) $(OPENSSL_CPPFLAGS)
 AM_LDFLAGS  = $(PCRE_LDFLAGS) $(OPENSSL_LDFLAGS)
 
 libutils_la_LIBADD = ../libcompat/libcompat.la
-libutils_la_LIBS     = $(PCRE_LIBS) $(OPENSSL_LIBS)
+libutils_la_LIBS   = $(PCRE_LIBS) $(OPENSSL_LIBS)
 
 libutils_la_SOURCES = \
 	alloc.c alloc.h \

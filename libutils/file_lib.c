@@ -30,6 +30,7 @@
 #include <libgen.h>
 #include <logging.h>
 #include <string_lib.h>                                         /* memcchr */
+#include <path.h>
 
 #ifndef __MINGW32__
 #include <glob.h>
@@ -65,6 +66,112 @@ Writer *FileRead(const char *filename, size_t max_size, bool *truncated)
     Writer *w = FileReadFromFd(fd, max_size, truncated);
     close(fd);
     return w;
+}
+
+bool File_Copy(const char *src, const char *dst)
+{
+    assert(src != NULL);
+    assert(dst != NULL);
+
+    Log(LOG_LEVEL_INFO, "Copying: '%s' -> '%s'", src, dst);
+
+    FILE *in = fopen(src, "r");
+    if (in == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Could not open '%s' (%s)", src, strerror(errno));
+        return false;
+    }
+
+    FILE *out = fopen(dst, "w");
+    if (out == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Could not open '%s' (%s)", dst, strerror(errno));
+        fclose(in);
+        return false;
+    }
+
+    size_t bytes_in = 0;
+    size_t bytes_out = 0;
+    bool ret = true;
+    do
+    {
+#define BUFSIZE 1024
+        char buf[BUFSIZE] = {0};
+
+        bytes_in = fread(buf, sizeof(char), sizeof(buf), in);
+        bytes_out = fwrite(buf, sizeof(char), bytes_in, out);
+        while (bytes_out < bytes_in && !ferror(out))
+        {
+            bytes_out += fwrite(
+                buf + bytes_out, sizeof(char), bytes_in - bytes_out, out);
+        }
+    } while (!feof(in) && !ferror(in) && !ferror(out) &&
+             bytes_in == bytes_out);
+
+    if (ferror(in))
+    {
+        Log(LOG_LEVEL_ERR, "Error encountered while reading '%s'", src);
+        ret = false;
+    }
+    else if (ferror(out))
+    {
+        Log(LOG_LEVEL_ERR, "Error encountered while writing '%s'", dst);
+        ret = false;
+    }
+    else if (bytes_in != bytes_out)
+    {
+        Log(LOG_LEVEL_ERR, "Did not copy the whole file");
+        ret = false;
+    }
+
+    const int i = fclose(in);
+    if (i != 0)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Error encountered while closing '%s' (%s)",
+            src,
+            strerror(errno));
+        ret = false;
+    }
+    const int o = fclose(out);
+    if (o != 0)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Error encountered while closing '%s' (%s)",
+            dst,
+            strerror(errno));
+        ret = false;
+    }
+    return ret;
+}
+
+bool File_CopyToDir(const char *src, const char *dst_dir)
+{
+    assert(src != NULL);
+    assert(dst_dir != NULL);
+
+    const char *filename = Path_Basename(src);
+    if (filename == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Cannot find filename in '%s'", src);
+        return false;
+    }
+
+    char dst[PATH_MAX] = {0};
+    const int s = snprintf(dst, PATH_MAX, "%s%s", dst_dir, filename);
+    if (s >= PATH_MAX)
+    {
+        Log(LOG_LEVEL_ERR, "Copy destination path too long: '%s...'", dst);
+        return false;
+    }
+
+    if (!File_Copy(src, dst))
+    {
+        Log(LOG_LEVEL_ERR, "Copying '%s' failed", filename);
+        return false;
+    }
+
+    return true;
 }
 
 Writer *FileReadFromFd(int fd, size_t max_size, bool *truncated)
@@ -331,6 +438,31 @@ void switch_symlink_hook();
 #else
 #define TEST_SYMLINK_SWITCH_POINT
 #endif
+
+Seq *ls(const char *dir, const char *extension)
+{
+    Dir *dirh = DirOpen(dir);
+    if (dirh == NULL)
+    {
+        return NULL;
+    }
+
+    Seq *contents = SeqNew(10, free);
+
+    const struct dirent *dirp;
+
+    while ((dirp = DirRead(dirh)) != NULL)
+    {
+        const char *name = dirp->d_name;
+        if (extension == NULL || StringEndsWithCase(name, extension, true))
+        {
+            SeqAppend(contents, Path_JoinAlloc(dir, name));
+        }
+    }
+    DirClose(dirh);
+
+    return contents;
+}
 
 /**
  * Opens a file safely. It will follow symlinks, but only if the symlink is trusted,

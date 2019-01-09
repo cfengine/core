@@ -566,3 +566,17 @@ Seq *SeqStringDeserialize(const char *const serialized)
 
     return seq;
 }
+
+Seq *SeqFromArgv(int argc, char **argv)
+{
+    assert(argc > 0);
+    assert(argv != NULL);
+    assert(argv[0] != NULL);
+
+    Seq *args = SeqNew(argc, NULL);
+    for (int i = 0; i < argc; ++i)
+    {
+        SeqAppend(args, argv[i]);
+    }
+    return args;
+}

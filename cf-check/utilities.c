@@ -13,7 +13,7 @@ Seq *default_lmdb_files()
     Log(LOG_LEVEL_INFO,
         "No filenames specified, defaulting to .lmdb files in %s",
         state);
-    Seq *files = ls(state, ".lmdb");
+    Seq *files = ListDir(state, ".lmdb");
     if (files == NULL)
     {
         Log(LOG_LEVEL_ERR, "Could not open %s", state);

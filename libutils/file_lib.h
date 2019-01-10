@@ -100,7 +100,7 @@ char *MapName(char *s);
 char *MapNameCopy(const char *s);
 char *MapNameForward(char *s);
 
-Seq *ls(const char *dir, const char *extension);
+Seq *ListDir(const char *dir, const char *extension);
 int safe_open(const char *pathname, int flags, ...);
 FILE *safe_fopen(const char *path, const char *mode);
 

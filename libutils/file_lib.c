@@ -439,7 +439,7 @@ void switch_symlink_hook();
 #define TEST_SYMLINK_SWITCH_POINT
 #endif
 
-Seq *ls(const char *dir, const char *extension)
+Seq *ListDir(const char *dir, const char *extension)
 {
     Dir *dirh = DirOpen(dir);
     if (dirh == NULL)

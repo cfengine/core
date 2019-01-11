@@ -2,21 +2,23 @@
 #include <stdio.h>
 #include <utilities.h>
 #include <backup.h>
+#include <logging.h>
+#include <file_lib.h>
 
-#if defined (__MINGW32__)
+#if defined(__MINGW32__) || !defined(LMDB)
 
 int backup_main(int argc, char **argv)
 {
-    printf("backup not supported on Windows\n");
+    Log(LOG_LEVEL_ERR,
+        "cf-check backup not available on this platform/build");
     return 1;
 }
 
-#elif ! defined (LMDB)
-
-int backup_main(int argc, char **argv)
+int backup_files(Seq *filenames)
 {
-    printf("backup only implemented for LMDB.\n");
-    return 1;
+    Log(LOG_LEVEL_INFO,
+        "database backup not available on this platform/build");
+    return 0;
 }
 
 #else
@@ -30,28 +32,38 @@ const char *create_backup_dir()
     {
         if (errno != EEXIST)
         {
-            printf("Could not create directory '%s' (%s)\n", backup_root, strerror(errno));
+            Log(LOG_LEVEL_ERR,
+                "Could not create directory '%s' (%s)",
+                backup_root,
+                strerror(errno));
             return NULL;
         }
     }
 
     time_t ts = time(NULL);
-    if (ts == (time_t) -1)
+    if (ts == (time_t)-1)
     {
-        printf("Could not get current time\n");
+        Log(LOG_LEVEL_ERR, "Could not get current time");
         return NULL;
     }
 
-    const int n = snprintf(backup_dir, PATH_MAX, "%s%jd/", backup_root, (intmax_t) ts);
+    const int n =
+        snprintf(backup_dir, PATH_MAX, "%s%jd/", backup_root, (intmax_t)ts);
     if (n >= PATH_MAX)
     {
-        printf("Backup path too long: %jd/%jd\n", (intmax_t) n, (intmax_t) PATH_MAX);
+        Log(LOG_LEVEL_ERR,
+            "Backup path too long: %jd/%jd",
+            (intmax_t)n,
+            (intmax_t)PATH_MAX);
         return NULL;
     }
 
     if (mkdir(backup_dir, 0700) != 0)
     {
-        printf("Could not create directory '%s' (%s)\n", backup_dir, strerror(errno));
+        Log(LOG_LEVEL_ERR,
+            "Could not create directory '%s' (%s)",
+            backup_dir,
+            strerror(errno));
         return NULL;
     }
 
@@ -68,14 +80,14 @@ int backup_files(Seq *filenames)
 
     const char *backup_dir = create_backup_dir();
 
-    printf("Backing up to '%s'\n", backup_dir);
+    Log(LOG_LEVEL_INFO, "Backing up to '%s'", backup_dir);
 
     for (int i = 0; i < length; ++i)
     {
         const char *file = SeqAt(filenames, i);
-        if (!copy_file_to_folder(file, backup_dir))
+        if (!File_CopyToDir(file, backup_dir))
         {
-            printf("Copying '%s' failed\n", file);
+            Log(LOG_LEVEL_ERR, "Copying '%s' failed", file);
             return 1;
         }
     }

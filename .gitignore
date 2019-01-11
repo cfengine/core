@@ -126,3 +126,6 @@ cscope.*
 # Mac
 .DS_Store
 *.dSYM
+
+# python
+__pycache__

@@ -25,11 +25,13 @@ def get_args():
 
 def run_command_with_args(command, args):
     if command == "info":
-        return commands.info(args.hosts, None)
-    if command == "install":
-        return commands.install(
-            args.hub, args.clients, package=args.package, bootstrap=args.bootstrap)
-    user_error("Unknown command: '{}'".format(command))
+        commands.info(args.hosts, None)
+    elif command == "install":
+        commands.install(args.hub, args.clients, package=args.package, bootstrap=args.bootstrap)
+    elif command == "packages":
+        commands.packages(tags=args.args)
+    else:
+        user_error("Unknown command: '{}'".format(command))
 
 
 def validate_command(command, args):

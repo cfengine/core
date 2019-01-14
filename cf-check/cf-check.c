@@ -3,6 +3,7 @@
 #include <backup.h>
 #include <repair.h>
 #include <string_lib.h>
+#include <logging.h>
 
 static void print_version()
 {
@@ -32,8 +33,7 @@ static void print_help()
         "\t$ cf-check dump -a /var/cfengine/state/cf_lastseen.lmdb\n"
         "\t$ cf-check diagnose\n"
         "\t$ cf-check repair\n"
-        "\n"
-    );
+        "\n");
 }
 
 int main(int argc, char **argv)
@@ -44,10 +44,15 @@ int main(int argc, char **argv)
         return lmdump_main(argc, argv);
     }
 
+    // When run separately it makes sense for cf-check to have INFO messages
+    LogSetGlobalLevel(LOG_LEVEL_INFO);
+    // In agent, NOTICE log level is default, and cf-check functions
+    // will print less information
+
     if (argc < 2)
     {
         print_help();
-        printf("No command given.\n");
+        Log(LOG_LEVEL_ERR, "No command given");
         return 1;
     }
 
@@ -68,8 +73,8 @@ int main(int argc, char **argv)
     {
         return backup_main(cmd_argc, cmd_argv);
     }
-    if (StringSafeEqual_IgnoreCase(command, "repair")
-        || StringSafeEqual_IgnoreCase(command, "remediate"))
+    if (StringSafeEqual_IgnoreCase(command, "repair") ||
+        StringSafeEqual_IgnoreCase(command, "remediate"))
     {
         return repair_main(cmd_argc, cmd_argv);
     }
@@ -91,6 +96,6 @@ int main(int argc, char **argv)
     }
 
     print_help();
-    printf("Unrecognized command: '%s'\n", command);
+    Log(LOG_LEVEL_ERR, "Unrecognized command: '%s'", command);
     return 1;
 }

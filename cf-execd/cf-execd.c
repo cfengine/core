@@ -40,12 +40,15 @@
 #include <loading.h>
 #include <printsize.h>
 #include <cleanup.h>
+#include <repair.h>
+#include <string_lib.h>
 
 #include <cf-windows-functions.h>
 
 #define CF_EXEC_IFELAPSED 0
 #define CF_EXEC_EXPIREAFTER 1
 
+static bool PERFORM_DB_CHECK = false;
 static int NO_FORK = false; /* GLOBAL_A */
 static int ONCE = false; /* GLOBAL_A */
 static int WINSERVICE = true; /* GLOBAL_A */
@@ -99,6 +102,7 @@ static const struct option OPTIONS[] =
     {"ld-library-path", required_argument, 0, 'L'},
     {"color", optional_argument, 0, 'C'},
     {"timestamp", no_argument, 0, 'l'},
+    {"skip-db-check", optional_argument, 0, 0 },
     {NULL, 0, 0, '\0'}
 };
 
@@ -122,6 +126,7 @@ static const char *const HINTS[] =
     "Set the internal value of LD_LIBRARY_PATH for child processes",
     "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
     "Log timestamps on each line of log output",
+    "Do not run database integrity checks and repairs at startup",
     NULL
 };
 
@@ -130,6 +135,11 @@ static const char *const HINTS[] =
 int main(int argc, char *argv[])
 {
     GenericAgentConfig *config = CheckOpts(argc, argv);
+    if (PERFORM_DB_CHECK)
+    {
+        repair_default();
+    }
+
     EvalContext *ctx = EvalContextNew();
     GenericAgentConfigApply(ctx, config);
 
@@ -181,8 +191,9 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_EXECUTOR, GetTTYInteractive());
 
 
+    int longopt_idx;
     while ((c = getopt_long(argc, argv, "dvnKIf:g:D:N:VxL:hFOV1gMWC::l",
-                            OPTIONS, NULL))
+                            OPTIONS, &longopt_idx))
            != -1)
     {
         switch (c)
@@ -309,6 +320,33 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             LoggingEnableTimestamps(true);
             break;
 
+        case 0:
+        {
+            const char *const option_name = OPTIONS[longopt_idx].name;
+            if (StringSafeEqual(option_name, "skip-db-check"))
+            {
+                if (optarg == NULL)
+                {
+                    PERFORM_DB_CHECK = false; // Skip (no arg), check = false
+                }
+                else if (StringSafeEqual_IgnoreCase(optarg, "yes"))
+                {
+                    PERFORM_DB_CHECK = false; // Skip = yes, check = false
+                }
+                else if (StringSafeEqual_IgnoreCase(optarg, "no"))
+                {
+                    PERFORM_DB_CHECK = true; // Skip = no, check = true
+                }
+                else
+                {
+                    Log(LOG_LEVEL_ERR,
+                        "Invalid argument for --skip-db-check(yes/no): '%s'",
+                        optarg);
+                    DoCleanupAndExit(EXIT_FAILURE);
+                }
+            }
+            break;
+        }
         default:
         {
             Writer *w = FileWriter(stdout);

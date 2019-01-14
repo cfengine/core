@@ -35,6 +35,7 @@ AM_LDFLAGS += $(LMDB_LDFLAGS) $(TOKYOCABINET_LDFLAGS) $(QDBM_LDFLAGS) \
 AM_CPPFLAGS = \
 	-I$(srcdir)/../libutils -I$(srcdir)/../libcfnet \
 	-I$(srcdir)/../libenv $(ENTERPRISE_CPPFLAGS) \
+	-I$(srcdir)/../cf-check \
 	$(LMDB_CPPFLAGS) $(TOKYOCABINET_CPPFLAGS) $(QDBM_CPPFLAGS) \
 	$(PCRE_CPPFLAGS) $(OPENSSL_CPPFLAGS) $(SQLITE3_CPPFLAGS) $(LIBACL_CPPFLAGS) $(LIBYAML_CPPFLAGS) $(LIBCURL_CPPFLAGS)
 
@@ -148,7 +149,12 @@ libpromises_la_SOURCES = \
         verify_classes.c verify_classes.h \
         verify_reports.c \
         verify_vars.c verify_vars.h \
-        cf-windows-functions.h
+        cf-windows-functions.h \
+        ../cf-check/backup.c ../cf-check/backup.h \
+        ../cf-check/diagnose.c ../cf-check/diagnose.h \
+        ../cf-check/lmdump.c ../cf-check/lmdump.h \
+        ../cf-check/utilities.c ../cf-check/utilities.h \
+        ../cf-check/repair.c ../cf-check/repair.h
 
 if !NT
 

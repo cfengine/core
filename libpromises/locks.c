@@ -486,8 +486,8 @@ static bool KillLockHolder(const char *lock)
         else
         {
             Log(LOG_LEVEL_ERR,
-                "Failed to kill process with PID %jd",
-                (intmax_t) lock_data.pid);
+                "Failed to kill process with PID: %jd (kill: %s)",
+                (intmax_t) lock_data.pid, GetErrorStr());
             return false;
         }
     }

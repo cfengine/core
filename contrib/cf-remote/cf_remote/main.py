@@ -11,6 +11,10 @@ def get_args():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     ap.add_argument("--hosts", "-H", help="Which hosts to connect to (ssh)", type=str)
+    ap.add_argument("--clients", help="Where to install client package", type=str)
+    ap.add_argument("--hub", help="Where to install hub package", type=str)
+    ap.add_argument("--bootstrap", help="cf-agent --bootstrap argument", type=str)
+    ap.add_argument("--package", help="Local path to package for transfer and install", type=str)
     ap.add_argument("--log-level", help="Specify detail of logging", type=str, default="WARNING")
     ap.add_argument("command", help="Action to perform", type=str, nargs='?', default="info")
     ap.add_argument("args", help="Arguments", type=str, nargs='*')
@@ -22,12 +26,23 @@ def get_args():
 def run_command_with_args(command, args):
     if command == "info":
         return commands.info(args.hosts, None)
+    if command == "install":
+        return commands.install(
+            args.hub, args.clients, package=args.package, bootstrap=args.bootstrap)
     user_error("Unknown command: '{}'".format(command))
 
 
 def validate_command(command, args):
     if command == "info" and not args.hosts:
         user_error("Use --hosts to specify remote hosts")
+    if command == "install":
+        if args.hosts:
+            user_error("Use --clients and --hub instead of --hosts")
+        if not args.clients and not args.hub:
+            user_error("Specify hosts using --hub and --clients")
+        if not args.package:
+            user_error("Need to specify local package file with --package")
+            # TODO: Find this automatically
 
 
 def validate_args(args):

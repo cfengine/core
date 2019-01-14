@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 import sys
+from os.path import basename
 from collections import OrderedDict
 
 import fabric
 from paramiko.ssh_exception import AuthenticationException
 from invoke.exceptions import UnexpectedExit
 
-from cf_remote.utils import os_release, column_print, pretty
+from cf_remote.utils import os_release, column_print, pretty, user_error
 from cf_remote import log
 
 
@@ -129,3 +130,30 @@ def scp(file, remote, connection=None):
             scp(file, remote, connection)
     else:
         connection.put(file)
+
+
+def install_package(host, pkg, data):
+    print("Installing '{}' on '{}'".format(pkg, host))
+    c = connect(host)
+    if ".deb" in pkg:
+        ssh_sudo(c, "dpkg -i {}".format(pkg))
+    else:
+        ssh_sudo(c, "rpm -i {}".format(pkg))
+
+
+def install_host(host, *, hub=False, package=None):
+    if not package:
+        user_error("Must specify package using --package")
+    data = get_info(host)
+    print_info(data)
+
+    print("Copying '{}' to '{}'".format(package, host))
+    scp(package, host)
+    package = basename(package)
+    install_package(host, package, data)
+    data = get_info(host)
+    if data["agent_version"] and len(data["agent_version"]) > 0:
+        print("CFEngine {} was successfully installed on {}".format(data["agent_version"], host))
+    else:
+        print("Installation failed!")
+        sys.exit(1)

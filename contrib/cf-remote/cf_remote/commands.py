@@ -10,12 +10,20 @@ def info(hosts, users=None):
         print_info(data)
 
 
-def install(hub, clients, bootstrap=None, package=None):
+def install(hub, clients, *, bootstrap=None, package=None, hub_package=None, client_package=None):
     assert hub or clients
+    assert not (hub and clients and package)
+    assert package or hub_package or client_package
+    # These assertions are checked in main.py
+
+    if not hub_package:
+        hub_package = package
+    if not client_package:
+        client_package = package
     if hub:
-        install_host(hub, hub=True, package=package)
+        install_host(hub, hub=True, package=hub_package)
     for host in (clients or []):
-        install_host(host, hub=False, package=package)
+        install_host(host, hub=False, package=client_package)
 
 
 def packages(tags=None):

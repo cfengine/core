@@ -15,6 +15,8 @@ def get_args():
     ap.add_argument("--hub", help="Where to install hub package", type=str)
     ap.add_argument("--bootstrap", help="cf-agent --bootstrap argument", type=str)
     ap.add_argument("--package", help="Local path to package for transfer and install", type=str)
+    ap.add_argument("--hub-package", help="Local path to package for --hub", type=str)
+    ap.add_argument("--client-package", help="Local path to package for --clients", type=str)
     ap.add_argument("--log-level", help="Specify detail of logging", type=str, default="WARNING")
     ap.add_argument("command", help="Action to perform", type=str, nargs='?', default="info")
     ap.add_argument("args", help="Arguments", type=str, nargs='*')
@@ -27,7 +29,13 @@ def run_command_with_args(command, args):
     if command == "info":
         commands.info(args.hosts, None)
     elif command == "install":
-        commands.install(args.hub, args.clients, package=args.package, bootstrap=args.bootstrap)
+        commands.install(
+            args.hub,
+            args.clients,
+            package=args.package,
+            bootstrap=args.bootstrap,
+            hub_package=args.hub_package,
+            client_package=args.client_package)
     elif command == "packages":
         commands.packages(tags=args.args)
     else:
@@ -42,8 +50,19 @@ def validate_command(command, args):
             user_error("Use --clients and --hub instead of --hosts")
         if not args.clients and not args.hub:
             user_error("Specify hosts using --hub and --clients")
-        if not args.package:
-            user_error("Need to specify local package file with --package")
+        if args.hub and args.clients and args.package:
+            user_error(
+                "Use --hub-package / --client-package instead to distinguish between hosts")
+        if not (args.package or args.client_package or args.hub_package):
+            user_error(
+                "Specify local package file(s) with --package / --hub-package / --client-package")
+        if args.package and (args.hub_package or args.client_package):
+            user_error(
+                "--package cannot be used in combination with --hub-package / --client-package")
+        if args.clients and not (args.package or args.client_package):
+            user_error("Specify client package using --client-package")
+        if args.hub and not (args.package or args.hub_package):
+            user_error("Specify hub package using --hub-package")
             # TODO: Find this automatically
 
 

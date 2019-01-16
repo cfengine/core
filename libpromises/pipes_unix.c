@@ -799,8 +799,25 @@ static int cf_pwait(pid_t pid)
 
 /*******************************************************************/
 
-/* Closes the pipe and wait()s for PID of the child,
-   in order to reap the zombies. */
+/**
+ * Closes the pipe without waiting the child.
+ *
+ * @param pp pipe to the child process
+ */
+void cf_pclose_nowait(FILE *pp)
+{
+    if (fclose(pp) == EOF)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Could not close the pipe to the executed subcommand (fclose: %s)",
+            GetErrorStr());
+    }
+}
+
+/**
+ * Closes the pipe and wait()s for PID of the child,
+ * in order to reap the zombies.
+ */
 int cf_pclose(FILE *pp)
 {
     int fd = fileno(pp);

@@ -49,7 +49,7 @@ static bool GetSysUsers( int *userListSz, int *numRootProcs, int *numOtherProcs)
     /* SKIP on HP-UX since cf-monitord doesn't count processes correctly! */
     return false;
 #else
-    xsnprintf(cbuff, CF_BUFSIZE, "ps -eo user,pid > %s/users.txt", CFWORKDIR);
+    xsnprintf(cbuff, CF_BUFSIZE, "ps -eo user:30,pid > %s/users.txt", CFWORKDIR);
 #endif
 
     Item *userList = NULL;

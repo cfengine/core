@@ -133,7 +133,7 @@ class Release:
 
     def find(self, tags):
         artifacts = self.artifacts
-        for tag in tags:
+        for tag in tags or []:
             tag = canonify(tag)
             remaining = filter(lambda a: tag in a.tags, artifacts)
             remaining = list(remaining)

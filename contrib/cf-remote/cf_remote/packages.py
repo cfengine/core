@@ -106,10 +106,24 @@ class Artifact:
             part = part.strip()
             if part == "x86":
                 continue
+            if part == "amd64" or part == "x86_64":
+                self.add_tag("64")
             try:
                 _ = int(part)
             except ValueError:
                 self.add_tag(part)
+        if "hub" in self.tags:
+            self.add_tag("policy_server")
+        else:
+            self.add_tag("client")
+            self.add_tag("agent")
+        parts = filename.split(".")
+        if "x86_64" in parts:
+            self.add_tag("x86_64")
+            self.add_tag("64")
+        if "amd64" in parts:
+            self.add_tag("amd64")
+            self.add_tag("64")
 
     def __str__(self):
         return self.filename + " ({})".format(" ".join(self.tags))

@@ -75,6 +75,7 @@ def print_info(data):
 
 
 def connect(host, users=None):
+    log.debug("Connecting to {}".format(host))
     if "@" in host:
         parts = host.split("@")
         assert len(parts) == 2
@@ -96,6 +97,7 @@ def connect(host, users=None):
 
 
 def get_info(host, users=None, connection=None):
+    log.debug("Getting info about {}".format(host))
     if not connection:
         with connect(host, users) as c:
             return get_info(host, users, c)
@@ -134,14 +136,22 @@ def scp(file, remote, connection=None):
 
 def install_package(host, pkg, data):
     print("Installing '{}' on '{}'".format(pkg, host))
-    c = connect(host)
-    if ".deb" in pkg:
-        ssh_sudo(c, "dpkg -i {}".format(pkg))
-    else:
-        ssh_sudo(c, "rpm -i {}".format(pkg))
+    with connect(host) as connection:
+        if ".deb" in pkg:
+            ssh_sudo(connection, "dpkg -i {}".format(pkg))
+        else:
+            ssh_sudo(connection, "rpm -i {}".format(pkg))
 
 
-def install_host(host, *, hub=False, package=None):
+def boootstrap_host(host, policy_server):
+    print("Bootstrapping {} -> {}".format(host, policy_server))
+    with connect(host) as connection:
+        command = "/var/cfengine/bin/cf-agent --bootstrap {}".format(policy_server)
+        output = ssh_sudo(connection, command)
+        print(output or "Something went wrong while bootstrapping")
+
+
+def install_host(host, *, hub=False, package=None, bootstrap=None):
     if not package:
         user_error("Must specify package using --package")
     data = get_info(host)
@@ -157,3 +167,5 @@ def install_host(host, *, hub=False, package=None):
     else:
         print("Installation failed!")
         sys.exit(1)
+    if bootstrap:
+        boootstrap_host(host, policy_server=bootstrap)

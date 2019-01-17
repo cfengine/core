@@ -45,6 +45,8 @@ def run_command_with_args(command, args):
 def validate_command(command, args):
     if command == "info" and not args.hosts:
         user_error("Use --hosts to specify remote hosts")
+    if args.bootstrap and command != "install":
+        user_error("--bootstrap can only be used with install command")
     if command == "install":
         if args.hosts:
             user_error("Use --clients and --hub instead of --hosts")

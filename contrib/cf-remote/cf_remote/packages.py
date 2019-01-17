@@ -1,7 +1,7 @@
 from os.path import basename, splitext
 from cf_remote.web import get_json
 from cf_remote.utils import pretty, is_in_past, canonify
-import cf_remote.log as log
+from cf_remote import log
 import re
 
 

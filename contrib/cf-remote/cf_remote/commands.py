@@ -1,6 +1,7 @@
 from cf_remote.remote import get_info, print_info, install_host
 from cf_remote.packages import Releases
 from cf_remote.web import download_package
+from cf_remote import log
 
 
 def info(hosts, users=None):
@@ -21,9 +22,11 @@ def install(hub, clients, *, bootstrap=None, package=None, hub_package=None, cli
     if not client_package:
         client_package = package
     if hub:
-        install_host(hub, hub=True, package=hub_package)
+        log.debug("Installing hub package on {}".format(hub))
+        install_host(hub, hub=True, package=hub_package, bootstrap=bootstrap)
     for host in (clients or []):
-        install_host(host, hub=False, package=client_package)
+        log.debug("Installing client package on {}".format(host))
+        install_host(host, hub=False, package=client_package, bootstrap=bootstrap)
 
 
 def packages(tags=None):

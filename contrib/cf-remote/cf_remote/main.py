@@ -69,6 +69,8 @@ def validate_command(command, args):
 def validate_args(args):
     if args.hosts:
         args.hosts = args.hosts.split(",")
+    if args.clients:
+        args.clients = args.clients.split(",")
     args.command = args.command.strip()
     if not args.command:
         user_error("Invalid or missing command")

@@ -12,6 +12,8 @@ from cf_remote import log
 from cf_remote.web import download_package
 from cf_remote.packages import Releases
 
+import cf_remote.demo as demo_lib
+
 
 def ssh_cmd(connection, cmd):
     try:
@@ -146,17 +148,17 @@ def install_package(host, pkg, data):
 
 
 def boootstrap_host(host, policy_server):
-    print("Bootstrapping {} -> {}".format(host, policy_server))
+    print("Bootstrapping: '{}' -> '{}'".format(host, policy_server))
     with connect(host) as connection:
         command = "/var/cfengine/bin/cf-agent --bootstrap {}".format(policy_server)
         output = ssh_sudo(connection, command)
-        if output:
-            print(output)
+        if output and "completed successfully" in output:
+            print("Bootstrap succesful: '{}' -> '{}'".format(host, policy_server))
         else:
             user_error("Something went wrong while bootstrapping")
 
 
-def install_host(host, *, hub=False, package=None, bootstrap=None, version=None):
+def install_host(host, *, hub=False, package=None, bootstrap=None, version=None, demo=False):
     data = get_info(host)
     print_info(data)
 
@@ -181,15 +183,22 @@ def install_host(host, *, hub=False, package=None, bootstrap=None, version=None)
         artifact = artifacts[-1]
         package = download_package(artifact.url)
 
-    print("Copying '{}' to '{}'".format(package, host))
+    print("Copying: '{}' to '{}'".format(package, host))
     scp(package, host)
     package = basename(package)
     install_package(host, package, data)
     data = get_info(host)
     if data["agent_version"] and len(data["agent_version"]) > 0:
-        print("CFEngine {} was successfully installed on {}".format(data["agent_version"], host))
+        print(
+            "CFEngine {} was successfully installed on '{}'".format(data["agent_version"], host))
     else:
         print("Installation failed!")
         sys.exit(1)
     if bootstrap:
         boootstrap_host(host, policy_server=bootstrap)
+    if demo:
+        if hub:
+            demo_lib.install_def_json(host)
+            demo_lib.agent_run(host)
+            demo_lib.disable_password_dialog(host)
+        demo_lib.agent_run(host)

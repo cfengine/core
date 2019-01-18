@@ -27,6 +27,8 @@ def get_args():
     ap.add_argument("--client-package", help="Local path to package for --clients", type=str)
     ap.add_argument("--log-level", help="Specify detail of logging", type=str, default="WARNING")
     ap.add_argument(
+        "--demo", help="Use defaults to make demos smoother (NOT secure)", action='store_true')
+    ap.add_argument(
         "--version", "-V", help="Print or specify version", nargs="?", type=str, const=True)
     ap.add_argument("command", help="Action to perform", type=str, nargs='?')
     ap.add_argument("args", help="Arguments", type=str, nargs='*')
@@ -46,7 +48,8 @@ def run_command_with_args(command, args):
             bootstrap=args.bootstrap,
             hub_package=args.hub_package,
             client_package=args.client_package,
-            version=args.version)
+            version=args.version,
+            demo=args.demo)
     elif command == "packages":
         commands.packages(tags=args.args, version=args.version)
     else:

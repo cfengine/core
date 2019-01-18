@@ -19,7 +19,8 @@ def install(
         package=None,
         hub_package=None,
         client_package=None,
-        version=None):
+        version=None,
+        demo=False):
     assert hub or clients
     assert not (hub and clients and package)
     # These assertions are checked in main.py
@@ -30,11 +31,17 @@ def install(
         client_package = package
     if hub:
         log.debug("Installing hub package on {}".format(hub))
-        install_host(hub, hub=True, package=hub_package, bootstrap=bootstrap, version=version)
+        install_host(
+            hub, hub=True, package=hub_package, bootstrap=bootstrap, version=version, demo=demo)
     for host in (clients or []):
         log.debug("Installing client package on {}".format(host))
         install_host(
-            host, hub=False, package=client_package, bootstrap=bootstrap, version=version)
+            host,
+            hub=False,
+            package=client_package,
+            bootstrap=bootstrap,
+            version=version,
+            demo=demo)
 
 
 def packages(tags=None, version=None):

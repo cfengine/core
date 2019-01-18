@@ -14,7 +14,6 @@ def info(hosts, users=None):
 def install(hub, clients, *, bootstrap=None, package=None, hub_package=None, client_package=None):
     assert hub or clients
     assert not (hub and clients and package)
-    assert package or hub_package or client_package
     # These assertions are checked in main.py
 
     if not hub_package:

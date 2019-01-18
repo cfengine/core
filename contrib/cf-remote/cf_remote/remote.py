@@ -9,6 +9,8 @@ from invoke.exceptions import UnexpectedExit
 
 from cf_remote.utils import os_release, column_print, pretty, user_error
 from cf_remote import log
+from cf_remote.web import download_package
+from cf_remote.packages import Releases
 
 
 def ssh_cmd(connection, cmd):
@@ -83,7 +85,7 @@ def connect(host, users=None):
         if not users:
             users = [parts[0]]
     if not users:
-        users = ["ubuntu", "centos", "vagrant", "root"]
+        users = ["ubuntu", "ec2-user", "centos", "vagrant", "root"]
     for user in users:
         try:
             c = fabric.Connection(host=host, user=user)
@@ -148,14 +150,34 @@ def boootstrap_host(host, policy_server):
     with connect(host) as connection:
         command = "/var/cfengine/bin/cf-agent --bootstrap {}".format(policy_server)
         output = ssh_sudo(connection, command)
-        print(output or "Something went wrong while bootstrapping")
+        if output:
+            print(output)
+        else:
+            user_error("Something went wrong while bootstrapping")
 
 
 def install_host(host, *, hub=False, package=None, bootstrap=None):
-    if not package:
-        user_error("Must specify package using --package")
     data = get_info(host)
     print_info(data)
+
+    if not package:
+        tags = []
+        tags.append("hub" if hub else "agent")
+        tags.append("64" if data["arch"] in ["x86_64", "amd64"] else data["arch"])
+        extension = None
+        if "dpkg" in data["bin"]:
+            extension = ".deb"
+        elif "rpm" in data["bin"]:
+            extension = ".rpm"
+        releases = Releases()
+        release = releases.default
+        artifacts = release.find(tags, extension)
+        if not artifacts:
+            user_error(
+                "Could not find an appropriate package for host, please use --{}-package".format(
+                    "hub" if hub else "client"))
+        artifact = artifacts[-1]
+        package = download_package(artifact.url)
 
     print("Copying '{}' to '{}'".format(package, host))
     scp(package, host)

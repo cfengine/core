@@ -55,16 +55,9 @@ def validate_command(command, args):
         if args.hub and args.clients and args.package:
             user_error(
                 "Use --hub-package / --client-package instead to distinguish between hosts")
-        if not (args.package or args.client_package or args.hub_package):
-            user_error(
-                "Specify local package file(s) with --package / --hub-package / --client-package")
         if args.package and (args.hub_package or args.client_package):
             user_error(
                 "--package cannot be used in combination with --hub-package / --client-package")
-        if args.clients and not (args.package or args.client_package):
-            user_error("Specify client package using --client-package")
-        if args.hub and not (args.package or args.hub_package):
-            user_error("Specify hub package using --hub-package")
             # TODO: Find this automatically
 
 

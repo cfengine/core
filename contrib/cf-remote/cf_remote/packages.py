@@ -63,14 +63,14 @@ class Artifact:
         self.arch = canonify(data["Arch"])
 
         self.filename = basename(self.url)
-        self.file_extension = splitext(self.filename)[1]
+        self.extension = splitext(self.filename)[1]
 
         self.tags = ["any"]
         self.create_tags()
 
     def create_tags(self):
         self.add_tag(self.arch)
-        self.add_tag(self.file_extension[1:])
+        self.add_tag(self.extension[1:])
 
         look_for_tags = [
             "Windows", "CentOS", "Red Hat", "Debian", "Ubuntu", "SLES", "Solaris", "AIX", "HPUX",
@@ -145,13 +145,16 @@ class Release:
                 self.artifacts.append(artifact)
         self.default = False
 
-    def find(self, tags):
+    def find(self, tags, extension=None):
+        log.debug("Looking for tags: {}".format(tags))
         artifacts = self.artifacts
+        if extension:
+            artifacts = [a for a in self.artifacts if a.extension == extension]
         for tag in tags or []:
             tag = canonify(tag)
-            remaining = filter(lambda a: tag in a.tags, artifacts)
-            remaining = list(remaining)
-            artifacts = remaining
+            artifacts = [a for a in artifacts if tag in a.tags]
+            # Have to force evaluation using list comprehension,
+            # since we are overwriting artifacts
         return artifacts
 
     def __str__(self):

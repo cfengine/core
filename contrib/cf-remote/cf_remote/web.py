@@ -26,6 +26,7 @@ def download_package(url):
     location = os.path.join(dir, filename)
     if os.path.exists(location):
         print("Package already downloaded: {}".format(location))
-        return
+        return location
     print("Downloading package: {}".format(location))
     os.system("curl --silent -L '{}' -o '{}'".format(url, location))
+    return location

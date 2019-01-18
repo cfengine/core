@@ -156,7 +156,7 @@ def boootstrap_host(host, policy_server):
             user_error("Something went wrong while bootstrapping")
 
 
-def install_host(host, *, hub=False, package=None, bootstrap=None):
+def install_host(host, *, hub=False, package=None, bootstrap=None, version=None):
     data = get_info(host)
     print_info(data)
 
@@ -171,6 +171,8 @@ def install_host(host, *, hub=False, package=None, bootstrap=None):
             extension = ".rpm"
         releases = Releases()
         release = releases.default
+        if version:
+            release = releases.pick_version(version)
         artifacts = release.find(tags, extension)
         if not artifacts:
             user_error(

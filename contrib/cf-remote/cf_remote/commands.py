@@ -11,7 +11,15 @@ def info(hosts, users=None):
         print_info(data)
 
 
-def install(hub, clients, *, bootstrap=None, package=None, hub_package=None, client_package=None):
+def install(
+        hub,
+        clients,
+        *,
+        bootstrap=None,
+        package=None,
+        hub_package=None,
+        client_package=None,
+        version=None):
     assert hub or clients
     assert not (hub and clients and package)
     # These assertions are checked in main.py
@@ -22,17 +30,20 @@ def install(hub, clients, *, bootstrap=None, package=None, hub_package=None, cli
         client_package = package
     if hub:
         log.debug("Installing hub package on {}".format(hub))
-        install_host(hub, hub=True, package=hub_package, bootstrap=bootstrap)
+        install_host(hub, hub=True, package=hub_package, bootstrap=bootstrap, version=version)
     for host in (clients or []):
         log.debug("Installing client package on {}".format(host))
-        install_host(host, hub=False, package=client_package, bootstrap=bootstrap)
+        install_host(
+            host, hub=False, package=client_package, bootstrap=bootstrap, version=version)
 
 
-def packages(tags=None):
+def packages(tags=None, version=None):
     releases = Releases()
     print(releases)
 
     release = releases.default
+    if version:
+        release = releases.pick_version(version)
     print("Using {}:".format(release))
     artifacts = release.find(tags)
 

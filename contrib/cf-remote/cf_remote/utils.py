@@ -29,6 +29,10 @@ def user_error(msg):
     sys.exit("cf-remote: " + msg)
 
 
+def exit_success():
+    sys.exit(0)
+
+
 def mkdir(path):
     if not os.path.exists(path):
         log.info("Creating directory: {}".format(path))

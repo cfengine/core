@@ -92,6 +92,11 @@ class Release:
         self.version = data["version"]
         self.url = data["URL"]
         self.lts = data["lts_branch"] if "lts_branch" in data else None
+        self.extended_data = None
+        self.artifacts = None
+        self.default = False
+
+    def init_download(self):
         self.extended_data = get_json(self.url)
         artifacts = self.extended_data["artifacts"]
         self.artifacts = []
@@ -100,9 +105,10 @@ class Release:
                 artifact = Artifact(blob)
                 artifact.add_tag(header)
                 self.artifacts.append(artifact)
-        self.default = False
 
     def find(self, tags, extension=None):
+        if not self.extended_data:
+            self.init_download()
         log.debug("Looking for tags: {}".format(tags))
         artifacts = self.artifacts
         if extension:
@@ -123,10 +129,6 @@ class Release:
             string += " (default)"
         return string
 
-    def download(self, path):
-        data = self.extended_data
-        log.debug(pretty(data))
-
 
 class Releases:
     def __init__(self):
@@ -145,21 +147,22 @@ class Releases:
 
         self.releases = []
         for release in self.data["releases"]:
+            rel = Release(release)
             if "status" in release and release["status"] == "unsupported":
                 continue
-            if "lts_branch" not in release:
+            if "lts_branch" not in release and "latest_stable" not in release:
                 continue
-            if release["lts_branch"] not in self.supported_branches:
-                continue
-            if "latest_on_branch" not in release:
-                continue
-            if release["latest_on_branch"] != True:
-                continue
-            rel = Release(release)
             if "latestLTS" in release and release["latestLTS"] == True:
                 self.default = rel
                 rel.default = True
             self.releases.append(rel)
+
+    def pick_version(self, version):
+        for release in self.data["releases"]:
+            if "version" in release and version == release["version"]:
+                return Release(release)
+            if "lts_branch" in release and version == release["lts_branch"]:
+                return Release(release)
 
     def __str__(self):
         lines = [str(x) for x in self.releases]

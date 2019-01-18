@@ -5,49 +5,6 @@ from cf_remote import log
 import re
 
 
-def get_releases():
-    data = get_json("https://cfengine.com/release-data/enterprise/releases.json")
-    return data["releases"]
-
-
-def get_latest_releases():
-    releases = get_releases()
-    for release in releases:
-        if "status" in release and release["status"] == "unsupported":
-            continue
-        if "latest_on_branch" not in release or not release["latest_on_branch"]:
-            continue
-        yield release
-
-
-def get_latest_stable():
-    releases = get_releases()
-    for release in releases:
-        if "latest_stable" in release and release["latest_stable"]:
-            return release
-    return None
-
-
-def get_latest_stable_data():
-    return get_release_data(get_latest_stable())
-
-
-def get_release_data(release):
-    assert "URL" in release
-    return get_json(release["URL"])
-
-
-def get_default_version(edition=False):
-    numeric = get_latest_stable()["version"]
-    if edition:
-        return "CFEngine Enterprise " + numeric
-    return numeric
-
-
-def get_default_version_data():
-    return get_latest_stable_data()
-
-
 class Artifact:
     def __init__(self, data, filename=None):
         if filename and not data:

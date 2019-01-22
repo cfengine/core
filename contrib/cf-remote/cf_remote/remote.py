@@ -102,10 +102,11 @@ def connect(host, users=None):
 
 
 def get_info(host, users=None, connection=None):
-    log.debug("Getting info about '{}'".format(host))
     if not connection:
         with connect(host, users) as c:
             return get_info(host, users, c)
+
+    log.debug("Getting info about '{}'".format(host))
 
     user, host = connection.ssh_user, connection.ssh_host
     data = OrderedDict()

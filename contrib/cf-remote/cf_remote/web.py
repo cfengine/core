@@ -13,7 +13,7 @@ def get_json(url):
     filename = os.path.basename(url)
     dir = cf_remote_dir("json")
     path = os.path.join(dir, filename)
-    log.debug("Saving {} to {}".format(url, path))
+    log.debug("Saving '{}' to '{}'".format(url, path))
     write_json(path, data)
 
     return data
@@ -25,8 +25,8 @@ def download_package(url):
     mkdir(dir)
     location = os.path.join(dir, filename)
     if os.path.exists(location):
-        print("Package already downloaded: {}".format(location))
+        print("Package already downloaded: '{}'".format(location))
         return location
-    print("Downloading package: {}".format(location))
+    print("Downloading package: '{}'".format(location))
     os.system("curl --silent -L '{}' -o '{}'".format(url, location))
     return location

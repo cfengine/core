@@ -35,10 +35,10 @@ def exit_success():
 
 def mkdir(path):
     if not os.path.exists(path):
-        log.info("Creating directory: {}".format(path))
+        log.info("Creating directory: '{}'".format(path))
         os.makedirs(path)
     else:
-        log.debug("Directory already exists: {}".format(path))
+        log.debug("Directory already exists: '{}'".format(path))
 
 
 def ls(path):

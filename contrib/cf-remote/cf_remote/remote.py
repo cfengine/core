@@ -79,7 +79,7 @@ def print_info(data):
 
 
 def connect(host, users=None):
-    log.debug("Connecting to {}".format(host))
+    log.debug("Connecting to '{}'".format(host))
     if "@" in host:
         parts = host.split("@")
         assert len(parts) == 2
@@ -97,11 +97,11 @@ def connect(host, users=None):
             return c
         except AuthenticationException:
             continue
-    sys.exit("Could not ssh into {}".format(host))
+    sys.exit("Could not ssh into '{}'".format(host))
 
 
 def get_info(host, users=None, connection=None):
-    log.debug("Getting info about {}".format(host))
+    log.debug("Getting info about '{}'".format(host))
     if not connection:
         with connect(host, users) as c:
             return get_info(host, users, c)
@@ -139,7 +139,7 @@ def scp(file, remote, connection=None):
 
 
 def install_package(host, pkg, data):
-    print("Installing '{}' on '{}'".format(pkg, host))
+    print("Installing: '{}' on '{}'".format(pkg, host))
     with connect(host) as connection:
         if ".deb" in pkg:
             ssh_sudo(connection, "dpkg -i {}".format(pkg))

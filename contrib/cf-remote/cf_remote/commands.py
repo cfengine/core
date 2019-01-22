@@ -30,11 +30,11 @@ def install(
     if not client_package:
         client_package = package
     if hub:
-        log.debug("Installing hub package on {}".format(hub))
+        log.debug("Installing hub package on '{}'".format(hub))
         install_host(
             hub, hub=True, package=hub_package, bootstrap=bootstrap, version=version, demo=demo)
     for host in (clients or []):
-        log.debug("Installing client package on {}".format(host))
+        log.debug("Installing client package on '{}'".format(host))
         install_host(
             host,
             hub=False,

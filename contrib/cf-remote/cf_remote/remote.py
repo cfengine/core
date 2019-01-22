@@ -38,7 +38,6 @@ def ssh_sudo(connection, cmd):
 
 
 def print_info(data):
-    log.debug("JSON data from host info: \n" + pretty(data))
     output = OrderedDict()
     print()
     print(data["ssh"])
@@ -66,6 +65,8 @@ def print_info(data):
         output["CFEngine"] = agent_version
     else:
         output["CFEngine"] = "Not installed"
+
+    output["Policy server"] = data.get("policy_server")
 
     binaries = []
     if "bin" in data:
@@ -116,6 +117,7 @@ def get_info(host, users=None, connection=None):
     data["arch"] = ssh_cmd(connection, "uname -m")
     data["os_release"] = os_release(ssh_cmd(connection, "cat /etc/os-release"))
     data["agent_location"] = ssh_cmd(connection, "which cf-agent")
+    data["policy_server"] = ssh_cmd(connection, "cat /var/cfengine/policy_server.dat")
     agent_version = ssh_cmd(connection, "cf-agent --version")
     if agent_version:
         # 'CFEngine Core 3.12.1 \n CFEngine Enterprise 3.12.1'
@@ -127,6 +129,8 @@ def get_info(host, users=None, connection=None):
         path = ssh_cmd(connection, "which {}".format(bin))
         if path:
             data["bin"][bin] = path
+
+    log.debug("JSON data from host info: \n" + pretty(data))
     return data
 
 

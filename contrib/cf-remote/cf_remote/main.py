@@ -2,7 +2,15 @@ import argparse
 
 from cf_remote import log
 from cf_remote import commands
-from cf_remote.utils import user_error
+from cf_remote.utils import user_error, exit_success
+from cf_remote.packages import Releases
+
+
+def print_version_info():
+    print("cf-remote version 0.1 (BETA)")
+    print("Available CFEngine versions:")
+    releases = Releases()
+    print(releases)
 
 
 def get_args():
@@ -11,14 +19,18 @@ def get_args():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     ap.add_argument("--hosts", "-H", help="Which hosts to connect to (ssh)", type=str)
-    ap.add_argument("--clients", help="Where to install client package", type=str)
+    ap.add_argument("--clients", "-c", help="Where to install client package", type=str)
     ap.add_argument("--hub", help="Where to install hub package", type=str)
-    ap.add_argument("--bootstrap", help="cf-agent --bootstrap argument", type=str)
+    ap.add_argument("--bootstrap", "-B", help="cf-agent --bootstrap argument", type=str)
     ap.add_argument("--package", help="Local path to package for transfer and install", type=str)
     ap.add_argument("--hub-package", help="Local path to package for --hub", type=str)
     ap.add_argument("--client-package", help="Local path to package for --clients", type=str)
     ap.add_argument("--log-level", help="Specify detail of logging", type=str, default="WARNING")
-    ap.add_argument("command", help="Action to perform", type=str, nargs='?', default="info")
+    ap.add_argument(
+        "--demo", help="Use defaults to make demos smoother (NOT secure)", action='store_true')
+    ap.add_argument(
+        "--version", "-V", help="Print or specify version", nargs="?", type=str, const=True)
+    ap.add_argument("command", help="Action to perform", type=str, nargs='?')
     ap.add_argument("args", help="Arguments", type=str, nargs='*')
 
     args = ap.parse_args()
@@ -35,9 +47,11 @@ def run_command_with_args(command, args):
             package=args.package,
             bootstrap=args.bootstrap,
             hub_package=args.hub_package,
-            client_package=args.client_package)
+            client_package=args.client_package,
+            version=args.version,
+            demo=args.demo)
     elif command == "packages":
-        commands.packages(tags=args.args)
+        commands.packages(tags=args.args, version=args.version)
     else:
         user_error("Unknown command: '{}'".format(command))
 
@@ -45,6 +59,10 @@ def run_command_with_args(command, args):
 def validate_command(command, args):
     if command == "info" and not args.hosts:
         user_error("Use --hosts to specify remote hosts")
+
+    if args.bootstrap and command != "install":
+        user_error("--bootstrap can only be used with install command")
+
     if command == "install":
         if args.hosts:
             user_error("Use --clients and --hub instead of --hosts")
@@ -53,22 +71,24 @@ def validate_command(command, args):
         if args.hub and args.clients and args.package:
             user_error(
                 "Use --hub-package / --client-package instead to distinguish between hosts")
-        if not (args.package or args.client_package or args.hub_package):
-            user_error(
-                "Specify local package file(s) with --package / --hub-package / --client-package")
         if args.package and (args.hub_package or args.client_package):
             user_error(
                 "--package cannot be used in combination with --hub-package / --client-package")
-        if args.clients and not (args.package or args.client_package):
-            user_error("Specify client package using --client-package")
-        if args.hub and not (args.package or args.hub_package):
-            user_error("Specify hub package using --hub-package")
             # TODO: Find this automatically
 
 
 def validate_args(args):
+    if args.version is True:  # --version with no second argument
+        print_version_info()
+        exit_success()
+
+    if args.version and args.command not in ["install", "packages"]:
+        user_error("Cannot specify version number in '{}' command".format(command))
+
     if args.hosts:
         args.hosts = args.hosts.split(",")
+    if args.clients:
+        args.clients = args.clients.split(",")
     args.command = args.command.strip()
     if not args.command:
         user_error("Invalid or missing command")

@@ -1,6 +1,7 @@
 from cf_remote.remote import get_info, print_info, install_host
 from cf_remote.packages import Releases
 from cf_remote.web import download_package
+from cf_remote import log
 
 
 def info(hosts, users=None):
@@ -10,10 +11,18 @@ def info(hosts, users=None):
         print_info(data)
 
 
-def install(hub, clients, *, bootstrap=None, package=None, hub_package=None, client_package=None):
+def install(
+        hub,
+        clients,
+        *,
+        bootstrap=None,
+        package=None,
+        hub_package=None,
+        client_package=None,
+        version=None,
+        demo=False):
     assert hub or clients
     assert not (hub and clients and package)
-    assert package or hub_package or client_package
     # These assertions are checked in main.py
 
     if not hub_package:
@@ -21,16 +30,27 @@ def install(hub, clients, *, bootstrap=None, package=None, hub_package=None, cli
     if not client_package:
         client_package = package
     if hub:
-        install_host(hub, hub=True, package=hub_package)
+        log.debug("Installing hub package on {}".format(hub))
+        install_host(
+            hub, hub=True, package=hub_package, bootstrap=bootstrap, version=version, demo=demo)
     for host in (clients or []):
-        install_host(host, hub=False, package=client_package)
+        log.debug("Installing client package on {}".format(host))
+        install_host(
+            host,
+            hub=False,
+            package=client_package,
+            bootstrap=bootstrap,
+            version=version,
+            demo=demo)
 
 
-def packages(tags=None):
+def packages(tags=None, version=None):
     releases = Releases()
     print(releases)
 
     release = releases.default
+    if version:
+        release = releases.pick_version(version)
     print("Using {}:".format(release))
     artifacts = release.find(tags)
 

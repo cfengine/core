@@ -1,51 +1,8 @@
 from os.path import basename, splitext
 from cf_remote.web import get_json
-from cf_remote.utils import pretty, is_in_past, canonify
-import cf_remote.log as log
+from cf_remote.utils import is_in_past, canonify
+from cf_remote import log
 import re
-
-
-def get_releases():
-    data = get_json("https://cfengine.com/release-data/enterprise/releases.json")
-    return data["releases"]
-
-
-def get_latest_releases():
-    releases = get_releases()
-    for release in releases:
-        if "status" in release and release["status"] == "unsupported":
-            continue
-        if "latest_on_branch" not in release or not release["latest_on_branch"]:
-            continue
-        yield release
-
-
-def get_latest_stable():
-    releases = get_releases()
-    for release in releases:
-        if "latest_stable" in release and release["latest_stable"]:
-            return release
-    return None
-
-
-def get_latest_stable_data():
-    return get_release_data(get_latest_stable())
-
-
-def get_release_data(release):
-    assert "URL" in release
-    return get_json(release["URL"])
-
-
-def get_default_version(edition=False):
-    numeric = get_latest_stable()["version"]
-    if edition:
-        return "CFEngine Enterprise " + numeric
-    return numeric
-
-
-def get_default_version_data():
-    return get_latest_stable_data()
 
 
 class Artifact:
@@ -63,14 +20,14 @@ class Artifact:
         self.arch = canonify(data["Arch"])
 
         self.filename = basename(self.url)
-        self.file_extension = splitext(self.filename)[1]
+        self.extension = splitext(self.filename)[1]
 
         self.tags = ["any"]
         self.create_tags()
 
     def create_tags(self):
         self.add_tag(self.arch)
-        self.add_tag(self.file_extension[1:])
+        self.add_tag(self.extension[1:])
 
         look_for_tags = [
             "Windows", "CentOS", "Red Hat", "Debian", "Ubuntu", "SLES", "Solaris", "AIX", "HPUX",
@@ -106,10 +63,24 @@ class Artifact:
             part = part.strip()
             if part == "x86":
                 continue
+            if part == "amd64" or part == "x86_64":
+                self.add_tag("64")
             try:
                 _ = int(part)
             except ValueError:
                 self.add_tag(part)
+        if "hub" in self.tags:
+            self.add_tag("policy_server")
+        else:
+            self.add_tag("client")
+            self.add_tag("agent")
+        parts = filename.split(".")
+        if "x86_64" in parts:
+            self.add_tag("x86_64")
+            self.add_tag("64")
+        if "amd64" in parts:
+            self.add_tag("amd64")
+            self.add_tag("64")
 
     def __str__(self):
         return self.filename + " ({})".format(" ".join(self.tags))
@@ -121,6 +92,11 @@ class Release:
         self.version = data["version"]
         self.url = data["URL"]
         self.lts = data["lts_branch"] if "lts_branch" in data else None
+        self.extended_data = None
+        self.artifacts = None
+        self.default = False
+
+    def init_download(self):
         self.extended_data = get_json(self.url)
         artifacts = self.extended_data["artifacts"]
         self.artifacts = []
@@ -129,15 +105,19 @@ class Release:
                 artifact = Artifact(blob)
                 artifact.add_tag(header)
                 self.artifacts.append(artifact)
-        self.default = False
 
-    def find(self, tags):
+    def find(self, tags, extension=None):
+        if not self.extended_data:
+            self.init_download()
+        log.debug("Looking for tags: {}".format(tags))
         artifacts = self.artifacts
-        for tag in tags:
+        if extension:
+            artifacts = [a for a in self.artifacts if a.extension == extension]
+        for tag in tags or []:
             tag = canonify(tag)
-            remaining = filter(lambda a: tag in a.tags, artifacts)
-            remaining = list(remaining)
-            artifacts = remaining
+            artifacts = [a for a in artifacts if tag in a.tags]
+            # Have to force evaluation using list comprehension,
+            # since we are overwriting artifacts
         return artifacts
 
     def __str__(self):
@@ -148,10 +128,6 @@ class Release:
         if self.default:
             string += " (default)"
         return string
-
-    def download(self, path):
-        data = self.extended_data
-        log.debug(pretty(data))
 
 
 class Releases:
@@ -171,21 +147,22 @@ class Releases:
 
         self.releases = []
         for release in self.data["releases"]:
+            rel = Release(release)
             if "status" in release and release["status"] == "unsupported":
                 continue
-            if "lts_branch" not in release:
+            if "lts_branch" not in release and "latest_stable" not in release:
                 continue
-            if release["lts_branch"] not in self.supported_branches:
-                continue
-            if "latest_on_branch" not in release:
-                continue
-            if release["latest_on_branch"] != True:
-                continue
-            rel = Release(release)
             if "latestLTS" in release and release["latestLTS"] == True:
                 self.default = rel
                 rel.default = True
             self.releases.append(rel)
+
+    def pick_version(self, version):
+        for release in self.data["releases"]:
+            if "version" in release and version == release["version"]:
+                return Release(release)
+            if "lts_branch" in release and version == release["lts_branch"]:
+                return Release(release)
 
     def __str__(self):
         lines = [str(x) for x in self.releases]

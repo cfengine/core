@@ -9,6 +9,10 @@ from invoke.exceptions import UnexpectedExit
 
 from cf_remote.utils import os_release, column_print, pretty, user_error
 from cf_remote import log
+from cf_remote.web import download_package
+from cf_remote.packages import Releases
+
+import cf_remote.demo as demo_lib
 
 
 def ssh_cmd(connection, cmd):
@@ -75,6 +79,7 @@ def print_info(data):
 
 
 def connect(host, users=None):
+    log.debug("Connecting to {}".format(host))
     if "@" in host:
         parts = host.split("@")
         assert len(parts) == 2
@@ -82,7 +87,7 @@ def connect(host, users=None):
         if not users:
             users = [parts[0]]
     if not users:
-        users = ["ubuntu", "centos", "vagrant", "root"]
+        users = ["ubuntu", "ec2-user", "centos", "vagrant", "root"]
     for user in users:
         try:
             c = fabric.Connection(host=host, user=user)
@@ -96,6 +101,7 @@ def connect(host, users=None):
 
 
 def get_info(host, users=None, connection=None):
+    log.debug("Getting info about {}".format(host))
     if not connection:
         with connect(host, users) as c:
             return get_info(host, users, c)
@@ -134,26 +140,65 @@ def scp(file, remote, connection=None):
 
 def install_package(host, pkg, data):
     print("Installing '{}' on '{}'".format(pkg, host))
-    c = connect(host)
-    if ".deb" in pkg:
-        ssh_sudo(c, "dpkg -i {}".format(pkg))
-    else:
-        ssh_sudo(c, "rpm -i {}".format(pkg))
+    with connect(host) as connection:
+        if ".deb" in pkg:
+            ssh_sudo(connection, "dpkg -i {}".format(pkg))
+        else:
+            ssh_sudo(connection, "rpm -i {}".format(pkg))
 
 
-def install_host(host, *, hub=False, package=None):
-    if not package:
-        user_error("Must specify package using --package")
+def boootstrap_host(host, policy_server):
+    print("Bootstrapping: '{}' -> '{}'".format(host, policy_server))
+    with connect(host) as connection:
+        command = "/var/cfengine/bin/cf-agent --bootstrap {}".format(policy_server)
+        output = ssh_sudo(connection, command)
+        if output and "completed successfully" in output:
+            print("Bootstrap succesful: '{}' -> '{}'".format(host, policy_server))
+        else:
+            user_error("Something went wrong while bootstrapping")
+
+
+def install_host(host, *, hub=False, package=None, bootstrap=None, version=None, demo=False):
     data = get_info(host)
     print_info(data)
 
-    print("Copying '{}' to '{}'".format(package, host))
+    if not package:
+        tags = []
+        tags.append("hub" if hub else "agent")
+        tags.append("64" if data["arch"] in ["x86_64", "amd64"] else data["arch"])
+        extension = None
+        if "dpkg" in data["bin"]:
+            extension = ".deb"
+        elif "rpm" in data["bin"]:
+            extension = ".rpm"
+        releases = Releases()
+        release = releases.default
+        if version:
+            release = releases.pick_version(version)
+        artifacts = release.find(tags, extension)
+        if not artifacts:
+            user_error(
+                "Could not find an appropriate package for host, please use --{}-package".format(
+                    "hub" if hub else "client"))
+        artifact = artifacts[-1]
+        package = download_package(artifact.url)
+
+    print("Copying: '{}' to '{}'".format(package, host))
     scp(package, host)
     package = basename(package)
     install_package(host, package, data)
     data = get_info(host)
     if data["agent_version"] and len(data["agent_version"]) > 0:
-        print("CFEngine {} was successfully installed on {}".format(data["agent_version"], host))
+        print(
+            "CFEngine {} was successfully installed on '{}'".format(data["agent_version"], host))
     else:
         print("Installation failed!")
         sys.exit(1)
+    if bootstrap:
+        boootstrap_host(host, policy_server=bootstrap)
+    if demo:
+        if hub:
+            demo_lib.install_def_json(host)
+            demo_lib.agent_run(host)
+            demo_lib.disable_password_dialog(host)
+        demo_lib.agent_run(host)

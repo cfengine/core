@@ -112,3 +112,24 @@ def column_print(data):
     for key, value in data.items():
         fill = " " * (width - len(key))
         print("{}{} : {}".format(key, fill, value))
+
+
+def is_file_string(string):
+    return string and string.startswith(("./", "~/", "/", "../"))
+
+
+def expand_list_from_file(string):
+    assert is_file_string(string)
+
+    location = os.path.expanduser(string)
+    if not os.path.exists(location):
+        user_error("Hosts file '{}' does not exist".format(location))
+    if not os.path.isfile(location):
+        user_error("'{}' is not a file".format(location))
+    if not os.access(location, os.R_OK):
+        user_error("Cannot read '{}' - Permission denied".format(location))
+
+    with open(location, "r") as f:
+        hosts = [line.strip() for line in f if line.strip()]
+
+    return hosts

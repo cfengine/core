@@ -42,6 +42,10 @@ def install(
             bootstrap=bootstrap,
             version=version,
             demo=demo)
+    if demo and hub:
+        print(
+            "Your demo hub is ready: https://{}/ (Username: admin, Password: password)".format(
+                hub))
 
 
 def packages(tags=None, version=None):

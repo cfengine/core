@@ -212,6 +212,11 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp,
             if (res.status == FNCALL_FAILURE)
             {
                 /* We do not assign variables to failed fn calls */
+                if (EvalContextGetPass(ctx) == CF_DONEPASSES-1) {
+                    // If we still fail at last pass, make a log
+                    Log(LOG_LEVEL_VERBOSE, "While setting variable '%s' in bundle '%s', function '%s' failed - skipping",
+                                       pp->promiser, PromiseGetBundle(pp)->name, fp->name);
+                }
                 RvalDestroy(res.rval);
                 VarRefDestroy(ref);
                 return PROMISE_RESULT_NOOP;

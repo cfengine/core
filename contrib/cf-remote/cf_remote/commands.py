@@ -50,7 +50,7 @@ def install(
 
 def packages(tags=None, version=None):
     releases = Releases()
-    print(releases)
+    print("Available releases: {}".format(releases))
 
     release = releases.default
     if version:

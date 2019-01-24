@@ -152,6 +152,8 @@ class Releases:
                 continue
             if "lts_branch" not in release and "latest_stable" not in release:
                 continue
+            if "lts_branch" in release and release["lts_branch"] not in self.supported_branches:
+                continue
             if "latestLTS" in release and release["latestLTS"] == True:
                 self.default = rel
                 rel.default = True
@@ -165,5 +167,4 @@ class Releases:
                 return Release(release)
 
     def __str__(self):
-        lines = [str(x) for x in self.releases]
-        return "\n".join(lines)
+        return ", ".join(str(x.version) for x in self.releases)

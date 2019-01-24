@@ -1,6 +1,10 @@
+import os
+
 from cf_remote.remote import get_info, print_info, install_host
 from cf_remote.packages import Releases
 from cf_remote.web import download_package
+from cf_remote.paths import cf_remote_dir
+from cf_remote.utils import save_file
 from cf_remote import log
 
 
@@ -29,6 +33,8 @@ def install(
         hub_package = package
     if not client_package:
         client_package = package
+    if bootstrap:
+        save_file(os.path.join(cf_remote_dir(), "policy_server.dat"), bootstrap + "\n")
     if hub:
         log.debug("Installing hub package on '{}'".format(hub))
         install_host(

@@ -38,7 +38,6 @@ def ssh_sudo(connection, cmd):
 
 
 def print_info(data):
-    log.debug("JSON data from host info: \n" + pretty(data))
     output = OrderedDict()
     print()
     print(data["ssh"])
@@ -67,6 +66,8 @@ def print_info(data):
     else:
         output["CFEngine"] = "Not installed"
 
+    output["Policy server"] = data.get("policy_server")
+
     binaries = []
     if "bin" in data:
         for key in data["bin"]:
@@ -79,7 +80,7 @@ def print_info(data):
 
 
 def connect(host, users=None):
-    log.debug("Connecting to {}".format(host))
+    log.debug("Connecting to '{}'".format(host))
     if "@" in host:
         parts = host.split("@")
         assert len(parts) == 2
@@ -97,14 +98,15 @@ def connect(host, users=None):
             return c
         except AuthenticationException:
             continue
-    sys.exit("Could not ssh into {}".format(host))
+    sys.exit("Could not ssh into '{}'".format(host))
 
 
 def get_info(host, users=None, connection=None):
-    log.debug("Getting info about {}".format(host))
     if not connection:
         with connect(host, users) as c:
             return get_info(host, users, c)
+
+    log.debug("Getting info about '{}'".format(host))
 
     user, host = connection.ssh_user, connection.ssh_host
     data = OrderedDict()
@@ -116,6 +118,7 @@ def get_info(host, users=None, connection=None):
     data["arch"] = ssh_cmd(connection, "uname -m")
     data["os_release"] = os_release(ssh_cmd(connection, "cat /etc/os-release"))
     data["agent_location"] = ssh_cmd(connection, "which cf-agent")
+    data["policy_server"] = ssh_cmd(connection, "cat /var/cfengine/policy_server.dat")
     agent_version = ssh_cmd(connection, "cf-agent --version")
     if agent_version:
         # 'CFEngine Core 3.12.1 \n CFEngine Enterprise 3.12.1'
@@ -127,6 +130,8 @@ def get_info(host, users=None, connection=None):
         path = ssh_cmd(connection, "which {}".format(bin))
         if path:
             data["bin"][bin] = path
+
+    log.debug("JSON data from host info: \n" + pretty(data))
     return data
 
 
@@ -139,7 +144,7 @@ def scp(file, remote, connection=None):
 
 
 def install_package(host, pkg, data):
-    print("Installing '{}' on '{}'".format(pkg, host))
+    print("Installing: '{}' on '{}'".format(pkg, host))
     with connect(host) as connection:
         if ".deb" in pkg:
             ssh_sudo(connection, "dpkg -i {}".format(pkg))

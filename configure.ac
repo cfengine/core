@@ -538,25 +538,41 @@ fi
 
 dnl libcurl
 
-AC_ARG_WITH([libcurl],
-    [AS_HELP_STRING([--with-libcurl[[=PATH]]], [Specify libcurl path])], [], [with_libcurl=check])
-
-if test "x$with_libcurl" != xno
-then
-  CF3_WITH_LIBRARY(libcurl, [
-    AC_CHECK_LIB(curl, curl_global_init,
-      [],
-      [  libcurl_lib_found=no;
-         if test "x$with_libcurl" != xcheck;
-         then
-             AC_MSG_ERROR(Cannot find libcurl library);
-         fi
-      ])
-    AC_CHECK_HEADERS([curl/curl.h],
-      [libcurl_header_found=yes],
-      [if test "x$with_libcurl" != xcheck; then AC_MSG_ERROR(Cannot find libcurl header files); fi])
-  ])
+if [[[ $( which -s pkg-config ) -eq 0 ]]]; then
+   echo "db: pkg-config found";
+   LIBCURL_CFLAGS="";
+   LIBCURL_CPPFLAGS="$( pkg-config --cflags libcurl )";
+   LIBCURL_LDFLAGS="$( pkg-config --libs libcurl )";
+   libcurl_lib_found=yes;
+   ac_cv_lib_curl_curl_global_init=yes;
+else
+   AC_ARG_WITH([libcurl], 
+      [AS_HELP_STRING(
+       [--with-libcurl[[=PATH]]], 
+       [Specify libcurl path])], 
+       [], 
+       [with_libcurl=check; check_libcurl])
 fi
+
+check_libcurl() {
+  if test "x$with_libcurl" != xno
+  then
+    CF3_WITH_LIBRARY(libcurl, [
+      AC_CHECK_LIB(curl, curl_global_init,
+        [],
+        [  libcurl_lib_found=no;
+           if test "x$with_libcurl" != xcheck;
+           then
+               AC_MSG_ERROR(Cannot find libcurl library);
+           fi
+        ])
+      AC_CHECK_HEADERS([curl/curl.h],
+        [libcurl_header_found=yes],
+        [if test "x$with_libcurl" != xcheck; then AC_MSG_ERROR(Cannot find libcurl header files); fi])
+    ])
+  fi
+}
+# end of check_libcurl
 
 AM_CONDITIONAL(HAVE_LIBCURL,
         [test "x$libcurl_lib_found" != xno && test "x$libcurl_header_found" = xyes])
@@ -580,50 +596,64 @@ fi
 
 dnl libxml2
 
-AC_ARG_WITH([libxml2],
-    [AS_HELP_STRING([--with-libxml2[[=PATH]]],
-        [Specify libxml2 path])
-    ],
-    [],
-    [with_libxml2=check])
-
-if test "x$with_libxml2" != xno
-then
-    if test "x$with_libxml2" != xyes &&
-       test "x$with_libxml2" != xcheck
-    then
-        XML2_CONFIG=$with_libxml2/bin/xml2-config
-    else
-        XML2_CONFIG=xml2-config
-    fi
-
-    # xml2-config is only for native builds
-    if test "x$cross_compiling" = "xno" && test x`which $XML2_CONFIG` != x
-    then
-        xml2_include_dir=`$XML2_CONFIG --cflags`
-        if test -n "$xml2_include_dir"
-        then
-            LIBXML2_CPPFLAGS="$xml2_include_dir"
-        fi
-    else                # xml2-config not found
-        # if a path, e.g. /var/cfengine was given, then we
-        # must take into account that libxml2 includes are in
-        # /var/cfengine/include/libxml2
-        LIBXML2_CPPFLAGS=-I$with_libxml2/include/libxml2
-    fi
-
-    CF3_WITH_LIBRARY(libxml2,
-        [AC_CHECK_LIB(xml2, xmlFirstElementChild,
-            [],
-            [if test "x$with_libxml2" != xcheck; then
-                AC_MSG_ERROR(Cannotfind libxml2); fi]
-        )
-        AC_CHECK_HEADERS([libxml/xmlwriter.h], [break],
-            [if test "x$with_libxml2" != xcheck; then
-                AC_MSG_ERROR(Cannot find libxml2); fi]
-        )]
-    )
+if [[[ $( which -s pkg-config ) -eq 0 ]]]; then
+   echo "db: pkg-config found";
+   LIBXML2_CFLAGS="";
+   LIBXML2_CPPFLAGS="$( pkg-config --cflags libxml2 )";
+   LIBXML2_LDFLAGS="$( pkg-config --libs libxml2 )";
+   libxml2_lib_found=yes;
+   ac_cv_lib_xml2_xmlFirstElementChild=yes;
+else
+   AC_ARG_WITH([libxml2],
+               [AS_HELP_STRING(
+                [--with-libxml2[[=PATH]]],
+                [Specify libxml2 path])
+               ],
+               [],
+               [with_libxml2=check; check_libxml2])
 fi
+
+check_libxml2() {
+
+  if test "x$with_libxml2" != xno
+  then
+      if test "x$with_libxml2" != xyes &&
+         test "x$with_libxml2" != xcheck
+      then
+          XML2_CONFIG=$with_libxml2/bin/xml2-config
+      else
+          XML2_CONFIG=xml2-config
+      fi
+
+      # xml2-config is only for native builds
+      if test "x$cross_compiling" = "xno" && test x`which $XML2_CONFIG` != x
+      then
+          xml2_include_dir=`$XML2_CONFIG --cflags`
+          if test -n "$xml2_include_dir"
+          then
+              LIBXML2_CPPFLAGS="$xml2_include_dir"
+          fi
+      else                # xml2-config not found
+          # if a path, e.g. /var/cfengine was given, then we
+          # must take into account that libxml2 includes are in
+          # /var/cfengine/include/libxml2
+          LIBXML2_CPPFLAGS=-I$with_libxml2/include/libxml2
+      fi
+
+      CF3_WITH_LIBRARY(libxml2,
+          [AC_CHECK_LIB(xml2, xmlFirstElementChild,
+              [],
+              [if test "x$with_libxml2" != xcheck; then
+                  AC_MSG_ERROR(Cannotfind libxml2); fi]
+          )
+          AC_CHECK_HEADERS([libxml/xmlwriter.h], [break],
+              [if test "x$with_libxml2" != xcheck; then
+                  AC_MSG_ERROR(Cannot find libxml2); fi]
+          )]
+      )
+  fi
+}
+# end of check_libxml2
 
 AM_CONDITIONAL([HAVE_LIBXML2],
     [test "x$with_libxml2" != xno &&

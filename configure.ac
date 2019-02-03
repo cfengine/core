@@ -543,8 +543,13 @@ if [[[ $( which -s pkg-config ) -eq 0 ]]]; then
    LIBCURL_CFLAGS="";
    LIBCURL_CPPFLAGS="$( pkg-config --cflags libcurl )";
    LIBCURL_LDFLAGS="$( pkg-config --libs libcurl )";
-   libcurl_lib_found=yes;
-   ac_cv_lib_curl_curl_global_init=yes;
+   if [[[ "$LIBCURL_CPPFLAGS" != "" && "$LIBCURL_LDFLAGS" != "" ]]]; then
+     libcurl_lib_found=yes;
+     ac_cv_lib_curl_curl_global_init=yes;
+   else
+     libcurl_lib_found=no;
+     ac_cv_lib_curl_curl_global_init=no;
+   fi
 else
    AC_ARG_WITH([libcurl], 
       [AS_HELP_STRING(
@@ -601,8 +606,13 @@ if [[[ $( which -s pkg-config ) -eq 0 ]]]; then
    LIBXML2_CFLAGS="";
    LIBXML2_CPPFLAGS="$( pkg-config --cflags libxml2 )";
    LIBXML2_LDFLAGS="$( pkg-config --libs libxml2 )";
-   libxml2_lib_found=yes;
-   ac_cv_lib_xml2_xmlFirstElementChild=yes;
+   if [[[ "$LIBXML2_CPPFLAGS" != "" && "$LIBXML2_LDFLAGS" != "" ]]]; then
+     libxml2_lib_found=yes;
+     ac_cv_lib_xml2_xmlFirstElementChild=yes;
+   else
+     libxml2_lib_found=no;
+     ac_cv_lib_xml2_xmlFirstElementChild=no;
+   fi
 else
    AC_ARG_WITH([libxml2],
                [AS_HELP_STRING(

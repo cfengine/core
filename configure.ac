@@ -1,5 +1,5 @@
 dnl
-dnl  Copyright 2019 Northern.tech AS
+dnl  Copyright 2018 Northern.tech AS
 dnl
 dnl  This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
 dnl
@@ -387,28 +387,30 @@ if test $WITH_QDBM = 1; then
   ])
 fi
 
+dnl Tokyo Cabinet (https://launchpad.net/tokyocabinet) is deprecated. 
 dnl Tokyo Cabinet
 
-AC_ARG_WITH([tokyocabinet],
-    [AS_HELP_STRING([--with-tokyocabinet[[=PATH]]], [use Tokyo Cabinet to store runtime data])])
-
-AS_IF([test $WITH_QDBM -eq 0 && test -n "$with_tokyocabinet" && test "x$with_tokyocabinet" != "xno"], [WITH_TOKYO=1], [WITH_TOKYO=0])
-
-if test $WITH_TOKYO = 1; then
-  CF3_WITH_LIBRARY(tokyocabinet, [
-    AC_CHECK_LIB(tokyocabinet, tchdbnew, [], [AC_MSG_ERROR(Cannot find Tokyo Cabinet)])
-    AC_CHECK_HEADERS(tcutil.h, [], [AC_MSG_ERROR(Cannot find Tokyo Cabinet)])
-    AC_CHECK_HEADERS(tchdb.h, [], [AC_MSG_ERROR(Cannot find Tokyo Cabinet)])
-    AC_DEFINE(TCDB, 1, [Define if Tokyo Cabinet is available.])
-  ])
-fi
+dnl AC_ARG_WITH([tokyocabinet],
+dnl     [AS_HELP_STRING([--with-tokyocabinet[[=PATH]]], [use Tokyo Cabinet to store runtime data])])
+dnl 
+dnl AS_IF([test $WITH_QDBM -eq 0 && test -n "$with_tokyocabinet" && test "x$with_tokyocabinet" != "xno"], [WITH_TOKYO=1], [WITH_TOKYO=0])
+dnl 
+dnl if test $WITH_TOKYO = 1; then
+dnl   CF3_WITH_LIBRARY(tokyocabinet, [
+dnl     AC_CHECK_LIB(tokyocabinet, tchdbnew, [], [AC_MSG_ERROR(Cannot find Tokyo Cabinet)])
+dnl     AC_CHECK_HEADERS(tcutil.h, [], [AC_MSG_ERROR(Cannot find Tokyo Cabinet)])
+dnl     AC_CHECK_HEADERS(tchdb.h, [], [AC_MSG_ERROR(Cannot find Tokyo Cabinet)])
+dnl     AC_DEFINE(TCDB, 1, [Define if Tokyo Cabinet is available.])
+dnl   ])
+dnl fi
 
 dnl OpenLDAP Lightning MDB
 
 AC_ARG_WITH([lmdb],
     [AS_HELP_STRING([--with-lmdb[[=PATH]]], [use Lightning MDB to store runtime data])])
 
-AS_IF([test $WITH_TOKYO -eq 0 && test $WITH_QDBM -eq 0 && (! test -n "$with_lmdb" || test "x$with_lmdb" != "xno")], [WITH_LMDB=1], [WITH_LMDB=0])
+dnl AS_IF([test $WITH_TOKYO -eq 0 && test $WITH_QDBM -eq 0 && (! test -n "$with_lmdb" || test "x$with_lmdb" != "xno")], [WITH_LMDB=1], [WITH_LMDB=0])
+AS_IF([test $WITH_QDBM -eq 0 && (! test -n "$with_lmdb" || test "x$with_lmdb" != "xno")], [WITH_LMDB=1], [WITH_LMDB=0])
 
 if test $WITH_LMDB = 1; then
   CF3_WITH_LIBRARY(lmdb, [
@@ -418,8 +420,11 @@ if test $WITH_LMDB = 1; then
   ])
 fi
 
-if test $WITH_QDBM -eq 0 && test $WITH_TOKYO -eq 0 && test $WITH_LMDB -eq 0; then
-   AC_MSG_ERROR(Either Tokyo Cabinet, LMDB, or QDBM must be selected to compile CFEngine)
+dnl if test $WITH_QDBM -eq 0 && test $WITH_TOKYO -eq 0 && test $WITH_LMDB -eq 0; then
+dnl    AC_MSG_ERROR(Either Tokyo Cabinet, LMDB, or QDBM must be selected to compile CFEngine)
+dnl fi
+if test $WITH_QDBM -eq 0 && test $WITH_LMDB -eq 0; then
+   AC_MSG_ERROR(Either LMDB, or QDBM must be selected to compile CFEngine)
 fi
 
 dnl
@@ -538,92 +543,160 @@ fi
 
 dnl libcurl
 
-AC_ARG_WITH([libcurl],
-    [AS_HELP_STRING([--with-libcurl[[=PATH]]], [Specify libcurl path])], [], [with_libcurl=check])
-
-if test "x$with_libcurl" != xno
-then
-  CF3_WITH_LIBRARY(libcurl, [
-    AC_CHECK_LIB(curl, curl_global_init,
-      [],
-      [  libcurl_lib_found=no;
-         if test "x$with_libcurl" != xcheck;
-         then
-             AC_MSG_ERROR(Cannot find libcurl library);
-         fi
-      ])
-    AC_CHECK_HEADERS([curl/curl.h],
-      [libcurl_header_found=yes],
-      [if test "x$with_libcurl" != xcheck; then AC_MSG_ERROR(Cannot find libcurl header files); fi])
-  ])
+if [[[ $( which -s pkg-config ) -eq 0 ]]]; then
+   LIBCURL_CFLAGS="$( pkg-config --cflags libcurl )";
+   LIBCURL_CPPFLAGS="$( pkg-config --cflags libcurl )";
+   LIBCURL_LDFLAGS="$( pkg-config --libs-only-L libcurl )";
+   LIBCURL_LIBS="$( pkg-config --libs-only-l libcurl )";
+   if [[[ "$LIBCURL_LIBS" != "" ]]]; then
+     libcurl_lib_found=yes;
+     ac_cv_lib_curl_curl_global_init=yes;
+   else
+     libcurl_lib_found=no;
+     ac_cv_lib_curl_curl_global_init=no;
+   fi
+else
+   AC_ARG_WITH([libcurl], 
+      [AS_HELP_STRING(
+       [--with-libcurl[[=PATH]]], 
+       [Specify libcurl path])], 
+       [], 
+       [with_libcurl=check; check_libcurl])
 fi
 
+check_libcurl() {
+   if [[[ "x$with_libcurl" != xno ]]]; then
+
+      CF3_WITH_LIBRARY(libcurl, [
+         AC_CHECK_LIB(curl, curl_global_init,
+           [],
+           [libcurl_lib_found=no;
+            if test "x$with_libcurl" != xcheck; then
+               AC_MSG_ERROR(Cannot find libcurl library);
+            fi])
+         AC_CHECK_HEADERS([curl/curl.h],
+            [libcurl_header_found=yes],
+            [if test "x$with_libcurl" != xcheck; then :
+                AC_MSG_ERROR(Cannot find libcurl header files); 
+             fi])
+         ])
+   fi
+}
+# end of check_libcurl
+
 AM_CONDITIONAL(HAVE_LIBCURL,
-        [test "x$libcurl_lib_found" != xno && test "x$libcurl_header_found" = xyes])
+   [test "x$libcurl_lib_found" != xno && 
+    test "x$libcurl_header_found" = xyes])
 
 dnl libyaml
 
-AC_ARG_WITH([libyaml],
-    [AS_HELP_STRING([--with-libyaml[[=PATH]]], [Specify libyaml path])], [], [with_libyaml=check])
 
-if test "x$with_libyaml" != xno
-then
-  CF3_WITH_LIBRARY(libyaml, [
-    AC_CHECK_LIB(yaml, yaml_parser_initialize,
-      [],
-      [if test "x$with_libyaml" != xcheck; then AC_MSG_ERROR(Cannot find libyaml library); fi])
-    AC_CHECK_HEADERS(yaml.h,
-      [libyaml_header_found=yes],
-      [if test "x$with_libyaml" != xcheck; then AC_MSG_ERROR(Cannot find libyaml header files); fi])
-  ])
+if [[[ $( which -s pkg-config ) -eq 0 ]]]; then
+   LIBYAML_CFLAGS="$( pkg-config --cflags yaml )";
+   LIBYAML_CPPFLAGS="$( pkg-config --cflags yaml )";
+   LIBYAML_LDFLAGS="$( pkg-config --libs-only-L yaml )";
+   LIBYAML_LIBS="$( pkg-config --libs-only-l yaml )";
+   if [[[ "$LIBYAML_LIBS" != "" ]]]; then
+     libyaml_lib_found=yes;
+      ac_cv_lib_yaml_yaml_parser_initialize=yes;
+   else
+     libyaml_lib_found=no;
+     ac_cv_lib_yaml_yaml_parser_initialize=no;
+   fi
+else
+   AC_ARG_WITH([libyaml],
+       [AS_HELP_STRING(
+        [--with-libyaml[[=PATH]]], 
+        [Specify libyaml path])], 
+        [], 
+        [with_libyaml=check; check_libyaml])
 fi
+
+check_libyaml() {
+   if test "x$with_libyaml" != xno
+   then
+     CF3_WITH_LIBRARY(libyaml, [
+       AC_CHECK_LIB(yaml, yaml_parser_initialize,
+         [],
+         [if test "x$with_libyaml" != xcheck; then 
+             AC_MSG_ERROR(Cannot find libyaml library); 
+          fi])
+       AC_CHECK_HEADERS(yaml.h,
+         [libyaml_header_found=yes],
+         [if test "x$with_libyaml" != xcheck; then 
+             AC_MSG_ERROR(Cannot find libyaml header files); 
+          fi])
+     ])
+   fi
+}
+# end of check_libyaml
 
 dnl libxml2
 
-AC_ARG_WITH([libxml2],
-    [AS_HELP_STRING([--with-libxml2[[=PATH]]],
-        [Specify libxml2 path])
-    ],
-    [],
-    [with_libxml2=check])
+if [[[ $( which -s pkg-config ) -eq 0 ]]]; then
+   LIBXML2_CFLAGS="$( pkg-config --cflags libxml2 )";
+   LIBXML2_CPPFLAGS="$( pkg-config --cflags libxml2 )";
+   LIBXML2_LDFLAGS="$( pkg-config --libs-only-L libxml2 )";
+   LIBXML2_LIBS="$( pkg-config --libs-only-l libxml2 )";
+   if [[[ "$LIBXML2_LIBS" != "" ]]]; then
+     libxml2_lib_found=yes;
+     ac_cv_lib_xml2_xmlFirstElementChild=yes;
+   else
+     libxml2_lib_found=no;
+     ac_cv_lib_xml2_xmlFirstElementChild=no;
+   fi
+else
+   AC_ARG_WITH([libxml2],
+               [AS_HELP_STRING(
+                [--with-libxml2[[=PATH]]],
+                [Specify libxml2 path])
+               ],
+               [],
+               [with_libxml2=check; check_libxml2])
+fi
 
-if test "x$with_libxml2" != xno
-then
-    if test "x$with_libxml2" != xyes &&
-       test "x$with_libxml2" != xcheck
-    then
-        XML2_CONFIG=$with_libxml2/bin/xml2-config
-    else
-        XML2_CONFIG=xml2-config
-    fi
+check_libxml2() {
 
-    # xml2-config is only for native builds
-    if test "x$cross_compiling" = "xno" && test x`which $XML2_CONFIG` != x
-    then
-        xml2_include_dir=`$XML2_CONFIG --cflags`
-        if test -n "$xml2_include_dir"
-        then
-            LIBXML2_CPPFLAGS="$xml2_include_dir"
-        fi
+   if [[[ "x$with_libxml2" != xno ]]]; then
+
+      if [[[ "x$with_libxml2" != xyes && 
+             "x$with_libxml2" != xcheck
+         ]]]; then
+         XML2_CONFIG=$with_libxml2/bin/xml2-config
+      else
+         XML2_CONFIG=xml2-config
+      fi
+      
+      # xml2-config is only for native builds
+      if [[[ "x$cross_compiling" == "xno" && 
+             "x$( which $XML2_CONFIG )" != x 
+          ]]]; then
+       xml2_include_dir=`$XML2_CONFIG --cflags`
+       if test -n "$xml2_include_dir"
+       then
+          LIBXML2_CPPFLAGS="$xml2_include_dir"
+       fi
     else                # xml2-config not found
-        # if a path, e.g. /var/cfengine was given, then we
-        # must take into account that libxml2 includes are in
-        # /var/cfengine/include/libxml2
-        LIBXML2_CPPFLAGS=-I$with_libxml2/include/libxml2
+       # if a path, e.g. /var/cfengine was given, then we
+       # must take into account that libxml2 includes are in
+       # /var/cfengine/include/libxml2
+       LIBXML2_CPPFLAGS=-I$with_libxml2/include/libxml2
     fi
 
     CF3_WITH_LIBRARY(libxml2,
-        [AC_CHECK_LIB(xml2, xmlFirstElementChild,
-            [],
-            [if test "x$with_libxml2" != xcheck; then
-                AC_MSG_ERROR(Cannotfind libxml2); fi]
-        )
-        AC_CHECK_HEADERS([libxml/xmlwriter.h], [break],
-            [if test "x$with_libxml2" != xcheck; then
-                AC_MSG_ERROR(Cannot find libxml2); fi]
-        )]
-    )
-fi
+                     [AC_CHECK_LIB(xml2, xmlFirstElementChild,
+                      [],
+                      [if test "x$with_libxml2" != xcheck; then
+                       AC_MSG_ERROR(Cannotfind libxml2); fi]
+                      )
+                     AC_CHECK_HEADERS([libxml/xmlwriter.h], [break],
+                                      [if test "x$with_libxml2" != xcheck; then
+                                       AC_MSG_ERROR(Cannot find libxml2); fi]
+                                      )]
+                     )
+    fi
+}
+# end of check_libxml2
 
 AM_CONDITIONAL([HAVE_LIBXML2],
     [test "x$with_libxml2" != xno &&
@@ -767,9 +840,6 @@ AC_CHECK_DECLS(strnlen)
 AC_REPLACE_FUNCS(strnlen)
 
 cf3_FUNC_STRNDUP
-
-AC_CHECK_DECLS(seteuid)
-AC_REPLACE_FUNCS(seteuid)
 
 AC_CHECK_DECLS(setlinebuf)
 AC_REPLACE_FUNCS(setlinebuf)
@@ -1244,10 +1314,14 @@ dnl ######################################################################
 dnl Collect all the options
 dnl ######################################################################
 
-CORE_CPPFLAGS="$LMDB_CPPFLAGS $TOKYOCABINET_CPPFLAGS $QDBM_CPPFLAGS $PCRE_CPPFLAGS $OPENSSL_CPPFLAGS $SQLITE3_CPPFLAGS $LIBACL_CPPFLAGS $LIBCURL_CPPFLAGS $LIBYAML_CPPFLAGS $POSTGRESQL_CPPFLAGS $MYSQL_CPPFLAGS $LIBXML2_CPPFLAGS $CPPFLAGS"
-CORE_CFLAGS="$LMDB_CFLAGS $TOKYOCABINET_CFLAGS $QDBM_CFLAGS $PCRE_CFLAGS $OPENSSL_CFLAGS $SQLITE3_CFLAGS $LIBACL_CFLAGS $LIBCURL_CFLAGS $LIBYAML_CFLAGS $POSTGRESQL_CFLAGS $MYSQL_CFLAGS $LIBXML2_CFLAGS $CFLAGS"
-CORE_LDFLAGS="$LMDB_LDFLAGS $TOKYOCABINET_LDFLAGS $QDBM_LDFLAGS $PCRE_LDFLAGS $OPENSSL_LDFLAGS $SQLITE3_LDFLAGS $LIBACL_LDFLAGS $LIBCURL_LDFLAGS $LIBYAML_LDFLAGS $POSTGRESQL_LDFLAGS $MYSQL_LDFLAGS $LIBXML2_LDFLAGS $LDFLAGS"
-CORE_LIBS="$LMDB_LIBS $TOKYOCABINET_LIBS $QDBM_LIBS $PCRE_LIBS $OPENSSL_LIBS $SQLITE3_LIBS $LIBACL_LIBS $LIBCURL_LIBS $LIBYAML_LIBS $POSTGRESQL_LIBS $MYSQL_LIBS $LIBXML2_LIBS $LIBS"
+dnl CORE_CPPFLAGS="$LMDB_CPPFLAGS $TOKYOCABINET_CPPFLAGS $QDBM_CPPFLAGS $PCRE_CPPFLAGS $OPENSSL_CPPFLAGS $SQLITE3_CPPFLAGS $LIBACL_CPPFLAGS $LIBCURL_CPPFLAGS $LIBYAML_CPPFLAGS $POSTGRESQL_CPPFLAGS $MYSQL_CPPFLAGS $LIBXML2_CPPFLAGS $CPPFLAGS"
+CORE_CPPFLAGS="$LMDB_CPPFLAGS $QDBM_CPPFLAGS $PCRE_CPPFLAGS $OPENSSL_CPPFLAGS $SQLITE3_CPPFLAGS $LIBACL_CPPFLAGS $LIBCURL_CPPFLAGS $LIBYAML_CPPFLAGS $POSTGRESQL_CPPFLAGS $MYSQL_CPPFLAGS $LIBXML2_CPPFLAGS $CPPFLAGS"
+dnl CORE_CFLAGS="$LMDB_CFLAGS $TOKYOCABINET_CFLAGS $QDBM_CFLAGS $PCRE_CFLAGS $OPENSSL_CFLAGS $SQLITE3_CFLAGS $LIBACL_CFLAGS $LIBCURL_CFLAGS $LIBYAML_CFLAGS $POSTGRESQL_CFLAGS $MYSQL_CFLAGS $LIBXML2_CFLAGS $CFLAGS"
+CORE_CFLAGS="$LMDB_CFLAGS $QDBM_CFLAGS $PCRE_CFLAGS $OPENSSL_CFLAGS $SQLITE3_CFLAGS $LIBACL_CFLAGS $LIBCURL_CFLAGS $LIBYAML_CFLAGS $POSTGRESQL_CFLAGS $MYSQL_CFLAGS $LIBXML2_CFLAGS $CFLAGS"
+dnl CORE_LDFLAGS="$LMDB_LDFLAGS $TOKYOCABINET_LDFLAGS $QDBM_LDFLAGS $PCRE_LDFLAGS $OPENSSL_LDFLAGS $SQLITE3_LDFLAGS $LIBACL_LDFLAGS $LIBCURL_LDFLAGS $LIBYAML_LDFLAGS $POSTGRESQL_LDFLAGS $MYSQL_LDFLAGS $LIBXML2_LDFLAGS $LDFLAGS"
+CORE_LDFLAGS="$LMDB_LDFLAGS $QDBM_LDFLAGS $PCRE_LDFLAGS $OPENSSL_LDFLAGS $SQLITE3_LDFLAGS $LIBACL_LDFLAGS $LIBCURL_LDFLAGS $LIBYAML_LDFLAGS $POSTGRESQL_LDFLAGS $MYSQL_LDFLAGS $LIBXML2_LDFLAGS $LDFLAGS"
+dnl CORE_LIBS="$LMDB_LIBS $TOKYOCABINET_LIBS $QDBM_LIBS $PCRE_LIBS $OPENSSL_LIBS $SQLITE3_LIBS $LIBACL_LIBS $LIBCURL_LIBS $LIBYAML_LIBS $POSTGRESQL_LIBS $MYSQL_LIBS $LIBXML2_LIBS $LIBS"
+CORE_LIBS="$LMDB_LIBS $QDBM_LIBS $PCRE_LIBS $OPENSSL_LIBS $SQLITE3_LIBS $LIBACL_LIBS $LIBCURL_LIBS $LIBYAML_LIBS $POSTGRESQL_LIBS $MYSQL_LIBS $LIBXML2_LIBS $LIBS"
 
 dnl ######################################################################
 dnl Make them available to subprojects.
@@ -1621,9 +1695,12 @@ AC_MSG_RESULT([-> OpenSSL: $OPENSSL_PATH])
 
 AC_MSG_RESULT([-> PCRE: $PCRE_PATH])
 
-if test $WITH_TOKYO = 1; then
-  AC_MSG_RESULT([-> DB: Tokyo Cabinet: $TOKYOCABINET_PATH])
-elif test $WITH_QDBM = 1; then
+dnl if test $WITH_TOKYO = 1; then
+dnl   AC_MSG_RESULT([-> DB: Tokyo Cabinet: $TOKYOCABINET_PATH])
+dnl elif test $WITH_QDBM = 1; then
+dnl   AC_MSG_RESULT([-> DB: QDBM: $QDBM_PATH])
+dnl fi
+if test $WITH_QDBM = 1; then
   AC_MSG_RESULT([-> DB: QDBM: $QDBM_PATH])
 fi
 
@@ -1641,10 +1718,15 @@ else
   AC_MSG_RESULT([-> PostgreSQL connector: disabled])
 fi
 
+dnl if test $WITH_LMDB = 1; then
+dnl   AC_MSG_RESULT([-> DB: Lightning MDB: $LMDB_PATH])
+dnl elif test $WITH_TOKYO = 1; then
+dnl   AC_MSG_RESULT([-> DB: Tokyo Cabinet: $TOKYOCABINET_PATH])
+dnl elif test $WITH_QDBM = 1; then
+dnl   AC_MSG_RESULT([-> DB: QDBM: $QDBM_PATH])
+dnl fi
 if test $WITH_LMDB = 1; then
   AC_MSG_RESULT([-> DB: Lightning MDB: $LMDB_PATH])
-elif test $WITH_TOKYO = 1; then
-  AC_MSG_RESULT([-> DB: Tokyo Cabinet: $TOKYOCABINET_PATH])
 elif test $WITH_QDBM = 1; then
   AC_MSG_RESULT([-> DB: QDBM: $QDBM_PATH])
 fi

@@ -40,6 +40,9 @@
 #include <communication.h>
 #include <client_code.h>
 #include <assert.h>
+#include <crypto.h>
+#include <openssl/rand.h>
+#include <encode.h>
 
 /*
 Bootstrapping is a tricky sequence of fragile events. We need to map shakey/IP
@@ -351,5 +354,34 @@ bool MasterfileExists(const char *masterdir)
         return false;
     }
 
+    return true;
+}
+
+static char *BootstrapIDFilename(const char *workdir)
+{
+   return StringFormat("%s%cbootstrap_id.dat", workdir, FILE_SEPARATOR);
+}
+
+bool CreateBootstrapIDFile(const char *workdir)
+{
+    char *filename = BootstrapIDFilename(workdir);
+
+    FILE *file = fopen(filename, "w");
+    if (file == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Unable to write bootstrap id file '%s' (fopen: %s)", filename, GetErrorStr());
+        free(filename);
+        return false;
+    }
+    CryptoInitialize();
+    #define RANDOM_BYTES 240 / 8 // 240 avoids padding (divisible by 6)
+    unsigned char buf[RANDOM_BYTES];
+    RAND_bytes(buf, RANDOM_BYTES);
+    char *b64_id = StringEncodeBase64(buf, RANDOM_BYTES);
+    fprintf(file, "%s\n", b64_id);
+    fclose(file);
+
+    free(b64_id);
+    free(filename);
     return true;
 }

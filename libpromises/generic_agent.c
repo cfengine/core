@@ -564,6 +564,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
 
         PolicyServerWriteFile(GetWorkDir(), bootstrap_arg);
         EvalContextSetPolicyServer(ctx, bootstrap_arg);
+        CreateBootstrapIDFile(GetWorkDir());
 
         /* FIXME: Why it is called here? Can't we move both invocations to before if? */
         UpdateLastPolicyUpdateTime(ctx);

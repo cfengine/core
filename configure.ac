@@ -538,7 +538,7 @@ fi
 
 dnl libcurl
 
-if [[[ $( which -s pkg-config ) -eq 0 ]]]; then
+if [[[ "$( which pkg-config )" != "" ]]]; then
    LIBCURL_CFLAGS="$( pkg-config --cflags libcurl )";
    LIBCURL_CPPFLAGS="$( pkg-config --cflags libcurl )";
    LIBCURL_LDFLAGS="$( pkg-config --libs-only-L libcurl )";
@@ -586,7 +586,7 @@ AM_CONDITIONAL(HAVE_LIBCURL,
 dnl libyaml
 
 
-if [[[ $( which -s pkg-config ) -eq 0 ]]]; then
+if [[[ "$( which pkg-config )" != "" ]]]; then
    LIBYAML_CFLAGS="$( pkg-config --cflags yaml )";
    LIBYAML_CPPFLAGS="$( pkg-config --cflags yaml )";
    LIBYAML_LDFLAGS="$( pkg-config --libs-only-L yaml )";
@@ -628,7 +628,7 @@ check_libyaml() {
 
 dnl libxml2
 
-if [[[ $( which -s pkg-config ) -eq 0 ]]]; then
+if [[[ "$( which pkg-config )" != "" ]]]; then
    LIBXML2_CFLAGS="$( pkg-config --cflags libxml2 )";
    LIBXML2_CPPFLAGS="$( pkg-config --cflags libxml2 )";
    LIBXML2_LDFLAGS="$( pkg-config --libs-only-L libxml2 )";

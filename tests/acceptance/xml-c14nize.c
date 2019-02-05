@@ -6,6 +6,9 @@
 
 static bool xmlC14nizeFile(const char *filename)
 {
+
+#ifdef LIBXML_SAX1_ENABLED
+
     xmlDocPtr doc = xmlParseFile(filename);
 
     if (doc == NULL)
@@ -36,6 +39,14 @@ static bool xmlC14nizeFile(const char *filename)
 
     xmlFreeDoc(doc);
     return true;
+
+#else
+    xmlDocPtr doc = xmlReadFile(filename, NULL, 0);
+    // agenda
+    xmlFreeDoc(doc);
+    return true;
+#endif
+
 }
 
 int main(int argc, char **argv)

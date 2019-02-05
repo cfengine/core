@@ -387,14 +387,28 @@ if test $WITH_QDBM = 1; then
   ])
 fi
 
-dnl Tokyo Cabinet (https://launchpad.net/tokyocabinet) is deprecated.
+dnl Tokyo Cabinet
+
+AC_ARG_WITH([tokyocabinet],
+    [AS_HELP_STRING([--with-tokyocabinet[[=PATH]]], [use Tokyo Cabinet to store runtime data])])
+
+AS_IF([test $WITH_QDBM -eq 0 && test -n "$with_tokyocabinet" && test "x$with_tokyocabinet" != "xno"], [WITH_TOKYO=1], [WITH_TOKYO=0])
+
+if test $WITH_TOKYO = 1; then
+  CF3_WITH_LIBRARY(tokyocabinet, [
+    AC_CHECK_LIB(tokyocabinet, tchdbnew, [], [AC_MSG_ERROR(Cannot find Tokyo Cabinet)])
+    AC_CHECK_HEADERS(tcutil.h, [], [AC_MSG_ERROR(Cannot find Tokyo Cabinet)])
+    AC_CHECK_HEADERS(tchdb.h, [], [AC_MSG_ERROR(Cannot find Tokyo Cabinet)])
+    AC_DEFINE(TCDB, 1, [Define if Tokyo Cabinet is available.])
+  ])
+fi
 
 dnl OpenLDAP Lightning MDB
 
 AC_ARG_WITH([lmdb],
     [AS_HELP_STRING([--with-lmdb[[=PATH]]], [use Lightning MDB to store runtime data])])
 
-AS_IF([test $WITH_QDBM -eq 0 && (! test -n "$with_lmdb" || test "x$with_lmdb" != "xno")], [WITH_LMDB=1], [WITH_LMDB=0])
+AS_IF([test $WITH_TOKYO -eq 0 && test $WITH_QDBM -eq 0 && (! test -n "$with_lmdb" || test "x$with_lmdb" != "xno")], [WITH_LMDB=1], [WITH_LMDB=0])
 
 if test $WITH_LMDB = 1; then
   CF3_WITH_LIBRARY(lmdb, [
@@ -404,8 +418,8 @@ if test $WITH_LMDB = 1; then
   ])
 fi
 
-if test $WITH_QDBM -eq 0 && test $WITH_LMDB -eq 0; then
-   AC_MSG_ERROR(Either LMDB, or QDBM must be selected to compile CFEngine)
+if test $WITH_QDBM -eq 0 && test $WITH_TOKYO -eq 0 && test $WITH_LMDB -eq 0; then
+   AC_MSG_ERROR(Either Tokyo Cabinet, LMDB, or QDBM must be selected to compile CFEngine)
 fi
 
 dnl
@@ -1295,10 +1309,10 @@ dnl ######################################################################
 dnl Collect all the options
 dnl ######################################################################
 
-CORE_CPPFLAGS="$LMDB_CPPFLAGS $QDBM_CPPFLAGS $PCRE_CPPFLAGS $OPENSSL_CPPFLAGS $SQLITE3_CPPFLAGS $LIBACL_CPPFLAGS $LIBCURL_CPPFLAGS $LIBYAML_CPPFLAGS $POSTGRESQL_CPPFLAGS $MYSQL_CPPFLAGS $LIBXML2_CPPFLAGS $CPPFLAGS"
-CORE_CFLAGS="$LMDB_CFLAGS $QDBM_CFLAGS $PCRE_CFLAGS $OPENSSL_CFLAGS $SQLITE3_CFLAGS $LIBACL_CFLAGS $LIBCURL_CFLAGS $LIBYAML_CFLAGS $POSTGRESQL_CFLAGS $MYSQL_CFLAGS $LIBXML2_CFLAGS $CFLAGS"
-CORE_LDFLAGS="$LMDB_LDFLAGS $QDBM_LDFLAGS $PCRE_LDFLAGS $OPENSSL_LDFLAGS $SQLITE3_LDFLAGS $LIBACL_LDFLAGS $LIBCURL_LDFLAGS $LIBYAML_LDFLAGS $POSTGRESQL_LDFLAGS $MYSQL_LDFLAGS $LIBXML2_LDFLAGS $LDFLAGS"
-CORE_LIBS="$LMDB_LIBS $QDBM_LIBS $PCRE_LIBS $OPENSSL_LIBS $SQLITE3_LIBS $LIBACL_LIBS $LIBCURL_LIBS $LIBYAML_LIBS $POSTGRESQL_LIBS $MYSQL_LIBS $LIBXML2_LIBS $LIBS"
+CORE_CPPFLAGS="$LMDB_CPPFLAGS $TOKYOCABINET_CPPFLAGS $QDBM_CPPFLAGS $PCRE_CPPFLAGS $OPENSSL_CPPFLAGS $SQLITE3_CPPFLAGS $LIBACL_CPPFLAGS $LIBCURL_CPPFLAGS $LIBYAML_CPPFLAGS $POSTGRESQL_CPPFLAGS $MYSQL_CPPFLAGS $LIBXML2_CPPFLAGS $CPPFLAGS"
+CORE_CFLAGS="$LMDB_CFLAGS $TOKYOCABINET_CFLAGS $QDBM_CFLAGS $PCRE_CFLAGS $OPENSSL_CFLAGS $SQLITE3_CFLAGS $LIBACL_CFLAGS $LIBCURL_CFLAGS $LIBYAML_CFLAGS $POSTGRESQL_CFLAGS $MYSQL_CFLAGS $LIBXML2_CFLAGS $CFLAGS"
+CORE_LDFLAGS="$LMDB_LDFLAGS $TOKYOCABINET_LDFLAGS $QDBM_LDFLAGS $PCRE_LDFLAGS $OPENSSL_LDFLAGS $SQLITE3_LDFLAGS $LIBACL_LDFLAGS $LIBCURL_LDFLAGS $LIBYAML_LDFLAGS $POSTGRESQL_LDFLAGS $MYSQL_LDFLAGS $LIBXML2_LDFLAGS $LDFLAGS"
+CORE_LIBS="$LMDB_LIBS $TOKYOCABINET_LIBS $QDBM_LIBS $PCRE_LIBS $OPENSSL_LIBS $SQLITE3_LIBS $LIBACL_LIBS $LIBCURL_LIBS $LIBYAML_LIBS $POSTGRESQL_LIBS $MYSQL_LIBS $LIBXML2_LIBS $LIBS"
 
 dnl ######################################################################
 dnl Make them available to subprojects.
@@ -1672,7 +1686,9 @@ AC_MSG_RESULT([-> OpenSSL: $OPENSSL_PATH])
 
 AC_MSG_RESULT([-> PCRE: $PCRE_PATH])
 
-if test $WITH_QDBM = 1; then
+if test $WITH_TOKYO = 1; then
+  AC_MSG_RESULT([-> DB: Tokyo Cabinet: $TOKYOCABINET_PATH])
+elif test $WITH_QDBM = 1; then
   AC_MSG_RESULT([-> DB: QDBM: $QDBM_PATH])
 fi
 
@@ -1692,6 +1708,8 @@ fi
 
 if test $WITH_LMDB = 1; then
   AC_MSG_RESULT([-> DB: Lightning MDB: $LMDB_PATH])
+elif test $WITH_TOKYO = 1; then
+  AC_MSG_RESULT([-> DB: Tokyo Cabinet: $TOKYOCABINET_PATH])
 elif test $WITH_QDBM = 1; then
   AC_MSG_RESULT([-> DB: QDBM: $QDBM_PATH])
 fi

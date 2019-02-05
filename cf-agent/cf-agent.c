@@ -324,6 +324,74 @@ int main(int argc, char *argv[])
 /* Level 1                                                         */
 /*******************************************************************/
 
+static void ConfigureBootstrap(GenericAgentConfig *config, const char *argument)
+{
+    assert(config != NULL);
+    if (!BootstrapAllowed())
+    {
+        Log(LOG_LEVEL_ERR, "Not enough privileges to bootstrap CFEngine");
+        DoCleanupAndExit(EXIT_FAILURE);
+    }
+
+    if(strcmp(optarg, ":avahi") == 0)
+    {
+        if(!HasAvahiSupport())
+        {
+            Log(LOG_LEVEL_ERR, "Avahi support is not built in, please see options to the configure script and rebuild CFEngine");
+            DoCleanupAndExit(EXIT_FAILURE);
+        }
+
+        int err = AutomaticBootstrap(config);
+        if (err < 0)
+        {
+            Log(LOG_LEVEL_ERR, "Automatic bootstrap failed, error code '%d'", err);
+            DoCleanupAndExit(EXIT_FAILURE);
+        }
+        return;
+    }
+
+    if(IsLoopbackAddress(argument))
+    {
+        Log(LOG_LEVEL_ERR, "Cannot bootstrap to a loopback address");
+        DoCleanupAndExit(EXIT_FAILURE);
+    }
+
+    // temporary assure that network functions are working
+    OpenNetwork();
+
+    config->agent_specific.agent.bootstrap_argument = xstrdup(argument);
+
+    char *host, *port;
+    ParseHostPort(optarg, &host, &port);
+
+    char ipaddr[CF_MAX_IP_LEN] = "";
+    if (Hostname2IPString(ipaddr, host,sizeof(ipaddr)) == -1)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Could not resolve hostname '%s', unable to bootstrap",
+            host);
+        DoCleanupAndExit(EXIT_FAILURE);
+    }
+
+    CloseNetwork();
+
+    MINUSF = true;
+    config->ignore_locks = true;
+    GenericAgentConfigSetInputFile(config, GetInputDir(), "promises.cf");
+
+    config->agent_specific.agent.bootstrap_ip = xstrdup(ipaddr);
+    config->agent_specific.agent.bootstrap_host = xstrdup(host);
+
+    if (port == NULL)
+    {
+        config->agent_specific.agent.bootstrap_port = NULL;
+    }
+    else
+    {
+        config->agent_specific.agent.bootstrap_port = xstrdup(port);
+    }
+}
+
 static GenericAgentConfig *CheckOpts(int argc, char **argv)
 {
     extern char *optarg;
@@ -378,69 +446,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
         case 'B':
             {
-                if (!BootstrapAllowed())
-                {
-                    Log(LOG_LEVEL_ERR, "Not enough privileges to bootstrap CFEngine");
-                    DoCleanupAndExit(EXIT_FAILURE);
-                }
-
-                if(strcmp(optarg, ":avahi") == 0)
-                {
-                    if(!HasAvahiSupport())
-                    {
-                        Log(LOG_LEVEL_ERR, "Avahi support is not built in, please see options to the configure script and rebuild CFEngine");
-                        DoCleanupAndExit(EXIT_FAILURE);
-                    }
-
-                    int err = AutomaticBootstrap(config);
-                    if (err < 0)
-                    {
-                        Log(LOG_LEVEL_ERR, "Automatic bootstrap failed, error code '%d'", err);
-                        DoCleanupAndExit(EXIT_FAILURE);
-                    }
-                    break;
-                }
-
-                if(IsLoopbackAddress(optarg))
-                {
-                    Log(LOG_LEVEL_ERR, "Cannot bootstrap to a loopback address");
-                    DoCleanupAndExit(EXIT_FAILURE);
-                }
-
-                // temporary assure that network functions are working
-                OpenNetwork();
-
-                config->agent_specific.agent.bootstrap_argument = xstrdup(optarg);
-
-                char *host, *port;
-                ParseHostPort(optarg, &host, &port);
-
-                char ipaddr[CF_MAX_IP_LEN] = "";
-                if (Hostname2IPString(ipaddr, host,sizeof(ipaddr)) == -1)
-                {
-                    Log(LOG_LEVEL_ERR,
-                        "Could not resolve hostname '%s', unable to bootstrap",
-                        host);
-                    DoCleanupAndExit(EXIT_FAILURE);
-                }
-
-                CloseNetwork();
-
-                MINUSF = true;
-                config->ignore_locks = true;
-                GenericAgentConfigSetInputFile(config, GetInputDir(), "promises.cf");
-
-                config->agent_specific.agent.bootstrap_ip = xstrdup(ipaddr);
-                config->agent_specific.agent.bootstrap_host = xstrdup(host);
-
-                if (port == NULL)
-                {
-                    config->agent_specific.agent.bootstrap_port = NULL;
-                }
-                else
-                {
-                    config->agent_specific.agent.bootstrap_port = xstrdup(port);
-                }
+                ConfigureBootstrap(config, optarg);
             }
             break;
 

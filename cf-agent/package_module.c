@@ -28,6 +28,7 @@
 #include <signals.h>
 #include <buffer.h>
 #include <string_lib.h>
+#include <path.h>
 #include <actuator.h>
 #include <file_lib.h>
 #include <known_dirs.h>
@@ -43,7 +44,7 @@ static bool UpdateSinglePackageModuleCache(EvalContext *ctx,
                                     const PackageModuleWrapper *module_wrapper,
                                     UpdateType type, bool force_update);
 static void GetPackageModuleExecInfo(const PackageModuleBody *package_module, char **exec_path,
-                                     char **script_path, char **script_exec_opts);
+                                     char **script_path, char **script_path_quoted, char **script_exec_opts);
 static int NegotiateSupportedAPIVersion(PackageModuleWrapper *wrapper);
 
 
@@ -53,6 +54,7 @@ void DeletePackageModuleWrapper(PackageModuleWrapper *wrapper)
     {
         free(wrapper->path);
         free(wrapper->script_path);
+        free(wrapper->script_path_quoted);
         free(wrapper->script_exec_opts);
         free(wrapper->name);
         free(wrapper);
@@ -66,7 +68,8 @@ PackageModuleWrapper *NewPackageModuleWrapper(PackageModuleBody *package_module)
     PackageModuleWrapper *wrapper = xmalloc(sizeof(PackageModuleWrapper));
 
     GetPackageModuleExecInfo(package_module, &(wrapper->path),
-                             &(wrapper->script_path), &(wrapper->script_exec_opts));
+                             &(wrapper->script_path), &(wrapper->script_path_quoted),
+                             &(wrapper->script_exec_opts));
     wrapper->name = SafeStringDuplicate(package_module->name);
     wrapper->package_module = package_module;
 
@@ -141,13 +144,13 @@ static int PackageWrapperCommunicate(const PackageModuleWrapper *wrapper, const 
     {
         if (wrapper->script_exec_opts == NULL)
         {
-            all_args = StringConcatenate(3, wrapper->script_path, " ", args);
+            all_args = StringConcatenate(3, wrapper->script_path_quoted, " ", args);
             args = all_args;
         }
         else
         {
             all_args = StringConcatenate(5, wrapper->script_exec_opts, " ",
-                                         wrapper->script_path, " ", args);
+                                         wrapper->script_path_quoted, " ", args);
             args = all_args;
         }
     }
@@ -470,11 +473,13 @@ PackageInfo *GetPackageData(const char *name, const char *version,
 }
 
 static void GetPackageModuleExecInfo(const PackageModuleBody *package_module, char **exec_path,
-                                     char **script_path, char **script_exec_opts)
+                                     char **script_path, char **script_path_quoted,
+                                     char **script_exec_opts)
 {
 
     assert(exec_path != NULL);
     assert(script_path != NULL);
+    assert(script_path_quoted != NULL);
 
     char *package_module_path = NULL;
 
@@ -492,6 +497,8 @@ static void GetPackageModuleExecInfo(const PackageModuleBody *package_module, ch
     if (package_module->interpreter && !StringSafeEqual(package_module->interpreter, ""))
     {
         *script_path = package_module_path;
+        *script_path_quoted = Path_GetQuoted(*script_path);
+
         if (strchr(package_module->interpreter, ' ') == NULL)
         {
             /* no spaces in the 'interpreter' string, easy! */
@@ -508,6 +515,7 @@ static void GetPackageModuleExecInfo(const PackageModuleBody *package_module, ch
     {
         *exec_path = package_module_path;
         *script_path = NULL;
+        *script_path_quoted = NULL;
         *script_exec_opts = NULL;
     }
 }

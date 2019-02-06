@@ -59,6 +59,7 @@ typedef struct
     char *name;
     char *path;
     char *script_path;
+    char *script_path_quoted;
     char *script_exec_opts;
     PackageModuleBody *package_module;
     int supported_api_version;

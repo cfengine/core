@@ -43,4 +43,12 @@ const char *Path_Basename(const char *path);
 
 char *Path_JoinAlloc(const char *dir, const char *leaf);
 
+/**
+ * Get a quoted path if not already quoted and if needs to be quoted (contains
+ * spaces and/or other special characters).
+ *
+ * @return A newly-allocated string (or %NULL if given %NULL)
+ */
+char *Path_GetQuoted(const char *path);
+
 #endif

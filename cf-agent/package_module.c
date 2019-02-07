@@ -501,8 +501,9 @@ static void GetPackageModuleExecInfo(const PackageModuleBody *package_module, ch
 
         if (strchr(package_module->interpreter, ' ') == NULL)
         {
-            /* no spaces in the 'interpreter' string, easy! */
+            /* No spaces in the 'interpreter' string, easy! Just interpreter path given, no opts. */
             *exec_path = xstrdup(package_module->interpreter);
+            *script_exec_opts = NULL;
         }
         else
         {

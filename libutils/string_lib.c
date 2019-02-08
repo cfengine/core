@@ -754,52 +754,6 @@ void ReplaceChar(char *in, char *out, int outSz, char from, char to)
     }
 }
 
-/* TODO replace with StringReplace. This one is pretty slow, calls strncmp
- * O(n) times even if string matches nowhere. */
-bool ReplaceStr(const char *in, char *out, int outSz, const char *from, const char *to)
-/* Replaces all occurrences of strings 'from' to 'to' in preallocated
- * string 'out'. Returns true on success, false otherwise. */
-{
-    int inSz;
-    int outCount;
-    int inCount;
-    int fromSz, toSz;
-
-    memset(out, 0, outSz);
-
-    inSz = strlen(in);
-    fromSz = strlen(from);
-    toSz = strlen(to);
-
-    inCount = 0;
-    outCount = 0;
-
-    while ((inCount < inSz) && (outCount < outSz))
-    {
-        if (strncmp(in + inCount, from, fromSz) == 0)
-        {
-            if (outCount + toSz >= outSz)
-            {
-                return false;
-            }
-
-            strcat(out, to);
-
-            inCount += fromSz;
-            outCount += toSz;
-        }
-        else
-        {
-            out[outCount] = in[inCount];
-
-            inCount++;
-            outCount++;
-        }
-    }
-
-    return true;
-}
-
 /**
  * Replace all occurrences of #find with #replace.
  *

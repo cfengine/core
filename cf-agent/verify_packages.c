@@ -3214,7 +3214,7 @@ bool ExecPackageCommand(EvalContext *ctx, char *command, int verify, int setCmdC
 {
     assert(a != NULL);
     bool retval = true;
-    char lineSafe[CF_BUFSIZE], *cmd;
+    char *cmd;
     FILE *pfp;
     int packmanRetval = 0;
 
@@ -3289,7 +3289,19 @@ bool ExecPackageCommand(EvalContext *ctx, char *command, int verify, int setCmdC
             }
         }
 
-        ReplaceStr(line, lineSafe, sizeof(lineSafe), "%", "%%");
+        /* Need space for 2x buffer and null byte. */
+        char lineSafe[res * 2 + 1];
+        memcpy(lineSafe, line, res + 1);
+
+        ssize_t replace_res =
+            StringReplace(lineSafe, sizeof(lineSafe), "%", "%%");
+        if (replace_res == -1)
+        {
+            ProgrammingError("StringReplace(): buffer overflow in %s",
+                             __FILE__);
+            continue;
+        }
+
         Log(LOG_LEVEL_INFO, "Q:%20.20s ...:%s", cmd, lineSafe);
 
         if (verify && (line[0] != '\0'))

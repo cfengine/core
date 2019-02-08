@@ -803,11 +803,11 @@ bool ReplaceStr(const char *in, char *out, int outSz, const char *from, const ch
 /**
  * Replace all occurrences of #find with #replace.
  *
- * @return the length of #buf or (size_t) -1 in case of overflow, or 0
- *         if no replace took place.
+ * @return the length of #buf or -1 in case of overflow, or 0 if no replace
+ *         took place.
  */
-size_t StringReplace(char *buf, size_t buf_size,
-                     const char *find, const char *replace)
+ssize_t StringReplace(char *buf, size_t buf_size,
+                      const char *find, const char *replace)
 {
     assert(find[0] != '\0');
 
@@ -822,7 +822,7 @@ size_t StringReplace(char *buf, size_t buf_size,
     size_t buf_len = strlen(buf);
     size_t buf_idx = 0;
     char tmp[buf_size];
-    size_t tmp_len = 0;
+    ssize_t tmp_len = 0;
 
     /* Do all replacements we find. */
     do
@@ -832,7 +832,7 @@ size_t StringReplace(char *buf, size_t buf_size,
 
         if (tmp_len + prefix_len + replace_len >= buf_size)
         {
-            return (size_t) -1;
+            return -1;
         }
 
         memcpy(&tmp[tmp_len], &buf[buf_idx], prefix_len);
@@ -849,7 +849,7 @@ size_t StringReplace(char *buf, size_t buf_size,
     size_t leftover_len = buf_len - buf_idx;
     if (tmp_len + leftover_len >= buf_size)
     {
-        return (size_t) -1;
+        return -1;
     }
     memcpy(&tmp[tmp_len], &buf[buf_idx], leftover_len + 1);
     tmp_len += leftover_len;

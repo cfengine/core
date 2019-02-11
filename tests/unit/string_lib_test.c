@@ -429,27 +429,33 @@ static void test_string_to_long_errors(void)
 {
     // A succesful call to StringToLong should return 0:
     long target = 0;
-    assert(StringToLong("1234",&target) == 0);
-    assert(target == 1234);
+    assert_int_equal(StringToLong("1234", &target), 0);
+    assert_int_equal(target, 1234);
 
     // Test that invalid inputs give error return code:
-    assert(StringToLong("",       &target) != 0);
-    assert(StringToLong(" ",      &target) != 0);
-    assert(StringToLong("error",  &target) != 0);
-    assert(StringToLong("-error", &target) != 0);
-    assert(StringToLong("ffff",   &target) != 0);
-    assert(StringToLong("1d",     &target) != 0);
-    assert(StringToLong("56789d", &target) != 0);
-    assert(StringToLong("9999999999999999999999999999999",&target) == ERANGE);
-    assert(StringToLong(" 999999999999999999999999999999",&target) == ERANGE);
-    assert(StringToLong("-999999999999999999999999999999",&target) == ERANGE);
+    assert_int_not_equal(StringToLong("",       &target), 0);
+    assert_int_not_equal(StringToLong(" ",      &target), 0);
+    assert_int_not_equal(StringToLong("error",  &target), 0);
+    assert_int_not_equal(StringToLong("-error", &target), 0);
+    assert_int_not_equal(StringToLong("ffff",   &target), 0);
+    assert_int_not_equal(StringToLong("1d",     &target), 0);
+    assert_int_not_equal(StringToLong("56789d", &target), 0);
+    assert_int_equal(StringToLong("9999999999999999999999999999999",
+                                  &target),
+                     ERANGE);
+    assert_int_equal(StringToLong(" 999999999999999999999999999999",
+                                  &target),
+                     ERANGE);
+    assert_int_equal(StringToLong("-999999999999999999999999999999",
+                                  &target),
+                     ERANGE);
 
     // Test that error logging function can be called:
     LogStringToLongError("-999999999999999999999999999999", "string_lib_test",
                          ERANGE);
 
     // Check that target is unmodified after errors:
-    assert(target == 1234);
+    assert_int_equal(target, 1234);
 }
 
 static void test_string_to_long_unsafe(void)

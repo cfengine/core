@@ -233,6 +233,84 @@ static void test_no_replace(void)
     free(new_string);
 }
 
+/****************************************************************************
+ * Tests for StringReplace()                                                *
+ *   StringReplace and SearchAndReplace differ in that StringReplace errors *
+ *   if the buffer is too small, and SearchAndReplace allocates sufficient  *
+ *   space.                                                                 *
+ ****************************************************************************/
+
+static void test_string_replace_empty_replacement(void)
+{
+    char string[] = "foobarbaz";
+    size_t actual_size = strlen(string);
+
+    ssize_t ret_size = StringReplace(string, actual_size + 1, "a", "");
+
+    // StringReplace returns the length without counting '\0'
+    assert_int_not_equal(ret_size, actual_size);
+    assert_string_equal(string, "foobrbz");
+}
+
+static void test_string_replace_eq_size(void)
+{
+    char string[] = "sasza szedl sucha szosa";
+    size_t actual_size = strlen(string);
+
+    ssize_t ret_size = StringReplace(string, actual_size + 1, "sz", "xx");
+
+    assert_int_equal(ret_size, actual_size);
+    assert_string_equal(string, "saxxa xxedl sucha xxosa");
+}
+
+static void test_string_replace_buf_too_small(void)
+{
+    char string[] = "sasza szedl sucha szosa";
+    size_t actual_size = sizeof(string);
+
+    ssize_t ret_size = StringReplace(string, actual_size, "sz", "xxx");
+
+    // Errors, `string` is retained
+    assert_int_equal(ret_size, (ssize_t) -1);
+    assert_string_equal(string, "sasza szedl sucha szosa");
+}
+
+static void test_string_replace_smaller(void)
+{
+    char string[] = "sasza szedl sucha szosa";
+    size_t actual_size = strlen(string);
+
+    ssize_t ret_size = StringReplace(string, actual_size + 1, "sz", "x");
+    assert_int_not_equal(ret_size, actual_size);
+    assert_string_equal(string, "saxa xedl sucha xosa");
+}
+
+static void test_string_replace_none(void)
+{
+    char string[] = "sasza szedl sucha szosa";
+    size_t actual_size = strlen(string);
+
+    ssize_t ret_size = StringReplace(string, actual_size + 1,
+                                     "no_such_pattern", "x");
+
+    assert_int_equal(ret_size, 0);
+    assert_string_equal(string, "sasza szedl sucha szosa");
+}
+
+static void test_string_replace_many_percentages(void)
+{
+    char string[29] = "%%%%%%%%%%%%%%";
+    size_t actual_size = sizeof(string);
+
+    ssize_t ret_size = StringReplace(string, actual_size,
+                                     "%", "%%");
+
+    assert_int_equal(ret_size, actual_size - 1);
+    assert_string_equal(string, "%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+}
+
+/****************************************************************************/
+
 static void test_concatenate(void)
 {
     char *new_string = StringConcatenate(2, "snookie", "sitch");
@@ -1016,6 +1094,13 @@ int main()
         unit_test(test_replace_more_size),
         unit_test(test_replace_less_size),
         unit_test(test_no_replace),
+
+        unit_test(test_string_replace_empty_replacement),
+        unit_test(test_string_replace_eq_size),
+        unit_test(test_string_replace_buf_too_small),
+        unit_test(test_string_replace_smaller),
+        unit_test(test_string_replace_none),
+        unit_test(test_string_replace_many_percentages),
 
         unit_test(test_concatenate),
 

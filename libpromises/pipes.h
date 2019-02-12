@@ -42,6 +42,7 @@ FILE *cf_popensetuid(const char *command, const char *type, uid_t uid, gid_t gid
 FILE *cf_popen_sh(const char *command, const char *type);
 FILE *cf_popen_shsetuid(const char *command, const char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, int background);
 int cf_pclose(FILE *pp);
+void cf_pclose_nowait(FILE *pp);
 bool PipeToPid(pid_t *pid, FILE *pp);
 bool PipeTypeIsOk(const char *type);
 

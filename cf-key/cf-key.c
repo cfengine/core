@@ -91,7 +91,7 @@ static const char *const HINTS[] =
     "Output the version of the software",
     "Specify an alternative input file than the default. This option is overridden by FILE if supplied as argument.",
     "Show lastseen hostnames and IP addresses",
-    "Remove keys for specified hostname/IP",
+    "Remove keys for specified hostname/IP/MD5/SHA (cf-key -r SHA=12345, cf-key -r MD5=12345, cf-key -r host001, cf-key -r 203.0.113.1)",
     "Force removal of keys (USE AT YOUR OWN RISK)",
     "Install license file on Enterprise server (CFEngine Enterprise Only)",
     "Print digest of the specified public key",

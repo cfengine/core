@@ -100,7 +100,7 @@ static const char *const HINTS[] =
     "Specify an alternative output file than the default.",
     "Specify a RSA key size in bits, the default value is 2048.",
     "Show lastseen hostnames and IP addresses",
-    "Remove keys for specified hostname/IP",
+    "Remove keys for specified hostname/IP/MD5/SHA (cf-key -r SHA=12345, cf-key -r MD5=12345, cf-key -r host001, cf-key -r 203.0.113.1)",
     "Force removal of keys (USE AT YOUR OWN RISK)",
     "Install license file on Enterprise server (CFEngine Enterprise Only)",
     "Print digest of the specified public key",

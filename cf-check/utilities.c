@@ -9,7 +9,7 @@
 
 Seq *default_lmdb_files()
 {
-    const char *state = "/var/cfengine/state/";
+    const char *state = WORKDIR "/state/";
     Log(LOG_LEVEL_INFO,
         "No filenames specified, defaulting to .lmdb files in %s",
         state);

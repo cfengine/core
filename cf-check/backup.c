@@ -26,7 +26,7 @@ int backup_files(Seq *filenames)
 const char *create_backup_dir()
 {
     static char backup_dir[PATH_MAX];
-    const char *const backup_root = "/var/cfengine/backups/";
+    const char *const backup_root = WORKDIR "/backups/";
 
     if (mkdir(backup_root, 0700) != 0)
     {

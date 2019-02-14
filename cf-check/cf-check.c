@@ -30,7 +30,7 @@ static void print_help()
         "\t$ cf-check command [options]\n"
         "\n"
         "Examples:\n"
-        "\t$ cf-check dump -a /var/cfengine/state/cf_lastseen.lmdb\n"
+        "\t$ cf-check dump -a " WORKDIR "/state/cf_lastseen.lmdb\n"
         "\t$ cf-check diagnose\n"
         "\t$ cf-check repair\n"
         "\n");

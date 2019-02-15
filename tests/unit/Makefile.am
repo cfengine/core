@@ -171,6 +171,7 @@ check_PROGRAMS = \
 	cf_upgrade_test \
 	queue_test \
 	threaded_queue_test \
+	threaded_deque_test \
 	stack_test \
 	matching_test \
 	ring_buffer_test \
@@ -485,6 +486,8 @@ cf_upgrade_test_CFLAGS = -I$(CFUPGRADE)
 queue_test_SOURCES = queue_test.c
 
 threaded_queue_test_SOURCES = threaded_queue_test.c
+
+threaded_deque_test_SOURCES = threaded_deque_test.c
 
 stack_test_SOURCES = stack_test.c
 

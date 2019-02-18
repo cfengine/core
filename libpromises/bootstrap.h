@@ -44,4 +44,7 @@ bool WriteBuiltinFailsafePolicyToPath(const char *filename);
 bool RemoveAllExistingPolicyInInputs(const char *inputdir);
 bool MasterfileExists(const char *masterdir);
 
+// BOOTSTRAP ID FUNCTIONS:
+bool CreateBootstrapIDFile(const char *workdir);
+
 #endif

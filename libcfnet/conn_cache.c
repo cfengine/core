@@ -128,6 +128,22 @@ AgentConnection *ConnCache_FindIdleMarkBusy(const char *server,
             {
                 assert(svp->status == CONNCACHE_STATUS_IDLE);
 
+                // Check connection state before returning it
+                int error = 0;
+                socklen_t len = sizeof(error);
+                if (getsockopt(svp->conn->conn_info->sd, SOL_SOCKET, SO_ERROR, &error, &len) < 0)
+                {
+                    Log(LOG_LEVEL_DEBUG, "FindIdle: found connection to '%s' but could not get socket status, skipping.",
+                        server);
+                    continue;
+                }
+                if (error != 0)
+                {
+                    Log(LOG_LEVEL_DEBUG, "FindIdle: found connection to '%s' but connection is broken, skipping.",
+                        server);
+                    continue;
+                }
+
                 Log(LOG_LEVEL_VERBOSE, "FindIdle:"
                     " found connection to '%s' already open and ready.",
                     server);

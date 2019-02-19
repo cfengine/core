@@ -15,27 +15,37 @@ from cf_remote.packages import Releases
 import cf_remote.demo as demo_lib
 
 
-def ssh_cmd(connection, cmd):
+def ssh_cmd(connection, cmd, errors=False):
     try:
         log.debug("Running over SSH: '{}'".format(cmd))
         result = connection.run(cmd, hide=True)
         output = result.stdout.strip()
         log.debug("'{}' -> '{}'".format(cmd, output))
         return output
-    except UnexpectedExit:
-        log.debug("Non-sudo command unexpectedly exited: '{}'".format(cmd))
+    except UnexpectedExit as e:
+        msg = "Non-sudo command unexpectedly exited: '{}'".format(cmd)
+        if errors:
+            print(e)
+            log.error(msg)
+        else:
+            log.debug(msg)
         return None
 
 
-def ssh_sudo(connection, cmd):
+def ssh_sudo(connection, cmd, errors=False):
     try:
         log.debug("Running(sudo) over SSH: '{}'".format(cmd))
         result = connection.sudo(cmd, hide=True)
         output = result.stdout.strip()
         log.debug("'{}' -> '{}'".format(cmd, output))
         return output
-    except UnexpectedExit:
-        log.debug("Sudo command unexpectedly exited: '{}'".format(cmd))
+    except UnexpectedExit as e:
+        msg = "Sudo command unexpectedly exited: '{}'".format(cmd)
+        if errors:
+            print(e)
+            log.error(msg)
+        else:
+            log.debug(msg)
         return None
 
 
@@ -116,8 +126,8 @@ def run_command(host, command, users=None, connection=None, sudo=False):
             return run_command(host, command, users, c, sudo)
 
     if sudo:
-        return ssh_sudo(connection, command)
-    return ssh_cmd(connection, command)
+        return ssh_sudo(connection, command, errors=True)
+    return ssh_cmd(connection, command, errors=True)
 
 
 def get_info(host, users=None, connection=None):

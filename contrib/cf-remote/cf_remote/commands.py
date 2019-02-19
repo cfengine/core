@@ -1,6 +1,6 @@
 import os
 
-from cf_remote.remote import get_info, print_info, install_host, run_command
+from cf_remote.remote import get_info, print_info, install_host, run_command, transfer_file
 from cf_remote.packages import Releases
 from cf_remote.web import download_package
 from cf_remote.paths import cf_remote_dir
@@ -28,6 +28,12 @@ def run(hosts, command, users=None, sudo=False):
 
 def sudo(hosts, command, users=None):
     run(hosts, command, users, sudo=True)
+
+
+def scp(hosts, files, users=None):
+    for host in hosts:
+        for file in files:
+            transfer_file(host, file, users)
 
 
 def install(

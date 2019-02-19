@@ -56,6 +56,8 @@ def run_command_with_args(command, args):
         commands.run(hosts=args.hosts, command=" ".join(args.args))
     elif command == "sudo":
         commands.sudo(hosts=args.hosts, command=" ".join(args.args))
+    elif command == "scp":
+        commands.scp(hosts=args.hosts, files=args.args)
     else:
         user_error("Unknown command: '{}'".format(command))
 

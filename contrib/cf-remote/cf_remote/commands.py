@@ -16,7 +16,7 @@ def info(hosts, users=None):
 
 
 def install(
-        hub,
+        hubs,
         clients,
         *,
         bootstrap=None,
@@ -25,8 +25,8 @@ def install(
         client_package=None,
         version=None,
         demo=False):
-    assert hub or clients
-    assert not (hub and clients and package)
+    assert hubs or clients
+    assert not (hubs and clients and package)
     # These assertions are checked in main.py
 
     if not hub_package:
@@ -34,24 +34,35 @@ def install(
     if not client_package:
         client_package = package
     if bootstrap:
-        save_file(os.path.join(cf_remote_dir(), "policy_server.dat"), bootstrap + "\n")
-    if hub:
-        log.debug("Installing hub package on '{}'".format(hub))
-        install_host(
-            hub, hub=True, package=hub_package, bootstrap=bootstrap, version=version, demo=demo)
-    for host in (clients or []):
+        if type(bootstrap) is str:
+            bootstrap = [bootstrap]
+        save_file(os.path.join(cf_remote_dir(), "policy_server.dat"), "\n".join(bootstrap + [""]))
+    if hubs:
+        if type(hubs) is str:
+            hubs = [hubs]
+        for index, hub in enumerate(hubs):
+            log.debug("Installing hub package on '{}'".format(hub))
+            install_host(
+                hub,
+                hub=True,
+                package=hub_package,
+                bootstrap=bootstrap[index % len(bootstrap)],
+                version=version,
+                demo=demo)
+    for index, host in enumerate(clients or []):
         log.debug("Installing client package on '{}'".format(host))
         install_host(
             host,
             hub=False,
             package=client_package,
-            bootstrap=bootstrap,
+            bootstrap=bootstrap[index % len(bootstrap)],
             version=version,
             demo=demo)
-    if demo and hub:
-        print(
-            "Your demo hub is ready: https://{}/ (Username: admin, Password: password)".format(
-                hub))
+    if demo and hubs:
+        for hub in hubs:
+            print(
+                "Your demo hub is ready: https://{}/ (Username: admin, Password: password)".
+                format(hub))
 
 
 def packages(tags=None, version=None):

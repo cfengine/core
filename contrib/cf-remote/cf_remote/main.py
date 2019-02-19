@@ -98,17 +98,15 @@ def validate_args(args):
 
     if args.version and args.command not in ["install", "packages"]:
         user_error("Cannot specify version number in '{}' command".format(command))
-    if any(x for x in [args.hub, args.bootstrap] if "," in (x or "")):
-        user_error("--hub and --bootstrap do not support lists (cannot contain commas)")
 
     if args.hosts:
         args.hosts = file_or_comma_list(args.hosts)
     if args.clients:
         args.clients = file_or_comma_list(args.clients)
     if args.bootstrap:
-        args.bootstrap = file_or_single_host(args.bootstrap)
+        args.bootstrap = file_or_comma_list(args.bootstrap)
     if args.hub:
-        args.hub = file_or_single_host(args.hub)
+        args.hub = file_or_comma_list(args.hub)
 
     args.command = args.command.strip()
     if not args.command:

@@ -52,12 +52,16 @@ def run_command_with_args(command, args):
             demo=args.demo)
     elif command == "packages":
         commands.packages(tags=args.args, version=args.version)
+    elif command == "run":
+        commands.run(hosts=args.hosts, command=" ".join(args.args))
+    elif command == "sudo":
+        commands.sudo(hosts=args.hosts, command=" ".join(args.args))
     else:
         user_error("Unknown command: '{}'".format(command))
 
 
 def validate_command(command, args):
-    if command == "info" and not args.hosts:
+    if command in ["info", "sudo", "run"] and not args.hosts:
         user_error("Use --hosts to specify remote hosts")
 
     if args.bootstrap and command != "install":

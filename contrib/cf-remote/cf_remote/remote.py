@@ -23,6 +23,7 @@ def ssh_cmd(connection, cmd):
         log.debug("'{}' -> '{}'".format(cmd, output))
         return output
     except UnexpectedExit:
+        log.debug("Non-sudo command unexpectedly exited: '{}'".format(cmd))
         return None
 
 
@@ -34,6 +35,7 @@ def ssh_sudo(connection, cmd):
         log.debug("'{}' -> '{}'".format(cmd, output))
         return output
     except UnexpectedExit:
+        log.debug("Sudo command unexpectedly exited: '{}'".format(cmd))
         return None
 
 
@@ -99,6 +101,16 @@ def connect(host, users=None):
         except AuthenticationException:
             continue
     sys.exit("Could not ssh into '{}'".format(host))
+
+
+def run_command(host, command, users=None, connection=None, sudo=False):
+    if not connection:
+        with connect(host, users) as c:
+            return run_command(host, command, users, c, sudo)
+
+    if sudo:
+        return ssh_sudo(connection, command)
+    return ssh_cmd(connection, command)
 
 
 def get_info(host, users=None, connection=None):

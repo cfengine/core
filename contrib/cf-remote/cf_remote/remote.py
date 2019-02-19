@@ -103,6 +103,13 @@ def connect(host, users=None):
     sys.exit("Could not ssh into '{}'".format(host))
 
 
+def transfer_file(host, file, users=None, connection=None):
+    assert not users or len(users) == 1
+    if users:
+        host = users[0] + "@" + host
+    scp(file=file, remote=host, connection=connection)
+
+
 def run_command(host, command, users=None, connection=None, sudo=False):
     if not connection:
         with connect(host, users) as c:
@@ -152,6 +159,7 @@ def scp(file, remote, connection=None):
         with connect(remote) as connection:
             scp(file, remote, connection)
     else:
+        print("Copying: '{}' to '{}'".format(file, remote))
         connection.put(file)
 
 
@@ -200,7 +208,6 @@ def install_host(host, *, hub=False, package=None, bootstrap=None, version=None,
         artifact = artifacts[-1]
         package = download_package(artifact.url)
 
-    print("Copying: '{}' to '{}'".format(package, host))
     scp(package, host)
     package = basename(package)
     install_package(host, package, data)

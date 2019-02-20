@@ -35,7 +35,7 @@ def ssh_cmd(connection, cmd, errors=False):
 def ssh_sudo(connection, cmd, errors=False):
     try:
         log.debug("Running(sudo) over SSH: '{}'".format(cmd))
-        result = connection.sudo(cmd, hide=True)
+        result = connection.run('sudo bash -c "{}"'.format(cmd.replace('"', r'\"')), hide=True)
         output = result.stdout.strip()
         log.debug("'{}' -> '{}'".format(cmd, output))
         return output

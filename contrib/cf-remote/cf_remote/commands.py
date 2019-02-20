@@ -22,8 +22,18 @@ def run(hosts, command, users=None, sudo=False):
         if lines is None:
             print("Failed on host: '{}'".format(host))
             continue
+        host_colon = (host + ":").ljust(16)
+        if lines == "":
+            print("{} '{}'".format(host_colon, command))
+            continue
+        cmd = command
         for line in lines.split("\n"):
-            print("{} {}".format((host + ":").ljust(16), line))
+            if cmd:
+                print("{} '{}' -> '{}'".format(host_colon, cmd, line))
+                fill = " " * (len(cmd) + 7)
+                cmd = None
+            else:
+                print("{}{}'{}'".format(host_colon, fill, line))
 
 
 def sudo(hosts, command, users=None):

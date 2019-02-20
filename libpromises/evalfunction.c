@@ -7964,7 +7964,7 @@ static bool CheckID(const char *id)
     {
         if (!CheckIDChar(*sp))
         {
-            Log(LOG_LEVEL_WARNING,
+            Log(LOG_LEVEL_VERBOSE,
                   "Module protocol contained an illegal character '%c' in class/variable identifier '%s'.", *sp,
                   id);
         }

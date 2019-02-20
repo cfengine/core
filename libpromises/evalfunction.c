@@ -7217,7 +7217,7 @@ static bool CheckID(const char *id)
     {
         if (!isalnum((int) *sp) && (*sp != '.') && (*sp != '-') && (*sp != '_') && (*sp != '[') && (*sp != ']'))
         {
-            Log(LOG_LEVEL_WARNING,
+            Log(LOG_LEVEL_VERBOSE,
                   "Module protocol contained an illegal character '%c' in class/variable identifier '%s'.", *sp,
                   id);
         }

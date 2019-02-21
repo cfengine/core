@@ -12,9 +12,6 @@ from cf_remote import log
 from cf_remote.web import download_package
 from cf_remote.packages import Releases
 
-import cf_remote.demo as demo_lib
-
-
 def ssh_cmd(connection, cmd, errors=False):
     try:
         log.debug("Running over SSH: '{}'".format(cmd))
@@ -231,6 +228,7 @@ def install_host(host, *, hub=False, package=None, bootstrap=None, version=None,
     if bootstrap:
         boootstrap_host(host, policy_server=bootstrap)
     if demo:
+        import cf_remote.demo as demo_lib
         if hub:
             demo_lib.install_def_json(host)
             demo_lib.agent_run(host)

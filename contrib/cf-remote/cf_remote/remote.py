@@ -4,7 +4,7 @@ from os.path import basename
 from collections import OrderedDict
 
 import fabric
-from paramiko.ssh_exception import AuthenticationException
+from paramiko.ssh_exception import AuthenticationException, SSHException
 from invoke.exceptions import UnexpectedExit
 
 from cf_remote.utils import os_release, column_print, pretty, user_error
@@ -108,7 +108,7 @@ def connect(host, users=None):
             c.ssh_host = host
             c.run("whoami", hide=True)
             return c
-        except AuthenticationException:
+        except (AuthenticationException, SSHException):
             continue
     sys.exit("Could not ssh into '{}'".format(host))
 

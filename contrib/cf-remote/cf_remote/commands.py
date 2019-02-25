@@ -1,6 +1,6 @@
 import os
 
-from cf_remote.remote import get_info, print_info, install_host
+from cf_remote.remote import get_info, print_info, install_host, run_command, transfer_file
 from cf_remote.packages import Releases
 from cf_remote.web import download_package
 from cf_remote.paths import cf_remote_dir
@@ -13,6 +13,37 @@ def info(hosts, users=None):
     for host in hosts:
         data = get_info(host, users)
         print_info(data)
+
+
+def run(hosts, command, users=None, sudo=False):
+    assert hosts
+    for host in hosts:
+        lines = run_command(host=host, command=command, users=users, sudo=sudo)
+        if lines is None:
+            print("Failed on host: '{}'".format(host))
+            continue
+        host_colon = (host + ":").ljust(16)
+        if lines == "":
+            print("{} '{}'".format(host_colon, command))
+            continue
+        cmd = command
+        for line in lines.split("\n"):
+            if cmd:
+                print("{} '{}' -> '{}'".format(host_colon, cmd, line))
+                fill = " " * (len(cmd) + 7)
+                cmd = None
+            else:
+                print("{}{}'{}'".format(host_colon, fill, line))
+
+
+def sudo(hosts, command, users=None):
+    run(hosts, command, users, sudo=True)
+
+
+def scp(hosts, files, users=None):
+    for host in hosts:
+        for file in files:
+            transfer_file(host, file, users)
 
 
 def install(

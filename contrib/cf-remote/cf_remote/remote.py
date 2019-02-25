@@ -15,25 +15,37 @@ from cf_remote.packages import Releases
 import cf_remote.demo as demo_lib
 
 
-def ssh_cmd(connection, cmd):
+def ssh_cmd(connection, cmd, errors=False):
     try:
         log.debug("Running over SSH: '{}'".format(cmd))
         result = connection.run(cmd, hide=True)
         output = result.stdout.strip()
         log.debug("'{}' -> '{}'".format(cmd, output))
         return output
-    except UnexpectedExit:
+    except UnexpectedExit as e:
+        msg = "Non-sudo command unexpectedly exited: '{}'".format(cmd)
+        if errors:
+            print(e)
+            log.error(msg)
+        else:
+            log.debug(msg)
         return None
 
 
-def ssh_sudo(connection, cmd):
+def ssh_sudo(connection, cmd, errors=False):
     try:
         log.debug("Running(sudo) over SSH: '{}'".format(cmd))
-        result = connection.sudo(cmd, hide=True)
+        result = connection.run('sudo bash -c "{}"'.format(cmd.replace('"', r'\"')), hide=True)
         output = result.stdout.strip()
         log.debug("'{}' -> '{}'".format(cmd, output))
         return output
-    except UnexpectedExit:
+    except UnexpectedExit as e:
+        msg = "Sudo command unexpectedly exited: '{}'".format(cmd)
+        if errors:
+            print(e)
+            log.error(msg)
+        else:
+            log.debug(msg)
         return None
 
 
@@ -101,6 +113,23 @@ def connect(host, users=None):
     sys.exit("Could not ssh into '{}'".format(host))
 
 
+def transfer_file(host, file, users=None, connection=None):
+    assert not users or len(users) == 1
+    if users:
+        host = users[0] + "@" + host
+    scp(file=file, remote=host, connection=connection)
+
+
+def run_command(host, command, users=None, connection=None, sudo=False):
+    if not connection:
+        with connect(host, users) as c:
+            return run_command(host, command, users, c, sudo)
+
+    if sudo:
+        return ssh_sudo(connection, command, errors=True)
+    return ssh_cmd(connection, command, errors=True)
+
+
 def get_info(host, users=None, connection=None):
     if not connection:
         with connect(host, users) as c:
@@ -140,6 +169,7 @@ def scp(file, remote, connection=None):
         with connect(remote) as connection:
             scp(file, remote, connection)
     else:
+        print("Copying: '{}' to '{}'".format(file, remote))
         connection.put(file)
 
 
@@ -188,7 +218,6 @@ def install_host(host, *, hub=False, package=None, bootstrap=None, version=None,
         artifact = artifacts[-1]
         package = download_package(artifact.url)
 
-    print("Copying: '{}' to '{}'".format(package, host))
     scp(package, host)
     package = basename(package)
     install_package(host, package, data)

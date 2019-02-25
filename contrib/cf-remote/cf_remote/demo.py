@@ -7,15 +7,18 @@ from cf_remote.utils import save_file
 from cf_remote.ssh import scp, connect, ssh_sudo
 
 
-def agent_run(host):
+def agent_run(host, connection=None):
+    if not connection:
+        with connect(host) as connection:
+            return agent_run(host, connection)
+
     print("Triggering an agent run on: '{}'".format(host))
-    with connect(host) as connection:
-        command = "/var/cfengine/bin/cf-agent -Kf update.cf"
-        output = ssh_sudo(connection, command)
-        log.debug(output)
-        command = "/var/cfengine/bin/cf-agent -K"
-        output = ssh_sudo(connection, command)
-        log.debug(output)
+    command = "/var/cfengine/bin/cf-agent -Kf update.cf"
+    output = ssh_sudo(connection, command)
+    log.debug(output)
+    command = "/var/cfengine/bin/cf-agent -K"
+    output = ssh_sudo(connection, command)
+    log.debug(output)
 
 
 def disable_password_dialog(host):
@@ -49,11 +52,14 @@ def def_json():
     }
 
 
-def install_def_json(host):
+def install_def_json(host, connection=None):
+    if not connection:
+        with connect(host) as connection:
+            return install_def_json(host, connection)
+
     print("Transferring def.json to hub: '{}'".format(host))
     data = json.dumps(def_json(), indent=2)
     path = os.path.join(cf_remote_dir("json"), "def.json")
     save_file(path, data)
-    scp(path, host)
-    with connect(host) as connection:
-        connection.sudo("cp def.json /var/cfengine/masterfiles/def.json")
+    scp(path, host, connection=connection)
+    ssh_sudo(connection, "cp def.json /var/cfengine/masterfiles/def.json")

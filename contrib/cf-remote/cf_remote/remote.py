@@ -105,28 +105,46 @@ def get_info(host, users=None, connection=None):
     return data
 
 
-def install_package(host, pkg, data):
+def install_package(host, pkg, data, connection=None):
+    if not connection:
+        with connect(host) as connection:
+            return install_package(host, pkg, data, connection)
+
     print("Installing: '{}' on '{}'".format(pkg, host))
-    with connect(host) as connection:
-        if ".deb" in pkg:
-            ssh_sudo(connection, "dpkg -i {}".format(pkg))
-        else:
-            ssh_sudo(connection, "rpm -i {}".format(pkg))
+    if ".deb" in pkg:
+        ssh_sudo(connection, "dpkg -i {}".format(pkg))
+    else:
+        ssh_sudo(connection, "rpm -i {}".format(pkg))
 
 
-def boootstrap_host(host, policy_server):
+def bootstrap_host(host, policy_server, connection=None):
+    if not connection:
+        with connect(host) as connection:
+            return bootstrap_host(host, policy_server, connection)
+
     print("Bootstrapping: '{}' -> '{}'".format(host, policy_server))
-    with connect(host) as connection:
-        command = "/var/cfengine/bin/cf-agent --bootstrap {}".format(policy_server)
-        output = ssh_sudo(connection, command)
-        if output and "completed successfully" in output:
-            print("Bootstrap succesful: '{}' -> '{}'".format(host, policy_server))
-        else:
-            user_error("Something went wrong while bootstrapping")
+    command = "/var/cfengine/bin/cf-agent --bootstrap {}".format(policy_server)
+    output = ssh_sudo(connection, command)
+    if output and "completed successfully" in output:
+        print("Bootstrap succesful: '{}' -> '{}'".format(host, policy_server))
+    else:
+        user_error("Something went wrong while bootstrapping")
 
 
-def install_host(host, *, hub=False, package=None, bootstrap=None, version=None, demo=False):
-    data = get_info(host)
+def install_host(
+        host, *, hub=False, package=None, bootstrap=None, version=None, demo=False,
+        connection=None):
+    if not connection:
+        with connect(host) as connection:
+            return install_host(
+                host=host,
+                hub=hub,
+                package=package,
+                bootstrap=bootstrap,
+                version=version,
+                demo=demo,
+                connection=connection)
+    data = get_info(host, connection=connection)
     print_info(data)
 
     if not package:
@@ -150,10 +168,10 @@ def install_host(host, *, hub=False, package=None, bootstrap=None, version=None,
         artifact = artifacts[-1]
         package = download_package(artifact.url)
 
-    scp(package, host)
+    scp(package, host, connection=connection)
     package = basename(package)
-    install_package(host, package, data)
-    data = get_info(host)
+    install_package(host, package, data, connection=connection)
+    data = get_info(host, connection=connection)
     if data["agent_version"] and len(data["agent_version"]) > 0:
         print(
             "CFEngine {} was successfully installed on '{}'".format(data["agent_version"], host))
@@ -161,10 +179,10 @@ def install_host(host, *, hub=False, package=None, bootstrap=None, version=None,
         print("Installation failed!")
         sys.exit(1)
     if bootstrap:
-        boootstrap_host(host, policy_server=bootstrap)
+        bootstrap_host(host, policy_server=bootstrap, connection=connection)
     if demo:
         if hub:
-            demo_lib.install_def_json(host)
-            demo_lib.agent_run(host)
+            demo_lib.install_def_json(host, connection=connection)
+            demo_lib.agent_run(host, connection=connection)
             demo_lib.disable_password_dialog(host)
-        demo_lib.agent_run(host)
+        demo_lib.agent_run(host, connection=connection)

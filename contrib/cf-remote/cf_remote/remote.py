@@ -4,7 +4,7 @@ from os.path import basename
 from collections import OrderedDict
 
 from cf_remote.utils import os_release, column_print, pretty, user_error
-from cf_remote.ssh import connect, ssh_sudo, ssh_cmd, scp
+from cf_remote.ssh import ssh_sudo, ssh_cmd, scp, auto_connect
 from cf_remote import log
 from cf_remote.web import download_package
 from cf_remote.packages import Releases
@@ -61,21 +61,15 @@ def transfer_file(host, file, users=None, connection=None):
     scp(file=file, remote=host, connection=connection)
 
 
-def run_command(host, command, users=None, connection=None, sudo=False):
-    if not connection:
-        with connect(host, users) as c:
-            return run_command(host, command, users, c, sudo)
-
+@auto_connect
+def run_command(host, command, *, users=None, connection=None, sudo=False):
     if sudo:
         return ssh_sudo(connection, command, errors=True)
     return ssh_cmd(connection, command, errors=True)
 
 
-def get_info(host, users=None, connection=None):
-    if not connection:
-        with connect(host, users) as c:
-            return get_info(host, users, c)
-
+@auto_connect
+def get_info(host, *, users=None, connection=None):
     log.debug("Getting info about '{}'".format(host))
 
     user, host = connection.ssh_user, connection.ssh_host
@@ -105,10 +99,8 @@ def get_info(host, users=None, connection=None):
     return data
 
 
-def install_package(host, pkg, data, connection=None):
-    if not connection:
-        with connect(host) as connection:
-            return install_package(host, pkg, data, connection)
+@auto_connect
+def install_package(host, pkg, data, *, connection=None):
 
     print("Installing: '{}' on '{}'".format(pkg, host))
     if ".deb" in pkg:
@@ -117,10 +109,8 @@ def install_package(host, pkg, data, connection=None):
         ssh_sudo(connection, "rpm -i {}".format(pkg))
 
 
-def bootstrap_host(host, policy_server, connection=None):
-    if not connection:
-        with connect(host) as connection:
-            return bootstrap_host(host, policy_server, connection)
+@auto_connect
+def bootstrap_host(host, policy_server, *, connection=None):
 
     print("Bootstrapping: '{}' -> '{}'".format(host, policy_server))
     command = "/var/cfengine/bin/cf-agent --bootstrap {}".format(policy_server)
@@ -131,19 +121,10 @@ def bootstrap_host(host, policy_server, connection=None):
         user_error("Something went wrong while bootstrapping")
 
 
+@auto_connect
 def install_host(
         host, *, hub=False, package=None, bootstrap=None, version=None, demo=False,
         connection=None):
-    if not connection:
-        with connect(host) as connection:
-            return install_host(
-                host=host,
-                hub=hub,
-                package=package,
-                bootstrap=bootstrap,
-                version=version,
-                demo=demo,
-                connection=connection)
     data = get_info(host, connection=connection)
     print_info(data)
 

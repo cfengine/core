@@ -4,14 +4,11 @@ import json
 from cf_remote import log
 from cf_remote.paths import cf_remote_dir
 from cf_remote.utils import save_file
-from cf_remote.ssh import scp, connect, ssh_sudo
+from cf_remote.ssh import scp, ssh_sudo, auto_connect
 
 
-def agent_run(host, connection=None):
-    if not connection:
-        with connect(host) as connection:
-            return agent_run(host, connection)
-
+@auto_connect
+def agent_run(host, *, connection=None):
     print("Triggering an agent run on: '{}'".format(host))
     command = "/var/cfengine/bin/cf-agent -Kf update.cf"
     output = ssh_sudo(connection, command)
@@ -52,11 +49,8 @@ def def_json():
     }
 
 
-def install_def_json(host, connection=None):
-    if not connection:
-        with connect(host) as connection:
-            return install_def_json(host, connection)
-
+@auto_connect
+def install_def_json(host, *, connection=None):
     print("Transferring def.json to hub: '{}'".format(host))
     data = json.dumps(def_json(), indent=2)
     path = os.path.join(cf_remote_dir("json"), "def.json")

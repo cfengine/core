@@ -37,6 +37,7 @@ def scp(file, remote, connection=None):
 
 
 def ssh_cmd(connection, cmd, errors=False):
+    assert connection
     try:
         log.debug("Running over SSH: '{}'".format(cmd))
         result = connection.run(cmd, hide=True)
@@ -54,6 +55,7 @@ def ssh_cmd(connection, cmd, errors=False):
 
 
 def ssh_sudo(connection, cmd, errors=False):
+    assert connection
     try:
         log.debug("Running(sudo) over SSH: '{}'".format(cmd))
         result = connection.run('sudo bash -c "{}"'.format(cmd.replace('"', r'\"')), hide=True)

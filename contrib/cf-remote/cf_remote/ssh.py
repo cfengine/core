@@ -27,6 +27,22 @@ def connect(host, users=None):
     sys.exit("Could not ssh into '{}'".format(host))
 
 
+# Decorator to make a function automatically connect
+# Requires that first positional argument is host
+# and connection should be a keyword argument with default None
+# Uses a context manager (with) to ensure connections are closed
+def auto_connect(func):
+    def connect_wrapper(host, *args, **kwargs):
+        if not kwargs.get("connection"):
+            with connect(host, users=kwargs.get("users")) as connection:
+                assert connection
+                kwargs["connection"] = connection
+                return func(host, *args, **kwargs)
+        return func(host, *args, **kwargs)
+
+    return connect_wrapper
+
+
 def scp(file, remote, connection=None):
     if not connection:
         with connect(remote) as connection:

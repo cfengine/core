@@ -11,7 +11,7 @@ from cf_remote import log
 def info(hosts, users=None):
     assert hosts
     for host in hosts:
-        data = get_info(host, users)
+        data = get_info(host, users=users)
         print_info(data)
 
 

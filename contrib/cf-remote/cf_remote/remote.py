@@ -3,50 +3,13 @@ import sys
 from os.path import basename
 from collections import OrderedDict
 
-import fabric
-from paramiko.ssh_exception import AuthenticationException
-from invoke.exceptions import UnexpectedExit
-
 from cf_remote.utils import os_release, column_print, pretty, user_error
+from cf_remote.ssh import ssh_sudo, ssh_cmd, scp, auto_connect
 from cf_remote import log
 from cf_remote.web import download_package
 from cf_remote.packages import Releases
 
 import cf_remote.demo as demo_lib
-
-
-def ssh_cmd(connection, cmd, errors=False):
-    try:
-        log.debug("Running over SSH: '{}'".format(cmd))
-        result = connection.run(cmd, hide=True)
-        output = result.stdout.strip()
-        log.debug("'{}' -> '{}'".format(cmd, output))
-        return output
-    except UnexpectedExit as e:
-        msg = "Non-sudo command unexpectedly exited: '{}'".format(cmd)
-        if errors:
-            print(e)
-            log.error(msg)
-        else:
-            log.debug(msg)
-        return None
-
-
-def ssh_sudo(connection, cmd, errors=False):
-    try:
-        log.debug("Running(sudo) over SSH: '{}'".format(cmd))
-        result = connection.run('sudo bash -c "{}"'.format(cmd.replace('"', r'\"')), hide=True)
-        output = result.stdout.strip()
-        log.debug("'{}' -> '{}'".format(cmd, output))
-        return output
-    except UnexpectedExit as e:
-        msg = "Sudo command unexpectedly exited: '{}'".format(cmd)
-        if errors:
-            print(e)
-            log.error(msg)
-        else:
-            log.debug(msg)
-        return None
 
 
 def print_info(data):
@@ -91,28 +54,6 @@ def print_info(data):
     print()
 
 
-def connect(host, users=None):
-    log.debug("Connecting to '{}'".format(host))
-    if "@" in host:
-        parts = host.split("@")
-        assert len(parts) == 2
-        host = parts[1]
-        if not users:
-            users = [parts[0]]
-    if not users:
-        users = ["ubuntu", "ec2-user", "centos", "vagrant", "root"]
-    for user in users:
-        try:
-            c = fabric.Connection(host=host, user=user)
-            c.ssh_user = user
-            c.ssh_host = host
-            c.run("whoami", hide=True)
-            return c
-        except AuthenticationException:
-            continue
-    sys.exit("Could not ssh into '{}'".format(host))
-
-
 def transfer_file(host, file, users=None, connection=None):
     assert not users or len(users) == 1
     if users:
@@ -120,21 +61,15 @@ def transfer_file(host, file, users=None, connection=None):
     scp(file=file, remote=host, connection=connection)
 
 
-def run_command(host, command, users=None, connection=None, sudo=False):
-    if not connection:
-        with connect(host, users) as c:
-            return run_command(host, command, users, c, sudo)
-
+@auto_connect
+def run_command(host, command, *, users=None, connection=None, sudo=False):
     if sudo:
         return ssh_sudo(connection, command, errors=True)
     return ssh_cmd(connection, command, errors=True)
 
 
-def get_info(host, users=None, connection=None):
-    if not connection:
-        with connect(host, users) as c:
-            return get_info(host, users, c)
-
+@auto_connect
+def get_info(host, *, users=None, connection=None):
     log.debug("Getting info about '{}'".format(host))
 
     user, host = connection.ssh_user, connection.ssh_host
@@ -164,37 +99,33 @@ def get_info(host, users=None, connection=None):
     return data
 
 
-def scp(file, remote, connection=None):
-    if not connection:
-        with connect(remote) as connection:
-            scp(file, remote, connection)
-    else:
-        print("Copying: '{}' to '{}'".format(file, remote))
-        connection.put(file)
+@auto_connect
+def install_package(host, pkg, data, *, connection=None):
 
-
-def install_package(host, pkg, data):
     print("Installing: '{}' on '{}'".format(pkg, host))
-    with connect(host) as connection:
-        if ".deb" in pkg:
-            ssh_sudo(connection, "dpkg -i {}".format(pkg))
-        else:
-            ssh_sudo(connection, "rpm -i {}".format(pkg))
+    if ".deb" in pkg:
+        ssh_sudo(connection, "dpkg -i {}".format(pkg))
+    else:
+        ssh_sudo(connection, "rpm -i {}".format(pkg))
 
 
-def boootstrap_host(host, policy_server):
+@auto_connect
+def bootstrap_host(host, policy_server, *, connection=None):
+
     print("Bootstrapping: '{}' -> '{}'".format(host, policy_server))
-    with connect(host) as connection:
-        command = "/var/cfengine/bin/cf-agent --bootstrap {}".format(policy_server)
-        output = ssh_sudo(connection, command)
-        if output and "completed successfully" in output:
-            print("Bootstrap succesful: '{}' -> '{}'".format(host, policy_server))
-        else:
-            user_error("Something went wrong while bootstrapping")
+    command = "/var/cfengine/bin/cf-agent --bootstrap {}".format(policy_server)
+    output = ssh_sudo(connection, command)
+    if output and "completed successfully" in output:
+        print("Bootstrap succesful: '{}' -> '{}'".format(host, policy_server))
+    else:
+        user_error("Something went wrong while bootstrapping")
 
 
-def install_host(host, *, hub=False, package=None, bootstrap=None, version=None, demo=False):
-    data = get_info(host)
+@auto_connect
+def install_host(
+        host, *, hub=False, package=None, bootstrap=None, version=None, demo=False,
+        connection=None):
+    data = get_info(host, connection=connection)
     print_info(data)
 
     if not package:
@@ -218,10 +149,10 @@ def install_host(host, *, hub=False, package=None, bootstrap=None, version=None,
         artifact = artifacts[-1]
         package = download_package(artifact.url)
 
-    scp(package, host)
+    scp(package, host, connection=connection)
     package = basename(package)
-    install_package(host, package, data)
-    data = get_info(host)
+    install_package(host, package, data, connection=connection)
+    data = get_info(host, connection=connection)
     if data["agent_version"] and len(data["agent_version"]) > 0:
         print(
             "CFEngine {} was successfully installed on '{}'".format(data["agent_version"], host))
@@ -229,10 +160,10 @@ def install_host(host, *, hub=False, package=None, bootstrap=None, version=None,
         print("Installation failed!")
         sys.exit(1)
     if bootstrap:
-        boootstrap_host(host, policy_server=bootstrap)
+        bootstrap_host(host, policy_server=bootstrap, connection=connection)
     if demo:
         if hub:
-            demo_lib.install_def_json(host)
-            demo_lib.agent_run(host)
+            demo_lib.install_def_json(host, connection=connection)
+            demo_lib.agent_run(host, connection=connection)
             demo_lib.disable_password_dialog(host)
-        demo_lib.agent_run(host)
+        demo_lib.agent_run(host, connection=connection)

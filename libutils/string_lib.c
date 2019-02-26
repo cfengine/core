@@ -754,60 +754,14 @@ void ReplaceChar(char *in, char *out, int outSz, char from, char to)
     }
 }
 
-/* TODO replace with StringReplace. This one is pretty slow, calls strncmp
- * O(n) times even if string matches nowhere. */
-bool ReplaceStr(const char *in, char *out, int outSz, const char *from, const char *to)
-/* Replaces all occurrences of strings 'from' to 'to' in preallocated
- * string 'out'. Returns true on success, false otherwise. */
-{
-    int inSz;
-    int outCount;
-    int inCount;
-    int fromSz, toSz;
-
-    memset(out, 0, outSz);
-
-    inSz = strlen(in);
-    fromSz = strlen(from);
-    toSz = strlen(to);
-
-    inCount = 0;
-    outCount = 0;
-
-    while ((inCount < inSz) && (outCount < outSz))
-    {
-        if (strncmp(in + inCount, from, fromSz) == 0)
-        {
-            if (outCount + toSz >= outSz)
-            {
-                return false;
-            }
-
-            strcat(out, to);
-
-            inCount += fromSz;
-            outCount += toSz;
-        }
-        else
-        {
-            out[outCount] = in[inCount];
-
-            inCount++;
-            outCount++;
-        }
-    }
-
-    return true;
-}
-
 /**
  * Replace all occurrences of #find with #replace.
  *
- * @return the length of #buf or (size_t) -1 in case of overflow, or 0
- *         if no replace took place.
+ * @return the length of #buf or -1 in case of overflow, or 0 if no replace
+ *         took place.
  */
-size_t StringReplace(char *buf, size_t buf_size,
-                     const char *find, const char *replace)
+ssize_t StringReplace(char *buf, size_t buf_size,
+                      const char *find, const char *replace)
 {
     assert(find[0] != '\0');
 
@@ -822,7 +776,7 @@ size_t StringReplace(char *buf, size_t buf_size,
     size_t buf_len = strlen(buf);
     size_t buf_idx = 0;
     char tmp[buf_size];
-    size_t tmp_len = 0;
+    ssize_t tmp_len = 0;
 
     /* Do all replacements we find. */
     do
@@ -832,7 +786,7 @@ size_t StringReplace(char *buf, size_t buf_size,
 
         if (tmp_len + prefix_len + replace_len >= buf_size)
         {
-            return (size_t) -1;
+            return -1;
         }
 
         memcpy(&tmp[tmp_len], &buf[buf_idx], prefix_len);
@@ -849,7 +803,7 @@ size_t StringReplace(char *buf, size_t buf_size,
     size_t leftover_len = buf_len - buf_idx;
     if (tmp_len + leftover_len >= buf_size)
     {
-        return (size_t) -1;
+        return -1;
     }
     memcpy(&tmp[tmp_len], &buf[buf_idx], leftover_len + 1);
     tmp_len += leftover_len;

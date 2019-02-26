@@ -110,8 +110,7 @@ char *StringSubstring(const char *source, size_t source_len, int start, int len)
 /* Allocates the result */
 char *SearchAndReplace(const char *source, const char *search, const char *replace);
 
-bool ReplaceStr(const char *in, char *out, int outSz, const char *from, const char *to);
-size_t StringReplace(char *buf, size_t buf_size, const char *find, const char *replace);
+ssize_t StringReplace(char *buf, size_t buf_size, const char *find, const char *replace);
 
 bool IsStrIn(const char *str, const char *const strs[]);
 bool IsStrCaseIn(const char *str, const char *const strs[]);

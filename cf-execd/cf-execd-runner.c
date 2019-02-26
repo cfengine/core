@@ -301,8 +301,19 @@ void LocalExec(const ExecConfig *config)
 
         if (*sp != '\0') /* line isn't entirely blank */
         {
-            char *line_escaped = xmalloc(2 * line_size);
-            ReplaceStr(line, line_escaped, 2 * line_size, "%", "%%");
+            /* Need space for 2x buffer and null byte. */
+            char line_escaped[res * 2 + 1];
+            memcpy(line_escaped, line, res + 1);
+
+            ssize_t replace_res =
+                StringReplace(line_escaped, sizeof(line_escaped), "%", "%%");
+            if (replace_res == -1)
+            {
+                ProgrammingError("StringReplace(): buffer overflow in %s",
+                                 __FILE__);
+                line[0] = '\0';
+                continue;
+            }
 
             fprintf(fp, "%s\n", line_escaped);
             count++;
@@ -321,7 +332,6 @@ void LocalExec(const ExecConfig *config)
             }
 
             line[0] = '\0';
-            free(line_escaped);
         }
     }
 

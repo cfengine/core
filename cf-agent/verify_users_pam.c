@@ -1209,6 +1209,11 @@ static bool DoCreateUser(const char *puser, User u, enum cfopaction action,
         if (a->havebundle)
         {
             const Constraint *method_attrib = PromiseGetConstraint(pp, "home_bundle");
+            if (method_attrib == NULL)
+            {
+                Log(LOG_LEVEL_ERR, "Cannot create user (home_bundle not found)");
+                return false;
+            }
             VerifyMethod(ctx, method_attrib->rval, *a, pp);
         }
 

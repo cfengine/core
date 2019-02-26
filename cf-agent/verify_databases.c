@@ -477,6 +477,13 @@ static int ValidateRegistryPromiser(char *key, const Promise *pp)
 
     strlcpy(root_key, key, CF_MAXVARSIZE );
     sp = strchr(root_key, '\\');
+    if (sp == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Cannot locate '\\' in '%s'", root_key);
+        Log(LOG_LEVEL_ERR, "Failed validating registry promiser");
+        PromiseRef(LOG_LEVEL_ERR, pp);
+        return false;
+    }
     *sp = '\0';
 
     for (i = 0; valid[i] != NULL; i++)

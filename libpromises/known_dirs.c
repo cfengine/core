@@ -56,6 +56,11 @@ const char *GetDefaultDir_helper(char dir[PATH_MAX], const char *root_dir, const
         {
             struct passwd *mpw = getpwuid(getuid());
 
+            if (mpw == NULL)
+            {
+                return NULL;
+            }
+
             if ( append_dir == NULL )
             {
                 if (snprintf(dir, PATH_MAX, "%s/.cfagent", mpw->pw_dir) >= PATH_MAX)

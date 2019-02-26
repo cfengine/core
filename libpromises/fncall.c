@@ -67,6 +67,11 @@ Rlist *NewExpArgs(EvalContext *ctx, const Policy *policy, const FnCall *fp, cons
     }
 
     const FnCallType *fn = FnCallTypeGet(fp->name);
+    if (fn == NULL)
+    {
+        FatalError(ctx, "Function call '%s' has unknown type", fp->name);
+    }
+    else
     {
         int len = RlistLen(fp->args);
 
@@ -251,6 +256,10 @@ static FnCallResult CallFunction(EvalContext *ctx, const Policy *policy, const F
 {
     const Rlist *rp = fp->args;
     const FnCallType *fncall_type = FnCallTypeGet(fp->name);
+    if (fncall_type == NULL)
+    {
+        FatalError(ctx, "Function call '%s' has unknown type", fp->name);
+    }
 
     int argnum = 0;
     for (argnum = 0; rp != NULL && fncall_type->args[argnum].pattern != NULL; argnum++)

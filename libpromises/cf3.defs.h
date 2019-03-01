@@ -35,7 +35,8 @@
 #include <sequence.h>
 #include <logging.h>
 
-#include <cfnet.h>                       /* ProtocolVersion, CF_BUFSIZE etc */
+#include <definitions.h>                 /* CF_MAXVARSIZE, CF_BUFSIZE etc   */
+#include <cfnet.h>                       /* ProtocolVersion, etc */
 #include <misc_lib.h>                    /* xsnprintf, ProgrammingError etc */
 
 /*******************************************************************/
@@ -59,13 +60,6 @@
 /* Various defines                                                 */
 /*******************************************************************/
 
-#define CF_MAXSIZE 102400000
-#define CF_BILLION 1000000000L
-#define CF_EXPANDSIZE (2*CF_BUFSIZE)
-#define CF_BUFFERMARGIN 128
-#define CF_BLOWFISHSIZE 16
-#define CF_MAXVARSIZE 1024
-#define CF_MAXSIDSIZE 2048      /* Windows only: Max size (bytes) of security identifiers */
 #define CF_MAXFRAGMENT 19       /* abbreviate long promise names to 2*MAXFRAGMENT+3 */
 #define CF_NONCELEN (CF_BUFSIZE/16)
 #define CF_MAXLINKSIZE 256

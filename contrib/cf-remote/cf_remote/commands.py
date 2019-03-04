@@ -1,4 +1,5 @@
 import os
+import sys
 
 from cf_remote.remote import get_info, print_info, install_host, run_command, transfer_file
 from cf_remote.packages import Releases
@@ -20,8 +21,7 @@ def run(hosts, command, users=None, sudo=False):
     for host in hosts:
         lines = run_command(host=host, command=command, users=users, sudo=sudo)
         if lines is None:
-            print("Failed on host: '{}'".format(host))
-            continue
+            sys.exit("Command: '{}'\nFailed on host: '{}'".format(command, host))
         host_colon = (host + ":").ljust(16)
         if lines == "":
             print("{} '{}'".format(host_colon, command))

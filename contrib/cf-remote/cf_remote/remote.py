@@ -104,9 +104,11 @@ def install_package(host, pkg, data, *, connection=None):
 
     print("Installing: '{}' on '{}'".format(pkg, host))
     if ".deb" in pkg:
-        ssh_sudo(connection, "dpkg -i {}".format(pkg))
+        output = ssh_sudo(connection, "dpkg -i {}".format(pkg))
     else:
-        ssh_sudo(connection, "rpm -i {}".format(pkg))
+        output = ssh_sudo(connection, "rpm -i {}".format(pkg))
+    if output is None:
+        sys.exit("Installation failed on '{}'".format(host))
 
 
 @auto_connect
@@ -115,6 +117,8 @@ def bootstrap_host(host, policy_server, *, connection=None):
     print("Bootstrapping: '{}' -> '{}'".format(host, policy_server))
     command = "/var/cfengine/bin/cf-agent --bootstrap {}".format(policy_server)
     output = ssh_sudo(connection, command)
+    if output is None:
+        sys.exit("Bootstrap failed on '{}'".format(host))
     if output and "completed successfully" in output:
         print("Bootstrap succesful: '{}' -> '{}'".format(host, policy_server))
     else:

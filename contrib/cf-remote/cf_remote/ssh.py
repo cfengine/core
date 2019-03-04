@@ -66,6 +66,7 @@ def ssh_cmd(connection, cmd, errors=False):
             print(e)
             log.error(msg)
         else:
+            log.debug(str(e))
             log.debug(msg)
         return None
 
@@ -84,5 +85,6 @@ def ssh_sudo(connection, cmd, errors=False):
             print(e)
             log.error(msg)
         else:
+            log.debug(str(e))
             log.debug(msg)
         return None

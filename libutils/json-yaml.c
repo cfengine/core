@@ -111,7 +111,8 @@ static JsonElement* JsonParseYamlScalarValue(yaml_event_t *event)
          JSON_YAML_SCALAR_TAG_IS(tag, YAML_FLOAT_TAG)))
     {
         JsonElement *tobuild;
-        if (JSON_PARSE_OK == JsonParseAsNumber(&value, &tobuild))
+        const char *end_of_num_part = value;
+        if (JSON_PARSE_OK == JsonParseAsNumber(&end_of_num_part, &tobuild))
         {
             return tobuild;
         }

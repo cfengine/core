@@ -210,23 +210,32 @@ char *StringVFormat(const char *fmt, va_list ap);
 char *StringFormat(const char *fmt, ...) FUNC_ATTR_PRINTF(1, 2);
 
 /**
- * @brief Copy a string of maximum length n from src to dst
+ * @brief Copy a string from `from` to `to` (a buffer of at least buf_size)
  *
- * The destination is guaranteed to be NUL terminated,
- * dst[n] will always be '\0', any additional bytes before dst[n]
- * will be zeroed if the string length is less than n.
+ * The destination (`to`) is guaranteed to be NUL terminated,
+ * `to[buf_size-1]` will always be '\0'. If the string is shorter
+ * the additional trailing bytes are also zeroed.
  *
- * The return value is equal to strlen(dst), for large data sizes this
+ * The source (`from`) must either be NUL terminated or big enough
+ * to read buf_size characters, even though only buf_size - 1 of them
+ * end up in the output buffer.
+ *
+ * The return value is equal to `strlen(to)`, for large data sizes this
  * is useful since it doesn't require a second pass through the data.
+ * The return value should be checked, if it is >= buf_size, it means
+ * the string was truncated because it was too long. Expressed in another
+ * way, the return value is the number of bytes read from the input (`from`)
+ * excluding the terminating `\0` byte (up to buf_size characters will be
+ * read).
  *
- * @note src and dst must not overlap
- * @warning Regardless for strlen(src) dst must be at least n + 1 size
- * @param[out] dst Output buffer, must have at least n + 1 size
- * @param[in] src String to copy from
- * @param[in] n Maximum string length to copy, not including NUL byte
- * @return String length of dst
+ * @note `from` and `to` must not overlap
+ * @warning Regardless of `strlen(from)`, `to` must be at least `buf_size` big
+ * @param[in] from String to copy from, up to buf_size bytes are read
+ * @param[out] to Output buffer (minimum buf_size), always '\0' terminated
+ * @param[in] buf_size Maximum buffer size to write (including '\0' byte)
+ * @return String length of `to`, or `buf_size` in case of overflow
  */
-size_t StringCopy(char * dst, const char * src, long n);
+size_t StringCopy(const char *from, char *to, size_t buf_size);
 
 void *memcchr(const void *buf, int c, size_t buf_size);
 

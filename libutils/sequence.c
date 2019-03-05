@@ -512,7 +512,8 @@ static char *ValidDuplicate(const char *src, long n)
     assert(n >= 0);
     char *dst = xcalloc(n+1, sizeof(char));
 
-    size_t len = StringCopy(dst, src, n);
+    size_t len = StringCopy(src, dst, n+1);
+    // If string was too long, len >= n+1, this is OKAY, there's more data.
     if (len < n) // string was too short
     {
         free(dst);

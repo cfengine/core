@@ -705,28 +705,36 @@ static void test_string_copy(void)
     char b[1 + 1];
     char c[2 + 1];
     char non_terminated[3];
-    long str_len = 3;
-    char d[str_len + 1];
-    char e[str_len + 1];
-    char f[str_len + 1];
-    char g[str_len + 1];
-    char h[str_len + 1];
+    const size_t str_len = 3;
+    const size_t buf_size = str_len + 1;
+    char d[buf_size];
+    char e[buf_size];
+    char f[buf_size];
+    char g[buf_size];
+    char h[buf_size];
 
     // Non terminated string source:
     non_terminated[0] = '3';
     non_terminated[1] = '4';
     non_terminated[2] = '5';
-    assert_int_equal(3, StringCopy(d, non_terminated, 3));
-    assert_string_equal(d, "345");
 
-    assert_int_equal(0, StringCopy(a, "", 0));
-    assert_int_equal(1, StringCopy(b, "A", 1));
-    assert_int_equal(2, StringCopy(c, "BC", 2));
-    assert_int_equal(3, StringCopy(d, "DEF", str_len));
-    assert_int_equal(3, StringCopy(e, "GHIJ", str_len));
-    assert_int_equal(3, StringCopy(f, "KLMNO", str_len));
-    assert_int_equal(3, StringCopy(g, "PQRSTU", str_len));
-    assert_int_equal(3, StringCopy(h, "VWXYZ 1", str_len));
+    // Returns 3 since it was truncated to a string of length 2:
+    // (The original was at least 3 bytes long and did not fit).
+    assert_int_equal(3, StringCopy(non_terminated, d, 3));
+    assert_string_equal(d, "34");
+
+    // Too long string source (returns buf_size, NUL terminates and truncates):
+    assert_int_equal(buf_size, StringCopy("longstring", d, buf_size));
+    assert_string_equal(d, "lon");
+
+    assert_int_equal(0, StringCopy("", a, 1));
+    assert_int_equal(1, StringCopy("A", b, 2));
+    assert_int_equal(2, StringCopy("BC", c, 3));
+    assert_int_equal(3, StringCopy("DEF", d, buf_size));
+    assert_int_equal(4, StringCopy("GHIJ", e, buf_size));
+    assert_int_equal(4, StringCopy("KLMNO", f, buf_size));
+    assert_int_equal(4, StringCopy("PQRSTU", g, buf_size));
+    assert_int_equal(4, StringCopy("VWXYZ 1", h, buf_size));
     assert_string_equal(a, "");
     assert_string_equal(b, "A");
     assert_string_equal(c, "BC");
@@ -735,14 +743,14 @@ static void test_string_copy(void)
     assert_string_equal(f, "KLM");
     assert_string_equal(g, "PQR");
     assert_string_equal(h, "VWX");
-    assert_int_equal(0, StringCopy(a, d, 0));
-    assert_int_equal(1, StringCopy(b, d, 1));
-    assert_int_equal(2, StringCopy(c, d, 2));
+    assert_int_equal(1, StringCopy(d, a, 1)); // Truncated, 1 NUL byte written
+    assert_int_equal(2, StringCopy(d, b, 2)); // Truncated, 2 bytes written
+    assert_int_equal(3, StringCopy(d, c, 3)); // Truncated, 3 bytes written
     // src == dst isn't allowed, have to skip d
-    assert_int_equal(3, StringCopy(e, d, str_len));
-    assert_int_equal(3, StringCopy(f, d, str_len));
-    assert_int_equal(3, StringCopy(g, d, str_len));
-    assert_int_equal(3, StringCopy(h, d, str_len));
+    assert_int_equal(3, StringCopy(d, e, buf_size));
+    assert_int_equal(3, StringCopy(d, f, buf_size));
+    assert_int_equal(3, StringCopy(d, g, buf_size));
+    assert_int_equal(3, StringCopy(d, h, buf_size));
     assert_string_equal(a, "");
     assert_string_equal(b, "D");
     assert_string_equal(c, "DE");
@@ -755,7 +763,7 @@ static void test_string_copy(void)
     // Let's also try a longer string:
     int length = strlen(lo_alphabet);
     char buf[1024];
-    assert_int_equal(length, StringCopy(buf, lo_alphabet, length));
+    assert_int_equal(length, StringCopy(lo_alphabet, buf, 1024));
     assert_string_equal(buf, lo_alphabet);
 
     // Let's check that we haven't corrupted the stack somehow:
@@ -763,12 +771,12 @@ static void test_string_copy(void)
     assert_true(non_terminated[1] == '4');
     assert_true(non_terminated[2] == '5');
     assert_string_equal(d, "DEF");
-    assert_int_equal(str_len, StringCopy(d, non_terminated, str_len));
-    assert_string_equal(d, "345");
-    assert_int_equal(str_len, 3);
+    assert_int_equal(3, StringCopy(non_terminated, d, 3));
+    assert_string_equal(d, "34");
 
+    // Let's check that we don't write out of specified maximum
     char ones[2] = {'1', '1'};
-    assert_int_equal(0, StringCopy(ones, "", 0));
+    assert_int_equal(0, StringCopy("", ones, 1));
     assert_true(ones[0] == '\0');
     assert_true(ones[1] == '1');
 }

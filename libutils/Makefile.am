@@ -35,6 +35,7 @@ libutils_la_SOURCES = \
 	alloc.c alloc.h \
 	cleanup.c cleanup.h \
 	compiler.h \
+	definitions.h \
 	deprecated.h \
 	dir.h dir_priv.h \
 	hash_method.h \

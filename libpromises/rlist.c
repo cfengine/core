@@ -349,7 +349,7 @@ Rval RvalNewRewriter(const void *item, RvalType type, JsonElement *map)
             char *buffer_to = xmalloc(max_size);
 
             Buffer *format = BufferNew();
-            strncpy(buffer_from, item, max_size);
+            StringCopy(item, buffer_from, max_size);
 
             for (int iteration = 0; iteration < 10; iteration++)
             {
@@ -397,7 +397,7 @@ Rval RvalNewRewriter(const void *item, RvalType type, JsonElement *map)
                             // Reset location to immediately after the replacement.
                             c = var_start + repl_len - 1;
                             var_start = -1;
-                            strcpy(buffer_from, buffer_to);
+                            StringCopy(buffer_to, buffer_from, max_size);
                             closing_brace = 0;
                             replacement_made = true;
                         }

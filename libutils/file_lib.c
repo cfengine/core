@@ -517,8 +517,10 @@ int safe_open(const char *pathname, int flags, ...)
     return open(pathname, flags, mode);
 #else // !__MINGW32__
 
-    char path[strlen(pathname) + 1];
-    strcpy(path, pathname);
+    const size_t path_bufsize = strlen(pathname) + 1;
+    char path[path_bufsize];
+    const size_t res_len = StringCopy(pathname, path, path_bufsize);
+    assert(res_len == strlen(pathname));
     int currentfd;
     const char *first_dir;
     bool trunc = false;

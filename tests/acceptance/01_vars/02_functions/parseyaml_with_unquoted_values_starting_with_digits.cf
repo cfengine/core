@@ -7,9 +7,8 @@ body common control
 bundle agent test
 {
    meta:
-     "test_soft_fail"
-       string => "any",
-       meta => { "redmine7372" };
+     "description" -> { "CFE-2033" }
+       string => "Make sure parsing YAML values starting with numbers works";
 
    vars:
       "class" string => "1003_efl_test";

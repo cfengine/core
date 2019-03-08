@@ -5466,13 +5466,15 @@ static FnCallResult FnCallRegistryValue(ARG_UNUSED EvalContext *ctx, ARG_UNUSED 
 {
     char buffer[CF_BUFSIZE] = "";
 
-    if (GetRegistryValue(RlistScalarValue(finalargs),
-                         RlistScalarValue(finalargs->next),
-                         buffer, sizeof(buffer)))
+    const char *const key = RlistScalarValue(finalargs);
+    const char *const value = RlistScalarValue(finalargs->next);
+    if (GetRegistryValue(key, value, buffer, sizeof(buffer)))
     {
         return FnReturn(buffer);
     }
 
+    Log(LOG_LEVEL_ERR, "Could not read existing registry data for key '%s' and value '%s'.",
+        key, value);
     return FnFailure();
 }
 

@@ -267,9 +267,12 @@ int main(int argc, char *argv[])
 
     GenericAgentPostLoadInit(ctx);
     ThisAgentInit();
+    ConnCache_Init();
 
     BeginAudit();
     KeepPromises(ctx, policy, config);
+
+    ConnCache_Destroy();
 
     if (ALLCLASSESREPORT)
     {
@@ -1812,7 +1815,6 @@ static int NewTypeContext(TypeSequence type)
         break;
 
     case TYPE_SEQUENCE_FILES:
-        ConnCache_Init();
         break;
 
     case TYPE_SEQUENCE_PROCESSES:
@@ -1846,7 +1848,6 @@ static void DeleteTypeContext(EvalContext *ctx, TypeSequence type)
         break;
 
     case TYPE_SEQUENCE_FILES:
-        ConnCache_Destroy();
         break;
 
     case TYPE_SEQUENCE_PROCESSES:

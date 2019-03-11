@@ -1,3 +1,4 @@
+import sys
 import fabric
 from paramiko.ssh_exception import AuthenticationException
 from invoke.exceptions import UnexpectedExit

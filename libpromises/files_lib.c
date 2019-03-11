@@ -290,7 +290,7 @@ bool MakeParentDirectory(const char *parentandchild, bool force)
             {
                 mask = umask(0);
 
-                if (mkdir(currentpath, DEFAULTMODE) == -1)
+                if (mkdir(currentpath, DEFAULTMODE) == -1 && errno != EEXIST)
                 {
                     Log(LOG_LEVEL_ERR,
                         "Unable to make directory: %s (mkdir: %s)",

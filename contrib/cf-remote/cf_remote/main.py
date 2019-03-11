@@ -103,7 +103,7 @@ def validate_args(args):
         exit_success()
 
     if args.version and args.command not in ["install", "packages"]:
-        user_error("Cannot specify version number in '{}' command".format(command))
+        user_error("Cannot specify version number in '{}' command".format(args.command))
 
     if args.hosts:
         args.hosts = file_or_comma_list(args.hosts)

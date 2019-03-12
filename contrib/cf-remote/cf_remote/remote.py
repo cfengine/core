@@ -113,7 +113,6 @@ def install_package(host, pkg, data, *, connection=None):
 
 @auto_connect
 def bootstrap_host(host, policy_server, *, connection=None):
-
     print("Bootstrapping: '{}' -> '{}'".format(host, policy_server))
     command = "/var/cfengine/bin/cf-agent --bootstrap {}".format(policy_server)
     output = ssh_sudo(connection, command)

@@ -2,7 +2,7 @@ import argparse
 
 from cf_remote import log
 from cf_remote import commands
-from cf_remote.utils import user_error, exit_success, expand_list_from_file, is_file_string
+from cf_remote.utils import user_error, exit_success, expand_list_from_file, is_file_string, strip_user
 from cf_remote.packages import Releases
 
 
@@ -110,7 +110,7 @@ def validate_args(args):
     if args.clients:
         args.clients = file_or_comma_list(args.clients)
     if args.bootstrap:
-        args.bootstrap = file_or_comma_list(args.bootstrap)
+        args.bootstrap = [strip_user(host_info) for host_info in file_or_comma_list(args.bootstrap)]
     if args.hub:
         args.hub = file_or_comma_list(args.hub)
 

@@ -133,3 +133,11 @@ def expand_list_from_file(string):
         hosts = [line.strip() for line in f if line.strip()]
 
     return hosts
+
+def strip_user(host):
+    """Strips the 'user@' info from a host spec"""
+    idx = host.find('@')
+    if idx != -1:
+        return host[(idx + 1):]
+    return host
+

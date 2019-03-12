@@ -5,7 +5,7 @@ from cf_remote.remote import get_info, print_info, install_host, run_command, tr
 from cf_remote.packages import Releases
 from cf_remote.web import download_package
 from cf_remote.paths import cf_remote_dir
-from cf_remote.utils import save_file
+from cf_remote.utils import save_file, strip_user
 from cf_remote import log
 
 
@@ -93,7 +93,7 @@ def install(
         for hub in hubs:
             print(
                 "Your demo hub is ready: https://{}/ (Username: admin, Password: password)".
-                format(hub))
+                format(strip_user(hub)))
 
 
 def packages(tags=None, version=None):

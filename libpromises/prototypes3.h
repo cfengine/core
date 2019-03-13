@@ -66,7 +66,7 @@ ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, LoadSlowlyVaryingObservations, EvalConte
 ENTERPRISE_FUNC_6ARG_DECLARE(char *, GetRemoteScalar, EvalContext *, ctx, char *, proto, char *, handle, const char *, server, int, encrypted, char *, rcv);
 ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, LogTotalCompliance, const char *, version, int, background_tasks);
 #if defined(__MINGW32__)
-ENTERPRISE_FUNC_4ARG_DECLARE(int, GetRegistryValue, const char *, key, char *, name, char *, buf, int, bufSz);
+ENTERPRISE_FUNC_4ARG_DECLARE(bool, GetRegistryValue, const char *, key, char *, name, char *, buf, int, bufSz);
 #endif
 ENTERPRISE_FUNC_6ARG_DECLARE(void *, CfLDAPValue, char *, uri, char *, dn, char *, filter, char *, name, char *, scope, char *, sec);
 ENTERPRISE_FUNC_6ARG_DECLARE(void *, CfLDAPList, char *, uri, char *, dn, char *, filter, char *, name, char *, scope, char *, sec);

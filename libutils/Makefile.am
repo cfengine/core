@@ -33,54 +33,55 @@ libutils_la_LIBS   = $(PCRE_LIBS) $(OPENSSL_LIBS)
 
 libutils_la_SOURCES = \
 	alloc.c alloc.h \
+	array_map.c array_map_priv.h \
+	bool.h \
+	buffer.c buffer.h \
+	cf-windows-functions.h \
 	cleanup.c cleanup.h \
 	compiler.h \
+	csv_writer.c csv_writer.h \
+	csv_parser.c csv_parser.h \
 	definitions.h \
 	deprecated.h \
 	dir.h dir_priv.h \
+	encode.c encode.h \
+	file_lib.c file_lib.h \
+	hash.c hash.h \
+	hash_map.c hash_map_priv.h \
 	hash_method.h \
-	path.c path.h \
-	sequence.c sequence.h \
-	set.c set.h \
-	statistics.c statistics.h \
-	string_lib.c string_lib.h \
-	pcre_include.h \
-	platform.h condition_macros.h \
-	proc_keyvalue.c proc_keyvalue.h \
-	bool.h \
+	ip_address.c ip_address.h \
 	json.c json.h json-priv.h \
 	json-utils.c json-utils.h \
 	json-yaml.c json-yaml.h \
-	refcount.c refcount.h \
+	libcrypto-compat.c libcrypto-compat.h \
 	list.c list.h \
 	logging.c logging.h logging_priv.h \
-	buffer.c buffer.h \
-	ip_address.c ip_address.h \
-	map.c map.h map_common.h \
-	mutex.c mutex.h \
-	array_map.c array_map_priv.h \
-	hash_map.c hash_map_priv.h \
-	misc_lib.c misc_lib.h \
-	writer.c writer.h \
-	csv_writer.c csv_writer.h \
-	csv_parser.c csv_parser.h \
-	xml_writer.c xml_writer.h \
-	file_lib.c file_lib.h \
 	man.c man.h \
-	rb-tree.c rb-tree.h \
+	map.c map.h map_common.h \
+	misc_lib.c misc_lib.h \
 	mustache.c mustache.h \
+	mutex.c mutex.h \
 	passopenfile.c passopenfile.h \
-	unicode.c unicode.h \
-	hash.c hash.h \
-	queue.c queue.h \
-	threaded_queue.c threaded_queue.h \
-	stack.c stack.h \
-	ring_buffer.c ring_buffer.h \
-	regex.c regex.h \
-	encode.c encode.h \
+	path.c path.h \
+	pcre_include.h \
 	pcre_wrap.c pcre_wrap.h \
-	libcrypto-compat.c libcrypto-compat.h \
-	printsize.h
+	platform.h condition_macros.h \
+	printsize.h \
+	proc_keyvalue.c proc_keyvalue.h \
+	queue.c queue.h \
+	rb-tree.c rb-tree.h \
+	refcount.c refcount.h \
+	regex.c regex.h \
+	ring_buffer.c ring_buffer.h \
+	sequence.c sequence.h \
+	set.c set.h \
+	stack.c stack.h \
+	statistics.c statistics.h \
+	string_lib.c string_lib.h \
+	threaded_queue.c threaded_queue.h \
+	unicode.c unicode.h \
+	writer.c writer.h \
+	xml_writer.c xml_writer.h
 
 if !NT
   libutils_la_SOURCES += unix_dir.c

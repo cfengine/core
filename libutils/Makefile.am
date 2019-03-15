@@ -53,6 +53,7 @@ libutils_la_SOURCES = \
 	json.c json.h json-priv.h \
 	json-utils.c json-utils.h \
 	json-yaml.c json-yaml.h \
+	known_dirs.c known_dirs.h \
 	list.c list.h \
 	logging.c logging.h logging_priv.h \
 	man.c man.h \

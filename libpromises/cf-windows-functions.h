@@ -70,12 +70,6 @@ int NovaWin_GetSysDir(char *sysDir, int sysDirSz);
 int NovaWin_GetProgDir(char *progDir, int progDirSz);
 int NovaWin_GetEnv(char *varName, char *varContents, int varContentsSz);
 
-const char *GetDefaultWorkDir(void);
-const char *GetDefaultLogDir(void);
-const char *GetDefaultPidDir(void);
-const char *GetDefaultMasterDir(void);
-const char *GetDefaultInputDir(void);
-
 /* win_user.c */
 
 int NovaWin_UserNameToSid(char *userName, SID *sid, DWORD sidSz, int shouldExist);

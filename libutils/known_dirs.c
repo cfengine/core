@@ -23,10 +23,10 @@
 */
 
 #include <known_dirs.h>
-#include <cf3.defs.h>
+#include <definitions.h>
 #include <file_lib.h>
 
-#include <cf-windows-functions.h>
+static char OVERRIDE_BINDIR[PATH_MAX] = {0};
 
 #if defined(__CYGWIN__) || defined(__ANDROID__)
 
@@ -34,7 +34,7 @@
 static const char *GetDefault##FUNC##Dir(void)      \
 {                                                   \
     return GLOBAL;                                  \
-}                                                   \
+}
 
 /* getpwuid() on Android returns /data,
  * so use compile-time default instead */
@@ -48,11 +48,14 @@ GET_DEFAULT_DIRECTORY_DEFINE(State, STATEDIR)
 
 #elif !defined(__MINGW32__)
 
-const char *GetDefaultDir_helper(char dir[PATH_MAX], const char *root_dir, const char *append_dir)
+const char *GetDefaultDir_helper(char *dir, const char *root_dir,
+                                 const char *append_dir)
 {
+    assert(dir != NULL);
+
     if (getuid() > 0)
     {
-        if (!*dir)
+        if (dir[0] == '\0')
         {
             struct passwd *mpw = getpwuid(getuid());
 
@@ -63,14 +66,16 @@ const char *GetDefaultDir_helper(char dir[PATH_MAX], const char *root_dir, const
 
             if ( append_dir == NULL )
             {
-                if (snprintf(dir, PATH_MAX, "%s/.cfagent", mpw->pw_dir) >= PATH_MAX)
+                if (snprintf(dir, PATH_MAX, "%s/.cfagent",
+                             mpw->pw_dir) >= PATH_MAX)
                 {
                     return NULL;
                 }
             }
             else
             {
-                if (snprintf(dir, PATH_MAX, "%s/.cfagent/%s", mpw->pw_dir, append_dir) >= PATH_MAX)
+                if (snprintf(dir, PATH_MAX, "%s/.cfagent/%s",
+                             mpw->pw_dir, append_dir) >= PATH_MAX)
                 {
                     return NULL;
                 }
@@ -91,7 +96,7 @@ const char *GetDefault##FUNC##Dir(void)                             \
 {                                                                   \
     static char STATIC##dir[PATH_MAX]; /* GLOBAL_C */               \
     return GetDefaultDir_helper(STATIC##dir, GLOBAL, FOLDER);       \
-}                                                                   \
+}
 
 GET_DEFAULT_DIRECTORY_DEFINE(Work, work, WORKDIR, NULL)
 GET_DEFAULT_DIRECTORY_DEFINE(Log, log, LOGDIR, "log")
@@ -107,6 +112,31 @@ const char *GetWorkDir(void)
     const char *workdir = getenv("CFENGINE_TEST_OVERRIDE_WORKDIR");
 
     return workdir == NULL ? GetDefaultWorkDir() : workdir;
+}
+
+const char *GetBinDir(void)
+{
+    const char *workdir = getenv("CFENGINE_TEST_OVERRIDE_WORKDIR");
+
+    if (workdir == NULL)
+    {
+#ifdef __MINGW32__
+        /* Compile-time default bindir doesn't work on windows because during
+         * the build /var/cfengine/bin is used and only when the package is
+         * created, things are shuffled around */
+        snprintf(OVERRIDE_BINDIR, PATH_MAX, "%s%cbin",
+                 GetDefaultWorkDir(), FILE_SEPARATOR);
+        return OVERRIDE_BINDIR;
+#else
+        return GetDefaultBinDir();
+#endif
+    }
+    else
+    {
+        snprintf(OVERRIDE_BINDIR, PATH_MAX, "%s%cbin",
+                 workdir, FILE_SEPARATOR);
+        return OVERRIDE_BINDIR;
+    }
 }
 
 const char *GetLogDir(void)
@@ -135,7 +165,7 @@ const char *GetPidDir(void)
     }                                                                \
     else if (strcmp(GLOBAL##DIR, "default") == 0 )                   \
     {                                                                \
-        snprintf(workbuf, CF_BUFSIZE, "%s/" #FOLDER, GetWorkDir()); \
+        snprintf(workbuf, CF_BUFSIZE, "%s/" #FOLDER, GetWorkDir());  \
     }                                                                \
     else /* VAR##dir defined at compile-time */                      \
     {                                                                \
@@ -143,8 +173,11 @@ const char *GetPidDir(void)
     }                                                                \
                                                                      \
     return MapName(workbuf);                                         \
-}                                                                    \
+}
 
-const char *GetInputDir(void) GET_DIRECTORY_DEFINE_FUNC_BODY(Input, input, INPUT, inputs)
-const char *GetMasterDir(void) GET_DIRECTORY_DEFINE_FUNC_BODY(Master, master, MASTER, masterfiles)
-const char *GetStateDir(void) GET_DIRECTORY_DEFINE_FUNC_BODY(State, state, STATE, state)
+const char *GetInputDir(void)
+    GET_DIRECTORY_DEFINE_FUNC_BODY(Input, input, INPUT, inputs)
+const char *GetMasterDir(void)
+    GET_DIRECTORY_DEFINE_FUNC_BODY(Master, master, MASTER, masterfiles)
+const char *GetStateDir(void)
+    GET_DIRECTORY_DEFINE_FUNC_BODY(State, state, STATE, state)

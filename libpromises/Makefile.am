@@ -51,35 +51,36 @@ libpromises_la_LIBADD = ../libutils/libutils.la ../libcfnet/libcfnet.la \
 	../libenv/libenv.la $(ENTERPRISE_LDADD)
 
 libpromises_la_SOURCES = \
-        cf3parse.y cf3parse.h \
-        cf3lex.l \
         acl_tools.h acl_tools_posix.c \
         actuator.c actuator.h \
         assoc.c assoc.h \
-        audit.c audit.h \
         attributes.c attributes.h \
+        audit.c audit.h \
         bootstrap.c bootstrap.h bootstrap.inc failsafe.cf \
+        cf-windows-functions.h
         cf3.defs.h \
         cf3.extern.h \
         cf3globals.c \
+        cf3lex.l \
+        cf3parse.y cf3parse.h \
         chflags.c chflags.h \
         class.c class.h \
         constants.c \
         conversion.c conversion.h \
         crypto.c crypto.h \
         dbm_api.c dbm_api.h dbm_priv.h \
+        dbm_lmdb.c \
         dbm_migration.c dbm_migration.h \
         dbm_migration_lastseen.c \
-        dbm_lmdb.c \
         dbm_quick.c \
         dbm_tokyocab.c \
-        extensions_template.c.pre extensions_template.h.pre \
         enterprise_stubs.c enterprise_extension.c enterprise_extension.h \
         eval_context.c eval_context.h \
         evalfunction.c evalfunction.h \
         exec_tools.c exec_tools.h \
         expand.c expand.h \
         extensions.c extensions.h \
+        extensions_template.c.pre extensions_template.h.pre \
         feature.c feature.h \
         files_copy.c files_copy.h \
         files_hashes.c files_hashes.h \
@@ -106,6 +107,7 @@ libpromises_la_SOURCES = \
         mod_environ.c mod_environ.h \
         mod_exec.c mod_exec.h \
         mod_files.c mod_files.h \
+        mod_knowledge.c mod_knowledge.h \
         mod_measurement.c mod_measurement.h \
         mod_methods.c mod_methods.h \
         mod_outputs.c mod_outputs.h \
@@ -114,7 +116,6 @@ libpromises_la_SOURCES = \
         mod_report.c mod_report.h \
         mod_services.c mod_services.h \
         mod_storage.c mod_storage.h \
-        mod_knowledge.c mod_knowledge.h \
         mod_users.c mod_users.h \
         modes.c \
         mutex.c mutex.h \
@@ -125,8 +126,8 @@ libpromises_la_SOURCES = \
         parser_state.h \
         patches.c \
         pipes.h pipes.c \
-        processes_select.c processes_select.h \
         process_lib.h process_unix_priv.h \
+        processes_select.c processes_select.h \
         promises.c promises.h \
         prototypes3.h \
         rlist.c rlist.h \
@@ -147,7 +148,6 @@ libpromises_la_SOURCES = \
         verify_classes.c verify_classes.h \
         verify_reports.c \
         verify_vars.c verify_vars.h \
-        cf-windows-functions.h
 
 if !NT
 

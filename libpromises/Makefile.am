@@ -52,17 +52,18 @@ libpromises_la_LIBADD = ../libutils/libutils.la ../libcfnet/libcfnet.la \
 	../libenv/libenv.la $(ENTERPRISE_LDADD)
 
 libpromises_la_SOURCES = \
-	cf3parse.y cf3parse.h \
-	cf3lex.l \
 	acl_tools.h acl_tools_posix.c \
 	actuator.c actuator.h \
 	assoc.c assoc.h \
-	audit.c audit.h \
 	attributes.c attributes.h \
+	audit.c audit.h \
 	bootstrap.c bootstrap.h bootstrap.inc failsafe.cf \
+	cf-windows-functions.h \
 	cf3.defs.h \
 	cf3.extern.h \
 	cf3globals.c \
+	cf3lex.l \
+	cf3parse.y cf3parse.h \
 	chflags.c chflags.h \
 	class.c class.h \
 	constants.c \
@@ -74,13 +75,13 @@ libpromises_la_SOURCES = \
 	dbm_lmdb.c \
 	dbm_quick.c \
 	dbm_tokyocab.c \
-	extensions_template.c.pre extensions_template.h.pre \
 	enterprise_stubs.c enterprise_extension.c enterprise_extension.h \
 	eval_context.c eval_context.h \
 	evalfunction.c evalfunction.h \
 	exec_tools.c exec_tools.h \
 	expand.c expand.h \
 	extensions.c extensions.h \
+	extensions_template.c.pre extensions_template.h.pre \
 	feature.c feature.h \
 	files_copy.c files_copy.h \
 	files_hashes.c files_hashes.h \
@@ -94,7 +95,7 @@ libpromises_la_SOURCES = \
 	instrumentation.c instrumentation.h \
 	item_lib.c item_lib.h \
 	iteration.c iteration.h \
-	keyring.c keyring.h\
+	keyring.c keyring.h \
 	known_dirs.c known_dirs.h \
 	lastseen.c lastseen.h \
 	loading.c loading.h \
@@ -144,17 +145,16 @@ libpromises_la_SOURCES = \
 	timeout.c timeout.h \
 	unix.c unix.h \
 	var_expressions.c var_expressions.h \
-	vars.c vars.h \
 	variable.c variable.h \
+	vars.c vars.h \
 	verify_classes.c verify_classes.h \
 	verify_reports.c \
 	verify_vars.c verify_vars.h \
-	cf-windows-functions.h \
 	../cf-check/backup.c ../cf-check/backup.h \
 	../cf-check/diagnose.c ../cf-check/diagnose.h \
 	../cf-check/lmdump.c ../cf-check/lmdump.h \
-	../cf-check/utilities.c ../cf-check/utilities.h \
-	../cf-check/repair.c ../cf-check/repair.h
+	../cf-check/repair.c ../cf-check/repair.h \
+	../cf-check/utilities.c ../cf-check/utilities.h
 
 if !NT
 

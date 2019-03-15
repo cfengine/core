@@ -95,7 +95,6 @@ libpromises_la_SOURCES = \
 	item_lib.c item_lib.h \
 	iteration.c iteration.h \
 	keyring.c keyring.h \
-	known_dirs.c known_dirs.h \
 	lastseen.c lastseen.h \
 	loading.c loading.h \
 	locks.c locks.h \

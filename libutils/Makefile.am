@@ -36,7 +36,6 @@ libutils_la_SOURCES = \
 	array_map.c array_map_priv.h \
 	bool.h \
 	buffer.c buffer.h \
-	cf-windows-functions.h \
 	cfversion.c cfversion.h \
 	cleanup.c cleanup.h \
 	compiler.h \
@@ -54,6 +53,7 @@ libutils_la_SOURCES = \
 	json.c json.h json-priv.h \
 	json-utils.c json-utils.h \
 	json-yaml.c json-yaml.h \
+	known_dirs.c known_dirs.h \
 	libcrypto-compat.c libcrypto-compat.h \
 	list.c list.h \
 	logging.c logging.h logging_priv.h \

@@ -490,6 +490,7 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
         {
             Log(LOG_LEVEL_VERBOSE,
                 "Existence only is promised, no copying required");
+            result = PromiseResultUpdate(result, PROMISE_RESULT_NOOP);
             return result;
         }
 

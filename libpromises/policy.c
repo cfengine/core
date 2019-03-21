@@ -1590,6 +1590,11 @@ static Buffer *EscapeQuotes(const char *raw, Buffer *out)
     return out;
 }
 
+/**
+ * Converts the given attribute rval to a JSON object.
+ *
+ * @return A JsonElement of type JSON_ELEMENT_TYPE_CONTAINER
+ */
 static JsonElement *AttributeValueToJson(Rval rval, bool symbolic_reference)
 {
     switch (rval.type)
@@ -1757,7 +1762,15 @@ static JsonElement *BundleContextsToJson(const Seq *promises)
                 JsonObjectAppendInteger(json_attribute, "line", cp->offset.line);
 
                 JsonObjectAppendString(json_attribute, "lval", cp->lval);
-                JsonObjectAppendObject(json_attribute, "rval", AttributeValueToJson(cp->rval, cp->references_body));
+                JsonElement *json_rval = AttributeValueToJson(cp->rval, cp->references_body);
+                if (JsonGetContainerType(json_rval) == JSON_CONTAINER_TYPE_ARRAY)
+                {
+                    JsonObjectAppendArray(json_attribute, "rval", json_rval);
+                }
+                else
+                {
+                    JsonObjectAppendObject(json_attribute, "rval", json_rval);
+                }
                 JsonArrayAppendObject(json_promise_attributes, json_attribute);
             }
 

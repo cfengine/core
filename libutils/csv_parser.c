@@ -332,7 +332,7 @@ char *GetCsvLineNext(FILE *fp)
     Writer *buffer = StringWriter();
 
     char prev = 0;
-
+    bool in_quotes = false;
     for (;;)
     {
         int current = fgetc(fp);
@@ -344,7 +344,11 @@ char *GetCsvLineNext(FILE *fp)
 
         WriterWriteChar(buffer, current);
 
-        if ((current == '\n') && (prev == '\r'))
+        if (current == '"')
+        {
+            in_quotes = !in_quotes;
+        }
+        else if (!in_quotes && (current == '\n') && (prev == '\r'))
         {
             break;
         }

@@ -726,17 +726,17 @@ int TLSRecv(SSL *ssl, char *buffer, int toget)
 
     int received,tries = 0,code=0;
     do
-      {
+    {
         received = SSL_read(ssl, buffer, toget);
         if (received < 0)
-          {
+        {
             code = TLSLogError(ssl, LOG_LEVEL_ERR, "SSL_read", received);
             if (code == SSL_ERROR_WANT_READ)
-              {
+            {
                 sleep(1);
-              }
-          }
-      } while( received < 0 && code == SSL_ERROR_WANT_READ && (tries++ < 10) );
+            }
+        }
+    } while (received < 0 && code == SSL_ERROR_WANT_READ && (tries++ < 10));
 
     if (received < 0)
     {

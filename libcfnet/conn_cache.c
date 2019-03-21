@@ -124,6 +124,12 @@ AgentConnection *ConnCache_FindIdleMarkBusy(const char *server,
                     " connection to '%s' is marked as offline.",
                     server);
             }
+            else if (svp->status == CONNCACHE_STATUS_BROKEN)
+            {
+                Log(LOG_LEVEL_DEBUG,
+                    "FindIdle: connection to '%s' is marked as broken.",
+                    server);
+            }
             else if (svp->conn->conn_info->sd >= 0)
             {
                 assert(svp->status == CONNCACHE_STATUS_IDLE);
@@ -135,12 +141,14 @@ AgentConnection *ConnCache_FindIdleMarkBusy(const char *server,
                 {
                     Log(LOG_LEVEL_DEBUG, "FindIdle: found connection to '%s' but could not get socket status, skipping.",
                         server);
+                    svp->status = CONNCACHE_STATUS_BROKEN;
                     continue;
                 }
                 if (error != 0)
                 {
                     Log(LOG_LEVEL_DEBUG, "FindIdle: found connection to '%s' but connection is broken, skipping.",
                         server);
+                    svp->status = CONNCACHE_STATUS_BROKEN;
                     continue;
                 }
 
@@ -157,6 +165,7 @@ AgentConnection *ConnCache_FindIdleMarkBusy(const char *server,
                 Log(LOG_LEVEL_VERBOSE, "FindIdle:"
                     " connection to '%s' has invalid socket descriptor %d!",
                     server, svp->conn->conn_info->sd);
+                svp->status = CONNCACHE_STATUS_BROKEN;
             }
         }
     }

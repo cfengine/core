@@ -62,9 +62,12 @@ char *StringFormat(const char *fmt, ...)
 
 unsigned int StringHash(const char *str, unsigned int seed)
 {
-    unsigned const char *p = str;
+    assert(str != NULL);
+    unsigned const char *p = (unsigned const char *) str;
     unsigned int h = seed;
-    size_t len = strlen(str);
+
+    // NULL is not allowed, but we will prevent segfault anyway:
+    size_t len = (str != NULL) ? strlen(str) : 0;
 
     /* https://en.wikipedia.org/wiki/Jenkins_hash_function#one-at-a-time */
     for (size_t i = 0; i < len; i++)

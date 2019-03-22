@@ -519,7 +519,7 @@ does not change. So be careful about cleaning those files. .gcda files are
 like index files which can be used to generate the .gcov files which lcov
 uses to generate lcov.info and the HTML report in the coverage-html directory.
 Many IDEs and editors expect a <root>/coverage/lcov.info summary of coverage
-information. After running `make check` you can run `make coverage` and 
+information. After running `make check` you can run `make coverage` and
 generate this lcov.info summary for use with other tools. If you wish to only
 run a few tests which will add to coverage data you can update lcov.info with
 `make collect-coverage` which will only collect coverage data, not compile or
@@ -601,7 +601,7 @@ atexit() and Windows
 On Windows the atexit function works but the functions registered there are
 executed after or concurrently with DLL unloading. If registered functions
 rely on DLLs such as pthreads to do locking/unlocking deadlock scenarios can
-occur when exit is called. 
+occur when exit is called.
 
 In order to make behavior more explicit and predictable we migrated to always
 using a homegrown atexit system. RegisterCleanupFunction instead of atexit and

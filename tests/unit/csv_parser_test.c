@@ -183,6 +183,60 @@ static void test_get_next_line()
     fclose(fp);
 }
 
+static void test_get_next_line_edge_cases()
+{
+    // Generated file in python:
+    // with open("tests/unit/data/csv_file_edge_cases.csv", "w") as f:
+    //     f.write("Empty,Empty,One double quote,Two double quotes,LF,CRLF,CRLFCRLF,Empty\r\n")
+    //     f.write('"",,"""","""""","\n","\r\n","\r\n\r\n",\r\n')
+
+
+    FILE *fp = fopen("./data/csv_file_edge_cases.csv", "r");
+    assert_true(fp);
+
+    {
+        char *header_string = GetCsvLineNext(fp);
+        char *data_string = GetCsvLineNext(fp);
+
+        assert_true(header_string != NULL);
+        assert_true(data_string != NULL);
+
+        assert_string_equal(header_string, "Empty,Empty,One double quote,Two double quotes,LF,CRLF,CRLFCRLF,Empty\r\n");
+        assert_string_equal(data_string,   "\"\",,\"\"\"\",\"\"\"\"\"\",\"\n\",\"\r\n\",\"\r\n\r\n\",\r\n");
+
+        Seq *header_list = SeqParseCsvString(header_string);
+        Seq *data_list = SeqParseCsvString(data_string);
+        assert_true(header_list != NULL);
+        assert_true(data_list != NULL);
+        assert_int_equal(SeqLength(header_list), 8);
+        assert_int_equal(SeqLength(data_list), 8);
+
+        assert_string_equal(SeqAt(header_list, 0), "Empty");
+        assert_string_equal(SeqAt(data_list,   0), "");
+        assert_string_equal(SeqAt(header_list, 1), "Empty");
+        assert_string_equal(SeqAt(data_list,   1), "");
+        assert_string_equal(SeqAt(header_list, 2), "One double quote");
+        assert_string_equal(SeqAt(data_list,   2), "\"");
+        assert_string_equal(SeqAt(header_list, 3), "Two double quotes");
+        assert_string_equal(SeqAt(data_list,   3), "\"\"");
+        assert_string_equal(SeqAt(header_list, 4), "LF");
+        assert_string_equal(SeqAt(data_list,   4), "\n");
+        assert_string_equal(SeqAt(header_list, 5), "CRLF");
+        assert_string_equal(SeqAt(data_list,   5), "\r\n");
+        assert_string_equal(SeqAt(header_list, 6), "CRLFCRLF");
+        assert_string_equal(SeqAt(data_list,   6), "\r\n\r\n");
+        assert_string_equal(SeqAt(header_list, 7), "Empty");
+        assert_string_equal(SeqAt(data_list,   7), "");
+
+        SeqDestroy(header_list);
+        SeqDestroy(data_list);
+        free(header_string);
+        free(data_string);
+    }
+
+    fclose(fp);
+}
+
 /* A memory corruption (off-by-one write) used to occur with this string,
  * detectable by valgrind and crashing some non-linux platforms. */
 static void test_new_csv_reader_zd3151_ENT3023()
@@ -206,9 +260,9 @@ int main()
         unit_test(test_new_csv_reader_lfln_at_end2),
         unit_test(test_new_csv_reader_lfln_at_end3),
         unit_test(test_get_next_line),
+        unit_test(test_get_next_line_edge_cases),
         unit_test(test_new_csv_reader_zd3151_ENT3023),
     };
 
     return run_tests(tests);
 }
-

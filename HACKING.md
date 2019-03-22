@@ -27,31 +27,35 @@ in order to make it to the first minor release.
 Pull Requests
 -------------------------------------------------
 
-### Top reasons pull-requests are rejected or delayed
+### Checklist
 
-* Code does not follow style guidlines. See [Coding Style](#coding-style).
+When submitting your pull request, please make sure you:
 
-* Pull request addresses several disparate issues. In general, smaller
-pull-requests are better because they are easier to review and stay mergeable
-longer.
+* Follow our [Coding Style](#coding-style).
 
-* Big feature is added, but it is not configurable in compile-time.
-We are striving to keep CFEngine lightweight and fast, so big new
-features should be possible to disable with
-`./configure --disable-feature` and linking to new libraries
-should be optional with `./configure --without-libfoo`.
+* Address only one issue/feature.
+  Smaller pull requests are generally better.
 
-* Messy commit log. Tidy up the commit log by squashing commits.
+* Add tests.
+  C functions should have unit tests.
+  Promise types, attributes, and functions should have acceptance tests.
 
-* Missing ChangeLog description in commit message, which is mandatory
-for new features or bugfixes to be accepted.
-See [ChangeLog Entries](#changelog-entries) for details.
+* Pay attention to review comments and CI results.
+  We have code analysis and tests which run when you submit your PR.
+  You may have to make some changes.
 
-* Code is out-of-date, does not compile, or does not pass all tests. Again,
-focused and small pull-requests are better.
+* Check that you don't have any merge conflicts.
+  (Rebase on master or target branch).
 
-* No attached test case. Normally, all new code needs test cases. This means a
-functional test runnable with `make check`.
+* Tidy up the commit log by squashing commits.
+  Each commit should be a valid change and make sense on its own.
+  Usually a Pull Request will only have one commit.
+
+* Add a [ChangeLog Entry](#changelog-entries) to the commit.
+
+* Add a configure option if appropriate:
+  `./configure --disable-big-feature` or `./configure --without-libfoo`.
+
 
 ### Multi-repo pull requests
 
@@ -75,96 +79,192 @@ The bigger PR will likely take some time to get reviewed, and discussed, while s
 Coding Style
 ------------
 
-* Loosely based on Allman-4 and the
-  [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html).
-* Keep in mind that code should be readable by non C experts.
-  If you are a Guru, try to restrain yourself, only do magic when
-  absolutely necessary.
-* 4 spaces indentation level, no tabs.
-* Function names are `CamelCase` (with first letter capital), variables and
-  parameters are `under_scored`.
-  * If you introduce a new namespace, you can use underscore as
-    namespace-identifier separator, for example
-    `StrList_BinarySearch()`.
-  * Avoid introducing extra long identifiers, like
-    ~~`GenericAgentConfigParseWarningOptions()`~~.
-* Try not to include assignments inside if/while expressions
-  *unless they avoid great repetition*. On the average case,
-  just put the assignment on the previous line. So try NOT to do
-  the following:
-  ~~`if ((ret = open(...)) == -1)`~~
-* Explicit comparisons are better than implicit, i.e. prefer writing
-  `if (number == 0)` or `if (pointer == NULL)`
-  instead of ~~`if (!number)`~~ or ~~`if (!pointer)`~~. It only makes
-  sense to test booleans directly, for example `if (is_valid)` is good.
-  Furthermore have the literal last in the comparison, not first, i.e.
-  prefer writing `if (open(...) == -1)` instead of
-  ~~`if (-1 == open(...))`~~.
-* Control statements need to have braces on separate line,
-  no matter how simple they are.
-  * Caution, do-while loops should have the closing brace at the same
-    line with while, so that it can't be confused with empty while statement.
-    ```c
-    do
-    {
-        // ...
+Our coding style is loosely based on Allman-4 and the [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html).
+Keep in mind that these are guidelines, there will always be some situations where exceptions are appropriate.
 
-    } while (condition);
-    ```
-* In functions which can fail, error code (int) or success/failure (bool) should be returned.
-    * `true`(bool) and `0`(int) should always signify success.
-    * Only return an error code (int) when there are multiple different return values for different errors. If a function can only return `0` (success) or `-1` (error) use `bool` instead.
-    * Compiler can enforce checking of return value, output of function can be in an output parameter (pointer).
-* *C99 is encouraged in the language, use it.*
+### Formatting / Whitespace
 
-  As for using C99-specific libc functions, you can mostly use them,
-  because we provide replacement functions in libcompat, since many old
-  Unix platforms are missing those. If there is no replacement for a
-  C99-specific function, then either stick to C89, or write the
-  libcompat replacement.
-
-  Current functions known to be missing from libcompat
-  (so stick to C89):
-  * `[s]scanf()`
+* Feel free to use `clang-format` to format new code you submit.
+  (Our configuration is in `.clang-format`).
+* 4 spaces per indentation, no tabs.
 * Fold new code at 78 columns.
-* Do not break string literals. Prefer having strings on a single line
-  In order to improve grep-ability. If they do not fit on a single line,
-  try breaking on punctuation. In worst case scenario, you are allowed
-  to surpass the 78 columns limit.
+    * Do not break string literals.
+      Prefer having strings on a single line, in order to improve search-ability(grep).
+      If they do not fit on a single line, try breaking on punctuation.
+      You can surpass the 78 column limit if necessary.
+* Use single spaces around operators, but not before semicolon:
+  ```c
+  int a = 2 + 3;
+  int b = 2 * (a - 2);
+  if (a > b)
+  ```
+* Place pointer star to the right, next to the name it belongs to:
+  ```c
+  int *a;
+  char *b, *c;
+  const char *const d;
+  ```
+* Curly brackets on separate lines.
+    * Except in a do-while loop, to avoid confusion with a while loop:
+      ```c
+      do
+      {
+          // ...
+      } while (condition);
+      ```
+    * Except at the end of a struct type definition:
+      ```c
+      typedef struct _Name
+      {
+          // ...
+      } Name;
+      ```
+* Type casts should be separated with one space from the variable:
+  ```c
+  (struct sockaddr *) &myaddr
+  ```
 
-  Bad:
+### Readability / Maintainability
+
+Keep in mind that code should be readable by non C experts.
+If you are a Guru, try to restrain yourself, only do magic when absolutely necessary.
+
+* Avoid code duplication.
+  Make a variable or a function instead of copy-pasting the same patterns.
+    * Helper functions which are only used in the same file should be declared `static`.
+    * If you want to test the `static` functions, you can `#include` the `.c` file in the unit test.
+* Avoid abbreviations.
+* Welcome to "modern" C (C99).
+    * Declare variables where they are needed, not at the beginning of a function / block.
+    * Declare index inside for loop:
+      ```c
+      for (int i = 0; i < n; ++i)
+      ```
+* Variable names:
+    * Describe what the variable is.
+    * Are English words with underscores: `string_index`
+    * Boolean variable names should make an `if`/`while` sensible: `if (more_data)` / `while (more_data)`
+* Function names:
+    * Are `CamelCase` (with first letter capital).
+    * Describe what the function does.
+* Namespaces:
+    * Don't exist in C.
+    * But we can pretend, using underscores in function names:
+        * `StrList_BinarySearch()`
+* Structs:
+    * Names are `CamelCase` (with first letter capital).
+    * Use the common typedef pattern:
+      ```c
+      typedef struct _Point
+      {
+          float x;
+          float y;
+      } Point;
+      ```
+      Don't add a trailing `_t` or similar for typedefs.
+    * Structs and functions which modify them are similar to classes and methods in other languages.
+        * Method names should start with the struct name.
+        * The first parameter should be the "self" pointer:
+          ```c
+          void SeqAppend(Seq *seq, void *item);
+          ```
+* Document using Doxygen (within reason), preferably in the `.c` files, not the header files.
+
+
+### Safety / Correctness
+
+* Minimize use of global variables.
+* Use pure functions when possible:
+    * Functions with no / few side effects are easier to reuse.
+    * Use `const` parameters to show that they are not altered.
+* Functions which expect their arguments to be non-NULL should assert this at the top:
   ```c
-  Log(LOG_LEVEL_INFO, "Some error occurred while reading installed "
-      "packages cache.");
+  size_t SeqLength(const Seq *seq)
+  {
+      assert(seq != NULL);
+      return seq->length;
+  }
   ```
-  Good:
-  ```c
-  Log(LOG_LEVEL_INFO,
-      "Some error occurred while reading installed packages cache");
-  ```
-* Always use typedefs, no `struct X`, or `enum Y` are allowed. Types
-  defined with typedef should be in camelcase and no trailing `_t`,
-  `_f` etc.
-* Constify what can be `const`. Minimize use of global variables.
-  Never declare a global variable in a library (e.g. libpromises) and
-  change it in the programs.
+    * Not necessary all the time, avoid duplication.
+      A wrapper like this doesn't need the asserts:
+      ```c
+      bool SaveXmlDocAsFile(xmlDocPtr doc, const char *file, const Attributes *a, NewLineMode new_line_mode)
+      {
+          return SaveAsFile(&SaveXmlCallback, doc, file, a, new_line_mode);
+      }
+      ```
+      It's more appropriate to put the asserts close to the code which dereferences the pointers.
+* Constants
+    * Constify what can be `const`.
+    * A pointer to an immutable string:
+    ```c
+    const char *string;
+    ```
+    * An immutable pointer to a mutable string:
+    ```c
+    char *const string;
+    ```
+    * An immutable pointer to an immutable string:
+    ```c
+    const char *const string;
+    ```
+    * The `const` keyword applies to the left, unless it is the first, then it applies to the right.
+* Types:
+    * Assign and compare using the correct "type" literal:
+      ```c
+      float temperature = 0.0;
+      int dollars = 10;
+      char string_terminator = '\0';
+      char *name = NULL;
+      if (name == NULL && dollars <= 0 && temperature <= -10.0)
+      {
+          // :(
+      }
+      ```
+* Conditions:
+    * Use explicit comparisons:
+    ```c
+    if (data != NULL)
+    ```
+    * Have the literal (constant) to the right side, so it reads well:
+    ```c
+    if (age >= 33)
+    ```
+    * **NEVER** compare to `true`: ~~`if (data == true)`~~ (`true` is `1`)
+    * Don't include assignments inside if/while expressions.
+      Put it on the line before.
+        * *Unless they avoid great repetition*.
+* Error handling:
+    * Functions which can fail should return error code (int) or success/failure (bool).
+        * Compiler can enforce checking of return value, output of function can be in an output parameter (pointer).
+        * Functions which have valid positive return values can use negative numbers for errors.
+    * `true`(`bool`) and `0`(`int`) should signify success.
+    * Only return an error code (`int`) when there are multiple different return values for different errors. If a function can only return `0` (success) or `-1` (error) use `bool` instead.
+* `Destroy` functions should accept NULL pointers (similar to `free()`).
 * Don't use `static` variables that change, since they are not thread-safe.
 * Sizes of stack-allocated buffers should be deduced using `sizeof()`.
   Never hard-code the size (like `CF_BUFSIZE`).
-* Avoid using type casts, unless absolutely necessary. Usually a compiler
-  warning is better satisfied with correct code rather than using a type cast.
-  * Type casts should be separated with one space from the variable,
-    for example ```(struct sockaddr *) &myaddr```.
-* Avoid pointless initialisation of variables, because they
-  silence important compiler warnings. Only initialise variables
-  when there is a reason to do so.
-* Document using Doxygen (within reason), preferably in the `.c` files,
-  not the header files.
-* Read
-  [Linux Kernel coding style](https://www.kernel.org/doc/html/latest/process/coding-style.html) and
-  [libabc coding style](https://git.kernel.org/cgit/linux/kernel/git/kay/libabc.git/plain/README).
-  They contain many good practices.
-* http://en.wikipedia.org/wiki/Golden_Rule
+* Avoid using type casts, unless absolutely necessary.
+    * Usually a compiler warning is better satisfied with correct code rather than using a type cast.
+* Don't initialize variables unless they need an initial value.
+  Unnecessary initialization silences important compiler warnings.
+
+#### String formatting
+
+| Type            | Format string  |
+| :-------------- | :------------- |
+| `char *`        | `%s`           |
+| `int`           | `%d`           |
+| `unsigned int`  | `%du`          |
+| `long`          | `%l`           |
+| `unsigned long` | `%lu`          |
+| `size_t`        | `%zu`          |
+| `ssize_t`       | `%zd`          |
+| `intmax_t`      | `%jd`          |
+| `uintmax_t`     | `%ju`          |
+
+See `man 3 printf` for a more complete table.
+For other integer types without a format, cast `signed` types to `intmax_t` and `unsigned` types to `uintmax_t`.
 
 
 Logging Conventions
@@ -419,7 +519,7 @@ does not change. So be careful about cleaning those files. .gcda files are
 like index files which can be used to generate the .gcov files which lcov
 uses to generate lcov.info and the HTML report in the coverage-html directory.
 Many IDEs and editors expect a <root>/coverage/lcov.info summary of coverage
-information. After running `make check` you can run `make coverage` and 
+information. After running `make check` you can run `make coverage` and
 generate this lcov.info summary for use with other tools. If you wish to only
 run a few tests which will add to coverage data you can update lcov.info with
 `make collect-coverage` which will only collect coverage data, not compile or
@@ -501,7 +601,7 @@ atexit() and Windows
 On Windows the atexit function works but the functions registered there are
 executed after or concurrently with DLL unloading. If registered functions
 rely on DLLs such as pthreads to do locking/unlocking deadlock scenarios can
-occur when exit is called. 
+occur when exit is called.
 
 In order to make behavior more explicit and predictable we migrated to always
 using a homegrown atexit system. RegisterCleanupFunction instead of atexit and

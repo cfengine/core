@@ -655,6 +655,8 @@ static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp,
                     cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, &a, "Updated rendering of '%s' from mustache template '%s'",
                          pp->promiser, message);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
+
+                    edcontext->num_rewrites++;
                 }
                 else
                 {

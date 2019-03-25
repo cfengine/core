@@ -54,7 +54,7 @@ The following policy code may be executed with cf-agent (the main CFEngine binar
 
 ## Contributing
 
-Please see the [HACKING.md](https://github.com/cfengine/core/blob/master/HACKING.md) file.
+Please see the [CONTRIBUTING.md](https://github.com/cfengine/core/blob/master/CONTRIBUTING.md) file.
 
 ## Relationship to CFEngine 2
 

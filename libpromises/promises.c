@@ -377,6 +377,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                 }
 
                 if (callee == NULL &&
+                    cp->rval.type != RVAL_TYPE_FNCALL &&
                     strcmp("ifvarclass", cp->lval) != 0 &&
                     strcmp("if",         cp->lval) != 0)
                 {

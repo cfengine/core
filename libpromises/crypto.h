@@ -31,6 +31,9 @@
 
 #include <logging.h>
 
+// This passphrase was used to encrypt private keys.
+// We no longer encrypt new keys, but the passphrase is kept
+// for backwards compatibility - old encrypted keys will still work.
 #define PRIVKEY_PASSPHRASE "Cfengine passphrase"
 #define PRIVKEY_PASSPHRASE_LEN 19
 

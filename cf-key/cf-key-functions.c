@@ -229,9 +229,7 @@ static bool KeepKeyPromisesRSA(RSA *pair, const char *public_key_file, const cha
 
     Log(LOG_LEVEL_VERBOSE, "Writing private key to '%s'", private_key_file);
 
-    const EVP_CIPHER *cipher = EVP_des_ede3_cbc();
-    int res = PEM_write_RSAPrivateKey(fp, pair, cipher, (void *)PRIVKEY_PASSPHRASE,
-                                 PRIVKEY_PASSPHRASE_LEN, NULL, NULL);
+    int res = PEM_write_RSAPrivateKey(fp, pair, NULL, NULL, 0, NULL, NULL);
     fclose(fp);
 
     if (res == 0)

@@ -119,7 +119,7 @@ def bootstrap_host(host, policy_server, *, connection=None):
     if output is None:
         sys.exit("Bootstrap failed on '{}'".format(host))
     if output and "completed successfully" in output:
-        print("Bootstrap succesful: '{}' -> '{}'".format(host, policy_server))
+        print("Bootstrap successful: '{}' -> '{}'".format(host, policy_server))
     else:
         user_error("Something went wrong while bootstrapping")
 

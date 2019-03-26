@@ -163,6 +163,7 @@ bool MapInsert(Map *map, void *key, void *value)
 {
     assert(map != NULL);
     /* MapGet() is not capable of handling NULL values. */
+    assert(key != NULL);
     assert(value != NULL);
 
     if (IsArrayMap(map))
@@ -203,6 +204,7 @@ static MapKeyValue *MapGetRaw(const Map *map, const void *key)
 bool MapHasKey(const Map *map, const void *key)
 {
     assert(map != NULL);
+    assert(key != NULL);
     return MapGetRaw(map, key) != NULL;
 }
 

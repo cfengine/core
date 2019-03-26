@@ -69,7 +69,6 @@ libutils_la_SOURCES = \
 	man.c man.h \
 	rb-tree.c rb-tree.h \
 	mustache.c mustache.h \
-	cfversion.c cfversion.h \
 	passopenfile.c passopenfile.h \
 	unicode.c unicode.h \
 	hash.c hash.h \

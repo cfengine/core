@@ -53,6 +53,9 @@ static SyntaxTypeMatch CheckFnCallType(const char *s, DataType dtype);
 
 static const PromiseTypeSyntax *PromiseTypeSyntaxGetStrict(const char *bundle_type, const char *promise_type)
 {
+    assert(bundle_type != NULL);
+    assert(promise_type != NULL);
+
     for (int module_index = 0; module_index < CF3_MODULES; module_index++)
     {
         for (int promise_type_index = 0; CF_ALL_PROMISE_TYPES[module_index][promise_type_index].promise_type; promise_type_index++)
@@ -111,6 +114,9 @@ const ConstraintSyntax *BodySyntaxGetConstraintSyntax(const ConstraintSyntax *bo
 
 const ConstraintSyntax *PromiseTypeSyntaxGetConstraintSyntax(const PromiseTypeSyntax *promise_type_syntax, const char *lval)
 {
+    assert(promise_type_syntax != NULL);
+    assert(lval != NULL);
+
     for (int i = 0; promise_type_syntax->constraints[i].lval; i++)
     {
         if (strcmp(promise_type_syntax->constraints[i].lval, lval) == 0)

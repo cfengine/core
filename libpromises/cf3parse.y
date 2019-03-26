@@ -566,11 +566,19 @@ constraint:            constraint_id                        /* BUNDLE ONLY */
                        {
                            if (!INSTALL_SKIP)
                            {
+                               const ConstraintSyntax *constraint_syntax = NULL;
                                const PromiseTypeSyntax *promise_type_syntax = PromiseTypeSyntaxGet(P.blocktype, P.currenttype);
-                               assert(promise_type_syntax);
+                               if (promise_type_syntax != NULL)
+                               {
+                                   constraint_syntax = PromiseTypeSyntaxGetConstraintSyntax(promise_type_syntax, P.lval);
+                               }
 
-                               const ConstraintSyntax *constraint_syntax = PromiseTypeSyntaxGetConstraintSyntax(promise_type_syntax, P.lval);
-                               if (constraint_syntax)
+                               if (promise_type_syntax == NULL)
+                               {
+                                   ParseError("Invalid promise type '%s' in bundle '%s' of type '%s'", P.currenttype, P.blockid, P.blocktype);
+                                   INSTALL_SKIP = true;
+                               }
+                               else if (constraint_syntax != NULL)
                                {
                                    switch (constraint_syntax->status)
                                    {

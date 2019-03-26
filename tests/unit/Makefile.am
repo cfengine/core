@@ -166,7 +166,6 @@ check_PROGRAMS = \
 	mon_processes_test \
 	mustache_test \
 	class_test \
-	version_test \
 	hash_test \
 	key_test \
 	cf_upgrade_test \
@@ -451,8 +450,6 @@ mon_processes_test_SOURCES = mon_processes_test.c \
 	../../cf-monitord/mon.h \
 	../../cf-monitord/mon_processes.c
 mon_processes_test_LDADD = ../../libpromises/libpromises.la libtest.la
-
-version_test_SOURCES = version_test.c
 
 hash_test_SOURCES = hash_test.c
 hash_test_LDADD = ../../libutils/libutils.la libtest.la

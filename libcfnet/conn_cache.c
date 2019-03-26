@@ -32,6 +32,7 @@
 #include <mutex.h>                                     /* ThreadLock */
 #include <communication.h>                             /* Hostname2IPString */
 #include <misc_lib.h>                                  /* CF_ASSERT */
+#include <string_lib.h>                                /* StringSafeEqual */
 
 
 /**
@@ -88,6 +89,16 @@ void ConnCache_Destroy()
     ThreadUnlock(&cft_conncache);
 }
 
+static bool ConnCacheEntryMatchesConnection(ConnCache_entry *entry,
+                                            const char *server,
+                                            const char *port,
+                                            ConnectionFlags flags)
+{
+    return ConnectionFlagsEqual(&flags, &entry->conn->flags) &&
+           StringSafeEqual(port, entry->conn->this_port)     &&
+           StringSafeEqual(server, entry->conn->this_server);
+}
+
 AgentConnection *ConnCache_FindIdleMarkBusy(const char *server,
                                             const char *port,
                                             ConnectionFlags flags)
@@ -105,26 +116,27 @@ AgentConnection *ConnCache_FindIdleMarkBusy(const char *server,
                   "FindIdle: NULL connection in ConnCache_entry!");
 
 
-        if (strcmp(server,  svp->conn->this_server) == 0 &&
-            ConnectionFlagsEqual(&flags, &svp->conn->flags) &&
-            (port == svp->conn->this_port
-             ||
-             (port != NULL && svp->conn->this_port != NULL &&
-              strcmp(port,    svp->conn->this_port) == 0)))
+        if (svp->status == CONNCACHE_STATUS_BUSY)
         {
-            if (svp->status == CONNCACHE_STATUS_BUSY)
-            {
-                Log(LOG_LEVEL_DEBUG, "FindIdle:"
-                    " connection to '%s' seems to be busy.",
-                    server);
-            }
-            else if (svp->status == CONNCACHE_STATUS_OFFLINE)
-            {
-                Log(LOG_LEVEL_DEBUG, "FindIdle:"
-                    " connection to '%s' is marked as offline.",
-                    server);
-            }
-            else if (svp->conn->conn_info->sd >= 0)
+            Log(LOG_LEVEL_DEBUG,
+                "FindIdle: connection %p seems to be busy.",
+                svp->conn);
+        }
+        else if (svp->status == CONNCACHE_STATUS_OFFLINE)
+        {
+            Log(LOG_LEVEL_DEBUG,
+                "FindIdle: connection %p is marked as offline.",
+                svp->conn);
+        }
+        else if (svp->status == CONNCACHE_STATUS_BROKEN)
+        {
+            Log(LOG_LEVEL_DEBUG,
+                "FindIdle: connection %p is marked as broken.",
+                svp->conn);
+        }
+        else if (ConnCacheEntryMatchesConnection(svp, server, port, flags))
+        {
+            if (svp->conn->conn_info->sd >= 0)
             {
                 assert(svp->status == CONNCACHE_STATUS_IDLE);
 
@@ -135,12 +147,14 @@ AgentConnection *ConnCache_FindIdleMarkBusy(const char *server,
                 {
                     Log(LOG_LEVEL_DEBUG, "FindIdle: found connection to '%s' but could not get socket status, skipping.",
                         server);
+                    svp->status = CONNCACHE_STATUS_BROKEN;
                     continue;
                 }
                 if (error != 0)
                 {
                     Log(LOG_LEVEL_DEBUG, "FindIdle: found connection to '%s' but connection is broken, skipping.",
                         server);
+                    svp->status = CONNCACHE_STATUS_BROKEN;
                     continue;
                 }
 
@@ -157,6 +171,7 @@ AgentConnection *ConnCache_FindIdleMarkBusy(const char *server,
                 Log(LOG_LEVEL_VERBOSE, "FindIdle:"
                     " connection to '%s' has invalid socket descriptor %d!",
                     server, svp->conn->conn_info->sd);
+                svp->status = CONNCACHE_STATUS_BROKEN;
             }
         }
     }

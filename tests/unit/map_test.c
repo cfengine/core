@@ -349,10 +349,6 @@ static void test_has_key(void)
     assert_false(StringMapInsert(map, xstrdup("one"), xstrdup("first")));
     assert_true(StringMapHasKey(map, "one"));
 
-    assert_false(StringMapHasKey(map, NULL));
-    assert_false(StringMapInsert(map, NULL, xstrdup("null")));
-    assert_true(StringMapHasKey(map, NULL));
-
     StringMapDestroy(map);
 }
 

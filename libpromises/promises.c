@@ -377,15 +377,18 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                 }
 
                 if (callee == NULL &&
+                    cp->rval.type != RVAL_TYPE_FNCALL &&
                     strcmp("ifvarclass", cp->lval) != 0 &&
                     strcmp("if",         cp->lval) != 0)
                 {
+                    char *rval_string = RvalToString(cp->rval);
                     Log(LOG_LEVEL_ERR,
                         "Apparent bundle '%s' was undeclared, but "
                         "used in a promise near line %zu of %s "
                         "(possible unquoted literal value)",
-                        RvalScalarValue(cp->rval), pp->offset.line,
+                        rval_string, pp->offset.line,
                         PromiseGetBundle(pp)->source_path);
+                    free(rval_string);
                 }
 
                 Log(LOG_LEVEL_DEBUG,

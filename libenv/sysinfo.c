@@ -2369,13 +2369,14 @@ static int Linux_Debian_Version(EvalContext *ctx)
     else if (strcmp(os, "Ubuntu") == 0)
     {
         LinuxDebianSanitizeIssue(buffer);
-        sscanf(buffer, "%*s %[^.].%d", version, &release);
+        char minor[CF_MAXVARSIZE] = {0};
+        sscanf(buffer, "%*s %[^.].%s", version, minor);
         snprintf(buffer, CF_MAXVARSIZE, "ubuntu_%s", version);
         SetFlavor(ctx, buffer);
         EvalContextClassPutHard(ctx, "ubuntu", "inventory,attribute_name=none,source=agent");
         if (release >= 0)
         {
-            snprintf(buffer, CF_MAXVARSIZE, "ubuntu_%s_%d", version, release);
+            snprintf(buffer, CF_MAXVARSIZE, "ubuntu_%s_%s", version, minor);
             EvalContextClassPutHard(ctx, buffer, "inventory,attribute_name=none,source=agent");
         }
     }

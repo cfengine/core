@@ -1,0 +1,51 @@
+#######################################################
+#
+# Test ubuntu classes
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+    ubuntu_18_04.ubuntu_18_4::
+     "not_ok";
+    ubuntu_16_04.ubuntu_16_4::
+     "not_ok";
+    ubuntu_14_04.ubuntu_14_4::
+     "not_ok";
+    ubuntu_12_04.ubuntu_12_4::
+     "not_ok";
+    any::
+      "ok" not => "not_ok";
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

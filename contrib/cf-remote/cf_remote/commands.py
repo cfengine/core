@@ -77,7 +77,7 @@ def install(
                 hub,
                 hub=True,
                 package=hub_package,
-                bootstrap=bootstrap[index % len(bootstrap)],
+                bootstrap=bootstrap[index % len(bootstrap)] if bootstrap else None,
                 version=version,
                 demo=demo)
     for index, host in enumerate(clients or []):
@@ -86,7 +86,7 @@ def install(
             host,
             hub=False,
             package=client_package,
-            bootstrap=bootstrap[index % len(bootstrap)],
+            bootstrap=bootstrap[index % len(bootstrap)] if bootstrap else None,
             version=version,
             demo=demo)
     if demo and hubs:

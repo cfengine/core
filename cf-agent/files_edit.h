@@ -46,6 +46,7 @@ typedef struct
     char *filename;
     Item *file_start;
     int num_edits;
+    int num_rewrites;
 #ifdef HAVE_LIBXML2
     xmlDocPtr xmldoc;
 #endif

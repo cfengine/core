@@ -170,6 +170,10 @@ Policy *SelectAndLoadPolicy(GenericAgentConfig *config, EvalContext *ctx, bool v
             GenericAgentConfigSetInputFile(config, GetInputDir(), "failsafe.cf");
             Log(LOG_LEVEL_ERR, "CFEngine failsafe.cf: %s %s", config->input_dir, config->input_file);
             policy = LoadPolicy(ctx, config);
+
+            /* running the failsafe policy, set the release_id to "failsafe" */
+            free(policy->release_id);
+            policy->release_id = xstrdup("failsafe");
         }
     }
     return policy;

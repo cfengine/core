@@ -593,15 +593,24 @@ Policy *LoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
         }
     }
 
-    JsonElement *validated_doc = ReadReleaseIdFileFromInputs();
-    if (validated_doc)
+    if (config->agent_type == AGENT_TYPE_AGENT &&
+        config->agent_specific.agent.bootstrap_argument != NULL)
     {
-        const char *release_id = JsonObjectGetAsString(validated_doc, "releaseId");
-        if (release_id)
+        /* doing bootstrap, set the release_id to "bootstrap" */
+        policy->release_id = xstrdup("bootstrap");
+    }
+    else
+    {
+        JsonElement *validated_doc = ReadReleaseIdFileFromInputs();
+        if (validated_doc)
         {
-            policy->release_id = xstrdup(release_id);
+            const char *release_id = JsonObjectGetAsString(validated_doc, "releaseId");
+            if (release_id)
+            {
+                policy->release_id = xstrdup(release_id);
+            }
+            JsonDestroy(validated_doc);
         }
-        JsonDestroy(validated_doc);
     }
 
     return policy;

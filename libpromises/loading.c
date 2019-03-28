@@ -28,6 +28,7 @@
 #include <file_lib.h>
 #include <files_names.h>
 #include <string_lib.h>
+#include <writer.h>
 #include <parser.h>
 #include <expand.h>
 #include <rlist.h>
@@ -596,8 +597,25 @@ Policy *LoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
     if (config->agent_type == AGENT_TYPE_AGENT &&
         config->agent_specific.agent.bootstrap_argument != NULL)
     {
-        /* doing bootstrap, set the release_id to "bootstrap" */
+        /* Doing bootstrap, set the release_id to "bootstrap" and also write it
+         * into a file so that sub-agent executed as part of bootstrap can just
+         * pick it up and then rewrite it with the actual value from
+         * masterfiles. */
         policy->release_id = xstrdup("bootstrap");
+
+        char filename[PATH_MAX];
+        GetReleaseIdFile(GetInputDir(), filename, sizeof(filename));
+        FILE *release_id_stream = safe_fopen(filename, "w");
+        if (release_id_stream == NULL)
+        {
+            Log(LOG_LEVEL_ERR, "Failed to open the release_id file for writing during bootstrap");
+        }
+        else
+        {
+            Writer *release_id_writer = FileWriter(release_id_stream);
+            WriterWrite(release_id_writer, "{ releaseId: \"bootstrap\" }\n");
+            WriterClose(release_id_writer);
+        }
     }
     else
     {

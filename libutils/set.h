@@ -31,6 +31,7 @@
 
 typedef Map Set;
 typedef MapIterator SetIterator;
+typedef void *(*SetElementCopyFn)(const void *);
 
 Set *SetNew(MapHashFn element_hash_fn,
             MapKeyEqualFn element_equal_fn,
@@ -38,7 +39,7 @@ Set *SetNew(MapHashFn element_hash_fn,
 void SetDestroy(Set *set);
 
 void SetAdd(Set *set, void *element);
-void SetJoin(Set *set, Set *otherset);
+void SetJoin(Set *set, Set *otherset, SetElementCopyFn copy_function);
 bool SetContains(const Set *set, const void *element);
 bool SetRemove(Set *set, const void *element);
 void SetClear(Set *set);
@@ -54,12 +55,13 @@ void *SetIteratorNext(SetIterator *i);
     {                                                                   \
         Set *impl;                                                      \
     } Prefix##Set;                                                      \
+    typedef ElementType(*Prefix##CopyFn)(const ElementType);            \
                                                                         \
     typedef SetIterator Prefix##SetIterator;                            \
                                                                         \
     Prefix##Set *Prefix##SetNew(void);                                  \
     void Prefix##SetAdd(const Prefix##Set *set, ElementType element);   \
-    void Prefix##SetJoin(const Prefix##Set *set, const Prefix##Set *otherset); \
+    void Prefix##SetJoin(const Prefix##Set *set, const Prefix##Set *otherset, Prefix##CopyFn copy_function); \
     bool Prefix##SetContains(const Prefix##Set *Set, const ElementType element);  \
     bool Prefix##SetRemove(const Prefix##Set *Set, const ElementType element);  \
     void Prefix##SetClear(Prefix##Set *set);                            \
@@ -83,9 +85,9 @@ void *SetIteratorNext(SetIterator *i);
         SetAdd(set->impl, (void *)element);                             \
     }                                                                   \
                                                                         \
-    void Prefix##SetJoin(const Prefix##Set *set, const Prefix##Set *otherset) \
+    void Prefix##SetJoin(const Prefix##Set *set, const Prefix##Set *otherset, Prefix##CopyFn copy_function) \
     {                                                                   \
-        SetJoin(set->impl, otherset->impl);                             \
+        SetJoin(set->impl, otherset->impl, (SetElementCopyFn) copy_function);              \
     }                                                                   \
                                                                         \
     bool Prefix##SetContains(const Prefix##Set *set, const ElementType element)   \

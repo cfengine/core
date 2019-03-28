@@ -221,18 +221,24 @@ size_t PromiseIteratorIndex(const PromiseIterator *iter_ctx)
 
 
 /**
- * Returns offset to "$(" or "${" in the string. If not found, then the offset
- * points to the terminating '\0' of the string.
+ * Returns offset to "$(" or "${" in the string.
+ * Reads bytes up to s[max-1], s[max] is NOT read.
+ * If a '\0' is encountered before the pattern, return offset to `\0` byte
+ * If no '\0' byte or pattern is found within max bytes, max is returned
  */
-static size_t FindDollarParen(const char *s)
+static size_t FindDollarParen(const char *s, size_t max)
 {
     size_t i = 0;
 
-    while (s[i] != '\0' &&
-           ! (s[i] == '$' && (s[i+1] == '(' || s[i+1] == '{')))
+    while (i < max && s[i] != '\0')
     {
+        if (i+1 < max && (s[i] == '$' && (s[i+1] == '(' || s[i+1] == '{')))
+        {
+            return i;
+        }
         i++;
     }
+    assert(i == max || s[i] == '\0');
     return i;
 }
 
@@ -255,7 +261,9 @@ static char opposite(char c)
  */
 static bool IsMangled(const char *s)
 {
-    size_t dollar_paren = FindDollarParen(s);
+    assert(s != NULL);
+    size_t s_length = strlen(s);
+    size_t dollar_paren = FindDollarParen(s, s_length);
     size_t bracket      = strchrnul(s, '[') - s;
     size_t upto = MIN(dollar_paren, bracket);
     size_t mangled_ns     = strchrnul(s, CF_MANGLED_NS)    - s;
@@ -283,7 +291,7 @@ static void MangleVarRefString(char *ref_str, size_t len)
 {
     //    printf("MangleVarRefString: %.*s\n", (int) len, ref_str);
 
-    size_t dollar_paren = FindDollarParen(ref_str);
+    size_t dollar_paren = FindDollarParen(ref_str, len);
     size_t upto         = MIN(len, dollar_paren);
     char *bracket       = memchr(ref_str, '[', upto);
     if (bracket != NULL)
@@ -417,7 +425,7 @@ static bool ShouldAddVariableAsIterationWheel(
     ARG_UNUSED const void *value = EvalContextVariableGet(evalctx, ref, &t);
     VarRefDestroy(ref);
 
-    size_t dollar_paren = FindDollarParen(varname);
+    size_t dollar_paren = FindDollarParen(varname, varname_len);
     if (dollar_paren < varname_len)
     {
         /* Varname contains inner expansions, so maybe the variable will
@@ -479,11 +487,13 @@ static bool ShouldAddVariableAsIterationWheel(
 static char *ProcessVar(PromiseIterator *iterctx, const EvalContext *evalctx,
                         char *s, char c)
 {
+    assert(s != NULL);
     assert(c == '(' || c == '{');
 
     char closing_paren   = opposite(c);
     char *s_end    = strchrnul(s, closing_paren);
-    char *next_var = s + FindDollarParen(s);
+    const size_t s_max = strlen(s);
+    char *next_var = s + FindDollarParen(s, s_max);
     size_t deps    = 0;
 
     while (next_var < s_end)              /* does it have nested variables? */
@@ -502,7 +512,8 @@ static char *ProcessVar(PromiseIterator *iterctx, const EvalContext *evalctx,
         {
             /* Despite unclosed parenthesis for the inner expansion,
              * the outer variable might close with a brace, or not. */
-            next_var = s_end + FindDollarParen(s_end);
+            const size_t s_end_len = strlen(s_end);
+            next_var = s_end + FindDollarParen(s_end, s_end_len);
             /* s_end is already correct */
         }
         else                          /* inner variable processed correctly */
@@ -510,11 +521,14 @@ static char *ProcessVar(PromiseIterator *iterctx, const EvalContext *evalctx,
             /* This variable depends on inner expansions. */
             deps++;
             /* We are sure (subvar_end+1) is not out of bounds. */
-            s_end    = strchrnul(subvar_end + 1, closing_paren);
-            next_var = subvar_end + 1 + FindDollarParen(subvar_end + 1);
+            char *s_next = subvar_end + 1;
+            const size_t s_next_len = strlen(s_next);
+            s_end    = strchrnul(s_next, closing_paren);
+            next_var = s_next + FindDollarParen(s_next, s_next_len);
         }
     }
 
+    assert(s_end != NULL);
     if (*s_end == '\0')
     {
         Log(LOG_LEVEL_ERR, "No closing '%c' found for variable: %s",
@@ -561,6 +575,7 @@ static char *ProcessVar(PromiseIterator *iterctx, const EvalContext *evalctx,
         }
     }
 
+    assert(s_end != NULL);
     assert(*s_end == closing_paren);
     return s_end;
 }
@@ -579,9 +594,18 @@ void PromiseIteratorPrepare(PromiseIterator *iterctx,
                             const EvalContext *evalctx,
                             char *s)
 {
+    assert(s != NULL);
     LogDebug(LOG_MOD_ITERATIONS, "PromiseIteratorPrepare(\"%s\")", s);
-    char *var_start = s + FindDollarParen(s);
+    const size_t s_len = strlen(s);
+    const size_t offset = FindDollarParen(s, s_len);
 
+    assert(offset <= s_len); // FindDollarParen guarantees this
+    if (offset == s_len)
+    {
+        return; // Don't search past NULL terminator
+    }
+
+    char *var_start = s + offset;
     while (*var_start != '\0')
     {
         char paren_or_brace = var_start[1];
@@ -590,8 +614,20 @@ void PromiseIteratorPrepare(PromiseIterator *iterctx,
         assert(paren_or_brace == '(' || paren_or_brace == '{');
 
         char *var_end = ProcessVar(iterctx, evalctx, var_start, paren_or_brace);
-
-        var_start = var_end + 1 + FindDollarParen(var_end + 1);
+        assert(var_end != NULL);
+        if (*var_end == '\0')
+        {
+            return; // Don't search past NULL terminator
+        }
+        char *var_next = var_end + 1;
+        const size_t var_next_len = s_len - (var_next - s);
+        const size_t var_offset = FindDollarParen(var_next, var_next_len);
+        assert(var_offset <= var_next_len);
+        if (var_offset == var_next_len)
+        {
+            return; // Don't search past NULL terminator
+        }
+        var_start = var_next + var_offset;
     }
 }
 

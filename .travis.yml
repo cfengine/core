@@ -24,7 +24,7 @@ matrix:
   include:
     - os: linux
       sudo: required
-      env: JOB_TYPE=compile_and_unit_test
+      env: JOB_TYPE=compile_and_unit_test_asan
     - os: linux
       sudo: required
       env: JOB_TYPE=compile_and_unit_test COVERAGE=no

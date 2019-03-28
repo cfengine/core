@@ -196,6 +196,8 @@ bool LoadSecretKeys(const char *const priv_key_path,
         {
             DESTROY_AND_NULL(RSA_free, *priv_key);
         }
+
+        // Can read both encrypted (old) and unencrypted(new) key files:
         *priv_key = PEM_read_RSAPrivateKey(fp, NULL, NULL, (void*) priv_passphrase);
         if (*priv_key == NULL)
         {

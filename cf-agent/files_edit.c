@@ -120,6 +120,12 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, const Pr
             *result = PROMISE_RESULT_NOOP;
         }
     }
+    else if (ec && (ec->num_rewrites > 0))
+    {
+        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a,
+             "Edit file '%s'", ec->filename);
+        *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+    }
     else if (ec && (ec->num_edits > 0))
     {
         if (a.haveeditline || a.edit_template || a.edit_template_string)

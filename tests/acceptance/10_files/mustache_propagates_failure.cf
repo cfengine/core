@@ -1,0 +1,52 @@
+bundle common test_meta
+{
+  vars:
+      "description" string => "Test that Mustache templates propagate classes to calling bundle";
+}
+
+#######################################################
+
+body common control
+{
+    inputs => { "../default.cf.sub" };
+    bundlesequence  => { default("$(this.promise_filename)") };
+    version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+    "template_target" string => "$(G.testfile)";
+
+  files:
+    "$(template_target)"
+      create => "true";
+}
+
+bundle agent render_mustache
+{
+  files:
+    "$(init.template_target)"
+      edit_template => "$(this.promise_filename).mustache",
+      template_method => "mustache";
+}
+
+bundle agent test
+{
+  methods:
+    "any" usebundle => render_mustache,
+      classes => if_repaired("mustache_propagated");
+}
+
+#######################################################
+
+bundle agent check
+{
+  reports:
+    mustache_propagated::
+      "$(this.promise_filename) Pass";
+    !mustache_propagated::
+      "$(this.promise_filename) FAIL";
+}

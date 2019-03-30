@@ -1,0 +1,108 @@
+#######################################################
+#
+# Basic checking of 'tty' selector.
+#
+# The name pattern of ttys varies across operating systems.
+# While the example in the documentation (e.g. "pts/[0-9]+")
+# is typical and illustrative, this basic-level test needs to be
+# reliably portable.
+#
+# The possible meta "test_skip_needs_work" would allow graceful handling
+# of platforms that have not yet been tested.  But aim to minimise
+# any reliance on this.
+#
+# It assumes that the host on which the test is being run will have at least
+# one tty connection active.  This is clearly the case if it being run
+# by a human from their command line.  But it might not be true in a
+# CI/CD environment; in such a case the meta/skip may be useful.
+#
+# Tests:
+#
+# 1.  Negative: using a highly unlikely name.
+#
+# 2.  Positive: using a known-good name pattern; allow to differ across OSes.
+#
+# David Lee, 2019
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+      "test_skip_needs_work" -> {"CFE-3025"}
+        string => "!linux.!hpux",
+        comment => "TTY-based process filtering does't work well no other platforms";
+
+  vars:
+    # Maintenance note: Aim to cover as many OSes as possible
+    # and mimimise the ".+" catch-all.
+    linux::
+      "dev_pattern" string => "(pts/[0-9]+)|(ttyS?[0-9]+)";
+    !linux::
+      "dev_pattern" string => ".+";
+
+  processes:
+      ### Expect zero processes on a tty with a highly unlikely name.
+      ".*"
+        handle => "expect_none",
+        process_select => test_select_tty("No-Such-Major/No-Such-Minor"),
+        process_count => test_range("0", "0", "pass_bad_dev", "fail_bad_dev");
+
+      ### Expect to find one or more processes on these ttys.
+      ".*"
+        handle => "expect_some",
+        process_select => test_select_tty("$(dev_pattern)"),
+        process_count => test_range("1", "inf", "pass_good_dev", "fail_good_dev");
+
+}
+
+body process_count test_range(min, max, class_good, class_bad)
+{
+      match_range => irange("$(min)", "$(max)");
+      in_range_define => { "$(class_good)" };
+      out_of_range_define => { "$(class_bad)" };
+}
+
+body process_select test_select_tty(tty_pattern)
+{
+      tty => "$(tty_pattern)";
+      process_result => "tty";
+}
+
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "ok" and => {
+        "pass_good_dev", "pass_bad_dev",
+        "!fail_good_dev", "!fail_bad_dev",
+      };
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+
+### PROJECT_ID: core
+### CATEGORY_ID: 30

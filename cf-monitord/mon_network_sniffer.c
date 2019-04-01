@@ -251,10 +251,12 @@ static void AnalyzeArrival(Item *ip_addresses, long iteration, char *arrival, do
     {
         arr++;
     }
-
     if ((strstr(arrival, "proto TCP")) || (strstr(arrival, "ack")))
     {
-        sscanf(arr, "%s %*c %s %c ", src, dest, &flag);
+        assert(sizeof(src) == CF_BUFSIZE);
+        assert(sizeof(dest) == CF_BUFSIZE);
+        assert(CF_BUFSIZE == 4096);
+        sscanf(arr, "%4095s %*c %4095s %c ", src, dest, &flag);
         DePort(src);
         DePort(dest);
         isme_dest = IsInterfaceAddress(ip_addresses, dest);
@@ -308,7 +310,10 @@ static void AnalyzeArrival(Item *ip_addresses, long iteration, char *arrival, do
     }
     else if (strstr(arrival, ".53"))
     {
-        sscanf(arr, "%s %*c %s %c ", src, dest, &flag);
+        assert(sizeof(src) == CF_BUFSIZE);
+        assert(sizeof(dest) == CF_BUFSIZE);
+        assert(CF_BUFSIZE == 4096);
+        sscanf(arr, "%4095s %*c %4095s %c ", src, dest, &flag);
         DePort(src);
         DePort(dest);
         isme_dest = IsInterfaceAddress(ip_addresses, dest);
@@ -328,7 +333,10 @@ static void AnalyzeArrival(Item *ip_addresses, long iteration, char *arrival, do
     }
     else if (strstr(arrival, "proto UDP"))
     {
-        sscanf(arr, "%s %*c %s %c ", src, dest, &flag);
+        assert(sizeof(src) == CF_BUFSIZE);
+        assert(sizeof(dest) == CF_BUFSIZE);
+        assert(CF_BUFSIZE == 4096);
+        sscanf(arr, "%4095s %*c %4095s %c ", src, dest, &flag);
         DePort(src);
         DePort(dest);
         isme_dest = IsInterfaceAddress(ip_addresses, dest);
@@ -348,7 +356,10 @@ static void AnalyzeArrival(Item *ip_addresses, long iteration, char *arrival, do
     }
     else if (strstr(arrival, "proto ICMP"))
     {
-        sscanf(arr, "%s %*c %s %c ", src, dest, &flag);
+        assert(sizeof(src) == CF_BUFSIZE);
+        assert(sizeof(dest) == CF_BUFSIZE);
+        assert(CF_BUFSIZE == 4096);
+        sscanf(arr, "%4095s %*c %4095s %c ", src, dest, &flag);
         DePort(src);
         DePort(dest);
         isme_dest = IsInterfaceAddress(ip_addresses, dest);
@@ -374,8 +385,9 @@ static void AnalyzeArrival(Item *ip_addresses, long iteration, char *arrival, do
         cf_this[ob_tcpmisc_in]++;
 
         /* Here we don't know what source will be, but .... */
-
-        sscanf(arrival, "%s", src);
+        assert(sizeof(src) == CF_BUFSIZE);
+        assert(CF_BUFSIZE == 4096);
+        sscanf(arrival, "%4095s", src);
 
         if (!isdigit((int) *src))
         {

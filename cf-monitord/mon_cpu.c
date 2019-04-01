@@ -62,8 +62,8 @@ void MonCPUGatherData(double *cf_this)
         {
             break;
         }
-
-        if (sscanf(buf, "%s%ld%ld%ld%ld%ld%ld%ld", cpuname, &userticks, &niceticks, &systemticks, &idle, &iowait, &irq,
+        assert(CF_MAXVARSIZE == 1024);
+        if (sscanf(buf, "%1023s%ld%ld%ld%ld%ld%ld%ld", cpuname, &userticks, &niceticks, &systemticks, &idle, &iowait, &irq,
                &softirq) != 8)
         {
             Log(LOG_LEVEL_VERBOSE, "Could not scan /proc/stat line: %60s", buf);

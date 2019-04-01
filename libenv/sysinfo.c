@@ -2310,7 +2310,10 @@ static int Linux_Debian_Version(EvalContext *ctx)
     char classname[CF_MAXVARSIZE], buffer[CF_MAXVARSIZE], os[CF_MAXVARSIZE], version[CF_MAXVARSIZE];
 
     Log(LOG_LEVEL_VERBOSE, "This appears to be a debian system.");
-    EvalContextClassPutHard(ctx, "debian", "inventory,attribute_name=none,source=agent");
+    EvalContextClassPutHard(
+        ctx,
+        "debian",
+        "inventory,attribute_name=none,source=agent,derived-from-file="DEBIAN_VERSION_FILENAME);
 
     buffer[0] = classname[0] = '\0';
 
@@ -2328,7 +2331,10 @@ static int Linux_Debian_Version(EvalContext *ctx)
     case 2:
         Log(LOG_LEVEL_VERBOSE, "This appears to be a Debian %u.%u system.", major, release);
         snprintf(classname, CF_MAXVARSIZE, "debian_%u_%u", major, release);
-        EvalContextClassPutHard(ctx, classname, "inventory,attribute_name=none,source=agent");
+        EvalContextClassPutHard(
+            ctx,
+            classname,
+            "inventory,attribute_name=none,source=agent,derived-from-file="DEBIAN_VERSION_FILENAME);
         snprintf(classname, CF_MAXVARSIZE, "debian_%u", major);
         SetFlavor(ctx, classname);
         break;
@@ -2345,7 +2351,10 @@ static int Linux_Debian_Version(EvalContext *ctx)
         if (strlen(version) > 0)
         {
             snprintf(classname, CF_MAXVARSIZE, "debian_%s", version);
-            EvalContextClassPutHard(ctx, classname, "inventory,attribute_name=none,source=agent");
+            EvalContextClassPutHard(
+                ctx,
+                classname,
+                "inventory,attribute_name=none,source=agent,derived-from-file="DEBIAN_VERSION_FILENAME);
         }
         break;
     }
@@ -2363,20 +2372,30 @@ static int Linux_Debian_Version(EvalContext *ctx)
         LinuxDebianSanitizeIssue(buffer);
         sscanf(buffer, "%*s %*s %[^./]", version);
         snprintf(buffer, CF_MAXVARSIZE, "debian_%s", version);
-        EvalContextClassPutHard(ctx, "debian", "inventory,attribute_name=none,source=agent");
+        EvalContextClassPutHard(
+            ctx,
+            "debian",
+            "inventory,attribute_name=none,source=agent,derived-from-file="DEBIAN_ISSUE_FILENAME);
         SetFlavor(ctx, buffer);
     }
     else if (strcmp(os, "Ubuntu") == 0)
     {
         LinuxDebianSanitizeIssue(buffer);
-        sscanf(buffer, "%*s %[^.].%d", version, &release);
+        char minor[CF_MAXVARSIZE] = {0};
+        sscanf(buffer, "%*s %[^.].%s", version, minor);
         snprintf(buffer, CF_MAXVARSIZE, "ubuntu_%s", version);
         SetFlavor(ctx, buffer);
-        EvalContextClassPutHard(ctx, "ubuntu", "inventory,attribute_name=none,source=agent");
+        EvalContextClassPutHard(
+            ctx,
+            "ubuntu",
+            "inventory,attribute_name=none,source=agent,derived-from-file="DEBIAN_ISSUE_FILENAME);
         if (release >= 0)
         {
-            snprintf(buffer, CF_MAXVARSIZE, "ubuntu_%s_%d", version, release);
-            EvalContextClassPutHard(ctx, buffer, "inventory,attribute_name=none,source=agent");
+            snprintf(buffer, CF_MAXVARSIZE, "ubuntu_%s_%s", version, minor);
+            EvalContextClassPutHard(
+                ctx,
+                buffer,
+                "inventory,attribute_name=none,source=agent,derived-from-file="DEBIAN_ISSUE_FILENAME);
         }
     }
 

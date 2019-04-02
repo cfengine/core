@@ -55,7 +55,8 @@ def install(
         hub_package=None,
         client_package=None,
         version=None,
-        demo=False):
+        demo=False,
+        call_collect=False):
     assert hubs or clients
     assert not (hubs and clients and package)
     # These assertions are checked in main.py
@@ -79,7 +80,8 @@ def install(
                 package=hub_package,
                 bootstrap=bootstrap[index % len(bootstrap)] if bootstrap else None,
                 version=version,
-                demo=demo)
+                demo=demo,
+                call_collect=call_collect)
     for index, host in enumerate(clients or []):
         log.debug("Installing client package on '{}'".format(host))
         install_host(

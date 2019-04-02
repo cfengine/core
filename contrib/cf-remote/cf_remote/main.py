@@ -29,6 +29,8 @@ def get_args():
     ap.add_argument(
         "--demo", help="Use defaults to make demos smoother (NOT secure)", action='store_true')
     ap.add_argument(
+        "--call-collect", help="Enable call collect in --demo def.json", action='store_true')
+    ap.add_argument(
         "--version", "-V", help="Print or specify version", nargs="?", type=str, const=True)
     ap.add_argument("command", help="Action to perform", type=str, nargs='?')
     ap.add_argument("args", help="Arguments", type=str, nargs='*')
@@ -49,7 +51,8 @@ def run_command_with_args(command, args):
             hub_package=args.hub_package,
             client_package=args.client_package,
             version=args.version,
-            demo=args.demo)
+            demo=args.demo,
+            call_collect=args.call_collect)
     elif command == "packages":
         commands.packages(tags=args.args, version=args.version)
     elif command == "run":
@@ -68,6 +71,9 @@ def validate_command(command, args):
 
     if args.bootstrap and command != "install":
         user_error("--bootstrap can only be used with install command")
+
+    if args.call_collect and not args.demo:
+        user_error("--call-collect must be used with --demo")
 
     if command == "install":
         if args.hosts:
@@ -110,7 +116,9 @@ def validate_args(args):
     if args.clients:
         args.clients = file_or_comma_list(args.clients)
     if args.bootstrap:
-        args.bootstrap = [strip_user(host_info) for host_info in file_or_comma_list(args.bootstrap)]
+        args.bootstrap = [
+            strip_user(host_info) for host_info in file_or_comma_list(args.bootstrap)
+        ]
     if args.hub:
         args.hub = file_or_comma_list(args.hub)
 

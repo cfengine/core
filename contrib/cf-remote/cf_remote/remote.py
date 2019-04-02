@@ -126,7 +126,14 @@ def bootstrap_host(host, policy_server, *, connection=None):
 
 @auto_connect
 def install_host(
-        host, *, hub=False, package=None, bootstrap=None, version=None, demo=False,
+        host,
+        *,
+        hub=False,
+        package=None,
+        bootstrap=None,
+        version=None,
+        demo=False,
+        call_collect=False,
         connection=None):
     data = get_info(host, connection=connection)
     print_info(data)
@@ -166,7 +173,7 @@ def install_host(
         bootstrap_host(host, policy_server=bootstrap, connection=connection)
     if demo:
         if hub:
-            demo_lib.install_def_json(host, connection=connection)
+            demo_lib.install_def_json(host, connection=connection, call_collect=call_collect)
             demo_lib.agent_run(host, connection=connection)
             demo_lib.disable_password_dialog(host)
         demo_lib.agent_run(host, connection=connection)

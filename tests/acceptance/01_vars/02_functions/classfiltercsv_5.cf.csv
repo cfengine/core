@@ -1,0 +1,7 @@
+ClassExpr,Token,Value
+
+
+any,net.ipv4.ip_forward,ANYVALUE
+
+
+supercalifragilisticexpialidociousNOTDEFINED,net.ipv4.ip_forward,SHOULD_BE_FILTERED_OUT

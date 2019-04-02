@@ -1,0 +1,51 @@
+body common control
+{
+        inputs => { "../../default.cf.sub" };
+        bundlesequence  => { default("$(this.promise_filename)") };
+        version => "1.0";
+}
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-2768" }
+        string => "Test that classfiltercsv() works:
+                   - no column headings
+                   - simple filtering (no duplicates after filter)
+                   - no sorting";
+
+}
+bundle agent check
+{
+  vars:
+      "data_file" string => "$(this.promise_filename).csv";
+      "d" data => classfiltercsv( $(data_file),
+                                  "false", # Data file contains column headings
+                                  0);      # Column containing class expression to filter with
+
+  classes:
+
+      # Check if Token has the value we expect
+      "Token_OK" expression => strcmp( "$(d[0][0])", "net.ipv4.ip_forward" );
+
+      # Check if Value has the value we expect
+      "Value_OK" expression => strcmp( "$(d[0][1])", "ANYVALUE" );
+
+      # Check if the result contains the number of records we expect.
+      "Length_OK" expression => strcmp( length( d ), 1 );
+
+  methods:
+
+      "Pass/FAIL"
+        usebundle => dcs_passif_expected( 'Token_OK,Value_OK,Length_OK', '', $(this.promise_filename) ),
+        inherit => "true";
+
+  reports:
+      DEBUG|EXTRA::
+      "Function returned:$(with)" with => string_mustache( "{{%-top-}}", d );
+
+      "supercalifragilisticexpialidociousNOTDEFINED is actually defined."
+        if => "supercalifragilisticexpialidociousNOTDEFINED";
+      "supercalifragilisticexpialidociousNOTDEFINED is not defined (as expected)"
+        unless => "supercalifragilisticexpialidociousNOTDEFINED";
+}

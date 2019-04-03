@@ -29,18 +29,15 @@ def disable_password_dialog(host):
     os.system(c)
 
 
-def def_json():
-    return {
+def def_json(call_collect=False):
+    d = {
         "classes": {
-            "client_initiated_reporting_enabled": ["any"],
             "mpf_augments_control_enabled": ["any"],
             "services_autorun": ["any"],
             "cfengine_internal_purge_policies": ["any"]
         },
         "vars": {
-            "control_server_call_collect_interval": "1",
             "control_hub_exclude_hosts": ["0.0.0.0/0"],
-            "mpf_access_rules_collect_calls_admit_ips": ["0.0.0.0/0"],
             "acl": ["0.0.0.0/0", "::/0"],
             "default_data_select_host_monitoring_include": [".*"],
             "default_data_select_policy_hub_monitoring_include": [".*"],
@@ -48,11 +45,18 @@ def def_json():
         }
     }
 
+    if call_collect:
+        d["classes"]["client_initiated_reporting_enabled"] = ["any"]
+        d["vars"]["control_server_call_collect_interval"] = "1"
+        d["vars"]["mpf_access_rules_collect_calls_admit_ips"] = ["0.0.0.0/0"]
+
+    return d
+
 
 @auto_connect
-def install_def_json(host, *, connection=None):
+def install_def_json(host, *, connection=None, call_collect=False):
     print("Transferring def.json to hub: '{}'".format(host))
-    data = json.dumps(def_json(), indent=2)
+    data = json.dumps(def_json(call_collect), indent=2)
     path = os.path.join(cf_remote_dir("json"), "def.json")
     save_file(path, data)
     scp(path, host, connection=connection)

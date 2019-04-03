@@ -529,6 +529,67 @@ void test_sscanf(void)
     ret = sscanf(eleven, "%10ld", &long_num);
     assert_int_equal(ret, 1);
     assert_int_equal(long_num, 11);
+
+    // Test max field width for %s:
+    const char *const one_to_nine = "123456789";
+    char a[4];
+    char b[4];
+    char c[3];
+    char d[2];
+    ret = sscanf(one_to_nine, "%3s%3s%2s%1s", a, b, c, d);
+    assert_int_equal(ret, 4);
+    assert_string_equal(a, "123");
+    assert_string_equal(b, "456");
+    assert_string_equal(c, "78");
+    assert_string_equal(d, "9");
+
+    // Test scanning shorter strings than max:
+    const char *const with_spaces = "abc de f";
+    ret = sscanf(with_spaces, "%3s %3s %2s", a, b, c);
+    assert_int_equal(ret, 3);
+    assert_string_equal(a, "abc");
+    assert_string_equal(b, "de");
+    assert_string_equal(c, "f");
+
+    const char *const enforce_spaces = "tu wxyz A";
+    #define FMT_SPACE "%*[ ]" // Matches exactly 1 space and discards it
+    ret = sscanf(enforce_spaces, "%3s"FMT_SPACE"%3s"FMT_SPACE"%2s", a, b, c);
+    #undef FMT_SPACE
+    assert_int_equal(ret, 2);
+    assert_string_equal(a, "tu");
+    assert_string_equal(b, "wxy");
+    assert_string_equal(c, "f");   // Untouched
+
+    // Note that in this example, %s could match commas:
+    const char *const partial_match = "tuv,wxyz,A";
+    ret = sscanf(partial_match, "%3s,%3s,%2s", a, b, c);
+    assert_int_equal(ret, 2);
+    assert_string_equal(a, "tuv");
+    assert_string_equal(b, "wxy");
+    assert_string_equal(c, "f");   // Untouched
+
+    // Don't allow commas in strings:
+    const char *const strict_commas = "tu,wxyz,A";
+    ret = sscanf(strict_commas, "%3[^ ,],%3[^ ,],%2[^ ,]", a, b, c);
+    // Stopped because second column was too long strlen("wxyz") > 3
+    assert_int_equal(ret, 2);
+    assert_string_equal(a, "tu");
+    assert_string_equal(b, "wxy");
+    assert_string_equal(c, "f");   // Untouched
+
+    // Spaces paces allowed in strings
+    const char *const spaces_allowed = "a b,   , a, ";
+    ret = sscanf(spaces_allowed, "%3[^,],%3[^,],%2[^,],%1[^,]", a, b, c, d);
+    // Stopped because second column was too long strlen("wxyz") > 3
+    assert_int_equal(ret, 4);
+    assert_string_equal(a, "a b");
+    assert_string_equal(b, "   ");
+    assert_string_equal(c, " a");
+    assert_string_equal(d, " ");
+
+    // Don't use sscanf to parse CSV rows:
+    // 1. %[] cannot match empty string
+    // 2. No way to handle quoting
 }
 
 void test_string_prefix(void)

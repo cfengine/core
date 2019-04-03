@@ -52,11 +52,11 @@ libtest_la_SOURCES = cmockery.c cmockery.h schema.h test.c test.h \
 	../../libutils/alloc.c \
 	../../libpromises/patches.c \
 	../../libpromises/constants.c \
-        ../../libpromises/known_dirs.c \
-        ../../libutils/map.c \
-        ../../libutils/array_map.c \
-        ../../libutils/hash.c \
-        ../../libutils/hash_map.c
+	../../libutils/array_map.c \
+	../../libutils/known_dirs.c \
+	../../libutils/map.c \
+	../../libutils/hash.c \
+	../../libutils/hash_map.c
 
 libtest_la_LIBADD = ../../libcompat/libcompat.la
 
@@ -90,7 +90,7 @@ libdb_la_SOURCES += ../../libpromises/cf3globals.c
 endif
 libdb_la_LIBADD = libstr.la ../../libutils/libutils.la
 #libdb_la_CPPFLAGS = $(LMDB_CPPFLAGS) $(TOKYOCABINET_CPPFLAGS) $(QDBM_CPPFLAGS)
-# Make sure that source files are compiled to separate object files 
+# Make sure that source files are compiled to separate object files
 # libdb_la-file.o
 libdb_la_CFLAGS = $(AM_CFLAGS)
 

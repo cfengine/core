@@ -27,7 +27,8 @@
 
 #include <platform.h>
 
-const char *GetDefaultDir_helper(char dir[PATH_MAX], const char *root_dir, const char *append_dir);
+const char *GetDefaultDir_helper(char dir[PATH_MAX], const char *root_dir,
+                                 const char *append_dir);
 
 const char *GetWorkDir(void);
 const char *GetLogDir(void);
@@ -35,5 +36,15 @@ const char *GetPidDir(void);
 const char *GetMasterDir(void);
 const char *GetInputDir(void);
 const char *GetStateDir(void);
+
+#ifdef __MINGW32__
+
+const char *GetDefaultWorkDir(void);
+const char *GetDefaultLogDir(void);
+const char *GetDefaultPidDir(void);
+const char *GetDefaultMasterDir(void);
+const char *GetDefaultInputDir(void);
+
+#endif
 
 #endif

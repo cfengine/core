@@ -49,6 +49,7 @@
 #include <unix.h>
 #include <client_code.h>
 #include <string_lib.h>
+#include <writer.h>
 #include <exec_tools.h>
 #include <list.h>
 #include <misc_lib.h>
@@ -170,6 +171,27 @@ Policy *SelectAndLoadPolicy(GenericAgentConfig *config, EvalContext *ctx, bool v
             GenericAgentConfigSetInputFile(config, GetInputDir(), "failsafe.cf");
             Log(LOG_LEVEL_ERR, "CFEngine failsafe.cf: %s %s", config->input_dir, config->input_file);
             policy = LoadPolicy(ctx, config);
+
+            /* Doing failsafe, set the release_id to "failsafe" and also
+             * overwrite the cfe_release_id file so that sub-agent executed as
+             * part of failsafe can just pick it up and then rewrite it with the
+             * actual value from masterfiles. */
+            free(policy->release_id);
+            policy->release_id = xstrdup("failsafe");
+
+            char filename[PATH_MAX];
+            GetReleaseIdFile(GetInputDir(), filename, sizeof(filename));
+            FILE *release_id_stream = safe_fopen(filename, "w");
+            if (release_id_stream == NULL)
+            {
+                Log(LOG_LEVEL_ERR, "Failed to open the release_id file for writing during failsafe");
+            }
+            else
+            {
+                Writer *release_id_writer = FileWriter(release_id_stream);
+                WriterWrite(release_id_writer, "{ releaseId: \"failsafe\" }\n");
+                WriterClose(release_id_writer);
+            }
         }
     }
     return policy;

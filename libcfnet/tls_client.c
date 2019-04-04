@@ -316,7 +316,19 @@ int TLSTry(ConnectionInfo *conn_info)
     /* Initiate the TLS handshake over the already open TCP socket. */
     SSL_set_fd(conn_info->ssl, conn_info->sd);
 
-    int ret = SSL_connect(conn_info->ssl);
+    do
+      {
+        ret = SSL_connect(conn_info->ssl);
+        if (ret < 0)
+          {
+            code = TLSLogError(conn_info->ssl, LOG_LEVEL_ERR,
+                               "Attempted to establish TLS connection", ret);
+            if (code == SSL_ERROR_WANT_READ)
+              {
+                sleep(1);
+              }
+          }
+      } while( ret < 0 && code == SSL_ERROR_WANT_READ && (tries++ < 10) );
     if (ret <= 0)
     {
         TLSLogError(conn_info->ssl, LOG_LEVEL_ERR,

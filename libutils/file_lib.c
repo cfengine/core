@@ -75,14 +75,14 @@ bool File_Copy(const char *src, const char *dst)
 
     Log(LOG_LEVEL_INFO, "Copying: '%s' -> '%s'", src, dst);
 
-    FILE *in = fopen(src, "r");
+    FILE *in = safe_fopen(src, "r");
     if (in == NULL)
     {
         Log(LOG_LEVEL_ERR, "Could not open '%s' (%s)", src, strerror(errno));
         return false;
     }
 
-    FILE *out = fopen(dst, "w");
+    FILE *out = safe_fopen(dst, "w");
     if (out == NULL)
     {
         Log(LOG_LEVEL_ERR, "Could not open '%s' (%s)", dst, strerror(errno));

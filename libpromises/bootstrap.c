@@ -366,7 +366,7 @@ bool CreateBootstrapIDFile(const char *workdir)
 {
     char *filename = BootstrapIDFilename(workdir);
 
-    FILE *file = fopen(filename, "w");
+    FILE *file = safe_fopen(filename, "w");
     if (file == NULL)
     {
         Log(LOG_LEVEL_ERR, "Unable to write bootstrap id file '%s' (fopen: %s)", filename, GetErrorStr());

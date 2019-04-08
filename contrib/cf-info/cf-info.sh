@@ -28,9 +28,11 @@ echo
 echo "Host key:"
 /var/cfengine/bin/cf-key -p /var/cfengine/ppkeys/localhost.pub
 echo
-awk -F '[:,]' -v time="$(date +%s)" 'END {printf "Last cf-agent run started %d minutes ago and lasted %d seconds\n", (time - $1)/60, $2 - $1}' /var/cfengine/promise_summary.log
+awk -F '[:,]' -v time="$(date +%s)" '!/update.cf/ {saved = $0} END {$0 = saved; printf "Last cf-agent run started %d minutes ago and lasted %d seconds\n", (time - $1)/60, $2 - $1}' /var/cfengine/promise_summary.log
 echo
-tail -n 2 /var/cfengine/promise_summary.log | sed 's/.*Total promise compliance: \([^.]*\).*/\1/;1s/^/update.cf compliance:   /;2s/^/promises.cf compliance: /'
+# h = hold that line for later use; g = get the line last written to the "hold space"; $ = do this only when last line is reached.
+sed -n '/update.cf/  h; $ { g; s/.*Total promise\( compliance: [^.]*\).*/\1/; s/^/  update.cf/p; }' /var/cfengine/promise_summary.log
+sed -n '/update.cf/! h; $ { g; s/.*Total promise\( compliance: [^.]*\).*/\1/; s/^/promises.cf/p; }' /var/cfengine/promise_summary.log
 echo
 touch /var/cfengine/test.tmp && ( echo Filesystem writeable ; \rm /var/cfengine/test.tmp)
 echo

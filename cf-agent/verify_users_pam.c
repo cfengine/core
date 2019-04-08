@@ -87,6 +87,8 @@ static const char *GetPlatformSpecificExpirationDate()
     return "January 02 1970";
 #elif defined(__linux__)
     return "1970-01-02";
+#elif defined(__FreeBSD__)
+    return "02-Jan-1970";
 #else
 # error Your operating system lacks the proper string for the "usermod -e" utility.
 #endif
@@ -760,7 +762,8 @@ static bool PlatformSupportsExpirationLock(void)
 #endif
 }
 
-static bool SetAccountLockExpiration(const char *puser, bool lock)
+#ifdef HAVE_USERMOD
+static bool SetAccountLockExpirationUsingUsermod(const char *puser, bool lock)
 {
     if (!PlatformSupportsExpirationLock())
     {
@@ -791,6 +794,54 @@ static bool SetAccountLockExpiration(const char *puser, bool lock)
     }
 
     return true;
+}
+#endif
+
+#ifdef HAVE_PW
+static bool SetAccountLockExpirationUsingPw(const char *puser, bool lock)
+{
+    if (!PlatformSupportsExpirationLock())
+    {
+        return true;
+    }
+
+    char cmd[CF_BUFSIZE];
+
+    strcpy(cmd, PW);
+    StringAppend(cmd, " usermod ", sizeof(cmd));
+    StringAppend(cmd, puser, sizeof(cmd));
+    StringAppend(cmd, " -e \"", sizeof(cmd));
+    if (lock)
+    {
+        StringAppend(cmd, GetPlatformSpecificExpirationDate(), sizeof(cmd));
+    }
+    StringAppend(cmd, "\" ", sizeof(cmd));
+
+    Log(LOG_LEVEL_VERBOSE, "%s user '%s' by setting expiry date. (command: '%s')",
+        lock ? "Locking" : "Unlocking", puser, cmd);
+
+    const int status = system(cmd);
+    if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
+    {
+        Log(LOG_LEVEL_ERR, "Command returned error while %s user '%s'. (Command line: '%s')",
+            lock ? "locking" : "unlocking", puser, cmd);
+        return false;
+    }
+
+    return true;
+}
+#endif
+
+static bool SetAccountLockExpiration(const char *puser, bool lock)
+{
+#if defined(HAVE_USERMOD)
+    return SetAccountLockExpirationUsingUsermod(puser, lock);
+#elif defined(HAVE_PW)
+    return SetAccountLockExpirationUsingPw(puser, lock);
+#else
+    Log(LOG_LEVEL_WARNING, "Cannot set account lock exporation, not supported on this platform");
+    return false;
+#endif
 }
 
 static bool SetAccountLocked(const char *puser, const char *hash, bool lock)

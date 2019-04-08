@@ -54,6 +54,10 @@ AM_LDFLAGS = \
 	$(LIBXML2_LDFLAGS) \
 	$(PAM_LDFLAGS)
 
+if FREEBSD
+    AM_LDFLAGS += -lutil
+endif
+
 libcf_agent_la_LIBADD = ../libpromises/libpromises.la \
 	$(OPENSSL_LIBS) \
 	$(PCRE_LIBS) \

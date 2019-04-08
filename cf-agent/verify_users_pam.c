@@ -51,6 +51,12 @@
 # include <shadow.h>
 #endif
 
+#ifdef __FreeBSD__
+/* Use pw_scan() and gr_scan() to implement fgetpwent() and
+ * fgetgrent() on FreeBSD. */
+#include <libutil.h>
+#endif
+
 #define CFUSR_CHECKBIT(v,p) ((v) & (1UL << (p)))
 #define CFUSR_SETBIT(v,p)   ((v)   |= ((1UL) << (p)))
 #define CFUSR_CLEARBIT(v,p) ((v) &= ~((1UL) << (p)))
@@ -814,6 +820,9 @@ static bool GroupGetUserMembership (const char *user, StringSet *result)
                 break;
             }
         }
+#ifdef __FreeBSD__
+        free(group_info);
+#endif
     }
 
     fclose(fptr);
@@ -830,6 +839,43 @@ static bool EqualGroupName(const char *key, const struct group *entry)
 {
     return (strcmp(key, entry->gr_name) == 0);
 }
+
+#ifdef __FreeBSD__
+struct group *fgetgrent(FILE *stream)
+{
+    if (stream == NULL)
+    {
+        return NULL;
+    }
+
+    struct group *gr = NULL;
+    char *line = NULL;
+    size_t linecap = 0;
+    ssize_t linelen;
+
+    while ((linelen = getline(&line, &linecap, stream)) > 0)
+    {
+        /* Skip comments and empty lines */
+        if (*line == '\n' || *line == '#')
+        {
+            continue;
+        }
+        /* trim latest \n */
+        if (line[linelen - 1] == '\n')
+        {
+            line[linelen - 1] = '\0';
+        }
+        gr = gr_scan(line);
+        if (gr != NULL)
+        {
+            break;
+        }
+    }
+    free(line);
+
+    return gr;
+}
+#endif
 
 // Uses fgetgrent() instead of getgrnam(), to guarantee that the returned group
 // is a local group, and not for example from LDAP.
@@ -852,6 +898,9 @@ static struct group *GetGrEntry(const char *key,
             found = true;
             break;
         }
+#ifdef __FreeBSD__
+        free(group_info);
+#endif
     }
 
     fclose(fptr);
@@ -918,6 +967,9 @@ static void TransformGidsToGroups(StringSet **list)
         {
             StringSetAdd(new_list, xstrdup(data));
         }
+#ifdef __FreeBSD__
+        free(group_info);
+#endif
     }
     StringSet *old_list = *list;
     *list = new_list;
@@ -995,6 +1047,10 @@ static bool VerifyIfUserNeedsModifs (const char *puser, const User *u, const str
         {
             CFUSR_SETBIT (*changemap, i_group);
         }
+
+#ifdef __FreeBSD__
+        free(group_info);
+#endif
     }
 
     if (u->groups_secondary_given)
@@ -1403,6 +1459,44 @@ static bool DoModifyUser (const char *puser, const User *u, const struct passwd 
     return true;
 }
 
+#ifdef __FreeBSD__
+struct passwd *fgetpwent(FILE *stream)
+{
+    if (stream == NULL)
+    {
+        return NULL;
+    }
+
+    struct passwd *pw = NULL;
+    char *line = NULL;
+    size_t linecap = 0;
+    ssize_t linelen;
+    int pwd_scanflag = 0;
+
+    while ((linelen = getline(&line, &linecap, stream)) > 0)
+    {
+        /* Skip comments and empty lines */
+        if (*line == '\n' || *line == '#')
+        {
+            continue;
+        }
+        /* trim latest \n */
+        if (line[linelen - 1 ] == '\n')
+        {
+            line[linelen - 1] = '\0';
+        }
+        pw = pw_scan(line, pwd_scanflag);
+        if (pw != NULL)
+        {
+            break;
+        }
+    }
+    free(line);
+
+    return pw;
+}
+#endif
+
 // Uses fgetpwent() instead of getpwnam(), to guarantee that the returned user
 // is a local user, and not for example from LDAP.
 static struct passwd *GetPwEntry(const char *puser)
@@ -1423,6 +1517,9 @@ static struct passwd *GetPwEntry(const char *puser)
             found = true;
             break;
         }
+#ifdef __FreeBSD__
+        free(passwd_info);
+#endif
     }
 
     fclose(fptr);
@@ -1509,4 +1606,7 @@ void VerifyOneUsersPromise (const char *puser, const User *u, PromiseResult *res
             *result = PROMISE_RESULT_NOOP;
         }
     }
+#ifdef __FreeBSD__
+    free(passwd_info);
+#endif
 }

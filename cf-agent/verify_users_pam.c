@@ -628,6 +628,45 @@ unlock_passwd:
 }
 #endif // defined(HAVE_LCKPWDF) && defined(HAVE_ULCKPWDF)
 
+static bool ExecuteUserCommand(const char *puser, const char *cmd, size_t sizeof_cmd,
+                               const char *action_msg, const char *cap_action_msg)
+{
+    if (strlen(cmd) >= sizeof_cmd - 1)
+    {
+        // Instead of checking every StringAppend call, assume that a maxed out
+        // string length overflowed the string.
+        Log(LOG_LEVEL_ERR, "Command line too long while %s user '%s'", action_msg, puser);
+        return false;
+    }
+
+    Log(LOG_LEVEL_VERBOSE, "%s user '%s'. (command: '%s')", cap_action_msg, puser, cmd);
+
+    int status = system(cmd);
+    if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
+    {
+        Log(LOG_LEVEL_ERR, "Command returned error while %s user '%s'. (Command line: '%s')", action_msg, puser, cmd);
+        return false;
+    }
+    return true;
+}
+
+#ifdef HAVE_CHPASS
+static bool ChangePasswordHashUsingChpass(const char *puser, const char *password)
+{
+    char cmd[CF_BUFSIZE];
+
+    strcpy(cmd, CHPASS);
+    StringAppend(cmd, " -p \'", sizeof(cmd));
+    StringAppend(cmd, password, sizeof(cmd));
+    StringAppend(cmd, "\' ", sizeof(cmd));
+    StringAppend(cmd, puser, sizeof(cmd));
+
+    Log(LOG_LEVEL_VERBOSE, "Changing password hash for user '%s'. (command: '%s')", puser, cmd);
+
+    return ExecuteUserCommand(puser, cmd, sizeof(cmd), "changing", "Changing");
+}
+#endif // HAVE_CHPASS
+
 static bool ChangePassword(const char *puser, const char *password, PasswordFormat format)
 {
     assert(format == PASSWORD_FORMAT_PLAINTEXT || format == PASSWORD_FORMAT_HASH);
@@ -651,6 +690,10 @@ static bool ChangePassword(const char *puser, const char *password, PasswordForm
 #if defined(HAVE_LCKPWDF) && defined(HAVE_ULCKPWDF)
         {
             successful = ChangePasswordHashUsingLckpwdf(puser, password);
+        }
+#elif defined(HAVE_CHPASS)
+        {
+            successful = ChangePasswordHashUsingChpass(puser, password);
         }
 #elif defined(HAVE_CHPASSWD)
         {
@@ -1121,30 +1164,8 @@ static bool SupportsOption(const char *cmd, const char *option)
     return supports_option;
 }
 
-static bool ExecuteUserCommand(const char *puser, const char *cmd, size_t sizeof_cmd,
-                               const char *action_msg, const char *cap_action_msg)
-{
-    if (strlen(cmd) >= sizeof_cmd - 1)
-    {
-        // Instead of checking every StringAppend call, assume that a maxed out
-        // string length overflowed the string.
-        Log(LOG_LEVEL_ERR, "Command line too long while %s user '%s'", action_msg, puser);
-        return false;
-    }
-
-    Log(LOG_LEVEL_VERBOSE, "%s user '%s'. (command: '%s')", cap_action_msg, puser, cmd);
-
-    int status;
-    status = system(cmd);
-    if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
-    {
-        Log(LOG_LEVEL_ERR, "Command returned error while %s user '%s'. (Command line: '%s')", action_msg, puser, cmd);
-        return false;
-    }
-    return true;
-}
-
-static bool DoCreateUser(const char *puser, const User *u, enum cfopaction action,
+#ifdef HAVE_USERADD
+static bool DoCreateUserUsingUseradd(const char *puser, const User *u, enum cfopaction action,
                          EvalContext *ctx, const Attributes *a, const Promise *pp)
 {
     assert(u != NULL);
@@ -1285,6 +1306,137 @@ static bool DoCreateUser(const char *puser, const User *u, enum cfopaction actio
     }
 
     return true;
+}
+#endif
+
+#ifdef HAVE_PW
+static bool DoCreateUserUsingPw(const char *puser, const User *u, enum cfopaction action,
+                         EvalContext *ctx, const Attributes *a, const Promise *pp)
+{
+    assert(u != NULL);
+    char cmd[CF_BUFSIZE];
+    char sec_group_args[CF_BUFSIZE];
+    if (NULL_OR_EMPTY(puser))
+    {
+        return false;
+    }
+    strcpy (cmd, PW);
+
+    StringAppend(cmd, " useradd ", sizeof(cmd));
+    StringAppend(cmd, puser, sizeof(cmd));
+
+    if (!NULL_OR_EMPTY(u->uid))
+    {
+        StringAppend(cmd, " -u \"", sizeof(cmd));
+        StringAppend(cmd, u->uid, sizeof(cmd));
+        StringAppend(cmd, "\"", sizeof(cmd));
+    }
+
+    if (u->description != NULL)
+    {
+        StringAppend(cmd, " -c \"", sizeof(cmd));
+        StringAppend(cmd, u->description, sizeof(cmd));
+        StringAppend(cmd, "\"", sizeof(cmd));
+    }
+
+    if (u->group_primary != NULL && strcmp (u->group_primary, ""))
+    {
+        // TODO: Should check that group exists
+        StringAppend(cmd, " -g \"", sizeof(cmd));
+        StringAppend(cmd, u->group_primary, sizeof(cmd));
+        StringAppend(cmd, "\"", sizeof(cmd));
+    }
+
+    if (u->groups_secondary_given)
+    {
+        // TODO: Should check that groups exist
+        strlcpy(sec_group_args, " -G \"", sizeof(sec_group_args));
+        char sep[2] = { '\0', '\0' };
+        for (Rlist *i = u->groups_secondary; i != NULL; i = i->next)
+        {
+            StringAppend(sec_group_args, sep, sizeof(sec_group_args));
+            StringAppend(sec_group_args, RvalScalarValue(i->val), sizeof(sec_group_args));
+            sep[0] = ',';
+        }
+        StringAppend(sec_group_args, "\"", sizeof(sec_group_args));
+        StringAppend(cmd, sec_group_args, sizeof(cmd));
+    }
+
+    if (u->home_dir != NULL && strcmp(u->home_dir, ""))
+    {
+        StringAppend(cmd, " -d \"", sizeof(cmd));
+        StringAppend(cmd, u->home_dir, sizeof(cmd));
+        StringAppend(cmd, "\"", sizeof(cmd));
+    }
+
+    if (u->shell != NULL && strcmp (u->shell, ""))
+    {
+        StringAppend(cmd, " -s \"", sizeof(cmd));
+        StringAppend(cmd, u->shell, sizeof(cmd));
+        StringAppend(cmd, "\"", sizeof(cmd));
+    }
+
+    if (action == cfa_warn || DONTDO)
+    {
+        Log(LOG_LEVEL_WARNING, "Need to create user '%s'", puser);
+        return false;
+    }
+    else
+    {
+        if (!ExecuteUserCommand(puser, cmd, sizeof(cmd), "creating", "Creating"))
+        {
+            return false;
+        }
+
+        if (!ChangePassword(puser, "x", PASSWORD_FORMAT_HASH))
+        {
+            return false;
+        }
+
+        if (u->policy == USER_STATE_LOCKED)
+        {
+            if (!SetAccountLocked(puser, "x", true))
+            {
+                return false;
+            }
+        }
+
+        if (a->havebundle)
+        {
+            const Constraint *method_attrib = PromiseGetConstraint(pp, "home_bundle");
+            if (method_attrib == NULL)
+            {
+                Log(LOG_LEVEL_ERR, "Cannot create user (home_bundle not found)");
+                return false;
+            }
+            VerifyMethod(ctx, method_attrib->rval, a, pp);
+        }
+
+        if (u->policy != USER_STATE_LOCKED && u->password != NULL && strcmp (u->password, ""))
+        {
+            if (!ChangePassword(puser, u->password, u->password_format))
+            {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+#endif
+
+static bool DoCreateUser(const char *puser, const User *u, enum cfopaction action,
+                         EvalContext *ctx, const Attributes *a, const Promise *pp)
+{
+#if defined(HAVE_USERADD)
+    return DoCreateUserUsingUseradd(puser, u, action, ctx, a, pp);
+#elif defined(HAVE_PW)
+    return DoCreateUserUsingPw(puser, u, action, ctx, a, pp);
+#else
+    Log(LOG_LEVEL_WARNING, "Cannot create user, not supported on this platform.");
+    return false;
+#endif
+
 }
 
 static bool DoRemoveUser (const char *puser, enum cfopaction action)

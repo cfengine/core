@@ -173,6 +173,8 @@ void HandleSignalsForDaemon(int signum)
     switch (signum)
     {
     case SIGTERM:
+        _exit(0);
+        break;
     case SIGINT:
     case SIGSEGV:
     case SIGKILL:

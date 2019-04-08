@@ -1542,7 +1542,14 @@ static bool DoModifyUser (const char *puser, const User *u, const struct passwd 
     assert(u != NULL);
     char cmd[CF_BUFSIZE];
 
+#ifdef HAVE_PW
+    strcpy (cmd, PW);
+    StringAppend(cmd, " usermod -n \"", sizeof(cmd));
+    StringAppend(cmd, puser, sizeof(cmd));
+    StringAppend(cmd, "\" ", sizeof(cmd));
+#else
     strcpy (cmd, USERMOD);
+#endif
 
     if (CFUSR_CHECKBIT (changemap, i_uid) != 0)
     {
@@ -1592,9 +1599,10 @@ static bool DoModifyUser (const char *puser, const User *u, const struct passwd 
         StringAppend(cmd, u->shell, sizeof(cmd));
         StringAppend(cmd, "\"", sizeof(cmd));
     }
-
+#ifndef HAVE_PW
     StringAppend(cmd, " ", sizeof(cmd));
     StringAppend(cmd, puser, sizeof(cmd));
+#endif
 
     if (CFUSR_CHECKBIT (changemap, i_password) != 0)
     {
@@ -1671,7 +1679,14 @@ static bool DoModifyUser (const char *puser, const User *u, const struct passwd 
         if (CFUSR_CHECKBIT (changemap, i_groups) != 0)
         {
             // Set real group list (see -G comment earlier).
+#ifdef HAVE_PW
+            strcpy (cmd, PW);
+            StringAppend(cmd, " usermod -n \"", sizeof(cmd));
+            StringAppend(cmd, puser, sizeof(cmd));
+            StringAppend(cmd, "\" ", sizeof(cmd));
+#else
             strcpy(cmd, USERMOD);
+#endif
             StringAppend(cmd, " -G \"", sizeof(cmd));
             char sep[2] = { '\0', '\0' };
             for (Rlist *i = u->groups_secondary; i; i = i->next)
@@ -1680,8 +1695,12 @@ static bool DoModifyUser (const char *puser, const User *u, const struct passwd 
                 StringAppend(cmd, RvalScalarValue(i->val), sizeof(cmd));
                 sep[0] = ',';
             }
+#ifdef HAVE_PW
+            StringAppend(cmd, "\"", sizeof(cmd));
+#else
             StringAppend(cmd, "\" ", sizeof(cmd));
             StringAppend(cmd, puser, sizeof(cmd));
+#endif
             if (!ExecuteUserCommand(puser, cmd, sizeof(cmd), "modifying", "Modifying"))
             {
                 return false;

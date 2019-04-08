@@ -719,6 +719,19 @@ static bool ChangePassword(const char *puser, const char *password, PasswordForm
     return successful;
 }
 
+static bool IsHashLocked(const char *hash)
+{
+#ifdef HAVE_PW
+    /* Accounts are locked by prepending "*LOCKED*" to the password
+     * hash on FreeBSD and other systems using pw. */
+    return (strstr(hash, "*LOCKED*") != NULL);
+#else
+    /* Accounts are locked by prepending "!" to the password hash on
+     * some systems. */
+    return (hash[0] == '!');
+#endif
+}
+
 static bool IsAccountLocked(const char *puser, const struct passwd *passwd_info)
 {
     /* Note that when we lock an account, we do two things, we make the password hash invalid
@@ -734,7 +747,8 @@ static bool IsAccountLocked(const char *puser, const struct passwd *passwd_info)
     {
         return false;
     }
-    return (system_hash[0] == '!');
+
+    return IsHashLocked(system_hash);
 }
 
 static bool PlatformSupportsExpirationLock(void)
@@ -850,10 +864,15 @@ static bool SetAccountLocked(const char *puser, const char *hash, bool lock)
     {
         if (lock)
         {
-            if (hash[0] != '!')
+            if (!IsHashLocked(hash))
             {
+#ifdef HAVE_PW
+                char new_hash[strlen(hash) + 9];
+                xsnprintf(new_hash, sizeof(new_hash), "*LOCKED*%s", hash);
+#else
                 char new_hash[strlen(hash) + 2];
                 xsnprintf(new_hash, sizeof(new_hash), "!%s", hash);
+#endif
                 if (!ChangePassword(puser, new_hash, PASSWORD_FORMAT_HASH))
                 {
                     return false;
@@ -862,9 +881,19 @@ static bool SetAccountLocked(const char *puser, const char *hash, bool lock)
         }
         else
         {
-            if (hash[0] == '!')
+            if (IsHashLocked(hash))
             {
+#ifdef HAVE_PW
+                /* Accounts are locked by prepending "*LOCKED*" to the
+                 * password hash on FreeBSD. Skip these 8 characters
+                 * to obtain only the password hash. */
+                if (!ChangePassword(puser, &hash[8], PASSWORD_FORMAT_HASH))
+#else
+                /* Accounts are locked by prepending "!" to the
+                 * password hash on some systems. Skip this 1
+                 * character to obtain only the password hash. */
                 if (!ChangePassword(puser, &hash[1], PASSWORD_FORMAT_HASH))
+#endif
                 {
                     return false;
                 }

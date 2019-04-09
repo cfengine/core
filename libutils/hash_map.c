@@ -199,6 +199,7 @@ static void FreeBucketListItem(HashMap *map, BucketListItem *item)
     map->destroy_key_fn(item->value.key);
     map->destroy_value_fn(item->value.value);
     free(item);
+    map->load--;
 }
 
 /* Do not destroy value item */
@@ -211,6 +212,7 @@ static void FreeBucketListItemSoft(HashMap *map, BucketListItem *item)
 
     map->destroy_key_fn(item->value.key);
     free(item);
+    map->load--;
 }
 
 void HashMapClear(HashMap *map)
@@ -223,6 +225,7 @@ void HashMapClear(HashMap *map)
         }
         map->buckets[i] = NULL;
     }
+    assert(map->load == 0);
 }
 
 void HashMapSoftDestroy(HashMap *map)

@@ -365,6 +365,55 @@ static void test_clear(void)
     StringMapDestroy(map);
 }
 
+static void test_clear_hashmap(void)
+{
+    HashMap *map = HashMapNew(StringHash_untyped, StringSafeEqual_untyped,
+                              free, free, HASH_MAP_INIT_SIZE);
+
+    assert_false(HashMapInsert(map, xstrdup("one"), xstrdup("first")));
+    assert_false(HashMapInsert(map, xstrdup("two"), xstrdup("second")));
+
+    assert_true(HashMapGet(map, "one") != NULL);
+    assert_true(HashMapGet(map, "two") != NULL);
+    assert_int_equal(map->load, 2);
+
+    HashMapClear(map);
+    assert_true(HashMapGet(map, "one") == NULL);
+    assert_true(HashMapGet(map, "two") == NULL);
+    assert_int_equal(map->load, 0);
+
+
+    /* make sure that inserting items after clear doesn't trigger growth  */
+    unsigned int i = 0;
+
+    /* first populate the hashmap just below the threshold */
+    size_t orig_size = map->size;
+    size_t orig_threshold = map->max_threshold;
+
+    for (i = 1; i <= orig_threshold; i++)
+    {
+        test_add_n_as_to_map(map, i);
+        assert_int_equal(map->load, i);
+    }
+    assert_int_equal(map->size, orig_size);
+    assert_int_equal(map->max_threshold, orig_threshold);
+
+    /* clear and repopulate again */
+    HashMapClear(map);
+    for (i = 1; i <= orig_threshold; i++)
+    {
+        test_add_n_as_to_map(map, i);
+        assert_int_equal(map->load, i);
+    }
+
+    /* the map was cleared before re-population, there's no reason for it to
+     * grow */
+    assert_int_equal(map->size, orig_size);
+    assert_int_equal(map->max_threshold, orig_threshold);
+
+    HashMapDestroy(map);
+}
+
 static void test_soft_destroy(void)
 {
     StringMap *map = StringMapNew();
@@ -585,6 +634,7 @@ int main()
         unit_test(test_get),
         unit_test(test_has_key),
         unit_test(test_clear),
+        unit_test(test_clear_hashmap),
         unit_test(test_soft_destroy),
         unit_test(test_hashmap_new_destroy),
         unit_test(test_hashmap_degenerate_hash_fn),

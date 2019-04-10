@@ -460,7 +460,7 @@ cf_status_daemon()
     # https is expected to have multiple pids, skip detection of multiple
     # pids to avoid false alarms
 
-    if [ "${base_daemon}" != "httpd" ]; then
+    if [ "${base_daemon}" != "httpd" ] && [ "${base_daemon}" != "cf-hub" ]; then
         # Lack of quotes around $pids is important to eliminate newlines.
         if [ -n "$(echo $pids | grep '[^0-9]')" ]; then
             echo "Warning: Multiple $base_daemon processes present. Should restart CFEngine."

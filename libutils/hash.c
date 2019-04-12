@@ -374,6 +374,7 @@ HashMethod HashIdFromName(const char *hash_name)
 
 const char *HashNameFromId(HashMethod hash_id)
 {
+    assert(hash_id >= 0);
     return (hash_id >= HASH_METHOD_NONE) ? NULL : CF_DIGEST_TYPES[hash_id];
 }
 
@@ -390,5 +391,6 @@ const EVP_MD *HashDigestFromId(HashMethod type)
 
 HashSize HashSizeFromId(HashMethod hash_id)
 {
+    assert(hash_id >= 0);
     return (hash_id >= HASH_METHOD_NONE) ? CF_NO_HASH : CF_DIGEST_SIZES[hash_id];
 }

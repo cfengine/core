@@ -181,13 +181,21 @@ const BodySyntax *BodySyntaxGet(const char *body_type)
 
 const char *SyntaxStatusToString(SyntaxStatus status)
 {
-    static const char *const status_strings[] =
+    assert( status == SYNTAX_STATUS_DEPRECATED ||
+            status == SYNTAX_STATUS_NORMAL ||
+            status == SYNTAX_STATUS_REMOVED );
+    switch (status)
     {
-        [SYNTAX_STATUS_DEPRECATED] = "deprecated",
-        [SYNTAX_STATUS_NORMAL] = "normal",
-        [SYNTAX_STATUS_REMOVED] = "removed"
-    };
-    return status_strings[status];
+        case SYNTAX_STATUS_DEPRECATED:
+            return "deprecated";
+        case SYNTAX_STATUS_NORMAL:
+            return "normal";
+        case SYNTAX_STATUS_REMOVED:
+            return "removed";
+        default:
+            break;
+    }
+    return NULL;
 }
 
 /****************************************************************************/

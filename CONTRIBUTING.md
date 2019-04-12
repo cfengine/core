@@ -270,9 +270,9 @@ For other integer types without a format, cast `signed` types to `intmax_t` and 
 Logging Conventions
 -----------------------------------
 
-CFEngine outputs messages about what its doing using the `Log()` function. It
-takes a `LogLevel` enum mapping closely to syslog priorities. Please try to do
-the following when writing output messages.
+CFEngine outputs messages about what it's doing using the `Log()` function. It
+takes a `LogLevel` enum mapping closely related to syslog priorities. Please try
+to do the following when writing output messages.
 
 ### Log levels
 

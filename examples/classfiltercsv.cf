@@ -1,0 +1,83 @@
+#  Copyright 2019 Northern.tech AS
+
+#  This file is part of Cfengine 3 - written and maintained by Northern.tech AS.
+
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by the
+#  Free Software Foundation; version 3.
+
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+# To the extent this program is licensed as part of the Enterprise
+# versions of Cfengine, the applicable Commercial Open Source License
+# (COSL) may apply to this file if you as a licensee so wish it. See
+# included file COSL.txt.
+
+#+begin_src prep
+#@ ```
+#@ echo 'ClassExpr,Sort,Token,Value'                        > /tmp/classfiltercsv.csv
+#@ echo '# This is a comment'                              >> /tmp/classfiltercsv.csv
+#@ echo 'any,A,net.ipv4.ip_forward,ANYVALUE'               >> /tmp/classfiltercsv.csv
+#@ echo 'example_class1,z,net.ipv4.ip_forward,ANYVALUE'    >> /tmp/classfiltercsv.csv
+#@ echo 'example_class2,a,net.ipv4.ip_forward,127.0.0.3'   >> /tmp/classfiltercsv.csv
+#@ echo 'not_defined,Z,net.ipv4.ip_forward,NOT_DEFINED'    >> /tmp/classfiltercsv.csv
+#@ echo 'example_class3,1,net.ipv4.ip_forward,127.0.0.4'   >> /tmp/classfiltercsv.csv
+#@ echo 'also_undefined,0,net.ipv4.ip_forward,NOT_DEFINED'  >> /tmp/classfiltercsv.csv
+#@ sed -i 's/$/\r/' /tmp/classfiltercsv.csv
+#@ ```
+#+end_src
+###############################################################################
+#+begin_src cfengine3
+bundle agent example_classfiltercsv
+{
+  classes:
+      "example_class1";
+      "example_class2";
+      "example_class3";
+
+  vars:
+      "data_file" string => "/tmp/classfiltercsv.csv";
+      "d" data => classfiltercsv($(data_file), "true", 0, 1);
+
+  reports:
+      "Filtered data: $(with)" with => string_mustache("{{%-top-}}", d);
+}
+bundle agent __main__
+{
+  methods:
+      "example_classfiltercsv";
+}
+#+end_src
+#+begin_src example_output
+#@ ```
+#@ R: Filtered data: [
+#@   {
+#@     "Sort": "1",
+#@     "Token": "net.ipv4.ip_forward",
+#@     "Value": "127.0.0.4"
+#@   },
+#@   {
+#@     "Sort": "A",
+#@     "Token": "net.ipv4.ip_forward",
+#@     "Value": "ANYVALUE"
+#@   },
+#@   {
+#@     "Sort": "a",
+#@     "Token": "net.ipv4.ip_forward",
+#@     "Value": "127.0.0.3"
+#@   },
+#@   {
+#@     "Sort": "z",
+#@     "Token": "net.ipv4.ip_forward",
+#@     "Value": "ANYVALUE"
+#@   }
+#@ ]
+#@ ```
+#+end_src

@@ -71,6 +71,7 @@ specific case, the differences are due to some difference in output between a
 normal run and a dry-run where warnings are promised.
 
 #+Caption: Execute the example outputs tests with the system installed cfengine
+#+NAME: test_check_outputs
 #+BEGIN_SRC sh :dir ../ :results output :exports both
   ./testall --jobs=4 \
             --printlog \
@@ -78,10 +79,14 @@ normal run and a dry-run where warnings are promised.
             ./04_examples/outputs/check_outputs.cf 2>&1
 #+END_SRC
 
-#+RESULTS:
+
+#+NAME: Testing classfiltercsv()
+#+CALL: test_check_outputs()
+
+#+RESULTS: Testing classfiltercsv()
 #+begin_example
 ======================================================================
-Testsuite started at 2019-04-13 16:05:32
+Testsuite started at 2019-04-13 16:40:46
 ----------------------------------------------------------------------
 Total tests: 1
 
@@ -101,7 +106,7 @@ Test run is PARALLEL with MAKEFLAGS= --jobs=4
 ./04_examples/outputs/check_outputs.cf Pass
 
 ======================================================================
-Testsuite finished at 2019-04-13 16:05:41 (9 seconds)
+Testsuite finished at 2019-04-13 16:40:56 (10 seconds)
 
 Passed tests:  1
 Failed tests:  0
@@ -109,7 +114,7 @@ Skipped tests: 0
 Soft failures: 0
 Total tests:   1
 ======================================================================
-Testsuite started at 2019-04-13 16:05:32
+Testsuite started at 2019-04-13 16:40:46
 ----------------------------------------------------------------------
 Total tests: 1
 
@@ -127,7 +132,7 @@ Total tests: 1
 Test run is PARALLEL with MAKEFLAGS= --jobs=4
 
 ----------------------------------------------------------------------
-./04_examples/outputs/check_outputs.cf
+./04_examples/outputs/check_outputs.cf 
 ----------------------------------------------------------------------
 R: test_example: ran checker '/usr/bin/perl /home/nickanderson/Northern.Tech/CFEngine/core/tests/acceptance/../../examples/remake_outputs.pl --cfagent="/home/nickanderson/Northern.Tech/CFEngine/core/tests/acceptance/workdir/__04_examples_outputs_check_outputs_cf/bin/cf-agent" --workdir=/home/nickanderson/Northern.Tech/CFEngine/core/tests/acceptance/workdir/__04_examples_outputs_check_outputs_cf/tmp/TESTDIR.cfengine -c /home/nickanderson/Northern.Tech/CFEngine/core/tests/acceptance/../../examples/file_hash.cf'
 R: test_example: ran checker '/usr/bin/perl /home/nickanderson/Northern.Tech/CFEngine/core/tests/acceptance/../../examples/remake_outputs.pl --cfagent="/home/nickanderson/Northern.Tech/CFEngine/core/tests/acceptance/workdir/__04_examples_outputs_check_outputs_cf/bin/cf-agent" --workdir=/home/nickanderson/Northern.Tech/CFEngine/core/tests/acceptance/workdir/__04_examples_outputs_check_outputs_cf/tmp/TESTDIR.cfengine -c /home/nickanderson/Northern.Tech/CFEngine/core/tests/acceptance/../../examples/filesize.cf'
@@ -413,7 +418,7 @@ Return code is 0.
 
 
 ======================================================================
-Testsuite finished at 2019-04-13 16:05:41 (9 seconds)
+Testsuite finished at 2019-04-13 16:40:56 (10 seconds)
 
 Passed tests:  1
 Failed tests:  0
@@ -421,3 +426,4 @@ Skipped tests: 0
 Soft failures: 0
 Total tests:   1
 #+end_example
+

@@ -35,12 +35,7 @@
 #+end_src
 ###############################################################################
 #+begin_src cfengine3
-body common control
-{
-      bundlesequence => { "example" };
-}
-
-bundle agent example
+bundle agent example_classfiltercsv
 {
   classes:
       "example_class1";
@@ -53,6 +48,11 @@ bundle agent example
 
   reports:
       "Filtered data: $(with)" with => string_mustache("{{%-top-}}", d);
+}
+bundle agent __main__
+{
+  methods:
+      "example_classfiltercsv";
 }
 #+end_src
 #+begin_src example_output

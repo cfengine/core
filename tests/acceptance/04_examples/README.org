@@ -83,10 +83,11 @@ normal run and a dry-run where warnings are promised.
 #+NAME: Testing classfiltercsv()
 #+CALL: test_check_outputs()
 
+:DRAWER:
 #+RESULTS: Testing classfiltercsv()
 #+begin_example
 ======================================================================
-Testsuite started at 2019-04-13 16:40:46
+Testsuite started at 2019-04-13 18:40:54
 ----------------------------------------------------------------------
 Total tests: 1
 
@@ -106,7 +107,7 @@ Test run is PARALLEL with MAKEFLAGS= --jobs=4
 ./04_examples/outputs/check_outputs.cf Pass
 
 ======================================================================
-Testsuite finished at 2019-04-13 16:40:56 (10 seconds)
+Testsuite finished at 2019-04-13 18:41:03 (9 seconds)
 
 Passed tests:  1
 Failed tests:  0
@@ -114,7 +115,7 @@ Skipped tests: 0
 Soft failures: 0
 Total tests:   1
 ======================================================================
-Testsuite started at 2019-04-13 16:40:46
+Testsuite started at 2019-04-13 18:40:54
 ----------------------------------------------------------------------
 Total tests: 1
 
@@ -418,7 +419,7 @@ Return code is 0.
 
 
 ======================================================================
-Testsuite finished at 2019-04-13 16:40:56 (10 seconds)
+Testsuite finished at 2019-04-13 18:41:03 (9 seconds)
 
 Passed tests:  1
 Failed tests:  0
@@ -426,4 +427,4 @@ Skipped tests: 0
 Soft failures: 0
 Total tests:   1
 #+end_example
-
+:END:

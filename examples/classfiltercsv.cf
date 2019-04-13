@@ -22,18 +22,15 @@
 
 #+begin_src prep
 #@ ```
-#@ export OUT_FILE=/tmp/classfiltercsv.csv
-#@
-#@ echo -e 'ClassExpr,Sort,Token,Value\r'                        > $OUT_FILE
-#@ echo -e '# This is a comment\r'                              >> $OUT_FILE
-#@ echo -e 'any,A,net.ipv4.ip_forward,ANYVALUE\r'               >> $OUT_FILE
-#@ echo -e 'example_class1,z,net.ipv4.ip_forward,ANYVALUE\r'    >> $OUT_FILE
-#@ echo -e 'example_class2,a,net.ipv4.ip_forward,127.0.0.3\r'   >> $OUT_FILE
-#@ echo -e 'not_defined,Z,net.ipv4.ip_forward,NOT_DEFINED\r'    >> $OUT_FILE
-#@ echo -e 'example_class3,1,net.ipv4.ip_forward,127.0.0.4\r'   >> $OUT_FILE
-#@ echo -ne 'also_undefined,0,net.ipv4.ip_forward,NOT_DEFINED'  >> $OUT_FILE
-#@
-#@ unset OUT_FILE
+#@ echo 'ClassExpr,Sort,Token,Value'                        > /tmp/classfiltercsv.csv
+#@ echo '# This is a comment'                              >> /tmp/classfiltercsv.csv
+#@ echo 'any,A,net.ipv4.ip_forward,ANYVALUE'               >> /tmp/classfiltercsv.csv
+#@ echo 'example_class1,z,net.ipv4.ip_forward,ANYVALUE'    >> /tmp/classfiltercsv.csv
+#@ echo 'example_class2,a,net.ipv4.ip_forward,127.0.0.3'   >> /tmp/classfiltercsv.csv
+#@ echo 'not_defined,Z,net.ipv4.ip_forward,NOT_DEFINED'    >> /tmp/classfiltercsv.csv
+#@ echo 'example_class3,1,net.ipv4.ip_forward,127.0.0.4'   >> /tmp/classfiltercsv.csv
+#@ echo 'also_undefined,0,net.ipv4.ip_forward,NOT_DEFINED'  >> /tmp/classfiltercsv.csv
+#@ sed -i 's/$/\r/' /tmp/classfiltercsv.csv
 #@ ```
 #+end_src
 ###############################################################################

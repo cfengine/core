@@ -44,9 +44,7 @@ extern bool LOOKUP_HOSTS;
 
 int PrintDigest(const char *pubkey);
 void ParseKeyArg(char *keyarg, char **filename, char **ipaddr, char **username);
-bool ShowHost(const char *hostkey, const char *address,
-              bool incoming, const KeyHostSeen *quality, void *ctx);
-void ShowLastSeenHosts();
+void ShowLastSeenHosts(bool truncate);
 int RemoveKeys(const char *input, bool must_be_coherent);
 bool KeepKeyPromises(const char *public_key_file, const char *private_key_file, const int key_size);
 int ForceKeyRemoval(const char *key);

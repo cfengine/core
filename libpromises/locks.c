@@ -593,8 +593,22 @@ void PromiseRuntimeHash(const Promise *pp, const char *salt,
             case RVAL_TYPE_LIST:
                 for (rp = cp->rval.item; rp != NULL; rp = rp->next)
                 {
-                    EVP_DigestUpdate(context, RlistScalarValue(rp),
-                                     strlen(RlistScalarValue(rp)));
+                    switch (rp->val.type)
+                    {
+                    case RVAL_TYPE_SCALAR:
+                        EVP_DigestUpdate(context, RlistScalarValue(rp),
+                                         strlen(RlistScalarValue(rp)));
+                        break;
+
+                    case RVAL_TYPE_FNCALL:
+                        EVP_DigestUpdate(context, RlistFnCallValue(rp)->name,
+                                         strlen(RlistFnCallValue(rp)->name));
+                        break;
+
+                    default:
+                        ProgrammingError("Unhandled case in switch");
+                        break;
+                    }
                 }
                 break;
 

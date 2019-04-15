@@ -120,12 +120,23 @@ void ParseKeyArg(char *keyarg, char **filename, char **ipaddr, char **username)
 
 extern bool cf_key_interrupted;
 
-bool ShowHost(const char *hostkey, const char *address, bool incoming,
-                     const KeyHostSeen *quality, void *ctx)
-{
-    int *count = ctx;
-    char timebuf[26];
+#define HOST_FMT_TRUNCATE "%-10.10s %-40.40s %-25.25s %-26.26s %-s\n"
+#define HOST_FMT_NO_TRUNCATE "%s\t%s\t%s\t%s\t%s\n"
 
+typedef struct _HostPrintState
+{
+    int count;
+    bool truncate;
+} HostPrintState;
+
+static bool ShowHost(
+    const char *const hostkey,
+    const char *const address,
+    bool incoming,
+    const KeyHostSeen *const quality,
+    void *const ctx)
+{
+    HostPrintState *const state = ctx;
     char hostname[NI_MAXHOST];
     if (LOOKUP_HOSTS)
     {
@@ -139,9 +150,11 @@ bool ShowHost(const char *hostkey, const char *address, bool incoming,
     {
         strlcpy(hostname, address, sizeof(hostname));
     }
+    ++(state->count);
 
-    (*count)++;
-    printf("%-10.10s %-40.40s %-25.25s %-26.26s %-s\n",
+    bool truncate = state->truncate;
+    char timebuf[26];
+    printf(truncate ? HOST_FMT_TRUNCATE : HOST_FMT_NO_TRUNCATE,
            incoming ? "Incoming" : "Outgoing",
            address, hostname,
            cf_strtimestamp_local(quality->lastseen, timebuf), hostkey);
@@ -149,19 +162,27 @@ bool ShowHost(const char *hostkey, const char *address, bool incoming,
     return !cf_key_interrupted;
 }
 
-void ShowLastSeenHosts()
+void ShowLastSeenHosts(bool truncate)
 {
-    int count = 0;
+    HostPrintState state = { 0 };
+    state.count = 0;
+    state.truncate = truncate;
 
-    printf("%-10.10s %-40.40s %-25.25s %-26.26s %-s\n", "Direction", "IP", "Name", "Last connection", "Key");
+    printf(
+        truncate ? HOST_FMT_TRUNCATE : HOST_FMT_NO_TRUNCATE,
+        "Direction",
+        "IP",
+        "Name",
+        "Last connection",
+        "Key");
 
-    if (!ScanLastSeenQuality(ShowHost, &count))
+    if (!ScanLastSeenQuality(ShowHost, &state))
     {
         Log(LOG_LEVEL_ERR, "Unable to show lastseen database");
         return;
     }
 
-    printf("Total Entries: %d\n", count);
+    printf("Total Entries: %d\n", state.count);
 }
 
 /**

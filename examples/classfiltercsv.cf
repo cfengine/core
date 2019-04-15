@@ -31,7 +31,6 @@
 #@ echo 'example_class3,1,net.ipv4.ip_forward,127.0.0.4'   >> /tmp/classfiltercsv.csv
 #@ echo 'also_undefined,0,net.ipv4.ip_forward,NOT_DEFINED'  >> /tmp/classfiltercsv.csv
 #@ sed -i 's/$/\r/' /tmp/classfiltercsv.csv
-#@
 #@ ```
 #+end_src
 

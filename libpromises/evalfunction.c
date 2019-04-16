@@ -6377,16 +6377,16 @@ static FnCallResult FnCallStrftime(ARG_UNUSED EvalContext *ctx,
     // this will be a problem on 32-bit systems...
     const time_t when = IntFromString(RlistScalarValue(finalargs->next->next));
 
-    struct tm tm;
+    struct tm tm_value;
     struct tm *tm_pointer;
 
     if (strcmp("gmtime", mode) == 0)
     {
-        tm_pointer = gmtime_r(&when, &tm);
+        tm_pointer = gmtime_r(&when, &tm_value);
     }
     else
     {
-        tm_pointer = localtime(&when);
+        tm_pointer = localtime_r(&when, &tm_value);
     }
 
     char buffer[CF_BUFSIZE];

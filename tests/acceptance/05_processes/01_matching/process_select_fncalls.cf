@@ -1,0 +1,93 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-1968" }
+        string => "Test that process_select body can have (failing) function calls";
+  vars:
+    "canonified_uid"
+        string => canonify(getuid("nosuchuser"));
+
+  processes:
+    any::
+      "cf-agent"
+        process_select => by_owner_no_fncall("nosuchuser", "$(canonified_uid)"),
+        process_count => proc_found_one_or_more("nosuchuser_no_fncall");
+      "cf-agent"
+        process_select => by_owner("nosuchuser"),
+        process_count => proc_found_one_or_more("nosuchuser");
+      "nosuchproc"
+        process_count => proc_found_one_or_more("nosuchproc");
+      "cf-agent"
+        process_count => proc_found_one_or_more("agent");
+      ".*"
+        process_select => by_owner("root"),
+        process_count => proc_found_one_or_more("root");
+}
+
+body process_count proc_found_one_or_more(prefix)
+# defines _found / _not_found if there are 1 or more / 0 matches, respectively
+{
+      in_range_define => { "$(prefix)_found" };
+      out_of_range_define => { "$(prefix)_not_found" };
+      match_range => irange(1,"inf");
+}
+
+body process_select by_owner(u)
+# @brief Select processes owned by user `u`
+# @param u The name of the user
+#
+# Matches processes against the given username and the given username's uid
+# in case only uid is visible in process list.
+#
+# @note: if getuid fails (because there is no user) the canonify call will
+#        not resolve, and that part of the list will be skipped.
+{
+      process_owner => { "$(u)", canonify(getuid("$(u)")) };
+      process_result => "process_owner";
+}
+
+body process_select by_owner_no_fncall(u, cgu)
+# Compare behavior to this backwards compatible body
+{
+      process_owner => { "$(u)", "$(cgu)" };
+      process_result => "process_owner";
+}
+
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "ok"
+        and => {
+            "!nosuchuser_no_fncall_found", "nosuchuser_no_fncall_not_found",
+            "!nosuchuser_found", "nosuchuser_not_found",
+            "!nosuchproc_found", "nosuchproc_not_found",
+             "agent_found", "!agent_not_found",
+             "root_found", "!root_not_found"
+        };
+
+  reports:
+    DEBUG.agent_found::
+      "ok - found agent";
+    DEBUG.nosuchproc_found::
+      "not ok - found nosuchproc";
+    DEBUG.nosuchuser_found::
+      "not ok - found nosuchuser";
+    DEBUG.root_found::
+      "ok - found root!";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

@@ -23,13 +23,18 @@
 
 ## Download
 ```
-git clone https://github.com/olehermanse/agentsay.git
-cd agentsay
+git clone https://github.com/cfengine/core.git
+cd core/contrib/agentsay
 ```
 
-## Install
+## Python Install
 ```
-make install
+python3 setup.py
+```
+
+## CLI Install
+```
+cp agentsay.py /usr/local/bin/agentsay && chmod ugo+x /usr/local/bin/agentsay && agentsay install success
 ```
 
 ## CLI usage

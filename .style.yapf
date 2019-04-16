@@ -2,3 +2,4 @@
 based_on_style = pep8
 split_before_first_argument = true
 column_limit = 98
+split_all_comma_separated_values = true

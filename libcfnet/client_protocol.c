@@ -210,7 +210,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 {
     char sendbuffer[CF_EXPANDSIZE], in[CF_BUFSIZE], *out, *decrypted_cchall;
     BIGNUM *nonce_challenge, *bn = NULL;
-    unsigned char digest[EVP_MAX_MD_SIZE];
+    unsigned char digest[EVP_MAX_MD_SIZE + 1];
     int encrypted_len, nonce_len = 0, len, session_size;
     bool need_to_implicitly_trust_server;
     char enterprise_field = 'c';

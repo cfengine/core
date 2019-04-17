@@ -51,7 +51,7 @@ int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *dirn
 void GetServerLiteral(EvalContext *ctx, ServerConnectionState *conn, char *sendbuffer, char *recvbuffer, int encrypted);
 int GetServerQuery(ServerConnectionState *conn, char *recvbuffer, int encrypted);
 bool CompareLocalHash(const char *filename, const char digest[EVP_MAX_MD_SIZE + 1],
-                      char sendbuffer[CF_BUFSIZE]);
+                      char sendbuffer[CFD_FALSE_SIZE]);
 Item *ListPersistentClasses(void);
 
 bool PathRemoveTrailingSlash(char *s, size_t s_len);

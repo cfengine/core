@@ -846,8 +846,10 @@ int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilename)
 }
 
 bool CompareLocalHash(const char *filename, const char digest[EVP_MAX_MD_SIZE + 1],
-                      char sendbuffer[CF_BUFSIZE])
+                      char sendbuffer[CFD_FALSE_SIZE])
 {
+    assert(CFD_FALSE_SIZE == (strlen(CFD_FALSE) + 1));
+    assert(strlen(CFD_FALSE) >= strlen(CFD_TRUE));
     char translated_filename[CF_BUFSIZE] = { 0 };
     TranslatePath(translated_filename, filename);
 
@@ -857,14 +859,12 @@ bool CompareLocalHash(const char *filename, const char digest[EVP_MAX_MD_SIZE + 
 
     if (HashesMatch(digest, file_digest, CF_DEFAULT_DIGEST))
     {
-        assert(strlen(CFD_FALSE) < CF_BUFSIZE);
         strcpy(sendbuffer, CFD_FALSE);
         Log(LOG_LEVEL_DEBUG, "Hashes matched ok");
         return true;
     }
     else
     {
-        assert(strlen(CFD_TRUE) < CF_BUFSIZE);
         strcpy(sendbuffer, CFD_TRUE);
         Log(LOG_LEVEL_DEBUG, "Hashes didn't match");
         return false;

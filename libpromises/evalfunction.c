@@ -99,6 +99,7 @@ static bool CheckIDChar(const char ch);
 static bool CheckID(const char *id);
 static const Rlist *GetListReferenceArgument(const EvalContext *ctx, const FnCall *fp, const char *lval_str, DataType *datatype_out);
 static char *CfReadFile(const char *filename, int maxsize);
+static const char *FileType(const char *filename);
 
 /*******************************************************************/
 
@@ -6606,27 +6607,7 @@ static FnCallResult FnCallReadData(ARG_UNUSED EvalContext *ctx,
         requested_mode = RlistScalarValue(args->next);
         if (strcmp("auto", requested_mode) == 0)
         {
-            if (StringEndsWithCase(input_path, ".csv", true))
-            {
-                requested_mode = "CSV";
-            }
-            else if (StringEndsWithCase(input_path, ".yaml", true))
-            {
-                requested_mode = "YAML";
-            }
-            else if (StringEndsWithCase(input_path, ".yml", true))
-            {
-                requested_mode = "YAML";
-            }
-            else if (StringEndsWithCase(input_path, ".env", true))
-            {
-                requested_mode = "ENV";
-            }
-            else // always default to JSON
-            {
-                requested_mode = "JSON";
-            }
-
+            requested_mode =  FileType(input_path);
             Log(LOG_LEVEL_VERBOSE, "%s: automatically selected data type %s from filename %s", fp->name, requested_mode, input_path);
         }
     }
@@ -7964,6 +7945,30 @@ static int ExecModule(EvalContext *ctx, char *command)
     return true;
 }
 
+static const char *FileType(const char *filename)
+{
+    if (StringEndsWithCase(filename, ".csv", true))
+    {
+        return "CSV";
+    }
+    else if (StringEndsWithCase(filename, ".yaml", true))
+    {
+        return "YAML";
+    }
+    else if (StringEndsWithCase(filename, ".yml", true))
+    {
+        return "YAML";
+    }
+    else if (StringEndsWithCase(filename, ".env", true))
+    {
+        return "ENV";
+    }
+    else // always default to JSON
+    {
+        return "JSON";
+    }
+}
+
 void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print, char* context, size_t context_size, StringSet *tags, long *persistence)
 {
     assert(tags);
@@ -8133,6 +8138,45 @@ void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print
             BufferDestroy(tagbuf);
 
             VarRefDestroy(ref);
+        }
+        break;
+
+    case '&':
+        // TODO: the variable name is limited to 256 to accommodate the
+        // context name once it's in the vartable.  Maybe this can be relaxed.
+        // &policy_varname=/path/to/file can be json/env/yaml/csv type, default: json
+        sscanf(line + 1, "%256[^=]=%4095[^\n]", name, content);
+
+        if (CheckID(name))
+        {
+            if (FileCanOpen(content, "r"))
+            {
+                const int size_max = IntFromString("inf");
+                const char *requested_mode = FileType(content);
+
+                Log(LOG_LEVEL_DEBUG, "Module protocol parsing %s file '%s'", requested_mode, content);
+
+                JsonElement *json = JsonReadDataFile("module file protocol", content, requested_mode, size_max);
+                if (json != NULL)
+                {
+                    Buffer *tagbuf = StringSetToBuffer(tags, ',');
+                    VarRef *ref = VarRefParseFromScope(name, context);
+
+                    EvalContextVariablePut(ctx, ref, json, CF_DATA_TYPE_CONTAINER, BufferData(tagbuf));
+                    VarRefDestroy(ref);
+                    BufferDestroy(tagbuf);
+                    JsonDestroy(json);
+                }
+                else
+                {
+                    // reading / parsing failed, error message printed by JsonReadDataFile,
+                    // variable will not be created
+                }
+            }
+            else
+            {
+                Log(LOG_LEVEL_ERR, "could not load module file '%s'", content);
+            }
         }
         break;
 

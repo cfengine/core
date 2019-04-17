@@ -54,16 +54,20 @@ static bool LastRecvTimedOut(void)
  * @param toget Number of bytes to read; a '\0' shall be written after
  *        the data; buffer must have space for that.
  *
+ * @note Writes up to buffer[toget] (toget + 1 bytes total)
  * @return number of bytes actually received, must be equal to #toget
  *         -1  in case of timeout or error - socket is unusable
  *         0   connection was closed (not an error, that's how clients
  *             normally terminate)
  *         <toget  NEVER
  */
-int RecvSocketStream(int sd, char buffer[CF_BUFSIZE], int toget)
+int RecvSocketStream(int sd, char *buffer, int toget)
 {
     int already, got;
 
+    // This function used to take char buffer[CF_BUFSIZE]
+    // Since it only writes up to (toget + 1) bytes I changed the function
+    // signature
     if (toget > CF_BUFSIZE - 1 || toget <= 0)
     {
         Log(LOG_LEVEL_ERR, "Bad software request to receive %d bytes", toget);

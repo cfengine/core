@@ -5,7 +5,7 @@ __copyright__ = "Northern.tech"
 __authors__ = ["Ole Herman Schumacher Elgesem"]
 
 # Install (as root):
-# curl -L https://raw.githubusercontent.com/olehermanse/agentsay/master/agentsay.py -o /usr/local/bin/agentsay && chmod ugo+x /usr/local/bin/agentsay && agentsay install success
+# curl -L https://raw.githubusercontent.com/cfengine/core/master/contrib/agentsay/agentsay.py -o /usr/local/bin/agentsay && chmod ugo+x /usr/local/bin/agentsay && agentsay install success
 
 import sys
 

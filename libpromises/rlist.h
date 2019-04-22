@@ -28,6 +28,7 @@
 #include <cf3.defs.h>
 #include <writer.h>
 #include <json.h>
+#include <fncall.h>
 
 /* NOTE: an empty Rlist is simply NULL. */
 struct Rlist_

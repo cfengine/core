@@ -212,7 +212,14 @@ If you are a Guru, try to restrain yourself, only do magic when absolutely neces
       }
       ```
       It's more appropriate to put the asserts close to the code which dereferences the pointers.
-* Constants
+* Variable initialization:
+    * Don't initialize variables unless they need an initial value.
+      Unnecessary initialization silences important compiler warnings.
+    * Put the declaration and initialization in the same statement (line).
+      ```C
+      time_t now = time(NULL);
+      ```
+* Constants:
     * Constify what can be `const`.
     * A pointer to an immutable string:
     ```c
@@ -261,8 +268,6 @@ If you are a Guru, try to restrain yourself, only do magic when absolutely neces
   Never hard-code the size (like `CF_BUFSIZE`).
 * Avoid using type casts, unless absolutely necessary.
     * Usually a compiler warning is better satisfied with correct code rather than using a type cast.
-* Don't initialize variables unless they need an initial value.
-  Unnecessary initialization silences important compiler warnings.
 
 #### String formatting
 

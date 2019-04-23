@@ -222,17 +222,17 @@ If you are a Guru, try to restrain yourself, only do magic when absolutely neces
 * Constants:
     * Constify what can be `const`.
     * A pointer to an immutable string:
-    ```c
-    const char *string;
-    ```
+      ```c
+      const char *string;
+      ```
     * An immutable pointer to a mutable string:
-    ```c
-    char *const string;
-    ```
+      ```c
+      char *const string;
+      ```
     * An immutable pointer to an immutable string:
-    ```c
-    const char *const string;
-    ```
+      ```c
+      const char *const string;
+      ```
     * The `const` keyword applies to the left, unless it is the first, then it applies to the right.
 * Types:
     * Assign and compare using the correct "type" literal:

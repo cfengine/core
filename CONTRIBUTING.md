@@ -140,6 +140,24 @@ If you are a Guru, try to restrain yourself, only do magic when absolutely neces
       ```c
       for (int i = 0; i < n; ++i)
       ```
+* Conditionals:
+    * Don't include assignments inside expressions.
+      Put them on the line before.
+        * *Unless they avoid great repetition*.
+    * **Always** use curly braces:
+      ```c
+      if (ready)
+      {
+          printf("Ready!\n");
+      }
+      ```
+    * A conditional with an empty body should have curly braces, and a comment:
+      ```c
+      while (ready)
+      {
+          // Log message already printed above
+      }
+      ```
 * Variable names:
     * Describe what the variable is.
     * Are English words with underscores: `string_index`
@@ -231,9 +249,6 @@ If you are a Guru, try to restrain yourself, only do magic when absolutely neces
     if (age >= 33)
     ```
     * **NEVER** compare to `true`: ~~`if (data == true)`~~ (`true` is `1`)
-    * Don't include assignments inside if/while expressions.
-      Put it on the line before.
-        * *Unless they avoid great repetition*.
 * Error handling:
     * Functions which can fail should return error code (int) or success/failure (bool).
         * Compiler can enforce checking of return value, output of function can be in an output parameter (pointer).

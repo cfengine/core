@@ -42,7 +42,8 @@
 
 #include <cf-key-functions.h>
 
-int SHOWHOSTS = false;                                          /* GLOBAL_A */
+bool SHOWHOSTS = false;                                         /* GLOBAL_A */
+bool NO_TRUNCATE = false;                                       /* GLOBAL_A */
 bool FORCEREMOVAL = false;                                      /* GLOBAL_A */
 bool REMOVEKEYS = false;                                        /* GLOBAL_A */
 bool LICENSE_INSTALL = false;                                   /* GLOBAL_A */
@@ -78,6 +79,7 @@ static const struct option OPTIONS[] =
     {"output-file", required_argument, 0, 'f'},
     {"key-type", required_argument, 0, 'T'},
     {"show-hosts", no_argument, 0, 's'},
+    {"no-truncate", no_argument, 0, 'N'},
     {"remove-keys", required_argument, 0, 'r'},
     {"force-removal", no_argument, 0, 'x'},
     {"install-license", required_argument, 0, 'l'},
@@ -100,6 +102,7 @@ static const char *const HINTS[] =
     "Specify an alternative output file than the default.",
     "Specify a RSA key size in bits, the default value is 2048.",
     "Show lastseen hostnames and IP addresses",
+    "Don't truncate -s / --show-hosts output",
     "Remove keys for specified hostname/IP/MD5/SHA (cf-key -r SHA=12345, cf-key -r MD5=12345, cf-key -r host001, cf-key -r 203.0.113.1)",
     "Force removal of keys (USE AT YOUR OWN RISK)",
     "Install license file on Enterprise server (CFEngine Enterprise Only)",
@@ -146,7 +149,7 @@ int main(int argc, char *argv[])
     if (SHOWHOSTS)
     {
         SetupSignalsForCfKey(handleShowKeysSignal);
-        ShowLastSeenHosts();
+        ShowLastSeenHosts(!NO_TRUNCATE);
         return 0;
     }
 
@@ -240,13 +243,20 @@ int main(int argc, char *argv[])
 /* Level                                                                     */
 /*****************************************************************************/
 
+static void PrintHelp()
+{
+    Writer *w = FileWriter(stdout);
+    WriterWriteHelp(w, "cf-key", OPTIONS, HINTS, false, NULL);
+    FileWriterDetach(w);
+}
+
 static GenericAgentConfig *CheckOpts(int argc, char **argv)
 {
     extern char *optarg;
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_KEYGEN, GetTTYInteractive());
 
-    while ((c = getopt_long(argc, argv, "dvIf:g:T:VMp:sr:xt:hl:C::n",
+    while ((c = getopt_long(argc, argv, "dvIf:g:T:VMp:sNr:xt:hl:C::n",
                             OPTIONS, NULL))
            != -1)
     {
@@ -292,6 +302,10 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             SHOWHOSTS = true;
             break;
 
+        case 'N':
+            NO_TRUNCATE = true;
+            break;
+
         case 'x':
             FORCEREMOVAL = true;
             break;
@@ -311,11 +325,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'h':
-            {
-                Writer *w = FileWriter(stdout);
-                WriterWriteHelp(w, "cf-key", OPTIONS, HINTS, false, NULL);
-                FileWriterDetach(w);
-            }
+            PrintHelp();
             DoCleanupAndExit(EXIT_SUCCESS);
 
         case 'M':
@@ -346,14 +356,17 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         default:
-            {
-                Writer *w = FileWriter(stdout);
-                WriterWriteHelp(w, "cf-key", OPTIONS, HINTS, false, NULL);
-                FileWriterDetach(w);
-            }
+            PrintHelp();
             DoCleanupAndExit(EXIT_FAILURE);
 
         }
+    }
+
+    if (NO_TRUNCATE && !SHOWHOSTS)
+    {
+        PrintHelp();
+        Log(LOG_LEVEL_ERR, "--no-truncate / -N option is only for --show-hosts / -s");
+        DoCleanupAndExit(EXIT_FAILURE);
     }
 
     return config;

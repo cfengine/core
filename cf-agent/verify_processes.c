@@ -132,6 +132,14 @@ static PromiseResult VerifyProcesses(EvalContext *ctx, const Attributes *a, cons
     return result;
 }
 
+static void ProcessCountDefineClass(EvalContext *const ctx, const Rlist *const rp)
+{
+    ClassRef ref = ClassRefParse(RlistScalarValue(rp));
+    EvalContextClassPutSoft(
+        ctx, RlistScalarValue(rp), CONTEXT_SCOPE_NAMESPACE, "source=promise");
+    ClassRefDestroy(ref);
+}
+
 static PromiseResult VerifyProcessOp(EvalContext *ctx, const Attributes *a, const Promise *pp)
 {
     bool do_signals = true;
@@ -153,9 +161,7 @@ static PromiseResult VerifyProcessOp(EvalContext *ctx, const Attributes *a, cons
             result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
             for (const Rlist *rp = a->process_count.out_of_range_define; rp != NULL; rp = rp->next)
             {
-                ClassRef ref = ClassRefParse(RlistScalarValue(rp));
-                EvalContextClassPutSoft(ctx, RlistScalarValue(rp), CONTEXT_SCOPE_NAMESPACE, "source=promise");
-                ClassRefDestroy(ref);
+                ProcessCountDefineClass(ctx, rp);
             }
             out_of_range = true;
         }
@@ -163,9 +169,7 @@ static PromiseResult VerifyProcessOp(EvalContext *ctx, const Attributes *a, cons
         {
             for (const Rlist *rp = a->process_count.in_range_define; rp != NULL; rp = rp->next)
             {
-                ClassRef ref = ClassRefParse(RlistScalarValue(rp));
-                EvalContextClassPutSoft(ctx, RlistScalarValue(rp), CONTEXT_SCOPE_NAMESPACE, "source=promise");
-                ClassRefDestroy(ref);
+                ProcessCountDefineClass(ctx, rp);
             }
             cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Process promise for '%s' is kept", pp->promiser);
             out_of_range = false;

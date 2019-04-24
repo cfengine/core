@@ -78,6 +78,8 @@ static unsigned int tls_disable_flags[TLS_LAST + 1] = {0, SSL_OP_NO_TLSv1_1, SSL
 
 int CONNECTIONINFO_SSL_IDX = -1;
 
+#define MAX_READ_RETRIES 5
+#define MAX_WRITE_RETRIES 5
 
 const char *TLSErrorString(intmax_t errcode)
 {
@@ -674,21 +676,32 @@ int TLSSend(SSL *ssl, const char *buffer, int length)
 
     EnforceBwLimit(length);
 
-    int sent = SSL_write(ssl, buffer, length);
-    if (sent == 0)
+    int sent = -1;
+    bool should_retry = true;
+    int remaining_tries = MAX_WRITE_RETRIES;
+    while ((sent < 0) && should_retry)
     {
-        if ((SSL_get_shutdown(ssl) & SSL_RECEIVED_SHUTDOWN) != 0)
+        sent = SSL_write(ssl, buffer, length);
+        if (sent <= 0)
         {
-            Log(LOG_LEVEL_ERR,
-                "Remote peer terminated TLS session (SSL_write)");
-            return 0;
+            if ((SSL_get_shutdown(ssl) & SSL_RECEIVED_SHUTDOWN) != 0)
+            {
+                Log(LOG_LEVEL_ERR,
+                    "Remote peer terminated TLS session (SSL_write)");
+                return 0;
+            }
+
+            /* else */
+            int code = TLSLogError(ssl, LOG_LEVEL_VERBOSE, "SSL write failed", sent);
+            /* If renegotiation happens, SSL_ERROR_WANT_READ or
+             * SSL_ERROR_WANT_WRITE can be reported. See man:SSL_write(3).*/
+            should_retry = ((remaining_tries > 0) &&
+                            ((code == SSL_ERROR_WANT_READ) || (code == SSL_ERROR_WANT_WRITE)));
         }
-        else
+        if ((sent < 0) && should_retry)
         {
-            TLSLogError(ssl, LOG_LEVEL_ERR,
-                        "Connection unexpectedly closed (SSL_write)",
-                        sent);
-            return 0;
+            sleep(1);
+            remaining_tries--;
         }
     }
     if (sent < 0)
@@ -724,22 +737,42 @@ int TLSRecv(SSL *ssl, char *buffer, int toget)
     assert(toget < CF_BUFSIZE);
     assert_SSLIsBlocking(ssl);
 
-    int received = SSL_read(ssl, buffer, toget);
+    int received = -1;
+    bool should_retry = true;
+    int remaining_tries = MAX_READ_RETRIES;
+    while ((received < 0) && should_retry)
+    {
+        received = SSL_read(ssl, buffer, toget);
+        if (received < 0)
+        {
+            int code = TLSLogError(ssl, LOG_LEVEL_VERBOSE, "SSL read failed", received);
+            /* SSL_read() might get an internal recv() timeout, since we've set
+             * SO_RCVTIMEO. In that case SSL_read() returns SSL_ERROR_WANT_READ.
+             * Also, if renegotiation happens, SSL_ERROR_WANT_READ or
+             * SSL_ERROR_WANT_WRITE can be reported. See man:SSL_read(3).*/
+            should_retry = ((remaining_tries > 0) &&
+                            ((code == SSL_ERROR_WANT_READ) || (code == SSL_ERROR_WANT_WRITE)));
+
+        }
+        if ((received < 0) && should_retry)
+        {
+            sleep(1);
+            remaining_tries--;
+        }
+    }
+
     if (received < 0)
     {
-        int errcode = TLSLogError(ssl, LOG_LEVEL_ERR, "SSL_read", received);
-
-        /* SSL_read() might get an internal recv() timeout, since we've set
-         * SO_RCVTIMEO. In that case, the internal socket returns EAGAIN or
-         * EWOULDBLOCK and SSL_read() returns SSL_ERROR_WANT_READ. */
-        if (errcode == SSL_ERROR_WANT_READ)               /* recv() timeout */
+        int errcode = TLSLogError(ssl, LOG_LEVEL_ERR, "SSL read after retries", received);
+        /* if all the retries didn't help, let's at least make sure proper
+         * cleanup is done */
+        if ((errcode == SSL_ERROR_WANT_READ) || (errcode == SSL_ERROR_WANT_WRITE))
         {
             /* Make sure that the peer will send us no more data. */
             SSL_shutdown(ssl);
             shutdown(SSL_get_fd(ssl), SHUT_RDWR);
 
             /* Empty possible SSL_read() buffers. */
-
             int ret = 1;
             int bytes_still_buffered = SSL_pending(ssl);
             while (bytes_still_buffered > 0 && ret > 0)

@@ -181,7 +181,13 @@ static bool SelectProcess(const char *procentry,
 
     for (rp = a.owner; rp != NULL; rp = rp->next)
     {
-        if (SelectProcRegexMatch("USER", "UID", RlistScalarValue(rp), true, names, column))
+        if (rp->val.type == RVAL_TYPE_FNCALL)
+        {
+            Log(LOG_LEVEL_VERBOSE,
+                "Function call '%s' in process_select body was not resolved, skipping",
+                RlistFnCallValue(rp)->name);
+        }
+        else if (SelectProcRegexMatch("USER", "UID", RlistScalarValue(rp), true, names, column))
         {
             StringSetAdd(process_select_attributes, xstrdup("process_owner"));
             break;

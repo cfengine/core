@@ -492,6 +492,30 @@ static bool KillLockHolder(const char *lock)
     }
 }
 
+static void RvalDigestUpdate(EVP_MD_CTX *context, Rlist *rp)
+{
+    assert(context != NULL);
+    assert(rp != NULL);
+
+    switch (rp->val.type)
+    {
+    case RVAL_TYPE_SCALAR:
+        EVP_DigestUpdate(context, RlistScalarValue(rp),
+                         strlen(RlistScalarValue(rp)));
+        break;
+
+    case RVAL_TYPE_FNCALL:
+        // TODO: This should be recursive and not just hash the function name
+        EVP_DigestUpdate(context, RlistFnCallValue(rp)->name,
+                         strlen(RlistFnCallValue(rp)->name));
+        break;
+
+    default:
+        ProgrammingError("Unhandled case in switch");
+        break;
+    }
+}
+
 void PromiseRuntimeHash(const Promise *pp, const char *salt,
                         unsigned char digest[EVP_MAX_MD_SIZE + 1],
                         HashMethod type)
@@ -593,8 +617,7 @@ void PromiseRuntimeHash(const Promise *pp, const char *salt,
             case RVAL_TYPE_LIST:
                 for (rp = cp->rval.item; rp != NULL; rp = rp->next)
                 {
-                    EVP_DigestUpdate(context, RlistScalarValue(rp),
-                                     strlen(RlistScalarValue(rp)));
+                    RvalDigestUpdate(context, rp);
                 }
                 break;
 
@@ -608,22 +631,7 @@ void PromiseRuntimeHash(const Promise *pp, const char *salt,
 
                 for (rp = fp->args; rp != NULL; rp = rp->next)
                 {
-                    switch (rp->val.type)
-                    {
-                    case RVAL_TYPE_SCALAR:
-                        EVP_DigestUpdate(context, RlistScalarValue(rp),
-                                         strlen(RlistScalarValue(rp)));
-                        break;
-
-                    case RVAL_TYPE_FNCALL:
-                        EVP_DigestUpdate(context, RlistFnCallValue(rp)->name,
-                                         strlen(RlistFnCallValue(rp)->name));
-                        break;
-
-                    default:
-                        ProgrammingError("Unhandled case in switch");
-                        break;
-                    }
+                    RvalDigestUpdate(context, rp);
                 }
                 break;
 

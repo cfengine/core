@@ -717,7 +717,11 @@ static void MailResult(const ExecConfig *config, const char *file)
     free(existing_policy_server);
 
 #if defined __linux__ || defined __NetBSD__ || defined __FreeBSD__ || defined __OpenBSD__
-    strftime(vbuff, CF_BUFSIZE, "Date: %a, %d %b %Y %H:%M:%S %z\r\n", localtime(&now));
+    {
+        struct tm tm_value;
+        struct tm *const tm_pointer = localtime_r(&now, &tm_value);
+        strftime(vbuff, CF_BUFSIZE, "Date: %a, %d %b %Y %H:%M:%S %z\r\n", tm_pointer);
+    }
     send(sd, vbuff, strlen(vbuff), 0);
 #endif
 

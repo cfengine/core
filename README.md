@@ -64,3 +64,10 @@ policy language.
 
 The server part of CFEngine 3 supports the network protocol of CFEngine 2, so you may
 upgrade your installation gradually.
+
+# Authors
+
+CFEngine was originally created by Mark Burgess with many contributions from
+around the world. Thanks [everyone](https://github.com/cfengine/core/blob/master/AUTHORS)!
+
+[CFEngine](https://cfengine.com) is sponsored by [Northern.tech AS](https://northern.tech)

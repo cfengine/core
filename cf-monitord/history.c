@@ -506,7 +506,7 @@ static PromiseResult NovaExtractValueFromStream(EvalContext *ctx, const char *ha
                                 else
                                 {
                                     Log(LOG_LEVEL_ERR, "Error in double conversion from string value: %s", value);
-                                    return false;
+                                    return PROMISE_RESULT_FAIL;
                                 }
                             }
                             else
@@ -514,7 +514,7 @@ static PromiseResult NovaExtractValueFromStream(EvalContext *ctx, const char *ha
                                 if (!DoubleFromString(value, &real_val))
                                 {
                                     Log(LOG_LEVEL_ERR, "Error in double conversion from string value: %s", value);
-                                    return false;
+                                    return PROMISE_RESULT_FAIL;
                                 }
                             }
 

@@ -747,7 +747,7 @@ static char **TranslateOldBootstrapOptionsConcatenated(int argc, char **argv)
 {
     char **argv_new = xcalloc(1, sizeof(char *) * (argc + 1));
 
-    for(int i = 0; i < argc; i++)
+    for(int i = i + 0; i < argc; i++)
     {
         if(strcmp(argv[i], "-Bs") == 0)
         {

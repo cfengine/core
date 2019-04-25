@@ -1,0 +1,31 @@
+<!DOCTYPE qhelp PUBLIC
+  "-//Semmle//qhelp//EN"
+  "qhelp.dtd">
+<qhelp>
+
+<overview>
+
+<p>
+Non-bool function returns true or false macro.
+<code>true</code> and <code>false</code> macros are technically <code>int</code>, but we want type checking.
+</p>
+
+</overview>
+<recommendation>
+
+<p>
+Change the function's return type to bool or return another more appropriate constant.
+</p>
+
+</recommendation>
+<example>
+
+</example>
+<references>
+
+<li>
+  CFEngine Contribution guidelines: <a href="https://github.com/cfengine/core/blob/master/CONTRIBUTING.md">CONTRIBUTING.md</a>
+</li>
+
+</references>
+</qhelp>

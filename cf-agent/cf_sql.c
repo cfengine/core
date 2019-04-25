@@ -458,7 +458,9 @@ char **CfFetchRow(CfdbConn *cfdb)
 
 char *CfFetchColumn(CfdbConn *cfdb, int col)
 {
-    if ((cfdb->rowdata) && (cfdb->rowdata[col]))
+    assert(cfdb != NULL);
+    assert(col >= 0 && col < cfdb->maxcolumns);
+    if (cfdb->rowdata)
     {
         return cfdb->rowdata[col];
     }

@@ -117,15 +117,15 @@
 /* Auditing key */
 
 typedef enum
-{
-    PROMISE_RESULT_SKIPPED = 's',
-    PROMISE_RESULT_NOOP = 'n',
-    PROMISE_RESULT_CHANGE = 'c',
-    PROMISE_RESULT_WARN = 'w', // something wrong but nothing done
-    PROMISE_RESULT_FAIL = 'f',
-    PROMISE_RESULT_DENIED = 'd',
-    PROMISE_RESULT_TIMEOUT = 't',
-    PROMISE_RESULT_INTERRUPTED = 'i'
+{                                     // Logging of outcomes in cf-agent.c:
+    PROMISE_RESULT_SKIPPED = 's',     // <Also skipped in logging>
+    PROMISE_RESULT_NOOP = 'n',        // Kept
+    PROMISE_RESULT_CHANGE = 'c',      // Repaired
+    PROMISE_RESULT_WARN = 'w',        // Not kept
+    PROMISE_RESULT_FAIL = 'f',        // Not kept
+    PROMISE_RESULT_DENIED = 'd',      // Not kept
+    PROMISE_RESULT_TIMEOUT = 't',     // Timed out
+    PROMISE_RESULT_INTERRUPTED = 'i'  // Not kept
 } PromiseResult;
 
 /*****************************************************************************/

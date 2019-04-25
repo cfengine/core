@@ -118,7 +118,7 @@
 
 typedef enum
 {
-    PROMISE_RESULT_SKIPPED,
+    PROMISE_RESULT_SKIPPED = 's',
     PROMISE_RESULT_NOOP = 'n',
     PROMISE_RESULT_CHANGE = 'c',
     PROMISE_RESULT_WARN = 'w', // something wrong but nothing done

@@ -276,9 +276,9 @@ static bool FileIsSparse(const char *filename)
 
     Log(LOG_LEVEL_DEBUG,
         " st_size=%ju ST_NBYTES=%ju ST_NBLOCKS=%ju ST_BLKSIZE=%ju DEV_BSIZE=%ju",
-        (uint64_t) statbuf.st_size, (uint64_t) ST_NBYTES(statbuf),
-        (uint64_t) ST_NBLOCKS(statbuf), (uint64_t) ST_BLKSIZE(statbuf),
-        (uint64_t) DEV_BSIZE);
+        (uintmax_t) statbuf.st_size, (uintmax_t) ST_NBYTES(statbuf),
+        (uintmax_t) ST_NBLOCKS(statbuf), (uintmax_t) ST_BLKSIZE(statbuf),
+        (uintmax_t) DEV_BSIZE);
 
     if (statbuf.st_size <= ST_NBYTES(statbuf))
     {

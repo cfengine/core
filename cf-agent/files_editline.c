@@ -394,7 +394,7 @@ static PromiseResult VerifyLineDeletions(EvalContext *ctx, const Promise *pp, Ed
             "The promised end pattern '%s' was not found when selecting region to delete in '%s'",
              a.region.select_end, edcontext->filename);
         result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
-        return false;
+        return result;
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "deleteline-%s-%s", pp->promiser, edcontext->filename);
@@ -691,7 +691,7 @@ static PromiseResult VerifyLineInsertions(EvalContext *ctx, const Promise *pp, E
             "The promised end pattern '%s' was not found when selecting region to insert in '%s'",
              a.region.select_end, edcontext->filename);
         result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
-        return false;
+        return result;
     }
 
     if (allow_multi_lines)

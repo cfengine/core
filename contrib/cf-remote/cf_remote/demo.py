@@ -37,7 +37,6 @@ def def_json(call_collect=False):
             "cfengine_internal_purge_policies": ["any"]
         },
         "vars": {
-            "control_hub_exclude_hosts": ["0.0.0.0/0"],
             "acl": ["0.0.0.0/0",
                     "::/0"],
             "default_data_select_host_monitoring_include": [".*"],
@@ -50,6 +49,7 @@ def def_json(call_collect=False):
         d["classes"]["client_initiated_reporting_enabled"] = ["any"]
         d["vars"]["control_server_call_collect_interval"] = "1"
         d["vars"]["mpf_access_rules_collect_calls_admit_ips"] = ["0.0.0.0/0"]
+        d["vars"]["control_hub_exclude_hosts"] = ["0.0.0.0/0"]
 
     return d
 

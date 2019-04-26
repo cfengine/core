@@ -1,0 +1,36 @@
+<!DOCTYPE qhelp PUBLIC
+  "-//Semmle//qhelp//EN"
+  "qhelp.dtd">
+<qhelp>
+
+<overview>
+
+<p>
+Non-bool function returns boolean variable.
+This can be the result of copy-pasted code, which should have been modified.
+In old-school C, there was no boolean type and it was normal to return boolean values as <code>int</code>.
+We prefer to use <code>bool</code> return type for functions which have 2 return values (<code>true</code> or <code>false</code>).
+Note that <code>true</code> and <code>false</code> are macros with type <code>int</code>.
+We have a <a href="https://lgtm.com/rules/1508474826013/">separate query</a> to detect those cases.
+</p>
+
+</overview>
+<recommendation>
+
+<p>
+Change the functions return type to <code>bool</code> or change the type of the returned value.
+(Adding a typecast is rarely the correct solution).
+</p>
+
+</recommendation>
+<example>
+
+</example>
+<references>
+
+<li>
+CFEngine Contribution guidelines: <a href="https://github.com/cfengine/core/blob/master/CONTRIBUTING.md">CONTRIBUTING.md</a>
+</li>
+
+</references>
+</qhelp>

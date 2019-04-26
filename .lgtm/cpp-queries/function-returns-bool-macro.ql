@@ -22,4 +22,4 @@ where r.getEnclosingFunction() = f               // Return statement is inside f
        or m.getMacroName() = "false")            // or "false"
 select r, "Function " + f.getName() +            // Select the return statement as the alert, and print a nice message
           " has return type " + f.getType().getName() +
-          " and returns bool (" + r.getExpr().toString()+ ")"
+          " and returns bool (" + m.getMacroName() + ")"

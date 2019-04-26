@@ -23,8 +23,8 @@ def disable_password_dialog(host):
     api = "https://{}/api/user/admin".format(host)
     d = json.dumps({"password": "password"})
     creds = "admin:admin"
-    c = "curl -X POST  -k {} -u {}  -H 'Content-Type: application/json' -d '{}'".format(
-        api, creds, d)
+    header = "Content-Type: application/json"
+    c = "curl -X POST  -k {} -u {}  -H '{}' -d '{}'".format(api, creds, header, d)
     log.debug(c)
     os.system(c)
 
@@ -38,7 +38,8 @@ def def_json(call_collect=False):
         },
         "vars": {
             "control_hub_exclude_hosts": ["0.0.0.0/0"],
-            "acl": ["0.0.0.0/0", "::/0"],
+            "acl": ["0.0.0.0/0",
+                    "::/0"],
             "default_data_select_host_monitoring_include": [".*"],
             "default_data_select_policy_hub_monitoring_include": [".*"],
             "control_executor_splaytime": "1"

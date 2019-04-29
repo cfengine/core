@@ -889,7 +889,7 @@ static PromiseResult DownVirt(EvalContext *ctx, virConnectPtr vc, const Attribut
                      pp->promiser);
                 result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
                 virDomainFree(dom);
-                return false;
+                return result;
             }
 
             cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Virtual domain '%s' is in a crashed state, terminating",

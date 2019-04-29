@@ -1,0 +1,23 @@
+bundle agent main
+{
+  meta:
+      "description" -> { "CFE-2067" }
+        string => "Test that process_count body can have (failing) function calls";
+
+  processes:
+      # Test that this doesn't cause a crash / abort:
+      "cf-execd"
+        process_count => process_count_one("$(nosuchvar)");
+         # Error will be printed since variable won't expand, expected behavior
+
+  reports:
+      # Nothing to check, running without crashing is good enough
+      "$(this.promise_filename) Pass";
+}
+
+body process_count process_count_one(suffix)
+{
+  match_range => irange("1", "1");
+  in_range_define => { canonify("one_$(suffix)") };
+  out_of_range_define => { canonify("not_one_$(suffix)") };
+}

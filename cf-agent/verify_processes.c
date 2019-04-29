@@ -132,6 +132,34 @@ static PromiseResult VerifyProcesses(EvalContext *ctx, const Attributes *a, cons
     return result;
 }
 
+static void ProcessCountMaybeDefineClass(
+    EvalContext *const ctx,
+    const Rlist *const rp,
+    const Promise *const pp,
+    const char *const attribute_name)
+{
+    assert(ctx != NULL);
+    assert(rp != NULL);
+    assert(pp != NULL);
+    assert(attribute_name != NULL && strlen(attribute_name) > 0);
+
+    if (rp->val.type == RVAL_TYPE_FNCALL)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Body (process_count), for processes promise %s, has a failing function call (%s) in the %s attribute - cannot define the class",
+            pp->promiser,
+            RlistFnCallValue(rp)->name,
+            attribute_name);
+        return;
+    }
+
+    assert(rp->val.type == RVAL_TYPE_SCALAR);
+    ClassRef ref = ClassRefParse(RlistScalarValue(rp));
+    EvalContextClassPutSoft(
+        ctx, RlistScalarValue(rp), CONTEXT_SCOPE_NAMESPACE, "source=promise");
+    ClassRefDestroy(ref);
+}
+
 static PromiseResult VerifyProcessOp(EvalContext *ctx, const Attributes *a, const Promise *pp)
 {
     bool do_signals = true;
@@ -153,9 +181,7 @@ static PromiseResult VerifyProcessOp(EvalContext *ctx, const Attributes *a, cons
             result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
             for (const Rlist *rp = a->process_count.out_of_range_define; rp != NULL; rp = rp->next)
             {
-                ClassRef ref = ClassRefParse(RlistScalarValue(rp));
-                EvalContextClassPutSoft(ctx, RlistScalarValue(rp), CONTEXT_SCOPE_NAMESPACE, "source=promise");
-                ClassRefDestroy(ref);
+                ProcessCountMaybeDefineClass(ctx, rp, pp, "out_of_range_define");
             }
             out_of_range = true;
         }
@@ -163,9 +189,7 @@ static PromiseResult VerifyProcessOp(EvalContext *ctx, const Attributes *a, cons
         {
             for (const Rlist *rp = a->process_count.in_range_define; rp != NULL; rp = rp->next)
             {
-                ClassRef ref = ClassRefParse(RlistScalarValue(rp));
-                EvalContextClassPutSoft(ctx, RlistScalarValue(rp), CONTEXT_SCOPE_NAMESPACE, "source=promise");
-                ClassRefDestroy(ref);
+                ProcessCountMaybeDefineClass(ctx, rp, pp, "in_range_define");
             }
             cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Process promise for '%s' is kept", pp->promiser);
             out_of_range = false;

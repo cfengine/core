@@ -3227,6 +3227,7 @@ static void LoadSetxid(void)
 
     char filename[CF_BUFSIZE];
     snprintf(filename, CF_BUFSIZE, "%s/cfagent.%s.log", GetLogDir(), VSYSNAME.nodename);
+    ToLowerStrInplace(filename);
     MapName(filename);
 
     VSETXIDLIST = RawLoadItemList(filename);
@@ -3243,6 +3244,7 @@ static void SaveSetxid(bool modified)
     {
         char filename[CF_BUFSIZE];
         snprintf(filename, CF_BUFSIZE, "%s/cfagent.%s.log", GetLogDir(), VSYSNAME.nodename);
+        ToLowerStrInplace(filename);
         MapName(filename);
 
         PurgeItemList(&VSETXIDLIST, "SETUID/SETGID");

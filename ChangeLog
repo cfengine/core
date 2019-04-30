@@ -1,3 +1,26 @@
+3.10.6:
+	- Allow forward slash character in module protocol commands (CFE-2478)
+	- CF-2951: ps command can handle longer usernames
+	- CSV parser now supports CRLF inside double quotes (ENT-4504)
+	- Display an error when a function defining a variables still fails at pass3
+	  (CFE-2983)
+	- Document cf-execd and cf-serverd respond to SIGHUP in manpage
+	  (CFE-2853)
+	- Fix a segfault in 'cf-promises -p json-full' (CFE-3019)
+	- Fix cf-key help output to indicate ability to delete by key digest
+	  (CFE-2997)
+	- Fix log message about setting collect_window (ENT-4238)
+	- Fix parsing YAML values starting with numbers (CFE-2033)
+	- Fix sys.flavor on AIX (ENT-3970)
+	- Fixed an issue while parsing ps output on AIX (ENT-4295)
+	- Fixed memory leak in filesexist function (ENT-4313)
+	- Fixed segfault in policy parser (ENT-4022)
+	- Message about invalid class characters from module protocol moved to VERBOSE
+	  (CFE-2887, CFE-3008)
+	- Set policy->release_id to "failsafe"/"bootstrap" when running failsafe.cf
+	  (CFE-3031)
+	- copylink_pattern honor '/../' in copy source (CFE-2960)
+
 3.10.5:
 	- Bundle name is now part of the log message when aborting a bundle
 	  (CFE-2793)

@@ -134,6 +134,7 @@ check_PROGRAMS = \
 	parsemode_test \
 	parser_test \
 	passopenfile_test \
+	path_test \
 	policy_test \
 	sort_test \
 	file_name_test \

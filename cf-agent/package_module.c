@@ -24,9 +24,11 @@
 
 #include <package_module.h>
 #include <pipes.h>
+#include <exec_tools.h>
 #include <signals.h>
 #include <buffer.h>
 #include <string_lib.h>
+#include <path.h>
 #include <actuator.h>
 #include <file_lib.h>
 #include <known_dirs.h>
@@ -41,15 +43,22 @@
 static bool UpdateSinglePackageModuleCache(EvalContext *ctx,
                                     const PackageModuleWrapper *module_wrapper,
                                     UpdateType type, bool force_update);
-static char *GetPackageModuleRealPath(const char *package_manager_name);
+static void GetPackageModuleExecInfo(const PackageModuleBody *package_module, char **exec_path,
+                                     char **script_path, char **script_path_quoted, char **script_exec_opts);
 static int NegotiateSupportedAPIVersion(PackageModuleWrapper *wrapper);
 
 
 void DeletePackageModuleWrapper(PackageModuleWrapper *wrapper)
 {
-    free(wrapper->path);
-    free(wrapper->name);
-    free(wrapper);
+    if (wrapper != NULL)
+    {
+        free(wrapper->path);
+        free(wrapper->script_path);
+        free(wrapper->script_path_quoted);
+        free(wrapper->script_exec_opts);
+        free(wrapper->name);
+        free(wrapper);
+    }
 }
 
 PackageModuleWrapper *NewPackageModuleWrapper(PackageModuleBody *package_module)
@@ -58,17 +67,53 @@ PackageModuleWrapper *NewPackageModuleWrapper(PackageModuleBody *package_module)
 
     PackageModuleWrapper *wrapper = xmalloc(sizeof(PackageModuleWrapper));
 
-    wrapper->path = GetPackageModuleRealPath(package_module->name);
+    GetPackageModuleExecInfo(package_module, &(wrapper->path),
+                             &(wrapper->script_path), &(wrapper->script_path_quoted),
+                             &(wrapper->script_exec_opts));
     wrapper->name = SafeStringDuplicate(package_module->name);
     wrapper->package_module = package_module;
 
-    /* Check if file exists */
-    if (!wrapper->path || (access(wrapper->path, X_OK) != 0))
+    if (wrapper->path == NULL)
     {
+        Log(LOG_LEVEL_ERR, "No executable for the package module '%s'", package_module->name);
+        DeletePackageModuleWrapper(wrapper);
+        return NULL;
+    }
+
+    /* Check if the given files exist and have the required permissions. */
+    if (wrapper->script_path != NULL)
+    {
+        /* we were given a path to a script to execute with the given
+         * interpreter */
+        const char *interpreter_path = wrapper->path;
+        const char *script_path = wrapper->script_path;
+
+        if (access(interpreter_path, X_OK) != 0)
+        {
+            Log(LOG_LEVEL_ERR,
+                "can not find package wrapper interpreter in provided location '%s' "
+                "or access to file is restricted: %s",
+                wrapper->path, strerror(errno));
+            DeletePackageModuleWrapper(wrapper);
+            return NULL;
+        }
+        if (access(script_path, R_OK) != 0)
+        {
+            Log(LOG_LEVEL_ERR,
+                "can not find the package wrapper script in provided location '%s' "
+                "or access to file is restricted: %s",
+                wrapper->script_path, strerror(errno));
+            DeletePackageModuleWrapper(wrapper);
+            return NULL;
+        }
+    }
+    else if (access(wrapper->path, X_OK) != 0)
+    {
+        /* no script path specified --> the given path has to be executable */
         Log(LOG_LEVEL_ERR,
             "can not find package wrapper in provided location '%s' "
-            "or access to file is restricted: %d",
-            wrapper->path, errno);
+            "or access to file is restricted: %s",
+            wrapper->path, strerror(errno));
         DeletePackageModuleWrapper(wrapper);
         return NULL;
     }
@@ -91,6 +136,31 @@ PackageModuleWrapper *NewPackageModuleWrapper(PackageModuleBody *package_module)
     return wrapper;
 }
 
+static int PackageWrapperCommunicate(const PackageModuleWrapper *wrapper, const char *args,
+                                     const char *request, Rlist **response)
+{
+    char *all_args = NULL;
+    if (wrapper->script_path != NULL)
+    {
+        if (wrapper->script_exec_opts == NULL)
+        {
+            all_args = StringConcatenate(3, wrapper->script_path_quoted, " ", args);
+            args = all_args;
+        }
+        else
+        {
+            all_args = StringConcatenate(5, wrapper->script_exec_opts, " ",
+                                         wrapper->script_path_quoted, " ", args);
+            args = all_args;
+        }
+    }
+    int ret = PipeReadWriteData(wrapper->path, args, request, response,
+                                PACKAGE_PROMISE_SCRIPT_TIMEOUT_SEC,
+                                PACKAGE_PROMISE_TERMINATION_CHECK_SEC);
+    free(all_args);
+
+    return ret;
+}
 
 void UpdatePackagesCache(EvalContext *ctx, bool force_update)
 {
@@ -324,10 +394,8 @@ static int NegotiateSupportedAPIVersion(PackageModuleWrapper *wrapper)
     int api_version = -1;
 
     Rlist *response = NULL;
-    if (PipeReadWriteData(wrapper->path, "supports-api-version", "",
-                          &response,
-                          PACKAGE_PROMISE_SCRIPT_TIMEOUT_SEC,
-                          PACKAGE_PROMISE_TERMINATION_CHECK_SEC) != 0)
+    if (PackageWrapperCommunicate(wrapper, "supports-api-version", "",
+                                  &response) != 0)
     {
         Log(LOG_LEVEL_INFO,
             "Error occurred while getting supported API version.");
@@ -370,10 +438,7 @@ PackageInfo *GetPackageData(const char *name, const char *version,
     free(arch);
 
     Rlist *response = NULL;
-    if (PipeReadWriteData(wrapper->path, "get-package-data", request,
-                          &response,
-                          PACKAGE_PROMISE_SCRIPT_TIMEOUT_SEC,
-                          PACKAGE_PROMISE_TERMINATION_CHECK_SEC) != 0)
+    if (PackageWrapperCommunicate(wrapper, "get-package-data", request, &response) != 0)
     {
         Log(LOG_LEVEL_INFO, "Some error occurred while communicating with "
             "package module while collecting package data.");
@@ -407,12 +472,52 @@ PackageInfo *GetPackageData(const char *name, const char *version,
     return package_data;
 }
 
-static char *GetPackageModuleRealPath(const char *package_module_name)
+static void GetPackageModuleExecInfo(const PackageModuleBody *package_module, char **exec_path,
+                                     char **script_path, char **script_path_quoted,
+                                     char **script_exec_opts)
 {
 
-    return StringFormat("%s%c%s%c%s%c%s", GetWorkDir(), FILE_SEPARATOR,
-                        "modules", FILE_SEPARATOR, "packages", FILE_SEPARATOR,
-                        package_module_name);
+    assert(exec_path != NULL);
+    assert(script_path != NULL);
+    assert(script_path_quoted != NULL);
+
+    char *package_module_path = NULL;
+
+    if (package_module->module_path != NULL && !StringSafeEqual(package_module->module_path, ""))
+    {
+        package_module_path = xstrdup(package_module->module_path);
+    }
+    else
+    {
+        package_module_path = StringFormat("%s%c%s%c%s%c%s", GetWorkDir(), FILE_SEPARATOR,
+                                           "modules", FILE_SEPARATOR, "packages", FILE_SEPARATOR,
+                                           package_module->name);
+    }
+
+    if (package_module->interpreter && !StringSafeEqual(package_module->interpreter, ""))
+    {
+        *script_path = package_module_path;
+        *script_path_quoted = Path_GetQuoted(*script_path);
+
+        if (strchr(package_module->interpreter, ' ') == NULL)
+        {
+            /* no spaces in the 'interpreter' string, easy! */
+            *exec_path = xstrdup(package_module->interpreter);
+        }
+        else
+        {
+            /* we need to split the interpreter command from the (potential)
+             * interpreter args */
+            ArgGetExecutableAndArgs(package_module->interpreter, exec_path, script_exec_opts);
+        }
+    }
+    else
+    {
+        *exec_path = package_module_path;
+        *script_path = NULL;
+        *script_path_quoted = NULL;
+        *script_exec_opts = NULL;
+    }
 }
 
 static int IsPackageInCache(EvalContext *ctx,
@@ -679,10 +784,7 @@ bool UpdateCache(Rlist* options, const PackageModuleWrapper *wrapper,
         req_type = "list-updates-local";
     }
 
-    if (PipeReadWriteData(wrapper->path, req_type, options_str,
-                          &response,
-                          PACKAGE_PROMISE_SCRIPT_TIMEOUT_SEC,
-                          PACKAGE_PROMISE_TERMINATION_CHECK_SEC) != 0)
+    if (PackageWrapperCommunicate(wrapper, req_type, options_str, &response) != 0)
     {
         Log(LOG_LEVEL_VERBOSE, "Some error occurred while communicating with "
                 "package module while updating cache.");
@@ -776,10 +878,7 @@ PromiseResult RemovePackage(const char *name, Rlist* options,
     PromiseResult res = PROMISE_RESULT_CHANGE;
 
     Rlist *error_message = NULL;
-    if (PipeReadWriteData(wrapper->path, "remove", request,
-                          &error_message,
-                          PACKAGE_PROMISE_SCRIPT_TIMEOUT_SEC,
-                          PACKAGE_PROMISE_TERMINATION_CHECK_SEC) != 0)
+    if (PackageWrapperCommunicate(wrapper, "remove", request, &error_message) != 0)
     {
         Log(LOG_LEVEL_INFO,
             "Error communicating package module while removing package.");
@@ -838,10 +937,7 @@ static PromiseResult InstallPackageGeneric(Rlist *options,
         request);
 
     Rlist *error_message = NULL;
-    if (PipeReadWriteData(wrapper->path, package_install_command, request,
-                          &error_message,
-                          PACKAGE_PROMISE_SCRIPT_TIMEOUT_SEC,
-                          PACKAGE_PROMISE_TERMINATION_CHECK_SEC) != 0)
+    if (PackageWrapperCommunicate(wrapper, package_install_command, request, &error_message) != 0)
     {
         Log(LOG_LEVEL_INFO, "Some error occurred while communicating with "
             "package module while installing package.");

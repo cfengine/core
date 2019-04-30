@@ -244,7 +244,7 @@ bool ShellCommandReturnsZero(const char *command, ShellType shell)
         {
             if (errno != EINTR)
             {
-                return -1;
+                return false;
             }
         }
 

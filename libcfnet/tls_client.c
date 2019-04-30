@@ -289,6 +289,8 @@ int TLSClientIdentificationDialog(ConnectionInfo *conn_info,
  */
 int TLSTry(ConnectionInfo *conn_info)
 {
+    assert(conn_info != NULL);
+
     if (PRIVKEY == NULL || PUBKEY == NULL)
     {
         Log(LOG_LEVEL_ERR, "No public/private key pair is loaded,"

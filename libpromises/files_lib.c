@@ -659,5 +659,3 @@ void CreateEmptyFile(char *name)
 }
 
 #endif
-
-

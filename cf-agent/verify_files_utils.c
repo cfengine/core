@@ -3206,6 +3206,7 @@ static void LoadSetxid(void)
 
     char filename[CF_BUFSIZE];
     snprintf(filename, CF_BUFSIZE, "%s/cfagent.%s.log", GetLogDir(), VSYSNAME.nodename);
+    ToLowerStrInplace(filename);
     MapName(filename);
 
     VSETXIDLIST = RawLoadItemList(filename);
@@ -3222,6 +3223,7 @@ static void SaveSetxid(bool modified)
     {
         char filename[CF_BUFSIZE];
         snprintf(filename, CF_BUFSIZE, "%s/cfagent.%s.log", GetLogDir(), VSYSNAME.nodename);
+        ToLowerStrInplace(filename);
         MapName(filename);
 
         PurgeItemList(&VSETXIDLIST, "SETUID/SETGID");
@@ -3229,7 +3231,14 @@ static void SaveSetxid(bool modified)
         Item *current = RawLoadItemList(filename);
         if (!ListsCompare(VSETXIDLIST, current))
         {
+            mode_t oldmode = umask(077); // This setxidlist file must only be accesible by root
+            Log(LOG_LEVEL_DEBUG,
+                "Updating setxidlist at '%s', umask was %o, will create setxidlist using umask 0077, file perms should be 0600.",
+                filename,
+                oldmode);
             RawSaveItemList(VSETXIDLIST, filename, NewLineMode_Unix);
+            umask(oldmode);
+            Log(LOG_LEVEL_DEBUG, "Restored umask to %o", oldmode);
         }
     }
 

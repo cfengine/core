@@ -1,9 +1,9 @@
 /**
- * @name Non-bool function returns bool type variable
+ * @name Non-bool function returns boolean value
  * @description Functions with return type other than 'bool' should not return 'bool'.
  * @kind problem
  * @problem.severity error
- * @id cpp/function-returns-bool-variable
+ * @id cpp/non-bool-function-returns-bool-value
  * @tags readability
  *       correctness
  * @precision very-high

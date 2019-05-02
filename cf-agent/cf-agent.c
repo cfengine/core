@@ -81,6 +81,8 @@
 #include <net.h>
 #include <package_module.h>
 #include <string_lib.h>
+#include <sys/types.h>                  /* checking umask on writing setxid log */
+#include <sys/stat.h>                   /* checking umask on writing setxid log */
 
 #include <mod_common.h>
 
@@ -708,8 +710,12 @@ static void ThisAgentInit(void)
 */
 
     snprintf(filename, CF_BUFSIZE, "%s/cfagent.%s.log", GetLogDir(), VSYSNAME.nodename);
+    ToLowerStrInplace(filename);
     MapName(filename);
 
+    const mode_t current_umask = umask(0777);  // Gets and changes umask
+    umask(current_umask); // Restores umask
+    Log(LOG_LEVEL_DEBUG, "Current umask is %o", current_umask);
     if ((fp = fopen(filename, "a")) != NULL)
     {
         fclose(fp);

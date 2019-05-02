@@ -38,6 +38,7 @@
 /* TODO move crypto.h to libutils */
 #include <crypto.h>                                       /* LoadSecretKeys */
 
+#define MAX_CONNECT_RETRIES 10
 
 extern RSA *PRIVKEY, *PUBKEY;
 
@@ -288,6 +289,8 @@ int TLSClientIdentificationDialog(ConnectionInfo *conn_info,
  */
 int TLSTry(ConnectionInfo *conn_info)
 {
+    assert(conn_info != NULL);
+
     if (PRIVKEY == NULL || PUBKEY == NULL)
     {
         Log(LOG_LEVEL_ERR, "No public/private key pair is loaded,"
@@ -310,8 +313,35 @@ int TLSTry(ConnectionInfo *conn_info)
     /* Initiate the TLS handshake over the already open TCP socket. */
     SSL_set_fd(conn_info->ssl, conn_info->sd);
 
-    int ret = SSL_connect(conn_info->ssl);
-    if (ret <= 0)
+    bool connected = false;
+    bool should_retry = true;
+    int remaining_tries = MAX_CONNECT_RETRIES;
+    int ret;
+    while (!connected && should_retry)
+    {
+        ret = SSL_connect(conn_info->ssl);
+        /* 1 means connected, 0 means shut down, <0 means error
+         * (see man:SSL_connect(3)) */
+        connected = (ret == 1);
+        if (ret == 0)
+        {
+            should_retry = false;
+        }
+        else if (ret < 0)
+        {
+            int code = TLSLogError(conn_info->ssl, LOG_LEVEL_VERBOSE,
+                                   "Attempt to establish TLS connection failed", ret);
+            /* see man:SSL_connect(3) */
+            should_retry = ((remaining_tries > 0) &&
+                            ((code == SSL_ERROR_WANT_READ) || (code == SSL_ERROR_WANT_WRITE)));
+        }
+        if (!connected && should_retry)
+        {
+            sleep(1);
+            remaining_tries--;
+        }
+    }
+    if (!connected)
     {
         TLSLogError(conn_info->ssl, LOG_LEVEL_ERR,
                     "Failed to establish TLS connection", ret);

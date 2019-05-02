@@ -5,7 +5,7 @@
  *              'true'/'false' macro.
  * @kind problem
  * @problem.severity error
- * @id cpp/function-returns-non-bool
+ * @id cpp/bool-function-returns-non-bool
  * @tags readability
  *       correctness
  * @precision very-high

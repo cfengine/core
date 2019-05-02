@@ -4,7 +4,7 @@
  *              'true' and 'false' macros are technically 'int', but we want type checking.
  * @kind problem
  * @problem.severity error
- * @id cpp/function-returns-bool-macro
+ * @id cpp/non-bool-function-returns-bool-macro
  * @tags readability
  *       correctness
  * @precision very-high

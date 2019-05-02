@@ -499,7 +499,7 @@ static ExpressionValue EvalTokenAsClass(const char *classname, void *param)
                    EvalContextStackFrameContainsSoft(ctx, ref.name));
 
     ClassRefDestroy(ref);
-    return classy; /* ExpressionValue is just an enum extending bool... */
+    return (ExpressionValue) classy; // ExpressionValue extends bool
 }
 
 /**********************************************************************/
@@ -575,7 +575,7 @@ bool IsDefinedClass(const EvalContext *ctx, const char *context)
 static ExpressionValue EvalTokenFromList(const char *token, void *param)
 {
     StringSet *set = param;
-    return StringSetContains(set, token);
+    return (ExpressionValue) StringSetContains(set, token); // EV extends bool
 }
 
 /**********************************************************************/

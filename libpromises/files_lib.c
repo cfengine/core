@@ -102,7 +102,7 @@ bool FileWriteOver(char *filename, char *contents)
  *          Windows if the path contains double (back)slashes!
  **/
 
-int MakeParentDirectory2(char *parentandchild, int force, bool enforce_promise)
+bool MakeParentDirectory2(char *parentandchild, int force, bool enforce_promise)
 {
     if(enforce_promise)
     {
@@ -339,7 +339,7 @@ bool MakeParentDirectory(const char *parentandchild, bool force)
     return true;
 }
 
-int LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits)
+bool LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits)
 {
     {
         struct stat statbuf;
@@ -353,7 +353,7 @@ int LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits)
         {
             Log(LOG_LEVEL_INFO, "File '%s' is bigger than the edit limit. max_file_size = %jd > %d bytes", file,
                   (intmax_t) statbuf.st_size, edits.maxfilesize);
-            return (false);
+            return false;
         }
 
         if (!S_ISREG(statbuf.st_mode))

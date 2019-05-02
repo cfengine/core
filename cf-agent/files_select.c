@@ -55,7 +55,7 @@ static int SelectGroupMatch(EvalContext *ctx, struct stat *lstatptr, Rlist *crit
 static int SelectBSDMatch(struct stat *lstatptr, Rlist *bsdflags);
 #endif
 
-int SelectLeaf(EvalContext *ctx, char *path, struct stat *sb, FileSelect fs)
+bool SelectLeaf(EvalContext *ctx, char *path, struct stat *sb, FileSelect fs)
 {
     Rlist *rp;
 

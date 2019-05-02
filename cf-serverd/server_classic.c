@@ -1039,7 +1039,7 @@ return true;
 
 
 
-int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
+bool BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
 {
     time_t tloc, trem = 0;
     char recvbuffer[CF_BUFSIZE + CF_BUFEXT], check[CF_BUFSIZE];

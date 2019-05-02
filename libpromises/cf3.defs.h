@@ -109,6 +109,7 @@
 #define CFD_TERMINATOR "---cfXen/gine/cfXen/gine---"
 #define CFD_TRUE "CFD_TRUE"
 #define CFD_FALSE "CFD_FALSE"
+#define CFD_FALSE_SIZE sizeof(CFD_FALSE) // size of CFD_FALSE including terminator
 #define CF_ANYCLASS "any"
 #define CF_SMALL_OFFSET 2
 

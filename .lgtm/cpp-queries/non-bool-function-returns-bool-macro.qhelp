@@ -6,7 +6,7 @@
 <overview>
 
 <p>
-Non-bool function returns true or false macro.
+Non-bool function returns <code>true</code> or <code>false</code> macro.
 <code>true</code> and <code>false</code> macros are technically <code>int</code>, but we want type checking.
 </p>
 

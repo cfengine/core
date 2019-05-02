@@ -6,7 +6,7 @@
 <overview>
 
 <p>
-Non-bool function returns boolean variable.
+Non-bool function returns boolean value.
 This can be the result of copy-pasted code, which should have been modified.
 In old-school C, there was no boolean type and it was normal to return boolean values as <code>int</code>.
 We prefer to use <code>bool</code> return type for functions which have 2 return values (<code>true</code> or <code>false</code>).

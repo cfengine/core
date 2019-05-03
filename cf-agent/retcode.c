@@ -28,7 +28,7 @@
 #include <actuator.h>
 #include <rlist.h>
 
-int VerifyCommandRetcode(EvalContext *ctx, int retcode, const Attributes *a, const Promise *pp, PromiseResult *result)
+bool VerifyCommandRetcode(EvalContext *ctx, int retcode, const Attributes *a, const Promise *pp, PromiseResult *result)
 {
     assert(a != NULL);
     bool result_retcode = true;

@@ -2295,7 +2295,7 @@ static PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, co
     return result;
 }
 
-int DepthSearch(EvalContext *ctx, char *name, const struct stat *sb, int rlevel, const Attributes *attr,
+bool DepthSearch(EvalContext *ctx, char *name, const struct stat *sb, int rlevel, const Attributes *attr,
                 const Promise *pp, dev_t rootdevice, PromiseResult *result)
 {
     assert(attr != NULL);

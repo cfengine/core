@@ -57,7 +57,7 @@ static int TableExists(CfdbConn *cfdb, char *name);
 static Rlist *GetSQLTables(CfdbConn *cfdb);
 static void ListTables(int type, char *query);
 static int ValidateRegistryPromiser(char *s, const Promise *pp);
-static int CheckRegistrySanity(const Attributes *a, const Promise *pp);
+static bool CheckRegistrySanity(const Attributes *a, const Promise *pp);
 
 /*****************************************************************************/
 
@@ -407,7 +407,7 @@ static int CheckDatabaseSanity(const Attributes *a, const Promise *pp)
     return retval;
 }
 
-static int CheckRegistrySanity(const Attributes *a, const Promise *pp)
+static bool CheckRegistrySanity(const Attributes *a, const Promise *pp)
 {
     assert(a != NULL);
     bool retval = true;

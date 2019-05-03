@@ -470,7 +470,7 @@ static ExpressionValue EvalTokenAsClass(const char *classname, void *param)
             if (EvalContextHeapContainsHard(ctx, ref.name))
             {
                 ClassRefDestroy(ref);
-                return true;
+                return EXPRESSION_VALUE_TRUE;
             }
         }
     }
@@ -479,7 +479,7 @@ static ExpressionValue EvalTokenAsClass(const char *classname, void *param)
         if (EvalContextHeapContainsHard(ctx, ref.name))
         {
             ClassRefDestroy(ref);
-            return true;
+            return EXPRESSION_VALUE_TRUE;
         }
 
         const char *ns = EvalContextCurrentNamespace(ctx);

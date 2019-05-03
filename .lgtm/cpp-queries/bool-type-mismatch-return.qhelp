@@ -6,7 +6,7 @@
 <overview>
 
 <p>
-Bool function returns something not boolean.
+Boolean type mismatch between function type and return value.
 This can be the result of copy-pasted code, which should have been modified.
 </p>
 
@@ -23,10 +23,13 @@ A variable with type <code>bool</code>
 A function call with return type <code>bool</code>
 </li>
 <li>
-A <code>true</code> or <code>false</code> macro
+A boolean macro - <code>true</code> or <code>false</code>
 </li>
 <li>
-A comparison (using <code>==</code> or <code>!=</code>)
+A comparison - <code>==</code> or <code>!=</code> or <code>&gt;=</code> etc.
+</li>
+<li>
+A logical operation - <code>&&</code> or <code>||</code>
 </li>
 
 <p>
@@ -40,12 +43,15 @@ Error handling is the main reason to have this strict type checking for <code>bo
 <recommendation>
 
 <p>
-Change the returned value to something boolean.
-Usually this means fixing the type of the returned variable, or adding an explicit comparison in the return statement.
+Change the returned value to something boolean, or change the function return type to <code>bool</code>.
+Sometimes this means adding an an explicit comparison in the return statement.
+(Typecasting is almost never the right answer).
 </p>
 
 </recommendation>
 <example>
+
+<sample src="bool-type-mismatch-return.c" />
 
 </example>
 <references>

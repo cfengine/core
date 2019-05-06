@@ -16,6 +16,7 @@ We prefer to use <code>bool</code> return type for functions which have 2 return
 We consider some different things boolean:
 </p>
 
+<ul>
 <li>
 A variable with type <code>bool</code>
 </li>
@@ -26,11 +27,12 @@ A function call with return type <code>bool</code>
 A boolean macro - <code>true</code> or <code>false</code>
 </li>
 <li>
-A comparison - <code>==</code> or <code>!=</code> or <code>&gt;=</code> etc.
+A comparison - <code>==</code> or <code>!=</code> (or less than / greater than variants).
 </li>
 <li>
 A logical operation - <code>&&</code> or <code>||</code>
 </li>
+</ul>
 
 <p>
 The reason why this query was added was to catch cases like <a href="https://github.com/cfengine/core/pull/3635">a boolean function returning <code>-1</code></a>.

@@ -80,11 +80,11 @@ static PromiseResult VerifyLineDeletions(EvalContext *ctx, const Promise *pp, Ed
 static PromiseResult VerifyColumnEdits(EvalContext *ctx, const Promise *pp, EditContext *edcontext);
 static PromiseResult VerifyPatterns(EvalContext *ctx, const Promise *pp, EditContext *edcontext);
 static PromiseResult VerifyLineInsertions(EvalContext *ctx, const Promise *pp, EditContext *edcontext);
-static int InsertMultipleLinesToRegion(EvalContext *ctx, Item **start, Item *begin_ptr, Item *end_ptr, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
-static int InsertMultipleLinesAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr, Item *end_ptr, Item *location, Item *prev, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
+static bool InsertMultipleLinesToRegion(EvalContext *ctx, Item **start, Item *begin_ptr, Item *end_ptr, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
+static bool InsertMultipleLinesAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr, Item *end_ptr, Item *location, Item *prev, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
 static int DeletePromisedLinesMatching(EvalContext *ctx, Item **start, Item *begin, Item *end, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
-static int InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, Item *location, Item *prev, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
-static int InsertCompoundLineAtLocation(EvalContext *ctx, char *newline, Item **start, Item *begin_ptr, Item *end_ptr, Item *location, Item *prev, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
+static bool InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, Item *location, Item *prev, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
+static bool InsertCompoundLineAtLocation(EvalContext *ctx, char *newline, Item **start, Item *begin_ptr, Item *end_ptr, Item *location, Item *prev, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
 static int ReplacePatterns(EvalContext *ctx, Item *start, Item *end, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
 static int EditColumns(EvalContext *ctx, Item *file_start, Item *file_end, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
 static int EditLineByColumn(EvalContext *ctx, Rlist **columns, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
@@ -95,7 +95,7 @@ static int SelectLine(EvalContext *ctx, const char *line, Attributes a);
 static int NotAnchored(char *s);
 static int SelectRegion(EvalContext *ctx, Item *start, Item **begin_ptr, Item **end_ptr, Attributes a, EditContext *edcontext);
 static int MultiLineString(char *s);
-static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr, Item *end_ptr, Item *location, Item *prev, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
+static bool InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr, Item *end_ptr, Item *location, Item *prev, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
 
 /*****************************************************************************/
 /* Level                                                                     */
@@ -882,8 +882,8 @@ bad:
 
 /*****************************************************************************/
 
-static int InsertMultipleLinesToRegion(EvalContext *ctx, Item **start, Item *begin_ptr, Item *end_ptr, Attributes a,
-                                       const Promise *pp, EditContext *edcontext, PromiseResult *result)
+static bool InsertMultipleLinesToRegion(EvalContext *ctx, Item **start, Item *begin_ptr, Item *end_ptr, Attributes a,
+                                        const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
     Item *ip, *prev = NULL;
     int allow_multi_lines = a.sourcetype && strcmp(a.sourcetype, "preserve_all_lines") == 0;
@@ -920,7 +920,7 @@ static int InsertMultipleLinesToRegion(EvalContext *ctx, Item **start, Item *beg
         /* As region was already selected by SelectRegion() and we know
          * what are the region boundaries (begin_ptr and end_ptr) there
          * is no reason to iterate over whole file. It is safe to start from
-         * begin_ptr. 
+         * begin_ptr.
          * As a bonus Redmine #7640 is fixed as we are not interested in
          * matching values outside of the region we are iterating over. */
         for (ip = begin_ptr; ip != NULL; ip = ip->next)
@@ -950,8 +950,8 @@ static int InsertMultipleLinesToRegion(EvalContext *ctx, Item **start, Item *beg
 
 /***************************************************************************/
 
-static int InsertMultipleLinesAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr, Item *end_ptr, Item *location,
-                                         Item *prev, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result)
+static bool InsertMultipleLinesAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr, Item *end_ptr, Item *location,
+                                          Item *prev, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result)
 
 // Promises to insert a possibly multi-line promiser at the specificed location convergently,
 // i.e. no insertion will be made if a neighbouring line matches
@@ -1418,7 +1418,7 @@ static int SanityCheckDeletions(Attributes a, const Promise *pp)
 /***************************************************************************/
 
 /* XXX */
-static int MatchPolicy(EvalContext *ctx, const char *camel, const char *haystack, Rlist *insert_match, const Promise *pp)
+static bool MatchPolicy(EvalContext *ctx, const char *camel, const char *haystack, Rlist *insert_match, const Promise *pp)
 {
     char *final = NULL;
     bool ok      = false;
@@ -1620,11 +1620,11 @@ static int IsItemInRegion(EvalContext *ctx, const char *item, const Item *begin_
 
 /***************************************************************************/
 
-static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr, Item *end_ptr, Item *location,
+static bool InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr, Item *end_ptr, Item *location,
                                 Item *prev, Attributes a, const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
     FILE *fin;
-    int retval = false;
+    bool retval = false;
     Item *loc = NULL;
     int preserve_block = a.sourcetype && strcmp(a.sourcetype, "file_preserve_block") == 0;
 
@@ -1717,7 +1717,7 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
 
 /***************************************************************************/
 
-static int InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **start, Item *begin_ptr, Item *end_ptr,
+static bool InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **start, Item *begin_ptr, Item *end_ptr,
                                         Item *location, Item *prev, Attributes a, const Promise *pp, EditContext *edcontext,
                                         PromiseResult *result)
 {
@@ -1832,7 +1832,7 @@ static int NeighbourItemMatches(EvalContext *ctx, const Item *file_start, const 
     return false;
 }
 
-static int InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, Item *location, Item *prev, Attributes a,
+static bool InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, Item *location, Item *prev, Attributes a,
                                 const Promise *pp, EditContext *edcontext, PromiseResult *result)
 
 /* Check line neighbourhood in whole file to avoid edge effects, iff we are not preseving block structure */
@@ -2009,7 +2009,7 @@ static int EditLineByColumn(EvalContext *ctx, Rlist **columns, Attributes a,
     {
         /* internal separator, single char so split again */
 
-        if (strstr(RlistScalarValue(rp), a.column.column_value) || strcmp(RlistScalarValue(rp), a.column.column_value) != 0) 
+        if (strstr(RlistScalarValue(rp), a.column.column_value) || strcmp(RlistScalarValue(rp), a.column.column_value) != 0)
         {
             this_column = RlistFromSplitString(RlistScalarValue(rp), a.column.value_separator);
             retval = DoEditColumn(&this_column, a, edcontext);

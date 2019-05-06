@@ -30,6 +30,6 @@
 
 #include "server.h"
 
-extern int BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn);
+extern bool BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn);
 
 #endif

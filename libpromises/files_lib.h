@@ -31,10 +31,10 @@
 void PurgeItemList(Item **list, char *name);
 bool FileWriteOver(char *filename, char *contents);
 
-int LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits);
+bool LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits);
 
 bool MakeParentDirectory(const char *parentandchild, bool force);
-int MakeParentDirectory2(char *parentandchild, int force, bool enforce_promise);
+bool MakeParentDirectory2(char *parentandchild, int force, bool enforce_promise);
 
 void RotateFiles(char *name, int number);
 void CreateEmptyFile(char *name);

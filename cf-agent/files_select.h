@@ -27,7 +27,7 @@
 
 #include <cf3.defs.h>
 
-int SelectLeaf(EvalContext *ctx, char *path, struct stat *sb, FileSelect fs);
+bool SelectLeaf(EvalContext *ctx, char *path, struct stat *sb, FileSelect fs);
 
 /* For implementation in Nova */
 int GetOwnerName(char *path, struct stat *lstatptr, char *owner, int ownerSz);

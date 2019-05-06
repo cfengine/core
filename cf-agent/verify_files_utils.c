@@ -2282,7 +2282,7 @@ PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, struct st
     return result;
 }
 
-int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attributes attr,
+bool DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attributes attr,
                 const Promise *pp, dev_t rootdevice, PromiseResult *result)
 {
     Dir *dirh;

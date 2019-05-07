@@ -101,6 +101,10 @@ char *MapNameCopy(const char *s);
 char *MapNameForward(char *s);
 
 Seq *ListDir(const char *dir, const char *extension);
+
+mode_t SetUmask(mode_t new_mask);
+void RestoreUmask(mode_t old_mask);
+
 int safe_open(const char *pathname, int flags, ...);
 FILE *safe_fopen(const char *path, const char *mode);
 

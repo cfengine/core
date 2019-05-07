@@ -34,6 +34,7 @@
 #include <string_lib.h>                                         /* Chop */
 #include <regex.h> /* CompileRegex,StringMatchWithPrecompiledRegex,StringMatchFull */
 #include <item_lib.h>
+#include <file_lib.h>   // SetUmask(), RestoreUmask()
 #include <pipes.h>
 #include <files_interfaces.h>
 #include <rlist.h>
@@ -1656,7 +1657,13 @@ int LoadProcessTable()
     const char* const statedir = GetStateDir();
 
     snprintf(vbuff, CF_MAXVARSIZE, "%s%ccf_procs", statedir, FILE_SEPARATOR);
-    RawSaveItemList(PROCESSTABLE, vbuff, NewLineMode_Unix);
+
+    // TODO: Change safe_fopen() to default to 0600, then remove this.
+    {
+        const mode_t old_umask = SetUmask(0077);
+        RawSaveItemList(PROCESSTABLE, vbuff, NewLineMode_Unix);
+        RestoreUmask(old_umask);
+    }
 
 # ifdef HAVE_GETZONEID
     if (global_zone) /* pidlist and rootpidlist are empty if we're not in the global zone */
@@ -1695,6 +1702,9 @@ int LoadProcessTable()
         PrependItem(&rootprocs, otherprocs->name, NULL);
     }
 
+    // TODO: Change safe_fopen() to default to 0600, then remove this.
+    const mode_t old_umask = SetUmask(0077);
+
     snprintf(vbuff, CF_MAXVARSIZE, "%s%ccf_rootprocs", statedir, FILE_SEPARATOR);
     RawSaveItemList(rootprocs, vbuff, NewLineMode_Unix);
     DeleteItemList(rootprocs);
@@ -1702,6 +1712,8 @@ int LoadProcessTable()
     snprintf(vbuff, CF_MAXVARSIZE, "%s%ccf_otherprocs", statedir, FILE_SEPARATOR);
     RawSaveItemList(otherprocs, vbuff, NewLineMode_Unix);
     DeleteItemList(otherprocs);
+
+    RestoreUmask(old_umask);
 
     free(vbuff);
     return true;

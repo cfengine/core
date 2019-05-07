@@ -1,3 +1,84 @@
+3.12.2:
+	- Add support for overriding the package module's path (CFE-2103)
+	- Add support for setting package module interpreter (CFE-2880)
+	- Added --no-truncate option to cf-key
+	  This option, when used with --show-hosts changes the formatting
+	  of the output. Instead of padding and truncating each of the
+	  fields, they are printed, in full, with no padding, and separated
+	  by a single tab character. The output is not as pretty, but should
+	  be more useful for parsing by other scripts / tooling.
+	  Ticket: (CFE-3036)
+	- Added a new option --skip-db-check to agent and execd
+	  This option allows you to enable/disable database (LMDB) consistency
+	  checks. Initially it is disabled by default, but this will likely
+	  change.
+	  Some small conflicts in cf-agent.c, since 3.12.x doesn't have
+	  --skip-bootstrap-policy-run.
+	  Ticket: (CFE-2893)
+	- Added derived-from-file tags to hard classes based on /etc/debian_version and /etc/issue
+	- Allow forward slash character in module protocol commands (CFE-2478)
+	- CF-2951: ps command can handle longer usernames
+	- CSV parser now supports CRLF inside double quotes (ENT-4504)
+	- Display an error when a function defining a variables still fails at pass3
+	  (CFE-2983)
+	- Document cf-execd and cf-serverd respond to SIGHUP in manpage
+	  (CFE-2853)
+	- Don't trim leading zeroes in ubuntu minor version class
+	  The old version detection logic (using /etc/debian_version) was
+	  converting the minor version part to an integer, defining
+	  ubuntu_18_4 instead of ubuntu_18_04. The new platform detection
+	  (based on /etc/os-release) defines ubuntu_18_04. Since both old
+	  and new methods are running to maximize compatibility, both
+	  ubuntu_18_04 and ubuntu_18_4 were defined.
+	  This commit ensures that the old detection logic treats the
+	  minor version (the 04 part) as a string, not an integer. The
+	  change is specific to Ubuntu, and should affect Ubuntu 18.04,
+	  16.04, 14.04, etc.
+	  Ticket: (CFE-2882)
+	- Ensure SUID log has proper permissions (CFE-2919)
+	- Ensure agent log file names are lowercase
+	- Fix a segfault in 'cf-promises -p json-full' (CFE-3019)
+	- Fix cf-key help output to indicate ability to delete by key digest
+	  (CFE-2997)
+	- Fix growing memory footprint of daemons (CFE-3032)
+	- Fix log message about setting collect_window (ENT-4238)
+	- Fix parsing YAML values starting with numbers (CFE-2033)
+	- Fix sys.flavor on AIX (ENT-3970)
+	- Fixed OOB read / heap buffer overflow in evaluator (ENT-4136)
+	- Fixed memory leak in JSON to policy conversion (ENT-4136)
+	- Fixed memory leak in filesexist function (ENT-4313)
+	- Fixed memory leak in mustache rendering (ENT-4313)
+	- Fixed segfault in policy parser (ENT-4022)
+	- Fixed small memory leak in cf-upgrade (ENT-4136)
+	- Message about invalid class characters from module protocol moved to VERBOSE
+	  (CFE-2887, CFE-3008)
+	- Prevented buffer overflows in cf-monitord data parsing
+	- Removed programming error in handling of process_count body
+	  Previously, having a failing function call inside in_range_define
+	  or out_of_range_define would cause a programming error when
+	  trying to define that as a class. Fixed it by detecting the
+	  case, printing a normal error, and skipping defining the class.
+	  Ticket: (CFE-2067)
+	- Set policy->release_id to "failsafe"/"bootstrap" when running failsafe.cf
+	  (CFE-3031)
+	- Test that methods can be called by expanding classic arrays (CFE-636)
+	- Unresolved function calls in process_select body are now skipped
+	  Function calls which always fail, like getuid("nosuchuser"), are
+	  never resolved. Previously this would cause a programming error,
+	  since the body is expected to have a list of strings, not
+	  unresolved function calls.
+	  The function calls are silently skipped (with a verbose message)
+	  as this matches the behavior of calling the functions in a vars
+	  promise, and using that as a body parameter.
+	  Ticket: (CFE-1968)
+	- cf-check: Added backup command
+	  This command copies lmdb files to a timestamped backup directory.
+	  Ticket: (ENT-4064)
+	- cf-check: Respect workdir from config.h (CFE-2994)
+	- cf-check: diagnose and backup now use state directory by default
+	  (ENT-4064)
+	- copylink_pattern honor '/../' in copy source (CFE-2960)
+
 3.12.1:
 	- Added a new binary: cf-check
 	  Corrupt local databases (LMDB) continues to be a problem.

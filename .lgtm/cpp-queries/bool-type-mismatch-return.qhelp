@@ -30,7 +30,7 @@ A boolean macro - <code>true</code> or <code>false</code>
 A comparison - <code>==</code> or <code>!=</code> (or less than / greater than variants).
 </li>
 <li>
-A logical operation - <code>&&</code> or <code>||</code>
+A logical operation - AND or OR.
 </li>
 </ul>
 

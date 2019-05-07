@@ -25,6 +25,7 @@
 #include <file_lib.h>
 #include <misc_lib.h>
 #include <dir.h>
+#include <logging.h>
 
 #include <alloc.h>
 #include <libgen.h>
@@ -462,6 +463,18 @@ Seq *ListDir(const char *dir, const char *extension)
     DirClose(dirh);
 
     return contents;
+}
+
+mode_t SetUmask(mode_t new_mask)
+{
+    const mode_t old_mask = umask(0077);
+    Log(LOG_LEVEL_DEBUG, "Set umask to 0077, was %o", old_mask);
+    return old_mask;
+}
+void RestoreUmask(mode_t old_mask)
+{
+    umask(old_mask);
+    Log(LOG_LEVEL_DEBUG, "Restored umask to %o", old_mask);
 }
 
 /**

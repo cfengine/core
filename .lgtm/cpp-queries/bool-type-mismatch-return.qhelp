@@ -35,7 +35,7 @@ A logical operation - AND or OR.
 </ul>
 
 <p>
-The reason why this query was added was to catch cases like <a href="https://github.com/cfengine/core/pull/3635">a boolean function returning <code>-1</code></a>.
+The reason why this query was added was to catch cases like <a href="https://github.com/cfengine/core/pull/3635">a boolean function returning -1</a>.
 <code>int</code> functions typically return <code>0</code> for success and <code>-1</code> for failure.
 This means that if you copied the error handling of an int function to a <code>bool</code> function, it would return <code>true</code> (success) in case of error.
 Error handling is the main reason to have this strict type checking for <code>bool</code>.

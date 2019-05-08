@@ -47,5 +47,6 @@ int TLSRecv(SSL *ssl, char *buffer, int toget);
 int TLSRecvLines(SSL *ssl, char *buf, size_t buf_size);
 void TLSSetDefaultOptions(SSL_CTX *ssl_ctx, const char *min_version);
 const char *TLSErrorString(intmax_t errcode);
+bool TLSSetCipherList(SSL_CTX *ssl_ctx, const char *cipher_list);
 
 #endif

@@ -1,0 +1,51 @@
+body common control
+{
+        inputs => { "../../default.cf.sub" };
+        bundlesequence  => { default("$(this.promise_filename)") };
+        version => "1.0";
+}
+
+bundle agent init
+{
+  files:
+    any::
+      "$(G.testfile).json"
+      create => "true",
+      edit_line => init_insert_json;
+}
+
+bundle edit_line init_insert_json
+{
+  insert_lines:
+      '{ "hello": "world" }';
+}
+
+
+bundle agent test
+{
+  meta:
+      "description"
+        string => "Test module file protocol";
+
+  commands:
+    any::
+      "$(G.echo) &data=$(G.testfile).json"
+        module => "true";
+
+  reports:
+    DEBUG::
+      "hello has value: $(echo.data[hello])";
+}
+
+bundle agent check
+{
+  classes:
+      "pass" expression => strcmp("$(echo.data[hello])", "world");
+
+  reports:
+    pass::
+      "$(this.promise_filename) Pass";
+
+    !pass::
+      "$(this.promise_filename) FAIL";
+}

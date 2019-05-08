@@ -89,6 +89,7 @@ install-data-local:
 	$(MKDIR_P) -m 700 $(DESTDIR)$(workdir)/outputs
 	$(MKDIR_P) -m 700 $(DESTDIR)$(workdir)/ppkeys
 	$(MKDIR_P) -m 700 $(DESTDIR)$(workdir)/plugins
+	$(MKDIR_P) -m 750 $(DESTDIR)$(workdir)/state
 
 
 tar-package:

@@ -1195,9 +1195,17 @@ Rlist *RlistFromRegexSplitNoOverflow(const char *string, const char *regex, int 
     while (count < max - 1 &&
            StringMatchWithPrecompiledRegex(pattern, sp, &start, &end))
     {
-        assert(start < CF_MAXVARSIZE);
-        memcpy(node, sp, start);
-        node[start] = '\0';
+        size_t len = start;
+        if (len >= CF_MAXVARSIZE)
+        {
+            len = CF_MAXVARSIZE - 1;
+            Log(LOG_LEVEL_WARNING,
+                "Segment in string_split() is %d bytes and will be truncated to %zu bytes",
+                start,
+                len);
+        }
+        memcpy(node, sp, len);
+        node[len] = '\0';
         RlistAppendScalar(&liststart, node);
         count++;
 

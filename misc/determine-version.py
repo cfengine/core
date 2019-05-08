@@ -6,7 +6,10 @@ import subprocess
 import sys
 import os
 from os.path import basename
-from functools import cmp_to_key
+try:
+    from functools import cmp_to_key
+except ImportError:
+    cmp_to_key = None
 
 try:
     DEVNULL = subprocess.DEVNULL
@@ -221,7 +224,10 @@ for tag in git_tag_list.stdout.readlines():
         continue
     all_tags.append(match)
 
-all_tags = sorted(all_tags, key=cmp_to_key(version_cmp), reverse=True)
+if cmp_to_key is None:
+    all_tags = sorted(all_tags, cmp=version_cmp, reverse=True)
+else:
+    all_tags = sorted(all_tags, key=cmp_to_key(version_cmp), reverse=True)
 verbose_print("all_tags   =", all_tags)
 
 

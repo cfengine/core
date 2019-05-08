@@ -20,6 +20,11 @@
 	- Set policy release_id to "failsafe"/"bootstrap" when running failsafe.cf
 	  (CFE-3031)
 	- copylink_pattern now honors '/../' in copy source (CFE-2960)
+	- Made permissions of various files in state directory more strict
+	  This change was done both in agent and in policy.
+	  New files which are created should have correct (0600) permissions
+	  and old files with 0644 permissions should be repaired in policy.
+	  (ENT-4601)
 
 3.10.5:
 	- Bundle name is now part of the log message when aborting a bundle

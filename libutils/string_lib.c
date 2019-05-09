@@ -1025,19 +1025,6 @@ char *EscapeCharCopy(const char *str, char to_escape, char escape_with)
     return out;
 }
 
-int StringInArray(char **array, char *string)
-{
-    for (int i = 0; array[i] != NULL; i++)
-    {
-        if (strcmp(string, array[i]) == 0)
-        {
-            return true;
-        }
-    }
-
-    return false;
-}
-
 char *ScanPastChars(char *scanpast, char *input)
 {
     char *pos = input;

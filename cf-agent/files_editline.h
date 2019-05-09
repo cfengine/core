@@ -28,7 +28,7 @@
 #include <cf3.defs.h>
 #include <files_edit.h>
 
-int ScheduleEditLineOperations(EvalContext *ctx, const Bundle *bp, const Attributes *a, const Promise *pp, EditContext *edcontext);
+bool ScheduleEditLineOperations(EvalContext *ctx, const Bundle *bp, const Attributes *a, const Promise *pp, EditContext *edcontext);
 Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, const Attributes *a, const Promise *pp, PromiseResult *result);
 
 #endif

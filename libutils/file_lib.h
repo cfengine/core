@@ -66,7 +66,7 @@ ssize_t FullWrite(int desc, const char *ptr, size_t len);
    Return amount of bytes read upon success, -1 otherwise */
 ssize_t FullRead(int desc, char *ptr, size_t len);
 
-int IsDirReal(const char *path);
+bool IsDirReal(const char *path);
 
 /**
  * Returns what type of line endings the file is using.

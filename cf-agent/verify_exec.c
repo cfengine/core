@@ -416,7 +416,7 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a,
 #ifdef __MINGW32__
         if (outsourced)     // only get return value if we waited for command execution
         {
-            cf_pclose(pfp);
+            cf_pclose_nowait(pfp);
         }
         else
 #endif /* __MINGW32__ */

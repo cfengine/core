@@ -1249,8 +1249,8 @@ static void KeepFileAccessPromise(const EvalContext *ctx, const Promise *pp)
     {
         /* If it's a directory append trailing '/' */
         path_len = ret2;
-        int is_dir = IsDirReal(path);
-        if (is_dir == 1 && path[path_len - 1] != FILE_SEPARATOR)
+        bool is_dir = IsDirReal(path);
+        if (is_dir && path[path_len - 1] != FILE_SEPARATOR)
         {
             if (path_len + 2 > sizeof(path))
             {

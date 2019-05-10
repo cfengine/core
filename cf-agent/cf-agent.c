@@ -146,7 +146,7 @@ static void FreeFixedStringArray(int size, char **array);
 static void CheckAgentAccess(const Rlist *list, const Policy *policy);
 static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config);
 static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, void *param);
-static int NewTypeContext(TypeSequence type);
+static void NewTypeContext(TypeSequence type);
 static void DeleteTypeContext(EvalContext *ctx, TypeSequence type);
 static PromiseResult ParallelFindAndVerifyFilesPromises(EvalContext *ctx, const Promise *pp);
 static bool VerifyBootstrap(void);
@@ -1400,10 +1400,7 @@ PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
                 continue;
             }
 
-            if (!NewTypeContext(type))
-            {
-                continue;
-            }
+            NewTypeContext(type);
 
             SpecialTypeBanner(type, pass);
             EvalContextStackPushPromiseTypeFrame(ctx, sp);
@@ -1810,7 +1807,7 @@ static void BannerStatus(PromiseResult status, char *type, char *name)
 /* Type context                                                      */
 /*********************************************************************/
 
-static int NewTypeContext(TypeSequence type)
+static void NewTypeContext(TypeSequence type)
 {
 // get maxconnections
 
@@ -1840,7 +1837,7 @@ static int NewTypeContext(TypeSequence type)
         break;
     }
 
-    return true;
+    return;
 }
 
 /*********************************************************************/

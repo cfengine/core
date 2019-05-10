@@ -846,7 +846,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
             return true;
         }
 
-        if (IsDirReal(filename) == 1)
+        if (IsDirReal(filename))
         {
             PathAppendTrailingSlash(filename, strlen(filename));
         }

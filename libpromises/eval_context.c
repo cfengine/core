@@ -1937,6 +1937,36 @@ bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const c
     }
 }
 
+const void *EvalContextVariableGetSpecial(
+    const EvalContext *const ctx,
+    const SpecialScope scope,
+    const char *const varname,
+    DataType *const type_out)
+{
+    VarRef *const ref = VarRefParseFromScope(
+        varname, SpecialScopeToString(scope));
+    const void *const result = EvalContextVariableGet(ctx, ref, type_out);
+    VarRefDestroy(ref);
+
+    return result;
+}
+
+/**
+ * @note Only use this when you know the variable is a string
+ * @see EvalContextVariableGetSpecial()
+ */
+const char *EvalContextVariableGetSpecialString(
+    const EvalContext *const ctx,
+    const SpecialScope scope,
+    const char *const varname)
+{
+    DataType type_out;
+    const void *const result = EvalContextVariableGetSpecial(
+        ctx, scope, varname, &type_out);
+    assert(type_out == CF_DATA_TYPE_STRING); // Programming error if not string
+    return (type_out == CF_DATA_TYPE_STRING) ? result : NULL;
+}
+
 bool EvalContextVariableRemoveSpecial(const EvalContext *ctx, SpecialScope scope, const char *lval)
 {
     switch (scope)

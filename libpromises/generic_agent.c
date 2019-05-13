@@ -197,7 +197,7 @@ Policy *SelectAndLoadPolicy(GenericAgentConfig *config, EvalContext *ctx, bool v
     return policy;
 }
 
-static bool CheckContextClassmatch(EvalContext *ctx, const char* class_str)
+static bool CheckContextClassmatch(EvalContext *ctx, char* class_str)
 {
     ClassTableIterator *iter = EvalContextClassTableIteratorNewGlobal(ctx, NULL, true, true);
     StringSet *global_matches = ClassesMatching(ctx, iter, class_str, NULL, true); // returns early
@@ -207,7 +207,18 @@ static bool CheckContextClassmatch(EvalContext *ctx, const char* class_str)
     StringSetDestroy(global_matches);
     ClassTableIteratorDestroy(iter);
 
-    return found;
+    if ( found )
+    {
+        return found;
+    }
+
+    if ( StringEndsWith(class_str, "::") )
+    {
+        class_str[strlen(class_str) - 2] = '\0';
+        return IsDefinedClass(ctx, class_str);
+    }
+
+    return false;
 }
 
 static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonElement* augment)

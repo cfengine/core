@@ -402,7 +402,10 @@ endif
 if AIX
 
 check_PROGRAMS += aix_process_test
-
+# We need to use -Wl,-bexpall when linking tests binaries on AIX
+# because they provide dummy versions of some standard functions.
+set_domainname_test_LDFLAGS = -Wl,-bexpall
+evalfunction_test_LDFLAGS = -Wl,-bexpall
 aix_process_test_SOURCES = aix_process_test.c \
 	../../libpromises/process_unix.c \
 	../../libpromises/process_aix.c \

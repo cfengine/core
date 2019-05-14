@@ -42,15 +42,22 @@ bundle agent test
       "expression" string => ifelse("myclass.myclass2", "bundle class OK", "bundle class broken");
 
   reports:
-      "ifelse result: $(mystring)";
+      "ifelse mystring result: $(mystring)";
+      "ifelse expression result: $(expression)";
 }
 
 #######################################################
 
 bundle agent check
 {
-  methods:
-      "check"  usebundle => dcs_check_state(test,
-                                           "$(this.promise_filename).expected.json",
-                                           $(this.promise_filename));
+  classes:
+        "check1" expression => strcmp("mystring", "pass");
+        "check2" expression => strcmp("expression", "bundle class OK");
+
+  reports:
+    check1.check2::
+         "$(this.promise_filename) Pass";
+
+    !(check1|check2)::
+         "$(this.promise_filename) FAIL";
 }

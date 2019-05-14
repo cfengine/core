@@ -1,0 +1,11 @@
+{
+    "classes": {
+        "augments_class_from_regex": [ "cfengine_\\d+" ],
+        "augments_class_from_single_class_as_regex": [ "cfengine" ],
+        "augments_class_from_single_class_as_expression": [ "cfengine::" ],
+        "augments_class_from_classexpression_and": [ "cfengine.cfengine_3::" ],
+        "augments_class_from_classexpression_not": [ "!MISSING::" ],
+        "augments_class_from_classexpression_or": [ "cfengine|cfengine_3::" ],
+        "augments_class_from_classexpression_complex": [ "(cfengine|cfengine_3).!MISSING::" ]
+    }
+}

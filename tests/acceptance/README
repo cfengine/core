@@ -191,7 +191,7 @@ Handling different platforms
 ------------------------------------------------------------------------------
 
 For tests that need to be skipped on certain platforms, you can add
-special meta variables to one of the test bundles. These are the
+special meta variables to the *test* bundle. These are the
 possible variable names:
 
   - test_skip_unsupported
@@ -214,6 +214,13 @@ possible variable names:
       Suppressed failures will count as a failure, but it won't block
       the build, and is appropriate for regressions or bad test
       failures.
+
+Additinally, a *description* meta variable can be added to the test to describe
+it's funciton.
+
+  meta:
+      "description" -> { "CFE-2971" }
+        string => "Test that class expressions can be used to define classes via augments";
 
 The rule of thumb is:
 

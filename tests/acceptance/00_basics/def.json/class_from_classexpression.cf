@@ -1,0 +1,62 @@
+# basic test of the def.json facility: augments
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+
+  meta:
+      "description" -> { "CFE-2971" }
+        string => "Test that class expressions can be used to define classes via augments";
+
+  methods:
+      "Test all expected classes defined from augments"
+        usebundle => file_make("$(sys.inputdir)/promises.cf", '
+bundle agent main
+{
+  classes:
+      "pass" and => {
+                      "augments_class_from_regex",
+                      "augments_class_from_single_class_as_regex",
+                      "augments_class_from_single_class_as_expression",
+                      "augments_class_from_classexpression_and",
+                      "augments_class_from_classexpression_not",
+                      "augments_class_from_classexpression_or",
+                      "augments_class_from_classexpression_complex",
+      };
+
+
+  reports:
+    pass::
+      "PASS: All expected classes found";
+    !pass::
+      "FAIL: Not all expected classes found";
+}
+');
+
+      "Place Augments for test"
+        usebundle => file_copy("$(this.promise_filename).json",
+                               "$(sys.inputdir)/def.json");
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+      "command"
+        string => "$(sys.cf_agent) --show-evaluated-classes=augments_classes_from_ -f $(sys.inputdir)/promises.cf|$(G.grep) PASS";
+
+  methods:
+      "PASS/FAIL"
+        usebundle => dcs_passif_output(".*PASS.*",
+                                       "",
+                                       $(command),
+                                       $(this.promise_filename));
+}

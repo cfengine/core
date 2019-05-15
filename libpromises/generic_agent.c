@@ -197,12 +197,34 @@ Policy *SelectAndLoadPolicy(GenericAgentConfig *config, EvalContext *ctx, bool v
     return policy;
 }
 
-static bool CheckContextClassmatch(EvalContext *ctx, const char* class_str)
+static bool CheckContextClassmatch(EvalContext *ctx, const char *class_str)
 {
+    if (StringEndsWith(class_str, "::")) // Treat as class expression, not regex
+    {
+        const size_t length = strlen(class_str);
+        if (length <= 2)
+        {
+            assert(length == 2); // True because StringEndsWith
+            Log(LOG_LEVEL_ERR,
+                "Invalid class expression in augments: '%s'",
+                class_str);
+            return false;
+        }
+
+        char *const tmp_class_str = xstrdup(class_str);
+        assert(strlen(tmp_class_str) == length);
+
+        tmp_class_str[length - 2] = '\0'; // 2 = strlen("::")
+        const bool found = IsDefinedClass(ctx, tmp_class_str);
+
+        free(tmp_class_str);
+        return found;
+    }
+
     ClassTableIterator *iter = EvalContextClassTableIteratorNewGlobal(ctx, NULL, true, true);
     StringSet *global_matches = ClassesMatching(ctx, iter, class_str, NULL, true); // returns early
 
-    bool found = (StringSetSize(global_matches) > 0);
+    const bool found = (StringSetSize(global_matches) > 0);
 
     StringSetDestroy(global_matches);
     ClassTableIteratorDestroy(iter);

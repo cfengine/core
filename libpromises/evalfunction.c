@@ -4593,6 +4593,7 @@ static FnCallResult FnCallSublist(EvalContext *ctx, ARG_UNUSED const Policy *pol
 
 /*********************************************************************/
 
+// TODO: This monstrosity needs refactoring
 static FnCallResult FnCallSetop(EvalContext *ctx,
                                 ARG_UNUSED const Policy *policy,
                                 const FnCall *fp, const Rlist *finalargs)
@@ -4627,12 +4628,14 @@ static FnCallResult FnCallSetop(EvalContext *ctx,
         // we failed to produce a valid JsonElement, so give up
         if (json_b == NULL)
         {
+            JsonDestroyMaybe(json, allocated);
             return FnFailure();
         }
         else if (JsonGetElementType(json_b) != JSON_ELEMENT_TYPE_CONTAINER)
         {
             Log(LOG_LEVEL_VERBOSE, "Function '%s', argument '%s' was not a data container or list",
                 fp->name, name_str_b);
+            JsonDestroyMaybe(json, allocated);
             JsonDestroyMaybe(json_b, allocated_b);
             return FnFailure();
         }

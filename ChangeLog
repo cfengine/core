@@ -80,6 +80,12 @@
 	  (ENT-4601)
 	- Fixed a crash in string_split function, when segments are too long
 	  (CFE-3047)
+	- Augments files can now handle class expressions by appending `::`.
+	  A condition in an augments file is treated as a class expression
+	  if it ends in ::. Otherwise it is treated as a regular
+	  expression. (CFE-2954)
+	- Fixed memory leak in: differences(), intersection(), unique()
+	  (ENT-4586)
 
 3.12.1:
 	- Added a new binary: cf-check

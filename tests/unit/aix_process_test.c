@@ -9,15 +9,18 @@
 /*
  * AIX 5.3 is missing this declaration
  */
-#ifndef GETPROCS64
-int getprocs64(struct procentry64 *, int, struct fdsinfo64 *, int, pid_t *, int);
+#ifndef HAVE_GETPROCS64
+int getprocs64(void *procsinfo, int sizproc, void *fdsinfo, int sizfd, pid_t *index, int count);
+#endif
 
-int getprocs64(struct procentry64* pe, int process_size, struct fdsinfo64 *fi, int files_size, pid_t* pid, int count)
+int getprocs64(void *procsinfo, int process_size, void *fdsinfo, int sizfd, pid_t *index, int count)
 {
     assert_int_equal(count, 1);
-    assert_true(fi == NULL);
+    assert_true(fdsinfo == NULL);
 
-    switch (*pid)
+    struct procentry64* pe = procsinfo;
+
+    switch (*index)
     {
     /* Normal process, running, started 1 jan 2000 00:00:00 */
     case 1:
@@ -25,7 +28,7 @@ int getprocs64(struct procentry64* pe, int process_size, struct fdsinfo64 *fi, i
         pe->pi_pid = 1;
         pe->pi_start = 946681200;
         pe->pi_state = SACTIVE;
-        *pid = 2;
+        *index = 2;
         return 1;
 
     /* Normal process, stopped, started 31 dec 1980 23:59:59 */
@@ -34,7 +37,7 @@ int getprocs64(struct procentry64* pe, int process_size, struct fdsinfo64 *fi, i
         pe->pi_pid = 2;
         pe->pi_start = 347151599;
         pe->pi_state = SSTOP;
-        *pid = 3;
+        *index = 3;
         return 1;
 
     /* Permission denied, getprocs64 returns EINVAL */
@@ -48,7 +51,7 @@ int getprocs64(struct procentry64* pe, int process_size, struct fdsinfo64 *fi, i
         pe->pi_pid = 1001;
         pe->pi_start = 312312313;
         pe->pi_state = SACTIVE;
-        *pid = 1002;
+        *index = 1002;
         return 1;
 
     /* Non-existing process, table sentinel. getprocs64 return 0 */
@@ -56,7 +59,7 @@ int getprocs64(struct procentry64* pe, int process_size, struct fdsinfo64 *fi, i
         return 0;
     }
 }
-#endif
+
 static void test_get_start_time_process1(void)
 {
     time_t t = GetProcessStartTime(1);

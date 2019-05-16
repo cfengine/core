@@ -441,8 +441,8 @@ static bool SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min
         if (value == CF_NOINT)
         {
             Log(LOG_LEVEL_INFO,
-                "Failed to extract a valid integer from %c => '%s' in process list",
-                name1[i], line[i]);
+                "Failed to extract a valid integer from %s => '%s' in process list",
+                names[i], line[i]);
             return false;
         }
 

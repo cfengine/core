@@ -125,7 +125,7 @@ static bool SplitProcLine(const char *proc,
                           int *end,
                           PsColumnAlgorithm pca,
                           char **line);
-static int SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line);
+static bool SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line);
 static int SelectProcTimeAbsRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line);
 static int GetProcColumnIndex(const char *name1, const char *name2, char **names);
 static void GetProcessColumnNames(const char *proc, char **names, int *start, int *end);
@@ -426,7 +426,7 @@ static long TimeCounter2Int(const char *s)
     return ((days * 24 + hours) * 60 + minutes) * 60 + seconds;
 }
 
-static int SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line)
+static bool SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line)
 {
     if ((min == CF_NOINT) || (max == CF_NOINT))
     {

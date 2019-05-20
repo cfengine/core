@@ -125,7 +125,7 @@ static bool SplitProcLine(const char *proc,
                           int *end,
                           PsColumnAlgorithm pca,
                           char **line);
-static int SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line);
+static bool SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line);
 static int SelectProcTimeAbsRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line);
 static int GetProcColumnIndex(const char *name1, const char *name2, char **names);
 static void GetProcessColumnNames(const char *proc, char **names, int *start, int *end);
@@ -426,7 +426,7 @@ static long TimeCounter2Int(const char *s)
     return ((days * 24 + hours) * 60 + minutes) * 60 + seconds;
 }
 
-static int SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line)
+static bool SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line)
 {
     if ((min == CF_NOINT) || (max == CF_NOINT))
     {
@@ -441,8 +441,8 @@ static int SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min,
         if (value == CF_NOINT)
         {
             Log(LOG_LEVEL_INFO,
-                "Failed to extract a valid integer from %c => '%s' in process list",
-                name1[i], line[i]);
+                "Failed to extract a valid integer from %s => '%s' in process list",
+                names[i], line[i]);
             return false;
         }
 
@@ -791,6 +791,21 @@ Solaris 9:
                         {
                             break;
                         }
+                    }
+                }
+            }
+            else if (strcmp(names[field], "TIME") == 0)
+            {
+                // Check for processes with no TIME reported.
+                for (int pos = start[field]; pos <= end[field] && pos < linelen && !skip; pos++)
+                {
+                    if ((pos == start[field] || isspace(line[pos - 1])) /* first or after space */
+                        && (line[pos] == '-')
+                        && (isspace(line[pos + 1]) || line[pos + 1] == '\0')) /* space or end follows */
+                    {
+                        LogDebug(LOG_MOD_PS, "Detected process with no TIME reported, "
+                                 "skipping parsing of empty ps fields.");
+                        skip = true;
                     }
                 }
             }

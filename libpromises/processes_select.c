@@ -794,21 +794,6 @@ Solaris 9:
                     }
                 }
             }
-            else if (strcmp(names[field], "TIME") == 0)
-            {
-                // Check for processes with no TIME reported.
-                for (int pos = start[field]; pos <= end[field] && pos < linelen && !skip; pos++)
-                {
-                    if ((pos == start[field] || isspace(line[pos - 1])) /* first or after space */
-                        && (line[pos] == '-')
-                        && (isspace(line[pos + 1]) || line[pos + 1] == '\0')) /* space or end follows */
-                    {
-                        LogDebug(LOG_MOD_PS, "Detected process with no TIME reported, "
-                                 "skipping parsing of empty ps fields.");
-                        skip = true;
-                    }
-                }
-            }
         }
     }
 

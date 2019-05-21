@@ -36,9 +36,15 @@ bundle agent test
 
 body process_count test_range
 {
-      in_range_define => { "none_found" };
-      out_of_range_define => { "some_found" };
-      match_range => irange(0,0);
+        in_range_define => { "none_found" };
+        out_of_range_define => { "some_found" };
+
+    aix::
+        # Allow one process with CPU time not between 0 seconds and 99 years on
+        # AIX because a process with TIME '-' sometimes appears there.
+        match_range => irange(0, 1);
+    !aix::
+        match_range => irange(0, 0);
 }
 
 body process_select test_select_high_users

@@ -174,7 +174,6 @@ int main(int argc, char *argv[])
     GenericAgentFinalize(ctx, config);
     ExecConfigDestroy(exec_config);
     ExecdConfigDestroy(execd_config);
-
     return 0;
 }
 
@@ -186,7 +185,6 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 {
     extern char *optarg;
     int c;
-    char ld_library_path[CF_BUFSIZE];
 
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_EXECUTOR, GetTTYInteractive());
 
@@ -260,10 +258,11 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'L':
-            snprintf(ld_library_path, CF_BUFSIZE - 1, "LD_LIBRARY_PATH=%s", optarg);
-            putenv(xstrdup(ld_library_path));
-            break;
-
+            {
+                Log(LOG_LEVEL_VERBOSE, "Setting 'LD_LIBRARY_PATH=%s'", optarg);
+                setenv_wrapper("LD_LIBRARY_PATH", optarg, 1);
+                break;
+            }
         case 'W':
             WINSERVICE = false;
             break;

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 import sys
+import time
 from os.path import basename
 from collections import OrderedDict
 
-from cf_remote.utils import os_release, column_print, pretty, user_error
+from cf_remote.utils import os_release, column_print, pretty, user_error, parse_systeminfo, parse_version
 from cf_remote.ssh import ssh_sudo, ssh_cmd, scp, auto_connect
 from cf_remote import log
 from cf_remote.web import download_package
@@ -16,13 +17,17 @@ def print_info(data):
     output = OrderedDict()
     print()
     print(data["ssh"])
-    os_release = data["os_release"]
     os = like = None
-    if os_release:
-        if "ID" in os_release:
-            os = os_release["ID"]
-        if "ID_LIKE" in os_release:
-            like = os_release["ID_LIKE"]
+    if "os_release" in data:
+        os_release = data["os_release"]
+        if os_release:
+            if "ID" in os_release:
+                os = os_release["ID"]
+            if "ID_LIKE" in os_release:
+                like = os_release["ID_LIKE"]
+    elif "systeminfo" in data:
+        os = "Windows"
+
     if not os:
         os = data["uname"]
     if os and like:
@@ -78,22 +83,32 @@ def get_info(host, *, users=None, connection=None):
     data["ssh_host"] = host
     data["ssh"] = "{}@{}".format(user, host)
     data["whoami"] = ssh_cmd(connection, "whoami")
-    data["uname"] = ssh_cmd(connection, "uname")
-    data["arch"] = ssh_cmd(connection, "uname -m")
-    data["os_release"] = os_release(ssh_cmd(connection, "cat /etc/os-release"))
-    data["agent_location"] = ssh_cmd(connection, "which cf-agent")
-    data["policy_server"] = ssh_cmd(connection, "cat /var/cfengine/policy_server.dat")
-    agent_version = ssh_cmd(connection, "cf-agent --version")
-    if agent_version:
-        # 'CFEngine Core 3.12.1 \n CFEngine Enterprise 3.12.1'
-        #                ^ split and use this part for version number
-        agent_version = agent_version.split()[2]
-    data["agent_version"] = agent_version
-    data["bin"] = {}
-    for bin in ["dpkg", "rpm", "yum", "apt", "pkg"]:
-        path = ssh_cmd(connection, "which {}".format(bin))
-        if path:
-            data["bin"][bin] = path
+    systeminfo = ssh_cmd(connection, "systeminfo")
+    if systeminfo:
+        data["os"] = "windows"
+        data["systeminfo"] = parse_systeminfo(systeminfo)
+        data["package_tags"] = ["x86_64", "msi"]
+        data["arch"] = "x86_64"
+        agent = r'"C:\Program Files\Cfengine\bin\cf-agent.exe"'
+        data["agent"] = agent
+        data["agent_version"] = parse_version(ssh_cmd(connection, '{} -V'.format(agent)))
+    else:
+        data["os"] = "unix"
+        data["uname"] = ssh_cmd(connection, "uname")
+        data["arch"] = ssh_cmd(connection, "uname -m")
+        data["os_release"] = os_release(ssh_cmd(connection, "cat /etc/os-release"))
+        data["agent_location"] = ssh_cmd(connection, "which cf-agent")
+        data["policy_server"] = ssh_cmd(connection, "cat /var/cfengine/policy_server.dat")
+
+        agent = r'/var/cfengine/bin/cf-agent'
+        data["agent"] = agent
+        data["agent_version"] = parse_version(ssh_cmd(connection, "{} --version".format(agent)))
+
+        data["bin"] = {}
+        for bin in ["dpkg", "rpm", "yum", "apt", "pkg"]:
+            path = ssh_cmd(connection, "which {}".format(bin))
+            if path:
+                data["bin"][bin] = path
 
     log.debug("JSON data from host info: \n" + pretty(data))
     return data
@@ -105,6 +120,9 @@ def install_package(host, pkg, data, *, connection=None):
     print("Installing: '{}' on '{}'".format(pkg, host))
     if ".deb" in pkg:
         output = ssh_sudo(connection, "dpkg -i {}".format(pkg))
+    elif ".msi" in pkg:
+        output = ssh_cmd(connection, r".\{}".format(pkg))
+        time.sleep(8)
     else:
         output = ssh_sudo(connection, "rpm -i {}".format(pkg))
     if output is None:
@@ -112,10 +130,16 @@ def install_package(host, pkg, data, *, connection=None):
 
 
 @auto_connect
-def bootstrap_host(host, policy_server, *, connection=None):
+def bootstrap_host(host_data, policy_server, *, connection=None):
+    host = host_data["ssh_host"]
+    agent = host_data["agent"]
     print("Bootstrapping: '{}' -> '{}'".format(host, policy_server))
-    command = "/var/cfengine/bin/cf-agent --bootstrap {}".format(policy_server)
-    output = ssh_sudo(connection, command)
+    command = "{} --bootstrap {}".format(agent, policy_server)
+    if host_data["os"] == "windows":
+        output = ssh_cmd(connection, command)
+    else:
+        output = ssh_sudo(connection, command)
+
     if output is None:
         sys.exit("Bootstrap failed on '{}'".format(host))
     if output and "completed successfully" in output:
@@ -143,7 +167,9 @@ def install_host(
         tags.append("hub" if hub else "agent")
         tags.append("64" if data["arch"] in ["x86_64", "amd64"] else data["arch"])
         extension = None
-        if "dpkg" in data["bin"]:
+        if "package_tags" in data and "msi" in data["package_tags"]:
+            extension = ".msi"
+        elif "dpkg" in data["bin"]:
             extension = ".deb"
         elif "rpm" in data["bin"]:
             extension = ".rpm"
@@ -165,15 +191,16 @@ def install_host(
     data = get_info(host, connection=connection)
     if data["agent_version"] and len(data["agent_version"]) > 0:
         print(
-            "CFEngine {} was successfully installed on '{}'".format(data["agent_version"], host))
+            "CFEngine {} was successfully installed on '{}'".format(data["agent_version"],
+                                                                    host))
     else:
         print("Installation failed!")
         sys.exit(1)
     if bootstrap:
-        bootstrap_host(host, policy_server=bootstrap, connection=connection)
+        bootstrap_host(data, policy_server=bootstrap, connection=connection)
     if demo:
         if hub:
             demo_lib.install_def_json(host, connection=connection, call_collect=call_collect)
-            demo_lib.agent_run(host, connection=connection)
+            demo_lib.agent_run(data, connection=connection)
             demo_lib.disable_password_dialog(host)
-        demo_lib.agent_run(host, connection=connection)
+        demo_lib.agent_run(data, connection=connection)

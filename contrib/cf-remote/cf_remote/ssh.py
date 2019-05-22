@@ -15,9 +15,10 @@ def connect(host, users=None):
         if not users:
             users = [parts[0]]
     if not users:
-        users = ["ubuntu", "ec2-user", "centos", "vagrant", "root"]
+        users = ["Administrator", "ubuntu", "ec2-user", "centos", "vagrant", "root"]
     for user in users:
         try:
+            log.debug("Attempting ssh: {}@{}".format(user, host))
             c = fabric.Connection(host=host, user=user)
             c.ssh_user = user
             c.ssh_host = host
@@ -58,7 +59,7 @@ def ssh_cmd(connection, cmd, errors=False):
     try:
         log.debug("Running over SSH: '{}'".format(cmd))
         result = connection.run(cmd, hide=True)
-        output = result.stdout.strip("\n")
+        output = result.stdout.replace("\r\n", "\n").strip("\n")
         log.debug("'{}' -> '{}'".format(cmd, output))
         return output
     except UnexpectedExit as e:

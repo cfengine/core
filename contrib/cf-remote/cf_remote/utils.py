@@ -103,6 +103,26 @@ def os_release(inp):
     return d
 
 
+def parse_version(string):
+    if not string:
+        return None
+    # 'CFEngine Core 3.12.1 \n CFEngine Enterprise 3.12.1'
+    #                ^ split and use this part for version number
+    return string.split()[2]
+
+
+def parse_systeminfo(data):
+    # TODO: This is not great, it misses a lot of the nested data
+    lines = [s.strip() for s in data.split("\n") if s.strip()]
+    data = OrderedDict()
+    for line in lines:
+        sections = line.split(":")
+        key = sections[0].strip()
+        value = ":".join(sections[1:]).strip()
+        data[key] = value
+    return data
+
+
 def column_print(data):
     width = 0
     for key in data:
@@ -134,10 +154,10 @@ def expand_list_from_file(string):
 
     return hosts
 
+
 def strip_user(host):
     """Strips the 'user@' info from a host spec"""
     idx = host.find('@')
     if idx != -1:
         return host[(idx + 1):]
     return host
-

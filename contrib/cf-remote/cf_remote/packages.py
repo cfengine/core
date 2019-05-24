@@ -47,6 +47,12 @@ class Artifact:
         if "os_x" in self.tags:
             self.add_tag("osx")
             self.tags.remove("os_x")
+        if "x86" in self.tags:
+            self.add_tag("32")
+        if "x86_64" in self.tags:
+            self.add_tag("64")
+        if "i686" in self.tags:
+            self.add_tag("32")
 
         self.add_tags_from_filename(self.filename)
 
@@ -85,6 +91,9 @@ class Artifact:
     def __str__(self):
         return self.filename + " ({})".format(" ".join(self.tags))
 
+    def __repr__(self):
+        return str(self)
+
 
 class Release:
     def __init__(self, data):
@@ -109,15 +118,18 @@ class Release:
     def find(self, tags, extension=None):
         if not self.extended_data:
             self.init_download()
-        log.debug("Looking for tags: {}".format(tags))
         artifacts = self.artifacts
         if extension:
-            artifacts = [a for a in self.artifacts if a.extension == extension]
+            artifacts = [a for a in artifacts if a.extension == extension]
+        log.debug("Looking for tags: {}".format(tags))
+        log.debug("In artifacts: {}".format(artifacts))
         for tag in tags or []:
             tag = canonify(tag)
             artifacts = [a for a in artifacts if tag in a.tags]
             # Have to force evaluation using list comprehension,
             # since we are overwriting artifacts
+
+        log.debug("Found artifacts: {}".format(artifacts))
         return artifacts
 
     def __str__(self):

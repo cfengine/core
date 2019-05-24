@@ -4,17 +4,20 @@ import json
 from cf_remote import log
 from cf_remote.paths import cf_remote_dir
 from cf_remote.utils import save_file
-from cf_remote.ssh import scp, ssh_sudo, auto_connect
+from cf_remote.ssh import scp, ssh_sudo, ssh_cmd, auto_connect
 
 
 @auto_connect
-def agent_run(host, *, connection=None):
+def agent_run(data, *, connection=None):
+    host = data["ssh_host"]
+    agent = data["agent"]
     print("Triggering an agent run on: '{}'".format(host))
-    command = "/var/cfengine/bin/cf-agent -Kf update.cf"
-    output = ssh_sudo(connection, command)
+    command = "{} -Kf update.cf".format(agent)
+    ssh_func = ssh_cmd if data["os"] == "windows" else ssh_sudo
+    output = ssh_func(connection, command)
     log.debug(output)
-    command = "/var/cfengine/bin/cf-agent -K"
-    output = ssh_sudo(connection, command)
+    command = "{} -K".format(agent)
+    output = ssh_func(connection, command)
     log.debug(output)
 
 

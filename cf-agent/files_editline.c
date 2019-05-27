@@ -83,18 +83,18 @@ static PromiseResult VerifyLineInsertions(EvalContext *ctx, const Promise *pp, E
 static bool InsertMultipleLinesToRegion(EvalContext *ctx, Item **start, Item *begin_ptr, Item *end_ptr, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
 static bool InsertMultipleLinesAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr, Item *end_ptr, Item *location, Item *prev, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
 static bool DeletePromisedLinesMatching(EvalContext *ctx, Item **start, Item *begin, Item *end, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
-static int InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, Item *location, Item *prev, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
+static bool InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, Item *location, Item *prev, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
 static bool InsertCompoundLineAtLocation(EvalContext *ctx, char *newline, Item **start, Item *begin_ptr, Item *end_ptr, Item *location, Item *prev, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
 static int ReplacePatterns(EvalContext *ctx, Item *start, Item *end, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
 static bool EditColumns(EvalContext *ctx, Item *file_start, Item *file_end, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
 static bool EditLineByColumn(EvalContext *ctx, Rlist **columns, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
 static bool DoEditColumn(Rlist **columns, const Attributes *a, EditContext *edcontext);
 static int SanityCheckInsertions(const Attributes *a);
-static int SanityCheckDeletions(const Attributes *a, const Promise *pp);
-static int SelectLine(EvalContext *ctx, const char *line, const Attributes *a);
-static int NotAnchored(char *s);
+static bool SanityCheckDeletions(const Attributes *a, const Promise *pp);
+static bool SelectLine(EvalContext *ctx, const char *line, const Attributes *a);
+static bool NotAnchored(char *s);
 static bool SelectRegion(EvalContext *ctx, Item *start, Item **begin_ptr, Item **end_ptr, const Attributes *a, EditContext *edcontext);
-static int MultiLineString(char *s);
+static bool MultiLineString(char *s);
 static bool InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr, Item *end_ptr, Item *location, Item *prev, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
 
 /*****************************************************************************/
@@ -1409,14 +1409,15 @@ static int SanityCheckInsertions(const Attributes *a)
 
 /***************************************************************************/
 
-static int SanityCheckDeletions(const Attributes *a, const Promise *pp)
+static bool SanityCheckDeletions(const Attributes *a, const Promise *pp)
 {
     if (MultiLineString(pp->promiser))
     {
         if (a->not_matching)
         {
             Log(LOG_LEVEL_ERR,
-                  "Makes no sense to promise multi-line delete with not_matching. Cannot be satisfied for all lines as a block.");
+                "Makes no sense to promise multi-line delete with not_matching. Cannot be satisfied for all lines as a block.");
+            // FIXME: This function always returns true (!)
         }
     }
 
@@ -1613,7 +1614,7 @@ static bool MatchPolicy(EvalContext *ctx, const char *camel, const char *haystac
     return ok;
 }
 
-static int IsItemInRegion(EvalContext *ctx, const char *item, const Item *begin_ptr, const Item *end_ptr, Rlist *insert_match, const Promise *pp)
+static bool IsItemInRegion(EvalContext *ctx, const char *item, const Item *begin_ptr, const Item *end_ptr, Rlist *insert_match, const Promise *pp)
 {
     for (const Item *ip = begin_ptr; ((ip != end_ptr) && (ip != NULL)); ip = ip->next)
     {
@@ -1800,7 +1801,7 @@ static bool InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **s
     return retval;
 }
 
-static int NeighbourItemMatches(EvalContext *ctx, const Item *file_start, const Item *location, const char *string, EditOrder pos, Rlist *insert_match,
+static bool NeighbourItemMatches(EvalContext *ctx, const Item *file_start, const Item *location, const char *string, EditOrder pos, Rlist *insert_match,
                          const Promise *pp)
 {
 /* Look for a line matching proposed insert before or after location */
@@ -1841,7 +1842,7 @@ static int NeighbourItemMatches(EvalContext *ctx, const Item *file_start, const 
     return false;
 }
 
-static int InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, Item *location, Item *prev, const Attributes *a,
+static bool InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, Item *location, Item *prev, const Attributes *a,
                                 const Promise *pp, EditContext *edcontext, PromiseResult *result)
 
 /* Check line neighbourhood in whole file to avoid edge effects, iff we are not preseving block structure */
@@ -2113,7 +2114,7 @@ static bool EditLineByColumn(EvalContext *ctx, Rlist **columns, const Attributes
 
 /***************************************************************************/
 
-static int SelectLine(EvalContext *ctx, const char *line, const Attributes *a)
+static bool SelectLine(EvalContext *ctx, const char *line, const Attributes *a)
 {
     Rlist *rp, *c;
     int s, e;
@@ -2301,7 +2302,7 @@ static bool DoEditColumn(Rlist **columns, const Attributes *a, EditContext *edco
 
 /********************************************************************/
 
-static int NotAnchored(char *s)
+static bool NotAnchored(char *s)
 {
     if (*s != '^')
     {
@@ -2318,7 +2319,7 @@ static int NotAnchored(char *s)
 
 /********************************************************************/
 
-static int MultiLineString(char *s)
+static bool MultiLineString(char *s)
 {
     return (strchr(s, '\n') != NULL);
 }

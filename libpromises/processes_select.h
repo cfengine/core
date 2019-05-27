@@ -31,7 +31,7 @@
 extern Item *PROCESSTABLE;
 #endif
 
-int LoadProcessTable(void);
+bool LoadProcessTable(void);
 void ClearProcessTable(void);
 
 Item *SelectProcesses(const char *process_name, const ProcessSelect *a, bool attrselect);

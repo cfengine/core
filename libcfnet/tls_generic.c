@@ -74,7 +74,7 @@ enum tls_version {
 #endif
 
 static const char *const tls_version_strings[TLS_LAST + 1] = {"1.0", "1.1", "1.2", "1.3"};
-static unsigned int tls_disable_flags[TLS_LAST + 1] = {0, SSL_OP_NO_TLSv1_1, SSL_OP_NO_TLSv1_2, SSL_OP_NO_TLSv1_3};
+static unsigned int tls_disable_flags[TLS_LAST + 1] = {SSL_OP_NO_TLSv1, SSL_OP_NO_TLSv1_1, SSL_OP_NO_TLSv1_2, SSL_OP_NO_TLSv1_3};
 
 int CONNECTIONINFO_SSL_IDX = -1;
 

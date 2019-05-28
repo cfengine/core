@@ -87,6 +87,7 @@ static void InitIgnoreInterfaces(void);
 static Rlist *IGNORE_INTERFACES = NULL; /* GLOBAL_E */
 
 typedef void (*ProcPostProcessFn)(void *ctx, void *json);
+typedef JsonElement * (*ProcTiebreakerFn)(JsonElement *prev_item, JsonElement *this_item);
 
 
 /*********************************************************************/
@@ -841,7 +842,7 @@ static long JsonExtractParsedNumber(JsonElement* element, const char* raw_key, c
 
 /*******************************************************************/
 
-static ProcPostProcessFn NetworkingRoutesPostProcessInfo(
+static void NetworkingRoutesPostProcessInfo(
     ARG_LINUX_ONLY void *passed_ctx, ARG_LINUX_ONLY void *json)
 {
 # if defined (__linux__)
@@ -886,10 +887,9 @@ static ProcPostProcessFn NetworkingRoutesPostProcessInfo(
         BufferDestroy(formatter);
     }
 # endif
-    return NULL;
 }
 
-static ProcPostProcessFn NetworkingIPv6RoutesPostProcessInfo(
+static void NetworkingIPv6RoutesPostProcessInfo(
     ARG_UNUSED void *passed_ctx, ARG_LINUX_ONLY void *json)
 {
 # if defined (__linux__)
@@ -922,10 +922,9 @@ static ProcPostProcessFn NetworkingIPv6RoutesPostProcessInfo(
     // like we do with IPv4 routes
 
 # endif
-    return NULL;
 }
 
-static ProcPostProcessFn NetworkingIPv6AddressesPostProcessInfo(ARG_UNUSED void *passed_ctx, void *json)
+static void NetworkingIPv6AddressesPostProcessInfo(ARG_UNUSED void *passed_ctx, void *json)
 {
     JsonElement *entry = json;
 
@@ -934,7 +933,50 @@ static ProcPostProcessFn NetworkingIPv6AddressesPostProcessInfo(ARG_UNUSED void 
     JsonExtractParsedNumber(entry, "raw_device_number", "device_number", true, false);
     JsonExtractParsedNumber(entry, "raw_prefix_length", "prefix_length", true, false);
     JsonExtractParsedNumber(entry, "raw_scope", "scope", true, false);
-    return NULL;
+}
+
+static unsigned RankIPv6Address(const char *address)
+{
+    unsigned long first_word = 0;
+    char *end;
+
+    if (address == NULL)
+    {
+        return 0;
+    }
+
+    first_word = strtoul(address, &end, 16);
+
+    if (*end != ':')
+    {
+        return 0;  // invalid IPv6 address?
+    }
+
+    if ((first_word & 0xffc0) == 0xfe80)
+    {
+        // link-local (fe80:://10)
+
+        return 1;
+    }
+    else
+    {
+        return 2;
+    }
+}
+
+static JsonElement *NetworkingIPv6AddressesTiebreaker(JsonElement *prev_item, JsonElement *this_item)
+{
+    const char *prev_addr = JsonObjectGetAsString(prev_item, "address");
+    const char *this_addr = JsonObjectGetAsString(this_item, "address");
+
+    if (RankIPv6Address(this_addr) >= RankIPv6Address(prev_addr))
+    {
+        return this_item;
+    }
+    else
+    {
+        return prev_item;
+    }
 }
 
 /*******************************************************************/
@@ -963,7 +1005,7 @@ static const char* GetPortStateString(ARG_LINUX_ONLY int state)
 
 // used in evalfunction.c but defined here so
 // JsonRewriteParsedIPAddress() etc. can stay local
-ProcPostProcessFn NetworkingPortsPostProcessInfo(ARG_UNUSED void *passed_ctx, void *json)
+void NetworkingPortsPostProcessInfo(ARG_UNUSED void *passed_ctx, void *json)
 {
     JsonElement *conn = json;
 
@@ -980,8 +1022,6 @@ ProcPostProcessFn NetworkingPortsPostProcessInfo(ARG_UNUSED void *passed_ctx, vo
             JsonObjectAppendString(conn, "state", GetPortStateString(num_state));
         }
     }
-
-    return NULL;
 }
 
 /*******************************************************************/
@@ -1048,7 +1088,7 @@ static JsonElement* GetNetworkingStatsInfo(const char *filename)
 // always returns the parsed data. If the key is not NULL, also
 // creates a sys.KEY variable.
 
-JsonElement* GetProcFileInfo(EvalContext *ctx, const char* filename, const char* key, const char* extracted_key, ProcPostProcessFn post, const char* regex)
+JsonElement* GetProcFileInfo(EvalContext *ctx, const char* filename, const char* key, const char* extracted_key, ProcPostProcessFn post, ProcTiebreakerFn tiebreak, const char* regex)
 {
     JsonElement *info = NULL;
     bool extract_key_mode = (extracted_key != NULL);
@@ -1086,14 +1126,39 @@ JsonElement* GetProcFileInfo(EvalContext *ctx, const char* filename, const char*
 
                     if (extract_key_mode)
                     {
-                        if (JsonObjectGetAsString(item, extracted_key) == NULL)
+                        const char *extracted_key_value = JsonObjectGetAsString(item, extracted_key);
+
+                        if (extracted_key_value == NULL)
                         {
                             Log(LOG_LEVEL_ERR, "While parsing %s, looked to extract key %s but couldn't find it in line %s", filename, extracted_key, line);
                         }
                         else
                         {
-                            Log(LOG_LEVEL_DEBUG, "While parsing %s, got key %s from line %s", filename, JsonObjectGetAsString(item, extracted_key), line);
-                            JsonObjectAppendElement(info, JsonObjectGetAsString(item, extracted_key), item);
+                            JsonElement *prev_item = JsonObjectGet(info, extracted_key_value);
+
+                            Log(LOG_LEVEL_DEBUG, "While parsing %s, got key %s from line %s", filename, extracted_key_value, line);
+
+                            if (prev_item != NULL && tiebreak != NULL)
+                            {
+                                JsonElement *winner = (*tiebreak)(prev_item, item);
+
+                                if (winner == prev_item)
+                                {
+                                    Log(LOG_LEVEL_DEBUG, "Multiple entries for key %s, preferring previous value", extracted_key_value);
+
+                                    JsonDestroy(item);
+                                    item = NULL;
+                                }
+                                else
+                                {
+                                    Log(LOG_LEVEL_DEBUG, "Multiple entries for key %s, preferring new value", extracted_key_value);
+                                }
+                            }
+
+                            if (item != NULL)
+                            {
+                                JsonObjectAppendElement(info, extracted_key_value, item);
+                            }
                         }
                     }
                     else
@@ -1142,7 +1207,7 @@ void GetNetworkingInfo(EvalContext *ctx)
     }
 
     BufferPrintf(pbuf, "%s/proc/net/route", procdir_root);
-    JsonElement *routes = GetProcFileInfo(ctx, BufferData(pbuf),  NULL, NULL, (ProcPostProcessFn) &NetworkingRoutesPostProcessInfo,
+    JsonElement *routes = GetProcFileInfo(ctx, BufferData(pbuf),  NULL, NULL, &NetworkingRoutesPostProcessInfo, NULL,
                     // format: Iface	Destination	Gateway 	Flags	RefCnt	Use	Metric	Mask		MTU	Window	IRTT
                     //         eth0	00000000	0102A8C0	0003	0	0	1024	00000000	0	0	0
                     "^(?<interface>\\S+)\\t(?<raw_dest>[[:xdigit:]]+)\\t(?<raw_gw>[[:xdigit:]]+)\\t(?<raw_flags>[[:xdigit:]]+)\\t(?<refcnt>\\d+)\\t(?<use>\\d+)\\t(?<metric>[[:xdigit:]]+)\\t(?<raw_mask>[[:xdigit:]]+)\\t(?<mtu>\\d+)\\t(?<window>\\d+)\\t(?<irtt>[[:xdigit:]]+)");
@@ -1190,7 +1255,7 @@ void GetNetworkingInfo(EvalContext *ctx)
     JsonElement *inet6 = JsonObjectCreate(3);
 
     BufferPrintf(pbuf, "%s/proc/net/snmp6", procdir_root);
-    JsonElement *inet6_stats = GetProcFileInfo(ctx, BufferData(pbuf), NULL, NULL, NULL,
+    JsonElement *inet6_stats = GetProcFileInfo(ctx, BufferData(pbuf), NULL, NULL, NULL, NULL,
                                                "^\\s*(?<key>\\S+)\\s+(?<value>\\d+)");
 
     if (inet6_stats != NULL)
@@ -1216,7 +1281,7 @@ void GetNetworkingInfo(EvalContext *ctx)
     }
 
     BufferPrintf(pbuf, "%s/proc/net/ipv6_route", procdir_root);
-    JsonElement *inet6_routes = GetProcFileInfo(ctx, BufferData(pbuf),  NULL, NULL, (ProcPostProcessFn) &NetworkingIPv6RoutesPostProcessInfo,
+    JsonElement *inet6_routes = GetProcFileInfo(ctx, BufferData(pbuf),  NULL, NULL, &NetworkingIPv6RoutesPostProcessInfo, NULL,
                     // format: dest                    dest_prefix source                source_prefix next_hop                         metric   refcnt   use      flags        interface
                     //         fe800000000000000000000000000000 40 00000000000000000000000000000000 00 00000000000000000000000000000000 00000100 00000000 00000000 00000001     eth0
                     "^(?<raw_dest>[[:xdigit:]]+)\\s+(?<dest_prefix>[[:xdigit:]]+)\\s+"
@@ -1231,7 +1296,7 @@ void GetNetworkingInfo(EvalContext *ctx)
     }
 
     BufferPrintf(pbuf, "%s/proc/net/if_inet6", procdir_root);
-    JsonElement *inet6_addresses = GetProcFileInfo(ctx, BufferData(pbuf),  NULL, "interface", (ProcPostProcessFn) &NetworkingIPv6AddressesPostProcessInfo,
+    JsonElement *inet6_addresses = GetProcFileInfo(ctx, BufferData(pbuf),  NULL, "interface", &NetworkingIPv6AddressesPostProcessInfo, &NetworkingIPv6AddressesTiebreaker,
                     // format: address device_number prefix_length scope flags interface_name
                     // 00000000000000000000000000000001 01 80 10 80       lo
                     // fe80000000000000004249fffebdd7b4 04 40 20 80  docker0
@@ -1255,7 +1320,7 @@ void GetNetworkingInfo(EvalContext *ctx)
 
     BufferPrintf(pbuf, "%s/proc/net/dev", procdir_root);
     JsonElement *interfaces_data =
-    GetProcFileInfo(ctx, BufferData(pbuf), "interfaces_data", "device", NULL,
+    GetProcFileInfo(ctx, BufferData(pbuf), "interfaces_data", "device", NULL, NULL,
                     "^\\s*(?<device>[^:]+)\\s*:\\s*"
                     // All of the below are just decimal digits separated by spaces
                     "(?<receive_bytes>\\d+)\\s+"
@@ -1288,28 +1353,28 @@ JsonElement* GetNetworkingConnections(EvalContext *ctx)
     Buffer *pbuf = BufferNew();
 
     BufferPrintf(pbuf, "%s/proc/net/tcp", procdir_root);
-    data = GetProcFileInfo(ctx, BufferData(pbuf), NULL, NULL, (ProcPostProcessFn) &NetworkingPortsPostProcessInfo, ports_regex);
+    data = GetProcFileInfo(ctx, BufferData(pbuf), NULL, NULL, &NetworkingPortsPostProcessInfo, NULL, ports_regex);
     if (data != NULL)
     {
         JsonObjectAppendElement(json, "tcp", data);
     }
 
     BufferPrintf(pbuf, "%s/proc/net/tcp6", procdir_root);
-    data = GetProcFileInfo(ctx, BufferData(pbuf), NULL, NULL, (ProcPostProcessFn) &NetworkingPortsPostProcessInfo, ports_regex);
+    data = GetProcFileInfo(ctx, BufferData(pbuf), NULL, NULL, &NetworkingPortsPostProcessInfo, NULL, ports_regex);
     if (data != NULL)
     {
         JsonObjectAppendElement(json, "tcp6", data);
     }
 
     BufferPrintf(pbuf, "%s/proc/net/udp", procdir_root);
-    data = GetProcFileInfo(ctx, BufferData(pbuf), NULL, NULL, (ProcPostProcessFn) &NetworkingPortsPostProcessInfo, ports_regex);
+    data = GetProcFileInfo(ctx, BufferData(pbuf), NULL, NULL, &NetworkingPortsPostProcessInfo, NULL, ports_regex);
     if (data != NULL)
     {
         JsonObjectAppendElement(json, "udp", data);
     }
 
     BufferPrintf(pbuf, "%s/proc/net/udp6", procdir_root);
-    data = GetProcFileInfo(ctx, BufferData(pbuf), NULL, NULL, (ProcPostProcessFn) &NetworkingPortsPostProcessInfo, ports_regex);
+    data = GetProcFileInfo(ctx, BufferData(pbuf), NULL, NULL, &NetworkingPortsPostProcessInfo, NULL, ports_regex);
     if (data != NULL)
     {
         JsonObjectAppendElement(json, "udp6", data);

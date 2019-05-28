@@ -1,0 +1,83 @@
+#!/var/cfengine/bin/cf-agent -f-
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => {
+                          default("$(this.promise_filename)") };
+      version => "1.0";
+}
+body file control {  namespace => "test"; }
+bundle agent example
+{
+  classes:
+    "TRIGGERED"
+      expression => "any",
+      scope => "namespace"; # Namespace scoped classes are visible from other bundles
+
+  reports:
+    TRIGGERED::
+      "TRIGGERED is defined within $(this.namespace).$(this.bundle)";
+
+    default:TRIGGERED::
+      "default:TRIGGERED is defined within $(this.namespace).$(this.bundle)";
+
+    test:TRIGGERED::
+      "$(this.namespace):TRIGGERED is defined within $(this.namespace).$(this.bundle)";
+}
+body file control {  namespace => "default"; }
+bundle agent test
+{
+  meta:
+    "description" -> {"ENT-4681" }
+      string => "Test that namespace scoped classes defined from namespaced
+      agent bundles are properly scoped. Specifically from the default
+      namespace.";
+
+    "test_soft_fail"
+      string => "any",
+      meta => { "ENT-4681" };
+
+  methods:
+    "test:example";
+}
+bundle agent check
+{
+  classes:
+    # Expectation, default:TRIGGERED is NOT defined
+    "default_TRIGGERED_OK"
+      expression => "!default:TRIGGERED";
+
+    # Expectation, test:TRIGGERED is defined (visable since it's a namespace scoped class)
+    "namespaced_TRIGGERED_OK"
+      expression => "test:TRIGGERED";
+
+    # Expectation, TRIGGERED is NOT defined, we are now in the default namespace, the TRIGGERED class was defined in the test namespace and should not be seen without explicitly using it's namespace
+    "TRIGGERED_OK"
+      expression => "!TRIGGERED";
+
+
+    "pass" and => {
+                    "default_TRIGGERED_OK",
+                    "namespaced_TRIGGERED_OK",
+                    "TRIGGERED_OK",
+                  };
+  reports:
+    pass::
+    "Pass $(this.promise_filename)";
+    !pass::
+    "FAIL $(this.promise_filename)";
+    !default_TRIGGERED_OK::
+    "Expected 'default:TRIGGERED' to not be seen as defined, but expression '!default:TRIGGERED' resulted in true";
+    !namespaced_TRIGGERED_OK::
+    "Expected 'test:TRIGGERED' to be seen as defined, but expression 'test:TRIGGERED' resulted in false";
+    !TRIGGERED_OK::
+    "Expected 'TRIGGERED' to NOT be seen as defined, but expression 'TRIGGERED' resulted in true even without specify the test namespace";
+
+}
+bundle agent __main__
+{
+
+  methods:
+    "test:example";
+    "check";
+}

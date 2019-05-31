@@ -32,7 +32,7 @@
 PromiseResult VerifyPackagesPromise(EvalContext *ctx, const Promise *pp);
 void ExecuteScheduledPackages(EvalContext *ctx);
 void CleanScheduledPackages(void);
-int PrependPackageItem(EvalContext *ctx, PackageItem **list,
+bool PrependPackageItem(EvalContext *ctx, PackageItem **list,
                        const char *name, const char *version,
                        const char *arch, const Promise *pp);
 

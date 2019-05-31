@@ -104,9 +104,9 @@ typedef enum
     PACKAGE_PROMISE_TYPE_NEW_ERROR
 } PackagePromiseType;
 
-static int PackageSanityCheck(EvalContext *ctx, const Attributes *a, const Promise *pp);
+static bool PackageSanityCheck(EvalContext *ctx, const Attributes *a, const Promise *pp);
 
-static int VerifyInstalledPackages(EvalContext *ctx, PackageManager **alllists, const char *default_arch, const Attributes *a, const Promise *pp, PromiseResult *result);
+static bool VerifyInstalledPackages(EvalContext *ctx, PackageManager **alllists, const char *default_arch, const Attributes *a, const Promise *pp, PromiseResult *result);
 
 static PromiseResult VerifyPromisedPackage(EvalContext *ctx, const Attributes *a, const Promise *pp);
 static PromiseResult VerifyPromisedPatch(EvalContext *ctx, const Attributes *a, const Promise *pp);
@@ -117,9 +117,9 @@ static char *GetDefaultArch(const char *command);
 
 static bool ExecPackageCommand(EvalContext *ctx, char *command, int verify, int setCmdClasses, const Attributes *a, const Promise *pp, PromiseResult *result);
 
-static int PrependPatchItem(EvalContext *ctx, PackageItem ** list, char *item, PackageItem * chklist, const char *default_arch, const Attributes *a, const Promise *pp);
-static int PrependMultiLinePackageItem(EvalContext *ctx, PackageItem ** list, char *item, int reset, const char *default_arch, const Attributes *a, const Promise *pp);
-static int PrependListPackageItem(EvalContext *ctx, PackageItem ** list, char *item, const char *default_arch, const Attributes *a, const Promise *pp);
+static bool PrependPatchItem(EvalContext *ctx, PackageItem ** list, char *item, PackageItem * chklist, const char *default_arch, const Attributes *a, const Promise *pp);
+static bool PrependMultiLinePackageItem(EvalContext *ctx, PackageItem ** list, char *item, int reset, const char *default_arch, const Attributes *a, const Promise *pp);
+static bool PrependListPackageItem(EvalContext *ctx, PackageItem ** list, char *item, const char *default_arch, const Attributes *a, const Promise *pp);
 
 static PackageManager *GetPackageManager(PackageManager **lists, char *mgr, PackageAction pa, PackageActionPolicy x);
 static void DeletePackageManagers(PackageManager *morituri);
@@ -389,7 +389,7 @@ end:
    @returns the promise result
 */
 
-static int PackageSanityCheck(EvalContext *ctx, const Attributes *a, const Promise *pp)
+static bool PackageSanityCheck(EvalContext *ctx, const Attributes *a, const Promise *pp)
 {
     assert(a != NULL);
     const Packages *const pkgs = &(a->packages);
@@ -990,8 +990,13 @@ static PackageItem *GetCachedPackageList(EvalContext *ctx, PackageManager *manag
    @param result [inout] the PromiseResult for this operation
    @returns boolean pass/fail of verification
 */
-static int VerifyInstalledPackages(EvalContext *ctx, PackageManager **all_mgrs, const char *default_arch,
-                                   const Attributes *a, const Promise *pp, PromiseResult *result)
+static bool VerifyInstalledPackages(
+    EvalContext *ctx,
+    PackageManager **all_mgrs,
+    const char *default_arch,
+    const Attributes *a,
+    const Promise *pp,
+    PromiseResult *result)
 {
     PackageManager *manager = GetPackageManager(all_mgrs, a->packages.package_list_command, PACKAGE_ACTION_NONE, PACKAGE_ACTION_POLICY_NONE);
 
@@ -1223,8 +1228,16 @@ int FindLargestVersionAvail(EvalContext *ctx, char *matchName, char *matchVers, 
    @param result [inout] the PromiseResult for this operation
    @returns boolean if given (n,v,a) is newer than known packages
 */
-static int IsNewerThanInstalled(EvalContext *ctx, const char *n, const char *v, const char *a, char *instV, char *instA, const Attributes *attr,
-                                const Promise *pp, PromiseResult *result)
+static bool IsNewerThanInstalled(
+    EvalContext *ctx,
+    const char *n,
+    const char *v,
+    const char *a,
+    char *instV,
+    char *instA,
+    const Attributes *attr,
+    const Promise *pp,
+    PromiseResult *result)
 {
     assert(attr != NULL);
     PackageManager *mp = INSTALLED_PACKAGE_LISTS;
@@ -2134,7 +2147,7 @@ static VersionCmpResult PackageMatch(EvalContext *ctx,
    @param installed [in] whether the package is installed
    @returns whether the package operation should be scheduled
 */
-static int WillSchedulePackageOperation(EvalContext *ctx, const Attributes *a, const Promise *pp, int matches, int installed)
+static bool WillSchedulePackageOperation(EvalContext *ctx, const Attributes *a, const Promise *pp, int matches, int installed)
 {
     assert(a != NULL);
     PackageAction policy = a->packages.package_policy;
@@ -3359,9 +3372,13 @@ bool ExecPackageCommand(EvalContext *ctx, char *command, int verify, int setCmdC
     return retval;
 }
 
-int PrependPackageItem(EvalContext *ctx, PackageItem ** list,
-                       const char *name, const char *version, const char *arch,
-                       const Promise *pp)
+bool PrependPackageItem(
+    EvalContext *ctx,
+    PackageItem ** list,
+    const char *name,
+    const char *version,
+    const char *arch,
+    const Promise *pp)
 {
     if (!list || !name[0] || !version[0] || !arch[0])
     {
@@ -3386,7 +3403,8 @@ int PrependPackageItem(EvalContext *ctx, PackageItem ** list,
     return true;
 }
 
-static int PackageInItemList(PackageItem * list, char *name, char *version, char *arch)
+static bool PackageInItemList(
+    PackageItem * list, char *name, char *version, char *arch)
 {
     if (!name[0] || !version[0] || !arch[0])
     {
@@ -3406,8 +3424,14 @@ static int PackageInItemList(PackageItem * list, char *name, char *version, char
     return false;
 }
 
-static int PrependPatchItem(EvalContext *ctx, PackageItem ** list, char *item, PackageItem * chklist, const char *default_arch,
-                            const Attributes *a, const Promise *pp)
+static bool PrependPatchItem(
+    EvalContext *ctx,
+    PackageItem ** list,
+    char *item,
+    PackageItem * chklist,
+    const char *default_arch,
+    const Attributes *a,
+    const Promise *pp)
 {
     assert(a != NULL);
     char name[CF_MAXVARSIZE];
@@ -3447,9 +3471,16 @@ static int PrependPatchItem(EvalContext *ctx, PackageItem ** list, char *item, P
     return PrependPackageItem(ctx, list, name, version, arch, pp);
 }
 
-static int PrependMultiLinePackageItem(EvalContext *ctx, PackageItem ** list, char *item, int reset, const char *default_arch,
-                                       const Attributes *a, const Promise *pp)
+static bool PrependMultiLinePackageItem(
+    EvalContext *ctx,
+    PackageItem ** list,
+    char *item,
+    int reset,
+    const char *default_arch,
+    const Attributes *a,
+    const Promise *pp)
 {
+    // FIXME: This function always returns false
     assert(a != NULL);
     static char name[CF_MAXVARSIZE] = ""; /* GLOBAL_X */
     static char arch[CF_MAXVARSIZE] = ""; /* GLOBAL_X */
@@ -3498,9 +3529,13 @@ static int PrependMultiLinePackageItem(EvalContext *ctx, PackageItem ** list, ch
     return false;
 }
 
-static int PrependListPackageItem(EvalContext *ctx, PackageItem ** list,
-                                  char *item, const char *default_arch, const Attributes *a,
-                                  const Promise *pp)
+static bool PrependListPackageItem(
+    EvalContext *ctx,
+    PackageItem **list,
+    char *item,
+    const char *default_arch,
+    const Attributes *a,
+    const Promise *pp)
 {
     assert(a != NULL);
     char name[CF_MAXVARSIZE];

@@ -51,6 +51,8 @@ typedef struct
     bool verbose;
     bool inform;
     bool used_default;
+    char *min_tls_version;
+    char *allow_ciphers;
 } CFNetOptions;
 
 //*******************************************************************
@@ -99,6 +101,8 @@ static const struct option OPTIONS[] =
     {"verbose",     no_argument,        0, 'v'},
     {"log-level",   required_argument,  0, 'g'},
     {"inform",      no_argument,        0, 'I'},
+    {"tls-version", required_argument,  0, 't'},
+    {"ciphers",     required_argument,  0, 'c'},
     {NULL,          0,                  0, '\0'}
 };
 
@@ -111,6 +115,8 @@ static const char *const HINTS[] =
     "Enable verbose output",
     "Specify how detailed logs should be. Possible values: 'error', 'warning', 'notice', 'info', 'verbose', 'debug'",
     "Enable basic information output",
+    "Minimum TLS version to use",
+    "TLS ciphers to use (comma-separated list)",
     NULL
 };
 
@@ -150,6 +156,7 @@ static const char *command_strings[] =
 // INIT:
 static void CFNetSetDefault(CFNetOptions *opts);
 static void CFNetInit();
+static void CFNetOptionsClear(CFNetOptions *opts);
 
 // MAIN LOGIC:
 static int CFNetParse(int argc, char **argv,                        // INPUTS
@@ -196,6 +203,7 @@ int main(int argc, char **argv)
     }
     ret = CFNetRun(&opts, args, hostnames);  // Commands return exit code
     free(hostnames);
+    CFNetOptionsClear(&opts);
     return ret;
 }
 
@@ -209,9 +217,18 @@ static void CFNetSetDefault(CFNetOptions *opts){
     opts->verbose     = false;
     opts->inform      = false;
     opts->used_default= false;
+    opts->min_tls_version = NULL;
+    opts->allow_ciphers   = NULL;
 }
 
-static void CFNetInit()
+static void CFNetOptionsClear(CFNetOptions *opts)
+{
+    assert(opts != NULL);
+    free(opts->min_tls_version);
+    free(opts->allow_ciphers);
+}
+
+static void CFNetInit(const char *min_tls_version, const char *allow_ciphers)
 {
 #ifdef __MINGW32__
     InitializeWindows();
@@ -219,7 +236,7 @@ static void CFNetInit()
 #endif
     CryptoInitialize();
     LoadSecretKeys(NULL, NULL, NULL, NULL);
-    cfnet_init(NULL, NULL);
+    cfnet_init(min_tls_version, allow_ciphers);
 }
 
 //*******************************************************************
@@ -310,6 +327,16 @@ static int CFNetParse(int argc, char **argv,
             case 'g':
             {
                 LogSetGlobalLevelArgOrExit(optarg);
+                break;
+            }
+            case 't':
+            {
+                opts->min_tls_version = xstrdup(optarg);
+                break;
+            }
+            case 'c':
+            {
+                opts->allow_ciphers = xstrdup(optarg);
                 break;
             }
             default:
@@ -415,7 +442,7 @@ static int CFNetRun(CFNetOptions *opts, char **args, char *hostnames)
         return CFNetHelp(args[1]);
     }
 
-    CFNetInit();
+    CFNetInit(opts->min_tls_version, opts->allow_ciphers);
     char *hosts = RequireHostname(hostnames);
     int ret = 0;
     char *hostname = strtok(hosts, ",");

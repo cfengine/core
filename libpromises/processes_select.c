@@ -116,7 +116,7 @@ static const char *UCB_STYLE_PS_ARGS = "axwww";
 static const PsColumnAlgorithm UCB_STYLE_PS_COLUMN_ALGORITHM = PCA_ZombieSkipEmptyColumns;
 #endif
 
-static int SelectProcRangeMatch(char *name1, char *name2, int min, int max, char **names, char **line);
+static bool SelectProcRangeMatch(char *name1, char *name2, int min, int max, char **names, char **line);
 static bool SelectProcRegexMatch(const char *name1, const char *name2, const char *regex, bool anchored, char **colNames, char **line);
 static bool SplitProcLine(const char *proc,
                           time_t pstime,
@@ -126,7 +126,7 @@ static bool SplitProcLine(const char *proc,
                           PsColumnAlgorithm pca,
                           char **line);
 static bool SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line);
-static int SelectProcTimeAbsRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line);
+static bool SelectProcTimeAbsRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line);
 static int GetProcColumnIndex(const char *name1, const char *name2, char **names);
 static void GetProcessColumnNames(const char *proc, char **names, int *start, int *end);
 static int ExtractPid(char *psentry, char **names, int *end);
@@ -347,7 +347,7 @@ Item *SelectProcesses(const char *process_name, const ProcessSelect *a, bool att
     return result;
 }
 
-static int SelectProcRangeMatch(char *name1, char *name2, int min, int max, char **names, char **line)
+static bool SelectProcRangeMatch(char *name1, char *name2, int min, int max, char **names, char **line)
 {
     int i;
     long value;
@@ -536,7 +536,7 @@ static time_t TimeAbs2Int(const char *s)
     return mktime(&tm);
 }
 
-static int SelectProcTimeAbsRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line)
+static bool SelectProcTimeAbsRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line)
 {
     int i;
     time_t value;
@@ -1551,7 +1551,7 @@ static inline void ApplyPlatformExtraTable(ARG_UNUSED char **names, ARG_UNUSED c
 #endif
 
 #ifndef _WIN32
-int LoadProcessTable()
+bool LoadProcessTable()
 {
     FILE *prp;
     char pscomm[CF_MAXLINKSIZE];

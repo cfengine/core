@@ -27,6 +27,7 @@ def run(hosts, command, users=None, sudo=False):
             print("{} '{}'".format(host_colon, command))
             continue
         cmd = command
+        lines = lines.replace("\r", "")
         for line in lines.split("\n"):
             if cmd:
                 print("{} '{}' -> '{}'".format(host_colon, cmd, line))

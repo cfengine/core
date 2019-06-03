@@ -231,7 +231,7 @@ else:
 verbose_print("all_tags   =", all_tags)
 
 
-if len(all_tags) == 0:
+if len(all_tags) == 0 or (not in_master_branch):
     # No tags besides the most recent one were found, so this is a new
     # patch version. So "increase" the patch version:
 

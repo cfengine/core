@@ -119,12 +119,12 @@ def install_package(host, pkg, data, *, connection=None):
 
     print("Installing: '{}' on '{}'".format(pkg, host))
     if ".deb" in pkg:
-        output = ssh_sudo(connection, "dpkg -i {}".format(pkg))
+        output = ssh_sudo(connection, "dpkg -i {}".format(pkg), True)
     elif ".msi" in pkg:
-        output = ssh_cmd(connection, r".\{}".format(pkg))
+        output = ssh_cmd(connection, r".\{}".format(pkg), True)
         time.sleep(8)
     else:
-        output = ssh_sudo(connection, "rpm -i {}".format(pkg))
+        output = ssh_sudo(connection, "rpm -i {}".format(pkg), True)
     if output is None:
         sys.exit("Installation failed on '{}'".format(host))
 

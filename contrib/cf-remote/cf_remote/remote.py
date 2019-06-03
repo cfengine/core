@@ -89,7 +89,7 @@ def get_info(host, *, users=None, connection=None):
         data["systeminfo"] = parse_systeminfo(systeminfo)
         data["package_tags"] = ["x86_64", "msi"]
         data["arch"] = "x86_64"
-        agent = r'"C:\Program Files\Cfengine\bin\cf-agent.exe"'
+        agent = r'& "C:\Program Files\Cfengine\bin\cf-agent.exe"'
         data["agent"] = agent
         data["agent_version"] = parse_version(ssh_cmd(connection, '{} -V'.format(agent)))
     else:

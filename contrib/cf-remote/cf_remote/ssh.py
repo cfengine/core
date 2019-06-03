@@ -77,7 +77,8 @@ def ssh_sudo(connection, cmd, errors=False):
     assert connection
     try:
         log.debug("Running(sudo) over SSH: '{}'".format(cmd))
-        result = connection.run('sudo bash -c "{}"'.format(cmd.replace('"', r'\"')), hide=True)
+        sudo_cmd = 'sudo bash -c "{}"'.format(cmd.replace('"', r'\"'))
+        result = connection.run(sudo_cmd, hide=True, pty=True)
         output = result.stdout.strip("\n")
         log.debug("'{}' -> '{}'".format(cmd, output))
         return output

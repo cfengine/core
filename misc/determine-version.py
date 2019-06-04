@@ -167,14 +167,19 @@ except IndexError:                          # command returned no output
 # Find the most recent tag reachable from this commit.
 git = subprocess.Popen(["git", "describe", "--tags", "--abbrev=0", REV],
                        stdout=subprocess.PIPE)
-recent_tag = git.stdout.readlines()[0].decode().strip()
-verbose_print("recent_tag = %s" % recent_tag)
+recent_tag_random = git.stdout.readlines()[0].decode().strip()
 
 # Find the revision corresponding to the tag
-git = subprocess.Popen(["git", "rev-parse", recent_tag + "^{}"],
+git = subprocess.Popen(["git", "rev-parse", recent_tag_random + "^{}"],
                        stdout=subprocess.PIPE)
 recent_rev = git.stdout.readlines()[0].decode().strip()
 verbose_print("recent_rev = %s" % recent_rev)
+
+# Find the shortest (nicest) tag for the given revision
+git = subprocess.Popen(["git", "tag", "--points-at", recent_rev],
+                       stdout=subprocess.PIPE)
+recent_tag = git.stdout.readlines()[0].decode().strip()
+verbose_print("recent_tag = %s" % recent_tag)
 
 # Find its version, if any.
 recent_version = extract_version_components(recent_tag)

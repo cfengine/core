@@ -915,7 +915,7 @@ pgsql_wal_receiver_status() {
     local pgsql_real_monitor_status=$1
 
     PID=`head -n 1 $PIDFILE`
-    receiver_parent_pids=`ps -ef | tr -s " " | grep "[w]al receiver process" | cut -d " " -f 3`
+    receiver_parent_pids=`ps -ef | tr -s " " | grep "[w]al \?receiver" | cut -d " " -f 3`
 
     if echo "$receiver_parent_pids" | grep -q -w "$PID" ; then
         attrd_updater -n "$PGSQL_WAL_RECEIVER_STATUS_ATTR" -v "normal" -q

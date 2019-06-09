@@ -1,3 +1,171 @@
+3.14.0:
+	- A bootstrap_id.dat file is now generated on every bootstrap
+	  (CFE-2977)
+	- Add missing section markers around policy (CFE-2952)
+	- Add options to cf-net to set minimum TLS version and ciphers
+	  (ENT-4617)
+	- Added --no-truncate option to cf-key
+	  This option, when used with --show-hosts changes the formatting
+	  of the output. Instead of padding and truncating each of the
+	  fields, they are printed, in full, with no padding, and separated
+	  by a single tab character. The output is not as pretty, but should
+	  be more useful for parsing by other scripts / tooling.
+	  Ticket: (CFE-3036)
+	- Added a new option --skip-db-check to agent and execd
+	  This option allows you to enable/disable database (LMDB) consistency
+	  checks. Initially it is disabled by default, but this will likely
+	  change.
+	  Ticket: (CFE-2893)
+	- Added a new utility to contrib: cf-remote
+	  cf-remote is a python + fabric tool to log in to remote hosts
+	  you have ssh access to. It will be used to download, transfer,
+	  and install cfengine packages as well as bootstrapping etc.
+	  This first iteration includes the `info` command, which prints
+	  basic information about a remote host.
+	  Ticket: (CFE-2889)
+	- Added derived-from-file tags to hard classes based on /etc/debian_version and /etc/issue
+	- Added function to filter CSV-files by classes (CFE-2768)
+	- Allow forward slash character in module protocol commands (CFE-2478)
+	- Augments files can now handle class expressions by appending '::'
+	  A condition in an augments file is treated as a class expression
+	  if it ends in `::`. Otherwise it is treated as a regular
+	  expression.
+	  Previously there was a bug, where the conditions in augments files
+	  were treated as both class expressions and regular expressions.
+	  This was ambiguous, and problematic since something like
+	  `cfengine.nginx.enabled` as a regex would match a class called
+	  `cfengine_nginx_enabled`, while as a class expression would match
+	  `cfengine && nginx && enabled`.
+	  This was fixed in 3.12.1 by treating it as a regex only.
+	  (Documented and intended behavior).
+	  Some users still wanted a way to use class expression, so the `::`
+	  suffix solves the problem. For the example above, you can use this
+	  in the augments file:
+	  `cfengine.nginx.enabled::`
+	  Since classes cannot end with `:`, this shouldn't be a problem,
+	  it is not useful to have regular expressions ending with `::` in
+	  this context.
+	  Original commit made by @basvandervlies(bas.vandervlies@surfsara.nl).
+	  Reworked by @olehermanse(ole@northern.tech).
+	  Ticket: (CFE-2954)
+	- CF-2951: ps command can handle longer usernames
+	- CF-2960: copylink_pattern honor '/../' in copy source
+	- CSV parser now supports CRLF inside double quotes (ENT-4504)
+	- Display an error when a function defining a variables still fails at pass3
+	  (CFE-2983)
+	- Document cf-execd and cf-serverd respond to SIGHUP in manpage
+	  (CFE-2853)
+	- Don't trim leading zeroes in ubuntu minor version class
+	  The old version detection logic (using /etc/debian_version) was
+	  converting the minor version part to an integer, defining
+	  ubuntu_18_4 instead of ubuntu_18_04. The new platform detection
+	  (based on /etc/os-release) defines ubuntu_18_04. Since both old
+	  and new methods are running to maximize compatibility, both
+	  ubuntu_18_04 and ubuntu_18_4 were defined.
+	  This commit ensures that the old detection logic treats the
+	  minor version (the 04 part) as a string, not an integer. The
+	  change is specific to Ubuntu, and should affect Ubuntu 18.04,
+	  16.04, 14.04, etc.
+	  Ticket: (CFE-2882)
+	- Ensure SUID log has proper permissions (CFE-2919)
+	- Ensure agent log file names are lowercase
+	- Extend module with file protocol for data (CFE-3050)
+	- Fix a segfault in 'cf-promises -p json-full' (CFE-3019)
+	- Fix cf-key help output to indicate ability to delete by key digest
+	  (CFE-2997)
+	- Fix disabling TLS 1.0 (CFE-3068)
+	- Fix growing memory footprint of daemons (CFE-3032)
+	- Fix log message about setting collect_window (ENT-4238)
+	- Fix log message when parsing TIME in 'ps' output fails
+	- Fix parsing YAML values starting with numbers (CFE-2033)
+	- Fix sys.flavor on AIX (ENT-3970)
+	- Fixed 6 cases where promises could get the wrong outcome
+	  All cases were related to error handling and detected using
+	  static code analysis (LGTM). They were limited to cf-monitord
+	  and cf-agent (guest_environments and files promise types). Due
+	  to a programming mistake promise results would sometimes be
+	  overwritten with 'skipped' outcome. Keeping the previous
+	  value or making the promises 'not kept' is expected behavior.
+	  Added a query to our CI (LGTM) to make sure we catch this error
+	  on new contributions.
+	  Reported by LGTM:
+	  https://github.com/cfengine/core/blob/master/.lgtm/cpp-queries/function-returns-bool-macro.ql
+	  Ticket: None
+	- Fixed an issue while parsing ps output on AIX (ENT-4295)
+	- Fixed memory leak in filesexist function (ENT-4313)
+	- Fixed memory leak in filesexist()
+	- Fixed memory leak in mustache rendering (ENT-4313)
+	- Fixed memory leak in: differences(), intersection(), unique()
+	  (ENT-4586)
+	- Fixed segfault in policy parser (ENT-4022)
+	- Global connection cache (CFE-2678)
+	- Increased verbosity of AcquireLock permission error (ENT-4395)
+	- Message about invalid class characters from module protocol moved to VERBOSE
+	  (CFE-2887, CFE-3008)
+	- Prevented buffer overflows in cf-monitord data parsing
+	- Private keys generated by cf-key are no longer encrypted
+	  Private key files encrypted with a broken cipher and default
+	  hard coded passphrase provide no real security, and is only an
+	  inconvenience. Maybe it was intended to add a password prompt
+	  later, but it's been 10 years now, and the cipher and passphrase
+	  remain untouched. The function which reads keys still supports
+	  both encrypted and unencrypted keys, it will decrypt if necessary.
+	  This passphrase was introduced as part of cf-key in:
+	  c7765f71ff04f07f497988a2a068122394da30bc
+	  Ticket: None
+	- Reduce SSL/TLS shutdowns on bad networks (CFE-3023)
+	- Removed programming error in handling of process_count body
+	  Previously, having a failing function call inside in_range_define
+	  or out_of_range_define would cause a programming error when
+	  trying to define that as a class. Fixed it by detecting the
+	  case, printing a normal error, and skipping defining the class.
+	  Ticket: (CFE-2067)
+	- Set policy->release_id to "failsafe"/"bootstrap" when running failsafe.cf
+	  (CFE-3031)
+	- Switched perms of various temporary files in state to 0600
+	  These files were created with 0644 permissions, and then
+	  repaired in policy. However, since they are deleted / recreated
+	  periodically, it causes INFO noise. Safer and better user
+	  experience to create them with restricted permissions to
+	  begin with.
+	  Affected files:
+	  * `$(sys.statedir)/cf_procs`
+	  * `$(sys.statedir)/cf_rootprocs`
+	  * `$(sys.statedir)/cf_otherprocs`
+	  Ticket: (ENT-4601)
+	- Test that methods can be called by expanding classic arrays (CFE-636)
+	- Truncate string_split segments to 1024 bytes instead of crashing
+	  (CFE-3047)
+	- Unresolved function calls in process_select body are now skipped
+	  Function calls which always fail, like getuid("nosuchuser"), are
+	  never resolved. Previously this would cause a programming error,
+	  since the body is expected to have a list of strings, not
+	  unresolved function calls.
+	  The function calls are silently skipped (with a verbose message)
+	  as this matches the behavior of calling the functions in a vars
+	  promise, and using that as a body parameter.
+	  Ticket: (CFE-1968)
+	- cf-check: Added backup command
+	  This command copies lmdb files to a timestamped backup directory.
+	  Ticket: (ENT-4064)
+	- cf-check: Respect workdir from config.h (CFE-2994)
+	- cf-check: diagnose and backup now use state directory by default
+	  (ENT-4064)
+	- cf-remote: Added 'sudo' and 'run' commands
+	  These can be used to execute arbitrary shell commands over
+	  ssh (fabric) and see the output.
+	- cf-remote: install command
+	  The first version of this command does not pick a package
+	  automatically, the file has to be specified with
+	  --package argument.
+	  Ticket: (CFE-2889)
+	- cf-remote: packages command
+	  This command can download the necessary packages for use with
+	  install command. For example:
+	  $ cf-remote packages deb hub
+	  Will download the default version hub package for debian.
+	  Ticket: (CFE-2889)
+
 3.13.0:
 	- Add support for TLS 1.3 and its ciphersuites
 	- Add 'feature' hard classes for supported TLS versions

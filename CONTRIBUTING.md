@@ -568,7 +568,9 @@ To run all tests, including the unsafe ones, you either need to be logged in as
 root or have "sudo" configured to not ask for a password. Then run the
 following:
 
-    $ UNSAFE_TESTS=1 GAINROOT=sudo make check
+```
+$ UNSAFE_TESTS=1 GAINROOT=sudo make check
+```
 
 Again: DO NOT do this on your main computer! Always use a test machine,
 preferable in a VM.
@@ -603,25 +605,117 @@ Try restricting ifdefs in the header files, or in the beginning of
 the C files.
 
 
-## Emacs users
+## Advanced topics
 
-There is Elisp snippet in contrib/cfengine-code-style.el which defines the
-project's coding style. Please use it when working with source code. The
-easiest way to do so is to add
-
-    (add-to-list 'load-path "<core checkout directory>/contrib")
-    (require 'cfengine-code-style)
-
-and run
-
-    ln -s contrib/dir-locals.el .dir-locals.el
-
-in the top directory of the source code checkout.
+This section is not for new contributors, but rather contains more specific guides which are useful to link to in some circumstances.
 
 
-## atexit() and Windows
+### Git
 
-On Windows the atexit function works but the functions registered there are
+
+#### How to rebase a branch
+
+By convention upstream refers to the canonical project repositories and origin refers to your fork of the repository.
+
+```
+$ git branch
+  3.10.x
+  3.11.x
+  3.7.x
+* ENT-3329
+  master
+```
+
+```
+$ git pull --rebase upstream master
+From https://github.com/cfengine/masterfiles
+ * branch                master     -> FETCH_HEAD
+First, rewinding head to replay your work on top of it...
+Applying: ENT-3329: Allow hubs to collect from themselves over loopback
+```
+
+Once you have rebased your changes on the latest changes from the upstream branch you need to force push (because history has been re-written) your branch to your fork in order to update the pull request.
+
+```
+$ git push origin master --force
+```
+
+
+#### How to rebase and squash commits
+
+[This post has a good explanation.](https://eli.thegreenplace.net/2014/02/19/squashing-github-pull-requests-into-a-single-commit)
+
+
+#### Cherry-picking/backporting commits
+
+Determine the commit to backport, use the first 6 or so characters of the sha1 (to make it unique). E.g. 80f198 for 80f198baeddcd5d1b9556d9a4890b648fe3c12c5
+
+```
+First checkout the branch you are backporting to:
+$ git checkout --track upstream/<branch such as 3.10.x>
+```
+
+Next create a branch in which to work and for a PR:
+
+```
+$ git checkout -b backport-some-commit
+```
+
+If you are cherry picking your own commit simply use -x option
+
+```
+$ git cherry-pick -x 80f198
+```
+
+`-x` adds: `"(cherry picked from commit 80f198baeddcd5d1b9556d9a4890b648fe3c12c5)"``
+
+If you are cherry picking someone elses commit, use the -s option to make your involvement more obvious.
+
+```
+$ git cherry-pick -x -s 80f198
+```
+
+`-s --signoff` adds: `"Signed-off-by: Committer Name <committer.email@northern.tech>"`
+
+Submit your change as a PR:
+
+```
+$ git push --set-upstream origin backport-some-commit
+```
+
+In the GitHub web UI you will need to create the PR and select the correct branch to submit to.
+If the cherry pick applied cleanly and you have merge rights, you may merge the change.
+If significant or risky changes were introduced in order to backport, ask for code review before merging.
+
+
+#### Cryptographically signing git commits
+
+* [Automatic Git commit signing with GPG on OSX](https://gist.github.com/bmhatfield/cc21ec0a3a2df963bffa3c1f884b676b)
+* (Open a Pull Request to add instructions for other platforms).
+
+
+### Emacs users
+
+There is an Elisp snippet in `contrib/cfengine-code-style.el` which defines the
+project's coding style.
+Please use it when working with source code.
+The easiest way to do so is to add:
+
+```
+(add-to-list 'load-path "<core checkout directory>/contrib")
+(require 'cfengine-code-style)
+```
+
+and run:
+
+```
+ln -s contrib/dir-locals.el .dir-locals.el
+```
+
+
+### Windows atexit()
+
+On Windows the `atexit` function works but the functions registered there are
 executed after or concurrently with DLL unloading. If registered functions
 rely on DLLs such as pthreads to do locking/unlocking deadlock scenarios can
 occur when exit is called.

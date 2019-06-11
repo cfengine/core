@@ -1,5 +1,4 @@
-How to contribute to CFEngine
-=============================
+# How to contribute to CFEngine
 
 Thanks for considering contributing to CFEngine! We take pull-requests
 [on GitHub](https://github.com/cfengine/core/pulls) and we have a public
@@ -24,8 +23,8 @@ Merged features and larger changes will be released in the first minor release
 in order to make it to the first minor release.
 
 
-Pull Requests
--------------------------------------------------
+## Pull Requests
+
 
 ### Checklist
 
@@ -76,11 +75,11 @@ If the change is needed for a bigger feature, make that feature a separate pull 
 The bigger PR will likely take some time to get reviewed, and discussed, while smaller changes can be merged quickly.
 
 
-Coding Style
-------------
+## Coding Style
 
 Our coding style is loosely based on Allman-4 and the [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html).
 Keep in mind that these are guidelines, there will always be some situations where exceptions are appropriate.
+
 
 ### Formatting / Whitespace
 
@@ -123,6 +122,7 @@ Keep in mind that these are guidelines, there will always be some situations whe
   ```c
   (struct sockaddr *) &myaddr
   ```
+
 
 ### Readability / Maintainability
 
@@ -269,6 +269,7 @@ If you are a Guru, try to restrain yourself, only do magic when absolutely neces
 * Avoid using type casts, unless absolutely necessary.
     * Usually a compiler warning is better satisfied with correct code rather than using a type cast.
 
+
 #### String formatting
 
 | Type            | Format string  |
@@ -287,12 +288,12 @@ See `man 3 printf` for a more complete table.
 For other integer types without a format, cast `signed` types to `intmax_t` and `unsigned` types to `uintmax_t`.
 
 
-Logging Conventions
------------------------------------
+## Logging Conventions
 
 CFEngine outputs messages about what its doing using the `Log()` function. It
 takes a `LogLevel` enum mapping closely to syslog priorities. Please try to do
 the following when writing output messages.
+
 
 ### Log levels
 
@@ -323,6 +324,7 @@ sets of data / connections and logs can become spammy. In some cases
 it might be appropriate to create error / warning summaries instead of
 outputting a log message every time an event occurs.
 
+
 ### Logging Guidelines
 
 * Do not decorate with symbols or indentation in messages and do not
@@ -348,8 +350,7 @@ outputting a log message every time an event occurs.
 * Normally, do not circumvent `Log()` by writing to stdout or stderr.
 
 
-Code Overview
--------------
+## Code Overview
 
 The CFEngine codebase can be usefully thought of as a few separate components:
 utilities (libutils), parsing (libpromises), evaluation (libpromises),
@@ -361,12 +362,14 @@ explicit dependencies, and provide better unit test coverage.
 
 For a general introduction to the tools, please read the man pages/documentation.
 
+
 ### libcompat
 
 These are replacement functions in cases where autoconf cannot find a function
 it expected to find on the platform. CFEngine takes an approach of relying on
 the platform (typically POSIX) as much as possible, rather than creating its
 own system abstraction layer.
+
 
 ### libutils
 
@@ -386,12 +389,14 @@ Some examples of often used files (not meant to be an exhaustive list):
 - *file_lib.h*: General purpose file utilities.
 - *misc_lib.h*: Really general utilities.
 
+
 ### libcfnet
 
 Contains the networking layer for CFEngine. (At the time of writing, a bit of
 a moving target). All of this was in libpromises previously. Ideally it would
 be completely separate, without depending on libpromises, but we're not there
 yet.
+
 
 ### libpromises
 
@@ -426,6 +431,7 @@ Things you should not use in *libpromises*
   symbol table.
 - *scope.h*: Old symbol table, this will move into *EvalContext*.
 
+
 ### cf-agent
 
 See the documentation for an introduction to cf-agent and the other components.
@@ -433,6 +439,7 @@ Since cf-agent is (arguably) the most important component here is a more
 technical description of how it works, both during first time setup (bootstrap)
 and regular operation. Note that most of the binaries evaluate policy so there
 are many similarities to cf-agent.
+
 
 #### Lifecycle of cf-agent
 
@@ -470,8 +477,7 @@ to a policy server.
    from `inputs` directory.
 
 
-ChangeLog Entries
------------------
+## ChangeLog Entries
 
 When a new feature or a bugfix is being merged, it is often necessary to be
 accompanied by a proper entry in the ChangeLog file. Besides manually editing
@@ -503,8 +509,7 @@ if anywhere in the commit message the string ```CFE-1234``` is found
 automatically added to the ChangeLog.
 
 
-Testing
--------
+## Testing
 
 It is extremely important to have automated tests for all code, and normally
 all new code should be covered by tests, though sometimes it can be hard to
@@ -527,8 +532,9 @@ Tip: In order to trigger assert() calls in the code, build with
 `--enable-debug` (passed to either `./autogen.sh` or `./configure`). If you get
 very large binary sizes you can also pass `CFLAGS='-g -O0'` to reduce that.
 
-Code Coverage
--------------
+
+## Code Coverage
+
 We strive to always increase code coverage. If you wish to generate code
 coverage information then you must autogen or configure with --enable-debug
 and --enable-coverage as well as ensure lcov is installed (typically an lcov
@@ -548,8 +554,7 @@ run any tests.
 For the atom editor, install the package atom-lcov-info.
 
 
-Unsafe Tests
-------------
+## Unsafe Tests
 
 Note that some acceptance tests are considered to be unsafe because they
 modify the system they are running on. One example is the tests for the
@@ -569,8 +574,7 @@ Again: DO NOT do this on your main computer! Always use a test machine,
 preferable in a VM.
 
 
-C Platform Macros
------------------
+## C Platform Macros
 
 It's important to have portability in a consistent way. In general we
 use *autoconf* to test for features (like system headers, defines,
@@ -599,8 +603,7 @@ Try restricting ifdefs in the header files, or in the beginning of
 the C files.
 
 
-Emacs users
------------
+## Emacs users
 
 There is Elisp snippet in contrib/cfengine-code-style.el which defines the
 project's coding style. Please use it when working with source code. The
@@ -615,8 +618,8 @@ and run
 
 in the top directory of the source code checkout.
 
-atexit() and Windows
---------------------
+
+## atexit() and Windows
 
 On Windows the atexit function works but the functions registered there are
 executed after or concurrently with DLL unloading. If registered functions

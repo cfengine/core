@@ -1,5 +1,4 @@
-How to contribute to CFEngine
-=============================
+# How to contribute to CFEngine
 
 Thanks for considering contributing to CFEngine! We take pull-requests
 [on GitHub](https://github.com/cfengine/core/pulls) and we have a public
@@ -24,8 +23,8 @@ Merged features and larger changes will be released in the first minor release
 in order to make it to the first minor release.
 
 
-Pull Requests
--------------------------------------------------
+## Pull Requests
+
 
 ### Checklist
 
@@ -76,11 +75,11 @@ If the change is needed for a bigger feature, make that feature a separate pull 
 The bigger PR will likely take some time to get reviewed, and discussed, while smaller changes can be merged quickly.
 
 
-Coding Style
-------------
+## Coding Style
 
 Our coding style is loosely based on Allman-4 and the [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html).
 Keep in mind that these are guidelines, there will always be some situations where exceptions are appropriate.
+
 
 ### Formatting / Whitespace
 
@@ -123,6 +122,7 @@ Keep in mind that these are guidelines, there will always be some situations whe
   ```c
   (struct sockaddr *) &myaddr
   ```
+
 
 ### Readability / Maintainability
 
@@ -269,6 +269,7 @@ If you are a Guru, try to restrain yourself, only do magic when absolutely neces
 * Avoid using type casts, unless absolutely necessary.
     * Usually a compiler warning is better satisfied with correct code rather than using a type cast.
 
+
 #### String formatting
 
 | Type            | Format string  |
@@ -287,12 +288,12 @@ See `man 3 printf` for a more complete table.
 For other integer types without a format, cast `signed` types to `intmax_t` and `unsigned` types to `uintmax_t`.
 
 
-Logging Conventions
------------------------------------
+## Logging Conventions
 
 CFEngine outputs messages about what its doing using the `Log()` function. It
 takes a `LogLevel` enum mapping closely to syslog priorities. Please try to do
 the following when writing output messages.
+
 
 ### Log levels
 
@@ -323,6 +324,7 @@ sets of data / connections and logs can become spammy. In some cases
 it might be appropriate to create error / warning summaries instead of
 outputting a log message every time an event occurs.
 
+
 ### Logging Guidelines
 
 * Do not decorate with symbols or indentation in messages and do not
@@ -348,8 +350,7 @@ outputting a log message every time an event occurs.
 * Normally, do not circumvent `Log()` by writing to stdout or stderr.
 
 
-Code Overview
--------------
+## Code Overview
 
 The CFEngine codebase can be usefully thought of as a few separate components:
 utilities (libutils), parsing (libpromises), evaluation (libpromises),
@@ -361,12 +362,14 @@ explicit dependencies, and provide better unit test coverage.
 
 For a general introduction to the tools, please read the man pages/documentation.
 
+
 ### libcompat
 
 These are replacement functions in cases where autoconf cannot find a function
 it expected to find on the platform. CFEngine takes an approach of relying on
 the platform (typically POSIX) as much as possible, rather than creating its
 own system abstraction layer.
+
 
 ### libutils
 
@@ -386,12 +389,14 @@ Some examples of often used files (not meant to be an exhaustive list):
 - *file_lib.h*: General purpose file utilities.
 - *misc_lib.h*: Really general utilities.
 
+
 ### libcfnet
 
 Contains the networking layer for CFEngine. (At the time of writing, a bit of
 a moving target). All of this was in libpromises previously. Ideally it would
 be completely separate, without depending on libpromises, but we're not there
 yet.
+
 
 ### libpromises
 
@@ -426,6 +431,7 @@ Things you should not use in *libpromises*
   symbol table.
 - *scope.h*: Old symbol table, this will move into *EvalContext*.
 
+
 ### cf-agent
 
 See the documentation for an introduction to cf-agent and the other components.
@@ -433,6 +439,7 @@ Since cf-agent is (arguably) the most important component here is a more
 technical description of how it works, both during first time setup (bootstrap)
 and regular operation. Note that most of the binaries evaluate policy so there
 are many similarities to cf-agent.
+
 
 #### Lifecycle of cf-agent
 
@@ -470,8 +477,7 @@ to a policy server.
    from `inputs` directory.
 
 
-ChangeLog Entries
------------------
+## ChangeLog Entries
 
 When a new feature or a bugfix is being merged, it is often necessary to be
 accompanied by a proper entry in the ChangeLog file. Besides manually editing
@@ -503,8 +509,7 @@ if anywhere in the commit message the string ```CFE-1234``` is found
 automatically added to the ChangeLog.
 
 
-Testing
--------
+## Testing
 
 It is extremely important to have automated tests for all code, and normally
 all new code should be covered by tests, though sometimes it can be hard to
@@ -527,8 +532,9 @@ Tip: In order to trigger assert() calls in the code, build with
 `--enable-debug` (passed to either `./autogen.sh` or `./configure`). If you get
 very large binary sizes you can also pass `CFLAGS='-g -O0'` to reduce that.
 
-Code Coverage
--------------
+
+## Code Coverage
+
 We strive to always increase code coverage. If you wish to generate code
 coverage information then you must autogen or configure with --enable-debug
 and --enable-coverage as well as ensure lcov is installed (typically an lcov
@@ -548,8 +554,7 @@ run any tests.
 For the atom editor, install the package atom-lcov-info.
 
 
-Unsafe Tests
-------------
+## Unsafe Tests
 
 Note that some acceptance tests are considered to be unsafe because they
 modify the system they are running on. One example is the tests for the
@@ -563,14 +568,15 @@ To run all tests, including the unsafe ones, you either need to be logged in as
 root or have "sudo" configured to not ask for a password. Then run the
 following:
 
-    $ UNSAFE_TESTS=1 GAINROOT=sudo make check
+```
+$ UNSAFE_TESTS=1 GAINROOT=sudo make check
+```
 
 Again: DO NOT do this on your main computer! Always use a test machine,
 preferable in a VM.
 
 
-C Platform Macros
------------------
+## C Platform Macros
 
 It's important to have portability in a consistent way. In general we
 use *autoconf* to test for features (like system headers, defines,
@@ -599,26 +605,117 @@ Try restricting ifdefs in the header files, or in the beginning of
 the C files.
 
 
-Emacs users
------------
+## Advanced topics
 
-There is Elisp snippet in contrib/cfengine-code-style.el which defines the
-project's coding style. Please use it when working with source code. The
-easiest way to do so is to add
+This section is not for new contributors, but rather contains more specific guides which are useful to link to in some circumstances.
 
-    (add-to-list 'load-path "<core checkout directory>/contrib")
-    (require 'cfengine-code-style)
 
-and run
+### Git
 
-    ln -s contrib/dir-locals.el .dir-locals.el
 
-in the top directory of the source code checkout.
+#### How to rebase a branch
 
-atexit() and Windows
---------------------
+By convention upstream refers to the canonical project repositories and origin refers to your fork of the repository.
 
-On Windows the atexit function works but the functions registered there are
+```
+$ git branch
+  3.10.x
+  3.11.x
+  3.7.x
+* ENT-3329
+  master
+```
+
+```
+$ git pull --rebase upstream master
+From https://github.com/cfengine/masterfiles
+ * branch                master     -> FETCH_HEAD
+First, rewinding head to replay your work on top of it...
+Applying: ENT-3329: Allow hubs to collect from themselves over loopback
+```
+
+Once you have rebased your changes on the latest changes from the upstream branch you need to force push (because history has been re-written) your branch to your fork in order to update the pull request.
+
+```
+$ git push origin master --force
+```
+
+
+#### How to rebase and squash commits
+
+[This post has a good explanation.](https://eli.thegreenplace.net/2014/02/19/squashing-github-pull-requests-into-a-single-commit)
+
+
+#### Cherry-picking/backporting commits
+
+Determine the commit to backport, use the first 6 or so characters of the sha1 (to make it unique). E.g. 80f198 for 80f198baeddcd5d1b9556d9a4890b648fe3c12c5
+
+```
+First checkout the branch you are backporting to:
+$ git checkout --track upstream/<branch such as 3.10.x>
+```
+
+Next create a branch in which to work and for a PR:
+
+```
+$ git checkout -b backport-some-commit
+```
+
+If you are cherry picking your own commit simply use -x option
+
+```
+$ git cherry-pick -x 80f198
+```
+
+`-x` adds: `"(cherry picked from commit 80f198baeddcd5d1b9556d9a4890b648fe3c12c5)"``
+
+If you are cherry picking someone elses commit, use the -s option to make your involvement more obvious.
+
+```
+$ git cherry-pick -x -s 80f198
+```
+
+`-s --signoff` adds: `"Signed-off-by: Committer Name <committer.email@northern.tech>"`
+
+Submit your change as a PR:
+
+```
+$ git push --set-upstream origin backport-some-commit
+```
+
+In the GitHub web UI you will need to create the PR and select the correct branch to submit to.
+If the cherry pick applied cleanly and you have merge rights, you may merge the change.
+If significant or risky changes were introduced in order to backport, ask for code review before merging.
+
+
+#### Cryptographically signing git commits
+
+* [Automatic Git commit signing with GPG on OSX](https://gist.github.com/bmhatfield/cc21ec0a3a2df963bffa3c1f884b676b)
+* (Open a Pull Request to add instructions for other platforms).
+
+
+### Emacs users
+
+There is an Elisp snippet in `contrib/cfengine-code-style.el` which defines the
+project's coding style.
+Please use it when working with source code.
+The easiest way to do so is to add:
+
+```
+(add-to-list 'load-path "<core checkout directory>/contrib")
+(require 'cfengine-code-style)
+```
+
+and run:
+
+```
+ln -s contrib/dir-locals.el .dir-locals.el
+```
+
+
+### Windows atexit()
+
+On Windows the `atexit` function works but the functions registered there are
 executed after or concurrently with DLL unloading. If registered functions
 rely on DLLs such as pthreads to do locking/unlocking deadlock scenarios can
 occur when exit is called.

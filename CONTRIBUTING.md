@@ -261,7 +261,8 @@ Keep in mind that these are guidelines, there will always be some situations whe
       ```
 * Type casts should be separated with one space from the variable:
   ```c
-  (struct sockaddr *) &myaddr
+  bool ok = true;
+  int res = (int) ok;
   ```
 
 

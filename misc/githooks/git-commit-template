@@ -1,11 +1,14 @@
 
 
-Changelog: TODO
+Changelog: Title
+Ticket: CFE-1234
 
 # Changelog: <message>
 #   -or-
 # Changelog: Title     (Will use topmost line in commit)
 #   -or-
 # Changelog: Commit    (Will use entire commit message)
+#   -or-
+# Changelog: None    (Will not make a changelog entry)
 #
-# "Redmine #1234" will be detected in the commit message text.
+# Always use past tense for the changelog entry, or the whole commit message.

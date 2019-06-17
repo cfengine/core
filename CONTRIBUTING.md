@@ -34,6 +34,7 @@ When submitting your pull request, please make sure you:
 
 * Address only one issue/feature.
   Smaller pull requests are generally better.
+  Usually a Pull Request will have only one commit.
 
 * Add tests.
   C functions should have unit tests.
@@ -46,14 +47,25 @@ When submitting your pull request, please make sure you:
 * Check that you don't have any merge conflicts.
   (Rebase on master or target branch).
 
-* Tidy up the commit log by squashing commits.
-  Each commit should be a valid change and make sense on its own.
-  Usually a Pull Request will only have one commit.
+* Tidy up the commit log by squashing commits and [writing good commit messages](#commits).
 
-* Add a [ChangeLog Entry](#changelog-entries) to the commit.
+* Add one or more [ChangeLog Entries](#changelog-entries) to the commit(s).
 
-* Add a configure option if appropriate:
-  `./configure --disable-big-feature` or `./configure --without-libfoo`.
+
+### Pull request title and description
+
+Use the following format for the PR title:
+
+```
+CFE-1234: Title (3.12)
+```
+
+Omit the first part if there is no related ticket.
+Omit the last part if the PR is for master branch.
+
+If the PR has only 1 commit, the title and description should match the title and body of the commit message.
+If the PR has multiple commits, summarize.
+See: [Commit messages](#commit-messages).
 
 
 ### Multi-repo pull requests
@@ -73,6 +85,135 @@ cfengine/buildscripts#333
 
 If the change is needed for a bigger feature, make that feature a separate pull request.
 The bigger PR will likely take some time to get reviewed, and discussed, while smaller changes can be merged quickly.
+
+
+## Commits
+
+Each commit should be a valid change and make sense on its own.
+It is often a good idea to make commits as small as possible.
+Normally, each commit should include only 1 bug fix, only 1 refactoring, or only 1 new feature.
+Tests which test a new feature can be in the same commit as the feature.
+If you add tests for other issues or features, they should be in a separate commit.
+
+
+### Commit messages
+
+Writing good commit messages, and having a clear history of git commits is important.
+It helps those reviewing your code, when merging and in the future.
+Good commit messages also increase the quality of the generated changelogs for each release.
+
+It is important that the commit message is sufficiently explicit/descriptive.
+As an example:
+
+```
+Fixed execresult function
+```
+
+This is **not good**, because it doesn't really say what was wrong.
+Here are some better examples:
+
+```
+Policy function execresult() no longer crashes when passed empty string
+```
+
+```
+Fixed memory leak in policy function execresult()
+```
+
+
+#### Commit message example
+
+Here is an example of our commit messages:
+
+```
+Fixed memory leak in: differences(), intersection(), unique()
+
+They all use `FnCallSetOp()` internally, which was lacking free
+for some error handling return paths.
+
+Changelog: Title
+Ticket: ENT-4586
+```
+
+A commit message consists of 3 parts; a title, a body, and metadata.
+The 3 parts are separated by empty lines.
+The body and metadata parts are optional.
+
+The first line of the commit message is called the title.
+It should not have punctuation (like `.`/`!`) on the end of the line.
+It should not exceed 80 characters.
+In a short sentence it explains the change in the commit.
+If the commit includes a change in code, as well as a test, it doesn't need to mention the test.
+Past tense is preferred, especially when the title is used in the changelog.
+
+The body can be several sentences.
+They should have proper punctuation, ending sentences in `.`/`!`.
+Wrap lines before 80 characters, so the width of `git log` is consistent.
+It should explain the change in detail, and can give examples, implementation details, etc.
+
+Using some markdown syntax is okay, but not required.
+Commit messages and changelog entries are considered plain text.
+Sometimes markdown can make them more clear, and the automatic pull request description on GitHub looks nicer.
+
+The metadata part is one or more lines of `Keyword: Value`.
+We mainly use 3 keywords:
+
+```
+Changelog: Title
+Ticket: CFE-1234
+Signed-off-by: Ole Herman Schumacher Elgesem <ole@northern.tech>
+```
+
+(`Signed-off-by` is added by `git commit -s`).
+
+One exception is the line automatically added by `git cherry-pick -x`, which looks like this:
+
+```
+(cherry picked from commit fca949fdb4b9691338e316b3675d8e5a4e9082b9)
+```
+
+If your change only affects one feature, component or part of the git repo, you can prefix the title:
+
+```
+CONTRIBUTING.md: Improved instructions for commit messages
+```
+
+This is helpful because it clearly communicates that the change only affects this markdown file.
+The same can be said for only affecting one component(binary):
+
+```
+cf-net: Fixed networking issues on windows
+```
+
+
+### Changelog
+
+Most new features and fixes should have an entry in the `ChangeLog` file.
+We have an automatic way of generating them before the release, by properly formatting *commit messages*.
+
+* To write arbitrary message in the ChangeLog:
+  `Changelog: <message>`
+* To use the commit title line in the ChangeLog:
+  `Changelog: Title`
+* To use the entire commit message in the ChangeLog:
+  `Changelog: Commit`
+* To not generate an entry in the ChangeLog:
+  `Changelog: None`
+
+`Changelog` entry is in past tense, and explains the impact to users.
+Changelog entries should be written in a way that is understandable by our users.
+This means that references to implementation details are not appropriate, leave this for the non-changelog part of the commit message.
+It is the behavior change which is important.
+Changes which don't affect users, like changes in tests or in tools which are not packaged, should *not* have a changelog entry.
+
+
+### Bug tracker tickets
+
+Most changes should have a ticket number, referring to a ticket on our bug tracker:
+
+https://tracker.mender.io/
+
+Add it to the commit message as in the example above.
 
 
 ## Coding Style
@@ -120,7 +261,8 @@ Keep in mind that these are guidelines, there will always be some situations whe
       ```
 * Type casts should be separated with one space from the variable:
   ```c
-  (struct sockaddr *) &myaddr
+  bool ok = true;
+  int res = (int) ok;
   ```
 
 
@@ -475,38 +617,6 @@ to a policy server.
 6. Agent finishes.
 7. `cf-execd` continues to run `cf-agent` periodically with policy
    from `inputs` directory.
-
-
-## ChangeLog Entries
-
-When a new feature or a bugfix is being merged, it is often necessary to be
-accompanied by a proper entry in the ChangeLog file. Besides manually editing
-the file, we have an automatic way of generating them before the release,
-by properly formatting *commit messages*
-(see [git-commit-template](misc/githooks/git-commit-template)). Keep in mind
-that changelog entries should be written in a way that is understandable by non-
-programmers. This means that references to implementation details are not
-appropriate, leave this for the non-changelog part of the commit message. It is
-the behavior change which is important. This implies that refactorings that have
-no visible effect on behavior don't need a changelog entry.
-
-If a changelog entry is needed, your pull request should have at least one
-commit either with a "Changelog:" line in it (anywhere after the title), or
-title should start with ticket number from our bug tracker ("CFE-1234").
-"Changelog:" line may be one of the following:
-
-* To write arbitrary message in the ChangeLog:
-`Changelog: <message>`
-* To use the commit title line in the ChangeLog:
-`Changelog: Title`
-* To use the entire commit message in the ChangeLog:
-`Changelog: Commit`
-
-It's worth noting that we strive to have bugtracker tickets for most
-changes, and they should be mentioned in the ChangeLog entries. In fact
-if anywhere in the commit message the string ```CFE-1234``` is found
-(referring to a ticket from https://tracker.mender.io ), it will be
-automatically added to the ChangeLog.
 
 
 ## Testing

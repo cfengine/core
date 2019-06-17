@@ -149,6 +149,9 @@ PackageManager *INSTALLED_PACKAGE_LISTS = NULL; /* GLOBAL_X */
 static PackagePromiseType GetPackagePromiseVersion(const Packages *packages,
         const NewPackages *new_packages)
 {
+    assert(packages != NULL);
+    assert(new_packages != NULL);
+
     /* We have mixed packages promise constraints. */
     if (!packages->is_empty && !new_packages->is_empty)
     {
@@ -175,6 +178,8 @@ static PackagePromiseType GetPackagePromiseVersion(const Packages *packages,
 
 PromiseResult VerifyPackagesPromise(EvalContext *ctx, const Promise *pp)
 {
+    assert(pp != NULL); // Dereferenced in cfPS macros
+
     PromiseResult result = PROMISE_RESULT_FAIL;
     char *promise_log_message = NULL;
     LogLevel level;
@@ -260,6 +265,8 @@ PromiseResult VerifyPackagesPromise(EvalContext *ctx, const Promise *pp)
 static PromiseResult HandleOldPackagePromiseType(EvalContext *ctx, const Promise *pp, const Attributes *attr)
 {
     assert(attr != NULL);
+    assert(pp != NULL);
+
     Attributes a = *attr; // TODO: Remove this local copy, overwritten on windows
     CfLock thislock;
     char lockname[CF_BUFSIZE];
@@ -392,6 +399,8 @@ end:
 static bool PackageSanityCheck(EvalContext *ctx, const Attributes *a, const Promise *pp)
 {
     assert(a != NULL);
+    assert(pp != NULL); // Dereferenced in cfPS macros
+
     const Packages *const pkgs = &(a->packages);
 #ifndef __MINGW32__  // Windows may use Win32 API for listing and parsing
 
@@ -623,6 +632,8 @@ static bool PackageListInstalledFromCommand(EvalContext *ctx,
                                             const Attributes *a, const Promise *pp,
                                             PromiseResult *result)
 {
+    assert(a != NULL);
+
     if (a->packages.package_list_update_command != NULL)
     {
         if (!a->packages.package_add_command)
@@ -883,6 +894,8 @@ static PackageItem *GetCachedPackageList(EvalContext *ctx, PackageManager *manag
                                          const Promise *pp)
 {
     assert(a != NULL);
+    assert(manager != NULL);
+
     PackageItem *list = NULL;
     char name[CF_MAXVARSIZE], version[CF_MAXVARSIZE], arch[CF_MAXVARSIZE], mgr[CF_MAXVARSIZE], line[CF_BUFSIZE];
     char thismanager[CF_MAXVARSIZE];
@@ -998,6 +1011,8 @@ static bool VerifyInstalledPackages(
     const Promise *pp,
     PromiseResult *result)
 {
+    assert(a != NULL);
+
     PackageManager *manager = GetPackageManager(all_mgrs, a->packages.package_list_command, PACKAGE_ACTION_NONE, PACKAGE_ACTION_POLICY_NONE);
 
     if (manager == NULL)
@@ -1335,6 +1350,9 @@ static PromiseResult AddPackageToSchedule(EvalContext *ctx, const Attributes *a,
                                           const char *name, const char *version, const char *arch,
                                           const Promise *pp)
 {
+    assert(a != NULL);
+    assert(pp != NULL);
+
     switch (a->transaction.action)
     {
     case cfa_warn:
@@ -1383,6 +1401,9 @@ static PromiseResult AddPatchToSchedule(EvalContext *ctx, const Attributes *a, c
                                         const char *name, const char *version, const char *arch,
                                         const Promise *pp)
 {
+    assert(a != NULL);
+    assert(pp != NULL);
+
     switch (a->transaction.action)
     {
     case cfa_warn:
@@ -1475,6 +1496,8 @@ static PromiseResult AddPatchToSchedule(EvalContext *ctx, const Attributes *a, c
 static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const char *version, const char *arch, int installed, int matched,
                                        int no_version_specified, const Attributes *a, const Promise *pp)
 {
+    assert(a != NULL);
+
     char refAnyVerEsc[CF_EXPANDSIZE];
     char largestVerAvail[CF_MAXVARSIZE];
     char largestPackAvail[CF_MAXVARSIZE];

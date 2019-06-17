@@ -13,18 +13,24 @@
 
 import cpp
 
+predicate hasNullCheck(Function func, Parameter p){
+  exists(MacroInvocation m |
+    m.getMacroName() = "assert"
+    and m.getEnclosingFunction() = func
+    and m.getUnexpandedArgument(0) = p.getName() + " != NULL")
+  or
+  exists(EqualityOperation comparison |
+    comparison.getEnclosingFunction() = func
+    and comparison.getLeftOperand().toString() = p.getName()
+    and comparison.getRightOperand().findRootCause().toString() = "NULL")
+}
+
 from Function func, PointerFieldAccess acc, Parameter p, PointerType pt
 where acc.getEnclosingFunction() = func
   and p.getFunction() = func
   and p.getType() = pt
   and acc.getQualifier().toString() = p.getName()
-  and not
-  (
-    exists(EqualityOperation comparison |
-           comparison.getEnclosingFunction() = func
-           and comparison.getLeftOperand().toString() = p.getName()
-           and comparison.getRightOperand().findRootCause().toString() = "NULL")
-  )
+  and not hasNullCheck(func, p)
 select acc, "Parameter " + p.getName() +
             " in " + func.getName() +
-            "() is dereferenced without a null-check"
+            "() is dereferenced without an explicit null-check"

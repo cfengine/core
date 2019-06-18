@@ -357,17 +357,15 @@ static PromiseResult HandleOldPackagePromiseType(EvalContext *ctx, const Promise
 
     free(default_arch);
 
-    switch (a.packages.package_policy)
+    if (a.packages.package_policy == PACKAGE_ACTION_PATCH)
     {
-    case PACKAGE_ACTION_PATCH:
         Log(LOG_LEVEL_VERBOSE, "Verifying patch action for promise %s", pp->promiser);
         result = PromiseResultUpdate_HELPER(pp, result, VerifyPromisedPatch(ctx, &a, pp));
-        break;
-
-    default:
+    }
+    else
+    {
         Log(LOG_LEVEL_VERBOSE, "Verifying action for promise %s", pp->promiser);
         result = PromiseResultUpdate_HELPER(pp, result, VerifyPromisedPackage(ctx, &a, pp));
-        break;
     }
 
     YieldCurrentLock(thislock);
@@ -2727,9 +2725,8 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
 
             Log(LOG_LEVEL_VERBOSE, "Command prefix '%s'", command_string);
 
-            switch (pm->policy)
+            if (pm->policy == PACKAGE_ACTION_POLICY_INDIVIDUAL)
             {
-            case PACKAGE_ACTION_POLICY_INDIVIDUAL:
 
                 for (const PackageItem *pi = pm->pack_list; pi != NULL; pi = pi->next)
                 {
@@ -2784,11 +2781,9 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
 
                     *offset = '\0';
                 }
-
-                break;
-
-            case PACKAGE_ACTION_POLICY_BULK:
-                {
+            }
+            else if (pm->policy == PACKAGE_ACTION_POLICY_BULK)
+            {
                     for (const PackageItem *pi = pm->pack_list; pi != NULL; pi = pi->next)
                     {
                         if (pi->name)
@@ -2847,12 +2842,6 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
                     }
                     EvalContextStackPopFrame(ctx);
                     EvalContextLogPromiseIterationOutcome(ctx, pp, result);
-                }
-
-                break;
-
-            default:
-                break;
             }
         }
 

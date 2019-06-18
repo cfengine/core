@@ -80,7 +80,7 @@ bool IsUserNameValid(const char *username)
     return false;
 }
 
-int AllowedUser(char *user)
+bool AllowedUser(char *user)
 {
     if (IsItemIn(SERVER_ACCESS.allowuserlist, user))
     {
@@ -167,7 +167,7 @@ static void ReplyNothing(ServerConnectionState *conn)
 
 /* Used only in EXEC protocol command, to check if any of the received classes
  * is defined in the server. */
-int MatchClasses(const EvalContext *ctx, ServerConnectionState *conn)
+bool MatchClasses(const EvalContext *ctx, ServerConnectionState *conn)
 {
     char recvbuffer[CF_BUFSIZE];
     Item *classlist = NULL, *ip;
@@ -269,8 +269,10 @@ void Terminate(ConnectionInfo *connection)
     }
 }
 
-static int TransferRights(const ServerConnectionState *conn,
-                          const char *filename, const struct stat *sb)
+static bool TransferRights(
+    const ServerConnectionState *conn,
+    const char *filename,
+    const struct stat *sb)
 {
     Log(LOG_LEVEL_DEBUG, "Checking ownership of file: %s", filename);
 

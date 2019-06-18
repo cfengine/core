@@ -93,7 +93,7 @@ static void CloseStringHole(char *s, int start, int end);
 static int BuildLineArray(EvalContext *ctx, const Bundle *bundle, const char *array_lval, const char *file_buffer,
                           const char *split, int maxent, DataType type, bool int_index);
 static JsonElement* BuildData(EvalContext *ctx, const char *file_buffer,  const char *split, int maxent, bool make_array);
-static int ExecModule(EvalContext *ctx, char *command);
+static bool ExecModule(EvalContext *ctx, char *command);
 
 static bool CheckIDChar(const char ch);
 static bool CheckID(const char *id);
@@ -7905,7 +7905,7 @@ static FnCallResult FnCallNetworkConnections(EvalContext *ctx, ARG_UNUSED const 
 
 /*********************************************************************/
 
-static int ExecModule(EvalContext *ctx, char *command)
+static bool ExecModule(EvalContext *ctx, char *command)
 {
     FILE *pp = cf_popen(command, "rt", true);
     if (!pp)

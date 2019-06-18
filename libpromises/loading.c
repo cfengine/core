@@ -427,7 +427,7 @@ static bool VerifyBundleSequence(EvalContext *ctx, const Policy *policy, const G
     }
 
     const char *name;
-    int ok = true;
+    bool ok = true;
     for (const Rlist *rp = bundlesequence; rp != NULL; rp = rp->next)
     {
         switch (rp->val.type)

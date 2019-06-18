@@ -46,7 +46,7 @@ AgentConnection *ServerConnection(const char *server, const char *port,
                                   ConnectionFlags flags, int *err);
 void DisconnectServer(AgentConnection *conn);
 
-int CompareHashNet(const char *file1, const char *file2, bool encrypt, AgentConnection *conn);
+bool CompareHashNet(const char *file1, const char *file2, bool encrypt, AgentConnection *conn);
 int CopyRegularFileNet(const char *source, const char *dest, off_t size,
                        bool encrypt, AgentConnection *conn);
 Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn);

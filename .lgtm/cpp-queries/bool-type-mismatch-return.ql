@@ -15,7 +15,13 @@
 import cpp
 
 predicate isBoolExpr(Expr expression){
-  expression.getType().getName() = "bool"
+  ( // bool type and not typecast to something else
+    expression.getType().getName() = "bool"
+    and not exists(CStyleCast cast |
+      cast.getExpr() = expression
+      and cast.getType().getName() != "bool"
+    )
+  )
   or exists(MacroInvocation m |
             m.getExpr() = expression
             and (m.getMacroName() = "true"

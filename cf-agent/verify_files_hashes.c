@@ -35,7 +35,7 @@
 #include <eval_context.h>
 #include <known_dirs.h>
 
-int CompareFileHashes(const char *file1, const char *file2, const struct stat *sstat, const struct stat *dstat, const FileCopy *fc, AgentConnection *conn)
+bool CompareFileHashes(const char *file1, const char *file2, const struct stat *sstat, const struct stat *dstat, const FileCopy *fc, AgentConnection *conn)
 {
     unsigned char digest1[EVP_MAX_MD_SIZE + 1] = { 0 }, digest2[EVP_MAX_MD_SIZE + 1] = { 0 };
     int i;
@@ -69,7 +69,7 @@ int CompareFileHashes(const char *file1, const char *file2, const struct stat *s
     }
 }
 
-int CompareBinaryFiles(const char *file1, const char *file2, const struct stat *sstat, const struct stat *dstat, const FileCopy *fc, AgentConnection *conn)
+bool CompareBinaryFiles(const char *file1, const char *file2, const struct stat *sstat, const struct stat *dstat, const FileCopy *fc, AgentConnection *conn)
 {
     int fd1, fd2, bytes1, bytes2;
     char buff1[BUFSIZ], buff2[BUFSIZ];

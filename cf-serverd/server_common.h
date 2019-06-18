@@ -37,10 +37,10 @@
 
 
 void RefuseAccess(ServerConnectionState *conn, char *errmesg);
-int AllowedUser(char *user);
+bool AllowedUser(char *user);
 /* Checks whatever user name contains characters we are considering to be invalid */
 bool IsUserNameValid(const char *username);
-int MatchClasses(const EvalContext *ctx, ServerConnectionState *conn);
+bool MatchClasses(const EvalContext *ctx, ServerConnectionState *conn);
 void Terminate(ConnectionInfo *connection);
 void CfGetFile(ServerFileGetState *args);
 void CfEncryptGetFile(ServerFileGetState *args);

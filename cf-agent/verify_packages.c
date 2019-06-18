@@ -1497,6 +1497,7 @@ static PromiseResult SchedulePackageOp(EvalContext *ctx, const char *name, const
                                        int no_version_specified, const Attributes *a, const Promise *pp)
 {
     assert(a != NULL);
+    assert(pp != NULL); // Dereferenced by cfPS macros
 
     char refAnyVerEsc[CF_EXPANDSIZE];
     char largestVerAvail[CF_MAXVARSIZE];
@@ -1985,6 +1986,9 @@ VersionCmpResult ComparePackages(EvalContext *ctx,
                                  const char *mode,
                                  PromiseResult *result)
 {
+    assert(pi != NULL);
+    assert(a != NULL);
+
     Log(LOG_LEVEL_VERBOSE, "Comparing %s package (%s,%s,%s) "
         "to [%s] with given (%s,%s,%s) [name,version,arch]",
         mode, pi->name, pi->version, pi->arch, PackageVersionComparatorToString(a->packages.package_select), n, v, arch);
@@ -2056,6 +2060,8 @@ static VersionCmpResult PatchMatch(EvalContext *ctx,
                                    const char* mode,
                                    PromiseResult *result)
 {
+    assert(attr != NULL);
+
     PackageManager *mp;
 
     // This REALLY needs some commenting
@@ -2123,6 +2129,8 @@ static VersionCmpResult PackageMatch(EvalContext *ctx,
  * The mode is informational
  */
 {
+    assert(attr != NULL);
+
     PackageManager *mp = NULL;
 
     // This REALLY needs some commenting
@@ -2173,6 +2181,8 @@ static VersionCmpResult PackageMatch(EvalContext *ctx,
 static bool WillSchedulePackageOperation(EvalContext *ctx, const Attributes *a, const Promise *pp, int matches, int installed)
 {
     assert(a != NULL);
+    assert(pp != NULL);
+
     PackageAction policy = a->packages.package_policy;
 
     Log(LOG_LEVEL_DEBUG, "WillSchedulePackageOperation: on entry, action %s: package %s matches = %s, installed = %s.",
@@ -2253,6 +2263,9 @@ static bool WillSchedulePackageOperation(EvalContext *ctx, const Attributes *a, 
 static PromiseResult CheckPackageState(EvalContext *ctx, const Attributes *a, const Promise *pp, const char *name, const char *version,
                                        const char *arch, bool no_version)
 {
+    assert(a != NULL);
+    assert(pp != NULL); // Dereferenced in cfPS macros
+
     PromiseResult result = PROMISE_RESULT_NOOP;
 
     /* Horrible */
@@ -2328,6 +2341,8 @@ static PromiseResult CheckPackageState(EvalContext *ctx, const Attributes *a, co
 static PromiseResult VerifyPromisedPatch(EvalContext *ctx, const Attributes *a, const Promise *pp)
 {
     assert(a != NULL);
+    assert(pp != NULL);
+
     char version[CF_MAXVARSIZE];
     char name[CF_MAXVARSIZE];
     char arch[CF_MAXVARSIZE];
@@ -2445,6 +2460,8 @@ static PromiseResult VerifyPromisedPatch(EvalContext *ctx, const Attributes *a, 
 static PromiseResult VerifyPromisedPackage(EvalContext *ctx, const Attributes *a, const Promise *pp)
 {
     assert(a != NULL);
+    assert(pp != NULL);
+
     const char *package = pp->promiser;
     const Packages *const pkgs = &(a->packages);
 
@@ -3199,7 +3216,7 @@ static PackageManager *GetPackageManager(PackageManager **lists, char *mgr,
 
 static void DeletePackageItems(PackageItem * pi)
 {
-    while (pi)
+    while (pi != NULL)
     {
         PackageItem *next = pi->next;
         free(pi->name);
@@ -3213,7 +3230,7 @@ static void DeletePackageItems(PackageItem * pi)
 
 static void DeletePackageManagers(PackageManager *np)
 {
-    while (np)
+    while (np != NULL)
     {
         PackageManager *next = np->next;
         DeletePackageItems(np->pack_list);
@@ -3253,6 +3270,8 @@ bool ExecPackageCommand(EvalContext *ctx, char *command, int verify, int setCmdC
                         const Promise *pp, PromiseResult *result)
 {
     assert(a != NULL);
+    assert(pp != NULL); // Dereferenced by cfPS macros
+
     bool retval = true;
     char *cmd;
     FILE *pfp;

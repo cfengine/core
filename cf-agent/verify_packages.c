@@ -2784,64 +2784,64 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
             }
             else if (pm->policy == PACKAGE_ACTION_POLICY_BULK)
             {
+                for (const PackageItem *pi = pm->pack_list; pi != NULL; pi = pi->next)
+                {
+                    if (pi->name)
+                    {
+                        char *offset = command_string + strlen(command_string);
+
+                        if (a.packages.package_file_repositories &&
+                            (action == PACKAGE_ACTION_ADD ||
+                             action == PACKAGE_ACTION_UPDATE))
+                        {
+                            const char *sp = PrefixLocalRepository(a.packages.package_file_repositories, pi->name);
+                            if (sp != NULL)
+                            {
+                                strcpy(offset, sp);
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            strcpy(offset, pi->name);
+                        }
+
+                        strcat(command_string, " ");
+                    }
+                }
+
+                PromiseResult result = PROMISE_RESULT_NOOP;
+                EvalContextStackPushPromiseFrame(ctx, pp);
+                if (EvalContextStackPushPromiseIterationFrame(ctx, NULL))
+                {
+                    bool ok = ExecPackageCommand(ctx, command_string, verify, true, &a, pp, &result);
+
                     for (const PackageItem *pi = pm->pack_list; pi != NULL; pi = pi->next)
                     {
-                        if (pi->name)
+                        if (StringSafeEqual(pi->name, PACKAGE_IGNORED_CFE_INTERNAL))
                         {
-                            char *offset = command_string + strlen(command_string);
-
-                            if (a.packages.package_file_repositories &&
-                                (action == PACKAGE_ACTION_ADD ||
-                                 action == PACKAGE_ACTION_UPDATE))
-                            {
-                                const char *sp = PrefixLocalRepository(a.packages.package_file_repositories, pi->name);
-                                if (sp != NULL)
-                                {
-                                    strcpy(offset, sp);
-                                }
-                                else
-                                {
-                                    break;
-                                }
-                            }
-                            else
-                            {
-                                strcpy(offset, pi->name);
-                            }
-
-                            strcat(command_string, " ");
+                            Log(LOG_LEVEL_DEBUG, "ExecuteSchedule: Ignoring outcome for special package '%s'", pi->name);
+                        }
+                        else if (ok)
+                        {
+                            Log(LOG_LEVEL_VERBOSE,
+                                "Bulk package schedule execution ok for '%s' (outcome cannot be promised by cf-agent)",
+                                  pi->name);
+                        }
+                        else
+                        {
+                            Log(LOG_LEVEL_ERR, "Bulk package schedule execution failed somewhere - unknown outcome for '%s'",
+                                  pi->name);
                         }
                     }
 
-                    PromiseResult result = PROMISE_RESULT_NOOP;
-                    EvalContextStackPushPromiseFrame(ctx, pp);
-                    if (EvalContextStackPushPromiseIterationFrame(ctx, NULL))
-                    {
-                        bool ok = ExecPackageCommand(ctx, command_string, verify, true, &a, pp, &result);
-
-                        for (const PackageItem *pi = pm->pack_list; pi != NULL; pi = pi->next)
-                        {
-                            if (StringSafeEqual(pi->name, PACKAGE_IGNORED_CFE_INTERNAL))
-                            {
-                                Log(LOG_LEVEL_DEBUG, "ExecuteSchedule: Ignoring outcome for special package '%s'", pi->name);
-                            }
-                            else if (ok)
-                            {
-                                Log(LOG_LEVEL_VERBOSE,
-                                    "Bulk package schedule execution ok for '%s' (outcome cannot be promised by cf-agent)",
-                                      pi->name);
-                            }
-                            else
-                            {
-                                Log(LOG_LEVEL_ERR, "Bulk package schedule execution failed somewhere - unknown outcome for '%s'",
-                                      pi->name);
-                            }
-                        }
-
-                        EvalContextStackPopFrame(ctx);
-                    }
                     EvalContextStackPopFrame(ctx);
-                    EvalContextLogPromiseIterationOutcome(ctx, pp, result);
+                }
+                EvalContextStackPopFrame(ctx);
+                EvalContextLogPromiseIterationOutcome(ctx, pp, result);
             }
         }
 

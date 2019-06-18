@@ -102,7 +102,7 @@ int setegid(gid_t gid)
 
 /*******************************************************************/
 
-int IsPrivileged()
+bool IsPrivileged()
 {
 #ifdef _WIN32
     return true;

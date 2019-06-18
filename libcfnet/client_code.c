@@ -456,7 +456,7 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
 
 /*********************************************************************/
 
-int CompareHashNet(const char *file1, const char *file2, bool encrypt, AgentConnection *conn)
+bool CompareHashNet(const char *file1, const char *file2, bool encrypt, AgentConnection *conn)
 {
     unsigned char d[EVP_MAX_MD_SIZE + 1];
     char *sp;

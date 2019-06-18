@@ -2959,7 +2959,7 @@ void EvalContextSetEvalOption(EvalContext *ctx, EvalContextOption option, bool v
 
 bool EvalContextGetEvalOption(EvalContext *ctx, EvalContextOption option)
 {
-    return !!(ctx->eval_options & option);
+    return ((ctx->eval_options & option) != 0);
 }
 
 void EvalContextSetLaunchDirectory(EvalContext *ctx, const char *path)

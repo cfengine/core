@@ -86,10 +86,10 @@ static PromiseResult VerifyCopy(EvalContext *ctx, const char *source, char *dest
                                 CompressedArray **inode_cache, AgentConnection *conn);
 static PromiseResult TouchFile(EvalContext *ctx, char *path, const Attributes *attr, const Promise *pp);
 static PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, const struct stat *dstat, const Attributes *attr, const Promise *pp);
-static int PushDirState(EvalContext *ctx, char *name, const struct stat *sb);
+static bool PushDirState(EvalContext *ctx, char *name, const struct stat *sb);
 static bool PopDirState(int goback, char *name, const struct stat *sb, DirectoryRecursion r);
 static bool CheckLinkSecurity(const struct stat *sb, char *name);
-static int CompareForFileCopy(char *sourcefile, char *destfile, const struct stat *ssb, const struct stat *dsb, const FileCopy *fc, AgentConnection *conn);
+static bool CompareForFileCopy(char *sourcefile, char *destfile, const struct stat *ssb, const struct stat *dsb, const FileCopy *fc, AgentConnection *conn);
 static void FileAutoDefine(EvalContext *ctx, char *destfile);
 static void TruncateFile(char *name);
 static void RegisterAHardLink(int i, char *value, const Attributes *attr, CompressedArray **inode_cache);
@@ -98,8 +98,8 @@ static int cf_stat(const char *file, struct stat *buf, const FileCopy *fc, Agent
 #ifndef __MINGW32__
 static int cf_readlink(EvalContext *ctx, char *sourcefile, char *linkbuf, int buffsize, const Attributes *attr, const Promise *pp, AgentConnection *conn, PromiseResult *result);
 #endif
-static int SkipDirLinks(EvalContext *ctx, char *path, const char *lastnode, DirectoryRecursion r);
-static int DeviceBoundary(const struct stat *sb, dev_t rootdevice);
+static bool SkipDirLinks(EvalContext *ctx, char *path, const char *lastnode, DirectoryRecursion r);
+static bool DeviceBoundary(const struct stat *sb, dev_t rootdevice);
 static PromiseResult LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile, const struct stat *sb, const Attributes *attr,
                               const Promise *pp, CompressedArray **inode_cache, AgentConnection *conn);
 
@@ -178,7 +178,7 @@ void VerifyFileLeaf(EvalContext *ctx, char *path, const struct stat *sb, const A
 }
 
 /* Checks whether item matches a list of wildcards */
-static int MatchRlistItem(EvalContext *ctx, const Rlist *listofregex, const char *teststring)
+static bool MatchRlistItem(EvalContext *ctx, const Rlist *listofregex, const char *teststring)
 {
     for (const Rlist *rp = listofregex; rp != NULL; rp = rp->next)
     {
@@ -186,7 +186,7 @@ static int MatchRlistItem(EvalContext *ctx, const Rlist *listofregex, const char
 
         if (strcmp(teststring, RlistScalarValue(rp)) == 0)
         {
-            return (true);
+            return true;
         }
 
         /* Make it commutative */
@@ -2477,7 +2477,7 @@ end:
     return retval;
 }
 
-static int PushDirState(EvalContext *ctx, char *name, const struct stat *sb)
+static bool PushDirState(EvalContext *ctx, char *name, const struct stat *sb)
 {
     if (safe_chdir(name) == -1)
     {
@@ -3127,9 +3127,9 @@ static PromiseResult VerifyFileIntegrity(EvalContext *ctx, const char *file, con
     return result;
 }
 
-static int CompareForFileCopy(char *sourcefile, char *destfile, const struct stat *ssb, const struct stat *dsb, const FileCopy *fc, AgentConnection *conn)
+static bool CompareForFileCopy(char *sourcefile, char *destfile, const struct stat *ssb, const struct stat *dsb, const FileCopy *fc, AgentConnection *conn)
 {
-    int ok_to_copy;
+    bool ok_to_copy;
 
     switch (fc->compare)
     {
@@ -3599,7 +3599,7 @@ static int cf_readlink(EvalContext *ctx, char *sourcefile, char *linkbuf, int bu
 
 #endif /* !__MINGW32__ */
 
-static int SkipDirLinks(EvalContext *ctx, char *path, const char *lastnode, DirectoryRecursion r)
+static bool SkipDirLinks(EvalContext *ctx, char *path, const char *lastnode, DirectoryRecursion r)
 {
     if (r.exclude_dirs)
     {
@@ -3955,7 +3955,7 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, const Attribu
     return true;
 }
 
-static int DeviceBoundary(const struct stat *sb, dev_t rootdevice)
+static bool DeviceBoundary(const struct stat *sb, dev_t rootdevice)
 {
     if (sb->st_dev == rootdevice)
     {

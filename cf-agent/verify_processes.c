@@ -61,9 +61,8 @@ PromiseResult VerifyProcessesPromise(EvalContext *ctx, const Promise *pp)
 
 static bool ProcessSanityChecks(const Attributes *a, const Promise *pp)
 {
-    int promised_zero, ret = true;
-
-    promised_zero = ((a->process_count.min_range == 0) && (a->process_count.max_range == 0));
+    bool promised_zero = ((a->process_count.min_range == 0) && (a->process_count.max_range == 0));
+    bool ret = true;
 
     if (a->restart_class)
     {

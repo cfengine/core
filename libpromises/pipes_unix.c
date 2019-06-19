@@ -34,7 +34,7 @@
 #include <signals.h>
 #include <string_lib.h>
 
-static int CfSetuid(uid_t uid, gid_t gid);
+static bool CfSetuid(uid_t uid, gid_t gid);
 
 static int cf_pwait(pid_t pid);
 
@@ -946,7 +946,7 @@ bool PipeToPid(pid_t *pid, FILE *pp)
 
 /*******************************************************************/
 
-static int CfSetuid(uid_t uid, gid_t gid)
+static bool CfSetuid(uid_t uid, gid_t gid)
 {
     struct passwd *pw;
 

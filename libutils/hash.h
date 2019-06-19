@@ -81,7 +81,7 @@ int HashCopy(Hash *origin, Hash **destination);
   @param b 2nd hash to be compared.
   @return True if both hashes are equal and false in any other case.
   */
-int HashEqual(const Hash *a, const Hash *b);
+bool HashEqual(const Hash *a, const Hash *b);
 
 /**
   @brief Pointer to the raw digest data.

@@ -36,23 +36,23 @@
 #include <exec_tools.h>
 #include <chflags.h>
 
-static int SelectTypeMatch(const struct stat *lstatptr, Rlist *crit);
-static int SelectOwnerMatch(EvalContext *ctx, char *path, const struct stat *lstatptr, Rlist *crit);
-static int SelectModeMatch(const struct stat *lstatptr, Rlist *ls);
-static int SelectTimeMatch(time_t stattime, time_t fromtime, time_t totime);
-static int SelectNameRegexMatch(EvalContext *ctx, const char *filename, char *crit);
-static int SelectPathRegexMatch(EvalContext *ctx, char *filename, char *crit);
+static bool SelectTypeMatch(const struct stat *lstatptr, Rlist *crit);
+static bool SelectOwnerMatch(EvalContext *ctx, char *path, const struct stat *lstatptr, Rlist *crit);
+static bool SelectModeMatch(const struct stat *lstatptr, Rlist *ls);
+static bool SelectTimeMatch(time_t stattime, time_t fromtime, time_t totime);
+static bool SelectNameRegexMatch(EvalContext *ctx, const char *filename, char *crit);
+static bool SelectPathRegexMatch(EvalContext *ctx, char *filename, char *crit);
 static bool SelectExecRegexMatch(EvalContext *ctx, char *filename, char *crit, char *prog);
-static int SelectIsSymLinkTo(EvalContext *ctx, char *filename, Rlist *crit);
-static int SelectExecProgram(char *filename, char *command);
-static int SelectSizeMatch(size_t size, size_t min, size_t max);
+static bool SelectIsSymLinkTo(EvalContext *ctx, char *filename, Rlist *crit);
+static bool SelectExecProgram(char *filename, char *command);
+static bool SelectSizeMatch(size_t size, size_t min, size_t max);
 
 #if !defined(__MINGW32__)
-static int SelectGroupMatch(EvalContext *ctx, const struct stat *lstatptr, Rlist *crit);
+static bool SelectGroupMatch(EvalContext *ctx, const struct stat *lstatptr, Rlist *crit);
 #endif
 
 #if defined HAVE_CHFLAGS
-static int SelectBSDMatch(const struct stat *lstatptr, Rlist *bsdflags);
+static bool SelectBSDMatch(const struct stat *lstatptr, Rlist *bsdflags);
 #endif
 
 bool SelectLeaf(EvalContext *ctx, char *path, const struct stat *sb, const FileSelect *fs)
@@ -200,7 +200,7 @@ bool SelectLeaf(EvalContext *ctx, char *path, const struct stat *sb, const FileS
 /* Level                                                           */
 /*******************************************************************/
 
-static int SelectSizeMatch(size_t size, size_t min, size_t max)
+static bool SelectSizeMatch(size_t size, size_t min, size_t max)
 {
     if ((size <= max) && (size >= min))
     {
@@ -212,7 +212,7 @@ static int SelectSizeMatch(size_t size, size_t min, size_t max)
 
 /*******************************************************************/
 
-static int SelectTypeMatch(const struct stat *lstatptr, Rlist *crit)
+static bool SelectTypeMatch(const struct stat *lstatptr, Rlist *crit)
 {
     Rlist *rp;
 
@@ -276,11 +276,10 @@ static int SelectTypeMatch(const struct stat *lstatptr, Rlist *crit)
     return false;
 }
 
-static int SelectOwnerMatch(EvalContext *ctx, char *path, const struct stat *lstatptr, Rlist *crit)
+static bool SelectOwnerMatch(EvalContext *ctx, char *path, const struct stat *lstatptr, Rlist *crit)
 {
     Rlist *rp;
     char ownerName[CF_BUFSIZE];
-    int gotOwner;
 
     StringSet *leafattrib = StringSetNew();
 
@@ -290,7 +289,7 @@ static int SelectOwnerMatch(EvalContext *ctx, char *path, const struct stat *lst
     StringSetAdd(leafattrib, xstrdup(buffer));
 #endif /* __MINGW32__ */
 
-    gotOwner = GetOwnerName(path, lstatptr, ownerName, sizeof(ownerName));
+    bool gotOwner = GetOwnerName(path, lstatptr, ownerName, sizeof(ownerName));
 
     if (gotOwner)
     {
@@ -333,7 +332,7 @@ static int SelectOwnerMatch(EvalContext *ctx, char *path, const struct stat *lst
 
 /*******************************************************************/
 
-static int SelectModeMatch(const struct stat *lstatptr, Rlist *list)
+static bool SelectModeMatch(const struct stat *lstatptr, Rlist *list)
 {
     mode_t newperm, plus, minus;
     Rlist *rp;
@@ -365,7 +364,7 @@ static int SelectModeMatch(const struct stat *lstatptr, Rlist *list)
 /*******************************************************************/
 
 #if defined HAVE_CHFLAGS
-static int SelectBSDMatch(const struct stat *lstatptr, Rlist *bsdflags)
+static bool SelectBSDMatch(const struct stat *lstatptr, Rlist *bsdflags)
 {
     u_long newflags, plus, minus;
 
@@ -388,14 +387,14 @@ static int SelectBSDMatch(const struct stat *lstatptr, Rlist *bsdflags)
 #endif
 /*******************************************************************/
 
-static int SelectTimeMatch(time_t stattime, time_t fromtime, time_t totime)
+static bool SelectTimeMatch(time_t stattime, time_t fromtime, time_t totime)
 {
     return ((fromtime < stattime) && (stattime < totime));
 }
 
 /*******************************************************************/
 
-static int SelectNameRegexMatch(EvalContext *ctx, const char *filename, char *crit)
+static bool SelectNameRegexMatch(EvalContext *ctx, const char *filename, char *crit)
 {
     if (FullTextMatch(ctx, crit, ReadLastNode(filename)))
     {
@@ -407,7 +406,7 @@ static int SelectNameRegexMatch(EvalContext *ctx, const char *filename, char *cr
 
 /*******************************************************************/
 
-static int SelectPathRegexMatch(EvalContext *ctx, char *filename, char *crit)
+static bool SelectPathRegexMatch(EvalContext *ctx, char *filename, char *crit)
 {
     if (FullTextMatch(ctx, crit, filename))
     {
@@ -470,7 +469,7 @@ static bool SelectExecRegexMatch(EvalContext *ctx, char *filename, char *crit, c
 
 /*******************************************************************/
 
-static int SelectIsSymLinkTo(EvalContext *ctx, char *filename, Rlist *crit)
+static bool SelectIsSymLinkTo(EvalContext *ctx, char *filename, Rlist *crit)
 {
 #ifndef __MINGW32__
     char buffer[CF_BUFSIZE];
@@ -514,7 +513,7 @@ static int SelectIsSymLinkTo(EvalContext *ctx, char *filename, Rlist *crit)
 
 /*******************************************************************/
 
-static int SelectExecProgram(char *filename, char *command)
+static bool SelectExecProgram(char *filename, char *command)
   /* command can include $(this.promiser) for the name of the file */
 {
 // insert real value of $(this.promiser) in command
@@ -544,7 +543,7 @@ static int SelectExecProgram(char *filename, char *command)
 /* Unix implementations                                            */
 /*******************************************************************/
 
-int GetOwnerName(ARG_UNUSED char *path, const struct stat *lstatptr, char *owner, int ownerSz)
+bool GetOwnerName(ARG_UNUSED char *path, const struct stat *lstatptr, char *owner, int ownerSz)
 {
     struct passwd *pw;
 
@@ -565,7 +564,7 @@ int GetOwnerName(ARG_UNUSED char *path, const struct stat *lstatptr, char *owner
 
 /*******************************************************************/
 
-static int SelectGroupMatch(EvalContext *ctx, const struct stat *lstatptr, Rlist *crit)
+static bool SelectGroupMatch(EvalContext *ctx, const struct stat *lstatptr, Rlist *crit)
 {
     char buffer[CF_SMALLBUF];
     struct group *gr;

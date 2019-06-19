@@ -28,11 +28,11 @@
 #include <cfnet.h>
 
 
-int IdentifyAgent(ConnectionInfo *connection);
-int AuthenticateAgent(AgentConnection *conn, bool trust_key);
-int BadProtoReply(char *buf);
-int OKProtoReply(char *buf);
-int FailedProtoReply(char *buf);
+bool IdentifyAgent(ConnectionInfo *connection);
+bool AuthenticateAgent(AgentConnection *conn, bool trust_key);
+bool BadProtoReply(char *buf);
+bool OKProtoReply(char *buf);
+bool FailedProtoReply(char *buf);
 
 
 #endif

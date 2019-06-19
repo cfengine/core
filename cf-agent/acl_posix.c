@@ -47,16 +47,16 @@
 
 #ifdef HAVE_LIBACL
 
-static int CheckPosixLinuxAccessACEs(EvalContext *ctx, Rlist *aces, AclMethod method, const char *file_path,
-                                     const Attributes *a, const Promise *pp, PromiseResult *result);
-static int CheckPosixLinuxDefaultACEs(EvalContext *ctx, Rlist *aces, AclMethod method, AclDefault acl_default,
-                                      const char *file_path, const Attributes *a, const Promise *pp, PromiseResult *result);
-static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, const char *file_path, acl_type_t acl_type, const Attributes *a,
-                               const Promise *pp, PromiseResult *result);
-static int CheckDefaultEqualsAccessACL(EvalContext *ctx, const char *file_path, const Attributes *a, const Promise *pp, PromiseResult *result);
-static int CheckDefaultClearACL(EvalContext *ctx, const char *file_path, const Attributes *a, const Promise *pp, PromiseResult *result);
-static int ParseEntityPosixLinux(char **str, acl_entry_t ace, int *is_mask);
-static int ParseModePosixLinux(char *mode, acl_permset_t old_perms);
+static bool CheckPosixLinuxAccessACEs(EvalContext *ctx, Rlist *aces, AclMethod method, const char *file_path,
+                                      const Attributes *a, const Promise *pp, PromiseResult *result);
+static bool CheckPosixLinuxDefaultACEs(EvalContext *ctx, Rlist *aces, AclMethod method, AclDefault acl_default,
+                                       const char *file_path, const Attributes *a, const Promise *pp, PromiseResult *result);
+static bool CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, const char *file_path, acl_type_t acl_type, const Attributes *a,
+                                const Promise *pp, PromiseResult *result);
+static bool CheckDefaultEqualsAccessACL(EvalContext *ctx, const char *file_path, const Attributes *a, const Promise *pp, PromiseResult *result);
+static bool CheckDefaultClearACL(EvalContext *ctx, const char *file_path, const Attributes *a, const Promise *pp, PromiseResult *result);
+static bool ParseEntityPosixLinux(char **str, acl_entry_t ace, int *is_mask);
+static bool ParseModePosixLinux(char *mode, acl_permset_t old_perms);
 static acl_entry_t FindACE(acl_t acl, acl_entry_t ace_find);
 static int ACLEquals(acl_t first, acl_t second);
 static int ACECount(acl_t acl);
@@ -88,18 +88,18 @@ PromiseResult CheckPosixLinuxACL(EvalContext *ctx, const char *file_path, Acl ac
     return PROMISE_RESULT_NOOP;
 }
 
-static int CheckPosixLinuxAccessACEs(EvalContext *ctx, Rlist *aces, AclMethod method, const char *file_path,
-                                     const Attributes *a, const Promise *pp, PromiseResult *result)
+static bool CheckPosixLinuxAccessACEs(EvalContext *ctx, Rlist *aces, AclMethod method, const char *file_path,
+                                      const Attributes *a, const Promise *pp, PromiseResult *result)
 {
     assert(a != NULL);
     return CheckPosixLinuxACEs(ctx, aces, method, file_path, ACL_TYPE_ACCESS, a, pp, result);
 }
 
-static int CheckPosixLinuxDefaultACEs(EvalContext *ctx, Rlist *aces, AclMethod method, AclDefault acl_default,
-                                      const char *file_path, const Attributes *a, const Promise *pp, PromiseResult *result)
+static bool CheckPosixLinuxDefaultACEs(EvalContext *ctx, Rlist *aces, AclMethod method, AclDefault acl_default,
+                                       const char *file_path, const Attributes *a, const Promise *pp, PromiseResult *result)
 {
     assert(a != NULL);
-    int retval;
+    bool retval;
 
     switch (acl_default)
     {
@@ -138,8 +138,8 @@ static int CheckPosixLinuxDefaultACEs(EvalContext *ctx, Rlist *aces, AclMethod m
    set on the given file. If it doesn't, the ACL on the file is updated.
 */
 
-static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, const char *file_path, acl_type_t acl_type, const Attributes *a,
-                               const Promise *pp, PromiseResult *result)
+static bool CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, const char *file_path, acl_type_t acl_type, const Attributes *a,
+                                const Promise *pp, PromiseResult *result)
 {
     assert(a != NULL);
     acl_t acl_existing;
@@ -406,13 +406,13 @@ static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, 
   Returns 0 on success and -1 on failure.
  */
 
-static int CheckDefaultEqualsAccessACL(EvalContext *ctx, const char *file_path, const Attributes *a, const Promise *pp, PromiseResult *result)
+static bool CheckDefaultEqualsAccessACL(EvalContext *ctx, const char *file_path, const Attributes *a, const Promise *pp, PromiseResult *result)
 {
     assert(a != NULL);
     acl_t acl_access;
     acl_t acl_default;
     int equals;
-    int retval = false;
+    bool retval = false;
 
     acl_access = NULL;
     acl_default = NULL;
@@ -497,13 +497,13 @@ static int CheckDefaultEqualsAccessACL(EvalContext *ctx, const char *file_path, 
   Checks if the default ACL is empty. If not, it is cleared.
 */
 
-int CheckDefaultClearACL(EvalContext *ctx, const char *file_path, const Attributes *a, const Promise *pp, PromiseResult *result)
+static bool CheckDefaultClearACL(EvalContext *ctx, const char *file_path, const Attributes *a, const Promise *pp, PromiseResult *result)
 {
     acl_t acl_existing;
     acl_t acl_empty;
     acl_entry_t ace_dummy;
     int retv;
-    int retval = false;
+    bool retval = false;
 
     acl_existing = NULL;
     acl_empty = NULL;
@@ -827,7 +827,7 @@ static int PermsetEquals(acl_permset_t first, acl_permset_t second)
    (with unset permissions). Sets is_mask to true if this is a mask entry.
 */
 
-static int ParseEntityPosixLinux(char **str, acl_entry_t ace, int *is_mask)
+static bool ParseEntityPosixLinux(char **str, acl_entry_t ace, int *is_mask)
 {
     struct passwd *pwd;
     struct group *grp;
@@ -836,7 +836,7 @@ static int ParseEntityPosixLinux(char **str, acl_entry_t ace, int *is_mask)
     id_t id;
     char *ids;
     char *id_end;
-    int result = true;
+    bool result = true;
     int i;
 
     ids = NULL;
@@ -981,7 +981,7 @@ static int ParseEntityPosixLinux(char **str, acl_entry_t ace, int *is_mask)
   Returns true on success, false otherwise.
 */
 
-static int ParseModePosixLinux(char *mode, acl_permset_t perms)
+static bool ParseModePosixLinux(char *mode, acl_permset_t perms)
 {
     int retv;
     int more_entries;

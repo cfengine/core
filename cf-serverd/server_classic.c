@@ -169,9 +169,9 @@ static bool PathMatch(const char *stem, const char *request)
             strncmp(stem, request, stemlen) == 0);
 }
 
-static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectionState *conn, int encrypt)
+static bool AccessControl(EvalContext *ctx, const char *req_path, ServerConnectionState *conn, int encrypt)
 {
-    int access = false;
+    bool access = false;
     char transrequest[CF_BUFSIZE];
     struct stat statbuf;
     char translated_req_path[CF_BUFSIZE];
@@ -569,7 +569,7 @@ static void SetConnectionData(ServerConnectionState *conn, char *buf)
     SetConnIdentity(conn, username);
 }
 
-static int CheckStoreKey(ServerConnectionState *conn, RSA *key)
+static bool CheckStoreKey(ServerConnectionState *conn, RSA *key)
 {
     RSA *savedkey;
 

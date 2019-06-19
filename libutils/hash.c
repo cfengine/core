@@ -303,7 +303,7 @@ int HashCopy(Hash *origin, Hash **destination)
     return 0;
 }
 
-int HashEqual(const Hash *a, const Hash *b)
+bool HashEqual(const Hash *a, const Hash *b)
 {
     if (!a && !b)
     {

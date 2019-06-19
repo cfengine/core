@@ -60,7 +60,7 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec,
                        PromiseResult *result);
 
 #ifdef HAVE_LIBXML2
-int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, EditDefaults ed);
+bool LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, EditDefaults ed);
 bool SaveXmlDocAsFile(xmlDocPtr doc, const char *file,
                       const Attributes *a, NewLineMode new_line_mode);
 #endif

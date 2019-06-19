@@ -74,7 +74,7 @@ char *CF_SUSPENDED[CF_MAX_CONCURRENT_ENVIRONMENTS];
 
 /*****************************************************************************/
 
-static int EnvironmentsSanityChecks(const Attributes *a, const Promise *pp);
+static bool EnvironmentsSanityChecks(const Attributes *a, const Promise *pp);
 static PromiseResult VerifyEnvironments(EvalContext *ctx, const Attributes *a, const Promise *pp);
 static PromiseResult VerifyVirtDomain(EvalContext *ctx, char *uri, enum cfhypervisors envtype, const Attributes *a, const Promise *pp);
 static PromiseResult VerifyVirtNetwork(EvalContext *ctx, char *uri, enum cfhypervisors envtype, const Attributes *a, const Promise *pp);
@@ -158,7 +158,7 @@ PromiseResult VerifyEnvironmentsPromise(EvalContext *ctx, const Promise *pp)
 
 /*****************************************************************************/
 
-static int EnvironmentsSanityChecks(const Attributes *a, const Promise *pp)
+static bool EnvironmentsSanityChecks(const Attributes *a, const Promise *pp)
 {
     assert(a != NULL);
     const Environments env = a->env;

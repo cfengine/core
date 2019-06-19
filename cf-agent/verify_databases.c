@@ -43,16 +43,15 @@ static int CheckDatabaseSanity(const Attributes *a, const Promise *pp);
 static PromiseResult VerifySQLPromise(EvalContext *ctx, const Attributes *a, const Promise *pp);
 static int VerifyDatabasePromise(CfdbConn *cfdb, char *database, const Attributes *a);
 
-static int ValidateSQLTableName(char *table_path, char *db, char *table);
-static int VerifyTablePromise(EvalContext *ctx, CfdbConn *cfdb, char *table_path, Rlist *columns, const Attributes *a, const Promise *pp, PromiseResult *result);
-static int ValidateSQLTableName(char *table_path, char *db, char *table);
+static bool ValidateSQLTableName(char *table_path, char *db, char *table);
+static bool VerifyTablePromise(EvalContext *ctx, CfdbConn *cfdb, char *table_path, Rlist *columns, const Attributes *a, const Promise *pp, PromiseResult *result);
 static void QueryTableColumns(char *s, char *db, char *table);
-static int NewSQLColumns(char *table, Rlist *columns, char ***name_table, char ***type_table, int **size_table,
+static bool NewSQLColumns(char *table, Rlist *columns, char ***name_table, char ***type_table, int **size_table,
                          int **done);
 static void DeleteSQLColumns(char **name_table, char **type_table, int *size_table, int *done, int len);
 static void CreateDBQuery(DatabaseType type, char *query);
-static int CreateTableColumns(CfdbConn *cfdb, char *table, Rlist *columns);
-static int CheckSQLDataType(char *type, char *ref_type, const Promise *pp);
+static bool CreateTableColumns(CfdbConn *cfdb, char *table, Rlist *columns);
+static bool CheckSQLDataType(char *type, char *ref_type, const Promise *pp);
 static int TableExists(CfdbConn *cfdb, char *name);
 static Rlist *GetSQLTables(CfdbConn *cfdb);
 static void ListTables(int type, char *query);
@@ -503,12 +502,13 @@ static int ValidateRegistryPromiser(char *key, const Promise *pp)
 /* Linker troubles require this code to be here in the main body             */
 /*****************************************************************************/
 
-static int VerifyTablePromise(EvalContext *ctx, CfdbConn *cfdb, char *table_path, Rlist *columns, const Attributes *a,
+static bool VerifyTablePromise(EvalContext *ctx, CfdbConn *cfdb, char *table_path, Rlist *columns, const Attributes *a,
                               const Promise *pp, PromiseResult *result)
 {
     assert(a != NULL);
     char name[CF_MAXVARSIZE], type[CF_MAXVARSIZE], query[CF_MAXVARSIZE], table[CF_MAXVARSIZE], db[CF_MAXVARSIZE];
-    int i, count, size, no_of_cols, *size_table, *done, identified, retval = true;
+    int i, count, size, no_of_cols, *size_table, *done, identified;
+    bool retval = true;
     char **name_table, **type_table;
 
     Log(LOG_LEVEL_VERBOSE, "Verifying promised table structure for '%s'", table_path);
@@ -734,7 +734,7 @@ static int TableExists(CfdbConn *cfdb, char *name)
 
 /*****************************************************************************/
 
-static int CreateTableColumns(CfdbConn *cfdb, char *table, Rlist *columns)
+static bool CreateTableColumns(CfdbConn *cfdb, char *table, Rlist *columns)
 {
     char entry[CF_MAXVARSIZE], query[CF_BUFSIZE];
     int i, *size_table, *done;
@@ -836,7 +836,7 @@ static void CreateDBQuery(DatabaseType type, char *query)
 
 /*****************************************************************************/
 
-static int ValidateSQLTableName(char *table_path, char *db, char *table)
+static bool ValidateSQLTableName(char *table_path, char *db, char *table)
 {
     char *sp;
     int dot = false, back = false, fwd = false;
@@ -885,7 +885,7 @@ static void QueryTableColumns(char *s, char *db, char *table)
 
 /*****************************************************************************/
 
-static int NewSQLColumns(char *table, Rlist *columns, char ***name_table, char ***type_table, int **size_table,
+static bool NewSQLColumns(char *table, Rlist *columns, char ***name_table, char ***type_table, int **size_table,
                          int **done)
 {
     int i, no_of_cols = RlistLen(columns);
@@ -987,8 +987,9 @@ static void DeleteSQLColumns(char **name_table, char **type_table, int *size_tab
 
 /*****************************************************************************/
 
-static int CheckSQLDataType(char *type, char *ref_type, const Promise *pp)
+static bool CheckSQLDataType(char *type, char *ref_type, const Promise *pp)
 {
+    // FIXME: This function always returns true
     static char *const aliases[3][2] =
         {
             {"varchar", "character@varying"},

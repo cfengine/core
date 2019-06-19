@@ -202,7 +202,7 @@ end:
 #ifdef HAVE_LIBXML2
 /***************************************************************************/
 
-int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, EditDefaults edits)
+bool LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, EditDefaults edits)
 {
     struct stat statbuf;
 

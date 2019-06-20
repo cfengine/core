@@ -50,7 +50,7 @@
 #include <buffer.h>
 
 
-int MoveObstruction(EvalContext *ctx, char *from, const Attributes *attr, const Promise *pp, PromiseResult *result)
+bool MoveObstruction(EvalContext *ctx, char *from, const Attributes *attr, const Promise *pp, PromiseResult *result)
 {
     assert(attr != NULL);
     struct stat sb;
@@ -153,7 +153,7 @@ bool SaveAsFile(SaveCallbackFn callback, void *param, const char *file, const At
     time_t stamp_now;
     Buffer *deref_file = BufferNewFrom(file, strlen(file));
     Buffer *pretty_file = BufferNew();
-    int ret = false;
+    bool ret = false;
 
     BufferPrintf(pretty_file, "'%s'", file);
 
@@ -345,11 +345,11 @@ static Item *NextItem(const Item *ip)
     }
 }
 
-static int ItemListsEqual(EvalContext *ctx, const Item *list1, const Item *list2, int warnings,
-                          const Attributes *a, const Promise *pp, PromiseResult *result)
+static bool ItemListsEqual(EvalContext *ctx, const Item *list1, const Item *list2, int warnings,
+                           const Attributes *a, const Promise *pp, PromiseResult *result)
 {
     assert(a != NULL);
-    int retval = true;
+    bool retval = true;
 
     const Item *ip1 = list1;
     const Item *ip2 = list2;

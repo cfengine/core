@@ -96,7 +96,7 @@ static bool IsProcessRunning(pid_t pid)
 
 /*************************************************************/
 
-int GetCurrentUserName(char *userName, int userNameLen)
+bool GetCurrentUserName(char *userName, int userNameLen)
 {
     char buf[GETPW_R_SIZE_MAX] = {0};
     struct passwd pwd;
@@ -119,7 +119,7 @@ int GetCurrentUserName(char *userName, int userNameLen)
 
 /*************************************************************/
 
-int IsExecutable(const char *file)
+bool IsExecutable(const char *file)
 {
     struct stat sb;
     gid_t grps[NGROUPS];

@@ -61,7 +61,7 @@ void SetSkipIdentify(bool enabled)
 
 /*********************************************************************/
 
-int IdentifyAgent(ConnectionInfo *conn_info)
+bool IdentifyAgent(ConnectionInfo *conn_info)
 {
     char uname[CF_BUFSIZE], sendbuff[CF_BUFSIZE];
     char dnsname[CF_MAXVARSIZE], localip[CF_MAX_IP_LEN];
@@ -206,7 +206,7 @@ static bool SetSessionKey(AgentConnection *conn)
     return true;
 }
 
-int AuthenticateAgent(AgentConnection *conn, bool trust_key)
+bool AuthenticateAgent(AgentConnection *conn, bool trust_key)
 {
     char sendbuffer[CF_EXPANDSIZE], in[CF_BUFSIZE], *out, *decrypted_cchall;
     BIGNUM *nonce_challenge, *bn = NULL;
@@ -537,21 +537,21 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
 /*********************************************************************/
 
-int BadProtoReply(char *buf)
+bool BadProtoReply(char *buf)
 {
     return (strncmp(buf, "BAD: ", 5) == 0);
 }
 
 /*********************************************************************/
 
-int OKProtoReply(char *buf)
+bool OKProtoReply(char *buf)
 {
     return (strncmp(buf, "OK:", 3) == 0);
 }
 
 /*********************************************************************/
 
-int FailedProtoReply(char *buf)
+bool FailedProtoReply(char *buf)
 {
     return (strncmp(buf, CF_FAILEDSTR, strlen(CF_FAILEDSTR)) == 0);
 }

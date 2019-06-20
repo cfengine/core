@@ -35,7 +35,7 @@ int NovaWin_chmod(const char *path, mode_t mode);
 /* win_file.c */
 
 int NovaWin_rename(const char *oldpath, const char *newpath);
-int NovaWin_FileExists(const char *fileName);
+bool NovaWin_FileExists(const char *fileName);
 int NovaWin_IsDir(char *fileName);
 int NovaWin_TakeFileOwnership(char *path);
 int NovaWin_SetFileOwnership(char *path, SID *sid);

@@ -62,7 +62,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
 
 /*****************************************************************************/
 
-static int FileSanityChecks(char *path, const Attributes *a, const Promise *pp)
+static bool FileSanityChecks(char *path, const Attributes *a, const Promise *pp)
 {
     assert(a != NULL);
     if ((a->havelink) && (a->havecopy))

@@ -28,7 +28,7 @@
 #include <platform.h>
 #include <cf3.defs.h>
 
-int IsExecutable(const char *file);
+bool IsExecutable(const char *file);
 bool ShellCommandReturnsZero(const char *command, ShellType shell);
 bool GetExecOutput(const char *command, char **buffer, size_t *buffer_size, ShellType shell);
 void ActAsDaemon();

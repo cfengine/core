@@ -544,7 +544,7 @@ bool CompareHashNet(const char *file1, const char *file2, bool encrypt, AgentCon
 /*********************************************************************/
 
 
-int EncryptCopyRegularFileNet(const char *source, const char *dest, off_t size, AgentConnection *conn)
+static bool EncryptCopyRegularFileNet(const char *source, const char *dest, off_t size, AgentConnection *conn)
 {
     int dd, blocksize = 2048, n_read = 0, plainlen, more = true, finlen, cnt = 0;
     int tosend, cipherlen = 0;
@@ -720,8 +720,8 @@ static void FlushFileStream(int sd, int toget)
 
 /* TODO finalise socket or TLS session in all cases that this function fails
  * and the transaction protocol is out of sync. */
-int CopyRegularFileNet(const char *source, const char *dest, off_t size,
-                       bool encrypt, AgentConnection *conn)
+bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
+                        bool encrypt, AgentConnection *conn)
 {
     char *buf, workbuf[CF_BUFSIZE], cfchangedstr[265];
     const int buf_size = 2048;

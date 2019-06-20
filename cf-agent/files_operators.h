@@ -28,7 +28,7 @@
 #include <cf3.defs.h>
 #include <file_lib.h>
 
-int MoveObstruction(EvalContext *ctx, char *from, const Attributes *attr, const Promise *pp, PromiseResult *result);
+bool MoveObstruction(EvalContext *ctx, char *from, const Attributes *attr, const Promise *pp, PromiseResult *result);
 
 typedef bool (*SaveCallbackFn)(const char *dest_filename, void *param, NewLineMode new_line_mode);
 bool SaveAsFile(SaveCallbackFn callback, void *param, const char *file, const Attributes *a, NewLineMode new_line_mode);

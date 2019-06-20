@@ -53,7 +53,7 @@ static const int INF_LINES = -2;
 /*******************************************************************/
 
 static void MailResult(const ExecConfig *config, const char *file);
-static int Dialogue(int sd, const char *s);
+static bool Dialogue(int sd, const char *s);
 
 /******************************************************************************/
 
@@ -808,7 +808,7 @@ static void MailResult(const ExecConfig *config, const char *file)
     Log(LOG_LEVEL_ERR, "Mail report: cannot mail to %s.", config->mail_to_address);
 }
 
-static int Dialogue(int sd, const char *s)
+static bool Dialogue(int sd, const char *s)
 {
     if ((s != NULL) && (*s != '\0'))
     {

@@ -752,6 +752,104 @@ static void test_chop_empty_two_spaces(void)
     assert_string_equal("", s);
 }
 
+static void test_trim_crlf(void)
+{
+    {
+        char *const data = xstrdup("\r\n");
+        const size_t new_length = TrimCSVLineCRLF(data);
+        assert_string_equal(data, "");
+        assert_int_equal(new_length, 0);
+        free(data);
+    }
+    {
+        char *const data = xstrdup("\r\n\r\n");
+        const size_t new_length = TrimCSVLineCRLF(data);
+        assert_string_equal(data, "\r\n");
+        assert_int_equal(new_length, 2);
+        free(data);
+    }
+    {
+        char *const data = xstrdup(",");
+        const size_t new_length = TrimCSVLineCRLF(data);
+        assert_string_equal(data, ",");
+        assert_int_equal(new_length, 1);
+        free(data);
+    }
+    {
+        char *const data = xstrdup(",\r\n");
+        const size_t new_length = TrimCSVLineCRLF(data);
+        assert_string_equal(data, ",");
+        assert_int_equal(new_length, 1);
+        free(data);
+    }
+    {
+        char *const data = xstrdup("a,b,c,d,\" \"\r\n");
+        const size_t new_length = TrimCSVLineCRLF(data);
+        assert_string_equal(data, "a,b,c,d,\" \"");
+        assert_int_equal(new_length, strlen(data));
+        free(data);
+    }
+    {
+        char *const data = xstrdup(" ,\r\n");
+        const size_t new_length = TrimCSVLineCRLF(data);
+        assert_string_equal(data, " ,");
+        assert_int_equal(new_length, strlen(data));
+        free(data);
+    }
+    {
+        const char *const original = ",\r\n";
+        char *const a = xstrdup(original);
+        char *const b = xstrdup(original);
+        const size_t a_len = TrimCSVLineCRLF(a);
+        const size_t b_len = TrimCSVLineCRLF(b);
+        assert_string_equal(a, ",");
+        assert_string_equal(b, ",");
+        assert_int_equal(a_len, b_len);
+        const size_t bb_len = TrimCSVLineCRLF(b);
+        assert_int_equal(b_len, bb_len);
+        assert_string_equal(b, ",");
+        free(a);
+        free(b);
+    }
+
+    // Test strict version, which has assertions for empty strings and spaces:
+    {
+        char *const data = xstrdup(",\r\n");
+        const size_t new_length = TrimCSVLineCRLFStrict(data);
+        assert_string_equal(data, ",");
+        assert_int_equal(new_length, 1);
+        free(data);
+    }
+    {
+        char *const data = xstrdup(",");
+        const size_t new_length = TrimCSVLineCRLFStrict(data);
+        assert_string_equal(data, ",");
+        assert_int_equal(new_length, 1);
+        free(data);
+    }
+    {
+        char *const data = xstrdup("'\r\n',\r\n");
+        const size_t new_length = TrimCSVLineCRLFStrict(data);
+        assert_string_equal(data, "'\r\n',");
+        assert_int_equal(new_length, strlen(data));
+        free(data);
+    }
+    {
+        char *const data = xstrdup("a,b,c,d,\" \"\r\n");
+        const size_t new_length = TrimCSVLineCRLFStrict(data);
+        assert_string_equal(data, "a,b,c,d,\" \"");
+        assert_int_equal(new_length, strlen(data));
+        free(data);
+    }
+    {
+        char *const data = xstrdup("'\r\n',\r\n");
+        const size_t new_length = TrimCSVLineCRLFStrict(data);
+        assert_string_equal(data, "'\r\n',");
+        assert_int_equal(new_length, strlen(data));
+        free(data);
+    }
+}
+
 static void test_ends_with(void)
 {
     assert_true(StringEndsWith("file.json", ".json"));
@@ -1152,6 +1250,8 @@ int main()
         unit_test(test_chop_empty),
         unit_test(test_chop_empty_single_space),
         unit_test(test_chop_empty_two_spaces),
+
+        unit_test(test_trim_crlf),
 
         unit_test(test_ends_with),
 

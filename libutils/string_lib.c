@@ -35,6 +35,7 @@
 #include <misc_lib.h>
 #include <logging.h>
 #include <cleanup.h>
+#include <definitions.h> // CF_BUFSIZE
 
 
 char *StringVFormat(const char *fmt, va_list ap)
@@ -1121,6 +1122,71 @@ char *TrimWhitespace(char *s)
 
     return s;
 }
+
+/**
+ * @brief Remove the CRLF at the end of a CSV line, if it exists
+ *
+ * For use in networking / reporting protocols. For old clients which send a
+ * CRLF it will remove exactly 1 occurence of CRLF. For new clients which
+ * don't send CRLF, it will remove nothing. Thus, it should be compatible
+ * with both. Does not trim any other whitespace, because we don't expect any
+ * other whitespace to be there, and if it did, this could mask important
+ * errors.
+ *
+ * @see CsvWriterNewRecord()
+ * @param data NUL-terminated string with one line of CSV data, cannot be NULL
+ * @return strlen(data), after trimming
+ */
+size_t TrimCSVLineCRLF(char *const data)
+{
+    assert(data != NULL);
+
+    size_t length = strlen(data);
+    assert(data[length] == '\0');
+
+    if (length < 2)
+    {
+        return length;
+    }
+
+    if (data[length - 2] == '\r' && data[length - 1] == '\n')
+    {
+        data[length - 2] = '\0';
+        data[length - 1] = '\0';
+        length -= 2;
+    }
+
+    assert(length == strlen(data));
+
+    return length;
+}
+
+/**
+ * @brief Remove the CRLF at the end of a non-empty CSV line, if it exists
+ *
+ * Based on `TrimCSVLineCRLF()`, adds a lot of assertions for bad cases we
+ * want to detect in testing.
+ *
+ * @see TrimCSVLineCRLF()
+ * @param data NUL-terminated string with one line of CSV data, cannot be NULL
+ * @return strlen(data), after trimming
+ */
+size_t TrimCSVLineCRLFStrict(char *const data)
+{
+    assert(data != NULL);
+    assert(strlen(data) > 0);
+    assert(strlen(data) < 4096);
+    assert(!isspace(data[0]));
+
+    const size_t length = TrimCSVLineCRLF(data);
+    assert(length == strlen(data));
+    assert(length > 0);
+    assert(!isspace(data[length - 1]));
+    assert(!isspace(data[0]));
+
+    return length;
+}
+
 
 bool StringEndsWithCase(const char *str, const char *suffix, const bool case_fold)
 {

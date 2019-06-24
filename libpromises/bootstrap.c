@@ -359,11 +359,13 @@ bool MasterfileExists(const char *masterdir)
 
 static char *BootstrapIDFilename(const char *workdir)
 {
-   return StringFormat("%s%cbootstrap_id.dat", workdir, FILE_SEPARATOR);
+    assert(workdir != NULL);
+    return StringFormat("%s%cbootstrap_id.dat", workdir, FILE_SEPARATOR);
 }
 
-bool CreateBootstrapIDFile(const char *workdir)
+char *CreateBootstrapIDFile(const char *workdir)
 {
+    assert(workdir != NULL);
     char *filename = BootstrapIDFilename(workdir);
 
     FILE *file = safe_fopen(filename, "w");
@@ -371,17 +373,66 @@ bool CreateBootstrapIDFile(const char *workdir)
     {
         Log(LOG_LEVEL_ERR, "Unable to write bootstrap id file '%s' (fopen: %s)", filename, GetErrorStr());
         free(filename);
-        return false;
+        return NULL;
     }
     CryptoInitialize();
     #define RANDOM_BYTES 240 / 8 // 240 avoids padding (divisible by 6)
+    #define BASE_64_LENGTH_NO_PADDING (4 * (RANDOM_BYTES / 3))
     unsigned char buf[RANDOM_BYTES];
     RAND_bytes(buf, RANDOM_BYTES);
     char *b64_id = StringEncodeBase64(buf, RANDOM_BYTES);
     fprintf(file, "%s\n", b64_id);
     fclose(file);
 
-    free(b64_id);
     free(filename);
-    return true;
+    return b64_id;
+}
+
+char *ReadBootstrapIDFile(const char *workdir)
+{
+    assert(workdir != NULL);
+
+    char *const path = BootstrapIDFilename(workdir);
+    Writer *writer = FileRead(path, BASE_64_LENGTH_NO_PADDING + 1, NULL);
+    if (writer == NULL)
+    {
+        // Not having a bootstrap id file is considered normal
+        Log(LOG_LEVEL_DEBUG,
+            "Could not read bootstrap ID from file: '%s'",
+            path);
+        free(path);
+        return NULL;
+    }
+    char *data = StringWriterClose(writer);
+
+    size_t data_length = strlen(data);
+    assert(data_length == BASE_64_LENGTH_NO_PADDING + 1);
+    assert(data[data_length - 1] == '\n');
+    if (data_length != BASE_64_LENGTH_NO_PADDING + 1)
+    {
+        Log(LOG_LEVEL_ERR, "'%s' contains invalid data: '%s'", path, data);
+        free(path);
+        free(data);
+        return NULL;
+    }
+
+    data[data_length - 1] = '\0';
+
+    Log(LOG_LEVEL_VERBOSE,
+        "Successfully read bootstrap ID '%s' from file '%s'",
+        data,
+        path);
+    free(path);
+    return data;
+}
+
+void EvalContextSetBootstrapID(EvalContext *ctx, char *bootstrap_id)
+{
+    EvalContextVariablePutSpecial(
+        ctx,
+        SPECIAL_SCOPE_SYS,
+        "bootstrap_id",
+        bootstrap_id,
+        CF_DATA_TYPE_STRING,
+        "source=bootstrap");
 }

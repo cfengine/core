@@ -145,6 +145,8 @@ int StripTrailingNewline(char *str, size_t max_length);
 int Chop(char *str, size_t max_length);
 
 char *TrimWhitespace(char *s);
+size_t TrimCSVLineCRLF(char *data);
+size_t TrimCSVLineCRLFStrict(char *data);
 
 /**
  * @brief Check if a string ends with the given suffix

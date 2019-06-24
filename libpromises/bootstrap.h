@@ -45,6 +45,8 @@ bool RemoveAllExistingPolicyInInputs(const char *inputdir);
 bool MasterfileExists(const char *masterdir);
 
 // BOOTSTRAP ID FUNCTIONS:
-bool CreateBootstrapIDFile(const char *workdir);
+char *CreateBootstrapIDFile(const char *workdir);
+char *ReadBootstrapIDFile(const char *workdir);
+void EvalContextSetBootstrapID(EvalContext *ctx, char *bootstrap_id);
 
 #endif

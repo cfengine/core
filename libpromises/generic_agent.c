@@ -608,7 +608,12 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
 
         PolicyServerWriteFile(GetWorkDir(), bootstrap_arg);
         EvalContextSetPolicyServer(ctx, bootstrap_arg);
-        CreateBootstrapIDFile(GetWorkDir());
+        char *const bootstrap_id = CreateBootstrapIDFile(GetWorkDir());
+        if (bootstrap_id != NULL)
+        {
+            EvalContextSetBootstrapID(ctx, bootstrap_id);
+            free(bootstrap_id);
+        }
 
         /* FIXME: Why it is called here? Can't we move both invocations to before if? */
         UpdateLastPolicyUpdateTime(ctx);
@@ -621,6 +626,12 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
             Log(LOG_LEVEL_VERBOSE, "This agent is bootstrapped to: %s",
                 existing_policy_server);
             EvalContextSetPolicyServer(ctx, existing_policy_server);
+            char *const bootstrap_id = ReadBootstrapIDFile(GetWorkDir());
+            if (bootstrap_id != NULL)
+            {
+                EvalContextSetBootstrapID(ctx, bootstrap_id);
+                free(bootstrap_id);
+            }
             free(existing_policy_server);
             UpdateLastPolicyUpdateTime(ctx);
             if (GetAmPolicyHub())

@@ -1,0 +1,58 @@
+#######################################################
+#
+# Test isipinsubnet()
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-3081" }
+        string => "Test that isipinsubnet() validates IP addresses as valid especially within the 0.0.0.0/0 range";
+
+      "test_soft_fail"
+        string => "any",
+        meta => { "CFE-3081"};
+  vars:
+
+      "variable_value_from_varible" string => "$(nosuch.variable)";
+
+      "candidates" slist => { "10.68.71.5", "10.168.171.5", "not-an-ip-address" };
+
+      "validIPv4[$(candidates)]"
+        string => "$(candidates)",
+        if => isipinsubnet( "0.0.0.0/0", "$(candidates)" );
+
+      "validIPv4_addresses" slist => getindices( validIPv4 );
+}
+
+bundle agent check
+{
+  vars:
+      "reg_valid_ipv4" string => "^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
+
+  classes:
+      # We only pass if every one of the ip addresses within the subnet is actually a valid ipv4 string.
+      "pass" expression => every( $(reg_valid_ipv4), @(test.validIPv4_addresses) );
+
+  reports:
+
+    pass::
+      "$(this.promise_filename) Pass";
+
+    !pass::
+      "$(this.promise_filename) FAIL";
+
+    (DEBUG|EXTRA).!pass::
+      "Not all ips found to be valid seem to match the regular expression for ipv4 address";
+      "validIPv4[$(test.candidates)] = $(test.candidates)";
+}

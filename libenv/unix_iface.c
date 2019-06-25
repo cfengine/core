@@ -133,7 +133,7 @@ static bool IgnoreJailInterface(
 
 /******************************************************************/
 
-static void GetMacAddress(EvalContext *ctx, int fd, struct ifreq *ifr, struct ifreq *ifp, Rlist **interfaces,
+static void GetMacAddress(EvalContext *ctx, ARG_UNUSED int fd, struct ifreq *ifr, struct ifreq *ifp, Rlist **interfaces,
                           Rlist **hardware)
 {
     char name[CF_MAXVARSIZE];

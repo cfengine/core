@@ -49,7 +49,7 @@ then
     make CFLAGS="-Werror -Wno-pointer-sign" -k
 elif [ "$JOB_TYPE" = compile_and_unit_test ]
 then
-    make CFLAGS="-Werror -Wno-pointer-sign"
+    make CFLAGS="-Wall -Wextra -Werror -Wno-pointer-sign -Wno-sign-compare"
     make -C tests/unit check
     make -C tests/load check
     exit

@@ -467,8 +467,8 @@ Seq *ListDir(const char *dir, const char *extension)
 
 mode_t SetUmask(mode_t new_mask)
 {
-    const mode_t old_mask = umask(0077);
-    Log(LOG_LEVEL_DEBUG, "Set umask to 0077, was %o", old_mask);
+    const mode_t old_mask = umask(new_mask);
+    Log(LOG_LEVEL_DEBUG, "Set umask to %o, was %o", new_mask, old_mask);
     return old_mask;
 }
 void RestoreUmask(mode_t old_mask)

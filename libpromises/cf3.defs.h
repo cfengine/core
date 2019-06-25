@@ -1583,6 +1583,87 @@ typedef struct
     Rlist *insert_match;
 } Attributes;
 
+#define ZeroAttributes {\
+    .select = {0},\
+    .perms = {0},\
+    .copy = {0},\
+    .delete = {0},\
+    .rename = {0},\
+    .change = {0},\
+    .link = {0},\
+    .edits = {0},\
+    .packages = {0},\
+    .new_packages = {0},\
+    .context = {0},\
+    .measure = {0},\
+    .acl = {0},\
+    .database = {0},\
+    .service = {0},\
+    .users = {0},\
+    .env = {0},\
+    .transformer = NULL,\
+    .pathtype = NULL,\
+    .file_type = NULL,\
+    .repository = NULL,\
+    .edit_template = NULL,\
+    .edit_template_string = NULL,\
+    .template_method = NULL,\
+    .template_data = NULL,\
+    .touch = 0,\
+    .create = 0,\
+    .move_obstructions = 0,\
+    .inherit = 0,\
+    .recursion = { 0 },\
+    .transaction = { 0 },\
+    .classes = { 0 },\
+    .contain = { 0 },\
+    .args = NULL,\
+    .arglist = NULL,\
+    .module = 0,\
+    .signals = NULL,\
+    .process_stop = NULL,\
+    .restart_class = NULL,\
+    .process_count = { 0 },\
+    .process_select = { 0 },\
+    .report = { 0 },\
+    .mount = { 0 },\
+    .volume = { 0 },\
+    .havedepthsearch = 0,\
+    .haveselect = 0,\
+    .haverename = 0,\
+    .havedelete = 0,\
+    .haveperms = 0,\
+    .havechange = 0,\
+    .havecopy = 0,\
+    .havelink = 0,\
+    .haveeditline = 0,\
+    .haveeditxml = 0,\
+    .haveedit = 0,\
+    .havecontain = 0,\
+    .haveclasses = 0,\
+    .havetrans = 0,\
+    .haveprocess_count = 0,\
+    .havemount = 0,\
+    .havevolume = 0,\
+    .havebundle = 0,\
+    .havepackages = 0,\
+    .region = { 0 },\
+    .location = { 0 },\
+    .column = { 0 },\
+    .replace = { 0 },\
+    .xml = { 0 },\
+    .haveregion = 0,\
+    .havelocation = 0,\
+    .havecolumn = 0,\
+    .havereplace = 0,\
+    .haveinsertselect = 0,\
+    .havedeleteselect = 0,\
+    .line_select = { 0 },\
+    .sourcetype = NULL,\
+    .expandvars = 0,\
+    .not_matching = 0,\
+    .insert_match = NULL\
+}
 
 /*************************************************************************/
 /* common macros                                                         */

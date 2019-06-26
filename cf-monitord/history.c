@@ -74,33 +74,37 @@ static void PutRecordForTime(CF_DB *db, time_t time, const Averages *values)
     WriteDB(db, timekey, values, sizeof(Averages));
 }
 
-static void Nova_SaveFilePosition(char *name, long fileptr)
+static void Nova_SaveFilePosition(const char *handle, char *name, long fileptr)
 {
     CF_DB *dbp;
+    char *key = StringConcatenate(2, handle, name);
 
     if (!OpenDB(&dbp, dbid_static))
     {
         return;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Saving state for %s at %ld", name, fileptr);
-    WriteDB(dbp, name, &fileptr, sizeof(long));
+    Log(LOG_LEVEL_VERBOSE, "Saving state for %s at %ld", key, fileptr);
+    WriteDB(dbp, key, &fileptr, sizeof(long));
     CloseDB(dbp);
+    free(key);
 }
 
-static long Nova_RestoreFilePosition(char *name)
+static long Nova_RestoreFilePosition(const char *handle, char *name)
 {
     CF_DB *dbp;
     long fileptr;
+    char *key = StringConcatenate(2, handle, name);
 
     if (!OpenDB(&dbp, dbid_static))
     {
         return 0L;
     }
 
-    ReadDB(dbp, name, &fileptr, sizeof(long));
-    Log(LOG_LEVEL_VERBOSE, "Resuming state for %s at %ld", name, fileptr);
+    ReadDB(dbp, key, &fileptr, sizeof(long));
+    Log(LOG_LEVEL_VERBOSE, "Resuming state for %s at %ld", key, fileptr);
     CloseDB(dbp);
+    free(key);
     return fileptr;
 }
 
@@ -178,6 +182,7 @@ static Item *NovaReSample(EvalContext *ctx, int slot, Attributes a, const Promis
     struct timespec start;
     FILE *fin = NULL;
     mode_t maskval = 0;
+    const char *handle = PromiseGetHandle(pp);
 
     if (a.measure.stream_type && strcmp(a.measure.stream_type, "pipe") == 0)
     {
@@ -256,7 +261,7 @@ static Item *NovaReSample(EvalContext *ctx, int slot, Attributes a, const Promis
 
             if (a.measure.growing)
             {
-                filepos = Nova_RestoreFilePosition(pp->promiser);
+                filepos = Nova_RestoreFilePosition(handle, pp->promiser);
 
                 if (sb.st_size >= filepos)
                 {
@@ -355,7 +360,7 @@ static Item *NovaReSample(EvalContext *ctx, int slot, Attributes a, const Promis
             long fileptr = ftell(fin);
 
             fclose(fin);
-            Nova_SaveFilePosition(pp->promiser, fileptr);
+            Nova_SaveFilePosition(handle, pp->promiser, fileptr);
         }
         else if (a.measure.stream_type && strcmp(a.measure.stream_type, "pipe") == 0)
         {

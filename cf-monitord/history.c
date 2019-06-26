@@ -470,7 +470,7 @@ static PromiseResult NovaExtractValueFromStream(EvalContext *ctx, const char *ha
 
         if (a->measure.select_line_matching && StringMatchFull(a->measure.select_line_matching, ip->name))
         {
-            Log(LOG_LEVEL_VERBOSE, " ?? Look for %s regex %s", handle, a->measure.select_line_matching);
+            Log(LOG_LEVEL_VERBOSE, "  Found regex '%s' matches line '%s'", a->measure.select_line_matching, ip->name);
             found = true;
             match = ip;
 

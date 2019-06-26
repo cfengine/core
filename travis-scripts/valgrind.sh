@@ -28,6 +28,8 @@ cd masterfiles
 ./autogen.sh
 make install
 
+systemctl daemon-reload
+
 function print_ps {
     set +e
     echo "CFEngine processes:"

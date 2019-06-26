@@ -1,5 +1,6 @@
 #!/bin/sh
 set -e
+set -x
 
 cd $TRAVIS_BUILD_DIR || exit 1
 

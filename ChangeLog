@@ -29,8 +29,8 @@
 	  A condition in an augments file is treated as a class expression
 	  if it ends in `::`. Otherwise it is treated as a regular
 	  expression. (CFE-2954)
-	- Internal ps command can now handle longer usernames (CF-2951)
-	- Made copylink_pattern honor '/../' in copy source (CF-2960)
+	- Internal ps command can now handle longer usernames (CFE-2951)
+	- Made copylink_pattern honor '/../' in copy source (CFE-2960)
 	- CSV parser now supports CRLF inside double quotes (ENT-4504)
 	- Added an error when a function defining a variables still fails at 
 	  pass 3 (CFE-2983)
@@ -116,6 +116,7 @@
 	  as this matches the behavior of calling the functions in a vars
 	  promise, and using that as a body parameter.
 	  (CFE-1968)
+	- cf-check directories can now be controlled from ENV vars (CFE-2994)
 	- cf-check: Added backup command
 	  This command copies lmdb files to a timestamped backup directory.
 	  (ENT-4064)

@@ -168,7 +168,7 @@ echo "Killing valgrind cf-execd"
 kill $exec_pid
 echo "Killing valgrind cf-serverd"
 kill $server_pid
-sleep 10
+sleep 30
 
 echo "Output from cf-execd in valgrind:"
 cat execd.txt

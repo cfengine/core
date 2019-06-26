@@ -125,7 +125,7 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp,
 
 //    opts.drop_undefined = true;         /* always remove @{unresolved_list} */
 
-    Attributes a = { {0} };
+    Attributes a = ZeroAttributes;
     // More consideration needs to be given to using these
     //a.transaction = GetTransactionConstraints(pp);
 

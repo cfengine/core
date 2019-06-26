@@ -44,7 +44,7 @@ void ClearFilesAttributes(Attributes *whom)
 
 Attributes GetFilesAttributes(const EvalContext *ctx, const Promise *pp)
 {
-    Attributes attr = { {0} };
+    Attributes attr = ZeroAttributes;
 
 // default for file copy
 
@@ -115,7 +115,7 @@ Attributes GetFilesAttributes(const EvalContext *ctx, const Promise *pp)
 
 Attributes GetReportsAttributes(const EvalContext *ctx, const Promise *pp)
 {
-    Attributes attr = { {0} };
+    Attributes attr = ZeroAttributes;
 
     attr.transaction = GetTransactionConstraints(ctx, pp);
     attr.classes = GetClassDefinitionConstraints(ctx, pp);
@@ -128,7 +128,7 @@ Attributes GetReportsAttributes(const EvalContext *ctx, const Promise *pp)
 
 Attributes GetEnvironmentsAttributes(const EvalContext *ctx, const Promise *pp)
 {
-    Attributes attr = { {0} };
+    Attributes attr = ZeroAttributes;
 
     attr.transaction = GetTransactionConstraints(ctx, pp);
     attr.classes = GetClassDefinitionConstraints(ctx, pp);
@@ -141,7 +141,7 @@ Attributes GetEnvironmentsAttributes(const EvalContext *ctx, const Promise *pp)
 
 Attributes GetServicesAttributes(const EvalContext *ctx, const Promise *pp)
 {
-    Attributes attr = { {0} };
+    Attributes attr = ZeroAttributes;
 
     attr.transaction = GetTransactionConstraints(ctx, pp);
     attr.classes = GetClassDefinitionConstraints(ctx, pp);
@@ -155,7 +155,7 @@ Attributes GetServicesAttributes(const EvalContext *ctx, const Promise *pp)
 
 Attributes GetPackageAttributes(const EvalContext *ctx, const Promise *pp)
 {
-    Attributes attr = { {0} };
+    Attributes attr = ZeroAttributes;
 
     attr.transaction = GetTransactionConstraints(ctx, pp);
     attr.classes = GetClassDefinitionConstraints(ctx, pp);
@@ -201,7 +201,7 @@ static User GetUserConstraints(const EvalContext *ctx, const Promise *pp)
 
 Attributes GetUserAttributes(const EvalContext *ctx, const Promise *pp)
 {
-    Attributes attr = { {0} };
+    Attributes attr = ZeroAttributes;
 
     attr.havebundle = PromiseBundleOrBodyConstraintExists(ctx, "home_bundle", pp);
 
@@ -217,7 +217,7 @@ Attributes GetUserAttributes(const EvalContext *ctx, const Promise *pp)
 
 Attributes GetDatabaseAttributes(const EvalContext *ctx, const Promise *pp)
 {
-    Attributes attr = { {0} };
+    Attributes attr = ZeroAttributes;
 
     attr.transaction = GetTransactionConstraints(ctx, pp);
     attr.classes = GetClassDefinitionConstraints(ctx, pp);
@@ -229,7 +229,7 @@ Attributes GetDatabaseAttributes(const EvalContext *ctx, const Promise *pp)
 
 Attributes GetClassContextAttributes(const EvalContext *ctx, const Promise *pp)
 {
-    Attributes a = { {0} };
+    Attributes a = ZeroAttributes;
 
     a.transaction = GetTransactionConstraints(ctx, pp);
     a.classes = GetClassDefinitionConstraints(ctx, pp);
@@ -242,7 +242,7 @@ Attributes GetClassContextAttributes(const EvalContext *ctx, const Promise *pp)
 
 Attributes GetExecAttributes(const EvalContext *ctx, const Promise *pp)
 {
-    Attributes attr = { {0} };
+    Attributes attr = ZeroAttributes;
 
     attr.contain = GetExecContainConstraints(ctx, pp);
     attr.havecontain = PromiseGetConstraintAsBoolean(ctx, "contain", pp);
@@ -266,7 +266,7 @@ Attributes GetExecAttributes(const EvalContext *ctx, const Promise *pp)
 
 Attributes GetProcessAttributes(const EvalContext *ctx, const Promise *pp)
 {
-    Attributes attr = { {0} };
+    Attributes attr = ZeroAttributes;
 
     attr.signals = PromiseGetConstraintAsList(ctx, "signals", pp);
     attr.process_stop = PromiseGetConstraintAsRval(pp, "process_stop", RVAL_TYPE_SCALAR);
@@ -292,7 +292,7 @@ Attributes GetProcessAttributes(const EvalContext *ctx, const Promise *pp)
 
 Attributes GetStorageAttributes(const EvalContext *ctx, const Promise *pp)
 {
-    Attributes attr = { {0} };
+    Attributes attr = ZeroAttributes;
 
     attr.mount = GetMountConstraints(ctx, pp);
     attr.volume = GetVolumeConstraints(ctx, pp);
@@ -319,7 +319,7 @@ Attributes GetStorageAttributes(const EvalContext *ctx, const Promise *pp)
 
 Attributes GetMethodAttributes(const EvalContext *ctx, const Promise *pp)
 {
-    Attributes attr = { {0} };
+    Attributes attr = ZeroAttributes;
 
     attr.havebundle = PromiseBundleOrBodyConstraintExists(ctx, "usebundle", pp);
 
@@ -338,7 +338,7 @@ Attributes GetMethodAttributes(const EvalContext *ctx, const Promise *pp)
 
 Attributes GetMeasurementAttributes(const EvalContext *ctx, const Promise *pp)
 {
-    Attributes attr = { {0} };
+    Attributes attr = ZeroAttributes;
 
     attr.measure = GetMeasurementConstraint(ctx, pp);
 
@@ -1409,7 +1409,7 @@ ProcessCount GetMatchesConstraints(const EvalContext *ctx, const Promise *pp)
 
 Attributes GetInsertionAttributes(const EvalContext *ctx, const Promise *pp)
 {
-    Attributes attr = { {0} };
+    Attributes attr = ZeroAttributes;
 
     attr.havelocation = PromiseGetConstraintAsBoolean(ctx, "location", pp);
     attr.location = GetLocationAttributes(pp);
@@ -1466,7 +1466,7 @@ EditLocation GetLocationAttributes(const Promise *pp)
 
 Attributes GetDeletionAttributes(const EvalContext *ctx, const Promise *pp)
 {
-    Attributes attr = { {0} };
+    Attributes attr = ZeroAttributes;
 
     attr.not_matching = PromiseGetConstraintAsBoolean(ctx, "not_matching", pp);
 
@@ -1493,7 +1493,7 @@ Attributes GetDeletionAttributes(const EvalContext *ctx, const Promise *pp)
 
 Attributes GetColumnAttributes(const EvalContext *ctx, const Promise *pp)
 {
-    Attributes attr = { {0} };
+    Attributes attr = ZeroAttributes;
 
     attr.havecolumn = PromiseGetConstraintAsBoolean(ctx, "edit_field", pp);
     attr.column = GetColumnConstraints(ctx, pp);
@@ -1516,7 +1516,7 @@ Attributes GetColumnAttributes(const EvalContext *ctx, const Promise *pp)
 
 Attributes GetReplaceAttributes(const EvalContext *ctx, const Promise *pp)
 {
-    Attributes attr = { {0} };
+    Attributes attr = ZeroAttributes;
 
     attr.havereplace = PromiseGetConstraintAsBoolean(ctx, "replace_patterns", pp);
     attr.replace = GetReplaceConstraints(pp);

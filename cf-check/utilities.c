@@ -6,10 +6,11 @@
 #include <alloc.h>
 #include <logging.h>
 #include <file_lib.h>
+#include <known_dirs.h>
 
 Seq *default_lmdb_files()
 {
-    const char *state = WORKDIR "/state/";
+    const char *state = GetStateDir();
     Log(LOG_LEVEL_INFO,
         "No filenames specified, defaulting to .lmdb files in %s",
         state);

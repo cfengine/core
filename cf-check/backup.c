@@ -4,6 +4,7 @@
 #include <backup.h>
 #include <logging.h>
 #include <file_lib.h>
+#include <known_dirs.h>
 
 #if defined(__MINGW32__) || !defined(LMDB)
 
@@ -26,7 +27,15 @@ int backup_files(Seq *filenames)
 const char *create_backup_dir()
 {
     static char backup_dir[PATH_MAX];
-    const char *const backup_root = WORKDIR "/backups/";
+    static char backup_root[PATH_MAX];
+    snprintf(
+        backup_root,
+        PATH_MAX,
+        "%s%c%s%c",
+        GetWorkDir(),
+        FILE_SEPARATOR,
+        "backups",
+        FILE_SEPARATOR);
 
     if (mkdir(backup_root, 0700) != 0)
     {

@@ -74,7 +74,7 @@ static void PutRecordForTime(CF_DB *db, time_t time, const Averages *values)
     WriteDB(db, timekey, values, sizeof(Averages));
 }
 
-static void Nova_SaveFilePosition(const char *handle, char *name, long fileptr)
+static void Nova_SaveFilePosition(const char *handle, const char *name, long fileptr)
 {
     CF_DB *dbp;
     char *key = StringConcatenate(2, handle, name);
@@ -90,7 +90,7 @@ static void Nova_SaveFilePosition(const char *handle, char *name, long fileptr)
     free(key);
 }
 
-static long Nova_RestoreFilePosition(const char *handle, char *name)
+static long Nova_RestoreFilePosition(const char *handle, const char *name)
 {
     CF_DB *dbp;
     long fileptr;

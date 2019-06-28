@@ -1,0 +1,127 @@
+#!/var/cfengine/bin/cf-agent -f-
+#  Copyright 2019 Northern.tech AS
+
+#  This file is part of Cfengine 3 - written and maintained by Northern.tech AS.
+
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by the
+#  Free Software Foundation; version 3.
+
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+# To the extent this program is licensed as part of the Enterprise
+# versions of Cfengine, the applicable Commercial Open Source License
+# (COSL) may apply to this file if you as a licensee so wish it. See
+# included file COSL.txt.
+
+#+begin_src cfengine3
+body file control
+{
+      # Include the stdlib for local_dcp, policy, delete_lines
+        inputs => { "$(sys.libdir)/stdlib.cf" };
+}
+bundle agent example_action_policy
+# @brief Example illustrating how action_policy in action bodies control promise actuation and outcomes
+{
+  files:
+
+      # We make sure there is some files to operate on, so we simply make a copy
+      # of ourselves
+
+      "$(this.promise_filename).nop"
+        copy_from => local_dcp( $(this.promise_filename) );
+
+      "$(this.promise_filename).warn"
+        copy_from => local_dcp( $(this.promise_filename) );
+
+      "$(this.promise_filename).fix"
+        copy_from => local_dcp( $(this.promise_filename) );
+
+      # We exercise each valid value of action_policy (nop, fix, warn) defining
+      # classes named for the action_policy
+
+      "$(this.promise_filename).nop"
+        handle => "delete_lines_action_nop",
+        edit_line => delete_lines_matching ( ".*" ),
+        action => policy( "nop" ),
+        classes => results( "namespace", "MY_files_promise_nop" );
+
+      "$(this.promise_filename).warn"
+        handle => "delete_lines_action_warn",
+        edit_line => delete_lines_matching ( ".*" ),
+        action => policy( "warn" ),
+        classes => results( "namespace", "MY_files_promise_warn" );
+
+      "$(this.promise_filename).fix"
+        handle => "delete_lines_action_fix",
+        edit_line => delete_lines_matching ( ".*" ),
+        action => policy( "fix" ),
+        classes => results( "namespace", "MY_files_promise_fix" );
+
+  commands:
+
+      "/bin/echo Running Command nop"
+        handle => "command_nop",
+        action => policy( "nop" ),
+        classes => results( "namespace", "MY_commands_promise_nop" );
+
+      "/bin/echo Running Command warn"
+        handle => "command_warn",
+        action => policy( "warn" ),
+        classes => results( "namespace", "MY_commands_promise_warn" );
+
+      "/bin/echo Running Command fix"
+        handle => "command_fix",
+        action => policy( "fix" ),
+        classes => results( "namespace", "MY_commands_promise_fix" );
+
+  reports:
+
+      "MY classes:$(const.n)$(const.t)$(with)"
+        with => join( "$(const.n)$(const.t)", sort( classesmatching( "MY_.*" ), "lex" ));
+
+}
+bundle agent __main__
+{
+  methods:
+      "example_action_policy";
+}
+#+end_src
+###############################################################################
+#+begin_src mock_example_output
+#@ ```
+#@  warning: Should edit file '/tmp/action_policy.cf.nop' but only a warning promised
+#@  warning: Should edit file '/tmp/action_policy.cf.warn' but only a warning promised
+#@  warning: Command '/bin/echo Running Command nop' needs to be executed, but only warning was promised
+#@  warning: Command '/bin/echo Running Command warn' needs to be executed, but only warning was promised
+#@ R: MY classes:
+#@ 	MY_commands_promise_fix_reached
+#@ 	MY_commands_promise_fix_repaired
+#@ 	MY_commands_promise_nop_error
+#@ 	MY_commands_promise_nop_failed
+#@ 	MY_commands_promise_nop_not_kept
+#@ 	MY_commands_promise_nop_reached
+#@ 	MY_commands_promise_warn_error
+#@ 	MY_commands_promise_warn_failed
+#@ 	MY_commands_promise_warn_not_kept
+#@ 	MY_commands_promise_warn_reached
+#@ 	MY_files_promise_fix_reached
+#@ 	MY_files_promise_fix_repaired
+#@ 	MY_files_promise_nop_error
+#@ 	MY_files_promise_nop_failed
+#@ 	MY_files_promise_nop_not_kept
+#@ 	MY_files_promise_nop_reached
+#@ 	MY_files_promise_warn_error
+#@ 	MY_files_promise_warn_failed
+#@ 	MY_files_promise_warn_not_kept
+#@ 	MY_files_promise_warn_reached
+#@  warning: Method 'example_action_policy' invoked repairs, but only warnings promised
+#@ ```
+#+end_src

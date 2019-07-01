@@ -250,6 +250,8 @@ void WriterClose(Writer *writer)
 char *StringWriterClose(Writer *writer)
 // NOTE: transfer of ownership for allocated return value
 {
+    assert(writer != NULL);
+
     if (writer->type != WT_STRING)
     {
         ProgrammingError("Wrong writer type");

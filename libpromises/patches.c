@@ -179,7 +179,7 @@ static char *cf_format_strtimestamp(struct tm *tm, char *buf)
 
 /*******************************************************************/
 
-int LinkOrCopy(const char *from, const char *to, int sym)
+bool LinkOrCopy(const char *from, const char *to, int sym)
 /**
  *  Creates symlink to file on platforms supporting it, copies on
  *  others.

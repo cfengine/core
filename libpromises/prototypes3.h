@@ -88,7 +88,7 @@ void TexinfoManual(EvalContext *ctx, const char *source_dir, const char *output_
 
 /* modes.c */
 
-int ParseModeString(const char *modestring, mode_t *plusmask, mode_t *minusmask);
+bool ParseModeString(const char *modestring, mode_t *plusmask, mode_t *minusmask);
 
 /* patches.c */
 
@@ -105,7 +105,7 @@ void OpenNetwork(void);
 void CloseNetwork(void);
 #endif
 
-int LinkOrCopy(const char *from, const char *to, int sym);
+bool LinkOrCopy(const char *from, const char *to, int sym);
 int ExclusiveLockFile(int fd);
 int ExclusiveUnlockFile(int fd);
 

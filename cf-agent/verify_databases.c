@@ -41,7 +41,7 @@
 
 static int CheckDatabaseSanity(const Attributes *a, const Promise *pp);
 static PromiseResult VerifySQLPromise(EvalContext *ctx, const Attributes *a, const Promise *pp);
-static int VerifyDatabasePromise(CfdbConn *cfdb, char *database, const Attributes *a);
+static bool VerifyDatabasePromise(CfdbConn *cfdb, char *database, const Attributes *a);
 
 static bool ValidateSQLTableName(char *table_path, char *db, char *table);
 static bool VerifyTablePromise(EvalContext *ctx, CfdbConn *cfdb, char *table_path, Rlist *columns, const Attributes *a, const Promise *pp, PromiseResult *result);
@@ -55,7 +55,7 @@ static bool CheckSQLDataType(char *type, char *ref_type, const Promise *pp);
 static int TableExists(CfdbConn *cfdb, char *name);
 static Rlist *GetSQLTables(CfdbConn *cfdb);
 static void ListTables(int type, char *query);
-static int ValidateRegistryPromiser(char *s, const Promise *pp);
+static bool ValidateRegistryPromiser(char *s, const Promise *pp);
 static bool CheckRegistrySanity(const Attributes *a, const Promise *pp);
 
 /*****************************************************************************/
@@ -249,7 +249,7 @@ static PromiseResult VerifySQLPromise(EvalContext *ctx, const Attributes *a, con
     return result;
 }
 
-static int VerifyDatabasePromise(CfdbConn *cfdb, char *database, const Attributes *a)
+static bool VerifyDatabasePromise(CfdbConn *cfdb, char *database, const Attributes *a)
 {
     assert(a != NULL);
     char query[CF_BUFSIZE], name[CF_MAXVARSIZE];
@@ -463,7 +463,7 @@ static bool CheckRegistrySanity(const Attributes *a, const Promise *pp)
     return retval;
 }
 
-static int ValidateRegistryPromiser(char *key, const Promise *pp)
+static bool ValidateRegistryPromiser(char *key, const Promise *pp)
 {
     static char *const valid[] = { "HKEY_CLASSES_ROOT", "HKEY_CURRENT_CONFIG",
         "HKEY_CURRENT_USER", "HKEY_LOCAL_MACHINE", "HKEY_USERS", NULL

@@ -17,7 +17,7 @@ mode_definition modes[] = {
 
 void test_mode(void)
 {
-    int ret = false;
+    bool ret = false;
     mode_t plus = 0;
     mode_t minus = 0;
 

@@ -427,8 +427,13 @@ static bool ItemListsEqual(EvalContext *ctx, const Item *list1, const Item *list
 
 /* returns true if file on disk is identical to file in memory */
 
-int CompareToFile(EvalContext *ctx, const Item *liststart, const char *file, const Attributes *a, const Promise *pp,
-                  PromiseResult *result)
+bool CompareToFile(
+    EvalContext *ctx,
+    const Item *liststart,
+    const char *file,
+    const Attributes *a,
+    const Promise *pp,
+    PromiseResult *result)
 {
     assert(a != NULL);
     struct stat statbuf;

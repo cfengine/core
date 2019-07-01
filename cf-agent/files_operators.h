@@ -34,6 +34,6 @@ typedef bool (*SaveCallbackFn)(const char *dest_filename, void *param, NewLineMo
 bool SaveAsFile(SaveCallbackFn callback, void *param, const char *file, const Attributes *a, NewLineMode new_line_mode);
 bool SaveItemListAsFile(Item *liststart, const char *file, const Attributes *a, NewLineMode new_line_mode);
 
-int CompareToFile(EvalContext *ctx, const Item *liststart, const char *file, const Attributes *a, const Promise *pp, PromiseResult *result);
+bool CompareToFile(EvalContext *ctx, const Item *liststart, const char *file, const Attributes *a, const Promise *pp, PromiseResult *result);
 
 #endif

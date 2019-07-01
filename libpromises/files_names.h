@@ -36,7 +36,7 @@ typedef enum
 
 FilePathType FilePathGetType(const char *file_path);
 
-int IsNewerFileTree(const char *dir, time_t reftime);
+bool IsNewerFileTree(const char *dir, time_t reftime);
 int CompareCSVName(const char *s1, const char *s2);
 int IsDir(const char *path);
 char *JoinSuffix(char *path, size_t path_size, const char *leaf);

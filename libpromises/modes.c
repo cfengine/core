@@ -42,15 +42,16 @@ enum modesort
 
 /*******************************************************************/
 
-static int CheckModeState(enum modestate stateA, enum modestate stateB, enum modesort modeA, enum modesort modeB,
+static bool CheckModeState(enum modestate stateA, enum modestate stateB, enum modesort modeA, enum modesort modeB,
                           char ch);
-static int SetModeMask(char action, int value, int affected, mode_t *p, mode_t *m);
+static bool SetModeMask(char action, int value, int affected, mode_t *p, mode_t *m);
 
 /***************************************************************/
 
-int ParseModeString(const char *modestring, mode_t *plusmask, mode_t *minusmask)
+bool ParseModeString(const char *modestring, mode_t *plusmask, mode_t *minusmask)
 {
-    int affected = 0, value = 0, gotaction, no_error = true;
+    int affected = 0, value = 0, gotaction;
+    bool no_error = true;
     char action = '=';
     enum modestate state = wild;
     enum modesort found_sort = unknown; /* Already found "sort" of mode */
@@ -244,7 +245,7 @@ int ParseModeString(const char *modestring, mode_t *plusmask, mode_t *minusmask)
 
 /*********************************************************/
 
-static int CheckModeState(enum modestate stateA, enum modestate stateB, enum modesort sortA, enum modesort sortB,
+static bool CheckModeState(enum modestate stateA, enum modestate stateB, enum modesort sortA, enum modesort sortB,
                           char ch)
 {
     if ((stateA != wild) && (stateB != wild) && (stateA != stateB))
@@ -264,7 +265,7 @@ static int CheckModeState(enum modestate stateA, enum modestate stateB, enum mod
 
 /*********************************************************/
 
-static int SetModeMask(char action, int value, int affected, mode_t *p, mode_t *m)
+static bool SetModeMask(char action, int value, int affected, mode_t *p, mode_t *m)
 {
     switch (action)
     {

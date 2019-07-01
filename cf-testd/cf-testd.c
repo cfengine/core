@@ -269,8 +269,8 @@ bool CFTestD_TLSSessionEstablish(ServerConnectionState *conn, CFTestD_Config *co
     }
 
     /* No CAUTH, SAUTH in non-classic protocol. */
-    conn->user_data_set = 1;
-    conn->rsa_auth      = 1;
+    conn->user_data_set = true;
+    conn->rsa_auth      = true;
 
     ServerSendWelcome(conn);
     return true;

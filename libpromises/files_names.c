@@ -38,7 +38,7 @@
 
 /*********************************************************************/
 
-int IsNewerFileTree(const char *dir, time_t reftime)
+bool IsNewerFileTree(const char *dir, time_t reftime)
 {
     const struct dirent *dirp;
     Dir *dirh;

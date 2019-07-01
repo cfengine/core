@@ -396,7 +396,7 @@ const char *FirstFileSeparator(const char *str)
 /*********************************************************************/
 
 const char *LastFileSeparator(const char *str)
-  /* Return pointer to last file separator in string, or NULL if 
+  /* Return pointer to last file separator in string, or NULL if
      string does not contains any file separtors */
 {
     const char *sp;
@@ -421,7 +421,7 @@ const char *LastFileSeparator(const char *str)
 
 bool ChopLastNode(char *str)
   /* Chop off trailing node name (possible blank) starting from
-     last character and removing up to the first / encountered 
+     last character and removing up to the first / encountered
      e.g. /a/b/c -> /a/b
      /a/b/ -> /a/b
      Will also collapse redundant/repeating path separators.

@@ -28,6 +28,8 @@ cd masterfiles
 ./autogen.sh
 make install
 
+systemctl daemon-reload
+
 function print_ps {
     set +e
     echo "CFEngine processes:"
@@ -158,6 +160,15 @@ echo "Running cf-check:"
 valgrind $VG_OPTS /var/cfengine/bin/cf-check diagnose /var/cfengine/state/*.lmdb 2>&1 | tee check.txt
 check_output check.txt
 
+echo "Checking that bootstrap ID doesn't change"
+/var/cfengine/bin/cf-agent --show-evaluated-vars | grep bootstrap_id > id_a
+/var/cfengine/bin/cf-agent -K --show-evaluated-vars | grep bootstrap_id > id_b
+cat id_a
+diff id_a id_b
+
+echo "Checking that bootstrap ID has expected length"
+[ `cat id_a | awk '{print $2}' | wc -c` -eq 41 ]
+
 print_ps
 
 echo "Checking that serverd and execd PIDs are still correct/alive:"
@@ -168,7 +179,7 @@ echo "Killing valgrind cf-execd"
 kill $exec_pid
 echo "Killing valgrind cf-serverd"
 kill $server_pid
-sleep 10
+sleep 30
 
 echo "Output from cf-execd in valgrind:"
 cat execd.txt

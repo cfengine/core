@@ -31,7 +31,7 @@
 typedef struct
 {
     int connected;
-    int result;
+    bool result;
     int row;
     unsigned int maxcolumns;
     unsigned int maxrows;

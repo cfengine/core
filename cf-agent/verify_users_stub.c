@@ -24,23 +24,29 @@
 
 #include <verify_users.h>
 
-void VerifyOneUsersPromise (ARG_UNUSED const char *puser,
-                            ARG_UNUSED const User *u,
-                            ARG_UNUSED PromiseResult *result,
-                            ARG_UNUSED enum cfopaction action,
-                            ARG_UNUSED EvalContext *ctx,
-                            ARG_UNUSED const Attributes *a,
-                            ARG_UNUSED const Promise *pp)
+void VerifyOneUsersPromise (
+    ARG_UNUSED const char *puser,
+    ARG_UNUSED const User *u,
+    ARG_UNUSED PromiseResult *result,
+    ARG_UNUSED enum cfopaction action,
+    ARG_UNUSED EvalContext *ctx,
+    ARG_UNUSED const Attributes *a,
+    ARG_UNUSED const Promise *pp)
 {
     Log(LOG_LEVEL_ERR, "Users promise type is not supported on this OS");
 }
 
-bool IsAccountLocked(const char *puser, const void *passwd_info)
+bool IsAccountLocked(
+    ARG_UNUSED const char *puser,
+    ARG_UNUSED const void *passwd_info)
 {
     return false;
 }
 
-bool GetPasswordHash(const char *puser, const void *passwd_info, const char **result)
+bool GetPasswordHash(
+    ARG_UNUSED const char *puser,
+    ARG_UNUSED const void *passwd_info,
+    ARG_UNUSED const char **result)
 {
     return false;
 }

@@ -168,7 +168,7 @@ static FnCallResult FnReturnContext(bool result)
 
 static FnCallResult FnFailure(void)
 {
-    return (FnCallResult) { FNCALL_FAILURE };
+    return (FnCallResult) { FNCALL_FAILURE, { 0 } };
 }
 
 static VarRef* ResolveAndQualifyVarName(const FnCall *fp, const char *varname)
@@ -1517,7 +1517,7 @@ static FnCallResult FnCallGetMetaTags(EvalContext *ctx, ARG_UNUSED const Policy 
     if (tagset == NULL)
     {
         Log(LOG_LEVEL_VERBOSE, "%s found variable or class %s without a tagset", fp->name, RlistScalarValue(finalargs));
-        return (FnCallResult) { FNCALL_FAILURE };
+        return (FnCallResult) { FNCALL_FAILURE, { 0 } };
     }
 
     char *key = NULL;

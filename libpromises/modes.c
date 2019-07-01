@@ -166,7 +166,7 @@ bool ParseModeString(const char *modestring, mode_t *plusmask, mode_t *minusmask
              * 2001 instead of erroring out, leaving just the
              * permissions. */
             value &= ~S_IFMT;
-            
+
             if (value > 07777)  /* TODO: Hardcoded !
                                    Is this correct for all sorts of Unix ?
                                    What about NT ?

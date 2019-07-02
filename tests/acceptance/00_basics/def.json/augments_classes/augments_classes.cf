@@ -1,0 +1,40 @@
+# basic test of the def.json facility: augments
+body common control
+{
+      inputs => { "../../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+
+      "description" -> { "CFE-2956" }
+        string => "Test that negative lookahead works as expected, when what is being looked for is defined from augments earlier.";
+
+      "test_soft_fail"
+        string => "any",
+        meta => { "CFE-2956" };
+
+  vars:
+      "expect_defined" slist => { "MY_ALWAYS", "BECAUSE_MY_ALWAYS", "BECAUSE_MISSING_ABSENT" };
+      "expect_undefined" slist => { "BECAUSE_MY_ALWAYS_ABSENT" };
+
+  classes:
+
+      # When all expect_defined are found and none of the expect_undefined are found.
+      "pass" expression => concat( "(", join( ".", expect_defined ), ").!(", join( "|", expect_undefined), ")" );
+
+  reports:
+
+      "$(this.promise_filename) $(with)" with => ifelse( "pass", "Pass", "FAIL" );
+
+    DEBUG|EXTRA::
+      "Expected $(expect_defined) to be defined, but was not." unless => "$(expect_defined)";
+      "Found $(expect_defined) to be defined, as expected." if => "$(expect_defined)";
+      "Expected $(expect_undefined) to not be defined, but was." if => "$(expect_undefined)";
+      "Found $(expect_undefined) to not be defined, as expected." unless => "$(expect_undefined)";
+}

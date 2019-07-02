@@ -17,17 +17,17 @@ mode_definition modes[] = {
 
 void test_mode(void)
 {
-    int ret = false;
+    bool ret = false;
     mode_t plus = 0;
     mode_t minus = 0;
 
     int mode = 0;
     do
     {
-	ret = ParseModeString(modes[mode].string, &plus, &minus);
-	assert_true(ret);
-	assert_int_equal(modes[mode].plus, plus);
-	assert_int_equal(modes[mode].minus, minus);
+        ret = ParseModeString(modes[mode].string, &plus, &minus);
+        assert_true(ret);
+        assert_int_equal(modes[mode].plus, plus);
+        assert_int_equal(modes[mode].minus, minus);
     } while (modes[mode++].string);
 }
 

@@ -569,8 +569,8 @@ bool ServerTLSSessionEstablish(ServerConnectionState *conn, SSL_CTX *ssl_ctx)
     SetConnIdentity(conn, username);
 
     /* No CAUTH, SAUTH in non-classic protocol. */
-    conn->user_data_set = 1;
-    conn->rsa_auth = 1;
+    conn->user_data_set = true;
+    conn->rsa_auth = true;
 
     LastSaw1(conn->ipaddr, KeyPrintableHash(ConnectionInfoKey(conn->conn_info)),
              LAST_SEEN_ROLE_ACCEPT);
@@ -623,8 +623,8 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
     const int encrypted = 0;
 
     /* Legacy stuff only for old protocol. */
-    assert(conn->rsa_auth == 1);
-    assert(conn->user_data_set == 1);
+    assert(conn->rsa_auth == true);
+    assert(conn->user_data_set == true);
 
     /* Receive up to CF_BUFSIZE - 1 bytes. */
     const int received = ReceiveTransaction(conn->conn_info,

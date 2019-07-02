@@ -83,9 +83,9 @@ static void CfCloseMysqlDB(DbMysqlConn *c)
 
 /*****************************************************************************/
 
-static void CfNewQueryMysqlDb(CfdbConn *c, const char *query)
+static void CfNewQueryMysqlDb(CfdbConn *cfdb, const char *query)
 {
-    DbMysqlConn *mc = c->data;
+    DbMysqlConn *mc = cfdb->data;
 
     if (mysql_query(&mc->conn, query) != 0)
     {
@@ -97,46 +97,46 @@ static void CfNewQueryMysqlDb(CfdbConn *c, const char *query)
 
         if (mc->res)
         {
-            c->result = true;
-            c->maxcolumns = mysql_num_fields(mc->res);
-            c->maxrows = mysql_num_rows(mc->res);
+            cfdb->result = true;
+            cfdb->maxcolumns = mysql_num_fields(mc->res);
+            cfdb->maxrows = mysql_num_rows(mc->res);
         }
     }
 }
 
 /*****************************************************************************/
 
-static void CfFetchMysqlRow(CfdbConn *c)
+static void CfFetchMysqlRow(CfdbConn *cfdb)
 {
     int i;
     MYSQL_ROW thisrow;
-    DbMysqlConn *mc = c->data;
+    DbMysqlConn *mc = cfdb->data;
 
-    if (c->maxrows > 0)
+    if (cfdb->maxrows > 0)
     {
         thisrow = mysql_fetch_row(mc->res);
 
         if (thisrow)
         {
-            c->rowdata = xmalloc(sizeof(char *) * c->maxcolumns);
+            cfdb->rowdata = xmalloc(sizeof(char *) * cfdb->maxcolumns);
 
-            for (i = 0; i < c->maxcolumns; i++)
+            for (i = 0; i < cfdb->maxcolumns; i++)
             {
-                c->rowdata[i] = (char *) thisrow[i];
+                cfdb->rowdata[i] = (char *) thisrow[i];
             }
         }
         else
         {
-            c->rowdata = NULL;
+            cfdb->rowdata = NULL;
         }
     }
 }
 
 /*****************************************************************************/
 
-static void CfDeleteMysqlQuery(CfdbConn *c)
+static void CfDeleteMysqlQuery(CfdbConn *cfdb)
 {
-    DbMysqlConn *mc = c->data;
+    DbMysqlConn *mc = cfdb->data;
 
     if (mc->res)
     {
@@ -157,15 +157,15 @@ static void CfCloseMysqlDB(ARG_UNUSED void *c)
 {
 }
 
-static void CfNewQueryMysqlDb(ARG_UNUSED CfdbConn *c, ARG_UNUSED const char *query)
+static void CfNewQueryMysqlDb(ARG_UNUSED CfdbConn *cfdb, ARG_UNUSED const char *query)
 {
 }
 
-static void CfFetchMysqlRow(ARG_UNUSED CfdbConn *c)
+static void CfFetchMysqlRow(ARG_UNUSED CfdbConn *cfdb)
 {
 }
 
-static void CfDeleteMysqlQuery(ARG_UNUSED CfdbConn *c)
+static void CfDeleteMysqlQuery(ARG_UNUSED CfdbConn *cfdb)
 {
 }
 
@@ -185,12 +185,12 @@ typedef struct
 static DbPostgresqlConn *CfConnectPostgresqlDB(const char *host,
                                                const char *user, const char *password, const char *database)
 {
-    DbPostgresqlConn *c;
+    DbPostgresqlConn *cfdb;
     char format[CF_BUFSIZE];
 
     Log(LOG_LEVEL_VERBOSE, "This is a PotsgreSQL database");
 
-    c = xcalloc(1, sizeof(DbPostgresqlConn));
+    cfdb = xcalloc(1, sizeof(DbPostgresqlConn));
 
     if (strcmp(host, "localhost") == 0)
     {
@@ -216,16 +216,16 @@ static DbPostgresqlConn *CfConnectPostgresqlDB(const char *host,
         }
     }
 
-    c->conn = PQconnectdb(format);
+    cfdb->conn = PQconnectdb(format);
 
-    if (PQstatus(c->conn) == CONNECTION_BAD)
+    if (PQstatus(cfdb->conn) == CONNECTION_BAD)
     {
-        Log(LOG_LEVEL_ERR, "Failed to connect to existing PostgreSQL database. (PQconnectdb: %s)", PQerrorMessage(c->conn));
-        free(c);
+        Log(LOG_LEVEL_ERR, "Failed to connect to existing PostgreSQL database. (PQconnectdb: %s)", PQerrorMessage(cfdb->conn));
+        free(cfdb);
         return NULL;
     }
 
-    return c;
+    return cfdb;
 }
 
 /*****************************************************************************/
@@ -238,9 +238,9 @@ static void CfClosePostgresqlDb(DbPostgresqlConn *c)
 
 /*****************************************************************************/
 
-static void CfNewQueryPostgresqlDb(CfdbConn *c, const char *query)
+static void CfNewQueryPostgresqlDb(CfdbConn *cfdb, const char *query)
 {
-    DbPostgresqlConn *pc = c->data;
+    DbPostgresqlConn *pc = cfdb->data;
 
     pc->res = PQexec(pc->conn, query);
 
@@ -250,41 +250,41 @@ static void CfNewQueryPostgresqlDb(CfdbConn *c, const char *query)
     }
     else
     {
-        c->result = true;
-        c->maxcolumns = PQnfields(pc->res);
-        c->maxrows = PQntuples(pc->res);
+        cfdb->result = true;
+        cfdb->maxcolumns = PQnfields(pc->res);
+        cfdb->maxrows = PQntuples(pc->res);
     }
 }
 
 /*****************************************************************************/
 
-static void CfFetchPostgresqlRow(CfdbConn *c)
+static void CfFetchPostgresqlRow(CfdbConn *cfdb)
 {
     int i;
-    DbPostgresqlConn *pc = c->data;
+    DbPostgresqlConn *pc = cfdb->data;
 
-    if (c->row >= c->maxrows)
+    if (cfdb->row >= cfdb->maxrows)
     {
-        c->rowdata = NULL;
+        cfdb->rowdata = NULL;
         return;
     }
 
-    if (c->maxrows > 0)
+    if (cfdb->maxrows > 0)
     {
-        c->rowdata = xmalloc(sizeof(char *) * c->maxcolumns);
+        cfdb->rowdata = xmalloc(sizeof(char *) * cfdb->maxcolumns);
     }
 
-    for (i = 0; i < c->maxcolumns; i++)
+    for (i = 0; i < cfdb->maxcolumns; i++)
     {
-        c->rowdata[i] = PQgetvalue(pc->res, c->row, i);
+        cfdb->rowdata[i] = PQgetvalue(pc->res, cfdb->row, i);
     }
 }
 
 /*****************************************************************************/
 
-static void CfDeletePostgresqlQuery(CfdbConn *c)
+static void CfDeletePostgresqlQuery(CfdbConn *cfdb)
 {
-    DbPostgresqlConn *pc = c->data;
+    DbPostgresqlConn *pc = cfdb->data;
 
     PQclear(pc->res);
 }
@@ -303,15 +303,15 @@ static void CfClosePostgresqlDb(ARG_UNUSED void *c)
 {
 }
 
-static void CfNewQueryPostgresqlDb(ARG_UNUSED CfdbConn *c, ARG_UNUSED const char *query)
+static void CfNewQueryPostgresqlDb(ARG_UNUSED CfdbConn *cfdb, ARG_UNUSED const char *query)
 {
 }
 
-static void CfFetchPostgresqlRow(ARG_UNUSED CfdbConn *c)
+static void CfFetchPostgresqlRow(ARG_UNUSED CfdbConn *cfdb)
 {
 }
 
-static void CfDeletePostgresqlQuery(ARG_UNUSED CfdbConn *c)
+static void CfDeletePostgresqlQuery(ARG_UNUSED CfdbConn *cfdb)
 {
 }
 

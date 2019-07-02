@@ -623,7 +623,7 @@ static bool CheckStoreKey(ServerConnectionState *conn, RSA *key)
     }
 }
 
-static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer, int recvlen)
+static bool AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer, int recvlen)
 {
     unsigned char digest[EVP_MAX_MD_SIZE + 1] = { 0 };
 

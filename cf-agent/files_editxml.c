@@ -146,7 +146,7 @@ static int XmlAttributeCount(const xmlNodePtr node);
 /* Level                                                                     */
 /*****************************************************************************/
 
-int ScheduleEditXmlOperations(EvalContext *ctx, const Bundle *bp, const Attributes *a, const Promise *parentp, EditContext *edcontext)
+bool ScheduleEditXmlOperations(EvalContext *ctx, const Bundle *bp, const Attributes *a, const Promise *parentp, EditContext *edcontext)
 {
     assert(a != NULL);
     enum editxmltypesequence type;
@@ -1800,7 +1800,7 @@ static bool SanityCheckTextInsertions(const Attributes *a)
 
 /***************************************************************************/
 
-int XmlCompareToFile(xmlDocPtr doc, char *file, EditDefaults edits)
+bool XmlCompareToFile(xmlDocPtr doc, char *file, EditDefaults edits)
 /* returns true if XML on disk is identical to XML in memory */
 {
     struct stat statbuf;
@@ -1845,7 +1845,7 @@ static bool XmlDocsEqualMem(xmlDocPtr doc1, xmlDocPtr doc2)
     xmlChar *mem2;
     int memsize1;
     int memsize2;
-    int equal = true;
+    bool equal = true;
 
     if (!doc1 && !doc2)
     {
@@ -1876,7 +1876,7 @@ static bool XmlDocsEqualMem(xmlDocPtr doc1, xmlDocPtr doc2)
 static bool XmlNodesCompare(const xmlNodePtr node1, const xmlNodePtr node2, const Attributes *a, const Promise *pp)
 /* Does node1 contain all content(tag/attributes/text/nodes) found in node2? */
 {
-    int compare = true;
+    bool compare = true;
 
     if (!node1 && !node2)
     {
@@ -1920,7 +1920,7 @@ static bool XmlNodesCompareAttributes(const xmlNodePtr node1, const xmlNodePtr n
     xmlAttrPtr attr2 = NULL;
     xmlChar *value = NULL;
     int count1, count2;
-    int compare = true;
+    bool compare = true;
 
     if (!node1 && !node2)
     {
@@ -2017,7 +2017,7 @@ static bool XmlNodesCompareNodes(const xmlNodePtr node1, const xmlNodePtr node2,
 static bool XmlNodesCompareTags(const xmlNodePtr node1, const xmlNodePtr node2)
 /* Does node1 contain same tag found in node2? */
 {
-    int compare = true;
+    bool compare = true;
 
     if (!node1 && !node2)
     {
@@ -2093,7 +2093,7 @@ static bool XmlNodesCompareText(xmlNodePtr node1, xmlNodePtr node2)
 static bool XmlNodesSubset(const xmlNodePtr node1, const xmlNodePtr node2, const Attributes *a, const Promise *pp)
 /* Does node1 contain matching subset of content(tag/attributes/text/nodes) found in node2? */
 {
-    int subset = true;
+    bool subset = true;
 
     if (!node1 && !node2)
     {
@@ -2134,7 +2134,7 @@ static bool XmlNodesSubsetOfAttributes(const xmlNodePtr node1, const xmlNodePtr 
 /* Does node1 contain matching subset of attributes found in node2? */
 {
     xmlAttrPtr attr1 = NULL;
-    int subset = true;
+    bool subset = true;
 
     if (!node1 && !node2)
     {

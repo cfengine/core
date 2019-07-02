@@ -1,0 +1,9 @@
+{
+  "classes":
+  {
+      "MY_ALWAYS": [ "cfengine" ],
+      "BECAUSE_MY_ALWAYS": [ "MY_ALWAYS" ],
+      "BECAUSE_MISSING_ABSENT": [ "^(?!MISSING).*" ],
+      "BECAUSE_MY_ALWAYS_ABSENT": [ "^(?!MY_ALWAYS).*" ]
+  }
+}

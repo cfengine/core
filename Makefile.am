@@ -86,14 +86,6 @@ ACLOCAL_AMFLAGS = -I m4
 list:
 	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' | sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$$'
 
-install-data-local:
-	$(MKDIR_P) -m 700 $(DESTDIR)$(workdir)/inputs
-	$(MKDIR_P) -m 755 $(DESTDIR)$(workdir)/modules
-	$(MKDIR_P) -m 700 $(DESTDIR)$(workdir)/outputs
-	$(MKDIR_P) -m 700 $(DESTDIR)$(workdir)/ppkeys
-	$(MKDIR_P) -m 700 $(DESTDIR)$(workdir)/plugins
-	$(MKDIR_P) -m 750 $(DESTDIR)$(workdir)/state
-
 
 tar-package:
 	pkgdir=`mktemp -d`  &&  export pkgdir  &&  \
@@ -160,3 +152,16 @@ cf__v_SED_1 =
 #
 CLEANFILES = cfengine-lcov-base.info cfengine-lcov.info \
 	$(BUILT_SOURCES)
+
+shprofiledir = $(sysconfdir)/profile.d
+shprofile_SCRIPTS = $(abs_srcdir)/misc/profile.d/cfengine.sh
+
+install-data-local:
+	$(MKDIR_P) -m 700 $(DESTDIR)$(workdir)/inputs
+	$(MKDIR_P) -m 755 $(DESTDIR)$(workdir)/modules
+	$(MKDIR_P) -m 700 $(DESTDIR)$(workdir)/outputs
+	$(MKDIR_P) -m 700 $(DESTDIR)$(workdir)/ppkeys
+	$(MKDIR_P) -m 700 $(DESTDIR)$(workdir)/plugins
+	$(MKDIR_P) -m 750 $(DESTDIR)$(workdir)/state
+	-test "x$(prefix)" = "x/var/cfengine" && $(MKDIR_P) /etc/profile.d
+	-test "x$(prefix)" = "x/var/cfengine" && $(INSTALL) -c $(abs_srcdir)/misc/profile.d/cfengine.sh /etc/profile.d

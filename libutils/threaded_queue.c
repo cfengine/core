@@ -331,7 +331,7 @@ bool ThreadedQueueIsEmpty(ThreadedQueue const *queue)
 bool ThreadedQueueWaitEmpty(ThreadedQueue const *queue, int timeout)
 {
     assert(queue != NULL);
-    int ret = true;
+    bool ret = true;
 
     ThreadLock(queue->lock);
 

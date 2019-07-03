@@ -28,8 +28,8 @@
 typedef enum
 {
     VERCMP_ERROR = -1,
-    VERCMP_NO_MATCH = 0,
-    VERCMP_MATCH = 1
+    VERCMP_NO_MATCH = false,
+    VERCMP_MATCH = true
 } VersionCmpResult;
 
 /*

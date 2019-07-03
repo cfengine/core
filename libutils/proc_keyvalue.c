@@ -79,5 +79,5 @@ bool ParseKeyValue(FILE *fd, KeyValueCallback callback, void *param)
         }
     }
 
-    return !ferror(fd);
+    return (ferror(fd) == 0);
 }

@@ -27,8 +27,8 @@
 
 #include <cf3.defs.h>
 
-int FullTextMatch(EvalContext *ctx, const char *regptr, const char *cmpptr); /* Sets variables */
-int BlockTextMatch(EvalContext *ctx, const char *regexp, const char *teststring, int *s, int *e); /* Sets variables */
+bool FullTextMatch(EvalContext *ctx, const char *regptr, const char *cmpptr); /* Sets variables */
+bool BlockTextMatch(EvalContext *ctx, const char *regexp, const char *teststring, int *s, int *e); /* Sets variables */
 bool ValidateRegEx(const char *regex); /* Pure */
 
 #endif

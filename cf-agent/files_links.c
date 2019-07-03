@@ -576,7 +576,7 @@ bool MakeHardLink(EvalContext *ctx, const char *from, const char *to, const Attr
 
 #ifdef __MINGW32__
 
-int ExpandLinks(char *dest, const char *from, int level)
+bool ExpandLinks(char *dest, const char *from, int level)
 {
     Log(LOG_LEVEL_ERR, "Windows does not support symbolic links (at ExpandLinks(%s,%s))", dest, from);
     return false;
@@ -584,7 +584,7 @@ int ExpandLinks(char *dest, const char *from, int level)
 
 #else                           /* !__MINGW32__ */
 
-int ExpandLinks(char *dest, const char *from, int level)
+bool ExpandLinks(char *dest, const char *from, int level)
 {
     char buff[CF_BUFSIZE];
     char node[CF_MAXLINKSIZE];

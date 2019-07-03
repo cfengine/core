@@ -73,7 +73,7 @@ typedef enum
 
 const char *SyntaxTypeMatchToString(SyntaxTypeMatch result);
 
-int CheckParseVariableName(const char *name);
+bool CheckParseVariableName(const char *name);
 SyntaxTypeMatch CheckConstraintTypeMatch(const char *lval, Rval rval, DataType dt, const char *range, int level);
 SyntaxTypeMatch CheckParseContext(const char *context, const char *range);
 DataType StringDataType(EvalContext *ctx, const char *string);

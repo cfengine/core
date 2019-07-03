@@ -31,7 +31,7 @@
 #include <string_lib.h>
 #include <misc_lib.h>
 
-static int UserSanityCheck(const Attributes *a, const Promise *pp);
+static bool UserSanityCheck(const Attributes *a, const Promise *pp);
 
 PromiseResult VerifyUsersPromise(EvalContext *ctx, const Promise *pp)
 {
@@ -85,7 +85,7 @@ PromiseResult VerifyUsersPromise(EvalContext *ctx, const Promise *pp)
 
 /** Pre-check of promise contents **/
 
-static int UserSanityCheck(const Attributes *a, const Promise *pp)
+static bool UserSanityCheck(const Attributes *a, const Promise *pp)
 {
     assert(a != NULL);
     const User *u = &(a->users);

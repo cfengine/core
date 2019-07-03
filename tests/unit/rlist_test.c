@@ -764,7 +764,7 @@ void __ProgrammingError(const char *file, int lineno, const char *format, ...)
     mock_assert(0, "0", __FILE__, __LINE__);
 }
 
-int FullTextMatch(const char *regptr, const char *cmpptr)
+bool FullTextMatch(const char *regptr, const char *cmpptr)
 {
     fail();
 }

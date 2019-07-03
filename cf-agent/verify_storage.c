@@ -50,8 +50,8 @@ static PromiseResult VerifyFileSystem(EvalContext *ctx, char *name, const Attrib
 static PromiseResult VerifyFreeSpace(EvalContext *ctx, char *file, const Attributes *a, const Promise *pp);
 static PromiseResult VolumeScanArrivals(char *file, const Attributes *a, const Promise *pp);
 #if !defined(__MINGW32__)
-static int FileSystemMountedCorrectly(Seq *list, char *name, const Attributes *a);
-static int IsForeignFileSystem(struct stat *childstat, char *dir);
+static bool FileSystemMountedCorrectly(Seq *list, char *name, const Attributes *a);
+static bool IsForeignFileSystem(struct stat *childstat, char *dir);
 #endif
 
 #ifndef __MINGW32__
@@ -339,9 +339,9 @@ static PromiseResult VolumeScanArrivals(ARG_UNUSED char *file, ARG_UNUSED const 
 /*********************************************************************/
 
 #if !defined(__MINGW32__)
-static int FileSystemMountedCorrectly(Seq *list, char *name, const Attributes *a)
+static bool FileSystemMountedCorrectly(Seq *list, char *name, const Attributes *a)
 {
-    int found = false;
+    bool found = false;
 
     for (size_t i = 0; i < SeqLength(list); i++)
     {
@@ -390,7 +390,7 @@ static int FileSystemMountedCorrectly(Seq *list, char *name, const Attributes *a
 /* Mounting */
 /*********************************************************************/
 
-static int IsForeignFileSystem(struct stat *childstat, char *dir)
+static bool IsForeignFileSystem(struct stat *childstat, char *dir)
  /* Is FS NFS mounted ? */
 {
     struct stat parentstat;

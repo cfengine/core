@@ -34,9 +34,9 @@ typedef struct CompressedArray_
     struct CompressedArray_ *next;
 } CompressedArray;
 
-int FixCompressedArrayValue(int i, char *value, CompressedArray **start);
+bool FixCompressedArrayValue(int i, char *value, CompressedArray **start);
 void DeleteCompressedArray(CompressedArray *start);
-int CompressedArrayElementExists(CompressedArray *start, int key);
+bool CompressedArrayElementExists(CompressedArray *start, int key);
 char *CompressedArrayValue(CompressedArray *start, int key);
 
 #endif

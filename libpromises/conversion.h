@@ -74,7 +74,7 @@ void CommandPrefix(char *execstr, char *comm);
 const char *DataTypeShortToType(char *short_type);
 bool DataTypeIsIterable(DataType t);
 
-int CoarseLaterThan(const char *key, const char *from);
+bool CoarseLaterThan(const char *key, const char *from);
 int FindTypeInArray(const char *const haystack[], const char *needle, int default_value, int null_value);
 
 void UidListDestroy(UidList *uids);

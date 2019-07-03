@@ -232,9 +232,10 @@ void HashPubKey(
 
 /*******************************************************************/
 
-int HashesMatch(const unsigned char digest1[EVP_MAX_MD_SIZE + 1],
-                const unsigned char digest2[EVP_MAX_MD_SIZE + 1],
-                HashMethod type)
+bool HashesMatch(
+    const unsigned char digest1[EVP_MAX_MD_SIZE + 1],
+    const unsigned char digest2[EVP_MAX_MD_SIZE + 1],
+    HashMethod type)
 {
     const HashSize size = HashSizeFromId(type);
     if (size <= 0) // HashSize is an enum (so int)

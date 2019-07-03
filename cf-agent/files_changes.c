@@ -111,7 +111,7 @@ static void DeleteHashValue(ChecksumValue *chk_val)
     free(chk_val);
 }
 
-static int ReadHash(CF_DB *dbp, HashMethod type, const char *name, unsigned char digest[EVP_MAX_MD_SIZE + 1])
+static bool ReadHash(CF_DB *dbp, HashMethod type, const char *name, unsigned char digest[EVP_MAX_MD_SIZE + 1])
 {
     char *key;
     int size;

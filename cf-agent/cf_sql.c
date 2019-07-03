@@ -319,7 +319,7 @@ static void CfDeletePostgresqlQuery(ARG_UNUSED CfdbConn *cfdb)
 
 /*****************************************************************************/
 
-int CfConnectDB(CfdbConn *cfdb, DatabaseType dbtype, char *remotehost, char *dbuser, char *passwd, char *db)
+void CfConnectDB(CfdbConn *cfdb, DatabaseType dbtype, char *remotehost, char *dbuser, char *passwd, char *db)
 {
 
     cfdb->connected = false;
@@ -355,7 +355,6 @@ int CfConnectDB(CfdbConn *cfdb, DatabaseType dbtype, char *remotehost, char *dbu
         cfdb->connected = true;
 
     cfdb->blank = xstrdup("");
-    return true;
 }
 
 /*****************************************************************************/

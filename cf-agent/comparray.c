@@ -32,7 +32,7 @@
 
 /*******************************************************************/
 
-int FixCompressedArrayValue(int i, char *value, CompressedArray **start)
+bool FixCompressedArrayValue(int i, char *value, CompressedArray **start)
 {
     CompressedArray *ap;
 
@@ -74,7 +74,7 @@ void DeleteCompressedArray(CompressedArray *start)
 
 /*******************************************************************/
 
-int CompressedArrayElementExists(CompressedArray *start, int key)
+bool CompressedArrayElementExists(CompressedArray *start, int key)
 {
     CompressedArray *ap;
 

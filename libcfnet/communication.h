@@ -38,8 +38,8 @@ AgentConnection *NewAgentConn(const char *server, const char *port,
   @param ap AgentConnection structure.
   */
 void DeleteAgentConn(AgentConnection *ap);
-int IsIPV6Address(char *name);
-int IsIPV4Address(char *name);
+bool IsIPV6Address(char *name);
+bool IsIPV4Address(char *name);
 int Hostname2IPString(char *dst, const char *hostname, size_t dst_size);
 int IPString2Hostname(char *dst, const char *ipaddr, size_t dst_size);
 unsigned short SocketFamily(int sd);

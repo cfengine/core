@@ -39,7 +39,7 @@
 #include <ornaments.h>
 #include <eval_context.h>
 
-static int ServicesSanityChecks(const Attributes *a, const Promise *pp);
+static bool ServicesSanityChecks(const Attributes *a, const Promise *pp);
 static void SetServiceDefaults(Attributes *a);
 static PromiseResult DoVerifyServices(EvalContext *ctx, const Attributes *attr, const Promise *pp);
 static PromiseResult VerifyServices(EvalContext *ctx, const Attributes *a, const Promise *pp);
@@ -65,7 +65,7 @@ PromiseResult VerifyServicesPromise(EvalContext *ctx, const Promise *pp)
 
 /*****************************************************************************/
 
-static int ServicesSanityChecks(const Attributes *a, const Promise *pp)
+static bool ServicesSanityChecks(const Attributes *a, const Promise *pp)
 {
     Rlist *dep;
 

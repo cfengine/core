@@ -31,7 +31,7 @@
 
 
 /* Sets variables */
-static int RegExMatchSubString(EvalContext *ctx, pcre *rx, const char *teststring, int *start, int *end)
+static bool RegExMatchSubString(EvalContext *ctx, pcre *rx, const char *teststring, int *start, int *end)
 {
     int ovector[OVECCOUNT];
     int rc = 0;
@@ -69,7 +69,7 @@ static int RegExMatchSubString(EvalContext *ctx, pcre *rx, const char *teststrin
 }
 
 /* Sets variables */
-static int RegExMatchFullString(EvalContext *ctx, pcre *rx, const char *teststring)
+static bool RegExMatchFullString(EvalContext *ctx, pcre *rx, const char *teststring)
 {
     int match_start;
     int match_len;
@@ -84,7 +84,7 @@ static int RegExMatchFullString(EvalContext *ctx, pcre *rx, const char *teststri
     }
 }
 
-int FullTextMatch(EvalContext *ctx, const char *regexp, const char *teststring)
+bool FullTextMatch(EvalContext *ctx, const char *regexp, const char *teststring)
 {
     pcre *rx;
 
@@ -118,13 +118,13 @@ bool ValidateRegEx(const char *regex)
     return regex_valid;
 }
 
-int BlockTextMatch(EvalContext *ctx, const char *regexp, const char *teststring, int *start, int *end)
+bool BlockTextMatch(EvalContext *ctx, const char *regexp, const char *teststring, int *start, int *end)
 {
     pcre *rx = CompileRegex(regexp);
 
     if (rx == NULL)
     {
-        return 0;
+        return false;
     }
 
     if (RegExMatchSubString(ctx, rx, teststring, start, end))

@@ -48,7 +48,7 @@ static int FSTAB_EDITS = 0; /* GLOBAL_X */
 static Item *FSTABLIST = NULL; /* GLOBAL_X */
 
 static void AugmentMountInfo(Seq *list, char *host, char *source, char *mounton, char *options);
-static int MatchFSInFstab(char *match);
+static bool MatchFSInFstab(char *match);
 static void DeleteThisItem(Item **liststart, Item *entry);
 
 static const char *const VMOUNTCOMM[] =
@@ -350,6 +350,7 @@ void DeleteMountInfo(Seq *list)
 int VerifyInFstab(EvalContext *ctx, char *name, const Attributes *a, const Promise *pp, PromiseResult *result)
 /* Ensure filesystem IS in fstab, and return no of changes */
 {
+    // FIXME: This ALWAYS returns 0 (!)
     assert(a != NULL);
     char fstab[CF_BUFSIZE];
     char *host, *rmountpt, *mountpt, *fstype, *opts;
@@ -426,6 +427,7 @@ int VerifyInFstab(EvalContext *ctx, char *name, const Attributes *a, const Promi
 int VerifyNotInFstab(EvalContext *ctx, char *name, const Attributes *a, const Promise *pp, PromiseResult *result)
 /* Ensure filesystem is NOT in fstab, and return no of changes */
 {
+    // FIXME: This ALWAYS returns 0 (!)
     char regex[CF_BUFSIZE];
     char *host, *mountpt, *opts;
     Item *ip;
@@ -665,7 +667,7 @@ PromiseResult VerifyUnmount(EvalContext *ctx, char *name, const Attributes *a, c
 
 /*******************************************************************/
 
-static int MatchFSInFstab(char *match)
+static bool MatchFSInFstab(char *match)
 {
     Item *ip;
     const char delimit[]=" \t\r\n\v\f";

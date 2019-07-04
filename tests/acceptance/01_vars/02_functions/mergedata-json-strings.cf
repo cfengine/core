@@ -1,0 +1,35 @@
+#!/var/cfengine/bin/cf-agent -f-
+body common control
+{
+        inputs => {
+                    "../../default.cf.sub"
+        };
+        bundlesequence => { default("$(this.promise_filename)") };
+}
+
+bundle agent test
+{
+  meta:
+      "description"
+        string => "Test that plain json strings can be merged";
+
+   vars:
+     "merged" data => mergedata( '[]', '{ "one": "1" }', '{ "two":"2"}' );
+
+  files:
+     "$(G.testfile)"
+       create => "true",
+       edit_template_string => "{{%-top-}}",
+       template_method => "inline_mustache",
+       template_data => @(merged);
+}
+
+bundle agent check
+{
+  methods:
+      "PASS/FAIL"
+        usebundle => dcs_check_diff("$(G.testfile)",
+                                    "$(this.promise_filename).expected",
+                                    "$(this.promise_filename)");
+}
+

@@ -38,13 +38,13 @@
 #define CF_VALID_OPS_METHOD_OVERWRITE "=+-"
 #define CF_VALID_OPS_METHOD_APPEND "=+-"
 
-static int CheckACLSyntax(const char *file, Acl acl, const Promise *pp);
+static bool CheckACLSyntax(const char *file, Acl acl, const Promise *pp);
 
 static void SetACLDefaults(const char *path, Acl *acl);
-static int CheckACESyntax(char *ace, char *valid_nperms, char *valid_ops, int deny_support, int mask_support,
+static bool CheckACESyntax(char *ace, char *valid_nperms, char *valid_ops, int deny_support, int mask_support,
                         const Promise *pp);
-static int CheckModeSyntax(char **mode_p, char *valid_nperms, char *valid_ops, const Promise *pp);
-static int CheckPermTypeSyntax(char *permt, int deny_support, const Promise *pp);
+static bool CheckModeSyntax(char **mode_p, char *valid_nperms, char *valid_ops, const Promise *pp);
+static bool CheckPermTypeSyntax(char *permt, int deny_support, const Promise *pp);
 static int CheckAclDefault(const char *path, Acl *acl, const Promise *pp);
 
 
@@ -103,9 +103,9 @@ PromiseResult VerifyACL(EvalContext *ctx, const char *file, const Attributes *at
     return result;
 }
 
-static int CheckACLSyntax(const char *file, Acl acl, const Promise *pp)
+static bool CheckACLSyntax(const char *file, Acl acl, const Promise *pp)
 {
-    int valid = true;
+    bool valid = true;
     int deny_support = false;
     int mask_support = false;
     char *valid_ops = NULL;
@@ -259,16 +259,16 @@ static int CheckAclDefault(const char *path, Acl *acl, const Promise *pp)
     return valid;
 }
 
-static int CheckACESyntax(char *ace, char *valid_ops, char *valid_nperms, int deny_support, int mask_support,
-                          const Promise *pp)
+static bool CheckACESyntax(
+    char *ace,
+    char *valid_ops,
+    char *valid_nperms,
+    int deny_support,
+    int mask_support,
+    const Promise *pp)
 {
-    char *str;
-    int chkid;
-    int valid_mode;
-    int valid_permt;
-
-    str = ace;
-    chkid = false;
+    char *str = ace;
+    bool chkid = false;
 
 // first element must be "user", "group" or "all"
 
@@ -337,7 +337,7 @@ static int CheckACESyntax(char *ace, char *valid_ops, char *valid_nperms, int de
     }
 
 // check the mode-string (also skips to next field)
-    valid_mode = CheckModeSyntax(&str, valid_ops, valid_nperms, pp);
+    const bool valid_mode = CheckModeSyntax(&str, valid_ops, valid_nperms, pp);
 
     if (!valid_mode)
     {
@@ -354,7 +354,7 @@ static int CheckACESyntax(char *ace, char *valid_ops, char *valid_nperms, int de
     str++;
 
 // last field; must be a perm_type field
-    valid_permt = CheckPermTypeSyntax(str, deny_support, pp);
+    const bool valid_permt = CheckPermTypeSyntax(str, deny_support, pp);
 
     if (!valid_permt)
     {
@@ -365,18 +365,15 @@ static int CheckACESyntax(char *ace, char *valid_ops, char *valid_nperms, int de
     return true;
 }
 
-static int CheckModeSyntax(char **mode_p, char *valid_ops, char *valid_nperms, const Promise *pp)
+static bool CheckModeSyntax(char **mode_p, char *valid_ops, char *valid_nperms, const Promise *pp)
 /*
   Checks the syntax of a ':' or NULL terminated mode string.
   Moves the string pointer to the character following the mode
   (i.e. ':' or '\0')
 */
 {
-    char *mode;
-    int valid;
-
-    valid = false;
-    mode = *mode_p;
+    char *mode = *mode_p;
+    bool valid = false;
 
 // mode is allowed to be empty
 
@@ -433,16 +430,14 @@ static int CheckModeSyntax(char **mode_p, char *valid_ops, char *valid_nperms, c
     return valid;
 }
 
-static int CheckPermTypeSyntax(char *permt, int deny_support, const Promise *pp)
+static bool CheckPermTypeSyntax(char *permt, int deny_support, const Promise *pp)
 /*
   Checks if the given string corresponds to the perm_type syntax.
   Only "allow" or "deny", followed by NULL-termination are valid.
   In addition, "deny" is only valid for ACL types supporting it.
  */
 {
-    int valid;
-
-    valid = false;
+    bool valid = false;
 
     if (strcmp(permt, "allow") == 0)
     {

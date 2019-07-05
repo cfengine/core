@@ -54,7 +54,7 @@ static VersionCmpResult AndResults(VersionCmpResult lhs, VersionCmpResult rhs)
     }
     else
     {
-        return lhs && rhs;
+        return ((VersionCmpResult) (lhs && rhs));
     }
 }
 

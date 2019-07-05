@@ -27,12 +27,12 @@
 
 #include <cf3.defs.h>
 
-int IsRegex(const char *str); /* Pure */
-int IsRegexItemIn(const EvalContext *ctx, const Item *list, const char *regex); /* Uses context */
+bool IsRegex(const char *str); /* Pure */
+bool IsRegexItemIn(const EvalContext *ctx, const Item *list, const char *regex); /* Uses context */
 
 char *ExtractFirstReference(const char *regexp, const char *teststring); /* Pure, not thread-safe */
 
-int IsPathRegex(const char *str); /* Pure */
+bool IsPathRegex(const char *str); /* Pure */
 bool HasRegexMetaChars(const char *string);
 void EscapeRegexChars(char *str, char *strEsc, int strEscSz); /* Pure */
 void EscapeSpecialChars(const char *str, char *strEsc, int strEscSz, char *noEscseq, char *noEsclist); /* Pure */

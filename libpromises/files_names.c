@@ -124,7 +124,7 @@ bool IsNewerFileTree(const char *dir, time_t reftime)
 
 /*********************************************************************/
 
-int IsDir(const char *path)
+bool IsDir(const char *path)
 /*
 Checks if the object pointed to by path exists and is a directory.
 Returns true if so, false otherwise.
@@ -211,7 +211,7 @@ char *JoinPaths(char *path, size_t path_size, const char *leaf_path)
     return path;
 }
 
-int IsAbsPath(const char *path)
+bool IsAbsPath(const char *path)
 {
     if (IsFileSep(*path))
     {
@@ -428,7 +428,7 @@ bool ChopLastNode(char *str)
   */
 {
     char *sp;
-    int ret;
+    bool ret;
 
     DeleteRedundantSlashes(str);
 

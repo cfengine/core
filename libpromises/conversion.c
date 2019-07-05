@@ -769,7 +769,7 @@ bool DataTypeIsIterable(DataType t)
     }
 }
 
-int CoarseLaterThan(const char *bigger, const char *smaller)
+bool CoarseLaterThan(const char *bigger, const char *smaller)
 {
     char month_small[CF_SMALLBUF];
     char month_big[CF_SMALLBUF];

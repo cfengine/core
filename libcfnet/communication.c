@@ -67,7 +67,7 @@ void DeleteAgentConn(AgentConnection *conn)
     free(conn);
 }
 
-int IsIPV6Address(char *name)
+bool IsIPV6Address(char *name)
 {
     if (!name)
     {
@@ -99,7 +99,7 @@ int IsIPV6Address(char *name)
 
 /*******************************************************************/
 
-int IsIPV4Address(char *name)
+bool IsIPV4Address(char *name)
 {
     if (!name)
     {

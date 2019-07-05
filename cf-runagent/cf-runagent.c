@@ -69,8 +69,7 @@ static void ThisAgentInit(void);
 static GenericAgentConfig *CheckOpts(int argc, char **argv);
 
 static void KeepControlPromises(EvalContext *ctx, const Policy *policy);
-static int HailServer(const EvalContext *ctx, const GenericAgentConfig *config,
-                      char *host);
+static bool HailServer(const EvalContext *ctx, const GenericAgentConfig *config, char *host);
 static void SendClassData(AgentConnection *conn);
 static void HailExec(AgentConnection *conn, char *peer);
 static FILE *NewStream(char *name);
@@ -446,8 +445,7 @@ static void ThisAgentInit(void)
 
 /********************************************************************/
 
-static int HailServer(const EvalContext *ctx, const GenericAgentConfig *config,
-                      char *host)
+static bool HailServer(const EvalContext *ctx, const GenericAgentConfig *config, char *host)
 {
     assert(host != NULL);
 

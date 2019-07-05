@@ -34,7 +34,7 @@
 #include <policy.h>
 #include <eval_context.h>
 
-static int IsCf3Scalar(char *str);
+static bool IsCf3Scalar(char *str);
 
 /*******************************************************************/
 
@@ -194,12 +194,12 @@ bool IsCf3VarString(const char *str)
         return false;
     }
 
-    return vars;
+    return (vars != 0);
 }
 
 /*********************************************************************/
 
-static int IsCf3Scalar(char *str)
+static bool IsCf3Scalar(char *str)
 {
     char *sp;
     char left = 'x', right = 'x';
@@ -273,7 +273,7 @@ static int IsCf3Scalar(char *str)
         return false;
     }
 
-    return vars;
+    return (vars != 0);
 }
 
 /* Extract everything up to the dollar sign. */

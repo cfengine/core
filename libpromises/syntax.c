@@ -824,7 +824,7 @@ static SyntaxTypeMatch CheckParseOpts(const char *s, const char *range)
 
 /****************************************************************************/
 
-int CheckParseVariableName(const char *name)
+bool CheckParseVariableName(const char *name)
 {
     const char *reserved[] = { "promiser", "handle", "promise_filename", "promise_dirname", "promise_linenumber", "this", NULL };
     char scopeid[CF_MAXVARSIZE], vlval[CF_MAXVARSIZE];

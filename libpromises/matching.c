@@ -93,10 +93,10 @@ char *ExtractFirstReference(const char *regexp, const char *teststring)
     return backreference;
 }
 
-int IsRegex(const char *str)
+bool IsRegex(const char *str)
 {
     const char *sp;
-    int ret = false;
+    bool ret = false;
     enum { r_norm, r_norepeat, r_literal } special = r_norepeat;
     int bracket = 0;
     int paren = 0;
@@ -189,9 +189,9 @@ int IsRegex(const char *str)
     }
 }
 
-int IsPathRegex(const char *str)
+bool IsPathRegex(const char *str)
 {
-    int result = IsRegex(str);
+    bool result = IsRegex(str);
 
     if (result)
     {
@@ -205,20 +205,12 @@ int IsPathRegex(const char *str)
                 break;
             case ']':
                 s--;
-                if (s % 2 == 0)
-                {
-                    result++;
-                }
                 break;
             case '(':
                 r++;
                 break;
             case ')':
                 r--;
-                if (r % 2 == 0)
-                {
-                    result++;
-                }
                 break;
             default:
 
@@ -240,7 +232,7 @@ int IsPathRegex(const char *str)
 
 /* Checks whether item matches a list of wildcards */
 
-int IsRegexItemIn(const EvalContext *ctx, const Item *list, const char *regex)
+bool IsRegexItemIn(const EvalContext *ctx, const Item *list, const char *regex)
 {
     for (const Item *ptr = list; ptr != NULL; ptr = ptr->next)
     {

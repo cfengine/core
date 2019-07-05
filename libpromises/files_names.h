@@ -38,10 +38,10 @@ FilePathType FilePathGetType(const char *file_path);
 
 bool IsNewerFileTree(const char *dir, time_t reftime);
 int CompareCSVName(const char *s1, const char *s2);
-int IsDir(const char *path);
+bool IsDir(const char *path);
 char *JoinSuffix(char *path, size_t path_size, const char *leaf);
 char *JoinPaths(char *path, size_t path_size, const char *leaf_path);
-int IsAbsPath(const char *path);
+bool IsAbsPath(const char *path);
 void AddSlash(char *str);
 char *GetParentDirectoryCopy(const char *path);
 void DeleteSlash(char *str);

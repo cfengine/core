@@ -85,7 +85,7 @@ bool GetRepositoryPath(ARG_UNUSED const char *file, const Attributes *attr, char
 
 /*********************************************************************/
 
-int ArchiveToRepository(const char *file, const Attributes *attr)
+bool ArchiveToRepository(const char *file, const Attributes *attr)
  /* Returns true if the file was backup up and false if not */
 {
     char destination[CF_BUFSIZE];

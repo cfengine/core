@@ -58,7 +58,7 @@ PromiseResult VerifyMeasurementPromise(EvalContext *ctx, double *measurement, co
 
 static bool CheckMeasureSanity(Measurement m, const Promise *pp)
 {
-    int retval = true;
+    bool retval = true;
 
     if (!IsAbsPath(pp->promiser))
     {

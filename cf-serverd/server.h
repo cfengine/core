@@ -111,7 +111,7 @@ struct ServerConnectionState_
 
     /* hostname is copied from client-supplied CAUTH command */
     char hostname[CF_MAXVARSIZE];
-    int user_data_set;
+    bool user_data_set;
     bool rsa_auth;
     /* TODO DANGEROUS! this is set for the whole connection if only one path
      * is admitted as maproot. */

@@ -286,8 +286,8 @@ static bool StringItemIPLess(const char *left_item, const char *right_item, ARG_
     IPAddress *left = IPAddressNew(left_buffer);
     IPAddress *right = IPAddressNew(right_buffer);
 
-    bool matched_left = left != NULL;
-    bool matched_right = right != NULL;
+    bool matched_left = (left != NULL);
+    bool matched_right = (right != NULL);
 
     BufferDestroy(left_buffer);
     BufferDestroy(right_buffer);
@@ -297,6 +297,8 @@ static bool StringItemIPLess(const char *left_item, const char *right_item, ARG_
         int less = IPAddressCompareLess(left, right);
         IPAddressDestroy(&left);
         IPAddressDestroy(&right);
+        // FIXME: less is -1, 0, 1 (see IPAddressCompareLess())
+        // What is the intention for -1?
         return less;
     }
 
@@ -326,11 +328,11 @@ static long ParseEtherAddress(const char* input, unsigned char *addr)
 {
     if (strlen(input) > 12)
     {
-        return sscanf(input, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx", 
+        return sscanf(input, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",
                       &addr[0], &addr[1], &addr[2], &addr[3], &addr[4], &addr[5]);
     }
 
-    return sscanf(input, "%2hhx%2hhx%2hhx%2hhx%2hhx%2hhx", 
+    return sscanf(input, "%2hhx%2hhx%2hhx%2hhx%2hhx%2hhx",
                   &addr[0], &addr[1], &addr[2], &addr[3], &addr[4], &addr[5]);
 }
 

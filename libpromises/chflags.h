@@ -30,6 +30,6 @@
 #include <cf3.defs.h>
 #include <rlist.h>
 
-int ParseFlagString(Rlist *flags, u_long *plusmask, u_long *minusmask);
+bool ParseFlagString(Rlist *flags, u_long *plusmask, u_long *minusmask);
 
 #endif

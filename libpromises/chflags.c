@@ -61,8 +61,9 @@ static u_long ConvertBSDBits(const char *s);
 
 /***************************************************************/
 
-int ParseFlagString(Rlist *bitlist, u_long *plusmask, u_long *minusmask)
+bool ParseFlagString(Rlist *bitlist, u_long *plusmask, u_long *minusmask)
 {
+    // FIXME: ALWAYS returns true
     if (bitlist == NULL)
     {
         return true;

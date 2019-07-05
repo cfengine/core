@@ -777,7 +777,7 @@ void SetItemListCounter(Item *list, const char *item, int value)
 
 /*********************************************************************/
 
-int IsMatchItemIn(const Item *list, const char *item)
+bool IsMatchItemIn(const Item *list, const char *item)
 /* Solve for possible regex/fuzzy models unified */
 {
     if (item == NULL || item[0] == '\0')
@@ -868,7 +868,7 @@ void DeleteItem(Item **liststart, Item *item)
 
 /*********************************************************************/
 
-int DeleteItemGeneral(Item **list, const char *string, ItemMatchType type)
+bool DeleteItemGeneral(Item **list, const char *string, ItemMatchType type)
 {
     if (list == NULL)
     {
@@ -964,49 +964,49 @@ int DeleteItemGeneral(Item **list, const char *string, ItemMatchType type)
 
 /*********************************************************************/
 
-int DeleteItemStarting(Item **list, const char *string)       /* delete 1st item starting with string */
+bool DeleteItemStarting(Item **list, const char *string)       /* delete 1st item starting with string */
 {
     return DeleteItemGeneral(list, string, ITEM_MATCH_TYPE_LITERAL_START);
 }
 
 /*********************************************************************/
 
-int DeleteItemNotStarting(Item **list, const char *string)    /* delete 1st item starting with string */
+bool DeleteItemNotStarting(Item **list, const char *string)    /* delete 1st item starting with string */
 {
     return DeleteItemGeneral(list, string, ITEM_MATCH_TYPE_LITERAL_START_NOT);
 }
 
 /*********************************************************************/
 
-int DeleteItemLiteral(Item **list, const char *string)  /* delete 1st item which is string */
+bool DeleteItemLiteral(Item **list, const char *string)  /* delete 1st item which is string */
 {
     return DeleteItemGeneral(list, string, ITEM_MATCH_TYPE_LITERAL_COMPLETE);
 }
 
 /*********************************************************************/
 
-int DeleteItemMatching(Item **list, const char *string)       /* delete 1st item fully matching regex */
+bool DeleteItemMatching(Item **list, const char *string)       /* delete 1st item fully matching regex */
 {
     return DeleteItemGeneral(list, string, ITEM_MATCH_TYPE_REGEX_COMPLETE);
 }
 
 /*********************************************************************/
 
-int DeleteItemNotMatching(Item **list, const char *string)    /* delete 1st item fully matching regex */
+bool DeleteItemNotMatching(Item **list, const char *string)    /* delete 1st item fully matching regex */
 {
     return DeleteItemGeneral(list, string, ITEM_MATCH_TYPE_REGEX_COMPLETE_NOT);
 }
 
 /*********************************************************************/
 
-int DeleteItemContaining(Item **list, const char *string)     /* delete first item containing string */
+bool DeleteItemContaining(Item **list, const char *string)     /* delete first item containing string */
 {
     return DeleteItemGeneral(list, string, ITEM_MATCH_TYPE_LITERAL_SOMEWHERE);
 }
 
 /*********************************************************************/
 
-int DeleteItemNotContaining(Item **list, const char *string)  /* delete first item containing string */
+bool DeleteItemNotContaining(Item **list, const char *string)  /* delete first item containing string */
 {
     return DeleteItemGeneral(list, string, ITEM_MATCH_TYPE_LITERAL_SOMEWHERE_NOT);
 }

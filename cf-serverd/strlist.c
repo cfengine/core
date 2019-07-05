@@ -69,7 +69,7 @@ struct string *string_New(const char *s)
 bool string_BoolCompare(const struct string *s1,
                         const struct string *s2)
 {
-    int result = false;
+    bool result = false;
 
     if (s1->len == s2->len)
     {

@@ -41,7 +41,7 @@
 
 #ifdef HAVE_LIBACL
 
-int CopyACLs(const char *src, const char *dst)
+bool CopyACLs(const char *src, const char *dst)
 {
     acl_t acls;
     struct stat statbuf;
@@ -105,7 +105,7 @@ int CopyACLs(const char *src, const char *dst)
 
 #elif !defined(__MINGW32__) /* !HAVE_LIBACL */
 
-int CopyACLs(ARG_UNUSED const char *src, ARG_UNUSED const char *dst)
+bool CopyACLs(ARG_UNUSED const char *src, ARG_UNUSED const char *dst)
 {
     return true;
 }

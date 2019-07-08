@@ -1593,6 +1593,16 @@ bool UpdateSinglePackageModuleCache(EvalContext *ctx,
             Log(LOG_LEVEL_VERBOSE,
                 "Forcing package list update due to missing database");
             force_update = true;
+
+            /* When the cfengine database containing the cache of package updates
+             * available is initialized we should use the network to get the
+             * current list of updates available. It's not unlikely that the OS
+             * does not yet have a local cache, which simply results in an error
+             * getting a list of package updates available. */
+            if (type == UPDATE_TYPE_LOCAL_UPDATES)
+            {
+                type = UPDATE_TYPE_UPDATES;
+            }
         }
 
         cache_updates_lock =

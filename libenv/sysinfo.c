@@ -719,7 +719,7 @@ static void GetNameInfo3(EvalContext *ctx)
     Log(LOG_LEVEL_VERBOSE, "Additional hard class defined as: %s", CanonifyName(workbuf));
 
     snprintf(workbuf, CF_BUFSIZE, "%s_%s", VSYSNAME.sysname, VSYSNAME.release);
-    EvalContextClassPutHard(ctx, workbuf, "source=agent,derived-from=sys.sysname,derived-from=sys.release");
+    EvalContextClassPutHard(ctx, workbuf, "inventory,attribute_name=none,source=agent,derived-from=sys.sysname,derived-from=sys.release");
 
     EvalContextClassPutHard(ctx, VSYSNAME.machine, "source=agent,derived-from=sys.machine");
     Log(LOG_LEVEL_VERBOSE, "Additional hard class defined as: %s", CanonifyName(workbuf));

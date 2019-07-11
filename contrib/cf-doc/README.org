@@ -1,0 +1,146 @@
+#+TITLE: cf-doc
+
+#+BEGIN_SRC sh :exports results :results output
+  exec 2>&1
+  ./cf-doc.sh --help
+  :
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+SYNOPSIS
+        cf-doc --help
+        cf-doc [-f FILE] [-p VERSION] [-u URL] [-t]
+
+DESCRIPTION
+        cf-doc will extract particular meta tags and meta promises
+        from CFEngine policy and will output a list of them in
+        Markdown format, to document and index a codebase of
+        CFEngine policy.
+
+        Each line of output is formatted as a URL linking back
+        to the line of policy from which it was extracted.
+        The -t option can also be used to generate plain text
+        (no hyperlinks).
+
+        cf-promises is used internally to parse CFEngine policy and
+        generate json output, which is further parsed to produce
+        the final script output.
+
+        The particular meta tags and meta promises to be collected
+        are as defined in the "collection" variable in this script.
+        For further details on this see the inline documentation
+        in the supporting script 'extract-cf-meta.jq'.
+
+OPTIONS
+        -f FILE         File to pass to cf-promises for parsing.
+                        If not specified cf-promises will use its own
+                        default of /var/cfengine/inputs/promises.cf
+
+        -p VERSION      Version of the policy that is being checked,
+                        for inclusion in the URL.  Default is master.
+
+        -u URL          URL prefix to use for all links.  Default is
+                        coded into the script at the top and is intended
+                        for modification to suit your site, but can also
+                        be overridden on the command line with -u.
+                        Current default is https://example.com/cfengine/masterfiles/blob/
+
+        -t              Text only mode.  The -v and -u switches do nothing
+                        if this option is passed, as the output will not
+                        be markdown formatted as URLs.
+#+end_example
+
+* Examples
+** Policy
+:PROPERTIES:
+:ID:       cb0077ca-324b-444a-97e7-8fe5d69f8a80
+:END:
+
+This example shows policy instrumented for cf-doc summary extraction.
+
+#+CAPTION: Example policy marked up for cf-doc
+#+BEGIN_SRC cfengine3 :exports code :tangle example_cf-doc.cf
+  bundle agent example_cf_doc
+  {
+      meta:
+        "inventory" string => "Example: This bundle does Inventory";
+        "config"    string => "Example: This bundle configures /tmp/example.txt";
+
+      vars:
+        "h"
+          string => "$(sys.fqhost)",
+          meta => { "docinv=Fully Qualified Hostname according to CFEngine" };
+
+      files:
+        "/tmp/example.txt"
+         create => 'true',
+         meta => { "docconfig=Make sure the important file /tmp/example.txt exists" };
+  }
+#+END_SRC
+
+Bundles are instrumented using /meta/ promises named =inventory= and =config=.
+
+Individual promises are instrumented with meta /attributes/ named =docconfig= and =docinv=.
+
+** Usage
+:PROPERTIES:
+:ID:       35c8b8b7-0b78-475c-a690-c360b0fca324
+:END:
+
+*** Create markdown summary
+:PROPERTIES:
+:ID:       7fc62f78-ed17-4366-9908-201edc063b9d
+:END:
+
+This example shows generating summary formatted in markdown.
+
+#+CAPTION: Example generating summary in markdown
+#+BEGIN_SRC sh :dir ~/CFEngine/core/contrib/cf-doc/ :exports both :results output :wrap "src markdown :tangle example_cf-doc.txt"
+  ./cf-doc.sh -f ./example_cf-doc.cf \
+              -u https://github.com/cfengine/core/tree/master/contrib/cf-doc \
+              -p ""
+#+END_SRC
+
+#+RESULTS:
+#+begin_src markdown :tangle example_cf-doc.md
+
+# Configuration
+- [Example: This bundle configures /tmp/example.txt](https://github.com/cfengine/core/tree/master/contrib/cf-doc/example_cf-doc.cf#L6)
+- [Make sure the important file /tmp/example.txt exists](https://github.com/cfengine/core/tree/master/contrib/cf-doc/example_cf-doc.cf#L16)
+
+# Inventory
+- [Example: This bundle does Inventory](https://github.com/cfengine/core/tree/master/contrib/cf-doc/example_cf-doc.cf#L5)
+- [Fully Qualified Hostname according to CFEngine](https://github.com/cfengine/core/tree/master/contrib/cf-doc/example_cf-doc.cf#L11)
+#+end_src
+
+See the [[example_cf-doc.md][generated file here]].
+
+*** Create plain text summary
+:PROPERTIES:
+:ID:       5c3a94f7-0bf9-4d93-a193-11b8873811af
+:END:
+
+This example shows generating summary formatted in plain text.
+
+#+CAPTION: Example generating summary in plain text
+#+BEGIN_SRC sh :dir ~/CFEngine/core/contrib/cf-doc/ :exports both :results output :wrap "src text :tangle example_cf-doc.txt"
+  ./cf-doc.sh -f ./example_cf-doc.cf \
+              -u https://github.com/cfengine/core/tree/master/contrib/cf-doc \
+              -p "" \
+              -t
+#+END_SRC
+
+#+RESULTS:
+#+begin_src text :tangle example_cf-doc.txt
+
+# Configuration
+- Example: This bundle configures /tmp/example.txt
+- Make sure the important file /tmp/example.txt exists
+
+# Inventory
+- Example: This bundle does Inventory
+- Fully Qualified Hostname according to CFEngine
+#+end_src
+
+See the [[example_cf-doc.txt][generated file here]].

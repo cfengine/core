@@ -3,7 +3,10 @@ body common control
 {
       bundlesequence => { run };
 }
-
+body agent control
+{
+        inform => "true";
+}
 bundle agent run
 {
   vars:
@@ -31,11 +34,48 @@ bundle agent run
       "values[28]" string => "100m"; # 100 million
       "values[29]" string => "100k"; # 100 thousand
 
-      "indices" slist => getindices("values");
+      "indices" slist => sort( getindices("values"), int);
 
       "eval[$(indices)]" string => eval("$(values[$(indices)])", "math", "infix");
 
   reports:
       "math/infix eval('$(values[$(indices)])') = '$(eval[$(indices)])'";
 }
+#+end_src
+###############################################################################
+#+begin_src example_output
+#@ ```
+#@     info: eval error: expression could not be parsed (input 'x')
+#@     info: eval error: expression could not be parsed (input '+ 200')
+#@     info: eval error: expression could not be parsed (input '- - -')
+#@ R: math/infix eval('x') = ''
+#@ R: math/infix eval('+ 200') = ''
+#@ R: math/infix eval('200 + 100') = '300.000000'
+#@ R: math/infix eval('200 - 100') = '100.000000'
+#@ R: math/infix eval('- - -') = ''
+#@ R: math/infix eval('2 + 3 - 1') = '4.000000'
+#@ R: math/infix eval('') = '0.000000'
+#@ R: math/infix eval('3 / 0') = 'inf'
+#@ R: math/infix eval('3^3') = '27.000000'
+#@ R: math/infix eval('-1^2.1') = '-nan'
+#@ R: math/infix eval('sin(20)') = '0.912945'
+#@ R: math/infix eval('cos(20)') = '0.408082'
+#@ R: math/infix eval('20 % 3') = '2.000000'
+#@ R: math/infix eval('sqrt(0.2)') = '0.447214'
+#@ R: math/infix eval('ceil(3.5)') = '4.000000'
+#@ R: math/infix eval('floor(3.4)') = '3.000000'
+#@ R: math/infix eval('abs(-3.4)') = '3.400000'
+#@ R: math/infix eval('-3.4 == -3.4') = '1.000000'
+#@ R: math/infix eval('-3.400000 == -3.400001') = '0.000000'
+#@ R: math/infix eval('e') = '2.718282'
+#@ R: math/infix eval('pi') = '3.141593'
+#@ R: math/infix eval('100m') = '100000000.000000'
+#@ R: math/infix eval('100k') = '100000.000000'
+#@     info: eval error: expression could not be parsed (input 'x')
+#@     info: eval error: expression could not be parsed (input '+ 200')
+#@     info: eval error: expression could not be parsed (input '- - -')
+#@     info: eval error: expression could not be parsed (input 'x')
+#@     info: eval error: expression could not be parsed (input '+ 200')
+#@     info: eval error: expression could not be parsed (input '- - -')
+#@ ```
 #+end_src

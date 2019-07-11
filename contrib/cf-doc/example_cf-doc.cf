@@ -1,0 +1,17 @@
+#!/var/cfengine/bin/cf-agent -f-
+bundle agent example_cf_doc
+{
+    meta:
+      "inventory" string => "Example: This bundle does Inventory";
+      "config"    string => "Example: This bundle configures /tmp/example.txt";
+
+    vars:
+      "h"
+        string => "$(sys.fqhost)",
+        meta => { "docinv=Fully Qualified Hostname according to CFEngine" };
+
+    files:
+      "/tmp/example.txt"
+       create => 'true',
+       meta => { "docconfig=Make sure the important file /tmp/example.txt exists" };
+}

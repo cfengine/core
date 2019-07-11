@@ -1,0 +1,7 @@
+# Configuration
+- Example: This bundle configures /tmp/example.txt
+- Make sure the important file /tmp/example.txt exists
+
+# Inventory
+- Example: This bundle does Inventory
+- Fully Qualified Hostname according to CFEngine

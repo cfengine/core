@@ -29,7 +29,7 @@ bundle agent example_sys_interfaces
       "Interface: $(sys.interfaces)";
       "Address of '$(sys.interfaces)' is '$(sys.ipv4[$(sys.interfaces)])'";
 }
-bundle agent __main__
+bundle agent main
 {
   methods:
       "example_sys_interfaces";

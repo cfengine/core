@@ -1,0 +1,62 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-3099" }
+        string => "Test that arrays defined by modules can contain @ just like classic arrays.";
+
+  commands:
+
+    # Define a simple classic array using the module protocol.
+
+      "$(G.echo)"
+        args => "=array[key]=array_key_value",
+        module => "true";
+
+    # Define a classic array where the key contains an @ using the module protocol.
+
+      "$(G.echo)"
+        args => "=array[key@1]=array_path_key_value",
+        module => "true";
+
+  vars:
+
+    # Define a classic array where the key contains an @.
+
+    "array[key@1]" string => "another_array_path_key_value";
+
+    #Find all the array entries defined by the module commands.
+    "v" slist => variablesmatching("default:echo\.*array.*");
+
+  reports:
+    DEBUG::
+     "Found variable '$(v)'";
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+    # Construct strings from the array values for comparison and test pass/fail
+    "expected" string => "array_key_value array_path_key_value another_array_path_key_value";
+    "actual" string => "$(echo.array[key]) $(echo.array[key@1]) $(test.array[key@1])";
+
+  methods:
+      "" usebundle => dcs_check_strcmp($(expected),
+                                       $(actual),
+                                       $(this.promise_filename),
+                                       "no");
+
+  reports:
+    DEBUG::
+      "module array[key] = '$(echo.array[key])'";
+      "module array[key@1] = '$(echo.array[key@1])'";
+      "classic array[key@1] = '$(test.array[key@1])'";
+}

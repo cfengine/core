@@ -1,0 +1,62 @@
+#  Copyright 2019 Northern.tech AS
+
+#  This file is part of Cfengine 3 - written and maintained by Northern.tech AS.
+
+#  This program is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU General Public License as published by the
+#  Free Software Foundation; version 3.
+
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+# To the extent this program is licensed as part of the Enterprise
+# versions of Cfengine, the applicable Commercial Open Source License
+# (COSL) may apply to this file if you as a licensee so wish it. See
+# included file COSL.txt.
+
+#+begin_src cfengine3
+bundle agent example_sys_interfaces
+# @brief Illustrate iterating over interfaces and addresses
+{
+  reports:
+      "Address: $(sys.ip_addresses)";
+      "Interface: $(sys.interfaces)";
+      "Address of '$(sys.interfaces)' is '$(sys.ipv4[$(sys.interfaces)])'";
+}
+bundle agent __main__
+{
+  methods:
+      "example_sys_interfaces";
+}
+#+end_src
+###############################################################################
+#+begin_src static_example_output
+#@ ```
+#@ R: Address: 127.0.0.1
+#@ R: Address: 192.168.42.189
+#@ R: Address: 192.168.122.1
+#@ R: Address: 172.17.0.1
+#@ R: Address: 192.168.33.1
+#@ R: Address: 172.27.224.211
+#@ R: Address: 192.168.69.1
+#@ R: Interface: wlan0
+#@ R: Interface: virbr0
+#@ R: Interface: docker0
+#@ R: Interface: vboxnet3
+#@ R: Interface: tun0
+#@ R: Interface: vboxnet13
+#@ R: Address of 'wlan0' is '192.168.42.189'
+#@ R: Address of 'virbr0' is '192.168.122.1'
+#@ R: Address of 'docker0' is '172.17.0.1'
+#@ R: Address of 'vboxnet3' is '192.168.33.1'
+#@ R: Address of 'tun0' is '172.27.224.211'
+#@ R: Address of 'vboxnet13' is '192.168.69.1'
+#@ ```
+#+end_src
+

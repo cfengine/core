@@ -8060,7 +8060,8 @@ static FnCallResult FnCallCFEngineCallers(EvalContext *ctx, ARG_UNUSED const Pol
 static bool CheckIDChar(const char ch)
 {
     return isalnum((int) ch) || (ch == '.') || (ch == '-') || (ch == '_') ||
-                                (ch == '[') || (ch == ']') || (ch == '/');
+                                (ch == '[') || (ch == ']') || (ch == '/') ||
+                                (ch == '@');
 }
 
 static bool CheckID(const char *id)

@@ -20,27 +20,50 @@
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
 
-
-body common control
-
+#+begin_src cfengine3
+bundle agent main
 {
-      bundlesequence  => { "example" };
-}
+  vars:
 
-###########################################################
+      "range" string => "1-32";
+      "hostname_f" string => execresult( "hostname -f", useshell);
+      "hostname_s" string => execresult( "hostname -s", useshell);
+      "hostname" string => execresult( "hostname", useshell);
 
-bundle agent example
-
-{     
   classes:
 
-      "compute_nodes" expression => hostrange("cpu-","01-32");
+      "hostgroup_alpha_no_leading_zeros" expression => hostrange("host", $(range) );
+      "hostgroup_alpha_leading_zeros"    expression => hostrange("host", "00$(range)" );
+      "hostgroup_alpha_UPPERCASE_prefix" expression => hostrange("HOST", "0$(range)" );
 
   reports:
+      "sys.fqhost = '$(sys.fqhost)'";
+      "sys.uqhost = '$(sys.uqhost)'";
+      "hostname -f = '$(hostname_f)'";
+      "hostname -s = '$(hostname_s)'";
+      "hostname = '$(hostname)'";
 
-    compute_nodes::
+    hostgroup_alpha_no_leading_zeros::
 
-      "No computer is a cluster";
+      "This host is within the alpha host group range (host$(range))";
 
+    hostgroup_alpha_leading_zeros::
+      "This host is within the alpha host group range (host00$(range)) (NOTE: Leading zeros and prefix capitalization is insignificant)";
+
+    hostgroup_alpha_UPPERCASE_prefix::
+      "This host is within the alpha host group range (HOST0$(range)) (NOTE: Leading zeros and prefix capitalization is insignificant)";
 }
-
+#+end_src
+###############################################################################
+#+begin_src static_example_output
+#@ ```
+#@ R: sys.fqhost = 'host001.example.com'
+#@ R: sys.uqhost = 'host001'
+#@ R: hostname -f = 'HOST001.example.com'
+#@ R: hostname -s = 'HOST001'
+#@ R: hostname = 'HOST001'
+#@ R: This host is within the alpha host group range (host1-32)
+#@ R: This host is within the alpha host group range (host001-32) (NOTE: Leading zeros and prefix capitalization is insignificant)
+#@ R: This host is within the alpha host group range (HOST01-32) (NOTE: Leading zeros and prefix capitalization is insignificant)
+#@ ```
+#+end_src

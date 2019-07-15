@@ -1549,6 +1549,27 @@ bool UpdateSinglePackageModuleCache(EvalContext *ctx,
                 module_wrapper->package_module->updates_ifelapsed);
             return false;
         }
+
+        /* Next we set force_update based on a setting of zero for
+         * query_installed_ifelapsed or query_updates_ifelapsed */
+        if (type == UPDATE_TYPE_INSTALLED)
+        {
+            if(module_wrapper->package_module->installed_ifelapsed == 0)
+            {
+              Log(LOG_LEVEL_VERBOSE,
+                  "query_installed_ifelapsed = 0, forcing package cache refresh");
+              force_update = true;
+            }
+        }
+        else
+        {
+          if(module_wrapper->package_module->updates_ifelapsed == 0)
+            {
+              Log(LOG_LEVEL_VERBOSE,
+                  "query_updates_ifelapsed = 0, forcing package cache refresh");
+              force_update = true;
+            }
+        }
     }
 
     Bundle bundle = {.name = "package_cache"};

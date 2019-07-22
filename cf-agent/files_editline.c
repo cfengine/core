@@ -89,7 +89,7 @@ static int ReplacePatterns(EvalContext *ctx, Item *start, Item *end, const Attri
 static bool EditColumns(EvalContext *ctx, Item *file_start, Item *file_end, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
 static bool EditLineByColumn(EvalContext *ctx, Rlist **columns, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
 static bool DoEditColumn(Rlist **columns, const Attributes *a, EditContext *edcontext);
-static int SanityCheckInsertions(const Attributes *a);
+static bool SanityCheckInsertions(const Attributes *a);
 static bool SanityCheckDeletions(const Attributes *a, const Promise *pp);
 static bool SelectLine(EvalContext *ctx, const char *line, const Attributes *a);
 static bool NotAnchored(char *s);
@@ -1322,11 +1322,11 @@ static bool EditColumns(EvalContext *ctx, Item *file_start, Item *file_end, cons
 
 /***************************************************************************/
 
-static int SanityCheckInsertions(const Attributes *a)
+static bool SanityCheckInsertions(const Attributes *a)
 {
     long not = 0;
     long with = 0;
-    long ok = true;
+    bool ok = true;
     Rlist *rp;
     InsertMatchType opt;
     int exact = false, ignore_something = false;

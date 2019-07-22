@@ -4485,23 +4485,23 @@ static FnCallResult FilterInternal(EvalContext *ctx,
         pcre_free(rx);
     }
 
-    bool contextmode = 0;
-    bool ret;
+    bool contextmode = false;
+    bool ret = false;
     if (strcmp(fp->name, "every") == 0)
     {
-        contextmode = 1;
+        contextmode = true;
         ret = (match_count == total && total > 0);
     }
     else if (strcmp(fp->name, "none") == 0)
     {
-        contextmode = 1;
+        contextmode = true;
         ret = (match_count == 0);
     }
     else if (strcmp(fp->name, "some")     == 0 ||
              strcmp(fp->name, "regarray") == 0 ||
              strcmp(fp->name, "reglist")  == 0)
     {
-        contextmode = 1;
+        contextmode = true;
         ret = (match_count > 0);
     }
     else if (strcmp(fp->name, "grep")   != 0 &&

@@ -1417,7 +1417,7 @@ static bool SanityCheckDeletions(const Attributes *a, const Promise *pp)
         {
             Log(LOG_LEVEL_ERR,
                 "Makes no sense to promise multi-line delete with not_matching. Cannot be satisfied for all lines as a block.");
-            // FIXME: This function always returns true (!)
+            return false;
         }
     }
 

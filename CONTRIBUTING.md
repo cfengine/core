@@ -432,9 +432,9 @@ For other integer types without a format, cast `signed` types to `intmax_t` and 
 
 ## Logging Conventions
 
-CFEngine outputs messages about what its doing using the `Log()` function. It
-takes a `LogLevel` enum mapping closely to syslog priorities. Please try to do
-the following when writing output messages.
+CFEngine outputs messages about what it's doing using the `Log()` function. It
+takes a `LogLevel` enum, mapping closely to syslog priorities. Please try
+to do the following when writing output messages.
 
 
 ### Log levels
@@ -498,8 +498,8 @@ The CFEngine codebase can be usefully thought of as a few separate components:
 utilities (libutils), parsing (libpromises), evaluation (libpromises),
 actuation (mostly in cf-agent), network (libcfnet).
 
-Over the past year, the structure of the codebase has undergone some
-change. The goal of the restructuring is to isolate separate components with
+Since around 2016, the structure of the codebase has undergone some change.
+The goal of the restructuring is to isolate separate components with
 explicit dependencies, and provide better unit test coverage.
 
 For a general introduction to the tools, please read the man pages/documentation.
@@ -515,7 +515,7 @@ own system abstraction layer.
 
 ### libutils
 
-Contains generally useful datastructures or utilities. The key point about
+Contains generally useful data structures or utilities. The key point about
 *libutils* is that it is free of dependencies (except *libcompat*), so it does
 not know about any CFEngine structures or global state found in *libpromises*.
 Some examples of often used files (not meant to be an exhaustive list):
@@ -534,10 +534,9 @@ Some examples of often used files (not meant to be an exhaustive list):
 
 ### libcfnet
 
-Contains the networking layer for CFEngine. (At the time of writing, a bit of
-a moving target). All of this was in libpromises previously. Ideally it would
-be completely separate, without depending on libpromises, but we're not there
-yet.
+Contains the networking layer for CFEngine. All of this was in libpromises previously.
+Ideally it would be completely separate, without depending on libpromises, but we're not there
+yet. See JIRA Epic [CFE-2735](https://tracker.mender.io/browse/CFE-2735) for details on status.
 
 
 ### libpromises

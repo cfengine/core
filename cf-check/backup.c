@@ -8,14 +8,14 @@
 
 #if defined(__MINGW32__) || !defined(LMDB)
 
-int backup_main(int argc, char **argv)
+int backup_main(ARG_UNUSED int argc, ARG_UNUSED char **argv)
 {
     Log(LOG_LEVEL_ERR,
         "cf-check backup not available on this platform/build");
     return 1;
 }
 
-int backup_files(Seq *filenames)
+int backup_files(ARG_UNUSED Seq *filenames)
 {
     Log(LOG_LEVEL_INFO,
         "database backup not available on this platform/build");

@@ -568,7 +568,7 @@ Seq *SeqStringDeserialize(const char *const serialized)
     return seq;
 }
 
-Seq *SeqFromArgv(int argc, char **argv)
+Seq *SeqFromArgv(int argc, const char *const *const argv)
 {
     assert(argc > 0);
     assert(argv != NULL);
@@ -577,7 +577,7 @@ Seq *SeqFromArgv(int argc, char **argv)
     Seq *args = SeqNew(argc, NULL);
     for (int i = 0; i < argc; ++i)
     {
-        SeqAppend(args, argv[i]);
+        SeqAppend(args, (void *)argv[i]); // Discards const
     }
     return args;
 }

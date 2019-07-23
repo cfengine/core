@@ -36,7 +36,7 @@ static void print_help()
         "\n");
 }
 
-int main(int argc, char **argv)
+int main(int argc, const char *const *const argv)
 {
     if (StringEndsWith(argv[0], "lmdump"))
     {
@@ -57,8 +57,8 @@ int main(int argc, char **argv)
     }
 
     const int cmd_argc = argc - 1;
-    char **cmd_argv = argv + 1;
-    char *command = cmd_argv[0];
+    const char *const *const cmd_argv = argv + 1;
+    const char *const command = cmd_argv[0];
 
     if (StringSafeEqual_IgnoreCase(command, "lmdump") ||
         StringSafeEqual_IgnoreCase(command, "dump"))

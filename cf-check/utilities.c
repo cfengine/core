@@ -11,9 +11,6 @@
 Seq *default_lmdb_files()
 {
     const char *state = GetStateDir();
-    Log(LOG_LEVEL_INFO,
-        "No filenames specified, defaulting to .lmdb files in %s",
-        state);
     Seq *files = ListDir(state, ".lmdb");
     if (files == NULL)
     {
@@ -26,6 +23,9 @@ Seq *argv_to_lmdb_files(int argc, const char *const *const argv)
 {
     if (argc <= 1)
     {
+        Log(LOG_LEVEL_INFO,
+            "No filenames specified, defaulting to .lmdb files in %s",
+            GetStateDir());
         return default_lmdb_files();
     }
 

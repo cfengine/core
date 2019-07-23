@@ -116,9 +116,10 @@ int repair_files(Seq *files)
 int repair_main(int argc, const char *const *const argv)
 {
     Seq *files = argv_to_lmdb_files(argc, argv);
-    if (files == NULL)
+    if (files == NULL || SeqLength(files) == 0)
     {
-        return 1;
+        Log(LOG_LEVEL_ERR, "No database files to repair");
+        return -1;
     }
     const int ret = repair_files(files);
     SeqDestroy(files);
@@ -127,10 +128,23 @@ int repair_main(int argc, const char *const *const argv)
 
 int repair_default()
 {
+    // This function is used by cf-execd and cf-agent, not cf-check
+
+    // Consistency checks are not enabled by default (--skip-db-check=yes)
+    // This log message can be changed to verbose if it happens by default:
+    Log(LOG_LEVEL_INFO, "Running internal DB (LMDB) consistency checks");
+
     Seq *files = default_lmdb_files();
     if (files == NULL)
     {
+        // Error message printed default_lmdb_files()
         return 1;
+    }
+    if (SeqLength(files) == 0)
+    {
+        // First agent run - no LMDB files
+        Log(LOG_LEVEL_INFO, "Skipping local database repair, no lmdb files");
+        return 0;
     }
     const int ret = repair_files(files);
     SeqDestroy(files);

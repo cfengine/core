@@ -4,14 +4,14 @@
 
 #if defined(__MINGW32__) || !defined(LMDB)
 
-int diagnose_main(int argc, char **argv)
+int diagnose_main(ARG_UNUSED int argc, ARG_UNUSED char **argv)
 {
     Log(LOG_LEVEL_ERR,
         "cf-check diagnose not available on this platform/build");
     return 1;
 }
 
-size_t diagnose_files(Seq *filenames, Seq **corrupt)
+size_t diagnose_files(ARG_UNUSED Seq *filenames, ARG_UNUSED Seq **corrupt)
 {
     Log(LOG_LEVEL_INFO,
         "database diagnosis not available on this platform/build");

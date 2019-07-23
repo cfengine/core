@@ -126,7 +126,7 @@ int lmdump(lmdump_mode mode, const char *file)
     return 0;
 }
 
-int lmdump_main(int argc, char * argv[])
+int lmdump_main(int argc, char **argv)
 {
     assert(argv != NULL);
 
@@ -149,7 +149,7 @@ int lmdump_main(int argc, char * argv[])
 }
 
 #else
-int lmdump_main(ARG_UNUSED int argc, ARG_UNUSED char * argv[])
+int lmdump_main(ARG_UNUSED int argc, ARG_UNUSED char **argv)
 {
     printf("lmdump only implemented for LMDB.\n");
     return 1;

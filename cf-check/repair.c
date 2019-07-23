@@ -4,7 +4,7 @@
 
 #if defined(__MINGW32__) || !defined(LMDB)
 
-int repair_main(int argc, char **argv)
+int repair_main(ARG_UNUSED int argc, ARG_UNUSED char **argv)
 {
     Log(LOG_LEVEL_ERR,
         "cf-check repair not available on this platform/build");

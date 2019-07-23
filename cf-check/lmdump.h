@@ -14,6 +14,6 @@ typedef enum
 
 lmdump_mode lmdump_char_to_mode(char mode);
 int lmdump(lmdump_mode mode, const char *file);
-int lmdump_main(int argc, char * argv[]);
+int lmdump_main(int argc, char **argv);
 
 #endif

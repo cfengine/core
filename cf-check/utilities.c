@@ -22,7 +22,7 @@ Seq *default_lmdb_files()
     return files;
 }
 
-Seq *argv_to_lmdb_files(int argc, char **argv)
+Seq *argv_to_lmdb_files(int argc, const char *const *const argv)
 {
     if (argc <= 1)
     {

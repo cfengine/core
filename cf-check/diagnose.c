@@ -4,7 +4,7 @@
 
 #if defined(__MINGW32__) || !defined(LMDB)
 
-int diagnose_main(ARG_UNUSED int argc, ARG_UNUSED char **argv)
+int diagnose_main(ARG_UNUSED int argc, ARG_UNUSED const char *const *const argv)
 {
     Log(LOG_LEVEL_ERR,
         "cf-check diagnose not available on this platform/build");
@@ -365,7 +365,7 @@ size_t diagnose_files(Seq *filenames, Seq **corrupt)
     return corruptions;
 }
 
-int diagnose_main(int argc, char **argv)
+int diagnose_main(int argc, const char *const *const argv)
 {
     Seq *files = argv_to_lmdb_files(argc, argv);
     const int ret = diagnose_files(files, NULL);

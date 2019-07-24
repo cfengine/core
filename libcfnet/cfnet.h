@@ -49,6 +49,7 @@ extern int CFENGINE_PORT;                              /* GLOBAL_P GLOBAL_E */
 #define CF_RSA_PROTO_OFFSET 24
 #define CF_PROTO_OFFSET 16
 #define CF_INBAND_OFFSET 8
+#define CF_MSGSIZE (CF_BUFSIZE - CF_INBAND_OFFSET)
 
 
 /**

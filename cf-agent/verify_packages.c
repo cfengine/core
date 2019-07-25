@@ -804,16 +804,17 @@ static bool PackageListInstalledFromCommand(EvalContext *ctx,
 */
 static void ReportSoftware(PackageManager *list)
 {
-    FILE *fout;
     PackageManager *mp = NULL;
     PackageItem *pi;
     char name[CF_BUFSIZE];
 
     GetSoftwareCacheFilename(name);
 
-    if ((fout = fopen(name, "w")) == NULL)
+    FILE *fout = safe_fopen(name, "w");
+    if (fout == NULL)
     {
-        Log(LOG_LEVEL_ERR, "Cannot open the destination file '%s'. (fopen: %s)",
+        Log(LOG_LEVEL_ERR,
+            "Cannot open the destination file '%s'. (fopen: %s)",
             name, GetErrorStr());
         return;
     }

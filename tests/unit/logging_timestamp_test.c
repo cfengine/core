@@ -1,6 +1,6 @@
+#include <platform.h>
+#include <definitions.h>
 #include <test.h>
-
-#include <cf3.defs.h>
 #include <logging.h>
 #include <pcre.h>
 

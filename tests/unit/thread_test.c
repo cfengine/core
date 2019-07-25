@@ -1,4 +1,4 @@
-#include <cf3.defs.h>
+#include <platform.h>
 
 #include <test.h>
 

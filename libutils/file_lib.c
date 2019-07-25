@@ -477,6 +477,19 @@ void RestoreUmask(mode_t old_mask)
 }
 
 /**
+ * Opens a file safety, with default (strict) permissions on creation.
+ * See safe_open_create_perms for more documentation.
+ *
+ * @param pathname The path to open.
+ * @param flags Same flags as for system open().
+ * @return Same errors as open().
+ */
+int safe_open(const char *pathname, int flags)
+{
+    return safe_open_create_perms(pathname, flags, S_IWUSR | S_IRUSR);
+}
+
+/**
  * Opens a file safely. It will follow symlinks, but only if the symlink is trusted,
  * that is, if the owner of the symlink and the owner of the target are the same,
  * or if the owner of the symlink is either root or the user running the current process.
@@ -486,12 +499,19 @@ void RestoreUmask(mode_t old_mask)
  * It should always be used when opening a file or directory that is not guaranteed
  * to be owned by root.
  *
+ * We decided to go for two different functions to decrease ambiguity and
+ * increase security. Previously there was only `safe_open`, which had an
+ * optional parameter in the same way as `open`.
+ *
  * @param pathname The path to open.
  * @param flags Same flags as for system open().
- * @param ... Optional mode argument, as per system open().
+ * @param perms Permissions for file, only relevant on file creation.
  * @return Same errors as open().
  */
-int safe_open(const char *pathname, int flags, ...)
+int safe_open_create_perms(
+        const char *const pathname,
+        int flags,
+        const mode_t perms)
 {
     if (flags & O_TRUNC)
     {
@@ -511,27 +531,15 @@ int safe_open(const char *pathname, int flags, ...)
         return -1;
     }
 
-    mode_t mode;
-    if (flags & O_CREAT)
-    {
-        va_list ap;
-        va_start(ap, flags);
-        mode = va_arg(ap, int);
-        va_end(ap);
-    }
-    else
-    {
-        mode = 0;
-    }
-
 #ifdef __MINGW32__
     // Windows gets off easy. No symlinks there.
-    return open(pathname, flags, mode);
+    return open(pathname, flags, perms);
 #else // !__MINGW32__
 
     const size_t path_bufsize = strlen(pathname) + 1;
     char path[path_bufsize];
     const size_t res_len = StringCopy(pathname, path, path_bufsize);
+    UNUSED(res_len);
     assert(res_len == strlen(pathname));
     int currentfd;
     const char *first_dir;
@@ -665,7 +673,7 @@ int safe_open(const char *pathname, int flags, ...)
                 {
                     *restore_slash = '/';
                 }
-                int filefd = openat(currentfd, component, flags, mode);
+                int filefd = openat(currentfd, component, flags, perms);
                 if (filefd < 0)
                 {
                     if ((stat_before_result < 0  && !(orig_flags & O_EXCL)  && errno == EEXIST) ||
@@ -766,6 +774,11 @@ int safe_open(const char *pathname, int flags, ...)
 #endif // !__MINGW32__
 }
 
+FILE *safe_fopen(const char *const path, const char *const mode)
+{
+    return safe_fopen_create_perms(path, mode, S_IWUSR | S_IRUSR);
+}
+
 /**
  * Opens a file safely. It will follow symlinks, but only if the symlink is trusted,
  * that is, if the owner of the symlink and the owner of the target are the same,
@@ -778,9 +791,13 @@ int safe_open(const char *pathname, int flags, ...)
  *
  * @param pathname The path to open.
  * @param flags Same mode as for system fopen().
+ * @param ... Optional permissions argument, same as in safe_open()
  * @return Same errors as fopen().
  */
-FILE *safe_fopen(const char *path, const char *mode)
+FILE *safe_fopen_create_perms(
+        const char *const path,
+        const char *const mode,
+        const mode_t perms)
 {
     if (!path || !mode)
     {
@@ -812,11 +829,15 @@ FILE *safe_fopen(const char *path, const char *mode)
         case 't':
             flags |= O_TEXT;
             break;
-        default:
+        case '\0':
             break;
+        default:
+            ProgrammingError("Invalid flag for fopen: %s", mode);
+            return NULL;
         }
     }
-    int fd = safe_open(path, flags, 0666);
+
+    int fd = safe_open_create_perms(path, flags, perms);
     if (fd < 0)
     {
         return NULL;

@@ -785,8 +785,12 @@ static void GetNameInfo3(EvalContext *ctx)
         Log(LOG_LEVEL_ERR, "I don't understand what architecture this is");
     }
 
-    strcpy(workbuf, "compiled_on_");
-    strcat(workbuf, CanonifyName(AUTOCONF_SYSNAME));
+    char compile_str[] = "compiled_on_";
+    size_t compile_str_len = sizeof(compile_str);
+    strcpy(workbuf, compile_str);
+
+    strlcat(workbuf, CanonifyName(AUTOCONF_SYSNAME),
+            CF_BUFSIZE - compile_str_len);
     EvalContextClassPutHard(ctx, workbuf, "source=agent");
     Log(LOG_LEVEL_VERBOSE, "GNU autoconf class from compile time: %s", workbuf);
 

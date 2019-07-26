@@ -100,7 +100,7 @@ void CryptoDeInitialize()
             unlink(randfile); /* do not reuse entropy */
         }
 
-        chmod(randfile, 0600);
+        chmod(randfile, CF_PERMS_DEFAULT);
         EVP_cleanup();
         CleanupOpenSSLThreadLocks();
         ERR_free_strings();

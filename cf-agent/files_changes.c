@@ -816,6 +816,4 @@ void FileChangesLogChange(const char *file, FileState status, char *msg, const P
 
     fprintf(fp, "%lld,%s,%s,%c,%s\n", (long long) now, handle, file, FileStateToChar(status), msg);
     fclose(fp);
-
-    safe_chmod(fname, 0600);
 }

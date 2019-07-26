@@ -269,7 +269,7 @@ bool WriteBuiltinFailsafePolicyToPath(const char *filename)
 
     Log(LOG_LEVEL_INFO, "Writing built-in failsafe policy to '%s'", filename);
 
-    FILE *fout = fopen(filename, "w");
+    FILE *fout = safe_fopen_create_perms(filename, "w", CF_PERMS_DEFAULT);
     if (!fout)
     {
         Log(LOG_LEVEL_ERR, "Unable to write failsafe to '%s' (fopen: %s)", filename, GetErrorStr());

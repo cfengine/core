@@ -232,19 +232,13 @@ int RemoveKeys(const char *input, bool must_be_coherent)
 
 static bool KeepKeyPromisesRSA(RSA *pair, const char *public_key_file, const char *private_key_file)
 {
-    int fd = safe_open_create_perms(private_key_file, O_WRONLY | O_CREAT | O_TRUNC, CF_PERMS_DEFAULT);
-
-    if (fd < 0)
-    {
-        Log(LOG_LEVEL_ERR, "Couldn't open private key file '%s' (open: %s)", private_key_file, GetErrorStr());
-        return false;
-    }
-
-    FILE *fp = fdopen(fd, "w");
+    FILE *fp = safe_fopen_create_perms(private_key_file, "w",
+                                       CF_PERMS_DEFAULT);
     if (fp == NULL)
     {
-        Log(LOG_LEVEL_ERR, "Error while writing private key file '%s' (fdopen: %s)", private_key_file, GetErrorStr());
-        close(fd);
+        Log(LOG_LEVEL_ERR,
+            "Error while writing private key file '%s' (fopen: %s)",
+            private_key_file, GetErrorStr());
         return false;
     }
 
@@ -261,19 +255,12 @@ static bool KeepKeyPromisesRSA(RSA *pair, const char *public_key_file, const cha
         return false;
     }
 
-    fd = safe_open_create_perms(public_key_file, O_WRONLY | O_CREAT | O_TRUNC, CF_PERMS_DEFAULT);
-
-    if (fd < 0)
+    fp = safe_fopen_create_perms(public_key_file, "w", CF_PERMS_DEFAULT);
+    if (fp == NULL)
     {
-        Log(LOG_LEVEL_ERR, "Couldn't open public key file '%s' (open: %s)",
+        Log(LOG_LEVEL_ERR,
+            "Error while writing public key file '%s' (fopen: %s)",
             public_key_file, GetErrorStr());
-        return false;
-    }
-
-    if ((fp = fdopen(fd, "w")) == NULL)
-    {
-        Log(LOG_LEVEL_ERR, "Error while writing public key file '%s' (fdopen: %s)", public_key_file, GetErrorStr());
-        close(fd);
         return false;
     }
 

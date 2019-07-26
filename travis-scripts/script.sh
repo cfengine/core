@@ -59,7 +59,7 @@ chmod -R go-w .
 
 if [ "$JOB_TYPE" = acceptance_tests_common ]
 then
-    ./testall --tests=common
+    ./testall --printlog --tests=common
     exit
 fi
 

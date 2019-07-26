@@ -181,7 +181,8 @@ Policy *SelectAndLoadPolicy(GenericAgentConfig *config, EvalContext *ctx, bool v
 
             char filename[PATH_MAX];
             GetReleaseIdFile(GetInputDir(), filename, sizeof(filename));
-            FILE *release_id_stream = safe_fopen(filename, "w");
+            FILE *release_id_stream = safe_fopen_create_perms(filename, "w",
+                                                              CF_PERMS_DEFAULT);
             if (release_id_stream == NULL)
             {
                 Log(LOG_LEVEL_ERR, "Failed to open the release_id file for writing during failsafe");

@@ -135,7 +135,7 @@ static void ReportToLog(const char *message)
 
 static void ReportToFile(const char *logfile, const char *message)
 {
-    FILE *fp = safe_fopen(logfile, "a");
+    FILE *fp = safe_fopen_create_perms(logfile, "a", CF_PERMS_DEFAULT);
     if (!fp)
     {
         Log(LOG_LEVEL_ERR, "Could not open log file '%s', message '%s'. (fopen: %s)", logfile, message, GetErrorStr());

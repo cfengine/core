@@ -121,7 +121,7 @@ static int GenerateAvahiConfig(const char *path)
 {
     FILE *fout;
     Writer *writer = NULL;
-    fout = safe_fopen(path, "w+");
+    fout = safe_fopen_create_perms(path, "w+", CF_PERMS_DEFAULT);
     if (fout == NULL)
     {
         Log(LOG_LEVEL_ERR, "Unable to open '%s'", path);

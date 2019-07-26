@@ -232,7 +232,7 @@ int RemoveKeys(const char *input, bool must_be_coherent)
 
 static bool KeepKeyPromisesRSA(RSA *pair, const char *public_key_file, const char *private_key_file)
 {
-    int fd = safe_open(private_key_file, O_WRONLY | O_CREAT | O_TRUNC, 0600);
+    int fd = safe_open_create_perms(private_key_file, O_WRONLY | O_CREAT | O_TRUNC, CF_PERMS_DEFAULT);
 
     if (fd < 0)
     {
@@ -261,7 +261,7 @@ static bool KeepKeyPromisesRSA(RSA *pair, const char *public_key_file, const cha
         return false;
     }
 
-    fd = safe_open(public_key_file, O_WRONLY | O_CREAT | O_TRUNC, 0600);
+    fd = safe_open_create_perms(public_key_file, O_WRONLY | O_CREAT | O_TRUNC, CF_PERMS_DEFAULT);
 
     if (fd < 0)
     {

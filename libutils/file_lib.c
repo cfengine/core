@@ -28,6 +28,7 @@
 #include <logging.h>
 
 #include <alloc.h>
+#include <definitions.h>                               /* CF_PERMS_DEFAULT */
 #include <libgen.h>
 #include <logging.h>
 #include <string_lib.h>                                         /* memcchr */
@@ -83,7 +84,7 @@ bool File_Copy(const char *src, const char *dst)
         return false;
     }
 
-    FILE *out = safe_fopen(dst, "w");
+    FILE *out = safe_fopen_create_perms(dst, "w", CF_PERMS_DEFAULT);
     if (out == NULL)
     {
         Log(LOG_LEVEL_ERR, "Could not open '%s' (%s)", dst, strerror(errno));
@@ -486,7 +487,7 @@ void RestoreUmask(mode_t old_mask)
  */
 int safe_open(const char *pathname, int flags)
 {
-    return safe_open_create_perms(pathname, flags, S_IWUSR | S_IRUSR);
+    return safe_open_create_perms(pathname, flags, CF_PERMS_DEFAULT);
 }
 
 /**
@@ -776,7 +777,7 @@ int safe_open_create_perms(
 
 FILE *safe_fopen(const char *const path, const char *const mode)
 {
-    return safe_fopen_create_perms(path, mode, S_IWUSR | S_IRUSR);
+    return safe_fopen_create_perms(path, mode, CF_PERMS_DEFAULT);
 }
 
 /**
@@ -1168,7 +1169,9 @@ cleanup:
  */
 int safe_creat(const char *pathname, mode_t mode)
 {
-    return safe_open(pathname, O_CREAT | O_WRONLY | O_TRUNC, mode);
+    return safe_open_create_perms(pathname,
+                                  O_CREAT | O_WRONLY | O_TRUNC,
+                                  mode);
 }
 
 // Windows implementation in Enterprise.

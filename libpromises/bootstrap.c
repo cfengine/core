@@ -279,12 +279,6 @@ bool WriteBuiltinFailsafePolicyToPath(const char *filename)
     fputs(bootstrap_content, fout);
     fclose(fout);
 
-    if (chmod(filename, S_IRUSR | S_IWUSR) == -1)
-    {
-        Log(LOG_LEVEL_ERR, "Failed setting permissions on generated failsafe file '%s'", filename);
-        return false;
-    }
-
     return true;
 }
 

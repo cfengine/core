@@ -14,6 +14,58 @@ and =#+end_src= tags.
 *NOTE:* Agent output should be *identical* between a normal execution and a dry
 run. This means that some examples are poor candidates for automatic testing.
 
+=prep= sections can not handle /heredoc/, so don't try to use them to setup an
+environment, instead, use echo to build up a file.
+
+#+CAPTION: Example error showing issue with usage of heredoc in prep
+#+begin_example
+Q: "...r/bin/perl /hom": processing /home/nickanderson/Northern.Tech/CFEngine/core/tests/acceptance/../../examples/execresult.cf: Running prep 'EOF'Can't exec "EOF": No such file or directory at /home/nickanderson/Northern.Tech/CFEngine/core/tests/acceptance/../../examples/remake_outputs.pl line 227.
+#+end_example
+
+So, don't do this:
+
+#+CAPTION: BAD: example using heredoc inside prep section
+#+begin_example
+  ,#+begin_src prep
+  #@ ```
+  #@ rm -rf /tmp/testhere
+  #@ mkdir -p /tmp/testhere
+  #@ touch /tmp/testhere/a
+  #@ touch /tmp/testhere/b
+  #@ touch /tmp/testhere/c
+  #@ touch /tmp/testhere/d
+  #@ touch /tmp/testhere/e
+  #@ cat << EOF >/tmp/testhere/echo-stdout-and-stderr
+  #@ #!/usr/bin/env sh
+  #@ echo stderr >&2
+  #@ echo stdout
+  #@ EOF
+  #@ chmod +x /tmp/testhere/echo-stdout-and-stderr
+  #@ ```
+  ,#+end_src
+#+end_example 
+
+Instead, do this:
+
+#+CAPTION: GOOD example using echo instead of heredoc during setup
+#+begin_example
+  ,#+begin_src prep
+  #@ ```
+  #@ rm -rf /tmp/testhere
+  #@ mkdir -p /tmp/testhere
+  #@ touch /tmp/testhere/a
+  #@ touch /tmp/testhere/b
+  #@ touch /tmp/testhere/c
+  #@ touch /tmp/testhere/d
+  #@ touch /tmp/testhere/e
+  #@ echo "#!/usr/bin/env sh" >/tmp/testhere/echo-stdout-and-stderr
+  #@ echo "echo stderr >&2" >>/tmp/testhere/echo-stdout-and-stderr
+  #@ echo "echo stdout" >>/tmp/testhere/echo-stdout-and-stderr
+  #@ chmod +x /tmp/testhere/echo-stdout-and-stderr
+  #@ ```
+  ,#+end_src
+#+end_example
+
 ** Troubleshooting Outputs Test Failures
 This section is primarily intended for CFEngine Staff as not all build output is
 publicly available.
@@ -83,8 +135,9 @@ normal run and a dry-run where warnings are promised.
 #+NAME: Testing classfiltercsv()
 #+CALL: test_check_outputs()
 
+
 :DRAWER:
-#+RESULTS: Testing classfiltercsv()
+#+RESULTS: Example Testing classfiltercsv()
 #+begin_example
 ======================================================================
 Testsuite started at 2019-04-13 18:40:54

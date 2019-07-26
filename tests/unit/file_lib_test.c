@@ -24,6 +24,7 @@
 
 #include <test.h>
 
+#include <definitions.h>
 #include <file_lib.h>
 #include <bool.h>
 
@@ -510,8 +511,9 @@ static void test_safe_open_create_safe_inserted_symlink(void)
     // safe_open() instead.
     //switch_symlink_hook();
 
-    int fd;
-    assert_true((fd = safe_open(TEST_LINK, O_RDONLY | O_CREAT, 0644)) >= 0);
+    int fd = safe_open_create_perms(TEST_LINK, O_RDONLY | O_CREAT,
+                                    CF_PERMS_SHARED);
+    assert_true(fd >= 0);
     check_contents(fd, TEST_STRING);
     close(fd);
 
@@ -530,7 +532,8 @@ static void test_safe_open_create_alternating_symlink(void)
     // safe_open() instead.
     //switch_symlink_hook();
 
-    assert_true(safe_open(TEST_LINK, O_RDONLY | O_CREAT, 0644) < 0);
+    assert_true(safe_open_create_perms(TEST_LINK, O_RDONLY | O_CREAT,
+                                       CF_PERMS_SHARED) < 0);
     assert_int_equal(errno, EACCES);
 
     return_to_test_dir();
@@ -547,7 +550,8 @@ static void test_safe_open_create_unsafe_switched_symlink(void)
     // safe_open() instead.
     //switch_symlink_hook();
 
-    assert_true(safe_open(TEST_FILE, O_RDONLY | O_CREAT, 0644) < 0);
+    assert_true(safe_open_create_perms(TEST_FILE, O_RDONLY | O_CREAT,
+                                       CF_PERMS_SHARED) < 0);
     assert_int_equal(errno, ENOLINK);
 
     return_to_test_dir();
@@ -564,7 +568,8 @@ static void test_safe_open_create_switched_dangling_symlink(void)
     // safe_open() instead.
     //switch_symlink_hook();
 
-    assert_true(safe_open(TEST_FILE, O_RDONLY | O_CREAT, 0644) < 0);
+    assert_true(safe_open_create_perms(TEST_FILE, O_RDONLY | O_CREAT,
+                                       CF_PERMS_SHARED) < 0);
     assert_int_equal(errno, EACCES);
 
     return_to_test_dir();
@@ -581,7 +586,8 @@ static void test_safe_open_create_switched_dangling_symlink_exclusively(void)
     // safe_open() instead.
     //switch_symlink_hook();
 
-    assert_true(safe_open(TEST_FILE, O_WRONLY | O_CREAT | O_EXCL, 0644) < 0);
+    assert_true(safe_open_create_perms(TEST_FILE, O_WRONLY | O_CREAT | O_EXCL,
+                                       CF_PERMS_SHARED) < 0);
     assert_int_equal(errno, EEXIST);
 
     return_to_test_dir();
@@ -596,7 +602,8 @@ static void test_safe_open_create_dangling_symlink_exclusively(void)
     TEST_SYMLINK_TARGET = "/etc/file-that-for-sure-does-not-exist";
     switch_symlink_hook();
 
-    assert_true(safe_open(TEST_FILE, O_WRONLY | O_CREAT | O_EXCL, 0644) < 0);
+    assert_true(safe_open_create_perms(TEST_FILE, O_WRONLY | O_CREAT | O_EXCL,
+                                       CF_PERMS_SHARED) < 0);
     assert_int_equal(errno, EEXIST);
 
     return_to_test_dir();
@@ -613,7 +620,7 @@ static void test_safe_open_switched_dangling_symlink(void)
     // safe_open() instead.
     //switch_symlink_hook();
 
-    assert_true(safe_open(TEST_FILE, O_RDONLY, 0644) < 0);
+    assert_true(safe_open(TEST_FILE, O_RDONLY) < 0);
     assert_int_equal(errno, ENOENT);
 
     return_to_test_dir();
@@ -904,7 +911,8 @@ static void test_safe_fopen(void)
     clearerr(fptr);
     fclose(fptr);
 
-    assert_true(fptr = safe_fopen(TEST_FILE, "a"));
+    assert_true(fptr = safe_fopen_create_perms(TEST_FILE, "a",
+                                               CF_PERMS_DEFAULT));
     assert_int_not_equal(fread(&buf, 1, 1, fptr), 1);
     assert_true(ferror(fptr));
     clearerr(fptr);
@@ -922,7 +930,8 @@ static void test_safe_fopen(void)
     clearerr(fptr);
     fclose(fptr);
 
-    assert_true(fptr = safe_fopen(TEST_FILE, "a+"));
+    assert_true(fptr = safe_fopen_create_perms(TEST_FILE, "a+",
+                                               CF_PERMS_DEFAULT));
     assert_int_not_equal(fread(&buf, 1, 1, fptr), 1);
     assert_false(ferror(fptr));
     clearerr(fptr);
@@ -931,7 +940,8 @@ static void test_safe_fopen(void)
     clearerr(fptr);
     fclose(fptr);
 
-    assert_true(fptr = safe_fopen(TEST_FILE, "w"));
+    assert_true(fptr = safe_fopen_create_perms(TEST_FILE, "w",
+                                               CF_PERMS_DEFAULT));
     assert_int_not_equal(fread(&buf, 1, 1, fptr), 1);
     assert_true(ferror(fptr));
     clearerr(fptr);
@@ -940,7 +950,8 @@ static void test_safe_fopen(void)
     clearerr(fptr);
     fclose(fptr);
 
-    assert_true(fptr = safe_fopen(TEST_FILE, "w+"));
+    assert_true(fptr = safe_fopen_create_perms(TEST_FILE, "w+",
+                                               CF_PERMS_DEFAULT));
     assert_int_not_equal(fread(&buf, 1, 1, fptr), 1);
     assert_false(ferror(fptr));
     clearerr(fptr);
@@ -953,7 +964,8 @@ static void test_safe_fopen(void)
     assert_false(fptr = safe_fopen(TEST_FILE, "r"));
 
     unlink(TEST_FILE);
-    assert_true(fptr = safe_fopen(TEST_FILE, "a"));
+    assert_true(fptr = safe_fopen_create_perms(TEST_FILE, "a",
+                                               CF_PERMS_DEFAULT));
     assert_int_not_equal(fread(&buf, 1, 1, fptr), 1);
     assert_true(ferror(fptr));
     clearerr(fptr);
@@ -963,7 +975,8 @@ static void test_safe_fopen(void)
     fclose(fptr);
 
     unlink(TEST_FILE);
-    assert_true(fptr = safe_fopen(TEST_FILE, "w"));
+    assert_true(fptr = safe_fopen_create_perms(TEST_FILE, "w",
+                                               CF_PERMS_DEFAULT));
     assert_int_not_equal(fread(&buf, 1, 1, fptr), 1);
     assert_true(ferror(fptr));
     clearerr(fptr);
@@ -976,7 +989,8 @@ static void test_safe_fopen(void)
     assert_false(fptr = safe_fopen(TEST_FILE, "r+"));
 
     unlink(TEST_FILE);
-    assert_true(fptr = safe_fopen(TEST_FILE, "a+"));
+    assert_true(fptr = safe_fopen_create_perms(TEST_FILE, "a+",
+                                               CF_PERMS_DEFAULT));
     assert_int_not_equal(fread(&buf, 1, 1, fptr), 1);
     assert_false(ferror(fptr));
     clearerr(fptr);
@@ -986,7 +1000,8 @@ static void test_safe_fopen(void)
     fclose(fptr);
 
     unlink(TEST_FILE);
-    assert_true(fptr = safe_fopen(TEST_FILE, "w+"));
+    assert_true(fptr = safe_fopen_create_perms(TEST_FILE, "w+",
+                                               CF_PERMS_DEFAULT));
     assert_int_not_equal(fread(&buf, 1, 1, fptr), 1);
     assert_false(ferror(fptr));
     clearerr(fptr);

@@ -2740,7 +2740,8 @@ static void SummarizeTransaction(EvalContext *ctx, const TransactionContext *tc,
                 }
             }
 
-            FILE *fout = safe_fopen(logname, "a");
+            FILE *fout = safe_fopen_create_perms(logname, "a",
+                                                 CF_PERMS_DEFAULT);
 
             if (fout == NULL)
             {

@@ -786,7 +786,6 @@ static char FileStateToChar(FileState status)
 
 void FileChangesLogChange(const char *file, FileState status, char *msg, const Promise *pp)
 {
-    FILE *fp;
     char fname[CF_BUFSIZE];
     time_t now = time(NULL);
 
@@ -806,7 +805,7 @@ void FileChangesLogChange(const char *file, FileState status, char *msg, const P
     }
 #endif /* !__MINGW32__ */
 
-    fp = safe_fopen(fname, "a");
+    FILE *fp = safe_fopen_create_perms(fname, "a", CF_PERMS_DEFAULT);
     if (fp == NULL)
     {
         Log(LOG_LEVEL_ERR, "Could not write to the hash change log. (fopen: %s)", GetErrorStr());

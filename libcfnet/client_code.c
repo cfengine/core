@@ -546,7 +546,7 @@ bool CompareHashNet(const char *file1, const char *file2, bool encrypt, AgentCon
 
 static bool EncryptCopyRegularFileNet(const char *source, const char *dest, off_t size, AgentConnection *conn)
 {
-    int dd, blocksize = 2048, n_read = 0, plainlen, more = true, finlen, cnt = 0;
+    int blocksize = 2048, n_read = 0, plainlen, more = true, finlen, cnt = 0;
     int tosend, cipherlen = 0;
     char *buf, in[CF_BUFSIZE], out[CF_BUFSIZE], workbuf[CF_BUFSIZE], cfchangedstr[265];
     unsigned char iv[32] =
@@ -562,7 +562,8 @@ static bool EncryptCopyRegularFileNet(const char *source, const char *dest, off_
 
     unlink(dest);                /* To avoid link attacks */
 
-    if ((dd = safe_open(dest, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY, 0600)) == -1)
+    int dd = safe_open_create_perms(dest, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY, CF_PERMS_DEFAULT);
+    if (dd == -1)
     {
         Log(LOG_LEVEL_ERR,
             "Copy from server '%s' to destination '%s' failed (open: %s)",
@@ -745,7 +746,7 @@ bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
 
     unlink(dest);                /* To avoid link attacks */
 
-    int dd = safe_open(dest, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY, 0600);
+    int dd = safe_open_create_perms(dest, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY, CF_PERMS_DEFAULT);
     if (dd == -1)
     {
         Log(LOG_LEVEL_ERR,

@@ -368,7 +368,7 @@ char *CreateBootstrapIDFile(const char *workdir)
     assert(workdir != NULL);
     char *filename = BootstrapIDFilename(workdir);
 
-    FILE *file = safe_fopen(filename, "w");
+    FILE *file = safe_fopen_create_perms(filename, "w", CF_PERMS_DEFAULT);
     if (file == NULL)
     {
         Log(LOG_LEVEL_ERR, "Unable to write bootstrap id file '%s' (fopen: %s)", filename, GetErrorStr());

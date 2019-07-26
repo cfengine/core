@@ -1,0 +1,62 @@
+#######################################################
+#
+# Test execresult() captures stdout and stderr
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-3103" }
+        string => "Test that execresult captures both stdout and stderr";
+
+  vars:
+      "result_with_stdout_stderr"
+        string => execresult("$(G.echo) stdout; $(G.echo) stderr >&2", "useshell");
+
+      "result_with_stdout"
+        string => execresult("$(G.echo) stdout", "useshell");
+
+      "result_with_stderr"
+        string => execresult("$(G.echo) stderr >&2", "useshell");
+
+  classes:
+      "pass_stdout_stderr"
+        expression => strcmp( "stdout$(const.n)stderr", $(result_with_stdout_stderr) );
+
+      "pass_stdout"
+        expression => strcmp( "stdout", $(result_with_stdout) );
+
+      "pass_stderr"
+        expression => strcmp( "stderr", $(result_with_stderr) );
+
+  reports:
+
+    !pass_stdout_stderr::
+      "result_with_stdout_stderr == '$(result_with_stdout_stderr)', expected 'stdout$(const.n)stderr'";
+    !pass_stdout::
+      "result_with_stdout == '$(result_with_stdout_stderr)', expected 'stdout'";
+    !pass_stderr::
+      "result_with_stderr == '$(result_with_stderr)', expected 'stderr'";
+
+    pass_stdout_stderr.pass_stdout.pass_stderr::
+      "$(this.promise_filename) Pass";
+
+    !(pass_stdout_stderr.pass_stdout.pass_stderr)::
+      "$(this.promise_filename) FAIL";
+
+}
+
+bundle agent __main__
+{
+  methods: "test";
+}

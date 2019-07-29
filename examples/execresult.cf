@@ -29,6 +29,10 @@
 #@ touch /tmp/testhere/c
 #@ touch /tmp/testhere/d
 #@ touch /tmp/testhere/e
+#@ echo "#!/usr/bin/env sh" >/tmp/testhere/echo-stdout-and-stderr
+#@ echo "echo stderr >&2" >>/tmp/testhere/echo-stdout-and-stderr
+#@ echo "echo stdout" >>/tmp/testhere/echo-stdout-and-stderr
+#@ chmod +x /tmp/testhere/echo-stdout-and-stderr
 #@ ```
 #+end_src
 ###############################################################################
@@ -41,10 +45,24 @@ body common control
 bundle agent example
 {
   vars:
-      "my_result" string => execresult("/bin/ls /tmp/testhere","noshell");
+      "my_result"
+        string => execresult("/bin/ls /tmp/testhere", noshell);
+
+      "my_result_with_stdout_and_stderr"
+        string => execresult("/tmp/testhere/echo-stdout-and-stderr", noshell);
+
+      "my_result_with_stdout"
+        string => execresult("/tmp/testhere/echo-stdout-and-stderr 2>/dev/null", useshell);
+
+      "my_result_with_stderr"
+        string => execresult("/tmp/testhere/echo-stdout-and-stderr 1>/dev/null", useshell);
 
   reports:
       "/bin/ls /tmp/testhere returned '$(my_result)'";
+      "my_result_with_stdout_and_stderr == '$(my_result_with_stdout_and_stderr)'";
+      "my_result_with_stdout == '$(my_result_with_stdout)'";
+      "my_result_with_stderr == '$(my_result_with_stderr)'";
+
 }
 #+end_src
 ###############################################################################
@@ -54,6 +72,11 @@ bundle agent example
 #@ b
 #@ c
 #@ d
-#@ e'
+#@ e
+#@ echo-stdout-and-stderr'
+#@ R: my_result_with_stdout_and_stderr == 'stderr
+#@ stdout'
+#@ R: my_result_with_stdout == 'stdout'
+#@ R: my_result_with_stderr == 'stderr'
 #@ ```
 #+end_src

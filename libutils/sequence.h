@@ -274,6 +274,6 @@ Seq *SeqStringDeserialize(const char *serialized);
  * Shallow copy. SeqDestroy is safe, it will not free the contents of argv.
  *
  */
-Seq *SeqFromArgv(int argc, char **argv);
+Seq *SeqFromArgv(int argc, const char *const *argv);
 
 #endif

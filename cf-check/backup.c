@@ -8,14 +8,14 @@
 
 #if defined(__MINGW32__) || !defined(LMDB)
 
-int backup_main(int argc, char **argv)
+int backup_main(ARG_UNUSED int argc, ARG_UNUSED const char *const *const argv)
 {
     Log(LOG_LEVEL_ERR,
         "cf-check backup not available on this platform/build");
     return 1;
 }
 
-int backup_files(Seq *filenames)
+int backup_files(ARG_UNUSED Seq *filenames)
 {
     Log(LOG_LEVEL_INFO,
         "database backup not available on this platform/build");
@@ -103,9 +103,14 @@ int backup_files(Seq *filenames)
     return 0;
 }
 
-int backup_main(int argc, char **argv)
+int backup_main(int argc, const char *const *const argv)
 {
     Seq *files = argv_to_lmdb_files(argc, argv);
+    if (files == NULL || SeqLength(files) == 0)
+    {
+        Log(LOG_LEVEL_ERR, "No database files to back up");
+        return -1;
+    }
     const int ret = backup_files(files);
     SeqDestroy(files);
     return ret;

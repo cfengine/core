@@ -4,6 +4,6 @@
 #include <sequence.h>
 
 size_t diagnose_files(Seq *filenames, Seq **corrupt);
-int diagnose_main(int argc, char **argv);
+int diagnose_main(int argc, const char *const *argv);
 
 #endif

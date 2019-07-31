@@ -3517,7 +3517,6 @@ static bool PrependMultiLinePackageItem(
     const Attributes *a,
     const Promise *pp)
 {
-    // FIXME: This function always returns false
     assert(a != NULL);
     static char name[CF_MAXVARSIZE] = ""; /* GLOBAL_X */
     static char arch[CF_MAXVARSIZE] = ""; /* GLOBAL_X */
@@ -3563,7 +3562,7 @@ static bool PrependMultiLinePackageItem(
         }
     }
 
-    return false;
+    return true;
 }
 
 static bool PrependListPackageItem(

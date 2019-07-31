@@ -989,7 +989,6 @@ static void DeleteSQLColumns(char **name_table, char **type_table, int *size_tab
 
 static bool CheckSQLDataType(char *type, char *ref_type, const Promise *pp)
 {
-    // FIXME: This function always returns true
     static char *const aliases[3][2] =
         {
             {"varchar", "character@varying"},
@@ -998,6 +997,7 @@ static bool CheckSQLDataType(char *type, char *ref_type, const Promise *pp)
         };
 
     int i;
+    bool ret = true;
 
     for (i = 0; aliases[i][0] != NULL; i++)
     {
@@ -1008,6 +1008,7 @@ static bool CheckSQLDataType(char *type, char *ref_type, const Promise *pp)
             {
                 Log(LOG_LEVEL_VERBOSE, "Promised column in database '%s' has a non-matching type (%s != %s)",
                       pp->promiser, ref_type, type);
+                ret = false;
             }
         }
         else
@@ -1016,11 +1017,12 @@ static bool CheckSQLDataType(char *type, char *ref_type, const Promise *pp)
             {
                 Log(LOG_LEVEL_VERBOSE, "Promised column in database '%s' has a non-matching type (%s != %s)",
                       pp->promiser, ref_type, type);
+                ret = false;
             }
         }
     }
 
-    return true;
+    return ret;
 }
 
 /*****************************************************************************/

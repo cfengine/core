@@ -546,17 +546,15 @@ static void LeapDetection(void)
 
 static void PublishEnvironment(Item *classes)
 {
-    FILE *fp;
-    Item *ip;
-
     unlink(ENVFILE_NEW);
 
-    if ((fp = fopen(ENVFILE_NEW, "a")) == NULL)
+    FILE *fp = safe_fopen(ENVFILE_NEW, "a");
+    if (fp == NULL)
     {
         return;
     }
 
-    for (ip = classes; ip != NULL; ip = ip->next)
+    for (Item *ip = classes; ip != NULL; ip = ip->next)
     {
         fprintf(fp, "%s\n", ip->name);
     }

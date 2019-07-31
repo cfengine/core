@@ -412,6 +412,7 @@ static void CFNetSetVerbosity(CFNetOptions *opts)
 
 static int CFNetRun(CFNetOptions *opts, char **args, char *hostnames)
 {
+    assert(opts != NULL);
     assert(args != NULL);
     CFNetSetVerbosity(opts);
 

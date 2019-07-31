@@ -816,7 +816,7 @@ FILE *safe_fopen(const char *path, const char *mode)
             break;
         }
     }
-    int fd = safe_open(path, flags, 0666);
+    int fd = safe_open(path, flags, 0600);
     if (fd < 0)
     {
         return NULL;

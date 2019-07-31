@@ -407,6 +407,7 @@ void MonNetworkGatherData(double *cf_this)
    older. This mirrors the persistence of the maxima classes */
 
     const char* const statedir = GetStateDir();
+    const mode_t old_umask = SetUmask(0077);
 
     for (i = 0; i < ATTR; i++)
     {
@@ -459,5 +460,6 @@ void MonNetworkGatherData(double *cf_this)
         DeleteItemList(out[i]);
     }
 
+    RestoreUmask(old_umask);
     free(vbuff);
 }

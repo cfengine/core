@@ -804,16 +804,17 @@ static bool PackageListInstalledFromCommand(EvalContext *ctx,
 */
 static void ReportSoftware(PackageManager *list)
 {
-    FILE *fout;
     PackageManager *mp = NULL;
     PackageItem *pi;
     char name[CF_BUFSIZE];
 
     GetSoftwareCacheFilename(name);
 
-    if ((fout = fopen(name, "w")) == NULL)
+    FILE *fout = safe_fopen(name, "w");
+    if (fout == NULL)
     {
-        Log(LOG_LEVEL_ERR, "Cannot open the destination file '%s'. (fopen: %s)",
+        Log(LOG_LEVEL_ERR,
+            "Cannot open the destination file '%s'. (fopen: %s)",
             name, GetErrorStr());
         return;
     }
@@ -2635,7 +2636,8 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
 
             Log(LOG_LEVEL_INFO, "Installing %-.39s...", pp->promiser);
 
-            command_string = xmalloc(estimated_size + strlen(a.packages.package_add_command) + 2);
+            estimated_size += strlen(a.packages.package_add_command) + 2;
+            command_string = xmalloc(estimated_size);
             strcpy(command_string, a.packages.package_add_command);
             break;
 
@@ -2651,7 +2653,8 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
 
             Log(LOG_LEVEL_INFO, "Deleting %-.39s...", pp->promiser);
 
-            command_string = xmalloc(estimated_size + strlen(a.packages.package_delete_command) + 2);
+            estimated_size += strlen(a.packages.package_delete_command) + 2;
+            command_string = xmalloc(estimated_size);
             strcpy(command_string, a.packages.package_delete_command);
             break;
 
@@ -2667,9 +2670,9 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
 
             Log(LOG_LEVEL_INFO, "Updating %-.39s...", pp->promiser);
 
-            command_string = xcalloc(1, estimated_size + strlen(a.packages.package_update_command) + 2);
+            estimated_size += strlen(a.packages.package_update_command) + 2;
+            command_string = xcalloc(1, estimated_size);
             strcpy(command_string, a.packages.package_update_command);
-
             break;
 
         case PACKAGE_ACTION_VERIFY:
@@ -2682,7 +2685,8 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
                 return false;
             }
 
-            command_string = xmalloc(estimated_size + strlen(a.packages.package_verify_command) + 2);
+            estimated_size += strlen(a.packages.package_verify_command) + 2;
+            command_string = xmalloc(estimated_size);
             strcpy(command_string, a.packages.package_verify_command);
 
             verify = true;
@@ -2733,14 +2737,15 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
                     const Promise *const ppi = pi->pp;
                     Attributes a = GetPackageAttributes(ctx, ppi);
 
-                    char *offset = command_string + strlen(command_string);
+                    const size_t command_len = strlen(command_string);
+                    char *offset = command_string + command_len;
 
                     if ((a.packages.package_file_repositories) && ((action == PACKAGE_ACTION_ADD) || (action == PACKAGE_ACTION_UPDATE)))
                     {
                         const char *sp = PrefixLocalRepository(a.packages.package_file_repositories, pi->name);
                         if (sp != NULL)
                         {
-                            strcat(offset, sp);
+                            strlcat(offset, sp, estimated_size - command_len);
                         }
                         else
                         {
@@ -2788,7 +2793,8 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
                 {
                     if (pi->name)
                     {
-                        char *offset = command_string + strlen(command_string);
+                        const size_t command_len = strlen(command_string);
+                        char *offset = command_string + command_len;
 
                         if (a.packages.package_file_repositories &&
                             (action == PACKAGE_ACTION_ADD ||
@@ -2797,7 +2803,7 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
                             const char *sp = PrefixLocalRepository(a.packages.package_file_repositories, pi->name);
                             if (sp != NULL)
                             {
-                                strcpy(offset, sp);
+                                strlcpy(offset, sp, estimated_size - command_len);
                             }
                             else
                             {

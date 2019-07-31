@@ -27,4 +27,8 @@ systemd_DATA  += systemd/cf-monitord.service
 systemd_DATA  += systemd/cf-postgres.service
 systemd_DATA  += systemd/cf-runalerts.service
 systemd_DATA  += systemd/cf-serverd.service
+
+install-data-local:
+	-systemctl daemon-reload
+
 endif

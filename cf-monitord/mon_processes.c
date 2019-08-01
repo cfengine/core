@@ -27,6 +27,7 @@
 #include <mon.h>
 #include <item_lib.h>
 #include <files_interfaces.h>
+#include <file_lib.h> // SetUmask()
 #include <pipes.h>
 #include <systype.h>
 #include <known_dirs.h>
@@ -61,7 +62,9 @@ void MonProcessesGatherData(double *cf_this)
     xsnprintf(vbuff, sizeof(vbuff), "%s/cf_users", GetStateDir());
     MapName(vbuff);
 
+    const mode_t old_umask = SetUmask(0077);
     RawSaveItemList(userList, vbuff, NewLineMode_Unix);
+    RestoreUmask(old_umask);
     DeleteItemList(userList);
 
     Log(LOG_LEVEL_VERBOSE, "(Users,root,other) = (%d,%d,%d)",

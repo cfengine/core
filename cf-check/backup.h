@@ -4,6 +4,6 @@
 #include <sequence.h>
 
 int backup_files(Seq *filenames);
-int backup_main(int argc, char **argv);
+int backup_main(int argc, const char *const *argv);
 
 #endif

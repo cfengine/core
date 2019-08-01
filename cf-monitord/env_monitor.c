@@ -41,6 +41,7 @@
 #include <exec_tools.h>
 #include <generic_agent.h> // WritePID
 #include <files_lib.h>
+#include <file_lib.h> // SetUmask()
 #include <unix.h>
 #include <verify_measurements.h>
 #include <verify_classes.h>
@@ -546,12 +547,14 @@ static void LeapDetection(void)
 
 static void PublishEnvironment(Item *classes)
 {
-    FILE *fp;
     Item *ip;
 
     unlink(ENVFILE_NEW);
 
-    if ((fp = fopen(ENVFILE_NEW, "a")) == NULL)
+    const mode_t old_umask = SetUmask(0077);
+    FILE *fp = safe_fopen(ENVFILE_NEW, "a");
+    RestoreUmask(old_umask);
+    if (fp == NULL)
     {
         return;
     }

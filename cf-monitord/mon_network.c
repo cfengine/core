@@ -30,6 +30,7 @@
 #include <files_names.h>
 #include <files_interfaces.h>
 #include <files_lib.h>
+#include <file_lib.h> // SetUmask()
 #include <pipes.h>
 #include <known_dirs.h>
 
@@ -421,7 +422,9 @@ void MonNetworkGatherData(double *cf_this)
         }
 
         SetNetworkEntropyClasses(CanonifyName(ECGSOCKS[i].name), "in", in[i]);
+        const mode_t old_umask = SetUmask(0077);
         RawSaveItemList(in[i], vbuff, NewLineMode_Unix);
+        RestoreUmask(old_umask);
         DeleteItemList(in[i]);
         Log(LOG_LEVEL_DEBUG, "Saved in netstat data in '%s'", vbuff);
     }
@@ -446,7 +449,9 @@ void MonNetworkGatherData(double *cf_this)
         }
 
         SetNetworkEntropyClasses(CanonifyName(ECGSOCKS[i].name), "out", out[i]);
+        const mode_t old_umask = SetUmask(0077);
         RawSaveItemList(out[i], vbuff, NewLineMode_Unix);
+        RestoreUmask(old_umask);
         Log(LOG_LEVEL_DEBUG, "Saved out netstat data in '%s'", vbuff);
         DeleteItemList(out[i]);
     }

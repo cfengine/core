@@ -46,9 +46,11 @@
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000
 /* The deprecated is the easy way to setup threads for OpenSSL. */
 #ifdef OPENSSL_NO_DEPRECATED
 void CRYPTO_set_id_callback(unsigned long (*func)(void));
+#endif
 #endif
 
 static void RandomSeed(void);
@@ -770,11 +772,15 @@ static pthread_mutex_t *cf_openssl_locks = NULL;
 
 
 #ifndef __MINGW32__
+#if OPENSSL_VERSION_NUMBER < 0x10100000
 unsigned long ThreadId_callback(void)
 {
     return (unsigned long) pthread_self();
 }
 #endif
+#endif
+
+#if OPENSSL_VERSION_NUMBER < 0x10100000
 
 static void OpenSSLLock_callback(int mode, int index, char *file, int line)
 {
@@ -799,6 +805,8 @@ static void OpenSSLLock_callback(int mode, int index, char *file, int line)
         }
     }
 }
+
+#endif // Callback only for openssl < 1.1.0
 
 static void SetupOpenSSLThreadLocks(void)
 {
@@ -833,6 +841,8 @@ static void SetupOpenSSLThreadLocks(void)
 #ifndef __MINGW32__
     CRYPTO_set_id_callback((unsigned long (*)())ThreadId_callback);
 #endif
+    // This is a no-op macro for OpenSSL >= 1.1.0
+    // The callback function is not used (or defined) then
     CRYPTO_set_locking_callback((void (*)())OpenSSLLock_callback);
 }
 

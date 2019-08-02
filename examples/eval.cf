@@ -19,7 +19,7 @@ bundle agent run
       "values[6]" string => ""; # 0
       "values[7]" string => "3 / 0"; # inf but not an error
       "values[8]" string => "3^3";
-      "values[9]" string => "-1^2.1"; # -nan but not an error
+      # "values[9]" string => "-1^2.1"; # 'nan' or '-nan' (on some platforms)
       "values[10]" string => "sin(20)";
       "values[11]" string => "cos(20)";
       "values[19]" string => "20 % 3"; # remainder
@@ -57,7 +57,6 @@ bundle agent run
 #@ R: math/infix eval('') = '0.000000'
 #@ R: math/infix eval('3 / 0') = 'inf'
 #@ R: math/infix eval('3^3') = '27.000000'
-#@ R: math/infix eval('-1^2.1') = '-nan'
 #@ R: math/infix eval('sin(20)') = '0.912945'
 #@ R: math/infix eval('cos(20)') = '0.408082'
 #@ R: math/infix eval('20 % 3') = '2.000000'

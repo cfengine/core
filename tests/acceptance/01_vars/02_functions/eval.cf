@@ -59,6 +59,7 @@ bundle agent init
       "values[40]" string => "10 < 11";
       "values[41]" string => "10 <= 10";
       "values[42]" string => "10 <= 11";
+      "values[43]" -> { "CFE-2762" } string => "1 * .75";
 }
 
 
@@ -124,6 +125,7 @@ bundle agent check
       "verify[40]" string => '1.000000';
       "verify[41]" string => '1.000000';
       "verify[42]" string => '1.000000';
+      "verify[43]" -> { "CFE-2762" } string => '0.750000';
 
       "indices" slist => getindices("verify");
 
@@ -136,7 +138,7 @@ bundle agent check
                    ok_17, ok_18, ok_19, ok_20, ok_21, ok_23, ok_24,
                    ok_25, ok_26, ok_27, ok_28, ok_29, ok_30, ok_31,
                    ok_32, ok_33, ok_34, ok_35, ok_36, ok_37, ok_38,
-                   ok_39, ok_40, ok_41, ok_42
+                   ok_39, ok_40, ok_41, ok_42, ok_43
       };
 
   reports:

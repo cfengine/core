@@ -1456,6 +1456,8 @@ dnl ######################################################################
 dnl systemd unit file installation
 dnl ######################################################################
 
+SYSTEMD_SERVICE_PATH=""
+
 AC_ARG_WITH(systemd-service, AS_HELP_STRING([--with-systemd-service=PATH],
     [Install systemd service file in given path. The default is no, but if specified, the default path is /usr/lib/systemd/system.]),
 [
@@ -1465,17 +1467,30 @@ AC_ARG_WITH(systemd-service, AS_HELP_STRING([--with-systemd-service=PATH],
         else
             SYSTEMD_SERVICE_PATH="$withval"
         fi
-        AC_SUBST([SYSTEMD_SERVICE_PATH])
-        AC_CONFIG_FILES([misc/systemd/cfengine3.service])
-        AC_CONFIG_FILES([misc/systemd/cf-apache.service])
-        AC_CONFIG_FILES([misc/systemd/cf-execd.service])
-        AC_CONFIG_FILES([misc/systemd/cf-hub.service])
-        AC_CONFIG_FILES([misc/systemd/cf-monitord.service])
-        AC_CONFIG_FILES([misc/systemd/cf-postgres.service])
-        AC_CONFIG_FILES([misc/systemd/cf-runalerts.service])
-        AC_CONFIG_FILES([misc/systemd/cf-serverd.service])
     fi
+]
+,
+[
+    AC_PATH_PROG([systemctl], [systemctl], [no])
+    AS_IF([test "x$systemctl" == "xno"],
+    [AC_MSG_CHECKING([Not a systemd system])],
+    [
+        SYSTEMD_SERVICE_PATH=/usr/lib/systemd/system
+    ])
 ])
+
+AS_IF([test "x$SYSTEMD_SERVICE_PATH" = "x"], [], [
+    AC_SUBST([SYSTEMD_SERVICE_PATH])
+    AC_CONFIG_FILES([misc/systemd/cfengine3.service])
+    AC_CONFIG_FILES([misc/systemd/cf-apache.service])
+    AC_CONFIG_FILES([misc/systemd/cf-execd.service])
+    AC_CONFIG_FILES([misc/systemd/cf-hub.service])
+    AC_CONFIG_FILES([misc/systemd/cf-monitord.service])
+    AC_CONFIG_FILES([misc/systemd/cf-postgres.service])
+    AC_CONFIG_FILES([misc/systemd/cf-runalerts.service])
+    AC_CONFIG_FILES([misc/systemd/cf-serverd.service])
+])
+
 AM_CONDITIONAL([WITH_SYSTEMD_SERVICE], [test -n "$SYSTEMD_SERVICE_PATH"])
 
 AC_ARG_WITH(environment-path, AS_HELP_STRING([--with-environment-path=PATH],

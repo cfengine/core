@@ -30,7 +30,7 @@ if [ "$TRAVIS_OS_NAME" = osx ]
 then
     ./autogen.sh --enable-debug --prefix=$INSTDIR --bindir=$INSTDIR/var/cfengine/bin
     gmake --version
-    gmake CFLAGS="-Werror -Wno-pointer-sign"
+    gmake CFLAGS="-Werror -Wall -Wno-pointer-sign"
     gmake --debug -C tests/unit check
     exit
 else
@@ -55,7 +55,7 @@ then
     exit
 elif [ "$JOB_TYPE" = compile_and_unit_test_asan ]
 then
-    make CFLAGS="-Werror -Wno-pointer-sign -fsanitize=address" LDFLAGS="-fsanitize=address -pthread"
+    make CFLAGS="-Werror -Wall -Wno-pointer-sign -fsanitize=address" LDFLAGS="-fsanitize=address -pthread"
     make -C tests/unit CFLAGS="-fsanitize=address" LDFLAGS="-fsanitize=address -pthread" check
     make -C tests/load CFLAGS="-fsanitize=address" LDFLAGS="-fsanitize=address -pthread" check
     exit

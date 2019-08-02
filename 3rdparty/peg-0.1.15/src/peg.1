@@ -13,9 +13,9 @@
 .\" 
 .\" THE SOFTWARE IS PROVIDED 'AS IS'.  USE ENTIRELY AT YOUR OWN RISK.
 .\" 
-.\" Last edited: 2012-05-17 15:38:34 by piumarta on emilia
+.\" Last edited: 2013-09-09 14:58:44 by piumarta on emilia
 .\"
-.TH PEG 1 "April 2012" "Version 0.1"
+.TH PEG 1 "September 2013" "Version 0.1"
 .SH NAME
 peg, leg \- parser generators
 .SH SYNOPSIS
@@ -30,7 +30,7 @@ peg, leg \- parser generators
 .I peg
 and
 .I leg
-are tools for generating recursive-descent parsers: programs that
+are tools for generating recursive\-descent parsers: programs that
 perform pattern matching on text.  They process a Parsing Expression
 Grammar (PEG) [Ford 2004] to produce a program that recognises legal
 sentences of that grammar.
@@ -69,10 +69,10 @@ with, a client program.  Each time the client program calls
 the parser consumes input text according to the parsing rules,
 starting from the first rule in the grammar.
 .IR yyparse ()
-returns non-zero if the input could be parsed according to the
+returns non\-zero if the input could be parsed according to the
 grammar; it returns zero if the input could not be parsed.
 .PP
-The prefix 'yy' or 'YY' is prepended to all externally-visible symbols
+The prefix 'yy' or 'YY' is prepended to all externally\-visible symbols
 in the generated parser.  This is intended to reduce the risk of
 namespace pollution in client programs.  (The choice of 'yy' is
 historical; see
@@ -106,7 +106,7 @@ input specifies a grammar with a single rule (called 'start') that is
 satisfied when the input contains the string "username".
 .nf
 
-    start <- "username"
+    start <\- "username"
 
 .fi
 (The quotation marks are
@@ -114,7 +114,7 @@ satisfied when the input contains the string "username".
 part of the matched text; they serve to indicate a literal string to
 be matched.)  In other words,
 .IR  yyparse ()
-in the generated C source will return non-zero only if the next eight
+in the generated C source will return non\-zero only if the next eight
 characters read from the input spell the word "username".  If the
 input contains anything else,
 .IR yyparse ()
@@ -127,12 +127,12 @@ alternative clause to the 'start' rule that will match any single
 character if "username" is not found.
 .nf
 
-    start <- "username"
+    start <\- "username"
            / .
 
 .fi
 .IR yyparse ()
-now always returns non-zero (except at the very end of the input).  To
+now always returns non\-zero (except at the very end of the input).  To
 do something useful we can add actions to the rules.  These actions
 are performed after a complete match is found (starting from the first
 rule) and are chosen according to the 'path' taken through the grammar
@@ -140,7 +140,7 @@ to match the input.  (Linguists would call this path a 'phrase
 marker'.)
 .nf
 
-    start <- "username"    { printf("%s\\n", getlogin()); }
+    start <\- "username"    { printf("%s\\n", getlogin()); }
            / < . >         { putchar(yytext[0]); }
 
 .fi
@@ -162,7 +162,7 @@ If the above grammar is placed in the file
 running the command
 .nf
 
-    peg -o username.c username.peg
+    peg \-o username.c username.peg
 
 .fi
 will save the corresponding parser in the file
@@ -187,7 +187,7 @@ program as follows.
 A grammar consists of a set of named rules.
 .nf
 
-    name <- pattern
+    name <\- pattern
 
 .fi
 The
@@ -200,7 +200,7 @@ The element stands for the entire pattern in the rule with the given
 .TP
 .BR \(dq characters \(dq
 A character or string enclosed in double quotes is matched literally.
-The ANSI C esacpe sequences are recognised within the
+The ANSI C escape sequences are recognised within the
 .IR characters .
 .TP
 .BR ' characters '
@@ -212,19 +212,19 @@ character from the set, with escape characters recognised as above.
 If the set begins with an uparrow (^) then the set is negated (the
 element matches any character
 .I not
-in the set).  Any pair of characters separated with a dash (-)
+in the set).  Any pair of characters separated with a dash (\-)
 represents the range of characters from the first to the second,
 inclusive.  A single alphabetic character or underscore is matched by
 the following set.
 .nf
 
-    [a-zA-Z_]
+    [a\-zA\-Z_]
 
 .fi
-Similarly, the following matches  any single non-digit character.
+Similarly, the following matches  any single non\-digit character.
 .nf
 
-    [^0-9]
+    [^0\-9]
 
 .fi
 .TP
@@ -233,11 +233,11 @@ A dot matches any character.  Note that the only time this fails is at
 the end of file, where there is no character to match.
 .TP
 .BR ( \ pattern\  )
-Parentheses are used for grouping (modifying the precendence of the
+Parentheses are used for grouping (modifying the precedence of the
 operators described below).
 .TP
 .BR { \ action\  }
-Curly braces surround actions.  The action is arbitray C source code
+Curly braces surround actions.  The action is arbitrary C source code
 to be executed at the end of matching.  Any braces within the action
 must be properly nested.  Any input text that was matched before the
 action and delimited by angle brackets (see below) is made available
@@ -287,7 +287,7 @@ are consumed and the match succeeds.  If no occurrences of
 are present on the input, the match succeeds anyway.
 .PP
 The above elements and suffixes can be converted into predicates (that
-match arbitray input text and subsequently succeed or fail
+match arbitrary input text and subsequently succeed or fail
 .I without
 consuming that input) with the following prefixes:
 .TP
@@ -323,7 +323,7 @@ In this predicate the simple C
 statement) is evaluated immediately when the parser reaches the
 predicate.  If the
 .I expression
-yields non-zero (true) the 'match' succeeds and the parser continues
+yields non\-zero (true) the 'match' succeeds and the parser continues
 with the next element in the pattern.  If the
 .I expression
 yields zero (false) the 'match' fails and the parser backs up to look
@@ -338,7 +338,7 @@ if each individual element within it matches, from left to right.
 Sequences can be separated into disjoint alternatives by the
 alternation operator '/'.
 .TP
-.RB sequence-1\  / \ sequence-2\  / \ ...\  / \ sequence-N
+.RB sequence\-1\  / \ sequence\-2\  / \ ...\  / \ sequence\-N
 Each sequence is tried in turn until one of them matches, at which
 time matching for the overall pattern succeeds.  If none of the
 sequences matches then the match of the overall pattern fails.
@@ -351,12 +351,12 @@ against a pattern containing literals, names (representing other
 rules), and various operators (written as prefixes, suffixes,
 juxtaposition for sequencing and and infix alternation operator) that
 modify how the elements within the pattern are matched.  Matches are
-made from left to right, 'descending' into named sub-rules as they are
+made from left to right, 'descending' into named sub\-rules as they are
 encountered.  If the matching process fails, the parser 'back tracks'
 ('rewinding' the input appropriately in the process) to find the
 nearest alternative 'path' through the grammar.  In other words the
-parser performs a depth-first, left-to-right search for the first
-successfully-matching path through the rules.  If found, the actions
+parser performs a depth\-first, left\-to\-right search for the first
+successfully\-matching path through the rules.  If found, the actions
 along the successful path are executed (in the order they were
 encountered).
 .PP
@@ -372,15 +372,15 @@ grammars is shown below.  This will both illustrate and formalise
 the above description.
 .nf
 
-    Grammar         <- Spacing Definition+ EndOfFile
+    Grammar         <\- Spacing Definition+ EndOfFile
     
-    Definition      <- Identifier LEFTARROW Expression
-    Expression      <- Sequence ( SLASH Sequence )*
-    Sequence        <- Prefix*
-    Prefix          <- AND Action
+    Definition      <\- Identifier LEFTARROW Expression
+    Expression      <\- Sequence ( SLASH Sequence )*
+    Sequence        <\- Prefix*
+    Prefix          <\- AND Action
                      / ( AND | NOT )? Suffix
-    Suffix          <- Primary ( QUERY / STAR / PLUS )?
-    Primary         <- Identifier !LEFTARROW
+    Suffix          <\- Primary ( QUERY / STAR / PLUS )?
+    Primary         <\- Identifier !LEFTARROW
                      / OPEN Expression CLOSE
                      / Literal
                      / Class
@@ -389,36 +389,36 @@ the above description.
                      / BEGIN
                      / END
     
-    Identifier      <- < IdentStart IdentCont* > Spacing
-    IdentStart      <- [a-zA-Z_]
-    IdentCont       <- IdentStart / [0-9]
-    Literal         <- ['] < ( !['] Char  )* > ['] Spacing
+    Identifier      <\- < IdentStart IdentCont* > Spacing
+    IdentStart      <\- [a\-zA\-Z_]
+    IdentCont       <\- IdentStart / [0\-9]
+    Literal         <\- ['] < ( !['] Char  )* > ['] Spacing
                      / ["] < ( !["] Char  )* > ["] Spacing
-    Class           <- '[' < ( !']' Range )* > ']' Spacing
-    Range           <- Char '-' Char / Char
-    Char            <- '\\\\' [abefnrtv'"\\[\\]\\\\]
-                     / '\\\\' [0-3][0-7][0-7]
-                     / '\\\\' [0-7][0-7]?
-                     / '\\\\' '-'
+    Class           <\- '[' < ( !']' Range )* > ']' Spacing
+    Range           <\- Char '\-' Char / Char
+    Char            <\- '\\\\' [abefnrtv'"\\[\\]\\\\]
+                     / '\\\\' [0\-3][0\-7][0\-7]
+                     / '\\\\' [0\-7][0\-7]?
+                     / '\\\\' '\-'
                      / !'\\\\' .
-    LEFTARROW       <- '<-' Spacing
-    SLASH           <- '/' Spacing
-    AND             <- '&' Spacing
-    NOT             <- '!' Spacing
-    QUERY           <- '?' Spacing
-    STAR            <- '*' Spacing
-    PLUS            <- '+' Spacing
-    OPEN            <- '(' Spacing
-    CLOSE           <- ')' Spacing
-    DOT             <- '.' Spacing
-    Spacing         <- ( Space / Comment )*
-    Comment         <- '#' ( !EndOfLine . )* EndOfLine
-    Space           <- ' ' / '\\t' / EndOfLine
-    EndOfLine       <- '\\r\\n' / '\\n' / '\\r'
-    EndOfFile       <- !.
-    Action          <- '{' < [^}]* > '}' Spacing
-    BEGIN           <- '<' Spacing
-    END             <- '>' Spacing
+    LEFTARROW       <\- '<\-' Spacing
+    SLASH           <\- '/' Spacing
+    AND             <\- '&' Spacing
+    NOT             <\- '!' Spacing
+    QUERY           <\- '?' Spacing
+    STAR            <\- '*' Spacing
+    PLUS            <\- '+' Spacing
+    OPEN            <\- '(' Spacing
+    CLOSE           <\- ')' Spacing
+    DOT             <\- '.' Spacing
+    Spacing         <\- ( Space / Comment )*
+    Comment         <\- '#' ( !EndOfLine . )* EndOfLine
+    Space           <\- ' ' / '\\t' / EndOfLine
+    EndOfLine       <\- '\\r\\n' / '\\n' / '\\r'
+    EndOfFile       <\- !.
+    Action          <\- '{' < [^}]* > '}' Spacing
+    BEGIN           <\- '<' Spacing
+    END             <\- '>' Spacing
 
 .fi
 .SH LEG GRAMMARS
@@ -443,43 +443,43 @@ generated C parser code
 the code that implements the parser itself.
 .TP
 .IB name\  = \ pattern
-The 'assignment' operator replaces the left arrow operator '<-'.
+The 'assignment' operator replaces the left arrow operator '<\-'.
 .TP
-.B rule-name
+.B rule\-name
 Hyphens can appear as letters in the names of rules.  Each hyphen is
 converted into an underscore in the generated C source code.  A single
-single hyphen '-' is a legal rule name.
+single hyphen '\-' is a legal rule name.
 .nf
 
-    -       = [ \\t\\n\\r]*
-    number  = [0-9]+                 -
-    name    = [a-zA-Z_][a-zA_Z_0-9]* -
-    l-paren = '('                    -
-    r-paren = ')'                    -
+    \-       = [ \\t\\n\\r]*
+    number  = [0\-9]+                 \-
+    name    = [a\-zA\-Z_][a\-zA_Z_0\-9]* \-
+    l\-paren = '('                    \-
+    r\-paren = ')'                    \-
     
 .fi
 This example shows how ignored whitespace can be obvious when reading
 the grammar and yet unobtrusive when placed liberally at the end of
 every rule associated with a lexical element.
 .TP
-.IB seq-1\  | \ seq-2
+.IB seq\-1\  | \ seq\-2
 The alternation operator is vertical bar '|' rather than forward
 slash '/'.  The
 .I peg
 rule
 .nf
 
-    name <- sequence-1
-          / sequence-2
-          / sequence-3
+    name <\- sequence\-1
+          / sequence\-2
+          / sequence\-3
 
 .fi
 is therefore written
 .nf
 
-    name = sequence-1
-         | sequence-2
-         | sequence-3
+    name = sequence\-1
+         | sequence\-2
+         | sequence\-3
          ;
 
 .fi
@@ -501,7 +501,7 @@ and
 .I yyleng
 are not available inside these actions, but the pointer variable
 .I yy
-is available to give the code access to any user-defined members
+is available to give the code access to any user\-defined members
 of the parser state (see "CUSTOMISING THE PARSER" below).
 Note also that
 .I exp
@@ -530,20 +530,20 @@ following '%%' is copied verbatim to the generated C parser code
 the parser implementation code.
 .TP
 .BI $$\ = \ value
-A sub-rule can return a semantic
+A sub\-rule can return a semantic
 .I value
-from an action by assigning it to the pseudo-variable '$$'.  All
+from an action by assigning it to the pseudo\-variable '$$'.  All
 semantic values must have the same type (which defaults to 'int').
 This type can be changed by defining YYSTYPE in a declaration section.
 .TP
 .IB identifier : name
-The semantic value returned (by assigning to '$$') from the sub-rule
+The semantic value returned (by assigning to '$$') from the sub\-rule
 .I name
 is associated with the
 .I identifier
 and can be referred to in subsequent actions.
 .PP
-The desk calclator example below illustrates the use of '$$' and ':'.
+The desk calculator example below illustrates the use of '$$' and ':'.
 .SH LEG EXAMPLE: A DESK CALCULATOR
 The extensions in
 .I leg
@@ -553,7 +553,7 @@ as 'main') to be kept within a single source file.  To illustrate this
 we show a simple desk calculator supporting the four common arithmetic
 operators and named variables.  The intermediate results of arithmetic
 evaluation will be accumulated on an implicit stack by returning them
-as semantic values from sub-rules.
+as semantic values from sub\-rules.
 .nf
 
     %{
@@ -562,7 +562,7 @@ as semantic values from sub-rules.
     int vars[26];
     %}
     
-    Stmt    = - e:Expr EOL                  { printf("%d\\n", e); }
+    Stmt    = \- e:Expr EOL                  { printf("%d\\n", e); }
             | ( !EOL . )* EOL               { printf("error\\n"); }
     
     Expr    = i:ID ASSIGN s:Sum             { $$ = vars[i] = s; }
@@ -570,7 +570,7 @@ as semantic values from sub-rules.
     
     Sum     = l:Product
                     ( PLUS  r:Product       { l += r; }
-                    | MINUS r:Product       { l -= r; }
+                    | MINUS r:Product       { l \-= r; }
                     )*                      { $$ = l; }
     
     Product = l:Value
@@ -582,17 +582,17 @@ as semantic values from sub-rules.
             | i:ID !ASSIGN                  { $$ = vars[i]; }
             | OPEN i:Expr CLOSE             { $$ = i; }
     
-    NUMBER  = < [0-9]+ >    -               { $$ = atoi(yytext); }
-    ID      = < [a-z]  >    -               { $$ = yytext[0] - 'a'; }
-    ASSIGN  = '='           -
-    PLUS    = '+'           -
-    MINUS   = '-'           -
-    TIMES   = '*'           -
-    DIVIDE  = '/'           -
-    OPEN    = '('           -
-    CLOSE   = ')'           -
+    NUMBER  = < [0\-9]+ >    \-               { $$ = atoi(yytext); }
+    ID      = < [a\-z]  >    \-               { $$ = yytext[0] \- 'a'; }
+    ASSIGN  = '='           \-
+    PLUS    = '+'           \-
+    MINUS   = '\-'           \-
+    TIMES   = '*'           \-
+    DIVIDE  = '/'           \-
+    OPEN    = '('           \-
+    CLOSE   = ')'           \-
     
-    -       = [ \\t]*
+    \-       = [ \\t]*
     EOL     = '\\n' | '\\r\\n' | '\\r' | ';'
     
     %%
@@ -612,9 +612,9 @@ grammars is shown below.  This will both illustrate and formalise the
 above description.
 .nf
 
-    grammar =       -
+    grammar =       \-
                     ( declaration | definition )+
-                    trailer? end-of-file
+                    trailer? end\-of\-file
     
     declaration =   '%{' < ( !'%}' . )* > RPERCENT
     
@@ -643,47 +643,47 @@ above description.
     |               BEGIN
     |               END
     
-    identifier =    < [-a-zA-Z_][-a-zA-Z_0-9]* > -
+    identifier =    < [\-a\-zA\-Z_][\-a\-zA\-Z_0\-9]* > \-
     
-    literal =       ['] < ( !['] char )* > ['] -
-    |               ["] < ( !["] char )* > ["] -
+    literal =       ['] < ( !['] char )* > ['] \-
+    |               ["] < ( !["] char )* > ["] \-
     
-    class =         '[' < ( !']' range )* > ']' -
+    class =         '[' < ( !']' range )* > ']' \-
     
-    range =         char '-' char | char
+    range =         char '\-' char | char
     
     char =          '\\\\' [abefnrtv'"\\[\\]\\\\]
-    |               '\\\\' [0-3][0-7][0-7]
-    |               '\\\\' [0-7][0-7]?
+    |               '\\\\' [0\-3][0\-7][0\-7]
+    |               '\\\\' [0\-7][0\-7]?
     |               !'\\\\' .
     
-    action =        '{' < braces* > '}' -
+    action =        '{' < braces* > '}' \-
     
     braces =        '{' braces* '}'
     |               !'}' .
     
-    EQUAL =         '=' -
-    COLON =         ':' -
-    SEMICOLON =     ';' -
-    BAR =           '|' -
-    AND =           '&' -
-    NOT =           '!' -
-    QUERY =         '?' -
-    STAR =          '*' -
-    PLUS =          '+' -
-    OPEN =          '(' -
-    CLOSE =         ')' -
-    DOT =           '.' -
-    BEGIN =         '<' -
-    END =           '>' -
-    TILDE =         '~' -
-    RPERCENT =      '%}' -
-    
-    - =             ( space | comment )*
-    space =         ' ' | '\\t' | end-of-line
-    comment =       '#' ( !end-of-line . )* end-of-line
-    end-of-line =   '\\r\\n' | '\\n' | '\\r'
-    end-of-file =   !.
+    EQUAL =         '=' \-
+    COLON =         ':' \-
+    SEMICOLON =     ';' \-
+    BAR =           '|' \-
+    AND =           '&' \-
+    NOT =           '!' \-
+    QUERY =         '?' \-
+    STAR =          '*' \-
+    PLUS =          '+' \-
+    OPEN =          '(' \-
+    CLOSE =         ')' \-
+    DOT =           '.' \-
+    BEGIN =         '<' \-
+    END =           '>' \-
+    TILDE =         '~' \-
+    RPERCENT =      '%}' \-
+
+    \- =             ( space | comment )*
+    space =         ' ' | '\\t' | end\-of\-line
+    comment =       '#' ( !end\-of\-line . )* end\-of\-line
+    end\-of\-line =   '\\r\\n' | '\\n' | '\\r'
+    end\-of\-file =   !.
 
 .fi
 .SH CUSTOMISING THE PARSER
@@ -691,7 +691,7 @@ The following symbols can be redefined in declaration sections to
 modify the generated parser code.
 .TP
 .B YYSTYPE
-The semantic value type.  The pseudo-variable '$$' and the
+The semantic value type.  The pseudo\-variable '$$' and the
 identifiers 'bound' to rule results with the colon operator ':' should
 all be considered as being declared to have this type.  The default
 value is 'int'.
@@ -788,7 +788,7 @@ be redefined to declare them 'static'.
 If this symbol is defined during compilation of a generated parser
 then global parser state will be kept in a structure of
 type 'yycontext' which can be declared as a local variable.  This
-allows multiple instances of parsers to coexist and to be thread-safe.
+allows multiple instances of parsers to coexist and to be thread\-safe.
 The parsing function
 .IR yyparse ()
 will be declared to expect a first argument of type 'yycontext *', an
@@ -801,7 +801,7 @@ A trivial but complete example is as follows.
 
     #define YY_CTX_LOCAL
 
-    #include "the-generated-parser.peg.c"
+    #include "the\-generated\-parser.peg.c"
 
     int main()
     {
@@ -814,13 +814,13 @@ A trivial but complete example is as follows.
 .fi
 Note that if this symbol is undefined then the compiled parser will
 statically allocate its global state and will be neither reentrant nor
-thread-safe.
+thread\-safe.
 Note also that the parser yycontext structure is initialised automatically
 the first time
 .IR yyparse ()
 is called; this structure
 .B must
-therefore be properly initliased to zero before the first call to
+therefore be properly initialised to zero before the first call to
 .IR yyparse ().
 .TP
 .B YY_CTX_MEMBERS
@@ -829,7 +829,7 @@ can be defined to expand to any additional member field declarations
 that the client would like included in the declaration of
 the 'yycontext' structure type.  These additional members are
 otherwise ignored by the generated parser.  The instance
-of 'yycontext' associated with the currently-active parser is
+of 'yycontext' associated with the currently\-active parser is
 available within actions as the pointer variable
 .IR yy .
 .TP
@@ -847,15 +847,15 @@ that perform many actions after a single successful match, could increase
 this to avoid unnecessary buffer reallocation.
 .TP
 .BI YY_MALLOC( YY , \ SIZE )
-The memory allocator for all parser-related storage.  The parameters
+The memory allocator for all parser\-related storage.  The parameters
 are the current yycontext structure and the number of bytes to
 allocate.  The default definition is:
 .RI malloc( SIZE )
 .TP
 .BI YY_REALLOC( YY , \ PTR , \ SIZE )
-The memory reallocator for dynamically-grown storage (such as text
+The memory reallocator for dynamically\-grown storage (such as text
 buffers and variable stacks).  The parameters are the current
-yycontext structure, the previously-allocated storage, and the number
+yycontext structure, the previously\-allocated storage, and the number
 of bytes to which that storage should be grown.  The default definition is:
 .RI realloc( PTR , \ SIZE )
 .TP
@@ -886,13 +886,13 @@ This variable indicates the number of characters in 'yytext'.
 .TP
 .B yycontext *yy
 This variable points to the instance of 'yycontext' associated with
-the currently-active parser.
+the currently\-active parser.
 .PP
 Programs that wish to release all the resources associated with a
 parser can use the following function.
 .TP
 .BI yyrelease(yycontext * yy )
-Returns all parser-allocated storage associated with
+Returns all parser\-allocated storage associated with
 .I yy
 to the system.  The storage will be reallocated on the next call to
 .IR yyparse ().
@@ -910,7 +910,7 @@ The
 .I yy
 variable passed to actions contains the state of the parser plus any
 additional fields defined by YY_CTX_MEMBERS.  Theses fields can be
-used to store application-specific information that is global to a
+used to store application\-specific information that is global to a
 particular call of
 .IR yyparse ().
 A trivial but complete
@@ -934,7 +934,7 @@ to print the number of lines of input that were read.
       int count;
     %}
 
-    Char    = ('\\n' | '\\r\\n' | '\\r')        { yy->count++ }
+    Char    = ('\\n' | '\\r\\n' | '\\r')        { yy\->count++ }
             | .
 
     %%
@@ -994,11 +994,11 @@ often 'direct' and implies trivial repetition.
 .nf
 
     # (6.7.6)
-    direct-abstract-declarator =
-        LPAREN abstract-declarator RPAREN
-    |   direct-abstract-declarator? LBRACKET assign-expr? RBRACKET
-    |   direct-abstract-declarator? LBRACKET STAR RBRACKET
-    |   direct-abstract-declarator? LPAREN param-type-list? RPAREN
+    direct\-abstract\-declarator =
+        LPAREN abstract\-declarator RPAREN
+    |   direct\-abstract\-declarator? LBRACKET assign\-expr? RBRACKET
+    |   direct\-abstract\-declarator? LBRACKET STAR RBRACKET
+    |   direct\-abstract\-declarator? LPAREN param\-type\-list? RPAREN
 
 .fi
 The recursion can easily be eliminated by converting the parts of the
@@ -1006,19 +1006,56 @@ pattern following the recursion into a repeatable suffix.
 .nf
     
     # (6.7.6)
-    direct-abstract-declarator =
-        direct-abstract-declarator-head?
-        direct-abstract-declarator-tail*
+    direct\-abstract\-declarator =
+        direct\-abstract\-declarator\-head?
+        direct\-abstract\-declarator\-tail*
     
-    direct-abstract-declarator-head =
-        LPAREN abstract-declarator RPAREN
+    direct\-abstract\-declarator\-head =
+        LPAREN abstract\-declarator RPAREN
     
-    direct-abstract-declarator-tail =
-        LBRACKET assign-expr? RBRACKET
+    direct\-abstract\-declarator\-tail =
+        LBRACKET assign\-expr? RBRACKET
     |   LBRACKET STAR RBRACKET
-    |   LPAREN param-type-list? RPAREN
+    |   LPAREN param\-type\-list? RPAREN
 
 .fi
+.SH CAVEATS
+A parser that accepts empty input will
+.I always
+succeed.  Consider the following example, not atypical of a first
+attempt to write a PEG\-based parser:
+.nf
+
+    Program = Expression*
+    Expression = "whatever"
+    %%
+    int main() {
+      while (yyparse())
+        puts("success!");
+      return 0;
+    }
+
+.fi
+This program loops forever, no matter what (if any) input is provided
+on stdin.  Many fixes are possible, the easiest being to insist that
+the parser always consumes some non\-empty input.  Changing the first
+line to
+.nf
+
+    Program = Expression+
+
+.fi
+accomplishes this.  If the parser is expected to consume the entire
+input, then explicitly requiring the end\-of\-file is also highly
+recommended:
+.nf
+
+    Program = Expression+ !.
+
+.fi
+This works because the parser will only fail to match ("!" predicate)
+any character at all ("." expression) when it attempts to read beyond
+the end of the input.
 .SH BUGS
 You have to type 'man peg' to read the manual page for
 .IR leg (1).
@@ -1037,32 +1074,32 @@ and
 .B ~
 should really be named the other way around.
 .PP
-Several commonly-used
+Several commonly\-used
 .IR lex (1)
 features (yywrap(), yyin, etc.) are completely absent.
 .PP
-The generated parser foes not contain '#line' directives to direct C
+The generated parser does not contain '#line' directives to direct C
 compiler errors back to the grammar description when appropriate.
 .SH SEE ALSO
 D. Val Schorre,
-.I META II, a syntax-oriented compiler writing language,
-19th ACM National Conference, 1964, pp.\ 41.301--41.311.  Describes a
-self-implementing parser generator for analytic grammars with no
+.I META II, a syntax\-oriented compiler writing language,
+19th ACM National Conference, 1964, pp.\ 41.301\-\-41.311.  Describes a
+self\-implementing parser generator for analytic grammars with no
 backtracking.
 .PP
 Alexander Birman,
 .I The TMG Recognition Schema,
 Ph.D. dissertation, Princeton, 1970.  A mathematical treatment of the
-power and complexity of recursive-descent parsing with backtracking.
+power and complexity of recursive\-descent parsing with backtracking.
 .PP
 Bryan Ford,
-.I Parsing Expression Grammars: A Recognition-Based Syntactic Foundation,
+.I Parsing Expression Grammars: A Recognition\-Based Syntactic Foundation,
 ACM SIGPLAN Symposium on Principles of Programming Languages, 2004.
-Defines PEGs and analyses them in relation to context-free and regular
+Defines PEGs and analyses them in relation to context\-free and regular
 grammars.  Introduces the syntax adopted in
 .IR peg .
 .PP
-The standard Unix utilies
+The standard Unix utilities
 .IR lex (1)
 and
 .IR yacc (1)
@@ -1084,9 +1121,9 @@ The latest version of this software and documentation:
 .SH AUTHOR
 .IR peg ,
 .I leg
-and this manual page were written by Ian Piumarta (first-name at
-last-name dot com) while investigating the viablility of regular- and
-parsing-expression grammars for efficiently extracting type and
+and this manual page were written by Ian Piumarta (first\-name at
+last\-name dot com) while investigating the viability of regular and
+parsing\-expression grammars for efficiently extracting type and
 signature information from C header files.
 .PP
 Please send bug reports and suggestions for improvements to the author

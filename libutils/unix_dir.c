@@ -90,7 +90,11 @@ Dir *DirOpen(const char *dirname)
  */
 const struct dirent *DirRead(Dir *dir)
 {
+    assert(dir != NULL);
     errno = 0;
+#ifdef __linux__
+    return readdir((DIR *) dir->dirh); // Sets errno for error
+#else // "exotics" use readdir_r
 
     struct dirent *ret;
     int err = readdir_r((DIR *) dir->dirh, dir->entrybuf, &ret);
@@ -107,6 +111,7 @@ const struct dirent *DirRead(Dir *dir)
     }
 
     return ret;
+#endif
 }
 
 void DirClose(Dir *dir)

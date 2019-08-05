@@ -478,7 +478,7 @@ void RestoreUmask(mode_t old_mask)
 }
 
 /**
- * Opens a file safety, with default (strict) permissions on creation.
+ * Opens a file safely, with default (strict) permissions on creation.
  * See safe_open_create_perms for more documentation.
  *
  * @param pathname The path to open.
@@ -491,28 +491,27 @@ int safe_open(const char *pathname, int flags)
 }
 
 /**
- * Opens a file safely. It will follow symlinks, but only if the symlink is trusted,
- * that is, if the owner of the symlink and the owner of the target are the same,
- * or if the owner of the symlink is either root or the user running the current process.
- * All components are checked, even symlinks encountered in earlier parts of the
- * path name.
+ * Opens a file safely. It will follow symlinks, but only if the symlink is
+ * trusted, that is, if the owner of the symlink and the owner of the target are
+ * the same, or if the owner of the symlink is either root or the user running
+ * the current process. All components are checked, even symlinks encountered in
+ * earlier parts of the path name.
  *
- * It should always be used when opening a file or directory that is not guaranteed
- * to be owned by root.
+ * It should always be used when opening a file or directory that is not 
+ * guaranteed to be owned by root.
  *
- * We decided to go for two different functions to decrease ambiguity and
- * increase security. Previously there was only `safe_open`, which had an
- * optional parameter in the same way as `open`.
+ * safe_open and safe_fopen both default to secure (0600) file creation perms.
+ * The _create_perms variants allow you to explicitly set different permissions.
  *
- * @param pathname The path to open.
- * @param flags Same flags as for system open().
- * @param perms Permissions for file, only relevant on file creation.
- * @return Same errors as open().
+ * @param pathname The path to open
+ * @param flags Same flags as for system open()
+ * @param create_perms Permissions for file, only relevant on file creation
+ * @return Same errors as open()
+ * @see safe_fopen_create_perms()
+ * @see safe_open()
  */
 int safe_open_create_perms(
-        const char *const pathname,
-        int flags,
-        const mode_t perms)
+    const char *const pathname, int flags, const mode_t create_perms)
 {
     if (flags & O_TRUNC)
     {
@@ -534,7 +533,7 @@ int safe_open_create_perms(
 
 #ifdef __MINGW32__
     // Windows gets off easy. No symlinks there.
-    return open(pathname, flags, perms);
+    return open(pathname, flags, create_perms);
 #else // !__MINGW32__
 
     const size_t path_bufsize = strlen(pathname) + 1;
@@ -674,7 +673,7 @@ int safe_open_create_perms(
                 {
                     *restore_slash = '/';
                 }
-                int filefd = openat(currentfd, component, flags, perms);
+                int filefd = openat(currentfd, component, flags, create_perms);
                 if (filefd < 0)
                 {
                     if ((stat_before_result < 0  && !(orig_flags & O_EXCL)  && errno == EEXIST) ||
@@ -792,13 +791,11 @@ FILE *safe_fopen(const char *const path, const char *const mode)
  *
  * @param pathname The path to open.
  * @param flags Same mode as for system fopen().
- * @param ... Optional permissions argument, same as in safe_open()
+ * @param create_perms Permissions for file, only relevant on file creation.
  * @return Same errors as fopen().
  */
 FILE *safe_fopen_create_perms(
-        const char *const path,
-        const char *const mode,
-        const mode_t perms)
+    const char *const path, const char *const mode, const mode_t create_perms)
 {
     if (!path || !mode)
     {
@@ -830,15 +827,13 @@ FILE *safe_fopen_create_perms(
         case 't':
             flags |= O_TEXT;
             break;
-        case '\0':
-            break;
         default:
             ProgrammingError("Invalid flag for fopen: %s", mode);
             return NULL;
         }
     }
 
-    int fd = safe_open_create_perms(path, flags, perms);
+    int fd = safe_open_create_perms(path, flags, create_perms);
     if (fd < 0)
     {
         return NULL;

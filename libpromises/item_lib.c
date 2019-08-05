@@ -1020,9 +1020,8 @@ bool RawSaveItemList(const Item *liststart, const char *filename, NewLineMode ne
     strcat(new, CF_EDITED);
     unlink(new);                /* Just in case of races */
 
-    FILE *fp = safe_fopen_create_perms(new,
-                                       (new_line_mode == NewLineMode_Native) ? "wt" : "w",
-                                       CF_PERMS_DEFAULT);
+    FILE *fp = safe_fopen(
+        new, (new_line_mode == NewLineMode_Native) ? "wt" : "w");
     if (fp == NULL)
     {
         Log(LOG_LEVEL_ERR, "Couldn't write file '%s'. (fopen: %s)", new, GetErrorStr());

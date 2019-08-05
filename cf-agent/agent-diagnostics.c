@@ -102,7 +102,7 @@ AgentDiagnosticsResult AgentDiagnosticsCheckPrivateKey(const char *workdir)
     {
         res = AgentDiagnosticsResultNew(false, StringFormat("No private key found at '%s'", path));
     }
-    else if (sb.st_mode != (S_IFREG | CF_PERMS_DEFAULT))
+    else if (sb.st_mode != (S_IFREG | S_IWUSR | S_IRUSR))
     {
         res = AgentDiagnosticsResultNew(false, StringFormat("Private key found at '%s', but had incorrect permissions '%o'", path, sb.st_mode));
     }
@@ -125,7 +125,7 @@ AgentDiagnosticsResult AgentDiagnosticsCheckPublicKey(const char *workdir)
     {
         res = AgentDiagnosticsResultNew(false, StringFormat("No public key found at '%s'", path));
     }
-    else if (sb.st_mode != (S_IFREG | CF_PERMS_DEFAULT))
+    else if (sb.st_mode != (S_IFREG | S_IWUSR | S_IRUSR))
     {
         res = AgentDiagnosticsResultNew(false, StringFormat("Public key found at '%s', but had incorrect permissions '%o'", path, sb.st_mode));
     }

@@ -511,8 +511,8 @@ static void test_safe_open_create_safe_inserted_symlink(void)
     // safe_open() instead.
     //switch_symlink_hook();
 
-    int fd = safe_open_create_perms(TEST_LINK, O_RDONLY | O_CREAT,
-                                    CF_PERMS_SHARED);
+    int fd = safe_open_create_perms(
+        TEST_LINK, (O_RDONLY | O_CREAT), CF_PERMS_SHARED);
     assert_true(fd >= 0);
     check_contents(fd, TEST_STRING);
     close(fd);

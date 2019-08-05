@@ -570,9 +570,8 @@ static PromiseResult RenderTemplateCFEngine(EvalContext *ctx, const Promise *pp,
 
 static bool SaveBufferCallback(const char *dest_filename, void *param, NewLineMode new_line_mode)
 {
-    FILE *fp = safe_fopen_create_perms(dest_filename,
-                                       (new_line_mode == NewLineMode_Native) ? "wt" : "w",
-                                       CF_PERMS_DEFAULT);
+    FILE *fp = safe_fopen(
+        dest_filename, (new_line_mode == NewLineMode_Native) ? "wt" : "w");
     if (fp == NULL)
     {
         Log(LOG_LEVEL_ERR, "Unable to open destination file '%s' for writing. (fopen: %s)",

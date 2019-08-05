@@ -109,7 +109,7 @@ int backup_main(int argc, const char *const *const argv)
     if (files == NULL || SeqLength(files) == 0)
     {
         Log(LOG_LEVEL_ERR, "No database files to back up");
-        return -1;
+        return 1;
     }
     const int ret = backup_files(files);
     SeqDestroy(files);

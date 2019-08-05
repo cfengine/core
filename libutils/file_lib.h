@@ -106,11 +106,12 @@ mode_t SetUmask(mode_t new_mask);
 void RestoreUmask(mode_t old_mask);
 
 int safe_open(const char *const pathname, int flags);
-int safe_open_create_perms(const char *const pathname,
-                           int flags, const mode_t perms);
-FILE *safe_fopen(const char *const path, const char *const mode);
-FILE *safe_fopen_create_perms(const char *const path, const char *const mode,
-                              const mode_t perms);
+int safe_open_create_perms(
+    const char *pathname, int flags, mode_t create_perms);
+
+FILE *safe_fopen(const char *path, const char *mode);
+FILE *safe_fopen_create_perms(
+    const char *path, const char *mode, mode_t create_perms);
 
 int safe_chdir(const char *path);
 int safe_chown(const char *path, uid_t owner, gid_t group);

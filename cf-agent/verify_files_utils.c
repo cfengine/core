@@ -3914,8 +3914,7 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, const Attribu
 
             MakeParentDirectory(file, attr->move_obstructions);
 
-            int fd = safe_open_create_perms(file, O_WRONLY | O_CREAT | O_EXCL,
-                                            filemode);
+            int fd = safe_open_create_perms(file, O_WRONLY | O_CREAT | O_EXCL, filemode);
             if (fd == -1)
             {
                 char errormsg[CF_BUFSIZE];

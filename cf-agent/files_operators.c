@@ -294,9 +294,8 @@ static bool SaveItemListCallback(const char *dest_filename, void *param, NewLine
     Item *liststart = param, *ip;
 
     //saving list to file
-    FILE *fp = safe_fopen_create_perms(dest_filename,
-                                       (new_line_mode == NewLineMode_Native) ? "wt" : "w",
-                                       CF_PERMS_DEFAULT);
+    FILE *fp = safe_fopen(
+        dest_filename, (new_line_mode == NewLineMode_Native) ? "wt" : "w");
     if (fp == NULL)
     {
         Log(LOG_LEVEL_ERR, "Unable to open destination file '%s' for writing. (fopen: %s)",

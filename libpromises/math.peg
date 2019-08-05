@@ -72,7 +72,7 @@ SI_Unit  <- [kK] SPACE { math_eval_push(1000, yy->stack, &(yy->stackp)); }
 
 # Lexemes
 
-F_NUMBER <- < '-'? [0-9]+ '.'? [0-9]* > SPACE
+F_NUMBER <- < ( '-'? [0-9]+ '.'? [0-9]* / '-'? '.' [0-9]+ ) > SPACE
 CLOSE_ENOUGH	<- '==' SPACE
 LESSEQ_THAN	<- '<=' SPACE
 LESS_THAN	<- '<' SPACE

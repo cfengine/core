@@ -13,7 +13,7 @@
  * 
  * THE SOFTWARE IS PROVIDED 'AS IS'.  USE ENTIRELY AT YOUR OWN RISK.
  * 
- * Last edited: 2013-08-16 00:58:47 by piumarta on emilia
+ * Last edited: 2013-12-18 10:09:42 by piumarta on linux32
  */
 
 #include <stdio.h>
@@ -406,7 +406,7 @@ static char *preamble= "\
 #define YY_REALLOC(C, P, N)	realloc(P, N)\n\
 #endif\n\
 #ifndef YY_FREE\n\
-#define YY_FREE free\n\
+#define YY_FREE(C, P)		free(P)\n\
 #endif\n\
 #ifndef YY_LOCAL\n\
 #define YY_LOCAL(T)	static T\n\
@@ -709,10 +709,10 @@ YY_PARSE(yycontext *) YYRELEASE(yycontext *yyctx)\n\
   if (yyctx->__buflen)\n\
     {\n\
       yyctx->__buflen= 0;\n\
-      YY_FREE(yyctx->__buf);\n\
-      YY_FREE(yyctx->__text);\n\
-      YY_FREE(yyctx->__thunks);\n\
-      YY_FREE(yyctx->__vals);\n\
+      YY_FREE(yyctx, yyctx->__buf);\n\
+      YY_FREE(yyctx, yyctx->__text);\n\
+      YY_FREE(yyctx, yyctx->__thunks);\n\
+      YY_FREE(yyctx, yyctx->__vals);\n\
     }\n\
   return yyctx;\n\
 }\n\

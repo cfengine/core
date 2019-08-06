@@ -292,10 +292,11 @@ end:
 static bool SaveItemListCallback(const char *dest_filename, void *param, NewLineMode new_line_mode)
 {
     Item *liststart = param, *ip;
-    FILE *fp;
 
     //saving list to file
-    if ((fp = safe_fopen(dest_filename, (new_line_mode == NewLineMode_Native) ? "wt" : "w")) == NULL)
+    FILE *fp = safe_fopen(
+        dest_filename, (new_line_mode == NewLineMode_Native) ? "wt" : "w");
+    if (fp == NULL)
     {
         Log(LOG_LEVEL_ERR, "Unable to open destination file '%s' for writing. (fopen: %s)",
             dest_filename, GetErrorStr());

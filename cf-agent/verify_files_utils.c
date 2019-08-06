@@ -1505,7 +1505,7 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
     if (rsrcfork)
     {                           /* Can't just "mv" the resource fork, unfortunately */
         rsrcrd = safe_open(new, O_RDONLY | O_BINARY);
-        rsrcwd = safe_open(dest, O_WRONLY | O_BINARY | O_CREAT | O_TRUNC, 0600);
+        rsrcwd = safe_open_create_perms(dest, O_WRONLY | O_BINARY | O_CREAT | O_TRUNC, CF_PERMS_DEFAULT);
 
         if (rsrcrd == -1 || rsrcwd == -1)
         {
@@ -3914,7 +3914,7 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, const Attribu
 
             MakeParentDirectory(file, attr->move_obstructions);
 
-            int fd = safe_open(file, O_WRONLY | O_CREAT | O_EXCL, filemode);
+            int fd = safe_open_create_perms(file, O_WRONLY | O_CREAT | O_EXCL, filemode);
             if (fd == -1)
             {
                 char errormsg[CF_BUFSIZE];

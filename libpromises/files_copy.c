@@ -62,9 +62,9 @@ bool CopyRegularFileDisk(const char *source, const char *destination)
        symlink attacks and races. */
     unlink(destination);
 
-    int dd = safe_open(destination,
-                       O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY,
-                       statbuf.st_mode);
+    int dd = safe_open_create_perms(destination,
+                                    O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY,
+                                    statbuf.st_mode);
     if (dd == -1)
     {
         Log(LOG_LEVEL_INFO,

@@ -269,7 +269,7 @@ bool WriteBuiltinFailsafePolicyToPath(const char *filename)
 
     Log(LOG_LEVEL_INFO, "Writing built-in failsafe policy to '%s'", filename);
 
-    FILE *fout = fopen(filename, "w");
+    FILE *fout = safe_fopen(filename, "w");
     if (!fout)
     {
         Log(LOG_LEVEL_ERR, "Unable to write failsafe to '%s' (fopen: %s)", filename, GetErrorStr());
@@ -278,12 +278,6 @@ bool WriteBuiltinFailsafePolicyToPath(const char *filename)
 
     fputs(bootstrap_content, fout);
     fclose(fout);
-
-    if (chmod(filename, S_IRUSR | S_IWUSR) == -1)
-    {
-        Log(LOG_LEVEL_ERR, "Failed setting permissions on generated failsafe file '%s'", filename);
-        return false;
-    }
 
     return true;
 }
@@ -368,7 +362,7 @@ char *CreateBootstrapIDFile(const char *workdir)
     assert(workdir != NULL);
     char *filename = BootstrapIDFilename(workdir);
 
-    FILE *file = safe_fopen(filename, "w");
+    FILE *file = safe_fopen_create_perms(filename, "w", CF_PERMS_DEFAULT);
     if (file == NULL)
     {
         Log(LOG_LEVEL_ERR, "Unable to write bootstrap id file '%s' (fopen: %s)", filename, GetErrorStr());

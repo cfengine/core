@@ -177,7 +177,7 @@ bool LoadSecretKeys(const char *const priv_key_path,
         {
             privkeyfile = PrivateKeyFile(GetWorkDir());
         }
-        FILE *fp = fopen(privkeyfile != NULL ? privkeyfile : priv_key_path, "r");
+        FILE *fp = safe_fopen(privkeyfile != NULL ? privkeyfile : priv_key_path, "r");
         if (!fp)
         {
             /* VERBOSE in case it's a custom, local-only installation. */
@@ -222,7 +222,7 @@ bool LoadSecretKeys(const char *const priv_key_path,
         {
             pubkeyfile = PublicKeyFile(GetWorkDir());
         }
-        FILE *fp = fopen(pubkeyfile != NULL ? pubkeyfile : pub_key_path, "r");
+        FILE *fp = safe_fopen(pubkeyfile != NULL ? pubkeyfile : pub_key_path, "r");
         if (!fp)
         {
             /* VERBOSE in case it's a custom, local-only installation. */
@@ -345,7 +345,6 @@ RSA *HavePublicKey(const char *username, const char *ipaddress, const char *dige
 {
     char keyname[CF_MAXVARSIZE], newname[CF_BUFSIZE], oldname[CF_BUFSIZE];
     struct stat statbuf;
-    FILE *fp;
     RSA *newkey = NULL;
     const char* const workdir = GetWorkDir();
 
@@ -390,7 +389,8 @@ RSA *HavePublicKey(const char *username, const char *ipaddress, const char *dige
         }
     }
 
-    if ((fp = fopen(newname, "r")) == NULL)
+    FILE *fp = safe_fopen(newname, "r");
+    if (fp == NULL)
     {
         Log(LOG_LEVEL_ERR, "Couldn't open public key file '%s' (fopen: %s)",
             newname, GetErrorStr());
@@ -430,7 +430,6 @@ bool SavePublicKey(const char *user, const char *digest, const RSA *key)
 {
     char keyname[CF_MAXVARSIZE], filename[CF_BUFSIZE];
     struct stat statbuf;
-    FILE *fp;
     int ret;
 
     ret = snprintf(keyname, sizeof(keyname), "%s-%s", user, digest);
@@ -460,7 +459,8 @@ bool SavePublicKey(const char *user, const char *digest, const RSA *key)
 
     Log(LOG_LEVEL_VERBOSE, "Saving public key to file '%s'", filename);
 
-    if ((fp = fopen(filename, "w")) == NULL)
+    FILE *fp = safe_fopen_create_perms(filename, "w", CF_PERMS_DEFAULT);
+    if (fp == NULL)
     {
         Log(LOG_LEVEL_ERR, "Unable to write a public key '%s'. (fopen: %s)", filename, GetErrorStr());
         return false;

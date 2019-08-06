@@ -82,8 +82,8 @@ bool CompareBinaryFiles(const char *file1, const char *file2, const struct stat 
 
     if (conn == NULL)
     {
-        fd1 = safe_open(file1, O_RDONLY | O_BINARY, 0400);
-        fd2 = safe_open(file2, O_RDONLY | O_BINARY, 0400);
+        fd1 = safe_open(file1, O_RDONLY | O_BINARY);
+        fd2 = safe_open(file2, O_RDONLY | O_BINARY);
 
         do
         {

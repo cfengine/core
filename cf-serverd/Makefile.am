@@ -32,6 +32,7 @@ AM_CPPFLAGS = -I$(srcdir)/../libpromises -I$(srcdir)/../libutils \
 
 AM_CFLAGS = \
 	$(OPENSSL_CFLAGS) \
+	$(PTHREAD_CFLAGS) \
 	$(ENTERPRISE_CFLAGS)
 
 libcf_serverd_la_LIBADD = ../libpromises/libpromises.la

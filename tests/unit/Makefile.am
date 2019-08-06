@@ -25,7 +25,7 @@
 EXTRA_DIST = data
 
 AM_CPPFLAGS = $(CORE_CPPFLAGS) \
-	$(ENTERPRISE_CFLAGS) \
+	$(ENTERPRISE_CPPFLAGS) \
 	-I$(srcdir)/../../libcfnet \
 	-I$(srcdir)/../../libenv \
 	-I$(srcdir)/../../libpromises \

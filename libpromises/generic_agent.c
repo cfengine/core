@@ -181,7 +181,8 @@ Policy *SelectAndLoadPolicy(GenericAgentConfig *config, EvalContext *ctx, bool v
 
             char filename[PATH_MAX];
             GetReleaseIdFile(GetInputDir(), filename, sizeof(filename));
-            FILE *release_id_stream = safe_fopen(filename, "w");
+            FILE *release_id_stream = safe_fopen_create_perms(filename, "w",
+                                                              CF_PERMS_DEFAULT);
             if (release_id_stream == NULL)
             {
                 Log(LOG_LEVEL_ERR, "Failed to open the release_id file for writing during failsafe");
@@ -769,7 +770,7 @@ static bool WritePolicyValidatedFile(ARG_UNUSED const GenericAgentConfig *config
         return false;
     }
 
-    int fd = creat(filename, 0600);
+    int fd = creat(filename, CF_PERMS_DEFAULT);
     if (fd == -1)
     {
         Log(LOG_LEVEL_ERR, "While writing policy validated marker file '%s', could not create file (create: %s)", filename, GetErrorStr());
@@ -886,7 +887,7 @@ static bool WriteReleaseIdFile(const char *filename, const char *dirname)
         return false;
     }
 
-    int fd = creat(filename, 0600);
+    int fd = creat(filename, CF_PERMS_DEFAULT);
     if (fd == -1)
     {
         Log(LOG_LEVEL_ERR, "While writing policy release ID file '%s', could not create file (create: %s)", filename, GetErrorStr());
@@ -1215,7 +1216,7 @@ static bool GeneratePolicyReleaseIDFromGit(char *release_id_out,
 
     // Note: Probably we should not be reading all of these filenames directly,
     // and should instead use git plumbing commands to retrieve the data.
-    FILE *git_file = fopen(git_filename, "r");
+    FILE *git_file = safe_fopen(git_filename, "r");
     if (git_file)
     {
         char git_head[128];
@@ -1227,7 +1228,7 @@ static bool GeneratePolicyReleaseIDFromGit(char *release_id_out,
             fclose(git_file);
             snprintf(git_filename, PATH_MAX, "%s/.git/%s",
                      policy_dir, git_head);
-            git_file = fopen(git_filename, "r");
+            git_file = safe_fopen(git_filename, "r");
             Log(LOG_LEVEL_DEBUG, "Found a git HEAD ref");
         }
         else
@@ -1785,13 +1786,12 @@ static void RegisterPidCleanup(void)
 
 void WritePID(char *filename)
 {
-    FILE *fp;
-
     pthread_once(&pid_cleanup_once, RegisterPidCleanup);
 
     snprintf(PIDFILE, CF_BUFSIZE - 1, "%s%c%s", GetPidDir(), FILE_SEPARATOR, filename);
 
-    if ((fp = fopen(PIDFILE, "w")) == NULL)
+    FILE *fp = safe_fopen_create_perms(PIDFILE, "w", CF_PERMS_DEFAULT);
+    if (fp == NULL)
     {
         Log(LOG_LEVEL_INFO, "Could not write to PID file '%s'. (fopen: %s)", filename, GetErrorStr());
         return;

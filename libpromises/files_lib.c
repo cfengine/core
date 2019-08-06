@@ -64,7 +64,7 @@ void PurgeItemList(Item **list, char *name)
 
 bool FileWriteOver(char *filename, char *contents)
 {
-    FILE *fp = safe_fopen(filename, "w");
+    FILE *fp = safe_fopen_create_perms(filename, "w", CF_PERMS_DEFAULT);
 
     if(fp == NULL)
     {
@@ -640,8 +640,6 @@ void RotateFiles(char *name, int number)
 
 void CreateEmptyFile(char *name)
 {
-    int tempfd;
-
     if (unlink(name) == -1)
     {
         if (errno != ENOENT)
@@ -650,7 +648,10 @@ void CreateEmptyFile(char *name)
         }
     }
 
-    if ((tempfd = safe_open(name, O_CREAT | O_EXCL | O_WRONLY, 0600)) < 0)
+    int tempfd = safe_open_create_perms(name,
+                                        O_CREAT | O_EXCL | O_WRONLY,
+                                        CF_PERMS_DEFAULT);
+    if (tempfd < 0)
     {
         Log(LOG_LEVEL_ERR, "Couldn't open a file '%s'. (open: %s)", name, GetErrorStr());
     }

@@ -145,8 +145,6 @@ static void Nova_DumpSlots(void)
                 GetErrorStr());
         }
     }
-
-    chmod(filename, 0600);
 }
 
 void GetObservable(int i, char *name, char *desc)

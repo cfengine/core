@@ -36,6 +36,7 @@ AM_CPPFLAGS = \
 AM_CFLAGS = \
 	$(PCRE_CFLAGS) \
 	$(OPENSSL_CFLAGS) \
+	$(PTHREAD_CFLAGS) \
 	$(ENTERPRISE_CFLAGS)
 
 libcf_execd_la_LIBADD = ../libpromises/libpromises.la

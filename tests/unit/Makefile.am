@@ -25,7 +25,7 @@
 EXTRA_DIST = data
 
 AM_CPPFLAGS = $(CORE_CPPFLAGS) \
-	$(ENTERPRISE_CFLAGS) \
+	$(ENTERPRISE_CPPFLAGS) \
 	-I$(srcdir)/../../libcfnet \
 	-I$(srcdir)/../../libenv \
 	-I$(srcdir)/../../libpromises \
@@ -45,6 +45,8 @@ LDADD = ../../libpromises/libpromises.la libtest.la
 # our local implementation. So we include *everything*...
 LIBS = $(CORE_LIBS)
 AM_LDFLAGS = $(CORE_LDFLAGS)
+
+AM_CFLAGS = $(PTHREAD_CFLAGS)
 
 
 check_LTLIBRARIES = libtest.la

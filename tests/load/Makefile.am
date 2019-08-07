@@ -32,7 +32,7 @@ AM_LDFLAGS = $(CORE_LDFLAGS)
 # under OS X. Another way of stubbing functions from libpromises is needed.
 if !XNU
 AM_CPPFLAGS = $(CORE_CPPFLAGS) \
-	$(ENTERPRISE_CFLAGS) \
+	$(ENTERPRISE_CPPFLAGS) \
 	-I../../libpromises \
 	-I../../libutils \
 	-I../../libcfnet \

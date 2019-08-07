@@ -27,8 +27,8 @@ MAKEFLAGS = $(if $(filter-out 0,$(V)),,--no-print-directory --quiet)
 
 LCOV_FLAGS = $(if $(filter-out 0,$(V)),,-q)
 
-SUBDIRS = libcompat \
-	libutils \
+SUBDIRS = \
+	libntech \
 	libcfnet \
 	libenv \
 	cf-check \

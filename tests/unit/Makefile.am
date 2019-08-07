@@ -29,7 +29,7 @@ AM_CPPFLAGS = $(CORE_CPPFLAGS) \
 	-I$(srcdir)/../../libcfnet \
 	-I$(srcdir)/../../libenv \
 	-I$(srcdir)/../../libpromises \
-	-I$(srcdir)/../../libutils \
+	-I$(srcdir)/../../libntech/libutils \
 	-I$(srcdir)/../../cf-monitord \
 	-I$(srcdir)/../../cf-serverd \
 	-I$(srcdir)/../../cf-agent \
@@ -51,28 +51,28 @@ AM_CFLAGS = $(PTHREAD_CFLAGS)
 
 check_LTLIBRARIES = libtest.la
 libtest_la_SOURCES = cmockery.c cmockery.h schema.h test.c test.h \
-	../../libutils/alloc.c \
+	../../libntech/libutils/alloc.c \
 	../../libpromises/patches.c \
 	../../libpromises/constants.c \
-	../../libutils/known_dirs.c \
-	../../libutils/map.c \
-	../../libutils/array_map.c \
-	../../libutils/hash.c \
-	../../libutils/hash_map.c
+	../../libntech/libutils/known_dirs.c \
+	../../libntech/libutils/map.c \
+	../../libntech/libutils/array_map.c \
+	../../libntech/libutils/hash.c \
+	../../libntech/libutils/hash_map.c
 
-libtest_la_LIBADD = ../../libcompat/libcompat.la
+libtest_la_LIBADD = ../../libntech/libcompat/libcompat.la
 
 check_LTLIBRARIES += libstr.la
 libstr_la_SOURCES = \
-	../../libutils/buffer.c \
-	../../libutils/pcre_wrap.c \
-	../../libutils/encode.c \
-	../../libutils/logging.c \
-	../../libutils/misc_lib.c \
-	../../libutils/regex.c \
-	../../libutils/sequence.c \
-	../../libutils/string_lib.c \
-	../../libutils/writer.c
+	../../libntech/libutils/buffer.c \
+	../../libntech/libutils/pcre_wrap.c \
+	../../libntech/libutils/encode.c \
+	../../libntech/libutils/logging.c \
+	../../libntech/libutils/misc_lib.c \
+	../../libntech/libutils/regex.c \
+	../../libntech/libutils/sequence.c \
+	../../libntech/libutils/string_lib.c \
+	../../libntech/libutils/writer.c
 libstr_la_LIBADD = libtest.la
 
 
@@ -84,13 +84,13 @@ libdb_la_SOURCES = db_stubs.c \
 	../../libpromises/dbm_lmdb.c \
 	../../libpromises/dbm_migration.c \
 	../../libpromises/dbm_migration_lastseen.c \
-	../../libutils/logging.c \
-	../../libutils/mutex.c \
-	../../libutils/cleanup.c
+	../../libntech/libutils/logging.c \
+	../../libntech/libutils/mutex.c \
+	../../libntech/libutils/cleanup.c
 if HPUX
 libdb_la_SOURCES += ../../libpromises/cf3globals.c
 endif
-libdb_la_LIBADD = libstr.la ../../libutils/libutils.la
+libdb_la_LIBADD = libstr.la ../../libntech/libutils/libutils.la
 #libdb_la_CPPFLAGS = $(LMDB_CPPFLAGS) $(TOKYOCABINET_CPPFLAGS) $(QDBM_CPPFLAGS)
 # Make sure that source files are compiled to separate object files
 # libdb_la-file.o
@@ -223,8 +223,8 @@ TESTS_ENVIRONMENT = DYLD_FORCE_FLAT_NAMESPACE=yes
 cleanup_test_SOURCES = cleanup_test.c
 cleanup_test_LDADD = libtest.la libdb.la
 
-csv_writer_test_SOURCES = csv_writer_test.c ../../libutils/csv_writer.c \
-	../../libutils/cleanup.c
+csv_writer_test_SOURCES = csv_writer_test.c ../../libntech/libutils/csv_writer.c \
+	../../libntech/libutils/cleanup.c
 csv_writer_test_LDADD = libtest.la libstr.la
 
 conversion_test_SOURCES = conversion_test.c ../../libpromises/conversion.c
@@ -248,21 +248,21 @@ str_test_SOURCES = str_test.c
 str_test_LDADD = libstr.la
 
 xml_writer_test_SOURCES = xml_writer_test.c \
-	../../libutils/xml_writer.c \
-	../../libutils/cleanup.c
+	../../libntech/libutils/xml_writer.c \
+	../../libntech/libutils/cleanup.c
 xml_writer_test_LDADD = libtest.la libstr.la
 
 list_test_SOURCES = list_test.c
 
-refcount_test_SOURCES = refcount_test.c ../../libutils/refcount.c
+refcount_test_SOURCES = refcount_test.c ../../libntech/libutils/refcount.c
 
-buffer_test_SOURCES = buffer_test.c ../../libutils/buffer.c
+buffer_test_SOURCES = buffer_test.c ../../libntech/libutils/buffer.c
 # Workaround for object file basename conflicts, search the web for
 # "automake created with both libtool and without"
 buffer_test_CPPFLAGS = $(AM_CPPFLAGS)
 
-csv_parser_test_SOURCES = csv_parser_test.c ../../libutils/csv_parser.c
-csv_parser_test_LDADD = libtest.la ../../libutils/libutils.la
+csv_parser_test_SOURCES = csv_parser_test.c ../../libntech/libutils/csv_parser.c
+csv_parser_test_LDADD = libtest.la ../../libntech/libutils/libutils.la
 
 regex_test_SOURCES = regex_test.c ../../libpromises/match_scope.c
 
@@ -317,13 +317,13 @@ db_concurrent_test_LDADD = libdb.la
 lastseen_test_SOURCES = lastseen_test.c \
 	../../libpromises/item_lib.c \
 	../../libpromises/lastseen.c \
-	../../libutils/statistics.c
+	../../libntech/libutils/statistics.c
 #lastseen_test_CPPFLAGS = $(libdb_la_CPPFLAGS)
 lastseen_test_LDADD = libdb.la ../../libpromises/libpromises.la
 
 lastseen_migration_test_SOURCES = lastseen_migration_test.c \
 	../../libpromises/lastseen.c \
-	../../libutils/statistics.c \
+	../../libntech/libutils/statistics.c \
 	../../libpromises/item_lib.c
 #lastseen_migration_test_CPPFLAGS = $(libdb_la_CPPFLAGS)
 lastseen_migration_test_LDADD = libdb.la ../../libpromises/libpromises.la
@@ -344,21 +344,21 @@ package_versions_compare_test_LDADD = ../../libpromises/libpromises.la \
 	libtest.la
 
 file_lib_test_SOURCES = file_lib_test.c \
-	../../libutils/file_lib.c \
-	../../libutils/logging.c \
-	../../libutils/misc_lib.c \
-	../../libutils/path.c \
-	../../libutils/string_lib.c \
-	../../libutils/sequence.c \
-	../../libutils/set.c \
-	../../libutils/buffer.c \
-	../../libutils/pcre_wrap.c \
-	../../libutils/regex.c \
-	../../libutils/json.c \
-	../../libutils/json-yaml.c \
-	../../libutils/unix_dir.c \
-	../../libutils/cleanup.c \
-	../../libutils/writer.c
+	../../libntech/libutils/file_lib.c \
+	../../libntech/libutils/logging.c \
+	../../libntech/libutils/misc_lib.c \
+	../../libntech/libutils/path.c \
+	../../libntech/libutils/string_lib.c \
+	../../libntech/libutils/sequence.c \
+	../../libntech/libutils/set.c \
+	../../libntech/libutils/buffer.c \
+	../../libntech/libutils/pcre_wrap.c \
+	../../libntech/libutils/regex.c \
+	../../libntech/libutils/json.c \
+	../../libntech/libutils/json-yaml.c \
+	../../libntech/libutils/unix_dir.c \
+	../../libntech/libutils/cleanup.c \
+	../../libntech/libutils/writer.c
 file_lib_test_LDADD = libtest.la
 file_lib_test_CPPFLAGS = $(AM_CPPFLAGS) -DTEST_SYMLINK_ATOMICITY
 
@@ -369,11 +369,11 @@ sort_test_SOURCES = sort_test.c
 sort_test_LDADD = libtest.la ../../libpromises/libpromises.la
 
 logging_test_SOURCES = logging_test.c ../../libpromises/syslog_client.c
-logging_test_LDADD = libtest.la ../../libutils/libutils.la
+logging_test_LDADD = libtest.la ../../libntech/libutils/libutils.la
 
 logging_timestamp_test_SOURCES = logging_timestamp_test.c \
-	../../libutils/logging.h
-logging_timestamp_test_LDADD = libtest.la ../../libutils/libutils.la
+	../../libntech/libutils/logging.h
+logging_timestamp_test_LDADD = libtest.la ../../libntech/libutils/libutils.la
 
 connection_management_test_SOURCES = connection_management_test.c \
 	../../cf-serverd/server_common.c \
@@ -398,8 +398,8 @@ check_PROGRAMS += linux_process_test
 linux_process_test_SOURCES = linux_process_test.c \
 	../../libpromises/process_unix.c \
 	../../libpromises/process_linux.c \
-	../../libutils/file_lib.c
-linux_process_test_LDADD = libtest.la ../../libutils/libutils.la
+	../../libntech/libutils/file_lib.c
+linux_process_test_LDADD = libtest.la ../../libntech/libutils/libutils.la
 
 endif
 
@@ -413,8 +413,8 @@ evalfunction_test_LDFLAGS = -Wl,-bexpall
 aix_process_test_SOURCES = aix_process_test.c \
 	../../libpromises/process_unix.c \
 	../../libpromises/process_aix.c \
-	../../libutils/file_lib.c
-aix_process_test_LDADD = libtest.la ../../libutils/libutils.la
+	../../libntech/libutils/file_lib.c
+aix_process_test_LDADD = libtest.la ../../libntech/libutils/libutils.la
 
 endif
 
@@ -425,14 +425,14 @@ check_PROGRAMS += solaris_process_test
 solaris_process_test_SOURCES = solaris_process_test.c \
 	../../libpromises/process_unix.c \
 	../../libpromises/process_solaris.c \
-	../../libutils/file_lib.c
-solaris_process_test_LDADD = libtest.la ../../libutils/libutils.la
+	../../libntech/libutils/file_lib.c
+solaris_process_test_LDADD = libtest.la ../../libntech/libutils/libutils.la
 
 endif
 
 process_terminate_unix_test_SOURCES = process_terminate_unix_test.c \
 	../../libpromises/process_unix.c
-process_terminate_unix_test_LDADD = libtest.la ../../libutils/libutils.la
+process_terminate_unix_test_LDADD = libtest.la ../../libntech/libutils/libutils.la
 
 exec_config_test_SOURCES = exec-config-test.c \
 	../../cf-execd/exec-config.c ../../cf-execd/execd-config.c
@@ -458,11 +458,11 @@ mon_processes_test_SOURCES = mon_processes_test.c \
 mon_processes_test_LDADD = ../../libpromises/libpromises.la libtest.la
 
 hash_test_SOURCES = hash_test.c
-hash_test_LDADD = ../../libutils/libutils.la libtest.la
+hash_test_LDADD = ../../libntech/libutils/libutils.la libtest.la
 
 key_test_SOURCES = key_test.c
 key_test_LDADD = ../../libpromises/libpromises.la \
-	../../libutils/libutils.la \
+	../../libntech/libutils/libutils.la \
 	libtest.la
 
 strlist_test_SOURCES = strlist_test.c \
@@ -471,7 +471,8 @@ strlist_test_SOURCES = strlist_test.c \
 
 iteration_test_SOURCES = iteration_test.c
 
-libcompat_test_CPPFLAGS = -I$(top_srcdir)/libcompat -I$(top_srcdir)/libutils
+libcompat_test_CPPFLAGS = -I$(top_srcdir)/libntech/libcompat \
+	-I$(top_srcdir)/libntech/libutils
 libcompat_test_SOURCES = libcompat_test.c
 
 cf_upgrade_test_SOURCES = cf_upgrade_test.c \
@@ -485,8 +486,8 @@ cf_upgrade_test_SOURCES = cf_upgrade_test.c \
 	../../cf-upgrade/process.c ../../cf-upgrade/process.h \
 	../../cf-upgrade/update.c \
 	../../cf-upgrade/update.h
-cf_upgrade_test_CPPFLAGS = -I../../cf-upgrade -I$(top_srcdir)/libutils -I$(top_srcdir)
-cf_upgrade_test_LDADD = libtest.la ../../libcompat/libcompat.la
+cf_upgrade_test_CPPFLAGS = -I../../cf-upgrade -I$(top_srcdir)/libntech/libutils -I$(top_srcdir)
+cf_upgrade_test_LDADD = libtest.la ../../libntech/libcompat/libcompat.la
 
 queue_test_SOURCES = queue_test.c
 

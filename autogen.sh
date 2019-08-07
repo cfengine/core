@@ -55,7 +55,7 @@ cd "$srcdir"
 
 echo "$0: Running determine-version.py ..."
 rm -f CFVERSION
-misc/determine-version.py > CFVERSION \
+{ misc/determine-version.py > CFVERSION && cp CFVERSION libntech/CFVERSION ; } \
     || echo "$0: Unable to auto-detect CFEngine version, continuing"
 
 echo "$0: Running autoreconf ..."

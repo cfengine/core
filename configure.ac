@@ -128,7 +128,7 @@ AM_PROG_LEX
 AC_PROG_YACC
 AC_PROG_INSTALL
 AC_PATH_PROG([PERL], [perl])
-AC_CONFIG_LIBOBJ_DIR(libcompat)
+AC_CONFIG_LIBOBJ_DIR(libntech/libcompat)
 AC_PATH_PROG(GETCONF, getconf, false, $PATH:$prefix/bin:/usr/bin:/usr/local/bin:/sw/bin)
 AM_CONDITIONAL(CROSS_COMPILING, test "x$cross_compiling" = "xyes")
 
@@ -1739,8 +1739,9 @@ dnl Now make the Makefiles
 dnl ######################################################################
 
 AC_CONFIG_FILES([Makefile
-    libcompat/Makefile
-    libutils/Makefile
+    libntech/libcompat/Makefile
+    libntech/libutils/Makefile
+    libntech/config.post.h
     libcfnet/Makefile
     libenv/Makefile
     libpromises/Makefile
@@ -1764,6 +1765,9 @@ AC_CONFIG_FILES([Makefile
     tests/acceptance/25_cf-execd/Makefile
     tests/unit/Makefile
     tests/load/Makefile])
+
+# Run autoconf/configure in libutils, generating necessary makefiles:
+AC_CONFIG_SUBDIRS([libntech])
 
 AC_OUTPUT
 

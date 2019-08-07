@@ -24,7 +24,7 @@
 noinst_LTLIBRARIES = libcf-key.la
 
 AM_CPPFLAGS = \
-	-I$(srcdir)/../libutils \
+	-I$(srcdir)/../libntech/libutils \
 	-I$(srcdir)/../libcfnet \
 	-I$(srcdir)/../libpromises \
 	$(PCRE_CPPFLAGS) \

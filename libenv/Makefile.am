@@ -38,7 +38,7 @@ if SOLARIS
 libenv_la_LIBADD = -lkstat
 endif
 
-AM_CPPFLAGS  = -I$(top_srcdir)/libutils
+AM_CPPFLAGS  = -I$(top_srcdir)/libntech/libutils
 AM_CPPFLAGS += $(OPENSSL_CPPFLAGS)         # because libutils needs it
 AM_CPPFLAGS += $(PCRE_CPPFLAGS)
 
@@ -62,7 +62,7 @@ MAINTAINERCLEANFILES = config.h.in
 
 # libcompat dependency
 
-.PRECIOUS: ../libcompat/libcompat.la
+.PRECIOUS: ../libntech/libcompat/libcompat.la
 
-../libcompat/libcompat.la:
-	$(MAKE) -C ../libcompat $(AM_MAKEFLAGS) libcompat.la
+../libntech/libcompat/libcompat.la:
+	$(MAKE) -C ../libntech/libcompat $(AM_MAKEFLAGS) libcompat.la

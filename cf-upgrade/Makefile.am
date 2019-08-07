@@ -25,9 +25,9 @@ bin_PROGRAMS = cf-upgrade
 
 LIBS=                                # This tool should not link to anything
 AM_LDFLAGS=
-AM_CPPFLAGS=-I$(top_srcdir)/libutils # platform.h
+AM_CPPFLAGS=-I$(top_srcdir)/libntech/libutils # platform.h
 
-LDADD=../libcompat/libcompat.la
+LDADD=../libntech/libcompat/libcompat.la
 
 cf_upgrade_SOURCES = \
     alloc-mini.c alloc-mini.h \

@@ -73,6 +73,9 @@ stamp-h1
 /libutils/config.h
 /libutils/config.h.in
 /libutils/config.post.h
+/config.h
+/config.h.in
+/config.post.h
 
 # examples
 /examples/cfengine_stdlib.cf

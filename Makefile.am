@@ -31,8 +31,8 @@ SUBDIRS = libcompat \
 	libutils \
 	libcfnet \
 	libenv \
-	libpromises \
 	cf-check \
+	libpromises \
 	cf-agent \
 	cf-execd \
 	cf-key \

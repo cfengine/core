@@ -471,7 +471,7 @@ strlist_test_SOURCES = strlist_test.c \
 
 iteration_test_SOURCES = iteration_test.c
 
-libcompat_test_CPPFLAGS = -I$(top_srcdir)/libcompat
+libcompat_test_CPPFLAGS = -I$(top_srcdir)/libcompat -I$(top_srcdir)/libutils
 libcompat_test_SOURCES = libcompat_test.c
 
 cf_upgrade_test_SOURCES = cf_upgrade_test.c \
@@ -485,7 +485,7 @@ cf_upgrade_test_SOURCES = cf_upgrade_test.c \
 	../../cf-upgrade/process.c ../../cf-upgrade/process.h \
 	../../cf-upgrade/update.c \
 	../../cf-upgrade/update.h
-cf_upgrade_test_CPPFLAGS = -I../../cf-upgrade -I$(top_srcdir)/libutils
+cf_upgrade_test_CPPFLAGS = -I../../cf-upgrade -I$(top_srcdir)/libutils -I$(top_srcdir)
 cf_upgrade_test_LDADD = libtest.la ../../libcompat/libcompat.la
 
 queue_test_SOURCES = queue_test.c

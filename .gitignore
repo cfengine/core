@@ -21,7 +21,10 @@ stamp-h1
 /compile
 /config.cache
 /config.guess
+/config.h
+/config.h.in
 /config.log
+/config.post.h
 /config.status
 /config.sub
 /configure

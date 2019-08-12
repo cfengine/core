@@ -24,7 +24,6 @@
 
 #include <alloc.h>
 #include <cleanup.h>
-#include <logging.h>
 #include <platform.h>
 
 typedef struct CleanupList
@@ -44,7 +43,6 @@ void CallCleanupFunctions(void)
     CleanupList *p = cleanup_functions;
     while (p)
     {
-        Log(LOG_LEVEL_DEBUG, "CallCleanupFunctions() had a function to call @ %p", p);
         CleanupList *cur = p;
         (cur->fn)();
         p = cur->next;

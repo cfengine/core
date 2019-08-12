@@ -12,6 +12,7 @@
 Makefile
 Makefile.in
 stamp-h1
+.dirstamp
 
 # Created by autogen.sh
 /CFVERSION
@@ -36,9 +37,13 @@ stamp-h1
 /ylwrap
 /test-driver
 /tests/unit/*.log
+/tests/unit/init_script_test_helper
 /tests/load/*.log
 
 /configure_flags.env
+
+# tarballs
+/*.tar.gz
 
 # binaries
 /cf-agent/cf-agent

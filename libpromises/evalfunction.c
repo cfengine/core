@@ -68,6 +68,7 @@
 #include <mustache.h>
 #include <processes_select.h>
 #include <sysinfo.h>
+#include <string_sequence.h>
 
 #include <math_eval.h>
 

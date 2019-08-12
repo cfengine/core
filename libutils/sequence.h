@@ -25,7 +25,10 @@
 #ifndef CFENGINE_SEQUENCE_H
 #define CFENGINE_SEQUENCE_H
 
-#include <platform.h>
+#include <stddef.h>    // size_t
+#include <sys/types.h> // ssize_t
+#include <assert.h>    // assert()
+#include <stdio.h>     // FILE
 
 /**
   @brief Sequence data-structure.

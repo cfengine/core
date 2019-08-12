@@ -486,7 +486,7 @@ cf_upgrade_test_SOURCES = cf_upgrade_test.c \
 	$(CFUPGRADE)/process.c $(CFUPGRADE)/process.h \
 	$(CFUPGRADE)/update.c \
 	$(CFUPGRADE)/update.h
-cf_upgrade_test_CFLAGS = -I$(CFUPGRADE)
+cf_upgrade_test_CPPFLAGS = -I$(CFUPGRADE)
 
 queue_test_SOURCES = queue_test.c
 

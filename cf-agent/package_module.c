@@ -32,6 +32,7 @@
 #include <actuator.h>
 #include <file_lib.h>
 #include <known_dirs.h>
+#include <string_sequence.h>
 #include <locks.h>
 #include <rlist.h>
 #include <policy.h>

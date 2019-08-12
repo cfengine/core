@@ -22,7 +22,7 @@
   included file COSL.txt.
 */
 
-
+#include <platform.h>
 #include <sequence.h>
 #include <alloc.h>
 #include <string_lib.h>

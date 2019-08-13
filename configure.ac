@@ -88,7 +88,7 @@ AC_DEFINE_UNQUOTED(ABS_TOP_SRCDIR,
 
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
-AC_CONFIG_HEADERS([libutils/config.h])
+AC_CONFIG_HEADERS([config.h])
 
 dnl Libtool madness
 
@@ -1741,7 +1741,6 @@ dnl ######################################################################
 AC_CONFIG_FILES([Makefile
     libcompat/Makefile
     libutils/Makefile
-    libutils/config.post.h
     libcfnet/Makefile
     libenv/Makefile
     libpromises/Makefile
@@ -1756,6 +1755,7 @@ AC_CONFIG_FILES([Makefile
     cf-serverd/Makefile
     cf-testd/Makefile
     cf-net/Makefile
+    config.post.h
     misc/Makefile
     ext/Makefile
     examples/Makefile

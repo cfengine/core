@@ -24,12 +24,12 @@
 noinst_LTLIBRARIES = libcf-monitord.la
 
 AM_CPPFLAGS = \
-	$(OPENSSL_CPPFLAGS) \
 	-I$(srcdir)/../libutils \
 	-I$(srcdir)/../libcfnet \
 	-I$(srcdir)/../libenv \
 	-I$(srcdir)/../libpromises \
 	$(PCRE_CPPFLAGS) \
+	$(OPENSSL_CPPFLAGS) \
 	$(ENTERPRISE_CPPFLAGS)
 
 AM_CFLAGS = @CFLAGS@ \

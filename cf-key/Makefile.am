@@ -24,11 +24,11 @@
 noinst_LTLIBRARIES = libcf-key.la
 
 AM_CPPFLAGS = \
-	$(OPENSSL_CPPFLAGS) \
-	$(PCRE_CPPFLAGS) \
 	-I$(srcdir)/../libutils \
 	-I$(srcdir)/../libcfnet \
 	-I$(srcdir)/../libpromises \
+	$(PCRE_CPPFLAGS) \
+	$(OPENSSL_CPPFLAGS) \
 	$(ENTERPRISE_CPPFLAGS)
 
 AM_CFLAGS = \

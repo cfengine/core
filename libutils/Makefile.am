@@ -63,7 +63,6 @@ libutils_la_SOURCES = \
 	mutex.c mutex.h \
 	passopenfile.c passopenfile.h \
 	path.c path.h \
-	pcre_include.h \
 	pcre_wrap.c pcre_wrap.h \
 	platform.h condition_macros.h \
 	printsize.h \

@@ -1,8 +1,8 @@
+#include <platform.h>
+#include <definitions.h>
 #include <test.h>
-
-#include <cf3.defs.h>
 #include <logging.h>
-#include <pcre_include.h>
+#include <pcre.h>
 
 
 static void test_timestamp_regex(void)

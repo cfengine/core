@@ -1,9 +1,9 @@
-#include <cf3.defs.h>
+#include <platform.h>
+#include <definitions.h>
 #include <string_lib.h>
+#include <alloc.h>
 #include <regex.h>
 #include <encode.h>
-
-#include <conversion.h>
 
 #include <test.h>
 

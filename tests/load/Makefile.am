@@ -34,7 +34,7 @@ if !XNU
 AM_CPPFLAGS = $(CORE_CPPFLAGS) \
 	$(ENTERPRISE_CPPFLAGS) \
 	-I../../libpromises \
-	-I../../libutils \
+	-I../../libntech/libutils \
 	-I../../libcfnet \
 	-I../../libpromises
 
@@ -55,7 +55,7 @@ db_load_LDADD = ../unit/libdb.la
 
 lastseen_load_SOURCES = lastseen_load.c \
 	$(srcdir)/../../libpromises/lastseen.c \
-	$(srcdir)/../../libutils/statistics.c
+	$(srcdir)/../../libntech/libutils/statistics.c
 lastseen_load_LDADD = ../unit/libdb.la ../../libpromises/libpromises.la
 endif
 

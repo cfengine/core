@@ -24,7 +24,7 @@
 noinst_LTLIBRARIES = libcf-promises.la
 
 AM_CPPFLAGS = \
-	-I$(srcdir)/../libutils \
+	-I$(srcdir)/../libntech/libutils \
 	-I$(srcdir)/../libpromises \
 	-I$(srcdir)/../libcfnet \
 	@CPPFLAGS@ \

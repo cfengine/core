@@ -25,7 +25,7 @@
 SUBDIRS = 25_cf-execd
 
 AM_CPPFLAGS = \
-	-I$(top_srcdir)/libutils \
+	-I$(top_srcdir)/libntech/libutils \
 	-I$(top_srcdir)/libpromises \
 	-I$(top_srcdir)/libcfnet \
 	$(CORE_CPPFLAGS) $(ENTERPRISE_CPPFLAGS)
@@ -48,7 +48,7 @@ mock_package_manager_SOURCES =
 mock_package_manager_LDADD = libmock_package_manager.la
 
 noinst_PROGRAMS += no_fds
-no_fds_LDADD = ../../libutils/libutils.la
+no_fds_LDADD = ../../libntech/libutils/libutils.la
 endif # !BUILTIN_EXTENSIONS
 
 if HAVE_LIBXML2
@@ -56,12 +56,12 @@ if HAVE_LIBXML2
 
   xml_c14nize_CPPFLAGS = \
 	-I$(top_srcdir)/libpromises \
-	-I$(srcdir)/../../libutils \
+	-I$(srcdir)/../../libntech/libutils \
 	$(LIBXML2_CPPFLAGS)
 
   xml_c14nize_CFLAGS  = $(LIBXML2_CFLAGS)
   xml_c14nize_LDFLAGS = $(LIBXML2_LDFLAGS)
-  xml_c14nize_LDADD = ../../libutils/libutils.la \
+  xml_c14nize_LDADD = ../../libntech/libutils/libutils.la \
 	$(LIBXML2_LIBS)
 endif
 

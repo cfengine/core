@@ -23,7 +23,7 @@
 #
 noinst_LTLIBRARIES = libcf-testd.la
 
-AM_CPPFLAGS = -I$(srcdir)/../libpromises -I$(srcdir)/../libutils \
+AM_CPPFLAGS = -I$(srcdir)/../libpromises -I$(srcdir)/../libntech/libutils \
 	-I$(srcdir)/../libcfnet \
 	-I$(srcdir)/../libenv \
 	-I$(srcdir)/../cf-serverd \

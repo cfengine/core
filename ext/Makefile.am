@@ -23,5 +23,4 @@
 #
 bin_PROGRAMS = rpmvercmp
 
-LDADD = ../libcompat/libcompat.la
-
+LDADD = ../libntech/libcompat/libcompat.la

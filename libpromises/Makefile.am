@@ -33,7 +33,7 @@ AM_LDFLAGS += $(LMDB_LDFLAGS) $(TOKYOCABINET_LDFLAGS) $(QDBM_LDFLAGS) \
 	$(PCRE_LDFLAGS) $(OPENSSL_LDFLAGS) $(SQLITE3_LDFLAGS) $(LIBACL_LDFLAGS) $(LIBYAML_LDFLAGS) $(LIBCURL_LDFLAGS)
 
 AM_CPPFLAGS = \
-	-I$(srcdir)/../libutils -I$(srcdir)/../libcfnet \
+	-I$(srcdir)/../libntech/libutils -I$(srcdir)/../libcfnet \
 	-I$(srcdir)/../libenv $(ENTERPRISE_CPPFLAGS) \
 	-I$(srcdir)/../cf-check \
 	$(LMDB_CPPFLAGS) $(TOKYOCABINET_CPPFLAGS) $(QDBM_CPPFLAGS) \
@@ -48,7 +48,7 @@ AM_YFLAGS = -d
 LIBS = $(LMDB_LIBS) $(TOKYOCABINET_LIBS) $(QDBM_LIBS) \
 	$(PCRE_LIBS) $(OPENSSL_LIBS) $(SQLITE3_LIBS) $(LIBACL_LIBS) $(LIBYAML_LIBS) $(LIBCURL_LIBS)
 
-libpromises_la_LIBADD = ../libutils/libutils.la ../libcfnet/libcfnet.la \
+libpromises_la_LIBADD = ../libntech/libutils/libutils.la ../libcfnet/libcfnet.la \
 	../libenv/libenv.la $(ENTERPRISE_LDADD)
 
 libpromises_la_SOURCES = \

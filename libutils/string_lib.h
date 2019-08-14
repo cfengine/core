@@ -28,7 +28,7 @@
 #include <platform.h>
 #include <compiler.h>
 #include <sequence.h>
-#include <pcre_include.h>
+#include <pcre.h>
 
 
 typedef struct

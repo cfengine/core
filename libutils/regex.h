@@ -29,7 +29,7 @@
 
 #include <platform.h>
 
-#include <pcre_include.h>
+#include <pcre.h>
 
 #include <sequence.h>                                           /* Seq */
 

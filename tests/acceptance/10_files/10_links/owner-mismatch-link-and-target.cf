@@ -1,0 +1,100 @@
+#!/var/cfengine/bin/cf-agent -f-
+body common control
+{
+        inputs => { "../../default.cf.sub" };
+        bundlesequence  => { default("$(this.promise_filename)") };
+        version => "1.0";
+}
+
+bundle agent init
+{
+  files:
+
+    # The symlink is initially created with uid 0, the uid we expect in the end.
+    # This tests that promising the uid of a symlink is not confused by the symlink target having a different uid
+    # - We do not expect to see any REPAIR related to the UID of the symlink
+      "/tmp/symlink-target"
+        create => "true",
+        perms => uid(2);
+
+       "/tmp/symlink"
+        link_from => ln_s( "/tmp/symlink-target" ),
+        perms => uid(0);
+}
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-3116" }
+        string => "Test that promising ownership of symlinks is not confused by target";
+
+      "test_soft_fail"
+        string => "any",
+        meta => { "CFE-3116" };
+
+      # this test isn't super comprehensive, once the issue is fixed, it will
+      # need to be skipped on various platforms, at least windows.
+      # "test_skip_unsupported" string => "windows";
+
+  files:
+       "/tmp/symlink"
+        handle => "link_1",
+        classes => results( "namespace", "link_1_uid" ),
+        perms => uid(0);
+
+       "/tmp/symlink"
+        handle => "link_2",
+        classes => results( "namespace", "link_2_uid" ),
+        perms => uid(0);
+}
+
+bundle agent check
+{
+  classes:
+      "symlink_owner_ok" expression => strcmp( "0", filestat( "/tmp/symlink", "uid" ) );
+      "pass" and => { "symlink_owner_ok" };
+      "fail" or => { "link_1_uid_repaired", "link_2_uid_repaired" };
+  reports:
+
+   link_1_uid_repaired::
+    "We think we repaired the UID of the symlink for promise with handle link_1";
+
+   link_2_uid_repaired::
+    "We think we repaired the UID of the symlink for promise with handle link_2";
+
+   link_1_uid_repaired.link_2_uid_repaired::
+    "We think we repaired the UID of the symlink multiple times";
+
+    symlink_owner_ok::
+      "The symlink is owned by uid 0 as expected";
+
+    !symlink_owner_ok::
+      "The symlink is NOT owned by uid 0 unexpectedly";
+
+    pass.!fail::
+      "$(this.promise_filename) Pass";
+    !pass|fail::
+      "$(this.promise_filename) FAIL";
+}
+body perms uid( uid )
+{
+  owners => { "$(uid)" };
+}
+
+body link_from ln_s(x)
+# @brief Create a symbolink link to `x`
+# The link is created even if the source of the link does not exist.
+# @param x The source of the link
+{
+      link_type => "symlink";
+      source => "$(x)";
+      when_no_source => "force";
+}
+
+bundle agent __main__
+{
+  methods:
+      "init";
+      "test";
+      "check";
+}

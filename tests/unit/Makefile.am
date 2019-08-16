@@ -99,56 +99,36 @@ libdb_la_CFLAGS = $(AM_CFLAGS)
 check_PROGRAMS = \
 	arg_split_test \
 	assoc_test \
-	cleanup_test \
-	csv_writer_test \
 	item_test \
 	rlist_test \
 	domainname_test \
-	set_test \
 	set_domainname_test \
 	json_test \
-	csv_parser_test \
-	env_file_test \
 	evalfunction_test \
 	eval_context_test \
 	regex_test \
-	alloc_test \
-	string_writer_test \
-	file_writer_test \
-	xml_writer_test \
-	sequence_test \
 	lastseen_test \
 	lastseen_migration_test \
 	changes_migration_test \
 	db_test \
 	db_concurrent_test \
-	misc_lib_test \
 	item_lib_test \
-	string_lib_test \
 	crypto_symmetric_test \
 	persistent_lock_test  \
-	thread_test \
 	package_versions_compare_test \
 	files_lib_test \
-	file_lib_test \
 	files_copy_test \
-	map_test \
 	parsemode_test \
 	parser_test \
 	passopenfile_test \
-	path_test \
 	policy_test \
 	sort_test \
 	file_name_test \
 	logging_test \
-	logging_timestamp_test \
 	granules_test \
 	scope_test \
 	conversion_test \
 	files_interfaces_test \
-	refcount_test \
-	list_test \
-	buffer_test \
 	connection_management_test \
 	expand_test \
 	string_expressions_test \
@@ -159,8 +139,6 @@ check_PROGRAMS = \
 	generic_agent_test \
 	syntax_test \
 	sysinfo_test \
-	ipaddress_test \
-	rb-tree-test \
 	variable_test \
 	protocol_test \
 	mon_cpu_test \
@@ -168,19 +146,12 @@ check_PROGRAMS = \
 	mon_processes_test \
 	mustache_test \
 	class_test \
-	hash_test \
 	key_test \
 	cf_upgrade_test \
-	queue_test \
-	threaded_queue_test \
-	threaded_deque_test \
-	stack_test \
 	matching_test \
-	ring_buffer_test \
 	strlist_test \
 	addr_lib_test \
 	policy_server_test \
-	libcompat_test \
 	split_process_line_test \
 	new_packages_promise_test \
 	iteration_test
@@ -220,13 +191,6 @@ endif
 #
 TESTS_ENVIRONMENT = DYLD_FORCE_FLAT_NAMESPACE=yes
 
-cleanup_test_SOURCES = cleanup_test.c
-cleanup_test_LDADD = libtest.la libdb.la
-
-csv_writer_test_SOURCES = csv_writer_test.c ../../libntech/libutils/csv_writer.c \
-	../../libntech/libutils/cleanup.c
-csv_writer_test_LDADD = libtest.la libstr.la
-
 conversion_test_SOURCES = conversion_test.c ../../libpromises/conversion.c
 
 if !BUILTIN_EXTENSIONS
@@ -247,26 +211,7 @@ set_domainname_test_LDADD = libstr.la ../../libpromises/libpromises.la
 str_test_SOURCES = str_test.c
 str_test_LDADD = libstr.la
 
-xml_writer_test_SOURCES = xml_writer_test.c \
-	../../libntech/libutils/xml_writer.c \
-	../../libntech/libutils/cleanup.c
-xml_writer_test_LDADD = libtest.la libstr.la
-
-list_test_SOURCES = list_test.c
-
-refcount_test_SOURCES = refcount_test.c ../../libntech/libutils/refcount.c
-
-buffer_test_SOURCES = buffer_test.c ../../libntech/libutils/buffer.c
-# Workaround for object file basename conflicts, search the web for
-# "automake created with both libtool and without"
-buffer_test_CPPFLAGS = $(AM_CPPFLAGS)
-
-csv_parser_test_SOURCES = csv_parser_test.c ../../libntech/libutils/csv_parser.c
-csv_parser_test_LDADD = libtest.la ../../libntech/libutils/libutils.la
-
 regex_test_SOURCES = regex_test.c ../../libpromises/match_scope.c
-
-ipaddress_test_SOURCES = ipaddress_test.c
 
 protocol_test_SOURCES = protocol_test.c \
 	../../cf-serverd/server_common.c \
@@ -298,13 +243,6 @@ avahi_config_test_SOURCES = avahi_config_test.c \
 avahi_config_test_LDADD = ../../libpromises/libpromises.la libtest.la
 
 endif
-endif
-
-#file_writer_test_CPPFLAGS = -I$(top_srcdir)/libutils
-file_writer_test_SOURCES = file_writer_test.c
-# ENABLE_COVERAGE is set in top-level configure.ac
-if !ENABLE_COVERAGE
-file_writer_test_SOURCES += gcov-stub.c
 endif
 
 db_test_SOURCES = db_test.c
@@ -343,25 +281,6 @@ package_versions_compare_test_SOURCES = package_versions_compare_test.c \
 package_versions_compare_test_LDADD = ../../libpromises/libpromises.la \
 	libtest.la
 
-file_lib_test_SOURCES = file_lib_test.c \
-	../../libntech/libutils/file_lib.c \
-	../../libntech/libutils/logging.c \
-	../../libntech/libutils/misc_lib.c \
-	../../libntech/libutils/path.c \
-	../../libntech/libutils/string_lib.c \
-	../../libntech/libutils/sequence.c \
-	../../libntech/libutils/set.c \
-	../../libntech/libutils/buffer.c \
-	../../libntech/libutils/pcre_wrap.c \
-	../../libntech/libutils/regex.c \
-	../../libntech/libutils/json.c \
-	../../libntech/libutils/json-yaml.c \
-	../../libntech/libutils/unix_dir.c \
-	../../libntech/libutils/cleanup.c \
-	../../libntech/libutils/writer.c
-file_lib_test_LDADD = libtest.la
-file_lib_test_CPPFLAGS = $(AM_CPPFLAGS) -DTEST_SYMLINK_ATOMICITY
-
 files_copy_test_SOURCES  = files_copy_test.c
 files_copy_test_LDADD    = libtest.la ../../libpromises/libpromises.la
 
@@ -370,10 +289,6 @@ sort_test_LDADD = libtest.la ../../libpromises/libpromises.la
 
 logging_test_SOURCES = logging_test.c ../../libpromises/syslog_client.c
 logging_test_LDADD = libtest.la ../../libntech/libutils/libutils.la
-
-logging_timestamp_test_SOURCES = logging_timestamp_test.c \
-	../../libntech/libutils/logging.h
-logging_timestamp_test_LDADD = libtest.la ../../libntech/libutils/libutils.la
 
 connection_management_test_SOURCES = connection_management_test.c \
 	../../cf-serverd/server_common.c \
@@ -457,9 +372,6 @@ mon_processes_test_SOURCES = mon_processes_test.c \
 	../../cf-monitord/mon_processes.c
 mon_processes_test_LDADD = ../../libpromises/libpromises.la libtest.la
 
-hash_test_SOURCES = hash_test.c
-hash_test_LDADD = ../../libntech/libutils/libutils.la libtest.la
-
 key_test_SOURCES = key_test.c
 key_test_LDADD = ../../libpromises/libpromises.la \
 	../../libntech/libutils/libutils.la \
@@ -470,10 +382,6 @@ strlist_test_SOURCES = strlist_test.c \
 	../../cf-serverd/strlist.h
 
 iteration_test_SOURCES = iteration_test.c
-
-libcompat_test_CPPFLAGS = -I$(top_srcdir)/libntech/libcompat \
-	-I$(top_srcdir)/libntech/libutils
-libcompat_test_SOURCES = libcompat_test.c
 
 cf_upgrade_test_SOURCES = cf_upgrade_test.c \
 	../../cf-upgrade/alloc-mini.c \
@@ -488,14 +396,6 @@ cf_upgrade_test_SOURCES = cf_upgrade_test.c \
 	../../cf-upgrade/update.h
 cf_upgrade_test_CPPFLAGS = -I../../cf-upgrade -I$(top_srcdir)/libntech/libutils -I$(top_srcdir)
 cf_upgrade_test_LDADD = libtest.la ../../libntech/libcompat/libcompat.la
-
-queue_test_SOURCES = queue_test.c
-
-threaded_queue_test_SOURCES = threaded_queue_test.c
-
-threaded_deque_test_SOURCES = threaded_deque_test.c
-
-stack_test_SOURCES = stack_test.c
 
 if !NT
 check_PROGRAMS += nfs_test

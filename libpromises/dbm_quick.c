@@ -188,20 +188,20 @@ bool DBPrivClean(DBPriv *db)
     {
         return false;
     }
-    
+
     if (!dpiterinit(db->depot))
     {
         Log(LOG_LEVEL_ERR, "Could not initialize QuickDB iterator. (dpiterinit: %s)", dperrmsg(dpecode));
         Unlock(db);
         return false;
     }
-    
+
     char *key = NULL;
     while((key = dpiternext(db->depot, NULL)))
     {
         dpout(db->depot, key, -1);
     }
-    
+
     Unlock(db);
     return true;
 }

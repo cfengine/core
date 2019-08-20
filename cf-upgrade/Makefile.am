@@ -30,13 +30,13 @@ AM_CPPFLAGS=-I$(top_srcdir)/libntech/libutils # platform.h
 LDADD=../libntech/libcompat/libcompat.la
 
 cf_upgrade_SOURCES = \
-    alloc-mini.c alloc-mini.h \
-    command_line.c command_line.h \
-    configuration.c configuration.h \
-    log.c log.h \
-    process.c process.h \
-    update.c update.h \
-    cf-upgrade.c
+	alloc-mini.c alloc-mini.h \
+	command_line.c command_line.h \
+	configuration.c configuration.h \
+	log.c log.h \
+	process.c process.h \
+	update.c update.h \
+	cf-upgrade.c
 
 CLEANFILES = *.gcno *.gcda
 

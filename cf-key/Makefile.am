@@ -38,15 +38,15 @@ AM_CFLAGS = \
 
 libcf_key_la_SOURCES = \
 	cf-key.c \
-        cf-key-functions.c cf-key-functions.h
+	cf-key-functions.c cf-key-functions.h
 
 
 libcf_key_la_LIBADD = ../libpromises/libpromises.la
 
 if !BUILTIN_EXTENSIONS
- bin_PROGRAMS = cf-key
- cf_key_LDADD = libcf-key.la
- cf_key_SOURCES =
+bin_PROGRAMS = cf-key
+cf_key_LDADD = libcf-key.la
+cf_key_SOURCES =
 endif
 
 CLEANFILES = *.gcno *.gcda

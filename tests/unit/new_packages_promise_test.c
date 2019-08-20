@@ -20,7 +20,7 @@ static void test_add_module_to_context()
 
     PackageModuleBody *pm = make_mock_package_module("apt_get", 120, 240, NULL);
     AddPackageModuleToContext(ctx, pm);
-   
+
     PackageModuleBody *pm2 = make_mock_package_module("yum", 220, 440, NULL);
     AddPackageModuleToContext(ctx, pm2);
 
@@ -54,17 +54,17 @@ static void test_default_package_module_settings()
 
     PackageModuleBody *pm = make_mock_package_module("apt_get", 120, 240, NULL);
     AddPackageModuleToContext(ctx, pm);
-   
+
     PackageModuleBody *pm2 = make_mock_package_module("yum", 220, 440, NULL);
     AddPackageModuleToContext(ctx, pm2);
-    
+
     PackageModuleBody *pm3 = make_mock_package_module("yum_2", 220, 440, NULL);
     AddPackageModuleToContext(ctx, pm3);
 
     AddDefaultPackageModuleToContext(ctx, "apt_get");
     PackageModuleBody *def_pm = GetDefaultPackageModuleFromContext(ctx);
     assert_string_equal("apt_get", def_pm->name);
-    
+
     AddDefaultPackageModuleToContext(ctx, "yum");
     def_pm = GetDefaultPackageModuleFromContext(ctx);
     assert_string_equal("yum", def_pm->name);

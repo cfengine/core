@@ -391,7 +391,7 @@ static const ConstraintSyntax CF_DELETEATTRIBUTES_BODIES[] =
 };
 
 
-// Master Syntax for Files 
+// Master Syntax for Files
 
 const PromiseTypeSyntax CF_FILES_PROMISE_TYPES[] =
 {

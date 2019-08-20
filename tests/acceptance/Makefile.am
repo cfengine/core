@@ -52,17 +52,16 @@ no_fds_LDADD = ../../libntech/libutils/libutils.la
 endif # !BUILTIN_EXTENSIONS
 
 if HAVE_LIBXML2
-  noinst_PROGRAMS += xml-c14nize
+noinst_PROGRAMS += xml-c14nize
 
-  xml_c14nize_CPPFLAGS = \
+xml_c14nize_CPPFLAGS = \
 	-I$(top_srcdir)/libpromises \
 	-I$(srcdir)/../../libntech/libutils \
 	$(LIBXML2_CPPFLAGS)
 
-  xml_c14nize_CFLAGS  = $(LIBXML2_CFLAGS)
-  xml_c14nize_LDFLAGS = $(LIBXML2_LDFLAGS)
-  xml_c14nize_LDADD = ../../libntech/libutils/libutils.la \
-	$(LIBXML2_LIBS)
+xml_c14nize_CFLAGS  = $(LIBXML2_CFLAGS)
+xml_c14nize_LDFLAGS = $(LIBXML2_LDFLAGS)
+xml_c14nize_LDADD = ../../libntech/libutils/libutils.la $(LIBXML2_LIBS)
 endif
 
 TESTS =
@@ -84,9 +83,9 @@ if !HAVE_LIBCURL
 TESTS_ENVIRONMENT += LIBCURL_TESTS=0
 endif
 
+# Keep the '+' in front for the command, needed for the sub-make
+# to run in parallel; TODO fix "make -n" not working:
 check-local:
-        # Keep the '+' in front for the command, needed for the sub-make
-        # to run in parallel; TODO fix "make -n" not working.
 	+ $(TESTS_ENVIRONMENT) MAKE=$(MAKE) ./testall
 
 

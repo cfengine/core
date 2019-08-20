@@ -44,4 +44,4 @@ do
 	echo "deleting $SHA1"
 	curl --user $USERNAME:$PASSWORD $URL/api/host/${SHA1} -X DELETE
     fi;
-done 
+done

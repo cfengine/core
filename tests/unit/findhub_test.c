@@ -103,7 +103,7 @@ void *dlsym(void *handle, const char *symbol)
     {
         return &avahi_service_browser_new;
     }
-    
+
     return NULL;
 }
 
@@ -115,7 +115,7 @@ int dlclose(void *handle)
 AvahiSimplePoll *avahi_simple_poll_new()
 {
     AvahiSimplePoll *sp = (AvahiSimplePoll*)1;
-    
+
     return sp;
 }
 
@@ -158,7 +158,7 @@ const char *avahi_strerror(int error)
     return "Avahi error occurred";
 }
 
-AvahiServiceResolver *avahi_service_resolver_new(AvahiClient *c, AvahiIfIndex index, AvahiProtocol protocol, const char * s1, const char *s2, const char *s3, 
+AvahiServiceResolver *avahi_service_resolver_new(AvahiClient *c, AvahiIfIndex index, AvahiProtocol protocol, const char * s1, const char *s2, const char *s3,
                                                  AvahiProtocol protocol2, AvahiLookupFlags flags, AvahiServiceResolverCallback callback, void *data)
 {
     return (AvahiServiceResolver *)1;
@@ -217,18 +217,18 @@ void avahi_client_free(AvahiClient *c)
 
 }
 
-AvahiServiceBrowser *avahi_service_browser_new(AvahiClient *c, AvahiIfIndex index, AvahiProtocol protocol, const char *s1, const char *s2, AvahiLookupFlags flags, 
+AvahiServiceBrowser *avahi_service_browser_new(AvahiClient *c, AvahiIfIndex index, AvahiProtocol protocol, const char *s1, const char *s2, AvahiLookupFlags flags,
                                                AvahiServiceBrowserCallback callback, void *data)
 {
     AvahiServiceBrowser *browser = (AvahiServiceBrowser *)1;
-    
+
     return browser;
 }
 
 static void test_noHubsFound(void)
 {
     List *list = NULL;
-    
+
     hostcount = 0;
 
     assert_int_equal(ListHubs(&list), 0);
@@ -245,12 +245,12 @@ static void test_oneHubFound(void)
 
     assert_int_equal(ListHubs(&list), 1);
     assert_int_not_equal(list, NULL);
-    
+
     ListIterator *i = NULL;
     i = ListIteratorGet(list);
     assert_true(i != NULL);
     HostProperties *host = (HostProperties *)ListIteratorData(i);
-    
+
     assert_int_equal(host->Port,5308);
     assert_string_equal(host->Hostname, "host1");
     assert_string_equal(host->IPAddress, "10.0.0.100");
@@ -267,15 +267,15 @@ static void test_multipleHubsFound(void)
 
     assert_int_equal(ListHubs(&list), 3);
     assert_int_not_equal(list, NULL);
-    
+
     ListIterator *i = NULL;
     i = ListIteratorGet(list);
-    
-    HostProperties *host1 = (HostProperties *)ListIteratorData(i); 
+
+    HostProperties *host1 = (HostProperties *)ListIteratorData(i);
     assert_int_not_equal(ListIteratorNext(i), -1);
-    HostProperties *host2 = (HostProperties *)ListIteratorData(i); 
+    HostProperties *host2 = (HostProperties *)ListIteratorData(i);
     assert_int_not_equal(ListIteratorNext(i), -1);
-    HostProperties *host3 = (HostProperties *)ListIteratorData(i); 
+    HostProperties *host3 = (HostProperties *)ListIteratorData(i);
 
     assert_int_equal(host1->Port, 5308);
     assert_string_equal(host1->Hostname, "host1");

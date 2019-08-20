@@ -60,7 +60,7 @@ then
     echo "-------- output end --------";
 else
     echo "$TEST_NAME: Success";
-fi          
+fi
 
 # Third test, wrong parameter
 TEST_NAME="Wrong parameter";
@@ -77,7 +77,7 @@ then
     echo "-------- output end --------";
 else
     echo "$TEST_NAME: Success";
-fi          
+fi
 
 # Fourth test, all good
 TEST_NAME="Normal command line";

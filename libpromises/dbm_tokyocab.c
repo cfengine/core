@@ -121,7 +121,7 @@ static bool OpenTokyoDatabase(const char *filename, TCHDB **hdb)
 
     if (threshold == -1)
     {
-        /** 
+        /**
            Optimize always if TCDB_OPTIMIZE_PERCENT is equal to 100
            Never optimize if  TCDB_OPTIMIZE_PERCENT is equal to 0
          */
@@ -131,7 +131,7 @@ static bool OpenTokyoDatabase(const char *filename, TCHDB **hdb)
             /* Environment variable exists */
             char *end;
             long result = strtol(perc, &end, 10);
- 
+
             /* Environment variable is a number and in 0..100 range */
             if (!*end && result >-1 && result < 101)
             {
@@ -140,13 +140,13 @@ static bool OpenTokyoDatabase(const char *filename, TCHDB **hdb)
             else
             {
                 /* This corresponds to 1% */
-                threshold = 99; 
+                threshold = 99;
             }
         }
         else
         {
             /* This corresponds to 1% */
-            threshold = 99; 
+            threshold = 99;
         }
     }
     if ((threshold != 100) && (threshold == 0 || (int)(rand()%threshold) == 0))
@@ -224,24 +224,24 @@ void DBPrivCommit(ARG_UNUSED DBPriv *db)
 bool DBPrivClean(DBPriv *db)
 {
     DBCursorPriv *cursor = DBPrivOpenCursor(db);
-    
+
     if (!cursor)
     {
         return false;
     }
-    
+
     void *key;
     int key_size;
     void *value;
     int value_size;
-    
+
     while ((DBPrivAdvanceCursor(cursor, &key, &key_size, &value, &value_size)))
     {
         DBPrivDeleteCursorEntry(cursor);
     }
-    
+
     DBPrivCloseCursor(cursor);
-    
+
     return true;
 }
 

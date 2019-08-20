@@ -159,13 +159,13 @@ static void test_command_promiser(void)
 
     char *t2 = "/bin/rpm -qa --queryformat \"i | repos | %{name} | %{version}-%{release} | %{arch}\n\"";
     assert_string_equal(CommandArg0(t2), "/bin/rpm");
-    
+
     char *t3 = "/bin/mount -va";
     assert_string_equal(CommandArg0(t3), "/bin/mount");
 
     char *t4 = "\"/bin/echo\"";
     assert_string_equal(CommandArg0(t4), "/bin/echo");
-    
+
     char *t5 = "\"/bin/echo\" 123";
     assert_string_equal(CommandArg0(t5), "/bin/echo");
 
@@ -210,7 +210,7 @@ static void test_command_promiser(void)
 
     char *b3 = "";
     assert_string_equal(CommandArg0(b3), "");
-    
+
 }
 
 int main()

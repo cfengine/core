@@ -9,13 +9,13 @@
 // use Blowfish (64-bit block size) for now
 #define CIPHER_TYPE_CFENGINE 'c'
 #define CIPHER_BLOCK_SIZE_BYTES 8
-static const char CIPHERTEXT_PRECOMPUTED[] = 
-{ 
+static const char CIPHERTEXT_PRECOMPUTED[] =
+{
     0x99, 0xfd, 0x86, 0x9c, 0x17, 0xb9, 0xe4, 0x98,
-    0xab, 0x01, 0x17, 0x5a, 0x4a, 0xcf, 0xfc, 0x1f, 
-    0xd4, 0xc5, 0xa3, 0xab, 0xf0, 0x1c, 0xa7, 0x39, 
-    0xf1, 0xf4, 0x09, 0xe4, 0xac, 0xb6, 0x44, 0xbb, 
-    0x47, 0xdd, 0xe6, 0xc4, 0x0e, 0x4a, 0x16, 0xf0 
+    0xab, 0x01, 0x17, 0x5a, 0x4a, 0xcf, 0xfc, 0x1f,
+    0xd4, 0xc5, 0xa3, 0xab, 0xf0, 0x1c, 0xa7, 0x39,
+    0xf1, 0xf4, 0x09, 0xe4, 0xac, 0xb6, 0x44, 0xbb,
+    0x47, 0xdd, 0xe6, 0xc4, 0x0e, 0x4a, 0x16, 0xf0
 };
 
 static int ComputeCiphertextLen(int plaintext_len, int cipher_block_size_bytes)
@@ -41,7 +41,7 @@ static void test_symmetric_encrypt(void)
 {
     char ciphertext[CF_BUFSIZE];
     int plaintext_len = strlen(PLAINTEXT) + 1;
-    
+
     int ciphertext_len = EncryptString(ciphertext, sizeof(ciphertext),
                                        PLAINTEXT, plaintext_len,
                                        CIPHER_TYPE_CFENGINE, KEY);
@@ -55,9 +55,9 @@ static void test_symmetric_decrypt(void)
 {
     char *ciphertext = (char *)CIPHERTEXT_PRECOMPUTED;
     int ciphertext_len = sizeof(CIPHERTEXT_PRECOMPUTED);
-    
+
     char plaintext_out[CF_BUFSIZE];
-    
+
     int plaintext_len = DecryptString(plaintext_out, sizeof(plaintext_out),
                                       ciphertext, ciphertext_len, CIPHER_TYPE_CFENGINE, KEY);
 
@@ -109,6 +109,6 @@ int main()
         unit_test(test_cipher_text_size_max),
         unit_test(test_plain_text_size_max),
     };
-    
+
     return run_tests(tests);
 }

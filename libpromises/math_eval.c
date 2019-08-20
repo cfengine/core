@@ -53,7 +53,7 @@ double math_eval_push(double n, double *stack, int *stackp)
         return 0;
     }
 
-    return stack[++(*stackp)]= n; 
+    return stack[++(*stackp)]= n;
 }
 
 double math_eval_pop(double *stack, int *stackp)

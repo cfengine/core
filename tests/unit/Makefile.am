@@ -159,8 +159,8 @@ check_PROGRAMS = \
 if HAVE_AVAHI_CLIENT
 if HAVE_AVAHI_COMMON
 check_PROGRAMS += \
-    findhub_test \
-    avahi_config_test
+	findhub_test \
+	avahi_config_test
 endif
 endif
 
@@ -194,15 +194,15 @@ TESTS_ENVIRONMENT = DYLD_FORCE_FLAT_NAMESPACE=yes
 conversion_test_SOURCES = conversion_test.c ../../libpromises/conversion.c
 
 if !BUILTIN_EXTENSIONS
-    check_PROGRAMS += enterprise_extension_test
+check_PROGRAMS += enterprise_extension_test
 
-    enterprise_extension_test_SOURCES = enterprise_extension_test.c
+enterprise_extension_test_SOURCES = enterprise_extension_test.c
 
-    check_LTLIBRARIES += cfengine-enterprise.la
-    cfengine_enterprise_la_SOURCES = enterprise_extension_test_lib.c
-    cfengine_enterprise_la_LDFLAGS = $(AM_LDFLAGS) \
+check_LTLIBRARIES += cfengine-enterprise.la
+cfengine_enterprise_la_SOURCES = enterprise_extension_test_lib.c
+cfengine_enterprise_la_LDFLAGS = $(AM_LDFLAGS) \
 	-avoid-version -module -shared -export-dynamic -rpath /
-    EXTRA_enterprise_extension_test_DEPENDENCIES = cfengine-enterprise.la
+EXTRA_enterprise_extension_test_DEPENDENCIES = cfengine-enterprise.la
 endif
 
 set_domainname_test_SOURCES = set_domainname_test.c

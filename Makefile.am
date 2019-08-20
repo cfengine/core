@@ -75,8 +75,8 @@ DISTCLEANFILES =
 # "configure; make; make install"
 #
 MAINTAINERCLEANFILES = Makefile.in aclocal.m4 config.guess config.sub \
-        configure install-sh missing mkinstalldirs depcomp ylwrap \
-        ltmain.sh mdate-sh
+	configure install-sh missing mkinstalldirs depcomp ylwrap \
+	ltmain.sh mdate-sh
 
 #
 # Pass proper flags to aclocal to pick up Libtool macros
@@ -100,9 +100,9 @@ tar-package:
 	origdir=`pwd`       &&  export origdir &&  \
 	$(MAKE) DESTDIR=$$pkgdir install  &&  \
 	(   cd $$pkgdir  &&  \
-            find . -name '*.cf*' | xargs -n1 chmod go-w  &&  \
-	    tardir=.  &&  $(am__tar) |  \
-	        GZIP=$(GZIP_ENV) gzip -c  \
+	    find . -name '*.cf*' | xargs -n1 chmod go-w  &&  \
+	    tardir=.  &&  \
+	    $(am__tar) | GZIP=$(GZIP_ENV) gzip -c  \
 	        > "$$origdir"/$(PACKAGE)-$(VERSION).pkg.tar.gz  \
 	)  ;  \
 	[ x$$pkgdir != x ]  &&  rm -rf $$pkgdir
@@ -138,8 +138,8 @@ coverage: clean-coverage run-coverage collect-coverage
 # so we need to generate it before everything else.
 ################################################################################
 BUILT_SOURCES = \
-       $(srcdir)/libpromises/enterprise_extension.c \
-       $(srcdir)/libpromises/enterprise_extension.h
+	$(srcdir)/libpromises/enterprise_extension.c \
+	$(srcdir)/libpromises/enterprise_extension.h
 libpromises/enterprise_extension.c: libpromises/extensions_template.c.pre libpromises/enterprise_extension.sed
 	$(V_SED) $(SED) -f $(srcdir)/libpromises/enterprise_extension.sed $< > $@
 libpromises/enterprise_extension.h: libpromises/extensions_template.h.pre libpromises/enterprise_extension.sed

@@ -29,7 +29,7 @@
 #include <logging.h>
 #include <alloc.h>
 
-List *hublist = NULL; 
+List *hublist = NULL;
 
 static void CleanupDlClose(void);
 static int CompareHosts(const void  *a, const void *b);
@@ -203,7 +203,7 @@ int ListHubs(List **list)
     if (!(sb = avahi_service_browser_new_ptr(client, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, "_cfenginehub._tcp", NULL, 0, browse_callback, client)))
     {
         Log(LOG_LEVEL_ERR, "Failed to create service browser '%s'", avahi_strerror_ptr(avahi_client_errno_ptr(client)));
-        
+
         if (spoll)
         {
             avahi_simple_poll_free_ptr(spoll);
@@ -230,7 +230,7 @@ int ListHubs(List **list)
         avahi_client_free_ptr(client);
     if (spoll)
         avahi_simple_poll_free_ptr(spoll);
-    
+
     *list = hublist;
 
     return ListCount(*list);

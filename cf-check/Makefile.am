@@ -55,13 +55,13 @@ libcf_check_la_SOURCES = \
 	repair.c repair.h
 
 if !BUILTIN_EXTENSIONS
-  bin_PROGRAMS = cf-check
+bin_PROGRAMS = cf-check
 
-  # Workaround for automake madness (try removing it if you want to know why).
-  cf_check_CFLAGS = $(AM_CFLAGS)
+# Workaround for automake madness (try removing it if you want to know why).
+cf_check_CFLAGS = $(AM_CFLAGS)
 
-  # Build both a libcf-check.la library, and a cf-check executable
-  cf_check_LDADD = libcf-check.la
+# Build both a libcf-check.la library, and a cf-check executable
+cf_check_LDADD = libcf-check.la
 endif
 
 CLEANFILES = *.gcno *.gcda

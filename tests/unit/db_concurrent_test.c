@@ -45,7 +45,7 @@ struct arg_struct {
 *     batch update
 *     delete one by one
 *     batch delete
-* 
+*
 * join
 * check
 * 0 - 1999
@@ -55,11 +55,11 @@ struct arg_struct {
 *   last 1500, if %20, update +1
 *   first 500, if %50, delete
 *   last 1500, if %50, delete
-*   
-* 2000- 3999 
-* 4000- 5999 
-* 6000- 7999 
-* 8000- 9999 
+*
+* 2000- 3999
+* 4000- 5999
+* 6000- 7999
+* 8000- 9999
 *****************************************************************/
 static void *fct2(void *arguments)
 {
@@ -98,7 +98,7 @@ static void *fct2(void *arguments)
     xsnprintf(key, sizeof(key), "foo%d", base*2000+88);
     assert_int_equal(HasKeyDB(db, key, strlen(key)+1), true);
     xsnprintf(key, sizeof(key), "foo%d", base*2000+89);
-    assert_int_equal(HasKeyDB(db, key, strlen(key)+1), true); 
+    assert_int_equal(HasKeyDB(db, key, strlen(key)+1), true);
 
     CloseDB(db);
     return NULL;
@@ -111,7 +111,7 @@ void test_db_concurrent(void)
     int i;
     for (i=0; i < 10; i++)
     {
-        args[i].base = i; 
+        args[i].base = i;
         pthread_create(&tid[i], NULL, (void *) fct2, (void *)&args[i]);
     }
     for (i=0; i < 10; i++)

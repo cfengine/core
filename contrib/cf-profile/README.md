@@ -5,7 +5,7 @@ together with timings and classes augmented so that you can see clearly the orde
 part of your policy cf-agent is spending most time on.
 
 ```shell
-# cf-agent -v | ./cf-profile.pl -a 
+# cf-agent -v | ./cf-profile.pl -a
 ```
 
 Requires Perl module Time::HiRes.

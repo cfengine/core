@@ -43,10 +43,10 @@ libcf_testd_la_SOURCES = \
 	cf-testd.c
 
 if !BUILTIN_EXTENSIONS
- noinst_PROGRAMS = cf-testd
- # Workaround for automake madness (try removing it if you want to know why).
- cf_testd_CFLAGS = $(AM_CFLAGS)
- cf_testd_LDADD = libcf-testd.la
+noinst_PROGRAMS = cf-testd
+# Workaround for automake madness (try removing it if you want to know why).
+cf_testd_CFLAGS = $(AM_CFLAGS)
+cf_testd_LDADD = libcf-testd.la
 endif
 
 CLEANFILES = *.gcno *.gcda

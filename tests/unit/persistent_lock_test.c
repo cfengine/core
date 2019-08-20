@@ -36,7 +36,7 @@ int main()
       {
 
       };
-    
+
     int ret = run_tests(tests);
 
     tests_teardown();

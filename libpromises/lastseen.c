@@ -681,7 +681,7 @@ int LastSeenHostKeyCount(void)
  * @brief removes all traces of entry 'input' from lastseen DB
  *
  * @param[in] key digest (SHA/MD5 format) or free host name string
- * @param[in] must_be_coherent. false : delete if lastseen is incoherent, 
+ * @param[in] must_be_coherent. false : delete if lastseen is incoherent,
  *                              true :  don't if lastseen is incoherent
  * @param[out] equivalent. If input is a host, return its corresponding
  *                         digest. If input is a digest, return its

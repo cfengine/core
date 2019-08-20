@@ -67,7 +67,7 @@ void test_cpu_monitor(void)
         return;
     }
     double min = (double) (dq2<dq1?dq2:dq1);
-    double max = (double) (dq2<dq1?dq1:dq2); 
+    double max = (double) (dq2<dq1?dq1:dq2);
     double lower = (min - (fabs(dq2 - dq1)) * 0.90);
     double upper = (max + (fabs(dq2 - dq1)) * 1.10);
 

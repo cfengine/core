@@ -35,12 +35,12 @@ get_version()
     *)
       VERSION=$CONF_VERSION
       ;;
-  esac  
+  esac
 echo $VERSION
 }
 dist()
 
-{ 
+{
   git checkout $BRANCH
   ./autogen.sh --with-tokyocabinet=/usr
   make dist

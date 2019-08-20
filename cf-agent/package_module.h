@@ -40,7 +40,7 @@ typedef enum
     PACKAGE_TYPE_FILE
 } PackageType;
 
-typedef struct 
+typedef struct
 {
     char *name;
     char *version;
@@ -77,14 +77,14 @@ typedef enum {
     UPDATE_TYPE_LOCAL_UPDATES,
 } UpdateType;
 
-PromiseResult HandlePresentPromiseAction(EvalContext *ctx, 
+PromiseResult HandlePresentPromiseAction(EvalContext *ctx,
                                          const char *package_name,
                                          const NewPackages *policy_data,
                                          const PackageModuleWrapper *wrapper,
                                          enum cfopaction action);
 PromiseResult HandleAbsentPromiseAction(EvalContext *ctx,
                                         char *package_name,
-                                        const NewPackages *policy_data, 
+                                        const NewPackages *policy_data,
                                         const PackageModuleWrapper *wrapper,
                                         enum cfopaction action);
 

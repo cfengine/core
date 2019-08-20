@@ -570,7 +570,7 @@ static const char *const COMMON_TYPESEQUENCE[] =
     NULL
 };
 
-/* Check if promise is NOT belonging to default server types 
+/* Check if promise is NOT belonging to default server types
  * (see SERVER_TYPESEQUENCE)*/
 static bool IsPromiseTypeNotInTypeSequence(const char *promise_type,
                                            const char * const *seq)

@@ -18,7 +18,7 @@ void test_load_monitor(void)
     }
 
     double min = (double) (load2[0]<load1[0]?load2[0]:load1[0]);
-    double max = (double) (load2[0]<load1[0]?load1[0]:load2[0]); 
+    double max = (double) (load2[0]<load1[0]?load1[0]:load2[0]);
     double lower = (min - (fabs(load2[0] - load1[0]))) * 0.90;
     double upper = (max + (fabs(load2[0] - load1[0]))) * 1.10;
 

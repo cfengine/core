@@ -75,7 +75,8 @@ bundle agent test {
         handle => "from_json_with_explicit_data",
         template_method => "inline_mustache",
         template_data => @(json_data.key_values),
-        edit_template_string => "{{#-top-}}
+        edit_template_string => "TEMPLATE=RENDERED
+{{#-top-}}
 {{@}}={{.}}
 {{/-top-}}";
 
@@ -84,7 +85,8 @@ bundle agent test {
         handle => "from_array_with_explicit_data",
         template_method => "inline_mustache",
         template_data => @(array_data.key_values),
-        edit_template_string => "{{#-top-}}
+        edit_template_string => "TEMPLATE=RENDERED
+{{#-top-}}
 {{@}}={{.}}
 {{/-top-}}";
 
@@ -92,7 +94,8 @@ bundle agent test {
         create => "true",
         handle => "from_json_with_implicit_datastate",
         template_method => "inline_mustache",
-        edit_template_string => "{{#vars.json_data.key_values}}
+        edit_template_string => "TEMPLATE=RENDERED
+{{#vars.json_data.key_values}}
 {{@}}={{.}}
 {{/vars.json_data.key_values}}";
 
@@ -100,7 +103,8 @@ bundle agent test {
         create => "true",
         handle => "from_array_with_implicit_datastate",
         template_method => "inline_mustache",
-        edit_template_string => "{{#vars.array_data.key_values}}
+        edit_template_string => "TEMPLATE=RENDERED
+{{#vars.array_data.key_values}}
 {{@}}={{.}}
 {{/vars.array_data.key_values}}";
 
@@ -109,7 +113,8 @@ bundle agent test {
         handle => "from_json_with_bundlestate",
         template_method => "inline_mustache",
         template_data => bundlestate( "json_data" ),
-        edit_template_string => "{{#key_values}}
+        edit_template_string => "TEMPLATE=RENDERED
+{{#key_values}}
 {{@}}={{.}}
 {{/key_values}}";
 
@@ -118,7 +123,8 @@ bundle agent test {
         handle => "from_array_with_bundlestate",
         template_method => "inline_mustache",
         template_data => bundlestate( "array_data" ),
-        edit_template_string => "{{#key_values}}
+        edit_template_string => "TEMPLATE=RENDERED
+{{#key_values}}
 {{@}}={{.}}
 {{/key_values}}";
 
@@ -127,7 +133,8 @@ bundle agent test {
         handle => "from_json_with_explicit_datastate",
         template_method => "inline_mustache",
         template_data => datastate(),
-        edit_template_string => "{{#vars.json_data.key_values}}
+        edit_template_string => "TEMPLATE=RENDERED
+{{#vars.json_data.key_values}}
 {{@}}={{.}}
 {{/vars.json_data.key_values}}";
 
@@ -136,7 +143,8 @@ bundle agent test {
         handle => "from_array_with_explicit_datastate",
         template_method => "inline_mustache",
         template_data => datastate(),
-        edit_template_string => "{{#vars.array_data.key_values}}
+        edit_template_string => "TEMPLATE=RENDERED
+{{#vars.array_data.key_values}}
 {{@}}={{.}}
 {{/vars.array_data.key_values}}";
 
@@ -170,6 +178,7 @@ bundle agent check
                strcmp( "1", "$(env_$(test.cases)[one])" ),
                strcmp( "2", "$(env_$(test.cases)[two])" ),
                strcmp( "3", "$(env_$(test.cases)[three])" ),
+               strcmp( "TEMPLATE", "RENDERED" ),
                },
       meta => { "class_for_passing_case" },
       comment => "We pass a test case if each expected key value pair is found in the rendered data";

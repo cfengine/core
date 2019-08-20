@@ -39,22 +39,22 @@ AM_CFLAGS = @CFLAGS@ \
 libcf_monitord_la_LIBADD = ../libpromises/libpromises.la
 
 libcf_monitord_la_SOURCES = \
-        verify_measurements.c verify_measurements.h \
-        env_monitor.c env_monitor.h \
-        mon.h \
-        mon_cpu.c \
-        mon_disk.c \
-        mon_entropy.c \
-        mon_load.c \
-        mon_network_sniffer.c \
-        mon_network.c \
-        mon_processes.c \
-        mon_temp.c \
-        history.c history.h \
-        mon_cumulative.c mon_cumulative.h \
-        probes.c probes.h \
-        monitoring.c monitoring.h \
-        cf-monitord.c
+	verify_measurements.c verify_measurements.h \
+	env_monitor.c env_monitor.h \
+	mon.h \
+	mon_cpu.c \
+	mon_disk.c \
+	mon_entropy.c \
+	mon_load.c \
+	mon_network_sniffer.c \
+	mon_network.c \
+	mon_processes.c \
+	mon_temp.c \
+	history.c history.h \
+	mon_cumulative.c mon_cumulative.h \
+	probes.c probes.h \
+	monitoring.c monitoring.h \
+	cf-monitord.c
 
 if LINUX
 libcf_monitord_la_SOURCES += mon_io_linux.c mon_mem_linux.c
@@ -73,10 +73,10 @@ endif
 
 
 if !BUILTIN_EXTENSIONS
- bin_PROGRAMS = cf-monitord
- # Workaround for automake madness (try removing it if you want to know why).
- cf_monitord_CFLAGS = $(AM_CFLAGS)
- cf_monitord_LDADD = libcf-monitord.la
+bin_PROGRAMS = cf-monitord
+# Workaround for automake madness (try removing it if you want to know why).
+cf_monitord_CFLAGS = $(AM_CFLAGS)
+cf_monitord_LDADD = libcf-monitord.la
 endif
 
 CLEANFILES = *.gcno *.gcda

@@ -24,13 +24,13 @@
 if !CROSS_COMPILING
 
 man_MANS = \
-    cf-agent.8 \
-    cf-execd.8 \
-    cf-key.8 \
-    cf-monitord.8 \
-    cf-promises.8 \
-    cf-runagent.8 \
-    cf-serverd.8
+	cf-agent.8 \
+	cf-execd.8 \
+	cf-key.8 \
+	cf-monitord.8 \
+	cf-promises.8 \
+	cf-runagent.8 \
+	cf-serverd.8
 
 endif
 

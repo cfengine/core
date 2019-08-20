@@ -104,11 +104,10 @@ libcf_agent_la_SOURCES = \
 
 if !NT
 libcf_agent_la_SOURCES += nfs.c nfs.h
-
 if HAVE_USERS_PROMISE_DEPS
-  libcf_agent_la_SOURCES += verify_users_pam.c
+libcf_agent_la_SOURCES += verify_users_pam.c
 else
-  libcf_agent_la_SOURCES += verify_users_stub.c
+libcf_agent_la_SOURCES += verify_users_stub.c
 endif
 endif
 
@@ -121,13 +120,13 @@ endif
 endif
 
 if !BUILTIN_EXTENSIONS
-  bin_PROGRAMS = cf-agent
+bin_PROGRAMS = cf-agent
 
-  # Workaround for automake madness (try removing it if you want to know why).
-  cf_agent_CFLAGS = $(AM_CFLAGS)
+# Workaround for automake madness (try removing it if you want to know why).
+cf_agent_CFLAGS = $(AM_CFLAGS)
 
-  # Build both a libcf-agent.la library, and a cf-agent executable
-  cf_agent_LDADD = libcf-agent.la
+# Build both a libcf-agent.la library, and a cf-agent executable
+cf_agent_LDADD = libcf-agent.la
 endif
 
 CLEANFILES = *.gcno *.gcda

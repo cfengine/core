@@ -50,10 +50,10 @@ libcf_serverd_la_SOURCES = \
 	strlist.c strlist.h
 
 if !BUILTIN_EXTENSIONS
- bin_PROGRAMS = cf-serverd
- # Workaround for automake madness (try removing it if you want to know why).
- cf_serverd_CFLAGS = $(AM_CFLAGS)
- cf_serverd_LDADD = libcf-serverd.la
+bin_PROGRAMS = cf-serverd
+# Workaround for automake madness (try removing it if you want to know why).
+cf_serverd_CFLAGS = $(AM_CFLAGS)
+cf_serverd_LDADD = libcf-serverd.la
 endif
 
 CLEANFILES = *.gcno *.gcda

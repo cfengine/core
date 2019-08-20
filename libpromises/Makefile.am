@@ -22,11 +22,11 @@
 # included file COSL.txt.
 #
 if !BUILTIN_EXTENSIONS
- projlib_LTLIBRARIES = libpromises.la
- AM_LDFLAGS = -version-info 3:6:0 -no-undefined
+projlib_LTLIBRARIES = libpromises.la
+AM_LDFLAGS = -version-info 3:6:0 -no-undefined
 else
- noinst_LTLIBRARIES = libpromises.la
- AM_LDFLAGS =
+noinst_LTLIBRARIES = libpromises.la
+AM_LDFLAGS =
 endif
 
 AM_LDFLAGS += $(LMDB_LDFLAGS) $(TOKYOCABINET_LDFLAGS) $(QDBM_LDFLAGS) \

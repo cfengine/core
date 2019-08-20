@@ -41,9 +41,9 @@ libcf_promises_la_LIBADD = ../libpromises/libpromises.la
 libcf_promises_la_SOURCES = cf-promises.c
 
 if !BUILTIN_EXTENSIONS
- bin_PROGRAMS = cf-promises
- cf_promises_LDADD = libcf-promises.la
- cf_promises_SOURCES =
+bin_PROGRAMS = cf-promises
+cf_promises_LDADD = libcf-promises.la
+cf_promises_SOURCES =
 endif
 
 CLEANFILES = *.gcno *.gcda

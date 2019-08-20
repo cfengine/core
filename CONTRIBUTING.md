@@ -265,6 +265,33 @@ Keep in mind that these are guidelines, there will always be some situations whe
   int res = (int) ok;
   ```
 
+#### Indentation in (auto)make files
+
+* Automake is based on make.
+* In make and automake files, tabs have a special meaning.
+    * Some places you have to use tabs, other places you cannot use tabs.
+* Always use tabs for make targets (required by make):
+  ```
+  run-coverage:
+  <TAB>-$(MAKE) check -k
+  ```
+* For consistency, always use tabs to indent multi line lists (optional in make):
+  ```
+  AM_CFLAGS = \
+  <TAB>$(OPENSSL_CFLAGS) \
+  <TAB>$(PCRE_CFLAGS) \
+  <TAB>$(ENTERPRISE_CFLAGS)
+  ```
+* Inside an `if`, you cannot indent with tabs (lines will be silently skipped):
+  ```
+  if !BUILTIN_EXTENSIONS
+  bin_PROGRAMS = cf-key
+  cf_key_LDADD = libcf-key.la
+  cf_key_SOURCES =
+  endif
+  ```
+  We prefer to not indent at all in these cases, if you have to, use 4 spaces.
+
 
 ### Readability / Maintainability
 

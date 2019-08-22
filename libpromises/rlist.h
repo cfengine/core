@@ -78,6 +78,7 @@ bool RlistMatchesRegexRlist(const Rlist *list, const Rlist *search);
 bool RlistMatchesRegex(const Rlist *list, const char *str);
 bool RlistIsInListOfRegex(const Rlist *list, const char *str);
 bool RlistIsNullList(const Rlist *list);
+bool RlistContainsString(const Rlist *list, const char *string);
 
 Rlist *RlistAppendRval(Rlist **start, Rval rval);
 

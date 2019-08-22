@@ -79,7 +79,7 @@
 static int aix_get_mac_addr(const char *device_name, uint8_t mac[6]);
 #endif
 
-static void FindV6InterfacesInfo(EvalContext *ctx);
+static void FindV6InterfacesInfo(EvalContext *ctx, Rlist **interfaces, Rlist **hardware);
 static bool IgnoreJailInterface(int ifaceidx, struct sockaddr_in *inaddr);
 static bool IgnoreInterface(char *name);
 static void InitIgnoreInterfaces(void);
@@ -555,23 +555,29 @@ void GetInterfacesInfo(EvalContext *ctx)
 
     close(fd);
 
+    FindV6InterfacesInfo(ctx, &interfaces, &hardware);
+
     if (interfaces)
     {
+        // Define sys.interfaces:
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "interfaces", interfaces, CF_DATA_TYPE_STRING_LIST,
                                       "inventory,source=agent,attribute_name=Interfaces");
     }
     if (hardware)
     {
+        // Define sys.hardware_addresses:
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "hardware_addresses", hardware, CF_DATA_TYPE_STRING_LIST,
                                       "inventory,source=agent,attribute_name=MAC addresses");
     }
     if (flags)
     {
+        // Define sys.hardware_flags:
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "hardware_flags", flags, CF_DATA_TYPE_STRING_LIST,
                                       "source=agent");
     }
     if (ips)
     {
+        // Define sys.ip_addresses:
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "ip_addresses", ips, CF_DATA_TYPE_STRING_LIST,
                                       "source=agent");
     }
@@ -580,16 +586,18 @@ void GetInterfacesInfo(EvalContext *ctx)
     RlistDestroy(hardware);
     RlistDestroy(flags);
     RlistDestroy(ips);
-
-    FindV6InterfacesInfo(ctx);
 }
 
 /*******************************************************************/
 
-static void FindV6InterfacesInfo(EvalContext *ctx)
+static void FindV6InterfacesInfo(EvalContext *ctx, Rlist **interfaces, Rlist **hardware)
 {
+    assert(interfaces != NULL);
+    assert(hardware != NULL);
+
+    UNUSED(hardware); // TODO: add MAC addresses based on "ether" lines
+
     FILE *pp = NULL;
-    char buffer[CF_BUFSIZE];
 
 /* Whatever the manuals might say, you cannot get IPV6
    interface configuration from the ioctls. This seems
@@ -626,9 +634,12 @@ static void FindV6InterfacesInfo(EvalContext *ctx)
 
 /* Don't know the output format of ifconfig on all these .. hope for the best*/
 
+    char ifconfig_line[CF_BUFSIZE];
+    char current_interface[CF_BUFSIZE];
+    current_interface[0] = '\0';
     for(;;)
     {
-        if (fgets(buffer, sizeof(buffer), pp) == NULL)
+        if (fgets(ifconfig_line, sizeof(ifconfig_line), pp) == NULL)
         {
             if (ferror(pp))
             {
@@ -641,12 +652,37 @@ static void FindV6InterfacesInfo(EvalContext *ctx)
             }
         }
 
-        if (strcasestr(buffer, "inet6"))
+        if (!isspace(ifconfig_line[0])) // Name of interface followed by colon
+        {
+            // Find colon:
+            const char *colon = strchr(ifconfig_line, ':');
+            if (colon != NULL)
+            {
+                // Bytes to "copy" includes colon(src)/NUL-byte(dst):
+                const size_t bytes_to_copy = colon - ifconfig_line + 1;
+                assert(bytes_to_copy <= sizeof(current_interface));
+
+                const size_t src_length = StringCopy(
+                    ifconfig_line, current_interface, bytes_to_copy);
+                // StringCopy effectively returns the length of the src string,
+                // up to (inclusive) a maximum of passed in buffer size
+
+                // We know there was more data, at least a colon:
+                assert(src_length == bytes_to_copy);
+                const size_t dst_length = src_length - 1;
+
+                // We copied everything up to, but not including, the colon:
+                assert(ifconfig_line[dst_length] == ':');
+                assert(current_interface[dst_length] == '\0');
+            }
+        }
+
+        if (strcasestr(ifconfig_line, "inet6"))
         {
             Item *ip, *list = NULL;
             char *sp;
 
-            list = SplitStringAsItemList(buffer, ' ');
+            list = SplitStringAsItemList(ifconfig_line, ' ');
 
             for (ip = list; ip != NULL; ip = ip->next)
             {
@@ -662,11 +698,17 @@ static void FindV6InterfacesInfo(EvalContext *ctx)
                 {
                     char prefixed_ip[CF_MAX_IP_LEN + sizeof(IPV6_PREFIX)] = {0};
                     Log(LOG_LEVEL_VERBOSE, "Found IPv6 address %s", ip->name);
-                    EvalContextAddIpAddress(ctx, ip->name, NULL); // interface unknown
+                    EvalContextAddIpAddress(ctx, ip->name, current_interface);
                     EvalContextClassPutHard(ctx, ip->name, "inventory,attribute_name=none,source=agent");
 
                     xsnprintf(prefixed_ip, sizeof(prefixed_ip), IPV6_PREFIX"%s", ip->name);
                     EvalContextClassPutHard(ctx, prefixed_ip, "inventory,attribute_name=none,source=agent");
+
+                    if (current_interface != NULL && !RlistContainsString(*interfaces, current_interface))
+                    {
+                        RlistAppend(interfaces, current_interface, RVAL_TYPE_SCALAR);
+                        assert(RlistContainsString(*interfaces, current_interface));
+                    }
                 }
             }
 

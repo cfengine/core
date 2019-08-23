@@ -28,7 +28,7 @@ systemd_DATA  += systemd/cf-postgres.service
 systemd_DATA  += systemd/cf-runalerts.service
 systemd_DATA  += systemd/cf-serverd.service
 
-install-data-local:
+install-data-hook:
 	-systemctl daemon-reload
 
 endif

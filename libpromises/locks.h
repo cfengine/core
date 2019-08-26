@@ -39,13 +39,9 @@ void GetLockName(char *lockname, const char *locktype,
 void PurgeLocks(void);
 void BackupLockDatabase(void);
 
-
-/* TODO remove from header file, these are currently only used internally! */
-int WriteLock(const char *lock);
-CF_DB *OpenLock(void);
+// Used in enterprise/nova code:
+CF_DB *OpenLock();
 void CloseLock(CF_DB *dbp);
-time_t FindLockTime(const char *name);
-
 
 /* These are only used in ENT! TODO fix and remove from header file. */
 void WaitForCriticalSection(const char *section_id);

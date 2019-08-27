@@ -28,7 +28,7 @@
 typedef struct
 {
     time_t lastseen;
-    QPoint Q;
+    QPoint Q; // Average time between connections (rolling weighted average)
 } KeyHostSeen;
 
 typedef enum

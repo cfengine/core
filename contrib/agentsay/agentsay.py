@@ -84,6 +84,9 @@ def speak(msg):
 if __name__ == "__main__":
     msg = " ".join(sys.argv[1:])
     if len(sys.argv) == 1:
-        import getpass
-        msg = "HELLO, " + getpass.getuser()
+        msg = []
+        for line in sys.stdin:
+            msg.append(line)
+        msg = "".join(msg).replace("\n", " ").replace("\t", " ")
+
     speak(msg)

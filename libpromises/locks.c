@@ -86,6 +86,66 @@ static CfLockStack *PopLock()
     return lock;
 }
 
+static void CopyLockDatabaseAtomically(const char *from, const char *to,
+                                       const char *from_pretty_name,
+                                       const char *to_pretty_name);
+
+static void RestoreLockDatabase(void);
+
+static void VerifyThatDatabaseIsNotCorrupt_once(void)
+{
+    int uptime = GetUptimeSeconds(time(NULL));
+    if (uptime <= 0)
+    {
+        Log(LOG_LEVEL_VERBOSE,
+            "Not able to determine uptime when verifying lock database. "
+            "Will assume the database is in order.");
+        return;
+    }
+
+    char *db_path = DBIdToPath(dbid_locks);
+    struct stat statbuf;
+    if (stat(db_path, &statbuf) == 0)
+    {
+        if (statbuf.st_mtime < time(NULL) - uptime)
+        {
+            // We have rebooted since the database was last updated.
+            // Restore it from our backup.
+            RestoreLockDatabase();
+        }
+    }
+
+    free(db_path);
+}
+
+static void VerifyThatDatabaseIsNotCorrupt(void)
+{
+    static pthread_once_t uptime_verified = PTHREAD_ONCE_INIT;
+    pthread_once(&uptime_verified, &VerifyThatDatabaseIsNotCorrupt_once);
+}
+
+CF_DB *OpenLock()
+{
+    CF_DB *dbp;
+
+    VerifyThatDatabaseIsNotCorrupt();
+
+    if (!OpenDB(&dbp, dbid_locks))
+    {
+        return NULL;
+    }
+
+    return dbp;
+}
+
+void CloseLock(CF_DB *dbp)
+{
+    if (dbp)
+    {
+        CloseDB(dbp);
+    }
+}
+
 static pthread_once_t lock_cleanup_once = PTHREAD_ONCE_INIT; /* GLOBAL_X */
 
 #ifdef LMDB
@@ -179,7 +239,25 @@ static bool WriteLockDataCurrent(CF_DB *dbp, const char *lock_id)
     return WriteLockData(dbp, lock_id, &lock_data);
 }
 
-time_t FindLockTime(const char *name)
+static int WriteLock(const char *name)
+{
+    CF_DB *dbp = OpenLock();
+
+    if (dbp == NULL)
+    {
+        return -1;
+    }
+
+    ThreadLock(cft_lock);
+    WriteLockDataCurrent(dbp, name);
+
+    CloseLock(dbp);
+    ThreadUnlock(cft_lock);
+
+    return 0;
+}
+
+static time_t FindLockTime(const char *name)
 {
     bool ret;
     CF_DB *dbp = OpenLock();
@@ -944,6 +1022,23 @@ void GetLockName(char *lockname, const char *locktype,
     }
 }
 
+static void RestoreLockDatabase(void)
+{
+    // We don't do any locking here (since we can't trust the database), but
+    // this should be right after bootup, so we should be the only one.
+    // Worst case someone else will just copy the same file to the same
+    // location.
+    char *db_path = DBIdToPath(dbid_locks);
+    char *db_path_backup;
+    xasprintf(&db_path_backup, "%s.backup", db_path);
+
+    CopyLockDatabaseAtomically(db_path_backup, db_path, "lock database backup",
+                               "lock database");
+
+    free(db_path);
+    free(db_path_backup);
+}
+
 static void CopyLockDatabaseAtomically(const char *from, const char *to,
                                        const char *from_pretty_name,
                                        const char *to_pretty_name)
@@ -1021,23 +1116,6 @@ void BackupLockDatabase(void)
     ReleaseCriticalSection(CF_CRITIAL_SECTION);
 }
 
-static void RestoreLockDatabase(void)
-{
-    // We don't do any locking here (since we can't trust the database), but
-    // this should be right after bootup, so we should be the only one.
-    // Worst case someone else will just copy the same file to the same
-    // location.
-    char *db_path = DBIdToPath(dbid_locks);
-    char *db_path_backup;
-    xasprintf(&db_path_backup, "%s.backup", db_path);
-
-    CopyLockDatabaseAtomically(db_path_backup, db_path, "lock database backup",
-                               "lock database");
-
-    free(db_path);
-    free(db_path_backup);
-}
-
 void PurgeLocks(void)
 {
     CF_DBC *dbcp;
@@ -1108,76 +1186,4 @@ void PurgeLocks(void)
 
     WriteDB(dbp, "lock_horizon", &lock_horizon, sizeof(lock_horizon));
     CloseLock(dbp);
-}
-
-int WriteLock(const char *name)
-{
-    CF_DB *dbp = OpenLock();
-
-    if (dbp == NULL)
-    {
-        return -1;
-    }
-
-    ThreadLock(cft_lock);
-    WriteLockDataCurrent(dbp, name);
-
-    CloseLock(dbp);
-    ThreadUnlock(cft_lock);
-
-    return 0;
-}
-
-static void VerifyThatDatabaseIsNotCorrupt_once(void)
-{
-    int uptime = GetUptimeSeconds(time(NULL));
-    if (uptime <= 0)
-    {
-        Log(LOG_LEVEL_VERBOSE,
-            "Not able to determine uptime when verifying lock database. "
-            "Will assume the database is in order.");
-        return;
-    }
-
-    char *db_path = DBIdToPath(dbid_locks);
-    struct stat statbuf;
-    if (stat(db_path, &statbuf) == 0)
-    {
-        if (statbuf.st_mtime < time(NULL) - uptime)
-        {
-            // We have rebooted since the database was last updated.
-            // Restore it from our backup.
-            RestoreLockDatabase();
-        }
-    }
-
-    free(db_path);
-}
-
-static void VerifyThatDatabaseIsNotCorrupt(void)
-{
-    static pthread_once_t uptime_verified = PTHREAD_ONCE_INIT;
-    pthread_once(&uptime_verified, &VerifyThatDatabaseIsNotCorrupt_once);
-}
-
-CF_DB *OpenLock()
-{
-    CF_DB *dbp;
-
-    VerifyThatDatabaseIsNotCorrupt();
-
-    if (!OpenDB(&dbp, dbid_locks))
-    {
-        return NULL;
-    }
-
-    return dbp;
-}
-
-void CloseLock(CF_DB *dbp)
-{
-    if (dbp)
-    {
-        CloseDB(dbp);
-    }
 }

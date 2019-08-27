@@ -248,9 +248,18 @@ typedef struct
 
 /******************************************************************/
 
-// Please ensure the padding in this struct is initialized to 0
-// LockData lock = { 0 }; // Will zero padding as well as members
-// lock.pid = [...]
+/** Data for an individual promise (lock), as it's stored in the lock DB
+ * (/var/cfengine/state/cf_lock.lmdb). This is the value, the key is an MD5
+ * hash of various strings identifying the promise.
+ *
+ * Most C code doesn't use this struct directly, instead AcquireLock() is called
+ * which uses functions in locks.c to read the LockData from LMDB and create a
+ * new CfLock struct.
+ *
+ * Please ensure the padding in this struct is initialized to 0
+ * LockData lock = { 0 }; // Will zero padding as well as members
+ * lock.pid = [...]
+ */
 typedef struct
 {
     pid_t pid;                  // 4 bytes

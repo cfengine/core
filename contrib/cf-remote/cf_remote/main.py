@@ -32,7 +32,7 @@ def get_args():
         "--call-collect", help="Enable call collect in --demo def.json", action='store_true')
     ap.add_argument(
         "--version", "-V", help="Print or specify version", nargs="?", type=str, const=True)
-    ap.add_argument("command", help="Action to perform", type=str, nargs='?')
+    ap.add_argument("command", help="Action to perform (info|install|packages|run|sudo|scp)", type=str, nargs='?')
     ap.add_argument("args", help="Arguments", type=str, nargs='*')
 
     args = ap.parse_args()
@@ -123,7 +123,7 @@ def validate_args(args):
         args.hub = file_or_comma_list(args.hub)
 
     if not args.command:
-        user_error("Invalid or missing command")
+        user_error("Invalid or missing command. Use one of (info|install|packages|run|sudo|scp)")
     args.command = args.command.strip()
     validate_command(args.command, args)
 

@@ -843,10 +843,6 @@ int CheckParseVariableName(const char *name)
         return false;
     }
 
-    char scopeid[CF_MAXVARSIZE], vlval[CF_MAXVARSIZE];
-    scopeid[0] = '\0';
-    vlval[0] = '\0';
-
     int count = 0, level = 0;
 
     const char *const first_dot = strchr(name, '.');
@@ -889,9 +885,7 @@ int CheckParseVariableName(const char *name)
         if (count == 1)
         {
             // Check that there is something before and after first dot:
-            sscanf(name, "%[^.].%s", scopeid, vlval);
-
-            if (scopeid[0] == '\0' || vlval[0] == '\0')
+            if (name[0] == '.' || first_dot[1] == '\0')
             {
                 return false;
             }

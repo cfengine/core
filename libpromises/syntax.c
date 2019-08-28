@@ -826,27 +826,43 @@ static SyntaxTypeMatch CheckParseOpts(const char *s, const char *range)
 
 int CheckParseVariableName(const char *name)
 {
-    const char *reserved[] = { "promiser", "handle", "promise_filename", "promise_dirname", "promise_linenumber", "this", NULL };
-    char scopeid[CF_MAXVARSIZE], vlval[CF_MAXVARSIZE];
-    int count = 0, level = 0;
+    assert(name != NULL);
+
+    const char *const reserved[] = {
+        "promiser",
+        "handle",
+        "promise_filename",
+        "promise_dirname",
+        "promise_linenumber",
+        "this",
+        NULL
+    };
 
     if (IsStrIn(name, reserved))
     {
         return false;
     }
 
+    char scopeid[CF_MAXVARSIZE], vlval[CF_MAXVARSIZE];
     scopeid[0] = '\0';
     vlval[0] = '\0';
 
-    if (strchr(name, '.'))
+    int count = 0, level = 0;
+
+    const char *const first_dot = strchr(name, '.');
+
+    if (first_dot != NULL)
     {
         for (const char *sp = name; *sp != '\0'; sp++)
         {
             switch (*sp)
             {
             case '.':
-                if (++count > 1 && level != 1)
+                count++;
+                if (count > 1 && level != 1)
                 {
+                    // Adding a second dot is not allowed,
+                    // except inside 1 level of square brackets
                     return false;
                 }
                 break;
@@ -868,14 +884,14 @@ int CheckParseVariableName(const char *name)
                 yyerror("Too many levels of [] reserved for array use");
                 return false;
             }
-
         }
 
         if (count == 1)
         {
+            // Check that there is something before and after first dot:
             sscanf(name, "%[^.].%s", scopeid, vlval);
 
-            if (strlen(scopeid) == 0 || strlen(vlval) == 0)
+            if (scopeid[0] == '\0' || vlval[0] == '\0')
             {
                 return false;
             }

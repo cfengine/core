@@ -122,9 +122,9 @@ def validate_args(args):
     if args.hub:
         args.hub = file_or_comma_list(args.hub)
 
-    args.command = args.command.strip()
     if not args.command:
         user_error("Invalid or missing command")
+    args.command = args.command.strip()
     validate_command(args.command, args)
 
 

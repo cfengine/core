@@ -836,6 +836,7 @@ int CheckParseVariableName(const char *name)
     }
 
     scopeid[0] = '\0';
+    vlval[0] = '\0';
 
     if (strchr(name, '.'))
     {

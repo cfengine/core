@@ -63,7 +63,7 @@ fi
 #                    v                 v                 v
 for symbol in LogSetGlobalLevel GetInterfacesInfo ConnectionInfoNew; do
     for binary in cf-*; do
-        if test "$binary" = "cf-check" ; then
+        if test "$binary" = "cf-check" || test "$binary" = "cf-upgrade" ; then
             continue
         fi
         if test -e "$binary/.libs/$binary"; then

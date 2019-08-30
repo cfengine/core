@@ -21,22 +21,44 @@
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
 #
-bin_PROGRAMS = cf-upgrade
+noinst_LTLIBRARIES = libcf-upgrade.la
 
-LIBS=                                # This tool should not link to anything
-AM_LDFLAGS=
-AM_CPPFLAGS=-I$(top_srcdir)/libntech/libutils # platform.h
+AM_CPPFLAGS = -I$(srcdir)/../libntech/libutils \
+	-I$(srcdir)/../libntech/libcompat \
+	$(PCRE_CPPFLAGS) \
+	$(LIBYAML_CPPFLAGS)
 
-LDADD=../libntech/libcompat/libcompat.la
+AM_CFLAGS = \
+	$(PCRE_CFLAGS) \
+	$(LIBYAML_CFLAGS) \
+	$(PTHREAD_CFLAGS)
 
-cf_upgrade_SOURCES = \
-	alloc-mini.c alloc-mini.h \
+AM_LDFLAGS = \
+	$(PCRE_LDFLAGS) \
+	$(LIBYAML_LDFLAGS) \
+	$(PTHREAD_CFLAGS)
+
+libcf_upgrade_la_LIBADD = $(srcdir)/../libntech/libutils/libutils.la \
+	$(PCRE_LIBS) \
+	$(LIBYAML_LIBS) \
+	$(PTHREAD_LIBS)
+
+libcf_upgrade_la_SOURCES = \
 	command_line.c command_line.h \
 	configuration.c configuration.h \
-	log.c log.h \
 	process.c process.h \
 	update.c update.h \
 	cf-upgrade.c
+
+if !BUILTIN_EXTENSIONS
+bin_PROGRAMS = cf-upgrade
+
+# Workaround for automake madness (try removing it if you want to know why).
+cf_upgrade_CFLAGS = $(AM_CFLAGS)
+
+# Build both a libcf-upgrade.la library, and a cf-upgrade executable
+cf_upgrade_LDADD = libcf-upgrade.la
+endif
 
 CLEANFILES = *.gcno *.gcda
 

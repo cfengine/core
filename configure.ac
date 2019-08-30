@@ -1519,6 +1519,15 @@ else
 fi
 AC_SUBST([OS_ENVIRONMENT_PATH])
 
+dnl #####################################################################
+dnl SELinux policy build and installation
+dnl #####################################################################
+AC_ARG_WITH(selinux-policy,
+            AS_HELP_STRING([--with-selinux-policy],
+                           [Whether to build and install SELinux policy (default: no)]),
+            [], [with_selinux_policy=no])
+AM_CONDITIONAL([WITH_SELINUX], [test "x$with_selinux_policy" != "xno"])
+
 
 dnl #####################################################################
 dnl Hostname and Version stuff
@@ -1713,6 +1722,12 @@ if test -n "$OS_ENVIRONMENT_PATH"; then
   AC_MSG_RESULT([-> Path of platform environment files: $OS_ENVIRONMENT_PATH])
 fi
 
+if test "x$with_selinux_policy" != "xno"; then
+  AC_MSG_RESULT([-> SELinux policy: enabled])
+else
+  AC_MSG_RESULT([-> SELinux policy: disabled])
+fi
+
 m4_indir(incstart[]incend, [nova/config.m4])
 
 AC_MSG_RESULT([-> Workdir: $WORKDIR])
@@ -1747,6 +1762,7 @@ AC_CONFIG_FILES([Makefile
     cf-testd/Makefile
     cf-net/Makefile
     misc/Makefile
+    misc/selinux/Makefile
     ext/Makefile
     examples/Makefile
     tests/Makefile

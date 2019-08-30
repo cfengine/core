@@ -25,8 +25,8 @@
 #include <update.h>
 #include <process.h>
 #include <command_line.h>
-#include <log.h>
-#include <alloc-mini.h>
+#include <logging.h>
+#include <alloc.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <stdio.h>
@@ -69,20 +69,22 @@ int private_copy_to_temporary_location(const char *source, const char *destinati
         this_read = read(source_fd, buffer, sizeof(buffer));
         if (this_read < 0)
         {
-            log_entry(LogCritical, "Failed to read from %s (read so far: %d)",
+            Log(LOG_LEVEL_CRIT, "Failed to read from %s (read so far: %d)",
                 source, so_far);
             goto bad_twofd;
         }
         this_write = write(destination_fd, buffer, this_read);
         if (this_write < 0)
         {
-            log_entry(LogCritical, "Failed to write to %s (written so far: %d)",
+            Log(LOG_LEVEL_CRIT,
+                "Failed to write to %s (written so far: %d)",
                 destination, so_far);
             goto bad_twofd;
         }
         if (this_write != this_read)
         {
-            log_entry(LogCritical, "Short write: read: %d, written: %d (prior progress: %d)",
+            Log(LOG_LEVEL_CRIT,
+                "Short write: read: %d, written: %d (prior progress: %d)",
                 this_read, this_write, so_far);
             goto bad_twofd;
         }
@@ -131,8 +133,8 @@ int private_copy_to_temporary_location(const char *source, const char *destinati
         this_read = read(source_fd, buffer, sizeof(buffer));
         if (this_read < 0)
         {
-            log_entry(LogCritical, "Failed to read from %s (read so far: %d)",
-                      source, so_far);
+            Log(LOG_LEVEL_CRIT, "Failed to read from %s (read so far: %d)",
+                source, so_far);
             goto bad_twofd;
         }
         else if (this_read > 0)                        /* Successful read() */
@@ -141,16 +143,16 @@ int private_copy_to_temporary_location(const char *source, const char *destinati
             int this_write = write(destination_fd, buffer, this_read);
             if (this_write < 0)
             {
-                log_entry(LogCritical,
-                          "Failed to write to %s (written so far: %d)",
-                          destination, so_far);
+                Log(LOG_LEVEL_CRIT,
+                    "Failed to write to %s (written so far: %d)",
+                    destination, so_far);
                 goto bad_twofd;
             }
             else if (this_write != this_read)
             {
-                log_entry(LogCritical,
-                          "Short write: read: %d, written: %d (prior progress: %d)",
-                          this_read, this_write, so_far);
+                Log(LOG_LEVEL_CRIT,
+                    "Short write: read: %d, written: %d (prior progress: %d)",
+                    this_read, this_write, so_far);
                 goto bad_twofd;
             }
         }
@@ -159,11 +161,11 @@ int private_copy_to_temporary_location(const char *source, const char *destinati
     assert(this_read == 0);
     if (so_far != source_stat.st_size)
     {
-        log_entry(LogCritical,
-                  "Unexpected, file is at EOF while %d out of %d bytes have been read",
-                  so_far, source_stat.st_size);
-        log_entry(LogCritical,
-                  "Trying to continue, maybe it changed size while reading");
+        Log(LOG_LEVEL_CRIT,
+            "Unexpected, file is at EOF while %d out of %d bytes have been read",
+            so_far, source_stat.st_size);
+        Log(LOG_LEVEL_CRIT,
+            "Trying to continue, maybe it changed size while reading");
     }
 
     close(source_fd);
@@ -256,18 +258,18 @@ int RunUpdate(const Configuration *configuration)
         const char *backup_tool = ConfigurationBackupTool(configuration);
         const char *cfengine = ConfigurationCFEnginePath(configuration);
 
-        log_entry(LogVerbose, "Performing backup of '%s' to '%s' using '%s'",
-                  cfengine, backup_path, backup_tool);
+        Log(LOG_LEVEL_VERBOSE, "Performing backup of '%s' to '%s' using '%s'",
+            cfengine, backup_path, backup_tool);
 
         result = perform_backup(backup_tool, backup_path, cfengine);
         if (result != 0)
         {
-            log_entry(LogCritical, "Failed to backup %s to %s using %s",
-                      cfengine, backup_path, backup_tool);
+            Log(LOG_LEVEL_CRIT, "Failed to backup %s to %s using %s",
+                cfengine, backup_path, backup_tool);
             return -1;
         }
 
-        log_entry(LogVerbose, "Backup successful");
+        Log(LOG_LEVEL_VERBOSE, "Backup successful");
 
         /* run the upgrade process */
         const char *command = ConfigurationCommand(configuration);
@@ -281,32 +283,34 @@ int RunUpdate(const Configuration *configuration)
         }
         args[total] = NULL;
 
-        log_entry(LogVerbose, "Running upgrade command: %s", command);
+        Log(LOG_LEVEL_VERBOSE, "Running upgrade command: %s", command);
 
         result = run_process_wait(command, args, environ);
         /* Check that everything went according to plan */
         if (result == 0)
         {
-            log_entry(LogNormal, "Upgrade succeeded!");
+            Log(LOG_LEVEL_INFO, "Upgrade succeeded!");
             return 0;
         }
         else
         {
-            log_entry(LogCritical, "Upgrade failed! Performing restore...");
+            Log(LOG_LEVEL_CRIT, "Upgrade failed! Performing restore...");
             /* Well, that is why we have a backup */
             result = perform_restore(backup_tool, backup_path, cfengine);
             if (result == 0)
             {
-                log_entry(LogNormal, "Restore successful. "
-                          "CFEngine has been successfully reverted to the previous version.");
+                Log(LOG_LEVEL_INFO,
+                    "Restore successful. "
+                    "CFEngine has been successfully "
+                    "reverted to the previous version.");
                 return -1;
             }
             else
             {
-                log_entry(LogCritical,
-                          "Failed to restore %s from %s using %s. "
-                          "Your CFEngine installation might be damaged now.",
-                          cfengine, backup_path, backup_tool);
+                Log(LOG_LEVEL_CRIT,
+                    "Failed to restore %s from %s using %s. "
+                    "Your CFEngine installation might be damaged now.",
+                    cfengine, backup_path, backup_tool);
                 return -2;
             }
         }
@@ -317,12 +321,12 @@ int RunUpdate(const Configuration *configuration)
         const char *copy = ConfigurationCopy(configuration);
         const char *current = ConfigurationCFUpgrade(configuration);
 
-        log_entry(LogVerbose, "Copying '%s' to '%s'", current, copy);
+        Log(LOG_LEVEL_VERBOSE, "Copying '%s' to '%s'", current, copy);
 
         result = copy_to_temporary_location(current, copy);
         if (result < 0)
         {
-            log_entry (LogCritical, "Could not copy %s to %s", current, copy);
+            Log(LOG_LEVEL_CRIT, "Could not copy %s to %s", current, copy);
             return -1;
         }
 
@@ -347,8 +351,9 @@ int RunUpdate(const Configuration *configuration)
         /* Replace current process with the copy. */
         args[counter + total] = NULL;
 
-        log_entry(LogVerbose, "Reexecuting cf-upgrade from the copy: %s",
-                  copy);
+        Log(LOG_LEVEL_VERBOSE,
+            "Reexecuting cf-upgrade from the copy: %s",
+            copy);
 
         /* Effectively this does execvp(), i.e. preserves
            current environment. */

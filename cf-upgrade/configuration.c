@@ -24,8 +24,8 @@
 
 #include <configuration.h>
 #include <stdlib.h>
-#include <alloc-mini.h>
-#include <log.h>
+#include <alloc.h>
+#include <logging.h>
 #include <string.h>
 
 #define CF_UPGRADE_COPY             "/tmp/cf-upgrade"
@@ -180,8 +180,9 @@ void ConfigurationAddArgument(Configuration *configuration, char *argument)
     }
     else
     {
-        log_entry(LogCritical, "A maximum of %d arguments can be specified, aborting",
-                  CF_UPGRADE_MAX_ARGUMENTS);
+        Log(LOG_LEVEL_CRIT,
+            "A maximum of %d arguments can be specified, aborting",
+            CF_UPGRADE_MAX_ARGUMENTS);
         exit(EXIT_FAILURE);
     }
 }

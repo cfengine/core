@@ -31,10 +31,10 @@
 #include <unistd.h>
 #include <string.h>
 #include <update.h>
-#include <alloc-mini.h>
+#include <alloc.h>
 #include <command_line.h>
 #include <configuration.h>
-#include <log.h>
+#include <logging.h>
 
 #define CF_UPGRADE_VERSION          "1.0.0"
 void usage()
@@ -51,8 +51,8 @@ int main(int argc, char **argv)
     int result = 0;
     Configuration *configuration = NULL;
 
-    logInit();
-    log_entry(LogVerbose, "Starting %s", argv[0]);
+    LogSetGlobalLevel(LOG_LEVEL_INFO);
+    Log(LOG_LEVEL_VERBOSE, "Starting %s", argv[0]);
 
     result = parse(argc, argv, &configuration);
     if (result < 0)
@@ -74,8 +74,6 @@ int main(int argc, char **argv)
 
     result = RunUpdate(configuration);
 
-    log_entry(LogVerbose, "Finished %s", argv[0]);
-    logFinish();
-
+    Log(LOG_LEVEL_VERBOSE, "Finished %s", argv[0]);
     return (result == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

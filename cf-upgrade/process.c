@@ -24,9 +24,9 @@
 
 #include <platform.h>
 
-#include <alloc-mini.h>
+#include <alloc.h>
 #include <process.h>
-#include <log.h>
+#include <logging.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <stdio.h>
@@ -63,7 +63,7 @@ int private_run_process_replace(const char *command, char **args, char **envp)
     /* Execute the command */
     execve(command, args, envp);
     /* If we reach here, then we have already failed */
-    log_entry(LogCritical, "Temporary copy failed to run, aborting");
+    Log(LOG_LEVEL_CRIT, "Temporary copy failed to run, aborting");
     return -1;
 }
 
@@ -97,14 +97,14 @@ int private_run_process_wait(const char *command, char **args, char **envp)
     pid_t child = fork();
     if (child < 0)
     {
-        log_entry(LogCritical, "Could not fork child process: %s", command);
+        Log(LOG_LEVEL_CRIT, "Could not fork child process: %s", command);
         return RUN_PROCESS_FAILURE_VALUE;
     }
     else if (child == 0)
     {
         execve(command, args, envp);
         /* If we reach here, the we failed */
-        log_entry(LogCritical, "Could not execute helper process %s", command);
+        Log(LOG_LEVEL_CRIT, "Could not execute helper process %s", command);
         exit(-1);
     }
     else
@@ -161,8 +161,9 @@ int private_run_process_replace(const char *command, char **args, char **envp)
 
     args_to_command_line(command_line, args, sizeof(command_line));
 
-    log_entry(LogVerbose,
-              "Creating process with command line: %s", command_line);
+    Log(LOG_LEVEL_VERBOSE,
+        "Creating process with command line: %s",
+        command_line);
 
     // Start the child process.
     if( !CreateProcess( command,   // No module name (use command line)
@@ -177,7 +178,7 @@ int private_run_process_replace(const char *command, char **args, char **envp)
                         &pi )           // Pointer to PROCESS_INFORMATION structure
             )
     {
-        log_entry(LogCritical, "Temporary copy failed to run, aborting");
+        Log(LOG_LEVEL_CRIT, "Temporary copy failed to run, aborting");
         return -1;
     }
     /*
@@ -209,8 +210,9 @@ int private_run_process_wait(const char *command, char **args, char **envp)
 
     args_to_command_line(command_line, args, sizeof(command_line));
 
-    log_entry(LogVerbose,
-              "Creating process with command line: %s", command_line);
+    Log(LOG_LEVEL_VERBOSE,
+        "Creating process with command line: %s",
+        command_line);
 
     // Start the child process.
     if( !CreateProcess( command,   // No module name (use command line)
@@ -225,7 +227,7 @@ int private_run_process_wait(const char *command, char **args, char **envp)
                         &pi )           // Pointer to PROCESS_INFORMATION structure
     )
     {
-        log_entry(LogCritical, "Could not create child process: %s", command);
+        Log(LOG_LEVEL_CRIT, "Could not create child process: %s", command);
         return RUN_PROCESS_FAILURE_VALUE;
     }
 
@@ -236,7 +238,9 @@ int private_run_process_wait(const char *command, char **args, char **envp)
     DWORD exit_status = 0;
     if ( !GetExitCodeProcess( pi.hProcess, &exit_status) )
     {
-        log_entry(LogCritical, "Could not get exit status from process: %s", command);
+        Log(LOG_LEVEL_CRIT,
+            "Could not get exit status from process: %s",
+            command);
     }
 
     // Close process and thread handles.

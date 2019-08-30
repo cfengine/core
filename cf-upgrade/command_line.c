@@ -23,7 +23,7 @@
 */
 
 #include <command_line.h>
-#include <log.h>
+#include <logging.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
@@ -41,7 +41,7 @@ int parse(int argc, char *argv[], Configuration **configuration)
 {
     if (!configuration || !argv || (argc < 2))
     {
-        log_entry(LogDebug, "configuration or argv are NULL");
+        Log(LOG_LEVEL_DEBUG, "configuration or argv are NULL");
         return -1;
     }
     /* Create the configuration structure */
@@ -56,30 +56,30 @@ int parse(int argc, char *argv[], Configuration **configuration)
     do
     {
         char *current = argv[i];
-        log_entry(LogDebug, "current: %s", current);
+        Log(LOG_LEVEL_DEBUG, "current: %s", current);
         if (0 == strcmp(COPY_PARAM, current))
         {
             char *copy = argv[i + 1];
-            log_entry(LogDebug, "copy: %s", copy);
+            Log(LOG_LEVEL_DEBUG, "copy: %s", copy);
             ConfigurationSetCopy(*configuration, copy);
             i += 2;
         }
         else if (0 == strcmp(HELP_REQUESTED, current))
         {
-            log_entry(LogDebug, "help requested");
+            Log(LOG_LEVEL_DEBUG, "help requested");
             ConfigurationSetHelp(*configuration, 1);
             return 0;
         }
         else if (0 == strcmp(VERSION_REQUESTED, current))
         {
-            log_entry(LogDebug, "version requested");
+            Log(LOG_LEVEL_DEBUG, "version requested");
             ConfigurationSetVersion(*configuration, 1);
             return 0;
         }
         else if (0 == strcmp(BACKUP_TOOL_PARAM, current))
         {
             char *path = argv[i + 1];
-            log_entry(LogDebug, "backup tool: %s", path);
+            Log(LOG_LEVEL_DEBUG, "backup tool: %s", path);
             ConfigurationSetBackupTool(*configuration, path);
             i += 2;
             backup_tool = 1;
@@ -87,7 +87,7 @@ int parse(int argc, char *argv[], Configuration **configuration)
         else if (0 == strcmp(BACKUP_PATH_PARAM, current))
         {
             char *path = argv[i + 1];
-            log_entry(LogDebug, "backup path: %s", path);
+            Log(LOG_LEVEL_DEBUG, "backup path: %s", path);
             ConfigurationSetBackupPath(*configuration, path);
             i += 2;
             backup_path = true;
@@ -95,7 +95,7 @@ int parse(int argc, char *argv[], Configuration **configuration)
         else if (0 == strcmp(CFENGINE_PATH, current))
         {
             char *path = argv[i + 1];
-            log_entry(LogDebug, "cfengine path: %s", path);
+            Log(LOG_LEVEL_DEBUG, "cfengine path: %s", path);
             ConfigurationSetCFEnginePath(*configuration, path);
             i += 2;
         }
@@ -105,26 +105,26 @@ int parse(int argc, char *argv[], Configuration **configuration)
          */
         else if (0 == strcmp(UPDATE_ARGS, current))
         {
-            log_entry(LogDebug, "Copying and forking");
+            Log(LOG_LEVEL_DEBUG, "Copying and forking");
             int j = 0;
             for (j = i + 1; j < argc; ++j)
             {
                 command_arguments = 1;
                 char *argument = argv[j];
-                log_entry(LogDebug, "argument: %s", argument);
+                Log(LOG_LEVEL_DEBUG, "argument: %s", argument);
                 ConfigurationAddArgument(*configuration, argument);
             }
             break;
         }
         else if (0 == strcmp(UPDATE_2ND_ARGS, current))
         {
-            log_entry(LogDebug, "Performing upgrade");
+            Log(LOG_LEVEL_DEBUG, "Performing upgrade");
             int j = 0;
             for (j = i + 1; j < argc; ++j)
             {
                 command_arguments = 1;
                 char *argument = argv[j];
-                log_entry(LogDebug, "argument: %s", argument);
+                Log(LOG_LEVEL_DEBUG, "argument: %s", argument);
                 ConfigurationAddArgument(*configuration, argument);
             }
             ConfigurationSetPerformUpdate(*configuration, true);
@@ -132,7 +132,7 @@ int parse(int argc, char *argv[], Configuration **configuration)
         }
         else
         {
-            log_entry (LogCritical, "Unrecognized option: %s", current);
+            Log(LOG_LEVEL_CRIT, "Unrecognized option: %s", current);
             ConfigurationDestroy(configuration);
             return -1;
         }
@@ -140,10 +140,10 @@ int parse(int argc, char *argv[], Configuration **configuration)
 
     if (!backup_tool || !command_arguments || !backup_path)
     {
-        log_entry(LogCritical, "Need to specify -s, -b and -i");
+        Log(LOG_LEVEL_CRIT, "Need to specify -s, -b and -i");
         ConfigurationDestroy(configuration);
         return -1;
     }
-    log_entry(LogDebug, "parsed %d options", i);
+    Log(LOG_LEVEL_DEBUG, "parsed %d options", i);
     return 0;
 }

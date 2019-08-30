@@ -33,6 +33,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <file_lib.h>
 
 #include <assert.h>
 
@@ -48,14 +49,16 @@ int private_copy_to_temporary_location(const char *source, const char *destinati
     int source_fd = -1;
     int destination_fd = -1;
 
-    source_fd = open(source, O_RDONLY);
+    source_fd = safe_open(source, O_RDONLY);
     if (source_fd < 0)
     {
         goto bad_nofd;
     }
     fstat(source_fd, &source_stat);
     unlink (destination);
-    destination_fd = open(destination, O_WRONLY|O_CREAT|O_EXCL, S_IRWXU|S_IRGRP|S_IROTH);
+    destination_fd = safe_open_create_perms(destination,
+                                            O_WRONLY | O_CREAT | O_EXCL,
+                                            S_IRWXU  | S_IRGRP | S_IROTH);
     if (destination_fd < 0)
     {
         goto bad_onefd;
@@ -91,13 +94,12 @@ int private_copy_to_temporary_location(const char *source, const char *destinati
         so_far += this_read;
     } while (so_far < source_stat.st_size);
 
-    fsync(destination_fd);
     close(source_fd);
     close(destination_fd);
     return 0;
 bad_twofd:
-    close(destination_fd);
     unlink(destination);
+    close(destination_fd);
 bad_onefd:
     close(source_fd);
 bad_nofd:

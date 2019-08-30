@@ -1,0 +1,4 @@
+cryptography==2.7
+fabric==2.4.0
+paramiko==2.6.0
+requests==2.22.0

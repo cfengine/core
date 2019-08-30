@@ -13,6 +13,13 @@ $ git clone https://github.com/cfengine/core.git
 $ ln -s `pwd`/core/contrib/cf-remote/cf_remote/__main__.py /usr/local/bin/cf-remote
 ```
 
+Install dependencies:
+
+```
+$ cd core/contrib/cf-remote/
+$ pip3 install -r requirements.txt
+```
+
 Check that it worked:
 
 ```

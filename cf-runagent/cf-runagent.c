@@ -793,7 +793,6 @@ static void HailExec(AgentConnection *conn, char *peer)
 
 static FILE *NewStream(char *name)
 {
-    FILE *fp;
     char filename[CF_BUFSIZE];
 
     if (OUTPUT_DIRECTORY[0] != '\0')
@@ -806,11 +805,13 @@ static FILE *NewStream(char *name)
                  GetWorkDir(), FILE_SEPARATOR, FILE_SEPARATOR, name);
     }
 
+    FILE *fp;
     if (OUTPUT_TO_FILE)
     {
         printf("Opening file... %s\n", filename);
 
-        if ((fp = fopen(filename, "w")) == NULL)
+        fp = safe_fopen(filename, "w");
+        if (fp == NULL)
         {
             Log(LOG_LEVEL_ERR, "Unable to open file '%s' (fopen: %s)", filename, GetErrorStr());
             fp = stdout;

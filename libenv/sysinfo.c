@@ -2265,7 +2265,7 @@ static int Linux_Misc_Version(EvalContext *ctx)
     *os = '\0';
     *version = '\0';
 
-    FILE *fp = fopen(LSB_RELEASE_FILENAME, "r");
+    FILE *fp = safe_fopen(LSB_RELEASE_FILENAME, "r");
     if (fp != NULL)
     {
         while (!feof(fp))
@@ -2719,7 +2719,7 @@ static int Xen_Domain(EvalContext *ctx)
 
 /* xen host will have "control_d" in /proc/xen/capabilities, xen guest will not */
 
-    FILE *fp = fopen("/proc/xen/capabilities", "r");
+    FILE *fp = safe_fopen("/proc/xen/capabilities", "r");
     if (fp != NULL)
     {
         size_t buffer_size = CF_BUFSIZE;

@@ -112,7 +112,6 @@ static void Nova_DumpSlowlyVaryingObservations(void)
 {
     CF_DB *dbp;
     CF_DBC *dbcp;
-    FILE *fout;
     char *key;
     void *stored;
     int ksize, vsize;
@@ -125,7 +124,9 @@ static void Nova_DumpSlowlyVaryingObservations(void)
 
     snprintf(name, CF_BUFSIZE - 1, "%s%cstatic_data", GetStateDir(), FILE_SEPARATOR);
 
-    if ((fout = fopen(name, "w")) == NULL)
+
+    FILE *fout = safe_fopen(name, "w");
+    if (fout == NULL)
     {
         Log(LOG_LEVEL_ERR, "Unable to save discovery data in '%s'. (fopen: %s)", name, GetErrorStr());
         CloseDB(dbp);
@@ -615,7 +616,6 @@ static void NovaLogSymbolicValue(EvalContext *ctx, const char *handle, Item *str
     int count = 1, found = false, match_count = 0;
     Item *ip, *match = NULL, *matches = NULL;
     time_t now = time(NULL);
-    FILE *fout;
 
     if (stream == NULL)
     {
@@ -712,7 +712,8 @@ static void NovaLogSymbolicValue(EvalContext *ctx, const char *handle, Item *str
     {
         snprintf(filename, CF_BUFSIZE, "%s%c%s_measure.log", GetStateDir(), FILE_SEPARATOR, handle);
 
-        if ((fout = fopen(filename, "a")) == NULL)
+        FILE *fout = safe_fopen(filename, "a");
+        if (fout == NULL)
         {
             cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Unable to open the output log \"%s\"", filename);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);

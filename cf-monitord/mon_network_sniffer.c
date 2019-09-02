@@ -419,7 +419,6 @@ static void AnalyzeArrival(Item *ip_addresses, long iteration, char *arrival, do
 static void SaveTCPEntropyData(Item *list, int i, char *inout)
 {
     Item *ip;
-    FILE *fp;
     char filename[CF_BUFSIZE];
 
     Log(LOG_LEVEL_VERBOSE, "TCP Save '%s'", TCPNAMES[i]);
@@ -441,7 +440,8 @@ static void SaveTCPEntropyData(Item *list, int i, char *inout)
 
     Log(LOG_LEVEL_VERBOSE, "TCP Save '%s'", filename);
 
-    if ((fp = fopen(filename, "w")) == NULL)
+    FILE *fp = safe_fopen(filename, "w");
+    if (fp == NULL)
     {
         Log(LOG_LEVEL_ERR, "Couldn't save TCP entropy to '%s' (fopen: %s)", filename, GetErrorStr());
         return;

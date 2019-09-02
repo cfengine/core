@@ -50,6 +50,7 @@ libcf_check_la_SOURCES = \
 	cf-check.c \
 	diagnose.c diagnose.h \
 	lmdump.c lmdump.h \
+	dump.c dump.h \
 	utilities.c utilities.h \
 	repair.c repair.h
 

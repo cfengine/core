@@ -1,4 +1,5 @@
 #include <lmdump.h>
+#include <dump.h>
 #include <diagnose.h>
 #include <backup.h>
 #include <repair.h>
@@ -28,10 +29,11 @@ static void print_help()
         "\thelp - Print this help menu\n"
         "\n"
         "Usage:\n"
-        "\t$ cf-check command [options]\n"
+        "\t$ cf-check <command> [options] [file ...]\n"
         "\n"
         "Examples:\n"
-        "\t$ cf-check dump -a " WORKDIR "/state/cf_lastseen.lmdb\n"
+        "\t$ cf-check dump " WORKDIR "/state/cf_lastseen.lmdb\n"
+        "\t$ cf-check lmdump -a " WORKDIR "/state/cf_lastseen.lmdb\n"
         "\t$ cf-check diagnose\n"
         "\t$ cf-check repair\n"
         "\n");
@@ -56,8 +58,8 @@ static const Description COMMANDS[] =
     {"repair",   "Diagnose, then backup and delete any corrupt databases",
                  "cf-check repair"},
     {"dump",     "Print the contents of a database file",
-                 "cf-check dump -a " WORKDIR "/state/cf_lastseen.lmdb"},
-    {"lmdump",   "Print the contents of a database file",
+                 "cf-check dump " WORKDIR "/state/cf_lastseen.lmdb"},
+    {"lmdump",   "LMDB database dumper (deprecated)",
                  "cf-check lmdump -a " WORKDIR "/state/cf_lastseen.lmdb"},
     {NULL, NULL, NULL}
 };
@@ -201,10 +203,13 @@ int main(int argc, const char *const *argv)
     int cmd_argc = argc - optind;
     const char *command = cmd_argv[0];
 
-    if (StringSafeEqual_IgnoreCase(command, "lmdump") ||
-        StringSafeEqual_IgnoreCase(command, "dump"))
+    if (StringSafeEqual_IgnoreCase(command, "lmdump"))
     {
         return lmdump_main(cmd_argc, cmd_argv);
+    }
+    if (StringSafeEqual_IgnoreCase(command, "dump"))
+    {
+        return dump_main(cmd_argc, cmd_argv);
     }
     if (StringSafeEqual_IgnoreCase(command, "diagnose"))
     {

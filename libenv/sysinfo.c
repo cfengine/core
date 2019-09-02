@@ -922,9 +922,18 @@ static void Get3Environment(EvalContext *ctx)
     snprintf(env, CF_BUFSIZE, "%s/%s", GetStateDir(), CF_ENV_FILE);
     MapName(env);
 
-    if (stat(env, &statbuf) == -1)
+    FILE *fp = safe_fopen(env, "r");
+    if (fp == NULL)
     {
         Log(LOG_LEVEL_VERBOSE, "Unable to detect environment from cf-monitord");
+        return;
+    }
+
+    int fd = fileno(fp);
+    if (fstat(fd, &statbuf) == -1)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Unable to detect environment from cf-monitord");
+        fclose(fp);
         return;
     }
 
@@ -932,6 +941,7 @@ static void Get3Environment(EvalContext *ctx)
     {
         Log(LOG_LEVEL_VERBOSE, "Environment data are too old - discarding");
         unlink(env);
+        fclose(fp);
         return;
     }
 
@@ -944,13 +954,6 @@ static void Get3Environment(EvalContext *ctx)
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_MON, "env_time", value, CF_DATA_TYPE_STRING, "time_based,source=agent");
 
     Log(LOG_LEVEL_VERBOSE, "Loading environment...");
-
-    FILE *fp = fopen(env, "r");
-    if (fp == NULL)
-    {
-        Log(LOG_LEVEL_VERBOSE, "Unable to detect environment from cf-monitord");
-        return;
-    }
 
     for(;;)
     {

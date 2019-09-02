@@ -337,14 +337,13 @@ void LocalExec(const ExecConfig *config)
 
     free(line);
     cf_pclose(pp);
-    Log(LOG_LEVEL_DEBUG, "Closing fp");
-    fclose(fp);
-
     Log(LOG_LEVEL_VERBOSE,
         complete ? "Command is complete" : "Terminated command");
 
     if (count)
     {
+        Log(LOG_LEVEL_DEBUG, "Closing fp");
+        fclose(fp);
         Log(LOG_LEVEL_VERBOSE, "Mailing result");
         MailResult(config, filename);
     }
@@ -352,6 +351,7 @@ void LocalExec(const ExecConfig *config)
     {
         Log(LOG_LEVEL_VERBOSE, "No output");
         unlink(filename);
+        fclose(fp);
     }
 }
 
@@ -583,19 +583,29 @@ static void MailResult(const ExecConfig *config, const char *file)
     time_t now = time(NULL);
 #endif
 
+    FILE *fp = safe_fopen(file, "r");
+    if (fp == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Mail report: couldn't open file '%s'. (fopen: %s)", file, GetErrorStr());
+        return;
+    }
+
     Log(LOG_LEVEL_VERBOSE, "Mail report: sending result...");
 
     {
+        int fd = fileno(fp);
         struct stat statbuf;
-        if (stat(file, &statbuf) == -1)
+        if (fstat(fd, &statbuf) == -1)
         {
             Log(LOG_LEVEL_ERR, "Mail report: failed to stat file '%s' [errno: %d]", file, errno);
+            fclose(fp);
             return;
         }
 
         if (statbuf.st_size == 0)
         {
             unlink(file);
+            fclose(fp);
             Log(LOG_LEVEL_DEBUG, "Mail report: nothing to report in file '%s'", file);
             return;
         }
@@ -609,6 +619,7 @@ static void MailResult(const ExecConfig *config, const char *file)
         if (CompareResultEqualOrFiltered(config, file, prev_file))
         {
             Log(LOG_LEVEL_VERBOSE, "Mail report: previous output is the same as current so do not mail it");
+            fclose(fp);
             return;
         }
     }
@@ -617,23 +628,18 @@ static void MailResult(const ExecConfig *config, const char *file)
     {
         /* Syslog should have done this */
         Log(LOG_LEVEL_VERBOSE, "Mail report: empty mail server or address - skipping");
+        fclose(fp);
         return;
     }
 
     if (config->mail_max_lines == 0)
     {
         Log(LOG_LEVEL_DEBUG, "Mail report: not mailing because EmailMaxLines was zero");
+        fclose(fp);
         return;
     }
 
     Log(LOG_LEVEL_DEBUG, "Mail report: mailing results of '%s' to '%s'", file, config->mail_to_address);
-
-    FILE *fp = fopen(file, "r");
-    if (fp == NULL)
-    {
-        Log(LOG_LEVEL_ERR, "Mail report: couldn't open file '%s'. (fopen: %s)", file, GetErrorStr());
-        return;
-    }
 
     int sd = ConnectToSmtpSocket(config);
     if (sd < 0)

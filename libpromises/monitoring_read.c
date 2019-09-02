@@ -135,30 +135,27 @@ MonitoringSlot *Nova_MakeSlot(const char *name, const char *description,
 
 void Nova_LoadSlots(void)
 {
-    FILE *f;
     char filename[CF_BUFSIZE];
     int i;
 
     snprintf(filename, CF_BUFSIZE - 1, "%s%cts_key", GetStateDir(), FILE_SEPARATOR);
 
-    struct stat sb;
-
-    if (stat(filename, &sb) != 0)
+    FILE *f = safe_fopen(filename, "r");
+    if (f == NULL)
     {
         return;
     }
 
-    if(sb.st_mtime <= slots_load_time)
+    int fd = fileno(f);
+    struct stat sb;
+    if ((fstat(fd, &sb) != 0) ||
+        (sb.st_mtime <= slots_load_time))
     {
+        fclose(f);
         return;
     }
 
     slots_load_time = sb.st_mtime;
-
-    if ((f = fopen(filename, "r")) == NULL)
-    {
-        return;
-    }
 
     for (i = 0; i < CF_OBSERVABLES; ++i)
     {

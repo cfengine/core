@@ -885,7 +885,7 @@ static long JsonExtractParsedNumber(JsonElement* element, const char* raw_key, c
 
 /*******************************************************************/
 
-static ProcPostProcessFn NetworkingRoutesPostProcessInfo(
+static void NetworkingRoutesPostProcessInfo(
     ARG_LINUX_ONLY void *passed_ctx, ARG_LINUX_ONLY void *json)
 {
 # if defined (__linux__)
@@ -930,7 +930,6 @@ static ProcPostProcessFn NetworkingRoutesPostProcessInfo(
         BufferDestroy(formatter);
     }
 # endif
-    return NULL;
 }
 
 static ProcPostProcessFn NetworkingIPv6RoutesPostProcessInfo(

@@ -9,7 +9,6 @@
 *.o
 .deps
 .libs
-Makefile
 Makefile.in
 stamp-h1
 
@@ -24,6 +23,31 @@ stamp-h1
 /config.sub
 /configure
 /depcomp
+
+# Generated Makefiles (Some deps use plain make):
+/Makefile
+/cf-agent/Makefile
+/cf-check/Makefile
+/cf-execd/Makefile
+/cf-key/Makefile
+/cf-monitord/Makefile
+/cf-net/Makefile
+/cf-promises/Makefile
+/cf-runagent/Makefile
+/cf-serverd/Makefile
+/cf-testd/Makefile
+/cf-upgrade/Makefile
+/examples/Makefile
+/ext/Makefile
+/libcfnet/Makefile
+/libenv/Makefile
+/libpromises/Makefile
+/misc/Makefile
+/tests/Makefile
+/tests/acceptance/25_cf-execd/Makefile
+/tests/acceptance/Makefile
+/tests/load/Makefile
+/tests/unit/Makefile
 
 /install-sh
 /libtool

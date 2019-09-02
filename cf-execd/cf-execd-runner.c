@@ -215,8 +215,8 @@ void LocalExec(const ExecConfig *config)
 
 /* What if no more processes? Could sacrifice and exec() - but we need a sentinel */
 
-    FILE *fp = fopen(filename, "w");
-    if (!fp)
+    FILE *fp = safe_fopen(filename, "w");
+    if (fp == NULL)
     {
         Log(LOG_LEVEL_ERR, "Couldn't open '%s' - aborting exec. (fopen: %s)", filename, GetErrorStr());
         return;

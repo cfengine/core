@@ -91,7 +91,7 @@ ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, LogTotalCompliance, const char *, ve
     snprintf(filename, CF_BUFSIZE, "%s/%s", GetLogDir(), CF_PROMISE_LOG);
     MapName(filename);
 
-    FILE *fout = fopen(filename, "a");
+    FILE *fout = safe_fopen(filename, "a");
     if (fout == NULL)
     {
         Log(LOG_LEVEL_ERR, "In total compliance logging, could not open file '%s'. (fopen: %s)", filename, GetErrorStr());

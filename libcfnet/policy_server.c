@@ -207,7 +207,7 @@ char *PolicyServerReadFile(const char *workdir)
     char contents[CF_MAX_SERVER_LEN] = "";
 
     char *filename = PolicyServerFilename(workdir);
-    FILE *fp = fopen(filename, "r");
+    FILE *fp = safe_fopen(filename, "r");
     if (fp == NULL)
     {
         Log( LOG_LEVEL_VERBOSE, "Could not open file '%s' (fopen: %s)",
@@ -319,7 +319,7 @@ bool PolicyServerWriteFile(const char *workdir, const char *new_policy_server)
 {
     char *filename = PolicyServerFilename(workdir);
 
-    FILE *file = fopen(filename, "w");
+    FILE *file = safe_fopen(filename, "w");
     if (file == NULL)
     {
         Log(LOG_LEVEL_ERR, "Unable to write policy server file '%s' (fopen: %s)", filename, GetErrorStr());

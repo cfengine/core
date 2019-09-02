@@ -103,7 +103,6 @@ check_PROGRAMS = \
 	rlist_test \
 	domainname_test \
 	set_domainname_test \
-	json_test \
 	evalfunction_test \
 	eval_context_test \
 	regex_test \

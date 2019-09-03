@@ -205,7 +205,6 @@ static void GetDatabaseAge()
 
 static void LoadHistogram(void)
 {
-    FILE *fp;
     int i, day, position;
     double maxval[CF_OBSERVABLES];
 
@@ -213,7 +212,8 @@ static void LoadHistogram(void)
 
     snprintf(filename, CF_BUFSIZE, "%s%chistograms", GetStateDir(), FILE_SEPARATOR);
 
-    if ((fp = fopen(filename, "r")) == NULL)
+    FILE *fp = safe_fopen(filename, "r");
+    if (fp == NULL)
     {
         Log(LOG_LEVEL_VERBOSE,
             "Unable to load histogram data from '%s' (fopen: %s)",
@@ -798,7 +798,6 @@ static void UpdateDistributions(EvalContext *ctx, char *timekey, Averages *av)
 {
     int position, day, i;
     char filename[CF_BUFSIZE];
-    FILE *fp;
 
 /* Take an interval of 4 standard deviations from -2 to +2, divided into CF_GRAINS
    parts. Centre each measurement on CF_GRAINS/2 and scale each measurement by the
@@ -822,7 +821,8 @@ static void UpdateDistributions(EvalContext *ctx, char *timekey, Averages *av)
 
         snprintf(filename, CF_BUFSIZE, "%s%chistograms", GetStateDir(), FILE_SEPARATOR);
 
-        if ((fp = fopen(filename, "w")) == NULL)
+        FILE *fp = safe_fopen(filename, "w");
+        if (fp == NULL)
         {
             Log(LOG_LEVEL_ERR, "Unable to save histograms to '%s' (fopen: %s)", filename, GetErrorStr());
             return;

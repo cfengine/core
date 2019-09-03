@@ -648,9 +648,7 @@ void CreateEmptyFile(char *name)
         }
     }
 
-    int tempfd = safe_open_create_perms(name,
-                                        O_CREAT | O_EXCL | O_WRONLY,
-                                        CF_PERMS_DEFAULT);
+    int tempfd = safe_open(name, O_CREAT | O_EXCL | O_WRONLY);
     if (tempfd < 0)
     {
         Log(LOG_LEVEL_ERR, "Couldn't open a file '%s'. (open: %s)", name, GetErrorStr());

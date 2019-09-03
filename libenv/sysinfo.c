@@ -922,9 +922,18 @@ static void Get3Environment(EvalContext *ctx)
     snprintf(env, CF_BUFSIZE, "%s/%s", GetStateDir(), CF_ENV_FILE);
     MapName(env);
 
-    if (stat(env, &statbuf) == -1)
+    FILE *fp = safe_fopen(env, "r");
+    if (fp == NULL)
     {
         Log(LOG_LEVEL_VERBOSE, "Unable to detect environment from cf-monitord");
+        return;
+    }
+
+    int fd = fileno(fp);
+    if (fstat(fd, &statbuf) == -1)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Unable to detect environment from cf-monitord");
+        fclose(fp);
         return;
     }
 
@@ -932,6 +941,7 @@ static void Get3Environment(EvalContext *ctx)
     {
         Log(LOG_LEVEL_VERBOSE, "Environment data are too old - discarding");
         unlink(env);
+        fclose(fp);
         return;
     }
 
@@ -944,13 +954,6 @@ static void Get3Environment(EvalContext *ctx)
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_MON, "env_time", value, CF_DATA_TYPE_STRING, "time_based,source=agent");
 
     Log(LOG_LEVEL_VERBOSE, "Loading environment...");
-
-    FILE *fp = fopen(env, "r");
-    if (fp == NULL)
-    {
-        Log(LOG_LEVEL_VERBOSE, "Unable to detect environment from cf-monitord");
-        return;
-    }
 
     for(;;)
     {
@@ -2265,7 +2268,7 @@ static int Linux_Misc_Version(EvalContext *ctx)
     *os = '\0';
     *version = '\0';
 
-    FILE *fp = fopen(LSB_RELEASE_FILENAME, "r");
+    FILE *fp = safe_fopen(LSB_RELEASE_FILENAME, "r");
     if (fp != NULL)
     {
         while (!feof(fp))
@@ -2719,7 +2722,7 @@ static int Xen_Domain(EvalContext *ctx)
 
 /* xen host will have "control_d" in /proc/xen/capabilities, xen guest will not */
 
-    FILE *fp = fopen("/proc/xen/capabilities", "r");
+    FILE *fp = safe_fopen("/proc/xen/capabilities", "r");
     if (fp != NULL)
     {
         size_t buffer_size = CF_BUFSIZE;

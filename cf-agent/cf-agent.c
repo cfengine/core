@@ -781,7 +781,6 @@ static void FreeFixedStringArray(int size, char **array)
 
 static void ThisAgentInit(void)
 {
-    FILE *fp;
     char filename[CF_BUFSIZE];
 
 #ifdef HAVE_SETSID
@@ -804,7 +803,8 @@ static void ThisAgentInit(void)
     const mode_t current_umask = umask(0777);  // Gets and changes umask
     umask(current_umask); // Restores umask
     Log(LOG_LEVEL_DEBUG, "Current umask is %o", current_umask);
-    if ((fp = fopen(filename, "a")) != NULL)
+    FILE *fp = safe_fopen(filename, "a");
+    if (fp != NULL)
     {
         fclose(fp);
     }
@@ -1353,8 +1353,8 @@ static void AllClassesReport(const EvalContext *ctx)
     char context_report_file[CF_BUFSIZE];
     snprintf(context_report_file, CF_BUFSIZE, "%s%callclasses.txt", GetStateDir(), FILE_SEPARATOR);
 
-    FILE *fp = NULL;
-    if ((fp = fopen(context_report_file, "w")) == NULL)
+    FILE *fp = safe_fopen(context_report_file, "w");
+    if (fp == NULL)
     {
         Log(LOG_LEVEL_INFO, "Could not open allclasses cache file '%s' (fopen: %s)", context_report_file, GetErrorStr());
     }

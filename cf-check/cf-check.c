@@ -1,4 +1,5 @@
 #include <lmdump.h>
+#include <dump.h>
 #include <diagnose.h>
 #include <backup.h>
 #include <repair.h>
@@ -28,10 +29,11 @@ static void print_help()
         "\thelp - Print this help menu\n"
         "\n"
         "Usage:\n"
-        "\t$ cf-check command [options]\n"
+        "\t$ cf-check <command> [options] [file ...]\n"
         "\n"
         "Examples:\n"
-        "\t$ cf-check dump -a " WORKDIR "/state/cf_lastseen.lmdb\n"
+        "\t$ cf-check dump " WORKDIR "/state/cf_lastseen.lmdb\n"
+        "\t$ cf-check lmdump -a " WORKDIR "/state/cf_lastseen.lmdb\n"
         "\t$ cf-check diagnose\n"
         "\t$ cf-check repair\n"
         "\n");
@@ -45,20 +47,22 @@ static const char *const CF_CHECK_MANPAGE_LONG_DESCRIPTION =
     "databases. It is intended to be able to detect and repair a corrupt\n"
     "database.";
 
-// static const Description COMMANDS[] =
-// {
-//     {"help",     "Prints general help or per topic",
-//                  "cf-check help [command]"},
-//     {"diagnose", "Assess the health of one or more database files",
-//                  "cf-check diagnose"},
-//     {"backup",   "Copy database files to a timestamped folder",
-//                  "cf-check backup"},
-//     {"repair",   "Diagnose, then backup and delete any corrupt databases",
-//                  "cf-check repair"},
-//     {"dump",     "Print the contents of a database file",
-//                  "cf-check dump -a " WORKDIR "/state/cf_lastseen.lmdb"},
-//     {NULL, NULL, NULL}
-// };
+static const Description COMMANDS[] =
+{
+    {"help",     "Prints general help or per topic",
+                 "cf-check help [command]"},
+    {"diagnose", "Assess the health of one or more database files",
+                 "cf-check diagnose"},
+    {"backup",   "Copy database files to a timestamped folder",
+                 "cf-check backup"},
+    {"repair",   "Diagnose, then backup and delete any corrupt databases",
+                 "cf-check repair"},
+    {"dump",     "Print the contents of a database file",
+                 "cf-check dump " WORKDIR "/state/cf_lastseen.lmdb"},
+    {"lmdump",   "LMDB database dumper (deprecated)",
+                 "cf-check lmdump -a " WORKDIR "/state/cf_lastseen.lmdb"},
+    {NULL, NULL, NULL}
+};
 
 static const struct option OPTIONS[] =
 {
@@ -83,6 +87,38 @@ static const char *const HINTS[] =
     "Enable basic information output",
     NULL
 };
+
+static int CFCheckHelpTopic(const char *topic)
+{
+    assert(topic != NULL);
+    bool found = false;
+    for (int i = 0; COMMANDS[i].name != NULL; ++i)
+    {
+        if (strcmp(COMMANDS[i].name, topic) == 0)
+        {
+            printf("Command:     %s\n", COMMANDS[i].name);
+            printf("Usage:       %s\n", COMMANDS[i].usage);
+            printf("Description: %s\n", COMMANDS[i].description);
+            found = true;
+            break;
+        }
+    }
+
+    // Add more detailed explanation here if necessary:
+    if (strcmp("help", topic) == 0)
+    {
+        printf("\nYou did it, you used the help command!\n");
+    }
+    else
+    {
+        if (!found)
+        {
+            printf("Unknown help topic: '%s'\n", topic);
+            return EXIT_FAILURE;
+        }
+    }
+    return EXIT_SUCCESS;
+}
 
 int main(int argc, const char *const *argv)
 {
@@ -167,10 +203,13 @@ int main(int argc, const char *const *argv)
     int cmd_argc = argc - optind;
     const char *command = cmd_argv[0];
 
-    if (StringSafeEqual_IgnoreCase(command, "lmdump") ||
-        StringSafeEqual_IgnoreCase(command, "dump"))
+    if (StringSafeEqual_IgnoreCase(command, "lmdump"))
     {
         return lmdump_main(cmd_argc, cmd_argv);
+    }
+    if (StringSafeEqual_IgnoreCase(command, "dump"))
+    {
+        return dump_main(cmd_argc, cmd_argv);
     }
     if (StringSafeEqual_IgnoreCase(command, "diagnose"))
     {
@@ -187,7 +226,20 @@ int main(int argc, const char *const *argv)
     }
     if (StringSafeEqual_IgnoreCase(command, "help"))
     {
-        print_help();
+        if (cmd_argc > 2)
+        {
+            Log(LOG_LEVEL_ERR, "help takes exactly 0 or 1 arguments");
+            return EXIT_FAILURE;
+        }
+        else if (cmd_argc <= 1)
+        {
+            print_help();
+        }
+        else
+        {
+            assert(cmd_argc == 2);
+            CFCheckHelpTopic(cmd_argv[1]);
+        }
         return EXIT_SUCCESS;
     }
     if (StringSafeEqual_IgnoreCase(command, "version"))

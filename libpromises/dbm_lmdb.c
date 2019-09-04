@@ -88,7 +88,8 @@ static int GetReadTransaction(DBPriv *db, DBTxn **txn)
         rc = mdb_txn_begin(db->env, NULL, MDB_RDONLY, &db_txn->txn);
         if (rc != MDB_SUCCESS)
         {
-            Log(LOG_LEVEL_ERR, "Unable to open read transaction: %s", mdb_strerror(rc));
+            Log(LOG_LEVEL_ERR, "Unable to open read transaction in '%s': %s",
+                (char *) mdb_env_get_userctx(db->env), mdb_strerror(rc));
         }
     }
 
@@ -113,7 +114,8 @@ static int GetWriteTransaction(DBPriv *db, DBTxn **txn)
         rc = mdb_txn_commit(db_txn->txn);
         if (rc != MDB_SUCCESS)
         {
-            Log(LOG_LEVEL_ERR, "Unable to close read-only transaction: %s", mdb_strerror(rc));
+            Log(LOG_LEVEL_ERR, "Unable to close read-only transaction in '%s': %s",
+                (char *) mdb_env_get_userctx(db->env), mdb_strerror(rc));
         }
         db_txn->txn = NULL;
     }
@@ -127,7 +129,8 @@ static int GetWriteTransaction(DBPriv *db, DBTxn **txn)
         }
         else
         {
-            Log(LOG_LEVEL_ERR, "Unable to open write transaction: %s", mdb_strerror(rc));
+            Log(LOG_LEVEL_ERR, "Unable to open write transaction in '%s': %s",
+                (char *) mdb_env_get_userctx(db->env), mdb_strerror(rc));
         }
     }
 
@@ -226,6 +229,12 @@ DBPriv *DBPrivOpenDB(const char *dbpath, dbid id)
         Log(LOG_LEVEL_ERR, "Could not create handle for database %s: %s",
               dbpath, mdb_strerror(rc));
         goto err;
+    }
+    rc = mdb_env_set_userctx(db->env, xstrdup(dbpath));
+    if (rc != MDB_SUCCESS)
+    {
+        Log(LOG_LEVEL_WARNING, "Could not store DB file path (%s) in the DB context",
+            dbpath);
     }
     rc = mdb_env_set_mapsize(db->env, LMDB_MAXSIZE);
     if (rc)
@@ -336,6 +345,11 @@ void DBPrivCloseDB(DBPriv *db)
      * transaction open when the signal handler or atexit() hook is called. */
     AbortTransaction(db);
 
+    char *db_path = mdb_env_get_userctx(db->env);
+    if (db_path)
+    {
+        free(db_path);
+    }
     if (db->env)
     {
         mdb_env_close(db->env);
@@ -354,7 +368,8 @@ bool DBPrivClean(DBPriv *db)
     
     if (rc != MDB_SUCCESS)
     {
-        Log(LOG_LEVEL_ERR, "Unable to get write transaction: %s", mdb_strerror(rc));
+        Log(LOG_LEVEL_ERR, "Unable to get write transaction for '%s': %s",
+            (char *) mdb_env_get_userctx(db->env), mdb_strerror(rc));
         return false;
     }
     
@@ -372,7 +387,8 @@ void DBPrivCommit(DBPriv *db)
         int rc = mdb_txn_commit(db_txn->txn);
         if (rc != MDB_SUCCESS)
         {
-            Log(LOG_LEVEL_ERR, "Could not commit database transaction: %s", mdb_strerror(rc));
+            Log(LOG_LEVEL_ERR, "Could not commit database transaction to '%s': %s",
+                (char *) mdb_env_get_userctx(db->env), mdb_strerror(rc));
         }
     }
     pthread_setspecific(db->txn_key, NULL);
@@ -395,7 +411,8 @@ bool DBPrivHasKey(DBPriv *db, const void *key, int key_size)
         rc = mdb_get(txn->txn, db->dbi, &mkey, &data);
         if (rc && rc != MDB_NOTFOUND)
         {
-            Log(LOG_LEVEL_ERR, "Could not read database entry: %s", mdb_strerror(rc));
+            Log(LOG_LEVEL_ERR, "Could not read database entry from '%s': %s",
+                (char *) mdb_env_get_userctx(db->env), mdb_strerror(rc));
             AbortTransaction(db);
         }
     }
@@ -420,7 +437,8 @@ int DBPrivGetValueSize(DBPriv *db, const void *key, int key_size)
         rc = mdb_get(txn->txn, db->dbi, &mkey, &data);
         if (rc && rc != MDB_NOTFOUND)
         {
-            Log(LOG_LEVEL_ERR, "Could not read database entry: %s", mdb_strerror(rc));
+            Log(LOG_LEVEL_ERR, "Could not read database entry from '%s': %s",
+                (char *) mdb_env_get_userctx(db->env), mdb_strerror(rc));
             AbortTransaction(db);
         }
     }
@@ -453,7 +471,8 @@ bool DBPrivRead(DBPriv *db, const void *key, int key_size, void *dest, int dest_
         }
         else if (rc != MDB_NOTFOUND)
         {
-            Log(LOG_LEVEL_ERR, "Could not read database entry: %s", mdb_strerror(rc));
+            Log(LOG_LEVEL_ERR, "Could not read database entry from '%s': %s",
+                (char *) mdb_env_get_userctx(db->env), mdb_strerror(rc));
             AbortTransaction(db);
         }
     }
@@ -475,7 +494,8 @@ bool DBPrivWrite(DBPriv *db, const void *key, int key_size, const void *value, i
         rc = mdb_put(txn->txn, db->dbi, &mkey, &data, 0);
         if (rc != MDB_SUCCESS)
         {
-            Log(LOG_LEVEL_ERR, "Could not write database entry: %s", mdb_strerror(rc));
+            Log(LOG_LEVEL_ERR, "Could not write database entry to '%s': %s",
+                (char *) mdb_env_get_userctx(db->env), mdb_strerror(rc));
             AbortTransaction(db);
         }
     }
@@ -495,11 +515,13 @@ bool DBPrivDelete(DBPriv *db, const void *key, int key_size)
         rc = mdb_del(txn->txn, db->dbi, &mkey, NULL);
         if (rc == MDB_NOTFOUND)
         {
-            Log(LOG_LEVEL_DEBUG, "Entry not found: %s", mdb_strerror(rc));
+            Log(LOG_LEVEL_DEBUG, "Entry not found in '%s': %s",
+                (char *) mdb_env_get_userctx(db->env), mdb_strerror(rc));
         }
         else if (rc != MDB_SUCCESS)
         {
-            Log(LOG_LEVEL_ERR, "Could not delete: %s", mdb_strerror(rc));
+            Log(LOG_LEVEL_ERR, "Could not delete from '%s': %s",
+                (char *) mdb_env_get_userctx(db->env), mdb_strerror(rc));
             AbortTransaction(db);
         }
     }
@@ -527,7 +549,8 @@ DBCursorPriv *DBPrivOpenCursor(DBPriv *db)
         }
         else
         {
-            Log(LOG_LEVEL_ERR, "Could not open cursor: %s", mdb_strerror(rc));
+            Log(LOG_LEVEL_ERR, "Could not open cursor in '%s': %s",
+                (char *) mdb_env_get_userctx(db->env), mdb_strerror(rc));
             AbortTransaction(db);
         }
         /* txn remains with cursor */
@@ -568,7 +591,8 @@ bool DBPrivAdvanceCursor(DBCursorPriv *cursor, void **key, int *key_size,
     }
     else if (rc != MDB_NOTFOUND)
     {
-        Log(LOG_LEVEL_ERR, "Could not advance cursor: %s", mdb_strerror(rc));
+        Log(LOG_LEVEL_ERR, "Could not advance cursor in '%s': %s",
+            (char *) mdb_env_get_userctx(cursor->db->env), mdb_strerror(rc));
     }
     if (cursor->pending_delete)
     {
@@ -617,12 +641,14 @@ bool DBPrivWriteCursorEntry(DBCursorPriv *cursor, const void *value, int value_s
 
         if ((rc = mdb_cursor_put(cursor->mc, &curkey, &data, MDB_CURRENT)) != MDB_SUCCESS)
         {
-            Log(LOG_LEVEL_ERR, "Could not write cursor entry: %s", mdb_strerror(rc));
+            Log(LOG_LEVEL_ERR, "Could not write cursor entry to '%s': %s",
+                (char *) mdb_env_get_userctx(cursor->db->env), mdb_strerror(rc));
         }
     }
     else
     {
-        Log(LOG_LEVEL_ERR, "Could not write cursor entry: cannot find current key");
+        Log(LOG_LEVEL_ERR, "Could not write cursor entry to '%s': cannot find current key",
+            (char *) mdb_env_get_userctx(cursor->db->env));
         rc = MDB_INVALID;
     }
     return rc == MDB_SUCCESS;

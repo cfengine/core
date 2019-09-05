@@ -1,0 +1,4 @@
+/var/cfengine/bin/cf-execd		--	gen_context(system_u:object_r:cfengine_execd_exec_t,s0)
+/var/cfengine/bin/cf-serverd	--	gen_context(system_u:object_r:cfengine_serverd_exec_t,s0)
+/var/cfengine/bin/cf-monitord	--	gen_context(system_u:object_r:cfengine_monitord_exec_t,s0)
+/var/cfengine/bin/cf-agent		--	gen_context(system_u:object_r:cfengine_agent_exec_t,s0)

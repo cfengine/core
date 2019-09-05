@@ -1,3 +1,5 @@
+SUBDIRS = selinux
+
 # include unconditionally in the distribution tarball
 EXTRA_DIST= init.d/cfengine3.in \
 	systemd/cf-apache.service.in \

@@ -429,6 +429,8 @@ void DBPrivCommit(DBPriv *db)
 
 bool DBPrivHasKey(DBPriv *db, const void *key, int key_size)
 {
+    assert(db != NULL);
+
     MDB_val mkey, data;
     DBTxn *txn;
     // FIXME: distinguish between "entry not found" and "error occurred"
@@ -585,6 +587,8 @@ bool DBPrivDelete(DBPriv *const db, const void *const key, const int key_size)
 
 DBCursorPriv *DBPrivOpenCursor(DBPriv *const db)
 {
+    assert(db != NULL);
+
     DBCursorPriv *cursor = NULL;
     DBTxn *txn;
     MDB_cursor *mc;
@@ -621,6 +625,7 @@ bool DBPrivAdvanceCursor(
     int *const value_size)
 {
     assert(cursor != NULL);
+    assert(cursor->db != NULL);
 
     MDB_val mkey, data;
     bool retval = false;
@@ -693,6 +698,7 @@ bool DBPrivWriteCursorEntry(
     DBCursorPriv *const cursor, const void *const value, const int value_size)
 {
     assert(cursor != NULL);
+    assert(cursor->db != NULL);
 
     MDB_val data;
     int rc;
@@ -726,6 +732,7 @@ bool DBPrivWriteCursorEntry(
 void DBPrivCloseCursor(DBCursorPriv *const cursor)
 {
     assert(cursor != NULL);
+    assert(cursor->db != NULL);
 
     DBTxn *txn;
     const int rc = GetWriteTransaction(cursor->db, &txn);

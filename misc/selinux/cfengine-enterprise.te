@@ -1,0 +1,259 @@
+# SELinux policy module for CFEngine Enterprise
+#
+# This is a complementary module for the upstream cfengine module [1].
+#
+# [1] https://github.com/fedora-selinux/selinux-policy-contrib/blob/rawhide/cfengine.te
+#
+module cfengine-enterprise 1.0;
+
+# 'require' is something like 'import' -- we need to list here all the things
+# used in this policy module
+require {
+	attribute domain;
+	attribute entry_type;
+	attribute file_type;
+	attribute exec_type;
+	attribute non_security_file_type;
+	attribute non_auth_file_type;
+	type bin_t;
+	type var_t;
+	type fs_t;
+	type unconfined_t;
+	type unreserved_port_t;
+	type user_cron_spool_t;
+	type cfengine_serverd_t;
+	type cfengine_execd_exec_t;
+	type ping_exec_t;
+	type proc_net_t;
+	type cfengine_serverd_exec_t;
+	type smtp_port_t;
+	type rpm_exec_t;
+	type rpm_var_lib_t;
+	type system_cron_spool_t;
+	type systemd_unit_file_t;
+	type init_exec_t;
+	type journalctl_exec_t;
+	type cfengine_execd_t;
+	type cfengine_log_t;
+	type systemd_systemctl_exec_t;
+	type useradd_exec_t;
+	type cfengine_monitord_t;
+	type dmidecode_exec_t;
+	type init_t;
+	type cfengine_monitord_exec_t;
+	type gpg_exec_t;
+	type shadow_t;
+	type cfengine_var_lib_t;
+	type crontab_exec_t;
+	type hostname_exec_t;
+	type groupadd_exec_t;
+	role system_r;
+	class tcp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown name_connect accept listen name_bind };
+	class udp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class rawip_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class netlink_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class packet_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class unix_stream_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class unix_dgram_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class appletalk_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class netlink_route_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class netlink_firewall_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class netlink_tcpdiag_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class netlink_nflog_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class netlink_xfrm_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class netlink_selinux_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class netlink_audit_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class netlink_ip6fw_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class netlink_dnrt_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class netlink_kobject_uevent_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class tun_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class netlink_iscsi_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class netlink_fib_lookup_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class netlink_connector_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class netlink_netfilter_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class netlink_generic_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class netlink_scsitransport_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class netlink_rdma_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class netlink_crypto_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class sctp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class icmp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class ax25_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class ipx_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class netrom_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class atmpvc_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class x25_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class rose_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class decnet_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class atmsvc_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class rds_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class irda_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class pppox_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class llc_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class can_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class tipc_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class bluetooth_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class iucv_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class rxrpc_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class isdn_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class phonet_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class ieee802154_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class caif_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class alg_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class nfc_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class vsock_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class kcm_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class qipcrtr_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class smc_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class bridge_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class dccp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class ib_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class mpls_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class process { setrlimit transition dyntransition execstack execheap execmem };
+	class file { execute execute_no_trans getattr ioctl map open read unlink write entrypoint lock link rename append setattr create relabelfrom relabelto };
+	class fifo_file { create open getattr setattr read write append rename link unlink ioctl lock relabelfrom relabelto };
+	class dir { getattr read search open write add_name remove_name lock ioctl };
+	class filesystem getattr;
+	class lnk_file { create getattr read unlink };
+	class unix_stream_socket connectto;
+	class capability { dac_read_search sys_module chown dac_read_search dac_override fowner fsetid sys_admin mknod net_raw net_admin sys_nice sys_rawio sys_resource setuid setgid sys_nice };
+	class capability2 { mac_admin mac_override block_suspend syslog compromise_kernel wake_alarm };
+	class association { sendto recvfrom setcontext polmatch };
+	class security setsecparam;
+	class service { start stop status reload enable disable };
+	class memprotect mmap_zero;
+	class peer recv;
+}
+
+
+#============= cfengine_agent_t =============
+# define an *unconfined* domain for the agent (so that it can access/do anything)
+type cfengine_agent_t;
+typeattribute cfengine_agent_t domain;
+role system_r types cfengine_agent_t;
+
+# this is a macro invocation, the file has to be processed with
+# make -f /usr/share/selinux/devel/Makefile
+unconfined_domain(cfengine_agent_t)
+
+# /var/cfengine/bin/cf-agent has the 'cfengine_agent_exec_t' context which is an
+# entrypoint for the 'cfengine_agent_t' domain
+type cfengine_agent_exec_t;
+typeattribute cfengine_agent_exec_t entry_type;
+typeattribute cfengine_agent_exec_t exec_type;
+typeattribute cfengine_agent_exec_t file_type, non_security_file_type, non_auth_file_type;
+role object_r types cfengine_agent_exec_t;
+
+allow cfengine_agent_t cfengine_agent_exec_t:file entrypoint;
+allow cfengine_agent_t cfengine_agent_exec_t:file { ioctl read getattr lock map execute open };
+
+
+#============= cfengine_execd_t ==============
+# allow cf-execd to run cf-agent and make sure the forked process run in the
+# unconfined cfengine_agent_t domain
+type_transition cfengine_execd_t cfengine_agent_exec_t:process cfengine_agent_t;
+allow cfengine_execd_t cfengine_agent_t:process transition;
+allow cfengine_execd_t cfengine_agent_exec_t:file { open read execute map getattr };
+
+# allow cf-execd to use/execute libpromises.so
+allow cfengine_execd_t cfengine_var_lib_t:file map;
+allow cfengine_execd_t cfengine_var_lib_t:file execute;
+
+# allow cf-execd to execute cf-promises
+allow cfengine_execd_t cfengine_var_lib_t:file execute_no_trans;
+
+allow cfengine_execd_t cfengine_log_t:file { read unlink write };
+allow cfengine_execd_t cfengine_log_t:lnk_file { create getattr read unlink };
+allow cfengine_execd_t cfengine_monitord_exec_t:file getattr;
+allow cfengine_execd_t cfengine_serverd_exec_t:file getattr;
+
+allow cfengine_execd_t crontab_exec_t:file getattr;
+allow cfengine_execd_t dmidecode_exec_t:file getattr;
+allow cfengine_execd_t fs_t:filesystem getattr;
+allow cfengine_execd_t gpg_exec_t:file getattr;
+allow cfengine_execd_t groupadd_exec_t:file getattr;
+allow cfengine_execd_t hostname_exec_t:file getattr;
+allow cfengine_execd_t init_exec_t:file getattr;
+allow cfengine_execd_t init_t:unix_stream_socket connectto;
+allow cfengine_execd_t journalctl_exec_t:file getattr;
+allow cfengine_execd_t ping_exec_t:file getattr;
+allow cfengine_execd_t proc_net_t:file { getattr open read };
+allow cfengine_execd_t rpm_exec_t:file getattr;
+allow cfengine_execd_t rpm_var_lib_t:dir search;
+allow cfengine_execd_t rpm_var_lib_t:file open;
+allow cfengine_execd_t self:capability dac_read_search;
+allow cfengine_execd_t shadow_t:file { getattr open read };
+allow cfengine_execd_t smtp_port_t:tcp_socket name_connect;
+allow cfengine_execd_t system_cron_spool_t:dir getattr;
+allow cfengine_execd_t systemd_systemctl_exec_t:file getattr;
+allow cfengine_execd_t systemd_unit_file_t:dir search;
+allow cfengine_execd_t systemd_unit_file_t:file getattr;
+allow cfengine_execd_t unreserved_port_t:tcp_socket name_connect;
+allow cfengine_execd_t user_cron_spool_t:dir getattr;
+allow cfengine_execd_t useradd_exec_t:file getattr;
+allow cfengine_execd_t var_t:dir read;
+
+
+#============= cfengine_monitord_t ==============
+# allow cf-monitord to use/execute libpromises.so
+allow cfengine_monitord_t cfengine_var_lib_t:file map;
+allow cfengine_monitord_t cfengine_var_lib_t:file execute;
+
+# allow cf-monitord to execute cf-promises
+allow cfengine_monitord_t cfengine_var_lib_t:file execute_no_trans;
+
+allow cfengine_monitord_t cfengine_execd_exec_t:file getattr;
+allow cfengine_monitord_t cfengine_serverd_exec_t:file getattr;
+allow cfengine_monitord_t cfengine_agent_exec_t:file getattr;
+
+allow cfengine_monitord_t crontab_exec_t:file getattr;
+allow cfengine_monitord_t dmidecode_exec_t:file getattr;
+allow cfengine_monitord_t groupadd_exec_t:file getattr;
+allow cfengine_monitord_t hostname_exec_t:file getattr;
+allow cfengine_monitord_t init_exec_t:file getattr;
+allow cfengine_monitord_t journalctl_exec_t:file getattr;
+allow cfengine_monitord_t ping_exec_t:file getattr;
+allow cfengine_monitord_t rpm_exec_t:file getattr;
+allow cfengine_monitord_t shadow_t:file getattr;
+allow cfengine_monitord_t systemd_systemctl_exec_t:file getattr;
+allow cfengine_monitord_t user_cron_spool_t:dir getattr;
+allow cfengine_monitord_t useradd_exec_t:file getattr;
+allow cfengine_monitord_t var_t:dir read;
+
+
+#============= cfengine_serverd_t ==============
+# allow cf-serverd to run cf-agent and make sure the forked process run in the
+# unconfined cfengine_agent_t domain
+allow cfengine_serverd_t cfengine_agent_exec_t:file { open read execute execute_no_trans map getattr };
+type_transition cfengine_serverd_t cfengine_agent_exec_t:process cfengine_agent_t;
+allow cfengine_serverd_t cfengine_agent_t:process transition;
+
+# allow cf-serverd to use/execute libpromises.so
+allow cfengine_serverd_t cfengine_var_lib_t:file map;
+allow cfengine_serverd_t cfengine_var_lib_t:file execute;
+
+# allow cf-serverd to execute cf-promises
+allow cfengine_serverd_t cfengine_var_lib_t:file execute_no_trans;
+
+allow cfengine_serverd_t cfengine_execd_exec_t:file getattr;
+allow cfengine_serverd_t cfengine_monitord_exec_t:file getattr;
+
+allow cfengine_serverd_t crontab_exec_t:file getattr;
+allow cfengine_serverd_t dmidecode_exec_t:file getattr;
+allow cfengine_serverd_t fs_t:filesystem getattr;
+allow cfengine_serverd_t groupadd_exec_t:file getattr;
+allow cfengine_serverd_t hostname_exec_t:file getattr;
+allow cfengine_serverd_t init_exec_t:file getattr;
+allow cfengine_serverd_t init_t:dir read;
+allow cfengine_serverd_t init_t:file { getattr open read };
+allow cfengine_serverd_t journalctl_exec_t:file getattr;
+allow cfengine_serverd_t ping_exec_t:file getattr;
+allow cfengine_serverd_t proc_net_t:file { getattr open read };
+allow cfengine_serverd_t rpm_exec_t:file getattr;
+allow cfengine_serverd_t self:process setrlimit;
+allow cfengine_serverd_t self:tcp_socket { accept listen };
+allow cfengine_serverd_t shadow_t:file getattr;
+allow cfengine_serverd_t systemd_systemctl_exec_t:file getattr;
+allow cfengine_serverd_t unreserved_port_t:tcp_socket name_bind;
+allow cfengine_serverd_t user_cron_spool_t:dir getattr;
+allow cfengine_serverd_t useradd_exec_t:file getattr;
+allow cfengine_serverd_t var_t:dir read;

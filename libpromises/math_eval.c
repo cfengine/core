@@ -110,7 +110,7 @@ static void yySet(struct _yycontext *yy, char *text, int count) FUNC_UNUSED;
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 
-#include <math.pc>
+#include <math.pc> // Generated from math.peg using 3rdparty/peg-0.1.15
 
 #pragma GCC diagnostic pop
 

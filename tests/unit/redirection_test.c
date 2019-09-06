@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <fcntl.h>
-#include <wait.h>
+#include <libgen.h> // dirname
 
 /*
  * This test checks for different types of IPC to check that redirection of
@@ -15,7 +15,7 @@
  * hub process that only runs on Linux.
  */
 static char redirection[] = "/tmp/redirectionXXXXXX";
-static char *path = NULL;
+static char path[PATH_MAX];
 static char *message = "This is the message to be written by our helper";
 static char message_back[128];
 static void test_fd_redirection(void)
@@ -39,7 +39,9 @@ static void test_fd_redirection(void)
         dup2(fd, STDIN_FILENO);
         char *argv[] = { path, message, NULL };
         char *envp[] = { NULL };
+        printf("path: %s\n", path);
         execve(path, argv, envp);
+        printf("execve failed: %s\n", strerror(errno));
         exit(-1);
     }
     else
@@ -70,9 +72,10 @@ void tests_teardown()
 int main(int argc, char **argv)
 {
     PRINT_TEST_BANNER();
+    assert(argc >= 1);
     /* Find the proper path for our helper */
     char *base = dirname(argv[0]);
-    char *helper = "/redirection_test_stub";
+    char *helper = "/../redirection_test_stub";
     sprintf(path, "%s%s", base, helper);
     const UnitTest tests[] =
     {
@@ -81,4 +84,3 @@ int main(int argc, char **argv)
     tests_teardown();
     return run_tests(tests);
 }
-

@@ -65,6 +65,7 @@ stamp-h1
 /test-driver
 /tests/unit/*.log
 /tests/unit/init_script_test_helper
+/tests/unit/redirection_test_stub
 /tests/load/*.log
 
 /configure_flags.env

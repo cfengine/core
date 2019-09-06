@@ -22,6 +22,10 @@
 
 # Math Grammar
 
+# The result of this grammar is commited to the repo as math.pc
+# It's not generated as part of a build, but as a manual step
+# if you change this grammar, use 3rdparty/peg-0.1.15 to regenerate math.pc
+
 Expr	<- SPACE Sum	        { yy->result = math_eval_pop(yy->stack, &(yy->stackp)); }
 	 / .		{ strcpy(yy->failure, "expression could not be parsed"); }
 

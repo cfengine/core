@@ -95,6 +95,8 @@ def run_command_with_args(command, args):
             demo=args.demo,
             call_collect=args.call_collect,
             edition=args.edition)
+    elif command == "uninstall":
+        commands.uninstall(args.hub, args.hosts)
     elif command == "packages":
         commands.packages(tags=args.tags, version=args.version, edition=args.edition)
     elif command == "run":
@@ -133,6 +135,9 @@ def validate_command(command, args):
                 user_error("--edition must be either community or enterprise")
         else:
             args.edition = "enterprise"
+
+    if command in ["uninstall"] and not (args.hosts or args.hub):
+        user_error("Use --hosts or --hub to specify remote hosts or hub, respectively.")
 
     if command == "install" and (args.call_collect and not args.demo):
         user_error("--call-collect must be used with --demo")

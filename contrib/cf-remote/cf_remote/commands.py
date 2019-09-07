@@ -2,7 +2,7 @@ import os
 import sys
 import time
 
-from cf_remote.remote import get_info, print_info, install_host, run_command, transfer_file
+from cf_remote.remote import get_info, print_info, install_host, uninstall_host, run_command, transfer_file
 from cf_remote.packages import Releases
 from cf_remote.web import download_package
 from cf_remote.paths import cf_remote_dir, CLOUD_CONFIG_FPATH, CLOUD_STATE_FPATH
@@ -254,3 +254,15 @@ def init_cloud_config():
     }
     write_json(CLOUD_CONFIG_FPATH, empty_config)
     print("Config file %s created, please complete the configuration in it." % CLOUD_CONFIG_FPATH)
+
+def uninstall(hubs, hosts):
+    assert hosts or hubs
+
+    if hosts:
+        for host in hosts:
+            data = uninstall_host(host, hub=False)
+            print_info(data)
+    if hubs:
+        for host in hubs:
+            data = uninstall_host(host, hub=True)
+            print_info(data)

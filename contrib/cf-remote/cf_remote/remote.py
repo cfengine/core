@@ -130,6 +130,21 @@ def install_package(host, pkg, data, *, connection=None):
 
 
 @auto_connect
+def uninstall_package(host, pkg, name, *, connection=None):
+
+    print("Uninstalling: '{}' on '{}'".format(name, host))
+    if ".deb" in pkg:
+        output = ssh_sudo(connection, "dpkg --purge {}".format(name), True)
+#     elif ".msi" in pkg: # no idea currently how to remove it
+#         output = ssh_cmd(connection, r".\{}".format(pkg), True)
+#         time.sleep(8)
+    elif ".rpm" in pkg:
+        output = ssh_sudo(connection, "rpm -e {}".format(name), True)
+    if output is None:
+        sys.exit("Unstallation failed on '{}'".format(host))
+
+
+@auto_connect
 def bootstrap_host(host_data, policy_server, *, connection=None):
     host = host_data["ssh_host"]
     agent = host_data["agent"]
@@ -204,3 +219,46 @@ def install_host(
             demo_lib.agent_run(data, connection=connection)
             demo_lib.disable_password_dialog(host)
         demo_lib.agent_run(data, connection=connection)
+
+
+def get_artifact_url(hub, data):
+    tags = []
+    tags.append("hub" if hub else "agent")
+    tags.append("64" if data["arch"] in ["x86_64", "amd64"] else data["arch"])
+    extension = None
+    if "package_tags" in data and "msi" in data["package_tags"]:
+        extension = ".msi"
+    elif "dpkg" in data["bin"]:
+        extension = ".deb"
+    elif "rpm" in data["bin"]:
+        extension = ".rpm"
+    releases = Releases()
+    release = releases.default
+    artifacts = release.find(tags, extension)
+    if not artifacts:
+        user_error(
+            "Could not find an appropriate package for host, cant uninstall.".format(
+                "hub" if hub else "client"))
+    artifact = artifacts[-1]
+    return artifact.url
+
+
+@auto_connect
+def uninstall_host(host, *, hub=False, connection=None):
+    data = get_info(host, connection=connection)
+    print_info(data)
+
+    package_file_name = basename(get_artifact_url(hub, data))
+    if package_file_name.endswith(".deb"):
+     package = package_file_name.split('_',1)[0] 
+    else:
+     package = re.sub('-[0-9]+\.[0-9]+.*$','',package_file_name)
+
+    uninstall_package(host, package_file_name, package, connection=connection)
+    if hub:
+     run_command(host, "rm -Rf /var/cfengine /opt/cfengine", users=None, connection=None, sudo=True)
+    else:
+     run_command(host, "rm -Rf /var/cfengine", users=None, connection=None, sudo=True)
+    return get_info(host, connection=connection)
+
+

@@ -53,6 +53,8 @@ def run_command_with_args(command, args):
             version=args.version,
             demo=args.demo,
             call_collect=args.call_collect)
+    elif command == "uninstall":
+        commands.uninstall(args.hub, args.hosts)
     elif command == "packages":
         commands.packages(tags=args.args, version=args.version)
     elif command == "run":
@@ -66,8 +68,11 @@ def run_command_with_args(command, args):
 
 
 def validate_command(command, args):
-    if command in ["info", "sudo", "run"] and not args.hosts:
+    if command in ["info", "sudo", "run" ] and not args.hosts:
         user_error("Use --hosts to specify remote hosts")
+
+    if command in ["uninstall"] and not (args.hosts or args.hub):
+        user_error("Use --hosts or --hub to specify remote hosts or hub, respectively.")
 
     if args.bootstrap and command != "install":
         user_error("--bootstrap can only be used with install command")

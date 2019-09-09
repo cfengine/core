@@ -7,7 +7,7 @@
 
 typedef enum
 {
-    DUMP_MODE_FULL,
+    DUMP_MODE_SIMPLE,
     DUMP_MODE_KEYS,
     DUMP_MODE_VALUES,
 } dump_mode;
@@ -72,7 +72,7 @@ void dump_print_json_string(const char *const data, const size_t size)
 
 void dump_print_opening_bracket(const dump_mode mode)
 {
-    if (mode == DUMP_MODE_FULL)
+    if (mode == DUMP_MODE_SIMPLE)
     {
         printf("{\n");
     }
@@ -100,7 +100,7 @@ void dump_print_array_line(const MDB_val value)
 
 void dump_print_closing_bracket(const dump_mode mode)
 {
-    if (mode == DUMP_MODE_FULL)
+    if (mode == DUMP_MODE_SIMPLE)
     {
         printf("}\n");
     }
@@ -134,7 +134,7 @@ int dump_db(const char *file, const dump_mode mode)
     while ((r = mdb_cursor_get(cursor, &key, &value, MDB_NEXT)) == MDB_SUCCESS)
     {
         switch (mode) {
-            case DUMP_MODE_FULL:
+            case DUMP_MODE_SIMPLE:
                 dump_print_object_line(key, value);
                 break;
             case DUMP_MODE_KEYS:
@@ -172,7 +172,7 @@ int dump_main(int argc, const char *const *const argv)
         print_usage();
         return EXIT_FAILURE;
     }
-    dump_mode mode = DUMP_MODE_FULL;
+    dump_mode mode = DUMP_MODE_SIMPLE;
     const char *filename = argv[1];
     if (argv[1][0] == '-')
     {

@@ -4,6 +4,7 @@
 #ifdef LMDB
 #include <lmdb.h>
 #include <string_lib.h>
+#include <json.h>
 
 typedef enum
 {
@@ -27,46 +28,14 @@ static int dump_report_error(int rc)
 void dump_print_json_string(const char *const data, const size_t size)
 {
     printf("\"");
-    for (size_t i = 0; i < size; ++i)
-    {
-        char byte = data[i];
-        switch (byte)
-        {
-        case '\0':
-            printf("\\0");
-            break;
-        case '\\':
-            printf("\\\\");
-            break;
-        case '\b':
-            printf("\\b");
-            break;
-        case '\f':
-            printf("\\f");
-            break;
-        case '\n':
-            printf("\\n");
-            break;
-        case '\r':
-            printf("\\r");
-            break;
-        case '\t':
-            printf("\\t");
-            break;
-        case '"':
-            printf("\\\"");
-            break;
-        default:
-            if (isprint(byte))
-            {
-                printf("%c", byte);
-            }
-            else
-            {
-                printf("\\x%2.2x", (unsigned char) byte);
-            }
-        }
-    }
+
+    Slice unescaped_data = {.data = (void *) data, .size = size};
+    // TODO: should probably change Slice in libntech to take (const void *)
+    // TODO: Expose Json5EscapeDataWriter and use it instead
+    char *escaped_data = Json5EscapeData(unescaped_data);
+    printf("%s", escaped_data);
+    free(escaped_data);
+
     printf("\"");
 }
 

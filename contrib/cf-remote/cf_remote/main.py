@@ -33,6 +33,22 @@ def get_args():
         "--call-collect", help="Enable call collect in --demo def.json", action='store_true')
     ap.add_argument(
         "--version", "-V", help="Print or specify version", nargs="?", type=str, const=True)
+
+    subp = ap.add_subparsers(dest="subcmd")
+    sp = subp.add_parser("spawn", help="Spawn hosts in the clouds")
+    sp.add_argument("--list-platforms", help="List supported platforms", action='store_true')
+    sp.add_argument("--init-config", help="Initialize configuration file for spawn functionality",
+                    action='store_true')
+    sp.add_argument("--platform", help="Platform to use", type=str)
+    sp.add_argument("--count", help="How many hosts to spawn", type=int)
+    sp.add_argument("--role", help="Role of the hosts", choices=["hub", "hubs", "client", "clients"])
+    sp.add_argument("--name", help="Name of the group of hosts (can be used in other commands)")
+    # TODO: --provider, --region (both optional)
+
+    dp = subp.add_parser("destroy", help="Destroy hosts spawned in the clouds")
+    dp.add_argument("--all", help="Destroy all hosts spawned in the clouds", action='store_true')
+    dp.add_argument("name", help="Name fo the group of hosts to destroy", nargs='?')
+
     ap.add_argument("command", help="Action to perform (info|install|packages|run|sudo|scp)", type=str, nargs='?')
     ap.add_argument("args", help="Arguments", type=str, nargs='*')
 
@@ -63,6 +79,22 @@ def run_command_with_args(command, args):
         commands.sudo(hosts=args.hosts, command=" ".join(args.args))
     elif command == "scp":
         commands.scp(hosts=args.hosts, files=args.args)
+    elif command == "spawn":
+        if args.list_platforms:
+            commands.list_platforms()
+            return
+        elif args.init_config:
+            commands.init_cloud_config()
+            return
+        # else
+        if args.role.endswith("s"):
+            # role should be singular
+            args.role = args.role[:-1]
+        commands.spawn(args.platform, args.count, args.role, args.name)
+    elif command == "destroy":
+        # args.name is a list because of 'nargs=1'
+        group_name = args.name[0] if args.name else None
+        commands.destroy(group_name)
     else:
         user_error("Unknown command: '{}'".format(command))
 
@@ -101,6 +133,22 @@ def validate_command(command, args):
                 "--package cannot be used in combination with --hub-package / --client-package")
             # TODO: Find this automatically
 
+    if command == "spawn" and not args.list_platforms and not args.init_config:
+        # --list-platforms doesn't require any other options/arguments (TODO:
+        # --provider), but otherwise all have to be given
+        if not args.platform:
+            user_error("--platform needs to be specified")
+        if not args.count:
+            user_error("--count needs to be specified")
+        if not args.role:
+            user_error("--role needs to be specified")
+        if not args.name:
+            user_error("--name needs to be specified")
+
+    if command == "destroy":
+        if not args.all and not args.name:
+            user_error("One of --all or NAME required for destroy")
+
 
 def file_or_comma_list(string):
     if is_file_string(string):
@@ -134,6 +182,11 @@ def validate_args(args):
         ]
     if args.hub:
         args.hub = file_or_comma_list(args.hub)
+
+    # TODO: use sub-commands for all commands
+    # sub-command is stored in a different place
+    if args.subcmd:
+        args.command = args.subcmd
 
     if not args.command:
         user_error("Invalid or missing command. Use one of (info|install|packages|run|sudo|scp)")

@@ -41,6 +41,27 @@ void dump_print_json_string(const char *const data, const size_t size)
     printf("\"");
 }
 
+void dump_print_json_string_nice(const char *const data, size_t size)
+{
+    assert(data != NULL);
+    assert(strnlen(data, size) == (size - 1));
+
+    printf("\"");
+
+    if (strnlen(data, size) == (size - 1))
+    {
+        // Looks like a normal string, let's remove NUL byte (nice mode)
+        size -= 1;
+    }
+
+    Slice unescaped_data = {.data = (void *) data, .size = size};
+    char *escaped_data = Json5EscapeData(unescaped_data);
+    printf("%s", escaped_data);
+    free(escaped_data);
+
+    printf("\"");
+}
+
 void dump_print_opening_bracket(const dump_mode mode)
 {
     if (mode == DUMP_MODE_SIMPLE || mode == DUMP_MODE_NICE)
@@ -231,7 +252,7 @@ void dump_print_object_line_nice(
     const MDB_val key, const MDB_val value, const char *file)
 {
     printf("\t");
-    dump_print_json_string(key.mv_data, key.mv_size);
+    dump_print_json_string_nice(key.mv_data, key.mv_size);
     printf(": ");
     if (StringEndsWith(file, "cf_lastseen.lmdb")
         && StringStartsWith(key.mv_data, "q"))
@@ -265,7 +286,7 @@ void dump_print_object_line_nice(
     }
     else
     {
-        dump_print_json_string(value.mv_data, value.mv_size);
+        dump_print_json_string_nice(value.mv_data, value.mv_size);
     }
     printf(",\n");
 }

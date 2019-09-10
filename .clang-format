@@ -26,4 +26,5 @@ AllowShortCaseLabelsOnASingleLine: false
 AllowShortIfStatementsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: None
 BreakBeforeBraces: Allman
+BreakBeforeBinaryOperators: NonAssignment
 ---

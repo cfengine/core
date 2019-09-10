@@ -2,7 +2,7 @@
 BasedOnStyle: Google
 ---
 Language: Cpp
-ColumnLimit: 78
+ColumnLimit: 79
 IndentWidth: 4
 TabWidth: 4
 UseTab: Never
@@ -26,6 +26,14 @@ IndentCaseLabels: false
 AllowShortCaseLabelsOnASingleLine: false
 AllowShortIfStatementsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: None
-BreakBeforeBraces: Allman
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterControlStatement: true
+  AfterEnum: true
+  AfterFunction: true
+  AfterStruct: true
+  AfterUnion: true
+  BeforeElse: true
+  SplitEmptyFunction: true
 BreakBeforeBinaryOperators: NonAssignment
 ---

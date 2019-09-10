@@ -48,6 +48,7 @@ stamp-h1
 /libenv/Makefile
 /libpromises/Makefile
 /misc/Makefile
+/misc/selinux/Makefile
 /tests/Makefile
 /tests/acceptance/25_cf-execd/Makefile
 /tests/acceptance/Makefile

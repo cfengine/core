@@ -163,6 +163,13 @@ check_PROGRAMS += \
 endif
 endif
 
+if !NT
+check_PROGRAMS += redirection_test
+noinst_PROGRAMS = redirection_test_stub
+
+redirection_test_stub_SOURCES = redirection_test_stub.c
+endif
+
 check_SCRIPTS = dynamic_dependency_test.sh \
 	tar_portability_test.sh
 

@@ -367,7 +367,7 @@ size_t diagnose_files(Seq *filenames, Seq **corrupt)
 
 int diagnose_main(int argc, const char *const *const argv)
 {
-    Seq *files = argv_to_lmdb_files(argc, argv);
+    Seq *files = argv_to_lmdb_files(argc, argv, 1);
     if (files == NULL || SeqLength(files) == 0)
     {
         Log(LOG_LEVEL_ERR, "No database files to diagnose");

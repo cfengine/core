@@ -8,6 +8,7 @@
 
 Seq *argv_to_seq(int argc, const char *const *argv);
 Seq *default_lmdb_files();
-Seq *argv_to_lmdb_files(int argc, const char *const *argv);
+
+Seq *argv_to_lmdb_files(int count, const char *const *files, size_t offset);
 
 #endif

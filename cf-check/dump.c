@@ -44,14 +44,31 @@ void dump_print_json_string(const char *const data, const size_t size)
 void dump_print_json_string_nice(const char *const data, size_t size)
 {
     assert(data != NULL);
-    assert(strnlen(data, size) == (size - 1));
+    assert(size != 0); // Don't know of anything we store which can be size 0
+    const size_t length = strnlen(data, size);
+
+    // Unfortunately, the packages_installed_apt_get.lmdb database
+    // needs some exceptions:
+    assert((size == 1) || data[size -1] == '\n' || (length == (size - 1)));
 
     printf("\"");
+    if (size == 0)
+    {
+        // size 0 is printed unambiguously as empty string ""
+        // An empty C string (size 1) will be printed as "\0"
+        printf("\"");
+        return;
+    }
 
-    if (strnlen(data, size) == (size - 1))
+    // Most of what we store are C strings
+    // except 1 byte '0' or '1', and some structs
+    // So in nice mode, we try to default to printing C strings in a nice way
+    // This means it can be ambiguous (we chop off the NUL byte sometimes)
+    // Use --simple for correct, unambiguous, uglier output
+    if (size > 1 && length == (size - 1))
     {
         // Looks like a normal string, let's remove NUL byte (nice mode)
-        size -= 1;
+        size = length;
     }
 
     Slice unescaped_data = {.data = (void *) data, .size = size};

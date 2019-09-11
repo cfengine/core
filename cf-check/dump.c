@@ -384,6 +384,32 @@ int dump_db(const char *file, const dump_mode mode)
     return 0;
 }
 
+int dump_dbs(
+    const char *const *const files,
+    const size_t len,
+    const dump_mode mode)
+{
+    assert(files != NULL);
+    assert(len > 0);
+    if (len == 1)
+    {
+        return dump_db(files[0], mode);
+    }
+
+    int ret = 0;
+
+    for (size_t i = 0; i < len; ++i)
+    {
+        printf("%s:\n", files[i]);
+        const int r = dump_db(files[i], mode);
+        if (r != 0)
+        {
+            ret = r;
+        }
+    }
+    return ret;
+}
+
 static bool matches_option(
     const char *const supplied,
     const char *const longopt,
@@ -412,22 +438,26 @@ static bool matches_option(
 int dump_main(int argc, const char *const *const argv)
 {
     assert(argv != NULL);
-    if (argc < 2 || argc > 3)
+    if (argc < 2) // Need at least binary and 1 filename
     {
         print_usage();
         return EXIT_FAILURE;
     }
     dump_mode mode = DUMP_MODE_NICE;
-    const char *filename = argv[1];
+    const char *const *filenames = argv + 1;
+    size_t filenames_len = argc - 1;
     if (argv[1][0] == '-')
     {
-        if (argc != 3)
+        const char *const option = argv[1];
+        filenames = argv + 2;
+        filenames_len = argc - 2;
+
+        if (filenames_len == 0) // 1 option and no filenames
         {
             print_usage();
             return EXIT_FAILURE;
         }
-        const char *const option = argv[1];
-        filename = argv[2];
+
         if (matches_option(option, "--keys", "-k"))
         {
             mode = DUMP_MODE_KEYS;
@@ -445,7 +475,7 @@ int dump_main(int argc, const char *const *const argv)
             mode = DUMP_MODE_SIMPLE;
         }
     }
-    return dump_db(filename, mode);
+    return dump_dbs(filenames, filenames_len, mode);
 }
 
 #else

@@ -367,6 +367,31 @@ int dump_db(const char *file, const dump_mode mode)
     return 0;
 }
 
+static bool matches_option(
+    const char *const supplied,
+    const char *const longopt,
+    const char *const shortopt)
+{
+    assert(supplied != NULL);
+    assert(shortopt != NULL);
+    assert(longopt != NULL);
+    assert(strlen(shortopt) == 2);
+    assert(strlen(longopt) >= 3);
+    assert(shortopt[0] == '-' && shortopt[1] != '-');
+    assert(longopt[0] == '-' && longopt[1] == '-' && longopt[2] != '-');
+
+    const size_t length = strlen(supplied);
+    if (length <= 1)
+    {
+        return false;
+    }
+    else if (length == 2)
+    {
+        return StringSafeEqual(supplied, shortopt);
+    }
+    return StringSafeEqualN_IgnoreCase(supplied, longopt, length);
+}
+
 int dump_main(int argc, const char *const *const argv)
 {
     assert(argv != NULL);
@@ -386,26 +411,19 @@ int dump_main(int argc, const char *const *const argv)
         }
         const char *const option = argv[1];
         filename = argv[2];
-        if (StringSafeEqual(option, "--keys")
-            || StringSafeEqual(option, "-k"))
+        if (matches_option(option, "--keys", "-k"))
         {
             mode = DUMP_MODE_KEYS;
         }
-        else if (
-            StringSafeEqual(option, "--values")
-            || StringSafeEqual(option, "-v"))
+        else if (matches_option(option, "--values", "-v"))
         {
             mode = DUMP_MODE_VALUES;
         }
-        else if (
-            StringSafeEqual(option, "--nice")
-            || StringSafeEqual(option, "-n"))
+        else if (matches_option(option, "--nice", "-n"))
         {
             mode = DUMP_MODE_NICE;
         }
-        else if (
-            StringSafeEqual(option, "--simple")
-            || StringSafeEqual(option, "-s"))
+        else if (matches_option(option, "--simple", "-s"))
         {
             mode = DUMP_MODE_SIMPLE;
         }

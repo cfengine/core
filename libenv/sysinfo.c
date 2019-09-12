@@ -1623,7 +1623,7 @@ static int Linux_Redhat_Version(EvalContext *ctx)
 #define RH_REL_FILENAME "/etc/redhat-release"
 
     Log(LOG_LEVEL_VERBOSE, "This appears to be a redhat (or redhat-based) system.");
-    EvalContextClassPutHard(ctx, "redhat", "inventory,attribute_name=none,source=agent");
+    EvalContextClassPutHard(ctx, "redhat", "inventory,attribute_name=none,source=agent,derived-from-file="RH_REL_FILENAME);
 
     /* Grab the first line from the file and then close it. */
     char relstring[CF_MAXVARSIZE];
@@ -1768,24 +1768,24 @@ static int Linux_Redhat_Version(EvalContext *ctx)
     {
         classbuf[0] = '\0';
         strcat(classbuf, vendor);
-        EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+        EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent,derived-from-file="RH_REL_FILENAME);
         strcat(classbuf, "_");
 
         if (strcmp(edition, "") != 0)
         {
             strcat(classbuf, edition);
-            EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+            EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent,derived-from-file="RH_REL_FILENAME);
             strcat(classbuf, "_");
         }
 
         strcat(classbuf, strmajor);
-        EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+        EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent,derived-from-file="RH_REL_FILENAME);
 
         if (minor != -2)
         {
             strcat(classbuf, "_");
             strcat(classbuf, strminor);
-            EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+            EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent,derived-from-file="RH_REL_FILENAME);
         }
     }
 
@@ -1794,7 +1794,7 @@ static int Linux_Redhat_Version(EvalContext *ctx)
     {
         classbuf[0] = '\0';
         strcat(classbuf, vendor);
-        EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+        EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent,derived-from-file="RH_REL_FILENAME);
         strcat(classbuf, "_");
 
         strcat(classbuf, strmajor);
@@ -1805,7 +1805,7 @@ static int Linux_Redhat_Version(EvalContext *ctx)
         {
             strcat(classbuf, "_");
             strcat(classbuf, strminor);
-            EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+            EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent,derived-from-file="RH_REL_FILENAME);
         }
     }
 

@@ -10,8 +10,9 @@
 
 typedef enum
 {
-    DUMP_MODE_NICE, // Customized printing of structs based on file name
-    DUMP_MODE_SIMPLE,
+    DUMP_MODE_NICE, // Print strings in a nice way, and file specific structs
+    DUMP_MODE_PORTABLE, // Portable and unambiguous, structs and raw strings
+    DUMP_MODE_SIMPLE, // Fallback mode for arbitrary / unrecognized data
     DUMP_MODE_KEYS,
     DUMP_MODE_VALUES,
 } dump_mode;
@@ -28,48 +29,40 @@ static int dump_report_error(int rc)
     return rc;
 }
 
-void dump_print_json_string(const char *const data, const size_t size)
-{
-    printf("\"");
-
-    Slice unescaped_data = {.data = (void *) data, .size = size};
-    // TODO: should probably change Slice in libntech to take (const void *)
-    // TODO: Expose Json5EscapeDataWriter and use it instead
-    char *escaped_data = Json5EscapeData(unescaped_data);
-    printf("%s", escaped_data);
-    free(escaped_data);
-
-    printf("\"");
-}
-
-void dump_print_json_string_nice(const char *const data, size_t size)
+void dump_print_json_string(
+    const char *const data, size_t size, const bool strip_strings)
 {
     assert(data != NULL);
     assert(size != 0); // Don't know of anything we store which can be size 0
-    const size_t length = strnlen(data, size);
-
-    // Unfortunately, the packages_installed_apt_get.lmdb database
-    // needs some exceptions:
-    assert((size == 1) || data[size -1] == '\n' || (length == (size - 1)));
 
     printf("\"");
     if (size == 0)
     {
         // size 0 is printed unambiguously as empty string ""
         // An empty C string (size 1) will be printed as "\0"
+        // in all modes (including nice)
         printf("\"");
         return;
     }
 
-    // Most of what we store are C strings
-    // except 1 byte '0' or '1', and some structs
-    // So in nice mode, we try to default to printing C strings in a nice way
-    // This means it can be ambiguous (we chop off the NUL byte sometimes)
-    // Use --simple for correct, unambiguous, uglier output
-    if (size > 1 && length == (size - 1))
+    if (strip_strings)
     {
-        // Looks like a normal string, let's remove NUL byte (nice mode)
-        size = length;
+        const size_t length = strnlen(data, size);
+
+        // Unfortunately, the packages_installed_apt_get.lmdb database
+        // has unterminated strings:
+        assert((size == 1) || data[size -1] == '\n' || (length == (size - 1)));
+
+        // Most of what we store are C strings
+        // except 1 byte '0' or '1', and some structs
+        // So in nice mode, we try to default to printing C strings in a nice way
+        // This means it can be ambiguous (we chop off the NUL byte sometimes)
+        // Use --simple for correct, unambiguous, uglier output
+        if (size > 1 && length == (size - 1))
+        {
+            // Looks like a normal string, let's remove NUL byte (nice mode)
+            size = length;
+        }
     }
 
     Slice unescaped_data = {.data = (void *) data, .size = size};
@@ -82,32 +75,23 @@ void dump_print_json_string_nice(const char *const data, size_t size)
 
 void dump_print_opening_bracket(const dump_mode mode)
 {
-    if (mode == DUMP_MODE_SIMPLE || mode == DUMP_MODE_NICE)
-    {
-        printf("{\n");
-    }
-    else
+    if (mode == DUMP_MODE_VALUES || mode == DUMP_MODE_KEYS)
     {
         printf("[\n");
     }
+    else
+    {
+        printf("{\n");
+    }
 }
 
-void dump_print_object_line(const MDB_val key, const MDB_val value)
-{
-    printf("\t");
-    dump_print_json_string(key.mv_data, key.mv_size);
-    printf(": ");
-    dump_print_json_string(value.mv_data, value.mv_size);
-    printf(",\n");
-}
-
-void nice_print_lastseen_quality(const MDB_val value)
+void print_lastseen_quality(const MDB_val value, const bool strip_strings)
 {
     assert(sizeof(KeyHostSeen) == value.mv_size);
     if (sizeof(KeyHostSeen) != value.mv_size)
     {
         // Fall back to simple printing in release builds:
-        dump_print_json_string(value.mv_data, value.mv_size);
+        dump_print_json_string(value.mv_data, value.mv_size, strip_strings);
     }
     else
     {
@@ -133,13 +117,13 @@ void nice_print_lastseen_quality(const MDB_val value)
     }
 }
 
-void nice_print_lock_data(const MDB_val value)
+void print_lock_data(const MDB_val value, const bool strip_strings)
 {
     assert(sizeof(LockData) == value.mv_size);
     if (sizeof(LockData) != value.mv_size)
     {
         // Fall back to simple printing in release builds:
-        dump_print_json_string(value.mv_data, value.mv_size);
+        dump_print_json_string(value.mv_data, value.mv_size, strip_strings);
     }
     else
     {
@@ -161,13 +145,14 @@ void nice_print_lock_data(const MDB_val value)
     }
 }
 
-void nice_print_averages(const MDB_val value)
+// Used to print values in /var/cfengine/state/cf_observations.lmdb:
+void print_averages(const MDB_val value, const bool strip_strings)
 {
     assert(sizeof(Averages) == value.mv_size);
     if (sizeof(Averages) != value.mv_size)
     {
         // Fall back to simple printing in release builds:
-        dump_print_json_string(value.mv_data, value.mv_size);
+        dump_print_json_string(value.mv_data, value.mv_size, strip_strings);
     }
     else
     {
@@ -202,7 +187,7 @@ void nice_print_averages(const MDB_val value)
     }
 }
 
-void nice_print_persistent_class(const MDB_val value)
+void print_persistent_class(const MDB_val value, const bool strip_strings)
 {
     // Value from db should always be bigger than sizeof struct
     // Since tags is not counted in sizeof. `tags` is variable size,
@@ -211,7 +196,7 @@ void nice_print_persistent_class(const MDB_val value)
     if (value.mv_size <= sizeof(PersistentClassInfo))
     {
         // Fall back to simple printing in release builds:
-        dump_print_json_string(value.mv_data, value.mv_size);
+        dump_print_json_string(value.mv_data, value.mv_size, strip_strings);
     }
     else
     {
@@ -248,7 +233,7 @@ void nice_print_persistent_class(const MDB_val value)
         {
             // String is not terminated, abort or fall back to default:
             debug_abort_if_reached();
-            dump_print_json_string(value.mv_data, value.mv_size);
+            dump_print_json_string(value.mv_data, value.mv_size, strip_strings);
             return;
         }
 
@@ -266,71 +251,99 @@ void nice_print_persistent_class(const MDB_val value)
     }
 }
 
-void dump_print_object_line_nice(
-    const MDB_val key, const MDB_val value, const char *file)
+void dump_print_value(
+    const MDB_val key,
+    const MDB_val value,
+    const char *const file,
+    const bool strip_strings,
+    const bool structs)
 {
-    printf("\t");
-    dump_print_json_string_nice(key.mv_data, key.mv_size);
-    printf(": ");
-    if (StringEndsWith(file, "cf_lastseen.lmdb")
-        && StringStartsWith(key.mv_data, "q"))
+    bool fallback = false;
+    if (structs)
     {
-        nice_print_lastseen_quality(value);
-    }
-    else if (StringEndsWith(file, "cf_lock.lmdb"))
-    {
-        nice_print_lock_data(value);
-    }
-    else if (StringEndsWith(file, "cf_observations.lmdb"))
-    {
-        if (StringSafeEqual(key.mv_data, "DATABASE_AGE"))
+        if (StringEndsWith(file, "cf_lastseen.lmdb")
+            && StringStartsWith(key.mv_data, "q"))
         {
-            assert(sizeof(double) == value.mv_size);
-            const double *const age = value.mv_data;
-            printf("%f", *age);
+            print_lastseen_quality(value, strip_strings);
+        }
+        else if (StringEndsWith(file, "cf_lock.lmdb"))
+        {
+            print_lock_data(value, strip_strings);
+        }
+        else if (StringEndsWith(file, "cf_observations.lmdb"))
+        {
+            if (StringSafeEqual(key.mv_data, "DATABASE_AGE"))
+            {
+                assert(sizeof(double) == value.mv_size);
+                const double *const age = value.mv_data;
+                printf("%f", *age);
+            }
+            else
+            {
+                print_averages(value, strip_strings);
+            }
+        }
+        else if (StringEndsWith(file, "history.lmdb"))
+        {
+            print_averages(value, strip_strings);
+        }
+        else if (StringEndsWith(file, "cf_state.lmdb"))
+        {
+            print_persistent_class(value, strip_strings);
         }
         else
         {
-            nice_print_averages(value);
+            fallback = true;
         }
     }
-    else if (StringEndsWith(file, "history.lmdb"))
+
+    const bool was_printed = (structs && !fallback);
+    if (!was_printed)
     {
-        nice_print_averages(value);
+        dump_print_json_string(value.mv_data, value.mv_size, strip_strings);
     }
-    else if (StringEndsWith(file, "cf_state.lmdb"))
-    {
-        nice_print_persistent_class(value);
-    }
-    else
-    {
-        dump_print_json_string_nice(value.mv_data, value.mv_size);
-    }
+}
+
+void dump_print_object_line(
+    const MDB_val key,
+    const MDB_val value,
+    const char *const file,
+    const bool strip_strings,
+    const bool structs)
+{
+    printf("\t");
+    dump_print_json_string(key.mv_data, key.mv_size, strip_strings);
+    printf(": ");
+    dump_print_value(key, value, file, strip_strings, structs);
     printf(",\n");
 }
 
-void dump_print_array_line(const MDB_val value)
+void dump_print_array_line(const MDB_val value, const bool strip_strings)
 {
     printf("\t");
-    dump_print_json_string(value.mv_data, value.mv_size);
+    dump_print_json_string(value.mv_data, value.mv_size, strip_strings);
     printf(",\n");
 }
 
 void dump_print_closing_bracket(const dump_mode mode)
 {
-    if (mode == DUMP_MODE_SIMPLE || mode == DUMP_MODE_NICE)
+    if (mode == DUMP_MODE_KEYS || mode == DUMP_MODE_VALUES)
     {
-        printf("}\n");
+        printf("]\n");
     }
     else
     {
-        printf("]\n");
+        printf("}\n");
     }
 }
 
 int dump_db(const char *file, const dump_mode mode)
 {
     assert(file != NULL);
+
+    const bool strip_strings = ((mode == DUMP_MODE_NICE) ? true : false);
+    const bool structs =
+        ((mode == DUMP_MODE_NICE || mode == DUMP_MODE_PORTABLE) ? true : false);
 
     int r;
     MDB_env *env;
@@ -352,17 +365,17 @@ int dump_db(const char *file, const dump_mode mode)
     while ((r = mdb_cursor_get(cursor, &key, &value, MDB_NEXT)) == MDB_SUCCESS)
     {
         switch (mode) {
+            case DUMP_MODE_NICE:
+            case DUMP_MODE_PORTABLE:
             case DUMP_MODE_SIMPLE:
-                dump_print_object_line(key, value);
+                dump_print_object_line(key, value, file, strip_strings, structs);
                 break;
             case DUMP_MODE_KEYS:
-                dump_print_array_line(key);
+                dump_print_array_line(key, strip_strings);
                 break;
             case DUMP_MODE_VALUES:
-                dump_print_array_line(value);
+                dump_print_array_line(value, strip_strings);
                 break;
-            case DUMP_MODE_NICE:
-                dump_print_object_line_nice(key, value, file);
                 break;
             default:
                 debug_abort_if_reached();
@@ -466,6 +479,10 @@ int dump_main(int argc, const char *const *const argv)
         else if (matches_option(option, "--simple", "-s"))
         {
             mode = DUMP_MODE_SIMPLE;
+        }
+        else if (matches_option(option, "--portable", "-p"))
+        {
+            mode = DUMP_MODE_PORTABLE;
         }
         else
         {

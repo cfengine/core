@@ -10,9 +10,9 @@
 
 typedef enum
 {
-    DUMP_NICE, // Print strings in a nice way, and file specific structs
+    DUMP_NICE,     // Print strings in a nice way, and file specific structs
     DUMP_PORTABLE, // Portable and unambiguous, structs and raw strings
-    DUMP_SIMPLE, // Fallback mode for arbitrary / unrecognized data
+    DUMP_SIMPLE,   // Fallback mode for arbitrary / unrecognized data
     DUMP_KEYS,
     DUMP_VALUES,
 } dump_mode;
@@ -126,7 +126,8 @@ static void print_struct_lock_data(
         JsonElement *json = JsonObjectCreate(3);
         JsonObjectAppendInteger(json, "pid", pid);
         JsonObjectAppendInteger(json, "time", time);
-        JsonObjectAppendInteger(json, "process_start_time", process_start_time);
+        JsonObjectAppendInteger(
+            json, "process_start_time", process_start_time);
 
         Writer *w = FileWriter(stdout);
         JsonWriteCompact(w, json);
@@ -369,21 +370,22 @@ static int dump_db(const char *file, const dump_mode mode)
     print_opening_bracket(mode);
     while ((r = mdb_cursor_get(cursor, &key, &value, MDB_NEXT)) == MDB_SUCCESS)
     {
-        switch (mode) {
-            case DUMP_NICE:
-            case DUMP_PORTABLE:
-            case DUMP_SIMPLE:
-                print_line_key_value(key, value, file, strip_strings, structs);
-                break;
-            case DUMP_KEYS:
-                print_line_array_element(key, strip_strings);
-                break;
-            case DUMP_VALUES:
-                print_line_array_element(value, strip_strings);
-                break;
-            default:
-                debug_abort_if_reached();
-                break;
+        switch (mode)
+        {
+        case DUMP_NICE:
+        case DUMP_PORTABLE:
+        case DUMP_SIMPLE:
+            print_line_key_value(key, value, file, strip_strings, structs);
+            break;
+        case DUMP_KEYS:
+            print_line_array_element(key, strip_strings);
+            break;
+        case DUMP_VALUES:
+            print_line_array_element(value, strip_strings);
+            break;
+        default:
+            debug_abort_if_reached();
+            break;
         }
     }
     print_closing_bracket(mode);

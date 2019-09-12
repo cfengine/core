@@ -6,6 +6,7 @@
 #include <string_lib.h>
 #include <json.h>
 #include <db_structs.h>
+#include <utilities.h>
 
 typedef enum
 {
@@ -17,7 +18,7 @@ typedef enum
 
 static void print_usage(void)
 {
-    printf("Usage: cf-check dump FILE\n");
+    printf("Usage: cf-check dump [OPTION] [FILE ...]\n");
     printf("Example: cf-check dump /var/cfengine/state/cf_lastseen.lmdb\n");
 }
 
@@ -384,24 +385,24 @@ int dump_db(const char *file, const dump_mode mode)
     return 0;
 }
 
-int dump_dbs(
-    const char *const *const files,
-    const size_t len,
-    const dump_mode mode)
+int dump_dbs(Seq *const files, const dump_mode mode)
 {
     assert(files != NULL);
-    assert(len > 0);
-    if (len == 1)
+    const size_t length = SeqLength(files);
+    assert(length > 0);
+
+    if (length == 1)
     {
-        return dump_db(files[0], mode);
+        return dump_db(SeqAt(files, 0), mode);
     }
 
     int ret = 0;
 
-    for (size_t i = 0; i < len; ++i)
+    for (size_t i = 0; i < length; ++i)
     {
-        printf("%s:\n", files[i]);
-        const int r = dump_db(files[i], mode);
+        const char *const filename = SeqAt(files, i);
+        printf("%s:\n", filename);
+        const int r = dump_db(filename, mode);
         if (r != 0)
         {
             ret = r;
@@ -438,25 +439,17 @@ static bool matches_option(
 int dump_main(int argc, const char *const *const argv)
 {
     assert(argv != NULL);
-    if (argc < 2) // Need at least binary and 1 filename
-    {
-        print_usage();
-        return EXIT_FAILURE;
-    }
+    assert(argc >= 1);
+
     dump_mode mode = DUMP_MODE_NICE;
     const char *const *filenames = argv + 1;
     size_t filenames_len = argc - 1;
-    if (argv[1][0] == '-')
+    if (filenames_len > 0 && filenames[0] != NULL && filenames[0][0] == '-')
     {
-        const char *const option = argv[1];
-        filenames = argv + 2;
-        filenames_len = argc - 2;
+        const char *const option = filenames[0];
 
-        if (filenames_len == 0) // 1 option and no filenames
-        {
-            print_usage();
-            return EXIT_FAILURE;
-        }
+        filenames += 1;
+        filenames_len -= 1;
 
         if (matches_option(option, "--keys", "-k"))
         {
@@ -475,7 +468,17 @@ int dump_main(int argc, const char *const *const argv)
             mode = DUMP_MODE_SIMPLE;
         }
     }
-    return dump_dbs(filenames, filenames_len, mode);
+
+    if (filenames_len > 0 && filenames[0] != NULL && filenames[0][0] == '-')
+    {
+        print_usage();
+        return 1;
+    }
+
+    Seq *files = argv_to_lmdb_files(filenames_len, filenames, 0);
+    const int ret = dump_dbs(files, mode);
+    SeqDestroy(files);
+    return ret;
 }
 
 #else

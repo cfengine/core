@@ -467,11 +467,18 @@ int dump_main(int argc, const char *const *const argv)
         {
             mode = DUMP_MODE_SIMPLE;
         }
+        else
+        {
+            print_usage();
+            printf("Unrecognized option: '%s'\n", option);
+            return 1;
+        }
     }
 
     if (filenames_len > 0 && filenames[0] != NULL && filenames[0][0] == '-')
     {
         print_usage();
+        printf("Only one option supported!\n");
         return 1;
     }
 

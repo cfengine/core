@@ -11,7 +11,8 @@ int diagnose_main(ARG_UNUSED int argc, ARG_UNUSED const char *const *const argv)
     return 1;
 }
 
-size_t diagnose_files(ARG_UNUSED Seq *filenames, ARG_UNUSED Seq **corrupt)
+size_t diagnose_files(
+    ARG_UNUSED Seq *filenames, ARG_UNUSED Seq **corrupt, bool foreground)
 {
     Log(LOG_LEVEL_INFO,
         "database diagnosis not available on this platform/build");
@@ -28,6 +29,8 @@ size_t diagnose_files(ARG_UNUSED Seq *filenames, ARG_UNUSED Seq **corrupt)
 #include <utilities.h>
 #include <sequence.h>
 #include <alloc.h>
+#include <string_lib.h>
+#include <unistd.h>
 
 // clang-format off
 #define CF_CHECK_RUN_CODES(macro)                         \
@@ -291,8 +294,14 @@ static int lmdump_errno_to_code(int r)
 
 static int diagnose(const char *path)
 {
+    int saved_stdout = dup(STDOUT_FILENO);
     freopen("/dev/null", "w", stdout);
-    return lmdump(LMDUMP_VALUES_ASCII, path);
+    int ret = lmdump(LMDUMP_VALUES_ASCII, path);
+
+    char buf[32];
+    snprintf(buf, sizeof(buf), "/dev/fd/%d", saved_stdout);
+    freopen(buf, "w", stdout);
+    return ret;
 }
 
 static int fork_and_diagnose(const char *path)
@@ -324,7 +333,7 @@ static int fork_and_diagnose(const char *path)
     return CF_CHECK_OK;
 }
 
-size_t diagnose_files(Seq *filenames, Seq **corrupt)
+size_t diagnose_files(Seq *filenames, Seq **corrupt, bool foreground)
 {
     assert(corrupt == NULL || *corrupt == NULL);
     size_t corruptions = 0;
@@ -332,7 +341,15 @@ size_t diagnose_files(Seq *filenames, Seq **corrupt)
     for (int i = 0; i < length; ++i)
     {
         const char *filename = SeqAt(filenames, i);
-        const int r = fork_and_diagnose(filename);
+        int r;
+        if (foreground)
+        {
+            r = lmdump_errno_to_code(diagnose(filename));
+        }
+        else
+        {
+            r = fork_and_diagnose(filename);
+        }
         Log(LOG_LEVEL_INFO,
             "Status of '%s': %s\n",
             filename,
@@ -367,13 +384,21 @@ size_t diagnose_files(Seq *filenames, Seq **corrupt)
 
 int diagnose_main(int argc, const char *const *const argv)
 {
-    Seq *files = argv_to_lmdb_files(argc, argv);
+    size_t offset = 1;
+    bool foreground = false;
+    if (StringSafeEqual(argv[1], "--no-fork")
+        || StringSafeEqual(argv[1], "-F"))
+    {
+        foreground = true;
+        offset += 1;
+    }
+    Seq *files = argv_to_lmdb_files(argc, argv, offset);
     if (files == NULL || SeqLength(files) == 0)
     {
         Log(LOG_LEVEL_ERR, "No database files to diagnose");
         return 1;
     }
-    const int ret = diagnose_files(files, NULL);
+    const int ret = diagnose_files(files, NULL, foreground);
     SeqDestroy(files);
     return ret;
 }

@@ -76,7 +76,7 @@ int repair_files(Seq *files)
 
     Seq *corrupt = NULL;
 
-    const int corruptions = diagnose_files(files, &corrupt);
+    const int corruptions = diagnose_files(files, &corrupt, false);
 
     if (corruptions != 0)
     {

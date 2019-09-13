@@ -3,7 +3,7 @@
 
 #include <sequence.h>
 
-size_t diagnose_files(Seq *filenames, Seq **corrupt);
+size_t diagnose_files(Seq *filenames, Seq **corrupt, bool foreground);
 int diagnose_main(int argc, const char *const *argv);
 
 #endif

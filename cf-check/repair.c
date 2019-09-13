@@ -76,7 +76,7 @@ int repair_files(Seq *files)
 
     Seq *corrupt = NULL;
 
-    const int corruptions = diagnose_files(files, &corrupt);
+    const int corruptions = diagnose_files(files, &corrupt, false);
 
     if (corruptions != 0)
     {
@@ -115,7 +115,7 @@ int repair_files(Seq *files)
 
 int repair_main(int argc, const char *const *const argv)
 {
-    Seq *files = argv_to_lmdb_files(argc, argv);
+    Seq *files = argv_to_lmdb_files(argc, argv, 1);
     if (files == NULL || SeqLength(files) == 0)
     {
         Log(LOG_LEVEL_ERR, "No database files to repair");

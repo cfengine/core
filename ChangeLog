@@ -1,3 +1,36 @@
+3.15.0b1:
+	- Added derived-from-file tag to hard classes based on /etc/redhat-release
+	  (CFE-3140)
+	- Added sys.bootstrap_id policy variable Contains the ID from
+	  `/var/cfengine/bootstrap_id.dat`, if present (CFE-2977)
+	- Fixed .xy floating point numbers parsing in eval() (CFE-2762)
+	- Fixed multiple measurements tracking growth of same file (ENT-4814)
+	- Local DB errors are now logged with the particular DB file path (CFE-2469)
+	- Package modules now hit network when package cache is first initialized
+	  (CFE-3094)
+	- Prevented buffer overflow when policy variable names are longer than 1024 bytes
+	- Report corrupted local database with a critical log message (CFE-2469)
+	- Set create permissions of monitord files in state directory to 0600
+	  0600 matches the permissions enforced by policy.
+	  Affected files:
+	   * `state/cf_incoming.*`
+	   * `state/cf_outgoing.*`
+	   * `state/cf_users`
+	   * `state/env_data`
+	  (ENT-4863)
+	- The @ character is now allowed in the key of classic arrays defined
+	  by the module protocol (CFE-3099)
+	- Version specific distro classes are now collected by default in Enterprise
+	  (ENT-4752)
+	- Zero bytes in class guards no longer cause crashes (CFE-3028)
+	- cf-check: Added --no-fork to diagnose command (CFE-3145)
+	- cf-check: Added -M manpage option and other common options (CFE-3082)
+	- cf-check: No DB files in state dir now causes errors
+	- cf-check: dump command now dumps DB contents to JSON5 (CFE-3126)
+	- cf-check: help command can now take a topic as argument
+	- redhat_8 and redhat_8_0 are now defined on RHEL 8 (CFE-3140)
+	- sys.interfaces now contains interfaces even when they only have IPv6 addresses (ENT-4858)
+
 3.14.0:
 	- A bootstrap_id.dat file is now generated on every bootstrap
 	  (CFE-2977)

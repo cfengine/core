@@ -1724,6 +1724,7 @@ static int Linux_Fedora_Version(EvalContext *ctx)
 static int Linux_Redhat_Version(EvalContext *ctx)
 {
 #define REDHAT_ID "Red Hat Linux"
+#define REDHAT_ENT_ID "Red Hat Enterprise Linux"
 #define REDHAT_AS_ID "Red Hat Enterprise Linux AS"
 #define REDHAT_AS21_ID "Red Hat Linux Advanced Server"
 #define REDHAT_ES_ID "Red Hat Enterprise Linux ES"
@@ -1745,6 +1746,7 @@ static int Linux_Redhat_Version(EvalContext *ctx)
 /* We are looking for one of the following strings...
  *
  * Red Hat Linux release 6.2 (Zoot)
+ * Red Hat Enterprise Linux release 8.0 (Ootpa)
  * Red Hat Linux Advanced Server release 2.1AS (Pensacola)
  * Red Hat Enterprise Linux AS release 3 (Taroon)
  * Red Hat Enterprise Linux WS release 3 (Taroon)
@@ -1760,7 +1762,7 @@ static int Linux_Redhat_Version(EvalContext *ctx)
 #define RH_REL_FILENAME "/etc/redhat-release"
 
     Log(LOG_LEVEL_VERBOSE, "This appears to be a redhat (or redhat-based) system.");
-    EvalContextClassPutHard(ctx, "redhat", "inventory,attribute_name=none,source=agent");
+    EvalContextClassPutHard(ctx, "redhat", "inventory,attribute_name=none,source=agent,derived-from-file="RH_REL_FILENAME);
 
     /* Grab the first line from the file and then close it. */
     char relstring[CF_MAXVARSIZE];
@@ -1812,6 +1814,10 @@ static int Linux_Redhat_Version(EvalContext *ctx)
         edition = "cn";
     }
     else if (!strncmp(relstring, REDHAT_ID, strlen(REDHAT_ID)))
+    {
+        vendor = "redhat";
+    }
+    else if (!strncmp(relstring, REDHAT_ENT_ID, strlen(REDHAT_ENT_ID)))
     {
         vendor = "redhat";
     }
@@ -1905,24 +1911,24 @@ static int Linux_Redhat_Version(EvalContext *ctx)
     {
         classbuf[0] = '\0';
         strcat(classbuf, vendor);
-        EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+        EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent,derived-from-file="RH_REL_FILENAME);
         strcat(classbuf, "_");
 
         if (strcmp(edition, "") != 0)
         {
             strcat(classbuf, edition);
-            EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+            EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent,derived-from-file="RH_REL_FILENAME);
             strcat(classbuf, "_");
         }
 
         strcat(classbuf, strmajor);
-        EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+        EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent,derived-from-file="RH_REL_FILENAME);
 
         if (minor != -2)
         {
             strcat(classbuf, "_");
             strcat(classbuf, strminor);
-            EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+            EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent,derived-from-file="RH_REL_FILENAME);
         }
     }
 
@@ -1931,7 +1937,7 @@ static int Linux_Redhat_Version(EvalContext *ctx)
     {
         classbuf[0] = '\0';
         strcat(classbuf, vendor);
-        EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+        EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent,derived-from-file="RH_REL_FILENAME);
         strcat(classbuf, "_");
 
         strcat(classbuf, strmajor);
@@ -1942,7 +1948,7 @@ static int Linux_Redhat_Version(EvalContext *ctx)
         {
             strcat(classbuf, "_");
             strcat(classbuf, strminor);
-            EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+            EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent,derived-from-file="RH_REL_FILENAME);
         }
     }
 

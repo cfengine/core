@@ -254,7 +254,15 @@ else:
     # (3.x) versions. But since those are not reachable from here, we
     # have branched off again, i.e. we need a new *minor* (3.x)
     # version. So find the newest minor version and increase it.
-    final_print("%s.%d.0a.%s" % (all_tags[0][0], int(all_tags[0][1]) + 1, abbrev_rev))
+
+    # Unless the newest minor version is an alpha or beta release which
+    # should not trigger minor version incrementing (we are yet to
+    # release the final version of that minor release).
+    # A tag in all_tags is like: ('3', '15', '0', 'b1-build2')
+    if all_tags[0][3].startswith(("a", "b")):
+        final_print("%s.%d.0a.%s" % (all_tags[0][0], int(all_tags[0][1]), abbrev_rev))
+    else:
+        final_print("%s.%d.0a.%s" % (all_tags[0][0], int(all_tags[0][1]) + 1, abbrev_rev))
 
 
 sys.exit(0)

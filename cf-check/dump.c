@@ -19,7 +19,7 @@ typedef enum
 
 static void print_usage(void)
 {
-    printf("Usage: cf-check dump [OPTION] [FILE ...]\n");
+    printf("Usage: cf-check dump [-k|-v|-n|-s|-p] [FILE ...]\n");
     printf("Example: cf-check dump /var/cfengine/state/cf_lastseen.lmdb\n");
 }
 
@@ -251,7 +251,6 @@ static void print_struct_or_string(
     const bool strip_strings,
     const bool structs)
 {
-    bool fallback = false;
     if (structs)
     {
         if (StringEndsWith(file, "cf_lastseen.lmdb")
@@ -286,12 +285,10 @@ static void print_struct_or_string(
         }
         else
         {
-            fallback = true;
+            print_json_string(value.mv_data, value.mv_size, strip_strings);
         }
     }
-
-    const bool was_printed = (structs && !fallback);
-    if (!was_printed)
+    else
     {
         print_json_string(value.mv_data, value.mv_size, strip_strings);
     }
@@ -347,9 +344,8 @@ static int dump_db(const char *file, const dump_mode mode)
 {
     assert(file != NULL);
 
-    const bool strip_strings = ((mode == DUMP_NICE) ? true : false);
-    const bool structs =
-        ((mode == DUMP_NICE || mode == DUMP_PORTABLE) ? true : false);
+    const bool strip_strings = (mode == DUMP_NICE);
+    const bool structs = (mode == DUMP_NICE || mode == DUMP_PORTABLE);
 
     int r;
     MDB_env *env;
@@ -461,14 +457,12 @@ int dump_main(int argc, const char *const *const argv)
     assert(argc >= 1);
 
     dump_mode mode = DUMP_NICE;
-    const char *const *filenames = argv + 1;
-    size_t filenames_len = argc - 1;
-    if (filenames_len > 0 && filenames[0] != NULL && filenames[0][0] == '-')
-    {
-        const char *const option = filenames[0];
+    size_t offset = 1;
 
-        filenames += 1;
-        filenames_len -= 1;
+    if (argc > offset && argv[offset] != NULL && argv[offset][0] == '-')
+    {
+        const char *const option = argv[offset];
+        offset += 1;
 
         if (matches_option(option, "--keys", "-k"))
         {
@@ -498,14 +492,14 @@ int dump_main(int argc, const char *const *const argv)
         }
     }
 
-    if (filenames_len > 0 && filenames[0] != NULL && filenames[0][0] == '-')
+    if (argc > offset && argv[offset] != NULL && argv[offset][0] == '-')
     {
         print_usage();
         printf("Only one option supported!\n");
         return 1;
     }
 
-    Seq *files = argv_to_lmdb_files(filenames_len, filenames, 0);
+    Seq *files = argv_to_lmdb_files(argc, argv, offset);
     const int ret = dump_dbs(files, mode);
     SeqDestroy(files);
     return ret;

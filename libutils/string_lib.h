@@ -75,6 +75,28 @@ char *NULLStringToEmpty(char *str);
 
 bool StringIsNumeric(const char *name);
 bool StringIsPrintable(const char *name);
+
+/**
+ * @brief Check if a char is "printable", replacement for isprint
+ *
+ * isprint takes a (signed) int, so if you send in a (signed) char there is an
+ * implicit cast. This can be problematic, since 0xF0 becomes 0xFFFFF0.
+ *
+ * Additionally, at least on HPUX, isprint returns true for some values above
+ * 127, depending on locale.
+ *
+ * Thus, this replacement works the same everywhere, and can be used when you
+ * want predictable results, even though it will return false for some values
+ * which might be possible to print in your environment / locale.
+ *
+ * @param c [in] Character to evaluate
+ * @return True if c is part of the printable ascii range
+ */
+static inline bool CharIsPrintableAscii(const char c)
+{
+    return (c >= ' ' && c <= '~');
+}
+
 bool EmptyString(const char *s);
 
 size_t StringBytesToHex(char *dst, size_t dst_size,

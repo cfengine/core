@@ -539,11 +539,6 @@ static ExpressionValue CheckVarClassExpression(const EvalContext *ctx, const Con
     return CheckClassExpression(ctx, classes);
 }
 
-static bool IsVarClassDefined(const EvalContext *ctx, const Constraint *cp, Promise *pcopy)
-{
-    return (CheckVarClassExpression(ctx, cp, pcopy) == EXPRESSION_VALUE_TRUE);
-}
-
 /* Expands "$(this.promiser)" comment if present. Writes the result to pp. */
 static void DereferenceAndPutComment(Promise* pp, const char *comment)
 {
@@ -634,7 +629,8 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
             ifvarclass = PromiseGetConstraint(pp, "if");
         }
 
-        if (ifvarclass && !IsVarClassDefined(ctx, ifvarclass, pcopy))
+        // if - Skip if false or error:
+        if (ifvarclass && (CheckVarClassExpression(ctx, ifvarclass, pcopy) != EXPRESSION_VALUE_TRUE))
         {
             if (LogGetGlobalLevel() >= LOG_LEVEL_VERBOSE)
             {
@@ -653,18 +649,33 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
     {
         const Constraint *unless = PromiseGetConstraint(pp, "unless");
 
-        if (unless && IsVarClassDefined(ctx, unless, pcopy))
+        // unless - Skip if true or error:
+        if (unless != NULL)
         {
-            if (LogGetGlobalLevel() >= LOG_LEVEL_VERBOSE)
+            const ExpressionValue value = CheckVarClassExpression(ctx, unless, pcopy);
+
+            if ((EvalContextGetPass(ctx) == CF_DONEPASSES-1)
+                && (value == EXPRESSION_VALUE_ERROR))
             {
                 char *unless_string =  RvalToString(unless->rval);
-                Log(LOG_LEVEL_VERBOSE, "Skipping promise '%s'"
-                    " because constraint '%s => %s' is not met",
+                Log(LOG_LEVEL_VERBOSE,
+                    "Not skipping promise '%s' with constraint '%s => %s' in last evaluation pass",
                     pp->promiser, unless->lval, unless_string);
                 free(unless_string);
             }
-            *excluded = true;
-            return pcopy;
+            else if (value != EXPRESSION_VALUE_FALSE)
+            {
+                if (LogGetGlobalLevel() >= LOG_LEVEL_VERBOSE)
+                {
+                    char *unless_string =  RvalToString(unless->rval);
+                    Log(LOG_LEVEL_VERBOSE,
+                        "Skipping promise '%s' because constraint '%s => %s' is not met",
+                        pp->promiser, unless->lval, unless_string);
+                    free(unless_string);
+                }
+                *excluded = true;
+                return pcopy;
+            }
         }
     }
 

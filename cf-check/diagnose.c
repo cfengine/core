@@ -292,15 +292,27 @@ static int lmdump_errno_to_code(int r)
     return s;
 }
 
-static int diagnose(const char *path)
+static int diagnose(const char *path, bool temporary_redirect)
 {
-    int saved_stdout = dup(STDOUT_FILENO);
-    freopen("/dev/null", "w", stdout);
-    int ret = lmdump(LMDUMP_VALUES_ASCII, path);
+    int ret;
+    if (temporary_redirect)
+    {
+        // --no-fork mode: temporarily redirect output to /dev/null & restore
+        // Only done when necessary as it might not be so portable (/dev/fd)
+        int saved_stdout = dup(STDOUT_FILENO);
+        freopen("/dev/null", "w", stdout);
+        ret = lmdump(LMDUMP_VALUES_ASCII, path);
 
-    char buf[32];
-    snprintf(buf, sizeof(buf), "/dev/fd/%d", saved_stdout);
-    freopen(buf, "w", stdout);
+        char buf[32];
+        snprintf(buf, sizeof(buf), "/dev/fd/%d", saved_stdout);
+        freopen(buf, "w", stdout);
+    }
+    else
+    {
+        // Normal mode: redirect to /dev/null permanently (forked process)
+        freopen("/dev/null", "w", stdout);
+        ret = lmdump(LMDUMP_VALUES_ASCII, path);
+    }
     return ret;
 }
 
@@ -310,7 +322,7 @@ static int fork_and_diagnose(const char *path)
     if (child_pid == 0)
     {
         // Child
-        exit(diagnose(path));
+        exit(diagnose(path, false));
     }
     else
     {
@@ -344,7 +356,7 @@ size_t diagnose_files(Seq *filenames, Seq **corrupt, bool foreground)
         int r;
         if (foreground)
         {
-            r = lmdump_errno_to_code(diagnose(filename));
+            r = lmdump_errno_to_code(diagnose(filename, true));
         }
         else
         {

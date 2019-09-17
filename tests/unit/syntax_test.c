@@ -109,6 +109,54 @@ static void test_typecheck_null_rval(void)
     assert_int_equal(SYNTAX_TYPE_MATCH_ERROR_GOT_NULL, err);
 }
 
+static void test_check_parse_variable_name(void)
+{
+    // Test was added after function
+    // It shows what it actually does (not what was intended)
+
+    // Allowed variable "names":
+    assert_true(CheckParseVariableName("a"));
+    assert_true(CheckParseVariableName("myvar"));
+    assert_true(CheckParseVariableName("SuperCaliFragilisticExpialidocius"));
+    assert_true(CheckParseVariableName("a.b"));
+    assert_true(CheckParseVariableName("a[b]"));
+    assert_true(CheckParseVariableName("a[b.c]"));
+    assert_true(CheckParseVariableName("a[b.c.d]"));
+    assert_true(CheckParseVariableName("a.b[c.d.e]"));
+    assert_true(CheckParseVariableName("a.b[c.d.e]"));
+    assert_true(CheckParseVariableName("Namespace.var[$(ns.expand)]"));
+
+    // Not allowed:
+    assert_false(CheckParseVariableName("a.b.c"));
+    assert_false(CheckParseVariableName("abc.def.ghi"));
+    assert_false(CheckParseVariableName(".a"));
+    assert_false(CheckParseVariableName("a."));
+    assert_false(CheckParseVariableName(".abc"));
+    assert_false(CheckParseVariableName("abc."));
+
+    // Reserved:
+    assert_false(CheckParseVariableName("promiser"));
+    assert_false(CheckParseVariableName("handle"));
+    assert_false(CheckParseVariableName("promise_filename"));
+    assert_false(CheckParseVariableName("promise_dirname"));
+    assert_false(CheckParseVariableName("promise_linenumber"));
+    assert_false(CheckParseVariableName("this"));
+
+    // Edge cases, allowed:
+    assert_true(CheckParseVariableName(""));
+    assert_true(CheckParseVariableName(" "));
+    assert_true(CheckParseVariableName("    "));
+    assert_true(CheckParseVariableName("\t"));
+    assert_true(CheckParseVariableName("a["));
+    assert_true(CheckParseVariableName("a.["));
+
+    // Edge cases, not allowed:
+    assert_false(CheckParseVariableName("."));
+    assert_false(CheckParseVariableName("..."));
+    assert_false(CheckParseVariableName(".[]"));
+    assert_false(CheckParseVariableName(".[][]"));
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -130,6 +178,7 @@ int main()
 
         unit_test(test_copy_from_servers),
         unit_test(test_typecheck_null_rval),
+        unit_test(test_check_parse_variable_name),
     };
 
     return run_tests(tests);

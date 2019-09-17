@@ -53,11 +53,11 @@ static const char *const POLICY_ERROR_VARS_CONSTRAINT_DUPLICATE_TYPE =
     "Variable contains existing data type contstraint %s, tried to "
     "redefine with %s";
 static const char *const POLICY_ERROR_VARS_PROMISER_NUMERICAL =
-    "Variable promises cannot have a purely numerical promiser (name)";
-static const char *const POLICY_ERROR_VARS_PROMISER_RESERVED =
-    "Variable promise is using a reserved name";
+    "Variable promises cannot have a purely numerical name (promiser)";
+static const char *const POLICY_ERROR_VARS_PROMISER_INVALID =
+    "Variable promise is using an invalid name (promiser)";
 static const char *const POLICY_ERROR_CLASSES_PROMISER_NUMERICAL =
-    "Classes promises cannot have a purely numerical promiser (name)";
+    "Classes promises cannot have a purely numerical name (promiser)";
 
 static bool ActionCheck(const Body *body, Seq *errors)
 {
@@ -168,7 +168,7 @@ static bool VarsParseTreeCheck(const Promise *pp, Seq *errors)
     if (!CheckParseVariableName(pp->promiser))
     {
         SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_PROMISE, pp,
-                                         POLICY_ERROR_VARS_PROMISER_RESERVED));
+                                         POLICY_ERROR_VARS_PROMISER_INVALID));
         success = false;
     }
 

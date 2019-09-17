@@ -491,7 +491,7 @@ static bool EvaluateConstraintIteration(EvalContext *ctx, const Constraint *cp, 
   @brief Helper function to determine whether the Rval of ifvarclass/if/unless is defined.
   If the Rval is a function, call that function.
 */
-static bool IsVarClassDefined(const EvalContext *ctx, const Constraint *cp, Promise *pcopy)
+static ExpressionValue CheckVarClassExpression(const EvalContext *ctx, const Constraint *cp, Promise *pcopy)
 {
     assert(ctx);
     assert(cp);
@@ -506,7 +506,7 @@ static bool IsVarClassDefined(const EvalContext *ctx, const Constraint *cp, Prom
     Rval final;
     if (!EvaluateConstraintIteration((EvalContext*)ctx, cp, &final))
     {
-        return false;
+        return EXPRESSION_VALUE_ERROR;
     }
 
     char *classes = NULL;
@@ -525,18 +525,23 @@ static bool IsVarClassDefined(const EvalContext *ctx, const Constraint *cp, Prom
         break;
     }
 
-    if (!classes)
+    if (classes == NULL)
     {
-        return false;
+        return EXPRESSION_VALUE_ERROR;
     }
     // sanity check for unexpanded variables
     if (strchr(classes, '$') || strchr(classes, '@'))
     {
         Log(LOG_LEVEL_DEBUG, "Class expression did not evaluate");
-        return false;
+        return EXPRESSION_VALUE_ERROR;
     }
 
-    return IsDefinedClass(ctx, classes);
+    return CheckClassExpression(ctx, classes);
+}
+
+static bool IsVarClassDefined(const EvalContext *ctx, const Constraint *cp, Promise *pcopy)
+{
+    return (CheckVarClassExpression(ctx, cp, pcopy) == EXPRESSION_VALUE_TRUE);
 }
 
 /* Expands "$(this.promiser)" comment if present. Writes the result to pp. */

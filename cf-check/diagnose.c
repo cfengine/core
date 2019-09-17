@@ -303,9 +303,8 @@ static int diagnose(const char *path, bool temporary_redirect)
         freopen("/dev/null", "w", stdout);
         ret = lmdump(LMDUMP_VALUES_ASCII, path);
 
-        char buf[32];
-        snprintf(buf, sizeof(buf), "/dev/fd/%d", saved_stdout);
-        freopen(buf, "w", stdout);
+        fflush(stdout);
+        dup2(saved_stdout, STDOUT_FILENO);
     }
     else
     {

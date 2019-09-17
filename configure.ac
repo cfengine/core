@@ -491,7 +491,7 @@ fi
 
 CF3_WITH_LIBRARY(pcre, [
   AC_CHECK_LIB(pcre, pcre_exec, [], [AC_MSG_ERROR(Cannot find PCRE)])
-  AC_CHECK_HEADERS([pcre.h], [PCRE_CPPFLAGS=""],
+  AC_CHECK_HEADERS([pcre.h], [],
     [AC_CHECK_HEADERS([pcre/pcre.h], [PCRE_CPPFLAGS="-Ipcre"],
                       AC_MSG_ERROR(Cannot find PCRE))])
 ])

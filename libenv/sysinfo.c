@@ -1132,10 +1132,21 @@ static void OSReleaseParse(EvalContext *ctx, const char *file_path)
         if (os_release_id != NULL)
         {
             CanonifyNameInPlace(os_release_id);
+
+            const char *alias = NULL;
+            if (StringSafeEqual(os_release_id, "rhel"))
+            {
+                alias = "redhat";
+            }
+
             if (os_release_version_id == NULL)
             {
                 // if VERSION_ID doesn't exist, define only one hard class:
                 EvalContextClassPutHard(ctx, os_release_id, tags);
+                if (alias != NULL)
+                {
+                    EvalContextClassPutHard(ctx, alias, tags);
+                }
             }
             else // if VERSION_ID exists set flavor and multiple hard classes:
             {
@@ -1158,6 +1169,10 @@ static void OSReleaseParse(EvalContext *ctx, const char *file_path)
                 // One of the hard classes is already set by SetFlavor
                 // but it seems excessive to try to skip this:
                 DefineVersionedHardClasses(ctx, tags, os_release_id, os_release_version_id);
+                if (alias != NULL)
+                {
+                    DefineVersionedHardClasses(ctx, tags, alias, os_release_version_id);
+                }
             }
         }
         free(os_release_version_id);

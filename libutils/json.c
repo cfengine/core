@@ -881,6 +881,69 @@ char *JsonDecodeString(const char *encoded_string)
     return StringWriterClose(w);
 }
 
+void Json5EscapeDataWriter(const Slice unescaped_data, Writer *const writer)
+{
+    // See: https://spec.json5.org/#strings
+
+    const char *const data = unescaped_data.data;
+    assert(data != NULL);
+
+    const size_t size = unescaped_data.size;
+
+    for (size_t index = 0; index < size; index++)
+    {
+        const char byte = data[index];
+        switch (byte)
+        {
+        case '\0':
+            WriterWrite(writer, "\\0");
+            break;
+        case '\"':
+        case '\\':
+            WriterWriteChar(writer, '\\');
+            WriterWriteChar(writer, byte);
+            break;
+        case '\b':
+            WriterWrite(writer, "\\b");
+            break;
+        case '\f':
+            WriterWrite(writer, "\\f");
+            break;
+        case '\n':
+            WriterWrite(writer, "\\n");
+            break;
+        case '\r':
+            WriterWrite(writer, "\\r");
+            break;
+        case '\t':
+            WriterWrite(writer, "\\t");
+            break;
+        default:
+        {
+            if (CharIsPrintableAscii(byte))
+            {
+                WriterWriteChar(writer, byte);
+            }
+            else
+            {
+                // unsigned char behaves better when implicitly cast to int:
+                WriterWriteF(writer, "\\x%2.2X", (unsigned char) byte);
+            }
+            break;
+        }
+        }
+    }
+}
+
+char *Json5EscapeData(Slice unescaped_data)
+{
+    Writer *writer = StringWriter();
+
+    Json5EscapeDataWriter(unescaped_data, writer);
+
+    return StringWriterClose(writer);
+}
+
 void JsonObjectAppendString(JsonElement *object, const char *key, const char *value)
 {
     JsonElement *child = JsonStringCreate(value);

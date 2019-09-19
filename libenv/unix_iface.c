@@ -79,7 +79,7 @@
 static int aix_get_mac_addr(const char *device_name, uint8_t mac[6]);
 #endif
 
-static void FindV6InterfacesInfo(EvalContext *ctx, Rlist **interfaces, Rlist **hardware);
+static void FindV6InterfacesInfo(EvalContext *ctx, Rlist **interfaces, Rlist **hardware, Rlist **ips);
 static bool IgnoreJailInterface(int ifaceidx, struct sockaddr_in *inaddr);
 static bool IgnoreInterface(char *name);
 static void InitIgnoreInterfaces(void);
@@ -555,7 +555,7 @@ void GetInterfacesInfo(EvalContext *ctx)
 
     close(fd);
 
-    FindV6InterfacesInfo(ctx, &interfaces, &hardware);
+    FindV6InterfacesInfo(ctx, &interfaces, &hardware, &ips);
 
     if (interfaces)
     {
@@ -590,7 +590,7 @@ void GetInterfacesInfo(EvalContext *ctx)
 
 /*******************************************************************/
 
-static void FindV6InterfacesInfo(EvalContext *ctx, Rlist **interfaces, Rlist **hardware)
+static void FindV6InterfacesInfo(EvalContext *ctx, Rlist **interfaces, Rlist **hardware, Rlist **ips)
 {
     assert(interfaces != NULL);
     assert(hardware != NULL);
@@ -703,6 +703,9 @@ static void FindV6InterfacesInfo(EvalContext *ctx, Rlist **interfaces, Rlist **h
 
                     xsnprintf(prefixed_ip, sizeof(prefixed_ip), IPV6_PREFIX"%s", ip->name);
                     EvalContextClassPutHard(ctx, prefixed_ip, "inventory,attribute_name=none,source=agent");
+
+                    // Add IPv6 address to sys.ip_addresses
+                    RlistAppendScalar(ips, ip->name);
 
                     if (current_interface[0] != '\0' &&
                         !IgnoreInterface(current_interface) &&

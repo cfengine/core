@@ -108,11 +108,11 @@ const char *const VPSOPTS[] =
 #else
     [PLATFORM_CONTEXT_FREEBSD] = "auxw",              /* freebsd 9.2 and older*/
 #endif
-    [PLATFORM_CONTEXT_NETBSD] = "-axo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,nlwp,start,time,args",   /* netbsd */
+    [PLATFORM_CONTEXT_NETBSD] = "-axwwo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,nlwp,start,time,args",   /* netbsd */
     [PLATFORM_CONTEXT_CRAYOS] = "-elyf",              /* cray */
     [PLATFORM_CONTEXT_WINDOWS_NT] = "-aW",            /* NT */
     [PLATFORM_CONTEXT_SYSTEMV] = "-ef",               /* Unixware */
-    [PLATFORM_CONTEXT_OPENBSD] = "-axo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,start,time,args",       /* openbsd */
+    [PLATFORM_CONTEXT_OPENBSD] = "-axwwo user,pid,ppid,pgid,pcpu,pmem,vsz,ni,rss,start,time,args",       /* openbsd */
     [PLATFORM_CONTEXT_CFSCO] = "-ef",                 /* sco */
     [PLATFORM_CONTEXT_DARWIN] = "auxw",               /* darwin */
     [PLATFORM_CONTEXT_QNX] = "-elyf",                 /* qnx */

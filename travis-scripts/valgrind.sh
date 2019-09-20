@@ -5,9 +5,23 @@ if [ -d /var/cfengine ]; then
     rm -rf /var/cfengine
 fi
 
+# Test assumes we start in core / masterfiles directory
+cd ../
+
+if [ ! -d core ]; then
+    echo "Cloning core (master)"
+    git clone --recursive https://github.com/cfengine/core.git
+fi
+
+if [ ! -d masterfiles ]; then
+    echo "Cloning masterfiles (master)"
+    git clone --recursive https://github.com/cfengine/masterfiles.git
+fi
+
 echo "Checking for systemctl"
 systemctl --version
 
+cd core/
 echo "Building CFEngine core"
 set +e
 git fetch --unshallow 2>&1 >> /dev/null
@@ -17,15 +31,14 @@ set -e
 
 ./autogen.sh --enable-debug --with-systemd-service
 make
-make install
 
-echo "Downloading and installing masterfiles"
+echo "Installing CFEngine core"
+make install
 cd ../
-if [ ! -d masterfiles ]; then
-    git clone https://github.com/cfengine/masterfiles.git
-fi
-cd masterfiles
+
+cd masterfiles/
 ./autogen.sh
+echo "Installing CFEngine masterfiles"
 make install
 
 systemctl daemon-reload

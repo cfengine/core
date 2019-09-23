@@ -5,7 +5,7 @@ if [ -d /var/cfengine ]; then
     rm -rf /var/cfengine
 fi
 
-# Test assumes we start in core / masterfiles directory
+# Test assumes we start in core or masterfiles directory
 cd ../
 
 if [ ! -d core ]; then

@@ -565,9 +565,11 @@ static void DereferenceAndPutComment(Promise* pp, const char *comment)
 
 Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
 {
-    assert(pp->promiser);
-    assert(pp->classes);
-    assert(excluded);
+    assert(pp != NULL);
+    assert(pp->parent_promise_type != NULL);
+    assert(pp->promiser != NULL);
+    assert(pp->classes != NULL);
+    assert(excluded != NULL);
 
     *excluded = false;
 
@@ -652,15 +654,40 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
         // unless - Skip if true or error:
         if (unless != NULL)
         {
+            // If the rval is a function, CheckVarClassExpression will call it
+            // It will evaluate the class expression as well:
             const ExpressionValue value = CheckVarClassExpression(ctx, unless, pcopy);
+            // If it returns EXPRESSION_VALUE_ERROR, it most likely means there
+            // are unexpanded variables in the rval (possibly in function calls)
 
             if ((EvalContextGetPass(ctx) == CF_DONEPASSES-1)
                 && (value == EXPRESSION_VALUE_ERROR))
             {
                 char *unless_string =  RvalToString(unless->rval);
-                Log(LOG_LEVEL_VERBOSE,
-                    "Not skipping promise '%s' with constraint '%s => %s' in last evaluation pass",
-                    pp->promiser, unless->lval, unless_string);
+                if (unless->rval.type == RVAL_TYPE_FNCALL)
+                {
+                    FatalError(
+                        ctx,
+                        "Unresolved function call in %s promise '%s', the constraint '%s => %s' might have unexpanded variables",
+                        pp->parent_promise_type->name,
+                        pp->promiser,
+                        unless->lval,
+                        unless_string);
+                    // (FatalError exits)
+                }
+                else
+                {
+                    // The rval is most likely a string (class expression)
+                    // with unexpanded variables, for example:
+                    // unless => "$(no_such_var)"
+                    // We default to NOT skipping (since if would skip).
+                    // This was most likely unintended, but we will keep the
+                    // behavior, for now, see:
+                    // https://tracker.mender.io/browse/CFE-2689
+                    Log(LOG_LEVEL_VERBOSE,
+                        "Not skipping promise '%s' with constraint '%s => %s' in last evaluation pass (since if would skip)",
+                        pp->promiser, unless->lval, unless_string);
+                }
                 free(unless_string);
             }
             else if (value != EXPRESSION_VALUE_FALSE)

@@ -1,0 +1,193 @@
+body common control
+{
+    inputs => { "../../default.cf.sub" };
+    bundlesequence => { default($(this.promise_filename)) };
+}
+
+bundle agent test
+{
+
+  meta:
+
+      "description" -> { "CFE-2698" }
+        string => "This test ensures changes to unless are compatible with previous behavior";
+
+  vars:
+
+    any::
+
+      # Simple expressions - unless is equivalent to if not:
+      "defined_variable_unless"
+        string => "value",
+        unless => "!any";
+
+      "defined_variable_if_not"
+        string => "value",
+        if => not("!any");
+
+      "skipped_variable_unless"
+        string => "value",
+        unless => "any";
+
+      "skipped_variable_if_not"
+        string => "value",
+        if => not("any");
+
+      # Function calls:
+      "defined_variable_function_call_unless"
+        string => "value",
+        unless => strcmp("a", "b");
+
+      "defined_variable_function_call_if_not"
+        string => "value",
+        if => not(strcmp("a", "b"));
+
+      "skipped_variable_function_call_unless"
+        string => "value",
+        unless => strcmp("a", "a");
+
+      "skipped_variable_function_call_if_not"
+        string => "value",
+        if => not(strcmp("a", "a"));
+
+      # Edge case - this shows the difference between unless and if not:
+      "defined_variable_unresolved_variable_unless"
+        string => "value",
+        unless => "$(no_such_var)";
+
+      "skipped_variable_unresolved_variable_if_not"
+        string => "value",
+        if => not("$(no_such_var)");
+
+    no_such_class::
+
+      # Let's just test that unless doesn't bypass class guards:
+      "skipped_variable_class_guard_unless"
+        string => "value",
+        unless => "!any";
+
+      "skipped_variable_class_guard_if_not"
+        string => "value",
+        if => not("!any");
+
+  classes:
+
+    any::
+
+      # Simple expressions - unless is equivalent to if not:
+      "defined_class_unless"
+        expression => "any",
+        scope => "namespace",
+        unless => "!any";
+
+      "defined_class_if_not"
+        expression => "any",
+        scope => "namespace",
+        if => not("!any");
+
+      "skipped_class_unless"
+        expression => "any",
+        scope => "namespace",
+        unless => "any";
+
+      "skipped_class_if_not"
+        expression => "any",
+        scope => "namespace",
+        if => not("any");
+
+      # Function calls:
+      "defined_class_function_call_unless"
+        expression => "any",
+        scope => "namespace",
+        unless => strcmp("a", "b");
+
+      "defined_class_function_call_if_not"
+        expression => "any",
+        scope => "namespace",
+        if => not(strcmp("a", "b"));
+
+      "skipped_class_function_call_unless"
+        expression => "any",
+        scope => "namespace",
+        unless => strcmp("a", "a");
+
+      "skipped_class_function_call_if_not"
+        expression => "any",
+        scope => "namespace",
+        if => not(strcmp("a", "a"));
+
+      # Edge case - this shows the difference between unless and if not:
+      "defined_class_unresolved_variable_unless"
+        expression => "any",
+        scope => "namespace",
+        unless => "$(no_such_var)";
+
+      "skipped_class_unresolved_variable_if_not"
+        expression => "any",
+        scope => "namespace",
+        if => not("$(no_such_var)");
+
+    no_such_class::
+
+      # Let's just test that unless doesn't bypass class guards:
+      "skipped_class_class_guard_unless"
+        expression => "any",
+        scope => "namespace",
+        unless => "!any";
+
+      "skipped_class_class_guard_if_not"
+        expression => "any",
+        scope => "namespace",
+        if => not("!any");
+
+}
+
+bundle agent check
+{
+  classes:
+
+    any::
+
+      "positives" # Fail if any of these are not defined:
+        and => {
+            isvariable("test.defined_variable_unless"),
+            isvariable("test.defined_variable_if_not"),
+            isvariable("test.defined_variable_function_call_unless"),
+            isvariable("test.defined_variable_function_call_if_not"),
+            isvariable("test.defined_variable_unresolved_variable_unless"),
+            "defined_class_unless",
+            "defined_class_if_not",
+            "defined_class_function_call_unless",
+            "defined_class_function_call_if_not",
+            "defined_class_unresolved_variable_unless",
+        };
+
+      "negatives" # Fail if any of these are defined:
+        or => {
+            isvariable("test.skipped_variable_unless"),
+            isvariable("test.skipped_variable_if_not"),
+            isvariable("test.skipped_variable_function_call_unless"),
+            isvariable("test.skipped_variable_function_call_if_not"),
+            isvariable("test.skipped_variable_unresolved_variable_if_not"),
+            isvariable("test.skipped_variable_class_guard_unless"),
+            isvariable("test.skipped_variable_class_guard_if_not"),
+            "skipped_class_unless",
+            "skipped_class_if_not",
+            "skipped_class_function_call_unless",
+            "skipped_class_function_call_if_not",
+            "skipped_class_unresolved_variable_if_not",
+            "skipped_class_class_guard_unless",
+            "skipped_class_class_guard_if_not",
+        };
+
+  reports:
+
+    !positives::
+      "Some classes/vars were unexpectedly skipped";
+    negatives::
+      "Some classes/vars were unexpectedly evaluated";
+    positives.!negatives::
+      "$(this.promise_filename) Pass";
+    !positives|negatives::
+      "$(this.promise_filename) FAIL";
+}

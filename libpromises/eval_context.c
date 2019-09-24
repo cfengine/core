@@ -521,13 +521,15 @@ bool ClassCharIsWhitespace(char ch)
     return ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r';
 }
 
-bool IsDefinedClass(const EvalContext *ctx, const char *context)
+ExpressionValue CheckClassExpression(const EvalContext *ctx, const char *context)
 {
+    assert(context != NULL);
     ParseResult res;
 
     if (!context)
     {
-        return true;
+        // TODO: Remove this, seems like a hack
+        return EXPRESSION_VALUE_TRUE;
     }
 
     if (context_expression_whitespace_rx == NULL)
@@ -538,13 +540,13 @@ bool IsDefinedClass(const EvalContext *ctx, const char *context)
     if (context_expression_whitespace_rx == NULL)
     {
         Log(LOG_LEVEL_ERR, "The context expression whitespace regular expression could not be compiled, aborting.");
-        return false;
+        return EXPRESSION_VALUE_ERROR;
     }
 
     if (StringMatchFullWithPrecompiledRegex(context_expression_whitespace_rx, context))
     {
         Log(LOG_LEVEL_INFO, "class names can't be separated by whitespace without an intervening operator in expression '%s'", context);
-        return false;
+        return EXPRESSION_VALUE_ERROR;
     }
 
     Buffer *condensed = BufferNewFrom(context, strlen(context));
@@ -555,7 +557,7 @@ bool IsDefinedClass(const EvalContext *ctx, const char *context)
     if (!res.result)
     {
         Log(LOG_LEVEL_ERR, "Unable to parse class expression '%s'", context);
-        return false;
+        return EXPRESSION_VALUE_ERROR;
     }
     else
     {
@@ -564,9 +566,7 @@ bool IsDefinedClass(const EvalContext *ctx, const char *context)
                                            (void *)ctx); // controlled cast. None of these should modify EvalContext
 
         FreeExpression(res.result);
-
-        /* r is EvalResult which could be ERROR */
-        return r == EXPRESSION_VALUE_TRUE;
+        return r;
     }
 }
 

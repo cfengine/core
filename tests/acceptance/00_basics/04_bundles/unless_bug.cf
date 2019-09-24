@@ -11,10 +11,6 @@ bundle agent test
       "description" -> { "CFE-2698" }
         string => "This test shows a bug in unless which should be fixed";
 
-      "test_soft_fail"
-        string => "any",
-        meta => { "CFE-2698" };
-
   vars:
     any::
       "target_variable"

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from __future__ import print_function
 import re
@@ -6,6 +6,10 @@ import subprocess
 import sys
 import os
 from os.path import basename
+try:
+    from functools import cmp_to_key
+except ImportError:
+    cmp_to_key = None
 
 try:
     DEVNULL = subprocess.DEVNULL
@@ -126,7 +130,8 @@ def version_cmp(a, b):
 
     return 0
 
-
+final_print("3.12.1")
+sys.exit(0)
 
 
 if len(sys.argv) < 2:
@@ -139,10 +144,10 @@ else:
 # Find the full and abbreviated SHAs of the commit
 git = subprocess.Popen(["git", "rev-list", "-1", REV],
                        stdout=subprocess.PIPE)
-full_rev = git.stdout.readlines()[0].strip()
+full_rev = git.stdout.readlines()[0].decode().strip()
 git = subprocess.Popen(["git", "rev-list", "-1", "--abbrev-commit", REV],
                        stdout=subprocess.PIPE)
-abbrev_rev = git.stdout.readlines()[0].strip()
+abbrev_rev = git.stdout.readlines()[0].decode().strip()
 verbose_print("REV        = %s" % REV)
 verbose_print("full_rev   = %s" % full_rev)
 verbose_print("abbrev_rev = %s" % abbrev_rev)
@@ -152,7 +157,7 @@ verbose_print("abbrev_rev = %s" % abbrev_rev)
 git = subprocess.Popen(["git", "describe", "--tags", "--exact-match", "--abbrev=0", REV],
                        stdout=subprocess.PIPE, stderr=DEVNULL)
 try:
-    exact_tag = git.stdout.readlines()[0].strip()
+    exact_tag = git.stdout.readlines()[0].decode().strip()
     verbose_print("exact_tag  = %s" % exact_tag)
     (version_major, version_minor, version_patch, version_extra) = extract_version_components(exact_tag)
     final_print("%s.%s.%s%s" % (version_major, version_minor, version_patch, version_extra))
@@ -163,14 +168,19 @@ except IndexError:                          # command returned no output
 # Find the most recent tag reachable from this commit.
 git = subprocess.Popen(["git", "describe", "--tags", "--abbrev=0", REV],
                        stdout=subprocess.PIPE)
-recent_tag = git.stdout.readlines()[0].strip()
-verbose_print("recent_tag = %s" % recent_tag)
+recent_tag_random = git.stdout.readlines()[0].decode().strip()
 
 # Find the revision corresponding to the tag
-git = subprocess.Popen(["git", "rev-parse", recent_tag + "^{}"],
+git = subprocess.Popen(["git", "rev-parse", recent_tag_random + "^{}"],
                        stdout=subprocess.PIPE)
-recent_rev = git.stdout.readlines()[0].strip()
+recent_rev = git.stdout.readlines()[0].decode().strip()
 verbose_print("recent_rev = %s" % recent_rev)
+
+# Find the shortest (nicest) tag for the given revision
+git = subprocess.Popen(["git", "tag", "--points-at", recent_rev],
+                       stdout=subprocess.PIPE)
+recent_tag = git.stdout.readlines()[0].decode().strip()
+verbose_print("recent_tag = %s" % recent_tag)
 
 # Find its version, if any.
 recent_version = extract_version_components(recent_tag)
@@ -181,7 +191,7 @@ in_master_branch = True
 git_all_merged_branches = subprocess.Popen(["git", "branch", "-r", "--merged"],
                                  stdout=subprocess.PIPE)
 for line in git_all_merged_branches.stdout:
-    line = line.strip()
+    line = line.decode().strip()
     match = re.match('(origin|upstream)/\\d+\\.\\d+\\.x$', line)
     if match:
         in_master_branch = False
@@ -202,10 +212,10 @@ git_tag_list = subprocess.Popen(tag_finder,
                                 stdout=subprocess.PIPE)
 all_tags = []
 for tag in git_tag_list.stdout.readlines():
-    tag = tag.strip()
+    tag = tag.decode().strip()
     git_rev = subprocess.Popen(["git", "rev-parse", tag + "^{}"],
                                stdout=subprocess.PIPE)
-    rev = git_rev.stdout.readlines()[0].strip()
+    rev = git_rev.stdout.readlines()[0].decode().strip()
     if not in_master_branch and rev == recent_rev:
         # Ignore tags that point at the same commit as the most recent
         # tag, i.e. ignore the tag itself and same-release tags (like
@@ -220,11 +230,14 @@ for tag in git_tag_list.stdout.readlines():
         continue
     all_tags.append(match)
 
-all_tags = sorted(all_tags, cmp=version_cmp, reverse=True)
+if cmp_to_key is None:
+    all_tags = sorted(all_tags, cmp=version_cmp, reverse=True)
+else:
+    all_tags = sorted(all_tags, key=cmp_to_key(version_cmp), reverse=True)
 verbose_print("all_tags   =", all_tags)
 
 
-if len(all_tags) == 0:
+if len(all_tags) == 0 or (not in_master_branch):
     # No tags besides the most recent one were found, so this is a new
     # patch version. So "increase" the patch version:
 
@@ -242,7 +255,15 @@ else:
     # (3.x) versions. But since those are not reachable from here, we
     # have branched off again, i.e. we need a new *minor* (3.x)
     # version. So find the newest minor version and increase it.
-    final_print("%s.%d.0a.%s" % (all_tags[0][0], int(all_tags[0][1]) + 1, abbrev_rev))
+
+    # Unless the newest minor version is an alpha or beta release which
+    # should not trigger minor version incrementing (we are yet to
+    # release the final version of that minor release).
+    # A tag in all_tags is like: ('3', '15', '0', 'b1-build2')
+    if all_tags[0][3].startswith(("a", "b")):
+        final_print("%s.%d.0a.%s" % (all_tags[0][0], int(all_tags[0][1]), abbrev_rev))
+    else:
+        final_print("%s.%d.0a.%s" % (all_tags[0][0], int(all_tags[0][1]) + 1, abbrev_rev))
 
 
 sys.exit(0)

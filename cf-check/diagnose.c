@@ -300,7 +300,12 @@ static int diagnose(const char *path, bool temporary_redirect)
         // --no-fork mode: temporarily redirect output to /dev/null & restore
         // Only done when necessary as it might not be so portable (/dev/fd)
         int saved_stdout = dup(STDOUT_FILENO);
-        freopen("/dev/null", "w", stdout);
+        FILE *const f_result = freopen("/dev/null", "w", stdout);
+        if (f_result == NULL)
+        {
+            return errno;
+        }
+        assert(f_result == stdout);
         ret = lmdump(LMDUMP_VALUES_ASCII, path);
 
         fflush(stdout);
@@ -309,7 +314,12 @@ static int diagnose(const char *path, bool temporary_redirect)
     else
     {
         // Normal mode: redirect to /dev/null permanently (forked process)
-        freopen("/dev/null", "w", stdout);
+        FILE *const f_result = freopen("/dev/null", "w", stdout);
+        if (f_result == NULL)
+        {
+            return errno;
+        }
+        assert(f_result == stdout);
         ret = lmdump(LMDUMP_VALUES_ASCII, path);
     }
     return ret;

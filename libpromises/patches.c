@@ -222,6 +222,8 @@ int ExclusiveLockFile(int fd)
     struct flock lock = {
         .l_type = F_WRLCK,
         .l_whence = SEEK_SET,
+        .l_start = 0, /* start of the region to which the lock applies */
+        .l_len = 0    /* till EOF */
     };
 
     while (fcntl(fd, F_SETLKW, &lock) == -1)

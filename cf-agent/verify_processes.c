@@ -161,6 +161,7 @@ static void ProcessCountMaybeDefineClass(
 
 static PromiseResult VerifyProcessOp(EvalContext *ctx, Attributes a, const Promise *pp)
 {
+    assert(pp != NULL);
     bool do_signals = true;
     int out_of_range;
     int killed = 0;
@@ -231,12 +232,27 @@ static PromiseResult VerifyProcessOp(EvalContext *ctx, Attributes a, const Promi
             {
                 if (IsExecutable(CommandArg0(a.process_stop)))
                 {
-                    ShellCommandReturnsZero(a.process_stop, SHELL_TYPE_NONE);
+                    Log(LOG_LEVEL_DEBUG, "Found process_stop command '%s' is executable.", a.process_stop);
+
+                    if (ShellCommandReturnsZero(a.process_stop, SHELL_TYPE_NONE))
+                    {
+                        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a,
+                             "Promise to stop '%s' repaired, '%s' returned zero",
+                             pp->promiser, a.process_stop);
+                        result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
+                    }
+                    else
+                    {
+                        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
+                             "Promise to stop '%s' failed, '%s' returned nonzero",
+                             pp->promiser, a.process_stop);
+                        result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+                    }
                 }
                 else
                 {
                     cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
-                         "Process promise to stop '%s' could not be kept because '%s' the stop operator failed",
+                         "Process promise to stop '%s' could not be kept because '%s' is not executable",
                          pp->promiser, a.process_stop);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                     DeleteItemList(killlist);

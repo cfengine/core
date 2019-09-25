@@ -698,21 +698,41 @@ static void FindV6InterfacesInfo(EvalContext *ctx, Rlist **interfaces, Rlist **h
                 {
                     char prefixed_ip[CF_MAX_IP_LEN + sizeof(IPV6_PREFIX)] = {0};
                     Log(LOG_LEVEL_VERBOSE, "Found IPv6 address %s", ip->name);
-                    EvalContextAddIpAddress(ctx, ip->name, current_interface);
-                    EvalContextClassPutHard(ctx, ip->name, "inventory,attribute_name=none,source=agent");
 
-                    xsnprintf(prefixed_ip, sizeof(prefixed_ip), IPV6_PREFIX"%s", ip->name);
-                    EvalContextClassPutHard(ctx, prefixed_ip, "inventory,attribute_name=none,source=agent");
-
-                    // Add IPv6 address to sys.ip_addresses
-                    RlistAppendScalar(ips, ip->name);
-
-                    if (current_interface[0] != '\0' &&
-                        !IgnoreInterface(current_interface) &&
-                        !RlistContainsString(*interfaces, current_interface))
+                    if (current_interface[0] != '\0'
+                        && !IgnoreInterface(current_interface))
                     {
-                        RlistAppend(interfaces, current_interface, RVAL_TYPE_SCALAR);
-                        assert(RlistContainsString(*interfaces, current_interface));
+                        EvalContextAddIpAddress(
+                            ctx, ip->name, current_interface);
+                        EvalContextClassPutHard(
+                            ctx,
+                            ip->name,
+                            "inventory,attribute_name=none,source=agent");
+
+                        xsnprintf(
+                            prefixed_ip,
+                            sizeof(prefixed_ip),
+                            IPV6_PREFIX "%s",
+                            ip->name);
+                        EvalContextClassPutHard(
+                            ctx,
+                            prefixed_ip,
+                            "inventory,attribute_name=none,source=agent");
+
+                        // Add IPv6 address to sys.ip_addresses
+                        RlistAppendScalar(ips, ip->name);
+                        assert(RlistContainsString(*ips, ip->name));
+
+                        if (!RlistContainsString(
+                                *interfaces, current_interface))
+                        {
+                            RlistAppend(
+                                interfaces,
+                                current_interface,
+                                RVAL_TYPE_SCALAR);
+                            assert(RlistContainsString(
+                                *interfaces, current_interface));
+                        }
                     }
                 }
             }

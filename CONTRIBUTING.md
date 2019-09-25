@@ -49,7 +49,7 @@ When submitting your pull request, please make sure you:
 
 * Tidy up the commit log by squashing commits and [writing good commit messages](#commits).
 
-* Add one or more [ChangeLog Entries](#changelog-entries) to the commit(s).
+* Add one or more [ChangeLog Entries](#changelog) to the commit(s).
 
 
 ### Pull request title and description

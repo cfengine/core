@@ -17,9 +17,9 @@ bundle agent __main__
   methods:
       "test" usebundle => libprint( "ok 1 - libprint works" );
 }
-
+###############################################################################
 #@ The policy promises to call libprint to report that it works when the policy file is the main entry.
-
+###############################################################################
 #+begin_src example_output
 #@ ```
 #@ R: Library: ok 1 - libprint works

@@ -6,9 +6,9 @@ bundle agent main
   reports:
       "Hello, $(this.bundle) bundle.";
 }
-
+###############################################################################
 #@ The policy promises to report the name of the current bundle, and produces this output:
-
+###############################################################################
 #+begin_src example_output
 #@ ```
 #@ R: Hello, main bundle.

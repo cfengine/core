@@ -75,16 +75,12 @@ body classes results(scope, class_prefix)
                       "$(class_prefix)_timeout" };
 }
 #+end_src
-###############################################################################
-#+begin_src policy_description
 #@ In the above example `/tmp/copied_from_missing_ok` promises to be a copy of the local file
 #@ `/var/cfengine/masterfiles/missing`. In the `missing_ok` `copy_from` body
 #@ `missing_ok` is set to true. This causes the promise to be considered kept if
 #@ the source file is missing. The `results` classes body is used to define bundle
 #@ scoped classes prefixed with `copy_from_missing_ok`. The `reports` promise
 #@ outputs a sorted list of the classes defined starting with `copy_from_`.
-#+end_src
-###############################################################################
 #+begin_src example_output
 #@ ```
 #@ R: [
@@ -93,8 +89,5 @@ body classes results(scope, class_prefix)
 #@ ]
 #@ ```
 #+end_src
-###############################################################################
-#+begin_src output_description
 #@ We can see in the output that the class defined for copying a local file that
 #@ does not exist is seen to be a promise kept.
-#+end_src

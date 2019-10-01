@@ -23,7 +23,7 @@
 */
 
 
-#define CF_NET_VERSION "0.1.1"
+#define CF_NET_VERSION "0.1.2"
 
 #include <platform.h>
 #include <libgen.h>
@@ -42,6 +42,8 @@
 #include <cf-windows-functions.h> // TODO: move this out of libpromises
 #include <known_dirs.h>           // TODO: move this 'out of libpromises
 #include <cleanup.h>
+#include <protocol.h>
+#include <sequence.h>
 
 #define ARG_UNUSED __attribute__((unused))
 
@@ -204,7 +206,9 @@ int main(int argc, char **argv)
     ret = CFNetRun(&opts, args, hostnames);  // Commands return exit code
     free(hostnames);
     CFNetOptionsClear(&opts);
-    return ret;
+
+    ret = (ret == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
+    DoCleanupAndExit(ret);
 }
 
 //*******************************************************************
@@ -874,17 +878,12 @@ static int CFNetGet(ARG_UNUSED CFNetOptions *opts, const char *hostname, char **
     return failure ? -1 : 0;
 }
 
-static void PrintDirs(const Item *list)
+static void PrintDirs(const Seq *list)
 {
-    const Item *ip = list;
-
-    while (ip != NULL)
+    for (size_t i = 0; i < SeqLength(list); i++)
     {
-        // TODO: I hate this:
-        struct dirent *de = (struct dirent *) ip->name;
-        printf("%s\n", de->d_name);
-
-        ip = ip->next;
+        char *dir_entry = SeqAt(list, i);
+        printf("%s\n", dir_entry);
     }
 }
 
@@ -912,8 +911,14 @@ static int CFNetOpenDir(ARG_UNUSED CFNetOptions *opts, const char *hostname, cha
 
     const char *remote_path = args[1];
 
-    Item *items = RemoteDirList(remote_path, false, conn);
-    PrintDirs(items);
+    Seq *seq = ProtocolOpenDir(conn, remote_path);
+    if (seq == NULL)
+    {
+        return -1;
+    }
+
+    PrintDirs(seq);
+    SeqDestroy(seq);
     CFNetDisconnect(conn);
     return 0;
 }

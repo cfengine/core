@@ -210,14 +210,7 @@ static bool WriteLockData(CF_DB *dbp, const char *lock_id, LockData *lock_data)
 #ifdef LMDB
     unsigned char digest2[EVP_MAX_MD_SIZE*2 + 1];
 
-    if (!strcmp(lock_id, "CF_CRITICAL_SECTION"))
-    {
-        strcpy(digest2, lock_id);
-    }
-    else
-    {
-        GenerateMd5Hash(lock_id, digest2);
-    }
+    GenerateMd5Hash(lock_id, digest2);
 
     LOG_LOCK_ENTRY(lock_id, digest2, lock_data);
     ret = WriteDB(dbp, digest2, lock_data, sizeof(LockData));
@@ -371,14 +364,7 @@ static int RemoveLock(const char *name)
 #ifdef LMDB
     unsigned char digest2[EVP_MAX_MD_SIZE*2 + 1];
 
-    if (!strcmp(name, "CF_CRITICAL_SECTION"))
-    {
-        strcpy(digest2, name);
-    }
-    else
-    {
-        GenerateMd5Hash(name, digest2);
-    }
+    GenerateMd5Hash(name, digest2);
 
     LOG_LOCK_ENTRY(name, digest2, NULL);
     DeleteDB(dbp, digest2);

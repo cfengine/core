@@ -43,6 +43,11 @@
 #include <openssl/evp.h>
 #include <libcrypto-compat.h>
 
+#ifdef LMDB
+// Be careful if you want to change this,
+// it must match mdb_env_get_maxkeysize(env)
+#define LMDB_MAX_KEY_SIZE 511
+#endif
 
 #define CFLOGSIZE 1048576       /* Size of lock-log before rotation */
 #define CF_LOCKHORIZON ((time_t)(SECONDS_PER_WEEK * 4))
@@ -177,29 +182,11 @@ static inline void log_lock(const char *op,
     }
 }
 
-static void GenerateMd5Hash(const char *istring, char *ohash)
+static void HashLockKeyIfNecessary(const char *const istring, char *const ohash)
 {
-    if (!strcmp(istring, "CF_CRITICAL_SECTION"))
-    {
-        strcpy(ohash, istring);
-        return;
-    }
-
-    unsigned char digest[EVP_MAX_MD_SIZE + 1];
-    HashString(istring, strlen(istring), digest, HASH_METHOD_MD5);
-
-    const char lookup[]="0123456789abcdef";
-    for (int i=0; i<16; i++)
-    {
-        ohash[i*2]   = lookup[digest[i] >> 4];
-        ohash[i*2+1] = lookup[digest[i] & 0xf];
-    }
-    ohash[16*2] = '\0';
-
-    if (!strncmp(istring, "lock.track_license_bundle.track_license", 39))
-    {
-        ohash[0] = 'X';
-    }
+    assert(strlen("CF_CRITICAL_SECTION") < LMDB_MAX_KEY_SIZE);
+    assert(strlen("lock.track_license_bundle.track_license") < LMDB_MAX_KEY_SIZE);
+    StringCopyTruncateAndHashIfNecessary(istring, ohash, LMDB_MAX_KEY_SIZE);
 }
 #endif
 
@@ -208,9 +195,9 @@ static bool WriteLockData(CF_DB *dbp, const char *lock_id, LockData *lock_data)
     bool ret;
 
 #ifdef LMDB
-    unsigned char digest2[EVP_MAX_MD_SIZE*2 + 1];
+    unsigned char digest2[LMDB_MAX_KEY_SIZE];
 
-    GenerateMd5Hash(lock_id, digest2);
+    HashLockKeyIfNecessary(lock_id, digest2);
 
     LOG_LOCK_ENTRY(lock_id, digest2, lock_data);
     ret = WriteDB(dbp, digest2, lock_data, sizeof(LockData));
@@ -263,8 +250,8 @@ static time_t FindLockTime(const char *name)
     entry.process_start_time = PROCESS_START_TIME_UNKNOWN;
 
 #ifdef LMDB
-    unsigned char ohash[EVP_MAX_MD_SIZE*2 + 1];
-    GenerateMd5Hash(name, ohash);
+    unsigned char ohash[LMDB_MAX_KEY_SIZE];
+    HashLockKeyIfNecessary(name, ohash);
 
     LOG_LOCK_ENTRY(name, ohash, &entry);
     ret = ReadDB(dbp, ohash, &entry, sizeof(entry));
@@ -362,9 +349,9 @@ static int RemoveLock(const char *name)
 
     ThreadLock(cft_lock);
 #ifdef LMDB
-    unsigned char digest2[EVP_MAX_MD_SIZE*2 + 1];
+    unsigned char digest2[LMDB_MAX_KEY_SIZE];
 
-    GenerateMd5Hash(name, digest2);
+    HashLockKeyIfNecessary(name, digest2);
 
     LOG_LOCK_ENTRY(name, digest2, NULL);
     DeleteDB(dbp, digest2);
@@ -512,8 +499,8 @@ static bool KillLockHolder(const char *lock)
     lock_data.process_start_time = PROCESS_START_TIME_UNKNOWN;
 
 #ifdef LMDB
-    unsigned char ohash[EVP_MAX_MD_SIZE*2 + 1];
-    GenerateMd5Hash(lock, ohash);
+    unsigned char ohash[LMDB_MAX_KEY_SIZE];
+    HashLockKeyIfNecessary(lock, ohash);
 
     LOG_LOCK_ENTRY(lock, ohash, &lock_data);
     ret = ReadDB(dbp, ohash, &lock_data, sizeof(lock_data));
@@ -1145,17 +1132,11 @@ void PurgeLocks(void)
     {
 #ifdef LMDB
         LOG_LOCK_OP("<unknown>", key, entry);
-
-        if (key[0] == 'X')
-        {
-            continue;
-        }
-#else
+#endif
         if (STARTSWITH(key, "last.internal_bundle.track_license.handle"))
         {
             continue;
         }
-#endif
 
         if (now - entry->time > (time_t) CF_LOCKHORIZON)
         {

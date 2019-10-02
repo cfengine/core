@@ -32,3 +32,28 @@ Seq *argv_to_lmdb_files(
 
     return SeqFromArgv(argc - offset, argv + offset);
 }
+
+bool matches_option(
+    const char *const supplied,
+    const char *const longopt,
+    const char *const shortopt)
+{
+    assert(supplied != NULL);
+    assert(shortopt != NULL);
+    assert(longopt != NULL);
+    assert(strlen(shortopt) == 2);
+    assert(strlen(longopt) >= 3);
+    assert(shortopt[0] == '-' && shortopt[1] != '-');
+    assert(longopt[0] == '-' && longopt[1] == '-' && longopt[2] != '-');
+
+    const size_t length = strlen(supplied);
+    if (length <= 1)
+    {
+        return false;
+    }
+    else if (length == 2)
+    {
+        return StringSafeEqual(supplied, shortopt);
+    }
+    return StringSafeEqualN_IgnoreCase(supplied, longopt, length);
+}

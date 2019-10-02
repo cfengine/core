@@ -5,6 +5,11 @@
 #include <logging.h>
 #include <file_lib.h>
 #include <known_dirs.h>
+#include <string_lib.h>
+#include <diagnose.h>
+#include <alloc.h>
+#include <libgen.h>     /* basename() (on some platforms) */
+#include <assert.h>
 
 #if defined(__MINGW32__) || !defined(LMDB)
 
@@ -15,7 +20,7 @@ int backup_main(ARG_UNUSED int argc, ARG_UNUSED const char *const *const argv)
     return 1;
 }
 
-int backup_files(ARG_UNUSED Seq *filenames)
+int backup_files_copy(ARG_UNUSED Seq *filenames)
 {
     Log(LOG_LEVEL_INFO,
         "database backup not available on this platform/build");
@@ -23,6 +28,15 @@ int backup_files(ARG_UNUSED Seq *filenames)
 }
 
 #else
+
+#include <replicate_lmdb.h>
+
+static void print_usage(void)
+{
+    printf("Usage: cf-check backup [-d] [FILE ...]\n");
+    printf("Example: cf-check backup /var/cfengine/state/cf_lastseen.lmdb\n");
+    printf("Options: -d|--dump use dump strategy instead of plain copy");
+}
 
 const char *create_backup_dir()
 {
@@ -79,7 +93,7 @@ const char *create_backup_dir()
     return backup_dir;
 }
 
-int backup_files(Seq *filenames)
+int backup_files_copy(Seq *filenames)
 {
     assert(filenames != NULL);
     const size_t length = SeqLength(filenames);
@@ -105,18 +119,103 @@ int backup_files(Seq *filenames)
 }
 
 /**
+ * Replicate LMDB files by reading their entries and writing them into new LMDB files.
+ *
+ * @return the number of files that failed to be replicated or -1 in case of
+ *         some internal failure
+ */
+static int backup_files_replicate(const Seq *files)
+{
+    assert(files != NULL);
+    const size_t length = SeqLength(files);
+
+    // Attempting to back up 0 files is considered a failure:
+    assert_or_return(length > 0, 1);
+
+    const char *backup_dir = create_backup_dir();
+
+    Log(LOG_LEVEL_INFO, "Backing up to '%s' using dump strategy", backup_dir);
+
+    int ret = 0;
+    for (int i = 0; i < length; ++i)
+    {
+        const char *file = SeqAt(files, i);
+        assert(StringEndsWith(backup_dir, "/"));
+        char *file_copy = xstrdup(file); /* basename() can modify the string */
+        char *dest_file = StringFormat("%s%s", backup_dir, basename(file_copy));
+        free(file_copy);
+        pid_t child_pid = fork();
+        if (child_pid == 0)
+        {
+            /* child */
+            exit(replicate_lmdb(file, dest_file));
+        }
+        else
+        {
+            /* parent */
+            int status;
+            pid_t pid = waitpid(child_pid, &status, 0);
+            if (pid != child_pid)
+            {
+                /* real error that should never happen */
+                return -1;
+            }
+            if (WIFEXITED(status) && WEXITSTATUS(status) != CF_CHECK_OK
+                && WEXITSTATUS(status) != CF_CHECK_LMDB_CORRUPT_PAGE)
+            {
+                Log(LOG_LEVEL_ERR, "Failed to backup file '%s'", file);
+                ret++;
+            }
+            if (WIFSIGNALED(status))
+            {
+                Log(LOG_LEVEL_ERR, "Failed to backup file '%s', child process signaled (%d)",
+                    file, WTERMSIG(status));
+                ret++;
+            }
+        }
+        free(dest_file);
+    }
+    return ret;
+}
+
+/**
  * @return the number of files that failed to be replicated or -1 in case of
  *         some internal failure
  */
 int backup_main(int argc, const char *const *const argv)
 {
-    Seq *files = argv_to_lmdb_files(argc, argv, 1);
+    size_t offset = 1;
+    bool do_dump = false;
+    if (argc > 1 && argv[1] != NULL && argv[1][0] == '-')
+    {
+        if (matches_option(argv[1], "--dump", "-d"))
+        {
+            offset++;
+            do_dump = true;
+        }
+        else
+        {
+            print_usage();
+            printf("Unrecognized option: '%s'\n", argv[1]);
+            return 1;
+        }
+    }
+
+    Seq *files = argv_to_lmdb_files(argc, argv, offset);
     if (files == NULL || SeqLength(files) == 0)
     {
         Log(LOG_LEVEL_ERR, "No database files to back up");
         return 1;
     }
-    const int ret = backup_files(files);
+    int ret;
+    if (do_dump)
+    {
+        ret = backup_files_replicate(files);
+    }
+    else
+    {
+        ret = backup_files_copy(files);
+    }
     SeqDestroy(files);
     return ret;
 }

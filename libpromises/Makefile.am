@@ -153,6 +153,7 @@ libpromises_la_SOURCES = \
 	../cf-check/diagnose.c ../cf-check/diagnose.h \
 	../cf-check/lmdump.c ../cf-check/lmdump.h \
 	../cf-check/repair.c ../cf-check/repair.h \
+	../cf-check/replicate_lmdb.c ../cf-check/replicate_lmdb.h \
 	../cf-check/utilities.c ../cf-check/utilities.h
 
 if !NT

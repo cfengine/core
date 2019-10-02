@@ -30,6 +30,13 @@ int repair_default()
 #include <diagnose.h>
 #include <string_lib.h>
 
+static void print_usage(void)
+{
+    printf("Usage: cf-check repair [-f] [FILE ...]\n");
+    printf("Example: cf-check repair /var/cfengine/state/cf_lastseen.lmdb\n");
+    printf("Options: -f|--force repair LMDB files that look OK ");
+}
+
 int remove_files(Seq *files)
 {
     assert(files != NULL);
@@ -86,7 +93,7 @@ int repair_files(Seq *files)
             corruptions,
             corruptions != 1 ? "s" : "");
 
-        if (backup_files(files) != 0)
+        if (backup_files_copy(files) != 0)
         {
             Log(LOG_LEVEL_ERR, "Backup failed, stopping");
             SeqDestroy(corrupt);
@@ -115,7 +122,23 @@ int repair_files(Seq *files)
 
 int repair_main(int argc, const char *const *const argv)
 {
-    Seq *files = argv_to_lmdb_files(argc, argv, 1);
+    size_t offset = 1;
+    bool do_dump = false;
+    if (argc > 1 && argv[1] != NULL && argv[1][0] == '-')
+    {
+        if (matches_option(argv[1], "--force", "-f"))
+        {
+            offset++;
+            do_dump = true;
+        }
+        else
+        {
+            print_usage();
+            printf("Unrecognized option: '%s'\n", argv[1]);
+            return 1;
+        }
+    }
+    Seq *files = argv_to_lmdb_files(argc, argv, offset);
     if (files == NULL || SeqLength(files) == 0)
     {
         Log(LOG_LEVEL_ERR, "No database files to repair");

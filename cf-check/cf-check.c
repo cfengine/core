@@ -53,7 +53,7 @@ static const Description COMMANDS[] =
                  "cf-check help [command]"},
     {"diagnose", "Assess the health of one or more database files",
                  "cf-check diagnose"},
-    {"backup",   "Copy database files to a timestamped folder",
+    {"backup",   "Backup database files to a timestamped folder",
                  "cf-check backup"},
     {"repair",   "Diagnose, then backup and delete any corrupt databases",
                  "cf-check repair"},

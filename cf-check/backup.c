@@ -91,18 +91,23 @@ int backup_files(Seq *filenames)
 
     Log(LOG_LEVEL_INFO, "Backing up to '%s'", backup_dir);
 
+    int ret = 0;
     for (int i = 0; i < length; ++i)
     {
         const char *file = SeqAt(filenames, i);
         if (!File_CopyToDir(file, backup_dir))
         {
             Log(LOG_LEVEL_ERR, "Copying '%s' failed", file);
-            return 1;
+            ret++;
         }
     }
-    return 0;
+    return ret;
 }
 
+/**
+ * @return the number of files that failed to be replicated or -1 in case of
+ *         some internal failure
+ */
 int backup_main(int argc, const char *const *const argv)
 {
     Seq *files = argv_to_lmdb_files(argc, argv, 1);

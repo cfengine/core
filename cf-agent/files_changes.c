@@ -32,7 +32,6 @@
 #include <promises.h>
 #include <actuator.h>
 #include <eval_context.h>
-#include <files_hashes.h>
 #include <known_dirs.h>
 
 /*

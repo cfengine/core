@@ -34,7 +34,7 @@
 #include <scope.h>
 #include <files_copy.h>
 #include <files_interfaces.h>
-#include <files_hashes.h>
+#include <hash.h>
 #include <keyring.h>
 #include <eval_context.h>
 #include <crypto.h>

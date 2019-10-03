@@ -24,7 +24,7 @@
 #include <loading.h>
 
 #include <eval_context.h>
-#include <files_hashes.h>
+#include <hash.h>
 #include <file_lib.h>
 #include <files_names.h>
 #include <string_lib.h>

@@ -32,7 +32,7 @@
 #include <cf3.defs.h>
 #include <lastseen.h>
 #include <files_interfaces.h>
-#include <files_hashes.h>
+#include <hash.h>
 #include <pipes.h>
 #include <mutex.h>
 #include <known_dirs.h>

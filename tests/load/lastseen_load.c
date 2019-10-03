@@ -95,7 +95,7 @@ char *HashPrintSafe(char *dst, size_t dst_size, const unsigned char *digest,
     exit(42);
 }
 
-void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
+void HashPubKey(const RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
 {
     exit(42);
 }

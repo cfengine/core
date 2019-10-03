@@ -1,0 +1,148 @@
+body common control
+{
+    inputs => { "../default.cf.sub" };
+    bundlesequence  => { default("$(this.promise_filename)") };
+}
+
+bundle agent test
+{
+  meta:
+      "description" -> { "ENT-4988" }
+        string => "Test some basic expectations when using process_stop in processes type promises";
+
+  processes:
+
+      # The policy file itself is not expected to be executable, this promise is
+      # expected to fail and be notkept.
+
+      "."
+        process_stop => "$(this.promise_filename)",
+        handle => "process_stop_not_executable_expect_failed",
+        classes => explicit_results( "namespace", "$(this.handle)_is" );
+
+      # G.true is expected to return true, and the promise is expected to be
+      # repaired. Note: At the time of authorship there is no validation that
+      # the selected pids were killed by process_stop. We are only using the
+      # return code.
+
+      "."
+        process_stop => "$(G.true)",
+        handle => "process_stop_return_zero_expect_repaired",
+        classes => explicit_results( "namespace", "$(this.handle)_is" );
+
+      # G.false is expected to return false, and the promise is expected to be
+      # repaired. Note: At the time of authorship there is no validation that
+      # the selected pids were killed by process_stop. We are only using the
+      # return code.
+
+      "."
+        process_stop => "$(G.false)",
+        handle => "process_stop_return_nonzero_expect_failed",
+        classes => explicit_results( "namespace", "$(this.handle)_is" );
+
+      # G.echo is expected to return true, and the promise is expected to be
+      # repaired. Note: At the time of authorship there is no validation that
+      # the selected pids were killed by process_stop. We are only using the
+      # return code.
+
+      "."
+        process_stop => "$(G.echo) pretend stop servicename",
+        handle => "process_stop_with_args_return_nonzero_expect_repaired",
+        classes => explicit_results( "namespace", "$(this.handle)_is" );
+}
+
+bundle agent check
+{
+  vars:
+
+      "expected_classes" slist => {
+                    "process_stop_with_args_return_nonzero_expect_repaired_is_repaired",
+                    "process_stop_return_nonzero_expect_failed_is_failed",
+                    "process_stop_return_zero_expect_repaired_is_repaired",
+                    "process_stop_not_executable_expect_failed_is_failed",
+      };
+
+
+    DEBUG::
+      "found_classes" slist => classesmatching( "process_stop_.*");
+      "difference" slist => difference( found_classes, expected_classes );
+
+  classes:
+      "ok" and => { @(expected_classes) };
+
+  reports:
+    DEBUG::
+      "Found unexpected class: $(difference)";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+
+body classes explicit_results(scope, class_prefix)
+# @brief Define classes prefixed with `class_prefix` and suffixed with
+# appropriate outcomes: _kept, _repaired, _failed, _denied, _timeout
+#
+# @param scope The scope in which the class should be defined (`bundle` or `namespace`)
+# @param class_prefix The prefix for the classes defined
+#
+# This body can be applied to any promise and sets global
+# (`namespace`) or local (`bundle`) classes based on its outcome. For
+# instance, with `class_prefix` set to `abc`:
+#
+# This body is a simpler, more consistent version of the body `results`. The key
+# difference is that fewer classes are defined, and only for explicit outcomes
+# that we can know. For example this body does not define "OK/not OK" outcome
+# classes, since a promise can be both kept and failed at the same time.
+#
+# It's important to understand that promises may do multiple things,
+# so a promise is not simply "OK" or "not OK." The best way to
+# understand what will happen when your specific promises get this
+# body is to test it in all the possible combinations.
+#
+# **Suffix Notes:**
+#
+# * `_kept` indicates some aspect of the promise was kept
+#
+# * `_repaired` indicates some aspect of the promise was repaired
+#
+# * `_failed` indicates the promise failed
+#
+# * `_denied` indicates the promise repair was denied
+#
+# * `_timeout` indicates the promise timed out
+#
+# **Example:**
+#
+# ```cf3
+# bundle agent example
+# {
+#   commands:
+#     "/bin/true"
+#       classes => results("bundle", "my_class_prefix");
+#
+#   reports:
+#     my_class_prefix_kept::
+#       "My promise was kept";
+#
+#     my_class_prefix_repaired::
+#       "My promise was repaired";
+# }
+# ```
+#
+# **See also:** `scope`, `scoped_classes_generic`, `classes_generic`
+{
+  scope => "$(scope)";
+
+  promise_kept => { "$(class_prefix)_kept" };
+
+  promise_repaired => { "$(class_prefix)_repaired" };
+
+  repair_failed => { "$(class_prefix)_failed" };
+
+  repair_denied => { "$(class_prefix)_denied" };
+
+  repair_timeout => { "$(class_prefix)_timeout" };
+}
+

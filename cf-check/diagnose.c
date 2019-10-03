@@ -32,81 +32,12 @@ size_t diagnose_files(
 #include <string_lib.h>
 #include <unistd.h>
 
-// clang-format off
-#define CF_CHECK_RUN_CODES(macro)                         \
-    macro(OK)                                             \
-    macro(SIGNAL_HANGUP)                                  \
-    macro(SIGNAL_INTERRUPT)                               \
-    macro(SIGNAL_QUIT)                                    \
-    macro(SIGNAL_ILLEGAL_INSTRUCTION)                     \
-    macro(SIGNAL_TRACE_TRAP)                              \
-    macro(SIGNAL_ABORT)                                   \
-    macro(SIGNAL_EMULATE_INSTRUCTION)                     \
-    macro(SIGNAL_FLOATING_POINT_EXCEPTION)                \
-    macro(SIGNAL_KILL)                                    \
-    macro(SIGNAL_BUS_ERROR)                               \
-    macro(SIGNAL_SEGFAULT)                                \
-    macro(SIGNAL_NON_EXISTENT_SYSCALL)                    \
-    macro(SIGNAL_INVALID_PIPE)                            \
-    macro(SIGNAL_TIMER_EXPIRED)                           \
-    macro(SIGNAL_TERMINATE)                               \
-    macro(SIGNAL_URGENT_SOCKET_CONDITION)                 \
-    macro(SIGNAL_STOP)                                    \
-    macro(SIGNAL_KEYBOARD_STOP)                           \
-    macro(SIGNAL_CONTINUE)                                \
-    macro(SIGNAL_CHILD_STATUS_CHANGE)                     \
-    macro(SIGNAL_BACKGROUND_READ_ATTEMPT)                 \
-    macro(SIGNAL_BACKGROUND_WRITE_ATTEMPT)                \
-    macro(SIGNAL_IO_POSSIBLE_ON_DESCRIPTOR)               \
-    macro(SIGNAL_CPU_TIME_EXCEEDED)                       \
-    macro(SIGNAL_FILE_SIZE_EXCEEDED)                      \
-    macro(SIGNAL_VIRTUAL_TIME_ALARM)                      \
-    macro(SIGNAL_PROFILING_TIMER_ALARM)                   \
-    macro(SIGNAL_WINDOW_SIZE_CHANGE)                      \
-    macro(SIGNAL_STATUS_REQUEST)                          \
-    macro(SIGNAL_OTHER)                                   \
-    macro(LMDB_KEY_EXISTS)                                \
-    macro(LMDB_KEY_NOT_FOUND)                             \
-    macro(LMDB_PAGE_NOT_FOUND)                            \
-    macro(LMDB_CORRUPT_PAGE)                              \
-    macro(LMDB_PANIC_FATAL_ERROR)                         \
-    macro(LMDB_VERSION_MISMATCH)                          \
-    macro(LMDB_INVALID_DATABASE)                          \
-    macro(LMDB_MAP_FULL)                                  \
-    macro(LMDB_DBS_FULL)                                  \
-    macro(LMDB_READERS_FULL)                              \
-    macro(LMDB_TLS_KEYS_FULL)                             \
-    macro(LMDB_TRANSACTION_FULL)                          \
-    macro(LMDB_CURSOR_STACK_TOO_DEEP)                     \
-    macro(LMDB_PAGE_FULL)                                 \
-    macro(LMDB_MAP_RESIZE_BEYOND_SIZE)                    \
-    macro(LMDB_INCOMPATIBLE_OPERATION)                    \
-    macro(LMDB_INVALID_REUSE_OF_READER_LOCKTABLE_SLOT)    \
-    macro(LMDB_BAD_OR_INVALID_TRANSACTION)                \
-    macro(LMDB_WRONG_KEY_OR_VALUE_SIZE)                   \
-    macro(LMDB_BAD_DBI)                                   \
-    macro(LMDUMP_UNKNOWN_ERROR)                           \
-    macro(PID_ERROR)                                      \
-    macro(PERMISSION_ERROR)                               \
-    macro(DOES_NOT_EXIST)                                 \
-    macro(UNKNOWN)
-
-#define CF_CHECK_MAX CF_CHECK_UNKNOWN
-
-#define CF_CHECK_CREATE_ENUM(name) \
-  CF_CHECK_##name,
-
 #define CF_CHECK_CREATE_STRING(name) \
   #name,
-
-typedef enum {
-    CF_CHECK_RUN_CODES(CF_CHECK_CREATE_ENUM)
-} CFCheckCode;
 
 static const char *CF_CHECK_STR[] = {
     CF_CHECK_RUN_CODES(CF_CHECK_CREATE_STRING)
 };
-// clang-format on
 
 static bool code_is_errno(int r)
 {
@@ -164,7 +95,7 @@ static const char *CF_CHECK_STRING(int code)
     return CF_CHECK_STR[CF_CHECK_UNKNOWN];
 }
 
-static int signal_to_code(int sig)
+int signal_to_cf_check_code(int sig)
 {
     switch (sig)
     {
@@ -233,7 +164,7 @@ static int signal_to_code(int sig)
     return CF_CHECK_SIGNAL_OTHER;
 }
 
-static int lmdump_errno_to_code(int r)
+int lmdb_errno_to_cf_check_code(int r)
 {
     switch (r)
     {
@@ -334,11 +265,11 @@ static int fork_and_diagnose(const char *path)
         }
         if (WIFEXITED(status) && WEXITSTATUS(status) != CF_CHECK_OK)
         {
-            return lmdump_errno_to_code(WEXITSTATUS(status));
+            return lmdb_errno_to_cf_check_code(WEXITSTATUS(status));
         }
         if (WIFSIGNALED(status))
         {
-            return signal_to_code(WTERMSIG(status));
+            return signal_to_cf_check_code(WTERMSIG(status));
         }
     }
     return CF_CHECK_OK;
@@ -355,7 +286,7 @@ size_t diagnose_files(Seq *filenames, Seq **corrupt, bool foreground)
         int r;
         if (foreground)
         {
-            r = lmdump_errno_to_code(diagnose(filename, true));
+            r = lmdb_errno_to_cf_check_code(diagnose(filename, true));
         }
         else
         {

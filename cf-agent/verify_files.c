@@ -34,7 +34,7 @@
 #include <files_interfaces.h>
 #include <files_lib.h>
 #include <files_operators.h>
-#include <files_hashes.h>
+#include <hash.h>
 #include <files_edit.h>
 #include <files_editxml.h>
 #include <files_editline.h>

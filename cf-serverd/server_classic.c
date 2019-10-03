@@ -35,7 +35,7 @@
 #include <string_lib.h>                               /* ToLowerStrInplace */
 #include <regex.h>                                    /* StringMatchFull */
 #include <lastseen.h>                                 /* LastSaw1 */
-#include <files_hashes.h>                             /* HashString */
+#include <hash.h>                                     /* HashString */
 #include <crypto.h>                                   /* HavePublicKey */
 #include <cf-serverd-enterprise-stubs.h>              /* ReceiveCollectCall */
 #include <tls_generic.h>

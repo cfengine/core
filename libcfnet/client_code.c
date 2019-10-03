@@ -38,7 +38,7 @@
 #include <client_protocol.h>
 #include <crypto.h>         /* CryptoInitialize,SavePublicKey,EncryptString */
 #include <logging.h>
-#include <files_hashes.h>                                       /* HashFile */
+#include <hash.h>                                               /* HashFile */
 #include <mutex.h>                                            /* ThreadLock */
 #include <files_lib.h>                               /* FullWrite,safe_open */
 #include <string_lib.h>                           /* MemSpan,MemSpanInverse */

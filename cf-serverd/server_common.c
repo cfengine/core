@@ -34,7 +34,7 @@ static const int CF_NOSIZE = -1;
 #include <crypto.h>                                   /* EncryptString */
 #include <files_names.h>
 #include <files_interfaces.h>
-#include <files_hashes.h>
+#include <hash.h>
 #include <file_lib.h>
 #include <eval_context.h>
 #include <dir.h>

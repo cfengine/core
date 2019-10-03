@@ -22,7 +22,7 @@
   included file COSL.txt.
 */
 
-
+#include <cf3.defs.h> // CF_DEFAULT_DIGEST
 #include <cfnet.h>
 
 #include <openssl/err.h>
@@ -35,7 +35,7 @@
 
 /* TODO move crypto.h to libutils */
 #include <crypto.h>                                    /* HavePublicKeyByIP */
-#include <files_hashes.h>                              /* HashPubKey */
+#include <hash.h>                                             /* HashPubKey */
 
 #include <assert.h>
 

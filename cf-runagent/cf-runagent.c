@@ -46,7 +46,7 @@
 #include <addr_lib.h>
 #include <loading.h>
 #include <expand.h>                                 /* ProtocolVersionParse */
-#include <files_hashes.h>
+#include <hash.h>
 #include <string_lib.h>
 #include <cleanup.h>
 

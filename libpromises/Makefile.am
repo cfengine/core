@@ -85,7 +85,6 @@ libpromises_la_SOURCES = \
 	extensions_template.c.pre extensions_template.h.pre \
 	feature.c feature.h \
 	files_copy.c files_copy.h \
-	files_hashes.c files_hashes.h \
 	files_interfaces.c files_interfaces.h \
 	files_lib.c files_lib.h \
 	files_names.c files_names.h \

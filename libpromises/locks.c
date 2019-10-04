@@ -30,7 +30,7 @@
 #include <files_lib.h>
 #include <cleanup.h>
 #include <policy.h>
-#include <files_hashes.h>
+#include <hash.h>
 #include <rb-tree.h>
 #include <files_names.h>
 #include <rlist.h>

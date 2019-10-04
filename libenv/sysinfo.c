@@ -30,7 +30,7 @@
 #include <eval_context.h>
 #include <files_names.h>
 #include <files_interfaces.h>
-#include <files_hashes.h>
+#include <hash.h>
 #include <scope.h>
 #include <item_lib.h>
 #include <matching.h>

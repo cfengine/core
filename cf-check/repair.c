@@ -11,7 +11,7 @@ int repair_main(ARG_UNUSED int argc, ARG_UNUSED const char *const *const argv)
     return 1;
 }
 
-int repair_default()
+int repair_lmdb_default()
 {
     Log(LOG_LEVEL_INFO,
         "database repair not available on this platform/build");
@@ -78,7 +78,7 @@ int remove_files(Seq *files)
     return failures;
 }
 
-int repair_file(const char *file)
+int repair_lmdb_file(const char *file)
 {
     char *dest_file = StringFormat("%s"REPAIR_FILE_EXTENSION, file);
     pid_t child_pid = fork();
@@ -132,7 +132,7 @@ int repair_file(const char *file)
     }
 }
 
-int repair_files(Seq *files, bool force)
+int repair_lmdb_files(Seq *files, bool force)
 {
     assert(files != NULL);
     assert(SeqLength(files) > 0);
@@ -167,7 +167,7 @@ int repair_files(Seq *files, bool force)
     for (int i = 0; i < length; ++i)
     {
         const char *file = SeqAt(files, i);
-        if (repair_file(file) != 0)
+        if (repair_lmdb_file(file) != 0)
         {
             ret++;
         }
@@ -215,12 +215,12 @@ int repair_main(int argc, const char *const *const argv)
         Log(LOG_LEVEL_ERR, "No database files to repair");
         return 1;
     }
-    const int ret = repair_files(files, force);
+    const int ret = repair_lmdb_files(files, force);
     SeqDestroy(files);
     return ret;
 }
 
-int repair_default()
+int repair_lmdb_default()
 {
     // This function is used by cf-execd and cf-agent, not cf-check
 
@@ -240,7 +240,7 @@ int repair_default()
         Log(LOG_LEVEL_INFO, "Skipping local database repair, no lmdb files");
         return 0;
     }
-    const int ret = repair_files(files, false);
+    const int ret = repair_lmdb_files(files, false);
     SeqDestroy(files);
 
     if (ret != 0)

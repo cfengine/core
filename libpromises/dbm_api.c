@@ -565,7 +565,7 @@ static int DBPathLock(const char *filename)
         return -1;
     }
 
-    if (ExclusiveLockFile(fd) == -1)
+    if (ExclusiveLockFile(fd, true) == -1)
     {
         Log(LOG_LEVEL_ERR, "Unable to lock database lock file '%s'. (fcntl(F_SETLK): %s)", filename_lock, GetErrorStr());
         free(filename_lock);

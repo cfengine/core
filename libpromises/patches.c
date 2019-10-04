@@ -217,7 +217,7 @@ int LinkOrCopy(const char *from, const char *to, int sym)
 
 #if !defined(__MINGW32__)
 
-int ExclusiveLockFile(int fd)
+int ExclusiveLockFile(int fd, bool wait)
 {
     struct flock lock = {
         .l_type = F_WRLCK,
@@ -226,15 +226,21 @@ int ExclusiveLockFile(int fd)
         .l_len = 0    /* till EOF */
     };
 
-    while (fcntl(fd, F_SETLKW, &lock) == -1)
+    if (wait)
     {
-        if (errno != EINTR)
+        while (fcntl(fd, F_SETLKW, &lock) == -1)
         {
-            return -1;
+            if (errno != EINTR)
+            {
+                return -1;
+            }
         }
+        return 0;
     }
-
-    return 0;
+    else
+    {
+        return fcntl(fd, F_SETLK, &lock);
+    }
 }
 
 int ExclusiveUnlockFile(int fd)

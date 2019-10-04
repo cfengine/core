@@ -38,10 +38,6 @@ bundle agent test
         string => "Test that preserve false in body copy_from doesn't modify
         permissions of the promised file";
 
-      "test_soft_fail"
-        string => "!windows",
-        meta => { "ENT-4016" };
-
   files:
 
       # We promise that the target is a copy of the source file Since preserve
@@ -59,7 +55,7 @@ bundle agent check
       "expect[target]"   string => "600";
 
       "observe[src]"    string => filestat( "$(this.promise_filename).src", permoct);
-      "observe[target]" string => filestat( "$(this.promise_filename).src", permoct);
+      "observe[target]" string => filestat( "$(this.promise_filename).target", permoct);
 
   methods:
 

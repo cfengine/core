@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
     GenericAgentConfig *config = CheckOpts(argc, argv);
     if (PERFORM_DB_CHECK)
     {
-        repair_default();
+        repair_lmdb_default();
     }
 
     EvalContext *ctx = EvalContextNew();

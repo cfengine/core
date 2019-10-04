@@ -243,6 +243,26 @@ int ExclusiveLockFile(int fd, bool wait)
     }
 }
 
+/**
+ * Check if we are holding an exclusive lock for the fd.
+ */
+bool ExclusiveLockFileCheck(int fd)
+{
+    struct flock lock = {
+        .l_type = F_WRLCK,
+        .l_whence = SEEK_SET,
+        .l_start = 0, /* start of the region to which the lock applies */
+        .l_len = 0    /* till EOF */
+    };
+    if (fcntl(fd, F_GETLK, &lock) == -1)
+    {
+        /* should never happen */
+        Log(LOG_LEVEL_ERR, "Error when checking locks on FD %d", fd);
+        return false;
+    }
+    return (lock.l_type != F_UNLCK);
+}
+
 int ExclusiveUnlockFile(int fd)
 {
     return close(fd);

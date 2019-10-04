@@ -41,7 +41,7 @@
 #include <known_dirs.h>
 #include <bootstrap.h>
 #include <policy_server.h>
-#include <files_hashes.h>
+#include <hash.h>
 #include <item_lib.h>
 
 #include <cf-windows-functions.h>

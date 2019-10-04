@@ -26,7 +26,7 @@
 
 #include <item_lib.h>
 #include <crypto.h>
-#include <files_hashes.h>
+#include <hash.h>
 #include <eval_context.h>
 #include <lastseen.h>
 #include <conversion.h>

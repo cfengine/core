@@ -641,10 +641,9 @@ char *HashPrintSafe(ARG_UNUSED char *dst, ARG_UNUSED size_t dst_size,
     fail();
 }
 
-void HashPubKey(ARG_UNUSED RSA *key,
+void HashPubKey(ARG_UNUSED const RSA *key,
                 ARG_UNUSED unsigned char digest[EVP_MAX_MD_SIZE + 1],
                 ARG_UNUSED HashMethod type)
 {
     fail();
 }
-

@@ -41,9 +41,8 @@ extern char VFQNAME[];
 #include <unix.h>                       /* GetCurrentUsername */
 #include <lastseen.h>                   /* LastSaw */
 #include <crypto.h>                     /* PublicKeyFile */
-#include <files_hashes.h>               /* HashString,HashesMatch,HashPubKey*/
+#include <hash.h>                       /* HashString,HashesMatch,HashPubKey*/
 #include <known_dirs.h>
-#include <hash.h>
 #include <connection_info.h>
 #include <tls_generic.h>                                  /* TLSErrorString */
 

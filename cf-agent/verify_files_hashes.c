@@ -30,7 +30,7 @@
 #include <client_code.h>
 #include <files_interfaces.h>
 #include <files_lib.h>
-#include <files_hashes.h>
+#include <hash.h>
 #include <misc_lib.h>
 #include <eval_context.h>
 #include <known_dirs.h>

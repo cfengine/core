@@ -26,7 +26,7 @@
 
 #include <lastseen.h>
 #include <conversion.h>
-#include <files_hashes.h>
+#include <hash.h>
 #include <locks.h>
 #include <item_lib.h>
 #include <known_dirs.h>

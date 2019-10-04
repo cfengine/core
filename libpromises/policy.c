@@ -37,7 +37,7 @@
 #include <eval_context.h>
 #include <promises.h>
 #include <item_lib.h>
-#include <files_hashes.h>
+#include <hash.h>
 #include <files_names.h>
 #include <audit.h>
 #include <logging.h>

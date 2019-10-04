@@ -506,13 +506,8 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
         if (attr.copy.type_check &&
             attr.copy.link_type != FILE_LINK_TYPE_NONE)
         {
-            if (((S_ISDIR(dsb.st_mode)) && (!S_ISDIR(srcmode))) ||
-                ((S_ISREG(dsb.st_mode)) && (!S_ISREG(srcmode))) ||
-                ((S_ISBLK(dsb.st_mode)) && (!S_ISBLK(srcmode))) ||
-                ((S_ISCHR(dsb.st_mode)) && (!S_ISCHR(srcmode))) ||
-                ((S_ISSOCK(dsb.st_mode)) && (!S_ISSOCK(srcmode))) ||
-                ((S_ISFIFO(dsb.st_mode)) && (!S_ISFIFO(srcmode))) ||
-                ((S_ISLNK(dsb.st_mode)) && (!S_ISLNK(srcmode))))
+            // Mask mode with S_IFMT to extract and compare file types
+            if ((dsb.st_mode & S_IFMT) != (srcmode & S_IFMT))
             {
                 cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &attr,
                      "Promised file copy %s "
@@ -593,8 +588,7 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
 
                 return result;
             }
-
-            if (S_ISLNK(srcmode))
+            else if (S_ISLNK(srcmode))
             {
                 result = PromiseResultUpdate(
                     result, LinkCopy(ctx, sourcefile, destfile, ssb,
@@ -1623,14 +1617,14 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
         unlink(backup);
     }
 
+#ifdef HAVE_UTIME_H
     if (attr->copy.stealth)
     {
-#ifdef HAVE_UTIME_H
         timebuf.actime = sstat->st_atime;
         timebuf.modtime = sstat->st_mtime;
         utime(dest, &timebuf);
-#endif
     }
+#endif
 
     return true;
 }

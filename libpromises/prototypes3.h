@@ -107,6 +107,7 @@ void CloseNetwork(void);
 
 int LinkOrCopy(const char *from, const char *to, int sym);
 int ExclusiveLockFile(int fd, bool wait);
+bool ExclusiveLockFileCheck(int fd);
 int ExclusiveUnlockFile(int fd);
 
 /* storage_tools.c */

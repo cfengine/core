@@ -33,3 +33,4 @@ int clock_gettime(ARG_UNUSED clockid_t clock_id, struct timespec *tp)
     tp->tv_nsec = 0;
     return 0;
 }
+

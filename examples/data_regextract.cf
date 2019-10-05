@@ -20,7 +20,14 @@
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
 
-###############################################################################
+##+begin_src prep
+#@ ```
+#@ printf "[general]\n" > /tmp/instance.cfg
+#@ printf "guid = 9CB197F0-4569-446A-A987-1DDEC1205F6B\n" >> /tmp/instance.cfg
+#@ printf "port=5308" >> /tmp/instance.cfg
+#@ ```
+#+end_src
+##############################################################################
 #+begin_src cfengine3
 bundle agent main
 {
@@ -40,13 +47,34 @@ bundle agent main
       "parsed" data => data_regextract("^(?<name1>...)(...)(..)-(?<name2>...)-(..).*", "abcdef12-345-67andsoon");
       "parsed_str" string => format("%S", parsed);
 
+      # Illustrating multiline regular expression
+
+      "instance_guid_until_end_of_string"
+        data => data_regextract( "^guid\s?+=\s?+(?<value>.*)$",
+                                 readfile( "/tmp/instance.cfg", 200));
+
+      "instance_guid"
+         data => data_regextract( "^guid\s+=\s+(?<value>[^\n]*)",
+                                  readfile( "/tmp/instance.cfg", 200));
+
+      "instance_port"
+         data => data_regextract( "^port\s?+=\s?+(?<value>[^\n]*)",
+                                  readfile( "/tmp/instance.cfg", 200));
+
   reports:
-      "$(this.bundle): '$(parsed[0])' parses into: $(parsed_str)";
+      "$(this.bundle): parsed[0] '$(parsed[0])' parses into: $(parsed_str)";
+      "$(this.bundle): instance_guid_until_end_of_string[value] '$(instance_guid_until_end_of_string[value])'";
+      "$(this.bundle): instance_guid[value] '$(instance_guid[value])'";
+      "$(this.bundle): instance_port[value] '$(instance_port[value])'";
 }
 #+end_src
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ R: main: 'abcdef12-345-67andsoon' parses into: {"0":"abcdef12-345-67andsoon","2":"def","3":"12","5":"67","name1":"abc","name2":"345"}
+#@ R: main: parsed[0] 'abcdef12-345-67andsoon' parses into: {"0":"abcdef12-345-67andsoon","2":"def","3":"12","5":"67","name1":"abc","name2":"345"}
+#@ R: main: instance_guid_until_end_of_string[value] '9CB197F0-4569-446A-A987-1DDEC1205F6B
+#@ port=5308'
+#@ R: main: instance_guid[value] '9CB197F0-4569-446A-A987-1DDEC1205F6B'
+#@ R: main: instance_port[value] '5308'
 #@ ```
 #+end_src

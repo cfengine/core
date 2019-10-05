@@ -1,0 +1,54 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+}
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-3171" }
+        string => "test that data_regextract uses a multiline regex";
+
+  vars:
+      "file" string => "$(this.promise_filename).readfile";
+
+      # Note the newline at the end of the file was included in the backreference.
+      # Per http://www.pcre.org/current/doc/html/pcre2syntax.html#SEC4 that means the regex is being run in “dotall” mode.
+      # Dotall mode doesn’t necessarily imply multiline mode, but a “$” matching before an internal newline does (per http://www.pcre.org/current/doc/html/pcre2syntax.html#SEC10)
+      "instance_guid_until_eof"
+        data => data_regextract( "^guid\s+=\s+(?<value>.*)$",
+                                 readfile ( $(file), inf ));
+
+      "instance_guid"
+        data => data_regextract( "^guid\s+=\s+(?<value>[^\n]*)",
+                                 readfile( $(file), inf ));
+
+      "instance_port"
+        data => data_regextract( "^port\s?+=\s?+(?<value>[^\n]*)",
+                                 readfile( $(file), inf ));
+}
+bundle agent check
+{
+  classes:
+      "pass"
+        and => {
+                      strcmp( "$(test.instance_guid[value])",
+                              "9CB197F0-4569-446A-A987-1DDEC1205F6B"),
+                      strcmp( "$(test.instance_port[value])",
+                              "5308"),
+                      strcmp( "$(test.instance_guid_until_eof[value])",
+                              "9CB197F0-4569-446A-A987-1DDEC1205F6B$(const.n)port=5308"),
+      };
+
+  reports:
+      DEBUG::
+      "expect test.instance_guid[value] '$(test.instance_guid[value])' == '9CB197F0-4569-446A-A987-1DDEC1205F6B'";
+      "expect test.instance_port[value] '$(test.instance_port[value])' == '5308'";
+      "expect test.instance_guid_until_eof[value] '$(test.instance_guid_until_eof[value])' == '9CB197F0-4569-446A-A987-1DDEC1205F6B$(const.n)port=5308'";
+
+  methods:
+      "Result"
+        usebundle => dcs_passif( "pass", $(this.promise_filename) ),
+        inherit  => "true";
+}

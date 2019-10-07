@@ -17,7 +17,9 @@ test "$TRAVIS_PULL_REQUEST" = "false" && BRANCH_OR_PULL_REQUEST=$TRAVIS_BRANCH |
 filename=cfengine-$VERSION-$BRANCH_OR_PULL_REQUEST-$JOB_TYPE.artifacts.zip
 zip -q -r $filename artifacts/
 
-echo ===== uploading $filename to transfer.sh =====
-curl --upload-file $filename https://transfer.sh/$filename
+echo ===== uploading $filename to file.io =====
+curl -F "file=@$filename" https://file.io
+echo 'Note that file.io DELETES file from their servers after first download,'
+echo "so don't delete it from your machine if you still need it!"
 
 cd - >/dev/null

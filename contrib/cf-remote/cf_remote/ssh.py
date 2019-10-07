@@ -4,6 +4,7 @@ from paramiko.ssh_exception import AuthenticationException
 from invoke.exceptions import UnexpectedExit
 
 from cf_remote import log
+from cf_remote.utils import whoami
 
 
 def connect(host, users=None):
@@ -16,6 +17,10 @@ def connect(host, users=None):
             users = [parts[0]]
     if not users:
         users = ["Administrator", "ubuntu", "ec2-user", "centos", "vagrant", "root"]
+        # Similar to ssh, try own username first,
+        # some systems will lock us out if we have too many failed attempts.
+        if whoami() not in users:
+            users = [whoami()] + users
     for user in users:
         try:
             log.debug("Attempting ssh: {}@{}".format(user, host))

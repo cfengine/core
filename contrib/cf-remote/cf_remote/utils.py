@@ -108,7 +108,16 @@ def parse_version(string):
         return None
     # 'CFEngine Core 3.12.1 \n CFEngine Enterprise 3.12.1'
     #                ^ split and use this part for version number
-    return string.split()[2]
+    words = string.split()
+    if len(words) < 3:
+        return None
+    version_number = words[2]
+    edition = words[1]
+    if edition == "Core":
+        edition = "Community"
+    if "Enterprise" in string:
+        edition = "Enterprise"
+    return "{} ({})".format(version_number, edition)
 
 
 def parse_systeminfo(data):

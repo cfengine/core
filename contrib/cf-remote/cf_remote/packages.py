@@ -143,8 +143,9 @@ class Release:
 
 
 class Releases:
-    def __init__(self):
-        self.url = "https://cfengine.com/release-data/enterprise/releases.json"
+    def __init__(self, edition="enterprise"):
+        assert edition in ["community", "enterprise"]
+        self.url = "https://cfengine.com/release-data/{}/releases.json".format(edition)
         self.data = get_json(self.url)
         self.supported_branches = []
         for branch in self.data["lts_branches"]:

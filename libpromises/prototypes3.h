@@ -109,6 +109,8 @@ int LinkOrCopy(const char *from, const char *to, int sym);
 int ExclusiveLockFile(int fd, bool wait);
 bool ExclusiveLockFileCheck(int fd);
 int ExclusiveUnlockFile(int fd);
+int SharedLockFile(int fd, bool wait);
+int SharedUnlockFile(int fd);
 
 /* storage_tools.c */
 

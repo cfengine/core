@@ -1,0 +1,37 @@
+#+begin_src prep
+#@ ```
+#@ printf "one\ntwo\nthree\n" > /tmp/list.txt
+#@ printf "1\n2\n3\n"         >> /tmp/list.txt
+#@ printf "1.0\n2.0\n3.0"   >> /tmp/list.txt
+#@ ```
+#+end_src
+#+begin_src cfengine3
+bundle agent example_readreallist
+# @brief Example showing function return types
+{
+  vars:
+      "my_list_of_reals"
+        rlist => readreallist( "/tmp/list.txt", # File to read
+                              "^(\D+)",         # Ignore any non-digits
+                              "\n",             # Split on newlines
+                              inf,              # Maximum number of entries
+                              inf );            # Maximum number of bytes to read
+
+  reports:
+      "my_list_of_reals includes '$(my_list_of_reals)'";
+}
+bundle agent __main__
+{
+  methods: "example_readreallist";
+}
+#+end_src
+#+begin_src example_output
+#@ ```
+#@ R: my_list_of_reals includes '1'
+#@ R: my_list_of_reals includes '2'
+#@ R: my_list_of_reals includes '3'
+#@ R: my_list_of_reals includes '1.0'
+#@ R: my_list_of_reals includes '2.0'
+#@ R: my_list_of_reals includes '3.0'
+#@ ```
+#+end_src

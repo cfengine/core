@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import getpass
 from collections import OrderedDict
 from cf_remote import log
 from datetime import datetime
@@ -161,3 +162,7 @@ def strip_user(host):
     if idx != -1:
         return host[(idx + 1):]
     return host
+
+
+def whoami():
+    return getpass.getuser()

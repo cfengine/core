@@ -36,6 +36,8 @@
     lsetxattr((__arg1), (__arg2), (__arg3), (__arg4), 0, (__arg5))
 #endif
 
+bool CopyRegularFileDiskPerms(const char *source, const char *destination,
+                              const int mode);
 bool CopyRegularFileDisk(const char *source, const char *destination);
 bool CopyFilePermissionsDisk(const char *source, const char *destination);
 bool CopyFileExtendedAttributesDisk(const char *source, const char *destination);

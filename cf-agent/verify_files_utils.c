@@ -506,13 +506,8 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
         if (attr.copy.type_check &&
             attr.copy.link_type != FILE_LINK_TYPE_NONE)
         {
-            if (((S_ISDIR(dsb.st_mode)) && (!S_ISDIR(srcmode))) ||
-                ((S_ISREG(dsb.st_mode)) && (!S_ISREG(srcmode))) ||
-                ((S_ISBLK(dsb.st_mode)) && (!S_ISBLK(srcmode))) ||
-                ((S_ISCHR(dsb.st_mode)) && (!S_ISCHR(srcmode))) ||
-                ((S_ISSOCK(dsb.st_mode)) && (!S_ISSOCK(srcmode))) ||
-                ((S_ISFIFO(dsb.st_mode)) && (!S_ISFIFO(srcmode))) ||
-                ((S_ISLNK(dsb.st_mode)) && (!S_ISLNK(srcmode))))
+            // Mask mode with S_IFMT to extract and compare file types
+            if ((dsb.st_mode & S_IFMT) != (srcmode & S_IFMT))
             {
                 cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &attr,
                      "Promised file copy %s "
@@ -593,8 +588,7 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
 
                 return result;
             }
-
-            if (S_ISLNK(srcmode))
+            else if (S_ISLNK(srcmode))
             {
                 result = PromiseResultUpdate(
                     result, LinkCopy(ctx, sourcefile, destfile, ssb,
@@ -1281,8 +1275,6 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
     char backup[CF_BUFSIZE];
     char new[CF_BUFSIZE], *linkable;
     int remote = false, backupisdir = false, backupok = false, discardbackup;
-    struct stat s;
-    struct stat dstat;
 
 #ifdef HAVE_UTIME_H
     struct utimbuf timebuf;
@@ -1345,9 +1337,8 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
         free(tmpstr);
     }
     else
-    {
 #endif
-
+    {
         strlcpy(new, dest, CF_BUFSIZE);
 
         if (!JoinSuffix(new, sizeof(new), CF_NEW))
@@ -1355,10 +1346,11 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
             Log(LOG_LEVEL_ERR, "Unable to construct filename for copy");
             return false;
         }
-
-#ifdef __APPLE__
     }
-#endif
+
+    struct stat dest_stat;
+    int ret = stat(dest, &dest_stat);
+    bool dest_exists = (ret == 0);
 
     if (remote)
     {
@@ -1374,80 +1366,100 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
     }
     else
     {
-        if (!CopyRegularFileDisk(source, new))
+        // If preserve is true, retain permissions of source file
+        if (attr->copy.preserve)
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Failed copying file '%s' to '%s'", source, new);
-            *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
-            return false;
+            if (!CopyRegularFileDisk(source, new))
+            {
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
+                     "Failed copying file '%s' to '%s'", source, new);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+                return false;
+            }
+        }
+        else
+        {
+            // Never preserve SUID bit (0777)
+            int mode = dest_exists ? (dest_stat.st_mode & 0777) : CF_PERMS_DEFAULT;
+            if (!CopyRegularFileDiskPerms(source, new, mode))
+            {
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
+                     "Failed copying file '%s' to '%s'", source, new);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+                return false;
+            }
         }
 
+#ifdef HAVE_UTIME_H
         if (attr->copy.stealth)
         {
-#ifdef HAVE_UTIME_H
             timebuf.actime = sstat->st_atime;
             timebuf.modtime = sstat->st_mtime;
             utime(source, &timebuf);
-#endif
         }
+#endif
     }
 
     Log(LOG_LEVEL_VERBOSE, "Copy of regular file succeeded '%s' to '%s'", source, new);
 
     backup[0] = '\0';
 
-    if (!discardbackup)
+    if (dest_exists)
     {
-        char stamp[CF_BUFSIZE];
-        time_t stampnow;
-
-        Log(LOG_LEVEL_DEBUG, "Backup file '%s'", source);
-
-        strlcpy(backup, dest, CF_BUFSIZE);
-
-        if (attr->copy.backup == BACKUP_OPTION_TIMESTAMP)
+        if (!discardbackup)
         {
-            stampnow = time((time_t *) NULL);
-            snprintf(stamp, CF_BUFSIZE - 1, "_%lu_%s", CFSTARTTIME, CanonifyName(ctime(&stampnow)));
+            char stamp[CF_BUFSIZE];
+            time_t stampnow;
 
-            if (!JoinSuffix(backup, sizeof(backup), stamp))
+            Log(LOG_LEVEL_DEBUG, "Backup file '%s'", source);
+
+            strlcpy(backup, dest, CF_BUFSIZE);
+
+            if (attr->copy.backup == BACKUP_OPTION_TIMESTAMP)
+            {
+                stampnow = time((time_t *) NULL);
+                snprintf(stamp, CF_BUFSIZE - 1, "_%lu_%s",
+                         CFSTARTTIME, CanonifyName(ctime(&stampnow)));
+
+                if (!JoinSuffix(backup, sizeof(backup), stamp))
+                {
+                    return false;
+                }
+            }
+
+            if (!JoinSuffix(backup, sizeof(backup), CF_SAVED))
             {
                 return false;
             }
-        }
 
-        if (!JoinSuffix(backup, sizeof(backup), CF_SAVED))
-        {
-            return false;
-        }
+            /* Now in case of multiple copies of same object,
+             * try to avoid overwriting original backup */
 
-        /* Now in case of multiple copies of same object, try to avoid overwriting original backup */
-
-        if (lstat(backup, &s) != -1)
-        {
-            if (S_ISDIR(s.st_mode))     /* if there is a dir in the way */
+            if (lstat(backup, &dest_stat) != -1)
             {
-                backupisdir = true;
-                PurgeLocalFiles(ctx, NULL, backup, attr, pp, conn);
-                rmdir(backup);
+                /* if there is a dir in the way */
+                if (S_ISDIR(dest_stat.st_mode))
+                {
+                    backupisdir = true;
+                    PurgeLocalFiles(ctx, NULL, backup, attr, pp, conn);
+                    rmdir(backup);
+                }
+
+                unlink(backup);
             }
 
-            unlink(backup);
+            if (rename(dest, backup) == -1)
+            {
+                /* ignore */
+            }
+
+            /* Did the rename() succeed? NFS-safe */
+            backupok = (lstat(backup, &dest_stat) != -1);
         }
-
-        if (rename(dest, backup) == -1)
+        else
         {
-            /* ignore */
-        }
-
-        backupok = (lstat(backup, &s) != -1);   /* Did the rename() succeed? NFS-safe */
-    }
-    else
-    {
-        /* Mainly important if there is a dir in the way */
-
-        if (stat(dest, &s) != -1)
-        {
-            if (S_ISDIR(s.st_mode))
+            /* Mainly important if there is a dir in the way */
+            if (S_ISDIR(dest_stat.st_mode))
             {
                 PurgeLocalFiles(ctx, NULL, dest, attr, pp, conn);
                 rmdir(dest);
@@ -1455,7 +1467,8 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
         }
     }
 
-    if (lstat(new, &dstat) == -1)
+    struct stat new_stat;
+    if (lstat(new, &new_stat) == -1)
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Can't stat new file '%s' - another agent has picked it up?. (stat: %s)",
              new, GetErrorStr());
@@ -1463,11 +1476,11 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
         return false;
     }
 
-    if ((S_ISREG(dstat.st_mode)) && (dstat.st_size != sstat->st_size))
+    if ((S_ISREG(new_stat.st_mode)) && (new_stat.st_size != sstat->st_size))
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
              "New file '%s' seems to have been corrupted in transit, destination %d and source %d, aborting.", new,
-             (int) dstat.st_size, (int) sstat->st_size);
+             (int) new_stat.st_size, (int) sstat->st_size);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
 
         if (backupok)
@@ -1482,7 +1495,7 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
     {
         Log(LOG_LEVEL_VERBOSE, "Final verification of transmission ...");
 
-        if (CompareFileHashes(source, new, sstat, &dstat, &(attr->copy), conn))
+        if (CompareFileHashes(source, new, sstat, &new_stat, &(attr->copy), conn))
         {
             cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
                  "New file '%s' seems to have been corrupted in transit, aborting.", new);
@@ -1505,7 +1518,7 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
     if (rsrcfork)
     {                           /* Can't just "mv" the resource fork, unfortunately */
         rsrcrd = safe_open(new, O_RDONLY | O_BINARY);
-        rsrcwd = safe_open_create_perms(dest, O_WRONLY | O_BINARY | O_CREAT | O_TRUNC, CF_PERMS_DEFAULT);
+        rsrcwd = safe_open(dest, O_WRONLY | O_BINARY | O_CREAT | O_TRUNC);
 
         if (rsrcrd == -1 || rsrcwd == -1)
         {
@@ -1577,9 +1590,8 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
         }
     }
     else
-    {
 #endif
-
+    {
         if (rename(new, dest) == -1)
         {
             cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
@@ -1594,10 +1606,7 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
 
             return false;
         }
-
-#ifdef __APPLE__
     }
-#endif
 
     if ((!discardbackup) && backupisdir)
     {
@@ -1608,14 +1617,14 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
         unlink(backup);
     }
 
+#ifdef HAVE_UTIME_H
     if (attr->copy.stealth)
     {
-#ifdef HAVE_UTIME_H
         timebuf.actime = sstat->st_atime;
         timebuf.modtime = sstat->st_mtime;
         utime(dest, &timebuf);
-#endif
     }
+#endif
 
     return true;
 }

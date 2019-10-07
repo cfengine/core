@@ -47,6 +47,7 @@ body perms test_og
 
 body copy_from test_copy
 {
+      preserve => "true";
       source => "$(G.etc_group)";
       compare => "hash";
 }

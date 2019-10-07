@@ -22,6 +22,7 @@ def get_args():
     ap.add_argument("--clients", "-c", help="Where to install client package", type=str)
     ap.add_argument("--hub", help="Where to install hub package", type=str)
     ap.add_argument("--bootstrap", "-B", help="cf-agent --bootstrap argument", type=str)
+    ap.add_argument("--edition", "-E", help="Enterprise or community packages", type=str)
     ap.add_argument("--package", help="Local path to package for transfer and install", type=str)
     ap.add_argument("--hub-package", help="Local path to package for --hub", type=str)
     ap.add_argument("--client-package", help="Local path to package for --clients", type=str)
@@ -52,9 +53,10 @@ def run_command_with_args(command, args):
             client_package=args.client_package,
             version=args.version,
             demo=args.demo,
-            call_collect=args.call_collect)
+            call_collect=args.call_collect,
+            edition=args.edition)
     elif command == "packages":
-        commands.packages(tags=args.args, version=args.version)
+        commands.packages(tags=args.args, version=args.version, edition=args.edition)
     elif command == "run":
         commands.run(hosts=args.hosts, command=" ".join(args.args))
     elif command == "sudo":
@@ -71,6 +73,17 @@ def validate_command(command, args):
 
     if args.bootstrap and command != "install":
         user_error("--bootstrap can only be used with install command")
+
+    if args.edition:
+        if command not in ["install", "packages"]:
+            user_error("--edition can only be used with install and packages commands")
+        args.edition = args.edition.lower()
+        if args.edition == "core":
+            args.edition = "community"
+        if args.edition not in ["enterprise", "community"]:
+            user_error("--edition must be either community or enterprise")
+    elif command in ["install", "packages"]:
+        args.edition = "enterprise"
 
     if args.call_collect and not args.demo:
         user_error("--call-collect must be used with --demo")

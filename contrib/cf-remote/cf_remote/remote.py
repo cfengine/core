@@ -158,13 +158,15 @@ def install_host(
         version=None,
         demo=False,
         call_collect=False,
-        connection=None):
+        connection=None,
+        edition=None):
     data = get_info(host, connection=connection)
     print_info(data)
 
     if not package:
         tags = []
-        tags.append("hub" if hub else "agent")
+        if edition == "enterprise":
+            tags.append("hub" if hub else "agent")
         tags.append("64" if data["arch"] in ["x86_64", "amd64"] else data["arch"])
         extension = None
         if "package_tags" in data and "msi" in data["package_tags"]:
@@ -173,7 +175,7 @@ def install_host(
             extension = ".deb"
         elif "rpm" in data["bin"]:
             extension = ".rpm"
-        releases = Releases()
+        releases = Releases(edition)
         release = releases.default
         if version:
             release = releases.pick_version(version)

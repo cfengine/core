@@ -1,0 +1,95 @@
+#+begin_src prep
+#@ ```
+#@ printf "one\ntwo\nthree\n" > /tmp/list.txt
+#@ printf "1\n2\n3\n"        >> /tmp/list.txt
+#@ printf "1.0\n2.0\n3.0"    >> /tmp/list.txt
+#@ ```
+#+end_src
+###############################################################################
+#+begin_src cfengine3
+bundle agent example_function_return_types
+# @brief Example showing function return types
+{
+
+  classes:
+      "this_file_exists" expression => fileexists( $(this.promise_filename) );
+
+  vars:
+      "my_string" string => concat( "Promises you cannot keep",
+                                    " are no better than lies");
+
+      "my_list_of_strings"
+        slist => readstringlist( "/tmp/list.txt", # File to read
+                                 "",               # Don't ignore any lines
+                                 "\n",             # Split on newlines
+                                 inf,              # Extract as many entries as possible
+                                 inf);             # Read in as much data as possible
+
+      "my_list_of_integers"
+        ilist => readintlist( "/tmp/list.txt",     # File to read
+                              "^(\D+)|(\d+[^\n]+)", # Ignore any lines that are not integers
+                              "\n",                 # Split on newlines
+                              inf,                  # Maximum number of entries
+                              inf);                 # Maximum number of bytes to read
+
+      "my_list_of_reals"
+        rlist => readreallist( "/tmp/list.txt", # File to read
+                              "^(\D+)",          # Ignore any lines that are not digits
+                              "\n",              # Split on newlines
+                              inf,               # Maximum number of entries
+                              inf);              # Maximum number of bytes to read
+
+      "my_integer" int => string_length( $(my_string) );
+
+      "my_real" real => sum( my_list_of_integers );
+
+      "my_data" data => mergedata( '{ "Hello": "world!" }' );
+
+  reports:
+      "my_string: '$(my_string)'";
+      "my_list_of_strings includes '$(my_list_of_strings)'";
+      "my_list_of_integers includes '$(my_list_of_integers)'";
+      "my_list_of_reals includes '$(my_list_of_reals)'";
+      "my_integer: '$(my_integer)'";
+      "my_real: '$(my_real)'";
+      "my_data: '$(with)'"
+        with => string_mustache( "{{%-top-}}", my_data );
+
+    this_file_exists::
+      "This file exists.";
+
+}
+bundle agent __main__
+{
+  methods: "example_function_return_types";
+}
+#+end_src
+#+begin_src example_output
+#@ ```
+#@ R: my_string: 'Promises you cannot keep are no better than lies'
+#@ R: my_list_of_strings includes 'one'
+#@ R: my_list_of_strings includes 'two'
+#@ R: my_list_of_strings includes 'three'
+#@ R: my_list_of_strings includes '1'
+#@ R: my_list_of_strings includes '2'
+#@ R: my_list_of_strings includes '3'
+#@ R: my_list_of_strings includes '1.0'
+#@ R: my_list_of_strings includes '2.0'
+#@ R: my_list_of_strings includes '3.0'
+#@ R: my_list_of_integers includes '1'
+#@ R: my_list_of_integers includes '2'
+#@ R: my_list_of_integers includes '3'
+#@ R: my_list_of_reals includes '1'
+#@ R: my_list_of_reals includes '2'
+#@ R: my_list_of_reals includes '3'
+#@ R: my_list_of_reals includes '1.0'
+#@ R: my_list_of_reals includes '2.0'
+#@ R: my_list_of_reals includes '3.0'
+#@ R: my_integer: '48'
+#@ R: my_real: '6.000000'
+#@ R: my_data: '{
+#@   "Hello": "world!"
+#@ }'
+#@ R: This file exists.
+#@ ```
+#+end_src

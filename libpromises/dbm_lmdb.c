@@ -250,6 +250,11 @@ static void HandleLDMBCorruption(MDB_env *env, const char *msg)
     Log(LOG_LEVEL_CRIT, "Corruption in the '%s' DB detected! %s",
         lmdb_file, msg);
 
+    /* Freeze the DB ASAP. This also makes the call to exit() safe regarding
+     * this particular DB because exit handlers will ignore it. */
+    DBHandle *handle = GetDBHandleFromFilename(lmdb_file);
+    FreezeDB(handle);
+
 #ifdef __MINGW32__
     /* Not much we can do on Windows because there is no fork() and file locking
      * is also not so nice. */
@@ -259,8 +264,9 @@ static void HandleLDMBCorruption(MDB_env *env, const char *msg)
     {
         Log(LOG_LEVEL_CRIT, "Failed to remove the corrupted DB file '%s'",
             lmdb_file);
+        exit(EC_CORRUPTION_REPAIR_FAILED);
     }
-    abort();
+    exit(EC_CORRUPTION_REPAIRED);
 #else
     /* Try to handle the corruption gracefully by repairing the LMDB file
      * (replacing it with a new LMDB file with all the data we managed to read
@@ -286,13 +292,7 @@ static void HandleLDMBCorruption(MDB_env *env, const char *msg)
         free(db_lock_file);
         free(tstamp_file);
 
-        /* TODO: no need to _exit(), we should be able to just make sure
-         * atexit stuff doesn't touch the repaired DB and exit(1). */
-
-        /* Avoid running atexit handlers that would mess with the LMDB files
-         * including the corrupted one and, worse, potentially even the new repaired
-         * one. */
-        _exit(1);
+        exit(EC_CORRUPTION_REPAIR_FAILED);
     }
     int fd_db_lock = safe_open(db_lock_file, O_CREAT|O_RDWR);
     if (fd_db_lock == -1)
@@ -304,13 +304,7 @@ static void HandleLDMBCorruption(MDB_env *env, const char *msg)
         free(db_lock_file);
         free(tstamp_file);
 
-        /* TODO: no need to _exit(), we should be able to just make sure
-         * atexit stuff doesn't touch the repaired DB and exit(1). */
-
-        /* Avoid running atexit handlers that would mess with the LMDB files
-         * including the corrupted one and, worse, potentially even the new repaired
-         * one. */
-        _exit(1);
+        exit(EC_CORRUPTION_REPAIR_FAILED);
     }
 
     int ret;
@@ -356,13 +350,7 @@ static void HandleLDMBCorruption(MDB_env *env, const char *msg)
         free(db_lock_file);
         free(tstamp_file);
 
-        /* TODO: no need to _exit(), we should be able to just make sure
-         * atexit stuff doesn't touch the repaired DB and exit(1). */
-
-        /* Avoid running atexit handlers that would mess with the LMDB files
-         * including the corrupted one and, worse, potentially even the new repaired
-         * one. */
-        _exit(1);
+        exit(EC_CORRUPTION_REPAIRED);
     }
 
     /* HERE is a window for some other process to do the repair between when we
@@ -387,13 +375,7 @@ static void HandleLDMBCorruption(MDB_env *env, const char *msg)
         free(db_lock_file);
         free(tstamp_file);
 
-        /* TODO: no need to _exit(), we should be able to just make sure
-         * atexit stuff doesn't touch the repaired DB and exit(1). */
-
-        /* Avoid running atexit handlers that would mess with the LMDB files
-         * including the corrupted one and, worse, potentially even the new
-         * repaired one. */
-        _exit(1);
+        exit(EC_CORRUPTION_REPAIR_FAILED);
     }
 
     /* Cleared to resolve the corruption. */
@@ -420,13 +402,7 @@ static void HandleLDMBCorruption(MDB_env *env, const char *msg)
         free(db_lock_file);
         free(tstamp_file);
 
-        /* TODO: no need to _exit(), we should be able to just make sure
-         * atexit stuff doesn't touch the repaired DB and exit(1). */
-
-        /* Avoid running atexit handlers that would mess with the LMDB files
-         * including the corrupted one and, worse, potentially even the new
-         * repaired one. */
-        _exit(1);
+        exit(EC_CORRUPTION_REPAIRED);
     }
 
     /* 3. Repair the DB or at least move it out of the way. */
@@ -488,12 +464,14 @@ static void HandleLDMBCorruption(MDB_env *env, const char *msg)
     /* fd_db_lock and fd_tstamp are already closed by the calls to
      * ExclusiveUnlockFile above. */
 
-    /* Avoid running atexit handlers that would mess with the LMDB files
-     * including the corrupted one and, worse, potentially even the new repaired
-     * one. */
-    /* TODO: no need to _exit(), we should be able to just make sure
-     * atexit stuff doesn't touch the repaired DB and exit(1). */
-    _exit(1);
+    if (repair_successful)
+    {
+        exit(EC_CORRUPTION_REPAIRED);
+    }
+    else
+    {
+        exit(EC_CORRUPTION_REPAIR_FAILED);
+    }
 #endif  /* __MINGW32__ */
 }
 

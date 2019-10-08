@@ -59,6 +59,11 @@ struct DBHandle_
     /* Record when the DB was opened (to check if possible corruptions are
      * already repaired) */
     time_t open_tstamp;
+
+    /**
+     * @see FreezeDB()
+     */
+    bool frozen;
 };
 
 struct DBCursor_
@@ -275,6 +280,14 @@ void CloseDBInstance(DBHandle *handle)
     /* Wait until all DB users are served, or a threshold is reached */
     int count = 0;
     ThreadLock(&handle->lock);
+    if (handle->frozen)
+    {
+        /* Just clean some allocated memory, but don't touch the DB itself. */
+        free(handle->filename);
+        free(handle->subname);
+        ThreadUnlock(&handle->lock);
+        return;
+    }
     while (handle->refcount > 0 && count < 1000)
     {
         ThreadUnlock(&handle->lock);
@@ -365,6 +378,12 @@ bool OpenDBInstance(DBHandle **dbp, dbid id, DBHandle *handle)
 {
     if (ThreadLock(&handle->lock))
     {
+        if (handle->frozen)
+        {
+            Log(LOG_LEVEL_WARNING, "Attempt to open a frozen DB '%s'", handle->filename);
+            ThreadUnlock(&handle->lock);
+            return false;
+        }
         if (handle->refcount == 0)
         {
             int lock_fd = DBPathLock(handle->filename);
@@ -469,6 +488,15 @@ void CloseDB(DBHandle *handle)
      * DB behaviour becomes erratic otherwise (CFE-1996). */
     if (ThreadLock(&handle->lock))
     {
+        if (handle->frozen)
+        {
+            /* Just clean some allocated memory, but don't touch the DB itself. */
+            free(handle->filename);
+            free(handle->subname);
+            ThreadUnlock(&handle->lock);
+            return;
+        }
+
         DBPrivCommit(handle->priv);
 
         if (handle->refcount < 1)
@@ -496,11 +524,30 @@ bool CleanDB(DBHandle *handle)
     bool ret = false;
     if (ThreadLock(&handle->lock))
     {
+        if (handle->frozen)
+        {
+            Log(LOG_LEVEL_WARNING, "Attempt to clean a frozen DB '%s'", handle->filename);
+            ThreadUnlock(&handle->lock);
+            return false;
+        }
         ret = DBPrivClean(handle->priv);
-
         ThreadUnlock(&handle->lock);
     }
     return ret;
+}
+
+/**
+ * Freezes the DB so that it is never touched by this process again. In
+ * particular, new OpenDB() calls are ignored and CloseAllDBExit() also ignores
+ * the DB.
+ */
+void FreezeDB(DBHandle *handle)
+{
+    /* This is intentionally NOT using the handle->lock to avoid deadlocks.
+     * Nothing ever sets this to 'false' explicitly, that's only done in the
+     * initialization with '{ { 0 } }', so this bit-flip is safe. */
+    Log(LOG_LEVEL_NOTICE, "Freezing the DB '%s'", handle->filename);
+    handle->frozen = true;
 }
 
 /*****************************************************************************/

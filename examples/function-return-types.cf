@@ -1,8 +1,8 @@
 #+begin_src prep
 #@ ```
-#@ printf "one\ntwo\nthree" > /tmp/list.txt
-#@ printf "1\n2\n3"         >> /tmp/list.txt
-#@ printf "1.0\n2.0\n3.0"   >> /tmp/list.txt
+#@ printf "one\ntwo\nthree\n" > /tmp/list.txt
+#@ printf "1\n2\n3\n"        >> /tmp/list.txt
+#@ printf "1.0\n2.0\n3.0"    >> /tmp/list.txt
 #@ ```
 #+end_src
 ###############################################################################
@@ -10,6 +10,10 @@
 bundle agent example_function_return_types
 # @brief Example showing function return types
 {
+
+  classes:
+      "this_file_exists" expression => fileexists( $(this.promise_filename) );
+
   vars:
       "my_string" string => concat( "Promises you cannot keep",
                                     " are no better than lies");
@@ -66,9 +70,18 @@ bundle agent __main__
 #@ R: my_list_of_strings includes 'one'
 #@ R: my_list_of_strings includes 'two'
 #@ R: my_list_of_strings includes 'three'
+#@ R: my_list_of_strings includes '1'
+#@ R: my_list_of_strings includes '2'
+#@ R: my_list_of_strings includes '3'
+#@ R: my_list_of_strings includes '1.0'
+#@ R: my_list_of_strings includes '2.0'
+#@ R: my_list_of_strings includes '3.0'
 #@ R: my_list_of_integers includes '1'
 #@ R: my_list_of_integers includes '2'
 #@ R: my_list_of_integers includes '3'
+#@ R: my_list_of_reals includes '1'
+#@ R: my_list_of_reals includes '2'
+#@ R: my_list_of_reals includes '3'
 #@ R: my_list_of_reals includes '1.0'
 #@ R: my_list_of_reals includes '2.0'
 #@ R: my_list_of_reals includes '3.0'

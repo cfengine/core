@@ -74,7 +74,7 @@ typedef enum {
 
 int lmdb_errno_to_cf_check_code(int r);
 int signal_to_cf_check_code(int sig);
-size_t diagnose_files(Seq *filenames, Seq **corrupt, bool foreground);
+size_t diagnose_files(const Seq *filenames, Seq **corrupt, bool foreground);
 int diagnose_main(int argc, const char *const *argv);
 
 #endif

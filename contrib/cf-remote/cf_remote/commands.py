@@ -57,7 +57,8 @@ def install(
         client_package=None,
         version=None,
         demo=False,
-        call_collect=False):
+        call_collect=False,
+        edition=None):
     assert hubs or clients
     assert not (hubs and clients and package)
     # These assertions are checked in main.py
@@ -74,7 +75,7 @@ def install(
         if type(hubs) is str:
             hubs = [hubs]
         for index, hub in enumerate(hubs):
-            log.debug("Installing hub package on '{}'".format(hub))
+            log.debug("Installing {} hub package on '{}'".format(edition, hub))
             install_host(
                 hub,
                 hub=True,
@@ -82,16 +83,18 @@ def install(
                 bootstrap=bootstrap[index % len(bootstrap)] if bootstrap else None,
                 version=version,
                 demo=demo,
-                call_collect=call_collect)
+                call_collect=call_collect,
+                edition=edition)
     for index, host in enumerate(clients or []):
-        log.debug("Installing client package on '{}'".format(host))
+        log.debug("Installing {} client package on '{}'".format(edition, host))
         install_host(
             host,
             hub=False,
             package=client_package,
             bootstrap=bootstrap[index % len(bootstrap)] if bootstrap else None,
             version=version,
-            demo=demo)
+            demo=demo,
+            edition=edition)
     if demo and hubs:
         for hub in hubs:
             print(
@@ -99,8 +102,8 @@ def install(
                 format(strip_user(hub)))
 
 
-def packages(tags=None, version=None):
-    releases = Releases()
+def packages(tags=None, version=None, edition=None):
+    releases = Releases(edition)
     print("Available releases: {}".format(releases))
 
     release = releases.default

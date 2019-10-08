@@ -61,6 +61,9 @@ PromiseResult VerifyProcessesPromise(EvalContext *ctx, const Promise *pp)
 
 static bool ProcessSanityChecks(const Attributes *a, const Promise *pp)
 {
+    assert(a != NULL);
+    assert(pp != NULL);
+    // Note that an undefined match_value results in process_count.min_range and max_range being set to CF_NOINT
     bool promised_zero = ((a->process_count.min_range == 0) && (a->process_count.max_range == 0));
     bool ret = true;
 
@@ -75,9 +78,9 @@ static bool ProcessSanityChecks(const Attributes *a, const Promise *pp)
 
         if (a->haveprocess_count)
         {
-            Log(LOG_LEVEL_ERR,
-                "process_count and restart_class should not be used in the same promise as this makes no sense");
-            PromiseRef(LOG_LEVEL_INFO, pp);
+            Log(LOG_LEVEL_VERBOSE,
+                "Note both process_count and restart_class define classes. Please exercises caution that there is not a logic error. Review process_count match_range, in_range_define, and out_of_range_define with respect to restart_class.");
+            PromiseRef(LOG_LEVEL_VERBOSE, pp);
             ret = false;
         }
     }
@@ -94,8 +97,24 @@ static bool ProcessSanityChecks(const Attributes *a, const Promise *pp)
     {
         Log(LOG_LEVEL_ERR, "Process select constraint body promised no result (check body definition)");
         PromiseRef(LOG_LEVEL_ERR, pp);
-        return false;
+        ret = false;
     }
+
+    // CF_NOINT is the value assigned when match_range is not specified
+    if ((a->haveprocess_count) && ((a->process_count.min_range == CF_NOINT) || (a->process_count.max_range == CF_NOINT)))
+    {
+        Log(LOG_LEVEL_ERR, "process_count used without match_range, this promise will not define a class based on a count of matching promises.");
+        PromiseRef(LOG_LEVEL_ERR, pp);
+        ret = false;
+    }
+
+    if ((a->haveprocess_count) && !((a->process_count.in_range_define) || (a->process_count.out_of_range_define)))
+    {
+        Log(LOG_LEVEL_ERR, "process_count body is insufficiently defined. process_count must specify at least one of in_range_define or out_of_range_define. ");
+        PromiseRef(LOG_LEVEL_ERR, pp);
+        ret = false;
+    }
+
 
     return ret;
 }

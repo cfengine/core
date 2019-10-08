@@ -12,7 +12,7 @@ int diagnose_main(ARG_UNUSED int argc, ARG_UNUSED const char *const *const argv)
 }
 
 size_t diagnose_files(
-    ARG_UNUSED Seq *filenames, ARG_UNUSED Seq **corrupt, bool foreground)
+    ARG_UNUSED const Seq *filenames, ARG_UNUSED Seq **corrupt, bool foreground)
 {
     Log(LOG_LEVEL_INFO,
         "database diagnosis not available on this platform/build");
@@ -275,11 +275,23 @@ static int fork_and_diagnose(const char *path)
     return CF_CHECK_OK;
 }
 
-size_t diagnose_files(Seq *filenames, Seq **corrupt, bool foreground)
+/**
+ * @param[in]  filenames  DB files to diagnose/check
+ * @param[out] corrupt    place to store the resulting sequence of corrupted files
+ *                        or %NULL (to only get the number of corrupted files)
+ * @param[in]  foreground whether to run in foreground or fork (safer)
+ * @return                the number of the corrupted files
+ */
+size_t diagnose_files(const Seq *filenames, Seq **corrupt, bool foreground)
 {
-    assert(corrupt == NULL || *corrupt == NULL);
     size_t corruptions = 0;
     const size_t length = SeqLength(filenames);
+
+    if (corrupt != NULL)
+    {
+        *corrupt = SeqNew(length, free);
+    }
+
     for (int i = 0; i < length; ++i)
     {
         const char *filename = SeqAt(filenames, i);
@@ -302,10 +314,6 @@ size_t diagnose_files(Seq *filenames, Seq **corrupt, bool foreground)
             ++corruptions;
             if (corrupt != NULL)
             {
-                if (*corrupt == NULL)
-                {
-                    *corrupt = SeqNew(length, free);
-                }
                 SeqAppend(*corrupt, xstrdup(filename));
             }
         }

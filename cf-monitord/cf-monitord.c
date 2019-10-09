@@ -306,6 +306,7 @@ static void ThisAgentInit(EvalContext *ctx)
 
     signal(SIGINT, HandleSignalsForDaemon);
     signal(SIGTERM, HandleSignalsForDaemon);
+    signal(SIGBUS, HandleSignalsForDaemon);
     signal(SIGHUP, SIG_IGN);
     signal(SIGPIPE, SIG_IGN);
     signal(SIGUSR1, HandleSignalsForDaemon);

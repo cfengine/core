@@ -1519,7 +1519,28 @@ static bool DoCreateUser(const char *puser, const User *u, enum cfopaction actio
 
 }
 
-static bool DoRemoveUser (const char *puser, enum cfopaction action)
+#ifdef HAVE_PW
+static bool DoRemoveUserUsingPw (const char *puser, enum cfopaction action)
+{
+    char cmd[CF_BUFSIZE];
+
+    strcpy(cmd, PW);
+
+    StringAppend(cmd, " userdel ", sizeof(cmd));
+    StringAppend(cmd, puser, sizeof(cmd));
+
+    if (action == cfa_warn || DONTDO)
+    {
+        Log(LOG_LEVEL_WARNING, "Need to remove user '%s'.", puser);
+        return false;
+    }
+
+    return ExecuteUserCommand(puser, cmd, sizeof(cmd), "removing", "Removing");
+}
+#endif
+
+#ifdef HAVE_USERDEL
+static bool DoRemoveUserUsingUserdel (const char *puser, enum cfopaction action)
 {
     char cmd[CF_BUFSIZE];
 
@@ -1535,6 +1556,19 @@ static bool DoRemoveUser (const char *puser, enum cfopaction action)
     }
 
     return ExecuteUserCommand(puser, cmd, sizeof(cmd), "removing", "Removing");
+}
+#endif
+
+static bool DoRemoveUser (const char *puser, enum cfopaction action)
+{
+#if defined(HAVE_PW)
+    return DoRemoveUserUsingPw(puser, action);
+#elif defined(HAVE_USERDEL)
+    return DoRemoveUserUsingUserdel(puser, action);
+#else
+    Log(LOG_LEVEL_WARNING, "Removing user '%s' not supported on this platform.", puser);
+    return false;
+#endif
 }
 
 static bool DoModifyUser (const char *puser, const User *u, const struct passwd *passwd_info, uint32_t changemap, enum cfopaction action)

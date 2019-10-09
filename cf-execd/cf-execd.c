@@ -41,6 +41,7 @@
 #include <printsize.h>
 #include <cleanup.h>
 #include <repair.h>
+#include <dbm_api.h>            /* CheckDBRepairFlagFile() */
 #include <string_lib.h>
 
 #include <cf-windows-functions.h>
@@ -135,9 +136,10 @@ static const char *const HINTS[] =
 int main(int argc, char *argv[])
 {
     GenericAgentConfig *config = CheckOpts(argc, argv);
-    if (PERFORM_DB_CHECK)
+    bool force_repair = CheckDBRepairFlagFile();
+    if (force_repair || PERFORM_DB_CHECK)
     {
-        repair_lmdb_default();
+        repair_lmdb_default(force_repair);
     }
 
     EvalContext *ctx = EvalContextNew();
@@ -430,6 +432,7 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
     WritePID("cf-execd.pid");
     signal(SIGINT, HandleSignalsForDaemon);
     signal(SIGTERM, HandleSignalsForDaemon);
+    signal(SIGBUS, HandleSignalsForDaemon);
     signal(SIGHUP, HandleSignalsForDaemon);
     signal(SIGPIPE, SIG_IGN);
     signal(SIGUSR1, HandleSignalsForDaemon);

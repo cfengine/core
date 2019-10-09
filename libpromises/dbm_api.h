@@ -103,4 +103,6 @@ char *DBIdToPath(dbid id);
 char *DBIdToSubPath(dbid id, const char *subdb_name);
 
 StringMap *LoadDatabaseToStringMap(dbid database_id);
+
+bool CheckDBRepairFlagFile();
 #endif  /* NOT CFENGINE_DBM_API_H */

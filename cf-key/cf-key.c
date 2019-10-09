@@ -132,6 +132,7 @@ static void SetupSignalsForCfKey(CfKeySigHandler sighandler)
     signal(SIGTERM, sighandler);
     signal(SIGHUP, SIG_IGN);
     signal(SIGPIPE, SIG_IGN);
+    signal(SIGBUS, HandleSignalsForAgent);
     signal(SIGUSR1, HandleSignalsForAgent);
     signal(SIGUSR2, HandleSignalsForAgent);
 }

@@ -11,7 +11,7 @@ int repair_main(ARG_UNUSED int argc, ARG_UNUSED const char *const *const argv)
     return 1;
 }
 
-int repair_lmdb_default()
+int repair_lmdb_default(ARG_UNUSED bool force)
 {
     Log(LOG_LEVEL_INFO,
         "database repair not available on this platform/build");
@@ -220,7 +220,7 @@ int repair_main(int argc, const char *const *const argv)
     return ret;
 }
 
-int repair_lmdb_default()
+int repair_lmdb_default(bool force)
 {
     // This function is used by cf-execd and cf-agent, not cf-check
 
@@ -240,7 +240,7 @@ int repair_lmdb_default()
         Log(LOG_LEVEL_INFO, "Skipping local database repair, no lmdb files");
         return 0;
     }
-    const int ret = repair_lmdb_files(files, false);
+    const int ret = repair_lmdb_files(files, force);
     SeqDestroy(files);
 
     if (ret != 0)

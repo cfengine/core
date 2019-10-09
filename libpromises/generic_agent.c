@@ -2088,6 +2088,7 @@ void SetupSignalsForAgent(void)
 {
     signal(SIGINT, HandleSignalsForAgent);
     signal(SIGTERM, HandleSignalsForAgent);
+    signal(SIGBUS, HandleSignalsForAgent);
     signal(SIGHUP, SIG_IGN);
     signal(SIGPIPE, SIG_IGN);
     signal(SIGUSR1, HandleSignalsForAgent);

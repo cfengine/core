@@ -730,3 +730,29 @@ StringMap *LoadDatabaseToStringMap(dbid database_id)
 
     return db_map;
 }
+
+/**
+ * Checks if a DB repair flag file is present and if it is, removes it.
+ *
+ * @return Whether the DB repair flag file was present or not.
+ */
+bool CheckDBRepairFlagFile()
+{
+    /* The DB repair flag file can be created by user or by some process
+     * that hit an error condition potentially caused by local DB corruption
+     * that it was not able to handle properly by repairing the corrupted DB
+     * file(s). For example, if a process is killed by a signal. */
+    char repair_flag_file[PATH_MAX] = { 0 };
+    bool present = false;
+    xsnprintf(repair_flag_file, PATH_MAX, "%s%c%s",
+              GetStateDir(), FILE_SEPARATOR, CF_DB_REPAIR_TRIGGER);
+    /* This is full of race-conditions, but it's just a best-effort
+     * thing. If a force-repair is missed, it will happen next time. If it's
+     * done twice, no big deal. */
+    if (access(repair_flag_file, F_OK) == 0)
+    {
+        present = true;
+        unlink(repair_flag_file);
+    }
+    return present;
+}

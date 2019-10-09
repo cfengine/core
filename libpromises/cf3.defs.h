@@ -103,6 +103,8 @@
 
 #define CF_ENV_FILE      "env_data"
 
+#define CF_DB_REPAIR_TRIGGER "db_repair_required"
+
 #define CF_SAVED ".cfsaved"
 #define CF_EDITED ".cfedited"
 #define CF_NEW ".cfnew"

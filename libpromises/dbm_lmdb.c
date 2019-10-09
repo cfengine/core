@@ -261,7 +261,7 @@ static bool RepairedAfterOpen(const char *lmdb_file, int fd_tstamp)
     return false;
 }
 
-static void HandleLDMBCorruption(MDB_env *env, const char *msg)
+static void HandleLMDBCorruption(MDB_env *env, const char *msg)
 {
     const char *lmdb_file = mdb_env_get_userctx(env);
     Log(LOG_LEVEL_CRIT, "Corruption in the '%s' DB detected! %s",
@@ -519,7 +519,7 @@ DBPriv *DBPrivOpenDB(const char *const dbpath, const dbid id)
         Log(LOG_LEVEL_WARNING, "Could not store DB file path (%s) in the DB context",
             dbpath);
     }
-    rc = mdb_env_set_assert(db->env, (MDB_assert_func*) HandleLDMBCorruption);
+    rc = mdb_env_set_assert(db->env, (MDB_assert_func*) HandleLMDBCorruption);
     if (rc != MDB_SUCCESS)
     {
         Log(LOG_LEVEL_WARNING, "Could not set the corruption handler for '%s'",

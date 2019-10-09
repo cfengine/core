@@ -1,0 +1,34 @@
+#+begin_src prep
+#@ ```
+#@ printf "one\ntwo\nthree\n" > /tmp/list.txt
+#@ printf "1\n2\n3\n"         >> /tmp/list.txt
+#@ printf "1.0\n2.0\n3.0"     >> /tmp/list.txt
+#@ ```
+#+end_src
+#+begin_src cfengine3
+bundle agent example_readintlist
+# @brief Example showing function return types
+{
+  vars:
+      "my_list_of_integers"
+        ilist => readintlist( "/tmp/list.txt",     # File to read
+                              "^(\D+)|(\d+[^\n]+)", # Ignore any lines that are not integers
+                              "\n",                 # Split on newlines
+                              inf,                  # Maximum number of entries
+                              inf);                 # Maximum number of bytes to read
+
+  reports:
+      "my_list_of_integers includes '$(my_list_of_integers)'";
+}
+bundle agent __main__
+{
+  methods: "example_readintlist";
+}
+#+end_src
+#+begin_src example_output
+#@ ```
+#@ R: my_list_of_integers includes '1'
+#@ R: my_list_of_integers includes '2'
+#@ R: my_list_of_integers includes '3'
+#@ ```
+#+end_src

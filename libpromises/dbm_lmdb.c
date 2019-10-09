@@ -551,6 +551,10 @@ DBPriv *DBPrivOpenDB(const char *dbpath, dbid id)
     {
         Log(LOG_LEVEL_ERR, "Could not open database %s: %s",
               dbpath, mdb_strerror(rc));
+        if (rc == MDB_CORRUPTED || rc == MDB_INVALID)
+        {
+            HandleLMDBCorruption(db->env, mdb_strerror(rc));
+        }
         goto err;
     }
     if (DB_MAX_READERS > 0)

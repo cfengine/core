@@ -5,6 +5,6 @@
 
 int repair_main(int argc, const char *const *argv);
 int repair_lmdb_default(bool force);
-int repair_lmdb_file(const char *file);
+int repair_lmdb_file(const char *file, int fd_tstamp);
 
 #endif

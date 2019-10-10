@@ -30,6 +30,7 @@ int repair_lmdb_default(ARG_UNUSED bool force)
 #include <utilities.h>
 #include <diagnose.h>
 #include <string_lib.h>
+#include <file_lib.h>
 #include <replicate_lmdb.h>
 
 static void print_usage(void)
@@ -78,9 +79,52 @@ int remove_files(Seq *files)
     return failures;
 }
 
-int repair_lmdb_file(const char *file)
+static bool record_repair_timestamp(int fd_tstamp)
 {
+    time_t this_timestamp = time(NULL);
+    lseek(fd_tstamp, 0, SEEK_SET);
+    ssize_t n_written = write(fd_tstamp, &this_timestamp, sizeof(time_t));
+    if (n_written != sizeof(time_t))
+    {
+        /* should never happen */
+        return false;
+    }
+    return true;
+}
+
+
+/**
+ * @param file      LMDB file to repair
+ * @param fd_tstamp An open FD to the repair timestamp file or -1
+ *
+ * @note If #fd_tstamp != -1 then it is expected to be open and with file locks
+ *       taken care of. If #fd_tstamp == -1, this function opens the repair
+ *       timestamp file on its own and takes care of the file locks.
+ */
+int repair_lmdb_file(const char *file, int fd_tstamp)
+{
+    int ret;
     char *dest_file = StringFormat("%s"REPAIR_FILE_EXTENSION, file);
+
+    /* Used to keep track of whether the repair timestamp file was opened
+     * locally. */
+    int local_fd_tstamp = -1;
+    if (fd_tstamp == -1)
+    {
+        char *tstamp_file = StringFormat("%s.repaired", file);
+        fd_tstamp = safe_open(tstamp_file, O_CREAT|O_RDWR);
+        free(tstamp_file);
+        local_fd_tstamp = fd_tstamp;
+    }
+    if (!ExclusiveLockFileCheck(fd_tstamp) && ExclusiveLockFile(fd_tstamp, true) == -1)
+    {
+        /* Should never happen because we tried to wait for the lock. */
+        Log(LOG_LEVEL_ERR,
+            "Failed to acquire lock for the '%s' DB repair timestamp file",
+            file);
+        ret = -1;
+        goto cleanup;
+    }
     pid_t child_pid = fork();
     if (child_pid == 0)
     {
@@ -95,23 +139,48 @@ int repair_lmdb_file(const char *file)
         if (pid != child_pid)
         {
             /* real error that should never happen */
-            return -1;
+            ret = -1;
+            goto cleanup;
         }
         if (WIFEXITED(status) && WEXITSTATUS(status) != CF_CHECK_OK
             && WEXITSTATUS(status) != CF_CHECK_LMDB_CORRUPT_PAGE)
         {
             Log(LOG_LEVEL_ERR, "Failed to repair file '%s', removing", file);
-            unlink(file);
-            free(dest_file);
-            return WEXITSTATUS(status);
+            if (unlink(file) != 0)
+            {
+                Log(LOG_LEVEL_ERR, "Failed to remove file '%s'", file);
+                ret = -1;
+            }
+            else
+            {
+                if (!record_repair_timestamp(fd_tstamp))
+                {
+                    Log(LOG_LEVEL_ERR, "Failed to write the timestamp of repair of the '%s' file",
+                        file);
+                }
+                ret = WEXITSTATUS(status);
+            }
+            goto cleanup;
         }
         else if (WIFSIGNALED(status))
         {
             Log(LOG_LEVEL_ERR, "Failed to repair file '%s', child process signaled (%d), removing",
                 file, WTERMSIG(status));
-            unlink(file);
-            free(dest_file);
-            return signal_to_cf_check_code(WTERMSIG(status));
+            if (unlink(file) != 0)
+            {
+                Log(LOG_LEVEL_ERR, "Failed to remove file '%s'", file);
+                ret = -1;
+            }
+            else
+            {
+                if (!record_repair_timestamp(fd_tstamp))
+                {
+                    Log(LOG_LEVEL_ERR, "Failed to write the timestamp of repair of the '%s' file",
+                        file);
+                }
+                ret = signal_to_cf_check_code(WTERMSIG(status));
+            }
+            goto cleanup;
         }
         else
         {
@@ -123,13 +192,26 @@ int repair_lmdb_file(const char *file)
                     "Failed to replace file '%s' with the repaired copy: %s",
                     file, strerror(errno));
                 unlink(dest_file);
-                free(dest_file);
-                return -1;
+                ret = -1;
+                goto cleanup;
             }
-            free(dest_file);
-            return 0;
+            if (!record_repair_timestamp(fd_tstamp))
+            {
+                Log(LOG_LEVEL_ERR, "Failed to write the timestamp of repair of the '%s' file",
+                    file);
+            }
+            ret = 0;
         }
     }
+  cleanup:
+    free(dest_file);
+    if (local_fd_tstamp != -1)
+    {
+        /* Also releases file locks on the timestamp file if we opened it
+         * locally. */
+        close(local_fd_tstamp);
+    }
+    return ret;
 }
 
 int repair_lmdb_files(Seq *files, bool force)
@@ -167,7 +249,7 @@ int repair_lmdb_files(Seq *files, bool force)
     for (int i = 0; i < length; ++i)
     {
         const char *file = SeqAt(files, i);
-        if (repair_lmdb_file(file) != 0)
+        if (repair_lmdb_file(file, -1) == -1)
         {
             ret++;
         }

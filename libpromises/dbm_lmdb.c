@@ -408,8 +408,11 @@ static void HandleLMDBCorruption(MDB_env *env, const char *msg)
     /* 3. Repair the DB or at least move it out of the way. */
     /* repair_lmdb_file() forks so it is safe (file locks are not
      * inherited). */
-    ret = repair_lmdb_file(lmdb_file);
-    bool repair_successful = (ret == 0);
+    ret = repair_lmdb_file(lmdb_file, fd_tstamp);
+
+    /* repair_lmdb_file returns -1 in case of error, 0 in case of successfull
+     * repair, >0 in case of failed repair, but successful remove */
+    bool repair_successful = (ret != -1);
     if (repair_successful)
     {
         Log(LOG_LEVEL_NOTICE, "DB '%s' successfully repaired",
@@ -417,32 +420,10 @@ static void HandleLMDBCorruption(MDB_env *env, const char *msg)
     }
     else
     {
-        Log(LOG_LEVEL_CRIT, "Failed to repair DB '%s', removing it", lmdb_file);
-        if (unlink(lmdb_file) != 0)
-        {
-            Log(LOG_LEVEL_CRIT, "Failed to remove DB '%s'", lmdb_file);
-        }
-        else
-        {
-            /* We at least moved the file out of the way. */
-            repair_successful = true;
-        }
+        Log(LOG_LEVEL_CRIT, "Failed to repair DB '%s'", lmdb_file);
     }
 
-    /* 4. Record the timestamp of the last repair. */
-    if (repair_successful)
-    {
-        time_t this_timestamp = time(NULL);
-        ssize_t n_written = write(fd_tstamp, &this_timestamp, sizeof(time_t));
-        if (n_written != sizeof(time_t))
-        {
-            Log(LOG_LEVEL_ERR, "Failed to write the timestamp of repair of the '%s' DB",
-                lmdb_file);
-            /* should never happen, but if it does, keep moving */
-        }
-    }
-
-    /* 5. Make the repaired DB available for others. Also release the locks
+    /* 4. Make the repaired DB available for others. Also release the locks
      *    in the opposite order in which they were acquired to avoid
      *    deadlocks. */
     if (ExclusiveUnlockFile(fd_db_lock) != 0)
@@ -451,7 +432,7 @@ static void HandleLMDBCorruption(MDB_env *env, const char *msg)
             db_lock_file);
     }
 
-    /* 6. Signal that the repair is done (also closes fd_tstamp). */
+    /* 5. Signal that the repair is done (also closes fd_tstamp). */
     if (ExclusiveUnlockFile(fd_tstamp) != 0)
     {
         Log(LOG_LEVEL_ERR, "Failed to release the acquired lock for '%s'",

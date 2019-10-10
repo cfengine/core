@@ -22,6 +22,10 @@
   included file COSL.txt.
 */
 
+// platform.h / config.h / bool.h has bool type
+// which is needed before including key.h
+// TODO: Fix this, including key.h shouldn't require bool type defined
+#include <platform.h>
 #include <alloc.h>
 #include <key.h>
 

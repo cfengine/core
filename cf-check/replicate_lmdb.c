@@ -33,10 +33,15 @@ static void HandleSrcLMDBCorruption(MDB_env *env, const char *msg)
     Log(LOG_LEVEL_ERR, "Corruption in the source DB '%s' detected! %s",
         info->s_file, msg);
     mdb_env_set_assert(env, (MDB_assert_func*) NULL);
+
+    /* Corruption in the source DB means we cannot read more data from it. But
+       we may have managed to read some data so let's make sure it is properly
+       written to the destination file by committing the writing transaction. */
     if (info->d_txn != NULL)
     {
         mdb_txn_commit(info->d_txn);
     }
+    /* The reading transaction should just be aborted. */
     if (info->s_txn != NULL)
     {
         mdb_txn_abort(info->s_txn);

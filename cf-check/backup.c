@@ -134,9 +134,9 @@ static int backup_files_replicate(const Seq *files)
 
     const char *backup_dir = create_backup_dir();
 
-    Log(LOG_LEVEL_INFO, "Backing up to '%s' using dump strategy", backup_dir);
+    Log(LOG_LEVEL_INFO, "Backing up to '%s' using data replication", backup_dir);
 
-    int ret = 0;
+    size_t corrupted = 0;
     for (int i = 0; i < length; ++i)
     {
         const char *file = SeqAt(files, i);
@@ -164,18 +164,18 @@ static int backup_files_replicate(const Seq *files)
                 && WEXITSTATUS(status) != CF_CHECK_LMDB_CORRUPT_PAGE)
             {
                 Log(LOG_LEVEL_ERR, "Failed to backup file '%s'", file);
-                ret++;
+                corrupted++;
             }
             if (WIFSIGNALED(status))
             {
                 Log(LOG_LEVEL_ERR, "Failed to backup file '%s', child process signaled (%d)",
                     file, WTERMSIG(status));
-                ret++;
+                corrupted++;
             }
         }
         free(dest_file);
     }
-    return ret;
+    return corrupted;
 }
 
 /**

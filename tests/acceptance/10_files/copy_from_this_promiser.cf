@@ -1,0 +1,92 @@
+#!/var/cfengine/bin/cf-agent -f-
+body common control
+{
+        inputs => { "../default.cf.sub" };
+        bundlesequence  => { default("$(this.promise_filename)") };
+        version => "1.0";
+}
+
+
+bundle agent init {
+  vars:
+      "ROOT" string => "/tmp/CFE-2489";
+      "SOURCE" string => "$(ROOT)/SOURCE";
+      "use_bundles"
+        slist => { "bundle_uses_copy_from_without_param",
+                   "bundle_uses_copy_from_with_param" };
+
+  files:
+      "$(init.ROOT)/$(use_bundles)/." create => "true";
+
+      # Setup source files to copy_from
+      "$(init.ROOT)/SOURCE/$(init.ROOT)/$(use_bundles)/file.txt"
+        create => "true";
+}
+bundle agent test {
+  meta:
+      "description" -> { "CFE-2489" }
+        string => "Test that this.promiser holds the correct value in a copy_from body that uses parameters";
+
+      "test_soft_fail"
+        string => "any",
+        meta => { "CFE-2489" };
+
+  methods:
+      "XXX" usebundle => $(init.use_bundles);
+}
+
+bundle agent bundle_uses_copy_from_without_param {
+
+  files:
+
+      # As expected, when a copy_from promise uses a non-parameterized body the
+      # this.promiser context is as expected (points to the promised file).
+
+      "$(init.ROOT)/$(this.bundle)/file.txt"
+        copy_from => my_copy_without_param();
+
+}
+body copy_from my_copy_without_param() {
+        source  => "$(init.ROOT)/SOURCE/$(this.promiser)";
+        compare => "digest";
+}
+
+bundle agent bundle_uses_copy_from_with_param {
+
+  files:
+
+      # Oddly, when a copy_from promise uses a parameterized body, the
+      # this.promiser context does not contain the promised file, instead, it
+      # seems to contain the parents promiser. So, in this case, it wrongly gets
+      # XXX from the 'test' bundle.
+
+      "$(init.ROOT)/$(this.bundle)/file.txt"
+        copy_from => my_copy_with_param( "use_of_paramater_should_not_change_this_promiser" );
+
+}
+body copy_from my_copy_with_param(root) {
+        source  => "$(init.ROOT)/SOURCE/$(this.promiser)";
+        compare => "digest";
+}
+
+bundle agent check
+{
+
+  classes:
+
+      "pass"
+        expression => filesexist( '[ "$(init.ROOT)/bundle_uses_copy_from_with_param/file.txt",
+                                      "$(init.ROOT)/bundle_uses_copy_from_without_param/file.txt" ]' );
+  reports:
+
+      "$(this.promise_filename) $(with)"
+        with => ifelse( "pass", "Pass", "FAIL");
+}
+
+bundle agent __main__
+{
+  methods:
+      "init";
+      "test";
+      "check";
+}

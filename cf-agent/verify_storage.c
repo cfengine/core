@@ -391,7 +391,7 @@ static bool FileSystemMountedCorrectly(Seq *list, char *name, const Attributes *
 /*********************************************************************/
 
 static bool IsForeignFileSystem(struct stat *childstat, char *dir)
- /* Is FS NFS mounted ? */
+// Is file system NFS / PanFS / CIFS mounted ?
 {
     struct stat parentstat;
     char vbuff[CF_BUFSIZE];
@@ -424,8 +424,10 @@ static bool IsForeignFileSystem(struct stat *childstat, char *dir)
 
             if (!strcmp(entry->mounton, dir))
             {
-                if ((entry->options) && (strstr(entry->options, "nfs")) && \
-                    (strstr(entry->options, "panfs")) && (strstr(entry->options, "cifs")))
+                if ((entry->options != NULL)
+                    && ((strstr(entry->options, "nfs") != NULL)
+                        || (strstr(entry->options, "panfs") != NULL)
+                        || (strstr(entry->options, "cifs") != NULL)))
                 {
                     return true;
                 }

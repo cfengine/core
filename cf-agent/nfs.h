@@ -26,6 +26,7 @@
 #define CFENGINE_NFS_H
 
 #include <cf3.defs.h>
+#include <sequence.h> // Seq
 
 bool LoadMountInfo(Seq *list);
 void DeleteMountInfo(Seq *list);

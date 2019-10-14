@@ -12,12 +12,13 @@
 Makefile.in
 stamp-h1
 
-# Created by autogen.sh
+# Created by autogen.sh / configure:
 /CFVERSION
 /aclocal.m4
 /autom4te.cache
 /compile
 /config.guess
+/config.cache
 /config.log
 /config.status
 /config.sub
@@ -40,8 +41,10 @@ stamp-h1
 /examples/Makefile
 /ext/Makefile
 /libcfnet/Makefile
+/libcompat/Makefile
 /libenv/Makefile
 /libpromises/Makefile
+/libutils/Makefile
 /misc/Makefile
 /tests/Makefile
 /tests/acceptance/25_cf-execd/Makefile

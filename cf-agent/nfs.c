@@ -48,8 +48,7 @@ static int FSTAB_EDITS = 0; /* GLOBAL_X */
 static Item *FSTABLIST = NULL; /* GLOBAL_X */
 
 static void GetHostAndSource(const char *buf, char *host, char *source);
-bool CheckFSType(const char* mount_str, const char* fs_type);
-bool LoadMountInfo(Seq *list);
+
 static void AugmentMountInfo(Seq *list, char *host, char *source, char *mounton, char *options);
 static int MatchFSInFstab(char *match);
 static void DeleteThisItem(Item **liststart, Item *entry);
@@ -132,16 +131,21 @@ static const char *const VMOUNTOPTS[] =
 static void GetHostAndSource(const char *buf, char *host, char *source)
 /* Extracts from buffer host & source of nfs, cifs and panfs network systems */
 {
-    int index = 0, index2 = 0, slash_count = 0;
+    int index = 0; // Index for buf and host
+    int source_index = 0;
+    size_t slashes = 0;
 
     // panfs & cifs
-    if (strncmp(buf, "panfs://", 8) == 0 || strncmp(buf, "//", 2) == 0)
+    if (StringStartsWith(buf, "panfs://") || StringStartsWith(buf, "//"))
     {
         // copy host
-        while(slash_count != 3)
+        while (slashes != 3)
         {
+            // TODO: Add example of what this string looks like
             if (buf[index] == '/' || buf[index] == '\\')
-                slash_count++;
+            {
+                slashes++;
+            }
             host[index] = buf[index];
             index++;
         }
@@ -150,7 +154,7 @@ static void GetHostAndSource(const char *buf, char *host, char *source)
     // nfs
     else
     {
-        while(buf[index] != ':')
+        while (buf[index] != ':')
         {
             host[index] = buf[index];
             index++;
@@ -160,31 +164,10 @@ static void GetHostAndSource(const char *buf, char *host, char *source)
 
     // copy source
     while ((buf[index] != '\0') && (buf[index] != ' '))
-        source[index2++] = buf[index++];
-    source[index2] = '\0';
-}
-
-bool CheckFSType(const char* mount_str, const char* fs_type)
-/* Checks if specified file system type is present in a mount line */
-{
-    bool fs_exists = false;
-    char *buf, *token;
-
-    buf = strdup(mount_str);
-    token = strtok(buf, " ");
-
-    while(token != NULL)
     {
-        if (strcmp(token, fs_type) == 0)
-        {
-            fs_exists = true;
-            break;
-        }
-        token = strtok(NULL, " ");
+        source[source_index++] = buf[index++];
     }
-    free(buf);
-
-    return fs_exists;
+    source[source_index] = '\0';
 }
 
 bool LoadMountInfo(Seq *list)
@@ -193,7 +176,8 @@ bool LoadMountInfo(Seq *list)
 {
     FILE *pp;
     char buf1[CF_BUFSIZE], buf2[CF_BUFSIZE], buf3[CF_BUFSIZE];
-    int i, nfs = false, panfs = false, cifs = false;
+    int i;
+    bool nfs = false, panfs = false, cifs = false;
 
     // get mount command without parameters
     for (i = 0; VMOUNTCOMM[VSYSTEMHARDCLASS][i] != ' '; i++)
@@ -235,6 +219,26 @@ bool LoadMountInfo(Seq *list)
             }
         }
 
+        Seq *words = SeqStringFromString(vbuff, ' ');
+
+        if (SeqStringContains(words, "panfs"))
+        {
+            panfs = true;
+        }
+        else if (SeqStringContains(words, "nfs"))
+        {
+            nfs = true;
+        }
+        else if (SeqStringContains(words, "cifs"))
+        {
+            cifs = true;
+        }
+
+        SeqDestroy(words);
+
+        // security note: buff is CF_BUFSIZE, so that is the max that can be written to buf1, buf2 or buf3
+        sscanf(vbuff, "%s%s%s", buf1, buf2, buf3);
+
         if ((vbuff[0] == '\0') || (vbuff[0] == '\n'))
         {
             break;
@@ -270,31 +274,11 @@ bool LoadMountInfo(Seq *list)
             return false;
         }
 
-        if (CheckFSType(vbuff, "panfs"))
-        {
-            panfs = true;
-        }
-        else if (CheckFSType(vbuff, "nfs"))
-        {
-            nfs = true;
-        }
-        else if (CheckFSType(vbuff, "cifs"))
-        {
-            cifs = true;
-        }
-        else
-        {
-            continue;
-        }
- 
-        // security note: buff is CF_BUFSIZE, so that is the max that can be written to buf1, buf2 or buf3
-        sscanf(vbuff, "%s%s%s", buf1, buf2, buf3);
-
-
         // host: max FQDN is 255 chars (max IPv6 with IPv4 tunneling is 45 chars)
         // source, mounton: hardcoding max path length to 1023; longer is very unlikely
         char host[256], source[1024], mounton[1024];
         host[0] = source[0] = mounton[0] = '\0';
+
 
 #if defined(__sun) || defined(__hpux)
         if (IsAbsoluteFileName(buf3) && !cifs)
@@ -304,7 +288,14 @@ bool LoadMountInfo(Seq *list)
         }
         else
         {
-            GetHostAndSource(buf1, host, source);
+            if (cifs || panfs)
+            {
+                GetHostAndSource(buf1, host, source);
+            }
+            else
+            {
+                sscanf(buf1, "%255[^:]:%1023s", host, source);
+            }
             strlcpy(mounton, buf1, sizeof(mounton));
         }
 #elif defined(_AIX)
@@ -329,13 +320,22 @@ bool LoadMountInfo(Seq *list)
 #else
         if (IsAbsoluteFileName(buf1) && !cifs)
         {
-            Log(LOG_LEVEL_VERBOSE, "SETTING LOCALHOST");
+            Log(LOG_LEVEL_VERBOSE,
+                "'%s' is a local absolute file name, setting host to localhost",
+                buf1);
             strlcpy(host, "localhost", sizeof(host));
             strlcpy(mounton, buf3, sizeof(mounton));
         }
         else
         {
-            GetHostAndSource(buf1, host, source);
+            if (cifs || panfs)
+            {
+                GetHostAndSource(buf1, host, source);
+            }
+            else
+            {
+                sscanf(buf1, "%255[^:]:%1023s", host, source);
+            }
             strlcpy(mounton, buf3, sizeof(mounton));
         }
 #endif
@@ -346,11 +346,11 @@ bool LoadMountInfo(Seq *list)
         {
             AugmentMountInfo(list, host, source, mounton, "panfs");
         }
-        else if(nfs)
+        else if (nfs)
         {
             AugmentMountInfo(list, host, source, mounton, "nfs");
         }
-        else if(cifs)
+        else if (cifs)
         {
             AugmentMountInfo(list, host, source, mounton, "cifs");
         }
@@ -649,12 +649,11 @@ PromiseResult VerifyMount(EvalContext *ctx, char *name, Attributes a, const Prom
     PromiseResult result = PROMISE_RESULT_NOOP;
     if (!DONTDO)
     {
-
-        if (strcmp(a.mount.mount_type, "panfs") == 0)
+        if (StringSafeEqual(a.mount.mount_type, "panfs"))
         {
-	    snprintf(comm, CF_BUFSIZE, "%s -t panfs -o %s %s%s %s", CommandArg0(VMOUNTCOMM[VSYSTEMHARDCLASS]), opts, host, rmountpt, mountpt);
+            snprintf(comm, CF_BUFSIZE, "%s -t panfs -o %s %s%s %s", CommandArg0(VMOUNTCOMM[VSYSTEMHARDCLASS]), opts, host, rmountpt, mountpt);
         }
-        else if(strcmp(a.mount.mount_type, "cifs") == 0)
+        else if (StringSafeEqual(a.mount.mount_type, "cifs"))
         {
             snprintf(comm, CF_BUFSIZE, "%s -t cifs -o %s %s%s %s", CommandArg0(VMOUNTCOMM[VSYSTEMHARDCLASS]), opts, host, rmountpt, mountpt);
         }

@@ -54,8 +54,7 @@ db_load_LDADD = ../unit/libdb.la
 
 
 lastseen_load_SOURCES = lastseen_load.c \
-	$(srcdir)/../../libpromises/lastseen.c \
-	$(srcdir)/../../libntech/libutils/statistics.c
+	$(srcdir)/../../libpromises/lastseen.c
 lastseen_load_LDADD = ../unit/libdb.la ../../libpromises/libpromises.la
 endif
 

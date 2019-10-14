@@ -51,28 +51,13 @@ AM_CFLAGS = $(PTHREAD_CFLAGS)
 
 check_LTLIBRARIES = libtest.la
 libtest_la_SOURCES = cmockery.c cmockery.h schema.h test.c test.h \
-	../../libntech/libutils/alloc.c \
 	../../libpromises/patches.c \
-	../../libpromises/constants.c \
-	../../libntech/libutils/known_dirs.c \
-	../../libntech/libutils/map.c \
-	../../libntech/libutils/array_map.c \
-	../../libntech/libutils/hash.c \
-	../../libntech/libutils/hash_map.c
+	../../libpromises/constants.c
 
 libtest_la_LIBADD = ../../libntech/libcompat/libcompat.la
 
 check_LTLIBRARIES += libstr.la
-libstr_la_SOURCES = \
-	../../libntech/libutils/buffer.c \
-	../../libntech/libutils/pcre_wrap.c \
-	../../libntech/libutils/encode.c \
-	../../libntech/libutils/logging.c \
-	../../libntech/libutils/misc_lib.c \
-	../../libntech/libutils/regex.c \
-	../../libntech/libutils/sequence.c \
-	../../libntech/libutils/string_lib.c \
-	../../libntech/libutils/writer.c
+libstr_la_SOURCES =
 libstr_la_LIBADD = libtest.la
 
 
@@ -83,10 +68,7 @@ libdb_la_SOURCES = db_stubs.c \
 	../../libpromises/dbm_tokyocab.c \
 	../../libpromises/dbm_lmdb.c \
 	../../libpromises/dbm_migration.c \
-	../../libpromises/dbm_migration_lastseen.c \
-	../../libntech/libutils/logging.c \
-	../../libntech/libutils/mutex.c \
-	../../libntech/libutils/cleanup.c
+	../../libpromises/dbm_migration_lastseen.c
 if HPUX
 libdb_la_SOURCES += ../../libpromises/cf3globals.c
 endif
@@ -260,14 +242,12 @@ db_concurrent_test_LDADD = libdb.la
 
 lastseen_test_SOURCES = lastseen_test.c \
 	../../libpromises/item_lib.c \
-	../../libpromises/lastseen.c \
-	../../libntech/libutils/statistics.c
+	../../libpromises/lastseen.c
 #lastseen_test_CPPFLAGS = $(libdb_la_CPPFLAGS)
 lastseen_test_LDADD = libdb.la ../../libpromises/libpromises.la
 
 lastseen_migration_test_SOURCES = lastseen_migration_test.c \
 	../../libpromises/lastseen.c \
-	../../libntech/libutils/statistics.c \
 	../../libpromises/item_lib.c
 #lastseen_migration_test_CPPFLAGS = $(libdb_la_CPPFLAGS)
 lastseen_migration_test_LDADD = libdb.la ../../libpromises/libpromises.la
@@ -318,8 +298,7 @@ check_PROGRAMS += linux_process_test
 
 linux_process_test_SOURCES = linux_process_test.c \
 	../../libpromises/process_unix.c \
-	../../libpromises/process_linux.c \
-	../../libntech/libutils/file_lib.c
+	../../libpromises/process_linux.c
 linux_process_test_LDADD = libtest.la ../../libntech/libutils/libutils.la
 
 endif
@@ -333,8 +312,7 @@ set_domainname_test_LDFLAGS = -Wl,-bexpall
 evalfunction_test_LDFLAGS = -Wl,-bexpall
 aix_process_test_SOURCES = aix_process_test.c \
 	../../libpromises/process_unix.c \
-	../../libpromises/process_aix.c \
-	../../libntech/libutils/file_lib.c
+	../../libpromises/process_aix.c
 aix_process_test_LDADD = libtest.la ../../libntech/libutils/libutils.la
 
 endif
@@ -345,8 +323,7 @@ check_PROGRAMS += solaris_process_test
 
 solaris_process_test_SOURCES = solaris_process_test.c \
 	../../libpromises/process_unix.c \
-	../../libpromises/process_solaris.c \
-	../../libntech/libutils/file_lib.c
+	../../libpromises/process_solaris.c
 solaris_process_test_LDADD = libtest.la ../../libntech/libutils/libutils.la
 
 endif

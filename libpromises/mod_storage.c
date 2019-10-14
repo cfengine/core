@@ -43,7 +43,7 @@ static const ConstraintSyntax mount_constraints[] =
 {
     CONSTRAINT_SYNTAX_GLOBAL,
     ConstraintSyntaxNewBool("edit_fstab", "true/false add or remove entries to the file system table (\"fstab\"). Default value: false", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewOption("mount_type", "nfs,nfs2,nfs3,nfs4", "Protocol type of remote file system", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("mount_type", "nfs,nfs2,nfs3,nfs4,panfs,cifs", "Protocol type of remote file system", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("mount_source", CF_ABSPATHRANGE, "Path of remote file system to mount", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("mount_server", "", "Hostname or IP or remote file system server", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("mount_options", "", "List of option strings to add to the file system table (\"fstab\")", SYNTAX_STATUS_NORMAL),

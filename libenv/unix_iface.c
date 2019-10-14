@@ -30,6 +30,7 @@
 #include <misc_lib.h>
 #include <communication.h>
 #include <string_lib.h>
+#include <string_sequence.h>                             /* SeqStringFromString */
 #include <regex.h>                                       /* StringMatchFull */
 #include <files_interfaces.h>
 #include <files_names.h>
@@ -595,8 +596,6 @@ static void FindV6InterfacesInfo(EvalContext *ctx, Rlist **interfaces, Rlist **h
     assert(interfaces != NULL);
     assert(hardware != NULL);
 
-    UNUSED(hardware); // TODO: add MAC addresses based on "ether" lines
-
     FILE *pp = NULL;
 
 /* Whatever the manuals might say, you cannot get IPV6
@@ -675,6 +674,56 @@ static void FindV6InterfacesInfo(EvalContext *ctx, Rlist **interfaces, Rlist **h
                 assert(ifconfig_line[dst_length] == ':');
                 assert(current_interface[dst_length] == '\0');
             }
+        }
+
+
+        const char *const stripped_ifconfig_line =
+            TrimWhitespace(ifconfig_line);
+        if (StringStartsWith(stripped_ifconfig_line, "ether "))
+        {
+            Seq *const ether_line =
+                SeqStringFromString(stripped_ifconfig_line, ' ');
+            const size_t length = SeqLength(ether_line);
+
+            if (length < 2)
+            {
+                Log(LOG_LEVEL_ERR,
+                    "Failed to parse hw_mac address for: %s",
+                    current_interface);
+            }
+            else
+            {
+                const char *const hw_mac = SeqAt(ether_line, 1);
+
+                if (!RlistContainsString(*hardware, hw_mac))
+                {
+                    Log(LOG_LEVEL_VERBOSE,
+                        "Adding MAC address: %s for %s",
+                        hw_mac,
+                        current_interface);
+
+                    RlistAppend(hardware, hw_mac, RVAL_TYPE_SCALAR);
+                    assert(RlistContainsString(*hardware, hw_mac));
+
+                    char variable_name[CF_MAXVARSIZE];
+
+                    snprintf(
+                        variable_name,
+                        sizeof(variable_name),
+                        "hardware_mac[%s]",
+                        CanonifyName(current_interface));
+
+                    EvalContextVariablePutSpecial(
+                        ctx,
+                        SPECIAL_SCOPE_SYS,
+                        variable_name,
+                        hw_mac,
+                        CF_DATA_TYPE_STRING,
+                        "source=agent,derived-from=ifconfig");
+                }
+            }
+
+            SeqDestroy(ether_line);
         }
 
         if (strcasestr(ifconfig_line, "inet6"))

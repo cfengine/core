@@ -35,6 +35,7 @@ AM_CPPFLAGS = $(CORE_CPPFLAGS) \
 	-I$(srcdir)/../../cf-agent \
 	-I$(srcdir)/../../cf-execd \
 	-I$(srcdir)/../../cf-key \
+	-I$(srcdir)/../../cf-check \
 	-DTESTDATADIR='"$(srcdir)/data"'
 
 LDADD = ../../libpromises/libpromises.la libtest.la
@@ -84,6 +85,13 @@ libdb_la_SOURCES = db_stubs.c \
 	../../libpromises/dbm_lmdb.c \
 	../../libpromises/dbm_migration.c \
 	../../libpromises/dbm_migration_lastseen.c \
+	../../libpromises/global_mutex.c \
+	../../cf-check/backup.c \
+	../../cf-check/diagnose.c \
+	../../cf-check/lmdump.c \
+	../../cf-check/repair.c \
+	../../cf-check/replicate_lmdb.c \
+	../../cf-check/utilities.c \
 	../../libntech/libutils/logging.c \
 	../../libntech/libutils/mutex.c \
 	../../libntech/libutils/cleanup.c

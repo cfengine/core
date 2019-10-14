@@ -69,6 +69,9 @@ bool OpenSubDB(DBHandle **dbp, dbid id, const char *sub_name);
 bool CleanDB(DBHandle *handle);
 void CloseDB(CF_DB *dbp);
 
+DBHandle *GetDBHandleFromFilename(const char *db_file_name);
+time_t GetDBOpenTimestamp(const DBHandle *handle);
+
 bool HasKeyDB(CF_DB *dbp, const char *key, int key_size);
 int ValueSizeDB(CF_DB *dbp, const char *key, int key_size);
 bool ReadComplexKeyDB(CF_DB *dbp, const char *key, int key_size, void *dest, int destSz);

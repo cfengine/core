@@ -702,8 +702,7 @@ static void FindV6InterfacesInfo(EvalContext *ctx, Rlist **interfaces, Rlist **h
                         hw_mac,
                         current_interface);
 
-                    RlistAppend(hardware, hw_mac, RVAL_TYPE_SCALAR);
-                    assert(RlistContainsString(*hardware, hw_mac));
+                    RlistAppendString(hardware, hw_mac);
 
                     char variable_name[CF_MAXVARSIZE];
 
@@ -769,18 +768,12 @@ static void FindV6InterfacesInfo(EvalContext *ctx, Rlist **interfaces, Rlist **h
                             "inventory,attribute_name=none,source=agent");
 
                         // Add IPv6 address to sys.ip_addresses
-                        RlistAppendScalar(ips, ip->name);
-                        assert(RlistContainsString(*ips, ip->name));
+                        RlistAppendString(ips, ip->name);
 
                         if (!RlistContainsString(
                                 *interfaces, current_interface))
                         {
-                            RlistAppend(
-                                interfaces,
-                                current_interface,
-                                RVAL_TYPE_SCALAR);
-                            assert(RlistContainsString(
-                                *interfaces, current_interface));
+                            RlistAppendString(interfaces, current_interface);
                         }
                     }
                 }

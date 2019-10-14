@@ -542,6 +542,15 @@ Rlist *RlistAppendScalar(Rlist **start, const char *scalar)
     return RlistAppendRval(start, RvalCopyScalar((Rval) { (char *)scalar, RVAL_TYPE_SCALAR }));
 }
 
+Rlist *RlistAppendString(Rlist **start, const char *string)
+{
+    Rlist *l = RlistAppendScalar(start, string);
+
+    assert(RlistContainsString(l, string));
+
+    return l;
+}
+
 // NOTE: Copies item, does NOT take ownership
 Rlist *RlistAppend(Rlist **start, const void *item, RvalType type)
 {

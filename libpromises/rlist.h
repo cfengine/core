@@ -89,6 +89,7 @@ Rlist *RlistAppendScalar(Rlist **start, const char *scalar);
 Rlist *RlistPrepend(Rlist **start, const void *item, RvalType type);
 Rlist *RlistAppend(Rlist **start, const void *item, RvalType type);
 Rlist *RlistAppendAllTypes(Rlist **start, const void *item, RvalType type, bool all_types);
+Rlist *RlistAppendString(Rlist **start, const char *string);
 
 Rlist *RlistFromSplitString(const char *string, char sep);
 Rlist *RlistFromStringSplitLines(const char *string, bool detect_crlf);

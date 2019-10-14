@@ -33,6 +33,7 @@
 #include <misc_lib.h>
 #include <known_dirs.h>
 #include <string_lib.h>
+#include <time.h>          /* time() */
 
 
 static int DBPathLock(const char *filename);
@@ -54,6 +55,10 @@ struct DBHandle_
 
     /* This lock protects initialization of .priv element, and .refcount manipulation */
     pthread_mutex_t lock;
+
+    /* Record when the DB was opened (to check if possible corruptions are
+     * already repaired) */
+    time_t open_tstamp;
 };
 
 struct DBCursor_
@@ -349,6 +354,8 @@ void DBSetMaximumConcurrentTransactions(int max_txn)
 static inline
 bool OpenDBInstance(DBHandle **dbp, dbid id, DBHandle *handle)
 {
+    assert(handle != NULL);
+
     ThreadLock(&handle->lock);
     if (handle->refcount == 0)
     {
@@ -356,6 +363,7 @@ bool OpenDBInstance(DBHandle **dbp, dbid id, DBHandle *handle)
 
         if(lock_fd != -1)
         {
+            handle->open_tstamp = time(NULL);
             handle->priv = DBPrivOpenDB(handle->filename, id);
 
             if (handle->priv == DB_PRIV_DATABASE_BROKEN)
@@ -377,6 +385,7 @@ bool OpenDBInstance(DBHandle **dbp, dbid id, DBHandle *handle)
             {
                 DBPrivCloseDB(handle->priv);
                 handle->priv = NULL;
+                handle->open_tstamp = -1;
             }
         }
     }
@@ -414,8 +423,35 @@ bool OpenDB(DBHandle **dbp, dbid id)
     return OpenDBInstance(dbp, id, handle);
 }
 
+/**
+ * @db_file_name Absolute path of the DB file
+ */
+DBHandle *GetDBHandleFromFilename(const char *db_file_name)
+{
+    ThreadLock(&db_handles_lock);
+    for(dbid id=0; id < dbid_max; id++)
+    {
+        if (StringSafeEqual(db_handles[id].filename, db_file_name))
+        {
+            ThreadUnlock(&db_handles_lock);
+            return &(db_handles[id]);
+        }
+    }
+    ThreadUnlock(&db_handles_lock);
+    return NULL;
+}
+
+
+time_t GetDBOpenTimestamp(const DBHandle *handle)
+{
+    assert(handle != NULL);
+    return handle->open_tstamp;
+}
+
 void CloseDB(DBHandle *handle)
 {
+    assert(handle != NULL);
+
     /* Skip in case of nested locking, for example signal handler.
      * DB behaviour becomes erratic otherwise (CFE-1996). */
     ThreadLock(&handle->lock);
@@ -433,6 +469,7 @@ void CloseDB(DBHandle *handle)
         if (handle->refcount == 0)
         {
             DBPrivCloseDB(handle->priv);
+            handle->open_tstamp = -1;
         }
     }
 
@@ -545,7 +582,7 @@ static int DBPathLock(const char *filename)
         return -1;
     }
 
-    if (ExclusiveLockFile(fd) == -1)
+    if (ExclusiveLockFile(fd, true) == -1)
     {
         Log(LOG_LEVEL_ERR, "Unable to lock database lock file '%s'. (fcntl(F_SETLK): %s)", filename_lock, GetErrorStr());
         free(filename_lock);

@@ -411,6 +411,22 @@ Seq *SeqStringFromString(const char *str, char delimiter)
     return seq;
 }
 
+bool SeqStringContains(const Seq *const seq, const char *const str)
+{
+    assert(seq != NULL);
+    assert(str != NULL);
+
+    size_t length = SeqLength(seq);
+    for (int i = 0; i < length; ++i)
+    {
+        if (StringSafeEqual(str, SeqAt(seq, i)))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 int SeqStringLength(Seq *seq)
 {
     assert (seq);

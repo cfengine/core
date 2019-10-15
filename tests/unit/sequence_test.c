@@ -416,7 +416,7 @@ static void test_get_range(void)
     SeqDestroy(seq);
 }
 
-static void test_string_length(void)
+static void test_seq_string_length(void)
 {
     Seq *strings = SeqNew(10, NULL);
     assert_int_equal(SeqStringLength(strings), 0);
@@ -428,6 +428,41 @@ static void test_string_length(void)
     SeqAppend(strings, "9");
     SeqAppend(strings, "");
     assert_int_equal(SeqStringLength(strings), 9);
+    SeqDestroy(strings);
+}
+
+static void test_seq_string_contains(void)
+{
+    Seq *strings = SeqNew(10, NULL);
+    assert_false(SeqStringContains(strings, ""));
+    assert_false(SeqStringContains(strings, "a"));
+    assert_false(SeqStringContains(strings, " "));
+    assert_false(SeqStringContains(strings, "nosuch"));
+
+    SeqAppend(strings, "a");
+    assert_false(SeqStringContains(strings, ""));
+    assert_true(SeqStringContains(strings, "a"));
+    assert_false(SeqStringContains(strings, " "));
+    assert_false(SeqStringContains(strings, "nosuch"));
+
+    SeqAppend(strings, " ");
+    assert_false(SeqStringContains(strings, ""));
+    assert_true(SeqStringContains(strings, "a"));
+    assert_true(SeqStringContains(strings, " "));
+    assert_false(SeqStringContains(strings, "nosuch"));
+
+    SeqAppend(strings, "");
+    assert_true(SeqStringContains(strings, ""));
+    assert_true(SeqStringContains(strings, "a"));
+    assert_true(SeqStringContains(strings, " "));
+    assert_false(SeqStringContains(strings, "nosuch"));
+
+    SeqAppend(strings, "abcdefghijklmnopqrstuvwxyz");
+    assert_true(SeqStringContains(strings, "abcdefghijklmnopqrstuvwxyz"));
+    assert_false(SeqStringContains(strings, "abcdefghijklmnopqrstuvwxyz "));
+    assert_false(SeqStringContains(strings, "abcdefghijklmnopqrstuvwxy"));
+    assert_false(SeqStringContains(strings, "abcdefghijklmnopqrstuvwxyy"));
+
     SeqDestroy(strings);
 }
 
@@ -450,7 +485,8 @@ int main()
         unit_test(test_reverse),
         unit_test(test_len),
         unit_test(test_get_range),
-        unit_test(test_string_length)
+        unit_test(test_seq_string_length),
+        unit_test(test_seq_string_contains)
     };
 
     return run_tests(tests);

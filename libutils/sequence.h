@@ -229,6 +229,10 @@ Seq *SeqGetRange(const Seq *seq, size_t start, size_t end);
   */
 Seq *SeqStringFromString(const char *str, char delimiter);
 
+/**
+ @brief Determine if string sequence contains a string
+ */
+bool SeqStringContains(const Seq *seq, const char *str);
 
 /**
  * @brief Return the total string length of a sequence of strings

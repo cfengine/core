@@ -1,8 +1,9 @@
 import argparse
 
 from cf_remote import log
-from cf_remote import commands
-from cf_remote.utils import user_error, exit_success, expand_list_from_file, is_file_string, strip_user
+from cf_remote import commands, paths
+from cf_remote.utils import user_error, exit_success, expand_list_from_file, is_file_string
+from cf_remote.utils import strip_user, read_json
 from cf_remote.packages import Releases
 
 
@@ -150,18 +151,82 @@ def validate_command(command, args):
             user_error("One of --all or NAME required for destroy")
 
 
-def file_or_comma_list(string):
+def is_in_cloud_state(name):
+    if not os.path.exists(paths.CLOUD_STATE_FPATH):
+        return False
+    # else
+    state = read_json(paths.CLOUD_STATE_FPATH)
+    if name in state:
+        return True
+    if ("@" + name) in state:
+        return True
+
+    # search for a host in any of the groups
+    for group in [key for key in state.keys() if key.startswith("@")]:
+        if name in state[group]:
+            return True
+
+    return False
+
+
+def get_cloud_hosts(name, private_ips=False):
+    if not os.path.exists(paths.CLOUD_STATE_FPATH):
+        return []
+
+    state = read_json(paths.CLOUD_STATE_FPATH)
+    group_name = None
+    hosts = []
+    if name.startswith("@") and name in state:
+        # @some_group given and exists
+        group_name = name
+    elif ("@" + name) in state:
+        # group_name given and @group_name exists
+        group_name = "@" + name
+
+    if group_name is not None:
+        for name, info in state[group_name].items():
+            if name == "meta":
+                continue
+            hosts.append(info)
+    else:
+        if name in state:
+            # host_name given and exists at the top level
+            hosts.append(state[name])
+        else:
+            for group_name in [key for key in state.keys() if key.startswith("@")]:
+                if name in state[group_name]:
+                    hosts.append(state[group_name][name])
+
+    ret = []
+    for host in hosts:
+        if private_ips:
+            key = "private_ips"
+        else:
+            key = "public_ips"
+
+        ips = host.get(key, [])
+        if len(ips) > 0:
+            ret.append(ips[0])
+        else:
+            ret.append(None)
+
+    return ret
+
+
+def resolve_hosts(string, single=False, private_ips=False):
     if is_file_string(string):
-        return expand_list_from_file(string)
-    return string.split(",")
+        ret = expand_list_from_file(string)
+    elif is_in_cloud_state(string):
+        ret = get_cloud_hosts(string, private_ips)
+    else:
+        ret = string.split(",")
 
-
-def file_or_single_host(string):
-    assert "," not in string
-    one_list = file_or_comma_list(string)
-    if len(one_list) != 1:
-        user_error("File '{}' must contain exactly 1 hostname or IP".format(string))
-    return one_list[0]
+    if single:
+        if len(ret) != 1:
+            user_error("'{}' must contain exactly 1 hostname or IP".format(string))
+        return ret[0]
+    else:
+        return ret
 
 
 def validate_args(args):
@@ -173,15 +238,15 @@ def validate_args(args):
         user_error("Cannot specify version number in '{}' command".format(args.command))
 
     if args.hosts:
-        args.hosts = file_or_comma_list(args.hosts)
+        args.hosts = resolve_hosts(args.hosts)
     if args.clients:
-        args.clients = file_or_comma_list(args.clients)
+        args.clients = resolve_hosts(args.clients)
     if args.bootstrap:
         args.bootstrap = [
-            strip_user(host_info) for host_info in file_or_comma_list(args.bootstrap)
+            strip_user(host_info) for host_info in resolve_hosts(args.bootstrap, private_ips=True)
         ]
     if args.hub:
-        args.hub = file_or_comma_list(args.hub)
+        args.hub = resolve_hosts(args.hub)
 
     # TODO: use sub-commands for all commands
     # sub-command is stored in a different place

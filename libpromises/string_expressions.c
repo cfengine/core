@@ -24,7 +24,7 @@
 
 #include <cf3.defs.h>
 
-#include <bool.h>
+#include <stdbool.h>
 #include <string_expressions.h>
 #include <misc_lib.h>
 

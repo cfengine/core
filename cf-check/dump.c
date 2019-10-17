@@ -439,23 +439,23 @@ int dump_main(int argc, const char *const *const argv)
         const char *const option = argv[offset];
         offset += 1;
 
-        if (matches_option(option, "--keys", "-k"))
+        if (StringMatchesOption(option, "--keys", "-k"))
         {
             mode = DUMP_KEYS;
         }
-        else if (matches_option(option, "--values", "-v"))
+        else if (StringMatchesOption(option, "--values", "-v"))
         {
             mode = DUMP_VALUES;
         }
-        else if (matches_option(option, "--nice", "-n"))
+        else if (StringMatchesOption(option, "--nice", "-n"))
         {
             mode = DUMP_NICE;
         }
-        else if (matches_option(option, "--simple", "-s"))
+        else if (StringMatchesOption(option, "--simple", "-s"))
         {
             mode = DUMP_SIMPLE;
         }
-        else if (matches_option(option, "--portable", "-p"))
+        else if (StringMatchesOption(option, "--portable", "-p"))
         {
             mode = DUMP_PORTABLE;
         }

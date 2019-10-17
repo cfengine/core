@@ -197,7 +197,7 @@ int repair_main(int argc, const char *const *const argv)
     bool force = false;
     if (argc > 1 && argv[1] != NULL && argv[1][0] == '-')
     {
-        if (matches_option(argv[1], "--force", "-f"))
+        if (StringMatchesOption(argv[1], "--force", "-f"))
         {
             offset++;
             force = true;

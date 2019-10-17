@@ -22,6 +22,7 @@
   included file COSL.txt.
 */
 
+#include <platform.h>
 #include <file_lib.h>
 
 #include <mutex.h>                                            /* ThreadLock */

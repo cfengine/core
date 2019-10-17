@@ -21,11 +21,11 @@
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
+
+#include <platform.h>
 #include <tokyo_check.h>
 
-#ifdef HAVE_CONFIG_H
-#include  <config.h>
-#endif
+#ifdef TCDB
 
 #include <array_map_priv.h>
 #include <hash_map_priv.h>
@@ -33,8 +33,6 @@
 #include <string_lib.h>
 #include <logging.h>
 #include <cf3.defs.h>
-
-#ifdef TCDB
 
 /*
  * The idea behind the following code comes from : copiousfreetime@github
@@ -480,8 +478,12 @@ int CheckTokyoDBCoherence(const char *path)
 }
 
 #else
+
+#include <compiler.h> // ARG_UNUSED
+
 int CheckTokyoDBCoherence(ARG_UNUSED const char *path)
 {
   return 0;
 }
+
 #endif

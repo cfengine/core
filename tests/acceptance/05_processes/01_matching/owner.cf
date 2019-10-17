@@ -1,0 +1,87 @@
+#######################################################
+#
+# Run multiple similar tests for 'process_owner'.
+# We test both expected success and expected failure.
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "ok_list" slist => {
+        "pass_root_1", "pass_root_2", "pass_nouser_3", "pass_nouser_4",
+        "!fail_root_1", "!fail_root_2", "!fail_nouser_3", "!fail_nouser_4"
+      };
+
+  processes:
+      ### 'root' processes:
+      # finding many processes is good
+      ".*"
+        process_select => test_select_owners("root"),
+        process_count => test_range("2", "inf", "pass_root_1", "fail_root_1");
+
+      # looking for a tiny number should fail
+      ".*"
+        process_select => test_select_owners("root"),
+        process_count => test_range("0", "1", "fail_root_2", "pass_root_2");
+
+      ### A hopefully non-existent user:
+      # finding zero processes is good
+      ".*"
+        process_select => test_select_owners("NoSuchUserWeHope"),
+        process_count => test_range("0", "0", "pass_nouser_3", "fail_nouser_3");
+
+      # looking for one or more should fail
+      ".*"
+        process_select => test_select_owners("NoSuchUserWeHope"),
+        process_count => test_range("1", "inf", "fail_nouser_4", "pass_nouser_4");
+
+}
+
+body process_count test_range(min, max, class_good, class_bad)
+{
+      match_range => irange("$(min)", "$(max)");
+      in_range_define => { "$(class_good)" };
+      out_of_range_define => { "$(class_bad)" };
+}
+
+body process_select test_select_owners(owner)
+{
+      process_owner => { "$(owner)" };
+      process_result => "process_owner";
+}
+
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "ok" and => { @(test.ok_list) };
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+
+### PROJECT_ID: core
+### CATEGORY_ID: 30

@@ -1,0 +1,92 @@
+#!/var/cfengine/bin/cf-agent -f-
+body common control
+{
+        inputs => { "../../default.cf.sub" };
+        bundlesequence  => { default("$(this.promise_filename)") };
+        version => "1.0";
+}
+bundle agent init
+{
+  vars:
+      "foo_usemodule" string =>
+"#!/bin/sh
+echo '=mystring=foo99'
+echo '+class_from_classes_usemodule'
+exit 1
+";
+
+      "foo_commands_module" string =>
+"#!/bin/sh
+echo '=mystring=foo99'
+echo '+class_from_commands_module'
+exit 1
+";
+
+  files:
+      "${sys.workdir}/modules/foo-usemodule"
+        create => 'true',
+        perms => m( 700 ),
+        edit_defaults => empty,
+        edit_line => append_if_no_line( ${foo_usemodule} );
+
+      "${sys.workdir}/modules/foo-commands_module"
+        create => 'true',
+        perms => m( 700 ),
+        edit_defaults => empty,
+        edit_line => append_if_no_line( ${foo_commands_module} );
+}
+
+bundle agent test
+{
+  meta:
+    "description" -> { "CFE-942" }
+      string => "Test that when a module executed by usemodule() returns nonzero, it's not interpreted as successful";
+
+      "test_soft_fail"
+        string => "any",
+        meta => { "CFE-942" },
+        comment => "usemodule seems to return true no matter if the module exists returning 0 or nonzero";
+
+  classes:
+
+      # Since the module exits with non zero, we should not get this class
+
+      "usemodule_expect_no_class_defined_because_return_nonzero"
+        expression => usemodule( "foo-usemodule", "" ),
+        scope => "namespace",
+        if => isexecutable( "$(sys.workdir)/foo-usemodule" );
+
+      # Since the module exists non zero, we should get this class
+      "usemodule_expect_class_defined_because_return_nonzero"
+        not => usemodule( "foo-usemodule", "" ),
+        scope => "namespace",
+        if => isexecutable( "$(sys.workdir)/foo-usemodule" );
+
+  commands:
+      "$(sys.workdir)/modules/foo-commands_module"
+        module => "true",
+        if => isexecutable( $(this.promiser) );
+}
+bundle agent check
+{
+  methods:
+    usemodule_expect_no_class_defined_because_return_nonzero.!usemodule_expect_class_defined_because_return_nonzero::
+      "FAIL" usebundle => dcs_fail( $(this.promise_filename) );
+
+    !usemodule_expect_class_defined_because_return_nonzero.usemodule_expect_class_defined_because_return_nonzero::
+      "Pass" usebundle => dcs_pass( $(this.promise_filename) );
+
+  reports:
+
+    DEBUG::
+      # Since the module exists nonzero, we don't expect that it communicated things back to the agent
+      "The command execution executed as a module that did not return 0 defined a class (unexpectedly)"
+        if => "class_from_commands_module";
+
+      "Did not expect that a class defined as the result of a classes promise usemodule would be defined if the module used returned nonzero"
+        if => "usemodule_expect_no_class_defined_because_return_nonzero";
+
+      "expected class to be defined based on negative result from usemodule classes promise"
+        if => "usemodule_expect_class_defined_because_return_nonzero";
+
+}

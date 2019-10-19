@@ -160,9 +160,13 @@ check_PROGRAMS = \
 	strlist_test \
 	addr_lib_test \
 	policy_server_test \
-	split_process_line_test \
 	new_packages_promise_test \
 	iteration_test
+
+if !HAVE_PS_VIA_PROC
+check_PROGRAMS += \
+    split_process_line_test
+endif
 
 if HAVE_AVAHI_CLIENT
 if HAVE_AVAHI_COMMON

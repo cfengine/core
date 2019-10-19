@@ -1347,6 +1347,18 @@ case "$target_os" in
         ;;
 esac
 
+dnl ######################################################################
+dnl Should "processes_select" use "/proc/<nnn>" rather than "ps" command?
+dnl New at March/2019.  Developing on RHEL6.  Eventually aim to use widely.
+dnl ######################################################################
+
+case "$target_os" in
+   linux*)
+        AM_CONDITIONAL([HAVE_PS_VIA_PROC], [test -f "/proc/1/stat"])
+        ;;
+
+esac
+
 m4_include([m4/cf3_platforms.m4])
 
 dnl #####################################################################

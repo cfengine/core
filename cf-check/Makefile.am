@@ -53,7 +53,8 @@ libcf_check_la_SOURCES = \
 	db_structs.h \
 	dump.c dump.h \
 	utilities.c utilities.h \
-	repair.c repair.h
+	repair.c repair.h \
+	replicate_lmdb.c replicate_lmdb.h
 
 if !BUILTIN_EXTENSIONS
   bin_PROGRAMS = cf-check

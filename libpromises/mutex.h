@@ -32,6 +32,7 @@ extern pthread_mutex_t *cft_count;
 extern pthread_mutex_t *cft_getaddr;
 extern pthread_mutex_t *cft_server_children;
 extern pthread_mutex_t *cft_server_filter;
+extern pthread_mutex_t *cft_db_corruption_lock;
 
 #define ThreadLock(m)     __ThreadLock(m, __func__, __FILE__, __LINE__)
 #define ThreadUnlock(m) __ThreadUnlock(m, __func__, __FILE__, __LINE__)

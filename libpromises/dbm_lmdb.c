@@ -311,6 +311,8 @@ static void HandleLMDBCorruption(MDB_env *env, const char *msg)
 
         exit(EC_CORRUPTION_REPAIR_FAILED);
     }
+    FileLock tstamp_lock = { .fd = fd_tstamp };
+
     int fd_db_lock = safe_open(db_lock_file, O_CREAT|O_RDWR);
     if (fd_db_lock == -1)
     {
@@ -323,20 +325,17 @@ static void HandleLMDBCorruption(MDB_env *env, const char *msg)
 
         exit(EC_CORRUPTION_REPAIR_FAILED);
     }
+    FileLock db_lock = { .fd = fd_db_lock };
 
     int ret;
     bool handle_corruption = true;
 
     /* Make sure we are not holding the DB's lock (potentially needed by some
      * other process for the repair) to avoid deadlocks. */
-    if (ExclusiveLockFileCheck(fd_db_lock))
-    {
-        Log(LOG_LEVEL_DEBUG, "Releasing lock on the '%s' DB", lmdb_file);
-        ExclusiveUnlockFile(fd_db_lock); /* closes fd_db_lock (TODO: fix) */
-        fd_db_lock = safe_open(db_lock_file, O_CREAT|O_RDWR);
-    }
+    Log(LOG_LEVEL_DEBUG, "Releasing lock on the '%s' DB", lmdb_file);
+    ExclusiveFileUnlock(&db_lock, false); /* close=false */
 
-    ret = SharedLockFile(fd_tstamp, true);
+    ret = SharedFileLock(&tstamp_lock, true);
     if (ret == 0)
     {
         if (RepairedAfterOpen(lmdb_file, fd_tstamp))
@@ -346,8 +345,7 @@ static void HandleLMDBCorruption(MDB_env *env, const char *msg)
              * it would just open the new (repaired) LMDB file. */
             handle_corruption = false;
         }
-        SharedUnlockFile(fd_tstamp); /* closes fd_tstamp (TODO: fix) */
-        fd_tstamp = safe_open(tstamp_file, O_CREAT|O_RDWR);
+        SharedFileUnlock(&tstamp_lock, false);
     }
     else
     {
@@ -376,8 +374,8 @@ static void HandleLMDBCorruption(MDB_env *env, const char *msg)
      * contents of the timestamp file again below, while holding the EXCLUSIVE
      * lock. */
 
-    ret = ExclusiveLockFile(fd_tstamp, true);
-    if (ret == -1)
+    ret = ExclusiveFileLock(&tstamp_lock, true);
+    if (ret != 0)
     {
         /* should never happen (we tried to wait), but if it does, just
          * terminate because doing the repair without the lock could be
@@ -399,7 +397,7 @@ static void HandleLMDBCorruption(MDB_env *env, const char *msg)
 
     /* 1. Acquire the lock for the DB to prevent more processes trying to use
      *    it while it is corrupted (wait till the lock is available). */
-    while (ExclusiveLockFile(fd_db_lock, false) == -1)
+    while (ExclusiveFileLock(&db_lock, false) == -1)
     {
         /* busy wait to do the logging */
         Log(LOG_LEVEL_INFO, "Waiting for the lock on the '%s' DB",
@@ -443,14 +441,14 @@ static void HandleLMDBCorruption(MDB_env *env, const char *msg)
     /* 4. Make the repaired DB available for others. Also release the locks
      *    in the opposite order in which they were acquired to avoid
      *    deadlocks. */
-    if (ExclusiveUnlockFile(fd_db_lock) != 0)
+    if (ExclusiveFileUnlock(&db_lock, true) != 0)
     {
         Log(LOG_LEVEL_ERR, "Failed to release the acquired lock for '%s'",
             db_lock_file);
     }
 
     /* 5. Signal that the repair is done (also closes fd_tstamp). */
-    if (ExclusiveUnlockFile(fd_tstamp) != 0)
+    if (ExclusiveFileUnlock(&tstamp_lock, true) != 0)
     {
         Log(LOG_LEVEL_ERR, "Failed to release the acquired lock for '%s'",
             tstamp_file);
@@ -460,7 +458,7 @@ static void HandleLMDBCorruption(MDB_env *env, const char *msg)
     free(db_lock_file);
     free(tstamp_file);
     /* fd_db_lock and fd_tstamp are already closed by the calls to
-     * ExclusiveUnlockFile above. */
+     * ExclusiveFileUnlock above. */
 
     if (repair_successful)
     {

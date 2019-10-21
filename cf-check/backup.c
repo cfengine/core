@@ -188,7 +188,7 @@ int backup_main(int argc, const char *const *const argv)
     bool do_dump = false;
     if (argc > 1 && argv[1] != NULL && argv[1][0] == '-')
     {
-        if (matches_option(argv[1], "--dump", "-d"))
+        if (StringMatchesOption(argv[1], "--dump", "-d"))
         {
             offset++;
             do_dump = true;

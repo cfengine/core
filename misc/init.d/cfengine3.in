@@ -77,6 +77,7 @@ test -f $CFEXECD || exit 0
 SUSE=0
 REDHAT=0
 DEBIAN=0
+AIX=0
 
 # SuSE
 if [ -d /var/lock/subsys ] && [ -f /usr/bin/zypper ]; then
@@ -98,6 +99,11 @@ if [ -f /etc/debian_version ] && [ -f /usr/bin/apt-get ]; then
     else
         LOCKDIR=/var/lock
     fi
+fi
+
+# AIX
+if [ -f /usr/bin/oslevel ]; then
+    AIX=1
 fi
 
 if [ -z "$LOCKDIR" ]; then
@@ -312,7 +318,17 @@ cf_start_daemon()
     elif [ "$DEBIAN" = "1" ] && [ "$SSD" = "0" ]; then
         "$daemon" "$@"
         cf_touch "$LOCKDIR/$base_daemon"
-
+    elif [ "$AIX" = "1" ]; then
+        "$daemon" "$@" && break
+        if [ "$?" != "0" ]; then
+            for retry in 1 2 3; do
+                msg="   retry $retry starting $daemon"
+                printf "$msg"
+                logger -p user.error -t "CFEngine init script" $msg
+                sleep 5
+                "$daemon" "$@" && break
+            done
+        fi
     # All others
     else
         "$daemon" "$@"

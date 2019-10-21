@@ -566,10 +566,16 @@ DBPriv *DBPrivOpenDB(const char *const dbpath, const dbid id)
     }
 
     unsigned int open_flags = MDB_NOSUBDIR;
+#if !defined(_AIX) && !defined(__sun)
+    /* The locks and lastseen (on hubs) DBs are heavily used and using
+     * MDB_NOSYNC increases performance. However, AIX and Solaris often suffer
+     * from some serious issues with consistency (ENT-4002) so it's better to
+     * sacrifice some performance there in favor of stability. */
     if (id == dbid_locks || (GetAmPolicyHub() && id == dbid_lastseen))
     {
         open_flags |= MDB_NOSYNC;
     }
+#endif
 
 #ifdef __hpux
     /*

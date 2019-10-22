@@ -72,7 +72,7 @@ typedef enum
 static const char * const PROTOCOL_VERSION_STRING[CF_PROTOCOL_LATEST + 1] = {
     "undefined",
     "classic",
-    "latest"
+    "tls",
 };
 
 typedef struct

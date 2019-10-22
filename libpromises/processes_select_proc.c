@@ -38,7 +38,7 @@
  *
  * The details of the per-process "/proc/nnn" vary across OSes.
  *
- * The initial draft are based on Linux: RHEL6 and RHEL7.
+ * The initial draft is based on Linux: RHEL6 and RHEL7.
  * It may need "ifdef..." type adjustment on other kernels.
  */
 
@@ -753,7 +753,7 @@ bool LoadProcessTable()
 
     pid_t  pid;
     JsonElement *pdata;
-     while ((dirp = DirRead(dirh)) != NULL)
+    while ((dirp = DirRead(dirh)) != NULL)
     {
         /*
          * Process next entry. Skip non-numeric names as being non-process.

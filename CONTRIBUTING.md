@@ -23,6 +23,65 @@ Merged features and larger changes will be released in the first minor release
 in order to make it to the first minor release.
 
 
+## A possible workflow
+
+If you are already comfortable with Github, you may skip this section.
+
+This is a suggested outline for those unfamiliar with working with Github.
+It does, however, assume a familiarity with the basics of using git
+so it does not attempt to provide every detail of that.
+
+You will be working with three git repositories: the central one on Github,
+your fork on Github and your local clone.
+
+Within Github, make your fork of the central CFEngine repository
+using the fork icon on the
+[Github CFEngine main page](https://github.com/cfengine/core).
+Your fork lives at `https://github.com/my-githud-id/cfengine-core`.
+
+Make your own local clone from the main page.
+Since the middle of 2019 the source code uses a git 'submodule'
+which requires the use of the `--recursive` flag.
+
+```
+git clone --recursive https://github.com/cfengine/core
+```
+
+In your local clone, add a reference to your fork on Github:
+
+```
+git remote add name-for-my-fork https://github.com/my-github-id/cfengine-core
+
+```
+
+Never work in the `master` branch; always use a separate branch for your topic.
+Prepare your topic on this topic-focussed branch.
+When it is ready, push it to your Github fork.
+
+```
+git checkout master # ensure you start from a good reference point
+git checkout mytopic
+./autogen.sh
+edit; check; git add; git commit; etc.
+git push name-for-my-fork mytopic
+```
+
+On your fork at Github you should now see an additional branch `mytopic`.
+This is what you use for the pull request there.
+
+### Occasional housekeeping
+
+From time to time, update your local clone from the central repository
+as a reasonably current baseline,
+and likewise push those changes to your fork:
+
+```
+git checkout master
+git pull origin master
+git push name-for-my-fork master
+```
+
+
 ## Pull Requests
 
 

@@ -137,6 +137,8 @@ static bool SelectProcess(pid_t pid, const JsonElement *pdata,
         return result;
     }
 
+    assert(a != NULL);
+
     StringSet *process_select_attributes = StringSetNew();
 
     Rlist *rp;

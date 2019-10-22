@@ -46,18 +46,15 @@ ProtocolVersion ParseProtocolVersionNetwork(const char *const s)
 
 ProtocolVersion ParseProtocolVersionPolicy(const char *const s)
 {
-    if (s == NULL ||
-        strcmp(s, "0") == 0 ||
-        strcmp(s, "undefined") == 0)
+    if ((s == NULL) || (strcmp(s, "0") == 0) || (strcmp(s, "undefined") == 0))
     {
         return CF_PROTOCOL_UNDEFINED;
     }
-    if (strcmp(s, "1") == 0 ||
-        strcmp(s, "classic") == 0)
+    if ((strcmp(s, "1") == 0) || (strcmp(s, "classic") == 0))
     {
         return CF_PROTOCOL_CLASSIC;
     }
-    else if (strcmp(s, "2") == 0)
+    else if ((strcmp(s, "2") == 0) || (strcmp(s, "tls") == 0))
     {
         return CF_PROTOCOL_TLS;
     }

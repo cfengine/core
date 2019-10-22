@@ -25,6 +25,7 @@
 
 #include <server_tls.h>
 #include <server_common.h>
+#include <protocol.h> // ParseProtocolVersionNetwork()
 
 #include <openssl/err.h>                                   /* ERR_get_error */
 
@@ -311,9 +312,8 @@ bool ServerIdentificationDialog(ConnectionInfo *conn_info,
         return false;
     }
 
-    int version_received = -1;
-    ret = sscanf(input, "CFE_v%d", &version_received);
-    if (ret != 1)
+    ProtocolVersion version_received = ParseProtocolVersionNetwork(input);
+    if (version_received <= CF_PROTOCOL_UNDEFINED)
     {
         Log(LOG_LEVEL_NOTICE,
             "Protocol version negotiation failed! Received: %s",

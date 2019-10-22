@@ -95,8 +95,8 @@ long sys_boot_time = -1;
 /*
  * internal functions
  */
-static int SelectProcRangeMatch(int value, int min, int max);
-static int SelectProcTimeCounterRangeMatch(time_t value, time_t min, time_t max);
+static bool SelectProcRangeMatch(int value, int min, int max);
+static bool SelectProcTimeCounterRangeMatch(time_t value, time_t min, time_t max);
 static bool SelectProcRegexMatch(const char *str, const char *regex, bool anchored);
 
 /***************************************************************************/
@@ -294,7 +294,7 @@ Item *SelectProcesses(const char *process_name, const ProcessSelect *a, bool att
     return result;
 }
 
-static int SelectProcRangeMatch(int value, int min, int max)
+static bool SelectProcRangeMatch(int value, int min, int max)
 {
     if ((min == CF_NOINT) || (max == CF_NOINT))
     {
@@ -304,7 +304,7 @@ static int SelectProcRangeMatch(int value, int min, int max)
     return ((min <= value) && (value <= max)) ? true : false;
 }
 
-static int SelectProcTimeCounterRangeMatch(time_t value, time_t min, time_t max)
+static bool SelectProcTimeCounterRangeMatch(time_t value, time_t min, time_t max)
 {
     if ((min == CF_NOINT) || (max == CF_NOINT))
     {

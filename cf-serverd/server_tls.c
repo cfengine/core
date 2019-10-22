@@ -46,6 +46,7 @@
 
 static SSL_CTX *SSLSERVERCONTEXT = NULL;
 
+#define MAX_ACCEPT_RETRIES 5
 
 /**
  * @param[in]  priv_key private key to use (or %NULL to use the global PRIVKEY)
@@ -470,7 +471,25 @@ bool BasicServerTLSSessionEstablish(ServerConnectionState *conn, SSL_CTX *ssl_ct
     /* Now we are letting OpenSSL take over the open socket. */
     SSL_set_fd(ssl, ConnectionInfoSocket(conn->conn_info));
 
-    int ret = SSL_accept(ssl);
+    int remaining_tries = MAX_ACCEPT_RETRIES;
+    int ret = -1;
+    bool should_retry = true;
+    while ((ret < 0) && should_retry)
+    {
+        ret = SSL_accept(ssl);
+        if (ret < 0)
+        {
+            int code = TLSLogError(ssl, LOG_LEVEL_VERBOSE, "SSL accept failed", ret);
+            should_retry = ((remaining_tries > 0) &&
+                            ((code == SSL_ERROR_WANT_READ) || (code == SSL_ERROR_WANT_WRITE)));
+
+        }
+        if ((ret < 0) && should_retry)
+        {
+            sleep(1);
+            remaining_tries--;
+        }
+    }
     if (ret <= 0)
     {
         TLSLogError(ssl, LOG_LEVEL_ERR,

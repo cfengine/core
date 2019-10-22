@@ -734,33 +734,6 @@ void BundleResolve(EvalContext *ctx, const Bundle *bundle)
     BundleResolvePromiseType(ctx, bundle, "vars", VerifyVarPromise);
 }
 
-ProtocolVersion ProtocolVersionParse(const char *s)
-{
-    if (s == NULL ||
-        strcmp(s, "0") == 0 ||
-        strcmp(s, "undefined") == 0)
-    {
-        return CF_PROTOCOL_UNDEFINED;
-    }
-    if (strcmp(s, "1") == 0 ||
-        strcmp(s, "classic") == 0)
-    {
-        return CF_PROTOCOL_CLASSIC;
-    }
-    else if (strcmp(s, "2") == 0)
-    {
-        return CF_PROTOCOL_TLS;
-    }
-    else if (strcmp(s, "latest") == 0)
-    {
-        return CF_PROTOCOL_LATEST;
-    }
-    else
-    {
-        return CF_PROTOCOL_UNDEFINED;
-    }
-}
-
 /**
  * Evaluate the relevant control body, and set the
  * relevant fields in #ctx and #config.

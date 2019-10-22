@@ -29,6 +29,19 @@
 #include <sequence.h>
 
 /**
+ * Parses the version string sent over network to enum, e.g. "CFE_v1" -> 1
+ */
+ProtocolVersion ParseProtocolVersionNetwork(const char *s);
+
+/**
+ * Parses the version string set in policy to enum, e.g. "classic" -> 1
+ */
+ProtocolVersion ParseProtocolVersionPolicy(const char *s);
+
+// Old name for compatibility (enterprise), TODO remove:
+#define ProtocolVersionParse ParseProtocolVersionPolicy
+
+/**
  * Receives a directory listing from a remote host.
  *
  * The server will use "/var/cfengine" as working directory if absolute path

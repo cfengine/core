@@ -62,6 +62,8 @@ void SetSkipIdentify(bool enabled)
 
 bool IdentifyAgent(ConnectionInfo *conn_info)
 {
+    assert(conn_info != NULL);
+
     char uname[CF_BUFSIZE], sendbuff[CF_BUFSIZE];
     char dnsname[CF_MAXVARSIZE], localip[CF_MAX_IP_LEN];
     int ret;

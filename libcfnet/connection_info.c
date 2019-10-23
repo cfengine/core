@@ -54,12 +54,16 @@ void ConnectionInfoDestroy(ConnectionInfo **info)
 
 ProtocolVersion ConnectionInfoProtocolVersion(const ConnectionInfo *info)
 {
+    assert(info != NULL);
+
     return info ? info->protocol : CF_PROTOCOL_UNDEFINED;
 }
 
 void ConnectionInfoSetProtocolVersion(ConnectionInfo *info, ProtocolVersion version)
 {
-    if (!info)
+    assert(info != NULL);
+
+    if (info ==  NULL)
     {
         return;
     }
@@ -77,12 +81,16 @@ void ConnectionInfoSetProtocolVersion(ConnectionInfo *info, ProtocolVersion vers
 
 int ConnectionInfoSocket(const ConnectionInfo *info)
 {
+    assert(info != NULL);
+
     return info ? info->sd : -1;
 }
 
 void ConnectionInfoSetSocket(ConnectionInfo *info, int s)
 {
-    if (!info)
+    assert(info != NULL);
+
+    if (info == NULL)
     {
         return;
     }
@@ -91,12 +99,16 @@ void ConnectionInfoSetSocket(ConnectionInfo *info, int s)
 
 SSL *ConnectionInfoSSL(const ConnectionInfo *info)
 {
+    assert(info != NULL);
+
     return info ? info->ssl : NULL;
 }
 
 void ConnectionInfoSetSSL(ConnectionInfo *info, SSL *ssl)
 {
-    if (!info)
+    assert(info != NULL);
+
+    if (info == NULL)
     {
         return;
     }
@@ -105,13 +117,17 @@ void ConnectionInfoSetSSL(ConnectionInfo *info, SSL *ssl)
 
 const Key *ConnectionInfoKey(const ConnectionInfo *info)
 {
+    assert(info != NULL);
+
     const Key *key = info ? info->remote_key : NULL;
     return key;
 }
 
 void ConnectionInfoSetKey(ConnectionInfo *info, Key *key)
 {
-    if (!info)
+    assert(info != NULL);
+
+    if (info == NULL)
     {
         return;
     }
@@ -129,7 +145,9 @@ void ConnectionInfoSetKey(ConnectionInfo *info, Key *key)
 
 const unsigned char *ConnectionInfoBinaryKeyHash(ConnectionInfo *info, unsigned int *length)
 {
-    if (!info)
+    assert(info != NULL);
+
+    if (info == NULL)
     {
         return NULL;
     }
@@ -145,5 +163,7 @@ const unsigned char *ConnectionInfoBinaryKeyHash(ConnectionInfo *info, unsigned 
 
 const char *ConnectionInfoPrintableKeyHash(ConnectionInfo *info)
 {
+    assert(info != NULL);
+
     return info ? KeyPrintableHash(info->remote_key) : NULL;
 }

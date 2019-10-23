@@ -112,6 +112,7 @@ static bool SelectProcess(pid_t pid, const JsonElement *pdata,
     bool result = false;
 
     assert(process_regex);
+    assert(a != NULL);
 
     cmdline = JsonObjectGetAsString(pdata, JPROC_KEY_CMDLINE);
     if (!cmdline)
@@ -136,8 +137,6 @@ static bool SelectProcess(pid_t pid, const JsonElement *pdata,
         // If we are not considering attributes, then the matching is done.
         return result;
     }
-
-    assert(a != NULL);
 
     StringSet *process_select_attributes = StringSetNew();
 
@@ -411,7 +410,7 @@ static bool LoadMisc(void)
     char statfile[CF_MAXVARSIZE];
     FILE *fd;
     char statbuf[CF_MAXVARSIZE];
-    char key[CF_MAXVARSIZE];
+    char key[64];	// see also sscanf() below
 
     sys_boot_time = -1;
 
@@ -424,7 +423,7 @@ static bool LoadMisc(void)
 
     while (fgets(statbuf, CF_MAXVARSIZE - 1, fd))
     {
-        sscanf(statbuf, "%s %lu", key, &sys_boot_time);
+        sscanf(statbuf, "%63s %lu", key, &sys_boot_time);
 
         if (strcmp(key, "btime") == 0) {
             break;

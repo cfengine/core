@@ -884,7 +884,7 @@ static void ResolveControlBody(EvalContext *ctx, GenericAgentConfig *config,
             config->protocol_version = ProtocolVersionParse(
                 RvalScalarValue(evaluated_rval));
             Log(LOG_LEVEL_VERBOSE, "SET common protocol_version: %s",
-                PROTOCOL_VERSION_STRING[config->protocol_version]);
+                ProtocolVersionString(config->protocol_version));
         }
 
         /* Those are package_inventory and package_module common control body options */

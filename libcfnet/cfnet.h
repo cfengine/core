@@ -69,11 +69,18 @@ typedef enum
 /* We use CF_PROTOCOL_LATEST as the default for new connections. */
 #define CF_PROTOCOL_LATEST CF_PROTOCOL_TLS
 
-static const char * const PROTOCOL_VERSION_STRING[CF_PROTOCOL_LATEST + 1] = {
-    "undefined",
-    "classic",
-    "tls",
-};
+static inline const char *ProtocolVersionString(const ProtocolVersion p)
+{
+    switch (p)
+    {
+    case CF_PROTOCOL_TLS:
+        return "tls";
+    case CF_PROTOCOL_CLASSIC:
+        return "classic";
+    default:
+        return "undefined";
+    }
+}
 
 typedef struct
 {

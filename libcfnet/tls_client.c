@@ -35,6 +35,7 @@
 #include <tls_client.h>
 #include <tls_generic.h>
 #include <net.h>                     /* SendTransaction, ReceiveTransaction */
+#include <protocol.h>                      /* ParseProtocolVersionNetwork() */
 /* TODO move crypto.h to libutils */
 #include <crypto.h>                                       /* LoadSecretKeys */
 
@@ -205,13 +206,29 @@ int TLSClientIdentificationDialog(ConnectionInfo *conn_info,
     ProtocolVersion wanted_version;
     if (conn_info->protocol == CF_PROTOCOL_UNDEFINED)
     {
-        /* TODO parse CFE_v%d received and use that version if it's lower. */
         wanted_version = CF_PROTOCOL_LATEST;
     }
     else
     {
         wanted_version = conn_info->protocol;
     }
+
+    const ProtocolVersion received_version = ParseProtocolVersionNetwork(line);
+
+    if (received_version < wanted_version && ProtocolIsTLS(received_version))
+    {
+        // Downgrade as long as it's still TLS
+        wanted_version = received_version;
+    }
+    else if (ProtocolIsUndefined(received_version)
+             || ProtocolIsClassic(received_version))
+    {
+        Log(LOG_LEVEL_ERR, "Server sent a bad version number! (0a)");
+        return -1;
+    }
+
+    assert(wanted_version <= received_version); // Server supported version
+    assert(ProtocolIsTLS(wanted_version));
 
     /* Send "CFE_v%d cf-agent version". */
     char version_string[128];

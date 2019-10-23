@@ -319,7 +319,7 @@ cf_start_daemon()
         "$daemon" "$@"
         cf_touch "$LOCKDIR/$base_daemon"
     elif [ "$AIX" = "1" ]; then
-        "$daemon" "$@" && break
+        "$daemon" "$@"
         if [ "$?" != "0" ]; then
             for retry in 1 2 3; do
                 msg="   retry $retry starting $daemon"

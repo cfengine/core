@@ -148,6 +148,7 @@ static bool SelectProcess(const char *procentry,
     Rlist *rp;
 
     assert(process_regex);
+    assert(a != NULL);
 
     StringSet *process_select_attributes = StringSetNew();
 
@@ -179,8 +180,6 @@ static bool SelectProcess(const char *procentry,
         // If we are not considering attributes, then the matching is done.
         goto cleanup;
     }
-
-    assert(a != NULL);
 
     for (rp = a->owner; rp != NULL; rp = rp->next)
     {

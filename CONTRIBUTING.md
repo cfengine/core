@@ -22,64 +22,8 @@ Merged features and larger changes will be released in the first minor release
 [the scheduled release date](https://cfengine.com/product/supported-versions/)
 in order to make it to the first minor release.
 
-
-## A possible workflow
-
-If you are already comfortable with Github, you may skip this section.
-
-This is a suggested outline for those unfamiliar with working with Github.
-It does, however, assume a familiarity with the basics of using git
-so it does not attempt to provide every detail of that.
-
-You will be working with three git repositories: the central one on Github,
-your fork on Github and your local clone.
-
-Within Github, make your fork of the central CFEngine repository
-using the fork icon on the
-[Github CFEngine main page](https://github.com/cfengine/core).
-Your fork lives at `https://github.com/my-githud-id/cfengine-core`.
-
-Make your own local clone from the main page.
-Since the middle of 2019 the source code uses a git 'submodule'
-which requires the use of the `--recursive` flag.
-
-```
-git clone --recursive https://github.com/cfengine/core
-```
-
-In your local clone, add a reference to your fork on Github:
-
-```
-git remote add name-for-my-fork https://github.com/my-github-id/cfengine-core
-
-```
-
-Never work in the `master` branch; always use a separate branch for your topic.
-Prepare your topic on this topic-focussed branch.
-When it is ready, push it to your Github fork.
-
-```
-git checkout master # ensure you start from a good reference point
-git checkout mytopic
-./autogen.sh
-edit; check; git add; git commit; etc.
-git push name-for-my-fork mytopic
-```
-
-On your fork at Github you should now see an additional branch `mytopic`.
-This is what you use for the pull request there.
-
-### Occasional housekeeping
-
-From time to time, update your local clone from the central repository
-as a reasonably current baseline,
-and likewise push those changes to your fork:
-
-```
-git checkout master
-git pull origin master
-git push name-for-my-fork master
-```
+If you are not very familiar with Git or GitHub, you can look at our
+[suggested workflow](#suggested-git--github-workflow), later in this document.
 
 
 ## Pull Requests
@@ -800,45 +744,280 @@ Try restricting ifdefs in the header files, or in the beginning of
 the C files.
 
 
+## Suggested git / GitHub workflow
+
+For very small / simple changes, you can open a PR by clicking the edit
+buttons in the GitHub UI. For most changes, it is preferable to work locally,
+using git. This is a suggested outline for those unfamiliar with working with
+GitHub. It does, however, assume a familiarity with the basics of using git
+so it does not attempt to provide every detail of that.
+
+
+### Forking
+
+You will be working with three git repositories: the central one on Github,
+your fork on Github and your local clone.
+
+Within Github, make your fork of the central CFEngine repository
+using the fork icon on the
+[Github CFEngine repository page](https://github.com/cfengine/core).
+Your fork lives at `https://github.com/your-username/core`.
+
+
+### Cloning
+
+Clone your fork, there is a **"Clone or Download"** button, which shows the
+necessary information. For example:
+
+```
+$ git clone --recursive https://github.com/your-username/core
+$ cd core
+```
+
+(If you have set up your GitHub profile with your SSH key, you can use the SSH
+URLs instead, which might be more convenient).
+
+Replace `your-username` with your GitHub username, here and later.
+`--recursive` is needed to clone submodules, without it, you would have to run
+these commands separately:
+
+```
+$ git submodule init
+$ git submodule update
+```
+
+
+### Set up remote references
+
+Now, add a `remote` reference to the `upstream` repository:
+
+```
+$ git remote add upstream https://github.com/cfengine/core
+```
+
+The result should look like this:
+
+```
+$ git remote -v
+origin	https://github.com/olehermanse/core (fetch)
+origin	https://github.com/olehermanse/core (push)
+upstream	https://github.com/cfengine/core (fetch)
+upstream	https://github.com/cfengine/core (push)
+```
+
+`origin` is your fork. This is the default for pushing and pulling.
+`upstream` is the central repository, managed by the CFEngine GitHub
+organization. You (probably) don't have access to push to `upstream`.
+Using these names are just a convention, you could change them, but we don't
+recommend it.
+
+
+### Branching
+
+Never work in the `master` branch; always use a separate branch for your topic.
+Prepare your topic on this topic-focussed branch.
+When it is ready, push it to your Github fork.
+
+```
+$ git checkout master
+$ git checkout -b mytopic
+```
+
+You can now make your changes. Build and test them when done:
+
+```
+$ ./autogen.sh --enable-debug && make -j4 && (cd tests/unit/ && make check)
+```
+
+Running all the tests is quite slow, because of many acceptance tests.
+Locally, it is usually sufficient to run unit tests, and select acceptance
+tests. Then, commit and push normally:
+
+```
+$ git add -p
+$ git commit
+$ git push
+```
+
+The default behavior of `git push` may or may not work for you, you can also
+specify where to push manually:
+
+```
+$ git push --set-upstream origin mytopic
+```
+
+On your fork at Github you should now see an additional branch `mytopic`.
+This is what you use for the pull request there.
+Pushing more commits or force pushing changed commits to the same branch will
+automatically update an open Pull Request which uses that branch.
+
+
+### Cleaning up the commit history - rebasing and squashing
+
+
+#### Resolving conflicts using rebase
+
+After you branched from `upstream/master` it is possible that someone else
+(or even you) commit conflicting changes to the `master` branch.
+To resolve these conflicts in your PR branch, use:
+
+```
+$ git fetch --all
+$ git rebase upstream/master
+```
+
+This will stop at the conflicting commit, and give you instructions to
+proceed. You will have to resolve conflicts and then run:
+
+```
+$ git rebase --continue
+```
+
+This might happen multiple times (1 for each commit).
+Once done, you will have to force push your changes to the PR branch:
+
+```
+$ git push -f
+```
+
+
+#### Interactive rebase
+
+We want the commit history to be as easy to read and understand as possible.
+Sometimes we make more commits than necessary, and we want to squash them
+(combine them). A good tool for this is _interactive rebase_.
+
+On your PR branch, run:
+
+```
+$ git rebase -i upstream/master
+```
+
+This will open an editor (usually `vi` or `emacs`), with a list of your
+commits:
+
+```
+pick ac07e6d27 Added new policy function isrealdir()
+pick 001bd420b Fixed mistake in isrealdir()
+
+# Commented out instructions ....
+```
+
+`upstream/master` will be used as a starting point, and the commits / commands
+will be applied tofrom top to bottom of this list. To combine the 2 commits,
+replace `pick` with `squash` on the second line:
+
+```
+pick ac07e6d27 Added new policy function isrealdir()
+squash 001bd420b Fixed mistake in isrealdir()
+
+# Commented out instructions ....
+```
+
+This will squash the second commit into the first one (the one above).
+Save and close. Another editor will open, allowing you to update the commit
+message(s). Update it to reflect the current state of this commit, then save
+and close.
+
+Once you get comfortable with _interactive rebase_ you can make more advanced
+changes, like squashing multiple commits, reordering commits, or dropping
+some commits. You may create conflicts, that you have to resolve, as
+described above.
+
+See also:
+[Squashing GitHub Pull Requests into a single commit](https://eli.thegreenplace.net/2014/02/19/squashing-github-pull-requests-into-a-single-commit)
+
+### Keeping master up to date
+
+Switch to local master branch:
+
+```
+$ git checkout master
+```
+
+Download changes from all remotes:
+
+```
+$ git fetch --all
+```
+
+Apply changes from the `upstream` `master` branch to our local `master` branch:
+
+```
+$ git rebase upstream/master
+```
+
+(You can also use `git pull`, but I find `rebase` a little easier when there
+are conflicts. `git pull` is a combination of `git fetch` and `git merge`.)
+
+Inspect the results:
+
+```
+$ git log
+```
+
+(Press `q` to quit `git log`).
+
+The latest (top) commit, should include `master` and `upstream/master` in
+parenthesis. This indicates that your local branch is up to date with
+`upstream`. If there are additional commits after the `upstream/master`
+commit, it means you committed some things on master, perhaps by accident.
+You can remove them, by doing:
+
+```
+$ git branch master-with-extra-commits
+$ git reset --hard upstream/master
+```
+
+You can, optionally, push your updated `master` branch to your GitHub fork:
+
+```
+$ git push
+```
+
+If you've already pushed some of the extra commits (on accident), you may
+have to add `--force`:
+
+```
+$ git push --force
+```
+
+However, normally this should not be necessary (!).
+
+
+### Updating git submodule(s)
+
+`git` has some commands for working with submodules, for example:
+
+```
+$ git submodule update
+```
+
+This will update the submodule, checking out the correct commit for your
+current for your current branch.
+
+Please note that a submodule is like a normal git repo, with the `SHA`
+committed to the parent repo. In many situations, the easiest approach is to
+`cd` into the submodule and run normal `git` commands in there. You can add
+remotes, push, pull, rebase, fetch, etc. inside the submodule. If you want to
+make changes to a submodule (for example `libntech`). Follow the same general
+steps inside that folder. (Fork that repo on GitHub, set up your fork as
+a remote etc.)
+
+If you need to make changes to the `libntech` submodule, you will need to
+submit a PR to that repo:
+
+https://github.com/cfengine/libntech
+
+The `libntech` PR has to be merged, before we can test your changes in `core`.
+
+
 ## Advanced topics
 
 This section is not for new contributors, but rather contains more specific guides which are useful to link to in some circumstances.
 
 
 ### Git
-
-
-#### How to rebase a branch
-
-By convention upstream refers to the canonical project repositories and origin refers to your fork of the repository.
-
-```
-$ git branch
-  3.10.x
-  3.11.x
-  3.7.x
-* ENT-3329
-  master
-```
-
-```
-$ git pull --rebase upstream master
-From https://github.com/cfengine/masterfiles
- * branch                master     -> FETCH_HEAD
-First, rewinding head to replay your work on top of it...
-Applying: ENT-3329: Allow hubs to collect from themselves over loopback
-```
-
-Once you have rebased your changes on the latest changes from the upstream branch you need to force push (because history has been re-written) your branch to your fork in order to update the pull request.
-
-```
-$ git push origin master --force
-```
-
-
-#### How to rebase and squash commits
-
-[This post has a good explanation.](https://eli.thegreenplace.net/2014/02/19/squashing-github-pull-requests-into-a-single-commit)
 
 
 #### Cherry-picking/backporting commits

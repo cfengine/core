@@ -287,14 +287,12 @@ bool ServerIdentificationDialog(ConnectionInfo *conn_info,
 {
     int ret;
     char input[1024] = "";
-    /* The only protocol version we support inside TLS, for now. */
-    const int SERVER_PROTOCOL_VERSION = CF_PROTOCOL_LATEST;
 
     /* Send "CFE_v%d cf-serverd version". */
     char version_string[CF_MAXVARSIZE];
     int len = snprintf(version_string, sizeof(version_string),
                        "CFE_v%d cf-serverd %s\n",
-                       SERVER_PROTOCOL_VERSION, VERSION);
+                       CF_PROTOCOL_LATEST, VERSION);
 
     ret = TLSSend(conn_info->ssl, version_string, len);
     if (ret != len)
@@ -312,8 +310,8 @@ bool ServerIdentificationDialog(ConnectionInfo *conn_info,
         return false;
     }
 
-    ProtocolVersion version_received = ParseProtocolVersionNetwork(input);
-    if (version_received <= CF_PROTOCOL_UNDEFINED)
+    const ProtocolVersion protocol = ParseProtocolVersionNetwork(input);
+    if (ProtocolIsUndefined(protocol))
     {
         Log(LOG_LEVEL_NOTICE,
             "Protocol version negotiation failed! Received: %s",
@@ -321,16 +319,24 @@ bool ServerIdentificationDialog(ConnectionInfo *conn_info,
         return false;
     }
 
-    /* For now we support only one version inside TLS. */
-    /* TODO value should not be hardcoded but compared to enum ProtocolVersion. */
-    if (version_received != SERVER_PROTOCOL_VERSION)
+    /* This is already inside TLS code, so TLS is required at this point*/
+    if (ProtocolIsClassic(protocol))
     {
         Log(LOG_LEVEL_NOTICE,
             "Client advertises disallowed protocol version: %d",
-            version_received);
+            protocol);
         return false;
-        /* TODO send "BAD ..." ? */
     }
+
+    if (ProtocolIsTooNew(protocol))
+    {
+        Log(LOG_LEVEL_NOTICE,
+            "Client attempted a protocol version which is too new for us: %d",
+            protocol);
+        return false;
+    }
+
+    assert(ProtocolIsKnown(protocol));
 
     /* Did we receive 2nd line or do we need to receive again? */
     const char id_line[] = "\nIDENTITY ";
@@ -396,7 +402,8 @@ bool ServerIdentificationDialog(ConnectionInfo *conn_info,
     }
 
     /* Version client and server agreed on. */
-    conn_info->protocol = version_received;
+    assert(ProtocolIsKnown(protocol));
+    conn_info->protocol = protocol;
 
     return true;
 }

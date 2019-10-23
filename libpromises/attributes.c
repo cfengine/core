@@ -928,8 +928,7 @@ FileCopy GetCopyConstraints(const EvalContext *ctx, const Promise *pp)
     if (protocol_version != NULL)
     {
         ProtocolVersion parsed = ParseProtocolVersionPolicy(protocol_version);
-        if ((parsed > CF_PROTOCOL_UNDEFINED)
-            && (parsed <= CF_PROTOCOL_LATEST))
+        if (ProtocolIsKnown(parsed))
         {
             f.protocol_version = parsed;
         }

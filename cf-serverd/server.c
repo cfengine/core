@@ -41,6 +41,7 @@
 #include <cf-serverd-enterprise-stubs.h>
 #include <audit.h>
 #include <cfnet.h>
+#include <protocol.h>                                    /* ProtocolIsTLS() */
 #include <server_tls.h>                                       /* ServerTLS* */
 #include <server_common.h>
 #include <connection_info.h>
@@ -358,7 +359,7 @@ static void *HandleConnection(void *c)
     }
 
     ProtocolVersion protocol_version = ConnectionInfoProtocolVersion(conn->conn_info);
-    if (protocol_version == CF_PROTOCOL_LATEST)
+    if (ProtocolIsTLS(protocol_version))
     {
         bool established = ServerTLSSessionEstablish(conn, NULL);
         if (!established)
@@ -366,8 +367,7 @@ static void *HandleConnection(void *c)
             goto dethread;
         }
     }
-    else if (protocol_version < CF_PROTOCOL_LATEST &&
-             protocol_version > CF_PROTOCOL_UNDEFINED)
+    else if (ProtocolIsClassic(protocol_version))
     {
         /* This connection is legacy protocol.
          * We are not allowing it by default. */
@@ -387,7 +387,7 @@ static void *HandleConnection(void *c)
 
 
     /* =========================  MAIN LOOPS  ========================= */
-    if (protocol_version >= CF_PROTOCOL_TLS)
+    if (ProtocolIsTLS(protocol_version))
     {
         /* New protocol does DNS reverse look up of the connected
          * IP address, to check hostname access_rules. */
@@ -415,7 +415,7 @@ static void *HandleConnection(void *c)
         {
         }
     }
-    else if (protocol_version == CF_PROTOCOL_CLASSIC)
+    else if (ProtocolIsClassic(protocol_version))
     {
         while (BusyWithClassicConnection(conn->ctx, conn))
         {

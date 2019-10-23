@@ -29,6 +29,7 @@
 #include <classic.h>                  /* RecvSocketStream */
 #include <net.h>                      /* SendTransaction,ReceiveTransaction */
 #include <openssl/err.h>                                   /* ERR_get_error */
+#include <protocol.h>                              /* ProtocolIsUndefined() */
 #include <libcrypto-compat.h>
 #include <tls_client.h>               /* TLSTry */
 #include <tls_generic.h>              /* TLSVerifyPeer */
@@ -183,7 +184,7 @@ int TLSConnect(ConnectionInfo *conn_info, bool trust_server,
 }
 
 /**
- * @NOTE if #flags.protocol_version is CF_PROTOCOL_UNDEFINED, then classic
+ * @NOTE if #flags.protocol_version is CF_PROTOCOL_UNDEFINED, then latest
  *       protocol is used by default.
  */
 AgentConnection *ServerConnection(const char *server, const char *port,
@@ -232,14 +233,17 @@ AgentConnection *ServerConnection(const char *server, const char *port,
     assert(sizeof(conn->remoteip) >= sizeof(txtaddr));
     strcpy(conn->remoteip, txtaddr);
 
-    switch (flags.protocol_version)
+    ProtocolVersion protocol_version = flags.protocol_version;
+    if (ProtocolIsUndefined(protocol_version))
     {
-    case CF_PROTOCOL_UNDEFINED:
-    case CF_PROTOCOL_TLS:
+        protocol_version = CF_PROTOCOL_LATEST;
+    }
 
+    if (ProtocolIsTLS(protocol_version))
+    {
         /* Set the version to request during protocol negotiation. After
          * TLSConnect() it will have the version we finally ended up with. */
-        conn->conn_info->protocol = CF_PROTOCOL_LATEST;
+        conn->conn_info->protocol = protocol_version;
 
         ret = TLSConnect(conn->conn_info, flags.trust_server,
                          conn->remoteip, conn->username);
@@ -265,10 +269,9 @@ AgentConnection *ServerConnection(const char *server, const char *port,
             LastSaw1(conn->remoteip, KeyPrintableHash(conn->conn_info->remote_key),
                      LAST_SEEN_ROLE_CONNECT);
         }
-        break;
-
-    case CF_PROTOCOL_CLASSIC:
-
+    }
+    else if (ProtocolIsClassic(protocol_version))
+    {
         conn->conn_info->protocol = CF_PROTOCOL_CLASSIC;
         conn->encryption_type = CfEnterpriseOptions();
 
@@ -290,11 +293,11 @@ AgentConnection *ServerConnection(const char *server, const char *port,
             return NULL;
         }
         conn->conn_info->status = CONNECTIONINFO_STATUS_ESTABLISHED;
-        break;
-
-    default:
+    }
+    else
+    {
         ProgrammingError("ServerConnection: ProtocolVersion %d!",
-                         flags.protocol_version);
+                         protocol_version);
     }
 
     conn->authenticated = true;
@@ -790,15 +793,19 @@ bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
 
         /* Stage C1 - receive */
         int n_read;
-        switch(conn->conn_info->protocol)
+
+        const ProtocolVersion version = conn->conn_info->protocol;
+
+        if (ProtocolIsClassic(version))
         {
-        case CF_PROTOCOL_CLASSIC:
             n_read = RecvSocketStream(conn->conn_info->sd, buf, toget);
-            break;
-        case CF_PROTOCOL_TLS:
+        }
+        else if (ProtocolIsTLS(version))
+        {
             n_read = TLSRecv(conn->conn_info->ssl, buf, toget);
-            break;
-        default:
+        }
+        else
+        {
             UnexpectedError("CopyRegularFileNet: ProtocolVersion %d!",
                             conn->conn_info->protocol);
             n_read = -1;

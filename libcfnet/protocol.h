@@ -27,62 +27,7 @@
 
 #include <cfnet.h>
 #include <sequence.h>
-
-static inline bool ProtocolIsKnown(const ProtocolVersion p)
-{
-    return ((p > CF_PROTOCOL_UNDEFINED) && (p <= CF_PROTOCOL_LATEST));
-}
-
-static inline bool ProtocolIsTLS(const ProtocolVersion p)
-{
-    return ((p >= CF_PROTOCOL_TLS) && (p <= CF_PROTOCOL_LATEST));
-}
-
-static inline bool ProtocolIsTooNew(const ProtocolVersion p)
-{
-    return (p > CF_PROTOCOL_LATEST);
-}
-
-static inline bool ProtocolIsUndefined(const ProtocolVersion p)
-{
-    return (p <= CF_PROTOCOL_UNDEFINED);
-}
-
-static inline bool ProtocolIsClassic(const ProtocolVersion p)
-{
-    return (p == CF_PROTOCOL_CLASSIC);
-}
-
-/**
- * Returns CF_PROTOCOL_TLS or CF_PROTOCOL_CLASSIC (or CF_PROTOCOL_UNDEFINED)
- * Maps all versions using TLS to CF_PROTOCOL_TLS for convenience
- * in switch statements.
- */
-static inline ProtocolVersion ProtocolClassicOrTLS(const ProtocolVersion p)
-{
-    if (ProtocolIsTLS(p))
-    {
-        return CF_PROTOCOL_TLS;
-    }
-    if (ProtocolIsClassic(p))
-    {
-        return CF_PROTOCOL_CLASSIC;
-    }
-    return CF_PROTOCOL_UNDEFINED;
-}
-
-/**
- * Parses the version string sent over network to enum, e.g. "CFE_v1" -> 1
- */
-ProtocolVersion ParseProtocolVersionNetwork(const char *s);
-
-/**
- * Parses the version string set in policy to enum, e.g. "classic" -> 1
- */
-ProtocolVersion ParseProtocolVersionPolicy(const char *s);
-
-// Old name for compatibility (enterprise), TODO remove:
-#define ProtocolVersionParse ParseProtocolVersionPolicy
+#include <protocol_version.h> // ProtocolVersion
 
 /**
  * Receives a directory listing from a remote host.

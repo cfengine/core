@@ -216,6 +216,8 @@ void ServerTLSDeInitialize(RSA **priv_key, RSA **pub_key, SSL_CTX **ssl_ctx)
  */
 bool ServerTLSPeek(ConnectionInfo *conn_info)
 {
+    assert(conn_info != NULL);
+
     assert(SSLSERVERCONTEXT != NULL);
     assert(PRIVKEY != NULL);
     assert(PUBKEY  != NULL);

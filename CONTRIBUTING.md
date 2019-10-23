@@ -761,7 +761,7 @@ your fork on Github and your local clone.
 Within Github, make your fork of the central CFEngine repository
 using the fork icon on the
 [Github CFEngine repository page](https://github.com/cfengine/core).
-Your fork lives at `https://github.com/your-username/core`.
+Your fork lives at `https://github.com/your-username/core` (by default).
 
 
 ### Cloning

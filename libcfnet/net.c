@@ -31,6 +31,7 @@
 #include <logging.h>
 #include <misc_lib.h>
 #include <cf3.defs.h>
+#include <protocol.h>
 
 
 /* TODO remove libpromises dependency. */
@@ -88,7 +89,7 @@ int SendTransaction(ConnectionInfo *conn_info,
     LogRaw(LOG_LEVEL_DEBUG, "SendTransaction data: ",
            work + CF_INBAND_OFFSET, len);
 
-    switch(conn_info->protocol)
+    switch (ProtocolClassicOrTLS(conn_info->protocol))
     {
 
     case CF_PROTOCOL_CLASSIC:
@@ -151,7 +152,7 @@ int ReceiveTransaction(ConnectionInfo *conn_info, char *buffer, int *more)
     int ret;
 
     /* Get control channel. */
-    switch(conn_info->protocol)
+    switch (ProtocolClassicOrTLS(conn_info->protocol))
     {
     case CF_PROTOCOL_CLASSIC:
         ret = RecvSocketStream(conn_info->sd, proto, CF_INBAND_OFFSET);
@@ -244,7 +245,7 @@ int ReceiveTransaction(ConnectionInfo *conn_info, char *buffer, int *more)
     }
 
     /* Get data. */
-    switch(conn_info->protocol)
+    switch (ProtocolClassicOrTLS(conn_info->protocol))
     {
     case CF_PROTOCOL_CLASSIC:
         ret = RecvSocketStream(conn_info->sd, buffer, len);

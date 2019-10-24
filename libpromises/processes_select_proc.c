@@ -580,7 +580,7 @@ static bool LoadProcUid(JsonElement *pdata, pid_t pid)
  * The "/proc" data has given us the major/minor device "ttyn".
  * We look through our possible candidate list in "/dev" for a match.
  */
-static bool LoadProcTTY(JsonElement *pdata, pid_t pid, int ttyn)
+static bool LoadProcTTY(JsonElement *pdata, int ttyn)
 {
     char ttyname[CF_MAXVARSIZE];
     struct stat statbuf;
@@ -615,7 +615,7 @@ static bool LoadProcTTY(JsonElement *pdata, pid_t pid, int ttyn)
 static JsonElement *LoadProcStat(pid_t pid)
 {
     char statfile[CF_MAXVARSIZE];
-    int fd;
+    int fd, len;
     JsonElement *pdata;
 
     pdata = JsonObjectCreate(12);
@@ -638,8 +638,11 @@ static JsonElement *LoadProcStat(pid_t pid)
 
     /* read the 'stat' file into a buffer */
     char statbuf[CF_MAXVARSIZE];
-    read(fd, statbuf, CF_MAXVARSIZE -1);
+    len = read(fd, statbuf, CF_MAXVARSIZE -1);
     close(fd);
+    if (len <=0) {
+        return pdata;
+    }
 
     /*
      * Big picture: "stat" is:
@@ -703,7 +706,7 @@ static JsonElement *LoadProcStat(pid_t pid)
     starttime += sys_boot_time;
 
     // tty major/minor
-    LoadProcTTY(pdata, pid, ttyn);
+    LoadProcTTY(pdata, ttyn);
 
     /*
      * Add data to the Json structure

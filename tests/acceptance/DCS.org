@@ -46,6 +46,9 @@ should be passed =$(this.promise_filename)=.
 - bundle agent =dcs_check_diff(file1, file2, test)= :: Pass if =file1= and
      =file2= do not differ.
 
+- bundle agent =dcs_check_diff_elements(set1, set2, test, expected_difference)= :: Pass if =set1= and
+     =set2= do not have different elements (order of elements not matter)
+
 - bundle agent =dcs_passif_expected(expected, not_expected, test)= :: =expected=
      and =not_expected= can be a string of comma (without spaces) separated
      classes. Pass if all expected classes are defined and none of the

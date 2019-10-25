@@ -1,5 +1,4 @@
 /*
-
   Copyright 2019 Northern.tech AS
 
   This file is part of CFEngine 3 - written and maintained by Northern.tech AS.

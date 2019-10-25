@@ -12,14 +12,14 @@
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
-   To the extent this program is licensed as part of the Enterprise
-   versions of CFEngine, the applicable Commercial Open Source License
-   (COSL) may apply to this file if you as a licensee so wish it. See
-   included file COSL.txt.
+  To the extent this program is licensed as part of the Enterprise
+  versions of CFEngine, the applicable Commercial Open Source License
+  (COSL) may apply to this file if you as a licensee so wish it. See
+  included file COSL.txt.
 */
 
 #ifndef CFENGINE_TLS_CLIENT_H
@@ -44,4 +44,3 @@ int TLSConnect(ConnectionInfo *conn_info, bool trust_server,
 
 
 #endif
-

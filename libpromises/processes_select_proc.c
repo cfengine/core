@@ -520,8 +520,6 @@ static bool LoadProcUid(JsonElement *pdata, pid_t pid)
 
     FILE *stream;
     char *line = NULL;
-    size_t len = 0;
-    ssize_t nread;
 
     stream = fopen(statusfile, "r");
     if (stream == NULL)
@@ -529,13 +527,19 @@ static bool LoadProcUid(JsonElement *pdata, pid_t pid)
         return false;
     }
 
+    // look for a line:
+    //   Uid: ruid euid ...
+    // and extract the ruid number as the uid
     uid_t uid;
     bool found = false;
+    size_t len = 0;
+    ssize_t nread;
+    int nscan;
     char key[CF_MAXVARSIZE];
     while ((nread = getline(&line, &len, stream)) != -1)
     {
-        sscanf(line, "%s %d ", key, &uid);
-        if (strcasecmp("Uid:", key) == 0)
+        nscan = sscanf(line, "%s %d ", key, &uid);
+        if (strcasecmp("Uid:", key) == 0 && nscan == 2)
         {
             found = true;
             break;

@@ -148,6 +148,7 @@ static bool SelectProcess(const char *procentry,
     Rlist *rp;
 
     assert(process_regex);
+    assert(a != NULL);
 
     StringSet *process_select_attributes = StringSetNew();
 

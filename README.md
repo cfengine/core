@@ -1,3 +1,4 @@
+[![Gitter chat](https://badges.gitter.im/cfengine/core.png)](https://gitter.im/cfengine/core)
 
 | Version    | [Core](https://github.com/cfengine/core)                                                                           | [MPF](https://github.com/cfengine/masterfiles)                                                                                  |
 |------------|--------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|

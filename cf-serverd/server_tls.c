@@ -1078,6 +1078,29 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
 
         break;
     }
+    case PROTOCOL_COMMAND_COOKIE:
+    {
+        if (ConnectionInfoProtocolVersion(conn->conn_info) < CF_PROTOCOL_COOKIE)
+        {
+            goto protocol_error;
+        }
+        if (acl_CheckExact(query_acl, "delta",
+                           conn->ipaddr, conn->revdns,
+                           KeyPrintableHash(ConnectionInfoKey(conn->conn_info)))
+            == false)
+        {
+            Log(LOG_LEVEL_INFO, "access denied to cookie query: %s", recvbuffer);
+            RefuseAccess(conn, recvbuffer);
+            return true;
+        }
+
+        if (ReturnCookies(conn))
+        {
+            return true;
+        }
+
+        break;
+    }
     case PROTOCOL_COMMAND_CALL_ME_BACK:
         /* Server side, handing the collect call off to cf-hub. */
 

@@ -37,16 +37,19 @@ typedef enum
     CF_PROTOCOL_UNDEFINED = 0,
     CF_PROTOCOL_CLASSIC = 1,
     /* --- Greater versions use TLS as secure communications layer --- */
-    CF_PROTOCOL_TLS = 2
+    CF_PROTOCOL_TLS = 2,
+    CF_PROTOCOL_COOKIE = 3,
 } ProtocolVersion;
 
 /* We use CF_PROTOCOL_LATEST as the default for new connections. */
-#define CF_PROTOCOL_LATEST CF_PROTOCOL_TLS
+#define CF_PROTOCOL_LATEST CF_PROTOCOL_COOKIE
 
 static inline const char *ProtocolVersionString(const ProtocolVersion p)
 {
     switch (p)
     {
+    case CF_PROTOCOL_COOKIE:
+        return "cookie";
     case CF_PROTOCOL_TLS:
         return "tls";
     case CF_PROTOCOL_CLASSIC:

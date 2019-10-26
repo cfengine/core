@@ -423,7 +423,7 @@ static bool LoadMisc(void)
 
     sys_boot_time = -1;
 
-    snprintf(statfile, CF_MAXVARSIZE, "/%s/stat", PROCDIR);
+    snprintf(statfile, sizeof(statfile), "/%s/stat", PROCDIR);
     fd = fopen(statfile, "r");
     if (!fd)
     {
@@ -458,7 +458,7 @@ static bool LoadProcCmd(pid_t pid, JsonElement *pdata)
      * "/proc/.../cmdline" is "ARGV[0]\0ARGV[1]\0...ARGV[n]\0\0"
      * For the moment we are only interested in ARGV0 (command name).
      */
-    snprintf(statfile, CF_MAXVARSIZE, "/%s/%d/cmdline", PROCDIR, pid);
+    snprintf(statfile, sizeof(statfile), "/%s/%jd/cmdline", PROCDIR, (intmax_t) pid);
     fd = fopen(statfile, "r");
     if (!fd)
     {
@@ -516,7 +516,7 @@ static bool LoadProcUid(JsonElement *pdata, pid_t pid)
 {
     char statusfile[CF_MAXVARSIZE];
 
-    snprintf(statusfile, CF_MAXVARSIZE, "/%s/%d/status", PROCDIR, pid);
+    snprintf(statusfile, sizeof(statusfile), "/%s/%jd/status", PROCDIR, (intmax_t) pid);
 
     FILE *stream;
     char *line = NULL;
@@ -600,7 +600,7 @@ static bool LoadProcTTY(JsonElement *pdata, int ttyn)
      */
     if (ttymajor >= 136 && ttymajor <= 143)
     {
-        snprintf(ttyname, CF_MAXVARSIZE, "/dev/pts/%d", ttyminor);
+        snprintf(ttyname, sizeof(ttyname), "/dev/pts/%d", ttyminor);
         if (stat(ttyname, &statbuf) >= 0)
         {
             JsonObjectAppendString(pdata, JPROC_KEY_TTYNAME, &ttyname[5]);
@@ -634,10 +634,30 @@ static JsonElement *LoadProcStat(pid_t pid)
     LoadProcCmd(pid, pdata);
 
     /* open the 'stat' file */
-    snprintf(statfile, CF_MAXVARSIZE, "/%s/%d/stat", PROCDIR, pid);
-    fd = open(statfile, O_RDONLY, 0);
-    if (fd < 0) {
-        return pdata;
+    snprintf(statfile, sizeof(statfile), "/%s/%jd/stat", PROCDIR, (intmax_t) pid);
+    for (;;)
+    {
+        if ((fd = open(statfile, O_RDONLY)) != -1)
+        {
+            break;
+        }
+
+        if (errno == EINTR)
+        {
+            continue;
+        }
+
+        if (errno == ENOENT || errno == ENOTDIR)
+        {
+            return pdata;
+        }
+
+        if (errno == EACCES)
+        {
+            return pdata;
+        }
+
+        assert (fd != -1 && "Unable to open /proc/<pid>/stat");
     }
 
     /* read the 'stat' file into a buffer */

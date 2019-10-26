@@ -419,7 +419,7 @@ static bool LoadMisc(void)
     char statfile[CF_MAXVARSIZE];
     FILE *fd;
     char statbuf[CF_MAXVARSIZE];
-    char key[64];	// see also sscanf() below
+    char key[64];       // see also sscanf() below
 
     sys_boot_time = -1;
 
@@ -430,11 +430,11 @@ static bool LoadMisc(void)
         return false;
     }
 
+    int nscan;
     while (fgets(statbuf, CF_MAXVARSIZE - 1, fd))
     {
-        sscanf(statbuf, "%63s %lu", key, &sys_boot_time);
-
-        if (strcmp(key, "btime") == 0) {
+        nscan = sscanf(statbuf, "%63s %lu", key, &sys_boot_time);
+        if (strcmp(key, "btime") == 0  && nscan == 2) {
             break;
         }
     }

@@ -644,24 +644,19 @@ static JsonElement *LoadProcStat(pid_t pid)
     char statbuf[CF_MAXVARSIZE];
     len = read(fd, statbuf, CF_MAXVARSIZE -1);
     close(fd);
-    if (len <=0) {
+    if (len <= 0) {
         return pdata;
     }
+    statbuf[len] = '\0';
 
     /*
      * Big picture: "stat" is:
-     *    pid (some text here) S n1 n2 n3 ...
+     *    pid (text_string_here) S n1 n2 n3 ...
      * We already know the pid. And the text is a variant of command (known).
-     * We are interested in the state char 'S' and numbers n1, n2, n3, ...
+     * We are interested in the state char 'S' and some numbers n1, n2, n3, ...
+     *
+     * The 'proc(5)' man page indicates 'scanf' compatibility for parsing.
      */
-
-    /* Find closing ')' and place pointer on the char 'S'. */
-    char *pt;
-    pt = strrchr(statbuf, ')');
-    pt++;
-    pt++;
-
-    /* Extract the 'stat' values.  May vary with OS/release. */
 
 #if defined(__linux__)
 
@@ -680,7 +675,8 @@ static JsonElement *LoadProcStat(pid_t pid)
     long rss;
 
     pstate[1] = '\0';
-    sscanf(pt,
+    sscanf(statbuf,
+      "%*d %*s "
       "%c "
       "%d %d %*d %d %*d %*u "
       "%*u %*u %*u %*u "

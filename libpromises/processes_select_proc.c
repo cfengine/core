@@ -616,6 +616,13 @@ static bool LoadProcTTY(JsonElement *pdata, int ttyn)
     return false;
 }
 
+/*
+ * Collect all data for a given pid.  This comes from a variety of sources.
+ *
+ * Errors should be rare.  One case is if a process disappears mid-collection.
+ * When that happens we clean up any half-collected data structures
+ * and return NULL.
+ */
 static JsonElement *LoadProcStat(pid_t pid)
 {
     char statfile[CF_MAXVARSIZE];
@@ -627,11 +634,18 @@ static JsonElement *LoadProcStat(pid_t pid)
     /* get uid from file 'status' */
     if (! LoadProcUid(pdata, pid))
     {
-        return pdata;
+        JsonDestroy(pdata);
+
+        return NULL;
     }
 
     /* extract command line info and store in 'pdata' */
-    LoadProcCmd(pid, pdata);
+    if (! LoadProcCmd(pid, pdata))
+    {
+        JsonDestroy(pdata);
+
+        return NULL;
+    }
 
     /* open the 'stat' file */
     snprintf(statfile, sizeof(statfile), "/%s/%jd/stat", PROCDIR, (intmax_t) pid);
@@ -649,15 +663,20 @@ static JsonElement *LoadProcStat(pid_t pid)
 
         if (errno == ENOENT || errno == ENOTDIR)
         {
-            return pdata;
+            break;
         }
 
         if (errno == EACCES)
         {
-            return pdata;
+            break;
         }
 
         assert (fd != -1 && "Unable to open /proc/<pid>/stat");
+    }
+    if (fd == -1) {
+        JsonDestroy(pdata);
+
+        return NULL;
     }
 
     /* read the 'stat' file into a buffer */
@@ -665,7 +684,9 @@ static JsonElement *LoadProcStat(pid_t pid)
     len = read(fd, statbuf, CF_MAXVARSIZE -1);
     close(fd);
     if (len <= 0) {
-        return pdata;
+        JsonDestroy(pdata);
+
+        return NULL;
     }
     statbuf[len] = '\0';
 

@@ -215,8 +215,8 @@ possible variable names:
       the build, and is appropriate for regressions or bad test
       failures.
 
-Additinally, a *description* meta variable can be added to the test to describe
-it's funciton.
+Additionally, a *description* meta variable can be added to the test to describe
+its function.
 
   meta:
       "description" -> { "CFE-2971" }

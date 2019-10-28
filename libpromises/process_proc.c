@@ -365,7 +365,7 @@ JsonElement *LoadProcStat(pid_t pid)
     JsonObjectAppendInteger(pdata, JPROC_KEY_THREADS, threads);
     JsonObjectAppendInteger(pdata, JPROC_KEY_CPUTIME, cpusecs);
     JsonObjectAppendInteger(pdata, JPROC_KEY_STARTTIME_BOOT, starttime);
-    starttime += sys_boot_time;  // => seconds since epoch
+    starttime += LoadBootTime();  // => seconds since epoch
     JsonObjectAppendInteger(pdata, JPROC_KEY_STARTTIME_EPOCH, starttime);
     JsonObjectAppendInteger(pdata, JPROC_KEY_VIRT_KB, vsize);
     JsonObjectAppendInteger(pdata, JPROC_KEY_RES_KB, rss);
@@ -409,7 +409,9 @@ time_t LoadBootTime(void)
     fd = fopen(statfile, "r");
     if (!fd)
     {
-        return false;
+        Log(LOG_LEVEL_ERR, "error opening %s for boot time", statfile);
+
+        return sys_boot_time;
     }
 
     int nscan;

@@ -33,16 +33,9 @@
  * (David Lee, 2019)
  ********************************************************** */
 
-/*
- * Portability notes:
- *
- * The details of the per-process "/proc/nnn" vary across OSes.
- *
- * The initial draft is based on Linux: RHEL6 and RHEL7.
- * It may need "ifdef..." type adjustment on other kernels.
- */
-
 #include <processes_select.h>
+#include <process_unix_priv.h>
+#include <process_lib.h>
 
 #include <string.h>
 #include <sys/user.h>
@@ -54,43 +47,9 @@
 #include <dir.h>
 
 
-#define PROCDIR "/proc"
-
 #define NPROC_GUESS 500
 
-// keys for Json structure
-#define JPROC_KEY_UID       "uid"      /* uid */
-#define JPROC_KEY_UNAME     "uname"    /* username */
-#define JPROC_KEY_CMD       "cmd"      /* cmd (argv[0]) only */
-#define JPROC_KEY_CMDLINE   "cmdline"  /* cmd line and args */
-#define JPROC_KEY_PSTATE    "pstate"   /* process state */
-#define JPROC_KEY_PPID      "ppid"     /* parent pid */
-#define JPROC_KEY_PGID      "pgid"     /* process group */
-#define JPROC_KEY_TTY       "tty"      /* terminal dev_t */
-#define JPROC_KEY_TTYNAME   "ttyname"  /* terminal name (e.g. "pts/nnn" */
-#define JPROC_KEY_PRIORITY  "priority" /* priority */
-#define JPROC_KEY_THREADS   "threads"  /* threads */
-#define JPROC_KEY_CPUTIME   "ttime"    /* elapsed time (seconds) */
-#define JPROC_KEY_STARTTIME "stime"    /* starttime (seconds since epoch) */
-#define JPROC_KEY_RES_KB    "rkb"      /* resident kb */
-#define JPROC_KEY_VIRT_KB   "vkb"      /* virtual kb */
-
-/*
- * JSON "proc" info.
- *
- * A list of objects keyed by 'pid', reflecting "/proc/<pid>".
- *
- * {
- *   "i" : { "ppid" : i_parent, "cmd" : i_cmd, ... },
- *   "j" : { "ppid" : j_parent, "cmd" : j_cmd, ... },
- *   ...
- *   },
- * }
- */
-
 static JsonElement *PROCTABLE = NULL;
-
-long sys_boot_time = -1;
 
 /*
  * internal functions
@@ -200,7 +159,7 @@ static bool SelectProcess(pid_t pid, const JsonElement *pdata,
         StringSetAdd(process_select_attributes, xstrdup("ttime"));
     }
 
-    pdtime = IntFromString(JsonObjectGetAsString(pdata, JPROC_KEY_STARTTIME));
+    pdtime = IntFromString(JsonObjectGetAsString(pdata, JPROC_KEY_STARTTIME_EPOCH));
     if (SelectProcTimeCounterRangeMatch(pdtime, a->min_stime, a->max_stime))
     {
         StringSetAdd(process_select_attributes, xstrdup("stime"));
@@ -386,7 +345,6 @@ const char *GetProcessTableLegend(void)
     }
 }
 
-/***************************************************************************/
 
 /*
  * LoadProcessTable() and subordinates
@@ -410,374 +368,6 @@ static bool IsProcDir(const char *name)
     return true;
 }
 
-/*
- * Obtain:
- *    boottime (seconds since epoch)
- */
-static bool LoadMisc(void)
-{
-    char statfile[CF_MAXVARSIZE];
-    FILE *fd;
-    char statbuf[CF_MAXVARSIZE];
-    char key[64];       // see also sscanf() below
-
-    sys_boot_time = -1;
-
-    snprintf(statfile, sizeof(statfile), "/%s/stat", PROCDIR);
-    fd = fopen(statfile, "r");
-    if (!fd)
-    {
-        return false;
-    }
-
-    int nscan;
-    while (fgets(statbuf, CF_MAXVARSIZE - 1, fd))
-    {
-        nscan = sscanf(statbuf, "%63s %lu", key, &sys_boot_time);
-        if (strcmp(key, "btime") == 0  && nscan == 2) {
-            break;
-        }
-    }
-
-    return true;
-}
-
-/*
- * set:
- *   'cmd' -> ARGV[0]
- *   'cmdline' -> space-separated ARGLIST
- */
-static bool LoadProcCmd(pid_t pid, JsonElement *pdata)
-{
-    char statfile[CF_MAXVARSIZE];
-    FILE *fd;
-    char cmd[CF_MAXVARSIZE];
-    char *pt, *ept;
-
-    /*
-     * "/proc/.../cmdline" is "ARGV[0]\0ARGV[1]\0...ARGV[n]\0\0"
-     * For the moment we are only interested in ARGV0 (command name).
-     */
-    snprintf(statfile, sizeof(statfile), "/%s/%jd/cmdline", PROCDIR, (intmax_t) pid);
-    fd = fopen(statfile, "r");
-    if (!fd)
-    {
-        return false;
-    }
-
-    memset(cmd, '\0', CF_MAXVARSIZE);
-    pt = fgets(cmd, CF_MAXVARSIZE, fd);
-    if (pt)
-    {
-        /* key 'cmd': ARGV[0] */
-        JsonObjectAppendString(pdata, JPROC_KEY_CMD, cmd);
-
-        /*
-         * Produce full command.
-         *     Find end of 'cmdline'.
-         *     Convert intermediate '\0' to space.
-         */
-
-        /* back along buffer until ept -> last char (end of ARGV[n]) */
-        ept = &cmd[CF_MAXVARSIZE-1];
-        while (ept != cmd && *ept == '\0')
-        {
-            ept--;
-        }
-
-        /* back along buffer changing NULL to space */
-        while (ept != cmd)
-        {
-            if (*ept == '\0')
-            {
-                *ept = ' ';
-            }
-            ept--;
-        }
-
-        /* key 'cmdline': "ARGV[0] ARGV[1] ARGV[2] ... ARGV[n]" inc. spaces */
-        JsonObjectAppendString(pdata, JPROC_KEY_CMDLINE, cmd);
-    }
-    fclose(fd);
-
-    return true;
-}
-
-/*
- * Read "/proc/pid/..." data into the "pdata" structure.
- * There are likely to be OS dependencies.
- *
- * Most of the data comes from file 'stat'.
- * But the uid is from 'status'.
- */
-
-// Obtain and store uid/uname
-static bool LoadProcUid(JsonElement *pdata, pid_t pid)
-{
-    char statusfile[CF_MAXVARSIZE];
-
-    snprintf(statusfile, sizeof(statusfile), "/%s/%jd/status", PROCDIR, (intmax_t) pid);
-
-    FILE *stream;
-    char *line = NULL;
-
-    stream = fopen(statusfile, "r");
-    if (stream == NULL)
-    {
-        return false;
-    }
-
-    // look for a line:
-    //   Uid: ruid euid ...
-    // and extract the ruid number as the uid
-    uid_t uid;
-    bool found = false;
-    size_t len = 0;
-    ssize_t nread;
-    int nscan;
-    char key[CF_MAXVARSIZE];
-    while ((nread = getline(&line, &len, stream)) != -1)
-    {
-        nscan = sscanf(line, "%s %d ", key, &uid);
-        if (strcasecmp("Uid:", key) == 0 && nscan == 2)
-        {
-            found = true;
-            break;
-        }
-    }
-
-    // tidy up
-    free(line);
-    fclose(stream);
-
-    // act on file-scan result
-
-    // a "shouldn't happen" error
-    if (!found)
-    {
-        Log(LOG_LEVEL_ERR, "error searching for uid %d in %s",
-          uid, statusfile);
-
-        return false;
-    }
-
-    JsonObjectAppendInteger(pdata, JPROC_KEY_UID, uid);
-
-    // "probably shouldn't happen"... uid of process is untranslatable into name
-    struct passwd *pwd = getpwuid(uid);
-    if (!pwd)
-    {
-        Log(LOG_LEVEL_WARNING, "could not translate uid %d into a username", uid);
-        return false;
-    }
-
-    JsonObjectAppendString(pdata, JPROC_KEY_UNAME, pwd->pw_name);
-
-    return found;
-}
-
-/*
- * The caller is looking for a pattern such as "pts/[0-9]+".
- * Here we examine likely places under "/dev".
- * In this initial implementation we only look for "/dev/pts/nnn"/.
- *
- * The "/proc" data has given us the major/minor device "ttyn".
- * We look through our possible candidate list in "/dev" for a match.
- */
-static bool LoadProcTTY(JsonElement *pdata, int ttyn)
-{
-    char ttyname[CF_MAXVARSIZE];
-    struct stat statbuf;
-    int ttymajor = major(ttyn);
-    int ttyminor = minor(ttyn);
-
-    JsonObjectAppendInteger(pdata, JPROC_KEY_TTY, ttyn);
-
-    /*
-     * From kernel "devices.txt", character-major 136-143 inclusive are "pty".
-     * We do a quick sanity-check on "/dev/pts/nnnn".
-     * If it looks OK, we set the name "pts/nnn".
-     */
-    if (ttymajor >= 136 && ttymajor <= 143)
-    {
-        snprintf(ttyname, sizeof(ttyname), "/dev/pts/%d", ttyminor);
-        if (stat(ttyname, &statbuf) >= 0)
-        {
-            JsonObjectAppendString(pdata, JPROC_KEY_TTYNAME, &ttyname[5]);
-            return true;
-        }
-    }
-
-    /*
-     * Could probably check for other things; "/dev/tty<n>" springs to mind.
-     * But for now, fail safely.
-     */
-
-    return false;
-}
-
-/*
- * Collect all data for a given pid.  This comes from a variety of sources.
- *
- * Errors should be rare.  One case is if a process disappears mid-collection.
- * When that happens we clean up any half-collected data structures
- * and return NULL.
- */
-static JsonElement *LoadProcStat(pid_t pid)
-{
-    char statfile[CF_MAXVARSIZE];
-    int fd, len;
-    JsonElement *pdata;
-
-    pdata = JsonObjectCreate(12);
-
-    /* get uid from file 'status' */
-    if (! LoadProcUid(pdata, pid))
-    {
-        JsonDestroy(pdata);
-
-        return NULL;
-    }
-
-    /* extract command line info and store in 'pdata' */
-    if (! LoadProcCmd(pid, pdata))
-    {
-        JsonDestroy(pdata);
-
-        return NULL;
-    }
-
-    /* open the 'stat' file */
-    snprintf(statfile, sizeof(statfile), "/%s/%jd/stat", PROCDIR, (intmax_t) pid);
-    for (;;)
-    {
-        if ((fd = open(statfile, O_RDONLY)) != -1)
-        {
-            break;
-        }
-
-        if (errno == EINTR)
-        {
-            continue;
-        }
-
-        if (errno == ENOENT || errno == ENOTDIR)
-        {
-            break;
-        }
-
-        if (errno == EACCES)
-        {
-            break;
-        }
-
-        assert (fd != -1 && "Unable to open /proc/<pid>/stat");
-    }
-    if (fd == -1) {
-        JsonDestroy(pdata);
-
-        return NULL;
-    }
-
-    /* read the 'stat' file into a buffer */
-    char statbuf[CF_MAXVARSIZE];
-    len = read(fd, statbuf, CF_MAXVARSIZE -1);
-    close(fd);
-    if (len <= 0) {
-        JsonDestroy(pdata);
-
-        return NULL;
-    }
-    statbuf[len] = '\0';
-
-    /*
-     * Big picture: "stat" is:
-     *    pid (text_string_here) S n1 n2 n3 ...
-     * We already know the pid. And the text is a variant of command (known).
-     * We are interested in the state char 'S' and some numbers n1, n2, n3, ...
-     *
-     * The 'proc(5)' man page indicates 'scanf' compatibility for parsing.
-     */
-
-#if defined(__linux__)
-
-    char pstate[2];
-    pid_t ppid;
-    pid_t pgid;
-    int ttyn;
-    long utime;
-    long stime;
-    long cpusecs;
-    long priority;
-    long nice;
-    long threads;
-    long long starttime;
-    ulong vsize;
-    long rss;
-
-    pstate[1] = '\0';
-    sscanf(statbuf,
-      "%*d %*s "
-      "%c "
-      "%d %d %*d %d %*d %*u "
-      "%*u %*u %*u %*u "
-      "%lu %lu %*d %*d "
-      "%ld %ld %ld %*d "
-      "%llu %lu %ld %*d ",
-      &pstate[0],
-      &ppid, &pgid, &ttyn,
-      &utime, &stime,
-      &priority, &nice, &threads,
-      &starttime, &vsize, &rss);
-
-    /*
-     * Transform numbers/units from OS into CFEngine-preferred number/units.
-     */
-    // proc bytes => CFEngine kilobytes
-    vsize /= 1024;
-
-    // proc PAGE SIZE => CFEngine kilobytes
-    rss *= (PAGE_SIZE/1024);
-
-    // proc clock ticks of process => CFEngine CPU seconds
-    cpusecs = (utime + stime) / sysconf(_SC_CLK_TCK);
-
-    // proc 'jiffies' since boot => CFEngine seconds since epoch
-    starttime /= sysconf(_SC_CLK_TCK);
-    starttime += sys_boot_time;
-
-    // tty major/minor
-    LoadProcTTY(pdata, ttyn);
-
-    /*
-     * Add data to the Json structure
-     */
-    JsonObjectAppendString(pdata, JPROC_KEY_PSTATE, pstate);
-    JsonObjectAppendInteger(pdata, JPROC_KEY_PPID, ppid);
-    JsonObjectAppendInteger(pdata, JPROC_KEY_PGID, pgid);
-    JsonObjectAppendInteger(pdata, JPROC_KEY_PRIORITY, priority);
-    JsonObjectAppendInteger(pdata, JPROC_KEY_THREADS, threads);
-    JsonObjectAppendInteger(pdata, JPROC_KEY_CPUTIME, cpusecs);
-    JsonObjectAppendInteger(pdata, JPROC_KEY_STARTTIME, starttime);
-    JsonObjectAppendInteger(pdata, JPROC_KEY_VIRT_KB, vsize);
-    JsonObjectAppendInteger(pdata, JPROC_KEY_RES_KB, rss);
-
-#elif defined(BSD)
-
-#error "Support for '/proc/<pid>' not yet written for BSD. Can you provide it?"
-
-#elif defined(__sun)
-
-#error "Support for '/proc/<pid>' not yet written for Sun/Solaris. Can you provide it?"
-
-#else
-
-#error "Support for '/proc/<pid>' not yet available."
-
-#endif
-
-    return pdata;
-}
 
 bool LoadProcessTable()
 {
@@ -788,13 +378,6 @@ bool LoadProcessTable()
     {
         Log(LOG_LEVEL_VERBOSE, "Reusing cached process table");
         return true;
-    }
-
-    /* Get misc. data (e.g. system boot time) */
-    if (! LoadMisc())
-    {
-        Log(LOG_LEVEL_ERR, "Error loading miscellaneous information");
-        return false;
     }
 
     if ((dirh = DirOpen(PROCDIR)) == NULL)
@@ -822,7 +405,7 @@ bool LoadProcessTable()
         /* It ought to be a directory... */
         if (dirp->d_type != DT_DIR)
         {
-            Log(LOG_LEVEL_ERR, "'%s' not a directory\n", dirp->d_name);
+            Log(LOG_LEVEL_ERR, "'%s/%s' not a directory\n", PROCDIR, dirp->d_name);
             continue;
         }
 

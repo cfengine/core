@@ -26,13 +26,53 @@
 #define CFENGINE_PROCESS_H
 
 #include <platform.h>
-
+#include <item_lib.h>
 
 /* TODO move to libutils, once windows implementation is merged. */
 
 
 #define PROCESS_START_TIME_UNKNOWN ((time_t) 0)
 
+#define PROCDIR "/proc"
+
+// keys for Json structure
+#define JPROC_KEY_UID             "uid"      /* uid */
+#define JPROC_KEY_UNAME           "uname"    /* username */
+#define JPROC_KEY_CMD             "cmd"      /* cmd (argv[0]) only */
+#define JPROC_KEY_CMDLINE         "cmdline"  /* cmd line and args */
+#define JPROC_KEY_PSTATE          "pstate"   /* process state */
+#define JPROC_KEY_PPID            "ppid"     /* parent pid */
+#define JPROC_KEY_PGID            "pgid"     /* process group */
+#define JPROC_KEY_TTY             "tty"      /* terminal dev_t */
+#define JPROC_KEY_TTYNAME         "ttyname"  /* terminal name (e.g. "pts/nnn" */
+#define JPROC_KEY_PRIORITY        "priority" /* priority */
+#define JPROC_KEY_THREADS         "threads"  /* threads */
+#define JPROC_KEY_CPUTIME         "ttime"    /* elapsed time (seconds) */
+#define JPROC_KEY_STARTTIME_BOOT  "stime_b"  /* starttime (seconds since boot) */
+#define JPROC_KEY_STARTTIME_EPOCH "stime_e"  /* starttime (seconds since epoch) */
+#define JPROC_KEY_RES_KB          "rkb"      /* resident kb */
+#define JPROC_KEY_VIRT_KB         "vkb"      /* virtual kb */
+
+/*
+ * JSON "proc" info.
+ *
+ * A list of objects keyed by 'pid', reflecting "/proc/<pid>".
+ *
+ * {
+ *   "i" : { "ppid" : i_parent, "cmd" : i_cmd, ... },
+ *   "j" : { "ppid" : j_parent, "cmd" : j_cmd, ... },
+ *   ...
+ *   },
+ * }
+ */
+
+
+/**
+ * Obtain ps-like information about specified process.
+ *
+ * @return JSON data structure of information about specified process
+ */
+JsonElement *LoadProcStat(pid_t pid);
 
 /**
  * Obtain start time of specified process.
@@ -41,6 +81,14 @@
  * @return PROCESS_START_TIME_UNKNOWN if start time cannot be determined
  */
 time_t GetProcessStartTime(pid_t pid);
+
+/**
+ * Obtain system boot time
+ *
+ * @return boot time (second since epoch) of the system
+ * @return -1 if start time cannot be determined
+ */
+time_t LoadBootTime(void);
 
 /**
  * Gracefully kill the process with pid #pid and start time #process_start_time.

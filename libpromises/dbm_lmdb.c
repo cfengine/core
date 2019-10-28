@@ -75,6 +75,16 @@ static int DB_MAX_READERS = -1;
 
 /******************************************************************************/
 
+static void HandleLMDBCorruption(MDB_env *env, const char *msg);
+
+static inline void CheckLMDBCorrupted(int rc, MDB_env *env)
+{
+    if (rc == MDB_CORRUPTED)
+    {
+        HandleLMDBCorruption(env, "");
+    }
+}
+
 static int GetReadTransaction(DBPriv *db, DBTxn **txn)
 {
     DBTxn *db_txn = pthread_getspecific(db->txn_key);
@@ -115,6 +125,7 @@ static int GetWriteTransaction(DBPriv *db, DBTxn **txn)
     if (db_txn->txn && !db_txn->rw_txn)
     {
         rc = mdb_txn_commit(db_txn->txn);
+        CheckLMDBCorrupted(rc, db->env);
         if (rc != MDB_SUCCESS)
         {
             Log(LOG_LEVEL_ERR, "Unable to close read-only transaction in '%s': %s",
@@ -126,6 +137,7 @@ static int GetWriteTransaction(DBPriv *db, DBTxn **txn)
     if (!db_txn->txn)
     {
         rc = mdb_txn_begin(db->env, NULL, 0, &db_txn->txn);
+        CheckLMDBCorrupted(rc, db->env);
         if (rc == MDB_SUCCESS)
         {
             db_txn->rw_txn = true;
@@ -557,6 +569,7 @@ DBPriv *DBPrivOpenDB(const char *dbpath, dbid id)
         }
     }
     rc = mdb_txn_begin(db->env, NULL, MDB_RDONLY, &txn);
+    CheckLMDBCorrupted(rc, db->env);
     if (rc)
     {
         Log(LOG_LEVEL_ERR, "Could not open database txn %s: %s",
@@ -564,6 +577,7 @@ DBPriv *DBPrivOpenDB(const char *dbpath, dbid id)
         goto err;
     }
     rc = mdb_open(txn, NULL, 0, &db->dbi);
+    CheckLMDBCorrupted(rc, db->env);
     if (rc)
     {
         Log(LOG_LEVEL_ERR, "Could not open database dbi %s: %s",
@@ -572,6 +586,7 @@ DBPriv *DBPrivOpenDB(const char *dbpath, dbid id)
         goto err;
     }
     rc = mdb_txn_commit(txn);
+    CheckLMDBCorrupted(rc, db->env);
     if (rc)
     {
         Log(LOG_LEVEL_ERR, "Could not commit database dbi %s: %s",
@@ -641,6 +656,7 @@ void DBPrivCommit(DBPriv *db)
     {
         assert(!db_txn->cursor_open);
         int rc = mdb_txn_commit(db_txn->txn);
+        CheckLMDBCorrupted(rc, db->env);
         if (rc != MDB_SUCCESS)
         {
             Log(LOG_LEVEL_ERR, "Could not commit database transaction to '%s': %s",
@@ -665,6 +681,7 @@ bool DBPrivHasKey(DBPriv *db, const void *key, int key_size)
         mkey.mv_data = (void *)key;
         mkey.mv_size = key_size;
         rc = mdb_get(txn->txn, db->dbi, &mkey, &data);
+        CheckLMDBCorrupted(rc, db->env);
         if (rc && rc != MDB_NOTFOUND)
         {
             Log(LOG_LEVEL_ERR, "Could not read database entry from '%s': %s",
@@ -691,6 +708,7 @@ int DBPrivGetValueSize(DBPriv *db, const void *key, int key_size)
         mkey.mv_data = (void *)key;
         mkey.mv_size = key_size;
         rc = mdb_get(txn->txn, db->dbi, &mkey, &data);
+        CheckLMDBCorrupted(rc, db->env);
         if (rc && rc != MDB_NOTFOUND)
         {
             Log(LOG_LEVEL_ERR, "Could not read database entry from '%s': %s",
@@ -716,6 +734,7 @@ bool DBPrivRead(DBPriv *db, const void *key, int key_size, void *dest, int dest_
         mkey.mv_data = (void *)key;
         mkey.mv_size = key_size;
         rc = mdb_get(txn->txn, db->dbi, &mkey, &data);
+        CheckLMDBCorrupted(rc, db->env);
         if (rc == MDB_SUCCESS)
         {
             if (dest_size > data.mv_size)
@@ -748,6 +767,7 @@ bool DBPrivWrite(DBPriv *db, const void *key, int key_size, const void *value, i
         data.mv_data = (void *)value;
         data.mv_size = value_size;
         rc = mdb_put(txn->txn, db->dbi, &mkey, &data, 0);
+        CheckLMDBCorrupted(rc, db->env);
         if (rc != MDB_SUCCESS)
         {
             Log(LOG_LEVEL_ERR, "Could not write database entry to '%s': %s",
@@ -769,6 +789,7 @@ bool DBPrivDelete(DBPriv *db, const void *key, int key_size)
         mkey.mv_data = (void *)key;
         mkey.mv_size = key_size;
         rc = mdb_del(txn->txn, db->dbi, &mkey, NULL);
+        CheckLMDBCorrupted(rc, db->env);
         if (rc == MDB_NOTFOUND)
         {
             Log(LOG_LEVEL_DEBUG, "Entry not found in '%s': %s",
@@ -796,6 +817,7 @@ DBCursorPriv *DBPrivOpenCursor(DBPriv *db)
     {
         assert(!txn->cursor_open);
         rc = mdb_cursor_open(txn->txn, db->dbi, &mc);
+        CheckLMDBCorrupted(rc, db->env);
         if (rc == MDB_SUCCESS)
         {
             cursor = xcalloc(1, sizeof(DBCursorPriv));
@@ -819,7 +841,6 @@ bool DBPrivAdvanceCursor(DBCursorPriv *cursor, void **key, int *key_size,
                      void **value, int *value_size)
 {
     MDB_val mkey, data;
-    int rc;
     bool retval = false;
 
     if (cursor->curkv)
@@ -827,7 +848,9 @@ bool DBPrivAdvanceCursor(DBCursorPriv *cursor, void **key, int *key_size,
         free(cursor->curkv);
         cursor->curkv = NULL;
     }
-    if ((rc = mdb_cursor_get(cursor->mc, &mkey, &data, MDB_NEXT)) == MDB_SUCCESS)
+    int rc = mdb_cursor_get(cursor->mc, &mkey, &data, MDB_NEXT);
+    CheckLMDBCorrupted(rc, cursor->db->env);
+    if (rc == MDB_SUCCESS)
     {
         // Align second buffer to 64-bit boundary, to avoid alignment errors on
         // certain platforms.
@@ -864,6 +887,8 @@ bool DBPrivAdvanceCursor(DBCursorPriv *cursor, void **key, int *key_size,
         {
             mkey.mv_data = *key;
             rc = mdb_cursor_get(cursor->mc, &mkey, NULL, MDB_SET);
+            CheckLMDBCorrupted(rc, cursor->db->env);
+            // TODO: Should the return value be checked?
         }
         cursor->pending_delete = false;
     }
@@ -873,6 +898,7 @@ bool DBPrivAdvanceCursor(DBCursorPriv *cursor, void **key, int *key_size,
 bool DBPrivDeleteCursorEntry(DBCursorPriv *cursor)
 {
     int rc = mdb_cursor_get(cursor->mc, &cursor->delkey, NULL, MDB_GET_CURRENT);
+    CheckLMDBCorrupted(rc, cursor->db->env);
     if (rc == MDB_SUCCESS)
     {
         cursor->pending_delete = true;
@@ -895,7 +921,9 @@ bool DBPrivWriteCursorEntry(DBCursorPriv *cursor, const void *value, int value_s
         curkey.mv_data = cursor->curkv;
         curkey.mv_size = sizeof(cursor->curkv);
 
-        if ((rc = mdb_cursor_put(cursor->mc, &curkey, &data, MDB_CURRENT)) != MDB_SUCCESS)
+        rc = mdb_cursor_put(cursor->mc, &curkey, &data, MDB_CURRENT);
+        CheckLMDBCorrupted(rc, cursor->db->env);
+        if (rc != MDB_SUCCESS)
         {
             Log(LOG_LEVEL_ERR, "Could not write cursor entry to '%s': %s",
                 (char *) mdb_env_get_userctx(cursor->db->env), mdb_strerror(rc));

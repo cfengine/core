@@ -25,6 +25,9 @@
 #ifndef CFENGINE_DBM_API_H
 #define CFENGINE_DBM_API_H
 
+#define EC_CORRUPTION_REPAIRED 120
+#define EC_CORRUPTION_REPAIR_FAILED 121
+
 #include <map.h>
 
 typedef enum
@@ -80,6 +83,7 @@ bool DeleteComplexKeyDB(CF_DB *dbp, const char *key, int size);
 bool ReadDB(CF_DB *dbp, const char *key, void *dest, int destSz);
 bool WriteDB(CF_DB *dbp, const char *key, const void *src, int srcSz);
 bool DeleteDB(CF_DB *dbp, const char *key);
+void FreezeDB(DBHandle *handle);
 
 /*
  * Creating cursor locks the whole database, so keep the amount of work here to
@@ -99,4 +103,6 @@ char *DBIdToPath(dbid id);
 char *DBIdToSubPath(dbid id, const char *subdb_name);
 
 StringMap *LoadDatabaseToStringMap(dbid database_id);
+
+bool CheckDBRepairFlagFile();
 #endif  /* NOT CFENGINE_DBM_API_H */

@@ -1349,14 +1349,20 @@ esac
 
 dnl ######################################################################
 dnl Should "processes_select" use "/proc/<nnn>" rather than "ps" command?
-dnl New at March/2019.  Developing on RHEL6.  Eventually aim to use widely.
+dnl
+dnl New at March/2019. Developing on RHEL6/RHEL7. Eventually aim to use widely.
+dnl The 'case' scaffolding is temporary during this development,
+dnl simply to avoid falling into this new code on non-Linux "/proc" platforms,
+dnl because such platforms may have different details under "/proc".
 dnl ######################################################################
 
 case "$target_os" in
    linux*)
         AM_CONDITIONAL([HAVE_PS_VIA_PROC], [test -f "/proc/1/stat"])
         ;;
-
+   *)
+        AM_CONDITIONAL([HAVE_PS_VIA_PROC], false)
+        ;;
 esac
 
 m4_include([m4/cf3_platforms.m4])

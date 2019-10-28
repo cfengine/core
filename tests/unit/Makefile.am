@@ -324,17 +324,19 @@ rlist_test_CPPFLAGS = $(AM_CPPFLAGS)
 
 process_test_LDADD = libtest.la ../../libpromises/libpromises.la
 
-if LINUX
+# Handling choice of newer "/proc" or traditional "ps" cmd to select processes.
+if HAVE_PS_VIA_PROC
 
-check_PROGRAMS += linux_process_test
+check_PROGRAMS += proc_process_test
 
-linux_process_test_SOURCES = linux_process_test.c \
+proc_process_test_SOURCES = proc_process_test.c \
 	../../libpromises/process_unix.c \
-	../../libpromises/process_linux.c \
+	../../libpromises/process_proc.c \
 	../../libntech/libutils/file_lib.c
-linux_process_test_LDADD = libtest.la ../../libntech/libutils/libutils.la
+proc_process_test_LDADD = libtest.la ../../libntech/libutils/libutils.la \
+	../../libpromises/libpromises.la
 
-endif
+else
 
 if AIX
 
@@ -362,6 +364,8 @@ solaris_process_test_SOURCES = solaris_process_test.c \
 solaris_process_test_LDADD = libtest.la ../../libntech/libutils/libutils.la
 
 endif
+
+endif # HAVE_PS_VIA_PROC
 
 process_terminate_unix_test_SOURCES = process_terminate_unix_test.c \
 	../../libpromises/process_unix.c

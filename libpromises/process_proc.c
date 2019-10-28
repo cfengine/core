@@ -255,7 +255,7 @@ JsonElement *LoadProcStat(pid_t pid)
     }
 
     /* open the 'stat' file */
-    snprintf(statfile, sizeof(statfile), "/%s/%jd/stat", PROCDIR, (intmax_t) pid);
+    snprintf(statfile, sizeof(statfile), "%s/%jd/stat", PROCDIR, (intmax_t) pid);
     for (;;)
     {
         if ((fd = open(statfile, O_RDONLY)) != -1)
@@ -288,7 +288,7 @@ JsonElement *LoadProcStat(pid_t pid)
 
     /* read the 'stat' file into a buffer */
     char statbuf[CF_MAXVARSIZE];
-    len = read(fd, statbuf, CF_MAXVARSIZE -1);
+    len = FullRead(fd, statbuf, CF_MAXVARSIZE -1);
     close(fd);
     if (len <= 0) {
         JsonDestroy(pdata);

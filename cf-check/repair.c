@@ -22,6 +22,7 @@ int repair_lmdb_default(ARG_UNUSED bool force)
 
 #include <stdio.h>
 #include <errno.h>
+#include <signal.h>
 #include <lmdump.h>
 #include <lmdb.h>
 #include <diagnose.h>
@@ -127,6 +128,12 @@ int repair_lmdb_file(const char *file, int fd_tstamp)
     if (child_pid == 0)
     {
         /* child */
+        /* The process can receive a SIGBUS signal while trying to read a
+         * corrupted LMDB file. This has a special handling in cf-agent and
+         * other processes, but this child process should just die in case of
+         * SIGBUS (which is then detected by the parent and handled
+         * accordingly).  */
+        signal(SIGBUS, SIG_DFL);
         exit(replicate_lmdb(file, dest_file));
     }
     else

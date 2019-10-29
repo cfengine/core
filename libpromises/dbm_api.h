@@ -30,6 +30,7 @@
 
 #include <map.h>
 
+// Only append to the end, keep in sync with DB_PATHS_STATEDIR array
 typedef enum
 {
     dbid_classes,   // Deprecated
@@ -55,6 +56,7 @@ typedef enum
     dbid_bundles,   // Deprecated
     dbid_packages_installed, //new package promise installed packages list
     dbid_packages_updates,   //new package promise list of available updates
+    dbid_cookies, // Enterprise reporting cookies for duplicate host detection
 
     dbid_max
 } dbid;

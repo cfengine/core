@@ -115,7 +115,7 @@ static bool SelectProcess(pid_t pid, const JsonElement *pdata,
 
 
         else {
-            uid = IntFromString(JsonObjectGetAsString(pdata, JPROC_KEY_UID));
+            uid = IntFromString(JsonObjectGetAsString(pdata, JPROC_KEY_EUID));
             pwd = getpwuid(uid);
             if (!pwd)
             {

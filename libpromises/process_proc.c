@@ -135,9 +135,10 @@ static bool LoadProcUid(JsonElement *pdata, pid_t pid)
     }
 
     // look for a line:
-    //   Uid: ruid euid ...
-    // and extract the ruid number as the uid
+    //   Uid: uid euid ...
+    // and extract the uid and euid
     uid_t uid;
+    uid_t euid;
     bool found = false;
     size_t len = 0;
     ssize_t nread;
@@ -145,8 +146,8 @@ static bool LoadProcUid(JsonElement *pdata, pid_t pid)
     char key[CF_MAXVARSIZE];
     while ((nread = getline(&line, &len, stream)) != -1)
     {
-        nscan = sscanf(line, "%s %d ", key, &uid);
-        if (strcasecmp("Uid:", key) == 0 && nscan == 2)
+        nscan = sscanf(line, "%s %d %d ", key, &uid, &euid);
+        if (strcasecmp("Uid:", key) == 0 && nscan == 3)
         {
             found = true;
             break;
@@ -169,6 +170,7 @@ static bool LoadProcUid(JsonElement *pdata, pid_t pid)
     }
 
     JsonObjectAppendInteger(pdata, JPROC_KEY_UID, uid);
+    JsonObjectAppendInteger(pdata, JPROC_KEY_EUID, euid);
 
     return found;
 }

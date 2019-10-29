@@ -639,6 +639,8 @@ ProtocolCommandNew GetCommandNew(char *str)
  */
 bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
 {
+    assert(conn != NULL);
+
     /* The CF_BUFEXT extra space is there to ensure we're not *reading* out of
      * bounds in commands that carry extra binary arguments, like MD5. */
     char recvbuffer[CF_BUFSIZE + CF_BUFEXT] = { 0 };

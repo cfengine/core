@@ -68,6 +68,15 @@
 
 
 /**
+ * Obtain ps-like information about all process.
+ *
+ * @return JSON data structure of information about all processes
+ */
+#ifdef HAVE_PS_VIA_PROC
+const JsonElement *FetchProcessTable(void);
+#endif
+
+/**
  * Obtain ps-like information about specified process.
  *
  * @return JSON data structure of information about specified process

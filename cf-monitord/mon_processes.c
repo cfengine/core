@@ -26,11 +26,22 @@
 
 #include <mon.h>
 #include <item_lib.h>
+
+#ifndef HAVE_PS_VIA_PROC
+
 #include <files_interfaces.h>
 #include <file_lib.h> // SetUmask()
 #include <pipes.h>
 #include <systype.h>
-#include <known_dirs.h>
+
+#else
+
+#include <conversion.h>
+#include <process_lib.h>
+
+#endif
+
+#include <known_dirs.h> // GetStateDir()
 
 #include <cf-windows-functions.h>
 
@@ -76,6 +87,8 @@ void MonProcessesGatherData(double *cf_this)
 
 static bool GatherProcessUsers(Item **userList, int *userListSz, int *numRootProcs, int *numOtherProcs)
 {
+#ifndef HAVE_PS_VIA_PROC
+
     char pscomm[CF_BUFSIZE];
     xsnprintf(pscomm, sizeof(pscomm), "%s %s",
               VPSCOMM[VPSHARDCLASS], VPSOPTS[VPSHARDCLASS]);
@@ -145,14 +158,55 @@ static bool GatherProcessUsers(Item **userList, int *userListSz, int *numRootPro
         }
     }
 
+#else // HAVE_PS_VIA_PROC
+
+    const JsonElement *pdata;
+    struct passwd *pwd;
+    uid_t uid;
+    const char *uname;
+    const JsonElement *ptable = FetchProcessTable();
+    JsonIterator iter = JsonIteratorInit(ptable);
+    while ((pdata = JsonIteratorNextValue(&iter)))
+    {
+        uid = IntFromString(JsonObjectGetAsString(pdata, JPROC_KEY_EUID));
+        pwd = getpwuid(uid);
+        if (pwd == NULL)
+        {
+            Log(LOG_LEVEL_ERR, "Could not convert uid %d to username", uid);
+            continue;
+        }
+        uname = pwd->pw_name;
+
+        if (!IsItemIn(*userList, uname))
+        {
+            PrependItem(userList, uname, NULL);
+            (*userListSz)++;
+        }
+
+        if (strcmp(uname, "root") == 0)
+        {
+            (*numRootProcs)++;
+        }
+        else
+        {
+            (*numOtherProcs)++;
+        }
+    }
+
+#endif // HAVE_PS_VIA_PROC
+
     if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG)
     {
         char *s = ItemList2CSV(*userList);
         Log(LOG_LEVEL_DEBUG, "Users in the process table: (%s)", s);
         free(s);
     }
+
+#ifndef HAVE_PS_VIA_PROC
     cf_pclose(pp);
     free(vbuff);
+#endif
+
     return true;
 }
 

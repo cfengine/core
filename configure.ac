@@ -1356,14 +1356,19 @@ dnl simply to avoid falling into this new code on non-Linux "/proc" platforms,
 dnl because such platforms may have different details under "/proc".
 dnl ######################################################################
 
-case "$target_os" in
-   linux*)
-        AM_CONDITIONAL([HAVE_PS_VIA_PROC], [test -f "/proc/1/stat"])
+if test -f "/proc/1/stat"; then
+  case "$target_os" in
+    linux*)
+        AM_CONDITIONAL([HAVE_PS_VIA_PROC], true)
+        AC_DEFINE(HAVE_PS_VIA_PROC, 1, [Have a /proc interface to processes])
         ;;
-   *)
+    *)
         AM_CONDITIONAL([HAVE_PS_VIA_PROC], false)
         ;;
-esac
+  esac
+else
+  AM_CONDITIONAL([HAVE_PS_VIA_PROC], false)
+fi
 
 m4_include([m4/cf3_platforms.m4])
 

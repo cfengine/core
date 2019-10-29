@@ -439,6 +439,20 @@ bool LoadProcessTable()
 
 }
 
+/*
+ * return a read-only pointer to the JSON version of the process table
+ */
+const JsonElement *FetchProcessTable()
+{
+    if (! LoadProcessTable())
+    {
+        Log(LOG_LEVEL_ERR, "Unable to load process table");
+        return NULL;
+    }
+
+    return PROCTABLE;
+}
+
 void ClearProcessTable(void)
 {
     JsonDestroy(PROCTABLE);

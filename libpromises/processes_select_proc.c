@@ -100,10 +100,11 @@ static bool SelectProcess(pid_t pid, const JsonElement *pdata,
     StringSet *process_select_attributes = StringSetNew();
 
     Rlist *rp;
+    uid_t uid;
     const char *uname;
+    struct passwd *pwd;
     for (rp = a->owner; rp != NULL; rp = rp->next)
     {
-        uname = JsonObjectGetAsString(pdata, JPROC_KEY_UNAME);
         if (rp->val.type == RVAL_TYPE_FNCALL)
         {
             Log(LOG_LEVEL_VERBOSE,
@@ -113,10 +114,22 @@ static bool SelectProcess(pid_t pid, const JsonElement *pdata,
 
 
 
-        else if (SelectProcRegexMatch(uname, RlistScalarValue(rp), true))
-        {
-            StringSetAdd(process_select_attributes, xstrdup("process_owner"));
-            break;
+        else {
+            uid = IntFromString(JsonObjectGetAsString(pdata, JPROC_KEY_UID));
+            pwd = getpwuid(uid);
+            if (!pwd)
+            {
+                // "probably shouldn't happen"... uid is untranslatable into name
+                Log(LOG_LEVEL_WARNING, "could not translate uid %d into a username", uid);
+                continue;
+            }
+
+            uname = pwd->pw_name;
+            if (SelectProcRegexMatch(uname, RlistScalarValue(rp), true))
+            {
+                StringSetAdd(process_select_attributes, xstrdup("process_owner"));
+                break;
+            }
         }
     }
 

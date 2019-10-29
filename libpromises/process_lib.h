@@ -37,7 +37,6 @@
 
 // keys for Json structure
 #define JPROC_KEY_UID             "uid"      /* uid */
-#define JPROC_KEY_UNAME           "uname"    /* username */
 #define JPROC_KEY_CMD             "cmd"      /* cmd (argv[0]) only */
 #define JPROC_KEY_CMDLINE         "cmdline"  /* cmd line and args */
 #define JPROC_KEY_PSTATE          "pstate"   /* process state */

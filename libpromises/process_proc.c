@@ -170,16 +170,6 @@ static bool LoadProcUid(JsonElement *pdata, pid_t pid)
 
     JsonObjectAppendInteger(pdata, JPROC_KEY_UID, uid);
 
-    // "probably shouldn't happen"... uid of process is untranslatable into name
-    struct passwd *pwd = getpwuid(uid);
-    if (!pwd)
-    {
-        Log(LOG_LEVEL_WARNING, "could not translate uid %d into a username", uid);
-        return false;
-    }
-
-    JsonObjectAppendString(pdata, JPROC_KEY_UNAME, pwd->pw_name);
-
     return found;
 }
 

@@ -1,5 +1,6 @@
 #include <platform.h>
 #include <protocol_version.h>
+#include <string_lib.h>
 
 ProtocolVersion ParseProtocolVersionNetwork(const char *const s)
 {
@@ -16,19 +17,19 @@ ProtocolVersion ParseProtocolVersionNetwork(const char *const s)
 
 ProtocolVersion ParseProtocolVersionPolicy(const char *const s)
 {
-    if ((s == NULL) || (strcmp(s, "0") == 0) || (strcmp(s, "undefined") == 0))
+    if ((s == NULL) || StringSafeEqual(s, "0") || StringSafeEqual(s, "undefined"))
     {
         return CF_PROTOCOL_UNDEFINED;
     }
-    if ((strcmp(s, "1") == 0) || (strcmp(s, "classic") == 0))
+    if (StringSafeEqual(s, "1") || StringSafeEqual(s, "classic"))
     {
         return CF_PROTOCOL_CLASSIC;
     }
-    else if ((strcmp(s, "2") == 0) || (strcmp(s, "tls") == 0))
+    else if (StringSafeEqual(s, "2") || StringSafeEqual(s, "tls"))
     {
         return CF_PROTOCOL_TLS;
     }
-    else if (strcmp(s, "latest") == 0)
+    else if (StringSafeEqual(s, "latest"))
     {
         return CF_PROTOCOL_LATEST;
     }

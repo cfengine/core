@@ -1402,7 +1402,7 @@ PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
                 PromiseResult promise_result = ExpandPromise(ctx, pp, KeepAgentPromise, NULL);
                 result = PromiseResultUpdate(result, promise_result);
 
-                if (Abort(ctx))
+                if (BundleAbort(ctx))
                 {
                     DeleteTypeContext(ctx, type);
                     EvalContextStackPopFrame(ctx);

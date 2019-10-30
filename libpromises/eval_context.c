@@ -789,6 +789,7 @@ void EvalContextHeapPersistentLoadAll(EvalContext *ctx)
 
 bool BundleAbort(EvalContext *ctx)
 {
+    assert(ctx != NULL);
     if (ctx->bundle_aborted)
     {
         ctx->bundle_aborted = false;
@@ -800,26 +801,31 @@ bool BundleAbort(EvalContext *ctx)
 
 static bool BundleAborted(const EvalContext* ctx)
 {
+    assert(ctx != NULL);
     return ctx->bundle_aborted;
 }
 
 static void SetBundleAborted(EvalContext *ctx)
 {
+    assert(ctx != NULL);
     ctx->bundle_aborted = true;
 }
 
 static void SetEvalAborted(EvalContext *ctx)
 {
+    assert(ctx != NULL);
     ctx->eval_aborted = true;
 }
 
 bool EvalAborted(const EvalContext *ctx)
 {
+    assert(ctx != NULL);
     return ctx->eval_aborted;
 }
 
 void EvalContextHeapAddAbort(EvalContext *ctx, const char *context, const char *activated_on_context)
 {
+    assert(ctx != NULL);
     if (!IsItemIn(ctx->heap_abort, context))
     {
         AppendItem(&ctx->heap_abort, context, activated_on_context);
@@ -836,6 +842,7 @@ void EvalContextHeapAddAbort(EvalContext *ctx, const char *context, const char *
 
 void EvalContextHeapAddAbortCurrentBundle(EvalContext *ctx, const char *context, const char *activated_on_context)
 {
+    assert(ctx != NULL);
     if (!IsItemIn(ctx->heap_abort_current_bundle, context))
     {
         AppendItem(&ctx->heap_abort_current_bundle, context, activated_on_context);
@@ -846,6 +853,7 @@ void EvalContextHeapAddAbortCurrentBundle(EvalContext *ctx, const char *context,
 
 bool MissingDependencies(EvalContext *ctx, const Promise *pp)
 {
+    assert(ctx != NULL);
     const Rlist *dependenies = PromiseGetConstraintAsList(ctx, "depends_on", pp);
     if (RlistIsNullList(dependenies))
     {

@@ -1063,10 +1063,12 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
             goto protocol_error;
         }
 
-        if (acl_CheckExact(query_acl, name,
-                           conn->ipaddr, conn->revdns,
-                           KeyPrintableHash(ConnectionInfoKey(conn->conn_info)))
-            == false)
+        const char *hostkey = KeyPrintableHash(
+            ConnectionInfoKey(conn->conn_info));
+        const bool access_to_query = acl_CheckExact(
+            query_acl, name, conn->ipaddr, conn->revdns, hostkey);
+
+        if (!access_to_query)
         {
             Log(LOG_LEVEL_INFO, "access denied to query: %s", query);
             RefuseAccess(conn, recvbuffer);
@@ -1086,10 +1088,13 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         {
             goto protocol_error;
         }
-        if (acl_CheckExact(query_acl, "delta",
-                           conn->ipaddr, conn->revdns,
-                           KeyPrintableHash(ConnectionInfoKey(conn->conn_info)))
-            == false)
+
+        const char *hostkey = KeyPrintableHash(
+            ConnectionInfoKey(conn->conn_info));
+        const bool access_to_query_delta = acl_CheckExact(
+            query_acl, "delta", conn->ipaddr, conn->revdns, hostkey);
+
+        if (!access_to_query_delta)
         {
             Log(LOG_LEVEL_INFO, "access denied to cookie query: %s", recvbuffer);
             RefuseAccess(conn, recvbuffer);

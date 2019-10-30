@@ -152,6 +152,8 @@ typedef enum
 
 #define CF_OBSERVABLES 100
 
+/* Special exit codes */
+#define EC_EVAL_ABORTED 6       /* like SIGABRT, but signal exit codes are 120+SIG */
 
 typedef struct
 {

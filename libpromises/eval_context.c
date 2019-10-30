@@ -784,7 +784,7 @@ void EvalContextHeapPersistentLoadAll(EvalContext *ctx)
     CloseDB(dbp);
 }
 
-bool Abort(EvalContext *ctx)
+bool BundleAbort(EvalContext *ctx)
 {
     if (ctx->bundle_aborted)
     {

@@ -173,7 +173,7 @@ if !NT
 #     that calls onto a per-OS "process_proc_/OS/".
 #
 # As the per-OS migration from /cmd/ to /proc/ advances, the /cmd/ files
-# can be removed.  The /linux/ variant was the first such removal.
+# become superfluous and can theoretically be removed.
 #
 # See also "tests/unit/Makefile.am"
 #

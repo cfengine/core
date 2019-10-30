@@ -351,7 +351,7 @@ set_domainname_test_LDFLAGS = -Wl,-bexpall
 evalfunction_test_LDFLAGS = -Wl,-bexpall
 aix_process_test_SOURCES = aix_process_test.c \
 	../../libpromises/process_unix.c \
-	../../libpromises/process_cmd__@PROCESS_OS_TAG@.c \
+	../../libpromises/process_cmd_@PROCESS_OS_TAG@.c \
 	../../libntech/libutils/file_lib.c
 aix_process_test_LDADD = libtest.la ../../libntech/libutils/libutils.la
 
@@ -363,7 +363,7 @@ check_PROGRAMS += solaris_process_test
 
 solaris_process_test_SOURCES = solaris_process_test.c \
 	../../libpromises/process_unix.c \
-	../../libpromises/process_cmd__@PROCESS_OS_TAG@.c \
+	../../libpromises/process_cmd_@PROCESS_OS_TAG@.c \
 	../../libntech/libutils/file_lib.c
 solaris_process_test_LDADD = libtest.la ../../libntech/libutils/libutils.la
 

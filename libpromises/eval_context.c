@@ -795,12 +795,12 @@ bool Abort(EvalContext *ctx)
     return false;
 }
 
-bool BundleAborted(const EvalContext* ctx)
+static bool BundleAborted(const EvalContext* ctx)
 {
     return ctx->bundle_aborted;
 }
 
-void SetBundleAborted(EvalContext *ctx)
+static void SetBundleAborted(EvalContext *ctx)
 {
     ctx->bundle_aborted = true;
 }

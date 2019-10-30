@@ -269,12 +269,19 @@ int main(int argc, char *argv[])
         DoCleanupAndExit(EXIT_FAILURE);
     }
 
+    int ret = 0;
+
     GenericAgentPostLoadInit(ctx);
     ThisAgentInit();
     ConnCache_Init();
 
     BeginAudit();
     KeepPromises(ctx, policy, config);
+
+    if (EvalAborted(ctx))
+    {
+        ret = EC_EVAL_ABORTED;
+    }
 
     ConnCache_Destroy();
 
@@ -306,7 +313,6 @@ int main(int argc, char *argv[])
     }
 
     PolicyDestroy(policy); /* Can we safely do this earlier ? */
-    int ret = 0;
     if (config->agent_specific.agent.bootstrap_argument && !VerifyBootstrap())
     {
         PolicyServerRemoveFile(GetWorkDir());

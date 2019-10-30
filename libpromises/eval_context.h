@@ -233,6 +233,7 @@ void EvalContextSetEntryPoint(EvalContext* ctx, const char *entry_point);
 const char *EvalContextGetEntryPoint(EvalContext* ctx);
 
 bool BundleAbort(EvalContext *ctx);
+bool EvalAborted(const EvalContext *ctx);
 void NotifyDependantPromises(EvalContext *ctx, const Promise *pp, PromiseResult result);
 bool MissingDependencies(EvalContext *ctx, const Promise *pp);
 void cfPS(EvalContext *ctx, LogLevel level, PromiseResult status, const Promise *pp, Attributes attr, const char *fmt, ...) FUNC_ATTR_PRINTF(6, 7);

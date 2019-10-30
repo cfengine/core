@@ -112,6 +112,7 @@ static pcre *context_expression_whitespace_rx = NULL;
 
 static bool BundleAborted(const EvalContext *ctx);
 static void SetBundleAborted(EvalContext *ctx);
+static void SetEvalAborted(EvalContext *ctx);
 
 static bool EvalContextStackFrameContainsSoft(const EvalContext *ctx, const char *context);
 static bool EvalContextHeapContainsSoft(const EvalContext *ctx, const char *ns, const char *name);
@@ -130,6 +131,7 @@ struct EvalContext_
 
     int eval_options;
     bool bundle_aborted;
+    bool eval_aborted;
     bool checksum_updates_default;
     Item *ip_addresses;
     bool ignore_locks;
@@ -435,7 +437,8 @@ static void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context, 
 
     if (IsRegexItemIn(ctx, ctx->heap_abort, copy))
     {
-        FatalError(ctx, "cf-agent aborted on defined class '%s'", copy);
+        Log(LOG_LEVEL_NOTICE, "cf-agent aborted on defined class '%s'", copy);
+        SetEvalAborted(ctx);
     }
 
     if (EvalContextStackFrameContainsSoft(ctx, copy))
@@ -805,6 +808,15 @@ static void SetBundleAborted(EvalContext *ctx)
     ctx->bundle_aborted = true;
 }
 
+static void SetEvalAborted(EvalContext *ctx)
+{
+    ctx->eval_aborted = true;
+}
+
+bool EvalAborted(const EvalContext *ctx)
+{
+    return ctx->eval_aborted;
+}
 
 void EvalContextHeapAddAbort(EvalContext *ctx, const char *context, const char *activated_on_context)
 {
@@ -817,7 +829,8 @@ void EvalContextHeapAddAbort(EvalContext *ctx, const char *context, const char *
 
     if (aborting_context)
     {
-        FatalError(ctx, "cf-agent aborted on defined class '%s'", aborting_context);
+        Log(LOG_LEVEL_NOTICE, "cf-agent aborted on defined class '%s'", aborting_context);
+        SetEvalAborted(ctx);
     }
 }
 
@@ -1622,7 +1635,8 @@ static bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *na
 
         if (IsRegexItemIn(ctx, ctx->heap_abort, context_copy))
         {
-            FatalError(ctx, "cf-agent aborted on defined class '%s'", context_copy);
+            Log(LOG_LEVEL_NOTICE, "cf-agent aborted on defined class '%s'", context_copy);
+            SetEvalAborted(ctx);
         }
     }
 

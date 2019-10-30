@@ -800,6 +800,11 @@ static void ThisAgentInit(void)
 static void KeepPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config)
 {
     KeepControlPromises(ctx, policy, config);
+    /* Check if 'abortclasses' aborted evaluation or not. */
+    if (EvalAborted(ctx))
+    {
+        return;
+    }
     KeepPromiseBundles(ctx, policy, config);
 }
 
@@ -1316,6 +1321,10 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy, GenericAg
             ScheduleAgentOperations(ctx, bp);
             EvalContextStackPopFrame(ctx);
             EndBundleBanner(bp);
+            if (EvalAborted(ctx))
+            {
+                break;
+            }
         }
         else
         {
@@ -1402,7 +1411,7 @@ PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
                 PromiseResult promise_result = ExpandPromise(ctx, pp, KeepAgentPromise, NULL);
                 result = PromiseResultUpdate(result, promise_result);
 
-                if (BundleAbort(ctx))
+                if (EvalAborted(ctx) || BundleAbort(ctx))
                 {
                     DeleteTypeContext(ctx, type);
                     EvalContextStackPopFrame(ctx);

@@ -1356,6 +1356,29 @@ dnl simply to avoid falling into this new code on non-Linux "/proc" platforms,
 dnl because such platforms may have different details under "/proc".
 dnl ######################################################################
 
+dnl Select appropriate "process.../OS/..." filenames in "Makfile.am".
+case "$target_os" in
+
+   solaris*)
+        AC_SUBST(PROCESS_OS_TAG, "solaris")
+        ;;
+   hpux*|hp-ux*)
+        AC_SUBST(PROCESS_OS_TAG, "hpux")
+        ;;
+   aix*)
+        AC_SUBST(PROCESS_OS_TAG, "aix")
+        ;;
+   freebsd*|dragonfly*)
+        AC_SUBST(PROCESS_OS_TAG, "freebsd")
+        ;;
+   linux*|*bsd*|*gnu*)
+        AC_SUBST(PROCESS_OS_TAG, "linux")
+        ;;
+   *)
+        AC_SUBST(PROCESS_OS_TAG, "unix_stub")
+        ;;
+esac
+
 if test -f "/proc/1/stat"; then
   case "$target_os" in
     linux*)

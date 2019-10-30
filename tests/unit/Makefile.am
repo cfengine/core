@@ -325,13 +325,17 @@ rlist_test_CPPFLAGS = $(AM_CPPFLAGS)
 process_test_LDADD = libtest.la ../../libpromises/libpromises.la
 
 # Handling choice of newer "/proc" or traditional "ps" cmd to select processes.
+# "PROCESS_OS_TAG" ("linux", "solaris", etc.) is set by autotools.
+#
+# See also "tests/unit/Makefile.am"
+#
 if HAVE_PS_VIA_PROC
 
 check_PROGRAMS += proc_process_test
 
 proc_process_test_SOURCES = proc_process_test.c \
 	../../libpromises/process_unix.c \
-	../../libpromises/process_proc.c \
+	../../libpromises/process_proc_@PROCESS_OS_TAG@.c \
 	../../libntech/libutils/file_lib.c
 proc_process_test_LDADD = libtest.la ../../libntech/libutils/libutils.la \
 	../../libpromises/libpromises.la
@@ -347,7 +351,7 @@ set_domainname_test_LDFLAGS = -Wl,-bexpall
 evalfunction_test_LDFLAGS = -Wl,-bexpall
 aix_process_test_SOURCES = aix_process_test.c \
 	../../libpromises/process_unix.c \
-	../../libpromises/process_aix.c \
+	../../libpromises/process_cmd__@PROCESS_OS_TAG@.c \
 	../../libntech/libutils/file_lib.c
 aix_process_test_LDADD = libtest.la ../../libntech/libutils/libutils.la
 
@@ -359,7 +363,7 @@ check_PROGRAMS += solaris_process_test
 
 solaris_process_test_SOURCES = solaris_process_test.c \
 	../../libpromises/process_unix.c \
-	../../libpromises/process_solaris.c \
+	../../libpromises/process_cmd__@PROCESS_OS_TAG@.c \
 	../../libntech/libutils/file_lib.c
 solaris_process_test_LDADD = libtest.la ../../libntech/libutils/libutils.la
 

@@ -161,54 +161,34 @@ libpromises_la_SOURCES = \
 
 if !NT
 
-# Whether to use traditional "ps" cmd or newer "/proc" to select processes.
-# Note that the newer 'proc' code subsumes previous "process_/OS/.c".
-# When that OS migrates to within HAVE_PS_VIA_PROC:
-#  o  that "process_/OS/.c" file should be removed
-#  o  a corresponding adjustment should be made in "tests/unit/Makefile.am"
+### Process selection.
+#
+# This is significantly OS dependent, so we have per-OS files.
+# A component of the filename reflects this: autotools "PROCESS_OS_TAG".
+#
+# A further complication is a gradual migration from:
+#   : A monolithic "processes_select_cmd" model which use the "ps" command
+# to:
+#   : A JSON-based API with a generic "processes_select_proc"
+#     that calls onto a per-OS "process_proc_/OS/".
+#
+# As the per-OS migration from /cmd/ to /proc/ advances, the /cmd/ files
+# can be removed.  The /linux/ variant was the first such removal.
+#
+# See also "tests/unit/Makefile.am"
+#
+
 if HAVE_PS_VIA_PROC
 libpromises_la_SOURCES += \
-	process_proc.c \
+	process_proc_@PROCESS_OS_TAG@.c \
 	processes_select_proc.c
 else
 libpromises_la_SOURCES += \
-	processes_select.c
-
-if AIX
-libpromises_la_SOURCES += \
-	process_aix.c
-endif
-
-if HPUX
-libpromises_la_SOURCES += \
-	process_hpux.c
-endif
-
-if SOLARIS
-libpromises_la_SOURCES += \
-	process_solaris.c
-endif
-
-if FREEBSD
-libpromises_la_SOURCES += \
-	process_freebsd.c
-endif
-
+	process_cmd_@PROCESS_OS_TAG@.c \
+	processes_select_cmd.c
 endif # HAVE_PS_VIA_PROC
 
-if !LINUX
-if !AIX
-if !HPUX
-if !SOLARIS
-if !FREEBSD
-libpromises_la_SOURCES += \
-	process_unix_stub.c
-endif
-endif
-endif
-endif
-endif
-
+# Additional generic sources
 libpromises_la_SOURCES += \
 	process_unix.c \
 	pipes_unix.c

@@ -1,3 +1,26 @@
+3.10.7:
+	- Added derived-from-file tag to hard classes based on /etc/redhat-release
+	  (CFE-3140)
+	- Fixed bug in ps parsing on OpenBSD / NetBSD causing bootstrap to fail
+	- Fixed promise result when using process_stop in processes type promises
+	  (ENT-4988)
+	- Package modules now hit network when package cache is first initialized
+	  (CFE-3094)
+	- Set create permissions of monitord files in state directory to 0600
+	  0600 matches the permissions enforced by policy.
+	  Affected files:
+	   * `state/cf_incoming.*`
+	   * `state/cf_outgoing.*`
+	   * `state/cf_users`
+	   * `state/env_data`
+	  Ticket: (ENT-4863)
+	- The @ character is now allowed in the key of classic arrays defined by the module protocol
+	  (CFE-3099)
+	- Version specific distro classes are now collected by default in Enterprise
+	  (ENT-4752)
+	- Zero bytes in class guards no longer cause crashes (CFE-3028)
+	- redhat_8 and redhat_8_0 are now defined on RHEL 8 (CFE-3140)
+
 3.10.6:
 	- Forward slashes are now allowed in module protocol commands (CFE-2478)
 	- 'ps' command used internally can now handle longer usernames (CFE-2951)

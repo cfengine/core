@@ -45,13 +45,3 @@ time_t LoadBootTime(void)
 {
     return -1;
 }
-
-time_t GetProcessStartTime(ARG_UNUSED pid_t pid)
-{
-    return PROCESS_START_TIME_UNKNOWN;
-}
-
-ProcessState GetProcessState(ARG_UNUSED pid_t pid)
-{
-    return PROCESS_STATE_DOES_NOT_EXIST;
-}

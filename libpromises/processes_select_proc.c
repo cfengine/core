@@ -458,3 +458,61 @@ void ClearProcessTable(void)
     JsonDestroy(PROCTABLE);
     PROCTABLE= NULL;
 }
+
+
+/*
+ * Access points for individual processes.
+ * Independent of complete PROCTABLE.
+ * Initial use is mostly unit tests
+ * although there are a couple of other uses.
+ */
+
+time_t GetProcessStartTime(pid_t pid)
+{
+    JsonElement *pdata;
+
+    pdata = LoadProcStat(pid);
+    if (pdata) {
+        time_t t = IntFromString(JsonObjectGetAsString(pdata, JPROC_KEY_STARTTIME_BOOT));
+
+        JsonDestroy(pdata);
+
+        return t;
+    }
+    else
+    {
+        return PROCESS_START_TIME_UNKNOWN;
+    }
+}
+
+ProcessState GetProcessState(pid_t pid)
+{
+    JsonElement *pdata;
+
+    pdata = LoadProcStat(pid);
+    if (pdata) {
+        ProcessState pstate;
+
+        const char *status = JsonObjectGetAsString(pdata, JPROC_KEY_PSTATE);
+        switch (status[0])
+        {
+        case 'T':
+            pstate = PROCESS_STATE_STOPPED;
+            break;
+        case 'Z':
+            pstate = PROCESS_STATE_ZOMBIE;
+            break;
+        default:
+            pstate = PROCESS_STATE_RUNNING;
+            break;
+        }
+
+        JsonDestroy(pdata);
+
+        return pstate;
+    }
+    else
+    {
+        return PROCESS_STATE_DOES_NOT_EXIST;
+    }
+}

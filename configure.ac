@@ -1351,47 +1351,54 @@ dnl ######################################################################
 dnl Should "processes_select" use "/proc/<nnn>" rather than "ps" command?
 dnl
 dnl New at March/2019. Developing on RHEL6/RHEL7. Eventually aim to use widely.
-dnl The 'case' scaffolding is temporary during this development,
-dnl simply to avoid falling into this new code on non-Linux "/proc" platforms,
-dnl because such platforms may have different details under "/proc".
 dnl ######################################################################
 
-dnl Select appropriate "process.../OS/..." filenames in "Makfile.am".
+dnl These are the supported platforms:
+dnl   o  Legacy ps-output support for all;
+dnl   o  Newer "/proc" parsing not yet implemented for all.
+dnl For unsupported platforms, the fallback is "unix_stub".
+
+AC_MSG_CHECKING(process handling)
+process_os_tag=""
 case "$target_os" in
 
    solaris*)
-        AC_SUBST(PROCESS_OS_TAG, "solaris")
+        process_os_tag="solaris"
         ;;
    hpux*|hp-ux*)
-        AC_SUBST(PROCESS_OS_TAG, "hpux")
+        process_os_tag="hpux"
         ;;
    aix*)
-        AC_SUBST(PROCESS_OS_TAG, "aix")
+        process_os_tag="aix"
         ;;
    freebsd*|dragonfly*)
-        AC_SUBST(PROCESS_OS_TAG, "freebsd")
+        process_os_tag="freebsd"
         ;;
    linux*|*bsd*|*gnu*)
-        AC_SUBST(PROCESS_OS_TAG, "linux")
-        ;;
-   *)
-        AC_SUBST(PROCESS_OS_TAG, "unix_stub")
+        process_os_tag="linux"
         ;;
 esac
 
-if test -f "/proc/1/stat"; then
-  case "$target_os" in
-    linux*)
-        AM_CONDITIONAL([HAVE_PS_VIA_PROC], true)
-        AC_DEFINE(HAVE_PS_VIA_PROC, 1, [Have a /proc interface to processes])
-        ;;
-    *)
-        AM_CONDITIONAL([HAVE_PS_VIA_PROC], false)
-        ;;
-  esac
+dnl Does platform seem to offer "/proc"?
+dnl AND do we have a '.c' source file to implement it?
+process_os_src="process_proc_${process_os_tag}.c"
+if test -f "/proc/1/stat" \
+        && test -n "${process_os_tag}" \
+        && test -f "${srcdir}/libpromises/${process_os_src}"
+then
+    # "/proc" style
+    AM_CONDITIONAL([HAVE_PS_VIA_PROC], true)
+    AC_MSG_RESULT(via '/proc' using ${process_os_src})
 else
-  AM_CONDITIONAL([HAVE_PS_VIA_PROC], false)
+    if test -z ${process_os_tag}; then
+        process_os_tag="unix_stub"
+    fi
+    AM_CONDITIONAL([HAVE_PS_VIA_PROC], false)
+    AC_MSG_RESULT(via legacy 'ps' output)
 fi
+
+dnl Substitute PROCESS_OS_TAG into Makefile.am etc.
+AC_SUBST(PROCESS_OS_TAG, "${process_os_tag}")
 
 m4_include([m4/cf3_platforms.m4])
 

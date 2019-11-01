@@ -12,7 +12,7 @@
 # any reliance on this.
 #
 # It assumes that the host on which the test is being run will have at least
-# one tty connection active.  This is clearly the case if it being run
+# one tty connection active.  This is clearly the case if it is being run
 # by a human from their command line.  But it might not be true in a
 # CI/CD environment; in such a case the meta/skip may be useful.
 #
@@ -48,7 +48,7 @@ bundle agent test
   meta:
       "test_skip_needs_work" -> {"CFE-3025"}
         string => "!linux.!hpux",
-        comment => "TTY-based process filtering does't work well no other platforms";
+        comment => "TTY-based process filtering doesn't work well on other platforms";
 
   vars:
     # Maintenance note: Aim to cover as many OSes as possible

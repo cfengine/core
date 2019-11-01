@@ -90,7 +90,6 @@ static JsonElement *CURL_CACHE = NULL;
 static FnCallResult FilterInternal(EvalContext *ctx, const FnCall *fp, const char *regex, const Rlist* rp, bool do_regex, bool invert, long max);
 
 static char *StripPatterns(char *file_buffer, const char *pattern, const char *filename);
-static void CloseStringHole(char *s, int start, int end);
 static int BuildLineArray(EvalContext *ctx, const Bundle *bundle, const char *array_lval, const char *file_buffer,
                           const char *split, int maxent, DataType type, bool int_index);
 static JsonElement* BuildData(EvalContext *ctx, const char *file_buffer,  const char *split, int maxent, bool make_array);
@@ -7654,7 +7653,7 @@ static char *StripPatterns(char *file_buffer, const char *pattern, const char *f
     const size_t original_length = strlen(file_buffer);
     while (StringMatchWithPrecompiledRegex(rx, file_buffer, &start, &end))
     {
-        CloseStringHole(file_buffer, start, end);
+        StringCloseHole(file_buffer, start, end);
 
         if (start == end)
         {
@@ -7680,16 +7679,6 @@ static char *StripPatterns(char *file_buffer, const char *pattern, const char *f
 }
 
 /*********************************************************************/
-
-static void CloseStringHole(char *s, int start, int end)
-{
-    if (end > start)
-    {
-        memmove(s + start, s + end,
-                /* The 1+ ensures we copy the final '\0' */
-                1 + strlen(s + end));
-    }
-}
 
 static JsonElement* BuildData(ARG_UNUSED EvalContext *ctx, const char *file_buffer,  const char *split, int maxent, bool make_array)
 {

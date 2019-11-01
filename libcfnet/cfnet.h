@@ -29,7 +29,7 @@
 
 #include <platform.h>
 #include <definitions.h>                        /* CF_BUFSIZE, CF_SMALLBUF */
-
+#include <protocol_version.h> // ProtocolVersion
 
 /* Only set with DetermineCfenginePort() and from cf-serverd */
 extern char CFENGINE_PORT_STR[16];                     /* GLOBAL_P GLOBAL_E */
@@ -50,30 +50,6 @@ extern int CFENGINE_PORT;                              /* GLOBAL_P GLOBAL_E */
 #define CF_PROTO_OFFSET 16
 #define CF_INBAND_OFFSET 8
 #define CF_MSGSIZE (CF_BUFSIZE - CF_INBAND_OFFSET)
-
-
-/**
-  Available protocol versions. When connection is initialised ProtocolVersion
-  is 0, i.e. undefined. It is after the call to ServerConnection() that
-  protocol version is decided, according to body copy_from and body common
-  control. All protocol numbers are numbered incrementally starting from 1.
- */
-typedef enum
-{
-    CF_PROTOCOL_UNDEFINED = 0,
-    CF_PROTOCOL_CLASSIC = 1,
-    /* --- Greater versions use TLS as secure communications layer --- */
-    CF_PROTOCOL_TLS = 2
-} ProtocolVersion;
-
-/* We use CF_PROTOCOL_LATEST as the default for new connections. */
-#define CF_PROTOCOL_LATEST CF_PROTOCOL_TLS
-
-static const char * const PROTOCOL_VERSION_STRING[CF_PROTOCOL_LATEST + 1] = {
-    "undefined",
-    "classic",
-    "latest"
-};
 
 typedef struct
 {

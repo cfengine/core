@@ -25,6 +25,7 @@
 
 #include <server_tls.h>
 #include <server_common.h>
+#include <protocol.h> // ParseProtocolVersionNetwork()
 
 #include <openssl/err.h>                                   /* ERR_get_error */
 
@@ -215,6 +216,8 @@ void ServerTLSDeInitialize(RSA **priv_key, RSA **pub_key, SSL_CTX **ssl_ctx)
  */
 bool ServerTLSPeek(ConnectionInfo *conn_info)
 {
+    assert(conn_info != NULL);
+
     assert(SSLSERVERCONTEXT != NULL);
     assert(PRIVKEY != NULL);
     assert(PUBKEY  != NULL);
@@ -286,14 +289,12 @@ bool ServerIdentificationDialog(ConnectionInfo *conn_info,
 {
     int ret;
     char input[1024] = "";
-    /* The only protocol version we support inside TLS, for now. */
-    const int SERVER_PROTOCOL_VERSION = CF_PROTOCOL_LATEST;
 
     /* Send "CFE_v%d cf-serverd version". */
     char version_string[CF_MAXVARSIZE];
     int len = snprintf(version_string, sizeof(version_string),
                        "CFE_v%d cf-serverd %s\n",
-                       SERVER_PROTOCOL_VERSION, VERSION);
+                       CF_PROTOCOL_LATEST, VERSION);
 
     ret = TLSSend(conn_info->ssl, version_string, len);
     if (ret != len)
@@ -311,9 +312,8 @@ bool ServerIdentificationDialog(ConnectionInfo *conn_info,
         return false;
     }
 
-    int version_received = -1;
-    ret = sscanf(input, "CFE_v%d", &version_received);
-    if (ret != 1)
+    const ProtocolVersion protocol = ParseProtocolVersionNetwork(input);
+    if (ProtocolIsUndefined(protocol))
     {
         Log(LOG_LEVEL_NOTICE,
             "Protocol version negotiation failed! Received: %s",
@@ -321,16 +321,24 @@ bool ServerIdentificationDialog(ConnectionInfo *conn_info,
         return false;
     }
 
-    /* For now we support only one version inside TLS. */
-    /* TODO value should not be hardcoded but compared to enum ProtocolVersion. */
-    if (version_received != SERVER_PROTOCOL_VERSION)
+    /* This is already inside TLS code, so TLS is required at this point*/
+    if (ProtocolIsClassic(protocol))
     {
         Log(LOG_LEVEL_NOTICE,
             "Client advertises disallowed protocol version: %d",
-            version_received);
+            protocol);
         return false;
-        /* TODO send "BAD ..." ? */
     }
+
+    if (ProtocolIsTooNew(protocol))
+    {
+        Log(LOG_LEVEL_NOTICE,
+            "Client attempted a protocol version which is too new for us: %d",
+            protocol);
+        return false;
+    }
+
+    assert(ProtocolIsKnown(protocol));
 
     /* Did we receive 2nd line or do we need to receive again? */
     const char id_line[] = "\nIDENTITY ";
@@ -396,7 +404,8 @@ bool ServerIdentificationDialog(ConnectionInfo *conn_info,
     }
 
     /* Version client and server agreed on. */
-    conn_info->protocol = version_received;
+    assert(ProtocolIsKnown(protocol));
+    conn_info->protocol = protocol;
 
     return true;
 }
@@ -630,6 +639,8 @@ ProtocolCommandNew GetCommandNew(char *str)
  */
 bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
 {
+    assert(conn != NULL);
+
     /* The CF_BUFEXT extra space is there to ensure we're not *reading* out of
      * bounds in commands that carry extra binary arguments, like MD5. */
     char recvbuffer[CF_BUFSIZE + CF_BUFEXT] = { 0 };
@@ -1052,10 +1063,12 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
             goto protocol_error;
         }
 
-        if (acl_CheckExact(query_acl, name,
-                           conn->ipaddr, conn->revdns,
-                           KeyPrintableHash(ConnectionInfoKey(conn->conn_info)))
-            == false)
+        const char *hostkey = KeyPrintableHash(
+            ConnectionInfoKey(conn->conn_info));
+        const bool access_to_query = acl_CheckExact(
+            query_acl, name, conn->ipaddr, conn->revdns, hostkey);
+
+        if (!access_to_query)
         {
             Log(LOG_LEVEL_INFO, "access denied to query: %s", query);
             RefuseAccess(conn, recvbuffer);
@@ -1063,6 +1076,32 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         }
 
         if (GetServerQuery(conn, recvbuffer, encrypted))
+        {
+            return true;
+        }
+
+        break;
+    }
+    case PROTOCOL_COMMAND_COOKIE:
+    {
+        if (ConnectionInfoProtocolVersion(conn->conn_info) < CF_PROTOCOL_COOKIE)
+        {
+            goto protocol_error;
+        }
+
+        const char *hostkey = KeyPrintableHash(
+            ConnectionInfoKey(conn->conn_info));
+        const bool access_to_query_delta = acl_CheckExact(
+            query_acl, "delta", conn->ipaddr, conn->revdns, hostkey);
+
+        if (!access_to_query_delta)
+        {
+            Log(LOG_LEVEL_INFO, "access denied to cookie query: %s", recvbuffer);
+            RefuseAccess(conn, recvbuffer);
+            return true;
+        }
+
+        if (ReturnCookies(conn))
         {
             return true;
         }

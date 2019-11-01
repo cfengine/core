@@ -45,6 +45,7 @@ typedef enum
     PROTOCOL_COMMAND_CONTEXT,
     PROTOCOL_COMMAND_QUERY,
     PROTOCOL_COMMAND_CALL_ME_BACK,
+    PROTOCOL_COMMAND_COOKIE,
     PROTOCOL_COMMAND_BAD
 } ProtocolCommandNew;
 
@@ -60,6 +61,7 @@ static const char *const PROTOCOL_NEW[PROTOCOL_COMMAND_BAD + 1] =
     "CONTEXT",
     "QUERY",
     "SCALLBACK",
+    "COOKIE",
     NULL
 };
 

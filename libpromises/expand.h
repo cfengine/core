@@ -54,7 +54,6 @@ bool IsNakedVar(const char *str, char vtype);
 void GetNaked(char *dst, const char *s);
 bool IsVarList(const char *var);
 
-ProtocolVersion ProtocolVersionParse(const char *s);
-
+#include <protocol.h> // ProtocolVersionParse() TODO: Remove
 
 #endif

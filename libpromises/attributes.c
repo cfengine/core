@@ -30,6 +30,7 @@
 #include <logging.h>
 #include <chflags.h>
 #include <audit.h>
+#include <protocol.h> // ParseProtocolVersionPolicy()
 
 #define CF_DEFINECLASSES "classes"
 #define CF_TRANSACTION   "action"
@@ -926,15 +927,10 @@ FileCopy GetCopyConstraints(const EvalContext *ctx, const Promise *pp)
     f.protocol_version = CF_PROTOCOL_UNDEFINED;
     if (protocol_version != NULL)
     {
-        if (strcmp(protocol_version, "1") == 0 ||
-            strcmp(protocol_version, "classic") == 0)
+        ProtocolVersion parsed = ParseProtocolVersionPolicy(protocol_version);
+        if (ProtocolIsKnown(parsed))
         {
-            f.protocol_version = CF_PROTOCOL_CLASSIC;
-        }
-        else if (strcmp(protocol_version, "2") == 0 ||
-                 strcmp(protocol_version, "latest") == 0)
-        {
-            f.protocol_version = CF_PROTOCOL_TLS;
+            f.protocol_version = parsed;
         }
     }
 

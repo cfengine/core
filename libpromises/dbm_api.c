@@ -93,6 +93,7 @@ static pthread_once_t db_shutdown_once = PTHREAD_ONCE_INIT; /* GLOBAL_T */
 
 /******************************************************************************/
 
+// Only append to the end, keep in sync with dbid enum in dbm_api.h
 static const char *const DB_PATHS_STATEDIR[] = {
     [dbid_classes] = "cf_classes",
     [dbid_variables] = "cf_variables",
@@ -116,7 +117,8 @@ static const char *const DB_PATHS_STATEDIR[] = {
     [dbid_agent_execution] = "nova_agent_execution",
     [dbid_bundles] = "bundles",
     [dbid_packages_installed] = "packages_installed",
-    [dbid_packages_updates] = "packages_updates"
+    [dbid_packages_updates] = "packages_updates",
+    [dbid_cookies] = "nova_cookies",
 };
 
 /*

@@ -44,6 +44,7 @@ static const int CF_NOSIZE = -1;
 #include <classic.h>                  /* SendSocketStream */
 #include <net.h>                      /* SendTransaction,ReceiveTransaction */
 #include <openssl/err.h>                                   /* ERR_get_error */
+#include <protocol.h>                                  /* ProtocolIsKnown() */
 #include <tls_generic.h>              /* TLSSend */
 #include <rlist.h>
 #include <cf-serverd-enterprise-stubs.h>
@@ -422,11 +423,14 @@ void CfGetFile(ServerFileGetState *args)
         Log(LOG_LEVEL_INFO, "REFUSE access to file: %s", filename);
         RefuseAccess(args->conn, args->replyfile);
         snprintf(sendbuffer, CF_BUFSIZE, "%s", CF_FAILEDSTR);
-        if (ConnectionInfoProtocolVersion(conn_info) == CF_PROTOCOL_CLASSIC)
+
+        const ProtocolVersion version = ConnectionInfoProtocolVersion(conn_info);
+        assert(ProtocolIsKnown(version));
+        if (ProtocolIsClassic(version))
         {
             SendSocketStream(ConnectionInfoSocket(conn_info), sendbuffer, args->buf_size);
         }
-        else if (ConnectionInfoProtocolVersion(conn_info) == CF_PROTOCOL_TLS)
+        else if (ProtocolIsTLS(version))
         {
             TLSSend(ConnectionInfoSSL(conn_info), sendbuffer, args->buf_size);
         }
@@ -440,11 +444,14 @@ void CfGetFile(ServerFileGetState *args)
         Log(LOG_LEVEL_ERR, "Open error of file '%s'. (open: %s)",
             filename, GetErrorStr());
         snprintf(sendbuffer, CF_BUFSIZE, "%s", CF_FAILEDSTR);
-        if (ConnectionInfoProtocolVersion(conn_info) == CF_PROTOCOL_CLASSIC)
+
+        const ProtocolVersion version = ConnectionInfoProtocolVersion(conn_info);
+        assert(ProtocolIsKnown(version));
+        if (ProtocolIsClassic(version))
         {
             SendSocketStream(ConnectionInfoSocket(conn_info), sendbuffer, args->buf_size);
         }
-        else if (ConnectionInfoProtocolVersion(conn_info) == CF_PROTOCOL_TLS)
+        else if (ProtocolIsTLS(version))
         {
             TLSSend(ConnectionInfoSSL(conn_info), sendbuffer, args->buf_size);
         }
@@ -494,14 +501,16 @@ void CfGetFile(ServerFileGetState *args)
                 {
                     snprintf(sendbuffer, CF_BUFSIZE, "%s%s: %s", CF_CHANGEDSTR1, CF_CHANGEDSTR2, filename);
 
-                    if (ConnectionInfoProtocolVersion(conn_info) == CF_PROTOCOL_CLASSIC)
+                    const ProtocolVersion version = ConnectionInfoProtocolVersion(conn_info);
+
+                    if (ProtocolIsClassic(version))
                     {
                         if (SendSocketStream(ConnectionInfoSocket(conn_info), sendbuffer, blocksize) == -1)
                         {
                             Log(LOG_LEVEL_VERBOSE, "Send failed in GetFile. (send: %s)", GetErrorStr());
                         }
                     }
-                    else if (ConnectionInfoProtocolVersion(conn_info) == CF_PROTOCOL_TLS)
+                    else if (ProtocolIsTLS(version))
                     {
                         if (TLSSend(ConnectionInfoSSL(conn_info), sendbuffer, blocksize) == -1)
                         {
@@ -527,7 +536,9 @@ void CfGetFile(ServerFileGetState *args)
 
             total += n_read;
 
-            if (ConnectionInfoProtocolVersion(conn_info) == CF_PROTOCOL_CLASSIC)
+            const ProtocolVersion version = ConnectionInfoProtocolVersion(conn_info);
+
+            if (ProtocolIsClassic(version))
             {
                 if (SendSocketStream(ConnectionInfoSocket(conn_info), sendbuffer, sendlen) == -1)
                 {
@@ -535,7 +546,7 @@ void CfGetFile(ServerFileGetState *args)
                     break;
                 }
             }
-            else if (ConnectionInfoProtocolVersion(conn_info) == CF_PROTOCOL_TLS)
+            else if (ProtocolIsTLS(version))
             {
                 if (TLSSend(ConnectionInfoSSL(conn_info), sendbuffer, sendlen) == -1)
                 {

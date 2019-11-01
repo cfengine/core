@@ -12,10 +12,6 @@ bundle agent test
         string => "Test that readstringlist correctly ignores many comment lines";
         # https://regex101.com/r/OZUgku/1/
 
-      "test_soft_fail"
-        string => "any",
-        meta => { "ENT-5042" };
-
   vars:
       "my_list_of_strings"
         slist => readstringlist( "$(this.promise_filename).list.txt", # File to read

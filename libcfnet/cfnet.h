@@ -51,6 +51,15 @@ extern int CFENGINE_PORT;                              /* GLOBAL_P GLOBAL_E */
 #define CF_INBAND_OFFSET 8
 #define CF_MSGSIZE (CF_BUFSIZE - CF_INBAND_OFFSET)
 
+#define CF_FAILEDSTR "BAD: Unspecified server refusal (see verbose server output)"
+
+/* Split this in two so it won't be recognised when transferring a CFEngine
+ * binary */
+#define CF_CHANGEDSTR1 "BAD: File changed "
+#define CF_CHANGEDSTR2 "while copying"
+
+#define CF_START_DOMAIN "undefined.domain"
+
 typedef struct
 {
     ProtocolVersion protocol_version : 3;

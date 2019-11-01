@@ -74,10 +74,10 @@ int SendTransaction(ConnectionInfo *conn_info,
     /* Not allowed to send zero-payload packets */
     assert(len > 0);
 
-    if (len > CF_BUFSIZE - CF_INBAND_OFFSET)
+    if (len > CF_MSGSIZE)
     {
-        Log(LOG_LEVEL_ERR, "SendTransaction: len (%d) > %d - %d",
-            len, CF_BUFSIZE, CF_INBAND_OFFSET);
+        Log(LOG_LEVEL_ERR, "SendTransaction: len (%d) > %d",
+            len, CF_MSGSIZE);
         return -1;
     }
 

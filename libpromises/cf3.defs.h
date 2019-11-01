@@ -132,12 +132,6 @@ typedef enum
 
 /*****************************************************************************/
 
-#define CF_FAILEDSTR "BAD: Unspecified server refusal (see verbose server output)"
-#define CF_CHANGEDSTR1 "BAD: File changed "     /* Split this so it cannot be recognized */
-#define CF_CHANGEDSTR2 "while copying"
-
-#define CF_START_DOMAIN "undefined.domain"
-
 #define CF_GRAINS   64
 #define CF_NETATTR   7          /* icmp udp dns tcpsyn tcpfin tcpack */
 #define CF_MEASURE_INTERVAL (5.0*60.0)

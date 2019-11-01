@@ -728,8 +728,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
             goto protocol_error;
         }
 
-        Log(LOG_LEVEL_VERBOSE, "%14s %7s %s",
-            "Received:", "GET", filename);
+        Log(LOG_LEVEL_VERBOSE, "Received: GET %s", filename);
 
         /* TODO batch all the following in one function since it's very
          * similar in all of GET, OPENDIR and STAT. */
@@ -752,8 +751,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
 
         PathRemoveTrailingSlash(filename, strlen(filename));
 
-        Log(LOG_LEVEL_VERBOSE, "%14s %7s %s",
-            "Translated to:", "GET", filename);
+        Log(LOG_LEVEL_VERBOSE, "Translated to: GET %s", filename);
 
         if (acl_CheckPath(paths_acl, filename,
                           conn->ipaddr, conn->revdns,
@@ -791,8 +789,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
             goto protocol_error;
         }
 
-        Log(LOG_LEVEL_VERBOSE, "%14s %7s %s",
-            "Received:", "OPENDIR", filename);
+        Log(LOG_LEVEL_VERBOSE, "Received: OPENDIR %s", filename);
 
         /* sizeof()-1 because we need one extra byte for
            appending '/' afterwards. */

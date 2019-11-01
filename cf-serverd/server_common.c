@@ -401,17 +401,34 @@ static void FailedTransfer(ConnectionInfo *connection)
 
 void CfGetFile(ServerFileGetState *args)
 {
-    int fd;
     off_t n_read, total = 0, sendlen = 0, count = 0;
     char sendbuffer[CF_BUFSIZE + 256], filename[CF_BUFSIZE];
-    struct stat sb;
-    int blocksize = 2048;
 
     ConnectionInfo *conn_info = args->conn->conn_info;
 
     TranslatePath(filename, args->replyfile);
 
-    stat(filename, &sb);
+    struct stat sb;
+    int fd = safe_open(filename, O_RDONLY);
+    if (fd == -1 || fstat(fd, &sb) == -1)
+    {
+        Log(LOG_LEVEL_ERR, "Open error of file '%s'. (open: %s)",
+            filename, GetErrorStr());
+        snprintf(sendbuffer, CF_BUFSIZE, "%s", CF_FAILEDSTR);
+
+        const ProtocolVersion version = ConnectionInfoProtocolVersion(conn_info);
+        assert(ProtocolIsKnown(version));
+        if (ProtocolIsClassic(version))
+        {
+            SendSocketStream(ConnectionInfoSocket(conn_info), sendbuffer, args->buf_size);
+        }
+        else if (ProtocolIsTLS(version))
+        {
+            TLSSend(ConnectionInfoSSL(conn_info), sendbuffer, args->buf_size);
+        }
+
+        return;
+    }
 
     Log(LOG_LEVEL_DEBUG, "CfGetFile('%s'), size = %jd",
         filename, (intmax_t) sb.st_size);
@@ -434,130 +451,111 @@ void CfGetFile(ServerFileGetState *args)
         {
             TLSSend(ConnectionInfoSSL(conn_info), sendbuffer, args->buf_size);
         }
+
         return;
     }
 
 /* File transfer */
 
-    if ((fd = safe_open(filename, O_RDONLY)) == -1)
+    int div = 3;
+
+    if (sb.st_size > 10485760L) /* File larger than 10 MB, checks every 64kB */
     {
-        Log(LOG_LEVEL_ERR, "Open error of file '%s'. (open: %s)",
-            filename, GetErrorStr());
-        snprintf(sendbuffer, CF_BUFSIZE, "%s", CF_FAILEDSTR);
+        div = 32;
+    }
+
+    int blocksize = sb.st_blksize;
+    while (true)
+    {
+        Log(LOG_LEVEL_DEBUG, "Now reading from disk...");
+
+        if ((n_read = read(fd, sendbuffer, blocksize)) == -1)
+        {
+            Log(LOG_LEVEL_ERR, "Read failed in GetFile. (read: %s)", GetErrorStr());
+            break;
+        }
+
+        if (n_read == 0)
+        {
+            break;
+        }
+
+        off_t savedlen = sb.st_size;
+
+        /* check the file is not changing at source */
+
+        if (count++ % div == 0)   /* Don't do this too often */
+        {
+
+            if (fstat(fd, &sb))
+            {
+                Log(LOG_LEVEL_ERR, "Cannot stat file '%s'. (fstat: %s)",
+                        filename, GetErrorStr());
+                break;
+            }
+
+            if (sb.st_size != savedlen)
+            {
+                snprintf(sendbuffer, CF_BUFSIZE, "%s%s: %s", CF_CHANGEDSTR1, CF_CHANGEDSTR2, filename);
+
+                const ProtocolVersion version = ConnectionInfoProtocolVersion(conn_info);
+
+                if (ProtocolIsClassic(version))
+                {
+                    if (SendSocketStream(ConnectionInfoSocket(conn_info), sendbuffer, blocksize) == -1)
+                    {
+                        Log(LOG_LEVEL_VERBOSE, "Send failed in GetFile. (send: %s)", GetErrorStr());
+                    }
+                }
+                else if (ProtocolIsTLS(version))
+                {
+                    if (TLSSend(ConnectionInfoSSL(conn_info), sendbuffer, blocksize) == -1)
+                    {
+                        Log(LOG_LEVEL_VERBOSE,
+                                "Send failed in GetFile. (send: %s)", GetErrorStr());
+                    }
+                }
+
+                Log(LOG_LEVEL_DEBUG,
+                        "Aborting transfer after %jd: file is "
+                        "changing rapidly at source.",
+                        (intmax_t) total);
+                break;
+            }
+
+            if ((savedlen - total) / blocksize > 0)
+            {
+                sendlen = blocksize;
+            }
+            else if (savedlen != 0)
+            {
+                sendlen = (savedlen - total);
+            }
+        }
+
+        total += n_read;
 
         const ProtocolVersion version = ConnectionInfoProtocolVersion(conn_info);
-        assert(ProtocolIsKnown(version));
+
         if (ProtocolIsClassic(version))
         {
-            SendSocketStream(ConnectionInfoSocket(conn_info), sendbuffer, args->buf_size);
+            if (SendSocketStream(ConnectionInfoSocket(conn_info), sendbuffer, sendlen) == -1)
+            {
+                Log(LOG_LEVEL_VERBOSE, "Send failed in GetFile. (send: %s)", GetErrorStr());
+                break;
+            }
         }
         else if (ProtocolIsTLS(version))
         {
-            TLSSend(ConnectionInfoSSL(conn_info), sendbuffer, args->buf_size);
-        }
-    }
-    else
-    {
-        int div = 3;
-
-        if (sb.st_size > 10485760L) /* File larger than 10 MB, checks every 64kB */
-        {
-            div = 32;
-        }
-
-        while (true)
-        {
-            memset(sendbuffer, 0, CF_BUFSIZE);
-
-            Log(LOG_LEVEL_DEBUG, "Now reading from disk...");
-
-            if ((n_read = read(fd, sendbuffer, blocksize)) == -1)
+            if (TLSSend(ConnectionInfoSSL(conn_info), sendbuffer, sendlen) == -1)
             {
-                Log(LOG_LEVEL_ERR, "Read failed in GetFile. (read: %s)", GetErrorStr());
+                Log(LOG_LEVEL_VERBOSE, "Send failed in GetFile. (send: %s)", GetErrorStr());
                 break;
             }
-
-            if (n_read == 0)
-            {
-                break;
-            }
-            else
-            {
-                off_t savedlen = sb.st_size;
-
-                /* check the file is not changing at source */
-
-                if (count++ % div == 0)   /* Don't do this too often */
-                {
-                    if (stat(filename, &sb))
-                    {
-                        Log(LOG_LEVEL_ERR, "Cannot stat file '%s'. (stat: %s)",
-                            filename, GetErrorStr());
-                        break;
-                    }
-                }
-
-                if (sb.st_size != savedlen)
-                {
-                    snprintf(sendbuffer, CF_BUFSIZE, "%s%s: %s", CF_CHANGEDSTR1, CF_CHANGEDSTR2, filename);
-
-                    const ProtocolVersion version = ConnectionInfoProtocolVersion(conn_info);
-
-                    if (ProtocolIsClassic(version))
-                    {
-                        if (SendSocketStream(ConnectionInfoSocket(conn_info), sendbuffer, blocksize) == -1)
-                        {
-                            Log(LOG_LEVEL_VERBOSE, "Send failed in GetFile. (send: %s)", GetErrorStr());
-                        }
-                    }
-                    else if (ProtocolIsTLS(version))
-                    {
-                        if (TLSSend(ConnectionInfoSSL(conn_info), sendbuffer, blocksize) == -1)
-                        {
-                            Log(LOG_LEVEL_VERBOSE, "Send failed in GetFile. (send: %s)", GetErrorStr());
-                        }
-                    }
-
-                    Log(LOG_LEVEL_DEBUG,
-                        "Aborting transfer after %jd: file is changing rapidly at source.",
-                        (intmax_t) total);
-                    break;
-                }
-
-                if ((savedlen - total) / blocksize > 0)
-                {
-                    sendlen = blocksize;
-                }
-                else if (savedlen != 0)
-                {
-                    sendlen = (savedlen - total);
-                }
-            }
-
-            total += n_read;
-
-            const ProtocolVersion version = ConnectionInfoProtocolVersion(conn_info);
-
-            if (ProtocolIsClassic(version))
-            {
-                if (SendSocketStream(ConnectionInfoSocket(conn_info), sendbuffer, sendlen) == -1)
-                {
-                    Log(LOG_LEVEL_VERBOSE, "Send failed in GetFile. (send: %s)", GetErrorStr());
-                    break;
-                }
-            }
-            else if (ProtocolIsTLS(version))
-            {
-                if (TLSSend(ConnectionInfoSSL(conn_info), sendbuffer, sendlen) == -1)
-                {
-                    Log(LOG_LEVEL_VERBOSE, "Send failed in GetFile. (send: %s)", GetErrorStr());
-                    break;
-                }
-            }
         }
-
-        close(fd);
     }
+
+    close(fd);
 }
 
 void CfEncryptGetFile(ServerFileGetState *args)

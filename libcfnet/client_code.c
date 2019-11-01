@@ -547,25 +547,17 @@ bool CompareHashNet(const char *file1, const char *file2, bool encrypt, AgentCon
 /*********************************************************************/
 
 
-static bool EncryptCopyRegularFileNet(const char *source, const char *dest, off_t size, AgentConnection *conn)
+static bool EncryptCopyRegularFileNet(const char *source, const char *dest,
+                                      const off_t size, AgentConnection *conn)
 {
     int blocksize = 2048, n_read = 0, plainlen, more = true, finlen, cnt = 0;
-    int tosend, cipherlen = 0;
-    char *buf, in[CF_BUFSIZE], out[CF_BUFSIZE], workbuf[CF_BUFSIZE], cfchangedstr[265];
+    char *buf, in[CF_BUFSIZE], out[CF_BUFSIZE], workbuf[CF_BUFSIZE];
     unsigned char iv[32] =
         { 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8 };
 
-    snprintf(cfchangedstr, 255, "%s%s", CF_CHANGEDSTR1, CF_CHANGEDSTR2);
-
-    if ((strlen(dest) > CF_BUFSIZE - 20))
-    {
-        Log(LOG_LEVEL_ERR, "Filename too long");
-        return false;
-    }
-
     unlink(dest);                /* To avoid link attacks */
 
-    int dd = safe_open_create_perms(dest, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY, CF_PERMS_DEFAULT);
+    int dd = safe_open(dest, O_WRONLY | O_CREAT | O_EXCL | O_BINARY);
     if (dd == -1)
     {
         Log(LOG_LEVEL_ERR,
@@ -577,7 +569,7 @@ static bool EncryptCopyRegularFileNet(const char *source, const char *dest, off_
 
     if (size == 0)
     {
-        // No sense in copying an empty file
+        // We do not need to copy the file if it is empty, only create
         close(dd);
         return true;
     }
@@ -585,9 +577,10 @@ static bool EncryptCopyRegularFileNet(const char *source, const char *dest, off_
     workbuf[0] = '\0';
 
     snprintf(in, CF_BUFSIZE - CF_PROTO_OFFSET, "GET dummykey %s", source);
-    cipherlen = EncryptString(out, sizeof(out), in, strlen(in) + 1, conn->encryption_type, conn->session_key);
+    int cipherlen = EncryptString(out, sizeof(out), in, strlen(in) + 1,
+                                  conn->encryption_type, conn->session_key);
 
-    tosend = cipherlen + CF_PROTO_OFFSET;
+    unsigned int tosend = cipherlen + CF_PROTO_OFFSET;
 
     if(tosend > sizeof(workbuf))
     {
@@ -618,9 +611,12 @@ static bool EncryptCopyRegularFileNet(const char *source, const char *dest, off_
 
     buf = xmalloc(CF_BUFSIZE + sizeof(int));
 
-    bool   last_write_made_hole = false;
-    size_t n_wrote_total        = 0;
+    char cfchangedstr[sizeof(CF_CHANGEDSTR1) + sizeof(CF_CHANGEDSTR2) - 1];
+    snprintf(cfchangedstr, sizeof(cfchangedstr), "%s%s",
+             CF_CHANGEDSTR1, CF_CHANGEDSTR2);
 
+    bool last_write_made_hole = false;
+    size_t n_wrote_total = 0;
     while (more)
     {
         if ((cipherlen = ReceiveTransaction(conn->conn_info, buf, &more)) == -1)
@@ -645,7 +641,8 @@ static bool EncryptCopyRegularFileNet(const char *source, const char *dest, off_
             return false;
         }
 
-        if (strncmp(buf + CF_INBAND_OFFSET, cfchangedstr, strlen(cfchangedstr)) == 0)
+        if (strncmp(buf + CF_INBAND_OFFSET, cfchangedstr,
+                    sizeof(cfchangedstr) - 1) == 0)
         {
             Log(LOG_LEVEL_INFO, "Source '%s:%s' changed while copying", conn->this_server, source);
             close(dd);
@@ -656,7 +653,8 @@ static bool EncryptCopyRegularFileNet(const char *source, const char *dest, off_
 
         EVP_DecryptInit_ex(crypto_ctx, CfengineCipher(CfEnterpriseOptions()), NULL, conn->session_key, iv);
 
-        if (!EVP_DecryptUpdate(crypto_ctx, workbuf, &plainlen, buf, cipherlen))
+        if (!EVP_DecryptUpdate(crypto_ctx, (unsigned char *) workbuf,
+                               &plainlen, (unsigned char *) buf, cipherlen))
         {
             close(dd);
             free(buf);
@@ -664,7 +662,7 @@ static bool EncryptCopyRegularFileNet(const char *source, const char *dest, off_
             return false;
         }
 
-        if (!EVP_DecryptFinal_ex(crypto_ctx, workbuf + plainlen, &finlen))
+        if (!EVP_DecryptFinal_ex(crypto_ctx, (unsigned char *) workbuf + plainlen, &finlen))
         {
             close(dd);
             free(buf);
@@ -724,11 +722,17 @@ static void FlushFileStream(int sd, int toget)
 
 /* TODO finalise socket or TLS session in all cases that this function fails
  * and the transaction protocol is out of sync. */
-bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
+bool CopyRegularFileNet(const char *source, const char *dest, const off_t size,
                         bool encrypt, AgentConnection *conn)
 {
-    char *buf, workbuf[CF_BUFSIZE], cfchangedstr[265];
+    char *buf, workbuf[CF_BUFSIZE];
     const int buf_size = 2048;
+
+    if (strlen(dest) > (CF_BUFSIZE - 20))
+    {
+        Log(LOG_LEVEL_ERR, "Filename too long");
+        return false;
+    }
 
     /* We encrypt only for CLASSIC protocol. The TLS protocol is always over
      * encrypted layer, so it does not support encrypted (S*) commands. */
@@ -739,17 +743,9 @@ bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
         return EncryptCopyRegularFileNet(source, dest, size, conn);
     }
 
-    snprintf(cfchangedstr, 255, "%s%s", CF_CHANGEDSTR1, CF_CHANGEDSTR2);
-
-    if ((strlen(dest) > CF_BUFSIZE - 20))
-    {
-        Log(LOG_LEVEL_ERR, "Filename too long");
-        return false;
-    }
-
     unlink(dest);                /* To avoid link attacks */
 
-    int dd = safe_open_create_perms(dest, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY, CF_PERMS_DEFAULT);
+    int dd = safe_open(dest, O_WRONLY | O_CREAT | O_EXCL | O_BINARY);
     if (dd == -1)
     {
         Log(LOG_LEVEL_ERR,
@@ -757,6 +753,13 @@ bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
             conn->this_server, dest, GetErrorStr());
         unlink(dest);
         return false;
+    }
+
+    if (size == 0)
+    {
+        // We do not need to copy the file if it is empty, only create
+        close(dd);
+        return true;
     }
 
     workbuf[0] = '\0';
@@ -781,10 +784,14 @@ bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
     buf = xmalloc(CF_BUFSIZE + sizeof(int));    /* Note CF_BUFSIZE not buf_size !! */
 
     Log(LOG_LEVEL_VERBOSE, "Copying remote file '%s:%s', expecting %jd bytes",
-          conn->this_server, source, (intmax_t)size);
+        conn->this_server, source, (intmax_t)size);
 
-    size_t n_wrote_total        = 0;
-    bool   last_write_made_hole = false;
+    char cfchangedstr[sizeof(CF_CHANGEDSTR1) + sizeof(CF_CHANGEDSTR2) - 1];
+    snprintf(cfchangedstr, sizeof(cfchangedstr), "%s%s",
+             CF_CHANGEDSTR1, CF_CHANGEDSTR2);
+
+    int n_wrote_total = 0;
+    bool last_write_made_hole = false;
     while (n_wrote_total < size)
     {
         int toget = MIN(size - n_wrote_total, buf_size);
@@ -839,7 +846,7 @@ bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
             return false;
         }
 
-        if (strncmp(buf, cfchangedstr, strlen(cfchangedstr)) == 0)
+        if (strncmp(buf, cfchangedstr, sizeof(cfchangedstr) - 1) == 0)
         {
             Log(LOG_LEVEL_INFO, "Source '%s:%s' changed while copying",
                 conn->this_server, source);

@@ -58,6 +58,11 @@ ENTERPRISE_FUNC_1ARG_DEFINE_STUB(bool, ReceiveCollectCall, ARG_UNUSED ServerConn
     return false;
 }
 
+ENTERPRISE_FUNC_1ARG_DEFINE_STUB(bool, ReturnCookies, ARG_UNUSED ServerConnectionState *, conn)
+{
+    return false;
+}
+
 ENTERPRISE_FUNC_3ARG_DEFINE_STUB(bool, ReturnQueryData, ARG_UNUSED ServerConnectionState *, conn, ARG_UNUSED char *, menu, ARG_UNUSED int, encrypt)
 {
     return false;

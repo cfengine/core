@@ -371,6 +371,15 @@ static bool CFTestD_BusyLoop(
     // See BusyWithNewProtocol() in server_tls.c for how to add other commands
     switch (GetCommandNew(recvbuffer))
     {
+    case PROTOCOL_COMMAND_COOKIE:
+    {
+        const char response[] = "COOKIES 0 0";
+        const size_t size = sizeof(response) - 1;
+        SendTransaction(conn->conn_info, response, size, CF_DONE);
+
+        return true;
+        break;
+    }
     case PROTOCOL_COMMAND_QUERY:
     {
         char query[256], name[128];

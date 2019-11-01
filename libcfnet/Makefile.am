@@ -41,6 +41,7 @@ libcfnet_la_SOURCES = \
 	net.c net.h \
 	policy_server.c policy_server.h \
 	protocol.c protocol.h \
+	protocol_version.c protocol_version.h \
 	server_code.c server_code.h \
 	stat_cache.c stat_cache.h \
 	tls_client.c tls_client.h \

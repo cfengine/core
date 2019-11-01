@@ -27,6 +27,7 @@
 
 #include <cfnet.h>
 #include <sequence.h>
+#include <protocol_version.h> // ProtocolVersion
 
 /**
  * Receives a directory listing from a remote host.

@@ -297,9 +297,6 @@ JsonElement *LoadProcStat(pid_t pid)
      *
      * The 'proc(5)' man page indicates 'scanf' compatibility for parsing.
      */
-
-#if defined(__linux__)
-
     char pstate[2];
     pid_t ppid;
     pid_t pgid;
@@ -361,20 +358,6 @@ JsonElement *LoadProcStat(pid_t pid)
     JsonObjectAppendInteger(pdata, JPROC_KEY_STARTTIME_EPOCH, starttime);
     JsonObjectAppendInteger(pdata, JPROC_KEY_VIRT_KB, vsize);
     JsonObjectAppendInteger(pdata, JPROC_KEY_RES_KB, rss);
-
-#elif defined(BSD)
-
-#error "Support for '/proc/<pid>' not yet written for BSD. Can you provide it?"
-
-#elif defined(__sun)
-
-#error "Support for '/proc/<pid>' not yet written for Sun/Solaris. Can you provide it?"
-
-#else
-
-#error "Support for '/proc/<pid>' not yet available."
-
-#endif
 
     return pdata;
 }

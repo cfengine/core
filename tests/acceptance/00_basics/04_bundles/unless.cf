@@ -50,6 +50,36 @@ bundle agent test
         string => "value",
         if => not(strcmp("a", "a"));
 
+      # If and unless precedence (skipping takes precedence):
+      "skipped_variable_precedence_if"
+        string => "value",
+        if => "!any",                  # Causes the promise to be skipped
+        unless => "!any";
+
+      "skipped_variable_precedence_unless"
+        string => "value",
+        if => "any",
+        unless => "any";               # Causes the promise to be skipped
+
+      "skipped_variable_precedence_unexpanded_variable_if"
+        string => "value",
+        if => "$(undefined_var)",      # Causes the promise to be skipped
+        unless => "$(undefined_var)";
+
+      "skipped_variable_precedence_unresolved_function_call_if"
+        string => "value",
+        if => not("$(undefined_var)"), # Causes the promise to be skipped
+        unless => not("$(undefined_var)");
+
+      # Edge case - unresolved function calls:
+      "skipped_variable_unresolved_function_call_if"
+        string => "value",
+        if => strcmp("$(no_such_var)", "$(no_such_var)");
+
+      "defined_variable_unresolved_function_call_unless"
+        string => "value",
+        unless => strcmp("$(no_such_var)", "$(no_such_var)");
+
       # Edge case - this shows the difference between unless and if not:
       "defined_variable_unresolved_variable_unless"
         string => "value",
@@ -116,6 +146,42 @@ bundle agent test
         scope => "namespace",
         if => not(strcmp("a", "a"));
 
+      # If and unless precedence (skipping takes precedence):
+      "skipped_class_precedence_if"
+        expression => "any",
+        scope => "namespace",
+        if => "!any",                  # Causes the promise to be skipped
+        unless => "!any";
+
+      "skipped_class_precedence_unless"
+        expression => "any",
+        scope => "namespace",
+        if => "any",
+        unless => "any";               # Causes the promise to be skipped
+
+      "skipped_class_precedence_unexpanded_variable_if"
+        expression => "any",
+        scope => "namespace",
+        if => "$(undefined_var)",      # Causes the promise to be skipped
+        unless => "$(undefined_var)";
+
+      "skipped_class_precedence_unresolved_function_call_if"
+        expression => "any",
+        scope => "namespace",
+        if => not("$(undefined_var)"), # Causes the promise to be skipped
+        unless => not("$(undefined_var)");
+
+      # Edge case - unresolved function calls:
+      "skipped_class_unresolved_function_call_if"
+        expression => "any",
+        scope => "namespace",
+        if => strcmp("$(no_such_var)", "$(no_such_var)");
+
+      "defined_class_unresolved_function_call_unless"
+        expression => "any",
+        scope => "namespace",
+        unless => strcmp("$(no_such_var)", "$(no_such_var)");
+
       # Edge case - this shows the difference between unless and if not:
       "defined_class_unresolved_variable_unless"
         expression => "any",
@@ -129,7 +195,7 @@ bundle agent test
 
     no_such_class::
 
-      # Let's just test that unless doesn't bypass class guards:
+      # Let's just test that if/unless doesn't bypass class guards:
       "skipped_class_class_guard_unless"
         expression => "any",
         scope => "namespace",
@@ -154,11 +220,13 @@ bundle agent check
             isvariable("test.defined_variable_if_not"),
             isvariable("test.defined_variable_function_call_unless"),
             isvariable("test.defined_variable_function_call_if_not"),
+            isvariable("test.defined_variable_unresolved_function_call_unless"),
             isvariable("test.defined_variable_unresolved_variable_unless"),
             "defined_class_unless",
             "defined_class_if_not",
             "defined_class_function_call_unless",
             "defined_class_function_call_if_not",
+            "defined_class_unresolved_function_call_unless",
             "defined_class_unresolved_variable_unless",
         };
 
@@ -168,6 +236,11 @@ bundle agent check
             isvariable("test.skipped_variable_if_not"),
             isvariable("test.skipped_variable_function_call_unless"),
             isvariable("test.skipped_variable_function_call_if_not"),
+            isvariable("test.skipped_variable_precedence_if"),
+            isvariable("test.skipped_variable_precedence_unless"),
+            isvariable("test.skipped_variable_precedence_unexpanded_variable_if"),
+            isvariable("test.skipped_variable_precedence_unresolved_function_call_if"),
+            isvariable("test.skipped_variable_unresolved_function_call_if"),
             isvariable("test.skipped_variable_unresolved_variable_if_not"),
             isvariable("test.skipped_variable_class_guard_unless"),
             isvariable("test.skipped_variable_class_guard_if_not"),
@@ -175,6 +248,11 @@ bundle agent check
             "skipped_class_if_not",
             "skipped_class_function_call_unless",
             "skipped_class_function_call_if_not",
+            "skipped_class_precedence_if",
+            "skipped_class_precedence_unless",
+            "skipped_class_precedence_unexpanded_variable_if",
+            "skipped_class_precedence_unresolved_function_call_if",
+            "skipped_class_unresolved_function_call_if",
             "skipped_class_unresolved_variable_if_not",
             "skipped_class_class_guard_unless",
             "skipped_class_class_guard_if_not",

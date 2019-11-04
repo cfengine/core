@@ -1402,6 +1402,7 @@ if test -n "${process_os_tag}" \
 then
     # probe OS directly
     AM_CONDITIONAL([HAVE_PS_VIA_SYSPROBE], true)
+    AC_DEFINE(HAVE_PS_VIA_SYSPROBE, 1, [We can probe OS for process-related information])
     AC_MSG_RESULT(system probing using ${process_os_src})
 else
     # legacy (invoke 'ps' and try to parse output)

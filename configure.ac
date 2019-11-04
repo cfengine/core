@@ -1390,10 +1390,11 @@ process_os_src="process_sysprobe_${process_os_tag}.c"
 if test -n "${process_os_tag}" \
         && test -f "${srcdir}/libpromises/${process_os_src}"
 then
-    # "/proc" style
+    # probe OS directly
     AM_CONDITIONAL([HAVE_PS_VIA_SYSPROBE], true)
     AC_MSG_RESULT(system probing using ${process_os_src})
 else
+    # legacy (invoke 'ps' and try to parse output)
     if test -z ${process_os_tag}; then
         process_os_tag="unix_stub"
     fi

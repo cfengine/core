@@ -181,6 +181,7 @@ if !NT
 if HAVE_PS_VIA_SYSPROBE
 libpromises_la_SOURCES += \
 	process_sysprobe_@PROCESS_OS_TAG@.c \
+	processes_load_sysprobe.c \
 	processes_select_sysprobe.c
 else
 libpromises_la_SOURCES += \

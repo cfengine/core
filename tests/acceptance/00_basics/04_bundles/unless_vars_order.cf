@@ -9,7 +9,7 @@ bundle agent test
   meta:
     any::
       "description" -> { "CFE-2698" }
-        string => "This test shows a bug in unless which should be fixed";
+        string => "Order of vars promises shouldn't matter";
 
   vars:
     any::
@@ -20,8 +20,6 @@ bundle agent test
         string => "value",
         unless => isvariable( $(variable_defined_later) );
 
-      # If you move this variable up, the test will pass,
-      # the order shouldn't matter here, this is a bug
       "variable_defined_later"
         string => "target_variable";
 }

@@ -664,30 +664,16 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
                 && (value == EXPRESSION_VALUE_ERROR))
             {
                 char *unless_string =  RvalToString(unless->rval);
-                if (unless->rval.type == RVAL_TYPE_FNCALL)
-                {
-                    FatalError(
-                        ctx,
-                        "Unresolved function call in %s promise '%s', the constraint '%s => %s' might have unexpanded variables",
-                        pp->parent_promise_type->name,
-                        pp->promiser,
-                        unless->lval,
-                        unless_string);
-                    // (FatalError exits)
-                }
-                else
-                {
-                    // The rval is most likely a string (class expression)
-                    // with unexpanded variables, for example:
-                    // unless => "$(no_such_var)"
-                    // We default to NOT skipping (since if would skip).
-                    // This was most likely unintended, but we will keep the
-                    // behavior, for now, see:
-                    // https://tracker.mender.io/browse/CFE-2689
-                    Log(LOG_LEVEL_VERBOSE,
-                        "Not skipping promise '%s' with constraint '%s => %s' in last evaluation pass (since if would skip)",
-                        pp->promiser, unless->lval, unless_string);
-                }
+                // The rval is most likely a string or a function call,
+                // with unexpanded variables, for example:
+                // unless => "$(no_such_var)"
+                // We default to NOT skipping (since if would skip).
+                Log(LOG_LEVEL_VERBOSE,
+                    "Not skipping %s promise '%s' with constraint '%s => %s' in last evaluation pass (since if would skip)",
+                    pp->parent_promise_type->name,
+                    pp->promiser,
+                    unless->lval,
+                    unless_string);
                 free(unless_string);
             }
             else if (value != EXPRESSION_VALUE_FALSE)

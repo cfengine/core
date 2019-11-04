@@ -40,7 +40,7 @@ const char *GetProcessTableLegend(void)
 {
     if (PROCTABLE)
     {
-        return "<via /proc>";
+        return "<not using ps command>";
     }
     else
     {
@@ -74,6 +74,7 @@ static bool IsProcDir(const char *name)
 
 bool LoadProcessTable()
 {
+    JsonElement *proctable;
     Dir *dirh = NULL;
     const struct dirent *dirp;
 
@@ -89,7 +90,7 @@ bool LoadProcessTable()
         return false;
     }
 
-    PROCTABLE = JsonObjectCreate(NPROC_GUESS);
+    proctable = JsonObjectCreate(NPROC_GUESS);
 
     pid_t  pid;
     JsonElement *pdata;
@@ -119,11 +120,13 @@ bool LoadProcessTable()
             continue;
         }
 
-        JsonObjectAppendObject(PROCTABLE, dirp->d_name, pdata);
+        JsonObjectAppendObject(proctable, dirp->d_name, pdata);
 
     }
 
     DirClose(dirh);
+
+    PROCTABLE = proctable;
 
     return true;
 

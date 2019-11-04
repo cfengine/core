@@ -72,7 +72,7 @@ Copying: '/Users/olehermanse/.cfengine/cf-remote/packages/cfengine-nova-hub_3.12
 Installing: 'cfengine-nova-hub_3.12.1-1_amd64.deb' on '34.247.181.100'
 CFEngine 3.12.1 was successfully installed on '34.247.181.100'
 Bootstrapping: '34.247.181.100' -> '172.31.44.146'
-Bootstrap succesful: '34.247.181.100' -> '172.31.44.146'
+Bootstrap successful: '34.247.181.100' -> '172.31.44.146'
 Transferring def.json to hub: '34.247.181.100'
 Copying: '/Users/olehermanse/.cfengine/cf-remote/json/def.json' to '34.247.181.100'
 Triggering an agent run on: '34.247.181.100'

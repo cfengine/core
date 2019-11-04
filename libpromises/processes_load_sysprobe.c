@@ -28,7 +28,6 @@
 #include <process_lib.h>
 
 #include <conversion.h>
-#include <dir.h>
 
 
 #define NPROC_GUESS 500
@@ -55,28 +54,9 @@ const char *GetProcessTableLegend(void)
  * ClearProcessTable()
  */
 
-/* "/proc/nnn" is a process directory only if pure integer "nnn" */
-static bool IsProcDir(const char *name)
-{
-    const char *p = name;
-
-    while (*p)
-    {
-        if (!isdigit(*p)) {
-            return false;
-        }
-        p++;
-    }
-
-    return true;
-}
-
-
 bool LoadProcessTable()
 {
     JsonElement *proctable;
-    Dir *dirh = NULL;
-    const struct dirent *dirp;
 
     if (PROCTABLE)
     {
@@ -84,47 +64,23 @@ bool LoadProcessTable()
         return true;
     }
 
-    if ((dirh = DirOpen(PROCDIR)) == NULL)
+    void *procd;
+    if ((procd = OpenProcDir()) == NULL)
     {
-        Log(LOG_LEVEL_ERR, "Unable to open %s directory'. (opendir: %s)", PROCDIR, GetErrorStr());
+        Log(LOG_LEVEL_ERR, "Unable to load process information");
         return false;
     }
 
     proctable = JsonObjectCreate(NPROC_GUESS);
 
-    pid_t  pid;
     JsonElement *pdata;
-    while ((dirp = DirRead(dirh)) != NULL)
-    {
-        /*
-         * Process next entry. Skip non-numeric names as being non-process.
-         */
-        if (! IsProcDir(dirp->d_name))
-        {
-            continue;
-        }
-
-        pid = atol(dirp->d_name);
-
-        /* It ought to be a directory... */
-        if (dirp->d_type != DT_DIR)
-        {
-            Log(LOG_LEVEL_ERR, "'%s/%s' not a directory\n", PROCDIR, dirp->d_name);
-            continue;
-        }
-
-        pdata = LoadProcStat(pid);
-        if (pdata == NULL)
-        {
-            Log(LOG_LEVEL_ERR, "failure creating 'stat' data for '%s'\n", dirp->d_name);
-            continue;
-        }
-
-        JsonObjectAppendObject(proctable, dirp->d_name, pdata);
-
+    const char *pidstr;
+    while ((pdata = ReadProcDir(procd)) != NULL) {
+        pidstr = JsonObjectGetAsString(pdata, JPROC_KEY_PID);
+        JsonObjectAppendObject(proctable, pidstr, pdata);
     }
 
-    DirClose(dirh);
+    CloseProcDir(procd);
 
     PROCTABLE = proctable;
 

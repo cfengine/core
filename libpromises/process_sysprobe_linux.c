@@ -215,6 +215,68 @@ static bool LoadProcTTY(JsonElement *pdata, int ttyn)
     return false;
 }
 
+void *OpenProcDir()
+{
+    Dir *dirh = NULL;
+
+    if ((dirh = DirOpen(PROCDIR)) == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Unable to open %s directory'. (opendir: %s)", PROCDIR, GetErrorStr());
+        return NULL;
+    }
+
+    return (void *) dirh;
+}
+
+/* "/proc/nnn" is a process directory only if pure integer "nnn" */
+static bool IsProcDir(const char *name)
+{
+    const char *p = name;
+
+    while (*p)
+    {
+        if (!isdigit(*p)) {
+            return false;
+        }
+        p++;
+    }
+
+    return true;
+}
+
+JsonElement *ReadProcDir(void *ptable)
+{
+    Dir *dirh = (Dir *) ptable;
+    const struct dirent *dirp;
+
+    pid_t  pid;
+    JsonElement *pdata = NULL;
+    while ((dirp = DirRead(dirh)) != NULL)
+    {
+        /*
+         * Process next entry. Skip non-numeric names as being non-process.
+         */
+        if (! IsProcDir(dirp->d_name))
+        {
+            continue;
+        }
+
+        pid = atol(dirp->d_name);
+
+        /* It ought to be a directory... */
+        if (dirp->d_type != DT_DIR)
+        {
+            Log(LOG_LEVEL_ERR, "'%s/%s' not a directory\n", PROCDIR, dirp->d_name);
+            continue;
+        }
+
+        pdata = LoadProcStat(pid);
+        break;
+    }
+
+    return pdata;
+}
+
 /*
  * Collect all data for a given pid.  This comes from a variety of sources.
  *
@@ -347,6 +409,7 @@ JsonElement *LoadProcStat(pid_t pid)
     /*
      * Add data to the Json structure
      */
+    JsonObjectAppendInteger(pdata, JPROC_KEY_PID, pid);
     JsonObjectAppendString(pdata, JPROC_KEY_PSTATE, pstate);
     JsonObjectAppendInteger(pdata, JPROC_KEY_PPID, ppid);
     JsonObjectAppendInteger(pdata, JPROC_KEY_PGID, pgid);
@@ -360,6 +423,13 @@ JsonElement *LoadProcStat(pid_t pid)
     JsonObjectAppendInteger(pdata, JPROC_KEY_RES_KB, rss);
 
     return pdata;
+}
+
+void CloseProcDir(void *ptable)
+{
+    Dir *dirh = (Dir *) ptable;
+
+    DirClose(dirh);
 }
 
 

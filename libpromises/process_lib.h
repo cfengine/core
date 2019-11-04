@@ -36,6 +36,7 @@
 #define PROCDIR "/proc"
 
 // keys for Json structure
+#define JPROC_KEY_PID             "pid"      /* pid */
 #define JPROC_KEY_UID             "uid"      /* uid */
 #define JPROC_KEY_EUID            "euid"     /* effective uid */
 #define JPROC_KEY_CMD             "cmd"      /* cmd (argv[0]) only */
@@ -69,11 +70,19 @@
 
 #ifdef HAVE_PS_VIA_SYSPROBE
 /**
- * Obtain ps-like information about all process.
+ * Obtain ps-like information about all processes.
  *
  * @return JSON data structure of information about all processes
  */
 const JsonElement *FetchProcessTable(void);
+
+/*
+ * Internal abstraction routines for different table-loading mechanisms.
+ */
+void *OpenProcDir();
+JsonElement *ReadProcDir(void *ptable);
+void CloseProcDir(void *ptable);
+
 #endif
 
 /**

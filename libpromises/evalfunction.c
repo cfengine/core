@@ -90,7 +90,6 @@ static JsonElement *CURL_CACHE = NULL;
 static FnCallResult FilterInternal(EvalContext *ctx, const FnCall *fp, const char *regex, const Rlist* rp, bool do_regex, bool invert, long max);
 
 static char *StripPatterns(char *file_buffer, const char *pattern, const char *filename);
-static void CloseStringHole(char *s, int start, int end);
 static int BuildLineArray(EvalContext *ctx, const Bundle *bundle, const char *array_lval, const char *file_buffer,
                           const char *split, int maxent, DataType type, bool int_index);
 static JsonElement* BuildData(EvalContext *ctx, const char *file_buffer,  const char *split, int maxent, bool make_array);
@@ -7651,17 +7650,27 @@ static char *StripPatterns(char *file_buffer, const char *pattern, const char *f
     }
 
     int start, end, count = 0;
+    const size_t original_length = strlen(file_buffer);
     while (StringMatchWithPrecompiledRegex(rx, file_buffer, &start, &end))
     {
-        CloseStringHole(file_buffer, start, end);
+        StringCloseHole(file_buffer, start, end);
 
-        if (count++ > strlen(file_buffer))
+        if (start == end)
         {
+            Log(LOG_LEVEL_WARNING,
+                "Comment regex '%s' matched empty string in '%s'",
+                pattern,
+                filename);
+            break;
+        }
+        assert(start < end);
+        if (count++ > original_length)
+        {
+            debug_abort_if_reached();
             Log(LOG_LEVEL_ERR,
                 "Comment regex '%s' was irreconcilable reading input '%s' probably because it legally matches nothing",
                 pattern, filename);
-            pcre_free(rx);
-            return file_buffer;
+            break;
         }
     }
 
@@ -7670,16 +7679,6 @@ static char *StripPatterns(char *file_buffer, const char *pattern, const char *f
 }
 
 /*********************************************************************/
-
-static void CloseStringHole(char *s, int start, int end)
-{
-    if (end > start)
-    {
-        memmove(s + start, s + end,
-                /* The 1+ ensures we copy the final '\0' */
-                1 + strlen(s + end));
-    }
-}
 
 static JsonElement* BuildData(ARG_UNUSED EvalContext *ctx, const char *file_buffer,  const char *split, int maxent, bool make_array)
 {

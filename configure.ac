@@ -1365,6 +1365,16 @@ dnl These are the supported platforms:
 dnl   o  Legacy ps-output support as before;
 dnl   o  Newer "system probe" ("sysprobe") not yet implemented for all.
 
+case "$target_os" in
+  freebsd*|dragonfly*)
+    AC_CHECK_LIB([kvm], [kvm_getprocs],
+        [AC_DEFINE([HAVE_LIBKVM], 1, [Define if -lkvm is available])
+        LIBS="-lkvm $LIBS"],
+        AC_MSG_ERROR(Cannot find kvm library required for BSD)
+    )
+    ;;
+esac
+
 AC_MSG_CHECKING(process handling)
 process_os_tag=""
 case "$target_os" in

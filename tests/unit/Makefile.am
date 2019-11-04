@@ -163,7 +163,7 @@ check_PROGRAMS = \
 	new_packages_promise_test \
 	iteration_test
 
-if !HAVE_PS_VIA_PROC
+if !HAVE_PS_VIA_SYSPROBE
 check_PROGRAMS += \
     split_process_line_test
 endif
@@ -329,13 +329,13 @@ process_test_LDADD = libtest.la ../../libpromises/libpromises.la
 #
 # See also "tests/unit/Makefile.am"
 #
-if HAVE_PS_VIA_PROC
+if HAVE_PS_VIA_SYSPROBE
 
 check_PROGRAMS += proc_process_test
 
 proc_process_test_SOURCES = proc_process_test.c \
 	../../libpromises/process_unix.c \
-	../../libpromises/process_proc_@PROCESS_OS_TAG@.c \
+	../../libpromises/process_sysprobe_@PROCESS_OS_TAG@.c \
 	../../libntech/libutils/file_lib.c
 proc_process_test_LDADD = libtest.la ../../libntech/libutils/libutils.la \
 	../../libpromises/libpromises.la
@@ -369,7 +369,7 @@ solaris_process_test_LDADD = libtest.la ../../libntech/libutils/libutils.la
 
 endif
 
-endif # HAVE_PS_VIA_PROC
+endif # HAVE_PS_VIA_SYSPROBE
 
 process_terminate_unix_test_SOURCES = process_terminate_unix_test.c \
 	../../libpromises/process_unix.c

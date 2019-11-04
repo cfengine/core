@@ -1348,53 +1348,57 @@ case "$target_os" in
 esac
 
 dnl ######################################################################
-dnl Should "processes_select" use "/proc/<nnn>" rather than "ps" command?
+dnl Historically process-handling has been based on invoking the 'ps' command
+dnl and parsing its output.  This has always been fiddly and error-prone.
 dnl
-dnl New at March/2019. Developing on RHEL6/RHEL7. Eventually aim to use widely.
+dnl Most UNIX/Linux systems offer more machine-oriented mechanisms, for instance:
+dnl   o  Linux: /proc
+dnl   o  Solaris: /proc (different details)
+dnl   o  FreeBSD: kvm_getprocs()
+dnl
+dnl We have begun (2019) to investigate using these on a per-platform basis.
+dnl Because there is variety, we refer to this by the general term "system probe".
+dnl The previous ps-cmd mechanism is retained as a fallback for platforms.
 dnl ######################################################################
 
 dnl These are the supported platforms:
-dnl   o  Legacy ps-output support for all;
-dnl   o  Newer "/proc" parsing not yet implemented for all.
-dnl For unsupported platforms, the fallback is "unix_stub".
+dnl   o  Legacy ps-output support as before;
+dnl   o  Newer "system probe" ("sysprobe") not yet implemented for all.
 
 AC_MSG_CHECKING(process handling)
 process_os_tag=""
 case "$target_os" in
-
-   solaris*)
-        process_os_tag="solaris"
-        ;;
-   hpux*|hp-ux*)
-        process_os_tag="hpux"
-        ;;
-   aix*)
-        process_os_tag="aix"
-        ;;
-   freebsd*|dragonfly*)
-        process_os_tag="freebsd"
-        ;;
-   linux*|*bsd*|*gnu*)
-        process_os_tag="linux"
-        ;;
+  solaris*)
+    process_os_tag="solaris"
+    ;;
+  hpux*|hp-ux*)
+    process_os_tag="hpux"
+    ;;
+  aix*)
+    process_os_tag="aix"
+    ;;
+  freebsd*|dragonfly*)
+    process_os_tag="freebsd"
+    ;;
+  linux*|*bsd*|*gnu*)
+    process_os_tag="linux"
+    ;;
 esac
 
-dnl Does platform seem to offer "/proc"?
-dnl AND do we have a '.c' source file to implement it?
-process_os_src="process_proc_${process_os_tag}.c"
-if test -f "/proc/1/stat" \
-        && test -n "${process_os_tag}" \
+dnl Do we have a '.c' source file to implement a "sysprobe" version?
+process_os_src="process_sysprobe_${process_os_tag}.c"
+if test -n "${process_os_tag}" \
         && test -f "${srcdir}/libpromises/${process_os_src}"
 then
     # "/proc" style
-    AM_CONDITIONAL([HAVE_PS_VIA_PROC], true)
-    AC_MSG_RESULT(via '/proc' using ${process_os_src})
+    AM_CONDITIONAL([HAVE_PS_VIA_SYSPROBE], true)
+    AC_MSG_RESULT(system probing using ${process_os_src})
 else
     if test -z ${process_os_tag}; then
         process_os_tag="unix_stub"
     fi
-    AM_CONDITIONAL([HAVE_PS_VIA_PROC], false)
-    AC_MSG_RESULT(via legacy 'ps' output)
+    AM_CONDITIONAL([HAVE_PS_VIA_SYSPROBE], false)
+    AC_MSG_RESULT(using legacy 'ps' output)
 fi
 
 dnl Substitute PROCESS_OS_TAG into Makefile.am etc.

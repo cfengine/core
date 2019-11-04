@@ -170,7 +170,7 @@ if !NT
 #   : A monolithic "processes_select_cmd" model which use the "ps" command
 # to:
 #   : A JSON-based API with a generic "processes_select_proc"
-#     that calls onto a per-OS "process_proc_/OS/".
+#     that calls onto a per-OS "process_sysprobe_/OS/".
 #
 # As the per-OS migration from /cmd/ to /proc/ advances, the /cmd/ files
 # become superfluous and can theoretically be removed.
@@ -178,15 +178,15 @@ if !NT
 # See also "tests/unit/Makefile.am"
 #
 
-if HAVE_PS_VIA_PROC
+if HAVE_PS_VIA_SYSPROBE
 libpromises_la_SOURCES += \
-	process_proc_@PROCESS_OS_TAG@.c \
+	process_sysprobe_@PROCESS_OS_TAG@.c \
 	processes_select_proc.c
 else
 libpromises_la_SOURCES += \
 	process_cmd_@PROCESS_OS_TAG@.c \
 	processes_select_cmd.c
-endif # HAVE_PS_VIA_PROC
+endif # HAVE_PS_VIA_SYSPROBE
 
 # Additional generic sources
 libpromises_la_SOURCES += \

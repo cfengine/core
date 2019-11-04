@@ -27,7 +27,7 @@
 #include <mon.h>
 #include <item_lib.h>
 
-#ifndef HAVE_PS_VIA_PROC
+#ifndef HAVE_PS_VIA_SYSPROBE
 
 #include <files_interfaces.h>
 #include <file_lib.h> // SetUmask()
@@ -87,7 +87,7 @@ void MonProcessesGatherData(double *cf_this)
 
 static bool GatherProcessUsers(Item **userList, int *userListSz, int *numRootProcs, int *numOtherProcs)
 {
-#ifndef HAVE_PS_VIA_PROC
+#ifndef HAVE_PS_VIA_SYSPROBE
 
     char pscomm[CF_BUFSIZE];
     xsnprintf(pscomm, sizeof(pscomm), "%s %s",
@@ -158,7 +158,7 @@ static bool GatherProcessUsers(Item **userList, int *userListSz, int *numRootPro
         }
     }
 
-#else // HAVE_PS_VIA_PROC
+#else // HAVE_PS_VIA_SYSPROBE
 
     const JsonElement *pdata;
     struct passwd *pwd;
@@ -193,7 +193,7 @@ static bool GatherProcessUsers(Item **userList, int *userListSz, int *numRootPro
         }
     }
 
-#endif // HAVE_PS_VIA_PROC
+#endif // HAVE_PS_VIA_SYSPROBE
 
     if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG)
     {
@@ -202,7 +202,7 @@ static bool GatherProcessUsers(Item **userList, int *userListSz, int *numRootPro
         free(s);
     }
 
-#ifndef HAVE_PS_VIA_PROC
+#ifndef HAVE_PS_VIA_SYSPROBE
     cf_pclose(pp);
     free(vbuff);
 #endif

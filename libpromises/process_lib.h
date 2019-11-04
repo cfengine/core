@@ -67,7 +67,7 @@
  */
 
 
-#ifdef HAVE_PS_VIA_PROC
+#ifdef HAVE_PS_VIA_SYSPROBE
 /**
  * Obtain ps-like information about all process.
  *

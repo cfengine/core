@@ -169,7 +169,7 @@ if !NT
 # A further complication is a gradual migration from:
 #   : A monolithic "processes_select_cmd" model which use the "ps" command
 # to:
-#   : A JSON-based API with a generic "processes_select_proc"
+#   : A JSON-based API with a generic "processes_select_sysprobe"
 #     that calls onto a per-OS "process_sysprobe_/OS/".
 #
 # As the per-OS migration from /cmd/ to /proc/ advances, the /cmd/ files
@@ -181,7 +181,7 @@ if !NT
 if HAVE_PS_VIA_SYSPROBE
 libpromises_la_SOURCES += \
 	process_sysprobe_@PROCESS_OS_TAG@.c \
-	processes_select_proc.c
+	processes_select_sysprobe.c
 else
 libpromises_la_SOURCES += \
 	process_cmd_@PROCESS_OS_TAG@.c \

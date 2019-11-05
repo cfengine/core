@@ -183,10 +183,42 @@ libpromises_la_SOURCES += \
 	process_sysprobe_@PROCESS_OS_TAG@.c \
 	processes_load_sysprobe.c \
 	processes_select_sysprobe.c
-else
-libpromises_la_SOURCES += \
-	process_cmd_@PROCESS_OS_TAG@.c \
-	processes_select_cmd.c
+else # HAVE_PS_VIA_SYSPROBE
+
+libpromises_la_SOURCES += processes_select_cmd.c
+
+if LINUX
+libpromises_la_SOURCES += process_cmd_linux.c
+endif
+
+if AIX
+libpromises_la_SOURCES += process_cmd_aix.c
+endif
+
+if HPUX
+libpromises_la_SOURCES += process_cmd_hpux.c
+endif
+
+if SOLARIS
+libpromises_la_SOURCES += process_cmd_solaris.c
+endif
+
+if FREEBSD
+libpromises_la_SOURCES += process_cmd_freebsd.c
+endif
+
+if !LINUX
+if !AIX
+if !HPUX
+if !SOLARIS
+if !FREEBSD
+libpromises_la_SOURCES += process_cmd_unix_stub.c
+endif
+endif
+endif
+endif
+endif
+
 endif # HAVE_PS_VIA_SYSPROBE
 
 # Additional generic sources

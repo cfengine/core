@@ -1365,8 +1365,9 @@ dnl These are the supported platforms:
 dnl   o  Legacy ps-output support as before;
 dnl   o  Newer "system probe" ("sysprobe") not yet implemented for all.
 
+dnl For BSD ensure we have "kvm_getprocs()"
 case "$target_os" in
-  freebsd*|dragonfly*)
+  *bsd*|dragonfly*)
     AC_CHECK_LIB([kvm], [kvm_getprocs],
         [AC_DEFINE([HAVE_LIBKVM], 1, [Define if -lkvm is available])
         LIBS="-lkvm $LIBS"],
@@ -1375,6 +1376,9 @@ case "$target_os" in
     ;;
 esac
 
+dnl For newer system-probe mechanism set a tag to represent the system type.
+dnl Not all are yet implemented, but we include them anyway then test for
+dnl support afterwards.
 AC_MSG_CHECKING(process handling)
 process_os_tag=""
 case "$target_os" in
@@ -1387,15 +1391,16 @@ case "$target_os" in
   aix*)
     process_os_tag="aix"
     ;;
-  freebsd*|dragonfly*)
-    process_os_tag="freebsd"
+  *bsd*|dragonfly*)
+    process_os_tag="bsd"
     ;;
-  linux*|*bsd*|*gnu*)
+  linux*|*gnu*)
     process_os_tag="linux"
     ;;
 esac
 
 dnl Do we have a '.c' source file to implement a "sysprobe" version?
+dnl If not, fall back to legacy ps mechanism.
 process_os_src="process_sysprobe_${process_os_tag}.c"
 if test -n "${process_os_tag}" \
         && test -f "${srcdir}/libpromises/${process_os_src}"

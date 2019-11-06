@@ -23,6 +23,14 @@
 */
 
 /* **********************************************************
+ *
+ * TODO:  Lots....
+ *
+ *  o  Stuff commented out (from Linux import), e.g. RSS, SIZE, ...
+ *  o  Fudge items, e.g. CMDLINE
+ ********************************************************** */
+
+/* **********************************************************
  * Create a JSON representation of processes.
  *
  * Whereas many modern UNIX-like systems offer "/proc"
@@ -70,9 +78,12 @@ typedef struct {
 /*
  * Set JPROC_KEY_CMDLINE
  */
-//     TODO: Not yet implemented
-static bool LoadProcCmdLine(JsonElement *pdata, const struct pargs *args)
+//     TODO: Fudge to be same as CMD
+static bool LoadProcCmdLine(JsonElement *pdata, const struct kinfo_proc *kp)
 {
+//     const struct pargs *args = kp->ki_args;
+
+    JsonObjectAppendString(pdata, JPROC_KEY_CMDLINE, kp->ki_comm);
     return true;
 }
 
@@ -143,7 +154,7 @@ static JsonElement *ReadProcInfo(const struct kinfo_proc *kp)
 
     JsonObjectAppendString(pdata, JPROC_KEY_CMD, kp->ki_comm);
 
-    LoadProcCmdLine(pdata, kp->ki_args);
+    LoadProcCmdLine(pdata, kp);
 
     starttime = kp->ki_start.tv_sec;
     JsonObjectAppendInteger(pdata, JPROC_KEY_STARTTIME_EPOCH, starttime);

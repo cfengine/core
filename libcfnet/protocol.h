@@ -115,4 +115,43 @@ bool ProtocolGet(AgentConnection *conn, const char *remote_path,
  */
 bool ProtocolStatGet(AgentConnection *conn, const char *remote_path,
                      const char *local_path, int perms);
+
+/**
+ * Receives statistics about a remote file.
+ *
+ * This is a cacheless version of #cf_remote_stat from stat_cache.c. This
+ * only supports sending with the latest cfnet protocol.
+ *
+ * When the `STAT` request is sent, it is sent together with the current time
+ * since the Epoch given by the `time` syscall denoted by `SYNCH <tloc>`. If
+ * the server is set to deny bad clocks (which is default), it will reject
+ * `STAT` requests from hosts where the clocks differ too much.
+ *
+ * When the server accepts the `STAT` request, it will send each field of the
+ * `Stat` struct from `stat_cache.h` as numbers delimited by spaces in a
+ * single string. Since the `Stat` struct is not cached, its fields are
+ * transferred to the \p stat_buf parameter.
+ *
+ * Example
+ * @code
+ *      AgentConnection *conn = ServerConnection("127.0.0.1", "666", ...);
+ *      struct stat stat_buf;
+ *      ProtocolStat(conn, "masterfiles/update.cf", &stat_buf);
+ *      assert((stat_buf.st_mode & S_IFMT) == S_IFREG);
+ * @endcode
+ *
+ * This is how the above example looks on the server side:
+ *      Received: SYNCH 12356789 STAT masterfiles/update.cf
+ *      Translated to: STAT /var/cfengine/masterfiles/update.cf
+ *      Sends string:
+ *      "OK: 0 33188 0 ..." etc.
+ *
+ * @param [in]  conn         The connection to use
+ * @param [in]  remote_path  Path on remote host
+ * @param [out] stat_buf     Where to store statistics
+ * @return true on success, false on failure.
+ */
+bool ProtocolStat(AgentConnection *conn, const char *remote_path,
+                  struct stat *stat_buf);
+
 #endif

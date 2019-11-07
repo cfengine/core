@@ -67,6 +67,8 @@ int cf_remote_stat(AgentConnection *conn, bool encrypt, const char *file,
                    struct stat *statbuf, const char *stattype);
 const Stat *StatCacheLookup(const AgentConnection *conn, const char *file_name,
                             const char *server_name);
+mode_t FileTypeToMode(const FileType type);
+bool StatParseResponse(const char *const buf, Stat *statbuf);
 
 
 #endif

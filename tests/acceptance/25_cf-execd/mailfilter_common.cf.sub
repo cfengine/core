@@ -142,10 +142,10 @@ bundle agent compare_cf_execd_mail(test)
       "ok"               and => { "wanted_ok", "unwanted_ok" };
 
   reports:
-#      "unwanted_regex_list = $(unwanted_regex_list)";
-#      "wanted_regex = '$(wanted_regex)'";
-#      "unwanted_regex = '$(unwanted_regex)'";
-#      "output = '$(output)'";
+      "unwanted_regex_list = $(unwanted_regex_list)";
+      "wanted_regex = '$(wanted_regex)'";
+      "unwanted_regex = '$(unwanted_regex)'";
+      "output = '$(output)'";
     wanted_ok::
       "wanted_ok is set";
     !wanted_ok::

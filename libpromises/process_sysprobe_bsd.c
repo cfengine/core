@@ -27,14 +27,15 @@
  * TODO:  Lots....
  *
  *  o  Stuff commented out (from Linux import), e.g. RSS, SIZE, ...
- *  o  Fudge items, e.g. CMDLINE
+ *  o  Check and re-check numeric calculations (e.g. CPU seconds)
+ *  o  Do fudged items properly, e.g. CMDLINE
  ********************************************************** */
 
 /* **********************************************************
  * Create a JSON representation of processes.
  *
  * Whereas many modern UNIX-like systems offer "/proc"
- * the BSD family (at least "FreeBSD" offers "kvm_getprocs(3)".
+ * the BSD family (at least "FreeBSD") offers "kvm_getprocs(3)".
  *
  * (David Lee, 2019)
  ********************************************************** */
@@ -118,6 +119,7 @@ static JsonElement *ReadProcInfo(const struct kinfo_proc *kp)
     JsonElement *pdata;
     char pstate[2];
     long long starttime;
+    long cpusecs;
 
     pdata = JsonObjectCreate(12);
 
@@ -172,9 +174,9 @@ static JsonElement *ReadProcInfo(const struct kinfo_proc *kp)
 //     rss *= (PAGE_SIZE/1024);
 //     JsonObjectAppendInteger(pdata, JPROC_KEY_RES_KB, rss);
 //
-//     // proc clock ticks of process => CFEngine CPU seconds
-//     cpusecs = (utime + stime) / sysconf(_SC_CLK_TCK);
-//     JsonObjectAppendInteger(pdata, JPROC_KEY_CPUTIME, cpusecs);
+    // CFEngine CPU seconds
+    cpusecs = kp->ki_rusage.ru_utime.tv_sec + kp->ki_rusage.ru_stime.tv_sec;
+    JsonObjectAppendInteger(pdata, JPROC_KEY_CPUTIME, cpusecs);
 
 //     JsonObjectAppendInteger(pdata, JPROC_KEY_PRIORITY, priority);
     JsonObjectAppendInteger(pdata, JPROC_KEY_THREADS, kp->ki_numthreads);

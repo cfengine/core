@@ -644,6 +644,82 @@ bundle agent dcs_check_strcmp(strA, strB, test, expected_difference)
       "$(test) FAIL";
 }
 
+bundle agent dcs_check_diff_elements( setA, setB, test, expected_difference)
+# @brief Test that there is or is not a difference between two lists or data containers elements (order elements does not matter)
+#
+# **Example:**
+# ```
+#  vars:
+#    "l1" slist => { "A", "three" };
+#    "l2" slist => { "three", "A" };
+#    "d1" data => '[ "three", "three" ]';
+#
+#  methods:
+#    "Pass/FAIL"
+#      usebundle => dcs_check_diff_elements( @(l1),                    # First set of elements
+#                                            @(l2),                    # Second set of elements
+#                                            $(this.promise_filename), # Full path to test policy file
+#                                            "no");                    # Expected difference in elements
+#    "Pass/FAIL"
+#      usebundle => dcs_check_diff_elements( @(l1),                    # First set of elements
+#                                            @(d1),                    # Second set of elements
+#                                            $(this.promise_filename), # Full path to test policy file
+#                                            "yes");                   # Expected difference in elements
+# ```
+{
+  vars:
+      "length_A" int => length( setA );
+      "length_B" int => length( setB );
+      "difference_A_B" slist => difference( setA, setB );
+      "difference_B_A" slist => difference( setB, setA );
+
+  classes:
+      "_pass_same_length"
+        expression => eval( "$(length_A) == $(length_B)", class, infix );
+      "_pass_no_elements_in_setA_that_are_not_in_setB"
+        expression => islessthan( length( difference_A_B ), 1 );
+      "_pass_no_elements_in_setB_that_are_not_in_setA"
+        expression => islessthan( length( difference_B_A ), 1 );
+
+      "__passif" and => { "_pass_same_length",
+                          "_pass_no_elements_in_setA_that_are_not_in_setB",
+                          "_pass_no_elements_in_setB_that_are_not_in_setA"};
+
+  reports:
+    DEBUG|EXTRA::
+
+    # We print each element of the list out individually on versions that didn't
+    # have the with attribute. No great way to specify a version less than a
+    # cfengine version.
+      "setA: $(setA)" if => eval( "$(sys.cf_version_minor) < 11", class, infix );
+      "setB: $(setB)" if => eval( "$(sys.cf_version_minor) < 11", class, infix );
+@if minimum_version(3.11)
+      "setA: $(with)" with => join( ", ", setA );
+      "setB: $(with)" with => join( ", ", setB );
+@endif
+      "setA and setB have the same number of elements"
+        if => "_pass_same_length";
+      "setA and setB do not have the same number of elements"
+        if => not("_pass_same_length");
+      "setA has $(length_A) elements and setB has $(length_B) ements"
+        if => not("_pass_same_length");
+
+      "There are no elements in setA that are not in setB"
+        if => "_pass_no_elements_in_setA_that_are_not_in_setB";
+      "Element in setA that is not in setB: $(difference_A_B)"
+        if => not( "_pass_no_elements_in_setA_that_are_not_in_setB" );
+
+      "There are no elements in setB that are not in setA"
+        if => "_pass_no_elements_in_setB_that_are_not_in_setA";
+      "Element in setB that is not in setA: $(difference_B_A)"
+        if => not( "_pass_no_elements_in_setB_that_are_not_in_setA" );
+
+    __passif::
+      "$(test) Pass";
+    !__passif::
+      "$(test) FAIL";
+}
+
 #######################################################
 # Test based on whether a string matches a regular expression
 

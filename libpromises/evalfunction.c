@@ -7452,17 +7452,27 @@ static char *StripPatterns(char *file_buffer, const char *pattern, const char *f
     }
 
     int start, end, count = 0;
+    const size_t original_length = strlen(file_buffer);
     while (StringMatchWithPrecompiledRegex(rx, file_buffer, &start, &end))
     {
         CloseStringHole(file_buffer, start, end);
 
-        if (count++ > strlen(file_buffer))
+        if (start == end)
         {
+            Log(LOG_LEVEL_WARNING,
+                "Comment regex '%s' matched empty string in '%s'",
+                pattern,
+                filename);
+            break;
+        }
+        assert(start < end);
+        if (count++ > original_length)
+        {
+            debug_abort_if_reached();
             Log(LOG_LEVEL_ERR,
                 "Comment regex '%s' was irreconcilable reading input '%s' probably because it legally matches nothing",
                 pattern, filename);
-            pcre_free(rx);
-            return file_buffer;
+            break;
         }
     }
 

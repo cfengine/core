@@ -137,7 +137,7 @@ bool ScheduleEditLineOperations(EvalContext *ctx, const Bundle *bp, const Attrib
 
                 ExpandPromise(ctx, pp, KeepEditLinePromise, edcontext);
 
-                if (Abort(ctx))
+                if (BundleAbort(ctx))
                 {
                     YieldCurrentLock(thislock);
                     EvalContextStackPopFrame(ctx);

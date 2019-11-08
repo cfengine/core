@@ -112,6 +112,7 @@ static pcre *context_expression_whitespace_rx = NULL;
 
 static bool BundleAborted(const EvalContext *ctx);
 static void SetBundleAborted(EvalContext *ctx);
+static void SetEvalAborted(EvalContext *ctx);
 
 static bool EvalContextStackFrameContainsSoft(const EvalContext *ctx, const char *context);
 static bool EvalContextHeapContainsSoft(const EvalContext *ctx, const char *ns, const char *name);
@@ -130,6 +131,7 @@ struct EvalContext_
 
     int eval_options;
     bool bundle_aborted;
+    bool eval_aborted;
     bool checksum_updates_default;
     Item *ip_addresses;
     bool ignore_locks;
@@ -435,7 +437,8 @@ static void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context, 
 
     if (IsRegexItemIn(ctx, ctx->heap_abort, copy))
     {
-        FatalError(ctx, "cf-agent aborted on defined class '%s'", copy);
+        Log(LOG_LEVEL_NOTICE, "cf-agent aborted on defined class '%s'", copy);
+        SetEvalAborted(ctx);
     }
 
     if (EvalContextStackFrameContainsSoft(ctx, copy))
@@ -784,8 +787,9 @@ void EvalContextHeapPersistentLoadAll(EvalContext *ctx)
     CloseDB(dbp);
 }
 
-bool Abort(EvalContext *ctx)
+bool BundleAbort(EvalContext *ctx)
 {
+    assert(ctx != NULL);
     if (ctx->bundle_aborted)
     {
         ctx->bundle_aborted = false;
@@ -795,19 +799,33 @@ bool Abort(EvalContext *ctx)
     return false;
 }
 
-bool BundleAborted(const EvalContext* ctx)
+static bool BundleAborted(const EvalContext* ctx)
 {
+    assert(ctx != NULL);
     return ctx->bundle_aborted;
 }
 
-void SetBundleAborted(EvalContext *ctx)
+static void SetBundleAborted(EvalContext *ctx)
 {
+    assert(ctx != NULL);
     ctx->bundle_aborted = true;
 }
 
+static void SetEvalAborted(EvalContext *ctx)
+{
+    assert(ctx != NULL);
+    ctx->eval_aborted = true;
+}
+
+bool EvalAborted(const EvalContext *ctx)
+{
+    assert(ctx != NULL);
+    return ctx->eval_aborted;
+}
 
 void EvalContextHeapAddAbort(EvalContext *ctx, const char *context, const char *activated_on_context)
 {
+    assert(ctx != NULL);
     if (!IsItemIn(ctx->heap_abort, context))
     {
         AppendItem(&ctx->heap_abort, context, activated_on_context);
@@ -817,12 +835,14 @@ void EvalContextHeapAddAbort(EvalContext *ctx, const char *context, const char *
 
     if (aborting_context)
     {
-        FatalError(ctx, "cf-agent aborted on defined class '%s'", aborting_context);
+        Log(LOG_LEVEL_NOTICE, "cf-agent aborted on defined class '%s'", aborting_context);
+        SetEvalAborted(ctx);
     }
 }
 
 void EvalContextHeapAddAbortCurrentBundle(EvalContext *ctx, const char *context, const char *activated_on_context)
 {
+    assert(ctx != NULL);
     if (!IsItemIn(ctx->heap_abort_current_bundle, context))
     {
         AppendItem(&ctx->heap_abort_current_bundle, context, activated_on_context);
@@ -833,6 +853,7 @@ void EvalContextHeapAddAbortCurrentBundle(EvalContext *ctx, const char *context,
 
 bool MissingDependencies(EvalContext *ctx, const Promise *pp)
 {
+    assert(ctx != NULL);
     const Rlist *dependenies = PromiseGetConstraintAsList(ctx, "depends_on", pp);
     if (RlistIsNullList(dependenies))
     {
@@ -1622,7 +1643,8 @@ static bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *na
 
         if (IsRegexItemIn(ctx, ctx->heap_abort, context_copy))
         {
-            FatalError(ctx, "cf-agent aborted on defined class '%s'", context_copy);
+            Log(LOG_LEVEL_NOTICE, "cf-agent aborted on defined class '%s'", context_copy);
+            SetEvalAborted(ctx);
         }
     }
 

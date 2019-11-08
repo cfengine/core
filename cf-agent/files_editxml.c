@@ -183,7 +183,7 @@ bool ScheduleEditXmlOperations(EvalContext *ctx, const Bundle *bp, const Attribu
 
                 ExpandPromise(ctx, pp, KeepEditXmlPromise, edcontext);
 
-                if (Abort(ctx))
+                if (BundleAbort(ctx))
                 {
                     YieldCurrentLock(thislock);
                     EvalContextStackPopFrame(ctx);

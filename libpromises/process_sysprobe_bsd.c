@@ -28,7 +28,6 @@
  *
  *  o  Stuff commented out (from Linux import), e.g. RSS, SIZE, ...
  *  o  Check and re-check numeric calculations (e.g. CPU seconds)
- *  o  Do fudged items properly, e.g. CMDLINE
  ********************************************************** */
 
 /* **********************************************************
@@ -78,13 +77,65 @@ typedef struct {
 
 /*
  * Set JPROC_KEY_CMDLINE
+ *
+ * Command argument lists are usually modest in size. But they can, in theory,
+ * be huge.  So limit the size to CF_MAXVARSIZE (a lot more than 'ps').
+ *
+ * Concatenate the arguments into a space-separated string as per 'ps'.
+ *
+ * On BSD the process itself can adjust its original arguments, including
+ * completely nullifying them.  Several deep-system processes seem to do this.
+ * We reflect that here by not setting JPROC_KEY_CMDLINE.
  */
-//     TODO: Fudge to be same as CMD
-static bool LoadProcCmdLine(JsonElement *pdata, const struct kinfo_proc *kp)
+static bool LoadProcCmdLine(kvm_t *kd, JsonElement *pdata, const struct kinfo_proc *kp)
 {
-//     const struct pargs *args = kp->ki_args;
+    char cmdline[CF_MAXVARSIZE];
+    char *cmdpt;
+    char **argv;
+    char **argpt;
+    size_t arglen;
+    size_t roomleft;
 
-    JsonObjectAppendString(pdata, JPROC_KEY_CMDLINE, kp->ki_comm);
+    argv = kvm_getargv(kd, kp, sizeof(cmdline));
+    if (argv == NULL)
+    {
+        Log(LOG_LEVEL_VERBOSE, "%s: pid: %d: no command arguments", __func__, kp->ki_pid);
+        return false;
+    }
+
+    argpt = &argv[0];
+    cmdpt = cmdline;
+    roomleft = sizeof(cmdline);
+
+    /*
+     * Concatenate the next argument as "space-string-NULL".
+     */
+    for ( ; ; )
+    {
+        /* No more arguments? Terminate the string and break loop */
+        if (*argpt == NULL)
+        {
+            *cmdpt = '\0';
+            break;
+        }
+
+        /* For all arguments except first append a space separator to previous */
+        if (argpt != argv)
+        {
+            *cmdpt = ' ';
+            cmdpt++;
+            roomleft--;
+        }
+
+        arglen = strlcpy(cmdpt, *argpt, roomleft);
+        cmdpt += arglen;
+        roomleft -= arglen;
+
+        argpt++;
+    }
+
+    JsonObjectAppendString(pdata, JPROC_KEY_CMDLINE, cmdline);
+
     return true;
 }
 
@@ -114,7 +165,7 @@ static bool LoadProcTTY(JsonElement *pdata, dev_t dev)
     return true;
 }
 
-static JsonElement *ReadProcInfo(const struct kinfo_proc *kp)
+static JsonElement *ReadProcInfo(kvm_t *kd, const struct kinfo_proc *kp)
 {
     JsonElement *pdata;
     char pstate[2];
@@ -156,7 +207,11 @@ static JsonElement *ReadProcInfo(const struct kinfo_proc *kp)
 
     JsonObjectAppendString(pdata, JPROC_KEY_CMD, kp->ki_comm);
 
-    LoadProcCmdLine(pdata, kp);
+    if (! LoadProcCmdLine(kd, pdata, kp))
+    {
+        /* process probably nullified its arguments; substitute with ki_comm */
+        JsonObjectAppendString(pdata, JPROC_KEY_CMDLINE, kp->ki_comm);
+    }
 
     starttime = kp->ki_start.tv_sec;
     JsonObjectAppendInteger(pdata, JPROC_KEY_STARTTIME_EPOCH, starttime);
@@ -182,8 +237,6 @@ static JsonElement *ReadProcInfo(const struct kinfo_proc *kp)
     JsonObjectAppendInteger(pdata, JPROC_KEY_THREADS, kp->ki_numthreads);
 
     LoadProcTTY(pdata, kp->ki_tdev);
-
-Log(LOG_LEVEL_VERBOSE, "%s() => pid:%d euid:%d state:%s stime:%lld comm:%s", __func__, kp->ki_pid, kp->ki_uid, pstate, starttime, kp->ki_comm);
 
     return pdata;
 }
@@ -223,7 +276,9 @@ void *OpenProcDir()
 
 JsonElement *ReadProcDir(void *opaque)
 {
+    kvm_t *kd;
     pd_state_handle_t *pdh;
+    const struct kinfo_proc *kp;
     JsonElement *pdata;
 
     if (opaque == NULL)
@@ -233,13 +288,15 @@ JsonElement *ReadProcDir(void *opaque)
     }
 
     pdh = (pd_state_handle_t *) opaque;
+    kd = ((pd_state_handle_t *) opaque)->kd;
 
     if (pdh->index >= pdh->nprocs)
     {
         return NULL;
     }
 
-    pdata = ReadProcInfo(&(pdh->procs[pdh->index]));
+    kp = &(pdh->procs[pdh->index]);
+    pdata = ReadProcInfo(kd, kp);
 
     pdh->index++;
 
@@ -262,20 +319,22 @@ JsonElement *LoadProcStat(pid_t pid)
 
     JsonElement *pdata;
 
-    if ((kd = kvm_openfiles(NULL, _PATH_DEVNULL, NULL, O_RDONLY, errmsg)) == NULL) {
+    if ((kd = kvm_openfiles(NULL, _PATH_DEVNULL, NULL, O_RDONLY, errmsg)) == NULL)
+    {
         Log(LOG_LEVEL_ERR, "%s: error opening kernel virtual memory", __func__);
         return NULL;
     }
 
     procs = kvm_getprocs(kd, KERN_PROC_PID, pid, &nprocs);
-    if (procs == NULL || nprocs != 1) {
+    if (procs == NULL || nprocs != 1)
+    {
         Log(LOG_LEVEL_ERR, "%s: error getting process information for %d", __func__, pid);
         return NULL;
     }
 
     kp = &procs[0];
 
-    pdata = ReadProcInfo(kp);
+    pdata = ReadProcInfo(kd, kp);
 
     kvm_close(kd);
 

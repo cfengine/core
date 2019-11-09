@@ -218,22 +218,20 @@ static JsonElement *ReadProcInfo(kvm_t *kd, const struct kinfo_proc *kp)
     starttime -= LoadBootTime();  // => seconds since epoch
     JsonObjectAppendInteger(pdata, JPROC_KEY_STARTTIME_BOOT, starttime);
 
-//     /*
-//      * Transform numbers/units from OS into CFEngine-preferred number/units.
-//      */
-//     // proc bytes => CFEngine kilobytes
-//     vsize /= 1024;
-//     JsonObjectAppendInteger(pdata, JPROC_KEY_VIRT_KB, vsize);
-//
-//     // proc PAGE SIZE => CFEngine kilobytes
-//     rss *= (PAGE_SIZE/1024);
-//     JsonObjectAppendInteger(pdata, JPROC_KEY_RES_KB, rss);
-//
+    /*
+     * Transform numbers/units from OS into CFEngine-preferred number/units.
+     */
+    // proc bytes => CFEngine kilobytes
+    JsonObjectAppendInteger(pdata, JPROC_KEY_VIRT_KB, kp->ki_size / 1024);
+
+    // proc PAGE SIZE => CFEngine kilobytes
+    JsonObjectAppendInteger(pdata, JPROC_KEY_RES_KB, kp->ki_rssize * (PAGE_SIZE/1024));
+
     // CFEngine CPU seconds
     cpusecs = kp->ki_rusage.ru_utime.tv_sec + kp->ki_rusage.ru_stime.tv_sec;
     JsonObjectAppendInteger(pdata, JPROC_KEY_CPUTIME, cpusecs);
 
-//     JsonObjectAppendInteger(pdata, JPROC_KEY_PRIORITY, priority);
+    JsonObjectAppendInteger(pdata, JPROC_KEY_PRIORITY, kp->ki_nice);
     JsonObjectAppendInteger(pdata, JPROC_KEY_THREADS, kp->ki_numthreads);
 
     LoadProcTTY(pdata, kp->ki_tdev);

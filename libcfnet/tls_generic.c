@@ -63,6 +63,9 @@ enum tls_version {
 /* the lowest version of TLS we always require */
 #define TLS_LOWEST_REQUIRED TLS_1_0
 
+/* the lowest version of TLS we recommend (also the default) */
+#define TLS_LOWEST_RECOMMENDED TLS_1_1
+
 #ifndef SSL_OP_NO_TLSv1_3
 #define SSL_OP_NO_TLSv1_3 0     /* no-op when ORed with bit flags */
 #endif
@@ -891,7 +894,8 @@ void TLSSetDefaultOptions(SSL_CTX *ssl_ctx, const char *min_version)
     /* In any case use only TLS v1 or later. */
     long options = SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3;
 
-    enum tls_version min_tls_version = TLS_LOWEST_REQUIRED;
+    assert(TLS_LOWEST_RECOMMENDED >= TLS_LOWEST_REQUIRED);
+    enum tls_version min_tls_version = TLS_LOWEST_RECOMMENDED;
     if (!NULL_OR_EMPTY(min_version))
     {
         bool found = false;
@@ -907,6 +911,13 @@ void TLSSetDefaultOptions(SSL_CTX *ssl_ctx, const char *min_version)
                         " Using the minimum required version.",
                         min_version, tls_version_strings[TLS_LOWEST_REQUIRED]);
                     min_tls_version = TLS_LOWEST_REQUIRED;
+                }
+                else if (v < TLS_LOWEST_RECOMMENDED)
+                {
+                    Log(LOG_LEVEL_WARNING, "Minimum requested TLS version is %s,"
+                        " but minimum version recommended by CFEngine is %s.",
+                        min_version, tls_version_strings[TLS_LOWEST_RECOMMENDED]);
+                    min_tls_version = v;
                 }
                 else if (v > TLS_HIGHEST_SUPPORTED)
                 {

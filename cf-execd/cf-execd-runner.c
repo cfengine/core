@@ -42,6 +42,7 @@
 #include <policy_server.h>
 #include <files_hashes.h>
 #include <item_lib.h>
+#include <processes_select.h>   /* LoadProcessTable()/SelectProcesses() */
 
 #include <cf-windows-functions.h>
 
@@ -262,11 +263,53 @@ void LocalExec(const ExecConfig *config)
             Log(LOG_LEVEL_NOTICE, errmsg, config->agent_expireafter);
             count++;
 
-            pid_t pid_agent;
+            pid_t pid_shell;
 
-            if (PipeToPid(&pid_agent, pp))
+            if (PipeToPid(&pid_shell, pp))
             {
-                ProcessSignalTerminate(pid_agent);
+                /* Default to killing the shell process (if we fail to get
+                 * more precise target). */
+                pid_t pid_to_kill = pid_shell;
+
+#ifndef __MINGW32__
+                /* The agent command is executed in a shell. Trying to kill the
+                 * shell may end up sending it SIGKILL which is not propagated
+                 * to the subprocesses of the shell and thus the cf-agent
+                 * process. The shell, however, creates a new process group
+                 * (with the PGID equal to the PID of the child process) for the
+                 * agent which then allows us to kill the whole process group
+                 * here. */
+
+                /* We need to determine the PID of the agent (and thus its
+                 * process group) first.*/
+                ClearProcessTable();
+                if (LoadProcessTable())
+                {
+                    ProcessSelect ps = PROCESS_SELECT_INIT;
+                    ps.min_ppid = pid_shell;
+                    ps.max_ppid = pid_shell;
+                    Item *procs = SelectProcesses(".*" /* any command */, ps, true /* apply ps */);
+                    if (procs != NULL)
+                    {
+                        pid_to_kill = procs->counter;
+
+                        /* There should only be one child process of the shell
+                         * running by default. But it doesn't apply to all
+                         * values of exec_command in general. */
+                        assert(procs->next == NULL);
+                    }
+                }
+
+                /* kill(-pid) is actually kill(pgid=pid) and kill(pid, 0) just
+                 * checks if it's possible to send signals to pid (or pgid in
+                 * our case). Kill the whole process group if possible. */
+                if ((getpgid(pid_to_kill) == pid_to_kill)
+                    && (kill(-pid_to_kill, 0) == 0))
+                {
+                    pid_to_kill = -pid_to_kill;
+                }
+#endif
+                ProcessSignalTerminate(pid_to_kill);
             }
             else
             {

@@ -82,6 +82,7 @@ require {
 	class netrom_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
 	class atmpvc_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
 	class x25_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class xdp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
 	class rose_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
 	class decnet_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
 	class atmsvc_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };

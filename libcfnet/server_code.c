@@ -7,6 +7,7 @@
 #include <systype.h>                    // CLASSTEXT
 #include <signals.h>                    // GetSignalPipe
 #include <cleanup.h>                    // DoCleanupAndExit
+#include <ctype.h>                      // isdigit
 
 /* Wait up to a minute for an in-coming connection.
  *
@@ -80,7 +81,20 @@ static int OpenReceiverChannel(char *bind_address)
     if (bind_address[0] != '\0')
     {
         ptr = bind_address;
-        query.ai_flags |= AI_NUMERICHOST;
+
+        /* Just a quick check if the string looks like an IPv4 address to see if
+         * we should use AI_NUMERICHOST or not. IPv6 addresses could use it too,
+         * but they are not so easy to recognize and the proper check would be
+         * more expensive than the optimization. */
+        bool is_numeric_host = true;
+        for (char *c = ptr; is_numeric_host && (*c != '\0'); c++)
+        {
+            is_numeric_host = ((*c == '.') || isdigit(*c));
+        }
+        if (is_numeric_host)
+        {
+            query.ai_flags |= AI_NUMERICHOST;
+        }
     }
 
     /* Resolve listening interface. */

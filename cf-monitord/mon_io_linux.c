@@ -26,6 +26,7 @@
 
 #include <string_lib.h>
 #include <files_names.h>
+#include <file_lib.h>
 #include <mon_cumulative.h>
 #include <monitoring.h>
 #include <probes.h>
@@ -49,7 +50,6 @@ static void SysfsizeDeviceName(char *name)
 static int DiskSectorSize(const char *sysfsname)
 {
     char sysfspath[CF_BUFSIZE];
-    FILE *fh;
     int size = 512;             /* Long-time default value */
 
     if (snprintf(sysfspath, CF_BUFSIZE, SYSFSBLOCK "%s/queue/logical_block_size", sysfsname) >= CF_BUFSIZE)
@@ -58,7 +58,8 @@ static int DiskSectorSize(const char *sysfsname)
         return -1;
     }
 
-    if (!(fh = fopen(sysfspath, "r")))
+    FILE *fh = safe_fopen(sysfspath, "r");
+    if (fh == NULL)
     {
         /*
          * Older Linux systems don't work correctly with new 4K drives. It's safe to

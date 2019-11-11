@@ -25,6 +25,7 @@
 
 #include <cf3.defs.h>
 
+#include <file_lib.h>
 #include <monitoring.h>
 #include <probes.h>
 #include <proc_keyvalue.h>
@@ -81,10 +82,10 @@ static bool AcceptMemoryField(const char *field, off_t value, void *param)
 
 static void MonMeminfoGatherData(double *cf_this)
 {
-    FILE *fh;
     MemoryInfo info = { 0 };
 
-    if (!(fh = fopen("/proc/meminfo", "r")))
+    FILE *fh = safe_fopen("/proc/meminfo", "r");
+    if (fh == NULL)
     {
         Log(LOG_LEVEL_ERR, "Unable to open /proc/meminfo. (fopen: %s)", GetErrorStr());
         return;

@@ -324,23 +324,22 @@ rlist_test_CPPFLAGS = $(AM_CPPFLAGS)
 
 process_test_LDADD = libtest.la ../../libpromises/libpromises.la
 
-# Handling choice of newer "/proc" or traditional "ps" cmd to select processes.
-# "PROCESS_OS_TAG" ("linux", "solaris", etc.) is set by autotools.
-#
-# See also "tests/unit/Makefile.am"
-#
-if HAVE_PS_VIA_SYSPROBE
+# The arrangements here for "/OS/_process_test" have been a little laboured.
+# The transitional period from traditional "ps" cmd to newer "/proc"
+# need a little more thought.  But the result on completion should be simpler.
 
-check_PROGRAMS += proc_process_test
+if LINUX
 
-proc_process_test_SOURCES = proc_process_test.c \
+check_PROGRAMS += linux_process_test
+
+linux_process_test_SOURCES = linux_process_test.c \
 	../../libpromises/process_unix.c \
-	../../libpromises/process_sysprobe_@PROCESS_OS_TAG@.c \
+	../../libpromises/process_sysprobe_linux.c \
 	../../libntech/libutils/file_lib.c
-proc_process_test_LDADD = libtest.la ../../libntech/libutils/libutils.la \
+linux_process_test_LDADD = libtest.la ../../libntech/libutils/libutils.la \
 	../../libpromises/libpromises.la
 
-else
+endif
 
 if AIX
 
@@ -351,7 +350,7 @@ set_domainname_test_LDFLAGS = -Wl,-bexpall
 evalfunction_test_LDFLAGS = -Wl,-bexpall
 aix_process_test_SOURCES = aix_process_test.c \
 	../../libpromises/process_unix.c \
-	../../libpromises/process_cmd_@PROCESS_OS_TAG@.c \
+	../../libpromises/process_cmd_aix.c \
 	../../libntech/libutils/file_lib.c
 aix_process_test_LDADD = libtest.la ../../libntech/libutils/libutils.la
 
@@ -363,13 +362,11 @@ check_PROGRAMS += solaris_process_test
 
 solaris_process_test_SOURCES = solaris_process_test.c \
 	../../libpromises/process_unix.c \
-	../../libpromises/process_cmd_@PROCESS_OS_TAG@.c \
+	../../libpromises/process_cmd_solaris.c \
 	../../libntech/libutils/file_lib.c
 solaris_process_test_LDADD = libtest.la ../../libntech/libutils/libutils.la
 
 endif
-
-endif # HAVE_PS_VIA_SYSPROBE
 
 process_terminate_unix_test_SOURCES = process_terminate_unix_test.c \
 	../../libpromises/process_unix.c

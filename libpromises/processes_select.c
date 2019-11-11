@@ -1300,7 +1300,7 @@ static void CheckPsLineLimitations(void)
     char *buf = NULL;
     size_t bufsize = 0;
 
-    ps_fd = fopen("/etc/default/ps", "r");
+    ps_fd = safe_fopen("/etc/default/ps", "r");
     if (!ps_fd)
     {
         Log(LOG_LEVEL_VERBOSE, "Could not open '/etc/default/ps' "
@@ -1660,12 +1660,7 @@ bool LoadProcessTable()
 
     snprintf(vbuff, CF_MAXVARSIZE, "%s%ccf_procs", statedir, FILE_SEPARATOR);
 
-    // TODO: Change safe_fopen() to default to 0600, then remove this.
-    {
-        const mode_t old_umask = SetUmask(0077);
-        RawSaveItemList(PROCESSTABLE, vbuff, NewLineMode_Unix);
-        RestoreUmask(old_umask);
-    }
+    RawSaveItemList(PROCESSTABLE, vbuff, NewLineMode_Unix);
 
 # ifdef HAVE_GETZONEID
     if (global_zone) /* pidlist and rootpidlist are empty if we're not in the global zone */

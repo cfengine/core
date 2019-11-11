@@ -265,11 +265,18 @@ int main(int argc, char *argv[])
         DoCleanupAndExit(EXIT_FAILURE);
     }
 
+    int ret = 0;
+
     GenericAgentPostLoadInit(ctx);
     ThisAgentInit();
 
     BeginAudit();
     KeepPromises(ctx, policy, config);
+
+    if (EvalAborted(ctx))
+    {
+        ret = EC_EVAL_ABORTED;
+    }
 
     if (ALLCLASSESREPORT)
     {
@@ -299,7 +306,6 @@ int main(int argc, char *argv[])
     }
 
     PolicyDestroy(policy); /* Can we safely do this earlier ? */
-    int ret = 0;
     if (config->agent_specific.agent.bootstrap_argument && !VerifyBootstrap())
     {
         PolicyServerRemoveFile(GetWorkDir());
@@ -800,6 +806,11 @@ static void ThisAgentInit(void)
 static void KeepPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config)
 {
     KeepControlPromises(ctx, policy, config);
+    /* Check if 'abortclasses' aborted evaluation or not. */
+    if (EvalAborted(ctx))
+    {
+        return;
+    }
     KeepPromiseBundles(ctx, policy, config);
 }
 
@@ -1316,6 +1327,10 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy, GenericAg
             ScheduleAgentOperations(ctx, bp);
             EvalContextStackPopFrame(ctx);
             EndBundleBanner(bp);
+            if (EvalAborted(ctx))
+            {
+                break;
+            }
         }
         else
         {
@@ -1402,7 +1417,7 @@ PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
                 PromiseResult promise_result = ExpandPromise(ctx, pp, KeepAgentPromise, NULL);
                 result = PromiseResultUpdate(result, promise_result);
 
-                if (Abort(ctx))
+                if (EvalAborted(ctx) || BundleAbort(ctx))
                 {
                     DeleteTypeContext(ctx, type);
                     EvalContextStackPopFrame(ctx);

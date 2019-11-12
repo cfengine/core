@@ -695,17 +695,9 @@ static void *CFNetGetFile(void *arg)
         return NULL;
     }
 
-    struct stat sb;
-    data->ret = cf_remote_stat(conn, true, data->remote_file, &sb, "file");
-    if (data->ret != 0)
-    {
-        printf("Could not stat: '%s'\n", data->remote_file);
-    }
-    else
-    {
-        bool ok = CopyRegularFileNet(data->remote_file, data->local_file, sb.st_size, true, conn);
-        data->ret = ok ? 0 : -1;
-    }
+    bool ok = ProtocolStatGet(conn, data->remote_file,
+                               data->local_file, 0644);
+    data->ret = ok ? 0 : -1;
     CFNetDisconnect(conn);
     return NULL;
 }

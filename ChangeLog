@@ -1,29 +1,28 @@
 3.12.3:
-	- 'cf-check repair' now preserves readable data in corrupted LMDB files
-	  (CFE-3127)
-	- --dump option was added to the 'cf-check backup' command
+	- Fixed issue when using hostname in bindtoaddress (CFE-3190)
+	- Fixed disabling TLS 1.0 (CFE-3068)
+	- Reduced SSL/TLS shutdowns on bad networks (CFE-3023)
+	- Fixed log message when parsing TIME in `ps` output fails
+	- Fixed parsing of numbers starting with dot (decimal point) in eval() (CFE-2762)
+	- Fixed bug in `ps` parsing on OpenBSD / NetBSD causing bootstrap to fail
+	- Fixed multiple measurements tracking growth of same file (ENT-4814)
+	- Fixed promise result when using process_stop in processes type promises
+	  (ENT-4988)
 	- Added derived-from-file tag to hard classes based on /etc/redhat-release
 	  (CFE-3140)
 	- An ID of rhel in os-release file will now define both rhel and redhat classes
 	  (CFE-3140)
-	- Corrupted LMDB files are now automatically repaired (CFE-3127)
-	- Fix disabling TLS 1.0 (CFE-3068)
-	- Fix log message when parsing TIME in 'ps' output fails
-	- Fixed .xy floating point numbers parsing in eval() (CFE-2762)
-	- Fixed bug in ps parsing on OpenBSD / NetBSD causing bootstrap to fail
-	- Fixed multiple measurements tracking growth of same file (ENT-4814)
-	- Fixed promise result when using process_stop in processes type promises
-	  (ENT-4988)
-	- Local DB errors are now logged with the particular DB file path
-	  (CFE-2469)
+	- Version specific distro classes are now collected by default in CFEngine Enterprise Reporting
+	  (ENT-4752)
+	- redhat_8 and redhat_8_0 are now defined on RHEL 8.0 (CFE-3140)
 	- Package modules now hit network when package cache is first initialized
 	  (CFE-3094)
-	- Prevented buffer overflow when policy variable names are longer than 1024 bytes
-	- Reduce SSL/TLS shutdowns on bad networks (CFE-3023)
 	- Removed stime_range and ttime_range constraints from promise hash
 	  (ENT-4921)
-	- Added a critical log message when a corrupted local database is detected
-	  (CFE-2469)
+	- The @ character is now allowed in the key of classic arrays defined by the module protocol
+	  (CFE-3099)
+	- Zero-bytes in class guards no longer cause crashes (CFE-3028)
+	- Prevented buffer overflow when policy variable names are longer than 1024 bytes
 	- Set create permissions of monitord files in state directory to 0600
 	  0600 matches the permissions enforced by policy.
 	  Affected files:
@@ -31,20 +30,22 @@
 	   * `state/cf_outgoing.*`
 	   * `state/cf_users`
 	   * `state/env_data`
-	  Ticket: (ENT-4863)
-	- The @ character is now allowed in the key of classic arrays defined by the module protocol
-	  (CFE-3099)
-	- Version specific distro classes are now collected by default in Enterprise
-	  (ENT-4752)
-	- Zero bytes in class guards no longer cause crashes (CFE-3028)
-	- cf-check directories can now be controlled from ENV vars (CFE-2994)
-	- cf-check: Added --no-fork to diagnose command (CFE-3145)
-	- cf-check: Added -M manpage option and other common options (CFE-3082)
-	- cf-check: No DB files in state dir now causes errors
+	  (ENT-4863)
+	- Corrupted LMDB files are now automatically repaired (CFE-3127)
+	- Added a critical log message when a corrupted local database is detected
+	  (CFE-2469)
+	- Local DB errors are now logged with the particular DB file path
+	  (CFE-2469)
+	- cf-check: directories can now be controlled from ENV vars (CFE-2994)
+	- cf-check: Added `--no-fork` to diagnose command (CFE-3145)
+	- cf-check: Added `-M` manpage option and other common options (CFE-3082)
 	- cf-check: dump command now dumps DB contents to JSON5 (CFE-3126)
 	- cf-check: dump command now prints structs as JSON objects (CFE-2989)
 	- cf-check: help command can now take a topic as argument
-	- redhat_8 and redhat_8_0 are now defined on RHEL 8 (CFE-3140)
+	- cf-check: --dump option was added to the `backup` command
+	- cf-check: repair command now preserves readable data in corrupted LMDB files
+	  (CFE-3127)
+	- cf-check: Errors are now printed when there are no DB files in state directory
 
 3.12.2:
 	- Added support for overriding the package module's path (CFE-2103)

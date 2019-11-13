@@ -1,4 +1,26 @@
 3.12.3:
+	- Agent runs that hit abortclasses now record results (ENT-2471)
+	- Fixed issue when removing comments from files in various policy functions
+	  Affected functions include:
+	  * readstringlist()
+	  * readintlist()
+	  * readreallist()
+	  * peers()
+	  * peerleader()
+	  * peerleaders()
+	  * data_readstringarray()
+	  * data_readstringarrayidx()
+	  * data_expand()
+	  * readstringarray()
+	  * readstringarrayidx()
+	  * readintarray()
+	  * readrealarray()
+	  * parsestringarray()
+	  * parsestringarrayidx()
+	  * parseintarray()
+	  * parserealarray()
+	  (CFE-3188)
+	- cf-serverd now tries to accept connection multiple times
 	- Fixed issue when using hostname in bindtoaddress (CFE-3190)
 	- Fixed disabling TLS 1.0 (CFE-3068)
 	- Reduced SSL/TLS shutdowns on bad networks (CFE-3023)
@@ -26,10 +48,10 @@
 	- Set create permissions of monitord files in state directory to 0600
 	  0600 matches the permissions enforced by policy.
 	  Affected files:
-	   * `state/cf_incoming.*`
-	   * `state/cf_outgoing.*`
-	   * `state/cf_users`
-	   * `state/env_data`
+	  * `state/cf_incoming.*`
+	  * `state/cf_outgoing.*`
+	  * `state/cf_users`
+	  * `state/env_data`
 	  (ENT-4863)
 	- Corrupted LMDB files are now automatically repaired (CFE-3127)
 	- Added a critical log message when a corrupted local database is detected

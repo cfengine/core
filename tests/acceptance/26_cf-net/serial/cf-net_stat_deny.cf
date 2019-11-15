@@ -34,7 +34,7 @@ bundle agent test
 {
     commands:
         "$(sys.cf_net)"
-            args => " -H 127.0.0.1:15000 stat $(this.promise_dirname)/cf-net_connect.cf > $(G.testfile)  2>&1",
+            args => "--log-level ERROR -H 127.0.0.1:15000 stat $(this.promise_dirname)/cf-net_connect.cf > $(G.testfile)  2>&1",
             contain => myshell;
     meta:
         "description" string => "Attempt to stat file without permission";

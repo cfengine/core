@@ -4934,7 +4934,12 @@ static FnCallResult FnCallNth(EvalContext *ctx, ARG_UNUSED const Policy *policy,
         else if (JSON_CONTAINER_TYPE_ARRAY == ct)
         {
             long index = IntFromString(key);
-            if (index >= 0 && index < JsonLength(json))
+            if (index < 0)
+            {
+                index += JsonLength(json);
+            }
+
+            if (index >= 0 && index < (long) JsonLength(json))
             {
                 jelement = JsonAt(json, index);
             }

@@ -121,7 +121,7 @@ static int PasswordSupplier(int num_msg, const struct pam_message **msg,
  */
 static bool GetAIXShadowHash(const char *puser, const char **result)
 {
-    FILE *fptr = fopen("/etc/security/passwd", "r");
+    FILE *fptr = safe_fopen("/etc/security/passwd", "r");
     if (fptr == NULL)
     {
         return false;
@@ -209,7 +209,7 @@ end:
 // is a local user, and not for example from LDAP.
 static struct spwd *GetSpEntry(const char *puser)
 {
-    FILE *fptr = fopen("/etc/shadow", "r");
+    FILE *fptr = safe_fopen("/etc/shadow", "r");
     if (!fptr)
     {
         Log(LOG_LEVEL_ERR, "Could not open '/etc/shadow': %s", GetErrorStr());
@@ -483,7 +483,7 @@ static bool ChangePasswordHashUsingLckpwdf(const char *puser, const char *passwo
         goto unlock_passwd;
     }
 
-    FILE *passwd_fd = fopen(passwd_file, "r");
+    FILE *passwd_fd = safe_fopen(passwd_file, "r");
     if (!passwd_fd)
     {
         Log(LOG_LEVEL_ERR, "Could not open password database '%s'. (fopen: '%s')", passwd_file, GetErrorStr());
@@ -780,7 +780,7 @@ static bool GroupGetUserMembership (const char *user, StringSet *result)
     bool ret = true;
     struct group *group_info;
 
-    FILE *fptr = fopen("/etc/group", "r");
+    FILE *fptr = safe_fopen("/etc/group", "r");
     if (!fptr)
     {
         Log(LOG_LEVEL_ERR, "Could not open '/etc/group': %s", GetErrorStr());
@@ -836,7 +836,7 @@ static bool EqualGroupName(const char *key, const struct group *entry)
 static struct group *GetGrEntry(const char *key,
                                 bool (*equal_fn)(const char *key, const struct group *entry))
 {
-    FILE *fptr = fopen("/etc/group", "r");
+    FILE *fptr = safe_fopen("/etc/group", "r");
     if (!fptr)
     {
         Log(LOG_LEVEL_ERR, "Could not open '/etc/group': %s", GetErrorStr());
@@ -1407,7 +1407,7 @@ static bool DoModifyUser (const char *puser, const User *u, const struct passwd 
 // is a local user, and not for example from LDAP.
 static struct passwd *GetPwEntry(const char *puser)
 {
-    FILE *fptr = fopen("/etc/passwd", "r");
+    FILE *fptr = safe_fopen("/etc/passwd", "r");
     if (!fptr)
     {
         Log(LOG_LEVEL_ERR, "Could not open '/etc/passwd': %s", GetErrorStr());

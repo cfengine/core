@@ -24,6 +24,7 @@
 
 #include <cf3.defs.h>
 
+#include <file_lib.h>
 #include <mon.h>
 
 #if !defined(__MINGW32__)
@@ -45,10 +46,10 @@ void MonCPUGatherData(double *cf_this)
     char cpuname[CF_MAXVARSIZE], buf[CF_BUFSIZE];
     long cpuidx, userticks = 0, niceticks = 0, systemticks = 0, idle = 0, iowait = 0, irq = 0, softirq = 0;
     long total_time = 1;
-    FILE *fp;
     enum observables slot = ob_spare;
 
-    if ((fp = fopen("/proc/stat", "r")) == NULL)
+    FILE *fp = safe_fopen("/proc/stat", "r");
+    if (fp == NULL)
     {
         Log(LOG_LEVEL_VERBOSE, "Could not open /proc/stat while gathering CPU data (fopen: %s)", GetErrorStr());
         return;

@@ -806,12 +806,16 @@ static bool GroupGetUserMembership (const char *user, StringSet *result)
             }
             break;
         }
-        for (int i = 0; group_info->gr_mem[i] != NULL; i++)
+        // At least on FreeBSD, gr_mem can be NULL:
+        if (group_info->gr_mem != NULL)
         {
-            if (strcmp(user, group_info->gr_mem[i]) == 0)
+            for (int i = 0; group_info->gr_mem[i] != NULL; i++)
             {
-                StringSetAdd(result, xstrdup(group_info->gr_name));
-                break;
+                if (strcmp(user, group_info->gr_mem[i]) == 0)
+                {
+                    StringSetAdd(result, xstrdup(group_info->gr_name));
+                    break;
+                }
             }
         }
     }

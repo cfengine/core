@@ -289,8 +289,13 @@ bool RlistIsInListOfRegex(const Rlist *list, const char *str)
 
 bool RlistContainsString(const Rlist *list, const char *string)
 {
-    assert(list != NULL);
     assert(string != NULL);
+
+    if (list == NULL)
+    {
+        // Empty Rlist is represented as a NULL pointer
+        return false;
+    }
 
     for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {

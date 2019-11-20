@@ -1,6 +1,4 @@
 3.12.3:
-	- Fixed an issue causing duplicate entries in sys.interfaces, and
-	  sys.hardware (CFE-3046)
 	- Agent runs that hit abortclasses now record results (ENT-2471)
 	- Fixed issue when removing comments from files in various policy functions
 	  Affected functions include:

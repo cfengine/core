@@ -409,12 +409,10 @@ void GetInterfacesInfo(EvalContext *ctx)
         /* If interface name appears a second time in a row then it has more
            than one IP addresses (linux: ip addr add $IP dev $IF).
            But the variable is already added so don't set it again. */
-        bool add_mac_addr = false;
         if (strcmp(last_name, ifp->ifr_name) != 0)
         {
             strcpy(last_name, ifp->ifr_name);
             EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "interface", last_name, CF_DATA_TYPE_STRING, "source=agent");
-            add_mac_addr = true;
         }
 
         snprintf(workbuf, sizeof(workbuf), "net_iface_%s", CanonifyName(ifp->ifr_name));
@@ -550,12 +548,8 @@ void GetInterfacesInfo(EvalContext *ctx)
                 }
             }
 
-            /* [CFE-3046] Only add unique interfaces to sys interfaces and hardware */
-            if (add_mac_addr)
-            {
-                // Set the hardware/mac address array
-                GetMacAddress(ctx, fd, &ifr, ifp, &interfaces, &hardware);
-            }
+            // Set the hardware/mac address array
+            GetMacAddress(ctx, fd, &ifr, ifp, &interfaces, &hardware);
         }
     }
 

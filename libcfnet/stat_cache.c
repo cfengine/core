@@ -108,6 +108,9 @@ static int StatFromCache(AgentConnection *conn, const char *file,
 int cf_remote_stat(AgentConnection *conn, bool encrypt, const char *file,
                    struct stat *statbuf, const char *stattype)
 {
+    assert(conn != NULL);
+    assert(file != NULL);
+    assert(statbuf != NULL);
     assert(strcmp(stattype, "file") == 0 ||
            strcmp(stattype, "link") == 0);
 
@@ -208,128 +211,87 @@ int cf_remote_stat(AgentConnection *conn, bool encrypt, const char *file,
         return -1;
     }
 
-    if (OKProtoReply(recvbuffer))
+    if (!OKProtoReply(recvbuffer))
     {
-        Stat cfst;
-
-        // use intmax_t here to provide enough space for large values coming over the protocol
-        intmax_t d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12 = 0, d13 = 0;
-        ret = sscanf(recvbuffer, "OK: "
-               "%1" PRIdMAX     // 01 cfst.cf_type
-               " %5" PRIdMAX    // 02 cfst.cf_mode
-               " %14" PRIdMAX   // 03 cfst.cf_lmode
-               " %14" PRIdMAX   // 04 cfst.cf_uid
-               " %14" PRIdMAX   // 05 cfst.cf_gid
-               " %18" PRIdMAX   // 06 cfst.cf_size
-               " %14" PRIdMAX   // 07 cfst.cf_atime
-               " %14" PRIdMAX   // 08 cfst.cf_mtime
-               " %14" PRIdMAX   // 09 cfst.cf_ctime
-               " %1" PRIdMAX    // 10 cfst.cf_makeholes
-               " %14" PRIdMAX   // 11 cfst.cf_ino
-               " %14" PRIdMAX   // 12 cfst.cf_nlink
-               " %18" PRIdMAX,  // 13 cfst.cf_dev
-               &d1, &d2, &d3, &d4, &d5, &d6, &d7, &d8, &d9, &d10, &d11, &d12, &d13);
-
-        if (ret < 13)
-        {
-            Log(LOG_LEVEL_ERR, "Cannot read SYNCH reply from '%s', only %d/13 items parsed", conn->remoteip, ret );
-            return -1;
-        }
-
-        cfst.cf_type = (FileType) d1;
-        cfst.cf_mode = (mode_t) d2;
-        cfst.cf_lmode = (mode_t) d3;
-        cfst.cf_uid = (uid_t) d4;
-        cfst.cf_gid = (gid_t) d5;
-        cfst.cf_size = (off_t) d6;
-        cfst.cf_atime = (time_t) d7;
-        cfst.cf_mtime = (time_t) d8;
-        cfst.cf_ctime = (time_t) d9;
-        cfst.cf_makeholes = (char) d10;
-        cfst.cf_ino = d11;
-        cfst.cf_nlink = d12;
-        cfst.cf_dev = (dev_t)d13;
-
-        /* Use %?d here to avoid memory overflow attacks */
-
-        memset(recvbuffer, 0, CF_BUFSIZE);
-
-        if (ReceiveTransaction(conn->conn_info, recvbuffer, NULL) == -1)
-        {
-            /* TODO mark connection in the cache as closed. */
-            return -1;
-        }
-
-        if (strlen(recvbuffer) > 3)
-        {
-            cfst.cf_readlink = xstrdup(recvbuffer + 3);
-        }
-        else
-        {
-            cfst.cf_readlink = NULL;
-        }
-
-        switch (cfst.cf_type)
-        {
-        case FILE_TYPE_REGULAR:
-            cfst.cf_mode |= (mode_t) S_IFREG;
-            break;
-        case FILE_TYPE_DIR:
-            cfst.cf_mode |= (mode_t) S_IFDIR;
-            break;
-        case FILE_TYPE_CHAR_:
-            cfst.cf_mode |= (mode_t) S_IFCHR;
-            break;
-        case FILE_TYPE_FIFO:
-            cfst.cf_mode |= (mode_t) S_IFIFO;
-            break;
-        case FILE_TYPE_SOCK:
-            cfst.cf_mode |= (mode_t) S_IFSOCK;
-            break;
-        case FILE_TYPE_BLOCK:
-            cfst.cf_mode |= (mode_t) S_IFBLK;
-            break;
-        case FILE_TYPE_LINK:
-            cfst.cf_mode |= (mode_t) S_IFLNK;
-            break;
-        }
-
-        cfst.cf_filename = xstrdup(file);
-        cfst.cf_server = xstrdup(conn->this_server);
-        cfst.cf_failed = false;
-
-        if (cfst.cf_lmode != 0)
-        {
-            cfst.cf_lmode |= (mode_t) S_IFLNK;
-        }
-
-        NewStatCache(&cfst, conn);
-
-        if ((cfst.cf_lmode != 0) && (strcmp(stattype, "link") == 0))
-        {
-            statbuf->st_mode = cfst.cf_lmode;
-        }
-        else
-        {
-            statbuf->st_mode = cfst.cf_mode;
-        }
-
-        statbuf->st_uid = cfst.cf_uid;
-        statbuf->st_gid = cfst.cf_gid;
-        statbuf->st_size = cfst.cf_size;
-        statbuf->st_mtime = cfst.cf_mtime;
-        statbuf->st_ctime = cfst.cf_ctime;
-        statbuf->st_atime = cfst.cf_atime;
-        statbuf->st_ino = cfst.cf_ino;
-        statbuf->st_dev = cfst.cf_dev;
-        statbuf->st_nlink = cfst.cf_nlink;
-
-        return 0;
+        Log(LOG_LEVEL_ERR,
+            "Transmission refused or failed statting '%s', got '%s'",
+            file, recvbuffer);
+        errno = EPERM;
+        return -1;
     }
 
-    Log(LOG_LEVEL_ERR, "Transmission refused or failed statting '%s', got '%s'", file, recvbuffer);
-    errno = EPERM;
-    return -1;
+    Stat cfst;
+
+    ret = StatParseResponse(recvbuffer, &cfst);
+    if (!ret)
+    {
+        Log(LOG_LEVEL_ERR, "Cannot read STAT reply from '%s'",
+            conn->this_server);
+        return -1;
+    }
+
+    // If remote path is symbolic link, receive actual path here
+    int recv_len = ReceiveTransaction(conn->conn_info, recvbuffer, NULL);
+    if (recv_len == -1)
+    {
+        /* TODO mark connection in the cache as closed. */
+        return -1;
+    }
+
+    int ok_len = sizeof("OK:");
+    /* Received a link destination from server
+       (recv_len greater than OK response + NUL-byte) */
+    if (recv_len > ok_len)
+    {
+        // Read from after "OK:"
+        cfst.cf_readlink = xstrdup(recvbuffer + (ok_len - 1));
+    }
+    else
+    {
+        cfst.cf_readlink = NULL;
+    }
+
+    mode_t file_type = FileTypeToMode(cfst.cf_type);
+    if (file_type == 0)
+    {
+        Log(LOG_LEVEL_ERR, "Invalid file type identifier for file %s:%s, %u",
+            conn->this_server, file, cfst.cf_type);
+        return -1;
+    }
+
+    cfst.cf_mode |= file_type;
+
+    cfst.cf_filename = xstrdup(file);
+    cfst.cf_server = xstrdup(conn->this_server);
+    cfst.cf_failed = false;
+
+    if (cfst.cf_lmode != 0)
+    {
+        cfst.cf_lmode |= (mode_t) S_IFLNK;
+    }
+
+    NewStatCache(&cfst, conn);
+
+    if ((cfst.cf_lmode != 0) && (strcmp(stattype, "link") == 0))
+    {
+        statbuf->st_mode = cfst.cf_lmode;
+    }
+    else
+    {
+        statbuf->st_mode = cfst.cf_mode;
+    }
+
+    statbuf->st_uid = cfst.cf_uid;
+    statbuf->st_gid = cfst.cf_gid;
+    statbuf->st_size = cfst.cf_size;
+    statbuf->st_mtime = cfst.cf_mtime;
+    statbuf->st_ctime = cfst.cf_ctime;
+    statbuf->st_atime = cfst.cf_atime;
+    statbuf->st_ino = cfst.cf_ino;
+    statbuf->st_dev = cfst.cf_dev;
+    statbuf->st_nlink = cfst.cf_nlink;
+
+    return 0;
 }
 
 /*********************************************************************/
@@ -348,4 +310,93 @@ const Stat *StatCacheLookup(const AgentConnection *conn, const char *file_name,
     }
 
     return NULL;
+}
+
+/*********************************************************************/
+
+mode_t FileTypeToMode(const FileType type)
+{
+    /* TODO Match the order of the actual stat struct for easier mode */
+    int mode = 0;
+    switch (type)
+    {
+        case FILE_TYPE_REGULAR:
+            mode |= (mode_t) S_IFREG;
+            break;
+        case FILE_TYPE_DIR:
+            mode |= (mode_t) S_IFDIR;
+            break;
+        case FILE_TYPE_CHAR_:
+            mode |= (mode_t) S_IFCHR;
+            break;
+        case FILE_TYPE_FIFO:
+            mode |= (mode_t) S_IFIFO;
+            break;
+        case FILE_TYPE_SOCK:
+            mode |= (mode_t) S_IFSOCK;
+            break;
+        case FILE_TYPE_BLOCK:
+            mode |= (mode_t) S_IFBLK;
+            break;
+        case FILE_TYPE_LINK:
+            mode |= (mode_t) S_IFLNK;
+            break;
+    }
+
+    // mode is 0 if no file types matched
+    return mode;
+}
+
+/*********************************************************************/
+
+bool StatParseResponse(const char *const buf, Stat *const statbuf)
+{
+    assert(buf != NULL);
+    assert(statbuf != NULL);
+
+    // use intmax_t here to provide enough space for large values coming over the protocol
+    intmax_t d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12 = 0, d13 = 0;
+    int res = sscanf(buf, "OK:"
+                          " %1" PRIdMAX    // 01 statbuf->cf_type
+                          " %5" PRIdMAX    // 02 statbuf->cf_mode
+                          " %14" PRIdMAX   // 03 statbuf->cf_lmode
+                          " %14" PRIdMAX   // 04 statbuf->cf_uid
+                          " %14" PRIdMAX   // 05 statbuf->cf_gid
+                          " %18" PRIdMAX   // 06 statbuf->cf_size
+                          " %14" PRIdMAX   // 07 statbuf->cf_atime
+                          " %14" PRIdMAX   // 08 statbuf->cf_mtime
+                          " %14" PRIdMAX   // 09 statbuf->cf_ctime
+                          " %1" PRIdMAX    // 10 statbuf->cf_makeholes
+                          " %14" PRIdMAX   // 11 statbuf->cf_ino
+                          " %14" PRIdMAX   // 12 statbuf->cf_nlink
+                          " %18" PRIdMAX,  // 13 statbuf->cf_dev
+                     &d1, &d2, &d3, &d4, &d5, &d6, &d7,
+                     &d8, &d9, &d10, &d11, &d12, &d13);
+    if (res < 13)
+    {
+        if (res >= 0)
+        {
+            Log(LOG_LEVEL_VERBOSE,
+                "STAT response parsing failed, only %d/13 elements parsed",
+                res);
+        }
+
+        return false;
+    }
+
+    statbuf->cf_type = (FileType) d1;
+    statbuf->cf_mode = (mode_t) d2;
+    statbuf->cf_lmode = (mode_t) d3;
+    statbuf->cf_uid = (uid_t) d4;
+    statbuf->cf_gid = (gid_t) d5;
+    statbuf->cf_size = (off_t) d6;
+    statbuf->cf_atime = (time_t) d7;
+    statbuf->cf_mtime = (time_t) d8;
+    statbuf->cf_ctime = (time_t) d9;
+    statbuf->cf_makeholes = (char) d10;
+    statbuf->cf_ino = d11;
+    statbuf->cf_nlink = d12;
+    statbuf->cf_dev = (dev_t)d13;
+
+    return true;
 }

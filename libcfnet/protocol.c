@@ -197,14 +197,106 @@ bool ProtocolStatGet(AgentConnection *conn, const char *remote_path,
     assert(remote_path != NULL);
 
     struct stat sb;
-    int ret = cf_remote_stat(conn, false, remote_path, &sb, "file");
-    if (ret == -1)
+    bool ret = ProtocolStat(conn, remote_path, &sb);
+    if (!ret)
     {
         Log(LOG_LEVEL_ERR,
-            "%s: Failed to stat remote file %s:%s",
-            __func__, conn->this_server, remote_path);
+            "Failed to stat remote file %s:%s",
+            conn->this_server, remote_path);
         return false;
     }
 
     return ProtocolGet(conn, remote_path, local_path, sb.st_size, perms);
+}
+
+bool ProtocolStat(AgentConnection *const conn, const char *const remote_path,
+                  struct stat *const stat_buf)
+{
+    assert(conn != NULL);
+    assert(remote_path != NULL);
+    assert(stat_buf != NULL);
+
+    time_t tloc = time(NULL);
+    if (tloc == (time_t) -1)
+    {
+        Log(LOG_LEVEL_WARNING,
+            "Couldn't read system clock, defaulting to 0 in case server "
+            "does not care about clock differences (time: %s)",
+            GetErrorStr());
+        tloc = 0;
+    }
+
+    char buf[CF_BUFSIZE] = {0};
+    int to_send = snprintf(buf, CF_BUFSIZE, "SYNCH %jd STAT %s",
+                           (intmax_t) tloc, remote_path);
+
+    int ret = SendTransaction(conn->conn_info, buf, to_send, CF_DONE);
+    if (ret == -1)
+    {
+        Log(LOG_LEVEL_WARNING,
+            "Could not send stat request for remote file %s:%s.",
+            conn->this_server, remote_path);
+        return false;
+    }
+
+    int recvd_len = ReceiveTransaction(conn->conn_info, buf, NULL) == -1;
+    if (recvd_len == -1)
+    {
+        Log(LOG_LEVEL_WARNING,
+            "Receiving file statistics from %s failed!",
+            conn->this_server);
+        return false;
+    }
+
+    if (BadProtoReply(buf))
+    {
+        Log(LOG_LEVEL_WARNING,
+            "Could not stat remote file %s:%s, response: %s",
+            conn->this_server, remote_path, buf);
+        return false;
+    }
+
+    if (!OKProtoReply(buf))
+    {
+        Log(LOG_LEVEL_WARNING,
+            "Illegal response from server while statting %s:%s",
+            conn->this_server, remote_path);
+        return false;
+    }
+
+    Stat cf_stat;
+    ret = StatParseResponse(buf, &cf_stat);
+    if (!ret)
+    {
+        Log(LOG_LEVEL_WARNING,
+            "Failed to parse the response from the server "
+            "while statting %s:%s",
+            conn->this_server, remote_path);
+        return false;
+    }
+
+    mode_t file_type = FileTypeToMode(cf_stat.cf_type);
+    if (file_type == 0)
+    {
+        Log(LOG_LEVEL_VERBOSE,
+            "Invalid file type identifier for file %s:%s, %u",
+            conn->this_server, remote_path, cf_stat.cf_type);
+        return false;
+    }
+
+    stat_buf->st_mode = file_type | cf_stat.cf_mode;
+    stat_buf->st_uid = cf_stat.cf_uid;
+    stat_buf->st_gid = cf_stat.cf_gid;
+    stat_buf->st_size = cf_stat.cf_size;
+    stat_buf->st_mtime = cf_stat.cf_mtime;
+    stat_buf->st_ctime = cf_stat.cf_ctime;
+    stat_buf->st_atime = cf_stat.cf_atime;
+    stat_buf->st_ino = cf_stat.cf_ino;
+    stat_buf->st_dev = cf_stat.cf_dev;
+    stat_buf->st_nlink = cf_stat.cf_nlink;
+
+    // Receive link destination, but do nothing
+    ReceiveTransaction(conn->conn_info, buf, NULL);
+
+    return true;
 }

@@ -484,7 +484,7 @@ static AgentConnection *CFNetOpenConnection(const char *server)
     free(buf);
     if (conn == NULL)
     {
-        printf("Failed to connect to '%s' (%d)\n", server, err);
+        printf("Failed to connect to '%s'\n", server);
         return NULL;
     }
     return conn;

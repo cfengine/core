@@ -36,6 +36,9 @@ bundle agent init
                            "element #11 of the test list: two",
                            "element #2 of the test list: 3",
                            "element #6 of the test list: long string",
+                           "element #-1 of the test list: three",
+                           "element #-13 of the test list: 1",
+                           "element #-6 of the test list: four",
       };
 
   files:
@@ -70,7 +73,7 @@ bundle agent test
                         "one", "two", "three",
       };
 
-      "nth" slist => { 1, 2, 6, 10, 11, 1000 };
+      "nth" slist => { 1, 2, 6, 10, 11, 1000, "-1", "-13", "-6", "-1000" };
 
       "test[$(nth)]" string => nth("test", $(nth));
       "test[0]" string => nth("test", 0);

@@ -34,7 +34,6 @@
 #include <addr_lib.h>           // ParseHostPort
 #include <net.h>                // SocketConnect() SendTransaction()
 #include <time.h>               // time_t, time, difftime
-#include <stat_cache.h>         // cf_remote_stat
 #include <string_lib.h>         // ToLowerStrInplace
 #include <writer.h>
 #include <policy_server.h>      // PolicyServerReadFile
@@ -643,15 +642,14 @@ static int CFNetStat(ARG_UNUSED CFNetOptions *opts, const char *hostname, char *
 {
     assert(opts);
     char *file = args[1];
-    AgentConnection *conn = CFNetOpenConnection(hostname);// FIXME
+    AgentConnection *conn = CFNetOpenConnection(hostname);
     if (conn == NULL)
     {
         return -1;
     }
-    bool encrypt = true;
     struct stat sb;
-    int r = cf_remote_stat(conn, encrypt, file, &sb, "file");
-    if (r != 0)
+    bool ret = ProtocolStat(conn, file, &sb);
+    if (!ret)
     {
         printf("Could not stat: '%s'\n", file);
     }
@@ -682,7 +680,7 @@ typedef struct _GetFileData {
     const char *hostname;
     char remote_file[PATH_MAX];
     char local_file[PATH_MAX];
-    int ret;
+    bool ret;
 } GetFileData;
 
 static void *CFNetGetFile(void *arg)
@@ -691,13 +689,16 @@ static void *CFNetGetFile(void *arg)
     AgentConnection *conn = CFNetOpenConnection(data->hostname);
     if (conn == NULL)
     {
-        data->ret = -1;
+        data->ret = false;
         return NULL;
     }
 
-    bool ok = ProtocolStatGet(conn, data->remote_file,
-                               data->local_file, 0644);
-    data->ret = ok ? 0 : -1;
+    data->ret = ProtocolStatGet(conn, data->remote_file,
+                                data->local_file, 0644);
+    if (!data->ret)
+    {
+        printf("Could not stat: '%s'\n", data->remote_file);
+    }
     CFNetDisconnect(conn);
     return NULL;
 }
@@ -856,7 +857,7 @@ static int CFNetGet(ARG_UNUSED CFNetOptions *opts, const char *hostname, char **
         }
         else
         {
-            failure = failure && (threads[i]->data->ret != 0);
+            failure = failure && !threads[i]->data->ret;
         }
     }
 

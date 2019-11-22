@@ -54,6 +54,9 @@ bundle agent test
       "access2[$(nth2)]" string => nth(test2, $(nth2));
       "access3[$(nth3)]" string => nth(test3, $(nth3));
 
+      "nth_neg1" string => nth(test, "-1");
+      "nth_neg100" string => nth(test, "-100"); # invalid index position requested
+
   reports:
       "The test list is $(test_str)";
       "element #$(nth) of the test list: $(access[$(nth)])";
@@ -64,6 +67,10 @@ bundle agent test
 
       "The test3 data container is $(test3_str)";
       "element #$(nth3) of the test3 data container: $(access3[$(nth3)])";
+
+      "The last element of test is $(nth_neg1)";
+      "nth_neg100 is not defined, because an invalid index was requested"
+        if => not( isvariable( nth_neg100 ));
 }
 #+end_src
 ###############################################################################
@@ -84,5 +91,7 @@ bundle agent test
 #@ R: The test3 data container is {"x":true,"y":"z"}
 #@ R: element #x of the test3 data container: true
 #@ R: element #y of the test3 data container: z
+#@ R: The last element of test is three
+#@ R: nth_neg100 is not defined, because an invalid index was requested
 #@ ```
 #+end_src

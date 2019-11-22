@@ -212,7 +212,7 @@ def spawn_vm_in_aws(platform, aws_creds, key_pair, security_groups, region, name
             raise ValueError("VM with the name '%s' already exists" % name)
 
     aws_platform = aws_platforms[platform]
-    size = size or aws_platform["size"]
+    size = size or aws_platform.get("xlsize") or aws_platform["size"]
     ami = aws_platform["ami"]
 
     log.info("Spawning new '%s' VM in AWS (AMI: %s, size=%s)" % (platform, ami, size))

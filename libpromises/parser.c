@@ -39,6 +39,7 @@ extern FILE *yyin;
 
 static void ParserStateReset(ParserState *p, bool discard)
 {
+    assert(p != NULL);
     p->agent_type = AGENT_TYPE_COMMON;
     p->warnings = PARSER_WARNING_ALL;
     p->policy = NULL;
@@ -97,6 +98,7 @@ static void ParserStateReset(ParserState *p, bool discard)
     p->promiser = NULL;
     p->blockid[0] = '\0';
     p->blocktype[0] = '\0';
+    RvalDestroy(p->rval);
     p->rval = RvalNew(NULL, RVAL_TYPE_NOPROMISEE);
 }
 

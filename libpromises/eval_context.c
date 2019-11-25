@@ -1474,10 +1474,7 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner)
             {
                 EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "with", RvalScalarValue(final), CF_DATA_TYPE_STRING, "source=promise_iteration/with");
             }
-            else
-            {
-                RvalDestroy(final);
-            }
+            RvalDestroy(final);
         }
     }
 }

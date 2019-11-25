@@ -1,0 +1,63 @@
+# Mock version of stdlib.cf , paths.cf etc. from masterfiles.
+# This just defines some empty bodies and bundles which are necessary
+# for cf-promises to run on all the examples in core. There is currently no
+# way to make cf-promises validate the syntax of a single file, without
+# opening inputs.
+#
+# NOTE: Syntax doesn't allow empty body, but body with 1 class guard is OK
+# NOTE: It would be nice if this was auto-generated, but it isn't,
+#       just add another body / bundle if you need to use it in an example.
+
+body package_method yum {any::}
+body package_method generic {any::}
+body classes enumerate(x) {any::}
+body perms p(user,mode) {any::}
+body changes tripwire {any::}
+body depth_search recurse(d) {any::}
+body delete tidy {any::}
+body file_select days_old(days) {any::}
+body edit_defaults empty {any::}
+body acl ntfs(acl) {any::}
+body action if_elapsed(x) {any::}
+body action warn_only {any::}
+body classes if_ok(x) {any::}
+body classes if_repaired(x) {any::}
+body contain setuid(owner) {any::}
+body copy_from local_cp(from) {any::}
+body copy_from remote_cp(from, server) {any::}
+body copy_from secure_cp(from,server) {any::}
+body depth_search include_base {any::}
+body package_method solaris(pkgname, spoolfile, adminfile) {any::}
+body package_method zypper {any::}
+body perms mo(mode, user) {any::}
+body perms mog(mode, user, group) {any::}
+body perms owner(user) {any::}
+body rename disable {any::}
+body rename rotate(level) {any::}
+body rename to(file) {any::}
+body replace_with value(x) {any::}
+
+bundle edit_line insert_lines(lines) {}
+bundle edit_line append_if_no_line(lines) {}
+bundle edit_line prepend_if_no_line(string) {}
+bundle edit_line append_user_field(group,field,allusers) {}
+bundle edit_line set_user_field(user,field,val) {}
+bundle agent package_absent(package) {}
+bundle agent package_present(package) {}
+bundle agent package_latest(package) {}
+bundle agent package_specific_present(packageorfile, package_version, package_arch) {}
+bundle agent package_specific_latest(packageorfile, package_version, package_arch) {}
+bundle edit_xml xml_insert_tree_nopath(treestring) {}
+bundle edit_xml xml_set_value(value, xpath) {}
+bundle edit_xml xml_set_attribute(attr, value, xpath) {}
+bundle edit_line set_variable_values(v) {}
+bundle edit_line expand_template(templatefile) {}
+bundle edit_line create_solaris_admin_file {}
+bundle common paths {}
+
+# This "test" always passes, it is meant to be included from examples:
+bundle agent __main__
+{
+  reports:
+    "$(this.promise_filename) Pass";
+}

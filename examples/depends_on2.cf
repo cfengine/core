@@ -11,7 +11,7 @@ bundle agent main
 
       "any"  usebundle => one;
 
-      "any"  usebundle => mars.two;
+      "any"  usebundle => mars:two;
 
 }
 
@@ -41,8 +41,9 @@ bundle agent two
       handle => "mars_two",
       depends_on => { "handle_one" };
 
-      "marsone"
-      handle => "handle_one";
+      # Currently bugged -> CFE-3206
+      # "marsone"
+      # handle => "handle_one";
 
       "marsthree"
       depends_on => { "default.handle_one", "mars_two" };

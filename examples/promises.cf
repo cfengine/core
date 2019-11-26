@@ -31,10 +31,7 @@ body common control
 {
     any::
 
-      bundlesequence  => { "update", "main", "cfengine2" };   
-
-      
-      inputs => { "update.cf" };
+      bundlesequence  => { "main", "cfengine2" };
 }
 
 #######################################################

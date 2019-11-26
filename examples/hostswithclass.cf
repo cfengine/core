@@ -1,7 +1,7 @@
 body common control
 {
       bundlesequence => { "example" };
-      inputs => { "libraries/cfengine_stdlib.cf" };
+      inputs => { "$(sys.libdir)/stdlib.cf" };
 }
 
 

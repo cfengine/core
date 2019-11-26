@@ -10,7 +10,7 @@ body common control
       bundlesequence  => { "zenoss_host", "zenoss_client"  };
       syslog_host     => "zenoss_syslog.example.org";
       syslog_port     => "514";
-      inputs => {"libraries/cfengine_stdlib.cf"};
+      inputs => { "$(sys.libdir)/stdlib.cf" };
 }
 
 ########################################################

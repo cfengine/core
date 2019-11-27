@@ -52,6 +52,7 @@
 	  * `state/cf_users`
 	  * `state/env_data`
 	  (ENT-4863)
+	- cf-execd now sends SIGKILL to the agent process in case of agent_expireafter (CFE-2664)
 	- Corrupted LMDB files are now automatically repaired (CFE-3127)
 	- Added a critical log message when a corrupted local database is detected
 	  (CFE-2469)

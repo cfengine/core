@@ -63,7 +63,7 @@ bundle edit_line append_users_starting(v)
 
   insert_lines:
 
-      "$($(v)[$(index)])",
+      "$($(v)[$(index)])"
 
       ifvarclass => "add_$(index)";
 
@@ -84,7 +84,7 @@ bundle edit_line append_groups_starting(v)
 
   insert_lines:
 
-      "$($(v)[$(index)])",
+      "$($(v)[$(index)])"
 
       ifvarclass => "add_$(index)";
 

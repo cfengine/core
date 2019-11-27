@@ -32,7 +32,7 @@ body common control
 bundle agent runme
 {
   methods:
-      "nozip" usebundle => cfe_package_ensure_absent("zip"); # delete
+      "nozip" usebundle => package_absent("zip"); # delete
       "pleasezip" usebundle => cfe_package_ensure_present("zip"); # add
       "latestzip" usebundle => cfe_package_ensure_upgrade("zip"); # add/update
 

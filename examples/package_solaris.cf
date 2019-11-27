@@ -28,7 +28,7 @@
 body common control
 {
       bundlesequence => { "packages" };
-      inputs => { "cfengine_stdlb.cf" };
+      inputs => { "$(sys.libdir)/stdlib.cf" };
 }
 
 #############################################

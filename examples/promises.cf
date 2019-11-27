@@ -29,9 +29,8 @@
 body common control
 
 {
-    any::
-
-      bundlesequence  => { "main", "cfengine2" };
+    inputs => { "$(sys.libdir)/stdlib.cf" };
+    bundlesequence  => { "main", "cfengine2" };
 }
 
 #######################################################
@@ -47,13 +46,13 @@ bundle agent main
       };
   files:
       "$(sys_files)" perms        => p("root","0644"),
-      changes      => trip_wire;
+      changes      => tripwire;
       "/etc/shadow"  perms        => p("root","0600"),
-      changes      => trip_wire;
-      "/usr"         changes      => trip_wire,
+      changes      => tripwire;
+      "/usr"         changes      => tripwire,
       depth_search => recurse("inf");
       "/tmp"         delete       => tidy,
-      file_select  => days("2"),
+      file_select  => days_old("2"),
       depth_search => recurse("inf");
 }
 

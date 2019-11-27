@@ -46,7 +46,7 @@ bundle agent packages
 
       "/tmp/$(admin_file)"
       create => "true",
-      edit_defaults => empty_file,
+      edit_defaults => empty,
       edit_line => create_solaris_admin_file;
 
   packages:

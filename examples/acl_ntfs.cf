@@ -15,15 +15,12 @@ bundle agent example
   files:
 
     windows::
-      "C:\Secret",
+      "C:\Secret"
       acl => ntfs( "@(acl_secret_dir)" ),
       depth_search => include_base,
       perms => owner( "Administrator" );
 
-      "C:\Secret\file.txt",
+      "C:\Secret\file.txt"
       acl => ntfs( "@(acl_secret_file)" ),
       perms => owner( "Administrator" );
 }
-
-
-

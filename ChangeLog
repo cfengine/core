@@ -22,7 +22,6 @@
 	  (CFE-3188)
 	- cf-serverd now tries to accept connection multiple times
 	- Fixed issue when using hostname in bindtoaddress (CFE-3190)
-	- Fixed disabling TLS 1.0 (CFE-3068)
 	- Reduced SSL/TLS shutdowns on bad networks (CFE-3023)
 	- Fixed log message when parsing TIME in `ps` output fails
 	- Fixed parsing of numbers starting with dot (decimal point) in eval() (CFE-2762)

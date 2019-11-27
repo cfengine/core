@@ -7668,7 +7668,10 @@ static FnCallResult FnCallProcessExists(ARG_UNUSED EvalContext *ctx, ARG_UNUSED 
         return FnFailure();
     }
 
-    ProcessSelect ps = { .owner = NULL, .process_result = "" };
+    ProcessSelect ps = PROCESS_SELECT_INIT;
+    ps.owner = NULL;
+    ps.process_result = "";
+
     // ps is unused because attrselect = false below
     Item *matched = SelectProcesses(regex, ps, false);
     ClearProcessTable();

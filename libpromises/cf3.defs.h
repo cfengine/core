@@ -1158,6 +1158,32 @@ typedef struct
     char *process_result;
 } ProcessSelect;
 
+#define PROCESS_SELECT_INIT { \
+    .owner = NULL,          \
+    .min_pid = CF_NOINT,    \
+    .max_pid = CF_NOINT,    \
+    .min_ppid = CF_NOINT,   \
+    .max_ppid = CF_NOINT,   \
+    .min_pgid = CF_NOINT,   \
+    .max_pgid = CF_NOINT,   \
+    .min_rsize = CF_NOINT,  \
+    .max_rsize = CF_NOINT,  \
+    .min_vsize = CF_NOINT,  \
+    .max_vsize = CF_NOINT,  \
+    .min_ttime = CF_NOINT,  \
+    .max_ttime = CF_NOINT,  \
+    .min_stime = CF_NOINT,  \
+    .max_stime = CF_NOINT,  \
+    .min_pri = CF_NOINT,    \
+    .max_pri = CF_NOINT,    \
+    .min_thread = CF_NOINT, \
+    .max_thread = CF_NOINT, \
+    .status = NULL,         \
+    .command = NULL,        \
+    .tty = NULL,            \
+    .process_result = NULL, \
+}
+
 /*************************************************************************/
 
 typedef struct

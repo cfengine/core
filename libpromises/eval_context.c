@@ -612,6 +612,12 @@ static bool EvalWithTokenFromList(const char *expr, StringSet *token_set)
 
 bool EvalProcessResult(const char *process_result, StringSet *proc_attr)
 {
+    assert(process_result != NULL);
+    if (StringSafeEqual(process_result, ""))
+    {
+        /* nothing to evaluate */
+        return false;
+    }
     return EvalWithTokenFromList(process_result, proc_attr);
 }
 

@@ -557,10 +557,9 @@ static void Apoptosis(void)
         Rlist *owners = NULL;
         RlistPrepend(&owners, myuid, RVAL_TYPE_SCALAR);
 
-        ProcessSelect process_select = {
-            .owner = owners,
-            .process_result = "process_owner",
-        };
+        ProcessSelect process_select = PROCESS_SELECT_INIT;
+        process_select.owner = owners;
+        process_select.process_result = "process_owner";
 
         Item *killlist = SelectProcesses(promiser_buf, process_select, true);
         RlistDestroy(owners);

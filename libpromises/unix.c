@@ -53,7 +53,11 @@ void ProcessSignalTerminate(pid_t pid)
     }
 
     sleep(1);
-
+    if (kill(pid, 0) != 0)
+    {
+        /* can no longer send signals to the process => it's dead now */
+        return;
+    }
 
     if(kill(pid, SIGTERM) == -1)
     {
@@ -62,7 +66,11 @@ void ProcessSignalTerminate(pid_t pid)
     }
 
     sleep(5);
-
+    if (kill(pid, 0) != 0)
+    {
+        /* can no longer send signals to the process => it's dead now */
+        return;
+    }
 
     if(kill(pid, SIGKILL) == -1)
     {

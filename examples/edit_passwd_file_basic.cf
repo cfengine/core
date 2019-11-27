@@ -24,6 +24,7 @@
 body common control
 {
       bundlesequence => { "edit_passwd" };
+      inputs => { "$(sys.libdir)/stdlib.cf" };
 }
 
 bundle agent edit_passwd

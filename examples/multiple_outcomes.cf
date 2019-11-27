@@ -43,7 +43,7 @@ Illustrate how a promise can have multiple outcomes";
       "My promise was not kept because the template failed to render.";
 
     outcome_reached::
-      "My promise was reached because it was actuated. Any o"
+      "My promise was reached because it was actuated. Any o";
 
     DEBUG::
       "Found class: '$(s_result_classes)'";

@@ -40,7 +40,6 @@ bundle agent runme
       # version, and architecture
       "addfilezip"
       usebundle => package_specific_present("/mydir/zip.deb-or-rpm",
-                                                    "==",
                                                     "3.0-7",
                                                     ifelse("debian", "amd64",
                                                            "x86_64"));
@@ -49,7 +48,6 @@ bundle agent runme
       # architecture
       "addzip"
       usebundle => package_specific_present("zip",
-                                                    "==",
                                                     ifelse("redhat", "3.0-7",
                                                            "2.99"),
                                                     ifelse("debian", "amd64",
@@ -59,7 +57,6 @@ bundle agent runme
       # method, version, and architecture
       "upgradefilezip"
       usebundle => package_specific_latest("/mydir/zip.deb-or-rpm",
-                                                    "==",
                                                     "3.0-7",
                                                     ifelse("debian", "amd64",
                                                            "x86_64"));
@@ -68,7 +65,6 @@ bundle agent runme
       # version, and architecture
       "upgradezip"
       usebundle => package_specific_latest("zip",
-                                                    "==",
                                                     "3.0-7",
                                                     ifelse("debian", "amd64",
                                                            "x86_64"));

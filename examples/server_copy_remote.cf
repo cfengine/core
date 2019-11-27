@@ -88,7 +88,6 @@ body copy_from mycopy(from,server)
       preserve    => "true";
       linkcopy_patterns => { ".*fish.*" };
       copylink_patterns => { "non-local.*"};
-      xdev        => "true";                   # /on/false/off
       compare     => "mtime";                  # ctime/mtime/checksum/sum/byte/binary/any
       link_type    => "absolute";              # /symbolic/relative/hard etc
       type_check   => "true";

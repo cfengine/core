@@ -47,9 +47,8 @@ bundle agent example
 
   files:
 
-      "/home/mark/tmp/testcopy" 
+      "/home/mark/tmp/testcopy"
 
-      handle       => "update_rule",
       copy_from    => mycopy("/home/mark/LapTop/words","127.0.0.1"),
       perms        => system,
       depth_search => recurse("inf");

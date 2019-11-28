@@ -3,7 +3,7 @@
 body common control
 {
       bundlesequence => { "overture" };
-      inputs => { "libraries/cfengine_stdlib.cf" };
+      inputs => { "$(sys.libdir)/stdlib.cf" };
 }
 
 #######################################################

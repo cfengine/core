@@ -65,8 +65,8 @@ bundle agent run
       "mapdata/none on data container result: $(mapc_none_str)";
 
     any::
-      "Note that the output of the above reports is not deterministic,"
-      "because the order of the keys returned by mapdata() is not guaranteed."
+      "Note that the output of the above reports is not deterministic,";
+      "because the order of the keys returned by mapdata() is not guaranteed.";
 }
 
 #+end_src

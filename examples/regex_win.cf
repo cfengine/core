@@ -21,7 +21,6 @@ bundle agent example
 bundle edit_line add_information()
 {
   insert_lines:
-      "a line",
+      "a line"
       comment => "adding line";
 }
-

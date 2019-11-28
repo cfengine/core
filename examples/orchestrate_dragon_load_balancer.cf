@@ -19,7 +19,7 @@
 body common control
 {
       bundlesequence => { "dragon_symphony" };
-      inputs => { "libraries/cfengine_stdlib.cf" };
+      inputs => { "$(sys.libdir)/stdlib.cf" };
 }
 
 ############################################################
@@ -187,7 +187,7 @@ bundle agent upgrade_host(predecessor,satellite,method)
 
   reports:
 
-      "Done $(satellite)",
+      "Done $(satellite)"
       ifvarclass => "$(satellite)";
 }
 
@@ -272,7 +272,7 @@ bundle edit_line restore_and_comment(name,pred)
 
     !problem::
 
-      "The state of the switch was:",
+      "The state of the switch was:"
       printfile => visitors_book("/tmp/switch_file"),
       ifvarclass => "show_switch_$(name)";
 

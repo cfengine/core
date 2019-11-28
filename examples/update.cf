@@ -81,12 +81,12 @@ bundle agent update
   commands:
 
     start_exec::
-      "$(sys.workdir)/bin/cf-execd",
-      action => logme("executor");
+      "$(sys.workdir)/bin/cf-execd"
+        action => logme("executor");
 
     start_server::
-      "$(sys.workdir)/bin/cf-serverd",
-      action => logme("server");
+      "$(sys.workdir)/bin/cf-serverd"
+        action => logme("server");
 
   reports:
 

@@ -102,12 +102,12 @@ bundle agent job_chain(time)
 
     !succeeded::
 
-      "Server communication failed",
-      
+      "Server communication failed"
+
       ifvarclass => "$(time)";
 
 
-      "Job completed on the server...",
+      "Job completed on the server..."
 
       ifvarclass => "$(g.signal)";
 

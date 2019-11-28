@@ -36,6 +36,9 @@ AM_CFLAGS = @CFLAGS@ \
 	$(OPENSSL_CFLAGS) \
 	$(ENTERPRISE_CFLAGS)
 
+AM_LDFLAGS = \
+	@LDFLAGS@
+
 libcf_promises_la_LIBADD = ../libpromises/libpromises.la
 
 libcf_promises_la_SOURCES = cf-promises.c

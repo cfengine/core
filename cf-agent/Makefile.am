@@ -26,6 +26,7 @@ noinst_LTLIBRARIES = libcf-agent.la
 AM_CPPFLAGS = -I$(srcdir)/../libpromises -I$(srcdir)/../libntech/libutils \
 	-I$(srcdir)/../libcfnet \
 	-I$(srcdir)/../cf-check \
+	@CPPFLAGS@ \
 	$(ENTERPRISE_CPPFLAGS) \
 	$(OPENSSL_CPPFLAGS) \
 	$(PCRE_CPPFLAGS) \
@@ -36,6 +37,7 @@ AM_CPPFLAGS = -I$(srcdir)/../libpromises -I$(srcdir)/../libntech/libutils \
 	$(PAM_CPPFLAGS)
 
 AM_CFLAGS = \
+	@CFLAGS@ \
 	$(ENTERPRISE_CFLAGS) \
 	$(OPENSSL_CFLAGS) \
 	$(PCRE_CFLAGS) \
@@ -46,6 +48,7 @@ AM_CFLAGS = \
 	$(PAM_CFLAGS)
 
 AM_LDFLAGS = \
+	@LDFLAGS@ \
 	$(OPENSSL_LDFLAGS) \
 	$(PCRE_LDFLAGS) \
 	$(LIBVIRT_LDFLAGS) \

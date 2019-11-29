@@ -85,11 +85,13 @@ R: ', "wanted"),
 \.\r
 250 Message accepted for delivery\r
 QUIT\r(
-221 test\.com closing connection\r)?');
+221 test\.com closing connection\r)*');
 # ^ Note that this last string is optionally matched. The reason is that
 #   cf-execd may finish everything and quit before the mock thread has time to
-#   finish writing that string. It does not mean there's an error. The string is
-#   left here for clarity though.
+#   finish writing that string. It does not mean there's an error.
+#   Moreover, sometimes it might be printed more than once, and since this
+#   regexp is treated as ancored, we're prepared to face as many of repetitions
+#   as necessary.
 
     unwanted_not_empty::
       "unwanted_regex" string => concat(".*(", join("|", "unwanted"), ").*");

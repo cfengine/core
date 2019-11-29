@@ -16,7 +16,7 @@ def connect(host, users=None):
         if not users:
             users = [parts[0]]
     if not users:
-        users = ["Administrator", "ubuntu", "ec2-user", "centos", "vagrant", "root"]
+        users = ["Administrator", "admin", "ubuntu", "ec2-user", "centos", "vagrant", "root"]
         # Similar to ssh, try own username first,
         # some systems will lock us out if we have too many failed attempts.
         if whoami() not in users:

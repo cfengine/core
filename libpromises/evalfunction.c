@@ -5875,7 +5875,7 @@ static FnCallResult FnCallRegReplace(ARG_UNUSED EvalContext *ctx, ARG_UNUSED con
         return FnFailure();
     }
 
-    return FnReturn(BufferClose(rewrite));
+    return FnReturnBuffer(rewrite);
 }
 
 /*********************************************************************/
@@ -7261,7 +7261,7 @@ static FnCallResult FnCallStringReplace(ARG_UNUSED EvalContext *ctx,
         return FnFailure();
     }
 
-    return FnReturn(ret);
+    return FnReturnNoCopy(ret);
 }
 
 /*********************************************************************/

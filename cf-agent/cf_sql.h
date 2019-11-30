@@ -36,7 +36,6 @@ typedef struct
     unsigned int maxrows;
     int column;
     char **rowdata;
-    char *blank;
     DatabaseType type;
     void *data;                 /* Generic pointer to RDBMS-specific data */
 } CfdbConn;

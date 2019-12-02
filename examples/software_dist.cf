@@ -46,6 +46,12 @@
 #
 #########################################################################
 
+body common control
+{
+  inputs => { "$(sys.libdir)/stdlib.cf" };
+  bundlesequence => { "check_software" };
+}
+
 bundle agent check_software
 {
   vars:
@@ -66,6 +72,7 @@ bundle agent check_software
       };
 
   methods:
+  # TODO: Fix the following bundles, msi_implicit is giving errors:
       #  "any" usebundle => add_software( "@(check_software.include_software)", "$(sys.policy_hub)" );
       #  "any" usebundle => update_software( "@(check_software.autoupdate_software)", "$(sys.policy_hub)" );
       #  "any" usebundle => remove_software( "@(check_software.exclude_software)", "$(sys.policy_hub)" );
@@ -98,7 +105,7 @@ bundle agent add_software(pkg_name, srv)
       classes                  => if_else("add_success", "add_fail" ),
       comment                  => "Install new software, if not already present";
 
-    reports::
+  reports:
     add_fail::
       "Failed to install one or more packages";
 }
@@ -133,7 +140,7 @@ bundle agent update_software(sw_names, srv)
       classes                  => if_else("update_success", "update_fail");
 
 
-    reports::
+    reports:
     update_fail::
       "Failed to update one or more packages";
 }
@@ -162,7 +169,7 @@ bundle agent remove_software(pkg_name, srv)
       classes                  => if_else("remove_success", "remove_fail" ),
       comment                  => "Remove software, if present";
 
-    reports::
+  reports:
     remove_fail::
       "Failed to remove one or more packages";
 }

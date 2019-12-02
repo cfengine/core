@@ -27,7 +27,7 @@
 body common control
 {
       bundlesequence => { run };
-      inputs => { "$(sys.libdir)/files.cf" };
+      inputs => { "$(sys.libdir)/stdlib.cf" };
 }
 
 bundle agent run

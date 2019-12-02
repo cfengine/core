@@ -9,6 +9,12 @@
 #
 #########################################################################
 
+body common control
+{
+    bundlesequence => { "win_emergency" };
+    inputs => { "$(sys.libdir)/stdlib.cf" };
+}
+
 bundle agent win_emergency
 {
   vars:

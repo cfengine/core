@@ -4,6 +4,11 @@
 #
 #########################################################################
 
+body file control
+{
+  inputs => { "$(sys.libdir)/stdlib.cf" };
+}
+
 bundle agent win_services
 {
   vars:

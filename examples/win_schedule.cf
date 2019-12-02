@@ -10,6 +10,12 @@
 #
 #########################################################################
 
+body common control
+{
+  bundlesequence => { "system_scheduling" };
+  inputs => { "$(sys.libdir)/stdlib.cf" };
+}
+
 bundle agent system_scheduling
 {
   vars:

@@ -3270,6 +3270,7 @@ static void SaveSetxid(bool modified)
             umask(oldmode);
             Log(LOG_LEVEL_DEBUG, "Restored umask to %o", oldmode);
         }
+        DeleteItemList(current);
     }
 
     DeleteItemList(VSETXIDLIST);

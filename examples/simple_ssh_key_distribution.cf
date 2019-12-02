@@ -1,3 +1,9 @@
+body common control
+{
+    bundlesequence => { "autorun_ssh_key_distribution" };
+    inputs => { "$(sys.libdir)/stdlib.cf" };
+}
+
 bundle common ssh_key_info
 {
   meta:

@@ -1,7 +1,6 @@
-
 body file control
 {
-      namespace => "name1"; 
+      namespace => "name1";
 }
 
 
@@ -35,11 +34,6 @@ bundle edit_line makefile
 
   reports:
       "makefile in name 1";
-}
-
-body file control
-{
-      namespace => "name2";
 }
 
 body perms settings

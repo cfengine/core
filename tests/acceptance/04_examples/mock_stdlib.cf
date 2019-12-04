@@ -36,6 +36,13 @@ body rename disable {any::}
 body rename rotate(level) {any::}
 body rename to(file) {any::}
 body replace_with value(x) {any::}
+body acl strict {any::}
+body changes detect_content {any::}
+body classes if_else (yes, no) {any::}
+body contain in_shell {any::}
+body copy_from remote_dcp(from,server) {any::}
+body package_method msi_explicit(repo) {any::}
+body package_method msi_implicit(repo) {any::}
 
 bundle edit_line insert_lines(lines) {}
 bundle edit_line append_if_no_line(lines) {}

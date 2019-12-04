@@ -39,6 +39,9 @@ bundle agent init
   commands:
       "$(G.no_fds) --no-std $(sys.cf_agent) -Kf $(this.promise_filename).sub -D AUTO,aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa_underscore_marks_the_81st_character_of_this_string___STRINGBEYOND80CHARS &"
         contain => in_shell;
+
+      # give the process a chance to actually start
+      "$(G.sleep) 1";
 }
 
 body process_count at_least_one(class)

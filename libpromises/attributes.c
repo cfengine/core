@@ -1127,6 +1127,7 @@ Packages GetPackageConstraints(const EvalContext *ctx, const Promise *pp)
             CopyBodyConstraintsToPromise((EvalContext*)ctx, (Promise*)pp, bp);
             has_generic_package_method = true;
         }
+        SeqDestroy(bodies_and_args);
     }
 
 

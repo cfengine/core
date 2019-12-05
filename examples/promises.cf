@@ -45,11 +45,11 @@ bundle agent main
                                        "/etc/services"
       };
   files:
-      "$(sys_files)" perms        => p("root","0644"),
-      changes      => tripwire;
-      "/etc/shadow"  perms        => p("root","0600"),
-      changes      => tripwire;
-      "/usr"         changes      => tripwire,
+      "$(sys_files)" perms        => mo("0644", "root"),
+      changes      => detect_content;
+      "/etc/shadow"  perms        => mo("0600", "root"),
+      changes      => detect_content;
+      "/usr"         changes      => detect_content,
       depth_search => recurse("inf");
       "/tmp"         delete       => tidy,
       file_select  => days_old("2"),

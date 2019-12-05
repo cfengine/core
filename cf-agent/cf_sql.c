@@ -353,8 +353,6 @@ void CfConnectDB(CfdbConn *cfdb, DatabaseType dbtype, char *remotehost, char *db
 
     if (cfdb->data)
         cfdb->connected = true;
-
-    cfdb->blank = xstrdup("");
 }
 
 /*****************************************************************************/
@@ -382,7 +380,6 @@ void CfCloseDB(CfdbConn *cfdb)
     }
 
     cfdb->connected = false;
-    free(cfdb->blank);
 }
 
 /*****************************************************************************/

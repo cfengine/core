@@ -1,7 +1,6 @@
-
 body file control
 {
-      namespace => "name1"; 
+      namespace => "name1";
 }
 
 

@@ -35,7 +35,7 @@ bundle agent init
       "test_skip_needs_work" string => "windows|using_fakeroot|redhat_4|hpux|sunos_5_9|sunos_5_10";
 
   methods:
-    test_pass_4::
+    test_pass_1::
       "any" usebundle => file_make("$(G.testfile).expireafter.expected", "one promise execution");
       "any" usebundle => file_make("$(G.testfile).short_expireafter.expected", "one promise execution
 one promise execution");

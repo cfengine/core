@@ -2,13 +2,13 @@
 body common control
 {
       bundlesequence => { "main" };
-      inputs => { "namespace1.cf", "namespace2.cf", "namespace3.cf" };
+      inputs => { "namespaces/1.cf", "namespaces/2.cf", "namespaces/3.cf" };
 }
 
 
 bundle agent main
 {
-  vars: 
+  vars:
 
       "alien_list" slist => { getindices("name1:mymethod.array")};
 

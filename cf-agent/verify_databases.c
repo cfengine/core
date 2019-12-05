@@ -189,6 +189,7 @@ static PromiseResult VerifySQLPromise(EvalContext *ctx, const Attributes *a, con
         if (!cfdb.connected)
         {
             Log(LOG_LEVEL_ERR, "Could not connect to the sql_db server for '%s'", database);
+            YieldCurrentLock(thislock);
             return PROMISE_RESULT_FAIL;
         }
 

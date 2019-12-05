@@ -516,7 +516,7 @@ int VerifyNotInFstab(EvalContext *ctx, char *name, const Attributes *a, const Pr
 {
     // FIXME: This ALWAYS returns 0 (!)
     char regex[CF_BUFSIZE];
-    char *host, *mountpt, *opts;
+    char *host, *mountpt;
     Item *ip;
 
     if (!FSTABLIST)
@@ -530,15 +530,6 @@ int VerifyNotInFstab(EvalContext *ctx, char *name, const Attributes *a, const Pr
         {
             FSTAB_EDITS = 0;
         }
-    }
-
-    if (a->mount.mount_options)
-    {
-        opts = Rlist2String(a->mount.mount_options, ",");
-    }
-    else
-    {
-        opts = xstrdup(VMOUNTOPTS[VSYSTEMHARDCLASS]);
     }
 
     host = a->mount.mount_server;
@@ -621,11 +612,6 @@ int VerifyNotInFstab(EvalContext *ctx, char *name, const Attributes *a, const Pr
             }
 #endif
         }
-    }
-
-    if (a->mount.mount_options)
-    {
-        free(opts);
     }
 
     return 0;

@@ -1026,10 +1026,7 @@ bool PromiseIteratorNext(PromiseIterator *iterctx, EvalContext *evalctx)
                                               CF_DATA_TYPE_STRING,
                                               "source=promise_iteration/with");
             }
-            else
-            {
-                RvalDestroy(final);
-            }
+            RvalDestroy(final);
         }
     }
     iterctx->count++;

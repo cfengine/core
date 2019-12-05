@@ -390,11 +390,13 @@ const ConstraintSyntax CFEX_CONTROLBODY[] = /* enum cfexcontrol */
     ConstraintSyntaxNewNull()
 };
 
-const ConstraintSyntax CFH_CONTROLBODY[] =  /* enum cfh_control */
+// Must be in sync with enum HubControl
+const ConstraintSyntax CFH_CONTROLBODY[] =
 {
     ConstraintSyntaxNewString("export_zenoss", CF_PATHRANGE, "Generate report for Zenoss integration", SYNTAX_STATUS_REMOVED),
     ConstraintSyntaxNewStringList("exclude_hosts", "", "A list of IP addresses of hosts to exclude from report collection", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("hub_schedule", "", "The class schedule used by cf-hub for report collation", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("query_timeout", "0,300", "Timeout (s) for connecting to host when querying. Default value: 30 (s)", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("port", "1,65535", "Default port for contacting hub nodes. Default value: 5308", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("client_history_timeout", "1,65535", "Threshold in hours over which if client did not report, hub will start query for full state of the host and discard all accumulated report history on the client. Default value: 6 hours", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()

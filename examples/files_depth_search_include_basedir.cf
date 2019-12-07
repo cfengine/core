@@ -1,0 +1,131 @@
+#+begin_src prep
+#@ ```
+#@ rm -rf /tmp/CFE-3217
+#@ mkdir -p /tmp/CFE-3217/test-delete-nobasedir/one/two/three
+#@ mkdir -p /tmp/CFE-3217/test-delete/one/two/three
+#@ mkdir -p /tmp/CFE-3217/test-perms/one/two/three
+#@ mkdir -p /tmp/CFE-3217/test-perms-nobasedir/one/two/three
+#@ touch /tmp/CFE-3217/test-delete-nobasedir/one/two/three/file
+#@ touch /tmp/CFE-3217/test-delete/one/two/three/file
+#@ touch /tmp/CFE-3217/test-perms/one/two/three/file
+#@ touch /tmp/CFE-3217/test-perms-nobasedir/one/two/three/file
+#@ touch /tmp/CFE-3217/test-delete-nobasedir/file
+#@ touch /tmp/CFE-3217/test-delete/file
+#@ touch /tmp/CFE-3217/test-perms/file
+#@ touch /tmp/CFE-3217/test-perms-nobasedir/file
+#@ ```
+#+end_src
+###############################################################################
+#+begin_src cfengine3
+bundle agent main
+# @brief Example showing how to promise permissions recursively and promise a directory tree is empty. It illustrates the behavior of `include_basedir` in `depth_search` bodies and that the delete ignores `include_basedir`.
+{
+  files:
+      "/tmp/CFE-3217/test-delete/." -> { "CFE-3217", "CFE-3218"  }
+        depth_search => aggressive("true"),
+        file_select => all,
+        delete => tidy,
+        comment => "include_basedir => 'true' will not result in thd promised directory being removed.";
+
+      "/tmp/CFE-3217/test-delete-nobasedir/."
+        depth_search => aggressive("false"),
+        file_select => all,
+        delete => tidy,
+        comment => "include_basedir => 'false' will not result in thd promised directory being removed.";
+
+      "/tmp/CFE-3217/test-perms/."
+        perms => m(555),
+        depth_search => aggressive("true"),
+        file_select => all,
+        comment => "include_basedir => 'true' results in thd promised directory having permissions managed as well.";
+
+      "/tmp/CFE-3217/test-perms-nobasedir/." -> { "CFE-3217" }
+        perms => m(555),
+        depth_search => aggressive("false"),
+        file_select => all,
+        comment => "include_basedir => 'false' results in thd promised directory not having permissions managed.";
+
+  reports:
+
+      "delete => tidy";
+      "/tmp/CFE-3217/test-delete present despite include_basedir => 'true'"
+        if => isdir("/tmp/CFE-3217/test-delete");
+      "/tmp/CFE-3217/test-delete-nobasedir present as expected with include_basedir => 'false'"
+        if => isdir("/tmp/CFE-3217/test-delete-nobasedir");
+      "/tmp/CFE-3217/test-delete absent, unexpectedly"
+        unless => isdir("/tmp/CFE-3217/test-delete");
+      "/tmp/CFE-3217/test-delete-nobasedir absent, unexpectedly"
+        unless => isdir("/tmp/CFE-3217/test-delete-nobasedir");
+
+
+      "perms => m(555)";
+      "/tmp/CFE-3217/test-perms $(with), as expected with include_basedir => 'true'"
+        with => filestat( "/tmp/CFE-3217/test-perms", modeoct ),
+        if => strcmp( filestat( "/tmp/CFE-3217/test-perms", modeoct ), "40555" );
+
+      "/tmp/CFE-3217/test-perms-nobasedir $(with), not 555, as expected with include_basedir => 'false'"
+        with => filestat( "/tmp/CFE-3217/test-perms-nobasedir", modeoct ),
+        unless => strcmp( filestat( "/tmp/CFE-3217/test-perms-nobasedir", modeoct ), "40555" );
+}
+
+body depth_search aggressive(include_basedir)
+# @brief Search for files recursively from promiser traversing synmlinks and filesystem boundaries.
+{
+        depth => "inf";
+      #  exclude_dirs => { @(exclude_dirs) };
+        include_basedir => "$(include_basedir)";
+      # include_dirs => { @(include_dirs) };
+      # inherit_from => "$(inherit_from)";
+      # meta => "$(meta)"; meta attribute inside the depth_search body? It's not documented. TODO!?
+        rmdeadlinks => "false"; # Depth search removes dead links, this seems like something that should be in delete body. TODO!?
+        traverse_links => "true";
+        xdev => "true";
+
+}
+
+#@ Inlined bodies from the stdlib in the Masterfiles Policy Framework
+
+body file_select all
+# @brief Select all file system entries
+{
+        leaf_name => { ".*" };
+        file_result => "leaf_name";
+}
+
+body delete tidy
+# @brief Delete the file and remove empty directories
+# and links to directories
+{
+        dirlinks => "delete";
+        rmdirs   => "true";
+}
+
+body perms m(mode)
+# @brief Set the file mode
+# @param mode The new mode
+{
+        mode   => "$(mode)";
+}
+#+end_src
+###############################################################################
+#+begin_src example_output
+#@ ```
+#@     info: Deleted file '/tmp/CFE-3217/test-delete/./one/two/three/file'
+#@     info: Deleted directory '/tmp/CFE-3217/test-delete/./one/two/three'
+#@     info: Deleted directory '/tmp/CFE-3217/test-delete/./one/two'
+#@     info: Deleted directory '/tmp/CFE-3217/test-delete/./one'
+#@     info: Deleted file '/tmp/CFE-3217/test-delete/./file'
+#@     info: Deleted file '/tmp/CFE-3217/test-delete-nobasedir/./one/two/three/file'
+#@     info: Deleted directory '/tmp/CFE-3217/test-delete-nobasedir/./one/two/three'
+#@     info: Deleted directory '/tmp/CFE-3217/test-delete-nobasedir/./one/two'
+#@     info: Deleted directory '/tmp/CFE-3217/test-delete-nobasedir/./one'
+#@     info: Deleted file '/tmp/CFE-3217/test-delete-nobasedir/./file'
+#@     info: Object '/tmp/CFE-3217/test-perms-nobasedir/./file' had permission 0664, changed it to 0555
+#@ R: delete => tidy
+#@ R: /tmp/CFE-3217/test-delete present despite include_basedir => 'true'
+#@ R: /tmp/CFE-3217/test-delete-nobasedir present as expected with include_basedir => 'false'
+#@ R: perms => m(555)
+#@ R: /tmp/CFE-3217/test-perms 40555, as expected with include_basedir => 'true'
+#@ R: /tmp/CFE-3217/test-perms-nobasedir 40775, not 555, as expected with include_basedir => 'false'
+#@ ```
+#+end_example

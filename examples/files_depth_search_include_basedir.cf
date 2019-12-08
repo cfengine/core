@@ -1,5 +1,3 @@
-#@ This example shows how to promise permissions recursively and promise a directory tree is empty. It illustrates the behavior of `include_basedir` in `depth_search` bodies and that the delete ignores `include_basedir`.
-
 #+begin_src prep
 #@ ```
 #@ rm -rf /tmp/CFE-3217
@@ -17,9 +15,10 @@
 #@ touch /tmp/CFE-3217/test-perms-nobasedir/file
 #@ ```
 #+end_src
-########################################################
+###############################################################################
 #+begin_src cfengine3
 bundle agent main
+# @brief Example showing how to promise permissions recursively and promise a directory tree is empty. It illustrates the behavior of `include_basedir` in `depth_search` bodies and that the delete ignores `include_basedir`.
 {
   files:
       "/tmp/CFE-3217/test-delete/." -> { "CFE-3217", "CFE-3218"  }
@@ -70,14 +69,15 @@ bundle agent main
 }
 
 body depth_search aggressive(include_basedir)
+# @brief Search for files recursively from promiser traversing synmlinks and filesystem boundaries.
 {
         depth => "inf";
       #  exclude_dirs => { @(exclude_dirs) };
         include_basedir => "$(include_basedir)";
       # include_dirs => { @(include_dirs) };
       # inherit_from => "$(inherit_from)";
-      # meta => "$(meta)";
-        rmdeadlinks => "true";
+      # meta => "$(meta)"; meta attribute inside the depth_search body? It's not documented. TODO!?
+        rmdeadlinks => "false"; # Depth search removes dead links, this seems like something that should be in delete body. TODO!?
         traverse_links => "true";
         xdev => "true";
 

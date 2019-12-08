@@ -239,9 +239,9 @@ static void MonIoDiskstatsGatherData(double *cf_this)
                                       0.0, 1000.0, true);
     int writes_slot = NovaRegisterSlot(MON_IO_WRITES, "Number of I/O writes", "writes per second",
                                        0.0f, 1000.0f, true);
-    int readdata_slot = NovaRegisterSlot(MON_IO_READDATA, "Amount of data read", "megabytes/s",
+    int readdata_slot = NovaRegisterSlot(MON_IO_READDATA, "Aggregate mount of data read across all devices", "megabytes/s",
                                          0.0, 1000.0, true);
-    int writtendata_slot = NovaRegisterSlot(MON_IO_WRITTENDATA, "Amount of data written", "megabytes",
+    int writtendata_slot = NovaRegisterSlot(MON_IO_WRITTENDATA, "Aggregate amount of data written across all devices", "megabytes/s",
                                             0.0, 1000.0, true);
 
     if (reads_slot != -1 && totalreads != 0)

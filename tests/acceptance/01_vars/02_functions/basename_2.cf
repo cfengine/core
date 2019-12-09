@@ -1,0 +1,78 @@
+#######################################################
+#
+# Test basename() with suffix removal
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      # The tests starting with template will be tested with both types of
+      # directory separators on Windows.
+
+      "template_input[root]" string => "/";
+      "template_suffix[root]" string => "";
+      "template_expected[root]" string => "/";
+
+      "template_input[simple]" string => "/foo/bar.c";
+      "template_suffix[simple]" string => ".c";
+      "template_expected[simple]" string => "bar";
+
+      "template_input[rel_suffif]" string => "foo.xyz";
+      "template_suffix[rel_suffif]" string => ".xyz";
+      "template_expected[rel_suffif]" string => "foo";
+
+      "template_input[no_matching_suffix]" string => "/foo/bar";
+      "template_suffix[no_matching_suffix]" string => "baz";
+      "template_expected[no_matching_suffix]" string => "bar";
+
+      "template_input[same_suffix]" string => "foo";
+      "template_suffix[same_suffix]" string => "foo";
+      "template_expected[same_suffix]" string => "foo";
+
+      "template_input[sub_same_suffix]" string => "foo/bar";
+      "template_suffix[sub_same_suffix]" string => "bar";
+      "template_expected[sub_same_suffix]" string => "bar";
+
+      "template_keys" slist => getindices("template_input");
+
+    any::
+      "input[native_$(template_keys)]" string => "$(template_input[$(template_keys)])";
+      "expected[native_$(template_keys)]" string => "$(template_expected[$(template_keys)])";
+      "suffix[native_$(template_keys)]" string => "$(template_suffix[$(template_keys)])";
+
+      "keys" slist => getindices("input");
+
+      "actual[$(keys)]" string => basename("$(input[$(keys)])", "$(suffix[$suffix])");
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+      "keys" slist => { @(test.keys) };
+
+  classes:
+      "failed_cmp_$(keys)" not => strcmp(basename("$(test.input[$(keys)])", "$(test.suffix[$(keys)])"), "$(test.expected[$(keys)])");
+      "ok" not => classmatch("failed_cmp_.*");
+
+  reports:
+    DEBUG::
+      "'basename($(test.input[$(keys)]), $(test.suffix[$(keys)]))' = '$(test.actual[$(keys)])' != '$(test.expected[$(keys)])'"
+        ifvarclass => "failed_cmp_$(keys)";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

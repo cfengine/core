@@ -69,6 +69,7 @@
 #include <processes_select.h>
 #include <sysinfo.h>
 #include <string_sequence.h>
+#include <string_lib.h>
 
 #include <math_eval.h>
 
@@ -1547,6 +1548,50 @@ static FnCallResult FnCallGetMetaTags(EvalContext *ctx, ARG_UNUSED const Policy 
 
     free(key);
     return (FnCallResult) { FNCALL_SUCCESS, { tags, RVAL_TYPE_LIST } };
+}
+
+/*********************************************************************/
+
+static FnCallResult FnCallBasename(ARG_UNUSED EvalContext *ctx,
+                                   ARG_UNUSED const Policy *policy,
+                                   const FnCall *fp,
+                                   const Rlist *args)
+{
+    assert(fp != NULL);
+    assert(fp->name != NULL);
+    if (args == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Function %s requires a filename as first arg!",
+            fp->name);
+        return FnFailure();
+    }
+
+    char dir[PATH_MAX];
+    strlcpy(dir, RlistScalarValue(args), PATH_MAX);
+    if (dir[0] == '\0')
+    {
+        return FnReturn(dir);
+    }
+
+    char *base = basename(dir);
+
+    if (args->next != NULL)
+    {
+        char *suffix = RlistScalarValue(args->next);
+        if (StringEndsWith(base, suffix))
+        {
+            size_t base_len = strlen(base);
+            size_t suffix_len = strlen(suffix);
+
+            // Remove only if actually a suffix, not the same string
+            if (suffix_len < base_len)
+            {
+                base[base_len - suffix_len] = '\0';
+            }
+        }
+    }
+
+    return FnReturn(base);
 }
 
 /*********************************************************************/
@@ -8397,6 +8442,13 @@ static const FnCallArg LATERTHAN_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg BASENAME_ARGS[] =
+{
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "File path"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Optional suffix"},
+    {NULL, CF_DATA_TYPE_NONE, NULL},
+};
+
 static const FnCallArg DATE_ARGS[] = /* for on() */
 {
     {"1970,3000", CF_DATA_TYPE_INT, "Year"},
@@ -9290,6 +9342,8 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("ago", CF_DATA_TYPE_INT, AGO_ARGS, &FnCallAgoDate, "Convert a time relative to now to an integer system representation",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("and", CF_DATA_TYPE_STRING, AND_ARGS, &FnCallAnd, "Calculate whether all arguments evaluate to true",
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("basename", CF_DATA_TYPE_STRING, BASENAME_ARGS, &FnCallBasename, "Retrieves the basename of a filename.",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("bundlesmatching", CF_DATA_TYPE_STRING_LIST, BUNDLESMATCHING_ARGS, &FnCallBundlesMatching, "Find all the bundles that match a regular expression and tags.",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),

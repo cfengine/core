@@ -49,6 +49,7 @@ static const ConstraintSyntax commands_constraints[] =
     ConstraintSyntaxNewStringList("arglist", CF_ANYSTRING, "Alternative string list of arguments for the command (concatenated with promiser string and 'args' attribute)", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBody("contain", &contain_body, "Containment options for the execution process", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("module", "true/false whether to expect the cfengine module protocol. Default value: false", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBool("inform", "true/false whether to print info messages for command execution. Default value: true", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

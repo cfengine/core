@@ -252,6 +252,16 @@ Attributes GetExecAttributes(const EvalContext *ctx, const Promise *pp)
     attr.arglist = PromiseGetConstraintAsList(ctx, "arglist", pp);
     attr.module = PromiseGetConstraintAsBoolean(ctx, "module", pp);
 
+    // Possible to suppress info level messages per commands promise:
+    if (PromiseBundleOrBodyConstraintExists(ctx, "inform", pp))
+    {
+        attr.inform = PromiseGetConstraintAsBoolean(ctx, "inform", pp);
+    }
+    else
+    {
+        attr.inform = true; // Default to printing the inform messages
+    }
+
 /* Common ("included") */
 
     attr.havetrans = PromiseGetConstraintAsBoolean(ctx, CF_TRANSACTION, pp);

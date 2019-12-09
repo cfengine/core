@@ -6650,6 +6650,60 @@ static FnCallResult FnCallReadData(ARG_UNUSED EvalContext *ctx,
     return (FnCallResult) { FNCALL_SUCCESS, (Rval) { json, RVAL_TYPE_CONTAINER } };
 }
 
+static FnCallResult FnCallReadModuleProtocol(
+    ARG_UNUSED EvalContext *ctx,
+    ARG_UNUSED const Policy *policy,
+    const FnCall *fp,
+    const Rlist *args)
+{
+    assert(fp != NULL);
+
+    if (args == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Function '%s' requires at least one argument", fp->name);
+        return FnFailure();
+    }
+
+    const char *input_path = RlistScalarValue(args);
+
+    char module_context[CF_BUFSIZE] = {0};
+
+    FILE *file = safe_fopen(input_path, "rt");
+    if (file == NULL)
+    {
+        return FnReturnContext(false);
+    }
+
+    StringSet *module_tags = StringSetNew();
+    long persistence = 0;
+
+    size_t line_size = CF_BUFSIZE;
+    char *line = xmalloc(line_size);
+
+    bool success = true;
+    for (;;)
+    {
+        const ssize_t res = CfReadLine(&line, &line_size, file);
+        if (res == -1)
+        {
+            if (!feof(file))
+            {
+                Log(LOG_LEVEL_ERR, "Unable to read from file '%s'. (fread: %s)", input_path, GetErrorStr());
+                success = false;
+            }
+            break;
+        }
+
+        ModuleProtocol(ctx, input_path, line, false, module_context, sizeof(module_context), module_tags, &persistence);
+    }
+
+    StringSetDestroy(module_tags);
+    free(line);
+    fclose(file);
+
+    return FnReturnContext(success);
+}
+
 static int JsonPrimitiveComparator(JsonElement const *left_obj,
                                    JsonElement const *right_obj,
                                    void *user_data)
@@ -7981,7 +8035,7 @@ static const char *FileType(const char *filename)
     }
 }
 
-void ModuleProtocol(EvalContext *ctx, char *command, const char *line, int print, char* context, size_t context_size, StringSet *tags, long *persistence)
+void ModuleProtocol(EvalContext *ctx, const char *command, const char *line, int print, char* context, size_t context_size, StringSet *tags, long *persistence)
 {
     assert(tags);
 
@@ -8893,6 +8947,12 @@ static const FnCallArg READDATA_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg READMODULE_ARGS[] =
+{
+    {CF_ABSPATHRANGE, CF_DATA_TYPE_STRING, "File name to read and parse from"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
 static const FnCallArg PARSEJSON_ARGS[] =
 {
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "JSON string to parse"},
@@ -9485,6 +9545,8 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("hash_to_int", CF_DATA_TYPE_INT, HASH_TO_INT_ARGS, &FnCallHashToInt, "Generate an integer in given range based on string hash",
               FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+
+    // read functions for reading from file
     FnCallTypeNew("readdata", CF_DATA_TYPE_CONTAINER, READDATA_ARGS, &FnCallReadData, "Parse a YAML, JSON, CSV, etc. file and return a JSON data container with the contents",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("readfile", CF_DATA_TYPE_STRING, READFILE_ARGS, &FnCallReadFile,       "Read max number of bytes from named file and assign to variable",
@@ -9497,6 +9559,8 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("readyaml", CF_DATA_TYPE_CONTAINER, READFILE_ARGS, &FnCallReadData,    "Read a data container from a YAML file",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("read_module_protocol", CF_DATA_TYPE_CONTEXT, READMODULE_ARGS, &FnCallReadModuleProtocol, "Parse a file containing module protocol output (for cached modules)",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("readintarray", CF_DATA_TYPE_INT, READSTRINGARRAY_ARGS, &FnCallReadIntArray, "Read an array of integers from a file, indexed by first entry on line and sequentially on each line; return line count",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("readintlist", CF_DATA_TYPE_INT_LIST, READSTRINGLIST_ARGS, &FnCallReadIntList, "Read and assign a list variable from a file of separated ints",
@@ -9513,6 +9577,8 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("readtcp", CF_DATA_TYPE_STRING, READTCP_ARGS, &FnCallReadTcp, "Connect to tcp port, send string and assign result to variable",
                   FNCALL_OPTION_CACHED, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
+
+    // reg functions for regex
     FnCallTypeNew("regarray", CF_DATA_TYPE_CONTEXT, REGARRAY_ARGS, &FnCallRegList, "True if the regular expression in arg1 matches any item in the list or array or data container arg2",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("regcmp", CF_DATA_TYPE_CONTEXT, REGCMP_ARGS, &FnCallRegCmp, "True if arg1 is a regular expression matching that matches string arg2",
@@ -9529,6 +9595,7 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_CACHED, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("remotescalar", CF_DATA_TYPE_STRING, REMOTESCALAR_ARGS, &FnCallRemoteScalar, "Read a scalar value from a remote cfengine server",
                   FNCALL_OPTION_CACHED, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
+
     FnCallTypeNew("remoteclassesmatching", CF_DATA_TYPE_CONTEXT, REMOTECLASSESMATCHING_ARGS, &FnCallRemoteClassesMatching, "Read persistent classes matching a regular expression from a remote cfengine server and add them into local context with prefix",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("returnszero", CF_DATA_TYPE_CONTEXT, RETURNSZERO_ARGS, &FnCallReturnsZero, "True if named shell command has exit status zero",

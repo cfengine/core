@@ -1,0 +1,44 @@
+bundle agent cache_maintenance
+# Creates a module protocol cache, refreshes it if minute is 30-35
+{
+    vars:
+      "file"
+        string => "$(this.promise_dirname)/cached_module";
+
+  classes:
+    "cache_refresh"
+      if => not(fileexists("$(file)"));
+    Min30_35::
+      "cache_refresh";
+
+  files:
+    cache_refresh::
+      "$(file)"
+        create => "true",
+        edit_template_string => "=my_variable=$(sys.date)",
+        template_data => "{}",
+        template_method => "inline_mustache";
+}
+
+bundle agent demo
+# Demonstrates read_module_protocol function, prints a variable from it
+{
+    classes:
+      "cache_was_read"
+        if => read_module_protocol("$(cache_maintenance.file)");
+
+    reports:
+      cache_was_read::
+        "Module cache was read!";
+        "cached_module.my_variable = $(cached_module.my_variable)";
+}
+
+
+bundle agent __main__
+{
+  methods:
+    "cache_maintenance"
+      handle => "cache_maintenance_done";
+    "demo"
+      depends_on => { "cache_maintenance_done" };
+}

@@ -1566,31 +1566,41 @@ static FnCallResult FnCallBasename(ARG_UNUSED EvalContext *ctx,
         return FnFailure();
     }
 
+    printf("First arg: '%s'\n", RlistScalarValue(args));
     char dir[PATH_MAX];
-    strlcpy(dir, RlistScalarValue(args), PATH_MAX);
+    StringCopy(RlistScalarValue(args), dir, PATH_MAX);
+
+    printf("Copied string '%s'\n", dir);
     if (dir[0] == '\0')
     {
+        printf("Empty dir!\n");
         return FnReturn(dir);
     }
 
+    printf("Calling basename()\n");
     char *base = basename(dir);
-
+    printf("basename() DONE\n");
     if (args->next != NULL)
     {
+        printf("Next arg: '%s'\n", RlistScalarValue(args->next));
         char *suffix = RlistScalarValue(args->next);
+        printf("Checking if the suffix matches\n");
         if (StringEndsWith(base, suffix))
         {
+            printf("Suffix matched\n");
             size_t base_len = strlen(base);
             size_t suffix_len = strlen(suffix);
 
             // Remove only if actually a suffix, not the same string
             if (suffix_len < base_len)
             {
+                printf("Trimming suffix\n");
                 base[base_len - suffix_len] = '\0';
             }
         }
     }
 
+    printf("Returning '%s'\n", base);
     return FnReturn(base);
 }
 

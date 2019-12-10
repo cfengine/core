@@ -45,6 +45,11 @@ def get_args():
     sp.add_argument(
         "--call-collect", help="Enable call collect in --demo def.json", action='store_true')
 
+    sp = subp.add_parser("uninstall", help="Install CFEngine on the given hosts")
+    sp.add_argument("--clients", "-c", help="Where to uninstall", type=str)
+    sp.add_argument("--hub", help="Where to uninstall", type=str)
+    sp.add_argument("--hosts", "-H", help="Where to uninstall", type=str)
+
     sp = subp.add_parser("packages", help="Get info about available packages")
     sp.add_argument("--edition", "-E", help="Enterprise or community packages", type=str)
     sp.add_argument("tags", metavar="TAG", nargs="*")

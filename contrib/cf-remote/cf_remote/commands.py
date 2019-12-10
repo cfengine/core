@@ -261,8 +261,6 @@ def uninstall(hubs, hosts):
     if hosts:
         for host in hosts:
             data = uninstall_host(host, hub=False)
-            print_info(data)
     if hubs:
         for host in hubs:
             data = uninstall_host(host, hub=True)
-            print_info(data)

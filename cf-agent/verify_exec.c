@@ -207,6 +207,8 @@ static char *GetLockNameExec(const Attributes *a, const Promise *pp)
 static ActionResult RepairExec(EvalContext *ctx, const Attributes *a,
                                const Promise *pp, PromiseResult *result)
 {
+    assert(a != NULL);
+    assert(pp != NULL);
     char eventname[CF_BUFSIZE];
     char cmdline[CF_BUFSIZE];
     char comm[20];
@@ -268,7 +270,8 @@ static ActionResult RepairExec(EvalContext *ctx, const Attributes *a,
     snprintf(cmdline, CF_BUFSIZE, "%s", temp); // TODO: remove CF_BUFSIZE limitation
     free(temp);
 
-    Log(LOG_LEVEL_INFO, "Executing '%s%s%s' ... '%s'", timeout_str, owner_str, group_str, cmdline);
+    const LogLevel info_or_verbose = a->inform ? LOG_LEVEL_INFO : LOG_LEVEL_VERBOSE;
+    Log(info_or_verbose, "Executing '%s%s%s' ... '%s'", timeout_str, owner_str, group_str, cmdline);
 
     BeginMeasure();
 
@@ -455,7 +458,8 @@ static ActionResult RepairExec(EvalContext *ctx, const Attributes *a,
         signal(SIGALRM, SIG_DFL);
     }
 
-    Log(LOG_LEVEL_INFO, "Completed execution of '%s'", cmdline);
+    Log(info_or_verbose, "Completed execution of '%s'", cmdline);
+
 #ifndef __MINGW32__
     umask(maskval);
 #endif

@@ -27,10 +27,12 @@
 #include <printsize.h>
 #include <actuator.h>
 #include <rlist.h>
+#include <string_lib.h>
 
 bool VerifyCommandRetcode(EvalContext *ctx, int retcode, const Attributes *a, const Promise *pp, PromiseResult *result)
 {
     assert(a != NULL);
+    assert(pp != NULL);
     bool result_retcode = true;
 
     if (a->classes.retcode_kept ||
@@ -41,9 +43,15 @@ bool VerifyCommandRetcode(EvalContext *ctx, int retcode, const Attributes *a, co
         char retcodeStr[PRINTSIZE(retcode)];
         xsnprintf(retcodeStr, sizeof(retcodeStr), "%d", retcode);
 
+        LogLevel info_or_verbose = LOG_LEVEL_INFO;
+        if (StringSafeEqual("commands", pp->parent_promise_type->name) && (!a->inform))
+        {
+            info_or_verbose = LOG_LEVEL_VERBOSE;
+        }
+
         if (RlistKeyIn(a->classes.retcode_kept, retcodeStr))
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_NOOP, pp, a,
+            cfPS(ctx, info_or_verbose, PROMISE_RESULT_NOOP, pp, a,
                  "Command related to promiser '%s' returned code defined as promise kept %d", pp->promiser,
                  retcode);
             matched = true;
@@ -51,7 +59,7 @@ bool VerifyCommandRetcode(EvalContext *ctx, int retcode, const Attributes *a, co
 
         if (RlistKeyIn(a->classes.retcode_repaired, retcodeStr))
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a,
+            cfPS(ctx, info_or_verbose, PROMISE_RESULT_CHANGE, pp, a,
                  "Command related to promiser '%s' returned code defined as promise repaired %d", pp->promiser,
                  retcode);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
@@ -70,7 +78,7 @@ bool VerifyCommandRetcode(EvalContext *ctx, int retcode, const Attributes *a, co
 
         if (!matched)
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a,
+            cfPS(ctx, info_or_verbose, PROMISE_RESULT_FAIL, pp, a,
                  "Command related to promiser '%s' returned code not defined as promise kept, not kept or repaired; setting to failed: %d",
                  pp->promiser, retcode);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);

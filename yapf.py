@@ -134,13 +134,29 @@ def uninstall_cfengine(host, data, *, connection=None):
     print("Uninstalling CFEngine on '{}'".format(host))
 
     if "dpkg" in data["bin"]:
-        run_command(host, "dpkg --purge cfengine-community || true", connection=connection, sudo=True)
+        run_command(
+            host,
+            "dpkg --purge cfengine-community || true",
+            connection=connection,
+            sudo=True)
         run_command(host, "dpkg --purge cfengine-nova || true", connection=connection, sudo=True)
-        run_command(host, "dpkg --purge cfengine-nova-hub || true", connection=connection, sudo=True)
+        run_command(
+            host,
+            "dpkg --purge cfengine-nova-hub || true",
+            connection=connection,
+            sudo=True)
     elif "rpm" in data["bin"]:
-        run_command(host, "rpm --erase cfengine-community || true", connection=connection, sudo=True)
+        run_command(
+            host,
+            "rpm --erase cfengine-community || true",
+            connection=connection,
+            sudo=True)
         run_command(host, "rpm --erase cfengine-nova || true", connection=connection, sudo=True)
-        run_command(host, "rpm --erase cfengine-nova-hub || true", connection=connection, sudo=True)
+        run_command(
+            host,
+            "rpm --erase cfengine-nova-hub || true",
+            connection=connection,
+            sudo=True)
     else:
         user_error("I don't know how to uninstall there!")
 
@@ -168,16 +184,16 @@ def bootstrap_host(host_data, policy_server, *, connection=None):
 
 @auto_connect
 def install_host(
-        host,
-        *,
-        hub=False,
-        package=None,
-        bootstrap=None,
-        version=None,
-        demo=False,
-        call_collect=False,
-        connection=None,
-        edition=None):
+    host,
+    *,
+    hub=False,
+    package=None,
+    bootstrap=None,
+    version=None,
+    demo=False,
+    call_collect=False,
+    connection=None,
+    edition=None):
     data = get_info(host, connection=connection)
     print_info(data)
 

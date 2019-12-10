@@ -4,7 +4,14 @@ import time
 from os.path import basename
 from collections import OrderedDict
 
-from cf_remote.utils import os_release, column_print, pretty, user_error, parse_systeminfo, parse_version
+from cf_remote.utils import (
+    os_release,
+    column_print,
+    pretty,
+    user_error,
+    parse_systeminfo,
+    parse_version,
+)
 from cf_remote.ssh import ssh_sudo, ssh_cmd, scp, auto_connect
 from cf_remote import log
 from cf_remote.web import download_package
@@ -91,18 +98,24 @@ def get_info(host, *, users=None, connection=None):
         data["arch"] = "x86_64"
         agent = r'& "C:\Program Files\Cfengine\bin\cf-agent.exe"'
         data["agent"] = agent
-        data["agent_version"] = parse_version(ssh_cmd(connection, '{} -V'.format(agent)))
+        data["agent_version"] = parse_version(
+            ssh_cmd(connection, "{} -V".format(agent))
+        )
     else:
         data["os"] = "unix"
         data["uname"] = ssh_cmd(connection, "uname")
         data["arch"] = ssh_cmd(connection, "uname -m")
         data["os_release"] = os_release(ssh_cmd(connection, "cat /etc/os-release"))
         data["agent_location"] = ssh_cmd(connection, "which cf-agent")
-        data["policy_server"] = ssh_cmd(connection, "cat /var/cfengine/policy_server.dat")
+        data["policy_server"] = ssh_cmd(
+            connection, "cat /var/cfengine/policy_server.dat"
+        )
 
-        agent = r'/var/cfengine/bin/cf-agent'
+        agent = r"/var/cfengine/bin/cf-agent"
         data["agent"] = agent
-        data["agent_version"] = parse_version(ssh_cmd(connection, "{} --version".format(agent)))
+        data["agent_version"] = parse_version(
+            ssh_cmd(connection, "{} --version".format(agent))
+        )
 
         data["bin"] = {}
         for bin in ["dpkg", "rpm", "yum", "apt", "pkg"]:
@@ -134,17 +147,43 @@ def uninstall_cfengine(host, data, *, connection=None):
     print("Uninstalling CFEngine on '{}'".format(host))
 
     if "dpkg" in data["bin"]:
-        run_command(host, "dpkg --purge cfengine-community || true", connection=connection, sudo=True)
-        run_command(host, "dpkg --purge cfengine-nova || true", connection=connection, sudo=True)
-        run_command(host, "dpkg --purge cfengine-nova-hub || true", connection=connection, sudo=True)
+        run_command(
+            host,
+            "dpkg --purge cfengine-community || true",
+            connection=connection,
+            sudo=True,
+        )
+        run_command(
+            host, "dpkg --purge cfengine-nova || true", connection=connection, sudo=True
+        )
+        run_command(
+            host,
+            "dpkg --purge cfengine-nova-hub || true",
+            connection=connection,
+            sudo=True,
+        )
     elif "rpm" in data["bin"]:
-        run_command(host, "rpm --erase cfengine-community || true", connection=connection, sudo=True)
-        run_command(host, "rpm --erase cfengine-nova || true", connection=connection, sudo=True)
-        run_command(host, "rpm --erase cfengine-nova-hub || true", connection=connection, sudo=True)
+        run_command(
+            host,
+            "rpm --erase cfengine-community || true",
+            connection=connection,
+            sudo=True,
+        )
+        run_command(
+            host, "rpm --erase cfengine-nova || true", connection=connection, sudo=True
+        )
+        run_command(
+            host,
+            "rpm --erase cfengine-nova-hub || true",
+            connection=connection,
+            sudo=True,
+        )
     else:
         user_error("I don't know how to uninstall there!")
 
-    run_command(host, "rm -rf /var/cfengine /opt/cfengine", connection=connection, sudo=True)
+    run_command(
+        host, "rm -rf /var/cfengine /opt/cfengine", connection=connection, sudo=True
+    )
 
 
 @auto_connect
@@ -168,16 +207,17 @@ def bootstrap_host(host_data, policy_server, *, connection=None):
 
 @auto_connect
 def install_host(
-        host,
-        *,
-        hub=False,
-        package=None,
-        bootstrap=None,
-        version=None,
-        demo=False,
-        call_collect=False,
-        connection=None,
-        edition=None):
+    host,
+    *,
+    hub=False,
+    package=None,
+    bootstrap=None,
+    version=None,
+    demo=False,
+    call_collect=False,
+    connection=None,
+    edition=None
+):
     data = get_info(host, connection=connection)
     print_info(data)
 
@@ -201,7 +241,9 @@ def install_host(
         if not artifacts:
             user_error(
                 "Could not find an appropriate package for host, please use --{}-package".format(
-                    "hub" if hub else "client"))
+                    "hub" if hub else "client"
+                )
+            )
         artifact = artifacts[-1]
         package = download_package(artifact.url)
 
@@ -211,8 +253,10 @@ def install_host(
     data = get_info(host, connection=connection)
     if data["agent_version"] and len(data["agent_version"]) > 0:
         print(
-            "CFEngine {} was successfully installed on '{}'".format(data["agent_version"],
-                                                                    host))
+            "CFEngine {} was successfully installed on '{}'".format(
+                data["agent_version"], host
+            )
+        )
     else:
         print("Installation failed!")
         sys.exit(1)
@@ -220,7 +264,9 @@ def install_host(
         bootstrap_host(data, policy_server=bootstrap, connection=connection)
     if demo:
         if hub:
-            demo_lib.install_def_json(host, connection=connection, call_collect=call_collect)
+            demo_lib.install_def_json(
+                host, connection=connection, call_collect=call_collect
+            )
             demo_lib.agent_run(data, connection=connection)
             demo_lib.disable_password_dialog(host)
         demo_lib.agent_run(data, connection=connection)

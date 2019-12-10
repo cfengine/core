@@ -45,6 +45,11 @@ def get_args():
     sp.add_argument(
         "--call-collect", help="Enable call collect in --demo def.json", action='store_true')
 
+    sp = subp.add_parser("uninstall", help="Install CFEngine on the given hosts")
+    sp.add_argument("--clients", "-c", help="Where to uninstall", type=str)
+    sp.add_argument("--hub", help="Where to uninstall", type=str)
+    sp.add_argument("--hosts", "-H", help="Where to uninstall", type=str)
+
     sp = subp.add_parser("packages", help="Get info about available packages")
     sp.add_argument("--edition", "-E", help="Enterprise or community packages", type=str)
     sp.add_argument("tags", metavar="TAG", nargs="*")
@@ -96,7 +101,8 @@ def run_command_with_args(command, args):
             call_collect=args.call_collect,
             edition=args.edition)
     elif command == "uninstall":
-        commands.uninstall(args.hub, args.hosts)
+        all_hosts = ((args.hosts or []) + (args.hub or []) + (args.clients or []))
+        commands.uninstall(all_hosts)
     elif command == "packages":
         commands.packages(tags=args.tags, version=args.version, edition=args.edition)
     elif command == "run":
@@ -136,8 +142,8 @@ def validate_command(command, args):
         else:
             args.edition = "enterprise"
 
-    if command in ["uninstall"] and not (args.hosts or args.hub):
-        user_error("Use --hosts or --hub to specify remote hosts or hub, respectively.")
+    if command in ["uninstall"] and not (args.hosts or args.hub or args.clients):
+        user_error("Use --hosts, --hub or --clients to specify remote hosts")
 
     if command == "install" and (args.call_collect and not args.demo):
         user_error("--call-collect must be used with --demo")

@@ -1571,6 +1571,7 @@ typedef struct
     char *args;
     Rlist *arglist;
     int module;
+    bool inform;
 
     Rlist *signals;
     char *process_stop;
@@ -1659,6 +1660,7 @@ typedef struct
     .args = NULL,\
     .arglist = NULL,\
     .module = 0,\
+    .inform = false,\
     .signals = NULL,\
     .process_stop = NULL,\
     .restart_class = NULL,\

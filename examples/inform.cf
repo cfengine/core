@@ -1,0 +1,16 @@
+# The inform constraint can be used to select which commands promises
+# generate output in INFO log level. INFO log level, is intendeted for
+# events which alter the state of the system, such as editing files, users,
+# etc. Since commands promises CAN modify the system, they create INFO
+# messages by default. However, not all commands promises do change the
+# system, so we let the policy writer customize this.
+
+bundle agent main
+{
+  commands:
+    "/bin/touch /tmp/module_cache"
+      inform => "true"; # Default
+    "/bin/cat /tmp/module_cache"
+      inform => "false", # Read-only promise, no INFO logging wanted
+      module => "true";
+}

@@ -1,0 +1,57 @@
+###########################################################
+#
+# Test the "with" promise attribute
+#
+###########################################################
+
+body common control
+{
+    inputs => { "../../default.cf.sub" };
+    bundlesequence => { default($(this.promise_filename)) };
+    version => "1.0";
+}
+
+###########################################################
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-3223" }
+        string => "Test that with can be used in the index of a classic array to access the value";
+
+      "test_soft_fail"
+        string => "any",
+        meta => { "CFE-3223" };
+
+  vars:
+      "interfaces"  slist => { "eth0", "wlan0", "wlan0.1" };
+
+      "ip[eth0]"    string => "1.1.1.1";
+      "ip[wlan0]"   string => "2.1.1.1";
+      "ip[wlan0_1]" string => "3.1.1.1";
+
+      "with[$(interfaces)]"
+        string => "$(ip[$(with)])",
+        with => canonify( $(interfaces) ),
+        comment => "This is a bug. This classic array is not generated when I try to dereference an array value using with.";
+
+}
+
+###########################################################
+
+bundle agent check
+{
+  classes:
+      "_pass" and => {
+                       isvariable( "test.with[eth0]" ),
+                       isvariable( "test.with[wlan0]" ),
+                       isvariable( "test.with[wlan0.1]" )};
+
+  methods:
+      "Pass/Fail"  usebundle => dcs_passif("_pass", $(this.promise_filename) );
+
+  reports:
+
+    !_pass::
+      'One or more of "test.with[eth0]", "test.with[wlan0]", or "test.with[wlan0.1]" is not defined';
+}

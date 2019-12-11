@@ -1,52 +1,60 @@
 3.15.0:
-	- 'cf-check repair' now preserves readable data in corrupted LMDB files
-	  (CFE-3127)
-	- --dump option was added to the 'cf-check backup' command
-	- Add 'tname' to 'ps' output fields on Linux (CFE-3025)
-	- Added MAC address to sys.hardware_(addresses,mac)
-	  Previously MAC addresses would not be added to the sys.hardware_addresses
-	  and the sys.hardware_mac variables if the interface contained only IPv6
-	  addresses. (CFE-3164)
-	- Added inform constraint to commands promises, to allow suppression of INFO log messages
-	  Ticket: (CFE-2973)
+	- New policy function basename() added (CFE-3196)
 	- Added read_module_protocol() policy function
 	  This function reads module protocol from a file, and can be used
-	  for caching the results of commands modules.
-	  Ticket: (CFE-2973)
-	- Added support for CIFS and PanFS file systems to storage promise type
-	  (CFE-3178)
-	- Added test for modules returning nonzero with classes usemodule
-	  (CFE-942)
-	- Agent runs that hit abortclasses record results (ENT-2471)
-	- Allow using hostname in bindtoaddress (CFE-3190)
-	- An ID of rhel in os-release file will now define both rhel and redhat classes
-	  (CFE-3140)
-	- CONTRIBUTING.md should include a suggested git workflow (CFE-3177)
+	  for caching the results of commands modules. (CFE-2973)
+	- nth() policy function now supports negative indices (CFE-3194)
+	- Added inform constraint to commands promises, to allow suppression of
+	  INFO log messages (CFE-2973)
 	- Changed unless constraint to be more consistent with if
 	  For any situation where `if` would NOT skip a promise, `unless`
 	  will cause the promise to be skipped. When there are
 	  unresolved variables / function calls, `if` will skip, `unless`
-	  will NOT skip.
-	  Both of these keywords make a determination on whether to SKIP
-	  the promise or not. If used together skipping effectively takes
-	  precedence. In other words, a promise will be evalutated, if
-	  nothing indicates that it should be skipped.
-	  Tests and log messages were also updated.
-	  Ticket: (CFE-3160)
-	- Clarified descriptions of io_writtendata and io_readdata (ENT-5127)
-	- Clarified log message about process_count and restart_class being used concurrently
-	  (CFE-208)
-	- Corrupted LMDB files are now automatically repaired (CFE-3127)
+	  will NOT skip. (CFE-3160)
 	- Default minimum allowed TLS version is now 1.1 (ENT-4616)
-	- Fixed bug in ps parsing on OpenBSD / NetBSD causing bootstrap to fail
-	- Fixed crash in policy/JSON parsing of numbers with too many decimal points
-	  (CFE-3138)
+	- Network protocol version 2 is now called "tls"
+	  "tls" or "2" can be used in places where you specify network
+	  protocol. Log messages were altered, to show "tls" instead of
+	  "latest". (ENT-4406)
+	- Introduced protocol version 3 - "cookie"
+	  This protocol is identical to version 2 ("tls"),
+	  except it allows the enterprise reporting hub to send
+	  the COOKIE command to enterprise hosts. This command is used for
+	  detecting hosts using duplicate identities. Protocol version "latest"
+	  now points to version 3. For community installations, it should not
+	  make a difference, policy servers will not send this command. The only
+	  visible difference is the new version number (in logs and policy).
+	  (ENT-4406)
+	- Fixed promise skipping bug in unless (CFE-2689)
 	- Fixed error message for unexpanded variables in function calls in unless
-	  Ticket: (CFE-2689)
+	  (CFE-2689)
+	- Fixed bug in ps parsing on OpenBSD / NetBSD causing bootstrap to fail
+	- Fixed crash in policy/JSON parsing of numbers with too many decimal
+	  points (CFE-3138)
+	- copy_from without preserve now respects destination mode (ENT-4016)
+	- Removed stime_range and ttime_range constraints from promise hash
+	  (ENT-4921)
+	- Fixed promise result when using process_stop in processes type promises
+	  (ENT-4988)
+	- cf-execd now sends SIGKILL to the agent process in case of
+	  agent_expireafter (CFE-2664)
+	- cf-serverd now tries to accept connection multiple times (CFE-3066)
+	- Clarified descriptions of io_writtendata and io_readdata (ENT-5127)
+	- Clarified log message about process_count and restart_class being used
+	  concurrently (CFE-208)
+	- Agent runs that hit abortclasses now record results (ENT-2471)
+	- An ID of rhel in os-release file will now define both rhel and redhat
+	  classes (CFE-3140)
+	- hostname now allowed in bindtoaddress (CFE-3190)
+	- IPv6-only interfaces added to sys.hardware_(addresses,mac) (CFE-3164)
+	- IPv6 addresses are now added to policy variable sys.ip_addresses
+	  (CFE-682)
+	- IPv6 addresses now respect ignored_interfaces.rx (CFE-3156)
 	- Fixed issue when removing comments from files in various policy functions
-	  This should also fix many erroneous occurences of the following error message:
+	  This also fixes many erroneous occurences of the error message
+	  mentioning:
 	  ```
-	     error: Comment regex '\s*#[^\n]*' was irreconcilable reading input 'test.txt' probably because it legally matches nothing
+	     [...] because it legally matches nothing
 	  ```
 	  (A warning can still appear if a comment regex actually matches nothing).
 	  Also made this comment removing logic faster.
@@ -68,50 +76,23 @@
 	  * parsestringarrayidx()
 	  * parseintarray()
 	  * parserealarray()
-	  Ticket: (CFE-3188, ENT-5019)
+	  (CFE-3188, ENT-5019)
 	- Fixed memory leak in JSON / env file parsing (CFE-3210)
 	- Fixed memory leak in handling of nfs / fstab (CFE-3210)
 	- Fixed memory leak in string_replace() and regex_replace() (CFE-3210)
 	- Fixed memory leak when using `with` constraint (CFE-3210)
 	- Fixed minor memory leak in policy evaluation (CFE-3210)
-	- Fixed promise result when using process_stop in processes type promises
-	  (ENT-4988)
-	- Fixed promise skipping bug in unless (CFE-2689)
 	- Fixed small memory leak in SQL database promises (CFE-3210)
-	- IPv6 addresses are now added to policy variable sys.ip_addresses
-	  (CFE-682)
-	- IPv6 addresses now respects ignored_interfaces.rx (CFE-3156)
-	- Introduced protocol version 3 - cookie
-	  This protocol is identical to version 2 ("tls"),
-	  except it allows the enterprise reporting hub to send
-	  the COOKIE command to enterprise hosts. This command is used for
-	  detecting hosts using duplicate identities.
-	  For community installations, it should not make a difference,
-	  policy servers will not send this command. The only visible
-	  difference is the new version number (in logs and policy).
-	  Ticket: (ENT-4406)
+	- Corrupted LMDB files are now automatically repaired (CFE-3127)
 	- Keys in the lock database, cf_lock.lmdb, are now human-readable
 	  (CFE-2596)
-	- Local databases now use synchronous access on AIX and Solaris
-	  (ENT-4002)
-	- Network protocol version 2 is now called "tls"
-	  "tls" or "2" can be used in places where you specify network
-	  protocol. Log messages were altered, to show "tls" instead of
-	  "latest". "latest" can still be used, but it will be an
-	  alias for whatever is the latest version. This change was made
-	  to pave the way for new protocol versions and features.
-	  Ticket: (ENT-4406)
-	- New policy function basename() added (CFE-3196)
+	- Local databases now use synchronous access on AIX and Solaris (ENT-4002)
 	- Received SIGBUS now triggers a repair of local DBs (CFE-3127)
-	- Removed stime_range and ttime_range constraints from promise hash
-	  (ENT-4921)
 	- cf-check: dump command now prints structs as JSON objects (CFE-2989)
-	- cf-execd now sends SIGKILL to the agent process in case of agent_expireafter
-	  (CFE-2664)
-	- cf-remote can now spawn VMs in AWS (CFE-2992)
-	- cf-serverd now tries to accept connection multiple times (CFE-3066)
-	- copy_from without preserve now respects destination mode (ENT-4016)
-	- nth() policy function now supports negative indices (CFE-3194)
+	- cf-check: repair now preserves readable data in corrupted LMDB files
+	  (CFE-3127)
+	- cf-check: --dump option was added to the backup command
+
 
 3.15.0b1:
 	- Added derived-from-file tag to hard classes based on /etc/redhat-release

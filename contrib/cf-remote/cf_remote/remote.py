@@ -130,6 +130,25 @@ def install_package(host, pkg, data, *, connection=None):
 
 
 @auto_connect
+def uninstall_cfengine(host, data, *, connection=None):
+    print("Uninstalling CFEngine on '{}'".format(host))
+
+    if "dpkg" in data["bin"]:
+        run_command(host, "dpkg --remove cfengine-community || true", connection=connection, sudo=True)
+        run_command(host, "dpkg --remove cfengine-nova || true", connection=connection, sudo=True)
+        run_command(host, "dpkg --remove cfengine-nova-hub || true", connection=connection, sudo=True)
+    elif "rpm" in data["bin"]:
+        run_command(host, "rpm --erase cfengine-community || true", connection=connection, sudo=True)
+        run_command(host, "rpm --erase cfengine-nova || true", connection=connection, sudo=True)
+        run_command(host, "rpm --erase cfengine-nova-hub || true", connection=connection, sudo=True)
+    else:
+        user_error("I don't know how to uninstall there!")
+
+    run_command(host, "pkill -U cfapache || true", connection=connection, sudo=True)
+    run_command(host, "rm -rf /var/cfengine /opt/cfengine", connection=connection, sudo=True)
+
+
+@auto_connect
 def bootstrap_host(host_data, policy_server, *, connection=None):
     host = host_data["ssh_host"]
     agent = host_data["agent"]
@@ -206,3 +225,25 @@ def install_host(
             demo_lib.agent_run(data, connection=connection)
             demo_lib.disable_password_dialog(host)
         demo_lib.agent_run(data, connection=connection)
+
+
+@auto_connect
+def uninstall_host(host, *, connection=None):
+    data = get_info(host, connection=connection)
+    print_info(data)
+
+    if not data["agent_version"]:
+        print("CFEngine is not installed on '{}' - moving on".format(host))
+        return data
+
+    uninstall_cfengine(host, data, connection=connection)
+    data = get_info(host, connection=connection)
+
+    if (not data) or data["agent_version"]:
+        print("Failed to uninstall CFEngine on '{}'".format(host))
+        return None
+
+    print_info(data)
+
+    print("Uninstallation successful on '{}''".format(host))
+    return data

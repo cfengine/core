@@ -1586,7 +1586,10 @@ static FnCallResult FnCallBasename(ARG_UNUSED EvalContext *ctx,
             // Remove only if actually a suffix, not the same string
             if (suffix_len < base_len)
             {
-                base[base_len - suffix_len] = '\0';
+                // On Solaris, trying to edit the buffer returned by basename
+                // causes segfault(!)
+                base = xstrndup(base, base_len - suffix_len);
+                return FnReturnNoCopy(base);
             }
         }
     }

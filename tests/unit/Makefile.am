@@ -191,7 +191,6 @@ TESTS = $(check_PROGRAMS) $(check_SCRIPTS)
 
 if MACOSX
 XFAIL_TESTS = set_domainname_test
-XFAIL_TESTS += evalfunction_test
 XFAIL_TESTS += process_test
 XFAIL_TESTS += mon_processes_test
 endif

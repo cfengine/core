@@ -1,7 +1,7 @@
 #include <test.h>
 
 #include <eval_context.h>
-#include <evalfunction.h>
+#include <evalfunction.c>
 
 static bool netgroup_more = false;
 
@@ -79,13 +79,56 @@ static void test_hostinnetgroup_not_found(void)
     EvalContextDestroy(ctx);
 }
 
+#define basename_single_testcase(input, suffix, expected)      \
+    {                                                          \
+        FnCallResult res;                                      \
+        Rlist *args = NULL;                                    \
+                                                               \
+        RlistAppendScalar(&args, input);                       \
+        if (suffix != NULL)                                    \
+        {                                                      \
+            RlistAppendScalar(&args, suffix);                  \
+        }                                                      \
+                                                               \
+        FnCall *call = FnCallNew("basename", args);            \
+                                                               \
+        res = FnCallBasename(NULL, NULL, call, args);          \
+        assert_string_equal(expected, (char *) res.rval.item); \
+                                                               \
+        RvalDestroy(res.rval);                                 \
+        FnCallDestroy(call);                                   \
+    }
+
+static void test_basename(void)
+{
+    basename_single_testcase("/", NULL, "/");
+    basename_single_testcase("//", NULL, "/");
+    basename_single_testcase("///", NULL, "/");
+    basename_single_testcase("///////", NULL, "/");
+    basename_single_testcase("./", NULL, ".");
+    basename_single_testcase(".", NULL, ".");
+    basename_single_testcase("", NULL, "");
+
+    basename_single_testcase("/foo/bar", NULL, "bar");
+    basename_single_testcase("/foo/bar/", NULL, "bar");
+    basename_single_testcase("//a//b///c////", NULL, "c");
+
+    basename_single_testcase("", "", "");
+    basename_single_testcase("/", "", "/");
+    basename_single_testcase("/foo/bar.txt", ".txt", "bar");
+    basename_single_testcase("/foo/bar.txt/", ".txt", "bar");
+    basename_single_testcase("//a//b///c////", "", "c");
+    basename_single_testcase("//a//b///c////", "blah", "c");
+    basename_single_testcase("//a//b///c.csv////", ".csv", "c");
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
-    const UnitTest tests[] =
-    {
+    const UnitTest tests[] = {
         unit_test(test_hostinnetgroup_found),
         unit_test(test_hostinnetgroup_not_found),
+        unit_test(test_basename),
     };
 
     return run_tests(tests);

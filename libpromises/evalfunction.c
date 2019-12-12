@@ -100,7 +100,6 @@ static bool CheckIDChar(const char ch);
 static bool CheckID(const char *id);
 static const Rlist *GetListReferenceArgument(const EvalContext *ctx, const FnCall *fp, const char *lval_str, DataType *datatype_out);
 static char *CfReadFile(const char *filename, int maxsize);
-static const char *FileType(const char *filename);
 
 /*******************************************************************/
 
@@ -6634,11 +6633,29 @@ static FnCallResult FnCallReadRealList(EvalContext *ctx, ARG_UNUSED const Policy
     return ReadList(ctx, fp, args, CF_DATA_TYPE_REAL);
 }
 
+static FnCallResult ReadDataGeneric(const char *const fname,
+                                     const char *const input_path,
+                                     const size_t size_max,
+                                     const DataFileType requested_mode)
+{
+    assert(fname != NULL);
+    assert(input_path != NULL);
+
+    JsonElement *json = JsonReadDataFile(fname, input_path, requested_mode, size_max);
+    if (json == NULL)
+    {
+        return FnFailure();
+    }
+
+    return (FnCallResult) { FNCALL_SUCCESS, (Rval) { json, RVAL_TYPE_CONTAINER } };
+}
+
 static FnCallResult FnCallReadData(ARG_UNUSED EvalContext *ctx,
                                    ARG_UNUSED const Policy *policy,
                                    const FnCall *fp,
                                    const Rlist *args)
 {
+    assert(fp != NULL);
     if (args == NULL)
     {
         Log(LOG_LEVEL_ERR, "Function '%s' requires at least one argument", fp->name);
@@ -6646,56 +6663,73 @@ static FnCallResult FnCallReadData(ARG_UNUSED EvalContext *ctx,
     }
 
     const char *input_path = RlistScalarValue(args);
-    size_t size_max;
-
-    // JsonReadDataFile reads key-value pairs from a json, yaml, csv or
-    // env file and puts them in a JSON element
-    // requested_mode is used to specify the input file type
-    // requested_mode is set based on file extension or function name
-    // example: readyaml -> "YAML" , ".csv" -> "CSV" etc.
-    // defaults to "JSON"
-    const char *requested_mode = NULL;
-    if (strcmp(fp->name, "readdata") == 0)
+    const char *const mode_string = RlistScalarValue(args->next);
+    DataFileType requested_mode = DATAFILETYPE_UNKNOWN;
+    if (StringSafeEqual("auto", mode_string))
     {
-        // readdata gets rid of the size, well almost
-        // csv still has 50MB restriction applied later
-        size_max = IntFromString("inf");
-        requested_mode = RlistScalarValue(args->next);
-        if (strcmp("auto", requested_mode) == 0)
-        {
-            requested_mode =  FileType(input_path);
-            Log(LOG_LEVEL_VERBOSE, "%s: automatically selected data type %s from filename %s", fp->name, requested_mode, input_path);
-        }
+        requested_mode = GetDataFileTypeFromSuffix(input_path);
+        Log(LOG_LEVEL_VERBOSE,
+            "%s: automatically selected data type %s from filename %s",
+            fp->name, DataFileTypeToString(requested_mode), input_path);
     }
     else
     {
-        size_max = args->next ? IntFromString(RlistScalarValue(args->next)) : IntFromString("inf");
-
-        if (strcmp(fp->name, "readyaml") == 0)
-        {
-            requested_mode = "YAML";
-        }
-        else if (strcmp(fp->name, "readcsv") == 0)
-        {
-            requested_mode = "CSV";
-        }
-        else if (strcmp(fp->name, "readenvfile") == 0)
-        {
-            requested_mode = "ENV";
-        }
-        else // always default to JSON
-        {
-            requested_mode = "JSON";
-        }
+        requested_mode = GetDataFileTypeFromString(mode_string);
     }
 
-    JsonElement *json = JsonReadDataFile(fp->name, input_path, requested_mode, size_max);
-    if (json == NULL)
+    return ReadDataGeneric(fp->name, input_path, CF_INFINITY, requested_mode);
+}
+
+static FnCallResult ReadGenericDataType(const FnCall *fp,
+                                         const Rlist *args,
+                                         const DataFileType requested_mode)
+{
+    assert(fp != NULL);
+    if (args == NULL)
     {
+        Log(LOG_LEVEL_ERR,
+            "Function '%s' requires at least one argument",
+            fp->name);
         return FnFailure();
     }
 
-    return (FnCallResult) { FNCALL_SUCCESS, (Rval) { json, RVAL_TYPE_CONTAINER } };
+    const char *const input_path = RlistScalarValue(args);
+    size_t size_max = args->next ?
+            IntFromString(RlistScalarValue(args->next)) :
+            CF_INFINITY;
+    return ReadDataGeneric(fp->name, input_path, size_max, requested_mode);
+}
+
+static FnCallResult FnCallReadCsv(ARG_UNUSED EvalContext *ctx,
+                                  ARG_UNUSED const Policy *policy,
+                                  const FnCall *fp,
+                                  const Rlist *args)
+{
+    return ReadGenericDataType(fp, args, DATAFILETYPE_CSV);
+}
+
+static FnCallResult FnCallReadEnvFile(ARG_UNUSED EvalContext *ctx,
+                                      ARG_UNUSED const Policy *policy,
+                                      const FnCall *fp,
+                                      const Rlist *args)
+{
+    return ReadGenericDataType(fp, args, DATAFILETYPE_ENV);
+}
+
+static FnCallResult FnCallReadYaml(ARG_UNUSED EvalContext *ctx,
+                                   ARG_UNUSED const Policy *policy,
+                                   const FnCall *fp,
+                                   const Rlist *args)
+{
+    return ReadGenericDataType(fp, args, DATAFILETYPE_YAML);
+}
+
+static FnCallResult FnCallReadJson(ARG_UNUSED EvalContext *ctx,
+                                   ARG_UNUSED const Policy *policy,
+                                   const FnCall *fp,
+                                   const Rlist *args)
+{
+    return ReadGenericDataType(fp, args, DATAFILETYPE_JSON);
 }
 
 static FnCallResult FnCallReadModuleProtocol(
@@ -8059,30 +8093,6 @@ static bool ExecModule(EvalContext *ctx, char *command)
     return true;
 }
 
-static const char *FileType(const char *filename)
-{
-    if (StringEndsWithCase(filename, ".csv", true))
-    {
-        return "CSV";
-    }
-    else if (StringEndsWithCase(filename, ".yaml", true))
-    {
-        return "YAML";
-    }
-    else if (StringEndsWithCase(filename, ".yml", true))
-    {
-        return "YAML";
-    }
-    else if (StringEndsWithCase(filename, ".env", true))
-    {
-        return "ENV";
-    }
-    else // always default to JSON
-    {
-        return "JSON";
-    }
-}
-
 void ModuleProtocol(EvalContext *ctx, const char *command, const char *line, int print, char* context, size_t context_size, StringSet *tags, long *persistence)
 {
     assert(tags);
@@ -8266,9 +8276,10 @@ void ModuleProtocol(EvalContext *ctx, const char *command, const char *line, int
             if (FileCanOpen(content, "r"))
             {
                 const int size_max = IntFromString("inf");
-                const char *requested_mode = FileType(content);
+                const DataFileType requested_mode = GetDataFileTypeFromSuffix(content);
 
-                Log(LOG_LEVEL_DEBUG, "Module protocol parsing %s file '%s'", requested_mode, content);
+                Log(LOG_LEVEL_DEBUG, "Module protocol parsing %s file '%s'",
+                    DataFileTypeToString(requested_mode), content);
 
                 JsonElement *json = JsonReadDataFile("module file protocol", content, requested_mode, size_max);
                 if (json != NULL)
@@ -9608,13 +9619,13 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("readfile", CF_DATA_TYPE_STRING, READFILE_ARGS, &FnCallReadFile,       "Read max number of bytes from named file and assign to variable",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("readcsv", CF_DATA_TYPE_CONTAINER, READFILE_ARGS, &FnCallReadData,     "Parse a CSV file and return a JSON data container with the contents",
+    FnCallTypeNew("readcsv", CF_DATA_TYPE_CONTAINER, READFILE_ARGS, &FnCallReadCsv,     "Parse a CSV file and return a JSON data container with the contents",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("readenvfile", CF_DATA_TYPE_CONTAINER, READFILE_ARGS, &FnCallReadData, "Parse a ENV-style file and return a JSON data container with the contents",
+    FnCallTypeNew("readenvfile", CF_DATA_TYPE_CONTAINER, READFILE_ARGS, &FnCallReadEnvFile, "Parse a ENV-style file and return a JSON data container with the contents",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("readjson", CF_DATA_TYPE_CONTAINER, READFILE_ARGS, &FnCallReadData,    "Read a JSON data container from a file",
+    FnCallTypeNew("readjson", CF_DATA_TYPE_CONTAINER, READFILE_ARGS, &FnCallReadJson,    "Read a JSON data container from a file",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("readyaml", CF_DATA_TYPE_CONTAINER, READFILE_ARGS, &FnCallReadData,    "Read a data container from a YAML file",
+    FnCallTypeNew("readyaml", CF_DATA_TYPE_CONTAINER, READFILE_ARGS, &FnCallReadYaml,    "Read a data container from a YAML file",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("read_module_protocol", CF_DATA_TYPE_CONTEXT, READMODULE_ARGS, &FnCallReadModuleProtocol, "Parse a file containing module protocol output (for cached modules)",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),

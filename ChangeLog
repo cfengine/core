@@ -10,9 +10,9 @@
 	- Added inform constraint to commands promises, to allow suppression of
 	  INFO log messages (CFE-2973)
 	- Changed unless constraint to be more consistent with if
-	  For any situation where `if` would NOT skip a promise, `unless`
+	  For any situation where if would NOT skip a promise, unless
 	  will cause the promise to be skipped. When there are
-	  unresolved variables / function calls, `if` will skip, `unless`
+	  unresolved variables / function calls, if will skip, unless
 	  will NOT skip. (CFE-3160)
 	- Default minimum allowed TLS version is now 1.1 (ENT-4616)
 	- Network protocol version 2 is now called "tls"
@@ -51,10 +51,10 @@
 	- Set create permissions of monitord files in state directory to 0600
 	  0600 matches the permissions enforced by policy.
 	  Affected files:
-	   * `state/cf_incoming.*`
-	   * `state/cf_outgoing.*`
-	   * `state/cf_users`
-	   * `state/env_data`
+	   * state/cf_incoming.*
+	   * state/cf_outgoing.*
+	   * state/cf_users
+	   * state/env_data
 	  (ENT-4863)
 	- Clarified descriptions of io_writtendata and io_readdata (ENT-5127)
 	- Clarified log message about process_count and restart_class being used
@@ -68,7 +68,7 @@
 	- Added derived-from-file tag to hard classes based on /etc/redhat-release
 	  (CFE-3140)
 	- Added sys.bootstrap_id policy variable containing the ID from
-	  `/var/cfengine/bootstrap_id.dat`, if present (CFE-2977)
+	  /var/cfengine/bootstrap_id.dat, if present (CFE-2977)
 	- sys.interfaces now contains interfaces even when they only have 
 	  IPv6 addresses (ENT-4858)
 	- IPv6-only interfaces added to sys.hardware_(addresses,mac) (CFE-3164)
@@ -79,9 +79,9 @@
 	- Fixed issue when removing comments from files in various policy functions
 	  This also fixes many erroneous occurences of the error message
 	  mentioning:
-	  ```
+	  
 	     [...] because it legally matches nothing
-	  ```
+	  
 	  (A warning can still appear if a comment regex actually matches nothing).
 	  Also made this comment removing logic faster.
 	  Affected functions include:
@@ -106,7 +106,7 @@
 	- Fixed memory leak in JSON / env file parsing (CFE-3210)
 	- Fixed memory leak in handling of nfs / fstab (CFE-3210)
 	- Fixed memory leak in string_replace() and regex_replace() (CFE-3210)
-	- Fixed memory leak when using `with` constraint (CFE-3210)
+	- Fixed memory leak when using with constraint (CFE-3210)
 	- Fixed minor memory leak in policy evaluation (CFE-3210)
 	- Fixed small memory leak in SQL database promises (CFE-3210)
 	- Received SIGBUS now triggers a repair of local DBs (CFE-3127)
@@ -154,7 +154,7 @@
 	  (CFE-2478)
 	- Augments files can now handle class expressions by appending '::'
 	  A condition in an augments file is treated as a class expression
-	  if it ends in `::`. Otherwise it is treated as a regular
+	  if it ends in ::. Otherwise it is treated as a regular
 	  expression. (CFE-2954)
 	- Internal ps command can now handle longer usernames (CFE-2951)
 	- Made copylink_pattern honor '/../' in copy source (CFE-2960)
@@ -228,9 +228,9 @@
 	  experience to create them with restricted permissions to
 	  begin with.
 	  Affected files:
-	  * `$(sys.statedir)/cf_procs`
-	  * `$(sys.statedir)/cf_rootprocs`
-	  * `$(sys.statedir)/cf_otherprocs`
+	  * $(sys.statedir)/cf_procs
+	  * $(sys.statedir)/cf_rootprocs
+	  * $(sys.statedir)/cf_otherprocs
 	  (ENT-4601)
 	- string_split segments are now truncated to 1024 bytes instead of 
 	  crashing (CFE-3047)
@@ -286,7 +286,7 @@
 	  it can be used in situations where the other binaries
 	  like cf-agent would hang.
 	  cf-check replaces our lmdb database dumper, lmdump.
-	  `cf-check lmdump` or symlinking / renaming it to lmdump
+	  cf-check lmdump or symlinking / renaming it to lmdump
 	  will make cf-check have the exact same behavior as lmdump.
 	  cf-check will include much more functionality in the future
 	  and some of the code will be added to other binaries,
@@ -376,9 +376,9 @@
 	  Example os-release file:
 	  	ID=coreos
 	  	VERSION_ID=1185.3.0
-	  For the example above, `sys.flavor` will be `coreos_1185` and 4 hard
-	  classes will be set; `coreos_1185_3_0`, `coreos_1185_3`, `coreos_1185`,
-	  and `coreos`.
+	  For the example above, sys.flavor will be coreos_1185 and 4 hard
+	  classes will be set; coreos_1185_3_0, coreos_1185_3, coreos_1185,
+	  and coreos.
 	  For backwards compatibility, older distribution specific logic is still
 	  executed and may overwrite sys.flavor and define hard classes as before.
 	- refactor use of atexit to use custom cleanup function instead. On Windows
@@ -740,8 +740,8 @@
 	- cf-promises --show-vars can now show JSON variables.
 	- Add json_pipe mode to mapdata(), which allows piping a
 	  JSON container to an external program for manipulation and receiving
-	  JSON back. The `jq` tool is a good example where this mode can be
-	  useful. A corresponding `$(def.jq)` variable has also been added with
+	  JSON back. The jq tool is a good example where this mode can be
+	  useful. A corresponding $(def.jq) variable has also been added with
 	  a default path to this tool. See documentation for mapdata() for
 	  more information and examples. (Jira CFE-2071)
 	- behaviour change: "true" is always defined and "false" is never defined in a context expression.
@@ -752,8 +752,8 @@
 	- Add callstack_callers() and callstack_promisers() functions.
 	- Log variable definitions in debug output. (Redmine #7137)
 	- Add: Memory information to host info report (Jira CFE-1177)
-	- In Mustache templates, one can now use `{{#-top-}}` and
-	  `{{/-top-}}` tags to iterate over the top level element in a
+	- In Mustache templates, one can now use {{#-top-}} and
+	  {{/-top-}} tags to iterate over the top level element in a
 	  container. (Redmine #6545)
 	- Add network_connections() function that parses /proc/net
 	- Provide new -w argument to override the workdir for testing
@@ -768,13 +768,13 @@
 	  (Redmine #7191)
 	- Add "canonify" mode to mapdata().
 	- Add: printfile bodies to stdlib
-	- Add: New `results` classes body [] (Redmine #7418, #7481)
+	- Add: New results classes body [] (Redmine #7418, #7481)
 	- Implement cf-runagent --remote-bundles and cf-serverd "bundle" access promise.
 	  (Redmine #7581)
 	- Add commands promise arglist attribute, augmenting args attribute.
 	- It's now possible to reference variables in inline JSON,
-	  for example: `mergedata('[ thing, { "mykey": otherthing[123] } ]')`.
-	  `thing` and `otherthing[123]` will be resolved as variables, since
+	  for example: mergedata('[ thing, { "mykey": otherthing[123] } ]').
+	  thing and otherthing[123] will be resolved as variables, since
 	  they are unquoted. See the documentation for more details.
 	  (Redmine #7871)
 	- Allow inline JSON to be used in the following function
@@ -812,7 +812,7 @@
 	  - unique()
 	  - url_get()
 	  - variance()
-	  For example: `mergedata('[ "thing", { "mykey": "myvalue" } ]')`
+	  For example: mergedata('[ "thing", { "mykey": "myvalue" } ]')
 	  See the documentation for more details. (Jira CFE-2253)
 	- Add: edit_line contains_literal_string to stdlib
 	- Add body agent control select_end_match_eof option. (Jira CFE-2390)
@@ -946,7 +946,7 @@
 	  has been rewritten from scratch, and should be more robust than
 	  before. (Jira CFE-2161)
 	- Fix the lexer which could not handle empty newline(s)
-	  before a ```@endif```.
+	  before a @endif.
 	- groupexists() no longer fails to detect a group name
 	  starting with a digit. (Jira CFE-2351)
 	- Fix HP-UX specific bug that caused a lot of log output to disappear.
@@ -1116,7 +1116,7 @@
 	  To use it, have the module print a line with "^persistence=<minutes>"
 	  before printing any class names. "persistence=0" goes back to non-
 	  persistent classes. (Redmine #7302)
-	- Add: New `results` classes body (Redmine #7418)
+	- Add: New results classes body (Redmine #7418)
 	- Add: Debug reports in cfe_internal_cleanup_agent_reports
 	- Add: Path to svcprop in stdlib
 	- Add: masterfiles-stage script to contrib
@@ -1404,7 +1404,7 @@
 
 	Masterfiles:
 	- Add: Path to svcprop in stdlib
-	- Add: New `results` classes body [] (Redmine #7418, #7481)
+	- Add: New results classes body [] (Redmine #7418, #7481)
 	- Remove: Support for email settings from augments_file (Redmine #7682)
 
 3.7.1:
@@ -1567,7 +1567,7 @@
         - Run vacuum operation on postgresql every night as a part of
           maintenance.
         - Add measure_promise_time action body to lib (3.5, 3.6, 3.7, 3.8)
-        - New negative class guard `cfengine_internal_disable_agent_email` so
+        - New negative class guard cfengine_internal_disable_agent_email so
           that agent email can be easily disabled by augmenting def.json
 
         Changed:
@@ -2601,8 +2601,8 @@
 
 	New features:
 	- Allow defining arrays from modules.
-	- Allow both `process_stop' and `signals' constraints in
-	  `processes' promises at the same time.
+	- Allow both process_stop' and signals' constraints in
+	  processes' promises at the same time.
 	- cf-promises --gcc-brief-format option to output warnings and
 	  errors in gcc-compatible syntax which to ease use "go to next
 	  error" feature of text editors.

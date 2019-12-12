@@ -45,7 +45,7 @@
 	- Fixed promise result when using process_stop in processes type promises
 	  (ENT-4988)
 	- cf-execd now sends SIGKILL to the agent process in case of
-	  agent_expireafter (CFE-2664)
+	  agent_expireafter, after attempting SIGINT and SIGTERM (CFE-2664)
 	- cf-serverd now tries to accept connection multiple times (CFE-3066)
 	- Fixed multiple measurements tracking growth of same file (ENT-4814)
 	- Set create permissions of monitord files in state directory to 0600
@@ -67,7 +67,7 @@
 	- redhat_8 and redhat_8_0 are now defined on RHEL 8 (CFE-3140)
 	- Added derived-from-file tag to hard classes based on /etc/redhat-release
 	  (CFE-3140)
-	- Added sys.bootstrap_id policy variable Contains the ID from
+	- Added sys.bootstrap_id policy variable containing the ID from
 	  `/var/cfengine/bootstrap_id.dat`, if present (CFE-2977)
 	- sys.interfaces now contains interfaces even when they only have 
 	  IPv6 addresses (ENT-4858)
@@ -116,7 +116,6 @@
 	- Local databases now use synchronous access on AIX and Solaris (ENT-4002)
 	- Report corrupted local database with a critical log message (CFE-2469)
 	- Local DB errors are now logged with the particular DB file path (CFE-2469)
-	- cf-check: dump command now prints structs as JSON objects (CFE-2989)
 	- cf-check: repair now preserves readable data in corrupted LMDB files
 	  (CFE-3127)
 	- cf-check: --dump option was added to the backup command

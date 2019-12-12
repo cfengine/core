@@ -1122,7 +1122,7 @@ static void DefineVersionedHardClasses(
 static void OSReleaseParse(EvalContext *ctx, const char *file_path)
 {
     JsonElement *os_release_json = JsonReadDataFile("system info discovery",
-                                                    file_path, "ENV",
+                                                    file_path, DATAFILETYPE_ENV,
                                                     100 * 1024);
     if (os_release_json != NULL)
     {

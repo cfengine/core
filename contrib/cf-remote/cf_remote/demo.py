@@ -37,7 +37,8 @@ def def_json(call_collect=False):
         "classes": {
             "mpf_augments_control_enabled": ["any"],
             "services_autorun": ["any"],
-            "cfengine_internal_purge_policies": ["any"]
+            "cfengine_internal_purge_policies": ["any"],
+            "cfengine_mp_fr_dependencies_auto_install" : ["any"]
         },
         "vars": {
             "acl": ["0.0.0.0/0",

@@ -661,7 +661,7 @@ constraint:            constraint_id                        /* BUNDLE ONLY */
                                                        RlistAppendScalar(&synthetic_args, xstrdup(P.rval.item));
                                                        RvalDestroy(P.rval);
 
-                                                       P.rval = (Rval) { FnCallNew(xstrdup(fname), synthetic_args), RVAL_TYPE_FNCALL };
+                                                       P.rval = (Rval) { FnCallNew(fname, synthetic_args), RVAL_TYPE_FNCALL };
                                                    }
                                                    else
                                                    {

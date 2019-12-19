@@ -1,0 +1,51 @@
+#######################################################
+#
+# Test countlinesmatching() errors when file is absent
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-3234" }
+        string => "Test that the agent emits error output when countlinesmatching() is used on a file that is inaccessible.";
+
+      "test_skip_needs_work"
+        string => "windows",
+        meta => { "CFE-3234" };
+
+  vars:
+
+      "subout" string => execresult("$(sys.cf_agent) -Kv --define AUTO -f $(this.promise_dirname)/countlinesmatching_returns_0_on_inaccessable_file.cf 2>&1 | $(G.grep) countlinesmatching", "useshell");
+
+}
+
+#######################################################
+
+bundle agent check
+{
+
+  vars:
+      "expression" string => ".* error: File '/asd/fgh/qwertyio0p' could not be read in countlinesmatching.*";
+
+  classes:
+      "__pass" expression => regcmp( $(expression), $(test.subout) );
+
+  methods:
+
+  __pass::
+      "Pass" usebundle => dcs_pass( $(this.promise_filename) );
+  !__pass::
+      "FAIL" usebundle => dcs_pass( $(this.promise_filename) );
+}

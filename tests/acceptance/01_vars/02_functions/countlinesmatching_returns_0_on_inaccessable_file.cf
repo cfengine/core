@@ -23,6 +23,10 @@ bundle agent init
 
 bundle agent test
 {
+  meta:
+      "description" -> { "Mantis 320", "CFE-3234" }
+        string => "Test that countlinesmatching() returns 0 when the file is inaccessible.";
+
   vars:
       "zero_regex" string => "impossible line";
 

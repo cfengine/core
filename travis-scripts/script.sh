@@ -28,7 +28,7 @@ git remote add upstream https://github.com/cfengine/core.git  \
 
 if [ "$TRAVIS_OS_NAME" = osx ]
 then
-    ./autogen.sh --enable-debug --prefix=$INSTDIR --bindir=$INSTDIR/var/cfengine/bin
+    ./autogen.sh --enable-debug --with-openssl="$(brew --prefix openssl)" --prefix=$INSTDIR --bindir=$INSTDIR/var/cfengine/bin
     gmake --version
     gmake CFLAGS="-Werror -Wall -Wno-pointer-sign"
     gmake --debug -C tests/unit check

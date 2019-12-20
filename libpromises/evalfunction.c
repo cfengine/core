@@ -70,6 +70,7 @@
 #include <sysinfo.h>
 #include <string_sequence.h>
 #include <string_lib.h>
+#include <version_comparison.h>
 
 #include <math_eval.h>
 
@@ -2064,6 +2065,157 @@ static FnCallResult FnCallClassify(EvalContext *ctx,
     bool is_defined = IsDefinedClass(ctx, CanonifyName(RlistScalarValue(finalargs)));
 
     return FnReturnContext(is_defined);
+}
+
+/*********************************************************************/
+
+static VersionComparison GenericVersionCheck(
+        const FnCall *fp,
+        const Rlist *args)
+{
+    assert(fp != NULL);
+    assert(fp->name != NULL);
+    if (args == NULL)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Policy fuction %s requires version to compare against",
+            fp->name);
+        return VERSION_ERROR;
+    }
+
+    const char *ver_string = RlistScalarValue(args);
+    VersionComparison comparison = CompareVersion(Version(), ver_string);
+    if (comparison == VERSION_ERROR)
+    {
+        Log(LOG_LEVEL_ERR,
+            "%s: Format of version comparison string '%s' is incorrect",
+            fp->name, ver_string);
+        return VERSION_ERROR;
+    }
+
+    return comparison;
+}
+
+static FnCallResult FnCallVersionMinimum(
+        ARG_UNUSED EvalContext *ctx,
+        ARG_UNUSED const Policy *policy,
+        const FnCall *fp,
+        const Rlist *args)
+{
+    const VersionComparison comparison = GenericVersionCheck(fp, args);
+    if (comparison == VERSION_ERROR)
+    {
+        return FnFailure();
+    }
+
+    return FnReturnContext(comparison == VERSION_GREATER ||
+                           comparison == VERSION_EQUAL);
+}
+
+static FnCallResult FnCallVersionAfter(
+        ARG_UNUSED EvalContext *ctx,
+        ARG_UNUSED const Policy *policy,
+        const FnCall *fp,
+        const Rlist *args)
+{
+    const VersionComparison comparison = GenericVersionCheck(fp, args);
+    if (comparison == VERSION_ERROR)
+    {
+        return FnFailure();
+    }
+
+    return FnReturnContext(comparison == VERSION_GREATER);
+}
+
+static FnCallResult FnCallVersionMaximum(
+        ARG_UNUSED EvalContext *ctx,
+        ARG_UNUSED const Policy *policy,
+        const FnCall *fp,
+        const Rlist *args)
+{
+    const VersionComparison comparison = GenericVersionCheck(fp, args);
+    if (comparison == VERSION_ERROR)
+    {
+        return FnFailure();
+    }
+
+    return FnReturnContext(comparison == VERSION_SMALLER ||
+                           comparison == VERSION_EQUAL);
+}
+
+static FnCallResult FnCallVersionBefore(
+        ARG_UNUSED EvalContext *ctx,
+        ARG_UNUSED const Policy *policy,
+        const FnCall *fp,
+        const Rlist *args)
+{
+    const VersionComparison comparison = GenericVersionCheck(fp, args);
+    if (comparison == VERSION_ERROR)
+    {
+        return FnFailure();
+    }
+
+    return FnReturnContext(comparison == VERSION_SMALLER);
+}
+
+static FnCallResult FnCallVersionAt(
+        ARG_UNUSED EvalContext *ctx,
+        ARG_UNUSED const Policy *policy,
+        const FnCall *fp,
+        const Rlist *args)
+{
+    const VersionComparison comparison = GenericVersionCheck(fp, args);
+    if (comparison == VERSION_ERROR)
+    {
+        return FnFailure();
+    }
+
+    return FnReturnContext(comparison == VERSION_EQUAL);
+}
+
+static FnCallResult FnCallVersionBetween(
+        ARG_UNUSED EvalContext *ctx,
+        ARG_UNUSED const Policy *policy,
+        const FnCall *fp,
+        const Rlist *args)
+{
+    assert(fp != NULL);
+    assert(fp->name != NULL);
+    if (args == NULL || args->next == NULL)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Policy fuction %s requires lower "
+            "and upper versions to compare against",
+            fp->name);
+        return FnFailure();
+    }
+
+    const char *ver_string_lower = RlistScalarValue(args);
+    const VersionComparison lower_comparison =
+        CompareVersion(Version(), ver_string_lower);
+    if (lower_comparison == VERSION_ERROR)
+    {
+        Log(LOG_LEVEL_ERR,
+            "%s: Format of lower version comparison string '%s' is incorrect",
+            fp->name, ver_string_lower);
+        return FnFailure();
+    }
+
+    const char *ver_string_upper = RlistScalarValue(args->next);
+    const VersionComparison upper_comparison =
+        CompareVersion(Version(), ver_string_upper);
+    if (upper_comparison == VERSION_ERROR)
+    {
+        Log(LOG_LEVEL_ERR,
+            "%s: Format of upper version comparison string '%s' is incorrect",
+            fp->name, ver_string_upper);
+        return FnFailure();
+    }
+
+    return FnReturnContext((lower_comparison == VERSION_GREATER ||
+                            lower_comparison == VERSION_EQUAL) &&
+                           (upper_comparison == VERSION_SMALLER ||
+                            upper_comparison == VERSION_EQUAL));
 }
 
 /*********************************************************************/
@@ -8543,6 +8695,19 @@ static const FnCallArg CHANGEDBEFORE_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg CFVERSION_ARGS[] =
+{
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "CFEngine version number to compare against"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
+static const FnCallArg CFVERSIONBETWEEN_ARGS[] =
+{
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Lower CFEngine version number to compare against"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Upper CFEngine version number to compare against"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
 static const FnCallArg CLASSIFY_ARGS[] =
 {
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Input string"},
@@ -9431,6 +9596,18 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("concat", CF_DATA_TYPE_STRING, CONCAT_ARGS, &FnCallConcat, "Concatenate all arguments into string",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("cf_version_minimum", CF_DATA_TYPE_CONTEXT, CFVERSION_ARGS, &FnCallVersionMinimum, "True if local CFEngine version is newer than or equal to input",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("cf_version_after", CF_DATA_TYPE_CONTEXT, CFVERSION_ARGS, &FnCallVersionAfter, "True if local CFEngine version is newer than input",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("cf_version_maximum", CF_DATA_TYPE_CONTEXT, CFVERSION_ARGS, &FnCallVersionMaximum, "True if local CFEngine version is older than or equal to input",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("cf_version_before", CF_DATA_TYPE_CONTEXT, CFVERSION_ARGS, &FnCallVersionBefore, "True if local CFEngine version is older than input",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("cf_version_at", CF_DATA_TYPE_CONTEXT, CFVERSION_ARGS, &FnCallVersionAt, "True if local CFEngine version is the same as input",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("cf_version_between", CF_DATA_TYPE_CONTEXT, CFVERSIONBETWEEN_ARGS, &FnCallVersionBetween, "True if local CFEngine version is between two input versions (inclusive)",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("changedbefore", CF_DATA_TYPE_CONTEXT, CHANGEDBEFORE_ARGS, &FnCallIsChangedBefore, "True if arg1 was changed before arg2 (ctime)",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("classify", CF_DATA_TYPE_CONTEXT, CLASSIFY_ARGS, &FnCallClassify, "True if the canonicalization of the argument is a currently defined class",

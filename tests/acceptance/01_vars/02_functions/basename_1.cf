@@ -84,7 +84,7 @@ bundle agent test
 
     windows::
       "template_input[full_root]" string => "C:/";
-      "template_expected[full_root]" string => "C:/";
+      "template_expected[full_root]" string => "/";
 
       "template_input[full_root_file]" string => "C:/foo";
       "template_expected[full_root_file]" string => "foo";
@@ -120,16 +120,10 @@ bundle agent test
       "input[native_unc_three]" string => "\\\\foo\\bar\\charlie\\";
       "expected[native_unc_three]" string => "charlie";
 
-
-      "input[unix_$(template_keys)]" string => "$(template_input[$(template_keys)])";
-      "input[native_$(template_keys)]" string => translatepath("$(template_input[$(template_keys)])");
-      "expected[unix_$(template_keys)]" string => "$(template_expected[$(template_keys)])";
-      "expected[native_$(template_keys)]" string => translatepath("$(template_expected[$(template_keys)])");
-    !windows::
+    any::
       "input[native_$(template_keys)]" string => "$(template_input[$(template_keys)])";
       "expected[native_$(template_keys)]" string => "$(template_expected[$(template_keys)])";
 
-    any::
       "keys" slist => getindices("input");
 
       "actual[$(keys)]" string => basename("$(input[$(keys)])");

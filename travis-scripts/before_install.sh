@@ -9,11 +9,11 @@ then
     brew install make
     brew install autoconf
     brew install automake
+    brew install openssl
     # brew install gcc@7 || brew link --overwrite gcc@7
     set -e
     # gcc-7 --version
     #brew install python
-    #brew install openssl
     #brew install libxml2
     #brew install fakeroot
 else

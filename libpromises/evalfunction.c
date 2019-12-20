@@ -2954,7 +2954,7 @@ static FnCallResult FnCallCountLinesMatching(ARG_UNUSED EvalContext *ctx, ARG_UN
     FILE *fin = safe_fopen(filename, "rt");
     if (!fin)
     {
-        Log(LOG_LEVEL_VERBOSE, "File '%s' could not be read in countlinesmatching(). (fopen: %s)", filename, GetErrorStr());
+        Log(LOG_LEVEL_ERR, "File '%s' could not be read in countlinesmatching(). (fopen: %s)", filename, GetErrorStr());
         pcre_free(rx);
         return FnReturn("0");
     }

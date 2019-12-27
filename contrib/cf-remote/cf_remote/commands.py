@@ -150,8 +150,9 @@ def spawn(platform, count, role, group_name, provider=Providers.AWS, region=None
 
     requests = []
     for i in range(count):
+        vm_name = os.getlogin()[0:2] + group_name + "-" + platform + role + str(i)
         requests.append(VMRequest(platform=platform,
-                                  name=(platform + role + str(i)),
+                                  name=vm_name,
                                   size=None))
     print("Spawning VMs...", end="")
     sys.stdout.flush()

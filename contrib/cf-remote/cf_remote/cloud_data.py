@@ -40,6 +40,17 @@ aws_platforms = {
         'size':'t2.micro',
         'xlsize':'m3.xlarge',
     },
+    "rhel-8-x64": {
+        "ami": "ami-04facb3ed127a2eb6",
+        "size": "t3a.micro",
+        "user": "ec2-user",
+        "xlsize": "m3.xlarge"
+    },
+    "coreos": {
+        "ami": "ami-067301c1a68e593f5",
+        "size": "t3a.nano",
+        "user": "core"
+    },
     'centos-5-x32':{
         'ami':'ami-fe11398a',
         'user':'root',

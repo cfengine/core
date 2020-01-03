@@ -721,9 +721,9 @@ static bool ChangePassword(const char *puser, const char *password, PasswordForm
 
 static bool IsHashLocked(const char *hash)
 {
-#ifdef HAVE_PW
+#ifdef __FreeBSD__
     /* Accounts are locked by prepending "*LOCKED*" to the password
-     * hash on FreeBSD and other systems using pw. */
+     * hash on FreeBSD and possibly other systems using pw. */
     return (strstr(hash, "*LOCKED*") != NULL);
 #else
     /* Accounts are locked by prepending "!" to the password hash on

@@ -905,6 +905,24 @@ AS_IF([test "x$USERADD" != x && \
       [have_userprogs=no]
 )
 
+dnl FreeBSD
+CF3_PATH_ROOT_PROG([CHPASS], [chpass], [], [/usr/bin:$PATH])
+AS_IF([test "x$CHPASS" != "x"],
+      [AC_DEFINE(HAVE_CHPASS, 1, [Define if chpass tool is present])]
+      [AC_DEFINE_UNQUOTED(CHPASS, ["$CHPASS"], [Path to chpass tool])]
+     )
+
+CF3_PATH_ROOT_PROG([PW], [pw], [], [/usr/sbin:$PATH])
+AS_IF([test "x$PW" != "x"],
+      [AC_DEFINE(HAVE_PW, 1, [Define if pw tool is present])]
+      [AC_DEFINE_UNQUOTED(PW, ["$PW"], [Path to pw tool])]
+     )
+
+AS_IF([test "x$CHPASS" != x && \
+       test "x$PW" != x],
+      [have_userprogs=yes],
+      [have_userprogs=no]
+)
 
 AC_ARG_WITH([pam], AS_HELP_STRING([--with-pam], [Compile with PAM support]))
 AS_IF([test x$with_pam != xno],
@@ -929,15 +947,29 @@ AS_IF([test x$with_pam != xno],
         [have_pam=no]
   )
   AC_CHECK_FUNCS(fgetpwent fgetgrent)
-  AS_IF([test "x$have_pam" = "xyes" && \
-      test "x$have_userprogs" = "xyes" && \
-      test "x$ac_cv_func_fgetpwent" = "xyes" && \
-      test "x$ac_cv_func_fgetgrent" = "xyes"],
-  [
-      users_promises_ok=yes
-  ],[
-      users_promises_ok=no
-  ])
+  AS_IF([test "x$ac_cv_func_fgetpwent" = "xyes" && \
+         test "x$ac_cv_func_fgetgrent" = "xyes"],
+         [have_fgetpwent_fgetgrent=yes]
+         [AC_DEFINE(HAVE_FGETPWENT_FGETGRENT, 1, [Define if fgetpwent and fgetgrent functions are present])],
+         [have_fgetpwent_fgetgrent=no]
+     )
+
+  AS_CASE(["$target_os"],
+     [freebsd*],
+     [
+        AS_IF([test "x$have_pam" = "xyes" && \
+               test "x$have_userprogs" = "xyes"],
+              [users_promises_ok=yes],
+              [users_promises_ok=no])
+     ],
+     [
+        AS_IF([test "x$have_pam" = "xyes" && \
+               test "x$have_userprogs" = "xyes"
+               test "x$ac_cv_func_fgetpwent" = "xyes" && \
+               test "x$ac_cv_func_fgetgrent" = "xyes"],
+              [users_promises_ok=yes],
+              [users_promises_ok=no])
+     ])
 ], [
   users_promises_ok=no
 ])
@@ -1284,6 +1316,7 @@ case "$target_os" in
         AC_CHECK_LIB(nss_nis, yp_get_default_domain)
         ;;
    freebsd*|dragonfly*)
+     AM_CONDITIONAL([FREEBSD], true)
         ;;
    netbsd*)
         ;;

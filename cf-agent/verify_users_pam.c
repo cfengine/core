@@ -51,6 +51,12 @@
 # include <shadow.h>
 #endif
 
+#ifdef __FreeBSD__
+/* Use pw_scan() and gr_scan() to implement fgetpwent() and
+ * fgetgrent() on FreeBSD. */
+#include <libutil.h>
+#endif
+
 #define CFUSR_CHECKBIT(v,p) ((v) & (1UL << (p)))
 #define CFUSR_SETBIT(v,p)   ((v)   |= ((1UL) << (p)))
 #define CFUSR_CLEARBIT(v,p) ((v) &= ~((1UL) << (p)))
@@ -81,6 +87,8 @@ static const char *GetPlatformSpecificExpirationDate()
     return "January 02 1970";
 #elif defined(__linux__)
     return "1970-01-02";
+#elif defined(__FreeBSD__)
+    return "02-Jan-1970";
 #else
 # error Your operating system lacks the proper string for the "usermod -e" utility.
 #endif
@@ -622,6 +630,45 @@ unlock_passwd:
 }
 #endif // defined(HAVE_LCKPWDF) && defined(HAVE_ULCKPWDF)
 
+static bool ExecuteUserCommand(const char *puser, const char *cmd, size_t sizeof_cmd,
+                               const char *action_msg, const char *cap_action_msg)
+{
+    if (strlen(cmd) >= sizeof_cmd - 1)
+    {
+        // Instead of checking every StringAppend call, assume that a maxed out
+        // string length overflowed the string.
+        Log(LOG_LEVEL_ERR, "Command line too long while %s user '%s'", action_msg, puser);
+        return false;
+    }
+
+    Log(LOG_LEVEL_VERBOSE, "%s user '%s'. (command: '%s')", cap_action_msg, puser, cmd);
+
+    int status = system(cmd);
+    if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
+    {
+        Log(LOG_LEVEL_ERR, "Command returned error while %s user '%s'. (Command line: '%s')", action_msg, puser, cmd);
+        return false;
+    }
+    return true;
+}
+
+#ifdef HAVE_CHPASS
+static bool ChangePasswordHashUsingChpass(const char *puser, const char *password)
+{
+    char cmd[CF_BUFSIZE];
+
+    strcpy(cmd, CHPASS);
+    StringAppend(cmd, " -p \'", sizeof(cmd));
+    StringAppend(cmd, password, sizeof(cmd));
+    StringAppend(cmd, "\' ", sizeof(cmd));
+    StringAppend(cmd, puser, sizeof(cmd));
+
+    Log(LOG_LEVEL_VERBOSE, "Changing password hash for user '%s'. (command: '%s')", puser, cmd);
+
+    return ExecuteUserCommand(puser, cmd, sizeof(cmd), "changing", "Changing");
+}
+#endif // HAVE_CHPASS
+
 static bool ChangePassword(const char *puser, const char *password, PasswordFormat format)
 {
     assert(format == PASSWORD_FORMAT_PLAINTEXT || format == PASSWORD_FORMAT_HASH);
@@ -646,6 +693,10 @@ static bool ChangePassword(const char *puser, const char *password, PasswordForm
         {
             successful = ChangePasswordHashUsingLckpwdf(puser, password);
         }
+#elif defined(HAVE_CHPASS)
+        {
+            successful = ChangePasswordHashUsingChpass(puser, password);
+        }
 #elif defined(HAVE_CHPASSWD)
         {
             Log(LOG_LEVEL_ERR, "No means to set password for user '%s' was found. Tried using the '%s' tool with no luck.",
@@ -668,6 +719,19 @@ static bool ChangePassword(const char *puser, const char *password, PasswordForm
     return successful;
 }
 
+static bool IsHashLocked(const char *hash)
+{
+#ifdef HAVE_PW
+    /* Accounts are locked by prepending "*LOCKED*" to the password
+     * hash on FreeBSD and other systems using pw. */
+    return (strstr(hash, "*LOCKED*") != NULL);
+#else
+    /* Accounts are locked by prepending "!" to the password hash on
+     * some systems. */
+    return (hash[0] == '!');
+#endif
+}
+
 static bool IsAccountLocked(const char *puser, const struct passwd *passwd_info)
 {
     /* Note that when we lock an account, we do two things, we make the password hash invalid
@@ -683,7 +747,8 @@ static bool IsAccountLocked(const char *puser, const struct passwd *passwd_info)
     {
         return false;
     }
-    return (system_hash[0] == '!');
+
+    return IsHashLocked(system_hash);
 }
 
 static bool PlatformSupportsExpirationLock(void)
@@ -711,7 +776,8 @@ static bool PlatformSupportsExpirationLock(void)
 #endif
 }
 
-static bool SetAccountLockExpiration(const char *puser, bool lock)
+#ifdef HAVE_USERMOD
+static bool SetAccountLockExpirationUsingUsermod(const char *puser, bool lock)
 {
     if (!PlatformSupportsExpirationLock())
     {
@@ -743,6 +809,54 @@ static bool SetAccountLockExpiration(const char *puser, bool lock)
 
     return true;
 }
+#endif
+
+#ifdef HAVE_PW
+static bool SetAccountLockExpirationUsingPw(const char *puser, bool lock)
+{
+    if (!PlatformSupportsExpirationLock())
+    {
+        return true;
+    }
+
+    char cmd[CF_BUFSIZE];
+
+    strcpy(cmd, PW);
+    StringAppend(cmd, " usermod ", sizeof(cmd));
+    StringAppend(cmd, puser, sizeof(cmd));
+    StringAppend(cmd, " -e \"", sizeof(cmd));
+    if (lock)
+    {
+        StringAppend(cmd, GetPlatformSpecificExpirationDate(), sizeof(cmd));
+    }
+    StringAppend(cmd, "\" ", sizeof(cmd));
+
+    Log(LOG_LEVEL_VERBOSE, "%s user '%s' by setting expiry date. (command: '%s')",
+        lock ? "Locking" : "Unlocking", puser, cmd);
+
+    const int status = system(cmd);
+    if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
+    {
+        Log(LOG_LEVEL_ERR, "Command returned error while %s user '%s'. (Command line: '%s')",
+            lock ? "locking" : "unlocking", puser, cmd);
+        return false;
+    }
+
+    return true;
+}
+#endif
+
+static bool SetAccountLockExpiration(const char *puser, bool lock)
+{
+#if defined(HAVE_USERMOD)
+    return SetAccountLockExpirationUsingUsermod(puser, lock);
+#elif defined(HAVE_PW)
+    return SetAccountLockExpirationUsingPw(puser, lock);
+#else
+    Log(LOG_LEVEL_WARNING, "Cannot set account lock exporation, not supported on this platform");
+    return false;
+#endif
+}
 
 static bool SetAccountLocked(const char *puser, const char *hash, bool lock)
 {
@@ -750,10 +864,15 @@ static bool SetAccountLocked(const char *puser, const char *hash, bool lock)
     {
         if (lock)
         {
-            if (hash[0] != '!')
+            if (!IsHashLocked(hash))
             {
+#ifdef HAVE_PW
+                char new_hash[strlen(hash) + 9];
+                xsnprintf(new_hash, sizeof(new_hash), "*LOCKED*%s", hash);
+#else
                 char new_hash[strlen(hash) + 2];
                 xsnprintf(new_hash, sizeof(new_hash), "!%s", hash);
+#endif
                 if (!ChangePassword(puser, new_hash, PASSWORD_FORMAT_HASH))
                 {
                     return false;
@@ -762,9 +881,19 @@ static bool SetAccountLocked(const char *puser, const char *hash, bool lock)
         }
         else
         {
-            if (hash[0] == '!')
+            if (IsHashLocked(hash))
             {
+#ifdef HAVE_PW
+                /* Accounts are locked by prepending "*LOCKED*" to the
+                 * password hash on FreeBSD. Skip these 8 characters
+                 * to obtain only the password hash. */
+                if (!ChangePassword(puser, &hash[8], PASSWORD_FORMAT_HASH))
+#else
+                /* Accounts are locked by prepending "!" to the
+                 * password hash on some systems. Skip this 1
+                 * character to obtain only the password hash. */
                 if (!ChangePassword(puser, &hash[1], PASSWORD_FORMAT_HASH))
+#endif
                 {
                     return false;
                 }
@@ -818,6 +947,9 @@ static bool GroupGetUserMembership (const char *user, StringSet *result)
                 }
             }
         }
+#ifdef __FreeBSD__
+        free(group_info);
+#endif
     }
 
     fclose(fptr);
@@ -834,6 +966,43 @@ static bool EqualGroupName(const char *key, const struct group *entry)
 {
     return (strcmp(key, entry->gr_name) == 0);
 }
+
+#ifdef __FreeBSD__
+struct group *fgetgrent(FILE *stream)
+{
+    if (stream == NULL)
+    {
+        return NULL;
+    }
+
+    struct group *gr = NULL;
+    char *line = NULL;
+    size_t linecap = 0;
+    ssize_t linelen;
+
+    while ((linelen = getline(&line, &linecap, stream)) > 0)
+    {
+        /* Skip comments and empty lines */
+        if (*line == '\n' || *line == '#')
+        {
+            continue;
+        }
+        /* trim latest \n */
+        if (line[linelen - 1] == '\n')
+        {
+            line[linelen - 1] = '\0';
+        }
+        gr = gr_scan(line);
+        if (gr != NULL)
+        {
+            break;
+        }
+    }
+    free(line);
+
+    return gr;
+}
+#endif
 
 // Uses fgetgrent() instead of getgrnam(), to guarantee that the returned group
 // is a local group, and not for example from LDAP.
@@ -856,6 +1025,9 @@ static struct group *GetGrEntry(const char *key,
             found = true;
             break;
         }
+#ifdef __FreeBSD__
+        free(group_info);
+#endif
     }
 
     fclose(fptr);
@@ -922,6 +1094,9 @@ static void TransformGidsToGroups(StringSet **list)
         {
             StringSetAdd(new_list, xstrdup(data));
         }
+#ifdef __FreeBSD__
+        free(group_info);
+#endif
     }
     StringSet *old_list = *list;
     *list = new_list;
@@ -999,6 +1174,10 @@ static bool VerifyIfUserNeedsModifs (const char *puser, const User *u, const str
         {
             CFUSR_SETBIT (*changemap, i_group);
         }
+
+#ifdef __FreeBSD__
+        free(group_info);
+#endif
     }
 
     if (u->groups_secondary_given)
@@ -1069,30 +1248,8 @@ static bool SupportsOption(const char *cmd, const char *option)
     return supports_option;
 }
 
-static bool ExecuteUserCommand(const char *puser, const char *cmd, size_t sizeof_cmd,
-                               const char *action_msg, const char *cap_action_msg)
-{
-    if (strlen(cmd) >= sizeof_cmd - 1)
-    {
-        // Instead of checking every StringAppend call, assume that a maxed out
-        // string length overflowed the string.
-        Log(LOG_LEVEL_ERR, "Command line too long while %s user '%s'", action_msg, puser);
-        return false;
-    }
-
-    Log(LOG_LEVEL_VERBOSE, "%s user '%s'. (command: '%s')", cap_action_msg, puser, cmd);
-
-    int status;
-    status = system(cmd);
-    if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
-    {
-        Log(LOG_LEVEL_ERR, "Command returned error while %s user '%s'. (Command line: '%s')", action_msg, puser, cmd);
-        return false;
-    }
-    return true;
-}
-
-static bool DoCreateUser(const char *puser, const User *u, enum cfopaction action,
+#ifdef HAVE_USERADD
+static bool DoCreateUserUsingUseradd(const char *puser, const User *u, enum cfopaction action,
                          EvalContext *ctx, const Attributes *a, const Promise *pp)
 {
     assert(u != NULL);
@@ -1234,8 +1391,160 @@ static bool DoCreateUser(const char *puser, const User *u, enum cfopaction actio
 
     return true;
 }
+#endif
 
-static bool DoRemoveUser (const char *puser, enum cfopaction action)
+#ifdef HAVE_PW
+static bool DoCreateUserUsingPw(const char *puser, const User *u, enum cfopaction action,
+                         EvalContext *ctx, const Attributes *a, const Promise *pp)
+{
+    assert(u != NULL);
+    char cmd[CF_BUFSIZE];
+    char sec_group_args[CF_BUFSIZE];
+    if (NULL_OR_EMPTY(puser))
+    {
+        return false;
+    }
+    strcpy (cmd, PW);
+
+    StringAppend(cmd, " useradd ", sizeof(cmd));
+    StringAppend(cmd, puser, sizeof(cmd));
+
+    if (!NULL_OR_EMPTY(u->uid))
+    {
+        StringAppend(cmd, " -u \"", sizeof(cmd));
+        StringAppend(cmd, u->uid, sizeof(cmd));
+        StringAppend(cmd, "\"", sizeof(cmd));
+    }
+
+    if (u->description != NULL)
+    {
+        StringAppend(cmd, " -c \"", sizeof(cmd));
+        StringAppend(cmd, u->description, sizeof(cmd));
+        StringAppend(cmd, "\"", sizeof(cmd));
+    }
+
+    if (u->group_primary != NULL && strcmp (u->group_primary, ""))
+    {
+        // TODO: Should check that group exists
+        StringAppend(cmd, " -g \"", sizeof(cmd));
+        StringAppend(cmd, u->group_primary, sizeof(cmd));
+        StringAppend(cmd, "\"", sizeof(cmd));
+    }
+
+    if (u->groups_secondary_given)
+    {
+        // TODO: Should check that groups exist
+        strlcpy(sec_group_args, " -G \"", sizeof(sec_group_args));
+        char sep[2] = { '\0', '\0' };
+        for (Rlist *i = u->groups_secondary; i != NULL; i = i->next)
+        {
+            StringAppend(sec_group_args, sep, sizeof(sec_group_args));
+            StringAppend(sec_group_args, RvalScalarValue(i->val), sizeof(sec_group_args));
+            sep[0] = ',';
+        }
+        StringAppend(sec_group_args, "\"", sizeof(sec_group_args));
+        StringAppend(cmd, sec_group_args, sizeof(cmd));
+    }
+
+    if (u->home_dir != NULL && strcmp(u->home_dir, ""))
+    {
+        StringAppend(cmd, " -d \"", sizeof(cmd));
+        StringAppend(cmd, u->home_dir, sizeof(cmd));
+        StringAppend(cmd, "\"", sizeof(cmd));
+    }
+
+    if (u->shell != NULL && strcmp (u->shell, ""))
+    {
+        StringAppend(cmd, " -s \"", sizeof(cmd));
+        StringAppend(cmd, u->shell, sizeof(cmd));
+        StringAppend(cmd, "\"", sizeof(cmd));
+    }
+
+    if (action == cfa_warn || DONTDO)
+    {
+        Log(LOG_LEVEL_WARNING, "Need to create user '%s'", puser);
+        return false;
+    }
+    else
+    {
+        if (!ExecuteUserCommand(puser, cmd, sizeof(cmd), "creating", "Creating"))
+        {
+            return false;
+        }
+
+        if (!ChangePassword(puser, "x", PASSWORD_FORMAT_HASH))
+        {
+            return false;
+        }
+
+        if (u->policy == USER_STATE_LOCKED)
+        {
+            if (!SetAccountLocked(puser, "x", true))
+            {
+                return false;
+            }
+        }
+
+        if (a->havebundle)
+        {
+            const Constraint *method_attrib = PromiseGetConstraint(pp, "home_bundle");
+            if (method_attrib == NULL)
+            {
+                Log(LOG_LEVEL_ERR, "Cannot create user (home_bundle not found)");
+                return false;
+            }
+            VerifyMethod(ctx, method_attrib->rval, a, pp);
+        }
+
+        if (u->policy != USER_STATE_LOCKED && u->password != NULL && strcmp (u->password, ""))
+        {
+            if (!ChangePassword(puser, u->password, u->password_format))
+            {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+#endif
+
+static bool DoCreateUser(const char *puser, const User *u, enum cfopaction action,
+                         EvalContext *ctx, const Attributes *a, const Promise *pp)
+{
+#if defined(HAVE_USERADD)
+    return DoCreateUserUsingUseradd(puser, u, action, ctx, a, pp);
+#elif defined(HAVE_PW)
+    return DoCreateUserUsingPw(puser, u, action, ctx, a, pp);
+#else
+    Log(LOG_LEVEL_WARNING, "Cannot create user, not supported on this platform.");
+    return false;
+#endif
+
+}
+
+#ifdef HAVE_PW
+static bool DoRemoveUserUsingPw (const char *puser, enum cfopaction action)
+{
+    char cmd[CF_BUFSIZE];
+
+    strcpy(cmd, PW);
+
+    StringAppend(cmd, " userdel ", sizeof(cmd));
+    StringAppend(cmd, puser, sizeof(cmd));
+
+    if (action == cfa_warn || DONTDO)
+    {
+        Log(LOG_LEVEL_WARNING, "Need to remove user '%s'.", puser);
+        return false;
+    }
+
+    return ExecuteUserCommand(puser, cmd, sizeof(cmd), "removing", "Removing");
+}
+#endif
+
+#ifdef HAVE_USERDEL
+static bool DoRemoveUserUsingUserdel (const char *puser, enum cfopaction action)
 {
     char cmd[CF_BUFSIZE];
 
@@ -1252,13 +1561,33 @@ static bool DoRemoveUser (const char *puser, enum cfopaction action)
 
     return ExecuteUserCommand(puser, cmd, sizeof(cmd), "removing", "Removing");
 }
+#endif
+
+static bool DoRemoveUser (const char *puser, enum cfopaction action)
+{
+#if defined(HAVE_PW)
+    return DoRemoveUserUsingPw(puser, action);
+#elif defined(HAVE_USERDEL)
+    return DoRemoveUserUsingUserdel(puser, action);
+#else
+    Log(LOG_LEVEL_WARNING, "Removing user '%s' not supported on this platform.", puser);
+    return false;
+#endif
+}
 
 static bool DoModifyUser (const char *puser, const User *u, const struct passwd *passwd_info, uint32_t changemap, enum cfopaction action)
 {
     assert(u != NULL);
     char cmd[CF_BUFSIZE];
 
+#ifdef HAVE_PW
+    strcpy (cmd, PW);
+    StringAppend(cmd, " usermod -n \"", sizeof(cmd));
+    StringAppend(cmd, puser, sizeof(cmd));
+    StringAppend(cmd, "\" ", sizeof(cmd));
+#else
     strcpy (cmd, USERMOD);
+#endif
 
     if (CFUSR_CHECKBIT (changemap, i_uid) != 0)
     {
@@ -1308,9 +1637,10 @@ static bool DoModifyUser (const char *puser, const User *u, const struct passwd 
         StringAppend(cmd, u->shell, sizeof(cmd));
         StringAppend(cmd, "\"", sizeof(cmd));
     }
-
+#ifndef HAVE_PW
     StringAppend(cmd, " ", sizeof(cmd));
     StringAppend(cmd, puser, sizeof(cmd));
+#endif
 
     if (CFUSR_CHECKBIT (changemap, i_password) != 0)
     {
@@ -1387,7 +1717,14 @@ static bool DoModifyUser (const char *puser, const User *u, const struct passwd 
         if (CFUSR_CHECKBIT (changemap, i_groups) != 0)
         {
             // Set real group list (see -G comment earlier).
+#ifdef HAVE_PW
+            strcpy (cmd, PW);
+            StringAppend(cmd, " usermod -n \"", sizeof(cmd));
+            StringAppend(cmd, puser, sizeof(cmd));
+            StringAppend(cmd, "\" ", sizeof(cmd));
+#else
             strcpy(cmd, USERMOD);
+#endif
             StringAppend(cmd, " -G \"", sizeof(cmd));
             char sep[2] = { '\0', '\0' };
             for (Rlist *i = u->groups_secondary; i; i = i->next)
@@ -1396,8 +1733,12 @@ static bool DoModifyUser (const char *puser, const User *u, const struct passwd 
                 StringAppend(cmd, RvalScalarValue(i->val), sizeof(cmd));
                 sep[0] = ',';
             }
+#ifdef HAVE_PW
+            StringAppend(cmd, "\"", sizeof(cmd));
+#else
             StringAppend(cmd, "\" ", sizeof(cmd));
             StringAppend(cmd, puser, sizeof(cmd));
+#endif
             if (!ExecuteUserCommand(puser, cmd, sizeof(cmd), "modifying", "Modifying"))
             {
                 return false;
@@ -1406,6 +1747,44 @@ static bool DoModifyUser (const char *puser, const User *u, const struct passwd 
     }
     return true;
 }
+
+#ifdef __FreeBSD__
+struct passwd *fgetpwent(FILE *stream)
+{
+    if (stream == NULL)
+    {
+        return NULL;
+    }
+
+    struct passwd *pw = NULL;
+    char *line = NULL;
+    size_t linecap = 0;
+    ssize_t linelen;
+    int pwd_scanflag = 0;
+
+    while ((linelen = getline(&line, &linecap, stream)) > 0)
+    {
+        /* Skip comments and empty lines */
+        if (*line == '\n' || *line == '#')
+        {
+            continue;
+        }
+        /* trim latest \n */
+        if (line[linelen - 1 ] == '\n')
+        {
+            line[linelen - 1] = '\0';
+        }
+        pw = pw_scan(line, pwd_scanflag);
+        if (pw != NULL)
+        {
+            break;
+        }
+    }
+    free(line);
+
+    return pw;
+}
+#endif
 
 // Uses fgetpwent() instead of getpwnam(), to guarantee that the returned user
 // is a local user, and not for example from LDAP.
@@ -1427,6 +1806,9 @@ static struct passwd *GetPwEntry(const char *puser)
             found = true;
             break;
         }
+#ifdef __FreeBSD__
+        free(passwd_info);
+#endif
     }
 
     fclose(fptr);
@@ -1513,4 +1895,7 @@ void VerifyOneUsersPromise (const char *puser, const User *u, PromiseResult *res
             *result = PROMISE_RESULT_NOOP;
         }
     }
+#ifdef __FreeBSD__
+    free(passwd_info);
+#endif
 }

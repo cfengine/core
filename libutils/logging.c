@@ -28,6 +28,9 @@
 #include <misc_lib.h>
 #include <cleanup.h>
 
+#ifdef __MINGW32__
+#include <definitions.h>        /* CF_BUFSIZE */
+#endif
 
 char VPREFIX[1024] = ""; /* GLOBAL_C */
 

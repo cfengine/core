@@ -36,8 +36,8 @@
 #include <time.h>          /* time() */
 
 
-static int DBPathLock(const char *filename);
-static void DBPathUnLock(int fd);
+static bool DBPathLock(FileLock *lock, const char *filename);
+static void DBPathUnLock(FileLock *lock);
 static void DBPathMoveBroken(const char *filename);
 
 struct DBHandle_
@@ -386,9 +386,8 @@ bool OpenDBInstance(DBHandle **dbp, dbid id, DBHandle *handle)
         }
         if (handle->refcount == 0)
         {
-            int lock_fd = DBPathLock(handle->filename);
-
-            if(lock_fd != -1)
+            FileLock lock = EMPTY_FILE_LOCK;
+            if (DBPathLock(&lock, handle->filename))
             {
                 handle->priv = DBPrivOpenDB(handle->filename, id);
                 handle->open_tstamp = time(NULL);
@@ -403,7 +402,7 @@ bool OpenDBInstance(DBHandle **dbp, dbid id, DBHandle *handle)
                     }
                 }
 
-                DBPathUnLock(lock_fd);
+                DBPathUnLock(&lock);
             }
 
             if (handle->priv)
@@ -630,7 +629,7 @@ bool DeleteDBCursor(DBCursor *cursor)
     return true;
 }
 
-static int DBPathLock(const char *filename)
+static bool DBPathLock(FileLock *lock, const char *filename)
 {
     char *filename_lock;
     if (xasprintf(&filename_lock, "%s.lock", filename) == -1)
@@ -638,34 +637,21 @@ static int DBPathLock(const char *filename)
         ProgrammingError("Unable to construct lock database filename for file %s", filename);
     }
 
-    int fd = open(filename_lock, O_CREAT | O_RDWR, 0666);
-
-    if(fd == -1)
+    if (ExclusiveFileLockPath(lock, filename_lock, true) != 0)
     {
-        Log(LOG_LEVEL_ERR, "Unable to open database lock file '%s'. (flock: %s)", filename_lock, GetErrorStr());
+        Log(LOG_LEVEL_ERR, "Unable to lock database lock file '%s'.", filename_lock);
         free(filename_lock);
-        return -1;
-    }
-
-    if (ExclusiveLockFile(fd, true) == -1)
-    {
-        Log(LOG_LEVEL_ERR, "Unable to lock database lock file '%s'. (fcntl(F_SETLK): %s)", filename_lock, GetErrorStr());
-        free(filename_lock);
-        close(fd);
-        return -1;
+        return false;
     }
 
     free(filename_lock);
 
-    return fd;
+    return true;
 }
 
-static void DBPathUnLock(int fd)
+static void DBPathUnLock(FileLock *lock)
 {
-    if(ExclusiveUnlockFile(fd) != 0)
-    {
-        Log(LOG_LEVEL_ERR, "Could not close db lock-file. (close: %s)", GetErrorStr());
-    }
+    ExclusiveFileUnlock(lock, true);
 }
 
 static void DBPathMoveBroken(const char *filename)

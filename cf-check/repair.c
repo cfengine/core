@@ -106,24 +106,22 @@ int repair_lmdb_file(const char *file, int fd_tstamp)
     int ret;
     char *dest_file = StringFormat("%s"REPAIR_FILE_EXTENSION, file);
 
-    /* Used to keep track of whether the repair timestamp file was opened
-     * locally. */
-    int local_fd_tstamp = -1;
+    FileLock lock = EMPTY_FILE_LOCK;
     if (fd_tstamp == -1)
     {
         char *tstamp_file = StringFormat("%s.repaired", file);
-        fd_tstamp = safe_open(tstamp_file, O_CREAT|O_RDWR);
+        int lock_ret = ExclusiveFileLockPath(&lock, tstamp_file, true); /* wait=true */
         free(tstamp_file);
-        local_fd_tstamp = fd_tstamp;
-    }
-    if (!ExclusiveLockFileCheck(fd_tstamp) && ExclusiveLockFile(fd_tstamp, true) == -1)
-    {
-        /* Should never happen because we tried to wait for the lock. */
-        Log(LOG_LEVEL_ERR,
-            "Failed to acquire lock for the '%s' DB repair timestamp file",
-            file);
-        ret = -1;
-        goto cleanup;
+        if (lock_ret < 0)
+        {
+            /* Should never happen because we tried to wait for the lock. */
+            Log(LOG_LEVEL_ERR,
+                "Failed to acquire lock for the '%s' DB repair timestamp file",
+                file);
+            ret = -1;
+            goto cleanup;
+        }
+        fd_tstamp = lock.fd;
     }
     pid_t child_pid = fork();
     if (child_pid == 0)
@@ -205,11 +203,9 @@ int repair_lmdb_file(const char *file, int fd_tstamp)
     }
   cleanup:
     free(dest_file);
-    if (local_fd_tstamp != -1)
+    if (lock.fd != -1)
     {
-        /* Also releases file locks on the timestamp file if we opened it
-         * locally. */
-        close(local_fd_tstamp);
+        ExclusiveFileUnlock(&lock, true); /* close=true */
     }
     return ret;
 }

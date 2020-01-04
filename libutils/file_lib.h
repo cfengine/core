@@ -157,4 +157,10 @@ ssize_t CfReadLine(char **buff, size_t *size, FILE *fp);
  */
 const char* GetRelocatedProcdirRoot();
 
+int ExclusiveLockFile(int fd, bool wait);
+bool ExclusiveLockFileCheck(int fd);
+int ExclusiveUnlockFile(int fd);
+int SharedLockFile(int fd, bool wait);
+int SharedUnlockFile(int fd);
+
 #endif

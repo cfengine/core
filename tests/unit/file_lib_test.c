@@ -1530,6 +1530,187 @@ static void test_safe_chmod_chown_fifos(void)
     return_to_test_dir();
 }
 
+static void test_file_locking(void)
+{
+    /* see file_lock_test.c for some more test cases */
+    setup_tempfiles();
+
+    /** TEST CASE 1 -- open, nowait excl. lock, unlock, close **/
+    int fd = open(TEMP_DIR "/" TEST_FILE, O_CREAT | O_RDWR, 0644);
+    FileLock lock = EMPTY_FILE_LOCK;
+    lock.fd = fd;
+
+    /* lock without waiting */
+    assert_int_equal(ExclusiveFileLock(&lock, false), 0);
+
+    /* FD should not be changed */
+    assert_int_equal(lock.fd, fd);
+
+    /* unlock, but keep the FD open */
+    assert_int_equal(ExclusiveFileUnlock(&lock, false), 0);
+
+    /* should be able to close */
+    assert_int_equal(close(lock.fd), 0);
+
+
+    /** TEST CASE 2 -- open, wait excl. lock, unlock+close **/
+    fd = open(TEMP_DIR "/" TEST_FILE, O_CREAT | O_RDWR, 0644);
+    lock.fd = fd;
+
+    /* lock trying to wait */
+    assert_int_equal(ExclusiveFileLock(&lock, true), 0);
+
+    /* FD should not be changed */
+    assert_int_equal(lock.fd, fd);
+
+    /* try to lock again without waiting (we already have the lock so it's a
+     * no-op)*/
+    assert_int_equal(ExclusiveFileLock(&lock, false), 0);
+
+    /* unlock and close the FD */
+    assert_int_equal(ExclusiveFileUnlock(&lock, true), 0);
+
+    /* should be already closed */
+    assert_int_equal(close(lock.fd), -1);
+
+    /* FD should be reset to -1 */
+    assert_int_equal(lock.fd, -1);
+
+
+    /** TEST CASE 3 -- open, wait shared lock, wait excl. lock, unlock, close **/
+    fd = open(TEMP_DIR "/" TEST_FILE, O_CREAT | O_RDWR, 0644);
+    lock.fd = fd;
+
+    /* SHARED lock trying to wait */
+    assert_int_equal(SharedFileLock(&lock, true), 0);
+
+    /* FD should not be changed */
+    assert_int_equal(lock.fd, fd);
+
+    /* we are holding a shared lock so WE should be able to get an exclusive
+     * lock */
+    assert_true(ExclusiveFileLockCheck(&lock));
+
+    /* upgrade the lock to an exclusive one */
+    assert_int_equal(ExclusiveFileLock(&lock, true), 0);
+
+    /* unlock, but keep the FD open */
+    assert_int_equal(ExclusiveFileUnlock(&lock, false), 0);
+
+    /* should be able to close the FD */
+    assert_int_equal(close(lock.fd), 0);
+
+
+    /** TEST CASE 4 -- open, unlock, wait excl. lock, unlock, excl. lock again,
+     *                 unlock+close **/
+    fd = open(TEMP_DIR "/" TEST_FILE, O_CREAT | O_RDWR, 0644);
+    lock.fd = fd;
+
+    /* unlock, but keep the FD open (we are NOT holding the lock so this should
+     * be no-op)*/
+    assert_int_equal(ExclusiveFileUnlock(&lock, false), 0);
+
+    /* FD should not be changed */
+    assert_int_equal(lock.fd, fd);
+
+    /* we should be able to get an exclusive lock */
+    assert_true(ExclusiveFileLockCheck(&lock));
+
+    /* get an exclusive lock */
+    assert_int_equal(ExclusiveFileLock(&lock, true), 0);
+
+    /* unlock, but keep the FD open */
+    assert_int_equal(ExclusiveFileUnlock(&lock, false), 0);
+
+    /* get an exclusive lock again */
+    assert_int_equal(ExclusiveFileLock(&lock, true), 0);
+
+    /* unlock and close the FD */
+    assert_int_equal(ExclusiveFileUnlock(&lock, true), 0);
+
+
+    return_to_test_dir();
+}
+
+static void test_file_locking_with_path(void)
+{
+    /* see file_lock_test.c for some more test cases */
+    setup_tempfiles();
+
+    FileLock lock = EMPTY_FILE_LOCK;
+
+    /** TEST CASE 1 -- nowait excl. lock, unlock, close **/
+    /* lock without waiting */
+    assert_int_equal(ExclusiveFileLockPath(&lock, TEMP_DIR "/" TEST_FILE, false), 0);
+
+    /* FD should be changed */
+    assert_int_not_equal(lock.fd, -1);
+
+    /* unlock, but keep the FD open */
+    assert_int_equal(ExclusiveFileUnlock(&lock, false), 0);
+
+    /* should be able to close */
+    assert_int_equal(close(lock.fd), 0);
+    lock.fd = -1;
+
+
+    /** TEST CASE 2 -- open, wait excl. lock, unlock+close **/
+    /* lock trying to wait */
+    assert_int_equal(ExclusiveFileLockPath(&lock, TEMP_DIR "/" TEST_FILE, true), 0);
+
+    /* FD should be changed */
+    assert_int_not_equal(lock.fd, -1);
+
+    /* try to lock again without waiting (we already have the lock so it's a
+     * no-op)*/
+    assert_int_equal(ExclusiveFileLock(&lock, false), 0);
+
+    /* unlock and close the FD */
+    assert_int_equal(ExclusiveFileUnlock(&lock, true), 0);
+
+    /* should be already closed */
+    assert_int_equal(close(lock.fd), -1);
+
+    /* FD should be reset to -1 */
+    assert_int_equal(lock.fd, -1);
+
+
+    /** TEST CASE 3 -- open, wait shared lock, wait excl. lock, unlock, close **/
+    /* SHARED lock trying to wait */
+    assert_int_equal(SharedFileLockPath(&lock, TEMP_DIR "/" TEST_FILE, true), 0);
+
+    /* FD should be changed */
+    assert_int_not_equal(lock.fd, -1);
+
+    /* we are holding a shared lock so WE should be able to get an exclusive
+     * lock */
+    assert_true(ExclusiveFileLockCheck(&lock));
+
+    /* SharedFileLockPath opens the file as RDONLY. For an exclusive lock, we
+     * need RDWR. */
+    assert_int_equal(ExclusiveFileLock(&lock, true), -1);
+
+    /* upgrade the lock to an exclusive one */
+    FileLock lock2 = EMPTY_FILE_LOCK;
+    assert_int_equal(ExclusiveFileLockPath(&lock2, TEMP_DIR "/" TEST_FILE, true), 0);
+
+    /* unlock, but keep the FD open */
+    assert_int_equal(ExclusiveFileUnlock(&lock, false), 0);
+
+    /* should be able to close both FDs */
+    assert_int_equal(close(lock.fd), 0);
+    lock.fd = -1;
+    assert_int_equal(close(lock2.fd), 0);
+    lock2.fd = -1;
+
+
+    /* TEST CASE 4 -- try to use lock file in non-existing directory */
+    assert_int_equal(ExclusiveFileLockPath(&lock, "non-existing-dir/" TEST_FILE, true), -2);
+
+
+    return_to_test_dir();
+}
+
 static void try_gaining_root_privileges(ARG_UNUSED int argc, char **argv)
 {
     if (system("sudo -n /bin/true") == 0)
@@ -1623,6 +1804,9 @@ int main(int argc, char **argv)
             unit_test(test_symlink_loop),
 
             unit_test(test_safe_chmod_chown_fifos),
+
+            unit_test(test_file_locking),
+            unit_test(test_file_locking_with_path),
 
             unit_test(close_test_dir),
             unit_test(clear_tempfiles),

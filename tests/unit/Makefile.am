@@ -137,6 +137,7 @@ check_PROGRAMS = \
 	package_versions_compare_test \
 	files_lib_test \
 	file_lib_test \
+	file_lock_test \
 	files_copy_test \
 	map_test \
 	parsemode_test \
@@ -365,6 +366,9 @@ file_lib_test_SOURCES = file_lib_test.c \
 	../../libutils/writer.c
 file_lib_test_LDADD = libtest.la
 file_lib_test_CPPFLAGS = $(AM_CPPFLAGS) -DTEST_SYMLINK_ATOMICITY
+
+file_lock_test_SOURCES = file_lock_test.c
+file_lock_test_LDADD = ../../libutils/libutils.la
 
 files_copy_test_SOURCES  = files_copy_test.c
 files_copy_test_LDADD    = libtest.la ../../libpromises/libpromises.la

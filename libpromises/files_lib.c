@@ -658,4 +658,44 @@ void CreateEmptyFile(char *name)
     close(tempfd);
 }
 
-#endif
+#else
+
+int ExclusiveLockFile(int fd, bool wait)
+{
+    OVERLAPPED ol = { 0 };
+    ol.Offset = INT_MAX;
+
+    DWORD flags = LOCKFILE_EXCLUSIVE_LOCK;
+    if (!wait)
+    {
+        flags |= LOCKFILE_FAIL_IMMEDIATELY;
+    }
+
+    HANDLE fh = (HANDLE)_get_osfhandle(fd);
+
+    if (!LockFileEx(fh, flags, 0, 1, 0, &ol))
+    {
+        return -1;
+    }
+
+    return 0;
+}
+
+int ExclusiveUnlockFile(int fd)
+{
+    OVERLAPPED ol = { 0 };
+    ol.Offset = INT_MAX;
+
+    HANDLE fh = (HANDLE)_get_osfhandle(fd);
+
+    if (!UnlockFileEx(fh, 0, 1, 0, &ol))
+    {
+        close(fd);
+        return -1;
+    }
+
+    close(fd);
+    return 0;
+}
+
+#endif  /* !__MINGW32__ */

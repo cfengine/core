@@ -11,7 +11,7 @@ int repair_main(ARG_UNUSED int argc, ARG_UNUSED const char *const *const argv)
     return 1;
 }
 
-int repair_lmdb_default()
+int repair_lmdb_default(ARG_UNUSED bool force)
 {
     Log(LOG_LEVEL_INFO,
         "database repair not available on this platform/build");
@@ -22,6 +22,7 @@ int repair_lmdb_default()
 
 #include <stdio.h>
 #include <errno.h>
+#include <signal.h>
 #include <lmdump.h>
 #include <lmdb.h>
 #include <diagnose.h>
@@ -30,6 +31,7 @@ int repair_lmdb_default()
 #include <utilities.h>
 #include <diagnose.h>
 #include <string_lib.h>
+#include <file_lib.h>
 #include <replicate_lmdb.h>
 
 static void print_usage(void)
@@ -78,13 +80,60 @@ int remove_files(Seq *files)
     return failures;
 }
 
-int repair_lmdb_file(const char *file)
+static bool record_repair_timestamp(int fd_tstamp)
 {
+    time_t this_timestamp = time(NULL);
+    lseek(fd_tstamp, 0, SEEK_SET);
+    ssize_t n_written = write(fd_tstamp, &this_timestamp, sizeof(time_t));
+    if (n_written != sizeof(time_t))
+    {
+        /* should never happen */
+        return false;
+    }
+    return true;
+}
+
+
+/**
+ * @param file      LMDB file to repair
+ * @param fd_tstamp An open FD to the repair timestamp file or -1
+ *
+ * @note If #fd_tstamp != -1 then it is expected to be open and with file locks
+ *       taken care of. If #fd_tstamp == -1, this function opens the repair
+ *       timestamp file on its own and takes care of the file locks.
+ */
+int repair_lmdb_file(const char *file, int fd_tstamp)
+{
+    int ret;
     char *dest_file = StringFormat("%s"REPAIR_FILE_EXTENSION, file);
+
+    FileLock lock = EMPTY_FILE_LOCK;
+    if (fd_tstamp == -1)
+    {
+        char *tstamp_file = StringFormat("%s.repaired", file);
+        int lock_ret = ExclusiveFileLockPath(&lock, tstamp_file, true); /* wait=true */
+        free(tstamp_file);
+        if (lock_ret < 0)
+        {
+            /* Should never happen because we tried to wait for the lock. */
+            Log(LOG_LEVEL_ERR,
+                "Failed to acquire lock for the '%s' DB repair timestamp file",
+                file);
+            ret = -1;
+            goto cleanup;
+        }
+        fd_tstamp = lock.fd;
+    }
     pid_t child_pid = fork();
     if (child_pid == 0)
     {
         /* child */
+        /* The process can receive a SIGBUS signal while trying to read a
+         * corrupted LMDB file. This has a special handling in cf-agent and
+         * other processes, but this child process should just die in case of
+         * SIGBUS (which is then detected by the parent and handled
+         * accordingly).  */
+        signal(SIGBUS, SIG_DFL);
         exit(replicate_lmdb(file, dest_file));
     }
     else
@@ -95,23 +144,48 @@ int repair_lmdb_file(const char *file)
         if (pid != child_pid)
         {
             /* real error that should never happen */
-            return -1;
+            ret = -1;
+            goto cleanup;
         }
         if (WIFEXITED(status) && WEXITSTATUS(status) != CF_CHECK_OK
             && WEXITSTATUS(status) != CF_CHECK_LMDB_CORRUPT_PAGE)
         {
             Log(LOG_LEVEL_ERR, "Failed to repair file '%s', removing", file);
-            unlink(file);
-            free(dest_file);
-            return WEXITSTATUS(status);
+            if (unlink(file) != 0)
+            {
+                Log(LOG_LEVEL_ERR, "Failed to remove file '%s'", file);
+                ret = -1;
+            }
+            else
+            {
+                if (!record_repair_timestamp(fd_tstamp))
+                {
+                    Log(LOG_LEVEL_ERR, "Failed to write the timestamp of repair of the '%s' file",
+                        file);
+                }
+                ret = WEXITSTATUS(status);
+            }
+            goto cleanup;
         }
         else if (WIFSIGNALED(status))
         {
             Log(LOG_LEVEL_ERR, "Failed to repair file '%s', child process signaled (%d), removing",
                 file, WTERMSIG(status));
-            unlink(file);
-            free(dest_file);
-            return signal_to_cf_check_code(WTERMSIG(status));
+            if (unlink(file) != 0)
+            {
+                Log(LOG_LEVEL_ERR, "Failed to remove file '%s'", file);
+                ret = -1;
+            }
+            else
+            {
+                if (!record_repair_timestamp(fd_tstamp))
+                {
+                    Log(LOG_LEVEL_ERR, "Failed to write the timestamp of repair of the '%s' file",
+                        file);
+                }
+                ret = signal_to_cf_check_code(WTERMSIG(status));
+            }
+            goto cleanup;
         }
         else
         {
@@ -123,13 +197,24 @@ int repair_lmdb_file(const char *file)
                     "Failed to replace file '%s' with the repaired copy: %s",
                     file, strerror(errno));
                 unlink(dest_file);
-                free(dest_file);
-                return -1;
+                ret = -1;
+                goto cleanup;
             }
-            free(dest_file);
-            return 0;
+            if (!record_repair_timestamp(fd_tstamp))
+            {
+                Log(LOG_LEVEL_ERR, "Failed to write the timestamp of repair of the '%s' file",
+                    file);
+            }
+            ret = 0;
         }
     }
+  cleanup:
+    free(dest_file);
+    if (lock.fd != -1)
+    {
+        ExclusiveFileUnlock(&lock, true); /* close=true */
+    }
+    return ret;
 }
 
 int repair_lmdb_files(Seq *files, bool force)
@@ -167,7 +252,7 @@ int repair_lmdb_files(Seq *files, bool force)
     for (int i = 0; i < length; ++i)
     {
         const char *file = SeqAt(files, i);
-        if (repair_lmdb_file(file) != 0)
+        if (repair_lmdb_file(file, -1) == -1)
         {
             ret++;
         }
@@ -220,7 +305,7 @@ int repair_main(int argc, const char *const *const argv)
     return ret;
 }
 
-int repair_lmdb_default()
+int repair_lmdb_default(bool force)
 {
     // This function is used by cf-execd and cf-agent, not cf-check
 
@@ -240,7 +325,7 @@ int repair_lmdb_default()
         Log(LOG_LEVEL_INFO, "Skipping local database repair, no lmdb files");
         return 0;
     }
-    const int ret = repair_lmdb_files(files, false);
+    const int ret = repair_lmdb_files(files, force);
     SeqDestroy(files);
 
     if (ret != 0)

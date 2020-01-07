@@ -28,6 +28,9 @@
 #include <misc_lib.h>
 #include <cleanup.h>
 
+#ifdef __MINGW32__
+#include <definitions.h>        /* CF_BUFSIZE */
+#endif
 
 char VPREFIX[1024] = ""; /* GLOBAL_C */
 
@@ -265,6 +268,10 @@ void LogToSystemLog(const char *msg, LogLevel level)
     syslog(LogLevelToSyslogPriority(level), "%s", logmsg);
 }
 
+#endif  /* !__MINGW32__ */
+
+#ifndef __MINGW32__
+
 const char *GetErrorStrFromCode(int error_code)
 {
     return strerror(error_code);
@@ -274,7 +281,35 @@ const char *GetErrorStr(void)
 {
     return strerror(errno);
 }
-#endif
+
+#else
+
+const char *GetErrorStrFromCode(int error_code)
+{
+    static char errbuf[CF_BUFSIZE];
+    int len;
+
+    memset(errbuf, 0, sizeof(errbuf));
+
+    if (FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, error_code,
+                  MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), errbuf, CF_BUFSIZE, NULL))
+    {
+        // remove CRLF from end
+        len = strlen(errbuf);
+        errbuf[len - 2] = errbuf[len - 1] = '\0';
+    } else {
+        strcpy(errbuf, "Unknown error");
+    }
+
+    return errbuf;
+}
+
+const char *GetErrorStr(void)
+{
+    return GetErrorStrFromCode(GetLastError());
+}
+
+#endif  /* !__MINGW32__ */
 
 void VLog(LogLevel level, const char *fmt, va_list ap)
 {

@@ -84,6 +84,7 @@
 #include <string_lib.h>
 #include <cfnet.h>
 #include <repair.h>
+#include <dbm_api.h>                    /* CheckDBRepairFlagFile() */
 #include <sys/types.h>                  /* checking umask on writing setxid log */
 #include <sys/stat.h>                   /* checking umask on writing setxid log */
 
@@ -242,9 +243,10 @@ int main(int argc, char *argv[])
     struct timespec start = BeginMeasure();
 
     GenericAgentConfig *config = CheckOpts(argc, argv);
-    if (PERFORM_DB_CHECK)
+    bool force_repair = CheckDBRepairFlagFile();
+    if (force_repair || PERFORM_DB_CHECK)
     {
-        repair_lmdb_default();
+        repair_lmdb_default(force_repair);
     }
     EvalContext *ctx = EvalContextNew();
 

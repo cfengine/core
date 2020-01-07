@@ -35,6 +35,8 @@
 
 #ifndef __MINGW32__
 #include <glob.h>
+#else
+#include <windows.h>            /* LockFileEx and friends */
 #endif
 
 #define SYMLINK_MAX_DEPTH 32
@@ -1488,4 +1490,262 @@ const char* GetRelocatedProcdirRoot()
     }
 
     return procdir;
+}
+
+#if !defined(__MINGW32__)
+
+static int LockFD(int fd, short int lock_type, bool wait)
+{
+    struct flock lock_spec = {
+        .l_type = lock_type,
+        .l_whence = SEEK_SET,
+        .l_start = 0, /* start of the region to which the lock applies */
+        .l_len = 0    /* till EOF */
+    };
+
+    if (wait)
+    {
+        while (fcntl(fd, F_SETLKW, &lock_spec) == -1)
+        {
+            if (errno != EINTR)
+            {
+                Log(LOG_LEVEL_DEBUG, "Failed to acquire file lock for FD %d: %s",
+                    fd, GetErrorStr());
+                return -1;
+            }
+        }
+        return 0;
+    }
+    else
+    {
+        if (fcntl(fd, F_SETLK, &lock_spec) == -1)
+        {
+            Log(LOG_LEVEL_DEBUG, "Failed to acquire file lock for FD %d: %s",
+                fd, GetErrorStr());
+            return -1;
+        }
+        /* else */
+        return 0;
+    }
+}
+
+static int UnlockFD(int fd)
+{
+    struct flock lock_spec = {
+        .l_type = F_UNLCK,
+        .l_whence = SEEK_SET,
+        .l_start = 0, /* start of the region to which the lock applies */
+        .l_len = 0    /* till EOF */
+    };
+
+    if (fcntl(fd, F_SETLK, &lock_spec) == -1)
+    {
+        Log(LOG_LEVEL_DEBUG, "Failed to release file lock for FD %d: %s",
+            fd, GetErrorStr());
+        return -1;
+    }
+    /* else */
+    return 0;
+}
+
+int ExclusiveFileLock(FileLock *lock, bool wait)
+{
+    assert(lock != NULL);
+    assert(lock->fd >= 0);
+
+    return LockFD(lock->fd, F_WRLCK, wait);
+}
+
+int SharedFileLock(FileLock *lock, bool wait)
+{
+    assert(lock != NULL);
+    assert(lock->fd >= 0);
+
+    return LockFD(lock->fd, F_RDLCK, wait);
+}
+
+bool ExclusiveFileLockCheck(FileLock *lock)
+{
+    assert(lock != NULL);
+    assert(lock->fd >= 0);
+
+    struct flock lock_spec = {
+        .l_type = F_WRLCK,
+        .l_whence = SEEK_SET,
+        .l_start = 0, /* start of the region to which the lock applies */
+        .l_len = 0    /* till EOF */
+    };
+    if (fcntl(lock->fd, F_GETLK, &lock_spec) == -1)
+    {
+        /* should never happen */
+        Log(LOG_LEVEL_ERR, "Error when checking locks on FD %d", lock->fd);
+        return false;
+    }
+    return (lock_spec.l_type == F_UNLCK);
+}
+
+int ExclusiveFileUnlock(FileLock *lock, bool close_fd)
+{
+    assert(lock != NULL);
+    assert(lock->fd >= 0);
+
+    if (close_fd)
+    {
+        /* also releases the lock */
+        int ret = close(lock->fd);
+        if (ret != 0)
+        {
+            Log(LOG_LEVEL_ERR, "Failed to close lock file with FD %d: %s",
+                lock->fd, GetErrorStr());
+            lock->fd = -1;
+            return -1;
+        }
+        /* else*/
+        lock->fd = -1;
+        return 0;
+    }
+    else
+    {
+        return UnlockFD(lock->fd);
+    }
+}
+
+int SharedFileUnlock(FileLock *lock, bool close_fd)
+{
+    assert(lock != NULL);
+    assert(lock->fd >= 0);
+
+    /* unlocking is the same for both kinds of locks */
+    return ExclusiveFileUnlock(lock, close_fd);
+}
+
+#else  /* __MINGW32__ */
+
+static int LockFD(int fd, DWORD flags, bool wait)
+{
+    OVERLAPPED ol = { 0 };
+    ol.Offset = INT_MAX;
+
+    if (!wait)
+    {
+        flags |= LOCKFILE_FAIL_IMMEDIATELY;
+    }
+
+    HANDLE fh = (HANDLE)_get_osfhandle(fd);
+
+    if (!LockFileEx(fh, flags, 0, 1, 0, &ol))
+    {
+        Log(LOG_LEVEL_DEBUG, "Failed to acquire file lock for FD %d: %s",
+            fd, GetErrorStr());
+        return -1;
+    }
+
+    return 0;
+}
+
+int ExclusiveFileLock(FileLock *lock, bool wait)
+{
+    assert(lock != NULL);
+    assert(lock->fd >= 0);
+
+    return LockFD(lock->fd, LOCKFILE_EXCLUSIVE_LOCK, wait);
+}
+
+int SharedFileLock(FileLock *lock, bool wait)
+{
+    assert(lock != NULL);
+    assert(lock->fd >= 0);
+
+    return LockFD(lock->fd, 0, wait);
+}
+
+static int UnlockFD(int fd)
+{
+    OVERLAPPED ol = { 0 };
+    ol.Offset = INT_MAX;
+
+    HANDLE fh = (HANDLE)_get_osfhandle(fd);
+
+    if (!UnlockFileEx(fh, 0, 1, 0, &ol))
+    {
+        Log(LOG_LEVEL_DEBUG, "Failed to release file lock for FD %d: %s",
+            fd, GetErrorStr());
+        return -1;
+    }
+
+    return 0;
+}
+
+bool ExclusiveFileLockCheck(FileLock *lock)
+{
+    /* XXX: there seems to be no way to check if the current process is holding
+     * a lock on a file */
+    return false;
+}
+
+int ExclusiveFileUnlock(FileLock *lock, bool close_fd)
+{
+    assert(lock != NULL);
+    assert(lock->fd >= 0);
+
+    int ret = UnlockFD(lock->fd);
+    if (close_fd)
+    {
+        close(lock->fd);
+        lock->fd = -1;
+    }
+    return ret;
+}
+
+int SharedFileUnlock(FileLock *lock, bool close_fd)
+{
+    assert(lock != NULL);
+    assert(lock->fd >= 0);
+
+    /* unlocking is the same for both kinds of locks */
+    return ExclusiveFileUnlock(lock, close_fd);
+}
+
+#endif  /* __MINGW32__ */
+
+int ExclusiveFileLockPath(FileLock *lock, const char *fpath, bool wait)
+{
+    assert(lock != NULL);
+    assert(lock->fd < 0);
+
+    int fd = safe_open(fpath, O_CREAT|O_RDWR, 0600);
+    if (fd < 0)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to open '%s' for locking", fpath);
+        return -2;
+    }
+
+    lock->fd = fd;
+    int ret = ExclusiveFileLock(lock, wait);
+    if (ret != 0)
+    {
+        lock->fd = -1;
+    }
+    return ret;
+}
+
+int SharedFileLockPath(FileLock *lock, const char *fpath, bool wait)
+{
+    assert(lock != NULL);
+    assert(lock->fd < 0);
+
+    int fd = safe_open(fpath, O_CREAT|O_RDONLY, 0600);
+    if (fd < 0)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to open '%s' for locking", fpath);
+        return -2;
+    }
+
+    lock->fd = fd;
+    int ret = SharedFileLock(lock, wait);
+    if (ret != 0)
+    {
+        lock->fd = -1;
+    }
+    return ret;
 }

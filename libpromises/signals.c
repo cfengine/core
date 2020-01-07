@@ -24,6 +24,8 @@
 
 #include <signals.h>
 #include <cleanup.h>
+#include <known_dirs.h>         /* GetStateDir() */
+#include <file_lib.h>           /* FILE_SEPARATOR */
 
 static bool PENDING_TERMINATION = false; /* GLOBAL_X */
 
@@ -149,6 +151,27 @@ void HandleSignalsForAgent(int signum)
         /* TODO don't exit from the signal handler, just set a flag. Reason is
          * that all the cleanup() hooks we register are not reentrant. */
         DoCleanupAndExit(0);
+    case SIGBUS:
+        /* SIGBUS almost certainly means a violation of mmap() area boundaries
+         * or some mis-aligned memory access. IOW, an LMDB corruption. */
+        {
+            char filename[PATH_MAX] = { 0 }; /* trying to avoid memory allocation */
+            xsnprintf(filename, PATH_MAX, "%s%c%s",
+                      GetStateDir(), FILE_SEPARATOR, CF_DB_REPAIR_TRIGGER);
+            int fd = open(filename, O_CREAT|O_RDWR, S_IRUSR|S_IWUSR);
+            if (fd != -1)
+            {
+                close(fd);
+            }
+
+            /* avoid calling complex logging functions */
+            fprintf(stdout, "process killed by SIGBUS\n");
+
+            /* else: we tried, nothing more to do in the limited environment of a
+             * signal handler */
+            _exit(1);
+        }
+        break;
     case SIGUSR1:
         LogSetGlobalLevel(LOG_LEVEL_DEBUG);
         break;
@@ -177,6 +200,27 @@ void HandleSignalsForDaemon(int signum)
     case SIGSEGV:
     case SIGKILL:
         PENDING_TERMINATION = true;
+        break;
+    case SIGBUS:
+        /* SIGBUS almost certainly means a violation of mmap() area boundaries
+         * or some mis-aligned memory access. IOW, an LMDB corruption. */
+        {
+            char filename[PATH_MAX] = { 0 }; /* trying to avoid memory allocation */
+            xsnprintf(filename, PATH_MAX, "%s%c%s",
+                      GetStateDir(), FILE_SEPARATOR, CF_DB_REPAIR_TRIGGER);
+            int fd = open(filename, O_CREAT|O_RDWR, S_IRUSR|S_IWUSR);
+            if (fd != -1)
+            {
+                close(fd);
+            }
+
+            /* avoid calling complex logging functions */
+            fprintf(stdout, "process killed by SIGBUS\n");
+
+            /* else: we tried, nothing more to do in the limited environment of a
+             * signal handler */
+            _exit(1);
+        }
         break;
     case SIGUSR1:
         LogSetGlobalLevel(LOG_LEVEL_DEBUG);

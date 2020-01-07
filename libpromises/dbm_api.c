@@ -36,8 +36,8 @@
 #include <time.h>          /* time() */
 
 
-static int DBPathLock(const char *filename);
-static void DBPathUnLock(int fd);
+static bool DBPathLock(FileLock *lock, const char *filename);
+static void DBPathUnLock(FileLock *lock);
 static void DBPathMoveBroken(const char *filename);
 
 struct DBHandle_
@@ -59,6 +59,11 @@ struct DBHandle_
     /* Record when the DB was opened (to check if possible corruptions are
      * already repaired) */
     time_t open_tstamp;
+
+    /**
+     * @see FreezeDB()
+     */
+    bool frozen;
 };
 
 struct DBCursor_
@@ -275,6 +280,14 @@ void CloseDBInstance(DBHandle *handle)
     /* Wait until all DB users are served, or a threshold is reached */
     int count = 0;
     ThreadLock(&handle->lock);
+    if (handle->frozen)
+    {
+        /* Just clean some allocated memory, but don't touch the DB itself. */
+        free(handle->filename);
+        free(handle->subname);
+        ThreadUnlock(&handle->lock);
+        return;
+    }
     while (handle->refcount > 0 && count < 1000)
     {
         ThreadUnlock(&handle->lock);
@@ -365,11 +378,16 @@ bool OpenDBInstance(DBHandle **dbp, dbid id, DBHandle *handle)
 {
     if (ThreadLock(&handle->lock))
     {
+        if (handle->frozen)
+        {
+            Log(LOG_LEVEL_WARNING, "Attempt to open a frozen DB '%s'", handle->filename);
+            ThreadUnlock(&handle->lock);
+            return false;
+        }
         if (handle->refcount == 0)
         {
-            int lock_fd = DBPathLock(handle->filename);
-
-            if(lock_fd != -1)
+            FileLock lock = EMPTY_FILE_LOCK;
+            if (DBPathLock(&lock, handle->filename))
             {
                 handle->priv = DBPrivOpenDB(handle->filename, id);
                 handle->open_tstamp = time(NULL);
@@ -384,7 +402,7 @@ bool OpenDBInstance(DBHandle **dbp, dbid id, DBHandle *handle)
                     }
                 }
 
-                DBPathUnLock(lock_fd);
+                DBPathUnLock(&lock);
             }
 
             if (handle->priv)
@@ -469,6 +487,15 @@ void CloseDB(DBHandle *handle)
      * DB behaviour becomes erratic otherwise (CFE-1996). */
     if (ThreadLock(&handle->lock))
     {
+        if (handle->frozen)
+        {
+            /* Just clean some allocated memory, but don't touch the DB itself. */
+            free(handle->filename);
+            free(handle->subname);
+            ThreadUnlock(&handle->lock);
+            return;
+        }
+
         DBPrivCommit(handle->priv);
 
         if (handle->refcount < 1)
@@ -496,11 +523,30 @@ bool CleanDB(DBHandle *handle)
     bool ret = false;
     if (ThreadLock(&handle->lock))
     {
+        if (handle->frozen)
+        {
+            Log(LOG_LEVEL_WARNING, "Attempt to clean a frozen DB '%s'", handle->filename);
+            ThreadUnlock(&handle->lock);
+            return false;
+        }
         ret = DBPrivClean(handle->priv);
-
         ThreadUnlock(&handle->lock);
     }
     return ret;
+}
+
+/**
+ * Freezes the DB so that it is never touched by this process again. In
+ * particular, new OpenDB() calls are ignored and CloseAllDBExit() also ignores
+ * the DB.
+ */
+void FreezeDB(DBHandle *handle)
+{
+    /* This is intentionally NOT using the handle->lock to avoid deadlocks.
+     * Nothing ever sets this to 'false' explicitly, that's only done in the
+     * initialization with '{ { 0 } }', so this bit-flip is safe. */
+    Log(LOG_LEVEL_NOTICE, "Freezing the DB '%s'", handle->filename);
+    handle->frozen = true;
 }
 
 /*****************************************************************************/
@@ -583,7 +629,7 @@ bool DeleteDBCursor(DBCursor *cursor)
     return true;
 }
 
-static int DBPathLock(const char *filename)
+static bool DBPathLock(FileLock *lock, const char *filename)
 {
     char *filename_lock;
     if (xasprintf(&filename_lock, "%s.lock", filename) == -1)
@@ -591,34 +637,21 @@ static int DBPathLock(const char *filename)
         ProgrammingError("Unable to construct lock database filename for file %s", filename);
     }
 
-    int fd = open(filename_lock, O_CREAT | O_RDWR, 0666);
-
-    if(fd == -1)
+    if (ExclusiveFileLockPath(lock, filename_lock, true) != 0)
     {
-        Log(LOG_LEVEL_ERR, "Unable to open database lock file '%s'. (flock: %s)", filename_lock, GetErrorStr());
+        Log(LOG_LEVEL_ERR, "Unable to lock database lock file '%s'.", filename_lock);
         free(filename_lock);
-        return -1;
-    }
-
-    if (ExclusiveLockFile(fd, true) == -1)
-    {
-        Log(LOG_LEVEL_ERR, "Unable to lock database lock file '%s'. (fcntl(F_SETLK): %s)", filename_lock, GetErrorStr());
-        free(filename_lock);
-        close(fd);
-        return -1;
+        return false;
     }
 
     free(filename_lock);
 
-    return fd;
+    return true;
 }
 
-static void DBPathUnLock(int fd)
+static void DBPathUnLock(FileLock *lock)
 {
-    if(ExclusiveUnlockFile(fd) != 0)
-    {
-        Log(LOG_LEVEL_ERR, "Could not close db lock-file. (close: %s)", GetErrorStr());
-    }
+    ExclusiveFileUnlock(lock, true);
 }
 
 static void DBPathMoveBroken(const char *filename)
@@ -682,4 +715,30 @@ StringMap *LoadDatabaseToStringMap(dbid database_id)
     CloseDB(db_conn);
 
     return db_map;
+}
+
+/**
+ * Checks if a DB repair flag file is present and if it is, removes it.
+ *
+ * @return Whether the DB repair flag file was present or not.
+ */
+bool CheckDBRepairFlagFile()
+{
+    /* The DB repair flag file can be created by user or by some process
+     * that hit an error condition potentially caused by local DB corruption
+     * that it was not able to handle properly by repairing the corrupted DB
+     * file(s). For example, if a process is killed by a signal. */
+    char repair_flag_file[PATH_MAX] = { 0 };
+    bool present = false;
+    xsnprintf(repair_flag_file, PATH_MAX, "%s%c%s",
+              GetStateDir(), FILE_SEPARATOR, CF_DB_REPAIR_TRIGGER);
+    /* This is full of race-conditions, but it's just a best-effort
+     * thing. If a force-repair is missed, it will happen next time. If it's
+     * done twice, no big deal. */
+    if (access(repair_flag_file, F_OK) == 0)
+    {
+        present = true;
+        unlink(repair_flag_file);
+    }
+    return present;
 }

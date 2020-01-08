@@ -254,6 +254,34 @@ static char opposite(char c)
 }
 
 /**
+ * Find the closing parenthesis for #c in #s. #c is considered to *not* be part
+ * of #s (IOW, #s is considered to be a string after #c).
+ *
+ * @return A closing parenthesis for #c in #s or %NULL if not found
+ */
+static char *FindClosingParen(char *s, char c)
+{
+    char closing = opposite(c);
+    int counter = 0;
+    for (char *cur=s; *cur != '\0'; cur++)
+    {
+        if (*cur == closing)
+        {
+            if (counter == 0)
+            {
+                return cur;
+            }
+            counter--;
+        }
+        if (*cur == c)
+        {
+            counter++;
+        }
+    }
+    return NULL;
+}
+
+/**
  * Check if variable reference is mangled, while avoiding going into the inner
  * variables that are being expanded, or into array indexes.
  *
@@ -490,9 +518,14 @@ static char *ProcessVar(PromiseIterator *iterctx, const EvalContext *evalctx,
     assert(s != NULL);
     assert(c == '(' || c == '{');
 
-    char closing_paren   = opposite(c);
-    char *s_end    = strchrnul(s, closing_paren);
+    char *s_end = FindClosingParen(s, c);
     const size_t s_max = strlen(s);
+    if (s_end == NULL)
+    {
+        /* Set s_end to the point to the NUL byte if no closing parenthesis was
+         * found. It's used for comparisons and other things below. */
+        s_end = s + s_max;
+    }
     char *next_var = s + FindDollarParen(s, s_max);
     size_t deps    = 0;
 
@@ -523,7 +556,13 @@ static char *ProcessVar(PromiseIterator *iterctx, const EvalContext *evalctx,
             /* We are sure (subvar_end+1) is not out of bounds. */
             char *s_next = subvar_end + 1;
             const size_t s_next_len = strlen(s_next);
-            s_end    = strchrnul(s_next, closing_paren);
+            s_end    = FindClosingParen(s_next, c);
+            if (s_end == NULL)
+            {
+                /* Set s_end to the point to the NUL byte if no closing parenthesis was
+                 * found. It's used for comparisons and other things below. */
+                s_end = s_next + s_next_len;
+            }
             next_var = s_next + FindDollarParen(s_next, s_next_len);
         }
     }
@@ -576,7 +615,7 @@ static char *ProcessVar(PromiseIterator *iterctx, const EvalContext *evalctx,
     }
 
     assert(s_end != NULL);
-    assert(*s_end == closing_paren);
+    assert(*s_end == opposite(c));
     return s_end;
 }
 

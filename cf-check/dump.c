@@ -49,9 +49,14 @@ static void print_json_string(
     {
         const size_t len = strnlen(data, size);
 
-        // Unfortunately, the packages_installed_apt_get.lmdb database
-        // has unterminated strings:
-        assert((size == 1) || (len == (size - 1)) || (data[size - 1] == '\n'));
+        // We expect the data to either be single byte ("0" or "1"),
+        // or a C-string
+        bool known_data = ((size == 1) || (len == (size - 1)) || (data[size - 1] == '\n'));
+        if (!known_data)
+        {
+            printf("\nError: This database contains unknown binary data - use --simple to print anyway\n");
+            exit(1);
+        }
 
         // Most of what we store are C strings except 1 byte '0' or '1',
         // and some structs. So in nice mode, we try to default to printing

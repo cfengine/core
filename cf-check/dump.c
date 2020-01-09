@@ -288,6 +288,25 @@ static void print_struct_or_string(
         {
             print_struct_persistent_class(value, strip_strings);
         }
+        else if (StringEndsWith(file, "nova_agent_execution.lmdb"))
+        {
+            if (StringSafeEqual(key.mv_data, "delta_gavr"))
+            {
+                assert(sizeof(double) == value.mv_size);
+                const double *const average = value.mv_data;
+                printf("%f", *average);
+            }
+            else if (StringSafeEqual(key.mv_data, "last_exec"))
+            {
+                assert(sizeof(time_t) == value.mv_size);
+                const time_t *const last_exec = value.mv_data;
+                printf("%ju", (uintmax_t) (*last_exec));
+            }
+            else
+            {
+                debug_abort_if_reached();
+            }
+        }
         else
         {
             print_json_string(value.mv_data, value.mv_size, strip_strings);

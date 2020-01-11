@@ -363,11 +363,11 @@ static void ConfigureBootstrap(GenericAgentConfig *config, const char *argument)
         return;
     }
 
-    if(IsLoopbackAddress(argument))
-    {
-        Log(LOG_LEVEL_ERR, "Cannot bootstrap to a loopback address");
-        DoCleanupAndExit(EXIT_FAILURE);
-    }
+//    if(IsLoopbackAddress(argument))
+//    {
+//        Log(LOG_LEVEL_ERR, "Cannot bootstrap to a loopback address");
+//        DoCleanupAndExit(EXIT_FAILURE);
+//    }
 
     // temporary assure that network functions are working
     OpenNetwork();

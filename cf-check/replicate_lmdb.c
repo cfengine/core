@@ -4,7 +4,7 @@
 #include <string_lib.h>
 
 #ifndef LMDB
-int replicate_lmdb(const char *s_file, const char *d_file)
+int replicate_lmdb(ARG_UNUSED const char *s_file, ARG_UNUSED const char *d_file)
 {
     Log(LOG_LEVEL_ERR, "Database replication only available for LMDB");
     return 1;

@@ -1,0 +1,41 @@
+###########################################################
+#
+# Test that a variable reference with nested parentheses works
+#
+###########################################################
+
+body common control
+{
+    inputs => { "../../default.cf.sub" };
+    bundlesequence => { default($(this.promise_filename)) };
+    version => "1.0";
+}
+
+###########################################################
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-3242" }
+        string => "Test that a variable reference with nested parentheses works";
+
+  vars:
+      "my_array[key(1)]" string => "value";
+      "value" string => "$(my_array[key(1)])";
+}
+
+###########################################################
+
+bundle agent check
+{
+  classes:
+      "ok" and => { isvariable( "test.value" ),
+                    strcmp( "$(test.value)", "value")
+      };
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

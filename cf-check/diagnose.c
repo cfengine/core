@@ -4,7 +4,8 @@
 
 #if defined(__MINGW32__) || !defined(LMDB)
 
-int diagnose_main(ARG_UNUSED int argc, ARG_UNUSED const char *const *const argv)
+int diagnose_main(
+    ARG_UNUSED int argc, ARG_UNUSED const char *const *const argv)
 {
     Log(LOG_LEVEL_ERR,
         "cf-check diagnose not available on this platform/build");
@@ -277,8 +278,9 @@ static int fork_and_diagnose(const char *path)
 
 /**
  * @param[in]  filenames  DB files to diagnose/check
- * @param[out] corrupt    place to store the resulting sequence of corrupted files
- *                        or %NULL (to only get the number of corrupted files)
+ * @param[out] corrupt    place to store the resulting sequence of corrupted
+ *                        files or %NULL (to only get the number of corrupted
+ *                        files)
  * @param[in]  foreground whether to run in foreground or fork (safer)
  * @return                the number of the corrupted files
  */

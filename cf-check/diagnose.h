@@ -3,6 +3,13 @@
 
 #include <sequence.h>
 
+// Extensions of the errno range, for mixing with lmdb
+// and operating system error codes
+#define CF_CHECK_ERRNO_VALIDATE_FAILED -1
+
+// cf-check has one canonical list of error codes
+// which combines signals, system errno, lmdb errnos and
+// cf-check specific errors:
 // clang-format off
 #define CF_CHECK_RUN_CODES(macro)                         \
     macro(OK)                                             \
@@ -60,6 +67,7 @@
     macro(PID_ERROR)                                      \
     macro(PERMISSION_ERROR)                               \
     macro(DOES_NOT_EXIST)                                 \
+    macro(VALIDATE_FAILED)                                \
     macro(UNKNOWN)
 
 #define CF_CHECK_MAX CF_CHECK_UNKNOWN
@@ -74,7 +82,9 @@ typedef enum {
 
 int lmdb_errno_to_cf_check_code(int r);
 int signal_to_cf_check_code(int sig);
-size_t diagnose_files(const Seq *filenames, Seq **corrupt, bool foreground);
+
+size_t diagnose_files(
+    const Seq *filenames, Seq **corrupt, bool foreground, bool validate);
 int diagnose_main(int argc, const char *const *argv);
 
 #endif

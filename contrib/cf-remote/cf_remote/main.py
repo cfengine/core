@@ -124,8 +124,7 @@ def run_command_with_args(command, args):
             args.role = args.role[:-1]
         commands.spawn(args.platform, args.count, args.role, args.name)
     elif command == "destroy":
-        # args.name is a list because of 'nargs=1'
-        group_name = args.name[0] if args.name else None
+        group_name = args.name if args.name else None
         commands.destroy(group_name)
     else:
         user_error("Unknown command: '{}'".format(command))

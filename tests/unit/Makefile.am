@@ -91,6 +91,7 @@ libdb_la_SOURCES = db_stubs.c \
 	../../cf-check/lmdump.c \
 	../../cf-check/repair.c \
 	../../cf-check/replicate_lmdb.c \
+	../../cf-check/validate.c \
 	../../cf-check/utilities.c
 
 if HPUX

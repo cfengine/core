@@ -1,3 +1,4 @@
+import os
 import sys
 import fabric
 from paramiko.ssh_exception import AuthenticationException
@@ -24,7 +25,12 @@ def connect(host, users=None):
     for user in users:
         try:
             log.debug("Attempting ssh: {}@{}".format(user, host))
-            c = fabric.Connection(host=host, user=user)
+            connect_kwargs = {}
+            key = os.getenv("CF_REMOTE_SSH_KEY")
+            if key:
+                connect_kwargs["key_filename"] = os.path.expanduser(key)
+            c = fabric.Connection(
+                host=host, user=user, connect_kwargs=connect_kwargs)
             c.ssh_user = user
             c.ssh_host = host
             c.run("whoami", hide=True)

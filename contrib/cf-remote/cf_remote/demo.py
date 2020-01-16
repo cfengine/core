@@ -45,7 +45,8 @@ def def_json(call_collect=False):
                     "::/0"],
             "default_data_select_host_monitoring_include": [".*"],
             "default_data_select_policy_hub_monitoring_include": [".*"],
-            "control_executor_splaytime": "1"
+            "control_executor_splaytime": "1",
+            "control_executor_schedule": ["any"]
         }
     }
 

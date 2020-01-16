@@ -4,7 +4,8 @@
 
 #if defined(__MINGW32__) || !defined(LMDB)
 
-int diagnose_main(ARG_UNUSED int argc, ARG_UNUSED const char *const *const argv)
+int diagnose_main(
+    ARG_UNUSED int argc, ARG_UNUSED const char *const *const argv)
 {
     Log(LOG_LEVEL_ERR,
         "cf-check diagnose not available on this platform/build");
@@ -12,7 +13,10 @@ int diagnose_main(ARG_UNUSED int argc, ARG_UNUSED const char *const *const argv)
 }
 
 size_t diagnose_files(
-    ARG_UNUSED const Seq *filenames, ARG_UNUSED Seq **corrupt, bool foreground)
+    ARG_UNUSED const Seq *filenames,
+    ARG_UNUSED Seq **corrupt,
+    ARG_UNUSED bool foreground,
+    ARG_UNUSED bool validate)
 {
     Log(LOG_LEVEL_INFO,
         "database diagnosis not available on this platform/build");
@@ -31,6 +35,7 @@ size_t diagnose_files(
 #include <alloc.h>
 #include <string_lib.h>
 #include <unistd.h>
+#include <validate.h>
 
 #define CF_CHECK_CREATE_STRING(name) \
   #name,
@@ -223,10 +228,19 @@ int lmdb_errno_to_cf_check_code(int r)
     return s;
 }
 
-static int diagnose(const char *path, bool temporary_redirect)
+static int diagnose(const char *path, bool temporary_redirect, bool validate)
 {
+    // At this point we are already forked, we just need to decide 2 things:
+    // * Should output be redirected (to prevent spam)?
+    // * Which inner diagnose / validation function should be called?
     int ret;
-    if (temporary_redirect)
+    if (validate)
+    {
+        // --validate has meaningful output, so we don't want to redirect
+        // regardless of whether it's foreground or forked.
+        ret = CFCheck_Validate(path);
+    }
+    else if (temporary_redirect)
     {
         // --no-fork mode: temporarily redirect output to /dev/null & restore
         // Only done when necessary as it might not be so portable (/dev/fd)
@@ -256,13 +270,13 @@ static int diagnose(const char *path, bool temporary_redirect)
     return ret;
 }
 
-static int fork_and_diagnose(const char *path)
+static int fork_and_diagnose(const char *path, bool validate)
 {
     const pid_t child_pid = fork();
     if (child_pid == 0)
     {
         // Child
-        exit(diagnose(path, false));
+        exit(diagnose(path, false, validate));
     }
     else
     {
@@ -287,12 +301,14 @@ static int fork_and_diagnose(const char *path)
 
 /**
  * @param[in]  filenames  DB files to diagnose/check
- * @param[out] corrupt    place to store the resulting sequence of corrupted files
- *                        or %NULL (to only get the number of corrupted files)
+ * @param[out] corrupt    place to store the resulting sequence of corrupted
+ *                        files or %NULL (to only get the number of corrupted
+ *                        files)
  * @param[in]  foreground whether to run in foreground or fork (safer)
  * @return                the number of the corrupted files
  */
-size_t diagnose_files(const Seq *filenames, Seq **corrupt, bool foreground)
+size_t diagnose_files(
+    const Seq *filenames, Seq **corrupt, bool foreground, bool validate)
 {
     size_t corruptions = 0;
     const size_t length = SeqLength(filenames);
@@ -308,11 +324,12 @@ size_t diagnose_files(const Seq *filenames, Seq **corrupt, bool foreground)
         int r;
         if (foreground)
         {
-            r = lmdb_errno_to_cf_check_code(diagnose(filename, true));
+            r = lmdb_errno_to_cf_check_code(
+                diagnose(filename, true, validate));
         }
         else
         {
-            r = fork_and_diagnose(filename);
+            r = fork_and_diagnose(filename, validate);
         }
         Log(LOG_LEVEL_INFO,
             "Status of '%s': %s\n",
@@ -346,11 +363,25 @@ int diagnose_main(int argc, const char *const *const argv)
 {
     size_t offset = 1;
     bool foreground = false;
-    if (StringSafeEqual(argv[1], "--no-fork")
-        || StringSafeEqual(argv[1], "-F"))
+    bool validate = false;
+    for (int i = offset; i < argc && argv[i][0] == '-'; ++i)
     {
-        foreground = true;
-        offset += 1;
+        if (StringMatchesOption(argv[i], "--no-fork", "-F"))
+        {
+            foreground = true;
+            offset += 1;
+        }
+        else if (StringMatchesOption(argv[i], "--validate", "-v"))
+        {
+            validate = true;
+            offset += 1;
+        }
+        else
+        {
+            assert(argv[i][0] == '-'); // For-loop condition
+            Log(LOG_LEVEL_ERR, "Unrecognized option: '%s'", argv[i]);
+            return 2;
+        }
     }
     Seq *files = argv_to_lmdb_files(argc, argv, offset);
     if (files == NULL || SeqLength(files) == 0)
@@ -358,7 +389,7 @@ int diagnose_main(int argc, const char *const *const argv)
         Log(LOG_LEVEL_ERR, "No database files to diagnose");
         return 1;
     }
-    const int ret = diagnose_files(files, NULL, foreground);
+    const int ret = diagnose_files(files, NULL, foreground, validate);
     SeqDestroy(files);
     return ret;
 }

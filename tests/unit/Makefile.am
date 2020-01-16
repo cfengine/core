@@ -92,6 +92,7 @@ libdb_la_SOURCES = db_stubs.c \
 	../../cf-check/repair.c \
 	../../cf-check/replicate_lmdb.c \
 	../../cf-check/utilities.c \
+	../../cf-check/validate.c \
 	../../libntech/libutils/logging.c \
 	../../libntech/libutils/mutex.c \
 	../../libntech/libutils/cleanup.c

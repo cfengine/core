@@ -104,7 +104,7 @@ static const char *const HINTS[] =
     "Show lastseen hostnames and IP addresses",
     "Don't truncate -s / --show-hosts output",
     "Remove keys for specified hostname/IP/MD5/SHA (cf-key -r SHA=12345, cf-key -r MD5=12345, cf-key -r host001, cf-key -r 203.0.113.1)",
-    "Force removal of keys (USE AT YOUR OWN RISK)",
+    "Force removal of keys",
     "Install license file on Enterprise server (CFEngine Enterprise Only)",
     "Print digest of the specified public key",
     "Make cf-serverd/cf-agent trust the specified public key. Argument value is of the form [[USER@]IPADDR:]FILENAME where FILENAME is the local path of the public key for client at IPADDR address.",

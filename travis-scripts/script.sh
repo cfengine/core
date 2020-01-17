@@ -19,9 +19,7 @@ INSTDIR=$HOME/cf_install
 # fi
 
 # Unshallow the clone. Fetch the tags from upstream even if we are on a
-# foreign clone. Needed for determine-version.py to work, specifically
-# `git describe --tags HEAD` was failing once the last tagged commit
-# became too old.
+# foreign clone. Needed for determine-version.sh to work.
 git fetch --unshallow
 git remote add upstream https://github.com/cfengine/core.git  \
     && git fetch upstream 'refs/tags/*:refs/tags/*'

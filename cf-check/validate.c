@@ -20,6 +20,9 @@ int CFCheck_Validate(const char *path)
 #include <map.h>        // StringMap
 #include <set.h>        // StringSet
 #include <diagnose.h>   // CF_CHECK_ERRNO_VALIDATE_FAILED
+#include <db_structs.h> // KeyHostSeen
+
+#define CF_BIRTH 725846400 // Assume timestamps before 1993-01-01 are corrupt
 
 static int lmdb_report_error(int rc)
 {
@@ -277,6 +280,53 @@ static void UpdateValidatorLastseen(
         const char *hostkey = key_string + 2;
         assert(!StringSetContains(quality_incoming_hostkeys, hostkey));
         StringSetAdd(quality_incoming_hostkeys, xstrdup(hostkey));
+    }
+
+    if (key_string[0] == 'q')
+    {
+        const char direction = key_string[1];
+        if (direction == 'i' || direction == 'o')
+        {
+            const KeyHostSeen *const data = value.mv_data;
+
+            const time_t lastseen = data->lastseen;
+            const time_t current = time(NULL);
+
+            Log(LOG_LEVEL_DEBUG,
+                "LMDB validation: Quality-entry lastseen time is %ju, current time is %ju",
+                (uintmax_t) lastseen,
+                (uintmax_t) current);
+
+            if (current < CF_BIRTH)
+            {
+                ValidationError(
+                    state,
+                    "Current time (%ju) is before 1993-01-01",
+                    (uintmax_t) current);
+            }
+            else if (lastseen < CF_BIRTH)
+            {
+                ValidationError(
+                    state,
+                    "Last seen time (%ju) is before 1993-01-01 (%s)",
+                    (uintmax_t) lastseen,
+                    key_string);
+            }
+            else if (lastseen > current)
+            {
+                ValidationError(
+                    state,
+                    "Future timestamp in last seen database: %ju > %ju (%s)",
+                    (uintmax_t) lastseen,
+                    (uintmax_t) current,
+                    key_string);
+            }
+        }
+        else
+        {
+            ValidationError(
+                state, "Unexpected quality-entry key: %s", key_string);
+        }
     }
 }
 

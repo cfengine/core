@@ -115,6 +115,8 @@ static void DestroyValidator(ValidatorState *state)
     case CF_CHECK_VALIDATE_LASTSEEN:
         StringMapDestroy(state->lastseen.hostkey_to_address);
         StringMapDestroy(state->lastseen.address_to_hostkey);
+        StringSetDestroy(state->lastseen.quality_outgoing_hostkeys);
+        StringSetDestroy(state->lastseen.quality_incoming_hostkeys);
         break;
     case CF_CHECK_VALIDATE_UNKNOWN:
         break;

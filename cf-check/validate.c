@@ -28,6 +28,7 @@ typedef enum ValidatorMode
 {
     CF_CHECK_VALIDATE_UNKNOWN,
     CF_CHECK_VALIDATE_MINIMAL,
+    CF_CHECK_VALIDATE_LOCK,
     CF_CHECK_VALIDATE_LASTSEEN,
 } ValidatorMode;
 
@@ -95,6 +96,10 @@ static void NewValidator(const char *path, ValidatorState *state)
     {
         state->mode = CF_CHECK_VALIDATE_MINIMAL;
     }
+    else if (StringEndsWith(path, "cf_lock.lmdb"))
+    {
+        state->mode = CF_CHECK_VALIDATE_LOCK;
+    }
     else
     {
         state->mode = CF_CHECK_VALIDATE_UNKNOWN;
@@ -121,6 +126,7 @@ static void DestroyValidator(ValidatorState *state)
         StringSetDestroy(state->lastseen.quality_incoming_hostkeys);
         break;
     case CF_CHECK_VALIDATE_MINIMAL:
+    case CF_CHECK_VALIDATE_LOCK:
     case CF_CHECK_VALIDATE_UNKNOWN:
         break;
     default:
@@ -330,6 +336,50 @@ static void UpdateValidatorLastseen(
     }
 }
 
+static void UpdateValidatorLock(
+    ValidatorState *state, MDB_val key, MDB_val value)
+{
+    assert(state != NULL);
+    assert(key.mv_size > 0 && key.mv_data != NULL);
+    assert(value.mv_size > 0 && value.mv_data != NULL);
+
+    const char *key_string = key.mv_data;
+
+    const LockData *const lock = value.mv_data;
+    const time_t lock_time = lock->time;
+    const time_t current = time(NULL);
+
+    Log(LOG_LEVEL_DEBUG,
+        "LMDB validation: Lock time is %ju, current time is %ju",
+        (uintmax_t) lock_time,
+        (uintmax_t) current);
+
+    if (current < CF_BIRTH)
+    {
+        ValidationError(
+            state,
+            "Current time (%ju) is before 1993-01-01",
+            (uintmax_t) current);
+    }
+    else if (lock_time < CF_BIRTH)
+    {
+        ValidationError(
+            state,
+            "Lock time (%ju) is before 1993-01-01 (%s)",
+            (uintmax_t) lock_time,
+            key_string);
+    }
+    else if (lock_time > current)
+    {
+        ValidationError(
+            state,
+            "Future timestamp in lock database: %ju > %ju (%s)",
+            (uintmax_t) lock_time,
+            (uintmax_t) current,
+            key_string);
+    }
+}
+
 static bool ValidateMDBValue(
     ValidatorState *state, MDB_val value, const char *name)
 {
@@ -387,6 +437,9 @@ static void UpdateValidator(ValidatorState *state, MDB_val key, MDB_val value)
     {
     case CF_CHECK_VALIDATE_LASTSEEN:
         UpdateValidatorLastseen(state, key, value);
+        break;
+    case CF_CHECK_VALIDATE_LOCK:
+        UpdateValidatorLock(state, key, value);
         break;
     case CF_CHECK_VALIDATE_UNKNOWN:
         break;
@@ -511,6 +564,7 @@ static void ValidateState(ValidatorState *state)
     case CF_CHECK_VALIDATE_LASTSEEN:
         ValidateStateLastseen(state);
     case CF_CHECK_VALIDATE_UNKNOWN:
+    case CF_CHECK_VALIDATE_LOCK:
     case CF_CHECK_VALIDATE_MINIMAL:
         break;
     default:

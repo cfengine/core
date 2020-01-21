@@ -33,6 +33,7 @@ static int lmdb_report_error(int rc)
 typedef enum ValidatorMode
 {
     CF_CHECK_VALIDATE_UNKNOWN,
+    CF_CHECK_VALIDATE_MINIMAL,
     CF_CHECK_VALIDATE_LASTSEEN,
 } ValidatorMode;
 
@@ -96,6 +97,10 @@ static void NewValidator(const char *path, ValidatorState *state)
         state->lastseen.quality_outgoing_hostkeys = StringSetNew();
         state->lastseen.quality_incoming_hostkeys = StringSetNew();
     }
+    else if (StringEndsWith(path, "cf_changes.lmdb"))
+    {
+        state->mode = CF_CHECK_VALIDATE_MINIMAL;
+    }
     else
     {
         state->mode = CF_CHECK_VALIDATE_UNKNOWN;
@@ -121,6 +126,7 @@ static void DestroyValidator(ValidatorState *state)
         StringSetDestroy(state->lastseen.quality_outgoing_hostkeys);
         StringSetDestroy(state->lastseen.quality_incoming_hostkeys);
         break;
+    case CF_CHECK_VALIDATE_MINIMAL:
     case CF_CHECK_VALIDATE_UNKNOWN:
         break;
     default:
@@ -350,6 +356,17 @@ static void UpdateValidator(ValidatorState *state, MDB_val key, MDB_val value)
 {
     assert(state != NULL);
 
+    if (state->mode == CF_CHECK_VALIDATE_MINIMAL)
+    {
+        // Databases with "weird" schemas, i.e. non-string keys,
+        // just check that we can read out the data:
+        void *key_copy = xmemdup(key.mv_data, key.mv_size);
+        void *value_copy = xmemdup(value.mv_data, value.mv_size);
+        free(key_copy);
+        free(value_copy);
+        return;
+    }
+
     if (!ValidateMDBValue(state, key, "key") || !ValidateString(state, key)
         || !ValidateMDBValue(state, value, "value"))
     {
@@ -500,6 +517,7 @@ static void ValidateState(ValidatorState *state)
     case CF_CHECK_VALIDATE_LASTSEEN:
         ValidateStateLastseen(state);
     case CF_CHECK_VALIDATE_UNKNOWN:
+    case CF_CHECK_VALIDATE_MINIMAL:
         break;
     default:
         debug_abort_if_reached();

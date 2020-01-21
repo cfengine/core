@@ -229,7 +229,7 @@ int repair_lmdb_files(Seq *files, bool force)
     }
     else
     {
-        const int corruptions = diagnose_files(files, &corrupt, false);
+        const int corruptions = diagnose_files(files, &corrupt, false, false);
         if (corruptions != 0)
         {
             assert(corrupt != NULL);

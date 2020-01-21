@@ -230,4 +230,26 @@ void StrCatDelim(char *dst, size_t dst_size, size_t *dst_len,
 
 void CanonifyNameInPlace(char *str);
 
+/**
+ * @brief Check if a command line argument matches a short or long option
+ *
+ * Useful for smaller binaries, when getopt seems overkill and you just want
+ * something simple. A match means it's either equal to shortopt or equal to
+ * (the first part of) longopt. shortopt is compared case sensitively,
+ * while longopt is compared case insensitively.
+ *
+ * As an example, `--INFO` would match the longopt `--inform`.
+ *
+ * It doesn't (cannot) detect ambiguities when there are multiple options.
+ * In many cases, where you need more flexibility and consistency, it's better
+ * to use getopt or something similar.
+ *
+ * @param[in] supplied User supplied argument from command line (trimmed word)
+ * @param[out] longopt Long option alternative to check (ex. "--help")
+ * @param[out] shortopt Short option alternative to check (ex. "-H")
+ * @return True if `supplied` _matches_ `longopt` or `shortopt`
+ */
+bool StringMatchesOption(
+    const char *supplied, const char *longopt, const char *shortopt);
+
 #endif

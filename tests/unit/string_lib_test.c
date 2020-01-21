@@ -913,6 +913,18 @@ static void test_StrCatDelim(void)
     }
 }
 
+static void test_StringMatchesOption(void)
+{
+    assert_true(StringMatchesOption("-i", "--info", "-i"));
+    assert_false(StringMatchesOption("-i", "--info", "-I"));
+
+    assert_true(StringMatchesOption("--info", "--inform", "-I"));
+    assert_false(StringMatchesOption("--inform-me", "--info", "-I"));
+
+    assert_true(StringMatchesOption("--client", "--clients", "-C"));
+    assert_true(StringMatchesOption("--hub", "--hubs", "-H"));
+    assert_true(StringMatchesOption("--host", "--hosts", "-H"));
+}
 
 int main()
 {
@@ -990,6 +1002,8 @@ int main()
         unit_test(test_PathAppend),
         unit_test(test_StrCat),
         unit_test(test_StrCatDelim),
+
+        unit_test(test_StringMatchesOption),
     };
 
     return run_tests(tests);

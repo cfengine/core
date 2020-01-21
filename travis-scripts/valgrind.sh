@@ -128,7 +128,11 @@ check_output cf-key.txt
 valgrind $VG_OPTS /var/cfengine/bin/cf-agent -B $BOOTSTRAP_IP 2>&1 | tee bootstrap.txt
 check_output bootstrap.txt
 
-echo "127.0.0.1" > /var/cfengine/policy_server.dat
+# Validate all databases here, because later, we cannot validate
+# cf_lastseen.lmdb:
+echo "Running cf-check diagnose --validate on all databases:"
+valgrind $VG_OPTS /var/cfengine/bin/cf-check diagnose --validate 2>&1 | tee cf_check_validate_all.txt
+check_output cf_check_validate_all.txt
 
 check_masterfiles_and_inputs
 
@@ -138,6 +142,11 @@ echo "Stopping service to relaunch under valgrind"
 systemctl stop cfengine3
 sleep 10
 print_ps
+
+# The IP we bootstrapped to cannot actually be used for communication.
+# This ensures that cf-serverd binds to loopback interface, and cf-net
+# connects to it:
+echo "127.0.0.1" > /var/cfengine/policy_server.dat
 
 echo "Starting cf-serverd with valgrind in background:"
 valgrind $VG_OPTS --log-file=serverd.txt /var/cfengine/bin/cf-serverd --no-fork 2>&1 > serverd_output.txt &
@@ -169,9 +178,26 @@ check_masterfiles_and_inputs
 echo "Running promises.cf:"
 valgrind $VG_OPTS /var/cfengine/bin/cf-agent -K -f promises.cf 2>&1 | tee promises.txt
 check_output promises.txt
-echo "Running cf-check:"
-valgrind $VG_OPTS /var/cfengine/bin/cf-check diagnose /var/cfengine/state/*.lmdb 2>&1 | tee check.txt
-check_output check.txt
+
+# Dump all databases, use grep to filter the JSON lines
+# (optional whitespace then double quote or curly brackets).
+# Some of the databases have strings containing "error"
+# which check_output greps for.
+echo "Running cf-check dump:"
+valgrind $VG_OPTS /var/cfengine/bin/cf-check dump 2>&1 | grep -E '\s*[{}"]' --invert-match | tee cf_check_dump.txt
+check_output cf_check_dump.txt
+
+echo "Running cf-check diagnose on all databases"
+valgrind $VG_OPTS /var/cfengine/bin/cf-check diagnose 2>&1 | tee cf_check_diagnose.txt
+check_output cf_check_diagnose.txt
+
+# Because of the hack with bootstrap IP / policy_server.dat above
+# lastseen would not pass validation:
+echo "Running cf-check diagnose --validate on all databases except cf_lastseen.lmdb:"
+find /var/cfengine/state -name '*.lmdb' ! -name 'cf_lastseen.lmdb' -exec \
+    valgrind $VG_OPTS /var/cfengine/bin/cf-check diagnose --validate {} + 2>&1 \
+    | tee cf_check_validate_no_lastseen.txt
+check_output cf_check_validate_no_lastseen.txt
 
 echo "Checking that bootstrap ID doesn't change"
 /var/cfengine/bin/cf-agent --show-evaluated-vars | grep bootstrap_id > id_a

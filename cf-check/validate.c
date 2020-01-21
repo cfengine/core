@@ -24,12 +24,6 @@ int CFCheck_Validate(const char *path)
 
 #define CF_BIRTH 725846400 // Assume timestamps before 1993-01-01 are corrupt
 
-static int lmdb_report_error(int rc)
-{
-    printf("err(%d): %s\n", rc, mdb_strerror(rc));
-    return rc;
-}
-
 typedef enum ValidatorMode
 {
     CF_CHECK_VALIDATE_UNKNOWN,
@@ -533,34 +527,34 @@ int CFCheck_Validate(const char *path)
     int rc = mdb_env_create(&env);
     if (rc != 0)
     {
-        return lmdb_report_error(rc);
+        return rc;
     }
 
     rc = mdb_env_open(env, path, MDB_NOSUBDIR | MDB_RDONLY, 0644);
     if (rc != 0)
     {
-        return lmdb_report_error(rc);
+        return rc;
     }
 
     MDB_txn *txn;
     rc = mdb_txn_begin(env, NULL, MDB_RDONLY, &txn);
     if (rc != 0)
     {
-        return lmdb_report_error(rc);
+        return rc;
     }
 
     MDB_dbi dbi;
     rc = mdb_open(txn, NULL, 0, &dbi);
     if (rc != 0)
     {
-        return lmdb_report_error(rc);
+        return rc;
     }
 
     MDB_cursor *cursor;
     rc = mdb_cursor_open(txn, dbi, &cursor);
     if (rc != 0)
     {
-        return lmdb_report_error(rc);
+        return rc;
     }
 
     ValidatorState state;
@@ -574,7 +568,7 @@ int CFCheck_Validate(const char *path)
     {
         // At this point, not found is expected, anything else is an error
         DestroyValidator(&state);
-        return lmdb_report_error(rc);
+        return rc;
     }
     mdb_cursor_close(cursor);
     mdb_close(env, dbi);

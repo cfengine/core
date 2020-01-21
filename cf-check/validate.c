@@ -580,8 +580,6 @@ int CFCheck_Validate(const char *path)
     const size_t errors = state.errors;
     DestroyValidator(&state);
 
-    // TODO: Find a better return code.
-    //       This is mapped to errno, so 1 is definitely wrong
     return (errors == 0) ? 0 : CF_CHECK_ERRNO_VALIDATE_FAILED;
 }
 

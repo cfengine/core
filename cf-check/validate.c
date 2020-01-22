@@ -20,16 +20,15 @@ int CFCheck_Validate(const char *path)
 #include <map.h>        // StringMap
 #include <set.h>        // StringSet
 #include <diagnose.h>   // CF_CHECK_ERRNO_VALIDATE_FAILED
+#include <db_structs.h> // KeyHostSeen
 
-static int lmdb_report_error(int rc)
-{
-    printf("err(%d): %s\n", rc, mdb_strerror(rc));
-    return rc;
-}
+#define CF_BIRTH 725846400 // Assume timestamps before 1993-01-01 are corrupt
 
 typedef enum ValidatorMode
 {
     CF_CHECK_VALIDATE_UNKNOWN,
+    CF_CHECK_VALIDATE_MINIMAL,
+    CF_CHECK_VALIDATE_LOCK,
     CF_CHECK_VALIDATE_LASTSEEN,
 } ValidatorMode;
 
@@ -93,6 +92,14 @@ static void NewValidator(const char *path, ValidatorState *state)
         state->lastseen.quality_outgoing_hostkeys = StringSetNew();
         state->lastseen.quality_incoming_hostkeys = StringSetNew();
     }
+    else if (StringEndsWith(path, "cf_changes.lmdb"))
+    {
+        state->mode = CF_CHECK_VALIDATE_MINIMAL;
+    }
+    else if (StringEndsWith(path, "cf_lock.lmdb"))
+    {
+        state->mode = CF_CHECK_VALIDATE_LOCK;
+    }
     else
     {
         state->mode = CF_CHECK_VALIDATE_UNKNOWN;
@@ -115,7 +122,11 @@ static void DestroyValidator(ValidatorState *state)
     case CF_CHECK_VALIDATE_LASTSEEN:
         StringMapDestroy(state->lastseen.hostkey_to_address);
         StringMapDestroy(state->lastseen.address_to_hostkey);
+        StringSetDestroy(state->lastseen.quality_outgoing_hostkeys);
+        StringSetDestroy(state->lastseen.quality_incoming_hostkeys);
         break;
+    case CF_CHECK_VALIDATE_MINIMAL:
+    case CF_CHECK_VALIDATE_LOCK:
     case CF_CHECK_VALIDATE_UNKNOWN:
         break;
     default:
@@ -276,6 +287,97 @@ static void UpdateValidatorLastseen(
         assert(!StringSetContains(quality_incoming_hostkeys, hostkey));
         StringSetAdd(quality_incoming_hostkeys, xstrdup(hostkey));
     }
+
+    if (key_string[0] == 'q')
+    {
+        const char direction = key_string[1];
+        if (direction == 'i' || direction == 'o')
+        {
+            const KeyHostSeen *const data = value.mv_data;
+
+            const time_t lastseen = data->lastseen;
+            const time_t current = time(NULL);
+
+            Log(LOG_LEVEL_DEBUG,
+                "LMDB validation: Quality-entry lastseen time is %ju, current time is %ju",
+                (uintmax_t) lastseen,
+                (uintmax_t) current);
+
+            if (current < CF_BIRTH)
+            {
+                ValidationError(
+                    state,
+                    "Current time (%ju) is before 1993-01-01",
+                    (uintmax_t) current);
+            }
+            else if (lastseen < CF_BIRTH)
+            {
+                ValidationError(
+                    state,
+                    "Last seen time (%ju) is before 1993-01-01 (%s)",
+                    (uintmax_t) lastseen,
+                    key_string);
+            }
+            else if (lastseen > current)
+            {
+                ValidationError(
+                    state,
+                    "Future timestamp in last seen database: %ju > %ju (%s)",
+                    (uintmax_t) lastseen,
+                    (uintmax_t) current,
+                    key_string);
+            }
+        }
+        else
+        {
+            ValidationError(
+                state, "Unexpected quality-entry key: %s", key_string);
+        }
+    }
+}
+
+static void UpdateValidatorLock(
+    ValidatorState *state, MDB_val key, MDB_val value)
+{
+    assert(state != NULL);
+    assert(key.mv_size > 0 && key.mv_data != NULL);
+    assert(value.mv_size > 0 && value.mv_data != NULL);
+
+    const char *key_string = key.mv_data;
+
+    const LockData *const lock = value.mv_data;
+    const time_t lock_time = lock->time;
+    const time_t current = time(NULL);
+
+    Log(LOG_LEVEL_DEBUG,
+        "LMDB validation: Lock time is %ju, current time is %ju",
+        (uintmax_t) lock_time,
+        (uintmax_t) current);
+
+    if (current < CF_BIRTH)
+    {
+        ValidationError(
+            state,
+            "Current time (%ju) is before 1993-01-01",
+            (uintmax_t) current);
+    }
+    else if (lock_time < CF_BIRTH)
+    {
+        ValidationError(
+            state,
+            "Lock time (%ju) is before 1993-01-01 (%s)",
+            (uintmax_t) lock_time,
+            key_string);
+    }
+    else if (lock_time > current)
+    {
+        ValidationError(
+            state,
+            "Future timestamp in lock database: %ju > %ju (%s)",
+            (uintmax_t) lock_time,
+            (uintmax_t) current,
+            key_string);
+    }
 }
 
 static bool ValidateMDBValue(
@@ -297,6 +399,17 @@ static bool ValidateMDBValue(
 static void UpdateValidator(ValidatorState *state, MDB_val key, MDB_val value)
 {
     assert(state != NULL);
+
+    if (state->mode == CF_CHECK_VALIDATE_MINIMAL)
+    {
+        // Databases with "weird" schemas, i.e. non-string keys,
+        // just check that we can read out the data:
+        void *key_copy = xmemdup(key.mv_data, key.mv_size);
+        void *value_copy = xmemdup(value.mv_data, value.mv_size);
+        free(key_copy);
+        free(value_copy);
+        return;
+    }
 
     if (!ValidateMDBValue(state, key, "key") || !ValidateString(state, key)
         || !ValidateMDBValue(state, value, "value"))
@@ -324,6 +437,9 @@ static void UpdateValidator(ValidatorState *state, MDB_val key, MDB_val value)
     {
     case CF_CHECK_VALIDATE_LASTSEEN:
         UpdateValidatorLastseen(state, key, value);
+        break;
+    case CF_CHECK_VALIDATE_LOCK:
+        UpdateValidatorLock(state, key, value);
         break;
     case CF_CHECK_VALIDATE_UNKNOWN:
         break;
@@ -448,6 +564,8 @@ static void ValidateState(ValidatorState *state)
     case CF_CHECK_VALIDATE_LASTSEEN:
         ValidateStateLastseen(state);
     case CF_CHECK_VALIDATE_UNKNOWN:
+    case CF_CHECK_VALIDATE_LOCK:
+    case CF_CHECK_VALIDATE_MINIMAL:
         break;
     default:
         debug_abort_if_reached();
@@ -463,34 +581,34 @@ int CFCheck_Validate(const char *path)
     int rc = mdb_env_create(&env);
     if (rc != 0)
     {
-        return lmdb_report_error(rc);
+        return rc;
     }
 
     rc = mdb_env_open(env, path, MDB_NOSUBDIR | MDB_RDONLY, 0644);
     if (rc != 0)
     {
-        return lmdb_report_error(rc);
+        return rc;
     }
 
     MDB_txn *txn;
     rc = mdb_txn_begin(env, NULL, MDB_RDONLY, &txn);
     if (rc != 0)
     {
-        return lmdb_report_error(rc);
+        return rc;
     }
 
     MDB_dbi dbi;
     rc = mdb_open(txn, NULL, 0, &dbi);
     if (rc != 0)
     {
-        return lmdb_report_error(rc);
+        return rc;
     }
 
     MDB_cursor *cursor;
     rc = mdb_cursor_open(txn, dbi, &cursor);
     if (rc != 0)
     {
-        return lmdb_report_error(rc);
+        return rc;
     }
 
     ValidatorState state;
@@ -504,7 +622,7 @@ int CFCheck_Validate(const char *path)
     {
         // At this point, not found is expected, anything else is an error
         DestroyValidator(&state);
-        return lmdb_report_error(rc);
+        return rc;
     }
     mdb_cursor_close(cursor);
     mdb_close(env, dbi);
@@ -516,8 +634,6 @@ int CFCheck_Validate(const char *path)
     const size_t errors = state.errors;
     DestroyValidator(&state);
 
-    // TODO: Find a better return code.
-    //       This is mapped to errno, so 1 is definitely wrong
     return (errors == 0) ? 0 : CF_CHECK_ERRNO_VALIDATE_FAILED;
 }
 

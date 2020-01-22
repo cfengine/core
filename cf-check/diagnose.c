@@ -214,6 +214,9 @@ int lmdb_errno_to_cf_check_code(int r)
         return CF_CHECK_LMDB_BAD_OR_INVALID_TRANSACTION;
     case MDB_BAD_VALSIZE:
         return CF_CHECK_LMDB_WRONG_KEY_OR_VALUE_SIZE;
+    // cf-check specific error codes:
+    case CF_CHECK_ERRNO_VALIDATE_FAILED:
+        return CF_CHECK_VALIDATE_FAILED;
     // Doesn't exist in earlier versions of LMDB:
     // case MDB_BAD_DBI:
     //     return CF_CHECK_LMDB_BAD_DBI;
@@ -257,7 +260,7 @@ static int diagnose(const char *path, bool temporary_redirect, bool validate)
         freopen("/dev/null", "w", stdout);
         ret = lmdump(LMDUMP_VALUES_ASCII, path);
     }
-    return ret;
+    return lmdb_errno_to_cf_check_code(ret);
 }
 
 static int fork_and_diagnose(const char *path, bool validate)
@@ -279,7 +282,7 @@ static int fork_and_diagnose(const char *path, bool validate)
         }
         if (WIFEXITED(status) && WEXITSTATUS(status) != CF_CHECK_OK)
         {
-            return lmdb_errno_to_cf_check_code(WEXITSTATUS(status));
+            return WEXITSTATUS(status);
         }
         if (WIFSIGNALED(status))
         {
@@ -314,8 +317,7 @@ size_t diagnose_files(
         int r;
         if (foreground)
         {
-            r = lmdb_errno_to_cf_check_code(
-                diagnose(filename, true, validate));
+            r = diagnose(filename, true, validate);
         }
         else
         {

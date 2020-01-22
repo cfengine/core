@@ -251,7 +251,7 @@ int repair_lmdb_files(Seq *files, bool force)
     backup_files_copy(corrupt);
     for (int i = 0; i < length; ++i)
     {
-        const char *file = SeqAt(files, i);
+        const char *file = SeqAt(corrupt, i);
         if (repair_lmdb_file(file, -1) == -1)
         {
             ret++;

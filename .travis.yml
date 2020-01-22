@@ -52,6 +52,10 @@ matrix:
     - os: osx
       env: JOB_TYPE=compile_and_unit_test COVERAGE=no
       sudo: false
+  allow_failures:
+    - os: osx
+      env: JOB_TYPE=compile_and_unit_test COVERAGE=no
+      sudo: false
 
 before_install:
   - chmod ug+x ./travis-scripts/*

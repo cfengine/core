@@ -30,7 +30,7 @@ class Providers(Enum):
 
 class VM:
     def __init__(self, name, driver, node, role=None,
-                 platform=None, size=None, key_pair=None, security_groups=None):
+                 platform=None, size=None, key_pair=None, security_groups=None, user=None):
         self._name = name
         self._driver = driver
         self._node = node
@@ -38,6 +38,7 @@ class VM:
         self._size = size
         self._key_pair = key_pair
         self._sec_groups = security_groups
+        self._user = user
         self.role = role
 
     @classmethod
@@ -127,6 +128,10 @@ class VM:
         return self._sec_groups
 
     @property
+    def user(self):
+        return self._user
+    
+    @property
     def _data(self):
         # we need to refresh this every time because libcloud's drivers seem to
         # be returning just snapshots of info (IOW, things are not updated)
@@ -156,6 +161,7 @@ class VM:
             "private_ips": self.private_ips,
             "public_ips": self.public_ips,
             "uuid": self.uuid,
+            "user": self.user
         }
         if self.role:
             ret["role"] = self.role
@@ -213,6 +219,7 @@ def spawn_vm_in_aws(platform, aws_creds, key_pair, security_groups, region, name
 
     aws_platform = aws_platforms[platform]
     size = size or aws_platform.get("xlsize") or aws_platform["size"]
+    user = aws_platform.get("user")
     ami = aws_platform["ami"]
 
     log.info("Spawning new '%s' VM in AWS (AMI: %s, size=%s)" % (platform, ami, size))
@@ -229,7 +236,7 @@ def spawn_vm_in_aws(platform, aws_creds, key_pair, security_groups, region, name
         }
     )
 
-    return VM(name, driver, node, role, platform, size, key_pair, security_groups)
+    return VM(name, driver, node, role, platform, size, key_pair, security_groups, user)
 
 
 def spawn_vms(vm_requests, creds, region, key_pair=None, security_groups=None, provider=Providers.AWS, role=None):

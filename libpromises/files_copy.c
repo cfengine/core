@@ -36,9 +36,78 @@
 #include <string_lib.h>
 #include <acl_tools.h>
 
+bool CopyRegularFileDiskPerms(const char *source, const char *destination,
+                              int mode)
+{
+    assert(source != NULL);
+    assert(destination != NULL);
+
+    int sd = safe_open(source, O_RDONLY | O_BINARY);
+    if (sd == -1)
+    {
+        Log(LOG_LEVEL_INFO, "Can't copy '%s' (open: %s)",
+            source, GetErrorStr());
+        return false;
+    }
+
+    /* unlink() + safe_open(O_CREAT|O_EXCL) to avoid
+       symlink attacks and races. */
+    unlink(destination);
+
+    int dd = safe_open(destination,
+                       O_WRONLY | O_CREAT | O_EXCL | O_BINARY,
+                       mode);
+    if (dd == -1)
+    {
+        Log(LOG_LEVEL_INFO,
+            "Unable to open destination file while copying '%s' to '%s'"
+            " (open: %s)", source, destination, GetErrorStr());
+        close(sd);
+        return false;
+    }
+
+    /* We need to stat the file to get the block size of the source file */
+    struct stat statbuf;
+    if (fstat(sd, &statbuf) == -1)
+    {
+        Log(LOG_LEVEL_INFO, "Can't copy '%s' (fstat: %s)",
+            source, GetErrorStr());
+        close(sd);
+        close(dd);
+        return false;
+    }
+
+    size_t total_bytes_written;
+    bool last_write_was_hole;
+    bool ret = FileSparseCopy(sd, source, dd, destination,
+                              ST_BLKSIZE(statbuf),
+                              &total_bytes_written, &last_write_was_hole);
+    if (!ret)
+    {
+        unlink(destination);
+        close(sd);
+        close(dd);
+        return false;
+    }
+
+    bool do_sync = false;
+    ret = FileSparseClose(dd, destination, do_sync,
+                          total_bytes_written, last_write_was_hole);
+    if (!ret)
+    {
+        unlink(destination);
+    }
+
+    close(sd);
+    close(dd);
+    return ret;
+}
 
 bool CopyRegularFileDisk(const char *source, const char *destination)
 {
+    assert(source != NULL);
+    assert(destination != NULL);
+
     bool ok1 = false, ok2 = false;       /* initialize before the goto end; */
 
     int sd = safe_open(source, O_RDONLY | O_BINARY);
@@ -51,9 +120,9 @@ bool CopyRegularFileDisk(const char *source, const char *destination)
 
     /* We need to stat the file to get the right source permissions. */
     struct stat statbuf;
-    if (stat(source, &statbuf) == -1)
+    if (fstat(sd, &statbuf) == -1)
     {
-        Log(LOG_LEVEL_INFO, "Can't copy '%s' (stat: %s)",
+        Log(LOG_LEVEL_INFO, "Can't copy '%s' (fstat: %s)",
             source, GetErrorStr());
         goto end;
     }
@@ -63,7 +132,7 @@ bool CopyRegularFileDisk(const char *source, const char *destination)
     unlink(destination);
 
     int dd = safe_open(destination,
-                       O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY,
+                       O_WRONLY | O_CREAT | O_EXCL | O_BINARY,
                        statbuf.st_mode);
     if (dd == -1)
     {
@@ -79,8 +148,8 @@ bool CopyRegularFileDisk(const char *source, const char *destination)
                          ST_BLKSIZE(statbuf),
                          &total_bytes_written, &last_write_was_hole);
     bool do_sync = false;
-    ok2= FileSparseClose(dd, destination, do_sync,
-                         total_bytes_written, last_write_was_hole);
+    ok2 = FileSparseClose(dd, destination, do_sync,
+                          total_bytes_written, last_write_was_hole);
 
     if (!ok1 || !ok2)
     {

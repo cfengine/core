@@ -1,4 +1,5 @@
 cryptography==2.8
 fabric==2.4.0
-paramiko==2.6.0
+paramiko==2.7.0
 requests==2.22.0
+apache-libcloud==2.8.0

@@ -231,6 +231,12 @@ int lmdb_errno_to_cf_check_code(int r)
     return s;
 }
 
+void report_mdb_error(const char *db_file, const char *op, int rc)
+{
+    Log(LOG_LEVEL_ERR, "%s: %s error(%d): %s\n",
+        db_file, op, rc, mdb_strerror(rc));
+}
+
 static int diagnose(const char *path, bool temporary_redirect, bool validate)
 {
     // At this point we are already forked, we just need to decide 2 things:

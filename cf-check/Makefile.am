@@ -27,7 +27,8 @@ AM_CPPFLAGS = -I$(srcdir)/../libntech/libutils \
 	-I$(srcdir)/../libntech/libcompat \
 	$(PCRE_CPPFLAGS) \
 	$(LIBYAML_CPPFLAGS) \
-	$(LMDB_CPPFLAGS)
+	$(LMDB_CPPFLAGS) \
+	$(OPENSSL_CPPFLAGS)
 
 AM_CFLAGS = \
 	$(LMDB_CFLAGS) \
@@ -44,7 +45,8 @@ libcf_check_la_LIBADD = $(srcdir)/../libntech/libutils/libutils.la \
 	$(LMDB_LIBS) \
 	$(PCRE_LIBS) \
 	$(LIBYAML_LIBS) \
-	$(PTHREAD_LIBS)
+	$(PTHREAD_LIBS) \
+	$(OPENSSL_LIBS)
 
 libcf_check_la_SOURCES = \
 	backup.c backup.h \

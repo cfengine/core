@@ -32,7 +32,7 @@ Vagrant.configure("2") do |config|
 sed -ri '/-build/d' /etc/hosts
 yum -q -y install epel-release
 yum -q -y update
-yum -q -y install '@Development tools' pkgconfig
+yum -q -y install '@Development tools' pkgconfig pam-devel
 SHELL
 
   no_deps_vm_name = "no-deps-build"
@@ -43,7 +43,7 @@ SHELL
     nd.vm.hostname = no_deps_vm_name.to_sym
 
     nd.vm.provision "shell", inline: <<-SHELL
-yum -q -y install pam-devel lmdb-devel pcre-devel openssl-devel libyaml-devel libxml-devel
+yum -q -y install lmdb-devel pcre-devel openssl-devel libyaml-devel libxml-devel
 SHELL
 
     nd.vm.provision "shell", inline: <<-SHELL
@@ -59,5 +59,43 @@ chmod -R go-w tests/acceptance
 make check
 SHELL
 
+  end
+
+  # doing a full build will the dependencies
+  config.vm.define full_vm_name.to_sym, primary: false, autostart: false do |fd|
+    fd.vm.hostname = full_vm_name.to_sym
+    fd.vm.synced_folder "../../../../buildscripts", "/cfe/buildscripts", type: "rsync",
+                          rsync__args: ["--archive", "--links", "--delete"]
+    fd.vm.synced_folder "../../../../masterfiles", "/cfe/masterfiles", type: "rsync",
+                          rsync__args: ["--archive", "--links", "--delete"]
+
+    fd.vm.provision "shell", inline: <<-SHELL
+yum -q -y install http://opensource.wandisco.com/centos/6/git/x86_64/wandisco-git-release-6-1.noarch.rpm || true
+yum -q -y install 'perl(ExtUtils::MakeMaker)' 'perl(Digest::MD5)' 'perl(Module::Load::Conditional)' ncurses-devel rpm-build
+SHELL
+
+    fd.vm.provision "shell", inline: <<-SHELL
+shopt -s expand_aliases
+export MAKEFLAGS="-j -l#{os_cpu_cores}"
+alias make='make -j -l#{os_cpu_cores}'
+export BUILD_TYPE=DEBUG
+export NO_CONFIGURE=1
+export PROJECT=community
+cd /cfe
+./buildscripts/build-scripts/autogen
+yum -q -y remove libtool
+./buildscripts/build-scripts/clean-buildmachine
+./buildscripts/build-scripts/build-environment-check
+./buildscripts/build-scripts/install-dependencies
+./buildscripts/build-scripts/configure
+./buildscripts/build-scripts/compile
+./buildscripts/build-scripts/package
+rm -rf /var/cfengine
+export TEST_MACHINE=chroot
+./buildscripts/build-scripts/clean-buildmachine
+./buildscripts/build-scripts/build-environment-check
+./buildscripts/build-scripts/install-dependencies
+./buildscripts/build-scripts/test
+SHELL
   end
 end

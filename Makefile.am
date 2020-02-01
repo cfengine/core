@@ -156,6 +156,9 @@ cf__v_SED_1 =
 vm-check:
 	$(MAKE) -C contrib/vagrant-ci/centos-6-x64/ vm-check
 
+vm-check-full:
+	$(MAKE) -C contrib/vagrant-ci/centos-6-x64/ vm-check-full
+
 #
 # Get everything removed down to where rebuilding requires:
 # "make; make install"

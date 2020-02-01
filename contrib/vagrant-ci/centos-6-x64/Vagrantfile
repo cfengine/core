@@ -1,0 +1,63 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+def os_cpu_cores
+  case RbConfig::CONFIG['host_os']
+  when /darwin/
+    Integer(`sysctl -n hw.ncpu`)
+  when /linux/
+    Integer(`cat /proc/cpuinfo | grep processor | wc -l`)
+  else
+    raise StandardError, "Unsupported platform"
+  end
+end
+
+# All Vagrant configuration is done below. The "2" in Vagrant.configure
+# configures the configuration version (we support older styles for
+# backwards compatibility). Please don't change it unless you know what
+# you're doing.
+Vagrant.configure("2") do |config|
+  config.vm.synced_folder "../../../", "/cfe/core", type: "rsync",
+                          rsync__args: ["--archive", "--links", "--delete"]
+
+  config.vm.box = "centos/6"
+  config.vm.provider :libvirt do |lv|
+    lv.cpus = os_cpu_cores
+    lv.memory = 1024
+    lv.volume_cache = :unsafe
+  end
+
+  # common provisioning
+  config.vm.provision "shell", inline: <<-SHELL
+sed -ri '/-build/d' /etc/hosts
+yum -q -y install epel-release
+yum -q -y update
+yum -q -y install '@Development tools' pkgconfig
+SHELL
+
+  no_deps_vm_name = "no-deps-build"
+  full_vm_name = "full-build"
+
+  # using system-provided dependencies
+  config.vm.define no_deps_vm_name.to_sym, primary: true do |nd|
+    nd.vm.hostname = no_deps_vm_name.to_sym
+
+    nd.vm.provision "shell", inline: <<-SHELL
+yum -q -y install pam-devel lmdb-devel pcre-devel openssl-devel libyaml-devel libxml-devel
+SHELL
+
+    nd.vm.provision "shell", inline: <<-SHELL
+shopt -s expand_aliases
+alias make='make -j -l#{os_cpu_cores}'
+cd /cfe/core
+make clean && make maintainer-clean
+./autogen.sh -C --enable-debug
+make
+export UNSAFE_TESTS=1
+export GAINROOT=sudo
+chmod -R go-w tests/acceptance
+make check
+SHELL
+
+  end
+end

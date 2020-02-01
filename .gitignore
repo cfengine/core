@@ -42,6 +42,7 @@ stamp-h1
 /cf-serverd/Makefile
 /cf-testd/Makefile
 /cf-upgrade/Makefile
+/contrib/vagrant-ci/centos-6-x64/Makefile
 /examples/Makefile
 /ext/Makefile
 /libcfnet/Makefile
@@ -139,6 +140,7 @@ cscope.*
 \#*#
 .dir-locals.el
 /contrib/*.elc
+/contrib/vagrant-ci/centos-6-x64/.vagrant
 
 # eclipse
 .cproject

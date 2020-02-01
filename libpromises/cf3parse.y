@@ -658,7 +658,7 @@ constraint:            constraint_id                        /* BUNDLE ONLY */
                                                    if (json == NULL)
                                                    {
                                                        Rlist *synthetic_args = NULL;
-                                                       RlistAppendScalar(&synthetic_args, xstrdup(P.rval.item));
+                                                       RlistAppendScalar(&synthetic_args, P.rval.item);
                                                        RvalDestroy(P.rval);
 
                                                        P.rval = (Rval) { FnCallNew(fname, synthetic_args), RVAL_TYPE_FNCALL };

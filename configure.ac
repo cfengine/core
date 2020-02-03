@@ -1805,6 +1805,7 @@ AC_CONFIG_FILES([Makefile
     cf-testd/Makefile
     cf-net/Makefile
     config.post.h
+    contrib/vagrant-ci/centos-6-x64/Makefile
     misc/Makefile
     misc/selinux/Makefile
     ext/Makefile

@@ -85,6 +85,14 @@ Note that this demo setup (`--demo`) is notoriously insecure.
 It has default passwords and open access controls.
 Don't use it in a production environment.
 
+### Specify an SSH key
+
+If you have more than one key in `~/.ssh` you may need to specify which key `cf-remote` is to use.
+
+```
+$ export CF_REMOTE_SSH_KEY="~/.ssh/id_rsa.pub"
+```
+
 ## Contribute
 
 Feel free to open pull requests to expand this documentation, add features or fix problems.

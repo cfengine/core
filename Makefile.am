@@ -153,6 +153,14 @@ cf__v_SED_ = $(cf__v_SED_$(AM_DEFAULT_VERBOSITY))
 cf__v_SED_0 = @echo "  SED     " "$@";
 cf__v_SED_1 =
 
+vm-check:
+	$(MAKE) -C contrib/vagrant-ci/centos-6-x64/ vm-check
+
+vm-check-full:
+	$(MAKE) -C contrib/vagrant-ci/centos-6-x64/ vm-check-full
+
+destroy-vms:
+	$(MAKE) -C contrib/vagrant-ci/centos-6-x64/ destroy-vms
 
 #
 # Get everything removed down to where rebuilding requires:

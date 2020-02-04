@@ -46,7 +46,8 @@ SUBDIRS = \
 	misc \
 	ext \
 	examples \
-	tests
+	tests \
+	contrib/vagrant-ci/centos-6-x64
 
 
 # Hide the buildsystem's username, at least with GNU tar.

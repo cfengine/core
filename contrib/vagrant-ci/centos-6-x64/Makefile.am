@@ -9,3 +9,7 @@ vm-check-full:
 destroy-vms:
 	-vagrant destroy no-deps-build
 	-vagrant destroy full-build
+
+EXTRA_DIST = Vagrantfile Makefile.in
+
+CLEANFILES = Makefile.in

@@ -16,36 +16,57 @@ bundle common test
 @if minimum_version(3.7)
   classes:
       "expected_3_7";
+@else
+  classes:
+      "not_expected_3_7";
 @endif
 
 @if minimum_version(3.6)
   classes:
       "expected_3_6";
+@else
+  classes:
+      "not_expected_3_6";
 @endif
 
 @if minimum_version(2.100)
   classes:
       "expected_2_100";
+@else
+  classes:
+      "not_xpected_2_100";
 @endif
 
 @if minimum_version(300.700)
   classes:
-      "not_expected";
+      "not_expected_300_700";
+@else
+  classes:
+      "expected_300_700";
 @endif
 
 @if maximum_version(3.0)
     classes:
-      "not_expected_2";
+      "not_expected_3_0";
+@else
+    classes:
+      "expected_3_0";
 @endif
 
 @if maximum_version(4.0)
     classes:
       "expected_4_0";
+@else
+    classes:
+      "not_expected_4_0";
 @endif
 
 @if maximum_version(4.0.0)
     classes:
       "expected_4_0_0";
+@else
+    classes:
+      "not_expected_4_0_0";
 @endif
 }
 
@@ -57,22 +78,29 @@ bundle agent check
     "expected_length"      int => length("expected_classes");
     "not_expected_length"  int => length("not_expected_classes");
   classes:
-    "pass_expected"     if => strcmp("$(expected_length)", "5");
+    "pass_expected"     if => strcmp("$(expected_length)", "7");
     "pass_not_expected" if => strcmp("$(not_expected_length)", "0");
     "ok" and => { "pass_expected", "pass_not_expected" };
   methods:
     ok::
       "" usebundle => dcs_pass($(this.promise_filename));
   reports:
-    "Expected classes: $(expected_classes)";
-    "Not expected classes: $(not_expected_classes)";
-    "Expected length: $(expected_length)";
-    "Not expected length: $(not_expected_length)";
-    pass_expected::
+    DEBUG::
+      "Expected classes: $(expected_classes)";
+      "Not expected classes: $(not_expected_classes)";
+      "Expected length: $(expected_length)";
+      "Not expected length: $(not_expected_length)";
+    DEBUG.pass_expected::
       "pass_expected";
-    pass_not_expected::
+    DEBUG.pass_not_expected::
       "pass_not_expected";
 }
+
+@if minimum_version(3.12)
+@else
+some invalid syntax here
+body {} {}{}{{}}
+@endif
 
 @if minimum_version(300.600)
 

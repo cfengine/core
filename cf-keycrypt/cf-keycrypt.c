@@ -43,8 +43,7 @@
 
 */
 
-#include <cf3.defs.h>
-#include <cf3.extern.h>
+#include <platform.h>
 #include <openssl/err.h>
 
 #include <lastseen.h>
@@ -52,11 +51,8 @@
 #include <writer.h>
 #include <man.h>
 #include <conversion.h>
-#include <files_hashes.h>
-#include <locks.h>
-#include <item_lib.h>
+#include <hash.h>
 #include <known_dirs.h>
-#include <dbm_api.h>
 
 #define BUFSIZE 1024
 

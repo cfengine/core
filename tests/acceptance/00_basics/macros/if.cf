@@ -68,6 +68,22 @@ bundle common test
     classes:
       "not_expected_4_0_0";
 @endif
+
+@if between_versions(3.15.0, 4.0.0)
+    classes:
+      "expected_3_15_0_4_0_0";
+@else
+    classes:
+      "not_expected_3_15_0_4_0_0";
+@endif
+
+@if between_versions(3.11, 3.12)
+    classes:
+      "not_expected_3_11_3_12";
+@else
+    classes:
+      "expected_3_11_3_12";
+@endif
 }
 
 bundle agent check
@@ -78,7 +94,7 @@ bundle agent check
     "expected_length"      int => length("expected_classes");
     "not_expected_length"  int => length("not_expected_classes");
   classes:
-    "pass_expected"     if => strcmp("$(expected_length)", "7");
+    "pass_expected"     if => strcmp("$(expected_length)", "9");
     "pass_not_expected" if => strcmp("$(not_expected_length)", "0");
     "ok" and => { "pass_expected", "pass_not_expected" };
   methods:
@@ -130,4 +146,9 @@ Who knows, perhaps this text doesn't exist..?
 
 @if maximum_version(3.6.0)
 body files control { {} }
+@endif
+
+@if between_versions(2.0, 3.0)
+more invalid syntax
+body body body body {{}};;::
 @endif

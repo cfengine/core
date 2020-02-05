@@ -88,9 +88,10 @@ eat_line  ([\n]|[\xd][\xa]).*
 
 comment    #[^\n]*
 
-macro_if_minimum_version @if\ minimum_version\([0-9]{1,10}\.[0-9]{1,10}(\.[0-9]{1,10})?\)
-macro_if_maximum_version @if\ maximum_version\([0-9]{1,10}\.[0-9]{1,10}(\.[0-9]{1,10})?\)
-macro_if_feature         @if\ feature\([a-zA-Z0-9_]+\)
+macro_if_minimum_version  @if\ minimum_version\([0-9]{1,10}\.[0-9]{1,10}(\.[0-9]{1,10})?\)
+macro_if_maximum_version  @if\ maximum_version\([0-9]{1,10}\.[0-9]{1,10}(\.[0-9]{1,10})?\)
+macro_if_between_versions @if\ between_versions\([0-9]{1,10}\.[0-9]{1,10}(\.[0-9]{1,10})?\ *,\ *[0-9]{1,10}\.[0-9]{1,10}(\.[0-9]{1,10})?\)
+macro_if_feature          @if\ feature\([a-zA-Z0-9_]+\)
 macro_else  @else
 macro_endif @endif
 macro_line [^@\n\xd\xa].*
@@ -214,6 +215,45 @@ promise_type   [a-zA-Z_]+:
                         {
                             assert(result == VERSION_ERROR);
                             yyerror("fatal: macro @if requested an unparseable version");
+                        }
+                      }
+
+{macro_if_between_versions} {
+                        if ( P.line_pos != 1 )
+                        {
+                             yyerror("fatal: macro @if must be at beginning of the line.");
+                             return 0;
+                        }
+                        if (P.if_depth > 0)
+                        {
+                          yyerror("fatal: nested @if macros are not allowed");
+                          return 0;
+                        }
+
+                        P.if_depth++;
+
+                        const char* from = yytext + strlen("@if between_versions(");
+
+                        const char *to = strchr(from, ',');
+                        to += 1;
+                        while (*to == ' ')
+                        {
+                            to += 1;
+                        }
+
+                        ParserDebug("\tL:macro @if %d:between_versions(%s\n", P.line_pos, from);
+
+                        VersionComparison a = CompareVersion(Version(), from);
+                        VersionComparison b = CompareVersion(Version(), to);
+                        if ((a == VERSION_EQUAL || a == VERSION_GREATER)
+                            && (b == VERSION_EQUAL || b == VERSION_SMALLER))
+                        {
+                            ParserDebug("\tL:macro @if %d:accepted to next @endif\n", P.line_pos);
+                        }
+                        else
+                        {
+                            ParserDebug("\tL:macro @if %d:ignoring to next @endif or EOF\n", P.line_pos);
+                            BEGIN(if_ignore_state);
                         }
                       }
 

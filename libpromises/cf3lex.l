@@ -91,6 +91,7 @@ comment    #[^\n]*
 macro_if_minimum_version @if\ minimum_version\([0-9]{1,10}\.[0-9]{1,10}(\.[0-9]{1,10})?\)
 macro_if_maximum_version @if\ maximum_version\([0-9]{1,10}\.[0-9]{1,10}(\.[0-9]{1,10})?\)
 macro_if_feature         @if\ feature\([a-zA-Z0-9_]+\)
+macro_else  @else
 macro_endif @endif
 macro_line [^@\n\xd\xa].*
 
@@ -270,6 +271,20 @@ promise_type   [a-zA-Z_]+:
 <if_ignore_state>{macro_line}  {
                                   ParserDebug("\tL:inside macro @if, ignoring line text:\"%s\"\n", yytext);
                                }
+
+<if_ignore_state>{macro_else} {
+                                ParserDebug("\tL:macro @else, will no longer ignore lines\n", P.line_pos);
+                                BEGIN(INITIAL);
+                              }
+{macro_else}                  {
+                                if (P.if_depth <= 0)
+                                {
+                                  yyerror("fatal: @else macro without a matching @if are not allowed");
+                                  return 0;
+                                }
+                                ParserDebug("\tL:macro @else, will now ignore lines\n", P.line_pos);
+                                BEGIN(if_ignore_state);
+                              }
 
 <if_ignore_state>{macro_endif} {
                                  ParserDebug("\tL:macro @endif %d\n", P.line_pos);

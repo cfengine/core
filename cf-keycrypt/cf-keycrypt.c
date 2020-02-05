@@ -1,5 +1,5 @@
 /*
-   Copyright 2017 Northern.tech AS
+   Copyright 2020 Northern.tech AS
 
    This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
 
@@ -53,6 +53,7 @@
 #include <conversion.h>
 #include <hash.h>
 #include <known_dirs.h>
+#include <file_lib.h>
 
 #define BUFSIZE 1024
 
@@ -97,8 +98,9 @@ static const char *const HINTS[] =
     NULL
 };
 
-void *get_in_addr(struct sockaddr *sa)
+static inline void *get_in_addr(struct sockaddr *sa)
 {
+    assert(sa != NULL);
     if (sa->sa_family == AF_INET)
     {
         return &(((struct sockaddr_in*)sa)->sin_addr);
@@ -106,13 +108,13 @@ void *get_in_addr(struct sockaddr *sa)
     return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
-int file_exist(const char *filename)
+static inline bool file_exist(const char *filename)
 {
     struct stat buffer;
     return stat(filename, &buffer) == 0;
 }
 
-char *get_host_pubkey(const char *host)
+static char *get_host_pubkey(const char *host)
 {
     char *buffer = (char *) malloc(BUFSIZE *sizeof(char));
     char hash[CF_HOSTKEY_STRING_SIZE];
@@ -168,9 +170,9 @@ char *get_host_pubkey(const char *host)
     return NULL;
 }
 
-RSA *readseckey(const char *privkey_path)
+static RSA *readseckey(const char *privkey_path)
 {
-    FILE *fp = fopen(privkey_path,"r");
+    FILE *fp = safe_fopen(privkey_path,"r");
 
     if (fp == NULL)
     {
@@ -189,9 +191,9 @@ RSA *readseckey(const char *privkey_path)
     return privkey;
 }
 
-RSA *readpubkey(const char *pubkey_path)
+static RSA *readpubkey(const char *pubkey_path)
 {
-    FILE *fp = fopen(pubkey_path, "r");
+    FILE *fp = safe_fopen(pubkey_path, "r");
 
     if (fp == NULL)
     {
@@ -209,7 +211,7 @@ RSA *readpubkey(const char *pubkey_path)
     return pubkey;
 }
 
-long int rsa_encrypt(
+static long rsa_encrypt(
     const char *pubkey_path, const char *input_path, const char *output_path)
 {
     int ks = 0;
@@ -221,7 +223,7 @@ long int rsa_encrypt(
         return -1;
     }
 
-    FILE *input_file = fopen(input_path, "r");
+    FILE *input_file = safe_fopen(input_path, "r");
     if (input_file == NULL)
     {
         Log(LOG_LEVEL_ERR, "Could not open input file '%s'", input_path);
@@ -229,7 +231,7 @@ long int rsa_encrypt(
         return -1;
     }
 
-    FILE *output_file = fopen(output_path, "w");
+    FILE *output_file = safe_fopen(output_path, "w");
     if (output_file == NULL)
     {
         Log(LOG_LEVEL_ERR, "Could not create output file '%s'", output_path);
@@ -293,14 +295,14 @@ long int rsa_decrypt(
         return -1;
     }
 
-    FILE *input_file = fopen(input_path, "r");
+    FILE *input_file = safe_fopen(input_path, "r");
     if (input_file == NULL) {
         Log(LOG_LEVEL_ERR, "Cannot open input file '%s'", input_path);
         RSA_free(privkey);
         return -1;
     }
 
-    FILE *output_file  = fopen(output_path, "w");
+    FILE *output_file  = safe_fopen(output_path, "w");
     if (output_file == NULL){
         Log(LOG_LEVEL_ERR, "Cannot open output file '%s'", output_path);
         fclose(input_file);

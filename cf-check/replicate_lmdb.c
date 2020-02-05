@@ -21,12 +21,6 @@ typedef struct {
     MDB_txn *d_txn;
 } LMDBReplicationInfo;
 
-static void report_mdb_error(const char *db_file, const char *op, int rc)
-{
-    Log(LOG_LEVEL_ERR, "%s: %s error(%d): %s\n",
-        db_file, op, rc, mdb_strerror(rc));
-}
-
 static void HandleSrcLMDBCorruption(MDB_env *env, const char *msg)
 {
     LMDBReplicationInfo *info = mdb_env_get_userctx(env);

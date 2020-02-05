@@ -16,7 +16,8 @@ size_t diagnose_files(
     ARG_UNUSED const Seq *filenames,
     ARG_UNUSED Seq **corrupt,
     ARG_UNUSED bool foreground,
-    ARG_UNUSED bool validate)
+    ARG_UNUSED bool validate,
+    ARG_UNUSED bool test_write)
 {
     Log(LOG_LEVEL_INFO,
         "database diagnosis not available on this platform/build");
@@ -36,6 +37,7 @@ size_t diagnose_files(
 #include <string_lib.h>
 #include <unistd.h>
 #include <validate.h>
+#include <openssl/rand.h>
 
 #define CF_CHECK_CREATE_STRING(name) \
   #name,
@@ -231,6 +233,12 @@ int lmdb_errno_to_cf_check_code(int r)
     return s;
 }
 
+void report_mdb_error(const char *db_file, const char *op, int rc)
+{
+    Log(LOG_LEVEL_ERR, "%s: %s error(%d): %s\n",
+        db_file, op, rc, mdb_strerror(rc));
+}
+
 static int diagnose(const char *path, bool temporary_redirect, bool validate)
 {
     // At this point we are already forked, we just need to decide 2 things:
@@ -273,13 +281,210 @@ static int diagnose(const char *path, bool temporary_redirect, bool validate)
     return lmdb_errno_to_cf_check_code(ret);
 }
 
-static int fork_and_diagnose(const char *path, bool validate)
+static int diagnose_write(const char *path)
+{
+    MDB_env *env = NULL;
+    MDB_txn *txn = NULL;
+    MDB_dbi dbi;
+    bool close_dbi = false;
+    MDB_cursor *cursor = NULL;
+
+    /* We need to initialize these to NULL here so that we can safely call
+     * free() on them in cleanup. */
+    MDB_val new_key, new_data;
+    new_key.mv_data = NULL;
+    new_data.mv_data = NULL;
+
+    int ret = 0;
+    int rc;
+
+    Log(LOG_LEVEL_INFO, "Trying to write data into '%s'", path);
+
+    rc = mdb_env_create(&env);
+    if (rc != MDB_SUCCESS)
+    {
+        ret = rc;
+        report_mdb_error(path, "mdb_env_create", rc);
+        goto cleanup;
+    }
+
+    rc = mdb_env_open(env, path, MDB_NOSUBDIR, 0600);
+    if (rc != MDB_SUCCESS)
+    {
+        ret = rc;
+        report_mdb_error(path, "mdb_env_open", rc);
+        goto cleanup;
+    }
+
+    rc = mdb_txn_begin(env, NULL, 0, &txn);
+    if (rc != MDB_SUCCESS)
+    {
+        ret = rc;
+        report_mdb_error(path, "mdb_txn_begin", rc);
+        goto cleanup;
+    }
+
+    rc = mdb_dbi_open(txn, NULL, 0, &dbi);
+    if (rc != MDB_SUCCESS)
+    {
+        ret = rc;
+        report_mdb_error(path, "mdb_dbi_open", rc);
+        goto cleanup;
+    }
+    else
+    {
+        close_dbi = true;
+    }
+
+    rc = mdb_cursor_open(txn, dbi, &cursor);
+    if (rc != MDB_SUCCESS)
+    {
+        ret = rc;
+        report_mdb_error(path, "mdb_cursor_open", rc);
+        goto cleanup;
+    }
+
+    MDB_val key, data;
+    rc = mdb_cursor_get(cursor, &key, &data, MDB_NEXT);
+    /* MDB_NOTFOUND => no more data */
+    if (rc == MDB_NOTFOUND)
+    {
+        Log(LOG_LEVEL_INFO,
+            "'%s' is empty, no data to use as a template, cannot test writing",
+            path);
+        ret = 0;
+        goto cleanup;
+    }
+    else if (rc != MDB_SUCCESS)
+    {
+        report_mdb_error(path, "mdb_cursor_get", rc);
+        ret = rc;
+        goto cleanup;
+    }
+    /* else */
+    new_key.mv_size = key.mv_size;
+    new_data.mv_size = data.mv_size;
+    new_key.mv_data = xmalloc(new_key.mv_size);
+    new_data.mv_data = xmalloc(new_data.mv_size);
+
+    rc = RAND_bytes((char *) new_key.mv_data, new_key.mv_size);
+    if (rc != 1)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to generate random key data");
+        ret = -1;
+        goto cleanup;
+    }
+    rc = RAND_bytes((char *) new_data.mv_data, new_data.mv_size);
+    if (rc != 1)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to generate random value data");
+        ret = -1;
+        goto cleanup;
+    }
+    rc = mdb_put(txn, dbi, &new_key, &new_data, 0);
+    if (rc != MDB_SUCCESS)
+    {
+        report_mdb_error(path, "mdb_put", rc);
+        Log(LOG_LEVEL_ERR, "Failed to write new data into '%s'", path);
+        ret = rc;
+        goto cleanup;
+    }
+
+    rc = mdb_txn_commit(txn);
+    if (rc != MDB_SUCCESS)
+    {
+        report_mdb_error(path, "mdb_txn_commit", rc);
+        Log(LOG_LEVEL_ERR, "Failed to commit new data into '%s'", path);
+        ret = rc;
+        goto cleanup;
+    }
+    txn = NULL;
+
+    mdb_close(env, dbi);
+    close_dbi = false;
+
+    rc = mdb_txn_begin(env, NULL, 0, &txn);
+    if (rc != MDB_SUCCESS)
+    {
+        ret = rc;
+        report_mdb_error(path, "mdb_txn_begin", rc);
+        goto cleanup;
+    }
+
+    rc = mdb_dbi_open(txn, NULL, 0, &dbi);
+    if (rc != MDB_SUCCESS)
+    {
+        ret = rc;
+        report_mdb_error(path, "mdb_dbi_open", rc);
+        goto cleanup;
+    }
+    else
+    {
+        close_dbi = true;
+    }
+
+    rc = mdb_del(txn, dbi, &new_key, NULL);
+    if (rc != MDB_SUCCESS)
+    {
+        report_mdb_error(path, "mdb_del", rc);
+        Log(LOG_LEVEL_ERR, "Failed to delete new data from '%s'", path);
+        ret = rc;
+        goto cleanup;
+    }
+
+    rc = mdb_txn_commit(txn);
+    if (rc != MDB_SUCCESS)
+    {
+        report_mdb_error(path, "mdb_txn_commit", rc);
+        Log(LOG_LEVEL_ERR, "Failed to commit removal of new data from '%s'", path);
+        ret = rc;
+        goto cleanup;
+    }
+    txn = NULL;
+
+    mdb_close(env, dbi);
+    close_dbi = false;
+
+  cleanup:
+    free(new_key.mv_data);
+    free(new_data.mv_data);
+
+    if (cursor != NULL)
+    {
+        mdb_cursor_close(cursor);
+    }
+    if (close_dbi)
+    {
+        mdb_close(env, dbi);
+    }
+    if (txn != NULL)
+    {
+        mdb_txn_abort(txn);
+    }
+    if (env != NULL)
+    {
+        mdb_env_close(env);
+    }
+
+    ret = lmdb_errno_to_cf_check_code(ret);
+    return ret;
+}
+
+static int fork_and_diagnose(const char *path, bool validate, bool test_write)
 {
     const pid_t child_pid = fork();
     if (child_pid == 0)
     {
         // Child
-        exit(diagnose(path, false, validate));
+        /* The second argument is 'temporary_redirect' and we require a
+         * temporary redirect if we want to test writability because that
+         * produces output. */
+        int r = diagnose(path, test_write, validate);
+        if ((r == CF_CHECK_OK) && test_write)
+        {
+            r = diagnose_write(path);
+        }
+        exit(r);
     }
     else
     {
@@ -308,10 +513,15 @@ static int fork_and_diagnose(const char *path, bool validate)
  *                        files or %NULL (to only get the number of corrupted
  *                        files)
  * @param[in]  foreground whether to run in foreground or fork (safer)
+ * @param[in]  test_write whether to test writing into the DB
  * @return                the number of the corrupted files
  */
 size_t diagnose_files(
-    const Seq *filenames, Seq **corrupt, bool foreground, bool validate)
+    const Seq *filenames,
+    Seq **corrupt,
+    bool foreground,
+    bool validate,
+    bool test_write)
 {
     size_t corruptions = 0;
     const size_t length = SeqLength(filenames);
@@ -328,10 +538,14 @@ size_t diagnose_files(
         if (foreground)
         {
             r = diagnose(filename, true, validate);
+            if ((r == CF_CHECK_OK) && test_write)
+            {
+                r = diagnose_write(filename);
+            }
         }
         else
         {
-            r = fork_and_diagnose(filename, validate);
+            r = fork_and_diagnose(filename, validate, test_write);
         }
         Log(LOG_LEVEL_INFO,
             "Status of '%s': %s\n",
@@ -366,6 +580,7 @@ int diagnose_main(int argc, const char *const *const argv)
     size_t offset = 1;
     bool foreground = false;
     bool validate = false;
+    bool test_write = false;
     for (int i = offset; i < argc && argv[i][0] == '-'; ++i)
     {
         if (StringMatchesOption(argv[i], "--no-fork", "-F"))
@@ -376,6 +591,11 @@ int diagnose_main(int argc, const char *const *const argv)
         else if (StringMatchesOption(argv[i], "--validate", "-v"))
         {
             validate = true;
+            offset += 1;
+        }
+        else if (StringMatchesOption(argv[i], "--test-write", "-w"))
+        {
+            test_write = true;
             offset += 1;
         }
         else
@@ -391,7 +611,7 @@ int diagnose_main(int argc, const char *const *const argv)
         Log(LOG_LEVEL_ERR, "No database files to diagnose");
         return 1;
     }
-    const int ret = diagnose_files(files, NULL, foreground, validate);
+    const int ret = diagnose_files(files, NULL, foreground, validate, test_write);
     SeqDestroy(files);
     return ret;
 }

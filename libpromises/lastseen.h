@@ -25,6 +25,8 @@
 #ifndef CFENGINE_LASTSEEN_H
 #define CFENGINE_LASTSEEN_H
 
+#include <statistics.h>
+
 typedef struct
 {
     time_t lastseen;

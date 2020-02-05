@@ -424,9 +424,9 @@ int main(int argc, char *argv[])
 
     input_path = argv[optind];
     optind += 1;
-    if (argv[optind] != NULL)
+    if (optind < argc)
     {
-        Log(LOG_LEVEL_ERR, "Unexpected non-option argument: '%s'",argv[optind]);
+        Log(LOG_LEVEL_ERR, "Unexpected non-option argument: '%s'", argv[optind]);
         exit(EXIT_FAILURE);
     }
 

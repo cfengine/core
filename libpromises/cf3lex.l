@@ -88,9 +88,9 @@ eat_line  ([\n]|[\xd][\xa]).*
 
 comment    #[^\n]*
 
-macro_if_minimum_version  @if\ minimum_version\([0-9]{1,10}\.[0-9]{1,10}(\.[0-9]{1,10})?\)
-macro_if_maximum_version  @if\ maximum_version\([0-9]{1,10}\.[0-9]{1,10}(\.[0-9]{1,10})?\)
-macro_if_between_versions @if\ between_versions\([0-9]{1,10}\.[0-9]{1,10}(\.[0-9]{1,10})?\ *,\ *[0-9]{1,10}\.[0-9]{1,10}(\.[0-9]{1,10})?\)
+macro_if_minimum_version  @if\ minimum_version\([0-9]{1,5}(\.[0-9]{1,5}){0,2}\)
+macro_if_maximum_version  @if\ maximum_version\([0-9]{1,5}(\.[0-9]{1,5}){0,2}\)
+macro_if_between_versions @if\ between_versions\([0-9]{1,5}(\.[0-9]{1,5}){0,2}\ *,\ *[0-9]{1,5}(\.[0-9]{1,5}){0,2}\)
 macro_if_feature          @if\ feature\([a-zA-Z0-9_]+\)
 macro_else  @else
 macro_endif @endif

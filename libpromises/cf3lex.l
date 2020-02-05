@@ -367,7 +367,7 @@ promise_type   [a-zA-Z_]+:
 
 {varclass}            {
                           char *tmp = NULL;
-                        
+
                           P.line_pos += yyleng;
                           ParserDebug("\tL:varclass %s %d\n", yytext, P.line_pos);
 
@@ -394,7 +394,7 @@ promise_type   [a-zA-Z_]+:
 
 {class}               {
                           char *tmp = NULL;
-                        
+
                           P.line_pos += yyleng;
                           ParserDebug("\tL:class %s %d\n", yytext, P.line_pos);
                           if (context_expression_whitespace_rx == NULL)

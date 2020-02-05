@@ -1,0 +1,48 @@
+bundle common test_meta
+{
+  vars:
+      "description" string => "Test that purging a directory in a target propagates promise as repaired";
+}
+
+#######################################################
+
+body common control
+{
+      inputs => { "../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+    "dirs" slist => {
+        "$(G.testdir)/source/.",
+        "$(G.testdir)/target/.",
+        "$(G.testdir)/target/subdir/."
+    };
+
+   files:
+    "$(dirs)" create => "true";
+}
+
+bundle agent test
+{
+  files:
+    "$(G.testdir)/target/" copy_from => copyfrom_sync("$(G.testdir)/source/."),
+        depth_search => recurse("inf"),
+        classes => if_repaired("purge_propagated");
+}
+
+#######################################################
+
+bundle agent check
+{
+  reports:
+    purge_propagated::
+      "$(this.promise_filename) Pass";
+    !purge_propagated::
+      "$(this.promise_filename) FAIL";
+}

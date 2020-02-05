@@ -36,6 +36,7 @@
 #include <file_lib.h>
 #include <regex.h>
 #include <feature.h>
+#include <version_comparison.h>
 }
 
 %{
@@ -146,70 +147,37 @@ promise_type   [a-zA-Z_]+:
                           yyless(1);
                       }
 
-{macro_if_minimum_version}
-                      {
+{macro_if_minimum_version} {
                         if (  P.line_pos != 1 )
                         {
                              yyerror("fatal: macro @if must be at beginning of the line.");
                              return 0;
                         }
-
-                        const char* version_text = yytext+20;
-                        ParserDebug("\tL:macro @if %d:version=%s\n", P.line_pos, version_text);
+                        if (P.if_depth > 0)
                         {
-                          int request_major = 0;
-                          int request_minor = 0;
-                          int request_patch = 0;
-                          int request_level = 0;
-                          int major = 0;
-                          int minor = 0;
-                          int patch = 0;
+                          yyerror("fatal: nested @if macros are not allowed");
+                          return 0;
+                        }
 
-                          if (P.if_depth > 0)
-                          {
-                            yyerror("fatal: nested @if macros are not allowed");
-                            return 0;
-                          }
+                        P.if_depth++;
 
-                          P.if_depth++;
+                        const char* minimum = yytext+20;
+                        ParserDebug("\tL:macro @if %d:version=%s\n", P.line_pos, minimum);
 
-                          if (sscanf(Version(), "%d.%d.%d", &major, &minor, &patch) == 3)
-                          {
-                            request_level = sscanf(version_text, "%d.%d.%d", &request_major, &request_minor, &request_patch);
-                            if (request_level >= 1)
-                            {
-                              if (request_major > major) {
-                                ParserDebug("\tL:macro @if %d:ignoring to next @endif or EOF\n", P.line_pos);
-                                BEGIN(if_ignore_state);
-                              } else if (request_major < major || request_level == 1) {
-                                ParserDebug("\tL:macro @if %d:accepted to next @endif\n", P.line_pos);
-                              } else { // request_major==major && request_level > 1
-                                if (request_minor > minor) {
-                                  ParserDebug("\tL:macro @if %d:ignoring to next @endif or EOF\n", P.line_pos);
-                                  BEGIN(if_ignore_state);
-                                } else if (request_minor < minor || request_level == 2) {
-                                  ParserDebug("\tL:macro @if %d:accepted to next @endif\n", P.line_pos);
-                                } else { // request_minor==minor && request_level > 2
-                                  if (request_patch > patch) {
-                                    ParserDebug("\tL:macro @if %d:ignoring to next @endif or EOF\n", P.line_pos);
-                                    BEGIN(if_ignore_state);
-                                  } else { // request_patch <= patch
-                                    ParserDebug("\tL:macro @if %d:accepted to next @endif\n", P.line_pos);
-                                  }
-                                }
-                              }
-                            }
-                            else
-                            {
-                              yyerror("fatal: macro @if requested an unparseable version");
-                              return 0;
-                            }
-                          }
-                          else
-                          {
-                            yyerror("fatal: Version() was unparseable");
-                            return 0;
-                          }
+                        VersionComparison result = CompareVersion(Version(), minimum);
+                        if (result == VERSION_GREATER || result == VERSION_EQUAL)
+                        {
+                            ParserDebug("\tL:macro @if %d:accepted to next @endif\n", P.line_pos);
+                        }
+                        else if (result == VERSION_SMALLER)
+                        {
+                            ParserDebug("\tL:macro @if %d:ignoring to next @endif or EOF\n", P.line_pos);
+                            BEGIN(if_ignore_state);
+                        }
+                        else
+                        {
+                            assert(result == VERSION_ERROR);
+                            yyerror("fatal: macro @if requested an unparseable version");
                         }
                       }
 

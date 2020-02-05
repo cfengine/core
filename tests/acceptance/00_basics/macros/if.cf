@@ -15,31 +15,63 @@ bundle common test
 {
 @if minimum_version(3.7)
   classes:
-      "expected" expression => "any";
+      "expected_3_7";
 @endif
 
 @if minimum_version(3.6)
   classes:
-      "expected2" expression => "any";
+      "expected_3_6";
 @endif
 
 @if minimum_version(2.100)
   classes:
-      "expected_2_100" expression => "any";
+      "expected_2_100";
 @endif
 
 @if minimum_version(300.700)
   classes:
-      "not_expected" expression => "any";
+      "not_expected";
+@endif
+
+@if maximum_version(3.0)
+    classes:
+      "not_expected_2";
+@endif
+
+@if maximum_version(4.0)
+    classes:
+      "expected_4_0";
+@endif
+
+@if maximum_version(4.0.0)
+    classes:
+      "expected_4_0_0";
 @endif
 }
 
 bundle agent check
 {
+  vars:
+    "expected_classes"     slist => classesmatching("expected.*");
+    "not_expected_classes" slist => classesmatching("not_expected.*");
+    "expected_length"      int => length("expected_classes");
+    "not_expected_length"  int => length("not_expected_classes");
+  classes:
+    "pass_expected"     if => strcmp("$(expected_length)", "5");
+    "pass_not_expected" if => strcmp("$(not_expected_length)", "0");
+    "ok" and => { "pass_expected", "pass_not_expected" };
   methods:
-      "" usebundle => dcs_passif_expected("expected,expected2,expected_2_100",
-                                         "not_expected",
-                                         $(this.promise_filename));
+    ok::
+      "" usebundle => dcs_pass($(this.promise_filename));
+  reports:
+    "Expected classes: $(expected_classes)";
+    "Not expected classes: $(not_expected_classes)";
+    "Expected length: $(expected_length)";
+    "Not expected length: $(not_expected_length)";
+    pass_expected::
+      "pass_expected";
+    pass_not_expected::
+      "pass_not_expected";
 }
 
 @if minimum_version(300.600)
@@ -66,4 +98,8 @@ Nothing should be seen here really
 
 Who knows, perhaps this text doesn't exist..?
 
+@endif
+
+@if maximum_version(3.6.0)
+body files control { {} }
 @endif

@@ -87,8 +87,8 @@ eat_line  ([\n]|[\xd][\xa]).*
 
 comment    #[^\n]*
 
-macro_if_version    @if\ minimum_version\([0-9]{1,10}\.[0-9]{1,10}(\.[0-9]{1,10})?\)
-macro_if_feature    @if\ feature\([a-zA-Z0-9_]+\)
+macro_if_minimum_version @if\ minimum_version\([0-9]{1,10}\.[0-9]{1,10}(\.[0-9]{1,10})?\)
+macro_if_feature         @if\ feature\([a-zA-Z0-9_]+\)
 macro_endif @endif
 macro_line [^@\n\xd\xa].*
 
@@ -146,7 +146,8 @@ promise_type   [a-zA-Z_]+:
                           yyless(1);
                       }
 
-{macro_if_version}    {
+{macro_if_minimum_version}
+                      {
                         if (  P.line_pos != 1 )
                         {
                              yyerror("fatal: macro @if must be at beginning of the line.");

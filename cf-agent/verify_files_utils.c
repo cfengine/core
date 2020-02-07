@@ -687,8 +687,6 @@ static PromiseResult PurgeLocalFiles(EvalContext *ctx, Item *filelist, const cha
             }
             else
             {
-                Log(LOG_LEVEL_INFO, "Purging '%s' in copy dest directory", filename);
-
                 if (lstat(filename, &sb) == -1)
                 {
                     cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, attr, "Couldn't stat '%s' while purging. (lstat: %s)",
@@ -710,11 +708,21 @@ static PromiseResult PurgeLocalFiles(EvalContext *ctx, Item *filelist, const cha
                             result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                         }
                     }
+                    else
+                    {
+                        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Purged directory '%s' in copy dest directory", filename);
+                        result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
+                    }
                 }
                 else if (unlink(filename) == -1)
                 {
                     cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Couldn't delete '%s' while purging", filename);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+                }
+                else
+                {
+                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Purged file '%s' in copy dest directory", filename);
+                    result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
                 }
             }
         }

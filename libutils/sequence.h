@@ -26,6 +26,7 @@
 #define CFENGINE_SEQUENCE_H
 
 #include <platform.h>
+#include <writer.h> // Writer
 
 /**
   @brief Sequence data-structure.
@@ -245,5 +246,56 @@ void SeqRemoveNulls(Seq *s);
  *
  */
 Seq *SeqFromArgv(int argc, const char *const *argv);
+
+/**
+ * @brief Serializes a sequence of strings to a length prefixed format
+ *
+ * (De)Serialize uses a length prefixed format.
+ * For every element in a string sequence,
+ * the serialized output includes:
+ * 1. 10 bytes of length prefix, where index 9 must be a space
+ * 2. The data, with no escaping / modifications
+ * 3. A single newline (\n) for readability
+ * It is assumed that the sequence contains ascii printable
+ * NUL terminated characters.
+ */
+char *SeqStringSerialize(Seq *seq);
+
+/**
+ * @brief Serializes a sequence of strings writing them to a Writer object
+ *
+ * Similar to SeqStringSerialize, but can be used with FileWriter to write
+ * line by line to file.
+ */
+bool SeqStringWrite(Seq *seq, Writer *w);
+
+/**
+ * @brief Serializes a sequence of strings writing them to a file
+ *
+ * Similar to SeqStringWrite, but opens and closes the file(name) for you.
+ */
+bool SeqStringWriteFile(Seq *seq, const char *file);
+
+/**
+ * @brief Serializes a sequence of strings writing them to a file stream
+ *
+ * Similar to SeqStringWriteFile, but accepts an open file stream
+ */
+bool SeqStringWriteFileStream(Seq *seq, FILE *file);
+
+/**
+ * @brief Reads a file deserializing it into a Seq
+ *
+ * @return NULL on any error, empty sequence for empty file
+ */
+Seq *SeqStringReadFile(const char *file);
+
+/**
+ * @brief Create a sequence of strings from the serialized format
+ *
+ * @param[in] serialized The input string, contents are copied
+ * @return A sequence of new allocated strings
+ */
+Seq *SeqStringDeserialize(const char *const serialized);
 
 #endif

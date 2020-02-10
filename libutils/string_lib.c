@@ -60,6 +60,36 @@ char *StringFormat(const char *fmt, ...)
     return res;
 }
 
+size_t StringCopy(const char *const from, char *const to, const size_t buf_size)
+{
+    assert(from != NULL);
+    assert(to != NULL);
+    assert(from != to);
+    assert(buf_size >= 0);
+
+    memset(to, 0, buf_size);
+    strncpy(to, from, buf_size);
+    if (to[buf_size-1] != '\0')
+    {
+        to[buf_size-1] = '\0';
+        return buf_size;
+    }
+    return strlen(to); // TODO - Replace the extra pass by using stpncpy:
+
+    /*
+    // stpncpy has bad/unsafe behavior when string is too long:
+    // * Does not NUL terminate
+    // * Returns a pointer to potentially invalid memory
+    // These issues have to be handled (even for correct arguments)
+
+    const char *const end = stpncpy(to, from, buf_size);
+    assert(end >= to);
+    const long len = end - to;
+    to[buf_size] = '\0';
+    return len;
+    */
+}
+
 unsigned int StringHash(const char *str, unsigned int seed)
 {
     assert(str != NULL);

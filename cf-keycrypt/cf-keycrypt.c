@@ -54,6 +54,7 @@
 #include <hash.h>
 #include <known_dirs.h>
 #include <file_lib.h>
+#include <unistd.h>
 
 #define BUFSIZE 1024
 
@@ -108,12 +109,6 @@ static inline void *get_in_addr(struct sockaddr *sa)
     return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
-static inline bool file_exist(const char *filename)
-{
-    struct stat buffer;
-    return stat(filename, &buffer) == 0;
-}
-
 static char *get_host_pubkey(const char *host)
 {
     char *buffer = (char *) malloc(BUFSIZE *sizeof(char));
@@ -160,7 +155,7 @@ static char *get_host_pubkey(const char *host)
             snprintf(
                 buffer, BUFSIZE * sizeof(char), "%s/ppkeys/root-%s.pub",
                 WORKDIR, ipaddress);
-            if (file_exist(buffer))
+            if (access(buffer, F_OK) == 0)
             {
                 freeaddrinfo(result);
                 return buffer;

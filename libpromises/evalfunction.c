@@ -6872,7 +6872,9 @@ static FnCallResult FnCallClassFilterCsv(EvalContext *ctx,
                     "%s: Class expression index is out of bounds. "
                     "Row length %zu, index %zu",
                     fp->name, num_columns, class_index);
-                FnFailure();
+                SeqDestroy(list);
+                JsonDestroy(json);
+                return FnFailure();
             }
         }
         else if (num_columns != SeqLength(list))

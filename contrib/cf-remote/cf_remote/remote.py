@@ -97,6 +97,46 @@ def get_info(host, *, users=None, connection=None):
         data["uname"] = ssh_cmd(connection, "uname")
         data["arch"] = ssh_cmd(connection, "uname -m")
         data["os_release"] = os_release(ssh_cmd(connection, "cat /etc/os-release"))
+
+        tags = []
+        if data["os_release"]:
+            distro = data["os_release"]["ID"]
+            major = data["os_release"]["VERSION_ID"].split(".")[0]
+            platform_tag = distro + major
+
+            # Add tags with version number first, to filter by them first:
+            tags.append(platform_tag) # Example: ubuntu16
+            if distro == "centos":
+                tags.append("el" + major)
+
+            # Then add more generic tags (lower priority):
+            tags.append(distro) # Example: ubuntu
+            if distro == "centos":
+                tags.append("rhel")
+                tags.append("el")
+        else:
+            redhat_release = ssh_cmd(connection, "cat /etc/redhat-release")
+            if redhat_release:
+                # Examples:
+                # CentOS release 6.10 (Final)
+                # Red Hat Enterprise Linux release 8.0 (Ootpa)
+                before, after = redhat_release.split(" release ")
+                distro = "rhel"
+                if before.lower().startswith("centos"):
+                    distro = "centos"
+                major = after.split(".")[0]
+                tags.append(distro + major)
+                tags.append("el" + major)
+                if "rhel" not in tags:
+                    tags.append("rhel" + major)
+
+                tags.append(distro)
+                if "rhel" not in tags:
+                    tags.append("rhel")
+                tags.append("el")
+
+        data["package_tags"] = tags
+
         data["agent_location"] = ssh_cmd(connection, "which cf-agent")
         data["policy_server"] = ssh_cmd(connection, "cat /var/cfengine/policy_server.dat")
 
@@ -190,6 +230,7 @@ def install_host(
         extension = None
         if "package_tags" in data and "msi" in data["package_tags"]:
             extension = ".msi"
+            del data["package_tags"]["msi"]
         elif "dpkg" in data["bin"]:
             extension = ".deb"
         elif "rpm" in data["bin"]:
@@ -199,21 +240,8 @@ def install_host(
         if version:
             release = releases.pick_version(version)
 
-        if "os_release" in data and data["os_release"]:
-            distro = data["os_release"]["ID"]
-            major = data["os_release"]["VERSION_ID"].split(".")[0]
-            platform_tag = distro + major
-
-            # Add tags with version number first, to filter by them first:
-            tags.append(platform_tag) # Example: ubuntu16
-            if distro == "centos":
-                tags.append("el" + major)
-
-            # Then add more generic tags (lower priority):
-            tags.append(distro) # Example: ubuntu
-            if distro == "centos":
-                tags.append("rhel")
-                tags.append("el")
+        if "package_tags" in data and data["package_tags"]:
+            tags.extend(data["package_tags"])
 
         artifacts = release.find(tags, extension)
         if not artifacts:

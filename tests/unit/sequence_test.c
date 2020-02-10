@@ -464,6 +464,7 @@ static void test_string_deserialize(void)
         Seq *seq = SeqStringDeserialize("");
         assert(seq != NULL);
         assert(SeqLength(seq) == 0);
+        SeqDestroy(seq);
     }
 }
 
@@ -494,7 +495,65 @@ static void test_string_serialize(void)
         assert_string_equal(def, "DEF");
         assert_string_equal(ghi, "GHI");
         SeqDestroy(seq);
+        SeqDestroy(seq2);
     }
+}
+
+static void test_seq_string_file(void)
+{
+    const char *const path = "test_file_string_sequence";
+
+    Seq *const sequence = SeqNew(5, free);
+    SeqAppend(sequence, xstrdup("ABC"));
+    SeqAppend(sequence, xstrdup("DEF"));
+    SeqAppend(sequence, xstrdup("123"));
+
+    const size_t length = SeqLength(sequence);
+    assert_int_equal(length, 3);
+
+    const bool write_success = SeqStringWriteFile(sequence, path);
+    assert_true(write_success);
+
+    Seq *const read_sequence = SeqStringReadFile(path);
+    assert_true(read_sequence != NULL);
+
+    assert_int_equal(length, SeqLength(sequence));
+    assert_int_equal(length, SeqLength(read_sequence));
+
+    for(int i = 0; i < length; ++i)
+    {
+        assert_string_equal(SeqAt(sequence, i), SeqAt(read_sequence, i));
+    }
+    SeqDestroy(sequence);
+    SeqDestroy(read_sequence);
+    unlink(path);
+    assert_true(SeqStringReadFile(path) == NULL);
+}
+
+static void test_seq_string_empty_file(void)
+{
+    const char *const path = "test_file_string_sequence";
+
+    Seq *const sequence = SeqNew(5, free);
+    const bool write_success = SeqStringWriteFile(sequence, path);
+    assert_true(write_success);
+
+    struct stat statbuf;
+
+    stat(path, &statbuf);
+    assert_int_equal(0, statbuf.st_size);
+
+    Seq *const read_sequence = SeqStringReadFile(path);
+    assert_true(read_sequence != NULL);
+
+    assert_int_equal(0, SeqLength(sequence));
+    assert_int_equal(0, SeqLength(read_sequence));
+
+    SeqDestroy(sequence);
+    SeqDestroy(read_sequence);
+    unlink(path);
+
+    assert_true(SeqStringReadFile(path) == NULL);
 }
 
 void test_sscanf(void)
@@ -609,7 +668,9 @@ int main()
         unit_test(test_string_prefix),
         unit_test(test_valid_duplicate),
         unit_test(test_string_deserialize),
-        unit_test(test_string_serialize)
+        unit_test(test_string_serialize),
+        unit_test(test_seq_string_file),
+        unit_test(test_seq_string_empty_file),
     };
 
     return run_tests(tests);

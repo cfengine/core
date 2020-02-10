@@ -198,6 +198,23 @@ def install_host(
         release = releases.default
         if version:
             release = releases.pick_version(version)
+
+        if "os_release" in data and data["os_release"]:
+            distro = data["os_release"]["ID"]
+            major = data["os_release"]["VERSION_ID"].split(".")[0]
+            platform_tag = distro + major
+
+            # Add tags with version number first, to filter by them first:
+            tags.append(platform_tag) # Example: ubuntu16
+            if distro == "centos":
+                tags.append("el" + major)
+
+            # Then add more generic tags (lower priority):
+            tags.append(distro) # Example: ubuntu
+            if distro == "centos":
+                tags.append("rhel")
+                tags.append("el")
+
         artifacts = release.find(tags, extension)
         if not artifacts:
             user_error(

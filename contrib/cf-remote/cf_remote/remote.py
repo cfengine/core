@@ -250,8 +250,7 @@ def uninstall_host(host, *, connection=None):
     print_info(data)
 
     if not data["agent_version"]:
-        print("CFEngine is not installed on '{}' - moving on".format(host))
-        return data
+        log.warning("CFEngine does not seem to be installed on '{}' - attempting uninstall anyway".format(host))
 
     uninstall_cfengine(host, data, connection=connection)
     data = get_info(host, connection=connection)
@@ -262,5 +261,5 @@ def uninstall_host(host, *, connection=None):
 
     print_info(data)
 
-    print("Uninstallation successful on '{}''".format(host))
+    print("Uninstallation successful on '{}'".format(host))
     return data

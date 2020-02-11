@@ -184,6 +184,7 @@ check_PROGRAMS = \
 	matching_test \
 	ring_buffer_test \
 	strlist_test \
+	version_comparison_test \
 	addr_lib_test \
 	policy_server_test \
 	libcompat_test \

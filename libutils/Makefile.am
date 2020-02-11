@@ -78,6 +78,7 @@ libutils_la_SOURCES = \
 	statistics.c statistics.h \
 	string_lib.c string_lib.h \
 	unicode.c unicode.h \
+	version_comparison.c version_comparison.h \
 	writer.c writer.h \
 	xml_writer.c xml_writer.h
 

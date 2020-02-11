@@ -90,6 +90,9 @@ comment    #[^\n]*
 
 macro_if_minimum_version  @if\ minimum_version\([0-9]{1,5}(\.[0-9]{1,5}){0,2}\)
 macro_if_maximum_version  @if\ maximum_version\([0-9]{1,5}(\.[0-9]{1,5}){0,2}\)
+macro_if_before_version   @if\ before_version\([0-9]{1,5}(\.[0-9]{1,5}){0,2}\)
+macro_if_at_version       @if\ at_version\([0-9]{1,5}(\.[0-9]{1,5}){0,2}\)
+macro_if_after_version    @if\ after_version\([0-9]{1,5}(\.[0-9]{1,5}){0,2}\)
 macro_if_between_versions @if\ between_versions\([0-9]{1,5}(\.[0-9]{1,5}){0,2}\ *,\ *[0-9]{1,5}(\.[0-9]{1,5}){0,2}\)
 macro_if_feature          @if\ feature\([a-zA-Z0-9_]+\)
 macro_else  @else
@@ -207,6 +210,108 @@ promise_type   [a-zA-Z_]+:
                             ParserDebug("\tL:macro @if %d:accepted to next @endif\n", P.line_pos);
                         }
                         else if (result == VERSION_GREATER)
+                        {
+                            ParserDebug("\tL:macro @if %d:ignoring to next @endif or EOF\n", P.line_pos);
+                            BEGIN(if_ignore_state);
+                        }
+                        else
+                        {
+                            assert(result == VERSION_ERROR);
+                            yyerror("fatal: macro @if requested an unparseable version");
+                        }
+                      }
+
+{macro_if_before_version} {
+                        if (  P.line_pos != 1 )
+                        {
+                             yyerror("fatal: macro @if must be at beginning of the line.");
+                             return 0;
+                        }
+                        if (P.if_depth > 0)
+                        {
+                          yyerror("fatal: nested @if macros are not allowed");
+                          return 0;
+                        }
+
+                        P.if_depth++;
+
+                        const char* target = yytext + strlen("@if before_version(");
+                        ParserDebug("\tL:macro @if %d:version=%s\n", P.line_pos, target);
+
+                        VersionComparison result = CompareVersion(Version(), target);
+                        if (result == VERSION_SMALLER)
+                        {
+                            ParserDebug("\tL:macro @if %d:accepted to next @endif\n", P.line_pos);
+                        }
+                        else if (result == VERSION_GREATER || result == VERSION_EQUAL)
+                        {
+                            ParserDebug("\tL:macro @if %d:ignoring to next @endif or EOF\n", P.line_pos);
+                            BEGIN(if_ignore_state);
+                        }
+                        else
+                        {
+                            assert(result == VERSION_ERROR);
+                            yyerror("fatal: macro @if requested an unparseable version");
+                        }
+                      }
+
+{macro_if_at_version} {
+                        if (  P.line_pos != 1 )
+                        {
+                             yyerror("fatal: macro @if must be at beginning of the line.");
+                             return 0;
+                        }
+                        if (P.if_depth > 0)
+                        {
+                          yyerror("fatal: nested @if macros are not allowed");
+                          return 0;
+                        }
+
+                        P.if_depth++;
+
+                        const char* target = yytext + strlen("@if at_version(");
+                        ParserDebug("\tL:macro @if %d:version=%s\n", P.line_pos, target);
+
+                        VersionComparison result = CompareVersion(Version(), target);
+                        if (result == VERSION_EQUAL)
+                        {
+                            ParserDebug("\tL:macro @if %d:accepted to next @endif\n", P.line_pos);
+                        }
+                        else if (result == VERSION_GREATER || result == VERSION_SMALLER)
+                        {
+                            ParserDebug("\tL:macro @if %d:ignoring to next @endif or EOF\n", P.line_pos);
+                            BEGIN(if_ignore_state);
+                        }
+                        else
+                        {
+                            assert(result == VERSION_ERROR);
+                            yyerror("fatal: macro @if requested an unparseable version");
+                        }
+                      }
+
+{macro_if_after_version} {
+                        if (  P.line_pos != 1 )
+                        {
+                             yyerror("fatal: macro @if must be at beginning of the line.");
+                             return 0;
+                        }
+                        if (P.if_depth > 0)
+                        {
+                          yyerror("fatal: nested @if macros are not allowed");
+                          return 0;
+                        }
+
+                        P.if_depth++;
+
+                        const char* target = yytext + strlen("@if after_version(");
+                        ParserDebug("\tL:macro @if %d:version=%s\n", P.line_pos, target);
+
+                        VersionComparison result = CompareVersion(Version(), target);
+                        if (result == VERSION_GREATER)
+                        {
+                            ParserDebug("\tL:macro @if %d:accepted to next @endif\n", P.line_pos);
+                        }
+                        else if (result == VERSION_EQUAL || result == VERSION_SMALLER)
                         {
                             ParserDebug("\tL:macro @if %d:ignoring to next @endif or EOF\n", P.line_pos);
                             BEGIN(if_ignore_state);

@@ -497,6 +497,23 @@ static int fork_and_diagnose(const char *path, bool validate, bool test_write)
     return CF_CHECK_OK;
 }
 
+static char *follow_symlink(const char *path)
+{
+    char target_buf[4096] = { 0 };
+    const ssize_t r = readlink(path, target_buf, sizeof(target_buf));
+    if (r < 0)
+    {
+        return NULL;
+    }
+    if (r >= sizeof(target_buf))
+    {
+        Log(LOG_LEVEL_ERR, "Symlink target path too long: %s", path);
+        return NULL;
+    }
+    target_buf[r] = '\0';
+    return xstrdup(target_buf);
+}
+
 /**
  * @param[in]  filenames  DB files to diagnose/check
  * @param[out] corrupt    place to store the resulting sequence of corrupted
@@ -524,8 +541,31 @@ size_t diagnose_files(
     for (int i = 0; i < length; ++i)
     {
         const char *filename = SeqAt(filenames, i);
-        int r;
-        if (foreground)
+        const char *symlink = NULL; // Only initialized because of gcc warning
+        int r = 0; // Only initialized because of LGTM alert
+        char *symlink_target = follow_symlink(filename);
+        bool broken_symlink_handled = false;
+        if (symlink_target != NULL)
+        {
+            symlink = filename;
+            // If the LMDB file path is a symlink
+            filename = symlink_target;
+            if (access(symlink_target, F_OK) != 0)
+            {
+                // Symlink target file does not exist
+                r = CF_CHECK_OK_DOES_NOT_EXIST;
+                broken_symlink_handled = true;
+            }
+            // If this is not the case, continue repair as normal,
+            // using the symlink target instead of the symlink in diagnose
+            // and repair functions
+        }
+        if (broken_symlink_handled)
+        {
+            // The LMDB database was a broken symlink,
+            // we don't need to do anything, agent will recreate it.
+        }
+        else if (foreground)
         {
             r = diagnose(filename, true, validate);
             if ((r == CF_CHECK_OK) && test_write)
@@ -537,12 +577,25 @@ size_t diagnose_files(
         {
             r = fork_and_diagnose(filename, validate, test_write);
         }
-        Log(LOG_LEVEL_INFO,
-            "Status of '%s': %s\n",
-            filename,
-            CF_CHECK_STRING(r));
 
-        if (r != CF_CHECK_OK)
+        if (symlink_target != NULL)
+        {
+            Log(LOG_LEVEL_INFO,
+                "Status of '%s' -> '%s': %s\n",
+                symlink,
+                symlink_target,
+                CF_CHECK_STRING(r));
+        }
+        else
+        {
+            Log(LOG_LEVEL_INFO,
+                "Status of '%s': %s\n",
+                filename,
+                CF_CHECK_STRING(r));
+        }
+
+
+        if (r != CF_CHECK_OK && r != CF_CHECK_OK_DOES_NOT_EXIST)
         {
             ++corruptions;
             if (corrupt != NULL)
@@ -550,6 +603,7 @@ size_t diagnose_files(
                 SeqAppend(*corrupt, xstrdup(filename));
             }
         }
+        free(symlink_target);
     }
     if (corruptions == 0)
     {

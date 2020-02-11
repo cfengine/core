@@ -35,6 +35,7 @@ stamp-h1
 /cf-check/Makefile
 /cf-execd/Makefile
 /cf-key/Makefile
+/cf-keycrypt/Makefile
 /cf-monitord/Makefile
 /cf-net/Makefile
 /cf-promises/Makefile

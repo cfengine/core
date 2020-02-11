@@ -125,9 +125,11 @@ class Release:
         log.debug("In artifacts: {}".format(artifacts))
         for tag in tags or []:
             tag = canonify(tag)
-            artifacts = [a for a in artifacts if tag in a.tags]
+            new_artifacts = [a for a in artifacts if tag in a.tags]
             # Have to force evaluation using list comprehension,
             # since we are overwriting artifacts
+            if len(new_artifacts) > 0:
+                artifacts = new_artifacts
 
         log.debug("Found artifacts: {}".format(artifacts))
         return artifacts

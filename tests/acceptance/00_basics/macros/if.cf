@@ -77,20 +77,20 @@ bundle common test
       "not_expected_4_0_0";
 @endif
 
-@if between_versions(3.15.0, 4.0.0)
+@if between_versions(3.12.0, 4.0.0)
     classes:
-      "expected_3_15_0_4_0_0";
+      "expected_3_12_0_4_0_0";
 @else
     classes:
-      "not_expected_3_15_0_4_0_0";
+      "not_expected_3_12_0_4_0_0";
 @endif
 
-@if between_versions(3.11, 3.12)
+@if between_versions(3.10, 3.11)
     classes:
-      "not_expected_3_11_3_12";
+      "not_expected_3_10_3_11";
 @else
     classes:
-      "expected_3_11_3_12";
+      "expected_3_10_3_11";
 @endif
 
 @if before_version(4)

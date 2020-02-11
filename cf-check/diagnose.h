@@ -13,6 +13,7 @@
 // clang-format off
 #define CF_CHECK_RUN_CODES(macro)                         \
     macro(OK)                                             \
+    macro(OK_DOES_NOT_EXIST)                              \
     macro(SIGNAL_HANGUP)                                  \
     macro(SIGNAL_INTERRUPT)                               \
     macro(SIGNAL_QUIT)                                    \

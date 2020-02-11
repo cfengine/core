@@ -433,6 +433,15 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
+    if (decrypt && (host == NULL) && (key_path == NULL))
+    {
+        /* Decryption requires a private key which is usually only available for
+         * the local host. Let's just default to localhost if no other specific
+         * host/key is given for decryption. */
+        Log(LOG_LEVEL_VERBOSE, "Using the localhost private key for decryption");
+        host = "localhost";
+    }
+
     if ((host != NULL) && (key_path != NULL))
     {
         Log(LOG_LEVEL_ERR,

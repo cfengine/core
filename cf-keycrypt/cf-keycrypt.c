@@ -53,10 +53,16 @@
 #include <conversion.h>
 #include <hash.h>
 #include <known_dirs.h>
+#include <string_lib.h>
 #include <file_lib.h>
 #include <unistd.h>
 
 #define BUFSIZE 1024
+
+typedef enum {
+    HOST_RSA_KEY_PRIVATE,
+    HOST_RSA_KEY_PUBLIC,
+} HostRSAKeyType;
 
 static const char passphrase[] = "Cfengine passphrase";
 
@@ -99,7 +105,7 @@ static const char *const HINTS[] =
     NULL
 };
 
-static inline void *get_in_addr(struct sockaddr *sa)
+static inline void *GetIPAddress(struct sockaddr *sa)
 {
     assert(sa != NULL);
     if (sa->sa_family == AF_INET)
@@ -109,15 +115,22 @@ static inline void *get_in_addr(struct sockaddr *sa)
     return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
-static char *get_host_pubkey(const char *host)
+/**
+ * Get path of the RSA key for the given host.
+ */
+static char *GetHostRSAKey(const char *host, HostRSAKeyType type)
 {
-    char *buffer = (char *) malloc(BUFSIZE *sizeof(char));
-    char hash[CF_HOSTKEY_STRING_SIZE];
-    char ipaddress[BUFSIZE];
-    struct addrinfo *result;
-    struct addrinfo *res;
-    bool found = false;
+    const char *key_ext = NULL;
+    if (type == HOST_RSA_KEY_PRIVATE)
+    {
+        key_ext = ".priv";
+    }
+    else
+    {
+        key_ext = ".pub";
+    }
 
+    struct addrinfo *result;
     int error = getaddrinfo(host, NULL, NULL, &result);
     if (error != 0)
     {
@@ -126,35 +139,37 @@ static char *get_host_pubkey(const char *host)
         return NULL;
     }
 
-    for(res = result; res != NULL && !found; res = res->ai_next)
+    char *buffer = malloc(BUFSIZE);
+    char hash[CF_HOSTKEY_STRING_SIZE];
+    char ipaddress[64];
+    bool found = false;
+    for (struct addrinfo *res = result; !found && (res != NULL); res = res->ai_next)
     {
-        inet_ntop(res->ai_family, get_in_addr((struct sockaddr *)res->ai_addr), ipaddress, sizeof(ipaddress));
-        if ((strcmp(ipaddress, "127.0.0.1") == 0) || (strcmp(ipaddress, "::1") == 0))
+        inet_ntop(res->ai_family,
+                  GetIPAddress((struct sockaddr *) res->ai_addr),
+                  ipaddress, sizeof(ipaddress));
+        if (StringStartsWith(ipaddress, "127.") || StringSafeEqual(ipaddress, "::1"))
         {
             found = true;
-            snprintf(buffer, BUFSIZE * sizeof(char), "%s/ppkeys/localhost.pub", WORKDIR);
+            snprintf(buffer, BUFSIZE, "%s/ppkeys/localhost%s", WORKDIR, key_ext);
             return buffer;
         }
         found = Address2Hostkey(hash, sizeof(hash), ipaddress);
     }
     if (found)
     {
-        snprintf(buffer, BUFSIZE * sizeof(char), "%s/ppkeys/root-%s.pub", WORKDIR, hash);
+        snprintf(buffer, BUFSIZE, "%s/ppkeys/root-%s%s", WORKDIR, hash, key_ext);
         freeaddrinfo(result);
         return buffer;
     }
     else
     {
-        for(res = result; res != NULL; res = res->ai_next)
+        for (struct addrinfo *res = result; res != NULL; res = res->ai_next)
         {
-            inet_ntop(
-                res->ai_family,
-                get_in_addr((struct sockaddr *)res->ai_addr),
-                ipaddress,
-                sizeof(ipaddress));
-            snprintf(
-                buffer, BUFSIZE * sizeof(char), "%s/ppkeys/root-%s.pub",
-                WORKDIR, ipaddress);
+            inet_ntop(res->ai_family,
+                      GetIPAddress((struct sockaddr *) res->ai_addr),
+                      ipaddress, sizeof(ipaddress));
+            snprintf(buffer, BUFSIZE, "%s/ppkeys/root-%s%s", WORKDIR, ipaddress, key_ext);
             if (access(buffer, F_OK) == 0)
             {
                 freeaddrinfo(result);
@@ -165,7 +180,7 @@ static char *get_host_pubkey(const char *host)
     return NULL;
 }
 
-static RSA *readseckey(const char *privkey_path)
+static RSA *ReadPrivateKey(const char *privkey_path)
 {
     FILE *fp = safe_fopen(privkey_path,"r");
 
@@ -174,8 +189,7 @@ static RSA *readseckey(const char *privkey_path)
         Log(LOG_LEVEL_ERR, "Could not open private key '%s'", privkey_path);
         return NULL;
     }
-    RSA *privkey = PEM_read_RSAPrivateKey(fp, (RSA **)NULL, NULL,
-                                          (void *) passphrase);
+    RSA *privkey = PEM_read_RSAPrivateKey(fp, (RSA **) NULL, NULL, (void *) passphrase);
     if (privkey == NULL)
     {
         unsigned long err = ERR_get_error();
@@ -186,7 +200,7 @@ static RSA *readseckey(const char *privkey_path)
     return privkey;
 }
 
-static RSA *readpubkey(const char *pubkey_path)
+static RSA *ReadPublicKey(const char *pubkey_path)
 {
     FILE *fp = safe_fopen(pubkey_path, "r");
 
@@ -196,26 +210,23 @@ static RSA *readpubkey(const char *pubkey_path)
         return NULL;
     }
 
-    RSA *pubkey = PEM_read_RSAPublicKey(
-        fp, NULL, NULL, (void *)passphrase);
+    RSA *pubkey = PEM_read_RSAPublicKey(fp, NULL, NULL, (void *) passphrase);
     if (pubkey == NULL)
     {
-        Log(LOG_LEVEL_ERR, "Could not read public key '%s'", pubkey_path);
+        unsigned long err = ERR_get_error();
+        Log(LOG_LEVEL_ERR, "Could not read public key '%s': %s",
+            pubkey_path, ERR_reason_error_string(err));
     }
     fclose(fp);
     return pubkey;
 }
 
-static long rsa_encrypt(
-    const char *pubkey_path, const char *input_path, const char *output_path)
+static bool RSAEncrypt(const char *pubkey_path, const char *input_path, const char *output_path)
 {
-    int ks = 0;
-    unsigned long len = 0, ciphsz = 0;
-
-    RSA* pubkey = readpubkey(pubkey_path);
+    RSA* pubkey = ReadPublicKey(pubkey_path);
     if (pubkey == NULL)
     {
-        return -1;
+        return false;
     }
 
     FILE *input_file = safe_fopen(input_path, "r");
@@ -223,7 +234,7 @@ static long rsa_encrypt(
     {
         Log(LOG_LEVEL_ERR, "Could not open input file '%s'", input_path);
         RSA_free(pubkey);
-        return -1;
+        return false;
     }
 
     FILE *output_file = safe_fopen(output_path, "w");
@@ -232,132 +243,121 @@ static long rsa_encrypt(
         Log(LOG_LEVEL_ERR, "Could not create output file '%s'", output_path);
         fclose(input_file);
         RSA_free(pubkey);
-        return -1;
+        return false;
     }
 
-    ks = RSA_size(pubkey);
-    char tmp_ciphertext[ks], tmp_plaintext[ks];
+    const int key_size = RSA_size(pubkey);
+    char tmp_ciphertext[key_size], tmp_plaintext[key_size];
 
     srand(time(NULL));
-    bool error_return = false;
-    while (!feof(input_file))
+    unsigned long len = 0;
+    bool error = false;
+    while (!error && !feof(input_file))
     {
-        memset(tmp_plaintext, '\0', ks);
-        memset(tmp_ciphertext, '\0', ks);
-        len = fread(
-            tmp_plaintext, 1, ks - RSA_PKCS1_PADDING_SIZE, input_file);
+        len = fread(tmp_plaintext, 1, key_size - RSA_PKCS1_PADDING_SIZE, input_file);
         if (len <= 0 || ferror(input_file) != 0)
         {
             Log(LOG_LEVEL_ERR, "Could not read file '%s'", input_path);
-            error_return = true;
+            error = true;
             break;
         }
-        unsigned long size = RSA_public_encrypt(
-            strlen(tmp_plaintext), tmp_plaintext, tmp_ciphertext,
-            pubkey, RSA_PKCS1_PADDING);
+        unsigned long size = RSA_public_encrypt(len, tmp_plaintext, tmp_ciphertext,
+                                                pubkey, RSA_PKCS1_PADDING);
         if (size == -1)
         {
-            Log(LOG_LEVEL_ERR, "%s",
+            Log(LOG_LEVEL_ERR, "Failed to encrypt data: %s",
                 ERR_error_string(ERR_get_error(), NULL));
-            error_return = true;
+            error = true;
             break;
         }
-        fwrite(tmp_ciphertext, sizeof(unsigned char), ks, output_file);
+        fwrite(tmp_ciphertext, 1, key_size, output_file);
         if (ferror(output_file) != 0)
         {
             Log(LOG_LEVEL_ERR, "Could not write file '%s'", output_path);
-            error_return = true;
+            error = true;
             break;
         }
     }
+    OPENSSL_cleanse(tmp_plaintext, key_size);
     fclose(input_file);
     fclose(output_file);
     RSA_free(pubkey);
-    if (error_return)
-    {
-        return -1;
-    }
-    return ciphsz;
+    return !error;
 }
 
-long int rsa_decrypt(
-    const char *privkey_path, const char *input_path, const char *output_path)
+static bool RSADecrypt(const char *privkey_path, const char *input_path, const char *output_path)
 {
-    unsigned long int plsz = 0, size = 0;
-
-    RSA *privkey = (RSA *)readseckey(privkey_path);
-    if (privkey == NULL) {
-        return -1;
+    RSA *privkey = ReadPrivateKey(privkey_path);
+    if (privkey == NULL)
+    {
+        return false;
     }
 
     FILE *input_file = safe_fopen(input_path, "r");
-    if (input_file == NULL) {
+    if (input_file == NULL)
+    {
         Log(LOG_LEVEL_ERR, "Cannot open input file '%s'", input_path);
         RSA_free(privkey);
-        return -1;
+        return false;
     }
 
     FILE *output_file  = safe_fopen(output_path, "w");
-    if (output_file == NULL){
+    if (output_file == NULL)
+    {
         Log(LOG_LEVEL_ERR, "Cannot open output file '%s'", output_path);
         fclose(input_file);
         RSA_free(privkey);
-        return -1;
+        return false;
     }
 
-    unsigned long int ks = RSA_size(privkey);
-    char tmp_ciphertext[ks], tmp_plaintext[ks];
+    const int key_size = RSA_size(privkey);
+    char tmp_ciphertext[key_size], tmp_plaintext[key_size];
 
-    bool error_return = false;
-    while (!feof(input_file))
+    bool error = false;
+    while (!error && !feof(input_file))
     {
-        memset(tmp_ciphertext, '\0', ks);
-        memset(tmp_plaintext, '\0', ks);
-        unsigned long int len = fread(
-            tmp_ciphertext, 1, ks, input_file);
+        unsigned long int len = fread(tmp_ciphertext, 1, key_size, input_file);
         if (ferror(input_file) != 0)
         {
             Log(LOG_LEVEL_ERR, "Could not read from '%s'", input_path);
-            error_return = true;
-            break;
+            error = true;
         }
-        if (len > 0){
-            size = RSA_private_decrypt(
-                ks, tmp_ciphertext, tmp_plaintext, privkey, RSA_PKCS1_PADDING);
+        else if (len > 0)
+        {
+            int size = RSA_private_decrypt(key_size, tmp_ciphertext, tmp_plaintext,
+                                           privkey, RSA_PKCS1_PADDING);
             if (size == -1)
             {
-                Log(LOG_LEVEL_ERR, "%s",
+                Log(LOG_LEVEL_ERR, "Failed to decrypt data: %s",
                     ERR_error_string(ERR_get_error(), NULL));
-                error_return = true;
-                break;
+                error = true;
+            }
+            else
+            {
+                fwrite(tmp_plaintext, 1, size, output_file);
+                if (ferror(output_file) != 0)
+                {
+                    Log(LOG_LEVEL_ERR, "Could not write to '%s'", output_path);
+                    error = true;
+                }
             }
         }
-
-        fwrite(tmp_plaintext, 1, strlen(tmp_plaintext), output_file);
-        if (ferror(output_file) != 0)
-        {
-            Log(LOG_LEVEL_ERR, "Could not write to '%s'", output_path);
-            error_return = true;
-            break;
-        }
     }
+    OPENSSL_cleanse(tmp_plaintext, key_size);
     fclose(input_file);
     fclose(output_file);
     RSA_free(privkey);
-    if (error_return)
-    {
-        return -1;
-    }
-    return plsz;
+    return !error;
 }
-void cf_keycrypt_help()
+
+static void CFKeyCryptHelp()
 {
     Writer *w = FileWriter(stdout);
     WriterWriteHelp(w, "cf-keycrypt", OPTIONS, HINTS, false, NULL);
     FileWriterDetach(w);
 }
 
-void cf_keycrypt_man()
+void CFKeyCryptMan()
 {
     Writer *out = FileWriter(stdout);
     ManPageWrite(out, "cf-keycrypt", time(NULL),
@@ -371,28 +371,29 @@ int main(int argc, char *argv[])
 {
     if (argc == 1)
     {
-        cf_keycrypt_help();
+        CFKeyCryptHelp();
         exit(EXIT_FAILURE);
     }
 
     opterr = 0;
-    char *key = NULL;
+    char *key_path = NULL;
     char *input_path = NULL;
     char *output_path = NULL;
     char *host = NULL;
     bool encrypt = false;
     bool decrypt = false;
+
     int c = 0;
     while ((c = getopt_long(argc, argv, "hMedk:o:H:", OPTIONS, NULL)) != -1)
     {
         switch (c)
         {
             case 'h':
-                cf_keycrypt_help();
+                CFKeyCryptHelp();
                 exit(EXIT_SUCCESS);
                 break;
             case 'M':
-                cf_keycrypt_man();
+                CFKeyCryptMan();
                 exit(EXIT_SUCCESS);
                 break;
             case 'e':
@@ -402,7 +403,7 @@ int main(int argc, char *argv[])
                 decrypt = true;
                 break;
             case 'k':
-                key = optarg;
+                key_path = optarg;
                 break;
             case 'o':
                 output_path = optarg;
@@ -412,7 +413,7 @@ int main(int argc, char *argv[])
                 break;
             default:
                 Log(LOG_LEVEL_ERR, "Unknown option '-%c'", optopt);
-                cf_keycrypt_help();
+                CFKeyCryptHelp();
                 exit(EXIT_FAILURE);
         }
     }
@@ -426,17 +427,19 @@ int main(int argc, char *argv[])
     }
 
     // Check for argument errors:
-    if (encrypt == decrypt)
+    if ((encrypt && decrypt) || (!encrypt && !decrypt))
     {
         Log(LOG_LEVEL_ERR, "Must specify either encrypt or decrypt (and not both)");
         exit(EXIT_FAILURE);
     }
 
-    if (host != NULL && key != NULL)
+    if ((host != NULL) && (key_path != NULL))
     {
-        Log(LOG_LEVEL_ERR, "--host/-H is used to specify a public key and cannot be used with --key/-k");
+        Log(LOG_LEVEL_ERR,
+            "--host/-H is used to specify a public key and cannot be used with --key/-k");
         exit(EXIT_FAILURE);
     }
+
     if (input_path == NULL)
     {
         Log(LOG_LEVEL_ERR, "No input file specified (Use -h for help)");
@@ -448,31 +451,25 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    // Resolve host to public key:
     CryptoInitialize();
-    if (host)
+    if (host != NULL)
     {
-        key = get_host_pubkey(host);
-        if (!key)
+        HostRSAKeyType key_type = encrypt ? HOST_RSA_KEY_PUBLIC : HOST_RSA_KEY_PRIVATE;
+        key_path = GetHostRSAKey(host, key_type);
+        if (!key_path)
         {
-            Log(LOG_LEVEL_ERR, "Unable to locate public key for host '%s'", host);
+            Log(LOG_LEVEL_ERR, "Unable to locate key for host '%s'", host);
             exit(EXIT_FAILURE);
         }
     }
-
-    // Additional error checking:
-    if (key == NULL)
-    {
-        Log(LOG_LEVEL_ERR, "No key specified (Use -h for help)");
-        exit(EXIT_FAILURE);
-    }
+    assert (key_path != NULL);
 
     // Encrypt or decrypt
-    int size = 0;
+    bool success;
     if (encrypt)
     {
-        size = rsa_encrypt(key, input_path, output_path);
-        if (size < 0)
+        success = RSAEncrypt(key_path, input_path, output_path);
+        if (!success)
         {
             Log(LOG_LEVEL_ERR, "Encryption failed");
             exit(EXIT_FAILURE);
@@ -480,8 +477,8 @@ int main(int argc, char *argv[])
     }
     else if (decrypt)
     {
-        size = rsa_decrypt(key, input_path, output_path);
-        if (size < 0)
+        success = RSADecrypt(key_path, input_path, output_path);
+        if (!success)
         {
             Log(LOG_LEVEL_ERR, "Decryption failed");
             exit(EXIT_FAILURE);

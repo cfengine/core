@@ -59,10 +59,22 @@
 
 #define BUFSIZE 1024
 
+#define MAX_HEADER_LEN 256      /* "Key[126]: Value[128]" */
+#define MAX_HEADER_KEY_LEN 126
+#define MAX_HEADER_VAL_LEN 128
+
+#define MAX_HEADER_KEY_LEN_STR STRING(MAX_HEADER_KEY_LEN)
+#define MAX_HEADER_VAL_LEN_STR STRING(MAX_HEADER_VAL_LEN)
+
 typedef enum {
     HOST_RSA_KEY_PRIVATE,
     HOST_RSA_KEY_PUBLIC,
 } HostRSAKeyType;
+
+/* see README.md for details about the format */
+typedef enum {
+    CF_KEYCRYPT_FORMAT_V_1_0,
+} CFKeyCryptFormatVersion;
 
 static const char passphrase[] = "Cfengine passphrase";
 
@@ -241,48 +253,190 @@ static bool RSAEncrypt(const char *pubkey_path, const char *input_path, const ch
     if (output_file == NULL)
     {
         Log(LOG_LEVEL_ERR, "Could not create output file '%s'", output_path);
-        fclose(input_file);
         RSA_free(pubkey);
+        fclose(input_file);
         return false;
     }
 
-    const int key_size = RSA_size(pubkey);
-    char tmp_ciphertext[key_size], tmp_plaintext[key_size];
-
-    srand(time(NULL));
-    unsigned long len = 0;
-    bool error = false;
-    while (!error && !feof(input_file))
+    EVP_PKEY *evp_key = EVP_PKEY_new();
+    if (EVP_PKEY_set1_RSA(evp_key, pubkey) == 0)
     {
-        len = fread(tmp_plaintext, 1, key_size - RSA_PKCS1_PADDING_SIZE, input_file);
-        if (len <= 0 || ferror(input_file) != 0)
+        Log(LOG_LEVEL_ERR, "Failed to initialize encryption context");
+        RSA_free(pubkey);
+        fclose(input_file);
+        fclose(output_file);
+        return false;
+    }
+
+    bool success = true;
+
+    const EVP_CIPHER *cipher = EVP_aes_256_cbc();
+    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+    const int key_size = EVP_PKEY_size(evp_key);
+
+    unsigned char *ek = xmalloc(key_size);
+    int ek_size;
+
+    const int iv_size = EVP_CIPHER_iv_length(cipher);
+    unsigned char iv[iv_size];
+
+    const int block_size = EVP_CIPHER_block_size(cipher);
+    char plaintext[block_size], ciphertext[2 * block_size];
+    int ct_len;
+
+    int ret = EVP_SealInit(ctx, cipher, &ek, &ek_size, iv, &evp_key, 1);
+    if (ret == 0)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to initialize encryption context");
+        success = false;
+        goto cleanup;
+    }
+
+    const char *headers = "Version: 1.0\n"
+                          "\n";
+    size_t headers_len = strlen(headers);
+    ssize_t n_written = FullWrite(fileno(output_file), headers, headers_len);
+    if (n_written != headers_len)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to write headers to the output file '%s'", output_path);
+        success = false;
+        goto cleanup;
+    }
+
+    n_written = FullWrite(fileno(output_file), iv, iv_size);
+    if (n_written != iv_size)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to write IV to the output file '%s'", output_path);
+        success = false;
+        goto cleanup;
+    }
+    n_written = FullWrite(fileno(output_file), ek, ek_size);
+    if (n_written != ek_size)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to write key to the output file '%s'", output_path);
+        success = false;
+        goto cleanup;
+    }
+
+    while (success && !feof(input_file))
+    {
+        ssize_t n_read = ReadFileStreamToBuffer(input_file, block_size, plaintext);
+        if (n_read == FILE_ERROR_READ)
         {
             Log(LOG_LEVEL_ERR, "Could not read file '%s'", input_path);
-            error = true;
+            success = false;
             break;
         }
-        unsigned long size = RSA_public_encrypt(len, tmp_plaintext, tmp_ciphertext,
-                                                pubkey, RSA_PKCS1_PADDING);
-        if (size == -1)
+        ret = EVP_SealUpdate(ctx, ciphertext, &ct_len, plaintext, n_read);
+        if (ret == 0)
         {
             Log(LOG_LEVEL_ERR, "Failed to encrypt data: %s",
                 ERR_error_string(ERR_get_error(), NULL));
-            error = true;
+            success = false;
             break;
         }
-        fwrite(tmp_ciphertext, 1, key_size, output_file);
-        if (ferror(output_file) != 0)
+        n_written = FullWrite(fileno(output_file), ciphertext, ct_len);
+        if (n_written < 0)
         {
             Log(LOG_LEVEL_ERR, "Could not write file '%s'", output_path);
-            error = true;
+            success = false;
             break;
         }
     }
-    OPENSSL_cleanse(tmp_plaintext, key_size);
+    ret = EVP_SealFinal(ctx, ciphertext, &ct_len);
+    if (ret == 0)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to encrypt data: %s",
+            ERR_error_string(ERR_get_error(), NULL));
+        success = false;
+    }
+    if (ct_len > 0)
+    {
+        n_written = FullWrite(fileno(output_file), ciphertext, ct_len);
+        if (n_written < 0)
+        {
+            Log(LOG_LEVEL_ERR, "Could not write file '%s'", output_path);
+            success = false;
+        }
+    }
+    OPENSSL_cleanse(plaintext, block_size);
+
+  cleanup:
+    RSA_free(pubkey);
     fclose(input_file);
     fclose(output_file);
-    RSA_free(pubkey);
-    return !error;
+    EVP_PKEY_free(evp_key);
+    EVP_CIPHER_CTX_free(ctx);
+    free(ek);
+    return success;
+}
+
+static bool CheckHeader(const char *key, const char *value)
+{
+    if (StringSafeEqual(key, "Version"))
+    {
+        if (!StringSafeEqual(value, "1.0"))
+        {
+            Log(LOG_LEVEL_ERR, "Unsupported file format version: '%s'", value);
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
+    else
+    {
+        Log(LOG_LEVEL_ERR, "Unsupported header: '%s'", key);
+        return false;
+    }
+}
+
+static bool ParseHeaders(FILE *input_file)
+{
+    char key[MAX_HEADER_KEY_LEN + 1];
+    char value[MAX_HEADER_VAL_LEN + 1];
+    int ret = fscanf(input_file,
+                     "%"MAX_HEADER_KEY_LEN_STR"[^:]: %"MAX_HEADER_VAL_LEN_STR"[^\n]",
+                     key, value);
+    bool version_specified = false;
+    while (ret == 2)
+    {
+        if (!CheckHeader(key, value))
+        {
+            return false;
+        }
+        version_specified = (version_specified || (StringSafeEqual(key, "Version")));
+
+        /* each header should be terminated by a newline */
+        char next = fgetc(input_file);
+        if (next == '\n')
+        {
+            next = fgetc(input_file);
+            if (next == '\n')
+            {
+                /* headers are supposed to be separated by blank line */
+                if (!version_specified)
+                {
+                    Log(LOG_LEVEL_ERR, "File format version not specified");
+                }
+                return version_specified;
+            }
+            else
+            {
+                /* keep trying */
+                ungetc(next, input_file);
+            }
+        }
+        else
+        {
+            return false;
+        }
+        ret = fscanf(input_file,
+                     "%"MAX_HEADER_KEY_LEN_STR"[^:]: %"MAX_HEADER_VAL_LEN_STR"[^\n]\n",
+                     key, value);
+    }
+    return false;
 }
 
 static bool RSADecrypt(const char *privkey_path, const char *input_path, const char *output_path)
@@ -310,44 +464,113 @@ static bool RSADecrypt(const char *privkey_path, const char *input_path, const c
         return false;
     }
 
-    const int key_size = RSA_size(privkey);
-    char tmp_ciphertext[key_size], tmp_plaintext[key_size];
-
-    bool error = false;
-    while (!error && !feof(input_file))
+    EVP_PKEY *evp_key = EVP_PKEY_new();
+    if (EVP_PKEY_set1_RSA(evp_key, privkey) == 0)
     {
-        unsigned long int len = fread(tmp_ciphertext, 1, key_size, input_file);
-        if (ferror(input_file) != 0)
+        Log(LOG_LEVEL_ERR, "Failed to initialize decryption context");
+        RSA_free(privkey);
+        fclose(input_file);
+        fclose(output_file);
+        return false;
+    }
+
+    bool success = true;
+
+    if (!ParseHeaders(input_file))
+    {
+        Log(LOG_LEVEL_ERR, "Failed to parse headers from '%s'", input_path);
+        RSA_free(privkey);
+        fclose(input_file);
+        fclose(output_file);
+        return false;
+    }
+
+    const EVP_CIPHER *cipher = EVP_aes_256_cbc();
+    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+
+    const int iv_size = EVP_CIPHER_iv_length(cipher);
+    unsigned char iv[iv_size];
+
+    const int key_size = EVP_PKEY_size(evp_key);
+    unsigned char ek[key_size];
+
+    const int block_size = EVP_CIPHER_block_size(cipher);
+
+    char plaintext[block_size], ciphertext[2 * block_size];
+    int pt_len;
+
+    ssize_t n_read = ReadFileStreamToBuffer(input_file, iv_size, iv);
+    if (n_read != iv_size)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to read the IV from '%s'", input_path);
+        goto cleanup;
+    }
+    n_read = ReadFileStreamToBuffer(input_file, key_size, ek);
+    if (n_read != key_size)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to read the key from '%s'", input_path);
+        goto cleanup;
+    }
+
+    int ret = EVP_OpenInit(ctx, cipher, ek, key_size, iv, evp_key);
+    if (ret == 0)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to initialize decryption context");
+        success = false;
+        goto cleanup;
+    }
+
+    ssize_t n_written;
+    while (success && !feof(input_file))
+    {
+        n_read = ReadFileStreamToBuffer(input_file, block_size, ciphertext);
+        if (n_read == FILE_ERROR_READ)
         {
-            Log(LOG_LEVEL_ERR, "Could not read from '%s'", input_path);
-            error = true;
+            Log(LOG_LEVEL_ERR, "Could not read file '%s'", input_path);
+            success = false;
+            break;
         }
-        else if (len > 0)
+        ret = EVP_OpenUpdate(ctx, plaintext, &pt_len, ciphertext, n_read);
+        if (ret == 0)
         {
-            int size = RSA_private_decrypt(key_size, tmp_ciphertext, tmp_plaintext,
-                                           privkey, RSA_PKCS1_PADDING);
-            if (size == -1)
-            {
-                Log(LOG_LEVEL_ERR, "Failed to decrypt data: %s",
-                    ERR_error_string(ERR_get_error(), NULL));
-                error = true;
-            }
-            else
-            {
-                fwrite(tmp_plaintext, 1, size, output_file);
-                if (ferror(output_file) != 0)
-                {
-                    Log(LOG_LEVEL_ERR, "Could not write to '%s'", output_path);
-                    error = true;
-                }
-            }
+            Log(LOG_LEVEL_ERR, "Failed to encrypt data: %s",
+                ERR_error_string(ERR_get_error(), NULL));
+            success = false;
+            break;
+        }
+        n_written = FullWrite(fileno(output_file), plaintext, pt_len);
+        if (n_written < 0)
+        {
+            Log(LOG_LEVEL_ERR, "Could not write file '%s'", output_path);
+            success = false;
+            break;
         }
     }
-    OPENSSL_cleanse(tmp_plaintext, key_size);
+    ret = EVP_OpenFinal(ctx, plaintext, &pt_len);
+    if (ret == 0)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to encrypt data: %s",
+            ERR_error_string(ERR_get_error(), NULL));
+        success = false;
+    }
+    if (pt_len > 0)
+    {
+        n_written = FullWrite(fileno(output_file), plaintext, pt_len);
+        if (n_written < 0)
+        {
+            Log(LOG_LEVEL_ERR, "Could not write file '%s'", output_path);
+            success = false;
+        }
+    }
+    OPENSSL_cleanse(plaintext, block_size);
+
+  cleanup:
+    RSA_free(privkey);
     fclose(input_file);
     fclose(output_file);
-    RSA_free(privkey);
-    return !error;
+    EVP_PKEY_free(evp_key);
+    EVP_CIPHER_CTX_free(ctx);
+    return success;
 }
 
 static void CFKeyCryptHelp()

@@ -56,9 +56,10 @@ body printfile cat(file)
 #+begin_src static_example_output
 #@ ```
 #@ R: Encrypted file content:
-#@ R: ��Q�������VO�["N߀ �1�}΢n�#��h�J�2�}5���N1m�n�,��E��\����٣��g<F�3A�rH?�`[V,G�\׮�\�5+�m��[[��Y��{�vD|@���䁶X��w
-#@ R: !�X�-Z��(�L92��t�n��=�Q�����
-#@                                 |����Q�C'��P�uY��$�oG���uXw{ �O�DD���h�u��f)�	�n��#ꊾ/�y�o>>��oqVہ��P�-{.�G��w$
+#@ R: Version: 1.0
+#@ R: 
+#@ R: ���V�cv�#�P��, ��-O�8旼[i����p򢢦�Q�
+#@ R: Φ&l�x'�#j���qQ����[�F�1����v�Q��ˮ�J'�թ�|^HG%)�`&�����~k�$wd]"�%4X\(Q�~�O����s�A~���/��:�"	gi�Rn&ٍ�E^���߬3��M�ə�%2s�SB��b3���K4wm����o�B�:P��O�#��1�t8��`�@��j/��+����j��g஡����Z�D�iJ��͞j��8ĉ�ag�9vz?+�暢��So��.Org]�"+�S����_HѢ=_O%
 #@ R: Decrypted content:
 #@ Super secret message is here
 #@ ```

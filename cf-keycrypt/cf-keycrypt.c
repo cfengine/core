@@ -233,6 +233,24 @@ static RSA *ReadPublicKey(const char *pubkey_path)
     return pubkey;
 }
 
+static FILE *OpenInputOutput(const char *path, const char *mode)
+{
+    assert(path != NULL);
+    assert(mode != NULL);
+    if (StringSafeEqual(path, "-"))
+    {
+        if (*mode == 'r')
+        {
+            return stdin;
+        }
+        else
+        {
+            return stdout;
+        }
+    }
+    return safe_fopen(path, mode);
+}
+
 static bool RSAEncrypt(const char *pubkey_path, const char *input_path, const char *output_path)
 {
     RSA* pubkey = ReadPublicKey(pubkey_path);
@@ -241,7 +259,7 @@ static bool RSAEncrypt(const char *pubkey_path, const char *input_path, const ch
         return false;
     }
 
-    FILE *input_file = safe_fopen(input_path, "r");
+    FILE *input_file = OpenInputOutput(input_path, "r");
     if (input_file == NULL)
     {
         Log(LOG_LEVEL_ERR, "Could not open input file '%s'", input_path);
@@ -249,7 +267,7 @@ static bool RSAEncrypt(const char *pubkey_path, const char *input_path, const ch
         return false;
     }
 
-    FILE *output_file = safe_fopen(output_path, "w");
+    FILE *output_file = OpenInputOutput(output_path, "w");
     if (output_file == NULL)
     {
         Log(LOG_LEVEL_ERR, "Could not create output file '%s'", output_path);
@@ -447,7 +465,7 @@ static bool RSADecrypt(const char *privkey_path, const char *input_path, const c
         return false;
     }
 
-    FILE *input_file = safe_fopen(input_path, "r");
+    FILE *input_file = OpenInputOutput(input_path, "r");
     if (input_file == NULL)
     {
         Log(LOG_LEVEL_ERR, "Cannot open input file '%s'", input_path);
@@ -455,7 +473,7 @@ static bool RSADecrypt(const char *privkey_path, const char *input_path, const c
         return false;
     }
 
-    FILE *output_file  = safe_fopen(output_path, "w");
+    FILE *output_file = OpenInputOutput(output_path, "w");
     if (output_file == NULL)
     {
         Log(LOG_LEVEL_ERR, "Cannot open output file '%s'", output_path);

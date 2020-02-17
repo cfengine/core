@@ -84,6 +84,11 @@ static inline bool ProtocolIsClassic(const ProtocolVersion p)
     return (p == CF_PROTOCOL_CLASSIC);
 }
 
+static inline bool ProtocolTerminateCSV(const ProtocolVersion p)
+{
+    return (p < CF_PROTOCOL_COOKIE);
+}
+
 /**
  * Returns CF_PROTOCOL_TLS or CF_PROTOCOL_CLASSIC (or CF_PROTOCOL_UNDEFINED)
  * Maps all versions using TLS to CF_PROTOCOL_TLS for convenience

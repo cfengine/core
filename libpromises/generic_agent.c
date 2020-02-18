@@ -1802,6 +1802,35 @@ void WritePID(char *filename)
     fclose(fp);
 }
 
+pid_t ReadPID(char *filename)
+{
+    char pidfile[PATH_MAX];
+    snprintf(pidfile, PATH_MAX - 1, "%s%c%s", GetPidDir(), FILE_SEPARATOR, filename);
+
+    if (access(pidfile, F_OK) != 0)
+    {
+        Log(LOG_LEVEL_VERBOSE, "PID file '%s' doesn't exist", pidfile);
+        return -1;
+    }
+
+    FILE *fp = safe_fopen(pidfile, "r");
+    if (fp == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Could not read PID file '%s' (fopen: %s)", filename, GetErrorStr());
+        return -1;
+    }
+
+    intmax_t pid;
+    if (fscanf(fp, "%jd", &pid) != 1)
+    {
+        Log(LOG_LEVEL_ERR, "Could not read PID from '%s'", pidfile);
+        fclose(fp);
+        return -1;
+    }
+    fclose(fp);
+    return ((pid_t) pid);
+}
+
 bool GenericAgentConfigParseArguments(GenericAgentConfig *config, int argc, char **argv)
 {
     if (argc == 0)

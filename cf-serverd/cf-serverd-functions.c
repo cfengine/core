@@ -465,6 +465,7 @@ static void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConf
     else
     {
         Log(LOG_LEVEL_DEBUG, "No new promises found");
+        EvalContextUpdateDumpReports(ctx);
     }
 }
 

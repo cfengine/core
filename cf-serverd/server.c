@@ -470,6 +470,7 @@ static ServerConnectionState *NewConn(EvalContext *ctx, ConnectionInfo *info)
     conn->ctx = ctx;
     conn->conn_info = info;
     conn->encryption_type = 'c';
+    conn->dump_reports = EvalContextGetDumpReports(ctx);
     /* Only public files (chmod o+r) accessible to non-root */
     conn->uid = CF_UNKNOWN_OWNER;                    /* Careful, 0 is root! */
     /* conn->maproot is false: only public files (chmod o+r) are accessible */

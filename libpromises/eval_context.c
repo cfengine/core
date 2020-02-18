@@ -180,6 +180,8 @@ struct EvalContext_
     /* Promises possibly remotely-injecting variables */
     /* ONLY INITIALIZED WHEN NON-EMPTY, OTHERWISE NULL */
     RemoteVarPromisesMap *remote_var_promises;
+
+    bool dump_reports;
 };
 
 bool EvalContextGetSelectEndMatchEof(const EvalContext *ctx)
@@ -1023,6 +1025,8 @@ EvalContext *EvalContextNew(void)
     ctx->remote_var_promises = NULL;
 
     ctx->select_end_match_eof = false;
+
+    ctx->dump_reports = false;
 
     return ctx;
 }
@@ -3196,4 +3200,35 @@ const Seq *EvalContextGetRemoteVarPromises(const EvalContext *ctx, const char *b
         return NULL;
     }
     return RemoteVarPromisesMapGet(ctx->remote_var_promises, bundle_name);
+}
+
+void EvalContextSetDumpReports(EvalContext *ctx, bool dump_reports)
+{
+    assert(ctx != NULL);
+    ctx->dump_reports = dump_reports;
+    if (dump_reports)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Report dumping is enabled");
+    }
+}
+
+bool EvalContextGetDumpReports(EvalContext *ctx)
+{
+    assert(ctx != NULL);
+
+    return ctx->dump_reports;
+}
+
+void EvalContextUpdateDumpReports(EvalContext *ctx)
+{
+    assert(ctx != NULL);
+
+    char enable_file_path[PATH_MAX];
+    snprintf(
+        enable_file_path,
+        PATH_MAX,
+        "%s%cenable_report_dumps",
+        GetWorkDir(),
+        FILE_SEPARATOR);
+    EvalContextSetDumpReports(ctx, (access(enable_file_path, F_OK) == 0));
 }

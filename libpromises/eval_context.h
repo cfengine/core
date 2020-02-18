@@ -276,4 +276,8 @@ char *MissionPortalLogHook(LoggingPrivContext *pctx, LogLevel level, const char 
 
 JsonElement* JsonExpandElement(EvalContext *ctx, const JsonElement *source);
 
+void EvalContextSetDumpReports(EvalContext *ctx, bool dump_reports);
+bool EvalContextGetDumpReports(EvalContext *ctx);
+void EvalContextUpdateDumpReports(EvalContext *ctx);
+
 #endif

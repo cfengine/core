@@ -122,6 +122,8 @@ struct ServerConnectionState_
     /* TODO pass it through function arguments, EvalContext has nothing to do
      * with connection-specific data. */
     EvalContext *ctx;
+
+    bool dump_reports;
 };
 
 typedef struct

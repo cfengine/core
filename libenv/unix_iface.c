@@ -164,8 +164,14 @@ static void GetMacAddress(EvalContext *ctx, int fd, struct ifreq *ifr, struct if
              (unsigned char) ifr->ifr_hwaddr.sa_data[5]);
 
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, hw_mac, CF_DATA_TYPE_STRING, "source=agent");
-    RlistAppend(hardware, hw_mac, RVAL_TYPE_SCALAR);
-    RlistAppend(interfaces, ifp->ifr_name, RVAL_TYPE_SCALAR);
+    if (!RlistContainsString(*hardware, hw_mac))
+    {
+        RlistAppend(hardware, hw_mac, RVAL_TYPE_SCALAR);
+    }
+    if (!RlistContainsString(*interfaces, ifp->ifr_name))
+    {
+        RlistAppend(interfaces, ifp->ifr_name, RVAL_TYPE_SCALAR);
+    }
 
     snprintf(name, sizeof(name), "mac_%s", CanonifyName(hw_mac));
     EvalContextClassPutHard(ctx, name, "inventory,attribute_name=none,source=agent");
@@ -203,7 +209,10 @@ static void GetMacAddress(EvalContext *ctx, int fd, struct ifreq *ifr, struct if
                     (unsigned char) m[5]);
 
                 EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, hw_mac, CF_DATA_TYPE_STRING, "source=agent");
-                RlistAppend(hardware, hw_mac, RVAL_TYPE_SCALAR);
+                if (!RlistContainsString(*hardware, hw_mac))
+                {
+                    RlistAppend(hardware, hw_mac, RVAL_TYPE_SCALAR);
+                }
                 RlistAppend(interfaces, ifa->ifa_name, RVAL_TYPE_SCALAR);
 
                 snprintf(name, sizeof(name), "mac_%s", CanonifyName(hw_mac));
@@ -224,8 +233,15 @@ static void GetMacAddress(EvalContext *ctx, int fd, struct ifreq *ifr, struct if
 	       mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, hw_mac, CF_DATA_TYPE_STRING, "source=agent");
-        RlistAppend(hardware, hw_mac, RVAL_TYPE_SCALAR);
-        RlistAppend(interfaces, ifp->ifr_name, RVAL_TYPE_SCALAR);
+
+        if (!RlistContainsString(*hardware, hw_mac))
+        {
+            RlistAppend(hardware, hw_mac, RVAL_TYPE_SCALAR);
+        }
+        if (!RlistContainsString(*interfaces, ifp->ifr_name))
+        {
+            RlistAppend(interfaces, ifp->ifr_name, RVAL_TYPE_SCALAR);
+        }
 
         snprintf(name, CF_MAXVARSIZE, "mac_%s", CanonifyName(hw_mac));
         EvalContextClassPutHard(ctx, name, "inventory,attribute_name=none,source=agent");
@@ -272,8 +288,16 @@ static void GetMacAddress(EvalContext *ctx, int fd, struct ifreq *ifr, struct if
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name,
                                   hw_mac, CF_DATA_TYPE_STRING,
                                   "source=agent");
-    RlistAppend(hardware, hw_mac, RVAL_TYPE_SCALAR);
-    RlistAppend(interfaces, ifp->ifr_name, RVAL_TYPE_SCALAR);
+
+    if (!RlistContainsString(*hardware, hw_mac))
+    {
+        RlistAppend(hardware, hw_mac, RVAL_TYPE_SCALAR);
+    }
+
+    if (!RlistContainsString(*interfaces, ifp->ifr_name))
+    {
+        RlistAppend(interfaces, ifp->ifr_name, RVAL_TYPE_SCALAR);
+    }
 
     snprintf(name, sizeof(name), "mac_%s", CanonifyName(hw_mac));
     EvalContextClassPutHard(ctx, name,

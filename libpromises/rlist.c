@@ -287,6 +287,27 @@ bool RlistIsInListOfRegex(const Rlist *list, const char *str)
     return false;
 }
 
+bool RlistContainsString(const Rlist *list, const char *string)
+{
+    assert(string != NULL);
+
+    if (list == NULL)
+    {
+        // Empty Rlist is represented as a NULL pointer
+        return false;
+    }
+
+    for (const Rlist *rp = list; rp != NULL; rp = rp->next)
+    {
+        if (rp->val.type == RVAL_TYPE_SCALAR &&
+            StringSafeEqual(RlistScalarValue(rp), string))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 /*******************************************************************/
 
 static Rval RvalCopyScalar(Rval rval)

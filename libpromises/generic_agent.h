@@ -124,6 +124,7 @@ Seq *ControlBodyConstraints(const Policy *policy, AgentType agent);
 void SetFacility(const char *retval);
 void CheckBundleParameters(char *scope, Rlist *args);
 void WritePID(char *filename);
+pid_t ReadPID(char *filename);
 
 bool GenericAgentConfigParseArguments(GenericAgentConfig *config, int argc, char **argv);
 bool GenericAgentConfigParseWarningOptions(GenericAgentConfig *config, const char *warning_options);

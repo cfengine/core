@@ -551,7 +551,7 @@ static PromiseResult NovaExtractValueFromStream(EvalContext *ctx, const char *ha
 
     if (!found)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Could not locate the line for promise '%s'", handle);
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a, "Could not locate the line for promise '%s'", handle);
         *value_out = 0.0;
         return PROMISE_RESULT_FAIL;
     }

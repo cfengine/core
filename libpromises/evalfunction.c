@@ -62,6 +62,7 @@
 #include <connection_info.h>
 #include <printsize.h>
 #include <csv_parser.h>
+#include <json.h>
 #include <json-yaml.h>
 #include <json-utils.h>
 #include <known_dirs.h>
@@ -6884,6 +6885,66 @@ static FnCallResult FnCallReadJson(ARG_UNUSED EvalContext *ctx,
     return ReadGenericDataType(fp, args, DATAFILETYPE_JSON);
 }
 
+static FnCallResult ValidateDataGeneric(const char *const fname,
+                                        const char *data,
+                                        const DataFileType requested_mode)
+{
+    assert(data != NULL);
+    if (requested_mode != DATAFILETYPE_JSON)
+    {
+        Log(LOG_LEVEL_ERR,
+            "%s: Data type %s is not supported by this function",
+            fname, DataFileTypeToString(requested_mode));
+        return FnFailure();
+    }
+
+    JsonElement *json = NULL;
+    JsonParseError err = JsonParse(&data, &json);
+    if (err != JSON_PARSE_OK)
+    {
+        Log(LOG_LEVEL_VERBOSE, "%s: %s", fname, JsonParseErrorToString(err));
+    }
+
+    FnCallResult ret = FnReturnContext(json != NULL);
+    JsonDestroy(json);
+    return ret;
+}
+
+static FnCallResult FnCallValidData(ARG_UNUSED EvalContext *ctx,
+                                    ARG_UNUSED const Policy *policy,
+                                    const FnCall *fp,
+                                    const Rlist *args)
+{
+    assert(fp != NULL);
+    if (args == NULL || args->next == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Function '%s' requires two arguments", fp->name);
+        return FnFailure();
+    }
+
+    const char *data = RlistScalarValue(args);
+    const char *const mode_string = RlistScalarValue(args->next);
+    DataFileType requested_mode = GetDataFileTypeFromString(mode_string);
+
+    return ValidateDataGeneric(fp->name, data, requested_mode);
+}
+
+static FnCallResult FnCallValidJson(ARG_UNUSED EvalContext *ctx,
+                                    ARG_UNUSED const Policy *policy,
+                                    const FnCall *fp,
+                                    const Rlist *args)
+{
+    assert(fp != NULL);
+    if (args == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Function '%s' requires one argument", fp->name);
+        return FnFailure();
+    }
+
+    const char *data = RlistScalarValue(args);
+    return ValidateDataGeneric(fp->name, data, DATAFILETYPE_JSON);
+}
+
 static FnCallResult FnCallReadModuleProtocol(
     ARG_UNUSED EvalContext *ctx,
     ARG_UNUSED const Policy *policy,
@@ -9131,6 +9192,12 @@ static const FnCallArg READFILE_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg VALIDDATATYPE_ARGS[] =
+{
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Data to validate"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
 static const FnCallArg CLASSFILTERCSV_ARGS[] =
 {
     {CF_ABSPATHRANGE, CF_DATA_TYPE_STRING, "File name"},
@@ -9177,6 +9244,13 @@ static const FnCallArg READDATA_ARGS[] =
 {
     {CF_ABSPATHRANGE, CF_DATA_TYPE_STRING, "File name to read"},
     {"CSV,YAML,JSON,ENV,auto", CF_DATA_TYPE_OPTION, "Type of data to read"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
+static const FnCallArg VALIDDATA_ARGS[] =
+{
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Data to validate"},
+    {"JSON", CF_DATA_TYPE_OPTION, "Type of data to validate"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
@@ -9883,6 +9957,10 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("userexists", CF_DATA_TYPE_CONTEXT, USEREXISTS_ARGS, &FnCallUserExists, "True if user name or numerical id exists on this host",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("validdata", CF_DATA_TYPE_CONTEXT, VALIDDATA_ARGS, &FnCallValidData, "Check for errors in JSON or YAML data",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("validjson", CF_DATA_TYPE_CONTAINER, VALIDDATATYPE_ARGS, &FnCallValidJson, "Check for errors in JSON data",
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("variablesmatching", CF_DATA_TYPE_STRING_LIST, CLASSMATCH_ARGS, &FnCallVariablesMatching, "List the variables matching regex arg1 and tag regexes arg2,arg3,...",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
 

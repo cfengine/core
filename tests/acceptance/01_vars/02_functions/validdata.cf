@@ -1,0 +1,38 @@
+###########################################################
+#
+# Test validdata() with valid and invalid data files
+#
+###########################################################
+
+body common control
+{
+    inputs => { "../../default.cf.sub" };
+    bundlesequence => { default($(this.promise_filename)) };
+    version => "1.0";
+}
+
+###########################################################
+
+bundle agent test
+{
+  vars:
+    "valid_json" string => "should appear",
+      if => validdata(readfile("$(this.promise_filename).json", inf), "JSON");
+    "invalid_json" string => "should not appear",
+      if => validdata(readfile("$(this.promise_filename).inv.json", inf), "JSON");
+
+    "valid_validjson" string => "should appear",
+      if => validjson(readfile("$(this.promise_filename).json", inf));
+    "invalid_validjson" string => "should not appear",
+      if => validjson(readfile("$(this.promise_filename).inv.json", inf));
+}
+
+###########################################################
+
+bundle agent check
+{
+  methods:
+    "check" usebundle => dcs_check_state(test,
+                                         "$(this.promise_filename).expected.json",
+                                         $(this.promise_filename));
+}

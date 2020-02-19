@@ -1,0 +1,61 @@
+###########################################################
+#
+# Test cf_version convenience functions
+#
+###########################################################
+
+body common control
+{
+    inputs => { "../../default.cf.sub" };
+    bundlesequence => { default($(this.promise_filename)) };
+    version => "1.0";
+}
+
+###########################################################
+
+bundle agent test
+{
+  vars:
+    "after_newer" string => "yes",
+      if => cf_version_after("1.0.0");
+    "after_newer_major" string => "yes",
+      if => cf_version_after("3.12");
+    "after_older" string => "no",
+      if => cf_version_after("999.999.999");
+    "at_same" string => "yes",
+      if => cf_version_at("$(sys.cf_version)");
+    "at_major" string => "yes",
+      if => cf_version_at("3");
+    "at_not_same" string => "no",
+      if => cf_version_at("999.999.999");
+    "before_newer" string => "no",
+      if => cf_version_before("1.0.0");
+    "before_older" string => "yes",
+      if => cf_version_before("999.999.999");
+    "before_older_major" string => "yes",
+      if => cf_version_before("999");
+    "between" string => "yes",
+      if => cf_version_between("1.0", "999.999");
+    "not_between" string => "no",
+      if => cf_version_between("999", "999");
+    "also_not_between" string => "no",
+      if => cf_version_between("1", "1");
+    "max_newer" string => "no",
+      if => cf_version_maximum("1.0.0");
+    "max_older" string => "yes",
+      if => cf_version_maximum("999.999.999");
+    "min_newer" string => "yes",
+      if => cf_version_minimum("1.0.0");
+    "min_older" string => "no",
+      if => cf_version_minimum("999.999.999");
+}
+
+###########################################################
+
+bundle agent check
+{
+  methods:
+    "check" usebundle => dcs_check_state(test,
+                                         "$(this.promise_filename).expected.json",
+                                         $(this.promise_filename));
+}

@@ -1,0 +1,11 @@
+{
+  "after_newer": "yes",
+  "after_newer_major": "yes",
+  "at_major": "yes",
+  "at_same": "yes",
+  "before_older": "yes",
+  "before_older_major": "yes",
+  "between": "yes",
+  "max_older": "yes",
+  "min_newer": "yes"
+}

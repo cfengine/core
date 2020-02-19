@@ -211,6 +211,7 @@ def get_cloud_hosts(name, private_ips=False):
         for name, info in state[group_name].items():
             if name == "meta":
                 continue
+            log.debug("found name '{}' in state, info='{}'".format(name, info))
             hosts.append(info)
     else:
         if name in state:
@@ -230,7 +231,10 @@ def get_cloud_hosts(name, private_ips=False):
 
         ips = host.get(key, [])
         if len(ips) > 0:
-            ret.append(ips[0])
+            if host.get("user"):
+                ret.append('{}@{}'.format(host.get("user"), ips[0]))
+            else:
+                ret.append(ips[0])
         else:
             ret.append(None)
 
@@ -238,10 +242,12 @@ def get_cloud_hosts(name, private_ips=False):
 
 
 def resolve_hosts(string, single=False, private_ips=False):
+    log.debug("resolving hosts from '{}'".format(string))
     if is_file_string(string):
         ret = expand_list_from_file(string)
     elif is_in_cloud_state(string):
         ret = get_cloud_hosts(string, private_ips)
+        log.debug("found in cloud, ret='{}'".format(ret))
     else:
         ret = string.split(",")
 
@@ -262,6 +268,7 @@ def validate_args(args):
         user_error("Cannot specify version number in '{}' command".format(args.command))
 
     if "hosts" in args and args.hosts:
+        log.debug("validate_args, hosts in args, args.hosts='{}'".format(args.hosts))
         args.hosts = resolve_hosts(args.hosts)
     if "clients" in args and args.clients:
         args.clients = resolve_hosts(args.clients)
@@ -280,9 +287,9 @@ def validate_args(args):
 
 def main():
     args = get_args()
-    validate_args(args)
     if args.log_level:
         log.set_level(args.log_level)
+    validate_args(args)
 
     run_command_with_args(args.command, args)
 

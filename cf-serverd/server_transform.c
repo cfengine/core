@@ -51,6 +51,7 @@
 #include <net.h>
 #include <client_code.h>
 #include <cfnet.h>
+#include <known_dirs.h> // GetWorkDir()
 
 #include "server_common.h"                         /* PreprocessRequestPath */
 #include "server_access.h"
@@ -546,6 +547,10 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
         }
     }
 
+    if (config->agent_type == AGENT_TYPE_SERVER)
+    {
+        EvalContextUpdateDumpReports(ctx);
+    }
 }
 
 /*********************************************************************/

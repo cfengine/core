@@ -10,6 +10,7 @@ from cf_remote.utils import whoami
 
 def connect(host, users=None):
     log.debug("Connecting to '{}'".format(host))
+    log.debug("users= '{}'".format(users))
     if "@" in host:
         parts = host.split("@")
         assert len(parts) == 2

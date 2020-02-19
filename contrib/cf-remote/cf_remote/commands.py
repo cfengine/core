@@ -14,6 +14,7 @@ from cf_remote import cloud_data
 
 def info(hosts, users=None):
     assert hosts
+    log.debug("hosts='{}'".format(hosts))
     for host in hosts:
         data = get_info(host, users=users)
         print_info(data)

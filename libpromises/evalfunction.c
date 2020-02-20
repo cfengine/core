@@ -9958,9 +9958,9 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("userexists", CF_DATA_TYPE_CONTEXT, USEREXISTS_ARGS, &FnCallUserExists, "True if user name or numerical id exists on this host",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("validdata", CF_DATA_TYPE_CONTEXT, VALIDDATA_ARGS, &FnCallValidData, "Check for errors in JSON or YAML data",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("validjson", CF_DATA_TYPE_CONTAINER, VALIDDATATYPE_ARGS, &FnCallValidJson, "Check for errors in JSON data",
-                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("validjson", CF_DATA_TYPE_CONTEXT, VALIDDATATYPE_ARGS, &FnCallValidJson, "Check for errors in JSON data",
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("variablesmatching", CF_DATA_TYPE_STRING_LIST, CLASSMATCH_ARGS, &FnCallVariablesMatching, "List the variables matching regex arg1 and tag regexes arg2,arg3,...",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
 

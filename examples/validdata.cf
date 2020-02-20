@@ -1,0 +1,19 @@
+#+begin_src cfengine3
+bundle agent main
+{
+  vars:
+    "json_string" string => '{"test": [1, 2, 3]}';
+
+  reports:
+    "This JSON string is valid!"
+      if => validdata("$(json_string)", "JSON");
+    "This JSON string is not valid."
+      unless => validdata("$(json_string)", "JSON");
+}
+#+end_src
+###############################################################################
+#+begin_src example_output
+#@ ```
+#@ R: This JSON string is valid!
+#@ ```
+#+end_src

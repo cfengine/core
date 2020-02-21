@@ -3425,6 +3425,7 @@ static FnCallResult FnCallMapData(EvalContext *ctx, ARG_UNUSED const Policy *pol
         JsonDestroyMaybe(container, allocated);
 
         container = temp2;
+        allocated = true;
     }
 
     JsonIterator iter = JsonIteratorInit(container);

@@ -6768,6 +6768,7 @@ static FnCallResult ReadList(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const FnCal
         return (FnCallResult) { FNCALL_SUCCESS, { newlist, RVAL_TYPE_LIST } };
     }
 
+    RlistDestroy(newlist);
     return FnFailure();
 }
 

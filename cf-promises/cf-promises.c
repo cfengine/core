@@ -278,9 +278,13 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'w':
+        {
             Log(LOG_LEVEL_INFO, "Setting workdir to '%s'", optarg);
-            putenv_wrapper(StringConcatenate(2, "CFENGINE_TEST_OVERRIDE_WORKDIR=", optarg));
+            char *str = StringConcatenate(2, "CFENGINE_TEST_OVERRIDE_WORKDIR=", optarg);
+            putenv_wrapper(str);
+            free(str);
             break;
+        }
 
         case 'c':
             config->check_runnable = true;

@@ -1009,9 +1009,11 @@ static FnCallResult FnCallSysctlValue(ARG_UNUSED EvalContext *ctx,
         BufferSearchAndReplace(var, BufferData(procrootbuf), "", "T");
         BufferSearchAndReplace(var, "/", ".", "gT");
         JsonObjectAppendString(sysctl_data, BufferData(var), result);
+        free(result);
         BufferDestroy(var);
     }
 
+    StringSetDestroy(sysctls);
     BufferDestroy(procrootbuf);
     return (FnCallResult) { FNCALL_SUCCESS, (Rval) { sysctl_data, RVAL_TYPE_CONTAINER } };
 #else

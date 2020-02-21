@@ -3753,8 +3753,9 @@ static FnCallResult FnCallMergeData(EvalContext *ctx, ARG_UNUSED const Policy *p
             {
                 JsonDestroy(json);
             }
-
-            Log(LOG_LEVEL_ERR, "%s is not mergeable as it it not a container", RvalToString(arg->val));
+            char *const as_string = RvalToString(arg->val);
+            Log(LOG_LEVEL_ERR, "%s is not mergeable as it it not a container", as_string);
+            free(as_string);
             SeqDestroy(containers);
             return FnFailure();
         }

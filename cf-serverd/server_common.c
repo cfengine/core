@@ -713,7 +713,7 @@ int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilename)
 
     if (strlen(ReadLastNode(filename)) > CF_MAXLINKSIZE)
     {
-        snprintf(sendbuffer, CF_BUFSIZE, "BAD: Filename suspiciously long [%s]", filename);
+        snprintf(sendbuffer, CF_MSGSIZE, "BAD: Filename suspiciously long [%s]", filename);
         Log(LOG_LEVEL_ERR, "%s", sendbuffer);
         SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
         return -1;
@@ -721,7 +721,7 @@ int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilename)
 
     if (lstat(filename, &statbuf) == -1)
     {
-        snprintf(sendbuffer, CF_BUFSIZE, "BAD: unable to stat file %s", filename);
+        snprintf(sendbuffer, CF_MSGSIZE, "BAD: unable to stat file %s", filename);
         Log(LOG_LEVEL_VERBOSE, "%s. (lstat: %s)", sendbuffer, GetErrorStr());
         SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
         return -1;
@@ -823,7 +823,7 @@ int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilename)
         cfst.cf_makeholes = 0;
     }
 
-    memset(sendbuffer, 0, CF_BUFSIZE);
+    memset(sendbuffer, 0, CF_MSGSIZE);
 
     /* send as plain text */
 
@@ -833,7 +833,7 @@ int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilename)
         (uintmax_t) cfst.cf_uid, (uintmax_t) cfst.cf_gid, (intmax_t) cfst.cf_size,
         (intmax_t) cfst.cf_atime, (intmax_t) cfst.cf_mtime);
 
-    snprintf(sendbuffer, CF_BUFSIZE,
+    snprintf(sendbuffer, CF_MSGSIZE,
              "OK: %d %ju %ju %ju %ju %jd %jd %jd %jd %d %d %d %jd",
              cfst.cf_type, (uintmax_t) cfst.cf_mode, (uintmax_t) cfst.cf_lmode,
              (uintmax_t) cfst.cf_uid, (uintmax_t) cfst.cf_gid,   (intmax_t) cfst.cf_size,
@@ -842,7 +842,7 @@ int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilename)
 
     SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
 
-    memset(sendbuffer, 0, CF_BUFSIZE);
+    memset(sendbuffer, 0, CF_MSGSIZE);
 
     if (cfst.cf_readlink != NULL)
     {

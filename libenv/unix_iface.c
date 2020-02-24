@@ -1446,6 +1446,7 @@ JsonElement* GetNetworkingConnections(EvalContext *ctx)
     {
         JsonObjectAppendElement(json, "udp6", data);
     }
+    BufferDestroy(pbuf);
 
     if (JsonLength(json) < 1)
     {

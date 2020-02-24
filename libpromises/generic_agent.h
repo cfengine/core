@@ -103,7 +103,6 @@ typedef struct
 
 } GenericAgentConfig;
 
-ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, GenericAgentSetDefaultDigest, HashMethod *, digest, int *, digest_len);
 const char *GenericAgentResolveInputPath(const GenericAgentConfig *config, const char *input_file);
 void MarkAsPolicyServer(EvalContext *ctx);
 void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config);

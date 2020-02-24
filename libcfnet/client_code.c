@@ -37,7 +37,8 @@
 #include <unix.h>
 #include <dir_priv.h>                          /* AllocateDirentForFilename */
 #include <client_protocol.h>
-#include <crypto.h>         /* CryptoInitialize,SavePublicKey,EncryptString */
+#include <crypto.h>                          /* SavePublicKey,EncryptString */
+#include <crypto_init.h>
 #include <logging.h>
 #include <hash.h>                                               /* HashFile */
 #include <mutex.h>                                            /* ThreadLock */
@@ -56,7 +57,7 @@
  */
 bool cfnet_init(const char *tls_min_version, const char *ciphers)
 {
-    CryptoInitialize();
+    CryptoInitialize(CFSTARTTIME, VFQNAME);
     return TLSClientInitialize(tls_min_version, ciphers);
 }
 

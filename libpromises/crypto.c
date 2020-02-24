@@ -25,7 +25,6 @@
 #include <crypto.h>
 
 #include <openssl/err.h>                                        /* ERR_* */
-#include <openssl/rand.h>                                       /* RAND_* */
 #include <openssl/bn.h>                                         /* BN_* */
 #include <libcrypto-compat.h>
 
@@ -39,6 +38,7 @@
 #include <bootstrap.h>
 #include <misc_lib.h>                   /* UnexpectedError,ProgrammingError */
 #include <file_lib.h>
+#include <logging.h>
 
 #ifdef DARWIN
 // On Mac OSX 10.7 and later, majority of functions in /usr/include/openssl/crypto.h
@@ -46,112 +46,13 @@
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
 
-#if OPENSSL_VERSION_NUMBER < 0x10100000
-/* The deprecated is the easy way to setup threads for OpenSSL. */
-#ifdef OPENSSL_NO_DEPRECATED
-void CRYPTO_set_id_callback(unsigned long (*func)(void));
-#endif
-#endif
-
-static void RandomSeed(void);
-static void SetupOpenSSLThreadLocks(void);
-static void CleanupOpenSSLThreadLocks(void);
-
 /* TODO move crypto.[ch] to libutils. Will need to remove all manipulation of
  * lastseen db. */
-
-static bool crypto_initialized = false; /* GLOBAL_X */
 
 const char *CryptoLastErrorString()
 {
     const char *errmsg = ERR_reason_error_string(ERR_get_error());
     return (errmsg != NULL) ? errmsg : "no error message";
-}
-
-void CryptoInitialize()
-{
-    if (!crypto_initialized)
-    {
-        SetupOpenSSLThreadLocks();
-        OpenSSL_add_all_algorithms();
-        OpenSSL_add_all_digests();
-        ERR_load_crypto_strings();
-
-        RandomSeed();
-
-        crypto_initialized = true;
-    }
-}
-
-void CryptoDeInitialize()
-{
-    if (crypto_initialized)
-    {
-        char randfile[CF_BUFSIZE];
-        snprintf(randfile, CF_BUFSIZE, "%s%crandseed",
-                 GetWorkDir(), FILE_SEPARATOR);
-
-        /* Only write out a seed if the file doesn't exist
-         * and we have enough entropy to do so. If RAND_write_File
-         * returns a bad value, delete the poor seed.
-         */
-        if (access(randfile, R_OK) && errno == ENOENT && RAND_write_file(randfile) != 1024)
-        {
-            Log(LOG_LEVEL_WARNING,
-                "Could not write randomness to '%s'", randfile);
-            unlink(randfile); /* do not reuse entropy */
-        }
-
-        chmod(randfile, 0600);
-        EVP_cleanup();
-        CleanupOpenSSLThreadLocks();
-        ERR_free_strings();
-        crypto_initialized = false;
-    }
-}
-
-static void RandomSeed(void)
-{
-    /* 1. Seed the weak C PRNGs. */
-
-    /* Mix various stuff. */
-    pid_t pid = getpid();
-    size_t fqdn_len = strlen(VFQNAME) > 0 ? strlen(VFQNAME) : 1;
-    time_t start_time = CFSTARTTIME;
-    time_t now = time(NULL);
-
-    srand((unsigned) pid      * start_time ^
-          (unsigned) fqdn_len * now);
-    srand48((long)  pid      * start_time ^
-            (long)  fqdn_len * now);
-
-    /* 2. Seed the strong OpenSSL PRNG. */
-
-#ifndef __MINGW32__
-    RAND_poll();                                        /* windows may hang */
-#else
-    RAND_screen();                       /* noop unless openssl is very old */
-#endif
-
-    if (RAND_status() != 1)
-    {
-        /* randseed file is written on deinitialization of crypto system */
-        char randfile[CF_BUFSIZE];
-        snprintf(randfile, CF_BUFSIZE, "%s%crandseed",
-                 GetWorkDir(), FILE_SEPARATOR);
-        Log(LOG_LEVEL_VERBOSE, "Looking for a source of entropy in '%s'",
-            randfile);
-
-        if (RAND_load_file(randfile, -1) != 1024)
-        {
-            Log(LOG_LEVEL_CRIT,
-                "Could not read randomness from '%s'", randfile);
-            unlink(randfile); /* kill randseed if error reading it */
-        }
-
-        /* If we've used the random seed, then delete */
-        unlink(randfile);
-    }
 }
 
 /* PEM functions need the const cast away, but hopefully the default
@@ -760,105 +661,4 @@ char *PrivateKeyFile(const char *workdir)
     xasprintf(&keyfile,
               "%s" FILE_SEPARATOR_STR "ppkeys" FILE_SEPARATOR_STR "localhost.priv", workdir);
     return keyfile;
-}
-
-
-/*********************************************************************
- * Functions for threadsafe OpenSSL usage                            *
- * Only pthread support - we don't create threads with any other API *
- *********************************************************************/
-
-static pthread_mutex_t *cf_openssl_locks = NULL;
-
-
-#ifndef __MINGW32__
-#if OPENSSL_VERSION_NUMBER < 0x10100000
-unsigned long ThreadId_callback(void)
-{
-    return (unsigned long) pthread_self();
-}
-#endif
-#endif
-
-#if OPENSSL_VERSION_NUMBER < 0x10100000
-
-static void OpenSSLLock_callback(int mode, int index, char *file, int line)
-{
-    if (mode & CRYPTO_LOCK)
-    {
-        int ret = pthread_mutex_lock(&(cf_openssl_locks[index]));
-        if (ret != 0)
-        {
-            Log(LOG_LEVEL_ERR,
-                "OpenSSL locking failure at %s:%d! (pthread_mutex_lock: %s)",
-                file, line, GetErrorStrFromCode(ret));
-        }
-    }
-    else
-    {
-        int ret = pthread_mutex_unlock(&(cf_openssl_locks[index]));
-        if (ret != 0)
-        {
-            Log(LOG_LEVEL_ERR,
-                "OpenSSL locking failure at %s:%d! (pthread_mutex_unlock: %s)",
-                file, line, GetErrorStrFromCode(ret));
-        }
-    }
-}
-
-#endif // Callback only for openssl < 1.1.0
-
-static void SetupOpenSSLThreadLocks(void)
-{
-    const int num_locks = CRYPTO_num_locks();
-    assert(cf_openssl_locks == NULL);
-    cf_openssl_locks = xmalloc(num_locks * sizeof(*cf_openssl_locks));
-
-    for (int i = 0; i < num_locks; i++)
-    {
-        pthread_mutexattr_t attr;
-        pthread_mutexattr_init(&attr);
-        int ret = pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK);
-        if (ret != 0)
-        {
-            Log(LOG_LEVEL_ERR,
-                "Failed to use error-checking mutexes for openssl,"
-                " falling back to normal ones (pthread_mutexattr_settype: %s)",
-                GetErrorStrFromCode(ret));
-            pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_NORMAL);
-        }
-        ret = pthread_mutex_init(&cf_openssl_locks[i], &attr);
-        if (ret != 0)
-        {
-            Log(LOG_LEVEL_CRIT,
-                "Failed to use initialise mutexes for openssl"
-                " (pthread_mutex_init: %s)!",
-                GetErrorStrFromCode(ret));
-        }
-        pthread_mutexattr_destroy(&attr);
-    }
-
-#ifndef __MINGW32__
-    CRYPTO_set_id_callback((unsigned long (*)())ThreadId_callback);
-#endif
-    // This is a no-op macro for OpenSSL >= 1.1.0
-    // The callback function is not used (or defined) then
-    CRYPTO_set_locking_callback((void (*)())OpenSSLLock_callback);
-}
-
-static void CleanupOpenSSLThreadLocks(void)
-{
-    const int numLocks = CRYPTO_num_locks();
-    CRYPTO_set_locking_callback(NULL);
-#ifndef __MINGW32__
-    CRYPTO_set_id_callback(NULL);
-#endif
-
-    for (int i = 0; i < numLocks; i++)
-    {
-        pthread_mutex_destroy(&(cf_openssl_locks[i]));
-    }
-
-    free(cf_openssl_locks);
-    cf_openssl_locks = NULL;
 }

@@ -46,6 +46,7 @@ stamp-h1
 /contrib/vagrant-ci/centos-6-x64/Makefile
 /examples/Makefile
 /ext/Makefile
+/libcfcrypto/Makefile
 /libcfnet/Makefile
 /libenv/Makefile
 /libpromises/Makefile

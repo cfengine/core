@@ -26,19 +26,14 @@
 #define CFENGINE_CRYPTO_H
 
 #include <platform.h>
-
-#include <openssl/rsa.h>
-
 #include <logging.h>
+#include <openssl/rsa.h>
 
 // This passphrase was used to encrypt private keys.
 // We no longer encrypt new keys, but the passphrase is kept
 // for backwards compatibility - old encrypted keys will still work.
 #define PRIVKEY_PASSPHRASE "Cfengine passphrase"
 #define PRIVKEY_PASSPHRASE_LEN 19
-
-void CryptoInitialize(void);
-void CryptoDeInitialize(void);
 
 const char *CryptoLastErrorString(void);
 void DebugBinOut(char *buffer, int len, char *com);

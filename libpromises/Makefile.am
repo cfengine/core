@@ -33,7 +33,7 @@ AM_LDFLAGS += $(CORE_LDFLAGS) $(LMDB_LDFLAGS) $(TOKYOCABINET_LDFLAGS) $(QDBM_LDF
 	$(PCRE_LDFLAGS) $(OPENSSL_LDFLAGS) $(SQLITE3_LDFLAGS) $(LIBACL_LDFLAGS) $(LIBYAML_LDFLAGS) $(LIBCURL_LDFLAGS)
 
 AM_CPPFLAGS = \
-	-I$(srcdir)/../libntech/libutils -I$(srcdir)/../libcfnet \
+	-I$(srcdir)/../libntech/libutils -I$(srcdir)/../libcfcrypto -I$(srcdir)/../libcfnet \
 	-I$(srcdir)/../libenv \
 	-I$(srcdir)/../cf-check \
 	$(CORE_CPPFLAGS) $(ENTERPRISE_CPPFLAGS) \
@@ -49,8 +49,8 @@ AM_YFLAGS = -d
 LIBS = $(LMDB_LIBS) $(TOKYOCABINET_LIBS) $(QDBM_LIBS) \
 	$(PCRE_LIBS) $(OPENSSL_LIBS) $(SQLITE3_LIBS) $(LIBACL_LIBS) $(LIBYAML_LIBS) $(LIBCURL_LIBS)
 
-libpromises_la_LIBADD = ../libntech/libutils/libutils.la ../libcfnet/libcfnet.la \
-	../libenv/libenv.la $(ENTERPRISE_LDADD)
+libpromises_la_LIBADD = ../libntech/libutils/libutils.la ../libcfcrypto/libcfcrypto.la \
+	../libcfnet/libcfnet.la ../libenv/libenv.la $(ENTERPRISE_LDADD)
 
 libpromises_la_SOURCES = \
 	acl_tools.h acl_tools_posix.c \

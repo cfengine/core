@@ -24,6 +24,7 @@
 noinst_LTLIBRARIES = libcf-keycrypt.la
 
 AM_CPPFLAGS = -I$(srcdir)/../libpromises -I$(srcdir)/../libntech/libutils \
+	-I$(srcdir)/../libcfcrypto \
 	-I$(srcdir)/../libcfnet \
 	$(OPENSSL_CPPFLAGS) \
 	$(PCRE_CPPFLAGS) \

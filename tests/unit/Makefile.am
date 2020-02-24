@@ -26,6 +26,7 @@ EXTRA_DIST = data
 
 AM_CPPFLAGS = $(CORE_CPPFLAGS) \
 	$(ENTERPRISE_CPPFLAGS) \
+	-I$(srcdir)/../../libcfcrypto \
 	-I$(srcdir)/../../libcfnet \
 	-I$(srcdir)/../../libenv \
 	-I$(srcdir)/../../libpromises \
@@ -38,7 +39,7 @@ AM_CPPFLAGS = $(CORE_CPPFLAGS) \
 	-I$(srcdir)/../../cf-check \
 	-DTESTDATADIR='"$(srcdir)/data"'
 
-LDADD = ../../libpromises/libpromises.la libtest.la
+LDADD = ../../libpromises/libpromises.la ../../libcfcrypto/libcfcrypto.la libtest.la
 
 # automake does not support "maude_LIBS" variables. We can only alter
 # the generic LIBS one. In case the functions are mocked in the test
@@ -220,7 +221,7 @@ EXTRA_enterprise_extension_test_DEPENDENCIES = cfengine-enterprise.la
 endif
 
 set_domainname_test_SOURCES = set_domainname_test.c
-set_domainname_test_LDADD = libstr.la ../../libpromises/libpromises.la
+set_domainname_test_LDADD = libstr.la ../../libpromises/libpromises.la ../../libcfcrypto/libcfcrypto.la 
 
 str_test_SOURCES = str_test.c
 str_test_LDADD = libstr.la
@@ -236,7 +237,7 @@ protocol_test_SOURCES = protocol_test.c \
 	../../cf-serverd/cf-serverd-functions.c \
 	../../cf-serverd/server_access.c \
 	../../cf-serverd/strlist.c
-protocol_test_LDADD = ../../libpromises/libpromises.la libtest.la
+protocol_test_LDADD = ../../libpromises/libpromises.la ../../libcfcrypto/libcfcrypto.la libtest.la
 
 if HAVE_AVAHI_CLIENT
 if HAVE_AVAHI_COMMON
@@ -254,13 +255,13 @@ avahi_config_test_SOURCES = avahi_config_test.c \
 	../../cf-serverd/server_access.c \
 	../../cf-serverd/server_classic.c \
 	../../cf-serverd/strlist.c
-avahi_config_test_LDADD = ../../libpromises/libpromises.la libtest.la
+avahi_config_test_LDADD = ../../libpromises/libpromises.la ../../libcfcrypto/libcfcrypto.la libtest.la
 
 endif
 endif
 
 db_test_SOURCES = db_test.c
-db_test_LDADD = libtest.la ../../libpromises/libpromises.la
+db_test_LDADD = libtest.la ../../libpromises/libpromises.la ../../libcfcrypto/libcfcrypto.la
 
 db_concurrent_test_SOURCES = db_concurrent_test.c
 #db_concurrent_test_CPPFLAGS = $(libdb_la_CPPFLAGS)
@@ -271,14 +272,14 @@ lastseen_test_SOURCES = lastseen_test.c \
 	../../libpromises/lastseen.c \
 	../../libntech/libutils/statistics.c
 #lastseen_test_CPPFLAGS = $(libdb_la_CPPFLAGS)
-lastseen_test_LDADD = libdb.la ../../libpromises/libpromises.la
+lastseen_test_LDADD = libdb.la ../../libpromises/libpromises.la ../../libcfcrypto/libcfcrypto.la
 
 lastseen_migration_test_SOURCES = lastseen_migration_test.c \
 	../../libpromises/lastseen.c \
 	../../libntech/libutils/statistics.c \
 	../../libpromises/item_lib.c
 #lastseen_migration_test_CPPFLAGS = $(libdb_la_CPPFLAGS)
-lastseen_migration_test_LDADD = libdb.la ../../libpromises/libpromises.la
+lastseen_migration_test_LDADD = libdb.la ../../libpromises/libpromises.la ../../libcfcrypto/libcfcrypto.la
 
 CLEANFILES = *.gcno *.gcda cfengine-enterprise.so
 
@@ -293,13 +294,14 @@ package_versions_compare_test_SOURCES = package_versions_compare_test.c \
 
 #package_versions_compare_test_CPPFLAGS = $(AM_CPPFLAGS)
 package_versions_compare_test_LDADD = ../../libpromises/libpromises.la \
+	../../libcfcrypto/libcfcrypto.la \
 	libtest.la
 
 files_copy_test_SOURCES  = files_copy_test.c
-files_copy_test_LDADD    = libtest.la ../../libpromises/libpromises.la
+files_copy_test_LDADD    = libtest.la ../../libpromises/libpromises.la ../../libcfcrypto/libcfcrypto.la
 
 sort_test_SOURCES = sort_test.c
-sort_test_LDADD = libtest.la ../../libpromises/libpromises.la
+sort_test_LDADD = libtest.la ../../libpromises/libpromises.la ../../libcfcrypto/libcfcrypto.la
 
 logging_test_SOURCES = logging_test.c ../../libpromises/syslog_client.c
 logging_test_LDADD = libtest.la ../../libntech/libutils/libutils.la
@@ -308,17 +310,18 @@ connection_management_test_SOURCES = connection_management_test.c \
 	../../cf-serverd/server_common.c \
 	../../cf-serverd/server_tls.c
 connection_management_test_LDADD = ../../libpromises/libpromises.la \
+	../../libcfcrypto/libcfcrypto.la \
 	 libtest.la \
 	../../cf-serverd/libcf-serverd.la
 
 rlist_test_SOURCES = rlist_test.c \
 	../../libpromises/rlist.c
-rlist_test_LDADD = libtest.la ../../libpromises/libpromises.la
+rlist_test_LDADD = libtest.la ../../libpromises/libpromises.la ../../libcfcrypto/libcfcrypto.la
 # Workaround for object file basename conflicts, search the web for
 # "automake created with both libtool and without"
 rlist_test_CPPFLAGS = $(AM_CPPFLAGS)
 
-process_test_LDADD = libtest.la ../../libpromises/libpromises.la
+process_test_LDADD = libtest.la ../../libpromises/libpromises.la ../../libcfcrypto/libcfcrypto.la
 
 if LINUX
 
@@ -365,29 +368,31 @@ process_terminate_unix_test_LDADD = libtest.la ../../libntech/libutils/libutils.
 
 exec_config_test_SOURCES = exec-config-test.c \
 	../../cf-execd/exec-config.c ../../cf-execd/execd-config.c
-exec_config_test_LDADD = libtest.la ../../libpromises/libpromises.la
+exec_config_test_LDADD = libtest.la ../../libpromises/libpromises.la ../../libcfcrypto/libcfcrypto.la
 
 sysinfo_test_LDADD = libtest.la \
 	../../libenv/libenv.la \
-	../../libpromises/libpromises.la
+	../../libpromises/libpromises.la \
+	../../libcfcrypto/libcfcrypto.la
 
 mon_cpu_test_SOURCES = mon_cpu_test.c \
 	../../cf-monitord/mon.h \
 	../../cf-monitord/mon_cpu.c
-mon_cpu_test_LDADD = ../../libpromises/libpromises.la libtest.la
+mon_cpu_test_LDADD = ../../libpromises/libpromises.la ../../libcfcrypto/libcfcrypto.la libtest.la
 
 mon_load_test_SOURCES = mon_load_test.c \
 	../../cf-monitord/mon.h \
 	../../cf-monitord/mon_load.c
-mon_load_test_LDADD = ../../libpromises/libpromises.la libtest.la
+mon_load_test_LDADD = ../../libpromises/libpromises.la ../../libcfcrypto/libcfcrypto.la libtest.la
 
 mon_processes_test_SOURCES = mon_processes_test.c \
 	../../cf-monitord/mon.h \
 	../../cf-monitord/mon_processes.c
-mon_processes_test_LDADD = ../../libpromises/libpromises.la libtest.la
+mon_processes_test_LDADD = ../../libpromises/libpromises.la ../../libcfcrypto/libcfcrypto.la libtest.la
 
 key_test_SOURCES = key_test.c
 key_test_LDADD = ../../libpromises/libpromises.la \
+	../../libcfcrypto/libcfcrypto.la \
 	../../libntech/libutils/libutils.la \
 	libtest.la
 
@@ -414,7 +419,7 @@ cf_upgrade_test_LDADD = libtest.la ../../libntech/libcompat/libcompat.la
 if !NT
 check_PROGRAMS += nfs_test
 nfs_test_SOURCES = nfs_test.c
-nfs_test_LDADD = ../../libpromises/libpromises.la libtest.la
+nfs_test_LDADD = ../../libpromises/libpromises.la ../../libcfcrypto/libcfcrypto.la libtest.la
 
 init_script_test_helper_SOURCES = init_script_test_helper.c
 init_script_test.sh: init_script_test_helper

@@ -30,7 +30,8 @@
 #include <client_code.h>        // ServerConnection
 #include <logging.h>            // Log, LogSetGlobalLevel
 #include <man.h>                // ManPageWrite
-#include <crypto.h>             // CryptoInitialize
+#include <crypto_init.h>        // CryptoInitialize
+#include <crypto.h>             // LoadSecretKeys
 #include <addr_lib.h>           // ParseHostPort
 #include <net.h>                // SocketConnect() SendTransaction()
 #include <time.h>               // time_t, time, difftime
@@ -38,8 +39,7 @@
 #include <writer.h>
 #include <policy_server.h>      // PolicyServerReadFile
 #include <generic_agent.h>      // GenericAgentSetDefaultDigest TODO: rm dep
-#include <cf-windows-functions.h> // TODO: move this out of libpromises
-#include <known_dirs.h>           // TODO: move this 'out of libpromises
+#include <known_dirs.h>
 #include <cleanup.h>
 #include <protocol.h>
 #include <sequence.h>
@@ -237,7 +237,7 @@ static void CFNetInit(const char *min_tls_version, const char *allow_ciphers)
     InitializeWindows();
     OpenNetwork();
 #endif
-    CryptoInitialize();
+    CryptoInitialize(CFSTARTTIME, VFQNAME);
     LoadSecretKeys(NULL, NULL, NULL, NULL);
     cfnet_init(min_tls_version, allow_ciphers);
 }

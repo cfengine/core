@@ -38,6 +38,7 @@
 #include <hash.h>
 #include <parser.h>
 #include <dbm_api.h>
+#include <crypto_init.h>
 #include <crypto.h>
 #include <vars.h>
 #include <syntax.h>
@@ -131,12 +132,6 @@ static void SanitizeEnvironment()
 }
 
 /*****************************************************************************/
-
-ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, GenericAgentSetDefaultDigest, HashMethod *, digest, int *, digest_len)
-{
-    *digest = HASH_METHOD_MD5;
-    *digest_len = CF_MD5_LEN;
-}
 
 void MarkAsPolicyServer(EvalContext *ctx)
 {
@@ -1131,7 +1126,7 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     MakeParentDirectory(ebuff, force);
 
     OpenNetwork();
-    CryptoInitialize();
+    CryptoInitialize(CFSTARTTIME, VFQNAME);
 
     CheckWorkingDirectories(ctx);
 

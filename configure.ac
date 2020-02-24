@@ -1790,6 +1790,7 @@ AC_CONFIG_FILES([Makefile
     libntech/libcompat/Makefile
     libntech/libutils/Makefile
     libntech/config.post.h
+    libcfcrypto/Makefile
     libcfnet/Makefile
     libenv/Makefile
     libpromises/Makefile

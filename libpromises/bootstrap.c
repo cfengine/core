@@ -40,7 +40,7 @@
 #include <communication.h>
 #include <client_code.h>
 #include <assert.h>
-#include <crypto.h>
+#include <crypto_init.h>
 #include <openssl/rand.h>
 #include <encode.h>
 
@@ -369,7 +369,7 @@ char *CreateBootstrapIDFile(const char *workdir)
         free(filename);
         return NULL;
     }
-    CryptoInitialize();
+    CryptoInitialize(CFSTARTTIME, VFQNAME);
     #define RANDOM_BYTES 240 / 8 // 240 avoids padding (divisible by 6)
     #define BASE_64_LENGTH_NO_PADDING (4 * (RANDOM_BYTES / 3))
     unsigned char buf[RANDOM_BYTES];

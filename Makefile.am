@@ -29,6 +29,7 @@ LCOV_FLAGS = $(if $(filter-out 0,$(V)),,-q)
 
 SUBDIRS = \
 	libntech \
+	libcfcrypto \
 	libcfnet \
 	libenv \
 	cf-check \

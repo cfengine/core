@@ -36,6 +36,7 @@ AM_CPPFLAGS = $(CORE_CPPFLAGS) \
 	-I../../libpromises \
 	-I../../libntech/libutils \
 	-I../../libcfnet \
+	-I../../libcfcrypto \
 	-I../../libpromises
 
 EXTRA_DIST = \

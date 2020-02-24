@@ -1,6 +1,7 @@
 #include <test.h>
 
 #include <cf3.defs.h>
+#include <crypto_init.h>
 #include <crypto.h>
 
 #define PLAINTEXT "123456789012345678901234567890123"
@@ -98,7 +99,7 @@ static void test_plain_text_size_max(void)
 int main()
 {
     PRINT_TEST_BANNER();
-    CryptoInitialize();
+    CryptoInitialize(CFSTARTTIME, VFQNAME);
 
     const UnitTest tests[] =
     {

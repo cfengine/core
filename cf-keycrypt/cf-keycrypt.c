@@ -48,6 +48,7 @@
 
 #include <lastseen.h>
 #include <crypto.h>
+#include <crypto_init.h>
 #include <writer.h>
 #include <man.h>
 #include <conversion.h>
@@ -701,7 +702,7 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    CryptoInitialize();
+    CryptoInitialize(CFSTARTTIME, VFQNAME);
     if (host != NULL)
     {
         HostRSAKeyType key_type = encrypt ? HOST_RSA_KEY_PUBLIC : HOST_RSA_KEY_PRIVATE;

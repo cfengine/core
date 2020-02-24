@@ -7,14 +7,14 @@
 #include <loading.h>
 #include <file_lib.h>
 #include <misc_lib.h>                                          /* xsnprintf */
-#include <crypto.h>
+#include <crypto_init.h>
 #include <string_lib.h>
 
 char TEMPDIR[] = "/tmp/generic_agent_test_XXXXXX";
 
 void test_have_tty_interactive_failsafe_is_not_created(void)
 {
-     CryptoInitialize();
+     CryptoInitialize(CFSTARTTIME, VFQNAME);
 
      bool simulate_tty_interactive = true;
 
@@ -47,7 +47,7 @@ void test_have_tty_interactive_failsafe_is_not_created(void)
 
 void test_dont_have_tty_interactive_failsafe_is_created(void)
 {
-     CryptoInitialize();
+     CryptoInitialize(CFSTARTTIME, VFQNAME);
 
      bool simulate_tty_interactive = false;
 

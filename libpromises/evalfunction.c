@@ -1009,9 +1009,11 @@ static FnCallResult FnCallSysctlValue(ARG_UNUSED EvalContext *ctx,
         BufferSearchAndReplace(var, BufferData(procrootbuf), "", "T");
         BufferSearchAndReplace(var, "/", ".", "gT");
         JsonObjectAppendString(sysctl_data, BufferData(var), result);
+        free(result);
         BufferDestroy(var);
     }
 
+    StringSetDestroy(sysctls);
     BufferDestroy(procrootbuf);
     return (FnCallResult) { FNCALL_SUCCESS, (Rval) { sysctl_data, RVAL_TYPE_CONTAINER } };
 #else
@@ -3423,6 +3425,7 @@ static FnCallResult FnCallMapData(EvalContext *ctx, ARG_UNUSED const Policy *pol
         JsonDestroyMaybe(container, allocated);
 
         container = temp2;
+        allocated = true;
     }
 
     JsonIterator iter = JsonIteratorInit(container);
@@ -3753,8 +3756,9 @@ static FnCallResult FnCallMergeData(EvalContext *ctx, ARG_UNUSED const Policy *p
             {
                 JsonDestroy(json);
             }
-
-            Log(LOG_LEVEL_ERR, "%s is not mergeable as it it not a container", RvalToString(arg->val));
+            char *const as_string = RvalToString(arg->val);
+            Log(LOG_LEVEL_ERR, "%s is not mergeable as it it not a container", as_string);
+            free(as_string);
             SeqDestroy(containers);
             return FnFailure();
         }
@@ -6768,6 +6772,7 @@ static FnCallResult ReadList(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const FnCal
         return (FnCallResult) { FNCALL_SUCCESS, { newlist, RVAL_TYPE_LIST } };
     }
 
+    RlistDestroy(newlist);
     return FnFailure();
 }
 

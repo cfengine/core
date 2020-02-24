@@ -407,6 +407,7 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, const Policy *policy, FnCall *fp, 
     if (result.status == FNCALL_FAILURE)
     {
         RlistDestroy(expargs);
+        RvalDestroy(result.rval);
         return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };
     }
 

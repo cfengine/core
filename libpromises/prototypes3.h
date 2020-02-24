@@ -59,7 +59,6 @@ void SetSkipIdentify(bool enabled);
 ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, Nova_Initialize, EvalContext *, ctx);
 ENTERPRISE_FUNC_1ARG_DECLARE(int, CfSessionKeySize, char, c);
 ENTERPRISE_FUNC_0ARG_DECLARE(char, CfEnterpriseOptions);
-ENTERPRISE_FUNC_1ARG_DECLARE(const EVP_CIPHER *, CfengineCipher, char, type);
 ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, EnterpriseContext, EvalContext *, ctx);
 ENTERPRISE_FUNC_0ARG_DECLARE(const char *, GetConsolePrefix);
 ENTERPRISE_FUNC_6ARG_DECLARE(char *, GetRemoteScalar, EvalContext *, ctx, char *, proto, char *, handle, const char *, server, int, encrypted, char *, rcv);

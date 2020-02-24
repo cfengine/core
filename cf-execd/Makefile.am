@@ -26,6 +26,7 @@ noinst_LTLIBRARIES = libcf-execd.la libcf-execd-test.la
 AM_CPPFLAGS = \
 	-I$(srcdir)/../libpromises \
 	-I$(srcdir)/../libntech/libutils \
+	-I$(srcdir)/../libcfcrypto \
 	-I$(srcdir)/../libcfnet \
 	-I$(srcdir)/../libenv \
 	-I$(srcdir)/../cf-check \
@@ -39,7 +40,7 @@ AM_CFLAGS = \
 	$(PTHREAD_CFLAGS) \
 	$(ENTERPRISE_CFLAGS)
 
-libcf_execd_la_LIBADD = ../libpromises/libpromises.la
+libcf_execd_la_LIBADD = ../libcfcrypto/libcfcrypto.la ../libpromises/libpromises.la
 
 libcf_execd_la_SOURCES = \
 	cf-execd.c cf-execd.h \

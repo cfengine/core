@@ -36,6 +36,7 @@
 #include <regex.h>                                    /* StringMatchFull */
 #include <lastseen.h>                                 /* LastSaw1 */
 #include <hash.h>                                     /* HashString */
+#include <crypto_init.h>                              /* CF_DEFAULT_DIGEST */
 #include <crypto.h>                                   /* HavePublicKey */
 #include <cf-serverd-enterprise-stubs.h>              /* ReceiveCollectCall */
 #include <tls_generic.h>

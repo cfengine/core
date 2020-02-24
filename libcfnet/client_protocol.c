@@ -28,6 +28,8 @@
 #include <openssl/err.h>                                   /* ERR_get_error */
 #include <libcrypto-compat.h>
 
+#include <crypto_init.h>                               /* CF_DEFAULT_DIGEST */
+
 #include <communication.h>
 #include <net.h>
 
@@ -41,6 +43,7 @@ extern char VFQNAME[];
 #include <unix.h>                       /* GetCurrentUsername */
 #include <lastseen.h>                   /* LastSaw */
 #include <crypto.h>                     /* PublicKeyFile */
+#include <lastseen_crypto.h>            /* HavePublicKeyByIP */
 #include <hash.h>                       /* HashString,HashesMatch,HashPubKey*/
 #include <known_dirs.h>
 #include <connection_info.h>

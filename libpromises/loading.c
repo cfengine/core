@@ -23,6 +23,7 @@
 */
 #include <loading.h>
 
+#include <crypto_init.h>        /* CF_DEFAULT_DIGEST */
 #include <eval_context.h>
 #include <hash.h>
 #include <file_lib.h>

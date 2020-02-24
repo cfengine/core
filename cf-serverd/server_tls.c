@@ -29,6 +29,7 @@
 
 #include <openssl/err.h>                                   /* ERR_get_error */
 
+#include <crypto_init.h>                                   /* CF_DEFAULT_DIGEST */
 #include <crypto.h>                                        /* DecryptString */
 #include <conversion.h>
 #include <signals.h>

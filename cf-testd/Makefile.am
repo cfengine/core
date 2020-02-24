@@ -24,6 +24,7 @@
 noinst_LTLIBRARIES = libcf-testd.la
 
 AM_CPPFLAGS = -I$(srcdir)/../libpromises -I$(srcdir)/../libntech/libutils \
+	-I$(srcdir)/../libcfcrypto \
 	-I$(srcdir)/../libcfnet \
 	-I$(srcdir)/../libenv \
 	-I$(srcdir)/../cf-serverd \
@@ -36,6 +37,7 @@ AM_CFLAGS = \
 	$(ENTERPRISE_CFLAGS)
 
 libcf_testd_la_LIBADD = \
+	../libcfcrypto/libcfcrypto.la \
 	../libpromises/libpromises.la \
 	../cf-serverd/libcf-serverd.la
 

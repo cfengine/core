@@ -25,6 +25,7 @@ noinst_LTLIBRARIES = libcf-key.la
 
 AM_CPPFLAGS = \
 	-I$(srcdir)/../libntech/libutils \
+	-I$(srcdir)/../libcfcrypto \
 	-I$(srcdir)/../libcfnet \
 	-I$(srcdir)/../libpromises \
 	$(PCRE_CPPFLAGS) \
@@ -41,7 +42,7 @@ libcf_key_la_SOURCES = \
 	cf-key-functions.c cf-key-functions.h
 
 
-libcf_key_la_LIBADD = ../libpromises/libpromises.la
+libcf_key_la_LIBADD = ../libcfcrypto/libcfcrypto.la ../libpromises/libpromises.la
 
 if !BUILTIN_EXTENSIONS
 bin_PROGRAMS = cf-key

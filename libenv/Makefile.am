@@ -29,16 +29,18 @@ libenv_la_SOURCES = \
 	time_classes.c time_classes.h \
 	zones.c zones.h
 
+libenv_la_LIBADD = $(top_srcdir)/libcfcrypto/libcfcrypto.la
+
 if !NT
 libenv_la_SOURCES += \
 	unix_iface.c
 endif
 
 if SOLARIS
-libenv_la_LIBADD = -lkstat
+libenv_la_LIBADD += -lkstat
 endif
 
-AM_CPPFLAGS  = -I$(top_srcdir)/libntech/libutils
+AM_CPPFLAGS  = -I$(top_srcdir)/libntech/libutils -I$(top_srcdir)/libcfcrypto
 AM_CPPFLAGS += $(OPENSSL_CPPFLAGS)         # because libutils needs it
 AM_CPPFLAGS += $(PCRE_CPPFLAGS)
 

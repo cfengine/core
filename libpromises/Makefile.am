@@ -69,7 +69,6 @@ libpromises_la_SOURCES = \
 	class.c class.h \
 	constants.c \
 	conversion.c conversion.h \
-	crypto.c crypto.h \
 	dbm_api.c dbm_api.h dbm_priv.h \
 	dbm_migration.c dbm_migration.h \
 	dbm_migration_lastseen.c \
@@ -97,6 +96,7 @@ libpromises_la_SOURCES = \
 	iteration.c iteration.h \
 	keyring.c keyring.h \
 	lastseen.c lastseen.h \
+	lastseen_crypto.c lastseen_crypto.h \
 	loading.c loading.h \
 	locks.c locks.h \
 	logic_expressions.c logic_expressions.h \

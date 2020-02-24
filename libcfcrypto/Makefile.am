@@ -35,4 +35,6 @@ AM_CFLAGS = $(CORE_CFLAGS) $(OPENSSL_CPPFLAGS)
 
 libcfcrypto_la_LIBS = $(srcdir)/../libntech/libutils.la $(OPENSSL_LIBS)
 
-libcfcrypto_la_SOURCES = crypto_init.c crypto_init.h
+libcfcrypto_la_SOURCES = \
+	crypto_init.c crypto_init.h \
+	crypto.c crypto.h

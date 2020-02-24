@@ -238,7 +238,7 @@ static void CFNetInit(const char *min_tls_version, const char *allow_ciphers)
     OpenNetwork();
 #endif
     CryptoInitialize(CFSTARTTIME, VFQNAME);
-    LoadSecretKeys(NULL, NULL, NULL, NULL);
+    LoadSecretKeys(NULL, NULL, &PRIVKEY, &PUBKEY);
     cfnet_init(min_tls_version, allow_ciphers);
 }
 

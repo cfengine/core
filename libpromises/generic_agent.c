@@ -72,6 +72,7 @@
 #include <libcrypto-compat.h>
 #include <libgen.h>
 #include <cleanup.h>
+#include <lastseen.h>
 
 static pthread_once_t pid_cleanup_once = PTHREAD_ONCE_INIT; /* GLOBAL_T */
 
@@ -132,6 +133,45 @@ static void SanitizeEnvironment()
 }
 
 /*****************************************************************************/
+void PolicyHubUpdateKeys(const char *policy_server)
+{
+    if (GetAmPolicyHub() && PUBKEY != NULL)
+    {
+        unsigned char digest[EVP_MAX_MD_SIZE + 1];
+        const char* const workdir = GetWorkDir();
+
+        char dst_public_key_filename[CF_BUFSIZE] = "";
+        {
+            char buffer[CF_HOSTKEY_STRING_SIZE];
+            HashPubKey(PUBKEY, digest, CF_DEFAULT_DIGEST);
+            snprintf(dst_public_key_filename, sizeof(dst_public_key_filename),
+                     "%s/ppkeys/%s-%s.pub",
+                     workdir, "root",
+                     HashPrintSafe(buffer, sizeof(buffer), digest,
+                                   CF_DEFAULT_DIGEST, true));
+            MapName(dst_public_key_filename);
+        }
+
+        struct stat sb;
+        if ((stat(dst_public_key_filename, &sb) == -1))
+        {
+            char src_public_key_filename[CF_BUFSIZE] = "";
+            snprintf(src_public_key_filename, CF_MAXVARSIZE, "%s/ppkeys/localhost.pub", workdir);
+            MapName(src_public_key_filename);
+
+            // copy localhost.pub to root-HASH.pub on policy server
+            if (!LinkOrCopy(src_public_key_filename, dst_public_key_filename, false))
+            {
+                Log(LOG_LEVEL_ERR, "Unable to copy policy server's own public key from '%s' to '%s'", src_public_key_filename, dst_public_key_filename);
+            }
+
+            if (policy_server)
+            {
+                LastSaw(policy_server, digest, LAST_SEEN_ROLE_CONNECT);
+            }
+        }
+    }
+}
 
 void MarkAsPolicyServer(EvalContext *ctx)
 {
@@ -1134,7 +1174,7 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
        must function properly even without them, so that it generates them! */
     if (config->agent_type != AGENT_TYPE_KEYGEN)
     {
-        LoadSecretKeys(NULL, NULL, NULL, NULL);
+        LoadSecretKeys(NULL, NULL, &PRIVKEY, &PUBKEY);
         char *ipaddr = NULL, *port = NULL;
         PolicyServerLookUpFile(workdir, &ipaddr, &port);
         PolicyHubUpdateKeys(ipaddr);

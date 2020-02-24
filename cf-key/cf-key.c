@@ -39,6 +39,7 @@
 #include <signals.h>
 #include <string_lib.h>
 #include <cleanup.h>
+#include <lastseen_crypto.h>
 
 #include <cf-key-functions.h>
 

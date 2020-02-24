@@ -117,11 +117,6 @@ ENTERPRISE_FUNC_0ARG_DEFINE_STUB(char, CfEnterpriseOptions)
     return 'c';
 }
 
-ENTERPRISE_FUNC_1ARG_DEFINE_STUB(const EVP_CIPHER *, CfengineCipher, char, type)
-{
-    return EVP_bf_cbc();
-}
-
 /* cf-agent: evalfunction.c */
 
 ENTERPRISE_FUNC_6ARG_DEFINE_STUB(char *, GetRemoteScalar, EvalContext *, ctx, char *, proto, char *, handle,

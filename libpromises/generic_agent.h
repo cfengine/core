@@ -104,6 +104,7 @@ typedef struct
 } GenericAgentConfig;
 
 const char *GenericAgentResolveInputPath(const GenericAgentConfig *config, const char *input_file);
+void PolicyHubUpdateKeys(const char *policy_server);
 void MarkAsPolicyServer(EvalContext *ctx);
 void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config);
 bool GenericAgentCheckPolicy(GenericAgentConfig *config, bool force_validation, bool write_validated_file);

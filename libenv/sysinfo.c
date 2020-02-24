@@ -51,6 +51,7 @@
 #include <feature.h>
 #include <evalfunction.h>
 #include <json-utils.h>
+#include <crypto_init.h>        /* CF_DEFAULT_DIGEST */
 
 #ifdef HAVE_ZONE_H
 # include <zone.h>

@@ -12,6 +12,14 @@
 
 static bool crypto_initialized = false; /* GLOBAL_X */
 
+/*
+  Edition-time constant (MD5 for community, something else for Enterprise)
+
+  Used as a default hash everywhere (not only in network protocol)
+*/
+HashMethod CF_DEFAULT_DIGEST; /* GLOBAL_C, initialized later */
+int CF_DEFAULT_DIGEST_LEN;    /* GLOBAL_C, initialized later */
+
 #if OPENSSL_VERSION_NUMBER < 0x10100000
 /* The deprecated is the easy way to setup threads for OpenSSL. */
 #ifdef OPENSSL_NO_DEPRECATED
@@ -208,3 +216,9 @@ ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, GenericAgentSetDefaultDigest, HashMe
     *digest = HASH_METHOD_MD5;
     *digest_len = CF_MD5_LEN;
 }
+
+ENTERPRISE_FUNC_1ARG_DEFINE_STUB(const EVP_CIPHER *, CfengineCipher, ARG_UNUSED char, type)
+{
+    return EVP_bf_cbc();
+}
+

@@ -56,6 +56,7 @@
 #include <mustache.h>
 #include <known_dirs.h>
 #include <evalfunction.h>
+#include <crypto_init.h>        /* CF_DEFAULT_DIGEST */
 
 static PromiseResult FindFilePromiserObjects(EvalContext *ctx, const Promise *pp);
 static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promise *pp);

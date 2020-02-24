@@ -81,14 +81,6 @@ RSA *PRIVKEY = NULL, *PUBKEY = NULL; /* GLOBAL_X */
 char VIPADDRESS[CF_MAX_IP_LEN] = ""; /* GLOBAL_E */
 
 /*
-  Edition-time constant (MD5 for community, something else for Enterprise)
-
-  Used as a default hash everywhere (not only in network protocol)
-*/
-HashMethod CF_DEFAULT_DIGEST; /* GLOBAL_C, initialized later */
-int CF_DEFAULT_DIGEST_LEN; /* GLOBAL_C, initialized later */
-
-/*
   Holds the "now" time captured at the moment of policy (re)load.
 
   TODO: This variable should be internal to timeout.c, not exposed.

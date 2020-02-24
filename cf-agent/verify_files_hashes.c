@@ -34,6 +34,9 @@
 #include <misc_lib.h>
 #include <eval_context.h>
 #include <known_dirs.h>
+#include <crypto_init.h>        /* CF_DEFAULT_DIGEST */
+#include <crypto.h>
+
 
 bool CompareFileHashes(const char *file1, const char *file2, const struct stat *sstat, const struct stat *dstat, const FileCopy *fc, AgentConnection *conn)
 {

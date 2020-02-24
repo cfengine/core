@@ -22,23 +22,21 @@
   included file COSL.txt.
 */
 
-#include <crypto.h>
-
 #include <openssl/err.h>                                        /* ERR_* */
 #include <openssl/bn.h>                                         /* BN_* */
+#include <openssl/pem.h>                                        /* PEM_* */
 #include <libcrypto-compat.h>
 
-#include <cf3.defs.h>
-#include <lastseen.h>
-#include <files_interfaces.h>
+#include <definitions.h>
+#include <alloc.h>
 #include <hash.h>
-#include <pipes.h>
-#include <mutex.h>
 #include <known_dirs.h>
-#include <bootstrap.h>
-#include <misc_lib.h>                   /* UnexpectedError,ProgrammingError */
+#include <misc_lib.h>
 #include <file_lib.h>
 #include <logging.h>
+
+#include <crypto_init.h>
+#include <crypto.h>
 
 #ifdef DARWIN
 // On Mac OSX 10.7 and later, majority of functions in /usr/include/openssl/crypto.h
@@ -62,10 +60,8 @@ static const char priv_passphrase[] = PRIVKEY_PASSPHRASE;
 /**
  * @param[in] priv_key_path path to the private key to use (%NULL to use the default)
  * @param[in] pub_key_path path to the private key to use (%NULL to use the default)
- * @param[out] priv_key a place to store the loaded private key (or %NULL to
- *             use the global PRIVKEY variable)
- * @param[out] pub_key a place to store the loaded public key (or %NULL to
- *             use the global PUBKEY variable)
+ * @param[out] priv_key a place to store the loaded private key
+ * @param[out] pub_key a place to store the loaded public key
  * @return true the error is not so severe that we must stop
  */
 bool LoadSecretKeys(const char *const priv_key_path,
@@ -89,12 +85,6 @@ bool LoadSecretKeys(const char *const priv_key_path,
             return false;
         }
 
-        if (priv_key == NULL)
-        {
-            /* if no place to store the private key was specified, use the
-             * global variable PRIVKEY */
-            priv_key = &PRIVKEY;
-        }
         if (*priv_key != NULL)
         {
             DESTROY_AND_NULL(RSA_free, *priv_key);
@@ -134,12 +124,6 @@ bool LoadSecretKeys(const char *const priv_key_path,
             return false;
         }
 
-        if (pub_key == NULL)
-        {
-            /* if no place to store the public key was specified, use the
-             * global variable PUBKEY */
-            pub_key = &PUBKEY;
-        }
         if (*pub_key != NULL)
         {
             DESTROY_AND_NULL(RSA_free, *pub_key);
@@ -174,66 +158,7 @@ bool LoadSecretKeys(const char *const priv_key_path,
     return true;
 }
 
-void PolicyHubUpdateKeys(const char *policy_server)
-{
-    if (GetAmPolicyHub() && PUBKEY != NULL)
-    {
-        unsigned char digest[EVP_MAX_MD_SIZE + 1];
-        const char* const workdir = GetWorkDir();
-
-        char dst_public_key_filename[CF_BUFSIZE] = "";
-        {
-            char buffer[CF_HOSTKEY_STRING_SIZE];
-            HashPubKey(PUBKEY, digest, CF_DEFAULT_DIGEST);
-            snprintf(dst_public_key_filename, sizeof(dst_public_key_filename),
-                     "%s/ppkeys/%s-%s.pub",
-                     workdir, "root",
-                     HashPrintSafe(buffer, sizeof(buffer), digest,
-                                   CF_DEFAULT_DIGEST, true));
-            MapName(dst_public_key_filename);
-        }
-
-        struct stat sb;
-        if ((stat(dst_public_key_filename, &sb) == -1))
-        {
-            char src_public_key_filename[CF_BUFSIZE] = "";
-            snprintf(src_public_key_filename, CF_MAXVARSIZE, "%s/ppkeys/localhost.pub", workdir);
-            MapName(src_public_key_filename);
-
-            // copy localhost.pub to root-HASH.pub on policy server
-            if (!LinkOrCopy(src_public_key_filename, dst_public_key_filename, false))
-            {
-                Log(LOG_LEVEL_ERR, "Unable to copy policy server's own public key from '%s' to '%s'", src_public_key_filename, dst_public_key_filename);
-            }
-
-            if (policy_server)
-            {
-                LastSaw(policy_server, digest, LAST_SEEN_ROLE_CONNECT);
-            }
-        }
-    }
-}
-
 /*********************************************************************/
-
-/**
- * @brief Search for a key given an IP address, by getting the
- *        key hash value from lastseen db.
- * @return NULL if the key was not found in any form.
- */
-RSA *HavePublicKeyByIP(const char *username, const char *ipaddress)
-{
-    char hash[CF_HOSTKEY_STRING_SIZE];
-
-    /* Get the key hash for that address from lastseen db. */
-    bool found = Address2Hostkey(hash, sizeof(hash), ipaddress);
-
-    /* If not found, by passing "" as digest, we effectively look only for
-     * the old-style key file, e.g. root-1.2.3.4.pub. */
-    return HavePublicKey(username, ipaddress,
-                         found ? hash : "");
-}
-
 static const char *const pub_passphrase = "public";
 
 /**
@@ -451,46 +376,6 @@ char *GetPubkeyDigest(RSA *pubkey)
     return buffer;
 }
 
-
-/**
- * Trust the given key.  If #ipaddress is not NULL, then also
- * update the "last seen" database.  The IP address is required for
- * trusting a server key (on the client); it is -currently- optional
- * for trusting a client key (on the server).
- */
-bool TrustKey(const char *filename, const char *ipaddress, const char *username)
-{
-    RSA* key;
-    char *digest;
-
-    key = LoadPublicKey(filename);
-    if (key == NULL)
-    {
-        return false;
-    }
-
-    digest = GetPubkeyDigest(key);
-    if (digest == NULL)
-    {
-        RSA_free(key);
-        return false;
-    }
-
-    if (ipaddress != NULL)
-    {
-        Log(LOG_LEVEL_VERBOSE,
-            "Adding a CONNECT entry in lastseen db: IP '%s', key '%s'",
-            ipaddress, digest);
-        LastSaw1(ipaddress, digest, LAST_SEEN_ROLE_CONNECT);
-    }
-
-    bool ret = SavePublicKey(username, digest, key);
-    RSA_free(key);
-    free(digest);
-
-    return ret;
-}
-
 int EncryptString(char *out, size_t out_size, const char *in, int plainlen,
                   char type, unsigned char *key)
 {
@@ -547,7 +432,7 @@ size_t CipherTextSizeMax(const EVP_CIPHER* cipher, size_t plaintext_size)
     size_t padding_size = (CipherBlockSizeBytes(cipher) * 2) - 1;
 
     // check for potential integer overflow, leave some buffer
-    if(plaintext_size > SIZE_MAX - padding_size)
+    if (plaintext_size > SIZE_MAX - padding_size)
     {
         ProgrammingError("CipherTextSizeMax: plaintext_size is too large (%zu)",
                          plaintext_size);
@@ -562,7 +447,7 @@ size_t PlainTextSizeMax(const EVP_CIPHER* cipher, size_t ciphertext_size)
     size_t padding_size = (CipherBlockSizeBytes(cipher) * 2);
 
     // check for potential integer overflow, leave some buffer
-    if(ciphertext_size > SIZE_MAX - padding_size)
+    if (ciphertext_size > SIZE_MAX - padding_size)
     {
         ProgrammingError("PlainTextSizeMax: ciphertext_size is too large (%zu)",
                          ciphertext_size);
@@ -612,7 +497,7 @@ int DecryptString(char *out, size_t out_size, const char *in, int cipherlen,
 
     plainlen += tmplen;
 
-    if(plainlen > max_plaintext_size)
+    if (plainlen > max_plaintext_size)
     {
         ProgrammingError("DecryptString: too large plaintext written: plainlen (%d) > max_plaintext_size (%zd)",
                           plainlen, max_plaintext_size);

@@ -24,6 +24,7 @@
 
 #include <cf3.defs.h>
 
+#include <crypto_init.h>        /* CF_DEFAULT_DIGEST */
 #include <lastseen.h>
 #include <conversion.h>
 #include <hash.h>

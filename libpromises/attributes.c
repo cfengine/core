@@ -31,6 +31,7 @@
 #include <chflags.h>
 #include <audit.h>
 #include <protocol.h> // ParseProtocolVersionPolicy()
+#include <crypto_init.h>        /* CF_DEFAULT_DIGEST */
 
 #define CF_DEFINECLASSES "classes"
 #define CF_TRANSACTION   "action"

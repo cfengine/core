@@ -34,6 +34,7 @@
 #include <string_lib.h>
 
 /* TODO move crypto.h to libutils */
+#include <crypto_init.h>                               /* CF_DEFAULT_DIGEST */
 #include <crypto.h>                                    /* HavePublicKeyByIP */
 #include <hash.h>                                             /* HashPubKey */
 

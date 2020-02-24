@@ -24,6 +24,7 @@
 noinst_LTLIBRARIES = libcf-agent.la
 
 AM_CPPFLAGS = -I$(srcdir)/../libpromises -I$(srcdir)/../libntech/libutils \
+	-I$(srcdir)/../libcfcrypto \
 	-I$(srcdir)/../libcfnet \
 	-I$(srcdir)/../cf-check \
 	@CPPFLAGS@ \
@@ -61,7 +62,7 @@ if FREEBSD
     AM_LDFLAGS += -lutil
 endif
 
-libcf_agent_la_LIBADD = ../libpromises/libpromises.la \
+libcf_agent_la_LIBADD = ../libcfcrypto/libcfcrypto.la ../libpromises/libpromises.la \
 	$(OPENSSL_LIBS) \
 	$(PCRE_LIBS) \
 	$(LIBVIRT_LIBS) \

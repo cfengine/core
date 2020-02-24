@@ -24,6 +24,7 @@
 noinst_LTLIBRARIES = libcf-runagent.la
 
 AM_CPPFLAGS = -I$(srcdir)/../libpromises -I$(srcdir)/../libntech/libutils \
+	-I$(srcdir)/../libcfcrypto \
 	-I$(srcdir)/../libcfnet \
 	$(OPENSSL_CPPFLAGS) \
 	$(PCRE_CPPFLAGS) \
@@ -33,7 +34,7 @@ AM_CFLAGS = @CFLAGS@ \
 	$(OPENSSL_CFLAGS) \
 	$(ENTERPRISE_CFLAGS)
 
-libcf_runagent_la_LIBADD = ../libpromises/libpromises.la
+libcf_runagent_la_LIBADD = ../libcfcrypto/libcfcrypto.la ../libpromises/libpromises.la
 
 libcf_runagent_la_SOURCES = cf-runagent.c
 

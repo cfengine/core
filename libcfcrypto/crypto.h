@@ -22,10 +22,9 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_CRYPTO_H
-#define CFENGINE_CRYPTO_H
+#ifndef CFCRYPTO_CRYPTO_H
+#define CFCRYPTO_CRYPTO_H
 
-#include <platform.h>
 #include <logging.h>
 #include <openssl/rsa.h>
 
@@ -40,7 +39,6 @@ void DebugBinOut(char *buffer, int len, char *com);
 bool LoadSecretKeys(const char *const priv_key_path,
                     const char *const pub_key_path,
                     RSA **priv_key, RSA **pub_key);
-void PolicyHubUpdateKeys(const char *policy_server);
 int EncryptString(char *out, size_t out_size, const char *in, int plainlen,
                   char type, unsigned char *key);
 size_t CipherBlockSizeBytes(const EVP_CIPHER *cipher);
@@ -49,15 +47,13 @@ size_t PlainTextSizeMax(const EVP_CIPHER* cipher, size_t ciphertext_size);
 int DecryptString(char *out, size_t out_size, const char *in, int cipherlen,
                   char type, unsigned char *key);
 RSA *HavePublicKey(const char *username, const char *ipaddress, const char *digest);
-RSA *HavePublicKeyByIP(const char *username, const char *ipaddress);
 bool SavePublicKey(const char *username, const char *digest, const RSA *key);
 RSA *LoadPublicKey(const char *filename);
 char *LoadPubkeyDigest(const char *pubkey);
 char *GetPubkeyDigest(RSA *pubkey);
-bool TrustKey(const char *pubkey, const char *ipaddress, const char *username);
 
 char *PublicKeyFile(const char *workdir);
 char *PrivateKeyFile(const char *workdir);
 LogLevel CryptoGetMissingKeyLogLevel(void);
 
-#endif
+#endif  /* CFCRYPTO_CRYPTO_H */

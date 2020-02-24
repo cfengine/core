@@ -42,6 +42,7 @@
 #include <sysinfo.h>
 #include <openssl/evp.h>
 #include <libcrypto-compat.h>
+#include <crypto_init.h>        /* CF_DEFAULT_DIGEST */
 
 #ifdef LMDB
 // Be careful if you want to change this,

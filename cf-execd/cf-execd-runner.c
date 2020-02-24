@@ -44,6 +44,7 @@
 #include <hash.h>
 #include <item_lib.h>
 #include <processes_select.h>   /* LoadProcessTable()/SelectProcesses() */
+#include <crypto_init.h>        /* CF_DEFAULT_DIGEST */
 
 #include <cf-windows-functions.h>
 

@@ -23,6 +23,7 @@
 */
 
 #include <signals.h>
+#include <signal_pipe.h>
 #include <cleanup.h>
 #include <known_dirs.h>         /* GetStateDir() */
 #include <file_lib.h>           /* FILE_SEPARATOR */
@@ -48,100 +49,6 @@ void ClearRequestReloadConfig()
 }
 
 /********************************************************************/
-
-static int SIGNAL_PIPE[2] = { -1, -1 }; /* GLOBAL_C */
-
-static void CloseSignalPipe(void)
-{
-    int c = 2;
-    while (c > 0)
-    {
-        c--;
-        if (SIGNAL_PIPE[c] >= 0)
-        {
-            close(SIGNAL_PIPE[c]);
-            SIGNAL_PIPE[c] = -1;
-        }
-    }
-}
-
-/**
- * Make a pipe that can be used to flag that a signal has arrived.
- * Using a pipe avoids race conditions, since it saves its values until emptied.
- * Use GetSignalPipe() to get the pipe.
- * Note that we use a real socket as the pipe, because Windows only supports
- * using select() with real sockets. This means also using send() and recv()
- * instead of write() and read().
- */
-void MakeSignalPipe(void)
-{
-    if (socketpair(AF_UNIX, SOCK_STREAM, 0, SIGNAL_PIPE) != 0)
-    {
-        Log(LOG_LEVEL_CRIT, "Could not create internal communication pipe. Cannot continue. (socketpair: '%s')",
-            GetErrorStr());
-        DoCleanupAndExit(EXIT_FAILURE);
-    }
-
-    RegisterCleanupFunction(&CloseSignalPipe);
-
-    for (int c = 0; c < 2; c++)
-    {
-#ifdef __MINGW32__
-        u_long enable = 1;
-        int ret = ioctlsocket(SIGNAL_PIPE[c], FIONBIO, &enable);
-#define CNTLNAME "ioctlsocket"
-#else /* Unix: */
-        int ret = fcntl(SIGNAL_PIPE[c], F_SETFL, O_NONBLOCK);
-#define CNTLNAME "fcntl"
-#endif /* __MINGW32__ */
-
-        if (ret != 0)
-        {
-            Log(LOG_LEVEL_CRIT,
-                "Could not unblock internal communication pipe. "
-                "Cannot continue. (" CNTLNAME ": '%s')",
-                GetErrorStr());
-            DoCleanupAndExit(EXIT_FAILURE);
-        }
-#undef CNTLNAME
-    }
-}
-
-/**
- * Gets the signal pipe, which is non-blocking.
- * Each byte read corresponds to one arrived signal.
- * Note: Use recv() to read from the pipe, not read().
- */
-int GetSignalPipe(void)
-{
-    return SIGNAL_PIPE[0];
-}
-
-static void SignalNotify(int signum)
-{
-    unsigned char sig = (unsigned char)signum;
-    if (SIGNAL_PIPE[1] >= 0)
-    {
-        // send() is async-safe, according to POSIX.
-        if (send(SIGNAL_PIPE[1], &sig, 1, 0) < 0)
-        {
-            // These signal contention. Everything else is an error.
-            if (errno != EAGAIN
-#ifndef __MINGW32__
-                && errno != EWOULDBLOCK
-#endif
-                )
-            {
-                // This is not async safe, but if we get in here there's something really weird
-                // going on.
-                Log(LOG_LEVEL_CRIT, "Could not write to signal pipe. Unsafe to continue. (write: '%s')",
-                    GetErrorStr());
-                _exit(EXIT_FAILURE);
-            }
-        }
-    }
-}
-
 void HandleSignalsForAgent(int signum)
 {
     switch (signum)

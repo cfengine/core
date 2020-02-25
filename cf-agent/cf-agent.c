@@ -88,6 +88,7 @@
 #include <sys/types.h>                  /* checking umask on writing setxid log */
 #include <sys/stat.h>                   /* checking umask on writing setxid log */
 #include <crypto_init.h>
+#include <extensions.h>
 
 #include <mod_common.h>
 

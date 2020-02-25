@@ -34,6 +34,7 @@ AM_LDFLAGS += $(CORE_LDFLAGS) $(LMDB_LDFLAGS) $(TOKYOCABINET_LDFLAGS) $(QDBM_LDF
 
 AM_CPPFLAGS = \
 	-I$(srcdir)/../libntech/libutils -I$(srcdir)/../libcfcrypto -I$(srcdir)/../libcfnet \
+	-I$(srcdir)/../enterprise_extension \
 	-I$(srcdir)/../libenv \
 	-I$(srcdir)/../cf-check \
 	$(CORE_CPPFLAGS) $(ENTERPRISE_CPPFLAGS) \
@@ -75,13 +76,15 @@ libpromises_la_SOURCES = \
 	dbm_lmdb.c \
 	dbm_quick.c \
 	dbm_tokyocab.c \
-	enterprise_stubs.c enterprise_extension.c enterprise_extension.h \
+	$(srcdir)/../enterprise_extension/extensions_template.c.pre $(srcdir)/../enterprise_extension/extensions_template.h.pre \
+	$(srcdir)/../enterprise_extension/enterprise_extension.c $(srcdir)/../enterprise_extension/enterprise_extension.h \
+	$(srcdir)/../enterprise_extension/shared_lib.c $(srcdir)/../enterprise_extension/shared_lib.h \
+	$(srcdir)/../enterprise_extension/extensions.c $(srcdir)/../enterprise_extension/extensions.h \
+	enterprise_stubs.c \
 	eval_context.c eval_context.h \
 	evalfunction.c evalfunction.h \
 	exec_tools.c exec_tools.h \
 	expand.c expand.h \
-	extensions.c extensions.h \
-	extensions_template.c.pre extensions_template.h.pre \
 	feature.c feature.h \
 	files_copy.c files_copy.h \
 	files_interfaces.c files_interfaces.h \
@@ -133,7 +136,6 @@ libpromises_la_SOURCES = \
 	prototypes3.h \
 	rlist.c rlist.h \
 	scope.c scope.h \
-	shared_lib.c shared_lib.h \
 	signals.c signals.h \
 	sort.c sort.h \
 	storage_tools.c \
@@ -209,15 +211,9 @@ endif # !NT
 # (e.g. libpromises_la) so that it's generated during "make dist"
 
 BUILT_SOURCES = cf3lex.c cf3parse.h cf3parse.c \
-	enterprise_extension.c enterprise_extension.h \
 	bootstrap.inc
-EXTRA_SCRIPTS = text2cstring.pl enterprise_extension.sed
+EXTRA_SCRIPTS = text2cstring.pl
 EXTRA_DIST = $(EXTRA_SCRIPTS)
-
-enterprise_extension.c: extensions_template.c.pre enterprise_extension.sed
-	$(V_SED) $(SED) -f $(srcdir)/enterprise_extension.sed $< > $@
-enterprise_extension.h: extensions_template.h.pre enterprise_extension.sed
-	$(V_SED) $(SED) -f $(srcdir)/enterprise_extension.sed $< > $@
 
 bootstrap.inc: failsafe.cf text2cstring.pl
 	$(V_PERL) $(PERL) $(srcdir)/text2cstring.pl $< > $@

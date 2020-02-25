@@ -46,7 +46,7 @@ AM_CPPFLAGS += $(PCRE_CPPFLAGS)
 
 # Those dependencies are ought to go away ASAP
 AM_CPPFLAGS += -I$(top_srcdir)/libcfnet
-AM_CPPFLAGS += -I$(top_srcdir)/libpromises
+AM_CPPFLAGS += -I$(top_srcdir)/libpromises -I$(top_srcdir)/enterprise_extension
 
 CLEANFILES = *.gcno *.gcda
 

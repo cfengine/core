@@ -21,38 +21,18 @@
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
 #
-noinst_LTLIBRARIES = libcf-promises.la
 
-AM_CPPFLAGS = \
-	-I$(srcdir)/../libntech/libutils \
-	-I$(srcdir)/../libpromises \
-	-I$(srcdir)/../enterprise_extension \
-	-I$(srcdir)/../libcfnet \
-	@CPPFLAGS@ \
-	$(OPENSSL_CPPFLAGS) \
-	$(PCRE_CPPFLAGS) \
-	$(ENTERPRISE_CPPFLAGS)
+########## Sources pre-generated and distributed in the tarball ##########
+# Make sure you include the generated file as a dependency to a target
+# (e.g. libpromises_la) so that it's generated during "make dist"
 
-AM_CFLAGS = @CFLAGS@ \
-	$(OPENSSL_CFLAGS) \
-	$(ENTERPRISE_CFLAGS)
+BUILT_SOURCES = enterprise_extension.c enterprise_extension.h
+EXTRA_SCRIPTS = enterprise_extension.sed
+EXTRA_DIST = $(EXTRA_SCRIPTS) $(BUILT_SOURCES)
 
-AM_LDFLAGS = \
-	@LDFLAGS@
+enterprise_extension.c: extensions_template.c.pre enterprise_extension.sed
+	$(V_SED) $(SED) -f $(srcdir)/enterprise_extension.sed $< > $@
+enterprise_extension.h: extensions_template.h.pre enterprise_extension.sed
+	$(V_SED) $(SED) -f $(srcdir)/enterprise_extension.sed $< > $@
 
-libcf_promises_la_LIBADD = ../libpromises/libpromises.la
-
-libcf_promises_la_SOURCES = cf-promises.c
-
-if !BUILTIN_EXTENSIONS
-bin_PROGRAMS = cf-promises
-cf_promises_LDADD = libcf-promises.la
-cf_promises_SOURCES =
-endif
-
-CLEANFILES = *.gcno *.gcda
-
-#
-# Some basic clean ups
-#
-MOSTLYCLEANFILES = *~ *.orig *.rej
+CLEANFILES = enterprise_extension.c enterprise_extension.h

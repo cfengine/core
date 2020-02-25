@@ -22,6 +22,9 @@
   included file COSL.txt.
 */
 
+#ifndef CFENGINE_EXTENSIONS_H
+#define CFENGINE_EXTENSIONS_H
+
 #include <shared_lib.h>
 
 #ifdef BUILTIN_EXTENSIONS
@@ -38,3 +41,5 @@ void *extension_library_open(const char *name);
 void extension_library_close(void *handle);
 
 #endif // !BUILTIN_EXTENSIONS
+
+#endif  /* CFENGINE_EXTENSIONS_H */

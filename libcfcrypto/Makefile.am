@@ -28,7 +28,7 @@ AM_LDFLAGS = $(CORE_LDFLAGS) $(OPENSSL_LDFLAGS)
 
 AM_CPPFLAGS = \
 	-I$(srcdir)/../libntech/libutils \
-	-I$(srcdir)/../libpromises \
+	-I$(srcdir)/../enterprise_extension \
 	$(CORE_CPPFLAGS) $(OPENSSL_CPPFLAGS)
 
 AM_CFLAGS = $(CORE_CFLAGS) $(OPENSSL_CPPFLAGS)

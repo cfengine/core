@@ -25,6 +25,7 @@
 AM_CPPFLAGS = \
 	$(OPENSSL_CPPFLAGS) \
 	-I$(srcdir)/../../../libpromises \
+	-I$(srcdir)/../../../enterprise_extension \
 	-I$(srcdir)/../../../libntech/libutils \
 	-I$(srcdir)/../../../libcfnet \
 	-I$(srcdir)/../../../libenv \

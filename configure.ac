@@ -1810,6 +1810,7 @@ AC_CONFIG_FILES([Makefile
     contrib/vagrant-ci/centos-6-x64/Makefile
     misc/Makefile
     misc/selinux/Makefile
+    enterprise_extension/Makefile
     ext/Makefile
     examples/Makefile
     tests/Makefile

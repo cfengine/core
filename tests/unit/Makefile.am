@@ -30,6 +30,7 @@ AM_CPPFLAGS = $(CORE_CPPFLAGS) \
 	-I$(srcdir)/../../libcfnet \
 	-I$(srcdir)/../../libenv \
 	-I$(srcdir)/../../libpromises \
+	-I$(srcdir)/../../enterprise_extension \
 	-I$(srcdir)/../../libntech/libutils \
 	-I$(srcdir)/../../cf-monitord \
 	-I$(srcdir)/../../cf-serverd \

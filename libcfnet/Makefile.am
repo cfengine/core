@@ -25,7 +25,7 @@ noinst_LTLIBRARIES = libcfnet.la
 
 AM_CPPFLAGS = -I$(top_srcdir)/libntech/libutils \
 	-I$(top_srcdir)/libcfcrypto \
-	-I$(top_srcdir)/libpromises \
+	-I$(top_srcdir)/enterprise_extension \
 	$(PCRE_CPPFLAGS) \
 	$(OPENSSL_CPPFLAGS)
 

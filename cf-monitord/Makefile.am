@@ -28,6 +28,7 @@ AM_CPPFLAGS = \
 	-I$(srcdir)/../libcfnet \
 	-I$(srcdir)/../libenv \
 	-I$(srcdir)/../libpromises \
+	-I$(srcdir)/../enterprise_extension \
 	$(PCRE_CPPFLAGS) \
 	$(OPENSSL_CPPFLAGS) \
 	$(ENTERPRISE_CPPFLAGS)

@@ -34,6 +34,7 @@ if !XNU
 AM_CPPFLAGS = $(CORE_CPPFLAGS) \
 	$(ENTERPRISE_CPPFLAGS) \
 	-I../../libpromises \
+	-I../../enterprise_extension \
 	-I../../libntech/libutils \
 	-I../../libcfnet \
 	-I../../libcfcrypto \

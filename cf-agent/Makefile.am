@@ -24,6 +24,7 @@
 noinst_LTLIBRARIES = libcf-agent.la
 
 AM_CPPFLAGS = -I$(srcdir)/../libpromises -I$(srcdir)/../libntech/libutils \
+	-I$(srcdir)/../enterprise_extension \
 	-I$(srcdir)/../libcfcrypto \
 	-I$(srcdir)/../libcfnet \
 	-I$(srcdir)/../cf-check \

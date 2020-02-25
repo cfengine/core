@@ -44,6 +44,7 @@ stamp-h1
 /cf-testd/Makefile
 /cf-upgrade/Makefile
 /contrib/vagrant-ci/centos-6-x64/Makefile
+/enterprise_extension/Makefile
 /examples/Makefile
 /ext/Makefile
 /libcfcrypto/Makefile
@@ -106,12 +107,18 @@ stamp-h1
 /ext/rpmvercmp.exe
 
 # autogen
-/libpromises/cf3lex.c
-/libpromises/cf3parse.c
-/libpromises/cf3parse.h
 /libutils/config.h
 /libutils/config.h.in
 /libutils/config.post.h
+
+# generated
+/libpromises/cf3lex.c
+/libpromises/cf3parse.c
+/libpromises/cf3parse.h
+/libpromises/bootstrap.inc
+/enterprise_extension/enterprise_extension.c
+/enterprise_extension/enterprise_extension.h
+
 
 # examples
 /examples/cfengine_stdlib.cf

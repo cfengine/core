@@ -25,6 +25,7 @@ noinst_LTLIBRARIES = libcf-execd.la libcf-execd-test.la
 
 AM_CPPFLAGS = \
 	-I$(srcdir)/../libpromises \
+	-I$(srcdir)/../enterprise_extension \
 	-I$(srcdir)/../libntech/libutils \
 	-I$(srcdir)/../libcfcrypto \
 	-I$(srcdir)/../libcfnet \

@@ -27,6 +27,7 @@ BEGIN_MARKER // Do not include this file directly! Build process should replace 
 #include <XextensionX_extension.h>
 
 #include <logging.h>
+#include <extensions.h>
 
 #include <pthread.h>
 

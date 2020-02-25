@@ -32,10 +32,6 @@
 
 #ifndef __MINGW32__
 
-/* Max size of the 'passwd' string in the getpwuid_r() function,
- * man:getpwuid_r(3) says that this value "Should be more than enough". */
-#define GETPW_R_SIZE_MAX 16384
-
 static bool IsProcessRunning(pid_t pid);
 
 void ProcessSignalTerminate(pid_t pid)
@@ -100,29 +96,6 @@ static bool IsProcessRunning(pid_t pid)
     Log(LOG_LEVEL_ERR, "Failed checking for process existence. (kill: %s)", GetErrorStr());
 
     return false;
-}
-
-/*************************************************************/
-
-bool GetCurrentUserName(char *userName, int userNameLen)
-{
-    char buf[GETPW_R_SIZE_MAX] = {0};
-    struct passwd pwd;
-    struct passwd *result;
-
-    memset(userName, 0, userNameLen);
-    int ret = getpwuid_r(getuid(), &pwd, buf, GETPW_R_SIZE_MAX, &result);
-
-    if (result == NULL)
-    {
-        Log(LOG_LEVEL_ERR, "Could not get user name of current process, using 'UNKNOWN'. (getpwuid: %s)",
-            ret == 0 ? "not found" : GetErrorStrFromCode(ret));
-        strlcpy(userName, "UNKNOWN", userNameLen);
-        return false;
-    }
-
-    strlcpy(userName, result->pw_name, userNameLen);
-    return true;
 }
 
 /*************************************************************/

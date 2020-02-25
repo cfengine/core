@@ -29,6 +29,5 @@
 #include <cf3.defs.h>
 
 void ProcessSignalTerminate(pid_t pid);
-bool GetCurrentUserName(char *userName, int userNameLen);
 
 #endif

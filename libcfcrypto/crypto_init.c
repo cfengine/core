@@ -1,4 +1,5 @@
 #include <platform.h>
+#include <definitions.h>
 #include <alloc.h>
 #include <logging.h>
 #include <known_dirs.h>
@@ -19,6 +20,8 @@ static bool crypto_initialized = false; /* GLOBAL_X */
 */
 HashMethod CF_DEFAULT_DIGEST; /* GLOBAL_C, initialized later */
 int CF_DEFAULT_DIGEST_LEN;    /* GLOBAL_C, initialized later */
+
+bool FIPS_MODE = false; /* GLOBAL_P */
 
 #if OPENSSL_VERSION_NUMBER < 0x10100000
 /* The deprecated is the easy way to setup threads for OpenSSL. */
@@ -222,3 +225,12 @@ ENTERPRISE_FUNC_1ARG_DEFINE_STUB(const EVP_CIPHER *, CfengineCipher, ARG_UNUSED 
     return EVP_bf_cbc();
 }
 
+ENTERPRISE_FUNC_1ARG_DEFINE_STUB(int, CfSessionKeySize, ARG_UNUSED char, type)
+{
+    return CF_BLOWFISHSIZE;
+}
+
+ENTERPRISE_FUNC_0ARG_DEFINE_STUB(char, CfEnterpriseOptions)
+{
+    return 'c';
+}

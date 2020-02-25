@@ -24,12 +24,15 @@
 
 #include <protocol.h>
 
+#include <alloc.h>
+#include <cfnet.h>
 #include <client_code.h>
 #include <client_protocol.h>
 #include <definitions.h>
 #include <net.h>
 #include <stat_cache.h>
 #include <string_lib.h>
+#include <file_lib.h>
 #include <tls_generic.h>
 
 Seq *ProtocolOpenDir(AgentConnection *conn, const char *path)

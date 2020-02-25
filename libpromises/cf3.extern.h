@@ -35,7 +35,6 @@
 extern pid_t ALARM_PID;
 extern RSA *PRIVKEY, *PUBKEY;
 
-extern char BINDINTERFACE[CF_MAXVARSIZE];
 extern time_t CONNTIMEOUT;
 
 extern time_t CFSTARTTIME;
@@ -56,8 +55,6 @@ extern int VIFELAPSED;
 extern int VEXPIREAFTER;
 
 extern const char *const OBSERVABLES[CF_OBSERVABLES][2];
-
-extern bool FIPS_MODE;
 
 extern int CF_PERSISTENCE;
 

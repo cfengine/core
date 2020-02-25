@@ -28,6 +28,7 @@
 #include <abstract_dir.h>
 #include <item_lib.h>
 #include <rlist.h>
+#include <sequence.h>
 
 struct AbstractDir_
 {
@@ -54,7 +55,15 @@ AbstractDir *AbstractDirOpen(const char *dirname, const FileCopy *fc, AgentConne
     else
     {
         assert(fc->servers && strcmp(RlistScalarValue(fc->servers), "localhost"));
-        d->list = RemoteDirList(dirname, fc->encrypt, conn);
+        d->list = NULL;
+        Seq *list = RemoteDirList(dirname, fc->encrypt, conn);
+        size_t length = SeqLength(list);
+        for (size_t i = 0; i < length; i++)
+        {
+            PrependItem(&(d->list), SeqAt(list, i), NULL);
+        }
+        d->list = ReverseItemList(d->list);
+        SeqSoftDestroy(list);
         if (d->list == NULL)
         {
             free(d);

@@ -22,6 +22,7 @@
   included file COSL.txt.
 */
 
+#include <alloc.h>
 #include <cfnet.h>                                 /* struct ConnectionInfo */
 #include <client_code.h>
 #include <communication.h>
@@ -34,7 +35,6 @@
 #include <tls_client.h>               /* TLSTry */
 #include <tls_generic.h>              /* TLSVerifyPeer */
 #include <dir.h>
-#include <unix.h>
 #include <dir_priv.h>                          /* AllocateDirentForFilename */
 #include <client_protocol.h>
 #include <crypto.h>                          /* SavePublicKey,EncryptString */
@@ -42,11 +42,11 @@
 #include <logging.h>
 #include <hash.h>                                               /* HashFile */
 #include <mutex.h>                                            /* ThreadLock */
-#include <files_lib.h>                               /* FullWrite,safe_open */
+#include <file_lib.h>                               /* FullWrite,safe_open */
 #include <string_lib.h>                           /* MemSpan,MemSpanInverse */
 #include <misc_lib.h>                                   /* ProgrammingError */
 #include <printsize.h>                                         /* PRINTSIZE */
-#include <lastseen.h>                                            /* LastSaw */
+#include <user.h>                                     /* GetCurrentUserName */
 
 
 #define CFENGINE_SERVICE "cfengine"
@@ -55,9 +55,10 @@
 /**
  * Initialize client's network library.
  */
-bool cfnet_init(const char *tls_min_version, const char *ciphers)
+bool cfnet_init(const char *tls_min_version, const char *ciphers,
+                time_t start_time, const char *host)
 {
-    CryptoInitialize(CFSTARTTIME, VFQNAME);
+    CryptoInitialize(start_time, host);
     return TLSClientInitialize(tls_min_version, ciphers);
 }
 
@@ -190,7 +191,11 @@ int TLSConnect(ConnectionInfo *conn_info, bool trust_server,
  */
 AgentConnection *ServerConnection(const char *server, const char *port,
                                   unsigned int connect_timeout,
-                                  ConnectionFlags flags, int *err)
+                                  ConnectionFlags flags,
+                                  RSA *privkey, RSA *pubkey,
+                                  RecordSeen record_seen,
+                                  GetHostRSAKeyByIP get_host_key_by_ip,
+                                  int *err)
 {
     AgentConnection *conn = NULL;
     int ret;
@@ -265,10 +270,9 @@ AgentConnection *ServerConnection(const char *server, const char *port,
         assert(ret == 1);
 
         conn->conn_info->status = CONNECTIONINFO_STATUS_ESTABLISHED;
-        if (!flags.off_the_record)
+        if (!flags.off_the_record && (record_seen != NULL))
         {
-            LastSaw1(conn->remoteip, KeyPrintableHash(conn->conn_info->remote_key),
-                     LAST_SEEN_ROLE_CONNECT);
+            record_seen(conn->remoteip, KeyPrintableHash(conn->conn_info->remote_key));
         }
     }
     else if (ProtocolIsClassic(protocol_version))
@@ -278,14 +282,16 @@ AgentConnection *ServerConnection(const char *server, const char *port,
 
         if (!IdentifyAgent(conn->conn_info))
         {
-            Log(LOG_LEVEL_ERR, "Id-authentication for '%s' failed", VFQNAME);
+            Log(LOG_LEVEL_ERR, "Id-authentication for failed");
             errno = EPERM;
             DisconnectServer(conn);
             *err = -2; // auth err
             return NULL;
         }
 
-        if (!AuthenticateAgent(conn, flags.trust_server))
+        if (!AuthenticateAgent(conn, flags.trust_server,
+                               privkey, pubkey,
+                               record_seen, get_host_key_by_ip))
         {
             Log(LOG_LEVEL_ERR, "Authentication dialogue with '%s' failed", server);
             errno = EPERM;
@@ -327,9 +333,9 @@ void DisconnectServer(AgentConnection *conn)
 
 /*********************************************************************/
 
-/* Returning NULL (an empty list) does not mean empty directory but ERROR,
+/* Returning NULL does not mean empty directory but ERROR,
  * since every directory has to contain at least . and .. */
-Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
+Seq *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
 {
     char sendbuffer[CF_BUFSIZE];
     char recvbuffer[CF_BUFSIZE];
@@ -380,7 +386,7 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
         return NULL;
     }
 
-    Item *start = NULL, *end = NULL;                  /* NULL is empty list */
+    Seq *ret = SeqNew(16, free);
     while (true)
     {
         /* TODO check the CF_MORE flag, no need for CFD_TERMINATOR. */
@@ -390,7 +396,8 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
         if (nbytes == -1)
         {
             /* TODO mark connection in the cache as closed. */
-            goto err;
+            SeqDestroy(ret);
+            return NULL;
         }
 
         if (encrypt)
@@ -404,21 +411,24 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
         {
             Log(LOG_LEVEL_ERR,
                 "Empty%s server packet when listing directory '%s'!",
-                (start == NULL) ? " first" : "",
+                (SeqLength(ret) == 0) ? " first" : "",
                 dirname);
-            goto err;
+            SeqDestroy(ret);
+            return NULL;
         }
 
         if (FailedProtoReply(recvbuffer))
         {
             Log(LOG_LEVEL_INFO, "Network access to '%s:%s' denied", conn->this_server, dirname);
-            goto err;
+            SeqDestroy(ret);
+            return NULL;
         }
 
         if (BadProtoReply(recvbuffer))
         {
             Log(LOG_LEVEL_INFO, "%s", recvbuffer + strlen("BAD: "));
-            goto err;
+            SeqDestroy(ret);
+            return NULL;
         }
 
         /* Double '\0' means end of packet. */
@@ -426,36 +436,14 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
         {
             if (strcmp(sp, CFD_TERMINATOR) == 0)      /* end of all packets */
             {
-                return start;
+                return ret;
             }
 
-            Item *ip = xcalloc(1, sizeof(Item));
-            ip->name = (char *) AllocateDirentForFilename(sp);
-
-            if (start == NULL)  /* First element */
-            {
-                start = ip;
-                end = ip;
-            }
-            else
-            {
-                end->next = ip;
-                end = ip;
-            }
+            SeqAppend(ret, AllocateDirentForFilename(sp));
         }
     }
 
-    return start;
-
-  err:                                                         /* free list */
-    for (Item *ip = start; ip != NULL; ip = start)
-    {
-        start = ip->next;
-        free(ip->name);
-        free(ip);
-    }
-
-    return NULL;
+    return ret;
 }
 
 /*********************************************************************/

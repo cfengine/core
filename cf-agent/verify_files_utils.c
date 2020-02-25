@@ -65,6 +65,8 @@
 #include <conn_cache.h>
 #include <stat_cache.h>                      /* remote_stat,StatCacheLookup */
 #include <known_dirs.h>
+#include <lastseen.h>
+#include <lastseen_crypto.h>
 
 #include <cf-windows-functions.h>
 
@@ -2822,8 +2824,10 @@ static AgentConnection *FileCopyConnectionOpen(const EvalContext *ctx,
         else                    /* not found, open and cache new connection */
         {
             int err = 0;
-            conn = ServerConnection(servername, port, conntimeout,
-                                    flags, &err);
+            conn = ServerConnection(servername, port, conntimeout, flags,
+                                    PRIVKEY, PUBKEY,
+                                    LastSawConnected, HavePublicKeyByIP,
+                                    &err);
 
             /* WARNING: if cache already has non-idle connections to that
              * host, here we add more so that we connect in parallel. */
@@ -2849,8 +2853,10 @@ static AgentConnection *FileCopyConnectionOpen(const EvalContext *ctx,
     else
     {
         int err = 0;
-        conn = ServerConnection(servername, port, conntimeout,
-                                flags, &err);
+        conn = ServerConnection(servername, port, conntimeout, flags,
+                                PRIVKEY, PUBKEY,
+                                LastSawConnected, HavePublicKeyByIP,
+                                &err);
         return conn;
     }
 }

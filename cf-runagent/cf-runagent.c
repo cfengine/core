@@ -25,9 +25,10 @@
 #include <generic_agent.h>
 
 #include <known_dirs.h>
-#include <unix.h>
+#include <user.h>
 #include <eval_context.h>
 #include <lastseen.h>
+#include <lastseen_crypto.h>
 #include <crypto.h>
 #include <files_names.h>
 #include <promises.h>
@@ -48,6 +49,7 @@
 #include <expand.h>                                 /* ProtocolVersionParse */
 #include <hash.h>
 #include <string_lib.h>
+#include <file_lib.h>
 #include <cleanup.h>
 
 typedef enum
@@ -549,7 +551,7 @@ static bool HailServer(const EvalContext *ctx, const GenericAgentConfig *config,
         .off_the_record = false
     };
     int err = 0;
-    conn = ServerConnection(hostname, port, CONNTIMEOUT, connflags, &err);
+    conn = ServerConnection(hostname, port, CONNTIMEOUT, connflags, PRIVKEY, PUBKEY, LastSawConnected, HavePublicKeyByIP, &err);
 
     if (conn == NULL)
     {

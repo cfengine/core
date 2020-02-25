@@ -26,6 +26,7 @@
 #include <platform.h>
 #include <conn_cache.h>
 
+#include <alloc.h>
 #include <cfnet.h>                                     /* AgentConnection */
 #include <client_code.h>                               /* DisconnectServer */
 #include <sequence.h>                                  /* Seq */
@@ -33,6 +34,7 @@
 #include <communication.h>                             /* Hostname2IPString */
 #include <misc_lib.h>                                  /* CF_ASSERT */
 #include <string_lib.h>                                /* StringSafeEqual */
+#include <logging.h>
 
 
 /**

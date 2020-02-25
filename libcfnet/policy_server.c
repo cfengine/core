@@ -24,11 +24,11 @@
 
 #include <policy_server.h>
 
-#include <eval_context.h>
 #include <addr_lib.h>
 #include <communication.h>
 
 #include <assert.h>
+#include <alloc.h>
 #include <logging.h>
 #include <string_lib.h>
 #include <file_lib.h>
@@ -71,7 +71,6 @@ static bool is_whitespace_empty(const char *str) {
  * NULL is a valid input for new_policy_server, everything will be freed and
  * set to NULL.
  *
- * @param ctx EvalContext is used to set related variables
  * @param new_policy_server can be 'host:port', same as policy_server.dat
  */
 void PolicyServerSet(const char *new_policy_server)

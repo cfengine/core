@@ -33,8 +33,6 @@
 /* operational state                                                         */
 /*****************************************************************************/
 
-bool FIPS_MODE = false; /* GLOBAL_P */
-
 struct utsname VSYSNAME; /* GLOBAL_E, initialized later */
 
 int CFA_MAXTHREADS = 10; /* GLOBAL_P */
@@ -123,13 +121,6 @@ int VIFELAPSED = 1; /* GLOBAL_P */
   Used as a default value for expireafter attribute in policy.
 */
 int VEXPIREAFTER = 120; /* GLOBAL_P */
-
-/*
-  Set in cf-agent/cf-serverd (from control body).
-
-  Utilized in server/client code to bind sockets.
-*/
-char BINDINTERFACE[CF_MAXVARSIZE]; /* GLOBAL_P */
 
 /*
   Set in cf-*.c:CheckOpts and GenericAgentConfigParseArguments.

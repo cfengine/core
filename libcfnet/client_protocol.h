@@ -26,10 +26,13 @@
 #define CFENGINE_CLIENT_PROTOCOL_H
 
 #include <cfnet.h>
+#include <openssl/rsa.h>
 
 
 bool IdentifyAgent(ConnectionInfo *connection);
-bool AuthenticateAgent(AgentConnection *conn, bool trust_key);
+bool AuthenticateAgent(AgentConnection *conn, bool trust_key,
+                       RSA *privkey, RSA *pubkey,
+                       RecordSeen record_seen, GetHostRSAKeyByIP get_host_key_by_ip);
 bool BadProtoReply(char *buf);
 bool OKProtoReply(char *buf);
 bool FailedProtoReply(char *buf);

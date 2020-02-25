@@ -52,7 +52,6 @@
 /*******************************************************************/
 
 #define CF_MAXFRAGMENT 19       /* abbreviate long promise names to 2*MAXFRAGMENT+3 */
-#define CF_NONCELEN (CF_BUFSIZE/16)
 #define CF_MAXLINKSIZE 256
 #define CF_PROCCOLS 16
 #define CF_MACROALPHABET 61     /* a-z, A-Z plus a bit */
@@ -99,12 +98,7 @@
 #define CF_SAVED ".cfsaved"
 #define CF_EDITED ".cfedited"
 #define CF_NEW ".cfnew"
-#define CFD_TERMINATOR "---cfXen/gine/cfXen/gine---"
-#define CFD_TRUE "CFD_TRUE"
-#define CFD_FALSE "CFD_FALSE"
-#define CFD_FALSE_SIZE sizeof(CFD_FALSE) // size of CFD_FALSE including terminator
 #define CF_ANYCLASS "any"
-#define CF_SMALL_OFFSET 2
 
 #define CF_NS ':'   // namespace character separator
 
@@ -131,12 +125,6 @@ typedef enum
 } PromiseResult;
 
 /*****************************************************************************/
-
-#define CF_FAILEDSTR "BAD: Unspecified server refusal (see verbose server output)"
-#define CF_CHANGEDSTR1 "BAD: File changed "     /* Split this so it cannot be recognized */
-#define CF_CHANGEDSTR2 "while copying"
-
-#define CF_START_DOMAIN "undefined.domain"
 
 #define CF_GRAINS   64
 #define CF_NETATTR   7          /* icmp udp dns tcpsyn tcpfin tcpack */

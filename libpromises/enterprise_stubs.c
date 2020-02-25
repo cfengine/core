@@ -104,19 +104,6 @@ ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, LogTotalCompliance, const char *, ve
 }
 
 
-/* network communication: cf-serverd.c, client_protocol.c, client_code.c, crypto.c */
-
-
-ENTERPRISE_FUNC_1ARG_DEFINE_STUB(int, CfSessionKeySize, char, type)
-{
-    return CF_BLOWFISHSIZE;
-}
-
-ENTERPRISE_FUNC_0ARG_DEFINE_STUB(char, CfEnterpriseOptions)
-{
-    return 'c';
-}
-
 /* cf-agent: evalfunction.c */
 
 ENTERPRISE_FUNC_6ARG_DEFINE_STUB(char *, GetRemoteScalar, EvalContext *, ctx, char *, proto, char *, handle,

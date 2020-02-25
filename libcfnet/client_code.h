@@ -27,12 +27,14 @@
 
 
 #include <platform.h>
-#include <item_lib.h>
+#include <sequence.h>
+#include <openssl/rsa.h>
 
 #include <communication.h>
 
 
-bool cfnet_init(const char *tls_min_version, const char *ciphers);
+bool cfnet_init(const char *tls_min_version, const char *ciphers,
+                time_t start_time, const char *host);
 void cfnet_shut(void);
 bool cfnet_IsInitialized(void);
 void DetermineCfenginePort(void);
@@ -43,13 +45,17 @@ bool SetCfenginePort(const char *port_str);
   */
 AgentConnection *ServerConnection(const char *server, const char *port,
                                   unsigned int connect_timeout,
-                                  ConnectionFlags flags, int *err);
+                                  ConnectionFlags flags,
+                                  RSA *privkey, RSA *pubkey,
+                                  RecordSeen record_seen,
+                                  GetHostRSAKeyByIP get_host_key_by_ip,
+                                  int *err);
 void DisconnectServer(AgentConnection *conn);
 
 bool CompareHashNet(const char *file1, const char *file2, bool encrypt, AgentConnection *conn);
 bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
                         bool encrypt, AgentConnection *conn);
-Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn);
+Seq *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn);
 
 int TLSConnectCallCollect(ConnectionInfo *conn_info, const char *username);
 

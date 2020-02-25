@@ -43,6 +43,8 @@
 #include <cleanup.h>
 #include <protocol.h>
 #include <sequence.h>
+#include <lastseen.h>
+#include <lastseen_crypto.h>
 
 #define ARG_UNUSED __attribute__((unused))
 
@@ -239,7 +241,7 @@ static void CFNetInit(const char *min_tls_version, const char *allow_ciphers)
 #endif
     CryptoInitialize(CFSTARTTIME, VFQNAME);
     LoadSecretKeys(NULL, NULL, &PRIVKEY, &PUBKEY);
-    cfnet_init(min_tls_version, allow_ciphers);
+    cfnet_init(min_tls_version, allow_ciphers, CFSTARTTIME, VFQNAME);
 }
 
 //*******************************************************************
@@ -479,7 +481,7 @@ static AgentConnection *CFNetOpenConnection(const char *server)
     {
         port = CFENGINE_PORT_STR;
     }
-    conn = ServerConnection(host, port, 30, connflags, &err);
+    conn = ServerConnection(host, port, 30, connflags, PRIVKEY, PUBKEY, LastSawConnected, HavePublicKeyByIP, &err);
     free(buf);
     if (conn == NULL)
     {

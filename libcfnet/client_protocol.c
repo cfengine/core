@@ -28,6 +28,7 @@
 #include <openssl/err.h>                                   /* ERR_get_error */
 #include <libcrypto-compat.h>
 
+#include <alloc.h>
 #include <crypto_init.h>                               /* CF_DEFAULT_DIGEST */
 
 #include <communication.h>
@@ -40,10 +41,8 @@
 extern char VIPADDRESS[CF_MAX_IP_LEN];
 extern char VDOMAIN[];
 extern char VFQNAME[];
-#include <unix.h>                       /* GetCurrentUsername */
-#include <lastseen.h>                   /* LastSaw */
+#include <user.h>                       /* GetCurrentUsername */
 #include <crypto.h>                     /* PublicKeyFile */
-#include <lastseen_crypto.h>            /* HavePublicKeyByIP */
 #include <hash.h>                       /* HashString,HashesMatch,HashPubKey*/
 #include <known_dirs.h>
 #include <connection_info.h>
@@ -210,7 +209,9 @@ static bool SetSessionKey(AgentConnection *conn)
     return true;
 }
 
-bool AuthenticateAgent(AgentConnection *conn, bool trust_key)
+bool AuthenticateAgent(AgentConnection *conn, bool trust_key,
+                       RSA *privkey, RSA *pubkey,
+                       RecordSeen record_seen, GetHostRSAKeyByIP get_host_key_by_ip)
 {
     char sendbuffer[CF_EXPANDSIZE], in[CF_BUFSIZE], *out, *decrypted_cchall;
     BIGNUM *nonce_challenge, *bn = NULL;
@@ -219,7 +220,7 @@ bool AuthenticateAgent(AgentConnection *conn, bool trust_key)
     bool need_to_implicitly_trust_server;
     char enterprise_field = 'c';
 
-    if (PRIVKEY == NULL || PUBKEY == NULL)
+    if (privkey == NULL || pubkey == NULL)
     {
         Log(LOG_LEVEL_ERR, "No public/private key pair is loaded,"
             " please create one using cf-key");
@@ -253,7 +254,12 @@ bool AuthenticateAgent(AgentConnection *conn, bool trust_key)
 /* We assume that the server bound to the remote socket is the official one i.e. = root's */
 
     /* Ask the server to send us the public key if we don't have it. */
-    RSA *server_pubkey = HavePublicKeyByIP(conn->username, conn->remoteip);
+    RSA *server_pubkey = NULL;
+    assert(get_host_key_by_ip != NULL); /* should never be NULL in our code and tests */
+    if (get_host_key_by_ip != NULL)
+    {
+        get_host_key_by_ip(conn->username, conn->remoteip);
+    }
     if (server_pubkey)
     {
         need_to_implicitly_trust_server = false;
@@ -304,7 +310,7 @@ bool AuthenticateAgent(AgentConnection *conn, bool trust_key)
 /* proposition C2 */
 
     const BIGNUM *pubkey_n, *pubkey_e;
-    RSA_get0_key(PUBKEY, &pubkey_n, &pubkey_e, NULL);
+    RSA_get0_key(pubkey, &pubkey_n, &pubkey_e, NULL);
 
     memset(sendbuffer, 0, CF_EXPANDSIZE);
     len = BN_bn2mpi(pubkey_n, sendbuffer);
@@ -400,7 +406,7 @@ bool AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
     decrypted_cchall = xmalloc(encrypted_len);
 
-    if (RSA_private_decrypt(encrypted_len, in, decrypted_cchall, PRIVKEY, RSA_PKCS1_PADDING) <= 0)
+    if (RSA_private_decrypt(encrypted_len, in, decrypted_cchall, privkey, RSA_PKCS1_PADDING) <= 0)
     {
         Log(LOG_LEVEL_ERR,
             "Private decrypt failed, abandoning. (RSA_private_decrypt: %s)",
@@ -530,8 +536,14 @@ bool AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
     SavePublicKey(conn->username, KeyPrintableHash(conn->conn_info->remote_key), server_pubkey);
 
-    unsigned int length = 0;
-    LastSaw(conn->remoteip, KeyBinaryHash(conn->conn_info->remote_key, &length), LAST_SEEN_ROLE_CONNECT);
+    if (record_seen != NULL)
+    {
+        unsigned int length = 0;
+        const unsigned char *binary_hash = KeyBinaryHash(conn->conn_info->remote_key, &length);
+        char text_hash[CF_HOSTKEY_STRING_SIZE];
+        HashPrintSafe(text_hash, sizeof(text_hash), binary_hash, CF_DEFAULT_DIGEST, true);
+        record_seen(conn->remoteip, text_hash);
+    }
 
     free(out);
 

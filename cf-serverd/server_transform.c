@@ -52,6 +52,7 @@
 #include <client_code.h>
 #include <cfnet.h>
 #include <known_dirs.h> // GetWorkDir()
+#include <crypto_init.h>
 
 #include "server_common.h"                         /* PreprocessRequestPath */
 #include "server_access.h"

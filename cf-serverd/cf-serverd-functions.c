@@ -25,6 +25,7 @@
 #include <cf-serverd-functions.h>
 #include <cf-serverd-enterprise-stubs.h>
 
+#include <cfnet.h>
 #include <server_access.h>
 #include <client_code.h>
 #include <server_code.h>
@@ -32,6 +33,7 @@
 #include <bootstrap.h>
 #include <policy_server.h>
 #include <scope.h>
+#include <signal_pipe.h>
 #include <signals.h>
 #include <systype.h>
 #include <mutex.h>
@@ -701,7 +703,7 @@ int StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
     }
 
     size_t queue_size = GetListenQueueSize();
-    int sd = SetServerListenState(ctx, queue_size, NULL, SERVER_LISTEN, &InitServer);
+    int sd = SetServerListenState(ctx, queue_size, BINDINTERFACE, SERVER_LISTEN, &InitServer);
 
     /* Necessary for our use of select() to work in WaitForIncoming(): */
     assert(sd < sizeof(fd_set) * CHAR_BIT &&

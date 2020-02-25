@@ -44,6 +44,7 @@ bool Address2Hostkey(char *dst, size_t dst_size, const char *address);
 
 void LastSaw1(const char *ipaddress, const char *hashstr, LastSeenRole role);
 void LastSaw(const char *ipaddress, const char *digest, LastSeenRole role);
+void LastSawConnected(const char *ipaddress, const char *hashstr);
 
 bool DeleteIpFromLastSeen(const char *ip, char *digest, size_t digest_size);
 bool DeleteDigestFromLastSeen(const char *key, char *ip, size_t ip_size);

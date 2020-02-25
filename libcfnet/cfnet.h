@@ -30,10 +30,13 @@
 #include <platform.h>
 #include <definitions.h>                        /* CF_BUFSIZE, CF_SMALLBUF */
 #include <protocol_version.h> // ProtocolVersion
+#include <openssl/rsa.h>
 
 /* Only set with DetermineCfenginePort() and from cf-serverd */
 extern char CFENGINE_PORT_STR[16];                     /* GLOBAL_P GLOBAL_E */
 extern int CFENGINE_PORT;                              /* GLOBAL_P GLOBAL_E */
+
+extern char BINDINTERFACE[CF_MAXVARSIZE];
 
 
 #define CF_MAX_IP_LEN 64                    /* max IPv4/IPv6 address length */
@@ -42,14 +45,29 @@ extern int CFENGINE_PORT;                              /* GLOBAL_P GLOBAL_E */
 // Since both have 1 extra for null byte, we don't need to add 1 for ':'
 #define CF_MAX_SERVER_LEN (CF_MAX_HOST_LEN + CF_MAX_PORT_LEN)
 
+#define CF_NONCELEN (CF_BUFSIZE/16)
+
 #define CF_DONE 't'
 #define CF_MORE 'm'
 #define SOCKET_INVALID -1
 #define MAXIP4CHARLEN 16
+#define CF_SMALL_OFFSET 2
 #define CF_RSA_PROTO_OFFSET 24
 #define CF_PROTO_OFFSET 16
 #define CF_INBAND_OFFSET 8
 #define CF_MSGSIZE (CF_BUFSIZE - CF_INBAND_OFFSET)
+
+#define CFD_TRUE "CFD_TRUE"
+#define CFD_FALSE "CFD_FALSE"
+#define CFD_FALSE_SIZE sizeof(CFD_FALSE) // size of CFD_FALSE including terminator
+
+#define CFD_TERMINATOR "---cfXen/gine/cfXen/gine---"
+
+#define CF_FAILEDSTR "BAD: Unspecified server refusal (see verbose server output)"
+#define CF_CHANGEDSTR1 "BAD: File changed "     /* Split this so it cannot be recognized */
+#define CF_CHANGEDSTR2 "while copying"
+
+#define CF_START_DOMAIN "undefined.domain"
 
 typedef struct
 {
@@ -59,6 +77,9 @@ typedef struct
     bool            trust_server     : 1;
     bool            off_the_record   : 1;
 } ConnectionFlags;
+
+typedef void RecordSeen(const char *ipaddress, const char *hostkey);
+typedef RSA* (*GetHostRSAKeyByIP) (const char *username, const char *ip_address);
 
 static inline bool ConnectionFlagsEqual(const ConnectionFlags *f1,
                                         const ConnectionFlags *f2)

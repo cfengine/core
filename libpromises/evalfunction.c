@@ -72,6 +72,7 @@
 #include <string_sequence.h>
 #include <string_lib.h>
 #include <version_comparison.h>
+#include <crypto_init.h>
 
 #include <math_eval.h>
 

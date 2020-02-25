@@ -30,12 +30,14 @@
 #include <connection_info.h>
 #include <logging.h>
 #include <misc_lib.h>
-#include <cf3.defs.h>
 #include <protocol.h>
 
+/*
+  Set in cf-agent/cf-serverd (from control body).
 
-/* TODO remove libpromises dependency. */
-extern char BINDINTERFACE[CF_MAXVARSIZE];                  /* cf3globals.c, cf3.extern.h */
+  Utilized in server/client code to bind sockets.
+*/
+char BINDINTERFACE[CF_MAXVARSIZE];
 
 void SetBindInterface(const char *ip)
 {

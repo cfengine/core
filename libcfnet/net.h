@@ -30,9 +30,7 @@
 
 #include <cfnet.h>
 
-
 extern uint32_t bwlimit_kbytes;
-
 
 int SendTransaction(ConnectionInfo *conn_info, const char *buffer, int len, char status);
 int ReceiveTransaction(ConnectionInfo *conn_info, char *buffer, int *more);

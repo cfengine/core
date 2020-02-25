@@ -47,6 +47,7 @@
 #include <server_tls.h>         // ServerTLSInitialize
 #include <server_transform.h>   // Summarize
 #include <signals.h>            // ReloadConfigRequested
+#include <signal_pipe.h>
 #include <string_lib.h>         // StringFormat, etc.
 #include <sysinfo.h>            // DetectEnvironment
 #include <systype.h>            // CLASSTEXT
@@ -759,7 +760,7 @@ int main(int argc, char *argv[])
     signal(SIGTERM, HandleSignal);
 
     Log(LOG_LEVEL_VERBOSE, "Starting cf-testd");
-    cfnet_init(NULL, NULL);
+    cfnet_init(NULL, NULL, CFSTARTTIME, VFQNAME);
     MakeSignalPipe();
 
     long n_threads = 1;

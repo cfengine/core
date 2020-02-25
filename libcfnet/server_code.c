@@ -2,12 +2,12 @@
 #include <platform.h>
 #include <server_code.h>
 
-#include <cf3.extern.h>                 // BINDINTERFACE
 #include <printsize.h>                  // PRINTSIZE
-#include <systype.h>                    // CLASSTEXT
-#include <signals.h>                    // GetSignalPipe
+#include <signal_pipe.h>                // GetSignalPipe
 #include <cleanup.h>                    // DoCleanupAndExit
 #include <ctype.h>                      // isdigit
+#include <logging.h>
+#include <cfnet.h>
 
 /* Wait up to a minute for an in-coming connection.
  *
@@ -60,7 +60,7 @@ int WaitForIncoming(int sd, time_t tm_sec)
 }
 
 /**
- * @param bind_address address to bind to or %NULL to use the default BINDINTERFACE
+ * @param bind_address address to bind to
  */
 static int OpenReceiverChannel(char *bind_address)
 {
@@ -71,12 +71,7 @@ static int OpenReceiverChannel(char *bind_address)
         .ai_socktype = SOCK_STREAM
     };
 
-    if (bind_address == NULL)
-    {
-        bind_address = BINDINTERFACE;
-    }
-
-    /* Listen to INADDR(6)_ANY if BINDINTERFACE unset. */
+    /* Listen to INADDR(6)_ANY if bind_address unset. */
     char *ptr = NULL;
     if (bind_address[0] != '\0')
     {
@@ -169,8 +164,7 @@ static int OpenReceiverChannel(char *bind_address)
                 getnameinfo(ap->ai_addr, ap->ai_addrlen,
                             txtaddr, sizeof(txtaddr),
                             NULL, 0, NI_NUMERICHOST);
-                Log(LOG_LEVEL_DEBUG, "Bound to address '%s' on '%s' = %d", txtaddr,
-                    CLASSTEXT[VSYSTEMHARDCLASS], VSYSTEMHARDCLASS);
+                Log(LOG_LEVEL_DEBUG, "Bound to address '%s'", txtaddr);
             }
             break;
         }
@@ -188,7 +182,7 @@ static int OpenReceiverChannel(char *bind_address)
 
 /**
  * @param queue_size   length of the queue for pending connections
- * @param bind_address address to bind to or %NULL to use the default BINDINTERFACE
+ * @param bind_address address to bind to
  */
 int InitServer(size_t queue_size, char *bind_address)
 {

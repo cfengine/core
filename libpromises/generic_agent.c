@@ -2166,7 +2166,7 @@ bool GenericAgentPostLoadInit(const EvalContext *ctx)
     const char *tls_min_version =
         EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_TLS_MIN_VERSION);
 
-    return cfnet_init(tls_min_version, tls_ciphers);
+    return cfnet_init(tls_min_version, tls_ciphers, CFSTARTTIME, VFQNAME);
 }
 
 void SetupSignalsForAgent(void)

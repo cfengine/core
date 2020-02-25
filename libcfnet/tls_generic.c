@@ -22,7 +22,6 @@
   included file COSL.txt.
 */
 
-#include <cf3.defs.h> // CF_DEFAULT_DIGEST
 #include <cfnet.h>
 
 #include <openssl/err.h>

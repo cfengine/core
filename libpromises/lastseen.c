@@ -105,6 +105,15 @@ void LastSaw(const char *ipaddress, const char *digest, LastSeenRole role)
     UpdateLastSawHost(databuf, mapip, role == LAST_SEEN_ROLE_ACCEPT, time(NULL));
 }
 
+/**
+ * @brief Like LastSaw1(), but with role %LAST_SEEN_ROLE_CONNECT
+ */
+void LastSawConnected(const char *ipaddress, const char *hashstr)
+{
+    LastSaw1(ipaddress, hashstr, LAST_SEEN_ROLE_CONNECT);
+}
+
+
 /*****************************************************************************/
 
 void UpdateLastSawHost(const char *hostkey, const char *address,

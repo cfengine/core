@@ -3709,6 +3709,7 @@ static FnCallResult FnCallExpandRange(EvalContext *ctx, ARG_UNUSED const Policy 
 
     free(before);
     free(after);
+    free(work);
 
     return (FnCallResult) { FNCALL_SUCCESS, { newlist, RVAL_TYPE_LIST } };
 }

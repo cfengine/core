@@ -2,8 +2,8 @@ language: android
 dist: trusty
 android:
   components:
-    - build-tools-26.0.2
-    - android-26
+    - build-tools-29
+    - android-29
     - add-on
     - extra
   licenses:
@@ -11,16 +11,22 @@ android:
     - 'google-gdk-license-.+'
 
 before_script:
-  - android list targets
-  - echo "y" | android update sdk -a --no-ui --filter sys-img-armeabi-v7a-android-26
-  - android list targets
-  - echo "n" | android create avd --force -n test -t android-26 -c 1G
-  - wget https://f-droid.org/FDroid.apk
-  - adb install FDroid.apk
-  - adb shell monkey -p 'org.fdroid.fdroid' -v 500
-  - adb shell screencap -p /sdcard/screen.png
-  - adb pull /sdcard/screen.png
-  - adb shell rm /sdcard/screen.png
+#  - android list targets
+#  - echo "y" | android update sdk -a --no-ui --filter sys-img-armeabi-v7a-android-26
+#  - android list targets
+#  - echo "n" | android create avd --force -n test -t android-26 -c 1G
+#  - wget https://f-droid.org/FDroid.apk
+#  - adb install FDroid.apk
+#  - adb shell monkey -p 'org.fdroid.fdroid' -v 500
+#  - adb shell screencap -p /sdcard/screen.png
+#  - adb pull /sdcard/screen.png
+#  - adb shell rm /sdcard/screen.png
+  - sudo find / -name 'avdmanager' || true
+  - sudo find / -name 'emulator' || true
+  - sudo find / -name 'android' || true
+  - command -v avdmanager || true
+  - command -v emulator || true
+  - command -v android || true
 #  - find / -name 'avdmanager'
 #  - find / -name 'android'
 #  - which android

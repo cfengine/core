@@ -673,14 +673,13 @@ static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp,
         JsonDestroy(destroy_this);
         return result;
     }
-    else
-    {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Error rendering mustache template '%s'", a.edit_template);
-        result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
-        BufferDestroy(output_buffer);
-        JsonDestroy(destroy_this);
-        return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
-    }
+
+    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Error rendering mustache template '%s'", a.edit_template);
+    result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+    BufferDestroy(output_buffer);
+    JsonDestroy(destroy_this);
+    free(message);
+    return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
 }
 
 static PromiseResult RenderTemplateMustacheFromFile(EvalContext *ctx, const Promise *pp, const Attributes *a,

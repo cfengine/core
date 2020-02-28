@@ -1663,6 +1663,8 @@ static bool InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr
 
         if (!SelectLine(ctx, BufferData(exp), a))
         {
+            free(buf);
+            buf = NULL;
             continue;
         }
 
@@ -1670,6 +1672,8 @@ static bool InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr
         {
             cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a,
                  "Promised file line '%s' exists within file %s (promise kept)", BufferData(exp), edcontext->filename);
+            free(buf);
+            buf = NULL;
             continue;
         }
 
@@ -1704,6 +1708,11 @@ static bool InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr
 
         free(buf);
         buf = NULL;
+    }
+
+    if (buf != NULL)
+    {
+        free(buf);
     }
 
     if (ferror(fin))

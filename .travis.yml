@@ -13,9 +13,9 @@ android:
 before_script:
 #  - find / -name 'avdmanager'
 #  - find / -name 'android'
-  - which android
-  - android --help
-  - android list targets
+#  - which android
+#  - android --help
+  - android --verbose list
   
 #  - echo no | android create avd --force -n test -t android-26 --abi armeabi-v7a -c 100M
 #  - emulator -avd test -no-audio -no-window &

@@ -135,7 +135,7 @@ static void RandomSeed(time_t start_time, const char *host)
 
     /* Mix various stuff. */
     pid_t pid = getpid();
-    size_t host_len = strlen(host) > 0 ? strlen(host) : 1;
+    size_t host_len = ((host != NULL) && (strlen(host) > 0)) ? strlen(host) : 1;
     time_t now = time(NULL);
 
     srand((unsigned) pid      * start_time ^

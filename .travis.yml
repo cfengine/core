@@ -11,9 +11,8 @@ android:
     - 'google-gdk-license-.+'
 
 before_script:
-  - which avdmanager
-  - avdmanager --help
-  - avdmanager list
+  - find / -name 'avdmanager'
+  - find / -name 'android'
   - which android
   - android --help
   - android list targets

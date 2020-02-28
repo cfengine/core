@@ -11,7 +11,10 @@ android:
     - 'google-gdk-license-.+'
 
 before_script:
-  - echo no | android create avd --force -n test -t android-26 -c 1G
+  - android list targets
+  - echo "y" | android update sdk -a --no-ui --filter sys-img-armeabi-v7a-android-26
+  - android list targets
+  - echo "n" | android create avd --force -n test -t android-26 -c 1G
   - wget https://f-droid.org/FDroid.apk
   - adb install FDroid.apk
   - adb shell monkey -p 'org.fdroid.fdroid' -v 500

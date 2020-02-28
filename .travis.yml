@@ -11,11 +11,18 @@ android:
     - 'google-gdk-license-.+'
 
 before_script:
+  - echo no | android create avd --force -n test -t android-26 -c 1G
+  - wget https://f-droid.org/FDroid.apk
+  - adb install FDroid.apk
+  - adb shell monkey -p 'org.fdroid.fdroid' -v 500
+  - adb shell screencap -p /sdcard/screen.png
+  - adb pull /sdcard/screen.png
+  - adb shell rm /sdcard/screen.png
 #  - find / -name 'avdmanager'
 #  - find / -name 'android'
 #  - which android
 #  - android --help
-  - android --verbose list
+#  - android --verbose list
   
 #  - echo no | android create avd --force -n test -t android-26 --abi armeabi-v7a -c 100M
 #  - emulator -avd test -no-audio -no-window &

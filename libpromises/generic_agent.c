@@ -64,7 +64,7 @@
 #include <time_classes.h>
 #include <constants.h>
 #include <ornaments.h>
-#include <cf-windows-functions.h>
+#include <os_util.h>                 // InitializeWindows
 #include <loading.h>
 #include <signals.h>
 #include <addr_lib.h>
@@ -95,6 +95,8 @@ static bool LoadAugmentsFiles(EvalContext *ctx, const char* filename);
 
 #if !defined(__MINGW32__)
 static void OpenLog(int facility);
+#else
+#include <cf-windows-functions.h>
 #endif
 
 static JsonElement *ReadJsonFile(const char *filename, LogLevel log_level)

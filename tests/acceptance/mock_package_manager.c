@@ -2,7 +2,7 @@
 
 #include <rlist.h>
 #include <generic_agent.h> // Syntax()
-#include <cf-windows-functions.h>
+#include <os_util.h>              // InitializeWindows
 
 static char AVAILABLE_PACKAGES_FILE_NAME[PATH_MAX];
 static char INSTALLED_PACKAGES_FILE_NAME[PATH_MAX];

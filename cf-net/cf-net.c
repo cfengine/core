@@ -40,6 +40,7 @@
 #include <policy_server.h>      // PolicyServerReadFile
 #include <generic_agent.h>      // GenericAgentSetDefaultDigest TODO: rm dep
 #include <known_dirs.h>
+#include <os_util.h>            // InitializeWindows
 #include <cleanup.h>
 #include <protocol.h>
 #include <sequence.h>

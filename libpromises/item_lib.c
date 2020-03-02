@@ -1016,8 +1016,7 @@ bool DeleteItemNotContaining(Item **list, const char *string)  /* delete first i
 bool RawSaveItemList(const Item *liststart, const char *filename, NewLineMode new_line_mode)
 {
     char new[CF_BUFSIZE];
-    strcpy(new, filename);
-    strcat(new, CF_EDITED);
+    snprintf(new, sizeof(new), "%s%s", filename, CF_EDITED);
     unlink(new);                /* Just in case of races */
 
     FILE *fp = safe_fopen(

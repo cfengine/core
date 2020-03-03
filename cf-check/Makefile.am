@@ -44,7 +44,7 @@ AM_LDFLAGS = \
 	$(LIBYAML_LDFLAGS) \
 	$(LMDB_LDFLAGS)
 
-libcf_check_la_LIBADD = $(srcdir)/../libntech/libutils/libutils.la \
+libcf_check_la_LIBADD = ../libntech/libutils/libutils.la \
 	$(LMDB_LIBS) \
 	$(PCRE_LIBS) \
 	$(LIBYAML_LIBS) \

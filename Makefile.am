@@ -142,9 +142,9 @@ coverage: clean-coverage run-coverage collect-coverage
 BUILT_SOURCES = \
 	$(srcdir)/libpromises/enterprise_extension.c \
 	$(srcdir)/libpromises/enterprise_extension.h
-libpromises/enterprise_extension.c: libpromises/extensions_template.c.pre libpromises/enterprise_extension.sed
+$(srcdir)/libpromises/enterprise_extension.c: libpromises/extensions_template.c.pre libpromises/enterprise_extension.sed
 	$(V_SED) $(SED) -f $(srcdir)/libpromises/enterprise_extension.sed $< > $@
-libpromises/enterprise_extension.h: libpromises/extensions_template.h.pre libpromises/enterprise_extension.sed
+$(srcdir)/libpromises/enterprise_extension.h: libpromises/extensions_template.h.pre libpromises/enterprise_extension.sed
 	$(V_SED) $(SED) -f $(srcdir)/libpromises/enterprise_extension.sed $< > $@
 V_PERL = $(cf__v_PERL_$(V))
 cf__v_PERL_ = $(cf__v_PERL_$(AM_DEFAULT_VERBOSITY))

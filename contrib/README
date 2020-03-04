@@ -1,6 +1,6 @@
 This directory contains kindly donated work by other inviduals
 who use cfengine. An alternative and more official GNU makefile
-setup is included here, courtesy of  Knut-Håvard Aksnes.
+setup is included here, courtesy of  Knut-HÃ¥vard Aksnes.
 I haven't used them yet, because I like the makefiles which I
 and David Masterson have worked out -- they leave the screen
 tidier.

@@ -1,0 +1,8 @@
+# This previously caused a crash (segfault), now we are testing that
+# it prints error and exits with 0.
+bundle agent main
+{
+  reports:
+    "With: $(with)"
+      with => string_mustache("{{");
+}

@@ -81,6 +81,7 @@ COMMON_TESTS=${COMMON_TESTS:-1}       ; export COMMON_TESTS
 TIMED_TESTS=${TIMED_TESTS:-1}         ; export TIMED_TESTS
 SLOW_TESTS=${SLOW_TESTS:-1}           ; export SLOW_TESTS
 ERROREXIT_TESTS=${ERROREXIT_TESTS:-1} ; export ERROREXIT_TESTS
+ERRORLOG_TESTS=${ERRORLOG_TESTS:-1}   ; export ERRORLOG_TESTS
 SERIAL_TESTS=${SERIAL_TESTS:-1}       ; export SERIAL_TESTS
 NETWORK_TESTS=${NETWORK_TESTS:-1}     ; export NETWORK_TESTS
 LIBXML2_TESTS=${LIBXML2_TESTS:-1}     ; export LIBXML2_TESTS
@@ -250,7 +251,7 @@ usage() {
     echo "               defaults to $DEFLIBTOOL."
     echo " --include Include the file or directory given in the workdir before the test"
     echo "           starts. This option may be given several times."
-    echo " --tests=common,network,serial,timed,slow,errorexit,libxml2,libcurl"
+    echo " --tests=common,network,serial,timed,slow,errorexit,errorlog,libxml2,libcurl"
     echo "           This is the default value, you can also add from the following:"
     echo "           unsafe,staging"
     echo "           NOTE: 'staging' tests are not expected to pass"
@@ -309,7 +310,9 @@ runtest() {
 
     case "$TEST" in
         *.x.cf)       TEST_TYPE=errorexit &&
-                      EXTRATEXT='(expected to exit with error)'  ;;
+                      EXTRATEXT='(should exit with non-zero, but not crash)' ;;
+        *.error.cf)   TEST_TYPE=errorlog &&
+                      EXTRATEXT='(should log error(s), but exit with 0)' ;;
         */staging/*)  TEST_TYPE=staging   ;;
         */unsafe/*)   TEST_TYPE=unsafe    ;;
         */network/*)  TEST_TYPE=network   ;;
@@ -327,6 +330,10 @@ runtest() {
     then
         SKIP=1
         SKIPREASON="${COLOR_WARNING}'errorexit' tests are disabled${COLOR_NORMAL}"
+    elif [ $ERRORLOG_TESTS = 0  -a  $TEST_TYPE = errorlog ]
+    then
+        SKIP=1
+        SKIPREASON="${COLOR_WARNING}'errorlog' tests are disabled${COLOR_NORMAL}"
     elif [ $STAGING_TESTS = 0  -a  $TEST_TYPE = staging ]
     then
         SKIP=1
@@ -509,9 +516,35 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
             TEST_COVERS="$(egrep "R: test covers" $OUTFILE | sed -e "s,.*test covers: \([A-Za-z0-9_]*\),\1,")"
         fi
 
-        RESULT_MSG=
-        if [ $TEST_TYPE != errorexit ]
+        if [ $TEST_TYPE = errorexit ]
         then
+            if [ $RETVAL -gt 0 ] && [ $RETVAL -lt 128 ]
+            then
+                RESULT=Pass
+                RESULT_MSG="${COLOR_SUCCESS}Pass${COLOR_NORMAL}"
+            elif [ $RETVAL -ge 128 ]
+            then
+                RESULT=FAIL
+                RESULT_MSG="${COLOR_FAILURE}FAIL (CRASH!!! THIS IS A BUG!)${COLOR_NORMAL}"
+            else
+                RESULT=FAIL
+                RESULT_MSG="${COLOR_FAILURE}FAIL (Failed to exit with error!)${COLOR_NORMAL}"
+            fi
+        elif [ $TEST_TYPE = errorlog ]
+        then
+            if [ $RETVAL != 0 ]
+            then
+                RESULT=FAIL
+                RESULT_MSG="${COLOR_FAILURE}FAIL (NON-ZERO EXIT CODE!)${COLOR_NORMAL}"
+            elif fgrep 'error: ' "$OUTFILE" > /dev/null
+            then
+                RESULT=Pass
+                RESULT_MSG="${COLOR_SUCCESS}Pass${COLOR_NORMAL}"
+            else
+                RESULT=FAIL
+                RESULT_MSG="${COLOR_FAILURE}FAIL (No errors printed)${COLOR_NORMAL}"
+            fi
+        else # TEST_TYPE is not errorlog or errorexit
             # We need to be careful when matching test outcomes. Because of convergence
             # passes, a test may output FAIL before it outputs Pass; in this case the
             # latter trumps the former. Also be careful when matching an [XS]FAIL; the
@@ -577,19 +610,6 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
             else
                 RESULT=FAIL
                 RESULT_MSG="${COLOR_FAILURE}FAIL${COLOR_NORMAL}"
-            fi
-        else                                     # TEST_TYPE = errorexit
-            if [ $RETVAL -gt 0 ] && [ $RETVAL -lt 128 ]
-            then
-                RESULT=Pass
-                RESULT_MSG="${COLOR_SUCCESS}Pass${COLOR_NORMAL}"
-            elif [ $RETVAL -ge 128 ]
-            then
-                RESULT=FAIL
-                RESULT_MSG="${COLOR_FAILURE}FAIL (CRASH!!! THIS IS A BUG!)${COLOR_NORMAL}"
-            else
-                RESULT=FAIL
-                RESULT_MSG="${COLOR_FAILURE}FAIL (Failed to exit with error!)${COLOR_NORMAL}"
             fi
         fi
 
@@ -758,6 +778,7 @@ do
             TIMED_TESTS=0
             SLOW_TESTS=0
             ERROREXIT_TESTS=0
+            ERRORLOG_TESTS=0
             SERIAL_TESTS=0
             NETWORK_TESTS=0
             LIBXML2_TESTS=0
@@ -773,6 +794,7 @@ do
                     timed)       TIMED_TESTS=1;;
                     slow)        SLOW_TESTS=1;;
                     errorexit)   ERROREXIT_TESTS=1;;
+                    errorlog)    ERRORLOG_TESTS=1;;
                     serial)      SERIAL_TESTS=1;;
                     network)     NETWORK_TESTS=1;;
                     libxml2)     LIBXML2_TESTS=1;;

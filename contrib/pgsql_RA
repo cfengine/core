@@ -12,7 +12,7 @@
 #                         and other Linux-HA contributors
 # License:      GNU General Public License (GPL)
 #
-# Note:         This is a modified version of the upstream RA that supports PostgreSQL 10
+# Note:         This is a modified version of the upstream RA that supports PostgreSQL 10-12
 #               on RHEL 6.
 ###############################################################################
 # Initialization:
@@ -714,7 +714,11 @@ pgsql_promote() {
         ocf_log info "Restarting PostgreSQL instead of promote."
         #stop : this function returns $OCF_SUCCESS only.
         pgsql_real_stop slave
-        rm -f $RECOVERY_CONF
+        if "${USE_STANDBY_SIGNAL}"; then
+            rm -f ${OCF_RESKEY_pgdata}/standby.signal
+        else
+            rm -f $RECOVERY_CONF
+        fi
         pgsql_real_start
         rc=$?
         if [ $rc -ne $OCF_RUNNING_MASTER ]; then
@@ -1589,11 +1593,23 @@ make_recovery_conf() {
     fi
 
 cat > $RECOVERY_CONF <<END
-standby_mode = 'on'
 primary_conninfo = 'host=${OCF_RESKEY_master_ip} port=${OCF_RESKEY_pgport} user=${OCF_RESKEY_repuser} application_name=${NODENAME} ${OCF_RESKEY_primary_conninfo_opt}'
 restore_command = '${OCF_RESKEY_restore_command}'
 recovery_target_timeline = 'latest'
 END
+
+    if "${USE_STANDBY_SIGNAL}"; then
+        # create a standby.signal to start standby server.
+        runasowner "touch ${OCF_RESKEY_pgdata}/standby.signal"
+        if [ $? -ne 0 ]; then
+            ocf_exit_reason "Can't create ${OCF_RESKEY_pgdata}/standby.signal."
+            return 1
+        fi
+    else
+cat >> $RECOVERY_CONF <<END
+standby_mode = 'on'
+END
+    fi
 
     user_recovery_conf >> $RECOVERY_CONF
     ocf_log debug "Created recovery.conf. host=${OCF_RESKEY_master_ip}, user=${OCF_RESKEY_repuser}"
@@ -1812,6 +1828,7 @@ pgsql_validate_all() {
     local version
     local check_config_rc
     local rep_mode_string
+    local recovery_conf_string
     local socket_directories
     local rc
 
@@ -1874,6 +1891,24 @@ pgsql_validate_all() {
         if [ `printf "$version\n9.1" | sort -n | head -1` != "9.1" ]; then
             ocf_log err "Replication mode needs PostgreSQL 9.1 or higher."
             return $OCF_ERR_INSTALLED
+        fi
+        ocf_version_cmp "$version" "12"
+        rc=$?
+        if [ $rc -eq 1 ]||[ $rc -eq 2 ]; then
+            # change the standby method for PosrgreSQL 12 or later.
+            USE_STANDBY_SIGNAL=true
+            # change the path to recovery.conf because it cause PostgreSQL start error.
+            RECOVERY_CONF=${OCF_RESKEY_tmpdir}/recovery.conf
+            if [ $check_config_rc -eq 0 ]; then
+                # adding recovery parameters to postgresql.conf.
+                recovery_conf_string="include '$RECOVERY_CONF' # added by pgsql RA"
+                if ! grep -q "^[[:space:]]*$recovery_conf_string" $OCF_RESKEY_config; then
+                    ocf_log info "Running as user $USER ($EUID)"
+                    ocf_log info "adding include directive $recovery_conf_string into $OCF_RESKEY_config"
+                    echo "$recovery_conf_string" >> $OCF_RESKEY_config
+                    ocf_log info "adding rc: $?"
+                fi
+            fi
         fi
         if [ ! -n "$OCF_RESKEY_master_ip" ]; then
             ocf_log err "master_ip can't be empty."
@@ -2084,6 +2119,7 @@ RESOURCE_NAME=`echo $OCF_RESOURCE_INSTANCE | cut -d ":" -f 1`
 PGSQL_WAL_RECEIVER_STATUS_ATTR="${RESOURCE_NAME}-receiver-status"
 RECOVERY_CONF=${OCF_RESKEY_pgdata}/recovery.conf
 NODENAME=$(ocf_local_nodename | tr '[A-Z]' '[a-z]')
+USE_STANDBY_SIGNAL=false
 
 case "$1" in
     methods)    pgsql_methods

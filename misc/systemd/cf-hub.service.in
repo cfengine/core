@@ -6,8 +6,8 @@ ConditionPathExists=@workdir@/inputs/promises.cf
 After=syslog.target
 After=network.target
 
+Wants=cf-postgres.service
 After=cf-postgres.service
-Requires=cf-postgres.service
 
 [Service]
 Type=simple

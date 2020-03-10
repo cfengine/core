@@ -193,7 +193,7 @@ static FnCall *DefaultServiceBundleCall(const Promise *pp, const char *service_p
     }
     else
     {
-        call = FnCallNew("standard_services", args);
+        call = FnCallNew("default:standard_services", args);
     }
 
     return call;

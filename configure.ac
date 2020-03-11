@@ -1787,9 +1787,6 @@ dnl Now make the Makefiles
 dnl ######################################################################
 
 AC_CONFIG_FILES([Makefile
-    libntech/libcompat/Makefile
-    libntech/libutils/Makefile
-    libntech/config.post.h
     libcfnet/Makefile
     libenv/Makefile
     libpromises/Makefile

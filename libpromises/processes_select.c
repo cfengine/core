@@ -882,7 +882,7 @@ Solaris 9:
         {
             // Last field, slurp up the rest, but discard trailing whitespace.
             last = linelen;
-            while (isspace(line[last - 1]))
+            while (last > pos && isspace(line[last - 1]))
             {
                 last--;
             }

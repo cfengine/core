@@ -1,3 +1,49 @@
+3.12.4:
+	- 'cf-check diagnose --test-write' can now be used to test writing into LMDB files
+	  (ENT-4484)
+	- Added cf-postgres requirement to cf-apache and cf-hub systemd units
+	  (ENT-5125)
+	- Added new binary version macros:
+	  - `@if maximum_version(x)`
+	  - `@else`
+	  - `@if between_versions(x, y)`
+	  - `@if before_version(x)`
+	  - `@if at_version(x)`
+	  - `@if after_version(x)`
+	  (CFE-3198)
+	- Fixed an issue causing duplicate entries in sys.interfaces, and
+	  sys.hardware (CFE-3046)
+	- Fixed memory leak in handling of inline JSON in policy evaluation
+	- Measurements promises with no match no longer produce errors
+	  (ENT-5171)
+	- Moved error reading file in countlinesmatching() from verbose to error
+	  (CFE-3234)
+	- Received SIGBUS now triggers a repair of local DBs (CFE-3127)
+	- Removed (USE AT YOUR OWN RISK) from cf-key help menu for -x
+	  (ENT-5090)
+	- Variable references with nested parentheses no longer
+	  cause errors (CFE-3242)
+	- Version macros now accept single digits (CFE-3198)
+	- cf-agent: files: report purged dirs and files as repaired (CFE-3260)
+	- cf-check: Added a more user friendly message when trying to print
+	  unknown binary data (ENT-5234)
+	- cf-check: Added data validation for cf_lastseen.lmdb (CFE-2988)
+	- cf-check: Added nice printing for nova_agent_executions.lmdb
+	  (ENT-5234)
+	- cf-check: Added validation for timestamps in cf_lock.lmdb (CFE-2988)
+	- cf-check: Added validation for timestamps in lastseen.lmdb (CFE-2988)
+	- cf-check: Fixed issue causing repair to target the wrong database file
+	  (ENT-5309)
+	- cf-check: Symlinked LMDB databases are now preserved in repair
+	  Performs diagnosis and repair on symlink target instead of symlink.
+	  Repaired files / copies are placed alongside symlink target.
+	  In some cases, the symlink target is deleted to repair a corrupt
+	  database, and the symlink is left as a broken symlink. This is
+	  handled gracefully by the agent, it will be recreated. Broken
+	  symlinks are now detected as an acceptable condition in diagnose,
+	  it won't try to repair them or delete them. (ENT-5162)
+	- copy_from without preserve now respects destination mode (ENT-4016)
+
 3.12.3:
 	- Agent runs that hit abortclasses now record results (ENT-2471)
 	- Fixed issue when removing comments from files in various policy functions

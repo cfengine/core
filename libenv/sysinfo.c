@@ -405,6 +405,8 @@ void DiscoverVersion(EvalContext *ctx)
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version_patch", "BAD VERSION " VERSION, CF_DATA_TYPE_STRING, "source=agent");
     }
 
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version_release", RELEASE, CF_DATA_TYPE_STRING, "source=agent");
+
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "local_libdir", "lib", CF_DATA_TYPE_STRING, "source=agent");
 
     snprintf(workbuf, CF_BUFSIZE, "%s%cinputs%clib", GetWorkDir(), FILE_SEPARATOR, FILE_SEPARATOR);

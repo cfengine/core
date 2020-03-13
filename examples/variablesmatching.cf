@@ -44,5 +44,6 @@ bundle agent run
 #@ R: Variables matching 'default:sys.cf_version.*' = default:sys.cf_version_major
 #@ R: Variables matching 'default:sys.cf_version.*' = default:sys.cf_version_minor
 #@ R: Variables matching 'default:sys.cf_version.*' = default:sys.cf_version_patch
+#@ R: Variables matching 'default:sys.cf_version.*' = default:sys.cf_version_release
 #@ ```
 #+end_src

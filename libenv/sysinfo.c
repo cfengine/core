@@ -388,33 +388,27 @@ void DiscoverVersion(EvalContext *ctx)
     int major = 0;
     int minor = 0;
     int patch = 0;
-    const char* const workdir = GetWorkDir();
-
+    char workbuf[CF_BUFSIZE];
     if (sscanf(Version(), "%d.%d.%d", &major, &minor, &patch) == 3)
     {
-        char workbuf[CF_BUFSIZE];
-
         snprintf(workbuf, CF_MAXVARSIZE, "%d", major);
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version_major", workbuf, CF_DATA_TYPE_STRING, "source=agent");
         snprintf(workbuf, CF_MAXVARSIZE, "%d", minor);
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version_minor", workbuf, CF_DATA_TYPE_STRING, "source=agent");
         snprintf(workbuf, CF_MAXVARSIZE, "%d", patch);
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version_patch", workbuf, CF_DATA_TYPE_STRING, "source=agent");
-
-        snprintf(workbuf, CF_BUFSIZE, "%s%cinputs%clib",
-                 workdir, FILE_SEPARATOR, FILE_SEPARATOR);
-
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "libdir", workbuf, CF_DATA_TYPE_STRING, "source=agent");
-
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "local_libdir", "lib", CF_DATA_TYPE_STRING, "source=agent");
     }
     else
     {
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version_major", "BAD VERSION " VERSION, CF_DATA_TYPE_STRING, "source=agent");
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version_minor", "BAD VERSION " VERSION, CF_DATA_TYPE_STRING, "source=agent");
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version_patch", "BAD VERSION " VERSION, CF_DATA_TYPE_STRING, "source=agent");
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "libdir", workdir, CF_DATA_TYPE_STRING, "source=agent");
     }
+
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "local_libdir", "lib", CF_DATA_TYPE_STRING, "source=agent");
+
+    snprintf(workbuf, CF_BUFSIZE, "%s%cinputs%clib", GetWorkDir(), FILE_SEPARATOR, FILE_SEPARATOR);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "libdir", workbuf, CF_DATA_TYPE_STRING, "source=agent");
 }
 
 static void GetNameInfo3(EvalContext *ctx)

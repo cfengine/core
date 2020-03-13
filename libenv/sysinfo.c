@@ -415,6 +415,9 @@ void DiscoverVersion(EvalContext *ctx)
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version_patch", "BAD VERSION " VERSION, CF_DATA_TYPE_STRING, "source=agent");
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "libdir", workdir, CF_DATA_TYPE_STRING, "source=agent");
     }
+
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_version_release", RELEASE, CF_DATA_TYPE_STRING, "source=agent");
+
 }
 
 static void GetNameInfo3(EvalContext *ctx)

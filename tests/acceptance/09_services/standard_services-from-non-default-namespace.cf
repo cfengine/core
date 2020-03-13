@@ -1,0 +1,50 @@
+body common control
+{
+      inputs => { "../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+      "description" -> { "ENT-5406" }
+        string => "Test that standard_services can be used from non-default namespace";
+
+  methods:
+      "Test" usebundle => ENT_5406:ns_test;
+}
+
+bundle agent standard_services(service, state) {
+  files:
+      "$(G.testfile)"
+        create => "true";
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "ok" expression => fileexists( $(G.testfile) );
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+
+body file control
+{
+        namespace => "ENT_5406";
+}
+
+bundle agent ns_test
+{
+  services:
+      "myservice"
+        service_policy => "start";
+}

@@ -46,6 +46,7 @@
 	  symlinks are now detected as an acceptable condition in diagnose,
 	  it won't try to repair them or delete them.
 	  (ENT-5162)
+	- Fixed selection of standard_services by default when used from non-default namespace (ENT-5406)
 
 3.15.0:
 	- New policy function basename() added (CFE-3196)

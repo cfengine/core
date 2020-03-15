@@ -43,6 +43,7 @@
 	  symlinks are now detected as an acceptable condition in diagnose,
 	  it won't try to repair them or delete them. (ENT-5162)
 	- copy_from without preserve now respects destination mode (ENT-4016)
+	- Fixed selection of standard_services by default when used from non-default namespace (ENT-5406)
 
 3.12.3:
 	- Agent runs that hit abortclasses now record results (ENT-2471)

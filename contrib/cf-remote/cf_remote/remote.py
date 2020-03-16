@@ -230,7 +230,7 @@ def install_host(
         extension = None
         if "package_tags" in data and "msi" in data["package_tags"]:
             extension = ".msi"
-            del data["package_tags"]["msi"]
+            data["package_tags"].remove("msi")
         elif "dpkg" in data["bin"]:
             extension = ".deb"
         elif "rpm" in data["bin"]:

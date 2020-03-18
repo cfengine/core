@@ -80,6 +80,10 @@ m4_undefine([cfversion])
 m4_undefine([cfversion_from_file])
 m4_undefine([cfversion_from_env])
 
+AS_IF([test -n "$RELEASE"],
+      [AC_DEFINE_UNQUOTED(RELEASE, ["$RELEASE"], [Release number])],
+      [AC_DEFINE(RELEASE, ["1"], [Release number])])
+
 AC_DEFINE(BUILD_YEAR, esyscmd([date +%Y | tr -d '\n']), "Software build year")
 
 AC_DEFINE_UNQUOTED(ABS_TOP_SRCDIR,

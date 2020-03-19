@@ -12,6 +12,11 @@ from cf_remote.packages import Releases
 
 import cf_remote.demo as demo_lib
 
+def powershell(cmd):
+    assert '"' not in cmd # TODO: How to escape in cmd / powershell
+    # Note: Have to use double quotes, because single quotes are different
+    #       in cmd
+    return r'powershell.exe -Command "{}"'.format(cmd)
 
 def print_info(data):
     output = OrderedDict()
@@ -161,8 +166,12 @@ def install_package(host, pkg, data, *, connection=None):
     if ".deb" in pkg:
         output = ssh_sudo(connection, "dpkg -i {}".format(pkg), True)
     elif ".msi" in pkg:
-        output = ssh_cmd(connection, r".\{}".format(pkg), True)
-        time.sleep(8)
+        # Windows is crazy, be careful if you decide to change this;
+        # This needs to work in both powershell and cmd, and in
+        # Windows 2012 Server, 2016, and so on...
+        # sleep is powershell specific,
+        # timeout doesn't work over ssh.
+        output = ssh_cmd(connection, powershell(r'.\{} ; sleep 10'.format(pkg)), True)
     else:
         output = ssh_sudo(connection, "rpm -i {}".format(pkg), True)
     if output is None:

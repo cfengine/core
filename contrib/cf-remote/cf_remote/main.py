@@ -115,9 +115,11 @@ def run_command_with_args(command, args):
         if args.list_platforms:
             commands.list_platforms()
             return
-        elif args.init_config:
+        if args.init_config:
             commands.init_cloud_config()
             return
+        if args.name and "," in args.name:
+            user_error("Group --name may not contain commas")
         # else
         if args.role.endswith("s"):
             # role should be singular
@@ -244,12 +246,19 @@ def get_cloud_hosts(name, private_ips=False):
 def resolve_hosts(string, single=False, private_ips=False):
     log.debug("resolving hosts from '{}'".format(string))
     if is_file_string(string):
-        ret = expand_list_from_file(string)
-    elif is_in_cloud_state(string):
-        ret = get_cloud_hosts(string, private_ips)
-        log.debug("found in cloud, ret='{}'".format(ret))
+        names = expand_list_from_file(string)
     else:
-        ret = string.split(",")
+        names = string.split(",")
+
+    ret = []
+
+    for name in names:
+        if is_in_cloud_state(name):
+            hosts = get_cloud_hosts(name, private_ips)
+            ret.extend(hosts)
+            log.debug("found in cloud, adding '{}'".format(hosts))
+        else:
+            ret.append(name)
 
     if single:
         if len(ret) != 1:

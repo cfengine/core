@@ -94,9 +94,10 @@ def get_info(host, *, users=None, connection=None):
         data["systeminfo"] = parse_systeminfo(systeminfo)
         data["package_tags"] = ["x86_64", "msi"]
         data["arch"] = "x86_64"
-        agent = r'& "C:\Program Files\Cfengine\bin\cf-agent.exe"'
+        agent = r"& 'C:\Program Files\Cfengine\bin\cf-agent.exe'"
         data["agent"] = agent
-        data["agent_version"] = parse_version(ssh_cmd(connection, '{} -V'.format(agent)))
+        version_cmd = powershell('{} -V'.format(agent))
+        data["agent_version"] = parse_version(ssh_cmd(connection, version_cmd))
     else:
         data["os"] = "unix"
         data["uname"] = ssh_cmd(connection, "uname")
@@ -204,7 +205,7 @@ def bootstrap_host(host_data, policy_server, *, connection=None):
     print("Bootstrapping: '{}' -> '{}'".format(host, policy_server))
     command = "{} --bootstrap {}".format(agent, policy_server)
     if host_data["os"] == "windows":
-        output = ssh_cmd(connection, command)
+        output = ssh_cmd(connection, powershell(command))
     else:
         output = ssh_sudo(connection, command)
 

@@ -56,12 +56,14 @@ def get_args():
 
     sp = subp.add_parser("run", help="Run the command given as arguments on the given hosts")
     sp.add_argument("--hosts", "-H", help="Which hosts to run the command on", type=str, required=True)
-    sp.add_argument("args", help="Arguments", type=str, nargs='*')
+    sp.add_argument("--raw", help="Print only output of command itself", action='store_true')
+    sp.add_argument("remote_command", help="Command to execute on remote host (including args)", type=str, nargs=1)
 
     sp = subp.add_parser("sudo",
                          help="Run the command given as arguments on the given hosts with 'sudo'")
     sp.add_argument("--hosts", "-H", help="Which hosts to run the command on", type=str, required=True)
-    sp.add_argument("args", help="Arguments", type=str, nargs='*')
+    sp.add_argument("--raw", help="Print only output of command itself", action='store_true')
+    sp.add_argument("remote_command", help="Command to execute on remote host (including args)", type=str, nargs=1)
 
     sp = subp.add_parser("scp", help="Copy the given file to the given hosts")
     sp.add_argument("--hosts", "-H", help="Which hosts to copy the file to", type=str, required=True)
@@ -106,18 +108,20 @@ def run_command_with_args(command, args):
     elif command == "packages":
         commands.packages(tags=args.tags, version=args.version, edition=args.edition)
     elif command == "run":
-        commands.run(hosts=args.hosts, command=" ".join(args.args))
+        commands.run(hosts=args.hosts, raw=args.raw, command=args.remote_command)
     elif command == "sudo":
-        commands.sudo(hosts=args.hosts, command=" ".join(args.args))
+        commands.sudo(hosts=args.hosts, raw=args.raw, command=args.remote_command)
     elif command == "scp":
         commands.scp(hosts=args.hosts, files=args.args)
     elif command == "spawn":
         if args.list_platforms:
             commands.list_platforms()
             return
-        elif args.init_config:
+        if args.init_config:
             commands.init_cloud_config()
             return
+        if args.name and "," in args.name:
+            user_error("Group --name may not contain commas")
         # else
         if args.role.endswith("s"):
             # role should be singular
@@ -157,6 +161,11 @@ def validate_command(command, args):
             user_error(
                 "--package cannot be used in combination with --hub-package / --client-package")
             # TODO: Find this automatically
+
+    if command in ["sudo", "run"]:
+        if len(args.remote_command) != 1:
+            user_error("cf-remote sude/run requires exactly 1 command (use quotes)")
+        args.remote_command = args.remote_command[0]
 
     if command == "spawn" and not args.list_platforms and not args.init_config:
         # --list-platforms doesn't require any other options/arguments (TODO:
@@ -244,12 +253,19 @@ def get_cloud_hosts(name, private_ips=False):
 def resolve_hosts(string, single=False, private_ips=False):
     log.debug("resolving hosts from '{}'".format(string))
     if is_file_string(string):
-        ret = expand_list_from_file(string)
-    elif is_in_cloud_state(string):
-        ret = get_cloud_hosts(string, private_ips)
-        log.debug("found in cloud, ret='{}'".format(ret))
+        names = expand_list_from_file(string)
     else:
-        ret = string.split(",")
+        names = string.split(",")
+
+    ret = []
+
+    for name in names:
+        if is_in_cloud_state(name):
+            hosts = get_cloud_hosts(name, private_ips)
+            ret.extend(hosts)
+            log.debug("found in cloud, adding '{}'".format(hosts))
+        else:
+            ret.append(name)
 
     if single:
         if len(ret) != 1:

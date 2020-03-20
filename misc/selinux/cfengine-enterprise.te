@@ -235,6 +235,9 @@ allow cfengine_serverd_t cfengine_var_lib_t:file execute;
 # allow cf-serverd to execute cf-promises
 allow cfengine_serverd_t cfengine_var_lib_t:file execute_no_trans;
 
+# allow cf-serverd to connect in case of call-collect
+allow cfengine_serverd_t unreserved_port_t:tcp_socket name_connect;
+
 allow cfengine_serverd_t cfengine_execd_exec_t:file getattr;
 allow cfengine_serverd_t cfengine_monitord_exec_t:file getattr;
 

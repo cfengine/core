@@ -20,7 +20,7 @@ def info(hosts, users=None):
         print_info(data)
 
 
-def run(hosts, command, users=None, sudo=False):
+def run(hosts, command, users=None, sudo=False, raw=False):
     assert hosts
     for host in hosts:
         lines = run_command(host=host, command=command, users=users, sudo=sudo)
@@ -33,7 +33,9 @@ def run(hosts, command, users=None, sudo=False):
         cmd = command
         lines = lines.replace("\r", "")
         for line in lines.split("\n"):
-            if cmd:
+            if raw:
+                print(line)
+            elif cmd:
                 print("{} '{}' -> '{}'".format(host_colon, cmd, line))
                 fill = " " * (len(cmd) + 7)
                 cmd = None
@@ -41,8 +43,8 @@ def run(hosts, command, users=None, sudo=False):
                 print("{}{}'{}'".format(host_colon, fill, line))
 
 
-def sudo(hosts, command, users=None):
-    run(hosts, command, users, sudo=True)
+def sudo(hosts, command, users=None, raw=False):
+    run(hosts, command, users, sudo=True, raw=raw)
 
 
 def scp(hosts, files, users=None):

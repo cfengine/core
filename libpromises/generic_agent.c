@@ -2219,7 +2219,7 @@ void GenericAgentShowVariablesFormatted(EvalContext *ctx, const char *regexp)
 
     while ((v = VariableTableIteratorNext(iter)))
     {
-        char *varname = VarRefToString(v->ref, true);
+        char *varname = VarRefToString(VariableGetRef(v), true);
 
         if (!RegexPartialMatch(rx, varname))
         {
@@ -2229,14 +2229,15 @@ void GenericAgentShowVariablesFormatted(EvalContext *ctx, const char *regexp)
 
         Writer *w = StringWriter();
 
-        switch (DataTypeToRvalType(v->type))
+        Rval var_rval = VariableGetRval(v, false);
+        switch (var_rval.type)
         {
         case RVAL_TYPE_CONTAINER:
-            JsonWriteCompact(w, RvalContainerValue(v->rval));
+            JsonWriteCompact(w, RvalContainerValue(var_rval));
             break;
 
         default:
-            RvalWrite(w, v->rval);
+            RvalWrite(w, var_rval);
         }
 
         const char *var_value;
@@ -2250,7 +2251,7 @@ void GenericAgentShowVariablesFormatted(EvalContext *ctx, const char *regexp)
         }
 
 
-        StringSet *tagset = EvalContextVariableTags(ctx, v->ref);
+        StringSet *tagset = EvalContextVariableTags(ctx, VariableGetRef(v));
         Buffer *tagbuf = StringSetToBuffer(tagset, ',');
 
         char *line;

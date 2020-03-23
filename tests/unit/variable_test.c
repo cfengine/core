@@ -3,6 +3,15 @@
 #include <variable.h>
 #include <rlist.h>
 
+struct Variable_
+{
+    VarRef *ref;
+    Rval rval;
+    DataType type;
+    StringSet *tags;
+    const Promise *promise; // The promise that set the present value
+};
+
 static bool PutVar(VariableTable *table, char *var_str)
 {
     VarRef *ref = VarRefParse(var_str);

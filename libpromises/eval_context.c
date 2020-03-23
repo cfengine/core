@@ -1362,9 +1362,9 @@ void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, cons
         Variable *var = NULL;
         while ((var = VariableTableIteratorNext(iter)))
         {
-            Rval retval = ExpandPrivateRval(ctx, owner->ns, owner->name, var->rval.item, var->rval.type);
-            RvalDestroy(var->rval);
-            var->rval = retval;
+            Rval var_rval = VariableGetRval(var, true);
+            Rval retval = ExpandPrivateRval(ctx, owner->ns, owner->name, var_rval.item, var_rval.type);
+            VariableSetRval(var, retval);
         }
         VariableTableIteratorDestroy(iter);
     }
@@ -2218,7 +2218,7 @@ static Variable *VariableResolve2(const EvalContext *ctx, const VarRef *ref)
             var = VariableTableGet(table, base_ref);
             VarRefDestroy(base_ref);
 
-            if (var && var->type == CF_DATA_TYPE_CONTAINER)
+            if (var && (VariableGetType(var) == CF_DATA_TYPE_CONTAINER))
             {
                 return var;
             }
@@ -2300,11 +2300,15 @@ const void *EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, Da
     Variable *var = VariableResolve(ctx, ref);
     if (var)
     {
-        if (var->ref->num_indices == 0    &&
+        const VarRef *var_ref = VariableGetRef(var);
+        DataType var_type = VariableGetType(var);
+        Rval var_rval = VariableGetRval(var, true);
+
+        if (var_ref->num_indices == 0    &&
                  ref->num_indices > 0     &&
-            var->type == CF_DATA_TYPE_CONTAINER)
+            var_type == CF_DATA_TYPE_CONTAINER)
         {
-            JsonElement *child = JsonSelect(RvalContainerValue(var->rval),
+            JsonElement *child = JsonSelect(RvalContainerValue(var_rval),
                                             ref->num_indices, ref->indices);
             if (child)
             {
@@ -2319,9 +2323,9 @@ const void *EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, Da
         {
             if (type_out)
             {
-                *type_out = var->type;
+                *type_out = var_type;
             }
-            return var->rval.item;
+            return var_rval.item;
         }
     }
 
@@ -2335,7 +2339,7 @@ const void *EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, Da
 const Promise *EvalContextVariablePromiseGet(const EvalContext *ctx, const VarRef *ref)
 {
     Variable *var = VariableResolve(ctx, ref);
-    return var ? var->promise : NULL;
+    return var ? VariableGetPromise(var) : NULL;
 }
 
 StringSet *EvalContextClassTags(const EvalContext *ctx, const char *ns, const char *name)
@@ -2358,8 +2362,9 @@ StringSet *EvalContextVariableTags(const EvalContext *ctx, const VarRef *ref)
         return NULL;
     }
 
-    assert(var->tags != NULL);
-    return var->tags;
+    StringSet *var_tags = VariableGetTags(var);
+    assert(var_tags != NULL);
+    return var_tags;
 }
 
 bool EvalContextVariableClearMatch(EvalContext *ctx)

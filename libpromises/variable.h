@@ -28,17 +28,37 @@
 
 #include <var_expressions.h>
 
-typedef struct
-{
-    VarRef *ref;
-    Rval rval;
-    DataType type;
-    StringSet *tags;
-    const Promise *promise; // The promise that set the present value
-} Variable;
-
+typedef struct Variable_ Variable;
 typedef struct VariableTable_ VariableTable;
 typedef struct VariableTableIterator_ VariableTableIterator;
+
+const VarRef *VariableGetRef(const Variable *var);
+DataType VariableGetType(const Variable *var);
+RvalType VariableGetRvalType(const Variable *var);
+StringSet *VariableGetTags(const Variable *var);
+const Promise *VariableGetPromise(const Variable *var);
+
+/**
+ * Get the variable's value.
+ *
+ * @param get_secret Whether to get the secret value in case the variable is tagged as secret
+ *
+ * @note #get_secret should only be %true if the potentially secret value is
+ *       really required, i.e. being actually used not logged, reported,...
+ */
+Rval VariableGetRval(const Variable *var, bool get_secret);
+
+/**
+ * Set new value of variable.
+ *
+ * @note Destroys the old variable's value.
+ */
+void VariableSetRval(Variable *var, Rval new_rval);
+
+/**
+ * Whether the variable is marked as secret or not.
+ */
+bool VariableIsSecret(const Variable *var);
 
 VariableTable *VariableTableNew(void);
 void VariableTableDestroy(VariableTable *table);

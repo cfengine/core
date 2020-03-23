@@ -28,14 +28,110 @@
 #include <writer.h>
 #include <conversion.h>                                 /* DataTypeToString */
 
+#define VARIABLE_TAG_SECRET "secret"
 
-static void VariableDestroy(Variable *var);                 /* forward declaration */
+struct Variable_
+{
+    VarRef *ref;
+    Rval rval;
+    DataType type;
+    StringSet *tags;
+    const Promise *promise; // The promise that set the present value
+};
+
+static Variable *VariableNew(VarRef *ref, Rval rval, DataType type,
+                             StringSet *tags, const Promise *promise)
+{
+    Variable *var = xmalloc(sizeof(Variable));
+
+    var->ref = ref;
+    var->rval = rval;
+    var->type = type;
+    if (tags == NULL)
+    {
+        var->tags = StringSetFromString("", ',');
+    }
+    else
+    {
+        var->tags = tags;
+    }
+    var->promise = promise;
+
+    return var;
+}
+
+/* DO NOT EXPORT, this is for internal (hash table) use only, and it doesn't
+ * free everything in Variable, in particular it leaves var->ref to be handled
+ * by the Map implementation calling the key-destroy function. */
+static void VariableDestroy(Variable *var)
+{
+    if (var)
+    {
+        RvalDestroy(var->rval);
+        StringSetDestroy(var->tags);
+        // Nothing to do for ->promise
+
+        free(var);
+    }
+}
 
 static void VariableDestroy_untyped(void *var)
 {
     VariableDestroy(var);
 }
 
+const VarRef *VariableGetRef(const Variable *var)
+{
+    assert(var != NULL);
+    return var->ref;
+}
+
+DataType VariableGetType(const Variable *var)
+{
+    assert(var != NULL);
+    return var->type;
+}
+
+RvalType VariableGetRvalType(const Variable *var)
+{
+    assert(var != NULL);
+    return var->rval.type;
+}
+
+StringSet *VariableGetTags(const Variable *var)
+{
+    assert(var != NULL);
+    return var->tags;
+}
+
+const Promise *VariableGetPromise(const Variable *var)
+{
+    assert(var != NULL);
+    return var->promise;
+}
+
+bool VariableIsSecret(const Variable *var)
+{
+    assert(var != NULL);
+    return StringSetContains(var->tags, VARIABLE_TAG_SECRET);
+}
+
+Rval VariableGetRval(const Variable *var, bool get_secret)
+{
+    assert(var != NULL);
+    if (!get_secret && VariableIsSecret(var))
+    {
+        return RvalNewSecret();
+    }
+    return var->rval;
+}
+
+void VariableSetRval(Variable *var, Rval new_rval)
+{
+    assert(var != NULL);
+    RvalDestroy(var->rval);
+    var->rval = new_rval;
+}
 
 /**
    Define "VarMap" hash table.
@@ -60,21 +156,6 @@ struct VariableTableIterator_
     VarRef *ref;
     MapIterator iter;
 };
-
-/* DO NOT EXPORT, this is for internal (hash table) use only, and it doesn't
- * free everything in Variable, in particular it leaves var->ref to be handled
- * by the Map implementation calling the key-destroy function. */
-static void VariableDestroy(Variable *var)
-{
-    if (var)
-    {
-        RvalDestroy(var->rval);
-        StringSetDestroy(var->tags);
-        // Nothing to do for ->promise
-
-        free(var);
-    }
-}
 
 VariableTable *VariableTableNew(void)
 {
@@ -144,27 +225,6 @@ Variable *VariableTableGet(const VariableTable *table, const VarRef *ref)
 bool VariableTableRemove(VariableTable *table, const VarRef *ref)
 {
     return VarMapRemove(table->vars, ref);
-}
-
-static Variable *VariableNew(VarRef *ref, Rval rval, DataType type,
-                             StringSet *tags, const Promise *promise)
-{
-    Variable *var = xmalloc(sizeof(Variable));
-
-    var->ref = ref;
-    var->rval = rval;
-    var->type = type;
-    if (tags == NULL)
-    {
-        var->tags = StringSetFromString("", ',');
-    }
-    else
-    {
-        var->tags = tags;
-    }
-    var->promise = promise;
-
-    return var;
 }
 
 bool VariableTablePut(VariableTable *table, const VarRef *ref,

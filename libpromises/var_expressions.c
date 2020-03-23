@@ -30,7 +30,6 @@
 #include <string_lib.h>
 #include <scope.h>
 
-
 // This is not allowed to be the part of VarRef.indices so looks safe
 // to be used as multi array indices separator while hashing.
 #define ARRAY_SEPARATOR_HASH ']'

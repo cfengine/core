@@ -294,24 +294,25 @@ static JsonElement* VarRefValueToJson(const EvalContext *ctx, const FnCall *fp, 
                 {
                     JsonElement *holder = convert;
                     JsonElement *holder_parent = NULL;
-                    if (var->ref->num_indices - ref_num_indices == 1)
+                    const VarRef *var_ref = VariableGetRef(var);
+                    if (var_ref->num_indices - ref_num_indices == 1)
                     {
-                        last_key = var->ref->indices[ref_num_indices];
+                        last_key = var_ref->indices[ref_num_indices];
                     }
-                    else if (var->ref->num_indices - ref_num_indices > 1)
+                    else if (var_ref->num_indices - ref_num_indices > 1)
                     {
                         Log(LOG_LEVEL_DEBUG, "%s: got ref with starting depth %zu and index count %zu",
-                            fp_name, ref_num_indices, var->ref->num_indices);
-                        for (int index = ref_num_indices; index < var->ref->num_indices-1; index++)
+                            fp_name, ref_num_indices, var_ref->num_indices);
+                        for (int index = ref_num_indices; index < var_ref->num_indices-1; index++)
                         {
-                            JsonElement *local = JsonObjectGet(holder, var->ref->indices[index]);
+                            JsonElement *local = JsonObjectGet(holder, var_ref->indices[index]);
                             if (local == NULL)
                             {
                                 local = JsonObjectCreate(1);
-                                JsonObjectAppendObject(holder, var->ref->indices[index], local);
+                                JsonObjectAppendObject(holder, var_ref->indices[index], local);
                             }
 
-                            last_key = var->ref->indices[index+1];
+                            last_key = var_ref->indices[index+1];
                             holder_parent = holder;
                             holder = local;
                         }
@@ -319,7 +320,8 @@ static JsonElement* VarRefValueToJson(const EvalContext *ctx, const FnCall *fp, 
 
                     if (last_key != NULL && holder != NULL)
                     {
-                        switch (var->rval.type)
+                        Rval var_rval = VariableGetRval(var, true);
+                        switch (var_rval.type)
                         {
                         case RVAL_TYPE_SCALAR:
                             if (JsonGetElementType(holder) != JSON_ELEMENT_TYPE_CONTAINER)
@@ -343,21 +345,22 @@ static JsonElement* VarRefValueToJson(const EvalContext *ctx, const FnCall *fp, 
                                                         empty_container);
                                 free (element_name);
                                 holder = empty_container;
-                                JsonObjectAppendString(holder, last_key, var->rval.item);
+                                JsonObjectAppendString(holder, last_key, var_rval.item);
                             }
                             else
                             {
                                 JsonElement *child = JsonObjectGet(holder, last_key);
                                 if (child != NULL && JsonGetElementType(child) == JSON_ELEMENT_TYPE_CONTAINER)
                                 {
+                                    Rval var_rval_secret = VariableGetRval(var, false);
                                     Log(LOG_LEVEL_WARNING,
                                         "Not replacing the container '%s' with a non-container value '%s'",
-                                        JsonGetPropertyAsString(child), (char*) var->rval.item);
+                                        JsonGetPropertyAsString(child), (char*) var_rval_secret.item);
                                 }
                                 else
                                 {
                                     /* everything ok, just append the string */
-                                    JsonObjectAppendString(holder, last_key, var->rval.item);
+                                    JsonObjectAppendString(holder, last_key, var_rval.item);
                                 }
                             }
                             break;
@@ -365,7 +368,7 @@ static JsonElement* VarRefValueToJson(const EvalContext *ctx, const FnCall *fp, 
                         case RVAL_TYPE_LIST:
                         {
                             JsonElement *array = JsonArrayCreate(10);
-                            for (const Rlist *rp = RvalRlistValue(var->rval); rp != NULL; rp = rp->next)
+                            for (const Rlist *rp = RvalRlistValue(var_rval); rp != NULL; rp = rp->next)
                             {
                                 if (rp->val.type == RVAL_TYPE_SCALAR)
                                 {
@@ -1369,11 +1372,12 @@ static JsonElement *VariablesMatching(const EvalContext *ctx, const FnCall *fp, 
     Variable *v = NULL;
     while ((v = VariableTableIteratorNext(iter)))
     {
-        char *expr = VarRefToString(v->ref, true);
+        const VarRef *var_ref = VariableGetRef(v);
+        char *expr = VarRefToString(var_ref, true);
 
         if (rx != NULL && StringMatchFullWithPrecompiledRegex(rx, expr))
         {
-            StringSet *tagset = EvalContextVariableTags(ctx, v->ref);
+            StringSet *tagset = EvalContextVariableTags(ctx, var_ref);
             bool pass = false;
 
             if (args->next)
@@ -1404,7 +1408,7 @@ static JsonElement *VariablesMatching(const EvalContext *ctx, const FnCall *fp, 
                 bool allocated = false;
                 if (collect_full_data)
                 {
-                    data = VarRefValueToJson(ctx, fp, v->ref, NULL, 0, true, &allocated);
+                    data = VarRefValueToJson(ctx, fp, var_ref, NULL, 0, true, &allocated);
                 }
 
                 /*
@@ -2785,6 +2789,7 @@ static FnCallResult FnCallGetIndicesClassic(EvalContext *ctx, ARG_UNUSED const P
     const Variable *itervar;
     while ((itervar = VariableTableIteratorNext(iter)) != NULL)
     {
+        const VarRef *itervar_ref = VariableGetRef(itervar);
         /*
         Log(LOG_LEVEL_DEBUG,
             "%s(%s): got itervar->ref->num_indices %zu while ref->num_indices is %zu",
@@ -2794,9 +2799,9 @@ static FnCallResult FnCallGetIndicesClassic(EvalContext *ctx, ARG_UNUSED const P
         /* Does the variable we found have more indices than the one we
          * requested? For example, if we requested the variable "blah", it has
          * 0 indices, so a found variable blah[i] will be acceptable. */
-        if (itervar->ref->num_indices > ref->num_indices)
+        if (itervar_ref->num_indices > ref->num_indices)
         {
-            RlistAppendScalarIdemp(&keys, itervar->ref->indices[ref->num_indices]);
+            RlistAppendScalarIdemp(&keys, itervar_ref->indices[ref->num_indices]);
         }
     }
 
@@ -3843,8 +3848,9 @@ JsonElement *DefaultTemplateData(const EvalContext *ctx, const char *wantbundle)
         Variable *var;
         while ((var = VariableTableIteratorNext(it)))
         {
+            const VarRef *var_ref = VariableGetRef(var);
             // TODO: need to get a CallRef, this is bad
-            char *scope_key = ClassRefToString(var->ref->ns, var->ref->scope);
+            char *scope_key = ClassRefToString(var_ref->ns, var_ref->scope);
 
             JsonElement *scope_obj = NULL;
             if (want_all_bundles)
@@ -3865,11 +3871,12 @@ JsonElement *DefaultTemplateData(const EvalContext *ctx, const char *wantbundle)
 
             if (scope_obj != NULL)
             {
-                char *lval_key = VarRefToString(var->ref, false);
+                char *lval_key = VarRefToString(var_ref, false);
+                Rval var_rval = VariableGetRval(var, true);
                 // don't collect mangled refs
                 if (strchr(lval_key, CF_MANGLED_SCOPE) == NULL)
                 {
-                    JsonObjectAppendElement(scope_obj, lval_key, RvalToJson(var->rval));
+                    JsonObjectAppendElement(scope_obj, lval_key, RvalToJson(var_rval));
                 }
                 free(lval_key);
             }

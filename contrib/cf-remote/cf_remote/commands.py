@@ -28,7 +28,8 @@ def run(hosts, command, users=None, sudo=False, raw=False):
             sys.exit("Command: '{}'\nFailed on host: '{}'".format(command, host))
         host_colon = (host + ":").ljust(16)
         if lines == "":
-            print("{} '{}'".format(host_colon, command))
+            if not raw:
+                print("{} '{}'".format(host_colon, command))
             continue
         cmd = command
         lines = lines.replace("\r", "")

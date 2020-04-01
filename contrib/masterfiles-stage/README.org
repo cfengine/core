@@ -250,6 +250,3 @@ The =masterfiles-stage.sh= script can support an implementation for
 phased rollout. Phased Rollout is the process of releasing a *policy*
 change to a population in a controlled manner.
 (=GIT_POLICY_CHANNELS= is one such implementation.)
-
-Read [[file:phased_rollout/README.org][this document]] for further information on using the
-=masterfiles-stage.sh= to help accomplish a phased roll out.

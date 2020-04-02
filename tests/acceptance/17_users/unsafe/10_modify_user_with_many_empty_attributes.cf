@@ -18,6 +18,10 @@ body common control
 
 bundle agent init
 {
+  vars:
+    "passwd_init" string => execresult("cat /etc/passwd", "useshell");
+    "group_init" string => execresult("cat /etc/group", "useshell");
+
   # Create him first with some unwanted attributes
   users:
     "johndoe"
@@ -25,18 +29,29 @@ bundle agent init
       group_primary => "$(user_tests.group1)",
       groups_secondary => { "$(user_tests.group2)" },
       description => "Description";
+
+  reports:
+    "passwd_init: $(passwd_init)";
+    "group_init: $(group_init)";
 }
 
 #######################################################
 
 bundle agent test
 {
+  vars:
+    "passwd_test" string => execresult("cat /etc/passwd", "useshell");
+    "group_test" string => execresult("cat /etc/group", "useshell");
+
   users:
     "johndoe"
       policy => "present",
       group_primary => "",
       groups_secondary => { },
       description => "";
+  reports:
+    "passwd_test: $(passwd_test)";
+    "group_test: $(group_test)";
 }
 
 #######################################################

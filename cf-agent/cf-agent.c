@@ -371,8 +371,7 @@ static void ConfigureBootstrap(GenericAgentConfig *config, const char *argument)
 
     if(IsLoopbackAddress(argument))
     {
-        Log(LOG_LEVEL_ERR, "Cannot bootstrap to a loopback address");
-        DoCleanupAndExit(EXIT_FAILURE);
+        Log(LOG_LEVEL_WARNING, "Bootstrapping to loopback interface (localhost), other hosts will not be able to bootstrap to this server");
     }
 
     // temporary assure that network functions are working

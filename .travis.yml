@@ -1,35 +1,86 @@
-language: android
-dist: trusty
-android:
-  components:
-    - build-tools-29.0.3
-    - emulator
-    - sys-img-armeabi-v7a-android-29
-    - android-29
-    - add-on
-    - extra
-  licenses:
-    - 'android-sdk-license-.+'
-    - 'google-gdk-license-.+'
+language: c
+dist: xenial
 
-before_script:
-  # debug what build-tools are available
-  - sudo find / -name 'sdkmanager' || true
-  - command -v sdkmanager || true
-  - sudo find / -name 'avdmanager' || true
-  - sudo find / -name 'emulator' || true
-  - sudo find / -name 'android' || true
-  - command -v avdmanager || true
-  - command -v emulator || true
-  - command -v android || true
-#  - sdkmanager --list
-#  - find / -name 'avdmanager'
-#  - find / -name 'android'
-#  - which android
-#  - android --help
-#  - android --verbose list
-  
-#  - echo no | android create avd --force -n test -t android-26 --abi armeabi-v7a -c 100M
-#  - emulator -avd test -no-audio -no-window &
-#  - android-wait-for-emulator
-#  - adb shell input keyevent 82 &
+addons:
+  artifacts:
+    paths:
+      - artifacts/
+
+# Build on pushes only to given branches
+branches:
+  only:
+    - master
+    - 3.10.x
+    - 3.12.x
+    - 3.15.x
+
+env:
+  global:
+    - CI_NODE_TOTAL=6
+      # Quickest to build, fast performing, debugable builds.
+    - CFLAGS="-g1 -O1"
+      # upload log files, tarballs etc artifacts from the build.
+    - ARTIFACTS_BUCKET=cfengine-travis-artifacts
+      # 2 cores according to: https://docs.travis-ci.com/user/ci-environment/
+    - MAKEFLAGS=-j3
+
+# Parallel jobs listed here; fastest jobs should come first to give
+# feedback ASAP. For more info read this:
+# https://docs.travis-ci.com/user/multi-os/
+matrix:
+  fast_finish: true # Build will succeed once all linux jobs succeed
+  include:
+    - os: linux
+      env: JOB_TYPE=compile_and_unit_test_asan
+    - os: linux
+      sudo: required
+      env: JOB_TYPE=valgrind_health_check
+    - os: linux
+      env: JOB_TYPE=compile_and_unit_test COVERAGE=no
+      compiler: clang
+    - os: linux
+      sudo: required
+      env: JOB_TYPE=acceptance_tests_common
+      # The unsafe acceptance tests don't work with SIMFS which is the default
+      # filesystem in Travis; so change OS to Trusty, which uses ext4.
+    - os: linux
+      sudo: required
+      env: JOB_TYPE=acceptance_tests_unsafe_serial_network_etc
+    - os: linux
+      sudo: required
+      env: JOB_TYPE=serverd_multi_versions COVERAGE=no
+    - os: osx
+      env: JOB_TYPE=compile_and_unit_test COVERAGE=no
+      sudo: false
+  allow_failures:
+    - os: osx
+      env: JOB_TYPE=compile_and_unit_test COVERAGE=no
+      sudo: false
+
+before_install:
+  - chmod ug+x ./travis-scripts/*
+  - ./travis-scripts/before_install.sh
+
+script: ./travis-scripts/script.sh
+
+after_success: ./travis-scripts/after_success.sh
+
+before_deploy: ./travis-scripts/before_deploy.sh
+
+# We deploy when setting tags only, which basically never happens
+# on master branch. Cherry-pick this part and alter it properly into
+# the release branches.
+deploy:
+  skip_cleanup: true
+  provider: releases
+  # Remember to set it as private variable in Travis-CI settings
+  api_key: $GITHUB_RELEASE_TOKEN
+  # Does not work, I get the error that "true" is not a boolean
+  prerelease: $IS_PRERELEASE
+  file: "$DIST_TARBALL"
+  on:
+    tags: true
+    # Avoid upload from all the multiple parallel matrix jobs
+    condition: "$CF_VERSION = latest"
+
+after_script: ./travis-scripts/after_script.sh

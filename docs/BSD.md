@@ -2,12 +2,19 @@
 
 BSD is not officially supported.
 These are some basic instructions for getting CFEngine Community to build on FreeBSD.
-Tested on FreeBSD 12.1 VM in AWS EC2.
+Tested on FreeBSD 12.1 VM in AWS EC2 and on a Lenovo X220 Tablet.
 
 ## Dependencies
 
 ```
-$ su root -c 'pkg update -f && pkg install -y gdb gcc gmake lmdb autoconf automake libtool git python3 emacs-nox'
+$ doas sh -c 'pkg update -f && pkg install -y gdb gcc gmake lmdb autoconf automake libtool git python3'
+```
+
+## Setup git
+
+```
+$ git config --global user.email <your git email>
+$ git config --global user.name <your git username>
 ```
 
 ## Download
@@ -20,7 +27,7 @@ $ git clone --recursive https://github.com/cfengine/masterfiles.git
 ## Install masterfiles
 
 ```
-$ (cd masterfiles && ./autogen.sh && su root -c "gmake install")
+$ (cd masterfiles && ./autogen.sh && doas sh -c "gmake install")
 ```
 
 ## Check out PR (Optional)
@@ -51,7 +58,7 @@ $ gmake -j8
 ## Install
 
 ```
-$ su root -c 'gmake install'
+$ doas sh -c 'gmake install'
 ```
 
 ## Bootstrap
@@ -59,14 +66,14 @@ $ su root -c 'gmake install'
 Example bootstrap, using IP from `ifconfig`:
 
 ```
-$ su root -c '/var/cfengine/bin/cf-key'
+$ doas sh -c '/var/cfengine/bin/cf-key'
 $ ifconfig | grep inet
 	inet6 ::1 prefixlen 128
 	inet6 fe80::1%lo0 prefixlen 64 scopeid 0x1
 	inet 127.0.0.1 netmask 0xff000000
 	inet6 fe80::8f7:3cff:fe7d:5e7c%xn0 prefixlen 64 scopeid 0x2
 	inet 172.31.45.172 netmask 0xfffff000 broadcast 172.31.47.255
-$ su root -c '/var/cfengine/bin/cf-agent -B 172.31.45.172'
+$ doas sh -c '/var/cfengine/bin/cf-agent -B 172.31.45.172'
 R: Bootstrapping from host '172.31.42.230' via built-in policy '/var/cfengine/inputs/failsafe.cf'
 R: This host assumes the role of policy server
 R: Updated local policy from policy server

@@ -321,6 +321,7 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp,
                 {
                     /* TODO redefinition shouldn't be mentioned. Maybe handle like normal variable definition/ */
                 case RVAL_TYPE_SCALAR:
+/* TODO cf-secret flag should prevent logging the value in the following statement */
                     Log(LOG_LEVEL_VERBOSE, "V: Skipping redefinition of constant scalar '%s': from '%s' to '%s'",
                         pp->promiser, (const char *)existing_value, RvalScalarValue(rval));
                     PromiseRef(LOG_LEVEL_VERBOSE, pp);

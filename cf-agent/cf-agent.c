@@ -856,7 +856,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
 
             VarRef *ref = VarRefParseFromScope(cp->lval, "control_agent");
             DataType value_type;
-            const void *value = EvalContextVariableGet(ctx, ref, &value_type);
+            const void *value = EvalContextVariableGet(ctx, ref, &value_type); /* CRAIG OK, value is used right away */
             VarRefDestroy(ref);
 
             /* If var not found, or if it's an empty list. */
@@ -1534,7 +1534,7 @@ static PromiseResult DefaultVarPromise(EvalContext *ctx, const Promise *pp)
     const void *value = NULL;
     {
         VarRef *ref = VarRefParseFromScope(pp->promiser, "this");
-        value = EvalContextVariableGet(ctx, ref, &value_type);
+        value = EvalContextVariableGet(ctx, ref, &value_type); /* CRAIG OK, value used right away */
         VarRefDestroy(ref);
     }
 
@@ -1594,7 +1594,7 @@ static void LogVariableValue(const EvalContext *ctx, const Promise *pp)
     char *out = NULL;
 
     DataType type;
-    const void *var = EvalContextVariableGet(ctx, ref, &type);
+    const void *var = EvalContextVariableGet(ctx, ref, &type); /* CRAIG OK, switch any other logging of variable values to this to refactor and reduce chance of logging secrets? FIXLOGGING */
     switch (type)
     {
         case CF_DATA_TYPE_INT:

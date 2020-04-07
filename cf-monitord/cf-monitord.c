@@ -265,7 +265,7 @@ static void KeepPromises(EvalContext *ctx, const Policy *policy)
             }
 
             VarRef *ref = VarRefParseFromScope(cp->lval, "control_monitor");
-            const void *value = EvalContextVariableGet(ctx, ref, NULL);
+            const void *value = EvalContextVariableGet(ctx, ref, NULL); /* CRAIG, value used right away, not logged as a string so likely OK */
             VarRefDestroy(ref);
             if (!value)
             {

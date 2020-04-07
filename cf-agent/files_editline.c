@@ -1172,7 +1172,7 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, c
 
             match_len = end_off - start_off;
             BufferClear(replace);
-            ExpandScalar(ctx, PromiseGetBundle(pp)->ns, PromiseGetBundle(pp)->name, a->replace.replace_value, replace);
+            ExpandScalar(ctx, PromiseGetBundle(pp)->ns, PromiseGetBundle(pp)->name, a->replace.replace_value, replace); /* CRAIG OK FIXLOGGING */
 
 /* TODO don't log replace if it has the cf-secret flag present */
             Log(LOG_LEVEL_VERBOSE, "Verifying replacement of '%s' with '%s', cutoff %d", pp->promiser, BufferData(replace),

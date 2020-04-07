@@ -907,6 +907,7 @@ static void TransformGidsToGroups(StringSet **list);
 
 static bool GetGroupInfo (const char *user, const User *u, StringSet **groups_to_set, StringSet **groups_missing, StringSet **current_secondary_groups)
 {
+    assert(u != NULL);
     bool ret = true;
     struct group *group_info;
 
@@ -988,11 +989,13 @@ static bool GetGroupInfo (const char *user, const User *u, StringSet **groups_to
 
 static bool EqualGid(const char *key, const struct group *entry)
 {
+    assert(entry != NULL);
     return (atoi(key) == entry->gr_gid);
 }
 
 static bool EqualGroupName(const char *key, const struct group *entry)
 {
+    assert(entry != NULL);
     return (strcmp(key, entry->gr_name) == 0);
 }
 

@@ -777,6 +777,7 @@ static bool SetAccountLocked(const char *puser, const char *hash, bool lock)
 
 static bool GroupGetUserMembership (const char *user, StringSet *result)
 {
+    assert(u != NULL);
     bool ret = true;
     struct group *group_info;
 
@@ -823,11 +824,13 @@ static bool GroupGetUserMembership (const char *user, StringSet *result)
 
 static bool EqualGid(const char *key, const struct group *entry)
 {
+    assert(entry != NULL);
     return (atoi(key) == entry->gr_gid);
 }
 
 static bool EqualGroupName(const char *key, const struct group *entry)
 {
+    assert(entry != NULL);
     return (strcmp(key, entry->gr_name) == 0);
 }
 

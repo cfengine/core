@@ -48,6 +48,7 @@
 
 #include <lastseen.h>
 #include <crypto.h>
+#include <generic_agent.h> /* GenericAgentSetDefaultDigest */
 #include <writer.h>
 #include <man.h>
 #include <conversion.h>
@@ -55,6 +56,8 @@
 #include <known_dirs.h>
 #include <string_lib.h>
 #include <file_lib.h>
+#include <sequence.h>
+#include <string_sequence.h>
 #include <unistd.h>
 
 #define BUFSIZE 1024
@@ -62,9 +65,6 @@
 #define MAX_HEADER_LEN 256      /* "Key[126]: Value[128]" */
 #define MAX_HEADER_KEY_LEN 126
 #define MAX_HEADER_VAL_LEN 128
-
-#define MAX_HEADER_KEY_LEN_STR STRING(MAX_HEADER_KEY_LEN)
-#define MAX_HEADER_VAL_LEN_STR STRING(MAX_HEADER_VAL_LEN)
 
 typedef enum {
     HOST_RSA_KEY_PRIVATE,
@@ -251,19 +251,14 @@ static FILE *OpenInputOutput(const char *path, const char *mode)
     return safe_fopen(path, mode);
 }
 
-static bool RSAEncrypt(const char *pubkey_path, const char *input_path, const char *output_path)
+static bool RSAEncrypt(Seq *rsa_keys, const char *input_path, const char *output_path)
 {
-    RSA* pubkey = ReadPublicKey(pubkey_path);
-    if (pubkey == NULL)
-    {
-        return false;
-    }
+    assert((rsa_keys != NULL) && (SeqLength(rsa_keys) > 0));
 
     FILE *input_file = OpenInputOutput(input_path, "r");
     if (input_file == NULL)
     {
         Log(LOG_LEVEL_ERR, "Could not open input file '%s'", input_path);
-        RSA_free(pubkey);
         return false;
     }
 
@@ -271,29 +266,41 @@ static bool RSAEncrypt(const char *pubkey_path, const char *input_path, const ch
     if (output_file == NULL)
     {
         Log(LOG_LEVEL_ERR, "Could not create output file '%s'", output_path);
-        RSA_free(pubkey);
         fclose(input_file);
         return false;
     }
 
-    EVP_PKEY *evp_key = EVP_PKEY_new();
-    if (EVP_PKEY_set1_RSA(evp_key, pubkey) == 0)
+    const size_t n_keys = SeqLength(rsa_keys);
+    Seq *evp_keys = SeqNew(n_keys, EVP_PKEY_free);
+    for (size_t i = 0; i < n_keys; i++)
     {
-        Log(LOG_LEVEL_ERR, "Failed to initialize encryption context");
-        RSA_free(pubkey);
-        fclose(input_file);
-        fclose(output_file);
-        return false;
+        RSA *rsa_key = SeqAt(rsa_keys, i);
+        EVP_PKEY *evp_key = EVP_PKEY_new();
+        if (EVP_PKEY_set1_RSA(evp_key, rsa_key) == 0)
+        {
+            Log(LOG_LEVEL_ERR, "Failed to initialize encryption context");
+            SeqDestroy(evp_keys);
+            fclose(input_file);
+            fclose(output_file);
+            return false;
+        }
+        SeqAppend(evp_keys, evp_key);
     }
 
     bool success = true;
 
     const EVP_CIPHER *cipher = EVP_aes_256_cbc();
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
-    const int key_size = EVP_PKEY_size(evp_key);
+    const int key_size = EVP_PKEY_size((EVP_PKEY*) SeqAt(evp_keys, 0));
 
-    unsigned char *ek = xmalloc(key_size);
-    int ek_size;
+    /* This sequence and the 'enc_key_sizes' array are both populated by the
+     * EVP_SealInit() call below. */
+    Seq *enc_keys = SeqNew(n_keys, free);
+    for (size_t i = 0; i < n_keys; i++)
+    {
+        SeqAppend(enc_keys, xmalloc(key_size));
+    }
+    int enc_key_sizes[n_keys];
 
     const int iv_size = EVP_CIPHER_iv_length(cipher);
     unsigned char iv[iv_size];
@@ -302,7 +309,9 @@ static bool RSAEncrypt(const char *pubkey_path, const char *input_path, const ch
     char plaintext[block_size], ciphertext[2 * block_size];
     int ct_len;
 
-    int ret = EVP_SealInit(ctx, cipher, &ek, &ek_size, iv, &evp_key, 1);
+    int ret = EVP_SealInit(ctx, cipher,
+                           (unsigned char**) SeqGetData(enc_keys), enc_key_sizes, iv,
+                           (EVP_PKEY**) SeqGetData(evp_keys), n_keys);
     if (ret == 0)
     {
         Log(LOG_LEVEL_ERR, "Failed to initialize encryption context");
@@ -310,13 +319,34 @@ static bool RSAEncrypt(const char *pubkey_path, const char *input_path, const ch
         goto cleanup;
     }
 
-    const char *headers = "Version: 1.0\n"
-                          "\n";
-    size_t headers_len = strlen(headers);
-    ssize_t n_written = FullWrite(fileno(output_file), headers, headers_len);
-    if (n_written != headers_len)
+    /* newline and NUL-byte => +2 */
+    char header[MAX_HEADER_LEN + 2] = "Version: 1.0\n";
+    size_t header_len = strlen(header);
+    ssize_t n_written = FullWrite(fileno(output_file), header, header_len);
+    if (n_written != header_len)
     {
-        Log(LOG_LEVEL_ERR, "Failed to write headers to the output file '%s'", output_path);
+        Log(LOG_LEVEL_ERR, "Failed to write header to the output file '%s'", output_path);
+        success = false;
+        goto cleanup;
+    }
+    for (size_t i = 0; i < n_keys; i++)
+    {
+        char *key_digest = GetPubkeyDigest(SeqAt(rsa_keys, i));
+        header_len = snprintf(header, MAX_HEADER_LEN + 2, "Encrypted-for: %s\n", key_digest);
+        free(key_digest);
+        assert(header_len <= (MAX_HEADER_LEN + 2));
+        n_written = FullWrite(fileno(output_file), header, header_len);
+        if (n_written != header_len)
+        {
+            Log(LOG_LEVEL_ERR, "Failed to write header to the output file '%s'", output_path);
+            success = false;
+            goto cleanup;
+        }
+    }
+    n_written = FullWrite(fileno(output_file), "\n", 1);
+    if (n_written != 1)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to write header to the output file '%s'", output_path);
         success = false;
         goto cleanup;
     }
@@ -328,12 +358,17 @@ static bool RSAEncrypt(const char *pubkey_path, const char *input_path, const ch
         success = false;
         goto cleanup;
     }
-    n_written = FullWrite(fileno(output_file), ek, ek_size);
-    if (n_written != ek_size)
+
+    for (size_t i = 0; i < n_keys; i++)
     {
-        Log(LOG_LEVEL_ERR, "Failed to write key to the output file '%s'", output_path);
-        success = false;
-        goto cleanup;
+        const char *enc_key = SeqAt(enc_keys, i);
+        n_written = FullWrite(fileno(output_file), enc_key, enc_key_sizes[i]);
+        if (n_written != enc_key_sizes[i])
+        {
+            Log(LOG_LEVEL_ERR, "Failed to write key to the output file '%s'", output_path);
+            success = false;
+            goto cleanup;
+        }
     }
 
     while (success && !feof(input_file))
@@ -380,16 +415,15 @@ static bool RSAEncrypt(const char *pubkey_path, const char *input_path, const ch
     OPENSSL_cleanse(plaintext, block_size);
 
   cleanup:
-    RSA_free(pubkey);
     fclose(input_file);
     fclose(output_file);
-    EVP_PKEY_free(evp_key);
+    SeqDestroy(evp_keys);
+    SeqDestroy(enc_keys);
     EVP_CIPHER_CTX_free(ctx);
-    free(ek);
     return success;
 }
 
-static bool CheckHeader(const char *key, const char *value)
+static inline bool CheckHeader(const char *key, const char *value)
 {
     if (StringSafeEqual(key, "Version"))
     {
@@ -403,6 +437,11 @@ static bool CheckHeader(const char *key, const char *value)
             return true;
         }
     }
+    else if (StringSafeEqual(key, "Encrypted-for"))
+    {
+        /* TODO: do some verification that 'value' is valid hash digest? */
+        return true;
+    }
     else
     {
         Log(LOG_LEVEL_ERR, "Unsupported header: '%s'", key);
@@ -410,66 +449,149 @@ static bool CheckHeader(const char *key, const char *value)
     }
 }
 
-static bool ParseHeaders(FILE *input_file)
+/**
+ * Read from #input_file into #buffer at most #max_chars or until #delimiter is
+ * encountered. If #stop_on_space, also stop when ' ' is read. #buffer is
+ * NUL-terminated when this function returns.
+ *
+ * @warning #buffer has to be at least #max_chars+1 big to accommodate for the
+ *          terminating NUL byte.
+ */
+static inline bool ReadUntilDelim(FILE *input_file, char *buffer, size_t max_chars, char delimiter, bool stop_on_space)
 {
-    char key[MAX_HEADER_KEY_LEN + 1];
-    char value[MAX_HEADER_VAL_LEN + 1];
-    int ret = fscanf(input_file,
-                     "%"MAX_HEADER_KEY_LEN_STR"[^:]: %"MAX_HEADER_VAL_LEN_STR"[^\n]",
-                     key, value);
-    bool version_specified = false;
-    while (ret == 2)
+    bool done = false;
+    size_t i = 0;
+    int c = fgetc(input_file);
+    while (!done && (i < max_chars))
     {
-        if (!CheckHeader(key, value))
+        if (c == EOF)
         {
-            return false;
+            done = true;
         }
-        version_specified = (version_specified || (StringSafeEqual(key, "Version")));
-
-        /* each header should be terminated by a newline */
-        char next = fgetc(input_file);
-        if (next == '\n')
+        else if (c == delimiter)
         {
-            next = fgetc(input_file);
-            if (next == '\n')
-            {
-                /* headers are supposed to be separated by blank line */
-                if (!version_specified)
-                {
-                    Log(LOG_LEVEL_ERR, "File format version not specified");
-                }
-                return version_specified;
-            }
-            else
-            {
-                /* keep trying */
-                ungetc(next, input_file);
-            }
+            done = true;
+            ungetc(c, input_file);
+        }
+        else if (stop_on_space && (c == ' '))
+        {
+            done = true;
+            ungetc(c, input_file);
         }
         else
         {
+            buffer[i] = (char) c;
+            i++;
+            if (i < max_chars)
+            {
+                c = fgetc(input_file);
+            }
+        }
+    }
+    buffer[i] = '\0';
+
+    bool ran_out = ((i > max_chars) || (c == EOF));
+    return !ran_out;
+}
+
+static inline void SkipSpaces(FILE *input_file)
+{
+    int c = ' ';
+    while (!feof(input_file) && (c == ' '))
+    {
+        c = fgetc(input_file);
+    }
+    if (c != ' ')
+    {
+        ungetc(c, input_file);
+    }
+}
+
+static inline bool ParseHeader(FILE *input_file, char *key, char *value)
+{
+    bool ok = ReadUntilDelim(input_file, key, MAX_HEADER_KEY_LEN, ':', true);
+    if (ok)
+    {
+        SkipSpaces(input_file);
+        ok = (fgetc(input_file) == ':');
+        SkipSpaces(input_file);
+        ok = ReadUntilDelim(input_file, value, MAX_HEADER_VAL_LEN, '\n', false);
+    }
+    ok = (fgetc(input_file) == '\n');
+    return ok;
+}
+
+static bool ParseHeaders(FILE *input_file, RSA *privkey, size_t *enc_key_pos, size_t *n_enc_keys)
+{
+    /* Actually works for a private RSA key too because it contains the public
+     * key. */
+    char *key_digest = GetPubkeyDigest(privkey);
+    bool version_specified = false;
+    bool found_matching_digest = false;
+    size_t n_enc_for_headers = 0;
+
+    char key[MAX_HEADER_KEY_LEN + 1];
+    char value[MAX_HEADER_VAL_LEN + 1];
+
+    while (ParseHeader(input_file, key, value))
+    {
+        if (!CheckHeader(key, value))
+        {
+            free(key_digest);
             return false;
         }
-        ret = fscanf(input_file,
-                     "%"MAX_HEADER_KEY_LEN_STR"[^:]: %"MAX_HEADER_VAL_LEN_STR"[^\n]\n",
-                     key, value);
+
+        if (StringSafeEqual(key, "Version"))
+        {
+            version_specified = true;
+        }
+        else if (StringSafeEqual(key, "Encrypted-for"))
+        {
+            if (StringSafeEqual(value, key_digest))
+            {
+                found_matching_digest = true;
+                *enc_key_pos = n_enc_for_headers;
+            }
+            n_enc_for_headers++;
+        }
+
+        /* headers are supposed to be terminated by a blank line */
+        int next = fgetc(input_file);
+        if (next == '\n')
+        {
+            if (!version_specified)
+            {
+                Log(LOG_LEVEL_ERR, "File format version not specified");
+            }
+            if (!found_matching_digest)
+            {
+                Log(LOG_LEVEL_ERR, "File not encrypted for host '%s'", key_digest);
+            }
+            *n_enc_keys = n_enc_for_headers;
+            free(key_digest);
+            return (version_specified && found_matching_digest);
+        }
+        else if (next == EOF)
+        {
+            free(key_digest);
+            return false;
+        }
+        else
+        {
+            /* keep trying */
+            ungetc(next, input_file);
+        }
     }
+    free(key_digest);
     return false;
 }
 
-static bool RSADecrypt(const char *privkey_path, const char *input_path, const char *output_path)
+static bool RSADecrypt(RSA *privkey, const char *input_path, const char *output_path)
 {
-    RSA *privkey = ReadPrivateKey(privkey_path);
-    if (privkey == NULL)
-    {
-        return false;
-    }
-
     FILE *input_file = OpenInputOutput(input_path, "r");
     if (input_file == NULL)
     {
         Log(LOG_LEVEL_ERR, "Cannot open input file '%s'", input_path);
-        RSA_free(privkey);
         return false;
     }
 
@@ -478,7 +600,6 @@ static bool RSADecrypt(const char *privkey_path, const char *input_path, const c
     {
         Log(LOG_LEVEL_ERR, "Cannot open output file '%s'", output_path);
         fclose(input_file);
-        RSA_free(privkey);
         return false;
     }
 
@@ -486,7 +607,6 @@ static bool RSADecrypt(const char *privkey_path, const char *input_path, const c
     if (EVP_PKEY_set1_RSA(evp_key, privkey) == 0)
     {
         Log(LOG_LEVEL_ERR, "Failed to initialize decryption context");
-        RSA_free(privkey);
         fclose(input_file);
         fclose(output_file);
         return false;
@@ -494,10 +614,11 @@ static bool RSADecrypt(const char *privkey_path, const char *input_path, const c
 
     bool success = true;
 
-    if (!ParseHeaders(input_file))
+    size_t our_key_pos;
+    size_t n_enc_keys;
+    if (!ParseHeaders(input_file, privkey, &our_key_pos, &n_enc_keys))
     {
         Log(LOG_LEVEL_ERR, "Failed to parse headers from '%s'", input_path);
-        RSA_free(privkey);
         fclose(input_file);
         fclose(output_file);
         return false;
@@ -511,6 +632,7 @@ static bool RSADecrypt(const char *privkey_path, const char *input_path, const c
 
     const int key_size = EVP_PKEY_size(evp_key);
     unsigned char ek[key_size];
+    unsigned char dev_null[key_size];
 
     const int block_size = EVP_CIPHER_block_size(cipher);
 
@@ -523,11 +645,35 @@ static bool RSADecrypt(const char *privkey_path, const char *input_path, const c
         Log(LOG_LEVEL_ERR, "Failed to read the IV from '%s'", input_path);
         goto cleanup;
     }
+
+    /* just skip the keys that are not ours */
+    size_t nth_key = 0;
+    for (; nth_key < our_key_pos; nth_key++)
+    {
+        n_read = ReadFileStreamToBuffer(input_file, key_size, dev_null);
+        if (n_read != key_size)
+        {
+            Log(LOG_LEVEL_ERR, "Failed to read the key from '%s'", input_path);
+            goto cleanup;
+        }
+    }
+    /* read our key */
     n_read = ReadFileStreamToBuffer(input_file, key_size, ek);
     if (n_read != key_size)
     {
         Log(LOG_LEVEL_ERR, "Failed to read the key from '%s'", input_path);
         goto cleanup;
+    }
+    nth_key++;
+    /* skip the remaining keys */
+    for (; nth_key < n_enc_keys; nth_key++)
+    {
+        n_read = ReadFileStreamToBuffer(input_file, key_size, dev_null);
+        if (n_read != key_size)
+        {
+            Log(LOG_LEVEL_ERR, "Failed to read the key from '%s'", input_path);
+            goto cleanup;
+        }
     }
 
     int ret = EVP_OpenInit(ctx, cipher, ek, key_size, iv, evp_key);
@@ -583,12 +729,29 @@ static bool RSADecrypt(const char *privkey_path, const char *input_path, const c
     OPENSSL_cleanse(plaintext, block_size);
 
   cleanup:
-    RSA_free(privkey);
     fclose(input_file);
     fclose(output_file);
     EVP_PKEY_free(evp_key);
     EVP_CIPHER_CTX_free(ctx);
     return success;
+}
+
+static Seq *LoadPublicKeys(Seq *key_paths)
+{
+    const size_t n_keys = SeqLength(key_paths);
+    Seq *pub_keys = SeqNew(n_keys, RSA_free);
+    for (size_t i = 0; i < n_keys; i++)
+    {
+        const char *key_path = SeqAt(key_paths, i);
+        RSA *pubkey = ReadPublicKey(key_path);
+        if (pubkey == NULL)
+        {
+            SeqDestroy(pub_keys);
+            return NULL;
+        }
+        SeqAppend(pub_keys, pubkey);
+    }
+    return pub_keys;
 }
 
 static void CFKeyCryptHelp()
@@ -617,10 +780,10 @@ int main(int argc, char *argv[])
     }
 
     opterr = 0;
-    char *key_path = NULL;
+    char *key_path_arg = NULL;
     char *input_path = NULL;
     char *output_path = NULL;
-    char *host = NULL;
+    char *host_arg = NULL;
     bool encrypt = false;
     bool decrypt = false;
 
@@ -644,13 +807,13 @@ int main(int argc, char *argv[])
                 decrypt = true;
                 break;
             case 'k':
-                key_path = optarg;
+                key_path_arg = optarg;
                 break;
             case 'o':
                 output_path = optarg;
                 break;
             case 'H':
-                host = optarg;
+                host_arg = optarg;
                 break;
             default:
                 Log(LOG_LEVEL_ERR, "Unknown option '-%c'", optopt);
@@ -674,16 +837,16 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    if (decrypt && (host == NULL) && (key_path == NULL))
+    if (decrypt && (host_arg == NULL) && (key_path_arg == NULL))
     {
         /* Decryption requires a private key which is usually only available for
          * the local host. Let's just default to localhost if no other specific
          * host/key is given for decryption. */
         Log(LOG_LEVEL_VERBOSE, "Using the localhost private key for decryption");
-        host = "localhost";
+        host_arg = "localhost";
     }
 
-    if ((host != NULL) && (key_path != NULL))
+    if ((host_arg != NULL) && (key_path_arg != NULL))
     {
         Log(LOG_LEVEL_ERR,
             "--host/-H is used to specify a public key and cannot be used with --key/-k");
@@ -702,23 +865,54 @@ int main(int argc, char *argv[])
     }
 
     CryptoInitialize();
-    if (host != NULL)
+    GenericAgentSetDefaultDigest(&CF_DEFAULT_DIGEST, &CF_DEFAULT_DIGEST_LEN);
+
+    Seq *key_paths;
+    if (key_path_arg != NULL)
     {
-        HostRSAKeyType key_type = encrypt ? HOST_RSA_KEY_PUBLIC : HOST_RSA_KEY_PRIVATE;
-        key_path = GetHostRSAKey(host, key_type);
-        if (!key_path)
-        {
-            Log(LOG_LEVEL_ERR, "Unable to locate key for host '%s'", host);
-            exit(EXIT_FAILURE);
-        }
+        key_paths = SeqStringFromString(key_path_arg, ',');
     }
-    assert (key_path != NULL);
+    else
+    {
+        key_paths = SeqNew(16, free);
+    }
+
+    if (host_arg != NULL)
+    {
+        Seq *hosts = SeqStringFromString(host_arg, ',');
+        const size_t n_hosts = SeqLength(hosts);
+        for (size_t i = 0; i < n_hosts; i++)
+        {
+            HostRSAKeyType key_type = encrypt ? HOST_RSA_KEY_PUBLIC : HOST_RSA_KEY_PRIVATE;
+            char *host = SeqAt(hosts, i);
+            char *host_key_path = GetHostRSAKey(host, key_type);
+            if (!host_key_path)
+            {
+                Log(LOG_LEVEL_ERR, "Unable to locate key for host '%s'", host);
+                SeqDestroy(hosts);
+                SeqDestroy(key_paths);
+                exit(EXIT_FAILURE);
+            }
+            SeqAppend(key_paths, host_key_path);
+        }
+        SeqDestroy(hosts);
+    }
+    assert ((key_paths != NULL) && (SeqLength(key_paths) > 0));
 
     // Encrypt or decrypt
     bool success;
     if (encrypt)
     {
-        success = RSAEncrypt(key_path, input_path, output_path);
+        Seq *pub_keys = LoadPublicKeys(key_paths);
+        SeqDestroy(key_paths);
+        if (pub_keys == NULL)
+        {
+            Log(LOG_LEVEL_ERR, "Failed to load public key(s)");
+            exit(EXIT_FAILURE);
+        }
+
+        success = RSAEncrypt(pub_keys, input_path, output_path);
+        SeqDestroy(pub_keys);
         if (!success)
         {
             Log(LOG_LEVEL_ERR, "Encryption failed");
@@ -727,7 +921,17 @@ int main(int argc, char *argv[])
     }
     else if (decrypt)
     {
-        success = RSADecrypt(key_path, input_path, output_path);
+        const size_t n_keys = SeqLength(key_paths);
+        if (n_keys > 1)
+        {
+            Log(LOG_LEVEL_ERR, "--decrypt requires only one key/host to be specified");
+            SeqDestroy(key_paths);
+            exit(EXIT_FAILURE);
+        }
+        RSA *private_key = ReadPrivateKey((char *) SeqAt(key_paths, 0));
+        SeqDestroy(key_paths);
+        success = RSADecrypt(private_key, input_path, output_path);
+        RSA_free(private_key);
         if (!success)
         {
             Log(LOG_LEVEL_ERR, "Decryption failed");

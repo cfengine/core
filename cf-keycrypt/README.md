@@ -16,9 +16,18 @@ The file format used by *cf-keycrypt* has the following schema:
   ------------
   | AES key  |
   ------------
+  | AES key  |
+  ------------
+  | ...      |
+  ------------
+  | AES key  |
+  ------------
   | data     |
   ------------
 ```
+
+Where each 'AES key' block is the same randomly generated AES key
+encrypted by different RSA (host) key.
 
 The header format is similar to HTTP headers -- colon-separated key-value pairs
 each on one line:
@@ -32,13 +41,16 @@ Supported headers are:
   * `Version` (required) -- version of the file format to allow backwards
                             compatibility
 
-The AES initialization vector is 16 bytes long (256 bits) and serves the purpose
-of the seed for the CBC (Cipher Block Chain) mode of operation of the AES
-cipher.
+  * `Encrypted-for` (required) -- which (host) keys the payload was encrypted for, one header (line)
+                                  per host
 
-The AES key is a randomly generated AES key encrypted by the specific RSA public
-key and is as long as the RSA public key, currently 256 bytes (2048 bits).
+The AES initialization vector (IV) is 16 bytes long (256 bits) and serves the
+purpose of the seed for the CBC (Cipher Block Chain) mode of operation of the
+AES cipher.
 
-The future versions of *cf-keycrypt* are expected to support more headers,
-multiple keys (encryption for multiple hosts in a single file) and varying key
-sizes.
+The `AES key` is a randomly generated AES key encrypted by RSA public keys and
+each encrypted `AES key` block is as long as the RSA public key, currently 256
+bytes (2048 bits).
+
+The future versions of *cf-keycrypt* are expected to support more headers and
+varying key sizes.

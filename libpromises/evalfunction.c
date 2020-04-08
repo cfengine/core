@@ -1250,6 +1250,11 @@ static FnCallResult FnCallIfElse(EvalContext *ctx,
         {
             /* If the evaluation returned true in the current context,
              * return the second of the two arguments. */
+/* CRAIG, DARN, this seems to NOT be the place that is evaluated/used for this issue */
+            Log(LOG_LEVEL_WARNING, "CRAIG arg->next is %p", arg->next);
+            Log(LOG_LEVEL_WARNING, "CRAIG RlistScalarValue(arg->next) is '%s'", RlistScalarValue(arg->next));
+            FnCallResult res = FnReturn(RlistScalarValue(arg->next));
+            Log(LOG_LEVEL_WARNING, "CRAIG FnCallResult status is '%d'", res.status);
             return FnReturn(RlistScalarValue(arg->next));
         }
     }

@@ -341,12 +341,12 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, const Policy *policy, FnCall *fp, 
 
     Writer *fncall_writer = NULL;
     const char *fncall_string = "";
-    if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG)
-    {
+//    if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG)
+//    {
         fncall_writer = StringWriter();
         FnCallWrite(fncall_writer, fp);
         fncall_string = StringWriterData(fncall_writer);
-    }
+//    }
 
     // Check if arguments are resolved, except for delayed evaluation functions
     if ( ! (fp_type->options & FNCALL_OPTION_DELAYED_EVALUATION) &&
@@ -354,6 +354,7 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, const Policy *policy, FnCall *fp, 
     {
         // Special case: ifelse(isvariable("x"), $(x), "default")
         // (the first argument will come down expanded as "!any")
+Log(LOG_LEVEL_WARNING, "CRAIG deciding whether to evaluate function: %s", fncall_string);
 Log(LOG_LEVEL_WARNING, "CRAIG fp->name is '%s'", fp->name);
 Log(LOG_LEVEL_WARNING, "CRAIG RlistLen(expargs) is %d", RlistLen(expargs));
 Log(LOG_LEVEL_WARNING, "CRAIG RlistScalarValueSafe(expargs) is '%s'", RlistScalarValueSafe(expargs));
@@ -387,6 +388,8 @@ Log(LOG_LEVEL_WARNING, "CRAIG SKIPPING FUNCTION EVAL FOR NOW, ARGS CONTAIN UNRES
             return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };
         }
     }
+
+Log(LOG_LEVEL_WARNING, "CRAIG evaluating function: %s", fncall_string);
 
     Rval cached_rval;
     if ((fp_type->options & FNCALL_OPTION_CACHED) && EvalContextFunctionCacheGet(ctx, fp, expargs, &cached_rval))

@@ -273,6 +273,7 @@ usage() {
     echo " -jobs=[n] Run tests in parallel, works like make -j option. Note that some"
     echo "           tests will always run one by one."
     echo " --verbose  Run tests with verbose logging"
+    echo " --debug    Run tests with debug logging"
 }
 
 workdir() {
@@ -485,12 +486,12 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
             then
                 printf "\"$LIBTOOL\" --mode=execute " >> "$WORKDIR/runtest"
             fi
-            printf "valgrind ${VALGRIND_OPTS} \"$AGENT\" $VERBOSE -Klf \"$TEST\" -D ${PASS_NUM:+test_pass_$PASS_NUM,}${BASECLASSES},${EXTRACLASSES} 2>&1\n" >> "$WORKDIR/runtest"
+            printf "valgrind ${VALGRIND_OPTS} \"$AGENT\" $VERBOSE $DEBUG -Klf \"$TEST\" -D ${PASS_NUM:+test_pass_$PASS_NUM,}${BASECLASSES},${EXTRACLASSES} 2>&1\n" >> "$WORKDIR/runtest"
         elif [ x"$PRELOAD_ASAN" != x ]
         then
-            printf "LD_PRELOAD=$PRELOAD_ASAN \"$AGENT\" $VERBOSE -Klf \"$TEST\" -D ${PASS_NUM:+test_pass_$PASS_NUM,}${BASECLASSES},${EXTRACLASSES}\n" >> "$WORKDIR/runtest"
+            printf "LD_PRELOAD=$PRELOAD_ASAN \"$AGENT\" $VERBOSE $DEBUG -Klf \"$TEST\" -D ${PASS_NUM:+test_pass_$PASS_NUM,}${BASECLASSES},${EXTRACLASSES}\n" >> "$WORKDIR/runtest"
         else
-            printf "\"$AGENT\" $VERBOSE -Klf \"$TEST\" -D ${PASS_NUM:+test_pass_$PASS_NUM,}${BASECLASSES},${EXTRACLASSES}\n" >> "$WORKDIR/runtest"
+            printf "\"$AGENT\" $VERBOSE $DEBUG -Klf \"$TEST\" -D ${PASS_NUM:+test_pass_$PASS_NUM,}${BASECLASSES},${EXTRACLASSES}\n" >> "$WORKDIR/runtest"
         fi
 
         chmod +x "$WORKDIR/runtest"
@@ -856,6 +857,8 @@ do
             NO_CLEAN=1;;
         --verbose)
             VERBOSE="-v";;
+        --debug)
+           DEBUG="--debug";;
         --stay-in-workdir)
             # Internal option. Meant to keep sub invocations from interfering by
             # writing files only into the workdir.
@@ -889,6 +892,7 @@ then
     # each test is horribly slow.
     echo "export GAINROOT=" > runtests.sh
     echo "export TESTALL_DO_NOT_RECURSE=1" >> runtests.sh
+    echo "export DEBUG='$DEBUG'" >> runtests.sh
     echo "export VERBOSE='$VERBOSE'" >> runtests.sh
     echo "$0 $ORIG_ARGS $@ &" >> runtests.sh
     # Note quote change. We want to keep below variables unexpanded.

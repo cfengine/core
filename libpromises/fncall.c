@@ -354,17 +354,28 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, const Policy *policy, FnCall *fp, 
     {
         // Special case: ifelse(isvariable("x"), $(x), "default")
         // (the first argument will come down expanded as "!any")
+Log(LOG_LEVEL_WARNING, "CRAIG fp->name is '%s'", fp->name);
+Log(LOG_LEVEL_WARNING, "CRAIG RlistLen(expargs) is %d", RlistLen(expargs));
+Log(LOG_LEVEL_WARNING, "CRAIG RlistScalarValueSafe(expargs) is '%s'", RlistScalarValueSafe(expargs));
+Log(LOG_LEVEL_WARNING, "CRAIG expargs->next is %p", expargs->next);
+if (expargs->next != NULL)
+{
+  Log(LOG_LEVEL_WARNING, "CRAIG expargs->next->next is %p", expargs->next->next);
+  Log(LOG_LEVEL_WARNING, "CRAIG RlistIsUnresolved(expargs->next->next) is %d", RlistIsUnresolved(expargs->next->next));
+}
         if (strcmp(fp->name, "ifelse") == 0 &&
             RlistLen(expargs) == 3 &&
             strcmp("!any", RlistScalarValueSafe(expargs)) == 0 &&
             !RlistIsUnresolved(expargs->next->next))
         {
+Log(LOG_LEVEL_WARNING, "CRAIG ALLOWING IFELSE EVEN THOUGH ARGS CONTAIN UNRESOLVED VARS");
                 Log(LOG_LEVEL_DEBUG, "Allowing ifelse() function evaluation even"
                     " though its arguments contain unresolved variables: %s",
                     fncall_string);
         }
         else
         {
+Log(LOG_LEVEL_WARNING, "CRAIG SKIPPING FUNCTION EVAL FOR NOW, ARGS CONTAIN UNRESOLVED VARS");
             if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG)
             {
                 Log(LOG_LEVEL_DEBUG, "Skipping function evaluation for now,"

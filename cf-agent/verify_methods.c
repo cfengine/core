@@ -159,11 +159,12 @@ PromiseResult VerifyMethod(EvalContext *ctx, const Rval call, const Attributes *
             Variable *var;
             while ((var = VariableTableIteratorNext(iter)))
             {
-                if (!var->ref->num_indices)
+                const VarRef *var_ref = VariableGetRef(var);
+                if (!var_ref->num_indices)
                 {
                     continue;
                 }
-                EvalContextVariableRemove(ctx, var->ref);
+                EvalContextVariableRemove(ctx, var_ref);
             }
             VariableTableIteratorDestroy(iter);
 
@@ -248,16 +249,18 @@ static void GetReturnValue(EvalContext *ctx, const Bundle *callee, const Promise
         Variable *result_var = NULL;
         while ((result_var = VariableTableIteratorNext(iter)))
         {
-            assert(result_var->ref->num_indices == 1);
-            if (result_var->ref->num_indices != 1)
+            const VarRef *result_var_ref = VariableGetRef(result_var);
+            assert(result_var_ref->num_indices == 1);
+            if (result_var_ref->num_indices != 1)
             {
                 continue;
             }
 
             VarRef *new_ref = VarRefParseFromBundle(result, PromiseGetBundle(caller));
-            VarRefAddIndex(new_ref, result_var->ref->indices[0]);
+            VarRefAddIndex(new_ref, result_var_ref->indices[0]);
 
-            EvalContextVariablePut(ctx, new_ref, result_var->rval.item, result_var->type, "source=bundle");
+            Rval result_var_rval = VariableGetRval(result_var, true);
+            EvalContextVariablePut(ctx, new_ref, result_var_rval.item, VariableGetType(result_var), "source=bundle");
 
             VarRefDestroy(new_ref);
         }

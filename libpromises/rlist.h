@@ -48,6 +48,14 @@ JsonElement *RvalContainerValue(Rval rval);
 const char *RvalTypeToString(RvalType type);
 
 Rval RvalNew(const void *item, RvalType type);
+
+/**
+ * Get new secret Rval.
+ *
+ * @note RvalDestroy() not required to be called on the returned value.
+ */
+Rval RvalNewSecret();
+
 Rval RvalNewRewriter(const void *item, RvalType type, JsonElement *map);
 Rval RvalCopy(Rval rval);
 Rval RvalCopyRewriter(Rval rval, JsonElement *map);

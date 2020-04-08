@@ -41,6 +41,8 @@
 
 static Rlist *RlistPrependRval(Rlist **start, Rval rval);
 
+static char SECRET_RVAL[] = "************";
+
 RvalType DataTypeToRvalType(DataType datatype)
 {
     switch (datatype)
@@ -464,6 +466,11 @@ Rval RvalNewRewriter(const void *item, RvalType type, JsonElement *map)
 Rval RvalNew(const void *item, RvalType type)
 {
     return RvalNewRewriter(item, type, NULL);
+}
+
+Rval RvalNewSecret()
+{
+    return ((Rval) {SECRET_RVAL, RVAL_TYPE_SCALAR});
 }
 
 Rval RvalCopyRewriter(Rval rval, JsonElement *map)
@@ -939,7 +946,7 @@ Rlist *RlistParseString(const char *string)
 
 void RvalDestroy(Rval rval)
 {
-    if (rval.item == NULL)
+    if (rval.item == NULL || rval.item == SECRET_RVAL)
     {
         return;
     }

@@ -1217,6 +1217,7 @@ static FnCallResult FnCallIfElse(EvalContext *ctx,
                                  ARG_UNUSED const FnCall *fp,
                                  const Rlist *finalargs)
 {
+Log(LOG_LEVEL_WARNING, "CRAIG FnCallIfElse");
     unsigned int argcount = 0;
     char id[CF_BUFSIZE];
 

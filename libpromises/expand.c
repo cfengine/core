@@ -681,10 +681,12 @@ static void RemoveRemotelyInjectedVars(const EvalContext *ctx, const Bundle *bun
         while (var != NULL)
         {
             /* variables are stored together with their original promises (org_pp) */
-            if (var->promise && var->promise->org_pp == pp)
+            const Promise *var_promise = VariableGetPromise(var);
+            const VarRef *var_ref = VariableGetRef(var);
+            if (var_promise && var_promise->org_pp == pp)
             {
                 Log(LOG_LEVEL_ERR, "Ignoring remotely-injected variable '%s'",
-                    var->ref->lval);
+                    var_ref->lval);
                 /* avoid modifications of the variable table being iterated
                  * over and avoid trying to remove the same variable twice */
                 SeqAppendOnce(remove_vars, (void *) var, PointerCmp);
@@ -699,9 +701,10 @@ static void RemoveRemotelyInjectedVars(const EvalContext *ctx, const Bundle *bun
     for (size_t i = 0; i < remove_vars_length; i++)
     {
         Variable *var = (Variable *) SeqAt(remove_vars, i);
-        if (var->ref != NULL)
+        const VarRef *var_ref = VariableGetRef(var);
+        if (var_ref != NULL)
         {
-            EvalContextVariableRemove(ctx, var->ref);
+            EvalContextVariableRemove(ctx, var_ref);
         }
     }
     SeqDestroy(remove_vars);

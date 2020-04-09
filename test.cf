@@ -1,0 +1,9 @@
+bundle agent main
+{
+  vars:
+    "foo" string => ifelse( isvariable( "missing" ), "$(missing)", "FALLBACK");
+    "bar" string => ifelse( isvariable( "missing" ), "$($(missing))", "FALLBACK");
+  reports:
+    "foo is $(foo)";
+    "bar is $(bar)";
+}

@@ -1,0 +1,11 @@
+bundle agent main
+{
+  vars:
+    "myvar" string => "I_AM_HERE";
+    "I_AM_HERE" string => "YIKES_RECURSIVE";
+    "foo" string => ifelse( isvariable( "myvar" ), "$(myvar)", "FALLBACK");
+    "bar" string => ifelse( isvariable( "myvar" ), "$($(myvar))", "FALLBACK");
+  reports:
+    "foo is $(foo)";
+    "bar is $(bar)";
+}

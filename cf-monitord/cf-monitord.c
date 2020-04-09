@@ -209,6 +209,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                          CF_MONITORD_SHORT_DESCRIPTION,
                          CF_MONITORD_MANPAGE_LONG_DESCRIPTION,
                          OPTIONS, HINTS,
+                         NULL, false,
                          true);
             FileWriterDetach(out);
             DoCleanupAndExit(EXIT_SUCCESS);

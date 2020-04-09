@@ -427,6 +427,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
                          CF_PROMISES_SHORT_DESCRIPTION,
                          CF_PROMISES_MANPAGE_LONG_DESCRIPTION,
                          OPTIONS, HINTS,
+                         NULL, false,
                          true);
             FileWriterDetach(out);
             DoCleanupAndExit(EXIT_SUCCESS);

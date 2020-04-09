@@ -295,6 +295,7 @@ static int CFNetParse(int argc, char **argv,
                              CF_NET_SHORT_DESCRIPTION,
                              CF_NET_MANPAGE_LONG_DESCRIPTION,
                              OPTIONS, HINTS,
+                             COMMANDS, false,
                              true);
                 FileWriterDetach(out);
                 DoCleanupAndExit(EXIT_SUCCESS);

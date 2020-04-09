@@ -187,6 +187,7 @@ int main(int argc, const char *const *argv)
                              CF_CHECK_SHORT_DESCRIPTION,
                              CF_CHECK_MANPAGE_LONG_DESCRIPTION,
                              OPTIONS, HINTS,
+                             NULL, false,
                              true);
                 FileWriterDetach(out);
                 return EXIT_SUCCESS;

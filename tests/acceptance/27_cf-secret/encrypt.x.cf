@@ -9,12 +9,12 @@ bundle agent test
 {
     meta:
         "description"
-            string => "Test that cf-keycrypt encryption uses random padding";
+            string => "Test that cf-secret encryption uses random padding";
 
     commands:
-        "$(sys.cf_keycrypt)"
+        "$(sys.cf_secret)"
             args => "encrypt -k $(this.promise_dirname)/testkey.pub -o $(G.testfile) $(this.promise_dirname)/plaintext";
-        "$(sys.cf_keycrypt)"
+        "$(sys.cf_secret)"
             args => "encrypt -k $(this.promise_dirname)/testkey.pub -o $(G.testfile).2 $(this.promise_dirname)/plaintext";
 }
 

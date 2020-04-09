@@ -19,7 +19,7 @@ bundle agent test
 {
     meta:
         "description"
-        string => "Test cf-keycrypt with different arguments/order";
+        string => "Test cf-secret with different arguments/order";
 
 
     vars:
@@ -32,13 +32,13 @@ bundle agent test
             edit_line => insert_lines( "$(text)" );
 
     commands:
-        "$(sys.cf_keycrypt)"
+        "$(sys.cf_secret)"
             args => "encrypt --key $(sys.workdir)/ppkeys/localhost.pub --output $(G.testfile).encrypted $(G.testfile).plain";
-        "$(sys.cf_keycrypt)"
+        "$(sys.cf_secret)"
             args => "decrypt --key $(sys.workdir)/ppkeys/localhost.priv -o $(G.testfile).decrypted $(G.testfile).encrypted";
     reports:
         "Binaries/folders:";
-        "$(sys.cf_keycrypt)";
+        "$(sys.cf_secret)";
         "$(sys.cf_agent)";
         "$(sys.workdir)";
 }

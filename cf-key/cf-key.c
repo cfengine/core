@@ -336,6 +336,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                              CF_KEY_SHORT_DESCRIPTION,
                              CF_KEY_MANPAGE_LONG_DESCRIPTION,
                              OPTIONS, HINTS,
+                             NULL, false,
                              false);
                 FileWriterDetach(out);
                 DoCleanupAndExit(EXIT_SUCCESS);

@@ -805,7 +805,7 @@ void CFKeyCryptMan()
     ManPageWrite(out, "cf-keycrypt", time(NULL),
                  CF_KEYCRYPT_SHORT_DESCRIPTION,
                  CF_KEYCRYPT_MANPAGE_LONG_DESCRIPTION,
-                 OPTIONS, HINTS, true);
+                 OPTIONS, HINTS, COMMANDS, true, true);
     FileWriterDetach(out);
 }
 

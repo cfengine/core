@@ -408,6 +408,7 @@ Log(LOG_LEVEL_WARNING, "CRAIG evaluating function: %s", fncall_string);
         WriterClose(w);
         RlistDestroy(expargs);
 
+Log(LOG_LEVEL_WARNING, "CRAIG returning FNCALL_SUCCESS line 411");
         return (FnCallResult) { FNCALL_SUCCESS, RvalCopy(cached_rval) };
     }
 
@@ -424,6 +425,7 @@ Log(LOG_LEVEL_WARNING, "CRAIG evaluating function: %s", fncall_string);
     {
         RlistDestroy(expargs);
         RvalDestroy(result.rval);
+Log(LOG_LEVEL_WARNING, "CRAIG return FNCALL_FAILURE at 428, result.status was that");
         return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };
     }
 
@@ -439,6 +441,7 @@ Log(LOG_LEVEL_WARNING, "CRAIG evaluating function: %s", fncall_string);
 
     RlistDestroy(expargs);
 
+Log(LOG_LEVEL_WARNING, "CRAIG returning result at end of function");
     return result;
 }
 

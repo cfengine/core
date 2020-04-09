@@ -1241,10 +1241,14 @@ Log(LOG_LEVEL_WARNING, "CRAIG FnCallIfElse");
     }
 
     const Rlist *arg;
+Log(LOG_LEVEL_WARNING, "CRAIG finalargs=%p", finalargs);
     for (arg = finalargs;        /* Start with arg set to finalargs. */
          arg && arg->next;       /* We must have arg and arg->next to proceed. */
          arg = arg->next->next)  /* arg steps forward *twice* every time. */
     {
+Log(LOG_LEVEL_WARNING, "CRAIG, LOOP, arg=%p", arg);
+if (arg) { Log(LOG_LEVEL_WARNING, "CRAIG, LOOP, arg->next=%p", arg->next); }
+if (arg && arg->next) { Log(LOG_LEVEL_WARNING, "CRAIG, LOOP, arg->next->next=%p", arg->next->next); }
         /* Similar to classmatch(), we evaluate the first of the two
          * arguments as a class. */
         if (IsDefinedClass(ctx, RlistScalarValue(arg)))
@@ -1260,6 +1264,7 @@ Log(LOG_LEVEL_WARNING, "CRAIG FnCallIfElse");
         }
     }
 
+Log(LOG_LEVEL_WARNING, "CRAIG default fallback value being used");
     /* If we get here, we've reached the last argument (arg->next is NULL). */
     return FnReturn(RlistScalarValue(arg));
 }

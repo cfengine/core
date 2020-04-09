@@ -13,9 +13,9 @@ bundle agent test
 
     commands:
         "$(sys.cf_keycrypt)"
-            args => "-e $(this.promise_dirname)/plaintext -k $(this.promise_dirname)/testkey.pub -o $(G.testfile)";
+            args => "encrypt -k $(this.promise_dirname)/testkey.pub -o $(G.testfile) $(this.promise_dirname)/plaintext";
         "$(sys.cf_keycrypt)"
-            args => "-e $(this.promise_dirname)/plaintext -k $(this.promise_dirname)/testkey.pub -o $(G.testfile).2";
+            args => "encrypt -k $(this.promise_dirname)/testkey.pub -o $(G.testfile).2 $(this.promise_dirname)/plaintext";
 }
 
 bundle agent check

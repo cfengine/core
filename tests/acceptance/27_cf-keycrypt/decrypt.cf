@@ -13,7 +13,7 @@ bundle agent test
 
     commands:
         "$(sys.cf_keycrypt)"
-            args => "-k $(this.promise_dirname)/testkey.priv -d $(this.promise_dirname)/encrypted -o $(G.testfile)";
+            args => "decrypt -k $(this.promise_dirname)/testkey.priv -o $(G.testfile) $(this.promise_dirname)/encrypted";
 }
 
 bundle agent check

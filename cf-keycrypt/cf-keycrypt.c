@@ -107,9 +107,9 @@ static const char *const HINTS[] =
 {
     "Print the help message",
     "Print the man page",
-    "Use key file",
-    "Encrypt for host (get key from lastseen database)",
-    "Output file",
+    "Comma-separated list of key files to use (one of -k/-H options is required for encryption)",
+    "Comma-separated list of hosts to encrypt/decrypt for (defaults to 'localhost' for decryption)",
+    "Output file (required)",
     NULL
 };
 

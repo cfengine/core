@@ -557,7 +557,7 @@ static int CFNetHelp(const char *topic)
     else
     {
         Writer *w = FileWriter(stdout);
-        WriterWriteHelp(w, "cf-net", OPTIONS, HINTS, false, COMMANDS);
+        WriterWriteHelp(w, "cf-net", OPTIONS, HINTS, COMMANDS, false, false);
         FileWriterDetach(w);
         DoCleanupAndExit(EXIT_SUCCESS);
     }

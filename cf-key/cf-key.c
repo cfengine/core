@@ -247,7 +247,7 @@ int main(int argc, char *argv[])
 static void PrintHelp()
 {
     Writer *w = FileWriter(stdout);
-    WriterWriteHelp(w, "cf-key", OPTIONS, HINTS, false, NULL);
+    WriterWriteHelp(w, "cf-key", OPTIONS, HINTS, NULL, false, false);
     FileWriterDetach(w);
 }
 

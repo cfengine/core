@@ -208,7 +208,7 @@ unix_seconds() {
 }
 
 usage() {
-    echo "testall [-h|--help] [-q|--quiet] [--gainroot=<command>] [--agent=<agent>] [--cfpromises=<cf-promises>] [--cfserverd=<cf-serverd>] [--cfexecd=<cf-execd>] [--cfkey=<cf-key>] [--cfkeycrypt=<cf-keycrypt>] [--cfnet=<cf-net>] [--cfcheck=<cf-check>] [--bindir=<bindir>] [--tests=...] [--gdb] [--printlog] [<test> <test>...]"
+    echo "testall [-h|--help] [-q|--quiet] [--gainroot=<command>] [--agent=<agent>] [--cfpromises=<cf-promises>] [--cfserverd=<cf-serverd>] [--cfexecd=<cf-execd>] [--cfkey=<cf-key>] [--cfkeycrypt=<cf-secret>] [--cfnet=<cf-net>] [--cfcheck=<cf-check>] [--bindir=<bindir>] [--tests=...] [--gdb] [--printlog] [<test> <test>...]"
     echo
     echo "If no test is given, all standard tests are run:"
     echo "  Tests with names of form <file>.cf are expected to run successfully"
@@ -238,7 +238,7 @@ usage() {
     echo "           and defaults to $DEFCF_EXECD."
     echo " --cfkey   provides a way to specify non-default cf-key location,"
     echo "           and defaults to $DEFCF_KEY."
-    echo " --cfkeycrypt  provides a way to specify non-default cf-keycrypt location,"
+    echo " --cfkeycrypt  provides a way to specify non-default cf-secret location,"
     echo "           and defaults to $DEFCF_KEYCRYPT."
     echo " --cfnet   provides a way to specify non-default cf-net location,"
     echo "           and defaults to $DEFCF_NET."
@@ -949,7 +949,7 @@ find_default_binary DEFCF_PROMISES cf-promises
 find_default_binary DEFCF_SERVERD cf-serverd
 find_default_binary DEFCF_EXECD cf-execd
 find_default_binary DEFCF_KEY cf-key
-find_default_binary DEFCF_KEYCRYPT cf-keycrypt
+find_default_binary DEFCF_KEYCRYPT cf-secret
 find_default_binary DEFCF_NET cf-net
 find_default_binary DEFCF_CHECK cf-check
 find_default_binary DEFCF_RUNAGENT cf-runagent

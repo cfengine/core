@@ -9,10 +9,10 @@ bundle agent test
 {
     meta:
         "description"
-            string => "Test that cf-keycrypt can still decrypt content encrypted at the time of initial implementation";
+            string => "Test that cf-secret can still decrypt content encrypted at the time of initial implementation";
 
     commands:
-        "$(sys.cf_keycrypt)"
+        "$(sys.cf_secret)"
             args => "decrypt -k $(this.promise_dirname)/testkey.priv -o $(G.testfile) $(this.promise_dirname)/encrypted";
 }
 

@@ -33,9 +33,9 @@ bundle agent test
 
     commands:
         "$(sys.cf_keycrypt)"
-            args => "--encrypt $(G.testfile).plain --key $(sys.workdir)/ppkeys/localhost.pub --output $(G.testfile).encrypted";
+            args => "encrypt --key $(sys.workdir)/ppkeys/localhost.pub --output $(G.testfile).encrypted $(G.testfile).plain";
         "$(sys.cf_keycrypt)"
-            args => "--decrypt -o $(G.testfile).decrypted --key $(sys.workdir)/ppkeys/localhost.priv $(G.testfile).encrypted";
+            args => "decrypt --key $(sys.workdir)/ppkeys/localhost.priv -o $(G.testfile).decrypted $(G.testfile).encrypted";
     reports:
         "Binaries/folders:";
         "$(sys.cf_keycrypt)";

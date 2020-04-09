@@ -97,8 +97,6 @@ static const struct option OPTIONS[] =
 {
     {"help",        no_argument,        0, 'h'},
     {"manpage",     no_argument,        0, 'M'},
-    {"encrypt",     no_argument,        0, 'e'},
-    {"decrypt",     no_argument,        0, 'd'},
     {"key",         required_argument,  0, 'k'},
     {"host",        required_argument,  0, 'H'},
     {"output",      required_argument,  0, 'o'},
@@ -109,12 +107,17 @@ static const char *const HINTS[] =
 {
     "Print the help message",
     "Print the man page",
-    "Encrypt file",
-    "Decrypt file",
     "Use key file",
     "Encrypt for host (get key from lastseen database)",
     "Output file",
     NULL
+};
+
+static const Description COMMANDS[] =
+{
+    {"encrypt", "Encrypt data for one or more hosts/keys", "cf-keycrypt encrypt -k/-H KEY/HOST -o OUTPUT INPUT"},
+    {"decrypt", "Decrypt data", "cf-keycrypt decrypt [-k/-H KEY/HOST] -o OUTPUT INPUT"},
+    {NULL, NULL, NULL}
 };
 
 static inline void *GetIPAddress(struct sockaddr *sa)
@@ -757,7 +760,7 @@ static Seq *LoadPublicKeys(Seq *key_paths)
 static void CFKeyCryptHelp()
 {
     Writer *w = FileWriter(stdout);
-    WriterWriteHelp(w, "cf-keycrypt", OPTIONS, HINTS, false, NULL);
+    WriterWriteHelp(w, "cf-keycrypt", OPTIONS, HINTS, COMMANDS, true, true);
     FileWriterDetach(w);
 }
 
@@ -773,7 +776,7 @@ void CFKeyCryptMan()
 
 int main(int argc, char *argv[])
 {
-    if (argc == 1)
+    if (argc < 2)
     {
         CFKeyCryptHelp();
         exit(EXIT_FAILURE);
@@ -787,8 +790,20 @@ int main(int argc, char *argv[])
     bool encrypt = false;
     bool decrypt = false;
 
+    size_t offset = 0;
+    if (StringSafeEqual(argv[1], "encrypt"))
+    {
+        encrypt = true;
+        offset++;
+    }
+    else if (StringSafeEqual(argv[1], "decrypt"))
+    {
+        offset++;
+        decrypt = true;
+    }
+
     int c = 0;
-    while ((c = getopt_long(argc, argv, "hMedk:o:H:", OPTIONS, NULL)) != -1)
+    while ((c = getopt_long(argc - offset, argv + offset, "hMedk:o:H:", OPTIONS, NULL)) != -1)
     {
         switch (c)
         {
@@ -799,12 +814,6 @@ int main(int argc, char *argv[])
             case 'M':
                 CFKeyCryptMan();
                 exit(EXIT_SUCCESS);
-                break;
-            case 'e':
-                encrypt = true;
-                break;
-            case 'd':
-                decrypt = true;
                 break;
             case 'k':
                 key_path_arg = optarg;
@@ -822,18 +831,21 @@ int main(int argc, char *argv[])
         }
     }
 
-    input_path = argv[optind];
-    optind += 1;
-    if (optind < argc)
+    if (!(decrypt || encrypt))
     {
-        Log(LOG_LEVEL_ERR, "Unexpected non-option argument: '%s'", argv[optind]);
+        printf("Command required. Specify either 'encrypt' or 'decrypt'\n");
+        CFKeyCryptHelp();
         exit(EXIT_FAILURE);
     }
 
-    // Check for argument errors:
-    if ((encrypt && decrypt) || (!encrypt && !decrypt))
+    /* Increment 'optind' because of command being argv[0]. */
+    optind++;
+    input_path = argv[optind];
+
+    /* Some more unexpected arguments? */
+    if (argc > (optind + offset))
     {
-        Log(LOG_LEVEL_ERR, "Must specify either encrypt or decrypt (and not both)");
+        Log(LOG_LEVEL_ERR, "Unexpected non-option argument: '%s'", argv[optind + 1]);
         exit(EXIT_FAILURE);
     }
 

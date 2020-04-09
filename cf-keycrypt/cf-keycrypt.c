@@ -97,6 +97,10 @@ static const struct option OPTIONS[] =
 {
     {"help",        no_argument,        0, 'h'},
     {"manpage",     no_argument,        0, 'M'},
+    {"debug",       no_argument,        0, 'd'},
+    {"verbose",     no_argument,        0, 'v'},
+    {"log-level",   required_argument,  0, 'g'},
+    {"inform",      no_argument,        0, 'I'},
     {"key",         required_argument,  0, 'k'},
     {"host",        required_argument,  0, 'H'},
     {"output",      required_argument,  0, 'o'},
@@ -107,6 +111,10 @@ static const char *const HINTS[] =
 {
     "Print the help message",
     "Print the man page",
+    "Enable debugging output",
+    "Enable verbose output",
+    "Specify how detailed logs should be. Possible values: 'error', 'warning', 'notice', 'info', 'verbose', 'debug'",
+    "Enable basic information output",
     "Comma-separated list of key files to use (one of -k/-H options is required for encryption)",
     "Comma-separated list of hosts to encrypt/decrypt for (defaults to 'localhost' for decryption)",
     "Output file (required)",
@@ -165,6 +173,7 @@ static char *GetHostRSAKey(const char *host, HostRSAKeyType type)
                   ipaddress, sizeof(ipaddress));
         if (StringStartsWith(ipaddress, "127.") || StringSafeEqual(ipaddress, "::1"))
         {
+            Log(LOG_LEVEL_VERBOSE, "Using localhost%s key", key_ext);
             found = true;
             snprintf(buffer, BUFSIZE, "%s/ppkeys/localhost%s", WORKDIR, key_ext);
             return buffer;
@@ -173,12 +182,14 @@ static char *GetHostRSAKey(const char *host, HostRSAKeyType type)
     }
     if (found)
     {
+        Log(LOG_LEVEL_DEBUG, "Found host '%s' for address '%s'", hash, ipaddress);
         snprintf(buffer, BUFSIZE, "%s/ppkeys/root-%s%s", WORKDIR, hash, key_ext);
         freeaddrinfo(result);
         return buffer;
     }
     else
     {
+        Log(LOG_LEVEL_DEBUG, "Searching key by IP");
         for (struct addrinfo *res = result; res != NULL; res = res->ai_next)
         {
             inet_ntop(res->ai_family,
@@ -187,6 +198,7 @@ static char *GetHostRSAKey(const char *host, HostRSAKeyType type)
             snprintf(buffer, BUFSIZE, "%s/ppkeys/root-%s%s", WORKDIR, ipaddress, key_ext);
             if (access(buffer, F_OK) == 0)
             {
+                Log(LOG_LEVEL_DEBUG, "Found matching key: '%s'", buffer);
                 freeaddrinfo(result);
                 return buffer;
             }
@@ -268,7 +280,7 @@ static bool RSAEncrypt(Seq *rsa_keys, const char *input_path, const char *output
     FILE *output_file = OpenInputOutput(output_path, "w");
     if (output_file == NULL)
     {
-        Log(LOG_LEVEL_ERR, "Could not create output file '%s'", output_path);
+        Log(LOG_LEVEL_ERR, "Could not create or open output file '%s'", output_path);
         fclose(input_file);
         return false;
     }
@@ -323,6 +335,7 @@ static bool RSAEncrypt(Seq *rsa_keys, const char *input_path, const char *output
     }
 
     /* newline and NUL-byte => +2 */
+    Log(LOG_LEVEL_VERBOSE, "Writing headers");
     char header[MAX_HEADER_LEN + 2] = "Version: 1.0\n";
     size_t header_len = strlen(header);
     ssize_t n_written = FullWrite(fileno(output_file), header, header_len);
@@ -332,6 +345,7 @@ static bool RSAEncrypt(Seq *rsa_keys, const char *input_path, const char *output
         success = false;
         goto cleanup;
     }
+    Log(LOG_LEVEL_VERBOSE, "Writing Encrypted-for headers");
     for (size_t i = 0; i < n_keys; i++)
     {
         char *key_digest = GetPubkeyDigest(SeqAt(rsa_keys, i));
@@ -353,7 +367,7 @@ static bool RSAEncrypt(Seq *rsa_keys, const char *input_path, const char *output
         success = false;
         goto cleanup;
     }
-
+    Log(LOG_LEVEL_VERBOSE, "Writing IV");
     n_written = FullWrite(fileno(output_file), iv, iv_size);
     if (n_written != iv_size)
     {
@@ -362,6 +376,7 @@ static bool RSAEncrypt(Seq *rsa_keys, const char *input_path, const char *output
         goto cleanup;
     }
 
+    Log(LOG_LEVEL_VERBOSE, "Writing keys");
     for (size_t i = 0; i < n_keys; i++)
     {
         const char *enc_key = SeqAt(enc_keys, i);
@@ -374,6 +389,7 @@ static bool RSAEncrypt(Seq *rsa_keys, const char *input_path, const char *output
         }
     }
 
+    size_t processed = 0;
     while (success && !feof(input_file))
     {
         ssize_t n_read = ReadFileStreamToBuffer(input_file, block_size, plaintext);
@@ -398,7 +414,10 @@ static bool RSAEncrypt(Seq *rsa_keys, const char *input_path, const char *output
             success = false;
             break;
         }
+        processed += n_read;
+        Log(LOG_LEVEL_VERBOSE, "%zu bytes processed", processed);
     }
+    Log(LOG_LEVEL_VERBOSE, "Finalizing");
     ret = EVP_SealFinal(ctx, ciphertext, &ct_len);
     if (ret == 0)
     {
@@ -538,6 +557,7 @@ static bool ParseHeaders(FILE *input_file, RSA *privkey, size_t *enc_key_pos, si
 
     while (ParseHeader(input_file, key, value))
     {
+        Log(LOG_LEVEL_DEBUG, "Parsed header '%s: %s'", key, value);
         if (!CheckHeader(key, value))
         {
             free(key_digest);
@@ -550,6 +570,7 @@ static bool ParseHeaders(FILE *input_file, RSA *privkey, size_t *enc_key_pos, si
         }
         else if (StringSafeEqual(key, "Encrypted-for"))
         {
+            Log(LOG_LEVEL_DEBUG, "Encrypted for '%s'", value);
             if (StringSafeEqual(value, key_digest))
             {
                 found_matching_digest = true;
@@ -576,6 +597,7 @@ static bool ParseHeaders(FILE *input_file, RSA *privkey, size_t *enc_key_pos, si
         }
         else if (next == EOF)
         {
+            Log(LOG_LEVEL_ERR, "Failed to parse headers from");
             free(key_digest);
             return false;
         }
@@ -585,6 +607,7 @@ static bool ParseHeaders(FILE *input_file, RSA *privkey, size_t *enc_key_pos, si
             ungetc(next, input_file);
         }
     }
+    Log(LOG_LEVEL_ERR, "Failed to parse headers");
     free(key_digest);
     return false;
 }
@@ -617,15 +640,16 @@ static bool RSADecrypt(RSA *privkey, const char *input_path, const char *output_
 
     bool success = true;
 
+    Log(LOG_LEVEL_VERBOSE, "Parsing headers");
     size_t our_key_pos;
     size_t n_enc_keys;
     if (!ParseHeaders(input_file, privkey, &our_key_pos, &n_enc_keys))
     {
-        Log(LOG_LEVEL_ERR, "Failed to parse headers from '%s'", input_path);
         fclose(input_file);
         fclose(output_file);
         return false;
     }
+    Log(LOG_LEVEL_DEBUG, "Parsed %zu keys", n_enc_keys);
 
     const EVP_CIPHER *cipher = EVP_aes_256_cbc();
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
@@ -659,8 +683,10 @@ static bool RSADecrypt(RSA *privkey, const char *input_path, const char *output_
             Log(LOG_LEVEL_ERR, "Failed to read the key from '%s'", input_path);
             goto cleanup;
         }
+        Log(LOG_LEVEL_DEBUG, "Skipping key");
     }
     /* read our key */
+    Log(LOG_LEVEL_DEBUG, "Reading key");
     n_read = ReadFileStreamToBuffer(input_file, key_size, ek);
     if (n_read != key_size)
     {
@@ -677,16 +703,21 @@ static bool RSADecrypt(RSA *privkey, const char *input_path, const char *output_
             Log(LOG_LEVEL_ERR, "Failed to read the key from '%s'", input_path);
             goto cleanup;
         }
+        Log(LOG_LEVEL_DEBUG, "Skipping key");
     }
 
     int ret = EVP_OpenInit(ctx, cipher, ek, key_size, iv, evp_key);
     if (ret == 0)
     {
-        Log(LOG_LEVEL_ERR, "Failed to initialize decryption context");
+        char *key_digest = GetPubkeyDigest(privkey);
+        Log(LOG_LEVEL_ERR, "Failed to decrypt contents using key '%s'", key_digest);
+        free(key_digest);
         success = false;
         goto cleanup;
     }
 
+    Log(LOG_LEVEL_VERBOSE, "Decrypting data");
+    size_t processed = 0;
     ssize_t n_written;
     while (success && !feof(input_file))
     {
@@ -700,7 +731,7 @@ static bool RSADecrypt(RSA *privkey, const char *input_path, const char *output_
         ret = EVP_OpenUpdate(ctx, plaintext, &pt_len, ciphertext, n_read);
         if (ret == 0)
         {
-            Log(LOG_LEVEL_ERR, "Failed to encrypt data: %s",
+            Log(LOG_LEVEL_ERR, "Failed to decrypt data: %s",
                 ERR_error_string(ERR_get_error(), NULL));
             success = false;
             break;
@@ -712,11 +743,14 @@ static bool RSADecrypt(RSA *privkey, const char *input_path, const char *output_
             success = false;
             break;
         }
+        processed += n_read;
+        Log(LOG_LEVEL_VERBOSE, "%zu bytes processed", processed);
     }
+    Log(LOG_LEVEL_VERBOSE, "Finalizing");
     ret = EVP_OpenFinal(ctx, plaintext, &pt_len);
     if (ret == 0)
     {
-        Log(LOG_LEVEL_ERR, "Failed to encrypt data: %s",
+        Log(LOG_LEVEL_ERR, "Failed to decrypt data: %s",
             ERR_error_string(ERR_get_error(), NULL));
         success = false;
     }
@@ -746,6 +780,7 @@ static Seq *LoadPublicKeys(Seq *key_paths)
     for (size_t i = 0; i < n_keys; i++)
     {
         const char *key_path = SeqAt(key_paths, i);
+        Log(LOG_LEVEL_VERBOSE, "Reading key '%s'", key_path);
         RSA *pubkey = ReadPublicKey(key_path);
         if (pubkey == NULL)
         {
@@ -815,6 +850,21 @@ int main(int argc, char *argv[])
                 CFKeyCryptMan();
                 exit(EXIT_SUCCESS);
                 break;
+            case 'd':
+                LogSetGlobalLevel(LOG_LEVEL_DEBUG);
+                Log(LOG_LEVEL_DEBUG, "Debug log level enabled");
+                break;
+            case 'v':
+                LogSetGlobalLevel(LOG_LEVEL_VERBOSE);
+                Log(LOG_LEVEL_VERBOSE, "Verbose log level enabled");
+                break;
+            case 'I':
+                LogSetGlobalLevel(LOG_LEVEL_INFO);
+                Log(LOG_LEVEL_INFO, "Inform log level enabled");
+                break;
+            case 'g':
+                LogSetGlobalLevelArgOrExit(optarg);
+                break;
             case 'k':
                 key_path_arg = optarg;
                 break;
@@ -882,6 +932,7 @@ int main(int argc, char *argv[])
     Seq *key_paths;
     if (key_path_arg != NULL)
     {
+        Log(LOG_LEVEL_DEBUG, "-k/--key given: '%s'", key_path_arg);
         key_paths = SeqStringFromString(key_path_arg, ',');
     }
     else
@@ -891,6 +942,7 @@ int main(int argc, char *argv[])
 
     if (host_arg != NULL)
     {
+        Log(LOG_LEVEL_DEBUG, "-H/--host given: '%s'", host_arg);
         Seq *hosts = SeqStringFromString(host_arg, ',');
         const size_t n_hosts = SeqLength(hosts);
         for (size_t i = 0; i < n_hosts; i++)
@@ -915,6 +967,7 @@ int main(int argc, char *argv[])
     bool success;
     if (encrypt)
     {
+        Log(LOG_LEVEL_DEBUG, "Encrypting");
         Seq *pub_keys = LoadPublicKeys(key_paths);
         SeqDestroy(key_paths);
         if (pub_keys == NULL)
@@ -933,6 +986,7 @@ int main(int argc, char *argv[])
     }
     else if (decrypt)
     {
+        Log(LOG_LEVEL_DEBUG, "Decrypting");
         const size_t n_keys = SeqLength(key_paths);
         if (n_keys > 1)
         {

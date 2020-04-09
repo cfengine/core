@@ -196,6 +196,7 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, PromiseIterator *iterc
      *      act_on_promise is CommonEvalPromise(). */
     while (PromiseIteratorNext(iterctx, ctx))
     {
+Log(LOG_LEVEL_WARNING, "ACTUAL WORK PART 1: get a(nother) copy of the promise");
         /*
          * ACTUAL WORK PART 1: Get a (another) copy of the promise.
          *
@@ -211,19 +212,25 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, PromiseIterator *iterc
             continue;
         }
 
+Log(LOG_LEVEL_WARNING, "ACTUAL WORK PART 2: run the actuator");
         /* ACTUAL WORK PART 2: run the actuator */
         PromiseResult iteration_result = act_on_promise(ctx, pexp, param);
+Log(LOG_LEVEL_WARNING, "act_on_promise(ctx, pexp, param) => %p", iteration_result);
 
         /* iteration_result is always NOOP for PRE-EVAL. */
         result = PromiseResultUpdate(result, iteration_result);
+Log(LOG_LEVEL_WARNING, "PromiseResultUpdate() => %p", result);
 
         /* Redmine#6484: Do not store promise handles during PRE-EVAL, to
          *               avoid package promise always running. */
+Log(LOG_LEVEL_WARNING, "CRAIG act_on_promise != &CommonEvalPromise?");
         if (act_on_promise != &CommonEvalPromise)
         {
+Log(LOG_LEVEL_WARNING, "CRAIG yep, so NotifyDependentPromises()");
             NotifyDependantPromises(ctx, pexp, iteration_result);
         }
 
+Log(LOG_LEVEL_WARNING, "EVALUATE VARS PROMISES again");
         /* EVALUATE VARS PROMISES again, allowing redefinition of
          * variables. The theory behind this is that the "sampling rate" of
          * vars promise needs to be double than the rest. */
@@ -252,6 +259,7 @@ PromiseResult ExpandPromise(EvalContext *ctx, const Promise *pp,
         return PROMISE_RESULT_SKIPPED;
     }
 
+Log(LOG_LEVEL_WARNING, "CRAIG, ExpandPromise() 1. Copy the promise while expanding '@' slists and body arguments (including body inheritance)");
     /* 1. Copy the promise while expanding '@' slists and body arguments
      *    (including body inheritance). */
     Promise *pcopy = DeRefCopyPromise(ctx, pp);
@@ -259,6 +267,7 @@ PromiseResult ExpandPromise(EvalContext *ctx, const Promise *pp,
     EvalContextStackPushPromiseFrame(ctx, pcopy);
     PromiseIterator *iterctx = PromiseIteratorNew(pcopy);
 
+Log(LOG_LEVEL_WARNING, "CRAIG, ExpandPromise() 2. Parse all strings (promiser-promisee-constraints), find all expanded vars, etc");
     /* 2. Parse all strings (promiser-promisee-constraints), find all
           unexpanded variables, mangle them if needed (if they are
           namespaced/scoped), and start the iteration engine (iterctx) to
@@ -278,6 +287,7 @@ PromiseResult ExpandPromise(EvalContext *ctx, const Promise *pp,
         MapIteratorsFromRval(ctx, iterctx, cp->rval);
     }
 
+Log(LOG_LEVEL_WARNING, "CRAIG, ExpandPromise() 3. GO!");
     /* 3. GO! */
     PutHandleVariable(ctx, pcopy);
     PromiseResult result = ExpandPromiseAndDo(ctx, iterctx,
@@ -976,6 +986,7 @@ static void ResolvePackageManagerBody(EvalContext *ctx, const Body *pm_body)
 void PolicyResolve(EvalContext *ctx, const Policy *policy,
                    GenericAgentConfig *config)
 {
+Log(LOG_LEVEL_WARNING, "CRAIG, PolicyResolve(), common bundles: classes, vars");
     /* PRE-EVAL: common bundles: classes,vars. */
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
@@ -994,6 +1005,7 @@ void PolicyResolve(EvalContext *ctx, const Policy *policy,
  */
 #if 1
 
+Log(LOG_LEVEL_WARNING, "CRAIG, PolicyResolve(), PRE_EVAL, non-common bundles: only vars");
     /* PRE-EVAL: non-common bundles: only vars. */
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {

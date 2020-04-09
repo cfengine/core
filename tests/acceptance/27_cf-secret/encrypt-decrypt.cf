@@ -19,7 +19,7 @@ bundle agent test
 {
     meta:
         "description"
-            string => "Test that cf-keycrypt basic key based encryption and decryption work";
+            string => "Test that cf-secret basic key based encryption and decryption work";
 
 
     vars:
@@ -33,14 +33,14 @@ bundle agent test
             edit_line => insert_lines( "$(text)" );
 
     commands:
-        "$(sys.cf_keycrypt)"
+        "$(sys.cf_secret)"
             args => "encrypt -k $(sys.workdir)/ppkeys/localhost.pub -o $(G.testfile).encrypted $(G.testfile).plain";
-        "$(sys.cf_keycrypt)"
+        "$(sys.cf_secret)"
             args => "decrypt -k $(sys.workdir)/ppkeys/localhost.priv -o $(G.testfile).decrypted $(G.testfile).encrypted";
 
     reports:
         "Binaries/folders:";
-        "$(sys.cf_keycrypt)";
+        "$(sys.cf_secret)";
         "$(sys.cf_agent)";
         "$(sys.workdir)";
 }

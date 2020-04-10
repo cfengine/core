@@ -125,6 +125,7 @@ static const Description COMMANDS[] =
 {
     {"encrypt", "Encrypt data for one or more hosts/keys", "cf-secret encrypt -k/-H KEY/HOST -o OUTPUT INPUT"},
     {"decrypt", "Decrypt data", "cf-secret decrypt [-k/-H KEY/HOST] -o OUTPUT INPUT"},
+    {"print-headers", "Print headers from an encrypted file", "cf-secret print-headers ENCRYPTED_FILE"},
     {NULL, NULL, NULL}
 };
 
@@ -824,6 +825,7 @@ int main(int argc, char *argv[])
     char *host_arg = NULL;
     bool encrypt = false;
     bool decrypt = false;
+    bool print_headers = false;
 
     size_t offset = 0;
     if (StringSafeEqual(argv[1], "encrypt"))
@@ -835,6 +837,11 @@ int main(int argc, char *argv[])
     {
         offset++;
         decrypt = true;
+    }
+    else if (StringSafeEqual(argv[1], "print-headers"))
+    {
+        print_headers = true;
+        offset++;
     }
 
     int c = 0;
@@ -881,9 +888,9 @@ int main(int argc, char *argv[])
         }
     }
 
-    if (!(decrypt || encrypt))
+    if (!(decrypt || encrypt || print_headers))
     {
-        printf("Command required. Specify either 'encrypt' or 'decrypt'\n");
+        printf("Command required. Specify either 'encrypt', 'decrypt' or 'print-headers'\n");
         CFKeyCryptHelp();
         exit(EXIT_FAILURE);
     }
@@ -897,6 +904,26 @@ int main(int argc, char *argv[])
     {
         Log(LOG_LEVEL_ERR, "Unexpected non-option argument: '%s'", argv[optind + 1]);
         exit(EXIT_FAILURE);
+    }
+
+    if (print_headers)
+    {
+        FILE *input_file = OpenInputOutput(input_path, "r");
+        char key[MAX_HEADER_KEY_LEN + 1];
+        char value[MAX_HEADER_VAL_LEN + 1];
+
+        while (ParseHeader(input_file, key, value))
+        {
+            Log(LOG_LEVEL_DEBUG, "Parsed header '%s: %s'", key, value);
+            if (!CheckHeader(key, value))
+            {
+                fclose(input_file);
+                exit(EXIT_FAILURE);
+            }
+            printf("%s: %s\n", key, value);
+        }
+        fclose(input_file);
+        exit(EXIT_SUCCESS);
     }
 
     if (decrypt && (host_arg == NULL) && (key_path_arg == NULL))

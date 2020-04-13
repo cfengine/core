@@ -137,10 +137,12 @@ static void MapIteratorsFromRval(EvalContext *ctx,
                                  PromiseIterator *iterctx,
                                  Rval rval)
 {
+Log(LOG_LEVEL_WARNING, "CRAIG, MapIteratorsFromRval()");
     switch (rval.type)
     {
 
     case RVAL_TYPE_SCALAR:
+Log(LOG_LEVEL_WARNING, "CRAIG, MapIteratorsFromRval(), RVAL_TYPE_SCALAR, PromiseIteratorPrepare()");
         PromiseIteratorPrepare(iterctx, ctx, RvalScalarValue(rval));
         break;
 
@@ -156,6 +158,7 @@ static void MapIteratorsFromRval(EvalContext *ctx,
     {
         char *fn_name = RvalFnCallValue(rval)->name;
 
+Log(LOG_LEVEL_WARNING, "CRAIG, MapIteratorsFromRval, RVAL_TYPE_FNCALL, fn_name is '%s'", fn_name);
         /* Check function name. */
         PromiseIteratorPrepare(iterctx, ctx, fn_name);
 
@@ -190,6 +193,7 @@ static void MapIteratorsFromRval(EvalContext *ctx,
 static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, PromiseIterator *iterctx,
                                         PromiseActuator *act_on_promise, void *param)
 {
+Log(LOG_LEVEL_WARNING, "CRAIG, ExpandPromiseAndDo(), ENTER <===");
     PromiseResult result = PROMISE_RESULT_SKIPPED;
 
     /* TODO this loop could be completely skipped for for non vars/classes if
@@ -248,12 +252,14 @@ Log(LOG_LEVEL_WARNING, "EVALUATE VARS PROMISES again");
         EvalContextStackPopFrame(ctx);
     }
 
+Log(LOG_LEVEL_WARNING, "CRAIG, ExpandPromiseAndDo(), EXIT ===>");
     return result;
 }
 
 PromiseResult ExpandPromise(EvalContext *ctx, const Promise *pp,
                             PromiseActuator *act_on_promise, void *param)
 {
+Log(LOG_LEVEL_WARNING, "CRAIG, ExpandPromise(), pp->promiser is '%s'", pp->promiser);
     if (!IsDefinedClass(ctx, pp->classes))
     {
         return PROMISE_RESULT_SKIPPED;

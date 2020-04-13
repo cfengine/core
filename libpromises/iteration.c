@@ -517,6 +517,7 @@ static char *ProcessVar(PromiseIterator *iterctx, const EvalContext *evalctx,
 {
     assert(s != NULL);
     assert(c == '(' || c == '{');
+Log(LOG_LEVEL_WARNING, "ProcessVar() s is '%s'", s);
 
     char *s_end = FindClosingParen(s, c);
     const size_t s_max = strlen(s);
@@ -531,6 +532,7 @@ static char *ProcessVar(PromiseIterator *iterctx, const EvalContext *evalctx,
 
     while (next_var < s_end)              /* does it have nested variables? */
     {
+Log(LOG_LEVEL_WARNING, "CRAIG, ProcessVar(), It's a dependent variable, the wheels of the dependencies must be added first.");
         /* It's a dependent variable, the wheels of the dependencies must be
          * added first. Example: "$(blah_$(dependency))" */
 
@@ -582,6 +584,7 @@ static char *ProcessVar(PromiseIterator *iterctx, const EvalContext *evalctx,
         /* Change the variable name in order to mangle namespaces and scopes. */
         MangleVarRefString(s, s_len);
 
+Log(LOG_LEVEL_WARNING, "CRAIG, ProcessVar(), adding a wheel based on ShouldAddVariableAsIterationWheel() result");
         Wheel *new_wheel = WheelNew(s, s_len);
 
         /* If identical variable is already inserted, it means that it has
@@ -601,6 +604,7 @@ static char *ProcessVar(PromiseIterator *iterctx, const EvalContext *evalctx,
         }
         else
         {
+Log(LOG_LEVEL_WARNING, "CRAIG, ProcessVar(), we need the wheel so append it");
             /* If this variable is dependent on other variables, we've already
              * appended the wheels of the dependencies during the recursive
              * calls. Or it happens and this is an independent variable. So
@@ -633,6 +637,7 @@ void PromiseIteratorPrepare(PromiseIterator *iterctx,
                             const EvalContext *evalctx,
                             char *s)
 {
+Log(LOG_LEVEL_WARNING, "CRAIG, PromiseIteratorPrepare(), s is '%s'");
     assert(s != NULL);
     LogDebug(LOG_MOD_ITERATIONS, "PromiseIteratorPrepare(\"%s\")", s);
     const size_t s_len = strlen(s);
@@ -991,14 +996,17 @@ static bool RunOnlyOnce(PromiseIterator *iterctx)
 bool PromiseIteratorNext(PromiseIterator *iterctx, EvalContext *evalctx)
 {
     size_t wheels_num = SeqLength(iterctx->wheels);
+Log(LOG_LEVEL_WARNING, "CRAIG, PromiseIteratorNext(), wheels_num is '%zd'", wheels_num);
 
     if (wheels_num == 0)
     {
+Log(LOG_LEVEL_WARNING, "CRAIG, PromiseIteratorNext(), wheels_num == 0 so return RunOnlyOnce(iterctx)");
         return RunOnlyOnce(iterctx);
     }
 
     bool done = false;
 
+Log(LOG_LEVEL_WARNING, "CRAIG, PromiseIteratorNext(), first iteration: we initialise all wheels");
     /* First iteration: we initialise all wheels. */
     if (iterctx->count == 0)
     {
@@ -1014,8 +1022,10 @@ bool PromiseIteratorNext(PromiseIterator *iterctx, EvalContext *evalctx)
     while (!done)
     {
         size_t i = WheelRightmostIncrement(iterctx);
+Log(LOG_LEVEL_WARNING, "CRAIG, PromiseIteratorNext(), WheelRightmostIncrement() gave i as %zd", i);
         if (i == (size_t) -1)       /* all combinations have been tried */
         {
+Log(LOG_LEVEL_WARNING, "CRAIG, PromiseIteratorNext(), all combinations have been tried, exiting");
             Log(LOG_LEVEL_DEBUG, "Iteration engine finished"
                 "   ---   WARPING OUT");
             return false;
@@ -1030,6 +1040,7 @@ bool PromiseIteratorNext(PromiseIterator *iterctx, EvalContext *evalctx)
         Wheel *wheel    = SeqAt(iterctx->wheels, i);
         void *new_value = SeqAt(wheel->values, wheel->iter_index);
 
+Log(LOG_LEVEL_WARNING, "CRAIG, PromiseIteratorNext(), new_value = %p, unexpanded variable name is '%s', expanded variable name is '%s'", new_value, wheel->varname_unexp, wheel->varname_exp);
         IterListElementVariablePut(
             evalctx, wheel->varname_exp, wheel->vartype, new_value);
 
@@ -1041,6 +1052,7 @@ bool PromiseIteratorNext(PromiseIterator *iterctx, EvalContext *evalctx)
          * should be skipped completely; so the function doesn't yield any
          * result yet, it just loops over until it finds a meaningful one. */
         done = ! IteratorHasEmptyWheel(iterctx);
+Log(LOG_LEVEL_WARNING, "CRAIG, PromiseIteratorNext(), If any of the wheels has no values to offer, then this iteration should be skipped completely; so the function does not yield any result yet, it just loops over until it finds a meaningful one.");
 
         LogDebug(LOG_MOD_ITERATIONS, "PromiseIteratorNext():"
                  " count=%zu wheels_num=%zu current_wheel=%zd",

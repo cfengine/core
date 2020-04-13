@@ -1485,6 +1485,7 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner)
 
 Promise *EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const PromiseIterator *iter_ctx)
 {
+Log(LOG_LEVEL_WARNING, "CRAIG, EvalContextStackPushPromiseIterationFrame()");
     const StackFrame *last_frame = LastStackFrame(ctx, 0);
 
     assert(last_frame       != NULL);

@@ -71,7 +71,7 @@ static size_t CURRENT_PROMISER_LINE = 0;
 
 %}
 
-%token IDSYNTAX BLOCKID QSTRING CLASS PROMISE_TYPE BUNDLE BODY ASSIGN ARROW NAKEDVAR
+%token IDSYNTAX BLOCKID QSTRING CLASS PROMISE_GUARD BUNDLE BODY ASSIGN ARROW NAKEDVAR
 %expect 1
 
 %%
@@ -325,11 +325,11 @@ bundle_statements:     bundle_statement
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-bundle_statement:      promise_type classpromises_decl
+bundle_statement:      promise_guard classpromises_decl
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-promise_type:          PROMISE_TYPE             /* BUNDLE ONLY */
+promise_guard:         PROMISE_GUARD             /* BUNDLE ONLY */
                        {
                            ParserDebug("\tP:%s:%s:%s promise_type = %s\n", P.block, P.blocktype, P.blockid, P.currenttype);
 
@@ -349,7 +349,7 @@ promise_type:          PROMISE_TYPE             /* BUNDLE ONLY */
                                        {
                                            P.currentstype = BundleAppendPromiseType(P.currentbundle,P.currenttype);
                                            P.currentstype->offset.line = P.line_no;
-                                           P.currentstype->offset.start = P.offsets.last_promise_type_id;
+                                           P.currentstype->offset.start = P.offsets.last_promise_guard_id;
                                        }
                                        else
                                        {

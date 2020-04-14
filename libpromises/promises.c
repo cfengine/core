@@ -283,7 +283,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
         if (bodies_and_args != NULL &&
             SeqLength(bodies_and_args) > 0)
         {
-Log(LOG_LEVEL_WARNING, "CRAIG first case is: we have a body to expand lval = body(args)");
+Log(LOG_LEVEL_DEBUG, "CRAIG first case is: we have a body to expand lval = body(args)");
             const Body *bp = SeqAt(bodies_and_args, 0);
             assert(bp != NULL);
 
@@ -356,10 +356,10 @@ Log(LOG_LEVEL_WARNING, "CRAIG first case is: we have a body to expand lval = bod
         }
         else                                    /* constraint is not a body */
         {
-Log(LOG_LEVEL_WARNING, "CRAIG constraint is not a body");
+Log(LOG_LEVEL_DEBUG, "CRAIG constraint is not a body");
             if (cp->references_body)
             {
-Log(LOG_LEVEL_WARNING, "CRAIG assume this is a typed bundle (e.g. edit_line)");
+Log(LOG_LEVEL_DEBUG, "CRAIG assume this is a typed bundle (e.g. edit_line)");
                 // assume this is a typed bundle (e.g. edit_line)
                 const Bundle *callee =
                     EvalContextResolveBundleExpression(ctx, policy,
@@ -367,7 +367,7 @@ Log(LOG_LEVEL_WARNING, "CRAIG assume this is a typed bundle (e.g. edit_line)");
                                                        cp->lval);
                 if (!callee)
                 {
-Log(LOG_LEVEL_WARNING, "CRAIG otherwise, assume this is a method-type call");
+Log(LOG_LEVEL_DEBUG, "CRAIG otherwise, assume this is a method-type call");
                     // otherwise, assume this is a method-type call
                     callee = EvalContextResolveBundleExpression(ctx, policy,
                                                                 body_reference,
@@ -433,7 +433,7 @@ Log(LOG_LEVEL_WARNING, "CRAIG otherwise, assume this is a method-type call");
     const PromiseTypeSyntax *global_syntax = PromiseTypeSyntaxGet("*", "*");
     AddDefaultBodiesToPromise(ctx, pcopy, global_syntax);
 
-Log(LOG_LEVEL_WARNING, "CRAIG returning pcopy=%p", pcopy);
+Log(LOG_LEVEL_DEBUG, "CRAIG returning pcopy=%p", pcopy);
     return pcopy;
 }
 

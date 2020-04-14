@@ -1527,7 +1527,7 @@ static void CheckAgentAccess(const Rlist *list, const Policy *policy)
 
 static PromiseResult DefaultVarPromise(EvalContext *ctx, const Promise *pp)
 {
-Log(LOG_LEVEL_WARNING, "CRAIG cf-agent DefaultVarPromise");
+Log(LOG_LEVEL_DEBUG, "CRAIG cf-agent DefaultVarPromise");
     char *regex = PromiseGetConstraintAsRval(pp, "if_match_regex", RVAL_TYPE_SCALAR);
     bool okay = true;
 

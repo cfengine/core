@@ -137,12 +137,12 @@ static void MapIteratorsFromRval(EvalContext *ctx,
                                  PromiseIterator *iterctx,
                                  Rval rval)
 {
-Log(LOG_LEVEL_WARNING, "CRAIG, MapIteratorsFromRval()");
+Log(LOG_LEVEL_DEBUG, "CRAIG, MapIteratorsFromRval()");
     switch (rval.type)
     {
 
     case RVAL_TYPE_SCALAR:
-Log(LOG_LEVEL_WARNING, "CRAIG, MapIteratorsFromRval(), RVAL_TYPE_SCALAR, PromiseIteratorPrepare()");
+Log(LOG_LEVEL_DEBUG, "CRAIG, MapIteratorsFromRval(), RVAL_TYPE_SCALAR, PromiseIteratorPrepare()");
         PromiseIteratorPrepare(iterctx, ctx, RvalScalarValue(rval));
         break;
 
@@ -158,7 +158,7 @@ Log(LOG_LEVEL_WARNING, "CRAIG, MapIteratorsFromRval(), RVAL_TYPE_SCALAR, Promise
     {
         char *fn_name = RvalFnCallValue(rval)->name;
 
-Log(LOG_LEVEL_WARNING, "CRAIG, MapIteratorsFromRval, RVAL_TYPE_FNCALL, fn_name is '%s'", fn_name);
+Log(LOG_LEVEL_DEBUG, "CRAIG, MapIteratorsFromRval, RVAL_TYPE_FNCALL, fn_name is '%s'", fn_name);
         /* Check function name. */
         PromiseIteratorPrepare(iterctx, ctx, fn_name);
 
@@ -193,7 +193,7 @@ Log(LOG_LEVEL_WARNING, "CRAIG, MapIteratorsFromRval, RVAL_TYPE_FNCALL, fn_name i
 static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, PromiseIterator *iterctx,
                                         PromiseActuator *act_on_promise, void *param)
 {
-Log(LOG_LEVEL_WARNING, "CRAIG, ExpandPromiseAndDo(), ENTER <===");
+Log(LOG_LEVEL_DEBUG, "CRAIG, ExpandPromiseAndDo(), ENTER <===");
     PromiseResult result = PROMISE_RESULT_SKIPPED;
 
     /* TODO this loop could be completely skipped for for non vars/classes if
@@ -227,10 +227,10 @@ Log(LOG_LEVEL_WARNING, "PromiseResultUpdate() => %p", (void *)result);
 
         /* Redmine#6484: Do not store promise handles during PRE-EVAL, to
          *               avoid package promise always running. */
-Log(LOG_LEVEL_WARNING, "CRAIG act_on_promise != &CommonEvalPromise?");
+Log(LOG_LEVEL_DEBUG, "CRAIG act_on_promise != &CommonEvalPromise?");
         if (act_on_promise != &CommonEvalPromise)
         {
-Log(LOG_LEVEL_WARNING, "CRAIG yep, so NotifyDependentPromises()");
+Log(LOG_LEVEL_DEBUG, "CRAIG yep, so NotifyDependentPromises()");
             NotifyDependantPromises(ctx, pexp, iteration_result);
         }
 
@@ -252,20 +252,20 @@ Log(LOG_LEVEL_WARNING, "EVALUATE VARS PROMISES again");
         EvalContextStackPopFrame(ctx);
     }
 
-Log(LOG_LEVEL_WARNING, "CRAIG, ExpandPromiseAndDo(), EXIT ===>");
+Log(LOG_LEVEL_DEBUG, "CRAIG, ExpandPromiseAndDo(), EXIT ===>");
     return result;
 }
 
 PromiseResult ExpandPromise(EvalContext *ctx, const Promise *pp,
                             PromiseActuator *act_on_promise, void *param)
 {
-Log(LOG_LEVEL_WARNING, "CRAIG, ExpandPromise(), pp->promiser is '%s'", pp->promiser);
+Log(LOG_LEVEL_DEBUG, "CRAIG, ExpandPromise(), pp->promiser is '%s'", pp->promiser);
     if (!IsDefinedClass(ctx, pp->classes))
     {
         return PROMISE_RESULT_SKIPPED;
     }
 
-Log(LOG_LEVEL_WARNING, "CRAIG, ExpandPromise() 1. Copy the promise while expanding '@' slists and body arguments (including body inheritance)");
+Log(LOG_LEVEL_DEBUG, "CRAIG, ExpandPromise() 1. Copy the promise while expanding '@' slists and body arguments (including body inheritance)");
     /* 1. Copy the promise while expanding '@' slists and body arguments
      *    (including body inheritance). */
     Promise *pcopy = DeRefCopyPromise(ctx, pp);
@@ -273,7 +273,7 @@ Log(LOG_LEVEL_WARNING, "CRAIG, ExpandPromise() 1. Copy the promise while expandi
     EvalContextStackPushPromiseFrame(ctx, pcopy);
     PromiseIterator *iterctx = PromiseIteratorNew(pcopy);
 
-Log(LOG_LEVEL_WARNING, "CRAIG, ExpandPromise() 2. Parse all strings (promiser-promisee-constraints), find all expanded vars, etc");
+Log(LOG_LEVEL_DEBUG, "CRAIG, ExpandPromise() 2. Parse all strings (promiser-promisee-constraints), find all expanded vars, etc");
     /* 2. Parse all strings (promiser-promisee-constraints), find all
           unexpanded variables, mangle them if needed (if they are
           namespaced/scoped), and start the iteration engine (iterctx) to
@@ -293,7 +293,7 @@ Log(LOG_LEVEL_WARNING, "CRAIG, ExpandPromise() 2. Parse all strings (promiser-pr
         MapIteratorsFromRval(ctx, iterctx, cp->rval);
     }
 
-Log(LOG_LEVEL_WARNING, "CRAIG, ExpandPromise() 3. GO!");
+Log(LOG_LEVEL_DEBUG, "CRAIG, ExpandPromise() 3. GO!");
     /* 3. GO! */
     PutHandleVariable(ctx, pcopy);
     PromiseResult result = ExpandPromiseAndDo(ctx, iterctx,
@@ -992,7 +992,7 @@ static void ResolvePackageManagerBody(EvalContext *ctx, const Body *pm_body)
 void PolicyResolve(EvalContext *ctx, const Policy *policy,
                    GenericAgentConfig *config)
 {
-Log(LOG_LEVEL_WARNING, "CRAIG, PolicyResolve(), common bundles: classes, vars");
+Log(LOG_LEVEL_DEBUG, "CRAIG, PolicyResolve(), common bundles: classes, vars");
     /* PRE-EVAL: common bundles: classes,vars. */
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
@@ -1011,7 +1011,7 @@ Log(LOG_LEVEL_WARNING, "CRAIG, PolicyResolve(), common bundles: classes, vars");
  */
 #if 1
 
-Log(LOG_LEVEL_WARNING, "CRAIG, PolicyResolve(), PRE_EVAL, non-common bundles: only vars");
+Log(LOG_LEVEL_DEBUG, "CRAIG, PolicyResolve(), PRE_EVAL, non-common bundles: only vars");
     /* PRE-EVAL: non-common bundles: only vars. */
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {

@@ -1217,7 +1217,7 @@ static FnCallResult FnCallIfElse(EvalContext *ctx,
                                  ARG_UNUSED const FnCall *fp,
                                  const Rlist *finalargs)
 {
-Log(LOG_LEVEL_WARNING, "CRAIG FnCallIfElse");
+Log(LOG_LEVEL_DEBUG, "CRAIG FnCallIfElse");
     unsigned int argcount = 0;
     char id[CF_BUFSIZE];
 
@@ -1241,14 +1241,14 @@ Log(LOG_LEVEL_WARNING, "CRAIG FnCallIfElse");
     }
 
     const Rlist *arg;
-Log(LOG_LEVEL_WARNING, "CRAIG finalargs=%p", finalargs);
+Log(LOG_LEVEL_DEBUG, "CRAIG finalargs=%p", finalargs);
     for (arg = finalargs;        /* Start with arg set to finalargs. */
          arg && arg->next;       /* We must have arg and arg->next to proceed. */
          arg = arg->next->next)  /* arg steps forward *twice* every time. */
     {
-Log(LOG_LEVEL_WARNING, "CRAIG, LOOP, arg=%p", arg);
-if (arg) { Log(LOG_LEVEL_WARNING, "CRAIG, LOOP, arg->next=%p", arg->next); }
-if (arg && arg->next) { Log(LOG_LEVEL_WARNING, "CRAIG, LOOP, arg->next->next=%p", arg->next->next); }
+Log(LOG_LEVEL_DEBUG, "CRAIG, LOOP, arg=%p", arg);
+if (arg) { Log(LOG_LEVEL_DEBUG, "CRAIG, LOOP, arg->next=%p", arg->next); }
+if (arg && arg->next) { Log(LOG_LEVEL_DEBUG, "CRAIG, LOOP, arg->next->next=%p", arg->next->next); }
         /* Similar to classmatch(), we evaluate the first of the two
          * arguments as a class. */
         if (IsDefinedClass(ctx, RlistScalarValue(arg)))
@@ -1256,15 +1256,15 @@ if (arg && arg->next) { Log(LOG_LEVEL_WARNING, "CRAIG, LOOP, arg->next->next=%p"
             /* If the evaluation returned true in the current context,
              * return the second of the two arguments. */
 /* CRAIG, DARN, this seems to NOT be the place that is evaluated/used for this issue */
-            Log(LOG_LEVEL_WARNING, "CRAIG arg->next is %p", arg->next);
-            Log(LOG_LEVEL_WARNING, "CRAIG RlistScalarValue(arg->next) is '%s'", RlistScalarValue(arg->next));
+            Log(LOG_LEVEL_DEBUG, "CRAIG arg->next is %p", arg->next);
+            Log(LOG_LEVEL_DEBUG, "CRAIG RlistScalarValue(arg->next) is '%s'", RlistScalarValue(arg->next));
             FnCallResult res = FnReturn(RlistScalarValue(arg->next));
-            Log(LOG_LEVEL_WARNING, "CRAIG FnCallResult status is '%d'", res.status);
+            Log(LOG_LEVEL_DEBUG, "CRAIG FnCallResult status is '%d'", res.status);
             return FnReturn(RlistScalarValue(arg->next));
         }
     }
 
-Log(LOG_LEVEL_WARNING, "CRAIG default fallback value being used");
+Log(LOG_LEVEL_DEBUG, "CRAIG default fallback value being used");
     /* If we get here, we've reached the last argument (arg->next is NULL). */
     return FnReturn(RlistScalarValue(arg));
 }

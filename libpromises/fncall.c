@@ -354,15 +354,15 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, const Policy *policy, FnCall *fp, 
     {
         // Special case: ifelse(isvariable("x"), $(x), "default")
         // (the first argument will come down expanded as "!any")
-Log(LOG_LEVEL_WARNING, "CRAIG deciding whether to evaluate function: %s", fncall_string);
-Log(LOG_LEVEL_WARNING, "CRAIG fp->name is '%s'", fp->name);
-Log(LOG_LEVEL_WARNING, "CRAIG RlistLen(expargs) is %d", RlistLen(expargs));
-Log(LOG_LEVEL_WARNING, "CRAIG RlistScalarValueSafe(expargs) is '%s'", RlistScalarValueSafe(expargs));
-Log(LOG_LEVEL_WARNING, "CRAIG expargs->next is %p", expargs->next);
+Log(LOG_LEVEL_DEBUG, "CRAIG deciding whether to evaluate function: %s", fncall_string);
+Log(LOG_LEVEL_DEBUG, "CRAIG fp->name is '%s'", fp->name);
+Log(LOG_LEVEL_DEBUG, "CRAIG RlistLen(expargs) is %d", RlistLen(expargs));
+Log(LOG_LEVEL_DEBUG, "CRAIG RlistScalarValueSafe(expargs) is '%s'", RlistScalarValueSafe(expargs));
+Log(LOG_LEVEL_DEBUG, "CRAIG expargs->next is %p", expargs->next);
 if (expargs->next != NULL)
 {
-  Log(LOG_LEVEL_WARNING, "CRAIG expargs->next->next is %p", expargs->next->next);
-  Log(LOG_LEVEL_WARNING, "CRAIG RlistIsUnresolved(expargs->next->next) is %d", RlistIsUnresolved(expargs->next->next));
+  Log(LOG_LEVEL_DEBUG, "CRAIG expargs->next->next is %p", expargs->next->next);
+  Log(LOG_LEVEL_DEBUG, "CRAIG RlistIsUnresolved(expargs->next->next) is %d", RlistIsUnresolved(expargs->next->next));
 }
 #if 1
         if (strcmp(fp->name, "ifelse") == 0 &&
@@ -370,14 +370,14 @@ if (expargs->next != NULL)
             strcmp("!any", RlistScalarValueSafe(expargs)) == 0 &&
             !RlistIsUnresolved(expargs->next->next))
         {
-Log(LOG_LEVEL_WARNING, "CRAIG ALLOWING IFELSE EVEN THOUGH ARGS CONTAIN UNRESOLVED VARS");
+Log(LOG_LEVEL_DEBUG, "CRAIG ALLOWING IFELSE EVEN THOUGH ARGS CONTAIN UNRESOLVED VARS");
                 Log(LOG_LEVEL_DEBUG, "Allowing ifelse() function evaluation even"
                     " though its arguments contain unresolved variables: %s",
                     fncall_string);
         }
         else
         {
-Log(LOG_LEVEL_WARNING, "CRAIG SKIPPING FUNCTION EVAL FOR NOW, ARGS CONTAIN UNRESOLVED VARS");
+Log(LOG_LEVEL_DEBUG, "CRAIG SKIPPING FUNCTION EVAL FOR NOW, ARGS CONTAIN UNRESOLVED VARS");
             if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG)
             {
                 Log(LOG_LEVEL_DEBUG, "Skipping function evaluation for now,"
@@ -391,7 +391,7 @@ Log(LOG_LEVEL_WARNING, "CRAIG SKIPPING FUNCTION EVAL FOR NOW, ARGS CONTAIN UNRES
 #endif // ifdef 0 - skip checks for unresolved?
     }
 
-Log(LOG_LEVEL_WARNING, "CRAIG evaluating function: %s", fncall_string);
+Log(LOG_LEVEL_DEBUG, "CRAIG evaluating function: %s", fncall_string);
 
     Rval cached_rval;
     if ((fp_type->options & FNCALL_OPTION_CACHED) && EvalContextFunctionCacheGet(ctx, fp, expargs, &cached_rval))
@@ -408,7 +408,7 @@ Log(LOG_LEVEL_WARNING, "CRAIG evaluating function: %s", fncall_string);
         WriterClose(w);
         RlistDestroy(expargs);
 
-Log(LOG_LEVEL_WARNING, "CRAIG returning FNCALL_SUCCESS line 411");
+Log(LOG_LEVEL_DEBUG, "CRAIG returning FNCALL_SUCCESS line 411");
         return (FnCallResult) { FNCALL_SUCCESS, RvalCopy(cached_rval) };
     }
 
@@ -425,7 +425,7 @@ Log(LOG_LEVEL_WARNING, "CRAIG returning FNCALL_SUCCESS line 411");
     {
         RlistDestroy(expargs);
         RvalDestroy(result.rval);
-Log(LOG_LEVEL_WARNING, "CRAIG return FNCALL_FAILURE at 428, result.status was that");
+Log(LOG_LEVEL_DEBUG, "CRAIG return FNCALL_FAILURE at 428, result.status was that");
         return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };
     }
 
@@ -441,7 +441,7 @@ Log(LOG_LEVEL_WARNING, "CRAIG return FNCALL_FAILURE at 428, result.status was th
 
     RlistDestroy(expargs);
 
-Log(LOG_LEVEL_WARNING, "CRAIG returning result at end of function");
+Log(LOG_LEVEL_DEBUG, "CRAIG returning result at end of function");
     return result;
 }
 

@@ -517,7 +517,7 @@ static char *ProcessVar(PromiseIterator *iterctx, const EvalContext *evalctx,
 {
     assert(s != NULL);
     assert(c == '(' || c == '{');
-Log(LOG_LEVEL_WARNING, "ProcessVar() s is '%s'", s);
+Log(LOG_LEVEL_DEBUG, "CRAIG, ProcessVar() s is '%s'", s);
 
     char *s_end = FindClosingParen(s, c);
     const size_t s_max = strlen(s);

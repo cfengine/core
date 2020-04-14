@@ -219,11 +219,11 @@ Log(LOG_LEVEL_WARNING, "ACTUAL WORK PART 1: get a(nother) copy of the promise");
 Log(LOG_LEVEL_WARNING, "ACTUAL WORK PART 2: run the actuator");
         /* ACTUAL WORK PART 2: run the actuator */
         PromiseResult iteration_result = act_on_promise(ctx, pexp, param);
-Log(LOG_LEVEL_WARNING, "act_on_promise(ctx, pexp, param) => %p", iteration_result);
+Log(LOG_LEVEL_WARNING, "act_on_promise(ctx, pexp, param) => %p", (void *)iteration_result);
 
         /* iteration_result is always NOOP for PRE-EVAL. */
         result = PromiseResultUpdate(result, iteration_result);
-Log(LOG_LEVEL_WARNING, "PromiseResultUpdate() => %p", result);
+Log(LOG_LEVEL_WARNING, "PromiseResultUpdate() => %p", (void *)result);
 
         /* Redmine#6484: Do not store promise handles during PRE-EVAL, to
          *               avoid package promise always running. */

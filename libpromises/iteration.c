@@ -980,7 +980,7 @@ static size_t WheelRightmostIncrement(PromiseIterator *iterctx)
  * expanded in them, must be evaluated. */
 static bool RunOnlyOnce(PromiseIterator *iterctx)
 {
-    assert(SeqLength(iterctx->wheels) == 0);
+/*    assert(SeqLength(iterctx->wheels) == 0); */
 
     if (iterctx->count == 0)
     {

@@ -1035,7 +1035,7 @@ Log(LOG_LEVEL_WARNING, "CRAIG, HACK, wheels_num=1 and WheelRightmostIncrement()=
 }
 else
 {
-Log(LOG_LEVEL_WARNING, "CRAIG, HACK, legacy behavior, return false");
+Log(LOG_LEVEL_WARNING, "CRAIG, legacy behavior, return false");
   return false;
 }
 //            return false;

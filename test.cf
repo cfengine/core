@@ -1,11 +1,15 @@
 bundle agent main
 {
+  classes:
+    "lessthan" expression => islessthan("0","1");
+    "lessthan_with_fn" expression => islessthan(length("foobar"),"1");
   vars:
     "x" string => "this-is-x";
     "y" string => "this-is-y";
     "baz" string => "$(x)-$(y)";
     "foo" string => ifelse( isvariable( "missing" ), "$(missing)", "FALLBACK");
     "bar" string => ifelse( isvariable( "missing" ), "$($(missing))", "FALLBACK");
+
   reports:
     "baz is $(baz)";
     "foo is $(foo)";

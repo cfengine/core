@@ -200,7 +200,7 @@ Log(LOG_LEVEL_DEBUG, "CRAIG, ExpandPromiseAndDo(), ENTER <===");
      *      act_on_promise is CommonEvalPromise(). */
     while (PromiseIteratorNext(iterctx, ctx))
     {
-Log(LOG_LEVEL_WARNING, "ACTUAL WORK PART 1: get a(nother) copy of the promise");
+Log(LOG_LEVEL_DEBUG, "CRAIG, ACTUAL WORK PART 1: get a(nother) copy of the promise");
         /*
          * ACTUAL WORK PART 1: Get a (another) copy of the promise.
          *
@@ -216,14 +216,14 @@ Log(LOG_LEVEL_WARNING, "ACTUAL WORK PART 1: get a(nother) copy of the promise");
             continue;
         }
 
-Log(LOG_LEVEL_WARNING, "ACTUAL WORK PART 2: run the actuator");
+Log(LOG_LEVEL_DEBUG, "CRAIG, ACTUAL WORK PART 2: run the actuator");
         /* ACTUAL WORK PART 2: run the actuator */
         PromiseResult iteration_result = act_on_promise(ctx, pexp, param);
-Log(LOG_LEVEL_WARNING, "act_on_promise(ctx, pexp, param) => %p", (void *)iteration_result);
+Log(LOG_LEVEL_DEBUG, "CRAIG, act_on_promise(ctx, pexp, param) => %p", (void *)iteration_result);
 
         /* iteration_result is always NOOP for PRE-EVAL. */
         result = PromiseResultUpdate(result, iteration_result);
-Log(LOG_LEVEL_WARNING, "PromiseResultUpdate() => %p", (void *)result);
+Log(LOG_LEVEL_DEBUG, "CRAIG, PromiseResultUpdate() => %p", (void *)result);
 
         /* Redmine#6484: Do not store promise handles during PRE-EVAL, to
          *               avoid package promise always running. */
@@ -234,7 +234,7 @@ Log(LOG_LEVEL_DEBUG, "CRAIG yep, so NotifyDependentPromises()");
             NotifyDependantPromises(ctx, pexp, iteration_result);
         }
 
-Log(LOG_LEVEL_WARNING, "EVALUATE VARS PROMISES again");
+Log(LOG_LEVEL_DEBUG, "CRAIG, EVALUATE VARS PROMISES again");
         /* EVALUATE VARS PROMISES again, allowing redefinition of
          * variables. The theory behind this is that the "sampling rate" of
          * vars promise needs to be double than the rest. */

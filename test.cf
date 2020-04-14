@@ -1,9 +1,13 @@
 bundle agent main
 {
   vars:
+    "x" string => "this-is-x";
+    "y" string => "this-is-y";
+    "baz" string => "$(x)-$(y)";
     "foo" string => ifelse( isvariable( "missing" ), "$(missing)", "FALLBACK");
     "bar" string => ifelse( isvariable( "missing" ), "$($(missing))", "FALLBACK");
   reports:
+    "baz is $(baz)";
     "foo is $(foo)";
     "bar is $(bar)";
 }

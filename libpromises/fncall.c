@@ -364,7 +364,7 @@ if (expargs->next != NULL)
   Log(LOG_LEVEL_WARNING, "CRAIG expargs->next->next is %p", expargs->next->next);
   Log(LOG_LEVEL_WARNING, "CRAIG RlistIsUnresolved(expargs->next->next) is %d", RlistIsUnresolved(expargs->next->next));
 }
-#if 0
+#if 1
         if (strcmp(fp->name, "ifelse") == 0 &&
             RlistLen(expargs) == 3 &&
             strcmp("!any", RlistScalarValueSafe(expargs)) == 0 &&

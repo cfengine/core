@@ -140,7 +140,7 @@ qstring        \"((\\(.|\n))|[^"\\])*\"|\'((\\(.|\n))|[^'\\])*\'|`[^`]*`
 class          [.|&!()a-zA-Z0-9_\200-\377:][\t .|&!()a-zA-Z0-9_\200-\377:]*::
 varclass       (\"[^"\0]*\"|\'[^'\0]*\')::
 
-promise_type   [a-zA-Z_]+:
+promise_guard  [a-zA-Z_]+:
 
 %%
 {eat_line}             {
@@ -596,12 +596,12 @@ promise_type   [a-zA-Z_]+:
                           return CLASS;
                       }
 
-{promise_type}        {
+{promise_guard}       {
                           char *tmp = NULL;
 
                           P.line_pos += yyleng;
-                          ParserDebug("\tL:promise_type %s %d\n", yytext, P.line_pos);
-                          P.offsets.last_promise_type_id = P.offsets.current - yyleng;
+                          ParserDebug("\tL:promise_guard %s %d\n", yytext, P.line_pos);
+                          P.offsets.last_promise_guard_id = P.offsets.current - yyleng;
 
                           tmp = xstrdup(yytext);
                           tmp[yyleng - 1] = '\0';
@@ -620,7 +620,7 @@ promise_type   [a-zA-Z_]+:
                           }
 
                           free(tmp);
-                          return PROMISE_TYPE;
+                          return PROMISE_GUARD;
                       }
 
 {qstring}             {

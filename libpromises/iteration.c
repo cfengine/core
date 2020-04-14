@@ -637,9 +637,9 @@ void PromiseIteratorPrepare(PromiseIterator *iterctx,
                             const EvalContext *evalctx,
                             char *s)
 {
-Log(LOG_LEVEL_WARNING, "CRAIG, PromiseIteratorPrepare(), s is '%s'");
     assert(s != NULL);
     LogDebug(LOG_MOD_ITERATIONS, "PromiseIteratorPrepare(\"%s\")", s);
+Log(LOG_LEVEL_WARNING, "CRAIG, PromiseIteratorPrepare(), s is '%s'", s);
     const size_t s_len = strlen(s);
     const size_t offset = FindDollarParen(s, s_len);
 

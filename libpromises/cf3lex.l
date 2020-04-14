@@ -604,7 +604,11 @@ promise_guard  [a-zA-Z_]+:
                           P.offsets.last_promise_guard_id = P.offsets.current - yyleng;
 
                           tmp = xstrdup(yytext);
-                          tmp[yyleng - 1] = '\0';
+                          assert(tmp[yyleng - 1] == ':');
+                          tmp[yyleng - 1] = '\0'; // Exclude trailing colon in promise guard
+                          assert(strlen(tmp) > 0);
+                          assert(tmp[strlen(tmp) - 1] != ':');
+
                           strncpy(P.currenttype, tmp, CF_MAXVARSIZE);
 
                           if (P.currentclasses != NULL)

@@ -1028,7 +1028,7 @@ Log(LOG_LEVEL_WARNING, "CRAIG, PromiseIteratorNext(), WheelRightmostIncrement() 
 Log(LOG_LEVEL_WARNING, "CRAIG, PromiseIteratorNext(), all combinations have been tried, exiting");
             Log(LOG_LEVEL_DEBUG, "Iteration engine finished"
                 "   ---   WARPING OUT");
-#if 1
+#if 0
             return false;
 #else
 if (wheels_num == 1 && i == -1)

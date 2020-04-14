@@ -12,4 +12,4 @@ destroy-vms:
 
 EXTRA_DIST = Vagrantfile Makefile.in
 
-CLEANFILES = Makefile.in
+MAINTAINERCLEANFILES = Makefile.in

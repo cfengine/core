@@ -20,6 +20,8 @@ bundle agent init
 
 bundle agent test
 {
+  meta:
+      "test_skip_unsupported" string => "pureos";  # reports as debian but /etc/issue has no information, rather it is in /etc/os-release
   vars:
     debian::
       "myflavor" string => execresult("/bin/grep Debian.*GNU /etc/issue | /usr/bin/cut -d' ' -f3 | cut -d. -f1 | cut -d/ -f1", "useshell");

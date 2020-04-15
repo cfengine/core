@@ -830,10 +830,12 @@ static void ExpandAndPutWheelVariablesAfter(
                                            NULL,
                                            wheel->varname_unexp, tmpbuf);
 
+Log(LOG_LEVEL_DEBUG, "CRAIG, varname is '%s', wheel->varname_exp is '%s'", varname, wheel->varname_exp);
         /* If it expanded to something different than before. */
         if (wheel->varname_exp == NULL
             || strcmp(varname, wheel->varname_exp) != 0)
         {
+Log(LOG_LEVEL_DEBUG, "CRAIG, it expanded to something different than before");
             free(wheel->varname_exp);                      /* could be NULL */
             wheel->varname_exp = xstrdup(varname);
 
@@ -903,6 +905,7 @@ static void ExpandAndPutWheelVariablesAfter(
         }
         else                 /* The variable name expanded to the same name */
         {
+Log(LOG_LEVEL_DEBUG, "CRAIG, variable name expanded to the same name");
             /* speedup: the variable name expanded to the same name, so the
              * value is the same and wheel->values is already correct. So if
              * it's an iterable, we VariablePut() the first element. */

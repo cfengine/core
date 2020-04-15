@@ -575,15 +575,20 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
     assert(pp->promiser != NULL);
     assert(pp->classes != NULL);
     assert(excluded != NULL);
+Log(LOG_LEVEL_DEBUG, "CRAIG, ExpandDeRefPromise, promiser is '%s'", pp->promiser);
 
     *excluded = false;
 
     Rval returnval = ExpandPrivateRval(ctx, NULL, "this", pp->promiser, RVAL_TYPE_SCALAR);
     if (returnval.item == NULL)
     {
+Log(LOG_LEVEL_DEBUG, "CRAIG, returnval.item is NULL");
+
+
         assert(returnval.type == RVAL_TYPE_LIST ||
                returnval.type == RVAL_TYPE_NOPROMISEE);
         /* TODO Log() empty slist, promise skipped? */
+Log(LOG_LEVEL_DEBUG, "CRAIG, log empty slist, promise skipped?");
         *excluded = true;
         return NULL;
     }

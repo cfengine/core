@@ -1495,6 +1495,7 @@ Log(LOG_LEVEL_DEBUG, "CRAIG, EvalContextStackPushPromiseIterationFrame()");
     bool excluded;
     Promise *pexp = ExpandDeRefPromise(ctx, last_frame->data.promise.owner,
                                        &excluded);
+Log(LOG_LEVEL_DEBUG, "CRAIG, ExpandDeRefPromise() returned pexp = %p and excluded = %d", pexp, excluded);
     if (excluded || !pexp)
     {
         PromiseDestroy(pexp);

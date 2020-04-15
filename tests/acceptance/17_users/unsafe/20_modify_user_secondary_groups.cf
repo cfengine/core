@@ -7,16 +7,16 @@ body common control
 bundle agent init
 {
   commands:
-    "/usr/bin/sudo $(user_tests.pw_path) userdel testu";
-    "/usr/bin/sudo $(user_tests.pw_path) delgroup testu";
-    "/usr/bin/sudo $(user_tests.pw_path) delgroup testg1";
-    "/usr/bin/sudo $(user_tests.pw_path) delgroup testg2";
-    "/usr/bin/sudo $(user_tests.pw_path) groupadd testg1";
-    "/usr/bin/sudo $(user_tests.pw_path) useradd testu";
+    "$(G.sudo) $(user_tests.pw_path) $(G.userdel) testu";
+    "$(G.sudo) $(user_tests.pw_path) $(G.groupdel) testu";
+    "$(G.sudo) $(user_tests.pw_path) $(G.groupdel) testg1";
+    "$(G.sudo) $(user_tests.pw_path) $(G.groupdel) testg2";
+    "$(G.sudo) $(user_tests.pw_path) $(G.groupadd) testg1";
+    "$(G.sudo) $(user_tests.pw_path) $(G.useradd) testu";
     freebsd::
-      "/usr/bin/sudo $(user_tests.pw_path) usermod testu --groups testg1 --append";
+      "$(G.sudo) $(user_tests.pw_path) $(G.usermod) testu -G testg1";
     !freebsd::
-      "/usr/bin/sudo $(user_tests.pw_path) usermod --groups testg1 --append testu";
+      "$(G.sudo) $(user_tests.pw_path) $(G.usermod) -G testg1 testu";
 }
 
 bundle agent test

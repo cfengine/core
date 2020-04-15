@@ -14,33 +14,38 @@ body common control
 }
 
 #######################################################
-
-bundle agent init
-{
-}
-
 #######################################################
 
 bundle agent test
 {
+  meta:
+
+      "description" -> { "CFE-270" }
+        string => "Test that classic templating does not insert extra newlines";
+
+      "test_soft_fail" -> { "CFE-270" }
+        string => "any",
+        meta => { "CFE-270" };
+
+
   files:
       "$(G.testfile).expected"
-      copy_from => local_cp("$(this.promise_filename).expected");
+      copy_from => my_local_cp("$(this.promise_filename).expected");
 
       "$(G.testfile).actual"
           create => "true",
-   edit_defaults => init_empty,
+   edit_defaults => my_init_empty,
    edit_template => "$(this.promise_filename).template";
 }
 
 #######################################################
 
-body copy_from local_cp(from)
+body copy_from my_local_cp(from)
 {
       source      => "$(from)";
 }
 
-body edit_defaults init_empty
+body edit_defaults my_init_empty
 {
       empty_file_before_editing => "true";
 }

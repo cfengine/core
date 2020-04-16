@@ -238,7 +238,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
         case 'h':
             {
                 Writer *w = FileWriter(stdout);
-                WriterWriteHelp(w, "cf-serverd", OPTIONS, HINTS, true, NULL);
+                WriterWriteHelp(w, "cf-serverd", OPTIONS, HINTS, NULL, false, true);
                 FileWriterDetach(w);
             }
             DoCleanupAndExit(EXIT_SUCCESS);
@@ -250,6 +250,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
                              CF_SERVERD_SHORT_DESCRIPTION,
                              CF_SERVERD_MANPAGE_LONG_DESCRIPTION,
                              OPTIONS, HINTS,
+                             NULL, false,
                              true);
                 FileWriterDetach(out);
                 DoCleanupAndExit(EXIT_SUCCESS);
@@ -287,7 +288,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
         default:
             {
                 Writer *w = FileWriter(stdout);
-                WriterWriteHelp(w, "cf-serverd", OPTIONS, HINTS, true, NULL);
+                WriterWriteHelp(w, "cf-serverd", OPTIONS, HINTS, NULL, false, true);
                 FileWriterDetach(w);
             }
             DoCleanupAndExit(EXIT_FAILURE);

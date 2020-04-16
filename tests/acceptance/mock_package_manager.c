@@ -444,7 +444,7 @@ int main(int argc, char *argv[])
         default:
             {
                 Writer *w = FileWriter(stdout);
-                WriterWriteHelp(w, "mock-package-manager - pretend that you are managing packages!", OPTIONS, HINTS, false, NULL);
+                WriterWriteHelp(w, "mock-package-manager - pretend that you are managing packages!", OPTIONS, HINTS, NULL, false, false);
                 FileWriterDetach(w);
             }
             exit(EXIT_FAILURE);

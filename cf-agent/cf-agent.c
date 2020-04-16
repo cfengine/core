@@ -524,7 +524,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         case 'h':
             {
                 Writer *w = FileWriter(stdout);
-                WriterWriteHelp(w, "cf-agent", OPTIONS, HINTS, true, NULL);
+                WriterWriteHelp(w, "cf-agent", OPTIONS, HINTS, NULL, false, true);
                 FileWriterDetach(w);
             }
             DoCleanupAndExit(EXIT_SUCCESS);
@@ -536,6 +536,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                              CF_AGENT_SHORT_DESCRIPTION,
                              CF_AGENT_MANPAGE_LONG_DESCRIPTION,
                              OPTIONS, HINTS,
+                             NULL, false,
                              true);
                 FileWriterDetach(out);
                 DoCleanupAndExit(EXIT_SUCCESS);
@@ -648,7 +649,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         default:
             {
                 Writer *w = FileWriter(stdout);
-                WriterWriteHelp(w, "cf-agent", OPTIONS, HINTS, true, NULL);
+                WriterWriteHelp(w, "cf-agent", OPTIONS, HINTS, NULL, false, true);
                 FileWriterDetach(w);
             }
             DoCleanupAndExit(EXIT_FAILURE);

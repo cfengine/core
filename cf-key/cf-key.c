@@ -247,7 +247,7 @@ int main(int argc, char *argv[])
 static void PrintHelp()
 {
     Writer *w = FileWriter(stdout);
-    WriterWriteHelp(w, "cf-key", OPTIONS, HINTS, false, NULL);
+    WriterWriteHelp(w, "cf-key", OPTIONS, HINTS, NULL, false, false);
     FileWriterDetach(w);
 }
 
@@ -336,6 +336,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                              CF_KEY_SHORT_DESCRIPTION,
                              CF_KEY_MANPAGE_LONG_DESCRIPTION,
                              OPTIONS, HINTS,
+                             NULL, false,
                              false);
                 FileWriterDetach(out);
                 DoCleanupAndExit(EXIT_SUCCESS);

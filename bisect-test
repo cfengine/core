@@ -1,0 +1,7 @@
+set -e
+set -x
+make clean
+autoreconf -f -i
+./autogen.sh --enable-debug && make -j16
+sudo make install
+sudo cf-agent/cf-agent -KIf ./test3.cf

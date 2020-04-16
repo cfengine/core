@@ -1,12 +1,12 @@
-# cf-keycrypt
+# cf-secret
 
-*cf-keycrypt* is a utility for encrypting sensitive data for use on
+*cf-secret* is a utility for encrypting sensitive data for use on
 CFEngine-managed hosts. It is using the existing CFEngine key pairs for strong
 cryptography based on the combination of RSA and AES ciphers.
 
 ## File format
 
-The file format used by *cf-keycrypt* has the following schema:
+The file format used by *cf-secret* has the following schema:
 
 ```
   ------------
@@ -52,5 +52,5 @@ The `AES key` is a randomly generated AES key encrypted by RSA public keys and
 each encrypted `AES key` block is as long as the RSA public key, currently 256
 bytes (2048 bits).
 
-The future versions of *cf-keycrypt* are expected to support more headers and
+The future versions of *cf-secret* are expected to support more headers and
 varying key sizes.

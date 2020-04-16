@@ -21,7 +21,7 @@
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
 #
-noinst_LTLIBRARIES = libcf-keycrypt.la
+noinst_LTLIBRARIES = libcf-secret.la
 
 AM_CPPFLAGS = -I$(srcdir)/../libpromises -I$(srcdir)/../libntech/libutils \
 	-I$(srcdir)/../libcfnet \
@@ -33,14 +33,14 @@ AM_CFLAGS = @CFLAGS@ \
 	$(OPENSSL_CFLAGS) \
 	$(ENTERPRISE_CFLAGS)
 
-libcf_keycrypt_la_LIBADD = ../libpromises/libpromises.la
+libcf_secret_la_LIBADD = ../libpromises/libpromises.la
 
-libcf_keycrypt_la_SOURCES = cf-keycrypt.c
+libcf_secret_la_SOURCES = cf-secret.c
 
 if !BUILTIN_EXTENSIONS
- bin_PROGRAMS = cf-keycrypt
- cf_keycrypt_LDADD = libcf-keycrypt.la
- cf_keycrypt_SOURCES =
+ bin_PROGRAMS = cf-secret
+ cf_secret_LDADD = libcf-secret.la
+ cf_secret_SOURCES =
 endif
 
 CLEANFILES = *.gcno *.gcda

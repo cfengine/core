@@ -809,6 +809,7 @@ static void ExpandAndPutWheelVariablesAfter(
     EvalContext *evalctx,
     size_t wheel_idx)
 {
+Log(LOG_LEVEL_DEBUG, "CRAIG, ExpandAndPutWheelVariablesAfter()");
     /* Buffer to store the expanded wheel variable name, for each wheel. */
     Buffer *tmpbuf = BufferNew();
 
@@ -924,6 +925,7 @@ Log(LOG_LEVEL_DEBUG, "CRAIG, variable name expanded to the same name");
 
 static bool IteratorHasEmptyWheel(const PromiseIterator *iterctx)
 {
+Log(LOG_LEVEL_DEBUG, "CRAIG, IteratorHasEmptyWheel()");
     size_t wheels_num = SeqLength(iterctx->wheels);
     for (size_t i = 0; i < wheels_num; i++)
     {
@@ -932,6 +934,7 @@ static bool IteratorHasEmptyWheel(const PromiseIterator *iterctx)
 
         if (VarIsSpecial(wheel->varname_unexp))       /* TODO this is ugly! */
         {
+Log(LOG_LEVEL_DEBUG, "CRAIG, wheel->varname_unexp is '%s', VarIsSpecial() so return false", wheel->varname_unexp);
             return false;
         }
 
@@ -941,10 +944,12 @@ static bool IteratorHasEmptyWheel(const PromiseIterator *iterctx)
             ||
             wheel->vartype == CF_DATA_TYPE_NONE)
         {
+Log(LOG_LEVEL_DEBUG, "CRAIG, variable resolves to empty iterable or did not resolve, returning true");
             return true;
         }
     }
 
+Log(LOG_LEVEL_DEBUG, "CRAIG, default case, return false");
     return false;
 }
 
@@ -1020,6 +1025,7 @@ Log(LOG_LEVEL_DEBUG, "CRAIG, PromiseIteratorNext(), first iteration: we initiali
         ExpandAndPutWheelVariablesAfter(iterctx, evalctx, 0);
 
         done = ! IteratorHasEmptyWheel(iterctx);
+Log(LOG_LEVEL_DEBUG, "CRAIG, first iteration, after ExpandAndPutWheelVariablesAfter(), done = %d", done);
     }
 
     while (!done)
@@ -1034,16 +1040,16 @@ Log(LOG_LEVEL_DEBUG, "CRAIG, PromiseIteratorNext(), all combinations have been t
 #if 0
             return false;
 #else
-if (wheels_num == 1 && i == -1)
-{
-Log(LOG_LEVEL_DEBUG, "CRAIG, HACK, wheels_num=1 and WheelRightmostIncrement()=-1 so RunOnlyOnce()");
-  return RunOnlyOnce(iterctx);
-}
-else
-{
-Log(LOG_LEVEL_DEBUG, "CRAIG, legacy behavior, return false");
-  return false;
-}
+            if (wheels_num == 1 && i == -1)
+            {
+            Log(LOG_LEVEL_DEBUG, "CRAIG, HACK, wheels_num=1 and WheelRightmostIncrement()=-1 so RunOnlyOnce()");
+              return RunOnlyOnce(iterctx);
+            }
+            else
+            {
+            Log(LOG_LEVEL_DEBUG, "CRAIG, legacy behavior, return false");
+              return false;
+            }
 #endif
         }
 

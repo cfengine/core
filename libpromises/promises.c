@@ -471,22 +471,26 @@ static void AddDefaultBodiesToPromise(EvalContext *ctx, Promise *promise, const 
 
 static bool EvaluateConstraintIteration(EvalContext *ctx, const Constraint *cp, Rval *rval_out)
 {
+Log(LOG_LEVEL_DEBUG, "CRAIG, EvaluateConstraintIteration");
     assert(cp->type == POLICY_ELEMENT_TYPE_PROMISE);
     const Promise *pp = cp->parent.promise;
 
     if (!IsDefinedClass(ctx, cp->classes))
     {
+Log(LOG_LEVEL_DEBUG, "CRAIG, IsDefinedClass(ctx, cp->classes) is false so return false");
         return false;
     }
 
     if (ExpectedDataType(cp->lval) == CF_DATA_TYPE_BUNDLE)
     {
         *rval_out = ExpandBundleReference(ctx, NULL, "this", cp->rval);
+Log(LOG_LEVEL_DEBUG, "CRAIG, CF_DATA_TYPE_BUNDLE, rval_out = %p", rval_out);
     }
     else
     {
         *rval_out = EvaluateFinalRval(ctx, PromiseGetPolicy(pp), NULL,
                                       "this", cp->rval, false, pp);
+Log(LOG_LEVEL_DEBUG, "CRAIG, NOT CF_DATA_TYPE_BUNDLE, rval_out = %p", rval_out);
     }
 
     return true;

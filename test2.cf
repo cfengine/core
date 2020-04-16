@@ -1,0 +1,9 @@
+bundle agent main
+{
+  vars:
+    "array" string => "zero";
+    "keys" slist => getindices("array");
+  reports:
+    "keys is $(keys)";
+# I want the above to NOT print out at all because $(keys) is unresolved
+}

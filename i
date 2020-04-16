@@ -7,8 +7,10 @@ make -j16
 #make -C tests/unit expand_test && tests/unit/expand_test
 
 # TEST PHASE
-scp test3.cf debian10:
-ssh debian10 sudo /var/cfengine/bin/cf-agent -KIf ./test3.cf
+cf-agent/cf-agent -K --debug -f ./test4.cf | tee log
+#cf-agent/cf-agent -K --debug -f ./test3.cf | tee log
+#scp test3.cf debian10:
+#ssh debian10 sudo /var/cfengine/bin/cf-agent -KIf ./test3.cf
 #cf-agent/cf-agent -K --debug -f ./test2.cf | tee log
 #cf-agent/cf-agent -K --debug -f ./test.cf | tee log
 #cf-agent/cf-agent -KIf ./defined.cf

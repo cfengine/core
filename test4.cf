@@ -1,0 +1,12 @@
+bundle agent main
+{
+  vars:
+    "foo" string => ifelse( isvariable( "missing" ), "$(missing)", "FALLBACK");
+    "bar" string => ifelse( isvariable( "missing" ), "$($(missing))", "FALLBACK");
+    "array" string => "zero";
+    "keys" slist => getindices("array");
+  reports:
+    "foo is $(foo)";
+    "bar is $(bar)";
+    "keys is $(keys)";
+}

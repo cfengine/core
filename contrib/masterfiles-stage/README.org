@@ -68,7 +68,7 @@ are pre-installed when using CFEngine Enterprise.
 
 #+Caption: Install masterfiles-stage
 #+BEGIN_SRC sh :exports code
-  wget https://raw.githubusercontent.com/cfengine/core/master/contrib/masterfiles-stage/install-masterfiles-stage.sh
+  curl --silent https://raw.githubusercontent.com/cfengine/core/master/contrib/masterfiles-stage/install-masterfiles-stage.sh --remote-name
   chmod +x install-masterfiles-stage.sh
   ./install-masterfiles-stage.sh
 #+END_SRC
@@ -76,14 +76,14 @@ are pre-installed when using CFEngine Enterprise.
 #+Name: masterfiles-stage.sh
 #+BEGIN_SRC sh :tangle ./install-masterfiles-stage.sh :exports none
   #!/bin/env bash
-  SRC_DIR="https://raw.githubusercontent.com/cfengine/core/master/contrib/masterfiles-stage/"
+  SRC_DIR="https://raw.githubusercontent.com/cfengine/core/master/contrib/masterfiles-stage"
   DC_SCRIPTS_DIR=$(/var/cfengine/bin/cf-promises --file update.cf --show-vars=dc_scripts | awk '/update_def\.dc_scripts/ {print $2}')
   DEFAULT_PARAMS_FILE="/opt/cfengine/dc-scripts/params.sh"
   mkdir -p ${DC_SCRIPTS_DIR}
   mkdir -p $(dirname ${DEFAULT_PARAMS_FILE})
-  wget ${SRC_DIR}/masterfiles-stage.sh --output-document ${DC_SCRIPTS_DIR}/masterfiles-stage.sh
-  wget ${SRC_DIR}/common.sh --output-document ${DC_SCRIPTS_DIR}/common.sh
-  wget ${SRC_DIR}/example_params/PARAMS_example_git_branch.sh --output-document ${DEFAULT_PARAMS_FILE}
+  curl --silent ${SRC_DIR}/masterfiles-stage.sh --output ${DC_SCRIPTS_DIR}/masterfiles-stage.sh
+  curl --silent ${SRC_DIR}/common.sh --output ${DC_SCRIPTS_DIR}/common.sh
+  curl --silent ${SRC_DIR}/example_params/PARAMS_example_git_branch.sh --output ${DEFAULT_PARAMS_FILE}
   chown root:root ${DC_SCRIPTS_DIR}/masterfiles-stage.sh ${DC_SCRIPTS_DIR}/common.sh ${DEFAULT_PARAMS_FILE}
   chmod 500 ${DC_SCRIPTS_DIR}/masterfiles-stage.sh
   chmod 400 ${DC_SCRIPTS_DIR}/common.sh
@@ -102,14 +102,14 @@ You may experience issues trying to use the old versions of various dependencies
 
 #+CAPTION: fatal: HTTP request failed
 #+begin_example
-[root@hub vagrant]# ${DC_SCRIPTS_DIR}/masterfiles-stage.sh  --DEBUG
-Option Deploy Dir: /var/cfengine/masterfiles
-Option Params File: /opt/cfengine/dc-scripts/params.sh
-Initialized empty Git repository in /opt/cfengine/https___gitlab.com_nickanderson_masterfiles-vcs/
-error:  while accessing https://gitlab.com/nickanderson/masterfiles-vcs/info/refs
+  [root@hub vagrant]# ${DC_SCRIPTS_DIR}/masterfiles-stage.sh  --DEBUG
+  Option Deploy Dir: /var/cfengine/masterfiles
+  Option Params File: /opt/cfengine/dc-scripts/params.sh
+  Initialized empty Git repository in /opt/cfengine/https___gitlab.com_nickanderson_masterfiles-vcs/
+  error:  while accessing https://gitlab.com/nickanderson/masterfiles-vcs/info/refs
 
-fatal: HTTP request failed
-/var/cfengine/httpd/htdocs/api/dc-scripts/masterfiles-stage.sh: Failed: git clone --mirror 'https://gitlab.com/nickanderson/masterfiles-vcs' '/opt/cfengine/https___gitlab.com_nickanderson_masterfiles-vcs'
+  fatal: HTTP request failed
+  /var/cfengine/httpd/htdocs/api/dc-scripts/masterfiles-stage.sh: Failed: git clone --mirror 'https://gitlab.com/nickanderson/masterfiles-vcs' '/opt/cfengine/https___gitlab.com_nickanderson_masterfiles-vcs'
 #+end_example
 
 #+CAPTION: Installing a modern version of git on EL6
@@ -120,12 +120,12 @@ fatal: HTTP request failed
 
 #+CAPTION: SSL connect error
 #+begin_example
-[root@hub ~]# ${DC_SCRIPTS_DIR}/masterfiles-stage.sh  --DEBUG
-Option Deploy Dir: /var/cfengine/masterfiles
-Option Params File: /opt/cfengine/dc-scripts/params.sh
-Cloning into bare repository '/opt/cfengine/https___gitlab.com_nickanderson_masterfiles-vcs'...
-fatal: unable to access 'https://gitlab.com/nickanderson/masterfiles-vcs/': SSL connect error
-/var/cfengine/httpd/htdocs/api/dc-scripts/masterfiles-stage.sh: Failed: git clone --mirror 'https://gitlab.com/nickanderson/masterfiles-vcs' '/opt/cfengine/https___gitlab.com_nickanderson_masterfiles-vcs'
+  [root@hub ~]# ${DC_SCRIPTS_DIR}/masterfiles-stage.sh  --DEBUG
+  Option Deploy Dir: /var/cfengine/masterfiles
+  Option Params File: /opt/cfengine/dc-scripts/params.sh
+  Cloning into bare repository '/opt/cfengine/https___gitlab.com_nickanderson_masterfiles-vcs'...
+  fatal: unable to access 'https://gitlab.com/nickanderson/masterfiles-vcs/': SSL connect error
+  /var/cfengine/httpd/htdocs/api/dc-scripts/masterfiles-stage.sh: Failed: git clone --mirror 'https://gitlab.com/nickanderson/masterfiles-vcs' '/opt/cfengine/https___gitlab.com_nickanderson_masterfiles-vcs'
 #+end_example
 
 #+CAPTION: Update nss, curl, and libcurl to bypass SSL connect error

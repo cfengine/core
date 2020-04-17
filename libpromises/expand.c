@@ -200,7 +200,7 @@ Log(LOG_LEVEL_DEBUG, "CRAIG, ExpandPromiseAndDo(), do_ifelse is %d, ENTER <===",
      *      act_on_promise is CommonEvalPromise(). */
 /* CRAIG TODO HACK, here I want to go through this loop ONCE in case of ifelse involved */
     bool done = ! do_ifelse;
-Log(LOG_LEVEL_WARNING, "CRAIG, before while loop, done is %d", done);
+Log(LOG_LEVEL_DEBUG, "CRAIG, before while loop, done is %d", done);
     while (PromiseIteratorNext(iterctx, ctx) || !done)
     {
 Log(LOG_LEVEL_DEBUG, "CRAIG, ACTUAL WORK PART 1: get a(nother) copy of the promise, done is %d", done);
@@ -256,7 +256,7 @@ Log(LOG_LEVEL_DEBUG, "CRAIG, EVALUATE VARS PROMISES again");
          * are Put() on the previous scope? */
         EvalContextStackPopFrame(ctx);
 
-Log(LOG_LEVEL_WARNING, "CRAIG, ExpandPromise(), at end of while block, done is %d, setting to true", done);
+Log(LOG_LEVEL_DEBUG, "CRAIG, ExpandPromise(), at end of while block, done is %d, setting to true", done);
 done = true;
     }
 

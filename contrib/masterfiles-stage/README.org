@@ -59,20 +59,79 @@ earlier versions of git may or may not work.
 :PROPERTIES:
 :ID:       2aeaaa9b-1229-4c14-b130-6d86e370de42
 :END:
-Installation simply consists of saving =masterfiles-stage.sh= and its
-supporting =common.sh= to the same directory on your policy server
-and making sure that =masterfiles-stage.sh= is executable.
+Installation simply consists of saving =masterfiles-stage.sh= and its supporting
+=common.sh= to the same directory on your policy server, making sure that
+=masterfiles-stage.sh= is executable and configuring the default parameter set.
 
-#+BEGIN_EXAMPLE
-  wget https://raw.githubusercontent.com/cfengine/core/master/contrib/masterfiles-stage/masterfiles-stage.sh -O /var/cfengine/bin/masterfiles-stage.sh
-  wget https://raw.githubusercontent.com/cfengine/core/master/contrib/masterfiles-stage/common.sh -O /var/cfengine/bin/common.sh
-  chown root:root /var/cfengine/bin/masterfiles-stage.sh /var/cfengine/bin/common.sh
-  chmod 555 /var/cfengine/bin/masterfiles-stage.sh
-  chmod 444 /var/cfengine/bin/common.sh
-#+END_EXAMPLE
+*Note:* These instructions install the tooling into the same location where they
+are pre-installed when using CFEngine Enterprise.
 
-*Warning:* The above commands may not work out of the box depending on
- how new your ssl certificates are.
+#+Caption: Install masterfiles-stage
+#+BEGIN_SRC sh :exports code
+  wget https://raw.githubusercontent.com/cfengine/core/master/contrib/masterfiles-stage/install-masterfiles-stage.sh
+  chmod +x install-masterfiles-stage.sh
+  ./install-masterfiles-stage.sh
+#+END_SRC
+
+#+Name: masterfiles-stage.sh
+#+BEGIN_SRC sh :tangle ./install-masterfiles-stage.sh :exports none
+  #!/bin/env bash
+  SRC_DIR="https://raw.githubusercontent.com/cfengine/core/master/contrib/masterfiles-stage/"
+  DC_SCRIPTS_DIR=$(/var/cfengine/bin/cf-promises --file update.cf --show-vars=dc_scripts | awk '/update_def\.dc_scripts/ {print $2}')
+  DEFAULT_PARAMS_FILE="/opt/cfengine/dc-scripts/params.sh"
+  mkdir -p ${DC_SCRIPTS_DIR}
+  mkdir -p $(dirname ${DEFAULT_PARAMS_FILE})
+  wget ${SRC_DIR}/masterfiles-stage.sh --output-document ${DC_SCRIPTS_DIR}/masterfiles-stage.sh
+  wget ${SRC_DIR}/common.sh --output-document ${DC_SCRIPTS_DIR}/common.sh
+  wget ${SRC_DIR}/example_params/PARAMS_example_git_branch.sh --output-document ${DEFAULT_PARAMS_FILE}
+  chown root:root ${DC_SCRIPTS_DIR}/masterfiles-stage.sh ${DC_SCRIPTS_DIR}/common.sh ${DEFAULT_PARAMS_FILE}
+  chmod 500 ${DC_SCRIPTS_DIR}/masterfiles-stage.sh
+  chmod 400 ${DC_SCRIPTS_DIR}/common.sh
+  chmod 600 ${DEFAULT_PARAMS_FILE}
+  echo "Now, edit ${DEFAULT_PARAMS_FILE} to conigure your upstream repository."
+  echo "Then, run '${DC_SCRIPTS_DIR}/masterfiles-stage.sh --DEBUG' to test deployment"
+#+END_SRC
+
+Next, configure the default parameter set (=DEFAULT_PARAMS_FILE=).
+
+*** Troubleshooting
+
+You may experience issues trying to use the old versions of various dependencies. Try these solutions to common issues.
+
+**** EL6
+
+#+CAPTION: fatal: HTTP request failed
+#+begin_example
+[root@hub vagrant]# ${DC_SCRIPTS_DIR}/masterfiles-stage.sh  --DEBUG
+Option Deploy Dir: /var/cfengine/masterfiles
+Option Params File: /opt/cfengine/dc-scripts/params.sh
+Initialized empty Git repository in /opt/cfengine/https___gitlab.com_nickanderson_masterfiles-vcs/
+error:  while accessing https://gitlab.com/nickanderson/masterfiles-vcs/info/refs
+
+fatal: HTTP request failed
+/var/cfengine/httpd/htdocs/api/dc-scripts/masterfiles-stage.sh: Failed: git clone --mirror 'https://gitlab.com/nickanderson/masterfiles-vcs' '/opt/cfengine/https___gitlab.com_nickanderson_masterfiles-vcs'
+#+end_example
+
+#+CAPTION: Installing a modern version of git on EL6
+#+BEGIN_SRC
+  yum install -y http://opensource.wandisco.com/centos/6/git/x86_64/wandisco-git-release-6-1.noarch.rpm
+  yum install -y git
+#+END_SRC
+
+#+CAPTION: SSL connect error
+#+begin_example
+[root@hub ~]# ${DC_SCRIPTS_DIR}/masterfiles-stage.sh  --DEBUG
+Option Deploy Dir: /var/cfengine/masterfiles
+Option Params File: /opt/cfengine/dc-scripts/params.sh
+Cloning into bare repository '/opt/cfengine/https___gitlab.com_nickanderson_masterfiles-vcs'...
+fatal: unable to access 'https://gitlab.com/nickanderson/masterfiles-vcs/': SSL connect error
+/var/cfengine/httpd/htdocs/api/dc-scripts/masterfiles-stage.sh: Failed: git clone --mirror 'https://gitlab.com/nickanderson/masterfiles-vcs' '/opt/cfengine/https___gitlab.com_nickanderson_masterfiles-vcs'
+#+end_example
+
+#+CAPTION: Update nss, curl, and libcurl to bypass SSL connect error
+#+BEGIN_SRC sh
+  yum update -y nss curl libcurl
+#+END_SRC
 
 * Configuration
 :PROPERTIES:
@@ -104,7 +163,6 @@ Run masterfiles-stage.sh --help to see exact option flags.
   (The value specified in =PARAMS=, if there is one, will take precedence
   over an option specified on the command line.)
 
-
 *** Reserved Parameters
 :PROPERTIES:
 :ID:       210cf03a-c8b3-47f3-916f-828c958bde5b
@@ -127,6 +185,14 @@ when developing new staging methods.
     - =my_tag=
     - =88335d36b48c8808b12b48667a463182dc8d0338=
     - =cb375d0f=
+
+- =PKEY= :: Fully qualified path to passphraseless private SSH Key used for authorization.
+
+- =GIT_USERNAME= :: Git username used for authorization.
+
+- =GIT_PASSWORD= :: Git password or token used for authorization.
+
+- =SCRIPT_DIR= :: Directory contianing supporting scripts.
 
 - =dir_to_hold_mirror= :: The directory where the git mirror repo will
   be created for =GIT_POLICY_CHANNELS=.  (With =VCS_TYPE=GIT=, the repo
@@ -164,14 +230,6 @@ when developing new staging methods.
 The following attributes are used by CFEngine Enterprise and
 their usage for other means should be avoided to avoid collisions.
 
-- =PKEY= :: Private SSH Key used for authorization.
-
-- =GIT_USERNAME= :: Git username used for authorization.
-
-- =GIT_PASSWORD= :: Git password used for authorization.
-
-- =SCRIPT_DIR= :: Directory contianing supporting scripts.
-
 - =GIT_SSH= :: Helper script to access SSH Git repositories (uses =PKEY=).
 
 - =GIT_ASKPASS= :: Helper script to provide HTTPS authorization details to Git
@@ -191,7 +249,6 @@ and the presence of an ssh key for authentication. Depending on the
 security requirements of your organization, you may use a
 passphraseless key, or you may use something like =ssh-agent=.
 
-
 * Example Usage
 :PROPERTIES:
 :ID:       67b5ead8-5bdf-47d9-a26a-70ad95b742d5
@@ -199,27 +256,92 @@ passphraseless key, or you may use something like =ssh-agent=.
 
 The script can be invoked manually:
 
-#+BEGIN_EXAMPLE
-  /var/cfengine/bin/masterfiles-stage.sh -d /tmp/deployed_masterfiles -p /var/cfengine/masterfiles-stage_parmas/PARAMS_example_git_branch.sh
-  tail -n1 /var/cfengine/outputs/dc-scripts.log
-  Successfully deployed 'master' from 'https://gitlab.com/nickanderson/masterfiles_demo_3.7.git' to '/var/cfengine/masterfiles' on Sun Dec  6 23:00:34 UTC 2015
-#+END_EXAMPLE
+#+CAPTION: Example manually executing masterfiles-stage
+#+begin_example
+  [root@hub ~]# ${DC_SCRIPTS_DIR}/masterfiles-stage.sh --DEBUG
+  Option Deploy Dir: /var/cfengine/masterfiles
+  Option Params File: /opt/cfengine/dc-scripts/params.sh
+  Cloning into bare repository '/opt/cfengine/https___gitlab.com_nickanderson_masterfiles-vcs'...
+  warning: redirecting to https://gitlab.com/nickanderson/masterfiles-vcs.git/
+  remote: Enumerating objects: 135, done.
+  remote: Counting objects: 100% (135/135), done.
+  remote: Compressing objects: 100% (116/116), done.
+  remote: Total 135 (delta 18), reused 123 (delta 13), pack-reused 0
+  Receiving objects: 100% (135/135), 201.34 KiB | 1.94 MiB/s, done.
+  Resolving deltas: 100% (18/18), done.
+  Successfully deployed '3.15.1' from 'https://gitlab.com/nickanderson/masterfiles-vcs' to '/var/cfengine/masterfiles' on Wed Apr 15 19:52:54 UTC 2020
+#+end_example
 
 Or execution can be automated with CFEngine.
 
+To enable automatic deployment define =cfengine_internal_masterfiles_update= and ensure that =cfe_internal_update_from_repository= is run as part of the update policy. Note, =cfe_internal_update_from_repository= is run automatically when =cfengine_internal_masterfiles_update= is defined AND CFEngine Enterprise binaries are in use using the stock update policy.
+
+#+CAPTION: Example augments (def.json) enabling automatic deployment and adding update from repository to end of update bundlesequence
+#+BEGIN_SRC json
+{
+
+  "classes": {
+    "cfengine_internal_masterfiles_update": [ "am_policy_hub::" ]
+  },
+  "vars": {
+    "control_common_update_bundlesequence_end": [ "cfe_internal_update_from_repository" ]
+  }
+}
+#+END_SRC
+
+Inform output from the update policy will indicate execution result:
+
+#+CAPTION: Example output from successful execution
+#+begin_example
+[root@hub ~]# cf-agent -KIf update.cf;
+    info: Executing 'no timeout' ... '/var/cfengine/httpd/htdocs/api/dc-scripts/masterfiles-stage.sh'
+    info: Command related to promiser '/var/cfengine/httpd/htdocs/api/dc-scripts/masterfiles-stage.sh' returned code defined as promise kept 0
+    info: Completed execution of '/var/cfengine/httpd/htdocs/api/dc-scripts/masterfiles-stage.sh'
+#+end_example
+
+#+CAPTION: Example output when upstream policy does not validate
+#+begin_example
+[root@hub ~]# cf-agent -KIf update.cf;
+    info: Executing 'no timeout' ... '/var/cfengine/httpd/htdocs/api/dc-scripts/masterfiles-stage.sh'
+   error: Command related to promiser '/var/cfengine/httpd/htdocs/api/dc-scripts/masterfiles-stage.sh' returned code defined as promise failed 1
+    info: Completed execution of '/var/cfengine/httpd/htdocs/api/dc-scripts/masterfiles-stage.sh'
+R: Masterfiles deployment failed, for more info see '/var/cfengine/outputs/dc-scripts.log'
+   error: Method 'cfe_internal_masterfiles_stage' failed in some repairs
+[root@hub ~]# tail /var/cfengine/outputs/dc-scripts.log
+From https://gitlab.com/nickanderson/masterfiles-vcs
+   7b35681..01b62cf  3.15.x     -> 3.15.x
+/var/cfengine/tmp.0B5Bz0DRD7/promises.cf:6:6: error: syntax error
+ERROR
+     ^
+/var/cfengine/tmp.0B5Bz0DRD7/promises.cf:6:6: error: Expected 'bundle' or 'body' keyword, wrong input 'ERROR'
+ERROR
+     ^
+   error: There are syntax errors in policy files
+/var/cfengine/httpd/htdocs/api/dc-scripts/masterfiles-stage.sh: Update policy staged in /var/cfengine/tmp.0B5Bz0DRD7 could not be validated, aborting.
+#+end_example
+
+Alternatively, write custom policy to trigger deployment:
+
+#+CAPTION: Custom policy to drive automatic deployment
 #+BEGIN_SRC cfengine3
   bundle agent stage_masterfiles
   {
     vars:
         policy_server::
+
+        # cf-promises --file update.cf --show-vars=dc_scripts | awk '/update_def\.dc_scripts/ {print $2}')
         "deploy_script"
-          string => "/var/cfengine/bin/masterfiles-stage.sh";
+          string => "/var/cfengine/httpd/htdocs/api/dc-scripts/masterfiles-stage.sh";
 
         "masterfiles_deploy_destination"
           string => "/var/cfengine/masterfiles";
 
+    classes:
+      "automatic_policy_deployment_allowed"
+        expression => "any"; # or perhaps Tuesday.Morning
+
     commands:
-        policy_server::
+        policy_server.automatic_policy_deployment_allowed::
         # masterfiles-stage.sh DESTINATION PARAMS
         "$(deploy_script)"
           args => "-d '$(masterfiles_deploy_destination)' -p '/var/cfengine/deploy_params/PARAMS_masterfiles.sh'",
@@ -228,15 +350,17 @@ Or execution can be automated with CFEngine.
 #+END_SRC
 
 If the params file is placed in the default location
-=/opt/cfengine/dc-scripts/params.sh=, and if the value of =MASTERDIR=
-is specified in the params file, the CFEngine code can be as simple as:
+=/opt/cfengine/dc-scripts/params.sh=, and if the value of =MASTERDIR= is
+specified in the params file, the CFEngine code can be as simple as:
 
+#+CAPTION: Simplest execution of masterfiles-stage leveraging defaults
 #+BEGIN_SRC cfengine3
   bundle agent stage_masterfiles
   {
     commands:
       policy_server::
-        "/var/cfengine/bin/masterfiles-stage.sh";
+        # cf-promises --file update.cf --show-vars=dc_scripts | awk '/update_def\.dc_scripts/ {print $2}')
+        "/var/cfengine/httpd/htdocs/api/dc-scripts/masterfiles-stage.sh";
   }
 #+END_SRC
 

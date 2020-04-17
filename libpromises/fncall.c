@@ -312,6 +312,7 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, const Policy *policy, FnCall *fp, 
     assert(policy);
     assert(fp);
     fp->caller = caller;
+Log(LOG_LEVEL_DEBUG, "CRAIG, FnCallEvaluate()");
 
     if (!EvalContextGetEvalOption(ctx, EVAL_OPTION_EVAL_FUNCTIONS))
     {

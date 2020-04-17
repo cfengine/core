@@ -191,16 +191,19 @@ Log(LOG_LEVEL_DEBUG, "CRAIG, MapIteratorsFromRval, RVAL_TYPE_FNCALL, fn_name is 
 }
 
 static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, PromiseIterator *iterctx,
-                                        PromiseActuator *act_on_promise, void *param)
+                                        PromiseActuator *act_on_promise, void *param, bool do_ifelse)
 {
-Log(LOG_LEVEL_DEBUG, "CRAIG, ExpandPromiseAndDo(), ENTER <===");
+Log(LOG_LEVEL_DEBUG, "CRAIG, ExpandPromiseAndDo(), do_ifelse is %d, ENTER <===", do_ifelse);
     PromiseResult result = PROMISE_RESULT_SKIPPED;
 
     /* TODO this loop could be completely skipped for for non vars/classes if
      *      act_on_promise is CommonEvalPromise(). */
-    while (PromiseIteratorNext(iterctx, ctx))
+/* CRAIG TODO HACK, here I want to go through this loop ONCE in case of ifelse involved */
+    bool done = ! do_ifelse;
+Log(LOG_LEVEL_WARNING, "CRAIG, before while loop, done is %d", done);
+    while (PromiseIteratorNext(iterctx, ctx) || !done)
     {
-Log(LOG_LEVEL_DEBUG, "CRAIG, ACTUAL WORK PART 1: get a(nother) copy of the promise");
+Log(LOG_LEVEL_DEBUG, "CRAIG, ACTUAL WORK PART 1: get a(nother) copy of the promise, done is %d", done);
         /*
          * ACTUAL WORK PART 1: Get a (another) copy of the promise.
          *
@@ -213,6 +216,8 @@ Log(LOG_LEVEL_DEBUG, "CRAIG, ACTUAL WORK PART 1: get a(nother) copy of the promi
         if (pexp == NULL)                       /* is the promise excluded? */
         {
             result = PromiseResultUpdate(result, PROMISE_RESULT_SKIPPED);
+Log(LOG_LEVEL_DEBUG, "CRAIG, HACK2, in case promise was excluded, consider us to be done, done was %d, setting to true", done);
+done = true;
             continue;
         }
 
@@ -250,6 +255,9 @@ Log(LOG_LEVEL_DEBUG, "CRAIG, EVALUATE VARS PROMISES again");
         /* Why do we push/pop an iteration frame, if all iterated variables
          * are Put() on the previous scope? */
         EvalContextStackPopFrame(ctx);
+
+Log(LOG_LEVEL_WARNING, "CRAIG, ExpandPromise(), at end of while block, done is %d, setting to true", done);
+done = true;
     }
 
 Log(LOG_LEVEL_DEBUG, "CRAIG, ExpandPromiseAndDo(), EXIT ===>");
@@ -259,6 +267,7 @@ Log(LOG_LEVEL_DEBUG, "CRAIG, ExpandPromiseAndDo(), EXIT ===>");
 PromiseResult ExpandPromise(EvalContext *ctx, const Promise *pp,
                             PromiseActuator *act_on_promise, void *param)
 {
+    bool do_ifelse = false;
 Log(LOG_LEVEL_DEBUG, "CRAIG, ExpandPromise(), pp->promiser is '%s'", pp->promiser);
     if (!IsDefinedClass(ctx, pp->classes))
     {
@@ -284,12 +293,23 @@ Log(LOG_LEVEL_DEBUG, "CRAIG, ExpandPromise() 2. Parse all strings (promiser-prom
 
     if (pcopy->promisee.item != NULL)
     {
+Log(LOG_LEVEL_DEBUG, "CRAIG, ExpandPromise(), if promisee.item not NULL then call MapIteratorsFromRval() on pcopy->promisee");
         MapIteratorsFromRval(ctx, iterctx, pcopy->promisee);
     }
 
+Log(LOG_LEVEL_DEBUG, "CRAIG, ExpandPromise(), loop through constraints and call MapIteratorsFromRval()");
     for (size_t i = 0; i < SeqLength(pcopy->conlist); i++)
     {
         Constraint *cp = SeqAt(pcopy->conlist, i);
+Log(LOG_LEVEL_DEBUG, "CRAIG, HACK2, cp->rval.type is %d", cp->rval.type);
+if (cp->rval.type == RVAL_TYPE_FNCALL) {
+Log(LOG_LEVEL_DEBUG, "CRAIG, HACK2, fncall, name is '%s'", RvalFnCallValue(cp->rval)->name);
+}
+        if (cp->rval.type == RVAL_TYPE_FNCALL && strcmp(RvalFnCallValue(cp->rval)->name,"ifelse") == 0)
+        {
+Log(LOG_LEVEL_DEBUG, "CRAIG, HACK2, constraint is a function called ifelse so pass that info along to ExpandPromiseAndDo()");
+            do_ifelse = true;
+        }
         MapIteratorsFromRval(ctx, iterctx, cp->rval);
     }
 
@@ -297,7 +317,7 @@ Log(LOG_LEVEL_DEBUG, "CRAIG, ExpandPromise() 3. GO!");
     /* 3. GO! */
     PutHandleVariable(ctx, pcopy);
     PromiseResult result = ExpandPromiseAndDo(ctx, iterctx,
-                                              act_on_promise, param);
+                                              act_on_promise, param, do_ifelse);
 
     EvalContextStackPopFrame(ctx);
     PromiseIteratorDestroy(iterctx);

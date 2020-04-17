@@ -1037,7 +1037,7 @@ Log(LOG_LEVEL_DEBUG, "CRAIG, PromiseIteratorNext(), WheelRightmostIncrement() ga
 Log(LOG_LEVEL_DEBUG, "CRAIG, PromiseIteratorNext(), all combinations have been tried, exiting");
             Log(LOG_LEVEL_DEBUG, "Iteration engine finished"
                 "   ---   WARPING OUT");
-#if 0
+#if 1
             return false;
 #else
             if (wheels_num == 1 && i == -1)

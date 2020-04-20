@@ -1260,7 +1260,7 @@ if (arg && arg->next) { Log(LOG_LEVEL_DEBUG, "CRAIG, LOOP, arg->next->next=%p", 
             Log(LOG_LEVEL_DEBUG, "CRAIG RlistScalarValue(arg->next) is '%s'", RlistScalarValue(arg->next));
             FnCallResult res = FnReturn(RlistScalarValue(arg->next));
             Log(LOG_LEVEL_DEBUG, "CRAIG FnCallResult status is '%d'", res.status);
-            return FnReturn(RlistScalarValue(arg->next));
+            return res;
         }
     }
 

@@ -347,6 +347,7 @@ Log(LOG_LEVEL_DEBUG, "CRAIG, FnCallEvaluate()");
         fncall_writer = StringWriter();
         FnCallWrite(fncall_writer, fp);
         fncall_string = StringWriterData(fncall_writer);
+        StringWriterClose(fncall_writer);
 //    }
 
     // Check if arguments are resolved, except for delayed evaluation functions

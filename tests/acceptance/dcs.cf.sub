@@ -37,6 +37,7 @@ bundle common G
                         "ls",
                         "mkdir",
                         "mkfifo",
+                        "mkgroup",  # AIX equivalent of groupadd
                         "mock_package_manager",
                         "mv",
                         "no_fds",
@@ -53,6 +54,7 @@ bundle common G
                         "sleep",
                         "sort",
                         "stat",
+                        "sudo",
                         "tee",
                         "touch",
                         "true",
@@ -61,6 +63,8 @@ bundle common G
                       };
       # Special cases.
       "make_cmds" slist => { "gmake", "make" };
+      # rmgroup is AIX equivalent of groupdel
+      "sbin_cmds" slist => { "rmgroup", "groupadd", "groupdel", "useradd", "userdel", "usermod" };
 
     any::
       "paths[tests]" string                  => "$(this.promise_dirname)";
@@ -72,6 +76,7 @@ bundle common G
     !windows::
       "paths[bin]" string                    => "/bin";
       "paths[usr_bin]" string                => "/usr/bin";
+      "paths[usr_sbin]" string               => "/usr/sbin";
       "paths[usr_local_bin]" string          => "/usr/local/bin";
       "paths[usr_contrib_bin]" string        => "/usr/contrib/bin";
     windows::
@@ -99,6 +104,7 @@ bundle common G
           scope => "namespace";
 
       # Special cases.
+      "$(paths_indices)_$(sbin_cmds)$(exeext)" expression => fileexists("$(paths[$(paths_indices)])$(const.dirsep)$(sbin_cmds)$(exeext)");
       "$(paths_indices)_$(make_cmds)$(exeext)" expression => fileexists("$(paths[$(paths_indices)])$(const.dirsep)$(make_cmds)$(exeext)");
       "has_make"                          expression => fileexists("$(paths[$(paths_indices)])$(const.dirsep)$(make_cmds)$(exeext)"),
       scope => "namespace";
@@ -112,11 +118,18 @@ bundle common G
       ifvarclass => canonify("$(paths_indices)_$(cmds)$(exeext)");
 
       # Special cases.
+      "$(sbin_cmds)" string => "$(paths[$(paths_indices)])$(const.dirsep)$(sbin_cmds)$(exeext)",
+      ifvarclass => canonify("$(paths_indices)_$(sbin_cmds)$(exeext)");
       # gmake has higher priority, so should come last.
       "make" string => "$(paths[$(paths_indices)])$(const.dirsep)make$(exeext)",
       ifvarclass => canonify("$(paths_indices)_make$(exeext)");
       "make" string => "$(paths[$(paths_indices)])$(const.dirsep)gmake$(exeext)",
       ifvarclass => canonify("$(paths_indices)_gmake$(exeext)");
+
+    # on AIX groupdel is rmgroup and groupadd is mkgroup
+    aix::
+      "groupdel" string => "$(G.rmgroup)";
+      "groupadd" string => "$(G.mkgroup)";
 
     want_color.have_colordiff::
       "diff_maybecolor" string => $(colordiff);

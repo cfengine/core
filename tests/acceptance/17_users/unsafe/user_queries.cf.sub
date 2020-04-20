@@ -14,6 +14,13 @@ bundle common user_tests
       "group1" string => "Users";
       "group2" string => "Administrators";
 
+    freebsd::
+      "pw_path" string => "/usr/sbin/pw";
+      "sudo_path" string => "/usr/local/bin/sudo";
+    !freebsd::
+      "pw_path" string => "";
+      "sudo_path" string => "/usr/bin/sudo";
+
   classes:
     # On HPUX we use a sudo hack, which doesn't support '-u'.
     !windows.!hpux::
@@ -22,10 +29,14 @@ bundle common user_tests
     hpux::
       "passwords_in_shadow" expression => fileexists("/etc/shadow");
       "passwords_in_passwd" not => fileexists("/etc/shadow");
+    freebsd::
+      "passwords_in_shadow" expression => "!any";
+      "passwords_in_passwd" expression => "!any";
+      "passwords_in_master_passwd" expression => "any";
     windows|aix::
       "passwords_in_shadow" expression => "!any";
       "passwords_in_passwd" expression => "!any";
-    !hpux.!windows.!aix::
+    !hpux.!windows.!aix.!freebsd::
       "passwords_in_shadow" expression => "any";
       "passwords_in_passwd" expression => "!any";
     windows|aix::
@@ -43,7 +54,7 @@ bundle agent remove_stale_groups
       "rmgroup johndoe"
         contain => in_shell;
     !aix::
-      "groupdel johndoe"
+      "$(user_tests.pw_path) groupdel johndoe"
         contain => in_shell;
 }
 
@@ -215,6 +226,8 @@ bundle agent user_has_password_hash(user, hash, true_class, false_class)
       "passwd_file" string => "/etc/passwd";
     passwords_in_shadow::
       "passwd_file" string => "/etc/shadow";
+    passwords_in_master_passwd::
+      "passwd_file" string => "/etc/master.passwd";
 
   classes:
     aix::

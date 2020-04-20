@@ -188,13 +188,21 @@ static void MapIteratorsFromRval(EvalContext *ctx,
 }
 
 static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, PromiseIterator *iterctx,
-                                        PromiseActuator *act_on_promise, void *param)
+                                        PromiseActuator *act_on_promise, void *param,
+                                        bool actuate_ifelse)
 {
     PromiseResult result = PROMISE_RESULT_SKIPPED;
 
+    /* In the case of ifelse() we must always include an extra round of "actuation"
+     * in the while loop below. PromiseIteratorNext() will return false in the case
+     * that there are doubly-unresolved Rvals like $($(missing)).
+     * We can't add an empty wheel because that is skipped as well as noted in
+     * libpromises/iteration.c ShouldAddVariableAsIterationWheel(). */
+    bool ifelse_actuated = !actuate_ifelse;
+
     /* TODO this loop could be completely skipped for for non vars/classes if
      *      act_on_promise is CommonEvalPromise(). */
-    while (PromiseIteratorNext(iterctx, ctx))
+    while (PromiseIteratorNext(iterctx, ctx) || !ifelse_actuated)
     {
         /*
          * ACTUAL WORK PART 1: Get a (another) copy of the promise.
@@ -208,6 +216,7 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, PromiseIterator *iterc
         if (pexp == NULL)                       /* is the promise excluded? */
         {
             result = PromiseResultUpdate(result, PROMISE_RESULT_SKIPPED);
+            ifelse_actuated = true;
             continue;
         }
 
@@ -239,6 +248,7 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, PromiseIterator *iterc
         /* Why do we push/pop an iteration frame, if all iterated variables
          * are Put() on the previous scope? */
         EvalContextStackPopFrame(ctx);
+        ifelse_actuated = true;
     }
 
     return result;
@@ -272,16 +282,22 @@ PromiseResult ExpandPromise(EvalContext *ctx, const Promise *pp,
         MapIteratorsFromRval(ctx, iterctx, pcopy->promisee);
     }
 
+    bool actuate_ifelse = false;
     for (size_t i = 0; i < SeqLength(pcopy->conlist); i++)
     {
         Constraint *cp = SeqAt(pcopy->conlist, i);
+        if (cp->rval.type == RVAL_TYPE_FNCALL &&
+            strcmp(RvalFnCallValue(cp->rval)->name, "ifelse") == 0)
+        {
+            actuate_ifelse = true;
+        }
         MapIteratorsFromRval(ctx, iterctx, cp->rval);
     }
 
     /* 3. GO! */
     PutHandleVariable(ctx, pcopy);
     PromiseResult result = ExpandPromiseAndDo(ctx, iterctx,
-                                              act_on_promise, param);
+                                              act_on_promise, param, actuate_ifelse);
 
     EvalContextStackPopFrame(ctx);
     PromiseIteratorDestroy(iterctx);

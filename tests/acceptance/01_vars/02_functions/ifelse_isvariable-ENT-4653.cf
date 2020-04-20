@@ -17,7 +17,7 @@ bundle agent test
   vars:
       "lookup" string => "THIS_IS_NOT_A_DEFINED_VARIABLE";
 
-      "BOINK" string =>
+      "test" string =>
       ifelse( isvariable( "$(lookup)" ),
               "$($(lookup))",
               "FALLBACK");
@@ -28,11 +28,11 @@ bundle agent check
 
   reports:
       'PASS'
-        if => strcmp( "FALLBACK", $(test.BOINK) ) ;
+        if => strcmp( "FALLBACK", $(test.test) ) ;
 
       'FAIL'
-        if => not( isvariable( "test.BOINK" ) );
+        if => not( isvariable( "test.test" ) );
 
       'FAIL'
-        if => not( strcmp( "FALLBACK", $(test.BOINK) ) );
+        if => not( strcmp( "FALLBACK", $(test.test) ) );
 }

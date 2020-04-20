@@ -342,13 +342,12 @@ Log(LOG_LEVEL_DEBUG, "CRAIG, FnCallEvaluate()");
 
     Writer *fncall_writer = NULL;
     const char *fncall_string = "";
-//    if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG)
-//    {
+    if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG)
+    {
         fncall_writer = StringWriter();
         FnCallWrite(fncall_writer, fp);
         fncall_string = StringWriterData(fncall_writer);
-        StringWriterClose(fncall_writer);
-//    }
+    }
 
     // Check if arguments are resolved, except for delayed evaluation functions
     if ( ! (fp_type->options & FNCALL_OPTION_DELAYED_EVALUATION) &&

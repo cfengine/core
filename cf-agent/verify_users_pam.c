@@ -774,8 +774,9 @@ static bool SetAccountLocked(const char *puser, const char *hash, bool lock)
 
     return SetAccountLockExpiration(puser, lock);
 }
+static void TransformGidsToGroups(StringSet **list);
 
-static bool GroupGetUserMembership (const char *user, StringSet *result)
+static bool GetGroupInfo (const char *user, const User *u, StringSet **groups_to_set, StringSet **groups_missing, StringSet **current_secondary_groups)
 {
     bool ret = true;
     struct group *group_info;
@@ -785,6 +786,18 @@ static bool GroupGetUserMembership (const char *user, StringSet *result)
     {
         Log(LOG_LEVEL_ERR, "Could not open '/etc/group': %s", GetErrorStr());
         return false;
+    }
+
+    StringSet *wanted_groups = StringSetNew();
+    if (u->groups_secondary_given)
+    {
+        for (Rlist *ptr = u->groups_secondary; ptr != NULL; ptr = ptr->next)
+        {
+            StringSetAdd(*groups_missing, xstrdup(RvalScalarValue(ptr->val)));
+            StringSetAdd(wanted_groups, xstrdup(RvalScalarValue(ptr->val)));
+        }
+        TransformGidsToGroups(groups_missing);
+        TransformGidsToGroups(&wanted_groups);
     }
 
     while (true)
@@ -806,20 +819,40 @@ static bool GroupGetUserMembership (const char *user, StringSet *result)
             }
             break;
         }
+
+
+        if (StringSetContains(wanted_groups, group_info->gr_name))
+        {
+            StringSetRemove(*groups_missing, group_info->gr_name);
+        }
+
         // At least on FreeBSD, gr_mem can be NULL:
         if (group_info->gr_mem != NULL)
         {
-            for (int i = 0; group_info->gr_mem[i] != NULL; i++)
+            bool found = false;
+            for (int i = 0; !found && group_info->gr_mem[i] != NULL; i++)
             {
                 if (strcmp(user, group_info->gr_mem[i]) == 0)
                 {
-                    StringSetAdd(result, xstrdup(group_info->gr_name));
-                    break;
+                    found = true;
+                    StringSetAdd(*current_secondary_groups, xstrdup(group_info->gr_name));
+                    if (StringSetContains(wanted_groups, group_info->gr_name))
+                    {
+                        StringSetAdd(*groups_to_set, xstrdup(group_info->gr_name));
+                    }
                 }
             }
+            if (!found && StringSetContains(wanted_groups, group_info->gr_name))
+            {
+                StringSetAdd(*groups_to_set, xstrdup(group_info->gr_name));
+            }
         }
+#ifdef __FreeBSD__
+        free(group_info);
+#endif
     }
 
+    StringSetDestroy(wanted_groups);
     fclose(fptr);
 
     return ret;
@@ -929,7 +962,7 @@ static void TransformGidsToGroups(StringSet **list)
 }
 
 static bool VerifyIfUserNeedsModifs (const char *puser, const User *u, const struct passwd *passwd_info,
-                             uint32_t *changemap)
+                             uint32_t *changemap, StringSet *groups_to_set, StringSet *current_secondary_groups)
 {
     assert(u != NULL);
     if (u->description != NULL && strcmp (u->description, passwd_info->pw_gecos))
@@ -962,6 +995,10 @@ static bool VerifyIfUserNeedsModifs (const char *puser, const User *u, const str
         {
             CFUSR_SETBIT (*changemap, i_password);
         }
+    }
+    if (u->groups_secondary_given && !StringSetIsEqual(groups_to_set, current_secondary_groups))
+    {
+        CFUSR_SETBIT (*changemap, i_groups);
     }
 
     if (SafeStringLength(u->group_primary))
@@ -1001,26 +1038,6 @@ static bool VerifyIfUserNeedsModifs (const char *puser, const User *u, const str
         }
     }
 
-    if (u->groups_secondary_given)
-    {
-        StringSet *wanted_groups = StringSetNew();
-        for (Rlist *ptr = u->groups_secondary; ptr; ptr = ptr->next)
-        {
-            StringSetAdd(wanted_groups, xstrdup(RvalScalarValue(ptr->val)));
-        }
-        TransformGidsToGroups(&wanted_groups);
-        StringSet *current_groups = StringSetNew();
-        if (!GroupGetUserMembership (puser, current_groups))
-        {
-            CFUSR_SETBIT (*changemap, i_groups);
-        }
-        else if (!StringSetIsEqual (current_groups, wanted_groups))
-        {
-            CFUSR_SETBIT (*changemap, i_groups);
-        }
-        StringSetDestroy(current_groups);
-        StringSetDestroy(wanted_groups);
-    }
 
     ////////////////////////////////////////////
     if (*changemap == 0)
@@ -1253,7 +1270,7 @@ static bool DoRemoveUser (const char *puser, enum cfopaction action)
     return ExecuteUserCommand(puser, cmd, sizeof(cmd), "removing", "Removing");
 }
 
-static bool DoModifyUser (const char *puser, const User *u, const struct passwd *passwd_info, uint32_t changemap, enum cfopaction action)
+static bool DoModifyUser (const char *puser, const User *u, const struct passwd *passwd_info, uint32_t changemap, enum cfopaction action, StringSet *groups_to_set)
 {
     assert(u != NULL);
     char cmd[CF_BUFSIZE];
@@ -1281,20 +1298,6 @@ static bool DoModifyUser (const char *puser, const User *u, const struct passwd 
         StringAppend(cmd, "\"", sizeof(cmd));
     }
 
-#ifndef __hpux
-    // HP-UX does not support -G with empty argument
-    if (CFUSR_CHECKBIT (changemap, i_groups) != 0)
-    {
-        /* Work around bug on SUSE. If secondary groups contain a group that is
-           the same group as the primary group, the secondary group is not set.
-           This happens even if the primary group is changed in the same call.
-           Therefore, set an empty group list first, and then set it to the real
-           list later.
-        */
-        StringAppend(cmd, " -G \"\"", sizeof(cmd));
-    }
-#endif
-
     if (CFUSR_CHECKBIT (changemap, i_home) != 0)
     {
         StringAppend(cmd, " -d \"", sizeof(cmd));
@@ -1308,9 +1311,6 @@ static bool DoModifyUser (const char *puser, const User *u, const struct passwd 
         StringAppend(cmd, u->shell, sizeof(cmd));
         StringAppend(cmd, "\"", sizeof(cmd));
     }
-
-    StringAppend(cmd, " ", sizeof(cmd));
-    StringAppend(cmd, puser, sizeof(cmd));
 
     if (CFUSR_CHECKBIT (changemap, i_password) != 0)
     {
@@ -1360,6 +1360,19 @@ static bool DoModifyUser (const char *puser, const User *u, const struct passwd 
         }
     }
 
+    if (CFUSR_CHECKBIT (changemap, i_groups) != 0)
+    {
+        StringAppend(cmd, " -G \"", sizeof(cmd));
+        Buffer *buf = BufferNew();
+        buf = StringSetToBuffer(groups_to_set, ',');
+        StringAppend(cmd, buf->buffer, sizeof(cmd));
+        BufferDestroy(buf);
+        StringAppend(cmd, "\" ", sizeof(cmd));
+    }
+#ifndef HAVE_PW
+        StringAppend(cmd, " ", sizeof(cmd));
+        StringAppend(cmd, puser, sizeof(cmd));
+#endif
     // If password and locking were the only things changed, don't run the command.
     CFUSR_CLEARBIT(changemap, i_password);
     CFUSR_CLEARBIT(changemap, i_locked);
@@ -1370,38 +1383,10 @@ static bool DoModifyUser (const char *puser, const User *u, const struct passwd 
     }
     else if (changemap != 0)
     {
-#ifdef __hpux
-        // This is to overcome the Suse hack above which does not work on HP-UX and thus we
-        // risk getting an empty command if change of secondary groups is the only change
-        // Only run for other changes than i_groups, otherwise the command will be empty
-        uint32_t changemap_without_groups = changemap;
-        CFUSR_CLEARBIT(changemap_without_groups, i_groups);
-        if(changemap_without_groups != 0)
-#endif
+
+        if (!ExecuteUserCommand(puser, cmd, sizeof(cmd), "modifying", "Modifying"))
         {
-            if (!ExecuteUserCommand(puser, cmd, sizeof(cmd), "modifying", "Modifying"))
-            {
-                return false;
-            }
-        }
-        if (CFUSR_CHECKBIT (changemap, i_groups) != 0)
-        {
-            // Set real group list (see -G comment earlier).
-            strcpy(cmd, USERMOD);
-            StringAppend(cmd, " -G \"", sizeof(cmd));
-            char sep[2] = { '\0', '\0' };
-            for (Rlist *i = u->groups_secondary; i; i = i->next)
-            {
-                StringAppend(cmd, sep, sizeof(cmd));
-                StringAppend(cmd, RvalScalarValue(i->val), sizeof(cmd));
-                sep[0] = ',';
-            }
-            StringAppend(cmd, "\" ", sizeof(cmd));
-            StringAppend(cmd, puser, sizeof(cmd));
-            if (!ExecuteUserCommand(puser, cmd, sizeof(cmd), "modifying", "Modifying"))
-            {
-                return false;
-            }
+            return false;
         }
     }
     return true;
@@ -1452,6 +1437,9 @@ void VerifyOneUsersPromise (const char *puser, const User *u, PromiseResult *res
     bool res;
 
     struct passwd *passwd_info;
+    StringSet *groups_to_set = StringSetNew();
+    StringSet *current_secondary_groups = StringSetNew();
+    StringSet *groups_missing = StringSetNew();
     passwd_info = GetPwEntry(puser);
     if (!passwd_info && errno != 0)
     {
@@ -1463,22 +1451,30 @@ void VerifyOneUsersPromise (const char *puser, const User *u, PromiseResult *res
     {
         if (passwd_info)
         {
-            uint32_t cmap = 0;
-            if (VerifyIfUserNeedsModifs (puser, u, passwd_info, &cmap))
+            res = GetGroupInfo(puser, u, &groups_to_set, &groups_missing, &current_secondary_groups);
+            if (res)
             {
-                res = DoModifyUser (puser, u, passwd_info, cmap, action);
-                if (res)
+                uint32_t cmap = 0;
+                if (VerifyIfUserNeedsModifs (puser, u, passwd_info, &cmap, groups_to_set, current_secondary_groups))
                 {
-                    *result = PROMISE_RESULT_CHANGE;
+                    res = DoModifyUser (puser, u, passwd_info, cmap, action, groups_to_set);
+                    if (res)
+                    {
+                        *result = PROMISE_RESULT_CHANGE;
+                    }
+                    else
+                    {
+                        *result = PROMISE_RESULT_FAIL;
+                    }
                 }
                 else
                 {
-                    *result = PROMISE_RESULT_FAIL;
+                    *result = PROMISE_RESULT_NOOP;
                 }
             }
             else
             {
-                *result = PROMISE_RESULT_NOOP;
+                *result = PROMISE_RESULT_FAIL;
             }
         }
         else

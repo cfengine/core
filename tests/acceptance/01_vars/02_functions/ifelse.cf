@@ -34,6 +34,8 @@ bundle agent test
       "five" string => ifelse("this is not true", "5 parameters broken",
              "this is also not true", "5 parameters broken 2",
              "5 parameters OK");
+      "unresolved1" string => ifelse( isvariable( "missing" ), "$(missing)", "expected fallback 1");
+      "unresolved2" string => ifelse( isvariable( "missing" ), "$($(missing))", "expected fallback 2");
 
     any::
       "mystring" string => ifelse("any","pass","!any","$(foo)","bar");

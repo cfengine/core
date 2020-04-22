@@ -1,0 +1,37 @@
+###########################################################
+#
+# Test that a variable reference with nested parentheses works
+#
+###########################################################
+
+body common control
+{
+    inputs => { "../../default.cf.sub" };
+    bundlesequence => { default($(this.promise_filename)) };
+    version => "1.0";
+}
+
+###########################################################
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-2191" }
+        string => "Test that a variable expands to the expected value";
+
+  vars:
+      "suffix" string => "devel";
+}
+
+###########################################################
+
+bundle agent check
+{
+  vars:
+      "var_devel" string => "___";
+
+  methods:
+      "Pass/Fail"
+        usebundle => dcs_check_strcmp( "__.__", "$(var_$(init.suffix)).___", $(this.promise_filename), "no");
+
+}

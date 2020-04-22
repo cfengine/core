@@ -1,0 +1,14 @@
+bundle agent main 
+{
+  classes:
+    "found_the_file" expression => fileexists( $(this.promise_filename) );
+
+  vars:
+    found_the_file::
+      "myvar" string => execresult("/bin/echo found_the_file", "noshell");
+    !found_the_file::
+      "myvar" string => execresult("/bin/echo didnt_find_the_file", "noshell");
+
+  reports:
+    "$(myvar)";
+}

@@ -1,0 +1,44 @@
+###########################################################
+#
+# Test evaluation order expectations
+#
+###########################################################
+
+body common control
+{
+    inputs => { "../../default.cf.sub" };
+    bundlesequence => { default($(this.promise_filename)) };
+    version => "1.0";
+}
+
+###########################################################
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-628" }
+        string => "Test that the output is as expected";
+
+      "test_skip_needs_work" -> { "CFE-628" }
+        string => "windows",
+        meta => { "CFE-628" };
+
+}
+
+###########################################################
+
+bundle agent check
+{
+  vars:
+      "cmd" string => "$(sys.cf_agent) -Kf $(this.promise_filename).sub";
+
+  methods:
+
+      "Pass/Fail"
+        usebundle => dcs_passif_output(
+                                        ".*found_the_file.*",      # wanted,
+                                        ".*didnt_find_the_file.*", # unwanted,
+                                        "$(cmd)",              # command,
+                                        $(this.promise_filename) );
+
+}

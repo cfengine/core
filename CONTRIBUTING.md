@@ -209,6 +209,10 @@ This means that references to implementation details are not appropriate, leave 
 It is the behavior change which is important.
 Changes which don't affect users, like changes in tests or in tools which are not packaged, should *not* have a changelog entry.
 
+All changelog entries should also include a reference to a ticket:
+  `Ticket: CFE-1234`
+  
+Note that the `Changelog` and `Ticket` entries must be in a *commit message* and not the description of a PR.
 
 ### Bug tracker tickets
 

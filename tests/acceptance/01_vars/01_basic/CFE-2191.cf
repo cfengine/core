@@ -1,0 +1,41 @@
+body common control
+{
+    inputs => { "../../default.cf.sub" };
+    bundlesequence => { default($(this.promise_filename)) };
+    version => "1.0";
+}
+
+###########################################################
+
+bundle agent init
+{
+  vars:
+      "suffix" string => "devel";
+}
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-2191" }
+        string => "Test that expansion of a nested variable in another bundle expands to the expected value";
+}
+
+###########################################################
+
+bundle agent check
+{
+
+  vars:
+      "expected" string => "___.___";
+      "var_devel" string => "___";
+
+  methods:
+      "Pass/Fail"
+                                     # First, init.suffix is expanded (to devel)
+                                     # Then, $(var_devel) is expanded (to ___)
+        usebundle => dcs_check_strcmp( "$(expected)", "$(var_$(init.suffix)).___", $(this.promise_filename), "no");
+
+  reports:
+      DEBUG|EXTRA::
+      "Expect '$(expected)', got '$(var_$(test.suffix)).___'";
+
+}

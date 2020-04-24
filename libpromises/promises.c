@@ -620,24 +620,40 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
 
     /* Look for 'if'/'ifvarclass' exclusion. */
     {
+        /* We need to make sure to check both 'if' and 'ifvarclass' constraints. */
+        bool checked_if = false;
         const Constraint *ifvarclass = PromiseGetConstraint(pp, "ifvarclass");
         if (!ifvarclass)
         {
             ifvarclass = PromiseGetConstraint(pp, "if");
+            checked_if = true;
         }
 
-        if (ifvarclass && !IsVarClassDefined(ctx, ifvarclass, pcopy))
+        // if - Skip if false or error:
+        while (ifvarclass != NULL)
         {
-            if (LogGetGlobalLevel() >= LOG_LEVEL_VERBOSE)
+            if (!IsVarClassDefined(ctx, ifvarclass, pcopy))
             {
-                char *ifvarclass_string =  RvalToString(ifvarclass->rval);
-                Log(LOG_LEVEL_VERBOSE, "Skipping promise '%s'"
-                    " because constraint '%s => %s' is not met",
-                    pp->promiser, ifvarclass->lval, ifvarclass_string);
-                free(ifvarclass_string);
+                if (LogGetGlobalLevel() >= LOG_LEVEL_VERBOSE)
+                {
+                    char *ifvarclass_string =  RvalToString(ifvarclass->rval);
+                    Log(LOG_LEVEL_VERBOSE, "Skipping promise '%s'"
+                        " because constraint '%s => %s' is not met",
+                        pp->promiser, ifvarclass->lval, ifvarclass_string);
+                    free(ifvarclass_string);
+                }
+                *excluded = true;
+                return pcopy;
             }
-            *excluded = true;
-            return pcopy;
+            if (!checked_if)
+            {
+                ifvarclass = PromiseGetConstraint(pp, "if");
+                checked_if = true;
+            }
+            else
+            {
+                ifvarclass = NULL;
+            }
         }
     }
 

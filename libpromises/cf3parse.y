@@ -98,16 +98,7 @@ bundleid_values:       symbol
 
 bodytype:              bodytype_values
                        {
-                           ParserDebug("P:body:%s\n", P.blocktype);
-                           P.block = PARSER_BLOCK_BODY;
-                           strcpy(P.blockid,"");
-                           RlistDestroy(P.currentRlist);
-                           P.currentRlist = NULL;
-                           if (P.currentstring)
-                           {
-                               free(P.currentstring);
-                           }
-                           P.currentstring = NULL;
+                           ParserBeginBody();
                        }
 
 bodytype_values:       typeid

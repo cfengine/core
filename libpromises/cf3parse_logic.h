@@ -686,4 +686,18 @@ static inline void ParserBeginBundle()
     strcpy(P.blockid, "");
 }
 
+static inline void ParserBeginBody()
+{
+    ParserDebug("P:body:%s\n", P.blocktype);
+    P.block = PARSER_BLOCK_BODY;
+    strcpy(P.blockid, "");
+    RlistDestroy(P.currentRlist);
+    P.currentRlist = NULL;
+    if (P.currentstring)
+    {
+        free(P.currentstring);
+    }
+    P.currentstring = NULL;
+}
+
 #endif // CF3_PARSE_LOGIC_H

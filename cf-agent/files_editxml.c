@@ -170,13 +170,13 @@ bool ScheduleEditXmlOperations(EvalContext *ctx, const Bundle *bp, const Attribu
     {
         for (type = 0; EDITXMLTYPESEQUENCE[type] != NULL; type++)
         {
-            const PromiseType *sp = BundleGetPromiseType(bp, EDITXMLTYPESEQUENCE[type]);
+            const BundleSection *sp = BundleGetSection(bp, EDITXMLTYPESEQUENCE[type]);
             if (!sp)
             {
                 continue;
             }
 
-            EvalContextStackPushPromiseTypeFrame(ctx, sp);
+            EvalContextStackPushBundleSectionFrame(ctx, sp);
             for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
             {
                 Promise *pp = SeqAt(sp->promises, ppi);

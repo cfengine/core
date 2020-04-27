@@ -577,8 +577,8 @@ Policy *LoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
 
             for (size_t j = 0; j < SeqLength(bp->promise_types); j++)
             {
-                PromiseType *sp = SeqAt(bp->promise_types, j);
-                EvalContextStackPushPromiseTypeFrame(ctx, sp);
+                BundleSection *sp = SeqAt(bp->promise_types, j);
+                EvalContextStackPushBundleSectionFrame(ctx, sp);
 
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {

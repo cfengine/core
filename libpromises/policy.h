@@ -96,7 +96,7 @@ struct Body_
     SourceOffset offset;
 };
 
-struct PromiseType_
+struct BundleSection_
 {
     Bundle *parent_bundle;
 
@@ -108,7 +108,7 @@ struct PromiseType_
 
 struct Promise_
 {
-    PromiseType *parent_promise_type;
+    BundleSection *parent_promise_type;
 
     char *classes;
     char *comment;
@@ -171,8 +171,8 @@ JsonElement *BodyToJson(const Body *body);
 Policy *PolicyFromJson(JsonElement *json_policy);
 void PolicyToString(const Policy *policy, Writer *writer);
 
-PromiseType *BundleAppendPromiseType(Bundle *bundle, const char *name);
-const PromiseType *BundleGetPromiseType(const Bundle *bp, const char *name);
+BundleSection *BundleAppendSection(Bundle *bundle, const char *name);
+const BundleSection *BundleGetSection(const Bundle *bp, const char *name);
 
 Constraint *BodyAppendConstraint(Body *body, const char *lval, Rval rval, const char *classes, bool references_body);
 Seq *BodyGetConstraint(Body *body, const char *lval);
@@ -180,8 +180,8 @@ bool BodyHasConstraint(const Body *body, const char *lval);
 
 const char *ConstraintGetNamespace(const Constraint *cp);
 
-Promise *PromiseTypeAppendPromise(PromiseType *type, const char *promiser, Rval promisee, const char *classes, const char *varclasses);
-void PromiseTypeDestroy(PromiseType *promise_type);
+Promise *BundleSectionAppendPromise(BundleSection *section, const char *promiser, Rval promisee, const char *classes, const char *varclasses);
+void BundleSectionDestroy(BundleSection *section);
 
 void PromiseDestroy(Promise *pp);
 

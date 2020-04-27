@@ -304,10 +304,10 @@ promisee_statement:    promiser
                                    ParseError("Missing promise type declaration");
                                }
 
-                               P.currentpromise = PromiseTypeAppendPromise(P.currentstype, P.promiser,
-                                                                           RvalCopy(P.rval),
-                                                                           P.currentclasses ? P.currentclasses : "any",
-                                                                           P.currentvarclasses);
+                               P.currentpromise = BundleSectionAppendPromise(P.currentstype, P.promiser,
+                                                                             RvalCopy(P.rval),
+                                                                             P.currentclasses ? P.currentclasses : "any",
+                                                                             P.currentvarclasses);
                                P.currentpromise->offset.line = CURRENT_PROMISER_LINE;
                                P.currentpromise->offset.start = P.offsets.last_string;
                                P.currentpromise->offset.context = P.offsets.last_class_id;
@@ -332,10 +332,10 @@ promiser_statement:    promiser
                                    ParseError("Missing promise type declaration");
                                }
 
-                               P.currentpromise = PromiseTypeAppendPromise(P.currentstype, P.promiser,
-                                                                (Rval) { NULL, RVAL_TYPE_NOPROMISEE },
-                                                                           P.currentclasses ? P.currentclasses : "any",
-                                                                           P.currentvarclasses);
+                               P.currentpromise = BundleSectionAppendPromise(P.currentstype, P.promiser,
+                                                                             (Rval) { NULL, RVAL_TYPE_NOPROMISEE },
+                                                                             P.currentclasses ? P.currentclasses : "any",
+                                                                             P.currentvarclasses);
                                P.currentpromise->offset.line = CURRENT_PROMISER_LINE;
                                P.currentpromise->offset.start = P.offsets.last_string;
                                P.currentpromise->offset.context = P.offsets.last_class_id;

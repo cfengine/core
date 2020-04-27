@@ -925,4 +925,38 @@ static inline void ParserHandleBlockAttributeRval()
     P.rval = RvalNew(NULL, RVAL_TYPE_NOPROMISEE);
 }
 
+static inline void ParserBeginBundleBody()
+{
+    assert(P.block == PARSER_BLOCK_BUNDLE);
+
+    if (RelevantBundle(CF_AGENTTYPES[P.agent_type], P.blocktype))
+    {
+        INSTALL_SKIP = false;
+    }
+    else if (strcmp(CF_AGENTTYPES[P.agent_type], P.blocktype) != 0)
+    {
+        INSTALL_SKIP = true;
+    }
+
+    if (!INSTALL_SKIP)
+    {
+        P.currentbundle = PolicyAppendBundle(
+            P.policy,
+            P.current_namespace,
+            P.blockid,
+            P.blocktype,
+            P.useargs,
+            P.filename);
+        P.currentbundle->offset.line = CURRENT_BLOCKID_LINE;
+        P.currentbundle->offset.start = P.offsets.last_block_id;
+    }
+    else
+    {
+        P.currentbundle = NULL;
+    }
+
+    RlistDestroy(P.useargs);
+    P.useargs = NULL;
+}
+
 #endif // CF3_PARSE_LOGIC_H

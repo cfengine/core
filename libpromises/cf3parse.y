@@ -26,7 +26,7 @@
 #include <cf3parse_logic.h>
 %}
 
-%token IDENTIFIER BLOCKID QUOTED_STRING CLASS_GUARD PROMISE_GUARD BUNDLE BODY FAT_ARROW THIN_ARROW NAKEDVAR
+%token IDENTIFIER QUOTED_STRING CLASS_GUARD PROMISE_GUARD BUNDLE BODY FAT_ARROW THIN_ARROW NAKEDVAR
 %expect 1
 
 %%
@@ -601,13 +601,6 @@ rval:                  IDENTIFIER
                            P.rval = (Rval) { xstrdup(P.currentid), RVAL_TYPE_SCALAR };
                            P.references_body = true;
                        }
-                     | BLOCKID
-                       {
-                           ParserDebug("\tP:%s:%s:%s:%s blockid rval, %s = %s\n", ParserBlockString(P.block), P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.lval, P.currentid);
-                           RvalDestroy(P.rval);
-                           P.rval = (Rval) { xstrdup(P.currentid), RVAL_TYPE_SCALAR };
-                           P.references_body = true;
-                       }
                      | QUOTED_STRING
                        {
                            ParserDebug("\tP:%s:%s:%s:%s qstring rval, %s = %s\n", ParserBlockString(P.block), P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.lval, P.currentstring);
@@ -742,10 +735,6 @@ litem:                 IDENTIFIER
 functionid:            IDENTIFIER
                        {
                            ParserDebug("\tP:%s:%s:%s:%s function id = %s\n", ParserBlockString(P.block), P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentid);
-                       }
-                     | BLOCKID
-                       {
-                           ParserDebug("\tP:%s:%s:%s:%s function blockid = %s\n", ParserBlockString(P.block), P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentid);
                        }
                      | NAKEDVAR
                        {

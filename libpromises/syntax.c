@@ -146,8 +146,9 @@ const ConstraintSyntax *PromiseTypeSyntaxGetConstraintSyntax(const PromiseTypeSy
     return GetCommonConstraint(lval);
 }
 
-const BodySyntax *BodySyntaxGet(const char *body_type)
+const BodySyntax *BodySyntaxGet(ParserBlock block, const char *body_type)
 {
+    assert(block == PARSER_BLOCK_BODY); // Will be used for promise blocks later
     for (int i = 0; i < CF3_MODULES; i++)
     {
         const PromiseTypeSyntax *promise_type_syntax = CF_ALL_PROMISE_TYPES[i];

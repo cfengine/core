@@ -38,6 +38,7 @@
 
 #include "cf3.defs.h"
 #include "parser.h"
+#include "parser_helpers.h"
 #include "parser_state.h"
 
 #include "logging.h"

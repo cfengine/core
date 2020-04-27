@@ -61,7 +61,7 @@ static void test_lookup_constraint_edit_xml_set_attribute_attribute_value(void)
 
 static void test_lookup_body_classes(void)
 {
-    const BodySyntax *x = BodySyntaxGet("classes");
+    const BodySyntax *x = BodySyntaxGet(PARSER_BLOCK_BODY, "classes");
     assert_true(x);
 
     const ConstraintSyntax *y = BodySyntaxGetConstraintSyntax(x->constraints, "promise_repaired");
@@ -71,7 +71,7 @@ static void test_lookup_body_classes(void)
 
 static void test_lookup_body_process_count(void)
 {
-    const BodySyntax *x = BodySyntaxGet("process_count");
+    const BodySyntax *x = BodySyntaxGet(PARSER_BLOCK_BODY, "process_count");
     assert_true(x);
 
     const ConstraintSyntax *y = BodySyntaxGetConstraintSyntax(x->constraints, "match_range");
@@ -81,7 +81,7 @@ static void test_lookup_body_process_count(void)
 
 static void test_lookup_body_delete_select(void)
 {
-    const BodySyntax *x = BodySyntaxGet("delete_select");
+    const BodySyntax *x = BodySyntaxGet(PARSER_BLOCK_BODY, "delete_select");
     assert_true(x);
 
     const ConstraintSyntax *y = BodySyntaxGetConstraintSyntax(x->constraints, "delete_if_startwith_from_list");
@@ -91,7 +91,7 @@ static void test_lookup_body_delete_select(void)
 
 static void test_copy_from_servers(void)
 {
-    const BodySyntax *x = BodySyntaxGet("copy_from");
+    const BodySyntax *x = BodySyntaxGet(PARSER_BLOCK_BODY, "copy_from");
     assert_true(x);
 
     const ConstraintSyntax *y = BodySyntaxGetConstraintSyntax(x->constraints, "servers");

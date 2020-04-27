@@ -28,6 +28,7 @@
 #include <cf3.defs.h>
 #include <rlist.h>
 #include <fncall.h>
+#include <parser_helpers.h> // ParserBlock
 
 #define CF_MAX_NESTING 10
 
@@ -35,7 +36,7 @@ typedef struct
 {
     AgentType agent_type;
 
-    char *block;                // body/bundle
+    ParserBlock block; // enum for bundle/body
     char blocktype[CF_MAXVARSIZE];
     char blockid[CF_MAXVARSIZE];
 

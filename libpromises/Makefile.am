@@ -125,6 +125,7 @@ libpromises_la_SOURCES = \
 	ornaments.c ornaments.h \
 	policy.c policy.h \
 	parser.c parser.h \
+	parser_helpers.h \
 	parser_state.h \
 	patches.c \
 	pipes.h pipes.c \

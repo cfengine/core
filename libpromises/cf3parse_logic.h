@@ -700,4 +700,65 @@ static inline void ParserBeginBody()
     P.currentstring = NULL;
 }
 
+// The promise "guard" is a promise type followed by a single colon,
+// found in bundles. It is called guard because it resembles the
+// class guards, and all other names I could think of were confusing.
+// (It doesn't really "guard" anything).
+static inline void ParserHandlePromiseGuard()
+{
+    ParserDebug(
+        "\tP:%s:%s:%s promise_type = %s\n",
+        ParserBlockString(P.block),
+        P.blocktype,
+        P.blockid,
+        P.currenttype);
+
+    const PromiseTypeSyntax *promise_type_syntax =
+        PromiseTypeSyntaxGet(P.blocktype, P.currenttype);
+
+    if (promise_type_syntax)
+    {
+        switch (promise_type_syntax->status)
+        {
+        case SYNTAX_STATUS_DEPRECATED:
+            ParseWarning(
+                PARSER_WARNING_DEPRECATED,
+                "Deprecated promise type '%s' in bundle type '%s'",
+                promise_type_syntax->promise_type,
+                promise_type_syntax->bundle_type);
+            // Intentional fall
+        case SYNTAX_STATUS_NORMAL:
+            if (P.block == PARSER_BLOCK_BUNDLE)
+            {
+                if (!INSTALL_SKIP)
+                {
+                    P.currentstype = BundleAppendPromiseType(
+                        P.currentbundle, P.currenttype);
+                    P.currentstype->offset.line = P.line_no;
+                    P.currentstype->offset.start =
+                        P.offsets.last_promise_guard_id;
+                }
+                else
+                {
+                    P.currentstype = NULL;
+                }
+            }
+            break;
+        case SYNTAX_STATUS_REMOVED:
+            ParseWarning(
+                PARSER_WARNING_REMOVED,
+                "Removed promise type '%s' in bundle type '%s'",
+                promise_type_syntax->promise_type,
+                promise_type_syntax->bundle_type);
+            INSTALL_SKIP = true;
+            break;
+        }
+    }
+    else
+    {
+        ParseError("Unknown promise type '%s'", P.currenttype);
+        INSTALL_SKIP = true;
+    }
+}
+
 #endif // CF3_PARSE_LOGIC_H

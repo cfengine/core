@@ -552,7 +552,7 @@ promise_guard  [a-zA-Z_]+:
                           P.currentvarclasses = xstrdup(tmp);
 
                           free(tmp);
-                          return CLASS;
+                          return CLASS_GUARD;
                       }
 
 {class}               {
@@ -593,7 +593,7 @@ promise_guard  [a-zA-Z_]+:
                           P.currentclasses = xstrdup(tmp);
 
                           free(tmp);
-                          return CLASS;
+                          return CLASS_GUARD;
                       }
 
 {promise_guard}       {

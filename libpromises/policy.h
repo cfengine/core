@@ -108,7 +108,7 @@ struct BundleSection_
 
 struct Promise_
 {
-    BundleSection *parent_promise_type;
+    BundleSection *parent_section;
 
     char *classes;
     char *comment;

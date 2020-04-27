@@ -227,8 +227,8 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, PromiseIterator *iterc
         /* EVALUATE VARS PROMISES again, allowing redefinition of
          * variables. The theory behind this is that the "sampling rate" of
          * vars promise needs to be double than the rest. */
-        if (strcmp(pexp->parent_promise_type->name, "vars") == 0 ||
-            strcmp(pexp->parent_promise_type->name, "meta") == 0)
+        if (strcmp(pexp->parent_section->name, "vars") == 0 ||
+            strcmp(pexp->parent_section->name, "meta") == 0)
         {
             if (act_on_promise != &VerifyVarPromise)
             {

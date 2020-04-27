@@ -1657,8 +1657,8 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
     struct timespec start = BeginMeasure();
     PromiseResult result = PROMISE_RESULT_NOOP;
 
-    if (strcmp("meta", pp->parent_promise_type->name) == 0 ||
-        strcmp("vars", pp->parent_promise_type->name) == 0)
+    if (strcmp("meta", pp->parent_section->name) == 0 ||
+        strcmp("vars", pp->parent_section->name) == 0)
     {
         Log(LOG_LEVEL_VERBOSE, "V:     Computing value of '%s'", pp->promiser);
 
@@ -1671,15 +1671,15 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
             }
         }
     }
-    else if (strcmp("defaults", pp->parent_promise_type->name) == 0)
+    else if (strcmp("defaults", pp->parent_section->name) == 0)
     {
         result = DefaultVarPromise(ctx, pp);
     }
-    else if (strcmp("classes", pp->parent_promise_type->name) == 0)
+    else if (strcmp("classes", pp->parent_section->name) == 0)
     {
         result = VerifyClassPromise(ctx, pp, NULL);
     }
-    else if (strcmp("processes", pp->parent_promise_type->name) == 0)
+    else if (strcmp("processes", pp->parent_section->name) == 0)
     {
         if (!LoadProcessTable())
         {
@@ -1692,7 +1692,7 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
             EndMeasurePromise(start, pp);
         }
     }
-    else if (strcmp("storage", pp->parent_promise_type->name) == 0)
+    else if (strcmp("storage", pp->parent_section->name) == 0)
     {
         result = FindAndVerifyStoragePromises(ctx, pp);
         if (result != PROMISE_RESULT_SKIPPED)
@@ -1700,7 +1700,7 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
             EndMeasurePromise(start, pp);
         }
     }
-    else if (strcmp("packages", pp->parent_promise_type->name) == 0)
+    else if (strcmp("packages", pp->parent_section->name) == 0)
     {
         result = VerifyPackagesPromise(ctx, pp);
         if (result != PROMISE_RESULT_SKIPPED)
@@ -1708,7 +1708,7 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
             EndMeasurePromise(start, pp);
         }
     }
-    else if (strcmp("users", pp->parent_promise_type->name) == 0)
+    else if (strcmp("users", pp->parent_section->name) == 0)
     {
         result = VerifyUsersPromise(ctx, pp);
         if (result != PROMISE_RESULT_SKIPPED)
@@ -1717,7 +1717,7 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
         }
     }
 
-    else if (strcmp("files", pp->parent_promise_type->name) == 0)
+    else if (strcmp("files", pp->parent_section->name) == 0)
     {
         result = ParallelFindAndVerifyFilesPromises(ctx, pp);
         if (result != PROMISE_RESULT_SKIPPED)
@@ -1725,7 +1725,7 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
             EndMeasurePromise(start, pp);
         }
     }
-    else if (strcmp("commands", pp->parent_promise_type->name) == 0)
+    else if (strcmp("commands", pp->parent_section->name) == 0)
     {
         result = VerifyExecPromise(ctx, pp);
         if (result != PROMISE_RESULT_SKIPPED)
@@ -1733,7 +1733,7 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
             EndMeasurePromise(start, pp);
         }
     }
-    else if (strcmp("databases", pp->parent_promise_type->name) == 0)
+    else if (strcmp("databases", pp->parent_section->name) == 0)
     {
         result = VerifyDatabasePromises(ctx, pp);
         if (result != PROMISE_RESULT_SKIPPED)
@@ -1741,7 +1741,7 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
             EndMeasurePromise(start, pp);
         }
     }
-    else if (strcmp("methods", pp->parent_promise_type->name) == 0)
+    else if (strcmp("methods", pp->parent_section->name) == 0)
     {
         result = VerifyMethodsPromise(ctx, pp);
         if (result != PROMISE_RESULT_SKIPPED)
@@ -1749,7 +1749,7 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
             EndMeasurePromise(start, pp);
         }
     }
-    else if (strcmp("services", pp->parent_promise_type->name) == 0)
+    else if (strcmp("services", pp->parent_section->name) == 0)
     {
         result = VerifyServicesPromise(ctx, pp);
         if (result != PROMISE_RESULT_SKIPPED)
@@ -1757,7 +1757,7 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
             EndMeasurePromise(start, pp);
         }
     }
-    else if (strcmp("guest_environments", pp->parent_promise_type->name) == 0)
+    else if (strcmp("guest_environments", pp->parent_section->name) == 0)
     {
         result = VerifyEnvironmentsPromise(ctx, pp);
         if (result != PROMISE_RESULT_SKIPPED)
@@ -1765,7 +1765,7 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
             EndMeasurePromise(start, pp);
         }
     }
-    else if (strcmp("reports", pp->parent_promise_type->name) == 0)
+    else if (strcmp("reports", pp->parent_section->name) == 0)
     {
         result = VerifyReportPromise(ctx, pp);
     }
@@ -1774,7 +1774,7 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
         result = PROMISE_RESULT_NOOP;
     }
 
-    BannerStatus(result, pp->parent_promise_type->name, pp->promiser);
+    BannerStatus(result, pp->parent_section->name, pp->promiser);
     EvalContextLogPromiseIterationOutcome(ctx, pp, result);
     return result;
 }

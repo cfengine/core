@@ -612,7 +612,7 @@ rval:                  IDENTIFIER
 
                            if (P.currentpromise)
                            {
-                               if (LvalWantsBody(P.currentpromise->parent_promise_type->name, P.lval))
+                               if (LvalWantsBody(P.currentpromise->parent_section->name, P.lval))
                                {
                                    yyerror("An rvalue is quoted, but we expect an unquoted body identifier");
                                }

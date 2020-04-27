@@ -460,7 +460,7 @@ const char *ConstraintGetNamespace(const Constraint *cp)
         return cp->parent.body->ns;
 
     case POLICY_ELEMENT_TYPE_PROMISE:
-        return cp->parent.promise->parent_promise_type->parent_bundle->ns;
+        return cp->parent.promise->parent_section->parent_bundle->ns;
 
     default:
         ProgrammingError("Constraint has parent type: %d", cp->type);
@@ -478,7 +478,7 @@ const Policy *PolicyFromPromise(const Promise *promise)
 {
     assert(promise);
 
-    BundleSection *section = promise->parent_promise_type;
+    BundleSection *section = promise->parent_section;
     assert(section != NULL);
 
     Bundle *bundle = section->parent_bundle;
@@ -555,7 +555,7 @@ static bool ConstraintCheckSyntax(const Constraint *constraint, Seq *errors)
                          " not belonging to a promise");
     }
 
-    const BundleSection *section = constraint->parent.promise->parent_promise_type;
+    const BundleSection *section = constraint->parent.promise->parent_section;
     const Bundle *bundle = section->parent_bundle;
 
     /* Check if lvalue is valid for the bundle's specific section. */
@@ -626,7 +626,7 @@ static bool ConstraintCheckSyntax(const Constraint *constraint, Seq *errors)
     SeqAppend(errors,
               PolicyErrorNew(POLICY_ELEMENT_TYPE_CONSTRAINT, constraint,
                              POLICY_ERROR_LVAL_INVALID,
-                             constraint->parent.promise->parent_promise_type->name,
+                             constraint->parent.promise->parent_section->name,
                              constraint->lval));
 
     return false;
@@ -728,7 +728,7 @@ static const ConstraintSyntax *ConstraintGetSyntax(const Constraint *constraint)
     }
 
     const Promise *promise = constraint->parent.promise;
-    const BundleSection *section = promise->parent_promise_type;
+    const BundleSection *section = promise->parent_section;
     const Bundle *bundle = section->parent_bundle;
 
     const PromiseTypeSyntax *promise_type_syntax = PromiseTypeSyntaxGet(bundle->type, section->name);
@@ -1245,7 +1245,7 @@ static const char *PolicyElementSourceFile(PolicyElementType type, const void *e
     case POLICY_ELEMENT_TYPE_PROMISE:
     {
         const Promise *promise = (const Promise *)element;
-        return PolicyElementSourceFile(POLICY_ELEMENT_TYPE_BUNDLE_SECTION, promise->parent_promise_type);
+        return PolicyElementSourceFile(POLICY_ELEMENT_TYPE_BUNDLE_SECTION, promise->parent_section);
     }
 
     case POLICY_ELEMENT_TYPE_CONSTRAINT:
@@ -1423,7 +1423,7 @@ Promise *BundleSectionAppendPromise(BundleSection *section, const char *promiser
 
     SeqAppend(section->promises, pp);
 
-    pp->parent_promise_type = section;
+    pp->parent_section = section;
 
     pp->promisee = promisee;
     pp->conlist = SeqNew(10, ConstraintDestroy);
@@ -2652,8 +2652,8 @@ static bool PromiseCheck(const Promise *pp, Seq *errors)
         success &= ConstraintCheckSyntax(constraint, errors);
     }
 
-    const PromiseTypeSyntax *pts = PromiseTypeSyntaxGet(pp->parent_promise_type->parent_bundle->type,
-                                                        pp->parent_promise_type->name);
+    const PromiseTypeSyntax *pts = PromiseTypeSyntaxGet(pp->parent_section->parent_bundle->type,
+                                                        pp->parent_section->name);
 
     if (pts->check_promise)
     {
@@ -2665,12 +2665,12 @@ static bool PromiseCheck(const Promise *pp, Seq *errors)
 
 const char *PromiseGetNamespace(const Promise *pp)
 {
-    return pp->parent_promise_type->parent_bundle->ns;
+    return pp->parent_section->parent_bundle->ns;
 }
 
 const Bundle *PromiseGetBundle(const Promise *pp)
 {
-    return pp->parent_promise_type->parent_bundle;
+    return pp->parent_section->parent_bundle;
 }
 
 const Policy *PromiseGetPolicy(const Promise *pp)
@@ -2698,7 +2698,7 @@ static void PromiseTypePath(Writer *w, const BundleSection *section)
  */
 void PromisePath(Writer *w, const Promise *pp)
 {
-    PromiseTypePath(w, pp->parent_promise_type);
+    PromiseTypePath(w, pp->parent_section);
     WriterWriteChar(w, '/');
     WriterWriteChar(w, '\'');
     WriterWrite(w, pp->promiser);
@@ -3102,7 +3102,7 @@ void PromiseRecheckAllConstraints(const EvalContext *ctx, const Promise *pp)
     /* Check and warn for non-convergence, see commits
        4f8c19b84327b8f3c2e269173196282ccedfdad9 and
        30c109d22e170a781a647b04b4b0a4a2f7244871. */
-    if (strcmp(pp->parent_promise_type->name, "insert_lines") == 0)
+    if (strcmp(pp->parent_section->name, "insert_lines") == 0)
     {
         /* TODO without static var, actually remove this check from here
          * completely, do it at the end of PRE-EVAL promise iterations
@@ -3150,7 +3150,7 @@ static SyntaxTypeMatch ConstraintCheckType(const Constraint *cp)
 
     if (cp->type == POLICY_ELEMENT_TYPE_PROMISE)
     {
-        BundleSection *section = cp->parent.promise->parent_promise_type;
+        BundleSection *section = cp->parent.promise->parent_section;
 
         for (size_t i = 0; i < CF3_MODULES; i++)
         {

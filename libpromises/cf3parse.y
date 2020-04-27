@@ -26,7 +26,7 @@
 #include <cf3parse_logic.h>
 %}
 
-%token IDSYNTAX BLOCKID QSTRING CLASS_GUARD PROMISE_GUARD BUNDLE BODY FAT_ARROW THIN_ARROW NAKEDVAR
+%token IDSYNTAX BLOCKID QUOTED_STRING CLASS_GUARD PROMISE_GUARD BUNDLE BODY FAT_ARROW THIN_ARROW NAKEDVAR
 %expect 1
 
 %%
@@ -350,7 +350,7 @@ promiser_statement:    promiser
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-promiser:              QSTRING
+promiser:              QUOTED_STRING
                        {
                            if (P.promiser)
                            {
@@ -608,7 +608,7 @@ rval:                  IDSYNTAX
                            P.rval = (Rval) { xstrdup(P.currentid), RVAL_TYPE_SCALAR };
                            P.references_body = true;
                        }
-                     | QSTRING
+                     | QUOTED_STRING
                        {
                            ParserDebug("\tP:%s:%s:%s:%s qstring rval, %s = %s\n", ParserBlockString(P.block), P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.lval, P.currentstring);
                            RvalDestroy(P.rval);
@@ -702,7 +702,7 @@ litem:                 IDSYNTAX
                                              P.currentid);
                        }
 
-                     | QSTRING
+                     | QUOTED_STRING
                        {
                            ParserDebug("\tP:%s:%s:%s:%s list append: "
                                        "qstring = %s\n",
@@ -811,7 +811,7 @@ gaitem:                IDSYNTAX
                            RlistAppendScalar(&P.giveargs[P.arg_nesting],P.currentid);
                        }
 
-                     | QSTRING
+                     | QUOTED_STRING
                        {
                            /* currently inside a use function */
                            ParserDebug("\tP:%s:%s:%s:%s function %s, qstring arg = %s\n", ParserBlockString(P.block), P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentfnid[P.arg_nesting], P.currentstring);

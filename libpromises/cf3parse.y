@@ -26,7 +26,7 @@
 #include <cf3parse_logic.h>
 %}
 
-%token IDSYNTAX BLOCKID QSTRING CLASS PROMISE_GUARD BUNDLE BODY FAT_ARROW THIN_ARROW NAKEDVAR
+%token IDSYNTAX BLOCKID QSTRING CLASS_GUARD PROMISE_GUARD BUNDLE BODY FAT_ARROW THIN_ARROW NAKEDVAR
 %expect 1
 
 %%
@@ -574,7 +574,7 @@ promisee_arrow:        THIN_ARROW
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-class:                 CLASS
+class:                 CLASS_GUARD
                        {
                            P.offsets.last_class_id = P.offsets.current - strlen(P.currentclasses ? P.currentclasses : P.currentvarclasses) - 2;
                            ParserDebug("\tP:%s:%s:%s:%s %s = %s\n", ParserBlockString(P.block), P.blocktype, P.blockid, P.currenttype, P.currentclasses ? "class": "varclass", yytext);

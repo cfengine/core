@@ -26,7 +26,7 @@
 #include <cf3parse_logic.h>
 %}
 
-%token IDSYNTAX BLOCKID QUOTED_STRING CLASS_GUARD PROMISE_GUARD BUNDLE BODY FAT_ARROW THIN_ARROW NAKEDVAR
+%token IDENTIFIER BLOCKID QUOTED_STRING CLASS_GUARD PROMISE_GUARD BUNDLE BODY FAT_ARROW THIN_ARROW NAKEDVAR
 %expect 1
 
 %%
@@ -130,7 +130,7 @@ bodyid_values:         symbol
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-typeid:                IDSYNTAX
+typeid:                IDENTIFIER
                        {
                            strncpy(P.blocktype,P.currentid,CF_MAXVARSIZE);
 
@@ -140,7 +140,7 @@ typeid:                IDSYNTAX
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-symbol:                IDSYNTAX
+symbol:                IDENTIFIER
                        {
                            strncpy(P.blockid,P.currentid,CF_MAXVARSIZE);
                            P.offsets.last_block_id = P.offsets.last_id;
@@ -174,7 +174,7 @@ aitems:                aitem
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-aitem:                 IDSYNTAX  /* recipient of argument is never a literal */
+aitem:                 IDENTIFIER  /* recipient of argument is never a literal */
                        {
                            ParserDebug("P:%s:%s:%s  arg id: %s\n", ParserBlockString(P.block),P.blocktype,P.blockid, P.currentid);
                            RlistAppendScalar(&(P.useargs),P.currentid);
@@ -270,7 +270,7 @@ promise_decl:          promise_line ';'
                            {
                               ParseError("Expected '->', got '%s'", yytext);
                            }
-                           else if (yychar == IDSYNTAX)
+                           else if (yychar == IDENTIFIER)
                            {
                               ParseError("Expected attribute, got '%s'", yytext);
                            }
@@ -391,7 +391,7 @@ promiser_constraints_decl:      /* empty */
                                     * Based on next token id display right error message
                                    */
                                    ParserDebug("P:constraints_decl:error yychar = %d\n", yychar);
-                                   if ( yychar == IDSYNTAX )
+                                   if ( yychar == IDENTIFIER )
                                    {
                                        ParseError("Check previous line, Expected ',', got '%s'", yytext);
                                    }
@@ -440,7 +440,7 @@ constraint:            constraint_id                        /* BUNDLE ONLY */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-constraint_id:         IDSYNTAX                        /* BUNDLE ONLY */
+constraint_id:         IDENTIFIER                        /* BUNDLE ONLY */
                        {
                            ParserDebug("\tP:%s:%s:%s:%s:%s:%s attribute = %s\n", ParserBlockString(P.block), P.blocktype, P.blockid, P.currenttype, P.currentclasses ? P.currentclasses : "any", P.promiser, P.currentid);
 
@@ -508,7 +508,7 @@ selection:             selection_id                         /* BODY ONLY */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-selection_id:          IDSYNTAX
+selection_id:          IDENTIFIER
                        {
                            ParserDebug("\tP:%s:%s:%s:%s attribute = %s\n", ParserBlockString(P.block), P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentid);
 
@@ -594,7 +594,7 @@ class:                 CLASS_GUARD
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-rval:                  IDSYNTAX
+rval:                  IDENTIFIER
                        {
                            ParserDebug("\tP:%s:%s:%s:%s id rval, %s = %s\n", ParserBlockString(P.block), P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.lval, P.currentid);
                            RvalDestroy(P.rval);
@@ -690,7 +690,7 @@ litems:
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-litem:                 IDSYNTAX
+litem:                 IDENTIFIER
                        {
                            ParserDebug("\tP:%s:%s:%s:%s list append: "
                                        "id = %s\n",
@@ -739,7 +739,7 @@ litem:                 IDSYNTAX
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-functionid:            IDSYNTAX
+functionid:            IDENTIFIER
                        {
                            ParserDebug("\tP:%s:%s:%s:%s function id = %s\n", ParserBlockString(P.block), P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentid);
                        }
@@ -804,7 +804,7 @@ gaitems:               /* empty */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-gaitem:                IDSYNTAX
+gaitem:                IDENTIFIER
                        {
                            ParserDebug("\tP:%s:%s:%s:%s function %s, id arg = %s\n", ParserBlockString(P.block), P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentfnid[P.arg_nesting], P.currentid);
                            /* currently inside a use function */

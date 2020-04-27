@@ -99,7 +99,7 @@ macro_else  @else
 macro_endif @endif
 macro_line [^@\n\xd\xa].*
 
-promises   bundle
+bundle     bundle
 
 body       body
 
@@ -450,7 +450,7 @@ promise_type   [a-zA-Z_]+:
                           ParserDebug("\tL:inside macro @if, ignoring char text:\"%s\"\n", yytext);
                       }
 
-{promises}            {
+{bundle}              {
                           /* Note this has to come before "id" since it is a subset of id */
 
                           if (P.currentclasses != NULL)

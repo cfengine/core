@@ -26,7 +26,7 @@
 #include <cf3parse_logic.h>
 %}
 
-%token IDSYNTAX BLOCKID QSTRING CLASS PROMISE_GUARD BUNDLE BODY ASSIGN ARROW NAKEDVAR
+%token IDSYNTAX BLOCKID QSTRING CLASS PROMISE_GUARD BUNDLE BODY FAT_ARROW THIN_ARROW NAKEDVAR
 %expect 1
 
 %%
@@ -293,7 +293,7 @@ promise_line:           promisee_statement
 
 promisee_statement:    promiser
 
-                       arrow_type
+                       promisee_arrow
 
                        rval
                        {
@@ -432,7 +432,7 @@ constraints:           constraint                           /* BUNDLE ONLY */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 constraint:            constraint_id                        /* BUNDLE ONLY */
-                       assign_type
+                       assign_arrow
                        rval
                        {
                            ParserHandleBundlePromiseRval();
@@ -500,7 +500,7 @@ selection_line:        selection ';'
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 selection:             selection_id                         /* BODY ONLY */
-                       assign_type
+                       assign_arrow
                        rval
                        {
                            ParserHandleBlockAttributeRval();
@@ -548,7 +548,7 @@ selection_id:          IDSYNTAX
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-assign_type:           ASSIGN
+assign_arrow:          FAT_ARROW
                        {
                            ParserDebug("\tP:=>\n");
                        }
@@ -560,7 +560,7 @@ assign_type:           ASSIGN
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-arrow_type:            ARROW
+promisee_arrow:        THIN_ARROW
                        {
                            ParserDebug("\tP:->\n");
                        }
@@ -675,7 +675,7 @@ litems:
                            {
                                ParseError("Expected '}', wrong input '%s'", yytext);
                            }
-                           else if ( yychar == ASSIGN )
+                           else if ( yychar == FAT_ARROW )
                            {
                                ParseError("Check list statement previous line,"
                                           " Expected '}', wrong input '%s'",
@@ -845,7 +845,7 @@ gaitem:                IDSYNTAX
                            {
                               ParseError("Expected ')', wrong input '%s'", yytext);
                            }
-                           else if (yychar == ASSIGN )
+                           else if (yychar == FAT_ARROW )
                            {
                               ParseError("Check function statement  previous line, Expected ')', wrong input '%s'", yytext);
                            }

@@ -109,9 +109,9 @@ id         [a-zA-Z0-9_\200-\377]+
 
 symbol     [a-zA-Z0-9_\200-\377]+[:][a-zA-Z0-9_\200-\377]+
 
-assign     =>
+fat_arrow  =>
 
-arrow      ->
+thin_arrow ->
 
 /*
  * Three types of quoted strings:
@@ -516,16 +516,16 @@ promise_guard  [a-zA-Z_]+:
                       }
 
 
-{assign}              {
+{fat_arrow}           {
                           P.line_pos += yyleng;
                           ParserDebug("\tL:assign %d\n", P.line_pos);
-                          return ASSIGN;
+                          return FAT_ARROW;
                       }
 
-{arrow}               {
+{thin_arrow}          {
                           P.line_pos += yyleng;
                           ParserDebug("\tL:arrow %d\n", P.line_pos);
-                          return ARROW;
+                          return THIN_ARROW;
                       }
 
 {varclass}            {

@@ -476,4 +476,198 @@ static void inline ParserEndCurrentBlock()
     }
 }
 
+// This function is called for every rval (right hand side value) of every
+// promise while parsing. The reason why it is so big is because it does a lot
+// of transformation, for example transforming strings into function calls like
+// parsejson, and then attempts to resolve those function calls.
+static inline void ParserHandleBundlePromiseRval()
+{
+    if (!INSTALL_SKIP)
+    {
+        const ConstraintSyntax *constraint_syntax = NULL;
+        const PromiseTypeSyntax *promise_type_syntax =
+            PromiseTypeSyntaxGet(P.blocktype, P.currenttype);
+        if (promise_type_syntax != NULL)
+        {
+            constraint_syntax = PromiseTypeSyntaxGetConstraintSyntax(
+                promise_type_syntax, P.lval);
+        }
+
+        if (promise_type_syntax == NULL)
+        {
+            ParseError(
+                "Invalid promise type '%s' in bundle '%s' of type '%s'",
+                P.currenttype,
+                P.blockid,
+                P.blocktype);
+            INSTALL_SKIP = true;
+        }
+        else if (constraint_syntax != NULL)
+        {
+            switch (constraint_syntax->status)
+            {
+            case SYNTAX_STATUS_DEPRECATED:
+                ParseWarning(
+                    PARSER_WARNING_DEPRECATED,
+                    "Deprecated constraint '%s' in promise type '%s'",
+                    constraint_syntax->lval,
+                    promise_type_syntax->promise_type);
+                // Intentional fall
+            case SYNTAX_STATUS_NORMAL:
+            {
+                const char *item = P.rval.item;
+                // convert @(x) to mergedata(x)
+                if (P.rval.type == RVAL_TYPE_SCALAR
+                    && (strcmp(P.lval, "data") == 0
+                        || strcmp(P.lval, "template_data") == 0)
+                    && strlen(item) > 3 && item[0] == '@'
+                    && (item[1] == '(' || item[1] == '{'))
+                {
+                    Rlist *synthetic_args = NULL;
+                    char *tmp =
+                        xstrndup(P.rval.item + 2, strlen(P.rval.item) - 3);
+                    RlistAppendScalar(&synthetic_args, tmp);
+                    free(tmp);
+                    RvalDestroy(P.rval);
+
+                    P.rval = (Rval){FnCallNew("mergedata", synthetic_args),
+                                    RVAL_TYPE_FNCALL};
+                }
+                // convert 'json or yaml' to direct container or parsejson(x)
+                // or parseyaml(x)
+                else if (
+                    P.rval.type == RVAL_TYPE_SCALAR
+                    && (strcmp(P.lval, "data") == 0
+                        || strcmp(P.lval, "template_data") == 0))
+                {
+                    JsonElement *json = NULL;
+                    JsonParseError res;
+                    bool json_parse_attempted = false;
+                    Buffer *copy =
+                        BufferNewFrom(P.rval.item, strlen(P.rval.item));
+
+                    const char *fname = NULL;
+                    if (strlen(P.rval.item) > 3
+                        && strncmp("---", P.rval.item, 3) == 0)
+                    {
+                        fname = "parseyaml";
+
+                        // look for unexpanded variables
+                        if (strstr(P.rval.item, "$(") == NULL
+                            && strstr(P.rval.item, "${") == NULL)
+                        {
+                            const char *copy_data = BufferData(copy);
+                            res = JsonParseYamlString(&copy_data, &json);
+                            json_parse_attempted = true;
+                        }
+                    }
+                    else
+                    {
+                        fname = "parsejson";
+                        // look for unexpanded variables
+                        if (strstr(P.rval.item, "$(") == NULL
+                            && strstr(P.rval.item, "${") == NULL)
+                        {
+                            const char *copy_data = BufferData(copy);
+                            res = JsonParse(&copy_data, &json);
+                            json_parse_attempted = true;
+                        }
+                    }
+
+                    BufferDestroy(copy);
+
+                    if (json_parse_attempted && res != JSON_PARSE_OK)
+                    {
+                        // Parsing failed, insert fncall so it can be retried
+                        // during evaluation
+                    }
+                    else if (
+                        json != NULL
+                        && JsonGetElementType(json)
+                               == JSON_ELEMENT_TYPE_PRIMITIVE)
+                    {
+                        // Parsing failed, insert fncall so it can be retried
+                        // during evaluation
+                        JsonDestroy(json);
+                        json = NULL;
+                    }
+
+                    if (fname != NULL)
+                    {
+                        if (json == NULL)
+                        {
+                            Rlist *synthetic_args = NULL;
+                            RlistAppendScalar(&synthetic_args, P.rval.item);
+                            RvalDestroy(P.rval);
+
+                            P.rval = (Rval){FnCallNew(fname, synthetic_args),
+                                            RVAL_TYPE_FNCALL};
+                        }
+                        else
+                        {
+                            RvalDestroy(P.rval);
+                            P.rval = (Rval){json, RVAL_TYPE_CONTAINER};
+                        }
+                    }
+                }
+
+                {
+                    SyntaxTypeMatch err = CheckConstraint(
+                        P.currenttype, P.lval, P.rval, promise_type_syntax);
+                    if (err != SYNTAX_TYPE_MATCH_OK
+                        && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
+                    {
+                        yyerror(SyntaxTypeMatchToString(err));
+                    }
+                }
+
+                if (P.rval.type == RVAL_TYPE_SCALAR
+                    && (strcmp(P.lval, "ifvarclass") == 0
+                        || strcmp(P.lval, "if") == 0))
+                {
+                    ValidateClassLiteral(P.rval.item);
+                }
+
+                Constraint *cp = PromiseAppendConstraint(
+                    P.currentpromise,
+                    P.lval,
+                    RvalCopy(P.rval),
+                    P.references_body);
+                cp->offset.line = P.line_no;
+                cp->offset.start = P.offsets.last_id;
+                cp->offset.end = P.offsets.current;
+                cp->offset.context = P.offsets.last_class_id;
+                P.currentstype->offset.end = P.offsets.current;
+            }
+            break;
+            case SYNTAX_STATUS_REMOVED:
+                ParseWarning(
+                    PARSER_WARNING_REMOVED,
+                    "Removed constraint '%s' in promise type '%s'",
+                    constraint_syntax->lval,
+                    promise_type_syntax->promise_type);
+                break;
+            }
+        }
+        else
+        {
+            ParseError(
+                "Unknown constraint '%s' in promise type '%s'",
+                P.lval,
+                promise_type_syntax->promise_type);
+        }
+
+        RvalDestroy(P.rval);
+        P.rval = RvalNew(NULL, RVAL_TYPE_NOPROMISEE);
+        strcpy(P.lval, "no lval");
+        RlistDestroy(P.currentRlist);
+        P.currentRlist = NULL;
+    }
+    else
+    {
+        RvalDestroy(P.rval);
+        P.rval = RvalNew(NULL, RVAL_TYPE_NOPROMISEE);
+    }
+}
+
 #endif // CF3_PARSE_LOGIC_H

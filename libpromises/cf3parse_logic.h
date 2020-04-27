@@ -460,4 +460,20 @@ static void ValidateClassLiteral(const char *class_literal)
     FreeExpression(res.result);
 }
 
+static void inline ParserEndCurrentBlock()
+{
+    P.offsets.last_id = -1;
+    P.offsets.last_string = -1;
+    P.offsets.last_class_id = -1;
+    if (P.block != PARSER_BLOCK_BUNDLE && P.currentbody != NULL)
+    {
+        P.currentbody->offset.end = P.offsets.current;
+    }
+
+    if (P.block == PARSER_BLOCK_BUNDLE && P.currentbundle != NULL)
+    {
+        P.currentbundle->offset.end = P.offsets.current;
+    }
+}
+
 #endif // CF3_PARSE_LOGIC_H

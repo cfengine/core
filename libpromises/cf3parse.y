@@ -58,7 +58,7 @@ body:                  BODY bodytype bodyid arglist bodybody
 bundletype:            bundletype_values
                        {
                            ParserDebug("P:bundle:%s\n", P.blocktype);
-                           P.block = "bundle";
+                           P.block = PARSER_BLOCK_BUNDLE;
                            RvalDestroy(P.rval);
                            P.rval = RvalNew(NULL, RVAL_TYPE_NOPROMISEE);
                            RlistDestroy(P.currentRlist);
@@ -110,7 +110,7 @@ bundleid_values:       symbol
 bodytype:              bodytype_values
                        {
                            ParserDebug("P:body:%s\n", P.blocktype);
-                           P.block = "body";
+                           P.block = PARSER_BLOCK_BODY;
                            strcpy(P.blockid,"");
                            RlistDestroy(P.currentRlist);
                            P.currentRlist = NULL;
@@ -123,7 +123,7 @@ bodytype:              bodytype_values
 
 bodytype_values:       typeid
                        {
-                           if (!BodySyntaxGet(P.blocktype))
+                           if (!BodySyntaxGet(PARSER_BLOCK_BODY, P.blocktype))
                            {
                                ParseError("Unknown body type '%s'", P.blocktype);
                            }
@@ -179,12 +179,12 @@ arglist:               /* Empty */
 
 arglist_begin:         '('
                        {
-                           ParserDebug("P:%s:%s:%s arglist begin:%s\n", P.block,P.blocktype,P.blockid, yytext);
+                           ParserDebug("P:%s:%s:%s arglist begin:%s\n", ParserBlockString(P.block),P.blocktype,P.blockid, yytext);
                        }
 
 arglist_end:           ')'
                        {
-                           ParserDebug("P:%s:%s:%s arglist end:%s\n", P.block,P.blocktype,P.blockid, yytext);
+                           ParserDebug("P:%s:%s:%s arglist end:%s\n", ParserBlockString(P.block),P.blocktype,P.blockid, yytext);
                        }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -196,7 +196,7 @@ aitems:                aitem
 
 aitem:                 IDSYNTAX  /* recipient of argument is never a literal */
                        {
-                           ParserDebug("P:%s:%s:%s  arg id: %s\n", P.block,P.blocktype,P.blockid, P.currentid);
+                           ParserDebug("P:%s:%s:%s  arg id: %s\n", ParserBlockString(P.block),P.blocktype,P.blockid, P.currentid);
                            RlistAppendScalar(&(P.useargs),P.currentid);
                        }
                      | error
@@ -252,7 +252,7 @@ bundlebody:            body_begin
 
 body_begin:            '{'
                        {
-                           ParserDebug("P:%s:%s:%s begin body open\n", P.block,P.blocktype,P.blockid);
+                           ParserDebug("P:%s:%s:%s begin body open\n", ParserBlockString(P.block),P.blocktype,P.blockid);
                        }
                      | error
                        {
@@ -286,7 +286,7 @@ bundle_statement:      promise_guard classpromises_decl
 
 promise_guard:         PROMISE_GUARD             /* BUNDLE ONLY */
                        {
-                           ParserDebug("\tP:%s:%s:%s promise_type = %s\n", P.block, P.blocktype, P.blockid, P.currenttype);
+                           ParserDebug("\tP:%s:%s:%s promise_type = %s\n", ParserBlockString(P.block), P.blocktype, P.blockid, P.currenttype);
 
                            const PromiseTypeSyntax *promise_type_syntax = PromiseTypeSyntaxGet(P.blocktype, P.currenttype);
 
@@ -298,7 +298,7 @@ promise_guard:         PROMISE_GUARD             /* BUNDLE ONLY */
                                    ParseWarning(PARSER_WARNING_DEPRECATED, "Deprecated promise type '%s' in bundle type '%s'", promise_type_syntax->promise_type, promise_type_syntax->bundle_type);
                                    // Intentional fall
                                case SYNTAX_STATUS_NORMAL:
-                                   if (strcmp(P.block, "bundle") == 0)
+                                   if (P.block == PARSER_BLOCK_BUNDLE)
                                    {
                                        if (!INSTALL_SKIP)
                                        {
@@ -443,7 +443,7 @@ promiser:              QSTRING
                            P.promiser = P.currentstring;
                            P.currentstring = NULL;
                            CURRENT_PROMISER_LINE = P.line_no;
-                           ParserDebug("\tP:%s:%s:%s:%s:%s promiser = %s\n", P.block, P.blocktype, P.blockid, P.currenttype, P.currentclasses ? P.currentclasses : "any", P.promiser);
+                           ParserDebug("\tP:%s:%s:%s:%s:%s promiser = %s\n", ParserBlockString(P.block), P.blocktype, P.blockid, P.currenttype, P.currentclasses ? P.currentclasses : "any", P.promiser);
                        }
                      | error
                        {
@@ -674,7 +674,7 @@ constraint:            constraint_id                        /* BUNDLE ONLY */
 
 constraint_id:         IDSYNTAX                        /* BUNDLE ONLY */
                        {
-                           ParserDebug("\tP:%s:%s:%s:%s:%s:%s attribute = %s\n", P.block, P.blocktype, P.blockid, P.currenttype, P.currentclasses ? P.currentclasses : "any", P.promiser, P.currentid);
+                           ParserDebug("\tP:%s:%s:%s:%s:%s:%s attribute = %s\n", ParserBlockString(P.block), P.blocktype, P.blockid, P.currenttype, P.currentclasses ? P.currentclasses : "any", P.promiser, P.currentid);
 
                            const PromiseTypeSyntax *promise_type_syntax = PromiseTypeSyntaxGet(P.blocktype, P.currenttype);
                            if (!promise_type_syntax)
@@ -701,7 +701,7 @@ constraint_id:         IDSYNTAX                        /* BUNDLE ONLY */
 
 bodybody:              body_begin
                        {
-                           const BodySyntax *body_syntax = BodySyntaxGet(P.blocktype);
+                           const BodySyntax *body_syntax = BodySyntaxGet(PARSER_BLOCK_BODY, P.blocktype);
 
                            if (body_syntax)
                            {
@@ -776,7 +776,7 @@ selection:             selection_id                         /* BODY ONLY */
 
                            if (!INSTALL_SKIP)
                            {
-                               const BodySyntax *body_syntax = BodySyntaxGet(P.blocktype);
+                               const BodySyntax *body_syntax = BodySyntaxGet(PARSER_BLOCK_BODY, P.blocktype);
                                assert(body_syntax);
 
                                const ConstraintSyntax *constraint_syntax = BodySyntaxGetConstraintSyntax(body_syntax->constraints, P.lval);
@@ -857,11 +857,11 @@ selection:             selection_id                         /* BODY ONLY */
 
 selection_id:          IDSYNTAX
                        {
-                           ParserDebug("\tP:%s:%s:%s:%s attribute = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentid);
+                           ParserDebug("\tP:%s:%s:%s:%s attribute = %s\n", ParserBlockString(P.block), P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentid);
 
                            if (!INSTALL_SKIP)
                            {
-                               const BodySyntax *body_syntax = BodySyntaxGet(P.currentbody->type);
+                               const BodySyntax *body_syntax = BodySyntaxGet(PARSER_BLOCK_BODY, P.currentbody->type);
 
                                if (!body_syntax || !BodySyntaxGetConstraintSyntax(body_syntax->constraints, P.currentid))
                                {
@@ -924,7 +924,7 @@ arrow_type:            ARROW
 class:                 CLASS
                        {
                            P.offsets.last_class_id = P.offsets.current - strlen(P.currentclasses ? P.currentclasses : P.currentvarclasses) - 2;
-                           ParserDebug("\tP:%s:%s:%s:%s %s = %s\n", P.block, P.blocktype, P.blockid, P.currenttype, P.currentclasses ? "class": "varclass", yytext);
+                           ParserDebug("\tP:%s:%s:%s:%s %s = %s\n", ParserBlockString(P.block), P.blocktype, P.blockid, P.currenttype, P.currentclasses ? "class": "varclass", yytext);
 
                            if (P.currentclasses != NULL)
                            {
@@ -943,21 +943,21 @@ class:                 CLASS
 
 rval:                  IDSYNTAX
                        {
-                           ParserDebug("\tP:%s:%s:%s:%s id rval, %s = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.lval, P.currentid);
+                           ParserDebug("\tP:%s:%s:%s:%s id rval, %s = %s\n", ParserBlockString(P.block), P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.lval, P.currentid);
                            RvalDestroy(P.rval);
                            P.rval = (Rval) { xstrdup(P.currentid), RVAL_TYPE_SCALAR };
                            P.references_body = true;
                        }
                      | BLOCKID
                        {
-                           ParserDebug("\tP:%s:%s:%s:%s blockid rval, %s = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.lval, P.currentid);
+                           ParserDebug("\tP:%s:%s:%s:%s blockid rval, %s = %s\n", ParserBlockString(P.block), P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.lval, P.currentid);
                            RvalDestroy(P.rval);
                            P.rval = (Rval) { xstrdup(P.currentid), RVAL_TYPE_SCALAR };
                            P.references_body = true;
                        }
                      | QSTRING
                        {
-                           ParserDebug("\tP:%s:%s:%s:%s qstring rval, %s = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.lval, P.currentstring);
+                           ParserDebug("\tP:%s:%s:%s:%s qstring rval, %s = %s\n", ParserBlockString(P.block), P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.lval, P.currentstring);
                            RvalDestroy(P.rval);
                            P.rval = (Rval) { P.currentstring, RVAL_TYPE_SCALAR };
 
@@ -974,7 +974,7 @@ rval:                  IDSYNTAX
                        }
                      | NAKEDVAR
                        {
-                           ParserDebug("\tP:%s:%s:%s:%s nakedvar rval, %s = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.lval, P.currentstring);
+                           ParserDebug("\tP:%s:%s:%s:%s nakedvar rval, %s = %s\n", ParserBlockString(P.block), P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.lval, P.currentstring);
                            RvalDestroy(P.rval);
                            P.rval = (Rval) { P.currentstring, RVAL_TYPE_SCALAR };
 
@@ -983,7 +983,7 @@ rval:                  IDSYNTAX
                        }
                      | list
                        {
-                           ParserDebug("\tP:%s:%s:%s:%s install list =  %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.lval);
+                           ParserDebug("\tP:%s:%s:%s:%s install list =  %s\n", ParserBlockString(P.block), P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.lval);
                            RvalDestroy(P.rval);
                            P.rval = (Rval) { RlistCopy(P.currentRlist), RVAL_TYPE_LIST };
                            RlistDestroy(P.currentRlist);
@@ -1041,7 +1041,7 @@ litem:                 IDSYNTAX
                        {
                            ParserDebug("\tP:%s:%s:%s:%s list append: "
                                        "id = %s\n",
-                                       P.block, P.blocktype, P.blockid,
+                                       ParserBlockString(P.block), P.blocktype, P.blockid,
                                        (P.currentclasses ?
                                             P.currentclasses : "any"),
                                        P.currentid);
@@ -1053,7 +1053,7 @@ litem:                 IDSYNTAX
                        {
                            ParserDebug("\tP:%s:%s:%s:%s list append: "
                                        "qstring = %s\n",
-                                       P.block, P.blocktype, P.blockid,
+                                       ParserBlockString(P.block), P.blocktype, P.blockid,
                                        (P.currentclasses ?
                                             P.currentclasses : "any"),
                                        P.currentstring);
@@ -1065,7 +1065,7 @@ litem:                 IDSYNTAX
 
                      | NAKEDVAR
                        {
-                           ParserDebug("\tP:%s:%s:%s:%s list append: nakedvar = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentstring);
+                           ParserDebug("\tP:%s:%s:%s:%s list append: nakedvar = %s\n", ParserBlockString(P.block), P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentstring);
                            RlistAppendScalar((Rlist **)&P.currentRlist,(void *)P.currentstring);
                            free(P.currentstring);
                            P.currentstring = NULL;
@@ -1088,15 +1088,15 @@ litem:                 IDSYNTAX
 
 functionid:            IDSYNTAX
                        {
-                           ParserDebug("\tP:%s:%s:%s:%s function id = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentid);
+                           ParserDebug("\tP:%s:%s:%s:%s function id = %s\n", ParserBlockString(P.block), P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentid);
                        }
                      | BLOCKID
                        {
-                           ParserDebug("\tP:%s:%s:%s:%s function blockid = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentid);
+                           ParserDebug("\tP:%s:%s:%s:%s function blockid = %s\n", ParserBlockString(P.block), P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentid);
                        }
                      | NAKEDVAR
                        {
-                           ParserDebug("\tP:%s:%s:%s:%s function nakedvar = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentstring);
+                           ParserDebug("\tP:%s:%s:%s:%s function nakedvar = %s\n", ParserBlockString(P.block), P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentstring);
                            strncpy(P.currentid,P.currentstring,CF_MAXVARSIZE); // Make a var look like an ID
                            free(P.currentstring);
                            P.currentstring = NULL;
@@ -1109,7 +1109,7 @@ functionid:            IDSYNTAX
 
 usefunction:           functionid givearglist
                        {
-                           ParserDebug("\tP:%s:%s:%s:%s Finished with function, now at level %d\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.arg_nesting);
+                           ParserDebug("\tP:%s:%s:%s:%s Finished with function, now at level %d\n", ParserBlockString(P.block), P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.arg_nesting);
                        };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -1121,14 +1121,14 @@ givearglist:           '('
                                fatal_yyerror("Nesting of functions is deeper than recommended");
                            }
                            P.currentfnid[P.arg_nesting] = xstrdup(P.currentid);
-                           ParserDebug("\tP:%s:%s:%s begin givearglist for function %s, level %d\n", P.block,P.blocktype,P.blockid, P.currentfnid[P.arg_nesting], P.arg_nesting );
+                           ParserDebug("\tP:%s:%s:%s begin givearglist for function %s, level %d\n", ParserBlockString(P.block),P.blocktype,P.blockid, P.currentfnid[P.arg_nesting], P.arg_nesting );
                        }
 
                        gaitems
 
                        ')'
                        {
-                           ParserDebug("\tP:%s:%s:%s end givearglist for function %s, level %d\n", P.block,P.blocktype,P.blockid, P.currentfnid[P.arg_nesting], P.arg_nesting );
+                           ParserDebug("\tP:%s:%s:%s end givearglist for function %s, level %d\n", ParserBlockString(P.block),P.blocktype,P.blockid, P.currentfnid[P.arg_nesting], P.arg_nesting );
                            P.currentfncall[P.arg_nesting] = FnCallNew(P.currentfnid[P.arg_nesting], P.giveargs[P.arg_nesting]);
                            P.giveargs[P.arg_nesting] = NULL;
                            strcpy(P.currentid,"");
@@ -1153,7 +1153,7 @@ gaitems:               /* empty */
 
 gaitem:                IDSYNTAX
                        {
-                           ParserDebug("\tP:%s:%s:%s:%s function %s, id arg = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentfnid[P.arg_nesting], P.currentid);
+                           ParserDebug("\tP:%s:%s:%s:%s function %s, id arg = %s\n", ParserBlockString(P.block), P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentfnid[P.arg_nesting], P.currentid);
                            /* currently inside a use function */
                            RlistAppendScalar(&P.giveargs[P.arg_nesting],P.currentid);
                        }
@@ -1161,7 +1161,7 @@ gaitem:                IDSYNTAX
                      | QSTRING
                        {
                            /* currently inside a use function */
-                           ParserDebug("\tP:%s:%s:%s:%s function %s, qstring arg = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentfnid[P.arg_nesting], P.currentstring);
+                           ParserDebug("\tP:%s:%s:%s:%s function %s, qstring arg = %s\n", ParserBlockString(P.block), P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentfnid[P.arg_nesting], P.currentstring);
                            RlistAppendScalar(&P.giveargs[P.arg_nesting],P.currentstring);
                            free(P.currentstring);
                            P.currentstring = NULL;
@@ -1170,7 +1170,7 @@ gaitem:                IDSYNTAX
                      | NAKEDVAR
                        {
                            /* currently inside a use function */
-                           ParserDebug("\tP:%s:%s:%s:%s function %s, nakedvar arg = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentfnid[P.arg_nesting], P.currentstring);
+                           ParserDebug("\tP:%s:%s:%s:%s function %s, nakedvar arg = %s\n", ParserBlockString(P.block), P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentfnid[P.arg_nesting], P.currentstring);
                            RlistAppendScalar(&P.giveargs[P.arg_nesting],P.currentstring);
                            free(P.currentstring);
                            P.currentstring = NULL;
@@ -1179,7 +1179,7 @@ gaitem:                IDSYNTAX
                      | usefunction
                        {
                            /* Careful about recursion */
-                           ParserDebug("\tP:%s:%s:%s:%s function %s, nakedvar arg = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentfnid[P.arg_nesting], P.currentstring);
+                           ParserDebug("\tP:%s:%s:%s:%s function %s, nakedvar arg = %s\n", ParserBlockString(P.block), P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentfnid[P.arg_nesting], P.currentstring);
                            RlistAppend(&P.giveargs[P.arg_nesting], P.currentfncall[P.arg_nesting+1], RVAL_TYPE_FNCALL);
                            RvalDestroy((Rval) { P.currentfncall[P.arg_nesting+1], RVAL_TYPE_FNCALL });
                            P.currentfncall[P.arg_nesting+1] = NULL;

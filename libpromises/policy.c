@@ -705,7 +705,7 @@ static bool PolicyCheckBody(const Body *body, Seq *errors)
         }
     }
 
-    const BodySyntax *body_syntax = BodySyntaxGet(body->type);
+    const BodySyntax *body_syntax = BodySyntaxGet(PARSER_BLOCK_BODY, body->type);
     assert(body_syntax && "Should have been checked at parse time");
     if (body_syntax->check_body)
     {

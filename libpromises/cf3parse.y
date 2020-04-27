@@ -189,28 +189,7 @@ aitem:                 IDSYNTAX  /* recipient of argument is never a literal */
 
 bundlebody:            body_begin
                        {
-                           if (RelevantBundle(CF_AGENTTYPES[P.agent_type], P.blocktype))
-                           {
-                               INSTALL_SKIP = false;
-                           }
-                           else if (strcmp(CF_AGENTTYPES[P.agent_type], P.blocktype) != 0)
-                           {
-                               INSTALL_SKIP = true;
-                           }
-
-                           if (!INSTALL_SKIP)
-                           {
-                               P.currentbundle = PolicyAppendBundle(P.policy, P.current_namespace, P.blockid, P.blocktype, P.useargs, P.filename);
-                               P.currentbundle->offset.line = CURRENT_BLOCKID_LINE;
-                               P.currentbundle->offset.start = P.offsets.last_block_id;
-                           }
-                           else
-                           {
-                               P.currentbundle = NULL;
-                           }
-
-                           RlistDestroy(P.useargs);
-                           P.useargs = NULL;
+                           ParserBeginBundleBody();
                        }
 
                        bundle_decl

@@ -73,7 +73,7 @@ void EndMeasurePromise(struct timespec start, const Promise *pp)
 
     if (mid)
     {
-        snprintf(id, CF_BUFSIZE, "%s:%s:%.100s", mid, pp->parent_section->name, pp->promiser);
+        snprintf(id, CF_BUFSIZE, "%s:%s:%.100s", mid, pp->parent_section->promise_type, pp->promiser);
         Chop(id, CF_EXPANDSIZE);
         EndMeasure(id, start);
     }

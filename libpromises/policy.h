@@ -100,7 +100,7 @@ struct BundleSection_
 {
     Bundle *parent_bundle;
 
-    char *name;
+    char *promise_type;
     Seq *promises;
 
     SourceOffset offset;
@@ -171,8 +171,8 @@ JsonElement *BodyToJson(const Body *body);
 Policy *PolicyFromJson(JsonElement *json_policy);
 void PolicyToString(const Policy *policy, Writer *writer);
 
-BundleSection *BundleAppendSection(Bundle *bundle, const char *name);
-const BundleSection *BundleGetSection(const Bundle *bp, const char *name);
+BundleSection *BundleAppendSection(Bundle *bundle, const char *promise_type);
+const BundleSection *BundleGetSection(const Bundle *bp, const char *promise_type);
 
 Constraint *BodyAppendConstraint(Body *body, const char *lval, Rval rval, const char *classes, bool references_body);
 Seq *BodyGetConstraint(Body *body, const char *lval);

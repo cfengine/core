@@ -227,8 +227,8 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, PromiseIterator *iterc
         /* EVALUATE VARS PROMISES again, allowing redefinition of
          * variables. The theory behind this is that the "sampling rate" of
          * vars promise needs to be double than the rest. */
-        if (strcmp(pexp->parent_section->name, "vars") == 0 ||
-            strcmp(pexp->parent_section->name, "meta") == 0)
+        if (strcmp(pexp->parent_section->promise_type, "vars") == 0 ||
+            strcmp(pexp->parent_section->promise_type, "meta") == 0)
         {
             if (act_on_promise != &VerifyVarPromise)
             {
@@ -628,7 +628,7 @@ void BundleResolvePromiseType(EvalContext *ctx, const Bundle *bundle, const char
     {
         BundleSection *section = SeqAt(bundle->sections, j);
 
-        if (strcmp(section->name, type) == 0)
+        if (strcmp(section->promise_type, type) == 0)
         {
             EvalContextStackPushBundleSectionFrame(ctx, section);
             for (size_t i = 0; i < SeqLength(section->promises); i++)

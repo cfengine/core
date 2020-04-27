@@ -1,19 +1,16 @@
-
-%{
-
 /*
-   Copyright 2020 Northern.tech AS
+  Copyright 2020 Northern.tech AS
 
-   This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
+  This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
 
-   This program is free software; you can redistribute it and/or modify it
-   under the terms of the GNU General Public License as published by the
-   Free Software Foundation; version 3.
+  This program is free software; you can redistribute it and/or modify it
+  under the terms of the GNU General Public License as published by the
+  Free Software Foundation; version 3.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
 
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
@@ -25,50 +22,8 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
-#include "parser.h"
-#include "parser_state.h"
-
-#include "logging.h"
-#include "fncall.h"
-#include "rlist.h"
-#include "item_lib.h"
-#include "policy.h"
-#include "mod_files.h"
-#include "string_lib.h"
-#include "logic_expressions.h"
-#include "json-yaml.h"
-#include "cleanup.h"
-
-// FIX: remove
-#include "syntax.h"
-
-#include <assert.h>
-
-int yylex(void);
-extern char *yytext;
-
-static int RelevantBundle(const char *agent, const char *blocktype);
-static bool LvalWantsBody(char *stype, char *lval);
-static SyntaxTypeMatch CheckSelection(const char *type, const char *name, const char *lval, Rval rval);
-static SyntaxTypeMatch CheckConstraint(const char *type, const char *lval, Rval rval, const PromiseTypeSyntax *ss);
-static void fatal_yyerror(const char *s);
-
-static void ParseErrorColumnOffset(int column_offset, const char *s, ...) FUNC_ATTR_PRINTF(2, 3);
-static void ParseError(const char *s, ...) FUNC_ATTR_PRINTF(1, 2);
-static void ParseWarning(unsigned int warning, const char *s, ...) FUNC_ATTR_PRINTF(2, 3);
-
-static void ValidateClassLiteral(const char *class_literal);
-
-static bool INSTALL_SKIP = false;
-static size_t CURRENT_BLOCKID_LINE = 0;
-static size_t CURRENT_PROMISER_LINE = 0;
-
-#define YYMALLOC xmalloc
-#define P PARSER_STATE
-
-#define ParserDebug(...) LogDebug(LOG_MOD_PARSER, __VA_ARGS__)
-
+%{
+#include <cf3parse_logic.h>
 %}
 
 %token IDSYNTAX BLOCKID QSTRING CLASS PROMISE_GUARD BUNDLE BODY ASSIGN ARROW NAKEDVAR

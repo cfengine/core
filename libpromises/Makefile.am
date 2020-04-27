@@ -65,6 +65,7 @@ libpromises_la_SOURCES = \
 	cf3globals.c \
 	cf3lex.l \
 	cf3parse.y cf3parse.h \
+	cf3parse_logic.h \
 	chflags.c chflags.h \
 	class.c class.h \
 	constants.c \

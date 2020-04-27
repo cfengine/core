@@ -659,7 +659,7 @@ promise_guard  [a-zA-Z_]+:
                           P.currentstring = xstrdup(tmp);
 
                           free(tmp);
-                          return QSTRING;
+                          return QUOTED_STRING;
                       }
 
 

@@ -670,4 +670,20 @@ static inline void ParserHandleBundlePromiseRval()
     }
 }
 
+static inline void ParserBeginBundle()
+{
+    ParserDebug("P:bundle:%s\n", P.blocktype);
+    P.block = PARSER_BLOCK_BUNDLE;
+    RvalDestroy(P.rval);
+    P.rval = RvalNew(NULL, RVAL_TYPE_NOPROMISEE);
+    RlistDestroy(P.currentRlist);
+    P.currentRlist = NULL;
+    if (P.currentstring)
+    {
+        free(P.currentstring);
+    }
+    P.currentstring = NULL;
+    strcpy(P.blockid, "");
+}
+
 #endif // CF3_PARSE_LOGIC_H

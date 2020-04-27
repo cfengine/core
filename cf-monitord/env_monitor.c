@@ -1146,9 +1146,9 @@ static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy)
 
         if ((strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_MONITOR]) == 0) || (strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_COMMON]) == 0))
         {
-            for (size_t j = 0; j < SeqLength(bp->promise_types); j++)
+            for (size_t j = 0; j < SeqLength(bp->sections); j++)
             {
-                BundleSection *sp = SeqAt(bp->promise_types, j);
+                BundleSection *sp = SeqAt(bp->sections, j);
 
                 EvalContextStackPushBundleSectionFrame(ctx, sp);
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)

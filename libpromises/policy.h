@@ -75,7 +75,7 @@ struct Bundle_
     char *ns;
     Rlist *args;
 
-    Seq *promise_types;
+    Seq *sections;
 
     char *source_path;
     SourceOffset offset;

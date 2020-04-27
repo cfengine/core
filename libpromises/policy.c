@@ -205,9 +205,9 @@ static unsigned BundleHash(const Bundle *bundle, unsigned seed)
     hash = StringHash(bundle->name, hash);
     hash = RlistHash(bundle->args, hash);
 
-    for (size_t i = 0; i < SeqLength(bundle->promise_types); i++)
+    for (size_t i = 0; i < SeqLength(bundle->sections); i++)
     {
-        const BundleSection *section = SeqAt(bundle->promise_types, i);
+        const BundleSection *section = SeqAt(bundle->sections, i);
         hash = BundleSectionHash(section, hash);
     }
 
@@ -668,9 +668,9 @@ static bool PolicyCheckBundle(const Bundle *bundle, Seq *errors)
         }
     }
 
-    for (size_t i = 0; i < SeqLength(bundle->promise_types); i++)
+    for (size_t i = 0; i < SeqLength(bundle->sections); i++)
     {
-        const BundleSection *section = SeqAt(bundle->promise_types, i);
+        const BundleSection *section = SeqAt(bundle->sections, i);
         success &= PolicyCheckPromiseType(section, errors);
     }
 
@@ -836,9 +836,9 @@ static bool PolicyCheckUndefinedBodies(const Policy *policy, Seq *errors)
     {
         Bundle *bundle = SeqAt(policy->bundles, bpi);
 
-        for (size_t sti = 0; sti < SeqLength(bundle->promise_types); sti++)
+        for (size_t sti = 0; sti < SeqLength(bundle->sections); sti++)
         {
-            BundleSection *section = SeqAt(bundle->promise_types, sti);
+            BundleSection *section = SeqAt(bundle->sections, sti);
 
             for (size_t ppi = 0; ppi < SeqLength(section->promises); ppi++)
             {
@@ -881,9 +881,9 @@ static bool PolicyCheckUndefinedBundles(const Policy *policy, Seq *errors)
     {
         Bundle *bundle = SeqAt(policy->bundles, bpi);
 
-        for (size_t sti = 0; sti < SeqLength(bundle->promise_types); sti++)
+        for (size_t sti = 0; sti < SeqLength(bundle->sections); sti++)
         {
-            BundleSection *section = SeqAt(bundle->promise_types, sti);
+            BundleSection *section = SeqAt(bundle->sections, sti);
 
             for (size_t ppi = 0; ppi < SeqLength(section->promises); ppi++)
             {
@@ -949,9 +949,9 @@ static bool PolicyCheckRequiredComments(const EvalContext *ctx, const Policy *po
         {
             Bundle *bundle = SeqAt(policy->bundles, bpi);
 
-            for (size_t sti = 0; sti < SeqLength(bundle->promise_types); sti++)
+            for (size_t sti = 0; sti < SeqLength(bundle->sections); sti++)
             {
-                BundleSection *section = SeqAt(bundle->promise_types, sti);
+                BundleSection *section = SeqAt(bundle->sections, sti);
 
                 for (size_t ppi = 0; ppi < SeqLength(section->promises); ppi++)
                 {
@@ -997,9 +997,9 @@ bool PolicyCheckDuplicateHandles(const Policy *policy, Seq *errors)
     {
         Bundle *bundle = SeqAt(policy->bundles, bpi);
 
-        for (size_t sti = 0; sti < SeqLength(bundle->promise_types); sti++)
+        for (size_t sti = 0; sti < SeqLength(bundle->sections); sti++)
         {
-            BundleSection *section = SeqAt(bundle->promise_types, sti);
+            BundleSection *section = SeqAt(bundle->sections, sti);
 
             for (size_t ppi = 0; ppi < SeqLength(section->promises); ppi++)
             {
@@ -1338,7 +1338,7 @@ Bundle *PolicyAppendBundle(Policy *policy,
     bundle->ns = xstrdup(ns);
     bundle->args = RlistCopy(args);
     bundle->source_path = SafeStringDuplicate(source_path);
-    bundle->promise_types = SeqNew(10, BundleSectionDestroy);
+    bundle->sections = SeqNew(10, BundleSectionDestroy);
 
     return bundle;
 }
@@ -1381,9 +1381,9 @@ BundleSection *BundleAppendSection(Bundle *bundle, const char *name)
     }
 
     // TODO: review SeqLookup
-    for (size_t i = 0; i < SeqLength(bundle->promise_types); i++)
+    for (size_t i = 0; i < SeqLength(bundle->sections); i++)
     {
-        BundleSection *existing = SeqAt(bundle->promise_types, i);
+        BundleSection *existing = SeqAt(bundle->sections, i);
         if (strcmp(existing->name, name) == 0)
         {
             return existing;
@@ -1396,7 +1396,7 @@ BundleSection *BundleAppendSection(Bundle *bundle, const char *name)
     tp->name = xstrdup(name);
     tp->promises = SeqNew(10, PromiseDestroy);
 
-    SeqAppend(bundle->promise_types, tp);
+    SeqAppend(bundle->sections, tp);
 
     return tp;
 }
@@ -1447,7 +1447,7 @@ static void BundleDestroy(Bundle *bundle)
         free(bundle->source_path);
 
         RlistDestroy(bundle->args);
-        SeqDestroy(bundle->promise_types);
+        SeqDestroy(bundle->sections);
         free(bundle);
     }
 }
@@ -1605,9 +1605,9 @@ const BundleSection *BundleGetSection(const Bundle *bp, const char *name)
         return NULL;
     }
 
-    for (size_t i = 0; i < SeqLength(bp->promise_types); i++)
+    for (size_t i = 0; i < SeqLength(bp->sections); i++)
     {
-        BundleSection *sp = SeqAt(bp->promise_types, i);
+        BundleSection *sp = SeqAt(bp->sections, i);
 
         if (strcmp(name, sp->name) == 0)
         {
@@ -1898,9 +1898,9 @@ JsonElement *BundleToJson(const Bundle *bundle)
     {
         JsonElement *json_promise_types = JsonArrayCreate(10);
 
-        for (size_t i = 0; i < SeqLength(bundle->promise_types); i++)
+        for (size_t i = 0; i < SeqLength(bundle->sections); i++)
         {
-            const BundleSection *sp = SeqAt(bundle->promise_types, i);
+            const BundleSection *sp = SeqAt(bundle->sections, i);
 
             JsonElement *json_promise_type = JsonObjectCreate(10);
 
@@ -2079,9 +2079,9 @@ void BundleToString(Writer *writer, Bundle *bundle)
     ArgumentsToString(writer, bundle->args);
     WriterWrite(writer, "\n{");
 
-    for (size_t i = 0; i < SeqLength(bundle->promise_types); i++)
+    for (size_t i = 0; i < SeqLength(bundle->sections); i++)
     {
-        BundleSection *section = SeqAt(bundle->promise_types, i);
+        BundleSection *section = SeqAt(bundle->sections, i);
 
         WriterWriteF(writer, "\n%s:\n", section->name);
 
@@ -2124,7 +2124,7 @@ void BundleToString(Writer *writer, Bundle *bundle)
             WriterWriteChar(writer, '\n');
         }
 
-        if (i == (SeqLength(bundle->promise_types) - 1))
+        if (i == (SeqLength(bundle->sections) - 1))
         {
             WriterWriteChar(writer, '\n');
         }

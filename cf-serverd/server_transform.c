@@ -617,9 +617,9 @@ static void EvaluateBundle(EvalContext *ctx, const Bundle *bp, const char * cons
 
     /* Check if we are having some other promise types which we
      * should evaluate. THIS IS ONLY FOR BACKWARD COMPATIBILITY! */
-    for (size_t j = 0; j < SeqLength(bp->promise_types); j++)
+    for (size_t j = 0; j < SeqLength(bp->sections); j++)
     {
-        BundleSection *sp = SeqAt(bp->promise_types, j);
+        BundleSection *sp = SeqAt(bp->sections, j);
 
         /* Skipping evaluation of promise as this was evaluated in
          * loop above. */

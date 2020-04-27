@@ -624,9 +624,9 @@ Rval EvaluateFinalRval(EvalContext *ctx, const Policy *policy,
 
 void BundleResolvePromiseType(EvalContext *ctx, const Bundle *bundle, const char *type, PromiseActuator *actuator)
 {
-    for (size_t j = 0; j < SeqLength(bundle->promise_types); j++)
+    for (size_t j = 0; j < SeqLength(bundle->sections); j++)
     {
-        BundleSection *section = SeqAt(bundle->promise_types, j);
+        BundleSection *section = SeqAt(bundle->sections, j);
 
         if (strcmp(section->name, type) == 0)
         {

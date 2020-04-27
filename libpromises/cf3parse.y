@@ -238,14 +238,7 @@ bundlebody:            body_begin
                        '}'
                        {
                            INSTALL_SKIP = false;
-                           P.offsets.last_id = -1;
-                           P.offsets.last_string = -1;
-                           P.offsets.last_class_id = -1;
-
-                           if (P.currentbundle)
-                           {
-                               P.currentbundle->offset.end = P.offsets.current;
-                           }
+                           ParserEndCurrentBlock();
                        }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -740,13 +733,7 @@ bodybody:              body_begin
 
                        '}'
                        {
-                           P.offsets.last_id = -1;
-                           P.offsets.last_string = -1;
-                           P.offsets.last_class_id = -1;
-                           if (P.currentbody)
-                           {
-                               P.currentbody->offset.end = P.offsets.current;
-                           }
+                           ParserEndCurrentBlock();
                        }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

@@ -1189,7 +1189,7 @@ static SourceOffset PolicyElementSourceOffset(PolicyElementType type, const void
         return body->offset;
     }
 
-    case POLICY_ELEMENT_TYPE_PROMISE_TYPE:
+    case POLICY_ELEMENT_TYPE_BUNDLE_SECTION:
     {
         const PromiseType *promise_type = (const PromiseType *)element;
         return promise_type->offset;
@@ -1236,7 +1236,7 @@ static const char *PolicyElementSourceFile(PolicyElementType type, const void *e
         return body->source_path;
     }
 
-    case POLICY_ELEMENT_TYPE_PROMISE_TYPE:
+    case POLICY_ELEMENT_TYPE_BUNDLE_SECTION:
     {
         const PromiseType *promise_type = (const PromiseType *)element;
         return PolicyElementSourceFile(POLICY_ELEMENT_TYPE_BUNDLE, promise_type->parent_bundle);
@@ -1245,7 +1245,7 @@ static const char *PolicyElementSourceFile(PolicyElementType type, const void *e
     case POLICY_ELEMENT_TYPE_PROMISE:
     {
         const Promise *promise = (const Promise *)element;
-        return PolicyElementSourceFile(POLICY_ELEMENT_TYPE_PROMISE_TYPE, promise->parent_promise_type);
+        return PolicyElementSourceFile(POLICY_ELEMENT_TYPE_BUNDLE_SECTION, promise->parent_promise_type);
     }
 
     case POLICY_ELEMENT_TYPE_CONSTRAINT:

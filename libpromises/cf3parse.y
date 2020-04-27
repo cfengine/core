@@ -490,39 +490,7 @@ constraint_id:         IDSYNTAX                        /* BUNDLE ONLY */
 
 bodybody:              body_begin
                        {
-                           const BodySyntax *body_syntax = BodySyntaxGet(PARSER_BLOCK_BODY, P.blocktype);
-
-                           if (body_syntax)
-                           {
-                               INSTALL_SKIP = false;
-
-                               switch (body_syntax->status)
-                               {
-                               case SYNTAX_STATUS_DEPRECATED:
-                                   ParseWarning(PARSER_WARNING_DEPRECATED, "Deprecated body '%s' of type '%s'", P.blockid, body_syntax->body_type);
-                                   // intentional fall
-                               case SYNTAX_STATUS_NORMAL:
-                                   P.currentbody = PolicyAppendBody(P.policy, P.current_namespace, P.blockid, P.blocktype, P.useargs, P.filename);
-                                   P.currentbody->offset.line = CURRENT_BLOCKID_LINE;
-                                   P.currentbody->offset.start = P.offsets.last_block_id;
-                                   break;
-
-                               case SYNTAX_STATUS_REMOVED:
-                                   ParseWarning(PARSER_WARNING_REMOVED, "Removed body '%s' of type '%s'", P.blockid, body_syntax->body_type);
-                                   INSTALL_SKIP = true;
-                                   break;
-                               }
-                           }
-                           else
-                           {
-                               ParseError("Invalid body type '%s'", P.blocktype);
-                               INSTALL_SKIP = true;
-                           }
-
-                           RlistDestroy(P.useargs);
-                           P.useargs = NULL;
-
-                           strcpy(P.currentid,"");
+                           ParserBeginBlockBody();
                        }
 
                        bodyattribs

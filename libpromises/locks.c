@@ -438,7 +438,7 @@ static void RegisterLockCleanup(void)
  */
 static void PromiseTypeString(char *dst, size_t dst_size, const Promise *pp)
 {
-    char *sp       = pp->parent_promise_type->name;
+    char *sp       = pp->parent_section->name;
     size_t sp_len  = strlen(sp);
 
     dst[0]         = '\0';
@@ -611,20 +611,20 @@ void PromiseRuntimeHash(const Promise *pp, const char *salt,
         EVP_DigestUpdate(context, pp->comment, strlen(pp->comment));
     }
 
-    if (pp->parent_promise_type && pp->parent_promise_type->parent_bundle)
+    if (pp->parent_section && pp->parent_section->parent_bundle)
     {
-        if (pp->parent_promise_type->parent_bundle->ns)
+        if (pp->parent_section->parent_bundle->ns)
         {
             EVP_DigestUpdate(context,
-                             pp->parent_promise_type->parent_bundle->ns,
-                             strlen(pp->parent_promise_type->parent_bundle->ns));
+                             pp->parent_section->parent_bundle->ns,
+                             strlen(pp->parent_section->parent_bundle->ns));
         }
 
-        if (pp->parent_promise_type->parent_bundle->name)
+        if (pp->parent_section->parent_bundle->name)
         {
             EVP_DigestUpdate(context,
-                             pp->parent_promise_type->parent_bundle->name,
-                             strlen(pp->parent_promise_type->parent_bundle->name));
+                             pp->parent_section->parent_bundle->name,
+                             strlen(pp->parent_section->parent_bundle->name));
         }
     }
 

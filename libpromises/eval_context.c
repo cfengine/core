@@ -1157,7 +1157,7 @@ Rlist *EvalContextGetPromiseCallerMethods(EvalContext *ctx) {
             break;
 
         case STACK_FRAME_TYPE_PROMISE:
-            if (strcmp(frame->data.promise.owner->parent_promise_type->name, "methods") == 0) {
+            if (strcmp(frame->data.promise.owner->parent_section->name, "methods") == 0) {
                 RlistAppendScalar(&callers_promisers, frame->data.promise.owner->promiser);
             }
             break;
@@ -1203,7 +1203,7 @@ JsonElement *EvalContextGetPromiseCallers(EvalContext *ctx) {
 
         case STACK_FRAME_TYPE_PROMISE:
             JsonObjectAppendString(f, "type", "promise");
-            JsonObjectAppendString(f, "promise_type", frame->data.promise.owner->parent_promise_type->name);
+            JsonObjectAppendString(f, "promise_type", frame->data.promise.owner->parent_section->name);
             JsonObjectAppendString(f, "promiser", frame->data.promise.owner->promiser);
             JsonObjectAppendString(f, "promise_classes", frame->data.promise.owner->classes);
             JsonObjectAppendString(f, "promise_comment",
@@ -2598,7 +2598,7 @@ static const char *const NO_LOG_TYPES[] =
  */
 static bool IsPromiseValuableForStatus(const Promise *pp)
 {
-    return pp && (pp->parent_promise_type->name != NULL) && (!IsStrIn(pp->parent_promise_type->name, NO_STATUS_TYPES));
+    return pp && (pp->parent_section->name != NULL) && (!IsStrIn(pp->parent_section->name, NO_STATUS_TYPES));
 }
 
 /*
@@ -2608,7 +2608,7 @@ static bool IsPromiseValuableForStatus(const Promise *pp)
 
 static bool IsPromiseValuableForLogging(const Promise *pp)
 {
-    return pp && (pp->parent_promise_type->name != NULL) && (!IsStrIn(pp->parent_promise_type->name, NO_LOG_TYPES));
+    return pp && (pp->parent_section->name != NULL) && (!IsStrIn(pp->parent_section->name, NO_LOG_TYPES));
 }
 
 static void AddAllClasses(EvalContext *ctx, const Rlist *list, unsigned int persistence_ttl,

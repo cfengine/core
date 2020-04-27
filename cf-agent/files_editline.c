@@ -315,27 +315,27 @@ static PromiseResult KeepEditLinePromise(EvalContext *ctx, const Promise *pp, vo
 
     PromiseBanner(ctx, pp);
 
-    if (strcmp("classes", pp->parent_promise_type->name) == 0)
+    if (strcmp("classes", pp->parent_section->name) == 0)
     {
         return VerifyClassPromise(ctx, pp, NULL);
     }
-    else if (strcmp("delete_lines", pp->parent_promise_type->name) == 0)
+    else if (strcmp("delete_lines", pp->parent_section->name) == 0)
     {
         return VerifyLineDeletions(ctx, pp, edcontext);
     }
-    else if (strcmp("field_edits", pp->parent_promise_type->name) == 0)
+    else if (strcmp("field_edits", pp->parent_section->name) == 0)
     {
         return VerifyColumnEdits(ctx, pp, edcontext);
     }
-    else if (strcmp("insert_lines", pp->parent_promise_type->name) == 0)
+    else if (strcmp("insert_lines", pp->parent_section->name) == 0)
     {
         return VerifyLineInsertions(ctx, pp, edcontext);
     }
-    else if (strcmp("replace_patterns", pp->parent_promise_type->name) == 0)
+    else if (strcmp("replace_patterns", pp->parent_section->name) == 0)
     {
         return VerifyPatterns(ctx, pp, edcontext);
     }
-    else if (strcmp("reports", pp->parent_promise_type->name) == 0)
+    else if (strcmp("reports", pp->parent_section->name) == 0)
     {
         return VerifyReportPromise(ctx, pp);
     }

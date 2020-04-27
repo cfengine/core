@@ -142,11 +142,11 @@ void PromiseBanner(EvalContext *ctx, const Promise *pp)
 
     if (strlen(handle) > 0)
     {
-        Log(LOG_LEVEL_VERBOSE, "P: BEGIN promise '%s' of type \"%s\" (pass %d)", handle, pp->parent_promise_type->name, EvalContextGetPass(ctx));
+        Log(LOG_LEVEL_VERBOSE, "P: BEGIN promise '%s' of type \"%s\" (pass %d)", handle, pp->parent_section->name, EvalContextGetPass(ctx));
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "P: BEGIN un-named promise of type \"%s\" (pass %d)", pp->parent_promise_type->name, EvalContextGetPass(ctx));
+        Log(LOG_LEVEL_VERBOSE, "P: BEGIN un-named promise of type \"%s\" (pass %d)", pp->parent_section->name, EvalContextGetPass(ctx));
     }
 
     const size_t n = 2*CF_MAXFRAGMENT + 3;

@@ -105,7 +105,7 @@ body       body
 
 nakedvar   [$@][(][a-zA-Z0-9_\[\]\200-\377.:]+[)]|[$@][{][a-zA-Z0-9_\[\]\200-\377.:]+[}]|[$@][(][a-zA-Z0-9_\200-\377.:]+[\[][a-zA-Z0-9_$(){}\200-\377.:]+[\]]+[)]|[$@][{][a-zA-Z0-9_\200-\377.:]+[\[][a-zA-Z0-9_$(){}\200-\377.:]+[\]]+[}]
 
-id         [a-zA-Z0-9_\200-\377]+
+identifier [a-zA-Z0-9_\200-\377]+
 
 symbol     [a-zA-Z0-9_\200-\377]+[:][a-zA-Z0-9_\200-\377]+
 
@@ -490,7 +490,7 @@ promise_guard  [a-zA-Z_]+:
                           return BODY;
                       }
 
-{id}                  {
+{identifier}          {
                           P.offsets.last_id = P.offsets.current - yyleng;
                           P.line_pos += yyleng;
                           ParserDebug("\tL:id %s %d\n", yytext, P.line_pos);
@@ -499,7 +499,7 @@ promise_guard  [a-zA-Z_]+:
                               yyerror("identifier too long");
                           }
                           strncpy(P.currentid, yytext, CF_MAXVARSIZE);
-                          return IDSYNTAX;
+                          return IDENTIFIER;
                       }
 
 
@@ -512,7 +512,7 @@ promise_guard  [a-zA-Z_]+:
                               yyerror("qualified identifier too long");
                           }
                           strncpy(P.currentid, yytext, CF_MAXVARSIZE);
-                          return IDSYNTAX;
+                          return IDENTIFIER;
                       }
 
 

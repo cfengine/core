@@ -215,10 +215,10 @@ void UpdatePackagesCache(EvalContext *ctx, bool force_update)
 PackagePromiseGlobalLock AcquireGlobalPackagePromiseLock(EvalContext *ctx)
 {
     Bundle bundle = {.name = "package_global"};
-    PromiseType promise_type = {.name = "package_global",
-                               .parent_bundle = &bundle};
+    BundleSection section = {.name = "package_global",
+                             .parent_bundle = &bundle};
     Promise pp = {.promiser = "package_global",
-                  .parent_promise_type = &promise_type};
+                  .parent_promise_type = &section};
 
     CfLock package_promise_global_lock;
 
@@ -233,10 +233,10 @@ PackagePromiseGlobalLock AcquireGlobalPackagePromiseLock(EvalContext *ctx)
 void YieldGlobalPackagePromiseLock(PackagePromiseGlobalLock lock)
 {
     Bundle bundle = {.name = "package_global"};
-    PromiseType promise_type = {.name = "package_global",
-                               .parent_bundle = &bundle};
+    BundleSection section = {.name = "package_global",
+                             .parent_bundle = &bundle};
     Promise pp = {.promiser = "package_global",
-                  .parent_promise_type = &promise_type};
+                  .parent_promise_type = &section};
 
     YieldCurrentLockAndRemoveFromCache(lock.lock_ctx, lock.g_lock,
                                        GLOBAL_PACKAGE_PROMISE_LOCK_NAME, &pp);
@@ -1553,10 +1553,10 @@ bool UpdateSinglePackageModuleCache(EvalContext *ctx,
     }
 
     Bundle bundle = {.name = "package_cache"};
-    PromiseType promie_type = {.name = "package_cache",
-                               .parent_bundle = &bundle};
+    BundleSection section = {.name = "package_cache",
+                             .parent_bundle = &bundle};
     Promise pp = {.promiser = "package_cache",
-                  .parent_promise_type = &promie_type};
+                  .parent_promise_type = &section};
 
     CfLock cache_updates_lock;
     char cache_updates_lock_name[CF_BUFSIZE];

@@ -409,11 +409,11 @@ static void test_expand_promise_array_with_scalar_arg(void **state)
 
     Policy *policy = PolicyNew();
     Bundle *bundle = PolicyAppendBundle(policy, NamespaceDefault(), "bundle", "agent", NULL, NULL);
-    PromiseType *promise_type = BundleAppendPromiseType(bundle, "dummy");
-    Promise *promise = PromiseTypeAppendPromise(promise_type, "$(foo[$(bar)])", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, "any", NULL);
+    BundleSection *section = BundleAppendSection(bundle, "dummy");
+    Promise *promise = BundleSectionAppendPromise(section, "$(foo[$(bar)])", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, "any", NULL);
 
     EvalContextStackPushBundleFrame(ctx, bundle, NULL, false);
-    EvalContextStackPushPromiseTypeFrame(ctx, promise_type);
+    EvalContextStackPushBundleSectionFrame(ctx, section);
     ExpandPromise(ctx, promise, actuator_expand_promise_array_with_scalar_arg, NULL);
     EvalContextStackPopFrame(ctx);
     EvalContextStackPopFrame(ctx);
@@ -464,11 +464,11 @@ static void test_expand_promise_slist(void **state)
 
     Policy *policy = PolicyNew();
     Bundle *bundle = PolicyAppendBundle(policy, NamespaceDefault(), "bundle", "agent", NULL, NULL);
-    PromiseType *promise_type = BundleAppendPromiseType(bundle, "dummy");
-    Promise *promise = PromiseTypeAppendPromise(promise_type, "$(foo)", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, "any", NULL);
+    BundleSection *section = BundleAppendSection(bundle, "dummy");
+    Promise *promise = BundleSectionAppendPromise(section, "$(foo)", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, "any", NULL);
 
     EvalContextStackPushBundleFrame(ctx, bundle, NULL, false);
-    EvalContextStackPushPromiseTypeFrame(ctx, promise_type);
+    EvalContextStackPushBundleSectionFrame(ctx, section);
     ExpandPromise(ctx, promise, actuator_expand_promise_slist, NULL);
     EvalContextStackPopFrame(ctx);
     EvalContextStackPopFrame(ctx);
@@ -532,11 +532,11 @@ static void test_expand_promise_array_with_slist_arg(void **state)
 
     Policy *policy = PolicyNew();
     Bundle *bundle = PolicyAppendBundle(policy, NamespaceDefault(), "bundle", "agent", NULL, NULL);
-    PromiseType *promise_type = BundleAppendPromiseType(bundle, "dummy");
-    Promise *promise = PromiseTypeAppendPromise(promise_type, "$(arr[$(keys)])", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, "any", NULL);
+    BundleSection *section = BundleAppendSection(bundle, "dummy");
+    Promise *promise = BundleSectionAppendPromise(section, "$(arr[$(keys)])", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, "any", NULL);
 
     EvalContextStackPushBundleFrame(ctx, bundle, NULL, false);
-    EvalContextStackPushPromiseTypeFrame(ctx, promise_type);
+    EvalContextStackPushBundleSectionFrame(ctx, section);
     ExpandPromise(ctx, promise, actuator_expand_promise_array_with_slist_arg, NULL);
     EvalContextStackPopFrame(ctx);
     EvalContextStackPopFrame(ctx);

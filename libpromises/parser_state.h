@@ -74,7 +74,7 @@ typedef struct
     Bundle *currentbundle;
     Body *currentbody;
     Promise *currentpromise;
-    PromiseType *currentstype;
+    BundleSection *currentstype;
     Rlist *useargs;
 
     Rlist *currentRlist;

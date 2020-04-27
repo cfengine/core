@@ -357,7 +357,7 @@ typedef struct Policy_ Policy;
 typedef struct Bundle_ Bundle;
 typedef struct Body_ Body;
 typedef struct Promise_ Promise;
-typedef struct PromiseType_ PromiseType;
+typedef struct BundleSection_ BundleSection;
 typedef struct FnCall_ FnCall;
 
 /*************************************************************************/

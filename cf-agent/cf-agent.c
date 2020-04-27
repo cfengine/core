@@ -1410,7 +1410,7 @@ PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
     {
         for (TypeSequence type = 0; AGENT_TYPESEQUENCE[type] != NULL; type++)
         {
-            const PromiseType *sp = BundleGetPromiseType((Bundle *)bp, AGENT_TYPESEQUENCE[type]);
+            const BundleSection *sp = BundleGetSection((Bundle *)bp, AGENT_TYPESEQUENCE[type]);
 
             if (!sp || SeqLength(sp->promises) == 0)
             {
@@ -1420,7 +1420,7 @@ PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
             NewTypeContext(type);
 
             SpecialTypeBanner(type, pass);
-            EvalContextStackPushPromiseTypeFrame(ctx, sp);
+            EvalContextStackPushBundleSectionFrame(ctx, sp);
 
             for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
             {

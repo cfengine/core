@@ -626,14 +626,14 @@ void BundleResolvePromiseType(EvalContext *ctx, const Bundle *bundle, const char
 {
     for (size_t j = 0; j < SeqLength(bundle->promise_types); j++)
     {
-        PromiseType *pt = SeqAt(bundle->promise_types, j);
+        BundleSection *section = SeqAt(bundle->promise_types, j);
 
-        if (strcmp(pt->name, type) == 0)
+        if (strcmp(section->name, type) == 0)
         {
-            EvalContextStackPushPromiseTypeFrame(ctx, pt);
-            for (size_t i = 0; i < SeqLength(pt->promises); i++)
+            EvalContextStackPushBundleSectionFrame(ctx, section);
+            for (size_t i = 0; i < SeqLength(section->promises); i++)
             {
-                Promise *pp = SeqAt(pt->promises, i);
+                Promise *pp = SeqAt(section->promises, i);
                 ExpandPromise(ctx, pp, actuator, NULL);
             }
             EvalContextStackPopFrame(ctx);

@@ -596,7 +596,7 @@ static void EvaluateBundle(EvalContext *ctx, const Bundle *bp, const char * cons
 
     for (int type = 0; seq[type] != NULL; type++)
     {
-        const PromiseType *sp = BundleGetPromiseType((Bundle *)bp, seq[type]);
+        const BundleSection *sp = BundleGetSection((Bundle *)bp, seq[type]);
 
         /* Some promise types might not be there. */
         if (!sp || SeqLength(sp->promises) == 0)
@@ -606,7 +606,7 @@ static void EvaluateBundle(EvalContext *ctx, const Bundle *bp, const char * cons
             continue;
         }
 
-        EvalContextStackPushPromiseTypeFrame(ctx, sp);
+        EvalContextStackPushBundleSectionFrame(ctx, sp);
         for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
         {
             Promise *pp = SeqAt(sp->promises, ppi);
@@ -619,7 +619,7 @@ static void EvaluateBundle(EvalContext *ctx, const Bundle *bp, const char * cons
      * should evaluate. THIS IS ONLY FOR BACKWARD COMPATIBILITY! */
     for (size_t j = 0; j < SeqLength(bp->promise_types); j++)
     {
-        PromiseType *sp = SeqAt(bp->promise_types, j);
+        BundleSection *sp = SeqAt(bp->promise_types, j);
 
         /* Skipping evaluation of promise as this was evaluated in
          * loop above. */
@@ -633,7 +633,7 @@ static void EvaluateBundle(EvalContext *ctx, const Bundle *bp, const char * cons
         Log(LOG_LEVEL_WARNING, "Trying to evaluate unsupported/obsolete "
                     "promise type %s in %s bundle %s", sp->name, bp->type, bp->name);
 
-        EvalContextStackPushPromiseTypeFrame(ctx, sp);
+        EvalContextStackPushBundleSectionFrame(ctx, sp);
         for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
         {
             Promise *pp = SeqAt(sp->promises, ppi);

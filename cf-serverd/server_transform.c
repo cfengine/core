@@ -623,15 +623,15 @@ static void EvaluateBundle(EvalContext *ctx, const Bundle *bp, const char * cons
 
         /* Skipping evaluation of promise as this was evaluated in
          * loop above. */
-        if (!IsPromiseTypeNotInTypeSequence(sp->name, seq))
+        if (!IsPromiseTypeNotInTypeSequence(sp->promise_type, seq))
         {
             Log(LOG_LEVEL_DEBUG, "Skipping subsequent evaluation of "
-                    "promise type %s in bundle %s", sp->name, bp->name);
+                    "promise type %s in bundle %s", sp->promise_type, bp->name);
             continue;
         }
 
         Log(LOG_LEVEL_WARNING, "Trying to evaluate unsupported/obsolete "
-                    "promise type %s in %s bundle %s", sp->name, bp->type, bp->name);
+                    "promise type %s in %s bundle %s", sp->promise_type, bp->type, bp->name);
 
         EvalContextStackPushBundleSectionFrame(ctx, sp);
         for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
@@ -686,12 +686,12 @@ static PromiseResult KeepServerPromise(EvalContext *ctx, const Promise *pp, ARG_
     assert(!param);
     PromiseBanner(ctx, pp);
 
-    if (strcmp(pp->parent_section->name, "vars") == 0)
+    if (strcmp(pp->parent_section->promise_type, "vars") == 0)
     {
         return VerifyVarPromise(ctx, pp, NULL);
     }
 
-    if (strcmp(pp->parent_section->name, "classes") == 0)
+    if (strcmp(pp->parent_section->promise_type, "classes") == 0)
     {
         return VerifyClassPromise(ctx, pp, NULL);
     }
@@ -705,8 +705,8 @@ static PromiseResult KeepServerPromise(EvalContext *ctx, const Promise *pp, ARG_
         Log(LOG_LEVEL_WARNING,
             "ifelapsed attribute specified in action body for %s promise '%s',"
             " but %s promises do not support promise locking",
-            pp->parent_section->name, pp->promiser,
-            pp->parent_section->name);
+            pp->parent_section->promise_type, pp->promiser,
+            pp->parent_section->promise_type);
     }
     int expireafter = PromiseGetConstraintAsInt(ctx, "expireafter", pp);
     if (expireafter != CF_NOINT)
@@ -714,11 +714,11 @@ static PromiseResult KeepServerPromise(EvalContext *ctx, const Promise *pp, ARG_
         Log(LOG_LEVEL_WARNING,
             "expireafter attribute specified in action body for %s promise '%s',"
             " but %s promises do not support promise locking",
-            pp->parent_section->name, pp->promiser,
-            pp->parent_section->name);
+            pp->parent_section->promise_type, pp->promiser,
+            pp->parent_section->promise_type);
     }
 
-    if (strcmp(pp->parent_section->name, "access") == 0)
+    if (strcmp(pp->parent_section->promise_type, "access") == 0)
     {
         const char *resource_type =
             PromiseGetConstraintAsRval(pp, "resource_type", RVAL_TYPE_SCALAR);
@@ -757,7 +757,7 @@ static PromiseResult KeepServerPromise(EvalContext *ctx, const Promise *pp, ARG_
             return PROMISE_RESULT_NOOP;
         }
     }
-    else if (strcmp(pp->parent_section->name, "roles") == 0)
+    else if (strcmp(pp->parent_section->promise_type, "roles") == 0)
     {
         KeepServerRolePromise(ctx, pp);
         return PROMISE_RESULT_NOOP;

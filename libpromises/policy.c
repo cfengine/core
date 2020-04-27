@@ -184,7 +184,7 @@ static unsigned BundleSectionHash(const BundleSection *section, unsigned seed)
 {
     unsigned hash = seed;
 
-    hash = StringHash(section->name, hash);
+    hash = StringHash(section->promise_type, hash);
     for (size_t i = 0; i < SeqLength(section->promises); i++)
     {
         const Promise *pp = SeqAt(section->promises, i);
@@ -559,7 +559,7 @@ static bool ConstraintCheckSyntax(const Constraint *constraint, Seq *errors)
     const Bundle *bundle = section->parent_bundle;
 
     /* Check if lvalue is valid for the bundle's specific section. */
-    const PromiseTypeSyntax *promise_type_syntax = PromiseTypeSyntaxGet(bundle->type, section->name);
+    const PromiseTypeSyntax *promise_type_syntax = PromiseTypeSyntaxGet(bundle->type, section->promise_type);
     for (size_t i = 0; promise_type_syntax->constraints[i].lval != NULL; i++)
     {
         const ConstraintSyntax *body_syntax = &promise_type_syntax->constraints[i];
@@ -626,7 +626,7 @@ static bool ConstraintCheckSyntax(const Constraint *constraint, Seq *errors)
     SeqAppend(errors,
               PolicyErrorNew(POLICY_ELEMENT_TYPE_CONSTRAINT, constraint,
                              POLICY_ERROR_LVAL_INVALID,
-                             constraint->parent.promise->parent_section->name,
+                             constraint->parent.promise->parent_section->promise_type,
                              constraint->lval));
 
     return false;
@@ -731,7 +731,7 @@ static const ConstraintSyntax *ConstraintGetSyntax(const Constraint *constraint)
     const BundleSection *section = promise->parent_section;
     const Bundle *bundle = section->parent_bundle;
 
-    const PromiseTypeSyntax *promise_type_syntax = PromiseTypeSyntaxGet(bundle->type, section->name);
+    const PromiseTypeSyntax *promise_type_syntax = PromiseTypeSyntaxGet(bundle->type, section->promise_type);
 
     /* Check if lvalue is valid for the bundle's specific section. */
     for (size_t i = 0; promise_type_syntax->constraints[i].lval != NULL; i++)
@@ -1318,7 +1318,7 @@ void BundleSectionDestroy(BundleSection *section)
     {
         SeqDestroy(section->promises);
 
-        free(section->name);
+        free(section->promise_type);
         free(section);
     }
 }
@@ -1373,7 +1373,7 @@ Body *PolicyAppendBody(Policy *policy, const char *ns, const char *name, const c
     return body;
 }
 
-BundleSection *BundleAppendSection(Bundle *bundle, const char *name)
+BundleSection *BundleAppendSection(Bundle *bundle, const char *promise_type)
 {
     if (bundle == NULL)
     {
@@ -1384,21 +1384,21 @@ BundleSection *BundleAppendSection(Bundle *bundle, const char *name)
     for (size_t i = 0; i < SeqLength(bundle->sections); i++)
     {
         BundleSection *existing = SeqAt(bundle->sections, i);
-        if (strcmp(existing->name, name) == 0)
+        if (strcmp(existing->promise_type, promise_type) == 0)
         {
             return existing;
         }
     }
 
-    BundleSection *tp = xcalloc(1, sizeof(BundleSection));
+    BundleSection *section = xcalloc(1, sizeof(BundleSection));
 
-    tp->parent_bundle = bundle;
-    tp->name = xstrdup(name);
-    tp->promises = SeqNew(10, PromiseDestroy);
+    section->parent_bundle = bundle;
+    section->promise_type = xstrdup(promise_type);
+    section->promises = SeqNew(10, PromiseDestroy);
 
-    SeqAppend(bundle->sections, tp);
+    SeqAppend(bundle->sections, section);
 
-    return tp;
+    return section;
 }
 
 /*******************************************************************/
@@ -1597,7 +1597,7 @@ Constraint *BodyAppendConstraint(Body *body, const char *lval, Rval rval, const 
 
 /*******************************************************************/
 
-const BundleSection *BundleGetSection(const Bundle *bp, const char *name)
+const BundleSection *BundleGetSection(const Bundle *bp, const char *promise_type)
 {
     // TODO: hiding error, remove and see what will crash
     if (bp == NULL)
@@ -1609,7 +1609,7 @@ const BundleSection *BundleGetSection(const Bundle *bp, const char *name)
     {
         BundleSection *sp = SeqAt(bp->sections, i);
 
-        if (strcmp(name, sp->name) == 0)
+        if (strcmp(promise_type, sp->promise_type) == 0)
         {
             return sp;
         }
@@ -1905,7 +1905,7 @@ JsonElement *BundleToJson(const Bundle *bundle)
             JsonElement *json_promise_type = JsonObjectCreate(10);
 
             JsonObjectAppendInteger(json_promise_type, "line", sp->offset.line);
-            JsonObjectAppendString(json_promise_type, "name", sp->name);
+            JsonObjectAppendString(json_promise_type, "name", sp->promise_type);
             JsonObjectAppendArray(json_promise_type, "contexts", BundleContextsToJson(sp->promises));
 
             JsonArrayAppendObject(json_promise_types, json_promise_type);
@@ -2083,7 +2083,7 @@ void BundleToString(Writer *writer, Bundle *bundle)
     {
         BundleSection *section = SeqAt(bundle->sections, i);
 
-        WriterWriteF(writer, "\n%s:\n", section->name);
+        WriterWriteF(writer, "\n%s:\n", section->promise_type);
 
         char *current_class = NULL;
         for (size_t ppi = 0; ppi < SeqLength(section->promises); ppi++)
@@ -2653,7 +2653,7 @@ static bool PromiseCheck(const Promise *pp, Seq *errors)
     }
 
     const PromiseTypeSyntax *pts = PromiseTypeSyntaxGet(pp->parent_section->parent_bundle->type,
-                                                        pp->parent_section->name);
+                                                        pp->parent_section->promise_type);
 
     if (pts->check_promise)
     {
@@ -2690,7 +2690,7 @@ static void PromiseTypePath(Writer *w, const BundleSection *section)
 {
     BundlePath(w, section->parent_bundle);
     WriterWriteChar(w, '/');
-    WriterWrite(w, section->name);
+    WriterWrite(w, section->promise_type);
 }
 
 /**
@@ -3102,7 +3102,7 @@ void PromiseRecheckAllConstraints(const EvalContext *ctx, const Promise *pp)
     /* Check and warn for non-convergence, see commits
        4f8c19b84327b8f3c2e269173196282ccedfdad9 and
        30c109d22e170a781a647b04b4b0a4a2f7244871. */
-    if (strcmp(pp->parent_section->name, "insert_lines") == 0)
+    if (strcmp(pp->parent_section->promise_type, "insert_lines") == 0)
     {
         /* TODO without static var, actually remove this check from here
          * completely, do it at the end of PRE-EVAL promise iterations
@@ -3166,7 +3166,7 @@ static SyntaxTypeMatch ConstraintCheckType(const Constraint *cp)
 
                 if (ss.promise_type != NULL)
                 {
-                    if (strcmp(ss.promise_type, section->name) == 0)
+                    if (strcmp(ss.promise_type, section->promise_type) == 0)
                     {
                         const ConstraintSyntax *bs = ss.constraints;
 

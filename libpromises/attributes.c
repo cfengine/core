@@ -683,28 +683,28 @@ TransactionContext GetTransactionConstraints(const EvalContext *ctx, const Promi
 
     /* Warn if promise locking was used with a promise that doesn't support it.
      * XXX: EvalContextGetPass() takes 'EvalContext *' instead of 'const EvalContext *'*/
-    if ((strcmp("access", pp->parent_section->name) == 0 ||
-         strcmp("classes", pp->parent_section->name) == 0 ||
-         strcmp("defaults", pp->parent_section->name) == 0 ||
-         strcmp("meta", pp->parent_section->name) == 0 ||
-         strcmp("roles", pp->parent_section->name) == 0 ||
-         strcmp("vars", pp->parent_section->name) == 0))
+    if ((strcmp("access", pp->parent_section->promise_type) == 0 ||
+         strcmp("classes", pp->parent_section->promise_type) == 0 ||
+         strcmp("defaults", pp->parent_section->promise_type) == 0 ||
+         strcmp("meta", pp->parent_section->promise_type) == 0 ||
+         strcmp("roles", pp->parent_section->promise_type) == 0 ||
+         strcmp("vars", pp->parent_section->promise_type) == 0))
     {
         if (t.ifelapsed != CF_NOINT)
         {
             Log(LOG_LEVEL_WARNING,
                 "ifelapsed attribute specified in action body for %s promise '%s',"
                 " but %s promises do not support promise locking",
-                pp->parent_section->name, pp->promiser,
-                pp->parent_section->name);
+                pp->parent_section->promise_type, pp->promiser,
+                pp->parent_section->promise_type);
         }
         if (t.expireafter != CF_NOINT)
         {
             Log(LOG_LEVEL_WARNING,
                 "expireafter attribute specified in action body for %s promise '%s',"
                 " but %s promises do not support promise locking",
-                pp->parent_section->name, pp->promiser,
-                pp->parent_section->name);
+                pp->parent_section->promise_type, pp->promiser,
+                pp->parent_section->promise_type);
         }
     }
 

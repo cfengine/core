@@ -215,7 +215,7 @@ void UpdatePackagesCache(EvalContext *ctx, bool force_update)
 PackagePromiseGlobalLock AcquireGlobalPackagePromiseLock(EvalContext *ctx)
 {
     Bundle bundle = {.name = "package_global"};
-    BundleSection section = {.name = "package_global",
+    BundleSection section = {.promise_type = "package_global",
                              .parent_bundle = &bundle};
     Promise pp = {.promiser = "package_global",
                   .parent_section = &section};
@@ -233,7 +233,7 @@ PackagePromiseGlobalLock AcquireGlobalPackagePromiseLock(EvalContext *ctx)
 void YieldGlobalPackagePromiseLock(PackagePromiseGlobalLock lock)
 {
     Bundle bundle = {.name = "package_global"};
-    BundleSection section = {.name = "package_global",
+    BundleSection section = {.promise_type = "package_global",
                              .parent_bundle = &bundle};
     Promise pp = {.promiser = "package_global",
                   .parent_section = &section};
@@ -1553,7 +1553,7 @@ bool UpdateSinglePackageModuleCache(EvalContext *ctx,
     }
 
     Bundle bundle = {.name = "package_cache"};
-    BundleSection section = {.name = "package_cache",
+    BundleSection section = {.promise_type = "package_cache",
                              .parent_bundle = &bundle};
     Promise pp = {.promiser = "package_cache",
                   .parent_section = &section};

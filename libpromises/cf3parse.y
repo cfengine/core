@@ -285,13 +285,13 @@ promise_decl:          promise_line ';'
                            yyclearin;
                        }
 
-promise_line:           promisee_statement
-                      | promiser_statement
+promise_line:           promise_with_promisee
+                      | promise_without_promisee
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-promisee_statement:    promiser
+promise_with_promisee: promiser
 
                        promisee_arrow
 
@@ -318,11 +318,11 @@ promisee_statement:    promiser
                            }
                        }
 
-                       promiser_constraints_decl
+                       promise_decl_constraints
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-promiser_statement:    promiser
+promise_without_promisee: promiser
                        {
 
                            if (!INSTALL_SKIP)
@@ -346,7 +346,7 @@ promiser_statement:    promiser
                            }
                        }
 
-                       promiser_constraints_decl
+                       promise_decl_constraints
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -383,7 +383,7 @@ promiser:              QUOTED_STRING
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-promiser_constraints_decl:      /* empty */
+promise_decl_constraints:       /* empty */
                               | constraints_decl
                               | constraints_decl error
                                 {

@@ -814,4 +814,115 @@ static inline void ParserBeginBlockBody()
     strcpy(P.currentid, "");
 }
 
+// Called for every Rval (Right hand side value) of attributes
+// in body blocks
+static inline void ParserHandleBlockAttributeRval()
+{
+    assert(P.block == PARSER_BLOCK_BODY); // Will also include promise blocks
+
+    if (!INSTALL_SKIP)
+    {
+        const BodySyntax *body_syntax =
+            BodySyntaxGet(PARSER_BLOCK_BODY, P.blocktype);
+        assert(body_syntax);
+
+        const ConstraintSyntax *constraint_syntax =
+            BodySyntaxGetConstraintSyntax(body_syntax->constraints, P.lval);
+        if (constraint_syntax)
+        {
+            switch (constraint_syntax->status)
+            {
+            case SYNTAX_STATUS_DEPRECATED:
+                ParseWarning(
+                    PARSER_WARNING_DEPRECATED,
+                    "Deprecated constraint '%s' in body type '%s'",
+                    constraint_syntax->lval,
+                    body_syntax->body_type);
+                // Intentional fall
+            case SYNTAX_STATUS_NORMAL:
+            {
+                SyntaxTypeMatch err =
+                    CheckSelection(P.blocktype, P.blockid, P.lval, P.rval);
+                if (err != SYNTAX_TYPE_MATCH_OK
+                    && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
+                {
+                    yyerror(SyntaxTypeMatchToString(err));
+                }
+
+                if (P.rval.type == RVAL_TYPE_SCALAR
+                    && (strcmp(P.lval, "ifvarclass") == 0
+                        || strcmp(P.lval, "if") == 0))
+                {
+                    ValidateClassLiteral(P.rval.item);
+                }
+
+                Constraint *cp = NULL;
+                if (P.currentclasses == NULL)
+                {
+                    cp = BodyAppendConstraint(
+                        P.currentbody,
+                        P.lval,
+                        RvalCopy(P.rval),
+                        "any",
+                        P.references_body);
+                }
+                else
+                {
+                    cp = BodyAppendConstraint(
+                        P.currentbody,
+                        P.lval,
+                        RvalCopy(P.rval),
+                        P.currentclasses,
+                        P.references_body);
+                }
+
+                if (P.currentvarclasses != NULL)
+                {
+                    ParseError(
+                        "Body attributes can't be put under a variable class '%s'",
+                        P.currentvarclasses);
+                }
+
+                cp->offset.line = P.line_no;
+                cp->offset.start = P.offsets.last_id;
+                cp->offset.end = P.offsets.current;
+                cp->offset.context = P.offsets.last_class_id;
+                break;
+            }
+            case SYNTAX_STATUS_REMOVED:
+                ParseWarning(
+                    PARSER_WARNING_REMOVED,
+                    "Removed constraint '%s' in promise type '%s'",
+                    constraint_syntax->lval,
+                    body_syntax->body_type);
+                break;
+            }
+        }
+    }
+    else
+    {
+        RvalDestroy(P.rval);
+        P.rval = RvalNew(NULL, RVAL_TYPE_NOPROMISEE);
+    }
+
+    if (strcmp(P.blockid, "control") == 0 && strcmp(P.blocktype, "file") == 0)
+    {
+        if (strcmp(P.lval, "namespace") == 0)
+        {
+            if (P.rval.type != RVAL_TYPE_SCALAR)
+            {
+                yyerror("namespace must be a constant scalar string");
+            }
+            else
+            {
+                free(P.current_namespace);
+                P.current_namespace = xstrdup(P.rval.item);
+            }
+        }
+    }
+
+    RvalDestroy(P.rval);
+    P.rval = RvalNew(NULL, RVAL_TYPE_NOPROMISEE);
+}
+
 #endif // CF3_PARSE_LOGIC_H

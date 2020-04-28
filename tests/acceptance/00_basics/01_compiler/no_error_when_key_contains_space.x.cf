@@ -1,0 +1,61 @@
+# This test should be renamed from .x.cf to .cf when the bug is fixed.
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-3320" }
+      string => "Test that data container keys can contain spaces";
+
+  vars:
+      "d" data => '{
+  "thing s": [
+    {
+      "Title": "ExpectedPick",
+      "classexpr": "$(sys.os)"
+    }
+  ]
+      }';
+
+      "selected"
+        string => "$(d[thing s][ExpectedPick][Title])",
+        if => "$([thing s][ExpectedPick][classexpr])";
+      # Note: wrapping with concat or classify prevents the error
+      #        if => concat("$([thing s][$(di)][classexpr])");
+      #        if => classify("$([thing s][$(di)][classexpr])");
+
+      "sanity_check"
+        string => "You are sane",
+        if => "$(sys.os)";
+
+  reports:
+    EXTRA|DEBUG::
+      "See iteration/expansion: $(d[thing s][ExpectedPick][Title]) has classexpr $(d[thing s][ExpectedPick][classexpr])";
+      "See sanity_check: $(sanity_check) because $(sys.os) is a defined class";
+
+      "Picked: $(d[thing s][ExpectedPick][Title]) has classexpr $(d[thing s][ExpectedPick][classexpr])"
+        if => "$([thing s][ExpectedPick][classexpr])";
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+      "expected_selection" string => "ExpectedPick";
+
+  methods:
+      "Pass/Fail"
+        usebundle => dcs_check_strcmp($(expected_selection), $(test.selected),
+                                      $(this.promise_filename), "no");
+
+}
+

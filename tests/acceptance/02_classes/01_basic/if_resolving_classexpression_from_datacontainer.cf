@@ -1,0 +1,70 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-3319" }
+      string => "Test that if/ifvarclass can check class expressions from within a data container";
+
+      "test_soft_fail"
+        meta => { "CFE-3319" },
+        string => "any";
+
+  vars:
+      "d" data => '{
+  "things": [
+    {
+      "Title": "NOPE",
+      "classexpr": "Something_that_wont_match"
+    },
+    {
+      "Title": "ExpectedPick",
+      "classexpr": "$(sys.os)"
+    },
+    {
+      "Title": "AlsoNOPE",
+      "classexpr": "AnotherSomething_that_wont_match"
+    }
+  ]
+      }';
+
+      "di" slist => getindices( "d[things]" );
+
+      "selected"
+        string => "$(d[things][$(di)][Title])",
+        if => "$([things][$(di)][classexpr])";
+
+      "sanity_check"
+        string => "You are sane",
+        if => "$(sys.os)";
+
+  reports:
+    EXTRA|DEBUG::
+      "See iteration/expansion: $(d[things][$(di)][Title]) has classexpr $(d[things][$(di)][classexpr])";
+      "See sanity_check: $(sanity_check) because $(sys.os) is a defined class";
+
+      "Picked: $(d[things][$(di)][Title]) has classexpr $(d[things][$(di)][classexpr])"
+        if => "$([things][$(di)][classexpr])";
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+      "expected_selection" string => "ExpectedPick";
+
+  methods:
+      "Pass/Fail"
+        usebundle => dcs_check_strcmp($(expected_selection), $(test.selected),
+                                      $(this.promise_filename), "no");
+
+}
+

@@ -732,8 +732,8 @@ static inline void ParserHandlePromiseGuard()
             {
                 if (!INSTALL_SKIP)
                 {
-                    P.currentstype = BundleAppendSection(
-                        P.currentbundle, P.currenttype);
+                    P.currentstype =
+                        BundleAppendSection(P.currentbundle, P.currenttype);
                     P.currentstype->offset.line = P.line_no;
                     P.currentstype->offset.start =
                         P.offsets.last_promise_guard_id;

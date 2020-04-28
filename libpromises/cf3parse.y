@@ -57,7 +57,7 @@ body:                  BODY bodytype bodyid arglist bodybody
 
 bundletype:            bundletype_values
                        {
-                           ParserBeginBundle();
+                           ParserBeginBlock(PARSER_BLOCK_BUNDLE);
                        }
 
 bundletype_values:     typeid
@@ -98,7 +98,7 @@ bundleid_values:       symbol
 
 bodytype:              bodytype_values
                        {
-                           ParserBeginBody();
+                           ParserBeginBlock(PARSER_BLOCK_BODY);
                        }
 
 bodytype_values:       typeid

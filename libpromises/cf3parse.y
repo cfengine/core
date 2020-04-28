@@ -514,11 +514,16 @@ selection_id:          IDENTIFIER
 
                            if (!INSTALL_SKIP)
                            {
-                               const BodySyntax *body_syntax = BodySyntaxGet(PARSER_BLOCK_BODY, P.currentbody->type);
+                               const BodySyntax *body_syntax = BodySyntaxGet(P.block, P.currentbody->type);
 
                                if (!body_syntax || !BodySyntaxGetConstraintSyntax(body_syntax->constraints, P.currentid))
                                {
-                                   ParseError("Unknown selection '%s' for body type '%s'", P.currentid, P.currentbody->type);
+                                   ParseError(
+                                       "Unknown attribute '%s' for '%s %s %s'",
+                                       P.currentid,                // attribute name (lval)
+                                       ParserBlockString(P.block), // body     (block type)
+                                       P.currentbody->type,        // file     (body type)
+                                       P.blockid);                 // control  (body name)
                                    INSTALL_SKIP = true;
                                }
 

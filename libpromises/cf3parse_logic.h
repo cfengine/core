@@ -670,34 +670,27 @@ static inline void ParserHandleBundlePromiseRval()
     }
 }
 
-static inline void ParserBeginBundle()
+static inline void ParserBeginBlock(ParserBlock b)
 {
-    ParserDebug("P:bundle:%s\n", P.blocktype);
-    P.block = PARSER_BLOCK_BUNDLE;
-    RvalDestroy(P.rval);
-    P.rval = RvalNew(NULL, RVAL_TYPE_NOPROMISEE);
-    RlistDestroy(P.currentRlist);
-    P.currentRlist = NULL;
-    if (P.currentstring)
-    {
-        free(P.currentstring);
-    }
-    P.currentstring = NULL;
-    strcpy(P.blockid, "");
-}
+    ParserDebug("P:%s:%s\n", ParserBlockString(b), P.blocktype);
+    P.block = b;
 
-static inline void ParserBeginBody()
-{
-    ParserDebug("P:body:%s\n", P.blocktype);
-    P.block = PARSER_BLOCK_BODY;
-    strcpy(P.blockid, "");
+    if (b == PARSER_BLOCK_BUNDLE)
+    {
+        RvalDestroy(P.rval);
+        P.rval = RvalNew(NULL, RVAL_TYPE_NOPROMISEE);
+    }
+
     RlistDestroy(P.currentRlist);
     P.currentRlist = NULL;
+
     if (P.currentstring)
     {
         free(P.currentstring);
     }
     P.currentstring = NULL;
+
+    strcpy(P.blockid, "");
 }
 
 // The promise "guard" is a promise type followed by a single colon,

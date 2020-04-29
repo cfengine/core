@@ -9,10 +9,8 @@ bundle agent test
 {
   meta:
 
-      "description" string => "Test that variable class expressions and the if alias work together as expected.";
-
-      "test_soft_fail"
-        string => "any",
+      "description"
+        string => "Test that variable class expressions and the if alias work together as expected.",
         meta => { "CFE-2615" };
 
   vars:
@@ -93,8 +91,8 @@ bundle agent test
       "Found class indicating failure '$(FAIL_classes)'";
 
     FAIL_classes::
-      "$(this.promise_dirname) FAIL";
+      "$(this.promise_filename) FAIL";
 
     no_FAIL_classes::
-      "$(this.promise_dirname) Pass";
+      "$(this.promise_filename) Pass";
 }

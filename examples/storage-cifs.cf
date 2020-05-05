@@ -1,0 +1,30 @@
+bundle agent main
+# @brief Example illustrating CIFS/Samba storage type promise mount
+{
+  vars:
+    redhat|centos::
+      "cifs" data => '{ "server": "192.168.42.251", "path": "/Audio" }';
+
+  packages:
+    redhat|centos::
+      "cifs-utils"   policy => "present";
+      "samba-client" policy => "present";
+
+  files:
+    redhat|centos::
+      "/mnt/CIFS/." create => "true";
+
+  storage:
+    redhat|centos::
+      "/mnt/CIFS"
+        mount => cifs_guest( $(cifs[server]) , $(cifs[path]) );
+}
+
+body mount cifs_guest(server,source)
+{
+        mount_type => "cifs";
+        mount_source => "$(source)";
+        mount_server => "$(server)";
+        mount_options => { "guest" };
+        edit_fstab => "false";
+}

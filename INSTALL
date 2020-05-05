@@ -35,6 +35,8 @@ following additional tools:
 
 Latest stable versions of the tools and libraries are generally advised.
 
+See INSTALL DEPENDENCIES below for example of deps for various systems.
+
 OPERATING SYSTEMS
 -----------------
 
@@ -102,3 +104,32 @@ RUNNING TESTSUITE
 -----------------
 
 Please refer to the instructions in tests/README file.
+
+INSTALL DEPENDENCIES
+--------------------
+
+Here we have examples of command lines for various systems to install dependencies
+needed to build. The version and date checked are noted in parenthesis. Please
+submit PRs with updates to this information.
+
+* Debian (Raspbian 9 2020-04-24)
+
+# apt-get install build-essential autoconf automake libssl-dev libpcre3 libpcre3-dev bison libbison-dev libacl1 libacl1-dev libpq-dev lmdb-utils liblmdb-dev libpam0g-dev flex libtool
+
+* FreeBSD (12.1 2020-04-07)
+
+See docs/BSD.md
+
+* SUSE (Tumbleweed 2020-02-02)
+
+# zypper install gdb gcc make lmdb autoconf automake libtool git python3 pcre-devel libopenssl-devel pam-devel
+
+* AlpineOS (3.11.3 x86_64 2020-04-13)
+
+# apk add allpine-sdk lmdb-dev openssl-dev bison flex-dev acl-dev pcre-dev autoconf automake libtool git python3 gdb
+# ./autogen.sh --without-pam
+
+* Termux (2020-04-24)
+
+# pkg install build-essential autoconf automake bison flex liblmdb openssl pcre libacl
+# ./autogen.sh --without-pam

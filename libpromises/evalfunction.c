@@ -4012,9 +4012,9 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx,
     {
         Bundle *bp = PolicyAppendBundle(select_server_policy, NamespaceDefault(),
                                         "select_server_bundle", "agent", NULL, NULL);
-        PromiseType *tp = BundleAppendPromiseType(bp, "select_server");
+        BundleSection *sp = BundleAppendSection(bp, "select_server");
 
-        PromiseTypeAppendPromise(tp, "function", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, NULL, NULL);
+        BundleSectionAppendPromise(sp, "function", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, NULL, NULL);
     }
 
     size_t count = 0;

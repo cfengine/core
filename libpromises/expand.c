@@ -236,8 +236,8 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, PromiseIterator *iterc
         /* EVALUATE VARS PROMISES again, allowing redefinition of
          * variables. The theory behind this is that the "sampling rate" of
          * vars promise needs to be double than the rest. */
-        if (strcmp(pexp->parent_promise_type->name, "vars") == 0 ||
-            strcmp(pexp->parent_promise_type->name, "meta") == 0)
+        if (strcmp(pexp->parent_section->promise_type, "vars") == 0 ||
+            strcmp(pexp->parent_section->promise_type, "meta") == 0)
         {
             if (act_on_promise != &VerifyVarPromise)
             {
@@ -640,16 +640,16 @@ Rval EvaluateFinalRval(EvalContext *ctx, const Policy *policy,
 
 void BundleResolvePromiseType(EvalContext *ctx, const Bundle *bundle, const char *type, PromiseActuator *actuator)
 {
-    for (size_t j = 0; j < SeqLength(bundle->promise_types); j++)
+    for (size_t j = 0; j < SeqLength(bundle->sections); j++)
     {
-        PromiseType *pt = SeqAt(bundle->promise_types, j);
+        BundleSection *section = SeqAt(bundle->sections, j);
 
-        if (strcmp(pt->name, type) == 0)
+        if (strcmp(section->promise_type, type) == 0)
         {
-            EvalContextStackPushPromiseTypeFrame(ctx, pt);
-            for (size_t i = 0; i < SeqLength(pt->promises); i++)
+            EvalContextStackPushBundleSectionFrame(ctx, section);
+            for (size_t i = 0; i < SeqLength(section->promises); i++)
             {
-                Promise *pp = SeqAt(pt->promises, i);
+                Promise *pp = SeqAt(section->promises, i);
                 ExpandPromise(ctx, pp, actuator, NULL);
             }
             EvalContextStackPopFrame(ctx);

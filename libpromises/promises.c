@@ -237,7 +237,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
 
     assert(pp->classes);
     pcopy->classes             = xstrdup(pp->classes);
-    pcopy->parent_promise_type = pp->parent_promise_type;
+    pcopy->parent_section      = pp->parent_section;
     pcopy->offset.line         = pp->offset.line;
     pcopy->comment             = pp->comment ? xstrdup(pp->comment) : NULL;
     pcopy->conlist             = SeqNew(10, ConstraintDestroy);
@@ -420,8 +420,8 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
     } /* for all constraints */
 
     // Add default body for promise body types that are not present
-    char *bundle_type = pcopy->parent_promise_type->parent_bundle->type;
-    char *promise_type = pcopy->parent_promise_type->name;
+    char *bundle_type = pcopy->parent_section->parent_bundle->type;
+    char *promise_type = pcopy->parent_section->promise_type;
     const PromiseTypeSyntax *syntax = PromiseTypeSyntaxGet(bundle_type, promise_type);
     AddDefaultBodiesToPromise(ctx, pcopy, syntax);
 
@@ -450,7 +450,7 @@ static void AddDefaultBodiesToPromise(EvalContext *ctx, Promise *promise, const 
             if(!PromiseBundleOrBodyConstraintExists(ctx, constraint_type, promise)) {
                 const Policy *policy = PolicyFromPromise(promise);
                 // default format is <promise_type>_<body_type>
-                char* default_body_name = StringConcatenate(3, promise->parent_promise_type->name, "_", constraint_type);
+                char* default_body_name = StringConcatenate(3, promise->parent_section->promise_type, "_", constraint_type);
                 const Body *bp = EvalContextFindFirstMatchingBody(policy, constraint_type, "bodydefault", default_body_name);
                 if(bp) {
                     Log(LOG_LEVEL_VERBOSE, "Using the default body: %60s", default_body_name);
@@ -566,7 +566,7 @@ static void DereferenceAndPutComment(Promise* pp, const char *comment)
 Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
 {
     assert(pp != NULL);
-    assert(pp->parent_promise_type != NULL);
+    assert(pp->parent_section != NULL);
     assert(pp->promiser != NULL);
     assert(pp->classes != NULL);
     assert(excluded != NULL);
@@ -586,8 +586,8 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
     pcopy->promiser = RvalScalarValue(returnval);
 
     /* TODO remove the conditions here for fixing redmine#7880. */
-    if ((strcmp("files", pp->parent_promise_type->name) != 0) &&
-        (strcmp("storage", pp->parent_promise_type->name) != 0))
+    if ((strcmp("files", pp->parent_section->promise_type) != 0) &&
+        (strcmp("storage", pp->parent_section->promise_type) != 0))
     {
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", pcopy->promiser,
                                       CF_DATA_TYPE_STRING, "source=promise");
@@ -603,14 +603,14 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
     }
 
     pcopy->classes = xstrdup(pp->classes);
-    pcopy->parent_promise_type = pp->parent_promise_type;
+    pcopy->parent_section = pp->parent_section;
     pcopy->offset.line = pp->offset.line;
     pcopy->comment = pp->comment ? xstrdup(pp->comment) : NULL;
     pcopy->conlist = SeqNew(10, ConstraintDestroy);
     pcopy->org_pp = pp->org_pp;
 
     // if this is a class promise, check if it is already set, if so, skip
-    if (strcmp("classes", pp->parent_promise_type->name) == 0)
+    if (strcmp("classes", pp->parent_section->promise_type) == 0)
     {
         if (IsDefinedClass(ctx, CanonifyName(pcopy->promiser)))
         {
@@ -685,7 +685,7 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
                 // We default to NOT skipping (since if would skip).
                 Log(LOG_LEVEL_VERBOSE,
                     "Not skipping %s promise '%s' with constraint '%s => %s' in last evaluation pass (since if would skip)",
-                    pp->parent_promise_type->name,
+                    pp->parent_section->promise_type,
                     pp->promiser,
                     unless->lval,
                     unless_string);

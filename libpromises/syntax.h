@@ -29,6 +29,7 @@
 
 #include <sequence.h>
 #include <json.h>
+#include <parser_helpers.h>
 
 #include <stdio.h>
 
@@ -82,7 +83,7 @@ DataType ExpectedDataType(const char *lvalname);
 const PromiseTypeSyntax *PromiseTypeSyntaxGet(const char *bundle_type, const char *promise_type);
 const ConstraintSyntax *PromiseTypeSyntaxGetConstraintSyntax(const PromiseTypeSyntax *promise_type_syntax, const char *lval);
 
-const BodySyntax *BodySyntaxGet(const char *body_type);
+const BodySyntax *BodySyntaxGet(ParserBlock block, const char *body_type);
 const ConstraintSyntax *BodySyntaxGetConstraintSyntax(const ConstraintSyntax *body_syntax, const char *lval);
 
 const char *SyntaxStatusToString(SyntaxStatus status);

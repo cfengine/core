@@ -124,13 +124,13 @@ bool ScheduleEditLineOperations(EvalContext *ctx, const Bundle *bp, const Attrib
     {
         for (type = 0; EDITLINETYPESEQUENCE[type] != NULL; type++)
         {
-            const PromiseType *sp = BundleGetPromiseType(bp, EDITLINETYPESEQUENCE[type]);
+            const BundleSection *sp = BundleGetSection(bp, EDITLINETYPESEQUENCE[type]);
             if (!sp)
             {
                 continue;
             }
 
-            EvalContextStackPushPromiseTypeFrame(ctx, sp);
+            EvalContextStackPushBundleSectionFrame(ctx, sp);
             for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
             {
                 Promise *pp = SeqAt(sp->promises, ppi);
@@ -174,7 +174,7 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, const 
     assert(bp);
 
     {
-        PromiseType *tp = BundleAppendPromiseType(bp, "insert_lines");
+        BundleSection *bsp = BundleAppendSection(bp, "insert_lines");
         Promise *np = NULL;
         Item *lines = NULL;
         Item *stack = NULL;
@@ -269,7 +269,7 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, const 
                 int nl = StripTrailingNewline(promiser, size);
                 CF_ASSERT(nl != -1, "StripTrailingNewline failure");
 
-                np = PromiseTypeAppendPromise(tp, promiser, (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, context, NULL);
+                np = BundleSectionAppendPromise(bsp, promiser, (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, context, NULL);
                 np->offset.line = lineno;
                 PromiseAppendConstraint(np, "insert_type", RvalNew("preserve_all_lines", RVAL_TYPE_SCALAR), false);
 
@@ -289,7 +289,7 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, const 
                     {
                         //install independent promise line
                         StripTrailingNewline(buffer, buffer_size);
-                        np = PromiseTypeAppendPromise(tp, buffer, (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, context, NULL);
+                        np = BundleSectionAppendPromise(bsp, buffer, (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, context, NULL);
                         np->offset.line = lineno;
                         PromiseAppendConstraint(np, "insert_type", RvalNew("preserve_all_lines", RVAL_TYPE_SCALAR), false);
                     }
@@ -315,27 +315,27 @@ static PromiseResult KeepEditLinePromise(EvalContext *ctx, const Promise *pp, vo
 
     PromiseBanner(ctx, pp);
 
-    if (strcmp("classes", pp->parent_promise_type->name) == 0)
+    if (strcmp("classes", pp->parent_section->promise_type) == 0)
     {
         return VerifyClassPromise(ctx, pp, NULL);
     }
-    else if (strcmp("delete_lines", pp->parent_promise_type->name) == 0)
+    else if (strcmp("delete_lines", pp->parent_section->promise_type) == 0)
     {
         return VerifyLineDeletions(ctx, pp, edcontext);
     }
-    else if (strcmp("field_edits", pp->parent_promise_type->name) == 0)
+    else if (strcmp("field_edits", pp->parent_section->promise_type) == 0)
     {
         return VerifyColumnEdits(ctx, pp, edcontext);
     }
-    else if (strcmp("insert_lines", pp->parent_promise_type->name) == 0)
+    else if (strcmp("insert_lines", pp->parent_section->promise_type) == 0)
     {
         return VerifyLineInsertions(ctx, pp, edcontext);
     }
-    else if (strcmp("replace_patterns", pp->parent_promise_type->name) == 0)
+    else if (strcmp("replace_patterns", pp->parent_section->promise_type) == 0)
     {
         return VerifyPatterns(ctx, pp, edcontext);
     }
-    else if (strcmp("reports", pp->parent_promise_type->name) == 0)
+    else if (strcmp("reports", pp->parent_section->promise_type) == 0)
     {
         return VerifyReportPromise(ctx, pp);
     }

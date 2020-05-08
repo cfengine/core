@@ -245,12 +245,12 @@ static void IteratorPrepare_TestHelper(
     Policy *policy = PolicyNew();
     Bundle *bundle = PolicyAppendBundle(policy, "ns1", "bundle1", "agent",
                                         NULL, NULL);
-    PromiseType *promise_type = BundleAppendPromiseType(bundle, "dummy");
-    Promise *promise = PromiseTypeAppendPromise(promise_type, promiser,
-                                                (Rval) { NULL, RVAL_TYPE_NOPROMISEE },
-                                                "any", NULL);
+    BundleSection *section = BundleAppendSection(bundle, "dummy");
+    Promise *promise = BundleSectionAppendPromise(section, promiser,
+                                                  (Rval) { NULL, RVAL_TYPE_NOPROMISEE },
+                                                  "any", NULL);
     EvalContextStackPushBundleFrame(evalctx, bundle, NULL, false);
-    EvalContextStackPushPromiseTypeFrame(evalctx, promise_type);
+    EvalContextStackPushBundleSectionFrame(evalctx, section);
     PromiseIterator *iterctx = PromiseIteratorNew(promise);
     char *promiser_copy = xstrdup(promiser);
 

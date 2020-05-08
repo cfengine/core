@@ -170,13 +170,13 @@ bool ScheduleEditXmlOperations(EvalContext *ctx, const Bundle *bp, const Attribu
     {
         for (type = 0; EDITXMLTYPESEQUENCE[type] != NULL; type++)
         {
-            const PromiseType *sp = BundleGetPromiseType(bp, EDITXMLTYPESEQUENCE[type]);
+            const BundleSection *sp = BundleGetSection(bp, EDITXMLTYPESEQUENCE[type]);
             if (!sp)
             {
                 continue;
             }
 
-            EvalContextStackPushPromiseTypeFrame(ctx, sp);
+            EvalContextStackPushBundleSectionFrame(ctx, sp);
             for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
             {
                 Promise *pp = SeqAt(sp->promises, ppi);
@@ -207,11 +207,11 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp,
 {
     PromiseBanner(ctx, pp);
 
-    if (strcmp("classes", pp->parent_promise_type->name) == 0)
+    if (strcmp("classes", pp->parent_section->promise_type) == 0)
     {
         return VerifyClassPromise(ctx, pp, NULL);
     }
-    else if (strcmp("build_xpath", pp->parent_promise_type->name) == 0)
+    else if (strcmp("build_xpath", pp->parent_section->promise_type) == 0)
     {
         Attributes a = GetInsertionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
@@ -224,7 +224,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp,
         return PROMISE_RESULT_FAIL;
 #endif
     }
-    else if (strcmp("delete_tree", pp->parent_promise_type->name) == 0)
+    else if (strcmp("delete_tree", pp->parent_section->promise_type) == 0)
     {
         Attributes a = GetDeletionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
@@ -236,7 +236,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp,
         return PROMISE_RESULT_FAIL;
 #endif
     }
-    else if (strcmp("insert_tree", pp->parent_promise_type->name) == 0)
+    else if (strcmp("insert_tree", pp->parent_section->promise_type) == 0)
     {
         Attributes a = GetInsertionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
@@ -248,7 +248,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp,
         return PROMISE_RESULT_FAIL;
 #endif
     }
-    else if (strcmp("delete_attribute", pp->parent_promise_type->name) == 0)
+    else if (strcmp("delete_attribute", pp->parent_section->promise_type) == 0)
     {
         Attributes a = GetDeletionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
@@ -260,7 +260,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp,
         return PROMISE_RESULT_FAIL;
 #endif
     }
-    else if (strcmp("set_attribute", pp->parent_promise_type->name) == 0)
+    else if (strcmp("set_attribute", pp->parent_section->promise_type) == 0)
     {
         Attributes a = GetInsertionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
@@ -272,7 +272,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp,
         return PROMISE_RESULT_FAIL;
 #endif
     }
-    else if (strcmp("delete_text", pp->parent_promise_type->name) == 0)
+    else if (strcmp("delete_text", pp->parent_section->promise_type) == 0)
     {
         Attributes a = GetDeletionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
@@ -284,7 +284,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp,
         return PROMISE_RESULT_FAIL;
 #endif
     }
-    else if (strcmp("set_text", pp->parent_promise_type->name) == 0)
+    else if (strcmp("set_text", pp->parent_section->promise_type) == 0)
     {
         Attributes a = GetInsertionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
@@ -296,7 +296,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp,
         return PROMISE_RESULT_FAIL;
 #endif
     }
-    else if (strcmp("insert_text", pp->parent_promise_type->name) == 0)
+    else if (strcmp("insert_text", pp->parent_section->promise_type) == 0)
     {
         Attributes a = GetInsertionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
@@ -308,7 +308,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp,
         return PROMISE_RESULT_FAIL;
 #endif
     }
-    else if (strcmp("reports", pp->parent_promise_type->name) == 0)
+    else if (strcmp("reports", pp->parent_section->promise_type) == 0)
     {
         return VerifyReportPromise(ctx, pp);
     }
@@ -1637,7 +1637,7 @@ static bool SanityCheckXPathBuild(EvalContext *ctx, const Attributes *a, const P
         strcpy(rawxpath, pp->promiser);
     }
 
-    if ((strcmp("build_xpath", pp->parent_promise_type->name) == 0) && (a->xml.havebuildxpath))
+    if ((strcmp("build_xpath", pp->parent_section->promise_type) == 0) && (a->xml.havebuildxpath))
     {
         Log(LOG_LEVEL_ERR, "Attribute: build_xpath is not allowed within bundle: build_xpath");
         return false;

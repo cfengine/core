@@ -158,6 +158,9 @@ cscope.*
 /core.includes
 *.autosave
 
+# vscode
+/.vscode
+
 # clang
 .clang_complete
 *.pch

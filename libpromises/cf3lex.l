@@ -99,19 +99,19 @@ macro_else  @else
 macro_endif @endif
 macro_line [^@\n\xd\xa].*
 
-promises   bundle
+bundle     bundle
 
 body       body
 
 nakedvar   [$@][(][a-zA-Z0-9_\[\]\200-\377.:]+[)]|[$@][{][a-zA-Z0-9_\[\]\200-\377.:]+[}]|[$@][(][a-zA-Z0-9_\200-\377.:]+[\[][a-zA-Z0-9_$(){}\200-\377.:]+[\]]+[)]|[$@][{][a-zA-Z0-9_\200-\377.:]+[\[][a-zA-Z0-9_$(){}\200-\377.:]+[\]]+[}]
 
-id         [a-zA-Z0-9_\200-\377]+
+identifier [a-zA-Z0-9_\200-\377]+
 
 symbol     [a-zA-Z0-9_\200-\377]+[:][a-zA-Z0-9_\200-\377]+
 
-assign     =>
+fat_arrow  =>
 
-arrow      ->
+thin_arrow ->
 
 /*
  * Three types of quoted strings:
@@ -140,7 +140,7 @@ qstring        \"((\\(.|\n))|[^"\\])*\"|\'((\\(.|\n))|[^'\\])*\'|`[^`]*`
 class          [.|&!()a-zA-Z0-9_\200-\377:][\t .|&!()a-zA-Z0-9_\200-\377:]*::
 varclass       (\"[^"\0]*\"|\'[^'\0]*\')::
 
-promise_type   [a-zA-Z_]+:
+promise_guard  [a-zA-Z_]+:
 
 %%
 {eat_line}             {
@@ -450,7 +450,7 @@ promise_type   [a-zA-Z_]+:
                           ParserDebug("\tL:inside macro @if, ignoring char text:\"%s\"\n", yytext);
                       }
 
-{promises}            {
+{bundle}              {
                           /* Note this has to come before "id" since it is a subset of id */
 
                           if (P.currentclasses != NULL)
@@ -490,7 +490,7 @@ promise_type   [a-zA-Z_]+:
                           return BODY;
                       }
 
-{id}                  {
+{identifier}          {
                           P.offsets.last_id = P.offsets.current - yyleng;
                           P.line_pos += yyleng;
                           ParserDebug("\tL:id %s %d\n", yytext, P.line_pos);
@@ -499,7 +499,7 @@ promise_type   [a-zA-Z_]+:
                               yyerror("identifier too long");
                           }
                           strncpy(P.currentid, yytext, CF_MAXVARSIZE);
-                          return IDSYNTAX;
+                          return IDENTIFIER;
                       }
 
 
@@ -512,20 +512,20 @@ promise_type   [a-zA-Z_]+:
                               yyerror("qualified identifier too long");
                           }
                           strncpy(P.currentid, yytext, CF_MAXVARSIZE);
-                          return IDSYNTAX;
+                          return IDENTIFIER;
                       }
 
 
-{assign}              {
+{fat_arrow}           {
                           P.line_pos += yyleng;
                           ParserDebug("\tL:assign %d\n", P.line_pos);
-                          return ASSIGN;
+                          return FAT_ARROW;
                       }
 
-{arrow}               {
+{thin_arrow}          {
                           P.line_pos += yyleng;
                           ParserDebug("\tL:arrow %d\n", P.line_pos);
-                          return ARROW;
+                          return THIN_ARROW;
                       }
 
 {varclass}            {
@@ -552,7 +552,7 @@ promise_type   [a-zA-Z_]+:
                           P.currentvarclasses = xstrdup(tmp);
 
                           free(tmp);
-                          return CLASS;
+                          return CLASS_GUARD;
                       }
 
 {class}               {
@@ -593,18 +593,22 @@ promise_type   [a-zA-Z_]+:
                           P.currentclasses = xstrdup(tmp);
 
                           free(tmp);
-                          return CLASS;
+                          return CLASS_GUARD;
                       }
 
-{promise_type}        {
+{promise_guard}       {
                           char *tmp = NULL;
 
                           P.line_pos += yyleng;
-                          ParserDebug("\tL:promise_type %s %d\n", yytext, P.line_pos);
-                          P.offsets.last_promise_type_id = P.offsets.current - yyleng;
+                          ParserDebug("\tL:promise_guard %s %d\n", yytext, P.line_pos);
+                          P.offsets.last_promise_guard_id = P.offsets.current - yyleng;
 
                           tmp = xstrdup(yytext);
-                          tmp[yyleng - 1] = '\0';
+                          assert(tmp[yyleng - 1] == ':');
+                          tmp[yyleng - 1] = '\0'; // Exclude trailing colon in promise guard
+                          assert(strlen(tmp) > 0);
+                          assert(tmp[strlen(tmp) - 1] != ':');
+
                           strncpy(P.currenttype, tmp, CF_MAXVARSIZE);
 
                           if (P.currentclasses != NULL)
@@ -620,7 +624,7 @@ promise_type   [a-zA-Z_]+:
                           }
 
                           free(tmp);
-                          return PROMISE_TYPE;
+                          return PROMISE_GUARD;
                       }
 
 {qstring}             {
@@ -655,7 +659,7 @@ promise_type   [a-zA-Z_]+:
                           P.currentstring = xstrdup(tmp);
 
                           free(tmp);
-                          return QSTRING;
+                          return QUOTED_STRING;
                       }
 
 

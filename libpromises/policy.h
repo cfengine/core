@@ -37,7 +37,7 @@ typedef enum
     POLICY_ELEMENT_TYPE_POLICY,
     POLICY_ELEMENT_TYPE_BUNDLE,
     POLICY_ELEMENT_TYPE_BODY,
-    POLICY_ELEMENT_TYPE_PROMISE_TYPE,
+    POLICY_ELEMENT_TYPE_BUNDLE_SECTION,
     POLICY_ELEMENT_TYPE_PROMISE,
     POLICY_ELEMENT_TYPE_CONSTRAINT
 } PolicyElementType;
@@ -75,7 +75,7 @@ struct Bundle_
     char *ns;
     Rlist *args;
 
-    Seq *promise_types;
+    Seq *sections;
 
     char *source_path;
     SourceOffset offset;
@@ -96,11 +96,11 @@ struct Body_
     SourceOffset offset;
 };
 
-struct PromiseType_
+struct BundleSection_
 {
     Bundle *parent_bundle;
 
-    char *name;
+    char *promise_type;
     Seq *promises;
 
     SourceOffset offset;
@@ -108,7 +108,7 @@ struct PromiseType_
 
 struct Promise_
 {
-    PromiseType *parent_promise_type;
+    BundleSection *parent_section;
 
     char *classes;
     char *comment;
@@ -171,8 +171,8 @@ JsonElement *BodyToJson(const Body *body);
 Policy *PolicyFromJson(JsonElement *json_policy);
 void PolicyToString(const Policy *policy, Writer *writer);
 
-PromiseType *BundleAppendPromiseType(Bundle *bundle, const char *name);
-const PromiseType *BundleGetPromiseType(const Bundle *bp, const char *name);
+BundleSection *BundleAppendSection(Bundle *bundle, const char *promise_type);
+const BundleSection *BundleGetSection(const Bundle *bp, const char *promise_type);
 
 Constraint *BodyAppendConstraint(Body *body, const char *lval, Rval rval, const char *classes, bool references_body);
 Seq *BodyGetConstraint(Body *body, const char *lval);
@@ -180,8 +180,8 @@ bool BodyHasConstraint(const Body *body, const char *lval);
 
 const char *ConstraintGetNamespace(const Constraint *cp);
 
-Promise *PromiseTypeAppendPromise(PromiseType *type, const char *promiser, Rval promisee, const char *classes, const char *varclasses);
-void PromiseTypeDestroy(PromiseType *promise_type);
+Promise *BundleSectionAppendPromise(BundleSection *section, const char *promiser, Rval promisee, const char *classes, const char *varclasses);
+void BundleSectionDestroy(BundleSection *section);
 
 void PromiseDestroy(Promise *pp);
 

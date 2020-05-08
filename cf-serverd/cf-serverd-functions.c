@@ -495,11 +495,11 @@ static CfLock AcquireServerLock(EvalContext *ctx,
         Bundle *bp = PolicyAppendBundle(server_policy, NamespaceDefault(),
                                         "server_cfengine_bundle", "agent",
                                         NULL, NULL);
-        PromiseType *tp = BundleAppendPromiseType(bp, "server_cfengine");
+        BundleSection *sp = BundleAppendSection(bp, "server_cfengine");
 
-        pp = PromiseTypeAppendPromise(tp, config->input_file,
-                                      (Rval) { NULL, RVAL_TYPE_NOPROMISEE },
-                                      NULL, NULL);
+        pp = BundleSectionAppendPromise(sp, config->input_file,
+                                        (Rval) { NULL, RVAL_TYPE_NOPROMISEE },
+                                        NULL, NULL);
     }
     assert(pp);
 

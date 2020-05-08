@@ -273,9 +273,9 @@ void MonitorStartServer(EvalContext *ctx, const Policy *policy)
     Promise *pp = NULL;
     {
         Bundle *bp = PolicyAppendBundle(monitor_cfengine_policy, NamespaceDefault(), "monitor_cfengine_bundle", "agent", NULL, NULL);
-        PromiseType *tp = BundleAppendPromiseType(bp, "monitor_cfengine");
+        BundleSection *sp = BundleAppendSection(bp, "monitor_cfengine");
 
-        pp = PromiseTypeAppendPromise(tp, "the monitor daemon", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, NULL, NULL);
+        pp = BundleSectionAppendPromise(sp, "the monitor daemon", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, NULL, NULL);
     }
     assert(pp);
 
@@ -1146,11 +1146,11 @@ static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy)
 
         if ((strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_MONITOR]) == 0) || (strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_COMMON]) == 0))
         {
-            for (size_t j = 0; j < SeqLength(bp->promise_types); j++)
+            for (size_t j = 0; j < SeqLength(bp->sections); j++)
             {
-                PromiseType *sp = SeqAt(bp->promise_types, j);
+                BundleSection *sp = SeqAt(bp->sections, j);
 
-                EvalContextStackPushPromiseTypeFrame(ctx, sp);
+                EvalContextStackPushBundleSectionFrame(ctx, sp);
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
                     Promise *pp = SeqAt(sp->promises, ppi);
@@ -1175,20 +1175,20 @@ static PromiseResult KeepMonitorPromise(EvalContext *ctx, const Promise *pp, ARG
 {
     assert(param == NULL);
 
-    if (strcmp("vars", pp->parent_promise_type->name) == 0)
+    if (strcmp("vars", pp->parent_section->promise_type) == 0)
     {
         return PROMISE_RESULT_NOOP;
     }
-    else if (strcmp("classes", pp->parent_promise_type->name) == 0)
+    else if (strcmp("classes", pp->parent_section->promise_type) == 0)
     {
         return VerifyClassPromise(ctx, pp, NULL);
     }
-    else if (strcmp("measurements", pp->parent_promise_type->name) == 0)
+    else if (strcmp("measurements", pp->parent_section->promise_type) == 0)
     {
         PromiseResult result = VerifyMeasurementPromise(ctx, CF_THIS, pp);
         return result;
     }
-    else if (strcmp("reports", pp->parent_promise_type->name) == 0)
+    else if (strcmp("reports", pp->parent_section->promise_type) == 0)
     {
         return PROMISE_RESULT_NOOP;
     }

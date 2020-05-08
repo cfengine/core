@@ -575,10 +575,10 @@ Policy *LoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
             Bundle *bp = SeqAt(policy->bundles, i);
             EvalContextStackPushBundleFrame(ctx, bp, NULL, false);
 
-            for (size_t j = 0; j < SeqLength(bp->promise_types); j++)
+            for (size_t j = 0; j < SeqLength(bp->sections); j++)
             {
-                PromiseType *sp = SeqAt(bp->promise_types, j);
-                EvalContextStackPushPromiseTypeFrame(ctx, sp);
+                BundleSection *sp = SeqAt(bp->sections, j);
+                EvalContextStackPushBundleSectionFrame(ctx, sp);
 
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {

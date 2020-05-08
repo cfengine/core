@@ -922,7 +922,7 @@ static void StackFrameDestroy(StackFrame *frame)
             StackFrameBodyDestroy(frame->data.body);
             break;
 
-        case STACK_FRAME_TYPE_PROMISE_TYPE:
+        case STACK_FRAME_TYPE_BUNDLE_SECTION:
             break;
 
         case STACK_FRAME_TYPE_PROMISE:
@@ -1157,12 +1157,12 @@ Rlist *EvalContextGetPromiseCallerMethods(EvalContext *ctx) {
             break;
 
         case STACK_FRAME_TYPE_PROMISE:
-            if (strcmp(frame->data.promise.owner->parent_promise_type->name, "methods") == 0) {
+            if (strcmp(frame->data.promise.owner->parent_section->promise_type, "methods") == 0) {
                 RlistAppendScalar(&callers_promisers, frame->data.promise.owner->promiser);
             }
             break;
 
-        case STACK_FRAME_TYPE_PROMISE_TYPE:
+        case STACK_FRAME_TYPE_BUNDLE_SECTION:
             break;
 
         default:
@@ -1203,16 +1203,16 @@ JsonElement *EvalContextGetPromiseCallers(EvalContext *ctx) {
 
         case STACK_FRAME_TYPE_PROMISE:
             JsonObjectAppendString(f, "type", "promise");
-            JsonObjectAppendString(f, "promise_type", frame->data.promise.owner->parent_promise_type->name);
+            JsonObjectAppendString(f, "promise_type", frame->data.promise.owner->parent_section->promise_type);
             JsonObjectAppendString(f, "promiser", frame->data.promise.owner->promiser);
             JsonObjectAppendString(f, "promise_classes", frame->data.promise.owner->classes);
             JsonObjectAppendString(f, "promise_comment",
                                    (frame->data.promise.owner->comment == NULL) ? "" : frame->data.promise.owner->comment);
             break;
 
-        case STACK_FRAME_TYPE_PROMISE_TYPE:
+        case STACK_FRAME_TYPE_BUNDLE_SECTION:
             JsonObjectAppendString(f, "type", "promise_type");
-            JsonObjectAppendString(f, "promise_type", frame->data.promise_type.owner->name);
+            JsonObjectAppendString(f, "promise_type", frame->data.bundle_section.owner->promise_type);
             break;
 
         default:
@@ -1282,11 +1282,11 @@ static StackFrame *StackFrameNewBody(const Body *owner)
     return frame;
 }
 
-static StackFrame *StackFrameNewPromiseType(const PromiseType *owner)
+static StackFrame *StackFrameNewBundleSection(const BundleSection *owner)
 {
-    StackFrame *frame = StackFrameNew(STACK_FRAME_TYPE_PROMISE_TYPE, true);
+    StackFrame *frame = StackFrameNew(STACK_FRAME_TYPE_BUNDLE_SECTION, true);
 
-    frame->data.promise_type.owner = owner;
+    frame->data.bundle_section.owner = owner;
 
     return frame;
 }
@@ -1376,7 +1376,7 @@ void EvalContextStackPushBodyFrame(EvalContext *ctx, const Promise *caller, cons
     StackFrame *last_frame = LastStackFrame(ctx, 0);
     if (last_frame)
     {
-        assert(last_frame->type == STACK_FRAME_TYPE_PROMISE_TYPE);
+        assert(last_frame->type == STACK_FRAME_TYPE_BUNDLE_SECTION);
     }
     else
     {
@@ -1407,18 +1407,18 @@ void EvalContextStackPushBodyFrame(EvalContext *ctx, const Promise *caller, cons
     }
 }
 
-void EvalContextStackPushPromiseTypeFrame(EvalContext *ctx, const PromiseType *owner)
+void EvalContextStackPushBundleSectionFrame(EvalContext *ctx, const BundleSection *owner)
 {
     assert(LastStackFrame(ctx, 0) && LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_BUNDLE);
 
-    StackFrame *frame = StackFrameNewPromiseType(owner);
+    StackFrame *frame = StackFrameNewBundleSection(owner);
     EvalContextStackPushFrame(ctx, frame);
 }
 
 void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner)
 {
     assert(LastStackFrame(ctx, 0));
-    assert(LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_PROMISE_TYPE);
+    assert(LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_BUNDLE_SECTION);
 
     EvalContextVariableClearMatch(ctx);
 
@@ -1868,9 +1868,9 @@ char *EvalContextStackPath(const EvalContext *ctx)
             BufferAppend(path, frame->data.bundle.owner->name, CF_BUFSIZE);
             break;
 
-        case STACK_FRAME_TYPE_PROMISE_TYPE:
+        case STACK_FRAME_TYPE_BUNDLE_SECTION:
             BufferAppendChar(path, '/');
-            BufferAppend(path, frame->data.promise_type.owner->name, CF_BUFSIZE);
+            BufferAppend(path, frame->data.bundle_section.owner->promise_type, CF_BUFSIZE);
 
         case STACK_FRAME_TYPE_PROMISE:
             break;
@@ -2133,7 +2133,7 @@ static void VarRefStackQualify(const EvalContext *ctx, VarRef *ref)
         VarRefQualify(ref, NULL, SpecialScopeToString(SPECIAL_SCOPE_BODY));
         break;
 
-    case STACK_FRAME_TYPE_PROMISE_TYPE:
+    case STACK_FRAME_TYPE_BUNDLE_SECTION:
         {
             StackFrame *last_last_frame = LastStackFrame(ctx, 1);
             assert(last_last_frame);
@@ -2598,7 +2598,7 @@ static const char *const NO_LOG_TYPES[] =
  */
 static bool IsPromiseValuableForStatus(const Promise *pp)
 {
-    return pp && (pp->parent_promise_type->name != NULL) && (!IsStrIn(pp->parent_promise_type->name, NO_STATUS_TYPES));
+    return pp && (pp->parent_section->promise_type != NULL) && (!IsStrIn(pp->parent_section->promise_type, NO_STATUS_TYPES));
 }
 
 /*
@@ -2608,7 +2608,7 @@ static bool IsPromiseValuableForStatus(const Promise *pp)
 
 static bool IsPromiseValuableForLogging(const Promise *pp)
 {
-    return pp && (pp->parent_promise_type->name != NULL) && (!IsStrIn(pp->parent_promise_type->name, NO_LOG_TYPES));
+    return pp && (pp->parent_section->promise_type != NULL) && (!IsStrIn(pp->parent_section->promise_type, NO_LOG_TYPES));
 }
 
 static void AddAllClasses(EvalContext *ctx, const Rlist *list, unsigned int persistence_ttl,

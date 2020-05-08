@@ -142,8 +142,8 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp,
             Log(LOG_LEVEL_WARNING,
                 "ifelapsed attribute specified in action body for %s promise '%s',"
                 " but %s promises do not support promise locking",
-                pp->parent_promise_type->name, pp->promiser,
-                pp->parent_promise_type->name);
+                pp->parent_section->promise_type, pp->promiser,
+                pp->parent_section->promise_type);
         }
         int expireafter = PromiseGetConstraintAsInt(ctx, "expireafter", pp);
         if (expireafter != CF_NOINT)
@@ -151,15 +151,15 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp,
             Log(LOG_LEVEL_WARNING,
                 "expireafter attribute specified in action body for %s promise '%s',"
                 " but %s promises do not support promise locking",
-                pp->parent_promise_type->name, pp->promiser,
-                pp->parent_promise_type->name);
+                pp->parent_section->promise_type, pp->promiser,
+                pp->parent_section->promise_type);
         }
     }
 
     a.classes = GetClassDefinitionConstraints(ctx, pp);
 
     VarRef *ref = VarRefParseFromBundle(pp->promiser, PromiseGetBundle(pp));
-    if (strcmp("meta", pp->parent_promise_type->name) == 0)
+    if (strcmp("meta", pp->parent_section->promise_type) == 0)
     {
         VarRefSetMeta(ref, true);
     }

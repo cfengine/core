@@ -21,6 +21,13 @@
 # included file COSL.txt.
 
 ###############################################################################
+#+begin_src prep
+#@ ```
+#@ touch /tmp/example.txt
+#@ printf "Welcome to host 'docs.cfengine.com'" > /tmp/example.txt
+#@ ```
+#+end_src
+###############################################################################
 #+begin_src cfengine3
 bundle agent example_using_template_method_inline_mustache
 {

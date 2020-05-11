@@ -44,4 +44,15 @@
 #define CF_BUFSIZE     4096
 #define CF_EXPANDSIZE (2 * CF_BUFSIZE)
 
+/*****************************************************************************
+ *                       File Ownership                                         *
+ *****************************************************************************/
+#ifdef __FreeBSD__
+#  define CF_SYSTEM_GROUP "wheel"
+#elseif __Solaris__
+#  define CF_SYSTEM_GROUP "sys"
+#else
+#  define CF_SYSTEM_GROUP "root"
+#endif
+
 #endif // CFENGINE_DEFINITIONS_H

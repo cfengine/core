@@ -319,7 +319,7 @@ db_test_LDADD = libtest.la ../../libpromises/libpromises.la
 
 db_concurrent_test_SOURCES = db_concurrent_test.c
 #db_concurrent_test_CPPFLAGS = $(libdb_la_CPPFLAGS)
-db_concurrent_test_LDADD = libdb.la
+db_concurrent_test_LDADD = libdb.la ../../libpromises/libpromises.la
 
 lastseen_test_SOURCES = lastseen_test.c \
 	../../libpromises/item_lib.c \

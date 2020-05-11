@@ -34,6 +34,7 @@
 #include <file_lib.h>
 #include <known_dirs.h>
 #include <bootstrap.h>
+#include <conversion.h>
 
 #ifdef LMDB
 
@@ -558,7 +559,30 @@ DBPriv *DBPrivOpenDB(const char *const dbpath, const dbid id)
     open_flags |= MDB_WRITEMAP;
 #endif
 
-    rc = LmdbEnvOpen(db->env, dbpath, open_flags, 0644);
+#ifndef __MINGW32__
+    // If effective user is root then change to system group for lmdb files
+    // otherwise leave group as-is.
+    uid_t p_euid = geteuid();
+    gid_t current_gid = getgid();
+    if (p_euid == 0)
+    {
+        gid_t system_gid = Str2Gid(CF_SYSTEM_GROUP, NULL /* no groupcopy */, NULL /* no Promise */);
+        if (system_gid == CF_SAME_GROUP || system_gid == CF_UNKNOWN_GROUP)
+        {
+            Log(LOG_LEVEL_ERR, "Could not get gid_t for CF_SYSTEM_GROUP('%s'), got %d", CF_SYSTEM_GROUP, system_gid);
+            goto err;
+        }
+        else
+        {
+            rc = setgid(system_gid);
+            if (rc)
+            {
+                Log(LOG_LEVEL_WARNING, "Could not set system group. setgid(%d): %s", system_gid, strerror(errno));
+            }
+        }
+    }
+#endif
+    rc = LmdbEnvOpen(db->env, dbpath, open_flags, CF_PERMS_DEFAULT);
     if (rc)
     {
         Log(LOG_LEVEL_ERR, "Could not open database %s: %s",
@@ -569,6 +593,17 @@ DBPriv *DBPrivOpenDB(const char *const dbpath, const dbid id)
         }
         goto err;
     }
+#ifndef __MINGW32__
+    if (p_euid == 0)
+    {
+        rc = setgid(current_gid);
+        if (rc)
+        {
+            Log(LOG_LEVEL_ERR, "Could not set group id back to previous value.");
+            goto err;
+        }
+    }
+#endif
     if (DB_MAX_READERS > 0)
     {
         int max_readers;

@@ -256,7 +256,7 @@ IOData cf_popen_full_duplex(const char *command, bool capture_stderr, bool requi
     {
         Log(LOG_LEVEL_ERR, "Couldn't fork child process: %s", GetErrorStr());
         ArgFree(argv);
-        return (IOData) {-1, -1};
+        return (IOData) {-1, -1, NULL, NULL};
     }
 
     else if (pid > 0) // parent
@@ -267,6 +267,8 @@ IOData cf_popen_full_duplex(const char *command, bool capture_stderr, bool requi
         IOData io_desc;
         io_desc.write_fd = parent_pipe[WRITE];
         io_desc.read_fd = child_pipe[READ];
+        io_desc.read_stream = NULL;
+        io_desc.write_stream = NULL;
 
         ChildrenFDSet(parent_pipe[WRITE], pid);
         ChildrenFDSet(child_pipe[READ], pid);
@@ -879,17 +881,32 @@ int cf_pclose_full_duplex_side(int fd)
 /* We are assuming that read_fd part will be always open at this point. */
 int cf_pclose_full_duplex(IOData *data)
 {
+    assert(data != NULL);
     ThreadLock(cft_count);
 
     if (CHILDREN == NULL)
     {
         ThreadUnlock(cft_count);
-        if (data->read_fd >= 0)
+        if (data->read_stream != NULL)
+        {
+            // fclose closes the underlying fd / socket,
+            // but we need the fd for handling of processes below.
+            assert(data->read_fd >= 0);
+            fclose(data->read_stream);
+        }
+        else if (data->read_fd >= 0)
         {
             close(data->read_fd);
         }
 
-        if (data->write_fd >= 0)
+        if (data->write_stream != NULL)
+        {
+            // fclose closes the underlying fd / socket,
+            // but we need the fd for handling of processes below.
+            assert(data->write_fd >= 0);
+            fclose(data->write_stream);
+        }
+        else if (data->write_fd >= 0)
         {
             close(data->write_fd);
         }
@@ -919,7 +936,45 @@ int cf_pclose_full_duplex(IOData *data)
         ThreadUnlock(cft_count);
     }
 
-    if (close(data->read_fd) != 0 || (data->write_fd >= 0 && close(data->write_fd) != 0) || pid == 0)
+    if (data->read_stream != NULL)
+    {
+        // Stream is open, fclose it
+        if (fclose(data->read_stream) != 0)
+        {
+            return -1;
+        }
+    }
+    else
+    {
+        // No stream, just close fd
+        if (close(data->read_fd) != 0)
+        {
+            return -1;
+        }
+    }
+
+    if (data->write_fd >= 0)
+    {
+        // write fd needs to be closed
+        if (data->write_stream != NULL)
+        {
+            // Stream is open, fclose it
+            if (fclose(data->write_stream) != 0)
+            {
+                return -1;
+            }
+        }
+        else
+        {
+            // No stream, close fd directly
+            if (close(data->write_fd) != 0)
+            {
+                return -1;
+            }
+        }
+    }
+
+    if (pid == 0)
     {
         return -1;
     }

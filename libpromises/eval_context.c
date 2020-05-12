@@ -2869,6 +2869,11 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, const Attributes *attr, 
 
 static void LogPromiseContext(const EvalContext *ctx, const Promise *pp)
 {
+    if (!WouldLog(LOG_LEVEL_VERBOSE))
+    {
+        return;
+    }
+
     Writer *w = StringWriter();
     WriterWrite(w, "Additional promise info:");
     if (PromiseGetHandle(pp))
@@ -2950,6 +2955,120 @@ void cfPS(EvalContext *ctx, LogLevel level, PromiseResult status, const Promise 
 
     ClassAuditLog(ctx, pp, attr, status);
     free(msg);
+}
+
+void RecordChange(EvalContext *ctx, const Promise *pp, const Attributes *attr, const char *fmt, ...)
+{
+    assert(ctx != NULL);
+    assert(pp != NULL);
+    assert(attr != NULL);
+
+    LogPromiseContext(ctx, pp);
+
+    va_list ap;
+    va_start(ap, fmt);
+    char *msg = NULL;
+    xvasprintf(&msg, fmt, ap);
+    Log(LOG_LEVEL_INFO, "%s", msg);
+    va_end(ap);
+    free(msg);
+
+    SetPromiseOutcomeClasses(ctx, PROMISE_RESULT_CHANGE, &(attr->classes));
+}
+
+void RecordNoChange(EvalContext *ctx, const Promise *pp, const Attributes *attr, const char *fmt, ...)
+{
+    assert(ctx != NULL);
+    assert(pp != NULL);
+    assert(attr != NULL);
+
+    LogPromiseContext(ctx, pp);
+
+    va_list ap;
+    va_start(ap, fmt);
+    char *msg = NULL;
+    xvasprintf(&msg, fmt, ap);
+    Log(LOG_LEVEL_VERBOSE, "%s", msg);
+    va_end(ap);
+    free(msg);
+
+    SetPromiseOutcomeClasses(ctx, PROMISE_RESULT_NOOP, &(attr->classes));
+}
+
+void RecordFailure(EvalContext *ctx, const Promise *pp, const Attributes *attr, const char *fmt, ...)
+{
+    assert(ctx != NULL);
+    assert(pp != NULL);
+    assert(attr != NULL);
+
+    LogPromiseContext(ctx, pp);
+
+    va_list ap;
+    va_start(ap, fmt);
+    char *msg = NULL;
+    xvasprintf(&msg, fmt, ap);
+    Log(LOG_LEVEL_ERR, "%s", msg);
+    va_end(ap);
+    free(msg);
+
+    SetPromiseOutcomeClasses(ctx, PROMISE_RESULT_FAIL, &(attr->classes));
+}
+
+void RecordWarning(EvalContext *ctx, const Promise *pp, const Attributes *attr, const char *fmt, ...)
+{
+    assert(ctx != NULL);
+    assert(pp != NULL);
+    assert(attr != NULL);
+
+    LogPromiseContext(ctx, pp);
+
+    va_list ap;
+    va_start(ap, fmt);
+    char *msg = NULL;
+    xvasprintf(&msg, fmt, ap);
+    Log(LOG_LEVEL_WARNING, "%s", msg);
+    va_end(ap);
+    free(msg);
+
+    SetPromiseOutcomeClasses(ctx, PROMISE_RESULT_WARN, &(attr->classes));
+}
+
+void RecordDenial(EvalContext *ctx, const Promise *pp, const Attributes *attr, const char *fmt, ...)
+{
+    assert(ctx != NULL);
+    assert(pp != NULL);
+    assert(attr != NULL);
+
+    LogPromiseContext(ctx, pp);
+
+    va_list ap;
+    va_start(ap, fmt);
+    char *msg = NULL;
+    xvasprintf(&msg, fmt, ap);
+    Log(LOG_LEVEL_ERR, "%s", msg);
+    va_end(ap);
+    free(msg);
+
+    SetPromiseOutcomeClasses(ctx, PROMISE_RESULT_DENIED, &(attr->classes));
+}
+
+void RecordInterruption(EvalContext *ctx, const Promise *pp, const Attributes *attr, const char *fmt, ...)
+{
+    assert(ctx != NULL);
+    assert(pp != NULL);
+    assert(attr != NULL);
+
+    LogPromiseContext(ctx, pp);
+
+    va_list ap;
+    va_start(ap, fmt);
+    char *msg = NULL;
+    xvasprintf(&msg, fmt, ap);
+    Log(LOG_LEVEL_ERR, "%s", msg);
+    va_end(ap);
+    free(msg);
+
+    SetPromiseOutcomeClasses(ctx, PROMISE_RESULT_INTERRUPTED, &(attr->classes));
 }
 
 void SetChecksumUpdatesDefault(EvalContext *ctx, bool enabled)

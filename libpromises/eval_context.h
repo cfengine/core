@@ -245,6 +245,21 @@ void NotifyDependantPromises(EvalContext *ctx, const Promise *pp, PromiseResult 
 bool MissingDependencies(EvalContext *ctx, const Promise *pp);
 void cfPS(EvalContext *ctx, LogLevel level, PromiseResult status, const Promise *pp, const Attributes *attr, const char *fmt, ...) FUNC_ATTR_PRINTF(6, 7);
 
+/**
+ * Log change done by the agent when evaluating policy and set the outcome
+ * classes.
+ *
+ * Unlike cfPS(), this function is expected to be called multiple times for the
+ * same promise. It's not recording a promise status, but rather one out of
+ * multiple changes done by the given promise.
+ */
+void RecordChange(EvalContext *ctx, const Promise *pp, const Attributes *attr, const char *fmt, ...) FUNC_ATTR_PRINTF(4, 5);
+void RecordNoChange(EvalContext *ctx, const Promise *pp, const Attributes *attr, const char *fmt, ...) FUNC_ATTR_PRINTF(4, 5);
+void RecordFailure(EvalContext *ctx, const Promise *pp, const Attributes *attr, const char *fmt, ...) FUNC_ATTR_PRINTF(4, 5);
+void RecordWarning(EvalContext *ctx, const Promise *pp, const Attributes *attr, const char *fmt, ...) FUNC_ATTR_PRINTF(4, 5);
+void RecordDenial(EvalContext *ctx, const Promise *pp, const Attributes *attr, const char *fmt, ...) FUNC_ATTR_PRINTF(4, 5);
+void RecordInterruption(EvalContext *ctx, const Promise *pp, const Attributes *attr, const char *fmt, ...) FUNC_ATTR_PRINTF(4, 5);
+
 PackagePromiseContext *GetPackageDefaultsFromCtx(const EvalContext *ctx);
 
 bool EvalContextGetSelectEndMatchEof(const EvalContext *ctx);

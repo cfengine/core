@@ -123,7 +123,7 @@ bool ArchiveToRepository(const char *file, const Attributes *attr)
         return false;
     }
 
-    if (!MakeParentDirectory(destination, attr->move_obstructions))
+    if (!MakeParentDirectory(destination, attr->move_obstructions, NULL))
     {
         // Could not create parent directory, assume this is okay,
         // verbose logging in MakeParentDirectory()

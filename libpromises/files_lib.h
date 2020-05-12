@@ -33,8 +33,8 @@ bool FileWriteOver(char *filename, char *contents);
 
 bool LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits);
 
-bool MakeParentDirectory(const char *parentandchild, bool force);
-bool MakeParentDirectory2(char *parentandchild, int force, bool enforce_promise);
+bool MakeParentDirectory(const char *parentandchild, bool force, bool *created);
+bool MakeParentDirectory2(char *parentandchild, int force, bool enforce_promise, bool *created);
 
 void RotateFiles(char *name, int number);
 void CreateEmptyFile(char *name);

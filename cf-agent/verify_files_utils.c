@@ -329,7 +329,7 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
     }
     else
     {
-        MakeParentDirectory(destfile, true);
+        MakeParentDirectory(destfile, true, NULL);
     }
 
     if (attr.copy.min_size != CF_NOINT)
@@ -764,7 +764,7 @@ static PromiseResult SourceSearchAndCopy(EvalContext *ctx, const char *from, cha
     {
         struct stat tostat;
 
-        if (!MakeParentDirectory(newto, attr->move_obstructions))
+        if (!MakeParentDirectory(newto, attr->move_obstructions, NULL))
         {
             cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Unable to make directory for '%s' in file-copy '%s' to '%s'", newto,
                  attr->copy.source, attr->copy.destination);
@@ -2703,7 +2703,7 @@ static PromiseResult CopyFileSources(EvalContext *ctx, char *destination, const 
         strcat(vbuff, ".");
     }
 
-    if (!MakeParentDirectory(vbuff, attr->move_obstructions))
+    if (!MakeParentDirectory(vbuff, attr->move_obstructions, NULL))
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
              "Can't make directories for '%s' in files.copy_from promise",
@@ -3848,7 +3848,7 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, const Attribu
 
         if (!DONTDO && attr->transaction.action != cfa_warn)
         {
-            if (!MakeParentDirectory(file, attr->move_obstructions))
+            if (!MakeParentDirectory(file, attr->move_obstructions, NULL))
             {
                 cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Error creating directories for '%s'. (create: %s)",
                      file, GetErrorStr());
@@ -3885,7 +3885,7 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, const Attribu
                 filemode = attr->perms.plus & ~(attr->perms.minus);
             }
 
-            MakeParentDirectory(file, attr->move_obstructions);
+            MakeParentDirectory(file, attr->move_obstructions, NULL);
 
             char errormsg[CF_BUFSIZE];
             if (!mkfifo(file, filemode))
@@ -3930,7 +3930,7 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, const Attribu
                 filemode = attr->perms.plus & ~(attr->perms.minus);
             }
 
-            MakeParentDirectory(file, attr->move_obstructions);
+            MakeParentDirectory(file, attr->move_obstructions, NULL);
 
             int fd = safe_open_create_perms(file, O_WRONLY | O_CREAT | O_EXCL, filemode);
             if (fd == -1)

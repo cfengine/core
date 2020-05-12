@@ -118,7 +118,7 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
             return PROMISE_RESULT_WARN;
         }
 
-        if (!MakeParentDirectory2(destination, attr->move_obstructions, EnforcePromise(attr->transaction.action)))
+        if (!MakeParentDirectory2(destination, attr->move_obstructions, EnforcePromise(attr->transaction.action, NULL)))
         {
             cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Unable to create parent directory of link '%s' -> '%s' (enforce %d)",
                  destination, to, EnforcePromise(attr->transaction.action));

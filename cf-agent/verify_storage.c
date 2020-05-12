@@ -461,7 +461,7 @@ static PromiseResult VerifyMountPromise(EvalContext *ctx, char *name, const Attr
     {
         if (!a->mount.unmount)
         {
-            if (!MakeParentDirectory(dir, a->move_obstructions))
+            if (!MakeParentDirectory(dir, a->move_obstructions, NULL))
             {
                 // Could not create parent directory, assume this is okay,
                 // verbose logging in MakeParentDirectory()

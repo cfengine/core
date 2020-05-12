@@ -244,3 +244,22 @@ int PipeReadWriteData(const char *base_cmd, const char *args, const char *reques
     *response = res;
     return 0;
 }
+
+IOData cf_popen_full_duplex_streams(
+    const char *command, bool capture_stderr, bool require_full_path)
+{
+    IOData ret = cf_popen_full_duplex(
+        command, capture_stderr, require_full_path);
+
+    // On windows, these streams are already set up correctly:
+    if (ret.read_stream == NULL)
+    {
+        ret.read_stream = fdopen(ret.read_fd, "r");
+    }
+    if (ret.write_stream == NULL)
+    {
+        ret.write_stream = fdopen(ret.write_fd, "w");
+    }
+
+    return ret;
+}

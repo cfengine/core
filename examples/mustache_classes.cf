@@ -39,13 +39,11 @@ The class you are looking for is not defined.
 #@ templates when explicit data is not provided. Finally we report the variable to
 #@ see the rendered template.
 #+end_src
-
 #+begin_src example_output
 #@ R: I recognize the day of the week.
 #@ The class you are looking for is not defined.
 #@ 
 #+end_src
-
 #+begin_src output_description
 #@ We can see in the output that the conditional text was rendered as expected.
 #@ Try adjusting the template or the class expression.

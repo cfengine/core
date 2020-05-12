@@ -763,7 +763,7 @@ static JsonElement *ReadPolicyValidatedFileFromMasterfiles(const GenericAgentCon
  */
 static bool WritePolicyValidatedFile(ARG_UNUSED const GenericAgentConfig *config, const char *filename)
 {
-    if (!MakeParentDirectory(filename, true))
+    if (!MakeParentDirectory(filename, true, NULL))
     {
         Log(LOG_LEVEL_ERR,
             "Could not write policy validated marker file: %s", filename);
@@ -1046,24 +1046,24 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     Log(LOG_LEVEL_VERBOSE, "Work directory is %s", workdir);
 
     snprintf(vbuff, CF_BUFSIZE, "%s%cupdate.conf", GetInputDir(), FILE_SEPARATOR);
-    MakeParentDirectory(vbuff, force);
+    MakeParentDirectory(vbuff, force, NULL);
     snprintf(vbuff, CF_BUFSIZE, "%s%ccf-agent", bindir, FILE_SEPARATOR);
-    MakeParentDirectory(vbuff, force);
+    MakeParentDirectory(vbuff, force, NULL);
     snprintf(vbuff, CF_BUFSIZE, "%s%coutputs%cspooled_reports", workdir, FILE_SEPARATOR, FILE_SEPARATOR);
-    MakeParentDirectory(vbuff, force);
+    MakeParentDirectory(vbuff, force, NULL);
     snprintf(vbuff, CF_BUFSIZE, "%s%clastseen%cintermittencies", workdir, FILE_SEPARATOR, FILE_SEPARATOR);
-    MakeParentDirectory(vbuff, force);
+    MakeParentDirectory(vbuff, force, NULL);
     snprintf(vbuff, CF_BUFSIZE, "%s%creports%cvarious", workdir, FILE_SEPARATOR, FILE_SEPARATOR);
-    MakeParentDirectory(vbuff, force);
+    MakeParentDirectory(vbuff, force, NULL);
 
     snprintf(vbuff, CF_BUFSIZE, "%s%c.", GetLogDir(), FILE_SEPARATOR);
-    MakeParentDirectory(vbuff, force);
+    MakeParentDirectory(vbuff, force, NULL);
     snprintf(vbuff, CF_BUFSIZE, "%s%c.", GetPidDir(), FILE_SEPARATOR);
-    MakeParentDirectory(vbuff, force);
+    MakeParentDirectory(vbuff, force, NULL);
     snprintf(vbuff, CF_BUFSIZE, "%s%c.", GetStateDir(), FILE_SEPARATOR);
-    MakeParentDirectory(vbuff, force);
+    MakeParentDirectory(vbuff, force, NULL);
 
-    MakeParentDirectory(GetLogDir(), force);
+    MakeParentDirectory(GetLogDir(), force, NULL);
 
     snprintf(vbuff, CF_BUFSIZE, "%s", GetInputDir());
 
@@ -1095,7 +1095,7 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
 
     snprintf(ebuff, sizeof(ebuff), "%s%ccf_procs",
              statedir, FILE_SEPARATOR);
-    MakeParentDirectory(ebuff, force);
+    MakeParentDirectory(ebuff, force, NULL);
 
     if (stat(ebuff, &statbuf) == -1)
     {
@@ -1120,15 +1120,15 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
 
     snprintf(ebuff, sizeof(ebuff), "%s%cprevious_state%c",
              statedir, FILE_SEPARATOR, FILE_SEPARATOR);
-    MakeParentDirectory(ebuff, force);
+    MakeParentDirectory(ebuff, force, NULL);
 
     snprintf(ebuff, sizeof(ebuff), "%s%cdiff%c",
              statedir, FILE_SEPARATOR, FILE_SEPARATOR);
-    MakeParentDirectory(ebuff, force);
+    MakeParentDirectory(ebuff, force, NULL);
 
     snprintf(ebuff, sizeof(ebuff), "%s%cuntracked%c",
              statedir, FILE_SEPARATOR, FILE_SEPARATOR);
-    MakeParentDirectory(ebuff, force);
+    MakeParentDirectory(ebuff, force, NULL);
 
     OpenNetwork();
     CryptoInitialize();
@@ -1608,7 +1608,7 @@ static void CheckWorkingDirectories(EvalContext *ctx)
     }
 
     snprintf(vbuff, CF_BUFSIZE, "%s%c.", workdir, FILE_SEPARATOR);
-    MakeParentDirectory(vbuff, false);
+    MakeParentDirectory(vbuff, false, NULL);
 
     /* check that GetWorkDir() exists */
     if (stat(GetWorkDir(), &statbuf) == -1)
@@ -1643,7 +1643,7 @@ static void CheckWorkingDirectories(EvalContext *ctx)
         }
     }
 
-    MakeParentDirectory(GetStateDir(), false);
+    MakeParentDirectory(GetStateDir(), false, NULL);
     Log(LOG_LEVEL_VERBOSE, "Checking integrity of the state database");
 
     snprintf(vbuff, CF_BUFSIZE, "%s", statedir);
@@ -1651,7 +1651,7 @@ static void CheckWorkingDirectories(EvalContext *ctx)
     if (stat(vbuff, &statbuf) == -1)
     {
         snprintf(vbuff, CF_BUFSIZE, "%s%c", statedir, FILE_SEPARATOR);
-        MakeParentDirectory(vbuff, false);
+        MakeParentDirectory(vbuff, false, NULL);
 
         if (chown(vbuff, getuid(), getgid()) == -1)
         {
@@ -1679,7 +1679,7 @@ static void CheckWorkingDirectories(EvalContext *ctx)
     if (stat(vbuff, &statbuf) == -1)
     {
         snprintf(vbuff, CF_BUFSIZE, "%s%cmodules%c.", workdir, FILE_SEPARATOR, FILE_SEPARATOR);
-        MakeParentDirectory(vbuff, false);
+        MakeParentDirectory(vbuff, false, NULL);
 
         if (chown(vbuff, getuid(), getgid()) == -1)
         {
@@ -1707,7 +1707,7 @@ static void CheckWorkingDirectories(EvalContext *ctx)
     if (stat(vbuff, &statbuf) == -1)
     {
         snprintf(vbuff, CF_BUFSIZE, "%s%cppkeys%c", workdir, FILE_SEPARATOR, FILE_SEPARATOR);
-        MakeParentDirectory(vbuff, false);
+        MakeParentDirectory(vbuff, false, NULL);
 
         chmod(vbuff, (mode_t) 0700); /* Keys must be immutable to others */
     }

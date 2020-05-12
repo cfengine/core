@@ -102,11 +102,11 @@ bool FileWriteOver(char *filename, char *contents)
  *          Windows if the path contains double (back)slashes!
  **/
 
-bool MakeParentDirectory2(char *parentandchild, int force, bool enforce_promise)
+bool MakeParentDirectory2(char *parentandchild, int force, bool enforce_promise, bool *created)
 {
     if(enforce_promise)
     {
-        return MakeParentDirectory(parentandchild, force);
+        return MakeParentDirectory(parentandchild, force, created);
     }
 
     char *parent_dir = GetParentDirectoryCopy(parentandchild);
@@ -130,7 +130,7 @@ bool MakeParentDirectory2(char *parentandchild, int force, bool enforce_promise)
  *          contains double (back)slashes!
  **/
 
-bool MakeParentDirectory(const char *parentandchild, bool force)
+bool MakeParentDirectory(const char *parentandchild, bool force, bool *created)
 {
     char *sp;
     char currentpath[CF_BUFSIZE];
@@ -138,6 +138,11 @@ bool MakeParentDirectory(const char *parentandchild, bool force)
     struct stat statbuf;
     mode_t mask;
     int rootlen;
+
+    if (created != NULL)
+    {
+        *created = false;
+    }
 
 #ifdef __APPLE__
 /* Keeps track of if dealing w. resource fork */
@@ -297,6 +302,10 @@ bool MakeParentDirectory(const char *parentandchild, bool force)
                         currentpath, GetErrorStr());
                     umask(mask);
                     return false;
+                }
+                if (created != NULL)
+                {
+                    *created = true;
                 }
                 umask(mask);
             }

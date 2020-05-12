@@ -43,7 +43,7 @@ The class you are looking for is not defined.
 #@ ```
 #@ R: I recognize the day of the week.
 #@ The class you are looking for is not defined.
-#@ 
+#@
 #@ ```
 #+end_src
 #+begin_src output_description

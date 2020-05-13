@@ -334,7 +334,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
     {
         if ((a.create) || (a.touch))
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, &a, "File '%s' exists as promised", path);
+            RecordNoChange(ctx, pp, &a, "File '%s' exists as promised", path);
         }
         exists = true;
         link = true;
@@ -342,7 +342,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
 
     if ((a.havedelete) && (!exists))
     {
-        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, &a, "File '%s' does not exist as promised", path);
+        RecordNoChange(ctx, pp, &a, "File '%s' does not exist as promised", path);
         goto exit;
     }
 

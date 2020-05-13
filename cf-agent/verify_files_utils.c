@@ -1738,7 +1738,7 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
 
     if (lstat(path, &dsb) == -1)
     {
-        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_NOOP, pp, attr, "File object named '%s' is not there (promise kept)", path);
+        RecordNoChange(ctx, pp, attr, "File object named '%s' is not there (promise kept)", path);
         return PROMISE_RESULT_NOOP;
     }
     else
@@ -1754,7 +1754,9 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
     {
         if (DONTDO)
         {
-            Log(LOG_LEVEL_INFO, "File '%s' should be renamed to '%s' to keep promise", path, attr->rename.newname);
+            RecordWarning(ctx, pp, attr,
+                          "File '%s' should be renamed to '%s' to keep promise",
+                          path, attr->rename.newname);
             return PROMISE_RESULT_NOOP;
         }
         else
@@ -1763,20 +1765,21 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
             {
                 if (rename(path, attr->rename.newname) == -1)
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Error occurred while renaming '%s'. (rename: %s)",
-                         path, GetErrorStr());
+                    RecordFailure(ctx, pp, attr, "Error occurred while renaming '%s'. (rename: %s)",
+                                  path, GetErrorStr());
                     result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                 }
                 else
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Renaming file '%s' to '%s'", path, attr->rename.newname);
+                    RecordChange(ctx, pp, attr, "Renamed file '%s' to '%s'", path, attr->rename.newname);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
                 }
             }
             else
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr,
-                     "Rename to same destination twice? Would overwrite saved copy - aborting");
+                RecordWarning(ctx, pp, attr,
+                              "Renaming '%s' to same destination twice would overwrite saved copy - aborting",
+                              path);
                 result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
             }
         }
@@ -1792,19 +1795,19 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
             {
                 if (unlink(path) == -1)
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Unable to unlink '%s'. (unlink: %s)",
-                         path, GetErrorStr());
+                    RecordFailure(ctx, pp, attr, "Unable to unlink '%s'. (unlink: %s)",
+                                  path, GetErrorStr());
                     result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                 }
                 else
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Disabling symbolic link '%s' by deleting it", path);
+                    RecordChange(ctx, pp, attr, "Disabled symbolic link '%s' by deleting it", path);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
                 }
             }
             else
             {
-                Log(LOG_LEVEL_INFO, "Need to disable link '%s' to keep promise", path);
+                RecordWarning(ctx, pp, attr, "Need to disable link '%s' to keep promise", path);
             }
 
             return result;
@@ -1819,8 +1822,8 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
 
         if (attr->transaction.action == cfa_warn)
         {
-            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "'%s' '%s' should be renamed",
-                 S_ISDIR(sb->st_mode) ? "Directory" : "File", path);
+            RecordWarning(ctx, pp, attr, "'%s' '%s' should be renamed",
+                          S_ISDIR(sb->st_mode) ? "Directory" : "File", path);
             result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
             return result;
         }
@@ -1839,10 +1842,9 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
                 if (!PathAppend(newname, sizeof(newname),
                                 attr->rename.newname, FILE_SEPARATOR))
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
-                         "Internal buffer limit in rename operation,"
-                         " destination: '%s' + '%s'",
-                         newname, attr->rename.newname);
+                    RecordFailure(ctx, pp, attr,
+                                  "Internal buffer limit in rename operation, destination: '%s' + '%s'",
+                                  newname, attr->rename.newname);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                     return result;
                 }
@@ -1881,38 +1883,51 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
 
         if (DONTDO)
         {
-            Log(LOG_LEVEL_INFO, "File '%s' should be renamed to '%s' to keep promise", path, newname);
+            RecordWarning(ctx, pp, attr, "File '%s' should be renamed to '%s' to keep promise", path, newname);
             return result;
         }
         else
         {
-            safe_chmod(path, newperm);
+            if (safe_chmod(path, newperm) == 0)
+            {
+                RecordChange(ctx, pp, attr, "Changed permissions of '%s' to 'mode %04jo'",
+                             path, (uintmax_t)newperm);
+            }
+            else
+            {
+                RecordFailure(ctx, pp, attr, "Failed to change permissions of '%s' to 'mode %04jo' (%s)",
+                              path, (uintmax_t)newperm, GetErrorStr());
+            }
 
             if (!FileInRepository(newname))
             {
                 if (rename(path, newname) == -1)
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Error occurred while renaming '%s'. (rename: %s)",
-                         path, GetErrorStr());
+                    RecordFailure(ctx, pp, attr, "Error occurred while renaming '%s'. (rename: %s)",
+                                  path, GetErrorStr());
                     result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                     return result;
                 }
                 else
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Disabling/renaming file '%s' to '%s' with mode %04jo", path,
-                         newname, (uintmax_t)newperm);
+                    RecordChange(ctx, pp, attr, "Disabled file '%s' by renaming to '%s' with mode %04jo",
+                                 path, newname, (uintmax_t)newperm);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
                 }
 
                 if (ArchiveToRepository(newname, attr))
                 {
+                    /* TODO: ArchiveToRepository() does
+                     *       Log(LOG_LEVEL_INFO, "Moved '%s' to repository location '%s'", file, destination)
+                     *       but we should do LogChange() instead. (maybe just add 'char **destination'
+                     *       argument to the function?) */
                     unlink(newname);
                 }
             }
             else
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr,
-                     "Disable required twice? Would overwrite saved copy - changing permissions only");
+                RecordWarning(ctx, pp, attr,
+                              "Disable required twice? Would overwrite saved copy - changing permissions only");
                 result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
             }
         }
@@ -1924,18 +1939,18 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
     {
         if (attr->transaction.action == cfa_warn)
         {
-            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "File '%s' should be truncated", path);
+            RecordWarning(ctx, pp, attr, "File '%s' should be truncated", path);
             result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
         }
         else if (!DONTDO)
         {
             TruncateFile(path);
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Truncating (emptying) '%s'", path);
+            RecordChange(ctx, pp, attr, "Truncated '%s'", path);
             result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
         }
         else
         {
-            Log(LOG_LEVEL_ERR, " * File '%s' needs emptying", path);
+            RecordWarning(ctx, pp, attr, " * File '%s' should be truncated", path);
         }
         return result;
     }
@@ -1944,18 +1959,18 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
     {
         if (attr->transaction.action == cfa_warn)
         {
-            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "File '%s' should be rotated", path);
+            RecordWarning(ctx, pp, attr, "File '%s' should be rotated", path);
             result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
         }
         else if (!DONTDO)
         {
             RotateFiles(path, attr->rename.rotate);
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Rotating files '%s' in %d fifo", path, attr->rename.rotate);
+            RecordChange(ctx, pp, attr, "Rotated file '%s' in %d fifo", path, attr->rename.rotate);
             result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
         }
         else
         {
-            Log(LOG_LEVEL_ERR, "File '%s' needs rotating", path);
+            RecordWarning(ctx, pp, attr, "File '%s' should be rotated", path);
         }
 
         return result;

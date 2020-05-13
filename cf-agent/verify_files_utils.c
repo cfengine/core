@@ -1989,8 +1989,8 @@ static PromiseResult VerifyDelete(EvalContext *ctx,
 
     if (DONTDO)
     {
-        Log(LOG_LEVEL_INFO, "Promise requires deletion of file object '%s'",
-            path);
+        RecordWarning(ctx, pp, attr, "%s '%s' should be deleted",
+                      S_ISDIR(sb->st_mode) ? "Directory" : "File", path);
         return PROMISE_RESULT_NOOP;
     }
 
@@ -1998,9 +1998,8 @@ static PromiseResult VerifyDelete(EvalContext *ctx,
     {
     case cfa_warn:
 
-        cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr,
-             "%s '%s' should be deleted",
-             S_ISDIR(sb->st_mode) ? "Directory" : "File", path);
+        RecordWarning(ctx, pp, attr, "%s '%s' should be deleted",
+                      S_ISDIR(sb->st_mode) ? "Directory" : "File", path);
         return PROMISE_RESULT_WARN;
         break;
 
@@ -2011,15 +2010,13 @@ static PromiseResult VerifyDelete(EvalContext *ctx,
             int ret = unlink(lastnode);
             if (ret == -1)
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
-                     "Couldn't unlink '%s' tidying. (unlink: %s)",
-                     path, GetErrorStr());
+                RecordFailure(ctx, pp, attr, "Couldn't unlink '%s' tidying. (unlink: %s)",
+                              path, GetErrorStr());
                 return PROMISE_RESULT_FAIL;
             }
             else
             {
-                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr,
-                     "Deleted file '%s'", path);
+                RecordChange(ctx, pp, attr, "Deleted file '%s'", path);
                 return PROMISE_RESULT_CHANGE;
             }
         }
@@ -2027,9 +2024,9 @@ static PromiseResult VerifyDelete(EvalContext *ctx,
         {
             if (!attr->delete.rmdirs)
             {
-                Log(LOG_LEVEL_VERBOSE, "Keeping directory '%s' "
-                    "since \"rmdirs\" attribute was not specified",
-                    path);
+                RecordNoChange(ctx, pp, attr,
+                               "Keeping directory '%s' since 'rmdirs' attribute was not specified",
+                               path);
                 return PROMISE_RESULT_NOOP;
             }
 
@@ -2045,9 +2042,8 @@ static PromiseResult VerifyDelete(EvalContext *ctx,
             int ret = rmdir(lastnode);
             if (ret == -1 && errno != EEXIST && errno != ENOTEMPTY)
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
-                     "Delete directory '%s' failed (rmdir: %s)",
-                     path, GetErrorStr());
+                RecordFailure(ctx, pp, attr, "Delete directory '%s' failed (rmdir: %s)",
+                              path, GetErrorStr());
                 return PROMISE_RESULT_FAIL;
             }
             else if (ret == -1 &&
@@ -2062,8 +2058,7 @@ static PromiseResult VerifyDelete(EvalContext *ctx,
             else
             {
                 assert(ret != -1);
-                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr,
-                     "Deleted directory '%s'", path);
+                RecordChange(ctx, pp, attr, "Deleted directory '%s'", path);
                 return PROMISE_RESULT_CHANGE;
             }
         }

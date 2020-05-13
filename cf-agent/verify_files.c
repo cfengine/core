@@ -361,8 +361,9 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
         }
 
         ChopLastNode(basedir);
-        if (safe_chdir(basedir))
+        if (safe_chdir(basedir) != 0)
         {
+            /* TODO: PROMISE_RESULT_FAIL?!?!?!?! */
             char msg[CF_BUFSIZE];
             snprintf(msg, sizeof(msg), "Failed to chdir into '%s'. (chdir: '%s')",
                      basedir, GetErrorStr());
@@ -412,9 +413,10 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
         {
             if (a.havedepthsearch)
             {
+                /* TODO: PROMISE_RESULT_DENIED */
                 Log(LOG_LEVEL_DEBUG,
                     "depth_search (recursion) is promised for a base object '%s' that is not a directory",
-                      path);
+                    path);
                 goto exit;
             }
         }
@@ -428,6 +430,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
         {
             if (!S_ISDIR(dsb.st_mode))
             {
+                /* TODO: PROMISE_RESULT_FAIL */
                 Log(LOG_LEVEL_ERR, "Cannot promise to link the children of '%s' as it is not a directory!",
                       a.link.source);
                 goto exit;
@@ -677,6 +680,8 @@ static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp,
                                  pp->promiser, message);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
 
+                    /* XXX: Really needed? The promise result should propagate
+                     *      from here. */
                     edcontext->num_rewrites++;
                 }
                 else

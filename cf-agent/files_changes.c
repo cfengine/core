@@ -514,6 +514,7 @@ bool FileChangesCheckAndUpdateHash(EvalContext *ctx,
         }
         else
         {
+            /* FIXME: FAIL if found?!?!?! */
             RecordFailure(ctx, pp, attr, "Hash for file '%s' changed", filename);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             ret = true;

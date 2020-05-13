@@ -981,6 +981,7 @@ static PromiseResult SourceSearchAndCopy(EvalContext *ctx, const char *from, cha
                     RecordInterruption(ctx, pp, attr, "Can't make directory '%s'. (mkdir: %s)",
                                        newto, GetErrorStr());
                     result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
+                    /* XXX: return result?!?!?! */
                     continue;
                 }
                 else
@@ -1875,6 +1876,7 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
     {
         if (attr->rename.disable)
         {
+            /* XXX: Why should attr->rename.disable imply that the file doesn't exist? */
             Log(LOG_LEVEL_WARNING, "File object '%s' exists, contrary to promise", path);
         }
     }

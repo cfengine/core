@@ -141,7 +141,7 @@ void VerifyFileLeaf(EvalContext *ctx, char *path, const struct stat *sb, ARG_UNU
     {
         if (!TransformFile(ctx, path, &new_attr, pp, result))
         {
-            /* NOP? */
+            /* NOP, changes and/or failures are recorded by TransformFile() */
         }
     }
     else
@@ -1650,11 +1650,10 @@ static bool TransformFile(EvalContext *ctx, char *file, const Attributes *attr, 
 
     Buffer *command = BufferNew();
     ExpandScalar(ctx, PromiseGetBundle(pp)->ns, PromiseGetBundle(pp)->name, attr->transformer, command);
-    Log(LOG_LEVEL_INFO, "Transforming '%s' ", BufferData(command));
 
     if (!IsExecutable(CommandArg0(BufferData(command))))
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Transformer '%s' for file '%s' failed", attr->transformer, file);
+        RecordFailure(ctx, pp, attr, "Transformer '%s' for file '%s' failed", attr->transformer, file);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
         BufferDestroy(command);
         return false;
@@ -1670,9 +1669,10 @@ static bool TransformFile(EvalContext *ctx, char *file, const Attributes *attr, 
             return false;
         }
 
+        Log(LOG_LEVEL_INFO, "Transforming '%s' with '%s'", file, BufferData(command));
         if ((pop = cf_popen(BufferData(command), "r", true)) == NULL)
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Transformer '%s' for file '%s' failed", attr->transformer, file);
+            RecordFailure(ctx, pp, attr, "Transformer '%s' for file '%s' failed", attr->transformer, file);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             YieldCurrentLock(thislock);
             BufferDestroy(command);
@@ -1690,7 +1690,7 @@ static bool TransformFile(EvalContext *ctx, char *file, const Attributes *attr, 
                 if (!feof(pop))
                 {
                     cf_pclose(pop);
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Transformer '%s' for file '%s' failed", attr->transformer, file);
+                    RecordFailure(ctx, pp, attr, "Transformer '%s' for file '%s' failed", attr->transformer, file);
                     *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
                     YieldCurrentLock(thislock);
                     free(line);
@@ -1705,7 +1705,7 @@ static bool TransformFile(EvalContext *ctx, char *file, const Attributes *attr, 
 
             Log(LOG_LEVEL_INFO, "%s", line);
         }
-
+        RecordChange(ctx, pp, attr, "Transformed '%s' with '%s' ", file, BufferData(command));
         free(line);
 
         transRetcode = cf_pclose(pop);
@@ -1723,7 +1723,7 @@ static bool TransformFile(EvalContext *ctx, char *file, const Attributes *attr, 
     }
     else
     {
-        Log(LOG_LEVEL_ERR, "Need to transform file '%s' with '%s'", file, BufferData(command));
+        RecordWarning(ctx, pp, attr, "Need to transform file '%s' with '%s'", file, BufferData(command));
     }
 
     BufferDestroy(command);

@@ -3834,8 +3834,9 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, const Attribu
     assert(attr != NULL);
     if (!IsAbsoluteFileName(file))
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
-             "Cannot create a relative filename '%s' - has no invariant meaning. (create: %s)", file, GetErrorStr());
+        RecordFailure(ctx, pp, attr,
+                      "Cannot create a relative filename '%s' - has no invariant meaning. (create: %s)",
+                      file, GetErrorStr());
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
         return false;
     }
@@ -3848,20 +3849,23 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, const Attribu
 
         if (!DONTDO && attr->transaction.action != cfa_warn)
         {
-            if (!MakeParentDirectory(file, attr->move_obstructions, NULL))
+            bool dir_created = false;
+            if (!MakeParentDirectory(file, attr->move_obstructions, &dir_created))
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Error creating directories for '%s'. (create: %s)",
-                     file, GetErrorStr());
+                RecordFailure(ctx, pp, attr, "Error creating directories for '%s'. (create: %s)",
+                              file, GetErrorStr());
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
                 return false;
             }
-
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Created directory '%s'", file);
+            if (dir_created)
+            {
+                RecordChange(ctx, pp, attr, "Created directory '%s'", file);
+            }
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
         }
         else
         {
-            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "Warning promised, need to create directory '%s'", file);
+            RecordWarning(ctx, pp, attr, "Warning promised, need to create directory '%s'", file);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
             return false;
         }
@@ -3869,68 +3873,86 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, const Attribu
     else if (attr->file_type && !strncmp(attr->file_type, "fifo", 5))
     {
 #ifndef _WIN32
+        mode_t filemode = 0600;
+        if (PromiseGetConstraintAsRval(pp, "mode", RVAL_TYPE_SCALAR) == NULL)
+        {
+            Log(LOG_LEVEL_VERBOSE, "No mode was set, choose plain file default %04jo", (uintmax_t)filemode);
+        }
+        else
+        {
+            filemode = attr->perms.plus & ~(attr->perms.minus);
+        }
+
         if (!DONTDO)
         {
             mode_t saveumask = umask(0);
-            mode_t filemode = 0600;
-
-            if (PromiseGetConstraintAsRval(pp, "mode", RVAL_TYPE_SCALAR) == NULL)
+            bool dir_created = false;
+            if (!MakeParentDirectory(file, attr->move_obstructions, &dir_created))
             {
-                /* Relying on umask is risky */
-                filemode = 0600;
-                Log(LOG_LEVEL_VERBOSE, "No mode was set, choose plain file default %04jo", (uintmax_t)filemode);
+                RecordFailure(ctx, pp, attr, "Error creating directories for '%s'. (create: %s)",
+                              file, GetErrorStr());
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+                return false;
             }
-            else
+            if (dir_created)
             {
-                filemode = attr->perms.plus & ~(attr->perms.minus);
+                RecordChange(ctx, pp, attr, "Created directory '%s'", file);
             }
-
-            MakeParentDirectory(file, attr->move_obstructions, NULL);
 
             char errormsg[CF_BUFSIZE];
-            if (!mkfifo(file, filemode))
+            if (mkfifo(file, filemode) != 0)
             {
                 snprintf(errormsg, sizeof(errormsg), "(mkfifo: %s)", GetErrorStr());
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Error creating file '%s', mode '%04jo'. %s",
-                     file, (uintmax_t)filemode, errormsg);
+                RecordFailure(ctx, pp, attr, "Error creating file '%s', mode '%04jo'. %s",
+                              file, (uintmax_t)filemode, errormsg);
                 umask(saveumask);
                 return false;
             }
+            RecordChange(ctx, pp, attr, "Created named pipe '%s', mode %04jo", file, (uintmax_t) filemode);
 
             umask(saveumask);
             return true;
         }
         else
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr, "Warning promised, need to create fifo '%s'", file);
+            RecordWarning(ctx, pp, attr, "Warning promised, need to create named pipe '%s', mode %04jo",
+                          file, (uintmax_t) filemode);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
             return false;
         }
 #else
-        cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "Operation not supported on Windows");
+        RecordWarning(ctx, pp, attr, "Named pipe creation not supported on Windows");
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
         return false;
 #endif
     }
     else
     {
+        mode_t filemode = 0600;     /* Decide the mode for filecreation */
+        if (PromiseGetConstraintAsRval(pp, "mode", RVAL_TYPE_SCALAR) == NULL)
+        {
+            Log(LOG_LEVEL_VERBOSE, "No mode was set, choose plain file default %04jo", (uintmax_t)filemode);
+        }
+        else
+        {
+            filemode = attr->perms.plus & ~(attr->perms.minus);
+        }
+
         if (!DONTDO && attr->transaction.action != cfa_warn)
         {
             mode_t saveumask = umask(0);
-            mode_t filemode = 0600;     /* Decide the mode for filecreation */
-
-            if (PromiseGetConstraintAsRval(pp, "mode", RVAL_TYPE_SCALAR) == NULL)
+            bool dir_created = false;
+            if (!MakeParentDirectory(file, attr->move_obstructions, &dir_created))
             {
-                /* Relying on umask is risky */
-                filemode = 0600;
-                Log(LOG_LEVEL_VERBOSE, "No mode was set, choose plain file default %04jo", (uintmax_t)filemode);
+                RecordFailure(ctx, pp, attr, "Error creating directories for '%s'. (create: %s)",
+                              file, GetErrorStr());
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+                return false;
             }
-            else
+            if (dir_created)
             {
-                filemode = attr->perms.plus & ~(attr->perms.minus);
+                RecordChange(ctx, pp, attr, "Created directory '%s'", file);
             }
-
-            MakeParentDirectory(file, attr->move_obstructions, NULL);
 
             int fd = safe_open_create_perms(file, O_WRONLY | O_CREAT | O_EXCL, filemode);
             if (fd == -1)
@@ -3947,15 +3969,15 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, const Attribu
                 {
                     snprintf(errormsg, sizeof(errormsg), "(open: %s)", GetErrorStr());
                 }
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Error creating file '%s', mode '%04jo'. %s",
-                     file, (uintmax_t)filemode, errormsg);
+                RecordFailure(ctx, pp, attr, "Error creating file '%s', mode '%04jo'. %s",
+                              file, (uintmax_t)filemode, errormsg);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
                 umask(saveumask);
                 return false;
             }
             else
             {
-                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Created file '%s', mode %04jo", file, (uintmax_t)filemode);
+                RecordChange(ctx, pp, attr, "Created file '%s', mode %04jo", file, (uintmax_t)filemode);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
                 close(fd);
                 umask(saveumask);
@@ -3964,7 +3986,8 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, const Attribu
         }
         else
         {
-            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "Warning promised, need to create file '%s'", file);
+            RecordWarning(ctx, pp, attr, "Warning promised, need to create file '%s', mode %04jo",
+                          file, (uintmax_t)filemode);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
             return false;
         }

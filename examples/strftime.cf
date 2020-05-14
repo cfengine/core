@@ -21,32 +21,150 @@
 # included file COSL.txt.
 
 #+begin_src cfengine3
-body common control
+#@ The templates used here are from the documentation of the standard strftime
+#@ implementation in the [glibc manual](http://www.gnu.org/software/libc/manual/html_node/Formatting-Calendar-Time.html#Formatting-Calendar-Time).
+body agent control
 {
-      bundlesequence => { "example" };
+      environment => { "LC_ALL=en_US.UTF-8", "TZ=GMT" };
 }
-
-bundle agent example
+bundle agent main
 {
   vars:
       "time" int => "1234567890";
-      "at_time" string => strftime("localtime", "%Y-%m-%d %T", $(time));
-      "then" string => strftime("localtime", "%Y-%m-%d %T", 0);
 
-      "gmt_at_time" string => strftime("gmtime", "%Y-%m-%d %T", $(time));
-      "gmt_then" string => strftime("gmtime", "%Y-%m-%d %T", 0);
+      "template[%a]" string => "The abbreviated weekday name according to the current locale.";
+      "template[%A]" string => "The full weekday name according to the current locale.";
+      "template[%b]" string => "The abbreviated month name according to the current locale.";
+      "template[%B]" string => "The full month name according to the current locale.";
+      "template[%c]" string => "The preferred calendar time representation for the current locale.";
+      "template[%C]" string => "The century of the year. This is equivalent to the greatest integer not greater than the year divided by 100.";
+      "template[%d]" string => "The day of the month as a decimal number (range 01 through 31).";
+      "template[%D]" string => "The date using the format %m/$d/%y.";
+      "template[%e]" string => "The day of the month like with %d, but padded with blank (range 1 through 31).";
+      "template[%F]" string => "The date using the format %Y-%m-%d. This is the form specified in the ISO 8601 standard and is the preferred form for all uses.";
+      "template[%g]" string => "The year corresponding to the ISO week number, but without the century (range 00 through 99). This has the same format and value as %y, except that if the ISO week number (see %V) belongs to the previous or next year, that year is used instead.";
+      "template[%G]" string => "The year corresponding to the ISO week number. This has the same format and value as %Y, except that if the ISO week number (see %V) belongs to the previous or next year, that year is used instead.";
+      "template[%h]" string => "The abbreviated month name according to the current locale. The action is the same as for %b.";
+      "template[%H]" string => "The hour as a decimal number, using a 24-hour clock (range 00 through 23).";
+      "template[%I]" string => "The hour as a decimal number, using a 12-hour clock (range 01 through 12).";
+      "template[%j]" string => "The day of the year as a decimal number (range 001 through 366).";
+      "template[%k]" string => "The hour as a decimal number, using a 24-hour clock like %H, but padded with blank (range 0 through 23).";
+      "template[%l]" string => "The hour as a decimal number, using a 12-hour clock like %I, but padded with blank (range 1 through 12).";
+      "template[%m]" string => "The month as a decimal number (range 01 through 12).";
+      "template[%M]" string => "The minute as a decimal number (range 00 through 59).";
+      "template[%n]" string => "A single \n (newline) character.";
+      "template[%p]" string => "Either AM or PM, according to the given time value; or the corresponding strings for the current locale.  Noon is treated as PM and midnight as AM.  In most locales AM/PM format is not supported, in such cases %p yields an empty string.";
+      "template[%P]" string => "Either am or pm, according to the given time value; or the corresponding strings for the current locale, printed in lowercase characters.  Noon is treated as pm and midnight as am.  In most locales AM/PM format is not supported, in such cases %P yields an empty string.";
+      "template[%r]" string => "The complete calendar time using the AM/PM format of the current locale.";
+      "template[%R]" string => "The hour and minute in decimal numbers using the format %H:%M.";
+      "template[%S]" string => "The seconds as a decimal number (range 00 through 60).";
+      "template[%t]" string => "A single \t (tabulator) character.";
+      "template[%T]" string => "The time of day using decimal numbers using the format %H:%M:%S.";
+      "template[%u]" string => "The day of the week as a decimal number (range 1 through 7), Monday being 1.";
+      "template[%U]" string => "The week number of the current year as a decimal number (range 00 through 53), starting with the first Sunday as the first day of the first week.  Days preceding the first Sunday in the year are considered to be in week 00.";
+      "template[%V]" string => "The *ISO 8601:1988* week number as a decimal number (range 01 through 53).  ISO weeks start with Monday and end with Sunday. Week 01 of a year is the first week which has the majority of its days in that year; this is equivalent to the week containing the year's first Thursday, and it is also equivalent to the week containing January 4.  Week 01 of a year can contain days from the previous year. The week before week 01 of a year is the last week (52 or 53) of the previous year even if it contains days from the new year.";
+      "template[%w]" string => "The day of the week as a decimal number (range 0 through 6), Sunday being 0.";
+      "template[%w]" string => "The day of the week as a decimal number (range 0 through 6), Sunday being 0.";
+      "template[%x]" string => "The preferred date representation for the current locale.";
+      "template[%X]" string => "The preferred time of day representation for the current locale.";
+      "template[%y]" string => "The year without a century as a decimal number (range 00 through 99).  This is equivalent to the year modulo 100.";
+      "template[%Y]" string => "The year as a decimal number, using the Gregorian calendar.  Years before the year 1 are numbered 0, -1, and so on.";
+      "template[%z]" string => "*RFC 822*/*ISO 8601:1988* style numeric time zone (e.g., -0600 or +0100), or nothing if no time zone is determinable.";
+      "template[%Z]" string => "The time zone abbreviation (empty if the time zone can't be determined).";
+      "template[%%]" string => "A literal % character.";
+
+      # Since %s is ever changing resulting in unstable output, causing a test failure in CI
+      # it's not used unless show_seconds_since_epoch is defined
+      "template[%s]" string => "The number of seconds since the epoch, i.e., since 1970-01-01 00:00:00 UTC. Leap seconds are not counted unless leap second support is available.", if => "show_seconds_since_epoch";
+
+      "_i" slist => sort(getindices(template), lex);
 
   reports:
-      # this will be different depending on your time zone
-      # "time $(time); at_time $(at_time); then $(then)";
-
-      # this will be the same in every time zone
-      "time $(time); GMT at_time $(gmt_at_time); GMT then $(gmt_then)";
+      "$(_i) :: $(template[$(_i)])$(const.n)$(const.t)For example: '$(with)'"
+        with => strftime(gmtime, $(_i), $(time));
 }
 #+end_src
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ R: time 1234567890; GMT at_time 2009-02-13 23:31:30; GMT then 1970-01-01 00:00:00
+#@ R: %% :: A literal % character.
+#@ 	For example: '%'
+#@ R: %A :: The full weekday name according to the current locale.
+#@ 	For example: 'Friday'
+#@ R: %B :: The full month name according to the current locale.
+#@ 	For example: 'February'
+#@ R: %C :: The century of the year. This is equivalent to the greatest integer not greater than the year divided by 100.
+#@ 	For example: '20'
+#@ R: %D :: The date using the format %m/$d/%y.
+#@ 	For example: '02/13/09'
+#@ R: %F :: The date using the format %Y-%m-%d. This is the form specified in the ISO 8601 standard and is the preferred form for all uses.
+#@ 	For example: '2009-02-13'
+#@ R: %G :: The year corresponding to the ISO week number. This has the same format and value as %Y, except that if the ISO week number (see %V) belongs to the previous or next year, that year is used instead.
+#@ 	For example: '2009'
+#@ R: %H :: The hour as a decimal number, using a 24-hour clock (range 00 through 23).
+#@ 	For example: '23'
+#@ R: %I :: The hour as a decimal number, using a 12-hour clock (range 01 through 12).
+#@ 	For example: '11'
+#@ R: %M :: The minute as a decimal number (range 00 through 59).
+#@ 	For example: '31'
+#@ R: %P :: Either am or pm, according to the given time value; or the corresponding strings for the current locale, printed in lowercase characters.  Noon is treated as pm and midnight as am.  In most locales AM/PM format is not supported, in such cases %P yields an empty string.
+#@ 	For example: 'pm'
+#@ R: %R :: The hour and minute in decimal numbers using the format %H:%M.
+#@ 	For example: '23:31'
+#@ R: %S :: The seconds as a decimal number (range 00 through 60).
+#@ 	For example: '30'
+#@ R: %T :: The time of day using decimal numbers using the format %H:%M:%S.
+#@ 	For example: '23:31:30'
+#@ R: %U :: The week number of the current year as a decimal number (range 00 through 53), starting with the first Sunday as the first day of the first week.  Days preceding the first Sunday in the year are considered to be in week 00.
+#@ 	For example: '06'
+#@ R: %V :: The *ISO 8601:1988* week number as a decimal number (range 01 through 53).  ISO weeks start with Monday and end with Sunday. Week 01 of a year is the first week which has the majority of its days in that year; this is equivalent to the week containing the year's first Thursday, and it is also equivalent to the week containing January 4.  Week 01 of a year can contain days from the previous year. The week before week 01 of a year is the last week (52 or 53) of the previous year even if it contains days from the new year.
+#@ 	For example: '07'
+#@ R: %X :: The preferred time of day representation for the current locale.
+#@ 	For example: '23:31:30'
+#@ R: %Y :: The year as a decimal number, using the Gregorian calendar.  Years before the year 1 are numbered 0, -1, and so on.
+#@ 	For example: '2009'
+#@ R: %Z :: The time zone abbreviation (empty if the time zone can't be determined).
+#@ 	For example: 'GMT'
+#@ R: %a :: The abbreviated weekday name according to the current locale.
+#@ 	For example: 'Fri'
+#@ R: %b :: The abbreviated month name according to the current locale.
+#@ 	For example: 'Feb'
+#@ R: %c :: The preferred calendar time representation for the current locale.
+#@ 	For example: 'Fri Feb 13 23:31:30 2009'
+#@ R: %d :: The day of the month as a decimal number (range 01 through 31).
+#@ 	For example: '13'
+#@ R: %e :: The day of the month like with %d, but padded with blank (range 1 through 31).
+#@ 	For example: '13'
+#@ R: %g :: The year corresponding to the ISO week number, but without the century (range 00 through 99). This has the same format and value as %y, except that if the ISO week number (see %V) belongs to the previous or next year, that year is used instead.
+#@ 	For example: '09'
+#@ R: %h :: The abbreviated month name according to the current locale. The action is the same as for %b.
+#@ 	For example: 'Feb'
+#@ R: %j :: The day of the year as a decimal number (range 001 through 366).
+#@ 	For example: '044'
+#@ R: %k :: The hour as a decimal number, using a 24-hour clock like %H, but padded with blank (range 0 through 23).
+#@ 	For example: '23'
+#@ R: %l :: The hour as a decimal number, using a 12-hour clock like %I, but padded with blank (range 1 through 12).
+#@ 	For example: '11'
+#@ R: %m :: The month as a decimal number (range 01 through 12).
+#@ 	For example: '02'
+#@ R: %n :: A single \n (newline) character.
+#@ 	For example: '
+#@ '
+#@ R: %p :: Either AM or PM, according to the given time value; or the corresponding strings for the current locale.  Noon is treated as PM and midnight as AM.  In most locales AM/PM format is not supported, in such cases %p yields an empty string.
+#@ 	For example: 'PM'
+#@ R: %r :: The complete calendar time using the AM/PM format of the current locale.
+#@ 	For example: '11:31:30 PM'
+#@ R: %t :: A single \t (tabulator) character.
+#@ 	For example: '	'
+#@ R: %u :: The day of the week as a decimal number (range 1 through 7), Monday being 1.
+#@ 	For example: '5'
+#@ R: %w :: The day of the week as a decimal number (range 0 through 6), Sunday being 0.
+#@ 	For example: '5'
+#@ R: %x :: The preferred date representation for the current locale.
+#@ 	For example: '02/13/09'
+#@ R: %y :: The year without a century as a decimal number (range 00 through 99).  This is equivalent to the year modulo 100.
+#@ 	For example: '09'
+#@ R: %z :: *RFC 822*/*ISO 8601:1988* style numeric time zone (e.g., -0600 or +0100), or nothing if no time zone is determinable.
+#@ 	For example: '+0000'
 #@ ```
 #+end_src

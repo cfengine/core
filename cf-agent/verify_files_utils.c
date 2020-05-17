@@ -2194,8 +2194,7 @@ static PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, co
     {
         Log(LOG_LEVEL_DEBUG, "File okay, newperm '%jo', stat '%jo'",
             (uintmax_t) (newperm & 07777), (uintmax_t) (dstat->st_mode & 07777));
-        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, attr,
-             "File permissions on '%s' as promised", file);
+        RecordNoChange(ctx, pp, attr, "File permissions on '%s' as promised", file);
         result = PromiseResultUpdate(result, PROMISE_RESULT_NOOP);
     }
     else
@@ -2206,24 +2205,21 @@ static PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, co
         if (attr->transaction.action == cfa_warn || DONTDO)
         {
 
-            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr,
-                 "'%s' has permission %04jo - [should be %04jo]", file,
-                 (uintmax_t)dstat->st_mode & 07777, (uintmax_t)newperm & 07777);
+            RecordWarning(ctx, pp, attr, "Should change permission of '%s' from %04jo to %04jo",
+                          file, (uintmax_t)dstat->st_mode & 07777, (uintmax_t)newperm & 07777);
             result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
         }
         else if (attr->transaction.action == cfa_fix)
         {
             if (safe_chmod(file, newperm & 07777) == -1)
             {
-                Log(LOG_LEVEL_ERR,
-                    "chmod failed on '%s'. (chmod: %s)",
-                    file, GetErrorStr());
+                RecordFailure(ctx, pp, attr, "Failed to change permissions of '%s'. (chmod: %s)",
+                              file, GetErrorStr());
             }
             else
             {
-                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr,
-                     "Object '%s' had permission %04jo, changed it to %04jo", file,
-                     (uintmax_t)dstat->st_mode & 07777, (uintmax_t)newperm & 07777);
+                RecordChange(ctx, pp, attr, "Object '%s' had permission %04jo, changed it to %04jo",
+                             file, (uintmax_t)dstat->st_mode & 07777, (uintmax_t)newperm & 07777);
                 result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
             }
         }
@@ -2240,11 +2236,10 @@ static PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, co
     newflags |= attr->perms.plus_flags;
     newflags &= ~(attr->perms.minus_flags);
 
-    if ((newflags & CHFLAGS_MASK) == (dstat->st_flags & CHFLAGS_MASK))  /* file okay */
+    if ((newflags & CHFLAGS_MASK) == (dstat->st_flags & CHFLAGS_MASK))
     {
-        Log(LOG_LEVEL_DEBUG, "BSD File okay, flags '%jx', current '%jx'",
-                (uintmax_t) (newflags & CHFLAGS_MASK),
-                (uintmax_t) (dstat->st_flags & CHFLAGS_MASK));
+        RecordNoChange("BSD flags of '%s' are as promised ('%jx')",
+                       file, (uintmax_t) (dstat->st_flags & CHFLAGS_MASK));
     }
     else
     {
@@ -2256,31 +2251,40 @@ static PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, co
         {
         case cfa_warn:
 
-            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr,
-                 "'%s' has flags %jo - [should be %jo]",
-                 file, (uintmax_t) (dstat->st_mode & CHFLAGS_MASK),
-                 (uintmax_t) (newflags & CHFLAGS_MASK));
+            RecordWarning(ctx, pp, attr,
+                          "Should change BSD flags of '%s' from %jo to %jo",
+                          file, (uintmax_t) (dstat->st_mode & CHFLAGS_MASK),
+                          (uintmax_t) (newflags & CHFLAGS_MASK));
             result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
             break;
 
         case cfa_fix:
 
-            if (!DONTDO)
+            if (DONTDO)
+            {
+                RecordWarning(ctx, pp, attr,
+                              "Should change BSD flags of '%s' from %jo to %jo",
+                              file, (uintmax_t) (dstat->st_mode & CHFLAGS_MASK),
+                              (uintmax_t) (newflags & CHFLAGS_MASK));
+                result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
+                break;
+            }
+            else
             {
                 if (chflags(file, newflags & CHFLAGS_MASK) == -1)
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_DENIED, pp, attr,
-                         "Failed setting BSD flags '%jx' on '%s'. (chflags: %s)",
-                         (uintmax_t) newflags, file, GetErrorStr());
+                    RecordDenial(ctx, pp, attr,
+                                 "Failed setting BSD flags '%jx' on '%s'. (chflags: %s)",
+                                 (uintmax_t) newflags, file, GetErrorStr());
                     result = PromiseResultUpdate(result, PROMISE_RESULT_DENIED);
                     break;
                 }
                 else
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr,
-                         "'%s' had flags %jo, changed it to %jo", file,
-                         (uintmax_t) (dstat->st_flags & CHFLAGS_MASK),
-                         (uintmax_t) (newflags & CHFLAGS_MASK));
+                    RecordChange(ctx, pp, attr, "'%s' had flags %jo, changed it to %jo",
+                                 file,
+                                 (uintmax_t) (dstat->st_flags & CHFLAGS_MASK),
+                                 (uintmax_t) (newflags & CHFLAGS_MASK));
                     result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
                 }
             }
@@ -2303,13 +2307,13 @@ static PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, co
     {
         if (utime(file, NULL) == -1)
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_DENIED, pp, attr, "Touching file '%s' failed. (utime: %s)",
-                 file, GetErrorStr());
+            RecordDenial(ctx, pp, attr, "Updating timestamps on '%s' failed. (utime: %s)",
+                         file, GetErrorStr());
             result = PromiseResultUpdate(result, PROMISE_RESULT_DENIED);
         }
         else
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Touching file '%s'", file);
+            RecordChange(ctx, pp, attr, "Updated timestamps on '%s'", file);
             result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
         }
     }
@@ -3326,7 +3330,7 @@ static PromiseResult VerifySetUidGid(EvalContext *ctx, const char *file, const s
             {
                 if (amroot)
                 {
-                    cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "NEW SETUID root PROGRAM '%s'", file);
+                    RecordWarning(ctx, pp, attr, "NEW SETUID root PROGRAM '%s'", file);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
                 }
 
@@ -3340,7 +3344,7 @@ static PromiseResult VerifySetUidGid(EvalContext *ctx, const char *file, const s
             {
             case cfa_fix:
 
-                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Removing setuid (root) flag from '%s'", file);
+                RecordChange(ctx, pp, attr, "Removed setuid (root) flag from '%s'", file);
                 result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
                 break;
 
@@ -3348,7 +3352,7 @@ static PromiseResult VerifySetUidGid(EvalContext *ctx, const char *file, const s
 
                 if (amroot)
                 {
-                    cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "Need to remove setuid (root) flag on '%s'", file);
+                    RecordWarning(ctx, pp, attr, "Setuid (root) flag on '%s' should be removed", file);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
                 }
                 break;
@@ -3368,7 +3372,7 @@ static PromiseResult VerifySetUidGid(EvalContext *ctx, const char *file, const s
             {
                 if (amroot)
                 {
-                    cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "NEW SETGID root PROGRAM '%s'", file);
+                    RecordWarning(ctx, pp, attr, "NEW SETGID root PROGRAM '%s'", file);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
                 }
 
@@ -3382,13 +3386,13 @@ static PromiseResult VerifySetUidGid(EvalContext *ctx, const char *file, const s
             {
             case cfa_fix:
 
-                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Removing setgid (root) flag from '%s'", file);
+                RecordChange(ctx, pp, attr, "Removed setgid (root) flag from '%s'", file);
                 result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
                 break;
 
             case cfa_warn:
 
-                cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "Need to remove setgid (root) flag on '%s'", file);
+                RecordWarning(ctx, pp, attr, "Setgid (root) flag on '%s' should be removed", file);
                 result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
                 break;
 
@@ -3473,7 +3477,7 @@ static int VerifyFinderType(EvalContext *ctx, const char *file, const Attributes
 
             if (DONTDO)
             {
-                Log(LOG_LEVEL_INFO, "Promised to set Finder Type code of '%s' to '%s'", file, a->perms.findertype);
+                RecordWarning("Should set Finder Type code of '%s' to '%s'", file, a->perms.findertype);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                 return 0;
             }
@@ -3485,20 +3489,20 @@ static int VerifyFinderType(EvalContext *ctx, const char *file, const Attributes
 
             if (retval >= 0)
             {
-                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Setting Finder Type code of '%s' to '%s'", file, a->perms.findertype);
+                RecordChange(ctx, pp, a, "Set Finder Type code of '%s' to '%s'", file, a->perms.findertype);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
             }
             else
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Setting Finder Type code of '%s' to '%s' failed", file,
-                     a->perms.findertype);
+                RecordFailure(ctx, pp, a, "Setting Finder Type code of '%s' to '%s' failed",
+                              file, a->perms.findertype);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             }
 
             return retval;
 
         case cfa_warn:
-            Log(LOG_LEVEL_WARNING, "Darwin FinderType does not match -- not fixing.");
+            RecordWarning("Should set Finder Type code of '%s' to '%s'", file, a->perms.findertype);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
             return 0;
 
@@ -3508,7 +3512,7 @@ static int VerifyFinderType(EvalContext *ctx, const char *file, const Attributes
     }
     else
     {
-        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Finder Type code of '%s' to '%s' is as promised", file, a->perms.findertype);
+        RecordNoChange(ctx, pp, a, "Finder Type code of '%s' to '%s' is as promised", file, a->perms.findertype);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_NOOP);
         return 0;
     }
@@ -3685,9 +3689,9 @@ bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, const At
         }
         if (ulp == NULL)
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
-                 "None of the promised owners for '%s' exist -- see INFO logs for more",
-                 file);
+            RecordFailure(ctx, pp, attr,
+                          "None of the promised owners for '%s' exist -- see INFO logs for more",
+                          file);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             uid = CF_SAME_OWNER;      /* chown(-1) doesn't change ownership */
         }
@@ -3717,9 +3721,9 @@ bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, const At
         }
         if (glp == NULL)
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
-                 "None of the promised groups for '%s' exist -- see INFO logs for more",
-                 file);
+            RecordFailure(ctx, pp, attr,
+                          "None of the promised groups for '%s' exist -- see INFO logs for more",
+                          file);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             gid = CF_SAME_GROUP;      /* chown(-1) doesn't change ownership */
         }
@@ -3730,6 +3734,7 @@ bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, const At
         gid == CF_SAME_GROUP)
     {
         /* User and group as promised, skip completely. */
+        RecordNoChange(ctx, pp, attr, "Owner and group of '%s' as promised", file);
         return false;
     }
     else
@@ -3756,43 +3761,52 @@ bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, const At
                 Log(LOG_LEVEL_DEBUG, "Using lchown function");
                 if (safe_lchown(file, uid, gid) == -1)
                 {
-                    Log(LOG_LEVEL_INFO, "Cannot set ownership on link '%s'. (lchown: %s)", file, GetErrorStr());
+                    RecordFailure(ctx, pp, attr, "Cannot set ownership on link '%s'. (lchown: %s)",
+                                  file, GetErrorStr());
                 }
                 else
                 {
-                    return true;
+                    if (uid != CF_SAME_OWNER)
+                    {
+                        RecordChange(ctx, pp, attr, "Owner of link '%s' was %ju, set to %ju",
+                                     file, (uintmax_t) sb->st_uid, (uintmax_t) uid);
+                        *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+                    }
+
+                    if (gid != CF_SAME_GROUP)
+                    {
+                        RecordChange(ctx, pp, attr, "Group of link '%s' was %ju, set to %ju",
+                                     file, (uintmax_t)sb->st_gid, (uintmax_t)gid);
+                        *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+                    }
                 }
 # endif
             }
             else if (!DONTDO)
             {
-                if (uid != CF_SAME_OWNER)
-                {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr,
-                         "Owner of '%s' was %ju, setting to %ju",
-                         file, (uintmax_t) sb->st_uid, (uintmax_t) uid);
-                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
-                }
-
-                if (gid != CF_SAME_GROUP)
-                {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr,
-                         "Group of '%s' was %ju, setting to %ju",
-                         file, (uintmax_t)sb->st_gid, (uintmax_t)gid);
-                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
-                }
-
                 if (!S_ISLNK(sb->st_mode))
                 {
                     if (safe_chown(file, uid, gid) == -1)
                     {
-                        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_DENIED, pp, attr, "Cannot set ownership on file '%s'. (chown: %s)",
-                             file, GetErrorStr());
+                        RecordDenial(ctx, pp, attr, "Cannot set ownership on file '%s'. (chown: %s)",
+                                     file, GetErrorStr());
                         *result = PromiseResultUpdate(*result, PROMISE_RESULT_DENIED);
                     }
                     else
                     {
-                        return true;
+                        if (uid != CF_SAME_OWNER)
+                        {
+                            RecordChange(ctx, pp, attr, "Owner of '%s' was %ju, set to %ju",
+                                         file, (uintmax_t) sb->st_uid, (uintmax_t) uid);
+                            *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+                        }
+
+                        if (gid != CF_SAME_GROUP)
+                        {
+                            RecordChange(ctx, pp, attr, "Group of '%s' was %ju, set to %ju",
+                                         file, (uintmax_t)sb->st_gid, (uintmax_t)gid);
+                            *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+                        }
                     }
                 }
             }
@@ -3802,22 +3816,23 @@ bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, const At
 
             if ((pw = getpwuid(sb->st_uid)) == NULL)
             {
-                Log(LOG_LEVEL_WARNING, "File '%s' is not owned by anybody in the passwd database", file);
-                Log(LOG_LEVEL_WARNING, "(uid = %ju,gid = %ju)", (uintmax_t)sb->st_uid, (uintmax_t)sb->st_gid);
+                RecordWarning(ctx, pp, attr,
+                    "File '%s' is not owned by anybody in the passwd database (uid = %ju)",
+                    file, (uintmax_t)sb->st_uid);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                 break;
             }
 
             if ((gp = getgrgid(sb->st_gid)) == NULL)
             {
-                cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "File '%s' is not owned by any group in group database",
-                     file);
+                RecordWarning(ctx, pp, attr, "File '%s' is not owned by any group in group database  (gid = %ju)",
+                              file, (uintmax_t)sb->st_gid);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                 break;
             }
 
-            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "File '%s' is owned by '%s', group '%s'", file, pw->pw_name,
-                 gp->gr_name);
+            RecordWarning(ctx, pp, attr, "File '%s' is owned by '%s', group '%s'", file, pw->pw_name,
+                          gp->gr_name);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
             break;
         }

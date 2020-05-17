@@ -2080,20 +2080,19 @@ static PromiseResult TouchFile(EvalContext *ctx, char *path, const Attributes *a
     {
         if (utime(path, NULL) != -1)
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Touched (updated time stamps) for path '%s'", path);
+            RecordChange(ctx, pp, attr, "Touched (updated time stamps) for path '%s'", path);
             result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
         }
         else
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
-                 "Touch '%s' failed to update timestamps. (utime: %s)", path, GetErrorStr());
+            RecordFailure(ctx, pp, attr, "Touch '%s' failed to update timestamps. (utime: %s)",
+                          path, GetErrorStr());
             result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         }
     }
     else
     {
-        cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr,
-             "Need to touch (update time stamps) for '%s', but only a warning was promised!", path);
+        RecordWarning(ctx, pp, attr, "Time stamps should be updated for '%s'", path);
         result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
     }
 

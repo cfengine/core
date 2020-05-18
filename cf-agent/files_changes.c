@@ -443,26 +443,32 @@ static bool FileChangesSetDirectoryList(CF_DB *db, const char *path, const Seq *
     return true;
 }
 
-/* Returns false if filename never seen before, and adds a checksum
-   to the database. Returns true if hashes do not match and also
-   updates database to the new value if update is true */
-bool FileChangesCheckAndUpdateHash_impl(const char *filename,
-                                        unsigned char digest[EVP_MAX_MD_SIZE + 1],
-                                        HashMethod type,
-                                        bool update,
-                                        const Promise *pp,
-                                        PromiseResult *result)
+/**
+ * @return %false if #filename never seen before, and adds a checksum to the
+ *         database; %true if hashes do not match and also updates database to
+ *         the new value if #update is true.
+ */
+bool FileChangesCheckAndUpdateHash(EvalContext *ctx,
+                                   const char *filename,
+                                   unsigned char digest[EVP_MAX_MD_SIZE + 1],
+                                   HashMethod type,
+                                   const Attributes *attr,
+                                   const Promise *pp,
+                                   PromiseResult *result)
 {
+    assert(attr != NULL);
+
     const int size = HashSizeFromId(type);
     unsigned char dbdigest[EVP_MAX_MD_SIZE + 1];
     CF_DB *dbp;
     bool found;
     bool different;
     bool ret = false;
+    bool update = attr->change.update;
 
     if (!OpenChangesDB(&dbp))
     {
-        Log(LOG_LEVEL_ERR, "Unable to open the hash database!");
+        RecordFailure(ctx, pp, attr, "Unable to open the hash database!");
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
         return false;
     }
@@ -473,7 +479,7 @@ bool FileChangesCheckAndUpdateHash_impl(const char *filename,
         different = (memcmp(digest, dbdigest, size) != 0);
         if (different)
         {
-            Log(LOG_LEVEL_NOTICE, "Hash '%s' for '%s' changed!", HashNameFromId(type), filename);
+            Log(LOG_LEVEL_INFO, "Hash '%s' for '%s' changed!", HashNameFromId(type), filename);
             if (pp->comment)
             {
                 Log(LOG_LEVEL_VERBOSE, "Preceding promise '%s'", pp->comment);
@@ -488,13 +494,19 @@ bool FileChangesCheckAndUpdateHash_impl(const char *filename,
 
     if (different)
     {
-        if ((!found || update) && !DONTDO)
+        if (DONTDO)
         {
-            const char *action = found ? "Updating" : "Storing";
+            RecordWarning(ctx, pp, attr, "Hash for file '%s' changed", filename);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
+            ret = true;
+        }
+        else if (!found || update)
+        {
+            const char *action = found ? "Updated" : "Stored";
             char buffer[CF_HOSTKEY_STRING_SIZE];
-            Log(LOG_LEVEL_NOTICE, "%s %s hash for '%s' (%s)", action,
-                HashNameFromId(type), filename,
-                HashPrintSafe(buffer, sizeof(buffer), digest, type, true));
+            RecordChange(ctx, pp, attr, "%s %s hash for '%s' (%s)",
+                         action, HashNameFromId(type), filename,
+                         HashPrintSafe(buffer, sizeof(buffer), digest, type, true));
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
 
             WriteHash(dbp, type, filename, digest);
@@ -502,14 +514,14 @@ bool FileChangesCheckAndUpdateHash_impl(const char *filename,
         }
         else
         {
-            Log(LOG_LEVEL_NOTICE, "Hash for file '%s' changed", filename);
+            RecordFailure(ctx, pp, attr, "Hash for file '%s' changed", filename);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             ret = true;
         }
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "File hash for %s is correct", filename);
+        RecordNoChange(ctx, pp, attr, "File hash for %s is correct", filename);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_NOOP);
         ret = false;
     }
@@ -518,35 +530,21 @@ bool FileChangesCheckAndUpdateHash_impl(const char *filename,
     return ret;
 }
 
-bool FileChangesCheckAndUpdateHash(EvalContext *ctx,
-                                   const char *filename,
-                                   unsigned char digest[EVP_MAX_MD_SIZE + 1],
-                                   HashMethod type,
-                                   const Attributes *attr,
-                                   const Promise *pp,
-                                   PromiseResult *result)
-{
-    assert(attr != NULL);
-    bool ret = FileChangesCheckAndUpdateHash_impl(filename, digest, type, attr->change.update, pp, result);
-    // TODO: Move cfPS even further up the call stack.
-    cfPS(ctx, LOG_LEVEL_DEBUG, *result, pp, attr, "Updating promise status for files changes promise");
-    return ret;
-}
-
-void FileChangesLogNewFile(const char *path, const Promise *pp)
+bool FileChangesLogNewFile(const char *path, const Promise *pp)
 {
     Log(LOG_LEVEL_NOTICE, "New file '%s' found", path);
-    FileChangesLogChange(path, FILE_STATE_NEW, "New file found", pp);
+    return FileChangesLogChange(path, FILE_STATE_NEW, "New file found", pp);
 }
 
 // db_file_set should already be sorted.
-void FileChangesCheckAndUpdateDirectory(const char *name, const Seq *file_set, const Seq *db_file_set,
+void FileChangesCheckAndUpdateDirectory(EvalContext *ctx, const Attributes *attr,
+                                        const char *name, const Seq *file_set, const Seq *db_file_set,
                                         bool update, const Promise *pp, PromiseResult *result)
 {
     CF_DB *db;
     if (!OpenChangesDB(&db))
     {
-        Log(LOG_LEVEL_ERR, "Could not open changes database");
+        RecordFailure(ctx, pp, attr, "Could not open changes database");
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
         return;
     }
@@ -557,7 +555,6 @@ void FileChangesCheckAndUpdateDirectory(const char *name, const Seq *file_set, c
 
     int num_files = SeqLength(disk_file_set);
     int num_db_files = SeqLength(db_file_set);
-    bool changed = false;
     for (int disk_pos = 0, db_pos = 0; disk_pos < num_files || db_pos < num_db_files;)
     {
         int compare_result;
@@ -593,7 +590,8 @@ void FileChangesCheckAndUpdateDirectory(const char *name, const Seq *file_set, c
             FileChangesLogNewFile(path, pp);
 #endif
 
-            changed = true;
+            /* just make sure the change is reflected in the promise result */
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
             disk_pos++;
         }
         else if (compare_result > 0)
@@ -603,11 +601,19 @@ void FileChangesCheckAndUpdateDirectory(const char *name, const Seq *file_set, c
             xsnprintf(path, sizeof(path), "%s/%s", name, db_file);
 
             Log(LOG_LEVEL_NOTICE, "File '%s' no longer exists", path);
-            FileChangesLogChange(path, FILE_STATE_REMOVED, "File removed", pp);
+            if (FileChangesLogChange(path, FILE_STATE_REMOVED, "File removed", pp))
+            {
+                RecordChange(ctx, pp, attr, "Removal of '%s' recorded", path);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+            }
+            else
+            {
+                RecordFailure(ctx, pp, attr, "Failed to record removal of '%s'", path);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+            }
 
             RemoveAllFileTraces(db, path);
 
-            changed = true;
             db_pos++;
         }
         else
@@ -618,32 +624,36 @@ void FileChangesCheckAndUpdateDirectory(const char *name, const Seq *file_set, c
         }
     }
 
-    PromiseResult newres;
-    if (!changed)
+    if (update && FileChangesSetDirectoryList(db, name, disk_file_set))
     {
-        newres = PROMISE_RESULT_NOOP;
-    }
-    else if (update && FileChangesSetDirectoryList(db, name, disk_file_set))
-    {
-        newres = PROMISE_RESULT_CHANGE;
+        RecordChange(ctx, pp, attr, "Recorded directory listing for '%s'", name);
+        *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
     }
     else
     {
-        newres = PROMISE_RESULT_FAIL;
+        RecordChange(ctx, pp, attr, "Failed to record directory listing for '%s'", name);
+        *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
     }
-    *result = PromiseResultUpdate(*result, newres);
 
     SeqSoftDestroy(disk_file_set);
     CloseDB(db);
 }
 
-void FileChangesCheckAndUpdateStats(const char *file, const struct stat *sb, bool update, const Promise *pp)
+void FileChangesCheckAndUpdateStats(EvalContext *ctx,
+                                    const char *file,
+                                    const struct stat *sb,
+                                    bool update,
+                                    const Attributes *attr,
+                                    const Promise *pp,
+                                    PromiseResult *result)
 {
     struct stat cmpsb;
     CF_DB *dbp;
 
     if (!OpenChangesDB(&dbp))
     {
+        RecordFailure(ctx, pp, attr, "Could not open changes database");
+        *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
         return;
     }
 
@@ -656,11 +666,22 @@ void FileChangesCheckAndUpdateStats(const char *file, const struct stat *sb, boo
         {
             if (!WriteDB(dbp, key, sb, sizeof(struct stat)))
             {
-                Log(LOG_LEVEL_ERR, "Could not write stat information to database");
+                RecordFailure(ctx, pp, attr, "Could not write stat information for '%s' to database", file);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             }
-            CloseDB(dbp);
-            return;
+            else
+            {
+                RecordChange(ctx, pp, attr, "Wrote stat information for '%s' to database", file);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+            }
         }
+        else
+        {
+            RecordWarning(ctx, pp, attr, "Should write stat information for '%s' to database", file);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
+        }
+        CloseDB(dbp);
+        return;
     }
 
     if (cmpsb.st_mode == sb->st_mode
@@ -670,6 +691,7 @@ void FileChangesCheckAndUpdateStats(const char *file, const struct stat *sb, boo
         && cmpsb.st_ino == sb->st_ino
         && cmpsb.st_mtime == sb->st_mtime)
     {
+        RecordNoChange(ctx, pp, attr, "No stat information change for '%s'", file);
         CloseDB(dbp);
         return;
     }
@@ -683,7 +705,24 @@ void FileChangesCheckAndUpdateStats(const char *file, const struct stat *sb, boo
         snprintf(msg_temp, sizeof(msg_temp), "Permission: %04jo -> %04jo",
                  (uintmax_t)cmpsb.st_mode, (uintmax_t)sb->st_mode);
 
-        FileChangesLogChange(file, FILE_STATE_STATS_CHANGED, msg_temp, pp);
+        if (DONTDO)
+        {
+            RecordWarning(ctx, pp, attr, "Should record permissions changes in '%s'", file);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
+        }
+        else
+        {
+            if (FileChangesLogChange(file, FILE_STATE_STATS_CHANGED, msg_temp, pp))
+            {
+                RecordChange(ctx, pp, attr, "Recorded permissions changes in '%s'", file);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+            }
+            else
+            {
+                RecordFailure(ctx, pp, attr, "Failed to record permissions changes in '%s'", file);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+            }
+        }
     }
 
     if (cmpsb.st_uid != sb->st_uid)
@@ -695,7 +734,24 @@ void FileChangesCheckAndUpdateStats(const char *file, const struct stat *sb, boo
         snprintf(msg_temp, sizeof(msg_temp), "Owner: %ju -> %ju",
                  (uintmax_t) cmpsb.st_uid, (uintmax_t) sb->st_uid);
 
-        FileChangesLogChange(file, FILE_STATE_STATS_CHANGED, msg_temp, pp);
+        if (DONTDO)
+        {
+            RecordWarning(ctx, pp, attr, "Should record ownership changes in '%s'", file);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
+        }
+        else
+        {
+            if (FileChangesLogChange(file, FILE_STATE_STATS_CHANGED, msg_temp, pp))
+            {
+                RecordChange(ctx, pp, attr, "Recorded ownership changes in '%s'", file);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+            }
+            else
+            {
+                RecordFailure(ctx, pp, attr, "Failed to record ownership changes in '%s'", file);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+            }
+        }
     }
 
     if (cmpsb.st_gid != sb->st_gid)
@@ -707,7 +763,24 @@ void FileChangesCheckAndUpdateStats(const char *file, const struct stat *sb, boo
         snprintf(msg_temp, sizeof(msg_temp), "Group: %ju -> %ju",
                  (uintmax_t)cmpsb.st_gid, (uintmax_t)sb->st_gid);
 
-        FileChangesLogChange(file, FILE_STATE_STATS_CHANGED, msg_temp, pp);
+        if (DONTDO)
+        {
+            RecordWarning(ctx, pp, attr, "Should record group changes in '%s'", file);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
+        }
+        else
+        {
+            if (FileChangesLogChange(file, FILE_STATE_STATS_CHANGED, msg_temp, pp))
+            {
+                RecordChange(ctx, pp, attr, "Recorded group changes in '%s'", file);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+            }
+            else
+            {
+                RecordFailure(ctx, pp, attr, "Failed to record group changes in '%s'", file);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+            }
+        }
     }
 
     if (cmpsb.st_dev != sb->st_dev)
@@ -719,7 +792,24 @@ void FileChangesCheckAndUpdateStats(const char *file, const struct stat *sb, boo
         snprintf(msg_temp, sizeof(msg_temp), "Device: %ju -> %ju",
                  (uintmax_t)cmpsb.st_dev, (uintmax_t)sb->st_dev);
 
-        FileChangesLogChange(file, FILE_STATE_STATS_CHANGED, msg_temp, pp);
+        if (DONTDO)
+        {
+            RecordWarning(ctx, pp, attr, "Should record device changes in '%s'", file);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
+        }
+        else
+        {
+            if (FileChangesLogChange(file, FILE_STATE_STATS_CHANGED, msg_temp, pp))
+            {
+                RecordChange(ctx, pp, attr, "Recorded device changes in '%s'", file);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+            }
+            else
+            {
+                RecordFailure(ctx, pp, attr, "Failed to record device changes in '%s'", file);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+            }
+        }
     }
 
     if (cmpsb.st_ino != sb->st_ino)
@@ -743,7 +833,24 @@ void FileChangesCheckAndUpdateStats(const char *file, const struct stat *sb, boo
         snprintf(msg_temp, sizeof(msg_temp), "Modified time: %s -> %s",
                  from, to);
 
-        FileChangesLogChange(file, FILE_STATE_STATS_CHANGED, msg_temp, pp);
+        if (DONTDO)
+        {
+            RecordWarning(ctx, pp, attr, "Should record mtime changes in '%s'", file);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
+        }
+        else
+        {
+            if (FileChangesLogChange(file, FILE_STATE_STATS_CHANGED, msg_temp, pp))
+            {
+                RecordChange(ctx, pp, attr, "Recorded mtime changes in '%s'", file);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+            }
+            else
+            {
+                RecordFailure(ctx, pp, attr, "Failed to record mtime changes in '%s'", file);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+            }
+        }
     }
 
     if (pp->comment)
@@ -751,11 +858,25 @@ void FileChangesCheckAndUpdateStats(const char *file, const struct stat *sb, boo
         Log(LOG_LEVEL_VERBOSE, "Preceding promise '%s'", pp->comment);
     }
 
-    if (update && !DONTDO)
+    if (update)
     {
-        if (!DeleteDB(dbp, key) || !WriteDB(dbp, key, sb, sizeof(struct stat)))
+        if (DONTDO)
         {
-            Log(LOG_LEVEL_ERR, "Could not write stat information to database");
+            RecordWarning(ctx, pp, attr, "Should write stat information for '%s' to database", file);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
+        }
+        else
+        {
+            if (!DeleteDB(dbp, key) || !WriteDB(dbp, key, sb, sizeof(struct stat)))
+            {
+                RecordFailure(ctx, pp, attr, "Failed to write stat information for '%s' to database", file);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+            }
+            else
+            {
+                RecordChange(ctx, pp, attr, "Wrote stat information changes for '%s' to database", file);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+            }
         }
     }
 
@@ -783,7 +904,7 @@ static char FileStateToChar(FileState status)
     }
 }
 
-void FileChangesLogChange(const char *file, FileState status, char *msg, const Promise *pp)
+bool FileChangesLogChange(const char *file, FileState status, char *msg, const Promise *pp)
 {
     char fname[CF_BUFSIZE];
     time_t now = time(NULL);
@@ -808,11 +929,12 @@ void FileChangesLogChange(const char *file, FileState status, char *msg, const P
     if (fp == NULL)
     {
         Log(LOG_LEVEL_ERR, "Could not write to the hash change log. (fopen: %s)", GetErrorStr());
-        return;
+        return false;
     }
 
     const char *handle = PromiseID(pp);
 
     fprintf(fp, "%lld,%s,%s,%c,%s\n", (long long) now, handle, file, FileStateToChar(status), msg);
     fclose(fp);
+    return true;
 }

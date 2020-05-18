@@ -460,7 +460,7 @@ static void ValidateClassLiteral(const char *class_literal)
     FreeExpression(res.result);
 }
 
-static void inline ParserEndCurrentBlock()
+static inline void ParserEndCurrentBlock()
 {
     P.offsets.last_id = -1;
     P.offsets.last_string = -1;

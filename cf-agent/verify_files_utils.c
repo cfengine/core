@@ -111,7 +111,8 @@ static PromiseResult VerifySetUidGid(EvalContext *ctx, const char *file, const s
 #ifdef __APPLE__
 static int VerifyFinderType(EvalContext *ctx, const char *file, const Attributes *a, const Promise *pp, PromiseResult *result);
 #endif
-static void VerifyFileChanges(const char *file, const struct stat *sb, const Attributes *attr, const Promise *pp);
+static void VerifyFileChanges(EvalContext *ctx, const char *file, const struct stat *sb,
+                              const Attributes *attr, const Promise *pp, PromiseResult *result);
 static PromiseResult VerifyFileIntegrity(EvalContext *ctx, const char *file, const Attributes *attr, const Promise *pp);
 
 extern Attributes GetExpandedAttributes(EvalContext *ctx, const Promise *pp, const Attributes *attr);
@@ -2174,7 +2175,7 @@ static PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, co
 
     if (attr->havechange)
     {
-        VerifyFileChanges(file, dstat, attr, pp);
+        VerifyFileChanges(ctx, file, dstat, attr, pp, &result);
     }
 
 #ifndef __MINGW32__
@@ -2496,7 +2497,7 @@ bool DepthSearch(EvalContext *ctx, char *name, const struct stat *sb, int rlevel
 
     if (attr->havechange)
     {
-        FileChangesCheckAndUpdateDirectory(name, selected_files, db_file_set,
+        FileChangesCheckAndUpdateDirectory(ctx, attr, name, selected_files, db_file_set,
                                            attr->change.update, pp, result);
     }
 
@@ -3141,7 +3142,16 @@ static PromiseResult VerifyFileIntegrity(EvalContext *ctx, const char *file, con
     {
         EvalContextHeapPersistentSave(ctx, "checksum_alerts", CF_PERSISTENCE, CONTEXT_STATE_POLICY_PRESERVE, "");
         EvalContextClassPutSoft(ctx, "checksum_alerts", CONTEXT_SCOPE_NAMESPACE, "");
-        FileChangesLogChange(file, FILE_STATE_CONTENT_CHANGED, "Content changed", pp);
+        if (FileChangesLogChange(file, FILE_STATE_CONTENT_CHANGED, "Content changed", pp))
+        {
+            RecordChange(ctx, pp, attr, "Recorded integrity changes in '%s'", file);
+            result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
+        }
+        else
+        {
+            RecordFailure(ctx, pp, attr, "Failed to record integrity changes in '%s'", file);
+            result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+        }
     }
 
     if (attr->change.report_diffs)
@@ -3843,14 +3853,15 @@ bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, const At
 
 #endif /* !__MINGW32__ */
 
-static void VerifyFileChanges(const char *file, const struct stat *sb, const Attributes *attr, const Promise *pp)
+static void VerifyFileChanges(EvalContext *ctx, const char *file, const struct stat *sb,
+                              const Attributes *attr, const Promise *pp, PromiseResult *result)
 {
     if ((attr->change.report_changes != FILE_CHANGE_REPORT_STATS_CHANGE) && (attr->change.report_changes != FILE_CHANGE_REPORT_ALL))
     {
         return;
     }
 
-    FileChangesCheckAndUpdateStats(file, sb, attr->change.update, pp);
+    FileChangesCheckAndUpdateStats(ctx, file, sb, attr->change.update, attr, pp, result);
 }
 
 bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, const Attributes *attr, PromiseResult *result)

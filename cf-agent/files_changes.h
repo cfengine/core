@@ -35,7 +35,7 @@ typedef enum
     FILE_STATE_STATS_CHANGED
 } FileState;
 
-void FileChangesLogChange(const char *file, FileState status, char *msg, const Promise *pp);
+bool FileChangesLogChange(const char *file, FileState status, char *msg, const Promise *pp);
 bool FileChangesCheckAndUpdateHash(EvalContext *ctx,
                                    const char *filename,
                                    unsigned char digest[EVP_MAX_MD_SIZE + 1],
@@ -44,9 +44,16 @@ bool FileChangesCheckAndUpdateHash(EvalContext *ctx,
                                    const Promise *pp,
                                    PromiseResult *result);
 bool FileChangesGetDirectoryList(const char *path, Seq *files);
-void FileChangesLogNewFile(const char *path, const Promise *pp);
-void FileChangesCheckAndUpdateDirectory(const char *name, const Seq *file_set, const Seq *db_file_set,
+bool FileChangesLogNewFile(const char *path, const Promise *pp);
+void FileChangesCheckAndUpdateDirectory(EvalContext *ctx, const Attributes *attr,
+                                        const char *name, const Seq *file_set, const Seq *db_file_set,
                                         bool update, const Promise *pp, PromiseResult *result);
-void FileChangesCheckAndUpdateStats(const char *file, const struct stat *sb, bool update, const Promise *pp);
+void FileChangesCheckAndUpdateStats(EvalContext *ctx,
+                                    const char *file,
+                                    const struct stat *sb,
+                                    bool update,
+                                    const Attributes *attr,
+                                    const Promise *pp,
+                                    PromiseResult *result);
 
 #endif

@@ -31,9 +31,12 @@ typedef struct
 {
     int write_fd;
     int read_fd;
+    FILE *write_stream;
+    FILE *read_stream;
 } IOData;
 
 IOData cf_popen_full_duplex(const char *command, bool capture_stderr, bool require_full_path);
+IOData cf_popen_full_duplex_streams(const char *command, bool capture_stderr, bool require_full_path);
 int cf_pclose_full_duplex(IOData *data);
 int cf_pclose_full_duplex_side(int fd);
 

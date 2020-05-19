@@ -86,8 +86,9 @@ static PromiseResult VerifyCopy(EvalContext *ctx, const char *source, char *dest
                                 CompressedArray **inode_cache, AgentConnection *conn);
 static PromiseResult TouchFile(EvalContext *ctx, char *path, const Attributes *attr, const Promise *pp);
 static PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, const struct stat *dstat, const Attributes *attr, const Promise *pp);
-static bool PushDirState(EvalContext *ctx, char *name, const struct stat *sb);
-static bool PopDirState(int goback, char *name, const struct stat *sb, DirectoryRecursion r);
+static bool PushDirState(EvalContext *ctx, const Promise *pp, const Attributes *attr, char *name, const struct stat *sb, PromiseResult *result);
+static bool PopDirState(EvalContext *ctx, const Promise *pp, const Attributes *attr, int goback, char *name, const struct stat *sb,
+                        DirectoryRecursion r, PromiseResult *result);
 static bool CheckLinkSecurity(const struct stat *sb, char *name);
 static bool CompareForFileCopy(char *sourcefile, char *destfile, const struct stat *ssb, const struct stat *dsb, const FileCopy *fc, AgentConnection *conn);
 static void FileAutoDefine(EvalContext *ctx, char *destfile);
@@ -2363,12 +2364,16 @@ bool DepthSearch(EvalContext *ctx, char *name, const struct stat *sb, int rlevel
 
     if (rlevel > CF_RECURSION_LIMIT)
     {
-        Log(LOG_LEVEL_WARNING, "Very deep nesting of directories (>%d deep) for '%s' (Aborting files)", rlevel, name);
+        RecordWarning(ctx, pp, attr,
+                      "Very deep nesting of directories (>%d deep) for '%s' (Aborting files)",
+                      rlevel, name);
+        *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
         return false;
     }
 
-    if (!PushDirState(ctx, name, sb))
+    if (!PushDirState(ctx, pp, attr, name, sb, result))
     {
+        /* PushDirState() reports errors and updates 'result' in case of failures */
         return false;
     }
 
@@ -2383,8 +2388,10 @@ bool DepthSearch(EvalContext *ctx, char *name, const struct stat *sb, int rlevel
         db_file_set = SeqNew(1, &free);
         if (!FileChangesGetDirectoryList(name, db_file_set))
         {
-            SeqDestroy(db_file_set);
+            RecordFailure(ctx, pp, attr,
+                          "Failed to get directory listing for recording file changes in '%s'", name);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+            SeqDestroy(db_file_set);
             return false;
         }
         selected_files = SeqNew(1, &free);
@@ -2410,8 +2417,10 @@ bool DepthSearch(EvalContext *ctx, char *name, const struct stat *sb, int rlevel
 
         if (strlcat(path, dirp->d_name, sizeof(path)) >= sizeof(path))
         {
-            Log(LOG_LEVEL_ERR, "Internal limit reached in DepthSearch(),"
-                " path too long: '%s' + '%s'", path, dirp->d_name);
+            RecordFailure(ctx, pp, attr,
+                          "Internal limit reached in DepthSearch(), path too long: '%s' + '%s'",
+                          path, dirp->d_name);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             retval = false;
             goto end;
         }
@@ -2445,7 +2454,10 @@ bool DepthSearch(EvalContext *ctx, char *name, const struct stat *sb, int rlevel
 
             if (stat(dirp->d_name, &lsb) == -1)
             {
-                Log(LOG_LEVEL_ERR, "Recurse was working on '%s' when this failed. (stat: %s)", path, GetErrorStr());
+                RecordFailure(ctx, pp, attr,
+                              "Recurse was working on '%s' when this failed. (stat: %s)",
+                              path, GetErrorStr());
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
                 continue;
             }
         }
@@ -2467,7 +2479,7 @@ bool DepthSearch(EvalContext *ctx, char *name, const struct stat *sb, int rlevel
             {
                 Log(LOG_LEVEL_VERBOSE, "Entering '%s', level %d", path, rlevel);
                 goback = DepthSearch(ctx, path, &lsb, rlevel + 1, attr, pp, rootdevice, result);
-                if (!PopDirState(goback, name, sb, attr->recursion))
+                if (!PopDirState(ctx, pp, attr, goback, name, sb, attr->recursion, result))
                 {
                     FatalError(ctx, "Not safe to continue");
                 }
@@ -2508,12 +2520,13 @@ end:
     return retval;
 }
 
-static bool PushDirState(EvalContext *ctx, char *name, const struct stat *sb)
+static bool PushDirState(EvalContext *ctx, const Promise *pp, const Attributes *attr, char *name, const struct stat *sb, PromiseResult *result)
 {
     if (safe_chdir(name) == -1)
     {
-        Log(LOG_LEVEL_INFO, "Could not change to directory '%s', mode '%04jo' in tidy. (chdir: %s)",
-            name, (uintmax_t)(sb->st_mode & 07777), GetErrorStr());
+        RecordFailure(ctx, pp, attr, "Could not change to directory '%s' (mode '%04jo', chdir: %s)",
+                      name, (uintmax_t)(sb->st_mode & 07777), GetErrorStr());
+        *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
         return false;
     }
 
@@ -2527,14 +2540,18 @@ static bool PushDirState(EvalContext *ctx, char *name, const struct stat *sb)
 /**
  * @return true if safe for agent to continue
  */
-static bool PopDirState(int goback, char *name, const struct stat *sb, DirectoryRecursion r)
+static bool PopDirState(EvalContext *ctx, const Promise *pp, const Attributes *attr,
+                        int goback, char *name, const struct stat *sb, DirectoryRecursion r,
+                        PromiseResult *result)
 {
     if (goback && (r.travlinks))
     {
         if (safe_chdir(name) == -1)
         {
-            Log(LOG_LEVEL_ERR, "Error in backing out of recursive travlink descent securely to '%s'. (chdir: %s)",
-                name, GetErrorStr());
+            RecordFailure(ctx, pp, attr,
+                          "Error in backing out of recursive travlink descent securely to '%s'. (chdir: %s)",
+                          name, GetErrorStr());
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             return false;
         }
 
@@ -2547,8 +2564,10 @@ static bool PopDirState(int goback, char *name, const struct stat *sb, Directory
     {
         if (safe_chdir("..") == -1)
         {
-            Log(LOG_LEVEL_ERR, "Error in backing out of recursive descent securely to '%s'. (chdir: %s)",
-                name, GetErrorStr());
+            RecordFailure(ctx, pp, attr,
+                          "Error in backing out of recursive descent securely to '%s'. (chdir: %s)",
+                          name, GetErrorStr());
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             return false;
         }
     }

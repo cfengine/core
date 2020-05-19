@@ -502,7 +502,14 @@ static inline void ParserHandleBundlePromiseRval()
                 P.blocktype);
             INSTALL_SKIP = true;
         }
-        else if (constraint_syntax != NULL)
+        else if (constraint_syntax == NULL)
+        {
+            ParseError(
+                "Unknown constraint '%s' in promise type '%s'",
+                P.lval,
+                promise_type_syntax->promise_type);
+        }
+        else
         {
             switch (constraint_syntax->status)
             {
@@ -648,13 +655,6 @@ static inline void ParserHandleBundlePromiseRval()
                     promise_type_syntax->promise_type);
                 break;
             }
-        }
-        else
-        {
-            ParseError(
-                "Unknown constraint '%s' in promise type '%s'",
-                P.lval,
-                promise_type_syntax->promise_type);
         }
 
         RvalDestroy(P.rval);

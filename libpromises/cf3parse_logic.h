@@ -476,6 +476,133 @@ static inline void ParserEndCurrentBlock()
     }
 }
 
+// This part of the parser is interesting, to say the least.
+// While parsing, we try to, opportunistically, do a bunch of
+// transformations on the right-hand side values (rval) of
+// promise attributes. For example converting some patterns
+// to function calls:
+// @(x)
+//   mergedata(x)
+// data => "{}"
+//   data => parsejson("{}")
+//
+// In some cases, we even try to evaluate the function call,
+// like parsejson, and if it succeeds (if there are no
+// unresolved variables) we just insert the resulting data
+// container directly.
+
+static inline void MagicRvalTransformations(
+    const PromiseTypeSyntax *promise_type_syntax)
+{
+    const char *item = P.rval.item;
+    // convert @(x) to mergedata(x)
+    if (P.rval.type == RVAL_TYPE_SCALAR
+        && (strcmp(P.lval, "data") == 0
+            || strcmp(P.lval, "template_data") == 0)
+        && strlen(item) > 3 && item[0] == '@'
+        && (item[1] == '(' || item[1] == '{'))
+    {
+        Rlist *synthetic_args = NULL;
+        char *tmp = xstrndup(P.rval.item + 2, strlen(P.rval.item) - 3);
+        RlistAppendScalar(&synthetic_args, tmp);
+        free(tmp);
+        RvalDestroy(P.rval);
+
+        P.rval =
+            (Rval){FnCallNew("mergedata", synthetic_args), RVAL_TYPE_FNCALL};
+    }
+    // convert 'json or yaml' to direct container or parsejson(x)
+    // or parseyaml(x)
+    else if (
+        P.rval.type == RVAL_TYPE_SCALAR
+        && (strcmp(P.lval, "data") == 0
+            || strcmp(P.lval, "template_data") == 0))
+    {
+        JsonElement *json = NULL;
+        JsonParseError res;
+        bool json_parse_attempted = false;
+        Buffer *copy = BufferNewFrom(P.rval.item, strlen(P.rval.item));
+
+        const char *fname = NULL;
+        if (strlen(P.rval.item) > 3 && strncmp("---", P.rval.item, 3) == 0)
+        {
+            fname = "parseyaml";
+
+            // look for unexpanded variables
+            if (strstr(P.rval.item, "$(") == NULL
+                && strstr(P.rval.item, "${") == NULL)
+            {
+                const char *copy_data = BufferData(copy);
+                res = JsonParseYamlString(&copy_data, &json);
+                json_parse_attempted = true;
+            }
+        }
+        else
+        {
+            fname = "parsejson";
+            // look for unexpanded variables
+            if (strstr(P.rval.item, "$(") == NULL
+                && strstr(P.rval.item, "${") == NULL)
+            {
+                const char *copy_data = BufferData(copy);
+                res = JsonParse(&copy_data, &json);
+                json_parse_attempted = true;
+            }
+        }
+
+        BufferDestroy(copy);
+
+        if (json_parse_attempted && res != JSON_PARSE_OK)
+        {
+            // Parsing failed, insert fncall so it can be retried
+            // during evaluation
+        }
+        else if (
+            json != NULL
+            && JsonGetElementType(json) == JSON_ELEMENT_TYPE_PRIMITIVE)
+        {
+            // Parsing failed, insert fncall so it can be retried
+            // during evaluation
+            JsonDestroy(json);
+            json = NULL;
+        }
+
+        if (fname != NULL)
+        {
+            if (json == NULL)
+            {
+                Rlist *synthetic_args = NULL;
+                RlistAppendScalar(&synthetic_args, P.rval.item);
+                RvalDestroy(P.rval);
+
+                P.rval =
+                    (Rval){FnCallNew(fname, synthetic_args), RVAL_TYPE_FNCALL};
+            }
+            else
+            {
+                RvalDestroy(P.rval);
+                P.rval = (Rval){json, RVAL_TYPE_CONTAINER};
+            }
+        }
+    }
+
+    {
+        SyntaxTypeMatch err = CheckConstraint(
+            P.currenttype, P.lval, P.rval, promise_type_syntax);
+        if (err != SYNTAX_TYPE_MATCH_OK
+            && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
+        {
+            yyerror(SyntaxTypeMatchToString(err));
+        }
+    }
+
+    if (P.rval.type == RVAL_TYPE_SCALAR
+        && (strcmp(P.lval, "ifvarclass") == 0 || strcmp(P.lval, "if") == 0))
+    {
+        ValidateClassLiteral(P.rval.item);
+    }
+}
+
 // This function is called for every rval (right hand side value) of every
 // promise while parsing. The reason why it is so big is because it does a lot
 // of transformation, for example transforming strings into function calls like
@@ -522,118 +649,7 @@ static inline void ParserHandleBundlePromiseRval()
                 // Intentional fall
             case SYNTAX_STATUS_NORMAL:
             {
-                const char *item = P.rval.item;
-                // convert @(x) to mergedata(x)
-                if (P.rval.type == RVAL_TYPE_SCALAR
-                    && (strcmp(P.lval, "data") == 0
-                        || strcmp(P.lval, "template_data") == 0)
-                    && strlen(item) > 3 && item[0] == '@'
-                    && (item[1] == '(' || item[1] == '{'))
-                {
-                    Rlist *synthetic_args = NULL;
-                    char *tmp =
-                        xstrndup(P.rval.item + 2, strlen(P.rval.item) - 3);
-                    RlistAppendScalar(&synthetic_args, tmp);
-                    free(tmp);
-                    RvalDestroy(P.rval);
-
-                    P.rval = (Rval){FnCallNew("mergedata", synthetic_args),
-                                    RVAL_TYPE_FNCALL};
-                }
-                // convert 'json or yaml' to direct container or parsejson(x)
-                // or parseyaml(x)
-                else if (
-                    P.rval.type == RVAL_TYPE_SCALAR
-                    && (strcmp(P.lval, "data") == 0
-                        || strcmp(P.lval, "template_data") == 0))
-                {
-                    JsonElement *json = NULL;
-                    JsonParseError res;
-                    bool json_parse_attempted = false;
-                    Buffer *copy =
-                        BufferNewFrom(P.rval.item, strlen(P.rval.item));
-
-                    const char *fname = NULL;
-                    if (strlen(P.rval.item) > 3
-                        && strncmp("---", P.rval.item, 3) == 0)
-                    {
-                        fname = "parseyaml";
-
-                        // look for unexpanded variables
-                        if (strstr(P.rval.item, "$(") == NULL
-                            && strstr(P.rval.item, "${") == NULL)
-                        {
-                            const char *copy_data = BufferData(copy);
-                            res = JsonParseYamlString(&copy_data, &json);
-                            json_parse_attempted = true;
-                        }
-                    }
-                    else
-                    {
-                        fname = "parsejson";
-                        // look for unexpanded variables
-                        if (strstr(P.rval.item, "$(") == NULL
-                            && strstr(P.rval.item, "${") == NULL)
-                        {
-                            const char *copy_data = BufferData(copy);
-                            res = JsonParse(&copy_data, &json);
-                            json_parse_attempted = true;
-                        }
-                    }
-
-                    BufferDestroy(copy);
-
-                    if (json_parse_attempted && res != JSON_PARSE_OK)
-                    {
-                        // Parsing failed, insert fncall so it can be retried
-                        // during evaluation
-                    }
-                    else if (
-                        json != NULL
-                        && JsonGetElementType(json)
-                               == JSON_ELEMENT_TYPE_PRIMITIVE)
-                    {
-                        // Parsing failed, insert fncall so it can be retried
-                        // during evaluation
-                        JsonDestroy(json);
-                        json = NULL;
-                    }
-
-                    if (fname != NULL)
-                    {
-                        if (json == NULL)
-                        {
-                            Rlist *synthetic_args = NULL;
-                            RlistAppendScalar(&synthetic_args, P.rval.item);
-                            RvalDestroy(P.rval);
-
-                            P.rval = (Rval){FnCallNew(fname, synthetic_args),
-                                            RVAL_TYPE_FNCALL};
-                        }
-                        else
-                        {
-                            RvalDestroy(P.rval);
-                            P.rval = (Rval){json, RVAL_TYPE_CONTAINER};
-                        }
-                    }
-                }
-
-                {
-                    SyntaxTypeMatch err = CheckConstraint(
-                        P.currenttype, P.lval, P.rval, promise_type_syntax);
-                    if (err != SYNTAX_TYPE_MATCH_OK
-                        && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
-                    {
-                        yyerror(SyntaxTypeMatchToString(err));
-                    }
-                }
-
-                if (P.rval.type == RVAL_TYPE_SCALAR
-                    && (strcmp(P.lval, "ifvarclass") == 0
-                        || strcmp(P.lval, "if") == 0))
-                {
-                    ValidateClassLiteral(P.rval.item);
-                }
+                MagicRvalTransformations(promise_type_syntax);
 
                 Constraint *cp = PromiseAppendConstraint(
                     P.currentpromise,

@@ -54,9 +54,9 @@ PromiseResult VerifyACL(EvalContext *ctx, const char *file, const Attributes *at
     Attributes a = *attr; // TODO: Remove this local copy
     if (!CheckACLSyntax(file, a.acl, pp))
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, &a, "Syntax error in access control list for '%s'", file);
+        RecordFailure(ctx, pp, attr, "Syntax error in access control list for '%s'", file);
         PromiseRef(LOG_LEVEL_ERR, pp);
-        return PROMISE_RESULT_INTERRUPTED;
+        return PROMISE_RESULT_FAIL;
     }
 
     SetACLDefaults(file, &a.acl);
@@ -74,7 +74,8 @@ PromiseResult VerifyACL(EvalContext *ctx, const char *file, const Attributes *at
 #elif defined(__MINGW32__)
         result = PromiseResultUpdate(result, Nova_CheckNtACL(ctx, file, a.acl, &a, pp));
 #else
-        Log(LOG_LEVEL_INFO, "ACLs are not yet supported on this system.");
+        RecordFailure(ctx, pp, attr, "ACLs are not yet supported on this system.");
+        result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
 #endif
         break;
 
@@ -83,7 +84,8 @@ PromiseResult VerifyACL(EvalContext *ctx, const char *file, const Attributes *at
 #if defined(__linux__)
         result = PromiseResultUpdate(result, CheckPosixLinuxACL(ctx, file, a.acl, &a, pp));
 #else
-        Log(LOG_LEVEL_INFO, "Posix ACLs are not supported on this system");
+        RecordFailure(ctx, pp, attr, "Posix ACLs are not supported on this system");
+        result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
 #endif
         break;
 
@@ -91,12 +93,14 @@ PromiseResult VerifyACL(EvalContext *ctx, const char *file, const Attributes *at
 #ifdef __MINGW32__
         result = PromiseResultUpdate(result, Nova_CheckNtACL(ctx, file, a.acl, &a, pp));
 #else
-        Log(LOG_LEVEL_INFO, "NTFS ACLs are not supported on this system");
+        RecordFailure(ctx, pp, attr, "NTFS ACLs are not supported on this system");
+        result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
 #endif
         break;
 
     default:
-        Log(LOG_LEVEL_ERR, "Unknown ACL type - software error");
+        assert(false);
+        RecordFailure(ctx, pp, attr, "Unknown ACL type - software error");
         break;
     }
 

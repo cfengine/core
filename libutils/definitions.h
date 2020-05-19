@@ -45,14 +45,23 @@
 #define CF_EXPANDSIZE (2 * CF_BUFSIZE)
 
 /*****************************************************************************
+ *                          File permissions                                 *
+ *****************************************************************************/
+// 0600 - Read/Write for owner
+#define CF_PERMS_DEFAULT  S_IRUSR | S_IWUSR
+// 0644 - World readable
+#define CF_PERMS_SHARED   CF_PERMS_DEFAULT | S_IRGRP | S_IROTH
+
+/*****************************************************************************
  *                       File Ownership                                         *
  *****************************************************************************/
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__APPLE__)
 #  define CF_SYSTEM_GROUP "wheel"
-#elseif __Solaris__
+#elif defined(__sun__) || defined(__hpux__)
 #  define CF_SYSTEM_GROUP "sys"
+#elif defined(_AIX)
+#  define CF_SYSTEM_GROUP "system"
 #else
 #  define CF_SYSTEM_GROUP "root"
 #endif
-
 #endif // CFENGINE_DEFINITIONS_H

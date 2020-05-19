@@ -603,6 +603,17 @@ static inline void MagicRvalTransformations(
     }
 }
 
+static inline void ParserAppendCurrentConstraint()
+{
+    Constraint *cp = PromiseAppendConstraint(
+        P.currentpromise, P.lval, RvalCopy(P.rval), P.references_body);
+    cp->offset.line = P.line_no;
+    cp->offset.start = P.offsets.last_id;
+    cp->offset.end = P.offsets.current;
+    cp->offset.context = P.offsets.last_class_id;
+    P.currentstype->offset.end = P.offsets.current;
+}
+
 // This function is called for every rval (right hand side value) of every
 // promise while parsing. The reason why it is so big is because it does a lot
 // of transformation, for example transforming strings into function calls like
@@ -650,17 +661,7 @@ static inline void ParserHandleBundlePromiseRval()
             case SYNTAX_STATUS_NORMAL:
             {
                 MagicRvalTransformations(promise_type_syntax);
-
-                Constraint *cp = PromiseAppendConstraint(
-                    P.currentpromise,
-                    P.lval,
-                    RvalCopy(P.rval),
-                    P.references_body);
-                cp->offset.line = P.line_no;
-                cp->offset.start = P.offsets.last_id;
-                cp->offset.end = P.offsets.current;
-                cp->offset.context = P.offsets.last_class_id;
-                P.currentstype->offset.end = P.offsets.current;
+                ParserAppendCurrentConstraint();
             }
             break;
             case SYNTAX_STATUS_REMOVED:

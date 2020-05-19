@@ -186,7 +186,7 @@ bool CopyFilePermissionsDisk(const char *source, const char *destination)
         return false;
     }
 
-    if (!CopyFileExtendedAttributesDisk(source, destination))
+    if (!CopyFileExtendedAttributesDisk(source, destination, NULL))
     {
         return false;
     }
@@ -194,7 +194,7 @@ bool CopyFilePermissionsDisk(const char *source, const char *destination)
     return true;
 }
 
-bool CopyFileExtendedAttributesDisk(const char *source, const char *destination)
+bool CopyFileExtendedAttributesDisk(const char *source, const char *destination, bool *change)
 {
 #if defined(WITH_XATTR)
     // Extended attributes include both POSIX ACLs and SELinux contexts.
@@ -206,6 +206,10 @@ bool CopyFileExtendedAttributesDisk(const char *source, const char *destination)
     {
         if (errno == ENOTSUP || errno == ENODATA)
         {
+            if (change != NULL)
+            {
+                *change = false;
+            }
             return true;
         }
         else
@@ -252,11 +256,15 @@ bool CopyFileExtendedAttributesDisk(const char *source, const char *destination)
                 return false;
             }
         }
+        if (change != NULL)
+        {
+            *change = true;
+        }
     }
 
 #else // !WITH_XATTR
     // ACLs are included in extended attributes, but fall back to CopyACLs if xattr is not available.
-    if (!CopyACLs(source, destination))
+    if (!CopyACLs(source, destination, change))
     {
         return false;
     }

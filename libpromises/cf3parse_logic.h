@@ -620,71 +620,70 @@ static inline void ParserAppendCurrentConstraint()
 // parsejson, and then attempts to resolve those function calls.
 static inline void ParserHandleBundlePromiseRval()
 {
-    if (!INSTALL_SKIP)
+    if (INSTALL_SKIP)
     {
-        const ConstraintSyntax *constraint_syntax = NULL;
-        const PromiseTypeSyntax *promise_type_syntax =
-            PromiseTypeSyntaxGet(P.blocktype, P.currenttype);
-        if (promise_type_syntax != NULL)
-        {
-            constraint_syntax = PromiseTypeSyntaxGetConstraintSyntax(
-                promise_type_syntax, P.lval);
-        }
-
-        if (promise_type_syntax == NULL)
-        {
-            ParseError(
-                "Invalid promise type '%s' in bundle '%s' of type '%s'",
-                P.currenttype,
-                P.blockid,
-                P.blocktype);
-            INSTALL_SKIP = true;
-        }
-        else if (constraint_syntax == NULL)
-        {
-            ParseError(
-                "Unknown constraint '%s' in promise type '%s'",
-                P.lval,
-                promise_type_syntax->promise_type);
-        }
-        else
-        {
-            switch (constraint_syntax->status)
-            {
-            case SYNTAX_STATUS_DEPRECATED:
-                ParseWarning(
-                    PARSER_WARNING_DEPRECATED,
-                    "Deprecated constraint '%s' in promise type '%s'",
-                    constraint_syntax->lval,
-                    promise_type_syntax->promise_type);
-                // Intentional fall
-            case SYNTAX_STATUS_NORMAL:
-            {
-                MagicRvalTransformations(promise_type_syntax);
-                ParserAppendCurrentConstraint();
-            }
-            break;
-            case SYNTAX_STATUS_REMOVED:
-                ParseWarning(
-                    PARSER_WARNING_REMOVED,
-                    "Removed constraint '%s' in promise type '%s'",
-                    constraint_syntax->lval,
-                    promise_type_syntax->promise_type);
-                break;
-            }
-        }
-
         RvalDestroy(P.rval);
         P.rval = RvalNew(NULL, RVAL_TYPE_NOPROMISEE);
-        strcpy(P.lval, "no lval");
-        RlistDestroy(P.currentRlist);
-        P.currentRlist = NULL;
+        return;
+    }
+
+    const ConstraintSyntax *constraint_syntax = NULL;
+    const PromiseTypeSyntax *promise_type_syntax =
+        PromiseTypeSyntaxGet(P.blocktype, P.currenttype);
+    if (promise_type_syntax != NULL)
+    {
+        constraint_syntax =
+            PromiseTypeSyntaxGetConstraintSyntax(promise_type_syntax, P.lval);
+    }
+
+    if (promise_type_syntax == NULL)
+    {
+        ParseError(
+            "Invalid promise type '%s' in bundle '%s' of type '%s'",
+            P.currenttype,
+            P.blockid,
+            P.blocktype);
+        INSTALL_SKIP = true;
+    }
+    else if (constraint_syntax == NULL)
+    {
+        ParseError(
+            "Unknown constraint '%s' in promise type '%s'",
+            P.lval,
+            promise_type_syntax->promise_type);
     }
     else
     {
-        RvalDestroy(P.rval);
-        P.rval = RvalNew(NULL, RVAL_TYPE_NOPROMISEE);
+        switch (constraint_syntax->status)
+        {
+        case SYNTAX_STATUS_DEPRECATED:
+            ParseWarning(
+                PARSER_WARNING_DEPRECATED,
+                "Deprecated constraint '%s' in promise type '%s'",
+                constraint_syntax->lval,
+                promise_type_syntax->promise_type);
+            // Intentional fall
+        case SYNTAX_STATUS_NORMAL:
+        {
+            MagicRvalTransformations(promise_type_syntax);
+            ParserAppendCurrentConstraint();
+        }
+        break;
+        case SYNTAX_STATUS_REMOVED:
+            ParseWarning(
+                PARSER_WARNING_REMOVED,
+                "Removed constraint '%s' in promise type '%s'",
+                constraint_syntax->lval,
+                promise_type_syntax->promise_type);
+            break;
+        }
     }
+
+    RvalDestroy(P.rval);
+    P.rval = RvalNew(NULL, RVAL_TYPE_NOPROMISEE);
+    strcpy(P.lval, "no lval");
+    RlistDestroy(P.currentRlist);
+    P.currentRlist = NULL;
 }
 
 static inline void ParserBeginBlock(ParserBlock b)

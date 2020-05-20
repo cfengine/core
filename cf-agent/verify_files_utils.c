@@ -93,7 +93,9 @@ static bool CheckLinkSecurity(const struct stat *sb, char *name);
 static bool CompareForFileCopy(char *sourcefile, char *destfile, const struct stat *ssb, const struct stat *dsb, const FileCopy *fc, AgentConnection *conn);
 static void FileAutoDefine(EvalContext *ctx, char *destfile);
 static void TruncateFile(char *name);
-static void RegisterAHardLink(int i, char *value, const Attributes *attr, CompressedArray **inode_cache);
+static void RegisterAHardLink(int i, char *value, EvalContext *ctx, const Promise *pp,
+                              const Attributes *attr, PromiseResult *result,
+                              CompressedArray **inode_cache);
 static PromiseResult VerifyCopiedFileAttributes(EvalContext *ctx, const char *src, const char *dest, const struct stat *sstat, const struct stat *dstat, const Attributes *attr, const Promise *pp);
 static int cf_stat(const char *file, struct stat *buf, const FileCopy *fc, AgentConnection *conn);
 #ifndef __MINGW32__
@@ -1162,8 +1164,9 @@ static PromiseResult LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile
 /* Link the file to the source, instead of copying */
 #ifdef __MINGW32__
 {
-    Log(LOG_LEVEL_VERBOSE, "Windows does not support symbolic links");
-    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Windows can't link '%s' to '%s'", sourcefile, destfile);
+    RecordFailure(ctx, pp, attr,
+                  "Can't link '%s' to '%s' (Windows does not support symbolic links)",
+                  sourcefile, destfile);
     return PROMISE_RESULT_FAIL;
 }
 #else                           /* !__MINGW32__ */
@@ -1178,7 +1181,7 @@ static PromiseResult LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile
 
     if ((S_ISLNK(sb->st_mode)) && (cf_readlink(ctx, sourcefile, linkbuf, sizeof(linkbuf), attr, pp, conn, &result) == -1))
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Can't readlink '%s'", sourcefile);
+        RecordFailure(ctx, pp, attr, "Can't readlink '%s'", sourcefile);
         return PROMISE_RESULT_FAIL;
     }
     else if (S_ISLNK(sb->st_mode))
@@ -1249,27 +1252,15 @@ static PromiseResult LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile
     {
         if (lstat(destfile, &dsb) == -1)
         {
-            Log(LOG_LEVEL_ERR, "Can't lstat '%s'. (lstat: %s)", destfile, GetErrorStr());
+            RecordFailure(ctx, pp, attr, "Can't lstat '%s'. (lstat: %s)", destfile, GetErrorStr());
+            result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+            return result;
         }
         else
         {
-            result = PromiseResultUpdate(result, VerifyCopiedFileAttributes(ctx, sourcefile, destfile, sb, &dsb, attr, pp));
-        }
-
-        if (status == PROMISE_RESULT_CHANGE)
-        {
-            cfPS(ctx, LOG_LEVEL_INFO, status, pp, attr, "Created link '%s'", destfile);
-            result = PromiseResultUpdate(result, status);
-        }
-        else if (status == PROMISE_RESULT_NOOP)
-        {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, status, pp, attr, "Link '%s' as promised", destfile);
-            result = PromiseResultUpdate(result, status);
-        }
-        else // TODO: is this reachable?
-        {
-            cfPS(ctx, LOG_LEVEL_INFO, status, pp, attr, "Unable to create link '%s'", destfile);
-            result = PromiseResultUpdate(result, status);
+            result = PromiseResultUpdate(result,
+                                         VerifyCopiedFileAttributes(ctx, sourcefile, destfile,
+                                                                    sb, &dsb, attr, pp));
         }
     }
 
@@ -2995,6 +2986,7 @@ PromiseResult ScheduleLinkOperation(EvalContext *ctx, char *destination, char *s
         result = VerifyAbsoluteLink(ctx, destination, source, attr, pp);
         break;
     default:
+        assert(false);
         Log(LOG_LEVEL_ERR, "Unknown link type - should not happen.");
         break;
     }
@@ -3013,35 +3005,48 @@ PromiseResult ScheduleLinkChildrenOperation(EvalContext *ctx, char *destination,
     struct stat lsb;
     int ret;
 
+    PromiseResult result = PROMISE_RESULT_NOOP;
     if ((ret = lstat(destination, &lsb)) != -1)
     {
         if (attr.move_obstructions && S_ISLNK(lsb.st_mode))
         {
-            unlink(destination);
+            if (unlink(destination) == 0)
+            {
+                RecordChange(ctx, pp, a, "Removed obstructing link '%s'", destination);
+                result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
+            }
+            else
+            {
+                RecordFailure(ctx, pp, a, "Failed to remove obstructing link '%s'", destination);
+                result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+            }
         }
         else if (!S_ISDIR(lsb.st_mode))
         {
-            Log(LOG_LEVEL_ERR, "Cannot promise to link multiple files to children of '%s' as it is not a directory!",
-                  destination);
-            return PROMISE_RESULT_NOOP;
+            RecordFailure(ctx, pp, a,
+                          "Cannot promise to link files to children of '%s' as it is not a directory",
+                          destination);
+            result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+            return result;
         }
     }
 
     snprintf(promiserpath, sizeof(promiserpath), "%s/.", destination);
 
-    PromiseResult result = PROMISE_RESULT_NOOP;
-    if ((ret == -1 || !S_ISDIR(lsb.st_mode)) && !CfCreateFile(ctx, promiserpath, pp, &attr, &result))
+    if ((ret == -1) && !CfCreateFile(ctx, promiserpath, pp, &attr, &result))
     {
-        Log(LOG_LEVEL_ERR, "Cannot promise to link multiple files to children of '%s' as it is not a directory!",
-              destination);
+        RecordFailure(ctx, pp, a,
+                      "Failed to create directory '%s' for linking files as its children",
+                      destination);
+        result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         return result;
     }
 
     if ((dirh = DirOpen(source)) == NULL)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &attr,
-             "Can't open source of children to link '%s'. (opendir: %s)",
-             attr.link.source, GetErrorStr());
+        RecordFailure(ctx, pp, a,
+                      "Can't open source of children to link '%s'. (opendir: %s)",
+                      attr.link.source, GetErrorStr());
         result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         return result;
     }
@@ -3050,6 +3055,7 @@ PromiseResult ScheduleLinkChildrenOperation(EvalContext *ctx, char *destination,
     {
         if (!ConsiderLocalFile(dirp->d_name, source))
         {
+            Log(LOG_LEVEL_VERBOSE, "Skipping '%s'", dirp->d_name);
             continue;
         }
 
@@ -3061,10 +3067,10 @@ PromiseResult ScheduleLinkChildrenOperation(EvalContext *ctx, char *destination,
         if (strlcat(promiserpath, dirp->d_name, sizeof(promiserpath))
             >= sizeof(promiserpath))
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, &attr,
-                 "Internal buffer limit while verifying child links,"
-                 " promiser: '%s' + '%s'",
-                 promiserpath, dirp->d_name);
+            RecordInterruption(ctx, pp, a,
+                              "Internal buffer limit while verifying child links,"
+                              " promiser: '%s' + '%s'",
+                              promiserpath, dirp->d_name);
             result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
             DirClose(dirh);
             return result;
@@ -3076,10 +3082,10 @@ PromiseResult ScheduleLinkChildrenOperation(EvalContext *ctx, char *destination,
         if (strlcat(sourcepath, dirp->d_name, sizeof(sourcepath))
             >= sizeof(sourcepath))
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, &attr,
-                 "Internal buffer limit while verifying child links,"
-                 " source filename: '%s' + '%s'",
-                 sourcepath, dirp->d_name);
+            RecordInterruption(ctx, pp, a,
+                               "Internal buffer limit while verifying child links,"
+                               " source filename: '%s' + '%s'",
+                               sourcepath, dirp->d_name);
             result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
             DirClose(dirh);
             return result;
@@ -3100,11 +3106,14 @@ PromiseResult ScheduleLinkChildrenOperation(EvalContext *ctx, char *destination,
 
         if ((attr.recursion.depth > recurse) && (lstat(sourcepath, &lsb) != -1) && S_ISDIR(lsb.st_mode))
         {
-            result = PromiseResultUpdate(result, ScheduleLinkChildrenOperation(ctx, promiserpath, sourcepath, recurse + 1, &attr, pp));
+            result = PromiseResultUpdate(result,
+                                         ScheduleLinkChildrenOperation(ctx, promiserpath, sourcepath,
+                                                                       recurse + 1, &attr, pp));
         }
         else
         {
-            result = PromiseResultUpdate(result, ScheduleLinkOperation(ctx, promiserpath, sourcepath, &attr, pp));
+            result = PromiseResultUpdate(result, ScheduleLinkOperation(ctx, promiserpath, sourcepath,
+                                                                       &attr, pp));
         }
     }
 
@@ -3571,26 +3580,24 @@ static void TruncateFile(char *name)
     }
 }
 
-static void RegisterAHardLink(int i, char *value, const Attributes *attr, CompressedArray **inode_cache)
+static void RegisterAHardLink(int i, char *value, EvalContext *ctx, const Promise *pp,
+                              const Attributes *attr, PromiseResult *result,
+                              CompressedArray **inode_cache)
 {
     if (!FixCompressedArrayValue(i, value, inode_cache))
     {
         /* Not root hard link, remove to preserve consistency */
-        if (DONTDO)
+        if (DONTDO || (attr->transaction.action == cfa_warn))
         {
-            Log(LOG_LEVEL_VERBOSE, "Need to remove old hard link '%s' to preserve structure", value);
+            RecordWarning(ctx, pp, attr,
+                          "Old hard link '%s' should be removed to preserve structure",
+                          value);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
         }
         else
         {
-            if (attr->transaction.action == cfa_warn)
-            {
-                Log(LOG_LEVEL_WARNING, "Need to remove old hard link '%s' to preserve structure", value);
-            }
-            else
-            {
-                Log(LOG_LEVEL_VERBOSE, "Removing old hard link '%s' to preserve structure", value);
-                unlink(value);
-            }
+            RecordChange(ctx, pp, attr, "Removed old hard link '%s' to preserve structure", value);
+            unlink(value);
         }
     }
 }

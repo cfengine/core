@@ -144,7 +144,7 @@ void CFTestD_ConfigDestroy(CFTestD_Config *config)
 void CFTestD_Help()
 {
     Writer *w = FileWriter(stdout);
-    WriterWriteHelp(w, "cf-testd", OPTIONS, HINTS, true, NULL);
+    WriterWriteHelp(w, "cf-testd", OPTIONS, HINTS, NULL, false, true);
     FileWriterDetach(w);
 }
 

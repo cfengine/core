@@ -1,3 +1,16 @@
+3.15.2:
+	- 'if' constraint now works in combination with class contexts
+	  (CFE-2615)
+	- Fixed rare crashing bug when parsing zombie entries in ps
+	  output. The problem was only ever observed on AIX, but could
+	  theoretically happen on any platform depending on exact libc behavior.
+	  (ENT-5329)
+	- Fixed ifelse() to return fallback in case of unresolved variables
+	  (ENT-4653)
+	- Fixed service status cfengine3 on systemd managed hosts (ENT-5528)
+	- Improved management of secondary groups to avoid intermediary state failures
+	  (ENT-3710)
+
 3.15.1:
 	- `cf-check diagnose --test-write` can now be used to test writing into LMDB files
 	  (ENT-4484)

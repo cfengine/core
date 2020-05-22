@@ -108,10 +108,10 @@ def get_info(host, *, users=None, connection=None):
         if data["os_release"]:
             distro = data["os_release"]["ID"]
             major = data["os_release"]["VERSION_ID"].split(".")[0]
-            platform_tag = distro + major
 
             # Add tags with version number first, to filter by them first:
-            tags.append(platform_tag) # Example: ubuntu16
+            tags.append(distro + "_" + major) # Example for 3.12.x builds: debian_7, to match with package name
+            tags.append(distro + major)       # Example for >3.12.x builds: ubuntu16, to match filename
             if distro == "centos":
                 tags.append("el" + major)
 

@@ -7,6 +7,7 @@ import re
 
 class Artifact:
     def __init__(self, data, filename=None):
+        log.debug("Artifact, data {}, filename {}".format(data, filename))
         if filename and not data:
             data = {}
             data["URL"] = "./" + filename
@@ -18,7 +19,8 @@ class Artifact:
         self.url = data["URL"]
         self.title = data["Title"]
         self.arch = canonify(data["Arch"])
-
+        if 'package' in data:
+            self.package = data["package"]
         self.filename = basename(self.url)
         self.extension = splitext(self.filename)[1]
 
@@ -28,6 +30,8 @@ class Artifact:
     def create_tags(self):
         self.add_tag(self.arch)
         self.add_tag(self.extension[1:])
+        if hasattr(self, 'package'):
+            self.add_tag('_'.join(self.package.split('_')[-2:]))
 
         look_for_tags = [
             "Windows", "CentOS", "Red Hat", "Debian", "Ubuntu", "SLES", "Solaris", "AIX", "HPUX",
@@ -172,6 +176,7 @@ class Releases:
             if "latestLTS" in release and release["latestLTS"] == True:
                 self.default = rel
                 rel.default = True
+            log.debug("Adding release {} to releases available for installing".format(release["URL"]))
             self.releases.append(rel)
 
     def pick_version(self, version):

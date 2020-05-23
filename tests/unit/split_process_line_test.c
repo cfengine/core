@@ -2,7 +2,7 @@
 
 #define TEST_UNIT_TEST
 
-#include <processes_select.c>
+#include <processes_select_cmd.c>
 
 static void free_and_null_strings(char **strings)
 {

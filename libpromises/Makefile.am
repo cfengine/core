@@ -129,7 +129,7 @@ libpromises_la_SOURCES = \
 	parser_state.h \
 	patches.c \
 	pipes.h pipes.c \
-	processes_select.c processes_select.h \
+	processes_select.h \
 	process_lib.h process_unix_priv.h \
 	promises.c promises.h \
 	prototypes3.h \
@@ -165,29 +165,58 @@ libpromises_la_SOURCES += \
 	process_unix.c \
 	pipes_unix.c
 
+### Process selection.
+#
+# This is significantly OS dependent, so we have per-OS files.
+# A component of the filename reflects this: autotools "PROCESS_OS_TAG".
+#
+# A further complication is a gradual migration from:
+#   : A monolithic "processes_select_cmd" model which use the "ps" command
+# to:
+#   : A JSON-based API with a generic "processes_select_sysprobe"
+#     that calls onto a per-OS "process_sysprobe_/OS/".
+#
+# As the per-OS migration from /cmd/ to /proc/ advances, the /cmd/ files
+# become superfluous and can theoretically be removed.
+#
+# See also "tests/unit/Makefile.am"
+#
+
+if HAVE_PS_VIA_SYSPROBE
+
+### Not yet implemented
+# libpromises_la_SOURCES += \
+#        process_sysprobe_@PROCESS_OS_TAG@.c \
+#        processes_load_sysprobe.c \
+#        processes_select_sysprobe.c
+
+else # HAVE_PS_VIA_SYSPROBE
+
+libpromises_la_SOURCES += processes_select_cmd.c
+
 if LINUX
 libpromises_la_SOURCES += \
-	process_linux.c
+	process_cmd_linux.c
 endif
 
 if AIX
 libpromises_la_SOURCES += \
-	process_aix.c
+	process_cmd_aix.c
 endif
 
 if HPUX
 libpromises_la_SOURCES += \
-	process_hpux.c
+	process_cmd_hpux.c
 endif
 
 if SOLARIS
 libpromises_la_SOURCES += \
-	process_solaris.c
+	process_cmd_solaris.c
 endif
 
 if FREEBSD
 libpromises_la_SOURCES += \
-	process_freebsd.c
+	process_cmd_freebsd.c
 endif
 
 if !LINUX
@@ -196,12 +225,14 @@ if !HPUX
 if !SOLARIS
 if !FREEBSD
 libpromises_la_SOURCES += \
-	process_unix_stub.c
+	process_cmd_unix_stub.c
 endif
 endif
 endif
 endif
 endif
+
+endif # HAVE_PS_VIA_SYSPROBE
 
 endif # !NT
 

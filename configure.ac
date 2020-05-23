@@ -1347,6 +1347,80 @@ case "$target_os" in
         ;;
 esac
 
+dnl ######################################################################
+dnl Historically process-handling has been based on invoking the 'ps' command
+dnl and parsing its output.  This has always been fiddly and error-prone.
+dnl
+dnl Most UNIX/Linux systems offer more machine-oriented mechanisms, for instance:
+dnl   o  Linux: /proc
+dnl   o  Solaris: /proc (different details)
+dnl   o  FreeBSD: kvm_getprocs()
+dnl
+dnl We have begun (2019) to investigate using these on a per-platform basis.
+dnl Because there is variety, we refer to this by the general term "system probe".
+dnl The previous ps-cmd mechanism is retained as a fallback for platforms.
+dnl ######################################################################
+
+dnl These are the supported platforms:
+dnl   o  Legacy ps-output support as before;
+dnl   o  Newer "system probe" ("sysprobe") not yet implemented for all.
+
+dnl For BSD ensure we have "kvm_getprocs()"
+case "$target_os" in
+  *bsd*|dragonfly*)
+    AC_CHECK_LIB([kvm], [kvm_getprocs],
+        [AC_DEFINE([HAVE_LIBKVM], 1, [Define if -lkvm is available])
+        LIBS="-lkvm $LIBS"],
+        AC_MSG_ERROR(Cannot find kvm library required for BSD)
+    )
+    ;;
+esac
+
+dnl For newer system-probe mechanism set a tag to represent the system type.
+dnl Not all are yet implemented, but we include them anyway then test for
+dnl support afterwards.
+AC_MSG_CHECKING(process handling)
+process_os_tag=""
+case "$target_os" in
+  solaris*)
+    process_os_tag="solaris"
+    ;;
+  hpux*|hp-ux*)
+    process_os_tag="hpux"
+    ;;
+  aix*)
+    process_os_tag="aix"
+    ;;
+  *bsd*|dragonfly*)
+    process_os_tag="bsd"
+    ;;
+  linux*|*gnu*)
+    process_os_tag="linux"
+    ;;
+esac
+
+dnl Do we have a '.c' source file to implement a "sysprobe" version?
+dnl If not, fall back to legacy ps mechanism.
+process_os_src="process_sysprobe_${process_os_tag}.c"
+if test -n "${process_os_tag}" \
+        && test -f "${srcdir}/libpromises/${process_os_src}"
+then
+    # probe OS directly
+    AM_CONDITIONAL([HAVE_PS_VIA_SYSPROBE], true)
+    AC_DEFINE(HAVE_PS_VIA_SYSPROBE, 1, [We can probe OS for process-related information])
+    AC_MSG_RESULT(system probing using ${process_os_src})
+else
+    # legacy (invoke 'ps' and try to parse output)
+    if test -z ${process_os_tag}; then
+        process_os_tag="unix_stub"
+    fi
+    AM_CONDITIONAL([HAVE_PS_VIA_SYSPROBE], false)
+    AC_MSG_RESULT(using legacy 'ps' output)
+fi
+
+dnl Substitute PROCESS_OS_TAG into Makefile.am etc.
+AC_SUBST(PROCESS_OS_TAG, "${process_os_tag}")
+
 m4_include([m4/cf3_platforms.m4])
 
 dnl #####################################################################

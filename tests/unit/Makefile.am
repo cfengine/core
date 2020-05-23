@@ -160,9 +160,13 @@ check_PROGRAMS = \
 	strlist_test \
 	addr_lib_test \
 	policy_server_test \
-	split_process_line_test \
 	new_packages_promise_test \
 	iteration_test
+
+if !HAVE_PS_VIA_SYSPROBE
+check_PROGRAMS += \
+    split_process_line_test
+endif
 
 if HAVE_AVAHI_CLIENT
 if HAVE_AVAHI_COMMON
@@ -326,7 +330,7 @@ check_PROGRAMS += linux_process_test
 
 linux_process_test_SOURCES = linux_process_test.c \
 	../../libpromises/process_unix.c \
-	../../libpromises/process_linux.c \
+	../../libpromises/process_cmd_linux.c \
 	../../libntech/libutils/file_lib.c
 linux_process_test_LDADD = libtest.la ../../libntech/libutils/libutils.la
 
@@ -341,7 +345,7 @@ set_domainname_test_LDFLAGS = -Wl,-bexpall
 evalfunction_test_LDFLAGS = -Wl,-bexpall
 aix_process_test_SOURCES = aix_process_test.c \
 	../../libpromises/process_unix.c \
-	../../libpromises/process_aix.c \
+	../../libpromises/process_cmd_aix.c \
 	../../libntech/libutils/file_lib.c
 aix_process_test_LDADD = libtest.la ../../libntech/libutils/libutils.la
 
@@ -353,7 +357,7 @@ check_PROGRAMS += solaris_process_test
 
 solaris_process_test_SOURCES = solaris_process_test.c \
 	../../libpromises/process_unix.c \
-	../../libpromises/process_solaris.c \
+	../../libpromises/process_cmd_solaris.c \
 	../../libntech/libutils/file_lib.c
 solaris_process_test_LDADD = libtest.la ../../libntech/libutils/libutils.la
 

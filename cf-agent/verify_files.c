@@ -497,7 +497,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
         }
         else
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Promised to edit '%s', but file does not exist", path);
+            RecordFailure(ctx, pp, &a, "Promised to edit '%s', but file does not exist", path);
             result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         }
     }
@@ -752,7 +752,7 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, const Attr
     PromiseResult result = PROMISE_RESULT_NOOP;
     if (edcontext == NULL)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "File '%s' was marked for editing but could not be opened", filename);
+        RecordFailure(ctx, pp, a, "File '%s' was marked for editing but could not be opened", filename);
         result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         goto exit;
     }

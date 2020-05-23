@@ -90,7 +90,7 @@ PromiseResult VerifyReportPromise(EvalContext *ctx, const Promise *pp)
 
     PromiseBanner(ctx, pp);
 
-    if (a.transaction.action == cfa_warn)
+    if (DONTDO || (a.transaction.action == cfa_warn))
     {
         cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, &a, "Need to repair reports promise: %s", pp->promiser);
         YieldCurrentLock(thislock);

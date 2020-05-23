@@ -88,7 +88,9 @@ static bool InsertCompoundLineAtLocation(EvalContext *ctx, char *newline, Item *
 static int ReplacePatterns(EvalContext *ctx, Item *start, Item *end, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
 static bool EditColumns(EvalContext *ctx, Item *file_start, Item *file_end, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
 static bool EditLineByColumn(EvalContext *ctx, Rlist **columns, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
-static bool DoEditColumn(Rlist **columns, const Attributes *a, EditContext *edcontext);
+static bool DoEditColumn(Rlist **columns, EditContext *edcontext,
+                         EvalContext *ctx, const Promise *pp, const Attributes *a,
+                         PromiseResult *result);
 static bool SanityCheckInsertions(const Attributes *a);
 static bool SanityCheckDeletions(const Attributes *a, const Promise *pp);
 static bool SelectLine(EvalContext *ctx, const char *line, const Attributes *a);
@@ -359,7 +361,8 @@ static PromiseResult VerifyLineDeletions(EvalContext *ctx, const Promise *pp, Ed
 
     if (!SanityCheckDeletions(&a, pp))
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, &a, "The promised line deletion '%s' is inconsistent", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, &a,
+             "The promised line deletion '%s' is inconsistent", pp->promiser);
         return PROMISE_RESULT_INTERRUPTED;
     }
 
@@ -375,14 +378,16 @@ static PromiseResult VerifyLineDeletions(EvalContext *ctx, const Promise *pp, Ed
     {
         if (a.region.include_end || a.region.include_start)
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp, &a,
-                 "The promised line deletion '%s' could not select an edit region in '%s' (this is a good thing, as policy suggests deleting the markers)",
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, &a,
+                 "The promised line deletion '%s' could not select an edit region in '%s'"
+                 " (this is a good thing, as policy suggests deleting the markers)",
                  pp->promiser, edcontext->filename);
         }
         else
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp, &a,
-                 "The promised line deletion '%s' could not select an edit region in '%s' (but the delimiters were expected in the file)",
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, &a,
+                 "The promised line deletion '%s' could not select an edit region in '%s'"
+                 " (but the delimiters were expected in the file)",
                  pp->promiser, edcontext->filename);
         }
         result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
@@ -390,8 +395,8 @@ static PromiseResult VerifyLineDeletions(EvalContext *ctx, const Promise *pp, Ed
     }
     if (!end_ptr && a.region.select_end && !a.region.select_end_match_eof)
     {
-        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, &a,
-            "The promised end pattern '%s' was not found when selecting region to delete in '%s'",
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, &a,
+             "The promised end pattern '%s' was not found when selecting region to delete in '%s'",
              a.region.select_end, edcontext->filename);
         result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
         return result;
@@ -408,6 +413,25 @@ static PromiseResult VerifyLineDeletions(EvalContext *ctx, const Promise *pp, Ed
     if (DeletePromisedLinesMatching(ctx, start, begin_ptr, end_ptr, &a, pp, edcontext, &result))
     {
         (edcontext->num_edits)++;
+    }
+    switch(result)
+    {
+    case PROMISE_RESULT_NOOP:
+        cfPS(ctx, LOG_LEVEL_VERBOSE, result, pp, &a,
+             "No changes done for the delete_lines promise '%s'", pp->promiser);
+        break;
+    case PROMISE_RESULT_CHANGE:
+        cfPS(ctx, LOG_LEVEL_INFO, result, pp, &a,
+             "delete_lines promise '%s' repaired", pp->promiser);
+        break;
+    case PROMISE_RESULT_WARN:
+        cfPS(ctx, LOG_LEVEL_WARNING, result, pp, &a,
+             "Warnings encountered when actuating delete_lines promise '%s'", pp->promiser);
+        break;
+    default:
+        cfPS(ctx, LOG_LEVEL_ERR, result, pp, &a,
+             "Errors encountered when actuating delete_lines promise '%s'", pp->promiser);
+        break;
     }
 
     YieldCurrentLock(thislock);
@@ -429,23 +453,26 @@ static PromiseResult VerifyColumnEdits(EvalContext *ctx, const Promise *pp, Edit
 
     if (a.column.column_separator == NULL)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, &a, "No field_separator in promise to edit by column for '%s'", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a,
+             "No field_separator in promise to edit by column for '%s'", pp->promiser);
         PromiseRef(LOG_LEVEL_ERR, pp);
-        return PROMISE_RESULT_WARN;
+        return PROMISE_RESULT_FAIL;
     }
 
     if (a.column.select_column <= 0)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, &a, "No select_field in promise to edit '%s'", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a,
+             "No select_field in promise to edit '%s'", pp->promiser);
         PromiseRef(LOG_LEVEL_ERR, pp);
-        return PROMISE_RESULT_WARN;
+        return PROMISE_RESULT_FAIL;
     }
 
     if (!a.column.column_value)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, &a, "No field_value is promised to column_edit '%s'", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a,
+             "No field_value is promised to column_edit '%s'", pp->promiser);
         PromiseRef(LOG_LEVEL_ERR, pp);
-        return PROMISE_RESULT_WARN;
+        return PROMISE_RESULT_FAIL;
     }
 
 /* Are we working in a restricted region? */
@@ -458,7 +485,8 @@ static PromiseResult VerifyColumnEdits(EvalContext *ctx, const Promise *pp, Edit
     }
     else if (!SelectRegion(ctx, *start, &begin_ptr, &end_ptr, &a, edcontext))
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, &a, "The promised column edit '%s' could not select an edit region in '%s'",
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, &a,
+             "The promised column edit '%s' could not select an edit region in '%s'",
              pp->promiser, edcontext->filename);
         result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
         return result;
@@ -476,6 +504,25 @@ static PromiseResult VerifyColumnEdits(EvalContext *ctx, const Promise *pp, Edit
     if (EditColumns(ctx, begin_ptr, end_ptr, &a, pp, edcontext, &result))
     {
         (edcontext->num_edits)++;
+    }
+    switch(result)
+    {
+    case PROMISE_RESULT_NOOP:
+        cfPS(ctx, LOG_LEVEL_VERBOSE, result, pp, &a,
+             "No changes done for the fields_edit promise '%s'", pp->promiser);
+        break;
+    case PROMISE_RESULT_CHANGE:
+        cfPS(ctx, LOG_LEVEL_INFO, result, pp, &a,
+             "fields_edit promise '%s' repaired", pp->promiser);
+        break;
+    case PROMISE_RESULT_WARN:
+        cfPS(ctx, LOG_LEVEL_WARNING, result, pp, &a,
+             "Warnings encountered when actuating fields_edit promise '%s'", pp->promiser);
+        break;
+    default:
+        cfPS(ctx, LOG_LEVEL_ERR, result, pp, &a,
+             "Errors encountered when actuating fields_edit promise '%s'", pp->promiser);
+        break;
     }
 
     YieldCurrentLock(thislock);
@@ -501,9 +548,9 @@ static PromiseResult VerifyPatterns(EvalContext *ctx, const Promise *pp, EditCon
 
     if (!a.replace.replace_value)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, &a, "The promised pattern replace '%s' had no replacement string",
-             pp->promiser);
-        return PROMISE_RESULT_INTERRUPTED;
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a,
+             "The promised pattern replace '%s' has no replacement string", pp->promiser);
+        return PROMISE_RESULT_FAIL;
     }
 
     PromiseResult result = PROMISE_RESULT_NOOP;
@@ -515,8 +562,8 @@ static PromiseResult VerifyPatterns(EvalContext *ctx, const Promise *pp, EditCon
     else if (!SelectRegion(ctx, *start, &begin_ptr, &end_ptr, &a, edcontext))
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, &a,
-             "The promised pattern replace '%s' could not select an edit region in '%s'", pp->promiser,
-             edcontext->filename);
+             "The promised pattern replace '%s' could not select an edit region in '%s'",
+             pp->promiser, edcontext->filename);
         result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
         return result;
     }
@@ -537,6 +584,26 @@ static PromiseResult VerifyPatterns(EvalContext *ctx, const Promise *pp, EditCon
     }
 
     EvalContextVariableClearMatch(ctx);
+
+    switch(result)
+    {
+    case PROMISE_RESULT_NOOP:
+        cfPS(ctx, LOG_LEVEL_VERBOSE, result, pp, &a,
+             "No changes done for the replace_patterns promise '%s'", pp->promiser);
+        break;
+    case PROMISE_RESULT_CHANGE:
+        cfPS(ctx, LOG_LEVEL_INFO, result, pp, &a,
+             "replace_patterns promise '%s' repaired", pp->promiser);
+        break;
+    case PROMISE_RESULT_WARN:
+        cfPS(ctx, LOG_LEVEL_WARNING, result, pp, &a,
+             "Warnings encountered when actuating replace_patterns promise '%s'", pp->promiser);
+        break;
+    default:
+        cfPS(ctx, LOG_LEVEL_ERR, result, pp, &a,
+             "Errors encountered when actuating replace_patterns promise '%s'", pp->promiser);
+        break;
+    }
 
     YieldCurrentLock(thislock);
 
@@ -662,9 +729,9 @@ static PromiseResult VerifyLineInsertions(EvalContext *ctx, const Promise *pp, E
 
     if (!SanityCheckInsertions(&a))
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, &a, "The promised line insertion '%s' breaks its own promises",
-             pp->promiser);
-        return PROMISE_RESULT_INTERRUPTED;
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a,
+             "The promised line insertion '%s' breaks its own promises", pp->promiser);
+        return PROMISE_RESULT_FAIL;
     }
 
     /* Are we working in a restricted region? */
@@ -687,8 +754,8 @@ static PromiseResult VerifyLineInsertions(EvalContext *ctx, const Promise *pp, E
 
     if (!end_ptr && a.region.select_end && !a.region.select_end_match_eof)
     {
-        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, &a,
-            "The promised end pattern '%s' was not found when selecting region to insert in '%s'",
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, &a,
+             "The promised end pattern '%s' was not found when selecting region to insert in '%s'",
              a.region.select_end, edcontext->filename);
         result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
         return result;
@@ -723,7 +790,9 @@ static PromiseResult VerifyLineInsertions(EvalContext *ctx, const Promise *pp, E
     {
         if (!SelectItemMatching(ctx, *start, a.location.line_matching, begin_ptr, end_ptr, &match, &prev, a.location.first_last))
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, &a, "The promised line insertion '%s' could not select a locator matching regex '%s' in '%s'", pp->promiser, a.location.line_matching, edcontext->filename);
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, &a,
+                 "The promised line insertion '%s' could not select a locator matching regex '%s' in '%s'",
+                 pp->promiser, a.location.line_matching, edcontext->filename);
             result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
             YieldCurrentLock(thislock);
             return result;
@@ -733,6 +802,26 @@ static PromiseResult VerifyLineInsertions(EvalContext *ctx, const Promise *pp, E
         {
             (edcontext->num_edits)++;
         }
+    }
+
+    switch(result)
+    {
+    case PROMISE_RESULT_NOOP:
+        cfPS(ctx, LOG_LEVEL_VERBOSE, result, pp, &a,
+             "No changes done for the insert_lines promise '%s'", pp->promiser);
+        break;
+    case PROMISE_RESULT_CHANGE:
+        cfPS(ctx, LOG_LEVEL_INFO, result, pp, &a,
+             "insert_lines promise '%s' repaired", pp->promiser);
+        break;
+    case PROMISE_RESULT_WARN:
+        cfPS(ctx, LOG_LEVEL_WARNING, result, pp, &a,
+             "Warnings encountered when actuating insert_lines promise '%s'", pp->promiser);
+        break;
+    default:
+        cfPS(ctx, LOG_LEVEL_ERR, result, pp, &a,
+             "Errors encountered when actuating insert_lines promise '%s'", pp->promiser);
+        break;
     }
 
     YieldCurrentLock(thislock);
@@ -931,7 +1020,8 @@ static bool InsertMultipleLinesToRegion(EvalContext *ctx, Item **start, Item *be
         {
             if (!allow_multi_lines && MatchRegion(ctx, pp->promiser, ip, end_ptr, false))
             {
-                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Promised chunk '%s' exists within selected region of %s (promise kept)", pp->promiser, edcontext->filename);
+                RecordNoChange(ctx, pp, a, "Promised chunk '%s' exists within selected region of %s",
+                               pp->promiser, edcontext->filename);
                 return false;
             }
 
@@ -1055,11 +1145,11 @@ static bool DeletePromisedLinesMatching(EvalContext *ctx, Item **start, Item *be
         {
             Log(LOG_LEVEL_VERBOSE, "Delete chunk of %d lines", matches);
 
-            if (a->transaction.action == cfa_warn)
+            if (DONTDO || (a->transaction.action == cfa_warn))
             {
-                cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a,
-                     "Need to delete line '%s' from %s - but only a warning was promised", ip->name,
-                     edcontext->filename);
+                RecordWarning(ctx, pp, a,
+                              "Line '%s' from %s should be deleted", ip->name,
+                              edcontext->filename);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                 np = ip->next;
                 noedits = false;
@@ -1068,8 +1158,8 @@ static bool DeletePromisedLinesMatching(EvalContext *ctx, Item **start, Item *be
             {
                 for (i = 1; i <= matches; i++)
                 {
-                    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Deleting the promised line %d '%s' from %s", i, ip->name,
-                         edcontext->filename);
+                    RecordChange(ctx, pp, a, "Deleted the promised line %d '%s' from %s",
+                                 i, ip->name, edcontext->filename);
                     *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
                     retval = true;
                     noedits = false;
@@ -1120,7 +1210,7 @@ static bool DeletePromisedLinesMatching(EvalContext *ctx, Item **start, Item *be
 
     if (noedits)
     {
-        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "No need to delete lines from %s, ok", edcontext->filename);
+        RecordNoChange(ctx, pp, a, "No need to delete lines from %s, ok", edcontext->filename);
     }
 
     return retval;
@@ -1197,20 +1287,20 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, c
 
         if (NotAnchored(pp->promiser) && BlockTextMatch(ctx, pp->promiser, line_buff, &start_off, &end_off))
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
-                 "Promised replacement '%s' on line '%s' for pattern '%s' is not convergent while editing '%s'",
-                 line_buff, ip->name, pp->promiser, edcontext->filename);
+            RecordInterruption(ctx, pp, a,
+                               "Promised replacement '%s' on line '%s' for pattern '%s'"
+                               " is not convergent while editing '%s'"
+                               " (regular expression matches the replacement string)",
+                               line_buff, ip->name, pp->promiser, edcontext->filename);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
-            Log(LOG_LEVEL_ERR, "Because the regular expression '%s' still matches the replacement string '%s'",
-                  pp->promiser, line_buff);
             PromiseRef(LOG_LEVEL_ERR, pp);
             break;
         }
 
-        if (a->transaction.action == cfa_warn)
+        if (DONTDO || (a->transaction.action == cfa_warn))
         {
             cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a,
-                 "Need to replace line '%s' in '%s' - but only a warning was promised", pp->promiser,
+                 "Pattern '%s' should be replaced in '%s'", pp->promiser,
                  edcontext->filename);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
             continue;
@@ -1219,7 +1309,7 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, c
         {
             free(ip->name);
             ip->name = xstrdup(line_buff);
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Replaced pattern '%s' in '%s'", pp->promiser, edcontext->filename);
+            RecordChange(ctx, pp, a, "Replaced pattern '%s' in '%s'", pp->promiser, edcontext->filename);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
             (edcontext->num_edits)++;
             retval = true;
@@ -1235,13 +1325,11 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, c
 
             if (BlockTextMatch(ctx, pp->promiser, ip->name, &start_off, &end_off))
             {
-                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp, a,
-                     "Promised replacement '%s' for pattern '%s' is not properly convergent while editing '%s'",
-                     ip->name, pp->promiser, edcontext->filename);
+                RecordInterruption(ctx, pp, a,
+                                   "Promised replacement '%s' for pattern '%s' is not properly convergent while editing '%s'"
+                                   " (pattern still matches the end-state replacement string '%s')",
+                                   ip->name, pp->promiser, edcontext->filename, line_buff);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
-                Log(LOG_LEVEL_INFO,
-                      "Because the regular expression '%s' still matches the end-state replacement string '%s'",
-                      pp->promiser, line_buff);
                 PromiseRef(LOG_LEVEL_INFO, pp);
             }
         }
@@ -1251,7 +1339,7 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, c
 
     if (notfound)
     {
-        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "No pattern '%s' in '%s'", pp->promiser, edcontext->filename);
+        RecordNoChange(ctx, pp, a, "No match for pattern '%s' in '%s'", pp->promiser, edcontext->filename);
     }
 
     return retval;
@@ -1291,8 +1379,8 @@ static bool EditColumns(EvalContext *ctx, Item *file_start, Item *file_end, cons
 
         if (!BlockTextMatch(ctx, a->column.column_separator, ip->name, &s, &e))
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a, "Field edit, no fields found by promised pattern '%s' in '%s'",
-                 a->column.column_separator, edcontext->filename);
+            RecordInterruption(ctx, pp, a, "Field edit, no fields found by promised pattern '%s' in '%s'",
+                               a->column.column_separator, edcontext->filename);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
             return false;
         }
@@ -1639,7 +1727,8 @@ static bool InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr
 
     if ((fin = safe_fopen(pp->promiser, "rt")) == NULL)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Could not read file '%s'. (fopen: %s)", pp->promiser, GetErrorStr());
+        RecordInterruption(ctx, pp, a, "Could not read file '%s'. (fopen: %s)",
+                           pp->promiser, GetErrorStr());
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
         return false;
     }
@@ -1670,8 +1759,8 @@ static bool InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr
 
         if (!preserve_block && IsItemInRegion(ctx, BufferData(exp), begin_ptr, end_ptr, a->insert_match, pp))
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a,
-                 "Promised file line '%s' exists within file %s (promise kept)", BufferData(exp), edcontext->filename);
+            RecordNoChange(ctx, pp, a, "Promised file line '%s' exists within file '%s'",
+                           BufferData(exp), edcontext->filename);
             free(buf);
             buf = NULL;
             continue;
@@ -1679,7 +1768,11 @@ static bool InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr
 
         // Need to call CompoundLine here in case ExpandScalar has inserted \n into a string
 
-        retval |= InsertCompoundLineAtLocation(ctx, BufferGet(exp), start, begin_ptr, end_ptr, loc, prev, a, pp, edcontext, result);
+        if (InsertCompoundLineAtLocation(ctx, BufferGet(exp), start, begin_ptr, end_ptr,
+                                         loc, prev, a, pp, edcontext, result))
+        {
+            retval = true;
+        }
 
         if (preserve_block && !prev)
         {
@@ -1719,12 +1812,14 @@ static bool InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr
     {
         if (errno == EISDIR)
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Could not read file %s: Is a directory", pp->promiser);
+            RecordInterruption(ctx, pp, a, "'%s' is a directory, cannot lines into it", pp->promiser);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
         }
         else
         {
             UnexpectedError("Failed to read line from stream");
+            RecordFailure(ctx, pp, a, "Failed to read line from stream");
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
         }
     }
 
@@ -1746,7 +1841,9 @@ static bool InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **s
 
     if (!preserve_all_lines && MatchRegion(ctx, chunk, location, NULL, false))
     {
-        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Promised chunk '%s' exists within selected region of %s (promise kept)", pp->promiser, edcontext->filename);
+        RecordNoChange(ctx, pp, a,
+                       "Promised chunk '%s' exists within selected region of %s (promise kept)",
+                       pp->promiser, edcontext->filename);
         return false;
     }
 
@@ -1773,11 +1870,16 @@ static bool InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **s
 
         if (!preserve_block && IsItemInRegion(ctx, buf, begin_ptr, end_ptr, a->insert_match, pp))
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Promised chunk '%s' exists within selected region of %s (promise kept)", pp->promiser, edcontext->filename);
+            RecordNoChange(ctx, pp, a,
+                           "Promised chunk '%s' exists within selected region of '%s'",
+                           pp->promiser, edcontext->filename);
             continue;
         }
 
-        retval |= InsertLineAtLocation(ctx, buf, start, location, prev, a, pp, edcontext, result);
+        if (InsertLineAtLocation(ctx, buf, start, location, prev, a, pp, edcontext, result))
+        {
+            retval = true;
+        }
 
         if (preserve_block && a->location.before_after == EDIT_ORDER_BEFORE && location == NULL && prev == NULL)
         {
@@ -1864,11 +1966,10 @@ static bool InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, 
         {
             if (*start == NULL)
             {
-                if (a->transaction.action == cfa_warn)
+                if (DONTDO || (a->transaction.action == cfa_warn))
                 {
-                    cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a,
-                         "Need to insert the promised line '%s' in %s - but only a warning was promised", newline,
-                         edcontext->filename);
+                    RecordWarning(ctx, pp, a, "Promised line '%s' should be inserted in '%s'",
+                                  newline, edcontext->filename);
                     *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                     return true;
                 }
@@ -1876,8 +1977,8 @@ static bool InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, 
                 {
                     PrependItemList(start, newline);
                     (edcontext->num_edits)++;
-                    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Inserting the promised line '%s' into %s", newline,
-                         edcontext->filename);
+                    RecordChange(ctx, pp, a, "Inserted the promised line '%s' into '%s'",
+                                 newline, edcontext->filename);
                     *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
                     return true;
                 }
@@ -1885,11 +1986,10 @@ static bool InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, 
 
             if (strcmp((*start)->name, newline) != 0)
             {
-                if (a->transaction.action == cfa_warn)
+                if (DONTDO || (a->transaction.action == cfa_warn))
                 {
-                    cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a,
-                         "Need to prepend the promised line '%s' to %s - but only a warning was promised",
-                         newline, edcontext->filename);
+                    RecordWarning(ctx, pp, a, "Promised line '%s' should be prepended to '%s'",
+                                  newline, edcontext->filename);
                     *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                     return true;
                 }
@@ -1897,16 +1997,16 @@ static bool InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, 
                 {
                     PrependItemList(start, newline);
                     (edcontext->num_edits)++;
-                    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Prepending the promised line '%s' to %s", newline,
-                         edcontext->filename);
+                    RecordChange(ctx, pp, a, "Prepended the promised line '%s' to %s", newline,
+                                 edcontext->filename);
                     *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
                     return true;
                 }
             }
             else
             {
-                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a,
-                     "Promised line '%s' exists at start of file %s (promise kept)", newline, edcontext->filename);
+                RecordNoChange(ctx, pp, a, "Promised line '%s' exists at start of file '%s'",
+                               newline, edcontext->filename);
                 return false;
             }
         }
@@ -1916,17 +2016,16 @@ static bool InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, 
     {
         if (!preserve_block && NeighbourItemMatches(ctx, *start, location, newline, EDIT_ORDER_BEFORE, a->insert_match, pp))
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Promised line '%s' exists before locator in (promise kept)",
-                 newline);
+            RecordNoChange(ctx, pp, a, "Promised line '%s' exists before locator in '%s'",
+                           newline, edcontext->filename);
             return false;
         }
         else
         {
-            if (a->transaction.action == cfa_warn)
+            if (DONTDO || (a->transaction.action == cfa_warn))
             {
-                cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a,
-                     "Need to insert line '%s' into '%s' but only a warning was promised", newline,
-                     edcontext->filename);
+                RecordWarning(ctx, pp, a, "Line '%s' should be inserted into '%s' before locator",
+                              newline, edcontext->filename);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                 return true;
             }
@@ -1934,8 +2033,8 @@ static bool InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, 
             {
                 InsertAfter(start, prev, newline);
                 (edcontext->num_edits)++;
-                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Inserting the promised line '%s' into '%s' before locator",
-                     newline, edcontext->filename);
+                RecordChange(ctx, pp, a, "Inserted the promised line '%s' into '%s' before locator",
+                             newline, edcontext->filename);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
                 return true;
             }
@@ -1945,24 +2044,24 @@ static bool InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, 
     {
         if (!preserve_block && NeighbourItemMatches(ctx, *start, location, newline, EDIT_ORDER_AFTER, a->insert_match, pp))
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Promised line '%s' exists after locator (promise kept)",
-                 newline);
+            RecordNoChange(ctx, pp, a, "Promised line '%s' exists after locator in '%s'",
+                           newline, edcontext->filename);
             return false;
         }
         else
         {
-            if (a->transaction.action == cfa_warn)
+            if (DONTDO || (a->transaction.action == cfa_warn))
             {
-                cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a,
-                     "Need to insert line '%s' in '%s' but only a warning was promised", newline, edcontext->filename);
+                RecordWarning(ctx, pp, a, "Line '%s' should be inserted into '%s' after locator",
+                              newline, edcontext->filename);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                 return true;
             }
             else
             {
                 InsertAfter(start, location, newline);
-                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Inserting the promised line '%s' into '%s' after locator",
-                     newline, edcontext->filename);
+                RecordChange(ctx, pp, a, "Inserted the promised line '%s' into '%s' after locator",
+                             newline, edcontext->filename);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
                 (edcontext->num_edits)++;
                 return true;
@@ -1998,9 +2097,9 @@ static bool EditLineByColumn(EvalContext *ctx, Rlist **columns, const Attributes
     {
         if (!a->column.extend_columns)
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
-                 "The file %s has only %d fields, but there is a promise for field %d", edcontext->filename, count,
-                 a->column.select_column);
+            RecordInterruption(ctx, pp, a,
+                               "The file %s has only %d fields, but there is a promise for field %d",
+                               edcontext->filename, count, a->column.select_column);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
             return false;
         }
@@ -2031,39 +2130,31 @@ static bool EditLineByColumn(EvalContext *ctx, Rlist **columns, const Attributes
 
         if (strstr(RlistScalarValue(rp), a->column.column_value) || strcmp(RlistScalarValue(rp), a->column.column_value) != 0)
         {
-            this_column = RlistFromSplitString(RlistScalarValue(rp), a->column.value_separator);
-            retval = DoEditColumn(&this_column, a, edcontext);
-        }
-        else
-        {
-            retval = false;
-        }
-
-        if (retval)
-        {
-            if (a->transaction.action == cfa_warn)
+            if (DONTDO || (a->transaction.action == cfa_warn))
             {
-                cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a, "Need to edit field in %s but only warning promised",
-                     edcontext->filename);
+                RecordFailure(ctx, pp, a, "Field '%s' in '%s' should be edited",
+                              a->column.column_value, edcontext->filename);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                 retval = false;
             }
             else
             {
-                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Edited field inside file object %s", edcontext->filename);
-                *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
-                (edcontext->num_edits)++;
-                free(RlistScalarValue(rp));
-                sep[0] = a->column.value_separator;
-                sep[1] = '\0';
-                rp->val.item = Rlist2String(this_column, sep);
+                this_column = RlistFromSplitString(RlistScalarValue(rp), a->column.value_separator);
+                retval = DoEditColumn(&this_column, edcontext, ctx, pp, a, result);
+                if (retval)
+                {
+                    (edcontext->num_edits)++;
+                    free(RlistScalarValue(rp));
+                    sep[0] = a->column.value_separator;
+                    sep[1] = '\0';
+                    rp->val.item = Rlist2String(this_column, sep);
+                }
             }
         }
         else
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "No need to edit field in %s", edcontext->filename);
+            retval = false;
         }
-
         RlistDestroy(this_column);
         return retval;
     }
@@ -2073,39 +2164,37 @@ static bool EditLineByColumn(EvalContext *ctx, Rlist **columns, const Attributes
 
         if (a->column.column_operation && strcmp(a->column.column_operation, "delete") == 0)
         {
-            if (a->transaction.action == cfa_warn)
+            if (DONTDO || (a->transaction.action == cfa_warn))
             {
-                cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a,
-                     "Need to delete field field value %s in %s but only a warning was promised", RlistScalarValue(rp),
-                     edcontext->filename);
+                RecordWarning(ctx, pp, a, "Field value '%s' in '%s' should be deleted",
+                              RlistScalarValue(rp), edcontext->filename);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                 return false;
             }
             else
             {
-                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Deleting column field value %s in %s", RlistScalarValue(rp),
-                     edcontext->filename);
-                *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
-                (edcontext->num_edits)++;
                 free(rp->val.item);
                 rp->val.item = xstrdup("");
+                RecordChange(ctx, pp, a, "Deleted column field value '%s' in '%s'",
+                             RlistScalarValue(rp), edcontext->filename);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+                (edcontext->num_edits)++;
                 return true;
             }
         }
         else
         {
-            if (a->transaction.action == cfa_warn)
+            if (DONTDO || (a->transaction.action == cfa_warn))
             {
-                cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a,
-                     "Need to set column field value %s to %s in %s but only a warning was promised",
-                     RlistScalarValue(rp), a->column.column_value, edcontext->filename);
+                RecordWarning(ctx, pp, a, "Column field value '%s' should be set to '%s' in '%s'",
+                              RlistScalarValue(rp), a->column.column_value, edcontext->filename);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                 return false;
             }
             else
             {
-                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Setting whole column field value %s to %s in %s",
-                     RlistScalarValue(rp), a->column.column_value, edcontext->filename);
+                RecordChange(ctx, pp, a, "Set whole column field value '%s' to '%s' in '%s'",
+                             RlistScalarValue(rp), a->column.column_value, edcontext->filename);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
                 free(rp->val.item);
                 rp->val.item = xstrdup(a->column.column_value);
@@ -2115,8 +2204,8 @@ static bool EditLineByColumn(EvalContext *ctx, Rlist **columns, const Attributes
         }
     }
 
-    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "No need to edit column field value %s in %s", a->column.column_value,
-         edcontext->filename);
+    RecordNoChange(ctx, pp, a, "No need to edit column field value '%s' in '%s'",
+                   a->column.column_value, edcontext->filename);
 
     return false;
 }
@@ -2227,7 +2316,9 @@ static bool SelectLine(EvalContext *ctx, const char *line, const Attributes *a)
 /* Level                                                                   */
 /***************************************************************************/
 
-static bool DoEditColumn(Rlist **columns, const Attributes *a, EditContext *edcontext)
+static bool DoEditColumn(Rlist **columns, EditContext *edcontext,
+                         EvalContext *ctx, const Promise *pp, const Attributes *a,
+                         PromiseResult *result)
 {
     Rlist *rp, *found;
     bool retval = false;
@@ -2239,9 +2330,10 @@ static bool DoEditColumn(Rlist **columns, const Attributes *a, EditContext *edco
     {
         while ((found = RlistKeyIn(*columns, column_value)))
         {
-            Log(LOG_LEVEL_INFO, "Deleting column field sub-value '%s' in '%s'", column_value,
-                  edcontext->filename);
             RlistDestroyEntry(columns, found);
+            RecordChange(ctx, pp, a, "Deleted column field sub-value '%s' in '%s'",
+                         column_value, edcontext->filename);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
             retval = true;
         }
 
@@ -2253,16 +2345,17 @@ static bool DoEditColumn(Rlist **columns, const Attributes *a, EditContext *edco
         int length = RlistLen(*columns);
         if (length == 1 && strcmp(RlistScalarValue(*columns), column_value) == 0)
         {
-            Log(LOG_LEVEL_VERBOSE, "Field sub-value set as promised");
+            RecordNoChange(ctx, pp, a, "Field sub-value set as promised");
             return false;
         }
         else if (length == 0 && strcmp("", column_value) == 0)
         {
-            Log(LOG_LEVEL_VERBOSE, "Empty field sub-value set as promised");
+            RecordNoChange(ctx, pp, a, "Empty field sub-value set as promised");
             return false;
         }
 
-        Log(LOG_LEVEL_INFO, "Setting field sub-value '%s' in '%s'", column_value, edcontext->filename);
+        RecordChange(ctx, pp, a, "Set field sub-value '%s' in '%s'", column_value, edcontext->filename);
+        *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
         RlistDestroy(*columns);
         *columns = NULL;
         RlistPrependScalarIdemp(columns, column_value);
@@ -2274,11 +2367,15 @@ static bool DoEditColumn(Rlist **columns, const Attributes *a, EditContext *edco
     {
         if (RlistPrependScalarIdemp(columns, column_value))
         {
-            Log(LOG_LEVEL_INFO, "Prepending field sub-value '%s' in '%s'", column_value, edcontext->filename);
+            RecordChange(ctx, pp, a, "Prepended field sub-value '%s' in '%s'",
+                         column_value, edcontext->filename);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
             return true;
         }
         else
         {
+            RecordNoChange(ctx, pp, a, "Field sub-value '%s' already present in '%s'",
+                           column_value, edcontext->filename);
             return false;
         }
     }
@@ -2287,7 +2384,16 @@ static bool DoEditColumn(Rlist **columns, const Attributes *a, EditContext *edco
     {
         if (RlistPrependScalarIdemp(columns, column_value))
         {
+            RecordChange(ctx, pp, a, "Inserted field sub-value '%s' in '%s'",
+                         column_value, edcontext->filename);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
             retval = true;
+        }
+        else
+        {
+            RecordNoChange(ctx, pp, a, "Field sub-value '%s' already present in '%s'",
+                           column_value, edcontext->filename);
+            retval = false;
         }
 
         rp = AlphaSortRListNames(*columns);
@@ -2299,10 +2405,15 @@ static bool DoEditColumn(Rlist **columns, const Attributes *a, EditContext *edco
 
     if (RlistAppendScalarIdemp(columns, column_value))
     {
+        RecordChange(ctx, pp, a, "Appended field sub-value '%s' in '%s'",
+                     column_value, edcontext->filename);
+        *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
         return true;
     }
     else
     {
+        RecordNoChange(ctx, pp, a, "Field sub-value '%s' already present in '%s'",
+                       column_value, edcontext->filename);
         return false;
     }
 

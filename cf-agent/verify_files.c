@@ -644,42 +644,41 @@ static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp,
         {
             if (a.transaction.action == cfa_warn || DONTDO)
             {
-                cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, &a,
-                     "Need to update rendering of '%s' from mustache template '%s' but policy is dry-run",
-                     pp->promiser, message);
+                RecordWarning(ctx, pp, &a,
+                              "Should update rendering of '%s' from mustache template '%s'",
+                              pp->promiser, message);
                 result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
             }
             else
             {
                 if (SaveAsFile(SaveBufferCallback, output_buffer, edcontext->filename, &a, edcontext->new_line_mode))
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, &a, "Updated rendering of '%s' from mustache template '%s'",
-                         pp->promiser, message);
+                    RecordChange(ctx, pp, &a,
+                                 "Updated rendering of '%s' from mustache template '%s'",
+                                 pp->promiser, message);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
 
                     edcontext->num_rewrites++;
                 }
                 else
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Failed to update rendering of '%s' from mustache template '%s'",
-                         pp->promiser, message);
+                    RecordFailure(ctx, pp, &a,
+                                  "Failed to update rendering of '%s' from mustache template '%s'",
+                                  pp->promiser, message);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                 }
             }
         }
-
-        BufferDestroy(output_buffer);
-        free(message);
-        JsonDestroy(destroy_this);
-        return result;
     }
-
-    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Error rendering mustache template '%s'", a.edit_template);
-    result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+    else
+    {
+        RecordFailure(ctx, pp, &a, "Error rendering mustache template '%s'", a.edit_template);
+        result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+    }
     BufferDestroy(output_buffer);
     JsonDestroy(destroy_this);
     free(message);
-    return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+    return result;
 }
 
 static PromiseResult RenderTemplateMustacheFromFile(EvalContext *ctx, const Promise *pp, const Attributes *a,
@@ -690,7 +689,7 @@ static PromiseResult RenderTemplateMustacheFromFile(EvalContext *ctx, const Prom
 
     if (!FileCanOpen(a->edit_template, "r"))
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Template file '%s' could not be opened for reading", a->edit_template);
+        RecordFailure(ctx, pp, a, "Template file '%s' could not be opened for reading", a->edit_template);
         return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
     }
 
@@ -704,7 +703,7 @@ static PromiseResult RenderTemplateMustacheFromFile(EvalContext *ctx, const Prom
     }
     if (template_writer == NULL)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Could not read template file '%s'", a->edit_template);
+        RecordFailure(ctx, pp, a, "Could not read template file '%s'", a->edit_template);
         return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
     }
 
@@ -723,7 +722,7 @@ static PromiseResult RenderTemplateMustacheFromString(EvalContext *ctx, const Pr
     {
         PromiseResult result = PROMISE_RESULT_NOOP;
 
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "'edit_template_string' not set for promiser: '%s'", pp->promiser);
+        RecordFailure(ctx, pp, a, "'edit_template_string' not set for promiser: '%s'", pp->promiser);
         return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
     }
 

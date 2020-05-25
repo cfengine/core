@@ -514,16 +514,35 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
 
     if (!exists && a.havechange)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Promised to monitor '%s' for changes, but file does not exist", path);
+        RecordFailure(ctx, pp, &a, "Promised to monitor '%s' for changes, but file does not exist", path);
         result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
     }
 
 exit:
-
     if (AttrHasNoAction(&a))
     {
-        Log(LOG_LEVEL_INFO,
+        Log(LOG_LEVEL_WARNING,
             "No action was requested for file '%s'. Maybe a typo in the policy?", path);
+    }
+
+    switch(result)
+    {
+    case PROMISE_RESULT_NOOP:
+        cfPS(ctx, LOG_LEVEL_VERBOSE, result, pp, &a,
+             "No changes done for the files promise '%s'", pp->promiser);
+        break;
+    case PROMISE_RESULT_CHANGE:
+        cfPS(ctx, LOG_LEVEL_INFO, result, pp, &a,
+             "files promise '%s' repaired", pp->promiser);
+        break;
+    case PROMISE_RESULT_WARN:
+        cfPS(ctx, LOG_LEVEL_WARNING, result, pp, &a,
+             "Warnings encountered when actuating files promise '%s'", pp->promiser);
+        break;
+    default:
+        cfPS(ctx, LOG_LEVEL_ERR, result, pp, &a,
+             "Errors encountered when actuating files promise '%s'", pp->promiser);
+        break;
     }
 
     YieldCurrentLock(thislock);

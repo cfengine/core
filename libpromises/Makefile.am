@@ -161,6 +161,10 @@ libpromises_la_SOURCES = \
 
 if !NT
 
+libpromises_la_SOURCES += \
+	process_unix.c \
+	pipes_unix.c
+
 ### Process selection.
 #
 # This is significantly OS dependent, so we have per-OS files.
@@ -188,23 +192,28 @@ else # HAVE_PS_VIA_SYSPROBE
 libpromises_la_SOURCES += processes_select_cmd.c
 
 if LINUX
-libpromises_la_SOURCES += process_cmd_linux.c
+libpromises_la_SOURCES += \
+	process_cmd_linux.c
 endif
 
 if AIX
-libpromises_la_SOURCES += process_cmd_aix.c
+libpromises_la_SOURCES += \
+	process_cmd_aix.c
 endif
 
 if HPUX
-libpromises_la_SOURCES += process_cmd_hpux.c
+libpromises_la_SOURCES += \
+	process_cmd_hpux.c
 endif
 
 if SOLARIS
-libpromises_la_SOURCES += process_cmd_solaris.c
+libpromises_la_SOURCES += \
+	process_cmd_solaris.c
 endif
 
 if FREEBSD
-libpromises_la_SOURCES += process_cmd_freebsd.c
+libpromises_la_SOURCES += \
+	process_cmd_freebsd.c
 endif
 
 if !LINUX
@@ -212,7 +221,8 @@ if !AIX
 if !HPUX
 if !SOLARIS
 if !FREEBSD
-libpromises_la_SOURCES += process_cmd_unix_stub.c
+libpromises_la_SOURCES += \
+	process_cmd_unix_stub.c
 endif
 endif
 endif
@@ -220,11 +230,6 @@ endif
 endif
 
 endif # HAVE_PS_VIA_SYSPROBE
-
-# Additional generic sources
-libpromises_la_SOURCES += \
-	process_unix.c \
-	pipes_unix.c
 
 endif # !NT
 

@@ -91,6 +91,8 @@ static bool MissingInputFile(const char *input_file);
 
 static bool LoadAugmentsFiles(EvalContext *ctx, const char* filename);
 
+static bool SetGroupToSystemGroup();
+
 #if !defined(__MINGW32__)
 static void OpenLog(int facility);
 #endif
@@ -989,6 +991,39 @@ void CloseLog(void)
 {
     closelog();
 }
+
+/**
+ * @brief Sets the current group to the build-time system group CF_SYSTEM_GROUP defined in
+ *        libntech/libutils/definitions.h
+ *        If the effective user is not root then leave the group as-is to allow for agents
+ *        to run as non-privileged user.
+ * @return True if successful. On Windows (__MINGW32__) will always return True and be a no-op.
+ */
+static bool SetGroupToSystemGroup()
+{
+#ifdef __MINGW32__
+   return true;
+#endif
+    if (geteuid() == 0)
+    {
+        gid_t system_gid = Str2Gid(CF_SYSTEM_GROUP, NULL /* no groupcopy */, NULL /* no Promise */);
+        if (system_gid == CF_SAME_GROUP || system_gid == CF_UNKNOWN_GROUP)
+        {
+            Log(LOG_LEVEL_ERR, "Could not get gid_t for CF_SYSTEM_GROUP('%s'), got %d", CF_SYSTEM_GROUP, system_gid);
+            return false;
+        }
+        else
+        {
+            int rc = setgid(system_gid);
+            if (rc != 0)
+            {
+                Log(LOG_LEVEL_WARNING, "Could not set system group. setgid(%d): %s", system_gid, GetErrorStr());
+                return false;
+            }
+        }
+    }
+    return true;
+}
 #endif
 
 ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, GenericAgentAddEditionClasses, EvalContext *, ctx)
@@ -1038,6 +1073,11 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     if (!workdir)
     {
         FatalError(ctx, "Error determining working directory");
+    }
+
+    if (!SetGroupToSystemGroup())
+    {
+        FatalError(ctx, "Unable to set effective group as system group (%s)", CF_SYSTEM_GROUP);
     }
 
     OpenLog(LOG_USER);

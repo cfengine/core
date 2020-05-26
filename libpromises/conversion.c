@@ -1190,10 +1190,10 @@ gid_t Str2Gid(const char *gidbuff, char *groupcopy, const Promise *pp)
         }
         else if ((gr = getgrnam(gidbuff)) == NULL)
         {
-            Log(LOG_LEVEL_INFO, "Unknown group '%s' in promise", gidbuff);
 
             if (pp)
             {
+                Log(LOG_LEVEL_INFO, "Unknown group '%s' in promise: ", gidbuff);
                 PromiseRef(LOG_LEVEL_INFO, pp);
             }
 

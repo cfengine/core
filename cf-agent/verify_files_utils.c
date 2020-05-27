@@ -2337,7 +2337,7 @@ static PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, co
         if (attr->transaction.action == cfa_warn || DONTDO)
         {
 
-            RecordWarning(ctx, pp, attr, "Should change permission of '%s' from %04jo to %04jo",
+            RecordWarning(ctx, pp, attr, "Should change permissions of '%s' from %04jo to %04jo",
                           file, (uintmax_t)dstat->st_mode & 07777, (uintmax_t)newperm & 07777);
             result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
         }
@@ -2350,7 +2350,7 @@ static PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, co
             }
             else
             {
-                RecordChange(ctx, pp, attr, "Object '%s' had permission %04jo, changed it to %04jo",
+                RecordChange(ctx, pp, attr, "Object '%s' had permissions %04jo, changed it to %04jo",
                              file, (uintmax_t)dstat->st_mode & 07777, (uintmax_t)newperm & 07777);
                 result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
             }

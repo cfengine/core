@@ -386,7 +386,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
         && (a.haveselect && !SelectLeaf(ctx, path, &oslb, &(a.select)))
         && !(a.havedepthsearch && S_ISDIR(oslb.st_mode)))
     {
-        goto exit;
+        goto skip;
     }
 
     if (stat(path, &osb) == -1)
@@ -548,6 +548,7 @@ exit:
         break;
     }
 
+skip:
     YieldCurrentLock(thislock);
 
     ClearExpandedAttributes(&a);

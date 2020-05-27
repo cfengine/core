@@ -16,7 +16,7 @@ body common control
 bundle agent check
 {
   methods:
-      "" usebundle => dcs_passif_output("",
+      "" usebundle => dcs_passif_output(".*info: Inserted the promised line.*",
                                         ".*nothing to repeat.*",
                                         "$(sys.cf_agent) -KI -f $(this.promise_filename).sub | $(G.grep) nofile",
                                         $(this.promise_filename));

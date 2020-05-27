@@ -307,6 +307,37 @@ bool DBPrivWrite(DBPriv *db, const void *key, int key_size, const void *value, i
     return ret;
 }
 
+bool DBPrivOverwrite(DBPriv *db, const void *key, int key_size, const void *value, int value_size,
+                     OverwriteCondition *Condition, void *data)
+{
+    ssize_t cur_val_size = tchdbvsiz(db->hdb, key, key_size);
+    void *cur_val = NULL;
+    bool exists = (cur_val_size > 0);
+
+    if (exists)
+    {
+        assert(cur_val_size > 0);
+        cur_val = xmalloc(cur_val_size);
+        if (tchdbget3(db->hdb, key, key_size, dest, dest_size) == -1)
+        {
+            /* If exists, we should never get the TCENOREC error. */
+            assert(tchdbecode(db->hdb) != TCENOREC);
+
+            Log(LOG_LEVEL_ERR, "Could not read key '%s': (tchdbget3: %s)", (const char *)key, ErrorMessage(db->hdb));
+            free(cur_val);
+            return false;
+        }
+    }
+    if ((Condition != NULL) && !Condition(cur_val, cur_val_size, data))
+    {
+        free(cur_val);
+        return false;
+    }
+    free(cur_val);
+
+    return Write(db->hdb, key, key_size, value, value_size);
+}
+
 /*
  * This one has to be locked against cursor -- deleting entries might interrupt
  * iteration.

@@ -70,7 +70,7 @@ libpromises_la_SOURCES = \
 	constants.c \
 	conversion.c conversion.h \
 	crypto.c crypto.h \
-	dbm_api.c dbm_api.h dbm_priv.h \
+	dbm_api.c dbm_api.h dbm_api_types.h dbm_priv.h \
 	dbm_migration.c dbm_migration.h \
 	dbm_migration_lastseen.c \
 	dbm_lmdb.c \

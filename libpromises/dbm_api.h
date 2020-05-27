@@ -29,6 +29,7 @@
 #define EC_CORRUPTION_REPAIR_FAILED 121
 
 #include <map.h>
+#include <dbm_api_types.h>
 
 // Only append to the end, keep in sync with DB_PATHS_STATEDIR array
 typedef enum
@@ -84,6 +85,8 @@ bool WriteComplexKeyDB(CF_DB *dbp, const char *key, int keySz, const void *src, 
 bool DeleteComplexKeyDB(CF_DB *dbp, const char *key, int size);
 bool ReadDB(CF_DB *dbp, const char *key, void *dest, int destSz);
 bool WriteDB(CF_DB *dbp, const char *key, const void *src, int srcSz);
+bool OverwriteDB(DBHandle *handle, const char *key, const void *value, size_t value_size,
+                 OverwriteCondition Condition, void *data);
 bool DeleteDB(CF_DB *dbp, const char *key);
 void FreezeDB(DBHandle *handle);
 

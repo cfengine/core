@@ -27,10 +27,10 @@ bundle agent init
       # Should be in database.
       "$(G.testfile).noupdate.same"
         create => "true",
-        changes => test_changes_noupdate;
+        changes => test_changes_nohasheupdate_report_changes_all;
       "$(G.testfile).noupdate.updated"
         create => "true",
-        changes => test_changes_noupdate;
+        changes => test_changes_nohasheupdate_report_changes_all;
 }
 
 bundle agent test
@@ -117,7 +117,7 @@ bundle agent test_noupdate_new
 {
   files:
       "$(G.testfile).noupdate.new"
-        changes => test_changes_noupdate,
+        changes => test_changes_nohasheupdate_report_changes_all,
         classes => kept_repaired_notkept("test_noupdate_new_kept", "test_noupdate_new_repaired", "test_noupdate_new_notkept");
 }
 
@@ -125,7 +125,7 @@ bundle agent test_noupdate_same
 {
   files:
       "$(G.testfile).noupdate.same"
-        changes => test_changes_noupdate,
+        changes => test_changes_nohasheupdate_report_changes_all,
         classes => kept_repaired_notkept("test_noupdate_same_kept", "test_noupdate_same_repaired", "test_noupdate_same_notkept");
 }
 
@@ -133,7 +133,7 @@ bundle agent test_noupdate_updated
 {
   files:
       "$(G.testfile).noupdate.updated"
-        changes => test_changes_noupdate,
+        changes => test_changes_nohasheupdate_report_changes_all,
         classes => kept_repaired_notkept("test_noupdate_updated_kept", "test_noupdate_updated_repaired", "test_noupdate_updated_notkept");
 }
 
@@ -141,7 +141,7 @@ bundle agent test_noupdate_new_again
 {
   files:
       "$(G.testfile).noupdate.new"
-        changes => test_changes_noupdate,
+        changes => test_changes_nohasheupdate_report_changes_all,
         classes => kept_repaired_notkept("test_noupdate_new_kept", "test_noupdate_new_repaired", "test_noupdate_new_notkept");
 }
 
@@ -149,7 +149,7 @@ bundle agent test_noupdate_same_again
 {
   files:
       "$(G.testfile).noupdate.same"
-        changes => test_changes_noupdate,
+        changes => test_changes_nohasheupdate_report_changes_all,
         classes => kept_repaired_notkept("test_noupdate_same_kept", "test_noupdate_same_repaired", "test_noupdate_same_notkept");
 }
 
@@ -157,7 +157,7 @@ bundle agent test_noupdate_updated_again
 {
   files:
       "$(G.testfile).noupdate.updated"
-        changes => test_changes_noupdate,
+        changes => test_changes_nohasheupdate_report_changes_all,
         classes => kept_repaired_notkept("test_noupdate_updated_kept", "test_noupdate_updated_repaired", "test_noupdate_updated_notkept");
 }
 
@@ -168,7 +168,7 @@ body changes test_changes_update
       update_hashes  => "yes";
 }
 
-body changes test_changes_noupdate
+body changes test_changes_nohasheupdate_report_changes_all
 {
       hash           => "sha256";
       report_changes => "all";
@@ -218,8 +218,8 @@ TEST.cfengine.noupdate.updated,C,Content changed");
                     "!test_noupdate_same_repaired",
                     "test_noupdate_same_kept",
                     "!test_noupdate_same_notkept",
-                    "!test_noupdate_updated_repaired",
-                    "test_noupdate_updated_notkept",
+                    "test_noupdate_updated_repaired", # because changes are recorded in the changes log
+                    "test_noupdate_updated_notkept",  # because hashes are not updated
                     "test_changes_log_ok",
                     "!test_changes_log_fail",
       };

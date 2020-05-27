@@ -3273,7 +3273,6 @@ static PromiseResult VerifyFileIntegrity(EvalContext *ctx, const char *file, con
     assert(attr != NULL);
     unsigned char digest1[EVP_MAX_MD_SIZE + 1];
     unsigned char digest2[EVP_MAX_MD_SIZE + 1];
-    int changed = false, one, two;
 
     if ((attr->change.report_changes != FILE_CHANGE_REPORT_CONTENT_CHANGE) && (attr->change.report_changes != FILE_CHANGE_REPORT_ALL))
     {
@@ -3284,6 +3283,7 @@ static PromiseResult VerifyFileIntegrity(EvalContext *ctx, const char *file, con
     memset(digest2, 0, EVP_MAX_MD_SIZE + 1);
 
     PromiseResult result = PROMISE_RESULT_NOOP;
+    bool changed = false;
     if (attr->change.hash == HASH_METHOD_BEST)
     {
         if (!DONTDO)
@@ -3291,13 +3291,10 @@ static PromiseResult VerifyFileIntegrity(EvalContext *ctx, const char *file, con
             HashFile(file, digest1, HASH_METHOD_MD5, false);
             HashFile(file, digest2, HASH_METHOD_SHA1, false);
 
-            one = FileChangesCheckAndUpdateHash(ctx, file, digest1, HASH_METHOD_MD5, attr, pp, &result);
-            two = FileChangesCheckAndUpdateHash(ctx, file, digest2, HASH_METHOD_SHA1, attr, pp, &result);
-
-            if (one || two)
-            {
-                changed = true;
-            }
+            changed = (changed ||
+                       FileChangesCheckAndUpdateHash(ctx, file, digest1, HASH_METHOD_MD5, attr, pp, &result));
+            changed = (changed ||
+                       FileChangesCheckAndUpdateHash(ctx, file, digest2, HASH_METHOD_SHA1, attr, pp, &result));
         }
     }
     else
@@ -3306,10 +3303,8 @@ static PromiseResult VerifyFileIntegrity(EvalContext *ctx, const char *file, con
         {
             HashFile(file, digest1, attr->change.hash, false);
 
-            if (FileChangesCheckAndUpdateHash(ctx, file, digest1, attr->change.hash, attr, pp, &result))
-            {
-                changed = true;
-            }
+            changed = (changed ||
+                       FileChangesCheckAndUpdateHash(ctx, file, digest1, attr->change.hash, attr, pp, &result));
         }
     }
 
@@ -3317,15 +3312,18 @@ static PromiseResult VerifyFileIntegrity(EvalContext *ctx, const char *file, con
     {
         EvalContextHeapPersistentSave(ctx, "checksum_alerts", CF_PERSISTENCE, CONTEXT_STATE_POLICY_PRESERVE, "");
         EvalContextClassPutSoft(ctx, "checksum_alerts", CONTEXT_SCOPE_NAMESPACE, "");
-        if (FileChangesLogChange(file, FILE_STATE_CONTENT_CHANGED, "Content changed", pp))
+        if (!DONTDO)
         {
-            RecordChange(ctx, pp, attr, "Recorded integrity changes in '%s'", file);
-            result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
-        }
-        else
-        {
-            RecordFailure(ctx, pp, attr, "Failed to record integrity changes in '%s'", file);
-            result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+            if (FileChangesLogChange(file, FILE_STATE_CONTENT_CHANGED, "Content changed", pp))
+            {
+                RecordChange(ctx, pp, attr, "Recorded integrity changes in '%s'", file);
+                result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
+            }
+            else
+            {
+                RecordFailure(ctx, pp, attr, "Failed to record integrity changes in '%s'", file);
+                result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+            }
         }
     }
 

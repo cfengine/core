@@ -496,7 +496,7 @@ bool FileChangesCheckAndUpdateHash(EvalContext *ctx,
     {
         if (DONTDO)
         {
-            RecordWarning(ctx, pp, attr, "Hash for file '%s' changed", filename);
+            RecordWarning(ctx, pp, attr, "Change of hash for file '%s' should be recorded", filename);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
             ret = true;
         }
@@ -515,7 +515,7 @@ bool FileChangesCheckAndUpdateHash(EvalContext *ctx,
         else
         {
             /* FIXME: FAIL if found?!?!?! */
-            RecordFailure(ctx, pp, attr, "Hash for file '%s' changed", filename);
+            RecordFailure(ctx, pp, attr, "Hash for file '%s' changed, but not updating the records", filename);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             ret = true;
         }

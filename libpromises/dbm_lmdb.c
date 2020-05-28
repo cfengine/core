@@ -34,6 +34,7 @@
 #include <file_lib.h>
 #include <known_dirs.h>
 #include <bootstrap.h>
+#include <definitions.h>
 
 #ifdef LMDB
 
@@ -537,7 +538,7 @@ DBPriv *DBPrivOpenDB(const char *dbpath, dbid id)
     open_flags |= MDB_WRITEMAP;
 #endif
 
-    rc = LmdbEnvOpen(db->env, dbpath, open_flags, 0644);
+    rc = LmdbEnvOpen(db->env, dbpath, open_flags, CF_PERMS_DEFAULT);
     if (rc)
     {
         Log(LOG_LEVEL_ERR, "Could not open database %s: %s",

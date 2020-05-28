@@ -44,4 +44,11 @@
 #define CF_BUFSIZE     4096
 #define CF_EXPANDSIZE (2 * CF_BUFSIZE)
 
+/*****************************************************************************
+ *                          File permissions                                 *
+ *****************************************************************************/
+// 0600 - Read/Write for owner
+#define CF_PERMS_DEFAULT  S_IRUSR | S_IWUSR
+// 0644 - World readable
+#define CF_PERMS_SHARED   CF_PERMS_DEFAULT | S_IRGRP | S_IROTH
 #endif // CFENGINE_DEFINITIONS_H

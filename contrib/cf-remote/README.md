@@ -85,6 +85,17 @@ Note that this demo setup (`--demo`) is notoriously insecure.
 It has default passwords and open access controls.
 Don't use it in a production environment.
 
+Note also that for distributions that we don't have packages for you might add entries to
+`/etc/os-release` on the target system to give cf-remote an alternative. For example, PureOS
+is based on debian testing, so currently the appropriate package we create would be debian 10.
+
+```
+ID_LIKE="debian"
+VERSION_ID_LIKE="10.0"
+```
+
+The non-standard `VERSION_ID_LIKE` is used. See [os-release documentation](https://www.linux.org/docs/man5/os-release.html) for more info.
+
 ### Specify an SSH key
 
 If you have more than one key in `~/.ssh` you may need to specify which key `cf-remote` is to use.

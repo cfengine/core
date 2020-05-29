@@ -106,8 +106,9 @@ def get_info(host, *, users=None, connection=None):
 
         tags = []
         if data["os_release"]:
-            distro = data["os_release"]["ID"]
-            major = data["os_release"]["VERSION_ID"].split(".")[0]
+            distro = data["os_release"]["ID_LIKE"] or data["os_release"]["ID"]
+            version = data["os_release"]["VERSION_ID_LIKE"] or data["os_release"]["VERSION_ID"]
+            major = version.split(".")[0]
             platform_tag = distro + major
 
             # Add tags with version number first, to filter by them first:

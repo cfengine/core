@@ -912,7 +912,8 @@ int main(int argc, char *argv[])
         char key[MAX_HEADER_KEY_LEN + 1];
         char value[MAX_HEADER_VAL_LEN + 1];
 
-        while (ParseHeader(input_file, key, value))
+        bool done = false;
+        while (!done && ParseHeader(input_file, key, value))
         {
             Log(LOG_LEVEL_DEBUG, "Parsed header '%s: %s'", key, value);
             if (!CheckHeader(key, value))
@@ -921,6 +922,17 @@ int main(int argc, char *argv[])
                 exit(EXIT_FAILURE);
             }
             printf("%s: %s\n", key, value);
+
+            /* headers are supposed to be terminated by a blank line */
+            int next = fgetc(input_file);
+            if (next == '\n')
+            {
+                done = true;
+            }
+            else
+            {
+                ungetc(next, input_file);
+            }
         }
         fclose(input_file);
         exit(EXIT_SUCCESS);

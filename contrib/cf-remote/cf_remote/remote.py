@@ -106,13 +106,20 @@ def get_info(host, *, users=None, connection=None):
 
         tags = []
         if data["os_release"]:
-            distro = data["os_release"]["ID_LIKE"] or data["os_release"]["ID"]
-            version = data["os_release"]["VERSION_ID_LIKE"] or data["os_release"]["VERSION_ID"]
+            if "ID_LIKE" in data["os_release"]:
+                distro_like = data["os_release"]["ID_LIKE"]
+            distro = data["os_release"]["ID"]
+            version_like = None
+            if "VERSION_ID_LIKE" in data["os_release"]:
+                version_like = data["os_release"]["VERSION_ID_LIKE"]
+            version = data["os_release"]["VERSION_ID"]
             major = version.split(".")[0]
             platform_tag = distro + major
 
             # Add tags with version number first, to filter by them first:
             tags.append(platform_tag) # Example: ubuntu16
+            # in case of ID_LIKE and/or VERSION_ID_LIKE add that as a "platform tag" as well
+            tags.append(distro_like + (version_like or version))
             if distro == "centos":
                 tags.append("el" + major)
 

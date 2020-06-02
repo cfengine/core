@@ -181,8 +181,6 @@ PromiseResult VerifyPackagesPromise(EvalContext *ctx, const Promise *pp)
     assert(pp != NULL); // Dereferenced in cfPS macros
 
     PromiseResult result = PROMISE_RESULT_FAIL;
-    char *promise_log_message = NULL;
-    LogLevel level;
 
     Attributes a = GetPackageAttributes(ctx, pp);
     PackagePromiseType package_promise_type =
@@ -193,19 +191,11 @@ PromiseResult VerifyPackagesPromise(EvalContext *ctx, const Promise *pp)
         case PACKAGE_PROMISE_TYPE_NEW:
             Log(LOG_LEVEL_VERBOSE, "Using new package promise.");
 
-            result = HandleNewPackagePromiseType(ctx, pp, &a, &promise_log_message,
-                    &level);
-
-            assert(promise_log_message != NULL);
-
-            if (result != PROMISE_RESULT_SKIPPED)
-            {
-                cfPS(ctx, level, result, pp, &a, "%s", promise_log_message);
-            }
-            free(promise_log_message);
+            result = HandleNewPackagePromiseType(ctx, pp, &a);
             break;
+
         case PACKAGE_PROMISE_TYPE_OLD:
-            Log(LOG_LEVEL_VERBOSE,
+            Log(LOG_LEVEL_NOTICE,
                 "Using old package promise. Please note that this old "
                 "implementation is being phased out. The old "
                 "implementation will continue to work, but forward development "

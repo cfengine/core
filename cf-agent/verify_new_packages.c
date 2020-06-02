@@ -28,6 +28,7 @@
 #include <string_lib.h>
 #include <locks.h>
 #include <ornaments.h>
+#include <promises.h>           /* PromiseRef */
 
 static bool NewPackagePromiseSanityCheck(const Attributes *a)
 {
@@ -59,9 +60,7 @@ static bool NewPackagePromiseSanityCheck(const Attributes *a)
     return true;
 }
 
-PromiseResult HandleNewPackagePromiseType(EvalContext *ctx, const Promise *pp,
-                                          const Attributes *a, char **promise_log_msg,
-                                          LogLevel *log_lvl)
+PromiseResult HandleNewPackagePromiseType(EvalContext *ctx, const Promise *pp, const Attributes *a)
 {
     assert(a != NULL);
     Log(LOG_LEVEL_DEBUG, "New package promise handler");
@@ -69,9 +68,8 @@ PromiseResult HandleNewPackagePromiseType(EvalContext *ctx, const Promise *pp,
 
     if (!NewPackagePromiseSanityCheck(a))
     {
-        *promise_log_msg =
-                SafeStringDuplicate("New package promise failed sanity check.");
-        *log_lvl = LOG_LEVEL_ERR;
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
+             "New package promise failed sanity check.");
         return PROMISE_RESULT_FAIL;
     }
 
@@ -86,11 +84,10 @@ PromiseResult HandleNewPackagePromiseType(EvalContext *ctx, const Promise *pp,
 
     if (global_lock.g_lock.lock == NULL)
     {
-        *promise_log_msg =
-                SafeStringDuplicate("Can not acquire global lock for package "
-                                    "promise. Skipping promise evaluation");
-        *log_lvl = LOG_LEVEL_INFO;
-
+        Log(LOG_LEVEL_DEBUG, "Skipping promise execution due to global packaging locking.");
+        PromiseRef(LOG_LEVEL_VERBOSE, pp);
+        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_SKIPPED, pp, a,
+             "Can not acquire global lock for package promises. Skipping promise evaluation");
         return PROMISE_RESULT_SKIPPED;
     }
 
@@ -99,26 +96,24 @@ PromiseResult HandleNewPackagePromiseType(EvalContext *ctx, const Promise *pp,
             a->transaction.ifelapsed, a->transaction.expireafter, pp, false);
     if (package_promise_lock.lock == NULL)
     {
-        Log(LOG_LEVEL_DEBUG, "Skipping promise execution due to locking.");
         YieldGlobalPackagePromiseLock(global_lock);
 
-        *promise_log_msg =
-                StringFormat("Can not acquire lock for '%s' package promise. "
-                             "Skipping promise evaluation",  pp->promiser);
-        *log_lvl = LOG_LEVEL_VERBOSE;
-
+        Log(LOG_LEVEL_DEBUG, "Skipping promise execution due to promise-specific package locking.");
+        PromiseRef(LOG_LEVEL_VERBOSE, pp);
+        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_SKIPPED, pp, a,
+             "Can not acquire lock for '%s' package promise. Skipping promise evaluation",
+             pp->promiser);
         return PROMISE_RESULT_SKIPPED;
     }
 
     PackageModuleWrapper *package_module =
-            NewPackageModuleWrapper(a->new_packages.module_body);
+        NewPackageModuleWrapper(a->new_packages.module_body);
 
-    if (!package_module)
+    if (package_module == NULL)
     {
-        *promise_log_msg =
-                StringFormat("Some error occurred while contacting package "
-                             "module - promise: %s", pp->promiser);
-        *log_lvl = LOG_LEVEL_ERR;
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
+             "Some error occurred while contacting package module for promise '%s'",
+             pp->promiser);
 
         YieldCurrentLock(package_promise_lock);
         YieldGlobalPackagePromiseLock(global_lock);
@@ -139,35 +134,25 @@ PromiseResult HandleNewPackagePromiseType(EvalContext *ctx, const Promise *pp,
             switch (result)
             {
                 case PROMISE_RESULT_FAIL:
-                    *log_lvl = LOG_LEVEL_ERR;
-                    *promise_log_msg =
-                        StringFormat("Error removing package '%s'",
-                                     pp->promiser);
+                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
+                         "Error removing package '%s'", pp->promiser);
                     break;
                 case PROMISE_RESULT_CHANGE:
-                    *log_lvl = LOG_LEVEL_INFO;
-                    *promise_log_msg =
-                        StringFormat("Successfully removed package '%s'",
-                                     pp->promiser);
+                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a,
+                         "Successfully removed package '%s'", pp->promiser);
                     break;
                 case PROMISE_RESULT_NOOP:
-                    *log_lvl = LOG_LEVEL_VERBOSE;
-                    *promise_log_msg =
-                        StringFormat("Package '%s' was not installed",
-                                     pp->promiser);
+                    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a,
+                         "Package '%s' was not installed", pp->promiser);
                     break;
                 case PROMISE_RESULT_WARN:
-                    *log_lvl = LOG_LEVEL_WARNING;
-                    *promise_log_msg =
-                        StringFormat("Package '%s' needs to be removed,"
-                                     "but only warning was promised",
-                                     pp->promiser);
+                    cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a,
+                         "Package '%s' should be removed",
+                         pp->promiser);
                     break;
                 default:
-                    ProgrammingError(
-                            "Absent promise action evaluation returned "
-                             "unsupported result: %d",
-                            result);
+                    ProgrammingError("Absent promise action evaluation returned"
+                                     " unsupported result: %d", result);
                     break;
             }
             break;
@@ -180,43 +165,31 @@ PromiseResult HandleNewPackagePromiseType(EvalContext *ctx, const Promise *pp,
             switch (result)
             {
                 case PROMISE_RESULT_FAIL:
-                    *log_lvl = LOG_LEVEL_ERR;
-                    *promise_log_msg =
-                        StringFormat("Error installing package '%s'",
-                                     pp->promiser);
+                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
+                         "Error installing package '%s'", pp->promiser);
                     break;
                 case PROMISE_RESULT_CHANGE:
-                    *log_lvl = LOG_LEVEL_INFO;
-                    *promise_log_msg =
-                        StringFormat("Successfully installed package '%s'",
-                                     pp->promiser);
+                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a,
+                         "Successfully installed package '%s'", pp->promiser);
                     break;
                 case PROMISE_RESULT_NOOP:
-                    *log_lvl = LOG_LEVEL_VERBOSE;
-                    *promise_log_msg =
-                        StringFormat("Package '%s' already installed",
-                                     pp->promiser);
+                    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a,
+                         "Package '%s' already installed", pp->promiser);
                     break;
                 case PROMISE_RESULT_WARN:
-                    *log_lvl = LOG_LEVEL_WARNING;
-                    *promise_log_msg =
-                        StringFormat("Package '%s' needs to be installed,"
-                                     "but only warning was promised",
-                                     pp->promiser);
+                    cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a,
+                         "Package '%s' should be installed", pp->promiser);
                     break;
                 default:
-                    ProgrammingError(
-                            "Present promise action evaluation returned "
-                             "unsupported result: %d",
-                            result);
+                    ProgrammingError("Present promise action evaluation returned"
+                                     " unsupported result: %d", result);
                     break;
             }
 
             break;
         case NEW_PACKAGE_ACTION_NONE:
         default:
-            ProgrammingError("Unsupported package action: %d",
-                             a->new_packages.package_policy);
+            ProgrammingError("Unsupported package action: %d", a->new_packages.package_policy);
             break;
     }
 

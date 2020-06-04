@@ -856,12 +856,32 @@ bool DBPrivOverwrite(DBPriv *db, const char *key, int key_size, const void *valu
         return false;
     }
 
-    void *cur_val = (rc == MDB_SUCCESS ? orig_data.mv_data : NULL);
-    size_t cur_val_size = (rc == MDB_SUCCESS ? orig_data.mv_size : 0);
-    if ((Condition != NULL) && !Condition(cur_val, cur_val_size, data))
+    if (Condition != NULL)
     {
-        AbortTransaction(db);
-        return false;
+        if (rc == MDB_SUCCESS)
+        {
+            assert(orig_data.mv_size > 0);
+
+            /* We have to copy the data because orig_data.mv_data is a pointer to
+             * the mmap()-ed area which can potentially have bad alignment causing
+             * a SIGBUS on some architectures. */
+            unsigned char cur_val[orig_data.mv_size];
+            memcpy(cur_val, orig_data.mv_data, orig_data.mv_size);
+            if (!Condition(cur_val, orig_data.mv_size, data))
+            {
+                AbortTransaction(db);
+                return false;
+            }
+        }
+        else
+        {
+            assert(rc == MDB_NOTFOUND);
+            if (!Condition(NULL, 0, data))
+            {
+                AbortTransaction(db);
+                return false;
+            }
+        }
     }
 
     MDB_val new_data;

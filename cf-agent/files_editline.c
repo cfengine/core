@@ -1361,6 +1361,7 @@ static bool EditColumns(EvalContext *ctx, Item *file_start, Item *file_end, cons
         return false;
     }
 
+    bool found_match = false;
     for (ip = file_start; ip != file_end; ip = ip->next)
     {
         if (ip->name == NULL)
@@ -1374,6 +1375,7 @@ static bool EditColumns(EvalContext *ctx, Item *file_start, Item *file_end, cons
         }
         else
         {
+            found_match = true;
             Log(LOG_LEVEL_VERBOSE, "Matched line '%s'", ip->name);
         }
 
@@ -1403,6 +1405,14 @@ static bool EditColumns(EvalContext *ctx, Item *file_start, Item *file_end, cons
         }
 
         RlistDestroy(columns);
+    }
+
+    if (!found_match)
+    {
+        RecordFailure(ctx, pp, a,
+                      "No matched line to edit fields of for pattern '%s' in '%s'",
+                      pp->promiser, edcontext->filename);
+        *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
     }
 
     return retval;

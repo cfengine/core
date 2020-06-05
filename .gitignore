@@ -35,6 +35,7 @@ stamp-h1
 /cf-check/Makefile
 /cf-execd/Makefile
 /cf-key/Makefile
+/cf-secret/Makefile
 /cf-monitord/Makefile
 /cf-net/Makefile
 /cf-promises/Makefile
@@ -91,6 +92,8 @@ stamp-h1
 /cf-runagent/cf-runagent.exe
 /cf-net/cf-net
 /cf-net/cf-net.exe
+/cf-secret/cf-secret
+/cf-secret/cf-secret.exe
 /cf-serverd/cf-serverd
 /cf-serverd/cf-serverd.exe
 /cf-testd/cf-testd

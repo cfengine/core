@@ -100,7 +100,7 @@ CF_PROMISES=${CF_PROMISES:-}        ; export CF_PROMISES
 CF_SERVERD=${CF_SERVERD:-}          ; export CF_SERVERD
 CF_EXECD=${CF_EXECD:-}              ; export CF_EXECD
 CF_KEY=${CF_KEY:-}                  ; export CF_KEY
-CF_KEYCRYPT=${CF_KEYCRYPT:-}        ; export CF_KEYCRYPT
+CF_SECRET=${CF_SECRET:-}            ; export CF_SECRET
 CF_NET=${CF_NET:-}                  ; export CF_NET
 CF_CHECK=${CF_CHECK:-}              ; export CF_CHECK
 CF_RUNAGENT=${CF_RUNAGENT:-}        ; export CF_RUNAGENT
@@ -239,7 +239,7 @@ usage() {
     echo " --cfkey   provides a way to specify non-default cf-key location,"
     echo "           and defaults to $DEFCF_KEY."
     echo " --cfkeycrypt  provides a way to specify non-default cf-secret location,"
-    echo "           and defaults to $DEFCF_KEYCRYPT."
+    echo "           and defaults to $DEFCF_SECRET."
     echo " --cfnet   provides a way to specify non-default cf-net location,"
     echo "           and defaults to $DEFCF_NET."
     echo " --cfcheck provides a way to specify non-default cf-check location,"
@@ -425,7 +425,7 @@ runtest() {
                 $LN_CMD "$CF_SERVERD" "$WORKDIR/bin"
                 $LN_CMD "$CF_EXECD" "$WORKDIR/bin"
                 $LN_CMD "$CF_KEY" "$WORKDIR/bin"
-                $LN_CMD "$CF_KEYCRYPT" "$WORKDIR/bin"
+                $LN_CMD "$CF_SECRET" "$WORKDIR/bin"
                 $LN_CMD "$CF_NET" "$WORKDIR/bin"
                 $LN_CMD "$CF_CHECK" "$WORKDIR/bin"
                 $LN_CMD "$CF_RUNAGENT" "$WORKDIR/bin"
@@ -832,7 +832,7 @@ do
         --cfkey=*)
             CF_KEY=${1#--cfkey=};;
         --cfkeycrypt=*)
-            CF_KEYCRYPT=${1#--cfkeycrypt=};;
+            CF_SECRET=${1#--cfkeycrypt=};;
         --cfnet=*)
             CF_NET=${1#--cfnet=};;
         --cfcheck=*)
@@ -920,7 +920,7 @@ do
     esac
 done
 
-if [ -n "$AGENT" -o -n "$CF_PROMISES" -o -n "$CF_SERVERD" -o -n "$CF_EXECD" -o -n "$CF_KEY" -o -n "$CF_KEYCRYPT" -o -n "$CF_NET" -o -n "$CF_CHECK" -o -n "$CF_RUNAGENT" -o -n "$RPMVERCMP" ]
+if [ -n "$AGENT" -o -n "$CF_PROMISES" -o -n "$CF_SERVERD" -o -n "$CF_EXECD" -o -n "$CF_KEY" -o -n "$CF_SECRET" -o -n "$CF_NET" -o -n "$CF_CHECK" -o -n "$CF_RUNAGENT" -o -n "$RPMVERCMP" ]
 then
     if [ -n "$BINDIR" ]
     then
@@ -949,7 +949,7 @@ find_default_binary DEFCF_PROMISES cf-promises
 find_default_binary DEFCF_SERVERD cf-serverd
 find_default_binary DEFCF_EXECD cf-execd
 find_default_binary DEFCF_KEY cf-key
-find_default_binary DEFCF_KEYCRYPT cf-secret
+find_default_binary DEFCF_SECRET cf-secret
 find_default_binary DEFCF_NET cf-net
 find_default_binary DEFCF_CHECK cf-check
 find_default_binary DEFCF_RUNAGENT cf-runagent
@@ -963,14 +963,14 @@ CF_PROMISES=${CF_PROMISES:-${DEFCF_PROMISES}}
 CF_SERVERD=${CF_SERVERD:-${DEFCF_SERVERD}}
 CF_EXECD=${CF_EXECD:-${DEFCF_EXECD}}
 CF_KEY=${CF_KEY:-${DEFCF_KEY}}
-CF_KEYCRYPT=${CF_KEYCRYPT:-${DEFCF_KEYCRYPT}}
+CF_SECRET=${CF_SECRET:-${DEFCF_SECRET}}
 CF_NET=${CF_NET:-${DEFCF_NET}}
 CF_CHECK=${CF_CHECK:-${DEFCF_CHECK}}
 CF_RUNAGENT=${CF_RUNAGENT:-${DEFCF_RUNAGENT}}
 RPMVERCMP=${RPMVERCMP:-${DEFRPMVERCMP}}
 LIBTOOL=${LIBTOOL:-${DEFLIBTOOL}}
 
-if [ ! -x "$AGENT" -o ! -x "$CF_PROMISES" -o ! -x "$CF_SERVERD" -o ! -x "$CF_EXECD" -o ! -x "$CF_KEY" -o ! -x "$CF_KEYCRYPT" -o ! -x "$CF_NET" -o ! -x "$CF_CHECK" -o ! -x "$CF_RUNAGENT" -o ! -x "$RPMVERCMP" ]
+if [ ! -x "$AGENT" -o ! -x "$CF_PROMISES" -o ! -x "$CF_SERVERD" -o ! -x "$CF_EXECD" -o ! -x "$CF_KEY" -o ! -x "$CF_SECRET" -o ! -x "$CF_NET" -o ! -x "$CF_CHECK" -o ! -x "$CF_RUNAGENT" -o ! -x "$RPMVERCMP" ]
 then
     echo "ERROR: can't find cf-agent or other binary;"     \
          " Are you sure you're running this from OBJDIR"   \
@@ -980,7 +980,7 @@ then
     echo '$CF_SERVERD   =' "$CF_SERVERD"
     echo '$CF_EXECD     =' "$CF_EXECD"
     echo '$CF_KEY       =' "$CF_KEY"
-    echo '$CF_KEYCRYPT  =' "$CF_KEYCRYPT"
+    echo '$CF_SECRET    =' "$CF_SECRET"
     echo '$CF_RUNAGENT  =' "$CF_RUNAGENT"
     echo '$CF_NET       =' "$CF_NET"
     echo '$CF_CHECK     =' "$CF_CHECK"

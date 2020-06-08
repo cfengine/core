@@ -558,7 +558,7 @@ DBPriv *DBPrivOpenDB(const char *const dbpath, const dbid id)
     open_flags |= MDB_WRITEMAP;
 #endif
 
-    rc = LmdbEnvOpen(db->env, dbpath, open_flags, 0644);
+    rc = LmdbEnvOpen(db->env, dbpath, open_flags, CF_PERMS_DEFAULT);
     if (rc)
     {
         Log(LOG_LEVEL_ERR, "Could not open database %s: %s",

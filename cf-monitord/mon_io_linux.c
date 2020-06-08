@@ -182,7 +182,7 @@ static void MonIoDiskstatsGatherData(double *cf_this)
         if (!strchr(buf, '\n'))
         {
             Log(LOG_LEVEL_ERR,
-                  "/proc/diskstats format error: read overlong string (> " TOSTRING(CF_BUFSIZE - 1) " bytes)");
+                  "/proc/diskstats format error: read overlong string (> " TO_STRING(CF_BUFSIZE) " bytes)");
             goto err;
         }
 

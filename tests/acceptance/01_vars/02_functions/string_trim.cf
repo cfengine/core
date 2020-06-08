@@ -1,0 +1,47 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "abcd1" string => string_trim("abcd");
+      "abcd2" string => string_trim(" abcd");
+      "abcd3" string => string_trim("abcd ");
+      "abcd4" string => string_trim("         abcd               ");
+      "abcd5" string => string_trim("abcd
+
+      ");
+      "abcd6" string => string_trim("
+      
+      abcd");
+      "abcd7" string => string_trim("   
+      
+      abcd
+      
+      ");
+      "abcd_abcd" string => string_trim("  abcd    abcd      ");
+
+      # empty cases
+      "empty1" string => string_trim("");
+      "empty2" string => string_trim("     ");
+      "empty3" string => string_trim("   
+      
+      
+      ");
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "" usebundle => dcs_check_state(test,
+                                      "$(this.promise_filename).expected.json",
+                                       $(this.promise_filename));
+}

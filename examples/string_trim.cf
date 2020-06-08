@@ -1,0 +1,28 @@
+#+begin_src cfengine3
+bundle agent example_trim
+# @brief Example showing string_trim
+{
+  vars:
+      "my_string_one" string => string_trim( "  Trim spaces please   ");
+      "my_string_two" string => string_trim( "
+        Trim newlines also please
+
+      ");
+
+  reports:
+      "my_string_one: '$(my_string_one)'";
+      "my_string_two: '$(my_string_two)'";
+}
+
+bundle agent __main__
+{
+  methods: "example_trim";
+}
+###############################################################################
+#+end_src
+#+begin_src example_output
+#@ ```
+#@ R: my_string_one: 'Trim spaces please'
+#@ R: my_string_two: 'Trim newlines also please'
+#@ ```
+#+end_src

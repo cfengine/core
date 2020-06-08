@@ -7630,6 +7630,15 @@ static FnCallResult FnCallStringReplace(ARG_UNUSED EvalContext *ctx,
 
 /*********************************************************************/
 
+static FnCallResult FnCallStringTrim(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
+{
+    char *string = RlistScalarValue(finalargs);
+
+    return FnReturn(TrimWhitespace(string));
+}
+
+/*********************************************************************/
+
 static FnCallResult FnCallFileSexist(EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
     bool allocated = false;
@@ -9458,6 +9467,12 @@ static const FnCallArg STRING_REPLACE_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg STRING_TRIM_ARGS[] =
+{
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Input string"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
 static const FnCallArg SUBLIST_ARGS[] =
 {
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "CFEngine variable identifier or inline JSON"},
@@ -9659,7 +9674,7 @@ static const FnCallArg DATA_SYSCTLVALUES_ARGS[] =
 /* FnCalls are rvalues in certain promise constraints    */
 /*********************************************************/
 
-/* see cf3.defs.h enum fncalltype */
+/* see fncall.h enum FnCallType */
 
 const FnCallType CF_FNCALL_TYPES[] =
 {
@@ -9983,6 +9998,8 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("string_split", CF_DATA_TYPE_STRING_LIST, SPLITSTRING_ARGS, &FnCallStringSplit, "Convert a string in arg1 into a list of at most arg3 strings by splitting on a regular expression in arg2",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("string_replace", CF_DATA_TYPE_STRING, STRING_REPLACE_ARGS, &FnCallStringReplace, "Search through arg1, replacing occurences of arg2 with arg3.",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("string_trim", CF_DATA_TYPE_STRING, STRING_TRIM_ARGS, &FnCallStringTrim, "Trim whitespace from beginning and end of string",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("regex_replace", CF_DATA_TYPE_STRING, REGEX_REPLACE_ARGS, &FnCallRegReplace, "Replace occurrences of arg1 in arg2 with arg3, allowing backreferences.  Perl-style options accepted in arg4.",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),

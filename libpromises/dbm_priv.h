@@ -25,6 +25,7 @@
 #ifndef CFENGINE_DBM_PRIV_H
 #define CFENGINE_DBM_PRIV_H
 
+#include <dbm_api_types.h>
 /* DBM implementation is supposed to define the following structures and
  * implement the following functions */
 
@@ -61,6 +62,11 @@ bool DBPrivRead(DBPriv *db, const void *key, int key_size,
 
 bool DBPrivWrite(DBPriv *db, const void *key, int key_size,
              const void *value, int value_size);
+
+bool DBPrivOverwrite(DBPriv *handle,
+                     const char *key, int key_size,
+                     const void *value, size_t value_size,
+                     OverwriteCondition Condition, void *data);
 
 bool DBPrivDelete(DBPriv *db, const void *key, int key_size);
 

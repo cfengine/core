@@ -827,6 +827,79 @@ bool DBPrivWrite(
     return (rc == MDB_SUCCESS);
 }
 
+bool DBPrivOverwrite(DBPriv *db, const char *key, int key_size, const void *value, size_t value_size,
+                     OverwriteCondition Condition, void *data)
+{
+    assert(db != NULL);
+    assert(key_size >= 0);
+    DBTxn *txn;
+    int rc = GetWriteTransaction(db, &txn);
+
+    if (rc != MDB_SUCCESS)
+    {
+        return false;
+    }
+
+    assert(txn != NULL);
+    assert(!txn->cursor_open);
+
+    MDB_val mkey, orig_data;
+    mkey.mv_data = (void *) key;
+    mkey.mv_size = key_size;
+    rc = mdb_get(txn->txn, db->dbi, &mkey, &orig_data);
+    CheckLMDBCorrupted(rc, db->env);
+    if ((rc != MDB_SUCCESS) && (rc != MDB_NOTFOUND))
+    {
+        Log(LOG_LEVEL_ERR, "Could not read database entry from '%s': %s",
+            (char *) mdb_env_get_userctx(db->env), mdb_strerror(rc));
+        AbortTransaction(db);
+        return false;
+    }
+
+    if (Condition != NULL)
+    {
+        if (rc == MDB_SUCCESS)
+        {
+            assert(orig_data.mv_size > 0);
+
+            /* We have to copy the data because orig_data.mv_data is a pointer to
+             * the mmap()-ed area which can potentially have bad alignment causing
+             * a SIGBUS on some architectures. */
+            unsigned char cur_val[orig_data.mv_size];
+            memcpy(cur_val, orig_data.mv_data, orig_data.mv_size);
+            if (!Condition(cur_val, orig_data.mv_size, data))
+            {
+                AbortTransaction(db);
+                return false;
+            }
+        }
+        else
+        {
+            assert(rc == MDB_NOTFOUND);
+            if (!Condition(NULL, 0, data))
+            {
+                AbortTransaction(db);
+                return false;
+            }
+        }
+    }
+
+    MDB_val new_data;
+    new_data.mv_data = (void *)value;
+    new_data.mv_size = value_size;
+    rc = mdb_put(txn->txn, db->dbi, &mkey, &new_data, 0);
+    CheckLMDBCorrupted(rc, db->env);
+    if (rc != MDB_SUCCESS)
+    {
+        Log(LOG_LEVEL_ERR, "Could not write database entry to '%s': %s",
+            (char *) mdb_env_get_userctx(db->env), mdb_strerror(rc));
+        AbortTransaction(db);
+        return false;
+    }
+    DBPrivCommit(db);
+    return true;
+}
+
 bool DBPrivDelete(DBPriv *const db, const void *const key, const int key_size)
 {
     assert(key_size >= 0);

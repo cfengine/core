@@ -122,7 +122,7 @@ void SetFileAutoDefineList(const Rlist *auto_define_list)
     AUTO_DEFINE_LIST = auto_define_list;
 }
 
-void VerifyFileLeaf(EvalContext *ctx, char *path, const struct stat *sb, const Attributes *attr, const Promise *pp, PromiseResult *result)
+void VerifyFileLeaf(EvalContext *ctx, char *path, const struct stat *sb, ARG_UNUSED const Attributes *attr, const Promise *pp, PromiseResult *result)
 {
     // FIXME: This function completely ignores it's attr argument
     assert(attr != NULL);

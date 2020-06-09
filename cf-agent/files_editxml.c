@@ -846,7 +846,7 @@ static bool XmlSelectNode(EvalContext *ctx, char *rawxpath, xmlDocPtr doc, xmlNo
 
     if ((xpathExpr = CharToXmlChar(rawxpath)) == NULL)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Unable to create new XPath expression '%s'", rawxpath);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Unable to create new XPath expression");
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
         return false;
     }
@@ -1034,8 +1034,8 @@ static bool InsertTreeInFile(EvalContext *ctx, char *rawtree, xmlDocPtr doc, con
     if ((buf = CharToXmlChar(rawtree)) == NULL)
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
-             "Tree to be inserted '%s' into an empty XML document '%s', was NOT successfully loaded into an XML buffer",
-             rawtree, edcontext->filename);
+             "Failed to load tree to be inserted into an empty XML document '%s' into an XML buffer",
+             edcontext->filename);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
         return false;
     }
@@ -1125,8 +1125,8 @@ static bool DeleteTreeInNode(EvalContext *ctx, char *rawtree, xmlDocPtr doc, xml
     if (!buf)
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
-             "Tree to be deleted '%s' at XPath '%s' in XML document '%s', was NOT successfully loaded into an XML buffer",
-             rawtree, a->xml.select_xpath, edcontext->filename);
+             "Failed to load the tree to be deleted at XPath '%s' in XML document '%s' into an XML buffer",
+             a->xml.select_xpath, edcontext->filename);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
         return false;
     }
@@ -1209,8 +1209,8 @@ static bool InsertTreeInNode(EvalContext *ctx, char *rawtree, xmlDocPtr doc, xml
     if ((buf = CharToXmlChar(rawtree)) == NULL)
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
-             "Tree to be inserted '%s' at XPath '%s' in XML document '%s', was NOT successfully loaded into an XML buffer",
-             rawtree, a->xml.select_xpath, edcontext->filename);
+             "Failed to load the tree to be inserted at XPath '%s' in XML document '%s' into an XML buffer",
+             a->xml.select_xpath, edcontext->filename);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
         return false;
     }
@@ -1287,8 +1287,8 @@ static bool DeleteAttributeInNode(EvalContext *ctx, char *rawname, xmlNodePtr do
     if ((name = CharToXmlChar(rawname)) == NULL)
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
-             "Name of attribute to be deleted '%s', at XPath '%s' in XML document '%s', was NOT successfully loaded into an XML buffer",
-             rawname, a->xml.select_xpath, edcontext->filename);
+             "Failed to load the name of attribute to be deleted at XPath '%s' in XML document '%s' into an XML buffer",
+             a->xml.select_xpath, edcontext->filename);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
         return false;
     }
@@ -1349,8 +1349,8 @@ static bool SetAttributeInNode(EvalContext *ctx, char *rawname, char *rawvalue, 
     if ((name = CharToXmlChar(rawname)) == NULL)
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
-             "Name of attribute to be set '%s', at XPath '%s' in XML document '%s', was NOT successfully loaded into an XML buffer",
-             rawname, a->xml.select_xpath, edcontext->filename);
+             "Failed to load the name of attribute to set at XPath '%s' in XML document '%s' into an XML buffer",
+             a->xml.select_xpath, edcontext->filename);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
         return false;
     }
@@ -1358,8 +1358,8 @@ static bool SetAttributeInNode(EvalContext *ctx, char *rawname, char *rawvalue, 
     if ((value = CharToXmlChar(rawvalue)) == NULL)
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
-             "Value of attribute to be set '%s', at XPath '%s' in XML document '%s', was NOT successfully loaded into an XML buffer",
-             rawvalue, a->xml.select_xpath, edcontext->filename);
+             "Failed to load value of attribute to set at XPath '%s' in XML document '%s' into an XML buffer",
+             a->xml.select_xpath, edcontext->filename);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
         return false;
     }
@@ -1419,8 +1419,8 @@ static bool DeleteTextInNode(EvalContext *ctx, char *rawtext, xmlDocPtr doc, xml
     if ((text = CharToXmlChar(rawtext)) == NULL)
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
-             "Text to be deleted '%s' at XPath '%s' in XML document '%s', was NOT successfully loaded into an XML buffer",
-             rawtext, a->xml.select_xpath, edcontext->filename);
+             "Failed to load text to delete at XPath '%s' in XML document '%s' into an XML buffer",
+             a->xml.select_xpath, edcontext->filename);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
         return false;
     }
@@ -1490,8 +1490,8 @@ static bool SetTextInNode(EvalContext *ctx, char *rawtext, xmlDocPtr doc, xmlNod
     if ((text = CharToXmlChar(rawtext)) == NULL)
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
-             "Text to be set '%s' at XPath '%s' in XML document '%s', was NOT successfully loaded into an XML buffer",
-             rawtext, a->xml.select_xpath, edcontext->filename);
+             "Failed to load text to set at XPath '%s' in XML document '%s' into an XML buffer",
+             a->xml.select_xpath, edcontext->filename);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
         return false;
     }
@@ -1561,8 +1561,8 @@ static bool InsertTextInNode(EvalContext *ctx, char *rawtext, xmlDocPtr doc, xml
     if ((text = CharToXmlChar(rawtext)) == NULL)
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
-             "Text to be inserted '%s' at XPath '%s' in XML document '%s', was NOT successfully loaded into an XML buffer",
-             rawtext, a->xml.select_xpath, edcontext->filename);
+             "Failed to load text to insert at XPath '%s' in XML document '%s' into an XML buffer",
+             a->xml.select_xpath, edcontext->filename);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
         return false;
     }

@@ -498,7 +498,7 @@ promise_guard  [a-zA-Z_]+:
                           {
                               yyerror("identifier too long");
                           }
-                          strncpy(P.currentid, yytext, CF_MAXVARSIZE);
+                          strncpy(P.currentid, yytext, CF_MAXVARSIZE - 1);
                           return IDENTIFIER;
                       }
 
@@ -511,7 +511,7 @@ promise_guard  [a-zA-Z_]+:
                           {
                               yyerror("qualified identifier too long");
                           }
-                          strncpy(P.currentid, yytext, CF_MAXVARSIZE);
+                          strncpy(P.currentid, yytext, CF_MAXVARSIZE - 1);
                           return IDENTIFIER;
                       }
 
@@ -609,7 +609,7 @@ promise_guard  [a-zA-Z_]+:
                           assert(strlen(tmp) > 0);
                           assert(tmp[strlen(tmp) - 1] != ':');
 
-                          strncpy(P.currenttype, tmp, CF_MAXVARSIZE);
+                          strncpy(P.currenttype, tmp, CF_MAXVARSIZE - 1);
 
                           if (P.currentclasses != NULL)
                           {

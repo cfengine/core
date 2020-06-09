@@ -1167,14 +1167,14 @@ static PromiseResult LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile
 #else                           /* !__MINGW32__ */
 {
     assert(attr != NULL);
-    char linkbuf[CF_BUFSIZE];
+    char linkbuf[CF_BUFSIZE - 1];
     const char *lastnode;
     struct stat dsb;
     PromiseResult result = PROMISE_RESULT_NOOP;
 
     linkbuf[0] = '\0';
 
-    if ((S_ISLNK(sb->st_mode)) && (cf_readlink(ctx, sourcefile, linkbuf, CF_BUFSIZE, attr, pp, conn, &result) == -1))
+    if ((S_ISLNK(sb->st_mode)) && (cf_readlink(ctx, sourcefile, linkbuf, sizeof(linkbuf), attr, pp, conn, &result) == -1))
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Can't readlink '%s'", sourcefile);
         return PROMISE_RESULT_FAIL;

@@ -972,7 +972,9 @@ static void Get3Environment(EvalContext *ctx)
 
         if (*context == '@')
         {
-            if (sscanf(context + 1, "%[^=]=%[^\n]", name, value) == 2)
+            assert((sizeof(name)) > 255);  // TODO: static_assert()
+            assert((sizeof(value)) > 255); // TODO: static_assert()
+            if (sscanf(context + 1, "%255[^=]=%255[^\n]", name, value) == 2)
             {
                 Log(LOG_LEVEL_DEBUG,
                     "Setting new monitoring list '%s' => '%s'",
@@ -994,6 +996,8 @@ static void Get3Environment(EvalContext *ctx)
         }
         else if (strchr(context, '='))
         {
+            assert((sizeof(name)) > 255);  // TODO: static_assert()
+            assert((sizeof(value)) > 255); // TODO: static_assert()
             if (sscanf(context, "%255[^=]=%255[^\n]", name, value) == 2)
             {
                 EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_MON,
@@ -2061,7 +2065,8 @@ static int Linux_Suse_Version(EvalContext *ctx)
     {
         Item *list, *ip;
 
-        sscanf(relstring, "%[-_a-zA-Z0-9]", vbuf);
+        assert((sizeof(vbuf)) > 255); // TODO: static_assert()
+        sscanf(relstring, "%255[-_a-zA-Z0-9]", vbuf);
         EvalContextClassPutHard(ctx, vbuf, "inventory,attribute_name=none,source=agent");
 
         list = SplitString(vbuf, '-');
@@ -2122,7 +2127,7 @@ static int Linux_Suse_Version(EvalContext *ctx)
     }
     else
     {
-        char strmajor[PRINTSIZE(major)], strminor[PRINTSIZE(minor)];
+        char strmajor[CF_MAXVARSIZE], strminor[CF_MAXVARSIZE];
         if (strchr(release, '.'))
         {
             sscanf(release, "%*s %d.%d", &major, &minor);
@@ -2158,8 +2163,10 @@ static int Linux_Suse_Version(EvalContext *ctx)
         }
         else
         {
-            sscanf(strversion, "VERSION = %s", strmajor);
-            sscanf(strpatch, "PATCHLEVEL = %s", strminor);
+            assert((sizeof(strmajor)) > 255); // TODO: static_assert()
+            assert((sizeof(strminor)) > 255); // TODO: static_assert()
+            sscanf(strversion, "VERSION = %255s", strmajor);
+            sscanf(strpatch, "PATCHLEVEL = %255s", strminor);
 
             if (major != -1 && minor != -1)
             {
@@ -2309,7 +2316,8 @@ static int Linux_Misc_Version(EvalContext *ctx)
             if (sp)
             {
                 version[0] = '\0';
-                sscanf(sp + strlen("DISTRIB_RELEASE="), "%[^\n]", version);
+                assert((sizeof(version)) > 255); // TODO: static_assert()
+                sscanf(sp + strlen("DISTRIB_RELEASE="), "%255[^\n]", version);
                 CanonifyNameInPlace(version);
             }
         }
@@ -2373,6 +2381,7 @@ static int Linux_Debian_Version(EvalContext *ctx)
 
     default:
         version[0] = '\0';
+        assert((sizeof(version)) > 25); // TODO: static_assert()
         sscanf(buffer, "%25[^/]", version);
         if (strlen(version) > 0)
         {
@@ -2391,12 +2400,14 @@ static int Linux_Debian_Version(EvalContext *ctx)
     }
 
     os[0] = '\0';
+    assert((sizeof(os)) > 250); // TODO: static_assert()
     sscanf(buffer, "%250s", os);
 
     if (strcmp(os, "Debian") == 0)
     {
         LinuxDebianSanitizeIssue(buffer);
-        sscanf(buffer, "%*s %*s %[^./]", version);
+        assert((sizeof(version)) > 255); // TODO: static_assert()
+        sscanf(buffer, "%*s %*s %255[^./]", version);
         snprintf(buffer, CF_MAXVARSIZE, "debian_%s", version);
         EvalContextClassPutHard(
             ctx,
@@ -2408,7 +2419,9 @@ static int Linux_Debian_Version(EvalContext *ctx)
     {
         LinuxDebianSanitizeIssue(buffer);
         char minor[CF_MAXVARSIZE] = {0};
-        sscanf(buffer, "%*s %[^.].%s", version, minor);
+        assert((sizeof(version)) > 255); // TODO: static_assert()
+        assert((sizeof(minor)) > 255);   // TODO: static_assert()
+        sscanf(buffer, "%*s %255[^.].%255s", version, minor);
         snprintf(buffer, CF_MAXVARSIZE, "ubuntu_%s", version);
         SetFlavor(ctx, buffer);
         EvalContextClassPutHard(
@@ -2638,7 +2651,8 @@ static int EOS_Version(EvalContext *ctx)
             EvalContextClassPutHard(ctx, "eos", "inventory,attribute_name=none,source=agent");
             EvalContextClassPutHard(ctx, "arista", "source=agent");
             version[0] = '\0';
-            sscanf(buffer, "%*s %*s %*s %s", version);
+            assert((sizeof(version)) > 255); // TODO: static_assert()
+            sscanf(buffer, "%*s %*s %*s %255s", version);
             CanonifyNameInPlace(version);
             snprintf(class, CF_MAXVARSIZE, "eos_%s", version);
             EvalContextClassPutHard(ctx, class, "inventory,attribute_name=none,source=agent");
@@ -2662,7 +2676,9 @@ static int MiscOS(EvalContext *ctx)
        {
            char version[CF_MAXVARSIZE], build[CF_MAXVARSIZE], class[CF_MAXVARSIZE];
            EvalContextClassPutHard(ctx, "big_ip", "inventory,attribute_name=none,source=agent");
-           sscanf(buffer, "%*s %s %*s %s", version, build);
+           assert((sizeof(version)) > 255); // TODO: static_assert()
+           assert((sizeof(build)) > 255);   // TODO: static_assert()
+           sscanf(buffer, "%*s %255s %*s %255s", version, build);
            CanonifyNameInPlace(version);
            CanonifyNameInPlace(build);
            snprintf(class, CF_MAXVARSIZE, "big_ip_%s", version);
@@ -2700,7 +2716,7 @@ static int VM_Version(EvalContext *ctx)
             EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
             sufficient = 1;
         }
-        else if (sscanf(buffer, "VMware ESX Server %s", version) > 0)
+        else if (sscanf(buffer, "VMware ESX Server %255s", version) > 0)
         {
             snprintf(classbuf, CF_BUFSIZE, "VMware ESX Server %s", version);
             EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");

@@ -220,9 +220,9 @@ static void print_struct_persistent_class(
         assert(tags > (char *) class_info);
 
         const size_t offset = (tags - (char *) class_info);
-        const size_t offset_no_padding =
-            (sizeof(unsigned int) + sizeof(PersistentClassPolicy));
-        assert(offset >= offset_no_padding);
+
+        /* (sizeof(unsigned int) + sizeof(PersistentClassPolicy)) is offset without the padding */
+        assert(offset >= (sizeof(unsigned int) + sizeof(PersistentClassPolicy)));
 
         assert(value.mv_size > offset);
         const size_t str_size = value.mv_size - offset;

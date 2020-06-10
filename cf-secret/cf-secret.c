@@ -546,6 +546,13 @@ static inline bool ParseHeader(FILE *input_file, char *key, char *value)
 
 static bool ParseHeaders(FILE *input_file, RSA *privkey, size_t *enc_key_pos, size_t *n_enc_keys)
 {
+    assert(enc_key_pos != NULL);
+    assert(n_enc_keys != NULL);
+
+    /* Make sure these are always set by this function. */
+    *enc_key_pos = 0;
+    *n_enc_keys = 0;
+
     /* Actually works for a private RSA key too because it contains the public
      * key. */
     char *key_digest = GetPubkeyDigest(privkey);

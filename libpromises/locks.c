@@ -429,7 +429,7 @@ void WaitForCriticalSection(const char *section_id)
      * have. */
     if (!got_lock)
     {
-        Log(LOG_LEVEL_DEBUG, "Failed to wait for critical section lock '%s', force-writing new lock", section_id);
+        Log(LOG_LEVEL_NOTICE, "Failed to wait for critical section lock '%s', force-writing new lock", section_id);
         if (!WriteDB(dbp, section_id, &entry, sizeof(entry)))
         {
             Log(LOG_LEVEL_CRIT, "Failed to force-write critical section lock '%s'", section_id);

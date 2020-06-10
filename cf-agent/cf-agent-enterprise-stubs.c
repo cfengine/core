@@ -23,6 +23,7 @@
 */
 
 #include <cf-agent-enterprise-stubs.h>
+#include <eval_context.h>
 
 ENTERPRISE_FUNC_8ARG_DEFINE_STUB(PromiseResult, LogFileChange,
                                  ARG_UNUSED EvalContext *, ctx,
@@ -34,7 +35,7 @@ ENTERPRISE_FUNC_8ARG_DEFINE_STUB(PromiseResult, LogFileChange,
                                  ARG_UNUSED const char *, destination,
                                  ARG_UNUSED DeleteCompressedArrayFunction, DeleteCompressedArrayPtr)
 {
-    Log(LOG_LEVEL_VERBOSE, "Logging file differences requires version Nova or above");
+    RecordNoChange(ctx, pp, attr, "Logging file differences requires version Nova or above");
     return PROMISE_RESULT_NOOP;
 }
 

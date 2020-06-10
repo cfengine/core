@@ -86,13 +86,16 @@ static PromiseResult VerifyCopy(EvalContext *ctx, const char *source, char *dest
                                 CompressedArray **inode_cache, AgentConnection *conn);
 static PromiseResult TouchFile(EvalContext *ctx, char *path, const Attributes *attr, const Promise *pp);
 static PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, const struct stat *dstat, const Attributes *attr, const Promise *pp);
-static bool PushDirState(EvalContext *ctx, char *name, const struct stat *sb);
-static bool PopDirState(int goback, char *name, const struct stat *sb, DirectoryRecursion r);
+static bool PushDirState(EvalContext *ctx, const Promise *pp, const Attributes *attr, char *name, const struct stat *sb, PromiseResult *result);
+static bool PopDirState(EvalContext *ctx, const Promise *pp, const Attributes *attr, int goback, char *name, const struct stat *sb,
+                        DirectoryRecursion r, PromiseResult *result);
 static bool CheckLinkSecurity(const struct stat *sb, char *name);
 static bool CompareForFileCopy(char *sourcefile, char *destfile, const struct stat *ssb, const struct stat *dsb, const FileCopy *fc, AgentConnection *conn);
 static void FileAutoDefine(EvalContext *ctx, char *destfile);
 static void TruncateFile(char *name);
-static void RegisterAHardLink(int i, char *value, const Attributes *attr, CompressedArray **inode_cache);
+static void RegisterAHardLink(int i, char *value, EvalContext *ctx, const Promise *pp,
+                              const Attributes *attr, PromiseResult *result,
+                              CompressedArray **inode_cache);
 static PromiseResult VerifyCopiedFileAttributes(EvalContext *ctx, const char *src, const char *dest, const struct stat *sstat, const struct stat *dstat, const Attributes *attr, const Promise *pp);
 static int cf_stat(const char *file, struct stat *buf, const FileCopy *fc, AgentConnection *conn);
 #ifndef __MINGW32__
@@ -111,7 +114,8 @@ static PromiseResult VerifySetUidGid(EvalContext *ctx, const char *file, const s
 #ifdef __APPLE__
 static int VerifyFinderType(EvalContext *ctx, const char *file, const Attributes *a, const Promise *pp, PromiseResult *result);
 #endif
-static void VerifyFileChanges(const char *file, const struct stat *sb, const Attributes *attr, const Promise *pp);
+static void VerifyFileChanges(EvalContext *ctx, const char *file, const struct stat *sb,
+                              const Attributes *attr, const Promise *pp, PromiseResult *result);
 static PromiseResult VerifyFileIntegrity(EvalContext *ctx, const char *file, const Attributes *attr, const Promise *pp);
 
 extern Attributes GetExpandedAttributes(EvalContext *ctx, const Promise *pp, const Attributes *attr);
@@ -141,7 +145,7 @@ void VerifyFileLeaf(EvalContext *ctx, char *path, const struct stat *sb, ARG_UNU
     {
         if (!TransformFile(ctx, path, &new_attr, pp, result))
         {
-            /* NOP? */
+            /* NOP, changes and/or failures are recorded by TransformFile() */
         }
     }
     else
@@ -238,21 +242,21 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
     if (strcmp(sourcefile, destfile) == 0 &&
         strcmp(server, "localhost") == 0)
     {
-        Log(LOG_LEVEL_INFO,
-            "File copy promise loop: file/dir '%s' is its own source",
-            sourcefile);
+        RecordNoChange(ctx, pp, &attr,
+                       "File copy promise loop: file/dir '%s' is its own source",
+                       sourcefile);
         return PROMISE_RESULT_NOOP;
     }
 
     if (attr.haveselect && !SelectLeaf(ctx, sourcefile, ssb, &(attr.select)))
     {
-        Log(LOG_LEVEL_DEBUG, "Skipping non-selected file '%s'", sourcefile);
+        RecordNoChange(ctx, pp, &attr, "Skipping non-selected file '%s'", sourcefile);
         return PROMISE_RESULT_NOOP;
     }
 
     if (RlistIsInListOfRegex(SINGLE_COPY_CACHE, destfile))
     {
-        Log(LOG_LEVEL_INFO, "Skipping single-copied file '%s'", destfile);
+        RecordNoChange(ctx, pp, &attr, "Skipping single-copied file '%s'", destfile);
         return PROMISE_RESULT_NOOP;
     }
 
@@ -264,10 +268,10 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
         {
             if (MatchRlistItem(ctx, attr.copy.copy_links, lastnode))
             {
-                Log(LOG_LEVEL_INFO,
-                    "File %s matches both copylink_patterns and linkcopy_patterns"
-                    " - promise loop (skipping)!",
-                      sourcefile);
+                RecordNoChange(ctx, pp, &attr,
+                               "File %s matches both copylink_patterns and linkcopy_patterns"
+                               " - promise loop (skipping)!",
+                               sourcefile);
                 return PROMISE_RESULT_NOOP;
             }
             else
@@ -286,8 +290,8 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
         }
     }
 
+    PromiseResult result = PROMISE_RESULT_NOOP;
     found = lstat(destfile, &dsb);
-
     if (found != -1)
     {
         if ((S_ISLNK(dsb.st_mode) && attr.copy.link_type == FILE_LINK_TYPE_NONE)
@@ -297,39 +301,51 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
                 attr.copy.type_check &&
                 attr.copy.link_type != FILE_LINK_TYPE_NONE)
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &attr,
-                     "File image exists but destination type is silly "
-                     "(file/dir/link doesn't match)");
+                RecordFailure(ctx, pp, &attr,
+                              "File image exists but destination type is silly "
+                              "(file/dir/link doesn't match)");
                 PromiseRef(LOG_LEVEL_ERR, pp);
                 return PROMISE_RESULT_FAIL;
             }
 
             if (DONTDO)
             {
-                Log(LOG_LEVEL_VERBOSE,
-                    "Need to remove old symbolic link '%s' "
-                    "to make way for copy", destfile);
+                RecordWarning(ctx, pp, &attr,
+                              "Should remove old symbolic link '%s' to make way for copy",
+                              destfile);
+                return PROMISE_RESULT_WARN;
             }
             else
             {
                 if (unlink(destfile) == -1)
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &attr,
-                         "Couldn't remove link '%s'. (unlink: %s)",
-                         destfile, GetErrorStr());
+                    RecordFailure(ctx, pp, &attr,
+                                  "Couldn't remove link '%s'. (unlink: %s)",
+                                  destfile, GetErrorStr());
                     return PROMISE_RESULT_FAIL;
                 }
-
-                Log(LOG_LEVEL_VERBOSE,
-                    "Removing old symbolic link '%s' to make way for copy",
-                    destfile);
+                RecordChange(ctx, pp, &attr,
+                             "Removing old symbolic link '%s' to make way for copy",
+                             destfile);
+                result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
                 found = -1;
             }
         }
     }
     else
     {
-        MakeParentDirectory(destfile, true);
+        bool dir_created = false;
+        if (!MakeParentDirectory(destfile, true, &dir_created))
+        {
+            RecordFailure(ctx, pp, &attr, "Failed to create parent directory for '%s'", destfile);
+            result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+            return result;
+        }
+        if (dir_created)
+        {
+            RecordChange(ctx, pp, &attr, "Created parent directory for '%s'", destfile);
+            result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
+        }
     }
 
     if (attr.copy.min_size != CF_NOINT)
@@ -337,50 +353,35 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
         if ((ssb->st_size < attr.copy.min_size)
             || (ssb->st_size > attr.copy.max_size))
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, &attr,
-                 "Source file '%s' size is not in the permitted safety range",
-                 sourcefile);
-            return PROMISE_RESULT_NOOP;
+            RecordNoChange(ctx, pp, &attr,
+                           "Source file '%s' size is not in the permitted safety range, skipping",
+                           sourcefile);
+            return result;
         }
     }
 
-    PromiseResult result = PROMISE_RESULT_NOOP;
     if (found == -1)
     {
-        if (attr.transaction.action == cfa_warn)
-        {
-            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, &attr,
-                 "Image file '%s' is non-existent and should be a copy of '%s'",
-                 destfile, sourcefile);
-            return PromiseResultUpdate(result, PROMISE_RESULT_WARN);
-        }
-
         if (S_ISREG(srcmode) ||
             (S_ISLNK(srcmode) && attr.copy.link_type == FILE_LINK_TYPE_NONE))
         {
-            if (DONTDO)
+            if (DONTDO || (attr.transaction.action == cfa_warn))
             {
-                Log(LOG_LEVEL_VERBOSE,
-                    "'%s' wasn't at destination (needs copying)",
-                    destfile);
+                RecordWarning(ctx, pp, &attr, "Should copy '%s' to '%s'", destfile, sourcefile);
+                result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
                 return result;
             }
-            else
-            {
-                Log(LOG_LEVEL_VERBOSE,
-                    "'%s' wasn't at destination (copying)",
-                    destfile);
 
-                Log(LOG_LEVEL_INFO, "Copying from '%s:%s'",
-                    server, sourcefile);
-            }
+            Log(LOG_LEVEL_VERBOSE,
+                "'%s' wasn't at destination, copying from '%s:%s'",
+                destfile, server, sourcefile);
 
             if (S_ISLNK(srcmode) && attr.copy.link_type != FILE_LINK_TYPE_NONE)
             {
                 Log(LOG_LEVEL_VERBOSE, "'%s' is a symbolic link", sourcefile);
-                result = PromiseResultUpdate(
-                    result, LinkCopy(ctx, sourcefile, destfile, ssb,
-                                     &attr, pp, inode_cache, conn));
+                result = PromiseResultUpdate(result,
+                                             LinkCopy(ctx, sourcefile, destfile, ssb,
+                                                      &attr, pp, inode_cache, conn));
             }
             else if (CopyRegularFile(ctx, sourcefile, destfile, ssb, &attr,
                                      pp, inode_cache, conn, &result))
@@ -393,16 +394,14 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
                 }
                 else
                 {
-                    result = PromiseResultUpdate(
-                        result, VerifyCopiedFileAttributes(ctx, sourcefile,
-                                                           destfile, ssb,
-                                                           &dsb, &attr, pp));
+                    result = PromiseResultUpdate(result,
+                                                 VerifyCopiedFileAttributes(ctx, sourcefile,
+                                                                            destfile, ssb,
+                                                                            &dsb, &attr, pp));
                 }
 
-                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, &attr,
-                     "Updated file from '%s:%s'",
-                     server, sourcefile);
-
+                RecordChange(ctx, pp, &attr, "Updated file '%s' from '%s:%s'",
+                             destfile, server, sourcefile);
                 result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
 
                 if (SINGLE_COPY_LIST)
@@ -417,9 +416,8 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
             }
             else
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp,
-                     &attr, "Copy from '%s:%s' failed",
-                     server, sourcefile);
+                RecordFailure(ctx, pp, &attr, "Copy from '%s:%s' failed",
+                              server, sourcefile);
                 result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
             }
 
@@ -429,22 +427,27 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
         if (S_ISFIFO(srcmode))
         {
 #ifdef HAVE_MKFIFO
-            if (DONTDO)
+            if (DONTDO || (attr.transaction.action == cfa_warn))
             {
-                Log(LOG_LEVEL_INFO, "Need to make FIFO '%s'", destfile);
+                RecordWarning(ctx, pp, &attr, "Should create FIFO '%s'", destfile);
+                result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
+                return result;
             }
-            else if (mkfifo(destfile, srcmode))
+            else if (mkfifo(destfile, srcmode) != 0)
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &attr,
-                     "Cannot create fifo '%s'. (mkfifo: %s)",
-                     destfile, GetErrorStr());
+                RecordFailure(ctx, pp, &attr, "Cannot create fifo '%s'. (mkfifo: %s)",
+                              destfile, GetErrorStr());
                 result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                 return result;
             }
 
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, &attr,
-                 "Created fifo '%s'", destfile);
+            RecordChange(ctx, pp, &attr, "Created fifo '%s'", destfile);
             result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
+#else
+            RecordWarning(ctx, pp, &attr, "Should create FIFO '%s', but FIFO creation not supported",
+                          destfile);
+            result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
+            return result;
 #endif
         }
         else
@@ -452,21 +455,20 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
 #ifndef __MINGW32__                   // only regular files on windows
             if (S_ISBLK(srcmode) || S_ISCHR(srcmode) || S_ISSOCK(srcmode))
             {
-                if (DONTDO)
+                if (DONTDO || (attr.transaction.action == cfa_warn))
                 {
-                    Log(LOG_LEVEL_INFO, "Make BLK/CHR/SOCK '%s'", destfile);
+                    RecordWarning(ctx, pp, &attr, "Should make special file/device '%s'", destfile);
+                    result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
+                    return result;
                 }
                 else if (mknod(destfile, srcmode, ssb->st_rdev))
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &attr,
-                         "Cannot create special file '%s'. (mknod: %s)",
-                         destfile, GetErrorStr());
+                    RecordFailure(ctx, pp, &attr, "Cannot create special file '%s'. (mknod: %s)",
+                                  destfile, GetErrorStr());
                     result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                     return result;
                 }
-
-                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, &attr,
-                     "Created special file/device '%s'.", destfile);
+                RecordChange(ctx, pp, &attr, "Created special file/device '%s'.", destfile);
                 result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
             }
 #endif /* !__MINGW32__ */
@@ -474,9 +476,9 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
 
         if ((S_ISLNK(srcmode)) && (attr.copy.link_type != FILE_LINK_TYPE_NONE))
         {
-            result = PromiseResultUpdate(
-                result, LinkCopy(ctx, sourcefile, destfile, ssb,
-                                 &attr, pp, inode_cache, conn));
+            result = PromiseResultUpdate(result,
+                                         LinkCopy(ctx, sourcefile, destfile, ssb,
+                                                  &attr, pp, inode_cache, conn));
         }
     }
     else
@@ -488,8 +490,7 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
 
         if (attr.copy.compare == FILE_COMPARATOR_EXISTS)
         {
-            Log(LOG_LEVEL_VERBOSE,
-                "Existence only is promised, no copying required");
+            RecordNoChange(ctx, pp, &attr, "Existence only is promised, no copying required");
             return result;
         }
 
@@ -509,23 +510,12 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
             // Mask mode with S_IFMT to extract and compare file types
             if ((dsb.st_mode & S_IFMT) != (srcmode & S_IFMT))
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &attr,
-                     "Promised file copy %s "
-                     "exists but type mismatch with source '%s'",
-                     destfile, sourcefile);
+                RecordFailure(ctx, pp, &attr,
+                              "Promised file copy %s exists but type mismatch with source '%s'",
+                              destfile, sourcefile);
                 result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                 return result;
             }
-        }
-
-        if (ok_to_copy && (attr.transaction.action == cfa_warn))
-        {
-            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, &attr,
-                 "Image file '%s' exists but is not up to date wrt '%s' "
-                 "(only a warning has been promised)",
-                 destfile, sourcefile);
-            result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
-            return result;
         }
 
         if (attr.copy.force_update ||
@@ -535,11 +525,11 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
             if (S_ISREG(srcmode) ||
                 attr.copy.link_type == FILE_LINK_TYPE_NONE)
             {
-                if (DONTDO)
+                if (DONTDO || attr.transaction.action == cfa_warn)
                 {
-                    Log(LOG_LEVEL_ERR,
-                        "Should update file '%s' from source '%s' on '%s'",
-                        destfile, sourcefile, server);
+                    RecordWarning(ctx, pp, &attr, "File '%s' should be updated from '%s' on '%s'",
+                                  destfile, sourcefile, server);
+                    result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
                     return result;
                 }
 
@@ -553,24 +543,20 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
                 {
                     if (stat(destfile, &dsb) == -1)
                     {
-                        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED,
-                             pp, &attr,
-                             "Can't stat destination '%s'. (stat: %s)",
-                             destfile, GetErrorStr());
-                        result = PromiseResultUpdate(
-                            result, PROMISE_RESULT_INTERRUPTED);
+                        RecordInterruption(ctx, pp, &attr,
+                                           "Can't stat destination '%s'. (stat: %s)",
+                                           destfile, GetErrorStr());
+                        result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
                     }
                     else
                     {
-                        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp,
-                             &attr, "Updated '%s' from source '%s' on '%s'",
-                             destfile, sourcefile, server);
-                        result = PromiseResultUpdate(
-                            result, PROMISE_RESULT_CHANGE);
-                        result = PromiseResultUpdate(
-                            result, VerifyCopiedFileAttributes(ctx, sourcefile,
-                                                               destfile, ssb,
-                                                               &dsb, &attr, pp));
+                        RecordChange(ctx, pp, &attr, "Updated '%s' from source '%s' on '%s'",
+                                     destfile, sourcefile, server);
+                        result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
+                        result = PromiseResultUpdate(result,
+                                                     VerifyCopiedFileAttributes(ctx, sourcefile,
+                                                                                destfile, ssb,
+                                                                                &dsb, &attr, pp));
                     }
 
                     if (RlistIsInListOfRegex(SINGLE_COPY_LIST, destfile))
@@ -580,9 +566,8 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
                 }
                 else
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &attr,
-                         "Was not able to copy '%s' to '%s'",
-                         sourcefile, destfile);
+                    RecordFailure(ctx, pp, &attr, "Was not able to copy '%s' on '%s' to '%s'",
+                                  sourcefile, server, destfile);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                 }
 
@@ -590,16 +575,16 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
             }
             else if (S_ISLNK(srcmode))
             {
-                result = PromiseResultUpdate(
-                    result, LinkCopy(ctx, sourcefile, destfile, ssb,
-                                     &attr, pp, inode_cache, conn));
+                result = PromiseResultUpdate(result,
+                                             LinkCopy(ctx, sourcefile, destfile, ssb,
+                                                      &attr, pp, inode_cache, conn));
             }
         }
         else
         {
-            result = PromiseResultUpdate(
-                result, VerifyCopiedFileAttributes(ctx, sourcefile, destfile,
-                                                   ssb, &dsb, &attr, pp));
+            result = PromiseResultUpdate(result,
+                                         VerifyCopiedFileAttributes(ctx, sourcefile, destfile,
+                                                                    ssb, &dsb, &attr, pp));
 
             /* Now we have to check for single copy, even though nothing was
                copied otherwise we can get oscillations between multipe
@@ -610,8 +595,8 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
                 RlistPrependScalarIdemp(&SINGLE_COPY_CACHE, destfile);
             }
 
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, &attr,
-                 "File '%s' is an up to date copy of source", destfile);
+            RecordNoChange(ctx, pp, &attr, "File '%s' is an up to date copy of source",
+                           destfile);
         }
     }
 
@@ -629,21 +614,25 @@ static PromiseResult PurgeLocalFiles(EvalContext *ctx, Item *filelist, const cha
 
     if (strlen(localdir) < 2)
     {
-        Log(LOG_LEVEL_ERR, "Purge of '%s' denied - too dangerous!", localdir);
-        return PROMISE_RESULT_NOOP;
+        RecordFailure(ctx, pp, attr, "Purge of '%s' denied - too dangerous!", localdir);
+        return PROMISE_RESULT_FAIL;
     }
 
     /* If we purge with no authentication we wipe out EVERYTHING ! */
 
     if (conn && (!conn->authenticated))
     {
-        Log(LOG_LEVEL_VERBOSE, "Not purge local files '%s' - no authenticated contact with a source", localdir);
-        return PROMISE_RESULT_NOOP;
+        RecordDenial(ctx, pp, attr,
+                     "Not purge local files '%s' - no authenticated contact with a source",
+                     localdir);
+        return PROMISE_RESULT_DENIED;
     }
 
     if (!attr->havedepthsearch)
     {
-        Log(LOG_LEVEL_VERBOSE, "No depth search when copying '%s' so purging does not apply", localdir);
+        RecordNoChange(ctx, pp, attr,
+                       "No depth search when copying '%s' so purging does not apply",
+                       localdir);
         return PROMISE_RESULT_NOOP;
     }
 
@@ -651,14 +640,18 @@ static PromiseResult PurgeLocalFiles(EvalContext *ctx, Item *filelist, const cha
 
     if (safe_chdir(localdir) == -1)
     {
-        Log(LOG_LEVEL_VERBOSE, "Can't chdir to local directory '%s'. (chdir: %s)", localdir, GetErrorStr());
-        return PROMISE_RESULT_NOOP;
+        RecordFailure(ctx, pp, attr,
+                      "Can't chdir to local directory '%s'. (chdir: %s)",
+                      localdir, GetErrorStr());
+        return PROMISE_RESULT_FAIL;
     }
 
     if ((dirh = DirOpen(".")) == NULL)
     {
-        Log(LOG_LEVEL_VERBOSE, "Can't open local directory '%s'. (opendir: %s)", localdir, GetErrorStr());
-        return PROMISE_RESULT_NOOP;
+        RecordFailure(ctx, pp, attr,
+                      "Can't open local directory '%s'. (opendir: %s)",
+                      localdir, GetErrorStr());
+        return PROMISE_RESULT_FAIL;
     }
 
     PromiseResult result = PROMISE_RESULT_NOOP;
@@ -666,6 +659,7 @@ static PromiseResult PurgeLocalFiles(EvalContext *ctx, Item *filelist, const cha
     {
         if (!ConsiderLocalFile(dirp->d_name, localdir))
         {
+            Log(LOG_LEVEL_VERBOSE, "Skipping '%s'", dirp->d_name);
             continue;
         }
 
@@ -677,51 +671,60 @@ static PromiseResult PurgeLocalFiles(EvalContext *ctx, Item *filelist, const cha
 
             if (strlcat(filename, dirp->d_name, CF_BUFSIZE) >= CF_BUFSIZE)
             {
-                Log(LOG_LEVEL_ERR, "Path name is too long in PurgeLocalFiles");
+                RecordFailure(ctx, pp, attr,
+                              "Path name '%s%s' is too long in PurgeLocalFiles",
+                              filename, dirp->d_name);
+                continue;
             }
 
             if (DONTDO || attr->transaction.action == cfa_warn)
             {
-                Log(LOG_LEVEL_WARNING, "Need to purge '%s' from copy dest directory", filename);
+                RecordWarning(ctx, pp, attr,
+                              "'%s' should be purged from copy dest directory",
+                              filename);
                 result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
             }
             else
             {
                 if (lstat(filename, &sb) == -1)
                 {
-                    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, attr, "Couldn't stat '%s' while purging. (lstat: %s)",
-                         filename, GetErrorStr());
+                    RecordInterruption(ctx, pp, attr,
+                                       "Couldn't stat '%s' while purging. (lstat: %s)",
+                                       filename, GetErrorStr());
                     result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
                 }
                 else if (S_ISDIR(sb.st_mode))
                 {
                     if (!DeleteDirectoryTree(filename))
                     {
-                        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Unable to purge directory tree '%s'", filename);
+                        RecordFailure(ctx, pp, attr,
+                                      "Unable to purge directory tree '%s'", filename);
                         result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                     }
                     else if (rmdir(filename) == -1)
                     {
                         if (errno != ENOENT)
                         {
-                            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Unable to purge directory '%s'", filename);
+                            RecordFailure(ctx, pp, attr,
+                                          "Unable to purge directory '%s'", filename);
                             result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                         }
                     }
                     else
                     {
-                        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Purged directory '%s' in copy dest directory", filename);
+                        RecordChange(ctx, pp, attr,
+                                     "Purged directory '%s' in copy dest directory", filename);
                         result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
                     }
                 }
                 else if (unlink(filename) == -1)
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Couldn't delete '%s' while purging", filename);
+                    RecordFailure(ctx, pp, attr, "Couldn't delete '%s' while purging", filename);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                 }
                 else
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Purged file '%s' in copy dest directory", filename);
+                    RecordChange(ctx, pp, attr, "Purged '%s' copy dest directory", filename);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
                 }
             }
@@ -745,8 +748,8 @@ static PromiseResult SourceSearchAndCopy(EvalContext *ctx, const char *from, cha
 
     if (maxrecurse == 0)        /* reached depth limit */
     {
-        Log(LOG_LEVEL_DEBUG, "MAXRECURSE ran out, quitting at level '%s'", from);
-        return PROMISE_RESULT_NOOP;
+        RecordFailure(ctx, pp, attr, "Maximum recursion level reached at '%s'", from);
+        return PROMISE_RESULT_FAIL;
     }
 
     if (strlen(from) == 0)      /* Check for root dir */
@@ -760,15 +763,21 @@ static PromiseResult SourceSearchAndCopy(EvalContext *ctx, const char *from, cha
     AddSlash(newto);
     strcat(newto, "dummy");
 
+    PromiseResult result = PROMISE_RESULT_NOOP;
     if (attr->transaction.action != cfa_warn)
     {
         struct stat tostat;
 
-        if (!MakeParentDirectory(newto, attr->move_obstructions))
+        bool dir_created = false;
+        if (!MakeParentDirectory(newto, attr->move_obstructions, &dir_created))
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Unable to make directory for '%s' in file-copy '%s' to '%s'", newto,
-                 attr->copy.source, attr->copy.destination);
+            RecordFailure(ctx, pp, attr, "Failed to make parent directory for '%s'", newto);
             return PROMISE_RESULT_FAIL;
+        }
+        if (dir_created)
+        {
+            RecordChange(ctx, pp, attr, "Created parent directory for '%s'", newto);
+            result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
         }
 
         DeleteSlash(to);
@@ -777,9 +786,10 @@ static PromiseResult SourceSearchAndCopy(EvalContext *ctx, const char *from, cha
 
         if (lstat(to, &tostat) != 0)
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr, "Unable to stat newly created directory '%s'. (lstat: %s)",
-                 to, GetErrorStr());
-            return PROMISE_RESULT_WARN;
+            RecordFailure(ctx, pp, attr, "Unable to stat newly created directory '%s'. (lstat: %s)",
+                          to, GetErrorStr());
+            result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+            return result;
         }
 
         if (S_ISLNK(tostat.st_mode))
@@ -789,9 +799,11 @@ static PromiseResult SourceSearchAndCopy(EvalContext *ctx, const char *from, cha
 
             if (!attr->move_obstructions)
             {
-                Log(LOG_LEVEL_INFO, "Path '%s' is a symlink. Unable to move it aside without move_obstructions is set",
-                      to);
-                return PROMISE_RESULT_NOOP;
+                RecordFailure(ctx, pp, attr,
+                              "Path '%s' is a symlink. Unable to move it aside without move_obstructions is set",
+                              to);
+                result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+                return result;
             }
 
             strcpy(backup, to);
@@ -800,16 +812,23 @@ static PromiseResult SourceSearchAndCopy(EvalContext *ctx, const char *from, cha
 
             if (rename(to, backup) == -1)
             {
-                Log(LOG_LEVEL_INFO, "Unable to backup old '%s'", to);
+                Log(LOG_LEVEL_ERR, "Unable to backup old '%s'", to);
                 unlink(to);
             }
 
             mask = umask(0);
             if (mkdir(to, DEFAULTMODE) == -1)
             {
-                Log(LOG_LEVEL_ERR, "Unable to make directory '%s'. (mkdir: %s)", to, GetErrorStr());
+                RecordFailure(ctx, pp, attr,
+                              "Failed to make directory '%s'. (mkdir: %s)", to, GetErrorStr());
                 umask(mask);
-                return PROMISE_RESULT_NOOP;
+                result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+                return result;
+            }
+            else
+            {
+                RecordChange(ctx, pp, attr, "Created directory '%s'", to);
+                result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
             }
             umask(mask);
         }
@@ -818,14 +837,14 @@ static PromiseResult SourceSearchAndCopy(EvalContext *ctx, const char *from, cha
     /* Send OPENDIR command. */
     if ((dirh = AbstractDirOpen(from, &(attr->copy), conn)) == NULL)
     {
-        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp, attr, "copy can't open directory '%s'", from);
-        return PROMISE_RESULT_INTERRUPTED;
+        RecordInterruption(ctx, pp, attr, "Can't open directory '%s' for copying", from);
+        result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
+        return result;
     }
 
     /* No backslashes over the network. */
     const char sep = (conn != NULL) ? '/' : FILE_SEPARATOR;
 
-    PromiseResult result = PROMISE_RESULT_NOOP;
     for (dirp = AbstractDirRead(dirh); dirp != NULL; dirp = AbstractDirRead(dirh))
     {
         /* This sends 1st STAT command. */
@@ -834,13 +853,15 @@ static PromiseResult SourceSearchAndCopy(EvalContext *ctx, const char *from, cha
             if (conn != NULL &&
                 conn->conn_info->status != CONNECTIONINFO_STATUS_ESTABLISHED)
             {
-                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp,
-                     attr, "connection error");
+                RecordInterruption(ctx, pp, attr,
+                                   "Connection error when checking '%s'", dirp->d_name);
                 AbstractDirClose(dirh);
-                return PROMISE_RESULT_INTERRUPTED;
+                result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
+                return result;
             }
             else
             {
+                Log(LOG_LEVEL_VERBOSE, "Skipping '%s'", dirp->d_name);
                 continue;
             }
         }
@@ -857,11 +878,12 @@ static PromiseResult SourceSearchAndCopy(EvalContext *ctx, const char *from, cha
 
         if (!PathAppend(newfrom, sizeof(newfrom), dirp->d_name, sep))
         {
-            Log(LOG_LEVEL_ERR, "Internal limit reached in SourceSearchAndCopy(),"
-                " source path too long: '%s' + '%s'",
-                newfrom, dirp->d_name);
+            RecordFailure(ctx, pp, attr, "Internal limit reached in SourceSearchAndCopy(),"
+                          " source path too long: '%s' + '%s'",
+                          newfrom, dirp->d_name);
+            result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
             AbstractDirClose(dirh);
-            return result;                             /* TODO return FAIL? */
+            return result;
         }
 
         /* This issues a 2nd STAT command, hopefully served from cache. */
@@ -877,13 +899,14 @@ static PromiseResult SourceSearchAndCopy(EvalContext *ctx, const char *from, cha
                 if (conn != NULL &&
                     conn->conn_info->status != CONNECTIONINFO_STATUS_ESTABLISHED)
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp,
-                         attr, "connection error");
+                    RecordInterruption(ctx, pp, attr, "Connection error when checking '%s'", newfrom);
                     AbstractDirClose(dirh);
-                    return PROMISE_RESULT_INTERRUPTED;
+                    result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
+                    return result;
                 }
                 else
                 {
+                    Log(LOG_LEVEL_VERBOSE, "Skipping '%s'", newfrom);
                     continue;
                 }
             }
@@ -896,14 +919,14 @@ static PromiseResult SourceSearchAndCopy(EvalContext *ctx, const char *from, cha
                 if (conn != NULL &&
                     conn->conn_info->status != CONNECTIONINFO_STATUS_ESTABLISHED)
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO,
-                         PROMISE_RESULT_INTERRUPTED, pp, attr,
-                         "connection error");
+                    RecordInterruption(ctx, pp, attr, "Connection error when checking '%s'", newfrom);
                     AbstractDirClose(dirh);
-                    return PROMISE_RESULT_INTERRUPTED;
+                    result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
+                    return result;
                 }
                 else
                 {
+                    Log(LOG_LEVEL_VERBOSE, "Skipping '%s'", newfrom);
                     continue;
                 }
             }
@@ -918,12 +941,13 @@ static PromiseResult SourceSearchAndCopy(EvalContext *ctx, const char *from, cha
             if (!PathAppend(newto, sizeof(newto), dirp->d_name,
                             FILE_SEPARATOR))
             {
-                Log(LOG_LEVEL_ERR,
-                    "Internal limit reached in SourceSearchAndCopy(),"
-                    " dest path too long: '%s' + '%s'",
-                    newto, dirp->d_name);
+                RecordFailure(ctx, pp, attr,
+                              "Internal limit reached in SourceSearchAndCopy(),"
+                              " dest path too long: '%s' + '%s'",
+                              newto, dirp->d_name);
+                result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                 AbstractDirClose(dirh);
-                return result;                         /* TODO result FAIL? */
+                return result;
             }
         }
 
@@ -954,17 +978,25 @@ static PromiseResult SourceSearchAndCopy(EvalContext *ctx, const char *from, cha
             {
                 if (mkdir(newto, 0700) == -1)
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, attr, "Can't make directory '%s'. (mkdir: %s)",
-                         newto, GetErrorStr());
+                    RecordInterruption(ctx, pp, attr, "Can't make directory '%s'. (mkdir: %s)",
+                                       newto, GetErrorStr());
                     result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
+                    /* XXX: return result?!?!?! */
                     continue;
+                }
+                else
+                {
+                    RecordChange(ctx, pp, attr, "Created directory '%s'", newto);
+                    result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
                 }
 
                 if (stat(newto, &dsb) == -1)
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, attr,
-                         "Can't stat local copy '%s' - failed to establish directory. (stat: %s)", newto, GetErrorStr());
+                    RecordInterruption(ctx, pp, attr,
+                                       "Can't stat local copy '%s' - failed to establish directory. (stat: %s)",
+                                       newto, GetErrorStr());
                     result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
+                    /* XXX: return result?!?!?! */
                     continue;
                 }
             }
@@ -987,8 +1019,7 @@ static PromiseResult SourceSearchAndCopy(EvalContext *ctx, const char *from, cha
         if (conn != NULL &&
             conn->conn_info->status != CONNECTIONINFO_STATUS_ESTABLISHED)
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp,
-                 attr, "connection error");
+            RecordInterruption(ctx, pp, attr, "connection error");
             AbstractDirClose(dirh);
             return PROMISE_RESULT_INTERRUPTED;
         }
@@ -1033,20 +1064,18 @@ static PromiseResult VerifyCopy(EvalContext *ctx,
 
     if (found == -1)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
-             "Can't stat '%s' in verify copy", source);
+        RecordFailure(ctx, pp, attr, "Can't stat '%s' in verify copy", source);
         return PROMISE_RESULT_FAIL;
     }
 
+    PromiseResult result = PROMISE_RESULT_NOOP;
     if (ssb.st_nlink > 1)      /* Preserve hard link structure when copying */
     {
-        RegisterAHardLink(ssb.st_ino, destination, attr, inode_cache);
+        RegisterAHardLink(ssb.st_ino, destination, ctx, pp, attr, &result, inode_cache);
     }
 
     if (S_ISDIR(ssb.st_mode))
     {
-        PromiseResult result = PROMISE_RESULT_NOOP;
-
         strcpy(sourcedir, source);
         AddSlash(sourcedir);
         strcpy(destdir, destination);
@@ -1054,26 +1083,25 @@ static PromiseResult VerifyCopy(EvalContext *ctx,
 
         if ((dirh = AbstractDirOpen(sourcedir, &(attr->copy), conn)) == NULL)
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
-                 "Can't open directory '%s'. (opendir: %s)",
-                 sourcedir, GetErrorStr());
-            return PROMISE_RESULT_FAIL;
+            RecordFailure(ctx, pp, attr, "Can't open directory '%s'. (opendir: %s)",
+                          sourcedir, GetErrorStr());
+            result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+            return result;
         }
 
         /* Now check any overrides */
 
         if (stat(destdir, &dsb) == -1)
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
-                 "Can't stat directory '%s'. (stat: %s)",
-                 destdir, GetErrorStr());
+            RecordFailure(ctx, pp, attr, "Can't stat directory '%s'. (stat: %s)",
+                          destdir, GetErrorStr());
             result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         }
         else
         {
-            result = PromiseResultUpdate(
-                result, VerifyCopiedFileAttributes(ctx, sourcedir, destdir,
-                                                   &ssb, &dsb, attr, pp));
+            result = PromiseResultUpdate(result,
+                                         VerifyCopiedFileAttributes(ctx, sourcedir, destdir,
+                                                                    &ssb, &dsb, attr, pp));
         }
 
         /* No backslashes over the network. */
@@ -1088,13 +1116,14 @@ static PromiseResult VerifyCopy(EvalContext *ctx,
                 if (conn != NULL &&
                     conn->conn_info->status != CONNECTIONINFO_STATUS_ESTABLISHED)
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED,
-                         pp, attr, "connection error");
-                    return PROMISE_RESULT_INTERRUPTED;
+                    RecordInterruption(ctx, pp, attr,
+                                       "Connection error when checking '%s'", dirp->d_name);
+                    result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
+                    return result;
                 }
                 else
                 {
-                    continue;
+                    Log(LOG_LEVEL_VERBOSE, "Skipping '%s'", dirp->d_name);
                 }
             }
 
@@ -1120,26 +1149,26 @@ static PromiseResult VerifyCopy(EvalContext *ctx,
             {
                 if (cf_stat(sourcefile, &ssb, &(attr->copy), conn) == -1)
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
-                         "Can't stat source file (notlinked) '%s'. (stat: %s)",
-                         sourcefile, GetErrorStr());
-                    return PROMISE_RESULT_FAIL;
+                    RecordFailure(ctx, pp, attr,
+                                  "Can't stat source file (notlinked) '%s'. (stat: %s)",
+                                  sourcefile, GetErrorStr());
+                    result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+                    return result;
                 }
             }
             else
             {
                 if (cf_lstat(sourcefile, &ssb, &(attr->copy), conn) == -1)
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
-                         "Can't stat source file '%s'. (lstat: %s)",
-                         sourcefile, GetErrorStr());
-                    return PROMISE_RESULT_FAIL;
+                    RecordFailure(ctx, pp, attr, "Can't stat source file '%s'. (lstat: %s)",
+                                  sourcefile, GetErrorStr());
+                    result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+                    return result;
                 }
             }
 
-            result = PromiseResultUpdate(
-                result, CfCopyFile(ctx, sourcefile, destfile, &ssb,
-                                   attr, pp, inode_cache, conn));
+            result = PromiseResultUpdate(result, CfCopyFile(ctx, sourcefile, destfile, &ssb,
+                                                            attr, pp, inode_cache, conn));
         }
 
         AbstractDirClose(dirh);
@@ -1160,8 +1189,9 @@ static PromiseResult LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile
 /* Link the file to the source, instead of copying */
 #ifdef __MINGW32__
 {
-    Log(LOG_LEVEL_VERBOSE, "Windows does not support symbolic links");
-    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Windows can't link '%s' to '%s'", sourcefile, destfile);
+    RecordFailure(ctx, pp, attr,
+                  "Can't link '%s' to '%s' (Windows does not support symbolic links)",
+                  sourcefile, destfile);
     return PROMISE_RESULT_FAIL;
 }
 #else                           /* !__MINGW32__ */
@@ -1176,7 +1206,7 @@ static PromiseResult LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile
 
     if ((S_ISLNK(sb->st_mode)) && (cf_readlink(ctx, sourcefile, linkbuf, sizeof(linkbuf), attr, pp, conn, &result) == -1))
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Can't readlink '%s'", sourcefile);
+        RecordFailure(ctx, pp, attr, "Can't readlink '%s'", sourcefile);
         return PROMISE_RESULT_FAIL;
     }
     else if (S_ISLNK(sb->st_mode))
@@ -1247,27 +1277,15 @@ static PromiseResult LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile
     {
         if (lstat(destfile, &dsb) == -1)
         {
-            Log(LOG_LEVEL_ERR, "Can't lstat '%s'. (lstat: %s)", destfile, GetErrorStr());
+            RecordFailure(ctx, pp, attr, "Can't lstat '%s'. (lstat: %s)", destfile, GetErrorStr());
+            result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+            return result;
         }
         else
         {
-            result = PromiseResultUpdate(result, VerifyCopiedFileAttributes(ctx, sourcefile, destfile, sb, &dsb, attr, pp));
-        }
-
-        if (status == PROMISE_RESULT_CHANGE)
-        {
-            cfPS(ctx, LOG_LEVEL_INFO, status, pp, attr, "Created link '%s'", destfile);
-            result = PromiseResultUpdate(result, status);
-        }
-        else if (status == PROMISE_RESULT_NOOP)
-        {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, status, pp, attr, "Link '%s' as promised", destfile);
-            result = PromiseResultUpdate(result, status);
-        }
-        else // TODO: is this reachable?
-        {
-            cfPS(ctx, LOG_LEVEL_INFO, status, pp, attr, "Unable to create link '%s'", destfile);
-            result = PromiseResultUpdate(result, status);
+            result = PromiseResultUpdate(result,
+                                         VerifyCopiedFileAttributes(ctx, sourcefile, destfile,
+                                                                    sb, &dsb, attr, pp));
         }
     }
 
@@ -1305,7 +1323,8 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
 
     if (DONTDO)
     {
-        Log(LOG_LEVEL_ERR, "Promise requires copy from '%s' to '%s'", source, dest);
+        RecordWarning(ctx, pp, attr, "Should copy '%s' to '%s'", source, dest);
+        *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
         return false;
     }
 
@@ -1315,9 +1334,13 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
 
     if (sstat->st_nlink > 1)     /* Preserve hard links, if possible */
     {
-        if ((CompressedArrayElementExists(*inode_cache, sstat->st_ino)) && (strcmp(dest, linkable) != 0))
+        if ((linkable != NULL) && (strcmp(dest, linkable) != 0))
         {
-            unlink(dest);
+            if (unlink(dest) == 0)
+            {
+                RecordChange(ctx, pp, attr, "Removed '%s'", dest);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+            }
             MakeHardLink(ctx, dest, linkable, attr, pp, result);
             return true;
         }
@@ -1364,13 +1387,22 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
     {
         if (conn->error)
         {
+            RecordFailure(ctx, pp, attr, "Failed to copy file '%s' from '%s' (connection error)",
+                          source, conn->remoteip);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             return false;
         }
 
         if (!CopyRegularFileNet(source, new, sstat->st_size, attr->copy.encrypt, conn))
         {
+            RecordFailure(ctx, pp, attr, "Failed to copy file '%s' from '%s'",
+                          source, conn->remoteip);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             return false;
         }
+        RecordChange(ctx, pp, attr, "Copied file '%s' from '%s' to '%s'",
+                     source, new, conn->remoteip);
+        *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
     }
     else
     {
@@ -1379,11 +1411,13 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
         {
             if (!CopyRegularFileDisk(source, new))
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
-                     "Failed copying file '%s' to '%s'", source, new);
+                RecordFailure(ctx, pp, attr, "Failed copying file '%s' to '%s'", source, new);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
                 return false;
             }
+            RecordChange(ctx, pp, attr, "Copied file '%s' to '%s' (permissions preserved)",
+                         source, new);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
         }
         else
         {
@@ -1391,11 +1425,13 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
             int mode = dest_exists ? (dest_stat.st_mode & 0777) : CF_PERMS_DEFAULT;
             if (!CopyRegularFileDiskPerms(source, new, mode))
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
-                     "Failed copying file '%s' to '%s'", source, new);
+                RecordFailure(ctx, pp, attr, "Failed copying file '%s' to '%s'", source, new);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
                 return false;
             }
+            RecordChange(ctx, pp, attr, "Copied file '%s' to '%s' (mode '%jo')",
+                         source, new, (uintmax_t) mode);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
         }
 
 #ifdef HAVE_UTIME_H
@@ -1412,6 +1448,9 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
 
     backup[0] = '\0';
 
+    /* XXX: Do RecordChange() for the changes done below? They are just "behind
+     *      the scenes" changes the user maybe doesn't care about if they just
+     *      work? */
     if (dest_exists)
     {
         if (!discardbackup)
@@ -1431,12 +1470,20 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
 
                 if (!JoinSuffix(backup, sizeof(backup), stamp))
                 {
+                    RecordFailure(ctx, pp, attr,
+                                  "Failed to determine file name for the backup of '%s'",
+                                  dest);
+                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
                     return false;
                 }
             }
 
             if (!JoinSuffix(backup, sizeof(backup), CF_SAVED))
             {
+                RecordFailure(ctx, pp, attr,
+                              "Failed to determine file name for the backup of '%s'",
+                              dest);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
                 return false;
             }
 
@@ -1450,15 +1497,41 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
                 {
                     backupisdir = true;
                     PurgeLocalFiles(ctx, NULL, backup, attr, pp, conn);
-                    rmdir(backup);
+                    if (rmdir(backup) == 0)
+                    {
+                        RecordChange(ctx, pp, attr, "Removed old backup directory '%s'", backup);
+                        *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+                    }
+                    else
+                    {
+                        RecordFailure(ctx, pp, attr,
+                                      "Failed to remove old backup directory '%s'", backup);
+                        *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+                    }
                 }
 
-                unlink(backup);
+                if (unlink(backup) == 0)
+                {
+                    RecordChange(ctx, pp, attr, "Removed old backup '%s'", backup);
+                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+                }
+                else
+                {
+                    RecordFailure(ctx, pp, attr,
+                                  "Failed to remove old backup '%s'", backup);
+                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+                }
             }
 
-            if (rename(dest, backup) == -1)
+            if (rename(dest, backup) == 0)
             {
-                /* ignore */
+                RecordChange(ctx, pp, attr, "Backed up '%s' as '%s'", dest, backup);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+            }
+            else
+            {
+                RecordFailure(ctx, pp, attr, "Failed to back up '%s' as '%s'", dest, backup);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             }
 
             /* Did the rename() succeed? NFS-safe */
@@ -1470,7 +1543,17 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
             if (S_ISDIR(dest_stat.st_mode))
             {
                 PurgeLocalFiles(ctx, NULL, dest, attr, pp, conn);
-                rmdir(dest);
+                if (rmdir(dest) == 0)
+                {
+                    RecordChange(ctx, pp, attr, "Removed directory '%s'", dest);
+                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+                }
+                else
+                {
+                    RecordFailure(ctx, pp, attr,
+                                  "Failed to remove directory '%s'", dest);
+                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+                }
             }
         }
     }
@@ -1478,22 +1561,30 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
     struct stat new_stat;
     if (lstat(new, &new_stat) == -1)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Can't stat new file '%s' - another agent has picked it up?. (stat: %s)",
-             new, GetErrorStr());
+        RecordFailure(ctx, pp, attr,
+                      "Can't stat new file '%s' - another agent has picked it up?. (stat: %s)",
+                      new, GetErrorStr());
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
         return false;
     }
 
     if ((S_ISREG(new_stat.st_mode)) && (new_stat.st_size != sstat->st_size))
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
-             "New file '%s' seems to have been corrupted in transit, destination %d and source %d, aborting.", new,
-             (int) new_stat.st_size, (int) sstat->st_size);
+        RecordFailure(ctx, pp, attr,
+                      "New file '%s' seems to have been corrupted in transit,"
+                      " destination size (%zd) differs from the source size (%zd), aborting.",
+                      new, (size_t) new_stat.st_size, (size_t) sstat->st_size);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
 
-        if (backupok)
+        if (backupok && (rename(backup, dest) == 0))
         {
-            rename(backup, dest);    /* ignore failure of this call, as there is nothing more we can do */
+            RecordChange(ctx, pp, attr, "Restored '%s' from '%s'", dest, backup);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+        }
+        else
+        {
+            RecordFailure(ctx, pp, attr, "Could not restore '%s' as '%s'", dest, backup);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
         }
 
         return false;
@@ -1505,13 +1596,19 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
 
         if (CompareFileHashes(source, new, sstat, &new_stat, &(attr->copy), conn))
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
-                 "New file '%s' seems to have been corrupted in transit, aborting.", new);
+            RecordFailure(ctx, pp, attr,
+                          "New file '%s' seems to have been corrupted in transit, aborting.", new);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
 
-            if (backupok)
+            if (backupok && (rename(backup, dest) == 0))
             {
-                rename(backup, dest);
+                RecordChange(ctx, pp, attr, "Restored '%s' from '%s'", dest, backup);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+            }
+            else
+            {
+                RecordFailure(ctx, pp, attr, "Could not restore '%s' as '%s'", dest, backup);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             }
 
             return false;
@@ -1552,7 +1649,10 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
                 }
                 else
                 {
-                    Log(LOG_LEVEL_INFO, "Read of Darwin resource fork rsrcrd failed. (read: %s)", GetErrorStr());
+                    RecordFailure(ctx, pp, attr,
+                                  "Read of Darwin resource fork rsrcrd '%s' failed (read: %s)",
+                                  new, GetErrorStr());
+                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
                     close(rsrcrd);
                     close(rsrcwd);
                     free(rsrcbuf);
@@ -1567,7 +1667,17 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
                 close(rsrcwd);
                 free(rsrcbuf);
 
-                unlink(new);    /* Go ahead and unlink .cfnew */
+                if (unlink(new) == 0)
+                {
+                    RecordChange(ctx, pp, attr, "Moved resource fork '%s' to '%s'", new, dest);
+                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+                }
+                else
+                {
+                    RecordFailure(ctx, pp, attr, "Failed to remove resource fork '%s'", new);
+                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+                    /* not a fatal failure, just record it and keep moving */
+                }
                 break;
             }
 
@@ -1586,7 +1696,10 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
                     }
                     else
                     {
-                        Log(LOG_LEVEL_INFO, "Write of Darwin resource fork rsrcwd failed.");
+                        RecordFailure(ctx, pp, attr,
+                                      "Write of Darwin resource fork rsrcwd '%s' failed (write: %s)"
+                                      dest, GetErrorStr());
+                        *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
                         close(rsrcrd);
                         close(rsrcwd);
                         free(rsrcbuf);
@@ -1600,16 +1713,27 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
     else
 #endif
     {
-        if (rename(new, dest) == -1)
+        if (rename(new, dest) == 0)
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
-                 "Could not install copy file as '%s', directory in the way?. (rename: %s)",
-                 dest, GetErrorStr());
+            RecordChange(ctx, pp, attr, "Moved '%s' to '%s'", new, dest);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+        }
+        else
+        {
+            RecordFailure(ctx, pp, attr,
+                          "Could not install copy file as '%s', directory in the way?. (rename: %s)",
+                          dest, GetErrorStr());
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
 
-            if (backupok)
+            if (backupok && (rename(backup, dest) == 0))
             {
-                rename(backup, dest);        /* ignore failure */
+                RecordChange(ctx, pp, attr, "Restored '%s' from '%s'", dest, backup);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+            }
+            else
+            {
+                RecordFailure(ctx, pp, attr, "Could not restore '%s' as '%s'", dest, backup);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             }
 
             return false;
@@ -1622,7 +1746,14 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
     }
     else if ((!discardbackup) && (ArchiveToRepository(backup, attr)))
     {
-        unlink(backup);
+        RecordChange(ctx, pp, attr, "Archived backup '%s'", backup);
+        *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+
+        if (unlink(backup) != 0)
+        {
+            RecordFailure(ctx, pp, attr, "Failed to clean backup '%s' after archiving", backup);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+        }
     }
 
 #ifdef HAVE_UTIME_H
@@ -1650,11 +1781,10 @@ static bool TransformFile(EvalContext *ctx, char *file, const Attributes *attr, 
 
     Buffer *command = BufferNew();
     ExpandScalar(ctx, PromiseGetBundle(pp)->ns, PromiseGetBundle(pp)->name, attr->transformer, command);
-    Log(LOG_LEVEL_INFO, "Transforming '%s' ", BufferData(command));
 
     if (!IsExecutable(CommandArg0(BufferData(command))))
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Transformer '%s' for file '%s' failed", attr->transformer, file);
+        RecordFailure(ctx, pp, attr, "Transformer '%s' for file '%s' failed", attr->transformer, file);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
         BufferDestroy(command);
         return false;
@@ -1670,9 +1800,10 @@ static bool TransformFile(EvalContext *ctx, char *file, const Attributes *attr, 
             return false;
         }
 
+        Log(LOG_LEVEL_INFO, "Transforming '%s' with '%s'", file, BufferData(command));
         if ((pop = cf_popen(BufferData(command), "r", true)) == NULL)
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Transformer '%s' for file '%s' failed", attr->transformer, file);
+            RecordFailure(ctx, pp, attr, "Transformer '%s' for file '%s' failed", attr->transformer, file);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             YieldCurrentLock(thislock);
             BufferDestroy(command);
@@ -1690,7 +1821,7 @@ static bool TransformFile(EvalContext *ctx, char *file, const Attributes *attr, 
                 if (!feof(pop))
                 {
                     cf_pclose(pop);
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Transformer '%s' for file '%s' failed", attr->transformer, file);
+                    RecordFailure(ctx, pp, attr, "Transformer '%s' for file '%s' failed", attr->transformer, file);
                     *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
                     YieldCurrentLock(thislock);
                     free(line);
@@ -1705,7 +1836,7 @@ static bool TransformFile(EvalContext *ctx, char *file, const Attributes *attr, 
 
             Log(LOG_LEVEL_INFO, "%s", line);
         }
-
+        RecordChange(ctx, pp, attr, "Transformed '%s' with '%s' ", file, BufferData(command));
         free(line);
 
         transRetcode = cf_pclose(pop);
@@ -1723,7 +1854,7 @@ static bool TransformFile(EvalContext *ctx, char *file, const Attributes *attr, 
     }
     else
     {
-        Log(LOG_LEVEL_ERR, "Need to transform file '%s' with '%s'", file, BufferData(command));
+        RecordWarning(ctx, pp, attr, "Need to transform file '%s' with '%s'", file, BufferData(command));
     }
 
     BufferDestroy(command);
@@ -1738,13 +1869,14 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
 
     if (lstat(path, &dsb) == -1)
     {
-        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_NOOP, pp, attr, "File object named '%s' is not there (promise kept)", path);
+        RecordNoChange(ctx, pp, attr, "File object named '%s' is not there (promise kept)", path);
         return PROMISE_RESULT_NOOP;
     }
     else
     {
         if (attr->rename.disable)
         {
+            /* XXX: Why should attr->rename.disable imply that the file doesn't exist? */
             Log(LOG_LEVEL_WARNING, "File object '%s' exists, contrary to promise", path);
         }
     }
@@ -1754,7 +1886,9 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
     {
         if (DONTDO)
         {
-            Log(LOG_LEVEL_INFO, "File '%s' should be renamed to '%s' to keep promise", path, attr->rename.newname);
+            RecordWarning(ctx, pp, attr,
+                          "File '%s' should be renamed to '%s' to keep promise",
+                          path, attr->rename.newname);
             return PROMISE_RESULT_NOOP;
         }
         else
@@ -1763,20 +1897,21 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
             {
                 if (rename(path, attr->rename.newname) == -1)
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Error occurred while renaming '%s'. (rename: %s)",
-                         path, GetErrorStr());
+                    RecordFailure(ctx, pp, attr, "Error occurred while renaming '%s'. (rename: %s)",
+                                  path, GetErrorStr());
                     result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                 }
                 else
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Renaming file '%s' to '%s'", path, attr->rename.newname);
+                    RecordChange(ctx, pp, attr, "Renamed file '%s' to '%s'", path, attr->rename.newname);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
                 }
             }
             else
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr,
-                     "Rename to same destination twice? Would overwrite saved copy - aborting");
+                RecordWarning(ctx, pp, attr,
+                              "Renaming '%s' to same destination twice would overwrite saved copy - aborting",
+                              path);
                 result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
             }
         }
@@ -1792,19 +1927,19 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
             {
                 if (unlink(path) == -1)
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Unable to unlink '%s'. (unlink: %s)",
-                         path, GetErrorStr());
+                    RecordFailure(ctx, pp, attr, "Unable to unlink '%s'. (unlink: %s)",
+                                  path, GetErrorStr());
                     result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                 }
                 else
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Disabling symbolic link '%s' by deleting it", path);
+                    RecordChange(ctx, pp, attr, "Disabled symbolic link '%s' by deleting it", path);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
                 }
             }
             else
             {
-                Log(LOG_LEVEL_INFO, "Need to disable link '%s' to keep promise", path);
+                RecordWarning(ctx, pp, attr, "Need to disable link '%s' to keep promise", path);
             }
 
             return result;
@@ -1819,8 +1954,8 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
 
         if (attr->transaction.action == cfa_warn)
         {
-            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "'%s' '%s' should be renamed",
-                 S_ISDIR(sb->st_mode) ? "Directory" : "File", path);
+            RecordWarning(ctx, pp, attr, "'%s' '%s' should be renamed",
+                          S_ISDIR(sb->st_mode) ? "Directory" : "File", path);
             result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
             return result;
         }
@@ -1839,10 +1974,9 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
                 if (!PathAppend(newname, sizeof(newname),
                                 attr->rename.newname, FILE_SEPARATOR))
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
-                         "Internal buffer limit in rename operation,"
-                         " destination: '%s' + '%s'",
-                         newname, attr->rename.newname);
+                    RecordFailure(ctx, pp, attr,
+                                  "Internal buffer limit in rename operation, destination: '%s' + '%s'",
+                                  newname, attr->rename.newname);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                     return result;
                 }
@@ -1881,38 +2015,51 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
 
         if (DONTDO)
         {
-            Log(LOG_LEVEL_INFO, "File '%s' should be renamed to '%s' to keep promise", path, newname);
+            RecordWarning(ctx, pp, attr, "File '%s' should be renamed to '%s' to keep promise", path, newname);
             return result;
         }
         else
         {
-            safe_chmod(path, newperm);
+            if (safe_chmod(path, newperm) == 0)
+            {
+                RecordChange(ctx, pp, attr, "Changed permissions of '%s' to 'mode %04jo'",
+                             path, (uintmax_t)newperm);
+            }
+            else
+            {
+                RecordFailure(ctx, pp, attr, "Failed to change permissions of '%s' to 'mode %04jo' (%s)",
+                              path, (uintmax_t)newperm, GetErrorStr());
+            }
 
             if (!FileInRepository(newname))
             {
                 if (rename(path, newname) == -1)
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Error occurred while renaming '%s'. (rename: %s)",
-                         path, GetErrorStr());
+                    RecordFailure(ctx, pp, attr, "Error occurred while renaming '%s'. (rename: %s)",
+                                  path, GetErrorStr());
                     result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                     return result;
                 }
                 else
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Disabling/renaming file '%s' to '%s' with mode %04jo", path,
-                         newname, (uintmax_t)newperm);
+                    RecordChange(ctx, pp, attr, "Disabled file '%s' by renaming to '%s' with mode %04jo",
+                                 path, newname, (uintmax_t)newperm);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
                 }
 
                 if (ArchiveToRepository(newname, attr))
                 {
+                    /* TODO: ArchiveToRepository() does
+                     *       Log(LOG_LEVEL_INFO, "Moved '%s' to repository location '%s'", file, destination)
+                     *       but we should do LogChange() instead. (maybe just add 'char **destination'
+                     *       argument to the function?) */
                     unlink(newname);
                 }
             }
             else
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr,
-                     "Disable required twice? Would overwrite saved copy - changing permissions only");
+                RecordWarning(ctx, pp, attr,
+                              "Disable required twice? Would overwrite saved copy - changing permissions only");
                 result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
             }
         }
@@ -1924,18 +2071,18 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
     {
         if (attr->transaction.action == cfa_warn)
         {
-            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "File '%s' should be truncated", path);
+            RecordWarning(ctx, pp, attr, "File '%s' should be truncated", path);
             result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
         }
         else if (!DONTDO)
         {
             TruncateFile(path);
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Truncating (emptying) '%s'", path);
+            RecordChange(ctx, pp, attr, "Truncated '%s'", path);
             result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
         }
         else
         {
-            Log(LOG_LEVEL_ERR, " * File '%s' needs emptying", path);
+            RecordWarning(ctx, pp, attr, " * File '%s' should be truncated", path);
         }
         return result;
     }
@@ -1944,18 +2091,18 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
     {
         if (attr->transaction.action == cfa_warn)
         {
-            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "File '%s' should be rotated", path);
+            RecordWarning(ctx, pp, attr, "File '%s' should be rotated", path);
             result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
         }
         else if (!DONTDO)
         {
             RotateFiles(path, attr->rename.rotate);
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Rotating files '%s' in %d fifo", path, attr->rename.rotate);
+            RecordChange(ctx, pp, attr, "Rotated file '%s' in %d fifo", path, attr->rename.rotate);
             result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
         }
         else
         {
-            Log(LOG_LEVEL_ERR, "File '%s' needs rotating", path);
+            RecordWarning(ctx, pp, attr, "File '%s' should be rotated", path);
         }
 
         return result;
@@ -1974,8 +2121,8 @@ static PromiseResult VerifyDelete(EvalContext *ctx,
 
     if (DONTDO)
     {
-        Log(LOG_LEVEL_INFO, "Promise requires deletion of file object '%s'",
-            path);
+        RecordWarning(ctx, pp, attr, "%s '%s' should be deleted",
+                      S_ISDIR(sb->st_mode) ? "Directory" : "File", path);
         return PROMISE_RESULT_NOOP;
     }
 
@@ -1983,9 +2130,8 @@ static PromiseResult VerifyDelete(EvalContext *ctx,
     {
     case cfa_warn:
 
-        cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr,
-             "%s '%s' should be deleted",
-             S_ISDIR(sb->st_mode) ? "Directory" : "File", path);
+        RecordWarning(ctx, pp, attr, "%s '%s' should be deleted",
+                      S_ISDIR(sb->st_mode) ? "Directory" : "File", path);
         return PROMISE_RESULT_WARN;
         break;
 
@@ -1996,15 +2142,13 @@ static PromiseResult VerifyDelete(EvalContext *ctx,
             int ret = unlink(lastnode);
             if (ret == -1)
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
-                     "Couldn't unlink '%s' tidying. (unlink: %s)",
-                     path, GetErrorStr());
+                RecordFailure(ctx, pp, attr, "Couldn't unlink '%s' tidying. (unlink: %s)",
+                              path, GetErrorStr());
                 return PROMISE_RESULT_FAIL;
             }
             else
             {
-                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr,
-                     "Deleted file '%s'", path);
+                RecordChange(ctx, pp, attr, "Deleted file '%s'", path);
                 return PROMISE_RESULT_CHANGE;
             }
         }
@@ -2012,9 +2156,9 @@ static PromiseResult VerifyDelete(EvalContext *ctx,
         {
             if (!attr->delete.rmdirs)
             {
-                Log(LOG_LEVEL_VERBOSE, "Keeping directory '%s' "
-                    "since \"rmdirs\" attribute was not specified",
-                    path);
+                RecordNoChange(ctx, pp, attr,
+                               "Keeping directory '%s' since 'rmdirs' attribute was not specified",
+                               path);
                 return PROMISE_RESULT_NOOP;
             }
 
@@ -2030,9 +2174,8 @@ static PromiseResult VerifyDelete(EvalContext *ctx,
             int ret = rmdir(lastnode);
             if (ret == -1 && errno != EEXIST && errno != ENOTEMPTY)
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
-                     "Delete directory '%s' failed (rmdir: %s)",
-                     path, GetErrorStr());
+                RecordFailure(ctx, pp, attr, "Delete directory '%s' failed (rmdir: %s)",
+                              path, GetErrorStr());
                 return PROMISE_RESULT_FAIL;
             }
             else if (ret == -1 &&
@@ -2047,8 +2190,7 @@ static PromiseResult VerifyDelete(EvalContext *ctx,
             else
             {
                 assert(ret != -1);
-                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr,
-                     "Deleted directory '%s'", path);
+                RecordChange(ctx, pp, attr, "Deleted directory '%s'", path);
                 return PROMISE_RESULT_CHANGE;
             }
         }
@@ -2070,20 +2212,19 @@ static PromiseResult TouchFile(EvalContext *ctx, char *path, const Attributes *a
     {
         if (utime(path, NULL) != -1)
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Touched (updated time stamps) for path '%s'", path);
+            RecordChange(ctx, pp, attr, "Touched (updated time stamps) for path '%s'", path);
             result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
         }
         else
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
-                 "Touch '%s' failed to update timestamps. (utime: %s)", path, GetErrorStr());
+            RecordFailure(ctx, pp, attr, "Touch '%s' failed to update timestamps. (utime: %s)",
+                          path, GetErrorStr());
             result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         }
     }
     else
     {
-        cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr,
-             "Need to touch (update time stamps) for '%s', but only a warning was promised!", path);
+        RecordWarning(ctx, pp, attr, "Time stamps should be updated for '%s'", path);
         result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
     }
 
@@ -2165,7 +2306,7 @@ static PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, co
 
     if (attr->havechange)
     {
-        VerifyFileChanges(file, dstat, attr, pp);
+        VerifyFileChanges(ctx, file, dstat, attr, pp, &result);
     }
 
 #ifndef __MINGW32__
@@ -2185,8 +2326,7 @@ static PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, co
     {
         Log(LOG_LEVEL_DEBUG, "File okay, newperm '%jo', stat '%jo'",
             (uintmax_t) (newperm & 07777), (uintmax_t) (dstat->st_mode & 07777));
-        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, attr,
-             "File permissions on '%s' as promised", file);
+        RecordNoChange(ctx, pp, attr, "File permissions on '%s' as promised", file);
         result = PromiseResultUpdate(result, PROMISE_RESULT_NOOP);
     }
     else
@@ -2197,24 +2337,21 @@ static PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, co
         if (attr->transaction.action == cfa_warn || DONTDO)
         {
 
-            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr,
-                 "'%s' has permission %04jo - [should be %04jo]", file,
-                 (uintmax_t)dstat->st_mode & 07777, (uintmax_t)newperm & 07777);
+            RecordWarning(ctx, pp, attr, "Should change permissions of '%s' from %04jo to %04jo",
+                          file, (uintmax_t)dstat->st_mode & 07777, (uintmax_t)newperm & 07777);
             result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
         }
         else if (attr->transaction.action == cfa_fix)
         {
             if (safe_chmod(file, newperm & 07777) == -1)
             {
-                Log(LOG_LEVEL_ERR,
-                    "chmod failed on '%s'. (chmod: %s)",
-                    file, GetErrorStr());
+                RecordFailure(ctx, pp, attr, "Failed to change permissions of '%s'. (chmod: %s)",
+                              file, GetErrorStr());
             }
             else
             {
-                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr,
-                     "Object '%s' had permission %04jo, changed it to %04jo", file,
-                     (uintmax_t)dstat->st_mode & 07777, (uintmax_t)newperm & 07777);
+                RecordChange(ctx, pp, attr, "Object '%s' had permissions %04jo, changed it to %04jo",
+                             file, (uintmax_t)dstat->st_mode & 07777, (uintmax_t)newperm & 07777);
                 result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
             }
         }
@@ -2231,11 +2368,10 @@ static PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, co
     newflags |= attr->perms.plus_flags;
     newflags &= ~(attr->perms.minus_flags);
 
-    if ((newflags & CHFLAGS_MASK) == (dstat->st_flags & CHFLAGS_MASK))  /* file okay */
+    if ((newflags & CHFLAGS_MASK) == (dstat->st_flags & CHFLAGS_MASK))
     {
-        Log(LOG_LEVEL_DEBUG, "BSD File okay, flags '%jx', current '%jx'",
-                (uintmax_t) (newflags & CHFLAGS_MASK),
-                (uintmax_t) (dstat->st_flags & CHFLAGS_MASK));
+        RecordNoChange("BSD flags of '%s' are as promised ('%jx')",
+                       file, (uintmax_t) (dstat->st_flags & CHFLAGS_MASK));
     }
     else
     {
@@ -2247,31 +2383,40 @@ static PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, co
         {
         case cfa_warn:
 
-            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr,
-                 "'%s' has flags %jo - [should be %jo]",
-                 file, (uintmax_t) (dstat->st_mode & CHFLAGS_MASK),
-                 (uintmax_t) (newflags & CHFLAGS_MASK));
+            RecordWarning(ctx, pp, attr,
+                          "Should change BSD flags of '%s' from %jo to %jo",
+                          file, (uintmax_t) (dstat->st_mode & CHFLAGS_MASK),
+                          (uintmax_t) (newflags & CHFLAGS_MASK));
             result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
             break;
 
         case cfa_fix:
 
-            if (!DONTDO)
+            if (DONTDO)
+            {
+                RecordWarning(ctx, pp, attr,
+                              "Should change BSD flags of '%s' from %jo to %jo",
+                              file, (uintmax_t) (dstat->st_mode & CHFLAGS_MASK),
+                              (uintmax_t) (newflags & CHFLAGS_MASK));
+                result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
+                break;
+            }
+            else
             {
                 if (chflags(file, newflags & CHFLAGS_MASK) == -1)
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_DENIED, pp, attr,
-                         "Failed setting BSD flags '%jx' on '%s'. (chflags: %s)",
-                         (uintmax_t) newflags, file, GetErrorStr());
+                    RecordDenial(ctx, pp, attr,
+                                 "Failed setting BSD flags '%jx' on '%s'. (chflags: %s)",
+                                 (uintmax_t) newflags, file, GetErrorStr());
                     result = PromiseResultUpdate(result, PROMISE_RESULT_DENIED);
                     break;
                 }
                 else
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr,
-                         "'%s' had flags %jo, changed it to %jo", file,
-                         (uintmax_t) (dstat->st_flags & CHFLAGS_MASK),
-                         (uintmax_t) (newflags & CHFLAGS_MASK));
+                    RecordChange(ctx, pp, attr, "'%s' had flags %jo, changed it to %jo",
+                                 file,
+                                 (uintmax_t) (dstat->st_flags & CHFLAGS_MASK),
+                                 (uintmax_t) (newflags & CHFLAGS_MASK));
                     result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
                 }
             }
@@ -2294,13 +2439,13 @@ static PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, co
     {
         if (utime(file, NULL) == -1)
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_DENIED, pp, attr, "Touching file '%s' failed. (utime: %s)",
-                 file, GetErrorStr());
+            RecordDenial(ctx, pp, attr, "Updating timestamps on '%s' failed. (utime: %s)",
+                         file, GetErrorStr());
             result = PromiseResultUpdate(result, PROMISE_RESULT_DENIED);
         }
         else
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Touching file '%s'", file);
+            RecordChange(ctx, pp, attr, "Updated timestamps on '%s'", file);
             result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
         }
     }
@@ -2349,12 +2494,16 @@ bool DepthSearch(EvalContext *ctx, char *name, const struct stat *sb, int rlevel
 
     if (rlevel > CF_RECURSION_LIMIT)
     {
-        Log(LOG_LEVEL_WARNING, "Very deep nesting of directories (>%d deep) for '%s' (Aborting files)", rlevel, name);
+        RecordWarning(ctx, pp, attr,
+                      "Very deep nesting of directories (>%d deep) for '%s' (Aborting files)",
+                      rlevel, name);
+        *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
         return false;
     }
 
-    if (!PushDirState(ctx, name, sb))
+    if (!PushDirState(ctx, pp, attr, name, sb, result))
     {
+        /* PushDirState() reports errors and updates 'result' in case of failures */
         return false;
     }
 
@@ -2369,8 +2518,10 @@ bool DepthSearch(EvalContext *ctx, char *name, const struct stat *sb, int rlevel
         db_file_set = SeqNew(1, &free);
         if (!FileChangesGetDirectoryList(name, db_file_set))
         {
-            SeqDestroy(db_file_set);
+            RecordFailure(ctx, pp, attr,
+                          "Failed to get directory listing for recording file changes in '%s'", name);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+            SeqDestroy(db_file_set);
             return false;
         }
         selected_files = SeqNew(1, &free);
@@ -2396,8 +2547,10 @@ bool DepthSearch(EvalContext *ctx, char *name, const struct stat *sb, int rlevel
 
         if (strlcat(path, dirp->d_name, sizeof(path)) >= sizeof(path))
         {
-            Log(LOG_LEVEL_ERR, "Internal limit reached in DepthSearch(),"
-                " path too long: '%s' + '%s'", path, dirp->d_name);
+            RecordFailure(ctx, pp, attr,
+                          "Internal limit reached in DepthSearch(), path too long: '%s' + '%s'",
+                          path, dirp->d_name);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             retval = false;
             goto end;
         }
@@ -2431,7 +2584,10 @@ bool DepthSearch(EvalContext *ctx, char *name, const struct stat *sb, int rlevel
 
             if (stat(dirp->d_name, &lsb) == -1)
             {
-                Log(LOG_LEVEL_ERR, "Recurse was working on '%s' when this failed. (stat: %s)", path, GetErrorStr());
+                RecordFailure(ctx, pp, attr,
+                              "Recurse was working on '%s' when this failed. (stat: %s)",
+                              path, GetErrorStr());
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
                 continue;
             }
         }
@@ -2453,7 +2609,7 @@ bool DepthSearch(EvalContext *ctx, char *name, const struct stat *sb, int rlevel
             {
                 Log(LOG_LEVEL_VERBOSE, "Entering '%s', level %d", path, rlevel);
                 goback = DepthSearch(ctx, path, &lsb, rlevel + 1, attr, pp, rootdevice, result);
-                if (!PopDirState(goback, name, sb, attr->recursion))
+                if (!PopDirState(ctx, pp, attr, goback, name, sb, attr->recursion, result))
                 {
                     FatalError(ctx, "Not safe to continue");
                 }
@@ -2483,7 +2639,7 @@ bool DepthSearch(EvalContext *ctx, char *name, const struct stat *sb, int rlevel
 
     if (attr->havechange)
     {
-        FileChangesCheckAndUpdateDirectory(name, selected_files, db_file_set,
+        FileChangesCheckAndUpdateDirectory(ctx, attr, name, selected_files, db_file_set,
                                            attr->change.update, pp, result);
     }
 
@@ -2494,12 +2650,13 @@ end:
     return retval;
 }
 
-static bool PushDirState(EvalContext *ctx, char *name, const struct stat *sb)
+static bool PushDirState(EvalContext *ctx, const Promise *pp, const Attributes *attr, char *name, const struct stat *sb, PromiseResult *result)
 {
     if (safe_chdir(name) == -1)
     {
-        Log(LOG_LEVEL_INFO, "Could not change to directory '%s', mode '%04jo' in tidy. (chdir: %s)",
-            name, (uintmax_t)(sb->st_mode & 07777), GetErrorStr());
+        RecordFailure(ctx, pp, attr, "Could not change to directory '%s' (mode '%04jo', chdir: %s)",
+                      name, (uintmax_t)(sb->st_mode & 07777), GetErrorStr());
+        *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
         return false;
     }
 
@@ -2513,14 +2670,18 @@ static bool PushDirState(EvalContext *ctx, char *name, const struct stat *sb)
 /**
  * @return true if safe for agent to continue
  */
-static bool PopDirState(int goback, char *name, const struct stat *sb, DirectoryRecursion r)
+static bool PopDirState(EvalContext *ctx, const Promise *pp, const Attributes *attr,
+                        int goback, char *name, const struct stat *sb, DirectoryRecursion r,
+                        PromiseResult *result)
 {
     if (goback && (r.travlinks))
     {
         if (safe_chdir(name) == -1)
         {
-            Log(LOG_LEVEL_ERR, "Error in backing out of recursive travlink descent securely to '%s'. (chdir: %s)",
-                name, GetErrorStr());
+            RecordFailure(ctx, pp, attr,
+                          "Error in backing out of recursive travlink descent securely to '%s'. (chdir: %s)",
+                          name, GetErrorStr());
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             return false;
         }
 
@@ -2533,8 +2694,10 @@ static bool PopDirState(int goback, char *name, const struct stat *sb, Directory
     {
         if (safe_chdir("..") == -1)
         {
-            Log(LOG_LEVEL_ERR, "Error in backing out of recursive descent securely to '%s'. (chdir: %s)",
-                name, GetErrorStr());
+            RecordFailure(ctx, pp, attr,
+                          "Error in backing out of recursive descent securely to '%s'. (chdir: %s)",
+                          name, GetErrorStr());
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             return false;
         }
     }
@@ -2638,12 +2801,21 @@ static PromiseResult VerifyCopiedFileAttributes(EvalContext *ctx, const char *sr
         (   attr.copy.servers == NULL
          || strcmp(RlistScalarValue(attr.copy.servers), "localhost") == 0))
     {
-        if (!CopyFileExtendedAttributesDisk(src, dest))
+        bool change = false;
+        if (!CopyFileExtendedAttributesDisk(src, dest, &change))
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &attr,
-                 "Could not preserve extended attributes"
-                 " (ACLs and security contexts) on file '%s'", dest);
+            RecordFailure(ctx, pp, &attr,
+                          "Could not preserve extended attributes"
+                          " (ACLs and security contexts) on file '%s'",
+                          dest);
             result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+        }
+        else if (change)
+        {
+            RecordChange(ctx, pp, &attr,
+                         "Copied extended attributes from '%s' to '%s'",
+                         src, dest);
+            result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
         }
     }
 
@@ -2664,9 +2836,8 @@ static PromiseResult CopyFileSources(EvalContext *ctx, char *destination, const 
 
     if (conn != NULL && (!conn->authenticated))
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
-             "No authenticated source '%s' in files.copy_from promise",
-             BufferData(source));
+        RecordFailure(ctx, pp, attr, "Source '%s' not authenticated in copy_from for '%s'",
+                      BufferData(source), destination);
         BufferDestroy(source);
         return PROMISE_RESULT_FAIL;
     }
@@ -2675,19 +2846,18 @@ static PromiseResult CopyFileSources(EvalContext *ctx, char *destination, const 
     {
         if (attr->copy.missing_ok)
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, attr,
-                 "Can't stat file '%s' on '%s' but promise is kept because of"
-                 " 'missing_ok' in files.copy_from promise",
-                 BufferData(source), conn ? conn->remoteip : "localhost");
+            RecordNoChange(ctx, pp, attr,
+                           "Can't stat file '%s' on '%s' but promise is kept because of"
+                           " 'missing_ok' in files.copy_from promise",
+                           BufferData(source), conn ? conn->remoteip : "localhost");
             BufferDestroy(source);
-
-            return PROMISE_RESULT_CHANGE;
+            return PROMISE_RESULT_NOOP;
         }
         else
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, attr,
-                 "Can't stat file '%s' on '%s' in files.copy_from promise",
-                 BufferData(source), conn ? conn->remoteip : "localhost");
+            RecordFailure(ctx, pp, attr,
+                          "Can't stat file '%s' on '%s' in files.copy_from promise",
+                          BufferData(source), conn ? conn->remoteip : "localhost");
             BufferDestroy(source);
             return PROMISE_RESULT_FAIL;
         }
@@ -2703,18 +2873,21 @@ static PromiseResult CopyFileSources(EvalContext *ctx, char *destination, const 
         strcat(vbuff, ".");
     }
 
-    if (!MakeParentDirectory(vbuff, attr->move_obstructions))
+    PromiseResult result = PROMISE_RESULT_NOOP;
+    bool dir_created = false;
+    if (!MakeParentDirectory(vbuff, attr->move_obstructions, &dir_created))
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
-             "Can't make directories for '%s' in files.copy_from promise",
-             vbuff);
+        RecordFailure(ctx, pp, attr, "Can't make parent directory for '%s'", destination);
         BufferDestroy(source);
         return PROMISE_RESULT_FAIL;
     }
+    if (dir_created)
+    {
+        RecordChange(ctx, pp, attr, "Created parent directory for '%s'", destination);
+        result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
+    }
 
     CompressedArray *inode_cache = NULL;
-
-    PromiseResult result = PROMISE_RESULT_NOOP;
     if (S_ISDIR(ssb.st_mode))   /* could be depth_search */
     {
         if (attr->copy.purge)
@@ -2876,8 +3049,7 @@ PromiseResult ScheduleCopyOperation(EvalContext *ctx, char *destination, const A
        https://cfengine.com/bugtracker/view.php?id=687 */
     if (attr->copy.source == NULL)
     {
-        Log(LOG_LEVEL_INFO,
-            "Body copy_from has no source! Maybe a typo in the policy?");
+        RecordFailure(ctx, pp, attr, "Body copy_from for '%s' has no source", destination);
         return PROMISE_RESULT_FAIL;
     }
 
@@ -2913,9 +3085,8 @@ PromiseResult ScheduleCopyOperation(EvalContext *ctx, char *destination, const A
 
     if (!copyfrom_localhost && conn == NULL)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
-             "No suitable server found");
-        PromiseRef(LOG_LEVEL_INFO, pp);
+        RecordFailure(ctx, pp, attr, "No suitable server found for '%s'", destination);
+        PromiseRef(LOG_LEVEL_ERR, pp);
         return PROMISE_RESULT_FAIL;
     }
 
@@ -2962,6 +3133,7 @@ PromiseResult ScheduleLinkOperation(EvalContext *ctx, char *destination, char *s
         result = VerifyAbsoluteLink(ctx, destination, source, attr, pp);
         break;
     default:
+        assert(false);
         Log(LOG_LEVEL_ERR, "Unknown link type - should not happen.");
         break;
     }
@@ -2980,35 +3152,48 @@ PromiseResult ScheduleLinkChildrenOperation(EvalContext *ctx, char *destination,
     struct stat lsb;
     int ret;
 
+    PromiseResult result = PROMISE_RESULT_NOOP;
     if ((ret = lstat(destination, &lsb)) != -1)
     {
         if (attr.move_obstructions && S_ISLNK(lsb.st_mode))
         {
-            unlink(destination);
+            if (unlink(destination) == 0)
+            {
+                RecordChange(ctx, pp, a, "Removed obstructing link '%s'", destination);
+                result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
+            }
+            else
+            {
+                RecordFailure(ctx, pp, a, "Failed to remove obstructing link '%s'", destination);
+                result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+            }
         }
         else if (!S_ISDIR(lsb.st_mode))
         {
-            Log(LOG_LEVEL_ERR, "Cannot promise to link multiple files to children of '%s' as it is not a directory!",
-                  destination);
-            return PROMISE_RESULT_NOOP;
+            RecordFailure(ctx, pp, a,
+                          "Cannot promise to link files to children of '%s' as it is not a directory",
+                          destination);
+            result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+            return result;
         }
     }
 
     snprintf(promiserpath, sizeof(promiserpath), "%s/.", destination);
 
-    PromiseResult result = PROMISE_RESULT_NOOP;
-    if ((ret == -1 || !S_ISDIR(lsb.st_mode)) && !CfCreateFile(ctx, promiserpath, pp, &attr, &result))
+    if ((ret == -1) && !CfCreateFile(ctx, promiserpath, pp, &attr, &result))
     {
-        Log(LOG_LEVEL_ERR, "Cannot promise to link multiple files to children of '%s' as it is not a directory!",
-              destination);
+        RecordFailure(ctx, pp, a,
+                      "Failed to create directory '%s' for linking files as its children",
+                      destination);
+        result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         return result;
     }
 
     if ((dirh = DirOpen(source)) == NULL)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &attr,
-             "Can't open source of children to link '%s'. (opendir: %s)",
-             attr.link.source, GetErrorStr());
+        RecordFailure(ctx, pp, a,
+                      "Can't open source of children to link '%s'. (opendir: %s)",
+                      attr.link.source, GetErrorStr());
         result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         return result;
     }
@@ -3017,6 +3202,7 @@ PromiseResult ScheduleLinkChildrenOperation(EvalContext *ctx, char *destination,
     {
         if (!ConsiderLocalFile(dirp->d_name, source))
         {
+            Log(LOG_LEVEL_VERBOSE, "Skipping '%s'", dirp->d_name);
             continue;
         }
 
@@ -3028,10 +3214,10 @@ PromiseResult ScheduleLinkChildrenOperation(EvalContext *ctx, char *destination,
         if (strlcat(promiserpath, dirp->d_name, sizeof(promiserpath))
             >= sizeof(promiserpath))
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, &attr,
-                 "Internal buffer limit while verifying child links,"
-                 " promiser: '%s' + '%s'",
-                 promiserpath, dirp->d_name);
+            RecordInterruption(ctx, pp, a,
+                              "Internal buffer limit while verifying child links,"
+                              " promiser: '%s' + '%s'",
+                              promiserpath, dirp->d_name);
             result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
             DirClose(dirh);
             return result;
@@ -3043,10 +3229,10 @@ PromiseResult ScheduleLinkChildrenOperation(EvalContext *ctx, char *destination,
         if (strlcat(sourcepath, dirp->d_name, sizeof(sourcepath))
             >= sizeof(sourcepath))
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, &attr,
-                 "Internal buffer limit while verifying child links,"
-                 " source filename: '%s' + '%s'",
-                 sourcepath, dirp->d_name);
+            RecordInterruption(ctx, pp, a,
+                               "Internal buffer limit while verifying child links,"
+                               " source filename: '%s' + '%s'",
+                               sourcepath, dirp->d_name);
             result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
             DirClose(dirh);
             return result;
@@ -3067,11 +3253,14 @@ PromiseResult ScheduleLinkChildrenOperation(EvalContext *ctx, char *destination,
 
         if ((attr.recursion.depth > recurse) && (lstat(sourcepath, &lsb) != -1) && S_ISDIR(lsb.st_mode))
         {
-            result = PromiseResultUpdate(result, ScheduleLinkChildrenOperation(ctx, promiserpath, sourcepath, recurse + 1, &attr, pp));
+            result = PromiseResultUpdate(result,
+                                         ScheduleLinkChildrenOperation(ctx, promiserpath, sourcepath,
+                                                                       recurse + 1, &attr, pp));
         }
         else
         {
-            result = PromiseResultUpdate(result, ScheduleLinkOperation(ctx, promiserpath, sourcepath, &attr, pp));
+            result = PromiseResultUpdate(result, ScheduleLinkOperation(ctx, promiserpath, sourcepath,
+                                                                       &attr, pp));
         }
     }
 
@@ -3084,7 +3273,6 @@ static PromiseResult VerifyFileIntegrity(EvalContext *ctx, const char *file, con
     assert(attr != NULL);
     unsigned char digest1[EVP_MAX_MD_SIZE + 1];
     unsigned char digest2[EVP_MAX_MD_SIZE + 1];
-    int changed = false, one, two;
 
     if ((attr->change.report_changes != FILE_CHANGE_REPORT_CONTENT_CHANGE) && (attr->change.report_changes != FILE_CHANGE_REPORT_ALL))
     {
@@ -3095,6 +3283,7 @@ static PromiseResult VerifyFileIntegrity(EvalContext *ctx, const char *file, con
     memset(digest2, 0, EVP_MAX_MD_SIZE + 1);
 
     PromiseResult result = PROMISE_RESULT_NOOP;
+    bool changed = false;
     if (attr->change.hash == HASH_METHOD_BEST)
     {
         if (!DONTDO)
@@ -3102,13 +3291,10 @@ static PromiseResult VerifyFileIntegrity(EvalContext *ctx, const char *file, con
             HashFile(file, digest1, HASH_METHOD_MD5, false);
             HashFile(file, digest2, HASH_METHOD_SHA1, false);
 
-            one = FileChangesCheckAndUpdateHash(ctx, file, digest1, HASH_METHOD_MD5, attr, pp, &result);
-            two = FileChangesCheckAndUpdateHash(ctx, file, digest2, HASH_METHOD_SHA1, attr, pp, &result);
-
-            if (one || two)
-            {
-                changed = true;
-            }
+            changed = (changed ||
+                       FileChangesCheckAndUpdateHash(ctx, file, digest1, HASH_METHOD_MD5, attr, pp, &result));
+            changed = (changed ||
+                       FileChangesCheckAndUpdateHash(ctx, file, digest2, HASH_METHOD_SHA1, attr, pp, &result));
         }
     }
     else
@@ -3117,10 +3303,8 @@ static PromiseResult VerifyFileIntegrity(EvalContext *ctx, const char *file, con
         {
             HashFile(file, digest1, attr->change.hash, false);
 
-            if (FileChangesCheckAndUpdateHash(ctx, file, digest1, attr->change.hash, attr, pp, &result))
-            {
-                changed = true;
-            }
+            changed = (changed ||
+                       FileChangesCheckAndUpdateHash(ctx, file, digest1, attr->change.hash, attr, pp, &result));
         }
     }
 
@@ -3128,7 +3312,19 @@ static PromiseResult VerifyFileIntegrity(EvalContext *ctx, const char *file, con
     {
         EvalContextHeapPersistentSave(ctx, "checksum_alerts", CF_PERSISTENCE, CONTEXT_STATE_POLICY_PRESERVE, "");
         EvalContextClassPutSoft(ctx, "checksum_alerts", CONTEXT_SCOPE_NAMESPACE, "");
-        FileChangesLogChange(file, FILE_STATE_CONTENT_CHANGED, "Content changed", pp);
+        if (!DONTDO)
+        {
+            if (FileChangesLogChange(file, FILE_STATE_CONTENT_CHANGED, "Content changed", pp))
+            {
+                RecordChange(ctx, pp, attr, "Recorded integrity changes in '%s'", file);
+                result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
+            }
+            else
+            {
+                RecordFailure(ctx, pp, attr, "Failed to record integrity changes in '%s'", file);
+                result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+            }
+        }
     }
 
     if (attr->change.report_diffs)
@@ -3317,7 +3513,7 @@ static PromiseResult VerifySetUidGid(EvalContext *ctx, const char *file, const s
             {
                 if (amroot)
                 {
-                    cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "NEW SETUID root PROGRAM '%s'", file);
+                    RecordWarning(ctx, pp, attr, "NEW SETUID root PROGRAM '%s'", file);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
                 }
 
@@ -3331,7 +3527,7 @@ static PromiseResult VerifySetUidGid(EvalContext *ctx, const char *file, const s
             {
             case cfa_fix:
 
-                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Removing setuid (root) flag from '%s'", file);
+                RecordChange(ctx, pp, attr, "Removed setuid (root) flag from '%s'", file);
                 result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
                 break;
 
@@ -3339,7 +3535,7 @@ static PromiseResult VerifySetUidGid(EvalContext *ctx, const char *file, const s
 
                 if (amroot)
                 {
-                    cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "Need to remove setuid (root) flag on '%s'", file);
+                    RecordWarning(ctx, pp, attr, "Setuid (root) flag on '%s' should be removed", file);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
                 }
                 break;
@@ -3359,7 +3555,7 @@ static PromiseResult VerifySetUidGid(EvalContext *ctx, const char *file, const s
             {
                 if (amroot)
                 {
-                    cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "NEW SETGID root PROGRAM '%s'", file);
+                    RecordWarning(ctx, pp, attr, "NEW SETGID root PROGRAM '%s'", file);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
                 }
 
@@ -3373,13 +3569,13 @@ static PromiseResult VerifySetUidGid(EvalContext *ctx, const char *file, const s
             {
             case cfa_fix:
 
-                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Removing setgid (root) flag from '%s'", file);
+                RecordChange(ctx, pp, attr, "Removed setgid (root) flag from '%s'", file);
                 result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
                 break;
 
             case cfa_warn:
 
-                cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "Need to remove setgid (root) flag on '%s'", file);
+                RecordWarning(ctx, pp, attr, "Setgid (root) flag on '%s' should be removed", file);
                 result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
                 break;
 
@@ -3464,7 +3660,7 @@ static int VerifyFinderType(EvalContext *ctx, const char *file, const Attributes
 
             if (DONTDO)
             {
-                Log(LOG_LEVEL_INFO, "Promised to set Finder Type code of '%s' to '%s'", file, a->perms.findertype);
+                RecordWarning("Should set Finder Type code of '%s' to '%s'", file, a->perms.findertype);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                 return 0;
             }
@@ -3476,20 +3672,20 @@ static int VerifyFinderType(EvalContext *ctx, const char *file, const Attributes
 
             if (retval >= 0)
             {
-                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Setting Finder Type code of '%s' to '%s'", file, a->perms.findertype);
+                RecordChange(ctx, pp, a, "Set Finder Type code of '%s' to '%s'", file, a->perms.findertype);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
             }
             else
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Setting Finder Type code of '%s' to '%s' failed", file,
-                     a->perms.findertype);
+                RecordFailure(ctx, pp, a, "Setting Finder Type code of '%s' to '%s' failed",
+                              file, a->perms.findertype);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             }
 
             return retval;
 
         case cfa_warn:
-            Log(LOG_LEVEL_WARNING, "Darwin FinderType does not match -- not fixing.");
+            RecordWarning("Should set Finder Type code of '%s' to '%s'", file, a->perms.findertype);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
             return 0;
 
@@ -3499,7 +3695,7 @@ static int VerifyFinderType(EvalContext *ctx, const char *file, const Attributes
     }
     else
     {
-        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Finder Type code of '%s' to '%s' is as promised", file, a->perms.findertype);
+        RecordNoChange(ctx, pp, a, "Finder Type code of '%s' to '%s' is as promised", file, a->perms.findertype);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_NOOP);
         return 0;
     }
@@ -3529,26 +3725,24 @@ static void TruncateFile(char *name)
     }
 }
 
-static void RegisterAHardLink(int i, char *value, const Attributes *attr, CompressedArray **inode_cache)
+static void RegisterAHardLink(int i, char *value, EvalContext *ctx, const Promise *pp,
+                              const Attributes *attr, PromiseResult *result,
+                              CompressedArray **inode_cache)
 {
     if (!FixCompressedArrayValue(i, value, inode_cache))
     {
         /* Not root hard link, remove to preserve consistency */
-        if (DONTDO)
+        if (DONTDO || (attr->transaction.action == cfa_warn))
         {
-            Log(LOG_LEVEL_VERBOSE, "Need to remove old hard link '%s' to preserve structure", value);
+            RecordWarning(ctx, pp, attr,
+                          "Old hard link '%s' should be removed to preserve structure",
+                          value);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
         }
         else
         {
-            if (attr->transaction.action == cfa_warn)
-            {
-                Log(LOG_LEVEL_WARNING, "Need to remove old hard link '%s' to preserve structure", value);
-            }
-            else
-            {
-                Log(LOG_LEVEL_VERBOSE, "Removing old hard link '%s' to preserve structure", value);
-                unlink(value);
-            }
+            RecordChange(ctx, pp, attr, "Removed old hard link '%s' to preserve structure", value);
+            unlink(value);
         }
     }
 }
@@ -3676,9 +3870,9 @@ bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, const At
         }
         if (ulp == NULL)
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
-                 "None of the promised owners for '%s' exist -- see INFO logs for more",
-                 file);
+            RecordFailure(ctx, pp, attr,
+                          "None of the promised owners for '%s' exist -- see INFO logs for more",
+                          file);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             uid = CF_SAME_OWNER;      /* chown(-1) doesn't change ownership */
         }
@@ -3708,9 +3902,9 @@ bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, const At
         }
         if (glp == NULL)
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
-                 "None of the promised groups for '%s' exist -- see INFO logs for more",
-                 file);
+            RecordFailure(ctx, pp, attr,
+                          "None of the promised groups for '%s' exist -- see INFO logs for more",
+                          file);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             gid = CF_SAME_GROUP;      /* chown(-1) doesn't change ownership */
         }
@@ -3721,6 +3915,7 @@ bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, const At
         gid == CF_SAME_GROUP)
     {
         /* User and group as promised, skip completely. */
+        RecordNoChange(ctx, pp, attr, "Owner and group of '%s' as promised", file);
         return false;
     }
     else
@@ -3747,43 +3942,52 @@ bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, const At
                 Log(LOG_LEVEL_DEBUG, "Using lchown function");
                 if (safe_lchown(file, uid, gid) == -1)
                 {
-                    Log(LOG_LEVEL_INFO, "Cannot set ownership on link '%s'. (lchown: %s)", file, GetErrorStr());
+                    RecordFailure(ctx, pp, attr, "Cannot set ownership on link '%s'. (lchown: %s)",
+                                  file, GetErrorStr());
                 }
                 else
                 {
-                    return true;
+                    if (uid != CF_SAME_OWNER)
+                    {
+                        RecordChange(ctx, pp, attr, "Owner of link '%s' was %ju, set to %ju",
+                                     file, (uintmax_t) sb->st_uid, (uintmax_t) uid);
+                        *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+                    }
+
+                    if (gid != CF_SAME_GROUP)
+                    {
+                        RecordChange(ctx, pp, attr, "Group of link '%s' was %ju, set to %ju",
+                                     file, (uintmax_t)sb->st_gid, (uintmax_t)gid);
+                        *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+                    }
                 }
 # endif
             }
             else if (!DONTDO)
             {
-                if (uid != CF_SAME_OWNER)
-                {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr,
-                         "Owner of '%s' was %ju, setting to %ju",
-                         file, (uintmax_t) sb->st_uid, (uintmax_t) uid);
-                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
-                }
-
-                if (gid != CF_SAME_GROUP)
-                {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr,
-                         "Group of '%s' was %ju, setting to %ju",
-                         file, (uintmax_t)sb->st_gid, (uintmax_t)gid);
-                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
-                }
-
                 if (!S_ISLNK(sb->st_mode))
                 {
                     if (safe_chown(file, uid, gid) == -1)
                     {
-                        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_DENIED, pp, attr, "Cannot set ownership on file '%s'. (chown: %s)",
-                             file, GetErrorStr());
+                        RecordDenial(ctx, pp, attr, "Cannot set ownership on file '%s'. (chown: %s)",
+                                     file, GetErrorStr());
                         *result = PromiseResultUpdate(*result, PROMISE_RESULT_DENIED);
                     }
                     else
                     {
-                        return true;
+                        if (uid != CF_SAME_OWNER)
+                        {
+                            RecordChange(ctx, pp, attr, "Owner of '%s' was %ju, set to %ju",
+                                         file, (uintmax_t) sb->st_uid, (uintmax_t) uid);
+                            *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+                        }
+
+                        if (gid != CF_SAME_GROUP)
+                        {
+                            RecordChange(ctx, pp, attr, "Group of '%s' was %ju, set to %ju",
+                                         file, (uintmax_t)sb->st_gid, (uintmax_t)gid);
+                            *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+                        }
                     }
                 }
             }
@@ -3793,22 +3997,23 @@ bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, const At
 
             if ((pw = getpwuid(sb->st_uid)) == NULL)
             {
-                Log(LOG_LEVEL_WARNING, "File '%s' is not owned by anybody in the passwd database", file);
-                Log(LOG_LEVEL_WARNING, "(uid = %ju,gid = %ju)", (uintmax_t)sb->st_uid, (uintmax_t)sb->st_gid);
+                RecordWarning(ctx, pp, attr,
+                    "File '%s' is not owned by anybody in the passwd database (uid = %ju)",
+                    file, (uintmax_t)sb->st_uid);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                 break;
             }
 
             if ((gp = getgrgid(sb->st_gid)) == NULL)
             {
-                cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "File '%s' is not owned by any group in group database",
-                     file);
+                RecordWarning(ctx, pp, attr, "File '%s' is not owned by any group in group database  (gid = %ju)",
+                              file, (uintmax_t)sb->st_gid);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                 break;
             }
 
-            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "File '%s' is owned by '%s', group '%s'", file, pw->pw_name,
-                 gp->gr_name);
+            RecordWarning(ctx, pp, attr, "File '%s' is owned by '%s', group '%s'", file, pw->pw_name,
+                          gp->gr_name);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
             break;
         }
@@ -3819,14 +4024,15 @@ bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, const At
 
 #endif /* !__MINGW32__ */
 
-static void VerifyFileChanges(const char *file, const struct stat *sb, const Attributes *attr, const Promise *pp)
+static void VerifyFileChanges(EvalContext *ctx, const char *file, const struct stat *sb,
+                              const Attributes *attr, const Promise *pp, PromiseResult *result)
 {
     if ((attr->change.report_changes != FILE_CHANGE_REPORT_STATS_CHANGE) && (attr->change.report_changes != FILE_CHANGE_REPORT_ALL))
     {
         return;
     }
 
-    FileChangesCheckAndUpdateStats(file, sb, attr->change.update, pp);
+    FileChangesCheckAndUpdateStats(ctx, file, sb, attr->change.update, attr, pp, result);
 }
 
 bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, const Attributes *attr, PromiseResult *result)
@@ -3834,8 +4040,9 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, const Attribu
     assert(attr != NULL);
     if (!IsAbsoluteFileName(file))
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
-             "Cannot create a relative filename '%s' - has no invariant meaning. (create: %s)", file, GetErrorStr());
+        RecordFailure(ctx, pp, attr,
+                      "Cannot create a relative filename '%s' - has no invariant meaning. (create: %s)",
+                      file, GetErrorStr());
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
         return false;
     }
@@ -3848,20 +4055,23 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, const Attribu
 
         if (!DONTDO && attr->transaction.action != cfa_warn)
         {
-            if (!MakeParentDirectory(file, attr->move_obstructions))
+            bool dir_created = false;
+            if (!MakeParentDirectory(file, attr->move_obstructions, &dir_created))
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Error creating directories for '%s'. (create: %s)",
-                     file, GetErrorStr());
+                RecordFailure(ctx, pp, attr, "Error creating directories for '%s'. (create: %s)",
+                              file, GetErrorStr());
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
                 return false;
             }
-
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Created directory '%s'", file);
+            if (dir_created)
+            {
+                RecordChange(ctx, pp, attr, "Created directory '%s'", file);
+            }
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
         }
         else
         {
-            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "Warning promised, need to create directory '%s'", file);
+            RecordWarning(ctx, pp, attr, "Warning promised, need to create directory '%s'", file);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
             return false;
         }
@@ -3869,68 +4079,86 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, const Attribu
     else if (attr->file_type && !strncmp(attr->file_type, "fifo", 5))
     {
 #ifndef _WIN32
+        mode_t filemode = 0600;
+        if (PromiseGetConstraintAsRval(pp, "mode", RVAL_TYPE_SCALAR) == NULL)
+        {
+            Log(LOG_LEVEL_VERBOSE, "No mode was set, choose plain file default %04jo", (uintmax_t)filemode);
+        }
+        else
+        {
+            filemode = attr->perms.plus & ~(attr->perms.minus);
+        }
+
         if (!DONTDO)
         {
             mode_t saveumask = umask(0);
-            mode_t filemode = 0600;
-
-            if (PromiseGetConstraintAsRval(pp, "mode", RVAL_TYPE_SCALAR) == NULL)
+            bool dir_created = false;
+            if (!MakeParentDirectory(file, attr->move_obstructions, &dir_created))
             {
-                /* Relying on umask is risky */
-                filemode = 0600;
-                Log(LOG_LEVEL_VERBOSE, "No mode was set, choose plain file default %04jo", (uintmax_t)filemode);
+                RecordFailure(ctx, pp, attr, "Error creating directories for '%s'. (create: %s)",
+                              file, GetErrorStr());
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+                return false;
             }
-            else
+            if (dir_created)
             {
-                filemode = attr->perms.plus & ~(attr->perms.minus);
+                RecordChange(ctx, pp, attr, "Created directory '%s'", file);
             }
-
-            MakeParentDirectory(file, attr->move_obstructions);
 
             char errormsg[CF_BUFSIZE];
-            if (!mkfifo(file, filemode))
+            if (mkfifo(file, filemode) != 0)
             {
                 snprintf(errormsg, sizeof(errormsg), "(mkfifo: %s)", GetErrorStr());
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Error creating file '%s', mode '%04jo'. %s",
-                     file, (uintmax_t)filemode, errormsg);
+                RecordFailure(ctx, pp, attr, "Error creating file '%s', mode '%04jo'. %s",
+                              file, (uintmax_t)filemode, errormsg);
                 umask(saveumask);
                 return false;
             }
+            RecordChange(ctx, pp, attr, "Created named pipe '%s', mode %04jo", file, (uintmax_t) filemode);
 
             umask(saveumask);
             return true;
         }
         else
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr, "Warning promised, need to create fifo '%s'", file);
+            RecordWarning(ctx, pp, attr, "Warning promised, need to create named pipe '%s', mode %04jo",
+                          file, (uintmax_t) filemode);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
             return false;
         }
 #else
-        cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "Operation not supported on Windows");
+        RecordWarning(ctx, pp, attr, "Named pipe creation not supported on Windows");
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
         return false;
 #endif
     }
     else
     {
+        mode_t filemode = 0600;     /* Decide the mode for filecreation */
+        if (PromiseGetConstraintAsRval(pp, "mode", RVAL_TYPE_SCALAR) == NULL)
+        {
+            Log(LOG_LEVEL_VERBOSE, "No mode was set, choose plain file default %04jo", (uintmax_t)filemode);
+        }
+        else
+        {
+            filemode = attr->perms.plus & ~(attr->perms.minus);
+        }
+
         if (!DONTDO && attr->transaction.action != cfa_warn)
         {
             mode_t saveumask = umask(0);
-            mode_t filemode = 0600;     /* Decide the mode for filecreation */
-
-            if (PromiseGetConstraintAsRval(pp, "mode", RVAL_TYPE_SCALAR) == NULL)
+            bool dir_created = false;
+            if (!MakeParentDirectory(file, attr->move_obstructions, &dir_created))
             {
-                /* Relying on umask is risky */
-                filemode = 0600;
-                Log(LOG_LEVEL_VERBOSE, "No mode was set, choose plain file default %04jo", (uintmax_t)filemode);
+                RecordFailure(ctx, pp, attr, "Error creating directories for '%s'. (create: %s)",
+                              file, GetErrorStr());
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+                return false;
             }
-            else
+            if (dir_created)
             {
-                filemode = attr->perms.plus & ~(attr->perms.minus);
+                RecordChange(ctx, pp, attr, "Created directory '%s'", file);
             }
-
-            MakeParentDirectory(file, attr->move_obstructions);
 
             int fd = safe_open_create_perms(file, O_WRONLY | O_CREAT | O_EXCL, filemode);
             if (fd == -1)
@@ -3947,15 +4175,15 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, const Attribu
                 {
                     snprintf(errormsg, sizeof(errormsg), "(open: %s)", GetErrorStr());
                 }
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Error creating file '%s', mode '%04jo'. %s",
-                     file, (uintmax_t)filemode, errormsg);
+                RecordFailure(ctx, pp, attr, "Error creating file '%s', mode '%04jo'. %s",
+                              file, (uintmax_t)filemode, errormsg);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
                 umask(saveumask);
                 return false;
             }
             else
             {
-                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Created file '%s', mode %04jo", file, (uintmax_t)filemode);
+                RecordChange(ctx, pp, attr, "Created file '%s', mode %04jo", file, (uintmax_t)filemode);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
                 close(fd);
                 umask(saveumask);
@@ -3964,7 +4192,8 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, const Attribu
         }
         else
         {
-            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "Warning promised, need to create file '%s'", file);
+            RecordWarning(ctx, pp, attr, "Warning promised, need to create file '%s', mode %04jo",
+                          file, (uintmax_t)filemode);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
             return false;
         }

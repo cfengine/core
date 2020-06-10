@@ -41,7 +41,7 @@
 
 #ifdef HAVE_LIBACL
 
-bool CopyACLs(const char *src, const char *dst)
+bool CopyACLs(const char *src, const char *dst, bool *change)
 {
     acl_t acls;
     struct stat statbuf;
@@ -52,6 +52,10 @@ bool CopyACLs(const char *src, const char *dst)
     {
         if (errno == ENOTSUP)
         {
+            if (change != NULL)
+            {
+                *change = false;
+            }
             return true;
         }
         else
@@ -66,6 +70,10 @@ bool CopyACLs(const char *src, const char *dst)
     {
         if (errno == ENOTSUP)
         {
+            if (change != NULL)
+            {
+                *change = false;
+            }
             return true;
         }
         else
@@ -82,6 +90,10 @@ bool CopyACLs(const char *src, const char *dst)
     }
     if (!S_ISDIR(statbuf.st_mode))
     {
+        if (change != NULL)
+        {
+            *change = false;
+        }
         return true;
     }
 
@@ -99,14 +111,21 @@ bool CopyACLs(const char *src, const char *dst)
         Log(LOG_LEVEL_ERR, "Can't copy ACLs to '%s'. (acl_set_file: %s)", dst, GetErrorStr());
         return false;
     }
-
+    if (change != NULL)
+    {
+        *change = true;
+    }
     return true;
 }
 
 #elif !defined(__MINGW32__) /* !HAVE_LIBACL */
 
-bool CopyACLs(ARG_UNUSED const char *src, ARG_UNUSED const char *dst)
+bool CopyACLs(ARG_UNUSED const char *src, ARG_UNUSED const char *dst, bool *change)
 {
+    if (change != NULL)
+    {
+        *change = false;
+    }
     return true;
 }
 

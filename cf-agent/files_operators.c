@@ -61,7 +61,7 @@ bool MoveObstruction(EvalContext *ctx, char *from, const Attributes *attr, const
     {
         if (!attr->move_obstructions)
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Object '%s' exists and is obstructing our promise", from);
+            RecordFailure(ctx, pp, attr, "Object '%s' is obstructing promise", from);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
             return false;
         }
@@ -70,6 +70,8 @@ bool MoveObstruction(EvalContext *ctx, char *from, const Attributes *attr, const
         {
             if (DONTDO)
             {
+                RecordWarning(ctx, pp, attr, "Object '%s' obstructing promise should be moved aside", from);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                 return false;
             }
 
@@ -84,18 +86,19 @@ bool MoveObstruction(EvalContext *ctx, char *from, const Attributes *attr, const
 
             strlcat(saved, CF_SAVED, sizeof(saved));
 
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, attr, "Moving file object '%s' to '%s'", from, saved);
-            *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
-
             if (rename(from, saved) == -1)
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Can't rename '%s' to '%s'. (rename: %s)", from, saved, GetErrorStr());
+                RecordFailure(ctx, pp, attr,
+                              "Can't rename '%s' to '%s'. (rename: %s)", from, saved, GetErrorStr());
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
                 return false;
             }
+            RecordChange(ctx, pp, attr, "Moved obstructing object '%s' to '%s'", from, saved);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
 
             if (ArchiveToRepository(saved, attr))
             {
+                RecordChange(ctx, pp, attr, "Archived '%s'", saved);
                 unlink(saved);
             }
 
@@ -104,11 +107,10 @@ bool MoveObstruction(EvalContext *ctx, char *from, const Attributes *attr, const
 
         if (S_ISDIR(sb.st_mode))
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, attr, "Moving directory '%s' to '%s%s'", from, from, CF_SAVED);
-            *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
-
             if (DONTDO)
             {
+                RecordWarning(ctx, pp, attr, "Directory '%s' obstructing promise should be moved aside", from);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                 return false;
             }
 
@@ -122,20 +124,22 @@ bool MoveObstruction(EvalContext *ctx, char *from, const Attributes *attr, const
 
             if (stat(saved, &sb) != -1)
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Couldn't save directory '%s', since '%s' exists already", from,
-                     saved);
+                RecordFailure(ctx, pp, attr,
+                              "Couldn't move directory '%s' aside, since '%s' exists already",
+                              from, saved);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
-                Log(LOG_LEVEL_ERR, "Unable to force link to existing directory '%s'", from);
                 return false;
             }
 
             if (rename(from, saved) == -1)
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Can't rename '%s' to '%s'. (rename: %s)",
-                     from, saved, GetErrorStr());
+                RecordFailure(ctx, pp, attr, "Can't rename '%s' to '%s'. (rename: %s)",
+                              from, saved, GetErrorStr());
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
                 return false;
             }
+            RecordChange(ctx, pp, attr, "Moved directory '%s' to '%s%s'", from, from, CF_SAVED);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
         }
     }
 

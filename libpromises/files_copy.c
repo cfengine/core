@@ -186,7 +186,7 @@ bool CopyFilePermissionsDisk(const char *source, const char *destination)
         return false;
     }
 
-    if (!CopyFileExtendedAttributesDisk(source, destination))
+    if (!CopyFileExtendedAttributesDisk(source, destination, NULL))
     {
         return false;
     }
@@ -194,7 +194,7 @@ bool CopyFilePermissionsDisk(const char *source, const char *destination)
     return true;
 }
 
-bool CopyFileExtendedAttributesDisk(const char *source, const char *destination)
+bool CopyFileExtendedAttributesDisk(const char *source, const char *destination, bool *change)
 {
 #if defined(WITH_XATTR)
     // Extended attributes include both POSIX ACLs and SELinux contexts.
@@ -206,6 +206,10 @@ bool CopyFileExtendedAttributesDisk(const char *source, const char *destination)
     {
         if (errno == ENOTSUP || errno == ENODATA)
         {
+            if (change != NULL)
+            {
+                *change = false;
+            }
             return true;
         }
         else
@@ -222,9 +226,9 @@ bool CopyFileExtendedAttributesDisk(const char *source, const char *destination)
         const char *current = attr_raw_names + pos;
         pos += strlen(current) + 1;
 
-        char data[CF_BUFSIZE];
-        int datasize = lgetxattr(source, current, data, sizeof(data));
-        if (datasize < 0)
+        char src_data[CF_BUFSIZE];
+        int src_datasize = lgetxattr(source, current, src_data, sizeof(src_data));
+        if (src_datasize < 0)
         {
             if (errno == ENOTSUP)
             {
@@ -237,8 +241,20 @@ bool CopyFileExtendedAttributesDisk(const char *source, const char *destination)
                 return false;
             }
         }
+        char dst_data[CF_BUFSIZE];
+        int dst_datasize = lgetxattr(destination, current, dst_data, sizeof(dst_data));
+        if ((dst_datasize < 0) && (errno == ENOTSUP))
+        {
+            continue;
+        }
+        else if ((src_datasize == dst_datasize) &&
+                 (memcmp(src_data, dst_data, src_datasize) == 0))
+        {
+            /* The value is the same, no need to overwrite it. */
+            continue;
+        }
 
-        int ret = lsetxattr(destination, current, data, datasize, 0);
+        int ret = lsetxattr(destination, current, src_data, src_datasize, 0);
         if (ret < 0)
         {
             if (errno == ENOTSUP)
@@ -252,11 +268,15 @@ bool CopyFileExtendedAttributesDisk(const char *source, const char *destination)
                 return false;
             }
         }
+        if (change != NULL)
+        {
+            *change = true;
+        }
     }
 
 #else // !WITH_XATTR
     // ACLs are included in extended attributes, but fall back to CopyACLs if xattr is not available.
-    if (!CopyACLs(source, destination))
+    if (!CopyACLs(source, destination, change))
     {
         return false;
     }

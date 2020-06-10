@@ -69,14 +69,16 @@ bundle agent test
       perms => m("666"),
       classes => promiser2_generic;
 
-    # 1 promisers - 1 file
+    # 2 promisers - 1 file inside the directory and the directory itself (as the
+    # real promiser)
     "$(G.testdir)"
       file_select => by_exec_cmd,
       perms => m("666"),
       classes => promiser2_generic,
       depth_search => test_recurse;
 
-    # 6 promisers - 6 files
+    # 6 promisers - 6 files inside the directory and the directory itself (as the
+    # real promiser)
     "$(G.testdir)"
       file_select => test_plain,
       depth_search => test_recurse,
@@ -178,8 +180,8 @@ bundle agent check
       "ok_expand" expression => none("__this_promiser_[0,1,2,3]_ok", ok_promisers);
       "ok0" expression => strcmp("$(ok_0_count)", 1);
       "ok1" expression => strcmp("$(ok_1_count)", 6);
-      "ok2" expression => strcmp("$(ok_2_count)", 4);
-      "ok3" expression => strcmp("$(ok_3_count)", 6);
+      "ok2" expression => strcmp("$(ok_2_count)", 5);
+      "ok3" expression => strcmp("$(ok_3_count)", 7);
       "ok4" expression => strcmp("$(ok_4_count)", 4);
       "ok5" expression => fileexists("$(G.testdir)/copy_me");
 
@@ -187,11 +189,11 @@ bundle agent check
   reports:
     DEBUG::
       "$(ok_promisers)";
-      "0: $(ok_0_count)";
-      "1: $(ok_1_count)";
-      "2: $(ok_2_count)";
-      "3: $(ok_3_count)";
-      "4: $(ok_4_count)";
+      "0: $(ok_0_count) (expected 1)";
+      "1: $(ok_1_count) (expected 6)";
+      "2: $(ok_2_count) (expected 5)";
+      "3: $(ok_3_count) (expected 7)";
+      "4: $(ok_4_count) (expected 4)";
     DEBUG.!ok5::
       "5: file not copied";
 

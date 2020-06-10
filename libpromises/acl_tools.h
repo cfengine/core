@@ -25,6 +25,6 @@
 #ifndef CFENGINE_ACL_TOOLS_H
 #define CFENGINE_ACL_TOOLS_H
 
-bool CopyACLs(const char *src, const char *dst);
+bool CopyACLs(const char *src, const char *dst, bool *change);
 
 #endif // CFENGINE_ACL_TOOLS_H

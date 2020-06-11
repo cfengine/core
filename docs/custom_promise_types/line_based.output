@@ -1,0 +1,17 @@
+git_promises 0.0.1 v1 line_based
+
+operation=validate_promise
+promiser=/opt/cfengine/masterfiles
+attribute_repo=https://github.com/cfengine/masterfiles
+result=valid
+
+operation=evaluate_promise
+promiser=/opt/cfengine/masterfiles
+attribute_repo=https://github.com/cfengine/masterfiles
+log_info=Cloning 'https://github.com/cfengine/masterfiles' -> '/opt/cfengine/masterfiles'...
+log_info=Successfully cloned 'https://github.com/cfengine/masterfiles' -> '/opt/cfengine/masterfiles'
+result=repaired
+
+operation=terminate
+result=success
+

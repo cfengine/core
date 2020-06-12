@@ -482,7 +482,7 @@ static void ValidateStateLastseen(ValidatorState *state)
                 ValidationError(
                     state, "Missing address entry for '%s'", address);
             }
-            else if (!StringSafeEqual(hostkey, lookup))
+            else if (!StringEqual(hostkey, lookup))
             {
                 ValidationError(
                     state,
@@ -513,7 +513,7 @@ static void ValidateStateLastseen(ValidatorState *state)
                 ValidationError(
                     state, "Missing hostkey entry for '%s'", hostkey);
             }
-            else if (!StringSafeEqual(address, lookup))
+            else if (!StringEqual(address, lookup))
             {
                 ValidationError(
                     state,

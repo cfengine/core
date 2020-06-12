@@ -75,7 +75,7 @@ Seq *ProtocolOpenDir(AgentConnection *conn, const char *path)
          */
         for (int i = 0; i < len && buf[i] != '\0'; i += strlen(buf + i) + 1)
         {
-            if (StringSafeEqualN(buf + i, CFD_TERMINATOR,
+            if (StringEqualN(buf + i, CFD_TERMINATOR,
                                  sizeof(CFD_TERMINATOR) - 1))
             {
                 more = 0;
@@ -159,7 +159,7 @@ bool ProtocolGet(AgentConnection *conn, const char *remote_path,
             break;
         }
 
-        if (StringSafeEqualN(buf, cfchangedstr, sizeof(cfchangedstr) - 1))
+        if (StringEqualN(buf, cfchangedstr, sizeof(cfchangedstr) - 1))
         {
             Log(LOG_LEVEL_ERR,
                 "Remote file %s:%s changed during file transfer",

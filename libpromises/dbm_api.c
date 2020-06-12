@@ -203,7 +203,7 @@ static
 bool IsSubHandle(DBHandle *handle, dbid id, const char *name)
 {
     char *sub_path = DBIdToSubPath(id, name);
-    bool result = StringSafeEqual(handle->filename, sub_path);
+    bool result = StringEqual(handle->filename, sub_path);
     free(sub_path);
     return result;
 }
@@ -452,7 +452,7 @@ DBHandle *GetDBHandleFromFilename(const char *db_file_name)
     ThreadLock(&db_handles_lock);
     for(dbid id=0; id < dbid_max; id++)
     {
-        if (StringSafeEqual(db_handles[id].filename, db_file_name))
+        if (StringEqual(db_handles[id].filename, db_file_name))
         {
             ThreadUnlock(&db_handles_lock);
             return &(db_handles[id]);

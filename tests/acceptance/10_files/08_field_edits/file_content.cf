@@ -1,0 +1,76 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "expected.singleline" string => "content in file";
+      "expected.multiline" string => "multiline
+content
+in
+file";
+
+  # Create the expected files using insert_lines
+  files:
+      "$(G.testfile).expected.singleline"
+        create => "true",
+        edit_line => init_insert("$(expected.singleline)"),
+        edit_defaults => init_empty;
+
+      "$(G.testfile).expected.multiline"
+        create => "true",
+        edit_line => init_insert("$(expected.multiline)"),
+        edit_defaults => init_empty;
+}
+
+bundle edit_line init_insert(str)
+{
+  insert_lines:
+      "$(str)";
+}
+
+body edit_defaults init_empty
+{
+      empty_file_before_editing => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+  files:
+      "$(G.testfile).actual.singleline"
+        create => "true",
+        content => "content in file
+";
+
+      "$(G.testfile).actual.multiline"
+        create => "true",
+        content => "multiline
+content
+in
+file
+";
+
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "" usebundle => dcs_check_diff("$(G.testfile).actual.singleline",
+                                     "$(G.testfile).expected.singleline",
+                                     "$(this.promise_filename)");
+
+      "" usebundle => dcs_check_diff("$(G.testfile).actual.multiline",
+                                     "$(G.testfile).expected.multiline",
+                                     "$(this.promise_filename)");
+
+}

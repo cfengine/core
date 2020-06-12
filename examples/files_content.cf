@@ -1,0 +1,46 @@
+#+begin_src cfengine3
+bundle agent example_file_content
+# @brief Example showing files content
+{
+  vars:
+      "my_content"
+        string => "Hello from var!";
+
+  files:
+      "/tmp/hello_string"
+        create => "true",
+        content => "Hello from string!";
+
+      "/tmp/hello_var"
+        create => "true",
+        content => "$(my_content)";
+
+  reports:
+      "/tmp/hello_string"
+        printfile => cat( $(this.promiser) );
+      "/tmp/hello_var"
+        printfile => cat( $(this.promiser) );
+}
+
+body printfile cat(file)
+# @brief Report the contents of a file
+# @param file The full path of the file to report
+{
+        file_to_print => "$(file)";
+        number_of_lines => "inf";
+}
+
+bundle agent __main__
+{
+  methods: "example_file_content";
+}
+###############################################################################
+#+end_src
+#+begin_src example_output
+#@ ```
+#@ R: /tmp/hello_string
+#@ R: Hello from string!
+#@ R: /tmp/hello_var
+#@ R: Hello from var!
+#@ ```
+#+end_src

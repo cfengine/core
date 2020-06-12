@@ -365,27 +365,96 @@ static int RemoveLock(const char *name)
     return 0;
 }
 
-void WaitForCriticalSection(const char *section_id)
+static bool NoOrObsoleteLock(LockData *entry, ARG_UNUSED size_t entry_size, size_t *max_old)
 {
-    time_t now = time(NULL), then = FindLockTime(section_id);
+    assert((entry == NULL) || (entry_size == sizeof(LockData)));
 
-/* Another agent has been waiting more than a minute, it means there
-   is likely crash detritus to clear up... After a minute we take our
-   chances ... */
-
-    while ((then != -1) && (now - then < 60))
+    if (entry == NULL)
     {
-        sleep(1);
-        now = time(NULL);
-        then = FindLockTime(section_id);
+        return true;
     }
 
-    WriteLock(section_id);
+    time_t now = time(NULL);
+    if ((now - entry->time) <= *max_old)
+    {
+        Log(LOG_LEVEL_DEBUG, "Giving time to process '%d' (holding lock for %ld s)", entry->pid, (now - entry->time));
+    }
+    return ((now - entry->time) > *max_old);
+}
+
+void WaitForCriticalSection(const char *section_id)
+{
+    ThreadLock(cft_lock);
+
+    CF_DB *dbp = OpenLock();
+    if (dbp == NULL)
+    {
+        Log(LOG_LEVEL_CRIT, "Failed to open lock database when waiting for critical section");
+        ThreadUnlock(cft_lock);
+        return;
+    }
+
+    time_t started = time(NULL);
+    LockData entry = { 0 };
+    entry.pid = getpid();
+    entry.process_start_time = PROCESS_START_TIME_UNKNOWN;
+
+#ifdef LMDB
+    unsigned char ohash[LMDB_MAX_KEY_SIZE];
+    HashLockKeyIfNecessary(section_id, ohash);
+    Log(LOG_LEVEL_DEBUG, "Hashed critical section lock '%s' to '%s'", section_id, ohash);
+    section_id = ohash;
+#endif
+
+    /* If another agent has been waiting more than a minute, it means there
+       is likely crash detritus to clear up... After a minute we take our
+       chances ... */
+    size_t max_old = 60;
+
+    Log(LOG_LEVEL_DEBUG, "Acquiring critical section lock '%s'", section_id);
+    bool got_lock = false;
+    while (!got_lock && ((time(NULL) - started) <= max_old))
+    {
+        entry.time = time(NULL);
+        got_lock = OverwriteDB(dbp, section_id, &entry, sizeof(entry),
+                               (OverwriteCondition) NoOrObsoleteLock, &max_old);
+        if (!got_lock)
+        {
+            Log(LOG_LEVEL_DEBUG, "Waiting for critical section lock '%s'", section_id);
+            sleep(1);
+        }
+    }
+
+    /* If we still haven't gotten the lock, let's try the biggest hammer we
+     * have. */
+    if (!got_lock)
+    {
+        Log(LOG_LEVEL_NOTICE, "Failed to wait for critical section lock '%s', force-writing new lock", section_id);
+        if (!WriteDB(dbp, section_id, &entry, sizeof(entry)))
+        {
+            Log(LOG_LEVEL_CRIT, "Failed to force-write critical section lock '%s'", section_id);
+        }
+    }
+    else
+    {
+        Log(LOG_LEVEL_DEBUG, "Acquired critical section lock '%s'", section_id);
+    }
+
+    CloseLock(dbp);
+    ThreadUnlock(cft_lock);
 }
 
 void ReleaseCriticalSection(const char *section_id)
 {
-    RemoveLock(section_id);
+    Log(LOG_LEVEL_DEBUG, "Releasing critical section lock '%s'", section_id);
+    if (RemoveLock(section_id) == 0)
+    {
+        Log(LOG_LEVEL_DEBUG, "Released critical section lock '%s'", section_id);
+    }
+    else
+    {
+        Log(LOG_LEVEL_DEBUG, "Failed to release critical section lock '%s'", section_id);
+    }
 }
 
 static time_t FindLock(char *last)

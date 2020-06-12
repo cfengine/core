@@ -55,8 +55,18 @@ bundle agent test
                        };
 
   commands:
-    test_pass_1|test_pass_2|test_pass_3::
+    !DEBUG::
       "$(G.no_fds) $(sys.cf_agent) -Il -D $(cases) -f $(this.promise_filename).sub 1>>$(G.testfile).$(cases).output.log 2>&1 &"
+        contain => in_shell;
+
+    DEBUG.test_pass_1::
+      "$(G.no_fds) $(sys.cf_agent) -l --debug -D $(cases) -f $(this.promise_filename).sub 1>>$(G.testfile).$(cases).1.output.log 2>&1 & echo $!"
+        contain => in_shell;
+    DEBUG.test_pass_2::
+      "$(G.no_fds) $(sys.cf_agent) -l --debug -D $(cases) -f $(this.promise_filename).sub 1>>$(G.testfile).$(cases).2.output.log 2>&1 & echo $!"
+        contain => in_shell;
+    DEBUG.test_pass_3::
+      "$(G.no_fds) $(sys.cf_agent) -l --debug -D $(cases) -f $(this.promise_filename).sub 1>>$(G.testfile).$(cases).3.output.log 2>&1 & echo $!"
         contain => in_shell;
 }
 

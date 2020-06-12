@@ -563,6 +563,13 @@ bool WriteDB(DBHandle *handle, const char *key, const void *src, int srcSz)
     return DBPrivWrite(handle->priv, key, strlen(key) + 1, src, srcSz);
 }
 
+bool OverwriteDB(DBHandle *handle, const char *key, const void *value, size_t value_size,
+                 OverwriteCondition Condition, void *data)
+{
+    assert(handle != NULL);
+    return DBPrivOverwrite(handle->priv, key, strlen(key) + 1, value, value_size, Condition, data);
+}
+
 bool HasKeyDB(DBHandle *handle, const char *key, int key_size)
 {
     return DBPrivHasKey(handle->priv, key, key_size);

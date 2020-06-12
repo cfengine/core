@@ -249,6 +249,53 @@ bool DBPrivWrite(DBPriv *db, const void *key, int key_size, const void *value, i
     return true;
 }
 
+bool DBPrivOverwrite(DBPriv *db, const void *key, int key_size, const void *value, int value_size,
+                     OverwriteCondition *Condition, void *data)
+{
+    if (!Lock(db))
+    {
+        return false;
+    }
+
+    ssize_t cur_val_size = dpvsiz(db->depot, key, key_size);
+    bool exists = (cur_val_size != -1);
+
+    void *cur_val = NULL;
+    if (exists)
+    {
+        assert(cur_val_size > 0);
+        cur_val = xmalloc((size_t) cur_val_size);
+
+        if (dpgetwb(db->depot, key, key_size, 0, value_size, cur_val) == -1)
+        {
+            Log(LOG_LEVEL_DEBUG, "QDBM DBPrivRead: Could not read '%s', (dpgetwb: %s)",
+                (const char *)key, dperrmsg(dpecode));
+
+            Unlock(db);
+            return false;
+        }
+    }
+    if ((Condition != NULL) && !Condition(cur_val, cur_val_size, data))
+    {
+        free(cur_val);
+        Unlock(db);
+        return false;
+    }
+    free(cur_val);
+
+    if (!dpput(db->depot, key, key_size, value, value_size, DP_DOVER))
+    {
+        char *db_name = dpname(db->depot);
+        Log(LOG_LEVEL_ERR, "Could not write key to DB '%s'. (dpput: %s)",
+            db_name, dperrmsg(dpecode));
+        free(db_name);
+        Unlock(db);
+        return false;
+    }
+    Unlock(db);
+    return true;
+}
+
 bool DBPrivHasKey(DBPriv *db, const void *key, int key_size)
 {
     if (!Lock(db))

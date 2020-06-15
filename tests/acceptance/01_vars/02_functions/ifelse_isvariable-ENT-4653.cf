@@ -11,9 +11,6 @@ bundle agent test
       "description" -> { "ENT-4653" }
         string => "Test that ifelse can use the result of isvariable with 3 arguments even when they contain variables that don't resolve";
 
-      "test_soft_fail" string => "any",
-        meta => { "ENT-4653" };
-
   vars:
       "lookup" string => "THIS_IS_NOT_A_DEFINED_VARIABLE";
 
@@ -27,12 +24,12 @@ bundle agent check
 {
 
   reports:
-      'PASS'
+      '$(this.promise_filename) Pass'
         if => strcmp( "FALLBACK", $(test.test) ) ;
 
-      'FAIL'
+      '$(this.promise_filename) FAIL'
         if => not( isvariable( "test.test" ) );
 
-      'FAIL'
+      '$(this.promise_filename) FAIL'
         if => not( strcmp( "FALLBACK", $(test.test) ) );
 }

@@ -204,28 +204,28 @@ int main(int argc, const char *const *argv)
     int cmd_argc = argc - optind;
     const char *command = cmd_argv[0];
 
-    if (StringSafeEqual_IgnoreCase(command, "lmdump"))
+    if (StringEqual_IgnoreCase(command, "lmdump"))
     {
         return lmdump_main(cmd_argc, cmd_argv);
     }
-    if (StringSafeEqual_IgnoreCase(command, "dump"))
+    if (StringEqual_IgnoreCase(command, "dump"))
     {
         return dump_main(cmd_argc, cmd_argv);
     }
-    if (StringSafeEqual_IgnoreCase(command, "diagnose"))
+    if (StringEqual_IgnoreCase(command, "diagnose"))
     {
         return diagnose_main(cmd_argc, cmd_argv);
     }
-    if (StringSafeEqual_IgnoreCase(command, "backup"))
+    if (StringEqual_IgnoreCase(command, "backup"))
     {
         return backup_main(cmd_argc, cmd_argv);
     }
-    if (StringSafeEqual_IgnoreCase(command, "repair") ||
-        StringSafeEqual_IgnoreCase(command, "remediate"))
+    if (StringEqual_IgnoreCase(command, "repair") ||
+        StringEqual_IgnoreCase(command, "remediate"))
     {
         return repair_main(cmd_argc, cmd_argv);
     }
-    if (StringSafeEqual_IgnoreCase(command, "help"))
+    if (StringEqual_IgnoreCase(command, "help"))
     {
         if (cmd_argc > 2)
         {
@@ -243,7 +243,7 @@ int main(int argc, const char *const *argv)
         }
         return EXIT_SUCCESS;
     }
-    if (StringSafeEqual_IgnoreCase(command, "version"))
+    if (StringEqual_IgnoreCase(command, "version"))
     {
         print_version();
         return EXIT_SUCCESS;

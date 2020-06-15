@@ -644,11 +644,11 @@ PromiseResult VerifyMount(EvalContext *ctx, char *name, const Attributes *a, con
     PromiseResult result = PROMISE_RESULT_NOOP;
     if (!DONTDO)
     {
-        if (StringSafeEqual(a->mount.mount_type, "panfs"))
+        if (StringEqual(a->mount.mount_type, "panfs"))
         {
             snprintf(comm, CF_BUFSIZE, "%s -t panfs -o %s %s%s %s", CommandArg0(VMOUNTCOMM[VSYSTEMHARDCLASS]), opts, host, rmountpt, mountpt);
         }
-        else if (StringSafeEqual(a->mount.mount_type, "cifs"))
+        else if (StringEqual(a->mount.mount_type, "cifs"))
         {
             snprintf(comm, CF_BUFSIZE, "%s -t cifs -o %s %s%s %s", CommandArg0(VMOUNTCOMM[VSYSTEMHARDCLASS]), opts, host, rmountpt, mountpt);
         }

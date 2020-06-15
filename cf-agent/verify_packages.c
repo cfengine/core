@@ -2763,7 +2763,7 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
                     {
                         bool ok = ExecPackageCommand(ctx, command_string, verify, true, &a, ppi, &result);
 
-                        if (StringSafeEqual(pi->name, PACKAGE_IGNORED_CFE_INTERNAL))
+                        if (StringEqual(pi->name, PACKAGE_IGNORED_CFE_INTERNAL))
                         {
                             Log(LOG_LEVEL_DEBUG, "ExecuteSchedule: Ignoring outcome for special package '%s'", pi->name);
                         }
@@ -2827,7 +2827,7 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
 
                     for (const PackageItem *pi = pm->pack_list; pi != NULL; pi = pi->next)
                     {
-                        if (StringSafeEqual(pi->name, PACKAGE_IGNORED_CFE_INTERNAL))
+                        if (StringEqual(pi->name, PACKAGE_IGNORED_CFE_INTERNAL))
                         {
                             Log(LOG_LEVEL_DEBUG, "ExecuteSchedule: Ignoring outcome for special package '%s'", pi->name);
                         }
@@ -3009,7 +3009,7 @@ static bool ExecutePatch(EvalContext *ctx, const PackageManager *schedule, Packa
                     {
                         bool ok = ExecPackageCommand(ctx, command_string, false, true, &a, pp, &result);
 
-                        if (StringSafeEqual(pi->name, PACKAGE_IGNORED_CFE_INTERNAL))
+                        if (StringEqual(pi->name, PACKAGE_IGNORED_CFE_INTERNAL))
                         {
                             Log(LOG_LEVEL_DEBUG, "ExecutePatch: Ignoring outcome for special package '%s'", pi->name);
                         }
@@ -3052,7 +3052,7 @@ static bool ExecutePatch(EvalContext *ctx, const PackageManager *schedule, Packa
 
                     for (const PackageItem *pi = pm->patch_list; pi != NULL; pi = pi->next)
                     {
-                        if (StringSafeEqual(pi->name, PACKAGE_IGNORED_CFE_INTERNAL))
+                        if (StringEqual(pi->name, PACKAGE_IGNORED_CFE_INTERNAL))
                         {
                             Log(LOG_LEVEL_DEBUG, "ExecutePatch: Ignoring outcome for special package '%s'", pi->name);
                         }

@@ -73,7 +73,11 @@
 # ifdef HAVE_SYS_PARAM_H
 #  include <sys/param.h>
 # endif
+# ifdef __linux__
+#  include <linux/sysctl.h>
+# else
 # include <sys/sysctl.h>
+# endif
 #endif
 
 

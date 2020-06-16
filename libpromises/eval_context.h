@@ -280,6 +280,41 @@ bool MakingChanges(EvalContext *ctx, const Promise *pp, const Attributes *attr,
 bool MakingInternalChanges(EvalContext *ctx, const Promise *pp, const Attributes *attr,
                            PromiseResult *result, const char *change_desc_fmt, ...) FUNC_ATTR_PRINTF(5, 6);
 
+/**
+ * Whether to make changes in a chroot or not.
+ */
+static inline bool ChrootChanges()
+{
+    return ((EVAL_MODE == EVAL_MODE_AUDIT_DIFF) || (EVAL_MODE == EVAL_MODE_AUDIT_MANIFEST));
+}
+
+/**
+ * Set the chroot for recording changes in files (in audit mode(s)).
+ *
+ * @note This function should only be called once.
+ */
+void SetChangesChroot(const char *chroot);
+
+/**
+ * Get the path for #orig_path under the changes chroot (where changes in audit
+ * mode(s) are done). #orig_path is expected to be an absolute path.
+ *
+ * @note Returns a pointer to an internal buffer and the value is only valid
+ *       until the function is called again.
+ * @warning not thread-safe
+ */
+const char *ToChangesChroot(const char *orig_path);
+
+/**
+ * Possibly transform #path to the path where changes are to be made.
+ * @see ChrootChanges()
+ * @see ToChangesChroot()
+ */
+static inline const char *ToChangesPath(const char *path)
+{
+    return (ChrootChanges() ? ToChangesChroot(path) : path);
+}
+
 PackagePromiseContext *GetPackageDefaultsFromCtx(const EvalContext *ctx);
 
 bool EvalContextGetSelectEndMatchEof(const EvalContext *ctx);

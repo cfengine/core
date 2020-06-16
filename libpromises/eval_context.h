@@ -260,6 +260,26 @@ void RecordWarning(EvalContext *ctx, const Promise *pp, const Attributes *attr, 
 void RecordDenial(EvalContext *ctx, const Promise *pp, const Attributes *attr, const char *fmt, ...) FUNC_ATTR_PRINTF(4, 5);
 void RecordInterruption(EvalContext *ctx, const Promise *pp, const Attributes *attr, const char *fmt, ...) FUNC_ATTR_PRINTF(4, 5);
 
+/**
+ * Check if the given promise is allowed to make changes in the current agent
+ * run and if not, log the fact and update #result accordingly.
+ *
+ * The #change_desc_fmt argument and the ones following it should format a
+ * message that describes the action, like "rename the file '/etc/issue'", the
+ * implementation of this function prepends and, potentially, appends text to
+ * the message to form a complete sentence.
+ */
+bool MakingChanges(EvalContext *ctx, const Promise *pp, const Attributes *attr,
+                   PromiseResult *result, const char *change_desc_fmt, ...) FUNC_ATTR_PRINTF(5, 6);
+
+/**
+ * Similar to MakingChanges() above, but checking if changes to internal
+ * structures are allowed. Audit modes should, for example, not make such
+ * changes, even though they make other changes (in a changes chroot).
+ */
+bool MakingInternalChanges(EvalContext *ctx, const Promise *pp, const Attributes *attr,
+                           PromiseResult *result, const char *change_desc_fmt, ...) FUNC_ATTR_PRINTF(5, 6);
+
 PackagePromiseContext *GetPackageDefaultsFromCtx(const EvalContext *ctx);
 
 bool EvalContextGetSelectEndMatchEof(const EvalContext *ctx);

@@ -404,7 +404,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'n':
-            DONTDO = true;
+            EVAL_MODE = EVAL_MODE_DRY_RUN;
             config->ignore_locks = true;
             break;
 

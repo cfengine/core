@@ -2946,15 +2946,12 @@ void cfPS(EvalContext *ctx, LogLevel level, PromiseResult status, const Promise 
 
     va_list ap;
     va_start(ap, fmt);
-    char *msg = NULL;
-    xvasprintf(&msg, fmt, ap);
-    Log(level, "%s", msg);
+    VLog(level, fmt, ap);
     va_end(ap);
 
     /* Now complete the exits status classes and auditing */
 
     ClassAuditLog(ctx, pp, attr, status);
-    free(msg);
 }
 
 void RecordChange(EvalContext *ctx, const Promise *pp, const Attributes *attr, const char *fmt, ...)
@@ -2967,11 +2964,8 @@ void RecordChange(EvalContext *ctx, const Promise *pp, const Attributes *attr, c
 
     va_list ap;
     va_start(ap, fmt);
-    char *msg = NULL;
-    xvasprintf(&msg, fmt, ap);
-    Log(LOG_LEVEL_INFO, "%s", msg);
+    VLog(LOG_LEVEL_INFO, fmt, ap);
     va_end(ap);
-    free(msg);
 
     SetPromiseOutcomeClasses(ctx, PROMISE_RESULT_CHANGE, &(attr->classes));
 }
@@ -2986,11 +2980,8 @@ void RecordNoChange(EvalContext *ctx, const Promise *pp, const Attributes *attr,
 
     va_list ap;
     va_start(ap, fmt);
-    char *msg = NULL;
-    xvasprintf(&msg, fmt, ap);
-    Log(LOG_LEVEL_VERBOSE, "%s", msg);
+    VLog(LOG_LEVEL_VERBOSE, fmt, ap);
     va_end(ap);
-    free(msg);
 
     SetPromiseOutcomeClasses(ctx, PROMISE_RESULT_NOOP, &(attr->classes));
 }
@@ -3005,11 +2996,8 @@ void RecordFailure(EvalContext *ctx, const Promise *pp, const Attributes *attr, 
 
     va_list ap;
     va_start(ap, fmt);
-    char *msg = NULL;
-    xvasprintf(&msg, fmt, ap);
-    Log(LOG_LEVEL_ERR, "%s", msg);
+    VLog(LOG_LEVEL_ERR, fmt, ap);
     va_end(ap);
-    free(msg);
 
     SetPromiseOutcomeClasses(ctx, PROMISE_RESULT_FAIL, &(attr->classes));
 }
@@ -3024,11 +3012,8 @@ void RecordWarning(EvalContext *ctx, const Promise *pp, const Attributes *attr, 
 
     va_list ap;
     va_start(ap, fmt);
-    char *msg = NULL;
-    xvasprintf(&msg, fmt, ap);
-    Log(LOG_LEVEL_WARNING, "%s", msg);
+    VLog(LOG_LEVEL_WARNING, fmt, ap);
     va_end(ap);
-    free(msg);
 
     SetPromiseOutcomeClasses(ctx, PROMISE_RESULT_WARN, &(attr->classes));
 }
@@ -3043,11 +3028,8 @@ void RecordDenial(EvalContext *ctx, const Promise *pp, const Attributes *attr, c
 
     va_list ap;
     va_start(ap, fmt);
-    char *msg = NULL;
-    xvasprintf(&msg, fmt, ap);
-    Log(LOG_LEVEL_ERR, "%s", msg);
+    VLog(LOG_LEVEL_ERR, fmt, ap);
     va_end(ap);
-    free(msg);
 
     SetPromiseOutcomeClasses(ctx, PROMISE_RESULT_DENIED, &(attr->classes));
 }
@@ -3062,11 +3044,8 @@ void RecordInterruption(EvalContext *ctx, const Promise *pp, const Attributes *a
 
     va_list ap;
     va_start(ap, fmt);
-    char *msg = NULL;
-    xvasprintf(&msg, fmt, ap);
-    Log(LOG_LEVEL_ERR, "%s", msg);
+    VLog(LOG_LEVEL_ERR, fmt, ap);
     va_end(ap);
-    free(msg);
 
     SetPromiseOutcomeClasses(ctx, PROMISE_RESULT_INTERRUPTED, &(attr->classes));
 }

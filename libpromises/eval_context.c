@@ -3413,3 +3413,58 @@ void EvalContextUpdateDumpReports(EvalContext *ctx)
         FILE_SEPARATOR);
     EvalContextSetDumpReports(ctx, (access(enable_file_path, F_OK) == 0));
 }
+
+static char chrooted_path[PATH_MAX + 1] = {0};
+static size_t chroot_len = 0;
+void SetChangesChroot(const char *chroot)
+{
+    assert(chroot != NULL);
+
+    /* This function should only be called once. */
+    assert(chroot_len == 0);
+
+    chroot_len = SafeStringLength(chroot);
+
+    memcpy(chrooted_path, chroot, chroot_len);
+
+    /* Make sure there is a file separator at the end. */
+    if (!IsFileSep(chroot[chroot_len - 1]))
+    {
+        chroot_len++;
+        chrooted_path[chroot_len - 1] = FILE_SEPARATOR;
+    }
+}
+
+const char *ToChangesChroot(const char *orig_path)
+{
+    /* SetChangesChroot() should be called first. */
+    assert(chroot_len != 0);
+
+    assert(orig_path != NULL);
+    assert(IsAbsPath(orig_path));
+    assert(strlen(orig_path) <= (PATH_MAX - chroot_len - 1));
+
+    size_t offset = 0;
+#ifdef __MINGW32__
+    /* On Windows, absolute path starts with the drive letter and colon followed
+     * by '\'. Let's replace the ":\" with just "\" so that each drive has its
+     * own directory tree in the chroot. */
+    if ((orig_path[0] > 'A') && ((orig_path[0] < 'Z')) && (orig_path[1] == ':'))
+    {
+        chrooted_path[chroot_len] = orig_path[0];
+        chrooted_path[chroot_len + 1] = FILE_SEPARATOR;
+        orig_path += 2;
+        offset += 2;
+    }
+#endif
+
+    while (orig_path[0] == FILE_SEPARATOR)
+    {
+        orig_path++;
+    }
+
+    /* Adds/copies the NUL-byte at the end of the string. */
+    strncpy(chrooted_path + chroot_len + offset, orig_path, (PATH_MAX - chroot_len - offset - 1));
+
+    return chrooted_path;
+}

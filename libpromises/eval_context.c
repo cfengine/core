@@ -3050,6 +3050,84 @@ void RecordInterruption(EvalContext *ctx, const Promise *pp, const Attributes *a
     SetPromiseOutcomeClasses(ctx, PROMISE_RESULT_INTERRUPTED, &(attr->classes));
 }
 
+bool MakingChanges(EvalContext *ctx, const Promise *pp, const Attributes *attr,
+                   PromiseResult *result, const char *change_desc_fmt, ...)
+{
+    assert(attr != NULL);
+
+    if ((EVAL_MODE != EVAL_MODE_DRY_RUN) && (attr->transaction.action != cfa_warn))
+    {
+        return true;
+    }
+    /* else */
+    char *fmt = NULL;
+    if (attr->transaction.action == cfa_warn)
+    {
+        xasprintf(&fmt, "Should %s, but only warning promised", change_desc_fmt);
+    }
+    else
+    {
+        xasprintf(&fmt, "Should %s", change_desc_fmt);
+    }
+
+    LogPromiseContext(ctx, pp);
+
+    va_list ap;
+    va_start(ap, change_desc_fmt);
+    VLog(LOG_LEVEL_WARNING, fmt, ap);
+    va_end(ap);
+
+    free(fmt);
+
+    SetPromiseOutcomeClasses(ctx, PROMISE_RESULT_WARN, &(attr->classes));
+
+    if (result != NULL)
+    {
+        *result = PROMISE_RESULT_WARN;
+    }
+
+    return false;
+}
+
+bool MakingInternalChanges(EvalContext *ctx, const Promise *pp, const Attributes *attr,
+                           PromiseResult *result, const char *change_desc_fmt, ...)
+{
+    assert(attr != NULL);
+
+    if ((EVAL_MODE == EVAL_MODE_NORMAL) && (attr->transaction.action != cfa_warn))
+    {
+        return true;
+    }
+    /* else */
+    char *fmt = NULL;
+    if (attr->transaction.action == cfa_warn)
+    {
+        xasprintf(&fmt, "Should %s, but only warning promised", change_desc_fmt);
+    }
+    else
+    {
+        xasprintf(&fmt, "Should %s", change_desc_fmt);
+    }
+
+    LogPromiseContext(ctx, pp);
+
+    va_list ap;
+    va_start(ap, change_desc_fmt);
+    VLog(LOG_LEVEL_WARNING, fmt, ap);
+    va_end(ap);
+
+    free(fmt);
+
+    SetPromiseOutcomeClasses(ctx, PROMISE_RESULT_WARN, &(attr->classes));
+
+    if (result != NULL)
+    {
+        *result = PROMISE_RESULT_WARN;
+    }
+
+    return false;
+}
+
 void SetChecksumUpdatesDefault(EvalContext *ctx, bool enabled)
 {
     ctx->checksum_updates_default = enabled;

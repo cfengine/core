@@ -1,3 +1,7 @@
+path_classifiers:
+  library:
+    - "ext/rpmvercmp.c"
+
 extraction:
   cpp:
     after_prepare:

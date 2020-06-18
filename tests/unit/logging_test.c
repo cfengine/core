@@ -67,7 +67,7 @@ static void test_set_host(void)
 #define check_level(str, lvl) \
 {\
     assert_int_equal(LogLevelFromString(str), lvl);\
-    assert_true(StringSafeEqual_IgnoreCase(str, LogLevelToString(lvl)));\
+    assert_true(StringEqual_IgnoreCase(str, LogLevelToString(lvl)));\
 }
 
 static void test_log_level(void)

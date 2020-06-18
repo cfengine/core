@@ -269,7 +269,7 @@ static void print_struct_or_string(
         }
         else if (StringEndsWith(file, "cf_observations.lmdb"))
         {
-            if (StringSafeEqual(key.mv_data, "DATABASE_AGE"))
+            if (StringEqual(key.mv_data, "DATABASE_AGE"))
             {
                 assert(sizeof(double) == value.mv_size);
                 const double *const age = value.mv_data;
@@ -290,13 +290,13 @@ static void print_struct_or_string(
         }
         else if (StringEndsWith(file, "nova_agent_execution.lmdb"))
         {
-            if (StringSafeEqual(key.mv_data, "delta_gavr"))
+            if (StringEqual(key.mv_data, "delta_gavr"))
             {
                 assert(sizeof(double) == value.mv_size);
                 const double *const average = value.mv_data;
                 printf("%f", *average);
             }
-            else if (StringSafeEqual(key.mv_data, "last_exec"))
+            else if (StringEqual(key.mv_data, "last_exec"))
             {
                 assert(sizeof(time_t) == value.mv_size);
                 const time_t *const last_exec = value.mv_data;

@@ -82,7 +82,7 @@ static bool IsLegalVariableName(EvalContext *ctx, const Promise *pp)
         char *prefix = xstrndup(var_name, dot - var_name);
         const Bundle *cur_bundle = PromiseGetBundle(pp);
 
-        if (!StringSafeEqual(prefix, cur_bundle->name))
+        if (!StringEqual(prefix, cur_bundle->name))
         {
             Log(LOG_LEVEL_VERBOSE,
                 "Variable '%s' may be attempted to be injected into a remote bundle",

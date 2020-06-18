@@ -32,7 +32,7 @@
 #include <mutex.h>                                     /* ThreadLock */
 #include <communication.h>                             /* Hostname2IPString */
 #include <misc_lib.h>                                  /* CF_ASSERT */
-#include <string_lib.h>                                /* StringSafeEqual */
+#include <string_lib.h>                                /* StringEqual */
 
 
 /**
@@ -95,8 +95,8 @@ static bool ConnCacheEntryMatchesConnection(ConnCache_entry *entry,
                                             ConnectionFlags flags)
 {
     return ConnectionFlagsEqual(&flags, &entry->conn->flags) &&
-           StringSafeEqual(port, entry->conn->this_port)     &&
-           StringSafeEqual(server, entry->conn->this_server);
+           StringEqual(port, entry->conn->this_port)     &&
+           StringEqual(server, entry->conn->this_server);
 }
 
 AgentConnection *ConnCache_FindIdleMarkBusy(const char *server,

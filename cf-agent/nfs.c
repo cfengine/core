@@ -437,7 +437,6 @@ void DeleteMountInfo(Seq *list)
 int VerifyInFstab(EvalContext *ctx, char *name, const Attributes *a, const Promise *pp, PromiseResult *result)
 /* Ensure filesystem IS in fstab, and return no of changes */
 {
-    // FIXME: This ALWAYS returns 0 (!)
     assert(a != NULL);
     char fstab[CF_BUFSIZE];
     char *host, *rmountpt, *mountpt, *fstype, *opts;
@@ -447,7 +446,7 @@ int VerifyInFstab(EvalContext *ctx, char *name, const Attributes *a, const Promi
         if (!LoadFileAsItemList(&FSTABLIST, VFSTAB[VSYSTEMHARDCLASS], a->edits))
         {
             Log(LOG_LEVEL_ERR, "Couldn't open '%s'", VFSTAB[VSYSTEMHARDCLASS]);
-            return false;
+            return 0;
         }
         else
         {
@@ -496,6 +495,8 @@ int VerifyInFstab(EvalContext *ctx, char *name, const Attributes *a, const Promi
 
     Log(LOG_LEVEL_VERBOSE, "Verifying '%s' in '%s'", mountpt, VFSTAB[VSYSTEMHARDCLASS]);
 
+    int changes = 0;
+
     if (!MatchFSInFstab(mountpt))
     {
         AppendItem(&FSTABLIST, fstab, NULL);
@@ -503,10 +504,11 @@ int VerifyInFstab(EvalContext *ctx, char *name, const Attributes *a, const Promi
         cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Adding file system '%s:%s' to '%s'", host, rmountpt,
              VFSTAB[VSYSTEMHARDCLASS]);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+        changes += 1;
     }
 
     free(opts);
-    return 0;
+    return changes;
 }
 
 /*******************************************************************/
@@ -514,7 +516,6 @@ int VerifyInFstab(EvalContext *ctx, char *name, const Attributes *a, const Promi
 int VerifyNotInFstab(EvalContext *ctx, char *name, const Attributes *a, const Promise *pp, PromiseResult *result)
 /* Ensure filesystem is NOT in fstab, and return no of changes */
 {
-    // FIXME: This ALWAYS returns 0 (!)
     char regex[CF_BUFSIZE];
     char *host, *mountpt;
     Item *ip;
@@ -524,7 +525,7 @@ int VerifyNotInFstab(EvalContext *ctx, char *name, const Attributes *a, const Pr
         if (!LoadFileAsItemList(&FSTABLIST, VFSTAB[VSYSTEMHARDCLASS], a->edits))
         {
             Log(LOG_LEVEL_ERR, "Couldn't open '%s'", VFSTAB[VSYSTEMHARDCLASS]);
-            return false;
+            return 0;
         }
         else
         {
@@ -534,7 +535,7 @@ int VerifyNotInFstab(EvalContext *ctx, char *name, const Attributes *a, const Pr
 
     host = a->mount.mount_server;
     mountpt = name;
-
+    int changes = 0;
     if (MatchFSInFstab(mountpt))
     {
         if (a->mount.editfstab)
@@ -608,13 +609,14 @@ int VerifyNotInFstab(EvalContext *ctx, char *name, const Attributes *a, const Pr
                     // Check host name matches too?
                     DeleteThisItem(&FSTABLIST, ip);
                     FSTAB_EDITS++;
+                    changes += 1;
                 }
             }
 #endif
         }
     }
 
-    return 0;
+    return changes;
 }
 
 /*******************************************************************/

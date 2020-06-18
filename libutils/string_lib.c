@@ -256,12 +256,12 @@ int StringSafeCompareN(const char *const a, const char *const b, const size_t n)
     return NullCompare(a, b);
 }
 
-bool StringSafeEqual(const char *const a, const char *const b)
+bool StringEqual(const char *const a, const char *const b)
 {
     return (StringSafeCompare(a, b) == 0);
 }
 
-bool StringSafeEqualN(const char *const a, const char *const b, const size_t n)
+bool StringEqualN(const char *const a, const char *const b, const size_t n)
 {
     return (StringSafeCompareN(a, b, n) == 0);
 }
@@ -296,19 +296,19 @@ int StringSafeCompareN_IgnoreCase(const char *const a, const char *const b, cons
     return NullCompare(a, b);
 }
 
-bool StringSafeEqual_IgnoreCase(const char *const a, const char *const b)
+bool StringEqual_IgnoreCase(const char *const a, const char *const b)
 {
     return (StringSafeCompare_IgnoreCase(a, b) == 0);
 }
 
-bool StringSafeEqualN_IgnoreCase(const char *const a, const char *const b, const size_t n)
+bool StringEqualN_IgnoreCase(const char *const a, const char *const b, const size_t n)
 {
     return (StringSafeCompareN_IgnoreCase(a, b, n) == 0);
 }
 
-bool StringSafeEqual_untyped(const void *a, const void *b)
+bool StringEqual_untyped(const void *a, const void *b)
 {
-    return StringSafeEqual(a, b);
+    return StringEqual(a, b);
 }
 
 /*********************************************************************/
@@ -1485,7 +1485,7 @@ bool StringMatchesOption(
     }
     else if (length == 2)
     {
-        return StringSafeEqual(supplied, shortopt);
+        return StringEqual(supplied, shortopt);
     }
-    return StringSafeEqualN_IgnoreCase(supplied, longopt, length);
+    return StringEqualN_IgnoreCase(supplied, longopt, length);
 }

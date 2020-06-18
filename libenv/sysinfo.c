@@ -1134,7 +1134,7 @@ static void OSReleaseParse(EvalContext *ctx, const char *file_path)
             CanonifyNameInPlace(os_release_id);
 
             const char *alias = NULL;
-            if (StringSafeEqual(os_release_id, "rhel"))
+            if (StringEqual(os_release_id, "rhel"))
             {
                 alias = "redhat";
             }

@@ -560,8 +560,8 @@ static bool IsKeyExtensionVar(TagType tag_type, const char *tag_start,
         /* the special case of unescaped form using {{{@}}} iff "{{" and "}}" are
          * used as delimiters */
         if ((delim_start_len == 2) && (delim_end_len == 2) &&
-            StringSafeEqual(delim_start, "{{") &&
-            StringSafeEqual(delim_end, "}}") &&
+            StringEqual(delim_start, "{{") &&
+            StringEqual(delim_end, "}}") &&
             StringStartsWith(tag_start, "{{{@}}}"))
         {
             return true;

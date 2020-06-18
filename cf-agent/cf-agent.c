@@ -583,7 +583,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         case 0:
         {
             const char *const option_name = OPTIONS[longopt_idx].name;
-            if (StringSafeEqual(option_name, "log-modules"))
+            if (StringEqual(option_name, "log-modules"))
             {
                 bool ret = LogEnableModulesFromString(optarg);
                 if (!ret)
@@ -591,7 +591,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                     DoCleanupAndExit(EXIT_FAILURE);
                 }
             }
-            else if (StringSafeEqual(option_name, "show-evaluated-classes"))
+            else if (StringEqual(option_name, "show-evaluated-classes"))
             {
                 if (optarg == NULL)
                 {
@@ -599,7 +599,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 }
                 config->agent_specific.agent.show_evaluated_classes = xstrdup(optarg);
             }
-            else if (StringSafeEqual(option_name, "show-evaluated-vars"))
+            else if (StringEqual(option_name, "show-evaluated-vars"))
             {
                 if (optarg == NULL)
                 {
@@ -607,17 +607,17 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 }
                 config->agent_specific.agent.show_evaluated_variables = xstrdup(optarg);
             }
-            else if (StringSafeEqual(option_name, "skip-db-check"))
+            else if (StringEqual(option_name, "skip-db-check"))
             {
                 if (optarg == NULL)
                 {
                     PERFORM_DB_CHECK = false; // Skip (no arg), check = false
                 }
-                else if (StringSafeEqual_IgnoreCase(optarg, "yes"))
+                else if (StringEqual_IgnoreCase(optarg, "yes"))
                 {
                     PERFORM_DB_CHECK = false; // Skip = yes, check = false
                 }
-                else if (StringSafeEqual_IgnoreCase(optarg, "no"))
+                else if (StringEqual_IgnoreCase(optarg, "no"))
                 {
                     PERFORM_DB_CHECK = true; // Skip = no, check = true
                 }

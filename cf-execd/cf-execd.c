@@ -324,17 +324,17 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         case 0:
         {
             const char *const option_name = OPTIONS[longopt_idx].name;
-            if (StringSafeEqual(option_name, "skip-db-check"))
+            if (StringEqual(option_name, "skip-db-check"))
             {
                 if (optarg == NULL)
                 {
                     PERFORM_DB_CHECK = false; // Skip (no arg), check = false
                 }
-                else if (StringSafeEqual_IgnoreCase(optarg, "yes"))
+                else if (StringEqual_IgnoreCase(optarg, "yes"))
                 {
                     PERFORM_DB_CHECK = false; // Skip = yes, check = false
                 }
-                else if (StringSafeEqual_IgnoreCase(optarg, "no"))
+                else if (StringEqual_IgnoreCase(optarg, "no"))
                 {
                     PERFORM_DB_CHECK = true; // Skip = no, check = true
                 }

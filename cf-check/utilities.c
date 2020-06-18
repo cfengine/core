@@ -53,7 +53,7 @@ bool matches_option(
     }
     else if (length == 2)
     {
-        return StringSafeEqual(supplied, shortopt);
+        return StringEqual(supplied, shortopt);
     }
-    return StringSafeEqualN_IgnoreCase(supplied, longopt, length);
+    return StringEqualN_IgnoreCase(supplied, longopt, length);
 }

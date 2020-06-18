@@ -897,7 +897,7 @@ void TLSSetDefaultOptions(SSL_CTX *ssl_ctx, const char *min_version)
         bool found = false;
         for (enum tls_version v = TLS_1_0; !found && v <= TLS_LAST; v++)
         {
-            if (StringSafeEqual(min_version, tls_version_strings[v]))
+            if (StringEqual(min_version, tls_version_strings[v]))
             {
                 found = true;
                 if (v < TLS_LOWEST_REQUIRED)

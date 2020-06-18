@@ -354,6 +354,6 @@ MapKeyValue *MapIteratorNext(MapIterator *i)
 
 TYPED_MAP_DEFINE(String, char *, char *,
                  StringHash_untyped,
-                 StringSafeEqual_untyped,
+                 StringEqual_untyped,
                  &free,
                  &free)

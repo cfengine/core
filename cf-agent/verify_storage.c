@@ -492,7 +492,7 @@ static PromiseResult VerifyMountPromise(EvalContext *ctx, char *name, const Attr
             }
         }
 
-        if (changes)
+        if (changes > 0)
         {
             CF_MOUNTALL = true;
         }

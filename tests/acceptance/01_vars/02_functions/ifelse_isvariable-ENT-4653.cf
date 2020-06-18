@@ -1,0 +1,35 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent test
+{
+  meta:
+      "description" -> { "ENT-4653" }
+        string => "Test that ifelse can use the result of isvariable with 3 arguments even when they contain variables that don't resolve";
+
+  vars:
+      "lookup" string => "THIS_IS_NOT_A_DEFINED_VARIABLE";
+
+      "test" string =>
+      ifelse( isvariable( "$(lookup)" ),
+              "$($(lookup))",
+              "FALLBACK");
+}
+
+bundle agent check
+{
+
+  reports:
+      '$(this.promise_filename) Pass'
+        if => strcmp( "FALLBACK", $(test.test) ) ;
+
+      '$(this.promise_filename) FAIL'
+        if => not( isvariable( "test.test" ) );
+
+      '$(this.promise_filename) FAIL'
+        if => not( strcmp( "FALLBACK", $(test.test) ) );
+}

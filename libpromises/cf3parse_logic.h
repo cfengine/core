@@ -60,7 +60,7 @@
 int yylex(void);
 extern char *yytext;
 
-static int RelevantBundle(const char *agent, const char *blocktype);
+static bool RelevantBundle(const char *agent, const char *blocktype);
 static bool LvalWantsBody(char *stype, char *lval);
 static SyntaxTypeMatch CheckSelection(
     const char *type, const char *name, const char *lval, Rval rval);
@@ -211,7 +211,7 @@ static void fatal_yyerror(const char *s)
     DoCleanupAndExit(EXIT_FAILURE);
 }
 
-static int RelevantBundle(const char *agent, const char *blocktype)
+static bool RelevantBundle(const char *agent, const char *blocktype)
 {
     if ((strcmp(agent, CF_AGENTTYPES[AGENT_TYPE_COMMON]) == 0)
         || (strcmp(CF_COMMONC, blocktype) == 0))

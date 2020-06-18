@@ -521,7 +521,7 @@ static bool CompareRval(const void *rval1_item, RvalType rval1_type,
 {
     if (rval1_type != rval2_type)
     {
-        return -1;
+        return false;
     }
 
     switch (rval1_type)
@@ -530,7 +530,7 @@ static bool CompareRval(const void *rval1_item, RvalType rval1_type,
 
         if (IsCf3VarString(rval1_item) || IsCf3VarString(rval2_item))
         {
-            return -1;          // inconclusive
+            return false;          // inconclusive
         }
 
         if (strcmp(rval1_item, rval2_item) != 0)
@@ -544,10 +544,10 @@ static bool CompareRval(const void *rval1_item, RvalType rval1_type,
         return RlistEqual(rval1_item, rval2_item);
 
     case RVAL_TYPE_FNCALL:
-        return -1;
+        return false;
 
     default:
-        return -1;
+        return false;
     }
 
     return true;

@@ -15,28 +15,37 @@
 import cpp
 
 predicate isBoolExpr(Expr expression){
-  ( // bool type and not typecast to something else
-    expression.getType().getName() = "bool"
-    and not exists(CStyleCast cast |
-      cast.getExpr() = expression
-      and cast.getType().getName() != "bool"
-    )
+  // Not bool if there is an explicit cast to something else:
+  not exists(CStyleCast cast |
+    cast.getType().getName() != "bool"
+    and
+    cast.getExplicitlyConverted() = expression.getExplicitlyConverted()
   )
-  or exists(MacroInvocation m |
-            m.getExpr() = expression
-            and (m.getMacroName() = "true"
-                 or m.getMacroName() = "false"))
-  or exists(BinaryLogicalOperation b |       // && or ||
-            b = expression)
-  or exists(ComparisonOperation cmp |        // == or != or > or < or >= or <=
-            cmp = expression)
-  or exists(NotExpr n |                      // !()
-            n = expression
-            and isBoolExpr(n.getOperand()))
-  or exists(ConditionalExpr c |              // (if) ? (then) : (else)
-            c = expression
-            and isBoolExpr(c.getThen())
-            and isBoolExpr(c.getElse()))
+  and
+  // One of these imply boolean:
+  (
+    // variable of type bool:
+    expression.getType().getName() = "bool"
+    // true or false macro:
+    or exists(MacroInvocation m |
+           m.getExpr() = expression
+           and (m.getMacroName() = "true" or m.getMacroName() = "false"))
+    // && or || operator
+    or exists(BinaryLogicalOperation b |
+              b = expression)
+    // == or != or > or < or >= or <= operator:
+    or exists(ComparisonOperation cmp |
+              cmp = expression)
+    // ! operator:
+    or exists(NotExpr n |
+              n = expression
+              and isBoolExpr(n.getOperand()))
+    // Recursively check both branches of ternary operator:
+    or exists(ConditionalExpr c |
+              c = expression
+              and isBoolExpr(c.getThen())
+              and isBoolExpr(c.getElse()))
+  )
 }
 
 string showMacroExpr(Expr e){

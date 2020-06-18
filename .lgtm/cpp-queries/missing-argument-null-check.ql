@@ -19,10 +19,11 @@ predicate hasNullCheck(Function func, Parameter p){
     and m.getEnclosingFunction() = func
     and m.getUnexpandedArgument(0) = p.getName() + " != NULL")
   or
-  exists(EqualityOperation comparison |
+  exists(EqualityOperation comparison, MacroInvocation m|
     comparison.getEnclosingFunction() = func
     and comparison.getLeftOperand().toString() = p.getName()
-    and comparison.getRightOperand().findRootCause().toString() = "NULL")
+    and comparison.getRightOperand() = m.getExpr()
+    and m.getMacroName() = "NULL")
 }
 
 from Function func, PointerFieldAccess acc, Parameter p, PointerType pt

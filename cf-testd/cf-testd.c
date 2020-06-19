@@ -723,12 +723,12 @@ static char *IncrementIPaddress(const char *ip_str)
     int step = 1;
     char *last_dot = strrchr(ip_str, '.');
     assert(last_dot != NULL);   /* the doc comment says there must be dots! */
-    if (StringSafeEqual(last_dot + 1, "255"))
+    if (StringEqual(last_dot + 1, "255"))
     {
         /* avoid the network address (ending with 0) */
         step = 2;
     }
-    else if (StringSafeEqual(last_dot + 1, "254"))
+    else if (StringEqual(last_dot + 1, "254"))
     {
         /* avoid the broadcast address and the network address */
         step = 3;

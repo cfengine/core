@@ -3977,7 +3977,7 @@ static FnCallResult FnCallFileStat(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
 
     if (lstat(path, &statbuf) == -1)
     {
-        if (StringSafeEqual(fp->name, "filesize"))
+        if (StringEqual(fp->name, "filesize"))
         {
             return FnFailure();
         }

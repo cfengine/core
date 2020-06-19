@@ -458,19 +458,19 @@ static void test_safe_compare(void)
 
 static void test_safe_equal(void)
 {
-    assert_true(StringSafeEqual(NULL, NULL));
-    assert_true(StringSafeEqual("a", "a"));
-    assert_true(StringSafeEqual("abcdefghijklmnopqrstuvwxyz", "abcdefghijklmnopqrstuvwxyz"));
-    assert_true(StringSafeEqual("0123456789", "0123456789"));
-    assert_true(StringSafeEqual("CamelCase", "CamelCase"));
-    assert_true(StringSafeEqual("(){}[]<>", "(){}[]<>"));
-    assert_true(StringSafeEqual("+-*/%%^", "+-*/%%^"));
+    assert_true(StringEqual(NULL, NULL));
+    assert_true(StringEqual("a", "a"));
+    assert_true(StringEqual("abcdefghijklmnopqrstuvwxyz", "abcdefghijklmnopqrstuvwxyz"));
+    assert_true(StringEqual("0123456789", "0123456789"));
+    assert_true(StringEqual("CamelCase", "CamelCase"));
+    assert_true(StringEqual("(){}[]<>", "(){}[]<>"));
+    assert_true(StringEqual("+-*/%%^", "+-*/%%^"));
 
-    assert_false(StringSafeEqual("", NULL));
-    assert_false(StringSafeEqual(NULL, ""));
-    assert_false(StringSafeEqual("a", "b"));
-    assert_false(StringSafeEqual("a", "A"));
-    assert_false(StringSafeEqual("abc def", "abc deF"));
+    assert_false(StringEqual("", NULL));
+    assert_false(StringEqual(NULL, ""));
+    assert_false(StringEqual("a", "b"));
+    assert_false(StringEqual("a", "A"));
+    assert_false(StringEqual("abc def", "abc deF"));
 }
 
 static void test_safe_compare_ignore_case(void)
@@ -506,31 +506,31 @@ static void test_safe_compare_ignore_case(void)
 
 static void test_safe_equal_ignore_case(void)
 {
-    assert_true(StringSafeEqual_IgnoreCase(NULL, NULL));
-    assert_true(StringSafeEqual_IgnoreCase("a", "a"));
-    assert_true(StringSafeEqual_IgnoreCase("a", "A"));
-    assert_true(StringSafeEqual_IgnoreCase(hi_alphabet, lo_alphabet));
-    assert_true(StringSafeEqual_IgnoreCase("0123456789", "0123456789"));
-    assert_true(StringSafeEqual_IgnoreCase("CamelCase", "camelcase"));
-    assert_true(StringSafeEqual_IgnoreCase("(){}[]<>", "(){}[]<>"));
-    assert_true(StringSafeEqual_IgnoreCase("+-*/%%^", "+-*/%%^"));
-    assert_true(StringSafeEqual_IgnoreCase("abc def", "abc deF"));
+    assert_true(StringEqual_IgnoreCase(NULL, NULL));
+    assert_true(StringEqual_IgnoreCase("a", "a"));
+    assert_true(StringEqual_IgnoreCase("a", "A"));
+    assert_true(StringEqual_IgnoreCase(hi_alphabet, lo_alphabet));
+    assert_true(StringEqual_IgnoreCase("0123456789", "0123456789"));
+    assert_true(StringEqual_IgnoreCase("CamelCase", "camelcase"));
+    assert_true(StringEqual_IgnoreCase("(){}[]<>", "(){}[]<>"));
+    assert_true(StringEqual_IgnoreCase("+-*/%%^", "+-*/%%^"));
+    assert_true(StringEqual_IgnoreCase("abc def", "abc deF"));
 
-    assert_false(StringSafeEqual_IgnoreCase("", NULL));
-    assert_false(StringSafeEqual_IgnoreCase(NULL, ""));
-    assert_false(StringSafeEqual_IgnoreCase("a", "b"));
+    assert_false(StringEqual_IgnoreCase("", NULL));
+    assert_false(StringEqual_IgnoreCase(NULL, ""));
+    assert_false(StringEqual_IgnoreCase("a", "b"));
 }
 
 static void test_safe_equal_n(void)
 {
-    assert_true(StringSafeEqualN("abcd", "abcX", 3));
-    assert_true(StringSafeEqualN_IgnoreCase("abcd", "ABCX", 3));
+    assert_true(StringEqualN("abcd", "abcX", 3));
+    assert_true(StringEqualN_IgnoreCase("abcd", "ABCX", 3));
 
-    assert_false(StringSafeEqualN("abcd", "abXX", 3));
-    assert_false(StringSafeEqualN_IgnoreCase("abcd", "ABXX", 3));
+    assert_false(StringEqualN("abcd", "abXX", 3));
+    assert_false(StringEqualN_IgnoreCase("abcd", "ABXX", 3));
 
-    assert_true(StringSafeEqualN("123abc", "123abc", 1000));
-    assert_true(StringSafeEqualN_IgnoreCase("123abc", "123ABC", 1000));
+    assert_true(StringEqualN("123abc", "123abc", 1000));
+    assert_true(StringEqualN_IgnoreCase("123abc", "123ABC", 1000));
 }
 
 static void test_match(void)

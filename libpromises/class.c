@@ -48,7 +48,7 @@ TYPED_MAP_DECLARE(Class, char *, Class *)
 
 TYPED_MAP_DEFINE(Class, char *, Class *,
                  StringHash_untyped,
-                 StringSafeEqual_untyped,
+                 StringEqual_untyped,
                  free,
                  ClassDestroy_untyped)
 

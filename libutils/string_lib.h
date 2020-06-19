@@ -110,18 +110,18 @@ char *SafeStringNDuplicate(const char *str, size_t size);
 int SafeStringLength(const char *str);
 
 int  StringSafeCompare(const char *a, const char *b);
-bool StringSafeEqual  (const char *a, const char *b);
+bool StringEqual  (const char *a, const char *b);
 
 int  StringSafeCompareN(const char *a, const char *b, size_t n);
-bool StringSafeEqualN  (const char *a, const char *b, size_t n);
+bool StringEqualN  (const char *a, const char *b, size_t n);
 
 int  StringSafeCompare_IgnoreCase(const char *a, const char *b);
-bool StringSafeEqual_IgnoreCase  (const char *a, const char *b);
+bool StringEqual_IgnoreCase  (const char *a, const char *b);
 
 int  StringSafeCompareN_IgnoreCase(const char *a, const char *b, size_t n);
-bool StringSafeEqualN_IgnoreCase  (const char *a, const char *b, size_t n);
+bool StringEqualN_IgnoreCase  (const char *a, const char *b, size_t n);
 
-bool StringSafeEqual_untyped(const void *a, const void *b);
+bool StringEqual_untyped(const void *a, const void *b);
 
 char *StringConcatenate(size_t count, const char *first, ...);
 char *StringSubstring(const char *source, size_t source_len, int start, int len);

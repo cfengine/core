@@ -938,7 +938,7 @@ bool PolicyCheckDuplicateHandles(const Policy *policy, Seq *errors)
 {
     bool success = true;
 
-    Map *recorded = MapNew(StringHash_untyped, StringSafeEqual_untyped, NULL, NULL);
+    Map *recorded = MapNew(StringHash_untyped, StringEqual_untyped, NULL, NULL);
 
     for (size_t bpi = 0; bpi < SeqLength(policy->bundles); bpi++)
     {

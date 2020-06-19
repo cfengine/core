@@ -250,10 +250,10 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
         const char *key;
         while ((key = JsonIteratorNextKey(&iter)))
         {
-            if (!(StringSafeEqual(key, "vars") ||
-                  StringSafeEqual(key, "classes") ||
-                  StringSafeEqual(key, "inputs") ||
-                  StringSafeEqual(key, "augments")))
+            if (!(StringEqual(key, "vars") ||
+                  StringEqual(key, "classes") ||
+                  StringEqual(key, "inputs") ||
+                  StringEqual(key, "augments")))
             {
                 Log(LOG_LEVEL_VERBOSE, "Unknown augments key '%s' in file '%s', skipping it",
                     key, filename);

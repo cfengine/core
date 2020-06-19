@@ -306,11 +306,11 @@ static PackageInfo *ParseAndCheckPackageDataReply(const Rlist *data)
         if (StringStartsWith(line, "PackageType="))
         {
             const char *type = line + strlen("PackageType=");
-            if (StringSafeEqual(type, "file"))
+            if (StringEqual(type, "file"))
             {
                 package_data->type = PACKAGE_TYPE_FILE;
             }
-            else if (StringSafeEqual(type, "repo"))
+            else if (StringEqual(type, "repo"))
             {
                 package_data->type = PACKAGE_TYPE_REPO;
             }
@@ -483,7 +483,7 @@ static void GetPackageModuleExecInfo(const PackageModuleBody *package_module, ch
 
     char *package_module_path = NULL;
 
-    if (package_module->module_path != NULL && !StringSafeEqual(package_module->module_path, ""))
+    if (package_module->module_path != NULL && !StringEqual(package_module->module_path, ""))
     {
         package_module_path = xstrdup(package_module->module_path);
     }
@@ -494,7 +494,7 @@ static void GetPackageModuleExecInfo(const PackageModuleBody *package_module, ch
                                            package_module->name);
     }
 
-    if (package_module->interpreter && !StringSafeEqual(package_module->interpreter, ""))
+    if (package_module->interpreter && !StringEqual(package_module->interpreter, ""))
     {
         *script_path = package_module_path;
         *script_path_quoted = Path_GetQuoted(*script_path);
@@ -529,7 +529,7 @@ static int IsPackageInCache(EvalContext *ctx,
     /* Handle latest version in specific way for repo packages.
      * Please note that for file packages 'latest' version is not supported
      * and check against that is made in CheckPolicyAndPackageInfoMatch(). */
-    if (version && StringSafeEqual(version, "latest"))
+    if (version && StringEqual(version, "latest"))
     {
         version = NULL;
     }
@@ -1132,7 +1132,7 @@ PromiseResult RepoInstall(EvalContext *ctx,
 
         const char *version = package_info->version;
         if (package_info->version &&
-                StringSafeEqual(package_info->version, "latest"))
+                StringEqual(package_info->version, "latest"))
         {
             Log(LOG_LEVEL_DEBUG, "Clearing latest package version");
             version = NULL;
@@ -1156,7 +1156,7 @@ PromiseResult RepoInstall(EvalContext *ctx,
 
     /* We have 'latest' version in policy. */
     if (package_info->version &&
-        StringSafeEqual(package_info->version, "latest"))
+        StringEqual(package_info->version, "latest"))
     {
         /* This can return more than one latest version if we have packages
          * with different architectures installed. */
@@ -1184,7 +1184,7 @@ PromiseResult RepoInstall(EvalContext *ctx,
              * in updates available but we are interested only in updating
              * package with specific architecture. */
             if (package_info->arch &&
-                    !StringSafeEqual(package_info->arch, update_package->arch))
+                    !StringEqual(package_info->arch, update_package->arch))
             {
                 Log(LOG_LEVEL_DEBUG,
                     "Skipping update check of package '%s' as updates"
@@ -1322,7 +1322,7 @@ static bool CheckPolicyAndPackageInfoMatch(const NewPackages *packages_policy,
                                            const PackageInfo *info)
 {
     if (packages_policy->package_version &&
-        StringSafeEqual(packages_policy->package_version, "latest"))
+        StringEqual(packages_policy->package_version, "latest"))
     {
         Log(LOG_LEVEL_WARNING, "Unsupported 'latest' version for package "
                 "promise of type file.");
@@ -1331,7 +1331,7 @@ static bool CheckPolicyAndPackageInfoMatch(const NewPackages *packages_policy,
 
     /* Check if file we are having matches what we want in policy. */
     if (info->arch && packages_policy->package_architecture &&
-            !StringSafeEqual(info->arch, packages_policy->package_architecture))
+            !StringEqual(info->arch, packages_policy->package_architecture))
     {
         Log(LOG_LEVEL_WARNING,
             "Package arch and one specified in policy doesn't match: %s -> %s",
@@ -1340,7 +1340,7 @@ static bool CheckPolicyAndPackageInfoMatch(const NewPackages *packages_policy,
     }
 
     if (info->version && packages_policy->package_version &&
-        !StringSafeEqual(info->version, packages_policy->package_version))
+        !StringEqual(info->version, packages_policy->package_version))
     {
 
         Log(LOG_LEVEL_WARNING,
@@ -1471,7 +1471,7 @@ PromiseResult HandleAbsentPromiseAction(EvalContext *ctx,
 {
     /* Check if we are not having 'latest' version. */
     if (policy_data->package_version &&
-            StringSafeEqual(policy_data->package_version, "latest"))
+            StringEqual(policy_data->package_version, "latest"))
     {
         Log(LOG_LEVEL_ERR, "Package version 'latest' not supported for"
                 "absent package promise");

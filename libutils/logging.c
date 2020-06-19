@@ -143,31 +143,31 @@ LogLevel LogLevelFromString(const char *const level)
     {
         return LOG_LEVEL_NOTHING;
     }
-    if (StringSafeEqualN_IgnoreCase(level, "CRITICAL", len))
+    if (StringEqualN_IgnoreCase(level, "CRITICAL", len))
     {
         return LOG_LEVEL_CRIT;
     }
-    if (StringSafeEqualN_IgnoreCase(level, "errors", len))
+    if (StringEqualN_IgnoreCase(level, "errors", len))
     {
         return LOG_LEVEL_ERR;
     }
-    if (StringSafeEqualN_IgnoreCase(level, "warnings", len))
+    if (StringEqualN_IgnoreCase(level, "warnings", len))
     {
         return LOG_LEVEL_WARNING;
     }
-    if (StringSafeEqualN_IgnoreCase(level, "notices", len))
+    if (StringEqualN_IgnoreCase(level, "notices", len))
     {
         return LOG_LEVEL_NOTICE;
     }
-    if (StringSafeEqualN_IgnoreCase(level, "information", len))
+    if (StringEqualN_IgnoreCase(level, "information", len))
     {
         return LOG_LEVEL_INFO;
     }
-    if (StringSafeEqualN_IgnoreCase(level, "verbose", len))
+    if (StringEqualN_IgnoreCase(level, "verbose", len))
     {
         return LOG_LEVEL_VERBOSE;
     }
-    if (StringSafeEqualN_IgnoreCase(level, "debug", len))
+    if (StringEqualN_IgnoreCase(level, "debug", len))
     {
         return LOG_LEVEL_DEBUG;
     }

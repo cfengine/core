@@ -28,13 +28,13 @@ static void test_new_destroy(void)
 static void test_new_hashmap_bad_size(void)
 {
     /* too small */
-    HashMap *hashmap = HashMapNew(StringHash_untyped, StringSafeEqual_untyped,
+    HashMap *hashmap = HashMapNew(StringHash_untyped, StringEqual_untyped,
                                   free, free, MIN_HASHMAP_BUCKETS >> 1);
     assert_int_equal(hashmap->size, MIN_HASHMAP_BUCKETS);
     HashMapDestroy(hashmap);
 
     /* not a pow2 */
-    hashmap = HashMapNew(StringHash_untyped, StringSafeEqual_untyped,
+    hashmap = HashMapNew(StringHash_untyped, StringEqual_untyped,
                          free, free, 123);
     assert_int_equal(hashmap->size, 128);
     HashMapDestroy(hashmap);
@@ -101,7 +101,7 @@ static void test_insert_jumbo(void)
 
 static void test_remove(void)
 {
-    HashMap *hashmap = HashMapNew(ConstHash, StringSafeEqual_untyped, free, free,
+    HashMap *hashmap = HashMapNew(ConstHash, StringEqual_untyped, free, free,
                                   HASH_MAP_INIT_SIZE);
 
     HashMapInsert(hashmap, xstrdup("a"), xstrdup("b"));
@@ -159,7 +159,7 @@ static void assert_n_as_in_map(HashMap *hashmap, unsigned int i, bool in)
 static void test_grow(void)
 {
     unsigned int i = 0;
-    HashMap *hashmap = HashMapNew(StringHash_untyped, StringSafeEqual_untyped,
+    HashMap *hashmap = HashMapNew(StringHash_untyped, StringEqual_untyped,
                                   free, free, HASH_MAP_INIT_SIZE);
 
     size_t orig_size = hashmap->size;
@@ -253,7 +253,7 @@ static void test_grow(void)
 static void test_shrink(void)
 {
     unsigned int i = 0;
-    HashMap *hashmap = HashMapNew(StringHash_untyped, StringSafeEqual_untyped,
+    HashMap *hashmap = HashMapNew(StringHash_untyped, StringEqual_untyped,
                                   free, free, HASH_MAP_INIT_SIZE);
 
     size_t orig_size = hashmap->size;
@@ -311,7 +311,7 @@ static void test_shrink(void)
 
 static void test_no_shrink_below_init_size(void)
 {
-    HashMap *hashmap = HashMapNew(StringHash_untyped, StringSafeEqual_untyped,
+    HashMap *hashmap = HashMapNew(StringHash_untyped, StringEqual_untyped,
                                   free, free, HASH_MAP_INIT_SIZE);
 
     assert_int_equal(hashmap->size, HASH_MAP_INIT_SIZE);
@@ -367,7 +367,7 @@ static void test_clear(void)
 
 static void test_clear_hashmap(void)
 {
-    HashMap *map = HashMapNew(StringHash_untyped, StringSafeEqual_untyped,
+    HashMap *map = HashMapNew(StringHash_untyped, StringEqual_untyped,
                               free, free, HASH_MAP_INIT_SIZE);
 
     assert_false(HashMapInsert(map, xstrdup("one"), xstrdup("first")));
@@ -499,7 +499,7 @@ static void test_hashmap_new_destroy(void)
 
 static void test_hashmap_degenerate_hash_fn(void)
 {
-    HashMap *hashmap = HashMapNew(ConstHash, StringSafeEqual_untyped, free, free, HASH_MAP_INIT_SIZE);
+    HashMap *hashmap = HashMapNew(ConstHash, StringEqual_untyped, free, free, HASH_MAP_INIT_SIZE);
 
     for (int i = 0; i < 100; i++)
     {
@@ -528,7 +528,7 @@ typedef struct
  * any references in the new value are not invalid. */
 static void test_array_map_key_referenced_in_value(void)
 {
-    ArrayMap *m = ArrayMapNew(StringSafeEqual_untyped, free, free);
+    ArrayMap *m = ArrayMapNew(StringEqual_untyped, free, free);
 
     char      *key1 = xstrdup("blah");
     TestValue *val1 = xmalloc(sizeof(*val1));
@@ -574,7 +574,7 @@ static void test_array_map_key_referenced_in_value(void)
 /* Same purpose as the above test. */
 static void test_hash_map_key_referenced_in_value(void)
 {
-    HashMap *m = HashMapNew(StringHash_untyped, StringSafeEqual_untyped,
+    HashMap *m = HashMapNew(StringHash_untyped, StringEqual_untyped,
                             free, free, HASH_MAP_INIT_SIZE);
     char      *key1 = xstrdup("blah");
     TestValue *val1 = xmalloc(sizeof(*val1));

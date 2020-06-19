@@ -29,7 +29,7 @@
 #include <buffer.h>
 
 TYPED_SET_DEFINE(String, char *,
-                 StringHash_untyped, StringSafeEqual_untyped, free)
+                 StringHash_untyped, StringEqual_untyped, free)
 
 Set *SetNew(MapHashFn element_hash_fn,
             MapKeyEqualFn element_equal_fn,

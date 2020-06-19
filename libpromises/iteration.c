@@ -1054,7 +1054,7 @@ bool PromiseIteratorNext(PromiseIterator *iterctx, EvalContext *evalctx)
     for (size_t i = 0; i < SeqLength(iterctx->pp->conlist); i++)
     {
         Constraint *cp = SeqAt(iterctx->pp->conlist, i);
-        if (StringSafeEqual(cp->lval, "with"))
+        if (StringEqual(cp->lval, "with"))
         {
             Rval final = EvaluateFinalRval(evalctx, PromiseGetPolicy(iterctx->pp), NULL,
                                            "this", cp->rval, false, iterctx->pp);

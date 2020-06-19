@@ -51,7 +51,7 @@ static bool MethodsParseTreeCheck(const Promise *pp, Seq *errors)
         const Constraint *cp = SeqAt(pp->conlist, i);
 
         // ensure: if call and callee are resolved, then they have matching arity
-        if (StringSafeEqual(cp->lval, "usebundle"))
+        if (StringEqual(cp->lval, "usebundle"))
         {
             if (cp->rval.type == RVAL_TYPE_FNCALL)
             {

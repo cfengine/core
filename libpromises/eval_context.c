@@ -101,7 +101,7 @@ TYPED_MAP_DECLARE(RemoteVarPromises, char *, Seq *)
 
 TYPED_MAP_DEFINE(RemoteVarPromises, char *, Seq *,
                  StringHash_untyped,
-                 StringSafeEqual_untyped,
+                 StringEqual_untyped,
                  free,
                  SeqDestroy_untyped)
 
@@ -613,7 +613,7 @@ static bool EvalWithTokenFromList(const char *expr, StringSet *token_set)
 bool EvalProcessResult(const char *process_result, StringSet *proc_attr)
 {
     assert(process_result != NULL);
-    if (StringSafeEqual(process_result, ""))
+    if (StringEqual(process_result, ""))
     {
         /* nothing to evaluate */
         return false;
@@ -1466,7 +1466,7 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner)
     for (size_t i = 0; i < SeqLength(owner->conlist); i++)
     {
         Constraint *cp = SeqAt(owner->conlist, i);
-        if (StringSafeEqual(cp->lval, "with"))
+        if (StringEqual(cp->lval, "with"))
         {
             Rval final = EvaluateFinalRval(ctx, PromiseGetPolicy(owner), NULL,
                                            "this", cp->rval, false, owner);
@@ -2418,7 +2418,7 @@ const Bundle *EvalContextResolveBundleExpression(const EvalContext *ctx, const P
         const Bundle *curr_bp = SeqAt(policy->bundles, i);
         if ((strcmp(curr_bp->type, callee_type) != 0) ||
             (strcmp(curr_bp->name, ref.name) != 0) ||
-            !StringSafeEqual(curr_bp->ns, ref.ns))
+            !StringEqual(curr_bp->ns, ref.ns))
         {
             continue;
         }
@@ -2439,7 +2439,7 @@ const Body *EvalContextFindFirstMatchingBody(const Policy *policy, const char *t
         const Body *curr_bp = SeqAt(policy->bodies, i);
         if ((strcmp(curr_bp->type, type) == 0) &&
             (strcmp(curr_bp->name, name) == 0) &&
-            StringSafeEqual(curr_bp->ns, namespace))
+            StringEqual(curr_bp->ns, namespace))
         {
             return curr_bp;
         }

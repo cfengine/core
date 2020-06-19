@@ -281,10 +281,10 @@ static void RenameMainBundle(EvalContext *ctx, Policy *policy)
     for (int i = 0; i < length; ++i)
     {
         Bundle *const bundle = SeqAt(bundles, i);
-        if (StringSafeEqual(bundle->name, "__main__"))
+        if (StringEqual(bundle->name, "__main__"))
         {
             char *abspath = GetRealPath(bundle->source_path);
-            if (StringSafeEqual(abspath, entry_point))
+            if (StringEqual(abspath, entry_point))
             {
                 Log(LOG_LEVEL_VERBOSE,
                     "Redefining __main__ bundle from file %s to be main",

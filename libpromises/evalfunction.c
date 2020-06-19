@@ -1259,15 +1259,15 @@ static FnCallResult FnCallClassesMatching(EvalContext *ctx, ARG_UNUSED const Pol
     bool check_only = false;
     unsigned count = 0;
 
-    if (StringSafeEqual(fp->name, "classesmatching"))
+    if (StringEqual(fp->name, "classesmatching"))
     {
         // Expected / default case
     }
-    else if (StringSafeEqual(fp->name, "classmatch"))
+    else if (StringEqual(fp->name, "classmatch"))
     {
         check_only = true;
     }
-    else if (StringSafeEqual(fp->name, "countclassesmatching"))
+    else if (StringEqual(fp->name, "countclassesmatching"))
     {
         count_only = true;
     }
@@ -4022,7 +4022,7 @@ static FnCallResult FnCallFileStat(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
 
     if (lstat(path, &statbuf) == -1)
     {
-        if (StringSafeEqual(fp->name, "filesize"))
+        if (StringEqual(fp->name, "filesize"))
         {
             return FnFailure();
         }
@@ -5148,7 +5148,7 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
                 if (SeqLength(s) >= 2)
                 {
                     const char *format_piece = BufferData(SeqAt(s, 1));
-                    bool percent = StringSafeEqualN(format_piece, "%%", 2);
+                    bool percent = StringEqualN(format_piece, "%%", 2);
                     char *data = NULL;
 
                     if (percent)
@@ -6665,7 +6665,7 @@ static FnCallResult FnCallReadData(ARG_UNUSED EvalContext *ctx,
     const char *input_path = RlistScalarValue(args);
     const char *const mode_string = RlistScalarValue(args->next);
     DataFileType requested_mode = DATAFILETYPE_UNKNOWN;
-    if (StringSafeEqual("auto", mode_string))
+    if (StringEqual("auto", mode_string))
     {
         requested_mode = GetDataFileTypeFromSuffix(input_path);
         Log(LOG_LEVEL_VERBOSE,

@@ -172,7 +172,7 @@ static char *GetHostRSAKey(const char *host, HostRSAKeyType type)
         inet_ntop(res->ai_family,
                   GetIPAddress((struct sockaddr *) res->ai_addr),
                   ipaddress, sizeof(ipaddress));
-        if (StringStartsWith(ipaddress, "127.") || StringSafeEqual(ipaddress, "::1"))
+        if (StringStartsWith(ipaddress, "127.") || StringEqual(ipaddress, "::1"))
         {
             Log(LOG_LEVEL_VERBOSE, "Using localhost%s key", key_ext);
             found = true;
@@ -253,7 +253,7 @@ static FILE *OpenInputOutput(const char *path, const char *mode)
 {
     assert(path != NULL);
     assert(mode != NULL);
-    if (StringSafeEqual(path, "-"))
+    if (StringEqual(path, "-"))
     {
         if (*mode == 'r')
         {
@@ -448,9 +448,9 @@ static bool RSAEncrypt(Seq *rsa_keys, const char *input_path, const char *output
 
 static inline bool CheckHeader(const char *key, const char *value)
 {
-    if (StringSafeEqual(key, "Version"))
+    if (StringEqual(key, "Version"))
     {
-        if (!StringSafeEqual(value, "1.0"))
+        if (!StringEqual(value, "1.0"))
         {
             Log(LOG_LEVEL_ERR, "Unsupported file format version: '%s'", value);
             return false;
@@ -460,7 +460,7 @@ static inline bool CheckHeader(const char *key, const char *value)
             return true;
         }
     }
-    else if (StringSafeEqual(key, "Encrypted-for"))
+    else if (StringEqual(key, "Encrypted-for"))
     {
         /* TODO: do some verification that 'value' is valid hash digest? */
         return true;
@@ -565,14 +565,14 @@ static bool ParseHeaders(FILE *input_file, RSA *privkey, size_t *enc_key_pos, si
             return false;
         }
 
-        if (StringSafeEqual(key, "Version"))
+        if (StringEqual(key, "Version"))
         {
             version_specified = true;
         }
-        else if (StringSafeEqual(key, "Encrypted-for"))
+        else if (StringEqual(key, "Encrypted-for"))
         {
             Log(LOG_LEVEL_DEBUG, "Encrypted for '%s'", value);
-            if (StringSafeEqual(value, key_digest))
+            if (StringEqual(value, key_digest))
             {
                 found_matching_digest = true;
                 *enc_key_pos = n_enc_for_headers;
@@ -828,17 +828,17 @@ int main(int argc, char *argv[])
     bool print_headers = false;
 
     size_t offset = 0;
-    if (StringSafeEqual(argv[1], "encrypt"))
+    if (StringEqual(argv[1], "encrypt"))
     {
         encrypt = true;
         offset++;
     }
-    else if (StringSafeEqual(argv[1], "decrypt"))
+    else if (StringEqual(argv[1], "decrypt"))
     {
         offset++;
         decrypt = true;
     }
-    else if (StringSafeEqual(argv[1], "print-headers"))
+    else if (StringEqual(argv[1], "print-headers"))
     {
         print_headers = true;
         offset++;

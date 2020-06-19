@@ -300,7 +300,7 @@ bool RlistContainsString(const Rlist *list, const char *string)
     for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
         if (rp->val.type == RVAL_TYPE_SCALAR &&
-            StringSafeEqual(RlistScalarValue(rp), string))
+            StringEqual(RlistScalarValue(rp), string))
         {
             return true;
         }

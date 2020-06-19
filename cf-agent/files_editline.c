@@ -890,7 +890,7 @@ static bool InsertMultipleLinesToRegion(EvalContext *ctx, Item **start, Item *be
                                        const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
     Item *ip, *prev = NULL;
-    int allow_multi_lines = StringSafeEqual(a->sourcetype, "preserve_all_lines");
+    int allow_multi_lines = StringEqual(a->sourcetype, "preserve_all_lines");
 
     // Insert at the start of the file
 
@@ -962,7 +962,7 @@ static bool InsertMultipleLinesAtLocation(EvalContext *ctx, Item **start, Item *
 
 {
     const char *const type = a->sourcetype;
-    int isfileinsert = StringSafeEqual(type, "file") || StringSafeEqual(type, "file_preserve_block");
+    int isfileinsert = StringEqual(type, "file") || StringEqual(type, "file_preserve_block");
 
     if (isfileinsert)
     {
@@ -1137,7 +1137,7 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, c
     Item *ip;
     int notfound = true, cutoff = 1, replaced = false;
 
-    if (StringSafeEqual(a->replace.occurrences, "first"))
+    if (StringEqual(a->replace.occurrences, "first"))
     {
         Log(LOG_LEVEL_WARNING, "Setting replace-occurrences policy to 'first' is not convergent");
         once_only = true;
@@ -1330,7 +1330,7 @@ static bool SanityCheckInsertions(const Attributes *a)
     Rlist *rp;
     InsertMatchType opt;
     int exact = false, ignore_something = false;
-    const bool preserve_block = StringSafeEqual(a->sourcetype, "preserve_block");
+    const bool preserve_block = StringEqual(a->sourcetype, "preserve_block");
     const LineSelect line_select = a->line_select;
 
     if (line_select.startwith_from_list)
@@ -1635,7 +1635,7 @@ static bool InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr
     FILE *fin;
     bool retval = false;
     Item *loc = NULL;
-    const bool preserve_block = StringSafeEqual(a->sourcetype, "file_preserve_block");
+    const bool preserve_block = StringEqual(a->sourcetype, "file_preserve_block");
 
     if ((fin = safe_fopen(pp->promiser, "rt")) == NULL)
     {
@@ -1732,7 +1732,7 @@ static bool InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **s
 {
     bool retval = false;
     const char *const type = a->sourcetype;
-    const bool preserve_all_lines = StringSafeEqual(type, "preserve_all_lines");
+    const bool preserve_all_lines = StringEqual(type, "preserve_all_lines");
     const bool preserve_block = type && (preserve_all_lines || strcmp(type, "preserve_block") == 0 || strcmp(type, "file_preserve_block") == 0);
 
     if (!preserve_all_lines && MatchRegion(ctx, chunk, location, NULL, false))
@@ -1847,7 +1847,7 @@ static bool InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, 
 
 /* Check line neighbourhood in whole file to avoid edge effects, iff we are not preseving block structure */
 
-{   int preserve_block = StringSafeEqual(a->sourcetype, "preserve_block");
+{   int preserve_block = StringEqual(a->sourcetype, "preserve_block");
 
     if (!prev)      /* Insert at first line */
     {
@@ -2226,7 +2226,7 @@ static bool DoEditColumn(Rlist **columns, const Attributes *a, EditContext *edco
     const char *const column_value = a->column.column_value;
     const char *const column_operation = a->column.column_operation;
 
-    if (StringSafeEqual(column_operation, "delete"))
+    if (StringEqual(column_operation, "delete"))
     {
         while ((found = RlistKeyIn(*columns, column_value)))
         {
@@ -2239,7 +2239,7 @@ static bool DoEditColumn(Rlist **columns, const Attributes *a, EditContext *edco
         return retval;
     }
 
-    if (StringSafeEqual(column_operation, "set"))
+    if (StringEqual(column_operation, "set"))
     {
         int length = RlistLen(*columns);
         if (length == 1 && strcmp(RlistScalarValue(*columns), column_value) == 0)
@@ -2261,7 +2261,7 @@ static bool DoEditColumn(Rlist **columns, const Attributes *a, EditContext *edco
         return true;
     }
 
-    if (StringSafeEqual(column_operation, "prepend"))
+    if (StringEqual(column_operation, "prepend"))
     {
         if (RlistPrependScalarIdemp(columns, column_value))
         {
@@ -2274,7 +2274,7 @@ static bool DoEditColumn(Rlist **columns, const Attributes *a, EditContext *edco
         }
     }
 
-    if (StringSafeEqual(column_operation, "alphanum"))
+    if (StringEqual(column_operation, "alphanum"))
     {
         if (RlistPrependScalarIdemp(columns, column_value))
         {

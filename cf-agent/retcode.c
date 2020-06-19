@@ -48,7 +48,7 @@ bool VerifyCommandRetcode(EvalContext *ctx, int retcode, const Attributes *a, co
         // inform constraint is only for commands promises,
         // a->inform is actually false for other promise types, so
         // checking the promise type here is important:
-        if (StringSafeEqual("commands", pp->parent_promise_type->name) && (!a->inform))
+        if (StringEqual("commands", pp->parent_promise_type->name) && (!a->inform))
         {
             // for commands promises which don't make changes to the system,
             // you can use this to make the log messages verbose:

@@ -624,20 +624,19 @@ static bool SaveBufferCallback(const char *dest_filename, void *param, NewLineMo
     return true;
 }
 
-
 static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp, const Attributes *attr,
                                             EditContext *edcontext, const char *template)
 {
     assert(attr != NULL);
-    Attributes a = *attr; // TODO: Try to remove this copy
     PromiseResult result = PROMISE_RESULT_NOOP;
 
+    const JsonElement *template_data = attr->template_data;
     JsonElement *destroy_this = NULL;
 
-    if (a.template_data == NULL)
+    if (template_data == NULL)
     {
-        a.template_data = DefaultTemplateData(ctx, NULL);
-        destroy_this = a.template_data;
+        destroy_this = DefaultTemplateData(ctx, NULL);
+        template_data = destroy_this;
     }
 
     unsigned char existing_output_digest[EVP_MAX_MD_SIZE + 1] = { 0 };
@@ -650,33 +649,33 @@ static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp,
     Buffer *output_buffer = BufferNew();
 
     char *message;
-    if ( strcmp("inline_mustache", a.template_method) == 0)
+    if (strcmp("inline_mustache", attr->template_method) == 0)
     {
         message = xstrdup("inline");
     }
     else
     {
-        message = xstrdup(a.edit_template);
+        message = xstrdup(attr->edit_template);
     }
 
-    if (MustacheRender(output_buffer, template, a.template_data))
+    if (MustacheRender(output_buffer, template, template_data))
     {
         unsigned char rendered_output_digest[EVP_MAX_MD_SIZE + 1] = { 0 };
         HashString(BufferData(output_buffer), BufferSize(output_buffer), rendered_output_digest, CF_DEFAULT_DIGEST);
         if (!HashesMatch(existing_output_digest, rendered_output_digest, CF_DEFAULT_DIGEST))
         {
-            if (a.transaction.action == cfa_warn || DONTDO)
+            if (attr->transaction.action == cfa_warn || DONTDO)
             {
-                RecordWarning(ctx, pp, &a,
+                RecordWarning(ctx, pp, attr,
                               "Should update rendering of '%s' from mustache template '%s'",
                               pp->promiser, message);
                 result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
             }
             else
             {
-                if (SaveAsFile(SaveBufferCallback, output_buffer, edcontext->filename, &a, edcontext->new_line_mode))
+                if (SaveAsFile(SaveBufferCallback, output_buffer, edcontext->filename, attr, edcontext->new_line_mode))
                 {
-                    RecordChange(ctx, pp, &a,
+                    RecordChange(ctx, pp, attr,
                                  "Updated rendering of '%s' from mustache template '%s'",
                                  pp->promiser, message);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
@@ -687,7 +686,7 @@ static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp,
                 }
                 else
                 {
-                    RecordFailure(ctx, pp, &a,
+                    RecordFailure(ctx, pp, attr,
                                   "Failed to update rendering of '%s' from mustache template '%s'",
                                   pp->promiser, message);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
@@ -697,7 +696,7 @@ static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp,
     }
     else
     {
-        RecordFailure(ctx, pp, &a, "Error rendering mustache template '%s'", a.edit_template);
+        RecordFailure(ctx, pp, attr, "Error rendering mustache template '%s'", attr->edit_template);
         result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
     }
     BufferDestroy(output_buffer);

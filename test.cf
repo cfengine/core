@@ -1,0 +1,7 @@
+bundle agent main
+{
+  processes:
+    "/usr/bin/cf-serverd";
+  reports:
+    "hi";
+}

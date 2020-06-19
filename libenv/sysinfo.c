@@ -458,7 +458,7 @@ static void GetNameInfo3(EvalContext *ctx)
      */
     strcpy(VSYSNAME.sysname, "android");
 #endif
-#ifdef __BUSYBOX__
+#if defined(__BUSYBOX__) || defined(__ALPINE__)
     /*
      * uname cannot differentiate a busybox toolset from a normal GNU linux toolset
      */

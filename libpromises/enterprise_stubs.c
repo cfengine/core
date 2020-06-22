@@ -139,7 +139,7 @@ ENTERPRISE_VOID_FUNC_3ARG_DEFINE_STUB(void, CacheUnreliableValue, char *, caller
 ENTERPRISE_FUNC_3ARG_DEFINE_STUB(int, RetrieveUnreliableValue, char *, caller, char *, handle, char *, buffer)
 {
     Log(LOG_LEVEL_VERBOSE, "Value fault-tolerance only available in CFEngine Enterprise");
-    return false;
+    return 0; // enterprise version returns strlen(buffer) or 0 for error
 }
 
 #if defined(__MINGW32__)

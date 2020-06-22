@@ -203,7 +203,7 @@ static bool RlistCustomItemLess(void *lhs_, void *rhs_, void *ctx)
 {
     Rlist *lhs = lhs_;
     Rlist *rhs = rhs_;
-    int (*cmp)() = ctx;
+    bool (*cmp)() = ctx;
 
     return (*cmp)(lhs->val.item, rhs->val.item);
 }
@@ -294,11 +294,9 @@ static bool StringItemIPLess(const char *left_item, const char *right_item, ARG_
 
     if (matched_left && matched_right)
     {
-        int less = IPAddressCompareLess(left, right);
+        bool less = IPAddressCompareLess(left, right);
         IPAddressDestroy(&left);
         IPAddressDestroy(&right);
-        // FIXME: less is -1, 0, 1 (see IPAddressCompareLess())
-        // What is the intention for -1?
         return less;
     }
 
@@ -380,7 +378,7 @@ static void RlistPutNext(void *element, void *next)
 
 /* Rlist* sorting */
 
-Rlist *SortRlist(Rlist *list, int (*CompareItems) ())
+Rlist *SortRlist(Rlist *list, bool (*CompareItems) ())
 {
     return Sort(list, &RlistCustomItemLess, &RlistGetNext, &RlistPutNext, CompareItems);
 }

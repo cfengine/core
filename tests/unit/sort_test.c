@@ -86,9 +86,9 @@ void test_sort_item_list_times(void)
     DeleteItemList(sorted);
 }
 
-int FirstItemShorter(const char *lhs, const char *rhs)
+bool FirstItemShorter(const char *lhs, const char *rhs)
 {
-    return strlen(lhs) < strlen(rhs);
+    return (strlen(lhs) < strlen(rhs));
 }
 
 void test_sort_rlist(void)

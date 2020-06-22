@@ -35,8 +35,6 @@
 #include <misc_lib.h>
 #include <eval_context.h>
 
-#define CF_MAXLINKLEVEL 4
-
 #if !defined(__MINGW32__)
 static bool MakeLink(EvalContext *ctx, const char *from, const char *to, const Attributes *attr, const Promise *pp, PromiseResult *result);
 #endif
@@ -232,7 +230,7 @@ PromiseResult VerifyAbsoluteLink(EvalContext *ctx, char *destination, const char
 
     if (attr->link.when_no_file == cfa_force)
     {
-        if (!ExpandLinks(expand, absto, 0))     /* begin at level 1 and beam out at 15 */
+        if (!ExpandLinks(expand, absto, 0, CF_MAXLINKLEVEL))     /* begin at level 1 and beam out at 15 */
         {
             RecordFailure(ctx, pp, attr, "Failed to expand absolute link to '%s'", source);
             PromiseRef(LOG_LEVEL_ERR, pp);
@@ -589,7 +587,7 @@ bool MakeHardLink(EvalContext *ctx, const char *from, const char *to, const Attr
 
 #ifdef __MINGW32__
 
-bool ExpandLinks(char *dest, const char *from, int level)
+bool ExpandLinks(char *dest, const char *from, int level, int max_level)
 {
     Log(LOG_LEVEL_ERR, "Windows does not support symbolic links (at ExpandLinks(%s,%s))", dest, from);
     return false;
@@ -597,7 +595,7 @@ bool ExpandLinks(char *dest, const char *from, int level)
 
 #else                           /* !__MINGW32__ */
 
-bool ExpandLinks(char *dest, const char *from, int level)
+bool ExpandLinks(char *dest, const char *from, int level, int max_level)
 {
     char buff[CF_BUFSIZE];
     char node[CF_MAXLINKSIZE];
@@ -610,6 +608,12 @@ bool ExpandLinks(char *dest, const char *from, int level)
     {
         Log(LOG_LEVEL_ERR, "Too many levels of symbolic links to evaluate absolute path");
         return false;
+    }
+
+    if (level >= max_level)
+    {
+        Log(LOG_LEVEL_DEBUG, "Reached maximum level of symbolic link resolution");
+        return true;
     }
 
     const char *sp = from;
@@ -691,7 +695,7 @@ bool ExpandLinks(char *dest, const char *from, int level)
                         return true;
                     }
 
-                    if ((!lastnode) && (!ExpandLinks(buff, dest, level + 1)))
+                    if ((!lastnode) && (!ExpandLinks(buff, dest, level + 1, max_level)))
                     {
                         return false;
                     }
@@ -721,7 +725,7 @@ bool ExpandLinks(char *dest, const char *from, int level)
 
                     memset(buff, 0, CF_BUFSIZE);
 
-                    if ((!lastnode) && (!ExpandLinks(buff, dest, level + 1)))
+                    if ((!lastnode) && (!ExpandLinks(buff, dest, level + 1, max_level)))
                     {
                         return false;
                     }

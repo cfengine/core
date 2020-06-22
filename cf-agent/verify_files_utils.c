@@ -1235,7 +1235,7 @@ static PromiseResult LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile
     {
         struct stat ssb;
 
-        ExpandLinks(linkbuf, sourcefile, 0);
+        ExpandLinks(linkbuf, sourcefile, 0, CF_MAXLINKLEVEL);
         Log(LOG_LEVEL_VERBOSE, "Link item in copy '%s' marked for copying from '%s' instead", sourcefile,
               linkbuf);
         stat(linkbuf, &ssb);

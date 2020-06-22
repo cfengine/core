@@ -27,12 +27,14 @@
 
 #include <cf3.defs.h>
 
+#define CF_MAXLINKLEVEL 4
+
 PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source, const Attributes *attr, const Promise *pp);
 PromiseResult VerifyAbsoluteLink(EvalContext *ctx, char *destination, const char *source, const Attributes *attr, const Promise *pp);
 PromiseResult VerifyRelativeLink(EvalContext *ctx, char *destination, const char *source, const Attributes *attr, const Promise *pp);
 PromiseResult VerifyHardLink(EvalContext *ctx, char *destination, const char *source, const Attributes *attr, const Promise *pp);
 bool KillGhostLink(EvalContext *ctx, const char *name, const Attributes *attr, const Promise *pp, PromiseResult *result);
 bool MakeHardLink(EvalContext *ctx, const char *from, const char *to, const Attributes *attr, const Promise *pp, PromiseResult *result);
-bool ExpandLinks(char *dest, const char *from, int level);
+bool ExpandLinks(char *dest, const char *from, int level, int max_level);
 
 #endif

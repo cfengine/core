@@ -5742,7 +5742,7 @@ static FnCallResult FnCallRemoteScalar(EvalContext *ctx,
 
         if (strncmp(buffer, "BAD:", 4) == 0)
         {
-            if (!RetrieveUnreliableValue("remotescalar", handle, buffer))
+            if (RetrieveUnreliableValue("remotescalar", handle, buffer) == 0)
             {
                 // This function should never fail
                 buffer[0] = '\0';
@@ -7704,7 +7704,7 @@ static FnCallResult FnCallLDAPValue(ARG_UNUSED EvalContext *ctx, ARG_UNUSED cons
     {
         CacheUnreliableValue("ldapvalue", handle, newval);
     }
-    else if (RetrieveUnreliableValue("ldapvalue", handle, buffer))
+    else if (RetrieveUnreliableValue("ldapvalue", handle, buffer) > 0)
     {
         newval = xstrdup(buffer);
     }

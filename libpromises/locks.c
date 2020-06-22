@@ -648,7 +648,7 @@ void PromiseRuntimeHash(const Promise *pp, const char *salt,
     Rlist *rp;
     FnCall *fp;
 
-    char *noRvalHash[] = { "mtime", "atime", "ctime", "stime_range", "ttime_range", NULL };
+    char *noRvalHash[] = { "mtime", "atime", "ctime", "stime_range", "ttime_range", "log_string", NULL };
     int doHash;
 
     md = HashDigestFromId(type);

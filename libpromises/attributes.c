@@ -53,6 +53,7 @@ Attributes GetFilesAttributes(const EvalContext *ctx, const Promise *pp)
     attr.haveselect = PromiseGetConstraintAsBoolean(ctx, "file_select", pp);
     attr.haverename = PromiseGetConstraintAsBoolean(ctx, "rename", pp);
     attr.havedelete = PromiseGetConstraintAsBoolean(ctx, "delete", pp);
+    attr.content = PromiseGetConstraintAsRval(pp, "content", RVAL_TYPE_SCALAR);
     attr.haveperms = PromiseGetConstraintAsBoolean(ctx, "perms", pp);
     attr.havechange = PromiseGetConstraintAsBoolean(ctx, "changes", pp);
     attr.havecopy = PromiseGetConstraintAsBoolean(ctx, "copy_from", pp);

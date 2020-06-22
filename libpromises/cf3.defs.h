@@ -1537,6 +1537,7 @@ typedef struct
     FilePerms perms;
     FileCopy copy;
     FileDelete delete;
+    char *content;
     FileRename rename;
     FileChange change;
     FileLink link;
@@ -1628,6 +1629,7 @@ typedef struct
     .perms = {0},\
     .copy = {0},\
     .delete = {0},\
+    .content = NULL,\
     .rename = {0},\
     .change = {0},\
     .link = {0},\

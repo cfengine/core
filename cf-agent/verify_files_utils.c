@@ -1697,7 +1697,7 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
                     else
                     {
                         RecordFailure(ctx, pp, attr,
-                                      "Write of Darwin resource fork rsrcwd '%s' failed (write: %s)"
+                                      "Write of Darwin resource fork rsrcwd '%s' failed (write: %s)",
                                       dest, GetErrorStr());
                         *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
                         close(rsrcrd);
@@ -2370,7 +2370,8 @@ static PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, co
 
     if ((newflags & CHFLAGS_MASK) == (dstat->st_flags & CHFLAGS_MASK))
     {
-        RecordNoChange("BSD flags of '%s' are as promised ('%jx')",
+        RecordNoChange(ctx, pp, attr,
+                       "BSD flags of '%s' are as promised ('%jx')",
                        file, (uintmax_t) (dstat->st_flags & CHFLAGS_MASK));
     }
     else
@@ -3660,7 +3661,9 @@ static int VerifyFinderType(EvalContext *ctx, const char *file, const Attributes
 
             if (DONTDO)
             {
-                RecordWarning("Should set Finder Type code of '%s' to '%s'", file, a->perms.findertype);
+                RecordWarning(ctx, pp, a,
+                              "Should set Finder Type code of '%s' to '%s'",
+                              file, a->perms.findertype);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                 return 0;
             }
@@ -3685,7 +3688,7 @@ static int VerifyFinderType(EvalContext *ctx, const char *file, const Attributes
             return retval;
 
         case cfa_warn:
-            RecordWarning("Should set Finder Type code of '%s' to '%s'", file, a->perms.findertype);
+            RecordWarning(ctx, pp, a, "Should set Finder Type code of '%s' to '%s'", file, a->perms.findertype);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
             return 0;
 

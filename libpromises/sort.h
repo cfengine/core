@@ -34,7 +34,7 @@ Item *SortItemListClasses(Item *list); /* Alphabetical */
 Item *SortItemListCounters(Item *list); /* Reverse sort */
 Item *SortItemListTimes(Item *list); /* Reverse sort */
 
-Rlist *SortRlist(Rlist *list, int (*CompareItems) ());
+Rlist *SortRlist(Rlist *list, bool (*CompareItems) ());
 Rlist *AlphaSortRListNames(Rlist *list);
 Rlist *IntSortRListNames(Rlist *list);
 Rlist *RealSortRListNames(Rlist *list);

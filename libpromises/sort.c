@@ -203,7 +203,7 @@ static bool RlistCustomItemLess(void *lhs_, void *rhs_, void *ctx)
 {
     Rlist *lhs = lhs_;
     Rlist *rhs = rhs_;
-    int (*cmp)() = ctx;
+    bool (*cmp)() = ctx;
 
     return (*cmp)(lhs->val.item, rhs->val.item);
 }
@@ -380,7 +380,7 @@ static void RlistPutNext(void *element, void *next)
 
 /* Rlist* sorting */
 
-Rlist *SortRlist(Rlist *list, int (*CompareItems) ())
+Rlist *SortRlist(Rlist *list, bool (*CompareItems) ())
 {
     return Sort(list, &RlistCustomItemLess, &RlistGetNext, &RlistPutNext, CompareItems);
 }

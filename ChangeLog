@@ -1,3 +1,91 @@
+3.16.0:
+	- Added `cf-secret` binary for host-specific encryption (CFE-2613)
+	- 'cf-check diagnose --test-write' can now be used to test writing
+	  into LMDB files (ENT-4484)
+	- 'if' constraint now works in combination with class contexts
+	  (CFE-2615)
+	- Added $(sys.cf_version_release) variable (ENT-5348)
+	- Added new macros to parser: else, maximum_version, between_versions,
+	  before_version, at_version and after_version. Version macros now
+	  accept single digits (CFE-3198)
+	- Added cf-postgres requirement to cf-apache and cf-hub systemd units
+	  (ENT-5125)
+	- Added files promise content attribute (CFE-3276)
+	- Added string_trim() policy function (CFE-3074)
+	- Added warning if CSV parser parses nothing from non-empty file
+	  (CFE-3256)
+	- All changes made by 'files' promises are now reported. Also,
+	  directory and file creations are now properly reported as 'info'
+	  messages. And failures in edit_xml result in promises marked as
+	  failed not interrupted. Purged dirs and files are reported as
+	  repaired (ENT-5291, CFE-3260)
+	- Bootstrap to loopback interface is now allowed, with a warning
+	  (CFE-3304)
+	- Client initiated reporting was fixed on RHEL 8.1 (ENT-5415)
+	- Fixed rare crashing bug when parsing zombie entries in ps output. The
+	  problem was only ever observed on AIX, but could theoretically happen
+	  on any platform depending on exact libc behavior. (ENT-5329)
+	- Fixed an issue causing duplicate entries in sys.interfaces, and
+	  sys.hardware. (CFE-3046)
+	- Fixed ifelse() to return fallback in case of unresolved variables
+	  (ENT-4653)
+	- Fixed locking of promises using log_repaired / log_string with
+	  timestamps (CFE-3376)
+	- Fixed memory leak in handling of inline JSON in policy evaluation
+	- Fixed memory leak in readlist functions (CFE-3263)
+	- Fixed race condition when multiple agents are acquiring critical
+	  section locks simultaneously (CFE-3361)
+	- Fixed selection of standard_services when used from non-default
+	  namespace (ENT-5406)
+	- Fixed service status cfengine3 on systemd managed hosts (ENT-5528)
+	- Fixed some memory leaks and crashes in policy evaluation (CFE-3263)
+	- Improved error message for invalid body attribute names (CFE-3273)
+	- Improved management of secondary groups to avoid intermediary state
+	  failures (ENT-3710)
+	- LMDB files are now created with correct permissions (ENT-5986)
+	- Log messages about broken Mustache templates are now errors (CFE-3263)
+	- Made classfiltercsv() fail properly on invalid class expression index
+	- Measurements promises with no match no longer produce errors
+	  (ENT-5171)
+	- Moved error reading file in countlinesmatching() from verbose to error
+	  (CFE-3234)
+	- Added new data validation policy functions validdata() and validjson()
+	  (CFE-2898)
+	- New version checking convenience policy functions (CFE-3197)
+	  Added the following policy functions to check against local CFEngine version:
+	  - cf_version_maximum()
+	  - cf_version_minimum()
+	  - cf_version_after()
+	  - cf_version_before()
+	  - cf_version_at()
+	  - cf_version_between()
+	- Removed (USE AT YOUR OWN RISK) from cf-key help menu for -x (ENT-5090)
+	- Rewrote helloworld.cf to use files promises content attribute
+	  (CFE-3276)
+	- The outcome classes are now defined for the top-level directory when
+	  'include_basedir' is 'false' (ENT-5291)
+	- Variable references with nested parentheses no longer cause errors
+	  (CFE-3242)
+	- cf-check: Added a more user friendly message when trying to print
+	  unknown binary data (ENT-5234)
+	- cf-check: Added data validation for cf_lastseen.lmdb (CFE-2988)
+	- cf-check: Added nice printing for nova_agent_executions.lmdb
+	  (ENT-5234)
+	- cf-check: Added validation for timestamps in cf_lock.lmdb (CFE-2988)
+	- cf-check: Added validation for timestamps in lastseen.lmdb (CFE-2988)
+	- cf-check: Fixed issue causing repair to target the wrong database file
+	  (ENT-5309)
+	- cf-check: Symlinked LMDB databases are now preserved in repair
+	  Performs diagnosis and repair on symlink target instead of symlink.
+	  Repaired files / copies are placed alongside symlink target.
+	  In some cases, the symlink target is deleted to repair a corrupt
+	  database, and the symlink is left as a broken symlink. This is
+	  handled gracefully by the agent, it will be recreated. Broken
+	  symlinks are now detected as an acceptable condition in diagnose,
+	  it won't try to repair them or delete them. (ENT-5162)
+	- storage promises managing nfs mounts should now correctly mount
+	  after editing fstab entries
+
 3.15.0:
 	- New policy function basename() added (CFE-3196)
 	- Added read_module_protocol() policy function

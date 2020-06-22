@@ -1221,12 +1221,12 @@ static PromiseResult LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile
             ChopLastNode(vbuff);
             AddSlash(vbuff);
             strncat(vbuff, linkbuf, CF_BUFSIZE - 1);
-            strlcpy(linkbuf, vbuff, CF_BUFSIZE);
+            strlcpy(linkbuf, vbuff, CF_BUFSIZE - 1);
         }
     }
     else
     {
-        strlcpy(linkbuf, sourcefile, CF_BUFSIZE);
+        strlcpy(linkbuf, sourcefile, CF_BUFSIZE - 1);
     }
 
     lastnode = ReadLastNode(sourcefile);

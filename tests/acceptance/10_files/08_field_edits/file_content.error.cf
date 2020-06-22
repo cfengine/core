@@ -1,0 +1,89 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  # Create a blank file to compare
+  files:
+      "$(G.testfile).expected.blank"
+        create => "true",
+        edit_defaults => init_empty;
+}
+
+bundle edit_line init_insert(str)
+{
+  insert_lines:
+      "$(str)";
+}
+
+body edit_defaults init_empty
+{
+      empty_file_before_editing => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+  files:
+      "$(G.testfile).error.edit_line"
+        create => "true",
+        content => "whatever",
+        edit_line => whatever_line;
+
+      "$(G.testfile).error.edit_xml"
+        create => "true",
+        content => "whatever",
+        edit_xml => whatever_xml;
+
+      "$(G.testfile).error.edit_template"
+        create => "true",
+        content => "whatever",
+        edit_template => "/path/to/whatever";
+
+      "$(G.testfile).error.edit_template_string"
+        create => "true",
+        content => "whatever",
+        edit_template_string => "whatever";
+
+
+}
+
+bundle edit_line whatever_line
+{
+
+}
+
+bundle edit_xml whatever_xml
+{
+
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+
+      "" usebundle => dcs_check_diff("$(G.testfile).error.edit_line",
+                                     "$(G.testfile).expected.blank",
+                                     "$(this.promise_filename)");
+
+      "" usebundle => dcs_check_diff("$(G.testfile).error.edit_xml",
+                                     "$(G.testfile).expected.blank",
+                                     "$(this.promise_filename)");
+
+      "" usebundle => dcs_check_diff("$(G.testfile).error.edit_template",
+                                     "$(G.testfile).expected.blank",
+                                     "$(this.promise_filename)");
+
+      "" usebundle => dcs_check_diff("$(G.testfile).error.edit_template_string",
+                                     "$(G.testfile).expected.blank",
+                                     "$(this.promise_filename)");
+}

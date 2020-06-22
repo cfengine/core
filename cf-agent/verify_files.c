@@ -59,6 +59,8 @@
 
 static PromiseResult FindFilePromiserObjects(EvalContext *ctx, const Promise *pp);
 static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promise *pp);
+static PromiseResult WriteContentFromString(EvalContext *ctx, const char *path, const Attributes *attr,
+                                            const Promise *pp);
 
 /*****************************************************************************/
 
@@ -490,7 +492,27 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
         result = PromiseResultUpdate(result, ScheduleLinkOperation(ctx, path, a.link.source, &a, pp));
     }
 
-/* Phase 3 - content editing */
+/* Phase 3a - direct content */
+
+    if (a.content)
+    {
+        if (a.haveedit)
+        {
+            // Disallow edits on top of content creation
+            RecordFailure(ctx, pp, &a, "A file promise with content attribute cannot have edit operations");
+            result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+            goto exit;
+        }
+        Log(LOG_LEVEL_VERBOSE, "Replacing '%s' with content '%s'",
+            path, a.content);
+
+        PromiseResult render_result = WriteContentFromString(ctx, path, &a, pp);
+        result = PromiseResultUpdate(result, render_result);
+
+        goto exit;
+    }
+
+/* Phase 3b - content editing */
 
     if (a.haveedit)
     {
@@ -553,6 +575,73 @@ skip:
 
     ClearExpandedAttributes(&a);
     EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser");
+
+    return result;
+}
+
+/*****************************************************************************/
+
+static PromiseResult WriteContentFromString(EvalContext *ctx, const char *path, const Attributes *attr,
+                                            const Promise *pp)
+{
+    assert(path != NULL);
+    assert(attr != NULL);
+
+    PromiseResult result = PROMISE_RESULT_NOOP;
+
+    if (attr->content == NULL)
+    {
+        RecordFailure(ctx, pp, attr, "'content' not set for promiser: '%s'", path);
+        return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+    }
+
+    unsigned char existing_content_digest[EVP_MAX_MD_SIZE + 1] = { 0 };
+    if (access(path, R_OK) == 0)
+    {
+        HashFile(path, existing_content_digest, CF_DEFAULT_DIGEST,
+                 FileNewLineMode(path) == NewLineMode_Native);
+    }
+
+    size_t bytes_to_write = strlen(attr->content);
+    unsigned char promised_content_digest[EVP_MAX_MD_SIZE + 1] = { 0 };
+    HashString(attr->content, strlen(attr->content),
+               promised_content_digest, CF_DEFAULT_DIGEST);
+
+    if (!HashesMatch(existing_content_digest, promised_content_digest, CF_DEFAULT_DIGEST))
+    {
+        if (DONTDO)
+        {
+            RecordWarning(ctx, pp, attr,
+                          "Should update content of '%s' with content '%s'",
+                          path, attr->content);
+            return result;
+        }
+
+        FILE *f = safe_fopen(path, "w");
+        if (f == NULL)
+        {
+            RecordFailure(ctx, pp, attr, "Cannot open file '%s' for writing", path);
+            return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+        }
+
+        Writer *w = FileWriter(f);
+        if (WriterWriteLen(w, attr->content, bytes_to_write) == bytes_to_write )
+        {
+            RecordChange(ctx, pp, attr,
+                         "Updated content of '%s' with content '%s'",
+                         path, attr->content);
+
+            result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
+        }
+        else
+        {
+            RecordFailure(ctx, pp, attr,
+                          "Failed to update content of '%s' with content '%s'",
+                          path, attr->content);
+            result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+        }
+        WriterClose(w);
+    }
 
     return result;
 }

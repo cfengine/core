@@ -237,6 +237,8 @@ def install_host(
         if edition == "enterprise":
             tags.append("hub" if hub else "agent")
         tags.append("64" if data["arch"] in ["x86_64", "amd64"] else data["arch"])
+        if data["arch"] in ["i386", "i486", "i586", "i686"]:
+            tags.append("32")
         extension = None
         if "package_tags" in data and "msi" in data["package_tags"]:
             extension = ".msi"

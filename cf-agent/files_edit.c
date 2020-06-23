@@ -104,20 +104,13 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, const Attributes *a, c
         goto end;
     }
 
-    if (DONTDO || (a->transaction.action == cfa_warn))
+    /* If some edits are to be saved, but we are not making changes to
+     * files (dry-run), just log the fact (MakingChanges() does that). */
+    if ((ec != NULL) && (ec->num_edits > 0) &&
+        !CompareToFile(ctx, ec->file_start, ec->filename, a, pp, result) &&
+        !MakingChanges(ctx, pp, a, result, "edit file '%s'", ec->filename))
     {
-        if (ec &&
-            !CompareToFile(ctx, ec->file_start, ec->filename, a, pp, result) &&
-            ec->num_edits > 0)
-        {
-            RecordWarning(ctx, pp, a, "File '%s' should be edited", ec->filename);
-            *result = PROMISE_RESULT_WARN;
-        }
-        else
-        {
-            RecordNoChange(ctx, pp, a, "No edit changes to file '%s' need saving", ec->filename);
-            *result = PROMISE_RESULT_NOOP;
-        }
+        goto end;
     }
     else if (ec && (ec->num_rewrites > 0))
     {

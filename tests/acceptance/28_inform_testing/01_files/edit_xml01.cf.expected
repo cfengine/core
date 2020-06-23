@@ -1,0 +1,4 @@
+    info: Built XPath '/Server/Service/Engine/Host' into an empty XML document '/tmp/TEST.cfengine'
+    info: build_xpath promise '/Server/Service/Engine/Host' repaired
+    info: Edited xml file '/tmp/TEST.cfengine'
+    info: files promise '/tmp/TEST.cfengine' repaired

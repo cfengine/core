@@ -1,0 +1,4 @@
+    info: Set attribute with name 'my_attr' to value 'my_value' at XPath '//Root' in XML document '/tmp/TEST.cfengine'
+    info: set_attribute promise 'my_attr' repaired
+    info: Edited xml file '/tmp/TEST.cfengine'
+    info: files promise '/tmp/TEST.cfengine' repaired

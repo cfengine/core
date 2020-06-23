@@ -1,5 +1,5 @@
 3.16.0:
-	- Added `cf-secret` binary for host-specific encryption (CFE-2613)
+	- Added 'cf-secret' binary for host-specific encryption (CFE-2613)
 	- 'cf-check diagnose --test-write' can now be used to test writing
 	  into LMDB files (ENT-4484)
 	- 'if' constraint now works in combination with class contexts

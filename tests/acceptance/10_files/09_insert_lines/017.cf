@@ -15,10 +15,6 @@ body common control
 
 
 bundle agent test {
-  meta:
-      "test_soft_fail" string => "aix|hpux",
-        meta => { "redmine6336" };
-
   files:
       "$(G.testfile)"
       edit_line => insert_dir,

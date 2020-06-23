@@ -1735,6 +1735,14 @@ static bool InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr
     Item *loc = NULL;
     const bool preserve_block = StringEqual(a->sourcetype, "file_preserve_block");
 
+    struct stat sb;
+    if ((stat(pp->promiser, &sb) == 0) && S_ISDIR(sb.st_mode))
+    {
+        RecordInterruption(ctx, pp, a, "Could not insert lines from a directory '%s'", pp->promiser);
+        *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
+        return false;
+    }
+
     if ((fin = safe_fopen(pp->promiser, "rt")) == NULL)
     {
         RecordInterruption(ctx, pp, a, "Could not read file '%s'. (fopen: %s)",

@@ -1631,16 +1631,9 @@ body perms system_owned(mode)
 {
       mode   => "$(mode)";
       owners => { "root" };
-
-    freebsd|openbsd|netbsd|darwin::
-      groups => { "wheel" };
-
-    linux::
-      groups => { "root" };
-
-    solaris::
-      groups => { "sys" };
+      groups => { "$(sys.user_data[gid])" };
 }
+
 
 body depth_search recurse(d)
 # @brief Search files and direcories recursively, up to the specified depth

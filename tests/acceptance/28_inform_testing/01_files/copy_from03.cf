@@ -1,0 +1,52 @@
+body file control
+{
+  hpux.ia64::
+    inputs => { "$(sys.policy_entry_dirname)/../common_soft_fail.cf.sub" };
+  !(hpux.ia64)::
+    inputs => { "$(sys.policy_entry_dirname)/../common.cf.sub" };
+}
+
+bundle common testcase
+{
+  vars:
+    "filename" string => "$(this.promise_filename)";
+}
+
+bundle agent setup
+{
+  files:
+    "$(G.testroot)/TEST.source"
+      depth_search => recurse("inf"),
+      perms => system_owned("0644"),
+      copy_from => example("$(this.promise_dirname)/test_files");
+
+}
+
+bundle agent main
+{
+  files:
+    "$(G.testroot)/TEST.destination/subdir/purgeme"
+      create => "true",
+      handle => "step_one";
+    "$(G.testroot)/TEST.destination/file-perms-644"
+      copy_from => example("$(G.testroot)/TEST.source/file-perms-644");
+    "$(G.testroot)/TEST.destination/subdir/."
+      depends_on => { "step_one" },
+      depth_search => recurse("inf"),
+      move_obstructions => "true",
+      copy_from => example3("$(G.testroot)/TEST.source/subdir/.");
+}
+
+body copy_from example(from)
+{
+  source => "$(from)";
+  compare => "digest";
+  preserve => "true";
+}
+
+body copy_from example3(from)
+{
+  source => "$(from)";
+  linkcopy_patterns => { ".*644" };
+  purge => "true";
+}

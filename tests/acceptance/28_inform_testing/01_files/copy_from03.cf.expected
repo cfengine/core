@@ -1,0 +1,13 @@
+    info: Created directory '/tmp/TEST.destination/subdir/purgeme'
+    info: Created file '/tmp/TEST.destination/subdir/purgeme', mode 0600
+    info: files promise '/tmp/TEST.destination/subdir/purgeme' repaired
+    info: Copied file '/tmp/TEST.source/file-perms-644' to '/tmp/TEST.destination/file-perms-644.cfnew' (permissions preserved)
+    info: Moved '/tmp/TEST.destination/file-perms-644.cfnew' to '/tmp/TEST.destination/file-perms-644'
+    info: Object '/tmp/TEST.destination/file-perms-644' had permissions 0600, changed it to 0644
+    info: Updated file '/tmp/TEST.destination/file-perms-644' from 'localhost:/tmp/TEST.source/file-perms-644'
+    info: files promise '/tmp/TEST.destination/file-perms-644' repaired
+    info: Copied file '/tmp/TEST.source/subdir/./subdir-file' to '/tmp/TEST.destination/subdir/./subdir-file.cfnew' (mode '600')
+    info: Moved '/tmp/TEST.destination/subdir/./subdir-file.cfnew' to '/tmp/TEST.destination/subdir/./subdir-file'
+    info: Updated file '/tmp/TEST.destination/subdir/./subdir-file' from 'localhost:/tmp/TEST.source/subdir/./subdir-file'
+    info: Purged '/tmp/TEST.destination/subdir/./purgeme' copy dest directory
+    info: files promise '/tmp/TEST.destination/subdir/.' repaired

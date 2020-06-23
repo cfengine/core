@@ -1,0 +1,4 @@
+    info: Inserted the promised line 'foobar' into '/tmp/TEST.cfengine' after locator
+    info: insert_lines promise 'foobar' repaired
+    info: Edit file '/tmp/TEST.cfengine'
+    info: files promise '/tmp/TEST.cfengine' repaired

@@ -1,0 +1,24 @@
+body file control
+{
+  inputs => { "$(sys.policy_entry_dirname)/../common.cf.sub" };
+}
+
+bundle common testcase
+{
+  vars:
+    "filename" string => "$(this.promise_filename)";
+}
+
+bundle agent setup
+{
+  files:
+    "$(G.testfile)"
+      create => "true";
+}
+
+bundle agent main
+{
+  files:
+    "$(G.testfile)"
+    perms => m(000);
+}

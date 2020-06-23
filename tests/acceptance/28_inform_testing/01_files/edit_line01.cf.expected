@@ -1,0 +1,4 @@
+    info: Set field sub-value '/my/new/shell' in '/tmp/TEST.cfengine'
+    info: fields_edit promise 'me:.*' repaired
+    info: Edit file '/tmp/TEST.cfengine'
+    info: files promise '/tmp/TEST.cfengine' repaired

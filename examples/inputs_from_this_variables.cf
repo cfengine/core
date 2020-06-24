@@ -1,0 +1,27 @@
+# Example showing how to use this. variables in body file control or body common control
+
+bundle common my_vars
+# @brief a common bundle in which this. variables are resolved
+# and can be later used in a body file control or body common control
+{
+  vars:
+    "inputs" slist => { "$(this.promise_dirname)/inputs_included.cf" };
+}
+
+body file control
+{
+  inputs => { "@(my_vars.inputs)" };
+}
+
+bundle agent main
+# @brief main bundle which can use a bundle from inputs_included.cf
+{
+  methods:
+    "inputs_included_bundle";
+}
+
+#+begin_src example_output
+#@ ```
+#@ R: Hello, from inputs_included.cf.
+#@ ```
+#+end_src

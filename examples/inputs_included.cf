@@ -1,0 +1,5 @@
+bundle agent inputs_included_bundle
+{
+  reports:
+    "Hello, from $(this.promise_filename)";
+}

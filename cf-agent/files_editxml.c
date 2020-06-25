@@ -1127,12 +1127,9 @@ static bool BuildXPathInFile(EvalContext *ctx, char rawxpath[CF_BUFSIZE], xmlDoc
         return false;
     }
 
-    if (DONTDO || a->transaction.action == cfa_warn)
+    if (!MakingChanges(ctx, pp, a, result, "build XPath '%s' into an empty XML document '%s'",
+                       rawxpath, edcontext->filename))
     {
-        RecordWarning(ctx, pp, a,
-                      "Should build XPath '%s' into an empty XML document '%s'",
-                      rawxpath, edcontext->filename);
-        *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
         return false;
     }
 
@@ -1194,12 +1191,9 @@ static bool BuildXPathInNode(EvalContext *ctx, char rawxpath[CF_BUFSIZE], xmlDoc
         tail = head;
     }
 
-    if (DONTDO || a->transaction.action == cfa_warn)
+    if (!MakingChanges(ctx, pp, a, result, "build XPath '%s' in XML document '%s'",
+                       rawxpath, edcontext->filename))
     {
-        RecordWarning(ctx, pp, a,
-                      "Should build XPath '%s' in XML document '%s'",
-                      rawxpath, edcontext->filename);
-        *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
         return false;
     }
 
@@ -1281,12 +1275,10 @@ static bool InsertTreeInFile(EvalContext *ctx, char *rawtree, xmlDocPtr doc, con
         return false;
     }
 
-    if (DONTDO || a->transaction.action == cfa_warn)
+    if (!MakingChanges(ctx, pp, a, result,
+                       "insert the promised tree '%s' into an empty XML document '%s'",
+                       rawtree, edcontext->filename))
     {
-        RecordWarning(ctx, pp, a,
-                      "Should insert the promised tree '%s' into an empty XML document '%s'",
-                      rawtree, edcontext->filename);
-        *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
         return true;
     }
 
@@ -1365,12 +1357,10 @@ static bool DeleteTreeInNode(EvalContext *ctx, char *rawtree, xmlDocPtr doc, xml
         return false;
     }
 
-    if (DONTDO || a->transaction.action == cfa_warn)
+    if (!MakingChanges(ctx, pp, a, result,
+                       "delete tree '%s' at XPath '%s' in XML document '%s'",
+                       rawtree, a->xml.select_xpath, edcontext->filename))
     {
-        RecordWarning(ctx, pp, a,
-                      "Tree '%s' at XPath '%s' in XML document '%s' should be deleted",
-                      rawtree, a->xml.select_xpath, edcontext->filename);
-        *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
         xmlFreeNode(treenode);
         xmlFreeNode(deletetree);
         return false;
@@ -1449,12 +1439,10 @@ static bool InsertTreeInNode(EvalContext *ctx, char *rawtree, xmlDocPtr doc, xml
         return false;
     }
 
-    if (DONTDO || (a->transaction.action == cfa_warn))
+    if (!MakingChanges(ctx, pp, a, result,
+                       "insert tree '%s' at XPath '%s' in XML document '%s'",
+                       rawtree, a->xml.select_xpath, edcontext->filename))
     {
-        RecordWarning(ctx, pp, a,
-                      "The tree '%s' should be inserted at XPath '%s' in XML document '%s'",
-                      rawtree, a->xml.select_xpath, edcontext->filename);
-        *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
         return false;
     }
 
@@ -1512,12 +1500,10 @@ static bool DeleteAttributeInNode(EvalContext *ctx, char *rawname, xmlNodePtr do
         return false;
     }
 
-    if (DONTDO || (a->transaction.action == cfa_warn))
+    if (!MakingChanges(ctx, pp, a, result,
+                       "delete the attribute '%s' at XPath '%s' in the XML document '%s'",
+                       rawname, a->xml.select_xpath, edcontext->filename))
     {
-        RecordWarning(ctx, pp, a,
-                      "Should delete the attribute '%s' at XPath '%s' in the XML document '%s'",
-                      rawname, a->xml.select_xpath, edcontext->filename);
-        *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
         return false;
     }
 
@@ -1589,12 +1575,10 @@ static bool SetAttributeInNode(EvalContext *ctx, char *rawname, char *rawvalue, 
         return false;
     }
 
-    if (DONTDO || (a->transaction.action == cfa_warn))
+    if (!MakingChanges(ctx, pp, a, result,
+                       "set attribute with name '%s' to value '%s' at XPath '%s' in XML document '%s'",
+                       rawname, rawvalue, a->xml.select_xpath, edcontext->filename))
     {
-        RecordWarning(ctx, pp, a,
-                      "Should set attribute with name '%s' to value '%s' at XPath '%s' in XML document '%s'",
-                      rawname, rawvalue, a->xml.select_xpath, edcontext->filename);
-        *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
         return false;
     }
 
@@ -1655,12 +1639,10 @@ static bool DeleteTextInNode(EvalContext *ctx, char *rawtext, xmlDocPtr doc, xml
         return false;
     }
 
-    if (DONTDO || (a->transaction.action == cfa_warn))
+    if (!MakingChanges(ctx, pp, a, result,
+                       "delete text '%s' at XPath '%s' in the XML document '%s'",
+                       rawtext, a->xml.select_xpath, edcontext->filename))
     {
-        RecordWarning(ctx, pp, a,
-                      "Should delete text '%s' at XPath '%s' in the XML document '%s'",
-                      rawtext, a->xml.select_xpath, edcontext->filename);
-        *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
         return false;
     }
 
@@ -1725,12 +1707,10 @@ static bool SetTextInNode(EvalContext *ctx, char *rawtext, xmlDocPtr doc, xmlNod
         return false;
     }
 
-    if (DONTDO || (a->transaction.action == cfa_warn))
+    if (!MakingChanges(ctx, pp, a, result,
+                       "set text '%s' at XPath '%s' in XML document '%s'",
+                       rawtext, a->xml.select_xpath, edcontext->filename))
     {
-        RecordWarning(ctx, pp, a,
-                      "Should set text '%s' at XPath '%s' in XML document '%s'",
-                      rawtext, a->xml.select_xpath, edcontext->filename);
-        *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
         return true;
     }
 
@@ -1795,12 +1775,10 @@ static bool InsertTextInNode(EvalContext *ctx, char *rawtext, xmlDocPtr doc, xml
         return false;
     }
 
-    if (DONTDO || a->transaction.action == cfa_warn)
+    if (!MakingChanges(ctx, pp, a, result,
+                       "insert text '%s' at XPath '%s' in the XML document '%s'",
+                       rawtext, a->xml.select_xpath, edcontext->filename))
     {
-        RecordWarning(ctx, pp, a,
-                      "Should insert text '%s' at XPath '%s' in the XML document '%s'",
-                      rawtext, a->xml.select_xpath, edcontext->filename);
-        *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
         return false;
     }
 

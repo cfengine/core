@@ -308,11 +308,10 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
                 return PROMISE_RESULT_FAIL;
             }
 
-            if (DONTDO)
+            if (!MakingChanges(ctx, pp, &attr, NULL,
+                              "remove old symbolic link '%s' to make way for copy",
+                               destfile))
             {
-                RecordWarning(ctx, pp, &attr,
-                              "Should remove old symbolic link '%s' to make way for copy",
-                              destfile);
                 return PROMISE_RESULT_WARN;
             }
             else
@@ -365,10 +364,8 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
         if (S_ISREG(srcmode) ||
             (S_ISLNK(srcmode) && attr.copy.link_type == FILE_LINK_TYPE_NONE))
         {
-            if (DONTDO || (attr.transaction.action == cfa_warn))
+            if (!MakingChanges(ctx, pp, &attr, &result, "copy '%s' to '%s'", destfile, sourcefile))
             {
-                RecordWarning(ctx, pp, &attr, "Should copy '%s' to '%s'", destfile, sourcefile);
-                result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
                 return result;
             }
 
@@ -427,10 +424,8 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
         if (S_ISFIFO(srcmode))
         {
 #ifdef HAVE_MKFIFO
-            if (DONTDO || (attr.transaction.action == cfa_warn))
+            if (!MakingChanges(ctx, pp, &attr, &result, "create FIFO '%s'", destfile))
             {
-                RecordWarning(ctx, pp, &attr, "Should create FIFO '%s'", destfile);
-                result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
                 return result;
             }
             else if (mkfifo(destfile, srcmode) != 0)
@@ -455,10 +450,8 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
 #ifndef __MINGW32__                   // only regular files on windows
             if (S_ISBLK(srcmode) || S_ISCHR(srcmode) || S_ISSOCK(srcmode))
             {
-                if (DONTDO || (attr.transaction.action == cfa_warn))
+                if (!MakingChanges(ctx, pp, &attr, &result, "make special file/device '%s'", destfile))
                 {
-                    RecordWarning(ctx, pp, &attr, "Should make special file/device '%s'", destfile);
-                    result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
                     return result;
                 }
                 else if (mknod(destfile, srcmode, ssb->st_rdev))
@@ -525,11 +518,9 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
             if (S_ISREG(srcmode) ||
                 attr.copy.link_type == FILE_LINK_TYPE_NONE)
             {
-                if (DONTDO || attr.transaction.action == cfa_warn)
+                if (!MakingChanges(ctx, pp, &attr, &result, "update file '%s' from '%s' on '%s'",
+                                   destfile, sourcefile, server))
                 {
-                    RecordWarning(ctx, pp, &attr, "File '%s' should be updated from '%s' on '%s'",
-                                  destfile, sourcefile, server);
-                    result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
                     return result;
                 }
 
@@ -677,14 +668,8 @@ static PromiseResult PurgeLocalFiles(EvalContext *ctx, Item *filelist, const cha
                 continue;
             }
 
-            if (DONTDO || attr->transaction.action == cfa_warn)
-            {
-                RecordWarning(ctx, pp, attr,
-                              "'%s' should be purged from copy dest directory",
-                              filename);
-                result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
-            }
-            else
+            if (MakingChanges(ctx, pp, attr, &result,
+                              "purge '%s' from copy dest directory", filename))
             {
                 if (lstat(filename, &sb) == -1)
                 {
@@ -1321,10 +1306,8 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
 
     discardbackup = ((attr->copy.backup == BACKUP_OPTION_NO_BACKUP) || (attr->copy.backup == BACKUP_OPTION_REPOSITORY_STORE));
 
-    if (DONTDO)
+    if (!MakingChanges(ctx, pp, attr, result, "copy '%s' to '%s'", source, dest))
     {
-        RecordWarning(ctx, pp, attr, "Should copy '%s' to '%s'", source, dest);
-        *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
         return false;
     }
 
@@ -1790,7 +1773,7 @@ static bool TransformFile(EvalContext *ctx, char *file, const Attributes *attr, 
         return false;
     }
 
-    if (!DONTDO)
+    if (MakingChanges(ctx, pp, attr, result, "transform file '%s' with '%s'", file, BufferData(command)))
     {
         CfLock thislock = AcquireLock(ctx, BufferData(command), VUQNAME, CFSTARTTIME, attr->transaction.ifelapsed, attr->transaction.expireafter, pp, false);
 
@@ -1852,10 +1835,6 @@ static bool TransformFile(EvalContext *ctx, char *file, const Attributes *attr, 
 
         YieldCurrentLock(thislock);
     }
-    else
-    {
-        RecordWarning(ctx, pp, attr, "Need to transform file '%s' with '%s'", file, BufferData(command));
-    }
 
     BufferDestroy(command);
     return true;
@@ -1884,14 +1863,8 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
     PromiseResult result = PROMISE_RESULT_NOOP;
     if (attr->rename.newname)
     {
-        if (DONTDO)
-        {
-            RecordWarning(ctx, pp, attr,
-                          "File '%s' should be renamed to '%s' to keep promise",
-                          path, attr->rename.newname);
-            return PROMISE_RESULT_NOOP;
-        }
-        else
+        if (MakingChanges(ctx, pp, attr, &result, "rename file '%s' to '%s'",
+                          path, attr->rename.newname))
         {
             if (!FileInRepository(attr->rename.newname))
             {
@@ -1923,7 +1896,7 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
     {
         if (attr->rename.disable)
         {
-            if (!DONTDO)
+            if (MakingChanges(ctx, pp, attr, &result, "disable link '%s'", path))
             {
                 if (unlink(path) == -1)
                 {
@@ -1937,10 +1910,6 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
                     result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
                 }
             }
-            else
-            {
-                RecordWarning(ctx, pp, attr, "Need to disable link '%s' to keep promise", path);
-            }
 
             return result;
         }
@@ -1952,11 +1921,9 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
     {
         char newname[CF_BUFSIZE];
 
-        if (attr->transaction.action == cfa_warn)
+        if (!MakingChanges(ctx, pp, attr, &result, "rename '%s' '%s'",
+                           S_ISDIR(sb->st_mode) ? "directory" : "file", path))
         {
-            RecordWarning(ctx, pp, attr, "'%s' '%s' should be renamed",
-                          S_ISDIR(sb->st_mode) ? "Directory" : "File", path);
-            result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
             return result;
         }
 
@@ -2013,12 +1980,7 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
             newperm = (mode_t) 0600;
         }
 
-        if (DONTDO)
-        {
-            RecordWarning(ctx, pp, attr, "File '%s' should be renamed to '%s' to keep promise", path, newname);
-            return result;
-        }
-        else
+        if (MakingChanges(ctx, pp, attr, &result, "rename file '%s' to '%s'", path, newname))
         {
             if (safe_chmod(path, newperm) == 0)
             {
@@ -2069,40 +2031,22 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
 
     if (attr->rename.rotate == 0)
     {
-        if (attr->transaction.action == cfa_warn)
-        {
-            RecordWarning(ctx, pp, attr, "File '%s' should be truncated", path);
-            result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
-        }
-        else if (!DONTDO)
+        if (MakingChanges(ctx, pp, attr, &result, "truncate '%s'", path))
         {
             TruncateFile(path);
             RecordChange(ctx, pp, attr, "Truncated '%s'", path);
             result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
-        }
-        else
-        {
-            RecordWarning(ctx, pp, attr, " * File '%s' should be truncated", path);
         }
         return result;
     }
 
     if (attr->rename.rotate > 0)
     {
-        if (attr->transaction.action == cfa_warn)
-        {
-            RecordWarning(ctx, pp, attr, "File '%s' should be rotated", path);
-            result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
-        }
-        else if (!DONTDO)
+        if (MakingChanges(ctx, pp, attr, &result, "rotate file '%s' in %d fifo", path, attr->rename.rotate))
         {
             RotateFiles(path, attr->rename.rotate);
             RecordChange(ctx, pp, attr, "Rotated file '%s' in %d fifo", path, attr->rename.rotate);
             result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
-        }
-        else
-        {
-            RecordWarning(ctx, pp, attr, "File '%s' should be rotated", path);
         }
 
         return result;
@@ -2119,24 +2063,10 @@ static PromiseResult VerifyDelete(EvalContext *ctx,
     const char *lastnode = ReadLastNode(path);
     Log(LOG_LEVEL_VERBOSE, "Verifying file deletions for '%s'", path);
 
-    if (DONTDO)
+    PromiseResult result = PROMISE_RESULT_NOOP;
+    if (MakingChanges(ctx, pp, attr, &result, "delete %s '%s'",
+                       S_ISDIR(sb->st_mode) ? "directory" : "file", path))
     {
-        RecordWarning(ctx, pp, attr, "%s '%s' should be deleted",
-                      S_ISDIR(sb->st_mode) ? "Directory" : "File", path);
-        return PROMISE_RESULT_NOOP;
-    }
-
-    switch (attr->transaction.action)
-    {
-    case cfa_warn:
-
-        RecordWarning(ctx, pp, attr, "%s '%s' should be deleted",
-                      S_ISDIR(sb->st_mode) ? "Directory" : "File", path);
-        return PROMISE_RESULT_WARN;
-        break;
-
-    case cfa_fix:
-
         if (!S_ISDIR(sb->st_mode))                      /* file,symlink */
         {
             int ret = unlink(lastnode);
@@ -2194,21 +2124,15 @@ static PromiseResult VerifyDelete(EvalContext *ctx,
                 return PROMISE_RESULT_CHANGE;
             }
         }
-        break;
-
-    default:
-        ProgrammingError("Unhandled file action in switch: %d",
-                         attr->transaction.action);
     }
 
-    assert(false);                                          /* Unreachable! */
-    return PROMISE_RESULT_NOOP;
+    return result;
 }
 
 static PromiseResult TouchFile(EvalContext *ctx, char *path, const Attributes *attr, const Promise *pp)
 {
     PromiseResult result = PROMISE_RESULT_NOOP;
-    if (!DONTDO && attr->transaction.action == cfa_fix)
+    if (MakingChanges(ctx, pp, attr, &result, "update time stamps for '%s'", path))
     {
         if (utime(path, NULL) != -1)
         {
@@ -2221,11 +2145,6 @@ static PromiseResult TouchFile(EvalContext *ctx, char *path, const Attributes *a
                           path, GetErrorStr());
             result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         }
-    }
-    else
-    {
-        RecordWarning(ctx, pp, attr, "Time stamps should be updated for '%s'", path);
-        result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
     }
 
     return result;
@@ -2334,14 +2253,8 @@ static PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, co
         Log(LOG_LEVEL_DEBUG, "Trying to fix mode...newperm '%jo', stat '%jo'",
             (uintmax_t) (newperm & 07777), (uintmax_t) (dstat->st_mode & 07777));
 
-        if (attr->transaction.action == cfa_warn || DONTDO)
-        {
-
-            RecordWarning(ctx, pp, attr, "Should change permissions of '%s' from %04jo to %04jo",
-                          file, (uintmax_t)dstat->st_mode & 07777, (uintmax_t)newperm & 07777);
-            result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
-        }
-        else if (attr->transaction.action == cfa_fix)
+        if (MakingChanges(ctx, pp, attr, &result, "change permissions of '%s' from %04jo to %04jo",
+                          file, (uintmax_t)dstat->st_mode & 07777, (uintmax_t)newperm & 07777))
         {
             if (safe_chmod(file, newperm & 07777) == -1)
             {
@@ -2354,11 +2267,6 @@ static PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, co
                              file, (uintmax_t)dstat->st_mode & 07777, (uintmax_t)newperm & 07777);
                 result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
             }
-        }
-        else
-        {
-            ProgrammingError("Unhandled file action in switch: %d",
-                             attr->transaction.action);
         }
     }
 
@@ -2380,52 +2288,27 @@ static PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, co
                 file, (uintmax_t) (newflags & CHFLAGS_MASK),
                 (uintmax_t) (dstat->st_flags & CHFLAGS_MASK));
 
-        switch (attr->transaction.action)
-        {
-        case cfa_warn:
-
-            RecordWarning(ctx, pp, attr,
-                          "Should change BSD flags of '%s' from %jo to %jo",
+        if (MakingChanges(ctx, pp, attr, &result,
+                          "change BSD flags of '%s' from %jo to %jo",
                           file, (uintmax_t) (dstat->st_mode & CHFLAGS_MASK),
-                          (uintmax_t) (newflags & CHFLAGS_MASK));
-            result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
-            break;
-
-        case cfa_fix:
-
-            if (DONTDO)
+                          (uintmax_t) (newflags & CHFLAGS_MASK)))
+        {
+            if (chflags(file, newflags & CHFLAGS_MASK) == -1)
             {
-                RecordWarning(ctx, pp, attr,
-                              "Should change BSD flags of '%s' from %jo to %jo",
-                              file, (uintmax_t) (dstat->st_mode & CHFLAGS_MASK),
-                              (uintmax_t) (newflags & CHFLAGS_MASK));
-                result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
+                RecordDenial(ctx, pp, attr,
+                             "Failed setting BSD flags '%jx' on '%s'. (chflags: %s)",
+                             (uintmax_t) newflags, file, GetErrorStr());
+                result = PromiseResultUpdate(result, PROMISE_RESULT_DENIED);
                 break;
             }
             else
             {
-                if (chflags(file, newflags & CHFLAGS_MASK) == -1)
-                {
-                    RecordDenial(ctx, pp, attr,
-                                 "Failed setting BSD flags '%jx' on '%s'. (chflags: %s)",
-                                 (uintmax_t) newflags, file, GetErrorStr());
-                    result = PromiseResultUpdate(result, PROMISE_RESULT_DENIED);
-                    break;
-                }
-                else
-                {
-                    RecordChange(ctx, pp, attr, "'%s' had flags %jo, changed it to %jo",
-                                 file,
-                                 (uintmax_t) (dstat->st_flags & CHFLAGS_MASK),
-                                 (uintmax_t) (newflags & CHFLAGS_MASK));
-                    result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
-                }
+                RecordChange(ctx, pp, attr, "'%s' had flags %jo, changed it to %jo",
+                             file,
+                             (uintmax_t) (dstat->st_flags & CHFLAGS_MASK),
+                             (uintmax_t) (newflags & CHFLAGS_MASK));
+                result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
             }
-
-            break;
-
-        default:
-            ProgrammingError("Unhandled file action in switch: %d", attr->transaction.action);
         }
     }
 # endif
@@ -3287,48 +3170,39 @@ static PromiseResult VerifyFileIntegrity(EvalContext *ctx, const char *file, con
     bool changed = false;
     if (attr->change.hash == HASH_METHOD_BEST)
     {
-        if (!DONTDO)
-        {
-            HashFile(file, digest1, HASH_METHOD_MD5, false);
-            HashFile(file, digest2, HASH_METHOD_SHA1, false);
+        HashFile(file, digest1, HASH_METHOD_MD5, false);
+        HashFile(file, digest2, HASH_METHOD_SHA1, false);
 
-            changed = (changed ||
-                       FileChangesCheckAndUpdateHash(ctx, file, digest1, HASH_METHOD_MD5, attr, pp, &result));
-            changed = (changed ||
-                       FileChangesCheckAndUpdateHash(ctx, file, digest2, HASH_METHOD_SHA1, attr, pp, &result));
-        }
+        changed = (changed ||
+                   FileChangesCheckAndUpdateHash(ctx, file, digest1, HASH_METHOD_MD5, attr, pp, &result));
+        changed = (changed ||
+                   FileChangesCheckAndUpdateHash(ctx, file, digest2, HASH_METHOD_SHA1, attr, pp, &result));
     }
     else
     {
-        if (!DONTDO)
-        {
-            HashFile(file, digest1, attr->change.hash, false);
+        HashFile(file, digest1, attr->change.hash, false);
 
-            changed = (changed ||
-                       FileChangesCheckAndUpdateHash(ctx, file, digest1, attr->change.hash, attr, pp, &result));
-        }
+        changed = (changed ||
+                   FileChangesCheckAndUpdateHash(ctx, file, digest1, attr->change.hash, attr, pp, &result));
     }
 
-    if (changed)
+    if (changed && MakingInternalChanges(ctx, pp, attr, &result, "record integrity changes in '%s'", file))
     {
         EvalContextHeapPersistentSave(ctx, "checksum_alerts", CF_PERSISTENCE, CONTEXT_STATE_POLICY_PRESERVE, "");
         EvalContextClassPutSoft(ctx, "checksum_alerts", CONTEXT_SCOPE_NAMESPACE, "");
-        if (!DONTDO)
+        if (FileChangesLogChange(file, FILE_STATE_CONTENT_CHANGED, "Content changed", pp))
         {
-            if (FileChangesLogChange(file, FILE_STATE_CONTENT_CHANGED, "Content changed", pp))
-            {
-                RecordChange(ctx, pp, attr, "Recorded integrity changes in '%s'", file);
-                result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
-            }
-            else
-            {
-                RecordFailure(ctx, pp, attr, "Failed to record integrity changes in '%s'", file);
-                result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
-            }
+            RecordChange(ctx, pp, attr, "Recorded integrity changes in '%s'", file);
+            result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
+        }
+        else
+        {
+            RecordFailure(ctx, pp, attr, "Failed to record integrity changes in '%s'", file);
+            result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         }
     }
 
-    if (attr->change.report_diffs)
+    if (attr->change.report_diffs && MakingInternalChanges(ctx, pp, attr, &result, "report diffs in '%s'", file))
     {
         char destination[CF_BUFSIZE];
         if (!GetRepositoryPath(file, attr, destination))
@@ -3522,25 +3396,10 @@ static PromiseResult VerifySetUidGid(EvalContext *ctx, const char *file, const s
                 setxid_modified = true;
             }
         }
-        else
+        else if (MakingChanges(ctx, pp, attr, &result, "remove setuid (root) flag from '%s'", file))
         {
-            switch (attr->transaction.action)
-            {
-            case cfa_fix:
-
-                RecordChange(ctx, pp, attr, "Removed setuid (root) flag from '%s'", file);
-                result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
-                break;
-
-            case cfa_warn:
-
-                if (amroot)
-                {
-                    RecordWarning(ctx, pp, attr, "Setuid (root) flag on '%s' should be removed", file);
-                    result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
-                }
-                break;
-            }
+            RecordChange(ctx, pp, attr, "Removed setuid (root) flag from '%s'", file);
+            result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
         }
     }
 
@@ -3564,25 +3423,10 @@ static PromiseResult VerifySetUidGid(EvalContext *ctx, const char *file, const s
                 setxid_modified = true;
             }
         }
-        else
+        else if (MakingChanges(ctx, pp, attr, &result, "remove setgid (root) flag from '%s'", file))
         {
-            switch (attr->transaction.action)
-            {
-            case cfa_fix:
-
-                RecordChange(ctx, pp, attr, "Removed setgid (root) flag from '%s'", file);
-                result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
-                break;
-
-            case cfa_warn:
-
-                RecordWarning(ctx, pp, attr, "Setgid (root) flag on '%s' should be removed", file);
-                result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
-                break;
-
-            default:
-                break;
-            }
+            RecordChange(ctx, pp, attr, "Removed setgid (root) flag from '%s'", file);
+            result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
         }
     }
 
@@ -3655,19 +3499,9 @@ static int VerifyFinderType(EvalContext *ctx, const char *file, const Attributes
     {
         fndrInfo.fi.fdType = *(long *) a->perms.findertype;
 
-        switch (a->transaction.action)
+        if (MakingChanges(ctx, pp, a, result,
+                          "set Finder Type code of '%s' to '%s'", file, a->perms.findertype))
         {
-        case cfa_fix:
-
-            if (DONTDO)
-            {
-                RecordWarning(ctx, pp, a,
-                              "Should set Finder Type code of '%s' to '%s'",
-                              file, a->perms.findertype);
-                *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
-                return 0;
-            }
-
             /* setattrlist does not take back in the long ssize */
             retval = setattrlist(file, &attrs, &fndrInfo.created, 4 * sizeof(struct timespec) + sizeof(FInfo), 0);
 
@@ -3686,13 +3520,9 @@ static int VerifyFinderType(EvalContext *ctx, const char *file, const Attributes
             }
 
             return retval;
-
-        case cfa_warn:
-            RecordWarning(ctx, pp, a, "Should set Finder Type code of '%s' to '%s'", file, a->perms.findertype);
-            *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
-            return 0;
-
-        default:
+        }
+        else
+        {
             return 0;
         }
     }
@@ -3735,14 +3565,8 @@ static void RegisterAHardLink(int i, char *value, EvalContext *ctx, const Promis
     if (!FixCompressedArrayValue(i, value, inode_cache))
     {
         /* Not root hard link, remove to preserve consistency */
-        if (DONTDO || (attr->transaction.action == cfa_warn))
-        {
-            RecordWarning(ctx, pp, attr,
-                          "Old hard link '%s' should be removed to preserve structure",
-                          value);
-            *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
-        }
-        else
+        if (MakingChanges(ctx, pp, attr, result, "remove old hard link '%s' to preserve structure",
+                          value))
         {
             RecordChange(ctx, pp, attr, "Removed old hard link '%s' to preserve structure", value);
             unlink(value);
@@ -3921,107 +3745,104 @@ bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, const At
         RecordNoChange(ctx, pp, attr, "Owner and group of '%s' as promised", file);
         return false;
     }
-    else
-    {
-        switch (attr->transaction.action)
-        {
-        case cfa_fix:
 
+    /* else */
+    if ((pw = getpwuid(sb->st_uid)) == NULL)
+    {
+        RecordWarning(ctx, pp, attr,
+                      "File '%s' is not owned by anybody in the passwd database (uid = %ju)",
+                      file, (uintmax_t)sb->st_uid);
+    }
+
+    if ((gp = getgrgid(sb->st_gid)) == NULL)
+    {
+        RecordWarning(ctx, pp, attr, "File '%s' is not owned by any group in group database  (gid = %ju)",
+                      file, (uintmax_t)sb->st_gid);
+    }
+
+    if (uid != CF_SAME_OWNER)
+    {
+        Log(LOG_LEVEL_DEBUG, "Change owner to uid '%ju' if possible",
+            (uintmax_t) uid);
+    }
+
+    if (gid != CF_SAME_GROUP)
+    {
+        Log(LOG_LEVEL_DEBUG, "Change group to gid '%ju' if possible",
+            (uintmax_t) gid);
+    }
+
+    if ((uid != CF_SAME_OWNER) && (gid != CF_SAME_GROUP) &&
+        !MakingChanges(ctx, pp, attr, result, "change owner and group of '%s' to '%ju:%ju'",
+                       file, (uintmax_t) uid, (uintmax_t) gid))
+    {
+        return false;
+    }
+    else if ((uid != CF_SAME_OWNER) &&
+             !MakingChanges(ctx, pp, attr, result, "change owner of '%s' to '%ju'",
+                            file, (uintmax_t) uid))
+    {
+        return false;
+    }
+    else if ((gid != CF_SAME_GROUP) &&
+             !MakingChanges(ctx, pp, attr, result, "change group of '%s' to '%ju'",
+                            file, (uintmax_t) gid))
+    {
+        return false;
+    }
+
+    if (S_ISLNK(sb->st_mode))
+    {
+# ifdef HAVE_LCHOWN
+        Log(LOG_LEVEL_DEBUG, "Using lchown function");
+        if (safe_lchown(file, uid, gid) == -1)
+        {
+            RecordFailure(ctx, pp, attr, "Cannot set ownership on link '%s'. (lchown: %s)",
+                          file, GetErrorStr());
+        }
+        else
+        {
             if (uid != CF_SAME_OWNER)
             {
-                Log(LOG_LEVEL_DEBUG, "Change owner to uid '%ju' if possible",
-                    (uintmax_t) uid);
+                RecordChange(ctx, pp, attr, "Owner of link '%s' was %ju, set to %ju",
+                             file, (uintmax_t) sb->st_uid, (uintmax_t) uid);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
             }
 
             if (gid != CF_SAME_GROUP)
             {
-                Log(LOG_LEVEL_DEBUG, "Change group to gid '%ju' if possible",
-                    (uintmax_t) gid);
+                RecordChange(ctx, pp, attr, "Group of link '%s' was %ju, set to %ju",
+                             file, (uintmax_t)sb->st_gid, (uintmax_t)gid);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
             }
-
-            if (!DONTDO && S_ISLNK(sb->st_mode))
-            {
-# ifdef HAVE_LCHOWN
-                Log(LOG_LEVEL_DEBUG, "Using lchown function");
-                if (safe_lchown(file, uid, gid) == -1)
-                {
-                    RecordFailure(ctx, pp, attr, "Cannot set ownership on link '%s'. (lchown: %s)",
-                                  file, GetErrorStr());
-                }
-                else
-                {
-                    if (uid != CF_SAME_OWNER)
-                    {
-                        RecordChange(ctx, pp, attr, "Owner of link '%s' was %ju, set to %ju",
-                                     file, (uintmax_t) sb->st_uid, (uintmax_t) uid);
-                        *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
-                    }
-
-                    if (gid != CF_SAME_GROUP)
-                    {
-                        RecordChange(ctx, pp, attr, "Group of link '%s' was %ju, set to %ju",
-                                     file, (uintmax_t)sb->st_gid, (uintmax_t)gid);
-                        *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
-                    }
-                }
+        }
 # endif
-            }
-            else if (!DONTDO)
+    }
+    else
+    {
+        if (safe_chown(file, uid, gid) == -1)
+        {
+            RecordDenial(ctx, pp, attr, "Cannot set ownership on file '%s'. (chown: %s)",
+                         file, GetErrorStr());
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_DENIED);
+        }
+        else
+        {
+            if (uid != CF_SAME_OWNER)
             {
-                if (!S_ISLNK(sb->st_mode))
-                {
-                    if (safe_chown(file, uid, gid) == -1)
-                    {
-                        RecordDenial(ctx, pp, attr, "Cannot set ownership on file '%s'. (chown: %s)",
-                                     file, GetErrorStr());
-                        *result = PromiseResultUpdate(*result, PROMISE_RESULT_DENIED);
-                    }
-                    else
-                    {
-                        if (uid != CF_SAME_OWNER)
-                        {
-                            RecordChange(ctx, pp, attr, "Owner of '%s' was %ju, set to %ju",
-                                         file, (uintmax_t) sb->st_uid, (uintmax_t) uid);
-                            *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
-                        }
-
-                        if (gid != CF_SAME_GROUP)
-                        {
-                            RecordChange(ctx, pp, attr, "Group of '%s' was %ju, set to %ju",
-                                         file, (uintmax_t)sb->st_gid, (uintmax_t)gid);
-                            *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
-                        }
-                    }
-                }
+                RecordChange(ctx, pp, attr, "Owner of '%s' was %ju, set to %ju",
+                             file, (uintmax_t) sb->st_uid, (uintmax_t) uid);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
             }
-            break;
 
-        case cfa_warn:
-
-            if ((pw = getpwuid(sb->st_uid)) == NULL)
+            if (gid != CF_SAME_GROUP)
             {
-                RecordWarning(ctx, pp, attr,
-                    "File '%s' is not owned by anybody in the passwd database (uid = %ju)",
-                    file, (uintmax_t)sb->st_uid);
-                *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
-                break;
+                RecordChange(ctx, pp, attr, "Group of '%s' was %ju, set to %ju",
+                             file, (uintmax_t)sb->st_gid, (uintmax_t)gid);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
             }
-
-            if ((gp = getgrgid(sb->st_gid)) == NULL)
-            {
-                RecordWarning(ctx, pp, attr, "File '%s' is not owned by any group in group database  (gid = %ju)",
-                              file, (uintmax_t)sb->st_gid);
-                *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
-                break;
-            }
-
-            RecordWarning(ctx, pp, attr, "File '%s' is owned by '%s', group '%s'", file, pw->pw_name,
-                          gp->gr_name);
-            *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
-            break;
         }
     }
-
     return false;
 }
 
@@ -4056,7 +3877,7 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, const Attribu
     {
         Log(LOG_LEVEL_DEBUG, "File object '%s' seems to be a directory", file);
 
-        if (!DONTDO && attr->transaction.action != cfa_warn)
+        if (MakingChanges(ctx, pp, attr, result, "create directory '%s'", file))
         {
             bool dir_created = false;
             if (!MakeParentDirectory(file, attr->move_obstructions, &dir_created))
@@ -4074,8 +3895,6 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, const Attribu
         }
         else
         {
-            RecordWarning(ctx, pp, attr, "Warning promised, need to create directory '%s'", file);
-            *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
             return false;
         }
     }
@@ -4092,7 +3911,8 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, const Attribu
             filemode = attr->perms.plus & ~(attr->perms.minus);
         }
 
-        if (!DONTDO)
+        if (MakingChanges(ctx, pp, attr, result, "create named pipe '%s', mode %04jo",
+                          file, (uintmax_t) filemode))
         {
             mode_t saveumask = umask(0);
             bool dir_created = false;
@@ -4124,9 +3944,6 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, const Attribu
         }
         else
         {
-            RecordWarning(ctx, pp, attr, "Warning promised, need to create named pipe '%s', mode %04jo",
-                          file, (uintmax_t) filemode);
-            *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
             return false;
         }
 #else
@@ -4147,7 +3964,8 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, const Attribu
             filemode = attr->perms.plus & ~(attr->perms.minus);
         }
 
-        if (!DONTDO && attr->transaction.action != cfa_warn)
+        if (MakingChanges(ctx, pp, attr, result, "create file '%s', mode '%04jo'",
+                          file, (uintmax_t)filemode))
         {
             mode_t saveumask = umask(0);
             bool dir_created = false;
@@ -4195,9 +4013,6 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, const Attribu
         }
         else
         {
-            RecordWarning(ctx, pp, attr, "Warning promised, need to create file '%s', mode %04jo",
-                          file, (uintmax_t)filemode);
-            *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
             return false;
         }
     }

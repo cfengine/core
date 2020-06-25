@@ -68,10 +68,8 @@ bool MoveObstruction(EvalContext *ctx, char *from, const Attributes *attr, const
 
         if (!S_ISDIR(sb.st_mode))
         {
-            if (DONTDO)
+            if (!MakingChanges(ctx, pp, attr, result, "move aside object '%s' obstructing promise", from))
             {
-                RecordWarning(ctx, pp, attr, "Object '%s' obstructing promise should be moved aside", from);
-                *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                 return false;
             }
 
@@ -107,10 +105,8 @@ bool MoveObstruction(EvalContext *ctx, char *from, const Attributes *attr, const
 
         if (S_ISDIR(sb.st_mode))
         {
-            if (DONTDO)
+            if (!MakingChanges(ctx, pp, attr, result, "move aside directory '%s' obstructing", from))
             {
-                RecordWarning(ctx, pp, attr, "Directory '%s' obstructing promise should be moved aside", from);
-                *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                 return false;
             }
 

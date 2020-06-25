@@ -811,11 +811,10 @@ static PromiseResult WriteContentFromString(EvalContext *ctx, const char *path, 
 
     if (!HashesMatch(existing_content_digest, promised_content_digest, CF_DEFAULT_DIGEST))
     {
-        if (DONTDO)
+        if (!MakingChanges(ctx, pp, attr, &result,
+                          "update content of '%s' with content '%s'",
+                           path, attr->content))
         {
-            RecordWarning(ctx, pp, attr,
-                          "Should update content of '%s' with content '%s'",
-                          path, attr->content);
             return result;
         }
 
@@ -955,14 +954,9 @@ static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp,
         HashString(BufferData(output_buffer), BufferSize(output_buffer), rendered_output_digest, CF_DEFAULT_DIGEST);
         if (!HashesMatch(existing_output_digest, rendered_output_digest, CF_DEFAULT_DIGEST))
         {
-            if (attr->transaction.action == cfa_warn || DONTDO)
-            {
-                RecordWarning(ctx, pp, attr,
-                              "Should update rendering of '%s' from mustache template '%s'",
-                              pp->promiser, message);
-                result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
-            }
-            else
+            if (MakingChanges(ctx, pp, attr, &result,
+                              "update rendering of '%s' from mustache template '%s'",
+                              pp->promiser, message))
             {
                 if (SaveAsFile(SaveBufferCallback, output_buffer, edcontext->filename, attr, edcontext->new_line_mode))
                 {

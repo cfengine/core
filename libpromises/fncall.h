@@ -100,7 +100,7 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, const Policy *policy, FnCall *fp, 
 
 const FnCallType *FnCallTypeGet(const char *name);
 
-FnCall *ExpandFnCall(EvalContext *ctx, const char *ns, const char *scope, const FnCall *f);
+FnCall *ExpandFnCall(const EvalContext *ctx, const char *ns, const char *scope, const FnCall *f);
 Rlist *NewExpArgs(EvalContext *ctx, const Policy *policy, const FnCall *fp, const FnCallType *fp_type);
 
 // TODO: should probably demolish this eventually

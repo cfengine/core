@@ -278,6 +278,14 @@ PackagePromiseContext *GetPackagePromiseContext(const EvalContext *ctx);
  * evaluator again, once variables promises are no longer specially handled */
 void ClassAuditLog(EvalContext *ctx, const Promise *pp, const Attributes *attr, PromiseResult status);
 
+/**
+ * Set classes based on the promise outcome/result.
+ *
+ * @note This function should only be called in special cases, ClassAuditLog()
+ *       (which calls this function internally) should be called in most places.
+ */
+void SetPromiseOutcomeClasses(EvalContext *ctx, PromiseResult status, const DefineClasses *dc);
+
 ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, TrackTotalCompliance, ARG_UNUSED PromiseResult, status, ARG_UNUSED const Promise *, pp);
 
 ENTERPRISE_VOID_FUNC_3ARG_DECLARE(void, EvalContextLogPromiseIterationOutcome,

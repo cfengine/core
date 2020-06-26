@@ -2699,7 +2699,7 @@ ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, TrackTotalCompliance, ARG_UNUSED Pro
 {
 }
 
-static void SetPromiseOutcomeClasses(EvalContext *ctx, PromiseResult status, const DefineClasses *dc)
+void SetPromiseOutcomeClasses(EvalContext *ctx, PromiseResult status, const DefineClasses *dc)
 {
     Rlist *add_classes = NULL;
     Rlist *del_classes = NULL;

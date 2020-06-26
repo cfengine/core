@@ -175,25 +175,29 @@ bundle agent check
       "ok_2_count" int => countclassesmatching(".*_2_ok");
       "ok_3_count" int => countclassesmatching(".*_3_ok");
       "ok_4_count" int => countclassesmatching(".*_4_ok");
+      "ok_pattern_promiser_count" int => countclassesmatching(".*__[01234]_ok"),
+        comment => "the patterns should be cannonified and classes for them should be defined";
 
   classes:
       "ok_expand" expression => none("__this_promiser_[0,1,2,3]_ok", ok_promisers);
       "ok0" expression => strcmp("$(ok_0_count)", 1);
       "ok1" expression => strcmp("$(ok_1_count)", 6);
-      "ok2" expression => strcmp("$(ok_2_count)", 5);
+      "ok2" expression => strcmp("$(ok_2_count)", 6);
       "ok3" expression => strcmp("$(ok_3_count)", 7);
-      "ok4" expression => strcmp("$(ok_4_count)", 4);
+      "ok4" expression => strcmp("$(ok_4_count)", 6);
       "ok5" expression => fileexists("$(G.testdir)/copy_me");
+      "ok_pattern" expression => strcmp("$(ok_pattern_promiser_count)", 3);
 
-      "ok" and => { "ok_expand", "ok0", "ok1", "ok2", "ok3", "ok4", "ok5" };
+      "ok" and => { "ok_expand", "ok0", "ok1", "ok2", "ok3", "ok4", "ok5", "ok_pattern" };
   reports:
     DEBUG::
       "$(ok_promisers)";
       "0: $(ok_0_count) (expected 1)";
       "1: $(ok_1_count) (expected 6)";
-      "2: $(ok_2_count) (expected 5)";
+      "2: $(ok_2_count) (expected 6)";
       "3: $(ok_3_count) (expected 7)";
-      "4: $(ok_4_count) (expected 4)";
+      "4: $(ok_4_count) (expected 6)";
+      "pattern promiser classes: $(ok_pattern_promiser_count) (expected 3)";
     DEBUG.!ok5::
       "5: file not copied";
 

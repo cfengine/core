@@ -882,8 +882,8 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host,
         if (elapsedtime < ifelapsed)
         {
             Log(LOG_LEVEL_VERBOSE,
-                "Nothing promised here [%.40s] (%jd/%u minutes elapsed)",
-                cflast, (intmax_t) elapsedtime, ifelapsed);
+                "Lock not acquired for promiser '%s', last lock: [%.40s] (%jd/%u minutes elapsed)",
+                pp->promiser, cflast, (intmax_t) elapsedtime, ifelapsed);
             ReleaseCriticalSection(CF_CRITIAL_SECTION);
             return CfLockNull();
         }

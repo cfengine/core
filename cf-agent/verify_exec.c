@@ -112,6 +112,7 @@ PromiseResult VerifyExecPromise(EvalContext *ctx, const Promise *pp)
     free(lock_name);
     if (thislock.lock == NULL)
     {
+        Log(LOG_LEVEL_VERBOSE, "Skipped promise '%s' due to lock", pp->promiser);
         return PROMISE_RESULT_SKIPPED;
     }
 

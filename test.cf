@@ -1,0 +1,27 @@
+bundle agent main
+{
+
+  vars:
+    "undefined" string => "$(no_i_am_not_defined)";
+    "defined" string => "Yes, I am here";
+
+  commands:
+    "/usr/bin/echo $(defined)";
+    "/usr/bin/echo $(undefined)";
+
+  methods:
+    "$(undefined)";
+
+  reports:
+    any::
+      "here";
+    nobody.nothing::
+      "gone"
+        if => "nope";
+    any::
+      "missing"
+        if => "nope";
+    any::
+      "defined: $(defined)";
+      "undefined: $(undefined)";
+}

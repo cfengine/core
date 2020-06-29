@@ -1,27 +1,15 @@
-bundle agent main
-{
-
-  vars:
-    "undefined" string => "$(no_i_am_not_defined)";
-    "defined" string => "Yes, I am here";
-
-  commands:
-    "/usr/bin/echo $(defined)";
-    "/usr/bin/echo $(undefined)";
-
-  methods:
-    "$(undefined)";
-
-  reports:
+ bundle agent main
+  {
+    commands:
     any::
-      "here";
-    nobody.nothing::
-      "gone"
-        if => "nope";
-    any::
-      "missing"
-        if => "nope";
-    any::
-      "defined: $(defined)";
-      "undefined: $(undefined)";
-}
+      "/bin/echo this is an unconstrained commands promise";
+      Hr09::
+        "/bin/echo 9am hour verbose logging"
+if => windows,
+          action => immediate_report_verbose;
+  }
+  body action immediate_report_verbose
+  {
+    expireafter => "0";
+    report_level => "verbose";
+  }

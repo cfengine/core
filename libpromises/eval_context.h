@@ -111,6 +111,8 @@ typedef enum
     EVAL_OPTION_FULL = 0xFFFFFFFF
 } EvalContextOption;
 
+void HonorReportLevel(const Promise *pp);
+void RestoreGlobalLogLevels();
 EvalContext *EvalContextNew(void);
 void EvalContextDestroy(EvalContext *ctx);
 

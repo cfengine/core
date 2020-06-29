@@ -191,6 +191,7 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, PromiseIterator *iterc
                                         PromiseActuator *act_on_promise, void *param,
                                         bool actuate_ifelse)
 {
+//Log(LOG_LEVEL_WARNING, "ExpandPromiseAndDo()");
     PromiseResult result = PROMISE_RESULT_SKIPPED;
 
     /* In the case of ifelse() we must always include an extra round of "actuation"
@@ -215,6 +216,7 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, PromiseIterator *iterc
             EvalContextStackPushPromiseIterationFrame(ctx, iterctx);
         if (pexp == NULL)                       /* is the promise excluded? */
         {
+//Log(LOG_LEVEL_WARNING, "In ExpandPromiseAndDo(), expanded promise is null so skipped");
             result = PromiseResultUpdate(result, PROMISE_RESULT_SKIPPED);
             ifelse_actuated = true;
             continue;
@@ -257,15 +259,19 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, PromiseIterator *iterc
 PromiseResult ExpandPromise(EvalContext *ctx, const Promise *pp,
                             PromiseActuator *act_on_promise, void *param)
 {
-    if (!IsDefinedClass(ctx, pp->classes))
-    {
-        Log(LOG_LEVEL_VERBOSE, "Skipped promise '%s' because class expression '%s' is not met", pp->promiser, pp->classes);
-        return PROMISE_RESULT_SKIPPED;
-    }
+//Log(LOG_LEVEL_WARNING, "ExpandPromise(), promiser is '%s'", pp->promiser);
 
     /* 1. Copy the promise while expanding '@' slists and body arguments
      *    (including body inheritance). */
     Promise *pcopy = DeRefCopyPromise(ctx, pp);
+    HonorReportLevel(pcopy);
+    if (!IsDefinedClass(ctx, pcopy->classes))
+    {
+        Log(LOG_LEVEL_VERBOSE, "Skipped promise '%s' because class expression '%s' is not met", pp->promiser, pp->classes);
+        // Restore logging level
+        RestoreGlobalLogLevels();
+        return PROMISE_RESULT_SKIPPED;
+    }
 
     EvalContextStackPushPromiseFrame(ctx, pcopy);
     PromiseIterator *iterctx = PromiseIteratorNew(pcopy);

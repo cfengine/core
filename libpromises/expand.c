@@ -270,6 +270,7 @@ Log(LOG_LEVEL_DEBUG, "ExpandPromise(), promiser is '%s'", pp->promiser);
         Log(LOG_LEVEL_VERBOSE, "Skipped promise '%s' because class expression '%s' is not met", pp->promiser, pp->classes);
         // Restore logging level
         RestoreGlobalLogLevels();
+        PromiseDestroy(pcopy);
         return PROMISE_RESULT_SKIPPED;
     }
 

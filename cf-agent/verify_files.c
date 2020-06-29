@@ -991,8 +991,46 @@ PromiseResult FindAndVerifyFilesPromises(EvalContext *ctx, const Promise *pp)
 
 /*****************************************************************************/
 
+static DefineClasses GetExpandedClassDefinitionConstraints(const EvalContext *ctx, const Promise *pp)
+{
+    const char *namespace = PromiseGetBundle(pp)->ns;
+    const char *scope = PromiseGetBundle(pp)->name;
+
+    /* Get the unexpanded classes. */
+    DefineClasses c = GetClassDefinitionConstraints(ctx, pp);
+
+    /* Expand the classes just like GetExpandedAttributes() does.
+     * NOTE: The original Rlists are owned by the promise, the new ones need to be
+     *       RlistDestroy()-ed.*/
+    c.change = ExpandList(ctx, namespace, scope, c.change, true);
+    c.failure = ExpandList(ctx, namespace, scope, c.failure, true);
+    c.denied = ExpandList(ctx, namespace, scope, c.denied, true);
+    c.timeout = ExpandList(ctx, namespace, scope, c.timeout, true);
+    c.kept = ExpandList(ctx, namespace, scope, c.kept, true);
+    c.del_change = ExpandList(ctx, namespace, scope, c.del_change, true);
+    c.del_kept = ExpandList(ctx, namespace, scope, c.del_kept, true);
+    c.del_notkept = ExpandList(ctx, namespace, scope, c.del_notkept, true);
+
+    return c;
+}
+
+static void ClearExpandedClassDefinitionConstraints(DefineClasses *c)
+{
+    assert(c != NULL);
+    RlistDestroy(c->change);
+    RlistDestroy(c->failure);
+    RlistDestroy(c->denied);
+    RlistDestroy(c->timeout);
+    RlistDestroy(c->kept);
+    RlistDestroy(c->del_change);
+    RlistDestroy(c->del_kept);
+    RlistDestroy(c->del_notkept);
+}
+
 static PromiseResult FindFilePromiserObjects(EvalContext *ctx, const Promise *pp)
 {
+    assert(pp != NULL);
+
     char *val = PromiseGetConstraintAsRval(pp, "pathtype", RVAL_TYPE_SCALAR);
     int literal = (PromiseGetConstraintAsBoolean(ctx, "copy_from", pp)) || ((val != NULL) && (strcmp(val, "literal") == 0));
 
@@ -1007,6 +1045,17 @@ static PromiseResult FindFilePromiserObjects(EvalContext *ctx, const Promise *pp
     else                        // Default is to expand regex paths
     {
         result = PromiseResultUpdate(result, LocateFilePromiserGroup(ctx, pp->promiser, pp, VerifyFilePromise));
+
+        /* Now set the outcome classes for the pp->promiser itself (not the expanded paths). */
+        if (result != PROMISE_RESULT_SKIPPED)
+        {
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser", pp->promiser, CF_DATA_TYPE_STRING, "source=promise");
+            Attributes a = ZeroAttributes;
+            a.classes = GetExpandedClassDefinitionConstraints(ctx, pp);
+            SetPromiseOutcomeClasses(ctx, result, &(a.classes));
+            ClearExpandedClassDefinitionConstraints(&(a.classes));
+            EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "promiser");
+        }
     }
 
     return result;

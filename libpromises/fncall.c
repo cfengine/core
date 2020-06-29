@@ -199,7 +199,7 @@ unsigned FnCallHash(const FnCall *fp, unsigned seed)
 }
 
 
-FnCall *ExpandFnCall(EvalContext *ctx, const char *ns, const char *scope, const FnCall *f)
+FnCall *ExpandFnCall(const EvalContext *ctx, const char *ns, const char *scope, const FnCall *f)
 {
     FnCall *result = NULL;
     if (IsCf3VarString(f->name))

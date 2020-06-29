@@ -579,6 +579,7 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
         assert(returnval.type == RVAL_TYPE_LIST ||
                returnval.type == RVAL_TYPE_NOPROMISEE);
         /* TODO Log() empty slist, promise skipped? */
+Log(LOG_LEVEL_VERBOSE, "Skipping promise '%s' due to empty slist", pp->promiser);
         *excluded = true;
         return NULL;
     }
@@ -639,7 +640,7 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
         {
             if (CheckVarClassExpression(ctx, ifvarclass, pcopy) != EXPRESSION_VALUE_TRUE)
             {
-                if (LogGetGlobalLevel() >= LOG_LEVEL_VERBOSE)
+//                if (LogGetGlobalLevel() >= LOG_LEVEL_VERBOSE)
                 {
                     char *ifvarclass_string =  RvalToString(ifvarclass->rval);
                     Log(LOG_LEVEL_VERBOSE, "Skipping promise '%s'"
@@ -693,7 +694,7 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
             }
             else if (value != EXPRESSION_VALUE_FALSE)
             {
-                if (LogGetGlobalLevel() >= LOG_LEVEL_VERBOSE)
+//                if (LogGetGlobalLevel() >= LOG_LEVEL_VERBOSE)
                 {
                     char *unless_string =  RvalToString(unless->rval);
                     Log(LOG_LEVEL_VERBOSE,

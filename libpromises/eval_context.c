@@ -328,9 +328,11 @@ static LogLevel StringToLogLevel(const char *value)
 
 static LogLevel GetLevelForPromise(const Promise *pp, const char *attr_name)
 {
-//    char *levelString = PromiseGetConstraintAsRval(pp, attr_name, RVAL_TYPE_SCALAR);
-//    LogLevel level = StringToLogLevel(levelString);
-//Log(LOG_LEVEL_WARNING, "GetLevelForPromise, promiser '%s', attribute '%s', level string '%s', level %d", pp->promiser, attr_name, levelString, level);
+#ifdef PRIVATE_DEBUG
+    char *levelString = PromiseGetConstraintAsRval(pp, attr_name, RVAL_TYPE_SCALAR);
+    LogLevel level = StringToLogLevel(levelString);
+Log(LOG_LEVEL_WARNING, "GetLevelForPromise, promiser '%s', attribute '%s', level string '%s', level %d", pp->promiser, attr_name, levelString, level);
+#endif
     return StringToLogLevel(PromiseGetConstraintAsRval(pp, attr_name, RVAL_TYPE_SCALAR));
 }
 
@@ -355,12 +357,16 @@ static LogLevel CalculateLogLevel(const Promise *pp)
 static LogLevel CalculateReportLevel(const Promise *pp)
 {
     LogLevel report_level = LogGetGlobalLevel();
-//Log(LOG_LEVEL_WARNING, "global report_level is %d", report_level);
+#ifdef PRIVATE_DEBUG
+Log(LOG_LEVEL_WARNING, "global report_level is %d", report_level);
+#endif
 
     if (pp)
     {
         report_level = AdjustLogLevel(report_level, GetLevelForPromise(pp, "report_level"));
-//Log(LOG_LEVEL_WARNING, "report_level from promise is %d", report_level);
+#ifdef PRIVATE_DEBUG
+Log(LOG_LEVEL_WARNING, "report_level from promise is %d", report_level);
+#endif
     }
 
     return report_level;
@@ -1247,11 +1253,16 @@ void EvalContextSetPass(EvalContext *ctx, int pass)
 }
 void RestoreGlobalLogLevels()
 {
+#ifdef PRIVATE_DEBUG
+Log(LOG_LEVEL_WARNING, "RestoreGlobalLogLevels()");
+#endif
     LoggingPrivSetLevels(LogGetGlobalLevel(), LogGetGlobalLevel());
 }
 void HonorReportLevel(const Promise *pp)
 {
-//Log(LOG_LEVEL_WARNING, "Changing log levels based on log_level and report_level for promiser '%s'", pp->promiser);
+#ifdef PRIVATE_DEBUG
+Log(LOG_LEVEL_WARNING, "HonorReportLevel() Changing log levels based on log_level and report_level for promiser '%s'", pp->promiser);
+#endif
 LoggingPrivSetLevels(CalculateLogLevel(pp), CalculateReportLevel(pp));
 }
 
@@ -1501,20 +1512,17 @@ Promise *EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const Promi
     assert(last_frame->type == STACK_FRAME_TYPE_PROMISE);
 
     /* Evaluate all constraints by calling functions etc. */
-//Log(LOG_LEVEL_WARNING, "Evaluate all constraints by calling functions, etc: ExpandDeRefPromise()");
     bool excluded;
     Promise *pexp = ExpandDeRefPromise(ctx, last_frame->data.promise.owner,
                                        &excluded);
     if (excluded || !pexp)
     {
-//Log(LOG_LEVEL_WARNING, "excluded is %d, pexp is %d, so PromiseDestroy() and return no-op", excluded, pexp);
         PromiseDestroy(pexp);
         return NULL;
     }
 
     EvalContextStackPushFrame(ctx, StackFrameNewPromiseIteration(pexp, iter_ctx));
 
-//Log(LOG_LEVEL_WARNING, "LoggingPrivSetLevels() being called, this is where report_level is payed attention to");
     LoggingPrivSetLevels(CalculateLogLevel(pexp), CalculateReportLevel(pexp));
 
     return pexp;

@@ -1,12 +1,16 @@
  bundle agent main
   {
     commands:
-    any::
-      "/bin/echo this is an unconstrained commands promise";
-      Hr09::
-        "/bin/echo 9am hour verbose logging"
-if => windows,
-          action => immediate_report_verbose;
+#      any::
+#        "/bin/echo this is an unconstrained commands promise";
+      any::
+        "/bin/echo this commands promise is constrained by an if attribute"
+        if => Hr09,
+        action => immediate_report_verbose;
+#      Hr09::
+#        "/bin/echo 9am hour verbose logging"
+#          if => windows,
+#          action => immediate_report_verbose;
   }
   body action immediate_report_verbose
   {

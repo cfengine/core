@@ -191,7 +191,7 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, PromiseIterator *iterc
                                         PromiseActuator *act_on_promise, void *param,
                                         bool actuate_ifelse)
 {
-//Log(LOG_LEVEL_WARNING, "ExpandPromiseAndDo()");
+Log(LOG_LEVEL_DEBUG, "ExpandPromiseAndDo()");
     PromiseResult result = PROMISE_RESULT_SKIPPED;
 
     /* In the case of ifelse() we must always include an extra round of "actuation"
@@ -216,7 +216,7 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, PromiseIterator *iterc
             EvalContextStackPushPromiseIterationFrame(ctx, iterctx);
         if (pexp == NULL)                       /* is the promise excluded? */
         {
-//Log(LOG_LEVEL_WARNING, "In ExpandPromiseAndDo(), expanded promise is null so skipped");
+Log(LOG_LEVEL_DEBUG, "In ExpandPromiseAndDo(), expanded promise is null so skipped");
             result = PromiseResultUpdate(result, PROMISE_RESULT_SKIPPED);
             ifelse_actuated = true;
             continue;
@@ -259,7 +259,7 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, PromiseIterator *iterc
 PromiseResult ExpandPromise(EvalContext *ctx, const Promise *pp,
                             PromiseActuator *act_on_promise, void *param)
 {
-//Log(LOG_LEVEL_WARNING, "ExpandPromise(), promiser is '%s'", pp->promiser);
+Log(LOG_LEVEL_DEBUG, "ExpandPromise(), promiser is '%s'", pp->promiser);
 
     /* 1. Copy the promise while expanding '@' slists and body arguments
      *    (including body inheritance). */
@@ -307,6 +307,8 @@ PromiseResult ExpandPromise(EvalContext *ctx, const Promise *pp,
                                               act_on_promise, param, actuate_ifelse);
 
     EvalContextStackPopFrame(ctx);
+// Just to be sure, restore levels here
+RestoreGlobalLogLevels();
     PromiseIteratorDestroy(iterctx);
     PromiseDestroy(pcopy);
 

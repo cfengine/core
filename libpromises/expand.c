@@ -310,7 +310,7 @@ PromiseResult ExpandPromise(EvalContext *ctx, const Promise *pp,
 /*********************************************************************/
 /*********************************************************************/
 
-Rval ExpandPrivateRval(EvalContext *ctx,
+Rval ExpandPrivateRval(const EvalContext *ctx,
                        const char *ns, const char *scope,
                        const void *rval_item, RvalType rval_type)
 {
@@ -345,7 +345,7 @@ Rval ExpandPrivateRval(EvalContext *ctx,
     return returnval;
 }
 
-static Rval ExpandListEntry(EvalContext *ctx,
+static Rval ExpandListEntry(const EvalContext *ctx,
                             const char *ns, const char *scope,
                             int expandnaked, Rval entry)
 {
@@ -389,7 +389,7 @@ static Rval ExpandListEntry(EvalContext *ctx,
     return ExpandPrivateRval(ctx, ns, scope, entry.item, entry.type);
 }
 
-Rlist *ExpandList(EvalContext *ctx,
+Rlist *ExpandList(const EvalContext *ctx,
                   const char *ns, const char *scope,
                   const Rlist *list, int expandnaked)
 {

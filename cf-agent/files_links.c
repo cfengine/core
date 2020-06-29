@@ -40,11 +40,6 @@ static bool MakeLink(EvalContext *ctx, const char *from, const char *to, const A
 #endif
 static char *AbsLinkPath(const char *from, const char *relto);
 
-static bool EnforcePromise(enum cfopaction action)
-{
-    return ((!DONTDO) && (action != cfa_warn));
-}
-
 /*****************************************************************************/
 
 #ifdef __MINGW32__
@@ -99,9 +94,9 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
         return PROMISE_RESULT_FAIL;
     }
 
+    PromiseResult result = PROMISE_RESULT_NOOP;
     if ((!source_file_exists) && (attr->link.when_no_file == cfa_delete))
     {
-        PromiseResult result = PROMISE_RESULT_NOOP;
         KillGhostLink(ctx, destination, attr, pp, &result);
         return result;
     }
@@ -110,23 +105,20 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
 
     if (readlink(destination, linkbuf, CF_BUFSIZE - 1) == -1)
     {
-        if (!EnforcePromise(attr->transaction.action))
+        if (!MakingChanges(ctx, pp, attr, &result, "create link '%s'", destination))
         {
-            RecordWarning(ctx, pp, attr, "Link '%s' should be created", destination);
-            return PROMISE_RESULT_WARN;
+            return result;
         }
 
         bool dir_created = false;
-        if (!MakeParentDirectory2(destination, attr->move_obstructions,
-                                  EnforcePromise(attr->transaction.action), &dir_created))
+        if (!MakeParentDirectory2(destination, attr->move_obstructions, true, &dir_created))
         {
-            RecordFailure(ctx, pp, attr, "Unable to create parent directory of link '%s' -> '%s' (enforce %d)",
-                          destination, to, EnforcePromise(attr->transaction.action));
+            RecordFailure(ctx, pp, attr, "Unable to create parent directory of link '%s' -> '%s'",
+                          destination, to);
             return PROMISE_RESULT_FAIL;
         }
         else
         {
-            PromiseResult result = PROMISE_RESULT_NOOP;
             if (dir_created)
             {
                 RecordChange(ctx, pp, attr, "Created parent directory for link '%s'", destination);
@@ -167,7 +159,7 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
         {
             if (attr->move_obstructions)
             {
-                if (EnforcePromise(attr->transaction.action))
+                if (MakingChanges(ctx, pp, attr, &result, "remove incorrect link '%s'", destination))
                 {
                     if (unlink(destination) == -1)
                     {
@@ -176,15 +168,14 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
                         return PROMISE_RESULT_FAIL;
                     }
                     RecordChange(ctx, pp, attr, "Overrode incorrect link '%s'", destination);
-                    PromiseResult result = PROMISE_RESULT_CHANGE;
+                    result = PROMISE_RESULT_CHANGE;
 
                     MakeLink(ctx, destination, source, attr, pp, &result);
                     return result;
                 }
                 else
                 {
-                    RecordWarning(ctx, pp, attr, "Should remove incorrect link '%s'", destination);
-                    return PROMISE_RESULT_WARN;
+                    return result;
                 }
             }
             else
@@ -412,13 +403,12 @@ PromiseResult VerifyHardLink(EvalContext *ctx, char *destination, const char *so
 
     Log(LOG_LEVEL_INFO, "'%s' does not appear to be a hard link to '%s'", destination, to);
 
-    if (!EnforcePromise(attr->transaction.action))
+    PromiseResult result = PROMISE_RESULT_NOOP;
+    if (!MakingChanges(ctx, pp, attr, &result,  "hard link '%s' -> '%s'", destination, to))
     {
-        RecordWarning(ctx, pp, attr, "Hard link '%s' -> '%s' should be created", destination, to);
-        return PROMISE_RESULT_WARN;
+        return result;
     }
 
-    PromiseResult result = PROMISE_RESULT_NOOP;
     if (!MoveObstruction(ctx, destination, attr, pp, &result))
     {
         RecordFailure(ctx, pp, attr,
@@ -480,21 +470,19 @@ bool KillGhostLink(EvalContext *ctx, const char *name, const Attributes *attr, c
     {
         if ((attr->link.when_no_file == cfa_delete) || (attr->recursion.rmdeadlinks))
         {
-            Log(LOG_LEVEL_VERBOSE, "'%s' is a link which points to '%s', but that file doesn't seem to exist", name,
-                  linkbuf);
+            Log(LOG_LEVEL_VERBOSE,
+                "'%s' is a link which points to '%s', but the target doesn't seem to exist",
+                name, linkbuf);
 
-            if (DONTDO)
+            if (MakingChanges(ctx, pp, attr, result, "remove dead link '%s'", name))
             {
-                RecordWarning(ctx, pp, attr, "Dead link '%s' should be removed", name);
-                *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
+                unlink(name);   /* May not work on a client-mounted system ! */
+                RecordChange(ctx, pp, attr, "Removed dead link '%s'", name);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
                 return true;
             }
             else
             {
-                unlink(name);   /* May not work on a client-mounted system ! */
-                RecordChange(ctx, pp, attr, "Removing ghost '%s', reference to something that is not there",
-                             name);
-                *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
                 return true;
             }
         }
@@ -510,13 +498,7 @@ bool KillGhostLink(EvalContext *ctx, const char *name, const Attributes *attr, c
 static bool MakeLink(EvalContext *ctx, const char *from, const char *to, const Attributes *attr, const Promise *pp,
                      PromiseResult *result)
 {
-    if (DONTDO || (attr->transaction.action == cfa_warn))
-    {
-        RecordWarning(ctx, pp, attr, "Should link files '%s' -> '%s'", from, to);
-        *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
-        return false;
-    }
-    else
+    if (MakingChanges(ctx, pp, attr, result, "link files '%s' -> '%s'", from, to))
     {
         if (symlink(to, from) == -1)
         {
@@ -531,6 +513,10 @@ static bool MakeLink(EvalContext *ctx, const char *from, const char *to, const A
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
             return true;
         }
+    }
+    else
+    {
+        return false;
     }
 }
 #endif /* !__MINGW32__ */
@@ -554,13 +540,7 @@ bool MakeHardLink(EvalContext *ctx, const char *from, const char *to, const Attr
 bool MakeHardLink(EvalContext *ctx, const char *from, const char *to, const Attributes *attr, const Promise *pp,
                   PromiseResult *result)
 {
-    if (DONTDO)
-    {
-        RecordWarning(ctx, pp, attr, "Should hard link files '%s' -> '%s'", from, to);
-        *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
-        return false;
-    }
-    else
+    if (MakingChanges(ctx, pp, attr, result, "hard link files '%s' -> '%s'", from, to))
     {
         if (link(to, from) == -1)
         {
@@ -575,6 +555,10 @@ bool MakeHardLink(EvalContext *ctx, const char *from, const char *to, const Attr
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
             return true;
         }
+    }
+    else
+    {
+        return false;
     }
 }
 

@@ -497,6 +497,7 @@ static ExpressionValue CheckVarClassExpression(const EvalContext *ctx, const Con
     assert(cp);
     assert(pcopy);
 
+char *constraint_string =  RvalToString(cp->rval);
     /*
       This might fail to expand if there are unexpanded variables in function arguments
       (in which case the function won't be called at all), but the function still returns true.
@@ -506,6 +507,7 @@ static ExpressionValue CheckVarClassExpression(const EvalContext *ctx, const Con
     Rval final;
     if (!EvaluateConstraintIteration((EvalContext*)ctx, cp, &final))
     {
+Log(LOG_LEVEL_VERBOSE, "constraint '%s' value error from EvaluateConstraintIteration()", constraint_string);
         return EXPRESSION_VALUE_ERROR;
     }
 
@@ -518,7 +520,7 @@ static ExpressionValue CheckVarClassExpression(const EvalContext *ctx, const Con
         break;
 
     case RVAL_TYPE_FNCALL:
-        Log(LOG_LEVEL_DEBUG, "Function call in class expression did not succeed");
+        Log(LOG_LEVEL_VERBOSE, "Function call in class expression did not succeed for constraint '%s'", constraint_string);
         break;
 
     default:
@@ -527,16 +529,23 @@ static ExpressionValue CheckVarClassExpression(const EvalContext *ctx, const Con
 
     if (classes == NULL)
     {
+Log(LOG_LEVEL_VERBOSE, "constraint '%s' value error due to classes being null", constraint_string);
         return EXPRESSION_VALUE_ERROR;
     }
     // sanity check for unexpanded variables
     if (strchr(classes, '$') || strchr(classes, '@'))
     {
-        Log(LOG_LEVEL_DEBUG, "Class expression did not evaluate");
+        Log(LOG_LEVEL_VERBOSE, "Class expression '%s' did not evaluate for constraint '%s'", classes, constraint_string);
         return EXPRESSION_VALUE_ERROR;
     }
 
-    return CheckClassExpression(ctx, classes);
+ExpressionValue ev = CheckClassExpression(ctx, classes);
+if (ev != EXPRESSION_VALUE_TRUE)
+{
+  Log(LOG_LEVEL_VERBOSE, "class expression '%s' for constraint '%s' evaluated as false (classes not met)", classes, constraint_string);
+}
+return ev;
+//    return CheckClassExpression(ctx, classes);
 }
 
 /* Expands "$(this.promiser)" comment if present. Writes the result to pp. */
@@ -570,6 +579,7 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
     assert(pp->promiser != NULL);
     assert(pp->classes != NULL);
     assert(excluded != NULL);
+//Log(LOG_LEVEL_VERBOSE, "ExpandDeRefPromise() promiser is '%s'", pp->promiser);
 
     *excluded = false;
 

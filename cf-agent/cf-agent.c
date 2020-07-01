@@ -1647,7 +1647,7 @@ static void LogVariableValue(const EvalContext *ctx, const Promise *pp)
             break;
     }
 
-    Log(LOG_LEVEL_DEBUG, "V: '%s' => '%s'", pp->promiser, out);
+    Log(LOG_LEVEL_VERBOSE, "V: '%s' => '%s'", pp->promiser, out);
     free(out);
     VarRefDestroy(ref);
 }

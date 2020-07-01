@@ -1,3 +1,1 @@
-make CFLAGS=-DPRIVATE_DEBUG=   # special macro def for needed logging at warning level to debug report_level at promise level
-cf-agent/cf-agent "$@" -f ./test.cf | tee log
-#cf-agent/cf-agent --verbose -f ./test.cf | tee log
+cf-agent/cf-agent --info -f ./test.cf | tee log

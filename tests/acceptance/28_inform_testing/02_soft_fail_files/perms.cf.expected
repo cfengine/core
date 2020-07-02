@@ -1,0 +1,2 @@
+    info: files promise '/tmp/TEST.cfengine' repaired, perms => m(000)
+    info: Changed permissions of '/tmp/TEST.cfengine' from 0600 to 0000

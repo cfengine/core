@@ -74,7 +74,7 @@ PromiseResult CheckPosixLinuxACL(EvalContext *ctx, const char *file_path, Acl ac
         return result;
     }
 
-    if (IsDir(file_path))
+    if (IsDir(ToChangesPath(file_path)))
     {
         if (!CheckPosixLinuxDefaultACEs(ctx, acl.acl_default_entries, acl.acl_method, acl.acl_default,
                                         file_path, a, pp, &result))
@@ -162,9 +162,15 @@ static bool CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method,
 
     acl_type_str = acl_type == ACL_TYPE_ACCESS ? "Access" : "Default";
 
+    const char *changes_path = file_path;
+    if (ChrootChanges())
+    {
+        changes_path = ToChangesChroot(file_path);
+    }
+
 // read existing acl
 
-    if ((acl_existing = acl_get_file(file_path, acl_type)) == NULL)
+    if ((acl_existing = acl_get_file(changes_path, acl_type)) == NULL)
     {
         RecordFailure(ctx, pp, a,
                       "No %s ACL for '%s' could be read. (acl_get_file: %s)",
@@ -382,7 +388,7 @@ static bool CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method,
                 acl_free(acl_text_str);
                 return false;
             }
-            if ((retv = acl_set_file(file_path, acl_type, acl_new)) != 0)
+            if ((retv = acl_set_file(changes_path, acl_type, acl_new)) != 0)
             {
                 RecordFailure(ctx, pp, a,
                               "Error setting new %s ACL(%s) on file '%s' (acl_set_file: %s), are required ACEs present ?",
@@ -428,10 +434,16 @@ static bool CheckDefaultEqualsAccessACL(EvalContext *ctx, const char *file_path,
     int equals;
     bool retval = false;
 
+    const char *changes_path = file_path;
+    if (ChrootChanges())
+    {
+        changes_path = ToChangesChroot(file_path);
+    }
+
     acl_access = NULL;
     acl_default = NULL;
 
-    if ((acl_access = acl_get_file(file_path, ACL_TYPE_ACCESS)) == NULL)
+    if ((acl_access = acl_get_file(changes_path, ACL_TYPE_ACCESS)) == NULL)
     {
         RecordFailure(ctx, pp, a, "Could not find an ACL for '%s'. (acl_get_file: %s)",
                       file_path, GetErrorStr());
@@ -439,7 +451,7 @@ static bool CheckDefaultEqualsAccessACL(EvalContext *ctx, const char *file_path,
         return false;
     }
 
-    acl_default = acl_get_file(file_path, ACL_TYPE_DEFAULT);
+    acl_default = acl_get_file(changes_path, ACL_TYPE_DEFAULT);
 
     if (acl_default == NULL)
     {
@@ -463,7 +475,7 @@ static bool CheckDefaultEqualsAccessACL(EvalContext *ctx, const char *file_path,
 
         if (MakingChanges(ctx, pp, a, result, "copy default ACL on '%s' from access ACL", file_path))
         {
-            if ((acl_set_file(file_path, ACL_TYPE_DEFAULT, acl_access)) != 0)
+            if ((acl_set_file(changes_path, ACL_TYPE_DEFAULT, acl_access)) != 0)
             {
                 RecordFailure(ctx, pp, a,
                               "Could not set default ACL to access on '%s'. (acl_set_file: %s)",
@@ -505,10 +517,16 @@ static bool CheckDefaultClearACL(EvalContext *ctx, const char *file_path, const 
     int retv;
     bool retval = false;
 
+    const char *changes_path = file_path;
+    if (ChrootChanges())
+    {
+        changes_path = ToChangesChroot(file_path);
+    }
+
     acl_existing = NULL;
     acl_empty = NULL;
 
-    if ((acl_existing = acl_get_file(file_path, ACL_TYPE_DEFAULT)) == NULL)
+    if ((acl_existing = acl_get_file(changes_path, ACL_TYPE_DEFAULT)) == NULL)
     {
         RecordFailure(ctx, pp, a, "Unable to read default acl for '%s'. (acl_get_file: %s)", file_path, GetErrorStr());
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
@@ -544,7 +562,7 @@ static bool CheckDefaultClearACL(EvalContext *ctx, const char *file_path, const 
 
         if (MakingChanges(ctx, pp, a, result, "clean default ACL on '%s'", file_path))
         {
-            if (acl_set_file(file_path, ACL_TYPE_DEFAULT, acl_empty) != 0)
+            if (acl_set_file(changes_path, ACL_TYPE_DEFAULT, acl_empty) != 0)
             {
                 RecordFailure(ctx, pp, a, "Could not reset ACL for '%s'. (acl_set_file: %s)",
                               file_path, GetErrorStr());

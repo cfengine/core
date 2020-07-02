@@ -1,0 +1,2 @@
+    info: files promise '/tmp/TEST.cfengine' repaired, touch => "true"
+    info: Created and Touched (updated time stamps) file '/tmp/TEST.cfengine'

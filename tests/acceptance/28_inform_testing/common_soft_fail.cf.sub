@@ -1,0 +1,93 @@
+bundle common inform_tests
+{
+  vars:
+    "inputs" slist => { "$(this.promise_dirname)/../default.cf.sub" };
+}
+
+body common control
+{
+  inputs => { "@(inform_tests.inputs)" };
+  version => "1.0";
+
+  # RUNDIRECT is used later to only run the actual test code with cf-agent
+  !RUNDIRECT::
+      bundlesequence  => { default("$(this.promise_filename)") };
+}
+
+#######################################################
+
+bundle agent init
+{
+  classes:
+    "expected_file_exists" expression => fileexists("$(testcase.filename).expected"),
+      scope => "namespace";
+    "has_setup" expression => isgreaterthan(length(bundlesmatching("default:setup")), "0"),
+      scope => "namespace";
+    "has_teardown" expression => isgreaterthan(length(bundlesmatching("default:teardown")), "0"),
+      scope => "namespace";
+
+  files:
+    "$(G.testfile)"
+      delete => init_delete,
+      handle => "file_deleted";
+    "$(G.testdir)"
+      delete => init_delete,
+      handle => "dir_deleted";
+
+  methods:
+    has_setup::
+      "setup"
+        depends_on => { "dir_deleted", "file_deleted" };
+}
+
+body delete init_delete
+{
+      dirlinks => "delete";
+      rmdirs   => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+    "test_soft_fail"
+      string => "any",
+      meta => { "ENT-3787" };
+  vars:
+    "cf_agent" string => ifelse(isvariable("sys.cf_agent"), "$(sys.cf_agent)", "/var/cfengine/bin/cf-agent");
+  commands:
+    # NOTE: easy debug, if you change `>` to `|tee` in all below then you can see results in the execution log
+    "$(cf_agent) -D RUNDIRECT -KIf $(testcase.filename) > $(testcase.filename).log"
+      contain => useshell;
+    "$(G.sed) 's,$(G.testroot),/tmp,g' $(testcase.filename).log > $(testcase.filename).actual"
+      contain => useshell;
+}
+
+body contain useshell
+{
+  useshell => "useshell";
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+    has_teardown::
+      "teardown"; # optional tear down step contained in the test.cf file
+    expected_file_exists::
+      "any" usebundle => dcs_if_diff("$(testcase.filename).actual", "$(testcase.filename).expected", "ok", "not_ok");
+
+  files:
+    # delete if not ok, since we expect these tests to fail
+    !ok::
+      "$(testcase.filename).(log|sorted|actual)"
+        delete => tidy;
+
+  reports:
+    ok::
+      "$(testcase.filename) Pass";
+    !ok::
+      "$(testcase.filename) FAIL";
+}

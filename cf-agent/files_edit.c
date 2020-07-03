@@ -91,14 +91,7 @@ EditContext *NewEditContext(char *filename, const Attributes *a)
 void FinishEditContext(EvalContext *ctx, EditContext *ec, const Attributes *a, const Promise *pp,
                        PromiseResult *result)
 {
-    if (*result == PROMISE_RESULT_NOOP || *result == PROMISE_RESULT_CHANGE)
-    {
-        /* TODO: This should not be necessary. */
-        // A sub promise with CHANGE status does not necessarily mean that the
-        // file has really changed.
-        *result = PROMISE_RESULT_NOOP;
-    }
-    else
+    if ((*result != PROMISE_RESULT_NOOP) && (*result != PROMISE_RESULT_CHANGE))
     {
         // Failure or skipped. Don't update the file.
         goto end;
@@ -111,11 +104,6 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, const Attributes *a, c
         !MakingChanges(ctx, pp, a, result, "edit file '%s'", ec->filename))
     {
         goto end;
-    }
-    else if (ec && (ec->num_rewrites > 0))
-    {
-        RecordChange(ctx, pp, a, "Edited file '%s'", ec->filename);
-        *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
     }
     else if (ec && (ec->num_edits > 0))
     {

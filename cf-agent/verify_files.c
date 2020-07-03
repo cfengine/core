@@ -964,10 +964,6 @@ static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp,
                                  "Updated rendering of '%s' from mustache template '%s'",
                                  pp->promiser, message);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
-
-                    /* XXX: Really needed? The promise result should propagate
-                     *      from here. */
-                    edcontext->num_rewrites++;
                 }
                 else
                 {

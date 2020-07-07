@@ -34,6 +34,8 @@
 #include <dir.h>
 #include <policy.h>
 #include <string_lib.h>
+#include <eval_context.h>       /* MakingChanges(), RecordFailure() */
+#include <actuator.h>           /* PromiseResultUpdate() */
 
 
 static Item *ROTATED = NULL; /* GLOBAL_X */
@@ -93,44 +95,17 @@ bool FileWriteOver(char *filename, char *contents)
 
 /*********************************************************************/
 
-/**
- * Like MakeParentDirectory, but honours warn-only and dry-run mode.
- * We should eventually migrate to this function to avoid making changes
- * in these scenarios.
- *
- * @WARNING like MakeParentDirectory, this function will not behave right on
- *          Windows if the path contains double (back)slashes!
- **/
-
-bool MakeParentDirectory2(char *parentandchild, int force, bool enforce_promise, bool *created)
-{
-    if(enforce_promise)
-    {
-        return MakeParentDirectory(parentandchild, force, created);
-    }
-
-    char *parent_dir = GetParentDirectoryCopy(parentandchild);
-
-    if (parent_dir)
-    {
-        bool parent_exists = IsDir(parent_dir);
-        free(parent_dir);
-        return parent_exists;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-/**
- * Please consider using MakeParentDirectory2() instead.
- *
- * @WARNING this function will not behave right on Windows if the path
- *          contains double (back)slashes!
- **/
 
 bool MakeParentDirectory(const char *parentandchild, bool force, bool *created)
+{
+    /* just use the complex function with no promise info */
+    return MakeParentDirectoryForPromise(NULL, NULL, NULL, NULL,
+                                         parentandchild, force, created);
+}
+
+bool MakeParentDirectoryForPromise(EvalContext *ctx, const Promise *pp, const Attributes *attr,
+                                   PromiseResult *result, const char *parentandchild,
+                                   bool force, bool *created)
 {
     char *sp;
     char currentpath[CF_BUFSIZE];
@@ -138,6 +113,8 @@ bool MakeParentDirectory(const char *parentandchild, bool force, bool *created)
     struct stat statbuf;
     mode_t mask;
     int rootlen;
+
+    const bool have_promise_info = ((ctx != NULL) && (pp != NULL) && (attr != NULL) && (result != NULL));
 
     if (created != NULL)
     {
@@ -206,34 +183,41 @@ bool MakeParentDirectory(const char *parentandchild, bool force, bool *created)
             {
                 struct stat sbuf;
 
-                if (DONTDO)
-                {
-                    return true;
-                }
-
                 strcpy(currentpath, pathbuf);
                 DeleteSlash(currentpath);
                 /* TODO overflow check! */
                 strlcat(currentpath, ".cf-moved", sizeof(currentpath));
-                Log(LOG_LEVEL_INFO,
+                Log(LOG_LEVEL_VERBOSE,
                     "Moving obstructing file/link %s to %s to make directory",
                     pathbuf, currentpath);
+
+                if (have_promise_info &&
+                    !MakingChanges(ctx, pp, attr, result,
+                                   "move obstructing file/link '%s' to '%s' to make directories for '%s'",
+                                   pathbuf, currentpath, parentandchild))
+                {
+                    return true;
+                }
 
                 /* Remove possibly pre-existing ".cf-moved" backup object. */
                 if (lstat(currentpath, &sbuf) != -1)
                 {
                     if (S_ISDIR(sbuf.st_mode))                 /* directory */
                     {
-                        DeleteDirectoryTree(currentpath);
+                        if (!DeleteDirectoryTree(currentpath))
+                        {
+                            Log(LOG_LEVEL_WARNING,
+                                "Failed to remove directory '%s' while trying to remove a backup",
+                                currentpath);
+                        }
                     }
                     else                                 /* not a directory */
                     {
                         if (unlink(currentpath) == -1)
                         {
-                            Log(LOG_LEVEL_INFO, "Couldn't remove file/link"
-                                " '%s' while trying to remove a backup"
-                                " (unlink: %s)",
-                                currentpath, GetErrorStr());
+                            Log(LOG_LEVEL_WARNING,
+                                "Couldn't remove file/link '%s' while trying to remove a backup"
+                                " (unlink: %s)", currentpath, GetErrorStr());
                         }
                     }
                 }
@@ -241,10 +225,27 @@ bool MakeParentDirectory(const char *parentandchild, bool force, bool *created)
                 /* And then rename the current object to ".cf-moved". */
                 if (rename(pathbuf, currentpath) == -1)
                 {
-                    Log(LOG_LEVEL_INFO,
-                        "Couldn't rename '%s' to .cf-moved"
-                        " (rename: %s)", pathbuf, GetErrorStr());
+                    if (have_promise_info)
+                    {
+                        RecordFailure(ctx, pp, attr,
+                                      "Couldn't rename '%s' to .cf-moved (rename: %s)",
+                                      pathbuf, GetErrorStr());
+                        *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+                    }
+                    else
+                    {
+                        Log(LOG_LEVEL_ERR,
+                            "Couldn't rename '%s' to .cf-moved (rename: %s)",
+                            pathbuf, GetErrorStr());
+                    }
                     return false;
+                }
+                else if (have_promise_info)
+                {
+                    RecordChange(ctx, pp, attr,
+                                 "Moved obstructing file/link '%s' to '%s' to make directories for '%s'",
+                                 pathbuf, currentpath, parentandchild);
+                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
                 }
             }
         }
@@ -252,9 +253,20 @@ bool MakeParentDirectory(const char *parentandchild, bool force, bool *created)
         {
             if (!S_ISLNK(statbuf.st_mode) && !S_ISDIR(statbuf.st_mode))
             {
-                Log(LOG_LEVEL_INFO, "The object '%s' is not a directory."
-                    " Cannot make a new directory without deleting it.",
-                    pathbuf);
+                if (have_promise_info)
+                {
+                    RecordFailure(ctx, pp, attr,
+                                  "The object '%s' is not a directory."
+                                  " Cannot make a new directory without deleting it.",
+                                  pathbuf);
+                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+                }
+                else
+                {
+                    Log(LOG_LEVEL_ERR, "The object '%s' is not a directory."
+                        " Cannot make a new directory without deleting it.",
+                        pathbuf);
+                }
                 return false;
             }
         }
@@ -291,21 +303,38 @@ bool MakeParentDirectory(const char *parentandchild, bool force, bool *created)
         /* WARNING: on Windows stat() fails if path has a trailing slash! */
         else if (stat(currentpath, &statbuf) == -1)
         {
-            if (!DONTDO)
+            if (!have_promise_info ||
+                MakingChanges(ctx, pp, attr, result,
+                              "make directory '%s' for '%s'", currentpath, parentandchild))
             {
                 mask = umask(0);
 
-                if (mkdir(currentpath, DEFAULTMODE) == -1 && errno != EEXIST)
+                if (mkdir(currentpath, DEFAULTMODE) == -1)
                 {
-                    Log(LOG_LEVEL_ERR,
-                        "Unable to make directory: %s (mkdir: %s)",
-                        currentpath, GetErrorStr());
-                    umask(mask);
-                    return false;
+                    if (errno != EEXIST)
+                    {
+                        if (have_promise_info)
+                        {
+                            RecordFailure(ctx, pp, attr, "Failed to make directory: %s (mkdir: %s)",
+                                          currentpath, GetErrorStr());
+                            *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+                        }
+                        else
+                        {
+                            Log(LOG_LEVEL_ERR,
+                                "Failed to make directory: %s (mkdir: %s)",
+                                currentpath, GetErrorStr());
+                        }
+                        umask(mask);
+                        return false;
+                    }
                 }
-                if (created != NULL)
+                else
                 {
-                    *created = true;
+                    if (created != NULL)
+                    {
+                        *created = true;
+                    }
                 }
                 umask(mask);
             }
@@ -333,10 +362,19 @@ bool MakeParentDirectory(const char *parentandchild, bool force, bool *created)
                     free(tmpstr);
                 }
 #endif
-
-                Log(LOG_LEVEL_ERR,
-                    "Cannot make %s - %s is not a directory!"
-                    " (use forcedirs=true)", pathbuf, currentpath);
+                if (have_promise_info)
+                {
+                    RecordFailure(ctx, pp, attr,
+                                  "Cannot make %s - %s is not a directory!",
+                                  pathbuf, currentpath);
+                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+                }
+                else
+                {
+                    Log(LOG_LEVEL_ERR,
+                        "Cannot make %s - %s is not a directory!",
+                        pathbuf, currentpath);
+                }
                 return false;
             }
         }

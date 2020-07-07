@@ -334,10 +334,9 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
     else
     {
         bool dir_created = false;
-        if (!MakeParentDirectory(destfile, true, &dir_created))
+        if (!MakeParentDirectoryForPromise(ctx, pp, &attr, &result,
+                                           destfile, true, &dir_created))
         {
-            RecordFailure(ctx, pp, &attr, "Failed to create parent directory for '%s'", destfile);
-            result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
             return result;
         }
         if (dir_created)
@@ -754,10 +753,10 @@ static PromiseResult SourceSearchAndCopy(EvalContext *ctx, const char *from, cha
         struct stat tostat;
 
         bool dir_created = false;
-        if (!MakeParentDirectory(newto, attr->move_obstructions, &dir_created))
+        if (!MakeParentDirectoryForPromise(ctx, pp, attr, &result,
+                                           newto, attr->move_obstructions, &dir_created))
         {
-            RecordFailure(ctx, pp, attr, "Failed to make parent directory for '%s'", newto);
-            return PROMISE_RESULT_FAIL;
+            return result;
         }
         if (dir_created)
         {
@@ -2759,11 +2758,11 @@ static PromiseResult CopyFileSources(EvalContext *ctx, char *destination, const 
 
     PromiseResult result = PROMISE_RESULT_NOOP;
     bool dir_created = false;
-    if (!MakeParentDirectory(vbuff, attr->move_obstructions, &dir_created))
+    if (!MakeParentDirectoryForPromise(ctx, pp, attr, &result,
+                                       vbuff, attr->move_obstructions, &dir_created))
     {
-        RecordFailure(ctx, pp, attr, "Can't make parent directory for '%s'", destination);
         BufferDestroy(source);
-        return PROMISE_RESULT_FAIL;
+        return result;
     }
     if (dir_created)
     {
@@ -3880,18 +3879,16 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, const Attribu
         if (MakingChanges(ctx, pp, attr, result, "create directory '%s'", file))
         {
             bool dir_created = false;
-            if (!MakeParentDirectory(file, attr->move_obstructions, &dir_created))
+            if (!MakeParentDirectoryForPromise(ctx, pp, attr, result,
+                                               file, attr->move_obstructions, &dir_created))
             {
-                RecordFailure(ctx, pp, attr, "Error creating directories for '%s'. (create: %s)",
-                              file, GetErrorStr());
-                *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
                 return false;
             }
             if (dir_created)
             {
                 RecordChange(ctx, pp, attr, "Created directory '%s'", file);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
             }
-            *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
         }
         else
         {
@@ -3911,23 +3908,22 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, const Attribu
             filemode = attr->perms.plus & ~(attr->perms.minus);
         }
 
+        bool dir_created = false;
+        if (!MakeParentDirectoryForPromise(ctx, pp, attr, result,
+                                           file, attr->move_obstructions, &dir_created))
+        {
+            return false;
+        }
+        if (dir_created)
+        {
+            RecordChange(ctx, pp, attr, "Created directory '%s'", file);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+        }
+
         if (MakingChanges(ctx, pp, attr, result, "create named pipe '%s', mode %04jo",
                           file, (uintmax_t) filemode))
         {
             mode_t saveumask = umask(0);
-            bool dir_created = false;
-            if (!MakeParentDirectory(file, attr->move_obstructions, &dir_created))
-            {
-                RecordFailure(ctx, pp, attr, "Error creating directories for '%s'. (create: %s)",
-                              file, GetErrorStr());
-                *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
-                return false;
-            }
-            if (dir_created)
-            {
-                RecordChange(ctx, pp, attr, "Created directory '%s'", file);
-            }
-
             char errormsg[CF_BUFSIZE];
             if (mkfifo(file, filemode) != 0)
             {
@@ -3938,6 +3934,7 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, const Attribu
                 return false;
             }
             RecordChange(ctx, pp, attr, "Created named pipe '%s', mode %04jo", file, (uintmax_t) filemode);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
 
             umask(saveumask);
             return true;
@@ -3964,22 +3961,22 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, const Attribu
             filemode = attr->perms.plus & ~(attr->perms.minus);
         }
 
+        bool dir_created = false;
+        if (!MakeParentDirectoryForPromise(ctx, pp, attr, result,
+                                           file, attr->move_obstructions, &dir_created))
+        {
+            return false;
+        }
+        if (dir_created)
+        {
+            RecordChange(ctx, pp, attr, "Created directory '%s'", file);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+        }
+
         if (MakingChanges(ctx, pp, attr, result, "create file '%s', mode '%04jo'",
                           file, (uintmax_t)filemode))
         {
             mode_t saveumask = umask(0);
-            bool dir_created = false;
-            if (!MakeParentDirectory(file, attr->move_obstructions, &dir_created))
-            {
-                RecordFailure(ctx, pp, attr, "Error creating directories for '%s'. (create: %s)",
-                              file, GetErrorStr());
-                *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
-                return false;
-            }
-            if (dir_created)
-            {
-                RecordChange(ctx, pp, attr, "Created directory '%s'", file);
-            }
 
             int fd = safe_open_create_perms(file, O_WRONLY | O_CREAT | O_EXCL, filemode);
             if (fd == -1)

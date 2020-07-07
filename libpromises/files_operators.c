@@ -25,7 +25,6 @@
 #include <files_operators.h>
 
 #include <actuator.h>
-#include <verify_acl.h>
 #include <eval_context.h>
 #include <promises.h>
 #include <dir.h>

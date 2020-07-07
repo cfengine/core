@@ -111,13 +111,9 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
         }
 
         bool dir_created = false;
-        if (!MakeParentDirectory2(destination, attr->move_obstructions, true, &dir_created))
-        {
-            RecordFailure(ctx, pp, attr, "Unable to create parent directory of link '%s' -> '%s'",
-                          destination, to);
-            return PROMISE_RESULT_FAIL;
-        }
-        else
+        if (MakeParentDirectoryForPromise(ctx, pp, attr, &result,
+                                          destination, attr->move_obstructions,
+                                          &dir_created))
         {
             if (dir_created)
             {
@@ -138,9 +134,8 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
                 RecordFailure(ctx, pp, attr, "Unable to create link '%s' -> '%s'", destination, to);
                 result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
             }
-
-            return result;
         }
+        return result;
     }
     else
     {

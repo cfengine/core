@@ -54,6 +54,8 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
 
 PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source, const Attributes *attr, const Promise *pp)
 {
+    assert(attr != NULL);
+
     char to[CF_BUFSIZE], linkbuf[CF_BUFSIZE], absto[CF_BUFSIZE];
     struct stat sb;
 

@@ -96,10 +96,7 @@ libcf_agent_la_SOURCES = \
 	files_edit.c files_edit.h \
 	files_editline.c files_editline.h \
 	files_editxml.c files_editxml.h \
-	files_links.c files_links.h \
-	files_operators.c files_operators.h \
 	files_properties.c files_properties.h \
-	files_repository.c files_repository.h \
 	files_select.c files_select.h \
 	vercmp_internal.c vercmp_internal.h \
 	vercmp.c vercmp.h \

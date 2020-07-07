@@ -66,6 +66,7 @@ libpromises_la_SOURCES = \
 	cf3lex.l \
 	cf3parse.y cf3parse.h \
 	cf3parse_logic.h \
+	changes_chroot.c changes_chroot.h \
 	chflags.c chflags.h \
 	class.c class.h \
 	constants.c \
@@ -88,7 +89,10 @@ libpromises_la_SOURCES = \
 	files_copy.c files_copy.h \
 	files_interfaces.c files_interfaces.h \
 	files_lib.c files_lib.h \
+	files_links.c files_links.h \
 	files_names.c files_names.h \
+	files_operators.c files_operators.h \
+	files_repository.c files_repository.h \
 	fncall.c fncall.h \
 	generic_agent.c generic_agent.h \
 	global_mutex.c global_mutex.h \

@@ -1035,15 +1035,9 @@ static PromiseResult VerifyCopy(EvalContext *ctx,
                                 AgentConnection *conn)
 {
     assert(attr != NULL);
-    AbstractDir *dirh;
-    char sourcefile[CF_BUFSIZE];
-    char sourcedir[CF_BUFSIZE];
-    char destdir[CF_BUFSIZE];
-    char destfile[CF_BUFSIZE];
-    struct stat ssb, dsb;
-    const struct dirent *dirp;
-    int found;
 
+    int found;
+    struct stat ssb;
     if (attr->copy.link_type == FILE_LINK_TYPE_NONE)
     {
         Log(LOG_LEVEL_DEBUG, "Treating links as files for '%s'", source);
@@ -1068,11 +1062,11 @@ static PromiseResult VerifyCopy(EvalContext *ctx,
 
     if (S_ISDIR(ssb.st_mode))
     {
+        char sourcedir[CF_BUFSIZE];
         strcpy(sourcedir, source);
         AddSlash(sourcedir);
-        strcpy(destdir, destination);
-        AddSlash(destdir);
 
+        AbstractDir *dirh;
         if ((dirh = AbstractDirOpen(sourcedir, &(attr->copy), conn)) == NULL)
         {
             RecordFailure(ctx, pp, attr, "Can't open directory '%s'. (opendir: %s)",
@@ -1083,6 +1077,11 @@ static PromiseResult VerifyCopy(EvalContext *ctx,
 
         /* Now check any overrides */
 
+        char destdir[CF_BUFSIZE];
+        strcpy(destdir, destination);
+        AddSlash(destdir);
+
+        struct stat dsb;
         if (stat(destdir, &dsb) == -1)
         {
             RecordFailure(ctx, pp, attr, "Can't stat directory '%s'. (stat: %s)",
@@ -1099,7 +1098,8 @@ static PromiseResult VerifyCopy(EvalContext *ctx,
         /* No backslashes over the network. */
         const char sep = (conn != NULL) ? '/' : FILE_SEPARATOR;
 
-        for (dirp = AbstractDirRead(dirh); dirp != NULL;
+        for (const struct dirent *dirp = AbstractDirRead(dirh);
+             dirp != NULL;
              dirp = AbstractDirRead(dirh))
         {
             if (!ConsiderAbstractFile(dirp->d_name, sourcedir,
@@ -1120,6 +1120,7 @@ static PromiseResult VerifyCopy(EvalContext *ctx,
                 }
             }
 
+            char sourcefile[CF_BUFSIZE];
             strcpy(sourcefile, sourcedir);
 
             if (!PathAppend(sourcefile, sizeof(sourcefile), dirp->d_name,
@@ -1129,6 +1130,7 @@ static PromiseResult VerifyCopy(EvalContext *ctx,
                 FatalError(ctx, "VerifyCopy sourcefile buffer limit");
             }
 
+            char destfile[CF_BUFSIZE];
             strcpy(destfile, destdir);
 
             if (!PathAppend(destfile, sizeof(destfile), dirp->d_name,
@@ -1171,6 +1173,8 @@ static PromiseResult VerifyCopy(EvalContext *ctx,
     }
     else
     {
+        char sourcefile[CF_BUFSIZE];
+        char destfile[CF_BUFSIZE];
         strcpy(sourcefile, source);
         strcpy(destfile, destination);
 

@@ -114,6 +114,12 @@ bool MakeParentDirectoryForPromise(EvalContext *ctx, const Promise *pp, const At
     mode_t mask;
     int rootlen;
 
+    const char *changes_parentandchild = parentandchild;
+    if (ChrootChanges())
+    {
+        changes_parentandchild = ToChangesChroot(parentandchild);
+    }
+
     const bool have_promise_info = ((ctx != NULL) && (pp != NULL) && (attr != NULL) && (result != NULL));
 
     if (created != NULL)
@@ -142,7 +148,7 @@ bool MakeParentDirectoryForPromise(EvalContext *ctx, const Promise *pp, const At
         return false;
     }
 
-    strlcpy(pathbuf, parentandchild, CF_BUFSIZE);   /* local copy */
+    strlcpy(pathbuf, changes_parentandchild, CF_BUFSIZE);   /* local copy */
 
 #ifdef __APPLE__
     if (strstr(pathbuf, _PATH_RSRCFORKSPEC) != NULL)
@@ -276,13 +282,13 @@ bool MakeParentDirectoryForPromise(EvalContext *ctx, const Promise *pp, const At
 
     currentpath[0] = '\0';
 
-    rootlen = RootDirLength(parentandchild);
+    rootlen = RootDirLength(changes_parentandchild);
     /* currentpath is not NULL terminated on purpose! */
-    strncpy(currentpath, parentandchild, rootlen);
+    strncpy(currentpath, changes_parentandchild, rootlen);
 
-    for (size_t z = rootlen; parentandchild[z] != '\0'; z++)
+    for (size_t z = rootlen; changes_parentandchild[z] != '\0'; z++)
     {
-        const char c = parentandchild[z];
+        const char c = changes_parentandchild[z];
 
         /* Copy up to the next separator. */
         if (!IsFileSep(c))

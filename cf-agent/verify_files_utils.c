@@ -1111,6 +1111,7 @@ static PromiseResult VerifyCopy(EvalContext *ctx,
                     RecordInterruption(ctx, pp, attr,
                                        "Connection error when checking '%s'", dirp->d_name);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
+                    AbstractDirClose(dirh);
                     return result;
                 }
                 else
@@ -1145,6 +1146,7 @@ static PromiseResult VerifyCopy(EvalContext *ctx,
                                   "Can't stat source file (notlinked) '%s'. (stat: %s)",
                                   sourcefile, GetErrorStr());
                     result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+                    AbstractDirClose(dirh);
                     return result;
                 }
             }
@@ -1155,6 +1157,7 @@ static PromiseResult VerifyCopy(EvalContext *ctx,
                     RecordFailure(ctx, pp, attr, "Can't stat source file '%s'. (lstat: %s)",
                                   sourcefile, GetErrorStr());
                     result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+                    AbstractDirClose(dirh);
                     return result;
                 }
             }

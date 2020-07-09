@@ -3468,3 +3468,10 @@ const char *ToChangesChroot(const char *orig_path)
 
     return chrooted_path;
 }
+
+const char *ToNormalRoot(const char *orig_path)
+{
+    assert(strncmp(orig_path, chrooted_path, chroot_len) == 0);
+
+    return orig_path + chroot_len - 1;
+}

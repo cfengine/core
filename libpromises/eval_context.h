@@ -315,6 +315,19 @@ static inline const char *ToChangesPath(const char *path)
     return (ChrootChanges() ? ToChangesChroot(path) : path);
 }
 
+/**
+ * Reverse operation for ToChangesChroot().
+ *
+ * @return A pointer to an offset of #orig_path where the non-chrooted path starts.
+ * @warning Doesn't work on Windows (because on Windows the operation is not as easy as just
+ *          shifting the pointer by the offset).
+ */
+#ifndef __MINGW32__
+const char *ToNormalRoot(const char *orig_path);
+#else
+const char *ToNormalRoot(const char *orig_path) __attribute__((error ("Not supported on Windows")));
+#endif
+
 PackagePromiseContext *GetPackageDefaultsFromCtx(const EvalContext *ctx);
 
 bool EvalContextGetSelectEndMatchEof(const EvalContext *ctx);

@@ -116,6 +116,12 @@ void test_changes_chroot(void)
     /* And a longer path again. */
     chrooted = ToChangesChroot("/etc/sysctl.d/00-default.conf");
     assert_string_equal(chrooted, "/changes/go/here/etc/sysctl.d/00-default.conf");
+
+#ifndef __MINGW32__
+    /* Inverse should work as expected */
+    const char *normal = ToNormalRoot(chrooted);
+    assert_string_equal(normal, "/etc/sysctl.d/00-default.conf");
+#endif
 }
 
 int main()

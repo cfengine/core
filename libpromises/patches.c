@@ -34,6 +34,10 @@
 
 #include <audit.h>
 
+#ifdef __TERMUX__
+#  include <file_lib.h>    /* File_Copy() */
+#endif
+
 static char *cf_format_strtimestamp(struct tm *tm, char *buf);
 
 /*********************************************************/
@@ -193,6 +197,8 @@ bool LinkOrCopy(const char *from, const char *to, int sym)
         return false;
     }
 
+#elif __TERMUX__    /* link() not supported on ANDROID platform */
+    return File_Copy(from, to);
 #else /* !__MINGW32__ */
 
     if (sym)

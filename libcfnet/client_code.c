@@ -197,7 +197,7 @@ AgentConnection *ServerConnection(const char *server, const char *port,
 
     conn = NewAgentConn(server, port, flags);
 
-#if !defined(__MINGW32__)
+#if !defined(__MINGW32__) && !defined(__TERMUX__)
     signal(SIGPIPE, SIG_IGN);
 
     sigset_t signal_mask;
@@ -208,7 +208,7 @@ AgentConnection *ServerConnection(const char *server, const char *port,
     /* FIXME: username is local */
     GetCurrentUserName(conn->username, sizeof(conn->username));
 #else
-    /* Always say "root" as username from windows. */
+    /* Always say "root" if windows or termux. */
     strlcpy(conn->username, "root", sizeof(conn->username));
 #endif
 

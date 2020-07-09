@@ -148,7 +148,7 @@ static void GetMacAddress(EvalContext *ctx, ARG_UNUSED int fd, struct ifreq *ifr
       return;
     }
 
-# if defined(SIOCGIFHWADDR) && defined(HAVE_STRUCT_IFREQ_IFR_HWADDR)
+# if defined(SIOCGIFHWADDR) && defined(HAVE_STRUCT_IFREQ_IFR_HWADDR) && !defined(__TERMUX__)
     char hw_mac[CF_MAXVARSIZE];
 
     if ((ioctl(fd, SIOCGIFHWADDR, ifr) == -1))
@@ -197,11 +197,15 @@ static void GetMacAddress(EvalContext *ctx, ARG_UNUSED int fd, struct ifreq *ifr
     {
         if ( strcmp(ifa->ifa_name, ifp->ifr_name) == 0)
         {
+            if (ifa->ifa_addr == NULL)
+            {
+               Log(LOG_LEVEL_VERBOSE, "Interface '%s' has no address information", ifa->ifa_name);
+               continue;
+            }
             if (ifa->ifa_addr->sa_family == AF_LINK)
             {
                 sdl = (struct sockaddr_dl *)ifa->ifa_addr;
                 m = (char *) LLADDR(sdl);
-
                 snprintf(hw_mac, sizeof(hw_mac), "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x",
                     (unsigned char) m[0],
                     (unsigned char) m[1],

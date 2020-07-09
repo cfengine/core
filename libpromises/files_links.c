@@ -34,6 +34,7 @@
 #include <string_lib.h>
 #include <misc_lib.h>
 #include <eval_context.h>
+#include <changes_chroot.h>     /* PrepareChangesChroot() */
 
 #if !defined(__MINGW32__)
 static bool MakeLink(EvalContext *ctx, const char *from, const char *to, const Attributes *attr, const Promise *pp, PromiseResult *result);
@@ -63,7 +64,9 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
 
     memset(to, 0, CF_BUFSIZE);
 
-    if ((!IsAbsoluteFileName(source)) && (*source != '.'))        /* links without a directory reference */
+    const bool absolute_source = IsAbsoluteFileName(source);
+
+    if ((!absolute_source) && (*source != '.'))        /* links without a directory reference */
     {
         snprintf(to, CF_BUFSIZE - 1, "./%s", source);
     }
@@ -72,7 +75,7 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
         strlcpy(to, source, CF_BUFSIZE);
     }
 
-    if (!IsAbsoluteFileName(to))        /* relative path, must still check if exists */
+    if (!absolute_source)        /* relative path, must still check if exists */
     {
         Log(LOG_LEVEL_DEBUG, "Relative link destination detected '%s'", to);
         strcpy(absto, AbsLinkPath(destination, to));
@@ -83,9 +86,22 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
         strcpy(absto, to);
     }
 
+    /* If making changes in a chroot, we need to get the link target into the
+     * chroot. */
+    if (ChrootChanges())
+    {
+        PrepareChangesChroot(absto);
+    }
+
+    const char *changes_absto = absto;
+    if (ChrootChanges())
+    {
+        changes_absto = ToChangesChroot(absto);
+    }
+
     bool source_file_exists = true;
 
-    if (stat(absto, &sb) == -1)
+    if (stat(changes_absto, &sb) == -1)
     {
         Log(LOG_LEVEL_DEBUG, "No source file '%s'", absto);
         source_file_exists = false;
@@ -98,16 +114,22 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
         return PROMISE_RESULT_FAIL;
     }
 
+    const char *changes_destination = destination;
+    if (ChrootChanges())
+    {
+        changes_destination = ToChangesChroot(destination);
+    }
+
     PromiseResult result = PROMISE_RESULT_NOOP;
     if ((!source_file_exists) && (attr->link.when_no_file == cfa_delete))
     {
-        KillGhostLink(ctx, destination, attr, pp, &result);
+        KillGhostLink(ctx, changes_destination, attr, pp, &result);
         return result;
     }
 
     memset(linkbuf, 0, CF_BUFSIZE);
 
-    if (readlink(destination, linkbuf, CF_BUFSIZE - 1) == -1)
+    if (readlink(changes_destination, linkbuf, CF_BUFSIZE - 1) == -1)
     {
         if (!MakingChanges(ctx, pp, attr, &result, "create link '%s'", destination))
         {
@@ -144,7 +166,14 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
     else
     {
         /* to == "./$source" */
-        const bool link_correct = (StringEqual(linkbuf, source) || StringEqual(linkbuf, to));
+        bool link_correct = (StringEqual(linkbuf, source) || StringEqual(linkbuf, to));
+
+        /* If making changes in chroot, the existing symlink can also be
+         * pointing to the changes chroot (if it's absolute). */
+        if (!link_correct && absolute_source && ChrootChanges())
+        {
+            link_correct = StringEqual(linkbuf, ToChangesChroot(source));
+        }
         if (link_correct)
         {
             RecordNoChange(ctx, pp, attr, "Link '%s' points to '%s', promise kept", destination, source);
@@ -155,7 +184,7 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
         {
             if (MakingChanges(ctx, pp, attr, &result, "remove incorrect link '%s'", destination))
             {
-                if (unlink(destination) == -1)
+                if (unlink(ToChangesPath(destination)) == -1)
                 {
                     RecordFailure(ctx, pp, attr, "Error removing link '%s' (points to '%s' not '%s')",
                                   destination, linkbuf, to);
@@ -209,15 +238,28 @@ PromiseResult VerifyAbsoluteLink(EvalContext *ctx, char *destination, const char
 
     if (attr->link.when_no_file == cfa_force)
     {
-        if (!ExpandLinks(expand, absto, 0, CF_MAXLINKLEVEL))     /* begin at level 1 and beam out at 15 */
+        bool expanded;
+        struct stat sb;
+        if (ChrootChanges() && (lstat(ToChangesChroot(absto), &sb) != -1))
+        {
+            char chrooted_expand[sizeof(expand)];
+            chrooted_expand[0] = '\0';
+            expanded = ExpandLinks(chrooted_expand, ToChangesChroot(absto), 0, CF_MAXLINKLEVEL);
+            strlcpy(expand, ToNormalRoot(chrooted_expand), sizeof(expand));
+        }
+        else
+        {
+            expanded = ExpandLinks(expand, absto, 0, CF_MAXLINKLEVEL);
+        }
+        if (expanded)
+        {
+            Log(LOG_LEVEL_DEBUG, "ExpandLinks returned '%s'", expand);
+        }
+        else
         {
             RecordFailure(ctx, pp, attr, "Failed to expand absolute link to '%s'", source);
             PromiseRef(LOG_LEVEL_ERR, pp);
             return PROMISE_RESULT_FAIL;
-        }
-        else
-        {
-            Log(LOG_LEVEL_DEBUG, "ExpandLinks returned '%s'", expand);
         }
     }
     else
@@ -321,7 +363,9 @@ PromiseResult VerifyHardLink(EvalContext *ctx, char *destination, const char *so
 
     memset(to, 0, CF_BUFSIZE);
 
-    if ((!IsAbsoluteFileName(source)) && (*source != '.'))        /* links without a directory reference */
+    const bool absolute_source = IsAbsoluteFileName(source);
+
+    if ((!absolute_source) && (*source != '.'))        /* links without a directory reference */
     {
         snprintf(to, CF_BUFSIZE - 1, ".%c%s", FILE_SEPARATOR, source);
     }
@@ -330,21 +374,33 @@ PromiseResult VerifyHardLink(EvalContext *ctx, char *destination, const char *so
         strlcpy(to, source, CF_BUFSIZE);
     }
 
-    if (!IsAbsoluteFileName(to))        /* relative path, must still check if exists */
+    if (!absolute_source)        /* relative path, must still check if exists */
     {
         Log(LOG_LEVEL_DEBUG, "Relative link destination detected '%s'", to);
         strcpy(absto, AbsLinkPath(destination, to));
-        Log(LOG_LEVEL_DEBUG, "Absolute path to relative link '%s', destination '%s'", absto, destination);
+        Log(LOG_LEVEL_DEBUG, "Absolute path to relative link '%s', '%s'", absto, destination);
     }
     else
     {
         strcpy(absto, to);
     }
 
-    if (stat(absto, &ssb) == -1)
+    /* If making changes in a chroot, we need to get the link target into the
+     * chroot. */
+    if (ChrootChanges())
     {
-        RecordInterruption(ctx, pp, attr, "Source file '%s' doesn't exist", source);
-        return PROMISE_RESULT_INTERRUPTED;
+        PrepareChangesChroot(absto);
+    }
+
+    const char *changes_absto = absto;
+    if (ChrootChanges())
+    {
+        changes_absto = ToChangesChroot(absto);
+    }
+
+    if (stat(changes_absto, &ssb) == -1)
+    {
+        Log(LOG_LEVEL_DEBUG, "No source file '%s'", absto);
     }
 
     if (!S_ISREG(ssb.st_mode))
@@ -356,7 +412,7 @@ PromiseResult VerifyHardLink(EvalContext *ctx, char *destination, const char *so
 
     Log(LOG_LEVEL_DEBUG, "Trying to hard link '%s' -> '%s'", destination, to);
 
-    if (stat(destination, &dsb) == -1)
+    if (stat(ChrootChanges()? ToChangesChroot(destination) : destination, &dsb) == -1)
     {
         PromiseResult result = PROMISE_RESULT_NOOP;
         MakeHardLink(ctx, destination, to, attr, pp, &result);
@@ -389,7 +445,12 @@ PromiseResult VerifyHardLink(EvalContext *ctx, char *destination, const char *so
         return PROMISE_RESULT_NOOP;
     }
 
-    Log(LOG_LEVEL_INFO, "'%s' does not appear to be a hard link to '%s'", destination, to);
+    const char *chroot_msg = "";
+    if (ChrootChanges())
+    {
+        chroot_msg = " (but hardlinks are always replicated to the changes chroot)";
+    }
+    Log(LOG_LEVEL_INFO, "'%s' does not appear to be a hard link to '%s'%s", destination, to, chroot_msg);
 
     PromiseResult result = PROMISE_RESULT_NOOP;
     if (!MakingChanges(ctx, pp, attr, &result,  "hard link '%s' -> '%s'", destination, to))
@@ -435,7 +496,13 @@ bool KillGhostLink(EvalContext *ctx, const char *name, const Attributes *attr, c
     memset(linkbuf, 0, CF_BUFSIZE);
     memset(linkpath, 0, CF_BUFSIZE);
 
-    if (readlink(name, linkbuf, CF_BUFSIZE - 1) == -1)
+    const char *changes_name = name;
+    if (ChrootChanges())
+    {
+        changes_name = ToChangesChroot(name);
+    }
+
+    if (readlink(changes_name, linkbuf, CF_BUFSIZE - 1) == -1)
     {
         Log(LOG_LEVEL_VERBOSE, "Can't read link '%s' while checking for deadlinks", name);
         return true;            /* ignore */
@@ -443,7 +510,7 @@ bool KillGhostLink(EvalContext *ctx, const char *name, const Attributes *attr, c
 
     if (!IsAbsoluteFileName(linkbuf))
     {
-        strcpy(linkpath, name); /* Get path to link */
+        strcpy(linkpath, changes_name); /* Get path to link */
 
         for (sp = linkpath + strlen(linkpath); (*sp != FILE_SEPARATOR) && (sp >= linkpath); sp--)
         {
@@ -464,7 +531,7 @@ bool KillGhostLink(EvalContext *ctx, const char *name, const Attributes *attr, c
 
             if (MakingChanges(ctx, pp, attr, result, "remove dead link '%s'", name))
             {
-                unlink(name);   /* May not work on a client-mounted system ! */
+                unlink(changes_name);   /* May not work on a client-mounted system ! */
                 RecordChange(ctx, pp, attr, "Removed dead link '%s'", name);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
                 return true;
@@ -488,17 +555,34 @@ static bool MakeLink(EvalContext *ctx, const char *from, const char *to, const A
 {
     if (MakingChanges(ctx, pp, attr, result, "link files '%s' -> '%s'", from, to))
     {
-        if (symlink(to, from) == -1)
+        const char *changes_to = to;
+        char *chroot_to = NULL;
+        if (ChrootChanges())
+        {
+            /* Create a copy because the next call to ToChangesChroot() will
+             * overwrite the value. */
+            chroot_to = xstrdup(ToChangesChroot(to));
+            changes_to = chroot_to;
+        }
+        const char *changes_from = from;
+        if (ChrootChanges())
+        {
+            changes_from = ToChangesChroot(from);
+        }
+
+        if (symlink(changes_to, changes_from) == -1)
         {
             RecordFailure(ctx, pp, attr, "Couldn't link '%s' to '%s'. (symlink: %s)",
                           to, from, GetErrorStr());
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+            free(chroot_to);
             return false;
         }
         else
         {
             RecordChange(ctx, pp, attr, "Linked files '%s' -> '%s'", from, to);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+            free(chroot_to);
             return true;
         }
     }
@@ -530,7 +614,22 @@ bool MakeHardLink(EvalContext *ctx, const char *from, const char *to, const Attr
 {
     if (MakingChanges(ctx, pp, attr, result, "hard link files '%s' -> '%s'", from, to))
     {
-        if (link(to, from) == -1)
+        const char *changes_to = to;
+        char *chroot_to = NULL;
+        if (ChrootChanges())
+        {
+            /* Create a copy because the next call to ToChangesChroot() will
+             * overwrite the value. */
+            chroot_to = xstrdup(ToChangesChroot(to));
+            changes_to = chroot_to;
+        }
+        const char *changes_from = from;
+        if (ChrootChanges())
+        {
+            changes_from = ToChangesChroot(from);
+        }
+
+        if (link(changes_to, changes_from) == -1)
         {
             RecordFailure(ctx, pp, attr, "Failed to hard link '%s' to '%s'. (link: %s)",
                           to, from, GetErrorStr());

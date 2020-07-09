@@ -207,8 +207,9 @@ AgentConnection *ServerConnection(const char *server, const char *port,
 
     /* FIXME: username is local */
     GetCurrentUserName(conn->username, sizeof(conn->username));
-#else
-    /* Always say "root" as username from windows. */
+#endif
+#if defined(__MINGW32__) || defined(__TERMUX__)
+    /* Always say "root" as username from windows or termux. */
     strlcpy(conn->username, "root", sizeof(conn->username));
 #endif
 

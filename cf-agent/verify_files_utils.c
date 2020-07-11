@@ -475,8 +475,6 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
     }
     else
     {
-        int ok_to_copy = false;
-
         Log(LOG_LEVEL_VERBOSE, "Destination file '%s' already exists",
             destfile);
 
@@ -486,15 +484,9 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
             return result;
         }
 
-        if (!attr.copy.force_update)
-        {
-            ok_to_copy = CompareForFileCopy(sourcefile, destfile, ssb,
-                                            &dsb, &attr.copy, conn);
-        }
-        else
-        {
-            ok_to_copy = true;
-        }
+        bool should_copy = (attr.copy.force_update ||
+                            CompareForFileCopy(sourcefile, destfile, ssb,
+                                               &dsb, &attr.copy, conn));
 
         if (attr.copy.type_check &&
             attr.copy.link_type != FILE_LINK_TYPE_NONE)
@@ -510,9 +502,7 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
             }
         }
 
-        if (attr.copy.force_update ||
-            ok_to_copy ||
-            S_ISLNK(srcmode))                     /* Always check links */
+        if (should_copy || S_ISLNK(srcmode))                     /* Always check links */
         {
             if (S_ISREG(srcmode) ||
                 attr.copy.link_type == FILE_LINK_TYPE_NONE)

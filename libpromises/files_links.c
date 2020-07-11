@@ -55,6 +55,8 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
 PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source, const Attributes *attr, const Promise *pp)
 {
     assert(attr != NULL);
+    /* VerifyHardLink() is a separate function */
+    assert(attr->link.link_type != FILE_LINK_TYPE_HARDLINK);
 
     char to[CF_BUFSIZE], linkbuf[CF_BUFSIZE], absto[CF_BUFSIZE];
     struct stat sb;
@@ -141,52 +143,41 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
     }
     else
     {
-        int ok = false;
-
-        if ((attr->link.link_type == FILE_LINK_TYPE_SYMLINK) && (strcmp(linkbuf, to) != 0) && (strcmp(linkbuf, source) != 0))
+        /* to == "./$source" */
+        const bool link_correct = (StringEqual(linkbuf, source) || StringEqual(linkbuf, to));
+        if (link_correct)
         {
-            ok = true;
+            RecordNoChange(ctx, pp, attr, "Link '%s' points to '%s', promise kept", destination, source);
+            return PROMISE_RESULT_NOOP;
         }
-        else if (strcmp(linkbuf, source) != 0)
+        /* else */
+        if (attr->move_obstructions)
         {
-            ok = true;
-        }
-
-        if (ok)
-        {
-            if (attr->move_obstructions)
+            if (MakingChanges(ctx, pp, attr, &result, "remove incorrect link '%s'", destination))
             {
-                if (MakingChanges(ctx, pp, attr, &result, "remove incorrect link '%s'", destination))
+                if (unlink(destination) == -1)
                 {
-                    if (unlink(destination) == -1)
-                    {
-                        RecordFailure(ctx, pp, attr, "Error removing link '%s' (points to '%s' not '%s')",
-                                      destination, linkbuf, to);
-                        return PROMISE_RESULT_FAIL;
-                    }
-                    RecordChange(ctx, pp, attr, "Overrode incorrect link '%s'", destination);
-                    result = PROMISE_RESULT_CHANGE;
+                    RecordFailure(ctx, pp, attr, "Error removing link '%s' (points to '%s' not '%s')",
+                                  destination, linkbuf, to);
+                    return PROMISE_RESULT_FAIL;
+                }
+                RecordChange(ctx, pp, attr, "Overrode incorrect link '%s'", destination);
+                result = PROMISE_RESULT_CHANGE;
 
-                    MakeLink(ctx, destination, source, attr, pp, &result);
-                    return result;
-                }
-                else
-                {
-                    return result;
-                }
+                MakeLink(ctx, destination, source, attr, pp, &result);
+                return result;
             }
             else
             {
-                RecordFailure(ctx, pp, attr,
-                              "Link '%s' points to '%s' not '%s', but not moving obstructions",
-                              destination, linkbuf, to);
-                return PROMISE_RESULT_FAIL;
+                return result;
             }
         }
         else
         {
-            RecordNoChange(ctx, pp, attr, "Link '%s' points to '%s', promise kept", destination, source);
-            return PROMISE_RESULT_NOOP;
+            RecordFailure(ctx, pp, attr,
+                          "Link '%s' points to '%s' not '%s', but not moving obstructions",
+                          destination, linkbuf, to);
+            return PROMISE_RESULT_FAIL;
         }
     }
 }

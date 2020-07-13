@@ -197,7 +197,7 @@ AgentConnection *ServerConnection(const char *server, const char *port,
 
     conn = NewAgentConn(server, port, flags);
 
-#if !defined(__MINGW32__) && !defined(__TERMUX__)
+#if !defined(__MINGW32__) && !defined(__ANDROID__)
     signal(SIGPIPE, SIG_IGN);
 
     sigset_t signal_mask;

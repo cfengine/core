@@ -148,7 +148,7 @@ static void GetMacAddress(EvalContext *ctx, ARG_UNUSED int fd, struct ifreq *ifr
       return;
     }
 
-# if defined(SIOCGIFHWADDR) && defined(HAVE_STRUCT_IFREQ_IFR_HWADDR) && !defined(__TERMUX__)
+# if defined(SIOCGIFHWADDR) && defined(HAVE_STRUCT_IFREQ_IFR_HWADDR) && !defined(__ANDROID__)
     char hw_mac[CF_MAXVARSIZE];
 
     if ((ioctl(fd, SIOCGIFHWADDR, ifr) == -1))

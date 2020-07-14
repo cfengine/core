@@ -596,7 +596,7 @@ bool HashDirectoryTree(const char *path,
     return TraverseDirectoryTree(path, HashDirectoryTreeCallback, &state);
 }
 
-void RotateFiles(char *name, int number)
+void RotateFiles(const char *name, int number)
 {
     int i, fd;
     struct stat statbuf;

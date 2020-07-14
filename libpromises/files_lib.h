@@ -47,7 +47,7 @@ bool MakeParentDirectoryForPromise(EvalContext *ctx, const Promise *pp, const At
                                    PromiseResult *result, const char *parentandchild,
                                    bool force, bool *created);
 
-void RotateFiles(char *name, int number);
+void RotateFiles(const char *name, int number);
 void CreateEmptyFile(char *name);
 
 

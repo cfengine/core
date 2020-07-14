@@ -28,7 +28,7 @@
 void SetRepositoryLocation(const char *path);
 void SetRepositoryChar(char c);
 
-bool ArchiveToRepository(char *file, const Attributes *attr);
+bool ArchiveToRepository(const char *file, const Attributes *attr);
 bool FileInRepository(const char *filename);
 
 /* Returns false if backing up files to repository is not set up */

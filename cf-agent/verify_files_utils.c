@@ -748,58 +748,66 @@ static PromiseResult SourceSearchAndCopy(EvalContext *ctx, const char *from, cha
     strcat(newto, "dummy");
 
     PromiseResult result = PROMISE_RESULT_NOOP;
-    if (attr->transaction.action != cfa_warn)
+    struct stat tostat;
+
+    bool dir_created = false;
+    if (!MakeParentDirectoryForPromise(ctx, pp, attr, &result,
+                                       newto, attr->move_obstructions, &dir_created))
     {
-        struct stat tostat;
+        return result;
+    }
+    if (dir_created)
+    {
+        RecordChange(ctx, pp, attr, "Created parent directory for '%s'", newto);
+        result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
+    }
 
-        bool dir_created = false;
-        if (!MakeParentDirectoryForPromise(ctx, pp, attr, &result,
-                                           newto, attr->move_obstructions, &dir_created))
+    DeleteSlash(to);
+
+    /* Set aside symlinks */
+
+    if (lstat(to, &tostat) != 0)
+    {
+        RecordFailure(ctx, pp, attr, "Unable to stat newly created directory '%s'. (lstat: %s)",
+                      to, GetErrorStr());
+        result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+        return result;
+    }
+
+    if (S_ISLNK(tostat.st_mode))
+    {
+        char backup[CF_BUFSIZE];
+        mode_t mask;
+
+        if (!attr->move_obstructions)
         {
-            return result;
-        }
-        if (dir_created)
-        {
-            RecordChange(ctx, pp, attr, "Created parent directory for '%s'", newto);
-            result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
-        }
-
-        DeleteSlash(to);
-
-        /* Set aside symlinks */
-
-        if (lstat(to, &tostat) != 0)
-        {
-            RecordFailure(ctx, pp, attr, "Unable to stat newly created directory '%s'. (lstat: %s)",
-                          to, GetErrorStr());
+            RecordFailure(ctx, pp, attr,
+                          "Path '%s' is a symlink. Unable to move it aside without move_obstructions is set",
+                          to);
             result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
             return result;
         }
 
-        if (S_ISLNK(tostat.st_mode))
+        strcpy(backup, to);
+        DeleteSlash(to);
+        strcat(backup, ".cf-moved");
+
+        if (MakingChanges(ctx, pp, attr, &result, "backup '%s'", to))
         {
-            char backup[CF_BUFSIZE];
-            mode_t mask;
-
-            if (!attr->move_obstructions)
-            {
-                RecordFailure(ctx, pp, attr,
-                              "Path '%s' is a symlink. Unable to move it aside without move_obstructions is set",
-                              to);
-                result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
-                return result;
-            }
-
-            strcpy(backup, to);
-            DeleteSlash(to);
-            strcat(backup, ".cf-moved");
-
             if (rename(to, backup) == -1)
             {
                 Log(LOG_LEVEL_ERR, "Unable to backup old '%s'", to);
                 unlink(to);
             }
+            else
+            {
+                RecordChange(ctx, pp, attr, "Backed up '%s'", to);
+                result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
+            }
+        }
 
+        if (MakingChanges(ctx, pp, attr, &result, "create directory '%s'", to))
+        {
             mask = umask(0);
             if (mkdir(to, DEFAULTMODE) == -1)
             {

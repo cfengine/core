@@ -159,6 +159,7 @@ static bool HasAvahiSupport(void);
 static int AutomaticBootstrap(GenericAgentConfig *config);
 static void BannerStatus(PromiseResult status, char *type, char *name);
 static PromiseResult DefaultVarPromise(EvalContext *ctx, const Promise *pp);
+static void WaitForBackgroundProcesses();
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -294,6 +295,11 @@ int main(int argc, char *argv[])
 
     /* Update packages cache. */
     UpdatePackagesCache(ctx, false);
+
+    /* Wait for background processes before generating reports because
+     * GenerateReports() does nothing if it detects multiple cf-agent processes
+     * running. */
+    WaitForBackgroundProcesses();
 
     GenerateReports(config, ctx);
 
@@ -2127,3 +2133,25 @@ static int AutomaticBootstrap(ARG_UNUSED GenericAgentConfig *config)
 }
 
 #endif // Avahi
+
+static void WaitForBackgroundProcesses()
+{
+#ifdef __MINGW32__
+    /* no fork() on Windows */
+    return;
+#else
+    Log(LOG_LEVEL_VERBOSE, "Waiting for background processes");
+    bool have_children = true;
+    while (have_children)
+    {
+        pid_t child = wait(NULL);
+        if (child >= 0)
+        {
+            Log(LOG_LEVEL_VERBOSE, "Background process %ju terminated", (uintmax_t) child);
+        }
+        have_children = !((child == -1) && (errno == ECHILD));
+    }
+    Log(LOG_LEVEL_VERBOSE, "No more background processes to wait for");
+    return;
+#endif  /* __MINGW32__ */
+}

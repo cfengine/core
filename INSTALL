@@ -112,9 +112,13 @@ Here we have examples of command lines for various systems to install dependenci
 needed to build. The version and date checked are noted in parenthesis. Please
 submit PRs with updates to this information.
 
+* CentOS (6 2020-07-17)
+
+# yum install -y gcc gdb make git libtool autoconf automake byacc flex openssl-devel pcre-devel lmdb-devel pam-devel flex-devel yaml-devel
+
 * Debian (Raspbian 9 2020-04-24)
 
-# apt-get install build-essential autoconf automake libssl-dev libpcre3 libpcre3-dev bison libbison-dev libacl1 libacl1-dev libpq-dev lmdb-utils liblmdb-dev libpam0g-dev flex libtool
+# apt-get install -y build-essential git libtool autoconf automake bison flex libssl-dev libpcre3-dev libbison-dev libacl1 libacl1-dev lmdb-utils liblmdb-dev libpam0g-dev libtool libyaml-dev
 
 * FreeBSD (12.1 2020-04-07)
 
@@ -131,5 +135,5 @@ See docs/BSD.md
 
 * Termux (2020-04-24)
 
-# pkg install build-essential autoconf automake bison flex liblmdb openssl pcre libacl
+# pkg install build-essential git autoconf automake bison flex liblmdb openssl pcre libacl libyaml
 # ./autogen.sh --without-pam

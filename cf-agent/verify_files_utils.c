@@ -2424,16 +2424,8 @@ bool DepthSearch(EvalContext *ctx, char *name, const struct stat *sb, int rlevel
             continue;
         }
 
-        memset(path, 0, sizeof(path));
-        if (strlcpy(path, name, sizeof(path)-2) >= sizeof(path)-2)
-        {
-            Log(LOG_LEVEL_ERR, "Truncated filename %s while performing depth-first search", path);
-            /* TODO return false? */
-        }
-
-        AddSlash(path);
-
-        if (strlcat(path, dirp->d_name, sizeof(path)) >= sizeof(path))
+        size_t total_len = strlcpy(path, name, sizeof(path));
+        if ((total_len >= sizeof(path) || (JoinPaths(path, dirp->d_name, sizeof(path)) == NULL))
         {
             RecordFailure(ctx, pp, attr,
                           "Internal limit reached in DepthSearch(), path too long: '%s' + '%s'",

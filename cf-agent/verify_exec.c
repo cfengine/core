@@ -212,7 +212,6 @@ static ActionResult RepairExec(EvalContext *ctx, const Attributes *a,
     char eventname[CF_BUFSIZE];
     char cmdline[CF_BUFSIZE];
     char comm[20];
-    bool do_work_here;
     int count = 0;
 #if !defined(__MINGW32__)
     mode_t maskval = 0;
@@ -292,21 +291,17 @@ static ActionResult RepairExec(EvalContext *ctx, const Attributes *a,
 
     CommandPrefix(cmdline, comm);
 
+    bool do_work_here = true;
+
     if (a->transaction.background)
     {
-#ifdef __MINGW32__
-        do_work_here = true;
-#else
         Log(LOG_LEVEL_VERBOSE, "Backgrounding job '%s'", cmdline);
+#ifndef __MINGW32__
         do_work_here = (fork() == 0); // true for child, false for parent
 #endif
     }
-    else
-    {
-        do_work_here = false;
-    }
 
-    if (do_work_here || (!a->transaction.background))    // work done here: either by child or non-background parent
+    if (do_work_here)    // work done here: either by child or non-background parent
     {
         if (a->contain.timeout != CF_NOINT)
         {
@@ -422,7 +417,7 @@ static ActionResult RepairExec(EvalContext *ctx, const Attributes *a,
         free(line);
 
 #ifdef __MINGW32__
-        if (do_work_here)     // only get return value if we waited for command execution
+        if (a->transaction.background) // only get return value if we waited for command execution
         {
             cf_pclose_nowait(pfp);
         }

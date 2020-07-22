@@ -212,7 +212,8 @@ static ActionResult RepairExec(EvalContext *ctx, const Attributes *a,
     char eventname[CF_BUFSIZE];
     char cmdline[CF_BUFSIZE];
     char comm[20];
-    int outsourced, count = 0;
+    bool do_work_here;
+    int count = 0;
 #if !defined(__MINGW32__)
     mode_t maskval = 0;
 #endif
@@ -294,18 +295,18 @@ static ActionResult RepairExec(EvalContext *ctx, const Attributes *a,
     if (a->transaction.background)
     {
 #ifdef __MINGW32__
-        outsourced = true;
+        do_work_here = true;
 #else
         Log(LOG_LEVEL_VERBOSE, "Backgrounding job '%s'", cmdline);
-        outsourced = fork();
+        do_work_here = (fork() == 0); // true for child, false for parent
 #endif
     }
     else
     {
-        outsourced = false;
+        do_work_here = false;
     }
 
-    if (outsourced || (!a->transaction.background))    // work done here: either by child or non-background parent
+    if (do_work_here || (!a->transaction.background))    // work done here: either by child or non-background parent
     {
         if (a->contain.timeout != CF_NOINT)
         {
@@ -421,7 +422,7 @@ static ActionResult RepairExec(EvalContext *ctx, const Attributes *a,
         free(line);
 
 #ifdef __MINGW32__
-        if (outsourced)     // only get return value if we waited for command execution
+        if (do_work_here)     // only get return value if we waited for command execution
         {
             cf_pclose_nowait(pfp);
         }
@@ -467,7 +468,7 @@ static ActionResult RepairExec(EvalContext *ctx, const Attributes *a,
     snprintf(eventname, CF_BUFSIZE - 1, "Exec(%s)", cmdline);
 
 #ifndef __MINGW32__
-    if ((a->transaction.background) && outsourced)
+    if ((a->transaction.background) && do_work_here)
     {
         Log(LOG_LEVEL_VERBOSE, "Backgrounded command '%s' is done - exiting", cmdline);
 

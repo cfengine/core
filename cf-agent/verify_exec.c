@@ -468,13 +468,12 @@ static ActionResult RepairExec(EvalContext *ctx, const Attributes *a,
     snprintf(eventname, CF_BUFSIZE - 1, "Exec(%s)", cmdline);
 
 #ifndef __MINGW32__
-    if ((a->transaction.background) && do_work_here)
+    if ((a->transaction.background) && do_work_here) // Child process
     {
         Log(LOG_LEVEL_VERBOSE, "Backgrounded command '%s' is done - exiting", cmdline);
 
-        /* exit() OK since this is a forked process and no functions are
-           registered for cleanup */
-        exit(EXIT_SUCCESS);
+        // _exit() since this is the child and we don't want to run cleanup
+        _exit(EXIT_SUCCESS);
     }
 #endif /* !__MINGW32__ */
 

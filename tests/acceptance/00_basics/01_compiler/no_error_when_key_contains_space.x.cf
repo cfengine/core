@@ -27,10 +27,10 @@ bundle agent test
 
       "selected"
         string => "$(d[thing s][ExpectedPick][Title])",
-        if => "$([thing s][ExpectedPick][classexpr])";
+        if => "$(d[thing s][ExpectedPick][classexpr])";
       # Note: wrapping with concat or classify prevents the error
-      #        if => concat("$([thing s][$(di)][classexpr])");
-      #        if => classify("$([thing s][$(di)][classexpr])");
+      #        if => concat("$(d[thing s][$(di)][classexpr])");
+      #        if => classify("$(d[thing s][$(di)][classexpr])");
 
       "sanity_check"
         string => "You are sane",
@@ -42,7 +42,7 @@ bundle agent test
       "See sanity_check: $(sanity_check) because $(sys.os) is a defined class";
 
       "Picked: $(d[thing s][ExpectedPick][Title]) has classexpr $(d[thing s][ExpectedPick][classexpr])"
-        if => "$([thing s][ExpectedPick][classexpr])";
+        if => "$(d[thing s][ExpectedPick][classexpr])";
 }
 
 #######################################################

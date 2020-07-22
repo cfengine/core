@@ -13,10 +13,6 @@ bundle agent test
       "description" -> { "CFE-3319" }
       string => "Test that if/ifvarclass can check class expressions from within a data container";
 
-      "test_soft_fail"
-        meta => { "CFE-3319" },
-        string => "any";
-
   vars:
       "d" data => '{
   "things": [
@@ -39,7 +35,7 @@ bundle agent test
 
       "selected"
         string => "$(d[things][$(di)][Title])",
-        if => "$([things][$(di)][classexpr])";
+        if => "$(d[things][$(di)][classexpr])";
 
       "sanity_check"
         string => "You are sane",
@@ -51,7 +47,7 @@ bundle agent test
       "See sanity_check: $(sanity_check) because $(sys.os) is a defined class";
 
       "Picked: $(d[things][$(di)][Title]) has classexpr $(d[things][$(di)][classexpr])"
-        if => "$([things][$(di)][classexpr])";
+        if => "$(d[things][$(di)][classexpr])";
 }
 
 #######################################################

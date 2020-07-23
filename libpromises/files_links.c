@@ -214,6 +214,14 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
 
 /*****************************************************************************/
 
+#ifdef __MINGW32__
+PromiseResult VerifyAbsoluteLink(EvalContext *ctx, char *destination, const char *source, const Attributes *attr, const Promise *pp)
+{
+    RecordFailure(ctx, pp, attr, "Windows does not support symbolic links (at VerifyAbsoluteLink())");
+    return PROMISE_RESULT_FAIL;
+}
+
+#else
 PromiseResult VerifyAbsoluteLink(EvalContext *ctx, char *destination, const char *source, const Attributes *attr, const Promise *pp)
 {
     char absto[CF_BUFSIZE];
@@ -271,6 +279,7 @@ PromiseResult VerifyAbsoluteLink(EvalContext *ctx, char *destination, const char
 
     return VerifyLink(ctx, destination, linkto, attr, pp);
 }
+#endif  /* __MINGW32__ */
 
 /*****************************************************************************/
 

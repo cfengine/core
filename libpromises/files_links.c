@@ -224,6 +224,8 @@ PromiseResult VerifyAbsoluteLink(EvalContext *ctx, char *destination, const char
 #else
 PromiseResult VerifyAbsoluteLink(EvalContext *ctx, char *destination, const char *source, const Attributes *attr, const Promise *pp)
 {
+    assert(attr != NULL);
+
     char absto[CF_BUFSIZE];
     char expand[CF_BUFSIZE];
     char linkto[CF_BUFSIZE];
@@ -232,8 +234,7 @@ PromiseResult VerifyAbsoluteLink(EvalContext *ctx, char *destination, const char
     {
         strcpy(linkto, destination);
         ChopLastNode(linkto);
-        AddSlash(linkto);
-        strcat(linkto, source);
+        JoinPaths(linkto, sizeof(linkto), source);
     }
     else
     {

@@ -35,14 +35,23 @@ typedef struct
     FILE *read_stream;
 } IOData;
 
+typedef enum OutputSelect
+{
+    OUTPUT_SELECT_BOTH,
+    OUTPUT_SELECT_STDOUT,
+    OUTPUT_SELECT_STDERR,
+} OutputSelect;
+
 IOData cf_popen_full_duplex(const char *command, bool capture_stderr, bool require_full_path);
 IOData cf_popen_full_duplex_streams(const char *command, bool capture_stderr, bool require_full_path);
 int cf_pclose_full_duplex(IOData *data);
 int cf_pclose_full_duplex_side(int fd);
 
 FILE *cf_popen(const char *command, const char *type, bool capture_stderr);
+FILE *cf_popen_select(const char *command, const char *type, OutputSelect output_select);
 FILE *cf_popensetuid(const char *command, const char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, int background);
 FILE *cf_popen_sh(const char *command, const char *type);
+FILE *cf_popen_sh_select(const char *command, const char *type, OutputSelect output_select);
 FILE *cf_popen_shsetuid(const char *command, const char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, int background);
 int cf_pclose(FILE *pp);
 void cf_pclose_nowait(FILE *pp);
@@ -58,6 +67,7 @@ int PipeReadWriteData(const char *base_command, const char *args, const char *re
 
 #ifdef __MINGW32__
 FILE *cf_popen_powershell(const char *command, const char *type);
+FILE *cf_popen_powershell_select(const char *command, const char *type, OutputSelect output_select);
 FILE *cf_popen_powershell_setuid(const char *command, const char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv,
                               int background);
 #endif

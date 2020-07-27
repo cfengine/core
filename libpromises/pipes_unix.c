@@ -331,7 +331,7 @@ IOData cf_popen_full_duplex(const char *command, bool capture_stderr, bool requi
     }
 }
 
-FILE *cf_popen(const char *command, const char *type, bool capture_stderr)
+FILE *cf_popen_select(const char *command, const char *type, OutputSelect output_select)
 {
     int pd[2];
     pid_t pid;
@@ -360,7 +360,8 @@ FILE *cf_popen(const char *command, const char *type, bool capture_stderr)
             {
                 dup2(pd[1], 1); /* Attach pp=pd[1] to our stdout */
 
-                if (capture_stderr)
+                assert(output_select != OUTPUT_SELECT_STDERR); // TODO / FIXME
+                if (output_select == OUTPUT_SELECT_BOTH)
                 {
                     dup2(pd[1], 2); /* Merge stdout/stderr */
                 }
@@ -431,6 +432,14 @@ FILE *cf_popen(const char *command, const char *type, bool capture_stderr)
 
     ProgrammingError("Unreachable code");
     return NULL;
+}
+
+FILE *cf_popen(const char *command, const char *type, bool capture_stderr)
+{
+    return cf_popen_select(
+        command,
+        type,
+        capture_stderr ? OUTPUT_SELECT_BOTH : OUTPUT_SELECT_STDOUT);
 }
 
 /*****************************************************************************/
@@ -559,7 +568,7 @@ FILE *cf_popensetuid(const char *command, const char *type,
 /* Shell versions of commands - not recommended for security reasons         */
 /*****************************************************************************/
 
-FILE *cf_popen_sh(const char *command, const char *type)
+FILE *cf_popen_sh_select(const char *command, const char *type, ARG_UNUSED OutputSelect output_select)
 {
     int pd[2];
     pid_t pid;
@@ -640,6 +649,11 @@ FILE *cf_popen_sh(const char *command, const char *type)
 
     ProgrammingError("Unreachable code");
     return NULL;
+}
+
+FILE *cf_popen_sh(const char *command, const char *type)
+{
+    return cf_popen_sh_select(command, type, OUTPUT_SELECT_BOTH);
 }
 
 /******************************************************************************/

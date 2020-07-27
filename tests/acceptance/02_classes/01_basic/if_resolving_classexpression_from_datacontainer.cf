@@ -14,6 +14,7 @@ bundle agent test
       string => "Test that if/ifvarclass can check class expressions from within a data container";
 
   vars:
+
       "d" data => '{
   "things": [
     {
@@ -22,7 +23,7 @@ bundle agent test
     },
     {
       "Title": "ExpectedPick",
-      "classexpr": "$(sys.os)"
+      "classexpr": "$(sys.class)"
     },
     {
       "Title": "AlsoNOPE",
@@ -39,12 +40,12 @@ bundle agent test
 
       "sanity_check"
         string => "You are sane",
-        if => "$(sys.os)";
+        if => "$(sys.class)";
 
   reports:
     EXTRA|DEBUG::
       "See iteration/expansion: $(d[things][$(di)][Title]) has classexpr $(d[things][$(di)][classexpr])";
-      "See sanity_check: $(sanity_check) because $(sys.os) is a defined class";
+      "See sanity_check: $(sanity_check) because $(sys.class) is a defined class";
 
       "Picked: $(d[things][$(di)][Title]) has classexpr $(d[things][$(di)][classexpr])"
         if => "$(d[things][$(di)][classexpr])";

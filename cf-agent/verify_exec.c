@@ -293,13 +293,13 @@ static ActionResult RepairExec(EvalContext *ctx, const Attributes *a,
 
     bool do_work_here = true;
 
+#ifndef __MINGW32__
     if (a->transaction.background)
     {
         Log(LOG_LEVEL_VERBOSE, "Backgrounding job '%s'", cmdline);
-#ifndef __MINGW32__
         do_work_here = (fork() == 0); // true for child, false for parent
-#endif
     }
+#endif
 
     if (do_work_here)    // work done here: either by child or non-background parent
     {

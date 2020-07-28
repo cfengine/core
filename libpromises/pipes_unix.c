@@ -358,15 +358,31 @@ FILE *cf_popen_select(const char *command, const char *type, OutputSelect output
 
             if (pd[1] != 1)
             {
-                dup2(pd[1], 1); /* Attach pp=pd[1] to our stdout */
-
-                assert(output_select != OUTPUT_SELECT_STDERR); // TODO / FIXME
-                if (output_select == OUTPUT_SELECT_BOTH)
+                if ((output_select == OUTPUT_SELECT_BOTH)
+                    || (output_select == OUTPUT_SELECT_STDOUT))
                 {
-                    dup2(pd[1], 2); /* Merge stdout/stderr */
+                    // close our(child) stdout(1) and open (pd[1]) as stdout
+                    dup2(pd[1], 1);
+                    // Subsequent stdout output will go to parent (pd[1])
                 }
                 else
                 {
+                    // Close / discard stdout
+                    int nullfd = open(NULLFILE, O_WRONLY);
+                    dup2(nullfd, 1);
+                    close(nullfd);
+                }
+
+                if ((output_select == OUTPUT_SELECT_BOTH)
+                    || (output_select == OUTPUT_SELECT_STDERR))
+                {
+                    // close our(child) stderr(2) and open (pd[1]) as stderr
+                    dup2(pd[1], 2);
+                    // Subsequent stderr output will go to parent (pd[1])
+                }
+                else
+                {
+                    // Close / discard stderr
                     int nullfd = open(NULLFILE, O_WRONLY);
                     dup2(nullfd, 2);
                     close(nullfd);

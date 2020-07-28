@@ -20,7 +20,7 @@ bundle agent test
   "thing s": [
     {
       "Title": "ExpectedPick",
-      "classexpr": "$(sys.os)"
+      "classexpr": "$(sys.class)"
     }
   ]
       }';
@@ -34,12 +34,12 @@ bundle agent test
 
       "sanity_check"
         string => "You are sane",
-        if => "$(sys.os)";
+        if => "$(sys.class)";
 
   reports:
     EXTRA|DEBUG::
       "See iteration/expansion: $(d[thing s][ExpectedPick][Title]) has classexpr $(d[thing s][ExpectedPick][classexpr])";
-      "See sanity_check: $(sanity_check) because $(sys.os) is a defined class";
+      "See sanity_check: $(sanity_check) because $(sys.class) is a defined class";
 
       "Picked: $(d[thing s][ExpectedPick][Title]) has classexpr $(d[thing s][ExpectedPick][classexpr])"
         if => "$(d[thing s][ExpectedPick][classexpr])";

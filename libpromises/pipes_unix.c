@@ -92,6 +92,46 @@ static void ChildrenFDClose()
 }
 #endif
 
+static void ChildOutputSelectDupClose(int pd[2], OutputSelect output_select)
+{
+    close(pd[0]); // Don't need output from parent
+
+    if (pd[1] != 1) // TODO: When is pd[1] == 1 ???
+    {
+        if ((output_select == OUTPUT_SELECT_BOTH)
+            || (output_select == OUTPUT_SELECT_STDOUT))
+        {
+            // close our(child) stdout(1) and open (pd[1]) as stdout
+            dup2(pd[1], 1);
+            // Subsequent stdout output will go to parent (pd[1])
+        }
+        else
+        {
+            // Close / discard stdout
+            int nullfd = open(NULLFILE, O_WRONLY);
+            dup2(nullfd, 1);
+            close(nullfd);
+        }
+
+        if ((output_select == OUTPUT_SELECT_BOTH)
+            || (output_select == OUTPUT_SELECT_STDERR))
+        {
+            // close our(child) stderr(2) and open (pd[1]) as stderr
+            dup2(pd[1], 2);
+            // Subsequent stderr output will go to parent (pd[1])
+        }
+        else
+        {
+            // Close / discard stderr
+            int nullfd = open(NULLFILE, O_WRONLY);
+            dup2(nullfd, 2);
+            close(nullfd);
+        }
+
+        close(pd[1]);
+    }
+}
+
 /*****************************************************************************/
 
 static void ChildrenFDSet(int fd, pid_t pid)
@@ -353,44 +393,7 @@ FILE *cf_popen_select(const char *command, const char *type, OutputSelect output
         switch (*type)
         {
         case 'r':
-
-            close(pd[0]);       /* Don't need output from parent */
-
-            if (pd[1] != 1)
-            {
-                if ((output_select == OUTPUT_SELECT_BOTH)
-                    || (output_select == OUTPUT_SELECT_STDOUT))
-                {
-                    // close our(child) stdout(1) and open (pd[1]) as stdout
-                    dup2(pd[1], 1);
-                    // Subsequent stdout output will go to parent (pd[1])
-                }
-                else
-                {
-                    // Close / discard stdout
-                    int nullfd = open(NULLFILE, O_WRONLY);
-                    dup2(nullfd, 1);
-                    close(nullfd);
-                }
-
-                if ((output_select == OUTPUT_SELECT_BOTH)
-                    || (output_select == OUTPUT_SELECT_STDERR))
-                {
-                    // close our(child) stderr(2) and open (pd[1]) as stderr
-                    dup2(pd[1], 2);
-                    // Subsequent stderr output will go to parent (pd[1])
-                }
-                else
-                {
-                    // Close / discard stderr
-                    int nullfd = open(NULLFILE, O_WRONLY);
-                    dup2(nullfd, 2);
-                    close(nullfd);
-                }
-
-                close(pd[1]);
-            }
-
+            ChildOutputSelectDupClose(pd, output_select);
             break;
 
         case 'w':

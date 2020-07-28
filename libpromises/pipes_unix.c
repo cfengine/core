@@ -587,7 +587,7 @@ FILE *cf_popensetuid(const char *command, const char *type,
 /* Shell versions of commands - not recommended for security reasons         */
 /*****************************************************************************/
 
-FILE *cf_popen_sh_select(const char *command, const char *type, ARG_UNUSED OutputSelect output_select)
+FILE *cf_popen_sh_select(const char *command, const char *type, OutputSelect output_select)
 {
     int pd[2];
     pid_t pid;
@@ -606,15 +606,7 @@ FILE *cf_popen_sh_select(const char *command, const char *type, ARG_UNUSED Outpu
         switch (*type)
         {
         case 'r':
-
-            close(pd[0]);       /* Don't need output from parent */
-
-            if (pd[1] != 1)
-            {
-                dup2(pd[1], 1); /* Attach pp=pd[1] to our stdout */
-                dup2(pd[1], 2); /* Merge stdout/stderr */
-                close(pd[1]);
-            }
+            ChildOutputSelectDupClose(pd, output_select);
 
             break;
 

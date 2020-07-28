@@ -2279,6 +2279,19 @@ static FnCallResult FnCallReturnsZero(ARG_UNUSED EvalContext *ctx, ARG_UNUSED co
 
 static FnCallResult FnCallExecResult(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
+    size_t args = RlistLen(finalargs);
+    if (args == 0)
+    {
+        FatalError(ctx, "Missing argument to execresult() - Must specify command");
+    }
+    else if (args == 1)
+    {
+        FatalError(ctx, "Missing argument to execresult() - Must specify 'noshell', 'useshell', or 'powershell'");
+    }
+    else if (args > 3)
+    {
+        FatalError(ctx, "Too many arguments to execresult() - Maximum 3 allowed");
+    }
     const char *shell_option = RlistScalarValue(finalargs->next);
     ShellType shelltype = SHELL_TYPE_NONE;
     bool need_executable_check = false;
@@ -2292,35 +2305,56 @@ static FnCallResult FnCallExecResult(ARG_UNUSED EvalContext *ctx, ARG_UNUSED con
         shelltype = SHELL_TYPE_POWERSHELL;
     }
 
-    if (IsAbsoluteFileName(RlistScalarValue(finalargs)))
+    const char *const command = RlistScalarValue(finalargs);
+    if (IsAbsoluteFileName(command))
     {
         need_executable_check = true;
     }
     else if (shelltype == SHELL_TYPE_NONE)
     {
-        Log(LOG_LEVEL_ERR, "%s '%s' does not have an absolute path", fp->name, RlistScalarValue(finalargs));
+        Log(LOG_LEVEL_ERR, "%s '%s' does not have an absolute path", fp->name, command);
         return FnFailure();
     }
 
-    if (need_executable_check && !IsExecutable(CommandArg0(RlistScalarValue(finalargs))))
+    if (need_executable_check && !IsExecutable(CommandArg0(command)))
     {
-        Log(LOG_LEVEL_ERR, "%s '%s' is assumed to be executable but isn't", fp->name, RlistScalarValue(finalargs));
+        Log(LOG_LEVEL_ERR, "%s '%s' is assumed to be executable but isn't", fp->name, command);
         return FnFailure();
     }
 
     size_t buffer_size = CF_EXPANDSIZE;
     char *buffer = xcalloc(1, buffer_size);
 
-    if (GetExecOutput(RlistScalarValue(finalargs), &buffer, &buffer_size, shelltype))
+    OutputSelect output_select = OUTPUT_SELECT_BOTH;
+
+    if (args >= 3)
     {
-        Log(LOG_LEVEL_VERBOSE, "%s ran '%s' successfully", fp->name, RlistScalarValue(finalargs));
+        const char *output = RlistScalarValue(finalargs->next->next);
+        if (StringEqual(output, "stderr"))
+        {
+            output_select = OUTPUT_SELECT_STDERR;
+        }
+        else if (StringEqual(output, "stdout"))
+        {
+            output_select = OUTPUT_SELECT_STDOUT;
+        }
+        else
+        {
+            assert(StringEqual(output, "both"));
+            assert(output_select == OUTPUT_SELECT_BOTH);
+        }
+    }
+
+    if (GetExecOutput(command, &buffer, &buffer_size, shelltype, output_select))
+    {
+        Log(LOG_LEVEL_VERBOSE, "%s ran '%s' successfully", fp->name, command);
         FnCallResult res = FnReturn(buffer);
         free(buffer);
         return res;
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "%s could not run '%s' successfully", fp->name, RlistScalarValue(finalargs));
+        Log(LOG_LEVEL_VERBOSE, "%s could not run '%s' successfully", fp->name, command);
         free(buffer);
         return FnFailure();
     }
@@ -8836,6 +8870,7 @@ static const FnCallArg EXECRESULT_ARGS[] =
 {
     {CF_PATHRANGE, CF_DATA_TYPE_STRING, "Fully qualified command path"},
     {"noshell,useshell,powershell", CF_DATA_TYPE_OPTION, "Shell encapsulation option"},
+    {"both,stdout,stderr", CF_DATA_TYPE_OPTION, "Which output to return; stdout or stderr"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
@@ -9741,7 +9776,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("every", CF_DATA_TYPE_CONTEXT, EVERY_SOME_NONE_ARGS, &FnCallEverySomeNone, "True if every element in the list or array or data container matches the given regular expression",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("execresult", CF_DATA_TYPE_STRING, EXECRESULT_ARGS, &FnCallExecResult, "Execute named command and assign output to variable",
-                  FNCALL_OPTION_CACHED, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_CACHED | FNCALL_OPTION_VARARG, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("file_hash", CF_DATA_TYPE_STRING, FILE_HASH_ARGS, &FnCallHandlerHash, "Return the hash of file arg1, type arg2 and assign to a variable",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("expandrange", CF_DATA_TYPE_STRING_LIST, EXPANDRANGE_ARGS, &FnCallExpandRange, "Expand a name as a list of names numered according to a range",

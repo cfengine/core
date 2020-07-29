@@ -1,0 +1,59 @@
+#+begin_src cfengine3
+bundle common globals
+{
+  vars:
+      "example_data" data => '{ "msg": "Hello from $(this.bundle)" }';
+}
+bundle agent example_storejson
+# @brief Example showing storejson
+{
+  vars:
+      "example_data" data => '{ "msg": "Hello from $(this.bundle)" }';
+
+      # Using storejson with data from remote bundle
+
+      # "json_string_zero" -> { "CFEngine 3.16.0"}
+      #    string => storejson( globals.example_data )
+      #    comment => "Unquoted with . (dot) present will cause the parser to error";
+
+      "json_string_one"   string => storejson( @(globals.example_data) );
+      "json_string_two"   string => storejson( "globals.example_data" );
+
+      # Using storejson with data from this bundle
+      "json_string_three" string => storejson( @(example_storejson.example_data) );
+      "json_string_four"  string => storejson( "example_storejson.example_data");
+      "json_string_five"  string => storejson( example_data );
+      "json_string_six"   string => storejson( "$(this.bundle).example_data");
+      "json_string_seven" string => storejson( @(example_data) );
+
+  reports:
+      "json_string_one and json_string_two are identical:$(const.n)$(json_string_one)"
+        if => strcmp( $(json_string_one), $(json_string_two) );
+
+      "json_string_{one,two,three,four,five,six,seven} are identical:$(const.n)$(json_string_three)"
+        if => and(
+                   strcmp( $(json_string_three), $(json_string_four) ),
+                   strcmp( $(json_string_four), $(json_string_five) ),
+                   strcmp( $(json_string_five), $(json_string_six) ),
+                   strcmp( $(json_string_six), $(json_string_seven) )
+        );
+}
+
+bundle agent __main__
+{
+  methods: "example_storejson";
+}
+###############################################################################
+#+end_src
+#+begin_src example_output
+#@ ```
+#@ R: json_string_one and json_string_two are identical:
+#@ {
+#@       "msg": "Hello from globals"
+#@ }
+#@ R: json_string_{one,two,three,four,five,six,seven} are identical:
+#@ {
+#@       "msg": "Hello from example_storejson"
+#@ }
+#@ ```
+#+end_src

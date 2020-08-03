@@ -2293,18 +2293,21 @@ static FnCallResult FnCallReturnsZero(ARG_UNUSED EvalContext *ctx, ARG_UNUSED co
 
 static FnCallResult FnCallExecResult(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
+    assert(fp != NULL);
+
+    const char *const function = fp->name;
     size_t args = RlistLen(finalargs);
     if (args == 0)
     {
-        FatalError(ctx, "Missing argument to execresult() - Must specify command");
+        FatalError(ctx, "Missing argument to %s() - Must specify command", function);
     }
     else if (args == 1)
     {
-        FatalError(ctx, "Missing argument to execresult() - Must specify 'noshell', 'useshell', or 'powershell'");
+        FatalError(ctx, "Missing argument to %s() - Must specify 'noshell', 'useshell', or 'powershell'", function);
     }
     else if (args > 3)
     {
-        FatalError(ctx, "Too many arguments to execresult() - Maximum 3 allowed");
+        FatalError(ctx, "Too many arguments to %s() - Maximum 3 allowed", function);
     }
     const char *shell_option = RlistScalarValue(finalargs->next);
     ShellType shelltype = SHELL_TYPE_NONE;
@@ -2359,12 +2362,26 @@ static FnCallResult FnCallExecResult(ARG_UNUSED EvalContext *ctx, ARG_UNUSED con
         }
     }
 
-    if (GetExecOutput(command, &buffer, &buffer_size, shelltype, output_select, NULL))
+    int exit_code;
+
+    if (GetExecOutput(command, &buffer, &buffer_size, shelltype, output_select, &exit_code))
     {
         Log(LOG_LEVEL_VERBOSE, "%s ran '%s' successfully", fp->name, command);
-        FnCallResult res = FnReturn(buffer);
-        free(buffer);
-        return res;
+        if (StringEqual(function, "execresult"))
+        {
+            FnCallResult res = FnReturn(buffer);
+            free(buffer);
+            return res;
+        }
+        else
+        {
+            assert(StringEqual(function, "execresult_as_data"));
+            JsonElement *result = JsonObjectCreate(2);
+            JsonObjectAppendInteger(result, "exit_code", exit_code);
+            JsonObjectAppendString(result, "output", buffer);
+            free(buffer);
+            return FnReturnContainerNoCopy(result);
+        }
     }
     else
     {
@@ -9790,6 +9807,8 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("every", CF_DATA_TYPE_CONTEXT, EVERY_SOME_NONE_ARGS, &FnCallEverySomeNone, "True if every element in the list or array or data container matches the given regular expression",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("execresult", CF_DATA_TYPE_STRING, EXECRESULT_ARGS, &FnCallExecResult, "Execute named command and assign output to variable",
+                  FNCALL_OPTION_CACHED | FNCALL_OPTION_VARARG, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("execresult_as_data", CF_DATA_TYPE_CONTAINER, EXECRESULT_ARGS, &FnCallExecResult, "Execute command and return exit code and output in data container",
                   FNCALL_OPTION_CACHED | FNCALL_OPTION_VARARG, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("file_hash", CF_DATA_TYPE_STRING, FILE_HASH_ARGS, &FnCallHandlerHash, "Return the hash of file arg1, type arg2 and assign to a variable",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),

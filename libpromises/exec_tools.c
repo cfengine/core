@@ -34,19 +34,19 @@
 
 /********************************************************************/
 
-bool GetExecOutput(const char *command, char **buffer, size_t *buffer_size, ShellType shell)
+bool GetExecOutput(const char *command, char **buffer, size_t *buffer_size, ShellType shell, OutputSelect output_select)
 /* Buffer initially contains whole exec string */
 {
     FILE *pp;
 
     if (shell == SHELL_TYPE_USE)
     {
-        pp = cf_popen_sh(command, "rt");
+        pp = cf_popen_sh_select(command, "rt", output_select);
     }
     else if (shell == SHELL_TYPE_POWERSHELL)
     {
 #ifdef __MINGW32__
-        pp = cf_popen_powershell(command, "rt");
+        pp = cf_popen_powershell_select(command, "rt", output_select);
 #else // !__MINGW32__
         Log(LOG_LEVEL_ERR, "Powershell is only supported on Windows");
         return false;
@@ -54,7 +54,7 @@ bool GetExecOutput(const char *command, char **buffer, size_t *buffer_size, Shel
     }
     else
     {
-        pp = cf_popen(command, "rt", true);
+        pp = cf_popen_select(command, "rt", output_select);
     }
 
     if (pp == NULL)

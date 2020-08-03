@@ -151,6 +151,19 @@ static FnCallResult FnReturnBuffer(Buffer *buf)
     return (FnCallResult) { FNCALL_SUCCESS, { BufferClose(buf), RVAL_TYPE_SCALAR } };
 }
 
+static FnCallResult FnReturnContainerNoCopy(JsonElement *container)
+{
+    return (FnCallResult) { FNCALL_SUCCESS, (Rval) { container, RVAL_TYPE_CONTAINER }};
+}
+
+// Currently only used for LIBCURL function, macro can be removed later
+#ifdef HAVE_LIBCURL
+static FnCallResult FnReturnContainer(JsonElement *container)
+{
+    return FnReturnContainerNoCopy(JsonCopy(container));
+}
+#endif // HAVE_LIBCURL
+
 static FnCallResult FnReturnF(const char *fmt, ...) FUNC_ATTR_PRINTF(1, 2);
 
 static FnCallResult FnReturnF(const char *fmt, ...)
@@ -1018,7 +1031,7 @@ static FnCallResult FnCallSysctlValue(ARG_UNUSED EvalContext *ctx,
 
     StringSetDestroy(sysctls);
     BufferDestroy(procrootbuf);
-    return (FnCallResult) { FNCALL_SUCCESS, (Rval) { sysctl_data, RVAL_TYPE_CONTAINER } };
+    return FnReturnContainerNoCopy(sysctl_data);
 #else
     return FnFailure();
 #endif
@@ -1073,7 +1086,7 @@ static FnCallResult FnCallGetUserInfo(ARG_UNUSED EvalContext *ctx, ARG_UNUSED co
         return FnFailure();
     }
 
-    return (FnCallResult) { FNCALL_SUCCESS, (Rval) { result, RVAL_TYPE_CONTAINER } };
+    return FnReturnContainerNoCopy(result);
 #endif
 }
 
@@ -1476,7 +1489,8 @@ static FnCallResult FnCallVariablesMatching(EvalContext *ctx, ARG_UNUSED const P
 
         if (fulldata)
         {
-            return (FnCallResult) { FNCALL_SUCCESS, (Rval) { global_matches, RVAL_TYPE_CONTAINER } };
+            return FnReturnContainerNoCopy(global_matches);
+
         }
 
         JsonIterator jiter = JsonIteratorInit(global_matches);
@@ -1896,7 +1910,7 @@ static FnCallResult FnCallPackagesMatching(ARG_UNUSED EvalContext *ctx, ARG_UNUS
         return FnFailure();
     }
 
-    return (FnCallResult) { FNCALL_SUCCESS, (Rval) { json, RVAL_TYPE_CONTAINER } };
+    return FnReturnContainerNoCopy(json);
 }
 
 /*********************************************************************/
@@ -2536,7 +2550,7 @@ static FnCallResult FnCallUrlGet(ARG_UNUSED EvalContext *ctx,
         Log(LOG_LEVEL_VERBOSE, "%s: found cached request for %s", fp->name, url);
         WriterClose(cache_w);
         JsonDestroyMaybe(options, allocated);
-        return (FnCallResult) { FNCALL_SUCCESS, (Rval) { JsonCopy(old_result), RVAL_TYPE_CONTAINER } };
+        return FnReturnContainer(old_result);
     }
 
     if (!CURL_INITIALIZED && curl_global_init(CURL_GLOBAL_DEFAULT) != 0)
@@ -2690,7 +2704,7 @@ static FnCallResult FnCallUrlGet(ARG_UNUSED EvalContext *ctx,
     WriterClose(cache_w);
 
     JsonDestroyMaybe(options, allocated);
-    return (FnCallResult) { FNCALL_SUCCESS, (Rval) { result, RVAL_TYPE_CONTAINER } };
+    return FnReturnContainerNoCopy(result);
 
 #else
 
@@ -3452,7 +3466,7 @@ static FnCallResult FnCallMapData(EvalContext *ctx, ARG_UNUSED const Policy *pol
 
         JsonDestroyMaybe(container, allocated);
 
-        return (FnCallResult) { FNCALL_SUCCESS, { returnjson_pipe, RVAL_TYPE_CONTAINER } };
+        return FnReturnContainerNoCopy(returnjson_pipe);
     }
 
     Buffer *expbuf = BufferNew();
@@ -3613,7 +3627,7 @@ static FnCallResult FnCallMapData(EvalContext *ctx, ARG_UNUSED const Policy *pol
         }
 
         RlistDestroy(returnlist);
-        return (FnCallResult) { FNCALL_SUCCESS, { returnjson, RVAL_TYPE_CONTAINER } };
+        return FnReturnContainerNoCopy(returnjson);
     }
 
     // this is maparray()
@@ -3819,7 +3833,7 @@ static FnCallResult FnCallMergeData(EvalContext *ctx, ARG_UNUSED const Policy *p
     {
         JsonElement *first = JsonCopy(SeqAt(containers, 0));
         SeqDestroy(containers);
-        return  (FnCallResult) { FNCALL_SUCCESS, (Rval) { first, RVAL_TYPE_CONTAINER } };
+        return FnReturnContainerNoCopy(first);
     }
     else
     {
@@ -3836,7 +3850,7 @@ static FnCallResult FnCallMergeData(EvalContext *ctx, ARG_UNUSED const Policy *p
         }
 
         SeqDestroy(containers);
-        return (FnCallResult) { FNCALL_SUCCESS, (Rval) { result, RVAL_TYPE_CONTAINER } };
+        return FnReturnContainerNoCopy(result);
     }
 
     assert(false);
@@ -3932,7 +3946,7 @@ static FnCallResult FnCallDatastate(EvalContext *ctx,
                                     ARG_UNUSED const Rlist *args)
 {
     JsonElement *state = DefaultTemplateData(ctx, NULL);
-    return  (FnCallResult) { FNCALL_SUCCESS, (Rval) { state, RVAL_TYPE_CONTAINER } };
+    return FnReturnContainerNoCopy(state);
 }
 
 static FnCallResult FnCallBundlestate(EvalContext *ctx,
@@ -3955,7 +3969,7 @@ static FnCallResult FnCallBundlestate(EvalContext *ctx,
     }
     else
     {
-        return  (FnCallResult) { FNCALL_SUCCESS, (Rval) { state, RVAL_TYPE_CONTAINER } };
+        return FnReturnContainerNoCopy(state);
     }
 }
 
@@ -6201,7 +6215,7 @@ static FnCallResult FnCallRegExtract(EvalContext *ctx, ARG_UNUSED const Policy *
 
     if (container_mode)
     {
-        return (FnCallResult) { FNCALL_SUCCESS, (Rval) { json, RVAL_TYPE_CONTAINER } };
+        return FnReturnContainerNoCopy(json);
     }
     else
     {
@@ -6847,7 +6861,7 @@ static FnCallResult ReadDataGeneric(const char *const fname,
         return FnFailure();
     }
 
-    return (FnCallResult) { FNCALL_SUCCESS, (Rval) { json, RVAL_TYPE_CONTAINER } };
+    return FnReturnContainerNoCopy(json);
 }
 
 static FnCallResult FnCallReadData(ARG_UNUSED EvalContext *ctx,
@@ -7229,7 +7243,7 @@ static FnCallResult FnCallClassFilterCsv(EvalContext *ctx,
         SeqDestroy(heading);
     }
 
-    return (FnCallResult) { FNCALL_SUCCESS, (Rval) { json, RVAL_TYPE_CONTAINER } };
+    return FnReturnContainerNoCopy(json);
 }
 
 static FnCallResult FnCallParseJson(ARG_UNUSED EvalContext *ctx,
@@ -7264,7 +7278,7 @@ static FnCallResult FnCallParseJson(ARG_UNUSED EvalContext *ctx,
     }
     else
     {
-        return (FnCallResult) { FNCALL_SUCCESS, (Rval) { json, RVAL_TYPE_CONTAINER } };
+        return FnReturnContainerNoCopy(json);
     }
 
     return FnFailure();
@@ -7351,7 +7365,7 @@ static FnCallResult DataRead(EvalContext *ctx, const FnCall *fp, const Rlist *fi
         return FnFailure();
     }
 
-    return (FnCallResult) { FNCALL_SUCCESS, (Rval) { json, RVAL_TYPE_CONTAINER } };
+    return FnReturnContainerNoCopy(json);
 }
 
 /*********************************************************************/
@@ -7372,7 +7386,7 @@ static FnCallResult FnCallDataExpand(EvalContext *ctx,
     JsonElement *expanded = JsonExpandElement(ctx, json);
     JsonDestroyMaybe(json, allocated);
 
-    return (FnCallResult) { FNCALL_SUCCESS, (Rval) { expanded, RVAL_TYPE_CONTAINER } };
+    return FnReturnContainerNoCopy(expanded);
 }
 
 /*********************************************************************/
@@ -8300,7 +8314,7 @@ static FnCallResult FnCallProcessExists(ARG_UNUSED EvalContext *ctx, ARG_UNUSED 
     }
     DeleteItemList(matched);
 
-    return (FnCallResult) { FNCALL_SUCCESS, (Rval) { json, RVAL_TYPE_CONTAINER } };
+    return FnReturnContainerNoCopy(json);
 }
 
 /*********************************************************************/
@@ -8315,7 +8329,7 @@ static FnCallResult FnCallNetworkConnections(EvalContext *ctx, ARG_UNUSED const 
         return FnFailure();
     }
 
-    return (FnCallResult) { FNCALL_SUCCESS, (Rval) { json, RVAL_TYPE_CONTAINER } };
+    return FnReturnContainerNoCopy(json);
 }
 
 /*********************************************************************/
@@ -8703,7 +8717,7 @@ static FnCallResult FnCallCFEngineCallers(EvalContext *ctx, ARG_UNUSED const Pol
     }
 
     JsonElement *callers = EvalContextGetPromiseCallers(ctx);
-    return (FnCallResult) { FNCALL_SUCCESS, { callers, RVAL_TYPE_CONTAINER } };
+    return FnReturnContainerNoCopy(callers);
 }
 
 /*********************************************************************/

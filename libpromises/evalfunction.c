@@ -2345,7 +2345,7 @@ static FnCallResult FnCallExecResult(ARG_UNUSED EvalContext *ctx, ARG_UNUSED con
         }
     }
 
-    if (GetExecOutput(command, &buffer, &buffer_size, shelltype, output_select))
+    if (GetExecOutput(command, &buffer, &buffer_size, shelltype, output_select, NULL))
     {
         Log(LOG_LEVEL_VERBOSE, "%s ran '%s' successfully", fp->name, command);
         FnCallResult res = FnReturn(buffer);

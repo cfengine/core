@@ -410,25 +410,25 @@ bool FileChangesGetDirectoryList(const char *path, Seq *files)
 static bool FileChangesSetDirectoryList(CF_DB *db, const char *path, const Seq *files)
 {
     int size = 0;
-    int no_files = SeqLength(files);
+    int n_files = SeqLength(files);
 
     char key[strlen(path) + 3];
     xsnprintf(key, sizeof(key), "D_%s", path);
 
-    if (no_files == 0)
+    if (n_files == 0)
     {
         DeleteDB(db, key);
         return true;
     }
 
-    for (int c = 0; c < no_files; c++)
+    for (int c = 0; c < n_files; c++)
     {
         size += strlen(SeqAt(files, c)) + 1;
     }
 
     char raw_entries[size];
     char *pos = raw_entries;
-    for (int c = 0; c < no_files; c++)
+    for (int c = 0; c < n_files; c++)
     {
         strcpy(pos, SeqAt(files, c));
         pos += strlen(pos) + 1;

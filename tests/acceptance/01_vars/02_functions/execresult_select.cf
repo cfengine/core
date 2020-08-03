@@ -31,29 +31,20 @@ bundle agent test
 
   classes:
       "pass_stdout_stderr"
+        scope => "namespace",
         expression => strcmp( "stdout$(const.n)stderr", $(result_with_stdout_stderr) );
 
       "pass_stdout"
+        scope => "namespace",
         expression => strcmp( "stdout", $(result_with_stdout) );
 
       "pass_stderr"
+        scope => "namespace",
         expression => strcmp( "stderr", $(result_with_stderr) );
 
-  reports:
-
-    !pass_stdout_stderr::
-      "result_with_stdout_stderr == '$(result_with_stdout_stderr)', expected 'stdout$(const.n)stderr'";
-    !pass_stdout::
-      "result_with_stdout == '$(result_with_stdout_stderr)', expected 'stdout'";
-    !pass_stderr::
-      "result_with_stderr == '$(result_with_stderr)', expected 'stderr'";
-
-    pass_stdout_stderr.pass_stdout.pass_stderr::
-      "$(this.promise_filename) Pass";
-
-    !(pass_stdout_stderr.pass_stdout.pass_stderr)::
-      "$(this.promise_filename) FAIL";
-
+  methods:
+      "Pass/Fail"
+        usebundle => dcs_passif("pass_stdout_stderr.pass_stdout.pass_stderr", $(this.promise_filename));
 }
 
 bundle agent __main__

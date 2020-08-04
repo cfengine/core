@@ -1558,7 +1558,7 @@ bool UpdateSinglePackageModuleCache(EvalContext *ctx,
     Promise pp = {.promiser = "package_cache",
                   .parent_section = &section};
 
-    CfLock cache_updates_lock;
+    CfLock cache_updates_lock = {NULL, NULL, false};
     char cache_updates_lock_name[CF_BUFSIZE];
     int ifelapsed_time = -1;
 

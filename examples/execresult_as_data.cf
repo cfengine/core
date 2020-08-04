@@ -1,0 +1,29 @@
+###############################################################################
+#+begin_src cfengine3
+body common control
+{
+      bundlesequence  => { "example" };
+}
+
+bundle agent example
+{
+  vars:
+      "my_data"
+        data => execresult_as_data("echo 'hello'", "useshell", "both");
+      "my_json_string"
+        string => storejson(my_data);
+
+  reports:
+      "echo 'hello' returned '$(my_json_string)'";
+
+}
+#+end_src
+###############################################################################
+#+begin_src example_output
+#@ ```
+#@ R: echo 'hello' returned '{
+#@   "exit_code": 0,
+#@   "output": "hello"
+#@ }'
+#@ ```
+#+end_src

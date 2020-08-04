@@ -419,7 +419,7 @@ void DiscoverVersion(EvalContext *ctx)
 
 static void GetNameInfo3(EvalContext *ctx)
 {
-    int i, found = false;
+    int i;
     char *sp, workbuf[CF_BUFSIZE];
     time_t tloc;
     struct hostent *hp;
@@ -518,7 +518,8 @@ static void GetNameInfo3(EvalContext *ctx)
         }
     }
 
-    for (i = 0; i < PLATFORM_CONTEXT_MAX; i++)
+    bool found = false;
+    for (i = 0; !found && (i < PLATFORM_CONTEXT_MAX); i++)
     {
         char sysname[CF_BUFSIZE];
         strlcpy(sysname, VSYSNAME.sysname, CF_BUFSIZE);
@@ -541,7 +542,6 @@ static void GetNameInfo3(EvalContext *ctx)
                     VSYSTEMHARDCLASS = (PlatformContext) i;
                     VPSHARDCLASS = (PlatformContext) i; /* this one can be overriden at vz detection */
                     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "class", CLASSTEXT[i], CF_DATA_TYPE_STRING, "inventory,source=agent,attribute_name=OS type");
-                    break;
                 }
             }
             else

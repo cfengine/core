@@ -164,6 +164,9 @@ vm-check-full:
 destroy-vms:
 	$(MAKE) -C contrib/vagrant-ci/centos-6-x64/ destroy-vms
 
+static-check:
+	tests/static-check/run.sh
+
 #
 # Get everything removed down to where rebuilding requires:
 # "make; make install"

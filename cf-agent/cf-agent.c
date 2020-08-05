@@ -1026,7 +1026,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_DRYRUN].lval) == 0)
             {
                 DONTDO = BooleanFromString(value);
-                Log(LOG_LEVEL_VERBOSE, "Setting dryrun to %c", DONTDO);
+                Log(LOG_LEVEL_VERBOSE, "Setting dryrun to %d", DONTDO);
                 continue;
             }
 

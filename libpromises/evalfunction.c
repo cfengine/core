@@ -151,6 +151,19 @@ static FnCallResult FnReturnBuffer(Buffer *buf)
     return (FnCallResult) { FNCALL_SUCCESS, { BufferClose(buf), RVAL_TYPE_SCALAR } };
 }
 
+static FnCallResult FnReturnContainerNoCopy(JsonElement *container)
+{
+    return (FnCallResult) { FNCALL_SUCCESS, (Rval) { container, RVAL_TYPE_CONTAINER }};
+}
+
+// Currently only used for LIBCURL function, macro can be removed later
+#ifdef HAVE_LIBCURL
+static FnCallResult FnReturnContainer(JsonElement *container)
+{
+    return FnReturnContainerNoCopy(JsonCopy(container));
+}
+#endif // HAVE_LIBCURL
+
 static FnCallResult FnReturnF(const char *fmt, ...) FUNC_ATTR_PRINTF(1, 2);
 
 static FnCallResult FnReturnF(const char *fmt, ...)
@@ -1018,7 +1031,7 @@ static FnCallResult FnCallSysctlValue(ARG_UNUSED EvalContext *ctx,
 
     StringSetDestroy(sysctls);
     BufferDestroy(procrootbuf);
-    return (FnCallResult) { FNCALL_SUCCESS, (Rval) { sysctl_data, RVAL_TYPE_CONTAINER } };
+    return FnReturnContainerNoCopy(sysctl_data);
 #else
     return FnFailure();
 #endif
@@ -1073,7 +1086,7 @@ static FnCallResult FnCallGetUserInfo(ARG_UNUSED EvalContext *ctx, ARG_UNUSED co
         return FnFailure();
     }
 
-    return (FnCallResult) { FNCALL_SUCCESS, (Rval) { result, RVAL_TYPE_CONTAINER } };
+    return FnReturnContainerNoCopy(result);
 #endif
 }
 
@@ -1476,7 +1489,8 @@ static FnCallResult FnCallVariablesMatching(EvalContext *ctx, ARG_UNUSED const P
 
         if (fulldata)
         {
-            return (FnCallResult) { FNCALL_SUCCESS, (Rval) { global_matches, RVAL_TYPE_CONTAINER } };
+            return FnReturnContainerNoCopy(global_matches);
+
         }
 
         JsonIterator jiter = JsonIteratorInit(global_matches);
@@ -1896,7 +1910,7 @@ static FnCallResult FnCallPackagesMatching(ARG_UNUSED EvalContext *ctx, ARG_UNUS
         return FnFailure();
     }
 
-    return (FnCallResult) { FNCALL_SUCCESS, (Rval) { json, RVAL_TYPE_CONTAINER } };
+    return FnReturnContainerNoCopy(json);
 }
 
 /*********************************************************************/
@@ -2279,18 +2293,21 @@ static FnCallResult FnCallReturnsZero(ARG_UNUSED EvalContext *ctx, ARG_UNUSED co
 
 static FnCallResult FnCallExecResult(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
+    assert(fp != NULL);
+
+    const char *const function = fp->name;
     size_t args = RlistLen(finalargs);
     if (args == 0)
     {
-        FatalError(ctx, "Missing argument to execresult() - Must specify command");
+        FatalError(ctx, "Missing argument to %s() - Must specify command", function);
     }
     else if (args == 1)
     {
-        FatalError(ctx, "Missing argument to execresult() - Must specify 'noshell', 'useshell', or 'powershell'");
+        FatalError(ctx, "Missing argument to %s() - Must specify 'noshell', 'useshell', or 'powershell'", function);
     }
     else if (args > 3)
     {
-        FatalError(ctx, "Too many arguments to execresult() - Maximum 3 allowed");
+        FatalError(ctx, "Too many arguments to %s() - Maximum 3 allowed", function);
     }
     const char *shell_option = RlistScalarValue(finalargs->next);
     ShellType shelltype = SHELL_TYPE_NONE;
@@ -2345,12 +2362,26 @@ static FnCallResult FnCallExecResult(ARG_UNUSED EvalContext *ctx, ARG_UNUSED con
         }
     }
 
-    if (GetExecOutput(command, &buffer, &buffer_size, shelltype, output_select))
+    int exit_code;
+
+    if (GetExecOutput(command, &buffer, &buffer_size, shelltype, output_select, &exit_code))
     {
         Log(LOG_LEVEL_VERBOSE, "%s ran '%s' successfully", fp->name, command);
-        FnCallResult res = FnReturn(buffer);
-        free(buffer);
-        return res;
+        if (StringEqual(function, "execresult"))
+        {
+            FnCallResult res = FnReturn(buffer);
+            free(buffer);
+            return res;
+        }
+        else
+        {
+            assert(StringEqual(function, "execresult_as_data"));
+            JsonElement *result = JsonObjectCreate(2);
+            JsonObjectAppendInteger(result, "exit_code", exit_code);
+            JsonObjectAppendString(result, "output", buffer);
+            free(buffer);
+            return FnReturnContainerNoCopy(result);
+        }
     }
     else
     {
@@ -2536,7 +2567,7 @@ static FnCallResult FnCallUrlGet(ARG_UNUSED EvalContext *ctx,
         Log(LOG_LEVEL_VERBOSE, "%s: found cached request for %s", fp->name, url);
         WriterClose(cache_w);
         JsonDestroyMaybe(options, allocated);
-        return (FnCallResult) { FNCALL_SUCCESS, (Rval) { JsonCopy(old_result), RVAL_TYPE_CONTAINER } };
+        return FnReturnContainer(old_result);
     }
 
     if (!CURL_INITIALIZED && curl_global_init(CURL_GLOBAL_DEFAULT) != 0)
@@ -2690,7 +2721,7 @@ static FnCallResult FnCallUrlGet(ARG_UNUSED EvalContext *ctx,
     WriterClose(cache_w);
 
     JsonDestroyMaybe(options, allocated);
-    return (FnCallResult) { FNCALL_SUCCESS, (Rval) { result, RVAL_TYPE_CONTAINER } };
+    return FnReturnContainerNoCopy(result);
 
 #else
 
@@ -3452,7 +3483,7 @@ static FnCallResult FnCallMapData(EvalContext *ctx, ARG_UNUSED const Policy *pol
 
         JsonDestroyMaybe(container, allocated);
 
-        return (FnCallResult) { FNCALL_SUCCESS, { returnjson_pipe, RVAL_TYPE_CONTAINER } };
+        return FnReturnContainerNoCopy(returnjson_pipe);
     }
 
     Buffer *expbuf = BufferNew();
@@ -3613,7 +3644,7 @@ static FnCallResult FnCallMapData(EvalContext *ctx, ARG_UNUSED const Policy *pol
         }
 
         RlistDestroy(returnlist);
-        return (FnCallResult) { FNCALL_SUCCESS, { returnjson, RVAL_TYPE_CONTAINER } };
+        return FnReturnContainerNoCopy(returnjson);
     }
 
     // this is maparray()
@@ -3819,7 +3850,7 @@ static FnCallResult FnCallMergeData(EvalContext *ctx, ARG_UNUSED const Policy *p
     {
         JsonElement *first = JsonCopy(SeqAt(containers, 0));
         SeqDestroy(containers);
-        return  (FnCallResult) { FNCALL_SUCCESS, (Rval) { first, RVAL_TYPE_CONTAINER } };
+        return FnReturnContainerNoCopy(first);
     }
     else
     {
@@ -3836,7 +3867,7 @@ static FnCallResult FnCallMergeData(EvalContext *ctx, ARG_UNUSED const Policy *p
         }
 
         SeqDestroy(containers);
-        return (FnCallResult) { FNCALL_SUCCESS, (Rval) { result, RVAL_TYPE_CONTAINER } };
+        return FnReturnContainerNoCopy(result);
     }
 
     assert(false);
@@ -3932,7 +3963,7 @@ static FnCallResult FnCallDatastate(EvalContext *ctx,
                                     ARG_UNUSED const Rlist *args)
 {
     JsonElement *state = DefaultTemplateData(ctx, NULL);
-    return  (FnCallResult) { FNCALL_SUCCESS, (Rval) { state, RVAL_TYPE_CONTAINER } };
+    return FnReturnContainerNoCopy(state);
 }
 
 static FnCallResult FnCallBundlestate(EvalContext *ctx,
@@ -3955,7 +3986,7 @@ static FnCallResult FnCallBundlestate(EvalContext *ctx,
     }
     else
     {
-        return  (FnCallResult) { FNCALL_SUCCESS, (Rval) { state, RVAL_TYPE_CONTAINER } };
+        return FnReturnContainerNoCopy(state);
     }
 }
 
@@ -6201,7 +6232,7 @@ static FnCallResult FnCallRegExtract(EvalContext *ctx, ARG_UNUSED const Policy *
 
     if (container_mode)
     {
-        return (FnCallResult) { FNCALL_SUCCESS, (Rval) { json, RVAL_TYPE_CONTAINER } };
+        return FnReturnContainerNoCopy(json);
     }
     else
     {
@@ -6847,7 +6878,7 @@ static FnCallResult ReadDataGeneric(const char *const fname,
         return FnFailure();
     }
 
-    return (FnCallResult) { FNCALL_SUCCESS, (Rval) { json, RVAL_TYPE_CONTAINER } };
+    return FnReturnContainerNoCopy(json);
 }
 
 static FnCallResult FnCallReadData(ARG_UNUSED EvalContext *ctx,
@@ -7229,7 +7260,7 @@ static FnCallResult FnCallClassFilterCsv(EvalContext *ctx,
         SeqDestroy(heading);
     }
 
-    return (FnCallResult) { FNCALL_SUCCESS, (Rval) { json, RVAL_TYPE_CONTAINER } };
+    return FnReturnContainerNoCopy(json);
 }
 
 static FnCallResult FnCallParseJson(ARG_UNUSED EvalContext *ctx,
@@ -7264,7 +7295,7 @@ static FnCallResult FnCallParseJson(ARG_UNUSED EvalContext *ctx,
     }
     else
     {
-        return (FnCallResult) { FNCALL_SUCCESS, (Rval) { json, RVAL_TYPE_CONTAINER } };
+        return FnReturnContainerNoCopy(json);
     }
 
     return FnFailure();
@@ -7351,7 +7382,7 @@ static FnCallResult DataRead(EvalContext *ctx, const FnCall *fp, const Rlist *fi
         return FnFailure();
     }
 
-    return (FnCallResult) { FNCALL_SUCCESS, (Rval) { json, RVAL_TYPE_CONTAINER } };
+    return FnReturnContainerNoCopy(json);
 }
 
 /*********************************************************************/
@@ -7372,7 +7403,7 @@ static FnCallResult FnCallDataExpand(EvalContext *ctx,
     JsonElement *expanded = JsonExpandElement(ctx, json);
     JsonDestroyMaybe(json, allocated);
 
-    return (FnCallResult) { FNCALL_SUCCESS, (Rval) { expanded, RVAL_TYPE_CONTAINER } };
+    return FnReturnContainerNoCopy(expanded);
 }
 
 /*********************************************************************/
@@ -8300,7 +8331,7 @@ static FnCallResult FnCallProcessExists(ARG_UNUSED EvalContext *ctx, ARG_UNUSED 
     }
     DeleteItemList(matched);
 
-    return (FnCallResult) { FNCALL_SUCCESS, (Rval) { json, RVAL_TYPE_CONTAINER } };
+    return FnReturnContainerNoCopy(json);
 }
 
 /*********************************************************************/
@@ -8315,7 +8346,7 @@ static FnCallResult FnCallNetworkConnections(EvalContext *ctx, ARG_UNUSED const 
         return FnFailure();
     }
 
-    return (FnCallResult) { FNCALL_SUCCESS, (Rval) { json, RVAL_TYPE_CONTAINER } };
+    return FnReturnContainerNoCopy(json);
 }
 
 /*********************************************************************/
@@ -8703,7 +8734,7 @@ static FnCallResult FnCallCFEngineCallers(EvalContext *ctx, ARG_UNUSED const Pol
     }
 
     JsonElement *callers = EvalContextGetPromiseCallers(ctx);
-    return (FnCallResult) { FNCALL_SUCCESS, { callers, RVAL_TYPE_CONTAINER } };
+    return FnReturnContainerNoCopy(callers);
 }
 
 /*********************************************************************/
@@ -9776,6 +9807,8 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("every", CF_DATA_TYPE_CONTEXT, EVERY_SOME_NONE_ARGS, &FnCallEverySomeNone, "True if every element in the list or array or data container matches the given regular expression",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("execresult", CF_DATA_TYPE_STRING, EXECRESULT_ARGS, &FnCallExecResult, "Execute named command and assign output to variable",
+                  FNCALL_OPTION_CACHED | FNCALL_OPTION_VARARG, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("execresult_as_data", CF_DATA_TYPE_CONTAINER, EXECRESULT_ARGS, &FnCallExecResult, "Execute command and return exit code and output in data container",
                   FNCALL_OPTION_CACHED | FNCALL_OPTION_VARARG, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("file_hash", CF_DATA_TYPE_STRING, FILE_HASH_ARGS, &FnCallHandlerHash, "Return the hash of file arg1, type arg2 and assign to a variable",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),

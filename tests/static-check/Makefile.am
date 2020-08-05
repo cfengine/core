@@ -21,4 +21,5 @@
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
 #
-SUBDIRS = unit load acceptance static-check
+
+DISTFILES = cppcheck_suppressions.txt run_checks.sh run.sh Makefile.in Makefile.am

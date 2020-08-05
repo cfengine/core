@@ -31,7 +31,7 @@
 
 bool IsExecutable(const char *file);
 bool ShellCommandReturnsZero(const char *command, ShellType shell);
-bool GetExecOutput(const char *command, char **buffer, size_t *buffer_size, ShellType shell, OutputSelect output_select);
+bool GetExecOutput(const char *command, char **buffer, size_t *buffer_size, ShellType shell, OutputSelect output_select, int *ret_out);
 void ActAsDaemon();
 void ArgGetExecutableAndArgs(const char *comm, char **exec, char **args);
 char **ArgSplitCommand(const char *comm);

@@ -34,7 +34,7 @@
 
 /********************************************************************/
 
-bool GetExecOutput(const char *command, char **buffer, size_t *buffer_size, ShellType shell, OutputSelect output_select)
+bool GetExecOutput(const char *command, char **buffer, size_t *buffer_size, ShellType shell, OutputSelect output_select, int *ret_out)
 /* Buffer initially contains whole exec string */
 {
     FILE *pp;
@@ -106,7 +106,15 @@ bool GetExecOutput(const char *command, char **buffer, size_t *buffer_size, Shel
 
     Log(LOG_LEVEL_DEBUG, "GetExecOutput got '%s'", *buffer);
 
-    cf_pclose(pp);
+    if (ret_out != NULL)
+    {
+        *ret_out = cf_pclose(pp);
+    }
+    else
+    {
+        cf_pclose(pp);
+    }
+
     free(line);
     return true;
 }

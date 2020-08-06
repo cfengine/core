@@ -436,23 +436,28 @@ static Item *NovaGetMeasurementStream(EvalContext *ctx, const Attributes *a, con
 {
     int i;
 
-    for (i = 0; i < CF_DUNBAR_WORK; i++)
+    for (i = 0; (i < CF_DUNBAR_WORK) && (ENTERPRISE_DATA[i].path != NULL); i++)
     {
-        if (ENTERPRISE_DATA[i].path == NULL)
-        {
-            break;
-        }
-
-        if (strcmp(ENTERPRISE_DATA[i].path, pp->promiser) == 0)
+        if (StringEqual(ENTERPRISE_DATA[i].path, pp->promiser))
         {
             ENTERPRISE_DATA[i].output = NovaReSample(ctx, i, a, pp, result);
             return ENTERPRISE_DATA[i].output;
         }
     }
 
-    ENTERPRISE_DATA[i].path = xstrdup(pp->promiser);
-    ENTERPRISE_DATA[i].output = NovaReSample(ctx, i, a, pp, result);
-    return ENTERPRISE_DATA[i].output;
+    /* if empty slot found */
+    if (i < CF_DUNBAR_WORK)
+    {
+        assert(ENTERPRISE_DATA[i].path == NULL);
+
+        ENTERPRISE_DATA[i].path = xstrdup(pp->promiser);
+        ENTERPRISE_DATA[i].output = NovaReSample(ctx, i, a, pp, result);
+        return ENTERPRISE_DATA[i].output;
+    }
+    else
+    {
+        return NULL;
+    }
 }
 
 static PromiseResult NovaExtractValueFromStream(EvalContext *ctx, const char *handle,

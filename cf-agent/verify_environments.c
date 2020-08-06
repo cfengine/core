@@ -149,9 +149,8 @@ PromiseResult VerifyEnvironmentsPromise(EvalContext *ctx, const Promise *pp)
         }
 
         PromiseDestroy(pexp);
+        YieldCurrentLock(thislock);
     }
-
-    YieldCurrentLock(thislock);
 
     return result;
 }

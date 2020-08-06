@@ -1,0 +1,5 @@
+    info: files promise '/tmp/TEST.destination/purgeme' repaired, create => "true", handle => "step_one"
+    info: Created file '/tmp/TEST.destination/purgeme', mode 0600
+    info: files promise '/tmp/TEST.destination' repaired, depth_search => recurse("inf"), move_obstructions => "true", copy_from => example3("$(G.testroot)/TEST.source")
+    info: Purged '/tmp/TEST.destination/purgeme'
+    info: Replaced '/tmp/TEST.destination/subdir/subdir-file' from 'localhost:/tmp/TEST.source/subdir/subdir-file'

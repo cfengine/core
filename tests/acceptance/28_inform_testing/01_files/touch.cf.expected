@@ -1,0 +1,3 @@
+    info: Created file '/tmp/TEST.cfengine', mode 0600
+    info: Touched (updated time stamps) for path '/tmp/TEST.cfengine'
+    info: files promise '/tmp/TEST.cfengine' repaired

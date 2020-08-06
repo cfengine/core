@@ -1,0 +1,4 @@
+    info: Transforming '/tmp/TEST.cfengine' with '/bin/gzip /tmp/TEST.cfengine'
+    info: Transformed '/tmp/TEST.cfengine' with '/bin/gzip /tmp/TEST.cfengine' 
+    info: Transformer '/tmp/TEST.cfengine' => '/bin/gzip /tmp/TEST.cfengine' seemed to work ok
+    info: files promise '/tmp/TEST.cfengine' repaired

@@ -1,0 +1,3 @@
+    info: Stored md5 hash for '/tmp/TEST.cfengine' (MD5=d41d8cd98f00b204e9800998ecf8427e)
+    info: Stored sha1 hash for '/tmp/TEST.cfengine' (SHA=da39a3ee5e6b4b0d3255bfef95601890afd80709)
+    info: files promise '/tmp/TEST.cfengine' repaired

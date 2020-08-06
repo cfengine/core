@@ -1,0 +1,12 @@
+// suppress warnings for access to individual bytes of a uint32 in platform.h
+objectIndex:libntech/libutils/platform.h
+
+// cppcheck is not clever enough to see that if (i >= PLATFORM_CONTEXT_MAX) then 'found' is false
+arrayIndexOutOfBounds:libenv/sysinfo.c:563
+
+// 'psin' is assigned to 'ai->ai_addr' and 'ai' is returned to the caller
+memleak:libntech/libcompat/getaddrinfo.c:153
+
+// cppcheck doesn't understand va_copy() properly
+va_list_usedBeforeStarted:libntech/libcompat/snprintf.c:1505
+va_list_usedBeforeStarted:libntech/libcompat/snprintf.c:1506

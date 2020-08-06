@@ -86,13 +86,12 @@ static const ConstraintSyntax *GetCommonConstraint(const char *lval)
 {
     for (int i = 0; CF_COMMON_PROMISE_TYPES[i].promise_type; i++)
     {
-        const PromiseTypeSyntax promise_type_syntax = CF_COMMON_PROMISE_TYPES[i];
-
-        for (int j = 0; promise_type_syntax.constraints[j].lval; j++)
+        const ConstraintSyntax *constraints = CF_COMMON_PROMISE_TYPES[i].constraints;
+        for (int j = 0; constraints[j].lval != NULL; j++)
         {
-            if (strcmp(promise_type_syntax.constraints[j].lval, lval) == 0)
+            if (StringEqual(constraints[j].lval, lval))
             {
-                return &promise_type_syntax.constraints[j];
+                return &(constraints[j]);
             }
         }
     }

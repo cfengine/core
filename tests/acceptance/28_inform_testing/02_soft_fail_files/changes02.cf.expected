@@ -1,0 +1,2 @@
+    info: files promise '/tmp/TEST.cfengine' repaired, edit_line => insert_lines('foobar')
+    info: Inserted line 'foobar' into '/tmp/TEST.cfengine' at end of file

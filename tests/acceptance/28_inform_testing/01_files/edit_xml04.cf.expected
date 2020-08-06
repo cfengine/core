@@ -1,0 +1,4 @@
+    info: Set text 'foobar' at XPath '//Root' in XML document '/tmp/TEST.cfengine'
+    info: set_text promise 'foobar' repaired
+    info: Edited xml file '/tmp/TEST.cfengine'
+    info: files promise '/tmp/TEST.cfengine' repaired

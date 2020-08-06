@@ -1,0 +1,4 @@
+    info: Deleted text 'text content' at XPath '//c' in the XML document '/tmp/TEST.cfengine'
+    info: delete_text promise 'text content' repaired
+    info: Edited xml file '/tmp/TEST.cfengine'
+    info: files promise '/tmp/TEST.cfengine' repaired

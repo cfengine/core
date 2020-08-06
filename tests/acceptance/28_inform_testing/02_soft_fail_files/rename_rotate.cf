@@ -1,0 +1,29 @@
+body file control
+{
+  inputs => { "$(sys.policy_entry_dirname)/../common_soft_fail.cf.sub" };
+}
+
+bundle common testcase
+{
+  vars:
+    "filename" string => "$(this.promise_filename)";
+}
+
+bundle agent setup
+{
+  files:
+    "$(G.testfile)" 
+      create => "true";
+}
+
+bundle agent main
+{
+  files:
+    "$(G.testfile)"
+      rename => rotate;
+}
+
+body rename rotate
+{
+  rotate => "4";
+}

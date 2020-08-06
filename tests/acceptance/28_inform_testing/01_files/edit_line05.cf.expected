@@ -1,0 +1,3 @@
+    info: Updated rendering of '/tmp/TEST.cfengine' from mustache template 'inline'
+    info: Edited file '/tmp/TEST.cfengine'
+    info: files promise '/tmp/TEST.cfengine' repaired

@@ -1,0 +1,2 @@
+    info: files promise '/tmp/TEST.cfengine' repaired, edit_xml => xml_insert_text("Tuesday", "//Root")
+    info: Inserted text 'Tuesday' at XPath '//Root' in the XML document '/tmp/TEST.cfengine'

@@ -1,0 +1,2 @@
+    info: files promise '/tmp/TEST.cfengine' repaired, create => "true"
+    info: Created file '/tmp/TEST.cfengine', mode 0600

@@ -1,0 +1,12 @@
+promise agent git
+{
+    path => "/var/cfengine/modules/promises/git_using_lib.py";
+    interpreter => "/usr/bin/python3";
+}
+
+bundle agent __main__
+{
+    git:
+        "/opt/cfengine/masterfiles"
+          repo => "https://github.com/cfengine/masterfiles";
+}

@@ -180,7 +180,7 @@ static void GetMacAddress(EvalContext *ctx, ARG_UNUSED int fd, struct ifreq *ifr
 
 # elif defined(HAVE_GETIFADDRS) && !defined(__sun)
     char hw_mac[CF_MAXVARSIZE];
-    char *m = NULL;
+    char *mac_pointer = NULL;
     struct ifaddrs *ifaddr, *ifa;
 
     if (getifaddrs(&ifaddr) == -1)
@@ -205,30 +205,30 @@ static void GetMacAddress(EvalContext *ctx, ARG_UNUSED int fd, struct ifreq *ifr
             if (ifa->ifa_addr->sa_family == AF_LINK)
             {
                 struct sockaddr_dl *sdl = (struct sockaddr_dl *)ifa->ifa_addr;
-                m = (char *) LLADDR(sdl);
+                mac_pointer = (char *) LLADDR(sdl);
             }
 #elif AF_PACKET
             if (ifa->ifa_addr->sa_family == AF_PACKET)
             {
                 struct sockaddr_ll *sll = (struct sockaddr_ll *)ifa->ifa_addr;
-                m = (char *) sll->sll_addr;
+                mac_pointer = (char *) sll->sll_addr;
             }
 #else
 # error "AF_LINK or AF_PACKET must be available for GetMacAddress() currently"
 #endif
-            if (m == NULL)
+            if (mac_pointer == NULL)
             {
                 Log(LOG_LEVEL_VERBOSE, "Couldn't get Physical-layer address from interface '%s'", ifr->ifr_name);
                 continue;
             }
 
             snprintf(hw_mac, sizeof(hw_mac), "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x",
-                (unsigned char) m[0],
-                (unsigned char) m[1],
-                (unsigned char) m[2],
-                (unsigned char) m[3],
-                (unsigned char) m[4],
-                (unsigned char) m[5]);
+                (unsigned char) mac_pointer[0],
+                (unsigned char) mac_pointer[1],
+                (unsigned char) mac_pointer[2],
+                (unsigned char) mac_pointer[3],
+                (unsigned char) mac_pointer[4],
+                (unsigned char) mac_pointer[5]);
 
             EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, name, hw_mac, CF_DATA_TYPE_STRING, "source=agent");
             if (!RlistContainsString(*hardware, hw_mac))

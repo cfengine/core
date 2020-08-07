@@ -61,7 +61,7 @@ typedef struct
 } ChecksumValue;
 
 static bool GetDirectoryListFromDatabase(CF_DB *db, const char * path, Seq *files);
-static bool FileChangesSetDirectoryList(CF_DB *db, const char *path, const Seq *files);
+static bool FileChangesSetDirectoryList(CF_DB *db, const char *path, const Seq *files, bool *change);
 
 /*
  * Key format:
@@ -198,7 +198,8 @@ static void AddMigratedFileToDirectoryList(CF_DB *changes_db, const char *file, 
     {
         SeqAppend(files, xstrdup(basefile));
         SeqSort(files, (SeqItemComparator)strcmp, NULL);
-        if (!FileChangesSetDirectoryList(changes_db, dir, files))
+        bool changes;
+        if (!FileChangesSetDirectoryList(changes_db, dir, files, &changes))
         {
             Log(LOG_LEVEL_ERR, "%s: Not able to update directory index", common_msg);
         }
@@ -407,31 +408,45 @@ bool FileChangesGetDirectoryList(const char *path, Seq *files)
     return result;
 }
 
-static bool FileChangesSetDirectoryList(CF_DB *db, const char *path, const Seq *files)
+static bool FileChangesSetDirectoryList(CF_DB *db, const char *path, const Seq *files, bool *change)
 {
+    assert(change != NULL);
+
     int size = 0;
-    int no_files = SeqLength(files);
+    int n_files = SeqLength(files);
 
     char key[strlen(path) + 3];
     xsnprintf(key, sizeof(key), "D_%s", path);
 
-    if (no_files == 0)
+    if (n_files == 0)
     {
-        DeleteDB(db, key);
+        *change = DeleteDB(db, key);
         return true;
     }
 
-    for (int c = 0; c < no_files; c++)
+    for (int c = 0; c < n_files; c++)
     {
         size += strlen(SeqAt(files, c)) + 1;
     }
 
     char raw_entries[size];
     char *pos = raw_entries;
-    for (int c = 0; c < no_files; c++)
+    for (int c = 0; c < n_files; c++)
     {
         strcpy(pos, SeqAt(files, c));
         pos += strlen(pos) + 1;
+    }
+
+    if (HasKeyDB(db, key, sizeof(key)))
+    {
+        char old_entries[MAX(size, 2 * CF_BUFSIZE)];
+        if (ReadDB(db, key, old_entries, sizeof(old_entries)) &&
+            (memcmp(old_entries, raw_entries, size) == 0))
+        {
+            Log(LOG_LEVEL_VERBOSE, "No changes in directory list");
+            *change = false;
+            return true;
+        }
     }
 
     if (!WriteDB(db, key, raw_entries, size))
@@ -440,6 +455,7 @@ static bool FileChangesSetDirectoryList(CF_DB *db, const char *path, const Seq *
         return false;
     }
 
+    *change = true;
     return true;
 }
 
@@ -618,18 +634,21 @@ void FileChangesCheckAndUpdateDirectory(const char *name, const Seq *file_set, c
         }
     }
 
-    PromiseResult newres;
-    if (!changed)
+    bool dir_list_changes = false;
+    PromiseResult newres = PROMISE_RESULT_NOOP;
+    if (changed)
     {
-        newres = PROMISE_RESULT_NOOP;
-    }
-    else if (update && FileChangesSetDirectoryList(db, name, disk_file_set))
-    {
-        newres = PROMISE_RESULT_CHANGE;
-    }
-    else
-    {
-        newres = PROMISE_RESULT_FAIL;
+        if (update && FileChangesSetDirectoryList(db, name, disk_file_set, &dir_list_changes))
+        {
+            if (dir_list_changes)
+            {
+                newres = PROMISE_RESULT_CHANGE;
+            }
+        }
+        else
+        {
+            newres = PROMISE_RESULT_FAIL;
+        }
     }
     *result = PromiseResultUpdate(*result, newres);
 

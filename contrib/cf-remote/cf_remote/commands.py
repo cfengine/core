@@ -6,7 +6,7 @@ from cf_remote.remote import get_info, print_info, install_host, uninstall_host,
 from cf_remote.packages import Releases
 from cf_remote.web import download_package
 from cf_remote.paths import cf_remote_dir, CLOUD_CONFIG_FPATH, CLOUD_STATE_FPATH
-from cf_remote.utils import save_file, strip_user, read_json, write_json
+from cf_remote.utils import save_file, strip_user, read_json, write_json, whoami
 from cf_remote.spawn import VM, VMRequest, Providers, AWSCredentials
 from cf_remote.spawn import spawn_vms, destroy_vms, dump_vms_info, get_cloud_driver
 from cf_remote import log
@@ -154,7 +154,7 @@ def spawn(platform, count, role, group_name, provider=Providers.AWS, region=None
 
     requests = []
     for i in range(count):
-        vm_name = os.getlogin()[0:2] + group_name + "-" + platform + role + str(i)
+        vm_name = whoami()[0:2] + group_name + "-" + platform + role + str(i)
         requests.append(VMRequest(platform=platform,
                                   name=vm_name,
                                   size=None))

@@ -9,6 +9,7 @@ from libcloud.compute.providers import get_driver
 from libcloud.compute.base import NodeSize, NodeImage
 
 from cf_remote.cloud_data import aws_platforms
+from cf_remote.utils import whoami
 from cf_remote import log
 
 
@@ -232,7 +233,7 @@ def spawn_vm_in_aws(platform, aws_creds, key_pair, security_groups, region, name
         ex_security_groups=security_groups,
         ex_metadata={
             "created-by": "cf-remote",
-            "owner": os.getlogin(),
+            "owner": whoami(),
         }
     )
 

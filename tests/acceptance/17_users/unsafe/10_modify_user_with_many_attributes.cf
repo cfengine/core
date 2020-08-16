@@ -123,13 +123,13 @@ bundle agent check
                          "not_sgroup_success", "!not_sgroup_failure", };
     windows::
       "unix_ok" expression => "any";
-    suse::
+    sles_11::
       "ok" -> "CFE-3386"
         and => { "pgroup_success", "!pgroup_failure", "!sgroup_success", "sgroup_failure",
                  "hash_success", "!hash_failure",
                  "home_success", "!home_failure", "desc_success", "!desc_failure",
                  "unix_ok" };
-    !suse::
+    !sles_11::
       "ok" and => { "pgroup_success", "!pgroup_failure", "sgroup_success", "!sgroup_failure",
                     "hash_success", "!hash_failure",
                     "home_success", "!home_failure", "desc_success", "!desc_failure",

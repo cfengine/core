@@ -818,7 +818,7 @@ static FnCallResult FnCallGetEnv(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const P
 
 /*********************************************************************/
 
-#if defined(HAVE_GETPWENT)
+#if defined(HAVE_GETPWENT) && !defined(__ANDROID__)
 
 static FnCallResult FnCallGetUsers(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {

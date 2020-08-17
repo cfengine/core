@@ -6,8 +6,9 @@
 #include <syslog_client.h>
 #include <string_lib.h>
 
+// This test uses syslog_client.c directly, without libpromises,
+// this is necessary so we don't get "undefined symbol" errors:
 char VFQNAME[CF_MAXVARSIZE];
-char VPREFIX[CF_MAXVARSIZE];
 
 static struct sockaddr *got_address;
 

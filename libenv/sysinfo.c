@@ -456,7 +456,7 @@ static void GetNameInfo3(EvalContext *ctx)
     snprintf(real_version, _SYS_NMLN, "%.80s.%.80s", VSYSNAME.version, VSYSNAME.release);
     strlcpy(VSYSNAME.release, real_version, _SYS_NMLN);
 #endif
-#ifdef __ANDROID__
+#if defined(__ANDROID__) && !defined(__TERMUX__)
     /*
      * uname cannot differentiate android from linux
      */
@@ -1535,6 +1535,11 @@ static void OSClasses(EvalContext *ctx)
 
 #if defined(__ANDROID__)
     SetFlavor(ctx, "android");
+#endif
+
+/* termux flavor should over-ride android flavor */
+#if defined(__TERMUX__)
+    SetFlavor(ctx, "termux");
 #endif
 
 #ifdef __sun

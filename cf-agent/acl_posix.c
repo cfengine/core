@@ -916,7 +916,7 @@ static bool ParseEntityPosixLinux(char **str, acl_entry_t ace, int *is_mask)
         *str += 5;
 
         // create null-terminated string for entity id
-        id_end = index(*str, ':');
+        id_end = strchr(*str, ':');
 
         if (id_end == NULL)     // entity id already null-terminated
         {
@@ -961,7 +961,7 @@ static bool ParseEntityPosixLinux(char **str, acl_entry_t ace, int *is_mask)
         *str += 6;
 
         // create null-terminated string for entity id
-        id_end = index(*str, ':');
+        id_end = strchr(*str, ':');
 
         if (id_end == NULL)     // entity id already null-terminated
         {

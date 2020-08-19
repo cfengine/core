@@ -345,10 +345,26 @@ Rval ExpandPrivateRval(EvalContext *ctx,
     return returnval;
 }
 
+static inline bool StartsWithVariableDataListReference(const char *str)
+{
+    return ((str[0] == '@') &&
+            ((str[1] == '{') || (str[1] == '(')) &&
+            (str[2] == '$') &&
+            ((str[3] == '{') || (str[3] == '(')));
+}
+
 static Rval ExpandListEntry(EvalContext *ctx,
                             const char *ns, const char *scope,
                             int expandnaked, Rval entry)
 {
+    /* If rval is something like '@($(container_name).field)', we need to expand
+     * the nested variable first. */
+    if (entry.type == RVAL_TYPE_SCALAR &&
+        StartsWithVariableDataListReference(entry.item))
+    {
+        entry = ExpandPrivateRval(ctx, ns, scope, entry.item, entry.type);
+    }
+
     if (entry.type == RVAL_TYPE_SCALAR &&
         IsNakedVar(entry.item, '@'))
     {

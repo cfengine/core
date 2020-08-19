@@ -1128,7 +1128,7 @@ bool IsExpandable(const char *str)
 
 /*********************************************************************/
 
-static char opposite(char c)
+static inline char opposite(char c)
 {
     switch (c)
     {

@@ -62,6 +62,19 @@ static void test_extract_reference(void)
     test_extract_reference_("$(x${$(y)}) $(y) ${x${z}}", true, "$(x${$(y)})", "x${$(y)}");
 }
 
+static void test_isnakedvar()
+{
+    assert_true(IsNakedVar("$(whatever)", '$'));
+    assert_true(IsNakedVar("${whatever}", '$'));
+    assert_true(IsNakedVar("$(blah$(blue))", '$'));
+
+    assert_false(IsNakedVar("$(blah)blue", '$'));
+    assert_false(IsNakedVar("blah$(blue)", '$'));
+    assert_false(IsNakedVar("$(blah)$(blue)", '$'));
+    assert_false(IsNakedVar("$(blah}", '$'));
+}
+
+
 #if 0
 static void test_map_iterators_from_rval_empty(void **state)
 {
@@ -564,6 +577,7 @@ int main()
     {
         unit_test(test_extract_scalar_prefix),
         unit_test(test_extract_reference),
+        unit_test(test_isnakedvar),
 #if 0
         unit_test_setup_teardown(test_map_iterators_from_rval_empty, test_setup, test_teardown),
         unit_test_setup_teardown(test_map_iterators_from_rval_literal, test_setup, test_teardown),

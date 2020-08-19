@@ -1122,7 +1122,7 @@ static inline char opposite(char c)
 bool IsNakedVar(const char *str, char vtype)
 {
     size_t len = strlen(str);
-    char last  = len > 0 ? str[len-1] : 0;
+    char last  = len > 0 ? str[len-1] : '\0';
 
     if (len < 3
         || str[0] != vtype

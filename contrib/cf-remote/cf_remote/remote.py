@@ -303,3 +303,25 @@ def uninstall_host(host, *, connection=None):
 
     print("Uninstallation successful on '{}'".format(host))
     return data
+
+@auto_connect
+def deploy_masterfiles(host, tarball, *, connection=None):
+    data = get_info(host, connection=connection)
+    print_info(data)
+    if not data["agent_version"]:
+        log.error(f"Cannot deploy masterfiles on {host} - CFEngine not installed")
+        sys.exit(1)
+    
+    scp(tarball, host, connection=connection)
+    ssh_cmd(connection, f"tar -xzf masterfiles.tgz")
+    commands = [
+        "systemctl stop cfengine3",
+        "rm -rf /var/cfengine/masterfiles",
+        "mv masterfiles /var/cfengine/masterfiles",
+        "systemctl start cfengine3",
+        "cf-agent -Kf update.cf",
+        "cf-agent -K",
+    ]
+    combined = " && ".join(commands)
+    print(f"Running: '{combined}'")
+    ssh_sudo(connection, combined)

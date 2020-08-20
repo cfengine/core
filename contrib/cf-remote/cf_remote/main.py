@@ -83,6 +83,10 @@ def get_args():
     dp.add_argument("--all", help="Destroy all hosts spawned in the clouds", action='store_true')
     dp.add_argument("name", help="Name fo the group of hosts to destroy", nargs='?')
 
+    sp = subp.add_parser("deploy", help="Deploy masterfiles directory to hub")
+    sp.add_argument("--hub", help="Hub(s) to deploy to", type=str, required=True)
+    sp.add_argument("directory", help="Path to local masterfiles directory", type=str)
+
     args = ap.parse_args()
     return args
 
@@ -130,6 +134,8 @@ def run_command_with_args(command, args):
     elif command == "destroy":
         group_name = args.name if args.name else None
         commands.destroy(group_name)
+    elif command == "deploy":
+        commands.deploy(args.hub, args.directory)
     else:
         user_error("Unknown command: '{}'".format(command))
 
@@ -182,6 +188,14 @@ def validate_command(command, args):
     if command == "destroy":
         if not args.all and not args.name:
             user_error("One of --all or NAME required for destroy")
+
+    if command == "deploy":
+        if not args.directory:
+            user_error("Must specify a masterfiles directory")
+        if not args.hub:
+            user_error("Must specify at least one hub")
+        if not os.path.isdir(args.directory):
+            user_error(f"'{args.directory}' is not a directory")
 
 
 def is_in_cloud_state(name):

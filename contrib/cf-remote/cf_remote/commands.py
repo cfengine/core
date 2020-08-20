@@ -2,7 +2,7 @@ import os
 import sys
 import time
 
-from cf_remote.remote import get_info, print_info, install_host, uninstall_host, run_command, transfer_file
+from cf_remote.remote import get_info, print_info, install_host, uninstall_host, run_command, transfer_file, deploy_masterfiles
 from cf_remote.packages import Releases
 from cf_remote.web import download_package
 from cf_remote.paths import cf_remote_dir, CLOUD_CONFIG_FPATH, CLOUD_STATE_FPATH
@@ -263,3 +263,17 @@ def init_cloud_config():
 def uninstall(hosts):
     for host in hosts:
         uninstall_host(host)
+
+def deploy(hubs, directory):
+    assert(directory.endswith("/masterfiles"))
+    assert(os.path.isfile(directory + "/autogen.sh"))
+    os.system(f"bash -c 'cd {directory} && ./autogen.sh 1>/dev/null 2>&1'")
+    assert(os.path.isfile(directory + "/promises.cf"))
+
+    assert(not cf_remote_dir().endswith("/"))
+    tarball = cf_remote_dir() + "/masterfiles.tgz"
+    above = directory[0:-len("/masterfiles")]
+    os.system(f"rm -rf {tarball}")
+    os.system(f"tar -czf {tarball} -C {above} masterfiles")
+    for hub in hubs:
+        deploy_masterfiles(hub, tarball)

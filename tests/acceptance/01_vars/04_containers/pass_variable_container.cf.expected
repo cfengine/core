@@ -6,3 +6,7 @@ Pass by variable name: hosts=/etc/hosts
 Pass by variable name: auto_master=/etc/auto.master
 Pass by variable name including namespace: hosts=/etc/hosts
 Pass by variable name including namespace: auto_master=/etc/auto.master
+Pass by variable name with prefix: hosts=/etc/hosts
+Pass by variable name with prefix: auto_master=/etc/auto.master
+Pass by variable name with namespace: hosts=/etc/hosts
+Pass by variable name with namespace: auto_master=/etc/auto.master

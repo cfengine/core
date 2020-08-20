@@ -40,6 +40,24 @@ aws_platforms = {
         'size':'t2.micro',
         'xlsize':'m3.xlarge',
     },
+    "rhel-5-x64": {
+        "ami": "ami-ea94369d",
+        "size": "t1.micro",
+        "user": "root",
+        "xlsize": "t1.micro"
+    },
+    "rhel-6-x64": {
+        "ami": "ami-c1bb06b2",
+        "size": "t2.micro",
+        "user": "ec2-user",
+        "xlsize": "t2.large"
+    },
+    "rhel-7-x64": {
+        "ami": "ami-065ec1e661d619058",
+        "size": "t2.micro",
+        "user": "ec2-user",
+        "xlsize": "t2.large"
+    },
     "rhel-8-x64": {
         "ami": "ami-04facb3ed127a2eb6",
         "size": "t3a.micro",

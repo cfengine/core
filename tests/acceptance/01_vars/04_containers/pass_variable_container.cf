@@ -44,6 +44,7 @@ bundle agent test
     # "found" variable, so we just use that instead.
 
     "bundle_name" string => "init";
+    "bundle_name_suffix" string => "it";
 
   methods:
   # These work.
@@ -54,7 +55,8 @@ bundle agent test
  # wouldn't be but thats a seperate issue.)
     "" usebundle => report_data("Pass by variable name:", "@($(bundle_name).d)");
     "" usebundle => report_data("Pass by variable name including namespace:", "@($(found).d)");
-
+    "" usebundle => report_data("Pass by variable name with prefix:", "@(in$(bundle_name_suffix).d)");
+    "" usebundle => report_data("Pass by variable name with namespace:", "@(default:$(bundle_name).d)");
 }
 
 bundle agent check

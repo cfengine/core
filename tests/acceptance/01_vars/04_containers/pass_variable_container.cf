@@ -35,17 +35,16 @@ bundle agent test
 {
 
   meta:
-    "description" string => "Test that variable data containers can be passed.";
-    "test_soft_fail"
-      string => "any",
-      meta => { "CFE-2434" };
+    "description" -> { "CFE-2434" }
+      string => "Test that variable data containers can be passed.";
 
   vars:
     "found" slist  => bundlesmatching(".*", "find");
     # "ns_bundle" string => "default:init"; # This is the same content as the
     # "found" variable, so we just use that instead.
 
-    "bundle" string => "init";
+    "bundle_name" string => "init";
+    "bundle_name_suffix" string => "it";
 
   methods:
   # These work.
@@ -54,9 +53,10 @@ bundle agent test
 
  # These do not work. (Note: Quotes are required for this, ideally they
  # wouldn't be but thats a seperate issue.)
-    "" usebundle => report_data("Pass by variable name", "@($(bundle).d)");
+    "" usebundle => report_data("Pass by variable name:", "@($(bundle_name).d)");
     "" usebundle => report_data("Pass by variable name including namespace:", "@($(found).d)");
-
+    "" usebundle => report_data("Pass by variable name with prefix:", "@(in$(bundle_name_suffix).d)");
+    "" usebundle => report_data("Pass by variable name with namespace:", "@(default:$(bundle_name).d)");
 }
 
 bundle agent check

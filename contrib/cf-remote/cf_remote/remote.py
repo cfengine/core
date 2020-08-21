@@ -68,7 +68,7 @@ def transfer_file(host, file, users=None, connection=None):
     assert not users or len(users) == 1
     if users:
         host = users[0] + "@" + host
-    scp(file=file, remote=host, connection=connection)
+    return scp(file=file, remote=host, connection=connection)
 
 
 @auto_connect
@@ -257,9 +257,10 @@ def install_host(
 
         artifacts = release.find(tags, extension)
         if not artifacts:
-            user_error(
+            log.error(
                 "Could not find an appropriate package for host, please use --{}-package".format(
                     "hub" if hub else "client"))
+            return 1
         artifact = artifacts[-1]
         package = download_package(artifact.url)
 
@@ -272,8 +273,8 @@ def install_host(
             "CFEngine {} was successfully installed on '{}'".format(data["agent_version"],
                                                                     host))
     else:
-        print("Installation failed!")
-        sys.exit(1)
+        log.error("Installation failed!")
+        return 1
     if bootstrap:
         bootstrap_host(data, policy_server=bootstrap, connection=connection)
     if demo:
@@ -282,6 +283,7 @@ def install_host(
             demo_lib.agent_run(data, connection=connection)
             demo_lib.disable_password_dialog(host)
         demo_lib.agent_run(data, connection=connection)
+    return 0
 
 
 @auto_connect
@@ -296,13 +298,13 @@ def uninstall_host(host, *, connection=None):
     data = get_info(host, connection=connection)
 
     if (not data) or data["agent_version"]:
-        print("Failed to uninstall CFEngine on '{}'".format(host))
-        return None
+        log.error("Failed to uninstall CFEngine on '{}'".format(host))
+        return 1
 
     print_info(data)
 
     print("Uninstallation successful on '{}'".format(host))
-    return data
+    return 0
 
 @auto_connect
 def deploy_masterfiles(host, tarball, *, connection=None):
@@ -310,7 +312,7 @@ def deploy_masterfiles(host, tarball, *, connection=None):
     print_info(data)
     if not data["agent_version"]:
         log.error(f"Cannot deploy masterfiles on {host} - CFEngine not installed")
-        sys.exit(1)
+        return 1
     
     scp(tarball, host, connection=connection)
     ssh_cmd(connection, f"tar -xzf masterfiles.tgz")
@@ -325,3 +327,4 @@ def deploy_masterfiles(host, tarball, *, connection=None):
     combined = " && ".join(commands)
     print(f"Running: '{combined}'")
     ssh_sudo(connection, combined)
+    return 0

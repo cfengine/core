@@ -48,7 +48,19 @@ extern char VDOMAIN[CF_MAXVARSIZE];
 extern char VFQNAME[];
 extern char VUQNAME[];
 
-extern bool DONTDO;
+typedef enum EvalMode {
+    EVAL_MODE_NORMAL = 0,                 /* needs to be 'false' to work for DONTDO below */
+    EVAL_MODE_DRY_RUN = 1,
+    EVAL_MODE_AUDIT_DIFF = 2,
+    EVAL_MODE_AUDIT_MANIFEST = 3,
+} EvalMode;
+
+extern EvalMode EVAL_MODE;
+
+/* This is only for backwards compatibility with code that uses
+ * 'if (!DONTDO)'. */
+#define DONTDO ((bool) EVAL_MODE)
+
 extern bool MINUSF;
 
 extern int EDITFILESIZE;

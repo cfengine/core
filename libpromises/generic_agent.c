@@ -91,6 +91,9 @@ static bool MissingInputFile(const char *input_file);
 
 static bool LoadAugmentsFiles(EvalContext *ctx, const char* filename);
 
+static void GetChangesChrootDir(char *buf, size_t buf_size);
+static void DeleteChangesChroot();
+
 #if !defined(__MINGW32__)
 static void OpenLog(int facility);
 #endif
@@ -1175,6 +1178,28 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     {
         GenericAgentConfigSetInputFile(config, GetInputDir(), "promises.cf");
     }
+
+    /* Make sure the chroot for recording changes this process would normally
+     * make on the system is setup if that was requested. */
+    if (ChrootChanges())
+    {
+        char changes_chroot[PATH_MAX] = {0};
+        GetChangesChrootDir(changes_chroot, sizeof(changes_chroot));
+        SetChangesChroot(changes_chroot);
+        RegisterCleanupFunction(DeleteChangesChroot);
+    }
+}
+
+static void GetChangesChrootDir(char *buf, size_t buf_size)
+{
+    snprintf(buf, buf_size, "%s/%ju.changes", GetStateDir(), (uintmax_t) getpid());
+}
+
+static void DeleteChangesChroot()
+{
+    char changes_chroot[PATH_MAX] = {0};
+    GetChangesChrootDir(changes_chroot, sizeof(changes_chroot));
+    DeleteDirectoryTree(changes_chroot);
 }
 
 void GenericAgentFinalize(EvalContext *ctx, GenericAgentConfig *config)

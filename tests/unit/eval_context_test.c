@@ -100,6 +100,30 @@ static void test_class_persistence(void)
     EvalContextDestroy(ctx);
 }
 
+void test_changes_chroot(void)
+{
+    /* Should add '/' to the end implicitly. */
+    SetChangesChroot("/changes/go/here");
+
+    /* The most trivial case. */
+    const char *chrooted = ToChangesChroot("/etc/issue");
+    assert_string_equal(chrooted, "/changes/go/here/etc/issue");
+
+    /* A shorter path to test that NUL-byte is added/copied properly. */
+    chrooted = ToChangesChroot("/etc/ab");
+    assert_string_equal(chrooted, "/changes/go/here/etc/ab");
+
+    /* And a longer path again. */
+    chrooted = ToChangesChroot("/etc/sysctl.d/00-default.conf");
+    assert_string_equal(chrooted, "/changes/go/here/etc/sysctl.d/00-default.conf");
+
+#ifndef __MINGW32__
+    /* Inverse should work as expected */
+    const char *normal = ToNormalRoot(chrooted);
+    assert_string_equal(normal, "/etc/sysctl.d/00-default.conf");
+#endif
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -108,6 +132,7 @@ int main()
     const UnitTest tests[] =
     {
         unit_test(test_class_persistence),
+        unit_test(test_changes_chroot),
     };
 
     int ret = run_tests(tests);

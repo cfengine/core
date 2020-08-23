@@ -35,9 +35,11 @@
 #include <files_lib.h>
 #include <files_operators.h>
 #include <hash.h>
+#include <files_copy.h>
 #include <files_edit.h>
 #include <files_editxml.h>
 #include <files_editline.h>
+#include <files_links.h>
 #include <files_properties.h>
 #include <files_select.h>
 #include <item_lib.h>
@@ -56,6 +58,7 @@
 #include <mustache.h>
 #include <known_dirs.h>
 #include <evalfunction.h>
+#include <changes_chroot.h>     /* PrepareChangesChroot() */
 
 static PromiseResult FindFilePromiserObjects(EvalContext *ctx, const Promise *pp);
 static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promise *pp);
@@ -303,6 +306,8 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
 
     PromiseResult result = PROMISE_RESULT_NOOP;
 
+    char *chrooted_path = NULL;
+
     /* if template_data was specified, it must have been resolved to a data
      * container by now */
     /* check this early to prevent creation of the file below in case of failure */
@@ -316,7 +321,19 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
         goto exit;
     }
 
-    if (lstat(path, &oslb) == -1)       /* Careful if the object is a link */
+    if (ChrootChanges())
+    {
+        PrepareChangesChroot(path);
+    }
+
+    const char *changes_path = path;
+    if (ChrootChanges())
+    {
+        chrooted_path = xstrdup(ToChangesChroot(path));
+        changes_path = chrooted_path;
+    }
+
+    if (lstat(changes_path, &oslb) == -1)       /* Careful if the object is a link */
     {
         if ((a.create) || (a.touch))
         {
@@ -326,7 +343,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
             }
             else
             {
-                exists = (lstat(path, &oslb) != -1);
+                exists = (lstat(changes_path, &oslb) != -1);
             }
         }
 
@@ -350,12 +367,12 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
 
     if (!a.havedepthsearch)     /* if the search is trivial, make sure that we are in the parent dir of the leaf */
     {
-        char basedir[CF_BUFSIZE];
-
         Log(LOG_LEVEL_DEBUG, "Direct file reference '%s', no search implied", path);
-        snprintf(basedir, sizeof(basedir), "%s", path);
 
-        if (strcmp(ReadLastNode(basedir), ".") == 0)
+        char basedir[CF_BUFSIZE];
+        strlcpy(basedir, path, sizeof(basedir));
+
+        if (StringEqual(ReadLastNode(basedir), "."))
         {
             // Handle /.  notation for deletion of directories
             ChopLastNode(basedir);
@@ -363,7 +380,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
         }
 
         ChopLastNode(basedir);
-        if (safe_chdir(basedir) != 0)
+        if (safe_chdir(ToChangesPath(basedir)) != 0)
         {
             /* TODO: PROMISE_RESULT_FAIL?!?!?!?! */
             char msg[CF_BUFSIZE];
@@ -391,7 +408,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
         goto skip;
     }
 
-    if (stat(path, &osb) == -1)
+    if (stat(changes_path, &osb) == -1)
     {
         if ((a.create) || (a.touch))
         {
@@ -428,7 +445,15 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
 
     if (a.link.link_children)
     {
-        if (stat(a.link.source, &dsb) != -1)
+        const char *changes_link_source = a.link.source;
+        if (ChrootChanges())
+        {
+            /* Make sure the link source is in the changes chroot. */
+            PrepareChangesChroot(a.link.source);
+            changes_link_source = ToChangesChroot(a.link.source);
+        }
+
+        if (stat(changes_link_source, &dsb) != -1)
         {
             if (!S_ISDIR(dsb.st_mode))
             {
@@ -448,7 +473,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
         ) ||
         ((exists || link) && a.havedelete))
     {
-        lstat(path, &oslb);     /* if doesn't exist have to stat again anyway */
+        lstat(changes_path, &oslb);     /* if doesn't exist have to stat again anyway */
 
         DepthSearch(ctx, path, &oslb, 0, &a, pp, oslb.st_dev, &result);
 
@@ -529,7 +554,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
 
 // Once more in case a file has been created as a result of editing or copying
 
-    exists = (stat(path, &osb) != -1);
+    exists = (stat(changes_path, &osb) != -1);
 
     if (exists && (S_ISREG(osb.st_mode))
         && (!a.haveselect || SelectLeaf(ctx, path, &osb, &(a.select))))
@@ -544,6 +569,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
     }
 
 exit:
+    free(chrooted_path);
     if (AttrHasNoAction(&a))
     {
         Log(LOG_LEVEL_WARNING,
@@ -587,6 +613,12 @@ static PromiseResult WriteContentFromString(EvalContext *ctx, const char *path, 
     assert(path != NULL);
     assert(attr != NULL);
 
+    const char *changes_path = path;
+    if (ChrootChanges())
+    {
+        changes_path = ToChangesChroot(path);
+    }
+
     PromiseResult result = PROMISE_RESULT_NOOP;
 
     if (attr->content == NULL)
@@ -596,10 +628,10 @@ static PromiseResult WriteContentFromString(EvalContext *ctx, const char *path, 
     }
 
     unsigned char existing_content_digest[EVP_MAX_MD_SIZE + 1] = { 0 };
-    if (access(path, R_OK) == 0)
+    if (access(changes_path, R_OK) == 0)
     {
-        HashFile(path, existing_content_digest, CF_DEFAULT_DIGEST,
-                 FileNewLineMode(path) == NewLineMode_Native);
+        HashFile(changes_path, existing_content_digest, CF_DEFAULT_DIGEST,
+                 FileNewLineMode(changes_path) == NewLineMode_Native);
     }
 
     size_t bytes_to_write = strlen(attr->content);
@@ -609,15 +641,14 @@ static PromiseResult WriteContentFromString(EvalContext *ctx, const char *path, 
 
     if (!HashesMatch(existing_content_digest, promised_content_digest, CF_DEFAULT_DIGEST))
     {
-        if (DONTDO)
+        if (!MakingChanges(ctx, pp, attr, &result,
+                          "update content of '%s' with content '%s'",
+                           path, attr->content))
         {
-            RecordWarning(ctx, pp, attr,
-                          "Should update content of '%s' with content '%s'",
-                          path, attr->content);
             return result;
         }
 
-        FILE *f = safe_fopen(path, "w");
+        FILE *f = safe_fopen(changes_path, "w");
         if (f == NULL)
         {
             RecordFailure(ctx, pp, attr, "Cannot open file '%s' for writing", path);
@@ -729,9 +760,9 @@ static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp,
     }
 
     unsigned char existing_output_digest[EVP_MAX_MD_SIZE + 1] = { 0 };
-    if (access(pp->promiser, R_OK) == 0)
+    if (access(edcontext->changes_filename, R_OK) == 0)
     {
-        HashFile(pp->promiser, existing_output_digest, CF_DEFAULT_DIGEST,
+        HashFile(edcontext->changes_filename, existing_output_digest, CF_DEFAULT_DIGEST,
                  edcontext->new_line_mode == NewLineMode_Native);
     }
 
@@ -753,31 +784,22 @@ static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp,
         HashString(BufferData(output_buffer), BufferSize(output_buffer), rendered_output_digest, CF_DEFAULT_DIGEST);
         if (!HashesMatch(existing_output_digest, rendered_output_digest, CF_DEFAULT_DIGEST))
         {
-            if (attr->transaction.action == cfa_warn || DONTDO)
+            if (MakingChanges(ctx, pp, attr, &result,
+                              "update rendering of '%s' from mustache template '%s'",
+                              edcontext->filename, message))
             {
-                RecordWarning(ctx, pp, attr,
-                              "Should update rendering of '%s' from mustache template '%s'",
-                              pp->promiser, message);
-                result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
-            }
-            else
-            {
-                if (SaveAsFile(SaveBufferCallback, output_buffer, edcontext->filename, attr, edcontext->new_line_mode))
+                if (SaveAsFile(SaveBufferCallback, output_buffer, edcontext->changes_filename, attr, edcontext->new_line_mode))
                 {
                     RecordChange(ctx, pp, attr,
                                  "Updated rendering of '%s' from mustache template '%s'",
-                                 pp->promiser, message);
+                                 edcontext->filename, message);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
-
-                    /* XXX: Really needed? The promise result should propagate
-                     *      from here. */
-                    edcontext->num_rewrites++;
                 }
                 else
                 {
                     RecordFailure(ctx, pp, attr,
                                   "Failed to update rendering of '%s' from mustache template '%s'",
-                                  pp->promiser, message);
+                                  edcontext->filename, message);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                 }
             }

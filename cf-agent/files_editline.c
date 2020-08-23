@@ -1145,12 +1145,9 @@ static bool DeletePromisedLinesMatching(EvalContext *ctx, Item **start, Item *be
         {
             Log(LOG_LEVEL_VERBOSE, "Delete chunk of %d lines", matches);
 
-            if (DONTDO || (a->transaction.action == cfa_warn))
+            if (!MakingChanges(ctx, pp, a, result, "delete line '%s' from %s",
+                               ip->name, edcontext->filename))
             {
-                RecordWarning(ctx, pp, a,
-                              "Line '%s' from %s should be deleted", ip->name,
-                              edcontext->filename);
-                *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                 np = ip->next;
                 noedits = false;
             }
@@ -1297,12 +1294,9 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, c
             break;
         }
 
-        if (DONTDO || (a->transaction.action == cfa_warn))
+        if (!MakingChanges(ctx, pp, a, result, "replace pattern '%s' in '%s'", pp->promiser,
+                           edcontext->filename))
         {
-            cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a,
-                 "Pattern '%s' should be replaced in '%s'", pp->promiser,
-                 edcontext->filename);
-            *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
             continue;
         }
         else if (replaced)
@@ -1984,11 +1978,9 @@ static bool InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, 
         {
             if (*start == NULL)
             {
-                if (DONTDO || (a->transaction.action == cfa_warn))
+                if (!MakingChanges(ctx, pp, a, result, "insert promised line '%s' into '%s'",
+                                   newline, edcontext->filename))
                 {
-                    RecordWarning(ctx, pp, a, "Promised line '%s' should be inserted in '%s'",
-                                  newline, edcontext->filename);
-                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                     return true;
                 }
                 else
@@ -2004,11 +1996,9 @@ static bool InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, 
 
             if (strcmp((*start)->name, newline) != 0)
             {
-                if (DONTDO || (a->transaction.action == cfa_warn))
+                if (!MakingChanges(ctx, pp, a, result, "prepend promised line '%s' to '%s'",
+                                   newline, edcontext->filename))
                 {
-                    RecordWarning(ctx, pp, a, "Promised line '%s' should be prepended to '%s'",
-                                  newline, edcontext->filename);
-                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                     return true;
                 }
                 else
@@ -2040,11 +2030,9 @@ static bool InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, 
         }
         else
         {
-            if (DONTDO || (a->transaction.action == cfa_warn))
+            if (!MakingChanges(ctx, pp, a, result, "insert line '%s' into '%s' before locator",
+                               newline, edcontext->filename))
             {
-                RecordWarning(ctx, pp, a, "Line '%s' should be inserted into '%s' before locator",
-                              newline, edcontext->filename);
-                *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                 return true;
             }
             else
@@ -2068,11 +2056,9 @@ static bool InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, 
         }
         else
         {
-            if (DONTDO || (a->transaction.action == cfa_warn))
+            if (!MakingChanges(ctx, pp, a, result, "insert line '%s' into '%s' after locator",
+                               newline, edcontext->filename))
             {
-                RecordWarning(ctx, pp, a, "Line '%s' should be inserted into '%s' after locator",
-                              newline, edcontext->filename);
-                *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                 return true;
             }
             else
@@ -2148,11 +2134,9 @@ static bool EditLineByColumn(EvalContext *ctx, Rlist **columns, const Attributes
 
         if (strstr(RlistScalarValue(rp), a->column.column_value) || strcmp(RlistScalarValue(rp), a->column.column_value) != 0)
         {
-            if (DONTDO || (a->transaction.action == cfa_warn))
+            if (!MakingChanges(ctx, pp, a, result, "edit field '%s' in '%s'",
+                               a->column.column_value, edcontext->filename))
             {
-                RecordFailure(ctx, pp, a, "Field '%s' in '%s' should be edited",
-                              a->column.column_value, edcontext->filename);
-                *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                 retval = false;
             }
             else
@@ -2182,11 +2166,9 @@ static bool EditLineByColumn(EvalContext *ctx, Rlist **columns, const Attributes
 
         if (a->column.column_operation && strcmp(a->column.column_operation, "delete") == 0)
         {
-            if (DONTDO || (a->transaction.action == cfa_warn))
+            if (!MakingChanges(ctx, pp, a, result, "delete field value '%s' in '%s'",
+                               RlistScalarValue(rp), edcontext->filename))
             {
-                RecordWarning(ctx, pp, a, "Field value '%s' in '%s' should be deleted",
-                              RlistScalarValue(rp), edcontext->filename);
-                *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                 return false;
             }
             else
@@ -2202,11 +2184,9 @@ static bool EditLineByColumn(EvalContext *ctx, Rlist **columns, const Attributes
         }
         else
         {
-            if (DONTDO || (a->transaction.action == cfa_warn))
+            if (!MakingChanges(ctx, pp, a, result, "set column field value '%s' to '%s' in '%s'",
+                               RlistScalarValue(rp), a->column.column_value, edcontext->filename))
             {
-                RecordWarning(ctx, pp, a, "Column field value '%s' should be set to '%s' in '%s'",
-                              RlistScalarValue(rp), a->column.column_value, edcontext->filename);
-                *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                 return false;
             }
             else

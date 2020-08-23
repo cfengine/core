@@ -22,16 +22,9 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_FILES_REPOSITORY_H
-#define CFENGINE_FILES_REPOSITORY_H
+#ifndef CFENGINE_CHANGES_CHROOT_H
+#define CFENGINE_CHANGES_CHROOT_H
 
-void SetRepositoryLocation(const char *path);
-void SetRepositoryChar(char c);
+void PrepareChangesChroot(const char *path);
 
-bool ArchiveToRepository(char *file, const Attributes *attr);
-bool FileInRepository(const char *filename);
-
-/* Returns false if backing up files to repository is not set up */
-bool GetRepositoryPath(const char *file, const Attributes *attr, char *destination);
-
-#endif
+#endif /* CFENGINE_CHANGES_CHROOT_H */

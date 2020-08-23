@@ -217,7 +217,8 @@ static void SetACLDefaults(const char *path, Acl *acl)
 
 // default on directories: acl_default => nochange
 
-    if ((acl->acl_default == ACL_DEFAULT_NONE) && (IsDir(path)))
+    if ((acl->acl_default == ACL_DEFAULT_NONE) &&
+        (IsDir(ToChangesPath(path))))
     {
         acl->acl_default = ACL_DEFAULT_NO_CHANGE;
     }

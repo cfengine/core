@@ -25,7 +25,6 @@
 #include <files_operators.h>
 
 #include <actuator.h>
-#include <verify_acl.h>
 #include <eval_context.h>
 #include <promises.h>
 #include <dir.h>
@@ -57,6 +56,12 @@ bool MoveObstruction(EvalContext *ctx, char *from, const Attributes *attr, const
     char stamp[CF_BUFSIZE], saved[CF_BUFSIZE];
     time_t now_stamp = time((time_t *) NULL);
 
+    const char *changes_from = from;
+    if (ChrootChanges())
+    {
+        changes_from = ToChangesChroot(from);
+    }
+
     if (lstat(from, &sb) == 0)
     {
         if (!attr->move_obstructions)
@@ -68,15 +73,13 @@ bool MoveObstruction(EvalContext *ctx, char *from, const Attributes *attr, const
 
         if (!S_ISDIR(sb.st_mode))
         {
-            if (DONTDO)
+            if (!MakingChanges(ctx, pp, attr, result, "move aside object '%s' obstructing promise", from))
             {
-                RecordWarning(ctx, pp, attr, "Object '%s' obstructing promise should be moved aside", from);
-                *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                 return false;
             }
 
             saved[0] = '\0';
-            strlcpy(saved, from, sizeof(saved));
+            strlcpy(saved, changes_from, sizeof(saved));
 
             if (attr->copy.backup == BACKUP_OPTION_TIMESTAMP || attr->edits.backup == BACKUP_OPTION_TIMESTAMP)
             {
@@ -86,7 +89,7 @@ bool MoveObstruction(EvalContext *ctx, char *from, const Attributes *attr, const
 
             strlcat(saved, CF_SAVED, sizeof(saved));
 
-            if (rename(from, saved) == -1)
+            if (rename(changes_from, saved) == -1)
             {
                 RecordFailure(ctx, pp, attr,
                               "Can't rename '%s' to '%s'. (rename: %s)", from, saved, GetErrorStr());
@@ -107,15 +110,13 @@ bool MoveObstruction(EvalContext *ctx, char *from, const Attributes *attr, const
 
         if (S_ISDIR(sb.st_mode))
         {
-            if (DONTDO)
+            if (!MakingChanges(ctx, pp, attr, result, "move aside directory '%s' obstructing", from))
             {
-                RecordWarning(ctx, pp, attr, "Directory '%s' obstructing promise should be moved aside", from);
-                *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
                 return false;
             }
 
             saved[0] = '\0';
-            strlcpy(saved, from, sizeof(saved));
+            strlcpy(saved, changes_from, sizeof(saved));
 
             snprintf(stamp, CF_BUFSIZE, "_%jd_%s", (intmax_t) CFSTARTTIME, CanonifyName(ctime(&now_stamp)));
             strlcat(saved, stamp, sizeof(saved));
@@ -131,7 +132,7 @@ bool MoveObstruction(EvalContext *ctx, char *from, const Attributes *attr, const
                 return false;
             }
 
-            if (rename(from, saved) == -1)
+            if (rename(changes_from, saved) == -1)
             {
                 RecordFailure(ctx, pp, attr, "Can't rename '%s' to '%s'. (rename: %s)",
                               from, saved, GetErrorStr());

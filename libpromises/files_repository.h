@@ -22,17 +22,16 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_FILES_LINKS_H
-#define CFENGINE_FILES_LINKS_H
+#ifndef CFENGINE_FILES_REPOSITORY_H
+#define CFENGINE_FILES_REPOSITORY_H
 
-#include <cf3.defs.h>
+void SetRepositoryLocation(const char *path);
+void SetRepositoryChar(char c);
 
-PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source, const Attributes *attr, const Promise *pp);
-PromiseResult VerifyAbsoluteLink(EvalContext *ctx, char *destination, const char *source, const Attributes *attr, const Promise *pp);
-PromiseResult VerifyRelativeLink(EvalContext *ctx, char *destination, const char *source, const Attributes *attr, const Promise *pp);
-PromiseResult VerifyHardLink(EvalContext *ctx, char *destination, const char *source, const Attributes *attr, const Promise *pp);
-bool KillGhostLink(EvalContext *ctx, const char *name, const Attributes *attr, const Promise *pp, PromiseResult *result);
-bool MakeHardLink(EvalContext *ctx, const char *from, const char *to, const Attributes *attr, const Promise *pp, PromiseResult *result);
-bool ExpandLinks(char *dest, const char *from, int level);
+bool ArchiveToRepository(const char *file, const Attributes *attr);
+bool FileInRepository(const char *filename);
+
+/* Returns false if backing up files to repository is not set up */
+bool GetRepositoryPath(const char *file, const Attributes *attr, char *destination);
 
 #endif

@@ -260,6 +260,74 @@ void RecordWarning(EvalContext *ctx, const Promise *pp, const Attributes *attr, 
 void RecordDenial(EvalContext *ctx, const Promise *pp, const Attributes *attr, const char *fmt, ...) FUNC_ATTR_PRINTF(4, 5);
 void RecordInterruption(EvalContext *ctx, const Promise *pp, const Attributes *attr, const char *fmt, ...) FUNC_ATTR_PRINTF(4, 5);
 
+/**
+ * Check if the given promise is allowed to make changes in the current agent
+ * run and if not, log the fact and update #result accordingly.
+ *
+ * The #change_desc_fmt argument and the ones following it should format a
+ * message that describes the action, like "rename the file '/etc/issue'", the
+ * implementation of this function prepends and, potentially, appends text to
+ * the message to form a complete sentence.
+ */
+bool MakingChanges(EvalContext *ctx, const Promise *pp, const Attributes *attr,
+                   PromiseResult *result, const char *change_desc_fmt, ...) FUNC_ATTR_PRINTF(5, 6);
+
+/**
+ * Similar to MakingChanges() above, but checking if changes to internal
+ * structures are allowed. Audit modes should, for example, not make such
+ * changes, even though they make other changes (in a changes chroot).
+ */
+bool MakingInternalChanges(EvalContext *ctx, const Promise *pp, const Attributes *attr,
+                           PromiseResult *result, const char *change_desc_fmt, ...) FUNC_ATTR_PRINTF(5, 6);
+
+/**
+ * Whether to make changes in a chroot or not.
+ */
+static inline bool ChrootChanges()
+{
+    return ((EVAL_MODE == EVAL_MODE_AUDIT_DIFF) || (EVAL_MODE == EVAL_MODE_AUDIT_MANIFEST));
+}
+
+/**
+ * Set the chroot for recording changes in files (in audit mode(s)).
+ *
+ * @note This function should only be called once.
+ */
+void SetChangesChroot(const char *chroot);
+
+/**
+ * Get the path for #orig_path under the changes chroot (where changes in audit
+ * mode(s) are done). #orig_path is expected to be an absolute path.
+ *
+ * @note Returns a pointer to an internal buffer and the value is only valid
+ *       until the function is called again.
+ * @warning not thread-safe
+ */
+const char *ToChangesChroot(const char *orig_path);
+
+/**
+ * Possibly transform #path to the path where changes are to be made.
+ * @see ChrootChanges()
+ * @see ToChangesChroot()
+ */
+static inline const char *ToChangesPath(const char *path)
+{
+    return (ChrootChanges() ? ToChangesChroot(path) : path);
+}
+
+/**
+ * Reverse operation for ToChangesChroot().
+ *
+ * @return A pointer to an offset of #orig_path where the non-chrooted path starts.
+ * @warning Doesn't work on Windows (because on Windows the operation is not as easy as just
+ *          shifting the pointer by the offset).
+ */
+#ifndef __MINGW32__
+const char *ToNormalRoot(const char *orig_path);
+#else
+const char *ToNormalRoot(const char *orig_path) __attribute__((error ("Not supported on Windows")));
+#endif
+
 PackagePromiseContext *GetPackageDefaultsFromCtx(const EvalContext *ctx);
 
 bool EvalContextGetSelectEndMatchEof(const EvalContext *ctx);

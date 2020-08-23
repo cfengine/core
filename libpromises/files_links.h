@@ -22,21 +22,19 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_COMPARRAY_H
-#define CFENGINE_COMPARRAY_H
+#ifndef CFENGINE_FILES_LINKS_H
+#define CFENGINE_FILES_LINKS_H
 
 #include <cf3.defs.h>
 
-typedef struct CompressedArray_
-{
-    int key;
-    char *value;
-    struct CompressedArray_ *next;
-} CompressedArray;
+#define CF_MAXLINKLEVEL 4
 
-bool FixCompressedArrayValue(int i, const char *value, CompressedArray **start);
-void DeleteCompressedArray(CompressedArray *start);
-bool CompressedArrayElementExists(CompressedArray *start, int key);
-char *CompressedArrayValue(CompressedArray *start, int key);
+PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source, const Attributes *attr, const Promise *pp);
+PromiseResult VerifyAbsoluteLink(EvalContext *ctx, char *destination, const char *source, const Attributes *attr, const Promise *pp);
+PromiseResult VerifyRelativeLink(EvalContext *ctx, char *destination, const char *source, const Attributes *attr, const Promise *pp);
+PromiseResult VerifyHardLink(EvalContext *ctx, char *destination, const char *source, const Attributes *attr, const Promise *pp);
+bool KillGhostLink(EvalContext *ctx, const char *name, const Attributes *attr, const Promise *pp, PromiseResult *result);
+bool MakeHardLink(EvalContext *ctx, const char *from, const char *to, const Attributes *attr, const Promise *pp, PromiseResult *result);
+bool ExpandLinks(char *dest, const char *from, int level, int max_level);
 
 #endif

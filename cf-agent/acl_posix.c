@@ -74,7 +74,7 @@ PromiseResult CheckPosixLinuxACL(EvalContext *ctx, const char *file_path, Acl ac
         return result;
     }
 
-    if (IsDir(file_path))
+    if (IsDir(ToChangesPath(file_path)))
     {
         if (!CheckPosixLinuxDefaultACEs(ctx, acl.acl_default_entries, acl.acl_method, acl.acl_default,
                                         file_path, a, pp, &result))
@@ -162,9 +162,15 @@ static bool CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method,
 
     acl_type_str = acl_type == ACL_TYPE_ACCESS ? "Access" : "Default";
 
+    const char *changes_path = file_path;
+    if (ChrootChanges())
+    {
+        changes_path = ToChangesChroot(file_path);
+    }
+
 // read existing acl
 
-    if ((acl_existing = acl_get_file(file_path, acl_type)) == NULL)
+    if ((acl_existing = acl_get_file(changes_path, acl_type)) == NULL)
     {
         RecordFailure(ctx, pp, a,
                       "No %s ACL for '%s' could be read. (acl_get_file: %s)",
@@ -363,73 +369,45 @@ static bool CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method,
 
     if (retv == 1)              // existing and new acl differ, update existing
     {
-
-        switch (a->transaction.action)
+        if (MakingChanges(ctx, pp, a, result, "update ACL %s on file '%s'", acl_type_str, file_path))
         {
-        case cfa_warn:
+            int last = -1;
+            acl_text_str = acl_to_any_text(acl_new, NULL, ',', 0);
+            Log(LOG_LEVEL_DEBUG, "ACL: new acl is `%s'", acl_text_str);
 
-            RecordWarning(ctx, pp, a,
-                          "%s ACL on file '%s' should be updated",
-                          acl_type_str, file_path);
-            *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
-            break;
-
-        case cfa_fix:
-
-            if (DONTDO)
+            if ((retv = acl_check(acl_new, &last)) != 0)
             {
-                RecordWarning(ctx, pp, a,
-                              "%s ACL on file '%s' should be updated",
-                              acl_type_str, file_path);
-                *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
-                break;
-            }
-            else
-            {
-                int last = -1;
-                acl_text_str = acl_to_any_text(acl_new, NULL, ',', 0);
-                Log(LOG_LEVEL_DEBUG, "ACL: new acl is `%s'", acl_text_str);
-
-                if ((retv = acl_check(acl_new, &last)) != 0)
-                {
-                    RecordFailure(ctx, pp, a, "Invalid ACL in '%s' at index %d (acl_check: %s)",
-                                  acl_text_str,
-                                  last,
-                                  acl_error(retv));
-                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
-                    acl_free(acl_existing);
-                    acl_free(acl_tmp);
-                    acl_free(acl_new);
-                    acl_free(acl_text_str);
-                    return false;
-                }
-                if ((retv = acl_set_file(file_path, acl_type, acl_new)) != 0)
-                {
-                    RecordFailure(ctx, pp, a,
-                                  "Error setting new %s ACL(%s) on file '%s' (acl_set_file: %s), are required ACEs present ?",
-                                  acl_type_str,
-                                  acl_text_str,
-                                  file_path,
-                                  GetErrorStr());
-                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
-                    acl_free(acl_existing);
-                    acl_free(acl_tmp);
-                    acl_free(acl_new);
-                    acl_free(acl_text_str);
-                    return false;
-                }
+                RecordFailure(ctx, pp, a, "Invalid ACL in '%s' at index %d (acl_check: %s)",
+                              acl_text_str,
+                              last,
+                              acl_error(retv));
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+                acl_free(acl_existing);
+                acl_free(acl_tmp);
+                acl_free(acl_new);
                 acl_free(acl_text_str);
-
-                RecordChange(ctx, pp, a, "%s ACL on '%s' successfully changed", acl_type_str, file_path);
-                *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
-
-                break;
+                return false;
             }
+            if ((retv = acl_set_file(changes_path, acl_type, acl_new)) != 0)
+            {
+                RecordFailure(ctx, pp, a,
+                              "Error setting new %s ACL(%s) on file '%s' (acl_set_file: %s), are required ACEs present ?",
+                              acl_type_str,
+                              acl_text_str,
+                              file_path,
+                              GetErrorStr());
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+                acl_free(acl_existing);
+                acl_free(acl_tmp);
+                acl_free(acl_new);
+                acl_free(acl_text_str);
+                return false;
+            }
+            acl_free(acl_text_str);
 
-        default:
-            ProgrammingError("CFEngine: internal error: illegal file action");
+            RecordChange(ctx, pp, a, "%s ACL on '%s' successfully changed", acl_type_str, file_path);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
         }
-
     }
     else
     {
@@ -456,10 +434,16 @@ static bool CheckDefaultEqualsAccessACL(EvalContext *ctx, const char *file_path,
     int equals;
     bool retval = false;
 
+    const char *changes_path = file_path;
+    if (ChrootChanges())
+    {
+        changes_path = ToChangesChroot(file_path);
+    }
+
     acl_access = NULL;
     acl_default = NULL;
 
-    if ((acl_access = acl_get_file(file_path, ACL_TYPE_ACCESS)) == NULL)
+    if ((acl_access = acl_get_file(changes_path, ACL_TYPE_ACCESS)) == NULL)
     {
         RecordFailure(ctx, pp, a, "Could not find an ACL for '%s'. (acl_get_file: %s)",
                       file_path, GetErrorStr());
@@ -467,7 +451,7 @@ static bool CheckDefaultEqualsAccessACL(EvalContext *ctx, const char *file_path,
         return false;
     }
 
-    acl_default = acl_get_file(file_path, ACL_TYPE_DEFAULT);
+    acl_default = acl_get_file(changes_path, ACL_TYPE_DEFAULT);
 
     if (acl_default == NULL)
     {
@@ -489,49 +473,23 @@ static bool CheckDefaultEqualsAccessACL(EvalContext *ctx, const char *file_path,
 
     case 1:                    // set access ACL as default ACL
 
-        switch (a->transaction.action)
+        if (MakingChanges(ctx, pp, a, result, "copy default ACL on '%s' from access ACL", file_path))
         {
-        case cfa_warn:
-
-            RecordWarning(ctx, pp, a, "Default ACL on '%s' should be copied from access ACL.",
-                          file_path);
-            *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
-            break;
-
-        case cfa_fix:
-
-            if (DONTDO)
+            if ((acl_set_file(changes_path, ACL_TYPE_DEFAULT, acl_access)) != 0)
             {
-                RecordWarning(ctx, pp, a, "Default ACL on '%s' should be copied from access ACL.",
-                              file_path);
-                *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
-                retval = true;
-                break;
+                RecordFailure(ctx, pp, a,
+                              "Could not set default ACL to access on '%s'. (acl_set_file: %s)",
+                              file_path, GetErrorStr());
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+                acl_free(acl_access);
+                acl_free(acl_default);
+                return false;
             }
-            else
-            {
-                if ((acl_set_file(file_path, ACL_TYPE_DEFAULT, acl_access)) != 0)
-                {
-                    RecordFailure(ctx, pp, a,
-                                  "Could not set default ACL to access on '%s'. (acl_set_file: %s)",
-                                  file_path, GetErrorStr());
-                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
-                    acl_free(acl_access);
-                    acl_free(acl_default);
-                    return false;
-                }
-                RecordChange(ctx, pp, a,
-                             "Default ACL on '%s' successfully copied from access ACL.",
-                             file_path);
-                *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
-                retval = true;
-            }
-
-            break;
-
-        default:
-            ProgrammingError("CFEngine: internal error: illegal file action");
-            retval = false;
+            RecordChange(ctx, pp, a,
+                         "Default ACL on '%s' successfully copied from access ACL.",
+                         file_path);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+            retval = true;
         }
 
         break;
@@ -559,10 +517,16 @@ static bool CheckDefaultClearACL(EvalContext *ctx, const char *file_path, const 
     int retv;
     bool retval = false;
 
+    const char *changes_path = file_path;
+    if (ChrootChanges())
+    {
+        changes_path = ToChangesChroot(file_path);
+    }
+
     acl_existing = NULL;
     acl_empty = NULL;
 
-    if ((acl_existing = acl_get_file(file_path, ACL_TYPE_DEFAULT)) == NULL)
+    if ((acl_existing = acl_get_file(changes_path, ACL_TYPE_DEFAULT)) == NULL)
     {
         RecordFailure(ctx, pp, a, "Unable to read default acl for '%s'. (acl_get_file: %s)", file_path, GetErrorStr());
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
@@ -596,42 +560,19 @@ static bool CheckDefaultClearACL(EvalContext *ctx, const char *file_path, const 
             break;
         }
 
-        switch (a->transaction.action)
+        if (MakingChanges(ctx, pp, a, result, "clean default ACL on '%s'", file_path))
         {
-        case cfa_warn:
-
-            RecordWarning(ctx, pp, a, "Default ACL on '%s' should be cleared", file_path);
-            *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
-            break;
-
-        case cfa_fix:
-
-            if (DONTDO)
+            if (acl_set_file(changes_path, ACL_TYPE_DEFAULT, acl_empty) != 0)
             {
-                RecordWarning(ctx, pp, a, "Default ACL on '%s' should be cleared", file_path);
-                *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
-                break;
-            }
-            else
-            {
-                if (acl_set_file(file_path, ACL_TYPE_DEFAULT, acl_empty) != 0)
-                {
-                    RecordFailure(ctx, pp, a, "Could not reset ACL for '%s'. (acl_set_file: %s)",
-                                  file_path, GetErrorStr());
-                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
-                    retval = false;
-                    break;
-                }
-
-                RecordChange(ctx, pp, a, "Default ACL on '%s' successfully cleared", file_path);
-                *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
-                retval = true;
-                break;
+                RecordFailure(ctx, pp, a, "Could not reset ACL for '%s'. (acl_set_file: %s)",
+                              file_path, GetErrorStr());
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+                retval = false;
             }
 
-        default:
-            ProgrammingError("CFEngine: internal error: illegal file action");
-            retval = false;
+            RecordChange(ctx, pp, a, "Default ACL on '%s' successfully cleared", file_path);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+            retval = true;
         }
 
         break;

@@ -510,10 +510,11 @@ bool FileChangesCheckAndUpdateHash(EvalContext *ctx,
 
     if (different)
     {
-        if (DONTDO)
+        /* TODO: Should we compare the stored hash with the digest of the file
+         *       in the changes chroot in case of ChrootChanges()?  */
+        if (!MakingInternalChanges(ctx, pp, attr, result, "record change of hash for file '%s'",
+                                   filename))
         {
-            RecordWarning(ctx, pp, attr, "Change of hash for file '%s' should be recorded", filename);
-            *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
             ret = true;
         }
         else if (!found || update)
@@ -618,15 +619,19 @@ void FileChangesCheckAndUpdateDirectory(EvalContext *ctx, const Attributes *attr
             xsnprintf(path, sizeof(path), "%s/%s", name, db_file);
 
             Log(LOG_LEVEL_NOTICE, "File '%s' no longer exists", path);
-            if (FileChangesLogChange(path, FILE_STATE_REMOVED, "File removed", pp))
+            if (MakingInternalChanges(ctx, pp, attr, result,
+                                      "record removal of '%s'", path))
             {
-                RecordChange(ctx, pp, attr, "Removal of '%s' recorded", path);
-                *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
-            }
-            else
-            {
-                RecordFailure(ctx, pp, attr, "Failed to record removal of '%s'", path);
-                *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+                if (FileChangesLogChange(path, FILE_STATE_REMOVED, "File removed", pp))
+                {
+                    RecordChange(ctx, pp, attr, "Removal of '%s' recorded", path);
+                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+                }
+                else
+                {
+                    RecordFailure(ctx, pp, attr, "Failed to record removal of '%s'", path);
+                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+                }
             }
 
             RemoveAllFileTraces(db, path);
@@ -641,19 +646,23 @@ void FileChangesCheckAndUpdateDirectory(EvalContext *ctx, const Attributes *attr
         }
     }
 
-    bool changes;
-    if (update && FileChangesSetDirectoryList(db, name, disk_file_set, &changes))
+    if (MakingInternalChanges(ctx, pp, attr, result,
+                              "record directory listing for '%s'", name))
     {
-        if (changes)
+        bool changes = false;
+        if (update && FileChangesSetDirectoryList(db, name, disk_file_set, &changes))
         {
-            RecordChange(ctx, pp, attr, "Recorded directory listing for '%s'", name);
-            *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+            if (changes)
+            {
+                RecordChange(ctx, pp, attr, "Recorded directory listing for '%s'", name);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+            }
         }
-    }
-    else
-    {
-        RecordChange(ctx, pp, attr, "Failed to record directory listing for '%s'", name);
-        *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+        else
+        {
+            RecordChange(ctx, pp, attr, "Failed to record directory listing for '%s'", name);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+        }
     }
 
     SeqSoftDestroy(disk_file_set);
@@ -683,7 +692,8 @@ void FileChangesCheckAndUpdateStats(EvalContext *ctx,
 
     if (!ReadDB(dbp, key, &cmpsb, sizeof(struct stat)))
     {
-        if (!DONTDO)
+        if (MakingInternalChanges(ctx, pp, attr, result,
+                                  "write stat information for '%s' to database", file))
         {
             if (!WriteDB(dbp, key, sb, sizeof(struct stat)))
             {
@@ -696,11 +706,7 @@ void FileChangesCheckAndUpdateStats(EvalContext *ctx,
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
             }
         }
-        else
-        {
-            RecordWarning(ctx, pp, attr, "Should write stat information for '%s' to database", file);
-            *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
-        }
+
         CloseDB(dbp);
         return;
     }
@@ -726,12 +732,7 @@ void FileChangesCheckAndUpdateStats(EvalContext *ctx,
         snprintf(msg_temp, sizeof(msg_temp), "Permission: %04jo -> %04jo",
                  (uintmax_t)cmpsb.st_mode, (uintmax_t)sb->st_mode);
 
-        if (DONTDO)
-        {
-            RecordWarning(ctx, pp, attr, "Should record permissions changes in '%s'", file);
-            *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
-        }
-        else
+        if (MakingInternalChanges(ctx, pp, attr, result, "record permissions changes in '%s'", file))
         {
             if (FileChangesLogChange(file, FILE_STATE_STATS_CHANGED, msg_temp, pp))
             {
@@ -755,12 +756,8 @@ void FileChangesCheckAndUpdateStats(EvalContext *ctx,
         snprintf(msg_temp, sizeof(msg_temp), "Owner: %ju -> %ju",
                  (uintmax_t) cmpsb.st_uid, (uintmax_t) sb->st_uid);
 
-        if (DONTDO)
-        {
-            RecordWarning(ctx, pp, attr, "Should record ownership changes in '%s'", file);
-            *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
-        }
-        else
+        if (MakingInternalChanges(ctx, pp, attr, result,
+                                  "record ownership changes in '%s'", file))
         {
             if (FileChangesLogChange(file, FILE_STATE_STATS_CHANGED, msg_temp, pp))
             {
@@ -784,12 +781,8 @@ void FileChangesCheckAndUpdateStats(EvalContext *ctx,
         snprintf(msg_temp, sizeof(msg_temp), "Group: %ju -> %ju",
                  (uintmax_t)cmpsb.st_gid, (uintmax_t)sb->st_gid);
 
-        if (DONTDO)
-        {
-            RecordWarning(ctx, pp, attr, "Should record group changes in '%s'", file);
-            *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
-        }
-        else
+        if (MakingInternalChanges(ctx, pp, attr, result,
+                                  "record group changes in '%s'", file))
         {
             if (FileChangesLogChange(file, FILE_STATE_STATS_CHANGED, msg_temp, pp))
             {
@@ -813,12 +806,7 @@ void FileChangesCheckAndUpdateStats(EvalContext *ctx,
         snprintf(msg_temp, sizeof(msg_temp), "Device: %ju -> %ju",
                  (uintmax_t)cmpsb.st_dev, (uintmax_t)sb->st_dev);
 
-        if (DONTDO)
-        {
-            RecordWarning(ctx, pp, attr, "Should record device changes in '%s'", file);
-            *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
-        }
-        else
+        if (MakingInternalChanges(ctx, pp, attr, result, "record device changes in '%s'", file))
         {
             if (FileChangesLogChange(file, FILE_STATE_STATS_CHANGED, msg_temp, pp))
             {
@@ -854,12 +842,7 @@ void FileChangesCheckAndUpdateStats(EvalContext *ctx,
         snprintf(msg_temp, sizeof(msg_temp), "Modified time: %s -> %s",
                  from, to);
 
-        if (DONTDO)
-        {
-            RecordWarning(ctx, pp, attr, "Should record mtime changes in '%s'", file);
-            *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
-        }
-        else
+        if (MakingInternalChanges(ctx, pp, attr, result, "record mtime changes in '%s'", file))
         {
             if (FileChangesLogChange(file, FILE_STATE_STATS_CHANGED, msg_temp, pp))
             {
@@ -881,12 +864,8 @@ void FileChangesCheckAndUpdateStats(EvalContext *ctx,
 
     if (update)
     {
-        if (DONTDO)
-        {
-            RecordWarning(ctx, pp, attr, "Should write stat information for '%s' to database", file);
-            *result = PromiseResultUpdate(*result, PROMISE_RESULT_WARN);
-        }
-        else
+        if (MakingInternalChanges(ctx, pp, attr, result,
+                                  "write stat information for '%s' to database", file))
         {
             if (!DeleteDB(dbp, key) || !WriteDB(dbp, key, sb, sizeof(struct stat)))
             {

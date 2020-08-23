@@ -2946,15 +2946,12 @@ void cfPS(EvalContext *ctx, LogLevel level, PromiseResult status, const Promise 
 
     va_list ap;
     va_start(ap, fmt);
-    char *msg = NULL;
-    xvasprintf(&msg, fmt, ap);
-    Log(level, "%s", msg);
+    VLog(level, fmt, ap);
     va_end(ap);
 
     /* Now complete the exits status classes and auditing */
 
     ClassAuditLog(ctx, pp, attr, status);
-    free(msg);
 }
 
 void RecordChange(EvalContext *ctx, const Promise *pp, const Attributes *attr, const char *fmt, ...)
@@ -2967,11 +2964,8 @@ void RecordChange(EvalContext *ctx, const Promise *pp, const Attributes *attr, c
 
     va_list ap;
     va_start(ap, fmt);
-    char *msg = NULL;
-    xvasprintf(&msg, fmt, ap);
-    Log(LOG_LEVEL_INFO, "%s", msg);
+    VLog(LOG_LEVEL_INFO, fmt, ap);
     va_end(ap);
-    free(msg);
 
     SetPromiseOutcomeClasses(ctx, PROMISE_RESULT_CHANGE, &(attr->classes));
 }
@@ -2986,11 +2980,8 @@ void RecordNoChange(EvalContext *ctx, const Promise *pp, const Attributes *attr,
 
     va_list ap;
     va_start(ap, fmt);
-    char *msg = NULL;
-    xvasprintf(&msg, fmt, ap);
-    Log(LOG_LEVEL_VERBOSE, "%s", msg);
+    VLog(LOG_LEVEL_VERBOSE, fmt, ap);
     va_end(ap);
-    free(msg);
 
     SetPromiseOutcomeClasses(ctx, PROMISE_RESULT_NOOP, &(attr->classes));
 }
@@ -3005,11 +2996,8 @@ void RecordFailure(EvalContext *ctx, const Promise *pp, const Attributes *attr, 
 
     va_list ap;
     va_start(ap, fmt);
-    char *msg = NULL;
-    xvasprintf(&msg, fmt, ap);
-    Log(LOG_LEVEL_ERR, "%s", msg);
+    VLog(LOG_LEVEL_ERR, fmt, ap);
     va_end(ap);
-    free(msg);
 
     SetPromiseOutcomeClasses(ctx, PROMISE_RESULT_FAIL, &(attr->classes));
 }
@@ -3024,11 +3012,8 @@ void RecordWarning(EvalContext *ctx, const Promise *pp, const Attributes *attr, 
 
     va_list ap;
     va_start(ap, fmt);
-    char *msg = NULL;
-    xvasprintf(&msg, fmt, ap);
-    Log(LOG_LEVEL_WARNING, "%s", msg);
+    VLog(LOG_LEVEL_WARNING, fmt, ap);
     va_end(ap);
-    free(msg);
 
     SetPromiseOutcomeClasses(ctx, PROMISE_RESULT_WARN, &(attr->classes));
 }
@@ -3043,11 +3028,8 @@ void RecordDenial(EvalContext *ctx, const Promise *pp, const Attributes *attr, c
 
     va_list ap;
     va_start(ap, fmt);
-    char *msg = NULL;
-    xvasprintf(&msg, fmt, ap);
-    Log(LOG_LEVEL_ERR, "%s", msg);
+    VLog(LOG_LEVEL_ERR, fmt, ap);
     va_end(ap);
-    free(msg);
 
     SetPromiseOutcomeClasses(ctx, PROMISE_RESULT_DENIED, &(attr->classes));
 }
@@ -3062,13 +3044,88 @@ void RecordInterruption(EvalContext *ctx, const Promise *pp, const Attributes *a
 
     va_list ap;
     va_start(ap, fmt);
-    char *msg = NULL;
-    xvasprintf(&msg, fmt, ap);
-    Log(LOG_LEVEL_ERR, "%s", msg);
+    VLog(LOG_LEVEL_ERR, fmt, ap);
     va_end(ap);
-    free(msg);
 
     SetPromiseOutcomeClasses(ctx, PROMISE_RESULT_INTERRUPTED, &(attr->classes));
+}
+
+bool MakingChanges(EvalContext *ctx, const Promise *pp, const Attributes *attr,
+                   PromiseResult *result, const char *change_desc_fmt, ...)
+{
+    assert(attr != NULL);
+
+    if ((EVAL_MODE != EVAL_MODE_DRY_RUN) && (attr->transaction.action != cfa_warn))
+    {
+        return true;
+    }
+    /* else */
+    char *fmt = NULL;
+    if (attr->transaction.action == cfa_warn)
+    {
+        xasprintf(&fmt, "Should %s, but only warning promised", change_desc_fmt);
+    }
+    else
+    {
+        xasprintf(&fmt, "Should %s", change_desc_fmt);
+    }
+
+    LogPromiseContext(ctx, pp);
+
+    va_list ap;
+    va_start(ap, change_desc_fmt);
+    VLog(LOG_LEVEL_WARNING, fmt, ap);
+    va_end(ap);
+
+    free(fmt);
+
+    SetPromiseOutcomeClasses(ctx, PROMISE_RESULT_WARN, &(attr->classes));
+
+    if (result != NULL)
+    {
+        *result = PROMISE_RESULT_WARN;
+    }
+
+    return false;
+}
+
+bool MakingInternalChanges(EvalContext *ctx, const Promise *pp, const Attributes *attr,
+                           PromiseResult *result, const char *change_desc_fmt, ...)
+{
+    assert(attr != NULL);
+
+    if ((EVAL_MODE == EVAL_MODE_NORMAL) && (attr->transaction.action != cfa_warn))
+    {
+        return true;
+    }
+    /* else */
+    char *fmt = NULL;
+    if (attr->transaction.action == cfa_warn)
+    {
+        xasprintf(&fmt, "Should %s, but only warning promised", change_desc_fmt);
+    }
+    else
+    {
+        xasprintf(&fmt, "Should %s", change_desc_fmt);
+    }
+
+    LogPromiseContext(ctx, pp);
+
+    va_list ap;
+    va_start(ap, change_desc_fmt);
+    VLog(LOG_LEVEL_WARNING, fmt, ap);
+    va_end(ap);
+
+    free(fmt);
+
+    SetPromiseOutcomeClasses(ctx, PROMISE_RESULT_WARN, &(attr->classes));
+
+    if (result != NULL)
+    {
+        *result = PROMISE_RESULT_WARN;
+    }
+
+    return false;
 }
 
 void SetChecksumUpdatesDefault(EvalContext *ctx, bool enabled)
@@ -3355,4 +3412,66 @@ void EvalContextUpdateDumpReports(EvalContext *ctx)
         GetWorkDir(),
         FILE_SEPARATOR);
     EvalContextSetDumpReports(ctx, (access(enable_file_path, F_OK) == 0));
+}
+
+static char chrooted_path[PATH_MAX + 1] = {0};
+static size_t chroot_len = 0;
+void SetChangesChroot(const char *chroot)
+{
+    assert(chroot != NULL);
+
+    /* This function should only be called once. */
+    assert(chroot_len == 0);
+
+    chroot_len = SafeStringLength(chroot);
+
+    memcpy(chrooted_path, chroot, chroot_len);
+
+    /* Make sure there is a file separator at the end. */
+    if (!IsFileSep(chroot[chroot_len - 1]))
+    {
+        chroot_len++;
+        chrooted_path[chroot_len - 1] = FILE_SEPARATOR;
+    }
+}
+
+const char *ToChangesChroot(const char *orig_path)
+{
+    /* SetChangesChroot() should be called first. */
+    assert(chroot_len != 0);
+
+    assert(orig_path != NULL);
+    assert(IsAbsPath(orig_path));
+    assert(strlen(orig_path) <= (PATH_MAX - chroot_len - 1));
+
+    size_t offset = 0;
+#ifdef __MINGW32__
+    /* On Windows, absolute path starts with the drive letter and colon followed
+     * by '\'. Let's replace the ":\" with just "\" so that each drive has its
+     * own directory tree in the chroot. */
+    if ((orig_path[0] > 'A') && ((orig_path[0] < 'Z')) && (orig_path[1] == ':'))
+    {
+        chrooted_path[chroot_len] = orig_path[0];
+        chrooted_path[chroot_len + 1] = FILE_SEPARATOR;
+        orig_path += 2;
+        offset += 2;
+    }
+#endif
+
+    while (orig_path[0] == FILE_SEPARATOR)
+    {
+        orig_path++;
+    }
+
+    /* Adds/copies the NUL-byte at the end of the string. */
+    strncpy(chrooted_path + chroot_len + offset, orig_path, (PATH_MAX - chroot_len - offset - 1));
+
+    return chrooted_path;
+}
+
+const char *ToNormalRoot(const char *orig_path)
+{
+    assert(strncmp(orig_path, chrooted_path, chroot_len) == 0);
+
+    return orig_path + chroot_len - 1;
 }

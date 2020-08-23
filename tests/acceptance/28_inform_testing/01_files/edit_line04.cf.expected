@@ -1,4 +1,4 @@
     info: Replaced pattern 'bar' in '/tmp/TEST.cfengine'
     info: replace_patterns promise 'bar' repaired
-    info: Edit file '/tmp/TEST.cfengine'
+    info: Edited file '/tmp/TEST.cfengine'
     info: files promise '/tmp/TEST.cfengine' repaired

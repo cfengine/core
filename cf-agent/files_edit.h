@@ -44,9 +44,9 @@
 typedef struct
 {
     char *filename;
+    char *changes_filename;
     Item *file_start;
     int num_edits;
-    int num_rewrites;
 #ifdef HAVE_LIBXML2
     xmlDocPtr xmldoc;
 #endif

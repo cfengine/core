@@ -50,11 +50,22 @@ EditContext *NewEditContext(char *filename, const Attributes *a)
 
     ec->filename = filename;
 
-    ec->new_line_mode = FileNewLineMode(filename);
+    /* If making changes in chroot, we need to load the file from the chroot
+     * instead. */
+    if (ChrootChanges())
+    {
+        ec->changes_filename = xstrdup(ToChangesChroot(filename));
+    }
+    else
+    {
+        ec->changes_filename = xstrdup(filename);
+    }
+
+    ec->new_line_mode = FileNewLineMode(ec->changes_filename);
 
     if (a->haveeditline)
     {
-        if (!LoadFileAsItemList(&(ec->file_start), filename, a->edits))
+        if (!LoadFileAsItemList(&(ec->file_start), ec->changes_filename, a->edits))
         {
             free(ec);
             return NULL;
@@ -64,7 +75,7 @@ EditContext *NewEditContext(char *filename, const Attributes *a)
     if (a->haveeditxml)
     {
 #ifdef HAVE_LIBXML2
-        if (!LoadFileAsXmlDoc(&(ec->xmldoc), filename, a->edits))
+        if (!LoadFileAsXmlDoc(&(ec->xmldoc), ec->changes_filename, a->edits))
         {
             free(ec);
             return NULL;
@@ -91,51 +102,32 @@ EditContext *NewEditContext(char *filename, const Attributes *a)
 void FinishEditContext(EvalContext *ctx, EditContext *ec, const Attributes *a, const Promise *pp,
                        PromiseResult *result)
 {
-    if (*result == PROMISE_RESULT_NOOP || *result == PROMISE_RESULT_CHANGE)
-    {
-        /* TODO: This should not be necessary. */
-        // A sub promise with CHANGE status does not necessarily mean that the
-        // file has really changed.
-        *result = PROMISE_RESULT_NOOP;
-    }
-    else
+    if ((*result != PROMISE_RESULT_NOOP) && (*result != PROMISE_RESULT_CHANGE))
     {
         // Failure or skipped. Don't update the file.
         goto end;
     }
 
-    if (DONTDO || (a->transaction.action == cfa_warn))
+    /* If some edits are to be saved, but we are not making changes to
+     * files (dry-run), just log the fact (MakingChanges() does that). */
+    if ((ec != NULL) && (ec->num_edits > 0) &&
+        !CompareToFile(ctx, ec->file_start, ec->changes_filename, a, pp, result) &&
+        !MakingChanges(ctx, pp, a, result, "edit file '%s'", ec->filename))
     {
-        if (ec &&
-            !CompareToFile(ctx, ec->file_start, ec->filename, a, pp, result) &&
-            ec->num_edits > 0)
-        {
-            RecordWarning(ctx, pp, a, "File '%s' should be edited", ec->filename);
-            *result = PROMISE_RESULT_WARN;
-        }
-        else
-        {
-            RecordNoChange(ctx, pp, a, "No edit changes to file '%s' need saving", ec->filename);
-            *result = PROMISE_RESULT_NOOP;
-        }
-    }
-    else if (ec && (ec->num_rewrites > 0))
-    {
-        RecordChange(ctx, pp, a, "Edited file '%s'", ec->filename);
-        *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+        goto end;
     }
     else if (ec && (ec->num_edits > 0))
     {
         if (a->haveeditline || a->edit_template || a->edit_template_string)
         {
-            if (CompareToFile(ctx, ec->file_start, ec->filename, a, pp, result))
+            if (CompareToFile(ctx, ec->file_start, ec->changes_filename, a, pp, result))
             {
                 RecordNoChange(ctx, pp, a, "No edit changes to file '%s' need saving",
                                ec->filename);
             }
-            else if (SaveItemListAsFile(ec->file_start, ec->filename, a, ec->new_line_mode))
+            else if (SaveItemListAsFile(ec->file_start, ec->changes_filename, a, ec->new_line_mode))
             {
-                RecordChange(ctx, pp, a, "Edit file '%s'", ec->filename);
+                RecordChange(ctx, pp, a, "Edited file '%s'", ec->filename);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
             }
             else
@@ -148,7 +140,7 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, const Attributes *a, c
         if (a->haveeditxml)
         {
 #ifdef HAVE_LIBXML2
-            if (XmlCompareToFile(ec->xmldoc, ec->filename, a->edits))
+            if (XmlCompareToFile(ec->xmldoc, ec->changes_filename, a->edits))
             {
                 if (ec)
                 {
@@ -156,7 +148,7 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, const Attributes *a, c
                                    ec->filename);
                 }
             }
-            else if (SaveXmlDocAsFile(ec->xmldoc, ec->filename, a, ec->new_line_mode))
+            else if (SaveXmlDocAsFile(ec->xmldoc, ec->changes_filename, a, ec->new_line_mode))
             {
                 RecordChange(ctx, pp, a, "Edited xml file '%s'", ec->filename);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
@@ -182,6 +174,7 @@ end:
     if (ec != NULL)
     {
         DeleteItemList(ec->file_start);
+        free(ec->changes_filename);
         free(ec);
     }
 }

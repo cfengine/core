@@ -52,7 +52,8 @@ long LASTSEENEXPIREAFTER = SECONDS_PER_WEEK; /* GLOBAL_P */
 /* Compatibility infrastructure                                              */
 /*****************************************************************************/
 
-bool DONTDO = false; /* GLOBAL_A */
+/* The mode policy is evaluated in (normal, dry-run, audit,...) */
+EvalMode EVAL_MODE = EVAL_MODE_NORMAL;
 
 /* NB! Check use before changing sizes */
 char VFQNAME[CF_MAXVARSIZE] = ""; /* GLOBAL_E GLOBAL_P */

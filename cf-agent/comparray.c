@@ -32,7 +32,7 @@
 
 /*******************************************************************/
 
-bool FixCompressedArrayValue(int i, char *value, CompressedArray **start)
+bool FixCompressedArrayValue(int i, const char *value, CompressedArray **start)
 {
     CompressedArray *ap;
 

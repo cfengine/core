@@ -33,10 +33,21 @@ bool FileWriteOver(char *filename, char *contents);
 
 bool LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits);
 
+/**
+ * @warning This function ignores the EVAL_MODE!
+ * @see     MakeParentDirectoryForPromise()
+ */
 bool MakeParentDirectory(const char *parentandchild, bool force, bool *created);
-bool MakeParentDirectory2(char *parentandchild, int force, bool enforce_promise, bool *created);
 
-void RotateFiles(char *name, int number);
+/**
+ * @warning This function will not behave right on Windows if the path
+ *          contains double (back)slashes!
+ **/
+bool MakeParentDirectoryForPromise(EvalContext *ctx, const Promise *pp, const Attributes *attr,
+                                   PromiseResult *result, const char *parentandchild,
+                                   bool force, bool *created);
+
+void RotateFiles(const char *name, int number);
 void CreateEmptyFile(char *name);
 
 

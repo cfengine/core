@@ -43,7 +43,6 @@
 #include <conversion.h>
 #include <verify_classes.h>
 
-
 /**
  * VARIABLES AND PROMISE EXPANSION
  *
@@ -105,6 +104,7 @@
  *
  */
 
+static inline char opposite(char c);
 
 static void PutHandleVariable(EvalContext *ctx, const Promise *pp)
 {
@@ -345,10 +345,74 @@ Rval ExpandPrivateRval(EvalContext *ctx,
     return returnval;
 }
 
+/**
+ * Detects a variable expansion inside of a data/list reference, for example
+ * "@(${container_name})" or "@(prefix${container_name})" or
+ * "@(nspace:${container_name})".
+ *
+ * @note This function doesn't have to be bullet-proof, it only needs to
+ *       properly detect valid cases. The rest is left to the parser and code
+ *       expanding variables.
+ */
+static inline bool ContainsVariableDataListReference(const char *str)
+{
+    assert(str != NULL);
+
+    size_t len = strlen(str);
+
+    /* at least '@($(X))' is needed */
+    if (len < 7)
+    {
+        return false;
+    }
+
+    if (!((str[0] == '@') &&
+          ((str[1] == '{') || (str[1] == '('))))
+    {
+        return false;
+    }
+
+    /* Check if, after '@(', there are only characters allowed in data/list
+     * names or ':' to separate namespace from the name followed by "$(" or "${"
+     * with a matching close bracket somewhere. */
+    for (size_t i = 2; i < len; i++)
+    {
+        if (!(isalnum((int) str[i]) ||
+              (str[i] == '_') || (str[i] == ':') ||
+              (str[i] == '$')))
+        {
+            return false;
+        }
+
+        if (str[i] == '$')
+        {
+            if (((i + 1) < len) && ((str[i + 1] == '{') || (str[i + 1] == '(')))
+            {
+                int close_bracket = (int) opposite(str[i+1]);
+                return (strchr(str + i + 2, close_bracket) != NULL);
+            }
+            else
+            {
+                return false;
+            }
+        }
+    }
+
+    return false;
+}
+
 static Rval ExpandListEntry(EvalContext *ctx,
                             const char *ns, const char *scope,
                             int expandnaked, Rval entry)
 {
+    /* If rval is something like '@($(container_name).field)', we need to expand
+     * the nested variable first. */
+    if (entry.type == RVAL_TYPE_SCALAR &&
+        ContainsVariableDataListReference(entry.item))
+    {
+        entry = ExpandPrivateRval(ctx, ns, scope, entry.item, entry.type);
+    }
+
     if (entry.type == RVAL_TYPE_SCALAR &&
         IsNakedVar(entry.item, '@'))
     {
@@ -1128,7 +1192,7 @@ bool IsExpandable(const char *str)
 
 /*********************************************************************/
 
-static char opposite(char c)
+static inline char opposite(char c)
 {
     switch (c)
     {
@@ -1149,7 +1213,7 @@ static char opposite(char c)
 bool IsNakedVar(const char *str, char vtype)
 {
     size_t len = strlen(str);
-    char last  = len > 0 ? str[len-1] : 0;
+    char last  = len > 0 ? str[len-1] : '\0';
 
     if (len < 3
         || str[0] != vtype

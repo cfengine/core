@@ -83,15 +83,19 @@ def get_args():
     dp.add_argument("--all", help="Destroy all hosts spawned in the clouds", action='store_true')
     dp.add_argument("name", help="Name fo the group of hosts to destroy", nargs='?')
 
+    sp = subp.add_parser("deploy", help="Deploy masterfiles directory to hub")
+    sp.add_argument("--hub", help="Hub(s) to deploy to", type=str, required=True)
+    sp.add_argument("directory", help="Path to local masterfiles directory", type=str)
+
     args = ap.parse_args()
     return args
 
 
 def run_command_with_args(command, args):
     if command == "info":
-        commands.info(args.hosts, None)
+        return commands.info(args.hosts, None)
     elif command == "install":
-        commands.install(
+        return commands.install(
             args.hub,
             args.clients,
             package=args.package,
@@ -104,32 +108,32 @@ def run_command_with_args(command, args):
             edition=args.edition)
     elif command == "uninstall":
         all_hosts = ((args.hosts or []) + (args.hub or []) + (args.clients or []))
-        commands.uninstall(all_hosts)
+        return commands.uninstall(all_hosts)
     elif command == "packages":
-        commands.packages(tags=args.tags, version=args.version, edition=args.edition)
+        return commands.packages(tags=args.tags, version=args.version, edition=args.edition)
     elif command == "run":
-        commands.run(hosts=args.hosts, raw=args.raw, command=args.remote_command)
+        return commands.run(hosts=args.hosts, raw=args.raw, command=args.remote_command)
     elif command == "sudo":
-        commands.sudo(hosts=args.hosts, raw=args.raw, command=args.remote_command)
+        return commands.sudo(hosts=args.hosts, raw=args.raw, command=args.remote_command)
     elif command == "scp":
-        commands.scp(hosts=args.hosts, files=args.args)
+        return commands.scp(hosts=args.hosts, files=args.args)
     elif command == "spawn":
         if args.list_platforms:
-            commands.list_platforms()
-            return
+            return commands.list_platforms()
         if args.init_config:
-            commands.init_cloud_config()
-            return
+            return commands.init_cloud_config()
         if args.name and "," in args.name:
             user_error("Group --name may not contain commas")
         # else
         if args.role.endswith("s"):
             # role should be singular
             args.role = args.role[:-1]
-        commands.spawn(args.platform, args.count, args.role, args.name)
+        return commands.spawn(args.platform, args.count, args.role, args.name)
     elif command == "destroy":
         group_name = args.name if args.name else None
-        commands.destroy(group_name)
+        return commands.destroy(group_name)
+    elif command == "deploy":
+        return commands.deploy(args.hub, args.directory)
     else:
         user_error("Unknown command: '{}'".format(command))
 
@@ -182,6 +186,14 @@ def validate_command(command, args):
     if command == "destroy":
         if not args.all and not args.name:
             user_error("One of --all or NAME required for destroy")
+
+    if command == "deploy":
+        if not args.directory:
+            user_error("Must specify a masterfiles directory")
+        if not args.hub:
+            user_error("Must specify at least one hub")
+        if not os.path.isdir(args.directory):
+            user_error(f"'{args.directory}' is not a directory")
 
 
 def is_in_cloud_state(name):
@@ -307,7 +319,9 @@ def main():
         log.set_level(args.log_level)
     validate_args(args)
 
-    run_command_with_args(args.command, args)
+    exit_code = run_command_with_args(args.command, args)
+    assert(type(exit_code) is int)
+    sys.exit(exit_code)
 
 
 if __name__ == "__main__":

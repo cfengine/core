@@ -64,6 +64,7 @@ def scp(file, remote, connection=None):
     else:
         print("Copying: '{}' to '{}'".format(file, remote))
         connection.put(file)
+    return 0
 
 
 def ssh_cmd(connection, cmd, errors=False):

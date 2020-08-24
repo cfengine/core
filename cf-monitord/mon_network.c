@@ -79,26 +79,26 @@ static const Sock ECGSOCKS[] =     /* extended to map old to new using enum */
 static const char *const VNETSTAT[] =
 {
     [PLATFORM_CONTEXT_UNKNOWN] = "-",
-    [PLATFORM_CONTEXT_OPENVZ] = "/bin/netstat -rn",          /* virt_host_vz_vzps */
-    [PLATFORM_CONTEXT_HP] = "/usr/bin/netstat -rn",          /* hpux */
-    [PLATFORM_CONTEXT_AIX] = "/usr/bin/netstat -rn",         /* aix */
-    [PLATFORM_CONTEXT_LINUX] = "/bin/netstat -rn",           /* linux */
-    [PLATFORM_CONTEXT_BUSYBOX] = "/bin/netstat -rn",         /* linux */
-    [PLATFORM_CONTEXT_SOLARIS] = "/usr/bin/netstat -rn",     /* solaris */
-    [PLATFORM_CONTEXT_SUN_SOLARIS] = "/usr/bin/netstat -rn", /* solaris */
-    [PLATFORM_CONTEXT_FREEBSD] = "/usr/bin/netstat -rn",     /* freebsd */
-    [PLATFORM_CONTEXT_NETBSD] = "/usr/bin/netstat -rn",      /* netbsd */
-    [PLATFORM_CONTEXT_CRAYOS] = "/usr/ucb/netstat -rn",      /* cray */
+    [PLATFORM_CONTEXT_OPENVZ] = "/bin/netstat",          /* virt_host_vz_vzps */
+    [PLATFORM_CONTEXT_HP] = "/usr/bin/netstat",          /* hpux */
+    [PLATFORM_CONTEXT_AIX] = "/usr/bin/netstat",         /* aix */
+    [PLATFORM_CONTEXT_LINUX] = "/bin/netstat",           /* linux */
+    [PLATFORM_CONTEXT_BUSYBOX] = "/bin/netstat",         /* linux */
+    [PLATFORM_CONTEXT_SOLARIS] = "/usr/bin/netstat",     /* solaris */
+    [PLATFORM_CONTEXT_SUN_SOLARIS] = "/usr/bin/netstat", /* solaris */
+    [PLATFORM_CONTEXT_FREEBSD] = "/usr/bin/netstat",     /* freebsd */
+    [PLATFORM_CONTEXT_NETBSD] = "/usr/bin/netstat",      /* netbsd */
+    [PLATFORM_CONTEXT_CRAYOS] = "/usr/ucb/netstat",      /* cray */
     [PLATFORM_CONTEXT_WINDOWS_NT] = "/cygdrive/c/WINNT/System32/netstat", /* CygWin */
-    [PLATFORM_CONTEXT_SYSTEMV] = "/usr/bin/netstat -rn",     /* Unixware */
-    [PLATFORM_CONTEXT_OPENBSD] = "/usr/bin/netstat -rn",     /* openbsd */
-    [PLATFORM_CONTEXT_CFSCO] = "/usr/bin/netstat -rn",       /* sco */
-    [PLATFORM_CONTEXT_DARWIN] = "/usr/sbin/netstat -rn",     /* darwin */
-    [PLATFORM_CONTEXT_QNX] = "/usr/bin/netstat -rn",         /* qnx */
-    [PLATFORM_CONTEXT_DRAGONFLY] = "/usr/bin/netstat -rn",   /* dragonfly */
+    [PLATFORM_CONTEXT_SYSTEMV] = "/usr/bin/netstat",     /* Unixware */
+    [PLATFORM_CONTEXT_OPENBSD] = "/usr/bin/netstat",     /* openbsd */
+    [PLATFORM_CONTEXT_CFSCO] = "/usr/bin/netstat",       /* sco */
+    [PLATFORM_CONTEXT_DARWIN] = "/usr/sbin/netstat",     /* darwin */
+    [PLATFORM_CONTEXT_QNX] = "/usr/bin/netstat",         /* qnx */
+    [PLATFORM_CONTEXT_DRAGONFLY] = "/usr/bin/netstat",   /* dragonfly */
     [PLATFORM_CONTEXT_MINGW] = "mingw-invalid",              /* mingw */
     [PLATFORM_CONTEXT_VMWARE] = "/usr/bin/netstat",          /* vmware */
-    [PLATFORM_CONTEXT_ANDROID] = "/system/xbin/netstat -rn", /* android */
+    [PLATFORM_CONTEXT_ANDROID] = "/system/xbin/netstat", /* android */
 };
 
 /* Implementation */
@@ -186,7 +186,8 @@ static void SetNetworkEntropyClasses(const char *service, const char *direction,
 void MonNetworkGatherData(double *cf_this)
 {
     FILE *pp;
-    char local[CF_BUFSIZE], remote[CF_BUFSIZE], comm[CF_BUFSIZE];
+    char local[CF_BUFSIZE], remote[CF_BUFSIZE];
+    char comm[PATH_MAX + 4] = {0}; /* path to the binary + " -an" */
     Item *in[ATTR], *out[ATTR];
     char *sp;
     int i;
@@ -207,7 +208,7 @@ void MonNetworkGatherData(double *cf_this)
     DeleteItemList(MON_UDP6);
     MON_UDP4 = MON_UDP6 = MON_TCP4 = MON_TCP6 = NULL;
 
-    sscanf(VNETSTAT[VSYSTEMHARDCLASS], "%s", comm);
+    strncpy(comm, VNETSTAT[VSYSTEMHARDCLASS], (sizeof(comm) - 1));
 
     if (!FileCanOpen(comm, "r"))
     {
@@ -217,7 +218,7 @@ void MonNetworkGatherData(double *cf_this)
         return;
     }
 
-    strcat(comm, " -an");
+    strncat(comm, " -an", sizeof(comm) - 1);
 
     if ((pp = cf_popen(comm, "r", true)) == NULL)
     {

@@ -186,7 +186,6 @@ static void SetNetworkEntropyClasses(const char *service, const char *direction,
 void MonNetworkGatherData(double *cf_this)
 {
     FILE *pp;
-    char local[CF_BUFSIZE], remote[CF_BUFSIZE];
     char comm[PATH_MAX + 4] = {0}; /* path to the binary + " -an" */
     Item *in[ATTR], *out[ATTR];
     char *sp;
@@ -230,11 +229,10 @@ void MonNetworkGatherData(double *cf_this)
 
     size_t vbuff_size = CF_BUFSIZE;
     char *vbuff = xmalloc(vbuff_size);
-
     for (;;)
     {
-        memset(local, 0, CF_BUFSIZE);
-        memset(remote, 0, CF_BUFSIZE);
+        char local[CF_MAX_IP_LEN + CF_MAX_PORT_LEN] = {0};
+        char remote[CF_MAX_IP_LEN + CF_MAX_PORT_LEN] = {0};
 
         size_t res = CfReadLine(&vbuff, &vbuff_size, pp);
         if (res == -1)

@@ -2,7 +2,7 @@ import os
 import sys
 import time
 
-from cf_remote.remote import get_info, print_info, install_host, uninstall_host, run_command, transfer_file
+from cf_remote.remote import get_info, print_info, install_host, uninstall_host, run_command, transfer_file, deploy_masterfiles
 from cf_remote.packages import Releases
 from cf_remote.web import download_package
 from cf_remote.paths import cf_remote_dir, CLOUD_CONFIG_FPATH, CLOUD_STATE_FPATH
@@ -15,17 +15,25 @@ from cf_remote import cloud_data
 def info(hosts, users=None):
     assert hosts
     log.debug("hosts='{}'".format(hosts))
+    errors = 0
     for host in hosts:
         data = get_info(host, users=users)
-        print_info(data)
+        if data:
+            print_info(data)
+        else:
+            errors += 1
+    return errors
 
 
 def run(hosts, command, users=None, sudo=False, raw=False):
     assert hosts
+    errors = 0
     for host in hosts:
         lines = run_command(host=host, command=command, users=users, sudo=sudo)
         if lines is None:
-            sys.exit("Command: '{}'\nFailed on host: '{}'".format(command, host))
+            log.error("Command: '{}'\nFailed on host: '{}'".format(command, host))
+            errors += 1
+            continue
         host_colon = (host + ":").ljust(16)
         if lines == "":
             if not raw:
@@ -42,16 +50,19 @@ def run(hosts, command, users=None, sudo=False, raw=False):
                 cmd = None
             else:
                 print("{}{}'{}'".format(host_colon, fill, line))
+    return errors
 
 
 def sudo(hosts, command, users=None, raw=False):
-    run(hosts, command, users, sudo=True, raw=raw)
+    return run(hosts, command, users, sudo=True, raw=raw)
 
 
 def scp(hosts, files, users=None):
+    errors = 0
     for host in hosts:
         for file in files:
-            transfer_file(host, file, users)
+            errors += transfer_file(host, file, users)
+    return errors
 
 
 def install(
@@ -78,12 +89,13 @@ def install(
         if type(bootstrap) is str:
             bootstrap = [bootstrap]
         save_file(os.path.join(cf_remote_dir(), "policy_server.dat"), "\n".join(bootstrap + [""]))
+    errors = 0
     if hubs:
         if type(hubs) is str:
             hubs = [hubs]
         for index, hub in enumerate(hubs):
             log.debug("Installing {} hub package on '{}'".format(edition, hub))
-            install_host(
+            errors += install_host(
                 hub,
                 hub=True,
                 package=hub_package,
@@ -94,7 +106,7 @@ def install(
                 edition=edition)
     for index, host in enumerate(clients or []):
         log.debug("Installing {} client package on '{}'".format(edition, host))
-        install_host(
+        errors += install_host(
             host,
             hub=False,
             package=client_package,
@@ -107,6 +119,7 @@ def install(
             print(
                 "Your demo hub is ready: https://{}/ (Username: admin, Password: password)".
                 format(strip_user(hub)))
+    return errors
 
 
 def packages(tags=None, version=None, edition=None):
@@ -124,6 +137,7 @@ def packages(tags=None, version=None, edition=None):
     else:
         for artifact in artifacts:
             download_package(artifact.url)
+    return 0
 
 def spawn(platform, count, role, group_name, provider=Providers.AWS, region=None):
     if os.path.exists(CLOUD_CONFIG_FPATH):
@@ -259,7 +273,26 @@ def init_cloud_config():
     }
     write_json(CLOUD_CONFIG_FPATH, empty_config)
     print("Config file %s created, please complete the configuration in it." % CLOUD_CONFIG_FPATH)
+    return 0
 
 def uninstall(hosts):
+    errors = 0
     for host in hosts:
-        uninstall_host(host)
+        errors += uninstall_host(host)
+    return errors
+
+def deploy(hubs, directory):
+    assert(directory.endswith("/masterfiles"))
+    assert(os.path.isfile(directory + "/autogen.sh"))
+    os.system(f"bash -c 'cd {directory} && ./autogen.sh 1>/dev/null 2>&1'")
+    assert(os.path.isfile(directory + "/promises.cf"))
+
+    assert(not cf_remote_dir().endswith("/"))
+    tarball = cf_remote_dir() + "/masterfiles.tgz"
+    above = directory[0:-len("/masterfiles")]
+    os.system(f"rm -rf {tarball}")
+    os.system(f"tar -czf {tarball} -C {above} masterfiles")
+    errors = 0
+    for hub in hubs:
+        errors += deploy_masterfiles(hub, tarball)
+    return errors

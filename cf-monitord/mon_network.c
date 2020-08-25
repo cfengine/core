@@ -184,6 +184,7 @@ static void SetNetworkEntropyClasses(const char *service, const char *direction,
 /******************************************************************************/
 
 static void SaveNetworkData(Item * const *in, Item * const *out);
+static void GetNetworkDataFromNetstat(FILE *fp, double *cf_this, Item **in, Item **out);
 
 void MonNetworkGatherData(double *cf_this)
 {
@@ -192,8 +193,6 @@ void MonNetworkGatherData(double *cf_this)
     Item *in[ATTR], *out[ATTR];
     char *sp;
     int i;
-    enum cf_netstat_type { cfn_new, cfn_old } type = cfn_new;
-    enum cf_packet_type { cfn_udp4, cfn_udp6, cfn_tcp4, cfn_tcp6} packet = cfn_tcp4;
 
     for (i = 0; i < ATTR; i++)
     {
@@ -223,6 +222,19 @@ void MonNetworkGatherData(double *cf_this)
         /* FIXME: no logging */
         return;
     }
+    GetNetworkDataFromNetstat(pp, cf_this, in, out);
+    cf_pclose(pp);
+
+    /* Now save the state for ShowState()
+       the state is not smaller than the last or at least 40 minutes
+       older. This mirrors the persistence of the maxima classes */
+    SaveNetworkData(in, out);
+}
+
+static void GetNetworkDataFromNetstat(FILE *fp, double *cf_this, Item **in, Item **out)
+{
+    enum cf_netstat_type { cfn_new, cfn_old } type = cfn_new;
+    enum cf_packet_type { cfn_udp4, cfn_udp6, cfn_tcp4, cfn_tcp6} packet = cfn_tcp4;
 
     size_t vbuff_size = CF_BUFSIZE;
     char *vbuff = xmalloc(vbuff_size);
@@ -231,13 +243,13 @@ void MonNetworkGatherData(double *cf_this)
         char local[CF_MAX_IP_LEN + CF_MAX_PORT_LEN] = {0};
         char remote[CF_MAX_IP_LEN + CF_MAX_PORT_LEN] = {0};
 
-        size_t res = CfReadLine(&vbuff, &vbuff_size, pp);
+        size_t res = CfReadLine(&vbuff, &vbuff_size, fp);
         if (res == -1)
         {
-            if (!feof(pp))
+            if (!feof(fp))
             {
                 /* FIXME: no logging */
-                cf_pclose(pp);
+                cf_pclose(fp);
                 free(vbuff);
                 return;
             }
@@ -328,6 +340,7 @@ void MonNetworkGatherData(double *cf_this)
 
         // Extract the port number from the end of the string
 
+        char *sp;
         for (sp = local + strlen(local); (*sp != '.') && (*sp != ':')  && (sp > local); sp--)
         {
         }
@@ -376,7 +389,7 @@ void MonNetworkGatherData(double *cf_this)
 
         // Now look for the specific vital signs to count frequencies
 
-        for (i = 0; i < ATTR; i++)
+        for (size_t i = 0; i < ATTR; i++)
         {
             if (strcmp(localport, ECGSOCKS[i].portnr) == 0)
             {
@@ -394,13 +407,6 @@ void MonNetworkGatherData(double *cf_this)
         }
     }
     free(vbuff);
-
-    cf_pclose(pp);
-
-    /* Now save the state for ShowState()
-       the state is not smaller than the last or at least 40 minutes
-       older. This mirrors the persistence of the maxima classes */
-    SaveNetworkData(in, out);
 }
 
 static void SaveNetworkData(Item * const *in, Item * const *out)

@@ -183,6 +183,8 @@ static void SetNetworkEntropyClasses(const char *service, const char *direction,
 
 /******************************************************************************/
 
+static void SaveNetworkData(Item * const *in, Item * const *out);
+
 void MonNetworkGatherData(double *cf_this)
 {
     FILE *pp;
@@ -399,16 +401,22 @@ void MonNetworkGatherData(double *cf_this)
             }
         }
     }
+    free(vbuff);
 
     cf_pclose(pp);
 
-/* Now save the state for ShowState()
-   the state is not smaller than the last or at least 40 minutes
-   older. This mirrors the persistence of the maxima classes */
+    /* Now save the state for ShowState()
+       the state is not smaller than the last or at least 40 minutes
+       older. This mirrors the persistence of the maxima classes */
+    SaveNetworkData(in, out);
+}
 
+static void SaveNetworkData(Item * const *in, Item * const *out)
+{
     const char* const statedir = GetStateDir();
 
-    for (i = 0; i < ATTR; i++)
+    char vbuff[CF_BUFSIZE];
+    for (size_t i = 0; i < ATTR; i++)
     {
         struct stat statbuf;
         time_t now = time(NULL);
@@ -436,7 +444,7 @@ void MonNetworkGatherData(double *cf_this)
         Log(LOG_LEVEL_DEBUG, "Saved in netstat data in '%s'", vbuff);
     }
 
-    for (i = 0; i < ATTR; i++)
+    for (size_t i = 0; i < ATTR; i++)
     {
         struct stat statbuf;
         time_t now = time(NULL);
@@ -462,6 +470,4 @@ void MonNetworkGatherData(double *cf_this)
         Log(LOG_LEVEL_DEBUG, "Saved out netstat data in '%s'", vbuff);
         DeleteItemList(out[i]);
     }
-
-    free(vbuff);
 }

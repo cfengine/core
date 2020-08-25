@@ -186,19 +186,8 @@ static void SetNetworkEntropyClasses(const char *service, const char *direction,
 static void SaveNetworkData(Item * const *in, Item * const *out);
 static void GetNetworkDataFromNetstat(FILE *fp, double *cf_this, Item **in, Item **out);
 
-void MonNetworkGatherData(double *cf_this)
+static inline void ResetNetworkData()
 {
-    FILE *pp;
-    char comm[PATH_MAX + 4] = {0}; /* path to the binary + " -an" */
-    Item *in[ATTR], *out[ATTR];
-    char *sp;
-    int i;
-
-    for (i = 0; i < ATTR; i++)
-    {
-        in[i] = out[i] = NULL;
-    }
-
     DeleteItemList(ALL_INCOMING);
     ALL_INCOMING = NULL;
 
@@ -207,7 +196,13 @@ void MonNetworkGatherData(double *cf_this)
     DeleteItemList(MON_UDP4);
     DeleteItemList(MON_UDP6);
     MON_UDP4 = MON_UDP6 = MON_TCP4 = MON_TCP6 = NULL;
+}
 
+void MonNetworkGatherData(double *cf_this)
+{
+    ResetNetworkData();
+
+    char comm[PATH_MAX + 4] = {0}; /* path to the binary + " -an" */
     strncpy(comm, VNETSTAT[VSYSTEMHARDCLASS], (sizeof(comm) - 1));
 
     if (!FileCanOpen(comm, "r"))
@@ -220,6 +215,7 @@ void MonNetworkGatherData(double *cf_this)
 
     strncat(comm, " -an", sizeof(comm) - 1);
 
+    FILE *pp;
     if ((pp = cf_popen(comm, "r", true)) == NULL)
     {
         Log(LOG_LEVEL_VERBOSE,
@@ -227,6 +223,9 @@ void MonNetworkGatherData(double *cf_this)
             comm);
         return;
     }
+
+    Item *in[ATTR] = {0};
+    Item *out[ATTR] = {0};
     GetNetworkDataFromNetstat(pp, cf_this, in, out);
     cf_pclose(pp);
 

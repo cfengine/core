@@ -8,41 +8,41 @@
 # NOTE: It would be nice if this was auto-generated, but it isn't,
 #       just add another body / bundle if you need to use it in an example.
 
-body package_method yum {any::}
-body package_method generic {any::}
-body classes enumerate(x) {any::}
-body perms p(user,mode) {any::}
-body changes tripwire {any::}
-body depth_search recurse(d) {any::}
-body delete tidy {any::}
-body file_select days_old(days) {any::}
-body edit_defaults empty {any::}
-body acl ntfs(acl) {any::}
-body action if_elapsed(x) {any::}
-body action warn_only {any::}
-body classes if_ok(x) {any::}
-body classes if_repaired(x) {any::}
-body contain setuid(owner) {any::}
-body copy_from local_cp(from) {any::}
-body copy_from remote_cp(from, server) {any::}
-body copy_from secure_cp(from,server) {any::}
-body depth_search include_base {any::}
-body package_method solaris(pkgname, spoolfile, adminfile) {any::}
-body package_method zypper {any::}
-body perms mo(mode, user) {any::}
-body perms mog(mode, user, group) {any::}
-body perms owner(user) {any::}
-body rename disable {any::}
-body rename rotate(level) {any::}
-body rename to(file) {any::}
-body replace_with value(x) {any::}
-body acl strict {any::}
-body changes detect_content {any::}
-body classes if_else (yes, no) {any::}
-body contain in_shell {any::}
-body copy_from remote_dcp(from,server) {any::}
-body package_method msi_explicit(repo) {any::}
-body package_method msi_implicit(repo) {any::}
+body package_method yum {}
+body package_method generic {}
+body classes enumerate(x) {}
+body perms p(user,mode) {}
+body changes tripwire {}
+body depth_search recurse(d) {}
+body delete tidy {}
+body file_select days_old(days) {}
+body edit_defaults empty {}
+body acl ntfs(acl) {}
+body action if_elapsed(x) {}
+body action warn_only {}
+body classes if_ok(x) {}
+body classes if_repaired(x) {}
+body contain setuid(owner) {}
+body copy_from local_cp(from) {}
+body copy_from remote_cp(from, server) {}
+body copy_from secure_cp(from,server) {}
+body depth_search include_base {}
+body package_method solaris(pkgname, spoolfile, adminfile) {}
+body package_method zypper {}
+body perms mo(mode, user) {}
+body perms mog(mode, user, group) {}
+body perms owner(user) {}
+body rename disable {}
+body rename rotate(level) {}
+body rename to(file) {}
+body replace_with value(x) {}
+body acl strict {}
+body changes detect_content {}
+body classes if_else (yes, no) {}
+body contain in_shell {}
+body copy_from remote_dcp(from,server) {}
+body package_method msi_explicit(repo) {}
+body package_method msi_implicit(repo) {}
 
 bundle edit_line insert_lines(lines) {}
 bundle edit_line append_if_no_line(lines) {}

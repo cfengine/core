@@ -472,7 +472,7 @@ bodybody:              body_begin
                            ParserBeginBlockBody();
                        }
 
-                       bodyattribs
+                       bodybody_inner
 
                        '}'
                        {
@@ -480,6 +480,9 @@ bodybody:              body_begin
                        }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+bodybody_inner:        /* empty */
+                     | bodyattribs
 
 bodyattribs:           bodyattrib                    /* BODY ONLY */
                      | bodyattribs bodyattrib

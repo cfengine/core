@@ -146,10 +146,11 @@ fi
 CURRENT_PS_UID=__none__
 INSIDE_CONTAINER=-1
 
-if ps --help 2>/dev/null | egrep -e '--cols\b' > /dev/null; then
+if ps --help 2>/dev/null | egrep -e '--cols\b' > /dev/null || ps --help output 2>/dev/null | egrep -e '--cols\b'; then
     # There is a bug in SUSE which means that ps output will be truncated even
     # when piped to grep, if the terminal size is small. However using --cols
-    # will override it.
+    # will override it. NOTE: On Suse 12 and 15, `ps` mentions `--cols` only
+    # in `ps --help output` only.
     PS_OPTIONS="--cols 200"
 else
     PS_OPTIONS=

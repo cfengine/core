@@ -57,7 +57,7 @@ libcf_monitord_la_SOURCES = \
 	cf-monitord.c
 
 if LINUX
-libcf_monitord_la_SOURCES += mon_io_linux.c mon_mem_linux.c
+libcf_monitord_la_SOURCES += mon_io_linux.c mon_mem_linux.c proc_net_parsing.c proc_net_parsing.h
 endif
 
 if SOLARIS
@@ -71,6 +71,17 @@ libcf_monitord_la_SOURCES += mon_mem_stub.c
 endif
 endif
 
+TESTS =
+
+if LINUX
+TESTS += get_socket_info
+noinst_PROGRAMS = get_socket_info
+get_socket_info_SOURCES = get_socket_info.c
+get_socket_info_LDADD = ${top_srcdir}/libntech/libutils/libutils.la \
+	$(PCRE_LIBS) \
+	$(LIBYAML_LIBS) \
+    libcf-monitord.la
+endif
 
 if !BUILTIN_EXTENSIONS
 bin_PROGRAMS = cf-monitord

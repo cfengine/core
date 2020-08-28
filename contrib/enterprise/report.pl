@@ -25,6 +25,7 @@ my %options = (
                limit => 100000,
                verbose => 0,
                list => 0,
+               insecure => 0,
               );
 
 GetOptions(\%options,
@@ -33,11 +34,20 @@ GetOptions(\%options,
            "limit:i",           # note that you can say "LIMIT N" in the query!
            "url:s",
            "host:s",
-           "list|list-hosts!"
+           "list|list-hosts!",
+           "insecure|k!",
           );
 
 # Create a user agent object
-my $ua = LWP::UserAgent->new;
+my $ua;
+if ($options{insecure})
+{
+    $ua = LWP::UserAgent->new(ssl_opts => { verify_hostname => 0, SSL_verify_mode => 0x00 });
+}
+else
+{
+    $ua = LWP::UserAgent->new;
+}
 
 my $query = shift;
 
@@ -52,7 +62,7 @@ elsif (exists $options{host})
     $options{output} = 'host';
 }
 
-die "Syntax: $0 [--url BASEURL] [--limit N] [--output @{[ join('|', sort keys %outputs) ]}] [QUERY|--list|--host HOSTNAME]"
+die "Syntax: $0 [--insecure] [--url BASEURL] [--limit N] [--output @{[ join('|', sort keys %outputs) ]}] [QUERY|--list|--host HOSTNAME]"
  unless ($query && exists $outputs{$options{output}});
 
 $query =~ s/\v+/ /g;

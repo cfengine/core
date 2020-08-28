@@ -34,10 +34,22 @@
 #include <pipes.h>
 #include <known_dirs.h>
 
+#ifdef __linux__
+#include <proc_net_parsing.h>
+#endif
+
 /* Globals */
 
 Item *ALL_INCOMING = NULL;
 Item *MON_UDP4 = NULL, *MON_UDP6 = NULL, *MON_TCP4 = NULL, *MON_TCP6 = NULL;
+
+typedef enum {
+    cfn_udp4 = 0,
+    cfn_udp6,
+    cfn_tcp4,
+    cfn_tcp6,
+    cfn_unknown,
+} SocketType;
 
 /*******************************************************************/
 /* Anomaly                                                         */
@@ -45,6 +57,7 @@ Item *MON_UDP4 = NULL, *MON_UDP6 = NULL, *MON_TCP4 = NULL, *MON_TCP6 = NULL;
 
 typedef struct
 {
+    uint32_t port;
     char *portnr;
     char *name;
     enum observables in;
@@ -53,52 +66,52 @@ typedef struct
 
 static const Sock ECGSOCKS[] =     /* extended to map old to new using enum */
 {
-    {"137", "netbiosns", ob_netbiosns_in, ob_netbiosns_out},
-    {"138", "netbiosdgm", ob_netbiosdgm_in, ob_netbiosdgm_out},
-    {"139", "netbiosssn", ob_netbiosssn_in, ob_netbiosssn_out},
-    {"445", "microsoft_ds", ob_microsoft_ds_in, ob_microsoft_ds_out},
-    {"5308", "cfengine", ob_cfengine_in, ob_cfengine_out},
-    {"2049", "nfsd", ob_nfsd_in, ob_nfsd_out},
-    {"25", "smtp", ob_smtp_in, ob_smtp_out},
-    {"80", "www", ob_www_in, ob_www_out},
-    {"8080", "www-alt", ob_www_alt_in, ob_www_alt_out},
-    {"21", "ftp", ob_ftp_in, ob_ftp_out},
-    {"22", "ssh", ob_ssh_in, ob_ssh_out},
-    {"443", "wwws", ob_wwws_in, ob_wwws_out},
-    {"143", "imap", ob_imap_in, ob_imap_out},
-    {"993", "imaps", ob_imaps_in, ob_imaps_out},
-    {"389", "ldap", ob_ldap_in, ob_ldap_out},
-    {"636", "ldaps", ob_ldaps_in, ob_ldaps_out},
-    {"27017", "mongo", ob_mongo_in, ob_mongo_out},
-    {"3306", "mysql", ob_mysql_in, ob_mysql_out},
-    {"5432", "postgresql", ob_postgresql_in, ob_postgresql_out},
-    {"631", "ipp", ob_ipp_in, ob_ipp_out},
+    {137, "137", "netbiosns", ob_netbiosns_in, ob_netbiosns_out},
+    {138, "138", "netbiosdgm", ob_netbiosdgm_in, ob_netbiosdgm_out},
+    {139, "139", "netbiosssn", ob_netbiosssn_in, ob_netbiosssn_out},
+    {445, "445", "microsoft_ds", ob_microsoft_ds_in, ob_microsoft_ds_out},
+    {5308, "5308", "cfengine", ob_cfengine_in, ob_cfengine_out},
+    {2049, "2049", "nfsd", ob_nfsd_in, ob_nfsd_out},
+    {25, "25", "smtp", ob_smtp_in, ob_smtp_out},
+    {80, "80", "www", ob_www_in, ob_www_out},
+    {8080, "8080", "www-alt", ob_www_alt_in, ob_www_alt_out},
+    {21, "21", "ftp", ob_ftp_in, ob_ftp_out},
+    {22, "22", "ssh", ob_ssh_in, ob_ssh_out},
+    {433, "443", "wwws", ob_wwws_in, ob_wwws_out},
+    {143, "143", "imap", ob_imap_in, ob_imap_out},
+    {993, "993", "imaps", ob_imaps_in, ob_imaps_out},
+    {389, "389", "ldap", ob_ldap_in, ob_ldap_out},
+    {636, "636", "ldaps", ob_ldaps_in, ob_ldaps_out},
+    {27017, "27017", "mongo", ob_mongo_in, ob_mongo_out},
+    {3306, "3306", "mysql", ob_mysql_in, ob_mysql_out},
+    {5432, "5432", "postgresql", ob_postgresql_in, ob_postgresql_out},
+    {631, "631", "ipp", ob_ipp_in, ob_ipp_out},
 };
 #define ATTR (sizeof(ECGSOCKS) / sizeof(ECGSOCKS[0]))
 
 static const char *const VNETSTAT[] =
 {
     [PLATFORM_CONTEXT_UNKNOWN] = "-",
-    [PLATFORM_CONTEXT_OPENVZ] = "/bin/netstat -rn",          /* virt_host_vz_vzps */
-    [PLATFORM_CONTEXT_HP] = "/usr/bin/netstat -rn",          /* hpux */
-    [PLATFORM_CONTEXT_AIX] = "/usr/bin/netstat -rn",         /* aix */
-    [PLATFORM_CONTEXT_LINUX] = "/bin/netstat -rn",           /* linux */
-    [PLATFORM_CONTEXT_BUSYBOX] = "/bin/netstat -rn",         /* linux */
-    [PLATFORM_CONTEXT_SOLARIS] = "/usr/bin/netstat -rn",     /* solaris */
-    [PLATFORM_CONTEXT_SUN_SOLARIS] = "/usr/bin/netstat -rn", /* solaris */
-    [PLATFORM_CONTEXT_FREEBSD] = "/usr/bin/netstat -rn",     /* freebsd */
-    [PLATFORM_CONTEXT_NETBSD] = "/usr/bin/netstat -rn",      /* netbsd */
-    [PLATFORM_CONTEXT_CRAYOS] = "/usr/ucb/netstat -rn",      /* cray */
+    [PLATFORM_CONTEXT_OPENVZ] = "/bin/netstat",          /* virt_host_vz_vzps */
+    [PLATFORM_CONTEXT_HP] = "/usr/bin/netstat",          /* hpux */
+    [PLATFORM_CONTEXT_AIX] = "/usr/bin/netstat",         /* aix */
+    [PLATFORM_CONTEXT_LINUX] = "/bin/netstat",           /* linux */
+    [PLATFORM_CONTEXT_BUSYBOX] = "/bin/netstat",         /* linux */
+    [PLATFORM_CONTEXT_SOLARIS] = "/usr/bin/netstat",     /* solaris */
+    [PLATFORM_CONTEXT_SUN_SOLARIS] = "/usr/bin/netstat", /* solaris */
+    [PLATFORM_CONTEXT_FREEBSD] = "/usr/bin/netstat",     /* freebsd */
+    [PLATFORM_CONTEXT_NETBSD] = "/usr/bin/netstat",      /* netbsd */
+    [PLATFORM_CONTEXT_CRAYOS] = "/usr/ucb/netstat",      /* cray */
     [PLATFORM_CONTEXT_WINDOWS_NT] = "/cygdrive/c/WINNT/System32/netstat", /* CygWin */
-    [PLATFORM_CONTEXT_SYSTEMV] = "/usr/bin/netstat -rn",     /* Unixware */
-    [PLATFORM_CONTEXT_OPENBSD] = "/usr/bin/netstat -rn",     /* openbsd */
-    [PLATFORM_CONTEXT_CFSCO] = "/usr/bin/netstat -rn",       /* sco */
-    [PLATFORM_CONTEXT_DARWIN] = "/usr/sbin/netstat -rn",     /* darwin */
-    [PLATFORM_CONTEXT_QNX] = "/usr/bin/netstat -rn",         /* qnx */
-    [PLATFORM_CONTEXT_DRAGONFLY] = "/usr/bin/netstat -rn",   /* dragonfly */
+    [PLATFORM_CONTEXT_SYSTEMV] = "/usr/bin/netstat",     /* Unixware */
+    [PLATFORM_CONTEXT_OPENBSD] = "/usr/bin/netstat",     /* openbsd */
+    [PLATFORM_CONTEXT_CFSCO] = "/usr/bin/netstat",       /* sco */
+    [PLATFORM_CONTEXT_DARWIN] = "/usr/sbin/netstat",     /* darwin */
+    [PLATFORM_CONTEXT_QNX] = "/usr/bin/netstat",         /* qnx */
+    [PLATFORM_CONTEXT_DRAGONFLY] = "/usr/bin/netstat",   /* dragonfly */
     [PLATFORM_CONTEXT_MINGW] = "mingw-invalid",              /* mingw */
     [PLATFORM_CONTEXT_VMWARE] = "/usr/bin/netstat",          /* vmware */
-    [PLATFORM_CONTEXT_ANDROID] = "/system/xbin/netstat -rn", /* android */
+    [PLATFORM_CONTEXT_ANDROID] = "/system/xbin/netstat", /* android */
 };
 
 /* Implementation */
@@ -183,21 +196,14 @@ static void SetNetworkEntropyClasses(const char *service, const char *direction,
 
 /******************************************************************************/
 
-void MonNetworkGatherData(double *cf_this)
+static void SaveNetworkData(Item * const *in, Item * const *out);
+static void GetNetworkDataFromNetstat(FILE *fp, double *cf_this, Item **in, Item **out);
+#ifdef __linux__
+static bool GetNetworkDataFromProcNet(double *cf_this, Item **in, Item **out);
+#endif
+
+static inline void ResetNetworkData()
 {
-    FILE *pp;
-    char local[CF_BUFSIZE], remote[CF_BUFSIZE], comm[CF_BUFSIZE];
-    Item *in[ATTR], *out[ATTR];
-    char *sp;
-    int i;
-    enum cf_netstat_type { cfn_new, cfn_old } type = cfn_new;
-    enum cf_packet_type { cfn_udp4, cfn_udp6, cfn_tcp4, cfn_tcp6} packet = cfn_tcp4;
-
-    for (i = 0; i < ATTR; i++)
-    {
-        in[i] = out[i] = NULL;
-    }
-
     DeleteItemList(ALL_INCOMING);
     ALL_INCOMING = NULL;
 
@@ -206,45 +212,373 @@ void MonNetworkGatherData(double *cf_this)
     DeleteItemList(MON_UDP4);
     DeleteItemList(MON_UDP6);
     MON_UDP4 = MON_UDP6 = MON_TCP4 = MON_TCP6 = NULL;
+}
 
-    sscanf(VNETSTAT[VSYSTEMHARDCLASS], "%s", comm);
+void MonNetworkGatherData(double *cf_this)
+{
+    ResetNetworkData();
 
-    if (!FileCanOpen(comm, "r"))
+    Item *in[ATTR] = {0};
+    Item *out[ATTR] = {0};
+
+#ifdef __linux__
+    /* On Linux, prefer parsing data from /proc/net with our custom code (more
+     * efficient), but fall back to netstat if proc parsing fails. */
+    if ((access("/proc/net/tcp", R_OK) != 0) || !GetNetworkDataFromProcNet(cf_this, in, out))
+#endif
     {
-        Log(LOG_LEVEL_VERBOSE,
-            "Cannot open '%s', aborting gathering of network data (monitoring)",
-            comm);
-        return;
+        char comm[PATH_MAX + 4] = {0}; /* path to the binary + " -an" */
+        strncpy(comm, VNETSTAT[VSYSTEMHARDCLASS], (sizeof(comm) - 1));
+
+        if (!FileCanOpen(comm, "r"))
+        {
+            Log(LOG_LEVEL_VERBOSE,
+                "Cannot open '%s', aborting gathering of network data (monitoring)",
+                comm);
+            return;
+        }
+
+        strncat(comm, " -an", sizeof(comm) - 1);
+
+        FILE *pp;
+        if ((pp = cf_popen(comm, "r", true)) == NULL)
+        {
+            Log(LOG_LEVEL_VERBOSE,
+                "Opening '%s' failed, aborting gathering of network data (monitoring)",
+                comm);
+            return;
+        }
+
+        GetNetworkDataFromNetstat(pp, cf_this, in, out);
+        cf_pclose(pp);
     }
 
-    strcat(comm, " -an");
+    /* Now save the state for ShowState()
+       the state is not smaller than the last or at least 40 minutes
+       older. This mirrors the persistence of the maxima classes */
+    SaveNetworkData(in, out);
+}
 
-    if ((pp = cf_popen(comm, "r", true)) == NULL)
+#ifdef __linux__
+static inline void SaveSocketInfo(const char *local_addr,
+                                  uint32_t local_port,
+                                  uint32_t remote_port,
+                                  SocketState state,
+                                  SocketType type,
+                                  const char *socket_info,
+                                  double *cf_this,
+                                  Item **in, Item **out)
+{
+    Log(LOG_LEVEL_DEBUG, "Saving socket info '%s:%d:%d [%d, %d]",
+        local_addr, local_port, remote_port, state, type);
+
+    if (state == SOCK_STATE_LISTEN)
     {
-        Log(LOG_LEVEL_VERBOSE,
-            "Opening '%s' failed, aborting gathering of network data (monitoring)",
-            comm);
-        return;
+        char port_str[CF_MAX_PORT_LEN];
+        snprintf(port_str, sizeof(port_str), "%d", local_port);
+
+        IdempPrependItem(&ALL_INCOMING, port_str, NULL);
+
+        switch (type)
+        {
+        case cfn_tcp4:
+            IdempPrependItem(&MON_TCP4, port_str, local_addr);
+            break;
+        case cfn_tcp6:
+            IdempPrependItem(&MON_TCP6, port_str, local_addr);
+            break;
+        case cfn_udp4:
+            IdempPrependItem(&MON_UDP4, port_str, local_addr);
+            break;
+        case cfn_udp6:
+            IdempPrependItem(&MON_UDP6, port_str, local_addr);
+            break;
+        default:
+            debug_abort_if_reached();
+            break;
+        }
     }
+    for (size_t i = 0; i < ATTR; i++)
+    {
+        if (local_port == ECGSOCKS[i].port)
+        {
+            cf_this[ECGSOCKS[i].in]++;
+            AppendItem(&in[i], socket_info, "");
+
+        }
+
+        if (remote_port == ECGSOCKS[i].port)
+        {
+            cf_this[ECGSOCKS[i].out]++;
+            AppendItem(&out[i], socket_info, "");
+
+        }
+    }
+}
+
+static inline bool GetNetworkDataFromProcNetTCP(char local_addr[INET_ADDRSTRLEN],
+                                                char remote_addr[INET_ADDRSTRLEN],
+                                                char **buff, size_t *buff_size, Seq *lines,
+                                                double *cf_this, Item **in, Item **out)
+{
+    FILE *fp = fopen("/proc/net/tcp", "r");
+    if (fp == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to open /proc/net/tcp for reading");
+        return false;
+    }
+    /* Read the header */
+    ssize_t ret = CfReadLine(buff, buff_size, fp);
+    if (ret == -1)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to read data from /proc/net/tcp");
+        fclose(fp);
+        return false;
+    }
+
+    /* Read real data */
+    ret = CfReadLines(buff, buff_size, fp, lines);
+    if (ret == -1)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to read data from /proc/net/tcp");
+        fclose(fp);
+        return false;
+    }
+    Log(LOG_LEVEL_VERBOSE, "Read %zu lines from /proc/net/tcp", ret);
+
+    uint32_t l_port, r_port;
+    SocketState state;
+    for (size_t i = 0; i < ret; i++)
+    {
+        char *line = SeqAt(lines,i);
+        if (ParseIPv4SocketInfo(line, local_addr, &l_port, remote_addr, &r_port, &state))
+        {
+            SaveSocketInfo(local_addr, l_port, r_port,
+                           state, cfn_tcp4,
+                           line, cf_this, in, out);
+        }
+    }
+    fclose(fp);
+    SeqClear(lines);
+    return true;
+}
+
+static inline bool GetNetworkDataFromProcNetTCP6(char local_addr6[INET6_ADDRSTRLEN],
+                                                 char remote_addr6[INET6_ADDRSTRLEN],
+                                                 char **buff, size_t *buff_size, Seq *lines,
+                                                 double *cf_this, Item **in, Item **out)
+{
+    FILE *fp = fopen("/proc/net/tcp6", "r");
+    if (fp == NULL)
+    {
+        /* IPv6 may be completely disabled in kernel so this should be handled gracefully. */
+        Log(LOG_LEVEL_VERBOSE, "Failed to read data from /proc/net/tcp6");
+        return true;
+    }
+    ssize_t ret = CfReadLine(buff, buff_size, fp);
+    if (ret == -1)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to read data from /proc/net/tcp6");
+        fclose(fp);
+        return false;
+    }
+
+    /* Read real data */
+    ret = CfReadLines(buff, buff_size, fp, lines);
+    if (ret == -1)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to read data from /proc/net/tcp6");
+        fclose(fp);
+        return false;
+    }
+    Log(LOG_LEVEL_VERBOSE, "Read %zu lines from /proc/net/tcp6", ret);
+
+    uint32_t l_port, r_port;
+    SocketState state;
+    for (size_t i = 0; i < ret; i++)
+    {
+        char *line = SeqAt(lines,i);
+        if (ParseIPv6SocketInfo(line, local_addr6, &l_port, remote_addr6, &r_port, &state))
+        {
+            SaveSocketInfo(local_addr6, l_port, r_port,
+                           state, cfn_tcp6,
+                           line, cf_this, in, out);
+        }
+    }
+    fclose(fp);
+    SeqClear(lines);
+    return true;
+}
+
+static inline bool GetNetworkDataFromProcNetUDP(char local_addr[INET_ADDRSTRLEN],
+                                                char remote_addr[INET_ADDRSTRLEN],
+                                                char **buff, size_t *buff_size, Seq *lines,
+                                                double *cf_this, Item **in, Item **out)
+{
+    FILE *fp = fopen("/proc/net/udp", "r");
+    if (fp == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to open /proc/net/udp for reading");
+        return false;
+    }
+    /* Read the header */
+    ssize_t ret = CfReadLine(buff, buff_size, fp);
+    if (ret == -1)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to read data from /proc/net/udp");
+        fclose(fp);
+        return false;
+    }
+
+    /* Read real data */
+    ret = CfReadLines(buff, buff_size, fp, lines);
+    if (ret == -1)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to read data from /proc/net/udp");
+        fclose(fp);
+        return false;
+    }
+    Log(LOG_LEVEL_VERBOSE, "Read %zu lines from /proc/net/udp", ret);
+
+    uint32_t l_port, r_port;
+    SocketState state;
+    for (size_t i = 0; i < ret; i++)
+    {
+        char *line = SeqAt(lines,i);
+        if (ParseIPv4SocketInfo(line, local_addr, &l_port, remote_addr, &r_port, &state))
+        {
+            SaveSocketInfo(local_addr, l_port, r_port,
+                           state, cfn_udp4,
+                           line, cf_this, in, out);
+        }
+    }
+    fclose(fp);
+    SeqClear(lines);
+    return true;
+}
+
+static inline bool GetNetworkDataFromProcNetUDP6(char local_addr6[INET6_ADDRSTRLEN],
+                                                 char remote_addr6[INET6_ADDRSTRLEN],
+                                                 char **buff, size_t *buff_size, Seq *lines,
+                                                 double *cf_this, Item **in, Item **out)
+{
+    FILE *fp = fopen("/proc/net/udp6", "r");
+    if (fp == NULL)
+    {
+        /* IPv6 may be completely disabled in kernel so this should be handled gracefully. */
+        Log(LOG_LEVEL_VERBOSE, "Failed to read data from /proc/net/udp6");
+        return true;
+    }
+    ssize_t ret = CfReadLine(buff, buff_size, fp);
+    if (ret == -1)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to read data from /proc/net/udp6");
+        fclose(fp);
+        return false;
+    }
+
+    /* Read real data */
+    ret = CfReadLines(buff, buff_size, fp, lines);
+    if (ret == -1)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to read data from /proc/net/udp6");
+        fclose(fp);
+        return false;
+    }
+    Log(LOG_LEVEL_VERBOSE, "Read %zu lines from /proc/net/udp6", ret);
+
+    uint32_t l_port, r_port;
+    SocketState state;
+    for (size_t i = 0; i < ret; i++)
+    {
+        char *line = SeqAt(lines,i);
+        if (ParseIPv6SocketInfo(line, local_addr6, &l_port, remote_addr6, &r_port, &state))
+        {
+            SaveSocketInfo(local_addr6, l_port, r_port,
+                           state, cfn_udp6,
+                           line, cf_this, in, out);
+        }
+    }
+    fclose(fp);
+    SeqClear(lines);
+    return true;
+}
+
+static bool GetNetworkDataFromProcNet(double *cf_this, Item **in, Item **out)
+{
+    bool result = true;
+    Seq *lines = SeqNew(64, free);
+
+    size_t buff_size = 256;
+    char *buff = xmalloc(buff_size);
+
+    {
+        char local_addr[INET_ADDRSTRLEN];
+        char remote_addr[INET_ADDRSTRLEN];
+        if (!GetNetworkDataFromProcNetTCP(local_addr, remote_addr,
+                                          &buff, &buff_size, lines,
+                                          cf_this, in, out))
+        {
+            SeqDestroy(lines);
+            free(buff);
+            return false;
+        }
+        SeqClear(lines);
+        if (!GetNetworkDataFromProcNetUDP(local_addr, remote_addr,
+                                          &buff, &buff_size, lines,
+                                          cf_this, in, out))
+        {
+            SeqDestroy(lines);
+            free(buff);
+            return false;
+        }
+        SeqClear(lines);
+    }
+
+    {
+        char local_addr6[INET6_ADDRSTRLEN];
+        char remote_addr6[INET6_ADDRSTRLEN];
+        if (!GetNetworkDataFromProcNetTCP6(local_addr6, remote_addr6,
+                                           &buff, &buff_size, lines,
+                                           cf_this, in, out))
+        {
+            Log(LOG_LEVEL_VERBOSE, "Failed to get IPv6 TCP sockets information");
+        }
+        SeqClear(lines);
+        if (!GetNetworkDataFromProcNetUDP6(local_addr6, remote_addr6,
+                                           &buff, &buff_size, lines,
+                                           cf_this, in, out))
+        {
+            Log(LOG_LEVEL_VERBOSE, "Failed to get IPv6 UDP sockets information");
+        }
+    }
+
+    SeqDestroy(lines);
+    free(buff);
+    return result;
+}
+#endif  /* __linux__ */
+
+static void GetNetworkDataFromNetstat(FILE *fp, double *cf_this, Item **in, Item **out)
+{
+    enum cf_netstat_type { cfn_new, cfn_old } type = cfn_new;
+    SocketType packet = cfn_tcp4;
 
     size_t vbuff_size = CF_BUFSIZE;
     char *vbuff = xmalloc(vbuff_size);
-
     for (;;)
     {
-        memset(local, 0, CF_BUFSIZE);
-        memset(remote, 0, CF_BUFSIZE);
+        char local[CF_MAX_IP_LEN + CF_MAX_PORT_LEN] = {0};
+        char remote[CF_MAX_IP_LEN + CF_MAX_PORT_LEN] = {0};
 
-        size_t res = CfReadLine(&vbuff, &vbuff_size, pp);
+        size_t res = CfReadLine(&vbuff, &vbuff_size, fp);
         if (res == -1)
         {
-            if (!feof(pp))
+            if (!feof(fp))
             {
                 Log(LOG_LEVEL_DEBUG,
-                    "Error occured while reading '%s' "
-                    "(CfReadLine/getline returned -1 but no EOF found)",
-                    comm);
-                cf_pclose(pp);
+                    "Error occured while reading data from 'netstat' "
+                    "(CfReadLine/getline returned -1 but no EOF found)");
                 free(vbuff);
                 return;
             }
@@ -335,6 +669,7 @@ void MonNetworkGatherData(double *cf_this)
 
         // Extract the port number from the end of the string
 
+        char *sp;
         for (sp = local + strlen(local); (*sp != '.') && (*sp != ':')  && (sp > local); sp--)
         {
         }
@@ -383,7 +718,7 @@ void MonNetworkGatherData(double *cf_this)
 
         // Now look for the specific vital signs to count frequencies
 
-        for (i = 0; i < ATTR; i++)
+        for (size_t i = 0; i < ATTR; i++)
         {
             if (strcmp(localport, ECGSOCKS[i].portnr) == 0)
             {
@@ -400,16 +735,15 @@ void MonNetworkGatherData(double *cf_this)
             }
         }
     }
+    free(vbuff);
+}
 
-    cf_pclose(pp);
-
-/* Now save the state for ShowState()
-   the state is not smaller than the last or at least 40 minutes
-   older. This mirrors the persistence of the maxima classes */
-
+static void SaveNetworkData(Item * const *in, Item * const *out)
+{
     const char* const statedir = GetStateDir();
 
-    for (i = 0; i < ATTR; i++)
+    char vbuff[CF_BUFSIZE];
+    for (size_t i = 0; i < ATTR; i++)
     {
         struct stat statbuf;
         time_t now = time(NULL);
@@ -437,7 +771,7 @@ void MonNetworkGatherData(double *cf_this)
         Log(LOG_LEVEL_DEBUG, "Saved in netstat data in '%s'", vbuff);
     }
 
-    for (i = 0; i < ATTR; i++)
+    for (size_t i = 0; i < ATTR; i++)
     {
         struct stat statbuf;
         time_t now = time(NULL);
@@ -463,6 +797,4 @@ void MonNetworkGatherData(double *cf_this)
         Log(LOG_LEVEL_DEBUG, "Saved out netstat data in '%s'", vbuff);
         DeleteItemList(out[i]);
     }
-
-    free(vbuff);
 }

@@ -152,6 +152,22 @@ bool FileSparseClose(int fd, const char *filename,
 ssize_t CfReadLine(char **buff, size_t *size, FILE *fp);
 
 /**
+ * @brief Read lines from a file and return them as a sequence.
+ *
+ * @param buff If not %NULL, a buffer used for the internal CfReadLine() calls
+ * @param size Size of the buffer %buff (or 0)
+ * @param fp   File to read the data from
+ * @param lines Sequence to append the read lines to
+ *
+ * @return Number of items/lines appended to #lines or -1 in case of error
+ * @note #buff can be reallocated by an internal CfReadLine() call in which case,
+ *       #size is also adapted accordingly (just like getline() does)
+ * @warning The information about lengths of individual lines is lost,
+ *          use CfReadLine() for files with NUL bytes.
+ */
+ssize_t CfReadLines(char **buff, size_t *size, FILE *fp, Seq *lines);
+
+/**
  * @brief For testing things against /proc, uses env var CFENGINE_TEST_OVERRIDE_PROCDIR
  * @return the extra directory to add BEFORE /proc in the path
  */

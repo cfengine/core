@@ -74,6 +74,7 @@ stamp-h1
 /cf-key/cf-key.exe
 /cf-monitord/cf-monitord
 /cf-monitord/cf-monitord.exe
+/cf-monitord/get_socket_info
 /cf-promises/cf-promises
 /cf-promises/cf-promises.exe
 /cf-runagent/cf-runagent

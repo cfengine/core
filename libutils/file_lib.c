@@ -1434,6 +1434,46 @@ ssize_t CfReadLine(char **buff, size_t *size, FILE *fp)
     return b;
 }
 
+ssize_t CfReadLines(char **buff, size_t *size, FILE *fp, Seq *lines)
+{
+    assert(size != NULL);
+    assert(fp != NULL);
+    assert(lines != NULL);
+    assert((buff != NULL) || *size == 0);
+
+    ssize_t appended = 0;
+
+    ssize_t ret;
+    bool free_buff = (buff == NULL);
+    while (!feof(fp))
+    {
+        assert((buff != NULL) || *size == 0);
+        ret = CfReadLine(buff, size, fp);
+        if (ret == -1)
+        {
+            if (!feof(fp))
+            {
+                if (free_buff)
+                {
+                    free(*buff);
+                }
+                return -1;
+            }
+        }
+        else
+        {
+            SeqAppend(lines, xstrdup(*buff));
+            appended++;
+        }
+    }
+    if (free_buff)
+    {
+        free(*buff);
+    }
+
+    return appended;
+}
+
 StringSet* GlobFileList(const char *pattern)
 {
     StringSet *set = StringSetNew();

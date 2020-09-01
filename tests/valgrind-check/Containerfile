@@ -1,0 +1,8 @@
+FROM ubuntu:20.04 AS build
+RUN DEBIAN_FRONTEND=noninteractive apt-get update -y
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y libssl-dev libxml2-dev libpam0g-dev liblmdb-dev libacl1-dev libpcre3 libpcre3-dev
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python git flex bison byacc automake make autoconf libtool valgrind
+COPY masterfiles masterfiles
+COPY core core
+WORKDIR core
+CMD bash tests/valgrind-check/run_checks.sh

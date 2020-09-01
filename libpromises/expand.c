@@ -348,13 +348,13 @@ Rval ExpandPrivateRval(EvalContext *ctx,
 /**
  * Detects a variable expansion inside of a data/list reference, for example
  * "@(${container_name})" or "@(prefix${container_name})" or
- * "@(nspace:${container_name})".
+ * "@(nspace:${container_name})" or "@(container_name[${field}])".
  *
  * @note This function doesn't have to be bullet-proof, it only needs to
  *       properly detect valid cases. The rest is left to the parser and code
  *       expanding variables.
  */
-static inline bool ContainsVariableDataListReference(const char *str)
+static inline bool VariableDataOrListReference(const char *str)
 {
     assert(str != NULL);
 
@@ -372,14 +372,16 @@ static inline bool ContainsVariableDataListReference(const char *str)
         return false;
     }
 
-    /* Check if, after '@(', there are only characters allowed in data/list
-     * names or ':' to separate namespace from the name followed by "$(" or "${"
-     * with a matching close bracket somewhere. */
+    /* Check if, after '@(', there are only
+     *   - characters allowed in data/list names or
+     *   - ':' to separate namespace from the name or
+     *   - '.' to separate bundle and variable name or,
+     *   - '[' for data/list field/index specification,
+     * followed by "$(" or "${" with a matching close bracket somewhere. */
     for (size_t i = 2; i < len; i++)
     {
-        if (!(isalnum((int) str[i]) ||
-              (str[i] == '_') || (str[i] == ':') ||
-              (str[i] == '$')))
+        if (!(isalnum((int) str[i]) || (str[i] == '_') ||
+              (str[i] == ':') || (str[i] == '$') || (str[i] == '.') || (str[i] == '[')))
         {
             return false;
         }
@@ -405,12 +407,14 @@ static Rval ExpandListEntry(EvalContext *ctx,
                             const char *ns, const char *scope,
                             int expandnaked, Rval entry)
 {
+    Rval expanded_data_list = {0};
     /* If rval is something like '@($(container_name).field)', we need to expand
      * the nested variable first. */
     if (entry.type == RVAL_TYPE_SCALAR &&
-        ContainsVariableDataListReference(entry.item))
+        VariableDataOrListReference(entry.item))
     {
         entry = ExpandPrivateRval(ctx, ns, scope, entry.item, entry.type);
+        expanded_data_list = entry;
     }
 
     if (entry.type == RVAL_TYPE_SCALAR &&
@@ -439,18 +443,24 @@ static Rval ExpandListEntry(EvalContext *ctx,
 
                 if (value_type != CF_DATA_TYPE_NONE)     /* variable found? */
                 {
-                    return ExpandPrivateRval(ctx, ns, scope, value,
-                                             DataTypeToRvalType(value_type));
+                    Rval ret = ExpandPrivateRval(ctx, ns, scope, value,
+                                                 DataTypeToRvalType(value_type));
+                    RvalDestroy(expanded_data_list);
+                    return ret;
                 }
             }
         }
         else
         {
-            return RvalNew(entry.item, RVAL_TYPE_SCALAR);
+            Rval ret = RvalNew(entry.item, RVAL_TYPE_SCALAR);
+            RvalDestroy(expanded_data_list);
+            return ret;
         }
     }
 
-    return ExpandPrivateRval(ctx, ns, scope, entry.item, entry.type);
+    Rval ret = ExpandPrivateRval(ctx, ns, scope, entry.item, entry.type);
+    RvalDestroy(expanded_data_list);
+    return ret;
 }
 
 Rlist *ExpandList(EvalContext *ctx,

@@ -1,0 +1,110 @@
+#######################################################
+#
+# Test datacontainers can be passed with a variable name.
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  meta:
+      "tags" slist => { "find" };
+}
+
+bundle agent test
+
+{
+  meta:
+    "description" -> { "CFE-3299" }
+      string => "Test that lists and data containers with variable index can be passed.";
+
+  vars:
+      "data"
+        data => parsejson('{ "key1" : { "list" : [ "a", "b", "c" ], "scalar" : "value1" },
+                             "key2" : { "list" : [ "x", "y", "z" ], "scalar" : "value2" } }') ;
+
+      "array[key1][list]"   slist  => { "a", "b", "c" } ;
+      "array[key1][scalar]" string => "value1" ;
+      "array[key2][list]"   slist  => { "x", "y", "z" } ;
+      "array[key2][scalar]" string => "value2" ;
+
+      "datakey"  slist => getindices("data") ;
+      "arraykey" slist => getindices("array") ;
+
+  methods:
+      "test_data"
+        usebundle => launcher_data("test.data[${datakey}][list]") ;
+
+      "test_array"
+        usebundle => launcher_array("test.array[${arraykey}][list]") ;
+
+      "test_executor_data"
+        usebundle => executor("@{test.data[${datakey}][list]}") ;
+
+      "test_executor_array"
+        usebundle => executor("@{test.data[${arraykey}][list]}") ;
+}
+
+bundle agent check
+{
+  methods:
+    "" usebundle => dcs_check_diff( $(G.testfile),
+                                    "$(this.promise_filename).expected",
+                                    $(this.promise_filename));
+}
+
+bundle agent launcher_data(list_name)
+{
+  vars:
+    any::
+      "expanded_list" slist => getvalues("${list_name}") ;
+      "callers" string => join(":", callstack_promisers()) ;
+
+  methods:
+    any::
+      # If we don't add something variable in the following promise, and the promise is kept,
+      # CFEngine will think that the promise is already kept and refuse to keep it more than
+      # once. Inserting a variable handle will make CFEngine understand that it's not the
+      # same promise we are asking it to keep over and over again, and execute it again every
+      # time we pass it a different list.
+      "run_list"
+        usebundle => executor(@{launcher_data.expanded_list}),
+        handle => "run_list_${list_name}" ;
+}
+
+bundle agent launcher_array(list_name)
+{
+  vars:
+    any::
+      "expanded_list" slist => { "@{${list_name}}"} ;
+      "callers" string => join(":", callstack_promisers()) ;
+
+  methods:
+    any::
+      # If we don't add something variable in the following promise, and the promise is kept,
+      # CFEngine will think that the promise is already kept and refuse to keep it more than
+      # once. Inserting a variable handle will make CFEngine understand that it's not the
+      # same promise we are asking it to keep over and over again, and execute it again every
+      # time we pass it a different list.
+      "run_list"
+        usebundle => executor(@{launcher_array.expanded_list}),
+        handle => "run_list_${list_name}" ;
+}
+
+bundle agent executor(list)
+{
+  vars:
+      "callers" string => join(":", callstack_promisers()) ;
+
+  reports:
+      "[${callers}:${this.bundle}] ${list}"
+        report_to_file => "$(G.testfile)";
+}

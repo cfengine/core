@@ -1917,7 +1917,7 @@ int _run_tests(const UnitTest *const tests, const size_t number_of_tests, const 
     char filename[1024]     = {0};
     char suitename[1024]    = {0};
     char casename[1024]     = {0};
-    char xmlfile[1024]     = {0};
+    char xmlfile[sizeof(suitename) + sizeof(".xml")] = {0};
     int len;
 
     strcpy(path, file);
@@ -2034,7 +2034,7 @@ int _run_tests(const UnitTest *const tests, const size_t number_of_tests, const 
             }
         }
     }
-    sprintf(xmlfile, "%s.xml", suitename);
+    snprintf(xmlfile, sizeof(xmlfile), "%s.xml", suitename);
     time(&time_now);
     init_xml(XS_INIT_TESTSUITE, suitename, timestamp, "localhost", number_of_tests, total_failed, global_errors, difftime(time_now, time_suite));
     append_xml(xmlfile, "xml_tmp_suite");

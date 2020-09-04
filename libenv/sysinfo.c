@@ -2295,10 +2295,9 @@ static int Linux_Misc_Version(EvalContext *ctx)
 {
     char flavor[CF_MAXVARSIZE];
     char version[CF_MAXVARSIZE];
-    char os[CF_MAXVARSIZE];
     char buffer[CF_BUFSIZE];
 
-    *os = '\0';
+    const char *os = NULL;
     *version = '\0';
 
     FILE *fp = safe_fopen(LSB_RELEASE_FILENAME, "r");
@@ -2318,7 +2317,7 @@ static int Linux_Misc_Version(EvalContext *ctx)
             if (strstr(buffer, "Cumulus"))
             {
                 EvalContextClassPutHard(ctx, "cumulus", "inventory,attribute_name=none,source=agent");
-                strcpy(os, "cumulus");
+                os = "cumulus";
             }
 
             char *sp = strstr(buffer, "DISTRIB_RELEASE=");
@@ -2333,7 +2332,7 @@ static int Linux_Misc_Version(EvalContext *ctx)
     fclose(fp);
     }
 
-    if (*os && *version)
+    if (os != NULL && *version)
     {
         snprintf(flavor, CF_MAXVARSIZE, "%s_%s", os, version);
         SetFlavor(ctx, flavor);

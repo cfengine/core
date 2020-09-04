@@ -28,7 +28,7 @@ if [ "$TRAVIS_OS_NAME" = osx ]
 then
     ./autogen.sh --enable-debug --with-openssl="$(brew --prefix openssl)" --prefix=$INSTDIR --bindir=$INSTDIR/var/cfengine/bin
     gmake --version
-    gmake CFLAGS="-Werror -Wall -Wno-pointer-sign"
+    gmake CFLAGS="-Werror -Wall"
     # Tests are disabled on OS X, because they started hanging in travis,
     # for no apparent reason.
     # gmake --debug -C tests/unit check
@@ -46,16 +46,16 @@ export DIST_TARBALL
 
 if [ "$JOB_TYPE" = compile_only ]
 then
-    make CFLAGS="-Werror -Wno-pointer-sign" -k
+    make CFLAGS="-Werror" -k
 elif [ "$JOB_TYPE" = compile_and_unit_test ]
 then
-    make CFLAGS="-Wall -Wextra -Werror -Wno-pointer-sign -Wno-sign-compare"
+    make CFLAGS="-Wall -Wextra -Werror -Wno-sign-compare"
     make -C tests/unit check
     make -C tests/load check
     exit
 elif [ "$JOB_TYPE" = compile_and_unit_test_asan ]
 then
-    make CFLAGS="-Werror -Wall -Wno-pointer-sign -fsanitize=address" LDFLAGS="-fsanitize=address"
+    make CFLAGS="-Werror -Wall -fsanitize=address" LDFLAGS="-fsanitize=address"
     make -C tests/unit CFLAGS="-fsanitize=address" LDFLAGS="-fsanitize=address" check
     make -C tests/load CFLAGS="-fsanitize=address" LDFLAGS="-fsanitize=address" check
     exit

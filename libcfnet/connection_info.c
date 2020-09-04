@@ -153,7 +153,7 @@ const unsigned char *ConnectionInfoBinaryKeyHash(ConnectionInfo *info, unsigned 
     }
     Key *connection_key = info->remote_key;
     unsigned int real_length = 0;
-    const char *binary = KeyBinaryHash(connection_key, &real_length);
+    const unsigned char *binary = KeyBinaryHash(connection_key, &real_length);
     if (length)
     {
         *length = real_length;

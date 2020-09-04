@@ -209,7 +209,10 @@ static bool SetSessionKey(AgentConnection *conn)
 
 bool AuthenticateAgent(AgentConnection *conn, bool trust_key)
 {
-    char sendbuffer[CF_EXPANDSIZE], in[CF_BUFSIZE], *out, *decrypted_cchall;
+    char *decrypted_cchall;
+    unsigned char sendbuffer[CF_EXPANDSIZE];
+    unsigned char *out;
+    unsigned char in[CF_BUFSIZE];
     BIGNUM *nonce_challenge, *bn = NULL;
     unsigned char digest[EVP_MAX_MD_SIZE + 1];
     int encrypted_len, nonce_len = 0, len, session_size;
@@ -240,11 +243,11 @@ bool AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
     if (FIPS_MODE)
     {
-        HashString(in, nonce_len, digest, CF_DEFAULT_DIGEST);
+        HashString((const char *) in, nonce_len, digest, CF_DEFAULT_DIGEST);
     }
     else
     {
-        HashString(in, nonce_len, digest, HASH_METHOD_MD5);
+        HashString((const char *) in, nonce_len, digest, HASH_METHOD_MD5);
     }
 
 /* We assume that the server bound to the remote socket is the official one i.e. = root's */
@@ -264,7 +267,7 @@ bool AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
 // Server pubkey is what we want to has as a unique ID
 
-    snprintf(sendbuffer, sizeof(sendbuffer), "SAUTH %c %d %d %c",
+    snprintf((char *) sendbuffer, sizeof(sendbuffer), "SAUTH %c %d %d %c",
              need_to_implicitly_trust_server ? 'n': 'y',
              encrypted_len, nonce_len, enterprise_field);
 
@@ -291,7 +294,7 @@ bool AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
 /* proposition C1 - Send challenge / nonce */
 
-    SendTransaction(conn->conn_info, sendbuffer, CF_RSA_PROTO_OFFSET + encrypted_len, CF_DONE);
+    SendTransaction(conn->conn_info, (const char *) sendbuffer, CF_RSA_PROTO_OFFSET + encrypted_len, CF_DONE);
 
     BN_free(bn);
     BN_free(nonce_challenge);
@@ -305,26 +308,26 @@ bool AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
     memset(sendbuffer, 0, CF_EXPANDSIZE);
     len = BN_bn2mpi(pubkey_n, sendbuffer);
-    SendTransaction(conn->conn_info, sendbuffer, len, CF_DONE);        /* No need to encrypt the public key ... */
+    SendTransaction(conn->conn_info, (const char *) sendbuffer, len, CF_DONE); /* No need to encrypt the public key ... */
 
 /* proposition C3 */
     memset(sendbuffer, 0, CF_EXPANDSIZE);
     len = BN_bn2mpi(pubkey_e, sendbuffer);
-    SendTransaction(conn->conn_info, sendbuffer, len, CF_DONE);
+    SendTransaction(conn->conn_info, (const char *) sendbuffer, len, CF_DONE);
 
 /* check reply about public key - server can break conn_info here */
 
 /* proposition S1 */
     memset(in, 0, CF_BUFSIZE);
 
-    if (ReceiveTransaction(conn->conn_info, in, NULL) == -1)
+    if (ReceiveTransaction(conn->conn_info, (char *) in, NULL) == -1)
     {
         Log(LOG_LEVEL_ERR, "Protocol transaction broken off (1). (ReceiveTransaction: %s)", GetErrorStr());
         RSA_free(server_pubkey);
         return false;
     }
 
-    if (BadProtoReply(in))
+    if (BadProtoReply((const char *) in))
     {
         Log(LOG_LEVEL_ERR, "Bad protocol reply: %s", in);
         RSA_free(server_pubkey);
@@ -336,7 +339,7 @@ bool AuthenticateAgent(AgentConnection *conn, bool trust_key)
 /* proposition S2 */
     memset(in, 0, CF_BUFSIZE);
 
-    if (ReceiveTransaction(conn->conn_info, in, NULL) == -1)
+    if (ReceiveTransaction(conn->conn_info, (char *) in, NULL) == -1)
     {
         Log(LOG_LEVEL_ERR, "Protocol transaction broken off (2). (ReceiveTransaction: %s)", GetErrorStr());
         RSA_free(server_pubkey);
@@ -386,7 +389,7 @@ bool AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
 /* proposition S3 */
     memset(in, 0, CF_BUFSIZE);
-    encrypted_len = ReceiveTransaction(conn->conn_info, in, NULL);
+    encrypted_len = ReceiveTransaction(conn->conn_info, (char *) in, NULL);
 
     if (encrypted_len == -1)
     {
@@ -397,7 +400,7 @@ bool AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
     decrypted_cchall = xmalloc(encrypted_len);
 
-    if (RSA_private_decrypt(encrypted_len, in, decrypted_cchall, PRIVKEY, RSA_PKCS1_PADDING) <= 0)
+    if (RSA_private_decrypt(encrypted_len, in, (unsigned char *) decrypted_cchall, PRIVKEY, RSA_PKCS1_PADDING) <= 0)
     {
         Log(LOG_LEVEL_ERR,
             "Private decrypt failed, abandoning. (RSA_private_decrypt: %s)",
@@ -418,11 +421,11 @@ bool AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
     if (FIPS_MODE)
     {
-        SendTransaction(conn->conn_info, digest, CF_DEFAULT_DIGEST_LEN, CF_DONE);
+        SendTransaction(conn->conn_info, (const char *) digest, CF_DEFAULT_DIGEST_LEN, CF_DONE);
     }
     else
     {
-        SendTransaction(conn->conn_info, digest, CF_MD5_LEN, CF_DONE);
+        SendTransaction(conn->conn_info, (const char *) digest, CF_MD5_LEN, CF_DONE);
     }
 
     free(decrypted_cchall);
@@ -436,7 +439,7 @@ bool AuthenticateAgent(AgentConnection *conn, bool trust_key)
         Log(LOG_LEVEL_VERBOSE, "Collecting public key from server!");
 
         /* proposition S4 - conditional */
-        if ((len = ReceiveTransaction(conn->conn_info, in, NULL)) == -1)
+        if ((len = ReceiveTransaction(conn->conn_info, (char *) in, NULL)) == -1)
         {
             Log(LOG_LEVEL_ERR, "Protocol error in RSA authentation from IP '%s'", conn->this_server);
             return false;
@@ -454,7 +457,7 @@ bool AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
         /* proposition S5 - conditional */
 
-        if ((len = ReceiveTransaction(conn->conn_info, in, NULL)) == -1)
+        if ((len = ReceiveTransaction(conn->conn_info, (char *) in, NULL)) == -1)
         {
             Log(LOG_LEVEL_INFO, "Protocol error in RSA authentation from IP '%s'",
                  conn->this_server);
@@ -517,7 +520,7 @@ bool AuthenticateAgent(AgentConnection *conn, bool trust_key)
         return false;
     }
 
-    SendTransaction(conn->conn_info, out, encrypted_len, CF_DONE);
+    SendTransaction(conn->conn_info, (const char *) out, encrypted_len, CF_DONE);
 
     Key *key = KeyNew(server_pubkey, CF_DEFAULT_DIGEST);
     conn->conn_info->remote_key = key;
@@ -538,21 +541,21 @@ bool AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
 /*********************************************************************/
 
-bool BadProtoReply(char *buf)
+bool BadProtoReply(const char *const buf)
 {
     return (strncmp(buf, "BAD: ", 5) == 0);
 }
 
 /*********************************************************************/
 
-bool OKProtoReply(char *buf)
+bool OKProtoReply(const char *const buf)
 {
     return (strncmp(buf, "OK:", 3) == 0);
 }
 
 /*********************************************************************/
 
-bool FailedProtoReply(char *buf)
+bool FailedProtoReply(const char *const buf)
 {
     return (strncmp(buf, CF_FAILEDSTR, strlen(CF_FAILEDSTR)) == 0);
 }

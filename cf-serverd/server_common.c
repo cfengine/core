@@ -567,16 +567,17 @@ void CfEncryptGetFile(ServerFileGetState *args)
 {
     int fd, n_read, cipherlen = 0, finlen = 0;
     off_t total = 0, count = 0;
-    char sendbuffer[CF_BUFSIZE + 256], out[CF_BUFSIZE], filename[CF_BUFSIZE];
+    char filename[CF_BUFSIZE];
+    unsigned char sendbuffer[CF_BUFSIZE + 256];
+    unsigned char out[CF_BUFSIZE];
     unsigned char iv[32] =
         { 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8 };
     int blocksize = CF_BUFSIZE - 4 * CF_INBAND_OFFSET;
-    char *key, enctype;
     struct stat sb;
     ConnectionInfo *conn_info = args->conn->conn_info;
 
-    key = args->conn->session_key;
-    enctype = args->conn->encryption_type;
+    const unsigned char *const key = args->conn->session_key;
+    const char enctype = args->conn->encryption_type;
 
     TranslatePath(filename, args->replyfile);
 
@@ -671,7 +672,7 @@ void CfEncryptGetFile(ServerFileGetState *args)
 
             if (total >= savedlen)
             {
-                if (SendTransaction(conn_info, out, cipherlen + finlen, CF_DONE) == -1)
+                if (SendTransaction(conn_info, (const char *) out, cipherlen + finlen, CF_DONE) == -1)
                 {
                     Log(LOG_LEVEL_VERBOSE, "Send failed in GetFile. (send: %s)", GetErrorStr());
                     EVP_CIPHER_CTX_free(ctx);
@@ -682,7 +683,7 @@ void CfEncryptGetFile(ServerFileGetState *args)
             }
             else
             {
-                if (SendTransaction(conn_info, out, cipherlen + finlen, CF_MORE) == -1)
+                if (SendTransaction(conn_info, (const char *) out, cipherlen + finlen, CF_MORE) == -1)
                 {
                     Log(LOG_LEVEL_VERBOSE, "Send failed in GetFile. (send: %s)", GetErrorStr());
                     close(fd);
@@ -858,7 +859,7 @@ int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilename)
     return 0;
 }
 
-bool CompareLocalHash(const char *filename, const char digest[EVP_MAX_MD_SIZE + 1],
+bool CompareLocalHash(const char *filename, const unsigned char digest[EVP_MAX_MD_SIZE + 1],
                       char sendbuffer[CFD_FALSE_SIZE])
 {
     assert(CFD_FALSE_SIZE == (strlen(CFD_FALSE) + 1));

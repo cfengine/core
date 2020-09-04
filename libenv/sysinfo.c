@@ -444,7 +444,7 @@ static void GetNameInfo3(EvalContext *ctx)
     };
     int have_component[COMPONENTS_SIZE];
     struct stat sb;
-    char name[CF_MAXVARSIZE], quoteName[CF_MAXVARSIZE], shortname[CF_MAXVARSIZE];
+    char name[CF_MAXVARSIZE], quoteName[CF_MAXVARSIZE + 2], shortname[CF_MAXVARSIZE];
 
     if (uname(&VSYSNAME) == -1)
     {

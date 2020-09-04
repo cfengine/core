@@ -514,7 +514,7 @@ static Rlist *GetHostsFromLastseenDB(Item *addresses, time_t horizon, bool retur
     Item *ip;
     time_t now = time(NULL);
     double entrytime;
-    char address[CF_MAXVARSIZE];
+    char address[CF_MAXVARSIZE]; // TODO: Could this be 1025 / NI_MAXHOST ?
 
     for (ip = addresses; ip != NULL; ip = ip->next)
     {
@@ -526,19 +526,19 @@ static Rlist *GetHostsFromLastseenDB(Item *addresses, time_t horizon, bool retur
 
         if (return_address)
         {
-            snprintf(address, sizeof(address), "%s", ip->name);
+            StringCopy(ip->name, address, sizeof(address));
         }
         else
         {
             char hostname[NI_MAXHOST];
             if (IPString2Hostname(hostname, ip->name, sizeof(hostname)) != -1)
             {
-                snprintf(address, sizeof(address), "%s", hostname);
+                StringCopy(hostname, address, sizeof(address));
             }
             else
             {
                 /* Not numeric address was requested, but IP was unresolvable. */
-                snprintf(address, sizeof(address), "%s", ip->name);
+                StringCopy(ip->name, address, sizeof(address));
             }
         }
 

@@ -148,6 +148,7 @@ check_PROGRAMS = \
 	syntax_test \
 	sysinfo_test \
 	variable_test \
+	verify_databases_test \
 	protocol_test \
 	mon_cpu_test \
 	mon_load_test \
@@ -394,6 +395,8 @@ key_test_LDADD = ../../libpromises/libpromises.la \
 strlist_test_SOURCES = strlist_test.c \
 	../../cf-serverd/strlist.c \
 	../../cf-serverd/strlist.h
+
+verify_databases_test_LDADD = ../../cf-agent/libcf-agent.la libtest.la
 
 iteration_test_SOURCES = iteration_test.c
 

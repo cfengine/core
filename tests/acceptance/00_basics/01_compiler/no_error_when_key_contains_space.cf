@@ -26,8 +26,8 @@ bundle agent test
       }';
 
       "selected"
-        string => "$(d[thing s][ExpectedPick][Title])",
-        if => "$(d[thing s][ExpectedPick][classexpr])";
+        string => "$(d[thing s][0][Title])",
+        if => "$(d[thing s][0][classexpr])";
       # Note: wrapping with concat or classify prevents the error
       #        if => concat("$(d[thing s][$(di)][classexpr])");
       #        if => classify("$(d[thing s][$(di)][classexpr])");

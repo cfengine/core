@@ -1599,7 +1599,7 @@ Class *EvalContextClassMatch(const EvalContext *ctx, const char *regex)
 static bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *name, bool is_soft, ContextScope scope, const char *tags)
 {
     {
-        char context_copy[CF_MAXVARSIZE];
+        char context_copy[2 * CF_MAXVARSIZE];
         char canonified_context[CF_MAXVARSIZE];
 
 
@@ -1622,11 +1622,11 @@ static bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *na
 
         if (ns && strcmp(ns, "default") != 0)
         {
-            snprintf(context_copy, CF_MAXVARSIZE, "%s:%s", ns, canonified_context);
+            snprintf(context_copy, sizeof(context_copy), "%s:%s", ns, canonified_context);
         }
         else
         {
-            strlcpy(context_copy, canonified_context, CF_MAXVARSIZE);
+            strlcpy(context_copy, canonified_context, sizeof(context_copy));
         }
 
         if (strlen(context_copy) == 0)

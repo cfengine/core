@@ -15,8 +15,7 @@ function check_with_clang() {
   rm -f config.cache
   make clean
   ./configure -C --enable-debug CC=clang
-  # no-pointer-sign => CFE-3389
-  make -j -l${n_procs} --keep-going CFLAGS="-Wno-pointer-sign -Werror"
+  make -j -l${n_procs} --keep-going CFLAGS="-Werror"
 }
 
 function check_with_cppcheck() {

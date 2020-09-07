@@ -50,7 +50,7 @@ int CfOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *oldDirn
 int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *dirname);
 void GetServerLiteral(EvalContext *ctx, ServerConnectionState *conn, char *sendbuffer, char *recvbuffer, int encrypted);
 bool GetServerQuery(ServerConnectionState *conn, char *recvbuffer, int encrypted);
-bool CompareLocalHash(const char *filename, const char digest[EVP_MAX_MD_SIZE + 1],
+bool CompareLocalHash(const char *filename, const unsigned char digest[EVP_MAX_MD_SIZE + 1],
                       char sendbuffer[CFD_FALSE_SIZE]);
 Item *ListPersistentClasses(void);
 

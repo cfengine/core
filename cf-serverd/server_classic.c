@@ -728,8 +728,12 @@ char iscrypt, enterprise_field;
                 recvlen - CF_RSA_PROTO_OFFSET, crypt_len);
         }
 
-        int ret = RSA_private_decrypt(crypt_len, recvbuffer + CF_RSA_PROTO_OFFSET,
-                                      decrypted_challenge, PRIVKEY, RSA_PKCS1_PADDING);
+        int ret = RSA_private_decrypt(
+            crypt_len,
+            (const unsigned char *) recvbuffer + CF_RSA_PROTO_OFFSET,
+            (unsigned char *) decrypted_challenge,
+            PRIVKEY,
+            RSA_PKCS1_PADDING);
         if (ret < 0)
         {
             Log(LOG_LEVEL_ERR, "Authentication failure: "
@@ -790,7 +794,7 @@ BIGNUM *newkey_n, *newkey_e;
         return false;
     }
 
-    if ((newkey_n = BN_mpi2bn(recvbuffer, len_n, NULL)) == NULL)
+    if ((newkey_n = BN_mpi2bn((unsigned char *) recvbuffer, len_n, NULL)) == NULL)
     {
         Log(LOG_LEVEL_ERR, "Authentication failure: "
             "private decrypt of received public key modulus failed "
@@ -809,7 +813,7 @@ BIGNUM *newkey_n, *newkey_e;
         return false;
     }
 
-    if ((newkey_e = BN_mpi2bn(recvbuffer, len_e, NULL)) == NULL)
+    if ((newkey_e = BN_mpi2bn((unsigned char *) recvbuffer, len_e, NULL)) == NULL)
     {
         Log(LOG_LEVEL_ERR, "Authentication failure: "
             "private decrypt of received public key exponent failed "
@@ -859,7 +863,7 @@ if (RSA_set0_key(newkey, newkey_n, newkey_e, NULL) != 1)
 /* proposition S2 - reply with digest of challenge. */
 {
     Log(LOG_LEVEL_DEBUG, "Sending challenge response");
-    SendTransaction(conn->conn_info, digest, digestLen, CF_DONE);
+    SendTransaction(conn->conn_info, (const char *) digest, digestLen, CF_DONE);
 }
 
 /* proposition S3 - send counter-challenge */
@@ -874,17 +878,17 @@ if (RSA_set0_key(newkey, newkey_n, newkey_e, NULL) != 1)
 
     BN_rand(counter_challenge_BN, CF_NONCELEN, 0, 0);
 
-    char counter_challenge[CF_BUFSIZE];
+    unsigned char counter_challenge[CF_BUFSIZE];
     int counter_challenge_len = BN_bn2mpi(counter_challenge_BN, counter_challenge);
     BN_free(counter_challenge_BN);
 
     /* Compute counter-challenge digest. */
-    HashString(counter_challenge, counter_challenge_len, digest, digestType);
+    HashString((const char *) counter_challenge, counter_challenge_len, digest, digestType);
 
     /* Encryption buffer is always RSA_size(key) and buffer needs 11 bytes,
      * see RSA_public_encrypt manual. */
     int encrypted_len = RSA_size(newkey);
-    char encrypted_counter_challenge[encrypted_len];
+    unsigned char encrypted_counter_challenge[encrypted_len];
     assert(counter_challenge_len < encrypted_len - 11);
 
     int ret = RSA_public_encrypt(counter_challenge_len, counter_challenge,
@@ -909,7 +913,7 @@ if (RSA_set0_key(newkey, newkey_n, newkey_e, NULL) != 1)
     }
 
     Log(LOG_LEVEL_DEBUG, "Sending counter-challenge");
-    SendTransaction(conn->conn_info, encrypted_counter_challenge,
+    SendTransaction(conn->conn_info, (const char *) encrypted_counter_challenge,
                     encrypted_len, CF_DONE);
 }
 
@@ -919,26 +923,26 @@ if (RSA_set0_key(newkey, newkey_n, newkey_e, NULL) != 1)
     {
         Log(LOG_LEVEL_DEBUG, "Sending server's public key");
 
-        char bignum_buf[CF_BUFSIZE] = { 0 };
+        unsigned char bignum_buf[CF_BUFSIZE] = { 0 };
 
         const BIGNUM *n, *e;
         RSA_get0_key(PUBKEY, &n, &e, NULL);
 
         /* proposition S4  - conditional */
         int len_n = BN_bn2mpi(n, bignum_buf);
-        SendTransaction(conn->conn_info, bignum_buf, len_n, CF_DONE);
+        SendTransaction(conn->conn_info, (const char *) bignum_buf, len_n, CF_DONE);
 
         /* proposition S5  - conditional */
         int len_e = BN_bn2mpi(e, bignum_buf);
-        SendTransaction(conn->conn_info, bignum_buf, len_e, CF_DONE);
+        SendTransaction(conn->conn_info, (const char *) bignum_buf, len_e, CF_DONE);
     }
 }
 
 /* proposition C4 - Receive counter-challenge response. */
 {
-    char recv_buf[CF_BUFSIZE] = { 0 };
+    unsigned char recv_buf[CF_BUFSIZE] = { 0 };
 
-    int recv_len = ReceiveTransaction(conn->conn_info, recv_buf, NULL);
+    int recv_len = ReceiveTransaction(conn->conn_info, (char *) recv_buf, NULL);
     if (recv_len < digestLen)
     {
         if (recv_len == -1)
@@ -975,9 +979,9 @@ if (RSA_set0_key(newkey, newkey_n, newkey_e, NULL) != 1)
 {
     Log(LOG_LEVEL_DEBUG, "Receiving session key from client...");
 
-    char session_key[CF_BUFSIZE] = { 0 };
+    unsigned char session_key[CF_BUFSIZE] = { 0 };
     int  session_key_size = CfSessionKeySize(enterprise_field);
-    int keylen = ReceiveTransaction(conn->conn_info, session_key, NULL);
+    int keylen = ReceiveTransaction(conn->conn_info, (char *) session_key, NULL);
 
     Log(LOG_LEVEL_DEBUG,
         "Received encrypted session key of %d bytes, "
@@ -1008,7 +1012,7 @@ if (RSA_set0_key(newkey, newkey_n, newkey_e, NULL) != 1)
     }
     else
     {
-        char decrypted_session_key[PRIVKEY_size];
+        unsigned char decrypted_session_key[PRIVKEY_size];
         int ret = RSA_private_decrypt(keylen, session_key,
                                       decrypted_session_key, PRIVKEY,
                                       RSA_PKCS1_PADDING);

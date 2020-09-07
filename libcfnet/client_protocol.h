@@ -30,9 +30,9 @@
 
 bool IdentifyAgent(ConnectionInfo *connection);
 bool AuthenticateAgent(AgentConnection *conn, bool trust_key);
-bool BadProtoReply(char *buf);
-bool OKProtoReply(char *buf);
-bool FailedProtoReply(char *buf);
+bool BadProtoReply(const char *buf);
+bool OKProtoReply(const char *buf);
+bool FailedProtoReply(const char *buf);
 
 
 #endif

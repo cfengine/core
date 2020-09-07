@@ -57,6 +57,7 @@ stamp-h1
 /tests/load/Makefile
 /tests/unit/Makefile
 /tests/static-check/Makefile
+/tests/valgrind-check/Makefile
 
 /install-sh
 /libtool

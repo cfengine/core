@@ -43,7 +43,7 @@ static int CheckDatabaseSanity(const Attributes *a, const Promise *pp);
 static PromiseResult VerifySQLPromise(EvalContext *ctx, const Attributes *a, const Promise *pp);
 static bool VerifyDatabasePromise(CfdbConn *cfdb, char *database, const Attributes *a);
 
-static bool ValidateSQLTableName(char *table_path, char *db, char *table);
+static bool ValidateSQLTableName(char *path, char *db, char *table);
 static bool VerifyTablePromise(EvalContext *ctx, CfdbConn *cfdb, char *table_path, Rlist *columns, const Attributes *a, const Promise *pp, PromiseResult *result);
 static void QueryTableColumns(char *s, char *db, char *table);
 static bool NewSQLColumns(char *table, Rlist *columns, char ***name_table, char ***type_table, int **size_table,
@@ -837,29 +837,30 @@ static void CreateDBQuery(DatabaseType type, char *query)
 
 /*****************************************************************************/
 
-static bool ValidateSQLTableName(char *table_path, char *db, char *table)
+static bool ValidateSQLTableName(char *path, char *db, char *table)
 {
-    char *sp;
+    // path is db + table, for example: cfsettings.table
+    char *separator;
     int dot = false, back = false, fwd = false;
 
 /* Valid separators . / or \ only */
 
-    if ((sp = strchr(table_path, '/')))
+    if ((separator = strchr(path, '/')))
     {
         fwd = true;
-        *sp = '.';
+        *separator = '.';
     }
 
-    if ((sp = strchr(table_path, '\\')))
+    if ((separator = strchr(path, '\\')))
     {
         back = true;
-        *sp = '.';
+        *separator = '.';
     }
 
-    if ((sp = strchr(table_path, '.')))
+    if ((separator = strchr(path, '.')))
     {
         dot = true;
-        sp++;
+        separator++;
     }
 
 /* Should contain a single separator */
@@ -870,8 +871,8 @@ static bool ValidateSQLTableName(char *table_path, char *db, char *table)
     }
 
     memset(db, 0, CF_MAXVARSIZE);
-    strncpy(db, table_path, sp - table_path - 1);
-    strlcpy(table, sp, CF_MAXVARSIZE);
+    strncpy(db, path, separator - path - 1);
+    strlcpy(table, separator, CF_MAXVARSIZE);
     return true;
 }
 

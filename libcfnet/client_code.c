@@ -656,7 +656,7 @@ static bool EncryptCopyRegularFileNet(const char *source, const char *dest, off_
 
         EVP_DecryptInit_ex(crypto_ctx, CfengineCipher(CfEnterpriseOptions()), NULL, conn->session_key, iv);
 
-        if (!EVP_DecryptUpdate(crypto_ctx, workbuf, &plainlen, buf, cipherlen))
+        if (!EVP_DecryptUpdate(crypto_ctx, (unsigned char *) workbuf, &plainlen, (unsigned char *) buf, cipherlen))
         {
             close(dd);
             free(buf);
@@ -664,7 +664,7 @@ static bool EncryptCopyRegularFileNet(const char *source, const char *dest, off_
             return false;
         }
 
-        if (!EVP_DecryptFinal_ex(crypto_ctx, workbuf + plainlen, &finlen))
+        if (!EVP_DecryptFinal_ex(crypto_ctx, (unsigned char *) workbuf + plainlen, &finlen))
         {
             close(dd);
             free(buf);

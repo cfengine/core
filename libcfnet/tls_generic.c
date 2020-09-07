@@ -490,7 +490,7 @@ X509 *TLSGenerateCertFromPrivKey(RSA *privkey)
 
     ret = 0;
     ret += X509_NAME_add_entry_by_txt(name, "CN", MBSTRING_ASC,
-                                      (const char *) "a",
+                                      (const unsigned char *) "a",
                                       -1, -1, 0);
     ret += X509_set_issuer_name(x509, name);
     ret += X509_set_pubkey(x509, pkey);

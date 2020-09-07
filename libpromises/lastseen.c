@@ -87,7 +87,7 @@ void LastSaw1(const char *ipaddress, const char *hashstr,
     UpdateLastSawHost(hashstr, mapip, role == LAST_SEEN_ROLE_ACCEPT, time(NULL));
 }
 
-void LastSaw(const char *ipaddress, const char *digest, LastSeenRole role)
+void LastSaw(const char *ipaddress, const unsigned char *digest, LastSeenRole role)
 {
     char databuf[CF_HOSTKEY_STRING_SIZE];
 

@@ -444,7 +444,7 @@ static void GetNameInfo3(EvalContext *ctx)
     };
     int have_component[COMPONENTS_SIZE];
     struct stat sb;
-    char name[CF_MAXVARSIZE], quoteName[CF_MAXVARSIZE], shortname[CF_MAXVARSIZE];
+    char name[CF_MAXVARSIZE], quoteName[CF_MAXVARSIZE + 2], shortname[CF_MAXVARSIZE];
 
     if (uname(&VSYSNAME) == -1)
     {
@@ -2294,12 +2294,11 @@ static void LinuxDebianSanitizeIssue(char *buffer)
 static int Linux_Misc_Version(EvalContext *ctx)
 {
     char flavor[CF_MAXVARSIZE];
-    char version[CF_MAXVARSIZE];
-    char os[CF_MAXVARSIZE];
+    char version[256];
     char buffer[CF_BUFSIZE];
 
-    *os = '\0';
-    *version = '\0';
+    const char *os = NULL;
+    version[0] = '\0';
 
     FILE *fp = safe_fopen(LSB_RELEASE_FILENAME, "r");
     if (fp != NULL)
@@ -2318,7 +2317,7 @@ static int Linux_Misc_Version(EvalContext *ctx)
             if (strstr(buffer, "Cumulus"))
             {
                 EvalContextClassPutHard(ctx, "cumulus", "inventory,attribute_name=none,source=agent");
-                strcpy(os, "cumulus");
+                os = "cumulus";
             }
 
             char *sp = strstr(buffer, "DISTRIB_RELEASE=");
@@ -2330,10 +2329,10 @@ static int Linux_Misc_Version(EvalContext *ctx)
                 CanonifyNameInPlace(version);
             }
         }
-    fclose(fp);
+        fclose(fp);
     }
 
-    if (*os && *version)
+    if (os != NULL && version[0] != '\0')
     {
         snprintf(flavor, CF_MAXVARSIZE, "%s_%s", os, version);
         SetFlavor(ctx, flavor);
@@ -2350,7 +2349,8 @@ static int Linux_Debian_Version(EvalContext *ctx)
     int major = -1;
     int release = -1;
     int result;
-    char classname[CF_MAXVARSIZE], buffer[CF_MAXVARSIZE], os[CF_MAXVARSIZE], version[CF_MAXVARSIZE];
+    char classname[CF_MAXVARSIZE], buffer[CF_MAXVARSIZE], os[CF_MAXVARSIZE];
+    char version[256]; // Size must agree with sscanfs below
 
     Log(LOG_LEVEL_VERBOSE, "This appears to be a debian system.");
     EvalContextClassPutHard(
@@ -2427,9 +2427,8 @@ static int Linux_Debian_Version(EvalContext *ctx)
     else if (strcmp(os, "Ubuntu") == 0)
     {
         LinuxDebianSanitizeIssue(buffer);
-        char minor[CF_MAXVARSIZE] = {0};
+        char minor[256] = {0};
         assert((sizeof(version)) > 255); // TODO: static_assert()
-        assert((sizeof(minor)) > 255);   // TODO: static_assert()
         sscanf(buffer, "%*s %255[^.].%255s", version, minor);
         snprintf(buffer, CF_MAXVARSIZE, "ubuntu_%s", version);
         SetFlavor(ctx, buffer);
@@ -2656,11 +2655,10 @@ static int EOS_Version(EvalContext *ctx)
     {
         if (strstr(buffer, "EOS"))
         {
-            char version[CF_MAXVARSIZE], class[CF_MAXVARSIZE];
+            char version[256], class[CF_MAXVARSIZE];
             EvalContextClassPutHard(ctx, "eos", "inventory,attribute_name=none,source=agent");
             EvalContextClassPutHard(ctx, "arista", "source=agent");
             version[0] = '\0';
-            assert((sizeof(version)) > 255); // TODO: static_assert()
             sscanf(buffer, "%*s %*s %*s %255s", version);
             CanonifyNameInPlace(version);
             snprintf(class, CF_MAXVARSIZE, "eos_%s", version);
@@ -2683,10 +2681,8 @@ static int MiscOS(EvalContext *ctx)
     {
        if (strstr(buffer, "BIG-IP"))
        {
-           char version[CF_MAXVARSIZE], build[CF_MAXVARSIZE], class[CF_MAXVARSIZE];
+           char version[256], build[256], class[CF_MAXVARSIZE];
            EvalContextClassPutHard(ctx, "big_ip", "inventory,attribute_name=none,source=agent");
-           assert((sizeof(version)) > 255); // TODO: static_assert()
-           assert((sizeof(build)) > 255);   // TODO: static_assert()
            sscanf(buffer, "%*s %255s %*s %255s", version, build);
            CanonifyNameInPlace(version);
            CanonifyNameInPlace(build);
@@ -2705,7 +2701,7 @@ static int MiscOS(EvalContext *ctx)
 
 static int VM_Version(EvalContext *ctx)
 {
-    char *sp, buffer[CF_BUFSIZE], classbuf[CF_BUFSIZE], version[CF_BUFSIZE];
+    char *sp, buffer[CF_BUFSIZE], classbuf[CF_BUFSIZE], version[256];
     int major, minor, bug;
     int sufficient = 0;
 

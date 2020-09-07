@@ -209,7 +209,6 @@ static ActionResult RepairExec(EvalContext *ctx, const Attributes *a,
 {
     assert(a != NULL);
     assert(pp != NULL);
-    char eventname[CF_BUFSIZE];
     char cmdline[CF_BUFSIZE];
     char comm[20];
     int count = 0;
@@ -459,8 +458,6 @@ static ActionResult RepairExec(EvalContext *ctx, const Attributes *a,
 #ifndef __MINGW32__
     umask(maskval);
 #endif
-
-    snprintf(eventname, CF_BUFSIZE - 1, "Exec(%s)", cmdline);
 
 #ifndef __MINGW32__
     if ((a->transaction.background) && do_work_here) // Child process

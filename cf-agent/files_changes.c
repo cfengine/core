@@ -829,13 +829,19 @@ void FileChangesCheckAndUpdateStats(EvalContext *ctx,
 
     if (cmpsb.st_mtime != sb->st_mtime)
     {
-        char from[CF_MAXVARSIZE];
-        char to[CF_MAXVARSIZE];
+        char from[25]; // ctime() string is 26 bytes (incl NUL)
+        char to[25];   // we ignore the newline at the end
+        // Example: "Thu Nov 24 18:22:48 1986\n"
 
-        strcpy(from, ctime(&(cmpsb.st_mtime)));
-        strcpy(to, ctime(&(sb->st_mtime)));
-        Chop(from, CF_MAXVARSIZE);
-        Chop(to, CF_MAXVARSIZE);
+        // TODO: Should be possible using memcpy
+        //       but I ran into some weird issues when trying
+        //       to assert the contents of ctime()
+        StringCopy(ctime(&(cmpsb.st_mtime)), from, 25);
+        StringCopy(ctime(&(sb->st_mtime)), to, 25);
+
+        assert(strlen(from) == 24);
+        assert(strlen(to) == 24);
+
         Log(LOG_LEVEL_NOTICE, "Last modified time for '%s' changed '%s' -> '%s'", file, from, to);
 
         char msg_temp[CF_MAXVARSIZE];

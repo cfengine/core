@@ -3241,7 +3241,7 @@ const char *PrefixLocalRepository(const Rlist *repositories, const char *package
 {
     static char quotedPath[CF_MAXVARSIZE]; /* GLOBAL_R, no need to initialize */
     struct stat sb;
-    char path[CF_BUFSIZE];
+    char path[sizeof(quotedPath) - 2];
 
     for (const Rlist *rp = repositories; rp != NULL; rp = rp->next)
     {

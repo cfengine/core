@@ -409,7 +409,7 @@ void CfGetFile(ServerFileGetState *args)
 
     ConnectionInfo *conn_info = args->conn->conn_info;
 
-    TranslatePath(filename, args->replyfile);
+    TranslatePath(args->replyfile, filename, sizeof(filename));
 
     stat(filename, &sb);
 
@@ -579,7 +579,7 @@ void CfEncryptGetFile(ServerFileGetState *args)
     const unsigned char *const key = args->conn->session_key;
     const char enctype = args->conn->encryption_type;
 
-    TranslatePath(filename, args->replyfile);
+    TranslatePath(args->replyfile, filename, sizeof(filename));
 
     stat(filename, &sb);
 
@@ -708,7 +708,7 @@ int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilename)
     char linkbuf[CF_BUFSIZE], filename[CF_BUFSIZE];
     int islink = false;
 
-    TranslatePath(filename, ofilename);
+    TranslatePath(ofilename, filename, sizeof(filename));
 
     memset(&cfst, 0, sizeof(Stat));
 
@@ -865,7 +865,7 @@ bool CompareLocalHash(const char *filename, const unsigned char digest[EVP_MAX_M
     assert(CFD_FALSE_SIZE == (strlen(CFD_FALSE) + 1));
     assert(strlen(CFD_FALSE) >= strlen(CFD_TRUE));
     char translated_filename[CF_BUFSIZE] = { 0 };
-    TranslatePath(translated_filename, filename);
+    TranslatePath(filename, translated_filename, sizeof(translated_filename));
 
     unsigned char file_digest[EVP_MAX_MD_SIZE + 1] = { 0 };
     /* TODO connection might timeout if this takes long! */
@@ -965,7 +965,7 @@ int CfOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *oldDirn
     int offset;
     char dirname[CF_BUFSIZE];
 
-    TranslatePath(dirname, oldDirname);
+    TranslatePath(oldDirname, dirname, sizeof(dirname));
 
     if (!IsAbsoluteFileName(dirname))
     {

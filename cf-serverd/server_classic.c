@@ -180,7 +180,7 @@ static bool AccessControl(EvalContext *ctx, const char *req_path, ServerConnecti
 /*
  * /var/cfengine -> $workdir translation.
  */
-    TranslatePath(translated_req_path, req_path);
+    TranslatePath(req_path, translated_req_path, sizeof(translated_req_path));
 
     if (ResolveFilename(translated_req_path, transrequest))
     {

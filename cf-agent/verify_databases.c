@@ -853,24 +853,45 @@ static bool ValidateSQLTableName(
 
     if (separator == NULL)
     {
+        Log(LOG_LEVEL_ERR, "No separator found in database path '%s'", path);
         return false;
     }
 
     // Backwards compatibility with bugs - this would cause false before:
     if ((strchr(path, '/') != NULL) || (strchr(path, '\\') != NULL))
     {
+        Log(LOG_LEVEL_ERR,
+            "Unexpected slash in database path '%s'",
+            path);
         return false;
     }
 
-    size_t db_length = separator - path;
+    assert(separator >= path);
+    const size_t db_length = separator - path;
     if (db_length >= db_size)
     {
-        debug_abort_if_reached();
-        db_length = (db_size - 1);
+        Log(LOG_LEVEL_ERR,
+            "Database name too long (%zu bytes) in '%s'",
+            db_length,
+            path);
+        return false;
     }
 
-    StringCopy(path, db, db_length + 1);
-    StringCopy(separator + 1, table, table_size);
+    const char *table_start = separator + 1;
+    const size_t table_length = strlen(table_start);
+
+    if (table_length >= table_size)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Database table name too long (%zu bytes) in '%s'",
+            table_length,
+            path);
+        return false;
+    }
+
+    memcpy(db, path, db_length);
+    memcpy(table, table_start, table_length);
+    db[db_length] = table[table_length] = '\0';
 
     assert(strlen(db) < db_size);
     assert(strlen(table) < table_size);

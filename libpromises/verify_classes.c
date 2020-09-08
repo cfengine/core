@@ -156,9 +156,9 @@ static bool SelectClass(EvalContext *ctx, const Rlist *list, const Promise *pp)
 
     assert(list);
 
-    char splay[CF_MAXVARSIZE];
-    snprintf(splay, CF_MAXVARSIZE, "%s+%s+%ju",
-             VFQNAME, VIPADDRESS, (uintmax_t)getuid());
+    // Max:    (strlen of VFQNAME)   (strlen of VIPADDRESS)   (strlen of max 64 bit integer    )   '++\0'
+    char splay[sizeof(VFQNAME) - 1 + sizeof(VIPADDRESS) - 1 + sizeof("18446744073709551615") - 1 + 2 + 1];
+    snprintf(splay, sizeof(splay), "%s+%s+%ju", VFQNAME, VIPADDRESS, (uintmax_t)getuid());
     unsigned int hash = StringHash(splay, 0);
     int n = hash % count;
 

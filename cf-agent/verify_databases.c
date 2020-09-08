@@ -43,7 +43,7 @@ static int CheckDatabaseSanity(const Attributes *a, const Promise *pp);
 static PromiseResult VerifySQLPromise(EvalContext *ctx, const Attributes *a, const Promise *pp);
 static bool VerifyDatabasePromise(CfdbConn *cfdb, char *database, const Attributes *a);
 
-static bool ValidateSQLTableName(const char *path, char *db, char *table);
+static bool ValidateSQLTableName(const char *path, char *db, size_t db_size, char *table, size_t table_size);
 static bool VerifyTablePromise(EvalContext *ctx, CfdbConn *cfdb, char *table_path, Rlist *columns, const Attributes *a, const Promise *pp, PromiseResult *result);
 static void QueryTableColumns(char *s, char *db, char *table);
 static bool NewSQLColumns(char *table, Rlist *columns, char ***name_table, char ***type_table, int **size_table,
@@ -514,7 +514,7 @@ static bool VerifyTablePromise(EvalContext *ctx, CfdbConn *cfdb, char *table_pat
 
     Log(LOG_LEVEL_VERBOSE, "Verifying promised table structure for '%s'", table_path);
 
-    if (!ValidateSQLTableName(table_path, db, table))
+    if (!ValidateSQLTableName(table_path, db, sizeof(db), table, sizeof(table)))
     {
         Log(LOG_LEVEL_ERR,
             "The structure of the promiser did not match that for an SQL table, i.e. 'database.table'");
@@ -838,11 +838,12 @@ static void CreateDBQuery(DatabaseType type, char *query)
 /*****************************************************************************/
 
 static bool ValidateSQLTableName(
-    const char *const path, char *const db, char *const table)
+    const char *const path,
+    char *const db,
+    const size_t db_size,
+    char *const table,
+    const size_t table_size)
 {
-    const size_t db_size = CF_MAXVARSIZE;
-    const size_t table_size = CF_MAXVARSIZE;
-
     assert(path != NULL);
     assert(db != NULL);
     assert(table != NULL);

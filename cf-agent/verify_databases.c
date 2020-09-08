@@ -43,7 +43,7 @@ static int CheckDatabaseSanity(const Attributes *a, const Promise *pp);
 static PromiseResult VerifySQLPromise(EvalContext *ctx, const Attributes *a, const Promise *pp);
 static bool VerifyDatabasePromise(CfdbConn *cfdb, char *database, const Attributes *a);
 
-static bool ValidateSQLTableName(char *path, char *db, char *table);
+static bool ValidateSQLTableName(const char *path, char *db, char *table);
 static bool VerifyTablePromise(EvalContext *ctx, CfdbConn *cfdb, char *table_path, Rlist *columns, const Attributes *a, const Promise *pp, PromiseResult *result);
 static void QueryTableColumns(char *s, char *db, char *table);
 static bool NewSQLColumns(char *table, Rlist *columns, char ***name_table, char ***type_table, int **size_table,
@@ -837,42 +837,45 @@ static void CreateDBQuery(DatabaseType type, char *query)
 
 /*****************************************************************************/
 
-static bool ValidateSQLTableName(char *path, char *db, char *table)
+static bool ValidateSQLTableName(
+    const char *const path, char *const db, char *const table)
 {
+    const size_t db_size = CF_MAXVARSIZE;
+    const size_t table_size = CF_MAXVARSIZE;
+
+    assert(path != NULL);
+    assert(db != NULL);
+    assert(table != NULL);
+
     // path is db + table, for example: cfsettings.table
-    char *separator;
-    int dot = false, back = false, fwd = false;
+    const char *separator = strchr(path, '.');
 
-/* Valid separators . / or \ only */
-
-    if ((separator = strchr(path, '/')))
-    {
-        fwd = true;
-        *separator = '.';
-    }
-
-    if ((separator = strchr(path, '\\')))
-    {
-        back = true;
-        *separator = '.';
-    }
-
-    if ((separator = strchr(path, '.')))
-    {
-        dot = true;
-        separator++;
-    }
-
-/* Should contain a single separator */
-
-    if (dot + back + fwd != 1)
+    if (separator == NULL)
     {
         return false;
     }
 
-    memset(db, 0, CF_MAXVARSIZE);
-    strncpy(db, path, separator - path - 1);
-    strlcpy(table, separator, CF_MAXVARSIZE);
+    // Backwards compatibility with bugs - this would cause false before:
+    if ((strchr(path, '/') != NULL) || (strchr(path, '\\') != NULL))
+    {
+        return false;
+    }
+
+    size_t db_length = separator - path;
+    if (db_length >= db_size)
+    {
+        debug_abort_if_reached();
+        db_length = (db_size - 1);
+    }
+
+    StringCopy(path, db, db_length + 1);
+    StringCopy(separator + 1, table, table_size);
+
+    assert(strlen(db) < db_size);
+    assert(strlen(table) < table_size);
+    assert(strlen(db) == db_length);
+    assert(strlen(path) == (strlen(db) + 1 + strlen(table)));
+
     return true;
 }
 

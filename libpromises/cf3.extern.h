@@ -44,9 +44,9 @@ extern struct utsname VSYSNAME;
 extern char VIPADDRESS[CF_MAX_IP_LEN];
 extern char VPREFIX[1024];
 
-extern char VDOMAIN[CF_MAXVARSIZE];
-extern char VFQNAME[];
-extern char VUQNAME[];
+extern char VFQNAME[CF_MAXVARSIZE];
+extern char VDOMAIN[CF_MAXVARSIZE / 2];
+extern char VUQNAME[CF_MAXVARSIZE / 2];
 
 typedef enum EvalMode {
     EVAL_MODE_NORMAL = 0,                 /* needs to be 'false' to work for DONTDO below */

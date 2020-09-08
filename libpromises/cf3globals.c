@@ -56,9 +56,14 @@ long LASTSEENEXPIREAFTER = SECONDS_PER_WEEK; /* GLOBAL_P */
 EvalMode EVAL_MODE = EVAL_MODE_NORMAL;
 
 /* NB! Check use before changing sizes */
-char VFQNAME[CF_MAXVARSIZE] = ""; /* GLOBAL_E GLOBAL_P */
-char VUQNAME[CF_MAXVARSIZE] = ""; /* GLOBAL_E */
-char VDOMAIN[CF_MAXVARSIZE] = ""; /* GLOBAL_E GLOBAL_P */
+// Note: These were previously all CF_MAXVARSIZE = 1024 size
+// However, to avoid problematic truncation, we changed the last 2 to 512,
+// thus they will fit into VFQNAME ("%s.%s").
+// This RFC indicates that DNS only supports up to 255 bytes, anyway:
+// https://tools.ietf.org/html/rfc2181#section-11
+char VFQNAME[CF_MAXVARSIZE] = "";     /* GLOBAL_E GLOBAL_P */
+char VUQNAME[CF_MAXVARSIZE / 2] = ""; /* GLOBAL_E */
+char VDOMAIN[CF_MAXVARSIZE / 2] = ""; /* GLOBAL_E GLOBAL_P */
 
 /*
   Default value for copytype attribute. Loaded by cf-agent from body control

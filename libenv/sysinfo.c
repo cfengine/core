@@ -353,8 +353,30 @@ void DetectDomainName(EvalContext *ctx, const char *orig_nodename)
         }
     }
 
-    CalculateDomainName(nodename, dnsname, VFQNAME, CF_MAXVARSIZE,
-                        VUQNAME, CF_MAXVARSIZE, VDOMAIN, CF_MAXVARSIZE);
+    assert(sizeof(VFQNAME) > 255);
+    assert(sizeof(VUQNAME) > 255);
+    assert(sizeof(VDOMAIN) > 255);
+    CalculateDomainName(nodename, dnsname, VFQNAME, sizeof(VFQNAME),
+                        VUQNAME, sizeof(VUQNAME), VDOMAIN, sizeof(VDOMAIN));
+
+    // Note: We don't expect hostnames or domain names above 255
+    // Not supported by DNS:
+    // https://tools.ietf.org/html/rfc2181#section-11
+    // So let's print some warnings:
+    if (strlen(VUQNAME) > 255)
+    {
+        Log(LOG_LEVEL_WARNING,
+            "Long host name '%s' (%zu bytes) will may cause issues",
+            VUQNAME,
+            strlen(VUQNAME));
+    }
+    if (strlen(VDOMAIN) > 255)
+    {
+        Log(LOG_LEVEL_WARNING,
+            "Long domain name '%s' (%zu bytes) will may cause issues",
+            VDOMAIN,
+            strlen(VDOMAIN));
+    }
 
 /*
  * VFQNAME = a.b.c.d ->
@@ -560,7 +582,7 @@ static void GetNameInfo3(EvalContext *ctx)
     Log(LOG_LEVEL_VERBOSE, "%s - ready", NameVersion());
     Banner("Environment discovery");
 
-    snprintf(workbuf, CF_BUFSIZE, "%s", CLASSTEXT[i]);
+    snprintf(workbuf, CF_BUFSIZE, "%s", CLASSTEXT[i]); // See: cppcheck_suppressions.txt
 
 
     Log(LOG_LEVEL_VERBOSE, "Host name is: %s", VSYSNAME.nodename);

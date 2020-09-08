@@ -403,7 +403,7 @@ void CfGetFile(ServerFileGetState *args)
 {
     int fd;
     off_t n_read, total = 0, sendlen = 0, count = 0;
-    char sendbuffer[CF_BUFSIZE + 256], filename[CF_BUFSIZE];
+    char sendbuffer[CF_BUFSIZE + 256], filename[CF_BUFSIZE - 128];
     struct stat sb;
     int blocksize = 2048;
 
@@ -705,7 +705,7 @@ int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilename)
 {
     Stat cfst;
     struct stat statbuf, statlinkbuf;
-    char linkbuf[CF_BUFSIZE], filename[CF_BUFSIZE];
+    char linkbuf[CF_BUFSIZE], filename[CF_BUFSIZE - 128];
     int islink = false;
 
     TranslatePath(ofilename, filename, sizeof(filename));
@@ -895,12 +895,12 @@ void GetServerLiteral(EvalContext *ctx, ServerConnectionState *conn, char *sendb
     if (ReturnLiteralData(ctx, handle, out))
     {
         memset(sendbuffer, 0, CF_BUFSIZE);
-        snprintf(sendbuffer, CF_BUFSIZE - 1, "%s", out);
+        snprintf(sendbuffer, CF_BUFSIZE, "%s", out);
     }
     else
     {
         memset(sendbuffer, 0, CF_BUFSIZE);
-        snprintf(sendbuffer, CF_BUFSIZE - 1, "BAD: Not found");
+        snprintf(sendbuffer, CF_BUFSIZE, "BAD: Not found");
     }
 
     if (encrypted)
@@ -963,7 +963,7 @@ int CfOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *oldDirn
     Dir *dirh;
     const struct dirent *dirp;
     int offset;
-    char dirname[CF_BUFSIZE];
+    char dirname[CF_BUFSIZE - 128];
 
     TranslatePath(oldDirname, dirname, sizeof(dirname));
 

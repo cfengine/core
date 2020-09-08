@@ -135,8 +135,10 @@ static StringParseResult ParseVarRef(const char *expr, int start, int end)
 
 /* <token> */
 
-static bool ValidTokenCharacter(char c)
+static inline bool ValidTokenCharacter(char c, bool *inside_index)
 {
+    assert(inside_index != NULL);
+
     if (c >= 'a' && c <= 'z')
     {
         return true;
@@ -152,7 +154,27 @@ static bool ValidTokenCharacter(char c)
         return true;
     }
 
-    if (c == '_' || c == '[' || c == ']' || c == ':')
+    if (c == '_' || c == ':')
+    {
+        return true;
+    }
+
+    if (c == '[')
+    {
+        *inside_index = true;
+        return true;
+    }
+
+    if (c == ']')
+    {
+        if (*inside_index)
+        {
+            *inside_index = false;
+        }
+        return true;
+    }
+
+    if ((c == ' ') && *inside_index)
     {
         return true;
     }
@@ -164,7 +186,8 @@ static StringParseResult ParseToken(const char *expr, int start, int end)
 {
     int endlit = start;
 
-    while (endlit < end && ValidTokenCharacter(expr[endlit]))
+    bool inside_index = false;
+    while (endlit < end && ValidTokenCharacter(expr[endlit], &inside_index))
     {
         endlit++;
     }

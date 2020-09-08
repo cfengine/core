@@ -157,7 +157,7 @@ void UpdateLastSawHost(const char *hostkey, const char *address,
 static bool Address2HostkeyInDB(DBHandle *db, const char *address, char *result, size_t result_size)
 {
     char address_key[CF_BUFSIZE];
-    char hostkey[CF_BUFSIZE];
+    char hostkey[CF_HOSTKEY_STRING_SIZE];
 
     /* Address key: "a" + address */
     snprintf(address_key, CF_BUFSIZE, "a%s", address);
@@ -171,11 +171,11 @@ static bool Address2HostkeyInDB(DBHandle *db, const char *address, char *result,
     /* Check for inconsistencies. Return success even if db is found
      * inconsistent, since the reverse entry is already found. */
 
-    char hostkey_key[CF_BUFSIZE];
+    char hostkey_key[1 + CF_HOSTKEY_STRING_SIZE];
     char back_address[CF_BUFSIZE];
 
     /* Hostkey key: "k" + hostkey */
-    snprintf(hostkey_key, CF_BUFSIZE, "k%s", hostkey);
+    snprintf(hostkey_key, sizeof(hostkey_key), "k%s", hostkey);
 
     if (!ReadDB(db, hostkey_key, &back_address, sizeof(back_address)))
     {
@@ -730,4 +730,3 @@ int RemoveKeysFromLastSeen(const char *input, bool must_be_coherent,
 
     return 0;
 }
-

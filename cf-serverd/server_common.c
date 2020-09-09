@@ -403,13 +403,13 @@ void CfGetFile(ServerFileGetState *args)
 {
     int fd;
     off_t n_read, total = 0, sendlen = 0, count = 0;
-    char sendbuffer[CF_BUFSIZE + 256], filename[CF_BUFSIZE];
+    char sendbuffer[CF_BUFSIZE + 256], filename[CF_BUFSIZE - 128];
     struct stat sb;
     int blocksize = 2048;
 
     ConnectionInfo *conn_info = args->conn->conn_info;
 
-    TranslatePath(filename, args->replyfile);
+    TranslatePath(args->replyfile, filename, sizeof(filename));
 
     stat(filename, &sb);
 
@@ -579,7 +579,7 @@ void CfEncryptGetFile(ServerFileGetState *args)
     const unsigned char *const key = args->conn->session_key;
     const char enctype = args->conn->encryption_type;
 
-    TranslatePath(filename, args->replyfile);
+    TranslatePath(args->replyfile, filename, sizeof(filename));
 
     stat(filename, &sb);
 
@@ -705,10 +705,10 @@ int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilename)
 {
     Stat cfst;
     struct stat statbuf, statlinkbuf;
-    char linkbuf[CF_BUFSIZE], filename[CF_BUFSIZE];
+    char linkbuf[CF_BUFSIZE], filename[CF_BUFSIZE - 128];
     int islink = false;
 
-    TranslatePath(filename, ofilename);
+    TranslatePath(ofilename, filename, sizeof(filename));
 
     memset(&cfst, 0, sizeof(Stat));
 
@@ -865,7 +865,7 @@ bool CompareLocalHash(const char *filename, const unsigned char digest[EVP_MAX_M
     assert(CFD_FALSE_SIZE == (strlen(CFD_FALSE) + 1));
     assert(strlen(CFD_FALSE) >= strlen(CFD_TRUE));
     char translated_filename[CF_BUFSIZE] = { 0 };
-    TranslatePath(translated_filename, filename);
+    TranslatePath(filename, translated_filename, sizeof(translated_filename));
 
     unsigned char file_digest[EVP_MAX_MD_SIZE + 1] = { 0 };
     /* TODO connection might timeout if this takes long! */
@@ -895,12 +895,12 @@ void GetServerLiteral(EvalContext *ctx, ServerConnectionState *conn, char *sendb
     if (ReturnLiteralData(ctx, handle, out))
     {
         memset(sendbuffer, 0, CF_BUFSIZE);
-        snprintf(sendbuffer, CF_BUFSIZE - 1, "%s", out);
+        snprintf(sendbuffer, CF_BUFSIZE, "%s", out);
     }
     else
     {
         memset(sendbuffer, 0, CF_BUFSIZE);
-        snprintf(sendbuffer, CF_BUFSIZE - 1, "BAD: Not found");
+        snprintf(sendbuffer, CF_BUFSIZE, "BAD: Not found");
     }
 
     if (encrypted)
@@ -963,9 +963,9 @@ int CfOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *oldDirn
     Dir *dirh;
     const struct dirent *dirp;
     int offset;
-    char dirname[CF_BUFSIZE];
+    char dirname[CF_BUFSIZE - 128];
 
-    TranslatePath(dirname, oldDirname);
+    TranslatePath(oldDirname, dirname, sizeof(dirname));
 
     if (!IsAbsoluteFileName(dirname))
     {

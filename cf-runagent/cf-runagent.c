@@ -646,9 +646,15 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy)
 
             if (strcmp(cp->lval, CFR_CONTROLBODY[RUNAGENT_CONTROL_OUTPUT_DIRECTORY].lval) == 0)
             {
-                if (IsAbsPath(value))
+                if (strlen(value) >= sizeof(OUTPUT_DIRECTORY))
                 {
-                    strlcpy(OUTPUT_DIRECTORY, value, CF_BUFSIZE);
+                    Log(LOG_LEVEL_ERR,
+                        "Could not set output direcory to '%s' - too long path",
+                        (const char *) value);
+                }
+                else if (IsAbsPath(value))
+                {
+                    strlcpy(OUTPUT_DIRECTORY, value, sizeof(OUTPUT_DIRECTORY));
                     Log(LOG_LEVEL_VERBOSE, "Setting output direcory to '%s'", OUTPUT_DIRECTORY);
                 }
                 continue;
@@ -794,16 +800,16 @@ static void HailExec(AgentConnection *conn, char *peer)
 
 static FILE *NewStream(char *name)
 {
-    char filename[CF_BUFSIZE];
+    char *filename;
 
     if (OUTPUT_DIRECTORY[0] != '\0')
     {
-        snprintf(filename, CF_BUFSIZE, "%s/%s_runagent.out", OUTPUT_DIRECTORY, name);
+        xasprintf(&filename, "%s/%s_runagent.out", OUTPUT_DIRECTORY, name);
     }
     else
     {
-        snprintf(filename, CF_BUFSIZE, "%s%coutputs%c%s_runagent.out",
-                 GetWorkDir(), FILE_SEPARATOR, FILE_SEPARATOR, name);
+        xasprintf(&filename, "%s%coutputs%c%s_runagent.out",
+                  GetWorkDir(), FILE_SEPARATOR, FILE_SEPARATOR, name);
     }
 
     FILE *fp;
@@ -823,5 +829,6 @@ static FILE *NewStream(char *name)
         fp = stdout;
     }
 
+    free(filename);
     return fp;
 }

@@ -95,7 +95,11 @@ PromiseResult VerifyDatabasePromises(EvalContext *ctx, const Promise *pp)
 static PromiseResult VerifySQLPromise(EvalContext *ctx, const Attributes *a, const Promise *pp)
 {
     assert(a != NULL);
-    char database[CF_MAXVARSIZE], table[CF_MAXVARSIZE], query[CF_BUFSIZE];
+    char database[CF_MAXDBNAMESIZE];
+    char table[CF_MAXTABLENAMESIZE];
+    char db_path[CF_MAXVARSIZE];
+    // Should have room for both buffers + 1 dot minus 1 NUL byte:
+    assert(sizeof(db_path) >= (sizeof(database) + sizeof(table)));
     char *sp;
     int count = 0;
     CfdbConn cfdb;
@@ -118,7 +122,7 @@ static PromiseResult VerifySQLPromise(EvalContext *ctx, const Attributes *a, con
         if (strchr("./\\", *sp))
         {
             count++;
-            strlcpy(table, sp + 1, CF_MAXVARSIZE);
+            strlcpy(table, sp + 1, sizeof(table));
             sscanf(pp->promiser, "%[^.\\/]", database);
 
             if (strlen(database) == 0)
@@ -142,7 +146,7 @@ static PromiseResult VerifySQLPromise(EvalContext *ctx, const Attributes *a, con
 
     if (strlen(database) == 0)
     {
-        strlcpy(database, pp->promiser, CF_MAXVARSIZE);
+        strlcpy(database, pp->promiser, sizeof(database));
     }
 
     if (a->database.operation == NULL)
@@ -222,15 +226,15 @@ static PromiseResult VerifySQLPromise(EvalContext *ctx, const Attributes *a, con
     }
     else
     {
-        snprintf(query, CF_MAXVARSIZE - 1, "%s.%s", database, table);
+        snprintf(db_path, sizeof(db_path), "%s.%s", database, table);
 
-        if (VerifyTablePromise(ctx, &cfdb, query, a->database.columns, a, pp, &result))
+        if (VerifyTablePromise(ctx, &cfdb, db_path, a->database.columns, a, pp, &result))
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_NOOP, pp, a, "Table '%s' is as promised", query);
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_NOOP, pp, a, "Table '%s' is as promised", db_path);
         }
         else
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Table '%s' is not as promised", query);
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Table '%s' is not as promised", db_path);
             result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         }
 
@@ -507,7 +511,9 @@ static bool VerifyTablePromise(EvalContext *ctx, CfdbConn *cfdb, char *table_pat
                               const Promise *pp, PromiseResult *result)
 {
     assert(a != NULL);
-    char name[CF_MAXVARSIZE], type[CF_MAXVARSIZE], query[CF_MAXVARSIZE], table[CF_MAXVARSIZE], db[CF_MAXVARSIZE];
+    char name[CF_MAXVARSIZE], type[CF_MAXVARSIZE], query[CF_MAXVARSIZE];
+    char db[CF_MAXDBNAMESIZE];
+    char table[CF_MAXTABLENAMESIZE];
     int i, count, size, no_of_cols, *size_table, *done, identified;
     bool retval = true;
     char **name_table, **type_table;
@@ -853,24 +859,45 @@ static bool ValidateSQLTableName(
 
     if (separator == NULL)
     {
+        Log(LOG_LEVEL_ERR, "No separator found in database path '%s'", path);
         return false;
     }
 
     // Backwards compatibility with bugs - this would cause false before:
     if ((strchr(path, '/') != NULL) || (strchr(path, '\\') != NULL))
     {
+        Log(LOG_LEVEL_ERR,
+            "Unexpected slash in database path '%s'",
+            path);
         return false;
     }
 
-    size_t db_length = separator - path;
+    assert(separator >= path);
+    const size_t db_length = separator - path;
     if (db_length >= db_size)
     {
-        debug_abort_if_reached();
-        db_length = (db_size - 1);
+        Log(LOG_LEVEL_ERR,
+            "Database name too long (%zu bytes) in '%s'",
+            db_length,
+            path);
+        return false;
     }
 
-    StringCopy(path, db, db_length + 1);
-    StringCopy(separator + 1, table, table_size);
+    const char *table_start = separator + 1;
+    const size_t table_length = strlen(table_start);
+
+    if (table_length >= table_size)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Database table name too long (%zu bytes) in '%s'",
+            table_length,
+            path);
+        return false;
+    }
+
+    memcpy(db, path, db_length);
+    memcpy(table, table_start, table_length);
+    db[db_length] = table[table_length] = '\0';
 
     assert(strlen(db) < db_size);
     assert(strlen(table) < table_size);

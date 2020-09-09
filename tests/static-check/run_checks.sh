@@ -8,7 +8,7 @@ function check_with_gcc() {
   rm -f config.cache
   make clean
   ./configure -C --enable-debug CC=gcc
-  make -j -l${n_procs} --keep-going CFLAGS="-Wno-format-truncation -Werror"
+  make -j -l${n_procs} --keep-going CFLAGS="-Werror"
 }
 
 function check_with_clang() {

@@ -198,12 +198,13 @@ void LocalExec(const ExecConfig *config)
 
     char filename[CF_BUFSIZE];
     {
-        char line[CF_BUFSIZE];
-        snprintf(line, CF_BUFSIZE, "_%jd_%s", (intmax_t) starttime, CanonifyName(ctime(&starttime)));
+        // 2 underscores, longest 64 bit integer, -1 for NUL byte, 26 for ctime (including NUL)
+        char line[2 + sizeof("-9223372036854775808") - 1 + 26];
+        snprintf(line, sizeof(line), "_%jd_%s", (intmax_t) starttime, CanonifyName(ctime(&starttime)));
         {
-            char canonified_fq_name[CF_BUFSIZE];
+            char canonified_fq_name[sizeof(VFQNAME)];
 
-            strlcpy(canonified_fq_name, config->fq_name, CF_BUFSIZE);
+            strlcpy(canonified_fq_name, config->fq_name, sizeof(canonified_fq_name));
             CanonifyNameInPlace(canonified_fq_name);
 
             snprintf(filename, CF_BUFSIZE, "%s/outputs/cf_%s_%s_%p",

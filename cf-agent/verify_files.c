@@ -383,7 +383,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
         if (safe_chdir(ToChangesPath(basedir)) != 0)
         {
             /* TODO: PROMISE_RESULT_FAIL?!?!?!?! */
-            char msg[CF_BUFSIZE];
+            char msg[sizeof(basedir) + 36 + 100]; // 36 for fmt string 100 for error string
             snprintf(msg, sizeof(msg), "Failed to chdir into '%s'. (chdir: '%s')",
                      basedir, GetErrorStr());
             if (errno == ENOLINK)

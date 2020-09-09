@@ -29,6 +29,7 @@
 #include <syntax.h>
 #include <eval_context.h>
 #include <file_lib.h>
+#include <string_lib.h> // StringCopy()
 
 #include <enterprise_extension.h>
 
@@ -182,9 +183,17 @@ ENTERPRISE_FUNC_4ARG_DEFINE_STUB(bool, ListHostsWithClass, EvalContext *, ctx, R
 
 /* cf-serverd: server_transform.c, cf-serverd.c */
 
-ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, TranslatePath, char *, new, const char *, old)
+ENTERPRISE_FUNC_3ARG_DEFINE_STUB(bool, TranslatePath, const char *, from, char *, to, size_t, to_size)
 {
-    strlcpy(new, old, CF_BUFSIZE);
+    const size_t length = StringCopy(from, to, to_size);
+    if (length >= to_size)
+    {
+        Log(LOG_LEVEL_ERR,
+            "File name was too long and got truncated: '%s'",
+            to);
+        return false;
+    }
+    return true;
 }
 
 

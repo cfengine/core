@@ -73,7 +73,7 @@ ENTERPRISE_FUNC_8ARG_DECLARE(void *, CfLDAPArray, EvalContext *, ctx, const Bund
 ENTERPRISE_FUNC_8ARG_DECLARE(void *, CfRegLDAP, EvalContext *, ctx, char *, uri, char *, dn, char *, filter, char *, name, char *, scope, char *, regex, char *, sec);
 ENTERPRISE_VOID_FUNC_3ARG_DECLARE(void, CacheUnreliableValue, char *, caller, char *, handle, char *, buffer);
 ENTERPRISE_FUNC_3ARG_DECLARE(int, RetrieveUnreliableValue, char *, caller, char *, handle, char *, buffer);
-ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, TranslatePath, char *, new, const char *, old);
+ENTERPRISE_FUNC_3ARG_DECLARE(bool, TranslatePath, const char *, from, char *, to, size_t, to_size);
 ENTERPRISE_FUNC_4ARG_DECLARE(bool, ListHostsWithClass, EvalContext *, ctx, Rlist **, return_list, char *, class_name, char *, return_format);
 
 ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, CheckAndSetHAState, const char *, workdir, EvalContext *, ctx);

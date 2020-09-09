@@ -210,7 +210,9 @@ static void IncrementCounter(Item **list, char *name)
 
 static void AnalyzeArrival(Item *ip_addresses, long iteration, char *arrival, double *cf_this)
 {
-    char src[CF_BUFSIZE], dest[CF_BUFSIZE], flag = '.', *arr;
+    char src[CF_BUFSIZE];
+    char dest[sizeof(src) + sizeof(" NETBIOS") - 1];
+    char flag = '.', *arr;
     int isme_dest, isme_src;
 
     src[0] = dest[0] = '\0';
@@ -254,7 +256,7 @@ static void AnalyzeArrival(Item *ip_addresses, long iteration, char *arrival, do
     if ((strstr(arrival, "proto TCP")) || (strstr(arrival, "ack")))
     {
         assert(sizeof(src) == CF_BUFSIZE);
-        assert(sizeof(dest) == CF_BUFSIZE);
+        assert(sizeof(dest) >= CF_BUFSIZE);
         assert(CF_BUFSIZE == 4096);
         sscanf(arr, "%4095s %*c %4095s %c ", src, dest, &flag);
         DePort(src);
@@ -311,7 +313,7 @@ static void AnalyzeArrival(Item *ip_addresses, long iteration, char *arrival, do
     else if (strstr(arrival, ".53"))
     {
         assert(sizeof(src) == CF_BUFSIZE);
-        assert(sizeof(dest) == CF_BUFSIZE);
+        assert(sizeof(dest) >= CF_BUFSIZE);
         assert(CF_BUFSIZE == 4096);
         sscanf(arr, "%4095s %*c %4095s %c ", src, dest, &flag);
         DePort(src);
@@ -334,7 +336,7 @@ static void AnalyzeArrival(Item *ip_addresses, long iteration, char *arrival, do
     else if (strstr(arrival, "proto UDP"))
     {
         assert(sizeof(src) == CF_BUFSIZE);
-        assert(sizeof(dest) == CF_BUFSIZE);
+        assert(sizeof(dest) >= CF_BUFSIZE);
         assert(CF_BUFSIZE == 4096);
         sscanf(arr, "%4095s %*c %4095s %c ", src, dest, &flag);
         DePort(src);
@@ -357,7 +359,7 @@ static void AnalyzeArrival(Item *ip_addresses, long iteration, char *arrival, do
     else if (strstr(arrival, "proto ICMP"))
     {
         assert(sizeof(src) == CF_BUFSIZE);
-        assert(sizeof(dest) == CF_BUFSIZE);
+        assert(sizeof(dest) >= CF_BUFSIZE);
         assert(CF_BUFSIZE == 4096);
         sscanf(arr, "%4095s %*c %4095s %c ", src, dest, &flag);
         DePort(src);
@@ -399,14 +401,17 @@ static void AnalyzeArrival(Item *ip_addresses, long iteration, char *arrival, do
 
         if (strstr(arrival, ".138"))
         {
-            snprintf(dest, CF_BUFSIZE - 1, "%s NETBIOS", src);
+            assert(sizeof(dest) >= (sizeof(src) + sizeof(" NETBIOS") - 1));
+            snprintf(dest, sizeof(dest), "%s NETBIOS", src);
         }
         else if (strstr(arrival, ".2049"))
         {
-            snprintf(dest, CF_BUFSIZE - 1, "%s NFS", src);
+            assert(sizeof(dest) >= (sizeof(src) + sizeof(" NFS") - 1));
+            snprintf(dest, sizeof(dest), "%s NFS", src);
         }
         else
         {
+            assert(sizeof(dest) > 60);
             strncpy(dest, src, 60);
             dest[60] = '\0';
         }

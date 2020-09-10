@@ -6,15 +6,7 @@ coverage:
   precision: 2
   round: down
   range: 50..75
-
-  status:
-    project: yes
-    patch: yes
-    changes: yes
-
-# comment:
-#   layout: "header, diff, tree, changes, reach, footer"
-#   behavior: default
+  status: false
 
 comment: off
 

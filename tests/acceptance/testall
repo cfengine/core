@@ -725,6 +725,32 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
 
     if [ -z "$QUIET" ]
     then
+        if [ -f '/tmp/cf-zypper' ]; then
+            (
+                # This next part is very confusing when mixed with "set -x".
+                # Turn it off inside the subshell while printing this.
+                set +x
+                echo "The following test reported something!"
+                echo "Info from '/tmp/cf-zypper'"
+                echo "--------------"
+                cat '/tmp/cf-zypper'
+                echo "--------------"
+                rm '/tmp/cf-zypper'
+            )
+        fi
+        if [ -n "`ps -ef | grep gpg-agent | grep -v grep`" ]; then
+            (
+                # This next part is very confusing when mixed with "set -x".
+                # Turn it off inside the subshell while printing this.
+                set +x
+                echo "The following test spawned gpg-agent!"
+                echo "Info from 'ps -ef'"
+                echo "--------------"
+                ps -ef | grep gpg-agent | grep -v grep
+                echo "--------------"
+                pkill gpg-agent
+            )
+        fi
         if [ -n "$STAY_IN_WORKDIR" ]
         then
             # See comment about STAY_IN_WORKDIR near start of runtest.

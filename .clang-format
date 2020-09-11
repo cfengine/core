@@ -28,6 +28,7 @@ AllowShortIfStatementsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: None
 BreakBeforeBraces: Custom
 BraceWrapping:
+  AfterCaseLabel: true
   AfterControlStatement: true
   AfterEnum: true
   AfterFunction: true

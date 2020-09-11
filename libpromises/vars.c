@@ -163,13 +163,9 @@ bool IsCf3VarString(const char *str)
         /* Some chars cannot be in variable ids, e.g.
            $(/bin/cat file) is legal in bash */
 
-        if (bracks > 0)
+        if ((bracks > 0) && (*sp == '/'))
         {
-            switch (*sp)
-            {
-            case '/':
-                return false;
-            }
+            return false;
         }
 
         if (left == '(' && right == ')' && dollar && (bracks == 0))
@@ -242,13 +238,9 @@ static bool IsCf3Scalar(char *str)
         /* Some chars cannot be in variable ids, e.g.
            $(/bin/cat file) is legal in bash */
 
-        if (bracks > 0)
+        if ((bracks > 0) && (*sp == '/'))
         {
-            switch (*sp)
-            {
-            case '/':
-                return false;
-            }
+            return false;
         }
 
         if (left == '(' && right == ')' && dollar && (bracks == 0))

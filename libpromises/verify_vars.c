@@ -395,12 +395,8 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp,
 
             for (const Rlist *rp = RvalRlistValue(rval); rp; rp = rp->next)
             {
-                switch (rp->val.type)
+                if (rp->val.type != RVAL_TYPE_SCALAR)
                 {
-                case RVAL_TYPE_SCALAR:
-                    break;
-
-                default:
                     // Cannot assign variable because value is a list containing a non-scalar item
                     VarRefDestroy(ref);
                     RvalDestroy(rval);

@@ -3279,19 +3279,17 @@ JsonElement* JsonExpandElement(EvalContext *ctx, const JsonElement *source)
         Buffer *expbuf;
         JsonElement *expanded_json;
 
-        switch (JsonGetPrimitiveType(source))
+        if (JsonGetPrimitiveType(source) == JSON_PRIMITIVE_TYPE_STRING)
         {
-        case JSON_PRIMITIVE_TYPE_STRING:
             expbuf = BufferNew();
             ExpandScalar(ctx, NULL, "this", JsonPrimitiveGetAsString(source), expbuf);
             expanded_json = JsonStringCreate(BufferData(expbuf));
             BufferDestroy(expbuf);
             return expanded_json;
-            break;
-
-        default:
+        }
+        else
+        {
             return JsonCopy(source);
-            break;
         }
     }
     else if (JsonGetElementType(source) == JSON_ELEMENT_TYPE_CONTAINER)

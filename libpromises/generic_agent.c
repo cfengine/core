@@ -2074,16 +2074,13 @@ void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config)
         LoggingSetColor(config->color);
     }
 
-    switch (config->agent_type)
+    if (config->agent_type == AGENT_TYPE_COMMON)
     {
-    case AGENT_TYPE_COMMON:
         EvalContextSetEvalOption(ctx, EVAL_OPTION_FULL, false);
         if (config->agent_specific.common.eval_functions)
+        {
             EvalContextSetEvalOption(ctx, EVAL_OPTION_EVAL_FUNCTIONS, true);
-        break;
-
-    default:
-        break;
+        }
     }
 
     EvalContextSetIgnoreLocks(ctx, config->ignore_locks);
@@ -2255,13 +2252,12 @@ void GenericAgentShowVariablesFormatted(EvalContext *ctx, const char *regexp)
         Writer *w = StringWriter();
 
         Rval var_rval = VariableGetRval(v, false);
-        switch (var_rval.type)
+        if (var_rval.type == RVAL_TYPE_CONTAINER)
         {
-        case RVAL_TYPE_CONTAINER:
             JsonWriteCompact(w, RvalContainerValue(var_rval));
-            break;
-
-        default:
+        }
+        else
+        {
             RvalWrite(w, var_rval);
         }
 

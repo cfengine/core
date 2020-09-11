@@ -1292,19 +1292,12 @@ static char *PolicyErrorToString(const PolicyError *error)
                  path, offset.line,
                  (size_t)0, error->message);
 
-    switch (error->type)
-    {
-    case POLICY_ELEMENT_TYPE_CONSTRAINT:
+    if (error->type == POLICY_ELEMENT_TYPE_CONSTRAINT)
     {
         const Constraint *cp = error->subject;
         WriterWrite(msg, " Given attribute value '");
         RvalWrite(msg, cp->rval);
         WriterWriteChar(msg, '\'');
-    }
-    break;
-
-    default:
-        break;
     }
 
     return StringWriterClose(msg);

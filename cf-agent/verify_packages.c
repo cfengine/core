@@ -2942,10 +2942,8 @@ static bool ExecutePatch(EvalContext *ctx, const PackageManager *schedule, Packa
         const Promise *const pp = pm->patch_list->pp;
         Attributes a = GetPackageAttributes(ctx, pp);
 
-        switch (action)
+        if (action == PACKAGE_ACTION_PATCH)
         {
-        case PACKAGE_ACTION_PATCH:
-
             Log(LOG_LEVEL_VERBOSE, "Execute scheduled package patch");
 
             if (a.packages.package_patch_command == NULL)
@@ -2956,9 +2954,9 @@ static bool ExecutePatch(EvalContext *ctx, const PackageManager *schedule, Packa
 
             command_string = xmalloc(estimated_size + strlen(a.packages.package_patch_command) + 2);
             strcpy(command_string, a.packages.package_patch_command);
-            break;
-
-        default:
+        }
+        else
+        {
             ProgrammingError("Unknown action attempted");
             return false;
         }

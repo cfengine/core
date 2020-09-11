@@ -180,6 +180,7 @@ class Releases:
                 return Release(release)
             if "lts_branch" in release and version == release["lts_branch"]:
                 return Release(release)
+        return None
 
     def __str__(self):
         return ", ".join(str(x.version) for x in self.releases)

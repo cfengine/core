@@ -76,16 +76,14 @@ char* BuildCommandLine(const Attributes *a, const Promise *pp)
     {
         for (const Rlist *rp = a->arglist; rp != NULL; rp = rp->next)
         {
-            switch (rp->val.type)
+            if (rp->val.type == RVAL_TYPE_SCALAR)
             {
-            case RVAL_TYPE_SCALAR:
                 WriterWrite(w, " ");
                 WriterWrite(w, RlistScalarValue(rp));
-                break;
-
-            default:
+            }
+            else
+            {
                 Log(LOG_LEVEL_INFO, "GetLockNameExec: invalid rval (not a scalar) in arglist of commands promise '%s'", pp->promiser);
-                break;
             }
         }
     }

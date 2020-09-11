@@ -55,12 +55,12 @@ PromiseResult PromiseResultUpdate(PromiseResult prior, PromiseResult evidence)
         return evidence;
 
     case PROMISE_RESULT_NOOP:
-        switch (evidence)
+        if (evidence == PROMISE_RESULT_SKIPPED)
         {
-        case PROMISE_RESULT_SKIPPED:
             return prior;
-
-        default:
+        }
+        else
+        {
             return evidence;
         }
 

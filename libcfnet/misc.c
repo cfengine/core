@@ -59,19 +59,18 @@ uint16_t sockaddr_port(const void *sa)
     int family = ((struct sockaddr *) sa)->sa_family;
     uint16_t port;
 
-    switch (family)
+    if (family == AF_INET)
     {
-    case AF_INET:
         port = ((struct sockaddr_in *) sa)->sin_port;
-        break;
-
+    }
 #ifdef HAVE_GETADDRINFO
-    case AF_INET6:
+    else if (family == AF_INET6)
+    {
         addr = ((struct sockaddr_in6 *) sa)->sin6_port;
-        break;
+    }
 #endif
-
-    default:
+    else
+    {
         ProgrammingError("sockaddr_port: address family was %d", family);
     }
 

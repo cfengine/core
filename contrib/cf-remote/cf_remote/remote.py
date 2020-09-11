@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import sys
-import time
 from os.path import basename
 from collections import OrderedDict
 

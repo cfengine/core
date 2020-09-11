@@ -1,5 +1,5 @@
 [Unit]
-Description=CFEngine Enterprise Execution Scheduler
+Description=CFEngine Execution Scheduler
 After=syslog.target
 ConditionPathExists=@bindir@/cf-execd
 ConditionPathExists=@workdir@/inputs/promises.cf

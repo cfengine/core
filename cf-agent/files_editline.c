@@ -1473,19 +1473,18 @@ static bool SanityCheckInsertions(const Attributes *a)
     {
         opt = InsertMatchTypeFromString(RlistScalarValue(rp));
 
-        switch (opt)
+        if (opt == INSERT_MATCH_TYPE_EXACT)
         {
-        case INSERT_MATCH_TYPE_EXACT:
             exact = true;
-            break;
-        default:
+        }
+        else
+        {
             ignore_something = true;
             if (preserve_block)
             {
                 Log(LOG_LEVEL_ERR, "Line insertion should not use whitespace policy with preserve_block");
                 ok = false;
             }
-            break;
         }
     }
 

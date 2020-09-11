@@ -1323,16 +1323,15 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy, GenericAg
         const char *name = NULL;
         const Rlist *args = NULL;
 
-        switch (rp->val.type)
+        if (rp->val.type == RVAL_TYPE_FNCALL)
         {
-        case RVAL_TYPE_FNCALL:
             name = RlistFnCallValue(rp)->name;
             args = RlistFnCallValue(rp)->args;
-            break;
-        default:
+        }
+        else
+        {
             name = RlistScalarValue(rp);
             args = NULL;
-            break;
         }
 
         EvalContextSetBundleArgs(ctx, args);

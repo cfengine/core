@@ -92,18 +92,15 @@ Rlist *NewExpArgs(EvalContext *ctx, const Policy *policy, const FnCall *fp, cons
     {
         Rval rval;
 
-        switch (rp->val.type)
+        if (rp->val.type == RVAL_TYPE_FNCALL)
         {
-        case RVAL_TYPE_FNCALL:
-            {
-                FnCall *subfp = RlistFnCallValue(rp);
-                rval = FnCallEvaluate(ctx, policy, subfp, fp->caller).rval;
-            }
-            break;
-        default:
+            FnCall *subfp = RlistFnCallValue(rp);
+            rval = FnCallEvaluate(ctx, policy, subfp, fp->caller).rval;
+        }
+        else
+        {
             rval = ExpandPrivateRval(ctx, NULL, NULL, rp->val.item, rp->val.type);
             assert(rval.item);
-            break;
         }
 
         /*

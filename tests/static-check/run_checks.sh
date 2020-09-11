@@ -8,14 +8,15 @@ function check_with_gcc() {
   rm -f config.cache
   make clean
   ./configure -C --enable-debug CC=gcc
-  make -j -l${n_procs} --keep-going CFLAGS="-Werror"
+  local gcc_exceptions="-Wno-sign-compare -Wno-implicit-fallthrough -Wno-cast-function-type -Wno-type-limits"
+  make -j -l${n_procs} --keep-going CFLAGS="-Werror -Wall -Wextra $gcc_exceptions"
 }
 
 function check_with_clang() {
   rm -f config.cache
   make clean
   ./configure -C --enable-debug CC=clang
-  make -j -l${n_procs} --keep-going CFLAGS="-Werror"
+  make -j -l${n_procs} --keep-going CFLAGS="-Werror -Wall -Wextra -Wno-sign-compare"
 }
 
 function check_with_cppcheck() {

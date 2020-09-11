@@ -329,8 +329,7 @@ static SyntaxTypeMatch CheckSelection(
 
         for (int j = 0; promise_type_syntax[j].promise_type != NULL; j++)
         {
-            const ConstraintSyntax *bs = bs =
-                promise_type_syntax[j].constraints;
+            const ConstraintSyntax *bs = promise_type_syntax[j].constraints;
 
             if (!bs)
             {

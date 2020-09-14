@@ -106,8 +106,8 @@ void PolicyServerSet(const char *new_policy_server)
     }
     else // ADDRESS_TYPE_IPV4 or ADDRESS_TYPE_IPV6
     {
-        assert(strlen(host_or_ip) < CF_MAX_IP_LEN);
-        strcpy(POLICY_SERVER_IP, host_or_ip);
+        assert(strlen(host_or_ip) < sizeof(POLICY_SERVER_IP));
+        StringCopy(host_or_ip, POLICY_SERVER_IP, sizeof(POLICY_SERVER_IP));
     }
 
     if ( ! NULL_OR_EMPTY(port) )

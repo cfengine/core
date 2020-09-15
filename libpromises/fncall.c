@@ -307,9 +307,9 @@ static FnCallResult CallFunction(EvalContext *ctx, const Policy *policy, const F
 
 FnCallResult FnCallEvaluate(EvalContext *ctx, const Policy *policy, FnCall *fp, const Promise *caller)
 {
-    assert(ctx);
-    assert(policy);
-    assert(fp);
+    assert(ctx != NULL);
+    assert(policy != NULL);
+    assert(fp != NULL);
     fp->caller = caller;
 
     if (!EvalContextGetEvalOption(ctx, EVAL_OPTION_EVAL_FUNCTIONS))

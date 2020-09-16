@@ -36,6 +36,8 @@
 #include <audit.h>
 #include <cleanup.h>
 
+#define AUDIT_SAFE_META_TAG "audit_safe"
+
 /******************************************************************/
 /* Argument propagation                                           */
 /******************************************************************/
@@ -305,9 +307,9 @@ static FnCallResult CallFunction(EvalContext *ctx, const Policy *policy, const F
 
 FnCallResult FnCallEvaluate(EvalContext *ctx, const Policy *policy, FnCall *fp, const Promise *caller)
 {
-    assert(ctx);
-    assert(policy);
-    assert(fp);
+    assert(ctx != NULL);
+    assert(policy != NULL);
+    assert(fp != NULL);
     fp->caller = caller;
 
     if (!EvalContextGetEvalOption(ctx, EVAL_OPTION_EVAL_FUNCTIONS))
@@ -331,6 +333,18 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, const Policy *policy, FnCall *fp, 
             Log(LOG_LEVEL_ERR, "No such FnCall '%s', context info unavailable", fp->name);
         }
 
+        return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };
+    }
+
+    const bool skip_unsafe_function_calls = ((EVAL_MODE == EVAL_MODE_AUDIT_MANIFEST) ||
+                                             (EVAL_MODE == EVAL_MODE_AUDIT_DIFF));
+
+    Rlist *caller_meta = PromiseGetConstraintAsList(ctx, "meta", caller);
+    if (skip_unsafe_function_calls &&
+        ((fp_type->options & FNCALL_OPTION_UNSAFE) != 0) &&
+        !RlistContainsString(caller_meta, AUDIT_SAFE_META_TAG))
+    {
+        Log(LOG_LEVEL_WARNING, "Not calling unsafe function '%s' in audit mode", fp->name);
         return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };
     }
 

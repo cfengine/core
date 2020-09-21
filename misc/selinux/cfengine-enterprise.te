@@ -313,6 +313,7 @@ allow cfengine_hub_t cfengine_execd_exec_t:file getattr;
 allow cfengine_hub_t cfengine_monitord_exec_t:file getattr;
 allow cfengine_hub_t cfengine_serverd_exec_t:file getattr;
 
+allow cfengine_hub_t cfengine_postgres_t:unix_stream_socket connectto;
 allow cfengine_hub_t unreserved_port_t:tcp_socket name_connect;
 
 allow cfengine_hub_t cfengine_log_t:dir getattr;
@@ -373,3 +374,64 @@ allow cfengine_hub_t ifconfig_exec_t:file { execute execute_no_trans open read g
 allow cfengine_hub_t shell_exec_t:file map;
 allow cfengine_hub_t shell_exec_t:file { execute execute_no_trans };
 allow cfengine_hub_t proc_xen_t:dir search;
+
+
+#============= cfengine_postgres_t ==============
+type cfengine_postgres_t;
+typeattribute cfengine_postgres_t domain;
+role system_r types cfengine_postgres_t;
+
+# /var/cfengine/bin/cf-postgres has the 'cfengine_postgres_exec_t' context which is an
+# entrypoint for the 'cfengine_postgres_t' domain
+type cfengine_postgres_exec_t;
+typeattribute cfengine_postgres_exec_t entry_type;
+typeattribute cfengine_postgres_exec_t exec_type;
+typeattribute cfengine_postgres_exec_t file_type, non_security_file_type, non_auth_file_type;
+role object_r types cfengine_postgres_exec_t;
+
+type_transition init_t cfengine_postgres_exec_t:process cfengine_postgres_t;
+allow init_t cfengine_postgres_t:process transition;
+allow init_t cfengine_postgres_exec_t:file { execute open read };
+
+allow cfengine_postgres_t cfengine_postgres_exec_t:file entrypoint;
+allow cfengine_postgres_t cfengine_postgres_exec_t:file { ioctl read getattr lock map execute open };
+
+# TODO: Why are 'map', 'execute' and 'execute_no_trans' needed for postgres?
+allow cfengine_postgres_t cfengine_var_lib_t:file map;
+allow cfengine_postgres_t cfengine_var_lib_t:file { create execute execute_no_trans getattr link open read rename unlink write };
+
+allow cfengine_postgres_t cfengine_var_lib_t:dir { add_name getattr open read remove_name search write };
+
+allow cfengine_postgres_t postgresql_port_t:tcp_socket name_bind;
+
+allow cfengine_postgres_t hugetlbfs_t:file map;
+allow cfengine_postgres_t hugetlbfs_t:file { read write };
+allow cfengine_postgres_t init_t:unix_stream_socket { getattr ioctl };
+allow cfengine_postgres_t net_conf_t:file { getattr open read };
+allow cfengine_postgres_t node_t:tcp_socket node_bind;
+allow cfengine_postgres_t node_t:udp_socket node_bind;
+allow cfengine_postgres_t proc_t:file { getattr open read };
+allow cfengine_postgres_t self:netlink_route_socket { bind create getattr nlmsg_read };
+allow cfengine_postgres_t self:tcp_socket { bind create listen setopt };
+allow cfengine_postgres_t self:udp_socket { bind connect create getattr getopt };
+allow cfengine_postgres_t sssd_public_t:dir search;
+allow cfengine_postgres_t sssd_public_t:file map;
+allow cfengine_postgres_t sssd_public_t:file { getattr open read };
+allow cfengine_postgres_t sssd_var_lib_t:sock_file write;
+allow cfengine_postgres_t sssd_var_lib_t:dir search;
+allow cfengine_postgres_t sssd_t:unix_stream_socket connectto;
+allow cfengine_postgres_t tmp_t:dir { add_name write remove_name };
+allow cfengine_postgres_t tmp_t:file { create write unlink };
+allow cfengine_postgres_t tmp_t:sock_file { create setattr unlink write };
+allow cfengine_postgres_t tmpfs_t:dir { add_name write remove_name };
+allow cfengine_postgres_t tmpfs_t:file { create open read write map unlink };
+allow cfengine_postgres_t tmpfs_t:filesystem getattr;
+allow cfengine_postgres_t var_log_t:file { append open };
+
+# Needed for systemd to be able to check PostgreSQL's PID file
+allow init_t cfengine_var_lib_t:dir read;
+allow init_t cfengine_var_lib_t:file { getattr open read };
+
+# TODO: these should not be needed
+allow cfengine_postgres_t shell_exec_t:file map;
+allow cfengine_postgres_t shell_exec_t:file { execute execute_no_trans };

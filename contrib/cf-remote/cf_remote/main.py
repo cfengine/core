@@ -54,6 +54,10 @@ def get_args():
     sp.add_argument("--edition", "-E", help="Enterprise or community packages", type=str)
     sp.add_argument("tags", metavar="TAG", nargs="*")
 
+    sp = subp.add_parser("download", help="Download CFEngine packages")
+    sp.add_argument("--edition", "-E", help="Enterprise or community packages", type=str)
+    sp.add_argument("tags", metavar="TAG", nargs="*")
+
     sp = subp.add_parser("run", help="Run the command given as arguments on the given hosts")
     sp.add_argument("--hosts", "-H", help="Which hosts to run the command on", type=str, required=True)
     sp.add_argument("--raw", help="Print only output of command itself", action='store_true')
@@ -110,7 +114,10 @@ def run_command_with_args(command, args):
         all_hosts = ((args.hosts or []) + (args.hub or []) + (args.clients or []))
         return commands.uninstall(all_hosts)
     elif command == "packages":
-        return commands.packages(tags=args.tags, version=args.version, edition=args.edition)
+        log.warning("packages command is deprecated, please use the new command: download")
+        return commands.download(tags=args.tags, version=args.version, edition=args.edition)
+    elif command == "download":
+        return commands.download(tags=args.tags, version=args.version, edition=args.edition)
     elif command == "run":
         return commands.run(hosts=args.hosts, raw=args.raw, command=args.remote_command)
     elif command == "sudo":
@@ -139,7 +146,7 @@ def run_command_with_args(command, args):
 
 
 def validate_command(command, args):
-    if command in ["install", "packages"]:
+    if command in ["install", "packages", "download"]:
         if args.edition:
             args.edition = args.edition.lower()
             if args.edition == "core":
@@ -292,7 +299,7 @@ def validate_args(args):
         print_version_info()
         exit_success()
 
-    if args.version and args.command not in ["install", "packages"]:
+    if args.version and args.command not in ["install", "packages", "download"]:
         user_error("Cannot specify version number in '{}' command".format(args.command))
 
     if "hosts" in args and args.hosts:

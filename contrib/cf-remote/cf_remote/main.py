@@ -54,6 +54,10 @@ def get_args():
     sp.add_argument("--edition", "-E", help="Enterprise or community packages", type=str)
     sp.add_argument("tags", metavar="TAG", nargs="*")
 
+    sp = subp.add_parser("list", help="List CFEngine packages available for download")
+    sp.add_argument("--edition", "-E", help="Enterprise or community packages", type=str)
+    sp.add_argument("tags", metavar="TAG", nargs="*")
+
     sp = subp.add_parser("download", help="Download CFEngine packages")
     sp.add_argument("--edition", "-E", help="Enterprise or community packages", type=str)
     sp.add_argument("tags", metavar="TAG", nargs="*")
@@ -116,6 +120,8 @@ def run_command_with_args(command, args):
     elif command == "packages":
         log.warning("packages command is deprecated, please use the new command: download")
         return commands.download(tags=args.tags, version=args.version, edition=args.edition)
+    elif command == "list":
+        return commands.list_command(tags=args.tags, version=args.version, edition=args.edition)
     elif command == "download":
         return commands.download(tags=args.tags, version=args.version, edition=args.edition)
     elif command == "run":
@@ -146,7 +152,7 @@ def run_command_with_args(command, args):
 
 
 def validate_command(command, args):
-    if command in ["install", "packages", "download"]:
+    if command in ["install", "packages", "list", "download"]:
         if args.edition:
             args.edition = args.edition.lower()
             if args.edition == "core":
@@ -299,7 +305,7 @@ def validate_args(args):
         print_version_info()
         exit_success()
 
-    if args.version and args.command not in ["install", "packages", "download"]:
+    if args.version and args.command not in ["install", "packages", "list", "download"]:
         user_error("Cannot specify version number in '{}' command".format(args.command))
 
     if "hosts" in args and args.hosts:

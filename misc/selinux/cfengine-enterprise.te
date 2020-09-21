@@ -166,6 +166,7 @@ allow cfengine_execd_t cfengine_var_lib_t:file execute_no_trans;
 
 # TODO: this should not be needed
 allow cfengine_execd_t proc_xen_t:dir search;
+allow cfengine_execd_t ssh_port_t:tcp_socket name_connect;
 
 allow cfengine_execd_t cfengine_log_t:file { read unlink write };
 allow cfengine_execd_t cfengine_log_t:lnk_file { create getattr read unlink };
@@ -216,6 +217,8 @@ allow cfengine_monitord_t cfengine_serverd_exec_t:file getattr;
 allow cfengine_monitord_t cfengine_agent_exec_t:file getattr;
 allow cfengine_monitord_t cfengine_hub_exec_t:file getattr;
 
+allow cfengine_monitord_t var_log_t:file { open read };
+
 allow cfengine_monitord_t self:capability { dac_override dac_read_search sys_ptrace };
 
 allow cfengine_monitord_t crontab_exec_t:file getattr;
@@ -255,6 +258,7 @@ allow cfengine_serverd_t unreserved_port_t:tcp_socket name_connect;
 
 # TODO: this should not be needed
 allow cfengine_serverd_t proc_xen_t:dir search;
+allow cfengine_serverd_t ssh_port_t:tcp_socket name_connect;
 
 allow cfengine_serverd_t cfengine_execd_exec_t:file getattr;
 allow cfengine_serverd_t cfengine_monitord_exec_t:file getattr;

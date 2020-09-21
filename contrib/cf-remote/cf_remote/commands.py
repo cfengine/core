@@ -122,7 +122,7 @@ def install(
     return errors
 
 
-def packages(tags=None, version=None, edition=None):
+def download(tags=None, version=None, edition=None):
     releases = Releases(edition)
     print("Available releases: {}".format(releases))
 

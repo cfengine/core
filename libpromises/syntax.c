@@ -27,6 +27,7 @@
 #include <json.h>
 #include <files_names.h>
 #include <mod_files.h>
+#include <mod_custom.h>
 #include <item_lib.h>
 #include <conversion.h>
 #include <expand.h>
@@ -147,7 +148,14 @@ const ConstraintSyntax *PromiseTypeSyntaxGetConstraintSyntax(const PromiseTypeSy
 
 const BodySyntax *BodySyntaxGet(ARG_UNUSED ParserBlock block, const char *body_type)
 {
-    assert(block == PARSER_BLOCK_BODY); // Will be used for promise blocks later
+    if (block == PARSER_BLOCK_PROMISE)
+    {
+        // Required: promise agent <id>
+        assert(StringEqual(body_type, "agent"));
+        return &CUSTOM_PROMISE_BLOCK_SYNTAX;
+    }
+
+    assert(block == PARSER_BLOCK_BODY);
     for (int i = 0; i < CF3_MODULES; i++)
     {
         const PromiseTypeSyntax *promise_type_syntax = CF_ALL_PROMISE_TYPES[i];

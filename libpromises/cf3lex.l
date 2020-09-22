@@ -103,6 +103,8 @@ bundle     bundle
 
 body       body
 
+promise    promise
+
 nakedvar   [$@][(][a-zA-Z0-9_\[\]\200-\377.:]+[)]|[$@][{][a-zA-Z0-9_\[\]\200-\377.:]+[}]|[$@][(][a-zA-Z0-9_\200-\377.:]+[\[][a-zA-Z0-9_$(){}\200-\377.:]+[\]]+[)]|[$@][{][a-zA-Z0-9_\200-\377.:]+[\[][a-zA-Z0-9_$(){}\200-\377.:]+[\]]+[}]
 
 identifier [a-zA-Z0-9_\200-\377]+
@@ -488,6 +490,26 @@ promise_guard  [a-zA-Z_]+:
                           P.line_pos += yyleng;
                           ParserDebug("\tL:body %d\n", P.line_pos);
                           return BODY;
+                      }
+
+{promise}             {
+                          /* Note this has to come before "id" since it is a subset of id */
+
+                          if (P.currentclasses != NULL)
+                          {
+                              free(P.currentclasses);
+                              P.currentclasses = NULL;
+                          }
+
+                          if (P.currentvarclasses != NULL)
+                          {
+                              free(P.currentvarclasses);
+                              P.currentvarclasses = NULL;
+                          }
+
+                          P.line_pos += yyleng;
+                          ParserDebug("\tL:promise %d\n", P.line_pos);
+                          return PROMISE;
                       }
 
 {identifier}          {

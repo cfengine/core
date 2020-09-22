@@ -257,8 +257,16 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, PromiseIterator *iterc
 PromiseResult ExpandPromise(EvalContext *ctx, const Promise *pp,
                             PromiseActuator *act_on_promise, void *param)
 {
+    assert(pp != NULL);
+
     if (!IsDefinedClass(ctx, pp->classes))
     {
+        Log(LOG_LEVEL_DEBUG,
+            "Skipping %s promise expansion with promiser '%s' due to class guard '%s::' (pass %d)",
+            pp->parent_section->promise_type,
+            pp->promiser,
+            pp->classes,
+            EvalContextGetPass(ctx));
         return PROMISE_RESULT_SKIPPED;
     }
 

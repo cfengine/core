@@ -33,7 +33,8 @@ def get_args():
     sp.add_argument("--hosts", "-H", help="Which hosts to get info for", type=str, required=True)
 
     sp = subp.add_parser("install", help="Install CFEngine on the given hosts")
-    sp.add_argument("--edition", "-E", help="Enterprise or community packages", type=str)
+    sp.add_argument("--edition", "-E", choices=["community", "enterprise"],
+                    help="Enterprise or community packages", type=str)
     sp.add_argument("--package", help="Local path to package for transfer and install", type=str)
     sp.add_argument("--hub-package", help="Local path to package for --hub", type=str)
     sp.add_argument("--client-package", help="Local path to package for --clients", type=str)
@@ -51,7 +52,18 @@ def get_args():
     sp.add_argument("--hosts", "-H", help="Where to uninstall", type=str)
 
     sp = subp.add_parser("packages", help="Get info about available packages")
-    sp.add_argument("--edition", "-E", help="Enterprise or community packages", type=str)
+    sp.add_argument("--edition", "-E", choices=["community", "enterprise"],
+                    help="Enterprise or community packages", type=str)
+    sp.add_argument("tags", metavar="TAG", nargs="*")
+
+    sp = subp.add_parser("list", help="List CFEngine packages available for download")
+    sp.add_argument("--edition", "-E", choices=["community", "enterprise"],
+                    help="Enterprise or community packages", type=str)
+    sp.add_argument("tags", metavar="TAG", nargs="*")
+
+    sp = subp.add_parser("download", help="Download CFEngine packages")
+    sp.add_argument("--edition", "-E", choices=["community", "enterprise"],
+                    help="Enterprise or community packages", type=str)
     sp.add_argument("tags", metavar="TAG", nargs="*")
 
     sp = subp.add_parser("run", help="Run the command given as arguments on the given hosts")
@@ -110,7 +122,12 @@ def run_command_with_args(command, args):
         all_hosts = ((args.hosts or []) + (args.hub or []) + (args.clients or []))
         return commands.uninstall(all_hosts)
     elif command == "packages":
-        return commands.packages(tags=args.tags, version=args.version, edition=args.edition)
+        log.warning("packages command is deprecated, please use the new command: download")
+        return commands.download(tags=args.tags, version=args.version, edition=args.edition)
+    elif command == "list":
+        return commands.list_command(tags=args.tags, version=args.version, edition=args.edition)
+    elif command == "download":
+        return commands.download(tags=args.tags, version=args.version, edition=args.edition)
     elif command == "run":
         return commands.run(hosts=args.hosts, raw=args.raw, command=args.remote_command)
     elif command == "sudo":
@@ -139,7 +156,7 @@ def run_command_with_args(command, args):
 
 
 def validate_command(command, args):
-    if command in ["install", "packages"]:
+    if command in ["install", "packages", "list", "download"]:
         if args.edition:
             args.edition = args.edition.lower()
             if args.edition == "core":
@@ -292,7 +309,7 @@ def validate_args(args):
         print_version_info()
         exit_success()
 
-    if args.version and args.command not in ["install", "packages"]:
+    if args.version and args.command not in ["install", "packages", "list", "download"]:
         user_error("Cannot specify version number in '{}' command".format(args.command))
 
     if "hosts" in args and args.hosts:

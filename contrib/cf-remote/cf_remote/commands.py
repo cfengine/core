@@ -121,8 +121,7 @@ def install(
                 format(strip_user(hub)))
     return errors
 
-
-def packages(tags=None, version=None, edition=None):
+def _iterate_over_packages(tags=None, version=None, edition=None, download=False):
     releases = Releases(edition)
     print("Available releases: {}".format(releases))
 
@@ -136,8 +135,18 @@ def packages(tags=None, version=None, edition=None):
         print("No suitable packages found")
     else:
         for artifact in artifacts:
-            download_package(artifact.url)
+            if download:
+                download_package(artifact.url)
+            else:
+                print(artifact.url)
     return 0
+
+# named list_command to not conflict with list()
+def list_command(tags=None, version=None, edition=None):
+    return _iterate_over_packages(tags, version, edition, False)
+
+def download(tags=None, version=None, edition=None):
+    return _iterate_over_packages(tags, version, edition, True)
 
 def spawn(platform, count, role, group_name, provider=Providers.AWS, region=None):
     if os.path.exists(CLOUD_CONFIG_FPATH):

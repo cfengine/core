@@ -44,11 +44,12 @@
 // Blocks are the top level elements of a policy file
 // (excluding macros). 
 
-// Currently there are 2 types of blocks; bundle and body
+// Currently there are 3 types of blocks; bundle, body, promise
 typedef enum
 {
   PARSER_BLOCK_BUNDLE = 1,
   PARSER_BLOCK_BODY = 2,
+  PARSER_BLOCK_PROMISE = 3,
 } ParserBlock;
 
 static inline const char *ParserBlockString(ParserBlock b)
@@ -59,6 +60,8 @@ static inline const char *ParserBlockString(ParserBlock b)
       return "bundle";
     case PARSER_BLOCK_BODY:
       return "body";
+    case PARSER_BLOCK_PROMISE:
+      return "promise";
     default:
       break;
     }

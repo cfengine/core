@@ -29,6 +29,7 @@
 #include <conversion.h>
 #include <mutex.h>
 #include <misc_lib.h>
+#include <mod_custom.h>
 #include <mod_files.h>
 #include <vars.h>
 #include <fncall.h>
@@ -62,6 +63,10 @@ static const char *const POLICY_ERROR_PROMISE_DUPLICATE_HANDLE =
     "Duplicate promise handle %s found";
 static const char *const POLICY_ERROR_LVAL_INVALID =
     "Promise type %s has unknown attribute %s";
+static const char *const POLICY_ERROR_PROMISE_ATTRIBUTE_NOT_IMPLEMENTED =
+    "Common attribute '%s' not implemented for custom promises (%s)";
+static const char *const POLICY_ERROR_PROMISE_CUSTOM_CONTAINERS_NOT_IMPLEMENTED =
+    "Container / string list attributes not implemented for custom promises (%s promise, '%s' promiser, '%s' attribute)";
 
 static const char *const POLICY_ERROR_CONSTRAINT_TYPE_MISMATCH =
     "Type mismatch in constraint: %s";
@@ -104,6 +109,7 @@ Policy *PolicyNew(void)
     policy->release_id = NULL;
     policy->bundles = SeqNew(100, BundleDestroy);
     policy->bodies = SeqNew(100, BodyDestroy);
+    policy->custom_promise_types = SeqNew(20, BodyDestroy);
     policy->policy_files_hashes = NULL;
 
     return policy;
@@ -120,10 +126,11 @@ int PolicyCompare(const void *a, const void *b)
 
 void PolicyDestroy(Policy *policy)
 {
-    if (policy)
+    if (policy != NULL)
     {
         SeqDestroy(policy->bundles);
         SeqDestroy(policy->bodies);
+        SeqDestroy(policy->custom_promise_types);
         free(policy->release_id);
         if (policy->policy_files_hashes != NULL)
         {
@@ -384,6 +391,9 @@ bool PolicyIsRunnable(const Policy *policy)
  */
 Policy *PolicyMerge(Policy *a, Policy *b)
 {
+    assert(a != NULL);
+    assert(b != NULL);
+
     Policy *result = PolicyNew();
 
     SeqAppendSeq(result->bundles, a->bundles);
@@ -405,6 +415,17 @@ Policy *PolicyMerge(Policy *a, Policy *b)
     for (size_t i = 0; i < SeqLength(result->bodies); i++)
     {
         Body *bdp = SeqAt(result->bodies, i);
+        bdp->parent_policy = result;
+    }
+
+    SeqAppendSeq(result->custom_promise_types, a->custom_promise_types);
+    SeqSoftDestroy(a->custom_promise_types);
+    SeqAppendSeq(result->custom_promise_types, b->custom_promise_types);
+    SeqSoftDestroy(b->custom_promise_types);
+
+    for (size_t i = 0; i < SeqLength(result->custom_promise_types); i++)
+    {
+        Body *bdp = SeqAt(result->custom_promise_types, i);
         bdp->parent_policy = result;
     }
 
@@ -651,6 +672,18 @@ static bool PolicyCheckPromiseType(const BundleSection *section, Seq *errors)
 
 /*************************************************************************/
 
+static inline bool PolicyCheckBundleSections(Seq * sections, Seq *errors)
+{
+    bool success = true;
+    const size_t length = SeqLength(sections);
+    for (size_t i = 0; i < length; i++)
+    {
+        const BundleSection *section = SeqAt(sections, i);
+        success &= PolicyCheckPromiseType(section, errors);
+    }
+    return success;
+}
+
 static bool PolicyCheckBundle(const Bundle *bundle, Seq *errors)
 {
     assert(bundle);
@@ -668,11 +701,8 @@ static bool PolicyCheckBundle(const Bundle *bundle, Seq *errors)
         }
     }
 
-    for (size_t i = 0; i < SeqLength(bundle->sections); i++)
-    {
-        const BundleSection *section = SeqAt(bundle->sections, i);
-        success &= PolicyCheckPromiseType(section, errors);
-    }
+    success &= PolicyCheckBundleSections(bundle->sections, errors);
+    success &= PolicyCheckBundleSections(bundle->custom_sections, errors);
 
     return success;
 }
@@ -1332,6 +1362,7 @@ Bundle *PolicyAppendBundle(Policy *policy,
     bundle->args = RlistCopy(args);
     bundle->source_path = SafeStringDuplicate(source_path);
     bundle->sections = SeqNew(10, BundleSectionDestroy);
+    bundle->custom_sections = SeqNew(10, BundleSectionDestroy);
 
     return bundle;
 }
@@ -1366,6 +1397,35 @@ Body *PolicyAppendBody(Policy *policy, const char *ns, const char *name, const c
     return body;
 }
 
+/*******************************************************************/
+
+Body *PolicyAppendPromiseBlock(
+    Policy *policy,
+    const char *ns,
+    const char *name,
+    const char *type,
+    Rlist *args,
+    const char *source_path)
+{
+    assert(policy != NULL);
+
+    Body *body = xcalloc(1, sizeof(Body));
+    body->parent_policy = policy;
+
+    SeqAppend(policy->custom_promise_types, body);
+
+    body->name = xstrdup(name);
+    body->type = xstrdup(type);
+    body->ns = xstrdup(ns);
+    body->args = RlistCopy(args);
+    body->source_path = SafeStringDuplicate(source_path);
+    body->conlist = SeqNew(10, ConstraintDestroy);
+
+    return body;
+}
+
+/*******************************************************************/
+
 BundleSection *BundleAppendSection(Bundle *bundle, const char *promise_type)
 {
     if (bundle == NULL)
@@ -1382,6 +1442,14 @@ BundleSection *BundleAppendSection(Bundle *bundle, const char *promise_type)
             return existing;
         }
     }
+    for (size_t i = 0; i < SeqLength(bundle->custom_sections); i++)
+    {
+        BundleSection *existing = SeqAt(bundle->custom_sections, i);
+        if (strcmp(existing->promise_type, promise_type) == 0)
+        {
+            return existing;
+        }
+    }
 
     BundleSection *section = xcalloc(1, sizeof(BundleSection));
 
@@ -1389,7 +1457,14 @@ BundleSection *BundleAppendSection(Bundle *bundle, const char *promise_type)
     section->promise_type = xstrdup(promise_type);
     section->promises = SeqNew(10, PromiseDestroy);
 
-    SeqAppend(bundle->sections, section);
+    if (PolicyHasCustomPromiseType(bundle->parent_policy, promise_type))
+    {
+        SeqAppend(bundle->custom_sections, section);
+    }
+    else
+    {
+        SeqAppend(bundle->sections, section);
+    }
 
     return section;
 }
@@ -1432,7 +1507,7 @@ Promise *BundleSectionAppendPromise(BundleSection *section, const char *promiser
 
 static void BundleDestroy(Bundle *bundle)
 {
-    if (bundle)
+    if (bundle != NULL)
     {
         free(bundle->name);
         free(bundle->type);
@@ -1441,6 +1516,8 @@ static void BundleDestroy(Bundle *bundle)
 
         RlistDestroy(bundle->args);
         SeqDestroy(bundle->sections);
+        SeqDestroy(bundle->custom_sections);
+
         free(bundle);
     }
 }
@@ -2627,6 +2704,82 @@ static bool CheckScalarNotEmptyVarRef(const char *scalar)
     return (strcmp("$()", scalar) != 0) && (strcmp("${}", scalar) != 0);
 }
 
+static bool ValidateCustomPromise(const Promise *pp, Seq *errors)
+{
+    assert(pp != NULL);
+    assert(pp->parent_section != NULL);
+    assert(errors != NULL);
+
+    const char *const promise_type = pp->parent_section->promise_type;
+    const char *const promiser = pp->promiser;
+    bool valid = true;
+    Seq *attributes = pp->conlist;
+    const size_t length = SeqLength(attributes);
+    for (size_t i = 0; i < length; ++i)
+    {
+        Constraint *attribute = SeqAt(attributes, i);
+        const char *name = attribute->lval;
+        if (StringEqual(name, "action")
+            || StringEqual(name, "action_policy")
+            || StringEqual(name, "ifelapsed")
+            || StringEqual(name, "expireafter")
+            || StringEqual(name, "log_level")
+            || StringEqual(name, "classes")
+            || StringEqual(name, "comment")
+            || StringEqual(name, "depends_on")
+            || StringEqual(name, "handle")
+            || StringEqual(name, "if")
+            || StringEqual(name, "ifvarclass")
+            || StringEqual(name, "meta")
+            || StringEqual(name, "unless")
+            || StringEqual(name, "with"))
+        {
+            // TODO: Remove 1 attribute at a time, test and fix.
+            //       https://tracker.mender.io/browse/CFE-3392
+            SeqAppend(
+                errors,
+                PolicyErrorNew(
+                    POLICY_ELEMENT_TYPE_PROMISE,
+                    pp,
+                    POLICY_ERROR_PROMISE_ATTRIBUTE_NOT_IMPLEMENTED,
+                    name,
+                    promise_type));
+            valid = false;
+        }
+        else if ((attribute->rval.type == RVAL_TYPE_CONTAINER)
+            || (attribute->rval.type == RVAL_TYPE_LIST))
+        {
+            // TODO - Implement slists for custom promises:
+            // https://tracker.mender.io/browse/CFE-3444
+            SeqAppend(
+                errors,
+                PolicyErrorNew(
+                    POLICY_ELEMENT_TYPE_PROMISE,
+                    pp,
+                    POLICY_ERROR_PROMISE_CUSTOM_CONTAINERS_NOT_IMPLEMENTED,
+                    promise_type,
+                    promiser,
+                    name));
+            valid = false;
+        }
+    }
+
+    // TODO: If we are running --full-check, spawn promise module and perform
+    //       validate operation. https://tracker.mender.io/browse/CFE-3430
+
+    return valid;
+}
+
+static inline bool PromiseIsCustom(const Promise *pp)
+{
+    assert (pp != NULL);
+
+    const Policy *policy = pp->parent_section->parent_bundle->parent_policy;
+    const char *promise_type = pp->parent_section->promise_type;
+
+    return PolicyHasCustomPromiseType(policy, promise_type);
+}
+
 static bool PromiseCheck(const Promise *pp, Seq *errors)
 {
     bool success = true;
@@ -2638,18 +2791,30 @@ static bool PromiseCheck(const Promise *pp, Seq *errors)
         success = false;
     }
 
-    // check if promise's constraints are valid
-    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
+    const bool is_custom = PromiseIsCustom(pp);
+
+    if (!is_custom)
     {
-        Constraint *constraint = SeqAt(pp->conlist, i);
-        success &= ConstraintCheckSyntax(constraint, errors);
+        // check if promise's constraints are valid
+        for (size_t i = 0; i < SeqLength(pp->conlist); i++)
+        {
+            Constraint *constraint = SeqAt(pp->conlist, i);
+            success &= ConstraintCheckSyntax(constraint, errors);
+        }
     }
 
     const PromiseTypeSyntax *pts = PromiseTypeSyntaxGet(pp->parent_section->parent_bundle->type,
                                                         pp->parent_section->promise_type);
 
-    if (pts->check_promise)
+
+    if (pts == NULL)
     {
+        assert(is_custom);
+        success &= ValidateCustomPromise(pp, errors);
+    }
+    else if (pts->check_promise)
+    {
+        assert(!is_custom);
         success &= pts->check_promise(pp, errors);
     }
 
@@ -3239,5 +3404,21 @@ bool BundleTypeCheck(const char *name)
         return true;
     }
 
+    return false;
+}
+
+bool PolicyHasCustomPromiseType(const Policy *policy, const char *name)
+{
+    assert(policy != NULL);
+    Seq *types = policy->custom_promise_types;
+    const size_t length = SeqLength(types);
+    for (size_t i = 0; i < length; ++i)
+    {
+        Body *type = SeqAt(types, i);
+        if (StringEqual(name, type->name))
+        {
+            return true;
+        }
+    }
     return false;
 }

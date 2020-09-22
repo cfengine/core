@@ -89,6 +89,7 @@
 #include <sys/stat.h>                   /* checking umask on writing setxid log */
 
 #include <mod_common.h>
+#include <mod_custom.h>                 /* IsCustomPromiseType() */
 
 #ifdef HAVE_AVAHI_CLIENT_CLIENT_H
 #ifdef HAVE_AVAHI_COMMON_ADDRESS_H
@@ -1399,6 +1400,8 @@ static void AllClassesReport(const EvalContext *ctx)
 PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
 // NB - this function can be called recursively through "methods"
 {
+    assert(bp != NULL);
+
     int save_pr_kept = PR_KEPT;
     int save_pr_repaired = PR_REPAIRED;
     int save_pr_notkept = PR_NOTKEPT;
@@ -1413,6 +1416,7 @@ PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
 
     for (int pass = 1; pass < CF_DONEPASSES; pass++)
     {
+        // Evaluate built-in (non-custom) promise types, according to type sequence (normal order):
         for (TypeSequence type = 0; AGENT_TYPESEQUENCE[type] != NULL; type++)
         {
             const BundleSection *sp = BundleGetSection((Bundle *)bp, AGENT_TYPESEQUENCE[type]);
@@ -1453,6 +1457,34 @@ PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
                 BundleResolve(ctx, bp);
                 BundleResolvePromiseType(ctx, bp, "defaults", (PromiseActuator*)DefaultVarPromise);
             }
+        }
+
+        // Custom promises are evaluated at the end of an evaluation pass:
+        const size_t sections = SeqLength(bp->custom_sections);
+        for (size_t i = 0; i < sections; ++i)
+        {
+            BundleSection *section = SeqAt(bp->custom_sections, i);
+
+            EvalContextStackPushBundleSectionFrame(ctx, section);
+
+            const size_t promises = SeqLength(section->promises);
+            for (size_t ppi = 0; ppi < promises; ppi++)
+            {
+                Promise *pp = SeqAt(section->promises, ppi);
+
+                EvalContextSetPass(ctx, pass);
+
+                PromiseResult promise_result = ExpandPromise(ctx, pp, KeepAgentPromise, NULL);
+                result = PromiseResultUpdate(result, promise_result);
+
+                if (EvalAborted(ctx) || BundleAbort(ctx))
+                {
+                    EvalContextStackPopFrame(ctx);
+                    NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept, start);
+                    return result;
+                }
+            }
+            EvalContextStackPopFrame(ctx);
         }
     }
 
@@ -1773,6 +1805,10 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
     else if (strcmp("reports", pp->parent_section->promise_type) == 0)
     {
         result = VerifyReportPromise(ctx, pp);
+    }
+    else if (IsCustomPromiseType(pp))
+    {
+        result = EvaluateCustomPromise(ctx, pp);
     }
     else
     {

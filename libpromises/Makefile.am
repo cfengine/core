@@ -110,6 +110,7 @@ libpromises_la_SOURCES = \
 	math_eval.c math_eval.h math.pc \
 	mod_access.c mod_access.h \
 	mod_common.c mod_common.h \
+	mod_custom.c mod_custom.h \
 	mod_databases.c mod_databases.h \
 	mod_environ.c mod_environ.h \
 	mod_exec.c mod_exec.h \

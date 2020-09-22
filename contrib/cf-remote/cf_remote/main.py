@@ -33,7 +33,8 @@ def get_args():
     sp.add_argument("--hosts", "-H", help="Which hosts to get info for", type=str, required=True)
 
     sp = subp.add_parser("install", help="Install CFEngine on the given hosts")
-    sp.add_argument("--edition", "-E", help="Enterprise or community packages", type=str)
+    sp.add_argument("--edition", "-E", choices=["community", "enterprise"],
+                    help="Enterprise or community packages", type=str)
     sp.add_argument("--package", help="Local path to package for transfer and install", type=str)
     sp.add_argument("--hub-package", help="Local path to package for --hub", type=str)
     sp.add_argument("--client-package", help="Local path to package for --clients", type=str)
@@ -51,15 +52,18 @@ def get_args():
     sp.add_argument("--hosts", "-H", help="Where to uninstall", type=str)
 
     sp = subp.add_parser("packages", help="Get info about available packages")
-    sp.add_argument("--edition", "-E", help="Enterprise or community packages", type=str)
+    sp.add_argument("--edition", "-E", choices=["community", "enterprise"],
+                    help="Enterprise or community packages", type=str)
     sp.add_argument("tags", metavar="TAG", nargs="*")
 
     sp = subp.add_parser("list", help="List CFEngine packages available for download")
-    sp.add_argument("--edition", "-E", help="Enterprise or community packages", type=str)
+    sp.add_argument("--edition", "-E", choices=["community", "enterprise"],
+                    help="Enterprise or community packages", type=str)
     sp.add_argument("tags", metavar="TAG", nargs="*")
 
     sp = subp.add_parser("download", help="Download CFEngine packages")
-    sp.add_argument("--edition", "-E", help="Enterprise or community packages", type=str)
+    sp.add_argument("--edition", "-E", choices=["community", "enterprise"],
+                    help="Enterprise or community packages", type=str)
     sp.add_argument("tags", metavar="TAG", nargs="*")
 
     sp = subp.add_parser("run", help="Run the command given as arguments on the given hosts")

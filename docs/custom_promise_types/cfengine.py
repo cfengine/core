@@ -90,7 +90,8 @@ class PromiseModule:
         log_level = request.get("log_level", "info")
         self._response["operation"] = operation
 
-        assert log_level == "info"
+        # Agent will never request log level critical
+        assert log_level in ["error", "warning", "notice", "info", "verbose", "debug"]
 
         if operation in ["validate_promise", "evaluate_promise"]:
             promiser = request["promiser"]
@@ -141,14 +142,32 @@ class PromiseModule:
         self._out.write(f"log_{level}={message}\n")
         self._out.flush()
 
+    def log_critical(self, message):
+        self._log("critical", message)
+
+    def log_error(self, message):
+        self._log("error", message)
+
+    def log_warning(self, message):
+        self._log("warning", message)
+
+    def log_notice(self, message):
+        self._log("notice", message)
+
     def log_info(self, message):
         self._log("info", message)
+
+    def log_verbose(self, message):
+        self._log("verbose", message)
+
+    def log_debug(self, message):
+        self._log("debug", message)
 
     def promise_kept(self):
         self._result = Result.KEPT
 
     def promise_repaired(self):
-        self._result = Result.KEPT
+        self._result = Result.REPAIRED
 
     def promise_not_kept(self):
         self._result = Result.NOTKEPT

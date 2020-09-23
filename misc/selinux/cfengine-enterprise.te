@@ -25,6 +25,7 @@ require {
 	type cfengine_execd_exec_t;
 	type ping_exec_t;
 	type proc_net_t;
+	type proc_xen_t;
 	type cfengine_serverd_exec_t;
 	type smtp_port_t;
 	type rpm_exec_t;
@@ -163,6 +164,9 @@ allow cfengine_execd_t cfengine_var_lib_t:file execute;
 # allow cf-execd to execute cf-promises
 allow cfengine_execd_t cfengine_var_lib_t:file execute_no_trans;
 
+# TODO: this should not be needed
+allow cfengine_execd_t proc_xen_t:dir search;
+
 allow cfengine_execd_t cfengine_log_t:file { read unlink write };
 allow cfengine_execd_t cfengine_log_t:lnk_file { create getattr read unlink };
 allow cfengine_execd_t cfengine_monitord_exec_t:file getattr;
@@ -227,6 +231,8 @@ allow cfengine_monitord_t useradd_exec_t:file getattr;
 allow cfengine_monitord_t var_t:dir read;
 allow cfengine_monitord_t semanage_exec_t:file getattr;
 
+# TODO: this should not be needed
+allow cfengine_monitord_t proc_xen_t:dir search;
 
 #============= cfengine_serverd_t ==============
 # allow cf-serverd to run cf-agent and make sure the forked process run in the
@@ -244,6 +250,9 @@ allow cfengine_serverd_t cfengine_var_lib_t:file execute_no_trans;
 
 # allow cf-serverd to connect in case of call-collect
 allow cfengine_serverd_t unreserved_port_t:tcp_socket name_connect;
+
+# TODO: this should not be needed
+allow cfengine_serverd_t proc_xen_t:dir search;
 
 allow cfengine_serverd_t cfengine_execd_exec_t:file getattr;
 allow cfengine_serverd_t cfengine_monitord_exec_t:file getattr;

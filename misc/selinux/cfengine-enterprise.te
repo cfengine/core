@@ -33,6 +33,7 @@ require {
 	type ping_exec_t;
 	type proc_t;
 	type proc_net_t;
+	type proc_xen_t;
 	type cfengine_serverd_exec_t;
 	type http_port_t;
 	type postgresql_port_t;
@@ -191,6 +192,7 @@ allow cfengine_execd_t cfengine_var_lib_t:file execute_no_trans;
 
 # TODO: this should not be needed
 allow cfengine_execd_t ssh_port_t:tcp_socket name_connect;
+allow cfengine_execd_t proc_xen_t:dir search;
 
 allow cfengine_execd_t cfengine_log_t:file { read unlink write };
 allow cfengine_execd_t cfengine_log_t:lnk_file { create getattr read unlink };
@@ -260,6 +262,8 @@ allow cfengine_monitord_t useradd_exec_t:file getattr;
 allow cfengine_monitord_t var_t:dir read;
 allow cfengine_monitord_t semanage_exec_t:file getattr;
 
+# TODO: this should not be needed
+allow cfengine_monitord_t proc_xen_t:dir search;
 
 #============= cfengine_serverd_t ==============
 # allow cf-serverd to run cf-agent and make sure the forked process run in the
@@ -280,6 +284,7 @@ allow cfengine_serverd_t unreserved_port_t:tcp_socket name_connect;
 
 # TODO: this should not be needed
 allow cfengine_serverd_t ssh_port_t:tcp_socket name_connect;
+allow cfengine_serverd_t proc_xen_t:dir search;
 
 allow cfengine_serverd_t cfengine_execd_exec_t:file getattr;
 allow cfengine_serverd_t cfengine_monitord_exec_t:file getattr;
@@ -398,6 +403,7 @@ allow cfengine_hub_t var_t:dir read;
 allow cfengine_hub_t ifconfig_exec_t:file { execute execute_no_trans open read getattr map };
 allow cfengine_hub_t shell_exec_t:file map;
 allow cfengine_hub_t shell_exec_t:file { execute execute_no_trans };
+allow cfengine_hub_t proc_xen_t:dir search;
 
 
 #============= cfengine_postgres_t ==============

@@ -204,8 +204,8 @@ static void AppendExpandedBodies(EvalContext *ctx, Promise *pcopy,
  */
 Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
 {
-    Log(LOG_LEVEL_DEBUG, "DeRefCopyPromise(): "
-        "promiser:'%s'",
+    Log(LOG_LEVEL_DEBUG,
+        "DeRefCopyPromise(): promiser:'%s'",
         SAFENULL(pp->promiser));
 
     Promise *pcopy = xcalloc(1, sizeof(Promise));

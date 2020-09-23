@@ -59,7 +59,7 @@ aws_platforms = {
         "xlsize": "t2.large"
     },
     "rhel-8-x64": {
-        "ami": "ami-04facb3ed127a2eb6",
+        "ami": "ami-08f4717d06813bf00",
         "size": "t3a.micro",
         "user": "ec2-user",
         "xlsize": "m3.xlarge"

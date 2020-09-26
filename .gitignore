@@ -167,3 +167,8 @@ cscope.*
 
 # python
 __pycache__
+
+# SELinux policy build artifacts
+misc/selinux/cfengine-enterprise.pp
+misc/selinux/cfengine-enterprise.if
+misc/selinux/tmp

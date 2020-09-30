@@ -1187,6 +1187,8 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
         GetChangesChrootDir(changes_chroot, sizeof(changes_chroot));
         SetChangesChroot(changes_chroot);
         RegisterCleanupFunction(DeleteChangesChroot);
+        Log(LOG_LEVEL_WARNING, "All changes in files will be made in the '%s' chroot",
+            changes_chroot);
     }
 }
 

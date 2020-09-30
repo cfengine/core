@@ -203,6 +203,7 @@ static const struct option OPTIONS[] =
     {"show-evaluated-vars", optional_argument, 0, 0 },
     {"skip-bootstrap-policy-run", no_argument, 0, 0 },
     {"skip-db-check", optional_argument, 0, 0 },
+    {"audit", required_argument, 0, 0},
     {NULL, 0, 0, '\0'}
 };
 
@@ -233,6 +234,7 @@ static const char *const HINTS[] =
     "Show *final* evaluated variables, including those defined without dependency to user-defined classes in policy. Optionally can take a regular expression.",
     "Do not run policy as the last step of the bootstrap process",
     "Do not run database integrity checks and repairs at startup",
+    "Run in Audit mode, either 'manifest' or 'diff'",
     NULL
 };
 
@@ -647,6 +649,31 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 {
                     Log(LOG_LEVEL_ERR,
                         "Invalid argument for --skip-db-check(yes/no): '%s'",
+                        optarg);
+                    DoCleanupAndExit(EXIT_FAILURE);
+                }
+            }
+            else if (StringEqual(option_name, "audit"))
+            {
+                if (optarg == NULL)
+                {
+                    Log(LOG_LEVEL_ERR, "Missing argument for --audit, 'manifest' or 'diff' required");
+                    DoCleanupAndExit(EXIT_FAILURE);
+                }
+                else if (StringEqual_IgnoreCase(optarg, "manifest"))
+                {
+                    EVAL_MODE = EVAL_MODE_AUDIT_MANIFEST;
+                }
+                else if (StringEqual_IgnoreCase(optarg, "diff"))
+                {
+                    EVAL_MODE = EVAL_MODE_AUDIT_DIFF;
+                    Log(LOG_LEVEL_ERR, "'diff' audit mode not supported yet");
+                    DoCleanupAndExit(EXIT_FAILURE);
+                }
+                else
+                {
+                    Log(LOG_LEVEL_ERR,
+                        "Invalid argument for --audit, 'manifest' or 'diff' required, not '%s'",
                         optarg);
                     DoCleanupAndExit(EXIT_FAILURE);
                 }

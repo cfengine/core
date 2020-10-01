@@ -1,0 +1,23 @@
+body common control
+{
+  inputs => { "../default.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+}
+
+
+bundle agent test
+{
+  meta:
+    "test_soft_fail"
+      string => "any",
+      meta => { "ENT-5299" };
+    "description" -> { "ENT-5299" }
+      string => "Test that unsafe function sare only evaulated in --audit mode when tagged as audit_safe";
+
+  vars:
+    "cf_agent" string => ifelse(isvariable("sys.cf_agent"), "$(sys.cf_agent)", "/var/cfengine/bin/cf-agent");
+    "result" string => execresult("$(cf_agent) --audit=manifest -Kf $(this.promise_filename).sub", useshell);
+
+  methods:
+    "Pass/FAIL" usebundle => dcs_check_strcmp( "$(result)", "FAIL", $(this.promise_filename), "no");
+}

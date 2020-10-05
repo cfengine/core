@@ -27,6 +27,7 @@ static const char* features[] = {
 #endif
     "def_json_preparse",
     "host_specific_data_load",
+    "copyfrom_restrict_keys",
     NULL
 };
 

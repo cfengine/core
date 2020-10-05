@@ -318,6 +318,7 @@ const ConstraintSyntax CFA_CONTROLBODY[] =
     ConstraintSyntaxNewBool("verbose", "true/false switches on verbose standard output. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("report_class_log", "true/false enables logging classes at the end of agent execution. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("select_end_match_eof", "Set the default behavior of select_end_match_eof in edit_line promises. Default: false", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("copyfrom_restrict_keys", ".*", "A list of key hashes to restrict copy_from to", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

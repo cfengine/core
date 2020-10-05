@@ -41,7 +41,7 @@ bool SetCfenginePort(const char *port_str);
 /**
   @param err Set to 0 on success, -1 no server response, -2 authentication failure.
   */
-AgentConnection *ServerConnection(const char *server, const char *port,
+AgentConnection *ServerConnection(const char *server, const char *port, const Rlist *restrict_keys,
                                   unsigned int connect_timeout,
                                   ConnectionFlags flags, int *err);
 void DisconnectServer(AgentConnection *conn);
@@ -52,6 +52,5 @@ bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
 Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn);
 
 int TLSConnectCallCollect(ConnectionInfo *conn_info, const char *username);
-
 
 #endif

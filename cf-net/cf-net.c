@@ -480,7 +480,7 @@ static AgentConnection *CFNetOpenConnection(const char *server)
     {
         port = CFENGINE_PORT_STR;
     }
-    conn = ServerConnection(host, port, 30, connflags, &err);
+    conn = ServerConnection(host, port, NULL, 30, connflags, &err);
     free(buf);
     if (conn == NULL)
     {

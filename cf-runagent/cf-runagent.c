@@ -608,7 +608,7 @@ static int HailServer(const EvalContext *ctx, const GenericAgentConfig *config, 
         .off_the_record = false
     };
     int err = 0;
-    conn = ServerConnection(hostname, port, CONNTIMEOUT, connflags, &err);
+    conn = ServerConnection(hostname, port, NULL, CONNTIMEOUT, connflags, &err);
 
     if (conn == NULL)
     {

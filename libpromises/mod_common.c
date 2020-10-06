@@ -25,6 +25,7 @@
 /* This is a root node in the syntax tree */
 
 #include <mod_common.h>
+#include <mod_custom.h>
 
 #include <mod_environ.h>
 #include <mod_outputs.h>

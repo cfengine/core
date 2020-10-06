@@ -26,7 +26,7 @@
 #include <cf3parse_logic.h>
 %}
 
-%token IDENTIFIER QUOTED_STRING CLASS_GUARD PROMISE_GUARD BUNDLE BODY FAT_ARROW THIN_ARROW NAKEDVAR
+%token IDENTIFIER QUOTED_STRING CLASS_GUARD PROMISE_GUARD BUNDLE BODY PROMISE FAT_ARROW THIN_ARROW NAKEDVAR
 %expect 1
 
 %%
@@ -43,6 +43,7 @@ blocks:                block
 
 block:                 bundle
                      | body
+                     | promise
                      | error
                        {
                            ParseError("Expected 'bundle' or 'body' keyword, wrong input '%s'", yytext);
@@ -52,6 +53,8 @@ block:                 bundle
 bundle:                BUNDLE bundletype bundleid arglist bundlebody
 
 body:                  BODY bodytype bodyid arglist bodybody
+
+promise:               PROMISE promisecomponent promiseid arglist bodybody
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -125,6 +128,40 @@ bodyid_values:         symbol
                        {
                            yyclearin;
                            ParseError("Expected body identifier, wrong input '%s'", yytext);
+                           INSTALL_SKIP = true;
+                       }
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+promisecomponent:      promisecomponent_values
+                       {
+                           ParserBeginBlock(PARSER_BLOCK_PROMISE);
+                       }
+
+promisecomponent_values: typeid
+                         {
+                             if (!StringEqual(P.blocktype, "agent"))
+                             {
+                                 ParseError("Custom promises only supported for 'agent', not '%s'", P.blocktype);
+                             }
+                         }
+                       | error
+                         {
+                             yyclearin;
+                             ParseError("Expected 'agent', got '%s'", yytext);
+                         }
+
+promiseid:             promiseid_values
+                       {
+                          ParserDebug("\tP:promise:%s:%s\n", P.blocktype, P.blockid);
+                          CURRENT_BLOCKID_LINE = P.line_no;
+                       }
+
+promiseid_values:      symbol
+                     | error
+                       {
+                           yyclearin;
+                           ParseError("Expected promise type identifier, wrong input '%s'", yytext);
                            INSTALL_SKIP = true;
                        }
 
@@ -444,16 +481,19 @@ constraint_id:         IDENTIFIER                        /* BUNDLE ONLY */
                        {
                            ParserDebug("\tP:%s:%s:%s:%s:%s:%s attribute = %s\n", ParserBlockString(P.block), P.blocktype, P.blockid, P.currenttype, P.currentclasses ? P.currentclasses : "any", P.promiser, P.currentid);
 
-                           const PromiseTypeSyntax *promise_type_syntax = PromiseTypeSyntaxGet(P.blocktype, P.currenttype);
-                           if (!promise_type_syntax)
+                           if (!PolicyHasCustomPromiseType(P.policy, P.currenttype))
                            {
-                               ParseError("Invalid promise type '%s' in bundle '%s' of type '%s'", P.currenttype, P.blockid, P.blocktype);
-                               INSTALL_SKIP = true;
-                           }
-                           else if (!PromiseTypeSyntaxGetConstraintSyntax(promise_type_syntax, P.currentid))
-                           {
-                               ParseError("Unknown attribute '%s' for promise type '%s' in bundle with type '%s'", P.currentid, P.currenttype, P.blocktype);
-                               INSTALL_SKIP = true;
+                               const PromiseTypeSyntax *promise_type_syntax = PromiseTypeSyntaxGet(P.blocktype, P.currenttype);
+                               if (!promise_type_syntax)
+                               {
+                                   ParseError("Invalid promise type '%s' in bundle '%s' of type '%s'", P.currenttype, P.blockid, P.blocktype);
+                                   INSTALL_SKIP = true;
+                               }
+                               else if (!PromiseTypeSyntaxGetConstraintSyntax(promise_type_syntax, P.currentid))
+                               {
+                                   ParseError("Unknown attribute '%s' for promise type '%s' in bundle with type '%s'", P.currentid, P.currenttype, P.blocktype);
+                                   INSTALL_SKIP = true;
+                               }
                            }
 
                            strncpy(P.lval,P.currentid,CF_MAXVARSIZE);
@@ -484,7 +524,7 @@ bodybody:              body_begin
 bodybody_inner:        /* empty */
                      | bodyattribs
 
-bodyattribs:           bodyattrib                    /* BODY ONLY */
+bodyattribs:           bodyattrib                    /* BODY/PROMISE ONLY */
                      | bodyattribs bodyattrib
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -502,7 +542,7 @@ selection_line:        selection ';'
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-selection:             selection_id                         /* BODY ONLY */
+selection:             selection_id                         /* BODY/PROMISE ONLY */
                        assign_arrow
                        rval
                        {

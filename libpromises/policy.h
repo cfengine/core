@@ -55,6 +55,7 @@ struct Policy_
 
     Seq *bundles;
     Seq *bodies;
+    Seq *custom_promise_types;
     StringMap *policy_files_hashes;
 };
 
@@ -76,6 +77,7 @@ struct Bundle_
     Rlist *args;
 
     Seq *sections;
+    Seq *custom_sections;
 
     char *source_path;
     SourceOffset offset;
@@ -164,6 +166,7 @@ bool PolicyCheckRunnable(const EvalContext *ctx, const Policy *policy, Seq *erro
 
 Bundle *PolicyAppendBundle(Policy *policy, const char *ns, const char *name, const char *type, const Rlist *args, const char *source_path);
 Body *PolicyAppendBody(Policy *policy, const char *ns, const char *name, const char *type, Rlist *args, const char *source_path);
+Body *PolicyAppendPromiseBlock(Policy *policy, const char *ns, const char *name, const char *type, Rlist *args, const char *source_path);
 
 JsonElement *PolicyToJson(const Policy *policy);
 JsonElement *BundleToJson(const Bundle *bundle);
@@ -220,5 +223,7 @@ char *QualifiedNameNamespaceComponent(const char *qualified_name);
 char *QualifiedNameScopeComponent(const char *qualified_name);
 bool BundleTypeCheck(const char *name);
 Rval DefaultBundleConstraint(const Promise *pp, char *promisetype);
+
+bool PolicyHasCustomPromiseType(const Policy *policy, const char *name);
 
 #endif

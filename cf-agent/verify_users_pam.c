@@ -1434,23 +1434,22 @@ void VerifyOneUsersPromise (const char *puser, const User *u, PromiseResult *res
                             EvalContext *ctx, const Attributes *a, const Promise *pp)
 {
     assert(u != NULL);
-    bool res;
 
-    struct passwd *passwd_info;
-    StringSet *groups_to_set = StringSetNew();
-    StringSet *current_secondary_groups = StringSetNew();
-    StringSet *groups_missing = StringSetNew();
-    passwd_info = GetPwEntry(puser);
+    struct passwd *passwd_info = GetPwEntry(puser);
     if (!passwd_info && errno != 0)
     {
         Log(LOG_LEVEL_ERR, "Could not get information from user database.");
         return;
     }
 
+    bool res;
     if (u->policy == USER_STATE_PRESENT || u->policy == USER_STATE_LOCKED)
     {
         if (passwd_info)
         {
+            StringSet *groups_to_set = StringSetNew();
+            StringSet *current_secondary_groups = StringSetNew();
+            StringSet *groups_missing = StringSetNew();
             res = GetGroupInfo(puser, u, &groups_to_set, &groups_missing, &current_secondary_groups);
             if (res)
             {
@@ -1476,6 +1475,9 @@ void VerifyOneUsersPromise (const char *puser, const User *u, PromiseResult *res
             {
                 *result = PROMISE_RESULT_FAIL;
             }
+            StringSetDestroy(groups_to_set);
+            StringSetDestroy(current_secondary_groups);
+            StringSetDestroy(groups_missing);
         }
         else
         {

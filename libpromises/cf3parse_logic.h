@@ -63,7 +63,11 @@ extern char *yytext;
 static bool RelevantBundle(const char *agent, const char *blocktype);
 static bool LvalWantsBody(char *stype, char *lval);
 static SyntaxTypeMatch CheckSelection(
-    const char *type, const char *name, const char *lval, Rval rval);
+    ParserBlock block,
+    const char *type,
+    const char *name,
+    const char *lval,
+    Rval rval);
 static SyntaxTypeMatch CheckConstraint(
     const char *type,
     const char *lval,
@@ -280,8 +284,35 @@ static bool LvalWantsBody(char *stype, char *lval)
 }
 
 static SyntaxTypeMatch CheckSelection(
-    const char *type, const char *name, const char *lval, Rval rval)
+    ParserBlock block,
+    const char *type,
+    const char *name,
+    const char *lval,
+    Rval rval)
 {
+    if (block == PARSER_BLOCK_PROMISE)
+    {
+        const BodySyntax *body_syntax = BodySyntaxGet(block, type);
+        const ConstraintSyntax *constraints = body_syntax->constraints;
+        for (int i = 0; constraints[i].lval != NULL; i++)
+        {
+            if (StringEqual(lval, constraints[i].lval))
+            {
+                return CheckConstraintTypeMatch(
+                    lval,
+                    rval,
+                    constraints[i].dtype,
+                    constraints[i].range.validation_string,
+                    0);
+            }
+        }
+        // Parser should ensure that lval is a valid
+        // attribute, and so we should never get here
+        debug_abort_if_reached();
+    }
+
+    assert(block == PARSER_BLOCK_BODY);
+
     // Check internal control bodies etc
     if (strcmp("control", name) == 0)
     {
@@ -585,6 +616,7 @@ static inline void MagicRvalTransformations(
         }
     }
 
+    if (promise_type_syntax != NULL) // NULL for custom promise types
     {
         SyntaxTypeMatch err = CheckConstraint(
             P.currenttype, P.lval, P.rval, promise_type_syntax);
@@ -624,6 +656,13 @@ static inline void ParserHandleBundlePromiseRval()
         RvalDestroy(P.rval);
         P.rval = RvalNew(NULL, RVAL_TYPE_NOPROMISEE);
         return;
+    }
+
+    if (PolicyHasCustomPromiseType(P.policy, P.currenttype))
+    {
+        MagicRvalTransformations(NULL);
+        ParserAppendCurrentConstraint();
+        goto cleanup;
     }
 
     const ConstraintSyntax *constraint_syntax = NULL;
@@ -677,6 +716,8 @@ static inline void ParserHandleBundlePromiseRval()
             break;
         }
     }
+
+cleanup:
 
     RvalDestroy(P.rval);
     P.rval = RvalNew(NULL, RVAL_TYPE_NOPROMISEE);
@@ -762,6 +803,20 @@ static inline void ParserHandlePromiseGuard()
             break;
         }
     }
+    else if (PolicyHasCustomPromiseType(P.policy, P.currenttype))
+    {
+        if (!INSTALL_SKIP)
+        {
+            P.currentstype =
+                BundleAppendSection(P.currentbundle, P.currenttype);
+            P.currentstype->offset.line = P.line_no;
+            P.currentstype->offset.start = P.offsets.last_promise_guard_id;
+        }
+        else
+        {
+            P.currentstype = NULL;
+        }
+    }
     else
     {
         ParseError("Unknown promise type '%s'", P.currenttype);
@@ -772,10 +827,22 @@ static inline void ParserHandlePromiseGuard()
 // Called at the beginning of the body of the block, i.e. the opening '{'
 static inline void ParserBeginBlockBody()
 {
-    const BodySyntax *body_syntax =
-        BodySyntaxGet(PARSER_BLOCK_BODY, P.blocktype);
+    const BodySyntax *body_syntax = BodySyntaxGet(P.block, P.blocktype);
 
-    if (body_syntax)
+    if (P.block == PARSER_BLOCK_PROMISE)
+    {
+        assert(body_syntax != NULL);
+        P.currentbody = PolicyAppendPromiseBlock(
+            P.policy,
+            P.current_namespace,
+            P.blockid,
+            P.blocktype,
+            P.useargs,
+            P.filename);
+        P.currentbody->offset.line = CURRENT_BLOCKID_LINE;
+        P.currentbody->offset.start = P.offsets.last_block_id;
+    }
+    else if (body_syntax)
     {
         INSTALL_SKIP = false;
 
@@ -826,13 +893,12 @@ static inline void ParserBeginBlockBody()
 // in body blocks
 static inline void ParserHandleBlockAttributeRval()
 {
-    assert(P.block == PARSER_BLOCK_BODY); // Will also include promise blocks
+    assert(P.block == PARSER_BLOCK_BODY || P.block == PARSER_BLOCK_PROMISE);
 
     if (!INSTALL_SKIP)
     {
-        const BodySyntax *body_syntax =
-            BodySyntaxGet(PARSER_BLOCK_BODY, P.blocktype);
-        assert(body_syntax);
+        const BodySyntax *body_syntax = BodySyntaxGet(P.block, P.blocktype);
+        assert(body_syntax != NULL);
 
         const ConstraintSyntax *constraint_syntax =
             BodySyntaxGetConstraintSyntax(body_syntax->constraints, P.lval);
@@ -849,8 +915,8 @@ static inline void ParserHandleBlockAttributeRval()
                 // Intentional fall
             case SYNTAX_STATUS_NORMAL:
             {
-                SyntaxTypeMatch err =
-                    CheckSelection(P.blocktype, P.blockid, P.lval, P.rval);
+                SyntaxTypeMatch err = CheckSelection(
+                    P.block, P.blocktype, P.blockid, P.lval, P.rval);
                 if (err != SYNTAX_TYPE_MATCH_OK
                     && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
                 {

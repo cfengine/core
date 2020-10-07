@@ -111,13 +111,15 @@ def get_info(host, *, users=None, connection=None):
 
             # Add tags with version number first, to filter by them first:
             tags.append(platform_tag) # Example: ubuntu16
-            if distro == "centos":
+            if distro == "centos" or distro == "rhel":
                 tags.append("el" + major)
 
             # Then add more generic tags (lower priority):
             tags.append(distro) # Example: ubuntu
             if distro == "centos":
                 tags.append("rhel")
+
+            if distro == "centos" or distro == "rhel":
                 tags.append("el")
         else:
             redhat_release = ssh_cmd(connection, "cat /etc/redhat-release")

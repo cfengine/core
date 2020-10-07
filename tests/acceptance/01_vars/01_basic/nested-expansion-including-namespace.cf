@@ -1,0 +1,32 @@
+body common control
+{
+        inputs => { "../../default.cf.sub" };
+        bundlesequence  => { default("$(this.promise_filename)") };
+        version => "1.0";
+}
+
+bundle agent init
+{
+  vars:
+      "dummy" string => "dummy";
+}
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-1583" }
+        string => "Check that nested expansion with namespaces works";
+
+}
+bundle agent check
+{
+  vars:
+      "data_bundle" string => "default:init";
+
+  methods:
+      "Pass/FAIL" usebundle => dcs_check_strcmp( "$($(data_bundle).dummy)","dummy", $(this.promise_filename), "no");
+
+  reports:
+      "Nested expansion: '$(data_bundle).dummy' = $($(data_bundle).dummy)";
+      "Not nested expansion: '$(data_bundle).dummy' = $(default:init.dummy)";
+}

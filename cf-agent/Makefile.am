@@ -123,6 +123,16 @@ libcf_agent_la_SOURCES += \
 endif
 endif
 
+TESTS =
+
+if !NT
+noinst_PROGRAMS = manifest_file
+manifest_file_SOURCES = manifest_file.c audit_mode.c
+manifest_file_LDADD = ${top_srcdir}/libntech/libutils/libutils.la \
+					  ../libpromises/libpromises.la
+TESTS += manifest_file
+endif
+
 if !BUILTIN_EXTENSIONS
 bin_PROGRAMS = cf-agent
 

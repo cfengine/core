@@ -25,6 +25,11 @@
 #ifndef CFENGINE_CHANGES_CHROOT_H
 #define CFENGINE_CHANGES_CHROOT_H
 
+#define CHROOT_CHANGES_LIST_FILE "/changed_files"
+#define CHROOT_RENAMES_LIST_FILE "/renamed_files"
+
 void PrepareChangesChroot(const char *path);
+bool RecordFileChangedInChroot(const char *path);
+bool RecordFileRenamedInChroot(const char *old_name, const char *new_name);
 
 #endif /* CFENGINE_CHANGES_CHROOT_H */

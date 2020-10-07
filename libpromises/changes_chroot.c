@@ -31,8 +31,11 @@
 #include <files_names.h>        /* IsAbsPath(), JoinPaths() */
 #include <files_links.h>        /* ExpandLinks() */
 #include <string_lib.h>         /* StringEqual() */
+#include <string_sequence.h>    /* WriteLenPrefixedString() */
+#include <writer.h>             /* FileWriter(), Writer */
 
 #include <changes_chroot.h>
+
 
 static inline const char *GetLastFileSeparator(const char *path, const char *end)
 {
@@ -224,4 +227,27 @@ void PrepareChangesChroot(const char *path)
     CopyFilePermissionsDisk(path, chrooted);
 
     free(chrooted);
+}
+
+bool RecordFileChangedInChroot(const char *path)
+{
+    FILE *chroot_changes = safe_fopen(ToChangesChroot(CHROOT_CHANGES_LIST_FILE), "a");
+    Writer *writer = FileWriter(chroot_changes);
+
+    bool ret = WriteLenPrefixedString(writer, path);
+
+    fclose(chroot_changes);
+    return ret;
+}
+
+bool RecordFileRenamedInChroot(const char *old_name, const char *new_name)
+{
+    FILE *chroot_renames = safe_fopen(ToChangesChroot(CHROOT_RENAMES_LIST_FILE), "a");
+    Writer *writer = FileWriter(chroot_renames);
+
+    bool ret = WriteLenPrefixedString(writer, old_name);
+    ret = (ret && WriteLenPrefixedString(writer, new_name));
+
+    fclose(chroot_renames);
+    return ret;
 }

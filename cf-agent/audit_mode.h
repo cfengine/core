@@ -28,5 +28,6 @@
 #define _AUDIT_MODE_H_
 
 bool ManifestFile(const char *path, bool chrooted);
+bool ManifestRename(const char *orig_name, const char *new_name);
 
 #endif  /* _AUDIT_MODE_H_ */

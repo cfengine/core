@@ -2919,24 +2919,7 @@ static void LogPromiseContext(const EvalContext *ctx, const Promise *pp)
 
 void cfPS(EvalContext *ctx, LogLevel level, PromiseResult status, const Promise *pp, const Attributes *attr, const char *fmt, ...)
 {
-    /*
-     * This stub implementation of cfPS delegates to the new logging backend.
-     *
-     * Due to the fact very little of the code has been converted, this code
-     * does a full initialization and shutdown of logging subsystem for each
-     * cfPS.
-     *
-     * Instead, LoggingInit should be called at the moment EvalContext is
-     * created, LoggingPromiseEnter/LoggingPromiseFinish should be called around
-     * ExpandPromise and LoggingFinish should be called when EvalContext is
-     * going to be destroyed.
-     *
-     * But it requires all calls to cfPS to be eliminated.
-     */
-
-    /* FIXME: Ensure that NULL pp is never passed into cfPS */
-
-    assert(pp);
+    assert(pp != NULL);
     assert(attr != NULL);
 
     if (level >= LOG_LEVEL_VERBOSE)

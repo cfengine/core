@@ -243,6 +243,16 @@ bool BundleAbort(EvalContext *ctx);
 bool EvalAborted(const EvalContext *ctx);
 void NotifyDependantPromises(EvalContext *ctx, const Promise *pp, PromiseResult result);
 bool MissingDependencies(EvalContext *ctx, const Promise *pp);
+
+/**
+ * Record promise status (result).
+ *
+ * This function should be called once for every promise to record its
+ * status/result. It logs the given message (#fmt and varargs) with the given
+ * #level based on the logging specifications in the 'action' body and
+ * increments the counters of actuated promises and promises
+ * kept/repaired/failed/...
+ */
 void cfPS(EvalContext *ctx, LogLevel level, PromiseResult status, const Promise *pp, const Attributes *attr, const char *fmt, ...) FUNC_ATTR_PRINTF(6, 7);
 
 /**

@@ -165,7 +165,11 @@ class Releases:
             rel = Release(release)
             if "status" in release and release["status"] == "unsupported":
                 continue
-            if "lts_branch" not in release and "latest_stable" not in release:
+            if (
+                (release["version"] != "master")
+                and ("lts_branch" not in release)
+                and ("latest_stable" not in release)
+            ):
                 continue
             if "lts_branch" in release and release["lts_branch"] not in self.supported_branches:
                 continue

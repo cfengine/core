@@ -81,6 +81,7 @@ stamp-h1
 # binaries
 /cf-agent/cf-agent
 /cf-agent/cf-agent.exe
+/cf-agent/manifest_file
 /cf-check/cf-check
 /cf-check/cf-check.exe
 /cf-execd/cf-execd

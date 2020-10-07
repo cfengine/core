@@ -328,3 +328,10 @@ bool ManifestFile(const char *path, bool chrooted)
 
     return true;
 }
+
+bool ManifestRename(const char *orig_name, const char *new_name)
+{
+    PrintDelimiter();
+    printf("'%s' is the new name of '%s'\n", new_name, orig_name);
+    return true;
+}

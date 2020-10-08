@@ -1,0 +1,75 @@
+body common control
+{
+  inputs => { "../plucked.cf.sub" };
+}
+
+bundle agent init
+{
+  vars:
+    "usemodule_unsafe_module_path" string => "$(sys.workdir)$(const.dirsep)modules$(const.dirsep)usemodule_unsafe.sh";
+    "usemodule_safe_module_path" string => "$(sys.workdir)$(const.dirsep)modules$(const.dirsep)usemodule_safe.sh";
+
+  files:
+    "$(sys.statedir)/*safe"
+      delete => tidy;
+    "$(usemodule_unsafe_module_path)"
+      create => "true",
+      perms => m(700),
+      content => "#!/bin/bash
+touch $(sys.statedir)/usemodule_unsafe
+";
+    "$(usemodule_safe_module_path)"
+      create => "true",
+      perms => m(700),
+      content => "#!/bin/bash
+touch $(sys.statedir)/usemodule_safe
+";
+}
+
+bundle agent test
+{
+  vars:
+    "unsafe_functions" slist => {
+      "execresult",
+      "execresult_as_data",
+      "returnszero",
+      "usemodule"
+    };
+
+    "test_1" string => execresult("touch $(sys.statedir)$(const.dirsep)execresult_safe", useshell),
+      meta => { "audit_safe" };
+    "test_2" string => execresult("touch $(sys.statedir)$(const.dirsep)execresult_unsafe", useshell);
+    "test_3" data => execresult_as_data("touch $(sys.statedir)$(const.dirsep)execresult_as_data_safe", useshell),
+      meta => { "audit_safe" };
+    "test_4" data => execresult_as_data("touch $(sys.statedir)$(const.dirsep)execresult_as_data_unsafe", useshell);
+
+  classes:
+    "test_5" expression => returnszero("touch $(sys.statedir)$(const.dirsep)returnszero_safe", useshell),
+      meta => { "audit_safe" };
+    "test_6" expression => returnszero("touch $(sys.statedir)$(const.dirsep)returnszero_unsafe", useshell);
+    "test_7" expression => usemodule("usemodule_safe.sh", useshell),
+      meta => { "audit_safe" };
+    "test_8" expression => usemodule("usemodule_unsafe.sh", useshell);
+
+}
+
+bundle agent check
+{
+  classes:
+    "pass_$(test.unsafe_functions)" expression => not(fileexists("$(sys.statedir)$(const.dirsep)$(test.unsafe_functions)_unsafe"));
+    "fail_$(test.unsafe_functions)" expression => fileexists("$(sys.statedir)$(const.dirsep)$(test.unsafe_functions)_unsafe");
+
+  reports:
+    "$(this.promise_filename) FAIL"
+      if => classmatch("fail_.*");
+    "$(this.promise_filename) Pass"
+      if => strcmp(countclassesmatching("fail.*"), 0);
+}
+
+bundle agent __main__
+{
+  methods:
+    "init";
+    "test";
+    "check";
+}

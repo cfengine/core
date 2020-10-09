@@ -2934,7 +2934,10 @@ void cfPS(EvalContext *ctx, LogLevel level, PromiseResult status, const Promise 
 
     /* Now complete the exits status classes and auditing */
 
-    ClassAuditLog(ctx, pp, attr, status);
+    if (status != PROMISE_RESULT_SKIPPED)
+    {
+        ClassAuditLog(ctx, pp, attr, status);
+    }
 }
 
 void RecordChange(EvalContext *ctx, const Promise *pp, const Attributes *attr, const char *fmt, ...)

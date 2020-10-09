@@ -27,8 +27,6 @@
 
 #include <cf3.defs.h>
 
-PromiseResult HandleNewPackagePromiseType(EvalContext *ctx, const Promise *pp,
-                                          const Attributes *a, char **promise_log_msg,
-                                          LogLevel *log_lvl);
+PromiseResult HandleNewPackagePromiseType(EvalContext *ctx, const Promise *pp, const Attributes *a);
 
 #endif

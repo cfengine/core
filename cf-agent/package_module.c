@@ -92,18 +92,18 @@ PackageModuleWrapper *NewPackageModuleWrapper(PackageModuleBody *package_module)
         if (access(interpreter_path, X_OK) != 0)
         {
             Log(LOG_LEVEL_ERR,
-                "can not find package wrapper interpreter in provided location '%s' "
-                "or access to file is restricted: %s",
-                wrapper->path, strerror(errno));
+                "Cannot find package module interpreter at location '%s'"
+                " or access to the file is restricted: %s",
+                wrapper->path, GetErrorStr());
             DeletePackageModuleWrapper(wrapper);
             return NULL;
         }
         if (access(script_path, R_OK) != 0)
         {
             Log(LOG_LEVEL_ERR,
-                "can not find the package wrapper script in provided location '%s' "
-                "or access to file is restricted: %s",
-                wrapper->script_path, strerror(errno));
+                "Cannot find package module script at location '%s'"
+                " or access to the file is restricted: %s",
+                wrapper->script_path, GetErrorStr());
             DeletePackageModuleWrapper(wrapper);
             return NULL;
         }
@@ -112,9 +112,8 @@ PackageModuleWrapper *NewPackageModuleWrapper(PackageModuleBody *package_module)
     {
         /* no script path specified --> the given path has to be executable */
         Log(LOG_LEVEL_ERR,
-            "can not find package wrapper in provided location '%s' "
-            "or access to file is restricted: %s",
-            wrapper->path, strerror(errno));
+            "Cannot find package module at location '%s' or access to file is restricted: %s",
+            wrapper->path, GetErrorStr());
         DeletePackageModuleWrapper(wrapper);
         return NULL;
     }
@@ -124,7 +123,7 @@ PackageModuleWrapper *NewPackageModuleWrapper(PackageModuleBody *package_module)
     if (wrapper->supported_api_version != 1)
     {
         Log(LOG_LEVEL_ERR,
-            "unsupported package module wrapper API version: %d",
+            "Unsupported package module wrapper API version: %d",
             wrapper->supported_api_version);
         DeletePackageModuleWrapper(wrapper);
         return NULL;

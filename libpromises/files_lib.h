@@ -34,7 +34,6 @@ bool FileWriteOver(char *filename, char *contents);
 bool LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits);
 
 /**
- * @warning This function ignores the EVAL_MODE!
  * @see     MakeParentDirectoryForPromise()
  */
 bool MakeParentDirectory(const char *parentandchild, bool force, bool *created);

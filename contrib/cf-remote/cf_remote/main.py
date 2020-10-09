@@ -169,10 +169,9 @@ def validate_command(command, args):
     if command in ["uninstall"] and not (args.hosts or args.hub or args.clients):
         user_error("Use --hosts, --hub or --clients to specify remote hosts")
 
-    if command == "install" and (args.call_collect and not args.demo):
-        user_error("--call-collect must be used with --demo")
-
     if command == "install":
+        if args.call_collect and not args.demo:
+            user_error("--call-collect must be used with --demo")
         if not args.clients and not args.hub:
             user_error("Specify hosts using --hub and --clients")
         if args.hub and args.clients and args.package:
@@ -181,7 +180,15 @@ def validate_command(command, args):
         if args.package and (args.hub_package or args.client_package):
             user_error(
                 "--package cannot be used in combination with --hub-package / --client-package")
-            # TODO: Find this automatically
+        if args.package:
+            if not os.path.isfile(args.package):
+                user_error(f"Package '{args.package}' does not exist")
+        if args.hub_package:
+            if not os.path.isfile(args.hub_package):
+                user_error(f"Hub package '{args.hub_package}' does not exist")
+        if args.client_package:
+            if not os.path.isfile(args.client_package):
+                user_error(f"Client package '{args.client_package}' does not exist")
 
     if command in ["sudo", "run"]:
         if len(args.remote_command) != 1:

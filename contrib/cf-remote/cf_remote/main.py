@@ -5,7 +5,7 @@ import sys
 from cf_remote import log
 from cf_remote import commands, paths
 from cf_remote.utils import user_error, exit_success, expand_list_from_file, is_file_string
-from cf_remote.utils import strip_user, read_json
+from cf_remote.utils import strip_user, read_json, is_package_url
 from cf_remote.packages import Releases
 
 
@@ -180,13 +180,13 @@ def validate_command(command, args):
         if args.package and (args.hub_package or args.client_package):
             user_error(
                 "--package cannot be used in combination with --hub-package / --client-package")
-        if args.package:
+        if args.package and not is_package_url(args.package):
             if not os.path.isfile(args.package):
                 user_error(f"Package '{args.package}' does not exist")
-        if args.hub_package:
+        if args.hub_package and not is_package_url(args.hub_package):
             if not os.path.isfile(args.hub_package):
                 user_error(f"Hub package '{args.hub_package}' does not exist")
-        if args.client_package:
+        if args.client_package and not is_package_url(args.client_package):
             if not os.path.isfile(args.client_package):
                 user_error(f"Client package '{args.client_package}' does not exist")
 

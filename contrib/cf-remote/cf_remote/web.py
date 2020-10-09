@@ -19,14 +19,15 @@ def get_json(url):
     return data
 
 
-def download_package(url):
-    filename = os.path.basename(url)
-    dir = cf_remote_packages_dir()
-    mkdir(dir)
-    location = os.path.join(dir, filename)
-    if os.path.exists(location):
-        print("Package already downloaded: '{}'".format(location))
-        return location
-    print("Downloading package: '{}'".format(location))
-    os.system("curl --silent -L '{}' -o '{}'".format(url, location))
-    return location
+def download_package(url, path=None):
+    if not path:
+        filename = os.path.basename(url)
+        directory = cf_remote_packages_dir()
+        mkdir(directory)
+        path = os.path.join(directory, filename)
+    if os.path.exists(path):
+        print("Package already downloaded: '{}'".format(path))
+        return path
+    print("Downloading package: '{}'".format(path))
+    os.system("curl --silent -L '{}' -o '{}'".format(url, path))
+    return path

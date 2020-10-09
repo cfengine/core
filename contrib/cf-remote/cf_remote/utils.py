@@ -1,5 +1,6 @@
 import os
 import sys
+import re
 import json
 import getpass
 from collections import OrderedDict
@@ -72,6 +73,15 @@ def package_path():
 def above_package_path():
     path = package_path() + "/../"
     return os.path.abspath(path)
+
+
+def is_package_url(string):
+    return bool(re.match("https?://.+/.+\.(rpm|deb|msi)", string))
+
+
+def get_package_name(url):
+    assert(is_package_url(url))
+    return url.rsplit("/", 1)[-1]
 
 
 def read_json(path):

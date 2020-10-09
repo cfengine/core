@@ -98,7 +98,7 @@ def os_release(inp):
             continue
         key, sep, value = line.partition("=")
         assert "=" not in key
-        if (len(value) > 1 and value[0] == value[-1] and value[0] in ["'", '"']):
+        if len(value) > 1 and value[0] == value[-1] and value[0] in ["'", '"']:
             value = value[1:-1]
         d[key] = value
     return d
@@ -167,9 +167,9 @@ def expand_list_from_file(string):
 
 def strip_user(host):
     """Strips the 'user@' info from a host spec"""
-    idx = host.find('@')
+    idx = host.find("@")
     if idx != -1:
-        return host[(idx + 1):]
+        return host[(idx + 1) :]
     return host
 
 

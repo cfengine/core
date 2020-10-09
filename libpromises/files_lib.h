@@ -40,6 +40,11 @@ bool LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits);
 bool MakeParentDirectory(const char *parentandchild, bool force, bool *created);
 
 /**
+ * Create an internal directory (never in the changes chroot).
+ */
+bool MakeParentInternalDirectory(const char *parentandchild, bool force, bool *created);
+
+/**
  * @warning This function will not behave right on Windows if the path
  *          contains double (back)slashes!
  **/

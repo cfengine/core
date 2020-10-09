@@ -1033,6 +1033,19 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
 
     GenericAgentAddEditionClasses(ctx);
 
+
+    /* Make sure the chroot for recording changes this process would normally
+     * make on the system is setup if that was requested. */
+    if (ChrootChanges())
+    {
+        char changes_chroot[PATH_MAX] = {0};
+        GetChangesChrootDir(changes_chroot, sizeof(changes_chroot));
+        SetChangesChroot(changes_chroot);
+        RegisterCleanupFunction(DeleteChangesChroot);
+        Log(LOG_LEVEL_WARNING, "All changes in files will be made in the '%s' chroot",
+            changes_chroot);
+    }
+
 /* Define trusted directories */
 
     const char *workdir = GetWorkDir();
@@ -1049,24 +1062,24 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     Log(LOG_LEVEL_VERBOSE, "Work directory is %s", workdir);
 
     snprintf(vbuff, CF_BUFSIZE, "%s%cupdate.conf", GetInputDir(), FILE_SEPARATOR);
-    MakeParentDirectory(vbuff, force, NULL);
+    MakeParentInternalDirectory(vbuff, force, NULL);
     snprintf(vbuff, CF_BUFSIZE, "%s%ccf-agent", bindir, FILE_SEPARATOR);
-    MakeParentDirectory(vbuff, force, NULL);
+    MakeParentInternalDirectory(vbuff, force, NULL);
     snprintf(vbuff, CF_BUFSIZE, "%s%coutputs%cspooled_reports", workdir, FILE_SEPARATOR, FILE_SEPARATOR);
-    MakeParentDirectory(vbuff, force, NULL);
+    MakeParentInternalDirectory(vbuff, force, NULL);
     snprintf(vbuff, CF_BUFSIZE, "%s%clastseen%cintermittencies", workdir, FILE_SEPARATOR, FILE_SEPARATOR);
-    MakeParentDirectory(vbuff, force, NULL);
+    MakeParentInternalDirectory(vbuff, force, NULL);
     snprintf(vbuff, CF_BUFSIZE, "%s%creports%cvarious", workdir, FILE_SEPARATOR, FILE_SEPARATOR);
-    MakeParentDirectory(vbuff, force, NULL);
+    MakeParentInternalDirectory(vbuff, force, NULL);
 
     snprintf(vbuff, CF_BUFSIZE, "%s%c.", GetLogDir(), FILE_SEPARATOR);
-    MakeParentDirectory(vbuff, force, NULL);
+    MakeParentInternalDirectory(vbuff, force, NULL);
     snprintf(vbuff, CF_BUFSIZE, "%s%c.", GetPidDir(), FILE_SEPARATOR);
-    MakeParentDirectory(vbuff, force, NULL);
+    MakeParentInternalDirectory(vbuff, force, NULL);
     snprintf(vbuff, CF_BUFSIZE, "%s%c.", GetStateDir(), FILE_SEPARATOR);
-    MakeParentDirectory(vbuff, force, NULL);
+    MakeParentInternalDirectory(vbuff, force, NULL);
 
-    MakeParentDirectory(GetLogDir(), force, NULL);
+    MakeParentInternalDirectory(GetLogDir(), force, NULL);
 
     snprintf(vbuff, CF_BUFSIZE, "%s", GetInputDir());
 
@@ -1177,18 +1190,6 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     if (!MINUSF)
     {
         GenericAgentConfigSetInputFile(config, GetInputDir(), "promises.cf");
-    }
-
-    /* Make sure the chroot for recording changes this process would normally
-     * make on the system is setup if that was requested. */
-    if (ChrootChanges())
-    {
-        char changes_chroot[PATH_MAX] = {0};
-        GetChangesChrootDir(changes_chroot, sizeof(changes_chroot));
-        SetChangesChroot(changes_chroot);
-        RegisterCleanupFunction(DeleteChangesChroot);
-        Log(LOG_LEVEL_WARNING, "All changes in files will be made in the '%s' chroot",
-            changes_chroot);
     }
 }
 

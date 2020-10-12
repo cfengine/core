@@ -163,6 +163,8 @@ static JsonElement *PromiseModule_Receive(PromiseModule *module)
         assert(line[bytes - 1] == '\n');
         line[bytes - 1] = '\0';
 
+        Log(LOG_LEVEL_DEBUG, "Received line from module: '%s'", line);
+
         if (line[0] == '\0')
         {
             empty_line = true;
@@ -462,6 +464,7 @@ static void PromiseModule_Send(PromiseModule *module)
 
     PromiseModule_SendMessage(module, message);
     SeqDestroy(message);
+    DESTROY_AND_NULL(JsonDestroy, module->message);
 }
 
 static void PromiseModule_AppendAllAttributes(

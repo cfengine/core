@@ -141,7 +141,7 @@ bool IdentifyAgent(ConnectionInfo *conn_info)
     }
     else
     {
-        assert(sizeof(localip) >= sizeof(VIPADDRESS));
+        nt_static_assert(sizeof(localip) >= sizeof(VIPADDRESS));
         strcpy(localip, VIPADDRESS);
 
         Log(LOG_LEVEL_VERBOSE,

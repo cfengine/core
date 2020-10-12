@@ -1,5 +1,6 @@
 import os
 import sys
+import re
 import json
 import getpass
 from collections import OrderedDict
@@ -74,6 +75,15 @@ def above_package_path():
     return os.path.abspath(path)
 
 
+def is_package_url(string):
+    return bool(re.match("https?://.+/.+\.(rpm|deb|msi)", string))
+
+
+def get_package_name(url):
+    assert(is_package_url(url))
+    return url.rsplit("/", 1)[-1]
+
+
 def read_json(path):
     try:
         with open(path, "r") as f:
@@ -98,7 +108,7 @@ def os_release(inp):
             continue
         key, sep, value = line.partition("=")
         assert "=" not in key
-        if (len(value) > 1 and value[0] == value[-1] and value[0] in ["'", '"']):
+        if len(value) > 1 and value[0] == value[-1] and value[0] in ["'", '"']:
             value = value[1:-1]
         d[key] = value
     return d
@@ -167,9 +177,9 @@ def expand_list_from_file(string):
 
 def strip_user(host):
     """Strips the 'user@' info from a host spec"""
-    idx = host.find('@')
+    idx = host.find("@")
     if idx != -1:
-        return host[(idx + 1):]
+        return host[(idx + 1) :]
     return host
 
 

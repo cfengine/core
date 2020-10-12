@@ -175,9 +175,7 @@ void PrepareChangesChroot(const char *path)
     {
         char first_nonexisting_parent[PATH_MAX];
         GetFirstNonExistingParentDir(path, first_nonexisting_parent);
-        const char *first_nonexisting_parent_chrooted = ToChangesChroot(first_nonexisting_parent);
-
-        MakeParentDirectory(first_nonexisting_parent_chrooted, true, NULL);
+        MakeParentDirectory(first_nonexisting_parent, true, NULL);
         MirrorDirTreePermsToChroot(first_nonexisting_parent);
     }
 

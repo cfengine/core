@@ -64,7 +64,7 @@ def scp(hosts, files, users=None):
             errors += transfer_file(host, file, users)
     return errors
 
-def _download_urls(packages):
+def _download_urls(urls):
     """Download packages from URLs, replace URLs with filenames
 
     Return a new list of packages where URLs are replaced with paths
@@ -76,16 +76,17 @@ def _download_urls(packages):
     downloaded_urls = []
     downloaded_paths = []
     paths = []
-    for i, pkg in enumerate(packages):
+    for package_url in urls:
         # Skip anything that is not a package url:
-        if pkg is None or not is_package_url(pkg):
-            paths.append(pkg)
+        if package_url is None or not is_package_url(package_url):
+            paths.append(package_url)
             continue
 
         if not os.path.isdir(urls_dir):
             os.mkdir(urls_dir)
+
         # separate name from url and construct path for downloaded file
-        url, name = pkg, get_package_name(pkg)
+        url, name = package_url, get_package_name(package_url)
         path = os.path.join(urls_dir, name)
 
         # replace url with local path to package in list which will be returned

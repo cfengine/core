@@ -99,7 +99,7 @@ static PromiseResult VerifySQLPromise(EvalContext *ctx, const Attributes *a, con
     char table[CF_MAXTABLENAMESIZE];
     char db_path[CF_MAXVARSIZE];
     // Should have room for both buffers + 1 dot minus 1 NUL byte:
-    assert(sizeof(db_path) >= (sizeof(database) + sizeof(table)));
+    nt_static_assert(sizeof(db_path) >= (sizeof(database) + sizeof(table)));
     char *sp;
     int count = 0;
     CfdbConn cfdb;

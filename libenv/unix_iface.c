@@ -490,7 +490,7 @@ void GetInterfacesInfo(EvalContext *ctx)
 
                 /* No DNS lookup, just convert IP address to string. */
                 char txtaddr[CF_MAX_IP_LEN] = "";
-                assert(sizeof(VIPADDRESS) >= sizeof(txtaddr));
+                nt_static_assert(sizeof(VIPADDRESS) >= sizeof(txtaddr));
 
                 getnameinfo((struct sockaddr *) sin, sizeof(*sin),
                             txtaddr, sizeof(txtaddr),
@@ -504,7 +504,7 @@ void GetInterfacesInfo(EvalContext *ctx)
                     /* TODO remove, interface address can't be 0.0.0.0 and
                      * even then DNS is not a safe way to set a variable... */
                     Log(LOG_LEVEL_VERBOSE, "Cannot discover hardware IP, using DNS value");
-                    assert(sizeof(ip) >= sizeof(VIPADDRESS) + sizeof("ipv4_"));
+                    nt_static_assert(sizeof(ip) >= sizeof(VIPADDRESS) + sizeof("ipv4_"));
                     strcpy(ip, "ipv4_");
                     strcat(ip, VIPADDRESS);
                     EvalContextAddIpAddress(ctx, VIPADDRESS, NULL); // we don't know the interface
@@ -534,7 +534,7 @@ void GetInterfacesInfo(EvalContext *ctx)
                     continue;
                 }
 
-                assert(sizeof(ip) >= sizeof(txtaddr) + sizeof("ipv4_"));
+                nt_static_assert(sizeof(ip) >= sizeof(txtaddr) + sizeof("ipv4_"));
                 strcpy(ip, "ipv4_");
                 strcat(ip, txtaddr);
                 EvalContextClassPutHard(ctx, ip, "inventory,attribute_name=none,source=agent");

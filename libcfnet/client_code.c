@@ -79,7 +79,7 @@ char CFENGINE_PORT_STR[16] = "5308";
 
 void DetermineCfenginePort()
 {
-    assert(sizeof(CFENGINE_PORT_STR) >= PRINTSIZE(CFENGINE_PORT));
+    nt_static_assert(sizeof(CFENGINE_PORT_STR) >= PRINTSIZE(CFENGINE_PORT));
     /* ... but we leave more space, as service names can be longer */
 
     errno = 0;
@@ -230,7 +230,7 @@ AgentConnection *ServerConnection(const char *server, const char *port,
         return NULL;
     }
 
-    assert(sizeof(conn->remoteip) >= sizeof(txtaddr));
+    nt_static_assert(sizeof(conn->remoteip) >= sizeof(txtaddr));
     strcpy(conn->remoteip, txtaddr);
 
     ProtocolVersion protocol_version = flags.protocol_version;

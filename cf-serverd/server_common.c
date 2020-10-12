@@ -1644,7 +1644,7 @@ bool DoExec2(const EvalContext *ctx,
     char   cmdbuf[CF_BUFSIZE] = "";
     size_t cmdbuf_len         = 0;
 
-    assert(sizeof(CFRUNCOMMAND) <= sizeof(cmdbuf));
+    nt_static_assert(sizeof(CFRUNCOMMAND) <= sizeof(cmdbuf));
 
     StrCat(cmdbuf, sizeof(cmdbuf), &cmdbuf_len, CFRUNCOMMAND, 0);
 

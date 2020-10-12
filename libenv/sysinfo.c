@@ -353,9 +353,9 @@ void DetectDomainName(EvalContext *ctx, const char *orig_nodename)
         }
     }
 
-    assert(sizeof(VFQNAME) > 255);
-    assert(sizeof(VUQNAME) > 255);
-    assert(sizeof(VDOMAIN) > 255);
+    nt_static_assert(sizeof(VFQNAME) > 255);
+    nt_static_assert(sizeof(VUQNAME) > 255);
+    nt_static_assert(sizeof(VDOMAIN) > 255);
     CalculateDomainName(nodename, dnsname, VFQNAME, sizeof(VFQNAME),
                         VUQNAME, sizeof(VUQNAME), VDOMAIN, sizeof(VDOMAIN));
 

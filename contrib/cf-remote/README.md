@@ -2,7 +2,7 @@
 
 ## Installation
 
-cf-remote requires curl and python 3 with fabric and requests.
+cf-remote requires python 3 with fabric and requests.
 (Install using brew/apt/yum/pip).
 It's a _normal_ python package, but doesn't have a setup script (yet).
 

@@ -832,7 +832,7 @@ static PromiseResult SourceSearchAndCopy(EvalContext *ctx, const char *from, cha
             }
             else
             {
-                RecordChange(ctx, pp, attr, "Created directory '%s'", to);
+                RecordChange(ctx, pp, attr, "Created directory for '%s'", to);
                 result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
             }
             umask(mask);
@@ -4312,7 +4312,7 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, const Attribu
         }
         if (dir_created)
         {
-            RecordChange(ctx, pp, attr, "Created directory '%s'", file);
+            RecordChange(ctx, pp, attr, "Created directory for '%s'", file);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
         }
 
@@ -4365,7 +4365,7 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, const Attribu
         }
         if (dir_created)
         {
-            RecordChange(ctx, pp, attr, "Created directory '%s'", file);
+            RecordChange(ctx, pp, attr, "Created directory for '%s'", file);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
         }
 

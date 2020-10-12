@@ -257,7 +257,7 @@ static void AnalyzeArrival(Item *ip_addresses, long iteration, char *arrival, do
     {
         nt_static_assert(sizeof(src) == CF_BUFSIZE);
         nt_static_assert(sizeof(dest) >= CF_BUFSIZE);
-        assert(CF_BUFSIZE == 4096);
+        nt_static_assert(CF_BUFSIZE == 4096);
         sscanf(arr, "%4095s %*c %4095s %c ", src, dest, &flag);
         DePort(src);
         DePort(dest);
@@ -314,7 +314,7 @@ static void AnalyzeArrival(Item *ip_addresses, long iteration, char *arrival, do
     {
         nt_static_assert(sizeof(src) == CF_BUFSIZE);
         nt_static_assert(sizeof(dest) >= CF_BUFSIZE);
-        assert(CF_BUFSIZE == 4096);
+        nt_static_assert(CF_BUFSIZE == 4096);
         sscanf(arr, "%4095s %*c %4095s %c ", src, dest, &flag);
         DePort(src);
         DePort(dest);
@@ -337,7 +337,7 @@ static void AnalyzeArrival(Item *ip_addresses, long iteration, char *arrival, do
     {
         nt_static_assert(sizeof(src) == CF_BUFSIZE);
         nt_static_assert(sizeof(dest) >= CF_BUFSIZE);
-        assert(CF_BUFSIZE == 4096);
+        nt_static_assert(CF_BUFSIZE == 4096);
         sscanf(arr, "%4095s %*c %4095s %c ", src, dest, &flag);
         DePort(src);
         DePort(dest);
@@ -360,7 +360,7 @@ static void AnalyzeArrival(Item *ip_addresses, long iteration, char *arrival, do
     {
         nt_static_assert(sizeof(src) == CF_BUFSIZE);
         nt_static_assert(sizeof(dest) >= CF_BUFSIZE);
-        assert(CF_BUFSIZE == 4096);
+        nt_static_assert(CF_BUFSIZE == 4096);
         sscanf(arr, "%4095s %*c %4095s %c ", src, dest, &flag);
         DePort(src);
         DePort(dest);
@@ -388,7 +388,7 @@ static void AnalyzeArrival(Item *ip_addresses, long iteration, char *arrival, do
 
         /* Here we don't know what source will be, but .... */
         nt_static_assert(sizeof(src) == CF_BUFSIZE);
-        assert(CF_BUFSIZE == 4096);
+        nt_static_assert(CF_BUFSIZE == 4096);
         sscanf(arrival, "%4095s", src);
 
         if (!isdigit((int) *src))

@@ -1,4 +1,5 @@
 import os
+import urllib.request
 import requests
 from cf_remote.utils import write_json, mkdir
 from cf_remote import log
@@ -29,5 +30,6 @@ def download_package(url, path=None):
         print("Package already downloaded: '{}'".format(path))
         return path
     print("Downloading package: '{}'".format(path))
-    os.system("curl --silent -L '{}' -o '{}'".format(url, path))
+    with open(path, "wb") as f:
+        f.write(urllib.request.urlopen(url).read())
     return path

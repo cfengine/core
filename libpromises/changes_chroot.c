@@ -160,11 +160,6 @@ static void ChrootSymlinkDeep(const char *path, const char *chrooted_path, struc
 void PrepareChangesChroot(const char *path)
 {
     struct stat sb;
-    if (lstat(path, &sb) == -1)
-    {
-        /* 'path' doesn't exist, nothing to do here */
-        return;
-    }
 
     /* We need to create a copy because ToChangesChroot() returns a pointer to
      * its internal buffer which gets overwritten by later calls of the
@@ -180,10 +175,14 @@ void PrepareChangesChroot(const char *path)
     {
         char first_nonexisting_parent[PATH_MAX];
         GetFirstNonExistingParentDir(path, first_nonexisting_parent);
-        const char *first_nonexisting_parent_chrooted = ToChangesChroot(first_nonexisting_parent);
-
-        MakeParentDirectory(first_nonexisting_parent_chrooted, true, NULL);
+        MakeParentDirectory(first_nonexisting_parent, true, NULL);
         MirrorDirTreePermsToChroot(first_nonexisting_parent);
+    }
+
+    if (lstat(path, &sb) == -1)
+    {
+        /* 'path' doesn't exist, nothing to do here */
+        return;
     }
 
 #ifndef __MINGW32__

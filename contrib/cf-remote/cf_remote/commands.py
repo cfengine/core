@@ -5,8 +5,8 @@ import time
 from cf_remote.remote import get_info, print_info, install_host, uninstall_host, run_command, transfer_file, deploy_masterfiles
 from cf_remote.packages import Releases
 from cf_remote.web import download_package
-from cf_remote.paths import cf_remote_dir, CLOUD_CONFIG_FPATH, CLOUD_STATE_FPATH
-from cf_remote.utils import save_file, strip_user, read_json, write_json, whoami
+from cf_remote.paths import cf_remote_dir, CLOUD_CONFIG_FPATH, CLOUD_STATE_FPATH, cf_remote_packages_dir
+from cf_remote.utils import save_file, strip_user, read_json, write_json, whoami, get_package_name, is_package_url
 from cf_remote.spawn import VM, VMRequest, Providers, AWSCredentials
 from cf_remote.spawn import spawn_vms, destroy_vms, dump_vms_info, get_cloud_driver
 from cf_remote import log
@@ -64,6 +64,41 @@ def scp(hosts, files, users=None):
             errors += transfer_file(host, file, users)
     return errors
 
+def _download_urls(packages):
+    """Download packages from URLs, replace URLs with filenames
+
+    Return a new list of packages where URLs are replaced with paths
+    to packages which have been downloaded. Other values, like None
+    and paths to local packages are preserved.
+    """
+    urls_dir = cf_remote_packages_dir("url_specified")
+
+    downloaded_urls = []
+    downloaded_paths = []
+    paths = []
+    for i, pkg in enumerate(packages):
+        # Skip anything that is not a package url:
+        if pkg is None or not is_package_url(pkg):
+            paths.append(pkg)
+            continue
+
+        if not os.path.isdir(urls_dir):
+            os.mkdir(urls_dir)
+        # separate name from url and construct path for downloaded file
+        url, name = pkg, get_package_name(pkg)
+        path = os.path.join(urls_dir, name)
+
+        # replace url with local path to package in list which will be returned
+        paths.append(path)
+
+        if path in downloaded_paths and url not in downloaded_urls:
+            user_error(f"2 packages with the same name '{name}' from different URLs")
+
+        download_package(url, path)
+        downloaded_urls.append(url)
+        downloaded_paths.append(path)
+
+    return paths
 
 def install(
         hubs,
@@ -81,10 +116,16 @@ def install(
     assert not (hubs and clients and package)
     # These assertions are checked in main.py
 
+    # If there are URLs in any of the package strings, downlaod and replace with path:
+    packages = (package, hub_package, client_package)
+    package, hub_package, client_package = _download_urls(packages)
+
+    # Copy path from package to client/hub package:
     if not hub_package:
         hub_package = package
     if not client_package:
         client_package = package
+
     if bootstrap:
         if type(bootstrap) is str:
             bootstrap = [bootstrap]

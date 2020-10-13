@@ -486,10 +486,12 @@ static void PromiseModule_AppendAllAttributes(
 
 static inline bool StringContainsUnresolved(const char *str)
 {
+    // clang-format off
     return (StringContains(str, "$(")
             || StringContains(str, "${")
             || StringContains(str, "@{")
             || StringContains(str, "@("));
+    // clang-format on
 }
 
 static inline bool CustomPromise_IsFullyResolved(const Promise *pp)
@@ -727,7 +729,7 @@ PromiseResult EvaluateCustomPromise(EvalContext *ctx, const Promise *pp)
     if (valid)
     {
         valid = CustomPromise_IsFullyResolved(pp);
-        if ((!valid) && (EvalContextGetPass(ctx) == CF_DONEPASSES-1))
+        if ((!valid) && (EvalContextGetPass(ctx) == CF_DONEPASSES - 1))
         {
             Log(LOG_LEVEL_ERR,
                 "%s promise with promiser '%s' has unresolved/unexpanded variables",

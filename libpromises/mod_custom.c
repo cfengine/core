@@ -30,6 +30,7 @@
 #include <policy.h>          // Promise
 #include <eval_context.h>    // cfPS()
 #include <attributes.h>      // GetClassContextAttributes()
+#include <expand.h>          // ExpandScalar()
 
 static const ConstraintSyntax promise_constraints[] = {
     CONSTRAINT_SYNTAX_GLOBAL,
@@ -73,7 +74,10 @@ static Body *FindCustomPromiseType(const Promise *promise)
 }
 
 static bool GetInterpreterAndPath(
-    Body *promise_block, char **interpreter_out, char **path_out)
+    EvalContext *ctx,
+    Body *promise_block,
+    char **interpreter_out,
+    char **path_out)
 {
     assert(promise_block != NULL);
     assert(interpreter_out != NULL);
@@ -90,22 +94,21 @@ static bool GetInterpreterAndPath(
     {
         Constraint *attribute = SeqAt(promise_block_attributes, i);
         const char *name = attribute->lval;
-        char *value = RvalToString(attribute->rval);
+        const char *value = RvalScalarValue(attribute->rval);
 
         if (StringEqual("interpreter", name))
         {
             free(interpreter);
-            interpreter = value;
+            interpreter = ExpandScalar(ctx, NULL, NULL, value, NULL);
         }
         else if (StringEqual("path", name))
         {
             free(path);
-            path = value;
+            path = ExpandScalar(ctx, NULL, NULL, value, NULL);
         }
         else
         {
             debug_abort_if_reached();
-            free(value);
         }
     }
 
@@ -710,7 +713,7 @@ PromiseResult EvaluateCustomPromise(EvalContext *ctx, const Promise *pp)
     char *interpreter = NULL;
     char *path = NULL;
 
-    bool success = GetInterpreterAndPath(promise_block, &interpreter, &path);
+    bool success = GetInterpreterAndPath(ctx, promise_block, &interpreter, &path);
 
     if (!success)
     {

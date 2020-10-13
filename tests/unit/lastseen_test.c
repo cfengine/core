@@ -111,6 +111,16 @@ static void test_update(void)
     CloseDB(db);
 }
 
+static void test_HostkeyToAddress(void)
+{
+    setup();
+
+    UpdateLastSawHost("SHA-12345", "127.0.0.64", true, 555);
+    char *address = HostkeyToAddress("SHA-12345");
+    assert_string_equal(address, "127.0.0.64");
+    free(address);
+}
+
 static void test_reverse_missing(void)
 {
     setup();
@@ -584,6 +594,7 @@ int main()
         {
             unit_test(test_newentry),
             unit_test(test_update),
+            unit_test(test_HostkeyToAddress),
             unit_test(test_reverse_missing),
             unit_test(test_reverse_conflict),
             unit_test(test_reverse_missing_forward),

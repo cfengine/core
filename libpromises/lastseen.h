@@ -41,6 +41,7 @@ typedef enum
 
 
 bool Address2Hostkey(char *dst, size_t dst_size, const char *address);
+char *HostkeyToAddress(const char *hostkey);
 
 void LastSaw1(const char *ipaddress, const char *hashstr, LastSeenRole role);
 void LastSaw(const char *ipaddress, const unsigned char *digest, LastSeenRole role);

@@ -353,9 +353,9 @@ void DetectDomainName(EvalContext *ctx, const char *orig_nodename)
         }
     }
 
-    assert(sizeof(VFQNAME) > 255);
-    assert(sizeof(VUQNAME) > 255);
-    assert(sizeof(VDOMAIN) > 255);
+    nt_static_assert(sizeof(VFQNAME) > 255);
+    nt_static_assert(sizeof(VUQNAME) > 255);
+    nt_static_assert(sizeof(VDOMAIN) > 255);
     CalculateDomainName(nodename, dnsname, VFQNAME, sizeof(VFQNAME),
                         VUQNAME, sizeof(VUQNAME), VDOMAIN, sizeof(VDOMAIN));
 
@@ -998,8 +998,8 @@ static void Get3Environment(EvalContext *ctx)
 
         if (*context == '@')
         {
-            assert((sizeof(name)) > 255);  // TODO: static_assert()
-            assert((sizeof(value)) > 255); // TODO: static_assert()
+            nt_static_assert((sizeof(name)) > 255);
+            nt_static_assert((sizeof(value)) > 255);
             if (sscanf(context + 1, "%255[^=]=%255[^\n]", name, value) == 2)
             {
                 Log(LOG_LEVEL_DEBUG,
@@ -1022,8 +1022,8 @@ static void Get3Environment(EvalContext *ctx)
         }
         else if (strchr(context, '='))
         {
-            assert((sizeof(name)) > 255);  // TODO: static_assert()
-            assert((sizeof(value)) > 255); // TODO: static_assert()
+            nt_static_assert((sizeof(name)) > 255);
+            nt_static_assert((sizeof(value)) > 255);
             if (sscanf(context, "%255[^=]=%255[^\n]", name, value) == 2)
             {
                 EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_MON,
@@ -2096,7 +2096,7 @@ static int Linux_Suse_Version(EvalContext *ctx)
     {
         Item *list, *ip;
 
-        assert((sizeof(vbuf)) > 255); // TODO: static_assert()
+        nt_static_assert((sizeof(vbuf)) > 255);
         sscanf(relstring, "%255[-_a-zA-Z0-9]", vbuf);
         EvalContextClassPutHard(ctx, vbuf, "inventory,attribute_name=none,source=agent");
 
@@ -2194,8 +2194,8 @@ static int Linux_Suse_Version(EvalContext *ctx)
         }
         else
         {
-            assert((sizeof(strmajor)) > 255); // TODO: static_assert()
-            assert((sizeof(strminor)) > 255); // TODO: static_assert()
+            nt_static_assert((sizeof(strmajor)) > 255);
+            nt_static_assert((sizeof(strminor)) > 255);
             sscanf(strversion, "VERSION = %255s", strmajor);
             sscanf(strpatch, "PATCHLEVEL = %255s", strminor);
 
@@ -2346,7 +2346,7 @@ static int Linux_Misc_Version(EvalContext *ctx)
             if (sp)
             {
                 version[0] = '\0';
-                assert((sizeof(version)) > 255); // TODO: static_assert()
+                nt_static_assert((sizeof(version)) > 255);
                 sscanf(sp + strlen("DISTRIB_RELEASE="), "%255[^\n]", version);
                 CanonifyNameInPlace(version);
             }
@@ -2412,7 +2412,7 @@ static int Linux_Debian_Version(EvalContext *ctx)
 
     default:
         version[0] = '\0';
-        assert((sizeof(version)) > 25); // TODO: static_assert()
+        nt_static_assert((sizeof(version)) > 25);
         sscanf(buffer, "%25[^/]", version);
         if (strlen(version) > 0)
         {
@@ -2431,13 +2431,13 @@ static int Linux_Debian_Version(EvalContext *ctx)
     }
 
     os[0] = '\0';
-    assert((sizeof(os)) > 250); // TODO: static_assert()
+    nt_static_assert((sizeof(os)) > 250);
     sscanf(buffer, "%250s", os);
 
     if (strcmp(os, "Debian") == 0)
     {
         LinuxDebianSanitizeIssue(buffer);
-        assert((sizeof(version)) > 255); // TODO: static_assert()
+        nt_static_assert((sizeof(version)) > 255);
         sscanf(buffer, "%*s %*s %255[^./]", version);
         snprintf(buffer, CF_MAXVARSIZE, "debian_%s", version);
         EvalContextClassPutHard(
@@ -2450,7 +2450,7 @@ static int Linux_Debian_Version(EvalContext *ctx)
     {
         LinuxDebianSanitizeIssue(buffer);
         char minor[256] = {0};
-        assert((sizeof(version)) > 255); // TODO: static_assert()
+        nt_static_assert((sizeof(version)) > 255);
         sscanf(buffer, "%*s %255[^.].%255s", version, minor);
         snprintf(buffer, CF_MAXVARSIZE, "ubuntu_%s", version);
         SetFlavor(ctx, buffer);

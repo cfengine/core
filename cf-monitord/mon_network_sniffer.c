@@ -255,9 +255,9 @@ static void AnalyzeArrival(Item *ip_addresses, long iteration, char *arrival, do
     }
     if ((strstr(arrival, "proto TCP")) || (strstr(arrival, "ack")))
     {
-        assert(sizeof(src) == CF_BUFSIZE);
-        assert(sizeof(dest) >= CF_BUFSIZE);
-        assert(CF_BUFSIZE == 4096);
+        nt_static_assert(sizeof(src) == CF_BUFSIZE);
+        nt_static_assert(sizeof(dest) >= CF_BUFSIZE);
+        nt_static_assert(CF_BUFSIZE == 4096);
         sscanf(arr, "%4095s %*c %4095s %c ", src, dest, &flag);
         DePort(src);
         DePort(dest);
@@ -312,9 +312,9 @@ static void AnalyzeArrival(Item *ip_addresses, long iteration, char *arrival, do
     }
     else if (strstr(arrival, ".53"))
     {
-        assert(sizeof(src) == CF_BUFSIZE);
-        assert(sizeof(dest) >= CF_BUFSIZE);
-        assert(CF_BUFSIZE == 4096);
+        nt_static_assert(sizeof(src) == CF_BUFSIZE);
+        nt_static_assert(sizeof(dest) >= CF_BUFSIZE);
+        nt_static_assert(CF_BUFSIZE == 4096);
         sscanf(arr, "%4095s %*c %4095s %c ", src, dest, &flag);
         DePort(src);
         DePort(dest);
@@ -335,9 +335,9 @@ static void AnalyzeArrival(Item *ip_addresses, long iteration, char *arrival, do
     }
     else if (strstr(arrival, "proto UDP"))
     {
-        assert(sizeof(src) == CF_BUFSIZE);
-        assert(sizeof(dest) >= CF_BUFSIZE);
-        assert(CF_BUFSIZE == 4096);
+        nt_static_assert(sizeof(src) == CF_BUFSIZE);
+        nt_static_assert(sizeof(dest) >= CF_BUFSIZE);
+        nt_static_assert(CF_BUFSIZE == 4096);
         sscanf(arr, "%4095s %*c %4095s %c ", src, dest, &flag);
         DePort(src);
         DePort(dest);
@@ -358,9 +358,9 @@ static void AnalyzeArrival(Item *ip_addresses, long iteration, char *arrival, do
     }
     else if (strstr(arrival, "proto ICMP"))
     {
-        assert(sizeof(src) == CF_BUFSIZE);
-        assert(sizeof(dest) >= CF_BUFSIZE);
-        assert(CF_BUFSIZE == 4096);
+        nt_static_assert(sizeof(src) == CF_BUFSIZE);
+        nt_static_assert(sizeof(dest) >= CF_BUFSIZE);
+        nt_static_assert(CF_BUFSIZE == 4096);
         sscanf(arr, "%4095s %*c %4095s %c ", src, dest, &flag);
         DePort(src);
         DePort(dest);
@@ -387,8 +387,8 @@ static void AnalyzeArrival(Item *ip_addresses, long iteration, char *arrival, do
         cf_this[ob_tcpmisc_in]++;
 
         /* Here we don't know what source will be, but .... */
-        assert(sizeof(src) == CF_BUFSIZE);
-        assert(CF_BUFSIZE == 4096);
+        nt_static_assert(sizeof(src) == CF_BUFSIZE);
+        nt_static_assert(CF_BUFSIZE == 4096);
         sscanf(arrival, "%4095s", src);
 
         if (!isdigit((int) *src))
@@ -401,17 +401,17 @@ static void AnalyzeArrival(Item *ip_addresses, long iteration, char *arrival, do
 
         if (strstr(arrival, ".138"))
         {
-            assert(sizeof(dest) >= (sizeof(src) + sizeof(" NETBIOS") - 1));
+            nt_static_assert(sizeof(dest) >= (sizeof(src) + sizeof(" NETBIOS") - 1));
             snprintf(dest, sizeof(dest), "%s NETBIOS", src);
         }
         else if (strstr(arrival, ".2049"))
         {
-            assert(sizeof(dest) >= (sizeof(src) + sizeof(" NFS") - 1));
+            nt_static_assert(sizeof(dest) >= (sizeof(src) + sizeof(" NFS") - 1));
             snprintf(dest, sizeof(dest), "%s NFS", src);
         }
         else
         {
-            assert(sizeof(dest) > 60);
+            nt_static_assert(sizeof(dest) > 60);
             strncpy(dest, src, 60);
             dest[60] = '\0';
         }

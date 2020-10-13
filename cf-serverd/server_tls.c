@@ -370,8 +370,8 @@ bool ServerIdentificationDialog(ConnectionInfo *conn_info,
     username[0] = '\0';
 
     /* Assert sscanf() is safe to use. */
-    assert(sizeof(word1) >= sizeof(input));
-    assert(sizeof(word2) >= sizeof(input));
+    nt_static_assert(sizeof(word1) >= sizeof(input));
+    nt_static_assert(sizeof(word2) >= sizeof(input));
 
     ret = sscanf(line2, "IDENTITY %[^=]=%s%n", word1, word2, &chars_read);
     while (ret >= 2)

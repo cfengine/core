@@ -63,7 +63,7 @@ void MonCPUGatherData(double *cf_this)
         {
             break;
         }
-        assert(CF_MAXVARSIZE == 1024);
+        nt_static_assert(CF_MAXVARSIZE == 1024);
         if (sscanf(buf, "%1023s%ld%ld%ld%ld%ld%ld%ld", cpuname, &userticks, &niceticks, &systemticks, &idle, &iowait, &irq,
                &softirq) != 8)
         {

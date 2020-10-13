@@ -1,0 +1,72 @@
+######################################################
+#
+#  Basic test of custom promise types / promise modules
+#
+#####################################################
+body common control
+{
+      inputs => { "../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  files:
+      "$(G.testfile)"
+      delete => init_delete;
+}
+
+body delete init_delete
+{
+      dirlinks => "delete";
+      rmdirs   => "true";
+}
+
+#######################################################
+
+promise agent example
+{
+    interpreter => "/bin/bash";
+    path => "$(this.promise_dirname)/example_module.sh";
+}
+
+bundle agent test
+{
+  meta:
+    "description" -> { "CFE-3443" }
+      string => "Test that you can add a promise module and evaluate a custom promise";
+
+  vars:
+    "test_string"
+      string => "hello, modules";
+
+  example:
+    cfengine::
+      "$(G.testfile)"
+        message => "$(test_string)";
+}
+
+body link_from test_link
+{
+      source => "$(G.testfile).SOURCE";
+      link_type => "hardlink";
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "ok"
+        expression => strcmp("$(test.test_string)", readfile("$(G.testfile)")),
+        if => fileexists("$(G.testfile)");
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

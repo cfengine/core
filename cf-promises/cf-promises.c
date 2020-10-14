@@ -244,7 +244,6 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
     extern char *optarg;
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_COMMON, GetTTYInteractive());
-    config->tag_release_dir = NULL;
 
     int longopt_idx;
     while ((c = getopt_long(argc, argv, "dvnIw:f:g:D:N:VSrxMb:i:p:s:cg:hW:C::T:l",

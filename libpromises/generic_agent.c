@@ -1967,6 +1967,7 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type, bool tty_
     config->original_input_file = NULL;
     config->input_file = NULL;
     config->input_dir = NULL;
+    config->tag_release_dir = NULL;
 
     config->check_not_writable_by_others = agent_type != AGENT_TYPE_COMMON;
     config->check_runnable = agent_type != AGENT_TYPE_COMMON;
@@ -2019,7 +2020,7 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type, bool tty_
 
 void GenericAgentConfigDestroy(GenericAgentConfig *config)
 {
-    if (config)
+    if (config != NULL)
     {
         RlistDestroy(config->bundlesequence);
         StringSetDestroy(config->heap_soft);
@@ -2027,6 +2028,7 @@ void GenericAgentConfigDestroy(GenericAgentConfig *config)
         free(config->original_input_file);
         free(config->input_file);
         free(config->input_dir);
+        free(config->tag_release_dir);
         free(config->agent_specific.agent.bootstrap_argument);
         free(config->agent_specific.agent.bootstrap_host);
         free(config->agent_specific.agent.bootstrap_ip);

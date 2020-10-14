@@ -241,6 +241,37 @@ bool Address2Hostkey(char *dst, size_t dst_size, const char *address)
     return retval;
 }
 
+char *HostkeyToAddress(const char *hostkey)
+{
+    DBHandle *db;
+    if (OpenDB(&db, dbid_lastseen))
+    {
+        char hostkey_key[CF_HOSTKEY_STRING_SIZE + 1];
+        char address[CF_BUFSIZE];
+
+        /* Hostkey key: "k" + hostkey */
+        snprintf(hostkey_key, sizeof(hostkey_key), "k%s", hostkey);
+
+        if (ReadDB(db, hostkey_key, &address, sizeof(address)))
+        {
+            CloseDB(db);
+            Log(LOG_LEVEL_DEBUG, "Found hostkey '%s' in lastseen LMDB", hostkey);
+            return xstrdup(address);
+        }
+        else
+        {
+            CloseDB(db);
+            Log(LOG_LEVEL_VERBOSE, "Could not find hostkey '%s' in lastseen LMDB", hostkey);
+            return NULL;
+        }
+    }
+    else
+    {
+        Log(LOG_LEVEL_ERR, "Failed to open lastseen DB");
+        return NULL;
+    }
+}
+
 /**
  * @brief detects whether input is a host/ip name or a key digest
  *

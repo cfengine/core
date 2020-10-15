@@ -1202,7 +1202,14 @@ static void DeleteChangesChroot()
 {
     char changes_chroot[PATH_MAX] = {0};
     GetChangesChrootDir(changes_chroot, sizeof(changes_chroot));
+    Log(LOG_LEVEL_VERBOSE, "Deleting changes chroot '%s'", changes_chroot);
     DeleteDirectoryTree(changes_chroot);
+
+    /* DeleteDirectoryTree() doesn't delete the root of the tree. */
+    if (rmdir(changes_chroot) != 0)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to delete changes chroot '%s'", changes_chroot);
+    }
 }
 
 void GenericAgentFinalize(EvalContext *ctx, GenericAgentConfig *config)

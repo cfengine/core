@@ -43,6 +43,7 @@
 #include <policy_server.h>
 #include <hash.h>
 #include <item_lib.h>
+#include <regex.h>              /* StringMatchFullWithPrecompiledRegex() */
 #include <processes_select.h>   /* LoadProcessTable()/SelectProcesses() */
 
 #include <cf-windows-functions.h>

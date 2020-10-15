@@ -32,6 +32,7 @@
 #include <eval_context.h>
 #include <conversion.h>
 #include <generic_agent.h> // TODO: fix
+#include <regex.h> // pcre_free()
 #include <item_lib.h>
 
 

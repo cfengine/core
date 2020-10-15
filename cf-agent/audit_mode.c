@@ -30,6 +30,8 @@
 #include <file_lib.h>           /* IsAbsoluteFileName() */
 #include <dir.h>                /* DirOpen(),...*/
 #include <string_lib.h>         /* StringEqual() */
+#include <string_sequence.h>    /* ReadLenPrefixedString() */
+#include <changes_chroot.h>     /* CHROOT_CHANGES_LIST_FILE */
 
 #include <audit_mode.h>
 
@@ -334,4 +336,117 @@ bool ManifestRename(const char *orig_name, const char *new_name)
     PrintDelimiter();
     printf("'%s' is the new name of '%s'\n", new_name, orig_name);
     return true;
+}
+
+bool ManifestChangedFiles()
+{
+    bool success = true;
+
+    const char *renamed_files_file = ToChangesChroot(CHROOT_RENAMES_LIST_FILE);
+    if (access(renamed_files_file, F_OK) == 0)
+    {
+        int fd = safe_open(renamed_files_file, O_RDONLY);
+        if (fd == -1)
+        {
+            Log(LOG_LEVEL_ERR, "Failed to open the file with list of renamed files: %s", GetErrorStr());
+            success = false;
+        }
+
+        Log(LOG_LEVEL_INFO, "Manifesting renamed files (in the changes chroot)");
+        bool done = false;
+        while (!done)
+        {
+            /* The CHROOT_RENAMES_LIST_FILE contains lines where two consecutive
+             * lines represent the original and the new name of a file (see
+             * RecordFileRenamedInChroot(). */
+
+            /* TODO: read into a PATH_MAX buffers */
+            char *orig_name;
+            int ret = ReadLenPrefixedString(fd, &orig_name);
+            if (ret > 0)
+            {
+                char *new_name;
+                ret = ReadLenPrefixedString(fd, &new_name);
+                if (ret > 0)
+                {
+                    success = (success && ManifestRename(orig_name, new_name));
+                    free(new_name);
+                }
+                else
+                {
+                    /* If there was the line with the original name, there
+                     * must be a line with the new name. */
+                    Log(LOG_LEVEL_ERR, "Invalid data about renamed files");
+                    success = false;
+                    done = true;
+                }
+                free(orig_name);
+            }
+            else if (ret == 0)
+            {
+                /* EOF */
+                done = true;
+            }
+            else
+            {
+                Log(LOG_LEVEL_ERR, "Failed to read the list of changed files");
+                success = false;
+                done = true;
+            }
+        }
+        close(fd);
+    }
+
+    const char *changed_files_file = ToChangesChroot(CHROOT_CHANGES_LIST_FILE);
+
+    /* If the file doesn't exist, there were no changes recorded. */
+    if (access(changed_files_file, F_OK) != 0)
+    {
+        Log(LOG_LEVEL_INFO, "No changed files to manifest");
+        return true;
+    }
+
+    int fd = safe_open(changed_files_file, O_RDONLY);
+    if (fd == -1)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to open the file with list of changed files: %s", GetErrorStr());
+        return false;
+    }
+
+    Log(LOG_LEVEL_INFO, "Manifesting changed files (in the changes chroot)");
+    StringSet *manifested_files = StringSetNew();
+    bool done = false;
+    while (!done)
+    {
+        /* TODO: read into a PATH_MAX buffer */
+        char *path;
+        int ret = ReadLenPrefixedString(fd, &path);
+        if (ret > 0)
+        {
+            /* Each file should only be manifested once. */
+            if (!StringSetContains(manifested_files, path))
+            {
+                success = (success && ManifestFile(path, true));
+                StringSetAdd(manifested_files, path);
+            }
+            else
+            {
+                free(path);
+            }
+        }
+        else if (ret == 0)
+        {
+            /* EOF */
+            done = true;
+        }
+        else
+        {
+            Log(LOG_LEVEL_ERR, "Failed to read the list of changed files");
+            success = false;
+            done = true;
+        }
+    }
+    StringSetDestroy(manifested_files);
+    close(fd);
+    return success;
 }

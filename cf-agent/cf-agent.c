@@ -353,6 +353,8 @@ int main(int argc, char *argv[])
         xmlCleanupParser();
 #endif
 
+    CallCleanupFunctions();
+
     return ret;
 }
 

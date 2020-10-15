@@ -32,6 +32,9 @@
 #include <string_lib.h>         /* StringEqual() */
 #include <string_sequence.h>    /* ReadLenPrefixedString() */
 #include <changes_chroot.h>     /* CHROOT_CHANGES_LIST_FILE */
+#include <known_dirs.h>         /* GetBinDir() */
+#include <files_names.h>        /* JoinPaths() */
+#include <pipes.h>              /* cf_popen(), cf_pclose() */
 
 #include <audit_mode.h>
 
@@ -342,7 +345,112 @@ bool ManifestRename(const char *orig_name, const char *new_name)
     return true;
 }
 
-bool ManifestChangedFiles()
+static bool RunDiff(const char *path1, const char *path2)
+{
+    char diff_path[PATH_MAX];
+    strncpy(diff_path, GetBinDir(), sizeof(diff_path));
+    JoinPaths(diff_path, sizeof(diff_path), "diff");
+
+    /* We use the '--label' option to override the paths in the output, for example:
+     * --- original /etc/motd.d/cfengine
+     * +++ changed  /etc/motd.d/cfengine
+     * @@ -1,1 +1,1 @@
+     * -One line
+     * +New line
+     */
+    char *command;
+    int ret = xasprintf(&command, "%s -u --label 'original %s' --label 'changed  %s' '%s' '%s'",
+                        diff_path, path1, path1, path1, path2);
+    assert(ret != -1); /* should never happen */
+
+    FILE *f = cf_popen(command, "r", true);
+
+    char buf[CF_BUFSIZE];
+    size_t n_read;
+    bool failure = false;
+    while (!failure && ((n_read = fread(buf, 1, sizeof(buf), f)) > 0))
+    {
+        /* TODO: fake the file paths? */
+        size_t to_write = n_read;
+        while (to_write > 0)
+        {
+            size_t n_written = fwrite(buf, 1, to_write, stdout);
+            if (n_written > 0)
+            {
+                to_write -= n_written;
+            }
+            else
+            {
+                Log(LOG_LEVEL_ERR, "Failed to print results from 'diff' for '%s' and '%s'",
+                    path1, path2);
+                failure = true;
+                break;
+            }
+        }
+    }
+    if (!feof(f))
+    {
+        Log(LOG_LEVEL_ERR, "Failed to read output from the 'diff' utility");
+        cf_pclose(f);
+        return false;
+    }
+    ret = cf_pclose(f);
+    if (ret == 2)
+    {
+        Log(LOG_LEVEL_ERR, "'diff -u %s %s' failed", path1, path2);
+        return false;
+    }
+    return !failure;
+}
+
+static bool DiffFile(const char *path)
+{
+    PrintDelimiter();
+    const char *chrooted_path = ToChangesChroot(path);
+
+    struct stat st_orig;
+    struct stat st_chrooted;
+    if (lstat(path, &st_orig) == -1)
+    {
+        /* Original final doesn't exist, must be a new file in the changes
+         * chroot, let's just manifest it instead of running 'diff' on it. */
+        ManifestFile(path, true);
+        return true;
+    }
+
+    if (lstat(chrooted_path, &st_chrooted) == -1)
+    {
+        /* TODO: should this do print info about the original file? */
+        printf("'%s' no longer exists\n", path);
+        return true;
+    }
+
+    if ((st_orig.st_mode & S_IFMT) != (st_chrooted.st_mode & S_IFMT))
+    {
+        /* File type changed. */
+        printf("'%s' changed type from %s to %s\n", path,
+               GetFileTypeDescription(st_orig.st_mode),
+               GetFileTypeDescription(st_chrooted.st_mode));
+        ManifestStatInfo(&st_chrooted);
+        ManifestFileDetails(path, &st_chrooted, true);
+        return true;
+    }
+    else
+    {
+        switch (st_chrooted.st_mode & S_IFMT) {
+        case S_IFREG:
+        case S_IFDIR:
+            return RunDiff(path, chrooted_path);
+        default:
+            printf("'%s' is a %s\n", path, GetFileTypeDescription(st_chrooted.st_mode));
+            ManifestStatInfo(&st_chrooted);
+            ManifestFileDetails(path, &st_chrooted, true);
+            return true;
+        }
+    }
+}
+
+bool ManifestRenamedFiles()
 {
     bool success = true;
 
@@ -400,13 +508,34 @@ bool ManifestChangedFiles()
         }
         close(fd);
     }
+    return success;
+}
+
+bool AuditChangedFiles(EvalMode mode)
+{
+    assert((mode == EVAL_MODE_AUDIT_MANIFEST) || (mode == EVAL_MODE_AUDIT_DIFF));
+
+    bool success = ManifestRenamedFiles();
+
+    const char *action;
+    const char *action_ing;
+    if (mode == EVAL_MODE_AUDIT_MANIFEST)
+    {
+        action = "manifest";
+        action_ing = "Manifesting";
+    }
+    else
+    {
+        action = "show diff for";
+        action_ing = "Showing diff for";
+    }
 
     const char *changed_files_file = ToChangesChroot(CHROOT_CHANGES_LIST_FILE);
 
     /* If the file doesn't exist, there were no changes recorded. */
     if (access(changed_files_file, F_OK) != 0)
     {
-        Log(LOG_LEVEL_INFO, "No changed files to manifest");
+        Log(LOG_LEVEL_INFO, "No changed files to %s", action);
         return true;
     }
 
@@ -417,7 +546,7 @@ bool ManifestChangedFiles()
         return false;
     }
 
-    Log(LOG_LEVEL_INFO, "Manifesting changed files (in the changes chroot)");
+    Log(LOG_LEVEL_INFO, "%s changed files (in the changes chroot)", action_ing);
     StringSet *manifested_files = StringSetNew();
     bool done = false;
     while (!done)
@@ -430,7 +559,14 @@ bool ManifestChangedFiles()
             /* Each file should only be manifested once. */
             if (!StringSetContains(manifested_files, path))
             {
-                success = (success && ManifestFile(path, true));
+                if (mode == EVAL_MODE_AUDIT_MANIFEST)
+                {
+                    success = (success && ManifestFile(path, true));
+                }
+                else
+                {
+                    success = (success && DiffFile(path));
+                }
                 StringSetAdd(manifested_files, path);
             }
             else
@@ -453,4 +589,14 @@ bool ManifestChangedFiles()
     StringSetDestroy(manifested_files);
     close(fd);
     return success;
+}
+
+bool ManifestChangedFiles()
+{
+    return AuditChangedFiles(EVAL_MODE_AUDIT_MANIFEST);
+}
+
+bool DiffChangedFiles()
+{
+    return AuditChangedFiles(EVAL_MODE_AUDIT_DIFF);
 }

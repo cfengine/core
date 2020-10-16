@@ -688,8 +688,6 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 else if (StringEqual_IgnoreCase(optarg, "diff"))
                 {
                     EVAL_MODE = EVAL_MODE_AUDIT_DIFF;
-                    Log(LOG_LEVEL_ERR, "'diff' audit mode not supported yet");
-                    DoCleanupAndExit(EXIT_FAILURE);
                 }
                 else
                 {

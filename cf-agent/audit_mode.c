@@ -261,6 +261,56 @@ static inline void ManifestDirectoryListing(const char *path)
     DirClose(dir);
 }
 
+static inline const char *GetFileTypeDescription(mode_t st_mode)
+{
+    switch (st_mode & S_IFMT) {
+    case S_IFBLK:
+        return "block device";
+    case S_IFCHR:
+        return "character device";
+    case S_IFDIR:
+        return "directory";
+    case S_IFIFO:
+        return "FIFO/pipe";
+#ifndef __MINGW32__
+    case S_IFLNK:
+        return "symbolic link";
+#endif
+    case S_IFREG:
+        return "regular file";
+    case S_IFSOCK:
+        return "socket";
+    default:
+        debug_abort_if_reached();
+        return "unknown";
+    }
+}
+
+static inline void ManifestFileDetails(const char *path, struct stat *st, bool chrooted)
+{
+    assert(st != NULL);
+
+    switch (st->st_mode & S_IFMT) {
+    case S_IFREG:
+        puts(""); /* blank line */
+        ManifestFileContents(path);
+        break;
+#ifndef __MINGW32__
+    case S_IFLNK:
+        puts(""); /* blank line */
+        ManifestLinkTarget(path, chrooted);
+        break;
+#endif
+    case S_IFDIR:
+        puts(""); /* blank line */
+        ManifestDirectoryListing(path);
+        break;
+    default:
+        /* nothing to do for other types */
+        break;
+    }
+}
+
 bool ManifestFile(const char *path, bool chrooted)
 {
     PrintDelimiter();
@@ -278,55 +328,9 @@ bool ManifestFile(const char *path, bool chrooted)
         return true;
     }
 
-    switch (st.st_mode & S_IFMT) {
-    case S_IFBLK:
-        printf("'%s' is a block device\n", path);
-        break;
-    case S_IFCHR:
-        printf("'%s' is a character device\n", path);
-        break;
-    case S_IFDIR:
-        printf("'%s' is a directory\n", path);
-        break;
-    case S_IFIFO:
-        printf("'%s' is a FIFO/pipe\n", path);
-        break;
-#ifndef __MINGW32__
-    case S_IFLNK:
-        printf("'%s' is a symbolic link\n", path);
-        break;
-#endif
-    case S_IFREG:
-        printf("'%s' is a regular file\n", path);
-        break;
-    case S_IFSOCK:
-        printf("'%s' is a socket\n", path);
-        break;
-    default:
-        debug_abort_if_reached();
-    }
-
+    printf("'%s' is a %s\n", path, GetFileTypeDescription(st.st_mode));
     ManifestStatInfo(&st);
-
-    switch (st.st_mode & S_IFMT) {
-    case S_IFREG:
-        puts(""); /* blank line */
-        ManifestFileContents(real_path);
-        break;
-#ifndef __MINGW32__
-    case S_IFLNK:
-        puts(""); /* blank line */
-        ManifestLinkTarget(real_path, chrooted);
-        break;
-#endif
-    case S_IFDIR:
-        puts(""); /* blank line */
-        ManifestDirectoryListing(real_path);
-        break;
-    default:
-        /* nothing to do for other types */
-        break;
-    }
+    ManifestFileDetails(real_path, &st, chrooted);
 
     return true;
 }

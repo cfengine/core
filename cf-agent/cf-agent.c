@@ -87,7 +87,7 @@
 #include <dbm_api.h>                    /* CheckDBRepairFlagFile() */
 #include <sys/types.h>                  /* checking umask on writing setxid log */
 #include <sys/stat.h>                   /* checking umask on writing setxid log */
-#include <audit_mode.h>                 /* ManifestChangedFiles() */
+#include <audit_mode.h>                 /* ManifestChangedFiles(), DiffChangedFiles() */
 
 #include <mod_common.h>
 #include <mod_custom.h>                 /* IsCustomPromiseType() */
@@ -343,6 +343,14 @@ int main(int argc, char *argv[])
         if (!success)
         {
             Log(LOG_LEVEL_ERR, "Failed to manifest changed files");
+        }
+    }
+    else if (EVAL_MODE == EVAL_MODE_AUDIT_DIFF)
+    {
+        bool success = DiffChangedFiles();
+        if (!success)
+        {
+            Log(LOG_LEVEL_ERR, "Failed to show differences for changed files");
         }
     }
 

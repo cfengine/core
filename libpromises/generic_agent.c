@@ -49,6 +49,7 @@
 #include <unix.h>
 #include <client_code.h>
 #include <string_lib.h>
+#include <regex.h>      // pcre
 #include <writer.h>
 #include <exec_tools.h>
 #include <list.h>

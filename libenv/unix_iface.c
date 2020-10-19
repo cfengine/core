@@ -32,6 +32,7 @@
 #include <string_lib.h>
 #include <string_sequence.h>                             /* SeqStringFromString */
 #include <regex.h>                                       /* StringMatchFull */
+#include <json-pcre.h>                                   /* StringCaptureData() */
 #include <files_interfaces.h>
 #include <files_names.h>
 #include <known_dirs.h>

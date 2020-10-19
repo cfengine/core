@@ -861,8 +861,8 @@ int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilename)
 bool CompareLocalHash(const char *filename, const char digest[EVP_MAX_MD_SIZE + 1],
                       char sendbuffer[CFD_FALSE_SIZE])
 {
-    assert(CFD_FALSE_SIZE == (strlen(CFD_FALSE) + 1));
-    assert(strlen(CFD_FALSE) >= strlen(CFD_TRUE));
+    nt_static_assert(CFD_FALSE_SIZE == (strlen(CFD_FALSE) + 1));
+    nt_static_assert(strlen(CFD_FALSE) >= strlen(CFD_TRUE));
     char translated_filename[CF_BUFSIZE] = { 0 };
     TranslatePath(translated_filename, filename);
 

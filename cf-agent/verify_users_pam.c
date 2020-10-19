@@ -34,6 +34,7 @@
 #include <files_interfaces.h>
 #include <files_lib.h>
 #include <eval_context.h>
+#include <regex.h> // CompileRegex()
 
 #include <cf3.defs.h>
 #include <verify_methods.h>

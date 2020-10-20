@@ -72,6 +72,7 @@ libcf_agent_la_LIBADD = ../libpromises/libpromises.la \
 
 libcf_agent_la_SOURCES = \
 	agent-diagnostics.c agent-diagnostics.h \
+	audit_mode.c audit_mode.h \
 	tokyo_check.c tokyo_check.h \
 	abstract_dir.c abstract_dir.h \
 	cf-agent.c \
@@ -121,6 +122,17 @@ libcf_agent_la_SOURCES += \
 	findhub.c findhub_priv.h findhub.h \
 	load_avahi.c load_avahi.h
 endif
+endif
+
+TESTS =
+
+if !NT
+noinst_PROGRAMS = manifest_file
+manifest_file_SOURCES = manifest_file.c
+manifest_file_LDADD = ${top_srcdir}/libntech/libutils/libutils.la \
+					  ../libpromises/libpromises.la \
+                      libcf-agent.la
+TESTS += manifest_file
 endif
 
 if !BUILTIN_EXTENSIONS

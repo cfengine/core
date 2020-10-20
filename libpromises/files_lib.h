@@ -34,10 +34,14 @@ bool FileWriteOver(char *filename, char *contents);
 bool LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits);
 
 /**
- * @warning This function ignores the EVAL_MODE!
  * @see     MakeParentDirectoryForPromise()
  */
 bool MakeParentDirectory(const char *parentandchild, bool force, bool *created);
+
+/**
+ * Create an internal directory (never in the changes chroot).
+ */
+bool MakeParentInternalDirectory(const char *parentandchild, bool force, bool *created);
 
 /**
  * @warning This function will not behave right on Windows if the path

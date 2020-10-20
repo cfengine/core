@@ -58,7 +58,7 @@
 #include <mustache.h>
 #include <known_dirs.h>
 #include <evalfunction.h>
-#include <changes_chroot.h>     /* PrepareChangesChroot() */
+#include <changes_chroot.h>     /* PrepareChangesChroot(), RecordFileChangedInChroot() */
 
 static PromiseResult FindFilePromiserObjects(EvalContext *ctx, const Promise *pp);
 static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promise *pp);
@@ -585,6 +585,15 @@ exit:
     case PROMISE_RESULT_CHANGE:
         cfPS(ctx, LOG_LEVEL_INFO, result, pp, &a,
              "files promise '%s' repaired", pp->promiser);
+
+        if (ChrootChanges() && !a.haverename)
+        {
+            /* Record that file was changed in the changes chroot so that we can
+             * later show the diff or manifest. Renames are reported
+             * separately. */
+            RecordFileChangedInChroot(path);
+        }
+
         break;
     case PROMISE_RESULT_WARN:
         cfPS(ctx, LOG_LEVEL_WARNING, result, pp, &a,

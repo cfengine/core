@@ -287,6 +287,20 @@ def install_host(
     return 0
 
 
+class HostInstaller:
+    def __init__(self, *args, **kwargs):
+        self._args = args
+        self._kwargs = kwargs
+        self._errors = None
+
+    def run(self):
+        self._errors = install_host(*self._args, **self._kwargs)
+
+    @property
+    def errors(self):
+        return self._errors
+
+
 @auto_connect
 def uninstall_host(host, *, connection=None):
     data = get_info(host, connection=connection)

@@ -1,8 +1,9 @@
 import os
 import sys
 import time
+from multiprocessing.dummy import Pool
 
-from cf_remote.remote import get_info, print_info, install_host, uninstall_host, run_command, transfer_file, deploy_masterfiles
+from cf_remote.remote import get_info, print_info, HostInstaller, uninstall_host, run_command, transfer_file, deploy_masterfiles
 from cf_remote.packages import Releases
 from cf_remote.web import download_package
 from cf_remote.paths import cf_remote_dir, CLOUD_CONFIG_FPATH, CLOUD_STATE_FPATH, cf_remote_packages_dir
@@ -131,13 +132,14 @@ def install(
         if type(bootstrap) is str:
             bootstrap = [bootstrap]
         save_file(os.path.join(cf_remote_dir(), "policy_server.dat"), "\n".join(bootstrap + [""]))
-    errors = 0
+
+    hub_jobs = []
     if hubs:
         if type(hubs) is str:
             hubs = [hubs]
         for index, hub in enumerate(hubs):
             log.debug("Installing {} hub package on '{}'".format(edition, hub))
-            errors += install_host(
+            hub_jobs.append(HostInstaller(
                 hub,
                 hub=True,
                 package=hub_package,
@@ -145,17 +147,31 @@ def install(
                 version=version,
                 demo=demo,
                 call_collect=call_collect,
-                edition=edition)
+                edition=edition))
+
+    errors = 0
+    if hub_jobs:
+        with Pool(len(hub_jobs)) as hubs_install_pool:
+            hubs_install_pool.map(lambda job: job.run(), hub_jobs)
+        errors = sum(job.errors for job in hub_jobs)
+
+    client_jobs = []
     for index, host in enumerate(clients or []):
         log.debug("Installing {} client package on '{}'".format(edition, host))
-        errors += install_host(
+        client_jobs.append(HostInstaller(
             host,
             hub=False,
             package=client_package,
             bootstrap=bootstrap[index % len(bootstrap)] if bootstrap else None,
             version=version,
             demo=demo,
-            edition=edition)
+            edition=edition))
+
+    if client_jobs:
+        with Pool(len(client_jobs)) as clients_install_pool:
+            clients_install_pool.map(lambda job: job.run(), client_jobs)
+        errors += sum(job.errors for job in client_jobs)
+
     if demo and hubs:
         for hub in hubs:
             print(

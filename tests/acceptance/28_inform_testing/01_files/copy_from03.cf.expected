@@ -1,4 +1,4 @@
-    info: Created directory '/tmp/TEST.destination/subdir/purgeme'
+    info: Created directory for '/tmp/TEST.destination/subdir/purgeme'
     info: Created file '/tmp/TEST.destination/subdir/purgeme', mode 0600
     info: files promise '/tmp/TEST.destination/subdir/purgeme' repaired
     info: Copied file '/tmp/TEST.source/file-perms-644' to '/tmp/TEST.destination/file-perms-644.cfnew' (permissions preserved)

@@ -95,17 +95,34 @@ bool FileWriteOver(char *filename, char *contents)
 
 /*********************************************************************/
 
+static bool MakeParentDirectoryImpl(EvalContext *ctx, const Promise *pp, const Attributes *attr,
+                                    PromiseResult *result, const char *parentandchild,
+                                    bool force, bool internal, bool *created);
 
 bool MakeParentDirectory(const char *parentandchild, bool force, bool *created)
 {
     /* just use the complex function with no promise info */
-    return MakeParentDirectoryForPromise(NULL, NULL, NULL, NULL,
-                                         parentandchild, force, created);
+    return MakeParentDirectoryImpl(NULL, NULL, NULL, NULL,
+                                   parentandchild, force, false, created);
+}
+
+bool MakeParentInternalDirectory(const char *parentandchild, bool force, bool *created)
+{
+    /* just use the complex function with no promise info */
+    return MakeParentDirectoryImpl(NULL, NULL, NULL, NULL,
+                                   parentandchild, force, true, created);
 }
 
 bool MakeParentDirectoryForPromise(EvalContext *ctx, const Promise *pp, const Attributes *attr,
                                    PromiseResult *result, const char *parentandchild,
                                    bool force, bool *created)
+{
+    return MakeParentDirectoryImpl(ctx, pp, attr, result, parentandchild, force, false, created);
+}
+
+static bool MakeParentDirectoryImpl(EvalContext *ctx, const Promise *pp, const Attributes *attr,
+                                    PromiseResult *result, const char *parentandchild,
+                                    bool force, bool internal, bool *created)
 {
     char *sp;
     char currentpath[CF_BUFSIZE];
@@ -115,7 +132,7 @@ bool MakeParentDirectoryForPromise(EvalContext *ctx, const Promise *pp, const At
     int rootlen;
 
     const char *changes_parentandchild = parentandchild;
-    if (ChrootChanges())
+    if (!internal && ChrootChanges())
     {
         changes_parentandchild = ToChangesChroot(parentandchild);
     }

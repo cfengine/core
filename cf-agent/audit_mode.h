@@ -22,14 +22,12 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_CHANGES_CHROOT_H
-#define CFENGINE_CHANGES_CHROOT_H
+#include <platform.h>
 
-#define CHROOT_CHANGES_LIST_FILE "/changed_files"
-#define CHROOT_RENAMES_LIST_FILE "/renamed_files"
+#ifndef _AUDIT_MODE_H_
+#define _AUDIT_MODE_H_
 
-void PrepareChangesChroot(const char *path);
-bool RecordFileChangedInChroot(const char *path);
-bool RecordFileRenamedInChroot(const char *old_name, const char *new_name);
+bool ManifestFile(const char *path, bool chrooted);
+bool ManifestRename(const char *orig_name, const char *new_name);
 
-#endif /* CFENGINE_CHANGES_CHROOT_H */
+#endif  /* _AUDIT_MODE_H_ */

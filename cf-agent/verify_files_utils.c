@@ -65,7 +65,7 @@
 #include <conn_cache.h>
 #include <stat_cache.h>                      /* remote_stat,StatCacheLookup */
 #include <known_dirs.h>
-#include <changes_chroot.h>     /* PrepareChangesChroot() */
+#include <changes_chroot.h>     /* PrepareChangesChroot(), RecordFileChangedInChroot() */
 
 #include <cf-windows-functions.h>
 
@@ -832,7 +832,7 @@ static PromiseResult SourceSearchAndCopy(EvalContext *ctx, const char *from, cha
             }
             else
             {
-                RecordChange(ctx, pp, attr, "Created directory '%s'", to);
+                RecordChange(ctx, pp, attr, "Created directory for '%s'", to);
                 result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
             }
             umask(mask);
@@ -2149,6 +2149,10 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
                 }
                 else
                 {
+                    if (ChrootChanges())
+                    {
+                        RecordFileRenamedInChroot(path, attr->rename.newname);
+                    }
                     RecordChange(ctx, pp, attr, "Renamed file '%s' to '%s'", path, attr->rename.newname);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
                 }
@@ -2288,6 +2292,10 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
                 }
                 else
                 {
+                    if (ChrootChanges())
+                    {
+                        RecordFileRenamedInChroot(path, newname);
+                    }
                     RecordChange(ctx, pp, attr, "Disabled file '%s' by renaming to '%s' with mode %04jo",
                                  path, newname, (uintmax_t)newperm);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
@@ -2747,6 +2755,10 @@ bool DepthSearch(EvalContext *ctx, char *name, const struct stat *sb, int rlevel
         {
             if (KillGhostLink(ctx, path, attr, pp, result))
             {
+                if (ChrootChanges())
+                {
+                    RecordFileChangedInChroot(path);
+                }
                 continue;
             }
         }
@@ -2812,6 +2824,10 @@ bool DepthSearch(EvalContext *ctx, char *name, const struct stat *sb, int rlevel
             }
 
             VerifyFileLeaf(ctx, path, &lsb, attr, pp, result);
+            if (ChrootChanges() && (*result == PROMISE_RESULT_CHANGE))
+            {
+                RecordFileChangedInChroot(path);
+            }
         }
         else
         {
@@ -3474,6 +3490,10 @@ PromiseResult ScheduleLinkChildrenOperation(EvalContext *ctx, char *destination,
         {
             result = PromiseResultUpdate(result, ScheduleLinkOperation(ctx, promiserpath, sourcepath,
                                                                        &attr, pp));
+        }
+        if (ChrootChanges() && (result == PROMISE_RESULT_CHANGE))
+        {
+            RecordFileChangedInChroot(promiserpath);
         }
     }
 
@@ -4292,7 +4312,7 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, const Attribu
         }
         if (dir_created)
         {
-            RecordChange(ctx, pp, attr, "Created directory '%s'", file);
+            RecordChange(ctx, pp, attr, "Created directory for '%s'", file);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
         }
 
@@ -4345,7 +4365,7 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, const Attribu
         }
         if (dir_created)
         {
-            RecordChange(ctx, pp, attr, "Created directory '%s'", file);
+            RecordChange(ctx, pp, attr, "Created directory for '%s'", file);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
         }
 

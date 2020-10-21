@@ -229,9 +229,12 @@ def install_host(
         demo=False,
         call_collect=False,
         connection=None,
-        edition=None):
+        edition=None,
+        show_info=True):
+
     data = get_info(host, connection=connection)
-    print_info(data)
+    if show_info:
+        print_info(data)
 
     if not package:
         tags = []
@@ -285,6 +288,20 @@ def install_host(
             demo_lib.disable_password_dialog(host)
         demo_lib.agent_run(data, connection=connection)
     return 0
+
+
+class HostInstaller:
+    def __init__(self, *args, **kwargs):
+        self._args = args
+        self._kwargs = kwargs
+        self._errors = None
+
+    def run(self):
+        self._errors = install_host(*self._args, **self._kwargs)
+
+    @property
+    def errors(self):
+        return self._errors
 
 
 @auto_connect

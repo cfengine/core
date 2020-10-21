@@ -1,0 +1,100 @@
+######################################################
+#
+#  Test that not() behaves as expected
+#
+#####################################################
+body common control
+{
+    inputs => { "../../default.cf.sub" };
+    bundlesequence  => { default("$(this.promise_filename)") };
+    version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+    "description" -> { "CFE-3470" }
+      string => "Test that not() behaves as expected";
+
+  classes:
+    "ok"
+      scope => "namespace",
+      and => {
+        # Simple case:
+        "any",
+        strcmp("any", not("!any")),
+        "cfengine",
+        strcmp("any", not("!cfengine")),
+
+        # Variable expansion:
+        "$(true_variable)",
+        strcmp("any", not("$(false_variable)")),
+        strcmp("any", not(not("$(true_variable)"))),
+        strcmp("any", not(not(not("$(false_variable)")))),
+
+        # Double expand:
+        strcmp("any", not(not("$($(true_variable_name))"))),
+        strcmp("any", not(not(not("$($(false_variable_name))")))),
+
+        # Triple expand:
+        strcmp("any", not(not("$($($(true_variable_name_name)))"))),
+        strcmp("any", not(not(not("$($($(false_variable_name_name)))")))),
+
+        # not() should always return any or !any,
+        # this is important for backwards compatibility:
+        strcmp(not("any"), "!any"),
+        strcmp(not("!any"), "any"),
+        strcmp(not("!cfengine"), "any"),
+        strcmp(not("!(cfengine.!cfengine)"), "!any"),
+        strcmp(not("$(true_variable)"), "!any"),
+        strcmp(not("$(false_variable)"), "any"),
+      };
+
+    # In both of these cases we expect the function call (and promise)
+    # to be skipped because of the unresolved variable:
+    # This tests function/promise skipping because of unresolved variables,
+    # but also that there is no syntax / type error, when the unresolved
+    # function call stays in the and list forever (Never resolved).
+    "fail_one"
+      and => {
+        "any",
+        strcmp("!any", not("$(unresolved_var)")),
+      };
+    "fail_two"
+      and => {
+        "any",
+        strcmp("!any", not(not("$(unresolved_var)"))),
+      };
+    "fail"
+      scope => "namespace",
+      expression => "fail_one|fail_two";
+
+  vars:
+    "false_variable"
+      string => "cfengine.(!cfengine)";
+    "true_variable"
+      string => "cfengine|(!cfengine)";
+    "false_variable_name"
+      string => "false_variable";
+    "true_variable_name"
+      string => "true_variable";
+    "false_variable_name_name"
+      string => "false_variable_name";
+    "true_variable_name_name"
+      string => "true_variable_name";
+
+}
+
+#######################################################
+
+bundle agent check
+{
+
+  reports:
+    ok.(!fail)::
+      "$(this.promise_filename) Pass";
+    (!ok)|fail::
+      "$(this.promise_filename) FAIL";
+}

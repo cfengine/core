@@ -135,6 +135,7 @@ def install(
 
     hub_jobs = []
     if hubs:
+        show_host_info = (len(hubs) == 1)
         if type(hubs) is str:
             hubs = [hubs]
         for index, hub in enumerate(hubs):
@@ -147,7 +148,8 @@ def install(
                 version=version,
                 demo=demo,
                 call_collect=call_collect,
-                edition=edition))
+                edition=edition,
+                show_info=show_host_info))
 
     errors = 0
     if hub_jobs:
@@ -156,6 +158,7 @@ def install(
         errors = sum(job.errors for job in hub_jobs)
 
     client_jobs = []
+    show_host_info = (clients and (len(clients) == 1))
     for index, host in enumerate(clients or []):
         log.debug("Installing {} client package on '{}'".format(edition, host))
         client_jobs.append(HostInstaller(
@@ -165,7 +168,8 @@ def install(
             bootstrap=bootstrap[index % len(bootstrap)] if bootstrap else None,
             version=version,
             demo=demo,
-            edition=edition))
+            edition=edition,
+            show_info=show_host_info))
 
     if client_jobs:
         with Pool(len(client_jobs)) as clients_install_pool:

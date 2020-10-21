@@ -229,9 +229,12 @@ def install_host(
         demo=False,
         call_collect=False,
         connection=None,
-        edition=None):
+        edition=None,
+        show_info=True):
+
     data = get_info(host, connection=connection)
-    print_info(data)
+    if show_info:
+        print_info(data)
 
     if not package:
         tags = []

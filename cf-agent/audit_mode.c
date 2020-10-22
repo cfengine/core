@@ -408,7 +408,6 @@ static bool RunDiff(const char *path1, const char *path2)
 
 static bool DiffFile(const char *path)
 {
-    PrintDelimiter();
     const char *chrooted_path = ToChangesChroot(path);
 
     struct stat st_orig;
@@ -421,6 +420,7 @@ static bool DiffFile(const char *path)
         return true;
     }
 
+    PrintDelimiter();
     if (lstat(chrooted_path, &st_chrooted) == -1)
     {
         /* TODO: should this do print info about the original file? */

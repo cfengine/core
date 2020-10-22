@@ -202,13 +202,15 @@ static inline void ManifestFileContents(const char *path)
         last_char = buf[n_read - 1];
         if (is_ascii)
         {
+            size_t offset = 0;
             size_t to_write = n_read;
             while (to_write > 0)
             {
-                size_t n_written = fwrite(buf, 1, to_write, stdout);
+                size_t n_written = fwrite(buf + offset, 1, to_write, stdout);
                 if (n_written > 0)
                 {
                     to_write -= n_written;
+                    offset += n_written;
                 }
                 else
                 {
@@ -370,14 +372,15 @@ static bool RunDiff(const char *path1, const char *path2)
     bool failure = false;
     while (!failure && ((n_read = fread(buf, 1, sizeof(buf), f)) > 0))
     {
-        /* TODO: fake the file paths? */
+        size_t offset = 0;
         size_t to_write = n_read;
         while (to_write > 0)
         {
-            size_t n_written = fwrite(buf, 1, to_write, stdout);
+            size_t n_written = fwrite(buf + offset, 1, to_write, stdout);
             if (n_written > 0)
             {
                 to_write -= n_written;
+                offset += n_written;
             }
             else
             {

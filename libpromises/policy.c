@@ -65,6 +65,8 @@ static const char *const POLICY_ERROR_LVAL_INVALID =
     "Promise type %s has unknown attribute %s";
 static const char *const POLICY_ERROR_PROMISE_ATTRIBUTE_NOT_IMPLEMENTED =
     "Common attribute '%s' not implemented for custom promises (%s)";
+static const char *const POLICY_ERROR_PROMISE_ATTRIBUTE_NOT_SUPPORTED =
+    "Common attribute '%s' not supported for custom promises, use '%s' instead (%s promises)";
 static const char *const POLICY_ERROR_PROMISE_CUSTOM_CONTAINERS_NOT_IMPLEMENTED =
     "Container / string list attributes not implemented for custom promises (%s promise, '%s' promiser, '%s' attribute)";
 
@@ -2719,7 +2721,19 @@ static bool ValidateCustomPromise(const Promise *pp, Seq *errors)
     {
         Constraint *attribute = SeqAt(attributes, i);
         const char *name = attribute->lval;
-        if (StringEqual(name, "action")
+        if (StringEqual(name, "ifvarclass"))
+        {
+            SeqAppend(
+                errors,
+                PolicyErrorNew(
+                    POLICY_ELEMENT_TYPE_PROMISE,
+                    pp,
+                    POLICY_ERROR_PROMISE_ATTRIBUTE_NOT_SUPPORTED,
+                    name,
+                    "if",
+                    promise_type));
+            valid = false;
+        } else if (StringEqual(name, "action")
             || StringEqual(name, "action_policy")
             || StringEqual(name, "ifelapsed")
             || StringEqual(name, "expireafter")
@@ -2729,7 +2743,6 @@ static bool ValidateCustomPromise(const Promise *pp, Seq *errors)
             || StringEqual(name, "depends_on")
             || StringEqual(name, "handle")
             || StringEqual(name, "if")
-            || StringEqual(name, "ifvarclass")
             || StringEqual(name, "meta")
             || StringEqual(name, "unless")
             || StringEqual(name, "with"))

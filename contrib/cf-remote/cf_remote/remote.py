@@ -230,7 +230,8 @@ def install_host(
         call_collect=False,
         connection=None,
         edition=None,
-        show_info=True):
+        show_info=True,
+        remote_download=False):
 
     data = get_info(host, connection=connection)
     if show_info:
@@ -266,9 +267,15 @@ def install_host(
                     "hub" if hub else "client"))
             return 1
         artifact = artifacts[-1]
-        package = download_package(artifact.url)
+        if not remote_download:
+            package = download_package(artifact.url)
 
-    scp(package, host, connection=connection)
+    if remote_download:
+        print(f"Downloading '{package}' on '{host}' using curl")
+        ssh_cmd(cmd="curl -O {}".format(package), connection=connection)
+    else:
+        scp(package, host, connection=connection)
+
     package = basename(package)
     install_package(host, package, data, connection=connection)
     data = get_info(host, connection=connection)

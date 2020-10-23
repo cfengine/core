@@ -1,0 +1,129 @@
+######################################################
+#
+#  Test that custom promises can use if attribute
+#
+#####################################################
+body common control
+{
+    inputs => { "../default.cf.sub" };
+    bundlesequence  => { default("$(this.promise_filename)") };
+    version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  files:
+    "$(G.testfile)-0"
+      delete => init_delete;
+    "$(G.testfile)-1"
+      delete => init_delete;
+    "$(G.testfile)-2"
+      delete => init_delete;
+    "$(G.testfile)-3"
+      delete => init_delete;
+    "$(G.testfile)-4"
+      delete => init_delete;
+    "$(G.testfile)-5"
+      delete => init_delete;
+    "$(G.testfile)-6"
+      delete => init_delete;
+    "$(G.testfile)-7"
+      delete => init_delete;
+    "$(G.testfile)-8"
+      delete => init_delete;
+    "$(G.testfile)-9"
+      delete => init_delete;
+    "$(G.testfile)-10"
+      delete => init_delete;
+}
+
+body delete init_delete
+{
+      dirlinks => "delete";
+      rmdirs   => "true";
+}
+
+#######################################################
+
+promise agent example
+{
+    interpreter => "/bin/bash";
+    path => "$(this.promise_dirname)/example_module.sh";
+}
+
+bundle agent test
+{
+  meta:
+    "description" -> { "CFE-3391" }
+      string => "Test that custom promises work with if attribute";
+
+  vars:
+    "false_variable"
+      string => "cfengine.(!cfengine)";
+    "true_variable"
+      string => "cfengine|(!cfengine)";
+
+  example:
+    cfengine::
+      "$(G.testfile)-0" # Created - no condition
+        message => "x";
+      "$(G.testfile)-1" # Created - true condition
+        message => "x",
+        if => "cfengine";
+      "$(G.testfile)-2" # Created - true condition from variable
+        message => "x",
+        if => "$(true_variable)";
+      "$(G.testfile)-3" # Created - true condition (inverted false variable)
+        message => "x",
+        if => "!($(false_variable))";
+      "$(G.testfile)-4" # Created - not function call of something false
+        message => "x",
+        if => not("$(false_variable)");
+      "$(G.testfile)-5" # Not created - false condition
+        message => "x",
+        if => "!cfengine";
+      "$(G.testfile)-6" # Not created - false condition from variable
+        message => "x",
+        if => "$(false_variable)";
+      "$(G.testfile)-7" # Not created - false condition (inverted true variable)
+        message => "x",
+        if => "!($(true_variable))";
+      "$(G.testfile)-8" # Not created - not function call of something true
+        message => "x",
+        if => not("$(true_variable)");
+      "$(G.testfile)-9" # Not created - undefined variable in if
+        message => "x",
+        if => "$(undefined_variable)";
+      "$(G.testfile)-10" # Not created - unresolved function call in if
+        message => "x",
+        if => not("$(undefined_variable)");
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+    "ok"
+      and => {
+        fileexists("$(G.testfile)-0"),
+        fileexists("$(G.testfile)-1"),
+        fileexists("$(G.testfile)-2"),
+        fileexists("$(G.testfile)-3"),
+        fileexists("$(G.testfile)-4"),
+        not(fileexists("$(G.testfile)-5")),
+        not(fileexists("$(G.testfile)-6")),
+        not(fileexists("$(G.testfile)-7")),
+        not(fileexists("$(G.testfile)-8")),
+        not(fileexists("$(G.testfile)-9")),
+        not(fileexists("$(G.testfile)-10")),
+      };
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

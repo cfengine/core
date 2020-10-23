@@ -481,6 +481,12 @@ static void PromiseModule_AppendAllAttributes(
     {
         const Constraint *attribute = SeqAt(pp->conlist, i);
         const char *const name = attribute->lval;
+        assert(!StringEqual(name, "ifvarclass")); // Not allowed by validation
+        if (StringEqual(name, "if") || StringEqual(name, "ifvarclass"))
+        {
+            // Evaluated by agent and not sent to module, skip
+            continue;
+        }
         char *const value = RvalToString(attribute->rval);
         PromiseModule_AppendAttribute(module, name, value);
         free(value);

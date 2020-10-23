@@ -28,10 +28,10 @@ bundle agent example
 
       "immediate" usebundle => one,
       classes => if_repaired_persist("countdown", "$(orchestrate.delay)"),
-      ifvarclass => "!one";
+      if => "!one";
 
       "delayed"   usebundle => two,
-      ifvarclass => "one.!countdown";
+      if => "one.!countdown";
 
   reports:
 
@@ -50,7 +50,7 @@ bundle agent one
       action => if_elapsed("0");
 
       "Set class $(this.bundle)"
-      ifvarclass => "$(this.bundle)";
+      if => "$(this.bundle)";
 }
 
 ##########################################
@@ -64,7 +64,7 @@ bundle agent two
       action => if_elapsed("0");
 
       "Set class $(this.bundle)"
-      ifvarclass => "$(this.bundle)";
+      if => "$(this.bundle)";
 }
 
 ###########################################

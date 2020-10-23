@@ -57,7 +57,7 @@ bundle agent system_scheduling
 
       "$(cmd[$(cmd_index)])"
       classes => if_repaired("cmd$(cmd_index)_success"),
-      ifvarclass => "$(dep_cmd[$(cmd_index)])",
+      if => "$(dep_cmd[$(cmd_index)])",
       contain => in_shell,
       comment => "$(comment_cmd[$(cmd_index)])";
       

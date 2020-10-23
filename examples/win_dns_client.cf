@@ -23,5 +23,5 @@ bundle agent windows_dns
       database_operation => "create",
       database_rows      => { "NameServer,REG_SZ,$(dns_servers)" },
       database_type      => "ms_registry",
-      ifvarclass         => not( strcmp("$(key_list)", "" ));
+      if                 => not( strcmp("$(key_list)", "" ));
 }

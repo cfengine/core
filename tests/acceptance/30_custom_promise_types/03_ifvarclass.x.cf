@@ -1,0 +1,26 @@
+######################################################
+#
+# Test that ifvarclass causes syntax / validation error
+#
+#####################################################
+
+# This policy is as minimal as possible to reduce
+# the chance of something else causing an error
+
+promise agent example
+{
+    interpreter => "/bin/bash";
+    path => "$(this.promise_dirname)/example_module.sh";
+}
+
+bundle agent main
+{
+  meta:
+    "description" -> { "CFE-3391" }
+      string => "Test that ifvarclass causes syntax / validation error";
+
+  example:
+      "/some/absolute/path"
+        message => "x",
+        ifvarclass => "any";
+}

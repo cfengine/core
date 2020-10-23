@@ -94,9 +94,9 @@ bundle agent check
   reports:
     DEBUG::
       "$(G.testdir)/$(files) exists with no $(G.testdir)/$(files).gz"
-      ifvarclass => "ok$(files).!no$(files)";
+      if => "ok$(files).!no$(files)";
       "$(G.testdir)/$(files).gz was created during --dry-run!"
-      ifvarclass => "no$(files)";
+      if => "no$(files)";
     ok::
       "$(this.promise_filename) Pass";
     !ok::

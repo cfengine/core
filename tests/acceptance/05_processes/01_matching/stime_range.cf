@@ -116,9 +116,9 @@ bundle agent init
 
 #  reports:
 #    DEBUG.got_early::
-#      "Early: $(pid)	from $(days[$(pid)]) days ago" ifvarclass => "early_$(pid)";
+#      "Early: $(pid)	from $(days[$(pid)]) days ago" if => "early_$(pid)";
 #    DEBUG.got_late::
-#      "Late:  $(pid)	from $(days[$(pid)]) days ago" ifvarclass => "late_$(pid)";
+#      "Late:  $(pid)	from $(days[$(pid)]) days ago" if => "late_$(pid)";
 }
 
 #######################################################
@@ -132,12 +132,12 @@ bundle agent test
       ""
         process_select => pid_is_newer_than($(pid), "$(init.days[$(pid)])"),
         process_count => any_procs("early_$(pid)"),
-        ifvarclass => "early_$(pid)";
+        if => "early_$(pid)";
 
       ""
         process_select => pid_is_newer_than($(pid), "$(init.days[$(pid)])"),
         process_count => any_procs("late_$(pid)"),
-        ifvarclass => "late_$(pid)";
+        if => "late_$(pid)";
 }
 
 body process_select pid_is_newer_than(pid, days)
@@ -187,19 +187,19 @@ bundle agent check
     DEBUG.got_early.early_in::
       "Early processes reported as in range";
       "Process $(pid), reported within $(init.days[$(pid)]) days, is older"
-        ifvarclass => "bad_$(pid)_in";
+        if => "bad_$(pid)_in";
     DEBUG.got_early.!early_out::
       "Early processes not reported as out of range";
       "Process $(pid), not reported outside $(init.days[$(pid)]) days, is so old"
-        ifvarclass => "early_$(pid).!early_$(pid)_out";
+        if => "early_$(pid).!early_$(pid)_out";
     DEBUG.got_late.!late_in::
       "Late processes not reported as in range";
       "Process $(pid), not reported within $(init.days[$(pid)]) days, is so new"
-        ifvarclass => "late_$(pid).!late_$(pid)_in";
+        if => "late_$(pid).!late_$(pid)_in";
     DEBUG.got_late.late_out::
       "Late processes reported as out of range";
       "Process $(pid), reported outside $(init.days[$(pid)]) days, is newer"
-        ifvarclass => "bad_$(pid)_out";
+        if => "bad_$(pid)_out";
 
     ok::
       "$(this.promise_filename) Pass";

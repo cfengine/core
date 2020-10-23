@@ -44,7 +44,7 @@ bundle agent check
       "the read of $(testlengths) bytes gave $(length_$(testlengths)) bytes";
 
       "the read of $(testlengths) bytes failed to match the expected $(testlengths) bytes, actual = $(length_$(testlengths))"
-      ifvarclass => "!ok_$(testlengths)";
+      if => "!ok_$(testlengths)";
 
     ok::
       "$(this.promise_filename) Pass";

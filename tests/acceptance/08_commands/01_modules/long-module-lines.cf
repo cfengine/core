@@ -80,28 +80,28 @@ bundle agent check
       "tail(256) of $(scalars) = $(tail[$(scalars)])";
 
       "Got the long class, $(longclass_length) bytes"
-      ifvarclass => "$(longclass)";
+      if => "$(longclass)";
 
       "Did NOT get the long class, $(longclass_length) bytes"
-      ifvarclass => "!$(longclass)";
+      if => "!$(longclass)";
 
       "Got the length for list $(lists): $(actual_length[$(lists)])"
-      ifvarclass => "match_length_$(lists)";
+      if => "match_length_$(lists)";
 
       "Did NOT get the length for list $(lists): actual $(actual_length[$(lists)]) vs expected $(expected_length[$(lists)])"
-      ifvarclass => "!match_length_$(lists)";
+      if => "!match_length_$(lists)";
 
       "Got the length for scalar $(scalars): $(actual_length[$(scalars)])"
-      ifvarclass => "match_length_$(scalars)";
+      if => "match_length_$(scalars)";
 
       "Did NOT get the length for scalar $(scalars): actual $(actual_length[$(scalars)]) vs expected $(expected_length[$(scalars)])"
-      ifvarclass => "!match_length_$(scalars)";
+      if => "!match_length_$(scalars)";
 
       "Got the long $(scalars), actual $(actual_length[$(scalars)]) bytes, actual tail($(scalars), 256) = $(tail[$(scalars)])"
-      ifvarclass => "match_$(scalars)";
+      if => "match_$(scalars)";
 
       "Did NOT get the long $(scalars), actual $(actual_length[$(scalars)]) bytes, actual tail($(scalars), 256) = $(tail[$(scalars)])"
-      ifvarclass => "!match_$(scalars)";
+      if => "!match_$(scalars)";
 
     ok::
       "$(this.promise_filename) Pass";

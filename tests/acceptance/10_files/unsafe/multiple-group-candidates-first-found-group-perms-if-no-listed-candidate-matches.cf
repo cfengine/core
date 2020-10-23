@@ -81,7 +81,7 @@ bundle agent check
       if => strcmp( $(observed_gid), $(desired_gid) );
 
     "$(this.promise_filename) FAIL"
-      ifvarclass => not( strcmp( $(observed_gid), $(desired_gid) ) );
+      if => not( strcmp( $(observed_gid), $(desired_gid) ) );
 
 }
 bundle agent cleanup

@@ -144,10 +144,10 @@ bundle agent check
   reports:
     DEBUG::
       "OK math $(indices) eval('$(init.values[$(indices)])') = '$(test.eval[$(indices)])'"
-      ifvarclass => "ok_$(indices)";
+      if => "ok_$(indices)";
 
       "FAIL math $(indices) eval('$(init.values[$(indices)])') = '$(test.eval[$(indices)])' (expected '$(verify[$(indices)])')"
-      ifvarclass => "not_ok_$(indices)";
+      if => "not_ok_$(indices)";
 
     ok::
       "$(this.promise_filename) Pass";

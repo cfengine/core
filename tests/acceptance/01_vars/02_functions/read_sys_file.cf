@@ -50,12 +50,12 @@ bundle agent check
 
   reports:
     DEBUG::
-      "/proc0 test OK" ifvarclass => "ok_proc0";
-      "/proc1 test OK" ifvarclass => "ok_proc1";
-      "/sys test OK" ifvarclass => "ok_sys";
-      "/proc0 test NOT OK: data '$(test.proc0_info)' did not contain digits" ifvarclass => "not_ok_proc0";
-      "/proc1 test NOT OK: data '$(test.proc1_info)' did not contain digits" ifvarclass => "not_ok_proc1";
-      "/sys test NOT OK: data '$(test.sys_info)' did not contain digits" ifvarclass => "not_ok_sys";
+      "/proc0 test OK" if => "ok_proc0";
+      "/proc1 test OK" if => "ok_proc1";
+      "/sys test OK" if => "ok_sys";
+      "/proc0 test NOT OK: data '$(test.proc0_info)' did not contain digits" if => "not_ok_proc0";
+      "/proc1 test NOT OK: data '$(test.proc1_info)' did not contain digits" if => "not_ok_proc1";
+      "/sys test NOT OK: data '$(test.sys_info)' did not contain digits" if => "not_ok_sys";
     DEBUG.inform_mode::
       "/proc0 test got data '$(test.proc0_info)'";
       "/proc1 test got data '$(test.proc1_info)'";

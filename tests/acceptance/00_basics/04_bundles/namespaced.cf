@@ -38,9 +38,9 @@ bundle agent check
 
   reports:
     EXTRA::
-      "class $(checks) is ON" ifvarclass => $(checks);
+      "class $(checks) is ON" if => $(checks);
     EXTRA::
-      "class $(checks) is OFF" ifvarclass => "!$(checks)";
+      "class $(checks) is OFF" if => "!$(checks)";
     DEBUG.ns1:ns1global_from_ppkeys::
       "ns1:ns1global_from_ppkeys is on as expected";
     DEBUG.ns1:ns1global_from_ppkeys_explicit::

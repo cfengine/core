@@ -53,7 +53,7 @@ bundle agent main
 
       # Show the time with the splay class defined
       "DEBUG $(this.bundle): $(sys.date) splayclass_hourly_$(hourly_inputs) defined"
-        ifvarclass => "splayclass_hourly_$(hourly_inputs)";
+        if => "splayclass_hourly_$(hourly_inputs)";
 
     ok::
       # We pass when the splay class is defined during the expected window

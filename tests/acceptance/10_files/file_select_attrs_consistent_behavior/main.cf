@@ -74,7 +74,7 @@ bundle agent test_delete_with_spec_from_policy {
                                                      "$(G.testdir)/$(this.bundle)/tmp/logs/tidy"), # == 'location' key in JSON
         depth_search => recurse("2"),                          # == 'depth' key in JSON
         action => if_elapsed_inform("10"),                     # == 'frequency' key in JSON
-        ifvarclass => "any";                                   # == 'context' key in JSON
+        if => "any";                                           # == 'context' key in JSON
 
   reports:
     DEBUG::
@@ -148,7 +148,7 @@ bundle agent do_cleanup(location,
                                                                   "$(G.testdir)/test_delete_with_spec_from_data/$(location)"),
         depth_search => recurse("$(depth)"),
         action => if_elapsed_inform("$(frequency)"),
-        ifvarclass => "$(context)";
+        if => "$(context)";
 
   reports:
     DEBUG::
@@ -187,10 +187,10 @@ bundle agent check
       "count_files[test_delete_with_spec_from_policy] = $(count_files[test_delete_with_spec_from_policy])";
 
       "$(init.tests) pass"
-        ifvarclass => "OK_$(init.tests)";
+        if => "OK_$(init.tests)";
 
       "$(init.tests) fail"
-        ifvarclass => "!OK_$(init.tests)";
+        if => "!OK_$(init.tests)";
 
     OK::
       "$(this.promise_filename) Pass";

@@ -70,13 +70,13 @@ bundle edit_line test_insert
       "keys:json = $(test_common.keys)";
 
       "primitive:json[$(test_common.keys)] = $(test_common.primitives[$(test_common.keys)])"
-      ifvarclass => "hasprimitive_$(test_common.keys)";
+      if => "hasprimitive_$(test_common.keys)";
 
       "list:json[$(test_common.all_keys)] = $(test_common.list[$(test_common.all_keys)])"
-      ifvarclass => "haslist_$(test_common.all_keys)";
+      if => "haslist_$(test_common.all_keys)";
 
       "object:json[$(test_common.all_keys)] = $(test_common.object[$(test_common.all_keys)])"
-      ifvarclass => "hasobject_$(test_common.all_keys)";
+      if => "hasobject_$(test_common.all_keys)";
 
 }
 

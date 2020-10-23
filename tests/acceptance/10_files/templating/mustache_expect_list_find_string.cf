@@ -105,41 +105,41 @@ template expects list of strings
   reports:
     EXTRA::
       "OK: As expected good '$(expected_good)'"
-      ifvarclass => "ok_content_good";
+      if => "ok_content_good";
 
       "OK: As expected bad '$(expected_bad)'"
-      ifvarclass => "ok_content_bad";
+      if => "ok_content_bad";
 
       "OK: good filestats $(filestats_good_str) change from step 1 to step 2"
-      ifvarclass => "ok_filestats_good_1_2";
+      if => "ok_filestats_good_1_2";
 
       "OK: good filestats $(filestats_good_str) change from step 2 to step 3"
-      ifvarclass => "ok_filestats_good_2_3";
+      if => "ok_filestats_good_2_3";
 
       "OK: bad filestats $(filestats_bad_str) change from step 1 to step 2"
-      ifvarclass => "ok_filestats_bad_1_2";
+      if => "ok_filestats_bad_1_2";
 
       "OK: bad filestats $(filestats_bad_str) don't change from step 2 to step 3"
-      ifvarclass => "ok_filestats_bad_2_3";
+      if => "ok_filestats_bad_2_3";
 
     DEBUG::
       "FAIL: Expected '$(expected_good)' <> '$(test.actual_good)'"
-      ifvarclass => "!ok_content_good";
+      if => "!ok_content_good";
 
       "FAIL: Expected '$(expected_bad)' <> '$(test.actual_bad)'"
-      ifvarclass => "!ok_content_bad";
+      if => "!ok_content_bad";
 
       "FAIL: good filestats $(filestats_good_str) don't change enough from step 1 to step 2"
-      ifvarclass => "!ok_filestats_good_1_2";
+      if => "!ok_filestats_good_1_2";
 
       "FAIL: good filestats $(filestats_good_str) don't change enough from step 2 to step 3"
-      ifvarclass => "!ok_filestats_good_2_3";
+      if => "!ok_filestats_good_2_3";
 
       "FAIL: bad filestats $(filestats_bad_str) don't change enough from step 1 to step 2"
-      ifvarclass => "!ok_filestats_bad_1_2";
+      if => "!ok_filestats_bad_1_2";
 
       "FAIL: bad filestats $(filestats_bad_str) change from step 2 to step 3"
-      ifvarclass => "!ok_filestats_bad_2_3";
+      if => "!ok_filestats_bad_2_3";
 
 }
 ### PROJECT_ID: core

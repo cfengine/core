@@ -55,5 +55,5 @@ bundle agent standard_services(service, state)
       "$(startcommand[$(service)])"
 
       comment => "Execute command to restart the $(service) service",
-      ifvarclass => "restart_$(service)";
+      if => "restart_$(service)";
 }

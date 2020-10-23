@@ -107,10 +107,10 @@ bundle agent check
   reports:
     DEBUG::
       "OK $(init.tests): Expected  '$(expected[$(init.tests)])' == '$(actual_$(init.tests))'"
-      ifvarclass => "ok_$(init.tests)";
+      if => "ok_$(init.tests)";
 
       "FAIL $(init.tests): Expected '$(expected[$(init.tests)])' <> '$(actual_$(init.tests))'"
-      ifvarclass => "!ok_$(init.tests)";
+      if => "!ok_$(init.tests)";
 
     ok::
       "$(this.promise_filename) Pass";

@@ -30,7 +30,7 @@ bundle agent test
       "myvar" string => "me";
       "myclass" string => "any";
       "s1" string => "hello, this is $(myvar)",
-      ifvarclass => "$(myclass)";
+      if => "$(myclass)";
     any::
       "s2" string => "any hello";
     'any'::
@@ -44,11 +44,11 @@ bundle agent test
       "s6" string => "BAD variable context hello!!!";
     "$(myclass)"::
       "s7" string => "augmented variable context hello!!!",
-      ifvarclass => "any";
+      if => "any";
 
     "$(myclass)"::
       "s8" string => "BAD augmented variable context hello!!!",
-      ifvarclass => "nonesuch";
+      if => "nonesuch";
     "$(mylist).cfengine"::
       "iterated_$(mylist)" string => "iteration class $(mylist)";
 

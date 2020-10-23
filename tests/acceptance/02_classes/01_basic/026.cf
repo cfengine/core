@@ -1,6 +1,6 @@
 #######################################################
 #
-# Check ifvarclass with qualified variable
+# Check if with qualified variable
 #
 #######################################################
 
@@ -39,7 +39,7 @@ bundle agent check
 {
   classes:
       "ok" expression => "any",
-      ifvarclass => "$(test.foobar)";
+      if => "$(test.foobar)";
 
   reports:
     ok::

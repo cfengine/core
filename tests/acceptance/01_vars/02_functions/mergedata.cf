@@ -121,16 +121,16 @@ bundle agent check
   reports:
     DEBUG::
       "$(X): actual $(actual_$(X)) != $(X) expected $(expected_$(X))"
-       ifvarclass => "!ok_$(X)";
+       if => "!ok_$(X)";
 
       "$(X): actual wrap key $(actual_wrapped_key_$(X)) != $(X) expected wrapped key $(expected_wrapped_key_$(X))"
-       ifvarclass => "not_ok_wrapped_key_$(X)";
+       if => "not_ok_wrapped_key_$(X)";
 
       "$(X): actual wrap array $(actual_wrapped_array_$(X)) != $(X) expected wrapped array $(expected_wrapped_array_$(X))"
-       ifvarclass => "not_ok_wrapped_array_$(X)";
+       if => "not_ok_wrapped_array_$(X)";
 
       "$(X)+$(Y): actual $(actual_$(X)_$(Y)) != $(X)+$(Y) expected $(expected_$(X)_$(Y))"
-       ifvarclass => "!ok_$(X)_$(Y)";
+       if => "!ok_$(X)_$(Y)";
 
     ok::
       "$(this.promise_filename) Pass";

@@ -115,15 +115,15 @@ bundle agent check
   reports:
     DEBUG::
       "ok: class '$(lookfor)' was set (should be)"
-      ifvarclass => "p1_$(lookfor)";
+      if => "p1_$(lookfor)";
       "ok: class '$(lookfor)' was not set (should not be)"
-      ifvarclass => "p2_$(lookfor)";
+      if => "p2_$(lookfor)";
       "ERROR: class '$(lookfor)' WAS NOT set (should be)"
-      ifvarclass => "f1_$(lookfor)";
+      if => "f1_$(lookfor)";
       "ERROR: class '$(lookfor)' was set (should NOT be)"
-      ifvarclass => "f2_$(lookfor)";
+      if => "f2_$(lookfor)";
       "ERROR: missing variable expect['$(lookfor)']"
-      ifvarclass => "f3_$(lookfor)";
+      if => "f3_$(lookfor)";
     ok::
       "$(this.promise_filename) Pass";
     !ok::

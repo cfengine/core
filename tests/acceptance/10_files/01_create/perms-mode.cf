@@ -106,8 +106,8 @@ bundle agent check
 
   reports:
     DEBUG::
-      "Permission $(modes) worked, got $(expected[$(modes)])" ifvarclass => "ok_$(canonified[$(modes)])";
-      "Permission $(modes) failed, expected $(expected[$(modes)]) != actual $(actual[$(modes)])" ifvarclass => "!ok_$(canonified[$(modes)])";
+      "Permission $(modes) worked, got $(expected[$(modes)])" if => "ok_$(canonified[$(modes)])";
+      "Permission $(modes) failed, expected $(expected[$(modes)]) != actual $(actual[$(modes)])" if => "!ok_$(canonified[$(modes)])";
     ok::
       "$(this.promise_filename) Pass";
     !ok::

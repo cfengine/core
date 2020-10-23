@@ -34,10 +34,10 @@ bundle agent check
   reports:
     "DEBUG"::
       "array_values_str: $(test.array_values_str)"
-        ifvarclass => "!get_values_ok";
+        if => "!get_values_ok";
 
       "array_data_str: $(test.array_data_str)"
-        ifvarclass => "!array_data_ok";
+        if => "!array_data_ok";
 
     "ok"::
       "$(this.promise_filename) Pass";

@@ -94,10 +94,10 @@ bundle agent check
 
   reports:
     DEBUG::
-      "The copy worked" ifvarclass => "ok_copy";
-      "The purge worked" ifvarclass => "ok_purge";
-      "The copy failed" ifvarclass => "bad_copy";
-      "The purge failed" ifvarclass => "bad_purge";
+      "The copy worked" if => "ok_copy";
+      "The purge worked" if => "ok_purge";
+      "The copy failed" if => "bad_copy";
+      "The purge failed" if => "bad_purge";
     ok::
       "$(this.promise_filename) Pass";
     !ok::

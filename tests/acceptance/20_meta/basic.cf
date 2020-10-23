@@ -55,10 +55,10 @@ bundle agent check
   reports:
     DEBUG::
       "OK: $(tests) got $(actual[$(tests)])"
-      ifvarclass => "ok_$(tests)";
+      if => "ok_$(tests)";
 
       "FAIL: $(tests) got $(actual[$(tests)]) != $(expected[$(tests)])"
-      ifvarclass => "not_ok_$(tests)";
+      if => "not_ok_$(tests)";
 
     ok::
       "$(this.promise_filename) Pass";

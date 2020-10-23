@@ -76,10 +76,10 @@ bundle agent check
   reports:
     DEBUG::
       "DEBUG $(this.bundle): Found '$(test.classes)' that should not have been found"
-        ifvarclass => "fail_classes";
+        if => "fail_classes";
 
       "DEBUG $(this.bundle): Found the content of $(G.testfile) was not as expected"
-        ifvarclass => "fail_content";
+        if => "fail_content";
 
      fail::
        "$(this.promise_filename) FAIL";

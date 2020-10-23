@@ -46,7 +46,7 @@ bundle agent check
       "$(this.promise_filename) FAIL";
     DEBUG::
       "xxx:a_class_global_from_command is set"
-      ifvarclass => "xxx:a_class_global_from_command";
+      if => "xxx:a_class_global_from_command";
 
     DEBUG.another_class_global_from_command::
       "another_class_global_from_command is set";

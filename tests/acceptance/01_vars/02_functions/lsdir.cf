@@ -81,10 +81,10 @@ bundle agent check
   reports:
     DEBUG::
       "pattern $(expects) matches as expected: '$(expected[$(expects)])'"
-      ifvarclass => "$(expects)";
+      if => "$(expects)";
 
       "pattern $(expects) does NOT match expected: '$(test.found_string[$(expects)])' != '$(expected[$(expects)])'"
-      ifvarclass => "!$(expects)";
+      if => "!$(expects)";
 
     ok::
       "$(this.promise_filename) Pass";

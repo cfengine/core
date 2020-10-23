@@ -1,4 +1,4 @@
-# Make sure function is (not) evaluated in a promise (not) skipped via ifvarclass
+# Make sure function is (not) evaluated in a promise (not) skipped via if
 # Redmine 6577
 
 body common control
@@ -23,7 +23,7 @@ bundle agent test
       "want_file" expression => "any";
 
       "test" expression => returnszero("$(G.touch) $(G.testdir)/$(files)", "noshell"),
-          ifvarclass => "$(files)";
+          if => "$(files)";
 }
 
 bundle agent check

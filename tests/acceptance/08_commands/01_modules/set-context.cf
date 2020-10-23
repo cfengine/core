@@ -90,15 +90,15 @@ bundle agent check
   reports:
     DEBUG::
       "container $(c): $(e$(c)) != $(c$(c))"
-      ifvarclass => "!ok_c$(c)";
+      if => "!ok_c$(c)";
 
-      "context $(hello_contexts) failed" ifvarclass => "!hello_$(hello_contexts)_ok";
+      "context $(hello_contexts) failed" if => "!hello_$(hello_contexts)_ok";
 
       "test.myvar = $(test.myvar)"
-        ifvarclass => "!ok_injected_var";
+        if => "!ok_injected_var";
 
     EXTRA::
-      "context $(hello_contexts) worked" ifvarclass => "hello_$(hello_contexts)_ok";
+      "context $(hello_contexts) worked" if => "hello_$(hello_contexts)_ok";
 
     ok::
       "$(this.promise_filename) Pass";

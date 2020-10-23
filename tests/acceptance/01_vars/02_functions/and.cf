@@ -1,6 +1,6 @@
 #######################################################
 #
-# Test and() with ifvarclass in vars
+# Test and() with if in vars
 #
 #######################################################
 
@@ -39,7 +39,7 @@ bundle agent check
 
   vars:
     "var"  string => "whatever",
-    	  ifvarclass => and("foo", "bar");
+      if => and("foo", "bar");
 
   reports:
     ok::

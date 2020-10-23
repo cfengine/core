@@ -74,9 +74,9 @@ bundle agent check
   reports:
     DEBUG::
       "$(G.testdir)/$(files).gz exists as expected"
-      ifvarclass => "ok$(files)";
+      if => "ok$(files)";
       "$(G.testdir)/$(files).gz was not created!"
-      ifvarclass => "!ok$(files)";
+      if => "!ok$(files)";
     ok::
       "$(this.promise_filename) Pass";
     !ok::

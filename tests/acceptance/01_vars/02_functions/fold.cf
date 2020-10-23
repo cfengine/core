@@ -196,10 +196,10 @@ bundle agent check
   reports:
     DEBUG::
       "$(good_lists) $(measurements) check expected '$(expected[$(good_lists)][$(measurements)])' <> actual '$(test.$(measurements)_$(good_lists))'"
-      ifvarclass => "!ok_$(measurements)_$(good_lists)";
+      if => "!ok_$(measurements)_$(good_lists)";
 
       "good list $(good_lists) had no $(measurements): '$(test.$(measurements)_$(good_lists))' was not expanded"
-      ifvarclass => "no_$(measurements)_$(good_lists)";
+      if => "no_$(measurements)_$(good_lists)";
 
     ok::
       "$(this.promise_filename) Pass";

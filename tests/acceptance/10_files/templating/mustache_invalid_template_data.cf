@@ -74,7 +74,7 @@ bundle agent test
       "Rendering template file $(template_file) to $(G.testfile).output";
 
       "invalid_data defined!"
-        ifvarclass => "invalid_data_exists";
+        if => "invalid_data_exists";
 }
 
 

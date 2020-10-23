@@ -42,9 +42,9 @@ bundle agent check
 
   reports:
     DEBUG::
-      "check $(checks) was OK" ifvarclass => "ok_$(checks)";
-      "check $(checks) was not OK" ifvarclass => "!ok_$(checks).!unknown_$(checks)";
-      "check $(checks) was unknown (skipped)" ifvarclass => "unknown_$(checks)";
+      "check $(checks) was OK" if => "ok_$(checks)";
+      "check $(checks) was not OK" if => "!ok_$(checks).!unknown_$(checks)";
+      "check $(checks) was unknown (skipped)" if => "unknown_$(checks)";
 
     ok||skipped::
       "$(this.promise_filename) Pass";

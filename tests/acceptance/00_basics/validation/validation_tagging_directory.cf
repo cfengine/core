@@ -122,10 +122,10 @@ bundle agent test_tag(vary, topname, tagopt, desc)
 
     DEBUG::
       "Case $(uid): failed to $(tagopt)"
-      ifvarclass => "!tagged_$(uid)";
+      if => "!tagged_$(uid)";
 
       "Case $(uid): tagged $(tagopt)"
-      ifvarclass => "tagged_$(uid)";
+      if => "tagged_$(uid)";
 }
 
 bundle agent test_read(suffix, topname, dir)
@@ -136,18 +136,18 @@ bundle agent test_read(suffix, topname, dir)
       "uid" string => "$(topname)_$(suffix)";
 
       "v_$(uid)" data => readjson($(vf), 4k),
-      ifvarclass => "have_vf_$(uid)";
+      if => "have_vf_$(uid)";
 
       "v_$(uid)_str" string => format("%S", "v_$(uid)"),
       handle => "v_$(uid)_str",
-      ifvarclass => "have_vf_$(uid)";
+      if => "have_vf_$(uid)";
 
       "r_$(uid)" data => readjson($(rf), 4k),
-      ifvarclass => "have_rf_$(uid)";
+      if => "have_rf_$(uid)";
 
       "r_$(uid)_str" string => format("%S", "r_$(uid)"),
       handle => "r_$(uid)_str",
-      ifvarclass => "have_rf_$(uid)";
+      if => "have_rf_$(uid)";
 
   classes:
       "have_vf_$(uid)" expression => fileexists($(vf)),
@@ -160,17 +160,17 @@ bundle agent test_read(suffix, topname, dir)
     DEBUG::
       "Case $(uid): $(vf) = $(v_$(uid)_str)"
       depends_on => { "v_$(uid)_str" },
-      ifvarclass => "have_vf_$(uid)";
+      if => "have_vf_$(uid)";
 
       "Case $(uid): Missing validation file $(vf)"
-      ifvarclass => "!have_vf_$(uid)";
+      if => "!have_vf_$(uid)";
 
       "Case $(uid): $(rf) = $(r_$(uid)_str)"
       depends_on => { "r_$(uid)_str" },
-      ifvarclass => "have_rf_$(uid)";
+      if => "have_rf_$(uid)";
 
       "Case $(uid): Missing release ID file $(rf)"
-      ifvarclass => "!have_rf_$(uid)";
+      if => "!have_rf_$(uid)";
 }
 
 bundle agent check
@@ -242,16 +242,16 @@ bundle agent check
   reports:
     DEBUG::
       "Case $(tops)_$(tests): the timestamp was correct or ignored"
-      ifvarclass => "correct_timestamp_$(tops)_$(tests)";
+      if => "correct_timestamp_$(tops)_$(tests)";
 
       "Case $(tops)_$(tests): the timestamp was incorrect, actual $(test_read.v_$(tops)_$(tests)[timestamp])"
-      ifvarclass => "!correct_timestamp_$(tops)_$(tests)";
+      if => "!correct_timestamp_$(tops)_$(tests)";
 
       "Case $(tops)_$(tests): the release ID was correct ($(expected_checksum)) or ignored"
-      ifvarclass => "correct_release_$(tops)_$(tests)";
+      if => "correct_release_$(tops)_$(tests)";
 
       "Case $(tops)_$(tests): the release ID was incorrect, expected $(expected_checksum) vs. actual $(test_read.r_$(tops)_$(tests)[releaseId])"
-      ifvarclass => "!correct_release_$(tops)_$(tests)";
+      if => "!correct_release_$(tops)_$(tests)";
 
     ok::
       "$(this.promise_filename) Pass";

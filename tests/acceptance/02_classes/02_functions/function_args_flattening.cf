@@ -30,19 +30,19 @@ bundle common test
 {
   classes:
       "fail_direct" expression => "any",
-        ifvarclass => and("one", "non_existing_class");
+        if => and("one", "non_existing_class");
 
       "fail_split" expression => "any",
-        ifvarclass => and(splitstring("one,non_existing_class", ",", "20"));
+        if => and(splitstring("one,non_existing_class", ",", "20"));
 
       "pass_direct" expression => "any",
-        ifvarclass => or("one", "non_existing_class");
+        if => or("one", "non_existing_class");
 
       "pass_split" expression => "any",
-        ifvarclass => or(splitstring("one,non_existing_class", ",", "20"));
+        if => or(splitstring("one,non_existing_class", ",", "20"));
 
       "pass_split1" expression => "any",
-        ifvarclass => not(splitstring("non_existing_class", ",", "20"));
+        if => not(splitstring("non_existing_class", ",", "20"));
 }
 
 #######################################################

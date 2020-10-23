@@ -77,7 +77,7 @@ bundle agent check
       # Get the octal mode for each of the files
       "result_permoct_$(init.modes)"
         string => execresult('$(G.stat) -c %a $(G.testdir)/test_sgid/$(init.modes)', "useshell"),
-        ifvarclass => "file_$(init.modes)_reached";
+        if => "file_$(init.modes)_reached";
 
     DEBUG|DEBUG_check::
       # We collect up the classes that match our expected pattern for debug

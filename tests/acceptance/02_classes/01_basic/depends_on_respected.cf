@@ -77,31 +77,31 @@ bundle agent check
   reports:
     DEBUG::
       "'test_commands_false' was ok unexpectedly"
-        ifvarclass => "test_commands_false_ok";
+        if => "test_commands_false_ok";
 
        "'test_commands_false' was kept unexpectedly"
-        ifvarclass => "test_commands_false_kept";
+        if => "test_commands_false_kept";
 
       "'test_commands_false' was repaired unexpectedly"
-        ifvarclass => "test_commands_false_repaired";
+        if => "test_commands_false_repaired";
 
        "'test_commands_false' was not_ok as expected"
-        ifvarclass => "test_commands_false_not_ok";
+        if => "test_commands_false_not_ok";
          
        "'test_commands_false2' was ok unexpectedly"
-        ifvarclass => "test_commands_false2_ok";
+        if => "test_commands_false2_ok";
 
        "'test_commands_false2' was kept unexpectedly"
-        ifvarclass => "test_commands_false2_kept";
+        if => "test_commands_false2_kept";
 
        "'test_commands_false2' was repaired unexpectedly"
-        ifvarclass => "test_commands_false2_repaired";
+        if => "test_commands_false2_repaired";
 
        "'test_commands_false2' was not_ok as expected"
-        ifvarclass => "test_commands_false2_not_ok";
+        if => "test_commands_false2_not_ok";
   
       "'$(fail_classes)' erroneously thought 'test_commands_false' and or 'test_commands_false2' was ok aka (kept or repaired)."
-        ifvarclass => "$(fail_classes)";
+        if => "$(fail_classes)";
 
     fail::
       "$(this.promise_filename) FAIL";

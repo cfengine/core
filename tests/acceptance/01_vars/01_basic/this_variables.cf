@@ -55,7 +55,7 @@ bundle agent check
       # Fail the test if any of the files fail.
       "fail"
         usebundle => dcs_fail( $(this.promise_filename) ),
-        ifvarclass => "_fail";
+        if => "_fail";
 
     pass::
       "pass"

@@ -1,4 +1,4 @@
-# Test that function call with computed ifvarclass does not lead to incorrect
+# Test that function call with computed if does not lead to incorrect
 # use of values (Mantis #864) (Mantis #1084)
 
 body common control

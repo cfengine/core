@@ -1,5 +1,5 @@
 # fixes https://dev.cfengine.com/issues/2504 using variables in string
-# contexts when a promise has a previous ifvarclass *with a FnCall*
+# contexts when a promise has a previous if *with a FnCall*
 
 body common control
 {
@@ -17,5 +17,5 @@ bundle agent check
   reports:
     "any"::
       "$(this.promise_filename) Pass"
-      ifvarclass => and("any");
+      if => and("any");
 }

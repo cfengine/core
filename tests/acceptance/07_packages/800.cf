@@ -21,13 +21,13 @@ bundle agent test
       "a:b:c"
       package_policy => "add",
       package_method => mock,
-      ifvarclass => "!a",
+      if => "!a",
       classes => ok("a");
 
       "d:e:f"
       package_policy => "add",
       package_method => mock,
-      ifvarclass => "!d",
+      if => "!d",
       classes => ok("d");
 }
 

@@ -54,7 +54,7 @@ bundle agent check
       if => strcmp( $(observed_uid), $(desired_uid) );
 
     "$(this.promise_filename) FAIL"
-      ifvarclass => not( strcmp( $(observed_uid), $(desired_uid) ) );
+      if => not( strcmp( $(observed_uid), $(desired_uid) ) );
 
 }
 bundle agent cleanup

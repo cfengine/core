@@ -56,8 +56,8 @@ bundle agent check
     DEBUG.!ok::
       "Failed activation $(activations): '$($(activations))'";
     DEBUG::
-      "expected  : $(pass_classes)" ifvarclass => not("$(pass_classes)");
-      "unexpected: $(fail_classes)" ifvarclass => "$(fail_classes)";
+      "expected  : $(pass_classes)" if => not("$(pass_classes)");
+      "unexpected: $(fail_classes)" if => "$(fail_classes)";
     ok::
       "$(this.promise_filename) Pass";
     !ok::

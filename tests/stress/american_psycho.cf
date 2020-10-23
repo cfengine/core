@@ -177,7 +177,7 @@ bundle agent copy_many_files_to_many_files
   reports:
     DEBUG::
       "$(this.bundle): copied $(copy_from_init.copy_from_source_path)/$(knowledge.range_list).txt to /tmp/$(knowledge.range_list)"
-        ifvarclass => "$(this.bundle)_tmp_$(knowledge.range_list)_repaired";
+        if => "$(this.bundle)_tmp_$(knowledge.range_list)_repaired";
 }
 
 body classes classes_generic(x)

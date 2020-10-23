@@ -64,13 +64,13 @@ bundle agent check
   reports:
     DEBUG.fail::
       "Found $(expected_ok) defined as expected"
-        ifvarclass => "$(expected_ok)";
+        if => "$(expected_ok)";
 
       "Found $(seen_fail) which is not expected and causes the test to fail"
-        ifvarclass => "$(seen_fail)";
+        if => "$(seen_fail)";
 
       "Missing $(expected_ok) which is expected and not being defined causes the test to fail"
-        ifvarclass => "!$(expected_ok)";
+        if => "!$(expected_ok)";
 
     !fail.ok::
       "$(this.promise_filename) Pass";

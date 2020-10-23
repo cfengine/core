@@ -161,17 +161,17 @@ bundle agent check
   reports:
     EXTRA::
       "$(good_cases): as expected, '$(expected_$(good_cases))'"
-      ifvarclass => "ok_$(good_cases)";
+      if => "ok_$(good_cases)";
 
       "$(bad_cases): as expected, no variable"
-      ifvarclass => "ok_$(bad_cases)";
+      if => "ok_$(bad_cases)";
 
       #"test.actual_$(good_cases) = '$(test.actual_$(good_cases))'";
 
     DEBUG::
       "$(good_cases): NOT as expected, '$(expected_$(good_cases))' != '$(test.actual_$(good_cases))'"
-      ifvarclass => "!ok_$(good_cases)";
+      if => "!ok_$(good_cases)";
 
       "$(bad_cases): NOT as expected, has variable '$(test.actual_$(bad_cases))'"
-      ifvarclass => "!ok_$(bad_cases)";
+      if => "!ok_$(bad_cases)";
 }

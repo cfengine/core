@@ -64,8 +64,8 @@ bundle agent check
     "Expecting file: '$(expected_files)'";
 
     "Have expected classes"
-      ifvarclass => "have_expected_classes";
+      if => "have_expected_classes";
 
     "Have expected files"
-      ifvarclass => "have_expected_files";
+      if => "have_expected_files";
 }

@@ -167,16 +167,16 @@ bundle agent check
   reports:
     DEBUG::
       "$(strings) / $(algos) failed, $(test.$(strings)_$(algos)) != $($(strings)_$(algos)) (original = $(init.$(strings)))"
-      ifvarclass => "not_ok_$(strings)_$(algos)";
+      if => "not_ok_$(strings)_$(algos)";
 
       "$(strings) / $(algos) hashmatch failed $($(strings)_$(algos)) against $(G.testfile).$(strings).txt"
-      ifvarclass => "not_ok_hmatch_$(strings)_$(algos)";
+      if => "not_ok_hmatch_$(strings)_$(algos)";
 
       "$(strings) / $(algos) file_hash failed $($(strings)_$(algos)) against $(G.testfile).$(strings).txt"
-      ifvarclass => "not_ok_filehash_$(strings)_$(algos)";
+      if => "not_ok_filehash_$(strings)_$(algos)";
 
     EXTRA::
-      "$(strings) / $(algos) is OK" ifvarclass => "ok_$(strings)_$(algos)";
-      "$(strings) / $(algos) hashmatch is OK" ifvarclass => "ok_hmatch_$(strings)_$(algos)";
-      "$(strings) / $(algos) file_hash is OK" ifvarclass => "ok_filehash_$(strings)_$(algos)";
+      "$(strings) / $(algos) is OK" if => "ok_$(strings)_$(algos)";
+      "$(strings) / $(algos) hashmatch is OK" if => "ok_hmatch_$(strings)_$(algos)";
+      "$(strings) / $(algos) file_hash is OK" if => "ok_filehash_$(strings)_$(algos)";
 }

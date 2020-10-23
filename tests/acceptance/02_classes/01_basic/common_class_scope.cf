@@ -24,8 +24,8 @@ bundle common test {
       "unlocal_c" expression => "!any", scope => "bundle";
   reports:
     DEBUG::
-      "$(init.classes) defined from test" ifvarclass => "${init.classes}";
-      "$(init.classes) not defined from test" ifvarclass => "!${init.classes}";
+      "$(init.classes) defined from test" if => "${init.classes}";
+      "$(init.classes) not defined from test" if => "!${init.classes}";
 }
 
 bundle agent check {
@@ -35,8 +35,8 @@ bundle agent check {
 
   reports:
     DEBUG::
-      "$(init.classes) defined from check" ifvarclass => "${init.classes}";
-      "$(init.classes) not defined from check" ifvarclass => "!${init.classes}";
+      "$(init.classes) defined from check" if => "${init.classes}";
+      "$(init.classes) not defined from check" if => "!${init.classes}";
 
     ok::
       "${this.promise_filename} Pass";

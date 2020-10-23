@@ -61,10 +61,10 @@ bundle agent check
       "got $(G.testfile) field $(fields)=$(test.stat[$(fields)])";
 
       "got $(G.testfile) field $(expects)=$(test.stat[$(expects)]) matches expected"
-      ifvarclass => "$(expects)";
+      if => "$(expects)";
 
       "got $(G.testfile) field $(expects)=$(test.stat[$(expects)]) did NOT match expected $(expected[$(expects)])"
-      ifvarclass => "!$(expects)";
+      if => "!$(expects)";
 
     ok::
       "$(this.promise_filename) Pass";

@@ -114,8 +114,8 @@ bundle agent check
 
   reports:
     DEBUG::
-      "'$(expect)' != '$(actual)'" ifvarclass => "!ok";
-      "'$(expect)' == '$(actual)'" ifvarclass => "ok";
+      "'$(expect)' != '$(actual)'" if => "!ok";
+      "'$(expect)' == '$(actual)'" if => "ok";
       "expect: '$(expect)'";
       "actual: '$(actual)'";
     ok::

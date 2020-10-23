@@ -56,9 +56,9 @@ bundle agent check
   reports:
     DEBUG::
       "Got expected size for read of $(sizes): $(test.length_$(sizes))"
-      ifvarclass => "ok_$(sizes)";
+      if => "ok_$(sizes)";
       "Did NOT get expected size for read of $(sizes): $(test.length_$(sizes)) != expected $(expected[$(sizes)])"
-      ifvarclass => "!ok_$(sizes)";
+      if => "!ok_$(sizes)";
 
     ok::
       "$(this.promise_filename) Pass";

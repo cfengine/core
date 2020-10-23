@@ -52,10 +52,10 @@ bundle agent check
   reports:
     DEBUG::
       "OK: Expected  '$(expected)' == '$(actual)'"
-      ifvarclass => "ok";
+      if => "ok";
 
       "FAIL: Expected '$(expected)' <> '$(actual)'"
-      ifvarclass => "!ok";
+      if => "!ok";
 
     ok::
       "$(this.promise_filename) Pass";

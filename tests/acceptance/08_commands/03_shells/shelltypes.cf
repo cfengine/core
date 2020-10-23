@@ -46,7 +46,7 @@ bundle agent test
   reports:
     DEBUG::
       "$(init.shelltypes) test failed"
-      ifvarclass => "!$(init.shelltypes)";
+      if => "!$(init.shelltypes)";
 }
 
 #######################################################

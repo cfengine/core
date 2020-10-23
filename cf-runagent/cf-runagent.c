@@ -247,6 +247,7 @@ int main(int argc, char *argv[])
     PolicyDestroy(policy);
     GenericAgentFinalize(ctx, config);
 
+    CallCleanupFunctions();
     return 0;
 }
 

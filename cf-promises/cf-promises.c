@@ -497,5 +497,6 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
         DoCleanupAndExit(EXIT_FAILURE);
     }
 
+    CallCleanupFunctions();
     return config;
 }

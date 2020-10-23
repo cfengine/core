@@ -102,6 +102,23 @@ def _download_urls(urls):
 
     return paths
 
+
+def _verify_package_urls(urls):
+    verified_urls = []
+    for package_url in urls:
+        if package_url is None:
+            verified_urls.append(None)
+            continue
+
+        # Throw an error if not valid URL
+        if is_package_url(package_url):
+            verified_urls.append(package_url)
+        else:
+            user_error("Wrong package URL: {}".format(package_url))
+
+    return verified_urls
+
+
 def install(
         hubs,
         clients,
@@ -113,14 +130,18 @@ def install(
         version=None,
         demo=False,
         call_collect=False,
-        edition=None):
+        edition=None,
+        remote_download=False):
     assert hubs or clients
     assert not (hubs and clients and package)
     # These assertions are checked in main.py
 
-    # If there are URLs in any of the package strings, downlaod and replace with path:
+    # If there are URLs in any of the package strings and remote_download is FALSE, download and replace with path:
     packages = (package, hub_package, client_package)
-    package, hub_package, client_package = _download_urls(packages)
+    if remote_download:
+        package, hub_package, client_package = _verify_package_urls(packages)
+    else:
+        package, hub_package, client_package = _download_urls(packages)
 
     # Copy path from package to client/hub package:
     if not hub_package:
@@ -149,7 +170,8 @@ def install(
                 demo=demo,
                 call_collect=call_collect,
                 edition=edition,
-                show_info=show_host_info))
+                show_info=show_host_info,
+                remote_download=remote_download))
 
     errors = 0
     if hub_jobs:
@@ -169,7 +191,8 @@ def install(
             version=version,
             demo=demo,
             edition=edition,
-            show_info=show_host_info))
+            show_info=show_host_info,
+            remote_download=remote_download))
 
     if client_jobs:
         with Pool(len(client_jobs)) as clients_install_pool:

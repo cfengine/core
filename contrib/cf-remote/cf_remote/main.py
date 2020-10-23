@@ -35,9 +35,9 @@ def get_args():
     sp = subp.add_parser("install", help="Install CFEngine on the given hosts")
     sp.add_argument("--edition", "-E", choices=["community", "enterprise"],
                     help="Enterprise or community packages", type=str)
-    sp.add_argument("--package", help="Local path to package for transfer and install", type=str)
-    sp.add_argument("--hub-package", help="Local path to package for --hub", type=str)
-    sp.add_argument("--client-package", help="Local path to package for --clients", type=str)
+    sp.add_argument("--package", help="Local path to package or URL to download", type=str)
+    sp.add_argument("--hub-package", help="Local path to package or URL to download for --hub", type=str)
+    sp.add_argument("--client-package", help="Local path to package or URL to download for --clients", type=str)
     sp.add_argument("--bootstrap", "-B", help="cf-agent --bootstrap argument", type=str)
     sp.add_argument("--clients", "-c", help="Where to install client package", type=str)
     sp.add_argument("--hub", help="Where to install hub package", type=str)
@@ -45,6 +45,7 @@ def get_args():
         "--demo", help="Use defaults to make demos smoother (NOT secure)", action='store_true')
     sp.add_argument(
         "--call-collect", help="Enable call collect in --demo def.json", action='store_true')
+    sp.add_argument("--remote-download", help="Package will be downloaded directly to the target machine", action="store_true")
 
     sp = subp.add_parser("uninstall", help="Install CFEngine on the given hosts")
     sp.add_argument("--clients", "-c", help="Where to uninstall", type=str)
@@ -117,7 +118,8 @@ def run_command_with_args(command, args):
             version=args.version,
             demo=args.demo,
             call_collect=args.call_collect,
-            edition=args.edition)
+            edition=args.edition,
+            remote_download=args.remote_download)
     elif command == "uninstall":
         all_hosts = ((args.hosts or []) + (args.hub or []) + (args.clients or []))
         return commands.uninstall(all_hosts)

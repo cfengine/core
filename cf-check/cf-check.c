@@ -6,6 +6,7 @@
 #include <string_lib.h>
 #include <logging.h>
 #include <man.h>
+#include <cleanup.h>            /* CallCleanupFunctions() */
 
 static void print_version()
 {
@@ -125,7 +126,9 @@ int main(int argc, const char *const *argv)
     if (StringEndsWith(argv[0], "lmdump"))
     {
         // Compatibility mode; act like lmdump if symlinked or renamed:
-        return lmdump_main(argc, argv);
+        int ret = lmdump_main(argc, argv);
+        CallCleanupFunctions();
+        return ret;
     }
 
     // When run separately it makes sense for cf-check to have INFO messages
@@ -137,6 +140,7 @@ int main(int argc, const char *const *argv)
     {
         print_help();
         Log(LOG_LEVEL_ERR, "No command given");
+        CallCleanupFunctions();
         return EXIT_FAILURE;
     }
 
@@ -144,7 +148,7 @@ int main(int argc, const char *const *argv)
     int start_index = 1;
     const char *optstr = "+hMg:dvI"; // + means stop for non opt arg. :)
     while ((c = getopt_long(argc, (char *const *) argv, optstr, OPTIONS, &start_index))
-            != -1)
+           != -1)
     {
         switch (c)
         {
@@ -171,12 +175,14 @@ int main(int argc, const char *const *argv)
             case 'V':
             {
                 print_version();
+                CallCleanupFunctions();
                 return EXIT_SUCCESS;
                 break;
             }
             case 'h':
             {
                 print_help();
+                CallCleanupFunctions();
                 return EXIT_SUCCESS;
                 break;
             }
@@ -189,11 +195,13 @@ int main(int argc, const char *const *argv)
                              OPTIONS, HINTS,
                              true);
                 FileWriterDetach(out);
+                CallCleanupFunctions();
                 return EXIT_SUCCESS;
                 break;
             }
             default:
             {
+                CallCleanupFunctions();
                 return EXIT_FAILURE;
                 break;
             }
@@ -205,30 +213,41 @@ int main(int argc, const char *const *argv)
 
     if (StringEqual_IgnoreCase(command, "lmdump"))
     {
-        return lmdump_main(cmd_argc, cmd_argv);
+        int ret = lmdump_main(cmd_argc, cmd_argv);
+        CallCleanupFunctions();
+        return ret;
     }
     if (StringEqual_IgnoreCase(command, "dump"))
     {
-        return dump_main(cmd_argc, cmd_argv);
+        int ret = dump_main(cmd_argc, cmd_argv);
+        CallCleanupFunctions();
+        return ret;
     }
     if (StringEqual_IgnoreCase(command, "diagnose"))
     {
-        return diagnose_main(cmd_argc, cmd_argv);
+        int ret = diagnose_main(cmd_argc, cmd_argv);
+        CallCleanupFunctions();
+        return ret;
     }
     if (StringEqual_IgnoreCase(command, "backup"))
     {
-        return backup_main(cmd_argc, cmd_argv);
+        int ret = backup_main(cmd_argc, cmd_argv);
+        CallCleanupFunctions();
+        return ret;
     }
     if (StringEqual_IgnoreCase(command, "repair") ||
         StringEqual_IgnoreCase(command, "remediate"))
     {
-        return repair_main(cmd_argc, cmd_argv);
+        int ret = repair_main(cmd_argc, cmd_argv);
+        CallCleanupFunctions();
+        return ret;
     }
     if (StringEqual_IgnoreCase(command, "help"))
     {
         if (cmd_argc > 2)
         {
             Log(LOG_LEVEL_ERR, "help takes exactly 0 or 1 arguments");
+            CallCleanupFunctions();
             return EXIT_FAILURE;
         }
         else if (cmd_argc <= 1)
@@ -240,15 +259,18 @@ int main(int argc, const char *const *argv)
             assert(cmd_argc == 2);
             CFCheckHelpTopic(cmd_argv[1]);
         }
+        CallCleanupFunctions();
         return EXIT_SUCCESS;
     }
     if (StringEqual_IgnoreCase(command, "version"))
     {
         print_version();
+        CallCleanupFunctions();
         return EXIT_SUCCESS;
     }
 
     print_help();
     Log(LOG_LEVEL_ERR, "Unrecognized command: '%s'", command);
+    CallCleanupFunctions();
     return EXIT_FAILURE;
 }

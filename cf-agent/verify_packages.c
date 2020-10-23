@@ -195,7 +195,7 @@ PromiseResult VerifyPackagesPromise(EvalContext *ctx, const Promise *pp)
             break;
 
         case PACKAGE_PROMISE_TYPE_OLD:
-            Log(LOG_LEVEL_NOTICE,
+            Log(LOG_LEVEL_VERBOSE,
                 "Using old package promise. Please note that this old "
                 "implementation is being phased out. The old "
                 "implementation will continue to work, but forward development "

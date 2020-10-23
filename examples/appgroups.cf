@@ -98,7 +98,7 @@ bundle agent appgroups(name, g)
       "cname" string => canonify($(name));
 
       "$(cname)_grouplist[$(groups_$(apps))]" string => "1",
-      ifvarclass => "have_app_$(apps)";
+      if => "have_app_$(apps)";
 
       "$(cname)_grouplist_slist" slist => getvalues("$(cname)_grouplist");
 
@@ -118,11 +118,11 @@ bundle agent appgroups(name, g)
 
       # stage (3)
       "$(this.bundle): $(name) is assigned $(apps)"
-      ifvarclass => "have_app_$(apps)";
+      if => "have_app_$(apps)";
 
       # stage (4)
       "$(this.bundle): all groups for $(name) = $(groups_$(apps))"
-       ifvarclass => "have_group_$(groups_$(apps))";
+       if => "have_group_$(groups_$(apps))";
 
       # stage (5)
     have_group::

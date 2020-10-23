@@ -21,7 +21,7 @@ bundle agent main
       "my_illegal_class is defined"
         if => canonify("my-illegal-class");
 
-      # Note, ifvarclass takes expressisons, you couldn't do that if it were
+      # Note, if takes expressisons, you couldn't do that if it were
       # automatically canonified. Here I canonify the string using with, and use
       # it as part of the expression which contains an invalid classcharacter, but
       # its desireable for constructing expressions.

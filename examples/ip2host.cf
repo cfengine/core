@@ -36,7 +36,7 @@ bundle agent reverse_lookup
 
   reports:
     _cfe_output_testing::
-      "we got local4" ifvarclass => isvariable("local4");
+      "we got local4" if => isvariable("local4");
 
     !_cfe_output_testing::
       "local4 is $(local4)";

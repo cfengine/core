@@ -44,6 +44,6 @@ bundle agent process_restart
   commands:
 
       "/var/cfengine/bin/$(component)"
-      ifvarclass => canonify("start_$(component)");
+      if => canonify("start_$(component)");
 
 }

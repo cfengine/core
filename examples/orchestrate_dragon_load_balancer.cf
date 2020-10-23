@@ -133,7 +133,7 @@ bundle agent upgrade_host(predecessor,satellite,method)
       comment => "Unleash the dragon",
       rename => to("/tmp/enter_the_dragon"),
       classes => if_repaired("dispatch_dragon_$(satellite)"),
-      ifvarclass => "$(dragons_lair)";
+      if => "$(dragons_lair)";
 
       # if we are the dragon's lair, welcome the dragon back, shooed from the satellite
 
@@ -142,7 +142,7 @@ bundle agent upgrade_host(predecessor,satellite,method)
       comment => "Returning from a visit to a satellite",
       copy_from => secure_cp("/tmp/shoo_dragon_$(predecessor)","$(predecessor)"),
       classes => if_repaired("dispatch_dragon_$(satellite)"),
-      ifvarclass => "$(dragons_lair)";
+      if => "$(dragons_lair)";
 
       # If we are a satellite, receive the dragon from its lair
 
@@ -150,7 +150,7 @@ bundle agent upgrade_host(predecessor,satellite,method)
       comment => "Wait for our cue or relay/conductor baton",
       copy_from => secure_cp("/tmp/dragon_$(satellite)","$(dragons_lair)"),
       classes => if_repaired("cue_action_on_$(satellite)"),
-      ifvarclass => "$(satellite)";
+      if => "$(satellite)";
 
   methods:
 
@@ -158,13 +158,13 @@ bundle agent upgrade_host(predecessor,satellite,method)
       comment => "Edit the load balancer?",
       usebundle => next_host("$(satellite)","$(predecessor)"),
       classes => if_repaired("send_the_dragon_to_$(satellite)"),
-      ifvarclass => "dispatch_dragon_$(satellite)";
+      if => "dispatch_dragon_$(satellite)";
 
       "dragon visits"
       comment => "One off activity that the nodes carry out while the dragon visits",
       usebundle => $(method)("$(satellite)"),
       classes => if_repaired("send_the_dragon_back_from_$(satellite)"),
-      ifvarclass => "cue_action_on_$(satellite)";
+      if => "cue_action_on_$(satellite)";
 
 
   files:
@@ -175,7 +175,7 @@ bundle agent upgrade_host(predecessor,satellite,method)
       create => "true",
       comment => "Add our signature to the dragon's tail",
       edit_line => sign_visitor_book("Dragon returned from $(predecessor)"),
-      ifvarclass => "send_the_dragon_to_$(satellite)";
+      if => "send_the_dragon_to_$(satellite)";
 
       # Satellite signs the book and shoos dragon for hub to collect
 
@@ -183,12 +183,12 @@ bundle agent upgrade_host(predecessor,satellite,method)
       create => "true",
       comment => "Add our signature to the dragon's tail",
       edit_line => sign_visitor_book("Dragon visited $(satellite) and did: $(method)"),
-      ifvarclass => "send_the_dragon_back_from_$(satellite)";
+      if => "send_the_dragon_back_from_$(satellite)";
 
   reports:
 
       "Done $(satellite)"
-      ifvarclass => "$(satellite)";
+      if => "$(satellite)";
 }
 
 ############################################################
@@ -215,7 +215,7 @@ bundle agent next_host(name,pred)
       "Returned from $(pred), heading out to $(name)";
 
       " X Restoring $(pred) and switching new dragon's target $(name)"
-      ifvarclass => "reload_switch_$(name)";
+      if => "reload_switch_$(name)";
 }
 
 ############################################################
@@ -274,7 +274,7 @@ bundle edit_line restore_and_comment(name,pred)
 
       "The state of the switch was:"
       printfile => visitors_book("/tmp/switch_file"),
-      ifvarclass => "show_switch_$(name)";
+      if => "show_switch_$(name)";
 
 
 }

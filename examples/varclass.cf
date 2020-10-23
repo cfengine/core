@@ -37,12 +37,12 @@ bundle agent example
 
       "/bin/echo This is linux"
 
-      ifvarclass => "linux";
+      if => "linux";
 
 
       "/bin/echo This is solaris"
 
-      ifvarclass => "solaris";
+      if => "solaris";
 
 }
 

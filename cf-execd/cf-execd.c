@@ -176,6 +176,7 @@ int main(int argc, char *argv[])
     GenericAgentFinalize(ctx, config);
     ExecConfigDestroy(exec_config);
     ExecdConfigDestroy(execd_config);
+    CallCleanupFunctions();
     return 0;
 }
 

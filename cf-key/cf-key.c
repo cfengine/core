@@ -151,11 +151,13 @@ int main(int argc, char *argv[])
     {
         SetupSignalsForCfKey(handleShowKeysSignal);
         ShowLastSeenHosts(!NO_TRUNCATE);
+        CallCleanupFunctions();
         return 0;
     }
 
     if (print_digest_arg)
     {
+        CallCleanupFunctions();
         return PrintDigest(print_digest_arg);
     }
 
@@ -182,17 +184,20 @@ int main(int argc, char *argv[])
             if (status == 0 || status == 1)
             {
                 Log (LOG_LEVEL_VERBOSE,
-                    "Forced removal of entry '%s' was successful",
-                    remove_keys_host);
+                     "Forced removal of entry '%s' was successful",
+                     remove_keys_host);
+                CallCleanupFunctions();
                 return 0;
             }
         }
+        CallCleanupFunctions();
         return status;
     }
 
     if(LICENSE_INSTALL)
     {
         bool success = LicenseInstall(LICENSE_SOURCE);
+        CallCleanupFunctions();
         return success ? 0 : 1;
     }
 
@@ -214,6 +219,7 @@ int main(int argc, char *argv[])
         bool ret = TrustKey(filename, ipaddr, username);
 
         free(arg);
+        CallCleanupFunctions();
         return ret ? EXIT_SUCCESS : EXIT_FAILURE;
     }
 
@@ -237,6 +243,7 @@ int main(int argc, char *argv[])
 
     GenericAgentFinalize(ctx, config);
 
+    CallCleanupFunctions();
     return ret ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 

@@ -320,7 +320,17 @@ static Seq *PromiseModule_ReceiveHeader(PromiseModule *module)
 
     // Read empty line:
     bytes = getline(&line, &size, module->output);
-    assert(bytes == 1 && line[0] == '\n');
+    if (bytes != 1 || line[0] != '\n')
+    {
+        Log(LOG_LEVEL_ERR,
+            "Promise module '%s %s' failed to send empty line after header: '%s'",
+            module->interpreter,
+            module->path,
+            line);
+        SeqDestroy(header);
+        free(line);
+        return NULL;
+    }
 
     free(line);
     return header;
@@ -731,6 +741,12 @@ PromiseResult EvaluateCustomPromise(EvalContext *ctx, const Promise *pp)
     // evaluation
     PromiseModule *module = PromiseModule_Start(interpreter, path);
     PromiseResult result;
+
+    if (module == NULL)
+    {
+        // Error logged in PromiseModule_Start()
+        return PROMISE_RESULT_FAIL;
+    }
 
     // TODO: Do validation earlier (cf-promises --full-check)
     bool valid = PromiseModule_Validate(module, pp);

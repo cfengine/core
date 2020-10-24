@@ -350,6 +350,25 @@ static void PromiseModule_DestroyInternal(PromiseModule *module)
 
 static PromiseModule *PromiseModule_Start(char *interpreter, char *path)
 {
+    assert(interpreter != NULL);
+    assert(path != NULL);
+
+    if (access(interpreter, X_OK) != 0)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Promise module interpreter '%s' is not an executable file",
+            interpreter);
+        return NULL;
+    }
+
+    if (access(path, F_OK) != 0)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Promise module '%s' does not exist",
+            path);
+        return NULL;
+    }
+
     PromiseModule *module = xcalloc(1, sizeof(PromiseModule));
 
     module->interpreter = interpreter;

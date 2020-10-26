@@ -1,0 +1,235 @@
+######################################################
+#
+# Test that or() behaves as expected
+#
+#####################################################
+body common control
+{
+    inputs => { "../../default.cf.sub" };
+    bundlesequence  => { default("$(this.promise_filename)") };
+    version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+    "description" -> { "CFE-3470" }
+      string => "Test that or() behaves as expected";
+
+  vars:
+    "f" # false
+      string => "(cfengine.(!cfengine))";
+    "T" # true, uppercase to be more different visually
+      string => "(cfengine|(!cfengine))";
+    "f_name"
+      string => "f";
+    "T_name"
+      string => "T";
+    "f_name_name"
+      string => "f_name";
+    "T_name_name"
+      string => "T_name";
+    "many_true"
+      slist => {
+        "any",
+        "$(T)",
+        concat(not(or("$(f)"))),
+        "(any.cfengine)",
+        concat(not(or())),
+        concat(not(or(or()))),
+    };
+    "many_false"
+      slist => {
+        "(!any)",
+        "$(f)",
+        concat(or(not("$(T)"))),
+        "(any.!cfengine)",
+        concat(not("any")),
+        concat(or()),
+      };
+    "many_both"
+      slist => { @(many_true), @(many_false) };
+
+  classes:
+
+    # All elements should be true, fail if one is false:
+    "ok"
+      scope => "namespace",
+      and => {
+        # Sanity check:
+        "any",
+        "cfengine",
+
+        # or() with 0 arguments should default to false:
+        strcmp("!any", or()),
+
+        # or() with 1 static string:
+        strcmp("any", or("any")),
+        strcmp("any", or("cfengine")),
+        strcmp("any", or("!(!cfengine)")),
+
+        # or() with 1 string with variable expansion(s):
+        strcmp("any", or("$(T)")),
+        strcmp("any", or("!$(f)")),
+        strcmp("any", or("$(T).any")),
+        strcmp("any", or("$(T).!(!any)")),
+        strcmp("any", or("any.$(T)")),
+        strcmp("any", or("!(!any).$(T)")),
+        strcmp("any", or("any|$(f)")),
+        strcmp("any", or("!(!any)|$(f)")),
+        strcmp("any", or("$(T)|$(f)")),
+        strcmp("any", or("$(f)|$(T)")),
+
+        # or() with slist:
+        # Careful, if there are expressions in list (using | operator)
+        # they should be parenthesized for this to work:
+        strcmp("any", or(join(".", many_true))),
+        strcmp("any", or(join("|", many_true))),
+        strcmp("any", or(join("|", many_both))),
+        strcmp("!any", or(join(".", many_false))),
+        strcmp("!any", or(join("|", many_false))),
+        strcmp("!any", or(join(".", many_both))),
+
+        # or() with 1 function call as argument:
+        strcmp("any", or(or("any"))),
+        strcmp("any", or(or("cfengine"))),
+        strcmp("!any", or("!cfengine")),
+        strcmp("!any", or(not("cfengine"))),
+        strcmp("!any", or("$(f)")),
+        strcmp("!any", or(not("$(T)"))),
+        strcmp("any", or(strcmp("cfengine", "cfengine"))),
+        strcmp("any", or(strcmp("any", not("$(f)")))),
+
+        # or() with 2 arguments:
+        strcmp("any", or("any", "cfengine")),
+        strcmp("any", or("any", "!any")),
+        strcmp("any", or("!any", "any")),
+        strcmp("any", or("!(!any)", "!(!cfengine)")),
+        strcmp("any", or("$(T)", "$(T)")),
+        strcmp("any", or("$(T)", "$(f)")),
+        strcmp("any", or("$(T)", "!$(f)")),
+        strcmp("any", or("$(T)", not("$(f)"))),
+        strcmp("any", or(not("$(f)"), not("$(f)"))),
+
+        # or() with 3+ arguments (strings):
+        strcmp("any", or("any", "any", "any")),
+        strcmp("any", or("any", "any", "any", "any")),
+        strcmp("any", or("any", "any", "any", "any", "any")),
+        strcmp("any", or("any", "any", "any", "any", "any", "any")),
+        strcmp("any", or("any", "any", "any", "any", "any", "!any")),
+        strcmp("any", or("any", "any", "any", "any", "!any", "!any")),
+        strcmp("any", or("any", "any", "any", "!any", "!any", "!any")),
+        strcmp("any", or("any", "any", "!any", "!any", "!any", "!any")),
+        strcmp("any", or("any", "!any", "!any", "!any", "!any", "!any")),
+        strcmp("any", or("!any", "!any", "!any", "!any", "!any", "any")),
+        strcmp("any", or("!any", "!any", "!any", "!any", "any", "any")),
+        strcmp("any", or("!any", "!any", "!any", "any", "any", "any")),
+        strcmp("any", or("!any", "!any", "any", "any", "any", "any")),
+        strcmp("any", or("!any", "any", "any", "any", "any", "any")),
+        strcmp("any", or("$(T)", "$(T)", "$(T)")),
+        strcmp("any", or("$(T)", "$(T)", "$(T)", "$(T)")),
+        strcmp("any", or("$(T)", "$(T)", "$(T)", "$(T)", "$(T)")),
+        strcmp("any", or("$(T)", "$(T)", "$(T)", "$(T)", "$(T)", "$(T)")),
+        strcmp("any", or("$(T)", "$(T)", "$(T)", "$(T)", "$(T)", "$(f)")),
+        strcmp("any", or("$(T)", "$(T)", "$(T)", "$(T)", "$(f)", "$(f)")),
+        strcmp("any", or("$(T)", "$(T)", "$(T)", "$(f)", "$(f)", "$(f)")),
+        strcmp("any", or("$(T)", "$(T)", "$(f)", "$(f)", "$(f)", "$(f)")),
+        strcmp("any", or("$(T)", "$(f)", "$(f)", "$(f)", "$(f)", "$(f)")),
+        strcmp("any", or("$(f)", "$(f)", "$(f)", "$(f)", "$(f)", "$(T)")),
+        strcmp("any", or("$(f)", "$(f)", "$(f)", "$(f)", "$(T)", "$(T)")),
+        strcmp("any", or("$(f)", "$(f)", "$(f)", "$(T)", "$(T)", "$(T)")),
+        strcmp("any", or("$(f)", "$(f)", "$(T)", "$(T)", "$(T)", "$(T)")),
+        strcmp("any", or("$(f)", "$(T)", "$(T)", "$(T)", "$(T)", "$(T)")),
+
+        # or() with 3+ function calls:
+        strcmp("any", or(not("any"), not("any"), not("!any"))),
+        strcmp("any", or(not("any"), not("any"), not("any"), not("!any"))),
+        strcmp("any", or(not("any"), not("any"), not("any"), not("any"), not("!any"))),
+        strcmp("any", or(not("any"), not("any"), not("any"), not("any"), not("any"), not("!any"))),
+        strcmp("any", or(not("$(T)"), not("$(T)"), not("$(f)"))),
+        strcmp("any", or(not("$(T)"), not("$(T)"), not("$(T)"), not("$(f)"))),
+        strcmp("any", or(not("$(T)"), not("$(T)"), not("$(T)"), not("$(T)"), not("$(f)"))),
+        strcmp("any", or(not("$(T)"), not("$(T)"), not("$(T)"), not("$(T)"), not("$(T)"), not("$(f)"))),
+
+        # or() with deep nesting:
+        strcmp("!any", or(or())),
+        strcmp("!any", or(or(or()))),
+        strcmp("!any", or(or(or(or())))),
+        strcmp("!any", or(or(or(or(or()))))),
+        strcmp("!any", or(or(or(or(or(or())))))),
+        strcmp("any", or(or(or(or(or(or("any"))))))),
+        strcmp("any", or(or(or(or(or(or("any", "cfengine"))))))),
+
+        # Double expansion:
+        strcmp("any", or("$($(T_name))")),
+        strcmp("any", or("$($(f_name))", "$($(T_name))")),
+        strcmp("any", or("$($(f_name))", "$($(f_name))", "$($(T_name))")),
+        strcmp("any", or("!$($(T_name))", "!$($(f_name))")),
+        strcmp("any", or("!$($(T_name))", "!$($(T_name))", "!$($(f_name))")),
+        strcmp("any", or(not("$($(T_name))"), not("$($(f_name))"))),
+
+        # Triple expansion:
+        strcmp("any", or("$($($(T_name_name)))")),
+        strcmp("any", or("$($($(f_name_name)))", "$($($(T_name_name)))")),
+        strcmp("any", or("$($($(f_name_name)))", "$($($(f_name_name)))", "$($($(T_name_name)))")),
+        strcmp("any", or("!$($(T_name_name))", "!$($(f_name_name))")),
+        strcmp("any", or("!$($(T_name_name))", "!$($(T_name_name))", "!$($(f_name_name))")),
+        strcmp("any", or(not("$($(T_name_name))"), not("$($(f_name_name))"))),
+
+        # or() should always return any or !any,
+        # this is important for backwards compatibility:
+        strcmp(or("any"), "any"),
+        strcmp(or("!any"), "!any"),
+        strcmp(or("!cfengine"), "!any"),
+        strcmp(or("!(cfengine|!cfengine)"), "!any"),
+        strcmp(or("$(T)"), "any"),
+        strcmp(or("$(f)"), "!any"),
+        strcmp(or("$(T)", "$(T)"), "any"),
+        strcmp(or("$(T)", "$(f)"), "any"),
+        strcmp(or("$(f)", "$(T)"), "any"),
+        strcmp(or("$(f)", "$(f)"), "!any"),
+      };
+
+    # Cases where or() should return false (fail if one is true):
+    "fail_false"
+      or => {
+        strcmp("any", or("$(f)")),
+        strcmp("any", or("$(f)", "$(f)")),
+        strcmp("any", or("$(f)", "$(f)", "$(f)")),
+        strcmp("any", or("$(f)", "$(f)", "$(f)", "$(f)")),
+        strcmp("any", or("$(f)", "$(f)", "$(f)", "$(f)", "$(f)")),
+        strcmp("any", or("$(f)", "$(f)", "$(f)", "$(f)", "$(f)", "$(f)")),
+        strcmp("any", or("$(f)", "$(f)", "$(f)", "$(f)", "$(f)", "$(f)", "$(f)")),
+        strcmp("any", or("$(f)", "$(f)", "$(f)", "$(f)", "$(f)", "$(f)", "$(f)", "$(f)")),
+      };
+    # Should be skipped because of unresolved variable:
+    "fail_unresolved"
+      and => {
+        "any",
+        strcmp("any", or("$(unresolved_var)")),
+      };
+    # Check that it's really skipped because of unresolved,
+    # and not that it accidentally becomes false:
+    "fail_not_of_unresolved"
+      and => {
+        "any",
+        strcmp("any", or(not("$(unresolved_var)"))),
+      };
+    "fail"
+      scope => "namespace",
+      expression => "fail_false|fail_unresolved|fail_not_of_unresolved";
+}
+
+#######################################################
+
+bundle agent check
+{
+
+  reports:
+    ok.(!fail)::
+      "$(this.promise_filename) Pass";
+    (!ok)|fail::
+      "$(this.promise_filename) FAIL";
+}

@@ -1,49 +1,219 @@
-#######################################################
+######################################################
 #
-# Test and() with ifvarclass in vars
+# Test that and() behaves as expected
 #
-#######################################################
-
+#####################################################
 body common control
 {
-      inputs => { "../../default.cf.sub" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
-}
-
-#######################################################
-
-bundle agent init
-{
-vars:
-    "dummy" string => "dummy";
+    inputs => { "../../default.cf.sub" };
+    bundlesequence  => { default("$(this.promise_filename)") };
+    version => "1.0";
 }
 
 #######################################################
 
 bundle agent test
 {
-vars:
-    "dummy" string => "dummy";
-}
+  meta:
+    "description" -> { "CFE-3470" }
+      string => "Test that and() behaves as expected";
 
+  vars:
+    "f" # false
+      string => "(cfengine.(!cfengine))";
+    "T" # true, uppercase to be more different visually
+      string => "(cfengine|(!cfengine))";
+    "f_name"
+      string => "f";
+    "T_name"
+      string => "T";
+    "f_name_name"
+      string => "f_name";
+    "T_name_name"
+      string => "T_name";
+    "many_true"
+      slist => {
+        "any",
+        "$(T)",
+        concat(not(and("$(f)"))),
+        "(any.cfengine)",
+        concat(and()),
+        concat(and(and())),
+    };
+    "many_false"
+      slist => {
+        "(!any)",
+        "$(f)",
+        concat(and(not("$(T)"))),
+        "(any.!cfengine)",
+        concat(not("any")),
+        concat(not(and())),
+      };
+    "many_both"
+      slist => { @(many_true), @(many_false) };
+
+  classes:
+
+    # All elements should be true, fail if one is false:
+    "ok"
+      scope => "namespace",
+      and => {
+        # Sanity check:
+        "any",
+        "cfengine",
+
+        # and() with 0 arguments should default to true:
+        strcmp("any", and()),
+
+        # and() with 1 static string:
+        strcmp("any", and("any")),
+        strcmp("any", and("cfengine")),
+        strcmp("any", and("!(!cfengine)")),
+
+        # and() with 1 string with variable expansion(s):
+        strcmp("any", and("$(T)")),
+        strcmp("any", and("!$(f)")),
+        strcmp("any", and("$(T).any")),
+        strcmp("any", and("$(T).!(!any)")),
+        strcmp("any", and("any.$(T)")),
+        strcmp("any", and("!(!any).$(T)")),
+        strcmp("any", and("any|$(f)")),
+        strcmp("any", and("!(!any)|$(f)")),
+        strcmp("any", and("$(T)|$(f)")),
+        strcmp("any", and("$(f)|$(T)")),
+
+        # and() with slist:
+        # Careful, if there are expressions in list (using | operator)
+        # they should be parenthesized for this to work:
+        strcmp("any", and(join(".", many_true))),
+        strcmp("any", and(join("|", many_true))),
+        strcmp("any", and(join("|", many_both))),
+        strcmp("any", and(not(join(".", many_false)))),
+        strcmp("any", and(not(join("|", many_false)))),
+        strcmp("any", and(not(join(".", many_both)))),
+
+        # and() with 1 function call as argument:
+        strcmp("any", and(and("any"))),
+        strcmp("any", and(and("cfengine"))),
+        strcmp("any", and(not("!cfengine"))),
+        strcmp("any", and(not(not("cfengine")))),
+        strcmp("any", and(not("$(f)"))),
+        strcmp("any", and(not(not("$(T)")))),
+        strcmp("any", and(strcmp("cfengine", "cfengine"))),
+        strcmp("any", and(strcmp("any", not("$(f)")))),
+
+        # and() with 2 arguments:
+        strcmp("any", and("any", "cfengine")),
+        strcmp("any", and("!(!any)", "!(!cfengine)")),
+        strcmp("any", and("$(T)", "$(T)")),
+        strcmp("any", and("$(T)", "!$(f)")),
+        strcmp("any", and("$(T)", not("$(f)"))),
+        strcmp("any", and(not("$(f)"), not("$(f)"))),
+
+        # and() with 3+ arguments (strings):
+        strcmp("any", and("any", "any", "any")),
+        strcmp("any", and("any", "any", "any", "any")),
+        strcmp("any", and("any", "any", "any", "any", "any")),
+        strcmp("any", and("any", "any", "any", "any", "any", "any")),
+        strcmp("any", and("$(T)", "$(T)", "$(T)")),
+        strcmp("any", and("$(T)", "$(T)", "$(T)", "$(T)")),
+        strcmp("any", and("$(T)", "$(T)", "$(T)", "$(T)", "$(T)")),
+        strcmp("any", and("$(T)", "$(T)", "$(T)", "$(T)", "$(T)", "$(T)")),
+
+        # and() with 3+ function calls:
+        strcmp("any", and(not("!any"), not("!any"), not("!any"))),
+        strcmp("any", and(not("!any"), not("!any"), not("!any"), not("!any"))),
+        strcmp("any", and(not("!any"), not("!any"), not("!any"), not("!any"), not("!any"))),
+        strcmp("any", and(not("!any"), not("!any"), not("!any"), not("!any"), not("!any"), not("!any"))),
+        strcmp("any", and(not("$(f)"), not("$(f)"), not("$(f)"))),
+        strcmp("any", and(not("$(f)"), not("$(f)"), not("$(f)"), not("$(f)"))),
+        strcmp("any", and(not("$(f)"), not("$(f)"), not("$(f)"), not("$(f)"), not("$(f)"))),
+        strcmp("any", and(not("$(f)"), not("$(f)"), not("$(f)"), not("$(f)"), not("$(f)"), not("$(f)"))),
+
+        # and() with deep nesting:
+        strcmp("any", and(and())),
+        strcmp("any", and(and(and()))),
+        strcmp("any", and(and(and(and())))),
+        strcmp("any", and(and(and(and(and()))))),
+        strcmp("any", and(and(and(and(and(and())))))),
+        strcmp("any", and(and(and(and(and(and("any"))))))),
+        strcmp("any", and(and(and(and(and(and("any", "cfengine"))))))),
+
+        # Double expansion:
+        strcmp("any", and("$($(T_name))")),
+        strcmp("any", and("$($(T_name))", "$($(T_name))")),
+        strcmp("any", and("$($(T_name))", "$($(T_name))", "$($(T_name))")),
+        strcmp("any", and("!$($(f_name))", "!$($(f_name))")),
+        strcmp("any", and("!$($(f_name))", "!$($(f_name))", "!$($(f_name))")),
+        strcmp("any", and(not("$($(f_name))"), not("$($(f_name))"))),
+
+        # Triple expansion:
+        strcmp("any", and("$($($(T_name_name)))")),
+        strcmp("any", and("$($($(T_name_name)))", "$($($(T_name_name)))")),
+        strcmp("any", and("$($($(T_name_name)))", "$($($(T_name_name)))", "$($($(T_name_name)))")),
+        strcmp("any", and("!$($(f_name_name))", "!$($(f_name_name))")),
+        strcmp("any", and("!$($(f_name_name))", "!$($(f_name_name))", "!$($(f_name_name))")),
+        strcmp("any", and(not("$($(f_name_name))"), not("$($(f_name_name))"))),
+
+        # and() should always return any or !any,
+        # this is important for backwards compatibility:
+        strcmp(and("any"), "any"),
+        strcmp(and("!any"), "!any"),
+        strcmp(and("!cfengine"), "!any"),
+        strcmp(and("!(cfengine.!cfengine)"), "any"),
+        strcmp(and("$(T)"), "any"),
+        strcmp(and("$(f)"), "!any"),
+        strcmp(and("$(T)", "$(T)"), "any"),
+        strcmp(and("$(T)", "$(f)"), "!any"),
+        strcmp(and("$(f)", "$(T)"), "!any"),
+        strcmp(and("$(f)", "$(f)"), "!any"),
+      };
+
+    # Cases where and() should return false (fail if one is true):
+    "fail_false"
+      or => {
+        strcmp("any", and("$(f)")),
+        strcmp("any", and("$(T)", "$(f)")),
+        strcmp("any", and("$(T)", "$(T)", "$(f)")),
+        strcmp("any", and("$(T)", "$(T)", "$(T)", "$(f)")),
+        strcmp("any", and("$(T)", "$(T)", "$(T)", "$(T)", "$(f)")),
+        strcmp("any", and("$(T)", "$(T)", "$(T)", "$(T)", "$(T)", "$(f)")),
+        strcmp("any", and("$(T)", "$(T)", "$(T)", "$(T)", "$(T)", "$(T)", "$(f)")),
+        strcmp("any", and("$(T)", "$(T)", "$(T)", "$(T)", "$(T)", "$(T)", "$(T)", "$(f)")),
+        strcmp("any", and("$(T)", "$(T)", "$(T)", "$(T)", "$(T)", "$(T)", "$(f)", "$(T)")),
+        strcmp("any", and("$(T)", "$(T)", "$(T)", "$(T)", "$(T)", "$(f)", "$(T)", "$(T)")),
+        strcmp("any", and("$(T)", "$(T)", "$(T)", "$(T)", "$(f)", "$(T)", "$(T)", "$(T)")),
+        strcmp("any", and("$(T)", "$(T)", "$(T)", "$(f)", "$(T)", "$(T)", "$(T)", "$(T)")),
+        strcmp("any", and("$(T)", "$(T)", "$(f)", "$(T)", "$(T)", "$(T)", "$(T)", "$(T)")),
+        strcmp("any", and("$(T)", "$(f)", "$(T)", "$(T)", "$(T)", "$(T)", "$(T)", "$(T)")),
+        strcmp("any", and("$(f)", "$(T)", "$(T)", "$(T)", "$(T)", "$(T)", "$(T)", "$(T)")),
+      };
+    # Should be skipped because of unresolved variable:
+    "fail_unresolved"
+      and => {
+        "any",
+        strcmp("any", and("$(unresolved_var)")),
+      };
+    # Check that it's really skipped because of unresolved,
+    # and not that it accidentally becomes false:
+    "fail_not_of_unresolved"
+      and => {
+        "any",
+        strcmp("any", and(not("$(unresolved_var)"))),
+      };
+    "fail"
+      scope => "namespace",
+      expression => "fail_false|fail_unresolved|fail_not_of_unresolved";
+}
 
 #######################################################
 
 bundle agent check
 {
-  classes:
-    "foo" expression => "any";
-    "bar" expression => "any";
-    "ok" expression => strcmp("$(var)", "whatever");
-
-  vars:
-    "var"  string => "whatever",
-    	  ifvarclass => and("foo", "bar");
 
   reports:
-    ok::
+    ok.(!fail)::
       "$(this.promise_filename) Pass";
-#    !ok::
-#      "$(this.promise_filename) FAIL";
+    (!ok)|fail::
+      "$(this.promise_filename) FAIL";
 }

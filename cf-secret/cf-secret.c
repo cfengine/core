@@ -59,6 +59,7 @@
 #include <sequence.h>
 #include <string_sequence.h>
 #include <unistd.h>
+#include <cleanup.h>            /* DoCleanupAndExit(), CallCleanupFunctions() */
 
 #define BUFSIZE 1024
 
@@ -822,7 +823,7 @@ int main(int argc, char *argv[])
     if (argc < 2)
     {
         CFKeyCryptHelp();
-        exit(EXIT_FAILURE);
+        DoCleanupAndExit(EXIT_FAILURE);
     }
 
     opterr = 0;
@@ -858,11 +859,11 @@ int main(int argc, char *argv[])
         {
             case 'h':
                 CFKeyCryptHelp();
-                exit(EXIT_SUCCESS);
+                DoCleanupAndExit(EXIT_SUCCESS);
                 break;
             case 'M':
                 CFKeyCryptMan();
-                exit(EXIT_SUCCESS);
+                DoCleanupAndExit(EXIT_SUCCESS);
                 break;
             case 'd':
                 LogSetGlobalLevel(LOG_LEVEL_DEBUG);
@@ -891,7 +892,7 @@ int main(int argc, char *argv[])
             default:
                 Log(LOG_LEVEL_ERR, "Unknown option '-%c'", optopt);
                 CFKeyCryptHelp();
-                exit(EXIT_FAILURE);
+                DoCleanupAndExit(EXIT_FAILURE);
         }
     }
 
@@ -899,7 +900,7 @@ int main(int argc, char *argv[])
     {
         printf("Command required. Specify either 'encrypt', 'decrypt' or 'print-headers'\n");
         CFKeyCryptHelp();
-        exit(EXIT_FAILURE);
+        DoCleanupAndExit(EXIT_FAILURE);
     }
 
     /* Increment 'optind' because of command being argv[0]. */
@@ -910,7 +911,7 @@ int main(int argc, char *argv[])
     if (argc > (optind + offset))
     {
         Log(LOG_LEVEL_ERR, "Unexpected non-option argument: '%s'", argv[optind + 1]);
-        exit(EXIT_FAILURE);
+        DoCleanupAndExit(EXIT_FAILURE);
     }
 
     if (print_headers)
@@ -926,7 +927,7 @@ int main(int argc, char *argv[])
             if (!CheckHeader(key, value))
             {
                 fclose(input_file);
-                exit(EXIT_FAILURE);
+                DoCleanupAndExit(EXIT_FAILURE);
             }
             printf("%s: %s\n", key, value);
 
@@ -942,7 +943,7 @@ int main(int argc, char *argv[])
             }
         }
         fclose(input_file);
-        exit(EXIT_SUCCESS);
+        DoCleanupAndExit(EXIT_SUCCESS);
     }
 
     if (decrypt && (host_arg == NULL) && (key_path_arg == NULL))
@@ -958,18 +959,18 @@ int main(int argc, char *argv[])
     {
         Log(LOG_LEVEL_ERR,
             "--host/-H is used to specify a public key and cannot be used with --key/-k");
-        exit(EXIT_FAILURE);
+        DoCleanupAndExit(EXIT_FAILURE);
     }
 
     if (input_path == NULL)
     {
         Log(LOG_LEVEL_ERR, "No input file specified (Use -h for help)");
-        exit(EXIT_FAILURE);
+        DoCleanupAndExit(EXIT_FAILURE);
     }
     if (output_path == NULL)
     {
         Log(LOG_LEVEL_ERR, "No output file specified (Use -h for help)");
-        exit(EXIT_FAILURE);
+        DoCleanupAndExit(EXIT_FAILURE);
     }
 
     CryptoInitialize();
@@ -1001,7 +1002,7 @@ int main(int argc, char *argv[])
                 Log(LOG_LEVEL_ERR, "Unable to locate key for host '%s'", host);
                 SeqDestroy(hosts);
                 SeqDestroy(key_paths);
-                exit(EXIT_FAILURE);
+                DoCleanupAndExit(EXIT_FAILURE);
             }
             SeqAppend(key_paths, host_key_path);
         }
@@ -1019,7 +1020,7 @@ int main(int argc, char *argv[])
         if (pub_keys == NULL)
         {
             Log(LOG_LEVEL_ERR, "Failed to load public key(s)");
-            exit(EXIT_FAILURE);
+            DoCleanupAndExit(EXIT_FAILURE);
         }
 
         success = RSAEncrypt(pub_keys, input_path, output_path);
@@ -1027,7 +1028,7 @@ int main(int argc, char *argv[])
         if (!success)
         {
             Log(LOG_LEVEL_ERR, "Encryption failed");
-            exit(EXIT_FAILURE);
+            DoCleanupAndExit(EXIT_FAILURE);
         }
     }
     else if (decrypt)
@@ -1038,7 +1039,7 @@ int main(int argc, char *argv[])
         {
             Log(LOG_LEVEL_ERR, "--decrypt requires only one key/host to be specified");
             SeqDestroy(key_paths);
-            exit(EXIT_FAILURE);
+            DoCleanupAndExit(EXIT_FAILURE);
         }
         RSA *private_key = ReadPrivateKey((char *) SeqAt(key_paths, 0));
         SeqDestroy(key_paths);
@@ -1047,14 +1048,15 @@ int main(int argc, char *argv[])
         if (!success)
         {
             Log(LOG_LEVEL_ERR, "Decryption failed");
-            exit(EXIT_FAILURE);
+            DoCleanupAndExit(EXIT_FAILURE);
         }
     }
     else
     {
         ProgrammingError("Unexpected error in cf-secret");
-        exit(EXIT_FAILURE);
+        DoCleanupAndExit(EXIT_FAILURE);
     }
 
+    CallCleanupFunctions();
     return 0;
 }

@@ -811,6 +811,7 @@ int main(int argc, char *argv[])
 
     if (failure)
     {
+        CallCleanupFunctions();
         return EXIT_FAILURE;
     }
 
@@ -828,5 +829,6 @@ int main(int argc, char *argv[])
         CFTestD_ConfigDestroy(thread_configs[i]);
     }
 
+    CallCleanupFunctions();
     return failure ? EXIT_FAILURE : EXIT_SUCCESS;
 }

@@ -1,3 +1,31 @@
+3.15.3:
+	- AVCs are no longer produced for CFEngine processes accessing /proc/net
+	  (CFE-3240)
+	- Added sys.cf_secret component variable
+	- Backgrounded commands are now correctly executed in the child process
+	  (CFE-3379)
+	- Changed bootstrap to loopback to a warning instead of exit (CFE-3304)
+	- Changed the syntax of cf-secret to match other components
+	- Directory listings in files changes monitoring are now only updated
+	  when there is a change (CFE-3382)
+	- Expand variables in data/list references (CFE-3299)
+	- Fix how we check for `--cols` argument to `ps`. (ENT-6098)
+	- Fixed locking of promises using log_repaired / log_string with
+	  timestamps (CFE-3376)
+	- Fixed memory leak in users promises
+	- Fixed race condition when multiple agents are acquiring critical
+	  section locks simultaneously (CFE-3361)
+	- LMDB files are now created with correct permissions (ENT-5986)
+	- Promises with 'action => bg()' no longer break reporting data
+	  (ENT-6042)
+	- Spaces inside square brackets (slist/data index) are now allowed in
+	  class expressions (CFE-3320)
+	- Variables specifying data/list names in @() references are now expanded
+	  (CFE-2434)
+	- cf-secret binary for managing secrets was added (CFE-2613)
+	- cf-monitord now uses /proc/net/* files to get network information if
+	  possible (CFE-2945)
+
 3.15.2:
 	- 'if' constraint now works in combination with class contexts
 	  (CFE-2615)

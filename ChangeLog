@@ -1,3 +1,15 @@
+3.12.6:
+	- AVCs are no longer produced for CFEngine processes accessing /proc/net
+	  (CFE-3240)
+	- Variables are now correctly expanded in data/list references (CFE-3299)
+	- LMDB files are now created with correct permissions (ENT-5986)
+	- Spaces inside square brackets (slist/data indices) are now allowed in
+	  class expressions (CFE-3320)
+	- Variables specifying data/list names in @() references are now expanded
+	  (CFE-2434)
+	- cf-monitord now uses /proc/net/* files to get network information if possible
+	  (CFE-2945)
+
 3.12.5:
 	- 'if' constraint now works in combination with class contexts
 	  (CFE-2615)

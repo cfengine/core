@@ -4,7 +4,7 @@ set -e
 trap "echo FAILURE" ERR
 
 set -x
-BASE_IMG="fedora:32"
+BASE_IMG="fedora:33"
 
 function create_image() {
   local c=$(buildah from -q $BASE_IMG)

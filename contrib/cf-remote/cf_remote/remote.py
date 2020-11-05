@@ -267,7 +267,9 @@ def install_host(
                     "hub" if hub else "client"))
             return 1
         artifact = artifacts[-1]
-        if not remote_download:
+        if remote_download:
+            package = artifact.url
+        else:
             package = download_package(artifact.url)
 
     if remote_download:

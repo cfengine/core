@@ -274,7 +274,9 @@ def install_host(
 
     if remote_download:
         print(f"Downloading '{package}' on '{host}' using curl")
-        ssh_cmd(cmd="curl -O {}".format(package), connection=connection)
+        r = ssh_cmd(cmd="curl --fail -O {}".format(package), connection=connection, errors=True)
+        if r is None:
+            return 1
     else:
         scp(package, host, connection=connection)
 

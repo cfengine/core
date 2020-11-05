@@ -183,8 +183,8 @@ def validate_command(command, args):
             user_error(
                 "--package cannot be used in combination with --hub-package / --client-package")
         if args.package and not is_package_url(args.package):
-            if not os.path.isfile(args.package):
-                user_error(f"Package '{args.package}' does not exist")
+            if not os.path.exists(os.path.expanduser(args.package)):
+                user_error(f"Package/directory '{args.package}' does not exist")
         if args.hub_package and not is_package_url(args.hub_package):
             if not os.path.isfile(args.hub_package):
                 user_error(f"Hub package '{args.hub_package}' does not exist")

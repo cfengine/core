@@ -179,6 +179,11 @@ def install(
             hubs_install_pool.map(lambda job: job.run(), hub_jobs)
         errors = sum(job.errors for job in hub_jobs)
 
+    if errors > 0:
+        s = "s" if errors > 1 else ""
+        log.error(f"{errors} error{s} encountered while installing hub packages, aborting...")
+        return errors
+
     client_jobs = []
     show_host_info = (clients and (len(clients) == 1))
     for index, host in enumerate(clients or []):
@@ -204,6 +209,11 @@ def install(
             print(
                 "Your demo hub is ready: https://{}/ (Username: admin, Password: password)".
                 format(strip_user(hub)))
+
+    if errors > 0:
+        s = "s" if errors > 1 else ""
+        log.error(f"{errors} error{s} encountered while installing client packages")
+
     return errors
 
 def _iterate_over_packages(tags=None, version=None, edition=None, download=False):

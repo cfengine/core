@@ -7,7 +7,7 @@ from cf_remote.utils import os_release, column_print, pretty, user_error, parse_
 from cf_remote.ssh import ssh_sudo, ssh_cmd, scp, auto_connect
 from cf_remote import log
 from cf_remote.web import download_package
-from cf_remote.packages import Releases
+from cf_remote.packages import Releases, Artifact, filter_artifacts
 
 import cf_remote.demo as demo_lib
 
@@ -217,13 +217,35 @@ def bootstrap_host(host_data, policy_server, *, connection=None):
     else:
         user_error("Something went wrong while bootstrapping")
 
+def _package_from_list(tags, extension, packages):
+    artifacts = [Artifact(None, p) for p in packages]
+    artifact = filter_artifacts(artifacts, tags, extension)[-1]
+    return artifact.url
+
+def _package_from_releases(tags, extension, version, edition, remote_download):
+    releases = Releases(edition)
+    release = releases.default
+    if version:
+        release = releases.pick_version(version)
+
+    artifacts = release.find(tags, extension)
+    if not artifacts:
+        log.error(
+            "Could not find an appropriate package for host, please use --{}-package".format(
+                "hub" if hub else "client"))
+        return 1
+    artifact = artifacts[-1]
+    if remote_download:
+        return artifact.url
+    else:
+        return download_package(artifact.url)
 
 @auto_connect
 def install_host(
         host,
         *,
         hub=False,
-        package=None,
+        packages=None,
         bootstrap=None,
         version=None,
         demo=False,
@@ -236,6 +258,12 @@ def install_host(
     data = get_info(host, connection=connection)
     if show_info:
         print_info(data)
+
+    package = None
+    if packages and type(packages) is str:
+        package = packages
+    elif packages and len(packages) == 1:
+        package = packages[0]
 
     if not package:
         tags = []
@@ -252,25 +280,14 @@ def install_host(
             extension = ".deb"
         elif "rpm" in data["bin"]:
             extension = ".rpm"
-        releases = Releases(edition)
-        release = releases.default
-        if version:
-            release = releases.pick_version(version)
 
         if "package_tags" in data and data["package_tags"]:
             tags.extend(data["package_tags"])
 
-        artifacts = release.find(tags, extension)
-        if not artifacts:
-            log.error(
-                "Could not find an appropriate package for host, please use --{}-package".format(
-                    "hub" if hub else "client"))
-            return 1
-        artifact = artifacts[-1]
-        if remote_download:
-            package = artifact.url
+        if packages is None: # No commandd line argument given
+            package = _package_from_releases(tags, extension, version, edition, remote_download)
         else:
-            package = download_package(artifact.url)
+            package = _package_from_list(tags, extension, packages)
 
     if remote_download:
         print(f"Downloading '{package}' on '{host}' using curl")

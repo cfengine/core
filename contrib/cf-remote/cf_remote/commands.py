@@ -118,6 +118,13 @@ def _verify_package_urls(urls):
 
     return verified_urls
 
+def _maybe_packages_in_folder(package):
+    if not (package and type(package) is str):
+        return package
+    folder = os.path.abspath(os.path.expanduser(package))
+    if os.path.isdir(folder):
+        return [os.path.join(folder, f) for f in os.listdir(folder)]
+    return package
 
 def install(
         hubs,
@@ -143,7 +150,12 @@ def install(
     else:
         package, hub_package, client_package = _download_urls(packages)
 
-    # Copy path from package to client/hub package:
+    # If any of these are folders, transform them to lists of the files inside those folders:
+    package = _maybe_packages_in_folder(package)
+    hub_package = _maybe_packages_in_folder(hub_package)
+    client_package = _maybe_packages_in_folder(client_package)
+
+    # If --hub-package or --client-pacakge are not specified, use --package argument:
     if not hub_package:
         hub_package = package
     if not client_package:
@@ -164,7 +176,7 @@ def install(
             hub_jobs.append(HostInstaller(
                 hub,
                 hub=True,
-                package=hub_package,
+                packages=hub_package,
                 bootstrap=bootstrap[index % len(bootstrap)] if bootstrap else None,
                 version=version,
                 demo=demo,
@@ -191,7 +203,7 @@ def install(
         client_jobs.append(HostInstaller(
             host,
             hub=False,
-            package=client_package,
+            packages=client_package,
             bootstrap=bootstrap[index % len(bootstrap)] if bootstrap else None,
             version=version,
             demo=demo,

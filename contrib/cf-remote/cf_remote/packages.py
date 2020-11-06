@@ -1,4 +1,4 @@
-from os.path import basename, splitext
+from os.path import basename, splitext, expanduser, abspath
 from cf_remote.web import get_json
 from cf_remote.utils import is_in_past, canonify
 from cf_remote import log
@@ -9,7 +9,7 @@ class Artifact:
     def __init__(self, data, filename=None):
         if filename and not data:
             data = {}
-            data["URL"] = "./" + filename
+            data["URL"] = abspath(expanduser(filename))
             data["Title"] = ""
             data["Arch"] = None
             if "sparc" in filename.lower():
@@ -17,7 +17,7 @@ class Artifact:
         self.data = data
         self.url = data["URL"]
         self.title = data["Title"]
-        self.arch = canonify(data["Arch"])
+        self.arch = canonify(data["Arch"]) if data["Arch"] else None
 
         self.filename = basename(self.url)
         self.extension = splitext(self.filename)[1]
@@ -26,7 +26,8 @@ class Artifact:
         self.create_tags()
 
     def create_tags(self):
-        self.add_tag(self.arch)
+        if self.arch:
+            self.add_tag(self.arch)
         self.add_tag(self.extension[1:])
 
         look_for_tags = [
@@ -94,6 +95,21 @@ class Artifact:
     def __repr__(self):
         return str(self)
 
+def filter_artifacts(artifacts, tags, extension):
+    if extension:
+        artifacts = [a for a in artifacts if a.extension == extension]
+    log.debug("Looking for tags: {}".format(tags))
+    log.debug("In artifacts: {}".format(artifacts))
+    for tag in tags or []:
+        tag = canonify(tag)
+        new_artifacts = [a for a in artifacts if tag in a.tags]
+        # Have to force evaluation using list comprehension,
+        # since we are overwriting artifacts
+        if len(new_artifacts) > 0:
+            artifacts = new_artifacts
+
+    log.debug("Found artifacts: {}".format(artifacts))
+    return artifacts
 
 class Release:
     def __init__(self, data):
@@ -118,21 +134,7 @@ class Release:
     def find(self, tags, extension=None):
         if not self.extended_data:
             self.init_download()
-        artifacts = self.artifacts
-        if extension:
-            artifacts = [a for a in artifacts if a.extension == extension]
-        log.debug("Looking for tags: {}".format(tags))
-        log.debug("In artifacts: {}".format(artifacts))
-        for tag in tags or []:
-            tag = canonify(tag)
-            new_artifacts = [a for a in artifacts if tag in a.tags]
-            # Have to force evaluation using list comprehension,
-            # since we are overwriting artifacts
-            if len(new_artifacts) > 0:
-                artifacts = new_artifacts
-
-        log.debug("Found artifacts: {}".format(artifacts))
-        return artifacts
+        return filter_artifacts(self.artifacts, tags, extension)
 
     def __str__(self):
         string = self.version

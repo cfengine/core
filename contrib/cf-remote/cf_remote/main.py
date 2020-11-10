@@ -7,6 +7,7 @@ from cf_remote import commands, paths
 from cf_remote.utils import user_error, exit_success, expand_list_from_file, is_file_string
 from cf_remote.utils import strip_user, read_json, is_package_url
 from cf_remote.packages import Releases
+from cf_remote.spawn import Providers
 
 
 def print_version_info():
@@ -90,7 +91,9 @@ def get_args():
     sp.add_argument("--count", help="How many hosts to spawn", type=int)
     sp.add_argument("--role", help="Role of the hosts", choices=["hub", "hubs", "client", "clients"])
     sp.add_argument("--name", help="Name of the group of hosts (can be used in other commands)")
-    # TODO: --provider, --region (both optional)
+    sp.add_argument("--aws", help="Spawn VMs in AWS (default)", action='store_true')
+    sp.add_argument("--gcp", help="Spawn VMs in GCP", action='store_true')
+    # TODO: --region (optional)
 
     dp = subp.add_parser("destroy", help="Destroy hosts spawned in the clouds")
     dp.add_argument("--all", help="Destroy all hosts spawned in the clouds", action='store_true')
@@ -143,11 +146,17 @@ def run_command_with_args(command, args):
             return commands.init_cloud_config()
         if args.name and "," in args.name:
             user_error("Group --name may not contain commas")
-        # else
+        if args.aws and args.gcp:
+            user_error("--aws and --gcp cannot be used at the same time")
         if args.role.endswith("s"):
             # role should be singular
             args.role = args.role[:-1]
-        return commands.spawn(args.platform, args.count, args.role, args.name)
+        if args.gcp:
+            provider = Providers.GCP
+        else:
+            # AWS is currently also the default
+            provider = Providers.AWS
+        return commands.spawn(args.platform, args.count, args.role, args.name, provider)
     elif command == "destroy":
         group_name = args.name if args.name else None
         return commands.destroy(group_name)

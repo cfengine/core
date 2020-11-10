@@ -15,8 +15,9 @@ from cf_remote import log
 _NAME_RANDOM_PART_LENGTH = 4
 
 AWSCredentials = namedtuple("AWSCredentials", ["key", "secret"])
+GCPCredentials = namedtuple("GCPCredentials", ["project_ID", "SA_ID", "key_path"])
 
-VMRequest = namedtuple("VMRequest", ["platform", "name", "size"])
+VMRequest = namedtuple("VMRequest", ["platform", "name", "size", "public_ip"])
 
 _DriverSpec = namedtuple("_DriverSpec", ["provider", "creds", "region"])
 
@@ -26,11 +27,16 @@ _DRIVERS = dict()
 
 class Providers(Enum):
     AWS = 1
+    GCP = 2
+
+    def __str__(self):
+        return self.name.lower()
 
 
 class VM:
     def __init__(self, name, driver, node, role=None,
-                 platform=None, size=None, key_pair=None, security_groups=None, user=None):
+                 platform=None, size=None, key_pair=None, security_groups=None, user=None,
+                 provider=None):
         self._name = name
         self._driver = driver
         self._node = node
@@ -40,6 +46,7 @@ class VM:
         self._sec_groups = security_groups
         self._user = user
         self.role = role
+        self._provider = provider
 
     @classmethod
     def get_by_ip(cls, ip, driver=None):
@@ -113,7 +120,15 @@ class VM:
 
     @property
     def region(self):
-        return self._driver.region
+        data = self._node or self._data
+        if "zone" in data.extra:
+            return data.extra["zone"].name
+
+        region = self._driver.region
+        if (type(region) != str) and hasattr(region, "name"):
+            return region.name
+        else:
+            return str(region)
 
     @property
     def size(self):
@@ -130,7 +145,11 @@ class VM:
     @property
     def user(self):
         return self._user
-    
+
+    @property
+    def provider(self):
+        return self._provider
+
     @property
     def _data(self):
         # we need to refresh this every time because libcloud's drivers seem to
@@ -161,14 +180,17 @@ class VM:
             "private_ips": self.private_ips,
             "public_ips": self.public_ips,
             "uuid": self.uuid,
-            "user": self.user
         }
+        if self.user:
+            ret["user"] = self.user
         if self.role:
             ret["role"] = self.role
         if self.key_pair:
             ret["key_pair"] = self.key_pair
         if self.security_groups:
             ret["security_groups"] = self.security_groups
+        if self.provider:
+            ret["provider"] = str(self.provider)
         return ret
 
     def __str__(self):
@@ -194,15 +216,21 @@ def _get_unused_name(used_names, prefix, random_suffix_length):
 def get_cloud_driver(provider, creds, region):
     driver_spec = _DriverSpec(provider, creds, region)
     if driver_spec in _DRIVERS:
-        driver = _DRIVERS[driver_spec]
-    else:
-        cls = get_driver(Provider.EC2)
-        driver = cls(creds.key, creds.secret, region=region)
+        return _DRIVERS[driver_spec]
+
+    if provider == Providers.AWS:
+        EC2 = get_driver(Provider.EC2)
+        driver = EC2(creds.key, creds.secret, region=region)
 
         # somehow driver.region is always None unless we set it explicitly
         driver.region = region
+    elif provider == Providers.GCP:
+        GCP = get_driver(Provider.GCE)
+        driver = GCP(creds.SA_ID, creds.key_path, project=creds.project_ID, datacenter=region)
+    else:
+        raise ValueError("Unknown provider: %s" % provider)
 
-        _DRIVERS[driver_spec] = driver
+    _DRIVERS[driver_spec] = driver
 
     return driver
 
@@ -233,26 +261,62 @@ def spawn_vm_in_aws(platform, aws_creds, key_pair, security_groups, region, name
         ex_metadata={
             "created-by": "cf-remote",
             "owner": whoami(),
-        }
+        },
     )
 
-    return VM(name, driver, node, role, platform, size, key_pair, security_groups, user)
+    return VM(name, driver, node, role, platform, size, key_pair, security_groups, user, Providers.AWS)
 
 
-def spawn_vms(vm_requests, creds, region, key_pair=None, security_groups=None, provider=Providers.AWS, role=None):
-    # TODO: support other providers
-    if provider != Providers.AWS:
+def spawn_vm_in_gcp(platform, gcp_creds, region, name=None, size="n1-standard-1", network=None, public_ip=True, role=None):
+    driver = get_cloud_driver(Providers.GCP, gcp_creds, region)
+    existing_vms = driver.list_nodes()
+
+    if name is None:
+        name = _get_unused_name([vm.name for vm in existing_vms], platform, _NAME_RANDOM_PART_LENGTH)
+    else:
+        if any(vm.state in (0, 'running') and vm.name == name for vm in existing_vms):
+            raise ValueError("VM with the name '%s' already exists" % name)
+
+    # TODO: Should we have a list of GCP platforms/images? No weird IDs needed,
+    #       they are straightforward like "centos-7" or "debian-9".
+    kwargs = dict()
+    if network is not None:
+        kwargs["ex_network"] = network
+    if not public_ip:
+        kwargs["external_ip"] = None
+    kwargs["ex_metadata"] = {
+        "created-by": "cf-remote",
+        "owner": whoami(),
+    }
+    if not size:
+        size = "n1-standard-1"
+
+    node = driver.create_node(name, size, platform, **kwargs)
+    return VM(name, driver, node, role, platform, size, None, None, None, Providers.GCP)
+
+
+def spawn_vms(vm_requests, creds, region, key_pair=None, security_groups=None, provider=Providers.AWS, network=None, role=None):
+    if provider not in (Providers.AWS, Providers.GCP):
         raise ValueError("Unsupported provider %s" % provider)
-    if key_pair is None:
+
+    if (provider == Providers.AWS) and (key_pair is None):
         raise ValueError("key pair ID required for AWS")
-    if security_groups is None:
+    if (provider == Providers.AWS) and (security_groups is None):
         raise ValueError("security groups required for AWS")
 
     ret = []
-    for req in vm_requests:
-        vm = spawn_vm_in_aws(req.platform, creds, key_pair, security_groups,
-                             region, req.name, req.size, role)
-        ret.append(vm)
+    if provider == Providers.AWS:
+        for req in vm_requests:
+            vm = spawn_vm_in_aws(req.platform, creds, key_pair, security_groups,
+                                 region, req.name, req.size, role)
+            ret.append(vm)
+    else:
+        for req in vm_requests:
+            vm = spawn_vm_in_gcp(req.platform, creds, region,
+                                 req.name, req.size, network, req.public_ip,
+                                 role)
+            ret.append(vm)
+
     return ret
 
 
@@ -260,20 +324,26 @@ def destroy_vms(vms):
     for vm in vms:
         vm.destroy()
 
+
 def dump_vms_info(vms):
     ret = {
         "meta": {
-            "provider": "aws",
         }
     }
+    duplicate_info_keys = []
+    providers = {vm.provider for vm in vms}
+    if (len(providers) == 1):
+        ret["meta"]["provider"] = str(next(iter(providers)))
+        duplicate_info_keys.append("provider")
+
     regions = {vm.region for vm in vms}
     if len(regions) == 1:
         ret["meta"]["region"] = next(iter(regions))
-        for vm in vms:
-            info = vm.info
-            del info["region"]
-            ret[vm.name] = info
-    else:
-        for vm in vms:
-            ret[vm.name] = vm.info
+        duplicate_info_keys.append("region")
+
+    for vm in vms:
+        info = vm.info
+        for key in duplicate_info_keys:
+            del info[key]
+        ret[vm.name] = info
     return ret

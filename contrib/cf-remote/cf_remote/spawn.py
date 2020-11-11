@@ -295,7 +295,9 @@ def spawn_vm_in_gcp(platform, gcp_creds, region, name=None, size="n1-standard-1"
     return VM(name, driver, node, role, platform, size, None, None, None, Providers.GCP)
 
 
-def spawn_vms(vm_requests, creds, region, key_pair=None, security_groups=None, provider=Providers.AWS, network=None, role=None):
+def spawn_vms(vm_requests, creds, region, key_pair=None, security_groups=None,
+              provider=Providers.AWS, network=None, role=None,
+              spawned_cb=None):
     if provider not in (Providers.AWS, Providers.GCP):
         raise ValueError("Unsupported provider %s" % provider)
 
@@ -309,12 +311,16 @@ def spawn_vms(vm_requests, creds, region, key_pair=None, security_groups=None, p
         for req in vm_requests:
             vm = spawn_vm_in_aws(req.platform, creds, key_pair, security_groups,
                                  region, req.name, req.size, role)
+            if spawned_cb is not None:
+                spawned_cb(vm)
             ret.append(vm)
     else:
         for req in vm_requests:
             vm = spawn_vm_in_gcp(req.platform, creds, region,
                                  req.name, req.size, network, req.public_ip,
                                  role)
+            if spawned_cb is not None:
+                spawned_cb(vm)
             ret.append(vm)
 
     return ret

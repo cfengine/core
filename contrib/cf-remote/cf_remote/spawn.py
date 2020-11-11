@@ -360,8 +360,8 @@ def spawn_vms(vm_requests, creds, region, key_pair=None, security_groups=None,
 
 
 def destroy_vms(vms):
-    for vm in vms:
-        vm.destroy()
+    with Pool(len(vms)) as pool:
+        pool.map(lambda vm: vm.destroy(), vms)
 
 
 def dump_vms_info(vms):

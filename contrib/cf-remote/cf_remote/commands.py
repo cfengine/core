@@ -8,7 +8,7 @@ from cf_remote.packages import Releases
 from cf_remote.web import download_package
 from cf_remote.paths import cf_remote_dir, CLOUD_CONFIG_FPATH, CLOUD_STATE_FPATH, cf_remote_packages_dir
 from cf_remote.utils import save_file, strip_user, read_json, write_json, whoami, get_package_name
-from cf_remote.utils import user_error, is_package_url
+from cf_remote.utils import user_error, is_package_url, print_progress_dot
 from cf_remote.spawn import VM, VMRequest, Providers, AWSCredentials, GCPCredentials
 from cf_remote.spawn import spawn_vms, destroy_vms, dump_vms_info, get_cloud_driver
 from cf_remote import log
@@ -309,7 +309,8 @@ def spawn(platform, count, role, group_name, provider=Providers.AWS, region=None
     vms = spawn_vms(requests, creds, region, key_pair,
                     security_groups=sec_groups,
                     provider=provider,
-                    role=role)
+                    role=role,
+                    spawned_cb=print_progress_dot)
     print("DONE")
 
     if not all(vm.public_ips for vm in vms):
@@ -317,8 +318,7 @@ def spawn(platform, count, role, group_name, provider=Providers.AWS, region=None
         sys.stdout.flush()      # STDOUT is line-buffered
         while not all(vm.public_ips for vm in vms):
             time.sleep(1)
-            print(".", end="")
-            sys.stdout.flush()      # STDOUT is line-buffered
+            print_progress_dot()
         print("DONE")
 
     vms_info[group_key] = dump_vms_info(vms)

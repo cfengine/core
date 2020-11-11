@@ -93,6 +93,12 @@ def get_args():
     sp.add_argument("--name", help="Name of the group of hosts (can be used in other commands)")
     sp.add_argument("--aws", help="Spawn VMs in AWS (default)", action='store_true')
     sp.add_argument("--gcp", help="Spawn VMs in GCP", action='store_true')
+    sp.add_argument("--size", help="Size/type of the instances", type=str)
+    sp.add_argument("--network", help="network/subnet to assign the VMs to (GCP only)", type=str)
+    sp.add_argument("--no-public-ip",
+                    help="No public IP needed (GCP only; WARNING: The VMs will only be accessible" +
+                         " from some other VM in the same cloud/network!)",
+                    action="store_true")
     # TODO: --region (optional)
 
     dp = subp.add_parser("destroy", help="Destroy hosts spawned in the clouds")
@@ -156,7 +162,16 @@ def run_command_with_args(command, args):
         else:
             # AWS is currently also the default
             provider = Providers.AWS
-        return commands.spawn(args.platform, args.count, args.role, args.name, provider)
+            if args.network:
+                user_error("--network not supported for AWS")
+            if args.no_public_ip:
+                user_error("--no-public-ip not supported for AWS")
+        if args.network and (args.network.count("/") != 1):
+            user_error("Invalid network specified, needs to be in the network/subnet format")
+
+        return commands.spawn(args.platform, args.count, args.role, args.name,
+                              provider=provider, size=args.size, network=args.network,
+                              public_ip=not args.no_public_ip)
     elif command == "destroy":
         group_name = args.name if args.name else None
         return commands.destroy(group_name)

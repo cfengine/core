@@ -256,7 +256,8 @@ def list_command(tags=None, version=None, edition=None):
 def download(tags=None, version=None, edition=None):
     return _iterate_over_packages(tags, version, edition, True)
 
-def spawn(platform, count, role, group_name, provider=Providers.AWS, region=None):
+def spawn(platform, count, role, group_name, provider=Providers.AWS, region=None,
+          size=None, network=None, public_ip=True):
     if os.path.exists(CLOUD_CONFIG_FPATH):
         creds_data = read_json(CLOUD_CONFIG_FPATH)
     else:
@@ -302,18 +303,19 @@ def spawn(platform, count, role, group_name, provider=Providers.AWS, region=None
         vm_name = whoami()[0:2] + group_name + "-" + platform + role + str(i)
         requests.append(VMRequest(platform=platform,
                                   name=vm_name,
-                                  size=None,
-                                  public_ip=True))
+                                  size=size,
+                                  public_ip=public_ip))
     print("Spawning VMs...", end="")
     sys.stdout.flush()
     vms = spawn_vms(requests, creds, region, key_pair,
                     security_groups=sec_groups,
                     provider=provider,
+                    network=network,
                     role=role,
                     spawned_cb=print_progress_dot)
     print("DONE")
 
-    if not all(vm.public_ips for vm in vms):
+    if public_ip and (not all(vm.public_ips for vm in vms)):
         print("Waiting for VMs to get IP addresses...", end="")
         sys.stdout.flush()      # STDOUT is line-buffered
         while not all(vm.public_ips for vm in vms):

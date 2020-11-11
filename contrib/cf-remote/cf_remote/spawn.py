@@ -281,7 +281,9 @@ def spawn_vm_in_gcp(platform, gcp_creds, region, name=None, size="n1-standard-1"
     #       they are straightforward like "centos-7" or "debian-9".
     kwargs = dict()
     if network is not None:
-        kwargs["ex_network"] = network
+        net, subnet = network.split("/")
+        kwargs["ex_network"] = net
+        kwargs["ex_subnetwork"] = subnet
     if not public_ip:
         kwargs["external_ip"] = None
     kwargs["ex_metadata"] = {
@@ -296,8 +298,8 @@ def spawn_vm_in_gcp(platform, gcp_creds, region, name=None, size="n1-standard-1"
 
 
 def spawn_vms(vm_requests, creds, region, key_pair=None, security_groups=None,
-              provider=Providers.AWS, network=None, role=None,
-              spawned_cb=None):
+              provider=Providers.AWS, size=None, network=None,
+              role=None, spawned_cb=None):
     if provider not in (Providers.AWS, Providers.GCP):
         raise ValueError("Unsupported provider %s" % provider)
 

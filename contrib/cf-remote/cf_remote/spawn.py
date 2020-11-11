@@ -2,6 +2,7 @@ import string
 import random
 from collections import namedtuple
 from enum import Enum
+from multiprocessing.dummy import Pool
 
 from libcloud.compute.types import Provider
 from libcloud.compute.providers import get_driver
@@ -297,6 +298,31 @@ def spawn_vm_in_gcp(platform, gcp_creds, region, name=None, size="n1-standard-1"
     return VM(name, driver, node, role, platform, size, None, None, None, Providers.GCP)
 
 
+class GCPSpawnTask:
+    def __init__(self, spawned_cb, *args, **kwargs):
+        self._spawned_cb = spawned_cb
+        self._args = args
+        self._kwargs = kwargs
+        self._vm = None
+        self._errors = []
+
+    def run(self):
+        try:
+            self._vm = spawn_vm_in_gcp(*self._args, **self._kwargs)
+        except Exception as e:
+            self._errors.append(e)
+        else:
+            self._spawned_cb(self._vm)
+
+    @property
+    def vm(self):
+        return self._vm
+
+    @property
+    def errors(self):
+        return self._errors
+
+
 def spawn_vms(vm_requests, creds, region, key_pair=None, security_groups=None,
               provider=Providers.AWS, size=None, network=None,
               role=None, spawned_cb=None):
@@ -317,13 +343,18 @@ def spawn_vms(vm_requests, creds, region, key_pair=None, security_groups=None,
                 spawned_cb(vm)
             ret.append(vm)
     else:
-        for req in vm_requests:
-            vm = spawn_vm_in_gcp(req.platform, creds, region,
-                                 req.name, req.size, network, req.public_ip,
-                                 role)
-            if spawned_cb is not None:
-                spawned_cb(vm)
-            ret.append(vm)
+        tasks = [GCPSpawnTask(spawned_cb, req.platform, creds, region,
+                              req.name, req.size, network, req.public_ip,
+                              role)
+                 for req in vm_requests]
+        with Pool(len(vm_requests)) as pool:
+            pool.map(lambda x: x.run(), tasks)
+        for task in tasks:
+            if task.vm is None:
+                for error in task.errors:
+                    log.error(str(error))
+            else:
+                ret.append(task.vm)
 
     return ret
 

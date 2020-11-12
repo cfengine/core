@@ -1,0 +1,52 @@
+# Test that locking works
+# Called twice from main.cf
+
+bundle agent example
+{
+  methods:
+      "test" usebundle => test, action => now;
+}
+
+bundle agent test
+{
+  vars:
+    first::                                                      
+       "count" string => "first";
+    second::
+       "count" string => "second";
+
+  methods:
+# should print "Called from test" for both runs
+      "Report"
+      usebundle => report_now($(this.bundle)),
+      action => now;
+
+# should print "Called from call_report_now" for both runs
+      "Nested Report"
+      usebundle => call_report_now,
+      action => now;
+
+# should print "Called from only_first" only for the first run
+      "Only first"
+      usebundle => report_now("only_first");
+}
+
+bundle agent call_report_now
+{
+  methods:
+      "Call Report"
+      usebundle => report_now($(this.bundle)),
+      action => now;
+}
+
+bundle agent report_now(caller)
+{
+  reports:
+      "Called from $(caller) ($(test.count))"
+      action => now;
+}
+
+body action now
+{
+    ifelapsed => "0";
+}

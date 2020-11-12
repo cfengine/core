@@ -153,8 +153,15 @@ class VM:
 
     @property
     def _data(self):
-        # we need to refresh this every time because libcloud's drivers seem to
-        # be returning just snapshots of info (IOW, things are not updated)
+        # We need to refresh this every time to get fresh data because
+        # libcloud's drivers seem to be returning just snapshots of info (IOW,
+        # things are not updated).
+
+        # GCP waits for VMs to fully initialize in create_node() so self._node
+        # is as fresh as we need it to be for a running VM.
+        if (self._provider == Providers.GCP) and self._node:
+            return self._node
+
         for node in self._driver.list_nodes():
             if node is self._node or node.uuid == self._node.uuid:
                 return node

@@ -1,4 +1,5 @@
 language: c
+os: linux
 dist: xenial
 
 addons:
@@ -27,31 +28,20 @@ env:
 # Parallel jobs listed here; fastest jobs should come first to give
 # feedback ASAP. For more info read this:
 # https://docs.travis-ci.com/user/multi-os/
-matrix:
+jobs:
   fast_finish: true # Build will succeed once all linux jobs succeed
   include:
-    - os: linux
-      env: JOB_TYPE=compile_and_unit_test_asan
-    - os: linux
-      sudo: required
-      env: JOB_TYPE=valgrind_health_check
-    - os: linux
-      env: JOB_TYPE=compile_and_unit_test COVERAGE=no
+    - env: JOB_TYPE=compile_and_unit_test_asan
+    - env: JOB_TYPE=valgrind_health_check
+    - env: JOB_TYPE=compile_and_unit_test COVERAGE=no
       compiler: clang
-    - os: linux
-      sudo: required
-      env: JOB_TYPE=acceptance_tests_common
+    - env: JOB_TYPE=acceptance_tests_common
       # The unsafe acceptance tests don't work with SIMFS which is the default
       # filesystem in Travis; so change OS to Trusty, which uses ext4.
-    - os: linux
-      sudo: required
-      env: JOB_TYPE=acceptance_tests_unsafe_serial_network_etc
-    - os: linux
-      sudo: required
-      env: JOB_TYPE=serverd_multi_versions COVERAGE=no
+    - env: JOB_TYPE=acceptance_tests_unsafe_serial_network_etc
+    - env: JOB_TYPE=serverd_multi_versions COVERAGE=no
     - os: osx
       env: JOB_TYPE=compile_only COVERAGE=no
-      sudo: false
 
 before_install:
   - chmod ug+x ./travis-scripts/*
@@ -70,13 +60,11 @@ deploy:
   skip_cleanup: true
   provider: releases
   # Remember to set it as private variable in Travis-CI settings
-  api_key: $GITHUB_RELEASE_TOKEN
-  # Does not work, I get the error that "true" is not a boolean
-  prerelease: $IS_PRERELEASE
+  token: $GITHUB_RELEASE_TOKEN
   file: "$DIST_TARBALL"
   on:
     tags: true
-    # Avoid upload from all the multiple parallel matrix jobs
+    # Avoid upload from all the multiple parallel jobs
     condition: "$CF_VERSION = latest"
 
 after_script: ./travis-scripts/after_script.sh

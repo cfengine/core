@@ -185,3 +185,7 @@ def strip_user(host):
 
 def whoami():
     return getpass.getuser()
+
+def print_progress_dot(*args):
+    print(".", end="")
+    sys.stdout.flush()      # STDOUT is line-buffered

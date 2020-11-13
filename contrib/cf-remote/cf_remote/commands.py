@@ -7,8 +7,9 @@ from cf_remote.remote import get_info, print_info, HostInstaller, uninstall_host
 from cf_remote.packages import Releases
 from cf_remote.web import download_package
 from cf_remote.paths import cf_remote_dir, CLOUD_CONFIG_FPATH, CLOUD_STATE_FPATH, cf_remote_packages_dir
-from cf_remote.utils import save_file, strip_user, read_json, write_json, whoami, get_package_name, is_package_url
-from cf_remote.spawn import VM, VMRequest, Providers, AWSCredentials
+from cf_remote.utils import save_file, strip_user, read_json, write_json, whoami, get_package_name
+from cf_remote.utils import user_error, is_package_url, print_progress_dot
+from cf_remote.spawn import VM, VMRequest, Providers, AWSCredentials, GCPCredentials
 from cf_remote.spawn import spawn_vms, destroy_vms, dump_vms_info, get_cloud_driver
 from cf_remote import log
 from cf_remote import cloud_data
@@ -255,7 +256,8 @@ def list_command(tags=None, version=None, edition=None):
 def download(tags=None, version=None, edition=None):
     return _iterate_over_packages(tags, version, edition, True)
 
-def spawn(platform, count, role, group_name, provider=Providers.AWS, region=None):
+def spawn(platform, count, role, group_name, provider=Providers.AWS, region=None,
+          size=None, network=None, public_ip=True):
     if os.path.exists(CLOUD_CONFIG_FPATH):
         creds_data = read_json(CLOUD_CONFIG_FPATH)
     else:
@@ -272,37 +274,53 @@ def spawn(platform, count, role, group_name, provider=Providers.AWS, region=None
         print("Group '%s' already exists!" % group_key)
         return 1
 
-    try:
-        creds = AWSCredentials(creds_data["aws"]["key"], creds_data["aws"]["secret"])
-        sec_groups = creds_data["aws"]["security_groups"]
-        key_pair = creds_data["aws"]["key_pair"]
-    except KeyError:
-        print("Incomplete AWS credential info") # TODO: report missing keys
-        return 1
+    creds = None
+    sec_groups = None
+    key_pair = None
+    if provider == Providers.AWS:
+        try:
+            creds = AWSCredentials(creds_data["aws"]["key"], creds_data["aws"]["secret"])
+            sec_groups = creds_data["aws"]["security_groups"]
+            key_pair = creds_data["aws"]["key_pair"]
+        except KeyError:
+            print("Incomplete AWS credential info") # TODO: report missing keys
+            return 1
 
-    region = region or creds_data["aws"].get("region", "eu-west-1")
+        region = region or creds_data["aws"].get("region", "eu-west-1")
+    elif provider == Providers.GCP:
+        try:
+            creds = GCPCredentials(creds_data["gcp"]["project_id"],
+                                   creds_data["gcp"]["service_account_id"],
+                                   creds_data["gcp"]["key_path"])
+        except KeyError:
+            print("Incomplete GCP credential info") # TODO: report missing keys
+            return 1
+
+        region = region or creds_data["gcp"].get("region", "europe-west1-b")
 
     requests = []
     for i in range(count):
         vm_name = whoami()[0:2] + group_name + "-" + platform + role + str(i)
         requests.append(VMRequest(platform=platform,
                                   name=vm_name,
-                                  size=None))
+                                  size=size,
+                                  public_ip=public_ip))
     print("Spawning VMs...", end="")
     sys.stdout.flush()
     vms = spawn_vms(requests, creds, region, key_pair,
                     security_groups=sec_groups,
                     provider=provider,
-                    role=role)
+                    network=network,
+                    role=role,
+                    spawned_cb=print_progress_dot)
     print("DONE")
 
-    if not all(vm.public_ips for vm in vms):
+    if public_ip and (not all(vm.public_ips for vm in vms)):
         print("Waiting for VMs to get IP addresses...", end="")
         sys.stdout.flush()      # STDOUT is line-buffered
         while not all(vm.public_ips for vm in vms):
             time.sleep(1)
-            print(".", end="")
-            sys.stdout.flush()      # STDOUT is line-buffered
+            print_progress_dot()
         print("DONE")
 
     vms_info[group_key] = dump_vms_info(vms)
@@ -319,7 +337,21 @@ def destroy(group_name=None):
         print("Cloud credentials not found at %s" % CLOUD_CONFIG_FPATH)
         return 1
 
-    creds = AWSCredentials(creds_data["aws"]["key"], creds_data["aws"]["secret"])
+    aws_creds = None
+    try:
+        aws_creds = AWSCredentials(creds_data["aws"]["key"], creds_data["aws"]["secret"])
+    except KeyError:
+        # missing/incomplete AWS credentials, may not be needed, though
+        pass
+
+    gcp_creds = None
+    try:
+        gcp_creds = GCPCredentials(creds_data["gcp"]["project_id"],
+                                   creds_data["gcp"]["service_account_id"],
+                                   creds_data["gcp"]["key_path"])
+    except KeyError:
+        # missing/incomplete GCP credentials, may not be needed, though
+        pass
 
     if not os.path.exists(CLOUD_STATE_FPATH):
         print("No saved cloud state info")
@@ -337,7 +369,18 @@ def destroy(group_name=None):
             return 1
 
         region = vms_info[group_name]["meta"]["region"]
-        driver = get_cloud_driver(Providers.AWS, creds, region)
+        provider = vms_info[group_name]["meta"]["provider"]
+        if provider == "aws":
+            if aws_creds is None:
+                user_error("Missing/incomplete AWS credentials")
+                return 1
+            driver = get_cloud_driver(Providers.AWS, aws_creds, region)
+        if provider == "gcp":
+            if gcp_creds is None:
+                user_error("Missing/incomplete GCP credentials")
+                return 1
+            driver = get_cloud_driver(Providers.GCP, gcp_creds, region)
+
         for name, vm_info in vms_info[group_name].items():
             if name == "meta":
                 continue
@@ -352,7 +395,18 @@ def destroy(group_name=None):
         print("Destroying all hosts")
         for group_name in [key for key in vms_info.keys() if key.startswith("@")]:
             region = vms_info[group_name]["meta"]["region"]
-            driver = get_cloud_driver(Providers.AWS, creds, region)
+            provider = vms_info[group_name]["meta"]["provider"]
+            if provider == "aws":
+                if aws_creds is None:
+                    user_error("Missing/incomplete AWS credentials")
+                    return 1
+                driver = get_cloud_driver(Providers.AWS, aws_creds, region)
+            if provider == "gcp":
+                if gcp_creds is None:
+                    user_error("Missing/incomplete GCP credentials")
+                    return 1
+                driver = get_cloud_driver(Providers.GCP, gcp_creds, region)
+
             for name, vm_info in vms_info[group_name].items():
                 if name == "meta":
                     continue
@@ -385,6 +439,12 @@ def init_cloud_config():
             "key_pair": "TBD",
             "security_groups": ["TBD"],
             "region": "OPTIONAL (DEFAULT: eu-west-1)",
+        },
+        "gcp": {
+            "project_id": "TBD",
+            "service_account_id": "TBD",
+            "key_path": "TBD",
+            "region": "OPTIONAL (DEFAULT: europe-west1-b)",
         },
     }
     write_json(CLOUD_CONFIG_FPATH, empty_config)

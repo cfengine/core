@@ -72,7 +72,7 @@ libcf_agent_la_LIBADD = ../libpromises/libpromises.la \
 
 libcf_agent_la_SOURCES = \
 	agent-diagnostics.c agent-diagnostics.h \
-	audit_mode.c audit_mode.h \
+	simulate_mode.c simulate_mode.h \
 	tokyo_check.c tokyo_check.h \
 	abstract_dir.c abstract_dir.h \
 	cf-agent.c \

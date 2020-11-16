@@ -37,18 +37,18 @@ bundle agent test
     };
 
     "test_1" string => execresult("touch $(sys.statedir)$(const.dirsep)execresult_safe", useshell),
-      meta => { "audit_safe" };
+      meta => { "simulate_safe" };
     "test_2" string => execresult("touch $(sys.statedir)$(const.dirsep)execresult_unsafe", useshell);
     "test_3" data => execresult_as_data("touch $(sys.statedir)$(const.dirsep)execresult_as_data_safe", useshell),
-      meta => { "audit_safe" };
+      meta => { "simulate_safe" };
     "test_4" data => execresult_as_data("touch $(sys.statedir)$(const.dirsep)execresult_as_data_unsafe", useshell);
 
   classes:
     "test_5" expression => returnszero("touch $(sys.statedir)$(const.dirsep)returnszero_safe", useshell),
-      meta => { "audit_safe" };
+      meta => { "simulate_safe" };
     "test_6" expression => returnszero("touch $(sys.statedir)$(const.dirsep)returnszero_unsafe", useshell);
     "test_7" expression => usemodule("usemodule_safe.sh", useshell),
-      meta => { "audit_safe" };
+      meta => { "simulate_safe" };
     "test_8" expression => usemodule("usemodule_unsafe.sh", useshell);
 
 }

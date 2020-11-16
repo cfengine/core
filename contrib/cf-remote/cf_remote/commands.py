@@ -397,11 +397,12 @@ def destroy(group_name=None):
                 return 1
             driver = get_cloud_driver(Providers.GCP, gcp_creds, region)
 
+        nodes = driver.list_nodes()
         for name, vm_info in vms_info[group_name].items():
             if name == "meta":
                 continue
             vm_uuid = vm_info["uuid"]
-            vm = VM.get_by_uuid(vm_uuid, driver)
+            vm = VM.get_by_uuid(vm_uuid, nodes=nodes)
             if vm is not None:
                 to_destroy.append(vm)
             else:
@@ -423,11 +424,12 @@ def destroy(group_name=None):
                     return 1
                 driver = get_cloud_driver(Providers.GCP, gcp_creds, region)
 
+            nodes = driver.list_nodes()
             for name, vm_info in vms_info[group_name].items():
                 if name == "meta":
                     continue
                 vm_uuid = vm_info["uuid"]
-                vm = VM.get_by_uuid(vm_uuid, driver)
+                vm = VM.get_by_uuid(vm_uuid, nodes=nodes)
                 if vm is not None:
                     to_destroy.append(vm)
                 else:

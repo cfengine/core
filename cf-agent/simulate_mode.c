@@ -36,7 +36,7 @@
 #include <files_names.h>        /* JoinPaths() */
 #include <pipes.h>              /* cf_popen(), cf_pclose() */
 
-#include <audit_mode.h>
+#include <simulate_mode.h>
 
 #define DELIM_CHAR '='
 
@@ -516,13 +516,13 @@ bool ManifestRenamedFiles()
 
 bool AuditChangedFiles(EvalMode mode)
 {
-    assert((mode == EVAL_MODE_AUDIT_MANIFEST) || (mode == EVAL_MODE_AUDIT_DIFF));
+    assert((mode == EVAL_MODE_SIMULATE_MANIFEST) || (mode == EVAL_MODE_SIMULATE_DIFF));
 
     bool success = ManifestRenamedFiles();
 
     const char *action;
     const char *action_ing;
-    if (mode == EVAL_MODE_AUDIT_MANIFEST)
+    if (mode == EVAL_MODE_SIMULATE_MANIFEST)
     {
         action = "manifest";
         action_ing = "Manifesting";
@@ -562,7 +562,7 @@ bool AuditChangedFiles(EvalMode mode)
             /* Each file should only be manifested once. */
             if (!StringSetContains(manifested_files, path))
             {
-                if (mode == EVAL_MODE_AUDIT_MANIFEST)
+                if (mode == EVAL_MODE_SIMULATE_MANIFEST)
                 {
                     success = (success && ManifestFile(path, true));
                 }
@@ -596,10 +596,10 @@ bool AuditChangedFiles(EvalMode mode)
 
 bool ManifestChangedFiles()
 {
-    return AuditChangedFiles(EVAL_MODE_AUDIT_MANIFEST);
+    return AuditChangedFiles(EVAL_MODE_SIMULATE_MANIFEST);
 }
 
 bool DiffChangedFiles()
 {
-    return AuditChangedFiles(EVAL_MODE_AUDIT_DIFF);
+    return AuditChangedFiles(EVAL_MODE_SIMULATE_DIFF);
 }

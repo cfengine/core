@@ -71,7 +71,7 @@ typedef enum
     // so they can do things like maplist(canonify($(this)), mylist)
     FNCALL_OPTION_DELAYED_EVALUATION = 1 << 3,
     // Unsafe functions (with side effects) that should not be evaluated in
-    // audit mode(s).
+    // simulate mode(s).
     FNCALL_OPTION_UNSAFE = 1 << 4,
 } FnCallOption;
 

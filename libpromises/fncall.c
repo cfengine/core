@@ -36,7 +36,7 @@
 #include <audit.h>
 #include <cleanup.h>
 
-#define AUDIT_SAFE_META_TAG "audit_safe"
+#define SIMULATE_SAFE_META_TAG "simulate_safe"
 
 /******************************************************************/
 /* Argument propagation                                           */
@@ -336,15 +336,15 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, const Policy *policy, FnCall *fp, 
         return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };
     }
 
-    const bool skip_unsafe_function_calls = ((EVAL_MODE == EVAL_MODE_AUDIT_MANIFEST) ||
-                                             (EVAL_MODE == EVAL_MODE_AUDIT_DIFF));
+    const bool skip_unsafe_function_calls = ((EVAL_MODE == EVAL_MODE_SIMULATE_MANIFEST) ||
+                                             (EVAL_MODE == EVAL_MODE_SIMULATE_DIFF));
 
     Rlist *caller_meta = PromiseGetConstraintAsList(ctx, "meta", caller);
     if (skip_unsafe_function_calls &&
         ((fp_type->options & FNCALL_OPTION_UNSAFE) != 0) &&
-        !RlistContainsString(caller_meta, AUDIT_SAFE_META_TAG))
+        !RlistContainsString(caller_meta, SIMULATE_SAFE_META_TAG))
     {
-        Log(LOG_LEVEL_WARNING, "Not calling unsafe function '%s' in audit mode", fp->name);
+        Log(LOG_LEVEL_WARNING, "Not calling unsafe function '%s' in simulate mode", fp->name);
         return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };
     }
 

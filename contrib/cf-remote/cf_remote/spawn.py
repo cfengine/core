@@ -50,51 +50,55 @@ class VM:
         self._provider = provider
 
     @classmethod
-    def get_by_ip(cls, ip, driver=None):
-        if driver is None:
+    def get_by_ip(cls, ip, driver=None, nodes=None):
+        if nodes is None and driver is None:
             if len(_DRIVERS.keys()) == 1:
                 driver = _DRIVERS.items()[0]
             else:
                 print("Don't know which driver to use: %s" % _DRIVERS.keys())
                 return None
 
-        for node in driver.list_nodes():
+        nodes = nodes or driver.list_nodes()
+        for node in nodes:
             if node.state in (0, 'running') and (ip in node.public_ips or ip in node.private_ips):
                 return cls(node.name, driver, node)
         return None
 
     @classmethod
-    def get_by_name(cls, name, driver=None):
-        if driver is None:
+    def get_by_name(cls, name, driver=None, nodes=None):
+        if nodes is None and driver is None:
             if len(_DRIVERS.keys()) == 1:
                 driver = _DRIVERS.items()[0]
             else:
                 print("Don't know which driver to use: %s" % _DRIVERS.keys())
                 return None
 
-        for node in driver.list_nodes():
+        nodes = nodes or driver.list_nodes()
+        for node in nodes:
             if node.state in (0, 'running') and node.name == name:
                 return cls(node.name, driver, node)
         return None
 
     @classmethod
-    def get_by_uuid(cls, uuid, driver=None):
-        if driver is None:
+    def get_by_uuid(cls, uuid, driver=None, nodes=None):
+        if nodes is None and driver is None:
             if len(_DRIVERS.keys()) == 1:
                 driver = _DRIVERS.items()[0]
             else:
                 print("Don't know which driver to use: %s" % _DRIVERS.keys())
                 return None
 
-        for node in driver.list_nodes():
+        nodes = nodes or driver.list_nodes()
+        for node in nodes:
             if node.uuid == uuid:
                 return cls(node.name, driver, node)
         return None
 
 
     @classmethod
-    def get_by_info(cls, driver, vm_info):
-        for node in driver.list_nodes():
+    def get_by_info(cls, driver, vm_info, nodes=None):
+        nodes = nodes or driver.list_nodes()
+        for node in nodes:
             if (("name" in vm_info and vm_info["name"] == node.name) or
                 ("public_ips" in vm_info and set(vm_info["public_ips"]).intersection(set(node.public_ips))) or
                 ("private_ips" in vm_info and set(vm_info["private_ips"]).intersection(set(node.private_ips)))):

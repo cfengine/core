@@ -295,18 +295,18 @@ bool MakingInternalChanges(EvalContext *ctx, const Promise *pp, const Attributes
  */
 static inline bool ChrootChanges()
 {
-    return ((EVAL_MODE == EVAL_MODE_AUDIT_DIFF) || (EVAL_MODE == EVAL_MODE_AUDIT_MANIFEST));
+    return ((EVAL_MODE == EVAL_MODE_SIMULATE_DIFF) || (EVAL_MODE == EVAL_MODE_SIMULATE_MANIFEST));
 }
 
 /**
- * Set the chroot for recording changes in files (in audit mode(s)).
+ * Set the chroot for recording changes in files (in simulate mode(s)).
  *
  * @note This function should only be called once.
  */
 void SetChangesChroot(const char *chroot);
 
 /**
- * Get the path for #orig_path under the changes chroot (where changes in audit
+ * Get the path for #orig_path under the changes chroot (where changes in simulate
  * mode(s) are done). #orig_path is expected to be an absolute path.
  *
  * @note Returns a pointer to an internal buffer and the value is only valid

@@ -87,7 +87,7 @@
 #include <dbm_api.h>                    /* CheckDBRepairFlagFile() */
 #include <sys/types.h>                  /* checking umask on writing setxid log */
 #include <sys/stat.h>                   /* checking umask on writing setxid log */
-#include <audit_mode.h>                 /* ManifestChangedFiles(), DiffChangedFiles() */
+#include <simulate_mode.h>              /* ManifestChangedFiles(), DiffChangedFiles() */
 
 #include <mod_common.h>
 #include <mod_custom.h>                 /* IsCustomPromiseType() */
@@ -204,7 +204,7 @@ static const struct option OPTIONS[] =
     {"show-evaluated-vars", optional_argument, 0, 0 },
     {"skip-bootstrap-policy-run", no_argument, 0, 0 },
     {"skip-db-check", optional_argument, 0, 0 },
-    {"audit", required_argument, 0, 0},
+    {"simulate", required_argument, 0, 0},
     {NULL, 0, 0, '\0'}
 };
 
@@ -337,7 +337,7 @@ int main(int argc, char *argv[])
 
     GenericAgentFinalize(ctx, config);
 
-    if (EVAL_MODE == EVAL_MODE_AUDIT_MANIFEST)
+    if (EVAL_MODE == EVAL_MODE_SIMULATE_MANIFEST)
     {
         bool success = ManifestChangedFiles();
         if (!success)
@@ -345,7 +345,7 @@ int main(int argc, char *argv[])
             Log(LOG_LEVEL_ERR, "Failed to manifest changed files");
         }
     }
-    else if (EVAL_MODE == EVAL_MODE_AUDIT_DIFF)
+    else if (EVAL_MODE == EVAL_MODE_SIMULATE_DIFF)
     {
         bool success = DiffChangedFiles();
         if (!success)
@@ -674,25 +674,25 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                     DoCleanupAndExit(EXIT_FAILURE);
                 }
             }
-            else if (StringEqual(option_name, "audit"))
+            else if (StringEqual(option_name, "simulate"))
             {
                 if (optarg == NULL)
                 {
-                    Log(LOG_LEVEL_ERR, "Missing argument for --audit, 'manifest' or 'diff' required");
+                    Log(LOG_LEVEL_ERR, "Missing argument for --simulate, 'manifest' or 'diff' required");
                     DoCleanupAndExit(EXIT_FAILURE);
                 }
                 else if (StringEqual_IgnoreCase(optarg, "manifest"))
                 {
-                    EVAL_MODE = EVAL_MODE_AUDIT_MANIFEST;
+                    EVAL_MODE = EVAL_MODE_SIMULATE_MANIFEST;
                 }
                 else if (StringEqual_IgnoreCase(optarg, "diff"))
                 {
-                    EVAL_MODE = EVAL_MODE_AUDIT_DIFF;
+                    EVAL_MODE = EVAL_MODE_SIMULATE_DIFF;
                 }
                 else
                 {
                     Log(LOG_LEVEL_ERR,
-                        "Invalid argument for --audit, 'manifest' or 'diff' required, not '%s'",
+                        "Invalid argument for --simulate, 'manifest' or 'diff' required, not '%s'",
                         optarg);
                     DoCleanupAndExit(EXIT_FAILURE);
                 }

@@ -26,7 +26,7 @@
 
 #include <platform.h>
 
-#include <audit_mode.h>
+#include <simulate_mode.h>
 
 int main (int argc, char *argv[])
 {

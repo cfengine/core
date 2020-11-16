@@ -24,12 +24,12 @@
 
 #include <platform.h>
 
-#ifndef _AUDIT_MODE_H_
-#define _AUDIT_MODE_H_
+#ifndef _SIMULATE_H_
+#define _SIMULATE_H_
 
 bool ManifestFile(const char *path, bool chrooted);
 bool ManifestRename(const char *orig_name, const char *new_name);
 bool ManifestChangedFiles();
 bool DiffChangedFiles();
 
-#endif  /* _AUDIT_MODE_H_ */
+#endif  /* _SIMULATE_H_ */

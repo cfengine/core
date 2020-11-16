@@ -1,3 +1,46 @@
+3.17.0:
+	- AVCs are no longer produced for CFEngine processes accessing /proc/net
+	  (CFE-3240)
+	- Added new policy function execresult_as_data() (CFE-3315)
+	- Added optional argument to execresult for choosing between stdout and
+	  stderr (CFE-3108)
+	- Added warning when trying to use {{.}} to expand containers in mustache
+	  templates (CFE-3457, CFE-3489)
+	- Backgrounded commands are now correctly executed in the child process
+	  (CFE-3379)
+	- CFEngine policy bodies can now be completely empty
+	- Custom promise types can now be added using promise modules (CFE-3273)
+	- Directory listings in files changes monitoring are now only updated
+	  when there is a change (CFE-3382)
+	- Expand variables in data/list references (CFE-3299)
+	- Fix how we check for `--cols` argument to `ps`. (ENT-6098)
+	- Fixed memory leak in users promises
+	- Fixed small memory leak in cf-promises (CFE-3461)
+	- Limited unqualified host and domain name to 511 characters (CFE-3409)
+	- Outcome classes are now always defined for promiser in files promises
+	  (CFE-3369)
+	- Promises with 'action => bg()' no longer break reporting data (ENT-6042)
+	- Spaces inside square brackets (slist/data index) are now allowed in
+	  class expressions (CFE-3320)
+	- Variables specifying data/list names in @() references are now expanded
+	  (CFE-2434)
+	- and(), or(), not() now return boolean and cannot be used directly in
+	  slist vars. They can now be used in other places where a boolean is
+	  expected. (Most notably and / or promise attributes). The return values
+	  can be converted to strings using concat(), if necessary (CFE-3470)
+	- cf-agent now supports the '--audit=diff' mode (ENT-5294)
+	- cf-agent now supports the manifest audit mode (ENT-5293)
+	- cf-monitord now uses /proc/net/* files to get network information if
+	  possible (CFE-2945)
+	- cf-remote can now spawn VMs in Google Cloud Platform (CFE-3477)
+	- cf-remote now installs CFEngine to hosts in parallel (CFE-3003)
+	- 'cf-remote destroy' destroys VMs faster (in parallel) now (CFE-3477)
+	- 'cf-remote spawn' now better reports progress when spawning VMs (CFE-3477)
+	- 'cf-remote spawn' now supports specifying size, network and public IP
+	  request (CFE-3477)
+	- Added `--remote-download` argument to the cf-remote that enables to
+	  download packages directly to the target machine with curl (CFE-3464)
+
 3.16.0:
 	- Added 'cf-secret' binary for host-specific encryption (CFE-2613)
 	- 'cf-check diagnose --test-write' can now be used to test writing

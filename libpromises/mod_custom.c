@@ -763,6 +763,8 @@ PromiseResult EvaluateCustomPromise(EvalContext *ctx, const Promise *pp)
 
     if (module == NULL)
     {
+        free(interpreter);
+        free(path);
         // Error logged in PromiseModule_Start()
         return PROMISE_RESULT_FAIL;
     }

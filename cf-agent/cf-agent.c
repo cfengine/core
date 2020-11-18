@@ -235,7 +235,7 @@ static const char *const HINTS[] =
     "Show *final* evaluated variables, including those defined without dependency to user-defined classes in policy. Optionally can take a regular expression.",
     "Do not run policy as the last step of the bootstrap process",
     "Do not run database integrity checks and repairs at startup",
-    "Run in Audit mode, either 'manifest' or 'diff'",
+    "Run in simulate mode, either 'manifest' or 'diff'",
     NULL
 };
 

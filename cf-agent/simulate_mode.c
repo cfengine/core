@@ -395,9 +395,11 @@ static bool RunDiff(const char *path1, const char *path2)
     {
         Log(LOG_LEVEL_ERR, "Failed to read output from the 'diff' utility");
         cf_pclose(f);
+        free(command);
         return false;
     }
     ret = cf_pclose(f);
+    free(command);
     if (ret == 2)
     {
         Log(LOG_LEVEL_ERR, "'diff -u %s %s' failed", path1, path2);

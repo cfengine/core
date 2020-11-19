@@ -236,7 +236,7 @@ bool RecordFileChangedInChroot(const char *path)
 
     bool ret = WriteLenPrefixedString(writer, path);
 
-    fclose(chroot_changes);
+    WriterClose(writer);
     return ret;
 }
 
@@ -248,6 +248,6 @@ bool RecordFileRenamedInChroot(const char *old_name, const char *new_name)
     bool ret = WriteLenPrefixedString(writer, old_name);
     ret = (ret && WriteLenPrefixedString(writer, new_name));
 
-    fclose(chroot_renames);
+    WriterClose(writer);
     return ret;
 }

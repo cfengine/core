@@ -232,7 +232,7 @@ def _package_from_releases(tags, extension, version, edition, remote_download):
     if not artifacts:
         log.error(
             "Could not find an appropriate package for host, please use --{}-package".format(
-                "hub" if hub else "client"))
+                "hub" if "hub" in tags else "client"))
         return 1
     artifact = artifacts[-1]
     if remote_download:

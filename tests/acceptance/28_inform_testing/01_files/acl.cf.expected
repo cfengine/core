@@ -1,3 +1,0 @@
-   error: No Access ACL for '/tmp/TESTDIR.cfengine' could be read. (acl_get_file: Operation not supported)
-   error: Promise belongs to bundle 'main' in file '/northern.tech/cfengine/core/tests/acceptance/./10_files/14_inform_logging/acl.cf' near line 24
-   error: Errors encountered when actuating files promise '/tmp/TESTDIR.cfengine'

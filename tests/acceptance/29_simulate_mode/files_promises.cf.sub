@@ -1,0 +1,101 @@
+bundle common simulation_files_promises
+{
+  vars:
+    "inputs" slist => { "$(this.promise_dirname)/../default.cf.sub" };
+}
+
+body common control
+{
+  inputs => { "@(simulation_files_promises.inputs)" };
+}
+
+bundle agent init
+{
+  files:
+    "$(G.testroot)$(const.dirsep)source-file"
+      create => "true",
+      content => "These are my source file contents.";
+}
+
+bundle agent test
+{
+  files:
+    "$(G.testroot)$(const.dirsep)create-true"
+      create => "true";
+    "$(G.testroot)$(const.dirsep)insert-lines"
+      create => "true",
+      edit_line => insert_lines("foobar");
+    "$(G.testroot)$(const.dirsep)SUBDIR/."
+      create => "true";
+    "$(G.testroot)$(const.dirsep)copy-from"
+      copy_from => example("$(G.testroot)$(const.dirsep)source-file");
+    "$(G.testroot)$(const.dirsep)delete-me"
+      delete => tidy;
+    "$(G.testroot)$(const.dirsep)sub-dir/."
+      delete => tidy,
+      file_select => all,
+      depth_search => recurse("inf");
+    "$(G.testroot)$(const.dirsep)set-colon-field"
+      edit_line => set_colon_field("me","6","/my/new/shell");
+    "$(G.testroot)$(const.dirsep)delete-lines-matching"
+      edit_line => delete_lines_matching("foo 1");
+    "$(G.testroot)$(const.dirsep)regex-replace"
+      edit_line => regex_replace("foo","FOO!");
+    "$(G.testroot)$(const.dirsep)edit-template-string"
+      template_method => "inline_mustache",
+      edit_template_string => "{{{name}}} killed your father",
+      template_data => '{ "name": "Darth Vader" }';
+    "$(G.testroot)$(const.dirsep)build-xpath"
+      edit_xml => build_xpath("/Server/Service/Engine/Host");
+    "$(G.testroot)$(const.dirsep)xml-insert-tree"
+      edit_xml => xml_insert_tree("<x foo='bar'>y</x>", "//Root");
+    "$(G.testroot)$(const.dirsep)perms"
+      perms => m(000);
+    "$(G.testroot)$(const.dirsep)rename-me"
+      rename => newname("$(G.testroot)$(const.dirsep)rename-newname");
+    "$(G.testroot)$(const.dirsep)transformer"
+      transformer => "$(G.gzip) $(this.promiser)";
+}
+
+
+# TODO list the contents of the chroot so we can see transformer.gz for example?
+#bundle agent check
+#{
+#  vars:
+#    "result" string => execresult("$(G.ls) -laR $(sys.workdir)/state/", "noshell"),
+#      meta => { "simulate_safe" };
+#  reports:
+#    "chroot files: $(result)";
+#}
+
+bundle agent main
+{
+  methods:
+    "init";
+    "test";
+#    "check";
+}
+
+body copy_from example(from)
+{
+  source => "$(from)";
+  compare => "digest";
+  preserve => "true";
+}
+
+bundle edit_xml xml_insert_tree(treestring, xpath)
+{
+  insert_tree:
+      '$(treestring)' select_xpath => "$(xpath)";
+}
+
+bundle edit_xml build_xpath(xpath)
+{
+  build_xpath:
+    "$(xpath)";
+}
+
+body rename newname(name)
+{
+  newname => "$(name)";
+}

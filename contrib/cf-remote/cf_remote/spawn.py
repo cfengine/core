@@ -367,6 +367,8 @@ def spawn_vms(vm_requests, creds, region, key_pair=None, security_groups=None,
 
 
 def destroy_vms(vms):
+    if not vms:
+        return
     with Pool(len(vms)) as pool:
         pool.map(lambda vm: vm.destroy(), vms)
 

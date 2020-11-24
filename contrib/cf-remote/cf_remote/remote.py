@@ -216,8 +216,10 @@ def bootstrap_host(host_data, policy_server, *, connection=None, trust_server=Tr
         sys.exit("Bootstrap failed on '{}'".format(host))
     if output and "completed successfully" in output:
         print("Bootstrap successful: '{}' -> '{}'".format(host, policy_server))
+        return True
     else:
-        user_error("Something went wrong while bootstrapping")
+        log.error("Something went wrong while bootstrapping")
+        return False
 
 def _package_from_list(tags, extension, packages):
     artifacts = [Artifact(None, p) for p in packages]
@@ -318,8 +320,11 @@ def install_host(
                         connection=connection, sudo=True)
 
     if bootstrap:
-        bootstrap_host(data, policy_server=bootstrap,
-                       connection=connection, trust_server=(not trust_keys))
+        ret = bootstrap_host(data, policy_server=bootstrap,
+                             connection=connection,
+                             trust_server=(not trust_keys))
+        if not ret:
+            return 1
     if demo:
         if hub:
             demo_lib.install_def_json(host, connection=connection, call_collect=call_collect)

@@ -91,6 +91,7 @@ def get_args():
     sp.add_argument("--count", help="How many hosts to spawn", type=int)
     sp.add_argument("--role", help="Role of the hosts", choices=["hub", "hubs", "client", "clients"])
     sp.add_argument("--name", help="Name of the group of hosts (can be used in other commands)")
+    sp.add_argument("--append", help="Append the new VMs to a pre-existing group", action='store_true')
     sp.add_argument("--aws", help="Spawn VMs in AWS (default)", action='store_true')
     sp.add_argument("--gcp", help="Spawn VMs in GCP", action='store_true')
     sp.add_argument("--size", help="Size/type of the instances", type=str)
@@ -171,7 +172,7 @@ def run_command_with_args(command, args):
 
         return commands.spawn(args.platform, args.count, args.role, args.name,
                               provider=provider, size=args.size, network=args.network,
-                              public_ip=not args.no_public_ip)
+                              public_ip=not args.no_public_ip, extend_group=args.append)
     elif command == "destroy":
         group_name = args.name if args.name else None
         return commands.destroy(group_name)

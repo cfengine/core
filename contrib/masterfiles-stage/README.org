@@ -60,8 +60,9 @@ earlier versions of git may or may not work.
 :ID:       2aeaaa9b-1229-4c14-b130-6d86e370de42
 :END:
 Installation simply consists of saving =masterfiles-stage.sh= and its supporting
-=common.sh= to the same directory on your policy server, making sure that
-=masterfiles-stage.sh= is executable and configuring the default parameter set.
+=common.sh=, =ssh-wrapper.sh= and =git-askpass.sh= scripts to the same directory on your policy
+server, making sure that=masterfiles-stage.sh= is executable and configuring the default
+parameter set.
 
 *Note:* These instructions install the tooling into the same location where they
 are pre-installed when using CFEngine Enterprise.
@@ -70,6 +71,7 @@ are pre-installed when using CFEngine Enterprise.
 #+BEGIN_SRC sh :exports code
   curl --silent https://raw.githubusercontent.com/cfengine/core/master/contrib/masterfiles-stage/install-masterfiles-stage.sh --remote-name
   chmod +x install-masterfiles-stage.sh
+  # adjust the shebang on the first line of the script if `/usr/bin/env` isn't the correct path to `env`.
   ./install-masterfiles-stage.sh
 #+END_SRC
 
@@ -187,6 +189,9 @@ when developing new staging methods.
     - =cb375d0f=
 
 - =PKEY= :: Fully qualified path to passphraseless private SSH Key used for authorization.
+  This file should be owned by root and have only user read/write permissions.
+  - Example values:
+    - =/opt/cfengine/userworkdir/admin/.ssh/id_rsa.pvt=
 
 - =GIT_USERNAME= :: Git username used for authorization.
 

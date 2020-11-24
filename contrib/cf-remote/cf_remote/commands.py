@@ -257,7 +257,7 @@ def download(tags=None, version=None, edition=None):
     return _iterate_over_packages(tags, version, edition, True)
 
 def spawn(platform, count, role, group_name, provider=Providers.AWS, region=None,
-          size=None, network=None, public_ip=True):
+          size=None, network=None, public_ip=True, extend_group=False):
     if os.path.exists(CLOUD_CONFIG_FPATH):
         creds_data = read_json(CLOUD_CONFIG_FPATH)
     else:
@@ -270,7 +270,8 @@ def spawn(platform, count, role, group_name, provider=Providers.AWS, region=None
         vms_info = dict()
 
     group_key = "@%s" % group_name
-    if group_key in vms_info:
+    group_exists = group_key in vms_info
+    if not extend_group and group_exists:
         print("Group '%s' already exists!" % group_key)
         return 1
 
@@ -298,8 +299,16 @@ def spawn(platform, count, role, group_name, provider=Providers.AWS, region=None
 
         region = region or creds_data["gcp"].get("region", "europe-west1-b")
 
+    # TODO: Do we have to complicate this instead of just assuming existing VMs
+    # were created by this code and thus follow the naming pattern from this
+    # code?
+    if group_exists:
+        range_start = len([key for key in vms_info[group_key].keys() if key != "meta"])
+    else:
+        range_start = 0
+
     requests = []
-    for i in range(count):
+    for i in range(range_start, range_start + count):
         vm_name = whoami()[0:2] + group_name + "-" + platform + role + str(i)
         requests.append(VMRequest(platform=platform,
                                   name=vm_name,
@@ -323,7 +332,10 @@ def spawn(platform, count, role, group_name, provider=Providers.AWS, region=None
             print_progress_dot()
         print("DONE")
 
-    vms_info[group_key] = dump_vms_info(vms)
+    if group_exists:
+        vms_info[group_key].update(dump_vms_info(vms))
+    else:
+        vms_info[group_key] = dump_vms_info(vms)
 
     write_json(CLOUD_STATE_FPATH, vms_info)
     print("Details about the spawned VMs can be found in %s" % CLOUD_STATE_FPATH)

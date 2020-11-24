@@ -200,11 +200,13 @@ def uninstall_cfengine(host, data, *, connection=None):
 
 
 @auto_connect
-def bootstrap_host(host_data, policy_server, *, connection=None):
+def bootstrap_host(host_data, policy_server, *, connection=None, trust_server=True):
     host = host_data["ssh_host"]
     agent = host_data["agent"]
     print("Bootstrapping: '{}' -> '{}'".format(host, policy_server))
     command = "{} --bootstrap {}".format(agent, policy_server)
+    if not trust_server:
+        command += " --trust-server=no"
     if host_data["os"] == "windows":
         output = ssh_cmd(connection, powershell(command))
     else:
@@ -253,7 +255,8 @@ def install_host(
         connection=None,
         edition=None,
         show_info=True,
-        remote_download=False):
+        remote_download=False,
+        trust_keys=None):
 
     data = get_info(host, connection=connection)
     if show_info:
@@ -307,8 +310,16 @@ def install_host(
     else:
         log.error("Installation failed!")
         return 1
+
+    if trust_keys:
+        for key in trust_keys:
+            scp(key, host, connection=connection)
+            run_command(host, "mv %s /var/cfengine/ppkeys/" % basename(key),
+                        connection=connection, sudo=True)
+
     if bootstrap:
-        bootstrap_host(data, policy_server=bootstrap, connection=connection)
+        bootstrap_host(data, policy_server=bootstrap,
+                       connection=connection, trust_server=(not trust_keys))
     if demo:
         if hub:
             demo_lib.install_def_json(host, connection=connection, call_collect=call_collect)

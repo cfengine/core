@@ -47,6 +47,8 @@ def get_args():
     sp.add_argument(
         "--call-collect", help="Enable call collect in --demo def.json", action='store_true')
     sp.add_argument("--remote-download", help="Package will be downloaded directly to the target machine", action="store_true")
+    sp.add_argument("--trust-keys", help="Comma-separated list of paths to keys hosts should trust" +
+                    " (implies '--trust-server no' when boostraping)", type=str)
 
     sp = subp.add_parser("uninstall", help="Install CFEngine on the given hosts")
     sp.add_argument("--clients", "-c", help="Where to uninstall", type=str)
@@ -117,6 +119,11 @@ def run_command_with_args(command, args):
     if command == "info":
         return commands.info(args.hosts, None)
     elif command == "install":
+        if args.trust_keys:
+            trust_keys = args.trust_keys.split(",")
+        else:
+            trust_keys = None
+
         return commands.install(
             args.hub,
             args.clients,
@@ -128,7 +135,8 @@ def run_command_with_args(command, args):
             demo=args.demo,
             call_collect=args.call_collect,
             edition=args.edition,
-            remote_download=args.remote_download)
+            remote_download=args.remote_download,
+            trust_keys=trust_keys)
     elif command == "uninstall":
         all_hosts = ((args.hosts or []) + (args.hub or []) + (args.clients or []))
         return commands.uninstall(all_hosts)

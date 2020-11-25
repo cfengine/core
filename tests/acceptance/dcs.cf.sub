@@ -8,12 +8,14 @@ bundle common G
 {
   vars:
     windows::
-      "cwd" string => execresult("C:\windows\system32\cmd.exe /C cd", "noshell");
+      "cwd" string => execresult("C:\windows\system32\cmd.exe /C cd", "noshell"),
+        meta => { "simulate_safe" };
       # Use for redirection, not as a real file.
       "dev_null" string => "nul";
       "exeext" slist => { ".exe", ".bat" };
     !windows::
-      "cwd" string => execresult("/bin/pwd 2>/dev/null || /usr/bin/pwd", "useshell");
+      "cwd" string => execresult("/bin/pwd 2>/dev/null || /usr/bin/pwd", "useshell"),
+        meta => { "simulate_safe" };
       # Use for redirection, not as a real file.
       "dev_null" string => "/dev/null";
       "exeext" string => "";
@@ -31,6 +33,7 @@ bundle common G
                         "env",
                         "false",
                         "grep",
+                        "gsed",  # will override sed on solaris hosts
                         "gzip",
                         "hexdump",
                         "ln",
@@ -125,6 +128,10 @@ bundle common G
       ifvarclass => canonify("$(paths_indices)_make$(exeext)");
       "make" string => "$(paths[$(paths_indices)])$(const.dirsep)gmake$(exeext)",
       ifvarclass => canonify("$(paths_indices)_gmake$(exeext)");
+
+    # on solaris, gsed works more like GNU sed, such as having `-i` option
+    solaris::
+      "sed" string => "$(G.gsed)";
 
     # on AIX groupdel is rmgroup and groupadd is mkgroup
     aix::
@@ -376,30 +383,40 @@ bundle agent xml_check_diff(file1, file2, test, expected_difference)
 {
   vars:
     DEBUG.check_ready.!no_difference::
-      "file1r" string => execresult("$(G.cwd)/xml-c14nize $(file1)", "noshell");
-      "file2r" string => execresult("$(G.cwd)/xml-c14nize $(file2)", "noshell");
+      "file1r" string => execresult("$(G.cwd)/xml-c14nize $(file1)", "noshell"),
+        meta => { "simulate_safe" };
+      "file2r" string => execresult("$(G.cwd)/xml-c14nize $(file2)", "noshell"),
+        meta => { "simulate_safe" };
 
     DEBUG.check_ready.!no_difference.has_hexdump::
-      "file1h" string => execresult("$(G.hexdump) -C $(file1)", "useshell");
-      "file2h" string => execresult("$(G.hexdump) -C $(file2)", "useshell");
+      "file1h" string => execresult("$(G.hexdump) -C $(file1)", "useshell"),
+        meta => { "simulate_safe" };
+      "file2h" string => execresult("$(G.hexdump) -C $(file2)", "useshell"),
+        meta => { "simulate_safe" };
 
     DEBUG.check_ready.!no_difference.!has_hexdump::
-      "file1h" string => execresult("$(G.od) -c $(file1)", "useshell");
-      "file2h" string => execresult("$(G.od) -c $(file2)", "useshell");
+      "file1h" string => execresult("$(G.od) -c $(file1)", "useshell"),
+        meta => { "simulate_safe" };
+      "file2h" string => execresult("$(G.od) -c $(file2)", "useshell"),
+        meta => { "simulate_safe" };
 
     DEBUG.check_ready.!no_difference.has_unified_diff::
-      "diffu" string => execresult("$(G.diff_maybecolor) -u $(file2) $(file1) 2>$(G.dev_null)", "useshell");
+      "diffu" string => execresult("$(G.diff_maybecolor) -u $(file2) $(file1) 2>$(G.dev_null)", "useshell"),
+        meta => { "simulate_safe" };
     DEBUG.check_ready.!no_difference.!has_unified_diff::
-      "diffu" string => execresult("$(G.diff_maybecolor) -c $(file2) $(file1) 2>$(G.dev_null)", "useshell");
+      "diffu" string => execresult("$(G.diff_maybecolor) -c $(file2) $(file1) 2>$(G.dev_null)", "useshell"),
+        meta => { "simulate_safe" };
 
   classes:
       "has_unified_diff" expression => returnszero(
-                                                    "$(G.diff_maybecolor) -u $(G.etc_null) $(G.etc_null) >$(G.dev_null) 2>&1", "useshell");
+                                                    "$(G.diff_maybecolor) -u $(G.etc_null) $(G.etc_null) >$(G.dev_null) 2>&1", "useshell"),
+        meta => { "simulate_safe" };
 
     c14n_files_created::
       "no_difference" expression => returnszero(
                                                  "$(G.diff_maybecolor) $(G.testfile).default-xml-check-diff-1 $(G.testfile).default-xml-check-diff-2 >$(G.dev_null) 2>&1",
-                                                 "useshell");
+                                                 "useshell"),
+        meta => { "simulate_safe" };
 
       "expected_difference" expression => strcmp("$(expected_difference)", "yes");
       "check_ready" expression => "any";
@@ -514,25 +531,33 @@ bundle agent dcs_if_diff_expected(file1, file2, expected_difference, pass_class,
       "file2r" string => readfile("$(file2)", "4096");
 
     (EXTRA|DEBUG_HEXDUMP).check_ready.!no_difference.has_hexdump::
-      "file1h" string => execresult("$(G.hexdump) -C $(file1)", "useshell");
-      "file2h" string => execresult("$(G.hexdump) -C $(file2)", "useshell");
+      "file1h" string => execresult("$(G.hexdump) -C $(file1)", "useshell"),
+        meta => { "simulate_safe" };
+      "file2h" string => execresult("$(G.hexdump) -C $(file2)", "useshell"),
+        meta => { "simulate_safe" };
 
     (EXTRA|DEBUG_HEXDUMP).check_ready.!no_difference.!has_hexdump::
-      "file1h" string => execresult("$(G.od) -c $(file1)", "useshell");
-      "file2h" string => execresult("$(G.od) -c $(file2)", "useshell");
+      "file1h" string => execresult("$(G.od) -c $(file1)", "useshell"),
+        meta => { "simulate_safe" };
+      "file2h" string => execresult("$(G.od) -c $(file2)", "useshell"),
+        meta => { "simulate_safe" };
 
     DEBUG.check_ready.!no_difference.has_unified_diff::
-      "diffu" string => execresult("$(G.diff_maybecolor) -u $(file2) $(file1) 2>$(G.dev_null)", "useshell");
+      "diffu" string => execresult("$(G.diff_maybecolor) -u $(file2) $(file1) 2>$(G.dev_null)", "useshell"),
+        meta => { "simulate_safe" };
     DEBUG.check_ready.!no_difference.!has_unified_diff::
-      "diffu" string => execresult("$(G.diff_maybecolor) -c $(file2) $(file1) 2>$(G.dev_null)", "useshell");
+      "diffu" string => execresult("$(G.diff_maybecolor) -c $(file2) $(file1) 2>$(G.dev_null)", "useshell"),
+        meta => { "simulate_safe" };
 
   classes:
       "has_unified_diff" expression => returnszero(
-                                                    "$(G.diff_maybecolor) -u $(G.etc_null) $(G.etc_null) >$(G.dev_null) 2>&1", "useshell");
+                                                    "$(G.diff_maybecolor) -u $(G.etc_null) $(G.etc_null) >$(G.dev_null) 2>&1", "useshell"),
+        meta => { "simulate_safe" };
 
       "no_difference" expression => returnszero(
                                                  "$(G.diff_maybecolor) $(file1) $(file2) >$(G.dev_null) 2>&1",
-                                                 "useshell");
+                                                 "useshell"),
+        meta => { "simulate_safe" };
 
       "expected_difference" expression => strcmp("$(expected_difference)", "yes");
       "check_ready" expression => "any";
@@ -858,7 +883,8 @@ bundle agent dcs_passif_expected(expected, not_expected, test)
 bundle agent dcs_passif_output(wanted, unwanted, command, test)
 {
   vars:
-      "subout" string => execresult($(command), "useshell");
+      "subout" string => execresult($(command), "useshell"),
+        meta => { "simulate_safe" };
 
   classes:
       "__passif_output_unwanted" expression => regcmp($(unwanted), $(subout));

@@ -3,29 +3,6 @@ body common control
   inputs => { "../plucked.cf.sub" };
 }
 
-bundle agent init
-{
-  vars:
-    "usemodule_unsafe_module_path" string => "$(sys.workdir)$(const.dirsep)modules$(const.dirsep)usemodule_unsafe.sh";
-    "usemodule_safe_module_path" string => "$(sys.workdir)$(const.dirsep)modules$(const.dirsep)usemodule_safe.sh";
-
-  files:
-    "$(sys.statedir)/*safe"
-      delete => tidy;
-    "$(usemodule_unsafe_module_path)"
-      create => "true",
-      perms => m(700),
-      content => "#!/bin/bash
-touch $(sys.statedir)/usemodule_unsafe
-";
-    "$(usemodule_safe_module_path)"
-      create => "true",
-      perms => m(700),
-      content => "#!/bin/bash
-touch $(sys.statedir)/usemodule_safe
-";
-}
-
 bundle agent test
 {
   vars:

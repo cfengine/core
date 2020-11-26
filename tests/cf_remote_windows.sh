@@ -9,6 +9,8 @@ set -x
 # Note, cf-remote uses private AMIs, you may have to create your own and add
 # them to cloud_data.py
 
+cf-remote --version master download msi
+
 cf-remote destroy --all
 cf-remote spawn --count 1 --platform ubuntu-18-04-x64 --role hub --name hub
 cf-remote spawn --count 1 --platform windows-2012-x64 --role client --name twelve

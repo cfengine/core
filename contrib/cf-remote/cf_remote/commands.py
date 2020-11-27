@@ -139,10 +139,12 @@ def install(
         demo=False,
         call_collect=False,
         edition=None,
-        remote_download=False):
+        remote_download=False,
+        trust_keys=None):
     assert hubs or clients
     assert not (hubs and clients and package)
-    # These assertions are checked in main.py
+    assert (trust_keys is None) or hasattr(trust_keys, "__iter__")
+    # These assertions are checked/ensured in main.py
 
     # If there are URLs in any of the package strings and remote_download is FALSE, download and replace with path:
     packages = (package, hub_package, client_package)
@@ -184,7 +186,8 @@ def install(
                 call_collect=call_collect,
                 edition=edition,
                 show_info=show_host_info,
-                remote_download=remote_download))
+                remote_download=remote_download,
+                trust_keys=trust_keys))
 
     errors = 0
     if hub_jobs:
@@ -210,7 +213,8 @@ def install(
             demo=demo,
             edition=edition,
             show_info=show_host_info,
-            remote_download=remote_download))
+            remote_download=remote_download,
+            trust_keys=trust_keys))
 
     if client_jobs:
         with Pool(len(client_jobs)) as clients_install_pool:

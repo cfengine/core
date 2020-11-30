@@ -1,0 +1,46 @@
+bundle agent prepare_files_for_simulate_tests
+{
+  files:
+    "$(G.testroot)$(const.dirsep)already-created"
+      create => "true";
+    "$(G.testroot)$(const.dirsep)delete-me"
+      create => "true";
+    "$(G.testroot)$(const.dirsep)sub-dir/."
+      create => "true";
+    "$(G.testroot)$(const.dirsep)sub-dir/sub-file"
+      create => "true";
+    "$(G.testroot)$(const.dirsep)set-colon-field"
+      create => "true",
+      content => "me:x:1001:1001::/home/me:/bin/sh";
+    "$(G.testroot)$(const.dirsep)delete-lines-matching"
+      create => "true",
+      content => "
+foo 1
+bar 2
+baz 3
+me:x:101:doo
+";
+    "$(G.testroot)$(const.dirsep)regex-replace"
+      create => "true",
+      content => "I dare you to change my policy foo";
+    "$(G.testroot)$(const.dirsep)edit-template-string"
+      create => "true",
+      content => "From a particular point of view";
+    "$(G.testroot)$(const.dirsep)xml-insert-tree"
+      create => "true",
+      edit_xml => xml_insert_tree_nopath("<Root/>");
+    "$(G.testroot)$(const.dirsep)build-xpath"
+      create => "true";
+    "$(G.testroot)$(const.dirsep)perms"
+      create => "true";
+    "$(G.testroot)$(const.dirsep)rename-me"
+      create => "true";
+    "$(G.testroot)$(const.dirsep)transformer"
+      create => "true";
+}
+
+bundle edit_xml xml_insert_tree_nopath(treestring)
+{
+  insert_tree:
+      '$(treestring)';
+}

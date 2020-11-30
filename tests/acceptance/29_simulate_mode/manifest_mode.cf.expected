@@ -141,3 +141,21 @@ Change: TIMESTAMP
 Contents of the file:
 ===========================================================================
 'WORKDIR/tmp/transformer' no longer exists
+===========================================================================
+'WORKDIR/tmp/hardlink' is a regular file
+Size: SIZE
+Access: (0600/rw-------)  Uid: (0/root)   Gid: (0/root)
+Access: TIMESTAMP
+Modify: TIMESTAMP
+Change: TIMESTAMP
+
+Contents of the file:
+===========================================================================
+'WORKDIR/tmp/link' is a symbolic link
+Size: SIZE
+Access: (0777/rwxrwxrwx)  Uid: (0/root)   Gid: (0/root)
+Access: TIMESTAMP
+Modify: TIMESTAMP
+Change: TIMESTAMP
+
+Target: 'WORKDIR/tmp/already-created'

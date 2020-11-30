@@ -19,8 +19,8 @@ function stop_daemons {
 
 function no_errors {
     set +e
-    grep -i "error" $1
-    grep -q -i "error" $1 && exit 1
+    grep -i "error:" $1
+    grep -q -i "error:" $1 && exit 1
     set -e
 }
 

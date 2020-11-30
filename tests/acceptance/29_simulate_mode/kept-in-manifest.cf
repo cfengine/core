@@ -1,0 +1,48 @@
+body common control
+{
+      inputs => {
+        "../default.cf.sub",
+        "./prepare_files_for_simulate_tests.cf.sub",
+        "./normalize_agent_output.cf.sub"
+      };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+
+bundle agent init
+{
+  methods:
+    "prepare_files_for_simulate_tests";
+}
+
+bundle agent test
+{
+  meta:
+    "test_soft_fail" string => "any",
+      meta => { "CFE-3506" },
+      comment => "file promises that are only kept are not currently part of the manifest";
+#    "test_soft_fail" string => "(solaris|aix|hpux)|(debian_7.i686)",
+#      meta => { "ENT-6537", "ENT-6540" };
+      # ENT-6537 debian 7 dirent has extra ',' entry
+      # ENT-6540 exotics fail to delete chroot
+
+    "description" -> { "ENT-3506" }
+      string => "Test that a file already existing will be included if KEPT in --simulate=manifest mode";
+
+  commands:
+    # add --verbose here and look at the .actual log for debugging sub policy runs
+    "$(sys.cf_agent) -Kf $(this.promise_filename).sub --simulate=manifest > $(this.promise_filename).temp 2>&1"
+      contain => in_shell,
+      comment => "Run sub policy in manifest mode and capture output to $(this.promise_filename).actual file.";
+}
+
+bundle agent check
+{
+  methods:
+    "normalize_agent_results" usebundle => normalize_agent_results("$(this.promise_filename).temp",
+                                                                   "$(this.promise_filename).actual");
+    "check" usebundle => dcs_check_diff("$(this.promise_filename).actual",
+                                        "$(this.promise_filename).expected",
+                                        "$(this.promise_filename)");
+}

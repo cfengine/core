@@ -56,88 +56,69 @@ These are my source file contents.
 ===========================================================================
 'WORKDIR/tmp/sub-dir/./sub-file' no longer exists
 ===========================================================================
-'WORKDIR/tmp/sub-dir/.' is a directory
-Size: SIZE
-Access: (0755/rwxr-xr-x)  Uid: (0/root)   Gid: (0/root)
-Access: TIMESTAMP
-Modify: TIMESTAMP
-Change: TIMESTAMP
-
-Directory contents:
+Only in WORKDIR/tmp/sub-dir/.: sub-file
 ===========================================================================
-'WORKDIR/tmp/set-colon-field' is a regular file
-Size: SIZE
-Access: (0600/rw-------)  Uid: (0/root)   Gid: (0/root)
-Access: TIMESTAMP
-Modify: TIMESTAMP
-Change: TIMESTAMP
-
-Contents of the file:
-me:x:1001:1001::/my/new/shell:/bin/sh
+--- original WORKDIR/tmp/set-colon-field
++++ changed  WORKDIR/tmp/set-colon-field
+@@ -1 +1 @@
+-me:x:1001:1001::/home/me:/bin/sh
+\ No newline at end of file
++me:x:1001:1001::/my/new/shell:/bin/sh
 ===========================================================================
-'WORKDIR/tmp/delete-lines-matching' is a regular file
-Size: SIZE
-Access: (0600/rw-------)  Uid: (0/root)   Gid: (0/root)
-Access: TIMESTAMP
-Modify: TIMESTAMP
-Change: TIMESTAMP
-
-Contents of the file:
-
-bar 2
-baz 3
-me:x:101:doo
+--- original WORKDIR/tmp/delete-lines-matching
++++ changed  WORKDIR/tmp/delete-lines-matching
+@@ -1,5 +1,4 @@
+ 
+-foo 1
+ bar 2
+ baz 3
+ me:x:101:doo
 ===========================================================================
-'WORKDIR/tmp/regex-replace' is a regular file
-Size: SIZE
-Access: (0600/rw-------)  Uid: (0/root)   Gid: (0/root)
-Access: TIMESTAMP
-Modify: TIMESTAMP
-Change: TIMESTAMP
-
-Contents of the file:
-I dare you to change my policy FOO!
+--- original WORKDIR/tmp/regex-replace
++++ changed  WORKDIR/tmp/regex-replace
+@@ -1 +1 @@
+-I dare you to change my policy foo
+\ No newline at end of file
++I dare you to change my policy FOO!
 ===========================================================================
-'WORKDIR/tmp/edit-template-string' is a regular file
-Size: SIZE
-Access: (0600/rw-------)  Uid: (0/root)   Gid: (0/root)
-Access: TIMESTAMP
-Modify: TIMESTAMP
-Change: TIMESTAMP
-
-Contents of the file:
-Darth Vader killed your father
-\no newline at the end of file
+--- original WORKDIR/tmp/edit-template-string
++++ changed  WORKDIR/tmp/edit-template-string
+@@ -1 +1 @@
+-From a particular point of view
+\ No newline at end of file
++Darth Vader killed your father
+\ No newline at end of file
 ===========================================================================
-'WORKDIR/tmp/build-xpath' is a regular file
-Size: SIZE
-Access: (0600/rw-------)  Uid: (0/root)   Gid: (0/root)
-Access: TIMESTAMP
-Modify: TIMESTAMP
-Change: TIMESTAMP
-
-Contents of the file:
-<?xml version="1.0"?>
-<Server><Service><Engine><Host/></Engine></Service></Server>
+--- original WORKDIR/tmp/build-xpath
++++ changed  WORKDIR/tmp/build-xpath
+@@ -0,0 +1,2 @@
++<?xml version="1.0"?>
++<Server><Service><Engine><Host/></Engine></Service></Server>
 ===========================================================================
-'WORKDIR/tmp/xml-insert-tree' is a regular file
-Size: SIZE
-Access: (0600/rw-------)  Uid: (0/root)   Gid: (0/root)
-Access: TIMESTAMP
-Modify: TIMESTAMP
-Change: TIMESTAMP
-
-Contents of the file:
-<?xml version="1.0"?>
-<Root><x foo="bar">y</x></Root>
+--- original WORKDIR/tmp/xml-insert-tree
++++ changed  WORKDIR/tmp/xml-insert-tree
+@@ -1,2 +1,2 @@
+ <?xml version="1.0"?>
+-<Root/>
++<Root><x foo="bar">y</x></Root>
 ===========================================================================
-'WORKDIR/tmp/perms' is a regular file
-Size: SIZE
-Access: (0000/---------)  Uid: (0/root)   Gid: (0/root)
-Access: TIMESTAMP
-Modify: TIMESTAMP
-Change: TIMESTAMP
-
-Contents of the file:
 ===========================================================================
 'WORKDIR/tmp/transformer' no longer exists
+===========================================================================
+'WORKDIR/tmp/hardlink' is a regular file
+Size: SIZE
+Access: (0600/rw-------)  Uid: (0/root)   Gid: (0/root)
+Access: TIMESTAMP
+Modify: TIMESTAMP
+Change: TIMESTAMP
+
+Contents of the file:
+===========================================================================
+'WORKDIR/tmp/link' is a symbolic link
+Size: SIZE
+Access: (0777/rwxrwxrwx)  Uid: (0/root)   Gid: (0/root)
+Access: TIMESTAMP
+Modify: TIMESTAMP
+Change: TIMESTAMP
+
+Target: 'WORKDIR/tmp/already-created'

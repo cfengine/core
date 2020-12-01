@@ -105,6 +105,7 @@ CF_NET=${CF_NET:-}                  ; export CF_NET
 CF_CHECK=${CF_CHECK:-}              ; export CF_CHECK
 CF_RUNAGENT=${CF_RUNAGENT:-}        ; export CF_RUNAGENT
 RPMVERCMP=${RPMVERCMP:-}            ; export RPMVERCMP
+DIFF=${DIFF:-}                      ; export DIFF
 LIBTOOL=${LIBTOOL:-}                ; export LIBTOOL
 INCLUDE_IN_WORKDIR=${INCLUDE_IN_WORKDIR:-} ; export INCLUDE_IN_WORKDIR
 
@@ -430,6 +431,7 @@ runtest() {
                 $LN_CMD "$CF_CHECK" "$WORKDIR/bin"
                 $LN_CMD "$CF_RUNAGENT" "$WORKDIR/bin"
                 $LN_CMD "$RPMVERCMP" "$WORKDIR/bin"
+                $LN_CMD "$DIFF" "$WORKDIR/bin"
             fi
             for inc in $INCLUDE_IN_WORKDIR
             do (
@@ -920,7 +922,7 @@ do
     esac
 done
 
-if [ -n "$AGENT" -o -n "$CF_PROMISES" -o -n "$CF_SERVERD" -o -n "$CF_EXECD" -o -n "$CF_KEY" -o -n "$CF_SECRET" -o -n "$CF_NET" -o -n "$CF_CHECK" -o -n "$CF_RUNAGENT" -o -n "$RPMVERCMP" ]
+if [ -n "$AGENT" -o -n "$CF_PROMISES" -o -n "$CF_SERVERD" -o -n "$CF_EXECD" -o -n "$CF_KEY" -o -n "$CF_SECRET" -o -n "$CF_NET" -o -n "$CF_CHECK" -o -n "$CF_RUNAGENT" -o -n "$RPMVERCMP" -o -n "$DIFF" ]
 then
     if [ -n "$BINDIR" ]
     then
@@ -943,6 +945,7 @@ find_default_binary()
     [ -x "`pwd`/../../$2/$2" ] && eval $1=\""`pwd`/../../$2/$2"\"
     [ -x "`pwd`/$2/$2" ] && eval $1=\""`pwd`/$2/$2"\"
     [ -n "$BINDIR" -a -x "$BINDIR/$2" ] && eval $1=\""$BINDIR/$2"\"
+    [ $2 = "diff" ] && eval $1=\""`command -v diff`"\"
 }
 find_default_binary DEFAGENT cf-agent
 find_default_binary DEFCF_PROMISES cf-promises
@@ -954,6 +957,7 @@ find_default_binary DEFCF_NET cf-net
 find_default_binary DEFCF_CHECK cf-check
 find_default_binary DEFCF_RUNAGENT cf-runagent
 find_default_binary DEFRPMVERCMP rpmvercmp
+find_default_binary DIFF diff
 
 [ -x "`pwd`/libtool" ] && DEFLIBTOOL="`pwd`/libtool"
 [ -x "`pwd`/../../libtool" ] && DEFLIBTOOL="`pwd`/../../libtool"

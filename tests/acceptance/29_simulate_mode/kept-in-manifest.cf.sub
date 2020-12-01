@@ -1,0 +1,11 @@
+body common control
+{
+  inputs => { "../default.cf.sub" };
+}
+
+bundle agent main
+{
+  files:
+    "$(G.testroot)$(const.dirsep)already-created"
+      create => "true";
+}

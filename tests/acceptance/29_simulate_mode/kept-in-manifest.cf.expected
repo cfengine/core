@@ -1,0 +1,10 @@
+ warning: All changes in files will be made in the 'WORKDIR/state/PID.changes' chroot
+===========================================================================
+'WORKDIR/tmp/already-created' is a regular file
+Size: SIZE
+Access: (0600/rw-------)  Uid: (0/root)   Gid: (0/root)
+Access: TIMESTAMP
+Modify: TIMESTAMP
+Change: TIMESTAMP
+
+Contents of the file:

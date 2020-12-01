@@ -1,0 +1,13 @@
+bundle agent normalize_agent_results(original, normalized)
+{
+  commands:
+    "$(G.sed)"
+      args => " \
+-e 's,$(sys.workdir),WORKDIR,g' \
+-e 's/[0-9]*\.changes/PID.changes/' \
+-e 's/[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}[[:blank:]][0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}[[:blank:]][-+][0-9]\{4\}/TIMESTAMP/' \
+-e 's/Size: [0-9]*/Size: SIZE/' \
+$(original) > $(normalized)",
+      contain => in_shell,
+      comment => "Normalize pid, timestamp and file sizes so that we can compare to an expected output.";
+}

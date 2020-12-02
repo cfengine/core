@@ -593,9 +593,16 @@ DBPriv *DBPrivOpenDB(const char *const dbpath, const dbid id)
     CheckLMDBCorrupted(rc, db->env);
     if (rc)
     {
-        Log(LOG_LEVEL_ERR, "Could not open database txn %s: %s",
+        Log(LOG_LEVEL_ERR, "Could not open database txn %s: %s. Trying again...",
               dbpath, mdb_strerror(rc));
-        goto err;
+        rc = mdb_txn_begin(db->env, NULL, MDB_RDONLY, &txn);
+        CheckLMDBCorrupted(rc, db->env);
+        if (rc)
+        {
+            Log(LOG_LEVEL_ERR, "Could not open database txn %s: %s. Exiting with error.",
+                  dbpath, mdb_strerror(rc));
+            goto err;
+        }
     }
     rc = mdb_open(txn, NULL, 0, &db->dbi);
     CheckLMDBCorrupted(rc, db->env);

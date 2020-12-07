@@ -14,9 +14,6 @@ class GitPromiseTypeModule(PromiseModule):
                 raise ValidationError(f"'repo' must be string for git promise types")
 
     def evaluate_promise(self, promiser, attributes):
-        if not promiser.startswith("/"):
-            raise ValidationError("File path must be absolute")
-
         folder = promiser
         url = attributes["repo"]
 

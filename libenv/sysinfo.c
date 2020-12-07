@@ -563,7 +563,7 @@ static void GetNameInfo3(EvalContext *ctx)
 
                     VSYSTEMHARDCLASS = (PlatformContext) i;
                     VPSHARDCLASS = (PlatformContext) i; /* this one can be overriden at vz detection */
-                    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "class", CLASSTEXT[i], CF_DATA_TYPE_STRING, "inventory,source=agent,attribute_name=OS type");
+                    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "class", CLASSTEXT[i], CF_DATA_TYPE_STRING, "inventory,source=agent,attribute_name=Kernel");
                 }
             }
             else
@@ -598,7 +598,7 @@ static void GetNameInfo3(EvalContext *ctx)
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "date", workbuf, CF_DATA_TYPE_STRING, "time_based,source=agent");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cdate", CanonifyName(workbuf), CF_DATA_TYPE_STRING, "time_based,source=agent");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "os", VSYSNAME.sysname, CF_DATA_TYPE_STRING, "source=agent");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "release", VSYSNAME.release, CF_DATA_TYPE_STRING, "inventory,source=agent,attribute_name=OS kernel");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "release", VSYSNAME.release, CF_DATA_TYPE_STRING, "inventory,source=agent,attribute_name=Kernel Release");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "version", VSYSNAME.version, CF_DATA_TYPE_STRING, "source=agent");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "arch", VSYSNAME.machine, CF_DATA_TYPE_STRING, "inventory,source=agent,attribute_name=Architecture");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "workdir", workdir, CF_DATA_TYPE_STRING, "source=agent");

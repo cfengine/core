@@ -181,6 +181,10 @@ static JsonElement *PromiseModule_Receive(PromiseModule *module)
                 Log(LOG_LEVEL_ERR,
                     "Promise module sent invalid log line: '%s'",
                     line);
+                // Skip this line but keep parsing
+                FREE_AND_NULL(line);
+                size = 0;
+                continue;
             }
             const char *const message = equal_sign + 1;
             const char *const level_start = line + strlen("log_");
@@ -231,10 +235,22 @@ static JsonElement *PromiseModule_Receive(PromiseModule *module)
                 free(line);
                 return NULL;
             }
+            assert(response != NULL);
         }
 
         FREE_AND_NULL(line);
         size = 0;
+    }
+
+    if (response == NULL)
+    {
+        // This can happen if using the JSON protocol, and the module sends
+        // nothing (newlines) or only log= lines.
+        assert(!line_based);
+        Log(LOG_LEVEL_ERR,
+            "The '%s' promise module sent an invalid/incomplete response with JSON based protocol",
+            module->path);
+        return NULL;
     }
 
     if (line_based)
@@ -283,6 +299,7 @@ static JsonElement *PromiseModule_Receive(PromiseModule *module)
     }
     JsonDestroy(log_array);
 
+    assert(response != NULL);
     return response;
 }
 
@@ -581,6 +598,12 @@ static bool PromiseModule_Validate(PromiseModule *module, const Promise *pp)
 
     // Prints errors / log messages from module:
     JsonElement *response = PromiseModule_Receive(module);
+
+    if (response == NULL)
+    {
+        // Error already printed in PromiseModule_Receive()
+        return false;
+    }
 
     const bool valid = HasResultAndResultIsValid(response);
 

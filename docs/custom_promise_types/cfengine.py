@@ -114,31 +114,45 @@ class PromiseModule:
         self._response["result"] = self._result
 
     def _handle_init(self):
-        self._result = Result.SUCCESS
-        self.protocol_init(None)
+        self._result = self.protocol_init(None)
         self._add_result()
         _put_response(self._response, self._out)
 
     def _handle_validate(self, promiser, attributes):
-        self._result = Result.VALID
-        self.validate_promise(promiser, attributes)
+        try:
+            returned = self.validate_promise(promiser, attributes)
+            if returned is None:
+                # Good, expected
+                self._result = Result.VALID
+            else:
+                # Bad, validate method shouldn't return anything else
+                self._result = Result.ERROR
+        except ValidationError as e:
+            self.log_error(e)
+            self._result = Result.INVALID
         self._add_result()
         _put_response(self._response, self._out)
 
     def _handle_evaluate(self, promiser, attributes):
-        self._result = Result.KEPT
-        self.evaluate_promise(promiser, attributes)
+        try:
+            self._result = self.evaluate_promise(promiser, attributes)
+        except Exception as e:
+            self.log_error(e)
+            self._result = Result.ERROR
         self._add_result()
         _put_response(self._response, self._out)
 
     def _handle_terminate(self):
-        self._result = Result.SUCCESS
-        self.protocol_terminate()
+        self._result = self.protocol_terminate()
         self._add_result()
         _put_response(self._response, self._out)
         sys.exit(0)
 
     def _log(self, level, message):
+        # Message can be str or an object which implements __str__()
+        # for example an exception:
+        message = str(message).replace("\n", r"\n")
+        assert "\n" not in message
         self._out.write(f"log_{level}={message}\n")
         self._out.flush()
 
@@ -163,19 +177,10 @@ class PromiseModule:
     def log_debug(self, message):
         self._log("debug", message)
 
-    def promise_kept(self):
-        self._result = Result.KEPT
-
-    def promise_repaired(self):
-        self._result = Result.REPAIRED
-
-    def promise_not_kept(self):
-        self._result = Result.NOTKEPT
-
     # Functions to override in subclass:
 
     def protocol_init(self, version):
-        pass
+        return Result.SUCCESS
 
     def validate_promise(self, promiser, attributes):
         raise NotImplementedError("Promise module must implement validate_promise")
@@ -184,4 +189,4 @@ class PromiseModule:
         raise NotImplementedError("Promise module must implement evaluate_promise")
 
     def protocol_terminate(self):
-        pass
+        return Result.SUCCESS

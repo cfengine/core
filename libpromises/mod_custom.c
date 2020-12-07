@@ -399,7 +399,7 @@ static PromiseModule *PromiseModule_Start(char *interpreter, char *path)
     module->input = module->fds.write_stream;
     module->message = NULL;
 
-    fprintf(module->input, "CFEngine 3.16.0 v1\n\n");
+    fprintf(module->input, "cf-agent %s v1\n\n", Version());
     fflush(module->input);
 
     Seq *header = PromiseModule_ReceiveHeader(module);

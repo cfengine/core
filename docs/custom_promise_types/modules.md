@@ -176,8 +176,8 @@ The header sent by cf-agent consists of 3 space-separated parts:
 
 The header response sent by the module consists of 3 or more space separated parts:
 
-* Name of program - Example: `git_promise_module`
-* CFEngine version - Example: `0.0.1`
+* Module name - Example: `git_promise_module`
+* Module version - Example: `0.0.1`
 * Requested protocol version - Example: `v1`
 * Rest of line, optional: Feature requests/flags - Example: `line_based`
 

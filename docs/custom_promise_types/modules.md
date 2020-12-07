@@ -137,6 +137,8 @@ The possible results are as follows:
   * `invalid` - There are problems with the promise data or data types
     * Should be explained by an `error` level log message
 * Promise evaluation:
+  * The module should assume the promise has already been validated.
+    * It does not need to validate the promise again, and should **not** return `valid` / `invalid`.
   * `kept` - promise satisfied already, no change made
   * `repaired` - promise not satisfied before, but fixed now
     * The change should be explained in a `info` level log message

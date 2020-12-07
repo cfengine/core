@@ -6726,24 +6726,12 @@ static FnCallResult FnCallStoreJson(EvalContext *ctx, ARG_UNUSED const Policy *p
     }
 
     Writer *w = StringWriter();
-    int length;
 
     JsonWrite(w, json, 0);
     JsonDestroyMaybe(json, allocated);
     Log(LOG_LEVEL_DEBUG, "%s: from data container %s, got JSON data '%s'", fp->name, name_str, StringWriterData(w));
 
-    length = strlen(StringWriterData(w));
-    if (length >= CF_BUFSIZE)
-    {
-        Log(LOG_LEVEL_INFO, "%s: truncating data container %s JSON data from %d bytes to %d",
-            fp->name, name_str, length, CF_BUFSIZE);
-    }
-
-    char buf[CF_BUFSIZE];
-    snprintf(buf, CF_BUFSIZE, "%s", StringWriterData(w));
-    WriterClose(w);
-
-    return FnReturn(buf);
+    return FnReturnNoCopy(StringWriterClose(w));
 }
 
 

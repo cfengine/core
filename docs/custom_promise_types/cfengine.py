@@ -38,7 +38,7 @@ class Result:
     # Promise evaluation outcomes, can reveal "real" problems with system:
     KEPT = "kept"  # Satisfied already, no change
     REPAIRED = "repaired"  # Not satisfied before , but fixed
-    NOTKEPT = "not_kept"  # Not satisfied before , not fixed
+    NOT_KEPT = "not_kept"  # Not satisfied before , not fixed
 
     # Validation only, can reveal problems in CFEngine policy:
     VALID = "valid"  # Validation successful

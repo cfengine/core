@@ -166,7 +166,11 @@ static JsonElement *PromiseModule_Receive(PromiseModule *module)
         assert(line[bytes - 1] == '\n');
         line[bytes - 1] = '\0';
 
-        Log(LOG_LEVEL_DEBUG, "Received line from module: '%s'", line);
+        // Log only non-empty lines:
+        if (bytes > 1)
+        {
+            Log(LOG_LEVEL_DEBUG, "Received line from module: '%s'", line);
+        }
 
         if (line[0] == '\0')
         {
@@ -327,8 +331,18 @@ static Seq *PromiseModule_ReceiveHeader(PromiseModule *module)
     char *line = NULL;
     size_t size = 0;
     size_t bytes = getline(&line, &size, module->output);
-    assert(bytes > 1);
+    if (bytes <= 0)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Did not receive header from promise module '%s'",
+            module->path);
+        free(line);
+        return NULL;
+    }
+    assert(line[bytes - 1] == '\n');
     line[bytes - 1] = '\0';
+
+    Log(LOG_LEVEL_DEBUG, "Received header from promise module: '%s'", line);
 
     Seq *header = SeqStringFromString(line, ' ');
 

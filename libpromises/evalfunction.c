@@ -8024,13 +8024,13 @@ static char *CfReadFile(const char *filename, int maxsize)
     {
         if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
         {
-            Log(LOG_LEVEL_ERR, "CfReadFile: Could not examine file '%s'", filename);
+            Log(LOG_LEVEL_ERR, "Could not examine file '%s'", filename);
         }
         else
         {
             if (IsCf3VarString(filename))
             {
-                Log(LOG_LEVEL_VERBOSE, "CfReadFile: Cannot converge/reduce variable '%s' yet .. assuming it will resolve later",
+                Log(LOG_LEVEL_VERBOSE, "Cannot converge/reduce variable '%s' yet .. assuming it will resolve later",
                       filename);
             }
             else

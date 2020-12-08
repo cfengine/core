@@ -4,6 +4,9 @@ from cfengine import PromiseModule, ValidationError, Result
 
 
 class GitPromiseTypeModule(PromiseModule):
+    def __init__(self):
+        super().__init__("git_promise_module", "0.0.2")
+
     def validate_promise(self, promiser, attributes):
         if not promiser.startswith("/"):
             raise ValidationError(f"File path '{promiser}' must be absolute")

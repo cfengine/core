@@ -53,8 +53,12 @@ class Result:
 
 
 class PromiseModule:
-    def __init__(self):
-        pass
+    def __init__(self, name = "default_module_name", version = "0.0.1"):
+        self.name = name
+        self.version = version
+        # Note: The class doesn't expose any way to set protocol version
+        # or flags, because that should be abstracted away from the
+        # user (module author).
 
     def start(self, in_file=None, out_file=None):
         self._in = in_file or sys.stdin
@@ -66,14 +70,13 @@ class PromiseModule:
         protocol_version = header[2]
         flags = header[3:]
 
-        assert name == "CFEngine"
-        assert version.startswith("3.16")
-        assert protocol_version == "v1"
-        assert flags == []
+        assert len(name) > 0              # cf-agent
+        assert version.startswith("3.")   # 3.18.0
+        assert protocol_version[0] == "v" # v1
 
         _skip_until_empty_line(self._in)
 
-        self._out.write("git_promises 0.0.1 v1 json_based\n\n")
+        self._out.write(f"{self.name} {self.version} v1 json_based\n\n")
         self._out.flush()
 
         while True:

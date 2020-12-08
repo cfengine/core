@@ -166,7 +166,11 @@ static JsonElement *PromiseModule_Receive(PromiseModule *module)
         assert(line[bytes - 1] == '\n');
         line[bytes - 1] = '\0';
 
-        Log(LOG_LEVEL_DEBUG, "Received line from module: '%s'", line);
+        // Log only non-empty lines:
+        if (bytes > 1)
+        {
+            Log(LOG_LEVEL_DEBUG, "Received line from module: '%s'", line);
+        }
 
         if (line[0] == '\0')
         {
@@ -181,6 +185,10 @@ static JsonElement *PromiseModule_Receive(PromiseModule *module)
                 Log(LOG_LEVEL_ERR,
                     "Promise module sent invalid log line: '%s'",
                     line);
+                // Skip this line but keep parsing
+                FREE_AND_NULL(line);
+                size = 0;
+                continue;
             }
             const char *const message = equal_sign + 1;
             const char *const level_start = line + strlen("log_");
@@ -231,10 +239,22 @@ static JsonElement *PromiseModule_Receive(PromiseModule *module)
                 free(line);
                 return NULL;
             }
+            assert(response != NULL);
         }
 
         FREE_AND_NULL(line);
         size = 0;
+    }
+
+    if (response == NULL)
+    {
+        // This can happen if using the JSON protocol, and the module sends
+        // nothing (newlines) or only log= lines.
+        assert(!line_based);
+        Log(LOG_LEVEL_ERR,
+            "The '%s' promise module sent an invalid/incomplete response with JSON based protocol",
+            module->path);
+        return NULL;
     }
 
     if (line_based)
@@ -283,6 +303,7 @@ static JsonElement *PromiseModule_Receive(PromiseModule *module)
     }
     JsonDestroy(log_array);
 
+    assert(response != NULL);
     return response;
 }
 
@@ -310,8 +331,18 @@ static Seq *PromiseModule_ReceiveHeader(PromiseModule *module)
     char *line = NULL;
     size_t size = 0;
     size_t bytes = getline(&line, &size, module->output);
-    assert(bytes > 1);
+    if (bytes <= 0)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Did not receive header from promise module '%s'",
+            module->path);
+        free(line);
+        return NULL;
+    }
+    assert(line[bytes - 1] == '\n');
     line[bytes - 1] = '\0';
+
+    Log(LOG_LEVEL_DEBUG, "Received header from promise module: '%s'", line);
 
     Seq *header = SeqStringFromString(line, ' ');
 
@@ -382,7 +413,7 @@ static PromiseModule *PromiseModule_Start(char *interpreter, char *path)
     module->input = module->fds.write_stream;
     module->message = NULL;
 
-    fprintf(module->input, "CFEngine 3.16.0 v1\n\n");
+    fprintf(module->input, "cf-agent %s v1\n\n", Version());
     fflush(module->input);
 
     Seq *header = PromiseModule_ReceiveHeader(module);
@@ -581,6 +612,12 @@ static bool PromiseModule_Validate(PromiseModule *module, const Promise *pp)
 
     // Prints errors / log messages from module:
     JsonElement *response = PromiseModule_Receive(module);
+
+    if (response == NULL)
+    {
+        // Error already printed in PromiseModule_Receive()
+        return false;
+    }
 
     const bool valid = HasResultAndResultIsValid(response);
 

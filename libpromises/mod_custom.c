@@ -673,7 +673,8 @@ static PromiseResult PromiseModule_Evaluate(
     PromiseResult result;
     const char *const result_str = JsonObjectGetAsString(response, "result");
 
-    Attributes a = GetClassContextAttributes(ctx, pp); // TODO: WTF
+    /* Attributes needed for setting outcome classes etc. */
+    Attributes a = GetClassContextAttributes(ctx, pp);
 
     if (result_str == NULL)
     {

@@ -137,6 +137,8 @@ The possible results are as follows:
   * `invalid` - There are problems with the promise data or data types
     * Should be explained by an `error` level log message
 * Promise evaluation:
+  * The module should assume the promise has already been validated.
+    * It does not need to validate the promise again, and should **not** return `valid` / `invalid`.
   * `kept` - promise satisfied already, no change made
   * `repaired` - promise not satisfied before, but fixed now
     * The change should be explained in a `info` level log message
@@ -174,8 +176,8 @@ The header sent by cf-agent consists of 3 space-separated parts:
 
 The header response sent by the module consists of 3 or more space separated parts:
 
-* Name of program - Example: `git_promise_module`
-* CFEngine version - Example: `0.0.1`
+* Module name - Example: `git_promise_module`
+* Module version - Example: `0.0.1`
 * Requested protocol version - Example: `v1`
 * Rest of line, optional: Feature requests/flags - Example: `line_based`
 

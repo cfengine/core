@@ -1,7 +1,5 @@
-import os
 import sys
 import json
-from enum import Enum, auto, unique
 
 
 def _skip_until_empty_line(file):
@@ -68,7 +66,7 @@ class PromiseModule:
         name = header[0]
         version = header[1]
         protocol_version = header[2]
-        flags = header[3:]
+        # flags = header[3:] -- unused for now
 
         assert len(name) > 0              # cf-agent
         assert version.startswith("3.")   # 3.18.0

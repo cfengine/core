@@ -138,6 +138,21 @@ static inline void PromiseModule_LogJson(JsonElement *object)
     Log(level, "%s", message);
 }
 
+static inline JsonElement *PromiseModule_ParseResultClasses(char *value)
+{
+    JsonElement *result_classes = JsonArrayCreate(1);
+    char *delim = strchr(value, ',');
+    while (delim != NULL)
+    {
+        *delim = '\0';
+        JsonArrayAppendString(result_classes, value);
+        value = delim + 1;
+        delim = strchr(value, ',');
+    }
+    JsonArrayAppendString(result_classes, value);
+    return result_classes;
+}
+
 static JsonElement *PromiseModule_Receive(PromiseModule *module)
 {
     assert(module != NULL);
@@ -220,7 +235,17 @@ static JsonElement *PromiseModule_Receive(PromiseModule *module)
                 const size_t key_length = equal_sign - line;
                 char *const key = xstrndup(line, key_length);
                 assert(strlen(key) == key_length);
-                JsonObjectAppendString(response, key, value);
+                if (StringEqual(key, "result_classes"))
+                {
+                    char *result_classes_str = xstrdup(value);
+                    JsonElement *result_classes = PromiseModule_ParseResultClasses(result_classes_str);
+                    JsonObjectAppendArray(response, key, result_classes);
+                    free(result_classes_str);
+                }
+                else
+                {
+                    JsonObjectAppendString(response, key, value);
+                }
                 free(key);
             }
         }
@@ -670,6 +695,19 @@ static PromiseResult PromiseModule_Evaluate(
     PromiseModule_Send(module);
 
     JsonElement *response = PromiseModule_Receive(module);
+
+    JsonElement *result_classes = JsonObjectGetAsArray(response, "result_classes");
+    if (result_classes != NULL)
+    {
+        const size_t n_classes = JsonLength(result_classes);
+        for (size_t i = 0; i < n_classes; i++)
+        {
+            const char *class_name = JsonArrayGetAsString(result_classes, i);
+            assert(class_name != NULL);
+            EvalContextClassPutSoft(ctx, class_name, CONTEXT_SCOPE_BUNDLE, "source=promise-module");
+        }
+    }
+
     PromiseResult result;
     const char *const result_str = JsonObjectGetAsString(response, "result");
 

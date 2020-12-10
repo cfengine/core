@@ -47,6 +47,17 @@ bundle agent test
     cfengine::
       "$(G.testfile)"
         message => "$(test_string)";
+
+  classes:
+      "file_created"
+        expression => canonify("$(G.testfile)_created"),
+        scope => "namespace";
+      "file_updated"
+        expression => canonify("$(G.testfile)_content_updated"),
+        scope => "namespace";
+      "file_update_failed"
+        expression => canonify("$(G.testfile)_content_update_failed"),
+        scope => "namespace";
 }
 
 #######################################################
@@ -54,11 +65,22 @@ bundle agent test
 bundle agent check
 {
   classes:
-      "ok"
+      "file_ok"
         expression => strcmp("$(test.test_string)", readfile("$(G.testfile)")),
         if => fileexists("$(G.testfile)");
 
+      "ok" expression => "file_ok.file_created.file_updated.(!file_update_failed)";
+
   reports:
+    DEBUG.file_ok::
+      "file_ok";
+    DEBUG.file_created::
+      "file_created";
+    DEBUG.file_updated::
+      "file_updated";
+    DEBUG.file_update_failed::
+      "file_update_failed";
+
     ok::
       "$(this.promise_filename) Pass";
     !ok::

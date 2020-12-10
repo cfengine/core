@@ -84,18 +84,41 @@ operation_validate() {
 }
 
 operation_evaluate() {
+    local safe_promiser="$(echo "$request_promiser" | sed 's/,/_/g')"
+    local classes=""
+
+    local existed_before=0
+    if [ -f "$request_promiser" ]; then
+        existed_before=1
+    fi
+
     if grep -q "$request_attribute_message" "$request_promiser" 2>/dev/null ; then
         response_result="kept"
+        classes="${safe_promiser}_content_as_promised"
     else
         response_result="repaired"
-        echo "$request_attribute_message" > "$request_promiser" || response_result="not_kept"
-        printf "log_info=Updated file '%s' with content '%s'\n" "$request_promiser" "$request_attribute_message"
+        echo "$request_attribute_message" > "$request_promiser" && {
+          printf "log_info=Updated file '%s' with content '%s'\n" "$request_promiser" "$request_attribute_message"
+          if [ $existed_before = 0 ]; then
+            classes="${safe_promiser}_created,${safe_promiser}_content_updated"
+          else
+            classes="${safe_promiser}_content_updated"
+          fi
+        } || response_result="not_kept"
     fi
 
     if ! grep -q "$request_attribute_message" "$request_promiser" 2>/dev/null ; then
         response_result="not_kept"
+        if [ -z "$classes" ]; then
+          classes="${safe_promiser}_content_update_failed"
+        else
+          classes="${classes},${safe_promiser}_content_update_failed"
+        fi
     fi
 
+    if [ -n "$classes" ]; then
+        echo "result_classes=$classes"
+    fi
     write_response
 }
 

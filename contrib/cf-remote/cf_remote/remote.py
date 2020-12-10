@@ -232,6 +232,10 @@ def _package_from_releases(tags, extension, version, edition, remote_download):
     if version:
         release = releases.pick_version(version)
 
+    if not release.artifacts:
+        log.error(f"The {version} {edition} release is empty, visit tracker.mender.io to file a bug report")
+        return None
+
     artifacts = release.find(tags, extension)
     if not artifacts:
         log.error(

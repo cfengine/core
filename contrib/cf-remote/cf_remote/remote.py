@@ -232,12 +232,16 @@ def _package_from_releases(tags, extension, version, edition, remote_download):
     if version:
         release = releases.pick_version(version)
 
+    if not release.artifacts:
+        log.error(f"The {version} {edition} release is empty, visit tracker.mender.io to file a bug report")
+        return None
+
     artifacts = release.find(tags, extension)
     if not artifacts:
         log.error(
             "Could not find an appropriate package for host, please use --{}-package".format(
                 "hub" if "hub" in tags else "client"))
-        return 1
+        return None
     artifact = artifacts[-1]
     if remote_download:
         return artifact.url
@@ -293,6 +297,10 @@ def install_host(
             package = _package_from_releases(tags, extension, version, edition, remote_download)
         else:
             package = _package_from_list(tags, extension, packages)
+
+    if not package:
+        log.error("Installation failed - no package found!")
+        return 1
 
     if remote_download:
         print(f"Downloading '{package}' on '{host}' using curl")

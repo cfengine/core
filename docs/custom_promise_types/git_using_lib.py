@@ -20,18 +20,20 @@ class GitPromiseTypeModule(PromiseModule):
         folder = promiser
         url = attributes["repo"]
 
+        safe_promiser = promiser.replace(",", "_")
+
         if os.path.exists(folder):
-            return Result.KEPT
+            return (Result.KEPT, [f"{safe_promiser}_cloned_already"])
 
         self.log_info(f"Cloning '{url}' -> '{folder}'...")
         os.system(f"git clone {url} {folder} 2>/dev/null")
 
         if os.path.exists(folder):
             self.log_info(f"Successfully cloned '{url}' -> '{folder}'")
-            return Result.REPAIRED
+            return (Result.REPAIRED, [f"{safe_promiser}_cloned"])
         else:
             self.log_error(f"Failed to clone '{url}' -> '{folder}'")
-            return Result.NOT_KEPT
+            return (Result.NOT_KEPT, [f"{safe_promiser}_clone_failed"])
 
 
 if __name__ == "__main__":

@@ -58,6 +58,8 @@ class PromiseModule:
         # or flags, because that should be abstracted away from the
         # user (module author).
 
+        self._result_classes = None
+
     def start(self, in_file=None, out_file=None):
         self._in = in_file or sys.stdin
         self._out = out_file or sys.stdout
@@ -114,6 +116,10 @@ class PromiseModule:
     def _add_result(self):
         self._response["result"] = self._result
 
+    def _add_result_classes(self):
+        if self._result_classes:
+            self._response["result_classes"] = self._result_classes
+
     def _handle_init(self):
         self._result = self.protocol_init(None)
         self._add_result()
@@ -135,12 +141,22 @@ class PromiseModule:
         _put_response(self._response, self._out)
 
     def _handle_evaluate(self, promiser, attributes):
+        self._result_classes = None
         try:
-            self._result = self.evaluate_promise(promiser, attributes)
+            results = self.evaluate_promise(promiser, attributes)
+
+            # evaluate_promise should return either a result or a (result, result_classes) pair
+            if type(results) == Result:
+                self._result = results
+            else:
+                assert len(results) == 2
+                self._result = results[0]
+                self._result_classes = results[1]
         except Exception as e:
             self.log_error(e)
             self._result = Result.ERROR
         self._add_result()
+        self._add_result_classes()
         _put_response(self._response, self._out)
 
     def _handle_terminate(self):

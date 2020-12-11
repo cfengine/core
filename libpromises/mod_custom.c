@@ -43,17 +43,7 @@ static const ConstraintSyntax promise_constraints[] = {
 const BodySyntax CUSTOM_PROMISE_BLOCK_SYNTAX =
     BodySyntaxNew("promise", promise_constraints, NULL, SYNTAX_STATUS_NORMAL);
 
-bool IsCustomPromiseType(const Promise *pp)
-{
-    assert(pp != NULL);
-
-    Policy *policy = pp->parent_section->parent_bundle->parent_policy;
-
-    return PolicyHasCustomPromiseType(
-        policy, pp->parent_section->promise_type);
-}
-
-static Body *FindCustomPromiseType(const Promise *promise)
+Body *FindCustomPromiseType(const Promise *promise)
 {
     assert(promise != NULL);
 
@@ -821,6 +811,14 @@ PromiseResult EvaluateCustomPromise(EvalContext *ctx, const Promise *pp)
     assert(pp != NULL);
 
     Body *promise_block = FindCustomPromiseType(pp);
+    if (promise_block == NULL)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Undefined promise type '%s'",
+            pp->parent_section->promise_type);
+        return PROMISE_RESULT_FAIL;
+    }
+
     char *interpreter = NULL;
     char *path = NULL;
 

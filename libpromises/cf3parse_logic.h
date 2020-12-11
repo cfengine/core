@@ -660,6 +660,7 @@ static inline void ParserHandleBundlePromiseRval()
 
     if (PolicyHasCustomPromiseType(P.policy, P.currenttype))
     {
+        // Definitely custom promise type, just add the constraint and move on
         MagicRvalTransformations(NULL);
         ParserAppendCurrentConstraint();
         goto cleanup;
@@ -676,12 +677,10 @@ static inline void ParserHandleBundlePromiseRval()
 
     if (promise_type_syntax == NULL)
     {
-        ParseError(
-            "Invalid promise type '%s' in bundle '%s' of type '%s'",
-            P.currenttype,
-            P.blockid,
-            P.blocktype);
-        INSTALL_SKIP = true;
+        // Assume custom promise type, but defined in another policy file
+        MagicRvalTransformations(NULL);
+        ParserAppendCurrentConstraint();
+        goto cleanup;
     }
     else if (constraint_syntax == NULL)
     {
@@ -803,8 +802,10 @@ static inline void ParserHandlePromiseGuard()
             break;
         }
     }
-    else if (PolicyHasCustomPromiseType(P.policy, P.currenttype))
+    else
     {
+        // Unrecognized promise type, assume it is custom
+        // no way to know while parsing, let's check later:
         if (!INSTALL_SKIP)
         {
             P.currentstype =
@@ -816,11 +817,6 @@ static inline void ParserHandlePromiseGuard()
         {
             P.currentstype = NULL;
         }
-    }
-    else
-    {
-        ParseError("Unknown promise type '%s'", P.currenttype);
-        INSTALL_SKIP = true;
     }
 }
 

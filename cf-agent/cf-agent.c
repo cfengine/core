@@ -89,8 +89,9 @@
 #include <sys/stat.h>                   /* checking umask on writing setxid log */
 #include <simulate_mode.h>              /* ManifestChangedFiles(), DiffChangedFiles() */
 
+#include <syntax.h>                     /* IsBuiltInPromiseType() */
 #include <mod_common.h>
-#include <mod_custom.h>                 /* IsCustomPromiseType() */
+#include <mod_custom.h>                 /* EvaluateCustomPromise() */
 
 #ifdef HAVE_AVAHI_CLIENT_CLIENT_H
 #ifdef HAVE_AVAHI_COMMON_ADDRESS_H
@@ -1737,6 +1738,8 @@ static void LogVariableValue(const EvalContext *ctx, const Promise *pp)
 static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED void *param)
 {
     assert(param == NULL);
+    assert(pp != NULL);
+
     struct timespec start = BeginMeasure();
     PromiseResult result = PROMISE_RESULT_NOOP;
 
@@ -1852,7 +1855,7 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
     {
         result = VerifyReportPromise(ctx, pp);
     }
-    else if (IsCustomPromiseType(pp))
+    else if (!IsBuiltInPromiseType(pp->parent_section->promise_type))
     {
         result = EvaluateCustomPromise(ctx, pp);
     }

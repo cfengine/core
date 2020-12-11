@@ -9,4 +9,11 @@ bundle agent __main__
     git:
         "/opt/cfengine/masterfiles"
           repo => "https://github.com/cfengine/masterfiles";
+
+    _opt_cfengine_masterfiles_cloned::
+      "MPF cloned";
+    _opt_cfengine_masterfiles_clone_failed::
+      "Failed to clone MPF";
+    _opt_cfengine_masterfiles_cloned_already::
+      "MPF cloned already";
 }

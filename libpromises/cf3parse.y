@@ -153,6 +153,10 @@ promisecomponent_values: typeid
 
 promiseid:             promiseid_values
                        {
+                          if (IsBuiltInPromiseType(P.blockid))
+                          {
+                             ParseError("'%s' promises are built in and cannot be custom", yytext);
+                          }
                           ParserDebug("\tP:promise:%s:%s\n", P.blocktype, P.blockid);
                           CURRENT_BLOCKID_LINE = P.line_no;
                        }

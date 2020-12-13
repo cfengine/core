@@ -10,6 +10,7 @@ bundle agent __main__
         "/opt/cfengine/masterfiles"
           repo => "https://github.com/cfengine/masterfiles";
 
+  reports:
     _opt_cfengine_masterfiles_cloned::
       "MPF cloned";
     _opt_cfengine_masterfiles_clone_failed::

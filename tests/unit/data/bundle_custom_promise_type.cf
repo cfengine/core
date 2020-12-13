@@ -1,0 +1,7 @@
+# This policy should be parseable since the promise type might be
+# defined in another policy file
+bundle agent foo
+{
+custom_promise_type:
+  "var" string => "test";
+}

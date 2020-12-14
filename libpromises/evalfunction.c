@@ -5159,9 +5159,7 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
                     }
                     else if (strrchr(format_piece, 's'))
                     {
-                        snprintf(piece, CF_BUFSIZE, format_piece, data);
-                        BufferAppend(buf, piece, strlen(piece));
-                        // CfOut(OUTPUT_LEVEL_INFORM, "", "format: appending string format piece = '%s' with data '%s'", format_piece, data);
+                        BufferAppendF(buf, format_piece, data);
                     }
                     else if (strrchr(format_piece, 'S'))
                     {
@@ -5190,9 +5188,8 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
                         {
                             Writer *w = StringWriter();
                             JsonWriteCompact(w, value);
-                            snprintf(piece, CF_BUFSIZE, format_rewrite, StringWriterData(w));
+                            BufferAppendF(buf, format_rewrite, StringWriterData(w));
                             WriterClose(w);
-                            BufferAppend(buf, piece, strlen(piece));
                         }
                         else            // it might be a list reference
                         {
@@ -5215,9 +5212,8 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
                                 }
                                 WriterWrite(w, " }");
 
-                                snprintf(piece, CF_BUFSIZE, format_rewrite, StringWriterData(w));
+                                BufferAppendF(buf, format_rewrite, StringWriterData(w));
                                 WriterClose(w);
-                                BufferAppend(buf, piece, strlen(piece));
                             }
                             else        // whatever this is, it's not a list reference or a data container
                             {

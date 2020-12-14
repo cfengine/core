@@ -5120,10 +5120,9 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
                     char piece[CF_BUFSIZE];
                     memset(piece, 0, CF_BUFSIZE);
 
-                    // CfOut(OUTPUT_LEVEL_INFORM, "", "format: processing format piece = '%s' with data '%s'", format_piece, percent ? "%" : data);
-
-                    char bad_modifiers[] = "hLqjzt";
-                    for (int b = 0; b < strlen(bad_modifiers); b++)
+                    const char bad_modifiers[] = "hLqjzt";
+                    const size_t length = strlen(bad_modifiers);
+                    for (int b = 0; b < length; b++)
                     {
                         if (strchr(format_piece, bad_modifiers[b]) != NULL)
                         {
@@ -5142,12 +5141,10 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
                         sscanf(data, "%ld%s", &x, piece); // we don't care about the remainder and will overwrite it
                         snprintf(piece, CF_BUFSIZE, format_piece, x);
                         BufferAppend(buf, piece, strlen(piece));
-                        // CfOut(OUTPUT_LEVEL_INFORM, "", "format: appending int format piece = '%s' with data '%s'", format_piece, data);
                     }
                     else if (percent)
                     {
                         BufferAppend(buf, "%", 1);
-                        // CfOut(OUTPUT_LEVEL_INFORM, "", "format: appending int format piece = '%s' with data '%s'", format_piece, data);
                     }
                     else if (strrchr(format_piece, 'f'))
                     {
@@ -5155,7 +5152,6 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
                         sscanf(data, "%lf%s", &x, piece); // we don't care about the remainder and will overwrite it
                         snprintf(piece, CF_BUFSIZE, format_piece, x);
                         BufferAppend(buf, piece, strlen(piece));
-                        // CfOut(OUTPUT_LEVEL_INFORM, "", "format: appending float format piece = '%s' with data '%s'", format_piece, data);
                     }
                     else if (strrchr(format_piece, 's'))
                     {
@@ -5229,7 +5225,6 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
                     {
                         char error[] = "(unhandled format)";
                         BufferAppend(buf, error, strlen(error));
-                        // CfOut(OUTPUT_LEVEL_INFORM, "", "format: error appending unhandled format piece = '%s' with data '%s'", format_piece, data);
                     }
                 }
                 else

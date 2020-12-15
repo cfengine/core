@@ -5068,14 +5068,14 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
         }
     }
 
-    if (!finalargs)
+    if (finalargs == NULL)
     {
         return FnFailure();
     }
 
     char *format = RlistScalarValue(finalargs);
 
-    if (!format)
+    if (format == NULL)
     {
         return FnFailure();
     }
@@ -5086,12 +5086,12 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
     char check_buffer[CF_BUFSIZE];
     Buffer *buf = BufferNew();
 
-    if (check)
+    if (check != NULL)
     {
         BufferAppend(buf, format, check - format);
         Seq *s;
 
-        while (check &&
+        while (check != NULL &&
                (s = StringMatchCaptures("^(%%|%[^diouxXeEfFgGaAcsCSpnm%]*?[diouxXeEfFgGaAcsCSpnm])([^%]*)(.*)$", check, false)))
         {
             {
@@ -5104,7 +5104,7 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
                     if (percent)
                     {
                     }
-                    else if (rp)
+                    else if (rp != NULL)
                     {
                         data = RlistScalarValue(rp);
                         rp = rp->next;
@@ -5135,7 +5135,7 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
                         }
                     }
 
-                    if (strrchr(format_piece, 'd') || strrchr(format_piece, 'o') || strrchr(format_piece, 'x'))
+                    if (strrchr(format_piece, 'd') != NULL || strrchr(format_piece, 'o') != NULL || strrchr(format_piece, 'x') != NULL)
                     {
                         long x = 0;
                         sscanf(data, "%ld%s", &x, piece); // we don't care about the remainder and will overwrite it
@@ -5146,18 +5146,18 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
                     {
                         BufferAppend(buf, "%", 1);
                     }
-                    else if (strrchr(format_piece, 'f'))
+                    else if (strrchr(format_piece, 'f') != NULL)
                     {
                         double x = 0;
                         sscanf(data, "%lf%s", &x, piece); // we don't care about the remainder and will overwrite it
                         snprintf(piece, CF_BUFSIZE, format_piece, x);
                         BufferAppend(buf, piece, strlen(piece));
                     }
-                    else if (strrchr(format_piece, 's'))
+                    else if (strrchr(format_piece, 's') != NULL)
                     {
                         BufferAppendF(buf, format_piece, data);
                     }
-                    else if (strrchr(format_piece, 'S'))
+                    else if (strrchr(format_piece, 'S') != NULL)
                     {
                         char *found_format_spec = NULL;
                         char format_rewrite[CF_BUFSIZE];
@@ -5165,7 +5165,7 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
                         strlcpy(format_rewrite, format_piece, CF_BUFSIZE);
                         found_format_spec = strrchr(format_rewrite, 'S');
 
-                        if (found_format_spec)
+                        if (found_format_spec != NULL)
                         {
                             *found_format_spec = 's';
                         }

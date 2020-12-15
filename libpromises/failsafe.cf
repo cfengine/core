@@ -398,7 +398,7 @@ bundle agent failsafe_cfe_internal_trigger_policy
   commands:
 
     bootstrap_mode.!skip_policy_on_bootstrap::
-      "$(sys.cf_agent) --define bootstrap_mode"
+      "$(sys.cf_agent) --info --define bootstrap_mode"
         handle => "failsafe_cfe_internal_trigger_policy_commands_call_promises_cf",
         if => fileexists( $(sys.default_policy_path) ),
         classes => failsafe_results("namespace", "trigger_policy"),

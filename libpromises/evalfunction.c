@@ -5104,9 +5104,7 @@ static FnCallResult FnCallSort(EvalContext *ctx, ARG_UNUSED const Policy *policy
 
 static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
-    char id[CF_BUFSIZE];
-
-    snprintf(id, CF_BUFSIZE, "built-in FnCall %s-arg", fp->name);
+    const char *const id = "built-in FnCall format-arg";
 
     /* We need to check all the arguments, ArgTemplate does not check varadic functions */
     for (const Rlist *arg = finalargs; arg; arg = arg->next)

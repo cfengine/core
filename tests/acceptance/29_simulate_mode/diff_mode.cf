@@ -23,6 +23,9 @@ bundle agent test
       meta => { "ENT-6537", "ENT-6540" };
       # ENT-6537 debian 7 dirent has extra ',' entry
       # ENT-6540 exotics fail to delete chroot
+    "test_skip_needs_work" string => "(redhat_5|centos_5)",
+      meta => { "ENT-6569" };
+      # ENT-6569 on RHEL/CentOS 5, dirlisting consists of two unprintable characters
 
     "description" -> { "ENT-5302" }
       string => "Test that files promises in --simulate=diff mode produce proper output and only make changes in chroot";

@@ -22,7 +22,7 @@ def get_args():
         description="Spooky CFEngine at a distance",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    ap.add_argument("--log-level", help="Specify detail of logging", type=str, default="WARNING")
+    ap.add_argument("--log-level", help="Specify level of logging: DEBUG, INFO, WARNING, ERROR, or CRITICAL", type=str, default="WARNING")
     ap.add_argument(
         "--version", "-V", help="Print or specify version", nargs="?", type=str, const=True)
 

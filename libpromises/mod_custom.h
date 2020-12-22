@@ -50,7 +50,7 @@ typedef struct PromiseModule
     JsonElement *message;
 } PromiseModule;
 
-bool IsCustomPromiseType(const Promise *pp);
+Body *FindCustomPromiseType(const Promise *promise);
 PromiseResult EvaluateCustomPromise(ARG_UNUSED EvalContext *ctx, const Promise *pp);
 
 #endif

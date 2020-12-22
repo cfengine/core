@@ -73,6 +73,26 @@ static const PromiseTypeSyntax *PromiseTypeSyntaxGetStrict(const char *bundle_ty
     return NULL;
 }
 
+bool IsBuiltInPromiseType(const char *const promise_type)
+{
+    // Any built in promise type, regardless of bundle (agent) type
+    assert(promise_type != NULL);
+
+    for (int module_index = 0; module_index < CF3_MODULES; module_index++)
+    {
+        const PromiseTypeSyntax *const module = CF_ALL_PROMISE_TYPES[module_index];
+        for (int promise_type_index = 0; module[promise_type_index].promise_type; promise_type_index++)
+        {
+            const PromiseTypeSyntax *promise_type_syntax = &(module[promise_type_index]);
+            if (StringEqual(promise_type, promise_type_syntax->promise_type))
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 const PromiseTypeSyntax *PromiseTypeSyntaxGet(const char *bundle_type, const char *promise_type)
 {
     const PromiseTypeSyntax *pts = PromiseTypeSyntaxGetStrict(bundle_type, promise_type);

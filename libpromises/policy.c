@@ -572,6 +572,7 @@ static bool RvalTypeCheckDataType(RvalType rval_type, DataType expected_datatype
 */
 static bool ConstraintCheckSyntax(const Constraint *constraint, Seq *errors)
 {
+    assert(constraint != NULL);
     if (constraint->type != POLICY_ELEMENT_TYPE_PROMISE)
     {
         ProgrammingError("Attempted to check the syntax for a constraint"
@@ -1459,13 +1460,13 @@ BundleSection *BundleAppendSection(Bundle *bundle, const char *promise_type)
     section->promise_type = xstrdup(promise_type);
     section->promises = SeqNew(10, PromiseDestroy);
 
-    if (PolicyHasCustomPromiseType(bundle->parent_policy, promise_type))
+    if (IsBuiltInPromiseType(promise_type))
     {
-        SeqAppend(bundle->custom_sections, section);
+        SeqAppend(bundle->sections, section);
     }
     else
     {
-        SeqAppend(bundle->sections, section);
+        SeqAppend(bundle->custom_sections, section);
     }
 
     return section;
@@ -2782,18 +2783,10 @@ static bool ValidateCustomPromise(const Promise *pp, Seq *errors)
     return valid;
 }
 
-static inline bool PromiseIsCustom(const Promise *pp)
-{
-    assert (pp != NULL);
-
-    const Policy *policy = pp->parent_section->parent_bundle->parent_policy;
-    const char *promise_type = pp->parent_section->promise_type;
-
-    return PolicyHasCustomPromiseType(policy, promise_type);
-}
-
 static bool PromiseCheck(const Promise *pp, Seq *errors)
 {
+    assert(pp != NULL);
+
     bool success = true;
 
     if (!CheckScalarNotEmptyVarRef(pp->promiser))
@@ -2803,9 +2796,9 @@ static bool PromiseCheck(const Promise *pp, Seq *errors)
         success = false;
     }
 
-    const bool is_custom = PromiseIsCustom(pp);
+    const bool is_builtin = IsBuiltInPromiseType(pp->parent_section->promise_type);
 
-    if (!is_custom)
+    if (is_builtin)
     {
         // check if promise's constraints are valid
         for (size_t i = 0; i < SeqLength(pp->conlist); i++)
@@ -2821,12 +2814,12 @@ static bool PromiseCheck(const Promise *pp, Seq *errors)
 
     if (pts == NULL)
     {
-        assert(is_custom);
+        assert(!is_builtin);
         success &= ValidateCustomPromise(pp, errors);
     }
     else if (pts->check_promise)
     {
-        assert(!is_custom);
+        assert(is_builtin);
         success &= pts->check_promise(pp, errors);
     }
 

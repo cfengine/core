@@ -80,6 +80,7 @@ SyntaxTypeMatch CheckParseContext(const char *context, const char *range);
 DataType StringDataType(EvalContext *ctx, const char *string);
 DataType ExpectedDataType(const char *lvalname);
 
+bool IsBuiltInPromiseType(const char *const promise_type);
 const PromiseTypeSyntax *PromiseTypeSyntaxGet(const char *bundle_type, const char *promise_type);
 const ConstraintSyntax *PromiseTypeSyntaxGetConstraintSyntax(const PromiseTypeSyntax *promise_type_syntax, const char *lval);
 

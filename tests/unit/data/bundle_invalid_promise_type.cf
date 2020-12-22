@@ -1,5 +1,0 @@
-bundle agent foo
-{
-invalid:
-  "var" string => "test";
-}

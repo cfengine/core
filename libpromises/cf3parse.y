@@ -153,6 +153,10 @@ promisecomponent_values: typeid
 
 promiseid:             promiseid_values
                        {
+                          if (IsBuiltInPromiseType(P.blockid))
+                          {
+                             ParseError("'%s' promises are built in and cannot be custom", yytext);
+                          }
                           ParserDebug("\tP:promise:%s:%s\n", P.blocktype, P.blockid);
                           CURRENT_BLOCKID_LINE = P.line_no;
                        }
@@ -481,19 +485,19 @@ constraint_id:         IDENTIFIER                        /* BUNDLE ONLY */
                        {
                            ParserDebug("\tP:%s:%s:%s:%s:%s:%s attribute = %s\n", ParserBlockString(P.block), P.blocktype, P.blockid, P.currenttype, P.currentclasses ? P.currentclasses : "any", P.promiser, P.currentid);
 
-                           if (!PolicyHasCustomPromiseType(P.policy, P.currenttype))
+                           const PromiseTypeSyntax *promise_type_syntax = PromiseTypeSyntaxGet(P.blocktype, P.currenttype);
+                           if (promise_type_syntax == NULL)
                            {
-                               const PromiseTypeSyntax *promise_type_syntax = PromiseTypeSyntaxGet(P.blocktype, P.currenttype);
-                               if (!promise_type_syntax)
-                               {
-                                   ParseError("Invalid promise type '%s' in bundle '%s' of type '%s'", P.currenttype, P.blockid, P.blocktype);
-                                   INSTALL_SKIP = true;
-                               }
-                               else if (!PromiseTypeSyntaxGetConstraintSyntax(promise_type_syntax, P.currentid))
-                               {
-                                   ParseError("Unknown attribute '%s' for promise type '%s' in bundle with type '%s'", P.currentid, P.currenttype, P.blocktype);
-                                   INSTALL_SKIP = true;
-                               }
+                               // This promise type might be defined in another Policy object.
+                               // There is no way to distinguish a custom promise type
+                               // from a wrong (misspelled) promise type while parsing
+                               // since the Policy objects will be merged later.
+                           }
+                           else if (!PromiseTypeSyntaxGetConstraintSyntax(promise_type_syntax, P.currentid))
+                           {
+                               // Built in promise type with bad attribute
+                               ParseError("Unknown attribute '%s' for promise type '%s' in bundle with type '%s'", P.currentid, P.currenttype, P.blocktype);
+                               INSTALL_SKIP = true;
                            }
 
                            strncpy(P.lval,P.currentid,CF_MAXVARSIZE);

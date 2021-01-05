@@ -1,5 +1,5 @@
 dnl
-dnl  Copyright 2020 Northern.tech AS
+dnl  Copyright 2021 Northern.tech AS
 dnl
 dnl  This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
 dnl

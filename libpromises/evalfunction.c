@@ -5187,7 +5187,7 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
                     if (strrchr(format_piece, 'd') != NULL || strrchr(format_piece, 'o') != NULL || strrchr(format_piece, 'x') != NULL)
                     {
                         long x = 0;
-                        sscanf(data, "%ld%s", &x, piece); // we don't care about the remainder and will overwrite it
+                        sscanf(data, "%ld", &x);
                         snprintf(piece, CF_BUFSIZE, format_piece, x);
                         BufferAppend(buf, piece, strlen(piece));
                     }
@@ -5199,7 +5199,7 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
                     else if (strrchr(format_piece, 'f') != NULL)
                     {
                         double x = 0;
-                        sscanf(data, "%lf%s", &x, piece); // we don't care about the remainder and will overwrite it
+                        sscanf(data, "%lf", &x);
                         snprintf(piece, CF_BUFSIZE, format_piece, x);
                         BufferAppend(buf, piece, strlen(piece));
                     }

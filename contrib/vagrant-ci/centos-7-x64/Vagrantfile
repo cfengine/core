@@ -20,7 +20,7 @@ Vagrant.configure("2") do |config|
   config.vm.synced_folder "../../../", "/cfe/core", type: "rsync",
                           rsync__args: ["--archive", "--links", "--delete"]
 
-  config.vm.box = "centos/6"
+  config.vm.box = "centos/7"
   config.vm.provider :libvirt do |lv|
     lv.cpus = os_cpu_cores
     lv.memory = 1024
@@ -70,8 +70,10 @@ SHELL
                           rsync__args: ["--archive", "--links", "--delete"]
 
     fd.vm.provision "shell", inline: <<-SHELL
-yum -q -y install http://opensource.wandisco.com/centos/6/git/x86_64/wandisco-git-release-6-1.noarch.rpm || true
+yum -q -y install http://opensource.wandisco.com/centos/7/git/x86_64/wandisco-git-release-7-1.noarch.rpm || true
 yum -q -y install 'perl(ExtUtils::MakeMaker)' 'perl(Digest::MD5)' 'perl(Module::Load::Conditional)' ncurses-devel rpm-build
+yum -q -y install psmisc # for fuser command
+yum -q -y install wget
 SHELL
 
     fd.vm.provision "shell", inline: <<-SHELL
@@ -83,7 +85,7 @@ export NO_CONFIGURE=1
 export PROJECT=community
 cd /cfe
 ./buildscripts/build-scripts/autogen
-yum -q -y remove libtool
+yum -q -y remove libtool libtool-ltdl
 ./buildscripts/build-scripts/clean-buildmachine
 ./buildscripts/build-scripts/build-environment-check
 ./buildscripts/build-scripts/install-dependencies

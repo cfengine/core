@@ -2242,7 +2242,7 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
         {
             if (IsAbsoluteFileName(attr->rename.newname))
             {
-                strlcpy(path, attr->rename.newname, CF_BUFSIZE);
+                strlcpy(newname, attr->rename.newname, CF_BUFSIZE);
             }
             else
             {

@@ -57,7 +57,7 @@ bundle agent test
     "$(G.testroot)$(const.dirsep)perms"
       perms => m(000);
     "$(G.testroot)$(const.dirsep)rename-me"
-      rename => newname("$(G.testroot)$(const.dirsep)rename-newname");
+      rename => newname("rename-newname");
     "$(G.testroot)$(const.dirsep)transformer"
       transformer => "$(G.gzip) $(this.promiser)";
 }

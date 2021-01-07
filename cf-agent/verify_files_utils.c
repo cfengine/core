@@ -2112,12 +2112,6 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
         changes_path = chrooted_path;
     }
 
-    const char *changes_newname = attr->rename.newname;
-    if ((attr->rename.newname != NULL) && ChrootChanges())
-    {
-        changes_newname = ToChangesChroot(attr->rename.newname);
-    }
-
     if (lstat(changes_path, &dsb) == -1)
     {
         RecordNoChange(ctx, pp, attr, "File object named '%s' is not there (promise kept)", path);
@@ -2134,12 +2128,49 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
     }
 
     PromiseResult result = PROMISE_RESULT_NOOP;
-    if (attr->rename.newname)
+    if (attr->rename.newname != NULL)
     {
-        if (MakingChanges(ctx, pp, attr, &result, "rename file '%s' to '%s'",
-                          path, attr->rename.newname))
+        char newname[CF_BUFSIZE];
+        if (IsAbsoluteFileName(attr->rename.newname))
         {
-            if (!FileInRepository(attr->rename.newname))
+            size_t copied = strlcpy(newname, attr->rename.newname, sizeof(newname));
+            if (copied > sizeof(newname))
+            {
+                RecordFailure(ctx, pp, attr,
+                              "Internal buffer limit in rename operation, new name too long: '%s'",
+                              attr->rename.newname);
+                result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+                free(chrooted_path);
+                return result;
+            }
+        }
+        else
+        {
+            strncpy(newname, path, sizeof(newname));
+            ChopLastNode(newname);
+
+            if (!PathAppend(newname, sizeof(newname),
+                            attr->rename.newname, FILE_SEPARATOR))
+            {
+                RecordFailure(ctx, pp, attr,
+                              "Internal buffer limit in rename operation, destination: '%s' + '%s'",
+                              newname, attr->rename.newname);
+                result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+                free(chrooted_path);
+                return result;
+            }
+        }
+
+        const char *changes_newname = newname;
+        if (ChrootChanges())
+        {
+            changes_newname = ToChangesChroot(newname);
+        }
+
+        if (MakingChanges(ctx, pp, attr, &result, "rename file '%s' to '%s'",
+                          path, newname))
+        {
+            if (!FileInRepository(newname))
             {
                 if (rename(changes_path, changes_newname) == -1)
                 {
@@ -2151,9 +2182,9 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
                 {
                     if (ChrootChanges())
                     {
-                        RecordFileRenamedInChroot(path, attr->rename.newname);
+                        RecordFileRenamedInChroot(path, newname);
                     }
-                    RecordChange(ctx, pp, attr, "Renamed file '%s' to '%s'", path, attr->rename.newname);
+                    RecordChange(ctx, pp, attr, "Renamed file '%s' to '%s'", path, newname);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
                 }
             }
@@ -2250,7 +2281,7 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
             }
         }
 
-        changes_newname = newname;
+        const char *changes_newname = newname;
         if (ChrootChanges())
         {
             changes_newname = ToChangesChroot(newname);

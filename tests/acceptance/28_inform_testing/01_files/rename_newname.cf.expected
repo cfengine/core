@@ -1,2 +1,2 @@
-    info: Renamed file '/tmp/TEST.cfengine' to 'TEST.foobar'
+    info: Renamed file '/tmp/TEST.cfengine' to '/tmp/TEST.foobar'
     info: files promise '/tmp/TEST.cfengine' repaired

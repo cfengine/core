@@ -19,6 +19,7 @@ ssize_t sendto(ARG_UNUSED int sockfd, ARG_UNUSED const void *buf,
                const struct sockaddr *dest_addr,
                ARG_UNUSED socklen_t addrlen)
 {
+    free(got_address); // RemoteSysLog can call this multiple times
     got_address = xmemdup(dest_addr, sizeof(struct sockaddr_in));
     return len;
 }
@@ -33,6 +34,7 @@ int sendto(ARG_UNUSED int sockfd, ARG_UNUSED const void *buf,
                const void *dest_addr,
                ARG_UNUSED int addrlen)
 {
+    free(got_address); // RemoteSysLog can call this multiple times
     got_address = xmemdup(dest_addr, sizeof(struct sockaddr_in));
     return len;
 }
@@ -53,6 +55,7 @@ static void test_set_port(void)
     }
 
     free(got_address);
+    got_address = NULL; // Safe to free(NULL) in another test
 }
 
 static void test_set_host(void)
@@ -63,6 +66,8 @@ static void test_set_host(void)
     assert_int_equal(got_address->sa_family, AF_INET);
 
     assert_int_equal(ntohl(((struct sockaddr_in *) got_address)->sin_addr.s_addr), 0x7f000037);
+    free(got_address);
+    got_address = NULL; // Safe to free(NULL) in another test
 }
 
 #define check_level(str, lvl) \

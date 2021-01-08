@@ -7,7 +7,7 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
+  unit_tests:
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
@@ -18,6 +18,6 @@ jobs:
     - name: Run autotools / configure
       run: ./autogen.sh --enable-debug
     - name: Compile and link (make)
-      run: make
+      run: make -j8 CFLAGS="-Werror -Wall -fsanitize=address" LDFLAGS="-fsanitize=address"
     - name: Run unit tests
-      run: cd tests/unit && make check
+      run: make -C tests/unit CFLAGS="-fsanitize=address" LDFLAGS="-fsanitize=address" check

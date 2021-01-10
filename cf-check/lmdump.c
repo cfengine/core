@@ -10,7 +10,7 @@
 
 static void lmdump_print_hex(const char *s, size_t len)
 {
-    for (int i = 0; i < len; i++)
+    for (size_t i = 0; i < len; i++)
     {
         printf("%02x", s[i]);
     }

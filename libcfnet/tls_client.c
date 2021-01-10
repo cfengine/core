@@ -250,7 +250,12 @@ int TLSClientIdentificationDialog(ConnectionInfo *conn_info,
     {
         ret = snprintf(&line[line_len], sizeof(line) - line_len,
                        " USERNAME=%s", username);
-        if (ret >= sizeof(line) - line_len)
+        if (ret < 0)
+        {
+            Log(LOG_LEVEL_ERR, "snprintf failed: %s", GetErrorStr());
+            return -1;
+        }
+        else if ((unsigned int) ret >= sizeof(line) - line_len)
         {
             Log(LOG_LEVEL_ERR, "Sending IDENTITY truncated: %s", line);
             return -1;
@@ -275,14 +280,13 @@ int TLSClientIdentificationDialog(ConnectionInfo *conn_info,
     static const char OK[] = "OK WELCOME";
     size_t OK_len = sizeof(OK) - 1;
     ret = TLSRecvLines(conn_info->ssl, line, sizeof(line));
-    if (ret == -1)
+    if (ret < 0)
     {
         Log(LOG_LEVEL_ERR,
             "Connection was hung up during identification! (3)");
         return -1;
     }
-
-    if (ret < OK_len || strncmp(line, OK, OK_len) != 0)
+    else if ((size_t) ret < OK_len || strncmp(line, OK, OK_len) != 0)
     {
         Log(LOG_LEVEL_ERR,
             "Peer did not accept our identity! Responded: %s",

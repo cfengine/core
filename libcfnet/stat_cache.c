@@ -165,7 +165,11 @@ int cf_remote_stat(AgentConnection *conn, bool encrypt, const char *file,
 
         tosend = cipherlen + CF_PROTO_OFFSET;
 
-        if(tosend > sizeof(sendbuffer))
+        if (tosend < 0)
+        {
+            ProgrammingError("cf_remote_stat: tosend (%d) < 0", tosend);
+        }
+        else if((unsigned int) tosend > sizeof(sendbuffer))
         {
             ProgrammingError("cf_remote_stat: tosend (%d) > sendbuffer (%zd)",
                              tosend, sizeof(sendbuffer));

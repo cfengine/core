@@ -1065,7 +1065,7 @@ static JsonElement *BundleTypesToJson(void)
     while ((bundle_type = JsonIteratorNextKey(&it)))
     {
         JsonElement *promise_types = JsonObjectGetAsArray(JsonObjectGetAsObject(bundle_types, bundle_type), "promiseTypes");
-        for (int i = 0; i < SeqLength(common_promise_types); i++)
+        for (size_t i = 0; i < SeqLength(common_promise_types); i++)
         {
             const char *common_promise_type = SeqAt(common_promise_types, i);
             JsonArrayAppendString(promise_types, common_promise_type);

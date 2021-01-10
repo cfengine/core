@@ -39,7 +39,13 @@
  */
 static bool StringAppendPromise(char *dst, const char *src, size_t n)
 {
-    int i, j;
+    size_t i, j;
+
+    if (n == 0)
+    {
+        return false;
+    }
+
     n--;
     for (i = 0; i < n && dst[i]; i++)
     {

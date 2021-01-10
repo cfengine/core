@@ -176,7 +176,14 @@ int PipeWriteData(const char *base_cmd, const char *args, const char *data)
         io.read_fd, io.write_fd, args);
 
     int res = 0;
-    if (PipeWrite(&io, data) != strlen(data))
+    int written = PipeWrite(&io, data);
+    if (written < 0)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to write to pipe (fd %d): %s", 
+            io.write_fd, GetErrorStr());
+        res = -1;
+    }
+    else if ((size_t) written != strlen(data))
     {
         Log(LOG_LEVEL_VERBOSE,
             "Was not able to send whole data to application '%s'.",
@@ -217,7 +224,13 @@ int PipeReadWriteData(const char *base_cmd, const char *args, const char *reques
     Log(LOG_LEVEL_DEBUG, "Opened fds %d and %d for command '%s'.",
         io.read_fd, io.write_fd, command);
 
-    if (PipeWrite(&io, request) != strlen(request))
+    int written = PipeWrite(&io, request);
+    if (written < 0) {
+        Log(LOG_LEVEL_ERR, "Failed to write to pipe (fd %d): %s",
+            io.write_fd, GetErrorStr());
+        return -1;
+    }
+    else if ((size_t) written != strlen(request))
     {
         Log(LOG_LEVEL_VERBOSE, "Couldn't send whole data to application '%s'.",
             base_cmd);

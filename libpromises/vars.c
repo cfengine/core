@@ -384,7 +384,7 @@ bool ExtractScalarReference(Buffer *out, const char *str, size_t len, bool extra
     }
 
     const char *dollar_point = memchr(str, '$', len);
-    if (!dollar_point || (dollar_point - str) == len)
+    if (!dollar_point || (size_t) (dollar_point - str) == len)
     {
         return false;
     }

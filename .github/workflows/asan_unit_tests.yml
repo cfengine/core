@@ -1,4 +1,4 @@
-name: Build and unit test
+name: ASAN Unit Tests
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [ master ]
 
 jobs:
-  unit_tests:
+  asan_unit_tests:
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2

@@ -1,0 +1,23 @@
+name: MacOS Unit Tests
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  macos_unit_tests:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    - name: Install dependencies
+      run: brew install lmdb automake
+    - name: Run autotools / configure
+      run: ./autogen.sh --enable-debug --with-openssl="$(brew --prefix openssl)"
+    - name: Compile and link
+      run: make -j8 CFLAGS="-Werror -Wall"
+    - name: Run unit tests
+      run: make -C tests/unit check

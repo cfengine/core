@@ -2269,6 +2269,11 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
             {
                 if (!JoinSuffix(newname, sizeof(newname), attr->rename.disable_suffix))
                 {
+                    RecordFailure(ctx, pp, attr,
+                                  "Failed to append disable suffix '%s' in rename operation for '%s'",
+                                  attr->rename.disable_suffix, path);
+                    result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+                    free(chrooted_path);
                     return result;
                 }
             }
@@ -2276,6 +2281,11 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
             {
                 if (!JoinSuffix(newname, sizeof(newname), ".cfdisabled"))
                 {
+                    RecordFailure(ctx, pp, attr,
+                                  "Failed to append disable suffix '.cfdisabled' in rename operation for '%s'",
+                                  path);
+                    result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+                    free(chrooted_path);
                     return result;
                 }
             }

@@ -43,10 +43,12 @@ SHELL
     nd.vm.hostname = no_deps_vm_name.to_sym
 
     nd.vm.provision "shell", inline: <<-SHELL
-yum -q -y install lmdb-devel pcre-devel openssl-devel libyaml-devel libxml-devel
+set -e
+yum -q -y install lmdb-devel pcre-devel openssl-devel libyaml-devel libxml2-devel
 SHELL
 
     nd.vm.provision "shell", inline: <<-SHELL
+set -e
 shopt -s expand_aliases
 alias make='make -j -l#{os_cpu_cores}'
 cd /cfe/core
@@ -70,6 +72,7 @@ SHELL
                           rsync__args: ["--archive", "--links", "--delete"]
 
     fd.vm.provision "shell", inline: <<-SHELL
+set -e
 yum -q -y install http://opensource.wandisco.com/centos/7/git/x86_64/wandisco-git-release-7-1.noarch.rpm || true
 yum -q -y install 'perl(ExtUtils::MakeMaker)' 'perl(Digest::MD5)' 'perl(Module::Load::Conditional)' ncurses-devel rpm-build
 yum -q -y install psmisc # for fuser command

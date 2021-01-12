@@ -108,7 +108,14 @@ bool ConsiderAbstractFile(const char *filename, const char *directory, const Fil
      * since it's joined elsewhere as well, if split needed do it here. */
     char buf[CF_BUFSIZE];
     int ret = snprintf(buf, sizeof(buf), "%s/%s", directory, filename);
-    if (ret < 0 || ret >= sizeof(buf))
+    if (ret < 0)
+    {
+        Log(LOG_LEVEL_ERR, 
+            "Unexpected failure from snprintf (%d - %s) on '%s' "
+            "(ConsiderAbstractFile)", errno, GetErrorStr(), buf);
+        return false;
+    }
+    else if ((size_t) ret >= sizeof(buf))
     {
         Log(LOG_LEVEL_ERR,
             "Filename too long! Directory '%s' filename '%s'",

@@ -76,7 +76,7 @@ static bool RegExMatchFullString(EvalContext *ctx, pcre *rx, const char *teststr
 
     if (RegExMatchSubString(ctx, rx, teststring, &match_start, &match_len))
     {
-        return (match_start == 0) && (match_len == strlen(teststring));
+        return ((size_t) match_start == 0) && ((size_t) match_len == strlen(teststring));
     }
     else
     {

@@ -132,9 +132,9 @@ void MonNetworkInit(void)
     const char* const file_stems[] = { "cf_incoming", "cf_outgoing" };
     const size_t num_files = sizeof(file_stems) / sizeof(char*);
 
-    for (int i = 0; i < ATTR; i++)
+    for (size_t i = 0; i < ATTR; i++)
     {
-        for (int j = 0; j < num_files; j++)
+        for (size_t j = 0; j < num_files; j++)
         {
             snprintf(vbuff, CF_BUFSIZE, "%s/%s.%s",
                      statedir, file_stems[j], ECGSOCKS[i].name);
@@ -338,7 +338,7 @@ static inline bool GetNetworkDataFromProcNetTCP(char local_addr[INET_ADDRSTRLEN]
 
     /* Read real data */
     ret = CfReadLines(buff, buff_size, fp, lines);
-    if (ret == -1)
+    if (ret < 0)
     {
         Log(LOG_LEVEL_ERR, "Failed to read data from /proc/net/tcp");
         fclose(fp);
@@ -348,7 +348,7 @@ static inline bool GetNetworkDataFromProcNetTCP(char local_addr[INET_ADDRSTRLEN]
 
     uint32_t l_port, r_port;
     SocketState state;
-    for (size_t i = 0; i < ret; i++)
+    for (size_t i = 0; i < (size_t) ret; i++)
     {
         char *line = SeqAt(lines,i);
         if (ParseIPv4SocketInfo(line, local_addr, &l_port, remote_addr, &r_port, &state))
@@ -385,7 +385,7 @@ static inline bool GetNetworkDataFromProcNetTCP6(char local_addr6[INET6_ADDRSTRL
 
     /* Read real data */
     ret = CfReadLines(buff, buff_size, fp, lines);
-    if (ret == -1)
+    if (ret < 0)
     {
         Log(LOG_LEVEL_ERR, "Failed to read data from /proc/net/tcp6");
         fclose(fp);
@@ -395,7 +395,7 @@ static inline bool GetNetworkDataFromProcNetTCP6(char local_addr6[INET6_ADDRSTRL
 
     uint32_t l_port, r_port;
     SocketState state;
-    for (size_t i = 0; i < ret; i++)
+    for (size_t i = 0; i < (size_t) ret; i++)
     {
         char *line = SeqAt(lines,i);
         if (ParseIPv6SocketInfo(line, local_addr6, &l_port, remote_addr6, &r_port, &state))
@@ -432,7 +432,7 @@ static inline bool GetNetworkDataFromProcNetUDP(char local_addr[INET_ADDRSTRLEN]
 
     /* Read real data */
     ret = CfReadLines(buff, buff_size, fp, lines);
-    if (ret == -1)
+    if (ret < 0)
     {
         Log(LOG_LEVEL_ERR, "Failed to read data from /proc/net/udp");
         fclose(fp);
@@ -442,7 +442,7 @@ static inline bool GetNetworkDataFromProcNetUDP(char local_addr[INET_ADDRSTRLEN]
 
     uint32_t l_port, r_port;
     SocketState state;
-    for (size_t i = 0; i < ret; i++)
+    for (size_t i = 0; i < (size_t) ret; i++)
     {
         char *line = SeqAt(lines,i);
         if (ParseIPv4SocketInfo(line, local_addr, &l_port, remote_addr, &r_port, &state))
@@ -479,7 +479,7 @@ static inline bool GetNetworkDataFromProcNetUDP6(char local_addr6[INET6_ADDRSTRL
 
     /* Read real data */
     ret = CfReadLines(buff, buff_size, fp, lines);
-    if (ret == -1)
+    if (ret < 0)
     {
         Log(LOG_LEVEL_ERR, "Failed to read data from /proc/net/udp6");
         fclose(fp);
@@ -489,7 +489,7 @@ static inline bool GetNetworkDataFromProcNetUDP6(char local_addr6[INET6_ADDRSTRL
 
     uint32_t l_port, r_port;
     SocketState state;
-    for (size_t i = 0; i < ret; i++)
+    for (size_t i = 0; i < (size_t) ret; i++)
     {
         char *line = SeqAt(lines,i);
         if (ParseIPv6SocketInfo(line, local_addr6, &l_port, remote_addr6, &r_port, &state))
@@ -571,7 +571,7 @@ static void GetNetworkDataFromNetstat(FILE *fp, double *cf_this, Item **in, Item
         char local[CF_MAX_IP_LEN + CF_MAX_PORT_LEN] = {0};
         char remote[CF_MAX_IP_LEN + CF_MAX_PORT_LEN] = {0};
 
-        size_t res = CfReadLine(&vbuff, &vbuff_size, fp);
+        ssize_t res = CfReadLine(&vbuff, &vbuff_size, fp);
         if (res == -1)
         {
             if (!feof(fp))

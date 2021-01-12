@@ -248,12 +248,17 @@ static bool RepairedAfterOpen(const char *lmdb_file, int fd_tstamp)
     time_t repaired_tstamp = -1;
     ssize_t n_read = read(fd_tstamp, &repaired_tstamp, sizeof(time_t));
     lseek(fd_tstamp, 0, SEEK_SET);
-    if (n_read == 0)
+
+    if (n_read < 0)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to read %s: %s", lmdb_file, GetErrorStr());
+    }
+    else if (n_read == 0)
     {
         /* EOF (empty file) => never repaired */
         Log(LOG_LEVEL_VERBOSE, "DB '%s' never repaired before", lmdb_file);
     }
-    else if (n_read < sizeof(time_t))
+    else if ((size_t) n_read < sizeof(time_t))
     {
         /* error */
         Log(LOG_LEVEL_ERR, "Failed to read the timestamp of repair of the '%s' DB",

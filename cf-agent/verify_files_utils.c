@@ -100,7 +100,7 @@ static void RegisterAHardLink(int i, const char *value, EvalContext *ctx, const 
 static PromiseResult VerifyCopiedFileAttributes(EvalContext *ctx, const char *src, const char *dest, const struct stat *sstat, const struct stat *dstat, const Attributes *attr, const Promise *pp);
 static int cf_stat(const char *file, struct stat *buf, const FileCopy *fc, AgentConnection *conn);
 #ifndef __MINGW32__
-static int cf_readlink(EvalContext *ctx, const char *sourcefile, char *linkbuf, int buffsize, const Attributes *attr, const Promise *pp, AgentConnection *conn, PromiseResult *result);
+static int cf_readlink(EvalContext *ctx, const char *sourcefile, char *linkbuf, size_t buffsize, const Attributes *attr, const Promise *pp, AgentConnection *conn, PromiseResult *result);
 #endif
 static bool SkipDirLinks(EvalContext *ctx, const char *path, const char *lastnode, DirectoryRecursion r);
 static bool DeviceBoundary(const struct stat *sb, dev_t rootdevice);
@@ -2022,7 +2022,7 @@ static bool TransformFile(EvalContext *ctx, char *file, const Attributes *attr, 
             strncpy(chrooted_command, command_str, command_len + 1);
             ssize_t ret = StringReplace(chrooted_command, command_len + PATH_MAX + 1,
                                         file, ToChangesChroot(file));
-            if ((ret <= 0) || (ret == command_len + PATH_MAX + 1))
+            if ((ret <= 0) || ((size_t) ret == command_len + PATH_MAX + 1))
             {
                 RecordFailure(ctx, pp, attr,
                               "Failed to replace path '%s' in transformer command '%s' for changes chroot",
@@ -4017,10 +4017,11 @@ static int cf_stat(const char *file, struct stat *buf, const FileCopy *fc, Agent
 
 #ifndef __MINGW32__
 
-static int cf_readlink(EvalContext *ctx, const char *sourcefile, char *linkbuf, int buffsize,
+static int cf_readlink(EvalContext *ctx, const char *sourcefile, char *linkbuf, size_t buffsize,
                        const Attributes *attr, const Promise *pp, AgentConnection *conn, PromiseResult *result)
  /* wrapper for network access */
 {
+    assert(buffsize > 0);
     assert(attr != NULL);
     memset(linkbuf, 0, buffsize);
 

@@ -991,7 +991,16 @@ static bool GetGroupInfo (const char *user, const User *u, StringSet **groups_to
 static bool EqualGid(const char *key, const struct group *entry)
 {
     assert(entry != NULL);
-    return (atoi(key) == entry->gr_gid);
+
+    unsigned long gid; 
+    int ret = StringToUlong(key, &gid);
+    if (ret != 0)
+    {
+        LogStringToLongError(key, "EqualGid", ret);
+        return false;
+    }   
+
+    return (gid == entry->gr_gid);
 }
 
 static bool EqualGroupName(const char *key, const struct group *entry)
@@ -1136,79 +1145,108 @@ static void TransformGidsToGroups(StringSet **list)
     StringSetDestroy(old_list);
 }
 
-static bool VerifyIfUserNeedsModifs (const char *puser, const User *u, const struct passwd *passwd_info,
-                             uint32_t *changemap, StringSet *groups_to_set, StringSet *current_secondary_groups)
+static bool VerifyIfUserNeedsModifs(const char *puser, const User *u, 
+                                    const struct passwd *passwd_info,
+                                    uint32_t *changemap, 
+                                    StringSet *groups_to_set, 
+                                    StringSet *current_secondary_groups)
 {
     assert(u != NULL);
-    if (u->description != NULL && strcmp (u->description, passwd_info->pw_gecos))
+    assert(passwd_info != NULL);
+
+    if (u->description != NULL && 
+        !StringEqual(u->description, passwd_info->pw_gecos))
     {
-        CFUSR_SETBIT (*changemap, i_comment);
+        CFUSR_SETBIT(*changemap, i_comment);
     }
-    if (u->uid != NULL && (atoi (u->uid) != passwd_info->pw_uid))
+
+    if (u->uid != NULL)
     {
-        CFUSR_SETBIT (*changemap, i_uid);
+        unsigned long uid;
+        int ret = StringToUlong(u->uid, &uid);
+        if (ret != 0 || uid != passwd_info->pw_uid)
+        {
+            CFUSR_SETBIT(*changemap, i_uid);
+        }
     }
-    if (u->home_dir != NULL && strcmp (u->home_dir, passwd_info->pw_dir))
+
+    if (u->home_dir != NULL && !StringEqual(u->home_dir, passwd_info->pw_dir))
     {
-        CFUSR_SETBIT (*changemap, i_home);
+        CFUSR_SETBIT(*changemap, i_home);
     }
-    if (u->shell != NULL && strcmp (u->shell, passwd_info->pw_shell))
+
+    if (u->shell != NULL && !StringEqual(u->shell, passwd_info->pw_shell))
     {
-        CFUSR_SETBIT (*changemap, i_shell);
+        CFUSR_SETBIT(*changemap, i_shell);
     }
+
     bool account_is_locked = IsAccountLocked(puser, passwd_info);
     if ((!account_is_locked && u->policy == USER_STATE_LOCKED)
         || (account_is_locked && u->policy != USER_STATE_LOCKED))
     {
         CFUSR_SETBIT(*changemap, i_locked);
     }
+
     // Don't bother with passwords if the account is going to be locked anyway.
-    if (u->password != NULL && strcmp (u->password, "")
+    if (u->password != NULL && !StringEqual(u->password, "")
         && u->policy != USER_STATE_LOCKED)
     {
         if (!IsPasswordCorrect(puser, u->password, u->password_format, passwd_info))
         {
-            CFUSR_SETBIT (*changemap, i_password);
+            CFUSR_SETBIT(*changemap, i_password);
         }
     }
+
     if (u->groups_secondary_given && !StringSetIsEqual(groups_to_set, current_secondary_groups))
     {
-        CFUSR_SETBIT (*changemap, i_groups);
+        CFUSR_SETBIT(*changemap, i_groups);
     }
-    if (SafeStringLength(u->group_primary))
+
+    if (SafeStringLength(u->group_primary) != 0)
     {
-        bool group_could_be_gid = (strlen(u->group_primary) == strspn(u->group_primary, "0123456789"));
-        int gid;
+        bool group_could_be_gid = (strlen(u->group_primary) == 
+                                   strspn(u->group_primary, "0123456789"));
 
         // We try name first, even if it looks like a gid. Only fall back to gid.
-        struct group *group_info;
         errno = 0;
-        group_info = GetGrEntry(u->group_primary, &EqualGroupName);
-        if (!group_info && errno != 0)
+        struct group *group_info = GetGrEntry(u->group_primary, 
+                                              &EqualGroupName);
+        if (group_info == NULL && errno != 0)
         {
-            Log(LOG_LEVEL_ERR, "Could not obtain information about group '%s': %s", u->group_primary, GetErrorStr());
-            gid = -1;
+            Log(LOG_LEVEL_ERR, 
+                "Could not obtain information about group '%s': %s", 
+                u->group_primary, GetErrorStr());
+            CFUSR_SETBIT(*changemap, i_group);
         }
-        else if (!group_info)
+        else if (group_info == NULL)
         {
             if (group_could_be_gid)
             {
-                gid = atoi(u->group_primary);
+                unsigned long gid;
+                int ret = StringToUlong(u->group_primary, &gid);
+                if (ret != 0)
+                {
+                    LogStringToLongError(u->group_primary, 
+                                         "VerifyIfUserNeedsModifs", ret);
+                    CFUSR_SETBIT(*changemap, i_group);
+                }
+                if (gid != passwd_info->pw_gid)
+                {
+                    CFUSR_SETBIT(*changemap, i_group);
+                }
             }
             else
             {
                 Log(LOG_LEVEL_ERR, "No such group '%s'.", u->group_primary);
-                gid = -1;
+                CFUSR_SETBIT(*changemap, i_group);
             }
         }
         else
         {
-            gid = group_info->gr_gid;
-        }
-
-        if (gid != passwd_info->pw_gid)
-        {
-            CFUSR_SETBIT (*changemap, i_group);
+            if (group_info->gr_gid != passwd_info->pw_gid)
+            {
+                CFUSR_SETBIT(*changemap, i_group);
+            }
         }
 
 #ifdef __FreeBSD__

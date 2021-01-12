@@ -563,7 +563,7 @@ bool CompressPath(char *dest, size_t dest_size, const char *src)
 
     rootlen = RootDirLength(src);
 
-    if(rootlen >= dest_size)
+    if((size_t) rootlen >= dest_size)
     {
         Log(LOG_LEVEL_ERR,
             "Internal limit reached in CompressPath(),"

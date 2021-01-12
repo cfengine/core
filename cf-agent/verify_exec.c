@@ -215,8 +215,8 @@ static ActionResult RepairExec(EvalContext *ctx, const Attributes *a,
 #endif
     FILE *pfp;
     char cmdOutBuf[CF_BUFSIZE];
-    int cmdOutBufPos = 0;
-    int lineOutLen;
+    size_t cmdOutBufPos = 0;
+    size_t lineOutLen;
     char module_context[CF_BUFSIZE];
 
     module_context[0] = '\0';
@@ -252,13 +252,13 @@ static ActionResult RepairExec(EvalContext *ctx, const Attributes *a,
     }
 
     char owner_str[CF_BUFSIZE] = "";
-    if (a->contain.owner != -1)
+    if (a->contain.owner != (uid_t) -1)
     {
         snprintf(owner_str, CF_BUFSIZE, ",uid=%ju", (uintmax_t)a->contain.owner);
     }
 
     char group_str[CF_BUFSIZE] = "";
-    if (a->contain.group != -1)
+    if (a->contain.group != (gid_t) -1)
     {
         snprintf(group_str, CF_BUFSIZE, ",gid=%ju", (uintmax_t)a->contain.group);
     }

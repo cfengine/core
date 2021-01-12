@@ -88,7 +88,7 @@ static bool access_CheckResource(const struct resource_acl *acl,
          */
 
         const char *rule = NULL;
-        for (int i = 0; i < StrList_Len(acl->admit.ips); i++)
+        for (size_t i = 0; i < StrList_Len(acl->admit.ips); i++)
         {
             if (FuzzySetMatch(StrList_At(acl->admit.ips, i), ipaddr) == 0 ||
                 /* Legacy regex matching, TODO DEPRECATE */
@@ -118,7 +118,7 @@ static bool access_CheckResource(const struct resource_acl *acl,
         /* === Legacy regex matching, slow, TODO DEPRECATE === */
         if (pos == (size_t) -1)
         {
-            for (int i = 0; i < StrList_Len(acl->admit.hostnames); i++)
+            for (size_t i = 0; i < StrList_Len(acl->admit.hostnames); i++)
             {
                 if (StringMatchFull(StrList_At(acl->admit.hostnames, i),
                                     hostname))
@@ -190,7 +190,7 @@ static bool access_CheckResource(const struct resource_acl *acl,
         acl->deny.ips != NULL)
     {
         const char *rule = NULL;
-        for (int i = 0; i < StrList_Len(acl->deny.ips); i++)
+        for (size_t i = 0; i < StrList_Len(acl->deny.ips); i++)
         {
             if (FuzzySetMatch(StrList_At(acl->deny.ips, i), ipaddr) == 0 ||
                 /* Legacy regex matching, TODO DEPRECATE */
@@ -221,7 +221,7 @@ static bool access_CheckResource(const struct resource_acl *acl,
         /* === Legacy regex matching, slow, TODO DEPRECATE === */
         if (pos == (size_t) -1)
         {
-            for (int i = 0; i < StrList_Len(acl->deny.hostnames); i++)
+            for (size_t i = 0; i < StrList_Len(acl->deny.hostnames); i++)
             {
                 if (StringMatchFull(StrList_At(acl->deny.hostnames, i),
                                     hostname))

@@ -1220,7 +1220,8 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, c
 {
     char line_buff[CF_EXPANDSIZE];
     char after[CF_BUFSIZE];
-    int match_len, start_off, end_off, once_only = false, retval = false;
+    size_t match_len;
+    int start_off, end_off, once_only = false, retval = false;
     Item *ip;
     int notfound = true, cutoff = 1, replaced = false;
 
@@ -1656,11 +1657,30 @@ static bool MatchPolicy(EvalContext *ctx, const char *camel, const char *haystac
                     char  *work      = xcalloc(1, work_size);
                     strcpy(work, sp);
 
-                    if (snprintf(final, final_size, "\\s*%s", work) >= final_size - 1)
+                    int written = snprintf(final, final_size, "\\s*%s", 
+                                           work);
+                    if (written < 0)
+                    {
+                        Log(LOG_LEVEL_ERR, 
+                            "Unexpected failure from snprintf "
+                            "(%d - %s) on '%s' (MatchPolicy)",
+                            errno, GetErrorStr(), final);
+                        return false;
+                    }
+                    else if ((size_t) written >= final_size - 1)
                     {
                         final = xrealloc(final, work_size);
                         final_size = work_size;
-                        snprintf(final, final_size, "\\s*%s", work);
+                        written = snprintf(final, final_size, "\\s*%s", 
+                                           work);
+                        if (written < 0)
+                        {
+                            Log(LOG_LEVEL_ERR, 
+                                "Unexpected failure from snprintf "
+                                "(%d - %s) on '%s' (MatchPolicy)", 
+                                errno, GetErrorStr(), final);
+                            return false;
+                        }
                     }
 
                     free(work);
@@ -1677,11 +1697,28 @@ static bool MatchPolicy(EvalContext *ctx, const char *camel, const char *haystac
                     char *sp;
                     for (sp = work + strlen(work) - 1; (sp > work) && (isspace((int)*sp)); sp--);
                     *++sp = '\0';
-                    if (snprintf(final, final_size, "%s\\s*", work) >= final_size - 1)
+                    int written = snprintf(final, final_size, "%s\\s*", work);
+                    if (written < 0)
+                    {
+                        Log(LOG_LEVEL_ERR, 
+                            "Unexpected failure from snprintf "
+                            "(%d - %s) on '%s' (MatchPolicy)", 
+                            errno, GetErrorStr(), final);
+                        return false;
+                    }
+                    else if ((size_t) written >= final_size - 1)
                     {
                         final = xrealloc(final, work_size);
                         final_size = work_size;
-                        snprintf(final, final_size, "%s\\s*", work);
+                        written = snprintf(final, final_size, "%s\\s*", work);
+                        if (written < 0)
+                        {
+                            Log(LOG_LEVEL_ERR, 
+                                "Unexpected failure from snprintf "
+                                "(%d - %s) on '%s' (MatchPolicy)", 
+                                errno, GetErrorStr(), final);
+                            return false;
+                        }
                     }
 
                     free(work);

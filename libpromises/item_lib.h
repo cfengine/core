@@ -70,7 +70,7 @@ bool DeleteItemMatching(Item **list, const char *string);
 bool DeleteItemNotMatching(Item **list, const char *string);
 bool DeleteItemContaining(Item **list, const char *string);
 bool DeleteItemNotContaining(Item **list, const char *string);
-int ListLen(const Item *list);
+size_t ListLen(const Item *list);
 bool IsItemIn(const Item *list, const char *item);
 bool ListsCompare(const Item *list1, const Item *list2);
 bool ListSubsetOfList(const Item *list1, const Item *list2);
@@ -92,7 +92,7 @@ void IncrementItemListCounter(Item *ptr, const char *string);
 void SetItemListCounter(Item *ptr, const char *string, int value);
 char *ItemList2CSV(const Item *list);
 size_t ItemList2CSV_bound(const Item *list, char *buf, size_t buf_size, char separator);
-int ItemListSize(const Item *list);
+size_t ItemListSize(const Item *list);
 bool IsInterfaceAddress(const Item *ip_addresses, const char *adr);
 
 #endif

@@ -63,8 +63,6 @@ static inline void PrintDelimiter()
 static void ManifestStatInfo(const struct stat *st)
 {
     assert(st != NULL);
-    struct passwd *owner = getpwuid(st->st_uid);
-    struct group *group = getgrgid(st->st_gid);
 
     /* Inspired by the output from the 'stat' command */
     char mode_str[10] = {
@@ -87,10 +85,45 @@ static void ManifestStatInfo(const struct stat *st)
     };
     printf("Size: %ju\n", (uintmax_t) st->st_size);
     printf("Access: (%04o/%s)  ", st->st_mode & CHMOD_MODE_BITS, mode_str);
-    printf("Uid: (%ju/%s)   ",
-           (uintmax_t)st->st_uid, owner->pw_name);
-    printf("Gid: (%ju/%s)\n",
-           (uintmax_t)st->st_gid, group->gr_name);
+
+    errno = 0;
+    struct passwd *owner = getpwuid(st->st_uid);
+    if (owner != NULL)
+    {
+        printf("Uid: (%ju/%s)   ", (uintmax_t) st->st_uid, owner->pw_name);
+    }
+    else
+    {
+        if (errno == 0)
+        {
+            Log(LOG_LEVEL_ERR, "Failed to get file owner name: non-existent user id '%ju'",
+                (uintmax_t) st->st_uid);
+        }
+        else
+        {
+            Log(LOG_LEVEL_ERR, "Failed to get file owner name: %s",
+                GetErrorStr());
+        }
+    }
+
+    errno = 0;
+    struct group *group = getgrgid(st->st_gid);
+    if (group != NULL) {
+        printf("Gid: (%ju/%s)\n", (uintmax_t) st->st_gid, group->gr_name);
+    }
+    else
+    {
+        if (errno == 0)
+        {
+            Log(LOG_LEVEL_ERR, "Failed to get file group name: non-existent group id '%ju'",
+                (uintmax_t) st->st_gid);
+        }
+        else
+        {
+            Log(LOG_LEVEL_ERR, "Failed to get file group name: %s",
+                GetErrorStr());
+        }
+    }
 
 #define MAX_TIMESTAMP_SIZE (sizeof("2020-10-05 12:56:18 +0200"))
     char buf[MAX_TIMESTAMP_SIZE] = {0};

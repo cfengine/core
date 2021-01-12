@@ -795,8 +795,8 @@ bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
     Log(LOG_LEVEL_VERBOSE, "Copying remote file '%s:%s', expecting %jd bytes",
           conn->this_server, source, (intmax_t)size);
 
-    size_t n_wrote_total        = 0;
-    bool   last_write_made_hole = false;
+    int n_wrote_total = 0;
+    bool last_write_made_hole = false;
     while (n_wrote_total < size)
     {
         int toget = MIN(size - n_wrote_total, buf_size);

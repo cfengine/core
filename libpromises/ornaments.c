@@ -97,10 +97,10 @@ static bool StringAppendAbbreviatedPromise(char *dst, const char *src, size_t n,
         /* `src` contains a newline: abbreviate it by taking the first and last few characters */
         static const char sep[] = "...";
         char abbr[sizeof(sep) + 2 * max_fragment];
-        const int head = (nl > src + max_fragment) ? max_fragment : (nl - src);
+        const size_t head = (nl > src + max_fragment) ? max_fragment : (size_t) (nl - src);
         const char * last_line = strrchr(src, '\n') + 1;
         assert(last_line); /* not max_fragmentULL, we know we have at least one '\n' */
-        const int tail = strlen(last_line);
+        const size_t tail = strlen(last_line);
         if (tail > max_fragment)
         {
             last_line += tail - max_fragment;

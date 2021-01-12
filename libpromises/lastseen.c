@@ -624,7 +624,7 @@ bool ScanLastSeenQuality(LastSeenQualityCallback callback, void *ctx)
 
         SeqAppend(hostkeys, xstrdup(key + 1));
     }
-    for (int i = 0; i < SeqLength(hostkeys); ++i)
+    for (size_t i = 0; i < SeqLength(hostkeys); ++i)
     {
         const char *hostkey = SeqAt(hostkeys, i);
 

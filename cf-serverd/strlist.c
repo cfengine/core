@@ -405,7 +405,7 @@ size_t StrList_bsearch(const StrList *sl,
             bsearch(&s, sl->list, sl->len, sizeof(sl->list[0]),
                     (int (*)(const void *, const void *)) comparator);
         struct string * const *base = &sl->list[0];
-        return (ret == NULL) ? (size_t) -1 : (ret - base);
+        return (ret == NULL) ? (size_t) -1 : (size_t) (ret - base);
     }
     else
     {

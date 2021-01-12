@@ -1076,7 +1076,7 @@ Seq *GetVersionsFromUpdates(EvalContext *ctx, const PackageInfo *info,
             ReadDB(db_updates, package_key, buff, val_size);
             Seq* updates = SeqStringFromString(buff, '\n');
 
-            for (int i = 0; i < SeqLength(updates); i++)
+            for (size_t i = 0; i < SeqLength(updates); i++)
             {
                 char *package_line = SeqAt(updates, i);
                 Log(LOG_LEVEL_DEBUG, "Got line in updates database: '%s",
@@ -1173,7 +1173,7 @@ PromiseResult RepoInstall(EvalContext *ctx,
         Seq *packages_to_install = SeqNew(1, NULL);
 
         /* Loop through possible updates. */
-        for (int i = 0; i < SeqLength(latest_versions); i++)
+        for (size_t i = 0; i < SeqLength(latest_versions); i++)
         {
             PackageInfo *update_package = SeqAt(latest_versions, i);
 
@@ -1263,7 +1263,7 @@ PromiseResult RepoInstall(EvalContext *ctx,
                                       PACKAGE_TYPE_REPO,
                                       install_formatted_list, wrapper);
 
-                for (int i = 0; i < SeqLength(packages_to_install); i++)
+                for (size_t i = 0; i < SeqLength(packages_to_install); i++)
                 {
                     PackageInfo *to_verify = SeqAt(packages_to_install, i);
                     PromiseResult validate =

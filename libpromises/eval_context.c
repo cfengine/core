@@ -242,7 +242,7 @@ PackageModuleBody *GetPackageModuleFromContext(const EvalContext *ctx,
         return NULL;
     }
 
-    for (int i = 0;
+    for (size_t i = 0;
          i < SeqLength(ctx->package_promise_context->package_modules_bodies);
          i++)
     {
@@ -755,10 +755,10 @@ void EvalContextHeapPersistentLoadAll(EvalContext *ctx)
          * dereferencing might be slow or even cause SIGBUS! */
         PersistentClassInfo info = { 0 };
         memcpy(&info, info_p,
-               info_size < sizeof(info) ? info_size : sizeof(info));
+               info_size < (int) sizeof(info) ? info_size : (int) sizeof(info));
 
         const char *tags = NULL;
-        if (info_size > sizeof(PersistentClassInfo))
+        if (info_size > (int) sizeof(PersistentClassInfo))
         {
             /* This is char pointer, it can point to unaligned data. */
             tags = ((PersistentClassInfo *) info_p)->tags;

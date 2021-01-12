@@ -73,7 +73,7 @@ bool FileWriteOver(char *filename, char *contents)
         return false;
     }
 
-    int bytes_to_write = strlen(contents);
+    size_t bytes_to_write = strlen(contents);
 
     size_t bytes_written = fwrite(contents, 1, bytes_to_write, fp);
 

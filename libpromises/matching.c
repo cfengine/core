@@ -261,9 +261,9 @@ bool IsRegexItemIn(const EvalContext *ctx, const Item *list, const char *regex)
 
 /* Escapes non-alphanumeric chars, except sequence given in noEscSeq */
 
-void EscapeSpecialChars(const char *str, char *strEsc, int strEscSz, char *noEscSeq, char *noEscList)
+void EscapeSpecialChars(const char *str, char *strEsc, size_t strEscSz, char *noEscSeq, char *noEscList)
 {
-    int strEscPos = 0;
+    size_t strEscPos = 0;
 
     if (noEscSeq == NULL)
     {
@@ -353,10 +353,10 @@ void EscapeRegexChars(char *str, char *strEsc, int strEscSz)
 
 /* Escapes characters esc in the string str of size strSz  */
 
-char *EscapeChar(char *str, int strSz, char esc)
+char *EscapeChar(char *str, size_t strSz, char esc)
 {
     char strDup[CF_BUFSIZE];
-    int strPos, strDupPos;
+    size_t strPos, strDupPos;
 
     if (sizeof(strDup) < strSz)
     {

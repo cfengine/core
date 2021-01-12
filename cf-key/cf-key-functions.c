@@ -417,7 +417,7 @@ int ForceKeyRemoval(const char *hash)
         snprintf(tmp, CF_BUFSIZE, "qo%s", hash);
         DeleteDB(dbp, tmp);
         RemovePublicKey(hash);
-        for (int i = 0; i < SeqLength(hostips); ++i)
+        for (size_t i = 0; i < SeqLength(hostips); ++i)
         {
             const char *myip = SeqAt(hostips, i);
             snprintf(tmp, CF_BUFSIZE, "a%s", myip);
@@ -484,7 +484,7 @@ int ForceIpAddressRemoval(const char *ip)
         }
         snprintf(tmp, CF_BUFSIZE, "a%s", ip);
         DeleteDB(dbp, tmp);
-        for (int i = 0; i < SeqLength(hostkeys); ++i)
+        for (size_t i = 0; i < SeqLength(hostkeys); ++i)
         {
             const char *myk = SeqAt(hostkeys, i);
             snprintf(tmp, CF_BUFSIZE, "k%s", myk);

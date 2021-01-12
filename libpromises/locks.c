@@ -375,11 +375,11 @@ static bool NoOrObsoleteLock(LockData *entry, ARG_UNUSED size_t entry_size, size
     }
 
     time_t now = time(NULL);
-    if ((now - entry->time) <= *max_old)
+    if ((now - entry->time) <= (time_t) *max_old)
     {
         Log(LOG_LEVEL_DEBUG, "Giving time to process '%d' (holding lock for %ld s)", entry->pid, (now - entry->time));
     }
-    return ((now - entry->time) > *max_old);
+    return ((now - entry->time) > (time_t) *max_old);
 }
 
 void WaitForCriticalSection(const char *section_id)
@@ -413,7 +413,7 @@ void WaitForCriticalSection(const char *section_id)
 
     Log(LOG_LEVEL_DEBUG, "Acquiring critical section lock '%s'", section_id);
     bool got_lock = false;
-    while (!got_lock && ((time(NULL) - started) <= max_old))
+    while (!got_lock && ((time(NULL) - started) <= (time_t) max_old))
     {
         entry.time = time(NULL);
         got_lock = OverwriteDB(dbp, section_id, &entry, sizeof(entry),

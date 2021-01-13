@@ -515,7 +515,7 @@ static char *follow_symlink(const char *path)
     {
         return NULL;
     }
-    if (r >= sizeof(target_buf))
+    if ((size_t) r >= sizeof(target_buf))
     {
         Log(LOG_LEVEL_ERR, "Symlink target path too long: %s", path);
         return NULL;
@@ -548,7 +548,7 @@ size_t diagnose_files(
         *corrupt = SeqNew(length, free);
     }
 
-    for (int i = 0; i < length; ++i)
+    for (size_t i = 0; i < length; ++i)
     {
         const char *filename = SeqAt(filenames, i);
         const char *symlink = NULL; // Only initialized because of gcc warning

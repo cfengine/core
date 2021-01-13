@@ -79,6 +79,7 @@ static bool access_CheckResource(const struct resource_acl *acl,
     /* First we check for admission, secondly for denial, so that denial takes
      * precedence. */
 
+Log(LOG_LEVEL_INFO, "ipaddr: '%s', hostname: '%s', StrList_Len(acl->admit.ips): '%d'", ipaddr, hostname, StrList_Len(acl->admit.ips));
     if (!NULL_OR_EMPTY(ipaddr) && acl->admit.ips != NULL)
     {
         /* Still using legacy code here, doing linear search over all IPs in

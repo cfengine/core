@@ -106,7 +106,7 @@ int backup_files_copy(Seq *filenames)
     Log(LOG_LEVEL_INFO, "Backing up to '%s'", backup_dir);
 
     int ret = 0;
-    for (int i = 0; i < length; ++i)
+    for (size_t i = 0; i < length; ++i)
     {
         const char *file = SeqAt(filenames, i);
         if (!File_CopyToDir(file, backup_dir))
@@ -137,7 +137,7 @@ static int backup_files_replicate(const Seq *files)
     Log(LOG_LEVEL_INFO, "Backing up to '%s' using data replication", backup_dir);
 
     size_t corrupted = 0;
-    for (int i = 0; i < length; ++i)
+    for (size_t i = 0; i < length; ++i)
     {
         const char *file = SeqAt(files, i);
         assert(StringEndsWith(backup_dir, "/"));

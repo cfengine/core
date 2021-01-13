@@ -458,7 +458,7 @@ int dump_main(int argc, const char *const *const argv)
     dump_mode mode = DUMP_NICE;
     size_t offset = 1;
 
-    if (argc > offset && argv[offset] != NULL && argv[offset][0] == '-')
+    if ((size_t) argc > offset && argv[offset] != NULL && argv[offset][0] == '-')
     {
         const char *const option = argv[offset];
         offset += 1;
@@ -491,7 +491,7 @@ int dump_main(int argc, const char *const *const argv)
         }
     }
 
-    if (argc > offset && argv[offset] != NULL && argv[offset][0] == '-')
+    if ((size_t) argc > offset && argv[offset] != NULL && argv[offset][0] == '-')
     {
         print_usage();
         printf("Only one option supported!\n");

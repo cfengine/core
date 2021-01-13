@@ -1153,8 +1153,8 @@ Rlist *RlistFromSplitRegex(const char *string, const char *regex, size_t max_ent
 
     const char *sp = string;
     size_t entry_count = 0;
-    int start = 0;
-    int end = 0;
+    size_t start = 0;
+    size_t end = 0;
     Rlist *result = NULL;
     Buffer *buffer = BufferNewWithCapacity(CF_MAXVARSIZE);
 
@@ -1213,7 +1213,7 @@ Rlist *RlistFromRegexSplitNoOverflow(const char *string, const char *regex, int 
 {
     Rlist *liststart = NULL;
     char node[CF_MAXVARSIZE];
-    int start, end;
+    size_t start, end;
     int count = 0;
 
     assert(max > 0); // ensured by FnCallStringSplit() before calling us
@@ -1237,7 +1237,7 @@ Rlist *RlistFromRegexSplitNoOverflow(const char *string, const char *regex, int 
         {
             len = CF_MAXVARSIZE - 1;
             Log(LOG_LEVEL_WARNING,
-                "Segment in string_split() is %d bytes and will be truncated to %zu bytes",
+                "Segment in string_split() is %zu bytes and will be truncated to %zu bytes",
                 start,
                 len);
         }

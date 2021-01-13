@@ -22,7 +22,8 @@ Seq *default_lmdb_files()
 Seq *argv_to_lmdb_files(
     const int argc, const char *const *const argv, const size_t offset)
 {
-    if (offset >= argc)
+    assert(argc >= 0);
+    if (offset >= (size_t) argc)
     {
         Log(LOG_LEVEL_INFO,
             "No filenames specified, defaulting to .lmdb files in %s",

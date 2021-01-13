@@ -433,7 +433,12 @@ bool SavePublicKey(const char *user, const char *digest, const RSA *key)
     int ret;
 
     ret = snprintf(keyname, sizeof(keyname), "%s-%s", user, digest);
-    if (ret >= sizeof(keyname))
+    if (ret < 0)
+    {
+        Log(LOG_LEVEL_ERR, "snprintf failed: %s", GetErrorStr());
+        return false;
+    }
+    else if ((unsigned long) ret >= sizeof(keyname))
     {
         Log(LOG_LEVEL_ERR, "USERNAME-KEY (%s-%s) string too long!",
             user, digest);
@@ -442,7 +447,12 @@ bool SavePublicKey(const char *user, const char *digest, const RSA *key)
 
     ret = snprintf(filename, sizeof(filename), "%s/ppkeys/%s.pub",
                    GetWorkDir(), keyname);
-    if (ret >= sizeof(filename))
+    if (ret < 0)
+    {
+        Log(LOG_LEVEL_ERR, "snprintf failed: %s", GetErrorStr());
+        return false;
+    }
+    else if ((unsigned long) ret >= sizeof(filename))
     {
         Log(LOG_LEVEL_ERR, "Filename too long!");
         return false;
@@ -625,7 +635,11 @@ int EncryptString(char *out, size_t out_size, const char *in, int plainlen,
 
     cipherlen += tmplen;
 
-    if(cipherlen > max_ciphertext_size)
+    if (cipherlen < 0)
+    {
+        ProgrammingError("EncryptString: chipherlen (%d) < 0", cipherlen);
+    }
+    else if ((size_t) cipherlen > max_ciphertext_size)
     {
         ProgrammingError("EncryptString: too large ciphertext written: cipherlen (%d) > max_ciphertext_size (%zd)",
                           cipherlen, max_ciphertext_size);
@@ -711,7 +725,11 @@ int DecryptString(char *out, size_t out_size, const char *in, int cipherlen,
 
     plainlen += tmplen;
 
-    if(plainlen > max_plaintext_size)
+    if (plainlen < 0)
+    {
+        ProgrammingError("DecryptString: plainlen (%d) < 0", plainlen);
+    }
+    if ((size_t) plainlen > max_plaintext_size)
     {
         ProgrammingError("DecryptString: too large plaintext written: plainlen (%d) > max_plaintext_size (%zd)",
                           plainlen, max_plaintext_size);
@@ -729,7 +747,11 @@ void DebugBinOut(char *buffer, int len, char *comment)
     char buf[CF_BUFSIZE];
     char hexStr[3];             // one byte as hex
 
-    if (len >= (sizeof(buf) / 2))       // hex uses two chars per byte
+    if (len < 0)
+    {
+        Log(LOG_LEVEL_ERR, "Debug binary print negative len param (len = %d)", len);
+    }
+    else if ((unsigned long) len >= (sizeof(buf) / 2))       // hex uses two chars per byte
     {
         Log(LOG_LEVEL_DEBUG, "Debug binary print is too large (len = %d)", len);
         return;

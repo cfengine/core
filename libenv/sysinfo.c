@@ -1928,7 +1928,7 @@ static int Linux_Redhat_Version(EvalContext *ctx)
    Scientific Linux don't fall through the cracks.
    */
 
-    for (int i = 0; i < strlen(relstring); i++)
+    for (size_t i = 0; i < strlen(relstring); i++)
     {
         relstring[i] = tolower(relstring[i]);
     }
@@ -2079,7 +2079,7 @@ static int Linux_Suse_Version(EvalContext *ctx)
      * SUSE with SUSE 10.0.
      */
 
-    for (int i = 0; i < strlen(relstring); i++)
+    for (size_t i = 0; i < strlen(relstring); i++)
     {
         relstring[i] = tolower(relstring[i]);
     }

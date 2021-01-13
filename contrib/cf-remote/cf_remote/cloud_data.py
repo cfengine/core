@@ -1,4 +1,10 @@
 aws_platforms = {
+    'ubuntu-20-04-x64':{
+        'ami':'ami-0aef57767f5404a3c',
+        'user':'ubuntu',
+        'size':'t2.small',
+        'xlsize':'t3.xlarge',
+    },
     'ubuntu-18-04-x64':{
         'ami':'ami-0ee3436f275c4f2e8',
         'user':'ubuntu',

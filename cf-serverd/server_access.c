@@ -81,6 +81,8 @@ static bool access_CheckResource(const struct resource_acl *acl,
 
 assert(ipaddr != NULL);
 assert(hostname != NULL);
+assert(acl != NULL);
+assert(acl->admit != NULL);
 Log(LOG_LEVEL_INFO, "ipaddr: '%s', hostname: '%s', StrList_Len(acl->admit.ips): '%ld'", ipaddr, hostname, StrList_Len(acl->admit.ips));
     if (!NULL_OR_EMPTY(ipaddr) && acl->admit.ips != NULL)
     {

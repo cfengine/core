@@ -64,10 +64,12 @@ void ThisAgentInit(void);
 static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *config,
                         ExecdConfig **execd_config, ExecConfig **exec_config);
 #ifndef __MINGW32__
+static pid_t LocalExecInFork(const ExecConfig *config);
 static void Apoptosis(void);
+#else
+static bool LocalExecInThread(const ExecConfig *config);
 #endif
 
-static bool LocalExecInThread(const ExecConfig *config);
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -451,6 +453,13 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
     {
         while (!IsPendingTermination())
         {
+#ifndef __MINGW32__
+            /* reap child processes (if any) */
+            while (waitpid(-1, NULL, WNOHANG) > 0)
+            {
+                Log(LOG_LEVEL_DEBUG, "Reaped child process");
+            }
+#endif
             if (ScheduleRun(ctx, &policy, config, execd_config, exec_config))
             {
                 MaybeSleepLog(LOG_LEVEL_VERBOSE,
@@ -464,12 +473,22 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
                     break;
                 }
 
+#ifndef __MINGW32__
+                pid_t child_pid = LocalExecInFork(*exec_config);
+                if (child_pid < 0)
+                {
+                    Log(LOG_LEVEL_INFO,
+                        "Unable to run agent in a fork, falling back to blocking execution");
+                    LocalExec(*exec_config);
+                }
+#else
                 if (!LocalExecInThread(*exec_config))
                 {
                     Log(LOG_LEVEL_INFO,
                         "Unable to run agent in thread, falling back to blocking execution");
                     LocalExec(*exec_config);
                 }
+#endif
             }
         }
     }
@@ -478,37 +497,33 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
 
 /*****************************************************************************/
 
-static void Thread_AllSignalsBlock(void)
-{
 #ifndef __MINGW32__
-    sigset_t sigmask;
-    sigfillset(&sigmask);
-    int ret = pthread_sigmask(SIG_SETMASK, &sigmask, NULL);
-    if (ret != 0)
+static pid_t LocalExecInFork(const ExecConfig *config)
+{
+    Log(LOG_LEVEL_VERBOSE, "Forking for exec_command execution");
+
+    pid_t pid = fork();
+    if (pid == -1)
     {
-        Log(LOG_LEVEL_ERR,
-            "Unable to block signals in child thread,"
-            " killing cf-execd might fail (pthread_sigmask: %s)",
+        Log(LOG_LEVEL_ERR, "Failed to fork for exec_command execution: %s",
             GetErrorStr());
+        return -1;
     }
-#endif
+    else if (pid == 0)
+    {
+        /* child */
+        LocalExec(config);
+        Log(LOG_LEVEL_VERBOSE, "Finished exec_command execution, terminating the forked process");
+        _exit(0);
+    }
+    else
+    {
+        /* parent */
+        return pid;
+    }
 }
 
-static void Thread_AllSignalsUnblock(void)
-{
-#ifndef __MINGW32__
-    sigset_t sigmask;
-    sigemptyset(&sigmask);
-    int ret = pthread_sigmask(SIG_SETMASK, &sigmask, NULL);
-    if (ret != 0)
-    {
-        Log(LOG_LEVEL_ERR,
-            "Unable to unblock signals again (pthread_sigmask: %s)",
-            GetErrorStr());
-    }
-#endif
-}
-
+#else
 static void *LocalExecThread(void *param)
 {
     ExecConfig *config = (ExecConfig *) param;
@@ -525,16 +540,7 @@ static bool LocalExecInThread(const ExecConfig *config)
     pthread_t tid;
 
     Log(LOG_LEVEL_VERBOSE, "Spawning thread for exec_command execution");
-
-    /* ENT-3147: Block all signals so that child thread inherits it and
-     * signals get only delivered to the main thread. Unblock all signals
-     * right after thread has been spawned. */
-    Thread_AllSignalsBlock();
-
     int ret = pthread_create(&tid, &threads_attrs, LocalExecThread, thread_config);
-
-    Thread_AllSignalsUnblock();
-
     if (ret != 0)
     {
         ExecConfigDestroy(thread_config);
@@ -545,6 +551,7 @@ static bool LocalExecInThread(const ExecConfig *config)
 
     return true;
 }
+#endif  /* ! __MINGW32__ */
 
 #ifndef __MINGW32__
 

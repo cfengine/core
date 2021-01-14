@@ -381,26 +381,56 @@ void ThisAgentInit(void)
 
 /*****************************************************************************/
 
-// msg should include exactly one reference to unsigned int.
-static unsigned int MaybeSleepLog(LogLevel level, const char *msg, unsigned int seconds)
+
+#ifndef __MINGW32__
+/**
+ * Sleep for the given number of seconds while handling requests from sockets.
+ *
+ * @return Whether to terminate (skip any further actions) or not.
+ */
+static bool HandleRequestsOrSleep(time_t seconds, const char *reason)
 {
     if (IsPendingTermination())
     {
-        return seconds;
+        return true;
     }
 
-    Log(level, msg, seconds);
+    Log(LOG_LEVEL_VERBOSE, "Sleeping for %s %ju seconds", reason, (intmax_t) seconds);
+    time_t sleep_started = time(NULL);
+    struct timeval remaining = {seconds, 0};
+    while (remaining.tv_sec != 0)
+    {
+        int ret = select(0, NULL, NULL, NULL, &remaining);
+        if ((ret == -1) && (errno != EINTR))
+        {
+            Log(LOG_LEVEL_ERR, "Failed to sleep for %s using select(): %s",
+                reason, GetErrorStr());
+        }
+        else if (ret == 0)
+        {
+            remaining.tv_sec = 0;
+        }
+        else
+        {
+            /* TODO: process requests */
+            remaining.tv_sec = MAX(0, 60 - (time(NULL) - sleep_started));
+        }
+    }
 
-    return sleep(seconds);
+    // We are sleeping above, so make sure a terminating signal did not
+    // arrive during that time.
+    if (IsPendingTermination())
+    {
+        return true;
+    }
+
+    return false;
 }
 
-/*****************************************************************************/
-
-
-#ifndef __MINGW32__
 static void CFExecdMainLoop(EvalContext *ctx, Policy **policy, GenericAgentConfig *config,
                             ExecdConfig **execd_config, ExecConfig **exec_config)
 {
+    bool terminate = false;
     while (!IsPendingTermination())
     {
         /* reap child processes (if any) */
@@ -411,17 +441,11 @@ static void CFExecdMainLoop(EvalContext *ctx, Policy **policy, GenericAgentConfi
 
         if (ScheduleRun(ctx, policy, config, execd_config, exec_config))
         {
-            MaybeSleepLog(LOG_LEVEL_VERBOSE,
-                          "Sleeping for splaytime %u seconds",
-                          (*execd_config)->splay_time);
-
-            // We are sleeping above, so make sure a terminating signal did not
-            // arrive during that time.
-            if (IsPendingTermination())
+            terminate = HandleRequestsOrSleep((*execd_config)->splay_time, "splay time");
+            if (terminate)
             {
                 break;
             }
-
             pid_t child_pid = LocalExecInFork(*exec_config);
             if (child_pid < 0)
             {
@@ -431,11 +455,28 @@ static void CFExecdMainLoop(EvalContext *ctx, Policy **policy, GenericAgentConfi
             }
         }
         /* 1 Minute resolution is enough */
-        MaybeSleepLog(LOG_LEVEL_VERBOSE, "Sleeping for pulse time %u seconds...", CFPULSETIME);
+        terminate = HandleRequestsOrSleep(CFPULSETIME, "pulse time");
+        if (terminate)
+        {
+            break;
+        }
     }
 }
 
 #else  /* ! __MINGW32__ */
+
+// msg should include exactly one reference to unsigned int.
+static inline unsigned int MaybeSleepLog(LogLevel level, const char *msg, unsigned int seconds)
+{
+    if (IsPendingTermination())
+    {
+        return seconds;
+    }
+
+    Log(level, msg, seconds);
+
+    return sleep(seconds);
+}
 
 static void CFExecdMainLoop(EvalContext *ctx, Policy **policy, GenericAgentConfig *config,
                             ExecdConfig **execd_config, ExecConfig **exec_config)

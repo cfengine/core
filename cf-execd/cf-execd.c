@@ -24,6 +24,19 @@
 
 #include <cf-execd.h>
 
+#ifndef __MINGW32__
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <files_lib.h>
+#include <cf-execd-runagent.h>
+
+#ifndef AF_LOCAL
+#define AF_LOCAL AF_UNIX
+#endif
+
+#endif
+
 #include <cf-execd-runner.h>
 #include <item_lib.h>
 #include <known_dirs.h>
@@ -48,6 +61,13 @@
 
 #define CF_EXEC_IFELAPSED 0
 #define CF_EXEC_EXPIREAFTER 1
+
+#define CF_EXECD_RUNAGENT_SOCKET_NAME "runagent.socket"
+
+/* The listen() queue doesn't need to be long, new connections are accepted
+ * quickly and handed over to forked child processes so a pile up means some
+ * serious problem and it's better to just throw such connections away. */
+#define CF_EXECD_RUNAGENT_SOCKET_LISTEN_QUEUE 5
 
 static bool PERFORM_DB_CHECK = false;
 static int NO_FORK = false; /* GLOBAL_A */
@@ -388,7 +408,7 @@ void ThisAgentInit(void)
  *
  * @return Whether to terminate (skip any further actions) or not.
  */
-static bool HandleRequestsOrSleep(time_t seconds, const char *reason)
+static bool HandleRequestsOrSleep(time_t seconds, const char *reason, int runagent_socket)
 {
     if (IsPendingTermination())
     {
@@ -396,25 +416,68 @@ static bool HandleRequestsOrSleep(time_t seconds, const char *reason)
     }
 
     Log(LOG_LEVEL_VERBOSE, "Sleeping for %s %ju seconds", reason, (intmax_t) seconds);
-    time_t sleep_started = time(NULL);
-    struct timeval remaining = {seconds, 0};
-    while (remaining.tv_sec != 0)
+
+    if (runagent_socket >= 0)
     {
-        int ret = select(0, NULL, NULL, NULL, &remaining);
-        if ((ret == -1) && (errno != EINTR))
+        time_t sleep_started = time(NULL);
+        struct timeval remaining = {seconds, 0};
+        while (remaining.tv_sec != 0)
         {
-            Log(LOG_LEVEL_ERR, "Failed to sleep for %s using select(): %s",
-                reason, GetErrorStr());
+            fd_set rfds;
+            FD_ZERO(&rfds);
+            FD_SET(runagent_socket, &rfds);
+
+            int ret = select(runagent_socket + 1, &rfds, NULL, NULL, &remaining);
+            if ((ret == -1) && (errno != EINTR))
+            {
+                /* unexpected error */
+                Log(LOG_LEVEL_ERR, "Failed to sleep for %s using select(): %s",
+                    reason, GetErrorStr());
+            }
+            else if (ret == 0)
+            {
+                /* timeout -- slept for the specified time */
+                remaining.tv_sec = 0;
+            }
+            else
+            {
+                /* runagent_socket ready or signal received (EINTR) */
+
+                // We are sleeping above, so make sure a terminating signal did not
+                // arrive during that time.
+                if (IsPendingTermination())
+                {
+                    return true;
+                }
+
+                if (ret > 0)
+                {
+                    assert(FD_ISSET(runagent_socket, &rfds));
+                    int data_socket = accept(runagent_socket, NULL, NULL);
+                    pid_t pid = fork();
+                    if (pid == 0)
+                    {
+                        /* child */
+                        signal(SIGPIPE, SIG_DFL);
+                        HandleRunagentRequest(data_socket);
+                        _exit(EXIT_SUCCESS);
+                    }
+                    else if (pid == -1)
+                    {
+                        /* error */
+                        Log(LOG_LEVEL_ERR, "Failed to fork runagent request handler: %s",
+                            GetErrorStr());
+                    }
+                    /* parent: nothing more to do, go back to sleep */
+                }
+
+                remaining.tv_sec = MAX(0, seconds - (time(NULL) - sleep_started));
+            }
         }
-        else if (ret == 0)
-        {
-            remaining.tv_sec = 0;
-        }
-        else
-        {
-            /* TODO: process requests */
-            remaining.tv_sec = MAX(0, 60 - (time(NULL) - sleep_started));
-        }
+    }
+    else
+    {
+        sleep(seconds);
     }
 
     // We are sleeping above, so make sure a terminating signal did not
@@ -428,7 +491,8 @@ static bool HandleRequestsOrSleep(time_t seconds, const char *reason)
 }
 
 static void CFExecdMainLoop(EvalContext *ctx, Policy **policy, GenericAgentConfig *config,
-                            ExecdConfig **execd_config, ExecConfig **exec_config)
+                            ExecdConfig **execd_config, ExecConfig **exec_config,
+                            int runagent_socket)
 {
     bool terminate = false;
     while (!IsPendingTermination())
@@ -441,7 +505,8 @@ static void CFExecdMainLoop(EvalContext *ctx, Policy **policy, GenericAgentConfi
 
         if (ScheduleRun(ctx, policy, config, execd_config, exec_config))
         {
-            terminate = HandleRequestsOrSleep((*execd_config)->splay_time, "splay time");
+            terminate = HandleRequestsOrSleep((*execd_config)->splay_time, "splay time",
+                                              runagent_socket);
             if (terminate)
             {
                 break;
@@ -455,7 +520,7 @@ static void CFExecdMainLoop(EvalContext *ctx, Policy **policy, GenericAgentConfi
             }
         }
         /* 1 Minute resolution is enough */
-        terminate = HandleRequestsOrSleep(CFPULSETIME, "pulse time");
+        terminate = HandleRequestsOrSleep(CFPULSETIME, "pulse time", runagent_socket);
         if (terminate)
         {
             break;
@@ -479,7 +544,8 @@ static inline unsigned int MaybeSleepLog(LogLevel level, const char *msg, unsign
 }
 
 static void CFExecdMainLoop(EvalContext *ctx, Policy **policy, GenericAgentConfig *config,
-                            ExecdConfig **execd_config, ExecConfig **exec_config)
+                            ExecdConfig **execd_config, ExecConfig **exec_config,
+                            ARG_UNUSED int runagent_socket)
 {
     while (!IsPendingTermination())
     {
@@ -554,6 +620,59 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
     signal(SIGUSR1, HandleSignalsForDaemon);
     signal(SIGUSR2, HandleSignalsForDaemon);
 
+    int runagent_socket = -1;
+
+#ifndef __MINGW32__
+    /* TODO: --with-runagent-socket, "am_policy_server" ??? */
+    struct sockaddr_un sock_info;
+    memset(&sock_info, 0, sizeof(sock_info));
+
+    /* This can easily fail if GetStateDir() returns some long path,
+     * 'sock_info.sun_path' is limited to 140 characters or even
+     * fewer. "/var/cfengine/state" is fine, crazy long temporary state
+     * directories used in the tests are too long. */
+    int ret = snprintf(sock_info.sun_path, sizeof(sock_info.sun_path) - 1,
+                       "%s/cf-execd.sockets/"CF_EXECD_RUNAGENT_SOCKET_NAME, GetStateDir());
+    if (ret <= (sizeof(sock_info.sun_path) - 1))
+    {
+        sock_info.sun_family = AF_LOCAL;
+
+        MakeParentDirectory(sock_info.sun_path, true, NULL);
+
+        /* Remove potential left-overs from old processes. */
+        unlink(sock_info.sun_path);
+
+        runagent_socket = socket(AF_LOCAL, SOCK_STREAM, 0);
+        assert(runagent_socket >= 0);
+    }
+    if (runagent_socket < 0)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to create socket for runagent requests");
+    }
+    else
+    {
+        ret = bind(runagent_socket, (const struct sockaddr *) &sock_info, sizeof(sock_info));
+        assert(ret == 0);
+        if (ret == -1)
+        {
+            Log(LOG_LEVEL_ERR, "Failed to bind the runagent socket: %s", GetErrorStr());
+            close(runagent_socket);
+            runagent_socket = -1;
+        }
+        else
+        {
+            ret = listen(runagent_socket, CF_EXECD_RUNAGENT_SOCKET_LISTEN_QUEUE);
+            assert(ret == 0);
+            if (ret == -1)
+            {
+                Log(LOG_LEVEL_ERR, "Failed to listen on runagent socket: %s", GetErrorStr());
+                close(runagent_socket);
+                runagent_socket = -1;
+            }
+        }
+    }
+#endif
+
     umask(077);
 
     if (ONCE)
@@ -563,7 +682,7 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
     }
     else
     {
-        CFExecdMainLoop(ctx, &policy, config, execd_config, exec_config);
+        CFExecdMainLoop(ctx, &policy, config, execd_config, exec_config, runagent_socket);
     }
     PolicyDestroy(policy);
 }

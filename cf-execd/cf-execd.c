@@ -396,6 +396,72 @@ static unsigned int MaybeSleepLog(LogLevel level, const char *msg, unsigned int 
 
 /*****************************************************************************/
 
+
+#ifndef __MINGW32__
+static void CFExecdMainLoop(EvalContext *ctx, Policy **policy, GenericAgentConfig *config,
+                            ExecdConfig **execd_config, ExecConfig **exec_config)
+{
+    while (!IsPendingTermination())
+    {
+        /* reap child processes (if any) */
+        while (waitpid(-1, NULL, WNOHANG) > 0)
+        {
+            Log(LOG_LEVEL_DEBUG, "Reaped child process");
+        }
+        if (ScheduleRun(ctx, policy, config, execd_config, exec_config))
+        {
+            MaybeSleepLog(LOG_LEVEL_VERBOSE,
+                          "Sleeping for splaytime %u seconds",
+                          (*execd_config)->splay_time);
+
+            // We are sleeping both above and inside ScheduleRun(), so make
+            // sure a terminating signal did not arrive during that time.
+            if (IsPendingTermination())
+            {
+                break;
+            }
+
+            pid_t child_pid = LocalExecInFork(*exec_config);
+            if (child_pid < 0)
+            {
+                Log(LOG_LEVEL_INFO,
+                    "Unable to run agent in a fork, falling back to blocking execution");
+                LocalExec(*exec_config);
+            }
+        }
+    }
+}
+
+#else  /* ! __MINGW32__ */
+
+static void CFExecdMainLoop(EvalContext *ctx, Policy **policy, GenericAgentConfig *config,
+                            ExecdConfig **execd_config, ExecConfig **exec_config)
+{
+    while (!IsPendingTermination())
+    {
+        if (ScheduleRun(ctx, policy, config, execd_config, exec_config))
+        {
+            MaybeSleepLog(LOG_LEVEL_VERBOSE,
+                          "Sleeping for splaytime %u seconds",
+                          (*execd_config)->splay_time);
+
+            // We are sleeping both above and inside ScheduleRun(), so make
+            // sure a terminating signal did not arrive during that time.
+            if (IsPendingTermination())
+            {
+                break;
+            }
+            if (!LocalExecInThread(*exec_config))
+            {
+                Log(LOG_LEVEL_INFO,
+                    "Unable to run agent in thread, falling back to blocking execution");
+                LocalExec(*exec_config);
+            }
+        }
+    }
+}
+#endif  /* ! __MINGW32__ */
+
 /* Might be called back from NovaWin_StartExecService */
 void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, ExecdConfig **execd_config, ExecConfig **exec_config)
 {
@@ -451,46 +517,7 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
     }
     else
     {
-        while (!IsPendingTermination())
-        {
-#ifndef __MINGW32__
-            /* reap child processes (if any) */
-            while (waitpid(-1, NULL, WNOHANG) > 0)
-            {
-                Log(LOG_LEVEL_DEBUG, "Reaped child process");
-            }
-#endif
-            if (ScheduleRun(ctx, &policy, config, execd_config, exec_config))
-            {
-                MaybeSleepLog(LOG_LEVEL_VERBOSE,
-                              "Sleeping for splaytime %u seconds",
-                              (*execd_config)->splay_time);
-
-                // We are sleeping both above and inside ScheduleRun(), so make
-                // sure a terminating signal did not arrive during that time.
-                if (IsPendingTermination())
-                {
-                    break;
-                }
-
-#ifndef __MINGW32__
-                pid_t child_pid = LocalExecInFork(*exec_config);
-                if (child_pid < 0)
-                {
-                    Log(LOG_LEVEL_INFO,
-                        "Unable to run agent in a fork, falling back to blocking execution");
-                    LocalExec(*exec_config);
-                }
-#else
-                if (!LocalExecInThread(*exec_config))
-                {
-                    Log(LOG_LEVEL_INFO,
-                        "Unable to run agent in thread, falling back to blocking execution");
-                    LocalExec(*exec_config);
-                }
-#endif
-            }
-        }
+        CFExecdMainLoop(ctx, &policy, config, execd_config, exec_config);
     }
     PolicyDestroy(policy);
 }

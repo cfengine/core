@@ -408,14 +408,15 @@ static void CFExecdMainLoop(EvalContext *ctx, Policy **policy, GenericAgentConfi
         {
             Log(LOG_LEVEL_DEBUG, "Reaped child process");
         }
+
         if (ScheduleRun(ctx, policy, config, execd_config, exec_config))
         {
             MaybeSleepLog(LOG_LEVEL_VERBOSE,
                           "Sleeping for splaytime %u seconds",
                           (*execd_config)->splay_time);
 
-            // We are sleeping both above and inside ScheduleRun(), so make
-            // sure a terminating signal did not arrive during that time.
+            // We are sleeping above, so make sure a terminating signal did not
+            // arrive during that time.
             if (IsPendingTermination())
             {
                 break;
@@ -429,6 +430,8 @@ static void CFExecdMainLoop(EvalContext *ctx, Policy **policy, GenericAgentConfi
                 LocalExec(*exec_config);
             }
         }
+        /* 1 Minute resolution is enough */
+        MaybeSleepLog(LOG_LEVEL_VERBOSE, "Sleeping for pulse time %u seconds...", CFPULSETIME);
     }
 }
 
@@ -445,8 +448,8 @@ static void CFExecdMainLoop(EvalContext *ctx, Policy **policy, GenericAgentConfi
                           "Sleeping for splaytime %u seconds",
                           (*execd_config)->splay_time);
 
-            // We are sleeping both above and inside ScheduleRun(), so make
-            // sure a terminating signal did not arrive during that time.
+            // We are sleeping above, so make sure a terminating signal did not
+            // arrive during that time.
             if (IsPendingTermination())
             {
                 break;
@@ -458,6 +461,8 @@ static void CFExecdMainLoop(EvalContext *ctx, Policy **policy, GenericAgentConfi
                 LocalExec(*exec_config);
             }
         }
+        /* 1 Minute resolution is enough */
+        MaybeSleepLog(LOG_LEVEL_VERBOSE, "Sleeping for pulse time %u seconds...", CFPULSETIME);
     }
 }
 #endif  /* ! __MINGW32__ */
@@ -681,9 +686,6 @@ static Reload CheckNewPromises(GenericAgentConfig *config)
 static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *config,
                         ExecdConfig **execd_config, ExecConfig **exec_config)
 {
-    /* 1 Minute resolution is enough */
-    MaybeSleepLog(LOG_LEVEL_VERBOSE, "Sleeping for pulse time %u seconds...", CFPULSETIME);
-
     /*
      * FIXME: this logic duplicates the one from cf-serverd.c. Unify ASAP.
      */

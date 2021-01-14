@@ -197,7 +197,7 @@ static const ConstraintSyntax depth_search_constraints[] =
     ConstraintSyntaxNewStringList("include_dirs", ".*", "List of regexes of directory names to include in depth search", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("rmdeadlinks", "true/false remove links that point to nowhere. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("traverse_links", "true/false traverse symbolic links to directories. Default value: false", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewBool("xdev", "true/false exclude directories that are on different devices. Default value: false", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBool("xdev", "When true files and directories on different devices from the promiser will be excluded from depth_search results. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

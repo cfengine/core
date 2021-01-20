@@ -1,0 +1,21 @@
+promise agent site_up
+# @brief Define site_up promise type
+{
+        path => "/var/cfengine/modules/promises/site_up.py";
+        interpreter => "/usr/bin/python3.8";
+}
+
+bundle agent site_up_autorun
+# @brief Example illustrating use of site_up promise type
+{
+  meta:
+
+      "tags" slist => { "autorun" };
+
+  site_up:
+      "http://172.28.128.10";
+      "https://cfengine.com/";
+      "https://cfengine2.com/";
+      "https://unavailable.com"
+        skip_ssl_verification => "true";
+}

@@ -36,7 +36,7 @@ bundle agent prepare_mailfilter_test(reports, includes, excludes)
 bundle agent run_cf_execd(wanted, unwanted)
 {
   vars:
-      "cmd" string => "$(this.promise_dirname)/cf-execd-test --once";
+      "cmd" string => "$(this.promise_dirname)/cf-execd-test --once --with-runagent-socket no";
 
   commands:
       "$(cmd) >> $(G.testfile).output"

@@ -74,6 +74,8 @@ static int NO_FORK = false; /* GLOBAL_A */
 static int ONCE = false; /* GLOBAL_A */
 static int WINSERVICE = true; /* GLOBAL_A */
 
+static char *RUNAGENT_SOCKET_DIR = NULL;
+
 static pthread_attr_t threads_attrs; /* GLOBAL_T, initialized by pthread_attr_init */
 
 /*******************************************************************/
@@ -126,6 +128,7 @@ static const struct option OPTIONS[] =
     {"color", optional_argument, 0, 'C'},
     {"timestamp", no_argument, 0, 'l'},
     {"skip-db-check", optional_argument, 0, 0 },
+    {"with-runagent-socket", required_argument, 0, 0},
     {NULL, 0, 0, '\0'}
 };
 
@@ -150,6 +153,7 @@ static const char *const HINTS[] =
     "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
     "Log timestamps on each line of log output",
     "Do not run database integrity checks and repairs at startup",
+    "Specify the directory for the socket for runagent requests or 'no' to disable the socket",
     NULL
 };
 
@@ -198,6 +202,7 @@ int main(int argc, char *argv[])
     GenericAgentFinalize(ctx, config);
     ExecConfigDestroy(exec_config);
     ExecdConfigDestroy(execd_config);
+    free(RUNAGENT_SOCKET_DIR);
     CallCleanupFunctions();
     return 0;
 }
@@ -370,6 +375,12 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                     DoCleanupAndExit(EXIT_FAILURE);
                 }
             }
+            else if (StringEqual(option_name, "with-runagent-socket"))
+            {
+                assert(optarg != NULL); /* required_argument */
+                RUNAGENT_SOCKET_DIR = xstrdup(optarg);
+            }
+
             break;
         }
         default:
@@ -528,6 +539,69 @@ static void CFExecdMainLoop(EvalContext *ctx, Policy **policy, GenericAgentConfi
     }
 }
 
+static int SetupRunagentSocket()
+{
+    int runagent_socket = -1;
+
+    struct sockaddr_un sock_info;
+    memset(&sock_info, 0, sizeof(sock_info));
+
+    /* This can easily fail if GetStateDir() returns some long path,
+     * 'sock_info.sun_path' is limited to 140 characters or even
+     * fewer. "/var/cfengine/state" is fine, crazy long temporary state
+     * directories used in the tests are too long. */
+    int ret;
+    if (RUNAGENT_SOCKET_DIR == NULL)
+    {
+        ret = snprintf(sock_info.sun_path, sizeof(sock_info.sun_path) - 1,
+                       "%s/cf-execd.sockets/"CF_EXECD_RUNAGENT_SOCKET_NAME, GetStateDir());
+    }
+    else
+    {
+        ret = snprintf(sock_info.sun_path, sizeof(sock_info.sun_path) - 1,
+                       "%s/"CF_EXECD_RUNAGENT_SOCKET_NAME, RUNAGENT_SOCKET_DIR);
+    }
+    if (ret <= (sizeof(sock_info.sun_path) - 1))
+    {
+        sock_info.sun_family = AF_LOCAL;
+
+        MakeParentDirectory(sock_info.sun_path, true, NULL);
+
+        /* Remove potential left-overs from old processes. */
+        unlink(sock_info.sun_path);
+
+        runagent_socket = socket(AF_LOCAL, SOCK_STREAM, 0);
+        assert(runagent_socket >= 0);
+    }
+    if (runagent_socket < 0)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to create socket for runagent requests");
+    }
+    else
+    {
+        ret = bind(runagent_socket, (const struct sockaddr *) &sock_info, sizeof(sock_info));
+        assert(ret == 0);
+        if (ret == -1)
+        {
+            Log(LOG_LEVEL_ERR, "Failed to bind the runagent socket: %s", GetErrorStr());
+            close(runagent_socket);
+            runagent_socket = -1;
+        }
+        else
+        {
+            ret = listen(runagent_socket, CF_EXECD_RUNAGENT_SOCKET_LISTEN_QUEUE);
+            assert(ret == 0);
+            if (ret == -1)
+            {
+                Log(LOG_LEVEL_ERR, "Failed to listen on runagent socket: %s", GetErrorStr());
+                close(runagent_socket);
+                runagent_socket = -1;
+            }
+        }
+    }
+    return runagent_socket;
+}
+
 #else  /* ! __MINGW32__ */
 
 // msg should include exactly one reference to unsigned int.
@@ -623,53 +697,9 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
     int runagent_socket = -1;
 
 #ifndef __MINGW32__
-    /* TODO: --with-runagent-socket, "am_policy_server" ??? */
-    struct sockaddr_un sock_info;
-    memset(&sock_info, 0, sizeof(sock_info));
-
-    /* This can easily fail if GetStateDir() returns some long path,
-     * 'sock_info.sun_path' is limited to 140 characters or even
-     * fewer. "/var/cfengine/state" is fine, crazy long temporary state
-     * directories used in the tests are too long. */
-    int ret = snprintf(sock_info.sun_path, sizeof(sock_info.sun_path) - 1,
-                       "%s/cf-execd.sockets/"CF_EXECD_RUNAGENT_SOCKET_NAME, GetStateDir());
-    if (ret <= (sizeof(sock_info.sun_path) - 1))
+    if ((RUNAGENT_SOCKET_DIR == NULL) || (!StringEqual_IgnoreCase(RUNAGENT_SOCKET_DIR, "no")))
     {
-        sock_info.sun_family = AF_LOCAL;
-
-        MakeParentDirectory(sock_info.sun_path, true, NULL);
-
-        /* Remove potential left-overs from old processes. */
-        unlink(sock_info.sun_path);
-
-        runagent_socket = socket(AF_LOCAL, SOCK_STREAM, 0);
-        assert(runagent_socket >= 0);
-    }
-    if (runagent_socket < 0)
-    {
-        Log(LOG_LEVEL_ERR, "Failed to create socket for runagent requests");
-    }
-    else
-    {
-        ret = bind(runagent_socket, (const struct sockaddr *) &sock_info, sizeof(sock_info));
-        assert(ret == 0);
-        if (ret == -1)
-        {
-            Log(LOG_LEVEL_ERR, "Failed to bind the runagent socket: %s", GetErrorStr());
-            close(runagent_socket);
-            runagent_socket = -1;
-        }
-        else
-        {
-            ret = listen(runagent_socket, CF_EXECD_RUNAGENT_SOCKET_LISTEN_QUEUE);
-            assert(ret == 0);
-            if (ret == -1)
-            {
-                Log(LOG_LEVEL_ERR, "Failed to listen on runagent socket: %s", GetErrorStr());
-                close(runagent_socket);
-                runagent_socket = -1;
-            }
-        }
+        runagent_socket = SetupRunagentSocket();
     }
 #endif
 

@@ -200,6 +200,9 @@ allow cfengine_execd_t cfengine_monitord_exec_t:file getattr;
 allow cfengine_execd_t cfengine_serverd_exec_t:file getattr;
 allow cfengine_execd_t cfengine_hub_exec_t:file getattr;
 
+# allow cf-execd to work with local/UNIX sockets
+allow cfengine_execd_t cfengine_var_lib_t:sock_file { create unlink };
+
 allow cfengine_execd_t self:capability sys_ptrace;
 
 allow cfengine_execd_t crontab_exec_t:file getattr;

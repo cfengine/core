@@ -349,7 +349,7 @@ allow cfengine_hub_t unreserved_port_t:tcp_socket name_connect;
 
 allow cfengine_hub_t cfengine_log_t:dir getattr;
 allow cfengine_hub_t cfengine_var_lib_t:dir { add_name getattr open read search write remove_name };
-allow cfengine_hub_t cfengine_var_lib_t:file { create ioctl lock write };
+allow cfengine_hub_t cfengine_var_lib_t:file { create ioctl lock write unlink };
 allow cfengine_hub_t cfengine_var_lib_t:lnk_file { getattr read };
 allow cfengine_hub_t cfengine_var_lib_t:sock_file { create unlink };
 
@@ -460,8 +460,8 @@ allow cfengine_postgres_t tmpfs_t:filesystem getattr;
 allow cfengine_postgres_t var_log_t:file { append open };
 
 # Needed for systemd to be able to check PostgreSQL's PID file
-allow init_t cfengine_var_lib_t:dir read;
-allow init_t cfengine_var_lib_t:file { getattr open read };
+allow init_t cfengine_var_lib_t:dir { read remove_name write };
+allow init_t cfengine_var_lib_t:file { getattr open read unlink };
 
 # TODO: these should not be needed
 allow cfengine_postgres_t shell_exec_t:file map;

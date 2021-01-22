@@ -2103,13 +2103,13 @@ static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "A: Promises kept in '%s' = %.0lf", bundle->name, delta_pr_kept);
-        Log(LOG_LEVEL_VERBOSE, "A: Promises not kept in '%s' = %.0lf", bundle->name, delta_pr_notkept);
-        Log(LOG_LEVEL_VERBOSE, "A: Promises repaired in '%s' = %.0lf", bundle->name, delta_pr_repaired);
+        Log(LOG_LEVEL_INFO, "A: Promises kept in '%s' = %.0lf", bundle->name, delta_pr_kept);
+        Log(LOG_LEVEL_INFO, "A: Promises not kept in '%s' = %.0lf", bundle->name, delta_pr_notkept);
+        Log(LOG_LEVEL_INFO, "A: Promises repaired in '%s' = %.0lf", bundle->name, delta_pr_repaired);
 
         bundle_compliance = (delta_pr_kept + delta_pr_repaired) / (delta_pr_kept + delta_pr_notkept + delta_pr_repaired);
 
-        Log(LOG_LEVEL_VERBOSE, "A: Aggregate compliance (promises kept/repaired) for bundle '%s' = %.1lf%%",
+        Log(LOG_LEVEL_INFO, "A: Aggregate compliance (promises kept/repaired) for bundle '%s' = %.1lf%%",
           bundle->name, bundle_compliance * 100.0);
 
         if (LogGetGlobalLevel() >= LOG_LEVEL_INFO)

@@ -600,8 +600,8 @@ exit:
              "Warnings encountered when actuating files promise '%s'", pp->promiser);
         break;
     default:
-        cfPS(ctx, LOG_LEVEL_ERR, result, pp, &a,
-             "Errors encountered when actuating files promise '%s'", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_INFO, result, pp, &a,
+             "Mismatches encountered when actuating files promise '%s'", pp->promiser);
         break;
     }
 

@@ -429,8 +429,8 @@ static PromiseResult VerifyLineDeletions(EvalContext *ctx, const Promise *pp, Ed
              "Warnings encountered when actuating delete_lines promise '%s'", pp->promiser);
         break;
     default:
-        cfPS(ctx, LOG_LEVEL_ERR, result, pp, &a,
-             "Errors encountered when actuating delete_lines promise '%s'", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_INFO, result, pp, &a,
+             "Mismatches encountered when actuating delete_lines promise '%s'", pp->promiser);
         break;
     }
 
@@ -520,8 +520,8 @@ static PromiseResult VerifyColumnEdits(EvalContext *ctx, const Promise *pp, Edit
              "Warnings encountered when actuating fields_edit promise '%s'", pp->promiser);
         break;
     default:
-        cfPS(ctx, LOG_LEVEL_ERR, result, pp, &a,
-             "Errors encountered when actuating fields_edit promise '%s'", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_INFO, result, pp, &a,
+             "Mismatches encountered when actuating fields_edit promise '%s'", pp->promiser);
         break;
     }
 
@@ -600,8 +600,8 @@ static PromiseResult VerifyPatterns(EvalContext *ctx, const Promise *pp, EditCon
              "Warnings encountered when actuating replace_patterns promise '%s'", pp->promiser);
         break;
     default:
-        cfPS(ctx, LOG_LEVEL_ERR, result, pp, &a,
-             "Errors encountered when actuating replace_patterns promise '%s'", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_INFO, result, pp, &a,
+             "Mismatches encountered when actuating replace_patterns promise '%s'", pp->promiser);
         break;
     }
 
@@ -812,6 +812,8 @@ static PromiseResult VerifyLineInsertions(EvalContext *ctx, const Promise *pp, E
         break;
     case PROMISE_RESULT_CHANGE:
         cfPS(ctx, LOG_LEVEL_INFO, result, pp, &a,
+             "insert_lines promise repaired");
+        cfPS(ctx, LOG_LEVEL_VERBOSE, result, pp, &a,
              "insert_lines promise '%s' repaired", pp->promiser);
         break;
     case PROMISE_RESULT_WARN:
@@ -819,8 +821,8 @@ static PromiseResult VerifyLineInsertions(EvalContext *ctx, const Promise *pp, E
              "Warnings encountered when actuating insert_lines promise '%s'", pp->promiser);
         break;
     default:
-        cfPS(ctx, LOG_LEVEL_ERR, result, pp, &a,
-             "Errors encountered when actuating insert_lines promise '%s'", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_INFO, result, pp, &a,
+             "Mismatches encountered when actuating insert_lines promise '%s'", pp->promiser);
         break;
     }
 

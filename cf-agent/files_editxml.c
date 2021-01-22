@@ -233,8 +233,8 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp,
                  "Warnings encountered when actuating build_xpath promise '%s'", pp->promiser);
             break;
         default:
-            cfPS(ctx, LOG_LEVEL_ERR, result, pp, &a,
-                 "Errors encountered when actuating build_xpath promise '%s'", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_INFO, result, pp, &a,
+                 "Mismatches encountered when actuating build_xpath promise '%s'", pp->promiser);
             break;
         }
         return result;
@@ -471,8 +471,8 @@ static PromiseResult VerifyTreeDeletions(EvalContext *ctx, const Attributes *att
              "Warnings encountered when actuating delete_tree promise '%s'", pp->promiser);
         break;
     default:
-        cfPS(ctx, LOG_LEVEL_ERR, result, pp, &a,
-             "Errors encountered when actuating delete_tree promise '%s'", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_INFO, result, pp, &a,
+             "Mismatches encountered when actuating delete_tree promise '%s'", pp->promiser);
         break;
     }
 
@@ -565,8 +565,8 @@ static PromiseResult VerifyTreeInsertions(EvalContext *ctx, const Attributes *at
              "Warnings encountered when actuating insert_tree promise '%s'", pp->promiser);
         break;
     default:
-        cfPS(ctx, LOG_LEVEL_ERR, result, pp, &a,
-             "Errors encountered when actuating insert_tree promise '%s'", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_INFO, result, pp, &a,
+             "Mismatches encountered when actuating insert_tree promise '%s'", pp->promiser);
         break;
     }
 
@@ -648,8 +648,8 @@ static PromiseResult VerifyAttributeDeletions(EvalContext *ctx, const Attributes
              "Warnings encountered when actuating delete_attribute promise '%s'", pp->promiser);
         break;
     default:
-        cfPS(ctx, LOG_LEVEL_ERR, result, pp, &a,
-             "Errors encountered when actuating delete_attribute promise '%s'", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_INFO, result, pp, &a,
+             "Mismatches encountered when actuating delete_attribute promise '%s'", pp->promiser);
         break;
     }
 
@@ -731,8 +731,8 @@ static PromiseResult VerifyAttributeSet(EvalContext *ctx, const Attributes *attr
              "Warnings encountered when actuating set_attribute promise '%s'", pp->promiser);
         break;
     default:
-        cfPS(ctx, LOG_LEVEL_ERR, result, pp, &a,
-             "Errors encountered when actuating set_attribute promise '%s'", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_INFO, result, pp, &a,
+             "Mismatches encountered when actuating set_attribute promise '%s'", pp->promiser);
         break;
     }
 
@@ -814,8 +814,8 @@ static PromiseResult VerifyTextDeletions(EvalContext *ctx, const Attributes *att
              "Warnings encountered when actuating delete_text promise '%s'", pp->promiser);
         break;
     default:
-        cfPS(ctx, LOG_LEVEL_ERR, result, pp, &a,
-             "Errors encountered when actuating delete_text promise '%s'", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_INFO, result, pp, &a,
+             "Mismatches encountered when actuating delete_text promise '%s'", pp->promiser);
         break;
     }
 
@@ -897,8 +897,8 @@ static PromiseResult VerifyTextSet(EvalContext *ctx, const Attributes *attr, con
              "Warnings encountered when actuating set_text promise '%s'", pp->promiser);
         break;
     default:
-        cfPS(ctx, LOG_LEVEL_ERR, result, pp, &a,
-             "Errors encountered when actuating set_text promise '%s'", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_INFO, result, pp, &a,
+             "Mismatches encountered when actuating set_text promise '%s'", pp->promiser);
         break;
     }
 
@@ -980,8 +980,8 @@ static PromiseResult VerifyTextInsertions(EvalContext *ctx, const Attributes *at
              "Warnings encountered when actuating insert_text promise '%s'", pp->promiser);
         break;
     default:
-        cfPS(ctx, LOG_LEVEL_ERR, result, pp, &a,
-             "Errors encountered when actuating insert_text promise '%s'", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_INFO, result, pp, &a,
+             "Mismatches encountered when actuating insert_text promise '%s'", pp->promiser);
         break;
     }
 

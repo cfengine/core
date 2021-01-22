@@ -762,7 +762,7 @@ bool DBPrivRead(
     const void *const key,
     const int key_size,
     void *const dest,
-    int dest_size)
+    size_t dest_size)
 {
     assert(db != NULL);
     assert(key_size >= 0);

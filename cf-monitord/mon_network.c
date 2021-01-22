@@ -754,7 +754,7 @@ static void SaveNetworkData(Item * const *in, Item * const *out)
 
         if (stat(vbuff, &statbuf) != -1)
         {
-            if (ItemListSize(in[i]) < statbuf.st_size &&
+            if (ItemListSize(in[i]) < (size_t) statbuf.st_size &&
                 now < statbuf.st_mtime + 40 * 60)
             {
                 Log(LOG_LEVEL_VERBOSE, "New state '%s' is smaller, retaining old for 40 mins longer", ECGSOCKS[i].name);
@@ -781,7 +781,7 @@ static void SaveNetworkData(Item * const *in, Item * const *out)
 
         if (stat(vbuff, &statbuf) != -1)
         {
-            if (ItemListSize(out[i]) < statbuf.st_size &&
+            if (ItemListSize(out[i]) < (size_t) statbuf.st_size &&
                 now < statbuf.st_mtime + 40 * 60)
             {
                 Log(LOG_LEVEL_VERBOSE, "New state '%s' is smaller, retaining old for 40 mins longer", ECGSOCKS[i].name);

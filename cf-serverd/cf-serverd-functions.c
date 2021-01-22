@@ -705,8 +705,8 @@ int StartServer(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
     int sd = SetServerListenState(ctx, queue_size, NULL, SERVER_LISTEN, &InitServer);
 
     /* Necessary for our use of select() to work in WaitForIncoming(): */
-    assert(sd < sizeof(fd_set) * CHAR_BIT &&
-           GetSignalPipe() < sizeof(fd_set) * CHAR_BIT);
+    assert((size_t) sd < sizeof(fd_set) * CHAR_BIT &&
+           (size_t) GetSignalPipe() < sizeof(fd_set) * CHAR_BIT);
 
     Policy *server_cfengine_policy = PolicyNew();
     CfLock thislock = AcquireServerLock(ctx, config, server_cfengine_policy);

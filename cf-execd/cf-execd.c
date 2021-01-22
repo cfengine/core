@@ -561,7 +561,8 @@ static int SetupRunagentSocket()
         ret = snprintf(sock_info.sun_path, sizeof(sock_info.sun_path) - 1,
                        "%s/"CF_EXECD_RUNAGENT_SOCKET_NAME, RUNAGENT_SOCKET_DIR);
     }
-    if (ret <= (sizeof(sock_info.sun_path) - 1))
+    assert(ret > 0);
+    if ((size_t) ret <= (sizeof(sock_info.sun_path) - 1))
     {
         sock_info.sun_family = AF_LOCAL;
 

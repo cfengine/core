@@ -993,7 +993,7 @@ static void NewHostToOldACL(Auth *old, const char *host)
 
             /* Identify next fragment: */
             const char *d = strchr(dot, '.');
-            size_t len = d ? d - dot : strlen(dot);
+            size_t len = d ? (size_t) (d - dot) : strlen(dot);
 
             /* Copy fragment: */
             memcpy(dst, dot, len);

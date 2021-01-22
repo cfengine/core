@@ -623,7 +623,7 @@ static bool CheckStoreKey(ServerConnectionState *conn, RSA *key)
     }
 }
 
-static bool AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer, int recvlen)
+static bool AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer, unsigned int recvlen)
 {
     unsigned char digest[EVP_MAX_MD_SIZE + 1] = { 0 };
 
@@ -743,7 +743,7 @@ char iscrypt, enterprise_field;
                 "Probably the client has wrong public key for this server");
             return false;
         }
-        if (ret != challenge_len)
+        if ((unsigned int) ret != challenge_len)
         {
             Log(LOG_LEVEL_ERR, "Authentication failure: "
                 "private decrypt of received challenge (%u bytes) "
@@ -1060,7 +1060,7 @@ bool BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
     memset(&get_args, 0, sizeof(get_args));
 
     received = ReceiveTransaction(conn->conn_info, recvbuffer, NULL);
-    if (received == -1)
+    if (received < 0)
     {
         return false;
     }
@@ -1223,7 +1223,7 @@ bool BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
         memset(buffer, 0, CF_BUFSIZE);
         sscanf(recvbuffer, "SGET %u %d", &len, &(get_args.buf_size));
 
-        if (received != len + CF_PROTO_OFFSET)
+        if ((unsigned int) received != len + CF_PROTO_OFFSET)
         {
             Log(LOG_LEVEL_INFO, "Protocol error SGET");
             RefuseAccess(conn, recvbuffer);
@@ -1290,7 +1290,7 @@ bool BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
         memset(buffer, 0, CF_BUFSIZE);
         sscanf(recvbuffer, "SOPENDIR %u", &len);
 
-        if ((len >= sizeof(out)) || (received != (len + CF_PROTO_OFFSET)))
+        if ((len >= sizeof(out)) || ((unsigned int) received != (len + CF_PROTO_OFFSET)))
         {
             Log(LOG_LEVEL_INFO, "Protocol error OPENDIR: %d", len);
             RefuseAccess(conn, recvbuffer);
@@ -1363,7 +1363,7 @@ bool BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
         memset(buffer, 0, CF_BUFSIZE);
         sscanf(recvbuffer, "SSYNCH %u", &len);
 
-        if ((len >= sizeof(out)) || (received != (len + CF_PROTO_OFFSET)))
+        if ((len >= sizeof(out)) || ((unsigned int) received != (len + CF_PROTO_OFFSET)))
         {
             Log(LOG_LEVEL_INFO, "Protocol error SSYNCH: %d", len);
             RefuseAccess(conn, recvbuffer);
@@ -1448,7 +1448,7 @@ bool BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
     case PROTOCOL_COMMAND_MD5_SECURE:
         sscanf(recvbuffer, "SMD5 %u", &len);
 
-        if ((len >= sizeof(out)) || (received != (len + CF_PROTO_OFFSET)))
+        if ((len >= sizeof(out)) || ((unsigned int) received != (len + CF_PROTO_OFFSET)))
         {
             Log(LOG_LEVEL_INFO, "Decryption error");
             RefuseAccess(conn, recvbuffer);
@@ -1496,7 +1496,7 @@ bool BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
         assert(CF_DEFAULT_DIGEST_LEN <= EVP_MAX_MD_SIZE);
         unsigned char digest[EVP_MAX_MD_SIZE + 1];
 
-        assert(CF_BUFSIZE + CF_SMALL_OFFSET + CF_DEFAULT_DIGEST_LEN
+        assert(CF_BUFSIZE + CF_SMALL_OFFSET + (unsigned long) CF_DEFAULT_DIGEST_LEN
                <= sizeof(recvbuffer));
         memcpy(digest, recvbuffer + strlen(recvbuffer) + CF_SMALL_OFFSET,
                CF_DEFAULT_DIGEST_LEN);
@@ -1509,7 +1509,7 @@ bool BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
     case PROTOCOL_COMMAND_VAR_SECURE:
         sscanf(recvbuffer, "SVAR %u", &len);
 
-        if ((len >= sizeof(out)) || (received != (len + CF_PROTO_OFFSET)))
+        if ((len >= sizeof(out)) || ((unsigned int) received != (len + CF_PROTO_OFFSET)))
         {
             Log(LOG_LEVEL_INFO, "Decrypt error SVAR");
             RefuseAccess(conn, "decrypt error SVAR");
@@ -1545,7 +1545,7 @@ bool BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
     case PROTOCOL_COMMAND_CONTEXT_SECURE:
         sscanf(recvbuffer, "SCONTEXT %u", &len);
 
-        if ((len >= sizeof(out)) || (received != (len + CF_PROTO_OFFSET)))
+        if ((len >= sizeof(out)) || ((unsigned int) received != (len + CF_PROTO_OFFSET)))
         {
             Log(LOG_LEVEL_INFO, "Decrypt error SCONTEXT, len,received = %d,%d", len, received);
             RefuseAccess(conn, "decrypt error SCONTEXT");
@@ -1581,7 +1581,7 @@ bool BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
     case PROTOCOL_COMMAND_QUERY_SECURE:
         sscanf(recvbuffer, "SQUERY %u", &len);
 
-        if ((len >= sizeof(out)) || (received != (len + CF_PROTO_OFFSET)))
+        if ((len >= sizeof(out)) || ((unsigned int) received != (len + CF_PROTO_OFFSET)))
         {
             Log(LOG_LEVEL_INFO, "Decrypt error SQUERY");
             RefuseAccess(conn, "decrypt error SQUERY");
@@ -1617,7 +1617,7 @@ bool BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
     case PROTOCOL_COMMAND_CALL_ME_BACK:
         sscanf(recvbuffer, "SCALLBACK %u", &len);
 
-        if ((len >= sizeof(out)) || (received != (len + CF_PROTO_OFFSET)))
+        if ((len >= sizeof(out)) || ((unsigned int) received != (len + CF_PROTO_OFFSET)))
         {
             Log(LOG_LEVEL_INFO, "Decrypt error CALL_ME_BACK");
             return true;

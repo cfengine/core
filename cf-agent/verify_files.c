@@ -197,7 +197,8 @@ static bool AttrHasNoAction(const Attributes *attr)
     if (!(attr->transformer || attr->haverename || attr->havedelete ||
           attr->havecopy || attr->create || attr->touch || attr->havelink ||
           attr->haveperms || attr->havechange || attr->acl.acl_entries ||
-          attr->haveedit || attr->haveeditline || attr->haveeditxml))
+          attr->haveedit || attr->haveeditline || attr->haveeditxml ||
+          (attr->content != NULL)))
     {
         return true;
     }

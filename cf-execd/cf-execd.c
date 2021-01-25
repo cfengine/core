@@ -604,15 +604,19 @@ static int SetupRunagentSocket()
 
 #else  /* ! __MINGW32__ */
 
-// msg should include exactly one reference to unsigned int.
-static inline unsigned int MaybeSleepLog(LogLevel level, const char *msg, unsigned int seconds)
+/**
+ * Sleep if not pending termination and log a message.
+ *
+ * @note: #msg_format should include exactly one "%u".
+ */
+static inline unsigned int MaybeSleepLog(LogLevel level, const char *msg_format, unsigned int seconds)
 {
     if (IsPendingTermination())
     {
         return seconds;
     }
 
-    Log(level, msg, seconds);
+    Log(level, msg_format, seconds);
 
     return sleep(seconds);
 }

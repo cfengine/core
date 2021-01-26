@@ -373,6 +373,8 @@ def validate_args(args):
 
 
 def main():
+    log.warning("You are using an outdated (deprecated) version of cf-remote")
+    log.warning("Please install a new version from: https://github.com/cfengine/cf-remote")
     args = get_args()
     if args.log_level:
         log.set_level(args.log_level)

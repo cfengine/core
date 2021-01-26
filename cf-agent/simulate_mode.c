@@ -35,6 +35,7 @@
 #include <known_dirs.h>         /* GetBinDir() */
 #include <files_names.h>        /* JoinPaths() */
 #include <pipes.h>              /* cf_popen(), cf_pclose() */
+#include <set.h>                /* StringSet */
 
 #include <simulate_mode.h>
 
@@ -549,43 +550,66 @@ bool ManifestRenamedFiles()
     return success;
 }
 
-bool AuditChangedFiles(EvalMode mode)
+bool AuditChangedFiles(EvalMode mode, StringSet **audited_files)
 {
-    assert((mode == EVAL_MODE_SIMULATE_MANIFEST) || (mode == EVAL_MODE_SIMULATE_DIFF));
+    assert((mode == EVAL_MODE_SIMULATE_MANIFEST) ||
+           (mode == EVAL_MODE_SIMULATE_MANIFEST_FULL) ||
+           (mode == EVAL_MODE_SIMULATE_DIFF));
 
-    bool success = ManifestRenamedFiles();
+    bool success = true;
+
+    /* Renames are part of the EVAL_MODE_SIMULATE_MANIFEST audit output which
+     * shows changes. */
+    if (mode != EVAL_MODE_SIMULATE_MANIFEST_FULL)
+    {
+        success = ManifestRenamedFiles();
+    }
 
     const char *action;
     const char *action_ing;
+    const char *file_category;
+    const char *files_list_file;
     if (mode == EVAL_MODE_SIMULATE_MANIFEST)
     {
         action = "manifest";
         action_ing = "Manifesting";
+        file_category = "changed";
+        files_list_file = ToChangesChroot(CHROOT_CHANGES_LIST_FILE);
+    }
+    else if (mode == EVAL_MODE_SIMULATE_MANIFEST_FULL)
+    {
+        action = "manifest";
+        action_ing = "Manifesting";
+        file_category = "unmodified";
+        files_list_file = ToChangesChroot(CHROOT_KEPT_LIST_FILE);
     }
     else
     {
         action = "show diff for";
         action_ing = "Showing diff for";
+        file_category = "changed";
+        files_list_file = ToChangesChroot(CHROOT_CHANGES_LIST_FILE);
     }
 
-    const char *changed_files_file = ToChangesChroot(CHROOT_CHANGES_LIST_FILE);
-
     /* If the file doesn't exist, there were no changes recorded. */
-    if (access(changed_files_file, F_OK) != 0)
+    if (access(files_list_file, F_OK) != 0)
     {
-        Log(LOG_LEVEL_INFO, "No changed files to %s", action);
+        Log(LOG_LEVEL_INFO, "No %s files to %s", file_category, action);
         return true;
     }
 
-    int fd = safe_open(changed_files_file, O_RDONLY);
+    int fd = safe_open(files_list_file, O_RDONLY);
     if (fd == -1)
     {
-        Log(LOG_LEVEL_ERR, "Failed to open the file with list of changed files: %s", GetErrorStr());
+        Log(LOG_LEVEL_ERR, "Failed to open the file with list of %s files: %s", file_category, GetErrorStr());
         return false;
     }
 
-    Log(LOG_LEVEL_INFO, "%s changed files (in the changes chroot)", action_ing);
-    StringSet *manifested_files = StringSetNew();
+    Log(LOG_LEVEL_INFO, "%s %s files (in the changes chroot)", action_ing, file_category);
+    if (*audited_files == NULL)
+    {
+        *audited_files = StringSetNew();
+    }
     bool done = false;
     while (!done)
     {
@@ -594,10 +618,11 @@ bool AuditChangedFiles(EvalMode mode)
         int ret = ReadLenPrefixedString(fd, &path);
         if (ret > 0)
         {
-            /* Each file should only be manifested once. */
-            if (!StringSetContains(manifested_files, path))
+            /* Each file should only be audited once. */
+            if (!StringSetContains(*audited_files, path))
             {
-                if (mode == EVAL_MODE_SIMULATE_MANIFEST)
+                if ((mode == EVAL_MODE_SIMULATE_MANIFEST) ||
+                    (mode == EVAL_MODE_SIMULATE_MANIFEST_FULL))
                 {
                     success = (success && ManifestFile(path, true));
                 }
@@ -605,7 +630,7 @@ bool AuditChangedFiles(EvalMode mode)
                 {
                     success = (success && DiffFile(path));
                 }
-                StringSetAdd(manifested_files, path);
+                StringSetAdd(*audited_files, path);
             }
             else
             {
@@ -619,22 +644,26 @@ bool AuditChangedFiles(EvalMode mode)
         }
         else
         {
-            Log(LOG_LEVEL_ERR, "Failed to read the list of changed files");
+            Log(LOG_LEVEL_ERR, "Failed to read the list of %s files", file_category);
             success = false;
             done = true;
         }
     }
-    StringSetDestroy(manifested_files);
     close(fd);
     return success;
 }
 
-bool ManifestChangedFiles()
+bool ManifestChangedFiles(StringSet **audited_files)
 {
-    return AuditChangedFiles(EVAL_MODE_SIMULATE_MANIFEST);
+    return AuditChangedFiles(EVAL_MODE_SIMULATE_MANIFEST, audited_files);
 }
 
-bool DiffChangedFiles()
+bool ManifestAllFiles(StringSet **audited_files)
 {
-    return AuditChangedFiles(EVAL_MODE_SIMULATE_DIFF);
+    return AuditChangedFiles(EVAL_MODE_SIMULATE_MANIFEST_FULL, audited_files);
+}
+
+bool DiffChangedFiles(StringSet **audited_files)
+{
+    return AuditChangedFiles(EVAL_MODE_SIMULATE_DIFF, audited_files);
 }

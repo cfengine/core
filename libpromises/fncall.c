@@ -337,6 +337,7 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, const Policy *policy, FnCall *fp, 
     }
 
     const bool skip_unsafe_function_calls = ((EVAL_MODE == EVAL_MODE_SIMULATE_MANIFEST) ||
+                                             (EVAL_MODE == EVAL_MODE_SIMULATE_MANIFEST_FULL) ||
                                              (EVAL_MODE == EVAL_MODE_SIMULATE_DIFF));
 
     Rlist *caller_meta = PromiseGetConstraintAsList(ctx, "meta", caller);

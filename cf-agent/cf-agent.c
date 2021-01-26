@@ -236,7 +236,7 @@ static const char *const HINTS[] =
     "Show *final* evaluated variables, including those defined without dependency to user-defined classes in policy. Optionally can take a regular expression.",
     "Do not run policy as the last step of the bootstrap process",
     "Do not run database integrity checks and repairs at startup",
-    "Run in simulate mode, either 'manifest' or 'diff'",
+    "Run in simulate mode, either 'manifest', 'manifest-full' or 'diff'",
     NULL
 };
 
@@ -338,22 +338,34 @@ int main(int argc, char *argv[])
 
     GenericAgentFinalize(ctx, config);
 
-    if (EVAL_MODE == EVAL_MODE_SIMULATE_MANIFEST)
+    StringSet *audited_files = NULL;
+    if ((EVAL_MODE == EVAL_MODE_SIMULATE_MANIFEST) ||
+        (EVAL_MODE == EVAL_MODE_SIMULATE_MANIFEST_FULL))
     {
-        bool success = ManifestChangedFiles();
+        bool success = ManifestChangedFiles(&audited_files);
         if (!success)
         {
             Log(LOG_LEVEL_ERR, "Failed to manifest changed files");
         }
+        if (EVAL_MODE == EVAL_MODE_SIMULATE_MANIFEST_FULL)
+        {
+            /* Skips the files already manifested above. */
+            success = ManifestAllFiles(&audited_files);
+            if (!success)
+            {
+                Log(LOG_LEVEL_ERR, "Failed to manifest unmodified files");
+            }
+        }
     }
     else if (EVAL_MODE == EVAL_MODE_SIMULATE_DIFF)
     {
-        bool success = DiffChangedFiles();
+        bool success = DiffChangedFiles(&audited_files);
         if (!success)
         {
             Log(LOG_LEVEL_ERR, "Failed to show differences for changed files");
         }
     }
+    StringSetDestroy(audited_files);
 
 #ifdef HAVE_LIBXML2
         xmlCleanupParser();
@@ -679,12 +691,17 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             {
                 if (optarg == NULL)
                 {
-                    Log(LOG_LEVEL_ERR, "Missing argument for --simulate, 'manifest' or 'diff' required");
+                    Log(LOG_LEVEL_ERR,
+                        "Missing argument for --simulate, 'manifest', 'manifest-full', or 'diff' required");
                     DoCleanupAndExit(EXIT_FAILURE);
                 }
                 else if (StringEqual_IgnoreCase(optarg, "manifest"))
                 {
                     EVAL_MODE = EVAL_MODE_SIMULATE_MANIFEST;
+                }
+                else if (StringEqual_IgnoreCase(optarg, "manifest-full"))
+                {
+                    EVAL_MODE = EVAL_MODE_SIMULATE_MANIFEST_FULL;
                 }
                 else if (StringEqual_IgnoreCase(optarg, "diff"))
                 {

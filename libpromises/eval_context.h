@@ -295,7 +295,9 @@ bool MakingInternalChanges(EvalContext *ctx, const Promise *pp, const Attributes
  */
 static inline bool ChrootChanges()
 {
-    return ((EVAL_MODE == EVAL_MODE_SIMULATE_DIFF) || (EVAL_MODE == EVAL_MODE_SIMULATE_MANIFEST));
+    return ((EVAL_MODE == EVAL_MODE_SIMULATE_DIFF) ||
+            (EVAL_MODE == EVAL_MODE_SIMULATE_MANIFEST) ||
+            (EVAL_MODE == EVAL_MODE_SIMULATE_MANIFEST_FULL));
 }
 
 /**

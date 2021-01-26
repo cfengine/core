@@ -251,3 +251,14 @@ bool RecordFileRenamedInChroot(const char *old_name, const char *new_name)
     WriterClose(writer);
     return ret;
 }
+
+bool RecordFileEvaluatedInChroot(const char *path)
+{
+    FILE *chroot_changes = safe_fopen(ToChangesChroot(CHROOT_KEPT_LIST_FILE), "a");
+    Writer *writer = FileWriter(chroot_changes);
+
+    bool ret = WriteLenPrefixedString(writer, path);
+
+    WriterClose(writer);
+    return ret;
+}

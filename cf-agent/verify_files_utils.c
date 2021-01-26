@@ -2723,6 +2723,12 @@ bool DepthSearch(EvalContext *ctx, char *name, const struct stat *sb, int rlevel
         }
         if (!attr->haveselect || SelectLeaf(ctx, name, sb, &(attr->select)))
         {
+            /* Renames are handled separately. */
+            if ((EVAL_MODE == EVAL_MODE_SIMULATE_MANIFEST_FULL) && !attr->haverename)
+            {
+                RecordFileEvaluatedInChroot(name);
+            }
+
             VerifyFileLeaf(ctx, name, sb, attr, pp, result);
             return true;
         }
@@ -2865,6 +2871,12 @@ bool DepthSearch(EvalContext *ctx, char *name, const struct stat *sb, int rlevel
             }
 
             VerifyFileLeaf(ctx, path, &lsb, attr, pp, result);
+
+            /* Renames are handled separately. */
+            if ((EVAL_MODE == EVAL_MODE_SIMULATE_MANIFEST_FULL) && !attr->haverename)
+            {
+                RecordFileEvaluatedInChroot(path);
+            }
             if (ChrootChanges() && (*result == PROMISE_RESULT_CHANGE))
             {
                 RecordFileChangedInChroot(path);

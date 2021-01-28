@@ -677,7 +677,12 @@ static bool SplitProcLine(const char *line,
         return false;
     }
 
-    size_t linelen = strlen(line);
+    const size_t checklen = strlen(line);
+    if (checklen > INT_MAX) {
+        Log(LOG_LEVEL_ERR, "Proc line too long (%zu > %d)", checklen, INT_MAX);
+        return false;
+    }
+    int linelen = (int) checklen;
 
     if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG)
     {

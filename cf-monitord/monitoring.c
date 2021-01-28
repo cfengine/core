@@ -199,7 +199,7 @@ void SetMeasurementPromises(Item ** classlist)
     {
         if (stored != NULL)
         {
-            if (sizeof(entry) < vsize)
+            if (sizeof(entry) < (size_t) vsize)
             {
                 Log(LOG_LEVEL_ERR, "Invalid entry in measurements database. Expected size: %zu, actual size: %d", sizeof(entry), vsize);
                 continue;

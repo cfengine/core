@@ -1050,7 +1050,7 @@ static size_t SubStrnCopyChr(Rlist **to, const char *from, char sep, char lstrip
         }
     }
 
-    size_t consume = (end == NULL) ? strlen(from) : (end - from);
+    size_t consume = (end == NULL) ? strlen(from) : (size_t)(end - from);
     assert(consume >= escapes);
     char copy[1 + consume - escapes], *dst = copy;
 
@@ -1085,7 +1085,7 @@ Rlist *RlistFromSplitString(const char *string, char sep)
     for (const char *sp = string; *sp != '\0';)
     {
         sp += SubStrnCopyChr(&liststart, sp, sep, '\0');
-        assert(sp - string <= strlen(string));
+        assert((size_t) (sp - string) <= strlen(string));
         if (*sp)
         {
             assert(*sp == sep && (sp == string || sp[-1] != '\\'));
@@ -1129,7 +1129,7 @@ Rlist *RlistFromStringSplitLines(const char *string, bool detect_crlf)
     for (const char *sp = string; *sp != '\0';)
     {
         sp += SubStrnCopyChr(&liststart, sp, '\r', '\n');
-        assert(sp - string <= strlen(string));
+        assert((size_t) (sp - string) <= strlen(string));
         if (*sp)
         {
             assert(*sp == '\r' && (sp == string || sp[-1] != '\\'));

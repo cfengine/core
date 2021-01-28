@@ -2477,10 +2477,10 @@ Seq *BodyGetConstraint(Body *body, const char *lval)
 
 bool BodyHasConstraint(const Body *body, const char *lval)
 {
-    for (int i = 0; i < SeqLength(body->conlist); i++)
+    for (size_t i = 0; i < SeqLength(body->conlist); i++)
     {
         Constraint *cp = SeqAt(body->conlist, i);
-        if (strcmp(lval, cp->lval) == 0)
+        if (StringEqual(lval, cp->lval))
         {
             return true;
         }
@@ -3315,7 +3315,7 @@ static SyntaxTypeMatch ConstraintCheckType(const Constraint *cp)
     {
         BundleSection *section = cp->parent.promise->parent_section;
 
-        for (size_t i = 0; i < CF3_MODULES; i++)
+        for (size_t i = 0; i < (size_t) CF3_MODULES; i++)
         {
             const PromiseTypeSyntax *ssp = CF_ALL_PROMISE_TYPES[i];
             if (!ssp)

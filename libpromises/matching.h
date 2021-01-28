@@ -35,9 +35,9 @@ char *ExtractFirstReference(const char *regexp, const char *teststring); /* Pure
 bool IsPathRegex(const char *str); /* Pure */
 bool HasRegexMetaChars(const char *string);
 void EscapeRegexChars(char *str, char *strEsc, int strEscSz); /* Pure */
-void EscapeSpecialChars(const char *str, char *strEsc, int strEscSz, char *noEscseq, char *noEsclist); /* Pure */
+void EscapeSpecialChars(const char *str, char *strEsc, size_t strEscSz, char *noEscseq, char *noEsclist); /* Pure */
 size_t EscapeRegexCharsLen(const char *str); /* Pure */
-char *EscapeChar(char *str, int strSz, char esc); /* Pure */
+char *EscapeChar(char *str, size_t strSz, char esc); /* Pure */
 void AnchorRegex(const char *regex, char *out, int outSz); /* Pure */
 
 /**

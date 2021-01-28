@@ -908,7 +908,7 @@ int main(int argc, char *argv[])
     input_path = argv[optind];
 
     /* Some more unexpected arguments? */
-    if (argc > (optind + offset))
+    if ((size_t) argc > (optind + offset))
     {
         Log(LOG_LEVEL_ERR, "Unexpected non-option argument: '%s'", argv[optind + 1]);
         DoCleanupAndExit(EXIT_FAILURE);

@@ -47,6 +47,10 @@ libcf_execd_la_SOURCES = \
 	exec-config.c exec-config.h \
 	execd-config.c execd-config.h
 
+if !WINDOWS
+libcf_execd_la_SOURCES += cf-execd-runagent.c cf-execd-runagent.h
+endif
+
 libcf_execd_test_la_SOURCES = $(libcf_execd_la_SOURCES)
 libcf_execd_test_la_LIBADD = $(libcf_execd_la_LIBADD)
 libcf_execd_test_la_CPPFLAGS = $(AM_CPPFLAGS) -DTEST_CF_EXECD

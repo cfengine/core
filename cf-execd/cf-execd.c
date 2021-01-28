@@ -24,6 +24,19 @@
 
 #include <cf-execd.h>
 
+#ifndef __MINGW32__
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <files_lib.h>
+#include <cf-execd-runagent.h>
+
+#ifndef AF_LOCAL
+#define AF_LOCAL AF_UNIX
+#endif
+
+#endif
+
 #include <cf-execd-runner.h>
 #include <item_lib.h>
 #include <known_dirs.h>
@@ -49,10 +62,19 @@
 #define CF_EXEC_IFELAPSED 0
 #define CF_EXEC_EXPIREAFTER 1
 
+#define CF_EXECD_RUNAGENT_SOCKET_NAME "runagent.socket"
+
+/* The listen() queue doesn't need to be long, new connections are accepted
+ * quickly and handed over to forked child processes so a pile up means some
+ * serious problem and it's better to just throw such connections away. */
+#define CF_EXECD_RUNAGENT_SOCKET_LISTEN_QUEUE 5
+
 static bool PERFORM_DB_CHECK = false;
 static int NO_FORK = false; /* GLOBAL_A */
 static int ONCE = false; /* GLOBAL_A */
 static int WINSERVICE = true; /* GLOBAL_A */
+
+static char *RUNAGENT_SOCKET_DIR = NULL;
 
 static pthread_attr_t threads_attrs; /* GLOBAL_T, initialized by pthread_attr_init */
 
@@ -64,10 +86,12 @@ void ThisAgentInit(void);
 static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *config,
                         ExecdConfig **execd_config, ExecConfig **exec_config);
 #ifndef __MINGW32__
+static pid_t LocalExecInFork(const ExecConfig *config);
 static void Apoptosis(void);
+#else
+static bool LocalExecInThread(const ExecConfig *config);
 #endif
 
-static bool LocalExecInThread(const ExecConfig *config);
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -104,6 +128,7 @@ static const struct option OPTIONS[] =
     {"color", optional_argument, 0, 'C'},
     {"timestamp", no_argument, 0, 'l'},
     {"skip-db-check", optional_argument, 0, 0 },
+    {"with-runagent-socket", required_argument, 0, 0},
     {NULL, 0, 0, '\0'}
 };
 
@@ -128,6 +153,7 @@ static const char *const HINTS[] =
     "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
     "Log timestamps on each line of log output",
     "Do not run database integrity checks and repairs at startup",
+    "Specify the directory for the socket for runagent requests or 'no' to disable the socket",
     NULL
 };
 
@@ -176,6 +202,7 @@ int main(int argc, char *argv[])
     GenericAgentFinalize(ctx, config);
     ExecConfigDestroy(exec_config);
     ExecdConfigDestroy(execd_config);
+    free(RUNAGENT_SOCKET_DIR);
     CallCleanupFunctions();
     return 0;
 }
@@ -348,6 +375,12 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                     DoCleanupAndExit(EXIT_FAILURE);
                 }
             }
+            else if (StringEqual(option_name, "with-runagent-socket"))
+            {
+                assert(optarg != NULL); /* required_argument */
+                RUNAGENT_SOCKET_DIR = xstrdup(optarg);
+            }
+
             break;
         }
         default:
@@ -379,20 +412,245 @@ void ThisAgentInit(void)
 
 /*****************************************************************************/
 
-// msg should include exactly one reference to unsigned int.
-static unsigned int MaybeSleepLog(LogLevel level, const char *msg, unsigned int seconds)
+
+#ifndef __MINGW32__
+/**
+ * Sleep for the given number of seconds while handling requests from sockets.
+ *
+ * @return Whether to terminate (skip any further actions) or not.
+ */
+static bool HandleRequestsOrSleep(time_t seconds, const char *reason, int runagent_socket)
+{
+    if (IsPendingTermination())
+    {
+        return true;
+    }
+
+    Log(LOG_LEVEL_VERBOSE, "Sleeping for %s %ju seconds", reason, (intmax_t) seconds);
+
+    if (runagent_socket >= 0)
+    {
+        time_t sleep_started = time(NULL);
+        struct timeval remaining = {seconds, 0};
+        while (remaining.tv_sec != 0)
+        {
+            fd_set rfds;
+            FD_ZERO(&rfds);
+            FD_SET(runagent_socket, &rfds);
+
+            int ret = select(runagent_socket + 1, &rfds, NULL, NULL, &remaining);
+            if ((ret == -1) && (errno != EINTR))
+            {
+                /* unexpected error */
+                Log(LOG_LEVEL_ERR, "Failed to sleep for %s using select(): %s",
+                    reason, GetErrorStr());
+            }
+            else if (ret == 0)
+            {
+                /* timeout -- slept for the specified time */
+                remaining.tv_sec = 0;
+            }
+            else
+            {
+                /* runagent_socket ready or signal received (EINTR) */
+
+                // We are sleeping above, so make sure a terminating signal did not
+                // arrive during that time.
+                if (IsPendingTermination())
+                {
+                    return true;
+                }
+
+                if (ret > 0)
+                {
+                    assert(FD_ISSET(runagent_socket, &rfds));
+                    int data_socket = accept(runagent_socket, NULL, NULL);
+                    pid_t pid = fork();
+                    if (pid == 0)
+                    {
+                        /* child */
+                        signal(SIGPIPE, SIG_DFL);
+                        HandleRunagentRequest(data_socket);
+                        _exit(EXIT_SUCCESS);
+                    }
+                    else if (pid == -1)
+                    {
+                        /* error */
+                        Log(LOG_LEVEL_ERR, "Failed to fork runagent request handler: %s",
+                            GetErrorStr());
+                    }
+                    /* parent: nothing more to do, go back to sleep */
+                }
+
+                remaining.tv_sec = MAX(0, seconds - (time(NULL) - sleep_started));
+            }
+        }
+    }
+    else
+    {
+        sleep(seconds);
+    }
+
+    // We are sleeping above, so make sure a terminating signal did not
+    // arrive during that time.
+    if (IsPendingTermination())
+    {
+        return true;
+    }
+
+    return false;
+}
+
+static void CFExecdMainLoop(EvalContext *ctx, Policy **policy, GenericAgentConfig *config,
+                            ExecdConfig **execd_config, ExecConfig **exec_config,
+                            int runagent_socket)
+{
+    bool terminate = false;
+    while (!IsPendingTermination())
+    {
+        /* reap child processes (if any) */
+        while (waitpid(-1, NULL, WNOHANG) > 0)
+        {
+            Log(LOG_LEVEL_DEBUG, "Reaped child process");
+        }
+
+        if (ScheduleRun(ctx, policy, config, execd_config, exec_config))
+        {
+            terminate = HandleRequestsOrSleep((*execd_config)->splay_time, "splay time",
+                                              runagent_socket);
+            if (terminate)
+            {
+                break;
+            }
+            pid_t child_pid = LocalExecInFork(*exec_config);
+            if (child_pid < 0)
+            {
+                Log(LOG_LEVEL_INFO,
+                    "Unable to run agent in a fork, falling back to blocking execution");
+                LocalExec(*exec_config);
+            }
+        }
+        /* 1 Minute resolution is enough */
+        terminate = HandleRequestsOrSleep(CFPULSETIME, "pulse time", runagent_socket);
+        if (terminate)
+        {
+            break;
+        }
+    }
+}
+
+static int SetupRunagentSocket()
+{
+    int runagent_socket = -1;
+
+    struct sockaddr_un sock_info;
+    memset(&sock_info, 0, sizeof(sock_info));
+
+    /* This can easily fail if GetStateDir() returns some long path,
+     * 'sock_info.sun_path' is limited to 140 characters or even
+     * fewer. "/var/cfengine/state" is fine, crazy long temporary state
+     * directories used in the tests are too long. */
+    int ret;
+    if (RUNAGENT_SOCKET_DIR == NULL)
+    {
+        ret = snprintf(sock_info.sun_path, sizeof(sock_info.sun_path) - 1,
+                       "%s/cf-execd.sockets/"CF_EXECD_RUNAGENT_SOCKET_NAME, GetStateDir());
+    }
+    else
+    {
+        ret = snprintf(sock_info.sun_path, sizeof(sock_info.sun_path) - 1,
+                       "%s/"CF_EXECD_RUNAGENT_SOCKET_NAME, RUNAGENT_SOCKET_DIR);
+    }
+    if (ret <= (sizeof(sock_info.sun_path) - 1))
+    {
+        sock_info.sun_family = AF_LOCAL;
+
+        MakeParentDirectory(sock_info.sun_path, true, NULL);
+
+        /* Remove potential left-overs from old processes. */
+        unlink(sock_info.sun_path);
+
+        runagent_socket = socket(AF_LOCAL, SOCK_STREAM, 0);
+        assert(runagent_socket >= 0);
+    }
+    if (runagent_socket < 0)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to create socket for runagent requests");
+    }
+    else
+    {
+        ret = bind(runagent_socket, (const struct sockaddr *) &sock_info, sizeof(sock_info));
+        assert(ret == 0);
+        if (ret == -1)
+        {
+            Log(LOG_LEVEL_ERR, "Failed to bind the runagent socket: %s", GetErrorStr());
+            close(runagent_socket);
+            runagent_socket = -1;
+        }
+        else
+        {
+            ret = listen(runagent_socket, CF_EXECD_RUNAGENT_SOCKET_LISTEN_QUEUE);
+            assert(ret == 0);
+            if (ret == -1)
+            {
+                Log(LOG_LEVEL_ERR, "Failed to listen on runagent socket: %s", GetErrorStr());
+                close(runagent_socket);
+                runagent_socket = -1;
+            }
+        }
+    }
+    return runagent_socket;
+}
+
+#else  /* ! __MINGW32__ */
+
+/**
+ * Sleep if not pending termination and log a message.
+ *
+ * @note: #msg_format should include exactly one "%u".
+ */
+static inline unsigned int MaybeSleepLog(LogLevel level, const char *msg_format, unsigned int seconds)
 {
     if (IsPendingTermination())
     {
         return seconds;
     }
 
-    Log(level, msg, seconds);
+    Log(level, msg_format, seconds);
 
     return sleep(seconds);
 }
 
-/*****************************************************************************/
+static void CFExecdMainLoop(EvalContext *ctx, Policy **policy, GenericAgentConfig *config,
+                            ExecdConfig **execd_config, ExecConfig **exec_config,
+                            ARG_UNUSED int runagent_socket)
+{
+    while (!IsPendingTermination())
+    {
+        if (ScheduleRun(ctx, policy, config, execd_config, exec_config))
+        {
+            MaybeSleepLog(LOG_LEVEL_VERBOSE,
+                          "Sleeping for splaytime %u seconds",
+                          (*execd_config)->splay_time);
+
+            // We are sleeping above, so make sure a terminating signal did not
+            // arrive during that time.
+            if (IsPendingTermination())
+            {
+                break;
+            }
+            if (!LocalExecInThread(*exec_config))
+            {
+                Log(LOG_LEVEL_INFO,
+                    "Unable to run agent in thread, falling back to blocking execution");
+                LocalExec(*exec_config);
+            }
+        }
+        /* 1 Minute resolution is enough */
+        MaybeSleepLog(LOG_LEVEL_VERBOSE, "Sleeping for pulse time %u seconds...", CFPULSETIME);
+    }
+}
+#endif  /* ! __MINGW32__ */
 
 /* Might be called back from NovaWin_StartExecService */
 void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, ExecdConfig **execd_config, ExecConfig **exec_config)
@@ -440,6 +698,15 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
     signal(SIGUSR1, HandleSignalsForDaemon);
     signal(SIGUSR2, HandleSignalsForDaemon);
 
+    int runagent_socket = -1;
+
+#ifndef __MINGW32__
+    if ((RUNAGENT_SOCKET_DIR == NULL) || (!StringEqual_IgnoreCase(RUNAGENT_SOCKET_DIR, "no")))
+    {
+        runagent_socket = SetupRunagentSocket();
+    }
+#endif
+
     umask(077);
 
     if (ONCE)
@@ -449,66 +716,40 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
     }
     else
     {
-        while (!IsPendingTermination())
-        {
-            if (ScheduleRun(ctx, &policy, config, execd_config, exec_config))
-            {
-                MaybeSleepLog(LOG_LEVEL_VERBOSE,
-                              "Sleeping for splaytime %u seconds",
-                              (*execd_config)->splay_time);
-
-                // We are sleeping both above and inside ScheduleRun(), so make
-                // sure a terminating signal did not arrive during that time.
-                if (IsPendingTermination())
-                {
-                    break;
-                }
-
-                if (!LocalExecInThread(*exec_config))
-                {
-                    Log(LOG_LEVEL_INFO,
-                        "Unable to run agent in thread, falling back to blocking execution");
-                    LocalExec(*exec_config);
-                }
-            }
-        }
+        CFExecdMainLoop(ctx, &policy, config, execd_config, exec_config, runagent_socket);
     }
     PolicyDestroy(policy);
 }
 
 /*****************************************************************************/
 
-static void Thread_AllSignalsBlock(void)
-{
 #ifndef __MINGW32__
-    sigset_t sigmask;
-    sigfillset(&sigmask);
-    int ret = pthread_sigmask(SIG_SETMASK, &sigmask, NULL);
-    if (ret != 0)
+static pid_t LocalExecInFork(const ExecConfig *config)
+{
+    Log(LOG_LEVEL_VERBOSE, "Forking for exec_command execution");
+
+    pid_t pid = fork();
+    if (pid == -1)
     {
-        Log(LOG_LEVEL_ERR,
-            "Unable to block signals in child thread,"
-            " killing cf-execd might fail (pthread_sigmask: %s)",
+        Log(LOG_LEVEL_ERR, "Failed to fork for exec_command execution: %s",
             GetErrorStr());
+        return -1;
     }
-#endif
+    else if (pid == 0)
+    {
+        /* child */
+        LocalExec(config);
+        Log(LOG_LEVEL_VERBOSE, "Finished exec_command execution, terminating the forked process");
+        _exit(0);
+    }
+    else
+    {
+        /* parent */
+        return pid;
+    }
 }
 
-static void Thread_AllSignalsUnblock(void)
-{
-#ifndef __MINGW32__
-    sigset_t sigmask;
-    sigemptyset(&sigmask);
-    int ret = pthread_sigmask(SIG_SETMASK, &sigmask, NULL);
-    if (ret != 0)
-    {
-        Log(LOG_LEVEL_ERR,
-            "Unable to unblock signals again (pthread_sigmask: %s)",
-            GetErrorStr());
-    }
-#endif
-}
-
+#else
 static void *LocalExecThread(void *param)
 {
     ExecConfig *config = (ExecConfig *) param;
@@ -525,16 +766,7 @@ static bool LocalExecInThread(const ExecConfig *config)
     pthread_t tid;
 
     Log(LOG_LEVEL_VERBOSE, "Spawning thread for exec_command execution");
-
-    /* ENT-3147: Block all signals so that child thread inherits it and
-     * signals get only delivered to the main thread. Unblock all signals
-     * right after thread has been spawned. */
-    Thread_AllSignalsBlock();
-
     int ret = pthread_create(&tid, &threads_attrs, LocalExecThread, thread_config);
-
-    Thread_AllSignalsUnblock();
-
     if (ret != 0)
     {
         ExecConfigDestroy(thread_config);
@@ -545,6 +777,7 @@ static bool LocalExecInThread(const ExecConfig *config)
 
     return true;
 }
+#endif  /* ! __MINGW32__ */
 
 #ifndef __MINGW32__
 
@@ -647,9 +880,6 @@ static Reload CheckNewPromises(GenericAgentConfig *config)
 static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *config,
                         ExecdConfig **execd_config, ExecConfig **exec_config)
 {
-    /* 1 Minute resolution is enough */
-    MaybeSleepLog(LOG_LEVEL_VERBOSE, "Sleeping for pulse time %u seconds...", CFPULSETIME);
-
     /*
      * FIXME: this logic duplicates the one from cf-serverd.c. Unify ASAP.
      */

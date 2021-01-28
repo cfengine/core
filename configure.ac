@@ -238,6 +238,8 @@ AS_CASE([${target_os}],
     # flags than vanilla Windows version, so they are false positives.
     [CFLAGS="$CFLAGS -Wno-format"])
 
+AS_CASE([${target_os}], [mingw*], [AM_CONDITIONAL([WINDOWS], [true])], [AM_CONDITIONAL([WINDOWS], [false])])
+
 dnl ######################################################################
 dnl Enable debugging
 dnl ######################################################################

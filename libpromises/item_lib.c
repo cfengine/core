@@ -140,9 +140,9 @@ void PrintItemList(const Item *list, Writer *w)
 
 /*********************************************************************/
 
-int ItemListSize(const Item *list)
+size_t ItemListSize(const Item *list)
 {
-    int size = 0;
+    size_t size = 0;
     const Item *ip = list;
     CYCLE_DECLARE(ip, slow, toggle);
 
@@ -447,7 +447,7 @@ void PrependItemList(Item **liststart, const char *itemstring)
 
 /*********************************************************************/
 
-int ListLen(const Item *list)
+size_t ListLen(const Item *list)
 {
     int count = 0;
     const Item *ip = list;
@@ -642,7 +642,7 @@ char *ItemList2CSV(const Item *list)
 {
     /* After each entry, we need space for either a ',' (before the
      * next entry) or a final '\0'. */
-    int s_size = ItemListSize(list) + ListLen(list);
+    size_t s_size = ItemListSize(list) + ListLen(list);
     if (s_size == 0)
     {
         s_size = 1;

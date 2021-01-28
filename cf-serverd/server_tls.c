@@ -421,7 +421,15 @@ bool ServerSendWelcome(const ServerConnectionState *conn)
     {
         ret = snprintf(&s[len], sizeof(s) - len, " %s=%s",
                            "USERNAME", conn->username);
-        if (ret >= sizeof(s) - len)
+        if (ret < 0)
+        {
+            Log(LOG_LEVEL_ERR, 
+                "Unexpected failure from snprintf (%d - %s) while "
+                "constructing OK WELCOME message (ServerSendWelcome)", 
+                errno, GetErrorStr());
+            return false;
+        }
+        else if ((size_t) ret >= sizeof(s) - len)
         {
             Log(LOG_LEVEL_NOTICE, "Sending OK WELCOME message truncated: %s", s);
             return false;

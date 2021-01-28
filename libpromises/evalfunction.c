@@ -101,7 +101,7 @@ static bool ExecModule(EvalContext *ctx, char *command);
 static bool CheckIDChar(const char ch);
 static bool CheckID(const char *id);
 static const Rlist *GetListReferenceArgument(const EvalContext *ctx, const FnCall *fp, const char *lval_str, DataType *datatype_out);
-static char *CfReadFile(const char *filename, int maxsize);
+static char *CfReadFile(const char *filename, size_t maxsize);
 
 /*******************************************************************/
 
@@ -237,7 +237,7 @@ static JsonElement* VarRefValueToJson(const EvalContext *ctx, const FnCall *fp, 
     // Convenience storage for the name of the function, since fp can be NULL
     const char* fp_name = (fp ? fp->name : "VarRefValueToJson");
 
-    for (int di = 0; di < disallowed_count; di++)
+    for (size_t di = 0; di < disallowed_count; di++)
     {
         if (disallowed_datatypes[di] == value_type)
         {
@@ -316,7 +316,7 @@ static JsonElement* VarRefValueToJson(const EvalContext *ctx, const FnCall *fp, 
                     {
                         Log(LOG_LEVEL_DEBUG, "%s: got ref with starting depth %zu and index count %zu",
                             fp_name, ref_num_indices, var_ref->num_indices);
-                        for (int index = ref_num_indices; index < var_ref->num_indices-1; index++)
+                        for (size_t index = ref_num_indices; index < var_ref->num_indices-1; index++)
                         {
                             JsonElement *local = JsonObjectGet(holder, var_ref->indices[index]);
                             if (local == NULL)
@@ -1825,7 +1825,7 @@ static bool GetPackagesMatching(pcre *matcher, JsonElement *json, const bool ins
             if (packages_from_module)
             {
                 // Iterate over and see where match is.
-                for (int i = 0; i < SeqLength(packages_from_module); i++)
+                for (size_t i = 0; i < SeqLength(packages_from_module); i++)
                 {
                     // With the new package promise we are storing inventory
                     // information it the database. This set of lines ('\n' separated)
@@ -1953,37 +1953,37 @@ static FnCallResult FnCallTextXform(ARG_UNUSED EvalContext *ctx, ARG_UNUSED cons
     char *buf = xcalloc(bufsiz, sizeof(char));
     memcpy(buf, string, len + 1);
 
-    if (!strcmp(fp->name, "string_downcase"))
+    if (StringEqual(fp->name, "string_downcase"))
     {
-        int pos = 0;
-        for (pos = 0; pos < len; pos++)
+        for (size_t pos = 0; pos < len; pos++)
         {
             buf[pos] = tolower(buf[pos]);
         }
     }
-    else if (!strcmp(fp->name, "string_upcase"))
+    else if (StringEqual(fp->name, "string_upcase"))
     {
-        int pos = 0;
-        for (pos = 0; pos < len; pos++)
+        for (size_t pos = 0; pos < len; pos++)
         {
             buf[pos] = toupper(buf[pos]);
         }
     }
-    else if (!strcmp(fp->name, "string_reverse"))
+    else if (StringEqual(fp->name, "string_reverse"))
     {
-        int c, i, j;
-        for (i = 0, j = len - 1; i < j; i++, j--)
-        {
-            c = buf[i];
-            buf[i] = buf[j];
-            buf[j] = c;
+        if (len > 1) {
+            size_t c, i, j;
+            for (i = 0, j = len - 1; i < j; i++, j--)
+            {
+                c = buf[i];
+                buf[i] = buf[j];
+                buf[j] = c;
+            }
         }
     }
-    else if (!strcmp(fp->name, "string_length"))
+    else if (StringEqual(fp->name, "string_length"))
     {
         xsnprintf(buf, bufsiz, "%zu", len);
     }
-    else if (!strcmp(fp->name, "string_head"))
+    else if (StringEqual(fp->name, "string_head"))
     {
         long max = IntFromString(RlistScalarValue(finalargs->next));
         // A negative offset -N on string_head() means the user wants up to the Nth from the end
@@ -1998,12 +1998,12 @@ static FnCallResult FnCallTextXform(ARG_UNUSED EvalContext *ctx, ARG_UNUSED cons
             max = 0;
         }
 
-        if (max < bufsiz)
+        if ((size_t) max < bufsiz)
         {
             buf[max] = '\0';
         }
     }
-    else if (!strcmp(fp->name, "string_tail"))
+    else if (StringEqual(fp->name, "string_tail"))
     {
         const long max = IntFromString(RlistScalarValue(finalargs->next));
         // A negative offset -N on string_tail() means the user wants up to the Nth from the start
@@ -2013,7 +2013,7 @@ static FnCallResult FnCallTextXform(ARG_UNUSED EvalContext *ctx, ARG_UNUSED cons
             size_t offset = MIN(labs(max), len);
             memcpy(buf, string + offset , len - offset + 1);
         }
-        else if (max < len)
+        else if ((size_t) max < len)
         {
             memcpy(buf, string + len - max, max + 1);
         }
@@ -2786,21 +2786,21 @@ static FnCallResult FnCallReadTcp(ARG_UNUSED EvalContext *ctx,
             {
                 sent += result;
             }
-        } while (sent < length);
+        } while ((size_t) sent < length);
     }
 
     char recvbuf[CF_BUFSIZE];
     ssize_t n_read = recv(sd, recvbuf, maxbytes, 0);
     cf_closesocket(sd);
 
-    if (n_read == -1)
+    if (n_read < 0)
     {
         Log(LOG_LEVEL_INFO, "readtcp: Error while receiving (%s)",
             GetErrorStr());
         return FnFailure();
     }
 
-    assert(n_read < sizeof(recvbuf));
+    assert((size_t) n_read < sizeof(recvbuf));
     recvbuf[n_read] = '\0';
 
     Log(LOG_LEVEL_VERBOSE,
@@ -3337,7 +3337,16 @@ static JsonElement* ExecJSON_Pipe(const char *cmd, JsonElement *container)
     JsonWrite(w, container, 0);
     char *container_str = StringWriterClose(w);
 
-    if (PipeWrite(&io, container_str) != strlen(container_str))
+    ssize_t written = PipeWrite(&io, container_str);
+    if (written < 0)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to write to pipe (fd = %d): %s",
+            io.write_fd, GetErrorStr());
+        free(container_str);
+
+        container_str = NULL;
+    }
+    else if ((size_t) written != strlen(container_str))
     {
         Log(LOG_LEVEL_VERBOSE, "Couldn't send whole container data to '%s'.", cmd);
         free(container_str);
@@ -4104,10 +4113,10 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx,
                 char recvbuf[CF_BUFSIZE];
                 ssize_t n_read = recv(sd, recvbuf, maxbytes, 0);
 
-                if (n_read != -1)
+                if (n_read < 0)
                 {
                     /* maxbytes was checked earlier, but just make sure... */
-                    assert(n_read < sizeof(recvbuf));
+                    assert((size_t) n_read < sizeof(recvbuf));
                     recvbuf[n_read] = '\0';
 
                     if (strlen(regex) == 0 || StringMatchFull(regex, recvbuf))
@@ -5401,7 +5410,7 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
 
                     const char bad_modifiers[] = "hLqjzt";
                     const size_t length = strlen(bad_modifiers);
-                    for (int b = 0; b < length; b++)
+                    for (size_t b = 0; b < length; b++)
                     {
                         if (strchr(format_piece, bad_modifiers[b]) != NULL)
                         {
@@ -6193,7 +6202,7 @@ static FnCallResult FnCallRegExtract(EvalContext *ctx, ARG_UNUSED const Policy *
         json = JsonObjectCreate(SeqLength(s)/2);
     }
 
-    for (int i = 0; i < SeqLength(s); i+=2)
+    for (size_t i = 0; i < SeqLength(s); i+=2)
     {
         Buffer *key = SeqAt(s, i);
         Buffer *value = SeqAt(s, i+1);
@@ -7990,8 +7999,7 @@ static bool SingleLine(const char *s)
     return s[length] && !s[length+1];
 }
 
-/* TODO change maxsize to size_t. */
-static char *CfReadFile(const char *filename, int maxsize)
+static char *CfReadFile(const char *filename, size_t maxsize)
 {
     /* TODO remove this stat() call, it's a remnant from old code
        that examined sb.st_size. */
@@ -8038,7 +8046,7 @@ static char *CfReadFile(const char *filename, int maxsize)
 
     if (truncated)
     {
-        Log(LOG_LEVEL_VERBOSE, "CfReadFile: Truncating file '%s' to %d bytes as "
+        Log(LOG_LEVEL_VERBOSE, "CfReadFile: Truncating file '%s' to %zu bytes as "
             "requested by maxsize parameter", filename, maxsize);
     }
 

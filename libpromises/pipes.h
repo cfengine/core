@@ -60,7 +60,7 @@ bool PipeTypeIsOk(const char *type);
 
 int PipeIsReadWriteReady(const IOData *io, int timeout_sec);
 Rlist *PipeReadData(const IOData *io, int pipe_timeout_secs, int pipe_termination_check_secs);
-int PipeWrite(IOData *io, const char *data);
+ssize_t PipeWrite(IOData *io, const char *data);
 int PipeWriteData(const char *base_cmd, const char *args, const char *data);
 int PipeReadWriteData(const char *base_command, const char *args, const char *request,
                              Rlist **response, int pipe_timeout_secs, int pipe_termination_check_secs);

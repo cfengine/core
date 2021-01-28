@@ -49,11 +49,9 @@ static ProbeGatherData ENTERPRISE_PROBES_GATHERERS[sizeof(ENTERPRISE_PROBES) / s
 
 void MonOtherInit()
 {
-    int i;
-
     Log(LOG_LEVEL_VERBOSE, "Starting initialization of static Nova monitoring probes.");
 
-    for (i = 0; i < sizeof(ENTERPRISE_PROBES) / sizeof(ENTERPRISE_PROBES[0]); ++i)
+    for (size_t i = 0; i < sizeof(ENTERPRISE_PROBES) / sizeof(ENTERPRISE_PROBES[0]); ++i)
     {
         const Probe *probe = &ENTERPRISE_PROBES[i];
         const char *provider;
@@ -76,11 +74,9 @@ void MonOtherInit()
 
 void MonOtherGatherData(double *cf_this)
 {
-    int i;
-
     Log(LOG_LEVEL_VERBOSE, "Gathering data from static Nova monitoring probes.");
 
-    for (i = 0; i < sizeof(ENTERPRISE_PROBES) / sizeof(ENTERPRISE_PROBES[0]); ++i)
+    for (size_t i = 0; i < sizeof(ENTERPRISE_PROBES) / sizeof(ENTERPRISE_PROBES[0]); ++i)
     {
         const char *probename = ENTERPRISE_PROBES[i].name;
         ProbeGatherData gatherer = ENTERPRISE_PROBES_GATHERERS[i];

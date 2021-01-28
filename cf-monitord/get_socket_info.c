@@ -51,7 +51,7 @@ int main()
     /* Read real data */
     Seq *lines = SeqNew(64, free);
     ret = CfReadLines(&buff, &buff_size, fp, lines);
-    if (ret == -1)
+    if (ret < 0)
     {
         Log(LOG_LEVEL_ERR, "Failed to read data from /proc/net/tcp");
         SeqDestroy(lines);
@@ -64,7 +64,7 @@ int main()
     char remote_addr[INET_ADDRSTRLEN];
     uint32_t l_port, r_port;
     SocketState state;
-    for (size_t i = 0; i < ret; i++)
+    for (size_t i = 0; i < (size_t) ret; i++)
     {
         char *line = SeqAt(lines,i);
         if (ParseIPv4SocketInfo(line, local_addr, &l_port, remote_addr, &r_port, &state))
@@ -93,7 +93,7 @@ int main()
 
         /* Read real data */
         ret = CfReadLines(&buff, &buff_size, fp, lines);
-        if (ret == -1)
+        if (ret < 0)
         {
             Log(LOG_LEVEL_ERR, "Failed to read data from /proc/net/tcp6");
             SeqDestroy(lines);
@@ -102,7 +102,7 @@ int main()
         }
 
         /* else */
-        for (size_t i = 0; i < ret; i++)
+        for (size_t i = 0; i < (size_t) ret; i++)
         {
             char *line = SeqAt(lines,i);
             if (ParseIPv6SocketInfo(line, local_addr6, &l_port, remote_addr6, &r_port, &state))
@@ -128,7 +128,7 @@ int main()
 
     /* Read real data */
     ret = CfReadLines(&buff, &buff_size, fp, lines);
-    if (ret == -1)
+    if (ret < 0)
     {
         Log(LOG_LEVEL_ERR, "Failed to read data from /proc/net/udp");
         SeqDestroy(lines);
@@ -137,7 +137,7 @@ int main()
     }
 
     /* else */
-    for (size_t i = 0; i < ret; i++)
+    for (size_t i = 0; i < (size_t) ret; i++)
     {
         char *line = SeqAt(lines,i);
         if (ParseIPv4SocketInfo(line, local_addr, &l_port, remote_addr, &r_port, &state))
@@ -163,7 +163,7 @@ int main()
 
         /* Read real data */
         ret = CfReadLines(&buff, &buff_size, fp, lines);
-        if (ret == -1)
+        if (ret < 0)
         {
             Log(LOG_LEVEL_ERR, "Failed to read data from /proc/net/udp6");
             SeqDestroy(lines);
@@ -172,7 +172,7 @@ int main()
         }
 
         /* else */
-        for (size_t i = 0; i < ret; i++)
+        for (size_t i = 0; i < (size_t) ret; i++)
         {
             char *line = SeqAt(lines,i);
             if (ParseIPv6SocketInfo(line, local_addr6, &l_port, remote_addr6, &r_port, &state))

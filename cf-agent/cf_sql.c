@@ -260,10 +260,10 @@ static void CfNewQueryPostgresqlDb(CfdbConn *cfdb, const char *query)
 
 static void CfFetchPostgresqlRow(CfdbConn *cfdb)
 {
-    int i;
+    assert(cfdb != NULL);
     DbPostgresqlConn *pc = cfdb->data;
 
-    if (cfdb->row >= cfdb->maxrows)
+    if (cfdb->row < 0 || (unsigned int) cfdb->row >= cfdb->maxrows)
     {
         cfdb->rowdata = NULL;
         return;
@@ -274,7 +274,7 @@ static void CfFetchPostgresqlRow(CfdbConn *cfdb)
         cfdb->rowdata = xmalloc(sizeof(char *) * cfdb->maxcolumns);
     }
 
-    for (i = 0; i < cfdb->maxcolumns; i++)
+    for (unsigned int i = 0; i < cfdb->maxcolumns; i++)
     {
         cfdb->rowdata[i] = PQgetvalue(pc->res, cfdb->row, i);
     }
@@ -455,7 +455,7 @@ char **CfFetchRow(CfdbConn *cfdb)
 char *CfFetchColumn(CfdbConn *cfdb, int col)
 {
     assert(cfdb != NULL);
-    assert(col >= 0 && col < cfdb->maxcolumns);
+    assert(col >= 0 && (unsigned int) col < cfdb->maxcolumns);
     if (cfdb->rowdata)
     {
         return cfdb->rowdata[col];

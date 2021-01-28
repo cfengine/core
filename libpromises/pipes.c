@@ -132,7 +132,7 @@ Rlist *PipeReadData(const IOData *io, int pipe_timeout_secs, int pipe_terminatio
     return response_lines;
 }
 
-int PipeWrite(IOData *io, const char *data)
+ssize_t PipeWrite(IOData *io, const char *data)
 {
     /* If there is nothing to write close writing end of pipe. */
     if (data == NULL || strlen(data) == 0)

@@ -844,7 +844,7 @@ static bool ParseEntityPosixLinux(char **str, acl_entry_t ace, int *is_mask)
     char *ids;
     char *id_end;
     bool result = true;
-    int i;
+    size_t i;
 
     ids = NULL;
 

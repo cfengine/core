@@ -129,7 +129,7 @@ In short, when writing a promise module, these log levels should be used:
     * New credentials detected
     * New host bootstrapped
     * The module made a change to the system for itself to work (database initialized, user created)
-* `info` - Changes made to the system (1 per repaired promise)
+* `info` - Changes made to the system (usually 1 per repaired promise, more if the promise made multiple different changes to the system)
 * `verbose` - Human understandable detailed information about promise evaluation
 * `debug` - Programmer-level information that is only useful for CFEngine developers or module developers
 

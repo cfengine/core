@@ -120,9 +120,20 @@ In short, when writing a promise module, these log levels should be used:
 
 * `critical` - Serious errors in protocol or module itself (not in policy)
 * `error` - Errors when validating / evaluating a promise, including syntax errors and promise not kept
-* `info` - Changes made (repaired promises)
+* `warning` - The promise did not fail, but there is something the user (policy writer) should probably fix. Some examples:
+  * Policy relies on deprecated behavior/syntax which will change
+  * Policy uses demo / unsafe options which should be avoided in a production environment
+* `notice` - Unusual events which you want to notify the user about
+  * Most promise types won't need this - usually `info` or `warning` is more appropriate
+  * Useful for events which happen rarely and are not the result of a promise, for example:
+    * New credentials detected
+    * New host bootstrapped
+    * The module made a change to the system for itself to work (database initialized, user created)
+* `info` - Changes made to the system (1 per repaired promise)
 * `verbose` - Human understandable detailed information about promise evaluation
 * `debug` - Programmer-level information that is only useful for CFEngine developers or module developers
+
+Note that all log levels, except for `debug`, should be friendly to non-developers, and not include programmer's details (such as protocol messages, source code references, function names, etc.).
 
 ### Results
 

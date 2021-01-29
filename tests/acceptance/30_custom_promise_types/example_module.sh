@@ -34,7 +34,7 @@ handle_input_line() {
         request_attribute_message="$value" ;;
     attribute_*)
         attribute_name=${key#"attribute_"}
-        echo "log_error=Unknown attribute: '$attribute_name'"
+        log error "Unknown attribute: '$attribute_name'"
         saw_unknown_attribute="yes" ;;
     *)
         saw_unknown_key="yes" ;;
@@ -71,12 +71,12 @@ operation_validate() {
     fi
 
     if [ "$request_promiser" = "" ] ; then
-        echo "log_error=Promiser must be non-empty"
+        log error "Promiser must be non-empty"
         response_result="invalid"
     fi
 
     if [ "$request_attribute_message" = "" ] ; then
-        echo "log_error=Attribute 'message' is missing or empty"
+        log error "Attribute 'message' is missing or empty"
         response_result="invalid"
     fi
 
@@ -124,7 +124,7 @@ operation_evaluate() {
 
 operation_unknown() {
     response_result="error"
-    echo "log_error=Promise module received unexpected operation: $request_operation"
+    log error "Promise module received unexpected operation: $request_operation"
     write_response
 }
 

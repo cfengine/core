@@ -41,7 +41,7 @@ handle_input_line() {
             request_promiser="$value" ;;
         attribute_*)
             attribute_name=${key#"attribute_"}
-            if ! expr " $obligatory_attributes $optional_attributes " : ".* $attribute_name " >/dev/null; then
+            if ! expr " $required_attributes $optional_attributes " : ".* $attribute_name " >/dev/null; then
                 saw_unknown_attribute="yes"
                 unknown_attribute_names="$unknown_attribute_names, $attribute_name"
             fi
@@ -82,8 +82,8 @@ operation_validate() {
         response_result="invalid"
     fi
 
-    if [ ! -z "$obligatory_attributes" ]; then
-        for attribute_name in $obligatory_attributes; do
+    if [ ! -z "$required_attributes" ]; then
+        for attribute_name in $required_attributes; do
             # Note: ${!varname} syntax expands to value of variable, which name
             # is saved in $varname variable. Example:
             # var_1=something

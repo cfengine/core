@@ -80,7 +80,7 @@ write_response() {
 
 operation_terminate() {
     response_result="success"
-    type do_terminate >/dev/null && do_terminate
+    type do_terminate >/dev/null 2>&1 && do_terminate
     write_response
     exit 0
 }
@@ -107,13 +107,13 @@ operation_validate() {
         done
     fi
 
-    type do_validate >/dev/null && do_validate
+    type do_validate >/dev/null 2>&1 && do_validate
     write_response
 }
 
 operation_evaluate() {
     response_result="error" # it's responsibility of do_evaluate to override this
-    type do_evaluate >/dev/null && do_evaluate
+    type do_evaluate >/dev/null 2>&1 && do_evaluate
     write_response
 }
 
@@ -166,7 +166,7 @@ module_main() {
     echo "$module_name $module_version v1 line_based"
     echo ""
 
-    type do_initialize >/dev/null && do_initialize
+    type do_initialize >/dev/null 2>&1 && do_initialize
 
     # Loop indefinitely, handling requests:
     while true; do

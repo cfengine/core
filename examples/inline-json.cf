@@ -1,0 +1,59 @@
+#+begin_src cfengine3
+bundle agent example_inline_json
+# @brief Example illustrating inline json
+{
+  vars:
+      "json_multi_line" data => '{
+  "CFEngine Champions": [
+    {
+      "Name": "Aleksey Tsalolikhin",
+      "Year": "2011"
+    },
+    {
+      "Name": "Ted Zlatanov",
+      "Year": "2013"
+    }
+  ]
+}';
+
+
+      "json_single_line" data => '[{"key1":"value1"},{"key2":"value2"}]';
+
+  reports:
+      "Data container defined from json_multi_line: $(with)"
+        with => storejson( @(json_multi_line) );
+
+      "Data container defined from json_single_line: $(with)"
+        with => storejson( @(json_single_line) );
+}
+bundle agent __main__
+{
+  methods:
+      "example_inline_json";
+}
+#+end_src
+###############################################################################
+#+begin_src example_output
+#@ ```
+#@ R: Data container defined from json_multi_line: {
+#@     "CFEngine Champions": [
+#@       {
+#@         "Name": "Aleksey Tsalolikhin",
+#@         "Year": "2011"
+#@       },
+#@       {
+#@         "Name": "Ted Zlatanov",
+#@         "Year": "2013"
+#@       }
+#@     ]
+#@ }
+#@ R: Data container defined from json_single_line: [
+#@   {
+#@     "key1": "value1"
+#@   },
+#@   {
+#@     "key2": "value2"
+#@   }
+#@ ]
+#@ ```
+#+end_src

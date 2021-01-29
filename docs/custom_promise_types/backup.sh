@@ -24,7 +24,7 @@
 #            root => "/var/backups";
 #      }
 
-obligatory_attributes="from"
+required_attributes="from"
 optional_attributes="root"
 all_attributes_are_valid="no"
 

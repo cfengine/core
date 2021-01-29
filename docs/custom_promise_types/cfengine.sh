@@ -2,6 +2,16 @@
 #
 # This file should be sourced, not run
 
+log() {
+    if [ "$#" != 2 ] ; then
+        echo "log_critical=Error in promise module (log must be used with 2 arguments, level and message)"
+        exit 1
+    fi
+    level="$1"
+    message="$2"
+    echo "log_$level=$message"
+}
+
 reset_state() {
     # Set global variables before we begin another request
 
@@ -41,7 +51,7 @@ handle_input_line() {
             request_promiser="$value" ;;
         attribute_*)
             attribute_name=${key#"attribute_"}
-            if ! expr " $obligatory_attributes $optional_attributes " : ".* $attribute_name " >/dev/null; then
+            if ! expr " $required_attributes $optional_attributes " : ".* $attribute_name " >/dev/null; then
                 saw_unknown_attribute="yes"
                 unknown_attribute_names="$unknown_attribute_names, $attribute_name"
             fi
@@ -70,7 +80,7 @@ write_response() {
 
 operation_terminate() {
     response_result="success"
-    type do_terminate >/dev/null && do_terminate
+    type do_terminate >/dev/null 2>&1 && do_terminate
     write_response
     exit 0
 }
@@ -78,12 +88,12 @@ operation_terminate() {
 operation_validate() {
     response_result="valid"
     if [ "$saw_unknown_attribute" != "no" -a "$all_attributes_are_valid" != "yes" ] ; then
-        echo "log_error=Unknown attribute/s: ${unknown_attribute_names#, }"
+        log error "Unknown attribute/s: ${unknown_attribute_names#, }"
         response_result="invalid"
     fi
 
-    if [ ! -z "$obligatory_attributes" ]; then
-        for attribute_name in $obligatory_attributes; do
+    if [ ! -z "$required_attributes" ]; then
+        for attribute_name in $required_attributes; do
             # Note: ${!varname} syntax expands to value of variable, which name
             # is saved in $varname variable. Example:
             # var_1=something
@@ -91,25 +101,25 @@ operation_validate() {
             # echo "${!varname}" # prints "something"
             varname="request_attribute_$attribute_name"
             if [ -z "${!varname}" ]; then
-                echo "log_error=Attribute '$attribute_name' is missing or empty"
+                log error "Attribute '$attribute_name' is missing or empty"
                 response_result="invalid"
             fi
         done
     fi
 
-    type do_validate >/dev/null && do_validate
+    type do_validate >/dev/null 2>&1 && do_validate
     write_response
 }
 
 operation_evaluate() {
     response_result="error" # it's responsibility of do_evaluate to override this
-    type do_evaluate >/dev/null && do_evaluate
+    type do_evaluate >/dev/null 2>&1 && do_evaluate
     write_response
 }
 
 operation_unknown() {
     response_result="error"
-    echo "log_error=Promise module received unexpected operation: $request_operation"
+    log error "Promise module received unexpected operation: $request_operation"
     write_response
 }
 
@@ -156,7 +166,7 @@ module_main() {
     echo "$module_name $module_version v1 line_based"
     echo ""
 
-    type do_initialize >/dev/null && do_initialize
+    type do_initialize >/dev/null 2>&1 && do_initialize
 
     # Loop indefinitely, handling requests:
     while true; do

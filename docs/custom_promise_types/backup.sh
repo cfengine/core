@@ -24,24 +24,26 @@
 #            root => "/var/backups";
 #      }
 
-obligatory_attributes="from"
+required_attributes="from"
 optional_attributes="root"
 all_attributes_are_valid="no"
 
 do_evaluate() {
     # Prepare environment for wrapped script
     BACKUP_ROOT="$request_attribute_root"
+    BACKUP_BIN="$(dirname "$0")/backup3"
     BACKUP_KEEP_TMP="1"
     run_this() {
         run_rsync always "$request_promiser" "$request_attribute_from"
     }
 
     # call the script
-    . "$(dirname "$0")/backup3/backup.sh"
+    . "$BACKUP_BIN/backup.sh"
 
     # Analyse its results
-    if [ "$?" = 0 -o ! -f "$BACKUP_TMP".files ]; then
+    if [ "$?" != 0 -o ! -f "$BACKUP_TMP".files ]; then
         response_result="not_kept"
+        rm -f "$BACKUP_TMP".sql "$BACKUP_TMP".files
         return 0
     fi
     # Note: $BACKUP_TMP".files file contains lists of created and deleted files,
@@ -56,7 +58,7 @@ do_evaluate() {
     fi
 
     # Clean up
-    rm "$BACKUP_TMP".sql "$BACKUP_TMP".files
+    rm -f "$BACKUP_TMP".sql "$BACKUP_TMP".files
 }
 
 . "$(dirname "$0")/cfengine.sh"

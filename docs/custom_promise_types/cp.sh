@@ -15,7 +15,7 @@
 #       from => "/home/vagrant/src";
 # }
 
-obligatory_attributes="from"
+required_attributes="from"
 optional_attributes=""
 all_attributes_are_valid="no"
 

@@ -2,6 +2,16 @@
 #
 # This file should be sourced, not run
 
+log() {
+    if [ "$#" != 2 ] ; then
+        echo "log_critical=Error in promise module (log must be used with 2 arguments, level and message)"
+        exit 1
+    fi
+    level="$1"
+    message="$2"
+    echo "log_$level=$message"
+}
+
 reset_state() {
     # Set global variables before we begin another request
 
@@ -78,7 +88,7 @@ operation_terminate() {
 operation_validate() {
     response_result="valid"
     if [ "$saw_unknown_attribute" != "no" -a "$all_attributes_are_valid" != "yes" ] ; then
-        echo "log_error=Unknown attribute/s: ${unknown_attribute_names#, }"
+        log error "Unknown attribute/s: ${unknown_attribute_names#, }"
         response_result="invalid"
     fi
 
@@ -91,7 +101,7 @@ operation_validate() {
             # echo "${!varname}" # prints "something"
             varname="request_attribute_$attribute_name"
             if [ -z "${!varname}" ]; then
-                echo "log_error=Attribute '$attribute_name' is missing or empty"
+                log error "Attribute '$attribute_name' is missing or empty"
                 response_result="invalid"
             fi
         done
@@ -109,7 +119,7 @@ operation_evaluate() {
 
 operation_unknown() {
     response_result="error"
-    echo "log_error=Promise module received unexpected operation: $request_operation"
+    log error "Promise module received unexpected operation: $request_operation"
     write_response
 }
 

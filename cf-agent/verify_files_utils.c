@@ -3358,8 +3358,7 @@ static PromiseResult VerifySetUidGid(EvalContext *ctx, const char *file, const s
             {
                 if (amroot)
                 {
-                    cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, attr, "NEW SETGID root PROGRAM '%s'", file);
-                    result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
+                    Log(LOG_LEVEL_NOTICE, "NEW SETGID root PROGRAM '%s' ", file);
                 }
 
                 PrependItem(&VSETXIDLIST, file, NULL);

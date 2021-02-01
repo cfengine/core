@@ -582,6 +582,12 @@ exit:
     case PROMISE_RESULT_NOOP:
         cfPS(ctx, LOG_LEVEL_VERBOSE, result, pp, &a,
              "No changes done for the files promise '%s'", pp->promiser);
+
+        if (EVAL_MODE == EVAL_MODE_SIMULATE_MANIFEST_FULL)
+        {
+            RecordFileEvaluatedInChroot(path);
+        }
+
         break;
     case PROMISE_RESULT_CHANGE:
         cfPS(ctx, LOG_LEVEL_INFO, result, pp, &a,

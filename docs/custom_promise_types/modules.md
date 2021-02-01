@@ -292,7 +292,7 @@ git_promise_module 0.0.1 v1 json_based
 
 log_info=Cloning 'https://github.com/cfengine/masterfiles' -> '/opt/cfengine/masterfiles'...
 log_info=Successfully cloned 'https://github.com/cfengine/masterfiles' -> '/opt/cfengine/masterfiles'
-{"operation": "evaluate_promise", "promiser": "/opt/cfengine/masterfiles", "attributes": {"repo": "https://github.com/cfengine/masterfiles"}, "result_classes": ["masterfiles_cloned"], "result": "kept"}
+{"operation": "evaluate_promise", "promiser": "/opt/cfengine/masterfiles", "attributes": {"repo": "https://github.com/cfengine/masterfiles"}, "result_classes": ["masterfiles_cloned"], "result": "repaired"}
 
 {"operation": "terminate", "result": "success"}
 ```
@@ -321,7 +321,7 @@ You can also include log messages in the JSON data:
   "result_classes": [
     "masterfiles_cloned"
   ],
-  "result": "kept"
+  "result": "repaired"
 }
 ```
 

@@ -244,6 +244,18 @@ Additionally, the same module may be started and stopped multiple times during a
 The promise module's responses to cf-agent requests must include `operation` and `result`.
 Promiser string and attributes are typically added for convenience.
 
+##### Result classes
+
+After promise evaluation the module can send back a list of classes to set, to give more information about what happened.
+Result classes should only be included in the response to `evaluate` requests - validation, or other operations should not define classes.
+Exactly what classes to set and what information they should give the policy writer is up to the module author.
+They are not required, and for simple promises, they might not be necessary.
+Some examples could be: `masterfiles_cloned`, `ran_git_clone`, `masterfiles_cloned_from_github` etc.
+Both how many classes are set, and the class names can be dynamic, depending on the promiser, attribute, module, etc.
+In the JSON protocol, they are a list of strings, in the line based protocol, they are a comma separated list.
+In both cases, the key is `result_classes`.
+See examples for both protocols in their sections below.
+
 #### JSON protocol
 
 The JSON based protocol supports all aspects of CFEngine promises, including `slist`, `data` containers, and strings with newlines, tabs, etc.
@@ -280,7 +292,7 @@ git_promise_module 0.0.1 v1 json_based
 
 log_info=Cloning 'https://github.com/cfengine/masterfiles' -> '/opt/cfengine/masterfiles'...
 log_info=Successfully cloned 'https://github.com/cfengine/masterfiles' -> '/opt/cfengine/masterfiles'
-{"operation": "evaluate_promise", "promiser": "/opt/cfengine/masterfiles", "attributes": {"repo": "https://github.com/cfengine/masterfiles"}, "result": "kept"}
+{"operation": "evaluate_promise", "promiser": "/opt/cfengine/masterfiles", "attributes": {"repo": "https://github.com/cfengine/masterfiles"}, "result_classes": ["masterfiles_cloned"], "result": "repaired"}
 
 {"operation": "terminate", "result": "success"}
 ```
@@ -306,7 +318,10 @@ You can also include log messages in the JSON data:
       "message": "Cloning 'https://github.com/cfengine/masterfiles' -> '/opt/cfengine/masterfiles'..."
     }
   ],
-  "result": "kept"
+  "result_classes": [
+    "masterfiles_cloned"
+  ],
+  "result": "repaired"
 }
 ```
 
@@ -363,6 +378,7 @@ promiser=/opt/cfengine/masterfiles
 attribute_repo=https://github.com/cfengine/masterfiles
 log_info=Cloning 'https://github.com/cfengine/masterfiles' -> '/opt/cfengine/masterfiles'...
 log_info=Successfully cloned 'https://github.com/cfengine/masterfiles' -> '/opt/cfengine/masterfiles'
+result_classes=masterfiles_cloned,ran_git_clone
 result=repaired
 
 operation=terminate

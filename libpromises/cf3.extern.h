@@ -53,6 +53,7 @@ typedef enum EvalMode {
     EVAL_MODE_DRY_RUN = 1,
     EVAL_MODE_SIMULATE_DIFF = 2,
     EVAL_MODE_SIMULATE_MANIFEST = 3,
+    EVAL_MODE_SIMULATE_MANIFEST_FULL = 4,
 } EvalMode;
 
 extern EvalMode EVAL_MODE;

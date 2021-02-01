@@ -27,9 +27,12 @@
 #ifndef _SIMULATE_H_
 #define _SIMULATE_H_
 
+#include <set.h>                /* StringSet */
+
 bool ManifestFile(const char *path, bool chrooted);
 bool ManifestRename(const char *orig_name, const char *new_name);
-bool ManifestChangedFiles();
-bool DiffChangedFiles();
+bool ManifestChangedFiles(StringSet **audited_files);
+bool ManifestAllFiles(StringSet **audited_files);
+bool DiffChangedFiles(StringSet **audited_files);
 
 #endif  /* _SIMULATE_H_ */

@@ -480,7 +480,7 @@ void MonNetworkSnifferGatherData(void)
 
         if (stat(vbuff, &statbuf) != -1)
         {
-            if (ItemListSize(NETIN_DIST[i]) < statbuf.st_size &&
+            if (ItemListSize(NETIN_DIST[i]) < (size_t) statbuf.st_size &&
                 now < statbuf.st_mtime + 40 * 60)
             {
                 Log(LOG_LEVEL_VERBOSE, "New state %s is smaller, retaining old for 40 mins longer", TCPNAMES[i]);
@@ -509,7 +509,7 @@ void MonNetworkSnifferGatherData(void)
 
         if (stat(vbuff, &statbuf) != -1)
         {
-            if (ItemListSize(NETOUT_DIST[i]) < statbuf.st_size &&
+            if (ItemListSize(NETOUT_DIST[i]) < (size_t) statbuf.st_size &&
                 now < statbuf.st_mtime + 40 * 60)
             {
                 Log(LOG_LEVEL_VERBOSE, "New state '%s' is smaller, retaining old for 40 mins longer", TCPNAMES[i]);

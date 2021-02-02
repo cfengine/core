@@ -352,10 +352,10 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
         }
     }
 
-    if (attr.copy.min_size != CF_NOINT)
+    if (attr.copy.min_size != (size_t) CF_NOINT)
     {
-        if ((ssb->st_size < attr.copy.min_size)
-            || (ssb->st_size > attr.copy.max_size))
+        if (((size_t) ssb->st_size < attr.copy.min_size)
+            || ((size_t) ssb->st_size > attr.copy.max_size))
         {
             RecordNoChange(ctx, pp, &attr,
                            "Source file '%s' size is not in the permitted safety range, skipping",

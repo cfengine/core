@@ -341,7 +341,7 @@ static bool RSAEncrypt(Seq *rsa_keys, const char *input_path, const char *output
     char header[MAX_HEADER_LEN + 2] = "Version: 1.0\n";
     size_t header_len = strlen(header);
     ssize_t n_written = FullWrite(fileno(output_file), header, header_len);
-    if (n_written != header_len)
+    if (n_written < 0 || (size_t) n_written != header_len)
     {
         Log(LOG_LEVEL_ERR, "Failed to write header to the output file '%s'", output_path);
         success = false;
@@ -355,7 +355,7 @@ static bool RSAEncrypt(Seq *rsa_keys, const char *input_path, const char *output
         free(key_digest);
         assert(header_len <= (MAX_HEADER_LEN + 2));
         n_written = FullWrite(fileno(output_file), header, header_len);
-        if (n_written != header_len)
+        if ((size_t) n_written != header_len)
         {
             Log(LOG_LEVEL_ERR, "Failed to write header to the output file '%s'", output_path);
             success = false;

@@ -22,6 +22,7 @@
   included file COSL.txt.
 */
 
+#include <platform.h>
 #include <alloc.h>              /* xstrdup() */
 #include <dir.h>                /* DirOpen(), DirRead(), DirClose() */
 #include <eval_context.h>       /* ToChangesChroot() */

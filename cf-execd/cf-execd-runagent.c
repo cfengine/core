@@ -50,7 +50,7 @@ void HandleRunagentRequest(int conn_fd)
 
         /* SIGH: There's no dprintf() on exotics. */
         char error_buf[256];
-        int length = snprintf(error_buf, sizeof(error_buf),
+        size_t length = snprintf(error_buf, sizeof(error_buf),
                               "{\"error\": \"Failed to create file stream from the connection file descriptor: %s\"}",
                               GetErrorStr());
         assert(length < sizeof(error_buf));

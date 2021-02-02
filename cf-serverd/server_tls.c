@@ -971,7 +971,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         assert(CF_DEFAULT_DIGEST_LEN <= EVP_MAX_MD_SIZE);
         unsigned char digest[EVP_MAX_MD_SIZE + 1];
 
-        assert(CF_BUFSIZE + CF_SMALL_OFFSET + CF_DEFAULT_DIGEST_LEN
+        assert(CF_BUFSIZE + CF_SMALL_OFFSET + (size_t) CF_DEFAULT_DIGEST_LEN
                <= sizeof(recvbuffer));
         memcpy(digest, recvbuffer + strlen(recvbuffer) + CF_SMALL_OFFSET,
                CF_DEFAULT_DIGEST_LEN);

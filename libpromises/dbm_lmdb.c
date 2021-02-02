@@ -74,6 +74,8 @@ struct DBCursorPriv_
 
 static int DB_MAX_READERS = -1;
 
+#define N_LMDB_EINVAL_RETRIES 5
+
 /******************************************************************************/
 
 static void HandleLMDBCorruption(MDB_env *env, const char *msg);
@@ -594,12 +596,31 @@ DBPriv *DBPrivOpenDB(const char *const dbpath, const dbid id)
                 dbpath);
         }
     }
+
+    /* There seems to be a race condition causing mdb_txn_begin() return
+     * EINVAL. We do a couple retries before giving up. */
     rc = mdb_txn_begin(db->env, NULL, MDB_RDONLY, &txn);
-    CheckLMDBCorrupted(rc, db->env);
-    if (rc)
+    int attempts = N_LMDB_EINVAL_RETRIES;
+    while ((rc != 0) && (attempts-- > 0))
+    {
+        CheckLMDBCorrupted(rc, db->env);
+        if (rc != EINVAL)
+        {
+            Log(LOG_LEVEL_ERR, "Could not open database txn %s: %s",
+                dbpath, mdb_strerror(rc));
+            goto err;
+        }
+#if HAVE_DECL_SCHED_YIELD && defined(HAVE_SCHED_YIELD)
+        // Not required for this to work, but makes it less likely that the race
+        // condition will persist.
+        sched_yield();
+#endif
+        rc = mdb_txn_begin(db->env, NULL, MDB_RDONLY, &txn);
+    }
+    if (rc != 0)
     {
         Log(LOG_LEVEL_ERR, "Could not open database txn %s: %s",
-              dbpath, mdb_strerror(rc));
+            dbpath, mdb_strerror(rc));
         goto err;
     }
     rc = mdb_open(txn, NULL, 0, &db->dbi);

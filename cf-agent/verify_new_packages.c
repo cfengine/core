@@ -85,9 +85,6 @@ PromiseResult HandleNewPackagePromiseType(EvalContext *ctx, const Promise *pp, c
     if (global_lock.g_lock.lock == NULL)
     {
         Log(LOG_LEVEL_DEBUG, "Skipping promise execution due to global packaging locking.");
-        PromiseRef(LOG_LEVEL_VERBOSE, pp);
-        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_SKIPPED, pp, a,
-             "Can not acquire global lock for package promises. Skipping promise evaluation");
         return PROMISE_RESULT_SKIPPED;
     }
 
@@ -99,10 +96,6 @@ PromiseResult HandleNewPackagePromiseType(EvalContext *ctx, const Promise *pp, c
         YieldGlobalPackagePromiseLock(global_lock);
 
         Log(LOG_LEVEL_DEBUG, "Skipping promise execution due to promise-specific package locking.");
-        PromiseRef(LOG_LEVEL_VERBOSE, pp);
-        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_SKIPPED, pp, a,
-             "Can not acquire lock for '%s' package promise. Skipping promise evaluation",
-             pp->promiser);
         return PROMISE_RESULT_SKIPPED;
     }
 

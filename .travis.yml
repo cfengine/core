@@ -40,8 +40,6 @@ jobs:
       # filesystem in Travis; so change OS to Trusty, which uses ext4.
     - env: JOB_TYPE=acceptance_tests_unsafe_serial_network_etc
     - env: JOB_TYPE=serverd_multi_versions COVERAGE=no
-    - os: osx
-      env: JOB_TYPE=compile_only COVERAGE=no
 
 before_install:
   - chmod ug+x ./travis-scripts/*

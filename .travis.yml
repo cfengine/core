@@ -40,13 +40,6 @@ matrix:
     - os: linux
       sudo: required
       env: JOB_TYPE=serverd_multi_versions COVERAGE=no
-    - os: osx
-      env: JOB_TYPE=compile_only
-      sudo: false
-  allow_failures:
-    - os: osx
-      env: JOB_TYPE=compile_only
-      sudo: false
 
 before_install:
   - chmod ug+x ./travis-scripts/*

@@ -1,0 +1,12 @@
+[Unit]
+Description=CFEngine Enterprise file server socket
+PartOf=cfengine3.service
+Before=cf-serverd.service
+
+[Socket]
+ListenStream = 5309
+
+[Install]
+WantedBy=multi-user.target
+WantedBy=cfengine3.service
+WantedBy=sockets.target

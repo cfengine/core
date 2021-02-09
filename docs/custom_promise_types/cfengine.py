@@ -146,7 +146,7 @@ class PromiseModule:
             results = self.evaluate_promise(promiser, attributes)
 
             # evaluate_promise should return either a result or a (result, result_classes) pair
-            if type(results) == Result:
+            if type(results) == str:
                 self._result = results
             else:
                 assert len(results) == 2

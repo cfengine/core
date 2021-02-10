@@ -345,6 +345,17 @@ bundle agent check
 
 }
 bundle agent __main__
+# @brief The test entry
+# Note: The testall script runs the agent with the acceptance test as the entry point,
+##+begin_src sh :results output :exports both :dir ~/CFEngine/core/tests/acceptance
+# pwd | sed 's/\/.*CFEngine\///'
+# find . -name "*.cf*" | xargs chmod 600
+# cf-agent -Kf ./01_vars/02_functions/basename_1.cf --define AUTO
+##+end_src sh
+#
+##+RESULTS:
+#: core/tests/acceptance
+#: R: /home/nickanderson/Northern.Tech/CFEngine/core/tests/acceptance/./01_vars/02_functions/basename_1.cf Pass
 {
   methods:
       "Run the default test bundle sequence (init,test,check,cleanup) if defined"

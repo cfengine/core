@@ -137,6 +137,9 @@ class PromiseModule:
         except ValidationError as e:
             self.log_error(e)
             self._result = Result.INVALID
+        except Exception as e:
+            self.log_critical(f"{type(e).__name__}: {e}")
+            self._result = Result.ERROR
         self._add_result()
         _put_response(self._response, self._out)
 
@@ -153,7 +156,7 @@ class PromiseModule:
                 self._result = results[0]
                 self._result_classes = results[1]
         except Exception as e:
-            self.log_error(e)
+            self.log_critical(f"{type(e).__name__}: {e}")
             self._result = Result.ERROR
         self._add_result()
         self._add_result_classes()

@@ -1,5 +1,6 @@
 import sys
 import json
+import traceback
 
 
 def _skip_until_empty_line(file):
@@ -140,6 +141,7 @@ class PromiseModule:
         except Exception as e:
             self.log_critical(f"{type(e).__name__}: {e}")
             self._result = Result.ERROR
+            self._log_traceback()
         self._add_result()
         _put_response(self._response, self._out)
 
@@ -157,6 +159,7 @@ class PromiseModule:
                 self._result_classes = results[1]
         except Exception as e:
             self.log_critical(f"{type(e).__name__}: {e}")
+            self._log_traceback()
             self._result = Result.ERROR
         self._add_result()
         self._add_result_classes()
@@ -196,6 +199,11 @@ class PromiseModule:
 
     def log_debug(self, message):
         self._log("debug", message)
+
+    def _log_traceback(self):
+        trace = traceback.format_exc().split('\n')
+        for line in trace:
+            self.log_debug(line)
 
     # Functions to override in subclass:
 

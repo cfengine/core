@@ -214,6 +214,12 @@ All changelog entries should also include a reference to a ticket:
   
 Note that the `Changelog` and `Ticket` entries must be in a *commit message* and not the description of a PR.
 
+Sometimes is necessary to redact a `Changelog` entry, for example a commit needs
+to be reverted, or it's already been mentioned in another `Changelog` entry in
+another repository. When this is necessary, use the `Cancel-Changelog` keyword
+with the commit of the entry you wish to redact:
+  `Cancel-changelog: 19cd387`
+
 ### Bug tracker tickets
 
 Most changes should have a ticket number, referring to a ticket on our bug tracker:

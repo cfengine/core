@@ -304,13 +304,12 @@ Nova-specific and being run on Community cf-agent.
 ------------------------------------------------------------------------------
 Example Test Skeleton
 ------------------------------------------------------------------------------
-body common control
+body file control
 {
       # Feel free to avoid including "default.cf.sub" and define your
       # own bundlesequence for simple tests
 
       inputs => { "../default.cf.sub" };
-      bundlesequence  => { default("$(this.promise_filename)") };
 }
 
 #######################################################
@@ -325,16 +324,41 @@ bundle agent test
 # Activate policy for behaviour you wish to inspect
 {
   meta:
-    "description" string => "What does this test?";
+    "description" -> { "CFE-1234" }
+      string => "What does this test?";
 
     "test_soft_fail"
-      string => "any"
-      meta => { "redmine7803" };
+      string => "Class_Expression|here",
+      meta => { "CFE-1234" };
 }
 
 bundle agent check
 # Check the result of the test
 {
 
+  # Pass/Fail requires a specific format:
+  # reports: "$(this.promise_filename) Pass";
+  # reports: "$(this.promise_filename) FAIL";
+
+  # Consider using one of the dcs bundles
+  # methods: "Pass/Fail" usebundle => dcs_passif( "Namespace_Scoped_Class_Indicating_Test_Passed", $(this.promise_filename) );
+
+}
+bundle agent __main__
+# @brief The test entry
+# Note: The testall script runs the agent with the acceptance test as the entry point,
+##+begin_src sh :results output :exports both :dir ~/CFEngine/core/tests/acceptance
+# pwd | sed 's/\/.*CFEngine\///'
+# find . -name "*.cf*" | xargs chmod 600
+# cf-agent -Kf ./01_vars/02_functions/basename_1.cf --define AUTO
+##+end_src sh
+#
+##+RESULTS:
+#: core/tests/acceptance
+#: R: /home/nickanderson/Northern.Tech/CFEngine/core/tests/acceptance/./01_vars/02_functions/basename_1.cf Pass
+{
+  methods:
+      "Run the default test bundle sequence (init,test,check,cleanup) if defined"
+        usebundle => default( $(this.promise_filename) );
 }
 ------------------------------------------------------------------------------

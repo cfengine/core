@@ -54,6 +54,9 @@ When submitting your pull request, please make sure you:
 
 * Add one or more [ChangeLog Entries](#changelog) to the commit(s).
 
+* Become familiar with the *Northern.tech AS Contributor statement* as described
+  in the [*AUTHORS*](./AUTHORS) file.
+
 
 ### Pull request title and description
 

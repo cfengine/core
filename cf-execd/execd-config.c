@@ -81,18 +81,18 @@ ExecdConfig *ExecdConfigNew(const EvalContext *ctx, const Policy *policy)
                                  cp->lval);
             }
 
-            if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_EXECUTORFACILITY].lval) == 0)
+            if (StringEqual(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_EXECUTORFACILITY].lval))
             {
                 free(execd_config->log_facility);
                 execd_config->log_facility = xstrdup(value);
                 Log(LOG_LEVEL_DEBUG, "executorfacility '%s'", execd_config->log_facility);
             }
-            else if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_SPLAYTIME].lval) == 0)
+            else if (StringEqual(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_SPLAYTIME].lval))
             {
                 int time = IntFromString(value);
                 execd_config->splay_time = (int) (time * SECONDS_PER_MINUTE * GetSplay());
             }
-            else if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_SCHEDULE].lval) == 0)
+            else if (StringEqual(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_SCHEDULE].lval))
             {
                 Log(LOG_LEVEL_DEBUG, "Loading user-defined schedule...");
                 StringSetClear(execd_config->schedule);

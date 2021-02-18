@@ -121,6 +121,9 @@ bool CopyACLs(const char *src, const char *dst, bool *change)
 
 bool AllowAccessForUsers(const char *path, StringSet *users, bool allow_writes, bool allow_execute)
 {
+    assert(path != NULL);
+    assert(users != NULL);
+
     acl_t acl = acl_get_file(path, ACL_TYPE_ACCESS);
     if (acl == NULL)
     {

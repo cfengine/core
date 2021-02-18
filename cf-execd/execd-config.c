@@ -56,6 +56,7 @@ ExecdConfig *ExecdConfigNew(const EvalContext *ctx, const Policy *policy)
     StringSetAdd(execd_config->schedule, xstrdup("Min55"));
     execd_config->splay_time = 0;
     execd_config->log_facility = xstrdup("LOG_USER");
+    execd_config->runagent_allow_users = StringSetNew();
 
     Seq *constraints = ControlBodyConstraints(policy, AGENT_TYPE_EXECUTOR);
     if (constraints)
@@ -103,6 +104,15 @@ ExecdConfig *ExecdConfigNew(const EvalContext *ctx, const Policy *policy)
                     Log(LOG_LEVEL_DEBUG, "Adding '%s'", RlistScalarValue(rp));
                 }
             }
+            else if (StringEqual(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_RUNAGENT_ALLOW_USERS].lval))
+            {
+                assert(t == CF_DATA_TYPE_STRING_LIST); /* should be enforced by parser */
+                for (const Rlist *rp = value; rp; rp = rp->next)
+                {
+                    Log(LOG_LEVEL_DEBUG, "User '%s' allowed to use the runagent.socket", RlistScalarValue(rp));
+                    StringSetAdd(execd_config->runagent_allow_users, xstrdup(RlistScalarValue(rp)));
+                }
+            }
         }
     }
 
@@ -115,6 +125,7 @@ void ExecdConfigDestroy(ExecdConfig *execd_config)
     {
         free(execd_config->log_facility);
         StringSetDestroy(execd_config->schedule);
+        StringSetDestroy(execd_config->runagent_allow_users);
     }
     free(execd_config);
 }

@@ -549,6 +549,16 @@ static void CFExecdMainLoop(EvalContext *ctx, Policy **policy, GenericAgentConfi
             break;
         }
     }
+
+    /* Remove the runagent socket (if any). */
+    if (UsingRunagentSocket())
+    {
+        struct sockaddr_un sock_info;
+        if (GetRunagentSocketInfo(&sock_info))
+        {
+            unlink(sock_info.sun_path);
+        }
+    }
 }
 
 static inline bool GetRunagentSocketInfo(struct sockaddr_un *sock_info)

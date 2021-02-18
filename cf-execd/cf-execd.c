@@ -30,6 +30,7 @@
 #include <sys/un.h>
 #include <files_lib.h>
 #include <cf-execd-runagent.h>
+#include <files_names.h>        /* ChopLastNode */
 
 #ifndef AF_LOCAL
 #define AF_LOCAL AF_UNIX
@@ -56,6 +57,7 @@
 #include <repair.h>
 #include <dbm_api.h>            /* CheckDBRepairFlagFile() */
 #include <string_lib.h>
+#include <acl_tools.h>          /* AllowAccessForUsers() */
 
 #include <cf-windows-functions.h>
 
@@ -514,7 +516,7 @@ static void CFExecdMainLoop(EvalContext *ctx, Policy **policy, GenericAgentConfi
             Log(LOG_LEVEL_DEBUG, "Reaped child process");
         }
 
-        if (ScheduleRun(ctx, policy, config, execd_config, exec_config))
+        if (ScheduleRun(ctx, policy, config, execd_config, exec_config)) /* TODO: update ACLs on the runagent socket */
         {
             terminate = HandleRequestsOrSleep((*execd_config)->splay_time, "splay time",
                                               runagent_socket);
@@ -539,8 +541,10 @@ static void CFExecdMainLoop(EvalContext *ctx, Policy **policy, GenericAgentConfi
     }
 }
 
-static int SetupRunagentSocket()
+static int SetupRunagentSocket(const ExecdConfig *execd_config)
 {
+    assert(execd_config != NULL);
+
     int runagent_socket = -1;
 
     struct sockaddr_un sock_info;
@@ -597,6 +601,29 @@ static int SetupRunagentSocket()
                 Log(LOG_LEVEL_ERR, "Failed to listen on runagent socket: %s", GetErrorStr());
                 close(runagent_socket);
                 runagent_socket = -1;
+            }
+        }
+        if (StringSetSize(execd_config->runagent_allow_users) > 0)
+        {
+            /* Allow access to the socket (rw) */
+            bool success = AllowAccessForUsers(sock_info.sun_path,
+                                               execd_config->runagent_allow_users,
+                                               true, false);
+
+            /* Need to ensure access to the parent folder too (rx) */
+            if (success)
+            {
+                ChopLastNode(sock_info.sun_path);
+                success = AllowAccessForUsers(sock_info.sun_path,
+                                              execd_config->runagent_allow_users,
+                                              false, true);
+            }
+
+            if (!success)
+            {
+                Log(LOG_LEVEL_ERR,
+                    "Failed to allow runagent_socket_allow_users users access the runagent socket");
+                /* keep going anyway */
             }
         }
     }
@@ -704,7 +731,7 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
 #ifndef __MINGW32__
     if ((RUNAGENT_SOCKET_DIR == NULL) || (!StringEqual_IgnoreCase(RUNAGENT_SOCKET_DIR, "no")))
     {
-        runagent_socket = SetupRunagentSocket();
+        runagent_socket = SetupRunagentSocket(*execd_config);
     }
 #endif
 

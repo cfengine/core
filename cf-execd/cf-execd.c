@@ -610,7 +610,18 @@ static int SetupRunagentSocket(const ExecdConfig *execd_config)
     {
         sock_info.sun_family = AF_LOCAL;
 
-        MakeParentDirectory(sock_info.sun_path, true, NULL);
+        bool created;
+        MakeParentDirectory(sock_info.sun_path, true, &created);
+
+        /* Make sure the permissions are correct if the directory was created
+         * (note: this code doesn't run on Windows). */
+        if (created)
+        {
+            char *last_slash = strrchr(sock_info.sun_path, '/');
+            *last_slash = '\0';
+            chmod(sock_info.sun_path, (mode_t) 0700);
+            *last_slash = '/';
+        }
 
         /* Remove potential left-overs from old processes. */
         unlink(sock_info.sun_path);
@@ -754,6 +765,8 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
     signal(SIGUSR1, HandleSignalsForDaemon);
     signal(SIGUSR2, HandleSignalsForDaemon);
 
+    umask(077);
+
     int runagent_socket = -1;
 
 #ifndef __MINGW32__
@@ -762,8 +775,6 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
         runagent_socket = SetupRunagentSocket(*execd_config);
     }
 #endif
-
-    umask(077);
 
     if (ONCE)
     {

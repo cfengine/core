@@ -27,4 +27,17 @@
 
 bool CopyACLs(const char *src, const char *dst, bool *change);
 
+/**
+ * Allow access to the given file ONLY for the given users using ACLs. Existing
+ * 'user:...' ACL entries are replaced by new entries allowing access for the
+ * given users.
+ *
+ * @param path  file to set the ACLs on
+ * @param users users to allow access for
+ * @param allow_writes whether to allow write access (read access is always allowed)
+ * @param allow_execute whether to allow execute access (read access is always allowed)
+ * @return Whether the change of ACLs was successful or not
+ */
+bool AllowAccessForUsers(const char *path, StringSet *users, bool allow_writes, bool allow_execute);
+
 #endif // CFENGINE_ACL_TOOLS_H

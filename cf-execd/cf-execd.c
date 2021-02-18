@@ -90,6 +90,8 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
 #ifndef __MINGW32__
 static pid_t LocalExecInFork(const ExecConfig *config);
 static void Apoptosis(void);
+static inline bool GetRunagentSocketInfo(struct sockaddr_un *sock_info);
+static inline bool SetRunagentSocketACLs(char *sock_path, StringSet *allow_users);
 #else
 static bool LocalExecInThread(const ExecConfig *config);
 #endif
@@ -416,6 +418,14 @@ void ThisAgentInit(void)
 
 
 #ifndef __MINGW32__
+
+static inline bool UsingRunagentSocket()
+{
+    /* No runagent socket dir specified (use the default) or a directory
+     * specified ("no" disables the functionality). */
+    return ((RUNAGENT_SOCKET_DIR == NULL) || (!StringEqual_IgnoreCase(RUNAGENT_SOCKET_DIR, "no")));
+}
+
 /**
  * Sleep for the given number of seconds while handling requests from sockets.
  *
@@ -516,7 +526,7 @@ static void CFExecdMainLoop(EvalContext *ctx, Policy **policy, GenericAgentConfi
             Log(LOG_LEVEL_DEBUG, "Reaped child process");
         }
 
-        if (ScheduleRun(ctx, policy, config, execd_config, exec_config)) /* TODO: update ACLs on the runagent socket */
+        if (ScheduleRun(ctx, policy, config, execd_config, exec_config))
         {
             terminate = HandleRequestsOrSleep((*execd_config)->splay_time, "splay time",
                                               runagent_socket);
@@ -737,7 +747,7 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
     int runagent_socket = -1;
 
 #ifndef __MINGW32__
-    if ((RUNAGENT_SOCKET_DIR == NULL) || (!StringEqual_IgnoreCase(RUNAGENT_SOCKET_DIR, "no")))
+    if (UsingRunagentSocket())
     {
         runagent_socket = SetupRunagentSocket(*execd_config);
     }
@@ -946,12 +956,51 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
 
         GenericAgentConfigSetBundleSequence(config, NULL);
 
+#ifndef __MINGW32__
+        /* Take over the runagent_socket_allow_users set for comparison. */
+        StringSet *old_runagent_allow_users = NULL;
+        if (UsingRunagentSocket())
+        {
+            old_runagent_allow_users = (*execd_config)->runagent_allow_users;
+            (*execd_config)->runagent_allow_users = NULL;
+        }
+#endif
+
         *policy = LoadPolicy(ctx, config);
         ExecConfigDestroy(*exec_config);
         ExecdConfigDestroy(*execd_config);
 
         *exec_config = ExecConfigNew(!ONCE, ctx, *policy);
         *execd_config = ExecdConfigNew(ctx, *policy);
+
+#ifndef __MINGW32__
+        if (UsingRunagentSocket())
+        {
+            /* Check if the old list and the new one differ. */
+            if (!StringSetIsEqual(old_runagent_allow_users,
+                                  (*execd_config)->runagent_allow_users))
+            {
+                struct sockaddr_un sock_info;
+                if (GetRunagentSocketInfo(&sock_info))
+                {
+                    bool success = SetRunagentSocketACLs(sock_info.sun_path,
+                                                         (*execd_config)->runagent_allow_users);
+                    if (!success)
+                    {
+                        Log(LOG_LEVEL_ERR,
+                            "Failed to allow new runagent_socket_allow_users users access the runagent socket"
+                            " (on policy reload)");
+                        /* keep going anyway */
+                    }
+                }
+                else
+                {
+                    Log(LOG_LEVEL_ERR, "Failed to get runagent.socket path");
+                }
+            }
+            StringSetDestroy(old_runagent_allow_users);
+        }
+#endif
 
         SetFacility((*execd_config)->log_facility);
     }

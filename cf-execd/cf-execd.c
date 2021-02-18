@@ -541,14 +541,11 @@ static void CFExecdMainLoop(EvalContext *ctx, Policy **policy, GenericAgentConfi
     }
 }
 
-static int SetupRunagentSocket(const ExecdConfig *execd_config)
+static inline bool GetRunagentSocketInfo(struct sockaddr_un *sock_info)
 {
-    assert(execd_config != NULL);
+    assert(sock_info != NULL);
 
-    int runagent_socket = -1;
-
-    struct sockaddr_un sock_info;
-    memset(&sock_info, 0, sizeof(sock_info));
+    memset(sock_info, 0, sizeof(*sock_info));
 
     /* This can easily fail if GetStateDir() returns some long path,
      * 'sock_info.sun_path' is limited to 140 characters or even
@@ -557,16 +554,39 @@ static int SetupRunagentSocket(const ExecdConfig *execd_config)
     int ret;
     if (RUNAGENT_SOCKET_DIR == NULL)
     {
-        ret = snprintf(sock_info.sun_path, sizeof(sock_info.sun_path) - 1,
+        ret = snprintf(sock_info->sun_path, sizeof(sock_info->sun_path) - 1,
                        "%s/cf-execd.sockets/"CF_EXECD_RUNAGENT_SOCKET_NAME, GetStateDir());
     }
     else
     {
-        ret = snprintf(sock_info.sun_path, sizeof(sock_info.sun_path) - 1,
+        ret = snprintf(sock_info->sun_path, sizeof(sock_info->sun_path) - 1,
                        "%s/"CF_EXECD_RUNAGENT_SOCKET_NAME, RUNAGENT_SOCKET_DIR);
     }
-    assert(ret > 0);
-    if ((size_t) ret <= (sizeof(sock_info.sun_path) - 1))
+    return ((ret > 0) && ((size_t) ret <= (sizeof(sock_info->sun_path) - 1)));
+}
+
+static inline bool SetRunagentSocketACLs(char *sock_path, StringSet *allow_users)
+{
+    /* Allow access to the socket (rw) */
+    bool success = AllowAccessForUsers(sock_path, allow_users, true, false);
+
+    /* Need to ensure access to the parent folder too (rx) */
+    if (success)
+    {
+        ChopLastNode(sock_path);
+        success = AllowAccessForUsers(sock_path, allow_users, false, true);
+    }
+    return success;
+}
+
+static int SetupRunagentSocket(const ExecdConfig *execd_config)
+{
+    assert(execd_config != NULL);
+
+    int runagent_socket = -1;
+
+    struct sockaddr_un sock_info;
+    if (GetRunagentSocketInfo(&sock_info))
     {
         sock_info.sun_family = AF_LOCAL;
 
@@ -584,7 +604,7 @@ static int SetupRunagentSocket(const ExecdConfig *execd_config)
     }
     else
     {
-        ret = bind(runagent_socket, (const struct sockaddr *) &sock_info, sizeof(sock_info));
+        int ret = bind(runagent_socket, (const struct sockaddr *) &sock_info, sizeof(sock_info));
         assert(ret == 0);
         if (ret == -1)
         {
@@ -605,20 +625,8 @@ static int SetupRunagentSocket(const ExecdConfig *execd_config)
         }
         if (StringSetSize(execd_config->runagent_allow_users) > 0)
         {
-            /* Allow access to the socket (rw) */
-            bool success = AllowAccessForUsers(sock_info.sun_path,
-                                               execd_config->runagent_allow_users,
-                                               true, false);
-
-            /* Need to ensure access to the parent folder too (rx) */
-            if (success)
-            {
-                ChopLastNode(sock_info.sun_path);
-                success = AllowAccessForUsers(sock_info.sun_path,
-                                              execd_config->runagent_allow_users,
-                                              false, true);
-            }
-
+            bool success = SetRunagentSocketACLs(sock_info.sun_path,
+                                                 execd_config->runagent_allow_users);
             if (!success)
             {
                 Log(LOG_LEVEL_ERR,

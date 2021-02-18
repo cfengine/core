@@ -121,7 +121,7 @@ ExecdConfig *ExecdConfigNew(const EvalContext *ctx, const Policy *policy)
 
 void ExecdConfigDestroy(ExecdConfig *execd_config)
 {
-    if (execd_config)
+    if (execd_config != NULL)
     {
         free(execd_config->log_facility);
         StringSetDestroy(execd_config->schedule);

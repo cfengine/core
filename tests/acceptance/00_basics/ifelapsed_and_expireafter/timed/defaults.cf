@@ -32,7 +32,12 @@ bundle agent init
       # In addition, RHEL4 seems to have some problem killing the test
       # afterwards, and HP-UX is too slow for timing to be accurate. Also,
       # this test randomly fails on Solaris and SUSE 11 and 12.
-      "test_skip_needs_work" string => "windows|using_fakeroot|redhat_4|hpux|sunos|suse_11|suse_12";
+      #"test_skip_needs_work" string => "windows|using_fakeroot|redhat_4|hpux|sunos|suse_11|suse_12";
+
+      # 2021-02-19, this test is failing often on many platforms and we will work on this issue soon
+      "test_soft_fail" string => "any",
+        meta => { "ENT-6200" };
+
 
   methods:
     test_pass_1::

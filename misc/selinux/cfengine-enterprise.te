@@ -504,6 +504,10 @@ allow cfengine_httpd_t cfengine_var_lib_t:file { append create execute getattr i
 allow cfengine_httpd_t cfengine_var_lib_t:dir { add_name getattr open read remove_name search write create };
 allow cfengine_httpd_t cfengine_var_lib_t:lnk_file read;
 
+# allow httpd/php to work with cf-execd sockets
+allow cfengine_httpd_t cfengine_execd_t:unix_stream_socket connectto;
+allow cfengine_httpd_t cfengine_var_lib_t:sock_file write;
+
 allow cfengine_httpd_t devlog_t:lnk_file read;
 allow cfengine_httpd_t devlog_t:sock_file write;
 allow cfengine_httpd_t http_port_t:tcp_socket { name_bind name_connect };

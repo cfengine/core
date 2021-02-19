@@ -619,7 +619,7 @@ static int SetupRunagentSocket(const ExecdConfig *execd_config)
         {
             char *last_slash = strrchr(sock_info.sun_path, '/');
             *last_slash = '\0';
-            chmod(sock_info.sun_path, (mode_t) 0700);
+            chmod(sock_info.sun_path, (mode_t) 0750);
             *last_slash = '/';
         }
 

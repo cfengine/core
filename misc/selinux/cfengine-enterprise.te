@@ -289,6 +289,7 @@ allow cfengine_serverd_t ssh_port_t:tcp_socket name_connect;
 allow cfengine_serverd_t cfengine_execd_exec_t:file getattr;
 allow cfengine_serverd_t cfengine_monitord_exec_t:file getattr;
 allow cfengine_serverd_t cfengine_hub_exec_t:file getattr;
+allow cfengine_serverd_t cfengine_log_t:lnk_file getattr;
 
 allow cfengine_serverd_t crontab_exec_t:file getattr;
 allow cfengine_serverd_t dmidecode_exec_t:file getattr;

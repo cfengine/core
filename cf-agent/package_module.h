@@ -78,15 +78,13 @@ typedef enum {
 } UpdateType;
 
 PromiseResult HandlePresentPromiseAction(EvalContext *ctx,
-                                         const char *package_name,
-                                         const NewPackages *policy_data,
-                                         const PackageModuleWrapper *wrapper,
-                                         enum cfopaction action);
+                                         const Promise *pp,
+                                         const Attributes *attr,
+                                         const PackageModuleWrapper *wrapper);
 PromiseResult HandleAbsentPromiseAction(EvalContext *ctx,
-                                        char *package_name,
-                                        const NewPackages *policy_data,
-                                        const PackageModuleWrapper *wrapper,
-                                        enum cfopaction action);
+                                        const Promise *pp,
+                                        const Attributes *attr,
+                                        const PackageModuleWrapper *wrapper);
 
 void UpdatePackagesCache(EvalContext *ctx, bool force_update);
 

@@ -119,10 +119,7 @@ PromiseResult HandleNewPackagePromiseType(EvalContext *ctx, const Promise *pp, c
     switch (a->new_packages.package_policy)
     {
         case NEW_PACKAGE_ACTION_ABSENT:
-            result = HandleAbsentPromiseAction(ctx, pp->promiser,
-                                               &a->new_packages,
-                                               package_module,
-                                               a->transaction.action);
+            result = HandleAbsentPromiseAction(ctx, pp, a, package_module);
 
             switch (result)
             {
@@ -150,10 +147,7 @@ PromiseResult HandleNewPackagePromiseType(EvalContext *ctx, const Promise *pp, c
             }
             break;
         case NEW_PACKAGE_ACTION_PRESENT:
-            result = HandlePresentPromiseAction(ctx, pp->promiser,
-                                                &a->new_packages,
-                                                package_module,
-                                                a->transaction.action);
+            result = HandlePresentPromiseAction(ctx, pp, a, package_module);
 
             switch (result)
             {

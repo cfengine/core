@@ -955,10 +955,10 @@ static PromiseResult InstallPackageGeneric(Rlist *options,
     return res;
 }
 
-PromiseResult InstallPackage(Rlist *options,
-        PackageType type, const char *package_to_install,
-        const char *version, const char *architecture,
-        const PackageModuleWrapper *wrapper)
+static PromiseResult InstallPackage(Rlist *options,
+                                    PackageType type, const char *package_to_install,
+                                    const char *version, const char *architecture,
+                                    const PackageModuleWrapper *wrapper)
 {
     Log(LOG_LEVEL_DEBUG, "Installing package '%s'", package_to_install);
 
@@ -999,12 +999,18 @@ PromiseResult InstallPackage(Rlist *options,
     return res;
 }
 
-PromiseResult FileInstallPackage(const char *package_file_path,
-                                 const PackageInfo *info,
-                                 const NewPackages *policy_data,
-                                 const PackageModuleWrapper *wrapper,
-                                 int is_in_cache, enum cfopaction action)
+static PromiseResult FileInstallPackage(const EvalContext *ctx,
+                                        const Promise *pp,
+                                        const Attributes *attr,
+                                        const char *package_file_path,
+                                        const PackageInfo *info,
+                                        const PackageModuleWrapper *wrapper,
+                                        int is_in_cache)
 {
+    assert(attr != NULL);
+
+    const NewPackages *policy_data = &(attr->new_packages);
+
     Log(LOG_LEVEL_DEBUG, "Installing file type package.");
 
     /* We have some packages matching file package promise in cache. */
@@ -1016,7 +1022,7 @@ PromiseResult FileInstallPackage(const char *package_file_path,
 
     PromiseResult res;
 
-    if (action == cfa_warn || DONTDO)
+    if (attr->transaction.action == cfa_warn || DONTDO)
     {
          Log(LOG_LEVEL_VERBOSE, "Should install file type package: %s",
              package_file_path);
@@ -1038,8 +1044,8 @@ PromiseResult FileInstallPackage(const char *package_file_path,
 }
 
 
-Seq *GetVersionsFromUpdates(EvalContext *ctx, const PackageInfo *info,
-                            const PackageModuleWrapper *module_wrapper)
+static Seq *GetVersionsFromUpdates(EvalContext *ctx, const PackageInfo *info,
+                                   const PackageModuleWrapper *module_wrapper)
 {
     assert(info && info->name);
 
@@ -1108,14 +1114,19 @@ Seq *GetVersionsFromUpdates(EvalContext *ctx, const PackageInfo *info,
     return updates_list;
 }
 
-PromiseResult RepoInstall(EvalContext *ctx,
-                          PackageInfo *package_info,
-                          const NewPackages *policy_data,
-                          const PackageModuleWrapper *wrapper,
-                          int is_in_cache,
-                          enum cfopaction action,
-                          bool *verified)
+static PromiseResult RepoInstall(EvalContext *ctx,
+                                 const Promise *pp,
+                                 const Attributes *attr,
+                                 const PackageInfo *package_info,
+                                 const PackageModuleWrapper *wrapper,
+                                 int is_in_cache,
+                                 bool *verified)
 {
+    assert(attr != NULL);
+    assert(package_info != NULL);
+
+    const NewPackages *policy_data = &(attr->new_packages);
+
     Log(LOG_LEVEL_DEBUG, "Installing repo type package: %d", is_in_cache);
     const char *const package_version = package_info->version;
     const char *const package_name = package_info->name;
@@ -1135,7 +1146,7 @@ PromiseResult RepoInstall(EvalContext *ctx,
             Log(LOG_LEVEL_DEBUG, "Clearing latest package version");
             version = NULL;
         }
-        if (action == cfa_warn || DONTDO)
+        if (attr->transaction.action == cfa_warn || DONTDO)
         {
             Log(LOG_LEVEL_VERBOSE, "Should install repo type package: %s",
                 package_name);
@@ -1220,7 +1231,7 @@ PromiseResult RepoInstall(EvalContext *ctx,
             }
             else
             {
-                if (action == cfa_warn || DONTDO)
+                if (attr->transaction.action == cfa_warn || DONTDO)
                 {
                     Log(LOG_LEVEL_VERBOSE, "Should install repo type package: %s",
                         package_name);
@@ -1296,16 +1307,20 @@ PromiseResult RepoInstall(EvalContext *ctx,
     return PROMISE_RESULT_FAIL;
 }
 
-PromiseResult RepoInstallPackage(EvalContext *ctx,
-                                 PackageInfo *package_info,
-                                 const NewPackages *policy_data,
-                                 const PackageModuleWrapper *wrapper,
-                                 int is_in_cache,
-                                 enum cfopaction action)
+static PromiseResult RepoInstallPackage(EvalContext *ctx,
+                                        const Promise *pp,
+                                        const Attributes *attr,
+                                        const PackageInfo *package_info,
+                                        const PackageModuleWrapper *wrapper,
+                                        int is_in_cache)
 {
+    assert(attr != NULL);
+
+    const NewPackages *policy_data = &(attr->new_packages);
+
     bool verified = false;
-    PromiseResult res = RepoInstall(ctx, package_info, policy_data, wrapper,
-                                    is_in_cache, action, &verified);
+    PromiseResult res = RepoInstall(ctx, pp, attr, package_info, wrapper,
+                                    is_in_cache, &verified);
 
     if (res == PROMISE_RESULT_CHANGE && !verified)
     {
@@ -1350,11 +1365,16 @@ static bool CheckPolicyAndPackageInfoMatch(const NewPackages *packages_policy,
 }
 
 PromiseResult HandlePresentPromiseAction(EvalContext *ctx,
-                                         const char *package_name,
-                                         const NewPackages *policy_data,
-                                         const PackageModuleWrapper *wrapper,
-                                         enum cfopaction action)
+                                         const Promise *pp,
+                                         const Attributes *attr,
+                                         const PackageModuleWrapper *wrapper)
 {
+    assert(pp != NULL);
+    assert(attr != NULL);
+
+    const char *package_name = pp->promiser;
+    const NewPackages *policy_data = &(attr->new_packages);
+
     Log(LOG_LEVEL_DEBUG, "Starting evaluating present action promise.");
 
     /* Figure out what kind of package we are having. */
@@ -1428,16 +1448,12 @@ PromiseResult HandlePresentPromiseAction(EvalContext *ctx,
         switch (package_info->type)
         {
             case PACKAGE_TYPE_FILE:
-                result = FileInstallPackage(package_name, package_info,
-                                            policy_data,
-                                            wrapper,
-                                            is_in_cache,
-                                            action);
+                result = FileInstallPackage(ctx, pp, attr, package_name, package_info,
+                                            wrapper, is_in_cache);
                 break;
             case PACKAGE_TYPE_REPO:
-                result = RepoInstallPackage(ctx, package_info, policy_data,
-                                            wrapper,
-                                            is_in_cache, action);
+                result = RepoInstallPackage(ctx, pp, attr, package_info,
+                                            wrapper, is_in_cache);
                 break;
             default:
                 /* We shouldn't end up here. If we are having unsupported
@@ -1461,11 +1477,16 @@ PromiseResult HandlePresentPromiseAction(EvalContext *ctx,
 
 
 PromiseResult HandleAbsentPromiseAction(EvalContext *ctx,
-                                        char *package_name,
-                                        const NewPackages *policy_data,
-                                        const PackageModuleWrapper *wrapper,
-                                        enum cfopaction action)
+                                        const Promise *pp,
+                                        const Attributes *attr,
+                                        const PackageModuleWrapper *wrapper)
 {
+    assert(pp != NULL);
+    assert(attr != NULL);
+
+    const char *package_name = pp->promiser;
+    const NewPackages *policy_data = &(attr->new_packages);
+
     /* Check if we are not having 'latest' version. */
     if (policy_data->package_version &&
             StringEqual(policy_data->package_version, "latest"))
@@ -1484,7 +1505,7 @@ PromiseResult HandleAbsentPromiseAction(EvalContext *ctx,
         /* Remove package(s) */
         PromiseResult res;
 
-        if (action == cfa_warn || DONTDO)
+        if (attr->transaction.action == cfa_warn || DONTDO)
         {
             Log(LOG_LEVEL_VERBOSE, "Need to remove package: %s", package_name);
             res = PROMISE_RESULT_WARN;
@@ -1498,11 +1519,17 @@ PromiseResult HandleAbsentPromiseAction(EvalContext *ctx,
             if (res == PROMISE_RESULT_CHANGE)
             {
                 /* Check if package was removed. */
-                return ValidateChangedPackage(policy_data, wrapper,
-                        &((PackageInfo){.name = package_name,
-                                        .version = policy_data->package_version,
-                                        .arch = policy_data->package_architecture}),
-                        NEW_PACKAGE_ACTION_ABSENT);
+
+                /* package_name is actually pp->promiser which is 'const char *'
+                 * so we need to type-cast it. It's safe because pkg_info is
+                 * passed as const *PackageInfo. */
+                const PackageInfo pkg_info = {
+                    .name = (char *) package_name,
+                    .version = policy_data->package_version,
+                    .arch = policy_data->package_architecture
+                };
+                return ValidateChangedPackage(policy_data, wrapper, &(pkg_info),
+                                              NEW_PACKAGE_ACTION_ABSENT);
             }
         }
 

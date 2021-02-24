@@ -229,13 +229,20 @@ For each request, there should be exactly one response.
 
 A promise module will receive 3 types of requests (operations):
 
-1. `validate_promise` - Validate the names and types of promise attributes
-2. `evaluate_promise` - Perform changes to the system
+1. `validate_promise` - Validate the promiser string, attribute names, types and values
+2. `evaluate_promise` - Check the current state of the system and perform changes if necessary
 3. `terminate` - Shut down the module
 
-The module should not make any assumptions about the order of validation or evaluation.
-Each promise might be validated and evaluated, 0, 1, or more times, in any order.
-In general, the promise module should not require that state is maintained between the individual requests.
+Both validation and evaluation happen on fully resolved promises.
+If the promise has unresolved variables (strings containing `$(` or `${` in attributes or promiser) no requests will be sent to validate or evaluate the promise.
+The agent should skip such promises until the variables are resolved, or mark them as not kept if they never resolve.
+This makes it easier, safer and less error prone to implement promise modules - the module does not have to account for edge cases where strings contain unresolved variables.
+(In the future, we might add other, optional mechanisms for validating unresolved promises).
+
+Any promise must be validated before it is evaluated.
+When handling `evaluate_promise` requests, the module can assume that validation was already performed and successful, with the same attributes and promiser string.
+It is not guaranteed that _the previous request_ was a `validate_promise` request.
+A `validate_promise` request does not imply that the next request will be `evaluate_promise`.
 
 The agent _might_ start multiple processes of the same module in parallel, for example for a module implementing multiple promise types.
 The module should not rely on this.

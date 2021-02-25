@@ -34,6 +34,7 @@
 #include <string_lib.h>         /* StringEqual() */
 #include <string_sequence.h>    /* WriteLenPrefixedString() */
 #include <writer.h>             /* FileWriter(), Writer */
+#include <csv_writer.h>         /* CsvWriter */
 
 #include <changes_chroot.h>
 
@@ -262,4 +263,48 @@ bool RecordFileEvaluatedInChroot(const char *path)
 
     WriterClose(writer);
     return ret;
+}
+
+bool RecordPkgOperationInChroot(const char *op, const char *name, const char *arch, const char *version)
+{
+    assert(op != NULL);
+    assert(name != NULL);
+    /* the rest is optional */
+
+    FILE *chroot_pkgs_ops = safe_fopen(ToChangesChroot(CHROOT_PKGS_OPS_FILE), "a");
+    if (chroot_pkgs_ops == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to open package operations record file '%s'",
+            CHROOT_PKGS_OPS_FILE);
+        return false;
+    }
+
+    Writer *writer = FileWriter(chroot_pkgs_ops);
+    if (writer == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to create a writer for package operations record file '%s'",
+            CHROOT_PKGS_OPS_FILE);
+        fclose(chroot_pkgs_ops);
+        return false;
+    }
+
+    CsvWriter *csv_writer = CsvWriterOpen(writer);
+    if (csv_writer == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to create a CSV writer for package operations record file '%s'",
+            CHROOT_PKGS_OPS_FILE);
+        WriterClose(writer);
+        return false;
+    }
+
+    CsvWriterField(csv_writer, op);
+    CsvWriterField(csv_writer, name);
+    CsvWriterField(csv_writer, NULL_TO_EMPTY_STRING(arch));
+    CsvWriterField(csv_writer, NULL_TO_EMPTY_STRING(version));
+
+    CsvWriterNewRecord(csv_writer);
+    CsvWriterClose(csv_writer);
+    WriterClose(writer);
+
+    return true;
 }

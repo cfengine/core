@@ -364,6 +364,11 @@ int main(int argc, char *argv[])
         {
             Log(LOG_LEVEL_ERR, "Failed to show differences for changed files");
         }
+        success = DiffPkgOperations();
+        if (!success)
+        {
+            Log(LOG_LEVEL_ERR, "Failed to show differences in installed packages");
+        }
     }
     StringSetDestroy(audited_files);
 

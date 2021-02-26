@@ -37,6 +37,8 @@
 #include <rlist.h>
 #include <policy.h>
 #include <eval_context.h>
+#include <changes_chroot.h>     /* RecordPkgOperationInChroot() */
+#include <simulate_mode.h>      /* CHROOT_PKG_OPERATION_* */
 
 #define INVENTORY_LIST_BUFFER_SIZE 100 * 80 /* 100 entries with 80 characters
                                              * per line */
@@ -999,7 +1001,7 @@ static PromiseResult InstallPackage(Rlist *options,
     return res;
 }
 
-static PromiseResult FileInstallPackage(const EvalContext *ctx,
+static PromiseResult FileInstallPackage(EvalContext *ctx,
                                         const Promise *pp,
                                         const Attributes *attr,
                                         const char *package_file_path,
@@ -1017,19 +1019,22 @@ static PromiseResult FileInstallPackage(const EvalContext *ctx,
     if (is_in_cache == 1)
     {
         Log(LOG_LEVEL_VERBOSE, "Package exists in cache. Skipping installation.");
+        if (ChrootChanges())
+        {
+            RecordPkgOperationInChroot(CHROOT_PKG_OPERATION_PRESENT, package_file_path, NULL, NULL);
+        }
         return PROMISE_RESULT_NOOP;
     }
 
     PromiseResult res;
-
-    if (attr->transaction.action == cfa_warn || DONTDO)
+    if (MakingChanges(ctx, pp, attr, &res, "install file type package: %s", package_file_path))
     {
-         Log(LOG_LEVEL_VERBOSE, "Should install file type package: %s",
-             package_file_path);
-        res = PROMISE_RESULT_WARN;
-    }
-    else
-    {
+        if (ChrootChanges())
+        {
+            /* TODO: simulate file package installation */
+            RecordPkgOperationInChroot(CHROOT_PKG_OPERATION_INSTALL, package_file_path, NULL, NULL);
+            return PROMISE_RESULT_CHANGE;
+        }
         res = InstallPackage(policy_data->package_options,
                              PACKAGE_TYPE_FILE, package_file_path,
                              NULL, NULL, wrapper);
@@ -1146,17 +1151,22 @@ static PromiseResult RepoInstall(EvalContext *ctx,
             Log(LOG_LEVEL_DEBUG, "Clearing latest package version");
             version = NULL;
         }
-        if (attr->transaction.action == cfa_warn || DONTDO)
+        PromiseResult result = PROMISE_RESULT_FAIL;
+        if (MakingChanges(ctx, pp, attr, &result, "install repo type package: %s", package_name))
         {
-            Log(LOG_LEVEL_VERBOSE, "Should install repo type package: %s",
-                package_name);
-            return PROMISE_RESULT_WARN;
+            if (ChrootChanges())
+            {
+                /* TODO: simulate package installation */
+                RecordPkgOperationInChroot(CHROOT_PKG_OPERATION_INSTALL, package_name,
+                                           version, package_info->arch);
+                return PROMISE_RESULT_CHANGE;
+            }
+            *verified = false; /* Verification will be done in RepoInstallPackage(). */
+            result = InstallPackage(policy_data->package_options, PACKAGE_TYPE_REPO,
+                                    package_name, version, package_info->arch,
+                                    wrapper);
         }
-
-        *verified = false; /* Verification will be done in RepoInstallPackage(). */
-        return InstallPackage(policy_data->package_options, PACKAGE_TYPE_REPO,
-                              package_name, version, package_info->arch,
-                              wrapper);
+        return result;
     }
 
 
@@ -1215,6 +1225,11 @@ static PromiseResult RepoInstall(EvalContext *ctx,
                 ctx, wrapper, package_name, update_version, update_package->arch);
             if (update_in_cache == 1)
             {
+                if (ChrootChanges())
+                {
+                    RecordPkgOperationInChroot(CHROOT_PKG_OPERATION_PRESENT, package_name,
+                                               update_version, update_package->arch);
+                }
                 Log(LOG_LEVEL_VERBOSE,
                     "Package version from updates matches one installed. "
                     "Skipping package installation.");
@@ -1231,32 +1246,42 @@ static PromiseResult RepoInstall(EvalContext *ctx,
             }
             else
             {
-                if (attr->transaction.action == cfa_warn || DONTDO)
+                PromiseResult result = PROMISE_RESULT_FAIL;
+                if (MakingChanges(ctx, pp, attr, &result, "install repo type package: %s",
+                                  package_name))
                 {
-                    Log(LOG_LEVEL_VERBOSE, "Should install repo type package: %s",
-                        package_name);
-                    res = PromiseResultUpdate(res, PROMISE_RESULT_WARN);
+                    if (ChrootChanges())
+                    {
+                        RecordPkgOperationInChroot(CHROOT_PKG_OPERATION_INSTALL, package_name,
+                                                   update_version, update_package->arch);
+                    }
+                    else
+                    {
+                        /* Append package data to buffer. At the end all packages
+                         * data that need to be updated will be sent to package module
+                         * at once. This is important if we have package in more than
+                         * one architecture. If we would update one after another we
+                         * may end up with the ones doesn't matching default
+                         * architecture being removed. */
+                        BufferAppendF(install_buffer,
+                                      "Name=%s\nVersion=%s\nArchitecture=%s\n",
+                                      package_name,
+                                      update_version,
+                                      update_package->arch);
+
+                        /* Here we are adding latest_versions elements to different
+                         * seq. Make sure to not free those and not free latest_versions
+                         * before we are done with packages_to_install.
+                         * This is needed for later verification if package was
+                         * installed correctly. */
+                        SeqAppend(packages_to_install, update_package);
+                    }
+                }
+                else
+                {
+                    res = PromiseResultUpdate(res, result);
                     continue;
                 }
-
-                /* Append package data to buffer. At the end all packages
-                 * data that need to be updated will be sent to package module
-                 * at once. This is important if we have package in more than
-                 * one architecture. If we would update one after another we
-                 * may end up with the ones doesn't matching default
-                 * architecture being removed. */
-                BufferAppendF(install_buffer,
-                              "Name=%s\nVersion=%s\nArchitecture=%s\n",
-                              package_name,
-                              update_version,
-                              update_package->arch);
-
-                /* Here we are adding latest_versions elements to different
-                 * seq. Make sure to not free those and not free latest_versions
-                 * before we are done with packages_to_install.
-                 * This is needed for later verification if package was
-                 * installed correctly. */
-                SeqAppend(packages_to_install, update_package);
             }
         }
 
@@ -1299,6 +1324,11 @@ static PromiseResult RepoInstall(EvalContext *ctx,
     /* No version or explicit version specified. */
     else
     {
+        if (ChrootChanges())
+        {
+            RecordPkgOperationInChroot(CHROOT_PKG_OPERATION_PRESENT, package_name,
+                                       package_version, package_info->arch);
+        }
         Log(LOG_LEVEL_VERBOSE, "Package '%s' already installed", package_name);
 
         return PROMISE_RESULT_NOOP;
@@ -1440,8 +1470,8 @@ PromiseResult HandlePresentPromiseAction(EvalContext *ctx,
 
         if (is_in_cache == -1)
         {
-            Log(LOG_LEVEL_INFO, "Some error occurred while looking for package "
-                    "'%s' in cache.", package_name);
+            Log(LOG_LEVEL_ERR, "Some error occurred while looking for package '%s' in cache.",
+                package_name);
             return PROMISE_RESULT_FAIL;
         }
 
@@ -1504,14 +1534,16 @@ PromiseResult HandleAbsentPromiseAction(EvalContext *ctx,
     {
         /* Remove package(s) */
         PromiseResult res;
-
-        if (attr->transaction.action == cfa_warn || DONTDO)
+        if (MakingChanges(ctx, pp, attr, &res, "remove package '%s'", package_name))
         {
-            Log(LOG_LEVEL_VERBOSE, "Need to remove package: %s", package_name);
-            res = PROMISE_RESULT_WARN;
-        }
-        else
-        {
+            if (ChrootChanges())
+            {
+                /* TODO: simulate removal */
+                RecordPkgOperationInChroot(CHROOT_PKG_OPERATION_REMOVE, package_name,
+                                           policy_data->package_version,
+                                           policy_data->package_architecture);
+                return PROMISE_RESULT_CHANGE;
+            }
             res = RemovePackage(package_name,
                     policy_data->package_options, policy_data->package_version,
                     policy_data->package_architecture, wrapper);
@@ -1537,7 +1569,7 @@ PromiseResult HandleAbsentPromiseAction(EvalContext *ctx,
     }
     else if (is_in_cache == -1)
     {
-        Log(LOG_LEVEL_INFO, "Error occurred while checking package '%s' "
+        Log(LOG_LEVEL_ERR, "Error occurred while checking package '%s' "
             "existence in cache.", package_name);
         return PROMISE_RESULT_FAIL;
     }
@@ -1545,7 +1577,12 @@ PromiseResult HandleAbsentPromiseAction(EvalContext *ctx,
     {
         /* Package is not in cache which means it is already removed. */
         Log(LOG_LEVEL_DEBUG, "Package '%s' not installed. Skipping removing.",
-                package_name);
+            package_name);
+        if (ChrootChanges())
+        {
+            RecordPkgOperationInChroot(CHROOT_PKG_OPERATION_ABSENT, package_name, policy_data->package_version,
+                                       policy_data->package_architecture);
+        }
         return PROMISE_RESULT_NOOP;
     }
 }

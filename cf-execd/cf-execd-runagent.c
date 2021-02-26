@@ -54,7 +54,8 @@ void HandleRunagentRequest(int conn_fd)
                               "{\"error\": \"Failed to create file stream from the connection file descriptor: %s\"}",
                               GetErrorStr());
         assert(length < sizeof(error_buf));
-        write(conn_fd, error_buf, MIN(sizeof(error_buf), (size_t) length));
+        NDEBUG_UNUSED size_t written = write(conn_fd, error_buf, MIN(sizeof(error_buf), (size_t) length));
+        assert(written == MIN(sizeof(error_buf), (size_t) length));
         close(conn_fd);
         return;
     }
@@ -123,7 +124,7 @@ void HandleRunagentRequest(int conn_fd)
     }
 
     Writer *json_writer = FileWriter(conn_file);
-    size_t written = WriterWrite(json_writer, "{\n\"output\" : \"");
+    NDEBUG_UNUSED size_t written = WriterWrite(json_writer, "{\n\"output\" : \"");
     assert(written > 0);
     JsonEncodeStringWriter(BufferData(collected_output), json_writer);
     written = WriterWrite(json_writer, "\",\n");

@@ -132,13 +132,12 @@ PromiseResult HandleNewPackagePromiseType(EvalContext *ctx, const Promise *pp, c
                          "Successfully removed package '%s'", pp->promiser);
                     break;
                 case PROMISE_RESULT_NOOP:
-                    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a,
-                         "Package '%s' was not installed", pp->promiser);
+                    /* Properly logged in HandleAbsentPromiseAction() */
+                    cfPS(ctx, LOG_LEVEL_NOTHING, PROMISE_RESULT_NOOP, pp, a, NULL);
                     break;
                 case PROMISE_RESULT_WARN:
-                    cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a,
-                         "Package '%s' should be removed",
-                         pp->promiser);
+                    /* Properly logged in HandleAbsentPromiseAction() */
+                    cfPS(ctx, LOG_LEVEL_NOTHING, PROMISE_RESULT_WARN, pp, a, NULL);
                     break;
                 default:
                     ProgrammingError("Absent promise action evaluation returned"
@@ -164,8 +163,8 @@ PromiseResult HandleNewPackagePromiseType(EvalContext *ctx, const Promise *pp, c
                          "Package '%s' already installed", pp->promiser);
                     break;
                 case PROMISE_RESULT_WARN:
-                    cfPS(ctx, LOG_LEVEL_WARNING, PROMISE_RESULT_WARN, pp, a,
-                         "Package '%s' should be installed", pp->promiser);
+                    /* Properly logged in HandlePresentPromiseAction() */
+                    cfPS(ctx, LOG_LEVEL_NOTHING, PROMISE_RESULT_WARN, pp, a, NULL);
                     break;
                 default:
                     ProgrammingError("Present promise action evaluation returned"

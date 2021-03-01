@@ -30,6 +30,7 @@
 #include <sys/un.h>
 #include <files_lib.h>
 #include <cf-execd-runagent.h>
+#include <files_names.h>        /* ChopLastNode */
 
 #ifndef AF_LOCAL
 #define AF_LOCAL AF_UNIX
@@ -56,6 +57,7 @@
 #include <repair.h>
 #include <dbm_api.h>            /* CheckDBRepairFlagFile() */
 #include <string_lib.h>
+#include <acl_tools.h>          /* AllowAccessForUsers() */
 
 #include <cf-windows-functions.h>
 
@@ -88,6 +90,8 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
 #ifndef __MINGW32__
 static pid_t LocalExecInFork(const ExecConfig *config);
 static void Apoptosis(void);
+static inline bool GetRunagentSocketInfo(struct sockaddr_un *sock_info);
+static inline bool SetRunagentSocketACLs(char *sock_path, StringSet *allow_users);
 #else
 static bool LocalExecInThread(const ExecConfig *config);
 #endif
@@ -414,6 +418,14 @@ void ThisAgentInit(void)
 
 
 #ifndef __MINGW32__
+
+static inline bool UsingRunagentSocket()
+{
+    /* No runagent socket dir specified (use the default) or a directory
+     * specified ("no" disables the functionality). */
+    return ((RUNAGENT_SOCKET_DIR == NULL) || (!StringEqual_IgnoreCase(RUNAGENT_SOCKET_DIR, "no")));
+}
+
 /**
  * Sleep for the given number of seconds while handling requests from sockets.
  *
@@ -537,14 +549,23 @@ static void CFExecdMainLoop(EvalContext *ctx, Policy **policy, GenericAgentConfi
             break;
         }
     }
+
+    /* Remove the runagent socket (if any). */
+    if (UsingRunagentSocket())
+    {
+        struct sockaddr_un sock_info;
+        if (GetRunagentSocketInfo(&sock_info))
+        {
+            unlink(sock_info.sun_path);
+        }
+    }
 }
 
-static int SetupRunagentSocket()
+static inline bool GetRunagentSocketInfo(struct sockaddr_un *sock_info)
 {
-    int runagent_socket = -1;
+    assert(sock_info != NULL);
 
-    struct sockaddr_un sock_info;
-    memset(&sock_info, 0, sizeof(sock_info));
+    memset(sock_info, 0, sizeof(*sock_info));
 
     /* This can easily fail if GetStateDir() returns some long path,
      * 'sock_info.sun_path' is limited to 140 characters or even
@@ -553,20 +574,54 @@ static int SetupRunagentSocket()
     int ret;
     if (RUNAGENT_SOCKET_DIR == NULL)
     {
-        ret = snprintf(sock_info.sun_path, sizeof(sock_info.sun_path) - 1,
+        ret = snprintf(sock_info->sun_path, sizeof(sock_info->sun_path) - 1,
                        "%s/cf-execd.sockets/"CF_EXECD_RUNAGENT_SOCKET_NAME, GetStateDir());
     }
     else
     {
-        ret = snprintf(sock_info.sun_path, sizeof(sock_info.sun_path) - 1,
+        ret = snprintf(sock_info->sun_path, sizeof(sock_info->sun_path) - 1,
                        "%s/"CF_EXECD_RUNAGENT_SOCKET_NAME, RUNAGENT_SOCKET_DIR);
     }
-    assert(ret > 0);
-    if ((size_t) ret <= (sizeof(sock_info.sun_path) - 1))
+    return ((ret > 0) && ((size_t) ret <= (sizeof(sock_info->sun_path) - 1)));
+}
+
+static inline bool SetRunagentSocketACLs(char *sock_path, StringSet *allow_users)
+{
+    /* Allow access to the socket (rw) */
+    bool success = AllowAccessForUsers(sock_path, allow_users, true, false);
+
+    /* Need to ensure access to the parent folder too (rx) */
+    if (success)
+    {
+        ChopLastNode(sock_path);
+        success = AllowAccessForUsers(sock_path, allow_users, false, true);
+    }
+    return success;
+}
+
+static int SetupRunagentSocket(const ExecdConfig *execd_config)
+{
+    assert(execd_config != NULL);
+
+    int runagent_socket = -1;
+
+    struct sockaddr_un sock_info;
+    if (GetRunagentSocketInfo(&sock_info))
     {
         sock_info.sun_family = AF_LOCAL;
 
-        MakeParentDirectory(sock_info.sun_path, true, NULL);
+        bool created;
+        MakeParentDirectory(sock_info.sun_path, true, &created);
+
+        /* Make sure the permissions are correct if the directory was created
+         * (note: this code doesn't run on Windows). */
+        if (created)
+        {
+            char *last_slash = strrchr(sock_info.sun_path, '/');
+            *last_slash = '\0';
+            chmod(sock_info.sun_path, (mode_t) 0750);
+            *last_slash = '/';
+        }
 
         /* Remove potential left-overs from old processes. */
         unlink(sock_info.sun_path);
@@ -580,7 +635,7 @@ static int SetupRunagentSocket()
     }
     else
     {
-        ret = bind(runagent_socket, (const struct sockaddr *) &sock_info, sizeof(sock_info));
+        int ret = bind(runagent_socket, (const struct sockaddr *) &sock_info, sizeof(sock_info));
         assert(ret == 0);
         if (ret == -1)
         {
@@ -597,6 +652,17 @@ static int SetupRunagentSocket()
                 Log(LOG_LEVEL_ERR, "Failed to listen on runagent socket: %s", GetErrorStr());
                 close(runagent_socket);
                 runagent_socket = -1;
+            }
+        }
+        if (StringSetSize(execd_config->runagent_allow_users) > 0)
+        {
+            bool success = SetRunagentSocketACLs(sock_info.sun_path,
+                                                 execd_config->runagent_allow_users);
+            if (!success)
+            {
+                Log(LOG_LEVEL_ERR,
+                    "Failed to allow runagent_socket_allow_users users access the runagent socket");
+                /* keep going anyway */
             }
         }
     }
@@ -699,16 +765,16 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
     signal(SIGUSR1, HandleSignalsForDaemon);
     signal(SIGUSR2, HandleSignalsForDaemon);
 
+    umask(077);
+
     int runagent_socket = -1;
 
 #ifndef __MINGW32__
-    if ((RUNAGENT_SOCKET_DIR == NULL) || (!StringEqual_IgnoreCase(RUNAGENT_SOCKET_DIR, "no")))
+    if (UsingRunagentSocket())
     {
-        runagent_socket = SetupRunagentSocket();
+        runagent_socket = SetupRunagentSocket(*execd_config);
     }
 #endif
-
-    umask(077);
 
     if (ONCE)
     {
@@ -911,12 +977,51 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
 
         GenericAgentConfigSetBundleSequence(config, NULL);
 
+#ifndef __MINGW32__
+        /* Take over the runagent_socket_allow_users set for comparison. */
+        StringSet *old_runagent_allow_users = NULL;
+        if (UsingRunagentSocket())
+        {
+            old_runagent_allow_users = (*execd_config)->runagent_allow_users;
+            (*execd_config)->runagent_allow_users = NULL;
+        }
+#endif
+
         *policy = LoadPolicy(ctx, config);
         ExecConfigDestroy(*exec_config);
         ExecdConfigDestroy(*execd_config);
 
         *exec_config = ExecConfigNew(!ONCE, ctx, *policy);
         *execd_config = ExecdConfigNew(ctx, *policy);
+
+#ifndef __MINGW32__
+        if (UsingRunagentSocket())
+        {
+            /* Check if the old list and the new one differ. */
+            if (!StringSetIsEqual(old_runagent_allow_users,
+                                  (*execd_config)->runagent_allow_users))
+            {
+                struct sockaddr_un sock_info;
+                if (GetRunagentSocketInfo(&sock_info))
+                {
+                    bool success = SetRunagentSocketACLs(sock_info.sun_path,
+                                                         (*execd_config)->runagent_allow_users);
+                    if (!success)
+                    {
+                        Log(LOG_LEVEL_ERR,
+                            "Failed to allow new runagent_socket_allow_users users access the runagent socket"
+                            " (on policy reload)");
+                        /* keep going anyway */
+                    }
+                }
+                else
+                {
+                    Log(LOG_LEVEL_ERR, "Failed to get runagent.socket path");
+                }
+            }
+            StringSetDestroy(old_runagent_allow_users);
+        }
+#endif
 
         SetFacility((*execd_config)->log_facility);
     }

@@ -77,7 +77,7 @@ require {
 	role system_r;
 	class tcp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown name_connect accept listen name_bind node_bind };
 	class udp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown node_bind };
-	class sock_file { create write setattr unlink };
+	class sock_file { create write getattr setattr unlink };
 	class rawip_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
 	class netlink_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
 	class packet_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
@@ -201,7 +201,7 @@ allow cfengine_execd_t cfengine_serverd_exec_t:file getattr;
 allow cfengine_execd_t cfengine_hub_exec_t:file getattr;
 
 # allow cf-execd to work with local/UNIX sockets
-allow cfengine_execd_t cfengine_var_lib_t:sock_file { create unlink };
+allow cfengine_execd_t cfengine_var_lib_t:sock_file { create unlink getattr setattr };
 
 allow cfengine_execd_t self:capability sys_ptrace;
 
@@ -503,6 +503,10 @@ allow cfengine_httpd_t cfengine_var_lib_t:file { append create execute getattr i
 
 allow cfengine_httpd_t cfengine_var_lib_t:dir { add_name getattr open read remove_name search write create };
 allow cfengine_httpd_t cfengine_var_lib_t:lnk_file read;
+
+# allow httpd/php to work with cf-execd sockets
+allow cfengine_httpd_t cfengine_execd_t:unix_stream_socket connectto;
+allow cfengine_httpd_t cfengine_var_lib_t:sock_file write;
 
 allow cfengine_httpd_t devlog_t:lnk_file read;
 allow cfengine_httpd_t devlog_t:sock_file write;

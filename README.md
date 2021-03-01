@@ -32,6 +32,11 @@ As you might be looking for another part of the open source code base, here is a
 
 ## Installation
 
+Pre-built installers are available from our website:
+
+* [Download CFEngine Enterprise Installers](https://cfengine.com/product/cfengine-enterprise-free-25/)
+* [Download CFEngine Community Installers](https://cfengine.com/product/community/)
+
 To install from source please see
 the [INSTALL](https://github.com/cfengine/core/blob/master/INSTALL) file for
 prerequisites and build instructions.

@@ -167,8 +167,14 @@ bool AllowAccessForUsers(const char *path, StringSet *users, bool allow_writes, 
         struct passwd *pw = getpwnam(user);
         if (pw == NULL)
         {
-            Log(LOG_LEVEL_ERR, "Failed to get UID for user '%s': %s",
-                user, GetErrorStr());
+            if (errno != 0)
+            {
+                Log(LOG_LEVEL_ERR, "Failed to get UID for user '%s': %s", user, GetErrorStr());
+            }
+            else
+            {
+                Log(LOG_LEVEL_ERR, "Failed to get UID for user '%s': user doesn't exist", user);
+            }
             acl_free(acl);
             return false;
         }

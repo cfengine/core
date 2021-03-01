@@ -356,6 +356,11 @@ int main(int argc, char *argv[])
                 Log(LOG_LEVEL_ERR, "Failed to manifest unmodified files");
             }
         }
+        success = ManifestPkgOperations();
+        if (!success)
+        {
+            Log(LOG_LEVEL_ERR, "Failed to manifest present and absent packages");
+        }
     }
     else if (EVAL_MODE == EVAL_MODE_SIMULATE_DIFF)
     {

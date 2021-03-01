@@ -834,3 +834,136 @@ bool DiffPkgOperations()
 
     return true;
 }
+
+bool ManifestPkgOperations()
+{
+    const char *pkgs_ops_csv_file = ToChangesChroot(CHROOT_PKGS_OPS_FILE);
+    if (access(pkgs_ops_csv_file, F_OK) != 0)
+    {
+        Log(LOG_LEVEL_INFO, "No package operations done by the agent run");
+        return true;
+    }
+
+    FILE *csv_file = safe_fopen(pkgs_ops_csv_file, "r");
+
+    if (csv_file == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to open the file with package operations records");
+        return false;
+    }
+
+    StringMap *present = StringMapNew();
+    StringMap *absent = StringMapNew();
+    char *line;
+    while ((line = GetCsvLineNext(csv_file)) != NULL)
+    {
+        Seq *fields = SeqParseCsvString(line);
+        free(line);
+        if ((fields == NULL) || (SeqLength(fields) != 4))
+        {
+            Log(LOG_LEVEL_ERR, "Invalid package operation record: '%s'", line);
+            SeqDestroy(fields);
+            continue;
+        }
+
+        /* See RecordPkgOperationInChroot() */
+        const char *op       = SeqAt(fields, 0);
+        const char *pkg_name = SeqAt(fields, 1);
+        const char *pkg_ver  = SeqAt(fields, 2);
+        const char *pkg_arch = SeqAt(fields, 3);
+
+        /* These two must always be set properly. */
+        assert(!NULL_OR_EMPTY(op));
+        assert(!NULL_OR_EMPTY(pkg_name));
+
+        /* We need to have a key for the map encoding package name and
+         * architecture. Let's use the sequence "-_-" as a separator to avoid
+         * collisions with possible weird package names. */
+        char *name_arch;
+        xasprintf(&name_arch, "%s-_-%s", pkg_name, pkg_arch ? pkg_arch : "");
+
+        if ((*op == CHROOT_PKG_OPERATION_CODE_INSTALL) ||
+            (*op == CHROOT_PKG_OPERATION_CODE_PRESENT))
+        {
+            /* TODO: check version */
+
+            /* If it was previously absent (or removed), it's no longer. */
+            StringMapRemove(absent, name_arch);
+
+            char *msg;
+            if (!NULL_OR_EMPTY(pkg_arch) && !NULL_OR_EMPTY(pkg_ver))
+            {
+                xasprintf(&msg, "Package '%s-%s [%s]' would be present\n", pkg_name, pkg_arch, pkg_ver);
+            }
+            else if (!NULL_OR_EMPTY(pkg_arch))
+            {
+                xasprintf(&msg, "Package '%s-%s' would be present\n", pkg_name, pkg_arch);
+            }
+            else if (!NULL_OR_EMPTY(pkg_ver))
+            {
+                xasprintf(&msg, "Package '%s [%s]' would be present\n", pkg_name, pkg_ver);
+            }
+            else
+            {
+                xasprintf(&msg, "Package '%s' would be present\n", pkg_name);
+            }
+
+            /* TODO: only higher version? */
+            StringMapInsert(present, name_arch, msg);
+        }
+        else
+        {
+            assert((*op == CHROOT_PKG_OPERATION_CODE_REMOVE) ||
+                   (*op == CHROOT_PKG_OPERATION_CODE_ABSENT));
+
+            /* TODO: check version */
+
+            /* If it was previously present (or installed), it's no longer. */
+            StringMapRemove(present, name_arch);
+
+            char *msg;
+            if (!NULL_OR_EMPTY(pkg_arch) && !NULL_OR_EMPTY(pkg_ver))
+            {
+                xasprintf(&msg, "Package '%s-%s [%s]' would be absent\n", pkg_name, pkg_arch, pkg_ver);
+            }
+            else if (!NULL_OR_EMPTY(pkg_arch))
+            {
+                xasprintf(&msg, "Package '%s-%s' would be absent\n", pkg_name, pkg_arch);
+            }
+            else if (!NULL_OR_EMPTY(pkg_ver))
+            {
+                xasprintf(&msg, "Package '%s [%s]' would be absent\n", pkg_name, pkg_ver);
+            }
+            else
+            {
+                xasprintf(&msg, "Package '%s' would be absent\n", pkg_name);
+            }
+            StringMapInsert(absent, name_arch, msg);
+        }
+    }
+    fclose(csv_file);
+
+    /* If there were package operations (the file with the records exists, which is checked above),
+     * there must be something to manifest. Otherwise, there's a flaw in the logic above,
+     * manipulating the maps. */
+    assert((StringMapSize(present) != 0) || (StringMapSize(absent) != 0));
+
+    Log(LOG_LEVEL_INFO, "Manifesting present and absent packages");
+    MapIterator i = MapIteratorInit(present->impl);
+    MapKeyValue *item;
+    while ((item = MapIteratorNext(&i)))
+    {
+        const char *msg = item->value;
+        puts(msg);
+    }
+    i = MapIteratorInit(absent->impl);
+    while ((item = MapIteratorNext(&i)))
+    {
+        const char *msg = item->value;
+        puts(msg);
+    }
+    StringMapDestroy(present);
+    StringMapDestroy(absent);
+
+    return true;
+}

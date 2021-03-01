@@ -48,5 +48,6 @@ bool ManifestAllFiles(StringSet **audited_files);
 bool DiffChangedFiles(StringSet **audited_files);
 
 bool DiffPkgOperations();
+bool ManifestPkgOperations();
 
 #endif  /* _SIMULATE_H_ */

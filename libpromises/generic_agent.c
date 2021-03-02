@@ -1647,7 +1647,7 @@ static void CheckWorkingDirectories(EvalContext *ctx)
 #ifndef __MINGW32__
         if (statbuf.st_mode & 022)
         {
-            Log(LOG_LEVEL_ERR, "UNTRUSTED: State directory %s (mode %jo) was not private!", workdir,
+            Log(LOG_LEVEL_ERR, "UNTRUSTED: State directory %s (mode %jo) was not private, world and/or group writeable!", statedir,
                   (uintmax_t)(statbuf.st_mode & 0777));
         }
 #endif /* !__MINGW32__ */

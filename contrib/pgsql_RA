@@ -13,7 +13,7 @@
 # License:      GNU General Public License (GPL)
 #
 # Note:         This is a modified version of the upstream RA that supports PostgreSQL 10-12
-#               on RHEL 6.
+#               on RHEL 7.
 ###############################################################################
 # Initialization:
 

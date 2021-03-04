@@ -428,7 +428,7 @@ Policy *PolicyMerge(Policy *a, Policy *b)
 
     if (extra_hashes != NULL)
     {
-        MapIterator it = MapIteratorInit((Map*) extra_hashes);
+        MapIterator it = MapIteratorInit(extra_hashes->impl);
         MapKeyValue *item;
         while ((item = MapIteratorNext(&it)) != NULL)
         {

@@ -4,8 +4,8 @@ from cfengine import PromiseModule, ValidationError, Result
 
 
 class GitPromiseTypeModule(PromiseModule):
-    def __init__(self):
-        super().__init__("git_promise_module", "0.0.2")
+    def __init__(self, **kwargs):
+        super().__init__("git_promise_module", "0.0.2", **kwargs)
 
     def validate_promise(self, promiser, attributes):
         if not promiser.startswith("/"):
@@ -37,4 +37,5 @@ class GitPromiseTypeModule(PromiseModule):
 
 
 if __name__ == "__main__":
+    # GitPromiseTypeModule(record_file_path="/tmp/git_using_lib.log").start()
     GitPromiseTypeModule().start()

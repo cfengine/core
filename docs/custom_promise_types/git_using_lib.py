@@ -1,4 +1,3 @@
-import sys
 import os
 from cfengine import PromiseModule, ValidationError, Result
 

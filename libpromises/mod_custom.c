@@ -614,13 +614,26 @@ static inline bool HasResultAndResultIsValid(JsonElement *response)
     return ((result != NULL) && StringEqual(result, "valid"));
 }
 
+static inline const char *LogLevelToRequestFromModule()
+{
+    // We will never request LOG_LEVEL_NOTHING or LOG_LEVEL_CRIT from the
+    // module:
+    const LogLevel global = LogGetGlobalLevel();
+    if (global < LOG_LEVEL_ERR)
+    {
+        assert((global == LOG_LEVEL_NOTHING) || (global == LOG_LEVEL_CRIT));
+        return LogLevelToString(LOG_LEVEL_ERR);
+    }
+    return LogLevelToString(global);
+}
+
 static bool PromiseModule_Validate(PromiseModule *module, const Promise *pp)
 {
     assert(module != NULL);
     assert(pp != NULL);
 
     PromiseModule_AppendString(module, "operation", "validate_promise");
-    PromiseModule_AppendString(module, "log_level", "info");
+    PromiseModule_AppendString(module, "log_level", LogLevelToRequestFromModule());
     PromiseModule_AppendString(module, "promiser", pp->promiser);
     PromiseModule_AppendAllAttributes(module, pp);
     PromiseModule_Send(module);
@@ -655,19 +668,6 @@ static bool PromiseModule_Validate(PromiseModule *module, const Promise *pp)
     }
 
     return valid;
-}
-
-static inline const char *LogLevelToRequestFromModule()
-{
-    // We will never request LOG_LEVEL_NOTHING or LOG_LEVEL_CRIT from the
-    // module:
-    const LogLevel global = LogGetGlobalLevel();
-    if (global < LOG_LEVEL_ERR)
-    {
-        assert((global == LOG_LEVEL_NOTHING) || (global == LOG_LEVEL_CRIT));
-        return LogLevelToString(LOG_LEVEL_ERR);
-    }
-    return LogLevelToString(global);
 }
 
 static PromiseResult PromiseModule_Evaluate(

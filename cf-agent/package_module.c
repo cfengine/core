@@ -1210,7 +1210,8 @@ static PromiseResult RepoInstall(EvalContext *ctx,
     Seq *packages_to_install = SeqNew(1, NULL);
 
     /* Loop through possible updates. */
-    for (size_t i = 0; i < SeqLength(latest_versions); i++)
+    size_t length = SeqLength(latest_versions);
+    for (size_t i = 0; i < length; i++)
     {
         PackageInfo *update_package = SeqAt(latest_versions, i);
 

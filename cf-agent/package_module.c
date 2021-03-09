@@ -1191,8 +1191,13 @@ static PromiseResult RepoInstall(EvalContext *ctx,
     /* This can return more than one latest version if we have packages
      * with different architectures installed. */
     Seq *latest_versions = GetVersionsFromUpdates(ctx, package_info, wrapper);
-    if (!latest_versions)
+    if (latest_versions == NULL)
     {
+        if (ChrootChanges())
+        {
+            RecordPkgOperationInChroot(CHROOT_PKG_OPERATION_PRESENT, package_name,
+                                       package_version, package_info->arch);
+        }
         Log(LOG_LEVEL_VERBOSE,
             "Package '%s' is already in the latest version. "
             "Skipping installation.", package_name);

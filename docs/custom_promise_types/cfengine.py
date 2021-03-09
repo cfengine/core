@@ -10,17 +10,24 @@ def _skip_until_empty_line(file):
             break
 
 
-def _get_request(file):
-    line = file.readline().strip()
-    _ = file.readline()
-    # sys.stderr.write("LINE: " + line + "\n")
-    return json.loads(line)
+def _get_request(file, record_file=None):
+    line = file.readline()
+    blank_line = file.readline()
+    if record_file is not None:
+        record_file.write("< " + line)
+        record_file.write("< " + blank_line)
+
+    return json.loads(line.strip())
 
 
-def _put_response(data, file):
+def _put_response(data, file, record_file=None):
     data = json.dumps(data)
     file.write(data + "\n\n")
     file.flush()
+
+    if record_file is not None:
+        record_file.write("> " + data + "\n")
+        record_file.write("> \n")
 
 
 class ValidationError(Exception):
@@ -52,7 +59,7 @@ class Result:
 
 
 class PromiseModule:
-    def __init__(self, name = "default_module_name", version = "0.0.1"):
+    def __init__(self, name = "default_module_name", version = "0.0.1", record_file_path=None):
         self.name = name
         self.version = version
         # Note: The class doesn't expose any way to set protocol version
@@ -61,11 +68,18 @@ class PromiseModule:
 
         self._result_classes = None
 
+        # File to record all the incoming and outgoing communication
+        self._record_file = open(record_file_path, "a") if record_file_path else None
+
     def start(self, in_file=None, out_file=None):
         self._in = in_file or sys.stdin
         self._out = out_file or sys.stdout
 
-        header = self._in.readline().strip().split(" ")
+        first_line = self._in.readline()
+        if self._record_file is not None:
+            self._record_file.write("< " + first_line)
+
+        header = first_line.strip().split(" ")
         name = header[0]
         version = header[1]
         protocol_version = header[2]
@@ -77,13 +91,18 @@ class PromiseModule:
 
         _skip_until_empty_line(self._in)
 
-        self._out.write(f"{self.name} {self.version} v1 json_based\n\n")
+        header_reply = f"{self.name} {self.version} v1 json_based\n\n"
+        self._out.write(header_reply)
         self._out.flush()
+
+        if self._record_file is not None:
+            self._record_file.write("> " + header_reply.strip() + "\n")
+            self._record_file.write(">\n")
 
         while True:
             self._response = {}
             self._result = None
-            request = _get_request(self._in)
+            request = _get_request(self._in, self._record_file)
             self._handle_request(request)
 
     def _handle_request(self, request):
@@ -124,7 +143,7 @@ class PromiseModule:
     def _handle_init(self):
         self._result = self.protocol_init(None)
         self._add_result()
-        _put_response(self._response, self._out)
+        _put_response(self._response, self._out, self._record_file)
 
     def _handle_validate(self, promiser, attributes):
         try:
@@ -143,7 +162,7 @@ class PromiseModule:
             self._result = Result.ERROR
             self._log_traceback()
         self._add_result()
-        _put_response(self._response, self._out)
+        _put_response(self._response, self._out, self._record_file)
 
     def _handle_evaluate(self, promiser, attributes):
         self._result_classes = None
@@ -163,12 +182,12 @@ class PromiseModule:
             self._result = Result.ERROR
         self._add_result()
         self._add_result_classes()
-        _put_response(self._response, self._out)
+        _put_response(self._response, self._out, self._record_file)
 
     def _handle_terminate(self):
         self._result = self.protocol_terminate()
         self._add_result()
-        _put_response(self._response, self._out)
+        _put_response(self._response, self._out, self._record_file)
         sys.exit(0)
 
     def _log(self, level, message):

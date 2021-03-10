@@ -252,6 +252,9 @@ bool MissingDependencies(EvalContext *ctx, const Promise *pp);
  * #level based on the logging specifications in the 'action' body and
  * increments the counters of actuated promises and promises
  * kept/repaired/failed/...
+ *
+ * If #fmt is NULL or an empty string, nothing is logged. #level should be
+ * #LOG_LEVEL_NOTHING in such cases.
  */
 void cfPS(EvalContext *ctx, LogLevel level, PromiseResult status, const Promise *pp, const Attributes *attr, const char *fmt, ...) FUNC_ATTR_PRINTF(6, 7);
 

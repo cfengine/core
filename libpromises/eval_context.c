@@ -2922,15 +2922,21 @@ void cfPS(EvalContext *ctx, LogLevel level, PromiseResult status, const Promise 
     assert(pp != NULL);
     assert(attr != NULL);
 
-    if (level >= LOG_LEVEL_VERBOSE)
-    {
-        LogPromiseContext(ctx, pp);
-    }
+    /* Either logging something (based on 'fmt') or logging nothing. */
+    assert(!NULL_OR_EMPTY(fmt) || (level == LOG_LEVEL_NOTHING));
 
-    va_list ap;
-    va_start(ap, fmt);
-    VLog(level, fmt, ap);
-    va_end(ap);
+    if (!NULL_OR_EMPTY(fmt))
+    {
+        if (level >= LOG_LEVEL_VERBOSE)
+        {
+            LogPromiseContext(ctx, pp);
+        }
+
+        va_list ap;
+        va_start(ap, fmt);
+        VLog(level, fmt, ap);
+        va_end(ap);
+    }
 
     /* Now complete the exits status classes and auditing */
 

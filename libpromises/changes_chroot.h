@@ -28,10 +28,12 @@
 #define CHROOT_CHANGES_LIST_FILE "/changed_files"
 #define CHROOT_RENAMES_LIST_FILE "/renamed_files"
 #define CHROOT_KEPT_LIST_FILE "/kept_files"
+#define CHROOT_PKGS_OPS_FILE "/pkgs_ops"
 
 void PrepareChangesChroot(const char *path);
 bool RecordFileChangedInChroot(const char *path);
 bool RecordFileRenamedInChroot(const char *old_name, const char *new_name);
 bool RecordFileEvaluatedInChroot(const char *path);
+bool RecordPkgOperationInChroot(const char *op, const char *name, const char *arch, const char *version);
 
 #endif /* CFENGINE_CHANGES_CHROOT_H */

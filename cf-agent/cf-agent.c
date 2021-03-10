@@ -356,6 +356,11 @@ int main(int argc, char *argv[])
                 Log(LOG_LEVEL_ERR, "Failed to manifest unmodified files");
             }
         }
+        success = ManifestPkgOperations();
+        if (!success)
+        {
+            Log(LOG_LEVEL_ERR, "Failed to manifest present and absent packages");
+        }
     }
     else if (EVAL_MODE == EVAL_MODE_SIMULATE_DIFF)
     {
@@ -363,6 +368,11 @@ int main(int argc, char *argv[])
         if (!success)
         {
             Log(LOG_LEVEL_ERR, "Failed to show differences for changed files");
+        }
+        success = DiffPkgOperations();
+        if (!success)
+        {
+            Log(LOG_LEVEL_ERR, "Failed to show differences in installed packages");
         }
     }
     StringSetDestroy(audited_files);

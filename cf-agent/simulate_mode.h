@@ -29,10 +29,25 @@
 
 #include <set.h>                /* StringSet */
 
+#define CHROOT_PKG_OPERATION_PRESENT "p"
+#define CHROOT_PKG_OPERATION_ABSENT  "a"
+#define CHROOT_PKG_OPERATION_INSTALL "i"
+#define CHROOT_PKG_OPERATION_REMOVE  "r"
+
+typedef enum {
+    CHROOT_PKG_OPERATION_CODE_PRESENT = 'p',
+    CHROOT_PKG_OPERATION_CODE_ABSENT  = 'a',
+    CHROOT_PKG_OPERATION_CODE_INSTALL = 'i',
+    CHROOT_PKG_OPERATION_CODE_REMOVE  = 'r',
+} ChrootPkgOperationCode;
+
 bool ManifestFile(const char *path, bool chrooted);
 bool ManifestRename(const char *orig_name, const char *new_name);
 bool ManifestChangedFiles(StringSet **audited_files);
 bool ManifestAllFiles(StringSet **audited_files);
 bool DiffChangedFiles(StringSet **audited_files);
+
+bool DiffPkgOperations();
+bool ManifestPkgOperations();
 
 #endif  /* _SIMULATE_H_ */

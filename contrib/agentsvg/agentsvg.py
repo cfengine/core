@@ -137,11 +137,10 @@ def main():
         circle.y += offset_y
 
     # The SVG container:
-    container = """
-    <svg width="{}" height="{}" version="1.1" xmlns="http://www.w3.org/2000/svg">
-    {}
-    </svg>
-    """
+    container = """<svg width="{}" height="{}" version="1.1" xmlns="http://www.w3.org/2000/svg">
+{}
+</svg>
+"""
 
     # Render SVG, print to stdout:
     content = "\n".join(str(x) for x in content)

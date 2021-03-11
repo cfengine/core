@@ -672,6 +672,31 @@ bool DiffChangedFiles(StringSet **audited_files)
     return AuditChangedFiles(EVAL_MODE_SIMULATE_DIFF, audited_files);
 }
 
+
+typedef struct PkgOperationRecord_ {
+    char *msg;
+    char *pkg_ver;
+} PkgOperationRecord;
+
+static PkgOperationRecord *PkgOperationRecordNew(char *msg, char *pkg_ver)
+{
+    PkgOperationRecord *ret = xmalloc(sizeof(PkgOperationRecord));
+    ret->msg = msg;
+    ret->pkg_ver = pkg_ver;
+
+    return ret;
+}
+
+static void PkgOperationRecordDestroy(PkgOperationRecord *pkg_op)
+{
+    if (pkg_op != NULL)
+    {
+        free(pkg_op->msg);
+        free(pkg_op->pkg_ver);
+        free(pkg_op);
+    }
+}
+
 bool DiffPkgOperations()
 {
     const char *pkgs_ops_csv_file = ToChangesChroot(CHROOT_PKGS_OPS_FILE);

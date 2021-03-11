@@ -32,7 +32,7 @@ poses = [normal, out, angled, up, up_out]
 for size in sizes:
     diameter = size * 2
     width = diameter * 14
-    height = diameter * 12
+    height = diameter * 14
     dimensions = f"{width}x{height}"
 
     radius_opt = f"--radius {size}"

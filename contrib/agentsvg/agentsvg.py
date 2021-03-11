@@ -96,7 +96,7 @@ def main():
 
     diameter = radius * 2
     width = diameter * 14
-    height = diameter * 12
+    height = diameter * 14
 
     # Actual logo:
     content = []
@@ -129,7 +129,7 @@ def main():
 
     # Offsets needed to center this logo in canvas:
     offset_x = radius + diameter * 1
-    offset_y = radius
+    offset_y = radius + diameter * 1
 
     # Apply offsets to all circles:
     for circle in content:

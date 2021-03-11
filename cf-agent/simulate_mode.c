@@ -697,6 +697,64 @@ static void PkgOperationRecordDestroy(PkgOperationRecord *pkg_op)
     }
 }
 
+static inline bool PkgVersionIsGreater(const char *ver1, const char *ver2)
+{
+    /* Empty/missing versions should be handled separately based on the
+     * operations they appear in */
+    assert(!NULL_OR_EMPTY(ver1) && !NULL_OR_EMPTY(ver2));
+
+    /* "latest" is greater than any version */
+    if (StringEqual(ver1, "latest"))
+    {
+        return true;
+    }
+
+    /* TODO: do real version comparison */
+    return (StringSafeCompare(ver1, ver2) == 1);
+}
+
+static inline char *GetPkgOperationMsg(ChrootPkgOperationCode op, const char *pkg_name, const char *pkg_arch, const char *pkg_ver)
+{
+    const char *op_str = "";
+    switch (op)
+    {
+    case CHROOT_PKG_OPERATION_CODE_INSTALL:
+        op_str = "installed";
+        break;
+    case CHROOT_PKG_OPERATION_CODE_REMOVE:
+        op_str = "removed";
+        break;
+    case CHROOT_PKG_OPERATION_CODE_PRESENT:
+        op_str = "present";
+        break;
+    case CHROOT_PKG_OPERATION_CODE_ABSENT:
+        op_str = "absent";
+        break;
+    default:
+        debug_abort_if_reached();
+    }
+
+    char *msg;
+    if (!NULL_OR_EMPTY(pkg_arch) && !NULL_OR_EMPTY(pkg_ver))
+    {
+        xasprintf(&msg, "Package '%s-%s [%s]' would be %s\n", pkg_name, pkg_arch, pkg_ver, op_str);
+    }
+    else if (!NULL_OR_EMPTY(pkg_arch))
+    {
+        xasprintf(&msg, "Package '%s-%s' would be %s\n", pkg_name, pkg_arch, op_str);
+    }
+    else if (!NULL_OR_EMPTY(pkg_ver))
+    {
+        xasprintf(&msg, "Package '%s [%s]' would be %s\n", pkg_name, pkg_ver, op_str);
+    }
+    else
+    {
+        xasprintf(&msg, "Package '%s' would be %s\n", pkg_name, op_str);
+    }
+
+    return msg;
+}
+
 bool DiffPkgOperations()
 {
     const char *pkgs_ops_csv_file = ToChangesChroot(CHROOT_PKGS_OPS_FILE);
@@ -714,8 +772,8 @@ bool DiffPkgOperations()
         return false;
     }
 
-    StringMap *installed = StringMapNew();
-    StringMap *removed = StringMapNew();
+    Map *installed = MapNew(StringHash_untyped, StringEqual_untyped, free, (MapDestroyDataFn) PkgOperationRecordDestroy);
+    Map *removed = MapNew(StringHash_untyped, StringEqual_untyped, free, (MapDestroyDataFn) PkgOperationRecordDestroy);
     char *line;
     while ((line = GetCsvLineNext(csv_file)) != NULL)
     {
@@ -756,106 +814,133 @@ bool DiffPkgOperations()
              * This means that a 'present' operation after 'remove' operation results in no
              * difference (the package would be installed back) so the potential message about the
              * removal should be removed. */
-            StringMapRemove(removed, name_arch);
+            MapRemove(removed, name_arch);
         }
         else if (*op == CHROOT_PKG_OPERATION_CODE_ABSENT)
         {
-            /* The same logic applies here for an originally absent package that is installed and
-             * then reported as absent again. No diff to report, just remove the message about the
-             * package installation. */
-            StringMapRemove(installed, name_arch);
+            /* The same logic as above applies here for an originally absent package that is
+             * installed and then reported as absent again. No diff to report, just remove the
+             * message about the package installation. */
+
+            /* However, if a different specific version is reported as absent than the version that
+             * would have been installed, this removal would not remove the installed package
+             * (because of version mismatch). */
+            if (NULL_OR_EMPTY(pkg_ver))
+            {
+                MapRemove(installed, name_arch);
+            }
+            else
+            {
+                PkgOperationRecord *record = MapGet(installed, name_arch);
+                if ((record != NULL) && StringEqual(pkg_ver, record->pkg_ver))
+                {
+                    /* Matching version being removed -> cancel the installation */
+                    MapRemove(installed, name_arch);
+                }
+            }
         }
         else if (*op == CHROOT_PKG_OPERATION_CODE_INSTALL)
         {
-            /* TODO: check version */
-            bool existed = StringMapRemove(removed, name_arch);
-            if (!existed)
-            {
-                char *msg;
-                if (!NULL_OR_EMPTY(pkg_arch) && !NULL_OR_EMPTY(pkg_ver))
-                {
-                    xasprintf(&msg, "Package '%s-%s [%s]' would be installed\n", pkg_name, pkg_arch, pkg_ver);
-                }
-                else if (!NULL_OR_EMPTY(pkg_arch))
-                {
-                    xasprintf(&msg, "Package '%s-%s' would be installed\n", pkg_name, pkg_arch);
-                }
-                else if (!NULL_OR_EMPTY(pkg_ver))
-                {
-                    xasprintf(&msg, "Package '%s [%s]' would be installed\n", pkg_name, pkg_ver);
-                }
-                else
-                {
-                    xasprintf(&msg, "Package '%s' would be installed\n", pkg_name);
-                }
+            /* Package would be installed if there is no previous 'install' operation record with a
+             * higher version.
+             *                                   OR
+             * Package would be removed and now it would be installed. However, if the 'install'
+             * operation had the same version as what is already present in the system (remove in
+             * simulation mode doesn't remove the package), it would be reported as 'present'
+             * operation. So 'install' operation must mean a newer version than what's present would
+             * be installed. */
 
-                /* TODO: only higher version? */
-                StringMapInsert(installed, name_arch, msg);
+            PkgOperationRecord *prev_record = MapGet(installed, name_arch);
+            if ((prev_record == NULL) || PkgVersionIsGreater(pkg_ver, prev_record->pkg_ver))
+            {
+                char *msg = GetPkgOperationMsg(CHROOT_PKG_OPERATION_CODE_INSTALL,
+                                               pkg_name, pkg_arch, pkg_ver);
+                PkgOperationRecord *record = PkgOperationRecordNew(msg, SafeStringDuplicate(pkg_ver));
+                MapInsert(installed, name_arch, record);
+                name_arch = NULL; /* name_arch is now owned by the map (as a key) */
             }
+
+            /* Package installation cancels a previous removal (if any). */
+            MapRemove(removed, name_arch);
         }
         else
         {
             assert(*op == CHROOT_PKG_OPERATION_CODE_REMOVE); /* The only option not covered above. */
 
-            /* TODO: check version */
-            bool existed = StringMapRemove(installed, name_arch);
+            /* If there is a previous 'remove' operation record with version specified, prefer that
+             * message over a new message without version specification as the net result would be
+             * the package being removed, in the version that was pressent. */
+            PkgOperationRecord *prev_record = MapGet(removed, name_arch);
+            bool insert_new_msg = ((prev_record == NULL) || (NULL_OR_EMPTY(prev_record->pkg_ver)));
 
-            /* If name_arch was in the 'installed' map it means it would have
-             * been installed by the policy and now it would have been
-             * removed. I.e. there would be no difference in the end and there
-             * should be no message about the package in the diff output. */
-            if (!existed)
+            /* If there is a previous 'install' operation and now there is a 'remove' operation it
+             * means that the package was initially present, then updated by the 'install' operation
+             * and now it is attempted to be removed. If the 'remove' operation specifies a version
+             * then in case the versions match, the net result would be no change (install and
+             * remove). If there is a mismatch between the versions, the installation would happen,
+             * but the removal would fail. If no version is specified for the 'remove' operation. it
+             * would remove the installed package. */
+            if (NULL_OR_EMPTY(pkg_ver))
             {
-                char *msg;
-                if (!NULL_OR_EMPTY(pkg_arch) && !NULL_OR_EMPTY(pkg_ver))
+                /* No version specified, remove the installation message (if any). */
+                MapRemove(installed, name_arch);
+            }
+            else
+            {
+                PkgOperationRecord *inst_record = MapGet(installed, name_arch);
+                if ((inst_record != NULL) && (StringEqual(pkg_ver, inst_record->pkg_ver)))
                 {
-                    xasprintf(&msg, "Package '%s-%s [%s]' would be removed\n", pkg_name, pkg_arch, pkg_ver);
-                }
-                else if (!NULL_OR_EMPTY(pkg_arch))
-                {
-                    xasprintf(&msg, "Package '%s-%s' would be removed\n", pkg_name, pkg_arch);
-                }
-                else if (!NULL_OR_EMPTY(pkg_ver))
-                {
-                    xasprintf(&msg, "Package '%s [%s]' would be removed\n", pkg_name, pkg_ver);
+                    MapRemove(installed, name_arch);
                 }
                 else
                 {
-                    xasprintf(&msg, "Package '%s' would be removed\n", pkg_name);
+                    /* Keeping the install message, the removal would make no change. */
+                    insert_new_msg = false;
                 }
-                StringMapInsert(removed, name_arch, msg);
+            }
+
+            if (insert_new_msg)
+            {
+                char *msg = GetPkgOperationMsg(CHROOT_PKG_OPERATION_CODE_REMOVE,
+                                               pkg_name, pkg_arch, pkg_ver);
+                PkgOperationRecord *record = PkgOperationRecordNew(msg, SafeStringDuplicate(pkg_ver));
+                MapInsert(removed, name_arch, record);
+                name_arch = NULL; /* name_arch is now owned by the map (as a key) */
             }
         }
+        free(name_arch);
     }
     fclose(csv_file);
 
-    if ((StringMapSize(installed) == 0) && (StringMapSize(removed) == 0))
+    if ((MapSize(installed) == 0) && (MapSize(removed) == 0))
     {
         Log(LOG_LEVEL_INFO, "No differences in installed packages to report");
 
-        StringMapDestroy(installed);
-        StringMapDestroy(removed);
+        MapDestroy(installed);
+        MapDestroy(removed);
 
         return true;
     }
 
     Log(LOG_LEVEL_INFO, "Showing differences in installed packages");
-    MapIterator i = MapIteratorInit(installed->impl);
+    MapIterator i = MapIteratorInit(installed);
     MapKeyValue *item;
     while ((item = MapIteratorNext(&i)))
     {
-        const char *msg = item->value;
+        PkgOperationRecord *value = item->value;
+        const char *msg = value->msg;
         puts(msg);
     }
-    i = MapIteratorInit(removed->impl);
+    i = MapIteratorInit(removed);
     while ((item = MapIteratorNext(&i)))
     {
-        const char *msg = item->value;
+        PkgOperationRecord *value = item->value;
+        const char *msg = value->msg;
         puts(msg);
     }
 
-    StringMapDestroy(installed);
-    StringMapDestroy(removed);
+    MapDestroy(installed);
+    MapDestroy(removed);
 
     return true;
 }

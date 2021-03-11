@@ -50,7 +50,7 @@ for size in sizes:
             command = f"python3 agentsvg.py {color_opts} {pose_opts} {radius_opt}"
             base_name = f"agent_{head}_{body}_{arms}_{legs}_{dimensions}"
             generate = f"{command} > ./{dimensions}/{base_name}.svg"
-            convert = f"convert ./{dimensions}/{base_name}.svg ./{dimensions}/{base_name}.png"
+            convert = f"convert -background none ./{dimensions}/{base_name}.svg ./{dimensions}/{base_name}.png"
             command = f"{generate} && {convert}"
             print(command)
             ret = os.system(command)

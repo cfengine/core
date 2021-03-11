@@ -47,7 +47,13 @@ AM_CFLAGS = $(CORE_CFLAGS) $(ENTERPRISE_CFLAGS) \
 AM_YFLAGS = -d
 
 LIBS = $(LMDB_LIBS) $(TOKYOCABINET_LIBS) $(QDBM_LIBS) \
-	$(PCRE_LIBS) $(OPENSSL_LIBS) $(SQLITE3_LIBS) $(LIBACL_LIBS) $(LIBYAML_LIBS) $(LIBCURL_LIBS) $(SYSTEMD_SOCKET_LIBS)
+	$(PCRE_LIBS) $(OPENSSL_LIBS) $(SQLITE3_LIBS) $(LIBACL_LIBS) $(LIBYAML_LIBS) $(LIBCURL_LIBS)
+
+# The lib providing sd_listen_fds() is not needed in libpromises, it's actually
+# needed in libcfnet. But adding it here is an easy way to make sure it's
+# available for all the binaries that might need it. Once libcfnet doesn't
+# require libpromises, we can do this properly.
+LIBS += $(SYSTEMD_SOCKET_LIBS)
 
 libpromises_la_LIBADD = ../libntech/libutils/libutils.la ../libcfnet/libcfnet.la \
 	../libenv/libenv.la $(ENTERPRISE_LDADD)

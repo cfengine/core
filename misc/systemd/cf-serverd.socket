@@ -4,7 +4,7 @@ PartOf=cfengine3.service
 Before=cf-serverd.service
 
 [Socket]
-ListenStream = 5309
+ListenStream = 5308
 
 [Install]
 WantedBy=multi-user.target

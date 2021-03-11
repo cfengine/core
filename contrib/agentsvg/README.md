@@ -1,5 +1,7 @@
 # CFEngine agent SVG / logo generator
 
+![cf-agent, the CFEngine mascot](agent.png)
+
 Python script(s) for generating agent logos.
 
 ## The default logo

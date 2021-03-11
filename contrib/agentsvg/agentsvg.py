@@ -14,7 +14,7 @@ Example:
 
 import argparse
 
-cfengine_blue = "#156a90"
+cfengine_blue = "#052569"
 cfengine_orange = "#f5821f"
 
 

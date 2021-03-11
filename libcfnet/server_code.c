@@ -8,9 +8,10 @@
 #include <signals.h>                    // GetSignalPipe
 #include <cleanup.h>                    // DoCleanupAndExit
 #include <ctype.h>                      // isdigit
+
 #if HAVE_SYSTEMD_SD_DAEMON_H
 #include <systemd/sd-daemon.h>          // sd_listen_fds
-#endif // HAVE_SYSTEMD_SD_DAEMON_H
+#endif
 
 /* Wait up to a minute for an in-coming connection.
  *
@@ -197,24 +198,31 @@ int InitServer(size_t queue_size, char *bind_address)
 {
 #if HAVE_SYSTEMD_SD_DAEMON_H
     int n = sd_listen_fds(0);
-    if (n > 1) {
+    if (n > 1)
+    {
         Log(LOG_LEVEL_ERR, "Too many file descriptors received from systemd");
-    } else if (n == 1) {
+    }
+    else if (n == 1)
+    {
         // we can check here that we have a socket with sd_is_socket_inet(3)
         // but why should we limit ourselves
         return SD_LISTEN_FDS_START;
-    } else 
+    }
+    else
 #endif // HAVE_SYSTEMD_SD_DAEMON_H
     {
         int sd = OpenReceiverChannel(bind_address);
 
         if (sd == -1)
         {
+            /* More detailed info is logged in case of error in
+             * OpenReceiverChannel() */
             Log(LOG_LEVEL_ERR, "Unable to start server");
         }
         else if (listen(sd, queue_size) == -1)
         {
-            Log(LOG_LEVEL_ERR, "listen failed. (listen: %s)", GetErrorStr());
+            Log(LOG_LEVEL_ERR, "Failed to listen on the '%s' address (listen: %s)",
+                bind_address, GetErrorStr());
             cf_closesocket(sd);
         }
         else

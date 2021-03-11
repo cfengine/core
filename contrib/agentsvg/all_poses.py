@@ -1,7 +1,7 @@
 import os
 import sys
 
-blue = "#156a90"
+blue = "#052569"
 orange = "#f5821f"
 green = "#79A442"
 grey = "#92B3B7"

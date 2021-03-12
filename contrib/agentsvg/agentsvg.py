@@ -14,7 +14,7 @@ Example:
 
 import argparse
 
-cfengine_blue = "#156a90"
+cfengine_blue = "#052569"
 cfengine_orange = "#f5821f"
 
 
@@ -96,7 +96,7 @@ def main():
 
     diameter = radius * 2
     width = diameter * 14
-    height = diameter * 12
+    height = diameter * 14
 
     # Actual logo:
     content = []
@@ -129,7 +129,7 @@ def main():
 
     # Offsets needed to center this logo in canvas:
     offset_x = radius + diameter * 1
-    offset_y = radius
+    offset_y = radius + diameter * 1
 
     # Apply offsets to all circles:
     for circle in content:
@@ -137,11 +137,10 @@ def main():
         circle.y += offset_y
 
     # The SVG container:
-    container = """
-    <svg width="{}" height="{}" version="1.1" xmlns="http://www.w3.org/2000/svg">
-    {}
-    </svg>
-    """
+    container = """<svg width="{}" height="{}" version="1.1" xmlns="http://www.w3.org/2000/svg">
+{}
+</svg>
+"""
 
     # Render SVG, print to stdout:
     content = "\n".join(str(x) for x in content)

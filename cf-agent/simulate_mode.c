@@ -962,8 +962,8 @@ bool ManifestPkgOperations()
         return false;
     }
 
-    StringMap *present = StringMapNew();
-    StringMap *absent = StringMapNew();
+    Map *present = MapNew(StringHash_untyped, StringEqual_untyped, free, (MapDestroyDataFn) PkgOperationRecordDestroy);
+    Map *absent = MapNew(StringHash_untyped, StringEqual_untyped, free, (MapDestroyDataFn) PkgOperationRecordDestroy);
     char *line;
     while ((line = GetCsvLineNext(csv_file)) != NULL)
     {
@@ -995,85 +995,82 @@ bool ManifestPkgOperations()
         if ((*op == CHROOT_PKG_OPERATION_CODE_INSTALL) ||
             (*op == CHROOT_PKG_OPERATION_CODE_PRESENT))
         {
-            /* TODO: check version */
-
-            /* If it was previously absent (or removed), it's no longer. */
-            StringMapRemove(absent, name_arch);
-
-            char *msg;
-            if (!NULL_OR_EMPTY(pkg_arch) && !NULL_OR_EMPTY(pkg_ver))
+            /* If there is a previous install/present operation, we want to choose the message with
+             * the higher version or the message which has a specific version (if any). */
+            PkgOperationRecord *prev_record = MapGet(present, name_arch);
+            if ((prev_record == NULL) ||
+                (NULL_OR_EMPTY(prev_record->pkg_ver) && !NULL_OR_EMPTY(pkg_ver)) ||
+                (!NULL_OR_EMPTY(pkg_ver) && !NULL_OR_EMPTY(prev_record->pkg_ver) &&
+                 PkgVersionIsGreater(pkg_ver, prev_record->pkg_ver)))
             {
-                xasprintf(&msg, "Package '%s-%s [%s]' would be present\n", pkg_name, pkg_arch, pkg_ver);
-            }
-            else if (!NULL_OR_EMPTY(pkg_arch))
-            {
-                xasprintf(&msg, "Package '%s-%s' would be present\n", pkg_name, pkg_arch);
-            }
-            else if (!NULL_OR_EMPTY(pkg_ver))
-            {
-                xasprintf(&msg, "Package '%s [%s]' would be present\n", pkg_name, pkg_ver);
-            }
-            else
-            {
-                xasprintf(&msg, "Package '%s' would be present\n", pkg_name);
+                char *msg = GetPkgOperationMsg(CHROOT_PKG_OPERATION_CODE_PRESENT,
+                                               pkg_name, pkg_arch, pkg_ver);
+                PkgOperationRecord *record = PkgOperationRecordNew(msg, SafeStringDuplicate(pkg_ver));
+                MapInsert(present, name_arch, record);
+                name_arch = NULL; /* name_arch is now owned by the map (as a key) */
             }
 
-            /* TODO: only higher version? */
-            StringMapInsert(present, name_arch, msg);
+            /* Cancels any previous remove/absent message. */
+            MapRemove(absent, name_arch);
         }
         else
         {
             assert((*op == CHROOT_PKG_OPERATION_CODE_REMOVE) ||
                    (*op == CHROOT_PKG_OPERATION_CODE_ABSENT));
 
-            /* TODO: check version */
+            /* If there is a 'present' message with a different version than the version specified
+             * here (if any), we know that the removal would fail and so it should not be
+             * reported. */
+            PkgOperationRecord *present_record = MapGet(present, name_arch);
+            if ((present_record == NULL) ||
+                NULL_OR_EMPTY(present_record->pkg_ver) || NULL_OR_EMPTY(pkg_ver) ||
+                StringEqual(present_record->pkg_ver, pkg_ver))
+            {
+                /* Remove the 'present' message now that we know the removal would/should work. */
+                MapRemove(present, name_arch);
 
-            /* If it was previously present (or installed), it's no longer. */
-            StringMapRemove(present, name_arch);
-
-            char *msg;
-            if (!NULL_OR_EMPTY(pkg_arch) && !NULL_OR_EMPTY(pkg_ver))
-            {
-                xasprintf(&msg, "Package '%s-%s [%s]' would be absent\n", pkg_name, pkg_arch, pkg_ver);
+                /* If there is a previous 'absent' message, we want to use the message with no
+                 * version specification (if any) because it's more generic. */
+                PkgOperationRecord *prev_record = MapGet(absent, name_arch);
+                if ((prev_record == NULL) ||
+                    (!NULL_OR_EMPTY(prev_record->pkg_ver) && NULL_OR_EMPTY(pkg_ver)))
+                {
+                    char *msg = GetPkgOperationMsg(CHROOT_PKG_OPERATION_CODE_ABSENT,
+                                                   pkg_name, pkg_arch, pkg_ver);
+                    PkgOperationRecord *record = PkgOperationRecordNew(msg, SafeStringDuplicate(pkg_ver));
+                    MapInsert(absent, name_arch, record);
+                    name_arch = NULL; /* name_arch is now owned by the map (as a key) */
+                }
             }
-            else if (!NULL_OR_EMPTY(pkg_arch))
-            {
-                xasprintf(&msg, "Package '%s-%s' would be absent\n", pkg_name, pkg_arch);
-            }
-            else if (!NULL_OR_EMPTY(pkg_ver))
-            {
-                xasprintf(&msg, "Package '%s [%s]' would be absent\n", pkg_name, pkg_ver);
-            }
-            else
-            {
-                xasprintf(&msg, "Package '%s' would be absent\n", pkg_name);
-            }
-            StringMapInsert(absent, name_arch, msg);
         }
+        free(name_arch);
     }
     fclose(csv_file);
 
     /* If there were package operations (the file with the records exists, which is checked above),
      * there must be something to manifest. Otherwise, there's a flaw in the logic above,
      * manipulating the maps. */
-    assert((StringMapSize(present) != 0) || (StringMapSize(absent) != 0));
+    assert((MapSize(present) != 0) || (MapSize(absent) != 0));
 
     Log(LOG_LEVEL_INFO, "Manifesting present and absent packages");
-    MapIterator i = MapIteratorInit(present->impl);
+    MapIterator i = MapIteratorInit(present);
     MapKeyValue *item;
     while ((item = MapIteratorNext(&i)))
     {
-        const char *msg = item->value;
+        PkgOperationRecord *value = item->value;
+        const char *msg = value->msg;
         puts(msg);
     }
-    i = MapIteratorInit(absent->impl);
+    i = MapIteratorInit(absent);
     while ((item = MapIteratorNext(&i)))
     {
-        const char *msg = item->value;
+        PkgOperationRecord *value = item->value;
+        const char *msg = value->msg;
         puts(msg);
     }
-    StringMapDestroy(present);
-    StringMapDestroy(absent);
+
+    MapDestroy(present);
+    MapDestroy(absent);
 
     return true;
 }

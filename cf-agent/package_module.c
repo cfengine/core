@@ -1158,7 +1158,7 @@ static PromiseResult RepoInstall(EvalContext *ctx,
             {
                 /* TODO: simulate package installation */
                 RecordPkgOperationInChroot(CHROOT_PKG_OPERATION_INSTALL, package_name,
-                                           version, package_info->arch);
+                                           package_version, package_info->arch);
                 return PROMISE_RESULT_CHANGE;
             }
             *verified = false; /* Verification will be done in RepoInstallPackage(). */

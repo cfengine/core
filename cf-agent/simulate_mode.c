@@ -908,6 +908,7 @@ bool DiffPkgOperations()
                 name_arch = NULL; /* name_arch is now owned by the map (as a key) */
             }
         }
+        SeqDestroy(fields);
         free(name_arch);
     }
     fclose(csv_file);
@@ -1043,6 +1044,7 @@ bool ManifestPkgOperations()
                 }
             }
         }
+        SeqDestroy(fields);
         free(name_arch);
     }
     fclose(csv_file);

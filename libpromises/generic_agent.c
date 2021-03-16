@@ -463,11 +463,12 @@ static bool LoadAugmentsFiles(EvalContext *ctx, const char *unexpanded_filename)
     {
         Log(LOG_LEVEL_DEBUG,
             "Skipping augments file '%s' because it failed to expand the base filename, resulting in '%s'",
-            filename, filename);
+            unexpanded_filename, filename);
     }
     else
     {
-        Log(LOG_LEVEL_DEBUG, "Searching for augments file '%s' (original '%s')", filename, filename);
+        Log(LOG_LEVEL_DEBUG, "Searching for augments file '%s' (original '%s')",
+            filename, unexpanded_filename);
         if (FileCanOpen(filename, "r"))
         {
             JsonElement* augment = ReadJsonFile(filename, LOG_LEVEL_ERR);

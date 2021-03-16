@@ -3465,6 +3465,93 @@ static void SysOSNameHuman(EvalContext *ctx)
 
 /*****************************************************************************/
 
+/**
+ * Find next integer from string in place. Leading zero's are included.
+ * 
+ * @param [in]  str string to extract next integer from
+ * @param [out] num pointer to start of next integer or %NULL if no integer
+ *                  number was found
+ * 
+ * @return pointer to the remaining string in `str` or %NULL if no remainder
+ * 
+ * @note `str` will be mutated
+ */
+static char *FindNextInteger(char *str, char **num)
+{
+    if (str == NULL)
+    {
+        *num = NULL;
+        return NULL;
+    }
+
+    char *ptr = str;
+    while (*ptr != '\0' && !isdigit(*ptr))
+    {
+        ++ptr;
+    }
+    if (*ptr == '\0')
+    {
+        /* no integer found */
+        *num = NULL;
+        return NULL;
+    }
+    *num = ptr++;
+
+    while (*ptr != '\0' && isdigit(*ptr))
+    {
+        ++ptr;
+    }
+    if (*ptr == '\0')
+    {
+        /* no remainder */
+        return NULL;
+    }
+    *ptr++ = '\0';
+
+    return ptr;
+}
+
+static void SysOsVersionMajor(EvalContext *ctx)
+{
+    const char *const_flavor = EvalContextVariableGetSpecialString(
+        ctx, SPECIAL_SCOPE_SYS, "flavor");
+    char *flavor = SafeStringDuplicate(const_flavor);
+
+    char *major;
+    char *next = FindNextInteger(flavor, &major);
+
+    if (flavor != NULL)
+    {
+        if (StringStartsWith(const_flavor, "solaris") ||
+            StringStartsWith(const_flavor, "sunos"))
+        {
+            /* In this case the major version comes second.
+             * E.g. SunOS 5.11 where 11 is the major release number.
+             * Thus, we need to get the next number.
+             */
+            FindNextInteger(next, &major);
+        }
+    }
+
+    if (NULL_OR_EMPTY(major))
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS,
+                                      "os_version_major", "Unknown",
+                                      CF_DATA_TYPE_STRING, "source=agent");
+    }
+    else
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, 
+                                      "os_version_major", major, 
+                                      CF_DATA_TYPE_STRING,
+                                      "source=agent,derived-from=flavor");
+    }
+
+    free(flavor);
+}
+
+/*****************************************************************************/
+
 void DetectEnvironment(EvalContext *ctx)
 {
     GetNameInfo3(ctx);
@@ -3476,4 +3563,5 @@ void DetectEnvironment(EvalContext *ctx)
     GetSysVars(ctx);
     GetDefVars(ctx);
     SysOSNameHuman(ctx);
+    SysOsVersionMajor(ctx);
 }

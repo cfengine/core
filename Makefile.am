@@ -56,7 +56,7 @@ TAR_OPTIONS = --owner=0 --group=0
 export TAR_OPTIONS
 
 
-EXTRA_DIST = ChangeLog INSTALL README.md LICENSE CFVERSION
+EXTRA_DIST = ChangeLog INSTALL README.md LICENSE CFVERSION docs/custom_promise_types/cfengine.sh
 
 doc_DATA = README.md ChangeLog
 

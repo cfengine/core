@@ -1745,6 +1745,11 @@ bool EvalContextClassPutSoft(EvalContext *ctx, const char *name, ContextScope sc
     return ret;
 }
 
+bool EvalContextClassPutSoftNS(EvalContext *ctx, const char *ns, const char *name,
+                               ContextScope scope, const char *tags)
+{
+    return EvalContextClassPut(ctx, ns, name, true, scope, tags);
+}
 
 ClassTableIterator *EvalContextClassTableIteratorNewGlobal(const EvalContext *ctx, const char *ns, bool is_hard, bool is_soft)
 {

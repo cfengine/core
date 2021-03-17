@@ -190,6 +190,7 @@ AS_IF([test x"$enable_fhs" = xyes], [
   WORKDIR='${localstatedir}/lib/${PACKAGE}'
   MASTERDIR='default'
   INPUTDIR='default'
+  DATADIR='default'
   LOGDIR='${localstatedir}/log/${PACKAGE}'
   PIDDIR='${runstatedir:-${localstatedir}/run}/${PACKAGE}'
   STATEDIR='default'
@@ -201,6 +202,7 @@ AS_IF([test x"$enable_fhs" = xyes], [
         WORKDIR=$(cmd /c "echo %PROGRAMFILES%\\Cfengine" | sed 's/\\/\\\\/g')
         MASTERDIR=default
         INPUTDIR=default
+        DATADIR=default
         LOGDIR=$(cmd /c "echo %PROGRAMFILES%\\Cfengine" | sed 's/\\/\\\\/g')
         PIDDIR=$(cmd /c "echo %PROGRAMFILES%\\Cfengine" | sed 's/\\/\\\\/g')
         STATEDIR=default
@@ -209,6 +211,7 @@ AS_IF([test x"$enable_fhs" = xyes], [
         WORKDIR=/var/cfengine
         MASTERDIR=default
         INPUTDIR=default
+        DATADIR=default
         LOGDIR=/var/cfengine
         PIDDIR=/var/cfengine
         STATEDIR=default
@@ -218,6 +221,7 @@ AS_IF([test x"$enable_fhs" = xyes], [
     WORKDIR="${localstatedir}/${PACKAGE}"
     MASTERDIR="default"
     INPUTDIR="default"
+    DATADIR="default"
     LOGDIR="${localstatedir}/${PACKAGE}"
     PIDDIR="${localstatedir}/${PACKAGE}"
     STATEDIR="default"
@@ -1370,6 +1374,22 @@ adl_RECURSIVE_EVAL("${INPUTDIR}", INPUTDIR)
 AC_DEFINE_UNQUOTED(INPUTDIR, "${INPUTDIR}", [Inputs directory location])
 AC_SUBST(inputdir, "${INPUTDIR}")
 
+AC_ARG_WITH(datadir,
+    [  --with-datadir=DATADIR  default for internal data directory ],
+    [
+        if test "x$withval" != x ; then
+            DATADIR="$withval"
+        fi
+    ],
+)
+
+dnl Expand ${prefix} and whatnot in DATADIR
+
+adl_RECURSIVE_EVAL("${DATADIR}", DATADIR)
+
+AC_DEFINE_UNQUOTED(DATADIR, "${DATADIR}", [Datadir location])
+AC_SUBST(datadir, "${DATADIR}")
+
 AC_ARG_WITH(logdir,
     [  --with-logdir=LOGDIR  default for internal log directory ],
     [
@@ -1746,6 +1766,7 @@ m4_indir(incstart[]incend, [nova/config.m4])
 AC_MSG_RESULT([-> Workdir: $WORKDIR])
 AC_MSG_RESULT([-> Masterdir: $MASTERDIR])
 AC_MSG_RESULT([-> Inputdir: $INPUTDIR])
+AC_MSG_RESULT([-> Datadir: $DATADIR])
 AC_MSG_RESULT([-> Logdir: $LOGDIR])
 AC_MSG_RESULT([-> Piddir: $PIDDIR])
 AC_MSG_RESULT([-> Statedir: $STATEDIR])

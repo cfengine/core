@@ -27,7 +27,7 @@
 #include <json.h>
 #include <string_lib.h>
 #include <known_dirs.h>         /* GetDataDir() */
-#include <var_expressions.h>    /* VarRef */
+#include <var_expressions.h>    /* VarRef, StringContainsUnresolved() */
 #include <eval_context.h>       /* EvalContext*() */
 #include <files_names.h>        /* JoinPaths() */
 
@@ -36,8 +36,7 @@
 #define HOST_SPECIFIC_DATA_FILE "host_specific.json"
 #define HOST_SPECIFIC_DATA_MAX_SIZE (5 * 1024 * 1024) /* maximum size of the host-specific.json file */
 
-JsonElement *ReadJsonFile(const char *filename, LogLevel log_level, size_t size_max,
-                          bool allow_vars_expressions)
+JsonElement *ReadJsonFile(const char *filename, LogLevel log_level, size_t size_max)
 {
     assert(filename != NULL);
 
@@ -59,6 +58,32 @@ JsonElement *ReadJsonFile(const char *filename, LogLevel log_level, size_t size_
     return doc;
 }
 
+static bool CheckPrimitiveForUnexpandedVars(JsonElement *primitive, ARG_UNUSED void *data)
+{
+    assert(JsonGetElementType(primitive) == JSON_ELEMENT_TYPE_PRIMITIVE);
+
+    /* Stop the iteration if a variable expression is found. */
+    return (!StringContainsUnresolved(JsonPrimitiveGetAsString(primitive)));
+}
+
+static bool CheckObjectForUnexpandedVars(JsonElement *object, ARG_UNUSED void *data)
+{
+    assert(JsonGetType(object) == JSON_TYPE_OBJECT);
+
+    /* Stop the iteration if a variable expression is found among children
+     * keys. (elements inside the object are checked separately) */
+    JsonIterator iter = JsonIteratorInit(object);
+    while (JsonIteratorHasMore(&iter))
+    {
+        const char *key = JsonIteratorNextKey(&iter);
+        if (StringContainsUnresolved(key))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
 static bool ReadCMDBVars(EvalContext *ctx, JsonElement *vars)
 {
     assert(vars != NULL);
@@ -66,6 +91,12 @@ static bool ReadCMDBVars(EvalContext *ctx, JsonElement *vars)
     if (JsonGetType(vars) != JSON_TYPE_OBJECT)
     {
         Log(LOG_LEVEL_ERR, "Invalid 'vars' CMDB data, must be a JSON object");
+        return false;
+    }
+
+    if (!JsonWalk(vars, CheckObjectForUnexpandedVars, NULL, CheckPrimitiveForUnexpandedVars, NULL))
+    {
+        Log(LOG_LEVEL_ERR, "Invalid 'vars' CMDB data, cannot contain variable references");
         return false;
     }
 
@@ -108,6 +139,12 @@ static bool ReadCMDBClasses(EvalContext *ctx, JsonElement *classes)
     if (JsonGetType(classes) != JSON_TYPE_OBJECT)
     {
         Log(LOG_LEVEL_ERR, "Invalid 'classes' CMDB data, must be a JSON object");
+        return false;
+    }
+
+    if (!JsonWalk(classes, CheckObjectForUnexpandedVars, NULL, CheckPrimitiveForUnexpandedVars, NULL))
+    {
+        Log(LOG_LEVEL_ERR, "Invalid 'classes' CMDB data, cannot contain variable references");
         return false;
     }
 

@@ -1387,7 +1387,8 @@ dnl Expand ${prefix} and whatnot in DATADIR
 
 adl_RECURSIVE_EVAL("${DATADIR}", DATADIR)
 
-AC_DEFINE_UNQUOTED(DATADIR, "${DATADIR}", [Datadir location])
+dnl There's a conflict on mingw where they have a type called DATADIR!
+AC_DEFINE_UNQUOTED(CF_DATADIR, "${DATADIR}", [Datadir location])
 AC_SUBST(datadir, "${DATADIR}")
 
 AC_ARG_WITH(logdir,

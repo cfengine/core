@@ -29,6 +29,7 @@
 
 #include <string_expressions.h>
 #include <policy.h>
+#include <string_lib.h>         /* StringContains() */
 
 /**
    VarRef is immutable, which means that after allocated the members never
@@ -86,5 +87,14 @@ bool VarRefEqual_untyped(const void *a, const void *b);
 unsigned int VarRefHash_untyped(const void *ref,
                                 unsigned int seed);
 
+static inline bool StringContainsUnresolved(const char *str)
+{
+    // clang-format off
+    return (StringContains(str, "$(")
+            || StringContains(str, "${")
+            || StringContains(str, "@{")
+            || StringContains(str, "@("));
+    // clang-format on
+}
 
 #endif

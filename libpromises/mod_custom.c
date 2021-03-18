@@ -31,6 +31,7 @@
 #include <eval_context.h>    // cfPS()
 #include <attributes.h>      // GetClassContextAttributes()
 #include <expand.h>          // ExpandScalar()
+#include <var_expressions.h> // StringContainsUnresolved()
 
 static const ConstraintSyntax promise_constraints[] = {
     CONSTRAINT_SYNTAX_GLOBAL,
@@ -566,16 +567,6 @@ static void PromiseModule_AppendAllAttributes(
         PromiseModule_AppendAttribute(module, name, value);
         free(value);
     }
-}
-
-static inline bool StringContainsUnresolved(const char *str)
-{
-    // clang-format off
-    return (StringContains(str, "$(")
-            || StringContains(str, "${")
-            || StringContains(str, "@{")
-            || StringContains(str, "@("));
-    // clang-format on
 }
 
 static inline bool CustomPromise_IsFullyResolved(const Promise *pp)

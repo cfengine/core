@@ -686,12 +686,12 @@ static PromiseResult KeepServerPromise(EvalContext *ctx, const Promise *pp, ARG_
     assert(!param);
     PromiseBanner(ctx, pp);
 
-    if (strcmp(pp->parent_section->promise_type, "vars") == 0)
+    if (strcmp(PromiseGetPromiseType(pp), "vars") == 0)
     {
         return VerifyVarPromise(ctx, pp, NULL);
     }
 
-    if (strcmp(pp->parent_section->promise_type, "classes") == 0)
+    if (strcmp(PromiseGetPromiseType(pp), "classes") == 0)
     {
         return VerifyClassPromise(ctx, pp, NULL);
     }
@@ -705,8 +705,8 @@ static PromiseResult KeepServerPromise(EvalContext *ctx, const Promise *pp, ARG_
         Log(LOG_LEVEL_WARNING,
             "ifelapsed attribute specified in action body for %s promise '%s',"
             " but %s promises do not support promise locking",
-            pp->parent_section->promise_type, pp->promiser,
-            pp->parent_section->promise_type);
+            PromiseGetPromiseType(pp), pp->promiser,
+            PromiseGetPromiseType(pp));
     }
     int expireafter = PromiseGetConstraintAsInt(ctx, "expireafter", pp);
     if (expireafter != CF_NOINT)
@@ -714,11 +714,11 @@ static PromiseResult KeepServerPromise(EvalContext *ctx, const Promise *pp, ARG_
         Log(LOG_LEVEL_WARNING,
             "expireafter attribute specified in action body for %s promise '%s',"
             " but %s promises do not support promise locking",
-            pp->parent_section->promise_type, pp->promiser,
-            pp->parent_section->promise_type);
+            PromiseGetPromiseType(pp), pp->promiser,
+            PromiseGetPromiseType(pp));
     }
 
-    if (strcmp(pp->parent_section->promise_type, "access") == 0)
+    if (strcmp(PromiseGetPromiseType(pp), "access") == 0)
     {
         const char *resource_type =
             PromiseGetConstraintAsRval(pp, "resource_type", RVAL_TYPE_SCALAR);
@@ -757,7 +757,7 @@ static PromiseResult KeepServerPromise(EvalContext *ctx, const Promise *pp, ARG_
             return PROMISE_RESULT_NOOP;
         }
     }
-    else if (strcmp(pp->parent_section->promise_type, "roles") == 0)
+    else if (strcmp(PromiseGetPromiseType(pp), "roles") == 0)
     {
         KeepServerRolePromise(ctx, pp);
         return PROMISE_RESULT_NOOP;

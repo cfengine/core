@@ -2713,7 +2713,7 @@ static bool ValidateCustomPromise(const Promise *pp, Seq *errors)
     assert(pp->parent_section != NULL);
     assert(errors != NULL);
 
-    const char *const promise_type = pp->parent_section->promise_type;
+    const char *const promise_type = PromiseGetPromiseType(pp);
     const char *const promiser = pp->promiser;
     bool valid = true;
     Seq *attributes = pp->conlist;
@@ -2796,7 +2796,7 @@ static bool PromiseCheck(const Promise *pp, Seq *errors)
         success = false;
     }
 
-    const bool is_builtin = IsBuiltInPromiseType(pp->parent_section->promise_type);
+    const bool is_builtin = IsBuiltInPromiseType(PromiseGetPromiseType(pp));
 
     if (is_builtin)
     {
@@ -2809,7 +2809,7 @@ static bool PromiseCheck(const Promise *pp, Seq *errors)
     }
 
     const PromiseTypeSyntax *pts = PromiseTypeSyntaxGet(pp->parent_section->parent_bundle->type,
-                                                        pp->parent_section->promise_type);
+                                                        PromiseGetPromiseType(pp));
 
 
     if (pts == NULL)
@@ -3265,7 +3265,7 @@ void PromiseRecheckAllConstraints(const EvalContext *ctx, const Promise *pp)
     /* Check and warn for non-convergence, see commits
        4f8c19b84327b8f3c2e269173196282ccedfdad9 and
        30c109d22e170a781a647b04b4b0a4a2f7244871. */
-    if (strcmp(pp->parent_section->promise_type, "insert_lines") == 0)
+    if (strcmp(PromiseGetPromiseType(pp), "insert_lines") == 0)
     {
         /* TODO without static var, actually remove this check from here
          * completely, do it at the end of PRE-EVAL promise iterations

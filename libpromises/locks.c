@@ -507,7 +507,7 @@ static void RegisterLockCleanup(void)
  */
 static void PromiseTypeString(char *dst, size_t dst_size, const Promise *pp)
 {
-    char *sp       = pp->parent_section->promise_type;
+    const char *sp = PromiseGetPromiseType(pp);
     size_t sp_len  = strlen(sp);
 
     dst[0]         = '\0';

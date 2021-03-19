@@ -194,6 +194,12 @@ const char *PromiseGetNamespace(const Promise *pp);
 const Bundle *PromiseGetBundle(const Promise *pp);
 const Policy *PromiseGetPolicy(const Promise *pp);
 
+static inline const char *PromiseGetPromiseType(const Promise *pp)
+{
+    assert(pp != NULL);
+    return pp->parent_section->promise_type;
+}
+
 void PromisePath(Writer *w, const Promise *pp);
 const char *PromiseGetHandle(const Promise *pp);
 int PromiseGetConstraintAsInt(const EvalContext *ctx, const char *lval, const Promise *pp);

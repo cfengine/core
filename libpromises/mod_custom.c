@@ -632,9 +632,13 @@ static bool PromiseModule_Validate(PromiseModule *module, const Promise *pp)
     assert(module != NULL);
     assert(pp != NULL);
 
+    const char *const promise_type = PromiseGetPromiseType(pp);
+    const char *const promiser = pp->promiser;
+
     PromiseModule_AppendString(module, "operation", "validate_promise");
     PromiseModule_AppendString(module, "log_level", LogLevelToRequestFromModule());
-    PromiseModule_AppendString(module, "promiser", pp->promiser);
+    PromiseModule_AppendString(module, "promise_type", promise_type);
+    PromiseModule_AppendString(module, "promiser", promiser);
     PromiseModule_AppendAllAttributes(module, pp);
     PromiseModule_Send(module);
 
@@ -654,8 +658,6 @@ static bool PromiseModule_Validate(PromiseModule *module, const Promise *pp)
     if (!valid)
     {
         // Detailed error messages from module should already have been printed
-        const char *const promise_type = pp->parent_section->promise_type;
-        const char *const promiser = pp->promiser;
         const char *const filename =
             pp->parent_section->parent_bundle->source_path;
         const size_t line = pp->offset.line;
@@ -676,10 +678,14 @@ static PromiseResult PromiseModule_Evaluate(
     assert(module != NULL);
     assert(pp != NULL);
 
+    const char *const promise_type = PromiseGetPromiseType(pp);
+    const char *const promiser = pp->promiser;
+
     PromiseModule_AppendString(module, "operation", "evaluate_promise");
     PromiseModule_AppendString(
         module, "log_level", LogLevelToRequestFromModule());
-    PromiseModule_AppendString(module, "promiser", pp->promiser);
+    PromiseModule_AppendString(module, "promise_type", promise_type);
+    PromiseModule_AppendString(module, "promiser", promiser);
 
     PromiseModule_AppendAllAttributes(module, pp);
     PromiseModule_Send(module);
@@ -714,8 +720,8 @@ static PromiseResult PromiseModule_Evaluate(
             pp,
             &a,
             "Promise module did not return a result for promise evaluation (%s promise, promiser: '%s' module: '%s')",
-            pp->parent_section->promise_type,
-            pp->promiser,
+            promise_type,
+            promiser,
             module->path);
     }
     else if (StringEqual(result_str, "kept"))
@@ -728,7 +734,7 @@ static PromiseResult PromiseModule_Evaluate(
             pp,
             &a,
             "Promise with promiser '%s' was kept by promise module '%s'",
-            pp->promiser,
+            promiser,
             module->path);
     }
     else if (StringEqual(result_str, "not_kept"))
@@ -741,7 +747,7 @@ static PromiseResult PromiseModule_Evaluate(
             pp,
             &a,
             "Promise with promiser '%s' was not kept by promise module '%s'",
-            pp->promiser,
+            promiser,
             module->path);
     }
     else if (StringEqual(result_str, "repaired"))
@@ -754,7 +760,7 @@ static PromiseResult PromiseModule_Evaluate(
             pp,
             &a,
             "Promise with promiser '%s' was repaired by promise module '%s'",
-            pp->promiser,
+            promiser,
             module->path);
     }
     else if (StringEqual(result_str, "error"))
@@ -767,8 +773,8 @@ static PromiseResult PromiseModule_Evaluate(
             pp,
             &a,
             "An unexpected error occured in promise module (%s promise, promiser: '%s' module: '%s')",
-            pp->parent_section->promise_type,
-            pp->promiser,
+            promise_type,
+            promiser,
             module->path);
     }
     else
@@ -782,8 +788,8 @@ static PromiseResult PromiseModule_Evaluate(
             &a,
             "Promise module returned unacceptable result: '%s' (%s promise, promiser: '%s' module: '%s')",
             result_str,
-            pp->parent_section->promise_type,
-            pp->promiser,
+            promise_type,
+            promiser,
             module->path);
     }
 

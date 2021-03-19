@@ -1158,7 +1158,7 @@ static PromiseResult RepoInstall(EvalContext *ctx,
             {
                 /* TODO: simulate package installation */
                 RecordPkgOperationInChroot(CHROOT_PKG_OPERATION_INSTALL, package_name,
-                                           version, package_info->arch);
+                                           package_version, package_info->arch);
                 return PROMISE_RESULT_CHANGE;
             }
             *verified = false; /* Verification will be done in RepoInstallPackage(). */
@@ -1173,157 +1173,9 @@ static PromiseResult RepoInstall(EvalContext *ctx,
     /* We have some packages matching already installed at this point. */
 
 
-    /* We have 'latest' version in policy. */
-    if (StringEqual(package_version, "latest"))
+    if (!StringEqual(package_version, "latest"))
     {
-        /* This can return more than one latest version if we have packages
-         * with different architectures installed. */
-        Seq *latest_versions =
-                GetVersionsFromUpdates(ctx, package_info, wrapper);
-        if (!latest_versions)
-        {
-            Log(LOG_LEVEL_VERBOSE,
-                "Package '%s' is already in the latest version. "
-                "Skipping installation.", package_name);
-
-            return PROMISE_RESULT_NOOP;
-        }
-
-        PromiseResult res = PROMISE_RESULT_NOOP;
-        Buffer *install_buffer = BufferNew();
-        Seq *packages_to_install = SeqNew(1, NULL);
-
-        /* Loop through possible updates. */
-        for (size_t i = 0; i < SeqLength(latest_versions); i++)
-        {
-            PackageInfo *update_package = SeqAt(latest_versions, i);
-
-            /* We can have multiple packages with different architectures
-             * in updates available but we are interested only in updating
-             * package with specific architecture. */
-            if (package_info->arch &&
-                !StringEqual(package_info->arch, update_package->arch))
-            {
-                Log(LOG_LEVEL_DEBUG,
-                    "Skipping update check of package '%s' as updates"
-                    "architecure doesn't match specified in policy: %s != %s.",
-                    package_name, package_info->arch,
-                    update_package->arch);
-                continue;
-            }
-
-            const char *const update_version = update_package->version;
-
-            Log(LOG_LEVEL_DEBUG,
-                "Checking for package '%s' version '%s' in available updates",
-                package_name, update_version);
-
-            /* Just in case some package managers will report highest possible
-             * version in updates list instead of removing entry if package is
-             * already in the latest version. */
-            const int update_in_cache = IsPackageInCache(
-                ctx, wrapper, package_name, update_version, update_package->arch);
-            if (update_in_cache == 1)
-            {
-                if (ChrootChanges())
-                {
-                    RecordPkgOperationInChroot(CHROOT_PKG_OPERATION_PRESENT, package_name,
-                                               update_version, update_package->arch);
-                }
-                Log(LOG_LEVEL_VERBOSE,
-                    "Package version from updates matches one installed. "
-                    "Skipping package installation.");
-                res = PromiseResultUpdate(res, PROMISE_RESULT_NOOP);
-                continue;
-            }
-            else if (update_in_cache == -1)
-            {
-                Log(LOG_LEVEL_INFO,
-                    "Skipping package installation due to error with checking "
-                    "packages cache.");
-                res = PromiseResultUpdate(res, PROMISE_RESULT_FAIL);
-                continue;
-            }
-            else
-            {
-                PromiseResult result = PROMISE_RESULT_FAIL;
-                if (MakingChanges(ctx, pp, attr, &result, "install repo type package: %s",
-                                  package_name))
-                {
-                    if (ChrootChanges())
-                    {
-                        RecordPkgOperationInChroot(CHROOT_PKG_OPERATION_INSTALL, package_name,
-                                                   update_version, update_package->arch);
-                    }
-                    else
-                    {
-                        /* Append package data to buffer. At the end all packages
-                         * data that need to be updated will be sent to package module
-                         * at once. This is important if we have package in more than
-                         * one architecture. If we would update one after another we
-                         * may end up with the ones doesn't matching default
-                         * architecture being removed. */
-                        BufferAppendF(install_buffer,
-                                      "Name=%s\nVersion=%s\nArchitecture=%s\n",
-                                      package_name,
-                                      update_version,
-                                      update_package->arch);
-
-                        /* Here we are adding latest_versions elements to different
-                         * seq. Make sure to not free those and not free latest_versions
-                         * before we are done with packages_to_install.
-                         * This is needed for later verification if package was
-                         * installed correctly. */
-                        SeqAppend(packages_to_install, update_package);
-                    }
-                }
-                else
-                {
-                    res = PromiseResultUpdate(res, result);
-                    continue;
-                }
-            }
-        }
-
-        char *install_formatted_list = BufferClose(install_buffer);
-
-        if (install_formatted_list)
-        {
-            /* If we have some packages to install. */
-            if (strlen(install_formatted_list) > 0)
-            {
-                Log(LOG_LEVEL_DEBUG,
-                    "Formatted list of packages to be send to package module: "
-                    "[%s]", install_formatted_list);
-                res = InstallPackageGeneric(policy_data->package_options,
-                                      PACKAGE_TYPE_REPO,
-                                      install_formatted_list, wrapper);
-
-                for (size_t i = 0; i < SeqLength(packages_to_install); i++)
-                {
-                    PackageInfo *to_verify = SeqAt(packages_to_install, i);
-                    PromiseResult validate =
-                            ValidateChangedPackage(policy_data, wrapper,
-                                                   to_verify,
-                                                   NEW_PACKAGE_ACTION_PRESENT);
-                    Log(LOG_LEVEL_DEBUG,
-                        "Validating package %s:%s:%s installation result: %d",
-                         to_verify->name, to_verify->version,
-                         to_verify->arch, validate);
-                    res = PromiseResultUpdate(res, validate);
-                    *verified = true;
-                }
-            }
-            free(install_formatted_list);
-        }
-
-        SeqDestroy(packages_to_install);
-        SeqDestroy(latest_versions);
-        return res;
-    }
-    /* No version or explicit version specified. */
-    else
-    {
+        /* No version or explicit version specified. */
         if (ChrootChanges())
         {
             RecordPkgOperationInChroot(CHROOT_PKG_OPERATION_PRESENT, package_name,
@@ -1333,8 +1185,158 @@ static PromiseResult RepoInstall(EvalContext *ctx,
 
         return PROMISE_RESULT_NOOP;
     }
-    /* Just to keep compiler happy; we shouldn't reach this point. */
-    return PROMISE_RESULT_FAIL;
+
+    /* We have 'latest' version in policy. */
+
+    /* This can return more than one latest version if we have packages
+     * with different architectures installed. */
+    Seq *latest_versions = GetVersionsFromUpdates(ctx, package_info, wrapper);
+    if (latest_versions == NULL)
+    {
+        if (ChrootChanges())
+        {
+            RecordPkgOperationInChroot(CHROOT_PKG_OPERATION_PRESENT, package_name,
+                                       package_version, package_info->arch);
+        }
+        Log(LOG_LEVEL_VERBOSE,
+            "Package '%s' is already in the latest version. "
+            "Skipping installation.", package_name);
+
+        return PROMISE_RESULT_NOOP;
+    }
+
+    PromiseResult res = PROMISE_RESULT_NOOP;
+    Buffer *install_buffer = BufferNew();
+    Seq *packages_to_install = SeqNew(1, NULL);
+
+    /* Loop through possible updates. */
+    size_t length = SeqLength(latest_versions);
+    for (size_t i = 0; i < length; i++)
+    {
+        PackageInfo *update_package = SeqAt(latest_versions, i);
+
+        /* We can have multiple packages with different architectures
+         * in updates available but we are interested only in updating
+         * package with specific architecture. */
+        if (package_info->arch &&
+            !StringEqual(package_info->arch, update_package->arch))
+        {
+            Log(LOG_LEVEL_DEBUG,
+                "Skipping update check of package '%s' as updates"
+                "architecure doesn't match specified in policy: %s != %s.",
+                package_name, package_info->arch,
+                update_package->arch);
+            continue;
+        }
+
+        const char *const update_version = update_package->version;
+
+        Log(LOG_LEVEL_DEBUG,
+            "Checking for package '%s' version '%s' in available updates",
+            package_name, update_version);
+
+        /* Just in case some package managers will report highest possible
+         * version in updates list instead of removing entry if package is
+         * already in the latest version. */
+        const int update_in_cache = IsPackageInCache(
+            ctx, wrapper, package_name, update_version, update_package->arch);
+        if (update_in_cache == 1)
+        {
+            if (ChrootChanges())
+            {
+                RecordPkgOperationInChroot(CHROOT_PKG_OPERATION_PRESENT, package_name,
+                                           update_version, update_package->arch);
+            }
+            Log(LOG_LEVEL_VERBOSE,
+                "Package version from updates matches one installed. "
+                "Skipping package installation.");
+            res = PromiseResultUpdate(res, PROMISE_RESULT_NOOP);
+            continue;
+        }
+        else if (update_in_cache == -1)
+        {
+            Log(LOG_LEVEL_INFO,
+                "Skipping package installation due to error with checking "
+                "packages cache.");
+            res = PromiseResultUpdate(res, PROMISE_RESULT_FAIL);
+            continue;
+        }
+        else
+        {
+            PromiseResult result = PROMISE_RESULT_FAIL;
+            if (MakingChanges(ctx, pp, attr, &result, "install repo type package: %s",
+                              package_name))
+            {
+                if (ChrootChanges())
+                {
+                    RecordPkgOperationInChroot(CHROOT_PKG_OPERATION_INSTALL, package_name,
+                                               update_version, update_package->arch);
+                }
+                else
+                {
+                    /* Append package data to buffer. At the end all packages
+                     * data that need to be updated will be sent to package module
+                     * at once. This is important if we have package in more than
+                     * one architecture. If we would update one after another we
+                     * may end up with the ones doesn't matching default
+                     * architecture being removed. */
+                    BufferAppendF(install_buffer,
+                                  "Name=%s\nVersion=%s\nArchitecture=%s\n",
+                                  package_name,
+                                  update_version,
+                                  update_package->arch);
+
+                    /* Here we are adding latest_versions elements to different
+                     * seq. Make sure to not free those and not free latest_versions
+                     * before we are done with packages_to_install.
+                     * This is needed for later verification if package was
+                     * installed correctly. */
+                    SeqAppend(packages_to_install, update_package);
+                }
+            }
+            else
+            {
+                res = PromiseResultUpdate(res, result);
+                continue;
+            }
+        }
+    }
+
+    char *install_formatted_list = BufferClose(install_buffer);
+
+    if (install_formatted_list)
+    {
+        /* If we have some packages to install. */
+        if (strlen(install_formatted_list) > 0)
+        {
+            Log(LOG_LEVEL_DEBUG,
+                "Formatted list of packages to be send to package module: "
+                "[%s]", install_formatted_list);
+            res = InstallPackageGeneric(policy_data->package_options,
+                                        PACKAGE_TYPE_REPO,
+                                        install_formatted_list, wrapper);
+
+            for (size_t i = 0; i < SeqLength(packages_to_install); i++)
+            {
+                PackageInfo *to_verify = SeqAt(packages_to_install, i);
+                PromiseResult validate =
+                    ValidateChangedPackage(policy_data, wrapper,
+                                           to_verify,
+                                           NEW_PACKAGE_ACTION_PRESENT);
+                Log(LOG_LEVEL_DEBUG,
+                    "Validating package %s:%s:%s installation result: %d",
+                    to_verify->name, to_verify->version,
+                    to_verify->arch, validate);
+                res = PromiseResultUpdate(res, validate);
+                *verified = true;
+            }
+        }
+        free(install_formatted_list);
+    }
+
+    SeqDestroy(packages_to_install);
+    SeqDestroy(latest_versions);
+    return res;
 }
 
 static PromiseResult RepoInstallPackage(EvalContext *ctx,

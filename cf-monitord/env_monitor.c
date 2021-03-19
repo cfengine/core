@@ -1175,20 +1175,20 @@ static PromiseResult KeepMonitorPromise(EvalContext *ctx, const Promise *pp, ARG
 {
     assert(param == NULL);
 
-    if (strcmp("vars", pp->parent_section->promise_type) == 0)
+    if (strcmp("vars", PromiseGetPromiseType(pp)) == 0)
     {
         return PROMISE_RESULT_NOOP;
     }
-    else if (strcmp("classes", pp->parent_section->promise_type) == 0)
+    else if (strcmp("classes", PromiseGetPromiseType(pp)) == 0)
     {
         return VerifyClassPromise(ctx, pp, NULL);
     }
-    else if (strcmp("measurements", pp->parent_section->promise_type) == 0)
+    else if (strcmp("measurements", PromiseGetPromiseType(pp)) == 0)
     {
         PromiseResult result = VerifyMeasurementPromise(ctx, CF_THIS, pp);
         return result;
     }
-    else if (strcmp("reports", pp->parent_section->promise_type) == 0)
+    else if (strcmp("reports", PromiseGetPromiseType(pp)) == 0)
     {
         return PROMISE_RESULT_NOOP;
     }

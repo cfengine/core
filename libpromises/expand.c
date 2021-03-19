@@ -236,8 +236,8 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, PromiseIterator *iterc
         /* EVALUATE VARS PROMISES again, allowing redefinition of
          * variables. The theory behind this is that the "sampling rate" of
          * vars promise needs to be double than the rest. */
-        if (strcmp(pexp->parent_section->promise_type, "vars") == 0 ||
-            strcmp(pexp->parent_section->promise_type, "meta") == 0)
+        if (strcmp(PromiseGetPromiseType(pexp), "vars") == 0 ||
+            strcmp(PromiseGetPromiseType(pexp), "meta") == 0)
         {
             if (act_on_promise != &VerifyVarPromise)
             {
@@ -263,7 +263,7 @@ PromiseResult ExpandPromise(EvalContext *ctx, const Promise *pp,
     {
         Log(LOG_LEVEL_DEBUG,
             "Skipping %s promise expansion with promiser '%s' due to class guard '%s::' (pass %d)",
-            pp->parent_section->promise_type,
+            PromiseGetPromiseType(pp),
             pp->promiser,
             pp->classes,
             EvalContextGetPass(ctx));

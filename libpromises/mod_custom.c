@@ -47,7 +47,7 @@ Body *FindCustomPromiseType(const Promise *promise)
 {
     assert(promise != NULL);
 
-    const char *const promise_type = promise->parent_section->promise_type;
+    const char *const promise_type = PromiseGetPromiseType(promise);
     const Policy *const policy =
         promise->parent_section->parent_bundle->parent_policy;
     Seq *custom_promise_types = policy->custom_promise_types;
@@ -815,7 +815,7 @@ PromiseResult EvaluateCustomPromise(EvalContext *ctx, const Promise *pp)
     {
         Log(LOG_LEVEL_ERR,
             "Undefined promise type '%s'",
-            pp->parent_section->promise_type);
+            PromiseGetPromiseType(pp));
         return PROMISE_RESULT_FAIL;
     }
 
@@ -853,7 +853,7 @@ PromiseResult EvaluateCustomPromise(EvalContext *ctx, const Promise *pp)
         {
             Log(LOG_LEVEL_ERR,
                 "%s promise with promiser '%s' has unresolved/unexpanded variables",
-                pp->parent_section->promise_type,
+                PromiseGetPromiseType(pp),
                 pp->promiser);
         }
     }
@@ -867,7 +867,7 @@ PromiseResult EvaluateCustomPromise(EvalContext *ctx, const Promise *pp)
         // PromiseModule_Validate() already printed an error
         Log(LOG_LEVEL_VERBOSE,
             "%s promise with promiser '%s' will be skipped because it failed validation",
-            pp->parent_section->promise_type,
+            PromiseGetPromiseType(pp),
             pp->promiser);
         result = PROMISE_RESULT_FAIL; // TODO: Investigate if DENIED is more
                                       // appropriate

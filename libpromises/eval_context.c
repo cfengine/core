@@ -2598,7 +2598,7 @@ static const char *const NO_LOG_TYPES[] =
  */
 static bool IsPromiseValuableForStatus(const Promise *pp)
 {
-    return pp && (pp->parent_section->promise_type != NULL) && (!IsStrIn(pp->parent_section->promise_type, NO_STATUS_TYPES));
+    return pp && (PromiseGetPromiseType(pp) != NULL) && (!IsStrIn(PromiseGetPromiseType(pp), NO_STATUS_TYPES));
 }
 
 /*
@@ -2608,7 +2608,7 @@ static bool IsPromiseValuableForStatus(const Promise *pp)
 
 static bool IsPromiseValuableForLogging(const Promise *pp)
 {
-    return pp && (pp->parent_section->promise_type != NULL) && (!IsStrIn(pp->parent_section->promise_type, NO_LOG_TYPES));
+    return pp && (PromiseGetPromiseType(pp) != NULL) && (!IsStrIn(PromiseGetPromiseType(pp), NO_LOG_TYPES));
 }
 
 static void AddAllClasses(EvalContext *ctx, const Rlist *list, unsigned int persistence_ttl,

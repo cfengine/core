@@ -654,14 +654,25 @@ AM_CONDITIONAL([HAVE_LIBXML2],
 
 dnl avahi
 
-AC_CHECK_HEADERS(avahi-client/client.h,
-    AM_CONDITIONAL(HAVE_AVAHI_CLIENT, true),
-    AM_CONDITIONAL(HAVE_AVAHI_CLIENT, false),
-    [])
-AC_CHECK_HEADERS(avahi-common/address.h,
-    AM_CONDITIONAL(HAVE_AVAHI_COMMON, true),
-    AM_CONDITIONAL(HAVE_AVAHI_COMMON, false),
-    [])
+AC_ARG_WITH([avahi],
+    [AS_HELP_STRING([--with-avahi@<:@=yes/no/check@:>@], [Compile with Avahi support @<:@default=no@:>@])],
+    [],
+    [with_avahi=no])
+
+if test "x$with_avahi" != xno
+then
+    AC_CHECK_HEADERS([avahi-client/client.h],
+        [AM_CONDITIONAL(HAVE_AVAHI_CLIENT, true)],
+        [AM_CONDITIONAL(HAVE_AVAHI_CLIENT, false)
+         test "x$with_avahi" != "xcheck" && AC_MSG_ERROR(Cannot find avahi-client/client.h)])
+    AC_CHECK_HEADERS([avahi-common/address.h],
+        [AM_CONDITIONAL(HAVE_AVAHI_COMMON, true)],
+        [AM_CONDITIONAL(HAVE_AVAHI_COMMON, false)
+         test "x$with_avahi" != "xcheck" && AC_MSG_ERROR(Cannot find avahi-common/address.h)])
+else
+    AM_CONDITIONAL(HAVE_AVAHI_CLIENT, false)
+    AM_CONDITIONAL(HAVE_AVAHI_COMMON, false)
+fi
 
 dnl
 

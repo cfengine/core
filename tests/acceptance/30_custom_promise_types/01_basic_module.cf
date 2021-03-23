@@ -33,6 +33,11 @@ promise agent example
     path => "$(this.promise_dirname)/example_module.sh";
 }
 
+body classes example
+{
+        promise_repaired => { "example_promise_repaired" };
+}
+
 bundle agent test
 {
   meta:
@@ -46,7 +51,8 @@ bundle agent test
   example:
     cfengine::
       "$(G.testfile)"
-        message => "$(test_string)";
+        message => "$(test_string)",
+        classes => example;
 
   classes:
       "file_created"
@@ -69,7 +75,7 @@ bundle agent check
         expression => strcmp("$(test.test_string)", readfile("$(G.testfile)")),
         if => fileexists("$(G.testfile)");
 
-      "ok" expression => "file_ok.file_created.file_updated.(!file_update_failed)";
+      "ok" expression => "file_ok.file_created.file_updated.(!file_update_failed).example_promise_repaired";
 
   reports:
     DEBUG.file_ok::
@@ -80,6 +86,8 @@ bundle agent check
       "file_updated";
     DEBUG.file_update_failed::
       "file_update_failed";
+    DEBUG.example_promise_repaired::
+      "example_promise_repaired";
 
     ok::
       "$(this.promise_filename) Pass";

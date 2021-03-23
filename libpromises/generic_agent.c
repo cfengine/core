@@ -72,6 +72,7 @@
 #include <libcrypto-compat.h>
 #include <libgen.h>
 #include <cleanup.h>
+#include <cmdb.h>               /* LoadCMDBData() */
 
 static pthread_once_t pid_cleanup_once = PTHREAD_ONCE_INIT; /* GLOBAL_T */
 
@@ -98,28 +99,6 @@ static void DeleteChangesChroot();
 #if !defined(__MINGW32__)
 static void OpenLog(int facility);
 #endif
-
-static JsonElement *ReadJsonFile(const char *filename, LogLevel log_level)
-{
-    struct stat sb;
-    if (stat(filename, &sb) == -1)
-    {
-        Log(log_level, "Could not open JSON file %s", filename);
-        return NULL;
-    }
-
-    JsonElement *doc = NULL;
-    // 5 MB should be enough for most reasonable def.json data
-    JsonParseError err = JsonParseFile(filename, 5 * 1024 * 1024, &doc);
-
-    if (err != JSON_PARSE_OK ||
-        doc == NULL)
-    {
-        Log(log_level, "Could not parse JSON file %s: %s", filename, JsonParseErrorToString(err));
-    }
-
-    return doc;
-}
 
 /*****************************************************************************/
 
@@ -463,14 +442,16 @@ static bool LoadAugmentsFiles(EvalContext *ctx, const char *unexpanded_filename)
     {
         Log(LOG_LEVEL_DEBUG,
             "Skipping augments file '%s' because it failed to expand the base filename, resulting in '%s'",
-            filename, filename);
+            unexpanded_filename, filename);
     }
     else
     {
-        Log(LOG_LEVEL_DEBUG, "Searching for augments file '%s' (original '%s')", filename, filename);
+        Log(LOG_LEVEL_DEBUG, "Searching for augments file '%s' (original '%s')",
+            filename, unexpanded_filename);
         if (FileCanOpen(filename, "r"))
         {
-            JsonElement* augment = ReadJsonFile(filename, LOG_LEVEL_ERR);
+            // 5 MB should be enough for most reasonable def.json data
+            JsonElement* augment = ReadJsonFile(filename, LOG_LEVEL_ERR, 5 * 1024 * 1024);
             if (augment != NULL)
             {
                 loaded = LoadAugmentsData(ctx, filename, augment);
@@ -654,6 +635,12 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
         }
     }
 
+    /* Load CMDB data *before* augments. */
+    if (!LoadCMDBData(ctx))
+    {
+        Log(LOG_LEVEL_ERR, "Failed to load CMDB data");
+    }
+
     /* load augments here so that they can make use of the classes added above
      * (especially 'am_policy_hub' and 'policy_server') */
     LoadAugments(ctx, config);
@@ -733,7 +720,7 @@ static JsonElement *ReadPolicyValidatedFile(const char *filename)
         missing = false;
     }
 
-    JsonElement *validated_doc = ReadJsonFile(filename, LOG_LEVEL_DEBUG);
+    JsonElement *validated_doc = ReadJsonFile(filename, LOG_LEVEL_DEBUG, 5 * 1024 * 1024);
     if (validated_doc == NULL)
     {
         Log(missing ? LOG_LEVEL_DEBUG : LOG_LEVEL_VERBOSE, "Could not parse policy_validated JSON file '%s', using dummy data", filename);
@@ -1425,7 +1412,7 @@ static JsonElement *ReadReleaseIdFileFromMasterfiles(const char *maybe_dirname)
     GetReleaseIdFile((maybe_dirname == NULL) ? GetMasterDir() : maybe_dirname,
                      filename, sizeof(filename));
 
-    JsonElement *doc = ReadJsonFile(filename, LOG_LEVEL_DEBUG);
+    JsonElement *doc = ReadJsonFile(filename, LOG_LEVEL_DEBUG, 5 * 1024 * 1024);
     if (doc == NULL)
     {
         Log(LOG_LEVEL_VERBOSE, "Could not parse release_id JSON file %s", filename);

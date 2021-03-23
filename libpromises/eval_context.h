@@ -122,6 +122,8 @@ void EvalContextHeapPersistentRemove(const char *context);
 void EvalContextHeapPersistentLoadAll(EvalContext *ctx);
 
 bool EvalContextClassPutSoft(EvalContext *ctx, const char *name, ContextScope scope, const char *tags);
+bool EvalContextClassPutSoftNS(EvalContext *ctx, const char *ns, const char *name,
+                               ContextScope scope, const char *tags);
 bool EvalContextClassPutHard(EvalContext *ctx, const char *name, const char *tags);
 Class *EvalContextClassGet(const EvalContext *ctx, const char *ns, const char *name);
 Class *EvalContextClassMatch(const EvalContext *ctx, const char *regex);

@@ -75,6 +75,7 @@ libpromises_la_SOURCES = \
 	changes_chroot.c changes_chroot.h \
 	chflags.c chflags.h \
 	class.c class.h \
+	cmdb.c cmdb.h \
 	constants.c \
 	conversion.c conversion.h \
 	crypto.c crypto.h \

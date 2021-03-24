@@ -1,0 +1,42 @@
+body common control
+{
+  bundlesequence => { "test", "check" };
+}
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-3608" }
+        string => "Make sure at least one of the expected os hard classes are defined";
+
+  vars:
+    DEBUG::
+      "defined_classes" string => join("$(const.n)", classesmatching(".*"));
+}
+
+bundle agent check
+{
+    classes:
+        "passed" or => { "debian",
+                         "ubuntu",
+                         "redhat",
+                         "centos",
+                         "fedora",
+                         "aix",
+                         "hpux",
+                         "suse",
+                         "windows",
+                         "freebsd",
+                         "macos",
+                         "solaris" };
+    
+    reports:
+      DEBUG&!passed::
+        "None of the expected classes were defined.";
+        "Here is a list of defined classes:";
+        "$(test.defined_classes)";
+      passed::
+        "$(this.promise_filename) Pass";
+      !passed::
+        "$(this.promise_filename) FAIL";
+}

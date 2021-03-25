@@ -29,7 +29,7 @@
 #include <string_sequence.h> // SeqStrginFromString()
 #include <policy.h>          // Promise
 #include <eval_context.h>    // cfPS()
-#include <attributes.h>      // GetClassContextAttributes()
+#include <attributes.h>      // GetClassContextAttributes(), IsClassesBodyConstraint()
 #include <expand.h>          // ExpandScalar()
 #include <var_expressions.h> // StringContainsUnresolved()
 
@@ -558,7 +558,8 @@ static void PromiseModule_AppendAllAttributes(
         const Constraint *attribute = SeqAt(pp->conlist, i);
         const char *const name = attribute->lval;
         assert(!StringEqual(name, "ifvarclass")); // Not allowed by validation
-        if (StringEqual(name, "if") || StringEqual(name, "ifvarclass"))
+        if (IsClassesBodyConstraint(name) ||
+            StringEqual(name, "if") || StringEqual(name, "ifvarclass"))
         {
             // Evaluated by agent and not sent to module, skip
             continue;
@@ -581,6 +582,11 @@ static inline bool CustomPromise_IsFullyResolved(const Promise *pp)
     for (size_t i = 0; i < attributes; i++)
     {
         const Constraint *attribute = SeqAt(pp->conlist, i);
+        if (IsClassesBodyConstraint(attribute->lval))
+        {
+            /* Not passed to the modules, handled on the agent side. */
+            continue;
+        }
         if (attribute->rval.type != RVAL_TYPE_SCALAR)
         {
             // Most likely container or unresolved function call

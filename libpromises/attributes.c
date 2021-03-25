@@ -31,6 +31,7 @@
 #include <chflags.h>
 #include <audit.h>
 #include <protocol.h> // ParseProtocolVersionPolicy()
+#include <string_lib.h>         /* StringEqual() */
 
 #define CF_DEFINECLASSES "classes"
 #define CF_TRANSACTION   "action"
@@ -739,6 +740,28 @@ TransactionContext GetTransactionConstraints(const EvalContext *ctx, const Promi
 }
 
 /*******************************************************************/
+
+bool IsClassesBodyConstraint(const char *constraint)
+{
+    return (
+        StringEqual(constraint, "classes") ||
+        StringEqual(constraint, "classes_name") ||
+        StringEqual(constraint, "scope") ||
+        StringEqual(constraint, "promise_repaired") ||
+        StringEqual(constraint, "repair_failed") ||
+        StringEqual(constraint, "repair_denied") ||
+        StringEqual(constraint, "repair_timeout") ||
+        StringEqual(constraint, "promise_kept") ||
+        StringEqual(constraint, "cancel_repaired") ||
+        StringEqual(constraint, "cancel_kept") ||
+        StringEqual(constraint, "cancel_notkept") ||
+        StringEqual(constraint, "kept_returncodes") ||
+        StringEqual(constraint, "repaired_returncodes") ||
+        StringEqual(constraint, "failed_returncodes") ||
+        StringEqual(constraint, "persist_time") ||
+        StringEqual(constraint, "timer_policy")
+        );
+}
 
 DefineClasses GetClassDefinitionConstraints(const EvalContext *ctx, const Promise *pp)
 {

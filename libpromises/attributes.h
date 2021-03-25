@@ -27,6 +27,7 @@
 
 #include <cf3.defs.h>
 
+bool IsClassesBodyConstraint(const char *constraint);
 Attributes GetClassContextAttributes(const EvalContext *ctx, const Promise *pp);
 Attributes GetColumnAttributes(const EvalContext *ctx, const Promise *pp);
 Attributes GetDatabaseAttributes(const EvalContext *ctx, const Promise *pp);

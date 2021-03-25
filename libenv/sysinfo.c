@@ -3335,6 +3335,99 @@ void GetDefVars(EvalContext *ctx)
         "jq --compact-output --monochrome-output --ascii-output --unbuffered --sort-keys",
         CF_DATA_TYPE_STRING, "invocation,source=agent,command_name=jq");
 }
+
+/*****************************************************************************/
+
+static void SysOSNameHuman(EvalContext *ctx)
+{
+    // This function sets the $(sys.os_name_human) variable
+    assert(ctx != NULL);
+    const char *const lval = "os_name_human";
+
+    /**
+     * Order is important. The first if-statement is more specific and wins.
+     * E.g. prefer Ubuntu over Debian.
+     */
+    if (EvalContextClassGet(ctx, NULL, "ubuntu") != NULL)
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, lval,
+                                      "Ubuntu", CF_DATA_TYPE_STRING,
+                                      "source=agent,derived-from=ubuntu");
+    }
+    else if (EvalContextClassGet(ctx, NULL, "debian") != NULL)
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, lval,
+                                      "Debian", CF_DATA_TYPE_STRING,
+                                      "source=agent,derived-from=debian");
+    }
+    else if (EvalContextClassGet(ctx, NULL, "centos") != NULL)
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, lval,
+                                      "CentOS", CF_DATA_TYPE_STRING,
+                                      "source=agent,derived-from=centos");
+    }
+    else if (EvalContextClassGet(ctx, NULL, "fedora") != NULL)
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, lval,
+                                      "Fedora", CF_DATA_TYPE_STRING,
+                                      "source=agent,derived-from=fedora");
+    }
+    else if (EvalContextClassGet(ctx, NULL, "redhat") != NULL)
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, lval,
+                                      "RHEL", CF_DATA_TYPE_STRING,
+                                      "source=agent,derived-from=redhat");
+    }
+    else if (EvalContextClassGet(ctx, NULL, "aix") != NULL)
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, lval,
+                                      "AIX", CF_DATA_TYPE_STRING,
+                                      "source=agent,derived-from=aix");
+    }
+    else if (EvalContextClassGet(ctx, NULL, "hpux") != NULL)
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, lval,
+                                      "HP-UX", CF_DATA_TYPE_STRING,
+                                      "source=agent,derived-from=hpux");
+    }
+    else if (EvalContextClassGet(ctx, NULL, "suse") != NULL)
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, lval,
+                                      "SUSE", CF_DATA_TYPE_STRING,
+                                      "source=agent,derived-from=suse");
+    }
+    else if (EvalContextClassGet(ctx, NULL, "macos") != NULL)
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, lval,
+                                      "macOS", CF_DATA_TYPE_STRING,
+                                      "source=agent,derived-from=macos");
+    }
+    else if (EvalContextClassGet(ctx, NULL, "windows") != NULL)
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, lval,
+                                      "Windows", CF_DATA_TYPE_STRING,
+                                      "source=agent,derived-from=windows");
+    }
+    else if (EvalContextClassGet(ctx, NULL, "freebsd") != NULL)
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, lval,
+                                      "FreeBSD", CF_DATA_TYPE_STRING,
+                                      "source=agent,derived-from=freebsd");
+    }
+    else if (EvalContextClassGet(ctx, NULL, "solaris") != NULL)
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, lval,
+                                      "Solaris", CF_DATA_TYPE_STRING,
+                                      "source=agent,derived-from=solaris");
+    }
+    else
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, lval,
+                                      "Unknown", CF_DATA_TYPE_STRING,
+                                      "source=agent");
+    }
+}
+
 /*****************************************************************************/
 
 void DetectEnvironment(EvalContext *ctx)
@@ -3347,4 +3440,5 @@ void DetectEnvironment(EvalContext *ctx)
     OSClasses(ctx);
     GetSysVars(ctx);
     GetDefVars(ctx);
+    SysOSNameHuman(ctx);
 }

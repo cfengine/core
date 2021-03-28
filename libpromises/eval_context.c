@@ -548,7 +548,7 @@ ExpressionValue CheckClassExpression(const EvalContext *ctx, const char *context
 
     if (StringMatchFullWithPrecompiledRegex(context_expression_whitespace_rx, context))
     {
-        Log(LOG_LEVEL_INFO, "class names can't be separated by whitespace without an intervening operator in expression '%s'", context);
+        Log(LOG_LEVEL_ERR, "class expressions can't be separated by whitespace without an intervening operator in expression '%s'", context);
         return EXPRESSION_VALUE_ERROR;
     }
 

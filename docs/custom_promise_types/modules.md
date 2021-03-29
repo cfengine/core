@@ -37,12 +37,13 @@ bundle agent main
     linux::
       "/opt/cfengine/masterfiles"
         if => "redhat",
+        classes => some_classes_body,
         repo => "https://github.com/cfengine/masterfiles";
 }
 ```
 
-In this example, the promise module does not receive information about the `if` attribute, or the `linux::` class guard.
-The agent evaluates these, and decides whether to request evaluation from the module.
+In this example, the promise module does not receive information about the `if` and `classes` attributes, or the `linux::` class guard.
+The agent evaluates these, and decides whether to request evaluation from the module and which classes to define based on the promise outcome and the `some_classes_body` classes body.
 
 These attributes are handled by the agent, and cannot be used inside promise modules:
 
@@ -55,8 +56,27 @@ These attributes are handled by the agent, and cannot be used inside promise mod
 * `handle`
 * `meta`
 * `with`
+* `classes`
 
 In an early iteration, the agent will emit errors for any of these which are not implemented yet, if you try to use them.
+
+Due to the implementation details, the following attributes from the `classes` body also cannot be used inside promise modules:
+
+* `classes_name`
+* `scope`
+* `promise_repaired`
+* `repair_failed`
+* `repair_denied`
+* `repair_timeout`
+* `promise_kept`
+* `cancel_repaired`
+* `cancel_kept`
+* `cancel_notkept`
+* `kept_returncodes`
+* `repaired_returncodes`
+* `failed_returncodes`
+* `persist_time`
+* `timer_policy`
 
 ## Creating custom promise types
 

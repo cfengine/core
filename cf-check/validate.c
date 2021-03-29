@@ -293,9 +293,10 @@ static void UpdateValidatorLastseen(
         const char direction = key_string[1];
         if (direction == 'i' || direction == 'o')
         {
-            const KeyHostSeen *const data = value.mv_data;
+            KeyHostSeen data;
+            memcpy(&data, value.mv_data, sizeof(data));
 
-            const time_t lastseen = data->lastseen;
+            const time_t lastseen = data.lastseen;
             const time_t current = time(NULL);
 
             Log(LOG_LEVEL_DEBUG,
@@ -345,8 +346,9 @@ static void UpdateValidatorLock(
 
     const char *key_string = key.mv_data;
 
-    const LockData *const lock = value.mv_data;
-    const time_t lock_time = lock->time;
+    LockData lock;
+    memcpy(&lock, value.mv_data, sizeof(lock));
+    const time_t lock_time = lock.time;
     const time_t current = time(NULL);
 
     Log(LOG_LEVEL_DEBUG,

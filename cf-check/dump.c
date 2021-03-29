@@ -90,9 +90,10 @@ static void print_struct_lastseen_quality(
     else
     {
         // TODO: improve names of struct members in QPoint and KeyHostSeen
-        const KeyHostSeen *const quality = value.mv_data;
-        const time_t lastseen = quality->lastseen;
-        const QPoint Q = quality->Q;
+        KeyHostSeen quality;
+        memcpy(&quality, value.mv_data, sizeof(quality));
+        const time_t lastseen = quality.lastseen;
+        const QPoint Q = quality.Q;
 
         JsonElement *q_json = JsonObjectCreate(4);
         JsonObjectAppendReal(q_json, "q", Q.q);
@@ -123,10 +124,11 @@ static void print_struct_lock_data(
     else
     {
         // TODO: improve names of struct members in LockData
-        const LockData *const lock = value.mv_data;
-        const pid_t pid = lock->pid;
-        const time_t time = lock->time;
-        const time_t process_start_time = lock->process_start_time;
+        LockData lock;
+        memcpy(&lock, value.mv_data, sizeof(lock));
+        const pid_t pid = lock.pid;
+        const time_t time = lock.time;
+        const time_t process_start_time = lock.process_start_time;
 
         JsonElement *json = JsonObjectCreate(3);
         JsonObjectAppendInteger(json, "pid", pid);
@@ -154,8 +156,9 @@ static void print_struct_averages(
     else
     {
         // TODO: clean up Averages
-        const Averages *const averages = value.mv_data;
-        const time_t last_seen = averages->last_seen;
+        Averages averages;
+        memcpy(&averages, value.mv_data, sizeof(averages));
+        const time_t last_seen = averages.last_seen;
 
         JsonElement *all_observables = JsonObjectCreate(observables_max);
         assert(observables_max <= CF_OBSERVABLES);
@@ -163,7 +166,7 @@ static void print_struct_averages(
         for (Observable i = 0; i < observables_max; ++i)
         {
             JsonElement *observable = JsonObjectCreate(4);
-            QPoint Q = averages->Q[i];
+            QPoint Q = averages.Q[i];
             const char *const name = observable_strings[i];
 
             JsonObjectAppendReal(observable, "q", Q.q);
@@ -198,9 +201,10 @@ static void print_struct_persistent_class(
     }
     else
     {
-        const PersistentClassInfo *const class_info = value.mv_data;
-        const unsigned int expires = class_info->expires;
-        const PersistentClassPolicy policy = class_info->policy;
+        PersistentClassInfo class_info;
+        memcpy(&class_info, value.mv_data, sizeof(class_info));
+        const unsigned int expires = class_info.expires;
+        const PersistentClassPolicy policy = class_info.policy;
         const char *policy_str;
         switch (policy)
         {
@@ -216,10 +220,10 @@ static void print_struct_persistent_class(
             break;
         }
 
-        const char *const tags = class_info->tags;
-        assert(tags > (char *) class_info);
+        const char *const tags = class_info.tags;
+        assert(tags > (char *) &class_info);
 
-        const size_t offset = (tags - (char *) class_info);
+        const size_t offset = (tags - (char *) &class_info);
 
         /* (sizeof(unsigned int) + sizeof(PersistentClassPolicy)) is offset without the padding */
         assert(offset >= (sizeof(unsigned int) + sizeof(PersistentClassPolicy)));
@@ -272,8 +276,9 @@ static void print_struct_or_string(
             if (StringEqual(key.mv_data, "DATABASE_AGE"))
             {
                 assert(sizeof(double) == value.mv_size);
-                const double *const age = value.mv_data;
-                printf("%f", *age);
+                double age;
+                memcpy(&age, value.mv_data, sizeof(age));
+                printf("%f", age);
             }
             else
             {
@@ -293,14 +298,16 @@ static void print_struct_or_string(
             if (StringEqual(key.mv_data, "delta_gavr"))
             {
                 assert(sizeof(double) == value.mv_size);
-                const double *const average = value.mv_data;
-                printf("%f", *average);
+                double average;
+                memcpy(&average, value.mv_data, sizeof(average));
+                printf("%f", average);
             }
             else if (StringEqual(key.mv_data, "last_exec"))
             {
                 assert(sizeof(time_t) == value.mv_size);
-                const time_t *const last_exec = value.mv_data;
-                printf("%ju", (uintmax_t) (*last_exec));
+                time_t last_exec;
+                memcpy(&last_exec, value.mv_data, sizeof(last_exec));
+                printf("%ju", (uintmax_t) (last_exec));
             }
             else
             {

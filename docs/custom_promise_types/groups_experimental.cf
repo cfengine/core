@@ -1,0 +1,61 @@
+
+promise agent groups_experimental
+{
+    path => "$(this.promise_dirname)/../modules/promises/groups_experimental.py";
+    interpreter => "/usr/bin/python3";
+}
+
+bundle common foo {
+    vars:
+        # alice and bob should be in foo
+        # malcom should not be in foo
+        "members" string => '{"include": ["alice", "bob"], "exclude": ["malcom"]}';
+}
+
+bundle common bar {
+    vars:
+        # only alice should be in bar 
+        # only cannot be used with include or exclude
+        "members" string => '{"only": ["alice"]}';
+}
+
+bundle agent groups_experimental_prototype
+{
+    groups_experimental:
+        "foo"
+            policy => "present", # foo should exist
+            members => "$(foo.members)";
+
+    groups_experimental:
+        "bar"
+            # policy defaults to present, thus bar should exist
+            gid => "1337", # bar should have gid = 1337
+            members => "$(bar.members)";
+
+    groups_experimental:
+        "baz"
+            policy => "absent"; # should not exist
+}
+
+bundle agent example_users
+{
+    # make sure the users in the groups promise actually exists
+    users:
+        "alice"
+            policy => "present";
+    
+    users:
+        "bob"
+            policy => "present";
+    
+    users:
+        "malcom"
+            policy => "present";
+}
+
+bundle agent __main__
+{
+    methods:
+        "example_users";
+        "groups_experimental_prototype";
+}

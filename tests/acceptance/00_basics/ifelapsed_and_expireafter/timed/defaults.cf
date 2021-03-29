@@ -31,8 +31,8 @@ bundle agent init
       # Backgrounding doesn't work properly on Windows or with fakeroot.
       # In addition, RHEL4 seems to have some problem killing the test
       # afterwards, and HP-UX is too slow for timing to be accurate. Also,
-      # this test randomly fails on Solaris and SUSE 11 and 12.
-      "test_skip_needs_work" string => "windows|using_fakeroot|redhat_4|hpux|sunos|suse_11|suse_12";
+      # this test was disabled on all platforms in ENT-6939
+      "test_skip_needs_work" string => "any";
 
   methods:
     test_pass_1::

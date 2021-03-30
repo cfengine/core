@@ -1,0 +1,31 @@
+body common control
+{
+  bundlesequence => { "test", "check" };
+}
+
+bundle agent test
+{
+  meta:
+    "description" -> { "CFE-3569" }
+      string => "Make sure sys.os_name_human does not resolve to 'Unknown'";
+}
+
+bundle agent check
+{
+  classes:
+      # Check that sys.os_name_human does not resolve to 'Unknown'
+      "check1" expression => not(strcmp("Unknown",       "$(sys.os_name_human)"));
+      # Check that sys.os_name_human does not resolve to an empty string
+      "check2" expression => not(strcmp("",              "$(sys.os_name_human)"));
+      # Check that sys.os_name_human does not contain 'os_name_human'
+      "check3" expression => not(regcmp("os_name_human", "$(sys.os_name_human)"));
+      "passed" and => { "check1", "check2", "check3" };
+
+  reports:
+    DEBUG::
+      "sys.os_name_human resolved to '$(sys.os_name_human)'";
+    passed::
+      "$(this.promise_filename) Pass";
+    !passed::
+      "$(this.promise_filename) FAIL";
+}

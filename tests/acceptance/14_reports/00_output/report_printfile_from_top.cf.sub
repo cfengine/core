@@ -1,0 +1,21 @@
+# Line 1 from top
+# Line 2 from top
+# Line 3 from top
+
+body common control
+{
+  bundlesequence => { "example" };
+}
+
+bundle agent example
+{
+  reports:
+    "First three:"
+      printfile => first_three("$(this.promise_filename)");
+}
+
+body printfile first_three(file)
+{
+  file_to_print => "$(file)";
+  number_of_lines => "3";
+}

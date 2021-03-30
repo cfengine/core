@@ -1,0 +1,21 @@
+body common control
+{
+  bundlesequence => { "example" };
+}
+
+bundle agent example
+{
+  reports:
+    "Last three:"
+      printfile => last_three("$(this.promise_filename)");
+}
+
+body printfile last_three(file)
+{
+  file_to_print => "$(file)";
+  number_of_lines => "-3";
+}
+
+# Line 3 from bot
+# Line 2 from bot
+# Line 1 from bot

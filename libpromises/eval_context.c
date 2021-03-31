@@ -139,6 +139,8 @@ struct EvalContext_
     int pass;
     Rlist *args;
 
+    Rlist *restrict_keys;
+
     Item *heap_abort;
     Item *heap_abort_current_bundle;
 
@@ -194,6 +196,15 @@ void EvalContextSetSelectEndMatchEof(EvalContext *ctx, bool value)
     ctx->select_end_match_eof = value;
 }
 
+Rlist *EvalContextGetRestrictKeys(const EvalContext *ctx)
+{
+    return ctx->restrict_keys;
+}
+
+void EvalContextSetRestrictKeys(EvalContext *ctx, const Rlist *restrict_keys)
+{
+    ctx->restrict_keys = RlistCopy(restrict_keys);
+}
 
 void AddDefaultPackageModuleToContext(const EvalContext *ctx, char *name)
 {

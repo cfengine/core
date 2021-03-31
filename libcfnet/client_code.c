@@ -133,7 +133,7 @@ bool SetCfenginePort(const char *port_str)
 /**
  * @return 1 success, 0 auth/ID error, -1 other error
  */
-int TLSConnect(ConnectionInfo *conn_info, bool trust_server,
+int TLSConnect(ConnectionInfo *conn_info, bool trust_server, const Rlist *restrict_keys,
                const char *ipaddr, const char *username)
 {
     int ret;
@@ -153,6 +153,17 @@ int TLSConnect(ConnectionInfo *conn_info, bool trust_server,
     }
 
     const char *key_hash = KeyPrintableHash(conn_info->remote_key);
+
+    // If restrict_key is defined, check if the key is there
+    if (restrict_keys) {
+        if (RlistContainsString(restrict_keys, key_hash)) {
+            Log(LOG_LEVEL_VERBOSE, "Server key in allowed list: %s", key_hash);
+        } else {
+            Log(LOG_LEVEL_ERR,
+                "Server key not in allowed keys, server presented: %s", key_hash);
+            return -1;
+        }
+    }
 
     if (ret == 1)
     {
@@ -187,7 +198,7 @@ int TLSConnect(ConnectionInfo *conn_info, bool trust_server,
  * @NOTE if #flags.protocol_version is CF_PROTOCOL_UNDEFINED, then latest
  *       protocol is used by default.
  */
-AgentConnection *ServerConnection(const char *server, const char *port,
+AgentConnection *ServerConnection(const char *server, const char *port, const Rlist *restrict_keys,
                                   unsigned int connect_timeout,
                                   ConnectionFlags flags, int *err)
 {
@@ -245,7 +256,7 @@ AgentConnection *ServerConnection(const char *server, const char *port,
          * TLSConnect() it will have the version we finally ended up with. */
         conn->conn_info->protocol = protocol_version;
 
-        ret = TLSConnect(conn->conn_info, flags.trust_server,
+        ret = TLSConnect(conn->conn_info, flags.trust_server, restrict_keys,
                          conn->remoteip, conn->username);
 
         if (ret == -1)                                      /* Error */

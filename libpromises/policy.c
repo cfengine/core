@@ -68,7 +68,7 @@ static const char *const POLICY_ERROR_PROMISE_ATTRIBUTE_NOT_IMPLEMENTED =
 static const char *const POLICY_ERROR_PROMISE_ATTRIBUTE_NOT_SUPPORTED =
     "Common attribute '%s' not supported for custom promises, use '%s' instead (%s promises)";
 static const char *const POLICY_ERROR_PROMISE_CUSTOM_CONTAINERS_NOT_IMPLEMENTED =
-    "Container / string list attributes not implemented for custom promises (%s promise, '%s' promiser, '%s' attribute)";
+    "Container attributes not implemented for custom promises (%s promise, '%s' promiser, '%s' attribute)";
 
 static const char *const POLICY_ERROR_CONSTRAINT_TYPE_MISMATCH =
     "Type mismatch in constraint: %s";
@@ -2758,11 +2758,8 @@ static bool ValidateCustomPromise(const Promise *pp, Seq *errors)
                     promise_type));
             valid = false;
         }
-        else if ((attribute->rval.type == RVAL_TYPE_CONTAINER)
-            || (attribute->rval.type == RVAL_TYPE_LIST))
+        else if (attribute->rval.type == RVAL_TYPE_CONTAINER)
         {
-            // TODO - Implement slists for custom promises:
-            // https://tracker.mender.io/browse/CFE-3444
             SeqAppend(
                 errors,
                 PolicyErrorNew(

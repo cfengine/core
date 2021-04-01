@@ -476,7 +476,7 @@ static void PromiseModule_AppendString(
 }
 
 static void PromiseModule_AppendAttribute(
-    PromiseModule *module, const char *key, const char *value)
+    PromiseModule *module, const char *key, JsonElement *value)
 {
     assert(module != NULL);
 
@@ -492,7 +492,7 @@ static void PromiseModule_AppendAttribute(
         JsonObjectAppendObject(module->message, "attributes", attributes);
     }
 
-    JsonObjectAppendString(attributes, key, value);
+    JsonObjectAppendElement(attributes, key, value);
 }
 
 static void PromiseModule_Send(PromiseModule *module)
@@ -564,13 +564,22 @@ static void PromiseModule_AppendAllAttributes(
             // Evaluated by agent and not sent to module, skip
             continue;
         }
-        char *const value = RvalToString(attribute->rval);
-        PromiseModule_AppendAttribute(module, name, value);
-        free(value);
+
+        if ((attribute->rval.type == RVAL_TYPE_SCALAR) || (attribute->rval.type == RVAL_TYPE_LIST))
+        {
+            JsonElement *value = RvalToJson(attribute->rval);
+            PromiseModule_AppendAttribute(module, name, value);
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE,
+                "Unsupported type of the '%s' attribute (%c), cannot be sent to custom promise module",
+                name, attribute->rval.type);
+        }
     }
 }
 
-static inline bool CustomPromise_IsFullyResolved(const Promise *pp)
+static inline bool CustomPromise_IsFullyResolved(const Promise *pp, bool slists_allowed)
 {
     assert(pp != NULL);
 
@@ -587,18 +596,33 @@ static inline bool CustomPromise_IsFullyResolved(const Promise *pp)
             /* Not passed to the modules, handled on the agent side. */
             continue;
         }
-        if (attribute->rval.type != RVAL_TYPE_SCALAR)
+        if ((attribute->rval.type != RVAL_TYPE_SCALAR) &&
+            (!slists_allowed || (attribute->rval.type != RVAL_TYPE_LIST)))
         {
             // Most likely container or unresolved function call
-            // Custom promises only support scalars currently
-            // TODO - Implement slists for custom promises:
-            // https://tracker.mender.io/browse/CFE-3444
+            // Custom promises only support scalars and slists currently
             return false;
         }
-        const char *const value = RvalScalarValue(attribute->rval);
-        if (StringContainsUnresolved(value))
+        if (attribute->rval.type == RVAL_TYPE_SCALAR)
         {
-            return false;
+            const char *const value = RvalScalarValue(attribute->rval);
+            if (StringContainsUnresolved(value))
+            {
+                return false;
+            }
+        }
+        else
+        {
+            assert(slists_allowed && (attribute->rval.type == RVAL_TYPE_LIST));
+            for (Rlist *rl = RvalRlistValue(attribute->rval); rl != NULL; rl = rl->next)
+            {
+                assert(rl->val.type == RVAL_TYPE_SCALAR);
+                const char *const value = RvalScalarValue(rl->val);
+                if (StringContainsUnresolved(value))
+                {
+                    return false;
+                }
+            }
         }
     }
     return true;
@@ -851,7 +875,7 @@ PromiseResult EvaluateCustomPromise(EvalContext *ctx, const Promise *pp)
 
     if (valid)
     {
-        valid = CustomPromise_IsFullyResolved(pp);
+        valid = CustomPromise_IsFullyResolved(pp, module->json);
         if ((!valid) && (EvalContextGetPass(ctx) == CF_DONEPASSES - 1))
         {
             Log(LOG_LEVEL_ERR,

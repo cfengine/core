@@ -293,6 +293,7 @@ static JsonElement* VarRefValueToJson(const EvalContext *ctx, const FnCall *fp, 
                     data);
             }
         }
+        // fallthrough
         default:
             *allocated = true;
 

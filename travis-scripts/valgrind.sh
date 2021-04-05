@@ -73,7 +73,7 @@ function check_output {
     fi
     echo "Looking for problems in $1:"
     grep -i "ERROR SUMMARY: 0 errors" "$1"
-    cat $1 | sed -e "/ 0 errors/d" -e "/and suppressed error/d" -e "/a memory error detector/d" > filtered.txt
+    cat $1 | sed -e "/ 0 errors/d" -e "/and suppressed error/d" -e "/a memory error detector/d" -e "/This database contains unknown binary data/d" > filtered.txt
     no_errors filtered.txt
     set +e
     grep -i "at 0x" filtered.txt

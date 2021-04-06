@@ -151,14 +151,17 @@ static bool PrintFile(const char *filename, ssize_t max_lines)
 {
     if (!filename)
     {
-        Log(LOG_LEVEL_VERBOSE, "Printfile promise was incomplete, with no filename.");
+        Log(LOG_LEVEL_VERBOSE,
+            "Printfile promise was incomplete, with no filename.");
         return false;
     }
 
     FILE *fp = safe_fopen(filename, "r");
     if (!fp)
     {
-        Log(LOG_LEVEL_ERR, "Printing of file '%s' was not possible. (fopen: %s)", filename, GetErrorStr());
+        Log(LOG_LEVEL_ERR,
+            "Printing of file '%s' was not possible. (fopen: %s)",
+            filename, GetErrorStr());
         return false;
     }
 
@@ -192,7 +195,9 @@ static bool PrintFile(const char *filename, ssize_t max_lines)
         {
             if (ferror(fp))
             {
-                Log(LOG_LEVEL_ERR, "Failed to read line from stream, (getline: %s)", GetErrorStr());
+                Log(LOG_LEVEL_ERR,
+                    "Failed to read line from stream, (getline: %s)",
+                    GetErrorStr());
                 free(line);
                 return false;
             }

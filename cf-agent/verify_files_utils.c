@@ -2669,7 +2669,7 @@ static PromiseResult CopyFileSources(EvalContext *ctx, char *destination, Attrib
         }
         else
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, attr,
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr,
                  "Can't stat file '%s' on '%s' in files.copy_from promise",
                  BufferData(source), conn ? conn->remoteip : "localhost");
             BufferDestroy(source);

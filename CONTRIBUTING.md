@@ -342,6 +342,24 @@ If you are a Guru, try to restrain yourself, only do magic when absolutely neces
           // Log message already printed above
       }
       ```
+* Switch-case deliberate fall through:
+  It should be explicitly indicated with a specific comment:
+  `// fall through` or `/* fall through */`
+  ```c
+  switch(x) {
+  case 1:
+  case 2:
+      // ...
+  // fall through
+  // Optional comment explaining why
+  case 3:
+      // ...
+      break;
+  default:
+      // ...
+      break;
+  }
+  ```
 * Variable names:
     * Describe what the variable is.
     * Are English words with underscores: `string_index`

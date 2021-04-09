@@ -1575,6 +1575,8 @@ bool DoExec2(const EvalContext *ctx,
              char *exec_args,
              char *sendbuf, size_t sendbuf_size)
 {
+    assert(conn != NULL);
+
     /* STEP 0: Verify cfruncommand was successfully configured. */
     if (NULL_OR_EMPTY(CFRUNCOMMAND))
     {
@@ -1789,7 +1791,15 @@ bool DoExec2(const EvalContext *ctx,
         }
     }
     free(line);
-    cf_pclose(pp);
+    int exit_code = cf_pclose(pp);
+    if (exit_code >= 0)
+    {
+        xsnprintf(sendbuf, sendbuf_size, "(exit code: %d)\n", exit_code);
+        if (SendTransaction(conn->conn_info, sendbuf, 0, CF_DONE) == -1)
+        {
+            Log(LOG_LEVEL_INFO, "Failed to send exit code from EXEC agent run");
+        }
+    }
 
     return true;
 }

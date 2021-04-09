@@ -50,6 +50,8 @@
 #include <string_lib.h>
 #include <cleanup.h>
 
+#define CF_RA_EXIT_CODE_OTHER_ERR 101
+
 typedef enum
 {
     RUNAGENT_CONTROL_HOSTS,
@@ -69,9 +71,9 @@ static void ThisAgentInit(void);
 static GenericAgentConfig *CheckOpts(int argc, char **argv);
 
 static void KeepControlPromises(EvalContext *ctx, const Policy *policy);
-static bool HailServer(const EvalContext *ctx, const GenericAgentConfig *config, char *host);
+static int HailServer(const EvalContext *ctx, const GenericAgentConfig *config, char *host);
 static void SendClassData(AgentConnection *conn);
-static void HailExec(AgentConnection *conn, char *peer);
+static int HailExec(AgentConnection *conn, char *peer);
 static FILE *NewStream(char *name);
 
 /*******************************************************************/
@@ -158,6 +160,41 @@ char REMOTEBUNDLES[CF_MAXVARSIZE] = "";
 
 /*****************************************************************************/
 
+/**
+ * @param is_exit_code whether #remote_exit_status is a exit code directly
+ *                     (#true) or a status from wait() (#false)
+ */
+static inline void UpdateExitCode(int *exit_code, int remote_exit_status, bool one_host, bool is_exit_code)
+{
+    assert(exit_code != NULL);
+
+    if (one_host)
+    {
+        if (is_exit_code)
+        {
+            *exit_code = remote_exit_status;
+            return;
+        }
+
+        if (WIFEXITED(remote_exit_status))
+        {
+            *exit_code = WEXITSTATUS(remote_exit_status);
+            return;
+        }
+
+        *exit_code = CF_RA_EXIT_CODE_OTHER_ERR;
+        return;
+    }
+
+    /* Other error should always take priority, otherwise, count failed remote
+     * agent runs. */
+    if ((*exit_code < CF_RA_EXIT_CODE_OTHER_ERR) &&
+        (!WIFEXITED(remote_exit_status) || (WEXITSTATUS(remote_exit_status) != EXIT_SUCCESS)))
+    {
+        *exit_code = MIN(*exit_code + 1, 100);
+    }
+}
+
 int main(int argc, char *argv[])
 {
 #if !defined(__MINGW32__)
@@ -178,17 +215,23 @@ int main(int argc, char *argv[])
 
     KeepControlPromises(ctx, policy);      // Set RUNATTR using copy
 
+    /* Exit codes:
+     * - exit code from the remote agent run if only 1 host specified
+     * - number of failed remote agent runs up to 100 otherwise
+     * - >100 in case of other errors */
+    int exit_code = 0;
+
     if (BACKGROUND && INTERACTIVE)
     {
         Log(LOG_LEVEL_ERR, "You cannot specify background mode and interactive mode together");
-        DoCleanupAndExit(EXIT_FAILURE);
+        DoCleanupAndExit(CF_RA_EXIT_CODE_OTHER_ERR);
     }
 
 /* HvB */
+    const bool one_host = (HOSTLIST != NULL) && (HOSTLIST->next == NULL);
     if (HOSTLIST)
     {
         const Rlist *rp = HOSTLIST;
-
         while (rp != NULL)
         {
 
@@ -206,8 +249,8 @@ int main(int argc, char *argv[])
                 {
                     if (fork() == 0)    /* child process */
                     {
-                        HailServer(ctx, config, RlistScalarValue(rp));
-                        DoCleanupAndExit(EXIT_SUCCESS);
+                        int remote_exit_code = HailServer(ctx, config, RlistScalarValue(rp));
+                        DoCleanupAndExit(remote_exit_code  > 0 ? remote_exit_code : CF_RA_EXIT_CODE_OTHER_ERR);
                     }
                     else        /* parent process */
                     {
@@ -220,12 +263,14 @@ int main(int argc, char *argv[])
                     pid = wait(&status);
                     Log(LOG_LEVEL_DEBUG, "child = %d, child number = %d", pid, count);
                     count--;
+                    UpdateExitCode(&exit_code, status, one_host, false);
                 }
             }
             else                /* serial */
 #endif /* __MINGW32__ */
             {
-                HailServer(ctx, config, RlistScalarValue(rp));
+                int remote_exit_code = HailServer(ctx, config, RlistScalarValue(rp));
+                UpdateExitCode(&exit_code, remote_exit_code, one_host, true);
                 rp = rp->next;
             }
         }                       /* end while */
@@ -240,6 +285,7 @@ int main(int argc, char *argv[])
             pid = wait(&status);
             Log(LOG_LEVEL_VERBOSE, "Child %d ended, number %d", pid, count);
             count--;
+            UpdateExitCode(&exit_code, status, one_host, false);
         }
     }
 #endif
@@ -248,7 +294,7 @@ int main(int argc, char *argv[])
     GenericAgentFinalize(ctx, config);
 
     CallCleanupFunctions();
-    return 0;
+    return exit_code;
 }
 
 /*******************************************************************/
@@ -447,7 +493,7 @@ static void ThisAgentInit(void)
 
 /********************************************************************/
 
-static bool HailServer(const EvalContext *ctx, const GenericAgentConfig *config, char *host)
+static int HailServer(const EvalContext *ctx, const GenericAgentConfig *config, char *host)
 {
     assert(host != NULL);
 
@@ -463,7 +509,7 @@ static bool HailServer(const EvalContext *ctx, const GenericAgentConfig *config,
     if (hostname == NULL)
     {
         Log(LOG_LEVEL_INFO, "No remote hosts were specified to connect to");
-        return false;
+        return -1;
     }
     if (port == NULL)
     {
@@ -475,7 +521,7 @@ static bool HailServer(const EvalContext *ctx, const GenericAgentConfig *config,
     {
         Log(LOG_LEVEL_ERR,
             "HailServer: ERROR, could not resolve '%s'", hostname);
-        return false;
+        return -1;
     }
 
     Address2Hostkey(hostkey, sizeof(hostkey), ipaddr);
@@ -556,13 +602,11 @@ static bool HailServer(const EvalContext *ctx, const GenericAgentConfig *config,
     if (conn == NULL)
     {
         Log(LOG_LEVEL_ERR, "Failed to connect to host: %s", hostname);
-        return false;
+        return -1;
     }
 
     /* Send EXEC command. */
-    HailExec(conn, hostname);
-
-    return true;
+    return HailExec(conn, hostname);
 }
 
 /********************************************************************/
@@ -704,7 +748,7 @@ static void SendClassData(AgentConnection *conn)
 
 /********************************************************************/
 
-static void HailExec(AgentConnection *conn, char *peer)
+static int HailExec(AgentConnection *conn, char *peer)
 {
     char sendbuf[CF_BUFSIZE - CF_INBAND_OFFSET] = "EXEC";
     size_t sendbuf_len = strlen(sendbuf);
@@ -724,14 +768,14 @@ static void HailExec(AgentConnection *conn, char *peer)
     {
         Log(LOG_LEVEL_ERR, "Command longer than maximum transaction packet");
         DisconnectServer(conn);
-        return;
+        return -1;
     }
 
     if (SendTransaction(conn->conn_info, sendbuf, 0, CF_DONE) == -1)
     {
         Log(LOG_LEVEL_ERR, "Transmission rejected. (send: %s)", GetErrorStr());
         DisconnectServer(conn);
-        return;
+        return -1;
     }
 
     /* TODO we are sending class data right after EXEC, when the server might
@@ -742,6 +786,7 @@ static void HailExec(AgentConnection *conn, char *peer)
 
     char recvbuffer[CF_BUFSIZE];
     FILE *fp = NewStream(peer);
+    int exit_code = -1;
     while (true)
     {
         memset(recvbuffer, 0, sizeof(recvbuffer));
@@ -769,6 +814,18 @@ static void HailExec(AgentConnection *conn, char *peer)
         }
         else
         {
+            /* '(exit code: N)' is a special line, not prefixed with '>' (so not
+             * part of output) and sent last by new cf-serverd (3.18.0+) */
+            if (StringStartsWith(recvbuffer, "(exit code:"))
+            {
+                /* Should never show up twice. */
+                assert(exit_code == -1);
+                int scanned = sscanf(recvbuffer, "(exit code: %d)", &exit_code);
+                if (scanned != 1)
+                {
+                    Log(LOG_LEVEL_ERR, "Failed to parse exit code from '%s'", recvbuffer);
+                }
+            }
             fprintf(fp, "%s> %s", ipaddr, recvbuffer);
         }
 
@@ -787,6 +844,7 @@ static void HailExec(AgentConnection *conn, char *peer)
         fclose(fp);
     }
     DisconnectServer(conn);
+    return exit_code;
 }
 
 /********************************************************************/

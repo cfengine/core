@@ -3,31 +3,24 @@
 
 teardown ()
 {
-  # because results in test.xml should not be parsed by CI or otherwise
-  # failures there may be expected and will be checked by grep below
-  rm test.xml
-  rm summary.log
-  rm test.log
-  rm "$MY_LOG"
+  # - remove the closing </testsuite> tag in all-test.xml
+  sed -i '/<\/testsuite>/d' all-test.xml
 
-  # borrowed from testall (finish_xml)
-  mv "$MY_XML" xml.tmp
-  (
-    cat <<EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="$(pwd)/selftest"
-  timestamp="$(date "+%F %T")"
-  hostname="localhost"
-  tests="$TESTS_COUNT"
-  failures="$FAILED_TESTS"
-  time="$((END_TIME - START_TIME)) seconds">
-EOF
-    cat xml.tmp
-    cat <<EOF
-</testsuite>
-EOF
-  ) >> "$MY_XML"
-  rm -f xml.tmp
+  # - adjust the testsuite tests= and failures= counts
+  local OLD_FAILED_TESTS=$(awk 'BEGIN{FS="="} /failures=/ {gsub(/"/, ""); print $2}' all-test.xml)
+  local OLD_TESTS_COUNT=$(awk 'BEGIN{FS="="} /tests=/ {gsub(/"/, ""); print $2}' all-test.xml)
+  local NEW_FAILED_TESTS=$((OLD_FAILED_TESTS + FAILED_TESTS))
+  local NEW_TESTS_COUNT=$((OLD_TESTS_COUNT + TESTS_COUNT))
+  sed -i "s,tests=\"$OLD_TESTS_COUNT\",tests=\"$NEW_TESTS_COUNT\"," all-test.xml
+  sed -i "s,failures=\"$OLD_FAILED_TESTS\",failures=\"$NEW_FAILED_TESTS\"," all-test.xml
+
+  # - append <testcase/> elements for each of my tests from the built-up selftest.xml file
+  cat selftest.xml >> all-test.xml
+
+  # test.xml will include a closing testsuite tag
+  mv all-test.xml test.xml
+  mv all-summary.log summary.log
+  mv all-test.log test.log
 }
 
 fail ()
@@ -35,7 +28,8 @@ fail ()
   local name="$1"
   local run_type="$2"
   cat <<EOF >> "$MY_XML"
-<testcase name="./selftest.sh($run_type) $name">
+<testcase name="$name"
+  classname="./selftest.sh/$run_type/$name">
   <failure type="FAIL"/>
 </testcase>
 EOF
@@ -46,7 +40,9 @@ pass ()
   local name="$1"
   local run_type="$2"
   cat <<EOF >> "$MY_XML"
-<testcase name="./selftest.sh($run_type) $name"/>
+<testcase name="$name"
+  classname="./selftest.sh/$run_type/$name">
+</testcase>
 EOF
 }
 
@@ -66,12 +62,18 @@ check ()
 }
 
 WORKDIR=workdir
-MY_XML=selftest/test.xml
+MY_XML=selftest.xml
 rm -f "$MY_XML"
 MY_LOG="$WORKDIR/selftest.log"
 mkdir -p "$WORKDIR"
 FAILED_TESTS=0
 TESTS_COUNT=0
+
+# make backups of test.xml, summary.log and test.log
+mv test.xml all-test.xml
+mv summary.log all-summary.log
+mv test.log all-test.log
+
 
 ./testall selftest > "$MY_LOG"
 ret=$?
@@ -99,7 +101,7 @@ for regex in \
 "Total tests:     6"
 do
   TESTS_COUNT=$((TESTS_COUNT + 1))
-  check "$regex" "$MY_LOG" "default" || FAILED_TESTS=$((FAILED_TESTSs + 1))
+  check "$regex" "$MY_LOG" "default" || FAILED_TESTS=$((FAILED_TESTS + 1))
 done
 
 FLAKEY_IS_FAIL=1 ./testall selftest > "$MY_LOG"

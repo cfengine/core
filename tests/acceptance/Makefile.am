@@ -86,9 +86,9 @@ endif
 # Keep the '+' in front for the command, needed for the sub-make
 # to run in parallel; TODO fix "make -n" not working:
 check-local:
-	+ $(srcdir)/selftest.sh
 	+ $(TESTS_ENVIRONMENT) MAKE=$(MAKE) $(srcdir)/testall
-
+	# selftest.sh MUST come after testall, it mangles the resulting tests/acceptance/test.xml JUnit report for CI
+	+ $(srcdir)/selftest.sh
 
 EXTRA_DIST = default.cf.sub dcs.cf.sub plucked.cf.sub run_with_server.cf.sub \
 	testall dummy_etc write_args.sh \

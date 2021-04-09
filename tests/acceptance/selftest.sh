@@ -28,10 +28,11 @@ teardown ()
 fail ()
 {
   local name="$1"
+  local classname=$(echo $name | awk '{print $1}')
   local run_type="$2"
   cat <<EOF >> "$MY_XML"
 <testcase name="$name"
-  classname="./selftest.sh/$run_type/$name">
+  classname="./selftest.sh/$run_type/$classname">
   <failure type="FAIL"/>
 </testcase>
 EOF
@@ -40,10 +41,11 @@ EOF
 pass ()
 {
   local name="$1"
+  local classname=$(echo $name | awk '{print $1}')
   local run_type="$2"
   cat <<EOF >> "$MY_XML"
 <testcase name="$name"
-  classname="./selftest.sh/$run_type/$name">
+  classname="./selftest.sh/$run_type/$classname">
 </testcase>
 EOF
 }
@@ -132,7 +134,7 @@ for regex in \
 "Total tests:     6"
 do
   TESTS_COUNT=$((TESTS_COUNT + 1))
-  check "$regex" "$MY_LOG" "FLAKEY_IS_FAIL=1" || FAILED_TESTS=$((FAILED_TESTS + 1))
+  check "$regex" "$MY_LOG" "FLAKEY_IS_FAIL" || FAILED_TESTS=$((FAILED_TESTS + 1))
 done
 
 teardown

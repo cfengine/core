@@ -3,10 +3,10 @@
 
 teardown ()
 {
-  # - remove the closing </testsuite> tag in all-test.xml
+  # remove the closing </testsuite> tag in all-test.xml
   sed -i '/<\/testsuite>/d' all-test.xml
 
-  # - adjust the testsuite tests= and failures= counts
+  # adjust the testsuite tests= and failures= counts
   local OLD_FAILED_TESTS=$(awk 'BEGIN{FS="="} /failures=/ {gsub(/"/, ""); print $2}' all-test.xml)
   local OLD_TESTS_COUNT=$(awk 'BEGIN{FS="="} /tests=/ {gsub(/"/, ""); print $2}' all-test.xml)
   local NEW_FAILED_TESTS=$((OLD_FAILED_TESTS + FAILED_TESTS))
@@ -14,10 +14,12 @@ teardown ()
   sed -i "s,tests=\"$OLD_TESTS_COUNT\",tests=\"$NEW_TESTS_COUNT\"," all-test.xml
   sed -i "s,failures=\"$OLD_FAILED_TESTS\",failures=\"$NEW_FAILED_TESTS\"," all-test.xml
 
-  # - append <testcase/> elements for each of my tests from the built-up selftest.xml file
+  # append <testcase/> elements for each of my tests from the built-up selftest.xml file
   cat selftest.xml >> all-test.xml
 
-  # test.xml will include a closing testsuite tag
+  # add back the closing testsuite tag
+  echo "</testsuite>" >> all-test.xml
+
   mv all-test.xml test.xml
   mv all-summary.log summary.log
   mv all-test.log test.log

@@ -6,7 +6,11 @@
 clean ()
 {
   rm test.xml
+  rm summary.log
+  rm test.log
+  rm "$WORKDIR/$LOG"
 }
+
 check ()
 {
   expect=$1
@@ -18,9 +22,13 @@ check ()
   fi
 }
 
-mkdir -p workdir
+WORKDIR=workdir
+MY_XML=selftest.xml
+LOG=selftest.log
+mkdir -p "$WORKDIR"
+touch "$WORKDIR/$MY_XML"
 
-./testall selftest > workdir/selftest_normal.log
+./testall selftest > "$WORKDIR/$LOG"
 ret=$?
 if [ "$ret" -ne "0" ]
 then
@@ -28,8 +36,6 @@ then
   clean
   exit 1
 fi
-
-log="workdir/selftest_normal.log"
 
 errors=0
 _pwd=$(pwd)
@@ -48,20 +54,18 @@ for regex in \
 "Flakey failures: 1" \
 "Total tests:     6"
 do
-  check "$regex" "$log" || errors=$((errors + 1))
+  check "$regex" "$WORKDIR/$LOG" || errors=$((errors + 1))
 done
 if [ "$errors" -ne "0" ]
 then
   echo "error: $errors error(s) occurred for selftest (flakey is not fail)"
-  echo "=== BEGIN $log ==="
-  cat $log
-  echo "=== END $log ==="
+  echo "=== BEGIN $WORKDIR/$LOG ==="
+  cat $WORKDIR/$LOG
+  echo "=== END $WORKDIR/$LOG ==="
   clean
   exit 1
 fi
-
-
-FLAKEY_IS_FAIL=1 ./testall selftest > workdir/selftest_flakey_is_fail.log
+FLAKEY_IS_FAIL=1 ./testall selftest > "$WORKDIR/$LOG"
 ret=$?
 if [ "$ret" -ne "4" ]
 then
@@ -71,7 +75,6 @@ then
 fi
 
 errors=0
-log="workdir/selftest_flakey_is_fail.log"
 
 for regex in \
 "./selftest/fail.cf FAIL (Suppressed, R: $_pwd/./selftest/fail.cf XFAIL)" \
@@ -87,14 +90,18 @@ for regex in \
 "Flakey failures: 1" \
 "Total tests:     6"
 do
-  check "$regex" "$log" || errors=$((errors + 1))
+  check "$regex" "$WORKDIR/$LOG" || errors=$((errors + 1))
 done
 if [ "$errors" -ne "0" ]
 then
   echo "error: $errors error(s) occurred for selftest (flakey is fail)"
-  echo "=== BEGIN $log ==="
-  cat $log
-  echo "=== END $log ==="
+  echo "=== BEGIN $WORKDIR/$LOG ==="
+  cat $WORKDIR/$LOG
+  echo "=== END $WORKDIR/$LOG ==="
   clean
   exit 1
 fi
+
+clean
+
+exit 0

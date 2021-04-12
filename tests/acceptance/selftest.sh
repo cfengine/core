@@ -31,6 +31,7 @@ EOF
 
   # append <testcase/> elements for each of my tests from the built-up selftest.xml file
   cat selftest.xml >> all-test.xml
+  rm -f selftest.xml # to avoid eager CI from parsing
 
   # add back the closing testsuite tag
   echo "</testsuite>" >> all-test.xml

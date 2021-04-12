@@ -1,8 +1,23 @@
 #!/bin/sh
-
+set -x
 
 teardown ()
 {
+  # if selftest.sh is run by itself or before testall there is no test.xml with a summary to change
+  if [ ! -f all-test.xml ]
+  then
+    cat <<EOF > all-test.xml
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="$(pwd)"
+           timestamp="$(date +\"%F %T\")"
+           hostname="localhost"
+           tests="0"
+           failures="0"
+           skipped="0"
+           time="1 seconds">
+EOF
+  fi
+
   # remove the closing </testsuite> tag in all-test.xml
   sed -i '/<\/testsuite>/d' all-test.xml
 
@@ -117,10 +132,8 @@ then
   exit 1
 fi
 
-#FAILED_TESTS=0
-
 for regex in \
-"./selftest/fail.cf FAIL (Suppressed, R: $_pwd/./selftest/fail.cf XFAIL)" \
+"./selftest/fail.cf xFAIL (Suppressed, R: $_pwd/./selftest/fail.cf XFAIL)" \
 "./selftest/flaky_fail.cf Flakey fail (R: $_pwd/./selftest/flaky_fail.cf FLAKEY)" \
 "./selftest/flaky_pass.cf Pass" \
 "./selftest/pass.cf Pass" \

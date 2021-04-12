@@ -89,6 +89,7 @@ endif
 check-local:
 	+ $(TESTS_ENVIRONMENT) MAKE=$(MAKE) $(srcdir)/testall
 	+ $(srcdir)/selftest.sh
+	+ find . -name '*.xml' 2>&1 # debug duplicate jenkins test results
 
 EXTRA_DIST = default.cf.sub dcs.cf.sub plucked.cf.sub run_with_server.cf.sub \
 	testall dummy_etc write_args.sh \

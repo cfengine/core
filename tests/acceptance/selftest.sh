@@ -73,10 +73,12 @@ check ()
   local run_type="$3"
   if ! grep "$expect" "$log" >/dev/null
   then
-    fail "$expect" "$run_type"
+#    fail "$expect" "$run_type"
+    fail "selftest_test_$TESTS_COUNT" "$run_type"
     return 1
   else
-    pass "$expect" "$run_type"
+#    pass "$expect" "$run_type"
+    pass "selftest_test_$TESTS_COUNT" "$run_type"
     return 0
   fi
 }

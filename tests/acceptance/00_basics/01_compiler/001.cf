@@ -59,8 +59,8 @@ bundle agent check
     DEBUG::
       "This test should pass as a precursor to a bunch of related failures";
     ok::
-      "$(this.promise_filename) Pass";
-    !ok::
       "$(this.promise_filename) FAIL";
+    !ok::
+      "$(this.promise_filename) Pass";
 }
 

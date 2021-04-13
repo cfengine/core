@@ -87,7 +87,6 @@ endif
 # to run in parallel; TODO fix "make -n" not working:
 check-local:
 	+ $(TESTS_ENVIRONMENT) MAKE=$(MAKE) ./testall
-	+ $(srcdir)/selftest.sh
 
 
 EXTRA_DIST = default.cf.sub dcs.cf.sub plucked.cf.sub run_with_server.cf.sub \
@@ -97,9 +96,6 @@ EXTRA_DIST = default.cf.sub dcs.cf.sub plucked.cf.sub run_with_server.cf.sub \
 
 # Recursively include all tests in the dist tarball and set proper permissions
 EXTRA_DIST += $(wildcard [0-9]*)
-
-# Include selftest.sh and selftest directory contents in dist tarball
-EXTRA_DIST += selftest.sh selftest
 
 dist-hook:
 	chmod -R go-w $(distdir)

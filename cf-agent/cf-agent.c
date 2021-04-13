@@ -320,6 +320,7 @@ int main(int argc, char *argv[])
     Nova_NoteAgentExecutionPerformance(config->input_file, start);
 
     GenericAgentFinalize(ctx, config);
+    StringSetDestroy(SINGLE_COPY_CACHE);
 
 #ifdef HAVE_LIBXML2
         xmlCleanupParser();
@@ -991,6 +992,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_FSINGLECOPY].lval) == 0)
             {
                 SINGLE_COPY_LIST = value;
+                SINGLE_COPY_CACHE = StringSetNew();
                 Log(LOG_LEVEL_VERBOSE, "Setting file single copy list");
                 continue;
             }

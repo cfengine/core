@@ -875,11 +875,17 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
             }
 
             /* 'files_single_copy => { }' is a perfectly valid case. */
-            if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_FSINGLECOPY].lval) == 0)
+            if (StringEqual(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_FSINGLECOPY].lval))
             {
+                assert(value_type == CF_DATA_TYPE_STRING_LIST);
                 SINGLE_COPY_LIST = value;
                 SINGLE_COPY_CACHE = StringSetNew();
-                Log(LOG_LEVEL_VERBOSE, "Setting file single copy list");
+                if (WouldLog(LOG_LEVEL_VERBOSE))
+                {
+                    char *rlist_str = RlistToString(SINGLE_COPY_LIST);
+                    Log(LOG_LEVEL_VERBOSE, "Setting file single copy list to: %s", rlist_str);
+                    free(rlist_str);
+                }
                 continue;
             }
 

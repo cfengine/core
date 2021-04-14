@@ -1,5 +1,5 @@
 # Test that this.promiser works in ifvarclass
-# Redmine:7880 (https://cfengine.com/dev/issues/7880)
+# CFE-2262 (https://tracker.mender.io/browse/CFE-2262)
 
 body common control
 {
@@ -18,26 +18,26 @@ bundle agent init
 bundle agent test
 {
   meta:
-    "description"
-      string => "Test that it is possible to use this.promiser in ifvarclass.",
-      meta => { "redmine#7880" };
+      "description" -> { "redmine#7880", "CFE-2262" }
+        string => "Test that it is possible to use this.promiser in ifvarclass.",
+        meta => { "redmine#7880", "CFE-2262" };
 
-  "test_soft_fail"
-      string => "any",
-      meta => { "redmine#7880" };
+      "test_soft_fail"
+        string => "any",
+        meta => { "CFE-2262" };
 
   files:
     # I should be able to use this.promiser to check if the file is a plain
     # file
     "$(G.testfile)"
       delete => tidy,
-      ifvarclass => isplain( $(this.promiser) );
+      ifvarclass => isplain( "$(this.promiser)" );
 }
 
 bundle agent check
 {
   classes:
-    "ok" not => fileexists("$(G.testfile)");
+    "ok" not => fileexists( "$(G.testfile)" );
 
   reports:
     ok::

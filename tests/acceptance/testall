@@ -154,6 +154,7 @@ FAILED_TESTS=0
 SUPPRESSED_FAILURES=0
 SOFT_FAILURES=0
 SKIPPED_TESTS=0
+FLAKEY_FAILURES=0
 
 #
 # Many older platforms don't support date +%s, so check for compatibility
@@ -615,6 +616,12 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
             then
                 RESULT=Skip
                 RESULT_MSG="${COLOR_WARNING}Skipped (Test needs work)${COLOR_NORMAL}"
+            elif egrep "R: .*$ESCAPED_TEST FLAKEY" $OUTFILE > /dev/null
+            then
+                RESULT=FLAKEY
+                TICKET="$(egrep "R: .*$ESCAPED_TEST FLAKEY" $OUTFILE | sed -e "s,.*FLAKEY/\(.*\),\1,")"
+                RESULT_MSG="${COLOR_WARNING}Flakey fail ($TICKET)${COLOR_NORMAL}"
+
             else
                 RESULT=FAIL
                 RESULT_MSG="${COLOR_FAILURE}FAIL${COLOR_NORMAL}"
@@ -1028,7 +1035,7 @@ then
         fi
     done
 else
-    ALL_TESTS="$ALL_TESTS${ALL_TESTS:+ }$(find . -name workdir -prune -o -name '*.cf' -print | sort)"
+    ALL_TESTS="$ALL_TESTS${ALL_TESTS:+ }$(find . \( -name selftest -o -name workdir \) -prune -o -name '*.cf' -print | sort)"
 fi
 
 for addtest in $ALL_TESTS
@@ -1095,6 +1102,7 @@ print_footer() {
     FAILED_TESTS=`egrep '^(FAIL|XFAIL) ' $SUMMARY | wc -l | tr -d ' '`
     SUPPRESSED_FAILURES=`egrep '^XFAIL ' $SUMMARY | wc -l | tr -d ' '`
     SOFT_FAILURES=`egrep '^SFAIL ' $SUMMARY | wc -l | tr -d ' '`
+    FLAKEY_FAILURES=`egrep '^FLAKEY ' $SUMMARY | wc -l | tr -d ' '`
     SKIPPED_TESTS=`egrep '^Skip ' $SUMMARY | wc -l | tr -d ' '`
 
     ( echo
@@ -1103,17 +1111,18 @@ print_footer() {
     ) | tee -a "$LOG" | tee -a "$SUMMARY" >&7
 
     ( echo
-      echo   "Passed tests:  $PASSED_TESTS"
-      printf "Failed tests:  $FAILED_TESTS"
+      echo   "Passed tests:    $PASSED_TESTS"
+      printf "Failed tests:    $FAILED_TESTS"
       if [ $SUPPRESSED_FAILURES -gt 0 ]
       then
           echo " ($SUPPRESSED_FAILURES are known and suppressed)"
       else
           echo
       fi
-      echo   "Skipped tests: $SKIPPED_TESTS"
-      echo   "Soft failures: $SOFT_FAILURES"
-      echo   "Total tests:   $TESTS_COUNT"
+      echo   "Skipped tests:   $SKIPPED_TESTS"
+      echo   "Soft failures:   $SOFT_FAILURES"
+      echo   "Flakey failures: $FLAKEY_FAILURES"
+      echo   "Total tests:     $TESTS_COUNT"
     ) | tee -a "$LOG" | tee -a "$SUMMARY"
 
     if [ -n "$PRINTLOG" ]
@@ -1358,7 +1367,7 @@ then
     finish_xml
 fi
 
-if [ $(($PASSED_TESTS+$FAILED_TESTS+$SOFT_FAILURES+$SKIPPED_TESTS)) -ne $TESTS_COUNT ]
+if [ $(($PASSED_TESTS+$FAILED_TESTS+$SOFT_FAILURES+$SKIPPED_TESTS+$FLAKEY_FAILURES)) -ne $TESTS_COUNT ]
 then
     echo "WARNING: Number of test results does not match number of tests!"
     echo "Did something go wrong during execution?"
@@ -1367,6 +1376,9 @@ fi
 if [ "$FAILED_TESTS" -gt "$SUPPRESSED_FAILURES" ]
 then
     exit 1
+elif [ "$FLAKEY_FAILURES" -gt "0" ] && [ -n "$FLAKEY_IS_FAIL" ]
+then
+    exit 4
 else
     exit 0
 fi

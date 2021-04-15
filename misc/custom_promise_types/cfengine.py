@@ -204,6 +204,9 @@ class PromiseModule:
         self._out.write(f"log_{level}={message}\n")
         self._out.flush()
 
+        if self._record_file is not None:
+            self._record_file.write(f"log_{level}={message}\n")
+
     def log_critical(self, message):
         self._log("critical", message)
 

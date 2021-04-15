@@ -2,6 +2,7 @@ import sys
 import json
 import traceback
 
+_LOG_LEVELS = {level: idx for idx, level in enumerate(("critical", "error", "warning", "notice", "info", "verbose", "debug"))}
 
 def _skip_until_empty_line(file):
     while True:
@@ -28,6 +29,14 @@ def _put_response(data, file, record_file=None):
     if record_file is not None:
         record_file.write("> " + data + "\n")
         record_file.write("> \n")
+
+
+def _would_log(level_set, msg_level):
+    if msg_level not in _LOG_LEVELS:
+        # uknown level, assume it would be logged
+        return True
+
+    return _LOG_LEVELS[msg_level] <= _LOG_LEVELS[level_set]
 
 
 class ValidationError(Exception):
@@ -110,11 +119,11 @@ class PromiseModule:
             sys.exit("Error: Empty/invalid request or EOF reached")
 
         operation = request["operation"]
-        log_level = request.get("log_level", "info")
+        self._log_level = request.get("log_level", "info")
         self._response["operation"] = operation
 
         # Agent will never request log level critical
-        assert log_level in ["error", "warning", "notice", "info", "verbose", "debug"]
+        assert self._log_level in ["error", "warning", "notice", "info", "verbose", "debug"]
 
         if operation in ["validate_promise", "evaluate_promise"]:
             promiser = request["promiser"]
@@ -131,7 +140,10 @@ class PromiseModule:
         elif operation == "terminate":
             self._handle_terminate()
         else:
+            self._log_level = None
             raise ProtocolError(f"Unknown operation: '{operation}'")
+
+        self._log_level = None
 
     def _add_result(self):
         self._response["result"] = self._result
@@ -141,6 +153,9 @@ class PromiseModule:
             self._response["result_classes"] = self._result_classes
 
     def _add_traceback_to_response(self):
+        if self._log_level != "debug":
+            return
+
         trace = traceback.format_exc()
         logs = self._response.get("log", [])
         logs.append({"level": "debug", "message": trace})
@@ -197,6 +212,9 @@ class PromiseModule:
         sys.exit(0)
 
     def _log(self, level, message):
+        if self._log_level is not None and not _would_log(self._log_level, level):
+            return
+
         # Message can be str or an object which implements __str__()
         # for example an exception:
         message = str(message).replace("\n", r"\n")

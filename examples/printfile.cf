@@ -1,0 +1,56 @@
+#+begin_src prep
+#@ ```
+#@ echo 'Line 1' > /tmp/example_file.txt
+#@ echo 'Line 2' >> /tmp/example_file.txt
+#@ echo 'Line 3' >> /tmp/example_file.txt
+#@ echo 'Line 4' >> /tmp/example_file.txt
+#@ echo 'Line 5' >> /tmp/example_file.txt
+#@ echo 'Line 6' >> /tmp/example_file.txt
+#@ echo 'Line 7' >> /tmp/example_file.txt
+#@ echo 'Line 8' >> /tmp/example_file.txt
+#@ echo 'Line 9' >> /tmp/example_file.txt
+#@ ```
+#+end_src
+###############################################################################
+#+begin_src cfengine3
+body common control
+{
+      bundlesequence  => { "example" };
+}
+
+bundle agent example
+{
+  vars:
+      "example_file" string => "/tmp/example_file.txt";
+  reports:
+      "First three:"
+        printfile => first_three("$(example_file)");
+      "Last three:"
+        printfile => last_three("$(example_file)");
+}
+
+body printfile first_three(file)
+{
+  file_to_print => "$(file)";
+  number_of_lines => "3";
+}
+
+body printfile last_three(file)
+{
+  file_to_print => "$(file)";
+  number_of_lines => "-3";
+}
+#+end_src
+###############################################################################
+#+begin_src example_output
+#@ ```
+#@ R: First three:
+#@ R: Line 1
+#@ R: Line 2
+#@ R: Line 3
+#@ R: Last three:
+#@ R: Line 7
+#@ R: Line 8
+#@ R: Line 9
+#@ ```
+#+end_src

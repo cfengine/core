@@ -140,6 +140,12 @@ class PromiseModule:
         if self._result_classes:
             self._response["result_classes"] = self._result_classes
 
+    def _add_traceback_to_response(self):
+        trace = traceback.format_exc()
+        logs = self._response.get("log", [])
+        logs.append({"level": "debug", "message": trace})
+        self._response["log"] = logs
+
     def _handle_init(self):
         self._result = self.protocol_init(None)
         self._add_result()
@@ -159,8 +165,8 @@ class PromiseModule:
             self._result = Result.INVALID
         except Exception as e:
             self.log_critical(f"{type(e).__name__}: {e}")
+            self._add_traceback_to_response()
             self._result = Result.ERROR
-            self._log_traceback()
         self._add_result()
         _put_response(self._response, self._out, self._record_file)
 
@@ -178,7 +184,7 @@ class PromiseModule:
                 self._result_classes = results[1]
         except Exception as e:
             self.log_critical(f"{type(e).__name__}: {e}")
-            self._log_traceback()
+            self._add_traceback_to_response()
             self._result = Result.ERROR
         self._add_result()
         self._add_result_classes()

@@ -76,7 +76,7 @@ static const Rlist *AUTO_DEFINE_LIST = NULL; /* GLOBAL_P */
 static Item *VSETXIDLIST = NULL;
 
 const Rlist *SINGLE_COPY_LIST = NULL; /* GLOBAL_P */
-static Rlist *SINGLE_COPY_CACHE = NULL; /* GLOBAL_X */
+StringSet *SINGLE_COPY_CACHE = NULL; /* GLOBAL_X */
 
 static bool TransformFile(EvalContext *ctx, char *file, const Attributes *attr, const Promise *pp, PromiseResult *result);
 static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat *sb, const Attributes *attr, const Promise *pp);
@@ -254,7 +254,7 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
         return PROMISE_RESULT_NOOP;
     }
 
-    if (RlistIsInListOfRegex(SINGLE_COPY_CACHE, destfile))
+    if ((SINGLE_COPY_CACHE != NULL) && StringSetContains(SINGLE_COPY_CACHE, destfile))
     {
         RecordNoChange(ctx, pp, &attr, "Skipping single-copied file '%s'", destfile);
         return PROMISE_RESULT_NOOP;
@@ -408,7 +408,7 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
 
                 if (SINGLE_COPY_LIST)
                 {
-                    RlistPrependScalarIdemp(&SINGLE_COPY_CACHE, destfile);
+                    StringSetAdd(SINGLE_COPY_CACHE, xstrdup(destfile));
                 }
 
                 if (MatchRlistItem(ctx, AUTO_DEFINE_LIST, destfile))
@@ -548,7 +548,7 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
 
                     if (RlistIsInListOfRegex(SINGLE_COPY_LIST, destfile))
                     {
-                        RlistPrependScalarIdemp(&SINGLE_COPY_CACHE, destfile);
+                        StringSetAdd(SINGLE_COPY_CACHE, xstrdup(destfile));
                     }
                 }
                 else
@@ -579,7 +579,7 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
 
             if (RlistIsInListOfRegex(SINGLE_COPY_LIST, destfile))
             {
-                RlistPrependScalarIdemp(&SINGLE_COPY_CACHE, destfile);
+                StringSetAdd(SINGLE_COPY_CACHE, xstrdup(destfile));
             }
 
             RecordNoChange(ctx, pp, &attr, "File '%s' is an up to date copy of source",

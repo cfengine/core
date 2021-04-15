@@ -338,6 +338,8 @@ int main(int argc, char *argv[])
 
     GenericAgentFinalize(ctx, config);
 
+    StringSetDestroy(SINGLE_COPY_CACHE);
+
     StringSet *audited_files = NULL;
     if ((EVAL_MODE == EVAL_MODE_SIMULATE_MANIFEST) ||
         (EVAL_MODE == EVAL_MODE_SIMULATE_MANIFEST_FULL))
@@ -1087,6 +1089,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_FSINGLECOPY].lval) == 0)
             {
                 SINGLE_COPY_LIST = value;
+                SINGLE_COPY_CACHE = StringSetNew();
                 Log(LOG_LEVEL_VERBOSE, "Setting file single copy list");
                 continue;
             }

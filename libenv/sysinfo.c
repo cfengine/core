@@ -1396,6 +1396,36 @@ static void OSClasses(EvalContext *ctx)
     snprintf(context, CF_BUFSIZE, "%s_%s", VSYSNAME.sysname, vbuff);
     SetFlavor(ctx, context);
 
+
+#ifdef __hpux
+    /*
+     * Define a hard class with just the version major number of HP-UX
+     *
+     * For example, when being run on HP-UX B.11.23 the following class will
+     * be defined: hpux_11
+     */
+
+    // Extract major version number
+    char *major = NULL;
+    for (char *sp = vbuff; *sp != '\0'; sp++)
+    {
+        if (major == NULL && isdigit(*sp))
+        {
+            major = sp;
+        }
+        else if (!isdigit(*sp))
+        {
+            *sp = '\0';
+        }
+    }
+
+    if (major != NULL)
+    {
+        snprintf(context, CF_BUFSIZE, "hpux_%s", major);
+        EvalContextClassPutHard(ctx, context, "source=agent,derived-from=sys.flavor");
+    }
+#endif
+
 #ifdef __FreeBSD__
     /*
      * Define a hard class with just the version major number on FreeBSD

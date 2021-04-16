@@ -331,6 +331,7 @@ int main(int argc, char *argv[])
     Nova_NoteAgentExecutionPerformance(config->input_file, start);
 
     GenericAgentFinalize(ctx, config);
+    StringSetDestroy(SINGLE_COPY_CACHE);
 
 #ifdef HAVE_LIBXML2
         xmlCleanupParser();
@@ -866,10 +867,34 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
             const void *value = EvalContextVariableGet(ctx, ref, &value_type);
             VarRefDestroy(ref);
 
-            /* If var not found, or if it's an empty list. */
-            if (value_type == CF_DATA_TYPE_NONE || value == NULL)
+            /* If var not found */
+            if (value_type == CF_DATA_TYPE_NONE)
             {
                 Log(LOG_LEVEL_ERR, "Unknown lval '%s' in agent control body", cp->lval);
+                continue;
+            }
+
+            /* 'files_single_copy => { }' is a perfectly valid case. */
+            if (StringEqual(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_FSINGLECOPY].lval))
+            {
+                assert(value_type == CF_DATA_TYPE_STRING_LIST);
+                SINGLE_COPY_LIST = value;
+                SINGLE_COPY_CACHE = StringSetNew();
+                if (WouldLog(LOG_LEVEL_VERBOSE))
+                {
+                    char *rlist_str = RlistToString(SINGLE_COPY_LIST);
+                    Log(LOG_LEVEL_VERBOSE, "Setting file single copy list to: %s", rlist_str);
+                    free(rlist_str);
+                }
+                continue;
+            }
+
+            /* Empty list is not supported for the other constraints/attributes. */
+            if (value == NULL)
+            {
+                Log(LOG_LEVEL_ERR,
+                    "Empty list is not a valid value for '%s' attribute in agent control body",
+                    cp->lval);
                 continue;
             }
 
@@ -1006,13 +1031,6 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
             {
                 DEFAULT_COPYTYPE = value;
                 Log(LOG_LEVEL_VERBOSE, "Setting defaultcopytype to '%s'", DEFAULT_COPYTYPE);
-                continue;
-            }
-
-            if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_FSINGLECOPY].lval) == 0)
-            {
-                SINGLE_COPY_LIST = value;
-                Log(LOG_LEVEL_VERBOSE, "Setting file single copy list");
                 continue;
             }
 

@@ -30,6 +30,7 @@
 #include <comparray.h>
 
 extern const Rlist *SINGLE_COPY_LIST;
+extern StringSet *SINGLE_COPY_CACHE;
 
 void SetFileAutoDefineList(const Rlist *auto_define_list);
 

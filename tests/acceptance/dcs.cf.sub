@@ -269,7 +269,7 @@ bundle agent collect_stories_metadata
 bundle agent test_precheck
 {
   vars:
-      "fail_types" slist => { "suppress", "soft" };
+      "fail_types" slist => { "suppress", "soft", "flakey" };
 
       "test_skip_unsupported" slist => variablesmatching(".*_meta\.test_skip_unsupported");
       "test_skip_needs_work" slist => variablesmatching(".*_meta\.test_skip_needs_work");
@@ -303,6 +303,10 @@ bundle agent test_precheck
     test_soft_fail_match.test_soft_fail_ticket_set::
       "$(this.promise_filename) SFAIL/$(test_soft_fail_ticket)";
     test_soft_fail_match.!test_soft_fail_ticket_set::
+      "$(this.promise_filename) FAIL/no_ticket_number";
+    test_flakey_fail_match.test_flakey_fail_ticket_set::
+      "$(this.promise_filename) FLAKEY/$(test_flakey_fail_ticket)";
+    test_flakey_fail_match.!test_flakey_fail_ticket_set::
       "$(this.promise_filename) FAIL/no_ticket_number";
 }
 

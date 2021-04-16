@@ -240,6 +240,15 @@ static const char *const HINTS[] =
     NULL
 };
 
+/**
+ @brief
+ Wrapper around DefaultVarPromise to silence cast-function-type compiler warning in ScheduleAgentOperations
+ */
+static PromiseResult DefaultVarPromiseWrapper(EvalContext *ctx, const Promise *pp, void *param) {
+    UNUSED(param);
+    return DefaultVarPromise(ctx, pp);
+}
+
 /*******************************************************************/
 
 int main(int argc, char *argv[])
@@ -1548,7 +1557,7 @@ PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
             if (type == TYPE_SEQUENCE_CONTEXTS)
             {
                 BundleResolve(ctx, bp);
-                BundleResolvePromiseType(ctx, bp, "defaults", (PromiseActuator*)DefaultVarPromise);
+                BundleResolvePromiseType(ctx, bp, "defaults", DefaultVarPromiseWrapper);
             }
         }
 

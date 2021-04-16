@@ -2207,7 +2207,7 @@ void GenericAgentShowContextsFormatted(EvalContext *ctx, const char *regexp)
 
     pcre_free(rx);
 
-    SeqSort(seq, (SeqItemComparator)strcmp, NULL);
+    SeqSort(seq, StrCmpWrapper, NULL);
 
     printf("%-60s %-40s\n", "Class name", "Meta tags");
 
@@ -2287,7 +2287,7 @@ void GenericAgentShowVariablesFormatted(EvalContext *ctx, const char *regexp)
 
     pcre_free(rx);
 
-    SeqSort(seq, (SeqItemComparator)strcmp, NULL);
+    SeqSort(seq, StrCmpWrapper, NULL);
 
     printf("%-40s %-60s %-40s\n", "Variable name", "Variable value", "Meta tags");
 

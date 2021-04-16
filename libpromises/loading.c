@@ -228,8 +228,8 @@ static void ShowContext(EvalContext *ctx)
         ClassTableIteratorDestroy(iter);
     }
 
-    SeqSort(soft_contexts, (SeqItemComparator)strcmp, NULL);
-    SeqSort(hard_contexts, (SeqItemComparator)strcmp, NULL);
+    SeqSort(soft_contexts, StrCmpWrapper, NULL);
+    SeqSort(hard_contexts, StrCmpWrapper, NULL);
 
     Log(LOG_LEVEL_VERBOSE, "----------------------------------------------------------------");
 

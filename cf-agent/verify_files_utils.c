@@ -2861,7 +2861,7 @@ bool DepthSearch(EvalContext *ctx, char *name, const struct stat *sb, int rlevel
         {
             if (attr->havechange)
             {
-                if (!SeqBinaryLookup(db_file_set, dirp->d_name, (SeqItemComparator)strcmp))
+                if (!SeqBinaryLookup(db_file_set, dirp->d_name, StrCmpWrapper))
                 {
                     // See comments in FileChangesCheckAndUpdateDirectory(),
                     // regarding this function call.

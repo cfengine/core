@@ -194,10 +194,10 @@ static void AddMigratedFileToDirectoryList(CF_DB *changes_db, const char *file, 
         return;
     }
 
-    if (SeqBinaryIndexOf(files, basefile, (SeqItemComparator)strcmp) == -1)
+    if (SeqBinaryIndexOf(files, basefile, StrCmpWrapper) == -1)
     {
         SeqAppend(files, xstrdup(basefile));
-        SeqSort(files, (SeqItemComparator)strcmp, NULL);
+        SeqSort(files, StrCmpWrapper, NULL);
         bool changes;
         if (!FileChangesSetDirectoryList(changes_db, dir, files, &changes))
         {
@@ -567,7 +567,7 @@ void FileChangesCheckAndUpdateDirectory(EvalContext *ctx, const Attributes *attr
         return;
     }
 
-    Seq *disk_file_set = SeqSoftSort(file_set, (SeqItemComparator)strcmp, NULL);
+    Seq *disk_file_set = SeqSoftSort(file_set, StrCmpWrapper, NULL);
 
     // We'll traverse the union of disk_file_set and db_file_set in merged order.
 

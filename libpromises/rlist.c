@@ -607,7 +607,7 @@ Rlist *RlistAppendAllTypes(Rlist **start, const void *item, RvalType type, bool 
             return RlistAppendRval(start, (Rval) { JsonCopy((JsonElement*) item), RVAL_TYPE_CONTAINER });
         }
 
-        // note falls through!
+        // fall through
 
     default:
         Log(LOG_LEVEL_DEBUG, "Cannot append %c to rval-list '%s'", type, (char *) item);

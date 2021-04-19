@@ -1389,7 +1389,7 @@ bool BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
             return true;
         }
 
-        /* roll through, no break */
+        /* fall through */
 
     case PROTOCOL_COMMAND_SYNC:
         memset(filename, 0, CF_BUFSIZE);
@@ -1468,7 +1468,7 @@ bool BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
         }
 
         encrypted = true;
-        /* roll through, no break */
+        /* fall through */
 
     case PROTOCOL_COMMAND_MD5:
 
@@ -1529,7 +1529,7 @@ bool BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
             return false;
         }
 
-        /* roll through, no break */
+        /* fall through */
 
     case PROTOCOL_COMMAND_VAR:
         if (!LiteralAccessControl(ctx, recvbuffer, conn, encrypted))
@@ -1565,7 +1565,7 @@ bool BusyWithClassicConnection(EvalContext *ctx, ServerConnectionState *conn)
             return false;
         }
 
-        /* roll through, no break */
+        /* fall through */
 
     case PROTOCOL_COMMAND_CONTEXT:
         if ((classes = ContextAccessControl(ctx, recvbuffer, conn, encrypted)) == NULL)

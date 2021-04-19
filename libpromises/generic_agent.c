@@ -2058,10 +2058,10 @@ void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config)
     case LOG_LEVEL_DEBUG:
         EvalContextClassPutHard(ctx, "debug_mode", "cfe_internal,source=agent");
         EvalContextClassPutHard(ctx, "opt_debug", "cfe_internal,source=agent");
-        // intentional fall
+        // fall through
     case LOG_LEVEL_VERBOSE:
         EvalContextClassPutHard(ctx, "verbose_mode", "cfe_internal,source=agent");
-        // intentional fall
+        // fall through
     case LOG_LEVEL_INFO:
         EvalContextClassPutHard(ctx, "inform_mode", "cfe_internal,source=agent");
         break;

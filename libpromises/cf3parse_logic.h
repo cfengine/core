@@ -699,7 +699,7 @@ static inline void ParserHandleBundlePromiseRval()
                 "Deprecated constraint '%s' in promise type '%s'",
                 constraint_syntax->lval,
                 promise_type_syntax->promise_type);
-            // Intentional fall
+            // fall through
         case SYNTAX_STATUS_NORMAL:
         {
             MagicRvalTransformations(promise_type_syntax);
@@ -774,7 +774,7 @@ static inline void ParserHandlePromiseGuard()
                 "Deprecated promise type '%s' in bundle type '%s'",
                 promise_type_syntax->promise_type,
                 promise_type_syntax->bundle_type);
-            // Intentional fall
+            // fall through
         case SYNTAX_STATUS_NORMAL:
             if (P.block == PARSER_BLOCK_BUNDLE)
             {
@@ -850,7 +850,7 @@ static inline void ParserBeginBlockBody()
                 "Deprecated body '%s' of type '%s'",
                 P.blockid,
                 body_syntax->body_type);
-            // intentional fall
+            // fall through
         case SYNTAX_STATUS_NORMAL:
             P.currentbody = PolicyAppendBody(
                 P.policy,
@@ -908,7 +908,7 @@ static inline void ParserHandleBlockAttributeRval()
                     "Deprecated constraint '%s' in body type '%s'",
                     constraint_syntax->lval,
                     body_syntax->body_type);
-                // Intentional fall
+                // fall through
             case SYNTAX_STATUS_NORMAL:
             {
                 SyntaxTypeMatch err = CheckSelection(

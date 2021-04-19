@@ -103,12 +103,14 @@ int sockaddr_AddrCompare(const void *sa1, const void *sa2)
         struct in_addr *addr1 = & ((struct sockaddr_in *) sa1)->sin_addr;
         struct in_addr *addr2 = & ((struct sockaddr_in *) sa2)->sin_addr;
         result = memcmp(addr1, addr2, sizeof(*addr1));
+        break;
     }
     case AF_INET6:
     {
         struct in6_addr *addr1 = & ((struct sockaddr_in6 *) sa1)->sin6_addr;
         struct in6_addr *addr2 = & ((struct sockaddr_in6 *) sa2)->sin6_addr;
         result = memcmp(addr1, addr2, sizeof(*addr1));
+        break;
     }
     default:
         assert(0);

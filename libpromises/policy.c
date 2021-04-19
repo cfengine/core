@@ -2742,7 +2742,6 @@ static bool ValidateCustomPromise(const Promise *pp, Seq *errors)
             || StringEqual(name, "depends_on")
             || StringEqual(name, "handle")
             || StringEqual(name, "meta")
-            || StringEqual(name, "unless")
             || StringEqual(name, "with"))
         {
             // TODO: Remove 1 attribute at a time, test and fix.

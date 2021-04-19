@@ -118,7 +118,7 @@ static bool GetInterpreterAndPath(
     return true;
 }
 
-static inline void PromiseModule_LogJson(JsonElement *object)
+static inline void PromiseModule_LogJson(JsonElement *object, const Promise *pp)
 {
     const char *level_string = JsonObjectGetAsString(object, "level");
     const char *message = JsonObjectGetAsString(object, "message");
@@ -126,6 +126,20 @@ static inline void PromiseModule_LogJson(JsonElement *object)
     assert(level_string != NULL && message != NULL);
     const LogLevel level = LogLevelFromString(level_string);
     assert(level != LOG_LEVEL_NOTHING);
+
+    /* Check if there is a log level specified for the particular promise. */
+    const char *value = PromiseGetConstraintAsRval(pp, "log_level", RVAL_TYPE_SCALAR);
+    if (value != NULL)
+    {
+        LogLevel specific = ActionAttributeLogLevelFromString(value);
+        if (specific < level)
+        {
+            /* Do not log messages that have a higher log level than the log
+             * level specified for the promise (e.g. 'info' messages when
+             * 'error' was requested for the promise). */
+            return;
+        }
+    }
     Log(level, "%s", message);
 }
 
@@ -144,7 +158,7 @@ static inline JsonElement *PromiseModule_ParseResultClasses(char *value)
     return result_classes;
 }
 
-static JsonElement *PromiseModule_Receive(PromiseModule *module)
+static JsonElement *PromiseModule_Receive(PromiseModule *module, const Promise *pp)
 {
     assert(module != NULL);
 
@@ -205,7 +219,7 @@ static JsonElement *PromiseModule_Receive(PromiseModule *module)
             JsonElement *log_message = JsonObjectCreate(2);
             JsonObjectAppendString(log_message, "level", level);
             JsonObjectAppendString(log_message, "message", message);
-            PromiseModule_LogJson(log_message);
+            PromiseModule_LogJson(log_message, pp);
             JsonArrayAppendObject(log_array, log_message);
 
             free(level);
@@ -289,7 +303,7 @@ static JsonElement *PromiseModule_Receive(PromiseModule *module)
             size_t length = JsonLength(json_log_messages);
             for (size_t i = 0; i < length; ++i)
             {
-                PromiseModule_LogJson(JsonArrayGet(json_log_messages, i));
+                PromiseModule_LogJson(JsonArrayGet(json_log_messages, i), pp);
             }
         }
 
@@ -565,6 +579,12 @@ static void PromiseModule_AppendAllAttributes(
             continue;
         }
 
+        if (StringEqual(attribute->lval, "log_level"))
+        {
+            /* Passed to the module as 'log_level' request field, not as an attribute. */
+            continue;
+        }
+
         if ((attribute->rval.type == RVAL_TYPE_SCALAR) || (attribute->rval.type == RVAL_TYPE_LIST))
         {
             JsonElement *value = RvalToJson(attribute->rval);
@@ -594,6 +614,11 @@ static inline bool CustomPromise_IsFullyResolved(const Promise *pp, bool slists_
         if (IsClassesBodyConstraint(attribute->lval))
         {
             /* Not passed to the modules, handled on the agent side. */
+            continue;
+        }
+        if (StringEqual(attribute->lval, "log_level"))
+        {
+            /* Passed to the module as 'log_level' request field, not as an attribute. */
             continue;
         }
         if ((attribute->rval.type != RVAL_TYPE_SCALAR) &&
@@ -635,17 +660,30 @@ static inline bool HasResultAndResultIsValid(JsonElement *response)
     return ((result != NULL) && StringEqual(result, "valid"));
 }
 
-static inline const char *LogLevelToRequestFromModule()
+static inline const char *LogLevelToRequestFromModule(const Promise *pp)
 {
+    LogLevel log_level = LogGetGlobalLevel();
+
+    /* Check if there is a log level specified for the particular promise. */
+    const char *value = PromiseGetConstraintAsRval(pp, "log_level", RVAL_TYPE_SCALAR);
+    if (value != NULL)
+    {
+        LogLevel specific = ActionAttributeLogLevelFromString(value);
+
+        /* Promise-specific log level cannot go above the global log level
+         * (e.g. no 'info' messages for a particular promise if the global level
+         * is 'error'). */
+        log_level = MIN(log_level, specific);
+    }
+
     // We will never request LOG_LEVEL_NOTHING or LOG_LEVEL_CRIT from the
     // module:
-    const LogLevel global = LogGetGlobalLevel();
-    if (global < LOG_LEVEL_ERR)
+    if (log_level < LOG_LEVEL_ERR)
     {
-        assert((global == LOG_LEVEL_NOTHING) || (global == LOG_LEVEL_CRIT));
+        assert((log_level == LOG_LEVEL_NOTHING) || (log_level == LOG_LEVEL_CRIT));
         return LogLevelToString(LOG_LEVEL_ERR);
     }
-    return LogLevelToString(global);
+    return LogLevelToString(log_level);
 }
 
 static bool PromiseModule_Validate(PromiseModule *module, const Promise *pp)
@@ -657,14 +695,14 @@ static bool PromiseModule_Validate(PromiseModule *module, const Promise *pp)
     const char *const promiser = pp->promiser;
 
     PromiseModule_AppendString(module, "operation", "validate_promise");
-    PromiseModule_AppendString(module, "log_level", LogLevelToRequestFromModule());
+    PromiseModule_AppendString(module, "log_level", LogLevelToRequestFromModule(pp));
     PromiseModule_AppendString(module, "promise_type", promise_type);
     PromiseModule_AppendString(module, "promiser", promiser);
     PromiseModule_AppendAllAttributes(module, pp);
     PromiseModule_Send(module);
 
     // Prints errors / log messages from module:
-    JsonElement *response = PromiseModule_Receive(module);
+    JsonElement *response = PromiseModule_Receive(module, pp);
 
     if (response == NULL)
     {
@@ -704,14 +742,14 @@ static PromiseResult PromiseModule_Evaluate(
 
     PromiseModule_AppendString(module, "operation", "evaluate_promise");
     PromiseModule_AppendString(
-        module, "log_level", LogLevelToRequestFromModule());
+        module, "log_level", LogLevelToRequestFromModule(pp));
     PromiseModule_AppendString(module, "promise_type", promise_type);
     PromiseModule_AppendString(module, "promiser", promiser);
 
     PromiseModule_AppendAllAttributes(module, pp);
     PromiseModule_Send(module);
 
-    JsonElement *response = PromiseModule_Receive(module);
+    JsonElement *response = PromiseModule_Receive(module, pp);
 
     JsonElement *result_classes = JsonObjectGetAsArray(response, "result_classes");
     if (result_classes != NULL)
@@ -818,14 +856,14 @@ static PromiseResult PromiseModule_Evaluate(
     return result;
 }
 
-static void PromiseModule_Terminate(PromiseModule *module)
+static void PromiseModule_Terminate(PromiseModule *module, const Promise *pp)
 {
     if (module != NULL)
     {
         PromiseModule_AppendString(module, "operation", "terminate");
         PromiseModule_Send(module);
 
-        JsonElement *response = PromiseModule_Receive(module);
+        JsonElement *response = PromiseModule_Receive(module, pp);
         JsonDestroy(response);
 
         PromiseModule_DestroyInternal(module);
@@ -900,7 +938,7 @@ PromiseResult EvaluateCustomPromise(EvalContext *ctx, const Promise *pp)
                                       // appropriate
     }
 
-    PromiseModule_Terminate(module);
+    PromiseModule_Terminate(module, pp);
 
     return result;
 }

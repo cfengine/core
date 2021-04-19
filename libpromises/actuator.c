@@ -49,8 +49,9 @@ PromiseResult PromiseResultUpdate(PromiseResult prior, PromiseResult evidence)
         case PROMISE_RESULT_NOOP:
         case PROMISE_RESULT_SKIPPED:
             return prior;
+        default:
+            ProgrammingError("Unexpected promise result");
         }
-
     case PROMISE_RESULT_SKIPPED:
         return evidence;
 

@@ -896,25 +896,29 @@ bool DeleteItemGeneral(Item **list, const char *string, ItemMatchType type)
             switch (type)
             {
             case ITEM_MATCH_TYPE_LITERAL_START_NOT:
-                flip = true; /* and fall through */
+                flip = true;
+                /* fall through */
             case ITEM_MATCH_TYPE_LITERAL_START:
                 match = (strncmp(ip->name, string, strlen(string)) == 0);
                 break;
 
             case ITEM_MATCH_TYPE_LITERAL_COMPLETE_NOT:
-                flip = true; /* and fall through */
+                flip = true;
+                /* fall through */
             case ITEM_MATCH_TYPE_LITERAL_COMPLETE:
                 match = (strcmp(ip->name, string) == 0);
                 break;
 
             case ITEM_MATCH_TYPE_LITERAL_SOMEWHERE_NOT:
-                flip = true; /* and fall through */
+                flip = true;
+                /* fall through */
             case ITEM_MATCH_TYPE_LITERAL_SOMEWHERE:
                 match = (strstr(ip->name, string) != NULL);
                 break;
 
             case ITEM_MATCH_TYPE_REGEX_COMPLETE_NOT:
-                flip = true; /* and fall through */
+                flip = true;
+                /* fall through */
             case ITEM_MATCH_TYPE_REGEX_COMPLETE:
                 match = StringMatchFullWithPrecompiledRegex(rx, ip->name);
                 break;

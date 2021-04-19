@@ -27,6 +27,7 @@
 
 #include <cf3.defs.h>
 
+LogLevel ActionAttributeLogLevelFromString(const char *log_level);
 bool IsClassesBodyConstraint(const char *constraint);
 Attributes GetClassContextAttributes(const EvalContext *ctx, const Promise *pp);
 Attributes GetColumnAttributes(const EvalContext *ctx, const Promise *pp);

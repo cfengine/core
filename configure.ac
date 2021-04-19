@@ -259,10 +259,13 @@ dnl as last, some macro seem to messes the order up and insert
 dnl its own optimisation flags as well. So we append ENV_CFLAGS
 dnl at the end manually, causing a bit of flag duplication.
 
+AC_MSG_CHECKING([for debug option])
 if test x"$debug" = x"yes"
 then
+    AC_MSG_RESULT(yes)
     CFLAGS="$CFLAGS -g3 -O0 $ENV_CFLAGS"
 else
+    AC_MSG_RESULT(no)
     CFLAGS="$CFLAGS -O2 -DNDEBUG $ENV_CFLAGS"
 fi
 

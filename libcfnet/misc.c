@@ -52,9 +52,3 @@ int cf_closesocket(int sd)
 
     return res;
 }
-
-/* int sockaddr_AddrCompareMasked(const void *sa1, const void *sa2, int cidr_mask) */
-/* { */
-/*     assert(cidr_mask >= 0 && cidr_mask <= 128); */
-
-/* } */

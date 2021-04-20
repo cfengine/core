@@ -544,6 +544,7 @@ Policy *LoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
                 PolicyErrorWrite(writer, errors->data[i]);
             }
             WriterClose(writer);
+            SeqDestroy(errors);
             DoCleanupAndExit(EXIT_FAILURE); // TODO: do not exit
         }
 

@@ -572,8 +572,10 @@ static void PromiseModule_AppendAllAttributes(
         const Constraint *attribute = SeqAt(pp->conlist, i);
         const char *const name = attribute->lval;
         assert(!StringEqual(name, "ifvarclass")); // Not allowed by validation
-        if (IsClassesBodyConstraint(name) ||
-            StringEqual(name, "if") || StringEqual(name, "ifvarclass"))
+        if (IsClassesBodyConstraint(name)
+            || StringEqual(name, "if")
+            || StringEqual(name, "ifvarclass")
+            || StringEqual(name, "unless"))
         {
             // Evaluated by agent and not sent to module, skip
             continue;
@@ -619,6 +621,13 @@ static inline bool CustomPromise_IsFullyResolved(const Promise *pp, bool slists_
         if (StringEqual(attribute->lval, "log_level"))
         {
             /* Passed to the module as 'log_level' request field, not as an attribute. */
+            continue;
+        }
+        if (StringEqual(attribute->lval, "unless"))
+        {
+            /* unless can actually have unresolved variables here,
+               it defaults to evaluate in case of unresolved variables,
+               to be the true opposite of if. (if would skip).*/
             continue;
         }
         if ((attribute->rval.type != RVAL_TYPE_SCALAR) &&

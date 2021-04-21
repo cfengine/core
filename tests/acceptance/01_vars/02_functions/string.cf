@@ -1,0 +1,57 @@
+body common control
+{
+        inputs => { "../../default.cf.sub" };
+        bundlesequence => { default( "$(this.promise_filename)" ) };
+}
+
+bundle agent init
+{
+  classes:
+      "ExistingClass";
+
+  vars:
+      "a_int" int => "1k";
+      "a_real" real => "6.066";
+      "a_string" string => "Really interesting string";
+      "a_data_container_1" data => '{"foo": "bar"}';
+      "a_data_container_2" data => '[1, 2, 3]';
+      "a_data_container_3" data => '{"list": [1, 2, 3, 4], "obj": {"key": ["b", "a", "r"]}}';
+
+      "string_of_int" string => string("$(a_int)");
+      "string_of_real" string => string("$(a_real)");
+      "string_of_string" string => string("$(a_string)");
+      "string_of_bool_true" string => string(and("ExistingClass"));
+      "string_of_bool_false" string => string(and("NonExistingClass"));
+      "string_of_data_container_1" string => string(a_data_container_1);  # Strings not interpretted as references
+      "string_of_data_container_2" string => string("a_data_container_2");  # Strings not interpretted as references
+      "string_of_data_container_3" string => string(@(a_data_container_3));
+
+      #    "test_args" string => string();  # This is caught by the parser
+}
+
+bundle agent check
+{
+  meta:
+      "description" -> { "CFE-3476" }
+        string => "Test whether string() properly converts argument to string
+                   or string-serialises JSON *only* when explicitely passed as a '@()' reference";
+
+  classes:
+      "ok_int" expression => strcmp("1000", "$(init.string_of_int)");
+      "ok_real" expression => strcmp("6.066000", "$(init.string_of_real)");
+      "ok_string" expression => strcmp("Really interesting string", "$(init.string_of_string)");
+      "ok_bool_true" expression => strcmp("any", "$(init.string_of_bool_true)");
+      "ok_bool_false" expression => strcmp("!any", "$(init.string_of_bool_false)");
+      "ok_data_container_1" expression => strcmp("a_data_container_1", "$(init.string_of_data_container_1)");
+      "ok_data_container_2" expression => strcmp("a_data_container_2", "$(init.string_of_data_container_2)");
+      "ok_data_container_3" expression => strcmp('{"list":[1,2,3,4],"obj":{"key":["b","a","r"]}}',
+                                                 "$(init.string_of_data_container_3)");
+
+      "ok" expression => and("ok_int", "ok_real", "ok_string", "ok_bool_true",
+                             "ok_bool_false", "ok_data_container_1", "ok_data_container_2", "ok_data_container_3");
+
+  methods:
+      "Pass/Fail"
+        usebundle => dcs_passif( "ok", "$(this.promise_filename)" ),
+        inherit => "true";
+}

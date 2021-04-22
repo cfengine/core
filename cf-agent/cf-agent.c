@@ -91,7 +91,7 @@
 
 #include <syntax.h>                     /* IsBuiltInPromiseType() */
 #include <mod_common.h>
-#include <mod_custom.h>                 /* EvaluateCustomPromise() */
+#include <mod_custom.h>                 /* EvaluateCustomPromise(), Intialize/FinalizeCustomPromises() */
 
 #ifdef HAVE_AVAHI_CLIENT_CLIENT_H
 #ifdef HAVE_AVAHI_COMMON_ADDRESS_H
@@ -310,6 +310,10 @@ int main(int argc, char *argv[])
 
     /* Update packages cache. */
     UpdatePackagesCache(ctx, false);
+
+    /* Finalize custom promises before waiting for background processes because
+     * they can be background processes and need special handling. */
+    FinalizeCustomPromises();
 
     /* Wait for background processes before generating reports because
      * GenerateReports() does nothing if it detects multiple cf-agent processes
@@ -908,6 +912,8 @@ static void ThisAgentInit(void)
     {
         fclose(fp);
     }
+
+    InitializeCustomPromises();
 }
 
 /*******************************************************************/

@@ -32,6 +32,9 @@
 #include <attributes.h>      // GetClassContextAttributes(), IsClassesBodyConstraint()
 #include <expand.h>          // ExpandScalar()
 #include <var_expressions.h> // StringContainsUnresolved()
+#include <map.h>             // Map*
+
+static Map *custom_modules = NULL;
 
 static const ConstraintSyntax promise_constraints[] = {
     CONSTRAINT_SYNTAX_GLOBAL,
@@ -455,6 +458,8 @@ static PromiseModule *PromiseModule_Start(char *interpreter, char *path)
         snprintf(command, CF_BUFSIZE, "%s %s", interpreter, path);
     }
 
+    Log(LOG_LEVEL_VERBOSE, "Starting custom promise module '%s' with command '%s'",
+        path, command);
     module->fds = cf_popen_full_duplex_streams(command, false, true);
     module->output = module->fds.read_stream;
     module->input = module->fds.write_stream;
@@ -896,6 +901,29 @@ static void PromiseModule_Terminate(PromiseModule *module, const Promise *pp)
     }
 }
 
+static void PromiseModule_Terminate_untyped(void *data)
+{
+    PromiseModule *module = data;
+    PromiseModule_Terminate(module, NULL);
+}
+
+bool InitializeCustomPromises()
+{
+    /* module_path -> PromiseModule map */
+    custom_modules = MapNew(StringHash_untyped,
+                            StringEqual_untyped,
+                            free,
+                            PromiseModule_Terminate_untyped);
+    assert(custom_modules != NULL);
+
+    return (custom_modules != NULL);
+}
+
+void FinalizeCustomPromises()
+{
+    MapDestroy(custom_modules);
+}
+
 PromiseResult EvaluateCustomPromise(EvalContext *ctx, const Promise *pp)
 {
     assert(ctx != NULL);
@@ -921,17 +949,21 @@ PromiseResult EvaluateCustomPromise(EvalContext *ctx, const Promise *pp)
         return PROMISE_RESULT_FAIL;
     }
 
-    // TODO: Store promise modules and avoid starting one per promise
-    // evaluation
-    PromiseModule *module = PromiseModule_Start(interpreter, path);
-    PromiseResult result;
-
+    PromiseModule *module = MapGet(custom_modules, path);
     if (module == NULL)
     {
-        free(interpreter);
-        free(path);
-        // Error logged in PromiseModule_Start()
-        return PROMISE_RESULT_FAIL;
+        module = PromiseModule_Start(interpreter, path);
+        if (module != NULL)
+        {
+            MapInsert(custom_modules, xstrdup(path), module);
+        }
+        else
+        {
+            free(interpreter);
+            free(path);
+            // Error logged in PromiseModule_Start()
+            return PROMISE_RESULT_FAIL;
+        }
     }
 
     // TODO: Do validation earlier (cf-promises --full-check)
@@ -949,6 +981,7 @@ PromiseResult EvaluateCustomPromise(EvalContext *ctx, const Promise *pp)
         }
     }
 
+    PromiseResult result;
     if (valid)
     {
         result = PromiseModule_Evaluate(module, ctx, pp);
@@ -963,8 +996,6 @@ PromiseResult EvaluateCustomPromise(EvalContext *ctx, const Promise *pp)
         result = PROMISE_RESULT_FAIL; // TODO: Investigate if DENIED is more
                                       // appropriate
     }
-
-    PromiseModule_Terminate(module, pp);
 
     return result;
 }

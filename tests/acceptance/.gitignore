@@ -1,3 +1,4 @@
 /Makefile.testall
 /no_fds
 /elevate.exe
+custom_promise_binary

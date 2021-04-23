@@ -51,6 +51,9 @@ noinst_PROGRAMS += no_fds
 no_fds_LDADD = ../../libntech/libutils/libutils.la
 endif # !BUILTIN_EXTENSIONS
 
+noinst_PROGRAMS += custom_promise_binary
+custom_promise_binary_SOURCES = 30_custom_promise_types/custom_promise_binary.c
+
 if HAVE_LIBXML2
 noinst_PROGRAMS += xml-c14nize
 

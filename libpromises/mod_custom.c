@@ -103,10 +103,10 @@ static bool GetInterpreterAndPath(
         }
     }
 
-    if ((interpreter == NULL) || (path == NULL))
+    if (path == NULL)
     {
         Log(LOG_LEVEL_ERR,
-            "Custom promise type '%s' missing interpreter or path",
+            "Custom promise type '%s' missing path",
             promise_type);
         free(interpreter);
         free(path);
@@ -411,14 +411,21 @@ static void PromiseModule_DestroyInternal(PromiseModule *module)
 
 static PromiseModule *PromiseModule_Start(char *interpreter, char *path)
 {
-    assert(interpreter != NULL);
     assert(path != NULL);
 
-    if (access(interpreter, X_OK) != 0)
+    if ((interpreter != NULL) && (access(interpreter, X_OK) != 0))
     {
         Log(LOG_LEVEL_ERR,
             "Promise module interpreter '%s' is not an executable file",
             interpreter);
+        return NULL;
+    }
+
+    if ((interpreter == NULL) && (access(path, X_OK) != 0))
+    {
+        Log(LOG_LEVEL_ERR,
+            "Promise module path '%s' is not an executable file",
+            path);
         return NULL;
     }
 
@@ -436,7 +443,14 @@ static PromiseModule *PromiseModule_Start(char *interpreter, char *path)
     module->path = path;
 
     char command[CF_BUFSIZE];
-    snprintf(command, CF_BUFSIZE, "%s %s", interpreter, path);
+    if (interpreter == NULL)
+    {
+        snprintf(command, CF_BUFSIZE, "%s", path);
+    }
+    else
+    {
+        snprintf(command, CF_BUFSIZE, "%s %s", interpreter, path);
+    }
 
     module->fds = cf_popen_full_duplex_streams(command, false, true);
     module->output = module->fds.read_stream;

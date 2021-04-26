@@ -1,0 +1,52 @@
+# This example illustrates the use of inherit_from to inherit body attribute
+# values from another body.
+###############################################################################
+#+begin_src cfengine3
+bundle agent __main__
+{
+  commands:
+      "/bin/true"
+        handle => "some meaningful string",
+        classes => my_set_some_extra_fancy_classes( "$(this.promiser)",
+                                                    "$(this.handle)",
+                                                    "some_class_to_handle_dependencies" );
+
+      "/bin/false"
+        handle => "some meaningless string",
+        classes => my_set_some_extra_fancy_classes( "$(this.promiser)",
+                                                    "$(this.handle)",
+                                                    "some_class_to_handle_dependencies" );
+
+  reports:
+      "Defined classes:$(const.n)$(with)"
+        with => join( "$(const.n)", sort( classesmatching( "some_.*"), "lex" ));
+}
+
+body classes my_set_some_extra_fancy_classes(x, y, z)
+# @brief In addition to the classes set by `set_some_fancy_classes` define `z` when the promise is repaired
+{
+        inherit_from => set_some_fancy_classes( $(x), $(y) );
+        promise_repaired => { "some_fancy_class_${x}_${y}_repaired", $(z) };
+}
+
+body classes set_some_fancy_classes(x, y)
+# @brief Define a class prefixed with `some_fancy_class_` followed by expansion
+#        of `x`_`y` and suffixed with the promise outcome for each promise outcome.
+{
+        promise_kept => { "some_fancy_class_${x}_${y}_kept" };
+        promise_repaired => { "some_fancy_class_${x}_${y}_repaired" };
+        repair_failed => { "some_fancy_class_${x}_${y}_notkept" };
+        repair_denied => { "some_fancy_class_${x}_${y}_notkept" };
+        repair_timeout => { "some_fancy_class_${x}_${y}_notkept" };
+}
+#+end_src
+###############################################################################
+#+begin_src example_output
+#@ ```
+#@    error: Finished command related to promiser '/bin/false' -- an error occurred, returned 1
+#@ R: Defined classes:
+#@ some_class_to_handle_dependencies
+#@ some_fancy_class__bin_false_some_meaningless_string_notkept
+#@ some_fancy_class__bin_true_some_meaningful_string_repaired
+#@ ```
+#+end_src

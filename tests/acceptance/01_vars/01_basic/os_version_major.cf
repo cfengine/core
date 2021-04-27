@@ -31,6 +31,8 @@ bundle agent test
     ubuntu_20::
       "expected" string => "20";
 
+    redhat_5::
+      "expected" string => "5";
     redhat_6::
       "expected" string => "6";
     redhat_7::

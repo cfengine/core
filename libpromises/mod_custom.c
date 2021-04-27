@@ -127,17 +127,20 @@ static inline void PromiseModule_LogJson(JsonElement *object, const Promise *pp)
     const LogLevel level = LogLevelFromString(level_string);
     assert(level != LOG_LEVEL_NOTHING);
 
-    /* Check if there is a log level specified for the particular promise. */
-    const char *value = PromiseGetConstraintAsRval(pp, "log_level", RVAL_TYPE_SCALAR);
-    if (value != NULL)
+    if (pp != NULL)
     {
-        LogLevel specific = ActionAttributeLogLevelFromString(value);
-        if (specific < level)
+        /* Check if there is a log level specified for the particular promise. */
+        const char *value = PromiseGetConstraintAsRval(pp, "log_level", RVAL_TYPE_SCALAR);
+        if (value != NULL)
         {
-            /* Do not log messages that have a higher log level than the log
-             * level specified for the promise (e.g. 'info' messages when
-             * 'error' was requested for the promise). */
-            return;
+            LogLevel specific = ActionAttributeLogLevelFromString(value);
+            if (specific < level)
+            {
+                /* Do not log messages that have a higher log level than the log
+                 * level specified for the promise (e.g. 'info' messages when
+                 * 'error' was requested for the promise). */
+                return;
+            }
         }
     }
     Log(level, "%s", message);

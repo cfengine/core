@@ -1,0 +1,142 @@
+######################################################
+#
+#  Basic test of custom promise types / promise modules with a custom promise
+#  module used for two promise types.
+#
+#####################################################
+body common control
+{
+    inputs => { "../default.cf.sub" };
+    bundlesequence  => { default("$(this.promise_filename)") };
+    version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  files:
+    "$(G.testfile)"
+      delete => init_delete;
+    "$(G.testfile)2"
+      delete => init_delete;
+}
+
+body delete init_delete
+{
+      dirlinks => "delete";
+      rmdirs   => "true";
+}
+
+#######################################################
+
+promise agent example
+{
+    interpreter => "/bin/bash";
+    path => "$(this.promise_dirname)/example_module.sh";
+}
+
+promise agent example_two
+{
+    interpreter => "/bin/bash";
+    path => "$(this.promise_dirname)/example_module.sh";
+}
+
+body classes example
+{
+        promise_repaired => { "example_promise_repaired" };
+}
+
+body classes example2
+{
+        promise_repaired => { "example2_promise_repaired" };
+}
+
+bundle agent test
+{
+  meta:
+    "description" -> { "CFE-3443" }
+      string => "Test that you can use the same custom module for two promise types";
+
+  vars:
+    "test_string"
+      string => "hello, modules";
+
+  example:
+    cfengine::
+      "$(G.testfile)"
+        message => "$(test_string)",
+        classes => example;
+
+  example_two:
+    cfengine::
+      "$(G.testfile)2"
+        message => "$(test_string)",
+        classes => example2;
+
+  classes:
+      "file_created"
+        expression => canonify("$(G.testfile)_created"),
+        scope => "namespace";
+      "file_updated"
+        expression => canonify("$(G.testfile)_content_updated"),
+        scope => "namespace";
+      "file_update_failed"
+        expression => canonify("$(G.testfile)_content_update_failed"),
+        scope => "namespace";
+      "file2_created"
+        expression => canonify("$(G.testfile)2_created"),
+        scope => "namespace";
+      "file2_updated"
+        expression => canonify("$(G.testfile)2_content_updated"),
+        scope => "namespace";
+      "file2_update_failed"
+        expression => canonify("$(G.testfile)2_content_update_failed"),
+        scope => "namespace";
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "file_ok"
+        expression => strcmp("$(test.test_string)", readfile("$(G.testfile)")),
+        if => fileexists("$(G.testfile)");
+      "file2_ok"
+        expression => strcmp("$(test.test_string)", readfile("$(G.testfile)2")),
+        if => fileexists("$(G.testfile)2");
+
+      "example_ok" expression => "file_ok.file_created.file_updated.(!file_update_failed).example_promise_repaired";
+      "example2_ok" expression => "file2_ok.file2_created.file2_updated.(!file2_update_failed).example2_promise_repaired";
+
+      "ok" expression => "example_ok.example2_ok";
+
+  reports:
+    DEBUG.file_ok::
+      "file_ok";
+    DEBUG.file_created::
+      "file_created";
+    DEBUG.file_updated::
+      "file_updated";
+    DEBUG.file_update_failed::
+      "file_update_failed";
+    DEBUG.example_promise_repaired::
+      "example_promise_repaired";
+
+    DEBUG.file2_ok::
+      "file2_ok";
+    DEBUG.file2_created::
+      "file2_created";
+    DEBUG.file2_updated::
+      "file2_updated";
+    DEBUG.file2_update_failed::
+      "file2_update_failed";
+    DEBUG.example2_promise_repaired::
+      "example_promise_repaired";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

@@ -1,0 +1,112 @@
+body common control
+{
+  bundlesequence => { "test", "check" };
+}
+
+bundle agent test
+{
+  meta:
+      "decription" -> { "CFE-3569" }
+        string => "Test for expected values of variable sys.os_version_major";
+
+  vars:
+    any::
+      "actual" string => "$(sys.os_version_major)";
+      "expected" string => "Unknown";
+    debian_7::
+      "expected" string => "7";
+    debian_8::
+      "expected" string => "8";
+    debian_9::
+      "expected" string => "9";
+    debian_10::
+      "expected" string => "10";
+
+    ubuntu_14::
+      "expected" string => "14";
+    ubuntu_16::
+      "expected" string => "16";
+    ubuntu_18::
+      "expected" string => "18";
+    ubuntu_20::
+      "expected" string => "20";
+
+    redhat_6::
+      "expected" string => "6";
+    redhat_7::
+      "expected" string => "7";
+    redhat_8::
+      "expected" string => "8";
+
+    centos_6::
+      "expected" string => "6";
+    centos_7::
+      "expected" string => "7";
+    centos_8::
+      "expected" string => "8";
+
+    fedora_32::
+      "expected" string => "32";
+    fedora_33::
+      "expected" string => "33";
+
+    aix_5::
+      "expected" string => "5";
+    aix_6::
+      "expected" string => "6";
+    aix_7::
+      "expected" string => "7";
+    aix_8::
+      "expected" string => "8";
+
+    hpux_10::
+      "expected" string => "10";
+    hpux_11::
+      "expected" string => "11";
+
+    suse_12|opensuse_12|sles_12::
+      "expected" string => "12";
+    suse_15|opensuse_15|sles_15::
+      "expected" string => "15";
+
+    windows_2012::
+      "expected" string => "2012";
+    windows_2016::
+      "expected" string => "2016";
+    windows_2019::
+      "expected" string => "2019";
+    windows_8::
+      "expected" string => "8";
+    windows_10::
+      "expected" string => "10";
+
+    freebsd_11::
+      "expected" string => "11";
+    freebsd_12::
+      "expected" string => "12";
+
+    macos_10::
+      "expected" string => "10";
+    macos_11::
+      "expected" string => "11";
+
+    solaris_10|sunos_5_10::
+      "expected" string => "10";
+    solaris_11|sunos_5_11::
+      "expected" string => "11";
+}
+
+bundle agent check
+{
+  classes:
+      "passed" expression => strcmp("$(test.actual)", "$(test.expected)");
+
+  reports:
+    DEBUG::
+      "$(this.promise_filename) Expected: $(test.expected)";
+      "$(this.promise_filename) Found: $(test.actual)";
+    passed::
+      "$(this.promise_filename) Pass";
+    !passed::
+      "$(this.promise_filename) FAIL";
+}

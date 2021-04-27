@@ -64,6 +64,8 @@ bundle agent test
     hpux_11::
       "expected" string => "11";
 
+    suse_11|opensuse_11|sles_11::
+      "expected" string => "11";
     suse_12|opensuse_12|sles_12::
       "expected" string => "12";
     suse_15|opensuse_15|sles_15::

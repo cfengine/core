@@ -965,6 +965,20 @@ PromiseResult EvaluateCustomPromise(EvalContext *ctx, const Promise *pp)
             return PROMISE_RESULT_FAIL;
         }
     }
+    else
+    {
+        if (!StringEqual(interpreter, module->interpreter))
+        {
+            Log(LOG_LEVEL_ERR, "Conflicting interpreter specifications for custom promise module '%s'"
+                " (started with '%s' and '%s' requested for promise '%s' of type '%s')",
+                path, module->interpreter, interpreter, pp->promiser, PromiseGetPromiseType(pp));
+            free(interpreter);
+            free(path);
+            return PROMISE_RESULT_FAIL;
+        }
+        free(interpreter);
+        free(path);
+    }
 
     // TODO: Do validation earlier (cf-promises --full-check)
     bool valid = PromiseModule_Validate(module, pp);

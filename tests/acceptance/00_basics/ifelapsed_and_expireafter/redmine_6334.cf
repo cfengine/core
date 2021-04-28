@@ -7,6 +7,10 @@ body common control
 
 bundle agent test
 {
+  meta:
+    "test_flakey_fail" string => "sunos_5_11.sparc",
+      meta => { "ENT-7068" };
+
   vars:
       "first"
         string =>

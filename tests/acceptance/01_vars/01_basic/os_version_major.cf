@@ -6,6 +6,9 @@ body common control
 bundle agent test
 {
   meta:
+      "test_flakey_fail" string => "centos_5",
+        meta => { "CFE-3649" };
+
       "decription" -> { "CFE-3569" }
         string => "Test for expected values of variable sys.os_version_major";
 

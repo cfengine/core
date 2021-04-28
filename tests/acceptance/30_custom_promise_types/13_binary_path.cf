@@ -1,0 +1,27 @@
+body common control
+{
+    inputs => { "../default.cf.sub" };
+    bundlesequence  => { default("$(this.promise_filename)") };
+    version => "1.0";
+}
+
+promise agent binary
+{
+  path => "$(G.cwd)/custom_promise_binary";
+}
+
+bundle agent test
+{
+  binary:
+    "foobar"
+      classes => if_ok("binary_ok");
+}
+
+bundle agent check
+{
+  reports:
+    binary_ok::
+      "$(this.promise_filename) Pass";
+    !binary_ok::
+      "$(this.promise_filename) FAIL";
+}

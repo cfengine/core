@@ -37,8 +37,10 @@ function check_with_cppcheck() {
 cd "$(dirname $0)"/../../
 
 failure=0
-check_with_gcc              || { echo "FAIL: GCC check failed"; failure=1; }
-check_with_clang            || { echo "FAIL: Clang check failed"; failure=1; }
-check_with_cppcheck         || { echo "FAIL: cppcheck failed"; failure=1; }
+failures=""
+check_with_gcc              || { failures="${failures}FAIL: GCC check failed\n"; failure=1; }
+check_with_clang            || { failures="${failures}FAIL: Clang check failed\n"; failure=1; }
+check_with_cppcheck         || { failures="${failures}FAIL: cppcheck failed\n"; failure=1; }
 
+echo -en "$failures"
 exit $failure

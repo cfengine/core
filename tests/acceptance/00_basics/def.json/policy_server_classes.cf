@@ -25,5 +25,5 @@ bundle agent check
     "command" string => "$(sys.cf_promises) --show-classes -f $(sys.inputdir)/promises.cf|$(G.grep) test_class";
 
   methods:
-      "" usebundle => dcs_passif_output("test_class_policy_server\s+source=augments_file,hardclass", "", $(command), $(this.promise_filename));
+      "" usebundle => dcs_passif_output("test_class_policy_server\s+source=augments_file", "", $(command), $(this.promise_filename));
 }

@@ -328,7 +328,7 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
                     {
                         Log(LOG_LEVEL_VERBOSE, "Installing augments class '%s' (checked '%s') from file '%s'",
                             ckey, check, filename);
-                        EvalContextClassPutHard(ctx, ckey, tags);
+                        EvalContextClassPutSoftNS(ctx, NULL, ckey, CONTEXT_SCOPE_NAMESPACE, tags);
                     }
                     free(check);
                 }
@@ -346,7 +346,7 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
                         {
                             Log(LOG_LEVEL_VERBOSE, "Installing augments class '%s' (checked array entry '%s') from file '%s'",
                                 ckey, check, filename);
-                            EvalContextClassPutHard(ctx, ckey, tags);
+                            EvalContextClassPutSoftNS(ctx, NULL, ckey, CONTEXT_SCOPE_NAMESPACE, tags);
                             free(check);
                             break;
                         }

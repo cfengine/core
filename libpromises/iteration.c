@@ -333,8 +333,8 @@ static void MangleVarRefString(char *ref_str, size_t len)
     {
         *ns      = CF_MANGLED_NS;
         ref_str2 =  ns + 1;
+        assert(upto >= (ns + 1 - ref_str));
         upto    -= (ns + 1 - ref_str);
-        assert(upto >= 0);
     }
 
     bool mangled_scope = false;

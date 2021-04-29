@@ -2208,8 +2208,12 @@ static Variable *VariableResolve2(const EvalContext *ctx, const VarRef *ref)
         {
             return var;
         }
-        else if (ref->num_indices > 0)                 /* why? TODO comment */
+        else if (ref->num_indices > 0)
         {
+            /* If the lookup with indices (the [idx1][idx2]... part of the
+             * variable reference) fails, there might still be a container
+             * variable where the indices actually refer to child objects inside
+             * the container structure. */
             VarRef *base_ref = VarRefCopyIndexless(ref);
             var = VariableTableGet(table, base_ref);
             VarRefDestroy(base_ref);

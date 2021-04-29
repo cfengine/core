@@ -2244,10 +2244,10 @@ static Variable *VariableResolve(const EvalContext *ctx, const VarRef *ref)
     /* We will make a first lookup that works in almost all cases: will look
      * for local or global variables, depending of the current scope. */
 
-    Variable *var1 = VariableResolve2(ctx, ref);
-    if (var1)
+    Variable *ret_var = VariableResolve2(ctx, ref);
+    if (ret_var != NULL)
     {
-        return var1;
+        return ret_var;
     }
 
     /* Try to qualify non-scoped vars to the scope:
@@ -2257,11 +2257,11 @@ static Variable *VariableResolve(const EvalContext *ctx, const VarRef *ref)
     {
         scoped_ref = VarRefCopy(ref);
         VarRefStackQualify(ctx, scoped_ref);
-        Variable *var2 = VariableResolve2(ctx, scoped_ref);
-        if (var2)
+        ret_var = VariableResolve2(ctx, scoped_ref);
+        if (ret_var != NULL)
         {
             VarRefDestroy(scoped_ref);
-            return var2;
+            return ret_var;
         }
         ref = scoped_ref;              /* continue with the scoped variable */
     }

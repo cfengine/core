@@ -1,29 +1,25 @@
 #include <stdio.h>
 
+static inline void eatline(FILE *stream)
+{
+    int c;
+    while ((c = getc(stream)) != EOF && c != '\n')
+        ;
+}
+
 int main()
 {
-    char *line = NULL;
-    size_t len = 0;
-
     printf("binary 0.0.1 v1 line_based\n");
     printf("\n");
 
-    if (getline(&line, &len, stdin) == -1)
-    {
-        perror("Couldn't read from stdin");
-        return 1;
-    }
+    eatline(stdin);
 
     printf("operation=validate_promise\n");
     printf("promiser=foobar\n");
     printf("result=valid\n");
     printf("\n");
 
-    if (getline(&line, &len, stdin) == -1)
-    {
-        perror("Couldn't read from stdin");
-        return 1;
-    }
+    eatline(stdin);
 
     printf("operation=evaluate_promise\n");
     printf("promiser=foobar\n");

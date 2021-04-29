@@ -4209,6 +4209,22 @@ static FnCallResult FnCallShuffle(EvalContext *ctx, ARG_UNUSED const Policy *pol
     return (FnCallResult) { FNCALL_SUCCESS, (Rval) { shuffled, RVAL_TYPE_LIST } };
 }
 
+static FnCallResult FnCallInt(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
+{
+    assert(finalargs != NULL);
+
+    char *str = RlistScalarValueSafe(finalargs);
+
+    double val;
+    bool ok = DoubleFromString(str, &val);
+    if (!ok)
+    {
+        // Log from DoubleFromString
+        return FnFailure();
+    }
+
+    return FnReturnF("%jd", (intmax_t) val);  // Discard decimals
+}
 
 static FnCallResult FnCallIsNewerThan(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
@@ -9053,6 +9069,12 @@ static const FnCallArg IFELSE_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg INT_ARGS[] =
+{
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Numeric string to convert to integer"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
 static const FnCallArg IPRANGE_ARGS[] =
 {
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "IP address range syntax"},
@@ -9859,6 +9881,8 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_CACHED, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("ifelse", CF_DATA_TYPE_STRING, IFELSE_ARGS, &FnCallIfElse, "Do If-ElseIf-ElseIf-...-Else evaluation of arguments",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("int", CF_DATA_TYPE_INT, INT_ARGS, &FnCallInt, "Convert numeric string to int",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("intersection", CF_DATA_TYPE_STRING_LIST, SETOP_ARGS, &FnCallSetop, "Returns all the unique elements of list or array or data container arg1 that are also in list or array or data container arg2",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("iprange", CF_DATA_TYPE_CONTEXT, IPRANGE_ARGS, &FnCallIPRange, "True if the current host lies in the range of IP addresses specified in arg1 (can be narrowed to specific interfaces with arg2).",

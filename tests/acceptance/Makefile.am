@@ -41,7 +41,7 @@ noinst_LTLIBRARIES = libmock_package_manager.la
 libmock_package_manager_la_SOURCES = mock_package_manager.c
 libmock_package_manager_la_LIBADD = ../../libpromises/libpromises.la
 
-if !BUILTIN_EXTENSIONS
+if !WINDOWS
 noinst_PROGRAMS += mock_package_manager
 
 mock_package_manager_SOURCES =
@@ -49,10 +49,11 @@ mock_package_manager_LDADD = libmock_package_manager.la
 
 noinst_PROGRAMS += no_fds
 no_fds_LDADD = ../../libntech/libutils/libutils.la
-endif # !BUILTIN_EXTENSIONS
 
 noinst_PROGRAMS += custom_promise_binary
 custom_promise_binary_SOURCES = 30_custom_promise_types/custom_promise_binary.c
+
+endif # !WINDOWS
 
 if HAVE_LIBXML2
 noinst_PROGRAMS += xml-c14nize

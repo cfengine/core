@@ -1,0 +1,105 @@
+body common control
+{
+        inputs => { "../default.cf.sub" };
+        version => "1.0";
+}
+
+bundle agent init
+{
+  vars:
+
+      # body agent control default_repository uses this
+      'bck'
+        string => '$(G.testdir)/backups';
+
+  files:
+      '$(init.bck)/.' create => 'true';
+}
+
+
+bundle agent __main__
+{
+  methods:
+      "init";
+      "test";
+}
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-3640" }
+        string => "Test that automatically created backup copies of files promised via copy_from do not produce errors.";
+
+  vars:
+      'file'  string  => "$(G.testfile)";
+
+  files:
+      # Let's have a file
+      '$(file)'
+        create => "true",
+        classes   => outcomes('create');
+
+      # Let's have the file be a copy of this policy, this should create the first backup file
+      '$(file)'
+        copy_from => path('$(this.promise_filename)'),
+        handle => 'copy_1',
+        classes   => outcomes('copy_1');
+
+      # Let's make sure the file differs from this policy file, so that we have reason to copy the file again
+      '$(file)'
+        edit_line => lines_present( 'edit after first copy' ),
+        handle => 'edit_1',
+        classes   => outcomes('edit_1');
+
+      # Let's have the file be a copy of this policy, this should create the second backup file
+      # This promise triggered an error on AIX, see CFE-3640.
+      '$(file)'
+        copy_from => path('$(this.promise_filename)'),
+        handle => 'copy_2',
+        classes   => outcomes('copy_2');
+
+      # Let's make sure the file differs from this policy file, so that we have reason to copy the file again
+      '$(file)'
+        edit_line => lines_present( 'edit after second copy' ),
+        handle => 'edit_2',
+        classes   => outcomes('edit_2');
+
+      # Let's have the file be a copy of this policy, this should create the second backup file
+      '$(file)'
+        copy_from => path('$(this.promise_filename)'),
+        handle => 'copy_3',
+        classes   => outcomes('copy_3');
+
+  reports:
+    DEBUG|EXTRA::
+      'CFEngine $(sys.cf_version) (running on $(sys.flavour))';
+      'Results: $(with)' with => join(' ', classesmatching('_.*'));
+}
+
+body copy_from path(path)
+{
+        source => translatepath($(path));
+}
+
+body agent control
+{
+        default_repository => '$(init.bck)';
+}
+
+body classes outcomes(p)
+{
+        promise_kept      => { '$(p)_kept',     '$(p)_reached'               };
+        promise_repaired  => { '$(p)_repaired', '$(p)_reached'               };
+        repair_failed     => { '$(p)_failed',   '$(p)_reached', '$(p)_error' };
+        repair_denied     => { '$(p)_denied',   '$(p)_reached', '$(p)_error' };
+        repair_timeout    => { '$(p)_timeout',  '$(p)_reached', '$(p)_error' };
+        scope             => 'bundle';
+}
+bundle edit_line lines_present(lines)
+{
+  insert_lines:
+
+      "$(lines)"
+        comment => "Append lines if they don't exist";
+}
+

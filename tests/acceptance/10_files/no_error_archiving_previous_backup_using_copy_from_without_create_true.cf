@@ -1,0 +1,36 @@
+body common control
+{
+        inputs => { "../default.cf.sub" };
+        bundlesequence  => { default("$(this.promise_filename)") };
+        version => "1.0";
+}
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-3640" }
+        string => "Test that automatically created backup copies of files promised via copy_from do not produce errors.";
+
+  vars:
+      "agent_log_path" string => "$(sys.workdir)$(const.dirsep)state$(const.dirsep)agent.log";
+      "cf_agent" string => ifelse(isvariable("sys.cf_agent"), "$(sys.cf_agent)", "/var/cfengine/bin/cf-agent");
+
+  commands:
+      "$(cf_agent) -Kf $(this.promise_filename).sub >$(test.agent_log_path) 2>&1"
+        contain => in_shell;
+}
+
+bundle agent check
+{
+  vars:
+      "result"
+        string => readfile($(test.agent_log_path)),
+        if => fileexists( $(test.agent_log_path) );
+
+  methods:
+      "Pass/FAIL"
+        usebundle => dcs_check_regcmp(".*(error|Failed to clean backup).*",
+                                      $(result),
+                                      $(this.promise_filename),
+                                      "true"); # We do not expect to find an error in the agent output
+}

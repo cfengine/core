@@ -31,15 +31,17 @@ bundle agent test
     ubuntu_20::
       "expected" string => "20";
 
-    redhat_5::
+    redhat_5|rhel_5::
       "expected" string => "5";
-    redhat_6::
+    redhat_6|rhel_6::
       "expected" string => "6";
-    redhat_7::
+    redhat_7|rhel_7::
       "expected" string => "7";
-    redhat_8::
+    redhat_8|rhel_8::
       "expected" string => "8";
 
+    centos_5::
+      "expected" string => "5";
     centos_6::
       "expected" string => "6";
     centos_7::

@@ -1,0 +1,130 @@
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+bundle common my_vars
+{
+  vars:
+      "files" slist => {
+        "file_1.txt",
+        "file_1.png",
+        "a/file_2.txt",
+        "a/file_22.txt",
+        "a/b/file_3.txt",
+        "a/b/c/d/file_3.txt",
+        "a/b/c/d/e/f/file_3.txt"
+      };
+}
+
+bundle agent init
+{
+  files:
+      "$(G.testdir)/$(my_vars.files)"
+        create => "true";
+
+  reports:
+    DEBUG::
+      "Created $(G.testdir)/$(my_vars.files)";
+}
+
+# Test findfiles_up with optional third argument specified
+bundle agent test_wapper_1(index, path, glob, level)
+{
+  vars:
+      "test"
+        data => findfiles_up("$(G.testdir)$(path)", "$(glob)", "$(level)"),
+        if => isdir("$(G.testdir)$(path)");
+
+      "test"
+        slist => filter("^$(G.testdir)/.*", test, true, false, inf);
+
+      "test"
+        slist => maplist(regex_replace("$(this)", "$(G.testdir)", "", "g"), test);
+
+      "test"
+        string => join(", ", getvalues(test));
+  reports:
+      "$(test)"
+        bundle_return_value_index => "$(index)";
+}
+
+# Test findfiles_up with optional third argument not specified
+bundle agent test_wapper_2(index, path, glob)
+{
+  vars:
+      "test"
+        data => findfiles_up("$(G.testdir)$(path)", "$(glob)"),
+        if => isdir("$(G.testdir)$(path)");
+
+      "test"
+        slist => filter("^$(G.testdir)/.*", test, true, false, inf);
+
+      "test"
+        slist => maplist(regex_replace("$(this)", "$(G.testdir)", "", "g"), test);
+
+      "test"
+        string => join(", ", getvalues(test));
+
+  reports:
+      "$(test)"
+        bundle_return_value_index => "$(index)";
+}
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-3577" }
+        string => "Test for expected results from policy function search_up";
+
+  methods:
+       "Test 0"
+        usebundle => test_wapper_1("0", "/", "*", 123),
+        useresult => "test";
+
+      "Test 1"
+        usebundle => test_wapper_1("1", "/a/b/c/d/e/f", ".", inf),
+        useresult => "test";
+
+      "Test 2"
+        usebundle => test_wapper_1("2", "/a/b/c/d/e/f", "file_1.txt", inf),
+        useresult => "test";
+
+      "Test 3"
+        usebundle => test_wapper_2("3", "/a/b/c/d/e/f", "file_2.txt"),
+        useresult => "test";
+
+      "Test 4"
+        usebundle => test_wapper_1("4", "/a/b/c/d/e/f", "file_3.txt", 0),
+        useresult => "test";
+
+      "Test 5"
+        usebundle => test_wapper_1("5", "/a/b/c/d/e/f", "file_3.txt", 2),
+        useresult => "test";
+
+      "Test 6"
+        usebundle => test_wapper_2("6", "/a/b//c/d/e/f", "file_1.*"),
+        useresult => "test";
+
+      "Test 7"
+        usebundle => test_wapper_2("7", "/a/b/c/d/e/f", "file_?.txt"),
+        useresult => "test";
+
+      "Test 8"
+        usebundle => test_wapper_2("8", "/a/b/c/d/e/f", "c//d/file_?.txt"),
+        useresult => "test";
+
+      "Test 9"
+        usebundle => test_wapper_1("9", "/a//b//c//d/e/f", "c/d/file_?.txt", 4),
+        useresult => "test";
+}
+
+bundle agent check
+{
+  methods:
+      "check"  usebundle => dcs_check_state(test,
+                                           "$(this.promise_filename).expected.json",
+                                           "$(this.promise_filename)");
+}

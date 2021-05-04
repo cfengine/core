@@ -1,0 +1,12 @@
+{
+  "test[0]": "/a, /file_1.png, /file_1.txt",
+  "test[1]": "/a/b/c/d/e/f/., /a/b/c/d/e/., /a/b/c/d/., /a/b/c/., /a/b/., /a/., /.",
+  "test[2]": "/file_1.txt",
+  "test[3]": "/a/file_2.txt",
+  "test[4]": "/a/b/c/d/e/f/file_3.txt",
+  "test[5]": "/a/b/c/d/e/f/file_3.txt, /a/b/c/d/file_3.txt",
+  "test[6]": "/file_1.png, /file_1.txt",
+  "test[7]": "/a/b/c/d/e/f/file_3.txt, /a/b/c/d/file_3.txt, /a/b/file_3.txt, /a/file_2.txt, /file_1.txt",
+  "test[8]": "/a/b/c/d/file_3.txt",
+  "test[9]": "/a/b/c/d/file_3.txt"
+}

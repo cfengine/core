@@ -6,9 +6,10 @@ bundle agent __main__
 {
   files:
       "$(this.promise_filename).txt"
-        content => "Hello World$(const.n)2$(const.n)3$(const.n)4$(const.n)half-way
-6$(const.n)7$(const.n)8$(const.n)9$(const.n)Byeeeeeee",
-        create => "true";
+        create => "true",
+        template_method => "inline_mustache",
+        edit_template_string => string_mustache( "Hello World$(const.n)2$(const.n)3$(const.n)4$(const.n)half-way
+6$(const.n)7$(const.n)8$(const.n)9$(const.n)Byeeeeeee", '{}');
 
   reports:
       "The first 3 lines of this file are:"

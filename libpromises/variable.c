@@ -229,7 +229,7 @@ bool VariableTableRemove(VariableTable *table, const VarRef *ref)
 
 bool VariableTablePut(VariableTable *table, const VarRef *ref,
                       const Rval *rval, DataType type,
-                      const char *tags, const Promise *promise)
+                      StringSet *tags, const Promise *promise)
 {
     assert(VarRefIsQualified(ref));
 
@@ -249,7 +249,7 @@ bool VariableTablePut(VariableTable *table, const VarRef *ref,
               "Only iterables (Rlists) are allowed to be NULL");
 
     Variable *var = VariableNew(VarRefCopy(ref), RvalCopy(*rval), type,
-                                StringSetFromString(tags, ','), promise);
+                                tags, promise);
     return VarMapInsert(table->vars, var->ref, var);
 }
 

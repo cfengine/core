@@ -2218,6 +2218,23 @@ bool EvalContextVariablePut(EvalContext *ctx,
                             const VarRef *ref, const void *value,
                             DataType type, const char *tags)
 {
+    StringSet *tags_set = StringSetFromString(tags, ',');
+    bool ret = EvalContextVariablePutTagsSet(ctx, ref, value, type, tags_set);
+    if (!ret)
+    {
+        StringSetDestroy(tags_set);
+    }
+    return ret;
+}
+
+/**
+ * Copies value, so you need to free your own copy afterwards, EXCEPT FOR THE
+ * 'tags' SET which is taken over as-is IF THE VARIABLE IS SUCCESSFULLY ADDED.
+ */
+bool EvalContextVariablePutTagsSet(EvalContext *ctx,
+                                   const VarRef *ref, const void *value,
+                                   DataType type, StringSet *tags)
+{
     assert(type != CF_DATA_TYPE_NONE);
     assert(ref);
     assert(ref->lval);

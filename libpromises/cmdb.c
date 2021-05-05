@@ -84,6 +84,75 @@ static bool CheckObjectForUnexpandedVars(JsonElement *object, ARG_UNUSED void *d
     return true;
 }
 
+static VarRef *GetCMDBVariableRef(const char *key)
+{
+    VarRef *ref = VarRefParse(key);
+    if (ref->ns == NULL)
+    {
+        ref->ns = xstrdup("cmdb");
+    }
+    else
+    {
+        if (ref->scope == NULL)
+        {
+            Log(LOG_LEVEL_ERR, "Invalid variable specification in CMDB data: '%s'"
+                " (bundle name has to be specified if namespace is specified)", key);
+            VarRefDestroy(ref);
+            return NULL;
+        }
+    }
+
+    if (ref->scope == NULL)
+    {
+        ref->scope = xstrdup("variables");
+    }
+    return ref;
+}
+
+static bool AddCMDBVariable(EvalContext *ctx, const char *key, const VarRef *ref,
+                            JsonElement *data, StringSet *tags)
+{
+    assert(ctx != NULL);
+    assert(key != NULL);
+    assert(ref != NULL);
+    assert(data != NULL);
+    assert(tags != NULL);
+
+    bool ret;
+    if (JsonGetElementType(data) == JSON_ELEMENT_TYPE_PRIMITIVE)
+    {
+        char *value = JsonPrimitiveToString(data);
+        Log(LOG_LEVEL_VERBOSE, "Installing CMDB variable '%s:%s.%s=%s'",
+            ref->ns, ref->scope, key, value);
+        ret = EvalContextVariablePutTagsSet(ctx, ref, value, CF_DATA_TYPE_STRING, tags);
+        free(value);
+    }
+    else if ((JsonGetType(data) == JSON_TYPE_ARRAY) &&
+             JsonArrayContainsOnlyPrimitives(data))
+    {
+        // map to slist if the data only has primitives
+        Log(LOG_LEVEL_VERBOSE, "Installing CMDB slist variable '%s:%s.%s'",
+            ref->ns, ref->scope, key);
+        Rlist *data_rlist = RlistFromContainer(data);
+        ret = EvalContextVariablePutTagsSet(ctx, ref, data_rlist, CF_DATA_TYPE_STRING_LIST, tags);
+        RlistDestroy(data_rlist);
+    }
+    else
+    {
+        // install as a data container
+        Log(LOG_LEVEL_VERBOSE, "Installing CMDB data container variable '%s:%s.%s'",
+            ref->ns, ref->scope, key);
+        ret = EvalContextVariablePutTagsSet(ctx, ref, data, CF_DATA_TYPE_CONTAINER, tags);
+    }
+    if (!ret)
+    {
+        /* On success, EvalContextVariablePutTagsSet() consumes the tags set,
+         * otherwise, we shall destroy it. */
+        StringSetDestroy(tags);
+    }
+    return ret;
+}
+
 static bool ReadCMDBVars(EvalContext *ctx, JsonElement *vars)
 {
     assert(vars != NULL);
@@ -106,52 +175,21 @@ static bool ReadCMDBVars(EvalContext *ctx, JsonElement *vars)
         const char *key = JsonIteratorNextKey(&iter);
         JsonElement *data = JsonObjectGet(vars, key);
 
-        VarRef *ref = VarRefParse(key);
-        if (ref->ns == NULL)
+        VarRef *ref = GetCMDBVariableRef(key);
+        if (ref == NULL)
         {
-            ref->ns = xstrdup("cmdb");
-        }
-        else
-        {
-            if (ref->scope == NULL)
-            {
-                Log(LOG_LEVEL_ERR, "Invalid variable specification in CMDB data: '%s'"
-                    " (bundle name has to be specified if namespace is specified)", key);
-                VarRefDestroy(ref);
-                continue;
-            }
+            continue;
         }
 
-        if (ref->scope == NULL)
-        {
-            ref->scope = xstrdup("variables");
-        }
-
-        if (JsonGetElementType(data) == JSON_ELEMENT_TYPE_PRIMITIVE)
-        {
-            char *value = JsonPrimitiveToString(data);
-            Log(LOG_LEVEL_VERBOSE, "Installing CMDB variable '%s:%s.%s=%s'",
-                ref->ns, ref->scope, key, value);
-            EvalContextVariablePut(ctx, ref, value, CF_DATA_TYPE_STRING, "source=cmdb");
-            free(value);
-        }
-        else if ((JsonGetType(data) == JSON_TYPE_ARRAY) &&
-                 JsonArrayContainsOnlyPrimitives(data))
-        {
-            // map to slist if the data only has primitives
-            Log(LOG_LEVEL_VERBOSE, "Installing CMDB slist variable '%s:%s.%s'",
-                ref->ns, ref->scope, key);
-            Rlist *data_rlist = RlistFromContainer(data);
-            EvalContextVariablePut(ctx, ref, data_rlist, CF_DATA_TYPE_STRING_LIST, "source=cmdb");
-            RlistDestroy(data_rlist);
-        }
-        else // install as a data container
-        {
-            Log(LOG_LEVEL_VERBOSE, "Installing CMDB data container variable '%s:%s.%s'",
-                ref->ns, ref->scope, key);
-            EvalContextVariablePut(ctx, ref, data, CF_DATA_TYPE_CONTAINER, "source=cmdb");
-        }
+        StringSet *tags = StringSetNew();
+        StringSetAdd(tags, xstrdup("source=cmdb"));
+        bool ret = AddCMDBVariable(ctx, key, ref, data, tags);
         VarRefDestroy(ref);
+        if (!ret)
+        {
+            /* Details should have been logged already. */
+            Log(LOG_LEVEL_ERR, "Failed to add CMDB variable '%s'", key);
+        }
     }
     return true;
 }

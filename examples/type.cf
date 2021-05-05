@@ -1,0 +1,45 @@
+#+begin_src cfengine3
+body common control
+{
+      bundlesequence => { "example" };
+}
+
+bundle agent example
+{
+  vars:
+      "foo"
+        data => '{ "bar": true, "baz": [1, 2, 3] }';
+    
+      "_foo" string => type("foo", "true");
+      "_foobar" string => type("foo[bar]", "false");
+      "_foobaz" string => type("foo[baz]", "true");
+    
+      "a" string => "hello";
+      "b" int => "123";
+      "c" rlist => { "1.1", "2.2", "3.3" };
+
+      "_a" string => type("a");
+      "_b" string => type("b", "true");
+      "_c" string => type("c", "false");
+
+  reports:
+      "'foo' is of type '$(_foo)' (detail)";
+      "'foo[bar]' is of type '$(_foobar)' (no detail)";
+      "'foo[baz]' is of type '$(_foobaz)' (detail)";
+
+      "'a' is of type '$(_a)' (no detail)";
+      "'b' is of type '$(_b)' (detail)";
+      "'c' is of type '$(_c)' (no detail)";
+}
+#+end_src
+#############################################################################
+#+begin_src example_output
+#@ ```
+#@ R: 'foo' is of type 'data object' (detail)
+#@ R: 'foo[bar]' is of type 'data' (no detail)
+#@ R: 'foo[baz]' is of type 'data array' (detail)
+#@ R: 'a' is of type 'string' (no detail)
+#@ R: 'b' is of type 'policy int' (detail)
+#@ R: 'c' is of type 'rlist' (no detail)
+#@ ```
+#+end_src

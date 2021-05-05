@@ -194,6 +194,37 @@ static bool ReadCMDBVars(EvalContext *ctx, JsonElement *vars)
     return true;
 }
 
+static bool AddCMDBClass(EvalContext *ctx, const char *key, StringSet *tags)
+{
+    assert(ctx != NULL);
+    assert(key != NULL);
+    assert(tags != NULL);
+
+    bool ret;
+    Log(LOG_LEVEL_VERBOSE, "Installing CMDB class '%s'", key);
+    if (strchr(key, ':') != NULL)
+    {
+        char *ns_class_name = xstrdup(key);
+        char *sep = strchr(ns_class_name, ':');
+        *sep = '\0';
+        key = sep + 1;
+        ret = EvalContextClassPutSoftNSTagsSet(ctx, ns_class_name, key, CONTEXT_SCOPE_NAMESPACE, tags);
+        free(ns_class_name);
+    }
+    else
+    {
+        ret = EvalContextClassPutSoftNSTagsSet(ctx, "cmdb", key, CONTEXT_SCOPE_NAMESPACE, tags);
+    }
+    if (!ret)
+    {
+        /* On success, EvalContextClassPutSoftNSTagsSet() consumes the tags set,
+         * otherwise, we shall destroy it. */
+        StringSetDestroy(tags);
+    }
+
+    return ret;
+}
+
 static bool ReadCMDBClasses(EvalContext *ctx, JsonElement *classes)
 {
     assert(classes != NULL);
@@ -224,19 +255,14 @@ static bool ReadCMDBClasses(EvalContext *ctx, JsonElement *classes)
                     "Invalid class specification '%s' in CMDB data, only \"any::\" allowed", expr);
                 continue;
             }
-            Log(LOG_LEVEL_VERBOSE, "Installing CMDB class '%s'", key);
-            if (strchr(key, ':') != NULL)
+
+            StringSet *default_tags = StringSetNew();
+            StringSetAdd(default_tags, xstrdup("source=cmdb"));
+            bool ret = AddCMDBClass(ctx, key, default_tags);
+            if (!ret)
             {
-                char *ns_class_name = xstrdup(key);
-                char *sep = strchr(ns_class_name, ':');
-                *sep = '\0';
-                key = sep + 1;
-                EvalContextClassPutSoftNS(ctx, ns_class_name, key, CONTEXT_SCOPE_NAMESPACE, "source=cmdb");
-                free(ns_class_name);
-            }
-            else
-            {
-                EvalContextClassPutSoftNS(ctx, "cmdb", key, CONTEXT_SCOPE_NAMESPACE, "source=cmdb");
+                /* Details should have been logged already. */
+                Log(LOG_LEVEL_ERR, "Failed to add CMDB class '%s'", key);
             }
         }
         else if (JsonGetContainerType(data) == JSON_CONTAINER_TYPE_ARRAY &&
@@ -250,19 +276,13 @@ static bool ReadCMDBClasses(EvalContext *ctx, JsonElement *classes)
                     JsonPrimitiveGetAsString(JsonArrayGet(data, 0)));
                 continue;
             }
-            Log(LOG_LEVEL_VERBOSE, "Installing CMDB class '%s'", key);
-            if (strchr(key, ':') != NULL)
+            StringSet *default_tags = StringSetNew();
+            StringSetAdd(default_tags, xstrdup("source=cmdb"));
+            bool ret = AddCMDBClass(ctx, key, default_tags);
+            if (!ret)
             {
-                char *ns_class_name = xstrdup(key);
-                char *sep = strchr(ns_class_name, ':');
-                *sep = '\0';
-                key = sep + 1;
-                EvalContextClassPutSoftNS(ctx, ns_class_name, key, CONTEXT_SCOPE_NAMESPACE, "source=cmdb");
-                free(ns_class_name);
-            }
-            else
-            {
-                EvalContextClassPutSoftNS(ctx, "cmdb", key, CONTEXT_SCOPE_NAMESPACE, "source=cmdb");
+                /* Details should have been logged already. */
+                Log(LOG_LEVEL_ERR, "Failed to add CMDB class '%s'", key);
             }
         }
         else

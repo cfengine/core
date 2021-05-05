@@ -66,13 +66,9 @@ struct ClassTableIterator_
 };
 
 
-/**
- * @param #tags is a comma separated string of words.
- *              Both "" or NULL are equivalent.
- */
 static void ClassInit(Class *cls,
                       const char *ns, const char *name,
-                      bool is_soft, ContextScope scope, const char *tags)
+                      bool is_soft, ContextScope scope, StringSet *tags)
 {
     if (ns == NULL || strcmp(ns, "default") == 0)
     {
@@ -88,8 +84,7 @@ static void ClassInit(Class *cls,
 
     cls->is_soft = is_soft;
     cls->scope = scope;
-
-    cls->tags = StringSetFromString(tags, ',');
+    cls->tags = (tags ? tags : StringSetNew());
     if (!is_soft && !StringSetContains(cls->tags, "hardclass"))
     {
         StringSetAdd(cls->tags, xstrdup("hardclass"));
@@ -135,7 +130,7 @@ void ClassTableDestroy(ClassTable *table)
 
 bool ClassTablePut(ClassTable *table,
                    const char *ns, const char *name,
-                   bool is_soft, ContextScope scope, const char *tags)
+                   bool is_soft, ContextScope scope, StringSet *tags)
 {
     assert(name);
     assert(is_soft || (!ns || strcmp("default", ns) == 0)); // hard classes should have default namespace

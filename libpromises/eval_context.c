@@ -452,7 +452,8 @@ static void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context, 
         return;
     }
 
-    ClassTablePut(frame.classes, frame.owner->ns, context, true, CONTEXT_SCOPE_BUNDLE, tags);
+    ClassTablePut(frame.classes, frame.owner->ns, context, true,
+                  CONTEXT_SCOPE_BUNDLE, StringSetFromString(tags, ','));
 
     if (!BundleAborted(ctx))
     {
@@ -1600,7 +1601,8 @@ Class *EvalContextClassMatch(const EvalContext *ctx, const char *regex)
     return ClassTableMatch(ctx->global_classes, regex);
 }
 
-static bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *name, bool is_soft, ContextScope scope, const char *tags)
+static bool EvalContextClassPutTagsSet(EvalContext *ctx, const char *ns, const char *name, bool is_soft,
+                                       ContextScope scope, StringSet *tags)
 {
     {
         char context_copy[2 * CF_MAXVARSIZE];
@@ -1706,6 +1708,18 @@ static bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *na
     return true;
 }
 
+static bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *name, bool is_soft,
+                                ContextScope scope, const char *tags)
+{
+    StringSet *tags_set = StringSetFromString(tags, ',');
+    bool ret = EvalContextClassPutTagsSet(ctx, ns, name, is_soft, scope, tags_set);
+    if (!ret)
+    {
+        StringSetDestroy(tags_set);
+    }
+    return ret;
+}
+
 static const char *EvalContextCurrentNamespace(const EvalContext *ctx)
 {
     size_t i = SeqLength(ctx->stack);
@@ -1753,6 +1767,15 @@ bool EvalContextClassPutSoftNS(EvalContext *ctx, const char *ns, const char *nam
                                ContextScope scope, const char *tags)
 {
     return EvalContextClassPut(ctx, ns, name, true, scope, tags);
+}
+
+/**
+ * Takes over #tags in case of success.
+ */
+bool EvalContextClassPutSoftNSTagsSet(EvalContext *ctx, const char *ns, const char *name,
+                                      ContextScope scope, StringSet *tags)
+{
+    return EvalContextClassPutTagsSet(ctx, ns, name, true, scope, tags);
 }
 
 ClassTableIterator *EvalContextClassTableIteratorNewGlobal(const EvalContext *ctx, const char *ns, bool is_hard, bool is_soft)

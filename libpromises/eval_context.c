@@ -2010,6 +2010,21 @@ static inline char *MangleScopedVarNameIntoSpecialScopeName(const char *scope, c
  */
 bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const char *lval, const void *value, DataType type, const char *tags)
 {
+    StringSet *tags_set = StringSetFromString(tags, ',');
+    bool ret = EvalContextVariablePutSpecialTagsSet(ctx, scope, lval, value, type, tags_set);
+    if (!ret)
+    {
+        StringSetDestroy(tags_set);
+    }
+    return ret;
+}
+
+/**
+ * Copies value, so you need to free your own copy afterwards, EXCEPT FOR THE
+ * 'tags' SET which is taken over as-is IF THE VARIABLE IS SUCCESSFULLY ADDED.
+ */
+bool EvalContextVariablePutSpecialTagsSet(EvalContext *ctx, SpecialScope scope, const char *lval, const void *value, DataType type, StringSet *tags)
+{
     char *new_lval = NULL;
     if (strchr(lval, '.') != NULL)
     {
@@ -2024,7 +2039,7 @@ bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const c
     {
         // dealing with (legacy) array reference in lval, must parse
         VarRef *ref = VarRefParseFromScope(new_lval ? new_lval : lval, SpecialScopeToString(scope));
-        bool ret = EvalContextVariablePut(ctx, ref, value, type, tags);
+        bool ret = EvalContextVariablePutTagsSet(ctx, ref, value, type, tags);
         free(new_lval);
         VarRefDestroy(ref);
         return ret;
@@ -2033,7 +2048,7 @@ bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const c
     {
         // plain lval, skip parsing
         const VarRef ref = VarRefConst(NULL, SpecialScopeToString(scope), new_lval ? new_lval : lval);
-        bool ret = EvalContextVariablePut(ctx, &ref, value, type, tags);
+        bool ret = EvalContextVariablePutTagsSet(ctx, &ref, value, type, tags);
         free(new_lval);
         return ret;
     }

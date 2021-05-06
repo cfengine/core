@@ -122,6 +122,7 @@ void EvalContextHeapPersistentRemove(const char *context);
 void EvalContextHeapPersistentLoadAll(EvalContext *ctx);
 
 bool EvalContextClassPutSoft(EvalContext *ctx, const char *name, ContextScope scope, const char *tags);
+bool EvalContextClassPutSoftTagsSet(EvalContext *ctx, const char *name, ContextScope scope, StringSet *tags);
 bool EvalContextClassPutSoftNS(EvalContext *ctx, const char *ns, const char *name,
                                ContextScope scope, const char *tags);
 bool EvalContextClassPutSoftNSTagsSet(EvalContext *ctx, const char *ns, const char *name,

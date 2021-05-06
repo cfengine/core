@@ -39,7 +39,7 @@ static bool CfSetuid(uid_t uid, gid_t gid);
 static int cf_pwait(pid_t pid);
 
 static pid_t *CHILDREN = NULL; /* GLOBAL_X */
-static int MAX_FD = 128; /* GLOBAL_X */ /* Max number of simultaneous pipes */
+static int MAX_FD = 2048; /* GLOBAL_X */ /* Max number of simultaneous pipes */
 
 
 static void ChildrenFDInit()

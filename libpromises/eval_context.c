@@ -1748,6 +1748,17 @@ bool EvalContextClassPutHard(EvalContext *ctx, const char *name, const char *tag
 
 bool EvalContextClassPutSoft(EvalContext *ctx, const char *name, ContextScope scope, const char *tags)
 {
+    StringSet *tags_set = StringSetFromString(tags, ',');
+    bool ret = EvalContextClassPutSoftTagsSet(ctx, name, scope, tags_set);
+    if (!ret)
+    {
+        StringSetDestroy(tags_set);
+    }
+    return ret;
+}
+
+bool EvalContextClassPutSoftTagsSet(EvalContext *ctx, const char *name, ContextScope scope, StringSet *tags)
+{
     bool ret;
     char *ns = NULL;
     char *delim = strchr(name, ':');
@@ -1757,8 +1768,8 @@ bool EvalContextClassPutSoft(EvalContext *ctx, const char *name, ContextScope sc
         ns = xstrndup(name, delim - name);
     }
 
-    ret = EvalContextClassPut(ctx, ns ? ns : EvalContextCurrentNamespace(ctx),
-                              ns ? delim + 1 : name, true, scope, tags);
+    ret = EvalContextClassPutTagsSet(ctx, ns ? ns : EvalContextCurrentNamespace(ctx),
+                                     ns ? delim + 1 : name, true, scope, tags);
     free(ns);
     return ret;
 }

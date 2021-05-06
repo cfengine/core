@@ -105,29 +105,53 @@ static bool ReadCMDBVars(EvalContext *ctx, JsonElement *vars)
     {
         const char *key = JsonIteratorNextKey(&iter);
         JsonElement *data = JsonObjectGet(vars, key);
-        VarRef ref = VarRefConst("cmdb", "variables", key);
+
+        VarRef *ref = VarRefParse(key);
+        if (ref->ns == NULL)
+        {
+            ref->ns = xstrdup("cmdb");
+        }
+        else
+        {
+            if (ref->scope == NULL)
+            {
+                Log(LOG_LEVEL_ERR, "Invalid variable specification in CMDB data: '%s'"
+                    " (bundle name has to be specified if namespace is specified)", key);
+                VarRefDestroy(ref);
+                continue;
+            }
+        }
+
+        if (ref->scope == NULL)
+        {
+            ref->scope = xstrdup("variables");
+        }
 
         if (JsonGetElementType(data) == JSON_ELEMENT_TYPE_PRIMITIVE)
         {
             char *value = JsonPrimitiveToString(data);
-            Log(LOG_LEVEL_VERBOSE, "Installing CMDB variable 'cmdb:variables.%s=%s'", key, value);
-            EvalContextVariablePut(ctx, &ref, value, CF_DATA_TYPE_STRING, "source=cmdb");
+            Log(LOG_LEVEL_VERBOSE, "Installing CMDB variable '%s:%s.%s=%s'",
+                ref->ns, ref->scope, key, value);
+            EvalContextVariablePut(ctx, ref, value, CF_DATA_TYPE_STRING, "source=cmdb");
             free(value);
         }
         else if ((JsonGetType(data) == JSON_TYPE_ARRAY) &&
                  JsonArrayContainsOnlyPrimitives(data))
         {
             // map to slist if the data only has primitives
-            Log(LOG_LEVEL_VERBOSE, "Installing CMDB slist variable 'cmdb:variables.%s'", key);
+            Log(LOG_LEVEL_VERBOSE, "Installing CMDB slist variable '%s:%s.%s'",
+                ref->ns, ref->scope, key);
             Rlist *data_rlist = RlistFromContainer(data);
-            EvalContextVariablePut(ctx, &ref, data_rlist, CF_DATA_TYPE_STRING_LIST, "source=cmdb");
+            EvalContextVariablePut(ctx, ref, data_rlist, CF_DATA_TYPE_STRING_LIST, "source=cmdb");
             RlistDestroy(data_rlist);
         }
         else // install as a data container
         {
-            Log(LOG_LEVEL_VERBOSE, "Installing CMDB data container variable 'cmdb:variables.%s'", key);
-            EvalContextVariablePut(ctx, &ref, data, CF_DATA_TYPE_CONTAINER, "source=cmdb");
+            Log(LOG_LEVEL_VERBOSE, "Installing CMDB data container variable '%s:%s.%s'",
+                ref->ns, ref->scope, key);
+            EvalContextVariablePut(ctx, ref, data, CF_DATA_TYPE_CONTAINER, "source=cmdb");
         }
+        VarRefDestroy(ref);
     }
     return true;
 }
@@ -163,7 +187,19 @@ static bool ReadCMDBClasses(EvalContext *ctx, JsonElement *classes)
                 continue;
             }
             Log(LOG_LEVEL_VERBOSE, "Installing CMDB class '%s'", key);
-            EvalContextClassPutSoftNS(ctx, "cmdb", key, CONTEXT_SCOPE_NAMESPACE, "source=cmdb");
+            if (strchr(key, ':') != NULL)
+            {
+                char *ns_class_name = xstrdup(key);
+                char *sep = strchr(ns_class_name, ':');
+                *sep = '\0';
+                key = sep + 1;
+                EvalContextClassPutSoftNS(ctx, ns_class_name, key, CONTEXT_SCOPE_NAMESPACE, "source=cmdb");
+                free(ns_class_name);
+            }
+            else
+            {
+                EvalContextClassPutSoftNS(ctx, "cmdb", key, CONTEXT_SCOPE_NAMESPACE, "source=cmdb");
+            }
         }
         else if (JsonGetContainerType(data) == JSON_CONTAINER_TYPE_ARRAY &&
                  JsonArrayContainsOnlyPrimitives(data))
@@ -177,7 +213,19 @@ static bool ReadCMDBClasses(EvalContext *ctx, JsonElement *classes)
                 continue;
             }
             Log(LOG_LEVEL_VERBOSE, "Installing CMDB class '%s'", key);
-            EvalContextClassPutSoftNS(ctx, "cmdb", key, CONTEXT_SCOPE_NAMESPACE, "source=cmdb");
+            if (strchr(key, ':') != NULL)
+            {
+                char *ns_class_name = xstrdup(key);
+                char *sep = strchr(ns_class_name, ':');
+                *sep = '\0';
+                key = sep + 1;
+                EvalContextClassPutSoftNS(ctx, ns_class_name, key, CONTEXT_SCOPE_NAMESPACE, "source=cmdb");
+                free(ns_class_name);
+            }
+            else
+            {
+                EvalContextClassPutSoftNS(ctx, "cmdb", key, CONTEXT_SCOPE_NAMESPACE, "source=cmdb");
+            }
         }
         else
         {

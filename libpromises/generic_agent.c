@@ -262,13 +262,38 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
             const char *vkey;
             while ((vkey = JsonIteratorNextKey(&iter)))
             {
+                VarRef *ref = VarRefParse(vkey);
+                if (ref->ns != NULL)
+                {
+                    if (ref->scope == NULL)
+                    {
+                        Log(LOG_LEVEL_ERR, "Invalid variable specification in augments data in '%s': '%s'"
+                            " (bundle name has to be specified if namespace is specified)", filename, vkey);
+                        VarRefDestroy(ref);
+                        continue;
+                    }
+                }
+                if (ref->scope == NULL)
+                {
+                    ref->scope = xstrdup("def");
+                }
+
                 JsonElement *data = JsonObjectGet(vars, vkey);
                 if (JsonGetElementType(data) == JSON_ELEMENT_TYPE_PRIMITIVE)
                 {
                     char *value = JsonPrimitiveToString(data);
-                    Log(LOG_LEVEL_VERBOSE, "Installing augments variable '%s.%s=%s' from file '%s'",
-                        SpecialScopeToString(SPECIAL_SCOPE_DEF), vkey, value, filename);
-                    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_DEF, vkey, value, CF_DATA_TYPE_STRING, "source=augments_file");
+                    if ((ref->ns == NULL) && (ref->scope == NULL))
+                    {
+                        Log(LOG_LEVEL_VERBOSE, "Installing augments variable '%s.%s=%s' from file '%s'",
+                            SpecialScopeToString(SPECIAL_SCOPE_DEF), vkey, value, filename);
+                        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_DEF, vkey, value, CF_DATA_TYPE_STRING, "source=augments_file");
+                    }
+                    else
+                    {
+                        Log(LOG_LEVEL_VERBOSE, "Installing augments variable '%s=%s' from file '%s'",
+                            vkey, value, filename);
+                        EvalContextVariablePut(ctx, ref, value, CF_DATA_TYPE_STRING, "source=augments_file");
+                    }
                     free(value);
                 }
                 else if (JsonGetElementType(data) == JSON_ELEMENT_TYPE_CONTAINER &&
@@ -276,25 +301,47 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
                          JsonArrayContainsOnlyPrimitives(data))
                 {
                     // map to slist if the data only has primitives
-                    Log(LOG_LEVEL_VERBOSE, "Installing augments slist variable '%s.%s' from file '%s'",
-                        SpecialScopeToString(SPECIAL_SCOPE_DEF), vkey, filename);
-
                     Rlist *data_as_rlist = RlistFromContainer(data);
-                    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_DEF,
-                                                  vkey, data_as_rlist,
-                                                  CF_DATA_TYPE_STRING_LIST,
-                                                  "source=augments_file");
+                    if ((ref->ns == NULL) && (ref->scope == NULL))
+                    {
+                        Log(LOG_LEVEL_VERBOSE, "Installing augments slist variable '%s.%s' from file '%s'",
+                            SpecialScopeToString(SPECIAL_SCOPE_DEF), vkey, filename);
+                        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_DEF,
+                                                      vkey, data_as_rlist,
+                                                      CF_DATA_TYPE_STRING_LIST,
+                                                      "source=augments_file");
+                    }
+                    else
+                    {
+                        Log(LOG_LEVEL_VERBOSE, "Installing augments slist variable '%s' from file '%s'",
+                            vkey, filename);
+                        EvalContextVariablePut(ctx, ref, data_as_rlist, CF_DATA_TYPE_STRING_LIST,
+                                               "source=augments_file");
+                    }
+
                     RlistDestroy(data_as_rlist);
                 }
                 else // install as a data container
                 {
-                    Log(LOG_LEVEL_VERBOSE, "Installing augments data container variable '%s.%s' from file '%s'",
-                        SpecialScopeToString(SPECIAL_SCOPE_DEF), vkey, filename);
-                    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_DEF,
-                                                  vkey, data,
-                                                  CF_DATA_TYPE_CONTAINER,
-                                                  "source=augments_file");
+                    if ((ref->ns == NULL) && (ref->scope == NULL))
+                    {
+                        Log(LOG_LEVEL_VERBOSE, "Installing augments data container variable '%s.%s' from file '%s'",
+                            SpecialScopeToString(SPECIAL_SCOPE_DEF), vkey, filename);
+                        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_DEF,
+                                                      vkey, data,
+                                                      CF_DATA_TYPE_CONTAINER,
+                                                      "source=augments_file");
+                    }
+                    else
+                    {
+                        Log(LOG_LEVEL_VERBOSE, "Installing augments data container variable '%s' from file '%s'",
+                            vkey, filename);
+                        EvalContextVariablePut(ctx, ref, data,
+                                               CF_DATA_TYPE_CONTAINER,
+                                               "source=augments_file");
+                    }
                 }
+                VarRefDestroy(ref);
             }
 
           vars_cleanup:
@@ -328,7 +375,7 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
                     {
                         Log(LOG_LEVEL_VERBOSE, "Installing augments class '%s' (checked '%s') from file '%s'",
                             ckey, check, filename);
-                        EvalContextClassPutHard(ctx, ckey, tags);
+                        EvalContextClassPutSoft(ctx, ckey, CONTEXT_SCOPE_NAMESPACE, tags);
                     }
                     free(check);
                 }
@@ -346,7 +393,7 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
                         {
                             Log(LOG_LEVEL_VERBOSE, "Installing augments class '%s' (checked array entry '%s') from file '%s'",
                                 ckey, check, filename);
-                            EvalContextClassPutHard(ctx, ckey, tags);
+                            EvalContextClassPutSoft(ctx, ckey, CONTEXT_SCOPE_NAMESPACE, tags);
                             free(check);
                             break;
                         }

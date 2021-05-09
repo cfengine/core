@@ -50,6 +50,9 @@ typedef struct PromiseModule
     JsonElement *message;
 } PromiseModule;
 
+bool InitializeCustomPromises();
+void FinalizeCustomPromises();
+
 Body *FindCustomPromiseType(const Promise *promise);
 PromiseResult EvaluateCustomPromise(ARG_UNUSED EvalContext *ctx, const Promise *pp);
 

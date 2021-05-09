@@ -32,6 +32,9 @@
 #include <attributes.h>      // GetClassContextAttributes(), IsClassesBodyConstraint()
 #include <expand.h>          // ExpandScalar()
 #include <var_expressions.h> // StringContainsUnresolved()
+#include <map.h>             // Map*
+
+static Map *custom_modules = NULL;
 
 static const ConstraintSyntax promise_constraints[] = {
     CONSTRAINT_SYNTAX_GLOBAL,
@@ -127,17 +130,20 @@ static inline void PromiseModule_LogJson(JsonElement *object, const Promise *pp)
     const LogLevel level = LogLevelFromString(level_string);
     assert(level != LOG_LEVEL_NOTHING);
 
-    /* Check if there is a log level specified for the particular promise. */
-    const char *value = PromiseGetConstraintAsRval(pp, "log_level", RVAL_TYPE_SCALAR);
-    if (value != NULL)
+    if (pp != NULL)
     {
-        LogLevel specific = ActionAttributeLogLevelFromString(value);
-        if (specific < level)
+        /* Check if there is a log level specified for the particular promise. */
+        const char *value = PromiseGetConstraintAsRval(pp, "log_level", RVAL_TYPE_SCALAR);
+        if (value != NULL)
         {
-            /* Do not log messages that have a higher log level than the log
-             * level specified for the promise (e.g. 'info' messages when
-             * 'error' was requested for the promise). */
-            return;
+            LogLevel specific = ActionAttributeLogLevelFromString(value);
+            if (specific < level)
+            {
+                /* Do not log messages that have a higher log level than the log
+                 * level specified for the promise (e.g. 'info' messages when
+                 * 'error' was requested for the promise). */
+                return;
+            }
         }
     }
     Log(level, "%s", message);
@@ -452,6 +458,8 @@ static PromiseModule *PromiseModule_Start(char *interpreter, char *path)
         snprintf(command, CF_BUFSIZE, "%s %s", interpreter, path);
     }
 
+    Log(LOG_LEVEL_VERBOSE, "Starting custom promise module '%s' with command '%s'",
+        path, command);
     module->fds = cf_popen_full_duplex_streams(command, false, true);
     module->output = module->fds.read_stream;
     module->input = module->fds.write_stream;
@@ -893,6 +901,29 @@ static void PromiseModule_Terminate(PromiseModule *module, const Promise *pp)
     }
 }
 
+static void PromiseModule_Terminate_untyped(void *data)
+{
+    PromiseModule *module = data;
+    PromiseModule_Terminate(module, NULL);
+}
+
+bool InitializeCustomPromises()
+{
+    /* module_path -> PromiseModule map */
+    custom_modules = MapNew(StringHash_untyped,
+                            StringEqual_untyped,
+                            free,
+                            PromiseModule_Terminate_untyped);
+    assert(custom_modules != NULL);
+
+    return (custom_modules != NULL);
+}
+
+void FinalizeCustomPromises()
+{
+    MapDestroy(custom_modules);
+}
+
 PromiseResult EvaluateCustomPromise(EvalContext *ctx, const Promise *pp)
 {
     assert(ctx != NULL);
@@ -918,17 +949,35 @@ PromiseResult EvaluateCustomPromise(EvalContext *ctx, const Promise *pp)
         return PROMISE_RESULT_FAIL;
     }
 
-    // TODO: Store promise modules and avoid starting one per promise
-    // evaluation
-    PromiseModule *module = PromiseModule_Start(interpreter, path);
-    PromiseResult result;
-
+    PromiseModule *module = MapGet(custom_modules, path);
     if (module == NULL)
     {
+        module = PromiseModule_Start(interpreter, path);
+        if (module != NULL)
+        {
+            MapInsert(custom_modules, xstrdup(path), module);
+        }
+        else
+        {
+            free(interpreter);
+            free(path);
+            // Error logged in PromiseModule_Start()
+            return PROMISE_RESULT_FAIL;
+        }
+    }
+    else
+    {
+        if (!StringEqual(interpreter, module->interpreter))
+        {
+            Log(LOG_LEVEL_ERR, "Conflicting interpreter specifications for custom promise module '%s'"
+                " (started with '%s' and '%s' requested for promise '%s' of type '%s')",
+                path, module->interpreter, interpreter, pp->promiser, PromiseGetPromiseType(pp));
+            free(interpreter);
+            free(path);
+            return PROMISE_RESULT_FAIL;
+        }
         free(interpreter);
         free(path);
-        // Error logged in PromiseModule_Start()
-        return PROMISE_RESULT_FAIL;
     }
 
     // TODO: Do validation earlier (cf-promises --full-check)
@@ -946,6 +995,7 @@ PromiseResult EvaluateCustomPromise(EvalContext *ctx, const Promise *pp)
         }
     }
 
+    PromiseResult result;
     if (valid)
     {
         result = PromiseModule_Evaluate(module, ctx, pp);
@@ -960,8 +1010,6 @@ PromiseResult EvaluateCustomPromise(EvalContext *ctx, const Promise *pp)
         result = PROMISE_RESULT_FAIL; // TODO: Investigate if DENIED is more
                                       // appropriate
     }
-
-    PromiseModule_Terminate(module, pp);
 
     return result;
 }

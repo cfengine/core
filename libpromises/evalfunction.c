@@ -8336,6 +8336,119 @@ static FnCallResult FnCallNetworkConnections(EvalContext *ctx, ARG_UNUSED const 
 
 /*********************************************************************/
 
+static FnCallResult FnCallFindfilesUp(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
+{
+    assert(fp != NULL);
+    assert(fp->name != NULL);
+
+    const Rlist *const path_arg = finalargs;
+    if (path_arg == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Function %s requires path as first argument",
+            fp->name);
+        return FnFailure();
+    }
+
+    const Rlist *const glob_arg = finalargs->next;
+    if (glob_arg == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Function %s requires glob as second argument",
+            fp->name);
+        return FnFailure();
+    }
+
+    const Rlist *const level_arg = finalargs->next->next;
+
+    char path[PATH_MAX];
+    size_t copied = strlcpy(path, RlistScalarValue(path_arg), sizeof(path));
+    if (copied >= sizeof(path))
+    {
+        Log(LOG_LEVEL_ERR, "Function %s, path is too long (%zu > %zu)",
+            fp->name, copied, sizeof(path));
+        return FnFailure();
+    }
+
+    if (!IsAbsoluteFileName(path))
+    {
+        Log(LOG_LEVEL_ERR, "Function %s, not an absolute path '%s'",
+            fp->name, path);
+        return FnFailure();
+    }
+
+    if (!IsDir(path))
+    {
+        Log(LOG_LEVEL_ERR, "Function %s, path '%s' is not a directory",
+            fp->name, path);
+        return FnFailure();
+    }
+
+    DeleteRedundantSlashes(path);
+
+    size_t len = strlen(path);
+    if (path[len - 1] == FILE_SEPARATOR)
+    {
+        path[len - 1] = '\0';
+    }
+
+    char glob[PATH_MAX];
+    copied = strlcpy(glob, RlistScalarValue(glob_arg), sizeof(glob));
+    if (copied >= sizeof(glob))
+    {
+        Log(LOG_LEVEL_ERR, "Function %s, glob is too long (%zu > %zu)",
+            fp->name, copied, sizeof(glob));
+        return FnFailure();
+    }
+
+    if (IsAbsoluteFileName(glob))
+    {
+        Log(LOG_LEVEL_ERR,
+            "Function %s, glob '%s' cannot be an absolute path", fp->name,
+            glob);
+        return FnFailure();
+    }
+
+    DeleteRedundantSlashes(glob);
+
+    /* level defaults to inf */
+    long level = IntFromString("inf");
+    if (level_arg != NULL)
+    {
+        level = IntFromString(RlistScalarValue(level_arg));
+    }
+
+    JsonElement *json = JsonArrayCreate(1);
+
+    while (level-- >= 0)
+    {
+        char filepath[PATH_MAX];
+        copied = strlcpy(filepath, path, sizeof(filepath));
+        assert(copied < sizeof(path));
+        if (JoinPaths(filepath, sizeof(filepath), glob) == NULL)
+        {
+            Log(LOG_LEVEL_ERR,
+                "Function %s, failed to join path '%s' and glob '%s'",
+                fp->name, path, glob);
+        }
+
+        StringSet *matches = GlobFileList(filepath);
+        JsonElement *matches_json = StringSetToJson(matches);
+        JsonArrayExtend(json, matches_json);
+        StringSetDestroy(matches);
+
+        char *sep = strrchr(path, FILE_SEPARATOR);
+        if (sep == NULL)
+        {
+            /* don't search beyond root directory */
+            break;
+        }
+        *sep = '\0';
+    }
+
+    return FnReturnContainerNoCopy(json);
+}
+
+/*********************************************************************/
+
 static bool ExecModule(EvalContext *ctx, char *command)
 {
     FILE *pp = cf_popen(command, "rt", true);
@@ -9720,6 +9833,14 @@ static const FnCallArg DATA_SYSCTLVALUES_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg FINDFILES_UP_ARGS[] =
+{
+    {CF_ABSPATHRANGE, CF_DATA_TYPE_STRING, "Path to search from"},
+    {CF_PATHRANGE, CF_DATA_TYPE_STRING, "Glob pattern to match files"},
+    {CF_VALRANGE, CF_DATA_TYPE_INT, "Number of levels to search"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
 
 /*********************************************************/
 /* FnCalls are rvalues in certain promise constraints    */
@@ -10110,6 +10231,12 @@ const FnCallType CF_FNCALL_TYPES[] =
     // Network probe functions
     FnCallTypeNew("network_connections", CF_DATA_TYPE_CONTAINER, NETWORK_CONNECTIONS_ARGS, &FnCallNetworkConnections, "Get the full list of TCP, TCP6, UDP, and UDP6 connections from /proc/net",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
+
+    // Files functions
+    FnCallTypeNew("findfiles_up", CF_DATA_TYPE_CONTAINER, FINDFILES_UP_ARGS, &FnCallFindfilesUp, "Find files matching a glob pattern by searching up the directory three from a given point in the tree structure",
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("search_up", CF_DATA_TYPE_CONTAINER, FINDFILES_UP_ARGS, &FnCallFindfilesUp, "Hush... This is a super secret alias name for function 'findfiles_up'",
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
 
     FnCallTypeNewNull()
 };

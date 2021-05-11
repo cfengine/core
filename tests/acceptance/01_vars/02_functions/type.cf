@@ -1,0 +1,92 @@
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+bundle agent init
+{
+  vars:
+      "_data" data => '
+          {
+            "_string": "abc",
+            "_int": 123,
+            "_real": 123.4,
+            "_true": true,
+            "_false": false,
+            "_object": { "abc": 123 },
+            "_array": [ 1, 2, 3 ],
+            "_null": null
+          }';
+      "_string" string => "abc";
+      "_int" int => "123";
+      "_real" real => "123.4";
+      "_slist" slist => { "a", "b", "c" };
+      "_ilist" ilist => { "1", "2", "3" };
+      "_rlist" rlist => { "1.2", "3.4", "5.6" };
+}
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-2240" }
+        string => "Test for expected results from policy function type";
+
+  vars:
+      "test_00" string => type("init._data");
+      "test_01" string => type("init._data", "true");
+
+      "test_02" string => type("init._data[_string]");
+      "test_03" string => type("init._data[_string]", "true");
+
+      "test_04" string => type("init._data[_int]");
+      "test_05" string => type("init._data[_int]", "true");
+
+      "test_06" string => type("init._data[_real]");
+      "test_07" string => type("init._data[_real]", "true");
+
+      "test_08" string => type("init._data[_true]");
+      "test_09" string => type("init._data[_true]", "true");
+
+      "test_10" string => type("init._data[_false]");
+      "test_11" string => type("init._data[_false]", "true");
+
+      "test_12" string => type("init._data[_object]");
+      "test_13" string => type("init._data[_object]", "true");
+
+      "test_14" string => type("init._data[_array]");
+      "test_15" string => type("init._data[_array]", "true");
+
+      "test_16" string => type("init._data[_null]");
+      "test_17" string => type("init._data[_null]", "true");
+
+      "test_18" string => type("init._string");
+      "test_19" string => type("init._string", "true");
+
+      "test_20" string => type("init._int");
+      "test_21" string => type("init._int", "true");
+
+      "test_22" string => type("init._real");
+      "test_23" string => type("init._real", "true");
+
+      "test_24" string => type("init._slist", "false");
+      "test_25" string => type("init._slist", "true");
+
+      "test_26" string => type("init._ilist", "no");
+      "test_27" string => type("init._ilist", "yes");
+
+      "test_28" string => type("init._rlist", "off");
+      "test_29" string => type("init._rlist", "on");
+
+      "test_30" string => type("undefined");
+      "test_31" string => type("undefined", "true");
+}
+
+bundle agent check
+{
+  methods:
+      "check"  usebundle => dcs_check_state(test,
+                                           "$(this.promise_filename).expected.json",
+                                           "$(this.promise_filename)"); 
+}

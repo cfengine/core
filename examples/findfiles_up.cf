@@ -1,0 +1,34 @@
+#+begin_src prep
+#@ ```
+#@ mkdir -p /tmp/repo/.git/
+#@ touch /tmp/repo/.git/config
+#@ mkdir -p /tmp/repo/submodule/.git/
+#@ touch /tmp/repo/submodule/.git/config
+#@ mkdir -p /tmp/repo/submodule/some/place/deep/within/my/repo/
+#@ ```
+#+end_src
+###############################################################################
+#+begin_src cfengine3
+bundle agent __main__
+{
+  vars:
+      "path" # path to search up from
+        string => "/tmp/repo/submodule/some/place/deep/within/my/repo/";
+      "glob" # glob pattern matching filename
+        string => ".git/config";
+      "level" # how far to search
+        int => "inf";
+      "configs"
+        data => findfiles_up("$(path)", "$(glob)", "$(level)");
+  reports:
+      "Submodules '$(glob)' is located in '$(configs[0])'";
+      "Parents '$(glob)' is located in '$(configs[1])'";
+}
+#+end_src
+###############################################################################
+#+begin_src example_output
+#@ ```
+#@ R: Submodules '.git/config' is located in '/tmp/repo/submodule/.git/config'
+#@ R: Parents '.git/config' is located in '/tmp/repo/.git/config'
+#@ ```
+#+end_src

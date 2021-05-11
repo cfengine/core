@@ -5119,69 +5119,81 @@ static FnCallResult FnCallFold(EvalContext *ctx,
 }
 
 /*********************************************************************/
-/* This function has been removed from the function list for now     */
-/*********************************************************************/
-#ifdef SUPPORT_FNCALL_DATATYPE
+
 static FnCallResult FnCallDatatype(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
-    const char* const varname = RlistScalarValue(finalargs);
+    assert(fp != NULL);
+    assert(fp->name != NULL);
 
-    VarRef* const ref = VarRefParse(varname);
+    if (finalargs == NULL)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Function %s requires variable identifier as first argument",
+            fp->name);
+        return FnFailure();
+    }
+    const char* const var_name = RlistScalarValue(finalargs);
+
+    VarRef* const var_ref = VarRefParse(var_name);
     DataType type;
-    const void *value = EvalContextVariableGet(ctx, ref, &type);
-    VarRefDestroy(ref);
+    const void *value = EvalContextVariableGet(ctx, var_ref, &type);
+    VarRefDestroy(var_ref);
 
-    Writer* const typestring = StringWriter();
+    /* detail argument defaults to false */
+    bool detail = false;
+    if (finalargs->next != NULL)
+    {
+        detail = BooleanFromString(RlistScalarValue(finalargs->next));
+    }
+
+    const char *const type_str =
+        (type == CF_DATA_TYPE_NONE) ? "none" : DataTypeToString(type);
+
+    if (!detail)
+    {
+        return FnReturn(type_str);
+    }
 
     if (type == CF_DATA_TYPE_CONTAINER)
     {
+        const char *subtype_str;
+        const JsonElement *const element = value;
 
-        const JsonElement* const jelement = value;
-
-        if (JsonGetElementType(jelement) == JSON_ELEMENT_TYPE_CONTAINER)
+        switch (JsonGetType(element))
         {
-            switch (JsonGetContainerType(jelement))
-            {
-            case JSON_CONTAINER_TYPE_OBJECT:
-                WriterWrite(typestring, "json_object");
-                break;
-            case JSON_CONTAINER_TYPE_ARRAY:
-                WriterWrite(typestring, "json_array");
-                break;
-            }
-        }
-        else if (JsonGetElementType(jelement) == JSON_ELEMENT_TYPE_PRIMITIVE)
-        {
-            switch (JsonGetPrimitiveType(jelement))
-            {
-            case JSON_PRIMITIVE_TYPE_STRING:
-                WriterWrite(typestring, "json_string");
-                break;
-            case JSON_PRIMITIVE_TYPE_INTEGER:
-                WriterWrite(typestring, "json_integer");
-                break;
-            case JSON_PRIMITIVE_TYPE_REAL:
-                WriterWrite(typestring, "json_real");
-                break;
-            case JSON_PRIMITIVE_TYPE_BOOL:
-                WriterWrite(typestring, "json_bool");
-                break;
-            case JSON_PRIMITIVE_TYPE_NULL:
-                WriterWrite(typestring, "json_null");
-                break;
-            }
+        case JSON_CONTAINER_TYPE_OBJECT:
+            subtype_str = "object";
+            break;
+        case JSON_CONTAINER_TYPE_ARRAY:
+            subtype_str = "array";
+            break;
+        case JSON_PRIMITIVE_TYPE_STRING:
+            subtype_str = "string";
+            break;
+        case JSON_PRIMITIVE_TYPE_INTEGER:
+            subtype_str = "int";
+            break;
+        case JSON_PRIMITIVE_TYPE_REAL:
+            subtype_str = "real";
+            break;
+        case JSON_PRIMITIVE_TYPE_BOOL:
+            subtype_str = "boolean";
+            break;
+        case JSON_PRIMITIVE_TYPE_NULL:
+            subtype_str = "null";
+            break;
+        default:
+            Log(LOG_LEVEL_ERR,
+                "Function %s failed to get subtype of type data", fp->name);
+            return FnFailure();
         }
 
-    }
-    else
-    {
-        Log(LOG_LEVEL_VERBOSE, "%s: variable '%s' is not a data container", fp->name, varname);
-        return FnFailure();
+        return FnReturnF("%s %s", type_str, subtype_str);
     }
 
-    return FnReturnNoCopy(StringWriterClose(typestring));
+    return FnReturnF("policy %s", type_str);
 }
-#endif /* unused code */
+
 /*********************************************************************/
 
 static FnCallResult FnCallNth(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
@@ -9841,6 +9853,13 @@ static const FnCallArg FINDFILES_UP_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg DATATYPE_ARGS[] =
+{
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Variable identifier"},
+    {CF_BOOL, CF_DATA_TYPE_OPTION, "Enable detailed type decription"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
 
 /*********************************************************/
 /* FnCalls are rvalues in certain promise constraints    */
@@ -10237,6 +10256,10 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("search_up", CF_DATA_TYPE_CONTAINER, FINDFILES_UP_ARGS, &FnCallFindfilesUp, "Hush... This is a super secret alias name for function 'findfiles_up'",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
+
+    // Datatype functions
+    FnCallTypeNew("type", CF_DATA_TYPE_STRING, DATATYPE_ARGS, &FnCallDatatype, "Get type description as string",
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
 
     FnCallTypeNewNull()
 };

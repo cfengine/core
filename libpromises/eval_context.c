@@ -452,7 +452,8 @@ static void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context, 
         return;
     }
 
-    ClassTablePut(frame.classes, frame.owner->ns, context, true, CONTEXT_SCOPE_BUNDLE, tags);
+    ClassTablePut(frame.classes, frame.owner->ns, context, true,
+                  CONTEXT_SCOPE_BUNDLE, StringSetFromString(tags, ','));
 
     if (!BundleAborted(ctx))
     {
@@ -1600,7 +1601,8 @@ Class *EvalContextClassMatch(const EvalContext *ctx, const char *regex)
     return ClassTableMatch(ctx->global_classes, regex);
 }
 
-static bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *name, bool is_soft, ContextScope scope, const char *tags)
+static bool EvalContextClassPutTagsSet(EvalContext *ctx, const char *ns, const char *name, bool is_soft,
+                                       ContextScope scope, StringSet *tags)
 {
     {
         char context_copy[2 * CF_MAXVARSIZE];
@@ -1706,6 +1708,18 @@ static bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *na
     return true;
 }
 
+static bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *name, bool is_soft,
+                                ContextScope scope, const char *tags)
+{
+    StringSet *tags_set = StringSetFromString(tags, ',');
+    bool ret = EvalContextClassPutTagsSet(ctx, ns, name, is_soft, scope, tags_set);
+    if (!ret)
+    {
+        StringSetDestroy(tags_set);
+    }
+    return ret;
+}
+
 static const char *EvalContextCurrentNamespace(const EvalContext *ctx)
 {
     size_t i = SeqLength(ctx->stack);
@@ -1734,6 +1748,17 @@ bool EvalContextClassPutHard(EvalContext *ctx, const char *name, const char *tag
 
 bool EvalContextClassPutSoft(EvalContext *ctx, const char *name, ContextScope scope, const char *tags)
 {
+    StringSet *tags_set = StringSetFromString(tags, ',');
+    bool ret = EvalContextClassPutSoftTagsSet(ctx, name, scope, tags_set);
+    if (!ret)
+    {
+        StringSetDestroy(tags_set);
+    }
+    return ret;
+}
+
+bool EvalContextClassPutSoftTagsSet(EvalContext *ctx, const char *name, ContextScope scope, StringSet *tags)
+{
     bool ret;
     char *ns = NULL;
     char *delim = strchr(name, ':');
@@ -1743,8 +1768,8 @@ bool EvalContextClassPutSoft(EvalContext *ctx, const char *name, ContextScope sc
         ns = xstrndup(name, delim - name);
     }
 
-    ret = EvalContextClassPut(ctx, ns ? ns : EvalContextCurrentNamespace(ctx),
-                              ns ? delim + 1 : name, true, scope, tags);
+    ret = EvalContextClassPutTagsSet(ctx, ns ? ns : EvalContextCurrentNamespace(ctx),
+                                     ns ? delim + 1 : name, true, scope, tags);
     free(ns);
     return ret;
 }
@@ -1753,6 +1778,15 @@ bool EvalContextClassPutSoftNS(EvalContext *ctx, const char *ns, const char *nam
                                ContextScope scope, const char *tags)
 {
     return EvalContextClassPut(ctx, ns, name, true, scope, tags);
+}
+
+/**
+ * Takes over #tags in case of success.
+ */
+bool EvalContextClassPutSoftNSTagsSet(EvalContext *ctx, const char *ns, const char *name,
+                                      ContextScope scope, StringSet *tags)
+{
+    return EvalContextClassPutTagsSet(ctx, ns, name, true, scope, tags);
 }
 
 ClassTableIterator *EvalContextClassTableIteratorNewGlobal(const EvalContext *ctx, const char *ns, bool is_hard, bool is_soft)
@@ -1987,6 +2021,21 @@ static inline char *MangleScopedVarNameIntoSpecialScopeName(const char *scope, c
  */
 bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const char *lval, const void *value, DataType type, const char *tags)
 {
+    StringSet *tags_set = StringSetFromString(tags, ',');
+    bool ret = EvalContextVariablePutSpecialTagsSet(ctx, scope, lval, value, type, tags_set);
+    if (!ret)
+    {
+        StringSetDestroy(tags_set);
+    }
+    return ret;
+}
+
+/**
+ * Copies value, so you need to free your own copy afterwards, EXCEPT FOR THE
+ * 'tags' SET which is taken over as-is IF THE VARIABLE IS SUCCESSFULLY ADDED.
+ */
+bool EvalContextVariablePutSpecialTagsSet(EvalContext *ctx, SpecialScope scope, const char *lval, const void *value, DataType type, StringSet *tags)
+{
     char *new_lval = NULL;
     if (strchr(lval, '.') != NULL)
     {
@@ -2001,7 +2050,7 @@ bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const c
     {
         // dealing with (legacy) array reference in lval, must parse
         VarRef *ref = VarRefParseFromScope(new_lval ? new_lval : lval, SpecialScopeToString(scope));
-        bool ret = EvalContextVariablePut(ctx, ref, value, type, tags);
+        bool ret = EvalContextVariablePutTagsSet(ctx, ref, value, type, tags);
         free(new_lval);
         VarRefDestroy(ref);
         return ret;
@@ -2010,7 +2059,7 @@ bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const c
     {
         // plain lval, skip parsing
         const VarRef ref = VarRefConst(NULL, SpecialScopeToString(scope), new_lval ? new_lval : lval);
-        bool ret = EvalContextVariablePut(ctx, &ref, value, type, tags);
+        bool ret = EvalContextVariablePutTagsSet(ctx, &ref, value, type, tags);
         free(new_lval);
         return ret;
     }
@@ -2217,6 +2266,23 @@ static void VarRefStackQualify(const EvalContext *ctx, VarRef *ref)
 bool EvalContextVariablePut(EvalContext *ctx,
                             const VarRef *ref, const void *value,
                             DataType type, const char *tags)
+{
+    StringSet *tags_set = StringSetFromString(tags, ',');
+    bool ret = EvalContextVariablePutTagsSet(ctx, ref, value, type, tags_set);
+    if (!ret)
+    {
+        StringSetDestroy(tags_set);
+    }
+    return ret;
+}
+
+/**
+ * Copies value, so you need to free your own copy afterwards, EXCEPT FOR THE
+ * 'tags' SET which is taken over as-is IF THE VARIABLE IS SUCCESSFULLY ADDED.
+ */
+bool EvalContextVariablePutTagsSet(EvalContext *ctx,
+                                   const VarRef *ref, const void *value,
+                                   DataType type, StringSet *tags)
 {
     assert(type != CF_DATA_TYPE_NONE);
     assert(ref);

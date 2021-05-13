@@ -1,0 +1,21 @@
+{
+    "classes":
+    {
+        "my_ns:test_class_29665402e2b4331f10b8d767b512cd916eeb5db9": {
+            "class_expressions": [ "one", "of", "these", "matches_classmatch", "any" ],
+            "tags": ["test_tag"]
+        },
+        "my_ns:test_class_29665402e2b4331f10b8d767b512cd916eeb5db9_2":  {
+            "regular_expressions": [ "cfengine" ],
+            "tags": ["test_tag"]
+        },
+        "my_ns2:test_class_cfengine_and_cfengine_version":  {
+            "class_expressions": [ "cfengine.cfengine_3" ],
+            "tags": ["test_tag2"]
+        },
+        "my_ns2:my_other_example":  {
+            "regular_expressions": [ "server[34]", "debian.*" ],
+            "tags": ["test_tag2"]
+        }
+    }
+}

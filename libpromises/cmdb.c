@@ -25,6 +25,7 @@
 #include <platform.h>
 #include <unistd.h>
 #include <json.h>
+#include <set.h>                /* StringSet */
 #include <string_lib.h>
 #include <known_dirs.h>         /* GetDataDir() */
 #include <var_expressions.h>    /* VarRef, StringContainsUnresolved() */
@@ -35,6 +36,12 @@
 
 #define HOST_SPECIFIC_DATA_FILE "host_specific.json"
 #define HOST_SPECIFIC_DATA_MAX_SIZE (5 * 1024 * 1024) /* maximum size of the host-specific.json file */
+
+#define CMDB_VARIABLES_TAGS "tags"
+#define CMDB_VARIABLES_DATA "value"
+#define CMDB_CLASSES_TAGS "tags"
+#define CMDB_CLASSES_CLASS_EXPRESSIONS "class_expressions"
+#define CMDB_CLASSES_REGULAR_EXPRESSIONS "regular_expressions"
 
 JsonElement *ReadJsonFile(const char *filename, LogLevel log_level, size_t size_max)
 {
@@ -84,6 +91,75 @@ static bool CheckObjectForUnexpandedVars(JsonElement *object, ARG_UNUSED void *d
     return true;
 }
 
+static VarRef *GetCMDBVariableRef(const char *key)
+{
+    VarRef *ref = VarRefParse(key);
+    if (ref->ns == NULL)
+    {
+        ref->ns = xstrdup("cmdb");
+    }
+    else
+    {
+        if (ref->scope == NULL)
+        {
+            Log(LOG_LEVEL_ERR, "Invalid variable specification in CMDB data: '%s'"
+                " (bundle name has to be specified if namespace is specified)", key);
+            VarRefDestroy(ref);
+            return NULL;
+        }
+    }
+
+    if (ref->scope == NULL)
+    {
+        ref->scope = xstrdup("variables");
+    }
+    return ref;
+}
+
+static bool AddCMDBVariable(EvalContext *ctx, const char *key, const VarRef *ref,
+                            JsonElement *data, StringSet *tags)
+{
+    assert(ctx != NULL);
+    assert(key != NULL);
+    assert(ref != NULL);
+    assert(data != NULL);
+    assert(tags != NULL);
+
+    bool ret;
+    if (JsonGetElementType(data) == JSON_ELEMENT_TYPE_PRIMITIVE)
+    {
+        char *value = JsonPrimitiveToString(data);
+        Log(LOG_LEVEL_VERBOSE, "Installing CMDB variable '%s:%s.%s=%s'",
+            ref->ns, ref->scope, key, value);
+        ret = EvalContextVariablePutTagsSet(ctx, ref, value, CF_DATA_TYPE_STRING, tags);
+        free(value);
+    }
+    else if ((JsonGetType(data) == JSON_TYPE_ARRAY) &&
+             JsonArrayContainsOnlyPrimitives(data))
+    {
+        // map to slist if the data only has primitives
+        Log(LOG_LEVEL_VERBOSE, "Installing CMDB slist variable '%s:%s.%s'",
+            ref->ns, ref->scope, key);
+        Rlist *data_rlist = RlistFromContainer(data);
+        ret = EvalContextVariablePutTagsSet(ctx, ref, data_rlist, CF_DATA_TYPE_STRING_LIST, tags);
+        RlistDestroy(data_rlist);
+    }
+    else
+    {
+        // install as a data container
+        Log(LOG_LEVEL_VERBOSE, "Installing CMDB data container variable '%s:%s.%s'",
+            ref->ns, ref->scope, key);
+        ret = EvalContextVariablePutTagsSet(ctx, ref, data, CF_DATA_TYPE_CONTAINER, tags);
+    }
+    if (!ret)
+    {
+        /* On success, EvalContextVariablePutTagsSet() consumes the tags set,
+         * otherwise, we shall destroy it. */
+        StringSetDestroy(tags);
+    }
+    return ret;
+}
+
 static bool ReadCMDBVars(EvalContext *ctx, JsonElement *vars)
 {
     assert(vars != NULL);
@@ -106,54 +182,141 @@ static bool ReadCMDBVars(EvalContext *ctx, JsonElement *vars)
         const char *key = JsonIteratorNextKey(&iter);
         JsonElement *data = JsonObjectGet(vars, key);
 
-        VarRef *ref = VarRefParse(key);
-        if (ref->ns == NULL)
+        VarRef *ref = GetCMDBVariableRef(key);
+        if (ref == NULL)
         {
-            ref->ns = xstrdup("cmdb");
+            continue;
+        }
+
+        StringSet *tags = StringSetNew();
+        StringSetAdd(tags, xstrdup("source=cmdb"));
+        bool ret = AddCMDBVariable(ctx, key, ref, data, tags);
+        VarRefDestroy(ref);
+        if (!ret)
+        {
+            /* Details should have been logged already. */
+            Log(LOG_LEVEL_ERR, "Failed to add CMDB variable '%s'", key);
+        }
+    }
+    return true;
+}
+
+static StringSet *GetTagsFromJsonTags(const char *item_type,
+                                      const char *key,
+                                      const JsonElement *json_tags,
+                                      const char *default_tag)
+{
+    StringSet *tags = NULL;
+    if (json_tags != NULL)
+    {
+        if ((JsonGetType(json_tags) != JSON_TYPE_ARRAY) ||
+            (!JsonArrayContainsOnlyPrimitives((JsonElement*) json_tags)))
+        {
+            Log(LOG_LEVEL_ERR,
+                "Invalid json_tags information for %s '%s' in CMDB data:"
+                " must be a JSON array of strings",
+                item_type, key);
         }
         else
         {
-            if (ref->scope == NULL)
+            tags = JsonArrayToStringSet(json_tags);
+            if (tags == NULL)
             {
-                Log(LOG_LEVEL_ERR, "Invalid variable specification in CMDB data: '%s'"
-                    " (bundle name has to be specified if namespace is specified)", key);
-                VarRefDestroy(ref);
-                continue;
+                Log(LOG_LEVEL_ERR,
+                    "Invalid json_tags information %s '%s' in CMDB data:"
+                    " must be a JSON array of strings",
+                    item_type, key);
             }
         }
+    }
+    if (tags == NULL)
+    {
+        tags = StringSetNew();
+    }
+    StringSetAdd(tags, xstrdup(default_tag));
 
-        if (ref->scope == NULL)
+    return tags;
+}
+
+/** Uses the new format allowing metadata (CFE-3633) */
+static bool ReadCMDBVariables(EvalContext *ctx, JsonElement *variables)
+{
+    assert(variables != NULL);
+
+    if (JsonGetType(variables) != JSON_TYPE_OBJECT)
+    {
+        Log(LOG_LEVEL_ERR, "Invalid 'variables' CMDB data, must be a JSON object");
+        return false;
+    }
+
+    if (!JsonWalk(variables, CheckObjectForUnexpandedVars, NULL, CheckPrimitiveForUnexpandedVars, NULL))
+    {
+        Log(LOG_LEVEL_ERR, "Invalid 'variables' CMDB data, cannot contain variable references");
+        return false;
+    }
+
+    JsonIterator iter = JsonIteratorInit(variables);
+    while (JsonIteratorHasMore(&iter))
+    {
+        const char *key = JsonIteratorNextKey(&iter);
+        JsonElement *var_info = JsonObjectGet(variables, key);
+
+        JsonElement *json_tags = JsonObjectGet(var_info, CMDB_VARIABLES_TAGS);
+        JsonElement *data = JsonObjectGet(var_info, CMDB_VARIABLES_DATA);
+
+        if (data == NULL)
         {
-            ref->scope = xstrdup("variables");
+            Log(LOG_LEVEL_ERR, "Missing value in '%s' variable specification in CMDB data", key);
+            continue;
         }
 
-        if (JsonGetElementType(data) == JSON_ELEMENT_TYPE_PRIMITIVE)
+        VarRef *ref = GetCMDBVariableRef(key);
+        if (ref == NULL)
         {
-            char *value = JsonPrimitiveToString(data);
-            Log(LOG_LEVEL_VERBOSE, "Installing CMDB variable '%s:%s.%s=%s'",
-                ref->ns, ref->scope, key, value);
-            EvalContextVariablePut(ctx, ref, value, CF_DATA_TYPE_STRING, "source=cmdb");
-            free(value);
+            continue;
         }
-        else if ((JsonGetType(data) == JSON_TYPE_ARRAY) &&
-                 JsonArrayContainsOnlyPrimitives(data))
-        {
-            // map to slist if the data only has primitives
-            Log(LOG_LEVEL_VERBOSE, "Installing CMDB slist variable '%s:%s.%s'",
-                ref->ns, ref->scope, key);
-            Rlist *data_rlist = RlistFromContainer(data);
-            EvalContextVariablePut(ctx, ref, data_rlist, CF_DATA_TYPE_STRING_LIST, "source=cmdb");
-            RlistDestroy(data_rlist);
-        }
-        else // install as a data container
-        {
-            Log(LOG_LEVEL_VERBOSE, "Installing CMDB data container variable '%s:%s.%s'",
-                ref->ns, ref->scope, key);
-            EvalContextVariablePut(ctx, ref, data, CF_DATA_TYPE_CONTAINER, "source=cmdb");
-        }
+        StringSet *tags = GetTagsFromJsonTags("variable", key, json_tags, "source=cmdb");
+
+        bool ret = AddCMDBVariable(ctx, key, ref, data, tags);
         VarRefDestroy(ref);
+        if (!ret)
+        {
+            /* Details should have been logged already. */
+            Log(LOG_LEVEL_ERR, "Failed to add CMDB variable '%s'", key);
+        }
     }
     return true;
+}
+
+static bool AddCMDBClass(EvalContext *ctx, const char *key, StringSet *tags)
+{
+    assert(ctx != NULL);
+    assert(key != NULL);
+    assert(tags != NULL);
+
+    bool ret;
+    Log(LOG_LEVEL_VERBOSE, "Installing CMDB class '%s'", key);
+    if (strchr(key, ':') != NULL)
+    {
+        char *ns_class_name = xstrdup(key);
+        char *sep = strchr(ns_class_name, ':');
+        *sep = '\0';
+        key = sep + 1;
+        ret = EvalContextClassPutSoftNSTagsSet(ctx, ns_class_name, key, CONTEXT_SCOPE_NAMESPACE, tags);
+        free(ns_class_name);
+    }
+    else
+    {
+        ret = EvalContextClassPutSoftNSTagsSet(ctx, "cmdb", key, CONTEXT_SCOPE_NAMESPACE, tags);
+    }
+    if (!ret)
+    {
+        /* On success, EvalContextClassPutSoftNSTagsSet() consumes the tags set,
+         * otherwise, we shall destroy it. */
+        StringSetDestroy(tags);
+    }
+
+    return ret;
 }
 
 static bool ReadCMDBClasses(EvalContext *ctx, JsonElement *classes)
@@ -186,19 +349,14 @@ static bool ReadCMDBClasses(EvalContext *ctx, JsonElement *classes)
                     "Invalid class specification '%s' in CMDB data, only \"any::\" allowed", expr);
                 continue;
             }
-            Log(LOG_LEVEL_VERBOSE, "Installing CMDB class '%s'", key);
-            if (strchr(key, ':') != NULL)
+
+            StringSet *default_tags = StringSetNew();
+            StringSetAdd(default_tags, xstrdup("source=cmdb"));
+            bool ret = AddCMDBClass(ctx, key, default_tags);
+            if (!ret)
             {
-                char *ns_class_name = xstrdup(key);
-                char *sep = strchr(ns_class_name, ':');
-                *sep = '\0';
-                key = sep + 1;
-                EvalContextClassPutSoftNS(ctx, ns_class_name, key, CONTEXT_SCOPE_NAMESPACE, "source=cmdb");
-                free(ns_class_name);
-            }
-            else
-            {
-                EvalContextClassPutSoftNS(ctx, "cmdb", key, CONTEXT_SCOPE_NAMESPACE, "source=cmdb");
+                /* Details should have been logged already. */
+                Log(LOG_LEVEL_ERR, "Failed to add CMDB class '%s'", key);
             }
         }
         else if (JsonGetContainerType(data) == JSON_CONTAINER_TYPE_ARRAY &&
@@ -212,24 +370,55 @@ static bool ReadCMDBClasses(EvalContext *ctx, JsonElement *classes)
                     JsonPrimitiveGetAsString(JsonArrayGet(data, 0)));
                 continue;
             }
-            Log(LOG_LEVEL_VERBOSE, "Installing CMDB class '%s'", key);
-            if (strchr(key, ':') != NULL)
+            StringSet *default_tags = StringSetNew();
+            StringSetAdd(default_tags, xstrdup("source=cmdb"));
+            bool ret = AddCMDBClass(ctx, key, default_tags);
+            if (!ret)
             {
-                char *ns_class_name = xstrdup(key);
-                char *sep = strchr(ns_class_name, ':');
-                *sep = '\0';
-                key = sep + 1;
-                EvalContextClassPutSoftNS(ctx, ns_class_name, key, CONTEXT_SCOPE_NAMESPACE, "source=cmdb");
-                free(ns_class_name);
+                /* Details should have been logged already. */
+                Log(LOG_LEVEL_ERR, "Failed to add CMDB class '%s'", key);
             }
-            else
+        }
+        else if (JsonGetContainerType(data) == JSON_CONTAINER_TYPE_OBJECT)
+        {
+            const JsonElement *class_exprs = JsonObjectGet(data, CMDB_CLASSES_CLASS_EXPRESSIONS);
+            const JsonElement *reg_exprs = JsonObjectGet(data, CMDB_CLASSES_REGULAR_EXPRESSIONS);
+            const JsonElement *json_tags = JsonObjectGet(data, CMDB_CLASSES_TAGS);
+
+            if ((class_exprs != NULL) &&
+                (JsonGetType(class_exprs) != JSON_TYPE_ARRAY ||
+                 JsonLength(class_exprs) > 1 ||
+                 (JsonLength(class_exprs) == 1 &&
+                  !StringEqual(JsonPrimitiveGetAsString(JsonArrayGet(class_exprs, 0)), "any::"))))
             {
-                EvalContextClassPutSoftNS(ctx, "cmdb", key, CONTEXT_SCOPE_NAMESPACE, "source=cmdb");
+                Log(LOG_LEVEL_ERR,
+                    "Invalid class expression rules for class '%s' in CMDB data,"
+                    " only '[]' or '[\"any::\"]' allowed", key);
+                continue;
+            }
+            if ((reg_exprs != NULL) &&
+                (JsonGetType(reg_exprs) != JSON_TYPE_ARRAY ||
+                 JsonLength(reg_exprs) > 1 ||
+                 (JsonLength(reg_exprs) == 1 &&
+                  !StringEqual(JsonPrimitiveGetAsString(JsonArrayGet(reg_exprs, 0)), "any"))))
+            {
+                Log(LOG_LEVEL_ERR,
+                    "Invalid regular expression rules for class '%s' in CMDB data,"
+                    " only '[]' or '[\"any\"]' allowed", key);
+                continue;
+            }
+
+            StringSet *tags = GetTagsFromJsonTags("class", key, json_tags, "source=cmdb");
+            bool ret = AddCMDBClass(ctx, key, tags);
+            if (!ret)
+            {
+                /* Details should have been logged already. */
+                Log(LOG_LEVEL_ERR, "Failed to add CMDB class '%s'", key);
             }
         }
         else
         {
-            Log(LOG_LEVEL_ERR, "Invalid CMDB class data for class '%s', must be a JSON object", key);
+            Log(LOG_LEVEL_ERR, "Invalid CMDB class data for class '%s'", key);
         }
     }
     return true;
@@ -272,7 +461,7 @@ bool LoadCMDBData(EvalContext *ctx)
     {
         const char *key = JsonIteratorNextKey(&iter);
         /* Only vars and classes allowed in CMDB data */
-        if (!StringEqual(key, "vars") && !StringEqual(key, "classes"))
+        if (!IsStrIn(key, (const char*[4]){"vars", "classes", "variables", NULL}))
         {
             Log(LOG_LEVEL_WARNING, "Invalid key '%s' in the CMDB data file '%s', skipping it",
                 key, file_path);
@@ -282,6 +471,12 @@ bool LoadCMDBData(EvalContext *ctx)
     bool success = true;
     JsonElement *vars = JsonObjectGet(data, "vars");
     if ((vars != NULL) && !ReadCMDBVars(ctx, vars))
+    {
+        success = false;
+    }
+    /* Uses the new format allowing metadata (CFE-3633) */
+    JsonElement *variables = JsonObjectGet(data, "variables");
+    if ((variables != NULL) && !ReadCMDBVariables(ctx, variables))
     {
         success = false;
     }

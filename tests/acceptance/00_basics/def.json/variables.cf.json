@@ -1,0 +1,8 @@
+{
+ "variables": {
+     "test_variable": {
+         "value": "37bff81c825bd57a613ff4770b7a0679ff147bdf",
+         "tags": ["test_tag"]
+     }
+ }
+}

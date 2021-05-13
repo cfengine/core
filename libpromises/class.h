@@ -44,7 +44,7 @@ typedef struct ClassTableIterator_ ClassTableIterator;
 ClassTable *ClassTableNew(void);
 void ClassTableDestroy(ClassTable *table);
 
-bool ClassTablePut(ClassTable *table, const char *ns, const char *name, bool is_soft, ContextScope scope, const char *tags);
+bool ClassTablePut(ClassTable *table, const char *ns, const char *name, bool is_soft, ContextScope scope, StringSet *tags);
 Class *ClassTableGet(const ClassTable *table, const char *ns, const char *name);
 Class *ClassTableMatch(const ClassTable *table, const char *regex);
 bool ClassTableRemove(ClassTable *table, const char *ns, const char *name);

@@ -1,0 +1,24 @@
+#+begin_src cfengine3
+bundle agent main
+{
+  classes:
+      "classA";
+      "classB";
+
+  vars:
+      "some_string" string => "cba";
+      "class_expressions" slist => {"classA.classB",
+                                    string(and("classA", strcmp("$(some_string)", "abc")))
+      };
+
+  reports:
+      "$(class_expressions)";
+}
+#+end_src
+
+#+begin_src example_output
+#@ ```
+#@ R: classA.classB
+#@ R: !any
+#@ ```
+#+end_src

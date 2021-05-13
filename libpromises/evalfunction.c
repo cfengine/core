@@ -8847,6 +8847,34 @@ static FnCallResult FnCallCFEngineCallers(EvalContext *ctx, ARG_UNUSED const Pol
     return FnReturnContainerNoCopy(callers);
 }
 
+static FnCallResult FnCallString(EvalContext *ctx,
+                                 ARG_UNUSED const Policy *policy,
+                                 const FnCall *fp,
+                                 const Rlist *finalargs)
+{
+    assert(finalargs != NULL);
+
+    char *ret = RvalToString(finalargs->val);
+    if (StringStartsWith(ret, "@("))
+    {
+        bool allocated = false;
+        JsonElement *json = VarNameOrInlineToJson(ctx, fp, finalargs, false, &allocated);
+
+        if (json != NULL)
+        {
+            Writer *w = StringWriter();
+            JsonWriteCompact(w, json);
+            ret = StringWriterClose(w);
+            if (allocated)
+            {
+                JsonDestroy(json);
+            }
+        }
+    }
+
+    return FnReturnNoCopy(ret);
+}
+
 /*********************************************************************/
 /* Level                                                             */
 /*********************************************************************/
@@ -9380,6 +9408,12 @@ static const FnCallArg HASH_TO_INT_ARGS[] =
     {CF_INTRANGE, CF_DATA_TYPE_INT, "Lower inclusive bound"},
     {CF_INTRANGE, CF_DATA_TYPE_INT, "Upper exclusive bound"},
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Input string to hash"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
+static const FnCallArg STRING_ARGS[] =
+{
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Convert argument to string"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
@@ -10088,6 +10122,8 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("hash_to_int", CF_DATA_TYPE_INT, HASH_TO_INT_ARGS, &FnCallHashToInt, "Generate an integer in given range based on string hash",
               FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
 
+    FnCallTypeNew("string", CF_DATA_TYPE_STRING, STRING_ARGS, &FnCallString, "Convert argument to string",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     // read functions for reading from file
     FnCallTypeNew("readdata", CF_DATA_TYPE_CONTAINER, READDATA_ARGS, &FnCallReadData, "Parse a YAML, JSON, CSV, etc. file and return a JSON data container with the contents",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),

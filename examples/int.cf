@@ -1,0 +1,19 @@
+#+begin_src cfengine3
+bundle agent main
+{
+  vars:
+      "data" data => '{"acft_name": "A320neo",
+                       "engine_num": "2",
+                       "price_in_USD": "123.456789k"}';
+
+      "engines" int => int("$(data[engine_num])");
+      "ballpark_price" int => int("$(data[price_in_USD])");
+
+  reports:
+      "A320neo has $(engines) engines and costs $(ballpark_price) more or less.";
+}
+#+end_src
+
+#+begin_src example_output
+#@ R: A320neo has 2 engines and costs 123456 more or less.
+#+end_srx

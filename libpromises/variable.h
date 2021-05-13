@@ -64,8 +64,8 @@ VariableTable *VariableTableNew(void);
 void VariableTableDestroy(VariableTable *table);
 
 bool VariableTablePut(VariableTable *table, const VarRef *ref,
-                      const Rval *rval, DataType type, const
-                      char *tags, const Promise *promise);
+                      const Rval *rval, DataType type,
+                      StringSet *tags, const Promise *promise);
 Variable *VariableTableGet(const VariableTable *table, const VarRef *ref);
 bool VariableTableRemove(VariableTable *table, const VarRef *ref);
 

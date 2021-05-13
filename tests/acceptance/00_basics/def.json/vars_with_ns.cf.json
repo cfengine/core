@@ -6,6 +6,6 @@
  },
 
  "vars": {
-  "test_variable": "37bff81c825bd57a613ff4770b7a0679ff147bdf"
+  "my_ns:config.test_variable": "37bff81c825bd57a613ff4770b7a0679ff147bdf"
  }
 }

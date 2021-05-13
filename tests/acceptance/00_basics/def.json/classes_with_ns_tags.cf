@@ -1,0 +1,27 @@
+# basic test of the def.json facility: classes with namespace specification and tags
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  methods:
+      "" usebundle => file_make("$(sys.inputdir)/promises.cf", '');
+      "" usebundle => file_copy("$(this.promise_filename).json", "$(sys.inputdir)/def.json");
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+    "command" string => "$(sys.cf_promises) --show-classes -f $(sys.inputdir)/promises.cf|$(G.grep) test_class";
+
+  methods:
+      "" usebundle => dcs_passif_output("my_ns:test_class_29665402e2b4331f10b8d767b512cd916eeb5db9\s+test_tag,source=augments_file.+my_ns:test_class_29665402e2b4331f10b8d767b512cd916eeb5db9_2\s+test_tag,source=augments_file", "my_ns2:test_class_cfengine_and_cfengine_version\s+test_tag2,source=augments_file", $(command), $(this.promise_filename));
+}

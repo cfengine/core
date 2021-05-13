@@ -52,6 +52,10 @@
 #include <conversion.h>                               /* DataTypeIsIterable */
 #include <cleanup.h>
 
+/* If we need to put a scoped variable into a special scope, use the string
+ * below to replace the original scope separator.
+ * (e.g. "config.var" -> "this.config___var" ) */
+#define NESTED_SCOPE_SEP "___"
 
 static const char *STACK_FRAME_TYPE_STR[STACK_FRAME_TYPE_MAX] = {
     "BUNDLE",
@@ -1941,24 +1945,65 @@ StringSet *EvalContextStackPromisees(const EvalContext *ctx)
     return promisees;
 }
 
+/**
+ * We cannot have double-scoped variables (e.g. "this.config.var1"), so if we
+ * want to put a scoped variable into a special scope, we need to mangle the
+ * name like this:
+ *   "config.var1" -> "config___var1"
+ */
+static inline char *MangleScopedVarNameIntoSpecialScopeName(const char *scope, const char *var_name)
+{
+    const size_t var_name_len = strlen(var_name);
+
+    /* Replace '.' with NESTED_SCOPE_SEP */
+    char *new_var_name = xmalloc(var_name_len + sizeof(NESTED_SCOPE_SEP));
+    memcpy(new_var_name, var_name, var_name_len + 1 /* including '\0' */);
+
+    /* Make sure we only replace the "scope." string, not all dots. */
+    char *scope_with_dot = StringConcatenate(2, scope, ".");
+    char *scope_with_underscores = StringConcatenate(2, scope, NESTED_SCOPE_SEP);
+
+    ssize_t ret = StringReplace(new_var_name, var_name_len + sizeof(NESTED_SCOPE_SEP),
+                                              scope_with_dot, scope_with_underscores);
+    assert(ret == (var_name_len + sizeof(NESTED_SCOPE_SEP) - 2));
+
+    free(scope_with_dot);
+    free(scope_with_underscores);
+
+    return new_var_name;
+}
+
 /*
  * Copies value, so you need to free your own copy afterwards.
  */
 bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const char *lval, const void *value, DataType type, const char *tags)
 {
+    char *new_lval = NULL;
+    if (strchr(lval, '.') != NULL)
+    {
+        VarRef *ref = VarRefParse(lval);
+        if (ref->scope != NULL)
+        {
+            new_lval = MangleScopedVarNameIntoSpecialScopeName(ref->scope, lval);
+        }
+        VarRefDestroy(ref);
+    }
     if (strchr(lval, '['))
     {
         // dealing with (legacy) array reference in lval, must parse
-        VarRef *ref = VarRefParseFromScope(lval, SpecialScopeToString(scope));
+        VarRef *ref = VarRefParseFromScope(new_lval ? new_lval : lval, SpecialScopeToString(scope));
         bool ret = EvalContextVariablePut(ctx, ref, value, type, tags);
+        free(new_lval);
         VarRefDestroy(ref);
         return ret;
     }
     else
     {
         // plain lval, skip parsing
-        const VarRef ref = VarRefConst(NULL, SpecialScopeToString(scope), lval);
-        return EvalContextVariablePut(ctx, &ref, value, type, tags);
+        const VarRef ref = VarRefConst(NULL, SpecialScopeToString(scope), new_lval ? new_lval : lval);
+        bool ret = EvalContextVariablePut(ctx, &ref, value, type, tags);
+        free(new_lval);
+        return ret;
     }
 }
 
@@ -2195,8 +2240,29 @@ bool EvalContextVariablePut(EvalContext *ctx,
     return true;
 }
 
+/**
+ * Change ref for e.g. 'config.var1' to 'this.config___var1'
+ *
+ * @see MangleScopedVarNameIntoSpecialScopeName()
+ */
+static inline VarRef *MangledThisScopedRef(const VarRef *ref)
+{
+    VarRef *mangled_this_ref = VarRefCopy(ref);
+    char *scope_underscores_lval = StringConcatenate(3, mangled_this_ref->scope,
+                                                     NESTED_SCOPE_SEP,
+                                                     mangled_this_ref->lval);
+    free(mangled_this_ref->lval);
+    mangled_this_ref->lval = scope_underscores_lval;
+    free(mangled_this_ref->scope);
+    mangled_this_ref->scope = xstrdup("this");
+
+    return mangled_this_ref;
+}
+
 static Variable *VariableResolve2(const EvalContext *ctx, const VarRef *ref)
 {
+    assert(ref != NULL);
+
     // Get the variable table associated to the scope
     VariableTable *table = GetVariableTableForScope(ctx, ref->ns, ref->scope);
 
@@ -2208,8 +2274,40 @@ static Variable *VariableResolve2(const EvalContext *ctx, const VarRef *ref)
         {
             return var;
         }
-        else if (ref->num_indices > 0)                 /* why? TODO comment */
+        else if (ref->num_indices > 0)
         {
+            /* Iteration over slists creates special variables in the 'this.'
+             * scope with the slist variable replaced by the individual
+             * values. However, if a scoped variable is part of the variable
+             * reference, e.g. 'config.data[$(list)]', the special iteration
+             * variables use mangled names to avoid having two scopes
+             * (e.g. 'this.config___data[list_item1]' instead of
+             * 'this.config.data[list_item1]').
+             *
+             * If the ref we are looking for has indices and it has a scope, it
+             * might be the case described above. Let's give it a try before
+             * falling back to the indexless container lookup described below
+             * (which will not have the list-iteration variables expanded). */
+            if (ref->scope != NULL)
+            {
+                VariableTable *this_table = GetVariableTableForScope(ctx, ref->ns,
+                                                                     SpecialScopeToString(SPECIAL_SCOPE_THIS));
+                if (this_table != NULL)
+                {
+                    VarRef *mangled_this_ref = MangledThisScopedRef(ref);
+                    var = VariableTableGet(this_table, mangled_this_ref);
+                    VarRefDestroy(mangled_this_ref);
+                    if (var != NULL)
+                    {
+                        return var;
+                    }
+                }
+            }
+
+            /* If the lookup with indices (the [idx1][idx2]... part of the
+             * variable reference) fails, there might still be a container
+             * variable where the indices actually refer to child objects inside
+             * the container structure. */
             VarRef *base_ref = VarRefCopyIndexless(ref);
             var = VariableTableGet(table, base_ref);
             VarRefDestroy(base_ref);
@@ -2240,10 +2338,10 @@ static Variable *VariableResolve(const EvalContext *ctx, const VarRef *ref)
     /* We will make a first lookup that works in almost all cases: will look
      * for local or global variables, depending of the current scope. */
 
-    Variable *var1 = VariableResolve2(ctx, ref);
-    if (var1)
+    Variable *ret_var = VariableResolve2(ctx, ref);
+    if (ret_var != NULL)
     {
-        return var1;
+        return ret_var;
     }
 
     /* Try to qualify non-scoped vars to the scope:
@@ -2253,11 +2351,11 @@ static Variable *VariableResolve(const EvalContext *ctx, const VarRef *ref)
     {
         scoped_ref = VarRefCopy(ref);
         VarRefStackQualify(ctx, scoped_ref);
-        Variable *var2 = VariableResolve2(ctx, scoped_ref);
-        if (var2)
+        ret_var = VariableResolve2(ctx, scoped_ref);
+        if (ret_var != NULL)
         {
             VarRefDestroy(scoped_ref);
-            return var2;
+            return ret_var;
         }
         ref = scoped_ref;              /* continue with the scoped variable */
     }
@@ -2274,14 +2372,14 @@ static Variable *VariableResolve(const EvalContext *ctx, const VarRef *ref)
     {
         VarRef *ref2 = VarRefCopy(ref);
         VarRefQualify(ref2, last_bundle->ns, last_bundle->name);
-        Variable *var3 = VariableResolve2(ctx, ref2);
+        ret_var = VariableResolve2(ctx, ref2);
 
         VarRefDestroy(scoped_ref);
         VarRefDestroy(ref2);
-        return var3;
+        return ret_var;
     }
-
     VarRefDestroy(scoped_ref);
+
     return NULL;
 }
 

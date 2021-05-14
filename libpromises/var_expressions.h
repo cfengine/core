@@ -97,4 +97,14 @@ static inline bool StringContainsUnresolved(const char *str)
     // clang-format on
 }
 
+/** Whether #str is of form "@{something}"/"@(something)" or not. */
+static inline bool StringIsBareNonScalarRef(const char *str)
+{
+    assert(str != NULL);
+    const size_t str_len = strlen(str);
+    return ((str[0] == '@') &&
+            (((str[1] == '(') && (str[str_len - 1] == ')')) ||
+             ((str[1] == '{') && (str[str_len - 1] == '}'))));
+}
+
 #endif

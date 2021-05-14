@@ -510,9 +510,11 @@ clean:
  * @param[in,out] ip  : return the key corresponding host.
  *                      If NULL, return nothing
  * @param[in] ip_size : length of ip parameter
+ * @param[in] a_entry_required : whether 'aIP_ADDR' entry is required for
+ *                               the 'kHOSTKEY' entry deletion
  * @retval true if entry was deleted, false otherwise
  */
-bool DeleteDigestFromLastSeen(const char *key, char *ip, size_t ip_size)
+bool DeleteDigestFromLastSeen(const char *key, char *ip, size_t ip_size, bool a_entry_required)
 {
     DBHandle *db;
     bool res = false;
@@ -535,7 +537,7 @@ bool DeleteDigestFromLastSeen(const char *key, char *ip, size_t ip_size)
     {
         strcpy(bufhost, "a");
         strlcat(bufhost, host, CF_BUFSIZE);
-        if (HasKeyDB(db, bufhost, strlen(bufhost) + 1) == false)
+        if (a_entry_required && !HasKeyDB(db, bufhost, strlen(bufhost) + 1))
         {
             res = false;
             goto clean;
@@ -710,7 +712,7 @@ int RemoveKeysFromLastSeen(const char *input, bool must_be_coherent,
     if (is_digest == true)
     {
         Log(LOG_LEVEL_VERBOSE, "Removing digest '%s' from lastseen database\n", input);
-        if (DeleteDigestFromLastSeen(input, equivalent, equivalent_size) == false)
+        if (!DeleteDigestFromLastSeen(input, equivalent, equivalent_size, must_be_coherent))
         {
             Log(LOG_LEVEL_ERR, "Unable to remove digest from lastseen database.");
             return 252;

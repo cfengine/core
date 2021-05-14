@@ -8871,7 +8871,7 @@ static FnCallResult FnCallString(EvalContext *ctx,
     assert(finalargs != NULL);
 
     char *ret = RvalToString(finalargs->val);
-    if (StringStartsWith(ret, "@("))
+    if (StringStartsWith(ret, "@(") || StringStartsWith(ret, "@{"))
     {
         bool allocated = false;
         JsonElement *json = VarNameOrInlineToJson(ctx, fp, finalargs, false, &allocated);

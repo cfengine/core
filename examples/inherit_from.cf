@@ -1,0 +1,56 @@
+# This example illustrates the use of inherit_from to inherit body attribute
+# values from another body.
+###############################################################################
+#+begin_src cfengine3
+bundle agent __main__
+{
+  files:
+      "$(this.promise_filename).txt"
+        create => "true",
+        template_method => "inline_mustache",
+        edit_template_string => string_mustache( "Hello World$(const.n)2$(const.n)3$(const.n)4$(const.n)half-way
+6$(const.n)7$(const.n)8$(const.n)9$(const.n)Byeeeeeee", '{}');
+
+  reports:
+      "The first 3 lines of this file are:"
+        printfile => head_n( "$(this.promise_filename).txt", "3" );
+
+      "The whole file contains:"
+        printfile => cat( "$(this.promise_filename).txt" );
+}
+
+body printfile head_n(file, lines)
+{
+      # Sets file_to_print the same as cat
+        inherit_from => cat( $(file) );
+
+      # Overrides number_of_lines from cat
+        number_of_lines => "$(lines)";
+}
+body printfile cat(file)
+{
+        file_to_print   => "$(file)";
+        number_of_lines => "inf";
+}
+###############################################################################
+#+begin_src example_output
+#@ ```
+#@ R: The first 3 lines of this file are:
+#@ R: Hello World
+#@ R: 2
+#@ R: 3
+#@ R: The whole file contains:
+#@ R: Hello World
+#@ R: 2
+#@ R: 3
+#@ R: 4
+#@ R: half-way
+#@ R: 6
+#@ R: 7
+#@ R: 8
+#@ R: 9
+#@ R: Byeeeeeee
+#@ ```
+#+end_src
+
+

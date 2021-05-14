@@ -10,10 +10,10 @@ bundle agent main
       "ballpark_price" int => int("$(data[price_in_USD])");
 
   reports:
-      "A320neo has $(engines) engines and costs $(ballpark_price) more or less.";
+      "A320neo has $(engines) engines and costs about $(ballpark_price) USD.";
 }
 #+end_src
 
 #+begin_src example_output
-#@ R: A320neo has 2 engines and costs 123456 more or less.
-#+end_srx
+#@ R: A320neo has 2 engines and costs about 123456 USD.
+#+end_src

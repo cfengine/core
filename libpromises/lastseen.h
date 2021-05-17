@@ -46,7 +46,7 @@ void LastSaw1(const char *ipaddress, const char *hashstr, LastSeenRole role);
 void LastSaw(const char *ipaddress, const char *digest, LastSeenRole role);
 
 bool DeleteIpFromLastSeen(const char *ip, char *digest, size_t digest_size);
-bool DeleteDigestFromLastSeen(const char *key, char *ip, size_t ip_size);
+bool DeleteDigestFromLastSeen(const char *key, char *ip, size_t ip_size, bool a_entry_required);
 
 /*
  * Return false in order to stop iteration

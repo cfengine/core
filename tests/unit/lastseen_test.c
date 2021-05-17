@@ -178,7 +178,7 @@ static void test_remove(void)
     UpdateLastSawHost("SHA-12345", "127.0.0.64", false, 556);
 
     //RemoveHostFromLastSeen("SHA-12345");
-    DeleteDigestFromLastSeen("SHA-12345", NULL, 0);
+    DeleteDigestFromLastSeen("SHA-12345", NULL, 0, true);
 
     DBHandle *db;
     OpenDB(&db, dbid_lastseen);
@@ -187,6 +187,28 @@ static void test_remove(void)
     assert_int_equal(HasKeyDB(db, "qoSHA-12345", strlen("qoSHA-12345") + 1), false);
     assert_int_equal(HasKeyDB(db, "kSHA-12345", strlen("kSHA-12345") + 1), false);
     assert_int_equal(HasKeyDB(db, "a127.0.0.64", strlen("a127.0.0.64") + 1), false);
+
+    CloseDB(db);
+}
+
+static void test_remove_no_a_entry(void)
+{
+    setup();
+
+    UpdateLastSawHost("SHA-12345", "127.0.0.64", true, 555);
+    UpdateLastSawHost("SHA-12345", "127.0.0.64", false, 556);
+
+    DBHandle *db;
+    OpenDB(&db, dbid_lastseen);
+
+    assert_true(DeleteDB(db, "a127.0.0.64"));
+    assert_false(DeleteDigestFromLastSeen("SHA-12345", NULL, 0, true));
+    assert_true(DeleteDigestFromLastSeen("SHA-12345", NULL, 0, false));
+
+    assert_false(HasKeyDB(db, "qiSHA-12345", strlen("qiSHA-12345") + 1));
+    assert_false(HasKeyDB(db, "qoSHA-12345", strlen("qoSHA-12345") + 1));
+    assert_false(HasKeyDB(db, "kSHA-12345", strlen("kSHA-12345") + 1));
+    assert_false(HasKeyDB(db, "a127.0.0.64", strlen("a127.0.0.64") + 1));
 
     CloseDB(db);
 }
@@ -588,6 +610,7 @@ int main()
             unit_test(test_reverse_conflict),
             unit_test(test_reverse_missing_forward),
             unit_test(test_remove),
+            unit_test(test_remove_no_a_entry),
             unit_test(test_remove_ip),
 
             unit_test_setup_teardown(test_consistent_1a, begin, end),

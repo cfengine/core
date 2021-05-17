@@ -15,5 +15,7 @@ bundle agent main
 #+end_src
 
 #+begin_src example_output
+#@ ```
 #@ R: A320neo has 2 engines and costs about 123456 USD.
+#@ ```
 #+end_src

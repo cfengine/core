@@ -214,6 +214,11 @@ bundle agent default(filename)
 
   vars:
 
+      "stuff_in_workdir_modules" -> { "ENT-5752" }
+        slist => findfiles( "$(sys.workdir)/modules" ),
+        comment => "ENT-5752, debugging";
+
+
       "tests" slist => { "default:init",
                          "default:test",
                          "default:check",
@@ -233,6 +238,9 @@ bundle agent default(filename)
       "any" usebundle => test_run("$(filename)"), inherit => "true";
 
   reports:
+    "Stuff under workdir/modules"; # ENT-5752, debugging
+    "$(stuff_in_workdir_modules)"; # ENT-5752, debugging
+
     EXTRA.verbose_mode::
       "$(this.bundle): found runnable bundle $(bundles)";
 }

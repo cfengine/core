@@ -28,6 +28,8 @@
 #include <json.h>
 #include <logging.h>
 
+#define CMDB_SOURCE_TAG "source=cmdb"
+
 JsonElement *ReadJsonFile(const char *filename, LogLevel log_level, size_t size_max);
 bool LoadCMDBData(EvalContext *ctx);
 

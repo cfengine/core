@@ -8,7 +8,7 @@ function check_with_gcc() {
   rm -f config.cache
   make clean
   ./configure -C --enable-debug CC=gcc
-  local gcc_exceptions="-Wno-sign-compare -Wno-type-limits"
+  local gcc_exceptions="-Wno-sign-compare"
   make -j -l${n_procs} --keep-going CFLAGS="-Werror -Wall -Wextra $gcc_exceptions"
 }
 

@@ -766,6 +766,11 @@ bundle agent dcs_check_diff_elements( setA, setB, test, expected_difference)
 # Test based on whether a string matches a regular expression
 
 bundle agent dcs_check_regcmp(regex, thestring, test, expected_mismatch)
+# @brief Check if `regex` matches `thestring` Pass if they match, unless `expected_mismatch` is `true|yes`, in which case, FAIL
+# @param regex The regular expression to check `thestring` against
+# @param thestring The string to test with `regex`
+# @param test The path to the test being run
+# @param expected_mismatch When `yes|true` the test will Pass if `regex` does not match `thestring`
 {
   classes:
       "matched" expression => regcmp($(regex), $(thestring));

@@ -2021,7 +2021,7 @@ static inline char *MangleScopedVarNameIntoSpecialScopeName(const char *scope, c
  */
 bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const char *lval, const void *value, DataType type, const char *tags)
 {
-    StringSet *tags_set = StringSetFromString(tags, ',');
+    StringSet *tags_set = (NULL_OR_EMPTY(tags) ? NULL : StringSetFromString(tags, ','));
     bool ret = EvalContextVariablePutSpecialTagsSet(ctx, scope, lval, value, type, tags_set);
     if (!ret)
     {
@@ -2267,7 +2267,7 @@ bool EvalContextVariablePut(EvalContext *ctx,
                             const VarRef *ref, const void *value,
                             DataType type, const char *tags)
 {
-    StringSet *tags_set = StringSetFromString(tags, ',');
+    StringSet *tags_set = (NULL_OR_EMPTY(tags) ? NULL : StringSetFromString(tags, ','));
     bool ret = EvalContextVariablePutTagsSet(ctx, ref, value, type, tags_set);
     if (!ret)
     {
@@ -2532,7 +2532,6 @@ StringSet *EvalContextVariableTags(const EvalContext *ctx, const VarRef *ref)
     }
 
     StringSet *var_tags = VariableGetTags(var);
-    assert(var_tags != NULL);
     return var_tags;
 }
 

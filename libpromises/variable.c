@@ -47,14 +47,7 @@ static Variable *VariableNew(VarRef *ref, Rval rval, DataType type,
     var->ref = ref;
     var->rval = rval;
     var->type = type;
-    if (tags == NULL)
-    {
-        var->tags = StringSetFromString("", ',');
-    }
-    else
-    {
-        var->tags = tags;
-    }
+    var->tags = tags;
     var->promise = promise;
 
     return var;

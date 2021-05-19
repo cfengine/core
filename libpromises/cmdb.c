@@ -189,7 +189,7 @@ static bool ReadCMDBVars(EvalContext *ctx, JsonElement *vars)
         }
 
         StringSet *tags = StringSetNew();
-        StringSetAdd(tags, xstrdup("source=cmdb"));
+        StringSetAdd(tags, xstrdup(CMDB_SOURCE_TAG));
         bool ret = AddCMDBVariable(ctx, key, ref, data, tags);
         VarRefDestroy(ref);
         if (!ret)
@@ -275,7 +275,7 @@ static bool ReadCMDBVariables(EvalContext *ctx, JsonElement *variables)
         {
             continue;
         }
-        StringSet *tags = GetTagsFromJsonTags("variable", key, json_tags, "source=cmdb");
+        StringSet *tags = GetTagsFromJsonTags("variable", key, json_tags, CMDB_SOURCE_TAG);
 
         bool ret = AddCMDBVariable(ctx, key, ref, data, tags);
         VarRefDestroy(ref);
@@ -351,7 +351,7 @@ static bool ReadCMDBClasses(EvalContext *ctx, JsonElement *classes)
             }
 
             StringSet *default_tags = StringSetNew();
-            StringSetAdd(default_tags, xstrdup("source=cmdb"));
+            StringSetAdd(default_tags, xstrdup(CMDB_SOURCE_TAG));
             bool ret = AddCMDBClass(ctx, key, default_tags);
             if (!ret)
             {
@@ -371,7 +371,7 @@ static bool ReadCMDBClasses(EvalContext *ctx, JsonElement *classes)
                 continue;
             }
             StringSet *default_tags = StringSetNew();
-            StringSetAdd(default_tags, xstrdup("source=cmdb"));
+            StringSetAdd(default_tags, xstrdup(CMDB_SOURCE_TAG));
             bool ret = AddCMDBClass(ctx, key, default_tags);
             if (!ret)
             {
@@ -408,7 +408,7 @@ static bool ReadCMDBClasses(EvalContext *ctx, JsonElement *classes)
                 continue;
             }
 
-            StringSet *tags = GetTagsFromJsonTags("class", key, json_tags, "source=cmdb");
+            StringSet *tags = GetTagsFromJsonTags("class", key, json_tags, CMDB_SOURCE_TAG);
             bool ret = AddCMDBClass(ctx, key, tags);
             if (!ret)
             {

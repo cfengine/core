@@ -590,7 +590,7 @@ exit:
 
         break;
     case PROMISE_RESULT_CHANGE:
-        cfPS(ctx, LOG_LEVEL_INFO, result, pp, &a,
+        cfPS(ctx, LOG_LEVEL_VERBOSE, result, pp, &a,
              "files promise '%s' repaired", pp->promiser);
 
         if (ChrootChanges() && !a.haverename)

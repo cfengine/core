@@ -1,2 +1,1 @@
     info: Object '/tmp/TEST.cfengine' had permissions 0600, changed it to 0000
-    info: files promise '/tmp/TEST.cfengine' repaired

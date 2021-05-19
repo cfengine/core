@@ -1,10 +1,7 @@
     info: Created directory '/tmp/TEST.destination/subdir/.'
-    info: files promise '/tmp/TEST.destination/subdir' repaired
     info: Copied file '/tmp/TEST.source/file-perms-644' to '/tmp/TEST.destination/file-perms-644.cfnew' (mode '600')
     info: Moved '/tmp/TEST.destination/file-perms-644.cfnew' to '/tmp/TEST.destination/file-perms-644'
     info: Updated file '/tmp/TEST.destination/file-perms-644' from 'localhost:/tmp/TEST.source/file-perms-644'
-    info: files promise '/tmp/TEST.destination/file-perms-644' repaired
     info: Copied file '/tmp/TEST.source/subdir/subdir-file' to '/tmp/TEST.destination/subdir/subfile.cfnew' (mode '600')
     info: Moved '/tmp/TEST.destination/subdir/subfile.cfnew' to '/tmp/TEST.destination/subdir/subfile'
     info: Updated file '/tmp/TEST.destination/subdir/subfile' from 'localhost:/tmp/TEST.source/subdir/subdir-file'
-    info: files promise '/tmp/TEST.destination/subdir/subfile' repaired

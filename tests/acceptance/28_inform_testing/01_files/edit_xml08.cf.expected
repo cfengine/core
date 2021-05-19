@@ -1,4 +1,3 @@
     info: Inserted text 'Tuesday' at XPath '//Root' in the XML document '/tmp/TEST.cfengine'
     info: insert_text promise 'Tuesday' repaired
     info: Edited xml file '/tmp/TEST.cfengine'
-    info: files promise '/tmp/TEST.cfengine' repaired

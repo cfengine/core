@@ -1,4 +1,3 @@
     info: Inserted tree '<x foo='bar'>y</x>' at XPath '//Root' in XML document '/tmp/TEST.cfengine'
     info: insert_tree promise '<x foo='bar'>y</x>' repaired
     info: Edited xml file '/tmp/TEST.cfengine'
-    info: files promise '/tmp/TEST.cfengine' repaired

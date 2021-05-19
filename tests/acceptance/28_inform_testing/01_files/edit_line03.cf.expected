@@ -1,4 +1,3 @@
     info: Inserted the promised line 'amazing!' into '/tmp/TEST.cfengine' after locator
     info: insert_lines promise 'amazing!' repaired
     info: Edited file '/tmp/TEST.cfengine'
-    info: files promise '/tmp/TEST.cfengine' repaired

@@ -1,12 +1,9 @@
     info: Created directory '/tmp/TEST.destination/subdir/.'
-    info: files promise '/tmp/TEST.destination/subdir' repaired
     info: Copied file '/tmp/TEST.source/file-perms-644' to '/tmp/TEST.destination/file-perms-644.cfnew' (permissions preserved)
     info: Moved '/tmp/TEST.destination/file-perms-644.cfnew' to '/tmp/TEST.destination/file-perms-644'
     info: Object '/tmp/TEST.destination/file-perms-644' had permissions 0600, changed it to 0644
     info: Updated file '/tmp/TEST.destination/file-perms-644' from 'localhost:/tmp/TEST.source/file-perms-644'
-    info: files promise '/tmp/TEST.destination/file-perms-644' repaired
     info: Copied file '/tmp/TEST.source/subdir/subdir-file' to '/tmp/TEST.destination/subdir/subfile.cfnew' (permissions preserved)
     info: Moved '/tmp/TEST.destination/subdir/subfile.cfnew' to '/tmp/TEST.destination/subdir/subfile'
     info: Object '/tmp/TEST.destination/subdir/subfile' had permissions 0600, changed it to 0644
     info: Updated file '/tmp/TEST.destination/subdir/subfile' from 'localhost:/tmp/TEST.source/subdir/subdir-file'
-    info: files promise '/tmp/TEST.destination/subdir/subfile' repaired

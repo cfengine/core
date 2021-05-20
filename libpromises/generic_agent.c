@@ -2623,9 +2623,11 @@ void GenericAgentShowVariablesFormatted(EvalContext *ctx, const char *regexp)
 
         StringSet *tagset = VariableGetTags(v);
         Buffer *tagbuf = StringSetToBuffer(tagset, ',');
+        const char *comment = VariableGetComment(v);
 
         char *line;
-        xasprintf(&line, "%-40s %-60s %-40s", varname, var_value, BufferData(tagbuf));
+        xasprintf(&line, "%-40s %-60s %-40s %-40s",
+                  varname, var_value, BufferData(tagbuf), NULL_TO_EMPTY_STRING(comment));
 
         SeqAppend(seq, line);
 
@@ -2638,7 +2640,7 @@ void GenericAgentShowVariablesFormatted(EvalContext *ctx, const char *regexp)
 
     SeqSort(seq, StrCmpWrapper, NULL);
 
-    printf("%-40s %-60s %-40s\n", "Variable name", "Variable value", "Meta tags");
+    printf("%-40s %-60s %-40s %-40s\n", "Variable name", "Variable value", "Meta tags", "Comment");
 
     for (size_t i = 0; i < SeqLength(seq); i++)
     {

@@ -2034,7 +2034,17 @@ bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const c
  * Copies value, so you need to free your own copy afterwards, EXCEPT FOR THE
  * 'tags' SET which is taken over as-is IF THE VARIABLE IS SUCCESSFULLY ADDED.
  */
-bool EvalContextVariablePutSpecialTagsSet(EvalContext *ctx, SpecialScope scope, const char *lval, const void *value, DataType type, StringSet *tags)
+bool EvalContextVariablePutSpecialTagsSet(EvalContext *ctx, SpecialScope scope,
+                                          const char *lval, const void *value,
+                                          DataType type, StringSet *tags)
+{
+    return EvalContextVariablePutSpecialTagsSetWithComment(ctx, scope, lval, value, type, tags, NULL);
+}
+
+bool EvalContextVariablePutSpecialTagsSetWithComment(EvalContext *ctx, SpecialScope scope,
+                                                     const char *lval, const void *value,
+                                                     DataType type, StringSet *tags,
+                                                     const char *comment)
 {
     char *new_lval = NULL;
     if (strchr(lval, '.') != NULL)
@@ -2050,7 +2060,7 @@ bool EvalContextVariablePutSpecialTagsSet(EvalContext *ctx, SpecialScope scope, 
     {
         // dealing with (legacy) array reference in lval, must parse
         VarRef *ref = VarRefParseFromScope(new_lval ? new_lval : lval, SpecialScopeToString(scope));
-        bool ret = EvalContextVariablePutTagsSet(ctx, ref, value, type, tags);
+        bool ret = EvalContextVariablePutTagsSetWithComment(ctx, ref, value, type, tags, comment);
         free(new_lval);
         VarRefDestroy(ref);
         return ret;
@@ -2059,7 +2069,7 @@ bool EvalContextVariablePutSpecialTagsSet(EvalContext *ctx, SpecialScope scope, 
     {
         // plain lval, skip parsing
         const VarRef ref = VarRefConst(NULL, SpecialScopeToString(scope), new_lval ? new_lval : lval);
-        bool ret = EvalContextVariablePutTagsSet(ctx, &ref, value, type, tags);
+        bool ret = EvalContextVariablePutTagsSetWithComment(ctx, &ref, value, type, tags, comment);
         free(new_lval);
         return ret;
     }
@@ -2284,6 +2294,14 @@ bool EvalContextVariablePutTagsSet(EvalContext *ctx,
                                    const VarRef *ref, const void *value,
                                    DataType type, StringSet *tags)
 {
+    return EvalContextVariablePutTagsSetWithComment(ctx, ref, value, type, tags, NULL);
+}
+
+bool EvalContextVariablePutTagsSetWithComment(EvalContext *ctx,
+                                              const VarRef *ref, const void *value,
+                                              DataType type, StringSet *tags,
+                                              const char *comment)
+{
     assert(type != CF_DATA_TYPE_NONE);
     assert(ref);
     assert(ref->lval);
@@ -2311,7 +2329,7 @@ bool EvalContextVariablePutTagsSet(EvalContext *ctx,
     Rval rval = (Rval) { (void *)value, DataTypeToRvalType(type) };
     VariableTable *table = GetVariableTableForScope(ctx, ref->ns, ref->scope);
     const Promise *pp = EvalContextStackCurrentPromise(ctx);
-    VariableTablePut(table, ref, &rval, type, tags, pp ? pp->org_pp : pp);
+    VariableTablePut(table, ref, &rval, type, tags, SafeStringDuplicate(comment), pp ? pp->org_pp : pp);
     return true;
 }
 

@@ -2521,7 +2521,6 @@ void GenericAgentShowContextsFormatted(EvalContext *ctx, const char *regexp)
     assert(regexp != NULL);
 
     ClassTableIterator *iter = EvalContextClassTableIteratorNewGlobal(ctx, NULL, true, true);
-    Class *cls = NULL;
 
     Seq *seq = SeqNew(1000, free);
 
@@ -2533,7 +2532,7 @@ void GenericAgentShowContextsFormatted(EvalContext *ctx, const char *regexp)
         return;
     }
 
-    while ((cls = ClassTableIteratorNext(iter)))
+    while ((Class *cls = ClassTableIteratorNext(iter)) != NULL)
     {
         char *class_name = ClassRefToString(cls->ns, cls->name);
 
@@ -2543,7 +2542,7 @@ void GenericAgentShowContextsFormatted(EvalContext *ctx, const char *regexp)
             continue;
         }
 
-        StringSet *tagset = EvalContextClassTags(ctx, cls->ns, cls->name);
+        StringSet *tagset = cls->tags;
         Buffer *tagbuf = StringSetToBuffer(tagset, ',');
 
         char *line;

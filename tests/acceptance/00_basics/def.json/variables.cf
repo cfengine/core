@@ -23,5 +23,5 @@ bundle agent check
     "command" string => "$(sys.cf_promises) --show-vars -f $(sys.inputdir)/promises.cf|$(G.grep) test_variable";
 
   methods:
-      "" usebundle => dcs_passif_output("default:def.test_variable\s+37bff81c825bd57a613ff4770b7a0679ff147bdf\s+test_tag,source=augments_file", "", $(command), $(this.promise_filename));
+      "" usebundle => dcs_passif_output("default:def.test_variable\s+37bff81c825bd57a613ff4770b7a0679ff147bdf\s+test_tag,source=augments_file\s+comment1", "", $(command), $(this.promise_filename));
 }

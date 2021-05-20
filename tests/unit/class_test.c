@@ -39,7 +39,7 @@ static void test_ns(void)
 {
     {
         ClassTable *t = ClassTableNew();
-        assert_false(ClassTablePut(t, "foo", "127.0.0.1", true, CONTEXT_SCOPE_BUNDLE, NULL));
+        assert_false(ClassTablePut(t, "foo", "127.0.0.1", true, CONTEXT_SCOPE_BUNDLE, NULL, NULL));
         Class *cls = ClassTableGet(t, "foo", "127_0_0_1");
         assert_string_equal("foo", cls->ns);
         assert_string_equal("127_0_0_1", cls->name);
@@ -60,7 +60,7 @@ static void test_default_ns(void)
 {
     {
         ClassTable *t = ClassTableNew();
-        assert_false(ClassTablePut(t, NULL, "127.0.0.1", false, CONTEXT_SCOPE_NAMESPACE, NULL));
+        assert_false(ClassTablePut(t, NULL, "127.0.0.1", false, CONTEXT_SCOPE_NAMESPACE, NULL, NULL));
         Class *cls = ClassTableGet(t, NULL, "127_0_0_1");
         assert_true(cls != NULL);
         assert_true(cls->ns == NULL);
@@ -79,7 +79,7 @@ static void test_default_ns(void)
 
     {
         ClassTable *t = ClassTableNew();
-        assert_false(ClassTablePut(t, "default", "127.0.0.1", false, CONTEXT_SCOPE_NAMESPACE, NULL));
+        assert_false(ClassTablePut(t, "default", "127.0.0.1", false, CONTEXT_SCOPE_NAMESPACE, NULL, NULL));
         Class *cls = ClassTableGet(t, NULL, "127_0_0_1");
         assert_true(cls->ns == NULL);
         cls = ClassTableGet(t, "default", "127_0_0_1");
@@ -93,12 +93,12 @@ static void test_default_ns(void)
 static void test_put_replace(void)
 {
     ClassTable *t = ClassTableNew();
-    assert_false(ClassTablePut(t, NULL, "test", false, CONTEXT_SCOPE_NAMESPACE, NULL));
+    assert_false(ClassTablePut(t, NULL, "test", false, CONTEXT_SCOPE_NAMESPACE, NULL, NULL));
     Class *cls = ClassTableGet(t, NULL, "test");
     assert_true(cls);
     assert_int_equal(CONTEXT_SCOPE_NAMESPACE, cls->scope);
 
-    assert_true(ClassTablePut(t, NULL, "test", true, CONTEXT_SCOPE_BUNDLE, NULL));
+    assert_true(ClassTablePut(t, NULL, "test", true, CONTEXT_SCOPE_BUNDLE, NULL, NULL));
     cls = ClassTableGet(t, NULL, "test");
     assert_true(cls);
     assert_int_equal(CONTEXT_SCOPE_BUNDLE, cls->scope);

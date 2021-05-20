@@ -478,8 +478,11 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp,
             }
         }
 
+        const char *comment = PromiseGetConstraintAsRval(pp, "comment", RVAL_TYPE_SCALAR);
+
         /* WRITE THE VARIABLE AT LAST. */
-        bool success = EvalContextVariablePutTagsSet(ctx, ref, rval.item, required_datatype, tags);
+        bool success = EvalContextVariablePutTagsSetWithComment(ctx, ref, rval.item, required_datatype,
+                                                                tags, comment);
 
         if (!success)
         {

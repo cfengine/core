@@ -1,4 +1,3 @@
     info: Deleted the promised line 1 'foo 1' from /tmp/TEST.cfengine
     info: delete_lines promise 'foo 1' repaired
     info: Edited file '/tmp/TEST.cfengine'
-    info: files promise '/tmp/TEST.cfengine' repaired

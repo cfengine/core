@@ -28,10 +28,10 @@
 #include <string_lib.h>      // StringStartsWith()
 #include <string_sequence.h> // SeqStrginFromString()
 #include <policy.h>          // Promise
-#include <eval_context.h>    // cfPS()
+#include <eval_context.h>    // cfPS(), EvalContextVariableGet()
 #include <attributes.h>      // GetClassContextAttributes(), IsClassesBodyConstraint()
 #include <expand.h>          // ExpandScalar()
-#include <var_expressions.h> // StringContainsUnresolved()
+#include <var_expressions.h> // StringContainsUnresolved(), StringIsBareNonScalarRef()
 #include <map.h>             // Map*
 
 static Map *custom_modules = NULL;
@@ -582,8 +582,34 @@ static void PromiseModule_Send(PromiseModule *module)
     DESTROY_AND_NULL(JsonDestroy, module->message);
 }
 
+static inline bool TryToGetContainerFromScalarRef(const EvalContext *ctx, const char *scalar, JsonElement **out)
+{
+    if (StringIsBareNonScalarRef(scalar))
+    {
+        /* Resolve a potential 'data' variable reference. */
+        const size_t scalar_len = strlen(scalar);
+        char *var_ref_str = xstrndup(scalar + 2, scalar_len - 3);
+        VarRef *ref = VarRefParse(var_ref_str);
+
+        DataType type = CF_DATA_TYPE_NONE;
+        const void *val = EvalContextVariableGet(ctx, ref, &type);
+        free(var_ref_str);
+        VarRefDestroy(ref);
+
+        if ((val != NULL) && (type == CF_DATA_TYPE_CONTAINER))
+        {
+            if (out != NULL)
+            {
+                *out = JsonCopy(val);
+            }
+            return true;
+        }
+    }
+    return false;
+}
+
 static void PromiseModule_AppendAllAttributes(
-    PromiseModule *module, const Promise *pp)
+    PromiseModule *module, const EvalContext *ctx, const Promise *pp)
 {
     assert(module != NULL);
     assert(pp != NULL);
@@ -609,9 +635,25 @@ static void PromiseModule_AppendAllAttributes(
             continue;
         }
 
-        if ((attribute->rval.type == RVAL_TYPE_SCALAR) || (attribute->rval.type == RVAL_TYPE_LIST))
+        JsonElement *value = NULL;
+        if (attribute->rval.type == RVAL_TYPE_SCALAR)
         {
-            JsonElement *value = RvalToJson(attribute->rval);
+            /* Could be a '@(container)' reference. */
+            if (!TryToGetContainerFromScalarRef(ctx, RvalScalarValue(attribute->rval), &value))
+            {
+                /* Didn't resolve to a container value, let's just use the
+                 * scalar value as-is. */
+                value = RvalToJson(attribute->rval);
+            }
+        }
+        if ((attribute->rval.type == RVAL_TYPE_LIST) ||
+            (attribute->rval.type == RVAL_TYPE_CONTAINER))
+        {
+            value = RvalToJson(attribute->rval);
+        }
+
+        if (value != NULL)
+        {
             PromiseModule_AppendAttribute(module, name, value);
         }
         else
@@ -623,7 +665,33 @@ static void PromiseModule_AppendAllAttributes(
     }
 }
 
-static inline bool CustomPromise_IsFullyResolved(const Promise *pp, bool slists_allowed)
+static bool CheckPrimitiveForUnexpandedVars(JsonElement *primitive, ARG_UNUSED void *data)
+{
+    assert(JsonGetElementType(primitive) == JSON_ELEMENT_TYPE_PRIMITIVE);
+
+    /* Stop the iteration if a variable expression is found. */
+    return (!StringContainsUnresolved(JsonPrimitiveGetAsString(primitive)));
+}
+
+static bool CheckObjectForUnexpandedVars(JsonElement *object, ARG_UNUSED void *data)
+{
+    assert(JsonGetType(object) == JSON_TYPE_OBJECT);
+
+    /* Stop the iteration if a variable expression is found among children
+     * keys. (elements inside the object are checked separately) */
+    JsonIterator iter = JsonIteratorInit(object);
+    while (JsonIteratorHasMore(&iter))
+    {
+        const char *key = JsonIteratorNextKey(&iter);
+        if (StringContainsUnresolved(key))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+static inline bool CustomPromise_IsFullyResolved(const EvalContext *ctx, const Promise *pp, bool nonscalars_allowed)
 {
     assert(pp != NULL);
 
@@ -652,24 +720,22 @@ static inline bool CustomPromise_IsFullyResolved(const Promise *pp, bool slists_
                to be the true opposite of if. (if would skip).*/
             continue;
         }
-        if ((attribute->rval.type != RVAL_TYPE_SCALAR) &&
-            (!slists_allowed || (attribute->rval.type != RVAL_TYPE_LIST)))
+        if ((attribute->rval.type == RVAL_TYPE_FNCALL) ||
+            (!nonscalars_allowed && (attribute->rval.type != RVAL_TYPE_SCALAR)))
         {
-            // Most likely container or unresolved function call
-            // Custom promises only support scalars and slists currently
             return false;
         }
         if (attribute->rval.type == RVAL_TYPE_SCALAR)
         {
             const char *const value = RvalScalarValue(attribute->rval);
-            if (StringContainsUnresolved(value))
+            if (StringContainsUnresolved(value) && !TryToGetContainerFromScalarRef(ctx, value, NULL))
             {
                 return false;
             }
         }
-        else
+        else if (attribute->rval.type == RVAL_TYPE_LIST)
         {
-            assert(slists_allowed && (attribute->rval.type == RVAL_TYPE_LIST));
+            assert(nonscalars_allowed);
             for (Rlist *rl = RvalRlistValue(attribute->rval); rl != NULL; rl = rl->next)
             {
                 assert(rl->val.type == RVAL_TYPE_SCALAR);
@@ -679,6 +745,14 @@ static inline bool CustomPromise_IsFullyResolved(const Promise *pp, bool slists_
                     return false;
                 }
             }
+        }
+        else
+        {
+            assert(nonscalars_allowed);
+            assert(attribute->rval.type == RVAL_TYPE_CONTAINER);
+            JsonElement *attr_data = RvalContainerValue(attribute->rval);
+            return JsonWalk(attr_data, CheckObjectForUnexpandedVars, NULL,
+                            CheckPrimitiveForUnexpandedVars, NULL);
         }
     }
     return true;
@@ -717,7 +791,7 @@ static inline const char *LogLevelToRequestFromModule(const Promise *pp)
     return LogLevelToString(log_level);
 }
 
-static bool PromiseModule_Validate(PromiseModule *module, const Promise *pp)
+static bool PromiseModule_Validate(PromiseModule *module, const EvalContext *ctx, const Promise *pp)
 {
     assert(module != NULL);
     assert(pp != NULL);
@@ -729,7 +803,7 @@ static bool PromiseModule_Validate(PromiseModule *module, const Promise *pp)
     PromiseModule_AppendString(module, "log_level", LogLevelToRequestFromModule(pp));
     PromiseModule_AppendString(module, "promise_type", promise_type);
     PromiseModule_AppendString(module, "promiser", promiser);
-    PromiseModule_AppendAllAttributes(module, pp);
+    PromiseModule_AppendAllAttributes(module, ctx, pp);
     PromiseModule_Send(module);
 
     // Prints errors / log messages from module:
@@ -777,7 +851,7 @@ static PromiseResult PromiseModule_Evaluate(
     PromiseModule_AppendString(module, "promise_type", promise_type);
     PromiseModule_AppendString(module, "promiser", promiser);
 
-    PromiseModule_AppendAllAttributes(module, pp);
+    PromiseModule_AppendAllAttributes(module, ctx, pp);
     PromiseModule_Send(module);
 
     JsonElement *response = PromiseModule_Receive(module, pp);
@@ -981,11 +1055,11 @@ PromiseResult EvaluateCustomPromise(EvalContext *ctx, const Promise *pp)
     }
 
     // TODO: Do validation earlier (cf-promises --full-check)
-    bool valid = PromiseModule_Validate(module, pp);
+    bool valid = PromiseModule_Validate(module, ctx, pp);
 
     if (valid)
     {
-        valid = CustomPromise_IsFullyResolved(pp, module->json);
+        valid = CustomPromise_IsFullyResolved(ctx, pp, module->json);
         if ((!valid) && (EvalContextGetPass(ctx) == CF_DONEPASSES - 1))
         {
             Log(LOG_LEVEL_ERR,

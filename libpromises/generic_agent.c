@@ -2621,7 +2621,7 @@ void GenericAgentShowVariablesFormatted(EvalContext *ctx, const char *regexp)
         }
 
 
-        StringSet *tagset = EvalContextVariableTags(ctx, VariableGetRef(v));
+        StringSet *tagset = VariableGetTags(v);
         Buffer *tagbuf = StringSetToBuffer(tagset, ',');
 
         char *line;

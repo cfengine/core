@@ -1,4 +1,3 @@
     info: Deleted tree '<c>text content</c>' at XPath '//b' in XML document '/tmp/TEST.cfengine'
     info: delete_tree promise '<c>text content</c>' repaired
     info: Edited xml file '/tmp/TEST.cfengine'
-    info: files promise '/tmp/TEST.cfengine' repaired

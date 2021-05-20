@@ -68,8 +68,11 @@ struct ClassTableIterator_
 
 static void ClassInit(Class *cls,
                       const char *ns, const char *name,
-                      bool is_soft, ContextScope scope, StringSet *tags)
+                      bool is_soft, ContextScope scope, StringSet *tags,
+                      const char *comment)
 {
+    assert(cls != NULL);
+
     if (ns == NULL || strcmp(ns, "default") == 0)
     {
         cls->ns = NULL;
@@ -89,15 +92,17 @@ static void ClassInit(Class *cls,
     {
         StringSetAdd(cls->tags, xstrdup("hardclass"));
     }
+    cls->comment = SafeStringDuplicate(comment);
 }
 
 static void ClassDestroySoft(Class *cls)
 {
-    if (cls)
+    if (cls != NULL)
     {
         free(cls->ns);
         free(cls->name);
         StringSetDestroy(cls->tags);
+        free(cls->comment);
     }
 }
 
@@ -130,7 +135,7 @@ void ClassTableDestroy(ClassTable *table)
 
 bool ClassTablePut(ClassTable *table,
                    const char *ns, const char *name,
-                   bool is_soft, ContextScope scope, StringSet *tags)
+                   bool is_soft, ContextScope scope, StringSet *tags, const char *comment)
 {
     assert(name);
     assert(is_soft || (!ns || strcmp("default", ns) == 0)); // hard classes should have default namespace
@@ -142,7 +147,7 @@ bool ClassTablePut(ClassTable *table,
     }
 
     Class *cls = xmalloc(sizeof(*cls));
-    ClassInit(cls, ns, name, is_soft, scope, tags);
+    ClassInit(cls, ns, name, is_soft, scope, tags, comment);
 
     /* (cls->name != name) because canonification has happened. */
     char *fullname = StringConcatenate(3, ns, ":", cls->name);

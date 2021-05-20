@@ -2532,7 +2532,8 @@ void GenericAgentShowContextsFormatted(EvalContext *ctx, const char *regexp)
         return;
     }
 
-    while ((Class *cls = ClassTableIteratorNext(iter)) != NULL)
+    Class *cls = NULL;
+    while ((cls = ClassTableIteratorNext(iter)) != NULL)
     {
         char *class_name = ClassRefToString(cls->ns, cls->name);
 
@@ -2546,7 +2547,7 @@ void GenericAgentShowContextsFormatted(EvalContext *ctx, const char *regexp)
         Buffer *tagbuf = StringSetToBuffer(tagset, ',');
 
         char *line;
-        xasprintf(&line, "%-60s %-40s", class_name, BufferData(tagbuf));
+        xasprintf(&line, "%-60s %-40s %-40s", class_name, BufferData(tagbuf), NULL_TO_EMPTY_STRING(cls->comment));
         SeqAppend(seq, line);
 
         BufferDestroy(tagbuf);
@@ -2557,7 +2558,7 @@ void GenericAgentShowContextsFormatted(EvalContext *ctx, const char *regexp)
 
     SeqSort(seq, StrCmpWrapper, NULL);
 
-    printf("%-60s %-40s\n", "Class name", "Meta tags");
+    printf("%-60s %-40s %-40s\n", "Class name", "Meta tags", "Comment");
 
     for (size_t i = 0; i < SeqLength(seq); i++)
     {

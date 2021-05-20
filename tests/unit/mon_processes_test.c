@@ -125,8 +125,8 @@ void test_processes_monitor(void)
         " the two numbers should be *about* the same since the 'ps'"
         " commands run very close to each other");
 
-    int upper = (int) ((double) usr*1.10);
-    int lower = (int) ((double) usr*0.90);
+    int upper = (int) ((double) usr*1.20);
+    int lower = (int) ((double) usr*0.80);
     assert_in_range((long long) cf_this[ob_users], lower, upper);
 }
 

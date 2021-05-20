@@ -109,6 +109,8 @@ static bool IsLegalVariableName(EvalContext *ctx, const Promise *pp)
 PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp,
                                ARG_UNUSED void *param)
 {
+    assert(pp != NULL);
+
     ConvergeVariableOptions opts = CollectConvergeVariableOptions(ctx, pp);
 
     Log(LOG_LEVEL_DEBUG, "Evaluating vars promise: %s", pp->promiser);
@@ -455,8 +457,29 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp,
             return PROMISE_RESULT_FAIL;
         }
 
+        StringSet *tags = StringSetNew();
+        StringSetAdd(tags, xstrdup("source=promise"));
+
+        Rlist *promise_meta = PromiseGetConstraintAsList(ctx, "meta", pp);
+        if (promise_meta)
+        {
+            Buffer *print;
+            for (const Rlist *rp = promise_meta; rp; rp = rp->next)
+            {
+                StringSetAdd(tags, xstrdup(RlistScalarValue(rp)));
+                if (WouldLog(LOG_LEVEL_DEBUG))
+                {
+                    print = StringSetToBuffer(tags, ',');
+                    Log(LOG_LEVEL_DEBUG,
+                        "Added tag %s to variable %s tags (now [%s])",
+                        RlistScalarValue(rp), pp->promiser, BufferData(print));
+                    BufferDestroy(print);
+                }
+            }
+        }
+
         /* WRITE THE VARIABLE AT LAST. */
-        bool success = EvalContextVariablePut(ctx, ref, rval.item, required_datatype, "source=promise");
+        bool success = EvalContextVariablePutTagsSet(ctx, ref, rval.item, required_datatype, tags);
 
         if (!success)
         {
@@ -467,23 +490,8 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp,
 
             VarRefDestroy(ref);
             RvalDestroy(rval);
+            StringSetDestroy(tags);
             return PROMISE_RESULT_FAIL;
-        }
-
-        Rlist *promise_meta = PromiseGetConstraintAsList(ctx, "meta", pp);
-        if (promise_meta)
-        {
-            StringSet *class_meta = EvalContextVariableTags(ctx, ref);
-            Buffer *print;
-            for (const Rlist *rp = promise_meta; rp; rp = rp->next)
-            {
-                StringSetAdd(class_meta, xstrdup(RlistScalarValue(rp)));
-                print = StringSetToBuffer(class_meta, ',');
-                Log(LOG_LEVEL_DEBUG,
-                    "Added tag %s to class %s, tags now [%s]",
-                    RlistScalarValue(rp), pp->promiser, BufferData(print));
-                BufferDestroy(print);
-            }
         }
 
         result = PROMISE_RESULT_NOOP;

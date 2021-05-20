@@ -132,7 +132,6 @@ check_PROGRAMS = \
 	misc_lib_test \
 	item_lib_test \
 	string_lib_test \
-	crypto_symmetric_test \
 	persistent_lock_test  \
 	thread_test \
 	package_versions_compare_test \
@@ -164,7 +163,6 @@ check_PROGRAMS = \
 	process_terminate_unix_test \
 	process_test \
 	exec-config-test \
-	generic_agent_test \
 	syntax_test \
 	sysinfo_test \
 	ipaddress_test \
@@ -177,8 +175,6 @@ check_PROGRAMS = \
 	mustache_test \
 	class_test \
 	version_test \
-	hash_test \
-	key_test \
 	cf_upgrade_test \
 	queue_test \
 	matching_test \

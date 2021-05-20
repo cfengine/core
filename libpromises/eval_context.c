@@ -455,7 +455,9 @@ static void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context, 
     }
 
     ClassTablePut(frame.classes, frame.owner->ns, context, true,
-                  CONTEXT_SCOPE_BUNDLE, StringSetFromString(tags, ','), NULL);
+                  CONTEXT_SCOPE_BUNDLE,
+                  NULL_OR_EMPTY(tags) ? NULL : StringSetFromString(tags, ','),
+                  NULL);
 
     if (!BundleAborted(ctx))
     {
@@ -1713,7 +1715,7 @@ static bool EvalContextClassPutTagsSet(EvalContext *ctx, const char *ns, const c
 static bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *name, bool is_soft,
                                 ContextScope scope, const char *tags, const char *comment)
 {
-    StringSet *tags_set = StringSetFromString(tags, ',');
+    StringSet *tags_set = (NULL_OR_EMPTY(tags) ? NULL : StringSetFromString(tags, ','));
     bool ret = EvalContextClassPutTagsSet(ctx, ns, name, is_soft, scope, tags_set, comment);
     if (!ret)
     {
@@ -1750,7 +1752,7 @@ bool EvalContextClassPutHard(EvalContext *ctx, const char *name, const char *tag
 
 bool EvalContextClassPutSoft(EvalContext *ctx, const char *name, ContextScope scope, const char *tags)
 {
-    StringSet *tags_set = StringSetFromString(tags, ',');
+    StringSet *tags_set = (NULL_OR_EMPTY(tags) ? NULL : StringSetFromString(tags, ','));
     bool ret = EvalContextClassPutSoftTagsSet(ctx, name, scope, tags_set);
     if (!ret)
     {

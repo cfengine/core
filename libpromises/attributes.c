@@ -649,16 +649,22 @@ LogLevel ActionAttributeLogLevelFromString(const char *log_level)
         return LOG_LEVEL_ERR;
     }
 
-    if (strcmp("inform", log_level) == 0)
+    if (StringEqual(log_level, "inform") || StringEqual(log_level, "info"))
     {
         return LOG_LEVEL_INFO;
     }
-    else if (strcmp("verbose", log_level) == 0)
+    else if (StringEqual(log_level, "verbose"))
     {
         return LOG_LEVEL_VERBOSE;
     }
+    else if (StringEqual(log_level, "error") || StringEqual(log_level, "log"))
+    {
+        /* XXX: what is 'log' and why is it the same as 'error'? */
+        return LOG_LEVEL_ERR;
+    }
     else
     {
+        Log(LOG_LEVEL_WARNING, "Unrecognized 'log_level' attribute value: %s", log_level);
         return LOG_LEVEL_ERR;
     }
 }

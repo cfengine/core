@@ -173,9 +173,17 @@ JsonElement *EvalContextGetPromiseCallers(EvalContext *ctx);
 
 bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, const void *value, DataType type, const char *tags);
 bool EvalContextVariablePutTagsSet(EvalContext *ctx, const VarRef *ref, const void *value, DataType type, StringSet *tags);
+bool EvalContextVariablePutTagsSetWithComment(EvalContext *ctx,
+                                              const VarRef *ref, const void *value,
+                                              DataType type, StringSet *tags,
+                                              const char *comment);
 bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const char *lval, const void *value, DataType type, const char *tags);
 bool EvalContextVariablePutSpecialTagsSet(EvalContext *ctx, SpecialScope scope, const char *lval,
                                           const void *value, DataType type, StringSet *tags);
+bool EvalContextVariablePutSpecialTagsSetWithComment(EvalContext *ctx, SpecialScope scope,
+                                                     const char *lval, const void *value,
+                                                     DataType type, StringSet *tags,
+                                                     const char *comment);
 const void *EvalContextVariableGetSpecial(const EvalContext *ctx, const SpecialScope scope, const char *varname, DataType *type_out);
 const char *EvalContextVariableGetSpecialString(const EvalContext *ctx, const SpecialScope scope, const char *varname);
 const void *EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, DataType *type_out);

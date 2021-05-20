@@ -67,8 +67,6 @@ static const char *const POLICY_ERROR_PROMISE_ATTRIBUTE_NOT_IMPLEMENTED =
     "Common attribute '%s' not implemented for custom promises (%s)";
 static const char *const POLICY_ERROR_PROMISE_ATTRIBUTE_NOT_SUPPORTED =
     "Common attribute '%s' not supported for custom promises, use '%s' instead (%s promises)";
-static const char *const POLICY_ERROR_PROMISE_CUSTOM_CONTAINERS_NOT_IMPLEMENTED =
-    "Container attributes not implemented for custom promises (%s promise, '%s' promiser, '%s' attribute)";
 
 static const char *const POLICY_ERROR_CONSTRAINT_TYPE_MISMATCH =
     "Type mismatch in constraint: %s";
@@ -2714,7 +2712,6 @@ static bool ValidateCustomPromise(const Promise *pp, Seq *errors)
     assert(errors != NULL);
 
     const char *const promise_type = PromiseGetPromiseType(pp);
-    const char *const promiser = pp->promiser;
     bool valid = true;
     Seq *attributes = pp->conlist;
     const size_t length = SeqLength(attributes);
@@ -2754,19 +2751,6 @@ static bool ValidateCustomPromise(const Promise *pp, Seq *errors)
                     POLICY_ERROR_PROMISE_ATTRIBUTE_NOT_IMPLEMENTED,
                     name,
                     promise_type));
-            valid = false;
-        }
-        else if (attribute->rval.type == RVAL_TYPE_CONTAINER)
-        {
-            SeqAppend(
-                errors,
-                PolicyErrorNew(
-                    POLICY_ELEMENT_TYPE_PROMISE,
-                    pp,
-                    POLICY_ERROR_PROMISE_CUSTOM_CONTAINERS_NOT_IMPLEMENTED,
-                    promise_type,
-                    promiser,
-                    name));
             valid = false;
         }
     }

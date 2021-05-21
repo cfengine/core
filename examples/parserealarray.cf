@@ -21,41 +21,37 @@
 # included file COSL.txt.
 
 #+begin_src cfengine3
-body common control
-{
-      bundlesequence => { "test" };
-}
-
-bundle agent test(f)
+bundle agent __main__
 {
   vars:
       # Define data inline for convenience
-      "table"   string =>
-      "1:2
-          3:4
-          5:6";
+      "table"
+        string => "1.0:2.718
+3:4.6692
+5.0:6.82";
 
-      "dim" int => parseintarray(
-                                  "items",
-				  "$(table)",
-				  "\s*#[^\n]*",
-				  ":",
-				  "1000",
-				  "200000"
+
+      "dim"
+        int => parserealarray(
+                               "items",
+                               "$(table)",
+                               "\s*#[^\n]*",
+                               ":",
+                               "1000",
+                               "200000"
       );
 
-      "keys" slist => getindices("items");
-      "sorted_keys" slist => sort(keys, "int");
+      "keys" slist => sort(getindices("items"));
 
   reports:
-      "$(sorted_keys)";
+      "$(keys) - $(items[$(keys)][1])";
 }
 #+end_src
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ R: 1
-#@ R: 3
-#@ R: 5
+#@ R: 1.0 - 2.718
+#@ R: 3 - 4.6692
+#@ R: 5.0 - 6.82
 #@ ```
 #+end_src

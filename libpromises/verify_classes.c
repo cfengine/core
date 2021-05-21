@@ -96,6 +96,8 @@ PromiseResult VerifyClassPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED
                 StringSetAdd(tags, xstrdup(RlistScalarValue(rp)));
             }
 
+            const char *comment = PromiseGetConstraintAsRval(pp, "comment", RVAL_TYPE_SCALAR);
+
             bool inserted = false;
             if (/* Persistent classes are always global: */
                 a.context.persistent > 0 ||
@@ -108,15 +110,17 @@ PromiseResult VerifyClassPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED
             {
                 Log(LOG_LEVEL_VERBOSE, "C:     +  Global class: %s",
                     pp->promiser);
-                inserted = EvalContextClassPutSoftTagsSet(ctx, pp->promiser,
-                                                          CONTEXT_SCOPE_NAMESPACE, tags);
+                inserted = EvalContextClassPutSoftTagsSetWithComment(ctx, pp->promiser,
+                                                                     CONTEXT_SCOPE_NAMESPACE,
+                                                                     tags, comment);
             }
             else
             {
                 Log(LOG_LEVEL_VERBOSE, "C:     +  Private class: %s",
                     pp->promiser);
-                inserted = EvalContextClassPutSoftTagsSet(ctx, pp->promiser,
-                                                          CONTEXT_SCOPE_BUNDLE, tags);
+                inserted = EvalContextClassPutSoftTagsSetWithComment(ctx, pp->promiser,
+                                                                     CONTEXT_SCOPE_BUNDLE,
+                                                                     tags, comment);
             }
 
             if (a.context.persistent > 0)

@@ -1,0 +1,22 @@
+# Test $(sys.inputdir), $(sys.masterdir), $(sys.libdir), $(sys.bindir), $(sys.failsafe_policy_path), $(sys.update_policy_path), $(sys.local_libdir)
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+}
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+    "description" string => "Test that comments on classes are emitted in --show-evaluated-classes output.";
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+    "" usebundle => dcs_passif_output(".*test_class.*This is a comment about test_class.*", "", "$(sys.cf_agent) -Kf $(this.promise_filename).sub --show-evaluated-classes", $(this.promise_filename));
+}

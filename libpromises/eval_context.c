@@ -2071,10 +2071,15 @@ static VariableTable *GetVariableTableForScope(const EvalContext *ctx,
                                                const char *ns,
                                                const char *scope)
 {
+    assert(ctx != NULL);
+
     switch (SpecialScopeFromString(scope))
     {
-    case SPECIAL_SCOPE_SYS:
     case SPECIAL_SCOPE_DEF:
+        /* 'def.' is not as special as the other scopes below. (CFE-3668) */
+        return ctx->global_variables;
+
+    case SPECIAL_SCOPE_SYS:
     case SPECIAL_SCOPE_MON:
     case SPECIAL_SCOPE_CONST:
         assert(!ns || strcmp("default", ns) == 0);

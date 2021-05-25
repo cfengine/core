@@ -223,13 +223,13 @@ void AddPackageModuleToContext(const EvalContext *ctx, PackageModuleBody *pm)
 {
     /* First check if the body is there added from previous pre-evaluation 
      * iteration. If it is there update it as we can have new expanded variables. */
-    ssize_t pm_seq_index;
-    if ((pm_seq_index = SeqIndexOf(ctx->package_promise_context->package_modules_bodies,
-            pm->name, PackageManagerSeqCompare)) != -1)
+    Seq *const bodies = ctx->package_promise_context->package_modules_bodies;
+    ssize_t index = SeqIndexOf(bodies, pm->name, PackageManagerSeqCompare);
+    if (index != -1)
     {
-        SeqRemove(ctx->package_promise_context->package_modules_bodies, pm_seq_index);
+        SeqRemove(bodies, index);
     }
-    SeqAppend(ctx->package_promise_context->package_modules_bodies, pm);
+    SeqAppend(bodies, pm);
 }
 
 PackageModuleBody *GetPackageModuleFromContext(const EvalContext *ctx,

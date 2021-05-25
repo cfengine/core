@@ -4114,7 +4114,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx,
                 char recvbuf[CF_BUFSIZE];
                 ssize_t n_read = recv(sd, recvbuf, maxbytes, 0);
 
-                if (n_read < 0)
+                if (n_read >= 0)
                 {
                     /* maxbytes was checked earlier, but just make sure... */
                     assert((size_t) n_read < sizeof(recvbuf));

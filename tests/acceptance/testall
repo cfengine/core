@@ -606,6 +606,10 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
                     RESULT=Wait
                     RESULT_MSG="Awaiting ($WAIT_TIME seconds)..."
                 fi
+            elif fgrep "error:" $OUTFILE > /dev/null
+            then
+                RESULT=FAIL
+                RESULT_MSG="${COLOR_FAILURE}FAIL CFEngine reported errors${COLOR_NORMAL}"
             elif egrep "R: .*$ESCAPED_TEST Pass" $OUTFILE > /dev/null
             then
                 RESULT=Pass

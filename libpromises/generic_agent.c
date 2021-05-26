@@ -819,7 +819,14 @@ static bool LoadAugmentsFiles(EvalContext *ctx, const char *unexpanded_filename)
 
 void LoadAugments(EvalContext *ctx, GenericAgentConfig *config)
 {
-    char* def_json = StringFormat("%s%c%s", config->input_dir, FILE_SEPARATOR, "def.json");
+    assert(config != NULL);
+
+    char* def_json = StringFormat("%s%c%s", config->input_dir, FILE_SEPARATOR, "def_preferred.json");
+    if (access(def_json, R_OK) != 0)
+    {
+        free(def_json);
+        def_json = StringFormat("%s%c%s", config->input_dir, FILE_SEPARATOR, "def.json");
+    }
     Log(LOG_LEVEL_VERBOSE, "Loading JSON augments from '%s' (input dir '%s', input file '%s'", def_json, config->input_dir, config->input_file);
     LoadAugmentsFiles(ctx, def_json);
     free(def_json);
@@ -1249,6 +1256,8 @@ static bool WriteReleaseIdFile(const char *filename, const char *dirname)
 
 bool GenericAgentArePromisesValid(const GenericAgentConfig *config)
 {
+    assert(config != NULL);
+
     char cmd[CF_BUFSIZE];
     const char* const bindir = GetBinDir();
 

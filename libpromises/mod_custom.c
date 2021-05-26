@@ -366,7 +366,7 @@ static Seq *PromiseModule_ReceiveHeader(PromiseModule *module)
     // Read header:
     char *line = NULL;
     size_t size = 0;
-    size_t bytes = getline(&line, &size, module->output);
+    ssize_t bytes = getline(&line, &size, module->output);
     if (bytes <= 0)
     {
         Log(LOG_LEVEL_ERR,

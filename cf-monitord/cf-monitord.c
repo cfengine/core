@@ -89,6 +89,8 @@ static const struct option OPTIONS[] =
     {"tcpdump", no_argument, 0, 'T'},
     {"color", optional_argument, 0, 'C'},
     {"timestamp", no_argument, 0, 'l'},
+    /* Only long option for the rest */
+    {"ignore-preferred-augments", no_argument, 0, 0},
     {NULL, 0, 0, '\0'}
 };
 
@@ -109,6 +111,7 @@ static const char *const HINTS[] =
     "Interface with tcpdump if available to collect data about network",
     "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
     "Log timestamps on each line of log output",
+    "Ignore def_preferred.json file in favor of def.json",
     NULL
 };
 
@@ -144,8 +147,9 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_MONITOR, GetTTYInteractive());
 
+    int longopt_idx;
     while ((c = getopt_long(argc, argv, "dvnIf:g:VSxHTKMFhC::l",
-                            OPTIONS, NULL)) != -1)
+                            OPTIONS, &longopt_idx)) != -1)
     {
         switch (c)
         {
@@ -230,6 +234,17 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         case 'l':
             LoggingEnableTimestamps(true);
             break;
+
+        /* long options only */
+        case 0:
+        {
+            const char *const option_name = OPTIONS[longopt_idx].name;
+            if (StringEqual(option_name, "ignore-preferred-augments"))
+            {
+                config->ignore_preferred_augments = true;
+            }
+            break;
+        }
 
         default:
         {

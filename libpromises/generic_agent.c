@@ -821,10 +821,21 @@ void LoadAugments(EvalContext *ctx, GenericAgentConfig *config)
 {
     assert(config != NULL);
 
-    char* def_json = StringFormat("%s%c%s", config->input_dir, FILE_SEPARATOR, "def_preferred.json");
-    if (access(def_json, R_OK) != 0)
+    char* def_json = NULL;
+    if (!config->ignore_preferred_augments)
     {
-        free(def_json);
+        def_json = StringFormat("%s%c%s", config->input_dir, FILE_SEPARATOR, "def_preferred.json");
+        if (access(def_json, R_OK) != 0)
+        {
+            // def_preferred.json does not exist or we cannot read it
+            FREE_AND_NULL(def_json);
+        }
+    }
+    if (def_json == NULL)
+    {
+        // No def_preferred.json, either because the feature is disabled
+        // or we could not read the file.
+        // Fall back to old / default behavior, using def.json:
         def_json = StringFormat("%s%c%s", config->input_dir, FILE_SEPARATOR, "def.json");
     }
     Log(LOG_LEVEL_VERBOSE, "Loading JSON augments from '%s' (input dir '%s', input file '%s'", def_json, config->input_dir, config->input_file);
@@ -1306,6 +1317,11 @@ bool GenericAgentArePromisesValid(const GenericAgentConfig *config)
             }
         }
         strlcat(cmd, "\"", CF_BUFSIZE);
+    }
+
+    if (config->ignore_preferred_augments)
+    {
+        strlcat(cmd, " --ignore-preferred-augments", CF_BUFSIZE);
     }
 
     Log(LOG_LEVEL_VERBOSE, "Checking policy with command '%s'", cmd);
@@ -2329,6 +2345,7 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type, bool tty_
     config->check_runnable = agent_type != AGENT_TYPE_COMMON;
     config->ignore_missing_bundles = false;
     config->ignore_missing_inputs = false;
+    config->ignore_preferred_augments = false;
 
     config->heap_soft = NULL;
     config->heap_negated = NULL;

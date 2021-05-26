@@ -97,6 +97,8 @@ static const struct option OPTIONS[] =
     {"color", optional_argument, 0, 'C'},
     {"timestamp", no_argument, 0, 'l'},
     {"graceful-detach", optional_argument, 0, 't'},
+    /* Only long option for the rest */
+    {"ignore-preferred-augments", no_argument, 0, 0},
     {NULL, 0, 0, '\0'}
 };
 
@@ -119,6 +121,7 @@ static const char *const HINTS[] =
     "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
     "Log timestamps on each line of log output",
     "Terminate gracefully on SIGHUP by detaching from systemd and waiting n seconds before terminating",
+    "Ignore def_preferred.json file in favor of def.json",
     NULL
 };
 
@@ -160,8 +163,9 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_SERVER, GetTTYInteractive());
 
+    int longopt_idx;
     while ((c = getopt_long(argc, argv, "dvIKf:g:D:N:VSxLFMhAC::lt::",
-                            OPTIONS, NULL))
+                            OPTIONS, &longopt_idx))
            != -1)
     {
         switch (c)
@@ -303,6 +307,16 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             }
             break;
 
+        /* long options only */
+        case 0:
+        {
+            const char *const option_name = OPTIONS[longopt_idx].name;
+            if (StringEqual(option_name, "ignore-preferred-augments"))
+            {
+                config->ignore_preferred_augments = true;
+            }
+            break;
+        }
         default:
             {
                 Writer *w = FileWriter(stdout);

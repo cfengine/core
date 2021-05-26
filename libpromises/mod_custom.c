@@ -473,6 +473,11 @@ static PromiseModule *PromiseModule_Start(char *interpreter, char *path)
     if (header == NULL)
     {
         // error logged in PromiseModule_ReceiveHeader()
+
+        /* Make sure 'path' and 'interpreter' are not free'd twice (the calling
+         * code frees them if it gets NULL). */
+        module->path = NULL;
+        module->interpreter = NULL;
         PromiseModule_DestroyInternal(module);
         return NULL;
     }

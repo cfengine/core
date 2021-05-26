@@ -375,7 +375,16 @@ static Seq *PromiseModule_ReceiveHeader(PromiseModule *module)
         free(line);
         return NULL;
     }
-    assert(line[bytes - 1] == '\n');
+    if (line[bytes - 1] != '\n')
+    {
+        Log(LOG_LEVEL_ERR,
+            "Promise module '%s %s' sent an invalid header with no newline: '%s'",
+            module->interpreter,
+            module->path,
+            line);
+        free(line);
+        return NULL;
+    }
     line[bytes - 1] = '\0';
 
     Log(LOG_LEVEL_DEBUG, "Received header from promise module: '%s'", line);

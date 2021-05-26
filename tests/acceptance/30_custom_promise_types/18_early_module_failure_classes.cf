@@ -1,0 +1,64 @@
+######################################################
+#
+#  Test of classes being set for a promise using a module which fails early
+#
+#####################################################
+body common control
+{
+    inputs => { "../default.cf.sub" };
+    bundlesequence  => { default("$(this.promise_filename)") };
+    version => "1.0";
+}
+
+#######################################################
+
+bundle common python_check
+{
+  classes:
+    "python_f_string_support" expression => returnszero("/usr/bin/python3 -c 'f\"string\"'", "useshell");
+}
+
+bundle agent init
+{
+  meta:
+      "test_skip_unsupported" string => "!python_f_string_support";
+
+  files:
+    "$(this.promise_dirname)/cfengine.py"
+      copy_from => local_cp("$(this.promise_dirname)/../../../misc/custom_promise_types/cfengine.py");
+}
+
+promise agent bad
+{
+    interpreter => "/usr/bin/python3";
+    path => "$(this.promise_dirname)/bad_import.py";
+}
+
+bundle agent test
+{
+  meta:
+    "description" -> { "CFE-3645" }
+      string => "Test that a promise using an early-failing custom module still sets result classes";
+
+  bad:
+      "doesn't matter what I put here"
+        classes => test;
+}
+
+body classes test
+{
+        promise_repaired => { "test_promise_repaired" };
+        repair_failed => { "test_promise_failed" };
+}
+
+bundle agent check
+{
+  classes:
+      "ok" expression => "test_promise_failed";
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

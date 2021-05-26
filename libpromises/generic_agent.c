@@ -822,7 +822,13 @@ void LoadAugments(EvalContext *ctx, GenericAgentConfig *config)
     assert(config != NULL);
 
     char* def_json = NULL;
-    if (!config->ignore_preferred_augments)
+    // --ignore-preferred-augments command line option:
+    if (config->ignore_preferred_augments)
+    {
+        EvalContextClassPutHard(ctx, "ignore_preferred_augments", "source=command_line_option");
+        // def_json is NULL so it will be assigned below
+    }
+    else
     {
         def_json = StringFormat("%s%c%s", config->input_dir, FILE_SEPARATOR, "def_preferred.json");
         if (access(def_json, R_OK) != 0)
@@ -831,6 +837,7 @@ void LoadAugments(EvalContext *ctx, GenericAgentConfig *config)
             FREE_AND_NULL(def_json);
         }
     }
+
     if (def_json == NULL)
     {
         // No def_preferred.json, either because the feature is disabled

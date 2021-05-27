@@ -431,7 +431,8 @@ static inline bool UsingRunagentSocket()
  *
  * @return Whether to terminate (skip any further actions) or not.
  */
-static bool HandleRequestsOrSleep(time_t seconds, const char *reason, int runagent_socket)
+static bool HandleRequestsOrSleep(time_t seconds, const char *reason,
+                                  int runagent_socket, const char *local_run_command)
 {
     if (IsPendingTermination())
     {
@@ -482,7 +483,7 @@ static bool HandleRequestsOrSleep(time_t seconds, const char *reason, int runage
                     {
                         /* child */
                         signal(SIGPIPE, SIG_DFL);
-                        HandleRunagentRequest(data_socket);
+                        HandleRunagentRequest(data_socket, local_run_command);
                         _exit(EXIT_SUCCESS);
                     }
                     else if (pid == -1)
@@ -529,7 +530,7 @@ static void CFExecdMainLoop(EvalContext *ctx, Policy **policy, GenericAgentConfi
         if (ScheduleRun(ctx, policy, config, execd_config, exec_config))
         {
             terminate = HandleRequestsOrSleep((*execd_config)->splay_time, "splay time",
-                                              runagent_socket);
+                                              runagent_socket, (*execd_config)->local_run_command);
             if (terminate)
             {
                 break;
@@ -543,7 +544,8 @@ static void CFExecdMainLoop(EvalContext *ctx, Policy **policy, GenericAgentConfi
             }
         }
         /* 1 Minute resolution is enough */
-        terminate = HandleRequestsOrSleep(CFPULSETIME, "pulse time", runagent_socket);
+        terminate = HandleRequestsOrSleep(CFPULSETIME, "pulse time", runagent_socket,
+                                          (*execd_config)->local_run_command);
         if (terminate)
         {
             break;

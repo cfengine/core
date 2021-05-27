@@ -495,7 +495,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
             /* unless child nodes were repaired, set a promise kept class */
             if (result == PROMISE_RESULT_NOOP)
             {
-                RecordNoChange(ctx, pp, &a, "Basedir '%s' not promising anything", path);
+                Log(LOG_LEVEL_VERBOSE, "Basedir '%s' not promising anything", path);
             }
         }
     }

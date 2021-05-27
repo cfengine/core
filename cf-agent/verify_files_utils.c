@@ -2314,11 +2314,13 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
             {
                 RecordChange(ctx, pp, attr, "Changed permissions of '%s' to 'mode %04jo'",
                              path, (uintmax_t)newperm);
+                result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
             }
             else
             {
                 RecordFailure(ctx, pp, attr, "Failed to change permissions of '%s' to 'mode %04jo' (%s)",
                               path, (uintmax_t)newperm, GetErrorStr());
+                result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
             }
 
             if (!FileInRepository(newname))
@@ -2610,6 +2612,7 @@ static PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, co
             {
                 RecordFailure(ctx, pp, attr, "Failed to change permissions of '%s'. (chmod: %s)",
                               file, GetErrorStr());
+                result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
             }
             else
             {

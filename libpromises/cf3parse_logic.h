@@ -825,9 +825,8 @@ static inline void ParserBeginBlockBody()
 {
     const BodySyntax *body_syntax = BodySyntaxGet(P.block, P.blocktype);
 
-    if (P.block == PARSER_BLOCK_PROMISE)
+    if (P.block == PARSER_BLOCK_PROMISE && body_syntax != NULL)
     {
-        assert(body_syntax != NULL);
         P.currentbody = PolicyAppendPromiseBlock(
             P.policy,
             P.current_namespace,

@@ -171,7 +171,10 @@ const BodySyntax *BodySyntaxGet(ARG_UNUSED ParserBlock block, const char *body_t
     if (block == PARSER_BLOCK_PROMISE)
     {
         // Required: promise agent <id>
-        assert(StringEqual(body_type, "agent"));
+        if (!StringEqual(body_type, "agent"))
+        {
+            return NULL;
+        }
         return &CUSTOM_PROMISE_BLOCK_SYNTAX;
     }
 

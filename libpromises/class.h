@@ -35,6 +35,7 @@ typedef struct
     ContextScope scope;
     bool is_soft;
     StringSet *tags;
+    char *comment;
 } Class;
 
 
@@ -44,7 +45,8 @@ typedef struct ClassTableIterator_ ClassTableIterator;
 ClassTable *ClassTableNew(void);
 void ClassTableDestroy(ClassTable *table);
 
-bool ClassTablePut(ClassTable *table, const char *ns, const char *name, bool is_soft, ContextScope scope, StringSet *tags);
+bool ClassTablePut(ClassTable *table, const char *ns, const char *name, bool is_soft, ContextScope scope,
+                   StringSet *tags, const char *comment);
 Class *ClassTableGet(const ClassTable *table, const char *ns, const char *name);
 Class *ClassTableMatch(const ClassTable *table, const char *regex);
 bool ClassTableRemove(ClassTable *table, const char *ns, const char *name);

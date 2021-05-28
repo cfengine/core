@@ -1,0 +1,22 @@
+# Test $(sys.inputdir), $(sys.masterdir), $(sys.libdir), $(sys.bindir), $(sys.failsafe_policy_path), $(sys.update_policy_path), $(sys.local_libdir)
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+}
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+    "description" string => "Test that comments on variables are emitted in --show-evaluated-vars output.";
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+    "" usebundle => dcs_passif_output(".*test_var.*test_var value.*This is a comment about test_var.*", "", "$(sys.cf_agent) -Kf $(this.promise_filename).sub --show-evaluated-vars", $(this.promise_filename));
+}

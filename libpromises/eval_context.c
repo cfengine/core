@@ -121,7 +121,9 @@ static void SetEvalAborted(EvalContext *ctx);
 static bool EvalContextStackFrameContainsSoft(const EvalContext *ctx, const char *context);
 static bool EvalContextHeapContainsSoft(const EvalContext *ctx, const char *ns, const char *name);
 static bool EvalContextHeapContainsHard(const EvalContext *ctx, const char *name);
-static bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *name, bool is_soft, ContextScope scope, const char *tags);
+static bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *name,
+                                bool is_soft, ContextScope scope,
+                                const char *tags, const char *comment);
 static const char *EvalContextCurrentNamespace(const EvalContext *ctx);
 static ClassRef IDRefQualify(const EvalContext *ctx, const char *id);
 
@@ -456,7 +458,9 @@ static void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context, 
     }
 
     ClassTablePut(frame.classes, frame.owner->ns, context, true,
-                  CONTEXT_SCOPE_BUNDLE, StringSetFromString(tags, ','));
+                  CONTEXT_SCOPE_BUNDLE,
+                  NULL_OR_EMPTY(tags) ? NULL : StringSetFromString(tags, ','),
+                  NULL);
 
     if (!BundleAborted(ctx))
     {
@@ -788,7 +792,7 @@ void EvalContextHeapPersistentLoadAll(EvalContext *ctx)
             Log(LOG_LEVEL_DEBUG, "Adding persistent class '%s'", key);
 
             ClassRef ref = ClassRefParse(key);
-            EvalContextClassPut(ctx, ref.ns, ref.name, true, CONTEXT_SCOPE_NAMESPACE, tags);
+            EvalContextClassPut(ctx, ref.ns, ref.name, true, CONTEXT_SCOPE_NAMESPACE, tags, NULL);
 
             StringSet *tag_set = EvalContextClassTags(ctx, ref.ns, ref.name);
             assert(tag_set);
@@ -1609,7 +1613,7 @@ Class *EvalContextClassMatch(const EvalContext *ctx, const char *regex)
 }
 
 static bool EvalContextClassPutTagsSet(EvalContext *ctx, const char *ns, const char *name, bool is_soft,
-                                       ContextScope scope, StringSet *tags)
+                                       ContextScope scope, StringSet *tags, const char *comment)
 {
     {
         char context_copy[2 * CF_MAXVARSIZE];
@@ -1685,12 +1689,12 @@ static bool EvalContextClassPutTagsSet(EvalContext *ctx, const char *ns, const c
             {
                 ProgrammingError("Attempted to add bundle class '%s' while not evaluating a bundle", name);
             }
-            ClassTablePut(frame->data.bundle.classes, ns, name, is_soft, scope, tags);
+            ClassTablePut(frame->data.bundle.classes, ns, name, is_soft, scope, tags, comment);
         }
         break;
 
     case CONTEXT_SCOPE_NAMESPACE:
-        ClassTablePut(ctx->global_classes, ns, name, is_soft, scope, tags);
+        ClassTablePut(ctx->global_classes, ns, name, is_soft, scope, tags, comment);
         break;
 
     case CONTEXT_SCOPE_NONE:
@@ -1716,10 +1720,10 @@ static bool EvalContextClassPutTagsSet(EvalContext *ctx, const char *ns, const c
 }
 
 static bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *name, bool is_soft,
-                                ContextScope scope, const char *tags)
+                                ContextScope scope, const char *tags, const char *comment)
 {
-    StringSet *tags_set = StringSetFromString(tags, ',');
-    bool ret = EvalContextClassPutTagsSet(ctx, ns, name, is_soft, scope, tags_set);
+    StringSet *tags_set = (NULL_OR_EMPTY(tags) ? NULL : StringSetFromString(tags, ','));
+    bool ret = EvalContextClassPutTagsSet(ctx, ns, name, is_soft, scope, tags_set, comment);
     if (!ret)
     {
         StringSetDestroy(tags_set);
@@ -1750,12 +1754,12 @@ static const char *EvalContextCurrentNamespace(const EvalContext *ctx)
 
 bool EvalContextClassPutHard(EvalContext *ctx, const char *name, const char *tags)
 {
-    return EvalContextClassPut(ctx, NULL, name, false, CONTEXT_SCOPE_NAMESPACE, tags);
+    return EvalContextClassPut(ctx, NULL, name, false, CONTEXT_SCOPE_NAMESPACE, tags, NULL);
 }
 
 bool EvalContextClassPutSoft(EvalContext *ctx, const char *name, ContextScope scope, const char *tags)
 {
-    StringSet *tags_set = StringSetFromString(tags, ',');
+    StringSet *tags_set = (NULL_OR_EMPTY(tags) ? NULL : StringSetFromString(tags, ','));
     bool ret = EvalContextClassPutSoftTagsSet(ctx, name, scope, tags_set);
     if (!ret)
     {
@@ -1765,6 +1769,12 @@ bool EvalContextClassPutSoft(EvalContext *ctx, const char *name, ContextScope sc
 }
 
 bool EvalContextClassPutSoftTagsSet(EvalContext *ctx, const char *name, ContextScope scope, StringSet *tags)
+{
+    return EvalContextClassPutSoftTagsSetWithComment(ctx, name, scope, tags, NULL);
+}
+
+bool EvalContextClassPutSoftTagsSetWithComment(EvalContext *ctx, const char *name, ContextScope scope,
+                                               StringSet *tags, const char *comment)
 {
     bool ret;
     char *ns = NULL;
@@ -1776,7 +1786,7 @@ bool EvalContextClassPutSoftTagsSet(EvalContext *ctx, const char *name, ContextS
     }
 
     ret = EvalContextClassPutTagsSet(ctx, ns ? ns : EvalContextCurrentNamespace(ctx),
-                                     ns ? delim + 1 : name, true, scope, tags);
+                                     ns ? delim + 1 : name, true, scope, tags, comment);
     free(ns);
     return ret;
 }
@@ -1784,7 +1794,7 @@ bool EvalContextClassPutSoftTagsSet(EvalContext *ctx, const char *name, ContextS
 bool EvalContextClassPutSoftNS(EvalContext *ctx, const char *ns, const char *name,
                                ContextScope scope, const char *tags)
 {
-    return EvalContextClassPut(ctx, ns, name, true, scope, tags);
+    return EvalContextClassPut(ctx, ns, name, true, scope, tags, NULL);
 }
 
 /**
@@ -1793,7 +1803,13 @@ bool EvalContextClassPutSoftNS(EvalContext *ctx, const char *ns, const char *nam
 bool EvalContextClassPutSoftNSTagsSet(EvalContext *ctx, const char *ns, const char *name,
                                       ContextScope scope, StringSet *tags)
 {
-    return EvalContextClassPutTagsSet(ctx, ns, name, true, scope, tags);
+    return EvalContextClassPutSoftNSTagsSetWithComment(ctx, ns, name, scope, tags, NULL);
+}
+
+bool EvalContextClassPutSoftNSTagsSetWithComment(EvalContext *ctx, const char *ns, const char *name,
+                                                 ContextScope scope, StringSet *tags, const char *comment)
+{
+    return EvalContextClassPutTagsSet(ctx, ns, name, true, scope, tags, comment);
 }
 
 ClassTableIterator *EvalContextClassTableIteratorNewGlobal(const EvalContext *ctx, const char *ns, bool is_hard, bool is_soft)
@@ -2028,7 +2044,7 @@ static inline char *MangleScopedVarNameIntoSpecialScopeName(const char *scope, c
  */
 bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const char *lval, const void *value, DataType type, const char *tags)
 {
-    StringSet *tags_set = StringSetFromString(tags, ',');
+    StringSet *tags_set = (NULL_OR_EMPTY(tags) ? NULL : StringSetFromString(tags, ','));
     bool ret = EvalContextVariablePutSpecialTagsSet(ctx, scope, lval, value, type, tags_set);
     if (!ret)
     {
@@ -2041,7 +2057,17 @@ bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const c
  * Copies value, so you need to free your own copy afterwards, EXCEPT FOR THE
  * 'tags' SET which is taken over as-is IF THE VARIABLE IS SUCCESSFULLY ADDED.
  */
-bool EvalContextVariablePutSpecialTagsSet(EvalContext *ctx, SpecialScope scope, const char *lval, const void *value, DataType type, StringSet *tags)
+bool EvalContextVariablePutSpecialTagsSet(EvalContext *ctx, SpecialScope scope,
+                                          const char *lval, const void *value,
+                                          DataType type, StringSet *tags)
+{
+    return EvalContextVariablePutSpecialTagsSetWithComment(ctx, scope, lval, value, type, tags, NULL);
+}
+
+bool EvalContextVariablePutSpecialTagsSetWithComment(EvalContext *ctx, SpecialScope scope,
+                                                     const char *lval, const void *value,
+                                                     DataType type, StringSet *tags,
+                                                     const char *comment)
 {
     char *new_lval = NULL;
     if (strchr(lval, '.') != NULL)
@@ -2057,7 +2083,7 @@ bool EvalContextVariablePutSpecialTagsSet(EvalContext *ctx, SpecialScope scope, 
     {
         // dealing with (legacy) array reference in lval, must parse
         VarRef *ref = VarRefParseFromScope(new_lval ? new_lval : lval, SpecialScopeToString(scope));
-        bool ret = EvalContextVariablePutTagsSet(ctx, ref, value, type, tags);
+        bool ret = EvalContextVariablePutTagsSetWithComment(ctx, ref, value, type, tags, comment);
         free(new_lval);
         VarRefDestroy(ref);
         return ret;
@@ -2066,7 +2092,7 @@ bool EvalContextVariablePutSpecialTagsSet(EvalContext *ctx, SpecialScope scope, 
     {
         // plain lval, skip parsing
         const VarRef ref = VarRefConst(NULL, SpecialScopeToString(scope), new_lval ? new_lval : lval);
-        bool ret = EvalContextVariablePutTagsSet(ctx, &ref, value, type, tags);
+        bool ret = EvalContextVariablePutTagsSetWithComment(ctx, &ref, value, type, tags, comment);
         free(new_lval);
         return ret;
     }
@@ -2276,7 +2302,7 @@ bool EvalContextVariablePut(EvalContext *ctx,
                             const VarRef *ref, const void *value,
                             DataType type, const char *tags)
 {
-    StringSet *tags_set = StringSetFromString(tags, ',');
+    StringSet *tags_set = (NULL_OR_EMPTY(tags) ? NULL : StringSetFromString(tags, ','));
     bool ret = EvalContextVariablePutTagsSet(ctx, ref, value, type, tags_set);
     if (!ret)
     {
@@ -2292,6 +2318,14 @@ bool EvalContextVariablePut(EvalContext *ctx,
 bool EvalContextVariablePutTagsSet(EvalContext *ctx,
                                    const VarRef *ref, const void *value,
                                    DataType type, StringSet *tags)
+{
+    return EvalContextVariablePutTagsSetWithComment(ctx, ref, value, type, tags, NULL);
+}
+
+bool EvalContextVariablePutTagsSetWithComment(EvalContext *ctx,
+                                              const VarRef *ref, const void *value,
+                                              DataType type, StringSet *tags,
+                                              const char *comment)
 {
     assert(type != CF_DATA_TYPE_NONE);
     assert(ref);
@@ -2320,7 +2354,7 @@ bool EvalContextVariablePutTagsSet(EvalContext *ctx,
     Rval rval = (Rval) { (void *)value, DataTypeToRvalType(type) };
     VariableTable *table = GetVariableTableForScope(ctx, ref->ns, ref->scope);
     const Promise *pp = EvalContextStackCurrentPromise(ctx);
-    VariableTablePut(table, ref, &rval, type, tags, pp ? pp->org_pp : pp);
+    VariableTablePut(table, ref, &rval, type, tags, SafeStringDuplicate(comment), pp ? pp->org_pp : pp);
     return true;
 }
 
@@ -2541,7 +2575,6 @@ StringSet *EvalContextVariableTags(const EvalContext *ctx, const VarRef *ref)
     }
 
     StringSet *var_tags = VariableGetTags(var);
-    assert(var_tags != NULL);
     return var_tags;
 }
 

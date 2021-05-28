@@ -79,6 +79,7 @@
 #define AUGMENTS_CLASSES_TAGS "tags"
 #define AUGMENTS_CLASSES_CLASS_EXPRESSIONS "class_expressions"
 #define AUGMENTS_CLASSES_REGULAR_EXPRESSIONS "regular_expressions"
+#define AUGMENTS_COMMENT_KEY "comment"
 
 static pthread_once_t pid_cleanup_once = PTHREAD_ONCE_INIT; /* GLOBAL_T */
 
@@ -308,6 +309,28 @@ static inline bool CanSetClass(const EvalContext *ctx, const char *class_spec)
     return can_set;
 }
 
+static inline const char *GetAugmentsComment(const char *item_type, const char *identifier,
+                                             const char *file_name, const JsonElement *json_object)
+{
+    assert(JsonGetType(json_object) == JSON_TYPE_OBJECT);
+
+    JsonElement *json_comment = JsonObjectGet(json_object, AUGMENTS_COMMENT_KEY);
+    if (json_comment == NULL)
+    {
+        return NULL;
+    }
+
+    if (JsonGetType(json_comment) != JSON_TYPE_STRING)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Invalid type of the 'comment' field for the '%s' %s in augments data in '%s', must be a string",
+            identifier, item_type, file_name);
+        return NULL;
+    }
+
+    return JsonPrimitiveGetAsString(json_comment);
+}
+
 static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonElement* augment)
 {
     bool loaded = false;
@@ -502,6 +525,7 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
 
                 const JsonElement *json_tags = JsonObjectGet(var_info, AUGMENTS_VARIABLES_TAGS);
                 StringSet *tags = GetTagsFromAugmentsTags("variable", vkey, json_tags, "source=augments_file", filename);
+                const char *comment = GetAugmentsComment("variable", vkey, filename, var_info);
 
                 bool installed = false;
                 if (JsonGetElementType(data) == JSON_ELEMENT_TYPE_PRIMITIVE)
@@ -513,8 +537,8 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
                             SpecialScopeToString(SPECIAL_SCOPE_DEF), vkey, value, filename);
                         if (CanSetVariable(ctx, ref))
                         {
-                            installed = EvalContextVariablePutSpecialTagsSet(ctx, SPECIAL_SCOPE_DEF, vkey, value,
-                                                                             CF_DATA_TYPE_STRING, tags);
+                            installed = EvalContextVariablePutSpecialTagsSetWithComment(ctx, SPECIAL_SCOPE_DEF, vkey, value,
+                                                                                        CF_DATA_TYPE_STRING, tags, comment);
                         }
                     }
                     else
@@ -523,7 +547,8 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
                             vkey, value, filename);
                         if (CanSetVariable(ctx, ref))
                         {
-                            installed = EvalContextVariablePutTagsSet(ctx, ref, value, CF_DATA_TYPE_STRING, tags);
+                            installed = EvalContextVariablePutTagsSetWithComment(ctx, ref, value, CF_DATA_TYPE_STRING,
+                                                                                 tags, comment);
                         }
                     }
                     free(value);
@@ -540,10 +565,10 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
                             SpecialScopeToString(SPECIAL_SCOPE_DEF), vkey, filename);
                         if (CanSetVariable(ctx, ref))
                         {
-                            installed = EvalContextVariablePutSpecialTagsSet(ctx, SPECIAL_SCOPE_DEF,
-                                                                             vkey, data_as_rlist,
-                                                                             CF_DATA_TYPE_STRING_LIST,
-                                                                             tags);
+                            installed = EvalContextVariablePutSpecialTagsSetWithComment(ctx, SPECIAL_SCOPE_DEF,
+                                                                                        vkey, data_as_rlist,
+                                                                                        CF_DATA_TYPE_STRING_LIST,
+                                                                                        tags, comment);
                         }
                     }
                     else
@@ -552,9 +577,9 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
                             vkey, filename);
                         if (CanSetVariable(ctx, ref))
                         {
-                            installed = EvalContextVariablePutTagsSet(ctx, ref, data_as_rlist,
-                                                                      CF_DATA_TYPE_STRING_LIST,
-                                                                      tags);
+                            installed = EvalContextVariablePutTagsSetWithComment(ctx, ref, data_as_rlist,
+                                                                                 CF_DATA_TYPE_STRING_LIST,
+                                                                                 tags, comment);
                         }
                     }
 
@@ -568,10 +593,10 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
                             SpecialScopeToString(SPECIAL_SCOPE_DEF), vkey, filename);
                         if (CanSetVariable(ctx, ref))
                         {
-                            installed = EvalContextVariablePutSpecialTagsSet(ctx, SPECIAL_SCOPE_DEF,
-                                                                             vkey, data,
-                                                                             CF_DATA_TYPE_CONTAINER,
-                                                                             tags);
+                            installed = EvalContextVariablePutSpecialTagsSetWithComment(ctx, SPECIAL_SCOPE_DEF,
+                                                                                        vkey, data,
+                                                                                        CF_DATA_TYPE_CONTAINER,
+                                                                                        tags, comment);
                         }
                     }
                     else
@@ -580,18 +605,19 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
                             vkey, filename);
                         if (CanSetVariable(ctx, ref))
                         {
-                            installed = EvalContextVariablePutTagsSet(ctx, ref, data,
-                                                                      CF_DATA_TYPE_CONTAINER,
-                                                                      tags);
+                            installed = EvalContextVariablePutTagsSetWithComment(ctx, ref, data,
+                                                                                 CF_DATA_TYPE_CONTAINER,
+                                                                                 tags, comment);
                         }
                     }
                 }
                 VarRefDestroy(ref);
                 if (!installed)
                 {
-                    /* EvalContextVariablePutTagsSet() and
-                     * EvalContextVariablePutSpecialTagsSet() take over tags in
-                     * case of success. Otherwise we have to destroy the set. */
+                    /* EvalContextVariablePutTagsSetWithComment() and
+                     * EvalContextVariablePutSpecialTagsSetWithComment() take
+                     * over tags in case of success. Otherwise we have to
+                     * destroy the set. */
                     StringSetDestroy(tags);
                 }
             }
@@ -676,6 +702,7 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
 
                     StringSet *tags = GetTagsFromAugmentsTags("class", ckey, json_tags,
                                                               "source=augments_file", filename);
+                    const char *comment = GetAugmentsComment("class", ckey, filename, data);
                     bool installed = false;
                     JsonIterator exprs_iter = JsonIteratorInit(class_exprs ? class_exprs : reg_exprs);
                     const JsonElement *el;
@@ -688,7 +715,8 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
                                 ckey, check, filename);
                             if (CanSetClass(ctx, ckey))
                             {
-                                installed = EvalContextClassPutSoftTagsSet(ctx, ckey, CONTEXT_SCOPE_NAMESPACE, tags);
+                                installed = EvalContextClassPutSoftTagsSetWithComment(ctx, ckey, CONTEXT_SCOPE_NAMESPACE,
+                                                                                      tags, comment);
                             }
                             free(check);
                             break;
@@ -698,7 +726,7 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
                     }
                     if (!installed)
                     {
-                        /* EvalContextClassPutSoftTagsSet() takes over tags in
+                        /* EvalContextClassPutSoftTagsSetWithComment() takes over tags in
                          * case of success. Otherwise we have to destroy the set. */
                         StringSetDestroy(tags);
                     }
@@ -2521,7 +2549,6 @@ void GenericAgentShowContextsFormatted(EvalContext *ctx, const char *regexp)
     assert(regexp != NULL);
 
     ClassTableIterator *iter = EvalContextClassTableIteratorNewGlobal(ctx, NULL, true, true);
-    Class *cls = NULL;
 
     Seq *seq = SeqNew(1000, free);
 
@@ -2533,7 +2560,8 @@ void GenericAgentShowContextsFormatted(EvalContext *ctx, const char *regexp)
         return;
     }
 
-    while ((cls = ClassTableIteratorNext(iter)))
+    Class *cls = NULL;
+    while ((cls = ClassTableIteratorNext(iter)) != NULL)
     {
         char *class_name = ClassRefToString(cls->ns, cls->name);
 
@@ -2543,11 +2571,11 @@ void GenericAgentShowContextsFormatted(EvalContext *ctx, const char *regexp)
             continue;
         }
 
-        StringSet *tagset = EvalContextClassTags(ctx, cls->ns, cls->name);
+        StringSet *tagset = cls->tags;
         Buffer *tagbuf = StringSetToBuffer(tagset, ',');
 
         char *line;
-        xasprintf(&line, "%-60s %-40s", class_name, BufferData(tagbuf));
+        xasprintf(&line, "%-60s %-40s %-40s", class_name, BufferData(tagbuf), NULL_TO_EMPTY_STRING(cls->comment));
         SeqAppend(seq, line);
 
         BufferDestroy(tagbuf);
@@ -2558,7 +2586,7 @@ void GenericAgentShowContextsFormatted(EvalContext *ctx, const char *regexp)
 
     SeqSort(seq, StrCmpWrapper, NULL);
 
-    printf("%-60s %-40s\n", "Class name", "Meta tags");
+    printf("%-60s %-40s %-40s\n", "Class name", "Meta tags", "Comment");
 
     for (size_t i = 0; i < SeqLength(seq); i++)
     {
@@ -2621,11 +2649,13 @@ void GenericAgentShowVariablesFormatted(EvalContext *ctx, const char *regexp)
         }
 
 
-        StringSet *tagset = EvalContextVariableTags(ctx, VariableGetRef(v));
+        StringSet *tagset = VariableGetTags(v);
         Buffer *tagbuf = StringSetToBuffer(tagset, ',');
+        const char *comment = VariableGetComment(v);
 
         char *line;
-        xasprintf(&line, "%-40s %-60s %-40s", varname, var_value, BufferData(tagbuf));
+        xasprintf(&line, "%-40s %-60s %-40s %-40s",
+                  varname, var_value, BufferData(tagbuf), NULL_TO_EMPTY_STRING(comment));
 
         SeqAppend(seq, line);
 
@@ -2638,7 +2668,7 @@ void GenericAgentShowVariablesFormatted(EvalContext *ctx, const char *regexp)
 
     SeqSort(seq, StrCmpWrapper, NULL);
 
-    printf("%-40s %-60s %-40s\n", "Variable name", "Variable value", "Meta tags");
+    printf("%-40s %-60s %-40s %-40s\n", "Variable name", "Variable value", "Meta tags", "Comment");
 
     for (size_t i = 0; i < SeqLength(seq); i++)
     {

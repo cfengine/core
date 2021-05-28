@@ -36,25 +36,21 @@ struct Variable_
     Rval rval;
     DataType type;
     StringSet *tags;
+    char *comment;
     const Promise *promise; // The promise that set the present value
 };
 
 static Variable *VariableNew(VarRef *ref, Rval rval, DataType type,
-                             StringSet *tags, const Promise *promise)
+                             StringSet *tags, char *comment,
+                             const Promise *promise)
 {
     Variable *var = xmalloc(sizeof(Variable));
 
     var->ref = ref;
     var->rval = rval;
     var->type = type;
-    if (tags == NULL)
-    {
-        var->tags = StringSetFromString("", ',');
-    }
-    else
-    {
-        var->tags = tags;
-    }
+    var->tags = tags;
+    var->comment = comment;
     var->promise = promise;
 
     return var;
@@ -65,10 +61,11 @@ static Variable *VariableNew(VarRef *ref, Rval rval, DataType type,
  * by the Map implementation calling the key-destroy function. */
 static void VariableDestroy(Variable *var)
 {
-    if (var)
+    if (var != NULL)
     {
         RvalDestroy(var->rval);
         StringSetDestroy(var->tags);
+        free(var->comment);
         // Nothing to do for ->promise
 
         free(var);
@@ -102,6 +99,12 @@ StringSet *VariableGetTags(const Variable *var)
 {
     assert(var != NULL);
     return var->tags;
+}
+
+const char *VariableGetComment(const Variable *var)
+{
+    assert(var != NULL);
+    return var->comment;
 }
 
 const Promise *VariableGetPromise(const Variable *var)
@@ -229,7 +232,8 @@ bool VariableTableRemove(VariableTable *table, const VarRef *ref)
 
 bool VariableTablePut(VariableTable *table, const VarRef *ref,
                       const Rval *rval, DataType type,
-                      StringSet *tags, const Promise *promise)
+                      StringSet *tags, char *comment,
+                      const Promise *promise)
 {
     assert(VarRefIsQualified(ref));
 
@@ -249,7 +253,7 @@ bool VariableTablePut(VariableTable *table, const VarRef *ref,
               "Only iterables (Rlists) are allowed to be NULL");
 
     Variable *var = VariableNew(VarRefCopy(ref), RvalCopy(*rval), type,
-                                tags, promise);
+                                tags, comment, promise);
     return VarMapInsert(table->vars, var->ref, var);
 }
 

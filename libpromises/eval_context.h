@@ -123,10 +123,14 @@ void EvalContextHeapPersistentLoadAll(EvalContext *ctx);
 
 bool EvalContextClassPutSoft(EvalContext *ctx, const char *name, ContextScope scope, const char *tags);
 bool EvalContextClassPutSoftTagsSet(EvalContext *ctx, const char *name, ContextScope scope, StringSet *tags);
+bool EvalContextClassPutSoftTagsSetWithComment(EvalContext *ctx, const char *name, ContextScope scope,
+                                               StringSet *tags, const char *comment);
 bool EvalContextClassPutSoftNS(EvalContext *ctx, const char *ns, const char *name,
                                ContextScope scope, const char *tags);
 bool EvalContextClassPutSoftNSTagsSet(EvalContext *ctx, const char *ns, const char *name,
                                       ContextScope scope, StringSet *tags);
+bool EvalContextClassPutSoftNSTagsSetWithComment(EvalContext *ctx, const char *ns, const char *name,
+                                                 ContextScope scope, StringSet *tags, const char *comment);
 bool EvalContextClassPutHard(EvalContext *ctx, const char *name, const char *tags);
 Class *EvalContextClassGet(const EvalContext *ctx, const char *ns, const char *name);
 Class *EvalContextClassMatch(const EvalContext *ctx, const char *regex);
@@ -173,9 +177,17 @@ JsonElement *EvalContextGetPromiseCallers(EvalContext *ctx);
 
 bool EvalContextVariablePut(EvalContext *ctx, const VarRef *ref, const void *value, DataType type, const char *tags);
 bool EvalContextVariablePutTagsSet(EvalContext *ctx, const VarRef *ref, const void *value, DataType type, StringSet *tags);
+bool EvalContextVariablePutTagsSetWithComment(EvalContext *ctx,
+                                              const VarRef *ref, const void *value,
+                                              DataType type, StringSet *tags,
+                                              const char *comment);
 bool EvalContextVariablePutSpecial(EvalContext *ctx, SpecialScope scope, const char *lval, const void *value, DataType type, const char *tags);
 bool EvalContextVariablePutSpecialTagsSet(EvalContext *ctx, SpecialScope scope, const char *lval,
                                           const void *value, DataType type, StringSet *tags);
+bool EvalContextVariablePutSpecialTagsSetWithComment(EvalContext *ctx, SpecialScope scope,
+                                                     const char *lval, const void *value,
+                                                     DataType type, StringSet *tags,
+                                                     const char *comment);
 const void *EvalContextVariableGetSpecial(const EvalContext *ctx, const SpecialScope scope, const char *varname, DataType *type_out);
 const char *EvalContextVariableGetSpecialString(const EvalContext *ctx, const SpecialScope scope, const char *varname);
 const void *EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, DataType *type_out);

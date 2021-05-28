@@ -1,0 +1,7 @@
+bundle agent main
+{
+  vars:
+    "test_var"
+      string => "test_var value",
+      comment => "This is a comment about test_var";
+}

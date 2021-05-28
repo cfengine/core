@@ -88,16 +88,17 @@ PromiseResult VerifyClassPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED
         }
         else
         {
-            Buffer *tag_buffer = BufferNew();
-            BufferAppendString(tag_buffer, "source=promise");
+            StringSet *tags = StringSetNew();
+            StringSetAdd(tags, xstrdup("source=promise"));
 
             for (const Rlist *rp = PromiseGetConstraintAsList(ctx, "meta", pp); rp; rp = rp->next)
             {
-                BufferAppendChar(tag_buffer, ',');
-                BufferAppendString(tag_buffer, RlistScalarValue(rp));
+                StringSetAdd(tags, xstrdup(RlistScalarValue(rp)));
             }
-            char *tags = BufferClose(tag_buffer);
 
+            const char *comment = PromiseGetConstraintAsRval(pp, "comment", RVAL_TYPE_SCALAR);
+
+            bool inserted = false;
             if (/* Persistent classes are always global: */
                 a.context.persistent > 0 ||
                 /* Namespace-scope is global: */
@@ -109,13 +110,17 @@ PromiseResult VerifyClassPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED
             {
                 Log(LOG_LEVEL_VERBOSE, "C:     +  Global class: %s",
                     pp->promiser);
-                EvalContextClassPutSoft(ctx, pp->promiser, CONTEXT_SCOPE_NAMESPACE, tags);
+                inserted = EvalContextClassPutSoftTagsSetWithComment(ctx, pp->promiser,
+                                                                     CONTEXT_SCOPE_NAMESPACE,
+                                                                     tags, comment);
             }
             else
             {
                 Log(LOG_LEVEL_VERBOSE, "C:     +  Private class: %s",
                     pp->promiser);
-                EvalContextClassPutSoft(ctx, pp->promiser, CONTEXT_SCOPE_BUNDLE, tags);
+                inserted = EvalContextClassPutSoftTagsSetWithComment(ctx, pp->promiser,
+                                                                     CONTEXT_SCOPE_BUNDLE,
+                                                                     tags, comment);
             }
 
             if (a.context.persistent > 0)
@@ -123,11 +128,16 @@ PromiseResult VerifyClassPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED
                 Log(LOG_LEVEL_VERBOSE,
                     "C:     +  Persistent class: '%s' (%d minutes)",
                     pp->promiser, a.context.persistent);
+                Buffer *buf = StringSetToBuffer(tags, ',');
                 EvalContextHeapPersistentSave(ctx, pp->promiser, a.context.persistent,
-                                              CONTEXT_STATE_POLICY_RESET, tags);
+                                              CONTEXT_STATE_POLICY_RESET, BufferData(buf));
+                BufferDestroy(buf);
             }
 
-            free(tags);
+            if (!inserted)
+            {
+                StringSetDestroy(tags);
+            }
 
             return PROMISE_RESULT_NOOP;
         }

@@ -36,6 +36,7 @@ const VarRef *VariableGetRef(const Variable *var);
 DataType VariableGetType(const Variable *var);
 RvalType VariableGetRvalType(const Variable *var);
 StringSet *VariableGetTags(const Variable *var);
+const char *VariableGetComment(const Variable *var);
 const Promise *VariableGetPromise(const Variable *var);
 
 /**
@@ -65,7 +66,7 @@ void VariableTableDestroy(VariableTable *table);
 
 bool VariableTablePut(VariableTable *table, const VarRef *ref,
                       const Rval *rval, DataType type,
-                      StringSet *tags, const Promise *promise);
+                      StringSet *tags, char *comment, const Promise *promise);
 Variable *VariableTableGet(const VariableTable *table, const VarRef *ref);
 bool VariableTableRemove(VariableTable *table, const VarRef *ref);
 

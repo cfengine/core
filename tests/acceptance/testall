@@ -529,7 +529,7 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
 
         if [ $TEST_TYPE = errorexit ]
         then
-            if [ $RETVAL -gt 0 ] && [ $RETVAL -lt 128 ]
+            if [ $RETVAL -gt 0 ] && [ $RETVAL -lt 128 ] && egrep "error:|aborted on defined class" $OUTFILE > /dev/null
             then
                 RESULT=Pass
                 RESULT_MSG="${COLOR_SUCCESS}Pass${COLOR_NORMAL}"

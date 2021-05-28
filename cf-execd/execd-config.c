@@ -28,6 +28,8 @@
 #include <eval_context.h>
 #include <conversion.h>
 #include <string_lib.h>
+#include <mod_common.h>         /* CFS_CONTROLBODY, SERVER_CONTROL_CFRUNCOMMAND */
+#include <expand.h>             /* ExpandScalar() */
 
 /* Get a number in the interval [0, 1) for a calculation of a pseudo-random delay */
 static double GetSplay(void)
@@ -116,6 +118,31 @@ ExecdConfig *ExecdConfigNew(const EvalContext *ctx, const Policy *policy)
         }
     }
 
+    /* We need to pull the 'cfruncommand' value from 'body control server' for
+     * local run-agent requests. */
+    constraints = ControlBodyConstraints(policy, AGENT_TYPE_SERVER);
+    if (constraints != NULL)
+    {
+        const size_t length = SeqLength(constraints);
+        for (size_t i = 0; i < length; i++)
+        {
+            Constraint *cp = SeqAt(constraints, i);
+
+            if (!IsDefinedClass(ctx, cp->classes))
+            {
+                continue;
+            }
+            if (StringEqual(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_CFRUNCOMMAND].lval))
+            {
+                assert(cp->rval.type == RVAL_TYPE_SCALAR);
+                execd_config->local_run_command = ExpandScalar(ctx, NULL, NULL,
+                                                               RvalScalarValue(cp->rval),
+                                                               NULL);
+                break;
+            }
+        }
+    }
+
     return execd_config;
 }
 
@@ -126,6 +153,7 @@ void ExecdConfigDestroy(ExecdConfig *execd_config)
         free(execd_config->log_facility);
         StringSetDestroy(execd_config->schedule);
         StringSetDestroy(execd_config->runagent_allow_users);
+        free(execd_config->local_run_command);
     }
     free(execd_config);
 }

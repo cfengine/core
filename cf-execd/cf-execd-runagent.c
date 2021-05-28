@@ -30,17 +30,84 @@
 #include <pipes.h>
 #include <alloc.h>
 #include <file_lib.h>
+#include <string_lib.h>
 #include <known_dirs.h>
 
 #include <cf-execd-runagent.h>
 
+static inline bool StringIsLocalhostIP(const char *str)
+{
+    assert(str != NULL);
+
+    const char *c = str;
+    if (*(c++) != '1')
+    {
+        return false;
+    }
+    if (*(c++) != '2')
+    {
+        return false;
+    }
+    if (*(c++) != '7')
+    {
+        return false;
+    }
+    if (*(c++) != '.')
+    {
+        return false;
+    }
+
+    short n_dgts = 0;
+    while ((*c != '\0') && (*c != '.'))
+    {
+        if (!isdigit(*(c++)))
+        {
+            return false;
+        }
+        n_dgts++;
+    }
+    if ((n_dgts > 3) || (*(c++) != '.'))
+    {
+        return false;
+    }
+
+    n_dgts = 0;
+    while ((*c != '\0') && (*c != '.'))
+    {
+        if (!isdigit(*(c++)))
+        {
+            return false;
+        }
+        n_dgts++;
+    }
+    if ((n_dgts > 3) || (*(c++) != '.'))
+    {
+        return false;
+    }
+
+    n_dgts = 0;
+    while (*c != '\0')
+    {
+        if (!isdigit(*(c++)))
+        {
+            return false;
+        }
+        n_dgts++;
+    }
+    if (n_dgts > 3)
+    {
+        return false;
+    }
+
+    return true;
+}
 
 /**
  * Handle request to run cf-runagent.
  *
  * @note Expected to be called from a forked child process (blocks and forks).
  */
-void HandleRunagentRequest(int conn_fd)
+void HandleRunagentRequest(int conn_fd, const char *local_run_command)
 {
     FILE *conn_file = fdopen(conn_fd, "r+");
     if (conn_file == NULL)
@@ -81,44 +148,55 @@ void HandleRunagentRequest(int conn_fd)
     }
 
     /* TODO: '--raw' for just getting output from cf-runagent directly? */
+    const char *tool = NULL;
     char *command;
-    xasprintf(&command, "%s%ccf-runagent -b -H %s", GetBinDir(), FILE_SEPARATOR, request);
+
+    if (StringEqual(request, "localhost") || StringIsLocalhostIP(request))
+    {
+        tool = "cf-agent";
+        command = xstrdup(local_run_command);
+    }
+    else
+    {
+        tool = "cf-runagent";
+        xasprintf(&command, "%s%ccf-runagent -b -H %s", GetBinDir(), FILE_SEPARATOR, request);
+    }
     free(request);
 
-    FILE *runagent_output = cf_popen(command, "r", true);
+    FILE *run_agent_output = cf_popen(command, "r", true);
     free(command);
 
-    if (runagent_output == NULL)
+    if (run_agent_output == NULL)
     {
-        Log(LOG_LEVEL_ERR, "Failed to start cf-runagent and connect to its output");
-        fprintf(conn_file, "{\"error\": \"Failed to start cf-runagent and connect to its output\"}");
+        Log(LOG_LEVEL_ERR, "Failed to start %s and connect to its output", tool);
+        fprintf(conn_file, "{\"error\": \"Failed to start %s and connect to its output\"}", tool);
         fclose(conn_file);
         return;
     }
 
     Buffer *collected_output = BufferNewWithCapacity(1024);
     char output_buffer[CF_BUFSIZE];
-    size_t read_bytes = fread(output_buffer, 1, sizeof(output_buffer), runagent_output);
+    size_t read_bytes = fread(output_buffer, 1, sizeof(output_buffer), run_agent_output);
     while (read_bytes > 0)
     {
         BufferAppend(collected_output, output_buffer, read_bytes);
-        read_bytes = fread(output_buffer, 1, sizeof(output_buffer), runagent_output);
+        read_bytes = fread(output_buffer, 1, sizeof(output_buffer), run_agent_output);
     }
-    if (!feof(runagent_output))
+    if (!feof(run_agent_output))
     {
-        Log(LOG_LEVEL_ERR, "Failed to read output from cf-runagent");
-        fprintf(conn_file, "{\"error\": \"Failed to read output from cf-runagent\"}");
-        cf_pclose(runagent_output);
+        Log(LOG_LEVEL_ERR, "Failed to read output from %s", tool);
+        fprintf(conn_file, "{\"error\": \"Failed to read output from %s\"}", tool);
+        cf_pclose(run_agent_output);
         fclose(conn_file);
         return;
     }
     BufferAppendChar(collected_output, '\0');
 
-    int runagent_ret = cf_pclose(runagent_output);
-    if (runagent_ret == -1)
+    int run_agent_ret = cf_pclose(run_agent_output);
+    if (run_agent_ret == -1)
     {
-        Log(LOG_LEVEL_ERR, "Failed to wait for the cf-runagent process to terminate");
-        fprintf(conn_file, "{\"error\": \"Failed to wait for the cf-runagent process to terminate\"}");
+        Log(LOG_LEVEL_ERR, "Failed to wait for the %s process to terminate", tool);
+        fprintf(conn_file, "{\"error\": \"Failed to wait for the %s process to terminate\"}", tool);
         fclose(conn_file);
         return;
     }
@@ -129,7 +207,7 @@ void HandleRunagentRequest(int conn_fd)
     JsonEncodeStringWriter(BufferData(collected_output), json_writer);
     written = WriterWrite(json_writer, "\",\n");
     assert(written > 0);
-    written = WriterWriteF(json_writer, "\"exit_code\": %d\n", runagent_ret);
+    written = WriterWriteF(json_writer, "\"exit_code\": %d\n", run_agent_ret);
     assert(written > 0);
     written = WriterWrite(json_writer, "}\n");
     assert(written > 0);

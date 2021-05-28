@@ -25,6 +25,6 @@
 #ifndef CFENGINE_CF_EXECD_RUNAGENT_H
 #define CFENGINE_CF_EXECD_RUNAGENT_H
 
-void HandleRunagentRequest(int conn_fd);
+void HandleRunagentRequest(int conn_fd, const char *local_run_command);
 
 #endif

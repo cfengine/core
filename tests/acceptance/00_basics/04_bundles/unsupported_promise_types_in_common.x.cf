@@ -1,0 +1,26 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+}
+
+bundle common test
+{
+  meta:
+      "description" -> { "CFE-3672" }
+        string => "Test that cf-promises errors for incompatible promise types
+                   in common bundle and doesnt crash.";
+
+  methods:
+      "some_report" usebundle => reporter("123");
+
+  files:
+      "some_file";
+}
+
+bundle agent reporter(x)
+{
+  reports:
+      "${x}";
+}
+

@@ -67,6 +67,8 @@ static const char *const POLICY_ERROR_PROMISE_ATTRIBUTE_NOT_IMPLEMENTED =
     "Common attribute '%s' not implemented for custom promises (%s)";
 static const char *const POLICY_ERROR_PROMISE_ATTRIBUTE_NOT_SUPPORTED =
     "Common attribute '%s' not supported for custom promises, use '%s' instead (%s promises)";
+static const char *const POLICY_ERROR_PROMISE_TYPE_UNSUPPORTED =
+    "Promise type '%s' not supported by '%s' bundle type";
 
 static const char *const POLICY_ERROR_CONSTRAINT_TYPE_MISMATCH =
     "Type mismatch in constraint: %s";
@@ -2776,8 +2778,24 @@ static bool PromiseCheck(const Promise *pp, Seq *errors)
 
     const bool is_builtin = IsBuiltInPromiseType(PromiseGetPromiseType(pp));
 
+    const PromiseTypeSyntax *pts = PromiseTypeSyntaxGet(pp->parent_section->parent_bundle->type,
+                                                        PromiseGetPromiseType(pp));
+
     if (is_builtin)
     {
+        if(pts == NULL)
+        {
+            // No promise type syntax to check for a built in promise
+            // This should be an error, for example if trying to use
+            // methods promises outside agent bundles
+            SeqAppend(errors,
+                      PolicyErrorNew(POLICY_ELEMENT_TYPE_BUNDLE_SECTION, pp->parent_section,
+                                     POLICY_ERROR_PROMISE_TYPE_UNSUPPORTED,
+                                     pp->parent_section->promise_type,
+                                     pp->parent_section->parent_bundle->type));
+            return false;
+        }
+
         // check if promise's constraints are valid
         for (size_t i = 0; i < SeqLength(pp->conlist); i++)
         {
@@ -2785,10 +2803,6 @@ static bool PromiseCheck(const Promise *pp, Seq *errors)
             success &= ConstraintCheckSyntax(constraint, errors);
         }
     }
-
-    const PromiseTypeSyntax *pts = PromiseTypeSyntaxGet(pp->parent_section->parent_bundle->type,
-                                                        PromiseGetPromiseType(pp));
-
 
     if (pts == NULL)
     {

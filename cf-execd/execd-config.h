@@ -36,6 +36,7 @@ typedef struct ExecdConfig
     int splay_time;
     char *log_facility;
     StringSet *runagent_allow_users;
+    char *local_run_command;
 } ExecdConfig;
 
 ExecdConfig *ExecdConfigNew(const EvalContext *ctx, const Policy *policy);

@@ -2314,11 +2314,13 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
             {
                 RecordChange(ctx, pp, attr, "Changed permissions of '%s' to 'mode %04jo'",
                              path, (uintmax_t)newperm);
+                result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
             }
             else
             {
                 RecordFailure(ctx, pp, attr, "Failed to change permissions of '%s' to 'mode %04jo' (%s)",
                               path, (uintmax_t)newperm, GetErrorStr());
+                result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
             }
 
             if (!FileInRepository(newname))
@@ -2610,6 +2612,7 @@ static PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, co
             {
                 RecordFailure(ctx, pp, attr, "Failed to change permissions of '%s'. (chmod: %s)",
                               file, GetErrorStr());
+                result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
             }
             else
             {
@@ -4112,9 +4115,15 @@ bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, const At
     /* SKIP if file is already owned by anyone of the promised owners. */
     for (ulp = attr->perms.owners; ulp != NULL; ulp = ulp->next)
     {
-        if (ulp->uid == CF_SAME_OWNER || sb->st_uid == ulp->uid)        /* "same" matches anything */
+        if (ulp->uid == CF_SAME_OWNER)        /* "same" matches anything */
         {
-            uid = CF_SAME_OWNER;      /* chown(-1) doesn't change ownership */
+            uid = CF_SAME_OWNER;
+            break;
+        }
+        if (sb->st_uid == ulp->uid)
+        {
+            RecordNoChange(ctx, pp, attr, "Owner of '%s' as promised (%ju)", file, (uintmax_t) ulp->uid);
+            uid = CF_SAME_OWNER;
             break;
         }
     }
@@ -4144,9 +4153,15 @@ bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, const At
     /* SKIP if file is already group owned by anyone of the promised groups. */
     for (glp = attr->perms.groups; glp != NULL; glp = glp->next)
     {
-        if (glp->gid == CF_SAME_GROUP || sb->st_gid == glp->gid)
+        if (glp->gid == CF_SAME_GROUP)
         {
-            gid = CF_SAME_GROUP;      /* chown(-1) doesn't change ownership */
+            gid = CF_SAME_GROUP;
+            break;
+        }
+        if (sb->st_gid == glp->gid)
+        {
+            RecordNoChange(ctx, pp, attr, "Group of '%s' as promised (%ju)", file, (uintmax_t) glp->gid);
+            gid = CF_SAME_GROUP;
             break;
         }
     }
@@ -4173,11 +4188,9 @@ bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, const At
     }
     assert(gid != CF_UNKNOWN_GROUP);
 
-    if (uid == CF_SAME_OWNER &&
-        gid == CF_SAME_GROUP)
+    if ((uid == CF_SAME_OWNER) && (gid == CF_SAME_GROUP))
     {
-        /* User and group as promised, skip completely. */
-        RecordNoChange(ctx, pp, attr, "Owner and group of '%s' as promised", file);
+        /* Owner and group as promised or unspecified, nothing to do. */
         return false;
     }
 

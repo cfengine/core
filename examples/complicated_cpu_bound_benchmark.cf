@@ -1,0 +1,1297 @@
+body common control
+{
+      bundlesequence => { "benchmark" };
+}
+
+bundle agent benchmark
+{
+  vars:
+    # Determines how many times each example is run
+      "n" int => "100";
+
+    # Range: 1, 2, 3, ..., n
+      "i" slist => { expandrange("[1-$(n)]", "1") };
+
+  methods:
+      "accumulated"
+        usebundle => accumulated_bench("$(i)");
+      "ago"
+        usebundle => ago_bench("$(i)");
+      "and"
+        usebundle => and_bench("$(i)");
+      "basename"
+        usebundle => basename_bench("$(i)");
+      "bundlesmatching"
+        usebundle => bundlesmatching_bench("$(i)");
+      "bundlestate"
+        usebundle => bundlestate_bench("$(i)");
+      "callstack_callers"
+        usebundle => callstack_callers_bench("$(i)");
+      "callstack_promisers"
+        usebundle => callstack_promisers_bench("$(i)");
+      "canonify"
+        usebundle => canonify_bench("$(i)");
+      "canonifyuniquely"
+        usebundle => canonifyuniquely_bench("$(i)");
+      "cf_version_after"
+        usebundle => cf_version_after_bench("$(i)");
+      "cf_version_at"
+        usebundle => cf_version_at_bench("$(i)");
+      "cf_version_before"
+        usebundle => cf_version_before_bench("$(i)");
+      "cf_version_between"
+        usebundle => cf_version_between_bench("$(i)");
+      "cf_version_maximum"
+        usebundle => cf_version_maximum_bench("$(i)");
+      "cf_version_minimum"
+        usebundle => cf_version_minimum_bench("$(i)");
+      "classesmatching"
+        usebundle => classesmatching_bench("$(i)");
+      "classify"
+        usebundle => classify_bench("$(i)");
+      "classmatch"
+        usebundle => classmatch_bench("$(i)");
+      "concat"
+        usebundle => concat_bench("$(i)");
+      "countclassesmatching"
+        usebundle => countclassesmatching_bench("$(i)");
+      "data_expand"
+        usebundle => data_expand_bench("$(i)");
+      "data_regextract"
+        usebundle => data_regextract_bench("$(i)");
+      "difference"
+        usebundle => difference_bench("$(i)");
+      "dirname"
+        usebundle => dirname_bench("$(i)");
+      "escape"
+        usebundle => escape_bench("$(i)");
+      "eval"
+        usebundle => eval_bench("$(i)");
+      "every"
+        usebundle => every_bench("$(i)");
+      "expandrange"
+        usebundle => expandrange_bench("$(i)");
+      "filter"
+        usebundle => filter_bench("$(i)");
+      "format"
+        usebundle => format_bench("$(i)");
+      "getclassmetatags"
+        usebundle => getclassmetatags_bench("$(i)");
+      "getindices"
+        usebundle => getindices_bench("$(i)");
+      "getvalues"
+        usebundle => getvalues_bench("$(i)");
+      "getvariablemetatags"
+        usebundle => getvariablemetatags_bench("$(i)");
+      "grep"
+        usebundle => grep_bench("$(i)");
+      "hash"
+        usebundle => hash_bench("$(i)");
+      "hash_to_int"
+        usebundle => hash_to_int_bench("$(i)");
+      "ifelse"
+        usebundle => ifelse_bench("$(i)");
+      "intersection"
+        usebundle => intersection_bench("$(i)");
+      "isgreaterthan"
+        usebundle => isgreaterthan_bench("$(i)");
+      "islessthan"
+        usebundle => islessthan_bench("$(i)");
+      "isvariable"
+        usebundle => isvariable_bench("$(i)");
+      "join"
+        usebundle => join_bench("$(i)");
+      "laterthan"
+        usebundle => laterthan_bench("$(i)");
+      "length"
+        usebundle => length_bench("$(i)");
+      "maparray"
+        usebundle => maparray_bench("$(i)");
+      "mapdata"
+        usebundle => mapdata_bench("$(i)");
+      "maplist"
+        usebundle => maplist_bench("$(i)");
+      "max"
+        usebundle => max_bench("$(i)");
+      "mean"
+        usebundle => mean_bench("$(i)");
+      "mergedata"
+        usebundle => mergedata_bench("$(i)");
+      "min"
+        usebundle => min_bench("$(i)");
+      "none"
+        usebundle => none_bench("$(i)");
+      "not"
+        usebundle => not_bench("$(i)");
+      "now"
+        usebundle => now_bench("$(i)");
+      "nth"
+        usebundle => nth_bench("$(i)");
+      "on"
+        usebundle => on_bench("$(i)");
+      "or"
+        usebundle => or_bench("$(i)");
+      "parseintarray"
+        usebundle => parseintarray_bench("$(i)");
+      "parsejson"
+        usebundle => parsejson_bench("$(i)");
+      "parserealarray"
+        usebundle => parserealarray_bench("$(i)");
+      "parsestringarray"
+        usebundle => parsestringarray_bench("$(i)");
+      "parsestringarrayidx"
+        usebundle => parsestringarrayidx_bench("$(i)");
+      "product"
+        usebundle => product_bench("$(i)");
+      "random"
+        usebundle => randomint_bench("$(i)");
+      "regarray"
+        usebundle => regarray_bench("$(i)");
+      "regcmp"
+        usebundle => regcmp_bench("$(i)");
+      "regex_replace"
+        usebundle => regex_replace_bench("$(i)");
+      "regextract"
+        usebundle => regextract_bench("$(i)");
+      "reglist"
+        usebundle => reglist_bench("$(i)");
+      "reverse"
+        usebundle => reverse_bench("$(i)");
+      "shuffle"
+        usebundle => shuffle_bench("$(i)");
+      "some"
+        usebundle => some_bench("$(i)");
+      "sort"
+        usebundle => sort_bench("$(i)");
+      "splitstring"
+        usebundle => splitstring_bench("$(i)");
+      "storejson"
+        usebundle => storejson_bench("$(i)");
+      "strcmp"
+        usebundle => strcmp_bench("$(i)");
+      "strftime"
+        usebundle => strftime_bench("$(i)");
+      "string_downcase"
+        usebundle => string_downcase_bench("$(i)");
+      "string_head"
+        usebundle => string_head_bench("$(i)");
+      "string_length"
+        usebundle => string_length_bench("$(i)");
+      "string_mustache"
+        usebundle => string_mustache_bench("$(i)");
+      "string_replace"
+        usebundle => string_replace_bench("$(i)");
+      "string_reverse"
+        usebundle => string_reverse_bench("$(i)");
+      "string_split"
+        usebundle => string_split_bench("$(i)");
+      "string_tail"
+        usebundle => string_tail_bench("$(i)");
+      "string_upcase"
+        usebundle => string_upcase_bench("$(i)");
+      "sublist"
+        usebundle => sublist_bench("$(i)");
+      "sum"
+        usebundle => sum_bench("$(i)");
+      "translatepath"
+        usebundle => translatepath_bench("$(i)");
+      "unique"
+        usebundle => unique_bench("$(i)");
+      "validdata"
+        usebundle => validdata_bench("$(i)");
+      "validjson"
+        usebundle => validjson_bench("$(i)");
+      "variablesmatching"
+        usebundle => variablesmatching_bench("$(i)");
+      "variablesmatching_as_data"
+        usebundle => variablesmatching_as_data_bench("$(i)");
+      "variance"
+        usebundle => variance_bench("$(i)");
+      "done"
+        usebundle => print_benchmark_done_msg();
+}
+
+bundle agent accumulated_bench(i)
+{
+  vars:
+      "test"
+        int => accumulated("$(i)", "$(i)", "$(i)", "$(i)", "$(i)", "$(i)");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent ago_bench(i)
+{
+  vars:
+      "test"
+        int => ago("$(i)", "$(i)", "$(i)", "$(i)", "$(i)", "$(i)");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent and_bench(i)
+{
+  classes:
+      "test_1"
+        expression => and("any_$(i)", "any_$(i)");
+      "test_2"
+        expression => and("any_$(i)", "!any_$(i)");
+      "test_3"
+        expression => and("!any_$(i)", "any_$(i)");
+      "test_4"
+        expression => and("!any_$(i)", "!any_$(i)");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent basename_bench(i)
+{
+  vars:
+      "test_1"
+        string => basename("/tmp/test_$(i).txt");
+      "test_2"
+        string => basename("/tmp/test_$(i).txt", ".txt");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent bundlesmatching_bench(i)
+{
+  vars:
+      "test"
+        slist => bundlesmatching(".*");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent bundlestate_bench(i)
+{
+  vars:
+      "test"
+        data => bundlestate("benchmark");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent callstack_callers_bench(i)
+{
+  vars:
+      "test"
+        data => callstack_callers();
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent callstack_promisers_bench(i)
+{
+  vars:
+      "test"
+        slist => callstack_promisers();
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent canonify_bench(i)
+{
+  vars:
+      "test"
+        string => canonify("/home/root/test-$(i).txt");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent canonifyuniquely_bench(i)
+{
+  vars:
+      "test"
+        string => canonifyuniquely("/home/root/test-$(i).txt");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent cf_version_after_bench(i)
+{
+  classes:
+      "test"
+        expression => cf_version_after("3.$(i)");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent cf_version_at_bench(i)
+{
+  classes:
+      "test"
+        expression => cf_version_at("3.$(i)");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent cf_version_before_bench(i)
+{
+  classes:
+      "test"
+        expression => cf_version_before("3.$(i)");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent cf_version_between_bench(i)
+{
+  classes:
+      "test"
+        expression => cf_version_between("3.$(i)", "4");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent cf_version_maximum_bench(i)
+{
+  classes:
+      "test"
+        expression => cf_version_maximum("3.$(i)");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent cf_version_minimum_bench(i)
+{
+  classes:
+      "test"
+        expression => cf_version_minimum("3.$(i)");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent classesmatching_bench(i)
+{
+  vars:
+      "test"
+        slist => classesmatching(".*$(i).*");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent classify_bench(i)
+{
+  classes:
+      "test"
+        expression => classify("/home/root/test-$(i).txt");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent classmatch_bench(i)
+{
+  classes:
+      "test"
+        expression => classmatch(".*$(i).*", "hardclass");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent concat_bench(i)
+{
+  vars:
+      "test"
+        string => concat("file", "_$(i)", ".txt");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent countclassesmatching_bench(i)
+{
+  vars:
+      "test"
+        int => countclassesmatching(".*$(i).*");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent data_expand_bench(i)
+{
+  vars:
+      "json"
+        data => '{ "i": $(i) }';
+      "expanded"
+        data => data_expand("json");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent data_regextract_bench(i)
+{
+  vars:
+      "parsed"
+        data => data_regextract("^(?<name1>...)(...)(..)-(?<name2>...)-(..).*",
+                                "abcdef12-345-$(i)andsoon");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent difference_bench(i)
+{
+  vars:
+      "a"
+        slist => { "a", "b", "c", "d", "e", "f", "$(i)" };
+      "b"
+        slist => { "a", "c", "e", "g", "i", "k" };
+      "diff"
+        slist => difference(a, b);
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent dirname_bench(i)
+{
+  vars:
+      "dir"
+        string => dirname("/dir/dir_$(i)/file");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent escape_bench(i)
+{
+  vars:
+      "node"
+        string => format("%d", eval("($(i) - 1) % 256"));
+      "ip"
+        string => "192.168.1.$(node)";
+      "escaped"
+        string => escape("$(ip)");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent eval_bench(i)
+{
+  vars:
+      "hyp"
+        string => eval("sqrt( ( ($(i) * $(i)) + ($(i) * $(i)) ) )", "math", "infix");
+      "same"
+        string => eval("$(i) == sqrt($(i) * $(i))", "class", "infix");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent every_bench(i)
+{
+  vars:
+      "test"
+        slist => { "/var/cfengine/bin/cf-agent", "/var/cfengine/bin/cf-execd", "/var/cfengine/bin/rpmvercmp", "/var/cfengine/bin/cf-$(i)" };
+  classes:
+      "yes"
+        expression => every("/var/cfengine/bin/.*", test);
+      "no"
+        expression => every("/var/cfengine/bin/cf-.*", test);
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent expandrange_bench(i)
+{
+  vars:
+      "range"
+        slist=> { expandrange("[0-$(i)]", "1") };
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent filter_bench(i)
+{
+  vars:
+      "natural"
+        slist => { expandrange("[0-$(i)]", "1") };
+      "odd"
+        slist => filter("[0-9]*[02468]", natural, "true", "false", "inf");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent format_bench(i)
+{
+  vars:
+      "formatted"
+        string => format("num: %s", "$(i)");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent getclassmetatags_bench(i)
+{
+  classes:
+      "myclass"
+        expression => "any",
+        meta => { "tag_$(i)" };
+  vars:
+      "metatags"
+        slist => getclassmetatags("myclass");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent getindices_bench(i)
+{
+  vars:
+      "test[i$(i)]"
+        string => "v$(i)";
+      "indices"
+        slist => getindices(test);
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent getvalues_bench(i)
+{
+  vars:
+      "test[i$(i)]"
+        string => "v$(i)";
+      "values"
+        slist => getvalues(test);
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent getvariablemetatags_bench(i)
+{
+  vars:
+      "myvar"
+        string => "hello",
+        meta => { "tag_$(i)" };
+      "metatags"
+        slist => getvariablemetatags(myvar);
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent grep_bench(i)
+{
+  vars:
+      "mylist"
+        slist => { "One", "Two", "Three", "Four", "Five", "T$(i)" };
+      "tlist"
+        slist => grep("T.*", mylist);
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent hash_bench(i)
+{
+  vars:
+      "md5" string => hash("Cfengine $(i) is not cryptic","md5");
+      "sha256" string => hash("Cfengine $(i) is not cryptic","sha256");
+      "sha384" string => hash("Cfengine $(i) is not cryptic","sha384");
+      "sha512" string => hash("Cfengine $(i) is not cryptic","sha512");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent hash_to_int_bench(i)
+{
+  vars:
+      "a" int => hash_to_int(0, "$(i)", "hello");
+      "b" int => hash_to_int(0, "$(i)", "world");
+      "c" int => hash_to_int(0, "$(i)", "$(sys.key_digest)");
+      "d" int => hash_to_int(0, "$(i)", "$(sys.policy_hub)");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent ifelse_bench(i)
+{
+  vars:
+      "outcome"
+        string => ifelse(regcmp("[0-9]*[02468]", "$(i)"), "is odd",
+                         regcmp("[0-9]", "$(i)"), "is less than 10",
+                         "is even");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent intersection_bench(i)
+{
+  vars:
+      "a"
+        slist => { "a", "b", "c", "d", "e", "f", "$(i)" };
+      "b"
+        slist => { "a", "c", "e", "g", "i", "k", "$(i)" };
+      "inter"
+        slist => intersection(a, b);
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent isgreaterthan_bench(i)
+{
+  classes:
+      "indeed"
+        expression => isgreaterthan("5", "$(i)");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent islessthan_bench(i)
+{
+  classes:
+      "indeed"
+        expression => islessthan("5", "$(i)");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent isvariable_bench(i)
+{
+  vars:
+      "defined_$(i)"
+        string => "this var is defined";
+  classes:
+      "test_1"
+        expression => isvariable("defined_$(i)");
+      "test_2"
+        expression => isvariable("undefined_$(i)");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent join_bench(i)
+{
+  vars:
+      "list"
+        slist => { "a", "b", "c", "d", "e", "$(i)" };
+      "joined_list"
+        string => join(", ", list);
+      "dat"
+        data => '[ "a", "b", "c", "d", "e", "$(i)" ]';
+      "joined_data"
+        string => join("->", dat);
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent laterthan_bench(i)
+{
+  classes:
+      "test"
+        expression => laterthan("$(i)", "$(i)", "$(i)", "$(i)", "$(i)", "$(i)");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent length_bench(i)
+{
+  vars:
+      "list"
+        slist => { expandrange("[0-$(i)]", "1") };
+      "len"
+        int => length(list);
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent maparray_bench(i)
+{
+  vars:
+      "arr[0]"
+        string => "a";
+      "arr[1]"
+        string => "b";
+      "arr[2]"
+        string => "c";
+      "arr[3]"
+        string => "d";
+      "arr[4]"
+        string => "e";
+      "arr[5]"
+        string => "$(i)";
+      "mapped"
+        slist => maparray("key=$(this.k), val=$(this.v)", arr);
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent mapdata_bench(i)
+{
+  vars:
+      "dat"
+        data => '{ "name": "alice", "age": $(i) }';
+      "map_json"
+        data => mapdata("json", '{ "key": "$(this.k)", "value": "$(this.v)" }', dat);
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent maplist_bench(i)
+{
+  vars:
+      "list"
+        slist => { "a", "b", "c", "d", "e", "$(i)" };
+      "mapped"
+        slist => maplist("Element: $(this)", list);
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent max_bench(i)
+{
+  vars:
+      "alpha"
+        slist => { "a", "c", "b", "d", "f", "$(i)" };
+      "numer"
+        ilist => { 1, 3, 2, 4, 6, "$(i)" };
+      "alpha_max"
+        string => max(alpha, "lex");
+      "numer_max"
+        string => max(numer, "int");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent mean_bench(i)
+{
+  vars:
+      "list"
+        slist => { "a", "1", "b", "2", "f", "$(i)" };
+      "mean" 
+        real => mean(list);
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent mergedata_bench(i)
+{
+  vars:
+      "d1"
+        data => '{ "name": "alice" }';
+      "d2"
+        data => '{ "age": $(i) }';
+      "data"
+        data => mergedata(d1, d2);
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent min_bench(i)
+{
+  vars:
+      "alpha"
+        slist => { "a", "c", "b", "d", "f", "$(i)" };
+      "numer"
+        ilist => { 1, 3, 2, 4, 6, "$(i)" };
+      "alpha_min"
+        string => min(alpha, "lex");
+      "numer_min"
+        string => min(numer, "int");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent none_bench(i)
+{
+  vars:
+      "list"
+        slist => { "a", "b", "c", "$(i)" };
+  classes:
+      "test_2"
+        expression => none("[0-9]", list);
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent not_bench(i)
+{
+  classes:
+      "myclass_$(i)"
+        expression => "any";
+      "yes"
+        expression => not("!myclass_$(i)");
+      "no"
+        expression => not("myclass_$(i)");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent now_bench(i)
+{
+  vars:
+      "epoch"
+        int => now();
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent nth_bench(i)
+{
+  vars:
+      "list"
+        slist => { "a", "b", "c", "d", "e", "$(i)" };
+      "first"
+        string => nth(list, "0");
+      "second"
+        string => nth(list, "1");
+      "third"
+        string => nth(list, "2");
+      "forth"
+        string => nth(list, "3");
+      "fifth"
+        string => nth(list, "4");
+      "sixth"
+        string => nth(list, "5");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent on_bench(i)
+{
+  vars:
+      "epoch"
+        int => on("$(i)", "$(i)", "$(i)", "$(i)", "$(i)", "$(i)");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent or_bench(i)
+{
+  classes:
+      "myclass_$(i)"
+        expression => "any";
+      "test_1"
+        expression => or("myclass_$(i)", "myclass_$(i)");
+      "test_2"
+        expression => or("myclass_$(i)", "!myclass_$(i)");
+      "test_3"
+        expression => or("!myclass_$(i)", "myclass_$(i)");
+      "test_3"
+        expression => or("!myclass_$(i)", "!myclass_$(i)");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent parseintarray_bench(i)
+{
+  vars:
+      # Define data inline for convenience
+      "table"
+         string =>
+           "1:2
+            3:4
+            $(i):6";
+      "dim"
+        int => parseintarray("items", "$(table)", "\s*#[^\n]*", ":", "1000", "200000");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent parsejson_bench(i)
+{
+  vars:
+      "json"
+        string => '{ "name": "alice", "age": $(i) }';
+      "data"
+        data => parsejson("$(json)");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent parserealarray_bench(i)
+{
+  vars:
+      "table" 
+        string =>
+          "1.1:2.2
+           3.3:4.4
+           $(i).5:6.6";
+      "dim"
+        int => parserealarray("items", "$(table)", "\s*#[^\n]*", ":", "1000", "200000");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent parsestringarray_bench(i)
+{
+    vars:
+      "table"
+        string =>
+          "a:b
+           c:d
+           $(i):f";
+      "dim"
+        int => parsestringarray("items", "$(table)", "\s*#[^\n]*", ":", "1000", "200000");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent parsestringarrayidx_bench(i)
+{
+    vars:
+      "table"
+        string =>
+          "one: a
+           two: b
+           $(i): c";
+      "dim"
+        int => parsestringarrayidx("items", "$(table)", "\s*#[^\n]*", ":", "1000", "200000");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent product_bench(i)
+{
+  vars:
+      "series"
+        rlist => { "1.1", "1.2", "2.3", "3.$(i)" };
+      "prod"
+        real => product(series);
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent randomint_bench(i)
+{
+  vars:
+      "rand"
+        int => randomint("0", "$(i)");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent regarray_bench(i)
+{
+  vars:
+      "array[0]"
+        string => "a1";
+      "array[1]"
+        string => "a2";
+      "array[2]"
+        string => "b$(i)";
+  classes:
+      "yes"
+        expression => regarray(array, "[ab][123]");
+      "no"
+        expression => regarray(array, "[cd][456]");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent regcmp_bench(i)
+{
+  classes:
+      "odd"
+        expression => regcmp("[0-9]*[02468]", "$(i)");
+      "par"
+        expression => regcmp("[0-9]*[13579]", "$(i)");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent regex_replace_bench(i)
+{
+  vars:
+      "str"
+        string => regex_replace("$(i)", "[0-9]*[02468]", "odd", "i");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent regextract_bench(i)
+{
+  classes:
+      "ok"
+        expression => regextract("abc([0-9]+)def", "abc$(i)def", "arr");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent reglist_bench(i)
+{
+  vars:
+      "test"
+        slist => { "a", "$(i)", "c" };
+  classes:
+      "yes"
+        expression => reglist("@(test)", "[0-9]*[02468]");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent reverse_bench(i)
+{
+  vars:
+      "test"
+        slist => { "a", "b", "c", "1", "2", "$(i)" };
+      "reversed"
+        slist => reverse(test);
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent shuffle_bench(i)
+{
+  vars:
+      "test"
+        slist => { "a", "b", "c", "1", "2", "3" };
+      "shuffled"
+        slist => shuffle(test, "seed_$(i)");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent some_bench(i)
+{
+  vars:
+      "test"
+        slist => { "a", "b", "c", "1", "$(i)", "3" };
+  classes:
+      "yes"
+        expression => some("[0-9]*[02468]", test);
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent sort_bench(i)
+{
+  vars:
+      "test"
+        slist => { "1", "2", "3", "4", "5", "$(i)" };
+      "shuffled"
+        slist => shuffle(test, "seed_$(i)");
+      "lex"
+        slist => sort(shuffled, "lex");
+      "int"
+        slist => sort(shuffled, "int");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent splitstring_bench(i)
+{
+  vars:
+      "test"
+        string => "1.5;2.3;$(i).0";
+      "split"
+        slist => splitstring("$(test)", ";", "inf");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent storejson_bench(i)
+{
+  vars:
+      "dat"
+        data => '{ "name": "alice", "age": $(i) }';
+      "json"
+        string => storejson(dat);
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent strcmp_bench(i)
+{
+  classes:
+      "same"
+        expression => strcmp("test$(i)", "test$(i)");
+      "diff"
+        expression => strcmp("$(i)test", "test$(i)");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent strftime_bench(i)
+{
+  vars:
+      "at_time"
+        string => strftime("localtime", "%Y-%m-%d %T", "$(i)");
+      "gmt_at_time"
+        string => strftime("gmtime", "%Y-%m-%d %T", "$(i)");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent string_downcase_bench(i)
+{
+  vars:
+      "downcase"
+        string => string_downcase("AbC dEf_$(i)");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent string_head_bench(i)
+{
+  vars:
+      "str"
+        string => "a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, 1, 2, 3, 4, 5, 6, 7, 8, 9";
+      "head"
+        string => string_head("$(str)", "$(i)");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent string_length_bench(i)
+{
+  vars:
+      "len"
+        int => string_length("Hello world $(i)!");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent string_mustache_bench(i)
+{
+  vars:
+      "deserts"
+        data => parsejson('{"deserts":{"Africa":"Sahara","Asia":"Gobi"}}');
+      "data"
+        string => string_mustache("from container $(i): deserts = {{%deserts}}from container: {{#deserts}}The desert {{.}} is in {{@}}. {{/deserts}}", deserts);
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent string_replace_bench(i)
+{
+  vars:
+      "str"
+        string => string_replace("This is a string $(i)", "string", "thing");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent string_reverse_bench(i)
+{
+  vars:
+      "str"
+        string => string_reverse("abcdefghijklmnopqrstuvwxyz$(i)");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent string_split_bench(i)
+{
+  vars:
+      "split"
+        slist => string_split("a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z", ",", "$(i)");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent string_tail_bench(i)
+{
+  vars:
+      "tail"
+        string => string_tail("a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z", "$(i)");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent string_upcase_bench(i)
+{
+  vars:
+      "upcase"
+        string => string_upcase("AbC dEf_$(i)");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent sublist_bench(i)
+{
+  vars:
+      "list"
+        slist => { "a", "b", "c", "d", "e", "f", "g",
+                   "h", "i", "j", "k", "l", "m", "n",
+                   "o", "p", "q", "r", "s", "t", "u",
+                   "v", "x", "y", "z" };
+      "sub_head"
+        slist => sublist(list, "head", "$(i)");
+      "sub_tail"
+        slist => sublist(list, "tail", "$(i)");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent sum_bench(i)
+{
+  vars:
+      "nums"
+        ilist => { "1", "2", "3", "4", "5", "$(i)" };
+      "num_sum"
+        real => sum(nums);
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent translatepath_bench(i)
+{
+  vars:
+      "path"
+        string => translatepath("/a/b/c/file_$(i).txt");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent unique_bench(i)
+{
+  vars:
+      "uni"
+        slist => { "one", "two", "three",
+                   "1",   "2",   "3",
+                   "one", "$(i)", "two" };
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent validdata_bench(i)
+{
+  classes:
+      "is_valid"
+        expression => validdata('{ "name": "alice", "age": $(i) }', "JSON");
+      "not_valid"
+        expression => validdata('{ "name": "alice", "age": $(i) ]', "JSON");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent validjson_bench(i)
+{
+  classes:
+      "is_valid"
+        expression => validjson('{ "name": "alice", "age": $(i) }');
+      "not_valid"
+        expression => validjson('{ "name": "alice", "age": $(i) ]');
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent variablesmatching_bench(i)
+{
+  vars:
+      "matches"
+        slist => variablesmatching(".*$(i).*", "source=agent");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent variablesmatching_as_data_bench(i)
+{
+  vars:
+      "matches"
+        data => variablesmatching_as_data(".*$(i).*", "source=agent");
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent variance_bench(i)
+{
+  vars:
+      "nums"
+        ilist => { "1", "2", "3", "$(i) " };
+      "vari"
+        real => variance(nums);
+  reports:
+      "Benching '$(this.bundle)' ($(i)/$(benchmark.n)) ...";
+}
+
+bundle agent print_benchmark_done_msg()
+{
+  reports:
+    "********** BENCHMARK DONE **********";
+}

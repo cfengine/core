@@ -1,0 +1,22 @@
+body common control
+{
+    inputs => { "../default.cf.sub" };
+    bundlesequence  => { default("$(this.promise_filename)") };
+    version => "1.0";
+}
+
+promise agent bad
+{
+    interpreter => "/usr/bin/python3";
+    path => "$(this.promise_dirname)/bad_import.py";
+}
+
+bundle agent test
+{
+  meta:
+    "description" -> { "CFE-3651" }
+      string => "Test that an early-failing custom module is hanled properly";
+
+  bad:
+    "doesn't matter what I put here";
+}

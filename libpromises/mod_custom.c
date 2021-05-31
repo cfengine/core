@@ -366,7 +366,7 @@ static Seq *PromiseModule_ReceiveHeader(PromiseModule *module)
     // Read header:
     char *line = NULL;
     size_t size = 0;
-    size_t bytes = getline(&line, &size, module->output);
+    ssize_t bytes = getline(&line, &size, module->output);
     if (bytes <= 0)
     {
         Log(LOG_LEVEL_ERR,
@@ -375,7 +375,16 @@ static Seq *PromiseModule_ReceiveHeader(PromiseModule *module)
         free(line);
         return NULL;
     }
-    assert(line[bytes - 1] == '\n');
+    if (line[bytes - 1] != '\n')
+    {
+        Log(LOG_LEVEL_ERR,
+            "Promise module '%s %s' sent an invalid header with no newline: '%s'",
+            module->interpreter,
+            module->path,
+            line);
+        free(line);
+        return NULL;
+    }
     line[bytes - 1] = '\0';
 
     Log(LOG_LEVEL_DEBUG, "Received header from promise module: '%s'", line);
@@ -473,6 +482,11 @@ static PromiseModule *PromiseModule_Start(char *interpreter, char *path)
     if (header == NULL)
     {
         // error logged in PromiseModule_ReceiveHeader()
+
+        /* Make sure 'path' and 'interpreter' are not free'd twice (the calling
+         * code frees them if it gets NULL). */
+        module->path = NULL;
+        module->interpreter = NULL;
         PromiseModule_DestroyInternal(module);
         return NULL;
     }
@@ -1012,6 +1026,9 @@ PromiseResult EvaluateCustomPromise(EvalContext *ctx, const Promise *pp)
         return PROMISE_RESULT_FAIL;
     }
 
+    /* Attributes needed for setting outcome classes etc. */
+    Attributes a = GetClassContextAttributes(ctx, pp);
+
     char *interpreter = NULL;
     char *path = NULL;
 
@@ -1020,6 +1037,8 @@ PromiseResult EvaluateCustomPromise(EvalContext *ctx, const Promise *pp)
     if (!success)
     {
         assert(interpreter == NULL && path == NULL);
+        /* Details logged in GetInterpreterAndPath() */
+        cfPS(ctx, LOG_LEVEL_NOTHING, PROMISE_RESULT_FAIL, pp, &a, NULL);
         return PROMISE_RESULT_FAIL;
     }
 
@@ -1036,6 +1055,7 @@ PromiseResult EvaluateCustomPromise(EvalContext *ctx, const Promise *pp)
             free(interpreter);
             free(path);
             // Error logged in PromiseModule_Start()
+            cfPS(ctx, LOG_LEVEL_NOTHING, PROMISE_RESULT_FAIL, pp, &a, NULL);
             return PROMISE_RESULT_FAIL;
         }
     }
@@ -1048,6 +1068,7 @@ PromiseResult EvaluateCustomPromise(EvalContext *ctx, const Promise *pp)
                 path, module->interpreter, interpreter, pp->promiser, PromiseGetPromiseType(pp));
             free(interpreter);
             free(path);
+            cfPS(ctx, LOG_LEVEL_NOTHING, PROMISE_RESULT_FAIL, pp, &a, NULL);
             return PROMISE_RESULT_FAIL;
         }
         free(interpreter);
@@ -1081,6 +1102,7 @@ PromiseResult EvaluateCustomPromise(EvalContext *ctx, const Promise *pp)
             "%s promise with promiser '%s' will be skipped because it failed validation",
             PromiseGetPromiseType(pp),
             pp->promiser);
+        cfPS(ctx, LOG_LEVEL_NOTHING, PROMISE_RESULT_FAIL, pp, &a, NULL);
         result = PROMISE_RESULT_FAIL; // TODO: Investigate if DENIED is more
                                       // appropriate
     }

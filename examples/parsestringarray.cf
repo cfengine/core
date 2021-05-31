@@ -1,11 +1,5 @@
-
-
-body common control 
-{
-      bundlesequence => { test("/tmp/test.txt") };
-}
-
-bundle agent example(f) 
+#+begin_src cfengine3
+bundle agent __main__
 {
   vars:
 
@@ -13,25 +7,33 @@ bundle agent example(f)
       # Define data inline for convenience
       #######################################
 
-      "table"   string => 
-
-      "one: a
-two: b
-three: c";
+      "table"
+        string => "Eulers Number:2.718
+A Feigenbaum constant:4.6692
+Tau (2pi):6.28";
 
       #######################################
 
       "dim" int => parsestringarray(
-				     "items",
-				     "$(table)",
-				     "\s*#[^\n]*",
-				     ":",
-				     "1000",
-				     "200000"
+                                     "items",
+                                     "$(table)",
+                                     "\s*#[^\n]*",
+                                     ":",
+                                     "1000",
+                                     "200000"
       );
 
-      "keys" slist => getindices("items");
+      "keys" slist => sort(getindices("items"));
 
   reports:
-      "$(keys)";
+      "$(keys) - $(items[$(keys)][1])";
 }
+#+end_src
+###############################################################################
+#+begin_src example_output
+#@ ```
+#@ R: A Feigenbaum constant - 4.6692
+#@ R: Eulers Number - 2.718
+#@ R: Tau (2pi) - 6.28
+#@ ```
+#+end_src

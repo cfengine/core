@@ -26,6 +26,7 @@ static const char* features[] = {
     "tls_1_3",
 #endif
     "def_json_preparse",
+    "host_specific_data_load",
     NULL
 };
 

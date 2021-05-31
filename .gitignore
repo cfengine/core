@@ -71,6 +71,10 @@ stamp-h1
 /tests/unit/*.log
 /tests/unit/init_script_test_helper
 /tests/unit/redirection_test_stub
+class_test.xml
+tests/acceptance/30_custom_promise_types/cfengine.py
+xml_tmp_case
+xml_tmp_suite
 /tests/load/*.log
 
 /configure_flags.env

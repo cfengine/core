@@ -1,0 +1,40 @@
+######################################################
+#
+#  Test of a module which fails early
+#
+#####################################################
+body common control
+{
+    inputs => { "../default.cf.sub" };
+    bundlesequence  => { default("$(this.promise_filename)") };
+    version => "1.0";
+}
+
+#######################################################
+
+bundle common python_check
+{
+  classes:
+    "python_f_string_support" expression => returnszero("/usr/bin/python3 -c 'f\"string\"'", "useshell");
+}
+
+bundle agent init
+{
+  meta:
+      "test_skip_unsupported" string => "!python_f_string_support";
+
+  files:
+    "$(this.promise_dirname)/cfengine.py"
+      copy_from => local_cp("$(this.promise_dirname)/../../../misc/custom_promise_types/cfengine.py");
+}
+
+bundle agent check
+{
+  vars:
+    "command" string => "$(sys.cf_agent) -D AUTO -KIf $(this.promise_filename).sub";
+
+  methods:
+      "check"
+        usebundle => dcs_passif_output(".*error:.*", ".*(Assertion.*failed|fault).*",
+                                       $(command), $(this.promise_filename));
+}

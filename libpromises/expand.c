@@ -1044,10 +1044,12 @@ static void ResolvePackageManagerBody(EvalContext *ctx, const Body *pm_body)
         }
         else if (strcmp(cp->lval, "interpreter") == 0)
         {
+            assert(new_manager->interpreter == NULL);
             new_manager->interpreter = SafeStringDuplicate(RvalScalarValue(returnval));
         }
         else if (strcmp(cp->lval, "module_path") == 0)
         {
+            assert(new_manager->module_path == NULL);
             new_manager->module_path = SafeStringDuplicate(RvalScalarValue(returnval));
         }
         else

@@ -6,7 +6,7 @@
 static inline
 PackageModuleBody *make_mock_package_module(const char *name, int updates_ifel, int installed_ifel, Rlist *options)
 {
-    PackageModuleBody *pm = xmalloc(sizeof(PackageModuleBody));
+    PackageModuleBody *pm = xcalloc(1, sizeof(PackageModuleBody));
     pm->name = SafeStringDuplicate(name);
     pm->installed_ifelapsed = installed_ifel;
     pm->updates_ifelapsed = updates_ifel;

@@ -38,6 +38,7 @@
 #include <time_classes.h>
 #include <loading.h>
 #include <cleanup.h>
+#include <file_lib.h>           /* FILE_SEPARATOR */
 
 typedef enum
 {
@@ -120,7 +121,11 @@ int main(int argc, char *argv[])
     EvalContext *ctx = EvalContextNew();
     GenericAgentConfigApply(ctx, config);
 
-    GenericAgentDiscoverContext(ctx, config);
+    const char *program_invocation_name = argv[0];
+    const char *last_dir_sep = strrchr(program_invocation_name, FILE_SEPARATOR);
+    const char *program_name = (last_dir_sep != NULL ? last_dir_sep + 1 : program_invocation_name);
+    GenericAgentDiscoverContext(ctx, config, program_name);
+
     Policy *policy = LoadPolicy(ctx, config);
 
     GenericAgentPostLoadInit(ctx);

@@ -7,7 +7,7 @@ bundle agent benchmark
 {
   vars:
     # Determines how many times each example is run
-      "n" int => "100";
+      "n" int => "10";
 
     # Range: 1, 2, 3, ..., n
       "i" slist => { expandrange("[1-$(n)]", "1") };

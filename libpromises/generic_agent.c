@@ -817,6 +817,20 @@ static bool LoadAugmentsFiles(EvalContext *ctx, const char *unexpanded_filename)
     return loaded;
 }
 
+static bool IsFile(const char *const filename)
+{
+    struct stat buffer;
+    if (stat(filename, &buffer) != 0)
+    {
+        return false;
+    }
+    if (S_ISREG(buffer.st_mode) != 0)
+    {
+        return true;
+    }
+    return false;
+}
+
 void LoadAugments(EvalContext *ctx, GenericAgentConfig *config)
 {
     assert(config != NULL);
@@ -831,7 +845,7 @@ void LoadAugments(EvalContext *ctx, GenericAgentConfig *config)
     else
     {
         def_json = StringFormat("%s%c%s", config->input_dir, FILE_SEPARATOR, "def_preferred.json");
-        if (access(def_json, R_OK) != 0)
+        if (!IsFile(def_json))
         {
             // def_preferred.json does not exist or we cannot read it
             FREE_AND_NULL(def_json);

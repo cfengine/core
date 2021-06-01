@@ -145,7 +145,10 @@ int main(int argc, char *argv[])
     EvalContext *ctx = EvalContextNew();
     GenericAgentConfigApply(ctx, config);
 
-    GenericAgentDiscoverContext(ctx, config);
+    const char *program_invocation_name = argv[0];
+    const char *last_dir_sep = strrchr(program_invocation_name, FILE_SEPARATOR);
+    const char *program_name = (last_dir_sep != NULL ? last_dir_sep + 1 : program_invocation_name);
+    GenericAgentDiscoverContext(ctx, config, program_name);
 
     Policy *policy = SelectAndLoadPolicy(config, ctx, false, false);
 
@@ -671,7 +674,7 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
         UpdateLastPolicyUpdateTime(ctx);
 
         DetectEnvironment(ctx);
-        GenericAgentDiscoverContext(ctx, config);
+        GenericAgentDiscoverContext(ctx, config, NULL);
 
         EvalContextClassPutHard(ctx, CF_AGENTTYPES[AGENT_TYPE_EXECUTOR], "cfe_internal,source=agent");
 

@@ -845,9 +845,48 @@ static bool LoadAugmentsFiles(EvalContext *ctx, const char *unexpanded_filename)
     return loaded;
 }
 
+static bool IsFile(const char *const filename)
+{
+    struct stat buffer;
+    if (stat(filename, &buffer) != 0)
+    {
+        return false;
+    }
+    if (S_ISREG(buffer.st_mode) != 0)
+    {
+        return true;
+    }
+    return false;
+}
+
 void LoadAugments(EvalContext *ctx, GenericAgentConfig *config)
 {
-    char* def_json = StringFormat("%s%c%s", config->input_dir, FILE_SEPARATOR, "def.json");
+    assert(config != NULL);
+
+    char* def_json = NULL;
+    // --ignore-preferred-augments command line option:
+    if (config->ignore_preferred_augments)
+    {
+        EvalContextClassPutHard(ctx, "ignore_preferred_augments", "source=command_line_option");
+        // def_json is NULL so it will be assigned below
+    }
+    else
+    {
+        def_json = StringFormat("%s%c%s", config->input_dir, FILE_SEPARATOR, "def_preferred.json");
+        if (!IsFile(def_json))
+        {
+            // def_preferred.json does not exist or we cannot read it
+            FREE_AND_NULL(def_json);
+        }
+    }
+
+    if (def_json == NULL)
+    {
+        // No def_preferred.json, either because the feature is disabled
+        // or we could not read the file.
+        // Fall back to old / default behavior, using def.json:
+        def_json = StringFormat("%s%c%s", config->input_dir, FILE_SEPARATOR, "def.json");
+    }
     Log(LOG_LEVEL_VERBOSE, "Loading JSON augments from '%s' (input dir '%s', input file '%s'", def_json, config->input_dir, config->input_file);
     LoadAugmentsFiles(ctx, def_json);
     free(def_json);
@@ -1277,6 +1316,8 @@ static bool WriteReleaseIdFile(const char *filename, const char *dirname)
 
 bool GenericAgentArePromisesValid(const GenericAgentConfig *config)
 {
+    assert(config != NULL);
+
     char cmd[CF_BUFSIZE];
     const char* const bindir = GetBinDir();
 
@@ -1325,6 +1366,11 @@ bool GenericAgentArePromisesValid(const GenericAgentConfig *config)
             }
         }
         strlcat(cmd, "\"", CF_BUFSIZE);
+    }
+
+    if (config->ignore_preferred_augments)
+    {
+        strlcat(cmd, " --ignore-preferred-augments", CF_BUFSIZE);
     }
 
     Log(LOG_LEVEL_VERBOSE, "Checking policy with command '%s'", cmd);
@@ -2348,6 +2394,7 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type, bool tty_
     config->check_runnable = agent_type != AGENT_TYPE_COMMON;
     config->ignore_missing_bundles = false;
     config->ignore_missing_inputs = false;
+    config->ignore_preferred_augments = false;
 
     config->heap_soft = NULL;
     config->heap_negated = NULL;

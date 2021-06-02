@@ -131,6 +131,8 @@ static const struct option OPTIONS[] =
     {"ld-library-path", required_argument, 0, 'L'},
     {"color", optional_argument, 0, 'C'},
     {"timestamp", no_argument, 0, 'l'},
+    /* Only long option for the rest */
+    {"ignore-preferred-augments", no_argument, 0, 0},
     {"skip-db-check", optional_argument, 0, 0 },
     {"with-runagent-socket", required_argument, 0, 0},
     {NULL, 0, 0, '\0'}
@@ -156,6 +158,7 @@ static const char *const HINTS[] =
     "Set the internal value of LD_LIBRARY_PATH for child processes",
     "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
     "Log timestamps on each line of log output",
+    "Ignore def_preferred.json file in favor of def.json",
     "Do not run database integrity checks and repairs at startup",
     "Specify the directory for the socket for runagent requests or 'no' to disable the socket",
     NULL
@@ -357,7 +360,11 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         case 0:
         {
             const char *const option_name = OPTIONS[longopt_idx].name;
-            if (StringEqual(option_name, "skip-db-check"))
+            if (StringEqual(option_name, "ignore-preferred-augments"))
+            {
+                config->ignore_preferred_augments = true;
+            }
+            else if (StringEqual(option_name, "skip-db-check"))
             {
                 if (optarg == NULL)
                 {

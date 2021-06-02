@@ -200,6 +200,7 @@ static const struct option OPTIONS[] =
     {"no-extensions", no_argument, 0, 'E'},
     {"timestamp", no_argument, 0, 'l'},
     /* Only long option for the rest */
+    {"ignore-preferred-augments", no_argument, 0, 0},
     {"log-modules", required_argument, 0, 0},
     {"show-evaluated-classes", optional_argument, 0, 0 },
     {"show-evaluated-vars", optional_argument, 0, 0 },
@@ -231,6 +232,7 @@ static const char *const HINTS[] =
     "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
     "Disable extension loading (used while upgrading)",
     "Log timestamps on each line of log output",
+    "Ignore def_preferred.json file in favor of def.json",
     "Enable even more detailed debug logging for specific areas of the implementation. Use together with '-d'. Use --log-modules=help for a list of available modules",
     "Show *final* evaluated classes, including those defined in common bundles in policy. Optionally can take a regular expression.",
     "Show *final* evaluated variables, including those defined without dependency to user-defined classes in policy. Optionally can take a regular expression.",
@@ -662,7 +664,11 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         case 0:
         {
             const char *const option_name = OPTIONS[longopt_idx].name;
-            if (StringEqual(option_name, "log-modules"))
+            if (StringEqual(option_name, "ignore-preferred-augments"))
+            {
+                config->ignore_preferred_augments = true;
+            }
+            else if (StringEqual(option_name, "log-modules"))
             {
                 bool ret = LogEnableModulesFromString(optarg);
                 if (!ret)

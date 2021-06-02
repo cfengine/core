@@ -68,6 +68,7 @@ typedef struct
     // agent state
     bool ignore_missing_bundles;
     bool ignore_missing_inputs;
+    bool ignore_preferred_augments; // --ignore-preferred-augments
 
     struct
     {

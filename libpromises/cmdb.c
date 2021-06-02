@@ -503,18 +503,21 @@ bool LoadCMDBData(EvalContext *ctx)
 
     bool success = true;
     JsonElement *vars = JsonObjectGet(data, "vars");
-    if ((vars != NULL) && !ReadCMDBVars(ctx, vars))
+    if ((vars != NULL) && (JsonGetType(vars) != JSON_TYPE_NULL) &&
+        !ReadCMDBVars(ctx, vars))
     {
         success = false;
     }
     /* Uses the new format allowing metadata (CFE-3633) */
     JsonElement *variables = JsonObjectGet(data, "variables");
-    if ((variables != NULL) && !ReadCMDBVariables(ctx, variables))
+    if ((variables != NULL) && (JsonGetType(variables) != JSON_TYPE_NULL) &&
+        !ReadCMDBVariables(ctx, variables))
     {
         success = false;
     }
     JsonElement *classes = JsonObjectGet(data, "classes");
-    if ((classes != NULL) && !ReadCMDBClasses(ctx, classes))
+    if ((classes != NULL) && (JsonGetType(classes) != JSON_TYPE_NULL) &&
+        !ReadCMDBClasses(ctx, classes))
     {
         success = false;
     }

@@ -361,7 +361,7 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
 
         /* load variables (if any) */
         JsonElement *element = JsonObjectGet(augment, "vars");
-        if (element != NULL)
+        if ((element != NULL) && (JsonGetType(element) != JSON_TYPE_NULL))
         {
             JsonElement* vars = JsonExpandElement(ctx, element);
 
@@ -483,7 +483,7 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
 
         /* Uses the new format allowing metadata (CFE-3633) */
         element = JsonObjectGet(augment, "variables");
-        if (element != NULL)
+        if ((element != NULL) && (JsonGetType(element) != JSON_TYPE_NULL))
         {
             JsonElement* variables = JsonExpandElement(ctx, element);
 
@@ -628,7 +628,7 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
 
         /* load classes (if any) */
         element = JsonObjectGet(augment, "classes");
-        if (element != NULL)
+        if ((element != NULL) && (JsonGetType(element) != JSON_TYPE_NULL))
         {
             JsonElement* classes = JsonExpandElement(ctx, element);
 
@@ -744,7 +744,7 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
 
         /* load inputs (if any) */
         element = JsonObjectGet(augment, "inputs");
-        if (element != NULL)
+        if ((element != NULL) && (JsonGetType(element) != JSON_TYPE_NULL))
         {
             JsonElement* inputs = JsonExpandElement(ctx, element);
 
@@ -772,7 +772,7 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
 
         /* load further def.json files (if any) */
         element = JsonObjectGet(augment, "augments");
-        if (element != NULL)
+        if ((element != NULL) && (JsonGetType(element) != JSON_TYPE_NULL))
         {
             JsonElement* further_augments = element;
             assert(further_augments != NULL);

@@ -89,6 +89,7 @@ static const struct option OPTIONS[] =
     {"tag-release", required_argument, 0, 'T'},
     {"timestamp", no_argument, 0, 'l'},
     /* Only long option for the rest */
+    {"ignore-preferred-augments", no_argument, 0, 0},
     {"log-modules", required_argument, 0, 0},
     {NULL, 0, 0, '\0'}
 };
@@ -118,6 +119,7 @@ static const char *const HINTS[] =
     "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
     "Tag a directory with promises.cf with cf_promises_validated and cf_promises_release_id",
     "Log timestamps on each line of log output",
+    "Ignore def_preferred.json file in favor of def.json",
     "Enable even more detailed debug logging for specific areas of the implementation. Use together with '-d'. Use --log-modules=help for a list of available modules",
     NULL
 };
@@ -472,8 +474,13 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
 
         /* long options only */
         case 0:
-
-            if (strcmp(OPTIONS[longopt_idx].name, "log-modules") == 0)
+        {
+            const char *const option_name = OPTIONS[longopt_idx].name;
+            if (StringEqual(option_name, "ignore-preferred-augments"))
+            {
+                config->ignore_preferred_augments = true;
+            }
+            else if (StringEqual(option_name, "log-modules"))
             {
                 bool ret = LogEnableModulesFromString(optarg);
                 if (!ret)
@@ -482,7 +489,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
                 }
             }
             break;
-
+        }
         default:
         {
             Writer *w = FileWriter(stdout);

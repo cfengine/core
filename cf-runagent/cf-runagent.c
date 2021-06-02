@@ -114,6 +114,7 @@ static const struct option OPTIONS[] =
     {"color", optional_argument, 0, 'C'},
     {"timestamp", no_argument, 0, 'l'},
     /* Only long option for the rest */
+    {"ignore-preferred-augments", no_argument, 0, 0},
     {"log-modules", required_argument, 0, 0},
     {"remote-bundles", required_argument, 0, 0},
     {NULL, 0, 0, '\0'}
@@ -139,6 +140,7 @@ static const char *const HINTS[] =
     "Connection timeout, seconds",
     "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
     "Log timestamps on each line of log output",
+    "Ignore def_preferred.json file in favor of def.json",
     "Enable even more detailed debug logging for specific areas of the implementation. Use together with '-d'. Use --log-modules=help for a list of available modules",
     "Bundles to execute on the remote agent",
     NULL
@@ -442,8 +444,13 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
         /* long options only */
         case 0:
-
-            if (strcmp(OPTIONS[longopt_idx].name, "log-modules") == 0)
+        {
+            const char *const option_name = OPTIONS[longopt_idx].name;
+            if (StringEqual(option_name, "ignore-preferred-augments"))
+            {
+                config->ignore_preferred_augments = true;
+            }
+            else if (strcmp(OPTIONS[longopt_idx].name, "log-modules") == 0)
             {
                 bool ret = LogEnableModulesFromString(optarg);
                 if (!ret)
@@ -463,7 +470,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 }
             }
             break;
-
+        }
         default:
         {
             Writer *w = FileWriter(stdout);

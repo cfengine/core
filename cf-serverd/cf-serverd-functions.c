@@ -439,7 +439,7 @@ static void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConf
             UpdateLastPolicyUpdateTime(ctx);
 
             DetectEnvironment(ctx);
-            GenericAgentDiscoverContext(ctx, config);
+            GenericAgentDiscoverContext(ctx, config, NULL);
 
             /* During startup this is done in GenericAgentDiscoverContext(). */
             EvalContextClassPutHard(ctx, CF_AGENTTYPES[AGENT_TYPE_SERVER], "cfe_internal,source=agent");

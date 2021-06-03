@@ -77,6 +77,9 @@ static pthread_once_t pid_cleanup_once = PTHREAD_ONCE_INIT; /* GLOBAL_T */
 
 static char PIDFILE[CF_BUFSIZE] = ""; /* GLOBAL_C */
 
+/* Used for 'ident' argument to openlog() */
+static char CF_PROGRAM_NAME[256] = "";
+
 static void CheckWorkingDirectories(EvalContext *ctx);
 
 static void GetAutotagDir(char *dirname, size_t max_size, const char *maybe_dirname);
@@ -516,9 +519,14 @@ static void AddPolicyEntryVariables (EvalContext *ctx, const GenericAgentConfig 
     free(basename_path);
 }
 
-void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
+void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config,
+                                 const char *program_name)
 {
     strcpy(VPREFIX, "");
+    if (program_name != NULL)
+    {
+        strncpy(CF_PROGRAM_NAME, program_name, sizeof(CF_PROGRAM_NAME));
+    }
 
     Log(LOG_LEVEL_VERBOSE, " %s", NameVersion());
     Banner("Initialization preamble");
@@ -979,7 +987,7 @@ bool GenericAgentArePromisesValid(const GenericAgentConfig *config)
 #if !defined(__MINGW32__)
 static void OpenLog(int facility)
 {
-    openlog(NULL, LOG_PID | LOG_NOWAIT | LOG_ODELAY, facility);
+    openlog(CF_PROGRAM_NAME, LOG_PID | LOG_NOWAIT | LOG_ODELAY, facility);
 }
 #endif
 

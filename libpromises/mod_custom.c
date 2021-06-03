@@ -839,7 +839,7 @@ static bool PromiseModule_Validate(PromiseModule *module, const EvalContext *ctx
         const char *const filename =
             pp->parent_section->parent_bundle->source_path;
         const size_t line = pp->offset.line;
-        Log(LOG_LEVEL_ERR,
+        Log(LOG_LEVEL_VERBOSE,
             "%s:%zu: %s promise with promiser '%s' failed validation",
             filename,
             line,

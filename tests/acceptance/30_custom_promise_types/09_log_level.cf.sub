@@ -8,7 +8,7 @@ body common control
 promise agent copy
 {
     interpreter => "/usr/bin/python3";
-    path => "$(this.promise_dirname)/copy.py";
+    path => "$(this.promise_dirname)/copy_promises.py";
 }
 
 bundle agent test

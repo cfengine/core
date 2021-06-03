@@ -265,6 +265,10 @@ class PromiseModule:
 
 
     def _validate_attributes(self, promiser, attributes):
+        if not self._has_validation_attributes:
+            # Can only validate attributes if module
+            # provided typings for attributes
+            return
         self.create_attribute_object(promiser, attributes)
         return # Only interested in exceptions, return None
 

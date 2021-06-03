@@ -525,6 +525,18 @@ static void PromiseModule_AppendString(
     JsonObjectAppendString(module->message, key, value);
 }
 
+static void PromiseModule_AppendInteger(
+    PromiseModule *module, const char *key, int64_t value)
+{
+    assert(module != NULL);
+
+    if (module->message == NULL)
+    {
+        module->message = JsonObjectCreate(10);
+    }
+    JsonObjectAppendInteger64(module->message, key, value);
+}
+
 static void PromiseModule_AppendAttribute(
     PromiseModule *module, const char *key, JsonElement *value)
 {
@@ -817,6 +829,8 @@ static bool PromiseModule_Validate(PromiseModule *module, const EvalContext *ctx
     PromiseModule_AppendString(module, "log_level", LogLevelToRequestFromModule(pp));
     PromiseModule_AppendString(module, "promise_type", promise_type);
     PromiseModule_AppendString(module, "promiser", promiser);
+    PromiseModule_AppendInteger(module, "line_number", pp->offset.line);
+    PromiseModule_AppendString(module, "filename", PromiseGetBundle(pp)->source_path);
     PromiseModule_AppendAllAttributes(module, ctx, pp);
     PromiseModule_Send(module);
 
@@ -864,6 +878,8 @@ static PromiseResult PromiseModule_Evaluate(
         module, "log_level", LogLevelToRequestFromModule(pp));
     PromiseModule_AppendString(module, "promise_type", promise_type);
     PromiseModule_AppendString(module, "promiser", promiser);
+    PromiseModule_AppendInteger(module, "line_number", pp->offset.line);
+    PromiseModule_AppendString(module, "filename", PromiseGetBundle(pp)->source_path);
 
     PromiseModule_AppendAllAttributes(module, ctx, pp);
     PromiseModule_Send(module);

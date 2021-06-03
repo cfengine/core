@@ -146,6 +146,9 @@ class PromiseModule:
             if type(value) is not str:
                 # If something is not string, assume it is correct type
                 continue
+            if name not in self._validator_attributes:
+                # Unknown attribute, this will cause a validation error later
+                continue
             # Only known conversion needed: "true"/"false" -> True/False
             if self._validator_attributes[name]["typing"] is bool:
                 if value == "true":

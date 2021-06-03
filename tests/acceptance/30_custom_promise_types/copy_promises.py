@@ -6,7 +6,7 @@
 # promise agent copy
 # {
 #     interpreter => "/usr/bin/python3";
-#     path => "$(sys.inputdir)/copy.py";
+#     path => "$(sys.inputdir)/copy_promises.py";
 # }
 # bundle agent main
 # {

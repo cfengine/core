@@ -227,7 +227,7 @@ class PromiseModule:
         # Check for missing required attributes:
         for name, attribute in self._validator_attributes.items():
             if attribute["required"] and name not in attributes:
-                raise ValidationError(f"Missing required attribute '{a}'")
+                raise ValidationError(f"Missing required attribute '{name}'")
 
         # Check for unknown attributes:
         for name in attributes:

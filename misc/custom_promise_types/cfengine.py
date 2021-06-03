@@ -184,7 +184,7 @@ class PromiseModule:
         if operation == "init":
             self._handle_init()
         elif operation == "validate_promise":
-            self._handle_validate(promiser, attributes)
+            self._handle_validate(promiser, attributes, request)
         elif operation == "evaluate_promise":
             self._handle_evaluate(promiser, attributes)
         elif operation == "terminate":
@@ -280,7 +280,7 @@ class PromiseModule:
         self._add_result()
         _put_response(self._response, self._out, self._record_file)
 
-    def _handle_validate(self, promiser, attributes):
+    def _handle_validate(self, promiser, attributes, request):
         try:
             self.validate_attributes(promiser, attributes)
             returned = self.validate_promise(promiser, attributes)
@@ -291,7 +291,15 @@ class PromiseModule:
                 # Bad, validate method shouldn't return anything else
                 self._result = Result.ERROR
         except ValidationError as e:
-            self.log_error(e)
+            message = str(e)
+            if "promise_type" in request:
+                message += f" for {request['promise_type']} promise with promiser '{promiser}'"
+            else:
+                message += f" for promise with promiser '{promiser}'"
+            if "filename" in request and "line_number" in request:
+                message += f" ({request['filename']}:{request['line_number']})"
+
+            self.log_error(message)
             self._result = Result.INVALID
         except Exception as e:
             self.log_critical(f"{type(e).__name__}: {e}")

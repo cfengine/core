@@ -54,6 +54,7 @@ static bool ValidClassName(const char *str)
 
 PromiseResult VerifyClassPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED void *param)
 {
+    assert(pp != NULL);
     assert(param == NULL);
 
     Log(LOG_LEVEL_DEBUG, "Evaluating classes promise: %s", pp->promiser);
@@ -133,6 +134,11 @@ PromiseResult VerifyClassPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED
                                               CONTEXT_STATE_POLICY_RESET, BufferData(buf));
                 BufferDestroy(buf);
             }
+            if (inserted && (comment != NULL))
+            {
+                Log(LOG_LEVEL_VERBOSE, "Added class '%s' with comment '%s'", pp->promiser, comment);
+            }
+
 
             if (!inserted)
             {

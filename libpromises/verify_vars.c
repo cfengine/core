@@ -483,6 +483,11 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp,
         /* WRITE THE VARIABLE AT LAST. */
         bool success = EvalContextVariablePutTagsSetWithComment(ctx, ref, rval.item, required_datatype,
                                                                 tags, comment);
+        if (success && (comment != NULL))
+        {
+            Log(LOG_LEVEL_VERBOSE, "Added variable '%s' with comment '%s'",
+                pp->promiser, comment);
+        }
 
         if (!success)
         {

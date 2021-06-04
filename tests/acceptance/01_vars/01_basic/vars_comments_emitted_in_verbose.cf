@@ -10,11 +10,9 @@ body common control
 bundle agent test
 {
   meta:
-    "description" string => "Test that comments on variables are emitted in verbose output.";
-
-    "test_soft_fail"
-      string => "any",
-      meta => { "CFE-2442" };
+      "description"
+        string => "Test that comments on variables are emitted in verbose output.",
+        meta => { "CFE-2442" };
 }
 
 #######################################################

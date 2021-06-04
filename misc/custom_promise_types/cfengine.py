@@ -149,12 +149,18 @@ class PromiseModule:
             if name not in self._validator_attributes:
                 # Unknown attribute, this will cause a validation error later
                 continue
-            # Only known conversion needed: "true"/"false" -> True/False
+            # "true"/"false" -> True/False
             if self._validator_attributes[name]["typing"] is bool:
                 if value == "true":
                     replacements[name] = True
                 elif value == "false":
                     replacements[name] = False
+            # "int" -> int()
+            elif self._validator_attributes[name]["typing"] is int:
+                try:
+                    replacements[name] = int(value)
+                except ValueError:
+                    pass
 
         # Don't edit dict while iterating over it, after instead:
         attributes.update(replacements)

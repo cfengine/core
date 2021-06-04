@@ -29,6 +29,7 @@
 
 #define PARSER_WARNING_DEPRECATED       (1 << 0)
 #define PARSER_WARNING_REMOVED          (1 << 1)
+#define PARSER_WARNING_TRUNCATED        (1 << 2)  // Why not an enum?
 
 #define PARSER_WARNING_ALL              0xfffffff
 

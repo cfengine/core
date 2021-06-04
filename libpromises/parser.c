@@ -168,6 +168,10 @@ int ParserWarningFromString(const char *warning_str)
     {
         return PARSER_WARNING_ALL;
     }
+    else if (strcmp("truncated", warning_str) == 0)
+    {
+        return PARSER_WARNING_TRUNCATED;
+    }
     else
     {
         return -1;
@@ -182,7 +186,8 @@ const char *ParserWarningToString(unsigned int warning)
         return "deprecated";
     case PARSER_WARNING_REMOVED:
         return "removed";
-
+    case PARSER_WARNING_TRUNCATED:
+        return "truncated";
     default:
         ProgrammingError("Invalid parser warning: %u", warning);
     }

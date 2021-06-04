@@ -1,0 +1,48 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-3639" }
+      string => "Test int/real number expansion in list arguments";
+
+  # Direct number initialisation
+  vars:
+      "only_str_ints_pos"  ilist => { "1", "56k", "78m", "9g",
+                                           "65k", "87M", "9G" };
+
+      "only_str_ints_neg"  ilist => { "-1", "-56k", "-78m", "-9g",
+                                            "-65K", "-87M", "-9G" };
+
+      "only_str_reals_pos"  rlist => { "1.0", "56.65k", "78.87m", "9.9g",
+                                              "65.56K", "87.78M", "9.9G" };
+
+      "only_str_reals_neg"  rlist => { "-1.0", "-56.65k", "-78.87m", "-9.9g",
+                                               "-65.56K", "-87.78M", "-9.9G" };
+
+      "ints_to_reals" rlist => { "1", "56k", "78m", "9g",
+                                      "65k", "87M", "9G" };
+
+      # "ints_to_reals_from_ref" rlist => { @{only_str_ints_pos} };  # This is considered a NAKEDVAR
+                                                                     # and just dumps the list nomatter the type
+
+      "truncation" ilist => { "1.0", "2.9", "3" }; # Parser must show warning
+
+  # Reference/variable initialisation
+  vars:
+      "a_int" int => "1000";
+      "a_real" real => "1000.0";
+      "ilist_from_a_int" ilist => { "${a_int}" };
+      "rlist_from_a_real" rlist => { "${a_real}" };
+
+  methods:
+    "check"  usebundle => dcs_check_state(test,
+                                          "$(this.promise_filename).expected.json",
+                                          $(this.promise_filename));
+
+}

@@ -49,8 +49,11 @@
 #include "mod_files.h"
 #include "string_lib.h"
 #include "logic_expressions.h"
+#include "var_expressions.h"
 #include "json-yaml.h"
 #include "cleanup.h"
+#include "conversion.h"
+#include "printsize.h"
 
 // FIX: remove
 #include "syntax.h"
@@ -1026,6 +1029,65 @@ static inline void ParserBeginBundleBody()
 
     RlistDestroy(P.useargs);
     P.useargs = NULL;
+}
+
+static inline void ParserHandleQuotedIlistItems()
+{
+    if (StringContainsUnresolved(P.currentstring))
+    {
+        RlistAppendScalar((Rlist **) &P.currentRlist, P.currentstring);
+        FREE_AND_NULL(P.currentstring);
+        return;
+    }
+
+    double value;
+    bool ok = DoubleFromString(P.currentstring, &value);
+    if (!ok)
+    {
+        // TODO: we dont really want DoubleFromStrings error output...
+        ParseError("Lval '%s' expects numbers", P.lval);
+        FREE_AND_NULL(P.currentstring);
+        return;
+    }
+
+    if (StringContainsChar(P.currentstring, '.'))
+    {
+        ParseWarning(PARSER_WARNING_TRUNCATED,
+                     "Real number '%s' will be truncated",
+                     P.currentstring);
+    }
+
+    char ret[PRINTSIZE(intmax_t)] = {0};
+    xsnprintf(ret, PRINTSIZE(intmax_t), "%jd", (intmax_t)value);
+
+    RlistAppendScalar((Rlist **) &P.currentRlist, ret);
+    FREE_AND_NULL(P.currentstring);
+}
+
+static inline void ParserHandleQuotedRlistItems()
+{
+    if (StringContainsUnresolved(P.currentstring))
+    {
+        RlistAppendScalar((Rlist **) &P.currentRlist, P.currentstring);
+        FREE_AND_NULL(P.currentstring);
+        return;
+    }
+
+    double value;
+    bool ok = DoubleFromString(P.currentstring, &value);
+    if (!ok)
+    {
+        // TODO: we dont really want DoubleFromStrings error output...
+        ParseError("Lval '%s' expects numbers", P.lval);
+        FREE_AND_NULL(P.currentstring);
+        return;
+    }
+
+    char ret[PRINTSIZE(double)] = {0};
+    xsnprintf(ret, PRINTSIZE(double), "%lf", value);
+
+    RlistAppendScalar((Rlist **) &P.currentRlist, ret);
+    FREE_AND_NULL(P.currentstring);
 }
 
 #endif // CF3_PARSE_LOGIC_H

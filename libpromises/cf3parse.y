@@ -755,10 +755,25 @@ litem:                 IDENTIFIER
                                        (P.currentclasses ?
                                             P.currentclasses : "any"),
                                        P.currentstring);
-                           RlistAppendScalar((Rlist **) &P.currentRlist,
-                                             (void *) P.currentstring);
-                           free(P.currentstring);
-                           P.currentstring = NULL;
+
+                           if (P.lval == NULL
+			       || P.lval[0] == 's'
+			       || !StringEqual(P.lval + 1, "list"))  // promisees, slists and everything else
+                           {
+                               RlistAppendScalar((Rlist **) &P.currentRlist,
+                                                 (void *) P.currentstring);
+                               FREE_AND_NULL(P.currentstring);
+                           }
+                           else if (P.lval[0] == 'i')
+                           {
+                               assert(StringEqual(P.lval, "ilist"));
+                               ParserHandleQuotedIlistItems();
+                           }
+                           else
+                           {
+                               assert(StringEqual(P.lval, "rlist"));
+                               ParserHandleQuotedRlistItems();
+                           }
                        }
 
                      | NAKEDVAR

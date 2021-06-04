@@ -1,3 +1,34 @@
+3.15.4:
+	- cf-runagent now exits with a code reflecting remote agent run status(es)
+	  (CFE-3594)
+	- Increased file descriptor limit from 128 to 2048 (CFE-3625)
+	- Added warning when trying to use {{.}} to expand containers in mustache templates
+	  (CFE-3457, CFE-3489)
+	- Changed log message about whitespace in class expressions to be errors
+	  (CFE-3560)
+	- Clarified error message about untrusted state directory not being private
+	  (CFE-3599)
+	- New observations of root owned SETUID programs moved from WARN to NOTICE
+	  (ENT-6519)
+	- Stopped emitting warning and recording result when observing new SETGID files
+	  (ENT-6750)
+	- Restored log level for failure to state remote files without missing_ok to ERROR
+	  (ENT-5879)
+	- Value of the 'files_single_copy' body control attribute is now logged in verbose logging mode
+	  (CFE-3622)
+	- Value of the 'files_single_copy' body control attribute can now be an empty list
+	  (CFE-3622)
+	- 'files_single_copy' no longer treats paths of copied files as regular expressions
+	  (CFE-3621)
+	- Fixed vulnerabillity where malformed input could trigger buffer overflow in
+	  format() policy function (CFE-3525)
+	- Policy function format() no longer truncates strings lager than 4096 bytes
+	  (CFE-2686)
+	- Policy function storejson() no longer truncates strings lager than 4096 bytes
+	  (CFE-2507)
+	- "source=promise_iteration" variables are no longer created in foreign bundles
+	  (ENT-7029)
+
 3.15.3:
 	- cf-secret binary for managing secrets was added (CFE-2613)
 	- Added sys.cf_secret component variable

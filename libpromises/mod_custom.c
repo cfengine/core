@@ -121,7 +121,7 @@ static bool GetInterpreterAndPath(
     return true;
 }
 
-static inline void PromiseModule_LogJson(JsonElement *object, const Promise *pp)
+static inline bool PromiseModule_LogJson(JsonElement *object, const Promise *pp)
 {
     const char *level_string = JsonObjectGetAsString(object, "level");
     const char *message = JsonObjectGetAsString(object, "message");
@@ -142,11 +142,18 @@ static inline void PromiseModule_LogJson(JsonElement *object, const Promise *pp)
                 /* Do not log messages that have a higher log level than the log
                  * level specified for the promise (e.g. 'info' messages when
                  * 'error' was requested for the promise). */
-                return;
+                return false;
             }
         }
     }
+
     Log(level, "%s", message);
+
+    // We want to keep track of whether the module logged an error,
+    // it must log errors for not kept promises and validation errors.
+    const bool logged_error =
+        (level == LOG_LEVEL_ERR || level == LOG_LEVEL_CRIT);
+    return logged_error;
 }
 
 static inline JsonElement *PromiseModule_ParseResultClasses(char *value)
@@ -180,6 +187,8 @@ static JsonElement *PromiseModule_Receive(PromiseModule *module, const Promise *
     {
         response = JsonObjectCreate(10);
     }
+
+    bool logged_error = false;
 
     ssize_t bytes;
     while (!empty_line
@@ -225,7 +234,7 @@ static JsonElement *PromiseModule_Receive(PromiseModule *module, const Promise *
             JsonElement *log_message = JsonObjectCreate(2);
             JsonObjectAppendString(log_message, "level", level);
             JsonObjectAppendString(log_message, "message", message);
-            PromiseModule_LogJson(log_message, pp);
+            logged_error |= PromiseModule_LogJson(log_message, pp);
             JsonArrayAppendObject(log_array, log_message);
 
             free(level);
@@ -309,7 +318,8 @@ static JsonElement *PromiseModule_Receive(PromiseModule *module, const Promise *
             size_t length = JsonLength(json_log_messages);
             for (size_t i = 0; i < length; ++i)
             {
-                PromiseModule_LogJson(JsonArrayGet(json_log_messages, i), pp);
+                logged_error |= PromiseModule_LogJson(
+                    JsonArrayGet(json_log_messages, i), pp);
             }
         }
 
@@ -340,6 +350,7 @@ static JsonElement *PromiseModule_Receive(PromiseModule *module, const Promise *
     JsonDestroy(log_array);
 
     assert(response != NULL);
+    JsonObjectAppendBool(response, "_logged_error", logged_error);
     return response;
 }
 
@@ -843,6 +854,9 @@ static bool PromiseModule_Validate(PromiseModule *module, const EvalContext *ctx
         return false;
     }
 
+    // TODO: const bool logged_error = JsonObjectGetAsBool(response, "_logged_error");
+    const bool logged_error = JsonPrimitiveGetAsBool(
+        JsonObjectGet(response, "_logged_error"));
     const bool valid = HasResultAndResultIsValid(response);
 
     JsonDestroy(response);
@@ -854,11 +868,21 @@ static bool PromiseModule_Validate(PromiseModule *module, const EvalContext *ctx
             pp->parent_section->parent_bundle->source_path;
         const size_t line = pp->offset.line;
         Log(LOG_LEVEL_VERBOSE,
-            "%s:%zu: %s promise with promiser '%s' failed validation",
-            filename,
-            line,
+            "%s promise with promiser '%s' failed validation (%s:%zu)",
             promise_type,
-            promiser);
+            promiser,
+            filename,
+            line);
+
+        if (!logged_error)
+        {
+            Log(LOG_LEVEL_CRIT,
+                "Bug in promise module - No error(s) logged for invalid %s promise with promiser '%s' (%s:%zu)",
+                promise_type,
+                promiser,
+                filename,
+                line);
+        }
     }
 
     return valid;
@@ -900,6 +924,9 @@ static PromiseResult PromiseModule_Evaluate(
 
     PromiseResult result;
     const char *const result_str = JsonObjectGetAsString(response, "result");
+    // TODO: const bool logged_error = JsonObjectGetAsBool(response, "_logged_error");
+    const bool logged_error = JsonPrimitiveGetAsBool(
+        JsonObjectGet(response, "_logged_error"));
 
     /* Attributes needed for setting outcome classes etc. */
     Attributes a = GetClassContextAttributes(ctx, pp);
@@ -943,6 +970,18 @@ static PromiseResult PromiseModule_Evaluate(
             "Promise with promiser '%s' was not kept by promise module '%s'",
             promiser,
             module->path);
+        if (!logged_error)
+        {
+            const char *const filename =
+                pp->parent_section->parent_bundle->source_path;
+            const size_t line = pp->offset.line;
+            Log(LOG_LEVEL_CRIT,
+                "Bug in promise module - Failed to log errors for not kept %s promise with promiser '%s' (%s:%zu)",
+                promise_type,
+                promiser,
+                filename,
+                line);
+        }
     }
     else if (StringEqual(result_str, "repaired"))
     {

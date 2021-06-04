@@ -289,6 +289,7 @@ class PromiseModule:
                 self._result = Result.VALID
             else:
                 # Bad, validate method shouldn't return anything else
+                self.log_critical(f"Bug in promise module {self.name} - validate_promise() should not return anything")
                 self._result = Result.ERROR
         except ValidationError as e:
             message = str(e)

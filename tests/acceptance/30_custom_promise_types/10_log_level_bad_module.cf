@@ -15,13 +15,14 @@ body common control
 bundle common python_check
 {
   classes:
-    "python_f_string_support" expression => returnszero("/usr/bin/python3 -c 'f\"string\"'", "useshell");
+    "python_version_compatible_with_cfengine_library"
+      expression => returnszero("/usr/bin/python3 -c 'import sys; assert sys.version_info >= (3,6)'", "useshell");
 }
 
 bundle agent init
 {
   meta:
-      "test_skip_unsupported" string => "!python_f_string_support";
+      "test_skip_unsupported" string => "!python_version_compatible_with_cfengine_library";
 
   vars:
     "test_string"

@@ -249,8 +249,8 @@ bool DBPrivWrite(DBPriv *db, const void *key, int key_size, const void *value, i
     return true;
 }
 
-bool DBPrivOverwrite(DBPriv *db, const void *key, int key_size, const void *value, int value_size,
-                     OverwriteCondition *Condition, void *data)
+bool DBPrivOverwrite(DBPriv *db, const char *key, int key_size, const void *value, size_t value_size,
+                     OverwriteCondition Condition, void *data)
 {
     if (!Lock(db))
     {

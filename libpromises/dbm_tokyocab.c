@@ -307,8 +307,8 @@ bool DBPrivWrite(DBPriv *db, const void *key, int key_size, const void *value, i
     return ret;
 }
 
-bool DBPrivOverwrite(DBPriv *db, const void *key, int key_size, const void *value, int value_size,
-                     OverwriteCondition *Condition, void *data)
+bool DBPrivOverwrite(DBPriv *db, const char *key, int key_size, const void *value, size_t value_size,
+                     OverwriteCondition Condition, void *data)
 {
     ssize_t cur_val_size = tchdbvsiz(db->hdb, key, key_size);
     void *cur_val = NULL;
@@ -318,7 +318,7 @@ bool DBPrivOverwrite(DBPriv *db, const void *key, int key_size, const void *valu
     {
         assert(cur_val_size > 0);
         cur_val = xmalloc(cur_val_size);
-        if (tchdbget3(db->hdb, key, key_size, dest, dest_size) == -1)
+        if (tchdbget3(db->hdb, key, key_size, cur_val, cur_val_size) == -1)
         {
             /* If exists, we should never get the TCENOREC error. */
             assert(tchdbecode(db->hdb) != TCENOREC);

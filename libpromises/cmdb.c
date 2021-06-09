@@ -37,6 +37,7 @@
 #define HOST_SPECIFIC_DATA_FILE "host_specific.json"
 #define HOST_SPECIFIC_DATA_MAX_SIZE (5 * 1024 * 1024) /* maximum size of the host-specific.json file */
 
+#define CMDB_NAMESPACE "data"
 #define CMDB_VARIABLES_TAGS "tags"
 #define CMDB_VARIABLES_DATA "value"
 #define CMDB_CLASSES_TAGS "tags"
@@ -97,7 +98,7 @@ static VarRef *GetCMDBVariableRef(const char *key)
     VarRef *ref = VarRefParse(key);
     if (ref->ns == NULL)
     {
-        ref->ns = xstrdup("cmdb");
+        ref->ns = xstrdup(CMDB_NAMESPACE);
     }
     else
     {
@@ -338,7 +339,7 @@ static bool AddCMDBClass(EvalContext *ctx, const char *key, StringSet *tags, con
     }
     else
     {
-        ret = EvalContextClassPutSoftNSTagsSetWithComment(ctx, "cmdb", key,
+        ret = EvalContextClassPutSoftNSTagsSetWithComment(ctx, CMDB_NAMESPACE, key,
                                                           CONTEXT_SCOPE_NAMESPACE, tags, comment);
     }
     if (!ret)

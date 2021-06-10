@@ -34,6 +34,7 @@
 bool SetSyslogHost(const char *host);
 void SetSyslogPort(uint16_t port);
 void SetSyslogFacility(int facility);
+int GetSyslogFacility();
 
 void RemoteSysLog(int log_priority, const char *log_string);
 

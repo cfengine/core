@@ -1035,6 +1035,9 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
 
     DetermineCfenginePort();
 
+    OpenLog(LOG_USER);
+    SetSyslogFacility(LOG_USER);
+
     EvalContextClassPutHard(ctx, "any", "source=agent");
 
     GenericAgentAddEditionClasses(ctx);
@@ -1048,9 +1051,6 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     {
         FatalError(ctx, "Error determining working directory");
     }
-
-    OpenLog(LOG_USER);
-    SetSyslogFacility(LOG_USER);
 
     Log(LOG_LEVEL_VERBOSE, "Work directory is %s", workdir);
 

@@ -22,12 +22,44 @@
   included file COSL.txt.
 */
 
-#include <test.h>
-
 #include <logging.h>
 #include <process_lib.h>
 #include <process_unix_priv.h>
 
+/**
+ * This file contains process-handling tests that need to fork() a child process
+ * which totally confuses the unit test framework used by the other tests.
+ */
+
+static bool failure = false;
+
+#define assert_int_equal(expr1, expr2) \
+    if ((expr1) != (expr2))            \
+    { \
+        fprintf(stderr, "FAIL: "#expr1" != "#expr2" [%jd != %jd] (%s:%d)\n", ((intmax_t) expr1), ((intmax_t) expr2), __FILE__, __LINE__); \
+        failure = true; \
+    }
+
+#define assert_int_not_equal(expr1, expr2) \
+    if ((expr1) == (expr2))            \
+    { \
+        fprintf(stderr, "FAIL: "#expr1" == "#expr2" [%jd == %jd] (%s:%d)\n", ((intmax_t) expr1), ((intmax_t) expr2), __FILE__, __LINE__); \
+        failure = true; \
+    }
+
+#define assert_true(expr) \
+    if (!(expr)) \
+    { \
+        fprintf(stderr, "FAIL: "#expr" is FALSE (%s:%d)\n", __FILE__, __LINE__); \
+        failure = true; \
+    }
+
+#define assert_false(expr) \
+    if ((expr)) \
+    { \
+        fprintf(stderr, "FAIL: "#expr" is TRUE (%s:%d)\n", __FILE__, __LINE__); \
+        failure = true; \
+    }
 
 pid_t SPAWNED_PID;
 pid_t THIS_PID;
@@ -203,7 +235,9 @@ static void test_graceful_terminate(void)
 
 int main()
 {
-    PRINT_TEST_BANNER();
+    puts("==================================================");
+    puts("Starting test process_test.c");
+    puts("==================================================");
 
     /* Don't miss the messages about GetProcessStartTime not implemented. */
     LogSetGlobalLevel(LOG_LEVEL_DEBUG);
@@ -214,14 +248,9 @@ int main()
     printf("This parent process has PID %jd and start_time %jd\n",
            (intmax_t) THIS_PID, (intmax_t) THIS_STARTTIME);
 
-    const UnitTest tests[] =
-    {
-        unit_test(test_process_start_time),
-        unit_test(test_process_state),
-        unit_test(test_graceful_terminate)
-    };
-
-    int ret = run_tests(tests);
+    test_process_start_time();
+    test_process_state();
+    test_graceful_terminate();
 
     /* Make sure no child is alive. */
     if (SPAWNED_PID > 0)
@@ -229,5 +258,5 @@ int main()
         kill(SPAWNED_PID, SIGKILL);
     }
 
-    return ret;
+    return failure ? 1 : 0;
 }

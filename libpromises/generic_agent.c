@@ -95,6 +95,9 @@ static bool MissingInputFile(const char *input_file);
 
 static bool LoadAugmentsFiles(EvalContext *ctx, const char* filename);
 
+static int ParseFacility(const char *name);
+static inline const char *LogFacilityToString(int facility);
+
 #if !defined(__MINGW32__)
 static void OpenLog(int facility);
 #endif
@@ -1005,6 +1008,58 @@ ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, GenericAgentAddEditionClasses, EvalC
     EvalContextClassPutHard(ctx, "community_edition", "inventory,attribute_name=none,source=agent");
 }
 
+static int GetDefaultLogFacility()
+{
+    char log_facility_file[PATH_MAX];
+    int written = snprintf(log_facility_file, sizeof(log_facility_file) - 1,
+                           "%s%c%s_log_facility.dat", GetStateDir(),
+                           FILE_SEPARATOR, CF_PROGRAM_NAME);
+    assert(written < PATH_MAX);
+    if (access(log_facility_file, R_OK) != 0)
+    {
+        return LOG_USER;
+    }
+
+    FILE *f = fopen(log_facility_file, "r");
+    if (f == NULL)
+    {
+        return LOG_USER;
+    }
+    char facility_str[16] = {0}; /* at most "LOG_DAEMON\n" */
+    size_t n_read = fread(facility_str, 1, sizeof(facility_str) - 1, f);
+    fclose(f);
+    if (n_read == 0)
+    {
+        return LOG_USER;
+    }
+    if (facility_str[n_read - 1] == '\n')
+    {
+        facility_str[n_read - 1] = '\0';
+    }
+    return ParseFacility(facility_str);
+}
+
+static bool StoreDefaultLogFacility()
+{
+    char log_facility_file[PATH_MAX];
+    int written = snprintf(log_facility_file, sizeof(log_facility_file) - 1,
+                           "%s%c%s_log_facility.dat", GetStateDir(),
+                           FILE_SEPARATOR, CF_PROGRAM_NAME);
+    assert(written < PATH_MAX);
+
+    FILE *f = fopen(log_facility_file, "w");
+    if (f == NULL)
+    {
+        return false;
+    }
+    const char *facility_str = LogFacilityToString(GetSyslogFacility());
+    int printed = fprintf(f, "%s\n", facility_str);
+    assert(printed > 0);
+
+    fclose(f);
+    return true;
+}
+
 void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
 {
     int force = false;
@@ -1035,6 +1090,10 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
 
     DetermineCfenginePort();
 
+    int default_facility = GetDefaultLogFacility();
+    OpenLog(default_facility);
+    SetSyslogFacility(default_facility);
+
     EvalContextClassPutHard(ctx, "any", "source=agent");
 
     GenericAgentAddEditionClasses(ctx);
@@ -1048,9 +1107,6 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     {
         FatalError(ctx, "Error determining working directory");
     }
-
-    OpenLog(LOG_USER);
-    SetSyslogFacility(LOG_USER);
 
     Log(LOG_LEVEL_VERBOSE, "Work directory is %s", workdir);
 
@@ -1592,6 +1648,24 @@ static int ParseFacility(const char *name)
     return -1;
 }
 
+static inline const char *LogFacilityToString(int facility)
+{
+    switch(facility)
+    {
+        case LOG_LOCAL0: return "LOG_LOCAL0";
+        case LOG_LOCAL1: return "LOG_LOCAL1";
+        case LOG_LOCAL2: return "LOG_LOCAL2";
+        case LOG_LOCAL3: return "LOG_LOCAL3";
+        case LOG_LOCAL4: return "LOG_LOCAL4";
+        case LOG_LOCAL5: return "LOG_LOCAL5";
+        case LOG_LOCAL6: return "LOG_LOCAL6";
+        case LOG_LOCAL7: return "LOG_LOCAL7";
+        case LOG_USER:   return "LOG_USER";
+        case LOG_DAEMON: return "LOG_DAEMON";
+        default:         return "UNKNOWN";
+    }
+}
+
 void SetFacility(const char *retval)
 {
     Log(LOG_LEVEL_VERBOSE, "SET Syslog FACILITY = %s", retval);
@@ -1599,6 +1673,10 @@ void SetFacility(const char *retval)
     CloseLog();
     OpenLog(ParseFacility(retval));
     SetSyslogFacility(ParseFacility(retval));
+    if (!StoreDefaultLogFacility())
+    {
+        Log(LOG_LEVEL_ERR, "Failed to store default log facility");
+    }
 }
 
 static void CheckWorkingDirectories(EvalContext *ctx)

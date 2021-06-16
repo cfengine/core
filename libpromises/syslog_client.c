@@ -46,6 +46,11 @@ void SetSyslogFacility(int facility)
     SYSLOG_FACILITY = facility;
 }
 
+int GetSyslogFacility()
+{
+    return SYSLOG_FACILITY;
+}
+
 bool SetSyslogHost(const char *host)
 {
     if (strlen(host) < sizeof(SYSLOG_HOST))

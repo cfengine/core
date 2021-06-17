@@ -1,3 +1,146 @@
+3.18.0:
+	- "No action for file" warning is no longer triggered when only
+	  'content => "something"' is used (CFE-3507)
+	- "source=promise_iteration" variables are no longer created in
+	  foreign bundles (ENT-7029)
+	- 'cf-remote install' now supports the '--trust-keys' option for
+	  pre-establishing trust before bootstrap (CFE-3485)
+	- 'cf-remote spawn' now supports adding new VMs to an existing group
+	  (CFE-3502)
+	- 'rename => newname()' now supports relative paths (CFE-3537)
+	- 'variables' and 'classes' in CMDB and augments data now support
+	  'comment' fields (CFE-3638)
+	- Included custom promise type libraries in src tarball
+	  (CFE-3575, CFE-3576)
+	- --ignore-preferred-augments now sets a hard class; ignore_preferred_augments
+	  This class makes it easy for cf-agent / cf-execd policy to
+	  propagate the option to other binaries (CFE-3656)
+	- Added 'classes' body support for custom promises (CFE-3437)
+	- Added a new --simulate=manifest-full mode
+	  New simulation mode that manifests all changed files as well as
+	  all other files evaluated by the agent run which were not skipped
+	  (by file selection rules) (CFE-3506)
+	- Added a new runagent_socket_allow_users body executor control attribute
+	  A new attribute that tells cf-execd to grant access to the
+	  runagent.socket to the specified users (ENT-6735)
+	- Added checks to return value from getpwuid & getgrgid (CFE-3521)
+	- Added int() policy function (CFE-3616)
+	- Added new command line option: --ignore-preferred-augments
+	  This option causes the agent to ignore def_preferred.json
+	  always reading def.json (old behavior) (CFE-3656)
+	- Added policy function `type()`
+	- Added policy function findfiles_up (CFE-3577)
+	- Added policy variable sys.os_name_human (CFE-3569)
+	- Added policy variable sys.os_version_major (CFE-3569)
+	- Added shell library for custom promise types with cp example
+	  (CFE-3516)
+	- Added string() policy function (CFE-3476)
+	- Augments data now supports meta information for classes
+	  and a new 'variables' object for variables with meta information
+	  (CFE-3633)
+	- Fixed case where malformed input could trigger buffer overflow
+	  in policy function format (CFE-3525)
+	- Ability to report some number of lines from the END of a file by
+	  specifying number_of_lines as a negative number using printfile
+	  (CFE-3558)
+	- CFEngine binaries now load host specific data
+	  ($(sys.workdir)/data/host_specific.json) before Augments relative
+	  to policy entry (def.json) (ENT-6789)
+	- CFEngine processes are now properly identified in syslog on
+	  non-GNU/Linux systems (ENT-7100)
+	- CMDB data now supports meta information for classes
+	  and a new 'variables' object for variables with meta information
+	  (CFE-3633)
+	- Changed custom promise type interpreter attribute to be optional
+	  (CFE-3562)
+	- Changed files promise repaired log level to verbose (CFE-3631)
+	- Changed log message about whitespace in class expressions to be error
+	  (CFE-3560)
+	- Changed sys var attribute names:
+	  "OS type" was changed to "Kernel", "OS kernel" was changed to "Kernel Release"
+	  (ENT-6551)
+	- Clarified error log message about untrusted state directory not being private
+	  (CFE-3599)
+	- Classes from augments are now defined as soft classes
+	  within the 'namespace' context instead of being hard
+	  classes. Policies using classes from augments in policy files
+	  using namespaces need to be updated to refer to the augments
+	  classes with the 'default:' prefix (CFE-3632)
+	- Custom promise modules using JSON protocol now support data attributes
+	  (CFE-3654)
+	- Custom promise modules using JSON protocol now support slist attributes
+	  (CFE-3444)
+	- Custom promise types can now be declared in separate files (CFE-3510)
+	- Custom promise types can now report back result classes (CFE-3515)
+	- Custom promises now support the 'log_level' attribute (CFE-3436)
+	- Each custom promise module is now only spawned once
+	  and handles all promises of its matching type(s) (CFE-3572)
+	- Early failing custom promises now properly set result classes
+	  (CFE-3645)
+	- Exit code from remote agent run is now sent to cf-runagent (CFE-3594)
+	- Fixed crash when attempting to put methods promises in bundles
+	  which are not agent bundles (CFE-3672)
+	- Fixed memory leak in package module code (ENT-5752)
+	- Fixed memory leak in simulate mode (CFE-3498)
+	- Fixed some more sign-compare warnings (CFE-3415)
+	- Improved error handling / logging of data received from promise module
+	- Improved log messages for commands promise outcomes and return codes
+	  (CFE-3604)
+	- Made errors about failed validation of custom promises less noisy
+	- Namespace and bundle can now be specified in augments and CMDB data
+	  (CFE-3633)
+	- New observations of root owned SETUID programs moved from WARN to NOTICE
+	  (ENT-6519)
+	- Policy function format() no longer truncates strings lager than 4KiB
+	  (CFE-2686)
+	- Policy function storejson() no longer truncates strings lager
+	  than 4096 bytes (CFE-2507)
+	- Promise type is now sent to custom promise modules (CFE-3563)
+	- Reduced the noise caused by packages promises being skipped in
+	  evaluation passes 2 and 3 (ENT-6553)
+	- Set Filedescriptor Limit to a more practial Size (CFE-3625)
+	- Stopped emitting warning and recording result when observing new
+	  SETGID files (ENT-6750)
+	- Stopped updating files promise result with WARN (notkept) when
+	  setuid files are encountered (ENT-6519)
+	- Unspecified 'files' constraints no longer cause '_kept' classes
+	  to be defined (CFE-3578)
+	- Updated contrib/masterfiles-stage scripts and instructions to be
+	  accurate (ENT-6165)
+	- Fixed using a custom promise module with two different
+	  interpreters results in an error (CFE-3572) - Value of the
+	  'files_single_copy' body control attribute is now logged in
+	  verbose logging mode (CFE-3622)
+	- variables and classes defined in cmdb cannot be re-defined in
+	  augments (ENT-7079)
+	- Verbose log now contains comments associated with 'vars' and
+	  'classes' promises (CFE-2442, CFE-2443)
+	- cf-agent now checks that promise module logs expected errors
+	- cf-agent now sends correct information to promise module in header
+	- cf-execd now executes cf-agent for "localhost" requests via the
+	  runagent.socket (ENT-7090)
+	- cf-execd now handles requests to run cf-runagent on given hosts
+	  (ENT-6182)
+	- cf-execd now runs cf-agent from a child process instead of a
+	  thread on POSIX systems (ENT-6182)
+	- cf-runagent now exits with a code reflecting remote agent run
+	  status(es) (CFE-3594)
+	- cf-serverd now supports systemd-based socket activation
+	- def_preferred.json is now used instead of def.json if it exists
+	  Old clients will ignore it, allowing you to have 2
+	  versions of the augments file, 1 for compatibility
+	  with old clients, and 1 for utilizing the new feautres.
+	  (CFE-3656)
+	- files_single_copy body agent control attribute can now be an
+	  empty list (CFE-3622)
+	- files_single_copy no longer treats paths of copied files as
+	  regular expressions (CFE-3621)
+	- log_level is properly sent to promise modules in both validate
+	  and evaluate requests (CFE-3564)
+	- unless can now be used with custom promise types (CFE-3431)
+	- CFEngine processes now reuse log facility from previous run for
+	  early logging before policy is loaded (ENT-6955)
+
 3.17.0:
 	- cf-agent can now simulate the changes done to files in a chroot, printing
 	  diff or manifest information about what it would do in a normal evaluation.

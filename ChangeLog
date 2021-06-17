@@ -28,7 +28,7 @@
 	- Added new command line option: --ignore-preferred-augments
 	  This option causes the agent to ignore def_preferred.json
 	  always reading def.json (old behavior) (CFE-3656)
-	- Added policy function `type()`
+	- Added policy function type()
 	- Added policy function findfiles_up (CFE-3577)
 	- Added policy variable sys.os_name_human (CFE-3569)
 	- Added policy variable sys.os_version_major (CFE-3569)

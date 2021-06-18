@@ -22,6 +22,12 @@ bundle agent init
   reports:
     DEBUG_LOTS::
       "$(this.bundle): will consider example $(all_examples)";
+
+  commands:
+      # restore hostname to be "localhost" - it's set to be like this in
+      # https://github.com/mendersoftware/mender-qa/blob/master/scripts/initialize-user-data.sh#L57
+      # but might be changed somewhere else
+      "hostname localhost";
 }
 
 #######################################################

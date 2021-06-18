@@ -1,3 +1,5 @@
+3.19.0:
+
 3.18.0:
 	- "No action for file" warning is no longer triggered when only
 	  'content => "something"' is used (CFE-3507)

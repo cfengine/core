@@ -867,7 +867,7 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host,
 
     // For promises/locks with ifelapsed == 0, skip all detection logic of
     // previously acquired locks, whether in this agent or a parallel one.
-    if (ifelapsed != 0)
+    if ((ifelapsed != 0) && (lastcompleted != 0))
     {
         if (elapsedtime < 0)
         {

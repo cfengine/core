@@ -25,6 +25,7 @@
 #include <parser.h>
 #include <parser_state.h>
 
+#include <string_lib.h>
 #include <misc_lib.h>
 #include <file_lib.h>
 #include <cleanup.h>
@@ -156,19 +157,19 @@ Policy *ParserParseFile(AgentType agent_type, const char *path, unsigned int war
 
 int ParserWarningFromString(const char *warning_str)
 {
-    if (strcmp("deprecated", warning_str) == 0)
+    if (StringEqual("deprecated", warning_str))
     {
         return PARSER_WARNING_DEPRECATED;
     }
-    else if (strcmp("removed", warning_str) == 0)
+    else if (StringEqual("removed", warning_str))
     {
         return PARSER_WARNING_REMOVED;
     }
-    else if (strcmp("all", warning_str) == 0)
+    else if (StringEqual("all", warning_str))
     {
         return PARSER_WARNING_ALL;
     }
-    else if (strcmp("truncated", warning_str) == 0)
+    else if (StringEqual("truncated", warning_str))
     {
         return PARSER_WARNING_TRUNCATED;
     }

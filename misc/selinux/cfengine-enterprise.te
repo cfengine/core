@@ -140,7 +140,7 @@ require {
 	class dccp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
 	class ib_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
 	class mpls_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
-	class process { setrlimit transition dyntransition execstack execheap execmem signull };
+	class process { setrlimit transition dyntransition execstack execheap execmem signull siginh };
 	class file { execute execute_no_trans getattr ioctl map open read unlink write entrypoint lock link rename append setattr create relabelfrom relabelto };
 	class fifo_file { create open getattr setattr read write append rename link unlink ioctl lock relabelfrom relabelto };
 	class dir { getattr read search open write add_name remove_name lock ioctl create };
@@ -339,6 +339,7 @@ role object_r types cfengine_hub_exec_t;
 type_transition init_t cfengine_hub_exec_t:process cfengine_hub_t;
 allow init_t cfengine_hub_t:process transition;
 allow init_t cfengine_hub_exec_t:file { execute open read };
+allow init_t cfengine_hub_t:process siginh;
 
 allow cfengine_hub_t cfengine_hub_exec_t:file entrypoint;
 allow cfengine_hub_t cfengine_hub_exec_t:file { ioctl read getattr lock map execute open };
@@ -432,6 +433,7 @@ role object_r types cfengine_postgres_exec_t;
 type_transition init_t cfengine_postgres_exec_t:process cfengine_postgres_t;
 allow init_t cfengine_postgres_t:process transition;
 allow init_t cfengine_postgres_exec_t:file { execute open read };
+allow init_t cfengine_postgres_t:process siginh;
 
 allow cfengine_postgres_t cfengine_postgres_exec_t:file entrypoint;
 allow cfengine_postgres_t cfengine_postgres_exec_t:file { ioctl read getattr lock map execute open };
@@ -493,6 +495,7 @@ role object_r types cfengine_httpd_exec_t;
 type_transition init_t cfengine_httpd_exec_t:process cfengine_httpd_t;
 allow init_t cfengine_httpd_t:process transition;
 allow init_t cfengine_httpd_exec_t:file { execute getattr open read };
+allow init_t cfengine_httpd_t:process siginh;
 
 allow cfengine_httpd_t cfengine_httpd_exec_t:file entrypoint;
 allow cfengine_httpd_t cfengine_httpd_exec_t:file { ioctl read getattr lock map execute open };

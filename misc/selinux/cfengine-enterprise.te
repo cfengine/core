@@ -306,7 +306,7 @@ allow cfengine_serverd_t fs_t:filesystem getattr;
 allow cfengine_serverd_t groupadd_exec_t:file getattr;
 allow cfengine_serverd_t hostname_exec_t:file getattr;
 allow cfengine_serverd_t init_exec_t:file getattr;
-allow cfengine_serverd_t init_t:dir read;
+allow cfengine_serverd_t init_t:dir { getattr open search read } ; # /proc/1 analysis
 allow cfengine_serverd_t init_t:file { getattr open read };
 allow cfengine_serverd_t journalctl_exec_t:file getattr;
 allow cfengine_serverd_t ping_exec_t:file getattr;

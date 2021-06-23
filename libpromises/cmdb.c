@@ -288,24 +288,41 @@ static bool ReadCMDBVariables(EvalContext *ctx, JsonElement *variables)
     while (JsonIteratorHasMore(&iter))
     {
         const char *key = JsonIteratorNextKey(&iter);
-        JsonElement *var_info = JsonObjectGet(variables, key);
+        JsonElement *const var_info = JsonObjectGet(variables, key);
 
-        JsonElement *json_tags = JsonObjectGet(var_info, CMDB_VARIABLES_TAGS);
-        JsonElement *data = JsonObjectGet(var_info, CMDB_VARIABLES_DATA);
+        JsonElement *data;
+        StringSet *tags;
+        const char *comment = NULL;
 
-        if (data == NULL)
+        if (JsonGetType(var_info) == JSON_TYPE_OBJECT)
         {
-            Log(LOG_LEVEL_ERR, "Missing value in '%s' variable specification in CMDB data", key);
-            continue;
+            data = JsonObjectGet(var_info, CMDB_VARIABLES_DATA);
+
+            if (data == NULL)
+            {
+                Log(LOG_LEVEL_ERR, "Missing value in '%s' variable specification in CMDB data (value field is required)", key);
+                continue;
+            }
+
+            JsonElement *json_tags = JsonObjectGet(var_info, CMDB_VARIABLES_TAGS);
+            tags = GetTagsFromJsonTags("variable", key, json_tags, CMDB_SOURCE_TAG);
+            comment = GetCMDBComment("variable", key, var_info);
         }
+        else
+        {
+            // Just a bare value, like in "vars", no metadata
+            data = var_info;
+            tags = GetTagsFromJsonTags("variable", key, NULL, CMDB_SOURCE_TAG);
+        }
+
+        assert(tags != NULL);
+        assert(data != NULL);
 
         VarRef *ref = GetCMDBVariableRef(key);
         if (ref == NULL)
         {
             continue;
         }
-        StringSet *tags = GetTagsFromJsonTags("variable", key, json_tags, CMDB_SOURCE_TAG);
-        const char *comment = GetCMDBComment("variable", key, var_info);
 
         bool ret = AddCMDBVariable(ctx, key, ref, data, tags, comment);
         VarRefDestroy(ref);

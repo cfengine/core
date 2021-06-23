@@ -518,19 +518,36 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
                     ref->scope = xstrdup("def");
                 }
 
-                const JsonElement *var_info = JsonObjectGet(variables, vkey);
-                const JsonElement *data = JsonObjectGet(var_info, AUGMENTS_VARIABLES_DATA);
+                const JsonElement *const var_info = JsonObjectGet(variables, vkey);
 
-                if (data == NULL)
+                const JsonElement *data;
+                StringSet *tags;
+                const char *comment = NULL;
+
+                if (JsonGetType(var_info) == JSON_TYPE_OBJECT)
                 {
-                    Log(LOG_LEVEL_ERR, "Missing value for the augments variable '%s' in '%s'",
-                        vkey, filename);
-                    continue;
+                    data = JsonObjectGet(var_info, AUGMENTS_VARIABLES_DATA);
+
+                    if (data == NULL)
+                    {
+                        Log(LOG_LEVEL_ERR, "Missing value for the augments variable '%s' in '%s' (value field is required)",
+                            vkey, filename);
+                        continue;
+                    }
+
+                    const JsonElement *json_tags = JsonObjectGet(var_info, AUGMENTS_VARIABLES_TAGS);
+                    tags = GetTagsFromAugmentsTags("variable", vkey, json_tags, "source=augments_file", filename);
+                    comment = GetAugmentsComment("variable", vkey, filename, var_info);
+                }
+                else
+                {
+                    // Just a bare value, like in "vars", no metadata
+                    data = var_info;
+                    tags = GetTagsFromAugmentsTags("variable", vkey, NULL, "source=augments_file", filename);
                 }
 
-                const JsonElement *json_tags = JsonObjectGet(var_info, AUGMENTS_VARIABLES_TAGS);
-                StringSet *tags = GetTagsFromAugmentsTags("variable", vkey, json_tags, "source=augments_file", filename);
-                const char *comment = GetAugmentsComment("variable", vkey, filename, var_info);
+                assert(tags != NULL);
+                assert(data != NULL);
 
                 bool installed = false;
                 if (JsonGetElementType(data) == JSON_ELEMENT_TYPE_PRIMITIVE)

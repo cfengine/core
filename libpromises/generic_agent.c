@@ -532,6 +532,7 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
                     {
                         Log(LOG_LEVEL_ERR, "Missing value for the augments variable '%s' in '%s' (value field is required)",
                             vkey, filename);
+                        VarRefDestroy(ref);
                         continue;
                     }
 

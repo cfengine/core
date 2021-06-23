@@ -77,6 +77,7 @@ require {
 	role system_r;
 	type tty_device_t;
 	type user_devpts_t;
+	type sysctl_t;
 	class tcp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown name_connect accept listen name_bind node_bind };
 	class udp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown node_bind };
 	class sock_file { create write setattr unlink };
@@ -268,6 +269,7 @@ allow cfengine_monitord_t var_t:dir read;
 allow cfengine_monitord_t semanage_exec_t:file getattr;
 allow cfengine_monitord_t tty_device_t:chr_file getattr;
 allow cfengine_monitord_t user_devpts_t:chr_file getattr;
+allow cfengine_monitord_t sysctl_t:dir read;
 
 # TODO: this should not be needed
 allow cfengine_monitord_t proc_xen_t:dir search;

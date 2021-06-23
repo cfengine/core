@@ -308,6 +308,7 @@ static bool ReadCMDBVariables(EvalContext *ctx, JsonElement *variables)
             if (data == NULL)
             {
                 Log(LOG_LEVEL_ERR, "Missing value in '%s' variable specification in CMDB data (value field is required)", key);
+                VarRefDestroy(ref);
                 continue;
             }
 

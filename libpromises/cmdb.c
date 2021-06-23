@@ -288,6 +288,13 @@ static bool ReadCMDBVariables(EvalContext *ctx, JsonElement *variables)
     while (JsonIteratorHasMore(&iter))
     {
         const char *key = JsonIteratorNextKey(&iter);
+
+        VarRef *ref = GetCMDBVariableRef(key);
+        if (ref == NULL)
+        {
+            continue;
+        }
+
         JsonElement *const var_info = JsonObjectGet(variables, key);
 
         JsonElement *data;
@@ -317,12 +324,6 @@ static bool ReadCMDBVariables(EvalContext *ctx, JsonElement *variables)
 
         assert(tags != NULL);
         assert(data != NULL);
-
-        VarRef *ref = GetCMDBVariableRef(key);
-        if (ref == NULL)
-        {
-            continue;
-        }
 
         bool ret = AddCMDBVariable(ctx, key, ref, data, tags, comment);
         VarRefDestroy(ref);

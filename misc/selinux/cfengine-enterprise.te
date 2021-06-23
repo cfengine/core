@@ -446,14 +446,14 @@ allow cfengine_postgres_t postgresql_port_t:tcp_socket name_bind;
 
 allow cfengine_postgres_t hugetlbfs_t:file map;
 allow cfengine_postgres_t hugetlbfs_t:file { read write };
-allow cfengine_postgres_t init_t:unix_stream_socket { getattr ioctl };
+allow cfengine_postgres_t init_t:unix_stream_socket { getattr ioctl read write }; # pg_ctl, systemd, PAM?
 allow cfengine_postgres_t net_conf_t:file { getattr open read };
 allow cfengine_postgres_t node_t:tcp_socket node_bind;
 allow cfengine_postgres_t node_t:udp_socket node_bind;
 allow cfengine_postgres_t proc_t:file { getattr open read };
-allow cfengine_postgres_t self:netlink_route_socket { bind create getattr nlmsg_read };
-allow cfengine_postgres_t self:tcp_socket { bind create listen setopt };
-allow cfengine_postgres_t self:udp_socket { bind connect create getattr getopt };
+allow cfengine_postgres_t self:netlink_route_socket { bind create getattr nlmsg_read read write };
+allow cfengine_postgres_t self:tcp_socket { bind create listen setopt read write };
+allow cfengine_postgres_t self:udp_socket { bind connect create getattr getopt read write };
 allow cfengine_postgres_t sssd_public_t:dir search;
 allow cfengine_postgres_t sssd_public_t:file map;
 allow cfengine_postgres_t sssd_public_t:file { getattr open read };

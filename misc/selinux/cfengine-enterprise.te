@@ -75,6 +75,9 @@ require {
 	type tmp_t;
 	type tmpfs_t;
 	role system_r;
+	type tty_device_t;
+	type user_devpts_t;
+	type sysctl_t;
 	class tcp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown name_connect accept listen name_bind node_bind };
 	class udp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown node_bind };
 	class sock_file { create write setattr unlink };
@@ -137,7 +140,7 @@ require {
 	class dccp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
 	class ib_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
 	class mpls_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
-	class process { setrlimit transition dyntransition execstack execheap execmem signull };
+	class process { setrlimit transition dyntransition execstack execheap execmem signull siginh };
 	class file { execute execute_no_trans getattr ioctl map open read unlink write entrypoint lock link rename append setattr create relabelfrom relabelto };
 	class fifo_file { create open getattr setattr read write append rename link unlink ioctl lock relabelfrom relabelto };
 	class dir { getattr read search open write add_name remove_name lock ioctl create };
@@ -151,6 +154,7 @@ require {
 	class service { start stop status reload enable disable };
 	class memprotect mmap_zero;
 	class peer recv;
+	class chr_file { getattr };
 }
 
 
@@ -228,6 +232,8 @@ allow cfengine_execd_t user_cron_spool_t:dir getattr;
 allow cfengine_execd_t useradd_exec_t:file getattr;
 allow cfengine_execd_t var_t:dir read;
 allow cfengine_execd_t semanage_exec_t:file getattr;
+allow cfengine_execd_t tty_device_t:chr_file getattr;
+allow cfengine_execd_t user_devpts_t:chr_file getattr;
 
 
 #============= cfengine_monitord_t ==============
@@ -261,6 +267,9 @@ allow cfengine_monitord_t user_cron_spool_t:dir getattr;
 allow cfengine_monitord_t useradd_exec_t:file getattr;
 allow cfengine_monitord_t var_t:dir read;
 allow cfengine_monitord_t semanage_exec_t:file getattr;
+allow cfengine_monitord_t tty_device_t:chr_file getattr;
+allow cfengine_monitord_t user_devpts_t:chr_file getattr;
+allow cfengine_monitord_t sysctl_t:dir read;
 
 # TODO: this should not be needed
 allow cfengine_monitord_t proc_xen_t:dir search;
@@ -297,7 +306,7 @@ allow cfengine_serverd_t fs_t:filesystem getattr;
 allow cfengine_serverd_t groupadd_exec_t:file getattr;
 allow cfengine_serverd_t hostname_exec_t:file getattr;
 allow cfengine_serverd_t init_exec_t:file getattr;
-allow cfengine_serverd_t init_t:dir read;
+allow cfengine_serverd_t init_t:dir { getattr open search read } ; # /proc/1 analysis
 allow cfengine_serverd_t init_t:file { getattr open read };
 allow cfengine_serverd_t journalctl_exec_t:file getattr;
 allow cfengine_serverd_t ping_exec_t:file getattr;
@@ -330,6 +339,7 @@ role object_r types cfengine_hub_exec_t;
 type_transition init_t cfengine_hub_exec_t:process cfengine_hub_t;
 allow init_t cfengine_hub_t:process transition;
 allow init_t cfengine_hub_exec_t:file { execute open read };
+allow init_t cfengine_hub_t:process siginh;
 
 allow cfengine_hub_t cfengine_hub_exec_t:file entrypoint;
 allow cfengine_hub_t cfengine_hub_exec_t:file { ioctl read getattr lock map execute open };
@@ -367,7 +377,7 @@ allow cfengine_hub_t hostname_exec_t:file getattr;
 allow cfengine_hub_t init_exec_t:file getattr;
 allow cfengine_hub_t init_t:dir { getattr open read search };
 allow cfengine_hub_t init_t:file { getattr open read };
-allow cfengine_hub_t init_t:unix_stream_socket ioctl;
+allow cfengine_hub_t init_t:unix_stream_socket { ioctl getattr read write }; # systemd, PAM?
 allow cfengine_hub_t init_var_run_t:dir search;
 allow cfengine_hub_t journalctl_exec_t:file getattr;
 allow cfengine_hub_t kernel_t:unix_dgram_socket sendto;
@@ -378,10 +388,10 @@ allow cfengine_hub_t proc_net_t:file { getattr open read };
 allow cfengine_hub_t proc_t:dir read;
 allow cfengine_hub_t rpm_exec_t:file getattr;
 allow cfengine_hub_t self:capability dac_override;
-allow cfengine_hub_t self:tcp_socket { connect create getopt setopt };
-allow cfengine_hub_t self:udp_socket { connect create getattr ioctl setopt };
+allow cfengine_hub_t self:tcp_socket { connect create getopt setopt read write };
+allow cfengine_hub_t self:udp_socket { connect create getattr ioctl setopt read write };
 allow cfengine_hub_t self:netlink_route_socket { create getopt setopt bind getattr };
-allow cfengine_hub_t self:unix_dgram_socket { create connect };
+allow cfengine_hub_t self:unix_dgram_socket { create connect read write };
 allow cfengine_hub_t semanage_exec_t:file getattr;
 allow cfengine_hub_t shadow_t:file getattr;
 allow cfengine_hub_t sssd_public_t:dir search;
@@ -423,6 +433,7 @@ role object_r types cfengine_postgres_exec_t;
 type_transition init_t cfengine_postgres_exec_t:process cfengine_postgres_t;
 allow init_t cfengine_postgres_t:process transition;
 allow init_t cfengine_postgres_exec_t:file { execute open read };
+allow init_t cfengine_postgres_t:process siginh;
 
 allow cfengine_postgres_t cfengine_postgres_exec_t:file entrypoint;
 allow cfengine_postgres_t cfengine_postgres_exec_t:file { ioctl read getattr lock map execute open };
@@ -437,14 +448,14 @@ allow cfengine_postgres_t postgresql_port_t:tcp_socket name_bind;
 
 allow cfengine_postgres_t hugetlbfs_t:file map;
 allow cfengine_postgres_t hugetlbfs_t:file { read write };
-allow cfengine_postgres_t init_t:unix_stream_socket { getattr ioctl };
+allow cfengine_postgres_t init_t:unix_stream_socket { getattr ioctl read write }; # pg_ctl, systemd, PAM?
 allow cfengine_postgres_t net_conf_t:file { getattr open read };
 allow cfengine_postgres_t node_t:tcp_socket node_bind;
 allow cfengine_postgres_t node_t:udp_socket node_bind;
 allow cfengine_postgres_t proc_t:file { getattr open read };
-allow cfengine_postgres_t self:netlink_route_socket { bind create getattr nlmsg_read };
-allow cfengine_postgres_t self:tcp_socket { bind create listen setopt };
-allow cfengine_postgres_t self:udp_socket { bind connect create getattr getopt };
+allow cfengine_postgres_t self:netlink_route_socket { bind create getattr nlmsg_read read write };
+allow cfengine_postgres_t self:tcp_socket { bind create listen setopt read write };
+allow cfengine_postgres_t self:udp_socket { bind connect create getattr getopt read write };
 allow cfengine_postgres_t sssd_public_t:dir search;
 allow cfengine_postgres_t sssd_public_t:file map;
 allow cfengine_postgres_t sssd_public_t:file { getattr open read };
@@ -484,6 +495,7 @@ role object_r types cfengine_httpd_exec_t;
 type_transition init_t cfengine_httpd_exec_t:process cfengine_httpd_t;
 allow init_t cfengine_httpd_t:process transition;
 allow init_t cfengine_httpd_exec_t:file { execute getattr open read };
+allow init_t cfengine_httpd_t:process siginh;
 
 allow cfengine_httpd_t cfengine_httpd_exec_t:file entrypoint;
 allow cfengine_httpd_t cfengine_httpd_exec_t:file { ioctl read getattr lock map execute open };
@@ -505,16 +517,16 @@ allow cfengine_httpd_t devlog_t:lnk_file read;
 allow cfengine_httpd_t devlog_t:sock_file write;
 allow cfengine_httpd_t http_port_t:tcp_socket { name_bind name_connect };
 allow cfengine_httpd_t init_t:dbus send_msg;
-allow cfengine_httpd_t init_t:unix_stream_socket { getattr ioctl };
+allow cfengine_httpd_t init_t:unix_stream_socket { getattr ioctl read write }; # apachectl
 allow cfengine_httpd_t init_var_run_t:dir search;
 allow cfengine_httpd_t kernel_t:unix_dgram_socket sendto;
 allow cfengine_httpd_t net_conf_t:file { getattr open read };
 allow cfengine_httpd_t node_t:tcp_socket node_bind;
-allow cfengine_httpd_t self:capability { dac_override dac_read_search kill net_bind_service setgid setuid };
-allow cfengine_httpd_t self:netlink_route_socket { bind create getattr nlmsg_read };
+allow cfengine_httpd_t self:capability { dac_override dac_read_search kill net_bind_service setgid setuid net_admin };
+allow cfengine_httpd_t self:netlink_route_socket { bind create getattr nlmsg_read read write };
 allow cfengine_httpd_t self:process execmem;
 allow cfengine_httpd_t unconfined_t:process signull;
-allow cfengine_httpd_t self:tcp_socket { accept bind connect create getattr getopt listen setopt shutdown };
+allow cfengine_httpd_t self:tcp_socket { accept bind connect create getattr getopt listen setopt shutdown read write };
 allow cfengine_httpd_t self:udp_socket { connect create getattr };
 allow cfengine_httpd_t self:unix_dgram_socket { connect create };
 allow cfengine_httpd_t sssd_public_t:dir search;

@@ -1,0 +1,12 @@
+{
+    "classes" : {
+        "test_class1": "any::",
+        "test_class2": ["any::"],
+        "ns1:test_class3": "any::",
+        "ns2:test_class4" : { "class_expressions": ["any::"] },
+        "ns2:test_class5" : { "regular_expressions": ["any"] },
+        "ns3:test_class6" : { "class_expressions": [] },
+        "ns3:test_class7" : { "regular_expressions": [] },
+        "test_class8" : {}
+    }
+}

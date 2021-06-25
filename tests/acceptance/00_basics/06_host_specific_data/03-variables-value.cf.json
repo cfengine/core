@@ -1,0 +1,7 @@
+{
+    "variables" : {
+        "test_variable": { "value": "4hfcattz2607yfksllzpf73eg7nmqprl" },
+        "scope1.test_variable": { "value": ["496btq4wxqs6rf07anbx95cj74ftdyhy"] },
+        "ns1:scope1.test_variable": { "value": { "key" : "tiyl4z5nybvlp8npd2faso4ctxhknpvk" } }
+    }
+}

@@ -1,0 +1,5 @@
+bundle agent __main__ {
+  reports:
+      "$(data:variables.test_variable)";
+      "$(with)" with => format("%S", "data:scope1.test_variable");
+}

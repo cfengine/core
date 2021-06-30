@@ -1,0 +1,9 @@
+{
+    "variables" : {
+        "test_variable": {
+            "value" : "4hfcattz2607yfksllzpf73eg7nmqprl",
+            "comment" : "comment1",
+            "tags" : ["test_tag"]
+        }
+    }
+}

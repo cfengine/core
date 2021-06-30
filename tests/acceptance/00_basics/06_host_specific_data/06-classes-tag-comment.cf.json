@@ -1,0 +1,13 @@
+{
+    "classes" : {
+        "ns1:test_class": {
+            "class_expressions" : [],
+            "tags": ["test_tag"],
+            "comment" : "comment1"
+        },
+        "ns2:test_class2": {
+            "tags": ["test_tag2"],
+            "comment" : "comment2"
+        }
+    }
+}

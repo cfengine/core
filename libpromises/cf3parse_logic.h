@@ -1028,4 +1028,11 @@ static inline void ParserBeginBundleBody()
     P.useargs = NULL;
 }
 
+static inline void ParserHandleQuotedListItem()
+{
+    RlistAppendScalar((Rlist **) &P.currentRlist,
+                      (void *) P.currentstring);
+    FREE_AND_NULL(P.currentstring);
+}
+
 #endif // CF3_PARSE_LOGIC_H

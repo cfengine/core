@@ -1,6 +1,7 @@
 [Unit]
 Description=CFEngine Enterprise Webserver
 After=syslog.target
+Wants=cf-postgres.service
 After=cf-postgres.service
 ConditionPathExists=@workdir@/httpd/bin/apachectl
 PartOf=cfengine3.service

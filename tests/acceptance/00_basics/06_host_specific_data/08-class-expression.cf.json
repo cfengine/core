@@ -1,0 +1,14 @@
+{
+    "classes" : {
+        "ns1:test_class1": {
+            "class_expressions" : ["cfengine"],
+            "tags": ["test_tag"],
+            "comment" : "comment1"
+        },
+       "ns2:test_class2": {
+            "class_expressions" : [],
+            "tags": ["test_tag"],
+            "comment" : "comment1"
+       }
+    }
+}

@@ -2,7 +2,6 @@
 Description=CFEngine Enterprise Webserver
 After=syslog.target
 After=cf-postgres.service
-Requires=cf-postgres.service
 ConditionPathExists=@workdir@/httpd/bin/apachectl
 PartOf=cfengine3.service
 

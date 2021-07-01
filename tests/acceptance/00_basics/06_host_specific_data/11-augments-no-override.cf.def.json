@@ -1,0 +1,9 @@
+{
+    "variables" : {
+        "ns1:scope1.test_variable": {
+            "value" : "override_value",
+            "comment" : "comment2",
+            "tags" : ["test_tag2"]
+        }
+    }
+}

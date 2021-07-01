@@ -7768,7 +7768,7 @@ static char *StripPatterns(char *file_buffer, const char *pattern, const char *f
         return file_buffer;
     }
 
-    int start, end, count = 0;
+    size_t start, end, count = 0;
     const size_t original_length = strlen(file_buffer);
     while (StringMatchWithPrecompiledRegex(rx, file_buffer, &start, &end))
     {

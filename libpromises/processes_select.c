@@ -594,7 +594,7 @@ static bool SelectProcRegexMatch(const char *name1, const char *name2,
         }
         else
         {
-            int s, e;
+            size_t s, e;
             return StringMatch(regex, line[i], &s, &e);
         }
     }

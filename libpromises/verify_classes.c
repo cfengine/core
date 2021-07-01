@@ -48,7 +48,8 @@ static bool ValidClassName(const char *str)
         FreeExpression(res.result);
     }
 
-    return res.result && res.position == strlen(str);
+    assert(res.position >= 0);
+    return res.result && (size_t) res.position == strlen(str);
 }
 
 PromiseResult VerifyClassPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED void *param)

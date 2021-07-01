@@ -416,7 +416,7 @@ void VarRefDestroy(VarRef *ref)
         free(ref->lval);
         if (ref->num_indices > 0)
         {
-            for (int i = 0; i < ref->num_indices; ++i)
+            for (size_t i = 0; i < ref->num_indices; ++i)
             {
                 free(ref->indices[i]);
             }

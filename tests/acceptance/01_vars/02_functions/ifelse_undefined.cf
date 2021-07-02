@@ -1,0 +1,37 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent test
+{
+  meta:
+      "description" -> { "ENT-4653" }
+        string => "Test that ifelse works with undefined variables in the second or third arguments";
+
+  vars:
+    "test_one" string => ifelse( "no_such_class", "$(no_such_var)", "test_one_expected_value" );
+    "test_two" string => ifelse( "any", "test_two_expected_value", "$(no_such_var)" );
+}
+
+bundle agent check
+{
+
+  reports:
+      '$(this.promise_filename) Pass'
+        if => and(
+                  strcmp( "test_one_expected_value", $(test.test_one) ),
+                  strcmp( "test_two_expected_value", $(test.test_two) ) );
+
+      '$(this.promise_filename) FAIL'
+        if => or(
+                 not( isvariable( "test.test_one" ) ),
+                 not( isvariable( "test.test_two" ) ) );
+
+      '$(this.propmise_filename) FAIL'
+        if => or(
+                 not(strcmp( "test_one_expected_value", $(test.test_one) ) ),
+                 not(strcmp( "test_two_expected_value", $(test.test_two) ) ) );
+}

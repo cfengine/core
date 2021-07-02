@@ -114,7 +114,7 @@ submit PRs with updates to this information.
 
 * CentOS (centos7 2021-07-02)
 
-Note that first you will need to (install epel-release)[https://fedoraproject.org/wiki/EPEL] for lmdb-devel to be available.
+Note that first you will need to install epel-release (https://fedoraproject.org/wiki/EPEL) for lmdb-devel to be available.
 
 # yum install -y gcc gdb make git libtool autoconf automake byacc flex openssl-devel pcre-devel lmdb-devel pam-devel flex-devel yaml-devel
 

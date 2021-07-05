@@ -1,0 +1,7 @@
+{
+    "vars" : {
+        "test_variable": "4hfcattz2607yfksllzpf73eg7nmqprl",
+        "scope1.test_variable": ["496btq4wxqs6rf07anbx95cj74ftdyhy"],
+        "ns1:scope1.test_variable": { "key" : "tiyl4z5nybvlp8npd2faso4ctxhknpvk" }
+    }
+}

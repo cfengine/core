@@ -1,0 +1,38 @@
+# basic test of the host_specific.json functionality: 'classes' object with a tag and a comment
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  files:
+      "$(sys.workdir)$(const.dirsep)data$(const.dirsep)."
+        create => "true",
+        perms => mog("0700", "$(sys.user_data[username])", "$(sys.user_data[username])");
+
+  methods:
+      "prepare_host_specific_data"
+        usebundle => file_copy("$(this.promise_filename).json",
+                               "$(sys.workdir)$(const.dirsep)data$(const.dirsep)host_specific.json"),
+        handle => "prepare_host_specific_data";
+
+      "empty_promises_cf" usebundle => file_make("$(sys.inputdir)/promises.cf", '');
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+      "command" string => "$(sys.cf_promises) --show-classes -f $(sys.inputdir)/promises.cf|$(G.grep) test_class";
+
+  methods:
+      "" usebundle => dcs_passif_output("ns1:test_class\s+test_tag,source=cmdb\s+comment1.*ns2:test_class2\s+test_tag2,source=cmdb\s+comment2",
+                                        "",
+                                        $(command), $(this.promise_filename));
+}

@@ -1,0 +1,38 @@
+# basic test of the host_specific.json functionality: 'classes' object with a tag and a comment
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  files:
+      "$(sys.workdir)$(const.dirsep)data$(const.dirsep)."
+        create => "true",
+        perms => mog("0700", "$(sys.user_data[username])", "$(sys.user_data[username])");
+
+  methods:
+      "prepare_host_specific_data"
+        usebundle => file_copy("$(this.promise_filename).json",
+                               "$(sys.workdir)$(const.dirsep)data$(const.dirsep)host_specific.json"),
+        handle => "prepare_host_specific_data";
+
+      "empty_promises_cf" usebundle => file_make("$(sys.inputdir)/promises.cf", '');
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+      "command" string => "$(sys.cf_promises) --show-classes -f $(sys.inputdir)/promises.cf";
+
+  methods:
+      "" usebundle => dcs_passif_output("\s*error: Invalid class expression rules for class 'ns1:test_class1'.*\s+ns2:test_class2\s+.*",
+                                        "",
+                                        $(command), $(this.promise_filename));
+}

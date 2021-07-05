@@ -1,0 +1,16 @@
+{
+    "clses" : {
+        "ns1:test_class": {
+            "class_expressions" : [],
+            "tags": ["test_tag"],
+            "comment" : "comment1"
+        }
+    },
+    "classes" : {
+        "ns1:test_class": {
+            "class_expressions" : [],
+            "tags": ["test_tag"],
+            "comment" : "comment1"
+        }
+    }
+}

@@ -1,0 +1,19 @@
+bundle agent __main__ {
+  reports:
+    data:test_class1::
+      "test_class1 defined as expected";
+    data:test_class2::
+      "test_class2 defined as expected";
+    ns1:test_class3::
+      "test_class3 defined as expected";
+    ns2:test_class4::
+      "test_class4 defined as expected";
+    ns2:test_class5::
+      "test_class5 defined as expected";
+    ns3:test_class6::
+      "test_class6 defined as expected";
+    ns3:test_class7::
+      "test_class7 defined as expected";
+    data:test_class8::
+      "test_class8 defined as expected";
+}

@@ -589,7 +589,7 @@ bool DoubleFromString(const char *s, double *value_out)
             Log(LOG_LEVEL_VERBOSE,
                 "Ignoring bad quantifier '%c' in real number: %s",
                 quantifier, s);
-            break;
+            return false;
         }
     }
 

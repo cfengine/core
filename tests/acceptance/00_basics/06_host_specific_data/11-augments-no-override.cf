@@ -1,0 +1,41 @@
+# basic test of the host_specific.json functionality: 'variables' object with a tag and a comment
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  files:
+      "$(sys.workdir)$(const.dirsep)data$(const.dirsep)."
+        create => "true",
+        perms => mog("0700", "$(sys.user_data[username])", "$(sys.user_data[username])");
+
+  methods:
+      "prepare_host_specific_data"
+        usebundle => file_copy("$(this.promise_filename).json",
+                               "$(sys.workdir)$(const.dirsep)data$(const.dirsep)host_specific.json"),
+        handle => "prepare_host_specific_data";
+
+      "def_json" usebundle => file_copy("$(this.promise_filename).def.json", "$(sys.inputdir)/def.json");
+
+      "empty_promises_cf" usebundle => file_make("$(sys.inputdir)/promises.cf", '');
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+      "command" string => "$(sys.cf_promises) --verbose --show-vars -f $(sys.inputdir)/promises.cf | $(G.grep) test_variable";
+
+  methods:
+      "" usebundle => dcs_passif_output(concat(".*Cannot set variable ns1:scope1.test_variable from augments, already defined from host-specific data",
+                                               ".*ns1:scope1.test_variable\s+4hfcattz2607yfksllzpf73eg7nmqprl\s+test_tag,source=cmdb\s+comment1.*"),
+                                        "override_value",
+                                        $(command), $(this.promise_filename));
+}

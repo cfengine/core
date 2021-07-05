@@ -1,0 +1,14 @@
+{
+    "variables" : {
+        "test_variable": {
+            "value" : "$(sys.uptime)",
+            "comment" : "comment1",
+            "tags" : ["test_tag"]
+        },
+        "test_variable2": {
+            "value" : "4hfcattz2607yfksllzpf73eg7nmqprl",
+            "comment" : "comment2",
+            "tags" : ["test_tag2"]
+        }
+    }
+}

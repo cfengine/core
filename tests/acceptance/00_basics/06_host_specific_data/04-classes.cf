@@ -1,0 +1,64 @@
+# basic test of the host_specific.json functionality: 'classes' object
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  files:
+      "$(sys.workdir)$(const.dirsep)data$(const.dirsep)."
+        create => "true",
+        perms => mog("0700", "$(sys.user_data[username])", "$(sys.user_data[username])");
+
+  methods:
+      "prepare_host_specific_data"
+        usebundle => file_copy("$(this.promise_filename).json",
+                               "$(sys.workdir)$(const.dirsep)data$(const.dirsep)host_specific.json"),
+        handle => "prepare_host_specific_data";
+
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "result"
+        data => execresult_as_data("$(sys.cf_agent) -Kf $(this.promise_filename).sub",
+                                   "noshell", "both"),
+        depends_on => { "prepare_host_specific_data" }; # ensure the sub-agent execution doesn't happen too early
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "exit_code_ok" expression => strcmp("$(test.result[exit_code])", "0");
+      "output_ok" expression => strcmp("$(test.result[output])",
+'R: test_class1 defined as expected
+R: test_class2 defined as expected
+R: test_class3 defined as expected
+R: test_class4 defined as expected
+R: test_class5 defined as expected
+R: test_class6 defined as expected
+R: test_class7 defined as expected
+R: test_class8 defined as expected');
+
+      "ok" and => {"exit_code_ok", "output_ok"};
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+
+    !ok.DEBUG::
+      "exit code: $(test.result[exit_code])";
+      "output: $(test.result[output])";
+}

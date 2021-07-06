@@ -1235,6 +1235,7 @@ static FnCallResult FnCallIfElse(EvalContext *ctx,
     char id[CF_BUFSIZE];
 
     snprintf(id, CF_BUFSIZE, "built-in FnCall ifelse-arg");
+    Log(LOG_LEVEL_DEBUG, "FnCallIfElse()");
 
     /* We need to check all the arguments, ArgTemplate does not check varadic functions */
     for (const Rlist *arg = finalargs; arg; arg = arg->next)
@@ -1246,6 +1247,8 @@ static FnCallResult FnCallIfElse(EvalContext *ctx,
         }
         argcount++;
     }
+
+    Log(LOG_LEVEL_DEBUG, "argument check complete");
 
     /* Require an odd number of arguments. We will always return something. */
     if ((argcount % 2) == 0)
@@ -1262,12 +1265,14 @@ static FnCallResult FnCallIfElse(EvalContext *ctx,
          * arguments as a class. */
         if (IsDefinedClass(ctx, RlistScalarValue(arg)))
         {
+            Log(LOG_LEVEL_DEBUG, "arg class eval'd true to return next arg, even arg number");
             /* If the evaluation returned true in the current context,
              * return the second of the two arguments. */
             return FnReturn(RlistScalarValue(arg->next));
         }
     }
 
+    Log(LOG_LEVEL_DEBUG, "no more args so return current arg, fallback case");
     /* If we get here, we've reached the last argument (arg->next is NULL). */
     return FnReturn(RlistScalarValue(arg));
 }

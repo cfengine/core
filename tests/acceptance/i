@@ -1,0 +1,1 @@
+./testall --printlog --debug 01_vars/02_functions/ifelse_undefined.cf 

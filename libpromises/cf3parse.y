@@ -755,10 +755,8 @@ litem:                 IDENTIFIER
                                        (P.currentclasses ?
                                             P.currentclasses : "any"),
                                        P.currentstring);
-                           RlistAppendScalar((Rlist **) &P.currentRlist,
-                                             (void *) P.currentstring);
-                           free(P.currentstring);
-                           P.currentstring = NULL;
+
+                           ParserHandleQuotedListItem();
                        }
 
                      | NAKEDVAR

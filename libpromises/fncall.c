@@ -366,10 +366,19 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, const Policy *policy, FnCall *fp, 
     {
         // Special case: ifelse(isvariable("x"), $(x), "default")
         // (the first argument will come down expanded as "!any")
+        Log(LOG_LEVEL_DEBUG, "fp->name: %s, Rlistlen(expargs): %d, RlistScalarValueSafe(expargs): %s, RlistIsUnresolved(expargs->next->next): %d",
+          fp->name,
+          RlistLen(expargs),
+          RlistScalarValueSafe(expargs),
+          RlistIsUnresolved(expargs->next->next));
+
+// TODO: try allowing eval of ifelse ALWAYS when there are three args
+// wondering though about multiple var expansion and such?
         if (strcmp(fp->name, "ifelse") == 0 &&
-            RlistLen(expargs) == 3 &&
-            strcmp("!any", RlistScalarValueSafe(expargs)) == 0 &&
-            !RlistIsUnresolved(expargs->next->next))
+            RlistLen(expargs) == 3) 
+            //&&
+            //strcmp("!any", RlistScalarValueSafe(expargs)) == 0 &&
+            //!RlistIsUnresolved(expargs->next->next))
         {
                 Log(LOG_LEVEL_DEBUG, "Allowing ifelse() function evaluation even"
                     " though its arguments contain unresolved variables: %s",

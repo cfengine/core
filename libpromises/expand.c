@@ -200,6 +200,9 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, PromiseIterator *iterc
      * libpromises/iteration.c ShouldAddVariableAsIterationWheel(). */
     bool ifelse_actuated = !actuate_ifelse;
 
+    Log(LOG_LEVEL_DEBUG, "ExpandPromiseAndDo, actuate_ifelse=%d, ifelse_actuated=%d",
+    actuate_ifelse, ifelse_actuated);
+
     /* TODO this loop could be completely skipped for for non vars/classes if
      *      act_on_promise is CommonEvalPromise(). */
     while (PromiseIteratorNext(iterctx, ctx) || !ifelse_actuated)
@@ -216,6 +219,7 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, PromiseIterator *iterc
         if (pexp == NULL)                       /* is the promise excluded? */
         {
             result = PromiseResultUpdate(result, PROMISE_RESULT_SKIPPED);
+            Log(LOG_LEVEL_DEBUG, "ExpandPromiseAndDo, promise excluded? skip actual work part 2. don't run the actuator.");
             ifelse_actuated = true;
             continue;
         }
@@ -249,6 +253,7 @@ static PromiseResult ExpandPromiseAndDo(EvalContext *ctx, PromiseIterator *iterc
          * are Put() on the previous scope? */
         EvalContextStackPopFrame(ctx);
         ifelse_actuated = true;
+        Log(LOG_LEVEL_DEBUG, "at end of loop in ExpandPromiseAndDo, set ifelse_actuated = true");
     }
 
     return result;

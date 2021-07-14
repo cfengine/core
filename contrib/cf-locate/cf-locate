@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 # Author: Nick Anderson <nick@cmdln.org>, Ted Zlatanov <tzz@lifelogs.com>
 # locate and show bundles or bodies in a list of paths
 

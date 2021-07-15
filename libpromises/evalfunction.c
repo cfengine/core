@@ -509,59 +509,122 @@ static JsonElement* VarNameOrInlineToJson(EvalContext *ctx, const FnCall *fp, co
     return vardata;
 }
 
-static Rlist *GetHostsFromLastseenDB(Item *addresses, time_t horizon, bool return_address, bool return_recent)
+typedef struct {
+    char *address;
+    char *hostkey;
+    time_t lastseen;
+} HostData;
+
+static HostData *HostDataNew(const char *address, const char *hostkey, time_t lastseen)
+{
+    HostData *data = xmalloc(sizeof(HostData));
+    data->address = SafeStringDuplicate(address);
+    data->hostkey = SafeStringDuplicate(hostkey);
+    data->lastseen = lastseen;
+    return data;
+}
+
+static void HostDataFree(HostData *hd)
+{
+    if (hd != NULL)
+    {
+        free(hd->address);
+        free(hd->hostkey);
+        free(hd);
+    }
+}
+
+typedef enum {
+    NAME,
+    ADDRESS,
+    HOSTKEY,
+    NONE
+} HostsSeenFieldOption;
+
+static HostsSeenFieldOption ParseHostsSeenFieldOption(const char *field)
+{
+    if (StringEqual(field, "name"))
+    {
+        return NAME;
+    }
+    else if (StringEqual(field, "address"))
+    {
+        return ADDRESS;
+    }
+    else if (StringEqual(field, "hostkey"))
+    {
+        return HOSTKEY;
+    }
+    else
+    {
+        return NONE;
+    }
+}
+
+static Rlist *GetHostsFromLastseenDB(Seq *host_data, time_t horizon, HostsSeenFieldOption return_what, bool return_recent)
 {
     Rlist *recent = NULL, *aged = NULL;
-    Item *ip;
     time_t now = time(NULL);
-    double entrytime;
-    char address[CF_MAXVARSIZE]; // TODO: Could this be 1025 / NI_MAXHOST ?
+    time_t entrytime;
+    char ret_host_data[CF_MAXVARSIZE]; // TODO: Could this be 1025 / NI_MAXHOST ?
 
-    for (ip = addresses; ip != NULL; ip = ip->next)
+    const size_t length = SeqLength(host_data);
+    for (size_t i = 0; i < length; ++i)
     {
-        if (sscanf(ip->classes, "%lf", &entrytime) != 1)
+        HostData *hd = SeqAt(host_data, i);
+        entrytime = hd->lastseen;
+
+        if ((return_what == NAME || return_what == ADDRESS)
+             && HostKeyAddressUnknown(hd->hostkey))
         {
-            Log(LOG_LEVEL_ERR, "Could not get host entry age");
             continue;
         }
 
-        if (return_address)
+        switch (return_what)
         {
-            StringCopy(ip->name, address, sizeof(address));
-        }
-        else
-        {
-            char hostname[NI_MAXHOST];
-            if (IPString2Hostname(hostname, ip->name, sizeof(hostname)) != -1)
+            case NAME:
             {
-                StringCopy(hostname, address, sizeof(address));
+                char hostname[NI_MAXHOST];
+                if (IPString2Hostname(hostname, hd->address, sizeof(hostname)) != -1)
+                {
+                    StringCopy(hostname, ret_host_data, sizeof(ret_host_data));
+                }
+                else
+                {
+                    /* Not numeric address was requested, but IP was unresolvable. */
+                    StringCopy(hd->address, ret_host_data, sizeof(ret_host_data));
+                }
+                break;
             }
-            else
-            {
-                /* Not numeric address was requested, but IP was unresolvable. */
-                StringCopy(ip->name, address, sizeof(address));
-            }
+            case ADDRESS:
+                StringCopy(hd->address, ret_host_data, sizeof(ret_host_data));
+                break;
+            case HOSTKEY:
+                StringCopy(hd->hostkey, ret_host_data, sizeof(ret_host_data));
+                break;
+            default:
+                ProgrammingError("Parser allowed invalid hostsseen() field argument");
         }
 
         if (entrytime < now - horizon)
         {
             Log(LOG_LEVEL_DEBUG, "Old entry");
 
-            if (RlistKeyIn(recent, address))
+            if (RlistKeyIn(recent, ret_host_data))
             {
-                Log(LOG_LEVEL_DEBUG, "There is recent entry for this address. Do nothing.");
+                Log(LOG_LEVEL_DEBUG, "There is recent entry for this ret_host_data. Do nothing.");
             }
             else
             {
                 Log(LOG_LEVEL_DEBUG, "Adding to list of aged hosts.");
-                RlistPrependScalarIdemp(&aged, address);
+                RlistPrependScalarIdemp(&aged, ret_host_data);
             }
         }
         else
         {
             Log(LOG_LEVEL_DEBUG, "Recent entry");
 
-            Rlist *r = RlistKeyIn(aged, address);
+            Rlist *r = RlistKeyIn(aged, ret_host_data);
             if (r)
             {
                 Log(LOG_LEVEL_DEBUG, "Purging from list of aged hosts.");
@@ -569,7 +632,7 @@ static Rlist *GetHostsFromLastseenDB(Item *addresses, time_t horizon, bool retur
             }
 
             Log(LOG_LEVEL_DEBUG, "Adding to list of recent hosts.");
-            RlistPrependScalarIdemp(&recent, address);
+            RlistPrependScalarIdemp(&recent, ret_host_data);
         }
     }
 
@@ -619,18 +682,7 @@ static bool CallHostsSeenCallback(const char *hostkey, const char *address,
                                   ARG_UNUSED bool incoming, const KeyHostSeen *quality,
                                   void *ctx)
 {
-    Item **addresses = ctx;
-
-    if (HostKeyAddressUnknown(hostkey))
-    {
-        return true;
-    }
-
-    char buf[PRINTSIZE(uintmax_t)];
-    xsnprintf(buf, sizeof(buf), "%ju", (uintmax_t) quality->lastseen);
-
-    PrependItem(addresses, address, buf);
-
+    SeqAppend(ctx, HostDataNew(address, hostkey, quality->lastseen));
     return true;
 }
 
@@ -638,25 +690,27 @@ static bool CallHostsSeenCallback(const char *hostkey, const char *address,
 
 static FnCallResult FnCallHostsSeen(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
-    Item *addresses = NULL;
+    Seq *host_data = SeqNew(1, HostDataFree);
 
     int horizon = IntFromString(RlistScalarValue(finalargs)) * 3600;
     char *hostseen_policy = RlistScalarValue(finalargs->next);
-    char *format = RlistScalarValue(finalargs->next->next);
+    char *field_str = RlistScalarValue(finalargs->next->next);
+    HostsSeenFieldOption field = ParseHostsSeenFieldOption(field_str);
 
     Log(LOG_LEVEL_DEBUG, "Calling hostsseen(%d,%s,%s)",
-        horizon, hostseen_policy, format);
+        horizon, hostseen_policy, field_str);
 
-    if (!ScanLastSeenQuality(&CallHostsSeenCallback, &addresses))
+    if (!ScanLastSeenQuality(&CallHostsSeenCallback, host_data))
     {
+        SeqDestroy(host_data);
         return FnFailure();
     }
 
-    Rlist *returnlist = GetHostsFromLastseenDB(addresses, horizon,
-                                               strcmp(format, "address") == 0,
-                                               strcmp(hostseen_policy, "lastseen") == 0);
+    Rlist *returnlist = GetHostsFromLastseenDB(host_data, horizon,
+                                               field,
+                                               StringEqual(hostseen_policy, "lastseen"));
 
-    DeleteItemList(addresses);
+    SeqDestroy(host_data);
 
     {
         Writer *w = StringWriter();
@@ -9206,7 +9260,7 @@ static const FnCallArg HOSTSSEEN_ARGS[] =
 {
     {CF_VALRANGE, CF_DATA_TYPE_INT, "Horizon since last seen in hours"},
     {"lastseen,notseen", CF_DATA_TYPE_OPTION, "Complements for selection policy"},
-    {"name,address", CF_DATA_TYPE_OPTION, "Type of return value desired"},
+    {"name,address,hostkey", CF_DATA_TYPE_OPTION, "Type of return value desired"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 

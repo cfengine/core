@@ -7,6 +7,9 @@
 #include <json.h>
 #include <db_structs.h>
 #include <utilities.h>
+#include <known_dirs.h> // GetStateDir() for usage printout
+#include <file_lib.h>   // FILE_SEPARATOR
+#include <observables.h>
 
 typedef enum
 {
@@ -19,7 +22,18 @@ typedef enum
 
 static void print_usage(void)
 {
-    printf("Usage: cf-check dump [-k|-v|-n|-s|-p] [FILE ...]\n");
+    printf("Usage: cf-check dump [-k|-v|-n|-s|-p|-t FILE] [FILE ...]\n");
+    printf("\n");
+    printf("\t-k|--keys        print only keys\n");
+    printf("\t-v|--values      print only values\n");
+    printf("\t-n|--nice        print strings in a nice way and with database specific awareness\n");
+    printf("\t-s|--simple      print as simple escaped binary data\n");
+    printf("\t-p|--portable    print unambiguously with structs and raw strings\n");
+    printf("\t-t|--tskey FILE  use FILE as list of observables\n");
+    printf("\tWill use '%s%cts_key' if not specified, or built-in list if no ts_key file is found.\n",
+        GetStateDir(),
+        FILE_SEPARATOR);
+    printf("\n");
     printf("Example: cf-check dump /var/cfengine/state/cf_lastseen.lmdb\n");
 }
 
@@ -54,7 +68,7 @@ static void print_json_string(
         bool known_data = ((size == 1) || (len == (size - 1)) || (data[size - 1] == '\n'));
         if (!known_data)
         {
-            printf("\nError: This database contains unknown binary data - use --simple to print anyway\n");
+            printf("\nError: This database contains unknown binary data - use --simple to print anyway or try on the same OS/architecture the lmdb file was generated on\n");
             exit(1);
         }
 
@@ -143,7 +157,7 @@ static void print_struct_lock_data(
 
 // Used to print values in /var/cfengine/state/cf_observations.lmdb:
 static void print_struct_averages(
-    const MDB_val value, const bool strip_strings)
+    const MDB_val value, const bool strip_strings, const char *tskey_filename)
 {
     assert(sizeof(Averages) == value.mv_size);
     if (sizeof(Averages) != value.mv_size)
@@ -154,24 +168,29 @@ static void print_struct_averages(
     else
     {
         // TODO: clean up Averages
+        char **obnames = NULL;
         const Averages *const averages = value.mv_data;
         const time_t last_seen = averages->last_seen;
 
-        JsonElement *all_observables = JsonObjectCreate(observables_max);
-        assert(observables_max <= CF_OBSERVABLES);
+        obnames = GetObservableNames(tskey_filename);
+        JsonElement *all_observables = JsonObjectCreate(CF_OBSERVABLES);
 
-        for (Observable i = 0; i < observables_max; ++i)
+        for (Observable i = 0; i < CF_OBSERVABLES; ++i)
         {
+            char *name = obnames[i];
             JsonElement *observable = JsonObjectCreate(4);
             QPoint Q = averages->Q[i];
-            const char *const name = observable_strings[i];
 
             JsonObjectAppendReal(observable, "q", Q.q);
             JsonObjectAppendReal(observable, "expect", Q.expect);
             JsonObjectAppendReal(observable, "var", Q.var);
             JsonObjectAppendReal(observable, "dq", Q.dq);
             JsonObjectAppendObject(all_observables, name, observable);
+
+            free(obnames[i]);
         }
+
+        free(obnames);
 
         JsonElement *top_json = JsonObjectCreate(2);
         JsonObjectAppendInteger(top_json, "last_seen", last_seen);
@@ -254,7 +273,8 @@ static void print_struct_or_string(
     const MDB_val value,
     const char *const file,
     const bool strip_strings,
-    const bool structs)
+    const bool structs,
+    const char *tskey_filename)
 {
     if (structs)
     {
@@ -277,12 +297,12 @@ static void print_struct_or_string(
             }
             else
             {
-                print_struct_averages(value, strip_strings);
+                print_struct_averages(value, strip_strings, tskey_filename);
             }
         }
         else if (StringEndsWith(file, "history.lmdb"))
         {
-            print_struct_averages(value, strip_strings);
+            print_struct_averages(value, strip_strings, tskey_filename);
         }
         else if (StringEndsWith(file, "cf_state.lmdb"))
         {
@@ -323,12 +343,13 @@ static void print_line_key_value(
     const MDB_val value,
     const char *const file,
     const bool strip_strings,
-    const bool structs)
+    const bool structs,
+    const char *tskey_filename)
 {
     printf("\t");
     print_json_string(key.mv_data, key.mv_size, strip_strings);
     printf(": ");
-    print_struct_or_string(key, value, file, strip_strings, structs);
+    print_struct_or_string(key, value, file, strip_strings, structs, tskey_filename);
     printf(",\n");
 }
 
@@ -364,7 +385,7 @@ static void print_closing_bracket(const dump_mode mode)
     }
 }
 
-static int dump_db(const char *file, const dump_mode mode)
+static int dump_db(const char *file, const dump_mode mode, const char *tskey_filename)
 {
     assert(file != NULL);
 
@@ -372,10 +393,10 @@ static int dump_db(const char *file, const dump_mode mode)
     const bool structs = (mode == DUMP_NICE || mode == DUMP_PORTABLE);
 
     int r;
-    MDB_env *env;
-    MDB_txn *txn;
+    MDB_env *env = NULL;
+    MDB_txn *txn = NULL;
     MDB_dbi dbi;
-    MDB_cursor *cursor;
+    MDB_cursor *cursor = NULL;
 
     if (0 != (r = mdb_env_create(&env))
         || 0 != (r = mdb_env_open(env, file, MDB_NOSUBDIR | MDB_RDONLY, 0644))
@@ -383,6 +404,18 @@ static int dump_db(const char *file, const dump_mode mode)
         || 0 != (r = mdb_open(txn, NULL, 0, &dbi))
         || 0 != (r = mdb_cursor_open(txn, dbi, &cursor)))
     {
+        if (env != NULL)
+        {
+            if (txn != NULL)
+            {
+                if (cursor != NULL)
+                {
+                    mdb_cursor_close(cursor);
+                }
+                mdb_txn_abort(txn);
+            }
+            mdb_env_close(env);
+        }
         return dump_report_error(r);
     }
 
@@ -395,7 +428,7 @@ static int dump_db(const char *file, const dump_mode mode)
         case DUMP_NICE:
         case DUMP_PORTABLE:
         case DUMP_SIMPLE:
-            print_line_key_value(key, value, file, strip_strings, structs);
+            print_line_key_value(key, value, file, strip_strings, structs, tskey_filename);
             break;
         case DUMP_KEYS:
             print_line_array_element(key, strip_strings);
@@ -424,7 +457,7 @@ static int dump_db(const char *file, const dump_mode mode)
     return 0;
 }
 
-static int dump_dbs(Seq *const files, const dump_mode mode)
+static int dump_dbs(Seq *const files, const dump_mode mode, const char *tskey_filename)
 {
     assert(files != NULL);
     const size_t length = SeqLength(files);
@@ -432,7 +465,7 @@ static int dump_dbs(Seq *const files, const dump_mode mode)
 
     if (length == 1)
     {
-        return dump_db(SeqAt(files, 0), mode);
+        return dump_db(SeqAt(files, 0), mode, tskey_filename);
     }
 
     int ret = 0;
@@ -441,7 +474,7 @@ static int dump_dbs(Seq *const files, const dump_mode mode)
     {
         const char *const filename = SeqAt(files, i);
         printf("%s:\n", filename);
-        const int r = dump_db(filename, mode);
+        const int r = dump_db(filename, mode, tskey_filename);
         if (r != 0)
         {
             ret = r;
@@ -457,6 +490,7 @@ int dump_main(int argc, const char *const *const argv)
 
     dump_mode mode = DUMP_NICE;
     size_t offset = 1;
+    const char *tskey_filename = NULL;
 
     if ((size_t) argc > offset && argv[offset] != NULL && argv[offset][0] == '-')
     {
@@ -483,6 +517,11 @@ int dump_main(int argc, const char *const *const argv)
         {
             mode = DUMP_PORTABLE;
         }
+        else if (StringMatchesOption(option, "--tskey", "-t"))
+        {
+            tskey_filename = argv[offset];
+            offset += 1;
+        }
         else
         {
             print_usage();
@@ -499,7 +538,7 @@ int dump_main(int argc, const char *const *const argv)
     }
 
     Seq *files = argv_to_lmdb_files(argc, argv, offset);
-    const int ret = dump_dbs(files, mode);
+    const int ret = dump_dbs(files, mode, tskey_filename);
     SeqDestroy(files);
     return ret;
 }

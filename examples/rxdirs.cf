@@ -1,0 +1,59 @@
+###############################################################################
+#+begin_src cfengine3
+bundle agent __main__
+# @brief Illustrating the behavior of rxdirs in perms bodies. Note, by default, when read is requested for a directory, execute is given as well.
+{
+  vars:
+      "example_dirs" slist => {
+                                "/tmp/rxdirs_example/rxdirs=default(true)-r",
+                                "/tmp/rxdirs_example/rxdirs=default(true)-rx",
+                                "/tmp/rxdirs_example/rxdirs=false-r",
+                                "/tmp/rxdirs_example/rxdirs=false-rx",
+      };
+
+  files:
+      "$(example_dirs)/."
+        create => "true";
+
+      "/tmp/rxdirs_example/rxdirs=default(true)-r"
+        perms => example:m( 600 );
+
+      "/tmp/rxdirs_example/rxdirs=default(true)-rx"
+        perms => example:m( 700 );
+
+      "/tmp/rxdirs_example/rxdirs=false-r"
+        perms => example:m_rxdirs_off( 600 );
+
+      "/tmp/rxdirs_example/rxdirs=false-rx"
+        perms => example:m_rxdirs_off( 700 );
+
+  reports:
+      "$(example_dirs) modeoct='$(with)'"
+        with => filestat( $(example_dirs), modeoct );
+}
+
+body file control{ namespace => "example"; }
+
+body perms m(mode)
+# @brief Set the file mode
+# @param mode The new mode
+{
+        mode   => "$(mode)";
+}
+body perms m_rxdirs_off(mode)
+# @brief Set the file mode, don't be clever and try to set +x on directory when +r is desired
+# @param mode The new mode
+{
+        inherit_from => m( $(mode) );
+        rxdirs => "false";
+}
+#+end_src
+###############################################################################
+#+begin_src example_output
+#@ ```
+#@ R: /tmp/rxdirs_example/rxdirs=default(true)-r modeoct='40700'
+#@ R: /tmp/rxdirs_example/rxdirs=default(true)-rx modeoct='40700'
+#@ R: /tmp/rxdirs_example/rxdirs=false-r modeoct='40600'
+#@ R: /tmp/rxdirs_example/rxdirs=false-rx modeoct='40700'
+#@ ```
+#+end_example

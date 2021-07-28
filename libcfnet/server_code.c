@@ -166,7 +166,7 @@ static int OpenReceiverChannel(char *bind_address)
 
         if (bind(sd, ap->ai_addr, ap->ai_addrlen) != -1)
         {
-            if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG)
+            if (WouldLog(LOG_LEVEL_DEBUG))
             {
                 /* Convert IP address to string, no DNS lookup performed. */
                 char txtaddr[CF_MAX_IP_LEN] = "";

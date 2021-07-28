@@ -157,7 +157,7 @@ int main(int argc, char *argv[])
         ShowLastSeenHosts(!NO_TRUNCATE);
         GenericAgentFinalize(ctx, config);
         CallCleanupFunctions();
-        return 0;
+        return EXIT_SUCCESS;
     }
 
     if (print_digest_arg)
@@ -192,7 +192,7 @@ int main(int argc, char *argv[])
                 Log (LOG_LEVEL_VERBOSE,
                      "Forced removal of entry '%s' was successful",
                      remove_keys_host);
-                status = 0;
+                status = EXIT_SUCCESS;
             }
         }
         GenericAgentFinalize(ctx, config);
@@ -205,7 +205,7 @@ int main(int argc, char *argv[])
         bool success = LicenseInstall(LICENSE_SOURCE);
         GenericAgentFinalize(ctx, config);
         CallCleanupFunctions();
-        return success ? 0 : 1;
+        return success ? EXIT_SUCCESS : EXIT_FAILURE;
     }
 
     if (trust_key_arg != NULL)

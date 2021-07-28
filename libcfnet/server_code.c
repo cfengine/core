@@ -178,9 +178,7 @@ static int OpenReceiverChannel(char *bind_address)
             }
             break;
         }
-        Log(LOG_LEVEL_INFO,
-            "Could not bind server address. (bind: %s)",
-            GetErrorStr());
+        Log(LOG_LEVEL_ERR, "Could not bind server address. (bind: %s)", GetErrorStr());
         cf_closesocket(sd);
         sd = -1;
     }

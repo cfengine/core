@@ -185,6 +185,13 @@ static int OpenReceiverChannel(char *bind_address)
         sd = -1;
     }
 
+    if (sd == -1)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Failed to bind to all attempted addresses (bind specification: '%s'",
+            bind_address);
+    }
+
     assert(response != NULL);               /* getaddrinfo() was successful */
     freeaddrinfo(response);
     return sd;

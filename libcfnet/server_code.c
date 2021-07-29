@@ -169,6 +169,20 @@ static int OpenReceiverChannel(char *bind_address)
         sd = socket(ap->ai_family, ap->ai_socktype, ap->ai_protocol);
         if (sd == -1)
         {
+            if (ap->ai_family == AF_INET)
+            {
+                Log(LOG_LEVEL_VERBOSE, "Failed to create socket for binding to an IPV4 interface");
+            }
+            else if (ap->ai_family == AF_INET6)
+            {
+                Log(LOG_LEVEL_VERBOSE, "Failed to create socket for binding to an IPV6 interface");
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE,
+                    "Failed to create socket for binding to an interface of ai_family %d",
+                    ap->ai_family);
+            }
             continue;
         }
 

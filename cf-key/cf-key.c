@@ -361,7 +361,8 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             }
 
         case 'C':
-            if (!GenericAgentConfigParseColor(config, optarg))
+            if (!GenericAgentConfigParseColor(config,
+                (OPTIONAL_ARGUMENT_IS_PRESENT) ? optarg : "auto"))
             {
                 GenericAgentConfigDestroy(config);
                 DoCleanupAndExit(EXIT_FAILURE);

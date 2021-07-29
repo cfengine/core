@@ -909,6 +909,11 @@ static PromiseResult PromiseModule_Evaluate(
     PromiseModule_Send(module);
 
     JsonElement *response = PromiseModule_Receive(module, pp);
+    if (response == NULL)
+    {
+        // Log from PromiseModule_Receive
+        return PROMISE_RESULT_FAIL;
+    }
 
     JsonElement *result_classes = JsonObjectGetAsArray(response, "result_classes");
     if (result_classes != NULL)

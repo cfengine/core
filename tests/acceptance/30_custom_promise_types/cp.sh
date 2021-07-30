@@ -24,10 +24,20 @@ do_evaluate() {
         response_result="kept"
         return 0
     fi
-    if cp "$request_attribute_from" "$request_promiser"; then
+    if [ "$request_promise_type" = "cpa" ]; then
+      # No 'cp -a' on exotics. Sleep 1s to make sure timestamps would differ
+      # without -p.
+      if sleep 1 && cp -Rp "$request_attribute_from" "$request_promiser"; then
         response_result="repaired"
-    else
+      else
         response_result="not_kept"
+      fi
+    else
+      if cp "$request_attribute_from" "$request_promiser"; then
+        response_result="repaired"
+      else
+        response_result="not_kept"
+      fi
     fi
 }
 

@@ -138,6 +138,10 @@ static bool access_CheckResource(const struct resource_acl *acl,
             access = true;
             have_match = true;
         }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "Hostname '%s' not admitted", hostname);
+        }
     }
     if (!access && !NULL_OR_EMPTY(key) &&
         acl->admit.keys != NULL)

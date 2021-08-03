@@ -12,6 +12,12 @@ bundle agent test
       "test_suppress_fail" string => "windows",
         meta => { "redmine6405" };
 
+      # Ubuntu 20 (at least our build machines) doesn't know how to resolve
+      # 127.0.0.1/::1 to localhost, the reverse lookup fails and so
+      # 'deny => { "localhost" };' and 'deny_hostnames => { "localhost" };'
+      # are not enough to deny access for this test.
+      "test_skip_unsupported" string => "ubuntu_20";
+
   methods:
       # source file
       "any" usebundle => file_make("$(G.testdir)/source_file",

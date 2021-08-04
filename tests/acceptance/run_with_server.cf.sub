@@ -40,9 +40,12 @@ bundle agent start_server(server_config)
         classes => if_failed("server_failed");
 
     debug_server|windows::
-      # Sleep 3 seconds since cf-serverd takes some time to start in background mode.
+      # Sleep 3 seconds since cf-serverd takes some time to start in background
+      # mode. We need to add a handle with $(server_config) in it so that the
+      # promise is not skipped if this bundle is used for multiple configs.
       "$(G.sleep) 3"
-        contain => run_under_shell;
+        contain => run_under_shell,
+        handle => "sleep_for_$(server_config)";
 
   reports:
     debug_server::

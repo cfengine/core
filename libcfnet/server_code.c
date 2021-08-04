@@ -64,6 +64,50 @@ int WaitForIncoming(int sd, time_t tm_sec)
 }
 
 /**
+ * Orders 'struct addrinfo *' linked list in a descending order based on the
+ * ai_family, prefering IPV6.
+ */
+static void OrderAddrInfoResponsesByAIfamily(struct addrinfo **first_response)
+{
+    /* Below is just a trivial implementation of the Bubble-sort algorithm to
+     * sort the linked list. */
+    struct addrinfo *first = *first_response;
+    bool change = true;
+    while (change)
+    {
+        change = false;
+        struct addrinfo *item = first;
+        struct addrinfo *prev = NULL;
+        while (item->ai_next != NULL)
+        {
+            /* AF_INET6 should be greater than AF_INET, but let's not rely on
+             * that and use a direct comparison. */
+            if ((item->ai_family == AF_INET) && (item->ai_next->ai_family == AF_INET6))
+            {
+                struct addrinfo *orig_next = item->ai_next;
+                item->ai_next = orig_next->ai_next;
+                orig_next->ai_next = item;
+                if (prev != NULL)
+                {
+                    prev->ai_next = orig_next;
+                }
+                else
+                {
+                    first = orig_next;
+                }
+                prev = orig_next;
+                change = true;
+            }
+            else
+            {
+                item = item->ai_next;
+            }
+        }
+    }
+    *first_response = first;
+}
+
+/**
  * @param bind_address address to bind to or %NULL to use the default BINDINTERFACE
  */
 static int OpenReceiverChannel(char *bind_address)
@@ -114,12 +158,31 @@ static int OpenReceiverChannel(char *bind_address)
         return -1;
     }
 
+    /* Make sure IPV6 addresses/interfaces are preferred over IPV4 ones (binding
+     * to the IPV6 address makes connections to the IPV4 equivalent work too, in
+     * particular for INADDR6_ANY (::) and INADDR_ANY (0.0.0.0/0). */
+    OrderAddrInfoResponsesByAIfamily(&response);
+
     int sd = -1;
     for (ap = response; ap != NULL; ap = ap->ai_next)
     {
         sd = socket(ap->ai_family, ap->ai_socktype, ap->ai_protocol);
         if (sd == -1)
         {
+            if (ap->ai_family == AF_INET)
+            {
+                Log(LOG_LEVEL_VERBOSE, "Failed to create socket for binding to an IPV4 interface");
+            }
+            else if (ap->ai_family == AF_INET6)
+            {
+                Log(LOG_LEVEL_VERBOSE, "Failed to create socket for binding to an IPV6 interface");
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE,
+                    "Failed to create socket for binding to an interface of ai_family %d",
+                    ap->ai_family);
+            }
             continue;
         }
 
@@ -166,7 +229,7 @@ static int OpenReceiverChannel(char *bind_address)
 
         if (bind(sd, ap->ai_addr, ap->ai_addrlen) != -1)
         {
-            if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG)
+            if (WouldLog(LOG_LEVEL_DEBUG))
             {
                 /* Convert IP address to string, no DNS lookup performed. */
                 char txtaddr[CF_MAX_IP_LEN] = "";
@@ -178,11 +241,16 @@ static int OpenReceiverChannel(char *bind_address)
             }
             break;
         }
-        Log(LOG_LEVEL_INFO,
-            "Could not bind server address. (bind: %s)",
-            GetErrorStr());
+        Log(LOG_LEVEL_ERR, "Could not bind server address. (bind: %s)", GetErrorStr());
         cf_closesocket(sd);
         sd = -1;
+    }
+
+    if (sd == -1)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Failed to bind to all attempted addresses (bind specification: '%s'",
+            bind_address);
     }
 
     assert(response != NULL);               /* getaddrinfo() was successful */

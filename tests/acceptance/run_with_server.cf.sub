@@ -34,7 +34,7 @@ bundle agent start_server(server_config)
         classes => if_failed("server_failed");
 
     debug_server::
-      "$(sys.cf_serverd) -Kdf $(server_config) > $(dlog) 2>&1"
+      "$(sys.cf_serverd) -Kldf $(server_config) > $(dlog) 2>&1"
         contain => run_under_shell,
         action => in_background,
         classes => if_failed("server_failed");
@@ -66,7 +66,7 @@ bundle agent run_test(test_name)
       "$(sys.cf_agent) -KIf $(test_name) -D DEBUG,AUTO 2>&1 | $(G.tee) $(dlog)"
         contain => run_under_shell;
     debug_client::
-      "$(sys.cf_agent) -Kdf $(test_name) -D DEBUG,EXTRA,AUTO 2>&1 | $(G.tee) $(dlog)"
+      "$(sys.cf_agent) -Kldf $(test_name) -D DEBUG,EXTRA,AUTO 2>&1 | $(G.tee) $(dlog)"
         contain => run_under_shell;
 
   reports:

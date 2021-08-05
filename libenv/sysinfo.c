@@ -3425,6 +3425,12 @@ static void SysOSNameHuman(EvalContext *ctx)
                                       "HP-UX", CF_DATA_TYPE_STRING,
                                       "source=agent,derived-from=hpux");
     }
+    else if (EvalContextClassGet(ctx, NULL, "opensuse") != NULL)
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, lval,
+                                      "OpenSUSE", CF_DATA_TYPE_STRING,
+                                      "source=agent,derived-from=opensuse");
+    }
     else if (EvalContextClassGet(ctx, NULL, "suse") != NULL)
     {
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, lval,

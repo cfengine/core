@@ -150,6 +150,8 @@ static time_t GetBootTimeFromUptimeCommand(time_t now);
 
 /*****************************************************/
 
+static char *FindNextInteger(char *str, char **num);
+
 void CalculateDomainName(const char *nodename, const char *dnsname,
                          char *fqname, size_t fqname_size,
                          char *uqname, size_t uqname_size,
@@ -1558,7 +1560,18 @@ static void OSClasses(EvalContext *ctx)
         EvalContextClassPutHard(ctx, "unknown_ostype", "source=agent,derived-from=sys.sysname");
     }
 
-    SetFlavor(ctx, "windows");
+    char *release = SafeStringDuplicate(VSYSNAME.release);
+    char *major = NULL;
+    FindNextInteger(release, &major);
+    if (NULL_OR_EMPTY(major))
+    {
+        SetFlavor(ctx, "windows");
+    }
+    else
+    {
+        SetFlavor2(ctx, "windows", major);
+    }
+    free(release);
 
 #endif /* __MINGW32__ */
 

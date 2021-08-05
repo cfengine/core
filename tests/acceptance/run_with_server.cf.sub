@@ -34,15 +34,18 @@ bundle agent start_server(server_config)
         classes => if_failed("server_failed");
 
     debug_server::
-      "$(sys.cf_serverd) -Kdf $(server_config) > $(dlog) 2>&1"
+      "$(sys.cf_serverd) -Kldf $(server_config) > $(dlog) 2>&1"
         contain => run_under_shell,
         action => in_background,
         classes => if_failed("server_failed");
 
     debug_server|windows::
-      # Sleep 3 seconds since cf-serverd takes some time to start in background mode.
+      # Sleep 3 seconds since cf-serverd takes some time to start in background
+      # mode. We need to add a handle with $(server_config) in it so that the
+      # promise is not skipped if this bundle is used for multiple configs.
       "$(G.sleep) 3"
-        contain => run_under_shell;
+        contain => run_under_shell,
+        handle => "sleep_for_$(server_config)";
 
   reports:
     debug_server::
@@ -63,7 +66,7 @@ bundle agent run_test(test_name)
       "$(sys.cf_agent) -KIf $(test_name) -D DEBUG,AUTO 2>&1 | $(G.tee) $(dlog)"
         contain => run_under_shell;
     debug_client::
-      "$(sys.cf_agent) -Kdf $(test_name) -D DEBUG,EXTRA,AUTO 2>&1 | $(G.tee) $(dlog)"
+      "$(sys.cf_agent) -Kldf $(test_name) -D DEBUG,EXTRA,AUTO 2>&1 | $(G.tee) $(dlog)"
         contain => run_under_shell;
 
   reports:

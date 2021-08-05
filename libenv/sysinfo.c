@@ -1092,7 +1092,7 @@ static void SetFlavor(EvalContext *ctx, const char *flavor)
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "flavor", flavor, CF_DATA_TYPE_STRING, "inventory,source=agent,attribute_name=none");
 }
 
-#ifdef __linux__
+#if defined __linux__ || __MINGW32__
 
 /**
  * @brief Combines OS and version string to define flavor variable and class
@@ -1113,6 +1113,10 @@ static void SetFlavor2(
     SetFlavor(ctx, flavor);
     free(flavor);
 }
+
+#endif
+
+#ifdef __linux__
 
 /**
  * @brief Combines OS and version string to define multiple hard classes

@@ -383,7 +383,7 @@ bundle agent failsafe_cfe_internal_call_update
 
     # On Windows we need cf-execd to call update.cf, otherwise the daemons will
     # not run under the SYSTEM account.
-    !windows::
+    !windows.!skip_policy_on_bootstrap::
       "$(sys.cf_agent) -f $(sys.update_policy_path) --define $(mode)"
         handle => "failsafe_cfe_internal_call_update_commands_call_update_cf",
         if => fileexists( $(sys.update_policy_path) ),

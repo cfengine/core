@@ -2,7 +2,7 @@
 objectIndex:libntech/libutils/platform.h
 
 // cppcheck is not clever enough to see that if (i >= PLATFORM_CONTEXT_MAX) then 'found' is false
-arrayIndexOutOfBounds:libenv/sysinfo.c:585
+arrayIndexOutOfBounds:libenv/sysinfo.c:587
 
 // 'psin' is assigned to 'ai->ai_addr' and 'ai' is returned to the caller
 memleak:libntech/libcompat/getaddrinfo.c:153

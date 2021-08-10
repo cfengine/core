@@ -150,6 +150,8 @@ static time_t GetBootTimeFromUptimeCommand(time_t now);
 
 /*****************************************************/
 
+static char *FindNextInteger(char *str, char **num);
+
 void CalculateDomainName(const char *nodename, const char *dnsname,
                          char *fqname, size_t fqname_size,
                          char *uqname, size_t uqname_size,
@@ -1092,7 +1094,7 @@ static void SetFlavor(EvalContext *ctx, const char *flavor)
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "flavor", flavor, CF_DATA_TYPE_STRING, "inventory,source=agent,attribute_name=none");
 }
 
-#ifdef __linux__
+#if defined __linux__ || __MINGW32__
 
 /**
  * @brief Combines OS and version string to define flavor variable and class
@@ -1113,6 +1115,10 @@ static void SetFlavor2(
     SetFlavor(ctx, flavor);
     free(flavor);
 }
+
+#endif
+
+#ifdef __linux__
 
 /**
  * @brief Combines OS and version string to define multiple hard classes
@@ -1554,7 +1560,18 @@ static void OSClasses(EvalContext *ctx)
         EvalContextClassPutHard(ctx, "unknown_ostype", "source=agent,derived-from=sys.sysname");
     }
 
-    SetFlavor(ctx, "windows");
+    char *release = SafeStringDuplicate(VSYSNAME.release);
+    char *major = NULL;
+    FindNextInteger(release, &major);
+    if (NULL_OR_EMPTY(major))
+    {
+        SetFlavor(ctx, "windows");
+    }
+    else
+    {
+        SetFlavor2(ctx, "windows", major);
+    }
+    free(release);
 
 #endif /* __MINGW32__ */
 

@@ -9,9 +9,7 @@ EXTRA_DIST= init.d/cfengine3.in \
 	systemd/cf-postgres.service.in \
 	systemd/cf-runalerts.service.in \
 	systemd/cf-serverd.service.in \
-	systemd/cfengine3.service.in \
-	custom_promise_types/cfengine.sh \
-	custom_promise_types/cfengine.py
+	systemd/cfengine3.service.in
 
 
 # The following files are generated from the previous ones, during ./configure

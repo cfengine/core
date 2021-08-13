@@ -12,23 +12,6 @@ body common control
 
 #######################################################
 
-bundle common python_check
-{
-  classes:
-    "python_version_compatible_with_cfengine_library"
-      expression => returnszero("/usr/bin/python3 -c 'import sys; assert sys.version_info >= (3,6)'", "useshell");
-}
-
-bundle agent init
-{
-  meta:
-      "test_skip_unsupported" string => "!python_version_compatible_with_cfengine_library";
-
-  files:
-    "$(this.promise_dirname)/cfengine.py"
-      copy_from => local_cp("$(this.promise_dirname)/../../../misc/custom_promise_types/cfengine.py");
-}
-
 bundle agent check
 {
   vars:

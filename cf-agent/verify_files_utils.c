@@ -736,8 +736,7 @@ static PromiseResult SourceSearchAndCopy(EvalContext *ctx, const char *from, cha
 
     if (maxrecurse == 0)        /* reached depth limit */
     {
-        RecordFailure(ctx, pp, attr, "Maximum recursion level reached at '%s'", from);
-        return PROMISE_RESULT_FAIL;
+        Log(LOG_LEVEL_VERBOSE, "Maximum recursion level reached at '%s'", from);
     }
 
     if (strlen(from) == 0)      /* Check for root dir */

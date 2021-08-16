@@ -155,12 +155,14 @@ int main(int argc, char *argv[])
     {
         SetupSignalsForCfKey(handleShowKeysSignal);
         ShowLastSeenHosts(!NO_TRUNCATE);
+        GenericAgentFinalize(ctx, config);
         CallCleanupFunctions();
-        return 0;
+        return EXIT_SUCCESS;
     }
 
     if (print_digest_arg)
     {
+        GenericAgentFinalize(ctx, config);
         CallCleanupFunctions();
         return PrintDigest(print_digest_arg);
     }
@@ -190,10 +192,10 @@ int main(int argc, char *argv[])
                 Log (LOG_LEVEL_VERBOSE,
                      "Forced removal of entry '%s' was successful",
                      remove_keys_host);
-                CallCleanupFunctions();
-                return 0;
+                status = EXIT_SUCCESS;
             }
         }
+        GenericAgentFinalize(ctx, config);
         CallCleanupFunctions();
         return status;
     }
@@ -201,8 +203,9 @@ int main(int argc, char *argv[])
     if(LICENSE_INSTALL)
     {
         bool success = LicenseInstall(LICENSE_SOURCE);
+        GenericAgentFinalize(ctx, config);
         CallCleanupFunctions();
-        return success ? 0 : 1;
+        return success ? EXIT_SUCCESS : EXIT_FAILURE;
     }
 
     if (trust_key_arg != NULL)
@@ -223,6 +226,7 @@ int main(int argc, char *argv[])
         bool ret = TrustKey(filename, ipaddr, username);
 
         free(arg);
+        GenericAgentFinalize(ctx, config);
         CallCleanupFunctions();
         return ret ? EXIT_SUCCESS : EXIT_FAILURE;
     }
@@ -292,6 +296,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 GenericAgentWriteVersion(w);
                 FileWriterDetach(w);
             }
+            GenericAgentConfigDestroy(config);
             DoCleanupAndExit(EXIT_SUCCESS);
 
         case 'v':
@@ -338,6 +343,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
         case 'h':
             PrintHelp();
+            GenericAgentConfigDestroy(config);
             DoCleanupAndExit(EXIT_SUCCESS);
 
         case 'M':
@@ -350,12 +356,14 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                              NULL, false,
                              false);
                 FileWriterDetach(out);
+                GenericAgentConfigDestroy(config);
                 DoCleanupAndExit(EXIT_SUCCESS);
             }
 
         case 'C':
             if (!GenericAgentConfigParseColor(config, optarg))
             {
+                GenericAgentConfigDestroy(config);
                 DoCleanupAndExit(EXIT_FAILURE);
             }
             break;
@@ -370,6 +378,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
         default:
             PrintHelp();
+            GenericAgentConfigDestroy(config);
             DoCleanupAndExit(EXIT_FAILURE);
 
         }
@@ -379,6 +388,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     {
         PrintHelp();
         Log(LOG_LEVEL_ERR, "--no-truncate / -N option is only for --show-hosts / -s");
+        GenericAgentConfigDestroy(config);
         DoCleanupAndExit(EXIT_FAILURE);
     }
 

@@ -235,7 +235,7 @@ static StringSet *GetTagsFromAugmentsTags(const char *item_type,
                                           const char *filename)
 {
     StringSet *tags = NULL;
-    if (json_tags != NULL)
+    if (JSON_NOT_NULL(json_tags))
     {
         if ((JsonGetType(json_tags) != JSON_TYPE_ARRAY) ||
             (!JsonArrayContainsOnlyPrimitives((JsonElement*) json_tags)))
@@ -320,7 +320,7 @@ static inline const char *GetAugmentsComment(const char *item_type, const char *
     assert(JsonGetType(json_object) == JSON_TYPE_OBJECT);
 
     JsonElement *json_comment = JsonObjectGet(json_object, AUGMENTS_COMMENT_KEY);
-    if (json_comment == NULL)
+    if (NULL_JSON(json_comment))
     {
         return NULL;
     }
@@ -366,7 +366,7 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
 
         /* load variables (if any) */
         JsonElement *element = JsonObjectGet(augment, "vars");
-        if ((element != NULL) && (JsonGetType(element) != JSON_TYPE_NULL))
+        if (JSON_NOT_NULL(element))
         {
             JsonElement* vars = JsonExpandElement(ctx, element);
 
@@ -488,7 +488,7 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
 
         /* Uses the new format allowing metadata (CFE-3633) */
         element = JsonObjectGet(augment, "variables");
-        if ((element != NULL) && (JsonGetType(element) != JSON_TYPE_NULL))
+        if (JSON_NOT_NULL(element))
         {
             JsonElement* variables = JsonExpandElement(ctx, element);
 
@@ -528,7 +528,7 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
                 {
                     data = JsonObjectGet(var_info, AUGMENTS_VARIABLES_DATA);
 
-                    if (data == NULL)
+                    if (NULL_JSON(data))
                     {
                         Log(LOG_LEVEL_ERR, "Missing value for the augments variable '%s' in '%s' (value field is required)",
                             vkey, filename);
@@ -651,7 +651,7 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
 
         /* load classes (if any) */
         element = JsonObjectGet(augment, "classes");
-        if ((element != NULL) && (JsonGetType(element) != JSON_TYPE_NULL))
+        if (JSON_NOT_NULL(element))
         {
             JsonElement* classes = JsonExpandElement(ctx, element);
 
@@ -714,8 +714,8 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
                     const JsonElement *reg_exprs = JsonObjectGet(data, AUGMENTS_CLASSES_REGULAR_EXPRESSIONS);
                     const JsonElement *json_tags = JsonObjectGet(data, AUGMENTS_CLASSES_TAGS);
 
-                    if (((class_exprs == NULL) && (reg_exprs == NULL)) ||
-                        ((class_exprs != NULL) && (reg_exprs != NULL)))
+                    if ((JSON_NOT_NULL(class_exprs) && JSON_NOT_NULL(reg_exprs)) ||
+                        (NULL_JSON(class_exprs) && NULL_JSON(reg_exprs)))
                     {
                         Log(LOG_LEVEL_ERR, "Invalid augments class data for class '%s' in '%s':"
                             " either \"class_expressions\" or \"regular_expressions\" need to be specified",
@@ -767,7 +767,7 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
 
         /* load inputs (if any) */
         element = JsonObjectGet(augment, "inputs");
-        if ((element != NULL) && (JsonGetType(element) != JSON_TYPE_NULL))
+        if (JSON_NOT_NULL(element))
         {
             JsonElement* inputs = JsonExpandElement(ctx, element);
 
@@ -795,7 +795,7 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
 
         /* load further def.json files (if any) */
         element = JsonObjectGet(augment, "augments");
-        if ((element != NULL) && (JsonGetType(element) != JSON_TYPE_NULL))
+        if (JSON_NOT_NULL(element))
         {
             JsonElement* further_augments = element;
             assert(further_augments != NULL);

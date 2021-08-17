@@ -133,6 +133,10 @@ MonitoringSlot *Nova_MakeSlot(const char *name, const char *description,
     return slot;
 }
 
+// This function is similar to cf-check/observables.c function GetObservableNames
+// If we refactor for dynamic observables instead of hard coded and limited to 100
+// then we likely should change here and there or refactor to have
+// this ts_key read/parse code in one shared place.
 void Nova_LoadSlots(void)
 {
     char filename[CF_BUFSIZE];

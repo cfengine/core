@@ -61,7 +61,8 @@ libcf_check_la_SOURCES = \
 	utilities.c utilities.h \
 	repair.c repair.h \
 	replicate_lmdb.c replicate_lmdb.h \
-	validate.c validate.h
+	validate.c validate.h \
+	observables.c observables.h
 
 if !BUILTIN_EXTENSIONS
 bin_PROGRAMS = cf-check

@@ -1,0 +1,30 @@
+#+begin_src cfengine3
+bundle agent mergedata_last_key_wins
+# @brief Example illustrating how the last key wins when merging data containers with conflicting keys
+{
+  vars:
+
+      "one" data => '{ "color": "red",  "stuff": [ "one", "two" ], "thing": "one" }';
+      "two" data => '{ "color": "blue", "stuff": [ "three" ] }';
+
+  reports:
+      "$(with)" with => storejson( mergedata( one, two ) );
+
+}
+bundle agent __main__
+{
+      methods: "mergedata_last_key_wins";
+}
+#+end_src
+###############################################################################
+#+begin_src example_output
+#@ ```
+#@ R: {
+#@       "color": "blue",
+#@       "stuff": [
+#@                  "three"
+#@                  ],
+#@       "thing": "one"
+#@ }
+#@ ```
+#+end_src

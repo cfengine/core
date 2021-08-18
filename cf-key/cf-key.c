@@ -84,7 +84,7 @@ static const struct option OPTIONS[] =
     {"remove-keys", required_argument, 0, 'r'},
     {"force-removal", no_argument, 0, 'x'},
     {"install-license", required_argument, 0, 'l'},
-    {"print-digest", required_argument, 0, 'p'},
+    {"print-digest", optional_argument, 0, 'p'},
     {"trust-key", required_argument, 0, 't'},
     {"color", optional_argument, 0, 'C'},
     {"timestamp", no_argument, 0, TIMESTAMP_VAL},
@@ -164,7 +164,9 @@ int main(int argc, char *argv[])
     {
         GenericAgentFinalize(ctx, config);
         CallCleanupFunctions();
-        return PrintDigest(print_digest_arg);
+        int rc = PrintDigest(print_digest_arg);
+        free(print_digest_arg);
+        return rc;
     }
 
     GenericAgentPostLoadInit(ctx);
@@ -272,7 +274,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_KEYGEN, GetTTYInteractive());
 
-    while ((c = getopt_long(argc, argv, "dvIf:g:T:VMp:sNr:xt:hl:C::n",
+    while ((c = getopt_long(argc, argv, "dvIf:g:T:VMp::sNr:xt:hl:C::n",
                             OPTIONS, NULL))
            != -1)
     {
@@ -312,7 +314,14 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'p': /* print digest */
-            print_digest_arg = optarg;
+            if (OPTIONAL_ARGUMENT_IS_PRESENT)
+            {
+                print_digest_arg = xstrdup(optarg);
+            }
+            else
+            {
+                print_digest_arg = PublicKeyFile(GetWorkDir());
+            }
             break;
 
         case 's':
@@ -361,7 +370,8 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             }
 
         case 'C':
-            if (!GenericAgentConfigParseColor(config, optarg))
+            if (!GenericAgentConfigParseColor(config,
+                (OPTIONAL_ARGUMENT_IS_PRESENT) ? optarg : "auto"))
             {
                 GenericAgentConfigDestroy(config);
                 DoCleanupAndExit(EXIT_FAILURE);

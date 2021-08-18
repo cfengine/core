@@ -214,7 +214,7 @@ static StringSet *GetTagsFromJsonTags(const char *item_type,
                                       const char *default_tag)
 {
     StringSet *tags = NULL;
-    if (json_tags != NULL)
+    if (JSON_NOT_NULL(json_tags))
     {
         if ((JsonGetType(json_tags) != JSON_TYPE_ARRAY) ||
             (!JsonArrayContainsOnlyPrimitives((JsonElement*) json_tags)))
@@ -251,7 +251,7 @@ static inline const char *GetCMDBComment(const char *item_type, const char *iden
     assert(JsonGetType(json_object) == JSON_TYPE_OBJECT);
 
     JsonElement *json_comment = JsonObjectGet(json_object, CMDB_COMMENT_KEY);
-    if (json_comment == NULL)
+    if (NULL_JSON(json_comment))
     {
         return NULL;
     }
@@ -437,7 +437,7 @@ static bool ReadCMDBClasses(EvalContext *ctx, JsonElement *classes)
             const JsonElement *reg_exprs = JsonObjectGet(data, CMDB_CLASSES_REGULAR_EXPRESSIONS);
             const JsonElement *json_tags = JsonObjectGet(data, CMDB_CLASSES_TAGS);
 
-            if ((class_exprs != NULL) &&
+            if (JSON_NOT_NULL(class_exprs) &&
                 (JsonGetType(class_exprs) != JSON_TYPE_ARRAY ||
                  JsonLength(class_exprs) > 1 ||
                  (JsonLength(class_exprs) == 1 &&
@@ -448,7 +448,7 @@ static bool ReadCMDBClasses(EvalContext *ctx, JsonElement *classes)
                     " only '[]' or '[\"any::\"]' allowed", key);
                 continue;
             }
-            if ((reg_exprs != NULL) &&
+            if (JSON_NOT_NULL(reg_exprs) &&
                 (JsonGetType(reg_exprs) != JSON_TYPE_ARRAY ||
                  JsonLength(reg_exprs) > 1 ||
                  (JsonLength(reg_exprs) == 1 &&
@@ -523,21 +523,18 @@ bool LoadCMDBData(EvalContext *ctx)
 
     bool success = true;
     JsonElement *vars = JsonObjectGet(data, "vars");
-    if ((vars != NULL) && (JsonGetType(vars) != JSON_TYPE_NULL) &&
-        !ReadCMDBVars(ctx, vars))
+    if (JSON_NOT_NULL(vars) && !ReadCMDBVars(ctx, vars))
     {
         success = false;
     }
     /* Uses the new format allowing metadata (CFE-3633) */
     JsonElement *variables = JsonObjectGet(data, "variables");
-    if ((variables != NULL) && (JsonGetType(variables) != JSON_TYPE_NULL) &&
-        !ReadCMDBVariables(ctx, variables))
+    if (JSON_NOT_NULL(variables) && !ReadCMDBVariables(ctx, variables))
     {
         success = false;
     }
     JsonElement *classes = JsonObjectGet(data, "classes");
-    if ((classes != NULL) && (JsonGetType(classes) != JSON_TYPE_NULL) &&
-        !ReadCMDBClasses(ctx, classes))
+    if (JSON_NOT_NULL(classes) && !ReadCMDBClasses(ctx, classes))
     {
         success = false;
     }

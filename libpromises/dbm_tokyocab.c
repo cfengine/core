@@ -257,7 +257,7 @@ int DBPrivGetValueSize(DBPriv *db, const void *key, int key_size)
     return tchdbvsiz(db->hdb, key, key_size);
 }
 
-bool DBPrivRead(DBPriv *db, const void *key, int key_size, void *dest, int dest_size)
+bool DBPrivRead(DBPriv *db, const void *key, int key_size, void *dest, size_t dest_size)
 {
     if (tchdbget3(db->hdb, key, key_size, dest, dest_size) == -1)
     {

@@ -91,6 +91,11 @@ bool ArchiveToRepository(const char *file, const Attributes *attr)
     char destination[CF_BUFSIZE];
     struct stat sb, dsb;
 
+    // Skip empty file name
+    if (file[0] == '\0') {
+        return false;
+    }
+
     if (!GetRepositoryPath(file, attr, destination))
     {
         return false;

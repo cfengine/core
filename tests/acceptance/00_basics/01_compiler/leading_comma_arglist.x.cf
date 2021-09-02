@@ -1,0 +1,17 @@
+body common control
+{
+  bundlesequence => { "test" };
+}
+
+bundle agent test
+{
+  methods:
+      "check"
+        usebundle => check("a", "b", "c");
+}
+
+bundle agent check(, a, b, c)
+{
+  reports:
+      "$(this.promise_filename) FAIL";
+}

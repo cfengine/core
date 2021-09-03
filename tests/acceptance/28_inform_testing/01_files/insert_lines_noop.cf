@@ -1,0 +1,48 @@
+body file control
+{
+  inputs => { "$(sys.policy_entry_dirname)/../common.cf.sub" };
+}
+
+bundle common testcase
+{
+  meta:
+    "description" -> { "CFE-3708" }
+      string => "empty+insert should not cause any changes being logged because the file is already as expected";
+
+  vars:
+    "filename" string => "$(this.promise_filename)";
+}
+
+
+bundle agent setup
+{
+  files:
+    "$(G.testfile)"
+      edit_line => insert_lines("this one line"),
+      create => "true";
+}
+
+bundle agent main
+{
+  files:
+    "$(G.testfile)"
+      edit_line => insert_lines("this one line"),
+      create => "true",
+      edit_defaults => empty;
+}
+
+bundle agent teardown
+{
+  reports:
+    "Edited file has contents: "
+      printfile => my_cat( $(G.testfile) );
+}
+
+body printfile my_cat(file)
+# @brief Report the contents of a file
+# @param file The full path of the file to report
+{
+        file_to_print => "$(file)";
+        number_of_lines => "inf";
+}
+

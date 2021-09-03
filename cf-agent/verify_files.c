@@ -898,6 +898,7 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, const Attr
     }
 
     EditContext *edcontext = NewEditContext(filename, a);
+    StartLoggingIntoBuffer(LOG_LEVEL_INFO, LOG_LEVEL_INFO);
 
     PromiseResult result = PROMISE_RESULT_NOOP;
     if (edcontext == NULL)
@@ -1016,6 +1017,14 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, const Attr
 exit:
     FinishEditContext(ctx, edcontext, a, pp, &result);
     YieldCurrentLock(thislock);
+    if (result == PROMISE_RESULT_CHANGE)
+    {
+        CommitLogBuffer();
+    }
+    else
+    {
+        DiscardLogBuffer();
+    }
     return result;
 }
 

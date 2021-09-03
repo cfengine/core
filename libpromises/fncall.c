@@ -352,12 +352,11 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, const Policy *policy, FnCall *fp, 
     if ( ! (fp_type->options & FNCALL_OPTION_DELAYED_EVALUATION) &&
          RlistIsUnresolved(expargs))
     {
-        // Special case: ifelse(isvariable("x"), $(x), "default")
-        // (the first argument will come down expanded as "!any")
+        // Special case where a three argument ifelse call must
+        // be allowed to have undefined variables.
         if (strcmp(fp->name, "ifelse") == 0 &&
-            RlistLen(expargs) == 3 &&
-            strcmp("!any", RlistScalarValueSafe(expargs)) == 0 &&
-            !RlistIsUnresolved(expargs->next->next))
+            expargs->val.type != RVAL_TYPE_FNCALL &&
+            RlistLen(expargs) == 3) 
         {
                 Log(LOG_LEVEL_DEBUG, "Allowing ifelse() function evaluation even"
                     " though its arguments contain unresolved variables: %s",

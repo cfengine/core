@@ -33,7 +33,7 @@
 #include <string_lib.h>
 
 #ifdef QDB
-# include <depot.h>
+# include <qdbm/depot.h>
 
 struct DBPriv_
 {
@@ -206,7 +206,7 @@ bool DBPrivClean(DBPriv *db)
     return true;
 }
 
-bool DBPrivRead(DBPriv *db, const void *key, int key_size, void *dest, int dest_size)
+bool DBPrivRead(DBPriv *db, const void *key, int key_size, void *dest, size_t dest_size)
 {
     if (!Lock(db))
     {

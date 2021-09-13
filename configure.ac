@@ -390,7 +390,7 @@ AS_IF([test -n "$with_qdbm" && test "x$with_qdbm" != "xno"], [WITH_QDBM=1], [WIT
 if test $WITH_QDBM = 1; then
   CF3_WITH_LIBRARY(qdbm, [
     AC_CHECK_LIB(qdbm, dpopen, [], [AC_MSG_ERROR(Cannot find QDBM)])
-    AC_CHECK_HEADERS(depot.h, [], [AC_MSG_ERROR(Cannot find QDBM)])
+    AC_CHECK_HEADERS(qdbm/depot.h, [], [AC_MSG_ERROR(Cannot find QDBM)])
     AC_DEFINE(QDB, 1, [Define if QDBM is available])
   ])
 fi

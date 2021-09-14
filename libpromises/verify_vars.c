@@ -134,12 +134,15 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp,
     /* Warn if promise locking was used with a promise that doesn't support it
      * (which applies to all of 'vars', 'meta' and 'defaults' promises handled
      * by this code).
+     * 'ifelapsed => "0"' (e.g. with 'action => immediate') can however be used
+     * to make sure cached functions are called every time. [ENT-7478]
      * (Only do this in the first pass in cf-promises, we don't have to repeat
      * the warning over and over.) */
     if (EvalContextGetPass(ctx) == 0 && THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
     {
         int ifelapsed = PromiseGetConstraintAsInt(ctx, "ifelapsed", pp);
-        if (ifelapsed != CF_NOINT)
+        if ((ifelapsed != CF_NOINT) &&
+            ((ifelapsed != 0) || !StringEqual(PromiseGetPromiseType(pp), "vars")))
         {
             Log(LOG_LEVEL_WARNING,
                 "ifelapsed attribute specified in action body for %s promise '%s',"

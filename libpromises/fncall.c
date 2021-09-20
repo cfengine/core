@@ -388,28 +388,34 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, const Policy *policy, FnCall *fp, 
         }
     }
 
-    Rval cached_rval;
-    if ((fp_type->options & FNCALL_OPTION_CACHED) && EvalContextFunctionCacheGet(ctx, fp, expargs, &cached_rval))
+    /* Call functions in promises with 'ifelapsed => "0"' (e.g. with
+     * 'action => immediate') [ENT-7478] */
+    const int if_elapsed = PromiseGetConstraintAsInt(ctx, "ifelapsed", caller);
+    if (if_elapsed != 0)
     {
-        if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG)
+        Rval cached_rval;
+        if ((fp_type->options & FNCALL_OPTION_CACHED) && EvalContextFunctionCacheGet(ctx, fp, expargs, &cached_rval))
         {
-            Log(LOG_LEVEL_DEBUG,
-                "Using previously cached result for function: %s",
-                fncall_string);
-            WriterClose(fncall_writer);
-        }
-        Writer *w = StringWriter();
-        FnCallWrite(w, fp);
-        WriterClose(w);
-        RlistDestroy(expargs);
+            if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG)
+            {
+                Log(LOG_LEVEL_DEBUG,
+                    "Using previously cached result for function: %s",
+                    fncall_string);
+                WriterClose(fncall_writer);
+            }
+            Writer *w = StringWriter();
+            FnCallWrite(w, fp);
+            WriterClose(w);
+            RlistDestroy(expargs);
 
-        return (FnCallResult) { FNCALL_SUCCESS, RvalCopy(cached_rval) };
+            return (FnCallResult) { FNCALL_SUCCESS, RvalCopy(cached_rval) };
+        }
     }
 
     if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG)
     {
-        Log(LOG_LEVEL_DEBUG, "Evaluating function: %s",
-            fncall_string);
+        Log(LOG_LEVEL_DEBUG, "Evaluating function: %s%s",
+            fncall_string, (if_elapsed == 0) ? " (because of ifelapsed => \"0\")" : "");
         WriterClose(fncall_writer);
     }
 

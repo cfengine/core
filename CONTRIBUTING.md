@@ -2,12 +2,11 @@
 
 Thanks for considering contributing to CFEngine! We take pull-requests
 [on GitHub](https://github.com/cfengine/core/pulls) and we have a public
-[bug-tracker](https://tracker.mender.io/projects/CFE/issues/). Discussion is taking place
-on the [dev-cfengine](https://groups.google.com/forum/#!forum/dev-cfengine)
-and [help-cfengine](https://groups.google.com/forum/#!forum/help-cfengine)
-mailing lists. You'll find us chatting on Freenode's IRC channels
-[#cfengine](https://webchat.freenode.net/?channels=cfengine&nick=) and
-[#cfengine-dev](https://webchat.freenode.net/?channels=cfengine-dev&nick=).
+[bug-tracker](https://tracker.mender.io/projects/CFE/issues/). Discussion
+is taking place on [GitHub Discussions](https://github.com/cfengine/core/discussions)
+and on the [help-cfengine](https://groups.google.com/forum/#!forum/help-cfengine)
+mailing list. You'll find us chatting on the Libera.chat IRC channel
+[#cfengine](https://web.libera.chat/?channel=cfengine).
 
 Normally, bug fixes have a higher chance of getting accepted than new
 features, but we certainly welcome feature contributions. If you have an idea

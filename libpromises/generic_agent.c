@@ -2679,6 +2679,15 @@ bool GenericAgentPostLoadInit(const EvalContext *ctx)
     const char *tls_min_version =
         EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_TLS_MIN_VERSION);
 
+    const char *system_log_level_str =
+        EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_SYSTEM_LOG_LEVEL);
+
+    LogLevel system_log_level = LogLevelFromString(system_log_level_str);
+    if (system_log_level != LOG_LEVEL_NOTHING)
+    {
+        LogSetGlobalSystemLogLevel(system_log_level);
+    }
+
     return cfnet_init(tls_min_version, tls_ciphers);
 }
 

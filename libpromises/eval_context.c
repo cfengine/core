@@ -344,7 +344,11 @@ static LogLevel GetLevelForPromise(const Promise *pp, const char *attr_name)
 
 static LogLevel CalculateLogLevel(const Promise *pp)
 {
-    LogLevel log_level = LogGetGlobalLevel();
+    LogLevel global_log_level = LogGetGlobalLevel();
+    LogLevel system_log_level = LogGetGlobalSystemLogLevel();
+
+    LogLevel log_level = (system_log_level != LOG_LEVEL_NOTHING ?
+                          system_log_level : global_log_level);
 
     if (pp)
     {
@@ -1342,7 +1346,10 @@ static void EvalContextStackPushFrame(EvalContext *ctx, StackFrame *frame)
     {
         if (last_frame->type == STACK_FRAME_TYPE_PROMISE_ITERATION)
         {
-            LoggingPrivSetLevels(LogGetGlobalLevel(), LogGetGlobalLevel());
+            LogLevel global_log_level = LogGetGlobalLevel();
+            LogLevel system_log_level = LogGetGlobalSystemLogLevel();
+            LoggingPrivSetLevels(system_log_level != LOG_LEVEL_NOTHING ? system_log_level : global_log_level,
+                                 global_log_level);
         }
     }
 
@@ -1517,7 +1524,6 @@ Promise *EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const Promi
     }
 
     EvalContextStackPushFrame(ctx, StackFrameNewPromiseIteration(pexp, iter_ctx));
-
     LoggingPrivSetLevels(CalculateLogLevel(pexp), CalculateReportLevel(pexp));
 
     return pexp;
@@ -1543,7 +1549,12 @@ void EvalContextStackPopFrame(EvalContext *ctx)
         break;
 
     case STACK_FRAME_TYPE_PROMISE_ITERATION:
-        LoggingPrivSetLevels(LogGetGlobalLevel(), LogGetGlobalLevel());
+        {
+            LogLevel global_log_level = LogGetGlobalLevel();
+            LogLevel system_log_level = LogGetGlobalSystemLogLevel();
+            LoggingPrivSetLevels(system_log_level != LOG_LEVEL_NOTHING ? system_log_level : global_log_level,
+                                 global_log_level);
+        }
         break;
 
     default:

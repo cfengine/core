@@ -2739,7 +2739,6 @@ static bool ValidateCustomPromise(const Promise *pp, Seq *errors)
             || StringEqual(name, "expireafter")
             || StringEqual(name, "comment")
             || StringEqual(name, "depends_on")
-            || StringEqual(name, "handle")
             || StringEqual(name, "meta")
             || StringEqual(name, "with"))
         {

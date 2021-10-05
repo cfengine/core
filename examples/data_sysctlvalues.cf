@@ -1,3 +1,4 @@
+#+begin_src cfengine3
 bundle agent inventory_sysctl
 # @brief Inventory each sysctl variable
 {
@@ -27,6 +28,8 @@ bundle agent __main__
       methods: "inventory_sysctl";
 
 }
+#+end_src
+###############################################################################
 #+begin_src mock_example_output
 #@ ```
 #@ R: data_sysctlvalues() returned:{

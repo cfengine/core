@@ -116,7 +116,7 @@ const Promise *VariableGetPromise(const Variable *var)
 bool VariableIsSecret(const Variable *var)
 {
     assert(var != NULL);
-    return StringSetContains(var->tags, VARIABLE_TAG_SECRET);
+    return ((var->tags != NULL) && StringSetContains(var->tags, VARIABLE_TAG_SECRET));
 }
 
 Rval VariableGetRval(const Variable *var, bool get_secret)

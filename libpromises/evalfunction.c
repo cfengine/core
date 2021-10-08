@@ -1394,7 +1394,7 @@ static JsonElement *VariablesMatching(const EvalContext *ctx, const FnCall *fp, 
             StringSet *tagset = EvalContextVariableTags(ctx, var_ref);
             bool pass = false;
 
-            if (args->next)
+            if ((tagset != NULL) && (args->next != NULL))
             {
                 for (const Rlist *arg = args->next; arg; arg = arg->next)
                 {

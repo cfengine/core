@@ -1497,7 +1497,8 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner)
         {
             Rval final = EvaluateFinalRval(ctx, PromiseGetPolicy(owner), NULL,
                                            "this", cp->rval, false, owner);
-            if (final.type == RVAL_TYPE_SCALAR && !IsCf3VarString(RvalScalarValue(final)))
+            if (final.type == RVAL_TYPE_SCALAR &&
+                ((EvalContextGetPass(ctx) == CF_DONEPASSES - 1) || !IsCf3VarString(RvalScalarValue(final))))
             {
                 EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "with", RvalScalarValue(final), CF_DATA_TYPE_STRING, "source=promise_iteration/with");
             }

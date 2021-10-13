@@ -1,0 +1,7 @@
+bundle agent __main__ {
+  vars:
+      "y" slist => { @{x} };
+
+  reports:
+     "y: $(with)" with => format("%S", y);
+}

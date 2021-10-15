@@ -1,0 +1,54 @@
+#######################################################
+#
+# Test that reports promises handle unresolved var refs in a sane way
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  vars:
+      "expected_lines" slist => {
+                                  "R: var1: val1",
+                                  "R: var2: val2",
+                                  "R: var3: val3",
+                                  "R: var4: val4",
+                                  "R: var5: $(const.dollar)(var5)"
+                                };
+
+      "expected_output" string => join("$(const.n)", expected_lines);
+
+  files:
+      "$(G.testfile).expected" content => "$(expected_output)$(const.n)";
+}
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-3776" }
+        string => "Test that reports with unresolved variables are only emitted during the last pass of evaluation";
+
+  commands:
+      "$(sys.cf_agent) -Kf $(this.promise_filename).sub > $(G.testfile).actual"
+        contain => shell;
+}
+
+body contain shell
+{
+      useshell => "true";
+}
+
+
+bundle agent check
+{
+  methods:
+      "" usebundle => dcs_check_diff("$(G.testfile).actual",
+                                     "$(G.testfile).expected",
+                                     "$(this.promise_filename)");
+}

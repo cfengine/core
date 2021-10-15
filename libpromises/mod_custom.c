@@ -660,7 +660,8 @@ static void PromiseModule_AppendAllAttributes(
         if (IsClassesBodyConstraint(name)
             || StringEqual(name, "if")
             || StringEqual(name, "ifvarclass")
-            || StringEqual(name, "unless"))
+            || StringEqual(name, "unless")
+            || StringEqual(name, "depends_on"))
         {
             // Evaluated by agent and not sent to module, skip
             continue;

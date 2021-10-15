@@ -29,6 +29,7 @@
 
 void LoadSystemConstants(EvalContext *ctx)
 {
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_CONST, "at", "@", CF_DATA_TYPE_STRING, "source=agent");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_CONST, "dollar", "$", CF_DATA_TYPE_STRING, "source=agent");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_CONST, "n", "\n", CF_DATA_TYPE_STRING, "source=agent");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_CONST, "r", "\r", CF_DATA_TYPE_STRING, "source=agent");

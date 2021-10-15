@@ -14,9 +14,9 @@ jobs:
       with:
         submodules: recursive
     - name: Install dependencies
-      run: brew install lmdb automake openssl
+      run: brew install lmdb automake openssl@1.1.1
     - name: Run autotools / configure
-      run: ./autogen.sh --enable-debug --with-openssl="$(brew --prefix openssl)"
+      run: ./autogen.sh --enable-debug --with-openssl="$(brew --prefix openssl@1.1.1)"
     - name: Compile and link
       run: make -j8 CFLAGS="-Werror -Wall"
     - name: Run unit tests

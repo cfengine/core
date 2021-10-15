@@ -49,6 +49,18 @@ static void ReportToLog(const char *message);
 
 PromiseResult VerifyReportPromise(EvalContext *ctx, const Promise *pp)
 {
+    assert(pp != NULL);
+
+    /* This check needs to happen *before* the lock is acquired otherwise the
+     * promise would be skipped in the next evaluation pass and a report with an
+     * unresolved variable reference would never be shown. */
+    if ((EvalContextGetPass(ctx) < (CF_DONEPASSES - 1)) && IsCf3VarString(pp->promiser))
+    {
+        /* Unresolved variable reference in the string to be reported and there
+         * is still a chance it will get resolved later. */
+        return PROMISE_RESULT_SKIPPED;
+    }
+
     CfLock thislock;
     char unique_name[CF_EXPANDSIZE];
 

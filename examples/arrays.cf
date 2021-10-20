@@ -10,21 +10,21 @@ bundle common g
 bundle agent __main__
 {
   vars:
-
       "thing[1][color]" string => "red";
       "thing[1][name]" string => "one";
       "thing[2][color]" string => "blue";
       "thing[2][name]" string => "two";
 
-      "_thing_idx" slist => sort( getindices( thing ), lex );
+      "_thing_idx"
+        slist => sort( getindices( thing ), lex );
 
   reports:
 
       "Keys in default:g.array = $(with)"
-        with => join( ", ", getindices( "default:g.array" ));
+        with => join( ", ", sort( getindices( "default:g.array" ), lex));
 
       "Keys of default:main.thing[1] = $(with)"
-        with => join( ", ", getindices( "default:main.thing[1]" ));
+        with => join( ", ", sort( getindices( "default:main.thing[1]" ), lex));
 
       "Thing $(thing[$(_thing_idx)][name]) is $(thing[$(_thing_idx)][color])";
 }

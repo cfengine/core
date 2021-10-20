@@ -1,0 +1,38 @@
+#######################################################
+#
+# This is a special test - it exercises runtime switches
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+      "description" -> { "ENT-7724", "ENT-7678" }
+        string => "Test --show-evaluated-vars does not crash the agent when there are vars defined by the module protocol that do not have explicit tags defined.";
+
+      "test_skip_unsupported"
+        string => "windows",
+        comment => "The subtest policy uses /bin/echo";
+
+  commands:
+      "$(sys.cf_agent) -Kf $(this.promise_filename).sub --show-evaluated-vars"
+        classes => results( "namespace", "sub_agent" );
+}
+bundle agent check
+{
+  methods:
+
+      "Pass/Fail"
+        usebundle => dcs_passif_expected( "sub_agent_repaired", "sub_agent_not_kept",
+                                          "$(this.promise_filename)");
+}
+

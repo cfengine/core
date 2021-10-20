@@ -1,0 +1,11 @@
+# Here we execute echo as a module to define some variables that do not have /explicit/ tags.
+# As noted in ENT-7724, this can cause a segfault when the agent is run with --show-evaluated-vars
+bundle agent main
+{
+  commands:
+      `/bin/echo '=string_from_module= value of string from module
+@list_from_module= { "one", "two", "three" }
+%data1_from_module=[1,2,3]
+%data2_from_module={ "my_stuff": [1,2,3] }'`
+        module => "true";
+}

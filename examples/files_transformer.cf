@@ -1,0 +1,64 @@
+#+begin_src prep
+#@ ```
+#@ # Make sure that none of the example files exist to begin with
+#@ rm -f /tmp/example-files-transformer.txt
+#@ rm -f /tmp/example-files-transformer.txt.gz
+#@ rm -f /tmp/this-file-does-not-exist-to-be-transformed.txt
+#@ rm -f /tmp/this-file-does-not-exist-to-be-transformed.txt.gz
+#@ ```
+#+end_src
+###############################################################################
+#+begin_src cfengine3
+bundle agent main
+{
+  vars:
+      "gzip_path" string => ifelse( isexecutable("/bin/gzip"), "/bin/gzip",
+                                    "/usr/bin/gzip" );
+  files:
+    linux::
+      "/tmp/example-files-transformer.txt"
+        content => "Hello World";
+
+      "/tmp/example-files-transformer.txt"
+        transformer => "$(gzip_path) $(this.promiser)";
+
+      # The transformer in the following promise results in the promised file
+      # being absent on completion. Note: It is the expectation and
+      # responsibility of the transformer itself that the transformation results
+      # in the promised file no longer existing.
+
+      "/tmp/example-files-transformer.txt"
+        transformer => "$(gzip_path) $(this.promiser)";
+
+      # Since this file does not exist, the transformer will not be triggered
+      # and neither the text file nor a gzip file will exist
+      "/tmp/this-file-does-not-exist-to-be-transformed.txt"
+        transformer => "$(gzip_path) $(this.promiser)";
+
+  reports:
+      "/tmp/example-files-transformer.txt $(with)"
+        with => ifelse( fileexists( "/tmp/example-files-transformer.txt"), "exists",
+                        "does not exist");
+
+      "/tmp/example-files-transformer.txt.gz $(with)"
+        with => ifelse( fileexists( "/tmp/example-files-transformer.txt.gz"), "exists",
+                        "does not exist");
+
+      "/tmp/this-file-does-not-exist-to-be-transformed.txt $(with)"
+        with => ifelse( fileexists( "/tmp/this-file-does-not-exist-to-be-transformed.txt"), "exists",
+                        "does not exist");
+
+      "/tmp/this-file-does-not-exist-to-be-transformed.txt.gz $(with)"
+        with => ifelse( fileexists( "/tmp/this-file-does-not-exist-to-be-transformed.txt.gz"), "exists",
+                        "does not exist");
+}
+#+end_src
+###############################################################################
+#+begin_src example_output
+#@ ```
+#@ R: /tmp/example-files-transformer.txt does not exist
+#@ R: /tmp/example-files-transformer.txt.gz exists
+#@ R: /tmp/this-file-does-not-exist-to-be-transformed.txt does not exist
+#@ R: /tmp/this-file-does-not-exist-to-be-transformed.txt.gz does not exist
+#@ ```
+#+end_src

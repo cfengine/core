@@ -2807,13 +2807,19 @@ void GenericAgentShowVariablesFormatted(EvalContext *ctx, const char *regexp)
         }
 
 
+        Buffer *tagbuf = NULL;
         StringSet *tagset = VariableGetTags(v);
-        Buffer *tagbuf = StringSetToBuffer(tagset, ',');
+        if (tagset != NULL)
+        {
+            tagbuf = StringSetToBuffer(tagset, ',');
+        }
         const char *comment = VariableGetComment(v);
 
         char *line;
         xasprintf(&line, "%-40s %-60s %-40s %-40s",
-                  varname, var_value, BufferData(tagbuf), NULL_TO_EMPTY_STRING(comment));
+                  varname, var_value,
+                  tagbuf != NULL ? BufferData(tagbuf) : "",
+                  NULL_TO_EMPTY_STRING(comment));
 
         SeqAppend(seq, line);
 

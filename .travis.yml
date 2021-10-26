@@ -51,18 +51,4 @@ after_success: ./travis-scripts/after_success.sh
 
 before_deploy: ./travis-scripts/before_deploy.sh
 
-# We deploy when setting tags only, which basically never happens
-# on master branch. Cherry-pick this part and alter it properly into
-# the release branches.
-deploy:
-  skip_cleanup: true
-  provider: releases
-  # Remember to set it as private variable in Travis-CI settings
-  token: $GITHUB_RELEASE_TOKEN
-  file: "$DIST_TARBALL"
-  on:
-    tags: true
-    # Avoid upload from all the multiple parallel jobs
-    condition: "$CF_VERSION = latest"
-
 after_script: ./travis-scripts/after_script.sh

@@ -2,6 +2,11 @@ language: c
 os: linux
 dist: xenial
 
+# This is an addon for uploading artifacts to s3:
+# https://docs.travis-ci.com/user/uploading-artifacts/
+# Env vars: ARTIFACTS_BUCKET ARTIFACTS_SECRET ARTIFACTS_BUCKET
+# If you are logged in and have permission, you can see here:
+# https://s3.console.aws.amazon.com/s3/buckets/cfengine-travis-artifacts?region=us-east-1
 addons:
   artifacts:
     paths:

@@ -39,6 +39,7 @@ simple environments this will be =$(sys.masterdir)= (typically
 :END:
 - Supported upstreams
   - =VCS_TYPE="GIT"=
+  - =VCS_TYPE="GIT_CFBS"= :: Like GIT, but instead of deploying policy from the root of a git repo directly, cfbs is used to first build the policy.
   - =VCS_TYPE="GIT_POLICY_CHANNELS"=
   - =VCS_TYPE="SVN"=
 

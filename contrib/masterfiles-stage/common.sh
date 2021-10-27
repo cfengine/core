@@ -22,6 +22,10 @@ check_git_installed() {
   git --version >/dev/null 2>&1 || error_exit "git not found on path: '${PATH}'"
 }
 
+check_cfbs_installed() {
+    cfbs --version >/dev/null 2>&1 || error_exit "cfbs not found on path: '${PATH}'"
+}
+
 git_setup_local_mirrored_repo() {
 # Contributed by Mike Weilgart
 
@@ -165,6 +169,120 @@ git_deploy_refspec() {
   # This function uses the second approach.  --Mike Weilgart
 }
 
+git_cfbs_deploy_refspec() {
+# copied from git_cfbs_deploy_refspec
+
+  # Depends on $local_mirrored_repo
+  # Accepts two args:
+  # $1 - dir to deploy to
+  # $2 - refspec to deploy - a git tagname, branch, or commit hash.
+
+  # This function
+  # 1. creates an empty temp dir,
+  # 2. checks out the refspec into the empty temp dir,
+  #    (including populating .git/HEAD in the temp dir),
+  # 3. builds policy with cfbs
+  # 4. sets appropriate permissions on the policy set,
+  # 5. validates the policy set using cf-promises,
+  # 6. moves the temp dir policy set into the given deploy dir,
+  #    avoiding triggering policy updates unnecessarily
+  #    by comparing the cf_promises_validated flag file.
+  #    (See long comment at end of function def.)
+
+  # The chipmunk in cfbs output breaks things without this or similar
+  export LANG=en_US.utf-8
+
+  # Ensure absolute pathname is given
+  [ "${1:0:1}" = / ] ||
+    error_exit "You must specify absolute pathnames in channel_config: '$1'"
+  mkdir -p "$(dirname "$1")" || error_exit "Failed to mkdir -p dirname $1"
+    # We don't mkdir $1 directly, just its parent dir if that doesn't exist.
+
+  ########################## 1. CREATE EMPTY TEMP DIR
+  # Put staging dir right next to deploy dir to ensure it's on same filesystem
+  local temp_stage
+  temp_stage="$(mktemp -d --tmpdir="$(dirname "$1")" )"
+  trap 'rm -rf "$temp_stage"' EXIT
+
+  ########################## 2. CHECKOUT INTO TEMP DIR
+  # The '^0' at the end of the refspec
+  # populates HEAD with the SHA of the commit
+  # rather than potentially using a git branch name.
+  # Also see http://stackoverflow.com/a/13293010/5419599
+  # and https://github.com/cfengine/core/pull/2465#issuecomment-173656475
+  git --git-dir="${local_mirrored_repo}" --work-tree="${temp_stage}" checkout -q -f "${2}^0" ||
+    error_exit "Failed to checkout '$2' from '${local_mirrored_repo}'"
+
+  ########################## 3. cfbs build
+  # Remember what directory we were in when we started.
+  _start_wrkdir=$(pwd)
+  # Switch to the staging directory and build with cfbs
+  cd "${temp_stage}"
+  cfbs build || error_exit "cfbs build failed"
+  # Switch back to the original working dir
+  cd "${_start_wrkdir}"
+  # Grab HEAD so it can be used to populate cf_promises_release_id
+  mkdir -p "${temp_stage}/.git"
+  cp "${local_mirrored_repo}/HEAD" "${temp_stage}/.git/"
+
+  ########################## 3. SET PERMISSIONS ON POLICY SET
+  chown -R root:root "${temp_stage}" || error_exit "Unable to chown '${temp_stage}'"
+  find "${temp_stage}" \( -type f -exec chmod 600 {} + \) -o \
+                       \( -type d -exec chmod 700 {} + \)
+
+  ########################## 4. VALIDATE POLICY SET
+  /var/cfengine/bin/cf-promises -T "${temp_stage}/out/masterfiles" &&
+  /var/cfengine/bin/cf-promises -cf "${temp_stage}/out/masterfiles/update.cf" ||
+  error_exit "Update policy staged in ${temp_stage}/out/masterfiles could not be validated, aborting."
+
+  ########################## 5. ROLL OUT POLICY SET FROM TEMP DIR TO DEPLOY DIR
+  if ! [ -d "$1" ] ; then
+    # deploy dir doesn't exist yet
+    mv "${temp_stage}/out/masterfiles" "$1" || error_exit "Failed to mv $temp_stage/out/masterfiles to $1."
+    trap -- EXIT
+  else
+    if /usr/bin/cmp -s "${temp_stage}/out/masterfiles//cf_promises_release_id" \
+                                 "${1}/cf_promises_release_id" ; then
+      # release id is the same in stage and deploy dir
+      # so prevent triggering update on hosts by keeping old "validated" flag file
+      cp -a "${1}/cf_promises_validated" "${temp_stage}/out/masterfiles/"
+    fi
+    local third_dir
+    third_dir="$(mktemp -d --tmpdir="$(dirname "$1")" )"
+    trap 'rm -rf "$third_dir"' EXIT
+    mv "${1}" "${third_dir}"  || error_exit "Can't mv ${1} to ${third_dir}"
+      # If the above command fails we will have an extra temp dir left.  Otherwise not.
+    mv "${temp_stage}/out/masterfiles" "${1}"          || error_exit "Can't mv ${temp_stage}/out/masterfiles to ${1}"
+    cp "${temp_stage}/cfbs.json" "${1}"          || error_exit "Can't cp ${temp_stage}/cfbs.json to ${1}"
+    rm -rf "${third_dir}"
+    trap -- EXIT
+  fi
+
+  # Note about triggering policy updates:
+  #
+  # cf_promises_validated gets updated by any run of cf-promises,
+  # but hosts use cf_promises_validated as the flag file to see
+  # if they need to update everything else (the full policy set.)
+  #
+  # cf_promises_release_id is the same for a given policy set
+  # unless changes have actually been made to the policy, so it
+  # can be used to check if we want to trigger an update.
+  #
+  # In other words, update is triggered by putting the
+  # newly created copy of cf_promises_validated into the MASTERDIR
+  # and update is avoided either by:
+  #
+  # 1. Completely skipping the rollout_staged_policy_to_masterdir
+  # function, or
+  #
+  # 2. Copying the MASTERDIR's copy of cf_promises_validated
+  # *back* into the STAGING_DIR *before* performing the rollout,
+  # so that after the rollout the MASTERDIR's copy of the flag
+  # file is the same as it was before the rollout.
+  #
+  # This function uses the second approach.  --Mike Weilgart
+}
+
 ######################################################
 ##           VCS_TYPE-based main functions           #
 ######################################################
@@ -218,6 +336,15 @@ git_masterstage() {
   git_setup_local_mirrored_repo "$( dirname "$ROOT" )"
   git_deploy_refspec "$MASTERDIR" "${GIT_REFSPEC}"
   echo "Successfully deployed '${GIT_REFSPEC}' from '${GIT_URL}' to '${MASTERDIR}' on $(date)"
+}
+
+git_cfbs_masterstage() {
+    # Depends on $GIT_URL, $ROOT, $MASTERDIR, $GIT_REFSPEC
+    check_git_installed
+    check_cfbs_installed
+    git_setup_local_mirrored_repo "$( dirname "$ROOT" )"
+    git_cfbs_deploy_refspec "$MASTERDIR" "${GIT_REFSPEC}"
+    echo "Successfully built and deployed '${GIT_REFSPEC}' from '${GIT_URL}' to '${MASTERDIR}' on $(date) with cfbs"
 }
 
 svn_branch() {

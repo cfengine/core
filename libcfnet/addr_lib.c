@@ -540,25 +540,6 @@ bool FuzzyMatchParse(const char *s)
     return true;
 }
 
-/* FIXME: handle 127.0.0.2, 127.255.255.254, ::1,
- * 0000:0000:0000:0000:0000:0000:0000:0001, 0:00:000:0000:000:00:0:1, 0::1 and
- * other variants
- */
-
-bool IsLoopbackAddress(const char *address)
-{
-    if(strcmp(address, "localhost") == 0)
-    {
-        return true;
-    }
-
-    if(strcmp(address, "127.0.0.1") == 0)
-    {
-        return true;
-    }
-
-    return false;
-}
 
 /**
  * Simple check to avoid writing to illegal memory addresses.

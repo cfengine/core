@@ -32,75 +32,10 @@
 #include <file_lib.h>
 #include <string_lib.h>
 #include <known_dirs.h>
+#include <ip_address.h>
 
 #include <cf-execd-runagent.h>
 
-static inline bool StringIsLocalhostIP(const char *str)
-{
-    assert(str != NULL);
-
-    const char *c = str;
-    if (*(c++) != '1')
-    {
-        return false;
-    }
-    if (*(c++) != '2')
-    {
-        return false;
-    }
-    if (*(c++) != '7')
-    {
-        return false;
-    }
-    if (*(c++) != '.')
-    {
-        return false;
-    }
-
-    short n_dgts = 0;
-    while ((*c != '\0') && (*c != '.'))
-    {
-        if (!isdigit(*(c++)))
-        {
-            return false;
-        }
-        n_dgts++;
-    }
-    if ((n_dgts > 3) || (*(c++) != '.'))
-    {
-        return false;
-    }
-
-    n_dgts = 0;
-    while ((*c != '\0') && (*c != '.'))
-    {
-        if (!isdigit(*(c++)))
-        {
-            return false;
-        }
-        n_dgts++;
-    }
-    if ((n_dgts > 3) || (*(c++) != '.'))
-    {
-        return false;
-    }
-
-    n_dgts = 0;
-    while (*c != '\0')
-    {
-        if (!isdigit(*(c++)))
-        {
-            return false;
-        }
-        n_dgts++;
-    }
-    if (n_dgts > 3)
-    {
-        return false;
-    }
-
-    return true;
-}
 
 /**
  * Handle request to run cf-runagent.
@@ -151,7 +86,7 @@ void HandleRunagentRequest(int conn_fd, const char *local_run_command)
     const char *tool = NULL;
     char *command;
 
-    if (StringEqual(request, "localhost") || StringIsLocalhostIP(request))
+    if (StringIsLocalHostIP(request))
     {
         tool = "cf-agent";
         command = xstrdup(local_run_command);

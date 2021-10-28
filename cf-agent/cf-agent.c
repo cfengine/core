@@ -88,6 +88,7 @@
 #include <sys/types.h>                  /* checking umask on writing setxid log */
 #include <sys/stat.h>                   /* checking umask on writing setxid log */
 #include <simulate_mode.h>              /* ManifestChangedFiles(), DiffChangedFiles() */
+#include <ip_address.h>
 
 #include <syntax.h>                     /* IsBuiltInPromiseType() */
 #include <mod_common.h>
@@ -436,7 +437,7 @@ static void ConfigureBootstrap(GenericAgentConfig *config, const char *argument)
         return;
     }
 
-    if(IsLoopbackAddress(argument))
+    if(StringIsLocalHostIP(argument))
     {
         Log(LOG_LEVEL_WARNING, "Bootstrapping to loopback interface (localhost), other hosts will not be able to bootstrap to this server");
     }

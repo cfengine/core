@@ -139,6 +139,9 @@ source "$PARAMS"
   # and additional vars set in PARAMS depending on the VCS_TYPE.
 
 case "${VCS_TYPE}" in
+    GIT_CFBS)
+        git_cfbs_masterstage
+        ;;
     GIT_POLICY_CHANNELS)
         git_stage_policy_channels
         ;;

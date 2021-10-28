@@ -661,7 +661,8 @@ static void PromiseModule_AppendAllAttributes(
             || StringEqual(name, "if")
             || StringEqual(name, "ifvarclass")
             || StringEqual(name, "unless")
-            || StringEqual(name, "depends_on"))
+            || StringEqual(name, "depends_on")
+            || StringEqual(name, "with"))
         {
             // Evaluated by agent and not sent to module, skip
             continue;

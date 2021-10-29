@@ -2738,8 +2738,7 @@ static bool ValidateCustomPromise(const Promise *pp, Seq *errors)
             || StringEqual(name, "ifelapsed")
             || StringEqual(name, "expireafter")
             || StringEqual(name, "comment")
-            || StringEqual(name, "meta")
-            || StringEqual(name, "with"))
+            || StringEqual(name, "meta"))
         {
             // TODO: Remove 1 attribute at a time, test and fix.
             //       https://tracker.mender.io/browse/CFE-3392

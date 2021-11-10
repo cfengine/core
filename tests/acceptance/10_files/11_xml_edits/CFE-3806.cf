@@ -1,0 +1,79 @@
+body common control
+{
+        inputs => { "../../default.cf.sub" };
+        bundlesequence  => { default("$(this.promise_filename)") };
+        version => "1.0";
+}
+
+bundle agent init
+{
+  vars:
+        "starting_xml" string => '<zone>
+ <short>Public</short>
+ <description>For use in public areas. You do not trust the other computers on networks to not harm your computer. Only selected incoming connections are accepted.</description>
+ <service name="ssh"/>
+ <service name="dhcpv6-client"/>
+ <service name="cockpit"/>
+ </zone>';
+
+  files:
+      "$(G.testfile)-1.xml"
+        content => "$(starting_xml)";
+
+      "$(G.testfile)-2.xml"
+        content => "$(starting_xml)";
+}
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-3806" }
+        string => "Test that trailing newline on insert_tree promisers do not remove ending tag for select_xpath";
+
+      "test_soft_fail"
+        string => "any",
+        meta => { "CFE-3860" };
+
+  files:
+
+      "$(G.testfile)-1.xml"
+        edit_xml => insert_tree_with_trailing_newline("1.1.1.1", "tcp", "9443");
+
+      "$(G.testfile)-2.xml"
+        edit_xml => insert_tree_without_trailing_newline("1.1.1.1", "tcp", "9443");
+}
+
+bundle agent check
+{
+  methods:
+      "Pass/Fail"
+        usebundle => dcs_check_strcmp( readfile( "$(G.testfile)-1.xml"),
+                                       readfile( "$(G.testfile)-2.xml"),
+                                       $(this.promise_filename), "no" );
+}
+
+bundle edit_xml insert_tree_with_trailing_newline(source, protocol, port)
+{
+  build_xpath:
+      "/zone";
+
+  insert_tree:
+      '<rule family="ipv4">
+   <source address="$(source)"/>
+   <port protocol="$(protocol)" port="$(port)"/>
+ </rule>
+'
+        select_xpath => "/zone";
+
+}
+bundle edit_xml insert_tree_without_trailing_newline(source, protocol, port)
+{
+  build_xpath:
+      "/zone";
+
+  insert_tree:
+      '<rule family="ipv4">
+   <source address="$(source)"/>
+   <port protocol="$(protocol)" port="$(port)"/>
+ </rule>'
+        select_xpath => "/zone";
+}

@@ -13,6 +13,7 @@ ExecStop=@workdir@/httpd/bin/apachectl stop
 PIDFile=@workdir@/httpd/logs/httpd.pid
 Restart=always
 RestartSec=10
+UMask=0177
 
 [Install]
 WantedBy=multi-user.target

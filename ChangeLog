@@ -1,3 +1,34 @@
+3.18.1:
+	- 'null' JSON value is now handled as empty data in augments/host-specific data
+	  (ENT-7434)
+	- Added "Wants cf-postgres.service" to cf-apache.service in systemd configuration
+	  (ENT-5125)
+	- Added a new common control attribute 'system_log_level'
+	  For specifying the minimum log level required for log messages to
+	  go to the system log. (ENT-7594)
+	- Added example illustrating data_sysctlvalues() behavior (CFE-3783)
+	- Cached functions are now always called inside promises with 'iflapsed => "0"'
+	  (CFE-3754)
+	- Fixed failure on new file creation when backups are enabled (CFE-3640)
+	- Enabled the 'handle' attribute for custom promise types(CFE-3439)
+	- Enabled the `depends_on` attribute for custom promise types (CFE-3438)
+	- Enabled the `with` attribute for custom promise types (CFE-3441)
+	- Only real changes in files now produce info messages (CFE-3708)
+	- Reports with unexpanded variable references are now
+	  attempted to be held off until the reference expands
+	  (CFE-3776)
+	- Fixed crashes (segmentation faults) in VariableIsSecret()
+	  and VariablesMatching() (ENT-7678)
+	- The --skip-bootstrap-policy-run option now skips the update policy run
+	  (ENT-7500, ENT-7511)
+	- cf-check dump now shows measurement names (ENT-7452)
+	- Value of '$(with)' is now expanded even if it contains unresolved variable references
+	  (CFE-3776)
+	- cf-serverd now binds to both IPV6 and IPV4 if bindtointerface is unspecified
+	  (ENT-7362)
+	- cf-serverd now reports if it fails to bind to all possible addresses/interfaces
+	  (ENT-7362)
+
 3.18.0:
 	- "No action for file" warning is no longer triggered when only
 	  'content => "something"' is used (CFE-3507)

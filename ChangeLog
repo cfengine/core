@@ -1,3 +1,17 @@
+3.15.5:
+	- Added "Wants cf-postgres.service" to cf-apache.service in systemd configuration
+	  (ENT-5125)
+	- CFEngine processes now reuse log facility from
+	  previous run for early logging before policy is loaded (ENT-6955)
+	- Reports with unexpanded variable references are now
+	  attempted to be held off until the reference expands
+	  (CFE-3776)
+	- The option --skip-bootstrap-policy-run now skips the update policy run
+	  (ENT-7500, ENT-7511)
+	- cf-check dump now shows measurement names (ENT-7452)
+	- The value of '$(with)' is now expanded even if it contains unresolved variable references
+	  (CFE-3776)
+
 3.15.4:
 	- cf-runagent now exits with a code reflecting remote agent run status(es)
 	  (CFE-3594)

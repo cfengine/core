@@ -1,39 +1,32 @@
 3.18.1:
 	- 'null' JSON value is now handled as empty data in augments/host-specific data
 	  (ENT-7434)
-	- Add Wants cf-postgres.service to cf-apache.service in systemd configuration
+	- Added "Wants cf-postgres.service" to cf-apache.service in systemd configuration
 	  (ENT-5125)
 	- Added a new common control attribute 'system_log_level'
 	  For specifying the minimum log level required for log messages to
-	  go to the system log.
-	  Ticket: (ENT-7594)
+	  go to the system log. (ENT-7594)
 	- Added example illustrating data_sysctlvalues() behavior (CFE-3783)
-	- Added support for cfbs managed policy set (ENT-7709)
 	- Cached functions are now always called inside promises with 'iflapsed => "0"'
 	  (CFE-3754)
-	- Custom promises can now use the 'handle' attribute (CFE-3439)
-	- Don't fail on new file creation when backups are enabled
-	  Ticket: (CFE-3640)
-	- Enabled `depends_on` for custom promise types (CFE-3438)
-	- Enabled `with` attribute for custom promise types (CFE-3441)
-	- Fix dbm_quick.c DBPrivRead() argument type (CFE-3737)
-	- Fix dbm_tokyocab.c DBPrivRead() argument type (CFE-3737)
+	- Fixed failure on new file creation when backups are enabled (CFE-3640)
+	- Enabled the 'handle' attribute for custom promise types(CFE-3439)
+	- Enabled the `depends_on` attribute for custom promise types (CFE-3438)
+	- Enabled the `with` attribute for custom promise types (CFE-3441)
 	- Only real changes in files now produce info messages (CFE-3708)
 	- Reports with unexpanded variable references are now
-	             attempted to be held off until the reference expands
+	  attempted to be held off until the reference expands
 	  (CFE-3776)
-	- Revert "Added cf-postgres requirement to cf-apache and cf-hub systemd units"
-	  (ENT-5125)
-	- Segfaults in VariableIsSecret() are no longer happening (ENT-7678)
-	- Segfaults in VariablesMatching() are no longer happening (ENT-7678)
-	- Skip update policy run with --skip-bootstrap-policy-run
+	- Fixed crashes (segmentation faults) in VariableIsSecret()
+	  and VariablesMatching() (ENT-7678)
+	- The --skip-bootstrap-policy-run option now skips the update policy run
 	  (ENT-7500, ENT-7511)
-	- Use ts_key file for measurement names in cf-check dump (ENT-7452)
+	- cf-check dump now shows measurement names (ENT-7452)
 	- Value of '$(with)' is now expanded even if it contains unresolved variable references
 	  (CFE-3776)
 	- cf-serverd now binds to both IPV6 and IPV4 if bindtointerface is unspecified
 	  (ENT-7362)
-	- cf-serverd now reports if fails to bind to all possible addresses/interfaces
+	- cf-serverd now reports if it fails to bind to all possible addresses/interfaces
 	  (ENT-7362)
 
 3.18.0:

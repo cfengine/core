@@ -1,20 +1,15 @@
 3.15.5:
-	- Add Wants cf-postgres.service to cf-apache.service in systemd configuration
+	- Added "Wants cf-postgres.service" to cf-apache.service in systemd configuration
 	  (ENT-5125)
-	- Added example illustrating data_sysctlvalues() behavior (CFE-3783)
 	- CFEngine processes now reuse log facility from
 	  previous run for early logging before policy is loaded (ENT-6955)
-	- Fix dbm_quick.c DBPrivRead() argument type (CFE-3737)
-	- Fix dbm_tokyocab.c DBPrivRead() argument type (CFE-3737)
 	- Reports with unexpanded variable references are now
-	             attempted to be held off until the reference expands
+	  attempted to be held off until the reference expands
 	  (CFE-3776)
-	- Revert "Added cf-postgres requirement to cf-apache and cf-hub systemd units"
-	  (ENT-5125)
-	- Skip update policy run with --skip-bootstrap-policy-run
+	- The option --skip-bootstrap-policy-run now skips the update policy run
 	  (ENT-7500, ENT-7511)
-	- Use ts_key file for measurement names in cf-check dump (ENT-7452)
-	- Value of '$(with)' is now expanded even if it contains unresolved variable references
+	- cf-check dump now shows measurement names (ENT-7452)
+	- The value of '$(with)' is now expanded even if it contains unresolved variable references
 	  (CFE-3776)
 
 3.15.4:

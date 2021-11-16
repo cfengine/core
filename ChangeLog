@@ -28,6 +28,7 @@
 	  (ENT-7362)
 	- cf-serverd now reports if it fails to bind to all possible addresses/interfaces
 	  (ENT-7362)
+	- '-N/--negate' now prevents persistent classes from being defined (ENT-5886)
 
 3.18.0:
 	- "No action for file" warning is no longer triggered when only

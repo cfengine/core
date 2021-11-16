@@ -121,6 +121,13 @@ void EvalContextHeapPersistentSave(EvalContext *ctx, const char *name, unsigned 
 void EvalContextHeapPersistentRemove(const char *context);
 void EvalContextHeapPersistentLoadAll(EvalContext *ctx);
 
+/**
+ * Sets negated classes (persistent classes that should not be defined).
+ *
+ * @note Takes ownership of #negated_classes
+ */
+void EvalContextSetNegatedClasses(EvalContext *ctx, StringSet *negated_classes);
+
 bool EvalContextClassPutSoft(EvalContext *ctx, const char *name, ContextScope scope, const char *tags);
 bool EvalContextClassPutHard(EvalContext *ctx, const char *name, const char *tags);
 Class *EvalContextClassGet(const EvalContext *ctx, const char *ns, const char *name);

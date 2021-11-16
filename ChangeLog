@@ -11,6 +11,7 @@
 	- cf-check dump now shows measurement names (ENT-7452)
 	- The value of '$(with)' is now expanded even if it contains unresolved variable references
 	  (CFE-3776)
+	- '-N/--negate' now prevents persistent classes from being defined (ENT-5886)
 
 3.15.4:
 	- cf-runagent now exits with a code reflecting remote agent run status(es)

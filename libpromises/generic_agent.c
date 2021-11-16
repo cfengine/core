@@ -2070,6 +2070,8 @@ void GenericAgentConfigDestroy(GenericAgentConfig *config)
 
 void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config)
 {
+    assert(config != NULL);
+
     if (config->heap_soft)
     {
         StringSetIterator it = StringSetIteratorInit(config->heap_soft);
@@ -2084,6 +2086,13 @@ void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config)
 
             EvalContextClassPutSoft(ctx, context, CONTEXT_SCOPE_NAMESPACE, "source=environment");
         }
+    }
+
+    if (config->heap_negated != NULL)
+    {
+        /* Takes ownership of heap_negated. */
+        EvalContextSetNegatedClasses(ctx, config->heap_negated);
+        ((GenericAgentConfig *)config)->heap_negated = NULL;
     }
 
     switch (LogGetGlobalLevel())

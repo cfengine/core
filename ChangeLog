@@ -11,8 +11,8 @@
 	  (CFE-3754)
 	- Fixed failure on new file creation when backups are enabled (CFE-3640)
 	- Enabled the 'handle' attribute for custom promise types(CFE-3439)
-	- Enabled the `depends_on` attribute for custom promise types (CFE-3438)
-	- Enabled the `with` attribute for custom promise types (CFE-3441)
+	- Enabled the 'depends_on' attribute for custom promise types (CFE-3438)
+	- Enabled the 'with' attribute for custom promise types (CFE-3441)
 	- Only real changes in files now produce info messages (CFE-3708)
 	- Reports with unexpanded variable references are now
 	  attempted to be held off until the reference expands

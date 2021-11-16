@@ -1,0 +1,20 @@
+body common control
+{
+      bundlesequence => { run };
+}
+
+bundle agent run
+{
+  classes:
+      "ok" expression => "!test_class";
+
+  reports:
+    ok::
+      "Pass";
+
+    !ok.DEBUG::
+      "test_class defined";
+
+    !ok::
+      "FAIL";
+}

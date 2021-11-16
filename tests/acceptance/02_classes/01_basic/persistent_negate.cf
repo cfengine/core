@@ -1,0 +1,50 @@
+#######################################################
+#
+# ENT-5886 -- -N/--negate should prevent persistent classes from being defined
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  vars:
+      "dflags" string => ifelse("EXTRA", "-DDEBUG,EXTRA", "-DDEBUG");
+}
+
+bundle agent test
+{
+  meta:
+      "description" -> {"ENT-5886"}
+        string => "-N/--negate should prevent persistent classes from being defined";
+
+  commands:
+      "$(sys.cf_agent) -K $(init.dflags) -f $(this.promise_filename).sub"
+        classes => test_always("done_persisting");
+}
+
+body classes test_always(x)
+{
+    promise_repaired => { "$(x)" };
+    promise_kept => { "$(x)" };
+    repair_failed => { "$(x)" };
+    repair_denied => { "$(x)" };
+    repair_timeout => { "$(x)" };
+}
+
+bundle agent check
+{
+  vars:
+    done_persisting::
+      "subout" string => execresult("$(sys.cf_agent) -N test_class -K $(init.dflags) -f $(this.promise_filename).sub2", "noshell");
+
+  methods:
+      "" usebundle => dcs_check_strcmp($(subout), "R: Pass",
+                                       $(this.promise_filename),
+                                       "no");
+}

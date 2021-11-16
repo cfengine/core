@@ -178,6 +178,9 @@ struct EvalContext_
     /* List if all classes set during policy evaluation */
     StringSet *all_classes;
 
+    /* Negated classes (persistent classes that should not be defined). */
+    StringSet *negated_classes;
+
     /* These following two fields are needed for remote variable injection
      * detection (CFE-1915) */
     /* Names of all bundles */
@@ -741,6 +744,8 @@ void EvalContextHeapPersistentRemove(const char *context)
 
 void EvalContextHeapPersistentLoadAll(EvalContext *ctx)
 {
+    assert(ctx != NULL);
+
     time_t now = time(NULL);
 
     Log(LOG_LEVEL_VERBOSE, "Loading persistent classes");
@@ -793,23 +798,38 @@ void EvalContextHeapPersistentLoadAll(EvalContext *ctx)
         {
             Log(LOG_LEVEL_VERBOSE, "Persistent class '%s' for %jd more minutes",
                 key, (intmax_t) ((info.expires - now) / 60));
-            Log(LOG_LEVEL_DEBUG, "Adding persistent class '%s'", key);
+            if ((ctx->negated_classes != NULL) && StringSetContains(ctx->negated_classes, key))
+            {
+                Log(LOG_LEVEL_VERBOSE,
+                    "Not adding persistent class '%s' due to match in -N/--negate", key);
+            }
+            else
+            {
+                Log(LOG_LEVEL_DEBUG, "Adding persistent class '%s'", key);
 
-            ClassRef ref = ClassRefParse(key);
-            EvalContextClassPut(ctx, ref.ns, ref.name, true, CONTEXT_SCOPE_NAMESPACE, tags, NULL);
+                ClassRef ref = ClassRefParse(key);
+                EvalContextClassPut(ctx, ref.ns, ref.name, true, CONTEXT_SCOPE_NAMESPACE, tags, NULL);
 
-            StringSet *tag_set = EvalContextClassTags(ctx, ref.ns, ref.name);
-            assert(tag_set);
+                StringSet *tag_set = EvalContextClassTags(ctx, ref.ns, ref.name);
+                assert(tag_set);
 
-            StringSetAdd(tag_set, xstrdup("source=persistent"));
+                StringSetAdd(tag_set, xstrdup("source=persistent"));
 
-            ClassRefDestroy(ref);
+                ClassRefDestroy(ref);
+            }
         }
     }
 
     DeleteDBCursor(dbcp);
     CloseDB(dbp);
 }
+
+void EvalContextSetNegatedClasses(EvalContext *ctx, StringSet *negated_classes)
+{
+    assert(ctx != NULL);
+    ctx->negated_classes = negated_classes;
+}
+
 
 bool BundleAbort(EvalContext *ctx)
 {
@@ -1041,6 +1061,7 @@ EvalContext *EvalContextNew(void)
     ctx->package_promise_context = PackagePromiseConfigNew();
 
     ctx->all_classes = NULL;
+    ctx->negated_classes = NULL;
     ctx->bundle_names = StringSetNew();
     ctx->remote_var_promises = NULL;
 
@@ -1087,6 +1108,7 @@ void EvalContextDestroy(EvalContext *ctx)
         FreePackagePromiseContext(ctx->package_promise_context);
 
         StringSetDestroy(ctx->all_classes);
+        StringSetDestroy(ctx->negated_classes);
         StringSetDestroy(ctx->bundle_names);
         if (ctx->remote_var_promises != NULL)
         {

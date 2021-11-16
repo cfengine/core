@@ -10,7 +10,7 @@ PartOf=cfengine3.service
 Type=forking
 ExecStart=@workdir@/httpd/bin/apachectl start
 ExecStop=@workdir@/httpd/bin/apachectl stop
-PIDFile=@workdir@/httpd/logs/httpd.pid
+PIDFile=@workdir@/httpd/httpd.pid
 Restart=always
 RestartSec=10
 

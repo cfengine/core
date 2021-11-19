@@ -497,6 +497,9 @@ allow cfengine_postgres_t tmpfs_t:file { create open read write map unlink };
 allow cfengine_postgres_t tmpfs_t:filesystem getattr;
 allow cfengine_postgres_t var_log_t:file { append open };
 
+# so that PostgreSQL can check if cfpostgres user/group exists
+allow cfengine_postgres_t passwd_file_t:file read;
+
 # Needed for systemd to be able to check PostgreSQL's PID file
 allow init_t cfengine_var_lib_t:dir { read remove_name write };
 allow init_t cfengine_var_lib_t:file { getattr open read unlink };

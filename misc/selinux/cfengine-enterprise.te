@@ -511,8 +511,8 @@ type cfengine_httpd_t;
 typeattribute cfengine_httpd_t domain;
 role system_r types cfengine_httpd_t;
 
-# /var/cfengine/bin/cf-httpd has the 'cfengine_httpd_exec_t' context which is an
-# entrypoint for the 'cfengine_httpd_t' domain
+# /var/cfengine/httpd/bin/* files have the 'cfengine_httpd_exec_t' context which
+# is an entrypoint for the 'cfengine_httpd_t' domain
 type cfengine_httpd_exec_t;
 typeattribute cfengine_httpd_exec_t entry_type;
 typeattribute cfengine_httpd_exec_t exec_type;

@@ -86,7 +86,7 @@ require {
 	type sendmail_exec_t;
 	class tcp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown name_connect accept listen name_bind node_bind };
 	class udp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown node_bind };
-	class sock_file { create write setattr unlink };
+	class sock_file { create write setattr unlink getattr };
 	class rawip_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
 	class netlink_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
 	class packet_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
@@ -147,7 +147,7 @@ require {
 	class ib_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
 	class mpls_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
 	class process { setrlimit transition dyntransition execstack execheap execmem signull siginh };
-	class file { execute execute_no_trans getattr ioctl map open read unlink write entrypoint lock link rename append setattr create relabelfrom relabelto };
+	class file { execute execute_no_trans getattr ioctl map open read unlink write entrypoint lock link rename append setattr create relabelfrom relabelto watch watch_reads };
 	class fifo_file { create open getattr setattr read write append rename link unlink ioctl lock relabelfrom relabelto };
 	class dir { getattr read search open write add_name remove_name lock ioctl create };
 	class filesystem getattr;
@@ -161,6 +161,7 @@ require {
 	class memprotect mmap_zero;
 	class peer recv;
 	class chr_file { getattr };
+	class lockdown { confidentiality integrity };
 }
 
 
@@ -539,6 +540,17 @@ allow cfengine_httpd_t cfengine_var_lib_t:file { append create execute getattr i
 
 allow cfengine_httpd_t cfengine_var_lib_t:dir { add_name getattr open read remove_name search write create };
 allow cfengine_httpd_t cfengine_var_lib_t:lnk_file read;
+
+# sending reports via email
+allow cfengine_httpd_t postfix_etc_t:dir { getattr open read search };
+allow cfengine_httpd_t postfix_etc_t:file { getattr open read };
+allow cfengine_httpd_t postfix_postdrop_exec_t:file { execute execute_no_trans map open read };
+allow cfengine_httpd_t postfix_public_t:dir search;
+allow cfengine_httpd_t postfix_public_t:sock_file { getattr write };
+allow cfengine_httpd_t postfix_spool_t:dir { add_name remove_name search write };
+allow cfengine_httpd_t postfix_spool_t:file { create getattr open read rename setattr write };
+allow cfengine_httpd_t self:process setrlimit;
+allow cfengine_httpd_t sendmail_exec_t:file { execute execute_no_trans getattr map open read };
 
 allow cfengine_httpd_t devlog_t:lnk_file read;
 allow cfengine_httpd_t devlog_t:sock_file write;

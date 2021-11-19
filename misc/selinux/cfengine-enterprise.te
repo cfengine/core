@@ -78,6 +78,12 @@ require {
 	type tty_device_t;
 	type user_devpts_t;
 	type sysctl_t;
+	type postfix_etc_t;
+	type postfix_master_t;
+	type postfix_postdrop_exec_t;
+	type postfix_public_t;
+	type postfix_spool_t;
+	type sendmail_exec_t;
 	class tcp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown name_connect accept listen name_bind node_bind };
 	class udp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown node_bind };
 	class sock_file { create write setattr unlink };
@@ -367,6 +373,19 @@ allow cfengine_hub_t cfengine_var_lib_t:sock_file { create unlink };
 allow cfengine_hub_t cfengine_httpd_exec_t:file map;
 allow cfengine_hub_t cfengine_httpd_exec_t:file { execute execute_no_trans getattr open read };
 
+# sending scheduled reports via email
+allow cfengine_hub_t postfix_etc_t:dir { getattr open read search };
+allow cfengine_hub_t postfix_etc_t:file { getattr open read };
+allow cfengine_hub_t postfix_master_t:unix_stream_socket connectto;
+allow cfengine_hub_t postfix_postdrop_exec_t:file map;
+allow cfengine_hub_t postfix_postdrop_exec_t:file { execute execute_no_trans open read };
+allow cfengine_hub_t postfix_public_t:dir search;
+allow cfengine_hub_t postfix_public_t:sock_file { getattr write };
+allow cfengine_hub_t postfix_spool_t:dir { add_name remove_name search write };
+allow cfengine_hub_t postfix_spool_t:file { create getattr open read rename setattr write };
+allow cfengine_hub_t sendmail_exec_t:file map;
+allow cfengine_hub_t sendmail_exec_t:file { execute execute_no_trans open read };
+
 allow cfengine_hub_t bin_t:file map;
 allow cfengine_hub_t bin_t:file { execute execute_no_trans };
 allow cfengine_hub_t cert_t:dir search;
@@ -391,10 +410,11 @@ allow cfengine_hub_t ping_exec_t:file getattr;
 allow cfengine_hub_t proc_net_t:file { getattr open read };
 allow cfengine_hub_t proc_t:dir read;
 allow cfengine_hub_t rpm_exec_t:file getattr;
-allow cfengine_hub_t self:capability dac_override;
+allow cfengine_hub_t self:capability { dac_override chown dac_read_search };
+allow cfengine_hub_t self:process { execmem setrlimit };
 allow cfengine_hub_t self:tcp_socket { connect create getopt setopt read write };
 allow cfengine_hub_t self:udp_socket { connect create getattr ioctl setopt read write };
-allow cfengine_hub_t self:netlink_route_socket { create getopt setopt bind getattr };
+allow cfengine_hub_t self:netlink_route_socket { create getopt setopt bind getattr nlmsg_read };
 allow cfengine_hub_t self:unix_dgram_socket { create connect read write };
 allow cfengine_hub_t semanage_exec_t:file getattr;
 allow cfengine_hub_t shadow_t:file getattr;

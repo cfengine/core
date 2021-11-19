@@ -362,9 +362,13 @@ allow cfengine_hub_t unreserved_port_t:tcp_socket name_connect;
 
 allow cfengine_hub_t cfengine_log_t:dir getattr;
 allow cfengine_hub_t cfengine_var_lib_t:dir { add_name getattr open read search write remove_name };
-allow cfengine_hub_t cfengine_var_lib_t:file { create ioctl lock write unlink };
+allow cfengine_hub_t cfengine_var_lib_t:file { create ioctl lock write unlink append setattr };
 allow cfengine_hub_t cfengine_var_lib_t:lnk_file { getattr read };
 allow cfengine_hub_t cfengine_var_lib_t:sock_file { create unlink };
+
+# cf-hub executes PHP in case of scheduled reports
+allow cfengine_hub_t cfengine_httpd_exec_t:file map;
+allow cfengine_hub_t cfengine_httpd_exec_t:file { execute execute_no_trans getattr open read };
 
 allow cfengine_hub_t bin_t:file map;
 allow cfengine_hub_t bin_t:file { execute execute_no_trans };

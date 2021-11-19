@@ -547,6 +547,17 @@ allow cfengine_httpd_t cfengine_var_lib_t:lnk_file read;
 allow cfengine_httpd_t cfengine_execd_t:unix_stream_socket connectto;
 allow cfengine_httpd_t cfengine_var_lib_t:sock_file write;
 
+# sending reports via email
+allow cfengine_httpd_t postfix_etc_t:dir { getattr open read search };
+allow cfengine_httpd_t postfix_etc_t:file { getattr open read };
+allow cfengine_httpd_t postfix_postdrop_exec_t:file { execute execute_no_trans map open read };
+allow cfengine_httpd_t postfix_public_t:dir search;
+allow cfengine_httpd_t postfix_public_t:sock_file { getattr write };
+allow cfengine_httpd_t postfix_spool_t:dir { add_name remove_name search write };
+allow cfengine_httpd_t postfix_spool_t:file { create getattr open read rename setattr write };
+allow cfengine_httpd_t self:process setrlimit;
+allow cfengine_httpd_t sendmail_exec_t:file { execute execute_no_trans getattr map open read };
+
 allow cfengine_httpd_t devlog_t:lnk_file read;
 allow cfengine_httpd_t devlog_t:sock_file write;
 allow cfengine_httpd_t http_port_t:tcp_socket { name_bind name_connect };

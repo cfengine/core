@@ -6,4 +6,4 @@
 /var/cfengine/bin/pg.*		    --	gen_context(system_u:object_r:cfengine_postgres_exec_t,s0)
 /var/cfengine/httpd/bin/.*      --	gen_context(system_u:object_r:cfengine_httpd_exec_t,s0)
 /var/cfengine/httpd/php/bin/.*  --	gen_context(system_u:object_r:cfengine_httpd_exec_t,s0)
-/opt/cfengine(/.*)?             --	gen_context(system_u:object_r:cfengine_var_lib_t,s0)
+/opt/cfengine(/.*)?             	gen_context(system_u:object_r:cfengine_var_lib_t,s0)

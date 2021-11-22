@@ -62,6 +62,7 @@ def get_args():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     ap.add_argument("--radius", "-r", help="Circle raidus", type=int, default=16)
+    ap.add_argument("--no-margins", help="No extra space around the agent", action="store_true")
     ap.add_argument("--body", help="Body color", type=str, default=cfengine_blue)
     ap.add_argument("--head", help="Head color", type=str, default=cfengine_orange)
     ap.add_argument(
@@ -93,6 +94,8 @@ def main():
     head = args.head
     arms = args.arms
     legs = args.legs
+
+    no_margins = args.no_margins
 
     diameter = radius * 2
     width = diameter * 14
@@ -130,6 +133,16 @@ def main():
     # Offsets needed to center this logo in canvas:
     offset_x = radius + diameter * 1
     offset_y = radius + diameter * 1
+
+    if no_margins:
+        min_x = min(c.x for c in content) - radius
+        min_y = min(c.y for c in content) - radius
+        max_x = max(c.x for c in content) + radius
+        max_y = max(c.y for c in content) + radius
+        width = max_x - min_x
+        height = max_y - min_y
+        offset_x = -1 * min_x
+        offset_y = -1 * min_y
 
     # Apply offsets to all circles:
     for circle in content:

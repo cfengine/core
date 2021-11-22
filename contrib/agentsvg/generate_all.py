@@ -34,6 +34,8 @@ colors = [orange_blue, blue_blue, orange_green, green_blue, grey_blue, dark_mode
 sizes = [8, 16, 32, 64, 128]
 poses = [normal, out, angled, up, up_out]
 
+opts = ["", "--no-margins"]
+
 for size in sizes:
     diameter = size * 2
     width = diameter * 14
@@ -52,12 +54,15 @@ for size in sizes:
             arms = pose["arms"]
             legs = pose["legs"]
             pose_opts = f"--arms {arms} --legs {legs}"
-            command = f"python3 agentsvg.py {color_opts} {pose_opts} {radius_opt}"
-            base_name = f"agent_{head}_{body}_{arms}_{legs}_{dimensions}"
-            generate = f"{command} > ./{dimensions}/{base_name}.svg"
-            convert = f"convert -background none ./{dimensions}/{base_name}.svg ./{dimensions}/{base_name}.png"
-            command = f"{generate} && {convert}"
-            print(command)
-            ret = os.system(command)
-            if ret != 0:
-                sys.exit("Error: The command above failed! (Non-zero exit code)")
+            for opt in opts:
+                command = f"python3 agentsvg.py {color_opts} {pose_opts} {radius_opt} {opt}"
+                if opt:
+                    opt = opt.replace("--", "").replace("-", "_")
+                base_name = f"agent_{head}_{body}_{arms}_{legs}_{dimensions}" + (f"_{opt}" if opt else "")
+                generate = f"{command} > ./{dimensions}/{base_name}.svg"
+                convert = f"convert -background none ./{dimensions}/{base_name}.svg ./{dimensions}/{base_name}.png"
+                command = f"{generate} && {convert}"
+                print(command)
+                ret = os.system(command)
+                if ret != 0:
+                    sys.exit("Error: The command above failed! (Non-zero exit code)")

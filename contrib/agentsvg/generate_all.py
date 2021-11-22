@@ -5,12 +5,16 @@ blue = "#052569"
 orange = "#f5821f"
 green = "#79A442"
 grey = "#92B3B7"
+off_white = "#E5E5E5"
+off_orange = "#F9AB2D"
 
 color_names = {
     blue: "blue",
     orange: "orange",
     green: "green",
     grey: "grey",
+    off_white: "off_white",
+    off_orange: "off_orange",
 }
 
 orange_blue = {"head": orange, "body": blue}
@@ -18,6 +22,7 @@ blue_blue = {"head": blue, "body": blue}
 orange_green = {"head": orange, "body": green}
 green_blue = {"head": green, "body": blue}
 grey_blue = {"head": grey, "body": blue}
+dark_mode = {"head": off_orange, "body": off_white}
 
 normal = {"arms": "down", "legs": "straight"}
 out = {"arms": "out", "legs": "out"}
@@ -25,7 +30,7 @@ angled = {"arms": "angled", "legs": "straight"}
 up = {"arms": "up", "legs": "straight"}
 up_out = {"arms": "up", "legs": "out"}
 
-colors = [orange_blue, blue_blue, orange_green, green_blue, grey_blue]
+colors = [orange_blue, blue_blue, orange_green, green_blue, grey_blue, dark_mode]
 sizes = [8, 16, 32, 64, 128]
 poses = [normal, out, angled, up, up_out]
 

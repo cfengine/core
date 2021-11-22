@@ -78,9 +78,15 @@ require {
 	type tty_device_t;
 	type user_devpts_t;
 	type sysctl_t;
+	type postfix_etc_t;
+	type postfix_master_t;
+	type postfix_postdrop_exec_t;
+	type postfix_public_t;
+	type postfix_spool_t;
+	type sendmail_exec_t;
 	class tcp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown name_connect accept listen name_bind node_bind };
 	class udp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown node_bind };
-	class sock_file { create write setattr unlink };
+	class sock_file { create write setattr unlink getattr };
 	class rawip_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
 	class netlink_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
 	class packet_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
@@ -141,7 +147,7 @@ require {
 	class ib_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
 	class mpls_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
 	class process { setrlimit transition dyntransition execstack execheap execmem signull siginh };
-	class file { execute execute_no_trans getattr ioctl map open read unlink write entrypoint lock link rename append setattr create relabelfrom relabelto };
+	class file { execute execute_no_trans getattr ioctl map open read unlink write entrypoint lock link rename append setattr create relabelfrom relabelto watch watch_reads };
 	class fifo_file { create open getattr setattr read write append rename link unlink ioctl lock relabelfrom relabelto };
 	class dir { getattr read search open write add_name remove_name lock ioctl create };
 	class filesystem getattr;
@@ -155,6 +161,7 @@ require {
 	class memprotect mmap_zero;
 	class peer recv;
 	class chr_file { getattr };
+	class lockdown { confidentiality integrity };
 }
 
 
@@ -359,9 +366,26 @@ allow cfengine_hub_t unreserved_port_t:tcp_socket name_connect;
 
 allow cfengine_hub_t cfengine_log_t:dir getattr;
 allow cfengine_hub_t cfengine_var_lib_t:dir { add_name getattr open read search write remove_name };
-allow cfengine_hub_t cfengine_var_lib_t:file { create ioctl lock write unlink };
+allow cfengine_hub_t cfengine_var_lib_t:file { create ioctl lock write unlink append setattr };
 allow cfengine_hub_t cfengine_var_lib_t:lnk_file { getattr read };
 allow cfengine_hub_t cfengine_var_lib_t:sock_file { create unlink };
+
+# cf-hub executes PHP in case of scheduled reports
+allow cfengine_hub_t cfengine_httpd_exec_t:file map;
+allow cfengine_hub_t cfengine_httpd_exec_t:file { execute execute_no_trans getattr open read };
+
+# sending scheduled reports via email
+allow cfengine_hub_t postfix_etc_t:dir { getattr open read search };
+allow cfengine_hub_t postfix_etc_t:file { getattr open read };
+allow cfengine_hub_t postfix_master_t:unix_stream_socket connectto;
+allow cfengine_hub_t postfix_postdrop_exec_t:file map;
+allow cfengine_hub_t postfix_postdrop_exec_t:file { execute execute_no_trans open read };
+allow cfengine_hub_t postfix_public_t:dir search;
+allow cfengine_hub_t postfix_public_t:sock_file { getattr write };
+allow cfengine_hub_t postfix_spool_t:dir { add_name remove_name search write };
+allow cfengine_hub_t postfix_spool_t:file { create getattr open read rename setattr write };
+allow cfengine_hub_t sendmail_exec_t:file map;
+allow cfengine_hub_t sendmail_exec_t:file { execute execute_no_trans open read };
 
 allow cfengine_hub_t bin_t:file map;
 allow cfengine_hub_t bin_t:file { execute execute_no_trans };
@@ -387,10 +411,11 @@ allow cfengine_hub_t ping_exec_t:file getattr;
 allow cfengine_hub_t proc_net_t:file { getattr open read };
 allow cfengine_hub_t proc_t:dir read;
 allow cfengine_hub_t rpm_exec_t:file getattr;
-allow cfengine_hub_t self:capability dac_override;
+allow cfengine_hub_t self:capability { dac_override chown dac_read_search };
+allow cfengine_hub_t self:process { execmem setrlimit };
 allow cfengine_hub_t self:tcp_socket { connect create getopt setopt read write };
 allow cfengine_hub_t self:udp_socket { connect create getattr ioctl setopt read write };
-allow cfengine_hub_t self:netlink_route_socket { create getopt setopt bind getattr };
+allow cfengine_hub_t self:netlink_route_socket { create getopt setopt bind getattr nlmsg_read };
 allow cfengine_hub_t self:unix_dgram_socket { create connect read write };
 allow cfengine_hub_t semanage_exec_t:file getattr;
 allow cfengine_hub_t shadow_t:file getattr;
@@ -470,6 +495,9 @@ allow cfengine_postgres_t tmpfs_t:file { create open read write map unlink };
 allow cfengine_postgres_t tmpfs_t:filesystem getattr;
 allow cfengine_postgres_t var_log_t:file { append open };
 
+# so that PostgreSQL can check if cfpostgres user/group exists
+allow cfengine_postgres_t passwd_file_t:file read;
+
 # Needed for systemd to be able to check PostgreSQL's PID file
 allow init_t cfengine_var_lib_t:dir { read remove_name write };
 allow init_t cfengine_var_lib_t:file { getattr open read unlink };
@@ -484,8 +512,8 @@ type cfengine_httpd_t;
 typeattribute cfengine_httpd_t domain;
 role system_r types cfengine_httpd_t;
 
-# /var/cfengine/bin/cf-httpd has the 'cfengine_httpd_exec_t' context which is an
-# entrypoint for the 'cfengine_httpd_t' domain
+# /var/cfengine/httpd/bin/* files have the 'cfengine_httpd_exec_t' context which
+# is an entrypoint for the 'cfengine_httpd_t' domain
 type cfengine_httpd_exec_t;
 typeattribute cfengine_httpd_exec_t entry_type;
 typeattribute cfengine_httpd_exec_t exec_type;
@@ -513,6 +541,17 @@ allow cfengine_httpd_t cfengine_var_lib_t:file { append create execute getattr i
 allow cfengine_httpd_t cfengine_var_lib_t:dir { add_name getattr open read remove_name search write create };
 allow cfengine_httpd_t cfengine_var_lib_t:lnk_file read;
 
+# sending reports via email
+allow cfengine_httpd_t postfix_etc_t:dir { getattr open read search };
+allow cfengine_httpd_t postfix_etc_t:file { getattr open read };
+allow cfengine_httpd_t postfix_postdrop_exec_t:file { execute execute_no_trans map open read };
+allow cfengine_httpd_t postfix_public_t:dir search;
+allow cfengine_httpd_t postfix_public_t:sock_file { getattr write };
+allow cfengine_httpd_t postfix_spool_t:dir { add_name remove_name search write };
+allow cfengine_httpd_t postfix_spool_t:file { create getattr open read rename setattr write };
+allow cfengine_httpd_t self:process setrlimit;
+allow cfengine_httpd_t sendmail_exec_t:file { execute execute_no_trans getattr map open read };
+
 allow cfengine_httpd_t devlog_t:lnk_file read;
 allow cfengine_httpd_t devlog_t:sock_file write;
 allow cfengine_httpd_t http_port_t:tcp_socket { name_bind name_connect };
@@ -537,6 +576,12 @@ allow cfengine_httpd_t sssd_var_lib_t:dir search;
 allow cfengine_httpd_t sssd_var_lib_t:sock_file write;
 allow cfengine_httpd_t syslogd_var_run_t:dir search;
 allow cfengine_httpd_t tmp_t:sock_file write;
+allow cfengine_httpd_t tmp_t:file { create setattr unlink write };
+allow cfengine_httpd_t tmp_t:dir { add_name remove_name write };
+allow cfengine_httpd_t var_t:dir read;
+
+# apparently, httpd creates some temporary bits in /tmp that it needs to mmap()
+allow cfengine_httpd_t tmp_t:file map;
 
 # Bidirectional DBus communication between httpd and systemd
 allow cfengine_httpd_t system_dbusd_t:dbus send_msg;

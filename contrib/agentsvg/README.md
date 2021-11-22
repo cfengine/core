@@ -10,6 +10,12 @@ Python script(s) for generating agent logos.
 python3 agentsvg.py > agent.svg
 ```
 
+## Logo with custom colors
+
+```
+python3 agentsvg.py --body="#f5821f" --head="#052569" > custom-agent.svg
+```
+
 ## Converting to PNG
 
 ```

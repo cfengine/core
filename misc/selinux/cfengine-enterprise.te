@@ -541,6 +541,10 @@ allow cfengine_httpd_t cfengine_var_lib_t:file { append create execute getattr i
 allow cfengine_httpd_t cfengine_var_lib_t:dir { add_name getattr open read remove_name search write create };
 allow cfengine_httpd_t cfengine_var_lib_t:lnk_file read;
 
+# allow httpd/php to upload notification/alert scripts
+allow cfengine_httpd_t cfengine_action_script_exec_t:dir { add_name getattr search write remove_name };
+allow cfengine_httpd_t cfengine_action_script_exec_t:file { create write setattr unlink };
+
 # sending reports via email
 allow cfengine_httpd_t postfix_etc_t:dir { getattr open read search };
 allow cfengine_httpd_t postfix_etc_t:file { getattr open read };
@@ -576,7 +580,7 @@ allow cfengine_httpd_t sssd_var_lib_t:dir search;
 allow cfengine_httpd_t sssd_var_lib_t:sock_file write;
 allow cfengine_httpd_t syslogd_var_run_t:dir search;
 allow cfengine_httpd_t tmp_t:sock_file write;
-allow cfengine_httpd_t tmp_t:file { create setattr unlink write };
+allow cfengine_httpd_t tmp_t:file { create setattr unlink write rename };
 allow cfengine_httpd_t tmp_t:dir { add_name remove_name write };
 allow cfengine_httpd_t var_t:dir read;
 
@@ -594,3 +598,35 @@ allow init_t cfengine_httpd_t:dbus send_msg;
 allow cfengine_httpd_t passwd_file_t:file { getattr open read };
 allow cfengine_httpd_t shell_exec_t:file map;
 allow cfengine_httpd_t shell_exec_t:file { execute execute_no_trans };
+
+
+#============= cfengine_action_script_t ==============
+# A special type and domain for action (notification/alert) scripts executed by
+# Mission Portal. They can do anything, so they need to run in an unconstrained
+# domain. At the same time we don't want our Apache and PHP to do anything so
+# these scripts cannot just run in the http_t domain.
+
+type cfengine_action_script_t;
+typeattribute cfengine_action_script_t domain;
+role system_r types cfengine_action_script_t;
+
+# this is a macro invocation, the file has to be processed with
+# make -f /usr/share/selinux/devel/Makefile
+unconfined_domain(cfengine_action_script_t)
+
+# /opt/cfengine/notification_scripts/* files have the
+# 'cfengine_action_script_exec_t' context which is an entrypoint for the
+# 'cfengine_action_script_t' domain
+type cfengine_action_script_exec_t;
+typeattribute cfengine_action_script_exec_t entry_type;
+typeattribute cfengine_action_script_exec_t exec_type;
+typeattribute cfengine_action_script_exec_t file_type, non_security_file_type, non_auth_file_type;
+role object_r types cfengine_action_script_exec_t;
+
+type_transition init_t cfengine_action_script_exec_t:process cfengine_action_script_t;
+allow cfengine_httpd_t cfengine_action_script_t:process transition;
+allow cfengine_httpd_t cfengine_action_script_exec_t:file { execute execute_no_trans getattr open read };
+allow cfengine_httpd_t cfengine_action_script_t:process siginh;
+
+allow cfengine_action_script_t cfengine_action_script_exec_t:file entrypoint;
+allow cfengine_action_script_t cfengine_action_script_exec_t:file { ioctl read getattr lock map execute open };

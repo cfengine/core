@@ -3937,7 +3937,7 @@ JsonElement *DefaultTemplateData(const EvalContext *ctx, const char *wantbundle)
                     JsonObjectAppendObject(bundles, scope_key, scope_obj);
                 }
             }
-            else if (strcmp(scope_key, wantbundle) == 0)
+            else if (StringEqual(scope_key, wantbundle))
             {
                 scope_obj = hash;
             }

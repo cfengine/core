@@ -167,6 +167,9 @@ destroy-vms:
 static-check:
 	tests/static-check/run.sh
 
+static-check-f%:
+	STATIC_CHECKS_FEDORA_VERSION=$* tests/static-check/run.sh
+
 #
 # Get everything removed down to where rebuilding requires:
 # "make; make install"

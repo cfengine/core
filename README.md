@@ -1,11 +1,11 @@
 [![Gitter chat](https://badges.gitter.im/cfengine/core.png)](https://gitter.im/cfengine/core)
 
-| Version    | [Core](https://github.com/cfengine/core)                                                                           | [MPF](https://github.com/cfengine/masterfiles)                                                                                  |
-|------------|--------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|
-| master     | [![Core Build Status](https://travis-ci.com/cfengine/core.svg?branch=master)](https://app.travis-ci.com/github/cfengine/core) | [![MPF Build Status](https://travis-ci.com/cfengine/masterfiles.svg?branch=master)](https://app.travis-ci.com/github/cfengine/masterfiles) |
-| 3.18.x LTS | [![Core Build Status](https://travis-ci.com/cfengine/core.svg?branch=3.18.x)](https://app.travis-ci.com/github/cfengine/core) | [![MPF Build Status](https://travis-ci.com/cfengine/masterfiles.svg?branch=3.18.x)](https://app.travis-ci.com/github/cfengine/masterfiles) |
-| 3.15.x LTS | [![Core Build Status](https://travis-ci.com/cfengine/core.svg?branch=3.15.x)](https://app.travis-ci.com/github/cfengine/core) | [![MPF Build Status](https://travis-ci.com/cfengine/masterfiles.svg?branch=3.15.x)](https://app.travis-ci.com/github/cfengine/masterfiles) |
-| 3.12.x LTS | [![Core Build Status](https://travis-ci.com/cfengine/core.svg?branch=3.12.x)](https://app.travis-ci.com/github/cfengine/core) | [![MPF Build Status](https://travis-ci.com/cfengine/masterfiles.svg?branch=3.12.x)](https://app.travis-ci.com/github/cfengine/masterfiles) |
+| Version    | CI Status |
+|------------|-----------|
+| master     | [![Build Status](https://ci.cfengine.com/buildStatus/icon?job=master-nightly-pipeline)](https://ci.cfengine.com/job/master-nightly-pipeline/) |
+| 3.18.x     | [![Build Status](https://ci.cfengine.com/buildStatus/icon?job=3.18.x-nightly-pipeline)](https://ci.cfengine.com/job/3.18.x-nightly-pipeline/) |
+| 3.15.x     | [![Build Status](https://ci.cfengine.com/buildStatus/icon?job=3.15.x-nightly-pipeline)](https://ci.cfengine.com/job/3.15.x-nightly-pipeline/) |
+| 3.12.x     | [![Build Status](https://ci.cfengine.com/buildStatus/icon?job=3.12.x-nightly-pipeline)](https://ci.cfengine.com/job/3.12.x-nightly-pipeline/) |
 
 [![Language grade: C](https://img.shields.io/lgtm/grade/cpp/g/cfengine/core.svg?logo=lgtm&logoWidth=18&label=code%20quality)](https://lgtm.com/projects/g/cfengine/core/)
 

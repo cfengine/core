@@ -85,6 +85,7 @@ require {
 	type postfix_spool_t;
 	type sendmail_exec_t;
 	type sshd_t;
+	type rpm_script_t;
 	class tcp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown name_connect accept listen name_bind node_bind };
 	class udp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown node_bind };
 	class sock_file { create write setattr unlink getattr };
@@ -187,6 +188,8 @@ role object_r types cfengine_agent_exec_t;
 allow cfengine_agent_t cfengine_agent_exec_t:file entrypoint;
 allow cfengine_agent_t cfengine_agent_exec_t:file { ioctl read getattr lock map execute open };
 
+# cf-agent needs to be able to transition into the domain of RPM scriplets
+allow cfengine_agent_t rpm_script_t:process transition;
 
 #============= cfengine_execd_t ==============
 # allow cf-execd to run cf-agent and make sure the forked process run in the

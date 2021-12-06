@@ -1,3 +1,44 @@
+3.19.0:
+	- -N/--negate now prevents persistent classes from being defined
+	  (ENT-5886)
+	- 'null' JSON value is now handled as empty data in augments/host-specific data
+	  (ENT-7434)
+	- Added a new common control attribute 'system_log_level'
+	  For specifying the minimum log level required for log messages to
+	  go to the system log. (ENT-7594)
+	- Added support for cfbs managed policy set to masterfiles staging script (ENT-7709)
+	- Trailing commas can now be used in policy argument lists (CFE-3734)
+	- Changed cf-key option --print-digest to take an optional argument.
+	  cf-key now defaults to the public key file in workdir, if no argument
+	  is specified or an empty string is given as the argument. (CFE-3682)
+	- Cached functions are now always called inside promises with 'iflapsed => "0"'
+	  (CFE-3754)
+	- Enabled 'handle' attribute for custom promise types (CFE-3439)
+	- Enabled 'depends_on' attribute for custom promise types (CFE-3438)
+	- Enabled 'with' attribute for custom promise types (CFE-3441)
+	- Don't fail on new file creation when backups are enabled
+	  (CFE-3640)
+	- Extended 'hostsseen()' policy function to return host keys (CFE-2546)
+	- Moved httpd.pid to root of httpd workdir (ENT-7966)
+	- Only real changes in files now produce info messages (CFE-3708)
+	- Reports with unexpanded variable references are now
+	  attempted to be held off until the reference expands
+	  (CFE-3776)
+	- Set apache umask to 0177 (ENT-7948)
+	- The --skip-bootstrap-policy-run option now skips the update policy
+	  (ENT-7500, ENT-7511)
+	- Added measurement names in cf-check dump (ENT-7452)
+	- Value of '$(with)' is now expanded even if it contains unresolved variable references
+	  (CFE-3776)
+	- cf-serverd now binds to both IPV6 and IPV4 if bindtointerface is unspecified
+	  (ENT-7362)
+	- cf-serverd now reports if fails to bind to all possible addresses/interfaces
+	  (ENT-7362)
+	- Fixed dbm_quick.c DBPrivRead() argument type (CFE-3737)
+	- Fixed dbm_tokyocab.c DBPrivRead() argument type (CFE-3737)
+	- Fixed crashes (Segfaults) in VariableIsSecret() (ENT-7678)
+	- Fixed crashes (Segfaults) in VariablesMatching() (ENT-7678)
+
 3.18.0:
 	- "No action for file" warning is no longer triggered when only
 	  'content => "something"' is used (CFE-3507)

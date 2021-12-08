@@ -121,7 +121,7 @@ bundle agent failsafe_cfe_internal_update
       "$(sys.inputdir)"
         handle => "failsafe_cfe_internal_bootstrap_update_files_sys_workdir_inputs_shortcut",
         copy_from => failsafe_scp("$(masterfiles_dir_remote)"),
-        depth_search => failsafe_recurse("inf"),
+        depth_search => failsafe_u_infinite_client_policy,
         file_select => failsafe_exclude_vcs_files,
         classes => failsafe_results("namespace", "inputdir_update");
 
@@ -418,6 +418,15 @@ body copy_from failsafe_scp(from)
     !policy_server::
       servers => { "$(sys.policy_hub)" };
       portnumber => "$(sys.policy_hub_port)";
+}
+############################################
+body depth_search failsafe_u_infinite_client_policy
+# @brief Search recursively for files excluding vcs related files and .no-distrib directories
+# @param d Maximum depth to search recursively
+# Duplicated in update policy
+{
+        depth => "inf";
+        exclude_dirs => { "\.svn", "\.git", "git-core", "\.no-distrib" };
 }
 ############################################
 body depth_search failsafe_recurse(d)

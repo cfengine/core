@@ -564,7 +564,8 @@ selection_id:          IDENTIFIER
                            {
                                const BodySyntax *body_syntax = BodySyntaxGet(P.block, P.currentbody->type);
 
-                               if (!body_syntax || !BodySyntaxGetConstraintSyntax(body_syntax->constraints, P.currentid))
+                               if (!body_syntax || (body_syntax->status != SYNTAX_STATUS_CUSTOM &&
+                                   !BodySyntaxGetConstraintSyntax(body_syntax->constraints, P.currentid)))
                                {
                                    ParseError(
                                        "Unknown attribute '%s' for '%s %s %s'",

@@ -47,6 +47,9 @@ static const ConstraintSyntax promise_constraints[] = {
 const BodySyntax CUSTOM_PROMISE_BLOCK_SYNTAX =
     BodySyntaxNew("promise", promise_constraints, NULL, SYNTAX_STATUS_NORMAL);
 
+const BodySyntax CUSTOM_BODY_BLOCK_SYNTAX =
+    BodySyntaxNew("custom", NULL, NULL, SYNTAX_STATUS_CUSTOM);
+
 Body *FindCustomPromiseType(const Promise *promise)
 {
     assert(promise != NULL);

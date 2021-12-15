@@ -193,6 +193,83 @@ static void AppendExpandedBodies(EvalContext *ctx, Promise *pcopy,
     }
 }
 
+static Rval GetExpandedBodyAsContainer(EvalContext *ctx,
+                                       const Seq *bodies_and_args,
+                                       bool flatten_slists,
+                                       bool expand_body_vars)
+{
+    const size_t ba_len = SeqLength(bodies_and_args);
+    JsonElement *body = JsonObjectCreate(ba_len / 2);
+
+    /* Iterate over all parent bodies, and finally over the body of the
+     * promise itself, expanding arguments.  We have already reversed the Seq
+     * so we start with the most distant parent in the inheritance tree. */
+    for (size_t i = 0; i < ba_len; i += 2)
+    {
+        const Rval *called_rval  = SeqAt(bodies_and_args, i);
+        const Body *current_body = SeqAt(bodies_and_args, i + 1);
+        bool in_inheritance_chain = (ba_len - i > 2);
+
+        JsonElement *arg_rewriter =
+            GetBodyRewriter(ctx, current_body, called_rval,
+                            in_inheritance_chain);
+
+        const size_t constraints_num = SeqLength(current_body->conlist);
+        for (size_t k = 0; k < constraints_num; k++)
+        {
+            const Constraint *scp = SeqAt(current_body->conlist, k);
+
+            // we don't copy the inherit_from attribute or associated call
+            if (StringEqual("inherit_from", scp->lval))
+            {
+                continue;
+            }
+
+            if (IsDefinedClass(ctx, scp->classes))
+            {
+                /* We copy the Rval expanding all, including inherited,
+                 * body arguments. */
+                Rval newrv = RvalCopyRewriter(scp->rval, arg_rewriter);
+
+                /* Expand '@' slists. */
+                if (flatten_slists && newrv.type == RVAL_TYPE_LIST)
+                {
+                    RlistFlatten(ctx, (Rlist **) &newrv.item);
+                }
+
+                /* Expand body vars; note it has to happen ONLY ONCE. */
+                if (expand_body_vars)
+                {
+                    Rval newrv2 = ExpandPrivateRval(ctx, NULL, "body",
+                                                    newrv.item, newrv.type);
+                    RvalDestroy(newrv);
+                    newrv = newrv2;
+                }
+
+                /* JsonObjectAppendElement() overwrites existing constraints,
+                   thus inheritance just works, as it correctly overwrites
+                   parents' constraints. */
+                JsonObjectAppendElement(body, scp->lval, RvalToJson(newrv));
+
+                if (WouldLog(LOG_LEVEL_DEBUG))
+                {
+                    char *rval_s     = RvalToString(scp->rval);
+                    char *rval_exp_s = RvalToString(newrv);
+                    Log(LOG_LEVEL_DEBUG, "DeRefCopyPromise():         "
+                        "expanding constraint '%s': '%s' -> '%s'",
+                        scp->lval, rval_s, rval_exp_s);
+                    free(rval_exp_s);
+                    free(rval_s);
+                }
+            }
+        } /* for all body constraints */
+
+        JsonDestroy(arg_rewriter);
+    }
+
+    return RvalNew((void *) body, RVAL_TYPE_CONTAINER);
+}
+
 /**
  * Copies the promise, expanding the constraints.
  *
@@ -303,7 +380,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                 "copying body %s: '%s'",
                 cp->lval, body_reference);
 
-            if (IsDefinedClass(ctx, cp->classes))
+            if (IsDefinedClass(ctx, cp->classes) && !bp->is_custom)
             {
                 /* For new package promises we need to have name of the
                  * package_manager body. */
@@ -329,8 +406,17 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                         PromiseGetBundle(pp)->source_path);
                 }
 
-                AppendExpandedBodies(ctx, pcopy, bodies_and_args,
-                                     false, true);
+                if (bp->is_custom)
+                {
+                    PromiseAppendConstraint(pcopy, cp->lval,
+                        GetExpandedBodyAsContainer(ctx, bodies_and_args,
+                                                   false, true), false);
+                }
+                else
+                {
+                    AppendExpandedBodies(ctx, pcopy, bodies_and_args,
+                                         false, true);
+                }
             }
             else                    /* No body arguments or body undeclared */
             {
@@ -345,8 +431,17 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                 }
                 else /* no body arguments, but maybe the inherited bodies have */
                 {
-                    AppendExpandedBodies(ctx, pcopy, bodies_and_args,
-                                         true, false);
+                    if (bp->is_custom)
+                    {
+                        PromiseAppendConstraint(pcopy, cp->lval,
+                            GetExpandedBodyAsContainer(ctx, bodies_and_args,
+                                                       true, false), false);
+                    }
+                    else
+                    {
+                        AppendExpandedBodies(ctx, pcopy, bodies_and_args,
+                                             true, false);
+                    }
                 }
             }
 

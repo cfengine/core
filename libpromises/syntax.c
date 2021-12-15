@@ -122,6 +122,10 @@ static const ConstraintSyntax *GetCommonConstraint(const char *lval)
 
 const ConstraintSyntax *BodySyntaxGetConstraintSyntax(const ConstraintSyntax *body_syntax, const char *lval)
 {
+    if (body_syntax == NULL)
+    {
+        return NULL;
+    }
     for (int j = 0; body_syntax[j].lval; j++)
     {
         if (strcmp(body_syntax[j].lval, lval) == 0)
@@ -207,7 +211,8 @@ const BodySyntax *BodySyntaxGet(ARG_UNUSED ParserBlock block, const char *body_t
         }
     }
 
-    return NULL;
+    // Not a built in body type, assume it's a custom body type
+    return &CUSTOM_BODY_BLOCK_SYNTAX;
 }
 
 const char *SyntaxStatusToString(SyntaxStatus status)
@@ -223,6 +228,8 @@ const char *SyntaxStatusToString(SyntaxStatus status)
             return "normal";
         case SYNTAX_STATUS_REMOVED:
             return "removed";
+        case SYNTAX_STATUS_CUSTOM:
+            return "custom";
         default:
             break;
     }

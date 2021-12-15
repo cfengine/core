@@ -1372,7 +1372,9 @@ Bundle *PolicyAppendBundle(Policy *policy,
 
 /*******************************************************************/
 
-Body *PolicyAppendBody(Policy *policy, const char *ns, const char *name, const char *type, Rlist *args, const char *source_path)
+Body *PolicyAppendBody(Policy *policy, const char *ns, const char *name,
+                       const char *type, Rlist *args, const char *source_path,
+                       bool is_custom)
 {
     Body *body = xcalloc(1, sizeof(Body));
     body->parent_policy = policy;
@@ -1385,6 +1387,7 @@ Body *PolicyAppendBody(Policy *policy, const char *ns, const char *name, const c
     body->args = RlistCopy(args);
     body->source_path = SafeStringDuplicate(source_path);
     body->conlist = SeqNew(10, ConstraintDestroy);
+    body->is_custom = is_custom;
 
     // TODO: move to standard callback
     if (strcmp("service_method", body->name) == 0)
@@ -2393,7 +2396,7 @@ static Body *PolicyAppendBodyJson(Policy *policy, JsonElement *json_body)
         }
     }
 
-    Body *body = PolicyAppendBody(policy, ns, name, type, args, source_path);
+    Body *body = PolicyAppendBody(policy, ns, name, type, args, source_path, false);
 
     {
         JsonElement *json_contexts = JsonObjectGetAsArray(json_body, "contexts");

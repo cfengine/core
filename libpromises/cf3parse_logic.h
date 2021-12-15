@@ -666,14 +666,11 @@ static inline void ParserHandleBundlePromiseRval()
         goto cleanup;
     }
 
-    const ConstraintSyntax *constraint_syntax = NULL;
     const PromiseTypeSyntax *promise_type_syntax =
         PromiseTypeSyntaxGet(P.blocktype, P.currenttype);
-    if (promise_type_syntax != NULL)
-    {
-        constraint_syntax =
-            PromiseTypeSyntaxGetConstraintSyntax(promise_type_syntax, P.lval);
-    }
+    const ConstraintSyntax *constraint_syntax = (promise_type_syntax != NULL)
+        ? PromiseTypeSyntaxGetConstraintSyntax(promise_type_syntax, P.lval)
+        : NULL;
 
     if (promise_type_syntax == NULL)
     {
@@ -699,6 +696,8 @@ static inline void ParserHandleBundlePromiseRval()
                 "Deprecated constraint '%s' in promise type '%s'",
                 constraint_syntax->lval,
                 promise_type_syntax->promise_type);
+            // fall through
+        case SYNTAX_STATUS_CUSTOM:
             // fall through
         case SYNTAX_STATUS_NORMAL:
         {
@@ -775,6 +774,8 @@ static inline void ParserHandlePromiseGuard()
                 promise_type_syntax->promise_type,
                 promise_type_syntax->bundle_type);
             // fall through
+        case SYNTAX_STATUS_CUSTOM:
+            // fall through
         case SYNTAX_STATUS_NORMAL:
             if (P.block == PARSER_BLOCK_BUNDLE)
             {
@@ -850,6 +851,8 @@ static inline void ParserBeginBlockBody()
                 P.blockid,
                 body_syntax->body_type);
             // fall through
+        case SYNTAX_STATUS_CUSTOM:
+            // fall through
         case SYNTAX_STATUS_NORMAL:
             P.currentbody = PolicyAppendBody(
                 P.policy,
@@ -857,7 +860,8 @@ static inline void ParserBeginBlockBody()
                 P.blockid,
                 P.blocktype,
                 P.useargs,
-                P.filename);
+                P.filename,
+                body_syntax->status == SYNTAX_STATUS_CUSTOM);
             P.currentbody->offset.line = CURRENT_BLOCKID_LINE;
             P.currentbody->offset.start = P.offsets.last_block_id;
             break;
@@ -895,8 +899,19 @@ static inline void ParserHandleBlockAttributeRval()
         const BodySyntax *body_syntax = BodySyntaxGet(P.block, P.blocktype);
         assert(body_syntax != NULL);
 
-        const ConstraintSyntax *constraint_syntax =
-            BodySyntaxGetConstraintSyntax(body_syntax->constraints, P.lval);
+        ConstraintSyntax *constraint_syntax;
+        if (body_syntax->status == SYNTAX_STATUS_CUSTOM)
+        {
+            constraint_syntax = xmalloc(sizeof(ConstraintSyntax));
+            constraint_syntax->status = SYNTAX_STATUS_CUSTOM;
+        }
+        else
+        {
+            constraint_syntax = (ConstraintSyntax *)
+                BodySyntaxGetConstraintSyntax(body_syntax->constraints,
+                                              P.lval);
+        }
+
         if (constraint_syntax)
         {
             switch (constraint_syntax->status)
@@ -924,7 +939,10 @@ static inline void ParserHandleBlockAttributeRval()
                 {
                     ValidateClassLiteral(P.rval.item);
                 }
-
+            }
+            // fall through
+            case SYNTAX_STATUS_CUSTOM:
+            {
                 Constraint *cp = NULL;
                 if (P.currentclasses == NULL)
                 {
@@ -966,6 +984,11 @@ static inline void ParserHandleBlockAttributeRval()
                     body_syntax->body_type);
                 break;
             }
+        }
+
+        if (body_syntax->status == SYNTAX_STATUS_CUSTOM)
+        {
+            free(constraint_syntax);
         }
     }
     else

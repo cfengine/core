@@ -1,0 +1,11 @@
+bundle agent main
+{
+  vars:
+    "my_var_in_policy" string => "my value in policy";
+    "tagged" slist => variablesmatching(".*", "my_tag");
+
+  commands:
+    "/bin/echo"
+      args => "=my_var_from_module= my val from module",
+      module => "true";
+}

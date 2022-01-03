@@ -1,4 +1,0 @@
-body invalid foo
-{
-      ifelapsed => "60";
-}

@@ -127,7 +127,8 @@ for repo in repos:
         log_entry_local = False
         log_entry = ""
         for line in blob.stdout:
-            line = line.decode().rstrip('\r\n')
+            # ENT-7979: we don't want to see backticks ` in our changelogs
+            line = line.decode().rstrip('\r\n').replace('`',"'")
 
             if line == "" and log_entry:
                 add_entry(sha, log_entry)

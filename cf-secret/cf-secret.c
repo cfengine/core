@@ -178,6 +178,7 @@ static char *GetHostRSAKey(const char *host, HostRSAKeyType type)
             Log(LOG_LEVEL_VERBOSE, "Using localhost%s key", key_ext);
             found = true;
             snprintf(buffer, BUFSIZE, "%s/ppkeys/localhost%s", WORKDIR, key_ext);
+            freeaddrinfo(result);
             return buffer;
         }
         found = Address2Hostkey(hash, sizeof(hash), ipaddress);
@@ -206,6 +207,7 @@ static char *GetHostRSAKey(const char *host, HostRSAKeyType type)
             }
         }
     }
+    freeaddrinfo(result);
     return NULL;
 }
 

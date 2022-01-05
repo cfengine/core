@@ -1,0 +1,20 @@
+[Unit]
+Description=CFEngine Enterprise event reaction daemon
+PartOf=cfengine3.service
+ConditionPathExists=@bindir@/cf-reactor
+ConditionPathExists=@workdir@/inputs/promises.cf
+After=syslog.target
+After=network.target
+
+Wants=cf-postgres.service
+After=cf-postgres.service
+
+[Service]
+Type=simple
+ExecStart=@bindir@/cf-reactor  --no-fork
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+WantedBy=cfengine3.service

@@ -213,6 +213,7 @@ allow cfengine_execd_t cfengine_log_t:lnk_file { create getattr read unlink };
 allow cfengine_execd_t cfengine_monitord_exec_t:file getattr;
 allow cfengine_execd_t cfengine_serverd_exec_t:file getattr;
 allow cfengine_execd_t cfengine_hub_exec_t:file getattr;
+allow cfengine_execd_t cfengine_reactor_exec_t:file getattr;
 
 # allow cf-execd to work with local/UNIX sockets
 allow cfengine_execd_t cfengine_var_lib_t:sock_file { create unlink getattr setattr };
@@ -261,6 +262,7 @@ allow cfengine_monitord_t cfengine_execd_exec_t:file getattr;
 allow cfengine_monitord_t cfengine_serverd_exec_t:file getattr;
 allow cfengine_monitord_t cfengine_agent_exec_t:file getattr;
 allow cfengine_monitord_t cfengine_hub_exec_t:file getattr;
+allow cfengine_monitord_t cfengine_reactor_exec_t:file getattr;
 
 allow cfengine_monitord_t var_log_t:file { open read };
 
@@ -311,6 +313,7 @@ allow cfengine_serverd_t proc_xen_t:dir search;
 allow cfengine_serverd_t cfengine_execd_exec_t:file getattr;
 allow cfengine_serverd_t cfengine_monitord_exec_t:file getattr;
 allow cfengine_serverd_t cfengine_hub_exec_t:file getattr;
+allow cfengine_serverd_t cfengine_reactor_exec_t:file getattr;
 allow cfengine_serverd_t cfengine_log_t:lnk_file getattr;
 
 allow cfengine_serverd_t crontab_exec_t:file getattr;
@@ -366,6 +369,7 @@ allow cfengine_hub_t cfengine_agent_exec_t:file getattr;
 allow cfengine_hub_t cfengine_execd_exec_t:file getattr;
 allow cfengine_hub_t cfengine_monitord_exec_t:file getattr;
 allow cfengine_hub_t cfengine_serverd_exec_t:file getattr;
+allow cfengine_hub_t cfengine_reactor_exec_t:file getattr;
 
 allow cfengine_hub_t cfengine_postgres_t:unix_stream_socket connectto;
 allow cfengine_hub_t unreserved_port_t:tcp_socket name_connect;
@@ -608,6 +612,57 @@ allow init_t cfengine_httpd_t:dbus send_msg;
 allow cfengine_httpd_t passwd_file_t:file { getattr open read };
 allow cfengine_httpd_t shell_exec_t:file map;
 allow cfengine_httpd_t shell_exec_t:file { execute execute_no_trans };
+
+
+#============= cfengine_reactor_t ==============
+type cfengine_reactor_t;
+typeattribute cfengine_reactor_t domain;
+role system_r types cfengine_reactor_t;
+
+# /var/cfengine/bin/cf-reactor has the 'cfengine_reactor_exec_t' context which is an
+# entrypoint for the 'cfengine_reactor_t' domain
+type cfengine_reactor_exec_t;
+typeattribute cfengine_reactor_exec_t entry_type;
+typeattribute cfengine_reactor_exec_t exec_type;
+typeattribute cfengine_reactor_exec_t file_type, non_security_file_type, non_auth_file_type;
+role object_r types cfengine_reactor_exec_t;
+
+type_transition init_t cfengine_reactor_exec_t:process cfengine_reactor_t;
+allow init_t cfengine_reactor_t:process transition;
+allow init_t cfengine_reactor_exec_t:file { execute open read };
+allow init_t cfengine_reactor_t:process siginh;
+
+allow cfengine_reactor_t cfengine_reactor_exec_t:file entrypoint;
+allow cfengine_reactor_t cfengine_reactor_exec_t:file { ioctl read getattr lock map execute open };
+
+# allow cf-reactor to use/execute libpromises.so
+allow cfengine_reactor_t cfengine_var_lib_t:file map;
+allow cfengine_reactor_t cfengine_var_lib_t:file execute;
+allow cfengine_reactor_t cfengine_var_lib_t:file { getattr open read };
+
+allow cfengine_reactor_t cfengine_postgres_t:unix_stream_socket connectto;
+
+allow cfengine_reactor_t cfengine_log_t:dir getattr;
+allow cfengine_reactor_t cfengine_var_lib_t:dir { add_name getattr create open read search write remove_name };
+allow cfengine_reactor_t cfengine_var_lib_t:file { create ioctl lock write unlink append setattr };
+allow cfengine_reactor_t cfengine_var_lib_t:lnk_file { getattr read };
+
+allow cfengine_reactor_t passwd_file_t:file { open read getattr };
+allow cfengine_reactor_t self:capability dac_override;
+allow cfengine_reactor_t self:unix_dgram_socket { create connect };
+allow cfengine_reactor_t sssd_var_lib_t:dir search;
+allow cfengine_reactor_t sssd_var_lib_t:sock_file write;
+allow cfengine_reactor_t sssd_public_t:dir search;
+allow cfengine_reactor_t sssd_public_t:file { open read getattr map };
+allow cfengine_reactor_t sssd_t:unix_stream_socket connectto;
+allow cfengine_reactor_t tmp_t:sock_file write;
+allow cfengine_reactor_t devlog_t:sock_file write;
+allow cfengine_reactor_t devlog_t:lnk_file read;
+allow cfengine_reactor_t syslogd_var_run_t:dir search;
+allow cfengine_reactor_t kernel_t:unix_dgram_socket sendto;
+allow cfengine_reactor_t init_var_run_t:dir search;
+allow cfengine_reactor_t init_t:unix_stream_socket getattr;
+allow cfengine_reactor_t var_t:dir read;
 
 
 #============= cfengine_action_script_t ==============

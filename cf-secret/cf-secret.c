@@ -1013,6 +1013,13 @@ int main(int argc, char *argv[])
         key_paths = SeqNew(16, free);
     }
 
+    // Default to localhost on encryption
+    char *localhost = "127.0.0.1";
+    if (encrypt && key_path_arg == NULL && host_arg == NULL)
+    {
+        host_arg = localhost;
+    }
+
     if (host_arg != NULL)
     {
         Log(LOG_LEVEL_DEBUG, "-H/--host given: '%s'", host_arg);

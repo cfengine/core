@@ -60,6 +60,7 @@
 #include <string_sequence.h>
 #include <unistd.h>
 #include <cleanup.h>            /* DoCleanupAndExit(), CallCleanupFunctions() */
+#include <ip_address.h>
 
 #define BUFSIZE 1024
 
@@ -173,7 +174,7 @@ static char *GetHostRSAKey(const char *host, HostRSAKeyType type)
         inet_ntop(res->ai_family,
                   GetIPAddress((struct sockaddr *) res->ai_addr),
                   ipaddress, sizeof(ipaddress));
-        if (StringStartsWith(ipaddress, "127.") || StringEqual(ipaddress, "::1"))
+        if (StringIsLocalHostIP(ipaddress))
         {
             Log(LOG_LEVEL_VERBOSE, "Using localhost%s key", key_ext);
             found = true;

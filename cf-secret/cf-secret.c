@@ -164,7 +164,7 @@ static char *GetHostRSAKey(const char *host, HostRSAKeyType type)
         return NULL;
     }
 
-    char *buffer = malloc(BUFSIZE);
+    char *buffer = malloc(PATH_MAX);
     char hash[CF_HOSTKEY_STRING_SIZE];
     char ipaddress[64];
     bool found = false;
@@ -177,7 +177,15 @@ static char *GetHostRSAKey(const char *host, HostRSAKeyType type)
         {
             Log(LOG_LEVEL_VERBOSE, "Using localhost%s key", key_ext);
             found = true;
-            snprintf(buffer, BUFSIZE, "%s/ppkeys/localhost%s", WORKDIR, key_ext);
+            int ret = snprintf(buffer, PATH_MAX, "%s/ppkeys/localhost%s",
+                      GetWorkDir(), key_ext);
+            if (ret < 0 || ret >= PATH_MAX)
+            {
+                Log(LOG_LEVEL_ERR, "Path to RSA key is too long (%d > %d)",
+                    ret, PATH_MAX - 1);
+                freeaddrinfo(result);
+                return NULL;
+            }
             freeaddrinfo(result);
             return buffer;
         }
@@ -186,7 +194,15 @@ static char *GetHostRSAKey(const char *host, HostRSAKeyType type)
     if (found)
     {
         Log(LOG_LEVEL_DEBUG, "Found host '%s' for address '%s'", hash, ipaddress);
-        snprintf(buffer, BUFSIZE, "%s/ppkeys/root-%s%s", WORKDIR, hash, key_ext);
+        int ret = snprintf(buffer, PATH_MAX, "%s/ppkeys/root-%s%s",
+                           GetWorkDir(), hash, key_ext);
+        if (ret < 0 || ret >= PATH_MAX)
+        {
+            Log(LOG_LEVEL_ERR, "Path to RSA key is too long (%d > %d)", ret,
+                PATH_MAX - 1);
+            freeaddrinfo(result);
+            return NULL;
+        }
         freeaddrinfo(result);
         return buffer;
     }
@@ -198,7 +214,15 @@ static char *GetHostRSAKey(const char *host, HostRSAKeyType type)
             inet_ntop(res->ai_family,
                       GetIPAddress((struct sockaddr *) res->ai_addr),
                       ipaddress, sizeof(ipaddress));
-            snprintf(buffer, BUFSIZE, "%s/ppkeys/root-%s%s", WORKDIR, ipaddress, key_ext);
+            int ret = snprintf(buffer, BUFSIZE, "%s/ppkeys/root-%s%s",
+                               GetWorkDir(), ipaddress, key_ext);
+            if (ret < 0 || ret >= PATH_MAX)
+            {
+                Log(LOG_LEVEL_ERR, "Path to RSA key is too long (%d > %d)",
+                    ret, PATH_MAX - 1);
+                freeaddrinfo(result);
+                return NULL;
+            }
             if (access(buffer, F_OK) == 0)
             {
                 Log(LOG_LEVEL_DEBUG, "Found matching key: '%s'", buffer);

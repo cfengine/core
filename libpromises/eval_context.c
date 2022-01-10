@@ -2063,8 +2063,10 @@ static inline char *MangleScopedVarNameIntoSpecialScopeName(const char *scope, c
     char *scope_with_dot = StringConcatenate(2, scope, ".");
     char *scope_with_underscores = StringConcatenate(2, scope, NESTED_SCOPE_SEP);
 
-    NDEBUG_UNUSED ssize_t ret = StringReplace(new_var_name, var_name_len + sizeof(NESTED_SCOPE_SEP),
-                                              scope_with_dot, scope_with_underscores);
+    /* Only replace the first "scope." occurrence (there might be "scope."
+     * inside square brackets). */
+    NDEBUG_UNUSED ssize_t ret = StringReplaceN(new_var_name, var_name_len + sizeof(NESTED_SCOPE_SEP),
+                                               scope_with_dot, scope_with_underscores, 1);
     assert(ret == (var_name_len + sizeof(NESTED_SCOPE_SEP) - 2));
 
     free(scope_with_dot);

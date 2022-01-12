@@ -3,6 +3,7 @@
 /var/cfengine/bin/cf-monitord	--	gen_context(system_u:object_r:cfengine_monitord_exec_t,s0)
 /var/cfengine/bin/cf-agent		--	gen_context(system_u:object_r:cfengine_agent_exec_t,s0)
 /var/cfengine/bin/cf-hub		--	gen_context(system_u:object_r:cfengine_hub_exec_t,s0)
+/var/cfengine/bin/cf-reactor	--	gen_context(system_u:object_r:cfengine_reactor_exec_t,s0)
 /var/cfengine/bin/pg.*		    --	gen_context(system_u:object_r:cfengine_postgres_exec_t,s0)
 /var/cfengine/httpd/bin/.*      --	gen_context(system_u:object_r:cfengine_httpd_exec_t,s0)
 /var/cfengine/httpd/php/bin/.*  --	gen_context(system_u:object_r:cfengine_httpd_exec_t,s0)

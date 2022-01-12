@@ -12,6 +12,7 @@ Wants=cf-postgres.service
 Wants=cf-apache.service
 Wants=cf-runalerts.service
 Wants=cf-hub.service
+Wants=cf-reactor.service
 
 # Ensure synchronous stop behavior
 Before=cf-serverd.service
@@ -21,6 +22,7 @@ Before=cf-postgres.service
 Before=cf-apache.service
 Before=cf-runalerts.service
 Before=cf-hub.service
+Before=cf-reactor.service
 
 [Install]
 WantedBy=multi-user.target

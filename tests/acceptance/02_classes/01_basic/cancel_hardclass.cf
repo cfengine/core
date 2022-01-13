@@ -1,0 +1,46 @@
+#############################################################################
+#
+# Test that undefining hardclasses is not be permitted.
+#
+#############################################################################
+
+body common control
+{
+  bundlesequence => { "init", "test", "check" };
+}
+
+bundle agent init
+{
+
+}
+
+body classes undefine(class)
+{
+      cancel_kept => { "$(class)" };
+      cancel_repaired => { "$(class)" };
+      cancel_notkept => { "$(class)" };
+}
+
+bundle agent test
+{
+  meta:
+      "description" -> { "ENT-7718" }
+        string => "Test that undefining hardclasses is not be permitted.";
+
+  commands:
+      "/bin/true"
+        classes => undefine("cfengine");
+}
+
+bundle agent check
+{
+  classes:
+      "passed"
+        expression => "cfengine";
+
+  reports:
+    passed::
+      "$(this.promise_filename) Pass";
+    !passed::
+      "$(this.promise_filename) FAIL";
+}

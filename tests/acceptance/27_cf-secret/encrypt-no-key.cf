@@ -18,6 +18,12 @@ body delete init_delete
   rmdirs   => "true";
 }
 
+bundle edit_line hello_world
+{
+  insert_lines:
+      "Hello World!";
+}
+
 bundle agent init
 {
   methods:
@@ -30,7 +36,7 @@ bundle agent init
     # Create plain text file
       "$(G.testfile).plaintext"
         create => "true",
-        content => "Hello World!";
+        edit_line => hello_world;
 
     # Delete encrypted file
       "$(G.testfile).encrypted"

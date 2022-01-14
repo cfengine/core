@@ -2686,7 +2686,6 @@ static bool ValidateCustomPromise(const Promise *pp, Seq *errors)
             valid = false;
         } else if (StringEqual(name, "action_policy")
             || StringEqual(name, "expireafter")
-            || StringEqual(name, "comment")
             || StringEqual(name, "meta"))
         {
             // TODO: Remove 1 attribute at a time, test and fix.

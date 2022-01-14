@@ -2737,7 +2737,6 @@ static bool ValidateCustomPromise(const Promise *pp, Seq *errors)
             || StringEqual(name, "action_policy")
             || StringEqual(name, "ifelapsed")
             || StringEqual(name, "expireafter")
-            || StringEqual(name, "comment")
             || StringEqual(name, "meta"))
         {
             // TODO: Remove 1 attribute at a time, test and fix.

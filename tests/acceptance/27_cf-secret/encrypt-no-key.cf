@@ -1,0 +1,75 @@
+##############################################################################
+#
+# Test that encrypting with no host- / key argument defaults to encrypting for
+# localhost.
+#
+##############################################################################
+
+body common control
+{
+    inputs => { "../default.cf.sub" };
+    bundlesequence => { default("$(this.promise_filename)") };
+    version => "1.0";
+}
+
+body delete init_delete
+{
+  dirlinks => "delete";
+  rmdirs   => "true";
+}
+
+bundle edit_line hello_world
+{
+  insert_lines:
+      "Hello World!";
+}
+
+bundle agent init
+{
+  methods:
+      "any"
+        usebundle => generate_key;
+      "any"
+        usebundle => trust_key;
+
+  files:
+    # Create plain text file
+      "$(G.testfile).plaintext"
+        create => "true",
+        edit_line => hello_world;
+
+    # Delete encrypted file
+      "$(G.testfile).encrypted"
+        delete => init_delete;
+
+    # Delete decrypted file
+      "$(G.testfile).decrypted"
+        delete => init_delete;
+}
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-3874" }
+        string => "Test that encrypting with no host- / key argument defaults to encrypting for localhost.";
+
+  commands:
+    # Encrypt test file
+      "$(sys.cf_secret)"
+        args => "encrypt -o $(G.testfile).encrypted $(G.testfile).plaintext",
+        handle => "file-is-encrypted";
+
+    # Decrypt test file
+      "$(sys.cf_secret)"
+        args => "decrypt -o $(G.testfile).decrypted $(G.testfile).encrypted",
+        depends_on => { "file-is-encrypted" };
+}
+
+bundle agent check
+{
+  methods:
+      "any"
+        usebundle => dcs_check_diff("$(G.testfile).plaintext",
+                                    "$(G.testfile).decrypted",
+                                    "$(this.promise_filename)");
+}

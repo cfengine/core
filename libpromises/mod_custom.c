@@ -1138,18 +1138,17 @@ PromiseResult EvaluateCustomPromise(EvalContext *ctx, const Promise *pp)
     }
 
     // TODO: Do validation earlier (cf-promises --full-check)
-    bool valid = PromiseModule_Validate(module, ctx, pp);
-
+    bool valid = CustomPromise_IsFullyResolved(ctx, pp, module->json);
+    if ((!valid) && (EvalContextGetPass(ctx) == CF_DONEPASSES - 1))
+    {
+        Log(LOG_LEVEL_ERR,
+            "%s promise with promiser '%s' has unresolved/unexpanded variables",
+            PromiseGetPromiseType(pp),
+            pp->promiser);
+    }
     if (valid)
     {
-        valid = CustomPromise_IsFullyResolved(ctx, pp, module->json);
-        if ((!valid) && (EvalContextGetPass(ctx) == CF_DONEPASSES - 1))
-        {
-            Log(LOG_LEVEL_ERR,
-                "%s promise with promiser '%s' has unresolved/unexpanded variables",
-                PromiseGetPromiseType(pp),
-                pp->promiser);
-        }
+        valid = PromiseModule_Validate(module, ctx, pp);
     }
 
     PromiseResult result;

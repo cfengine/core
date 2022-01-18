@@ -33,6 +33,7 @@
 #include <expand.h>          // ExpandScalar()
 #include <var_expressions.h> // StringContainsUnresolved(), StringIsBareNonScalarRef()
 #include <map.h>             // Map*
+#include <locks.h>           // AcquireLock()
 
 static Map *custom_modules = NULL;
 
@@ -1104,9 +1105,17 @@ PromiseResult EvaluateCustomPromise(EvalContext *ctx, const Promise *pp)
         return PROMISE_RESULT_FAIL;
     }
 
+    /* Used below, constructed here while path and interpreter are definitely
+     * valid pointers. */
+    char custom_promise_id[CF_BUFSIZE];
+    NDEBUG_UNUSED size_t ret = snprintf(custom_promise_id, sizeof(custom_promise_id),
+                                        "%s-%s-%s", pp->promiser, path, interpreter);
+    assert((ret > 0) && (ret < sizeof(custom_promise_id)));
+
     PromiseModule *module = MapGet(custom_modules, path);
     if (module == NULL)
     {
+        /* Takes ownership of interpreter and path. */
         module = PromiseModule_Start(interpreter, path);
         if (module != NULL)
         {
@@ -1146,6 +1155,15 @@ PromiseResult EvaluateCustomPromise(EvalContext *ctx, const Promise *pp)
             PromiseGetPromiseType(pp),
             pp->promiser);
     }
+
+    CfLock promise_lock = AcquireLock(ctx, custom_promise_id, VUQNAME, CFSTARTTIME,
+                                      a.transaction.ifelapsed, a.transaction.expireafter,
+                                      pp, true);
+    if (promise_lock.lock == NULL)
+    {
+        return PROMISE_RESULT_SKIPPED;
+    }
+
     if (valid)
     {
         valid = PromiseModule_Validate(module, ctx, pp);
@@ -1168,5 +1186,6 @@ PromiseResult EvaluateCustomPromise(EvalContext *ctx, const Promise *pp)
                                       // appropriate
     }
 
+    YieldCurrentLock(promise_lock);
     return result;
 }

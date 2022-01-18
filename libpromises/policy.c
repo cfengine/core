@@ -2733,9 +2733,7 @@ static bool ValidateCustomPromise(const Promise *pp, Seq *errors)
                     "if",
                     promise_type));
             valid = false;
-        } else if (StringEqual(name, "action")
-            || StringEqual(name, "action_policy")
-            || StringEqual(name, "ifelapsed")
+        } else if (StringEqual(name, "action_policy")
             || StringEqual(name, "expireafter")
             || StringEqual(name, "comment")
             || StringEqual(name, "meta"))

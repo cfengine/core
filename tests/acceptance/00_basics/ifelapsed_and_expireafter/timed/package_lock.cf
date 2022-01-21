@@ -13,8 +13,7 @@ bundle agent init
       # "no_fds" won't work correctly on Windows.
       # Also Solaris 9 and 10 don't seem to handle the backgrounding used in
       # this test. But it seems unrelated to the actual fix.
-      # Moreover, this test was disabled on all platforms in ENT-6939
-      "test_skip_needs_work" string => "any";
+      "test_skip_needs_work" string => "windows|sunos_5_9|sunos_5_10";
 
       # The backgrounding doesn't work well under fakeroot.
       "test_skip_unsupported" string => "using_fakeroot";

@@ -1558,7 +1558,7 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
             return false;
         }
         RecordChange(ctx, pp, attr, "Copied file '%s' from '%s' to '%s'",
-                     source, new, conn->remoteip);
+                     source, conn->remoteip, new);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
     }
     else

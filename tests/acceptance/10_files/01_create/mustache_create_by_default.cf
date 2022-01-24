@@ -1,0 +1,151 @@
+##############################################################################
+#
+# template_method mustache and inline_mustache should create files if they are
+# absent by default. But file should not be created in the cases where promise
+# is not kept.
+#
+##############################################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+##############################################################################
+
+bundle agent init
+{
+  vars:
+      "range"
+        slist => { expandrange("[1-8]", 1) };
+
+  files:
+      "$(G.testfile).test_$(range)"
+        delete => tidy;
+
+      "$(G.testfile).valid_template"
+        content => "Hello {{{name}}}";
+
+      "$(G.testfile).invalid_template"
+        content => "Hello {{{name";
+}
+
+##############################################################################
+
+bundle agent test
+{
+  meta:
+      "description" -> { "ENT-4792" }
+        string => "mustache and inline_mustache creates promiser by default";
+
+  vars:
+      "d"
+        data => '{ "name": "Lars" }';
+
+  files:
+    # File should be created by default
+      "$(G.testfile).test_1"
+        template_method => "mustache",
+        edit_template => "$(G.testfile).valid_template",
+        if => fileexists("$(G.testfile).valid_template"),
+        template_data => @(d);
+
+    # File should not be created due to invalid template
+      "$(G.testfile).test_2"
+        template_method => "mustache",
+        edit_template => "$(G.testfile).invalid_template",
+        if => fileexists("$(G.testfile).invalid_template"),
+        template_data => @(d);
+
+    # File should be created even though template is invalid
+      "$(G.testfile).test_3"
+        create => "true",
+        template_method => "mustache",
+        edit_template => "$(G.testfile).invalid_template",
+        if => fileexists("$(G.testfile).invalid_template"),
+        template_data => @(d);
+
+    # File should not be created even though template is valid
+      "$(G.testfile).test_4"
+        create => "false",
+        template_method => "mustache",
+        edit_template => "$(G.testfile).valid_template",
+        if => fileexists("$(G.testfile).valid_template"),
+        template_data => @(d);
+
+    # File should be created by default
+      "$(G.testfile).test_5"
+        template_method => "inline_mustache",
+        edit_template_string => readfile("$(G.testfile).valid_template"),
+        if => fileexists("$(G.testfile).valid_template"),
+        template_data => @(d);
+
+    # File should not be created due to invalid template
+      "$(G.testfile).test_6"
+        template_method => "inline_mustache",
+        edit_template_string => readfile("$(G.testfile).invalid_template"),
+        if => fileexists("$(G.testfile).invalid_template"),
+        template_data => @(d);
+
+    # File should be created even though template is invalid
+      "$(G.testfile).test_7"
+        create => "true",
+        template_method => "inline_mustache",
+        edit_template_string => readfile("$(G.testfile).invalid_template"),
+        if => fileexists("$(G.testfile).invalid_template"),
+        template_data => @(d);
+
+    # File should not be created even though template is valid
+      "$(G.testfile).test_8"
+        create => "false",
+        template_method => "inline_mustache",
+        edit_template_string => readfile("$(G.testfile).valid_template"),
+        if => fileexists("$(G.testfile).valid_template"),
+        template_data => @(d);
+}
+
+##############################################################################
+
+bundle agent check
+{
+  vars:
+    # Get lists of successful / failed checks so we can report them
+      "checks"
+        slist => { expandrange("check_[1-8]", 1) };
+      "successful_checks"
+        slist => sort(classesmatching("check_[1-8]"), "lex");
+      "failed_checks"
+        slist => sort(difference("checks", "successful_checks"), "lex");
+
+  classes:
+      "check_1"
+        expression => fileexists("$(G.testfile).test_1");
+      "check_2"
+        expression => not(fileexists("$(G.testfile).test_2"));
+      "check_3"
+        expression => fileexists("$(G.testfile).test_3");
+      "check_4"
+        expression => not(fileexists("$(G.testfile).test_4"));
+      "check_5"
+        expression => fileexists("$(G.testfile).test_5");
+      "check_6"
+        expression => not(fileexists("$(G.testfile).test_6"));
+      "check_7"
+        expression => fileexists("$(G.testfile).test_7");
+      "check_8"
+        expression => not(fileexists("$(G.testfile).test_8"));
+      "ok"
+        expression => and("check_1", "check_2", "check_3", "check_4",
+                          "check_5", "check_6", "check_7", "check_8");
+
+  reports:
+    DEBUG::
+      "'$(successful_checks)' succeded!";
+      "'$(failed_checks)' failed!";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

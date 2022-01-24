@@ -28,6 +28,8 @@
 #include <cf3.defs.h>
 
 PromiseResult FindAndVerifyFilesPromises(EvalContext *ctx, const Promise *pp);
-PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, const Attributes *attr, const Promise *pp);
+PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename,
+                                    bool file_exists, const Attributes *attr,
+                                    const Promise *pp);
 
 #endif

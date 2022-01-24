@@ -2804,6 +2804,7 @@ static void DeleteAllClasses(EvalContext *ctx, const Rlist *list)
         {
             Log(LOG_LEVEL_ERR, "You cannot cancel a reserved hard class '%s' in post-condition classes",
                   RlistScalarValue(rp));
+            return;
         }
 
         const char *string = RlistScalarValue(rp);

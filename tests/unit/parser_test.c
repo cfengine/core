@@ -30,11 +30,6 @@ void test_bundle_invalid_type(void)
     assert_false(TestParsePolicy("bundle_invalid_type.cf"));
 }
 
-void test_body_invalid_type(void)
-{
-    assert_false(TestParsePolicy("body_invalid_type.cf"));
-}
-
 void test_constraint_ifvarclass_invalid(void)
 {
     assert_false(TestParsePolicy("constraint_ifvarclass_invalid.cf"));
@@ -243,7 +238,6 @@ int main()
         unit_test(test_body_edit_xml_common_constraints),
         unit_test(test_bundle_body_promisee_missing_arrow),
 
-        unit_test(test_body_invalid_type),
         unit_test(test_body_selection_wrong_token),
         unit_test(test_body_selection_forgot_semicolon),
         unit_test(test_body_selection_unknown_selection_id),

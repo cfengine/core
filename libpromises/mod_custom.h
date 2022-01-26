@@ -39,6 +39,10 @@
 // promise attributes).
 extern const BodySyntax CUSTOM_PROMISE_BLOCK_SYNTAX;
 
+// Defines custom promise block with no syntax, as syntax will be checked by
+// the custom promise module.
+extern const BodySyntax CUSTOM_BODY_BLOCK_SYNTAX;
+
 typedef struct PromiseModule
 {
     IOData fds;

@@ -93,6 +93,7 @@ struct Body_
     Rlist *args;
 
     Seq *conlist;
+    bool is_custom;
 
     char *source_path;
     SourceOffset offset;
@@ -165,7 +166,9 @@ bool PolicyCheckPartial(const Policy *policy, Seq *errors);
 bool PolicyCheckRunnable(const EvalContext *ctx, const Policy *policy, Seq *errors, bool ignore_missing_bundles);
 
 Bundle *PolicyAppendBundle(Policy *policy, const char *ns, const char *name, const char *type, const Rlist *args, const char *source_path);
-Body *PolicyAppendBody(Policy *policy, const char *ns, const char *name, const char *type, Rlist *args, const char *source_path);
+Body *PolicyAppendBody(Policy *policy, const char *ns, const char *name,
+                       const char *type, Rlist *args, const char *source_path,
+                       bool is_custom);
 Body *PolicyAppendPromiseBlock(Policy *policy, const char *ns, const char *name, const char *type, Rlist *args, const char *source_path);
 
 JsonElement *PolicyToJson(const Policy *policy);

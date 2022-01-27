@@ -648,7 +648,7 @@ void PromiseRuntimeHash(const Promise *pp, const char *salt,
     Rlist *rp;
     FnCall *fp;
 
-    char *noRvalHash[] = { "mtime", "atime", "ctime", "stime_range", "ttime_range", "log_string", NULL };
+    char *noRvalHash[] = { "mtime", "atime", "ctime", "stime_range", "ttime_range", "log_string", "template_data", NULL };
     int doHash;
 
     md = HashDigestFromId(type);
@@ -741,6 +741,16 @@ void PromiseRuntimeHash(const Promise *pp, const char *salt,
                     RvalDigestUpdate(context, rp);
                 }
                 break;
+
+            case RVAL_TYPE_CONTAINER:
+                {
+                    const JsonElement *rval_json = RvalContainerValue(cp->rval);
+                    Writer *writer = StringWriter();
+                    JsonWriteCompact(writer, rval_json); /* sorts elements and produces canonical form */
+                    EVP_DigestUpdate(context, StringWriterData(writer), StringWriterLength(writer));
+                    WriterClose(writer);
+                    break;
+                }
 
             case RVAL_TYPE_FNCALL:
 

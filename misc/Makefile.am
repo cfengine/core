@@ -25,6 +25,7 @@ systemd_DATA   = systemd/cfengine3.service
 systemd_DATA  += systemd/cf-apache.service
 systemd_DATA  += systemd/cf-execd.service
 systemd_DATA  += systemd/cf-hub.service
+systemd_DATA  += systemd/cf-reactor.service
 systemd_DATA  += systemd/cf-monitord.service
 systemd_DATA  += systemd/cf-postgres.service
 systemd_DATA  += systemd/cf-runalerts.service

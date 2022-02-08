@@ -280,6 +280,23 @@ void ClearExpandedAttributes(Attributes *a)
     ClearFilesAttributes(a);
 }
 
+static inline bool CreateFalseWasSpecified(const Promise *pp)
+{
+    assert(pp != NULL);
+    const size_t n = SeqLength(pp->conlist);
+    for (size_t i = 0; i < n; i++)
+    {
+        Constraint *cp = SeqAt(pp->conlist, i);
+        if (StringEqual(cp->lval, "create") &&
+            (StringEqual(cp->rval.item, "false") ||
+             StringEqual(cp->rval.item, "no")))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promise *pp)
 {
     struct stat osb, oslb, dsb;
@@ -542,9 +559,26 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
 
     if (a.haveedit)
     {
-        if (exists)
+        /* Files promises that promise full file content - like the template
+         * methods 'mustache' and 'inline_mustache' - are exeptions to the
+         * normal behaviour related to the 'create' attribute. Instead we have
+         * the following behaviour:
+         *  - If `create => "true"` is specified; the file is created even
+         *    though rendering fails.
+         *  - If `create => "false"` is specified; the file is never created.
+         *  - If not specified; the file is created by default, but only upon
+         *    successful rendering.
+         */
+        if (exists ||
+            ((StringEqual(a.template_method, "mustache") ||
+              StringEqual(a.template_method, "inline_mustache")) &&
+             !CreateFalseWasSpecified(pp)))
         {
-            result = PromiseResultUpdate(result, ScheduleEditOperation(ctx, path, &a, pp));
+            result = PromiseResultUpdate(result, ScheduleEditOperation(ctx,
+                                                                       path,
+                                                                       exists,
+                                                                       &a,
+                                                                       pp));
         }
         else
         {
@@ -760,10 +794,15 @@ static bool SaveBufferCallback(const char *dest_filename, void *param, NewLineMo
     return true;
 }
 
-static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp, const Attributes *attr,
-                                            EditContext *edcontext, const char *template)
+static PromiseResult RenderTemplateMustache(EvalContext *ctx,
+                                            const Promise *pp,
+                                            const Attributes *attr,
+                                            EditContext *edcontext,
+                                            const char *template,
+                                            bool file_exists)
 {
     assert(attr != NULL);
+    assert(edcontext != NULL);
     PromiseResult result = PROMISE_RESULT_NOOP;
 
     const JsonElement *template_data = attr->template_data;
@@ -804,7 +843,18 @@ static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp,
                               "update rendering of '%s' from mustache template '%s'",
                               edcontext->filename, message))
             {
-                if (SaveAsFile(SaveBufferCallback, output_buffer, edcontext->changes_filename, attr, edcontext->new_line_mode))
+                if (!file_exists && !CfCreateFile(ctx,
+                                                  edcontext->changes_filename,
+                                                  pp, attr, &result))
+                { 
+                    RecordFailure(ctx, pp, attr,
+                                  "Failed to create file '%s' for rendering mustache template '%s'",
+                                  edcontext->filename, message);
+                    result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+                }
+                else if (SaveAsFile(SaveBufferCallback, output_buffer,
+                                    edcontext->changes_filename, attr,
+                                    edcontext->new_line_mode))
                 {
                     RecordChange(ctx, pp, attr,
                                  "Updated rendering of '%s' from mustache template '%s'",
@@ -832,8 +882,11 @@ static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp,
     return result;
 }
 
-static PromiseResult RenderTemplateMustacheFromFile(EvalContext *ctx, const Promise *pp, const Attributes *a,
-                                            EditContext *edcontext)
+static PromiseResult RenderTemplateMustacheFromFile(EvalContext *ctx,
+                                                    const Promise *pp,
+                                                    const Attributes *a,
+                                                    EditContext *edcontext,
+                                                    bool file_exists)
 {
     assert(a != NULL);
     PromiseResult result = PROMISE_RESULT_NOOP;
@@ -858,15 +911,20 @@ static PromiseResult RenderTemplateMustacheFromFile(EvalContext *ctx, const Prom
         return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
     }
 
-    result =  RenderTemplateMustache(ctx, pp, a, edcontext, StringWriterData(template_writer));
+    result = RenderTemplateMustache(ctx, pp, a, edcontext,
+                                    StringWriterData(template_writer),
+                                    file_exists);
 
     WriterClose(template_writer);
 
     return result;
 }
 
-static PromiseResult RenderTemplateMustacheFromString(EvalContext *ctx, const Promise *pp, const Attributes *a,
-                                            EditContext *edcontext)
+static PromiseResult RenderTemplateMustacheFromString(EvalContext *ctx,
+                                                      const Promise *pp,
+                                                      const Attributes *a,
+                                                      EditContext *edcontext,
+                                                      bool file_exists)
 {
     assert(a != NULL);
     if ( a->edit_template_string == NULL  )
@@ -877,10 +935,14 @@ static PromiseResult RenderTemplateMustacheFromString(EvalContext *ctx, const Pr
         return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
     }
 
-    return  RenderTemplateMustache(ctx, pp, a, edcontext, a->edit_template_string);
+    return RenderTemplateMustache(ctx, pp, a, edcontext,
+                                  a->edit_template_string,
+                                  file_exists);
 }
 
-PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, const Attributes *a, const Promise *pp)
+PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename,
+                                    bool file_exists, const Attributes *a,
+                                    const Promise *pp)
 {
     assert(a != NULL);
     void *vp;
@@ -998,7 +1060,9 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, const Attr
             Log(LOG_LEVEL_VERBOSE, "Rendering '%s' using template '%s' with method '%s'",
                 filename, a->edit_template, a->template_method);
 
-            PromiseResult render_result = RenderTemplateMustacheFromFile(ctx, pp, a, edcontext);
+            PromiseResult render_result =
+                RenderTemplateMustacheFromFile(ctx, pp, a, edcontext,
+                                               file_exists);
             result = PromiseResultUpdate(result, render_result);
         }
     }
@@ -1009,7 +1073,9 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename, const Attr
             Log(LOG_LEVEL_VERBOSE, "Rendering '%s' with method '%s'",
                 filename, a->template_method);
 
-            PromiseResult render_result = RenderTemplateMustacheFromString(ctx, pp, a, edcontext);
+            PromiseResult render_result =
+                RenderTemplateMustacheFromString(ctx, pp, a, edcontext,
+                                                 file_exists);
             result = PromiseResultUpdate(result, render_result);
         }
     }

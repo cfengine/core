@@ -1116,7 +1116,7 @@ uid_t Str2Uid(const char *uidbuff, char *usercopy, const Promise *pp)
         {
             if ((pw = getpwnam(ip->name)) == NULL)
             {
-                Log(LOG_LEVEL_INFO, "Unknown user in promise '%s'", ip->name);
+                Log(LOG_LEVEL_INFO, "Unknown user in promise '%s': %s", ip->name, GetErrorStr());
 
                 if (pp != NULL)
                 {
@@ -1153,7 +1153,7 @@ uid_t Str2Uid(const char *uidbuff, char *usercopy, const Promise *pp)
         }
         else if ((pw = getpwnam(uidbuff)) == NULL)
         {
-            Log(LOG_LEVEL_INFO, "Unknown user '%s' in promise", uidbuff);
+            Log(LOG_LEVEL_INFO, "Unknown user '%s' in promise: %s", uidbuff, GetErrorStr());
             uid = CF_UNKNOWN_OWNER;     /* signal user not found */
 
             if (usercopy != NULL)
@@ -1190,7 +1190,7 @@ gid_t Str2Gid(const char *gidbuff, char *groupcopy, const Promise *pp)
         }
         else if ((gr = getgrnam(gidbuff)) == NULL)
         {
-            Log(LOG_LEVEL_INFO, "Unknown group '%s' in promise", gidbuff);
+            Log(LOG_LEVEL_INFO, "Unknown group '%s' in promise: %s", gidbuff, GetErrorStr());
 
             if (pp)
             {

@@ -968,7 +968,7 @@ static FnCallResult FnCallSysctlValue(ARG_UNUSED EvalContext *ctx,
 
         if (w == NULL)
         {
-            Log(LOG_LEVEL_INFO, "Error while reading file '%s' (%s)",
+            Log(LOG_LEVEL_VERBOSE, "Error while reading file '%s' (%s)",
                 BufferData(filenamebuf), GetErrorStr());
             BufferDestroy(filenamebuf);
             return FnFailure();

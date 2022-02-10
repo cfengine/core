@@ -68,10 +68,10 @@ PromiseResult VerifyUsersPromise(EvalContext *ctx, const Promise *pp)
     case PROMISE_RESULT_TIMEOUT:
     case PROMISE_RESULT_INTERRUPTED:
     case PROMISE_RESULT_WARN:
-        cfPS(ctx, LOG_LEVEL_INFO, result, pp, &a, "User promise not kept");
+        cfPS(ctx, LOG_LEVEL_VERBOSE, result, pp, &a, "User promise not kept");
         break;
     case PROMISE_RESULT_CHANGE:
-        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, &a, "User promise repaired");
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, &a, "User promise repaired");
         break;
     default:
         ProgrammingError("Unknown promise result");

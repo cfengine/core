@@ -1851,7 +1851,7 @@ void VerifyOneUsersPromise (const char *puser, const User *u, PromiseResult *res
     bool res;
     if (u->policy == USER_STATE_PRESENT || u->policy == USER_STATE_LOCKED)
     {
-        if (passwd_info)
+        if (passwd_info != NULL)
         {
             StringSet *groups_to_set = StringSetNew();
             StringSet *current_secondary_groups = StringSetNew();
@@ -1865,10 +1865,12 @@ void VerifyOneUsersPromise (const char *puser, const User *u, PromiseResult *res
                     res = DoModifyUser (puser, u, passwd_info, cmap, action, groups_to_set);
                     if (res)
                     {
+                        Log(LOG_LEVEL_INFO, "Modified user '%s'", puser);
                         *result = PROMISE_RESULT_CHANGE;
                     }
                     else
                     {
+                        Log(LOG_LEVEL_ERR, "Failed to modify user '%s'", puser);
                         *result = PROMISE_RESULT_FAIL;
                     }
                 }
@@ -1890,25 +1892,29 @@ void VerifyOneUsersPromise (const char *puser, const User *u, PromiseResult *res
             res = DoCreateUser (puser, u, action, ctx, a, pp);
             if (res)
             {
+                Log(LOG_LEVEL_INFO, "Created user '%s'", puser);
                 *result = PROMISE_RESULT_CHANGE;
             }
             else
             {
+                Log(LOG_LEVEL_ERR, "Failed to create user '%s'", puser);
                 *result = PROMISE_RESULT_FAIL;
             }
         }
     }
     else if (u->policy == USER_STATE_ABSENT)
     {
-        if (passwd_info)
+        if (passwd_info != NULL)
         {
             res = DoRemoveUser (puser, action);
             if (res)
             {
+                Log(LOG_LEVEL_INFO, "Removed user '%s'", puser);
                 *result = PROMISE_RESULT_CHANGE;
             }
             else
             {
+                Log(LOG_LEVEL_ERR, "Failed to remove user '%s'", puser);
                 *result = PROMISE_RESULT_FAIL;
             }
         }

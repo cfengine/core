@@ -27,7 +27,7 @@
 
 
 #include <cfnet.h>
-
+#include <rlist.h>
 
 bool TLSClientInitialize(const char *tls_min_version,
                          const char *ciphers);
@@ -39,7 +39,7 @@ int TLSClientIdentificationDialog(ConnectionInfo *conn_info,
 int TLSTry(ConnectionInfo *conn_info);
 
 /* Exported for enterprise. */
-int TLSConnect(ConnectionInfo *conn_info, bool trust_server,
+int TLSConnect(ConnectionInfo *conn_info, bool trust_server, const Rlist *restrict_keys,
                const char *ipaddr, const char *username);
 
 

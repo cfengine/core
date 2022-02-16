@@ -114,6 +114,9 @@ typedef enum
 EvalContext *EvalContextNew(void);
 void EvalContextDestroy(EvalContext *ctx);
 
+Rlist *EvalContextGetRestrictKeys(const EvalContext *ctx);
+void EvalContextSetRestrictKeys(EvalContext *ctx, const Rlist *restrict_keys);
+
 void EvalContextHeapAddAbort(EvalContext *ctx, const char *context, const char *activated_on_context);
 void EvalContextHeapAddAbortCurrentBundle(EvalContext *ctx, const char *context, const char *activated_on_context);
 

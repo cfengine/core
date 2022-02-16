@@ -1026,6 +1026,12 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
                 continue;
             }
 
+            if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_COPYFROM_RESTRICT_KEYS].lval) == 0)
+            {
+                EvalContextSetRestrictKeys(ctx, value);
+                continue;
+            }
+
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_REFRESH_PROCESSES].lval) == 0)
             {
                 Log(LOG_LEVEL_VERBOSE, "Setting refresh_processes when starting to...");

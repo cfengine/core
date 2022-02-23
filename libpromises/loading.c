@@ -326,12 +326,12 @@ static Policy *LoadPolicyFile(EvalContext *ctx, GenericAgentConfig *config, cons
 
     if (StringMapHasKey(policy_files_hashes, policy_file))
     {
-        Log(LOG_LEVEL_VERBOSE, "Skipping loading of duplicate policy file %s", policy_file);
+        Log(LOG_LEVEL_DEBUG, "Skipping loading of duplicate policy file %s", policy_file);
         return NULL;
     }
     else if (StringSetContains(parsed_files_checksums, hashbuffer))
     {
-        Log(LOG_LEVEL_VERBOSE, "Skipping loading of duplicate (detected by hash) policy file %s",
+        Log(LOG_LEVEL_DEBUG, "Skipping loading of duplicate (detected by hash) policy file %s",
             policy_file);
         return NULL;
     }

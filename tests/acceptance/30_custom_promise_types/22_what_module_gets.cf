@@ -1,0 +1,57 @@
+######################################################
+#
+#  Test which checks what custom module gets from the agent
+#
+#####################################################
+body common control
+{
+    inputs => { "../default.cf.sub" };
+    bundlesequence  => { default("$(this.promise_filename)") };
+    version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  files:
+    "/tmp/module.log"
+      delete => init_delete;
+}
+
+body delete init_delete
+{
+      dirlinks => "delete";
+      rmdirs   => "true";
+}
+
+#######################################################
+
+promise agent example
+{
+    interpreter => "/bin/bash";
+    path => "$(this.promise_dirname)/cat_module.sh";
+}
+
+bundle agent test
+{
+  meta:
+    "description" -> { "CFE-3723" }
+      string => "Test that input from cf-agent to promise module matches expected data";
+
+  example:
+    cfengine::
+      "Promiser"
+        attributeName => "attributeValue";
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "any" usebundle => dcs_check_diff("/tmp/module.log",
+                                        "$(this.promise_filename).expected",
+                                        "$(this.promise_filename)");
+}
+ 

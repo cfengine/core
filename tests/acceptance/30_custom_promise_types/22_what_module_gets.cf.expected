@@ -1,0 +1,18 @@
+cf-agent xxx v1
+
+operation=validate_promise
+log_level=info
+promise_type=example
+promiser=Promiser
+line_number=44
+filename=./30_custom_promise_types/22_what_module_gets.cf
+attribute_attributeName=attributeValue
+
+operation=evaluate_promise
+log_level=info
+promise_type=example
+promiser=Promiser
+line_number=44
+filename=./30_custom_promise_types/22_what_module_gets.cf
+attribute_attributeName=attributeValue
+

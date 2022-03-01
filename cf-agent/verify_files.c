@@ -675,7 +675,13 @@ static PromiseResult RenderTemplateMustache(EvalContext *ctx, const Promise *pp,
     }
     else
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Error rendering mustache template '%s'", a.edit_template);
+        /* Use `edit_template` attribute when template method is "mustache".
+         * Use `edit_template_string` attribute when template method is
+         * "inline_mustache".
+         */
+        char *tmpl = StringEqual(attr->template_method, "mustache")
+                   ? attr->edit_template : attr->edit_template_string;
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Error rendering mustache template '%s'", tmpl);
         result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         BufferDestroy(output_buffer);
         JsonDestroy(destroy_this);

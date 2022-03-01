@@ -1108,8 +1108,10 @@ PromiseResult EvaluateCustomPromise(EvalContext *ctx, const Promise *pp)
     /* Used below, constructed here while path and interpreter are definitely
      * valid pointers. */
     char custom_promise_id[CF_BUFSIZE];
-    NDEBUG_UNUSED size_t ret = snprintf(custom_promise_id, sizeof(custom_promise_id),
-                                        "%s-%s-%s", pp->promiser, path, interpreter);
+    NDEBUG_UNUSED size_t ret = snprintf(custom_promise_id,
+                                        sizeof(custom_promise_id),
+                                        "%s-%s-%s", pp->promiser, path,
+                                        interpreter ? interpreter : "(null)");
     assert((ret > 0) && (ret < sizeof(custom_promise_id)));
 
     PromiseModule *module = MapGet(custom_modules, path);

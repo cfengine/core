@@ -962,16 +962,22 @@ static void ResolveControlBody(EvalContext *ctx, GenericAgentConfig *config,
         {
             Log(LOG_LEVEL_VERBOSE, "SET ignore_missing_inputs %s",
                 RvalScalarValue(evaluated_rval));
-            config->ignore_missing_inputs = BooleanFromString(
-                RvalScalarValue(evaluated_rval));
+            if (StringIsBoolean(RvalScalarValue(evaluated_rval)))
+            {
+                config->ignore_missing_inputs = BooleanFromString(
+                    RvalScalarValue(evaluated_rval));
+            }
         }
 
         if (strcmp(lval, CFG_CONTROLBODY[COMMON_CONTROL_IGNORE_MISSING_BUNDLES].lval) == 0)
         {
             Log(LOG_LEVEL_VERBOSE, "SET ignore_missing_bundles %s",
                 RvalScalarValue(evaluated_rval));
-            config->ignore_missing_bundles = BooleanFromString(
-                RvalScalarValue(evaluated_rval));
+            if (StringIsBoolean(RvalScalarValue(evaluated_rval)))
+            {
+                config->ignore_missing_bundles = BooleanFromString(
+                    RvalScalarValue(evaluated_rval));
+            }
         }
 
         if (strcmp(lval, CFG_CONTROLBODY[COMMON_CONTROL_CACHE_SYSTEM_FUNCTIONS].lval) == 0)

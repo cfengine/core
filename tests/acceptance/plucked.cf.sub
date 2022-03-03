@@ -1580,6 +1580,7 @@ body perms m(mode)
 # @param mode The new mode
 {
       mode   => "$(mode)";
+      rxdirs => "true";
 }
 
 body perms mo(mode,user)
@@ -1589,6 +1590,7 @@ body perms mo(mode,user)
 {
       owners => { "$(user)" };
       mode   => "$(mode)";
+      rxdirs => "true";
 }
 
 body perms mog(mode,user,group)
@@ -1600,6 +1602,7 @@ body perms mog(mode,user,group)
       owners => { "$(user)" };
       groups => { "$(group)" };
       mode   => "$(mode)";
+      rxdirs => "true";
 }
 
 body perms og(u,g)
@@ -1632,6 +1635,7 @@ body perms system_owned(mode)
       mode   => "$(mode)";
       owners => { "root" };
       groups => { "$(sys.user_data[gid])" };
+      rxdirs => "true";
 }
 
 

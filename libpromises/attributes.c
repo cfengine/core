@@ -512,14 +512,7 @@ static FilePerms GetPermissionConstraints(const EvalContext *ctx, const Promise 
     p.groups = Rlist2GidList((Rlist *) PromiseGetConstraintAsRval(pp, "groups", RVAL_TYPE_LIST), pp);
 
     p.findertype = PromiseGetConstraintAsRval(pp, "findertype", RVAL_TYPE_SCALAR);
-    p.rxdirs = PromiseGetConstraintAsBoolean(ctx, "rxdirs", pp);
-
-// The default should be true
-
-    if (!PromiseGetConstraintAsRval(pp, "rxdirs", RVAL_TYPE_SCALAR))
-    {
-        p.rxdirs = true;
-    }
+    p.rxdirs = PromiseGetConstraintAsBooleanWithDefault(ctx, "rxdirs", pp, true, false);
 
     return p;
 }

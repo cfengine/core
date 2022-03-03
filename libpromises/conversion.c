@@ -352,80 +352,41 @@ DataType ConstraintSyntaxGetDataType(const ConstraintSyntax *body_syntax, const 
 
 /****************************************************************************/
 
+// Warning: Defaults to true on unexpected (non-bool) input
 bool BooleanFromString(const char *s)
 {
-    Item *list = SplitString(CF_BOOL, ','), *ip;
-    int count = 0;
+    assert(StringEqual(CF_BOOL, "true,false,yes,no,on,off"));
+    assert(s != NULL);
 
-    for (ip = list; ip != NULL; ip = ip->next)
-    {
-        if (strcmp(s, ip->name) == 0)
-        {
-            break;
-        }
-
-        count++;
-    }
-
-    DeleteItemList(list);
-
-    if (count % 2)
+    if (StringEqual(s, "false")
+        || StringEqual(s, "no")
+        || StringEqual(s, "off"))
     {
         return false;
     }
-    else
-    {
-        return true;
-    }
+    // Unnecessary to check here because the default is true anyway:
+    // if (StringEqual(s, "true")
+    //     || StringEqual(s, "yes")
+    //     || StringEqual(s, "on"))
+    // {
+    //     return true;
+    // }
+
+    // Default to true to preserve old behavior:
+    return true;
 }
 
 bool StringIsBoolean(const char *s)
 {
+    assert(StringEqual(CF_BOOL, "true,false,yes,no,on,off"));
     assert(s != NULL);
 
-    if (s[0] == '\0')
-    {
-        // Empty string is not one of the accepted values in CF_BOOL.
-        // We have to check for this, because strstr() would return a "match"
-        // at the beginning of CF_BOOL. The C std library takes the
-        // mathematical view that all strings contain the empty string.
-        return false;
-    }
-
-    if (strchr(s, ',') != NULL)
-    {
-        // If there is a comma in the string,
-        // it is not one of the boolean values we have in a comma-separated
-        // list (CF_BOOL).
-        return false;
-    }
-
-    // The length of the match is the length of what we searched for:
-    const size_t match_length = strlen(s);
-    const char *match = strstr(CF_BOOL, s);
-    while (match != NULL)
-    {
-        // We found a match, but we also have to check that it matched
-        // everything between commas or start or end of string.
-
-        const char* after_match = match + match_length;
-        if (*after_match != '\0' && *after_match != ',')
-        {
-            match = strstr(match + 1, s);
-            continue; // There was something more, not a complete match.
-        }
-        const size_t offset = match - CF_BOOL;
-        if (offset == 0)
-        {
-            return true; // We matched the beginning, so a complete match.
-        }
-        if (CF_BOOL[offset - 1] == ',')
-        {
-            return true; // Previous character was comma, so a complete match.
-        }
-        match = strstr(match + 1, s);
-    }
-    return false;
+    return (StringEqual(s, "true")
+            || StringEqual(s, "false")
+            || StringEqual(s, "yes")
+            || StringEqual(s, "no")
+            || StringEqual(s, "on")
+            || StringEqual(s, "off"));
 }
 
 /****************************************************************************/

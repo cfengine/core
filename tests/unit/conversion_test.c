@@ -3,6 +3,40 @@
 #include <cmockery.h>
 #include <conversion.h>
 
+static void test_string_is_boolean(void)
+{
+    // This test should be updated if someone changes CF_BOOL:
+    assert_string_equal(CF_BOOL, "true,false,yes,no,on,off");
+
+    // Accepted boolean values:
+    assert_true(StringIsBoolean("true"));
+    assert_true(StringIsBoolean("false"));
+    assert_true(StringIsBoolean("yes"));
+    assert_true(StringIsBoolean("no"));
+    assert_true(StringIsBoolean("on"));
+    assert_true(StringIsBoolean("off"));
+
+    // Anything else is not boolean:
+    assert_false(StringIsBoolean("boolean"));
+    assert_false(StringIsBoolean("bool"));
+    assert_false(StringIsBoolean(""));
+    assert_false(StringIsBoolean(" "));
+    assert_false(StringIsBoolean(","));
+    assert_false(StringIsBoolean(",,"));
+    assert_false(StringIsBoolean("()"));
+    assert_false(StringIsBoolean("$(foo)"));
+    assert_false(StringIsBoolean("$(true)"));
+    assert_false(StringIsBoolean("y"));
+    assert_false(StringIsBoolean("n"));
+    assert_false(StringIsBoolean("tru"));
+    assert_false(StringIsBoolean("fals"));
+    assert_false(StringIsBoolean("true,"));
+    assert_false(StringIsBoolean(",false"));
+    assert_false(StringIsBoolean("o,n"));
+    assert_false(StringIsBoolean(" on "));
+    assert_false(StringIsBoolean("onoff"));
+    assert_false(StringIsBoolean("onon"));
+}
 
 static void test_int_from_string(void)
 {
@@ -208,6 +242,7 @@ int main()
     PRINT_TEST_BANNER();
     const UnitTest tests[] =
     {
+        unit_test(test_string_is_boolean),
         unit_test(test_int_from_string),
         unit_test(test_double_from_string),
         unit_test(test_CommandArg0_bound),

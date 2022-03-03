@@ -2546,10 +2546,9 @@ void ConstraintDestroy(Constraint *cp)
 /*****************************************************************************/
 
 /**
- * @brief Get the trinary boolean value of the first effective constraint found matching, from a promise
- * @param lval
- * @param list
- * @return True/false, or CF_UNDEFINED if not found
+ * @brief Get the boolean value of the first effective constraint found matching, from a promise
+ * @return true/false
+ * @note Returns #false if no matching constraint is found
  */
 int PromiseGetConstraintAsBoolean(const EvalContext *ctx, const char *lval, const Promise *pp)
 {

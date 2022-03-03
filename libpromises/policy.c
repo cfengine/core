@@ -2552,6 +2552,16 @@ void ConstraintDestroy(Constraint *cp)
  */
 int PromiseGetConstraintAsBoolean(const EvalContext *ctx, const char *lval, const Promise *pp)
 {
+    return PromiseGetConstraintAsBooleanWithDefault(ctx, lval, pp, false, false);
+}
+
+/**
+ * @brief Get the boolean value of the first effective constraint found matching, from a promise
+ * @return true/false
+ */
+int PromiseGetConstraintAsBooleanWithDefault(const EvalContext *ctx, const char *lval, const Promise *pp,
+                                             int default_val, bool with_warning)
+{
     int retval = CF_UNDEFINED;
 
     for (size_t i = 0; i < SeqLength(pp->conlist); i++)
@@ -2596,7 +2606,13 @@ int PromiseGetConstraintAsBoolean(const EvalContext *ctx, const char *lval, cons
 
     if (retval == CF_UNDEFINED)
     {
-        retval = false;
+        if (with_warning)
+        {
+            Log(LOG_LEVEL_WARNING,
+                "Using the default value '%s' for attribute %s (promiser: %s), please set it explicitly",
+                default_val ? "true" : "false", lval, pp->promiser);
+        }
+        retval = default_val;
     }
 
     return retval;

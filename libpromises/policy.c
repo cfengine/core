@@ -2562,6 +2562,8 @@ int PromiseGetConstraintAsBoolean(const EvalContext *ctx, const char *lval, cons
 int PromiseGetConstraintAsBooleanWithDefault(const EvalContext *ctx, const char *lval, const Promise *pp,
                                              int default_val, bool with_warning)
 {
+    assert(pp != NULL);
+
     int retval = CF_UNDEFINED;
 
     for (size_t i = 0; i < SeqLength(pp->conlist); i++)

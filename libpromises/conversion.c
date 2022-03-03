@@ -379,6 +379,55 @@ bool BooleanFromString(const char *s)
     }
 }
 
+bool StringIsBoolean(const char *s)
+{
+    assert(s != NULL);
+
+    if (s[0] == '\0')
+    {
+        // Empty string is not one of the accepted values in CF_BOOL.
+        // We have to check for this, because strstr() would return a "match"
+        // at the beginning of CF_BOOL. The C std library takes the
+        // mathematical view that all strings contain the empty string.
+        return false;
+    }
+
+    if (strchr(s, ',') != NULL)
+    {
+        // If there is a comma in the string,
+        // it is not one of the boolean values we have in a comma-separated
+        // list (CF_BOOL).
+        return false;
+    }
+
+    // The length of the match is the length of what we searched for:
+    const size_t match_length = strlen(s);
+    const char *match = strstr(CF_BOOL, s);
+    while (match != NULL)
+    {
+        // We found a match, but we also have to check that it matched
+        // everything between commas or start or end of string.
+
+        const char* after_match = match + match_length;
+        if (*after_match != '\0' && *after_match != ',')
+        {
+            match = strstr(match + 1, s);
+            continue; // There was something more, not a complete match.
+        }
+        const size_t offset = match - CF_BOOL;
+        if (offset == 0)
+        {
+            return true; // We matched the beginning, so a complete match.
+        }
+        if (CF_BOOL[offset - 1] == ',')
+        {
+            return true; // Previous character was comma, so a complete match.
+        }
+        match = strstr(match + 1, s);
+    }
+    return false;
+}
+
 /****************************************************************************/
 
 /**

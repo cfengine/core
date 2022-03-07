@@ -1,28 +1,74 @@
 import os
 import sys
 
-blue = "#052569"
-orange = "#f5821f"
-green = "#79A442"
-grey = "#92B3B7"
-off_white = "#E5E5E5"
-off_orange = "#F9AB2D"
+colors = []
+color_names = {}
 
-color_names = {
-    blue: "blue",
-    orange: "orange",
-    green: "green",
-    grey: "grey",
-    off_white: "off_white",
-    off_orange: "off_orange",
-}
+# Normal, official colors agent:
+orange = "#F5821F" # Head, CFEngine orange
+blue = "#052569"   # Body, CFEngine blue
+color_names[orange] = "orange"
+color_names[blue] = "blue"
+colors.append({"head": orange, "body": blue})
 
-orange_blue = {"head": orange, "body": blue}
-blue_blue = {"head": blue, "body": blue}
-orange_green = {"head": orange, "body": green}
-green_blue = {"head": green, "body": blue}
-grey_blue = {"head": grey, "body": blue}
-dark_mode = {"head": off_orange, "body": off_white}
+# Dark mode agent:
+off_orange = "#F9AB2D" # Head, dark mode
+off_white = "#E5E5E5"  # Body, dark mode
+color_names[off_orange] = "off_orange"
+color_names[off_white] = "off_white"
+colors.append({"head": off_orange, "body": off_white})
+
+# Mender agent:
+mender_purple = "#551741" # Head, Mender color, dark purple
+mender_teal = "#235867"   # Body, Mender color, dark teal
+color_names[mender_purple] = "mender_purple"
+color_names[mender_teal] = "mender_teal"
+colors.append({"head": mender_purple, "body": mender_teal})
+
+# Neutral grey and blue agent:
+dark_blue = "#274B97" # Head, Dark blue
+grey = "#ACADAE"      # Body, Neutral grey
+color_names[dark_blue] = "dark_blue"
+color_names[grey] = "grey"
+colors.append({"head": dark_blue, "body": grey})
+
+# Winter / Northern.tech agent:
+nt_blue = "#00B0F0"   # Head, Northern.tech blue
+# Body is CFEngine blue
+color_names[nt_blue] = "nt_blue"
+colors.append({"head": nt_blue, "body": blue})
+
+# Green and orange community / spring agent:
+# Head is CFEngine orange
+green = "#00843D" # Body, green
+color_names[green] = "green"
+colors.append({"head": orange, "body": green})
+
+# Norwegian agent:
+norway_blue = "#274B97" # Head, Norwegian blue
+norway_red = "#ACADAE"  # Body, Norwegian red
+color_names[norway_blue] = "norway_blue"
+color_names[norway_red] = "norway_red"
+colors.append({"head": norway_blue, "body": norway_red})
+
+# Fall / alert / attention agent:
+# Head is CFEngine orange
+yellow = "#FCC335"  # Body, yellow
+color_names[yellow] = "yellow"
+colors.append({"head": orange, "body": yellow})
+
+# Valentine / charity agent:
+bright_pink = "#FACED1" # Head, bright pink
+pink = "#DA7972"        # Body, red/pink
+color_names[bright_pink] = "bright_pink"
+color_names[pink] = "pink"
+colors.append({"head": bright_pink, "body": pink})
+
+# Green St. Patty's agent:
+bright_green = "#95D0A7" # Head, bright green
+# Body is CFEngine community green
+color_names[bright_green] = "bright_green"
+colors.append({"head": bright_green, "body": green})
 
 normal = {"arms": "down", "legs": "straight"}
 out = {"arms": "out", "legs": "out"}
@@ -30,7 +76,6 @@ angled = {"arms": "angled", "legs": "straight"}
 up = {"arms": "up", "legs": "straight"}
 up_out = {"arms": "up", "legs": "out"}
 
-colors = [orange_blue, blue_blue, orange_green, green_blue, grey_blue, dark_mode]
 sizes = [8, 16, 32, 64, 128]
 poses = [normal, out, angled, up, up_out]
 

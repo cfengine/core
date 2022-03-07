@@ -46,7 +46,7 @@ colors.append({"head": orange, "body": green, "name": "community"})
 
 # Norwegian agent:
 norway_blue = "#274B97" # Head, Norwegian blue
-norway_red = "#ACADAE"  # Body, Norwegian red
+norway_red = "#AA2734"  # Body, Norwegian red
 color_names[norway_blue] = "norway_blue"
 color_names[norway_red] = "norway_red"
 colors.append({"head": norway_blue, "body": norway_red, "name": "norway"})

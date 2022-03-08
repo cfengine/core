@@ -104,29 +104,6 @@ static bool IsProcessRunning(pid_t pid)
 
 /*************************************************************/
 
-bool GetCurrentUserName(char *userName, int userNameLen)
-{
-    char buf[GETPW_R_SIZE_MAX] = {0};
-    struct passwd pwd;
-    struct passwd *result;
-
-    memset(userName, 0, userNameLen);
-    int ret = getpwuid_r(getuid(), &pwd, buf, GETPW_R_SIZE_MAX, &result);
-
-    if (result == NULL)
-    {
-        Log(LOG_LEVEL_ERR, "Could not get user name of current process, using 'UNKNOWN'. (getpwuid: %s)",
-            ret == 0 ? "not found" : GetErrorStrFromCode(ret));
-        strlcpy(userName, "UNKNOWN", userNameLen);
-        return false;
-    }
-
-    strlcpy(userName, result->pw_name, userNameLen);
-    return true;
-}
-
-/*************************************************************/
-
 bool IsExecutable(const char *file)
 {
     struct stat sb;
@@ -260,6 +237,29 @@ bool ShellCommandReturnsZero(const char *command, ShellType shell)
     }
 
     return false;
+}
+
+/*************************************************************/
+
+bool GetCurrentUserName(char *userName, int userNameLen)
+{
+    char buf[GETPW_R_SIZE_MAX] = {0};
+    struct passwd pwd;
+    struct passwd *result;
+
+    memset(userName, 0, userNameLen);
+    int ret = getpwuid_r(getuid(), &pwd, buf, GETPW_R_SIZE_MAX, &result);
+
+    if (result == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Could not get user name of current process, using 'UNKNOWN'. (getpwuid: %s)",
+            ret == 0 ? "not found" : GetErrorStrFromCode(ret));
+        strlcpy(userName, "UNKNOWN", userNameLen);
+        return false;
+    }
+
+    strlcpy(userName, result->pw_name, userNameLen);
+    return true;
 }
 
 #endif /* !__MINGW32__ */

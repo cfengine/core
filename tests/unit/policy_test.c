@@ -89,7 +89,7 @@ static void test_failsafe(void)
     {
         EvalContext *ctx = EvalContextNew();
 
-        PolicyCheckRunnable(ctx, failsafe, errs, false);
+        PolicyCheckRunnable(ctx, failsafe, errs);
 
         DumpErrors(errs);
         assert_int_equal(0, SeqLength(errs));

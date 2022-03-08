@@ -38,6 +38,7 @@
 #include <iteration.h>
 #include <rb-tree.h>
 #include <ring_buffer.h>
+#include <generic_agent.h>
 
 typedef enum
 {
@@ -113,6 +114,9 @@ typedef enum
 
 EvalContext *EvalContextNew(void);
 void EvalContextDestroy(EvalContext *ctx);
+
+void EvalContextSetConfig(EvalContext *ctx, const GenericAgentConfig *config);
+const GenericAgentConfig *EvalContextGetConfig(EvalContext *ctx);
 
 void EvalContextHeapAddAbort(EvalContext *ctx, const char *context, const char *activated_on_context);
 void EvalContextHeapAddAbortCurrentBundle(EvalContext *ctx, const char *context, const char *activated_on_context);

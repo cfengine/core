@@ -132,8 +132,7 @@ static ClassRef IDRefQualify(const EvalContext *ctx, const char *id);
  */
 struct EvalContext_
 {
-    /* TODO: a pointer to read-only version of config is often needed. */
-    /* const GenericAgentConfig *config; */
+    const GenericAgentConfig *config;
 
     int eval_options;
     bool bundle_aborted;
@@ -192,6 +191,18 @@ struct EvalContext_
 
     bool dump_reports;
 };
+
+void EvalContextSetConfig(EvalContext *ctx, const GenericAgentConfig *config)
+{
+    assert(ctx != NULL);
+    ctx->config = config;
+}
+
+const GenericAgentConfig *EvalContextGetConfig(EvalContext *ctx)
+{
+    assert(ctx != NULL);
+    return ctx->config;
+}
 
 bool EvalContextGetSelectEndMatchEof(const EvalContext *ctx)
 {

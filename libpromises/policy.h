@@ -162,7 +162,7 @@ void PolicyErrorDestroy(PolicyError *error);
 void PolicyErrorWrite(Writer *writer, const PolicyError *error);
 
 bool PolicyCheckPartial(const Policy *policy, Seq *errors);
-bool PolicyCheckRunnable(const EvalContext *ctx, const Policy *policy, Seq *errors, bool ignore_missing_bundles);
+bool PolicyCheckRunnable(const EvalContext *ctx, const Policy *policy, Seq *errors);
 
 Bundle *PolicyAppendBundle(Policy *policy, const char *ns, const char *name, const char *type, const Rlist *args, const char *source_path);
 Body *PolicyAppendBody(Policy *policy, const char *ns, const char *name, const char *type, Rlist *args, const char *source_path);

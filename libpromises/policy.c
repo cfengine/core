@@ -48,8 +48,6 @@ static const char *const POLICY_ERROR_BUNDLE_NAME_RESERVED =
     "Use of a reserved container name as a bundle name \"%s\"";
 static const char *const POLICY_ERROR_BUNDLE_REDEFINITION =
     "Duplicate definition of bundle %s with type %s";
-static const char *const POLICY_ERROR_BUNDLE_UNDEFINED =
-    "Undefined bundle %s with type %s";
 static const char *const POLICY_ERROR_BODY_REDEFINITION =
     "Duplicate definition of body %s with type %s";
 static const char *const POLICY_ERROR_BODY_UNDEFINED =
@@ -906,65 +904,6 @@ static bool PolicyCheckUndefinedBodies(const Policy *policy, Seq *errors)
     return success;
 }
 
-static bool PolicyCheckUndefinedBundles(const Policy *policy, Seq *errors)
-{
-    bool success = true;
-
-    for (size_t bpi = 0; bpi < SeqLength(policy->bundles); bpi++)
-    {
-        Bundle *bundle = SeqAt(policy->bundles, bpi);
-
-        for (size_t sti = 0; sti < SeqLength(bundle->sections); sti++)
-        {
-            BundleSection *section = SeqAt(bundle->sections, sti);
-
-            for (size_t ppi = 0; ppi < SeqLength(section->promises); ppi++)
-            {
-                Promise *promise = SeqAt(section->promises, ppi);
-
-                for (size_t cpi = 0; cpi < SeqLength(promise->conlist); cpi++)
-                {
-                    Constraint *constraint = SeqAt(promise->conlist, cpi);
-
-                    const ConstraintSyntax *syntax = ConstraintGetSyntax(constraint);
-                    if (syntax->dtype == CF_DATA_TYPE_BUNDLE &&
-                        !IsCf3VarString(RvalFullSymbol(&constraint->rval)))
-                    {
-                        char *ns = QualifiedNameNamespaceComponent(RvalFullSymbol(&constraint->rval));
-                        char *symbol = QualifiedNameScopeComponent(RvalFullSymbol(&constraint->rval));
-
-                        const Bundle *referenced_bundle = NULL;
-                        if (strcmp(constraint->lval, "usebundle") == 0 || strcmp(constraint->lval, "home_bundle") == 0)
-                        {
-                            referenced_bundle = PolicyGetBundle(policy, ns, "agent", symbol);
-                            if (!referenced_bundle)
-                            {
-                                referenced_bundle = PolicyGetBundle(policy, ns, "common", symbol);
-                            }
-                        }
-                        else
-                        {
-                            referenced_bundle = PolicyGetBundle(policy, ns, constraint->lval, symbol);
-                        }
-
-                        if (!referenced_bundle)
-                        {
-                            SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_CONSTRAINT, constraint,
-                                                             POLICY_ERROR_BUNDLE_UNDEFINED, symbol, constraint->lval));
-                            success = false;
-                        }
-
-                        free(ns);
-                        free(symbol);
-                    }
-                } // constraints
-            } // promises
-        } // promise_types
-    } // bundles
-
-    return success;
-}
-
 static bool PolicyCheckRequiredComments(const EvalContext *ctx, const Policy *policy, Seq *errors)
 {
     const Body *common_control = PolicyGetBody(policy, NULL, "common", "control");
@@ -1079,18 +1018,12 @@ bool PolicyCheckDuplicateHandles(const Policy *policy, Seq *errors)
  * @param ignore_missing_bundles Whether to ignore missing bundle references
  * @return True if no new errors are found
  */
-bool PolicyCheckRunnable(const EvalContext *ctx, const Policy *policy, Seq *errors, bool ignore_missing_bundles)
+bool PolicyCheckRunnable(const EvalContext *ctx, const Policy *policy, Seq *errors)
 {
     bool success = true;
 
     success &= PolicyCheckRequiredComments(ctx, policy, errors);
     success &= PolicyCheckUndefinedBodies(policy, errors);
-
-    if (!ignore_missing_bundles)
-    {
-        success &= PolicyCheckUndefinedBundles(policy, errors);
-    }
-
     success &= PolicyCheckDuplicateHandles(policy, errors);
 
     return success;

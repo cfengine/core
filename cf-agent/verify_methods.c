@@ -25,6 +25,7 @@
 #include <verify_methods.h>
 
 #include <actuator.h>
+#include <audit.h> // FatalError()
 #include <eval_context.h>
 #include <vars.h>
 #include <expand.h>
@@ -227,6 +228,10 @@ PromiseResult VerifyMethod(EvalContext *ctx, const Rval call, const Attributes *
              "A method attempted to use a bundle '%s' that was apparently not defined",
              BufferData(method_name));
         result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+        if (!EvalContextGetConfig(ctx)->ignore_missing_bundles)
+        {
+            FatalError(ctx, "Aborting due to missing bundle '%s'", BufferData(method_name));
+        }
     }
 
     YieldCurrentLock(thislock);

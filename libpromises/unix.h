@@ -38,6 +38,7 @@ bool GetCurrentUserName(char *userName, int userNameLen);
  *
  * @param uid              UID of the user
  * @param user_name_buf    buffer to store the user name (if found)
+ *                         (%NULL if only checking if a user with #uid exists)
  * @param buf_size         size of the #user_name_buf buffer
  * @param error_log_level  log level to store errors with (not found or an actual error)
  * @return                 whether the lookup was successful or not
@@ -50,6 +51,7 @@ bool GetGroupName(gid_t gid, char *group_name_buf, size_t buf_size, LogLevel err
  *
  * @param user_name        user name of the user
  * @param[out] uid         place to store the UID of user #user_name (if found)
+ *                         (%NULL if only checking if a user with #user_name exists)
  * @param error_log_level  log level to store errors with (not found or an actual error)
  * @return                 whether the lookup was successful or not
  */

@@ -256,14 +256,17 @@ bool GetUserName(uid_t uid, char *user_name_buf, size_t buf_size, LogLevel error
         return false;
     }
 
-    ret = strlcpy(user_name_buf, result->pw_name, buf_size);
-    assert(ret < buf_size);
-    if (ret >= buf_size)
+    if ((user_name_buf != NULL) && (buf_size > 0))
     {
-        /* Should never happen, but if it does, it's definitely an error. */
-        Log(LOG_LEVEL_ERR, "Failed to get user name for uid %ju (buffer too small)",
-            (uintmax_t) uid);
-        return false;
+        ret = strlcpy(user_name_buf, result->pw_name, buf_size);
+        assert(ret < buf_size);
+        if (ret >= buf_size)
+        {
+            /* Should never happen, but if it does, it's definitely an error. */
+            Log(LOG_LEVEL_ERR, "Failed to get user name for uid %ju (buffer too small)",
+                (uintmax_t) uid);
+            return false;
+        }
     }
 
     return true;
@@ -295,14 +298,17 @@ bool GetGroupName(gid_t gid, char *group_name_buf, size_t buf_size, LogLevel err
         return false;
     }
 
-    ret = strlcpy(group_name_buf, result->gr_name, buf_size);
-    assert(ret < buf_size);
-    if (ret >= buf_size)
+    if ((group_name_buf != NULL) && (buf_size > 0))
     {
-        /* Should never happen, but if it does, it's definitely an error. */
-        Log(LOG_LEVEL_ERR, "Failed to get group name for gid %ju (buffer too small)",
-            (uintmax_t) gid);
-        return false;
+        ret = strlcpy(group_name_buf, result->gr_name, buf_size);
+        assert(ret < buf_size);
+        if (ret >= buf_size)
+        {
+            /* Should never happen, but if it does, it's definitely an error. */
+            Log(LOG_LEVEL_ERR, "Failed to get group name for gid %ju (buffer too small)",
+                (uintmax_t) gid);
+            return false;
+        }
     }
 
     return true;
@@ -322,7 +328,10 @@ bool GetUserID(const char *user_name, uid_t *uid, LogLevel error_log_level)
         return false;
     }
 
-    *uid = result->pw_uid;
+    if (uid != NULL)
+    {
+        *uid = result->pw_uid;
+    }
 
     return true;
 }
@@ -341,7 +350,10 @@ bool GetGroupID(const char *group_name, gid_t *gid, LogLevel error_log_level)
         return false;
     }
 
-    *gid = result->gr_gid;
+    if (gid != NULL)
+    {
+        *gid = result->gr_gid;
+    }
 
     return true;
 }

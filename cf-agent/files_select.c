@@ -35,6 +35,7 @@
 #include <promises.h>
 #include <exec_tools.h>
 #include <chflags.h>
+#include <unix.h>               /* GetGroupName(), GetUserName() */
 
 static bool SelectTypeMatch(const struct stat *lstatptr, Rlist *crit);
 static bool SelectOwnerMatch(EvalContext *ctx, char *path, const struct stat *lstatptr, Rlist *crit);
@@ -543,21 +544,15 @@ static bool SelectExecProgram(char *filename, char *command)
 /* Unix implementations                                            */
 /*******************************************************************/
 
-bool GetOwnerName(ARG_UNUSED char *path, const struct stat *lstatptr, char *owner, int ownerSz)
+bool GetOwnerName(char *path, const struct stat *lstatptr, char *owner, int ownerSz)
 {
-    struct passwd *pw;
-
     memset(owner, 0, ownerSz);
-    pw = getpwuid(lstatptr->st_uid);
-
-    if (pw == NULL)
+    if (!GetUserName(lstatptr->st_uid, owner, ownerSz, LOG_LEVEL_ERR))
     {
-        Log(LOG_LEVEL_ERR, "Could not get owner name of user with 'uid=%ju'. (getpwuid: %s)",
-              (uintmax_t)lstatptr->st_uid, GetErrorStr());
+        /* detailed error already logged */
+        Log(LOG_LEVEL_ERR, "Could not get owner name for '%s'", path);
         return false;
     }
-
-    strncpy(owner, pw->pw_name, ownerSz - 1);
 
     return true;
 }
@@ -567,7 +562,6 @@ bool GetOwnerName(ARG_UNUSED char *path, const struct stat *lstatptr, char *owne
 static bool SelectGroupMatch(EvalContext *ctx, const struct stat *lstatptr, Rlist *crit)
 {
     char buffer[CF_SMALLBUF];
-    struct group *gr;
     Rlist *rp;
 
     StringSet *leafattrib = StringSetNew();
@@ -575,9 +569,10 @@ static bool SelectGroupMatch(EvalContext *ctx, const struct stat *lstatptr, Rlis
     snprintf(buffer, CF_SMALLBUF, "%ju", (uintmax_t) lstatptr->st_gid);
     StringSetAdd(leafattrib, xstrdup(buffer));
 
-    if ((gr = getgrgid(lstatptr->st_gid)) != NULL)
+    bool found = GetGroupName(lstatptr->st_gid, buffer, sizeof(buffer), LOG_LEVEL_VERBOSE);
+    if (found)
     {
-        StringSetAdd(leafattrib, xstrdup(gr->gr_name));
+        StringSetAdd(leafattrib, xstrdup(buffer));
     }
     else
     {
@@ -593,7 +588,7 @@ static bool SelectGroupMatch(EvalContext *ctx, const struct stat *lstatptr, Rlis
             return true;
         }
 
-        if (gr && (FullTextMatch(ctx, RlistScalarValue(rp), gr->gr_name)))
+        if (found && (FullTextMatch(ctx, RlistScalarValue(rp), buffer)))
         {
             Log(LOG_LEVEL_DEBUG, "Select group match");
             StringSetDestroy(leafattrib);

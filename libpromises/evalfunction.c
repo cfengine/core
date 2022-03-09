@@ -1100,14 +1100,13 @@ static FnCallResult FnCallGetUid(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const P
 
 #else /* !__MINGW32__ */
 
-    struct passwd *pw = getpwnam(RlistScalarValue(finalargs));
-
-    if (pw == NULL)
+    uid_t uid;
+    if (!GetUserID(RlistScalarValue(finalargs), &uid, LOG_LEVEL_ERR))
     {
         return FnFailure();
     }
 
-    return FnReturnF("%ju", (uintmax_t)pw->pw_uid);
+    return FnReturnF("%ju", (uintmax_t)uid);
 #endif
 }
 
@@ -1120,14 +1119,13 @@ static FnCallResult FnCallGetGid(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const P
 
 #else /* !__MINGW32__ */
 
-    struct group *gr = getgrnam(RlistScalarValue(finalargs));
-
-    if (gr == NULL)
+    gid_t gid;
+    if (!GetGroupID(RlistScalarValue(finalargs), &gid, LOG_LEVEL_ERR))
     {
         return FnFailure();
     }
 
-    return FnReturnF("%ju", (uintmax_t)gr->gr_gid);
+    return FnReturnF("%ju", (uintmax_t)gid);
 #endif
 }
 

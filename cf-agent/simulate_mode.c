@@ -40,6 +40,7 @@
 #include <set.h>                /* StringSet */
 #include <map.h>                /* StringMap */
 #include <csv_parser.h>         /* GetCsvLineNext() */
+#include <unix.h>               /* GetGroupName(), GetUserName() */
 
 #include <simulate_mode.h>
 
@@ -91,43 +92,14 @@ static void ManifestStatInfo(const struct stat *st)
     printf("Size: %ju\n", (uintmax_t) st->st_size);
     printf("Access: (%04o/%s)  ", st->st_mode & CHMOD_MODE_BITS, mode_str);
 
-    errno = 0;
-    struct passwd *owner = getpwuid(st->st_uid);
-    if (owner != NULL)
+    char name[CF_SMALLBUF];
+    if (GetUserName(st->st_uid, name, sizeof(name), LOG_LEVEL_ERR))
     {
-        printf("Uid: (%ju/%s)   ", (uintmax_t) st->st_uid, owner->pw_name);
+        printf("Uid: (%ju/%s)   ", (uintmax_t) st->st_uid, name);
     }
-    else
+    if (GetGroupName(st->st_gid, name, sizeof(name), LOG_LEVEL_ERR))
     {
-        if (errno == 0)
-        {
-            Log(LOG_LEVEL_ERR, "Failed to get file owner name: non-existent user id '%ju'",
-                (uintmax_t) st->st_uid);
-        }
-        else
-        {
-            Log(LOG_LEVEL_ERR, "Failed to get file owner name: %s",
-                GetErrorStr());
-        }
-    }
-
-    errno = 0;
-    struct group *group = getgrgid(st->st_gid);
-    if (group != NULL) {
-        printf("Gid: (%ju/%s)\n", (uintmax_t) st->st_gid, group->gr_name);
-    }
-    else
-    {
-        if (errno == 0)
-        {
-            Log(LOG_LEVEL_ERR, "Failed to get file group name: non-existent group id '%ju'",
-                (uintmax_t) st->st_gid);
-        }
-        else
-        {
-            Log(LOG_LEVEL_ERR, "Failed to get file group name: %s",
-                GetErrorStr());
-        }
+        printf("Gid: (%ju/%s)\n", (uintmax_t) st->st_gid, name);
     }
 
 #define MAX_TIMESTAMP_SIZE (sizeof("2020-10-05 12:56:18 +0200"))

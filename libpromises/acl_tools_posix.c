@@ -40,7 +40,7 @@
 #endif
 
 #ifdef HAVE_LIBACL
-#include <pwd.h>        /* getpwnam */
+#include <unix.h>        /* GetUserID() */
 
 bool CopyACLs(const char *src, const char *dst, bool *change)
 {
@@ -164,21 +164,13 @@ bool AllowAccessForUsers(const char *path, StringSet *users, bool allow_writes, 
     const char *user = NULL;
     while ((user = StringSetIteratorNext(&iter)) != NULL)
     {
-        struct passwd *pw = getpwnam(user);
-        if (pw == NULL)
+        uid_t uid;
+        if (!GetUserID(user, &uid, LOG_LEVEL_ERR))
         {
-            if (errno != 0)
-            {
-                Log(LOG_LEVEL_ERR, "Failed to get UID for user '%s': %s", user, GetErrorStr());
-            }
-            else
-            {
-                Log(LOG_LEVEL_ERR, "Failed to get UID for user '%s': user doesn't exist", user);
-            }
+            /* errors already logged */
             acl_free(acl);
             return false;
         }
-        uid_t uid = pw->pw_uid;
 
         if (acl_create_entry(&acl, &entry) == -1)
         {

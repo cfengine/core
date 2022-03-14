@@ -42,7 +42,7 @@
 #include <scope.h>
 #include <keyring.h>
 #include <matching.h>
-#include <unix.h>
+#include <unix.h>           /* GetUserName(), GetGroupName() */
 #include <string_lib.h>
 #include <regex.h>          /* CompileRegex,StringMatchWithPrecompiledRegex */
 #include <net.h>                                           /* SocketConnect */
@@ -1051,6 +1051,7 @@ static FnCallResult FnCallGetUserInfo(ARG_UNUSED EvalContext *ctx, ARG_UNUSED co
 
 #else /* !__MINGW32__ */
 
+    /* TODO: implement and use new GetUserInfo(uid_or_username) */
     struct passwd *pw = NULL;
 
     if (finalargs == NULL)
@@ -1100,14 +1101,13 @@ static FnCallResult FnCallGetUid(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const P
 
 #else /* !__MINGW32__ */
 
-    struct passwd *pw = getpwnam(RlistScalarValue(finalargs));
-
-    if (pw == NULL)
+    uid_t uid;
+    if (!GetUserID(RlistScalarValue(finalargs), &uid, LOG_LEVEL_ERR))
     {
         return FnFailure();
     }
 
-    return FnReturnF("%ju", (uintmax_t)pw->pw_uid);
+    return FnReturnF("%ju", (uintmax_t)uid);
 #endif
 }
 
@@ -1120,14 +1120,13 @@ static FnCallResult FnCallGetGid(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const P
 
 #else /* !__MINGW32__ */
 
-    struct group *gr = getgrnam(RlistScalarValue(finalargs));
-
-    if (gr == NULL)
+    gid_t gid;
+    if (!GetGroupID(RlistScalarValue(finalargs), &gid, LOG_LEVEL_ERR))
     {
         return FnFailure();
     }
 
-    return FnReturnF("%ju", (uintmax_t)gr->gr_gid);
+    return FnReturnF("%ju", (uintmax_t)gid);
 #endif
 }
 
@@ -7973,12 +7972,12 @@ FnCallResult FnCallUserExists(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Poli
             return FnFailure();
         }
 
-        if (getpwuid(uid) == NULL)
+        if (!GetUserName(uid, NULL, 0, LOG_LEVEL_VERBOSE))
         {
             return FnReturnContext(false);
         }
     }
-    else if (getpwnam(arg) == NULL)
+    else if (!GetUserID(arg, NULL, LOG_LEVEL_VERBOSE))
     {
         return FnReturnContext(false);
     }
@@ -8000,12 +7999,12 @@ FnCallResult FnCallGroupExists(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Pol
             return FnFailure();
         }
 
-        if (getgrgid(gid) == NULL)
+        if (!GetGroupName(gid, NULL, 0, LOG_LEVEL_VERBOSE))
         {
             return FnReturnContext(false);
         }
     }
-    else if (getgrnam(arg) == NULL)
+    else if (!GetGroupID(arg, NULL, LOG_LEVEL_VERBOSE))
     {
         return FnReturnContext(false);
     }

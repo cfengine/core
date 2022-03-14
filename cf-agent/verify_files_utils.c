@@ -66,6 +66,7 @@
 #include <stat_cache.h>                      /* remote_stat,StatCacheLookup */
 #include <known_dirs.h>
 #include <changes_chroot.h>     /* PrepareChangesChroot(), RecordFileChangedInChroot() */
+#include <unix.h>               /* GetGroupName(), GetUserName() */
 
 #include <cf-windows-functions.h>
 
@@ -4103,8 +4104,6 @@ bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, const At
 {
     assert(sb != NULL);
 
-    struct passwd *pw;
-    struct group *gp;
     UidList *ulp;
     GidList *glp;
 
@@ -4195,14 +4194,15 @@ bool VerifyOwner(EvalContext *ctx, const char *file, const Promise *pp, const At
     }
 
     /* else */
-    if ((pw = getpwuid(sb->st_uid)) == NULL)
+    char name[CF_SMALLBUF];
+    if (!GetUserName(sb->st_uid, name, sizeof(name), LOG_LEVEL_VERBOSE))
     {
         RecordWarning(ctx, pp, attr,
                       "File '%s' is not owned by anybody in the passwd database (uid = %ju)",
                       file, (uintmax_t)sb->st_uid);
     }
 
-    if ((gp = getgrgid(sb->st_gid)) == NULL)
+    if (!GetGroupName(sb->st_gid, name, sizeof(name), LOG_LEVEL_VERBOSE))
     {
         RecordWarning(ctx, pp, attr, "File '%s' is not owned by any group in group database  (gid = %ju)",
                       file, (uintmax_t)sb->st_gid);

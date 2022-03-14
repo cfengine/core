@@ -32,6 +32,7 @@
 #include <misc_lib.h>
 #include <rlist.h>
 #include <eval_context.h>
+#include <unix.h>               /* GetGroupID(), GetUserID() */
 
 #ifdef HAVE_ACL_H
 # include <acl.h>
@@ -836,8 +837,6 @@ static int PermsetEquals(acl_permset_t first, acl_permset_t second)
 
 static bool ParseEntityPosixLinux(char **str, acl_entry_t ace, int *is_mask)
 {
-    struct passwd *pwd;
-    struct group *grp;
     acl_tag_t etype;
     size_t idsz;
     id_t id;
@@ -885,16 +884,12 @@ static bool ParseEntityPosixLinux(char **str, acl_entry_t ace, int *is_mask)
         else
         {
             etype = ACL_USER;
-            pwd = getpwnam(ids);
-
-            if (pwd == NULL)
+            if (!GetUserID(ids, &id, LOG_LEVEL_ERR))
             {
-                Log(LOG_LEVEL_ERR, "Couldn't find user id for '%s'. (getpwnnam: %s)", ids, GetErrorStr());
+                /* error already logged */
                 free(ids);
                 return false;
             }
-
-            id = pwd->pw_uid;
         }
     }
     else if (strncmp(*str, "group:", 6) == 0)
@@ -929,16 +924,12 @@ static bool ParseEntityPosixLinux(char **str, acl_entry_t ace, int *is_mask)
         else
         {
             etype = ACL_GROUP;
-            grp = getgrnam(ids);
-
-            if (grp == NULL)
+            if (!GetGroupID(ids, &id, LOG_LEVEL_ERR))
             {
-                Log(LOG_LEVEL_ERR, "Error looking up group id for %s", ids);
+                /* error already logged */
                 free(ids);
                 return false;
             }
-
-            id = grp->gr_gid;
         }
 
     }

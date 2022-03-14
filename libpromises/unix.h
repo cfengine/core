@@ -27,8 +27,36 @@
 #define CFENGINE_UNIX_H
 
 #include <cf3.defs.h>
+#include <logging.h>
 
 void ProcessSignalTerminate(pid_t pid);
 bool GetCurrentUserName(char *userName, int userNameLen);
+
+#ifndef __MINGW32__
+/**
+ * Get user name for the user with UID #uid
+ *
+ * @param uid              UID of the user
+ * @param user_name_buf    buffer to store the user name (if found)
+ *                         (%NULL if only checking if a user with #uid exists)
+ * @param buf_size         size of the #user_name_buf buffer
+ * @param error_log_level  log level to store errors with (not found or an actual error)
+ * @return                 whether the lookup was successful or not
+ */
+bool GetUserName(uid_t uid, char *user_name_buf, size_t buf_size, LogLevel error_log_level);
+bool GetGroupName(gid_t gid, char *group_name_buf, size_t buf_size, LogLevel error_log_level);
+
+/**
+ * Get UID for the user with user name #user_name
+ *
+ * @param user_name        user name of the user
+ * @param[out] uid         place to store the UID of user #user_name (if found)
+ *                         (%NULL if only checking if a user with #user_name exists)
+ * @param error_log_level  log level to store errors with (not found or an actual error)
+ * @return                 whether the lookup was successful or not
+ */
+bool GetUserID(const char *user_name, uid_t *uid, LogLevel error_log_level);
+bool GetGroupID(const char *group_name, gid_t *gid, LogLevel error_log_level);
+#endif
 
 #endif

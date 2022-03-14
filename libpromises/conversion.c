@@ -33,6 +33,7 @@
 #include <logging.h>
 #include <rlist.h>
 #include <string_lib.h>
+#include <unix.h>               /* GetUserID(), GetGroupID() */
 
 
 const char *MapAddress(const char *unspec_address)
@@ -1086,84 +1087,67 @@ GidList *Rlist2GidList(Rlist *gidnames, const Promise *pp)
 
 uid_t Str2Uid(const char *uidbuff, char *usercopy, const Promise *pp)
 {
-    Item *ip, *tmplist;
-    struct passwd *pw;
-    int offset, uid = -2, tmp = -2;
-    char *machine, *user, *domain;
-
-    if (uidbuff[0] == '+')      /* NIS group - have to do this in a roundabout     */
-    {                           /* way because calling getpwnam spoils getnetgrent */
-        offset = 1;
-        if (uidbuff[1] == '@')
-        {
-            offset++;
-        }
-
-        setnetgrent(uidbuff + offset);
-        tmplist = NULL;
-
-        while (getnetgrent(&machine, &user, &domain))
-        {
-            if (user != NULL)
-            {
-                AppendItem(&tmplist, user, NULL);
-            }
-        }
-
-        endnetgrent();
-
-        for (ip = tmplist; ip != NULL; ip = ip->next)
-        {
-            if ((pw = getpwnam(ip->name)) == NULL)
-            {
-                Log(LOG_LEVEL_INFO, "Unknown user in promise '%s'", ip->name);
-
-                if (pp != NULL)
-                {
-                    PromiseRef(LOG_LEVEL_INFO, pp);
-                }
-
-                uid = CF_UNKNOWN_OWNER; /* signal user not found */
-            }
-            else
-            {
-                uid = pw->pw_uid;
-
-                if (usercopy != NULL)
-                {
-                    strcpy(usercopy, ip->name);
-                }
-            }
-        }
-
-        DeleteItemList(tmplist);
-        return uid;
+    if (StringEqual(uidbuff, "*"))
+    {
+        return CF_SAME_OWNER;        /* signals wildcard */
     }
 
     if (StringIsNumeric(uidbuff))
     {
-        sscanf(uidbuff, "%d", &tmp);
-        uid = (uid_t) tmp;
+        uintmax_t tmp;
+        sscanf(uidbuff, "%ju", &tmp);
+        return (uid_t) tmp;
+    }
+
+    uid_t uid = CF_UNKNOWN_OWNER;
+    if (uidbuff[0] == '+')
+    {
+        if (uidbuff[1] == '@')
+        {
+            uidbuff++;
+        }
+
+        char *machine = NULL;
+        char *user = NULL;
+        char *domain = NULL;
+        setnetgrent(uidbuff);
+        while ((uid == CF_UNKNOWN_OWNER) && (getnetgrent(&machine, &user, &domain) == 1))
+        {
+            if (user != NULL)
+            {
+                if (GetUserID(user, &uid, LOG_LEVEL_INFO))
+                {
+                    if (usercopy != NULL)
+                    {
+                        strcpy(usercopy, user);
+                    }
+                }
+                else
+                {
+                    if (pp != NULL)
+                    {
+                        PromiseRef(LOG_LEVEL_INFO, pp);
+                    }
+                }
+            }
+        }
+        endnetgrent();
+
+        return uid;
+    }
+
+    if (GetUserID(uidbuff, &uid, LOG_LEVEL_INFO))
+    {
+        if (usercopy != NULL)
+        {
+            strcpy(usercopy, uidbuff);
+        }
     }
     else
     {
-        if (strcmp(uidbuff, "*") == 0)
+        if (pp)
         {
-            uid = CF_SAME_OWNER;        /* signals wildcard */
-        }
-        else if ((pw = getpwnam(uidbuff)) == NULL)
-        {
-            Log(LOG_LEVEL_INFO, "Unknown user '%s' in promise", uidbuff);
-            uid = CF_UNKNOWN_OWNER;     /* signal user not found */
-
-            if (usercopy != NULL)
-            {
-                strcpy(usercopy, uidbuff);
-            }
-        }
-        else
-        {
-            uid = pw->pw_uid;
+            PromiseRef(LOG_LEVEL_INFO, pp);
         }
     }
 
@@ -1174,39 +1158,31 @@ uid_t Str2Uid(const char *uidbuff, char *usercopy, const Promise *pp)
 
 gid_t Str2Gid(const char *gidbuff, char *groupcopy, const Promise *pp)
 {
-    struct group *gr;
-    int gid = -2, tmp = -2;
+    if (StringEqual(gidbuff, "*"))
+    {
+        return CF_SAME_GROUP;        /* signals wildcard */
+    }
 
     if (StringIsNumeric(gidbuff))
     {
-        sscanf(gidbuff, "%d", &tmp);
-        gid = (gid_t) tmp;
+        uintmax_t tmp;
+        sscanf(gidbuff, "%ju", &tmp);
+        return (gid_t) tmp;
+    }
+
+    gid_t gid = CF_UNKNOWN_GROUP;
+    if (GetGroupID(gidbuff, &gid, LOG_LEVEL_INFO))
+    {
+        if (groupcopy != NULL)
+        {
+            strcpy(groupcopy, gidbuff);
+        }
     }
     else
     {
-        if (strcmp(gidbuff, "*") == 0)
+        if (pp)
         {
-            gid = CF_SAME_GROUP;        /* signals wildcard */
-        }
-        else if ((gr = getgrnam(gidbuff)) == NULL)
-        {
-            Log(LOG_LEVEL_INFO, "Unknown group '%s' in promise", gidbuff);
-
-            if (pp)
-            {
-                PromiseRef(LOG_LEVEL_INFO, pp);
-            }
-
-            gid = CF_UNKNOWN_GROUP;
-        }
-        else
-        {
-            gid = gr->gr_gid;
-
-            if (groupcopy != NULL)
-            {
-                strcpy(groupcopy, gidbuff);
-            }
+            PromiseRef(LOG_LEVEL_INFO, pp);
         }
     }
 

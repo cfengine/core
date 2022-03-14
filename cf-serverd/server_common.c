@@ -53,6 +53,7 @@ static const int CF_NOSIZE = -1;
 #include <cf-windows-functions.h>                  /* NovaWin_UserNameToSid */
 #include <mutex.h>                                 /* ThreadLock */
 #include <stat_cache.h>                            /* struct Stat */
+#include <unix.h>                                  /* GetUserID() */
 #include "server_access.h"
 
 
@@ -1450,17 +1451,12 @@ void SetConnIdentity(ServerConnectionState *conn, const char *username)
     if (conn->uid == CF_UNKNOWN_OWNER)      /* skip looking up UID for root */
     {
         static pthread_mutex_t pwnam_mtx = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
-        struct passwd *pw = NULL;
 
         ThreadLock(&pwnam_mtx);
         /* TODO Redmine#7643: looking up the UID is expensive and should
          * not be needed, since today's agent machine VS hub most probably
          * do not share the accounts. */
-        pw = getpwnam(conn->username);
-        if (pw != NULL)
-        {
-            conn->uid = pw->pw_uid;
-        }
+        GetUserID(conn->username, &(conn->uid), LOG_LEVEL_VERBOSE);
         ThreadUnlock(&pwnam_mtx);
     }
 

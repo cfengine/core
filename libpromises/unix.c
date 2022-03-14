@@ -35,6 +35,7 @@
 /* Max size of the 'passwd' string in the getpwuid_r() function,
  * man:getpwuid_r(3) says that this value "Should be more than enough". */
 #define GETPW_R_SIZE_MAX 16384
+#define GETGR_R_SIZE_MAX 16384  /* same for group name */
 
 static bool IsProcessRunning(pid_t pid);
 
@@ -100,29 +101,6 @@ static bool IsProcessRunning(pid_t pid)
     Log(LOG_LEVEL_ERR, "Failed checking for process existence. (kill: %s)", GetErrorStr());
 
     return false;
-}
-
-/*************************************************************/
-
-bool GetCurrentUserName(char *userName, int userNameLen)
-{
-    char buf[GETPW_R_SIZE_MAX] = {0};
-    struct passwd pwd;
-    struct passwd *result;
-
-    memset(userName, 0, userNameLen);
-    int ret = getpwuid_r(getuid(), &pwd, buf, GETPW_R_SIZE_MAX, &result);
-
-    if (result == NULL)
-    {
-        Log(LOG_LEVEL_ERR, "Could not get user name of current process, using 'UNKNOWN'. (getpwuid: %s)",
-            ret == 0 ? "not found" : GetErrorStrFromCode(ret));
-        strlcpy(userName, "UNKNOWN", userNameLen);
-        return false;
-    }
-
-    strlcpy(userName, result->pw_name, userNameLen);
-    return true;
 }
 
 /*************************************************************/
@@ -260,6 +238,282 @@ bool ShellCommandReturnsZero(const char *command, ShellType shell)
     }
 
     return false;
+}
+
+/*************************************************************/
+
+static bool GetUserGroupInfoFromGetent(const char *type, const char *query,
+                                       char *name, size_t name_size, uintmax_t *id,
+                                       LogLevel error_log_level)
+{
+    char buf[CF_BUFSIZE];
+    NDEBUG_UNUSED int print_ret = snprintf(buf, sizeof(buf), "/bin/getent %s %s", type, query);
+    assert(print_ret < sizeof(buf));
+
+    FILE *out = cf_popen(buf, "r", OUTPUT_SELECT_STDOUT);
+    size_t offset = 0;
+    size_t n_read;
+    while ((n_read = fread(buf + offset, 1, sizeof(buf) - offset, out)) > 0)
+    {
+        offset += n_read;
+    }
+    buf[offset] = '\0';
+    if (!feof(out))
+    {
+        Log(error_log_level, "Failed to read output from 'getent %s %s'", type, query);
+        cf_pclose(out);
+        return false;
+    }
+    int ec = cf_pclose(out);
+    if (ec == 2)
+    {
+        /* not found */
+        return false;
+    }
+    else if (ec != 0)
+    {
+        Log(error_log_level, "Failed to get information about '%s %s' using getent", type, query);
+        return false;
+    }
+
+    char *nl = strchr(buf, '\n');
+    if ((nl != NULL) && (nl < buf + offset) && (strchr(nl + 1, '\n') != NULL))
+    {
+        Log(error_log_level, "Multiple results from 'getent %s %s'", type, query);
+        return false;
+    }
+
+    /* The format is:
+     *   name:password:id:...
+     * (just like /etc/passwd and /etc/group) */
+    char *next_colon = strchr(buf, ':');
+    if (next_colon == NULL)
+    {
+        Log(error_log_level, "Invalid data from 'getent %s %s': %s", type, query, buf);
+        return false;
+    }
+    *next_colon = '\0';
+
+    if (name != NULL)
+    {
+        size_t ret = strlcpy(name, buf, name_size);
+        assert(ret < name_size);
+        if (ret >= name_size)
+        {
+            /* This should never happen, but if it does, it's always an error */
+            Log(LOG_LEVEL_ERR, "Failed to extract info from 'getent %s %s', buffer too small",
+                type, query);
+            return false;
+        }
+    }
+
+    if (id == NULL)
+    {
+        /* We are done. */
+        return true;
+    }
+
+    /* just skip the next field (password) */
+    next_colon = strchr(next_colon + 1, ':');
+    if (next_colon == NULL)
+    {
+        Log(error_log_level, "Invalid data from 'getent %s %s': %s", type, query, buf);
+        return false;
+    }
+    *next_colon = '\0';
+
+    char *id_start = next_colon + 1;
+    next_colon = strchr(id_start, ':');
+    if (next_colon == NULL)
+    {
+        Log(error_log_level, "Invalid data from 'getent %s %s': %s", type, query, buf);
+        return false;
+    }
+    *next_colon = '\0';
+
+    int n_scanned = sscanf(id_start, "%ju", id);
+    if (n_scanned != 1)
+    {
+        Log(error_log_level, "Failed to extract info from 'getent %s %s': unexpected ID data '%s'",
+            type, query, buf);
+        return false;
+    }
+
+    return true;
+}
+
+bool GetUserName(uid_t uid, char *user_name_buf, size_t buf_size, LogLevel error_log_level)
+{
+    char buf[GETPW_R_SIZE_MAX] = {0};
+    struct passwd pwd;
+    struct passwd *result;
+
+    int ret = getpwuid_r(uid, &pwd, buf, GETPW_R_SIZE_MAX, &result);
+    if (result == NULL)
+    {
+        char uid_str[32];       /* len("%d" % (2**64 - 1)) == 20 */
+        NDEBUG_UNUSED int print_ret = snprintf(uid_str, sizeof(uid_str), "%ju", (uintmax_t) uid);
+        assert(print_ret < sizeof(uid_str));
+
+        if (GetUserGroupInfoFromGetent("passwd", uid_str,
+                                       user_name_buf, buf_size, NULL,
+                                       error_log_level))
+        {
+            /* Found by getent. */
+            return true;
+        }
+        else
+        {
+            Log(error_log_level, "Could not get user name for uid %ju, (getpwuid: %s)",
+                (uintmax_t) uid, (ret == 0) ? "not found" : GetErrorStrFromCode(ret));
+            return false;
+        }
+    }
+
+    if ((user_name_buf != NULL) && (buf_size > 0))
+    {
+        ret = strlcpy(user_name_buf, result->pw_name, buf_size);
+        assert(ret < buf_size);
+        if (ret >= buf_size)
+        {
+            /* Should never happen, but if it does, it's definitely an error. */
+            Log(LOG_LEVEL_ERR, "Failed to get user name for uid %ju (buffer too small)",
+                (uintmax_t) uid);
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool GetCurrentUserName(char *userName, int userNameLen)
+{
+    memset(userName, 0, userNameLen);
+    bool success = GetUserName(getuid(), userName, userNameLen, LOG_LEVEL_ERR);
+    if (!success)
+    {
+        strlcpy(userName, "UNKNOWN", userNameLen);
+    }
+
+    return success;
+}
+
+bool GetGroupName(gid_t gid, char *group_name_buf, size_t buf_size, LogLevel error_log_level)
+{
+    char buf[GETGR_R_SIZE_MAX] = {0};
+    struct group grp;
+    struct group *result;
+
+    int ret = getgrgid_r(gid, &grp, buf, GETGR_R_SIZE_MAX, &result);
+    if (result == NULL)
+    {
+        char gid_str[32];       /* len("%d" % (2**64 - 1)) == 20 */
+        NDEBUG_UNUSED int print_ret = snprintf(gid_str, sizeof(gid_str), "%ju", (uintmax_t) gid);
+        assert(print_ret < sizeof(gid_str));
+
+        if (GetUserGroupInfoFromGetent("group", gid_str,
+                                       group_name_buf, buf_size, NULL,
+                                       error_log_level))
+        {
+            /* Found by getent. */
+            return true;
+        }
+        else
+        {
+            Log(error_log_level, "Could not get group name for gid %ju, (getgrgid: %s)",
+                (uintmax_t) gid, (ret == 0) ? "not found" : GetErrorStrFromCode(ret));
+            return false;
+        }
+    }
+
+    if ((group_name_buf != NULL) && (buf_size > 0))
+    {
+        ret = strlcpy(group_name_buf, result->gr_name, buf_size);
+        assert(ret < buf_size);
+        if (ret >= buf_size)
+        {
+            /* Should never happen, but if it does, it's definitely an error. */
+            Log(LOG_LEVEL_ERR, "Failed to get group name for gid %ju (buffer too small)",
+                (uintmax_t) gid);
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool GetUserID(const char *user_name, uid_t *uid, LogLevel error_log_level)
+{
+    char buf[GETPW_R_SIZE_MAX] = {0};
+    struct passwd pwd;
+    struct passwd *result;
+
+    int ret = getpwnam_r(user_name, &pwd, buf, GETPW_R_SIZE_MAX, &result);
+    if (result == NULL)
+    {
+        uintmax_t tmp;
+        if (GetUserGroupInfoFromGetent("passwd", user_name,
+                                       NULL, 0, &tmp,
+                                       error_log_level))
+        {
+            /* Found by getent. */
+            if (uid != NULL)
+            {
+                *uid = (uid_t) tmp;
+            }
+            return true;
+        }
+        else
+        {
+            Log(error_log_level, "Could not get UID for user '%s', (getpwnam: %s)",
+                user_name, (ret == 0) ? "not found" : GetErrorStrFromCode(ret));
+            return false;
+        }
+    }
+
+    if (uid != NULL)
+    {
+        *uid = result->pw_uid;
+    }
+
+    return true;
+}
+
+bool GetGroupID(const char *group_name, gid_t *gid, LogLevel error_log_level)
+{
+    char buf[GETGR_R_SIZE_MAX] = {0};
+    struct group grp;
+    struct group *result;
+
+    int ret = getgrnam_r(group_name, &grp, buf, GETGR_R_SIZE_MAX, &result);
+    if (result == NULL)
+    {
+        uintmax_t tmp;
+        if (GetUserGroupInfoFromGetent("group", group_name,
+                                       NULL, 0, &tmp,
+                                       error_log_level))
+        {
+            /* Found by getent. */
+            if (gid != NULL)
+            {
+                *gid = (gid_t) tmp;
+            }
+            return true;
+        }
+        else
+        {
+            Log(error_log_level, "Could not get GID for group '%s', (getgrnam: %s)",
+                group_name, (ret == 0) ? "not found" : GetErrorStrFromCode(ret));
+            return false;
+        }
+    }
+
+    if (gid != NULL)
+    {
+        *gid = result->gr_gid;
+    }
+
+    return true;
 }
 
 #endif /* !__MINGW32__ */

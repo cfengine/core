@@ -51,6 +51,7 @@
 #include <feature.h>
 #include <evalfunction.h>
 #include <json-utils.h>
+#include <unix.h>               /* GetCurrentUserName() */
 
 #ifdef HAVE_ZONE_H
 # include <zone.h>
@@ -1576,30 +1577,26 @@ static void OSClasses(EvalContext *ctx)
 #endif /* __MINGW32__ */
 
 #ifndef _WIN32
-    struct passwd *pw;
-    if ((pw = getpwuid(getuid())) == NULL)
-    {
-        Log(LOG_LEVEL_ERR, "Unable to get username for uid '%ju'. (getpwuid: %s)", (uintmax_t)getuid(), GetErrorStr());
-    }
-    else
+    char user_name[CF_SMALLBUF];
+    if (GetCurrentUserName(user_name, sizeof(user_name)))
     {
         char vbuff[CF_BUFSIZE];
 
         if (EvalContextClassGet(ctx, NULL, "SUSE"))
         {
-            snprintf(vbuff, CF_BUFSIZE, "/var/spool/cron/tabs/%s", pw->pw_name);
+            snprintf(vbuff, CF_BUFSIZE, "/var/spool/cron/tabs/%s", user_name);
         }
         else if (EvalContextClassGet(ctx, NULL, "redhat"))
         {
-            snprintf(vbuff, CF_BUFSIZE, "/var/spool/cron/%s", pw->pw_name);
+            snprintf(vbuff, CF_BUFSIZE, "/var/spool/cron/%s", user_name);
         }
         else if (EvalContextClassGet(ctx, NULL, "freebsd"))
         {
-            snprintf(vbuff, CF_BUFSIZE, "/var/cron/tabs/%s", pw->pw_name);
+            snprintf(vbuff, CF_BUFSIZE, "/var/cron/tabs/%s", user_name);
         }
         else
         {
-            snprintf(vbuff, CF_BUFSIZE, "/var/spool/cron/crontabs/%s", pw->pw_name);
+            snprintf(vbuff, CF_BUFSIZE, "/var/spool/cron/crontabs/%s", user_name);
         }
 
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "crontab", vbuff, CF_DATA_TYPE_STRING, "source=agent");

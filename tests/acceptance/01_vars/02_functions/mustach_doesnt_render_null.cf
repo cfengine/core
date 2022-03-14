@@ -31,6 +31,7 @@ bundle agent check
 
       "check" usebundle => dcs_check_regcmp("one two three ", $(test.mustache_string), $(this.promise_filename), "no");
 
+  reports:
     DEBUG|EXTRA::
       "Diff string: $(test.diff_string)";
       "Mustache string: $(test.mustache_string)";

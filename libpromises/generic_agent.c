@@ -2565,6 +2565,8 @@ void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config)
 {
     assert(config != NULL);
 
+    EvalContextSetConfig(ctx, config);
+
     if (config->heap_soft)
     {
         StringSetIterator it = StringSetIteratorInit(config->heap_soft);

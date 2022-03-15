@@ -531,8 +531,7 @@ Policy *LoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
             {
                 Log(LOG_LEVEL_VERBOSE,
                     "Running full policy integrity checks");
-                PolicyCheckRunnable(ctx, policy, errors,
-                                    config->ignore_missing_bundles);
+                PolicyCheckRunnable(ctx, policy, errors);
             }
         }
 

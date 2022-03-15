@@ -58,6 +58,7 @@ int Month2Int(const char *string);
 
 // Evalaution conversion
 bool BooleanFromString(const char *val);
+bool StringIsBoolean(const char *val);
 long IntFromString(const char *s);
 bool DoubleFromString(const char *s, double *value_out);
 bool IntegerRangeFromString(const char *intrange, long *min_out, long *max_out);

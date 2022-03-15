@@ -352,31 +352,41 @@ DataType ConstraintSyntaxGetDataType(const ConstraintSyntax *body_syntax, const 
 
 /****************************************************************************/
 
+// Warning: Defaults to true on unexpected (non-bool) input
 bool BooleanFromString(const char *s)
 {
-    Item *list = SplitString(CF_BOOL, ','), *ip;
-    int count = 0;
+    assert(StringEqual(CF_BOOL, "true,false,yes,no,on,off"));
+    assert(s != NULL);
 
-    for (ip = list; ip != NULL; ip = ip->next)
-    {
-        if (strcmp(s, ip->name) == 0)
-        {
-            break;
-        }
-
-        count++;
-    }
-
-    DeleteItemList(list);
-
-    if (count % 2)
+    if (StringEqual(s, "false")
+        || StringEqual(s, "no")
+        || StringEqual(s, "off"))
     {
         return false;
     }
-    else
-    {
-        return true;
-    }
+    // Unnecessary to check here because the default is true anyway:
+    // if (StringEqual(s, "true")
+    //     || StringEqual(s, "yes")
+    //     || StringEqual(s, "on"))
+    // {
+    //     return true;
+    // }
+
+    // Default to true to preserve old behavior:
+    return true;
+}
+
+bool StringIsBoolean(const char *s)
+{
+    assert(StringEqual(CF_BOOL, "true,false,yes,no,on,off"));
+    assert(s != NULL);
+
+    return (StringEqual(s, "true")
+            || StringEqual(s, "false")
+            || StringEqual(s, "yes")
+            || StringEqual(s, "no")
+            || StringEqual(s, "on")
+            || StringEqual(s, "off"));
 }
 
 /****************************************************************************/

@@ -692,7 +692,7 @@ static PromiseResult WriteContentFromString(EvalContext *ctx, const char *path, 
     if (!HashesMatch(existing_content_digest, promised_content_digest, CF_DEFAULT_DIGEST))
     {
         if (!MakingChanges(ctx, pp, attr, &result,
-                          "update content of '%s' with content '%s'",
+                          "update file '%s' with content '%s'",
                            path, attr->content))
         {
             return result;
@@ -709,7 +709,7 @@ static PromiseResult WriteContentFromString(EvalContext *ctx, const char *path, 
         if (WriterWriteLen(w, attr->content, bytes_to_write) == bytes_to_write )
         {
             RecordChange(ctx, pp, attr,
-                         "Updated content of '%s' with content '%s'",
+                         "Updated file '%s' with content '%s'",
                          path, attr->content);
 
             result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
@@ -717,7 +717,7 @@ static PromiseResult WriteContentFromString(EvalContext *ctx, const char *path, 
         else
         {
             RecordFailure(ctx, pp, attr,
-                          "Failed to update content of '%s' with content '%s'",
+                          "Failed to update file '%s' with content '%s'",
                           path, attr->content);
             result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         }

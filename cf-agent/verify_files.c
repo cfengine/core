@@ -662,6 +662,7 @@ static PromiseResult WriteContentFromString(EvalContext *ctx, const char *path, 
 {
     assert(path != NULL);
     assert(attr != NULL);
+    assert(attr->content != NULL);
 
     const char *changes_path = path;
     if (ChrootChanges())
@@ -670,12 +671,6 @@ static PromiseResult WriteContentFromString(EvalContext *ctx, const char *path, 
     }
 
     PromiseResult result = PROMISE_RESULT_NOOP;
-
-    if (attr->content == NULL)
-    {
-        RecordFailure(ctx, pp, attr, "'content' not set for promiser: '%s'", path);
-        return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
-    }
 
     unsigned char existing_content_digest[EVP_MAX_MD_SIZE + 1] = { 0 };
     if (access(changes_path, R_OK) == 0)

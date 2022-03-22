@@ -483,15 +483,15 @@ Acl GetAclConstraints(const EvalContext *ctx, const Promise *pp)
 static FilePerms GetPermissionConstraints(const EvalContext *ctx, const Promise *pp)
 {
     FilePerms p;
-    char *value;
+    char *mode_value;
     Rlist *list;
 
-    value = PromiseGetConstraintAsRval(pp, "mode", RVAL_TYPE_SCALAR);
+    mode_value = PromiseGetConstraintAsRval(pp, "mode", RVAL_TYPE_SCALAR);
 
     p.plus = CF_SAMEMODE;
     p.minus = CF_SAMEMODE;
 
-    if (!ParseModeString(value, &p.plus, &p.minus))
+    if (!ParseModeString(mode_value, &p.plus, &p.minus))
     {
         Log(LOG_LEVEL_ERR, "Problem validating a mode string");
         PromiseRef(LOG_LEVEL_ERR, pp);
@@ -512,14 +512,8 @@ static FilePerms GetPermissionConstraints(const EvalContext *ctx, const Promise 
     p.groups = Rlist2GidList((Rlist *) PromiseGetConstraintAsRval(pp, "groups", RVAL_TYPE_LIST), pp);
 
     p.findertype = PromiseGetConstraintAsRval(pp, "findertype", RVAL_TYPE_SCALAR);
-    p.rxdirs = PromiseGetConstraintAsBoolean(ctx, "rxdirs", pp);
-
-// The default should be true
-
-    if (!PromiseGetConstraintAsRval(pp, "rxdirs", RVAL_TYPE_SCALAR))
-    {
-        p.rxdirs = true;
-    }
+    p.rxdirs = PromiseGetConstraintAsBooleanWithDefault(ctx, "rxdirs", pp,
+                                                        true, (mode_value != NULL));
 
     return p;
 }

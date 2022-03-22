@@ -209,6 +209,8 @@ uid_t PromiseGetConstraintAsUid(const EvalContext *ctx, const char *lval, const 
 gid_t PromiseGetConstraintAsGid(const EvalContext *ctx, char *lval, const Promise *pp);
 Rlist *PromiseGetConstraintAsList(const EvalContext *ctx, const char *lval, const Promise *pp);
 int PromiseGetConstraintAsBoolean(const EvalContext *ctx, const char *lval, const Promise *list);
+int PromiseGetConstraintAsBooleanWithDefault(const EvalContext *ctx, const char *lval, const Promise *pp,
+                                             int default_val, bool with_warning);
 Constraint *PromiseGetConstraintWithType(const Promise *promise, const char *lval, RvalType type);
 Constraint *PromiseGetImmediateConstraint(const Promise *promise, const char *lval);
 void *PromiseGetConstraintAsRval(const Promise *promise, const char *lval, RvalType type);

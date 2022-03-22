@@ -51,9 +51,17 @@ body perms m_rxdirs_off(mode)
 ###############################################################################
 #+begin_src example_output
 #@ ```
+#@  warning: Using the default value 'true' for attribute rxdirs (promiser: /tmp/rxdirs_example/rxdirs=default(true)-r), please set it explicitly
+#@  warning: Using the default value 'true' for attribute rxdirs (promiser: /tmp/rxdirs_example/rxdirs=default(true)-r), please set it explicitly
+#@  warning: Using the default value 'true' for attribute rxdirs (promiser: /tmp/rxdirs_example/rxdirs=default(true)-rx), please set it explicitly
+#@  warning: Using the default value 'true' for attribute rxdirs (promiser: /tmp/rxdirs_example/rxdirs=default(true)-rx), please set it explicitly
 #@ R: /tmp/rxdirs_example/rxdirs=default(true)-r modeoct='40700'
 #@ R: /tmp/rxdirs_example/rxdirs=default(true)-rx modeoct='40700'
 #@ R: /tmp/rxdirs_example/rxdirs=false-r modeoct='40600'
 #@ R: /tmp/rxdirs_example/rxdirs=false-rx modeoct='40700'
+#@  warning: Using the default value 'true' for attribute rxdirs (promiser: /tmp/rxdirs_example/rxdirs=default(true)-r), please set it explicitly
+#@  warning: Using the default value 'true' for attribute rxdirs (promiser: /tmp/rxdirs_example/rxdirs=default(true)-rx), please set it explicitly
+#@  warning: Using the default value 'true' for attribute rxdirs (promiser: /tmp/rxdirs_example/rxdirs=default(true)-r), please set it explicitly
+#@  warning: Using the default value 'true' for attribute rxdirs (promiser: /tmp/rxdirs_example/rxdirs=default(true)-rx), please set it explicitly
 #@ ```
 #+end_example

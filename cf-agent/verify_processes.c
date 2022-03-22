@@ -342,7 +342,22 @@ int DoAllSignals(EvalContext *ctx, Item *siglist, const Attributes *a, const Pro
 
         for (rp = a->signals; rp != NULL; rp = rp->next)
         {
-            int signal = SignalFromString(RlistScalarValue(rp));
+            char *spec = RlistScalarValue(rp);
+
+            int secs;
+            char s;
+            char next;
+            int ret = sscanf(spec, "%d%c%c", &secs, &s, &next);
+            if (((ret == 1) && (secs >= 0)) ||
+                ((ret == 2) && (s == 's') && (secs >= 0)))
+            {
+                /* Some number or some number plus 's' given, and nothing more */
+                sleep(secs);
+                continue;
+            }
+            /* else something else given => consider it a signal name */
+
+            int signal = SignalFromString(spec);
 
             if (!DONTDO)
             {
@@ -355,14 +370,14 @@ int DoAllSignals(EvalContext *ctx, Item *siglist, const Attributes *a, const Pro
                 {
                     cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a,
                          "Couldn't send promised signal '%s' (%d) to pid %jd (might be dead). (kill: %s)",
-                         RlistScalarValue(rp), signal, (intmax_t)pid, GetErrorStr());
+                         spec, signal, (intmax_t)pid, GetErrorStr());
                     failure = true;
                 }
                 else
                 {
                     cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a,
                          "Signalled '%s' (%d) to process %jd (%s)",
-                         RlistScalarValue(rp), signal, (intmax_t) pid, ip->name);
+                         spec, signal, (intmax_t) pid, ip->name);
                     *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
                     failure = false;
                 }
@@ -370,7 +385,7 @@ int DoAllSignals(EvalContext *ctx, Item *siglist, const Attributes *a, const Pro
             else
             {
                 Log(LOG_LEVEL_ERR, "Need to keep signal promise '%s' in process entry '%s'",
-                    RlistScalarValue(rp), ip->name);
+                    spec, ip->name);
             }
         }
     }

@@ -553,7 +553,6 @@ typedef enum
 #define CF_HIGHINIT 999999L
 #define CF_LOWINIT -999999L
 
-#define CF_SIGNALRANGE "hup,int,trap,kill,pipe,cont,abrt,stop,quit,term,child,usr1,usr2,bus,segv"
 #define CF_BOOL      "true,false,yes,no,on,off"
 #define CF_LINKRANGE "symlink,hardlink,relative,absolute"
 #define CF_TIMERANGE "0,2147483647" /* i.e. "0,0x7fffffff" */
@@ -750,25 +749,6 @@ typedef enum
     FILE_CHANGE_REPORT_STATS_CHANGE,
     FILE_CHANGE_REPORT_ALL
 } FileChangeReport;
-
-enum signalnames
-{
-    cfa_hup,
-    cfa_int,
-    cfa_trap,
-    cfa_kill,
-    cfa_pipe,
-    cfa_cont,
-    cfa_abrt,
-    cfa_stop,
-    cfa_quit,
-    cfa_term,
-    cfa_child,
-    cfa_usr1,
-    cfa_usr2,
-    cfa_bus,
-    cfa_segv
-};
 
 typedef enum
 {

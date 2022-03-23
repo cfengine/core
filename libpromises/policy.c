@@ -2544,8 +2544,9 @@ int PromiseGetConstraintAsBooleanWithDefault(const EvalContext *ctx, const char 
         if (with_warning)
         {
             Log(LOG_LEVEL_WARNING,
-                "Using the default value '%s' for attribute %s (promiser: %s), please set it explicitly",
-                default_val ? "true" : "false", lval, pp->promiser);
+                "Using the default value '%s' for attribute %s (promiser: %s, file: %s:%zd), please set it explicitly",
+                default_val ? "true" : "false", lval,
+                pp->promiser, PromiseGetBundle(pp)->source_path, pp->offset.line);
         }
         retval = default_val;
     }

@@ -28,9 +28,6 @@
 #include <cf3.defs.h>
 
 PromiseResult VerifyProcessesPromise(EvalContext *ctx, const Promise *pp);
-
-/* To be implemented in Nova for Win32 */
-
-int DoAllSignals(EvalContext *ctx, Item *siglist, const Attributes *a, const Promise *pp, PromiseResult *result);
+bool DoAllSignals(EvalContext *ctx, Item *siglist, const Attributes *a, const Promise *pp, PromiseResult *result);
 
 #endif

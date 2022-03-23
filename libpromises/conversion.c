@@ -221,56 +221,24 @@ char *Rlist2String(Rlist *list, char *sep)
 
 int SignalFromString(const char *s)
 {
-    int i = 0;
-    Item *ip, *names = SplitString(CF_SIGNALRANGE, ',');
+    char *signal_names[15] = {
+        "hup", "int", "trap", "kill", "pipe", "cont", "abrt", "stop",
+        "quit", "term", "child", "usr1", "usr2", "bus", "segv"
+    };
+    int signals[15] = {
+       SIGHUP, SIGINT, SIGTRAP, SIGKILL, SIGPIPE, SIGCONT, SIGABRT, SIGSTOP,
+       SIGQUIT, SIGTERM, SIGCHLD, SIGUSR1, SIGUSR2, SIGBUS, SIGSEGV
+    };
 
-    for (ip = names; ip != NULL; ip = ip->next)
+    for (size_t i = 0; i < 15; i++)
     {
-        if (strcmp(s, ip->name) == 0)
+        if (StringEqual(s, signal_names[i]))
         {
-            break;
+            return signals[i];
         }
-        i++;
     }
 
-    DeleteItemList(names);
-
-    switch (i)
-    {
-    case cfa_hup:
-        return SIGHUP;
-    case cfa_int:
-        return SIGINT;
-    case cfa_trap:
-        return SIGTRAP;
-    case cfa_kill:
-        return SIGKILL;
-    case cfa_pipe:
-        return SIGPIPE;
-    case cfa_cont:
-        return SIGCONT;
-    case cfa_abrt:
-        return SIGABRT;
-    case cfa_stop:
-        return SIGSTOP;
-    case cfa_quit:
-        return SIGQUIT;
-    case cfa_term:
-        return SIGTERM;
-    case cfa_child:
-        return SIGCHLD;
-    case cfa_usr1:
-        return SIGUSR1;
-    case cfa_usr2:
-        return SIGUSR2;
-    case cfa_bus:
-        return SIGBUS;
-    case cfa_segv:
-        return SIGSEGV;
-    default:
-        return -1;
-    }
-
+    return -1;
 }
 
 ContextScope ContextScopeFromString(const char *scope_str)

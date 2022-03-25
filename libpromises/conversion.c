@@ -1104,8 +1104,16 @@ uid_t Str2Uid(const char *uidbuff, char *usercopy, const Promise *pp)
 
     if (StringIsNumeric(uidbuff))
     {
+#ifdef __hpux
+        /* sscanf("0", "%ju", &tmp) with 'uintmax_t' fails, 'int' and '%d' work */
+        int tmp;
+        NDEBUG_UNUSED int ret = sscanf(uidbuff, "%d", &tmp);
+        assert(ret == 1);
+#else
         uintmax_t tmp;
-        sscanf(uidbuff, "%ju", &tmp);
+        NDEBUG_UNUSED int ret = sscanf(uidbuff, "%ju", &tmp);
+        assert(ret == 1);
+#endif
         return (uid_t) tmp;
     }
 
@@ -1175,8 +1183,16 @@ gid_t Str2Gid(const char *gidbuff, char *groupcopy, const Promise *pp)
 
     if (StringIsNumeric(gidbuff))
     {
+#ifdef __hpux
+        /* sscanf("0", "%ju", &tmp) with 'uintmax_t' fails, 'int' and '%d' work */
+        int tmp;
+        NDEBUG_UNUSED int ret = sscanf(gidbuff, "%d", &tmp);
+        assert(ret == 1);
+#else
         uintmax_t tmp;
-        sscanf(gidbuff, "%ju", &tmp);
+        NDEBUG_UNUSED int ret = sscanf(gidbuff, "%ju", &tmp);
+        assert(ret == 1);
+#endif
         return (gid_t) tmp;
     }
 

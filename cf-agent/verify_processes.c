@@ -182,15 +182,11 @@ static PromiseResult VerifyProcessOp(EvalContext *ctx, const Attributes *a, cons
 {
     assert(a != NULL);
     assert(pp != NULL);
-    bool do_signals = true;
-    int out_of_range;
-    int killed = 0;
-    bool need_to_restart = true;
-    Item *killlist = NULL;
 
-    int matches = FindPidMatches(&killlist, a, pp->promiser);
+    Item *matched_procs = NULL;
+    int matches = FindPidMatches(&matched_procs, a, pp->promiser);
 
-/* promise based on number of matches */
+    /* promise based on number of matches */
 
     PromiseResult result = PROMISE_RESULT_NOOP;
     if (a->process_count.min_range != CF_NOINT)  /* if a range is specified */
@@ -203,7 +199,6 @@ static PromiseResult VerifyProcessOp(EvalContext *ctx, const Attributes *a, cons
             {
                 ProcessCountMaybeDefineClass(ctx, rp, pp, "out_of_range_define");
             }
-            out_of_range = true;
         }
         else
         {
@@ -212,32 +207,20 @@ static PromiseResult VerifyProcessOp(EvalContext *ctx, const Attributes *a, cons
                 ProcessCountMaybeDefineClass(ctx, rp, pp, "in_range_define");
             }
             cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Process promise for '%s' is kept", pp->promiser);
-            out_of_range = false;
+            DeleteItemList(matched_procs);
+            return result;
         }
     }
-    else
-    {
-        out_of_range = true;
-    }
 
-    if (!out_of_range)
+    bool do_signals = (a->transaction.action != cfa_warn);
+    if (!do_signals)
     {
-        DeleteItemList(killlist);
-        return result;
-    }
-
-    if (a->transaction.action == cfa_warn)
-    {
-        do_signals = false;
         result = PromiseResultUpdate(result, PROMISE_RESULT_WARN);
     }
-    else
-    {
-        do_signals = true;
-    }
 
-/* signal/kill promises for existing matches */
+    /* signal/kill promises for existing matches */
 
+    bool killed = false;
     if (do_signals && (matches > 0))
     {
         if (a->process_stop != NULL)
@@ -275,21 +258,19 @@ static PromiseResult VerifyProcessOp(EvalContext *ctx, const Attributes *a, cons
                          "Process promise to stop '%s' could not be kept because '%s' is not executable",
                          pp->promiser, a->process_stop);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
-                    DeleteItemList(killlist);
+                    DeleteItemList(matched_procs);
                     return result;
                 }
             }
         }
 
-        killed = DoAllSignals(ctx, killlist, a, pp, &result);
+        killed = DoAllSignals(ctx, matched_procs, a, pp, &result);
     }
+    DeleteItemList(matched_procs);
 
-/* delegated promise to restart killed or non-existent entries */
+    /* delegated promise to restart killed or non-existent entries */
 
-    need_to_restart = (a->restart_class != NULL) && (killed || (matches == 0));
-
-    DeleteItemList(killlist);
-
+    bool need_to_restart = (a->restart_class != NULL) && (killed || (matches == 0));
     if (!need_to_restart)
     {
         cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "No restart promised for %s", pp->promiser);
@@ -317,32 +298,47 @@ static PromiseResult VerifyProcessOp(EvalContext *ctx, const Attributes *a, cons
 }
 
 #ifndef __MINGW32__
-int DoAllSignals(EvalContext *ctx, Item *siglist, const Attributes *a, const Promise *pp, PromiseResult *result)
+bool DoAllSignals(EvalContext *ctx, Item *procs_to_signal, const Attributes *a, const Promise *pp, PromiseResult *result)
 {
     Item *ip;
     Rlist *rp;
     pid_t pid;
-    int killed = false;
+    bool killed = false;
     bool failure = false;
 
-    if (siglist == NULL)
+    if (procs_to_signal == NULL)
     {
-        return 0;
+        return false;
     }
 
     if (a->signals == NULL)
     {
         Log(LOG_LEVEL_VERBOSE, "No signals to send for '%s'", pp->promiser);
-        return 0;
+        return false;
     }
 
-    for (ip = siglist; ip != NULL; ip = ip->next)
+    for (ip = procs_to_signal; ip != NULL; ip = ip->next)
     {
         pid = ip->counter;
 
         for (rp = a->signals; rp != NULL; rp = rp->next)
         {
-            int signal = SignalFromString(RlistScalarValue(rp));
+            char *spec = RlistScalarValue(rp);
+
+            int secs;
+            char s;
+            char next;
+            int ret = sscanf(spec, "%d%c%c", &secs, &s, &next);
+            if (((ret == 1) && (secs >= 0)) ||
+                ((ret == 2) && (s == 's') && (secs >= 0)))
+            {
+                /* Some number or some number plus 's' given, and nothing more */
+                sleep(secs);
+                continue;
+            }
+            /* else something else given => consider it a signal name */
+
+            int signal = SignalFromString(spec);
 
             if (!DONTDO)
             {
@@ -355,14 +351,14 @@ int DoAllSignals(EvalContext *ctx, Item *siglist, const Attributes *a, const Pro
                 {
                     cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a,
                          "Couldn't send promised signal '%s' (%d) to pid %jd (might be dead). (kill: %s)",
-                         RlistScalarValue(rp), signal, (intmax_t)pid, GetErrorStr());
+                         spec, signal, (intmax_t)pid, GetErrorStr());
                     failure = true;
                 }
                 else
                 {
                     cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a,
                          "Signalled '%s' (%d) to process %jd (%s)",
-                         RlistScalarValue(rp), signal, (intmax_t) pid, ip->name);
+                         spec, signal, (intmax_t) pid, ip->name);
                     *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
                     failure = false;
                 }
@@ -370,7 +366,7 @@ int DoAllSignals(EvalContext *ctx, Item *siglist, const Attributes *a, const Pro
             else
             {
                 Log(LOG_LEVEL_ERR, "Need to keep signal promise '%s' in process entry '%s'",
-                    RlistScalarValue(rp), ip->name);
+                    spec, ip->name);
             }
         }
     }

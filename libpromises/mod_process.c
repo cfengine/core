@@ -72,7 +72,8 @@ static const ConstraintSyntax processes_constraints[] =
     ConstraintSyntaxNewString("process_stop", CF_ABSPATHRANGE, "A command used to stop a running process", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("restart_class", CF_IDRANGE,
      "A class to be defined globally if the process is not running, so that a command: rule can be referred to restart the process", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewOptionList("signals", CF_SIGNALRANGE, "A list of menu options representing signals to be sent to a process", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("signals", "(hup|int|trap|kill|pipe|cont|abrt|stop|quit|term|child|usr1|usr2|bus|segv|[0-9]+s?)",
+                                  "A list of strings representing signals to be sent to a process or sleep periods", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

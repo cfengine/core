@@ -574,8 +574,9 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
         }
         else
         {
-            RecordFailure(ctx, pp, &a, "Promised to edit '%s', but file does not exist", path);
-            result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+            Log(LOG_LEVEL_VERBOSE,
+                "Cannot render file '%s': file does not exist", path);
+            goto exit;
         }
     }
 

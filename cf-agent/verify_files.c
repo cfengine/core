@@ -559,16 +559,8 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
 
     if (a.haveedit)
     {
-        /* Files promises that promise full file content - like the template
-         * methods 'mustache' and 'inline_mustache' - are exeptions to the
-         * normal behaviour related to the 'create' attribute. Instead we have
-         * the following behaviour:
-         *  - If `create => "true"` is specified; the file is created even
-         *    though rendering fails.
-         *  - If `create => "false"` is specified; the file is never created.
-         *  - If not specified; the file is created by default, but only upon
-         *    successful rendering.
-         */
+        /* Files promises that promise full file content shall create files by
+         * default, unless `create => "false"` is specified. */
         if (exists ||
             ((StringEqual(a.template_method, "mustache") ||
               StringEqual(a.template_method, "inline_mustache")) &&

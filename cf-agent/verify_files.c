@@ -563,7 +563,8 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
          * default, unless `create => "false"` is specified. */
         if (exists ||
             ((StringEqual(a.template_method, "mustache") ||
-              StringEqual(a.template_method, "inline_mustache")) &&
+              StringEqual(a.template_method, "inline_mustache") ||
+              StringEqual(a.template_method, "cfengine")) &&
              !CreateFalseWasSpecified(pp)))
         {
             result = PromiseResultUpdate(result, ScheduleEditOperation(ctx,
@@ -722,10 +723,14 @@ static PromiseResult WriteContentFromString(EvalContext *ctx, const char *path, 
 
 /*****************************************************************************/
 
-static PromiseResult RenderTemplateCFEngine(EvalContext *ctx, const Promise *pp,
-                                            const Rlist *bundle_args, const Attributes *attr,
-                                            EditContext *edcontext)
+static PromiseResult RenderTemplateCFEngine(EvalContext *ctx,
+                                            const Promise *pp,
+                                            const Rlist *bundle_args,
+                                            const Attributes *attr,
+                                            EditContext *edcontext,
+                                            bool file_exists)
 {
+    assert(edcontext != NULL);
     assert(attr != NULL);
     Attributes a = *attr; // TODO: Try to remove this copy
     PromiseResult result = PROMISE_RESULT_NOOP;
@@ -734,6 +739,15 @@ static PromiseResult RenderTemplateCFEngine(EvalContext *ctx, const Promise *pp,
     Bundle *bp = NULL;
     if ((bp = MakeTemporaryBundleFromTemplate(ctx, tmp_policy, &a, pp, &result)))
     {
+        if (!file_exists && !CfCreateFile(ctx, edcontext->changes_filename,
+                                          pp, attr, &result))
+        { 
+            RecordFailure(ctx, pp, attr,
+                          "Failed to create file '%s' for rendering cfengine template '%s'",
+                          edcontext->filename, attr->edit_template);
+            return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+        }
+
         a.haveeditline = true;
 
         EvalContextStackPushBundleFrame(ctx, bp, bundle_args, a.edits.inherit);
@@ -1049,7 +1063,10 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename,
             Log(LOG_LEVEL_VERBOSE, "Rendering '%s' using template '%s' with method '%s'",
                 filename, a->edit_template, a->template_method);
 
-            PromiseResult render_result = RenderTemplateCFEngine(ctx, pp, args, a, edcontext);
+            PromiseResult render_result = RenderTemplateCFEngine(ctx, pp,
+                                                                 args, a,
+                                                                 edcontext,
+                                                                 file_exists);
             result = PromiseResultUpdate(result, render_result);
         }
     }

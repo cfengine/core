@@ -1,0 +1,126 @@
+##############################################################################
+#
+# template_method cfengine should create files by default, unless
+# `create => "false"` is specified.
+#
+##############################################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+##############################################################################
+
+bundle agent init
+{
+  vars:
+      "range"
+        slist => { expandrange("[1-4]", 1) };
+
+  files:
+      "$(G.testfile).test_$(range)"
+        delete => tidy;
+
+      "$(G.testfile).test_5"
+        create => "true";
+
+      "$(G.testfile).valid_template"
+        content => "[%CFEngine BEGIN %]
+I have $(const.dollar)(sys.cpus) CPU's!
+[%CFEngine END %]
+";
+
+      "$(G.testfile).invalid_template"
+        content => "[%CFEngine BEGIN %]
+I have $(const.dollar)(sys.cpus) CPU's!
+[%CFEngine END %)
+";
+}
+
+##############################################################################
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-3955" }
+        string => "template_method cfengine creates promiser by default";
+
+  files:
+    # File should be created by default and rendered with content
+      "$(G.testfile).test_1"
+        template_method => "cfengine",
+        edit_template => "$(G.testfile).valid_template",
+        if => fileexists("$(G.testfile).valid_template");
+
+    # File should not be created due to invalid template
+      "$(G.testfile).test_2"
+        template_method => "cfengine",
+        edit_template => "$(G.testfile).invalid_template",
+        if => fileexists("$(G.testfile).invalid_template");
+
+    # File should be created even though template is invalid
+      "$(G.testfile).test_3"
+        create => "true",
+        template_method => "cfengine",
+        edit_template => "$(G.testfile).invalid_template",
+        if => fileexists("$(G.testfile).invalid_template");
+
+    # File should not be created even though template is valid
+      "$(G.testfile).test_4"
+        create => "false",
+        template_method => "cfengine",
+        edit_template => "$(G.testfile).valid_template",
+        if => fileexists("$(G.testfile).valid_template");
+
+    # File should be rendered with content, since it already exists
+      "$(G.testfile).test_5"
+        create => "false",
+        template_method => "cfengine",
+        edit_template => "$(G.testfile).valid_template",
+        if => fileexists("$(G.testfile).valid_template");
+}
+
+##############################################################################
+
+bundle agent check
+{
+  vars:
+    # Get lists of successful / failed checks so we can report them
+      "checks"
+        slist => { expandrange("check_[1-5]", 1) };
+      "successful_checks"
+        slist => sort(classesmatching("check_[1-5]"), "lex");
+      "failed_checks"
+        slist => sort(difference("checks", "successful_checks"), "lex");
+
+  classes:
+      "check_1"
+        expression => regcmp("I have [0-9]+ CPU's!",
+                             readfile("$(G.testfile).test_1")),
+        if => fileexists("$(G.testfile).test_1");
+      "check_2"
+        expression => not(fileexists("$(G.testfile).test_2"));
+      "check_3"
+        expression => fileexists("$(G.testfile).test_3");
+      "check_4"
+        expression => not(fileexists("$(G.testfile).test_4"));
+      "check_5"
+        expression => regcmp("I have [0-9]+ CPU's!",
+                             readfile("$(G.testfile).test_5")),
+        if => fileexists("$(G.testfile).test_5");
+      "ok"
+        expression => and("check_1", "check_2", "check_3", "check_4",
+                          "check_5");
+
+  reports:
+    DEBUG::
+      "'$(successful_checks)' succeded!";
+      "'$(failed_checks)' failed!";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

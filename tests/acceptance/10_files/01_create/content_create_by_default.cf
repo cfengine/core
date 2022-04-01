@@ -1,0 +1,110 @@
+##############################################################################
+#
+# content files promises shall create files by default unless `create =>
+# "false"` is specified.
+#
+##############################################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+##############################################################################
+
+bundle agent init
+{
+  vars:
+      "delete_range"
+        slist => { expandrange("[1-3]", 1) };
+      "create_range"
+        slist => { expandrange("[4-6]", 1) };
+
+  files:
+      "$(G.testfile)_$(delete_range)"
+        delete => tidy;
+      "$(G.testfile)_$(create_range)"
+        create => "true";
+}
+
+##############################################################################
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-3916" }
+        string => "files with content attribute shall create promiser by default";
+
+  files:
+    # File should be created by default
+      "$(G.testfile)_1"
+        content => "Hello World!";
+
+      "$(G.testfile)_2"
+        create => "true",
+        content => "Hello World!";
+
+      "$(G.testfile)_3"
+        create => "false",
+        content => "Hello World!";
+
+      "$(G.testfile)_4"
+        content => "Hello World!";
+
+      "$(G.testfile)_5"
+        create => "true",
+        content => "Hello World!";
+
+      "$(G.testfile)_6"
+        create => "false",
+        content => "Hello World!";
+}
+
+##############################################################################
+
+bundle agent check
+{
+  vars:
+    # Get lists of successful / failed checks so we can report them
+      "checks"
+        slist => { expandrange("check_[1-6]", 1) };
+      "successful_checks"
+        slist => sort(classesmatching("check_[1-6]"), "lex");
+      "failed_checks"
+        slist => sort(difference("checks", "successful_checks"), "lex");
+
+  classes:
+      "check_1"
+        expression => strcmp(readfile("$(G.testfile)_1"), "Hello World!"),
+        if => fileexists("$(G.testfile)_1");
+      "check_2"
+        expression => strcmp(readfile("$(G.testfile)_2"), "Hello World!"),
+        if => fileexists("$(G.testfile)_2");
+      "check_3"
+        expression => not(fileexists("$(G.testfile)_3"));
+      "check_4"
+        expression => strcmp(readfile("$(G.testfile)_4"), "Hello World!"),
+        if => fileexists("$(G.testfile)_4");
+      "check_5"
+        expression => strcmp(readfile("$(G.testfile)_5"), "Hello World!"),
+        if => fileexists("$(G.testfile)_5");
+      "check_6"
+        expression => strcmp(readfile("$(G.testfile)_6"), "Hello World!"),
+        if => fileexists("$(G.testfile)_6");
+      "ok"
+        expression => and("check_1", "check_2", "check_3", "check_4",
+                          "check_5", "check_6");
+
+  methods:
+    "Pass/Fail"
+      usebundle => dcs_passif("ok", $(this.promise_filename)),
+      inherit => "true"; # We want dcs_passif to inhert bundle scoped classes from our check bundle
+    
+  reports:
+    DEBUG::
+      "'$(successful_checks)' succeded!";
+      "'$(failed_checks)' failed!";
+
+}

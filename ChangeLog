@@ -455,7 +455,7 @@
 	  and install cfengine packages as well as bootstrapping etc.
 	  At this point, cf-remote is not packaged with CFEngine, but can be
 	  installed separately from:
-	  https://github.com/cfengine/core/tree/master/contrib/cf-remote
+	  https://github.com/cfengine/cf-remote
 	  (CFE-2889)
 	- Added derived-from-file tags to hard classes based on /etc/debian_version and /etc/issue
 	- Added a function to filter CSV-files by classes (CFE-2768)

@@ -575,19 +575,12 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
 
     if (a.haveedit)
     {
-        /* Files promises that promise full file content - like the template
-         * methods 'mustache' and 'inline_mustache' - are exeptions to the
-         * normal behaviour related to the 'create' attribute. Instead we have
-         * the following behaviour:
-         *  - If `create => "true"` is specified; the file is created even
-         *    though rendering fails.
-         *  - If `create => "false"` is specified; the file is never created.
-         *  - If not specified; the file is created by default, but only upon
-         *    successful rendering.
-         */
+        /* Files promises that promise full file content shall create files by
+         * default, unless `create => "false"` is specified. */
         if (exists ||
             ((StringEqual(a.template_method, "mustache") ||
-              StringEqual(a.template_method, "inline_mustache")) &&
+              StringEqual(a.template_method, "inline_mustache") ||
+              StringEqual(a.template_method, "cfengine")) &&
              !CreateFalseWasSpecified(pp)))
         {
             result = PromiseResultUpdate(result, ScheduleEditOperation(ctx,
@@ -598,8 +591,9 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
         }
         else
         {
-            RecordFailure(ctx, pp, &a, "Promised to edit '%s', but file does not exist", path);
-            result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+            Log(LOG_LEVEL_VERBOSE,
+                "Cannot render file '%s': file does not exist", path);
+            goto exit;
         }
     }
 
@@ -740,10 +734,14 @@ static PromiseResult WriteContentFromString(EvalContext *ctx, const char *path, 
 
 /*****************************************************************************/
 
-static PromiseResult RenderTemplateCFEngine(EvalContext *ctx, const Promise *pp,
-                                            const Rlist *bundle_args, const Attributes *attr,
-                                            EditContext *edcontext)
+static PromiseResult RenderTemplateCFEngine(EvalContext *ctx,
+                                            const Promise *pp,
+                                            const Rlist *bundle_args,
+                                            const Attributes *attr,
+                                            EditContext *edcontext,
+                                            bool file_exists)
 {
+    assert(edcontext != NULL);
     assert(attr != NULL);
     Attributes a = *attr; // TODO: Try to remove this copy
     PromiseResult result = PROMISE_RESULT_NOOP;
@@ -752,6 +750,15 @@ static PromiseResult RenderTemplateCFEngine(EvalContext *ctx, const Promise *pp,
     Bundle *bp = NULL;
     if ((bp = MakeTemporaryBundleFromTemplate(ctx, tmp_policy, &a, pp, &result)))
     {
+        if (!file_exists && !CfCreateFile(ctx, edcontext->changes_filename,
+                                          pp, attr, &result))
+        { 
+            RecordFailure(ctx, pp, attr,
+                          "Failed to create file '%s' for rendering cfengine template '%s'",
+                          edcontext->filename, attr->edit_template);
+            return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+        }
+
         a.haveeditline = true;
 
         EvalContextStackPushBundleFrame(ctx, bp, bundle_args, a.edits.inherit);
@@ -1067,7 +1074,10 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename,
             Log(LOG_LEVEL_VERBOSE, "Rendering '%s' using template '%s' with method '%s'",
                 filename, a->edit_template, a->template_method);
 
-            PromiseResult render_result = RenderTemplateCFEngine(ctx, pp, args, a, edcontext);
+            PromiseResult render_result = RenderTemplateCFEngine(ctx, pp,
+                                                                 args, a,
+                                                                 edcontext,
+                                                                 file_exists);
             result = PromiseResultUpdate(result, render_result);
         }
     }

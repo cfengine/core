@@ -1949,6 +1949,18 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
 
 static void BannerStatus(PromiseResult status, const char *type, char *name)
 {
+    char handle[CF_MAXVARSIZE];
+    const char *sp;
+
+    if ((sp = PromiseGetHandle(pp)) || (sp = PromiseID(pp)))
+      {
+        strlcpy(handle, sp, CF_MAXVARSIZE);
+      }
+    else
+      {
+        strcpy(handle, "");
+      }
+
     if ((strcmp(type, "vars") == 0) || (strcmp(type, "classes") == 0))
     {
         return;
@@ -1982,9 +1994,19 @@ static void BannerStatus(PromiseResult status, const char *type, char *name)
         break;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "P: END %s promise (%.30s%s)",
-        type, name,
-        (strlen(name) > 30) ? "..." : "");
+
+    if (strlen(handle) > 0)
+    {
+        Log(LOG_LEVEL_VERBOSE, "P: END promise '%s' of type \"%s\" (pass %d)",
+            handle, PromiseGetPromiseType(pp), EvalContextGetPass(ctx));
+    }
+    else
+    {
+        Log(LOG_LEVEL_VERBOSE, "P: END promise '%s' (un-named) of type \"%s\" (pass %d)",
+            name, PromiseGetPromiseType(pp), EvalContextGetPass(ctx));
+    }
+
+
 }
 
 /*********************************************************************/

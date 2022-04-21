@@ -29,6 +29,10 @@ ProtocolVersion ParseProtocolVersionPolicy(const char *const s)
     {
         return CF_PROTOCOL_TLS;
     }
+    else if (StringEqual(s, "3") || StringEqual(s, "cookie"))
+      {
+        return CF_PROTOCOL_COOKIE;
+    }
     else if (StringEqual(s, "latest"))
     {
         return CF_PROTOCOL_LATEST;

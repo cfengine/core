@@ -1452,7 +1452,6 @@ typedef struct
     char *service_policy;
     char *service_autostart_policy;
     char *service_depend_chain;
-    FnCall *service_method;
 } Services;
 
 /*************************************************************************/

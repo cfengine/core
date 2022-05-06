@@ -325,7 +325,7 @@ static const ConstraintSyntax copy_from_constraints[] =
     ConstraintSyntaxNewBool("trustkey", "true/false trust public keys from remote server if previously unknown. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("type_check", "true/false compare file types before copying and require match", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("verify", "true/false verify transferred file by hashing after copy (resource penalty). Default value: false", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewOption("protocol_version", "0,undefined,1,classic,2,latest", "CFEngine protocol version to use when connecting to the server. Default: undefined", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("protocol_version", "1,classic,2,tls,3,cookie,latest", "CFEngine protocol version to use when connecting to the server. Default: undefined", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("missing_ok", "true/false Do not treat missing file as an error. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };

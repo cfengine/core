@@ -1,0 +1,10 @@
+{
+    "variables": {
+        "default:def.my_var": "Set by variables key",
+        "in_variables": "Only in variables"
+    },
+    "vars": {
+        "my_var": "Set by vars key",
+        "in_vars": "Only in vars"
+    }
+}

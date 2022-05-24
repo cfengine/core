@@ -786,6 +786,30 @@ static CfLock CfLockNull(void)
     };
 }
 
+// returns true if pid points to a cfenbgine process
+static bool is_cfengine_process(const int pid)
+{
+    char* cmd = (char*)xcalloc(1024,sizeof(char));
+    if(cmd){
+        sprintf(cmd, "/proc/%d/cmdline",pid);
+        FILE* f = fopen(cmd,"r");
+        if(f){
+            size_t size;
+            size = fread(cmd, sizeof(char), 1024, f);
+            if(size>0){
+                if('\n'==cmd[size-1])
+                    cmd[size-1]='\0';
+            }
+            fclose(f);
+            // cmd contains the process command path
+            char *name = basename(cmd);
+            return (strncmp("cf-", name, 3) == 0);
+        }
+    }
+    // assume true if we don't know
+    return true;
+}
+
 CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host,
                    time_t now, int ifelapsed, int expireafter, const Promise *pp,
                    bool ignoreProcesses)
@@ -903,15 +927,23 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host,
                     "Lock expired after %jd/%u minutes: %s",
                     (intmax_t) elapsedtime, expireafter, cflock);
 
-                if (KillLockHolder(cflock))
+                if (is_cfengine_process(cflock.pid))
                 {
-                    Log(LOG_LEVEL_VERBOSE,
-                        "Lock successfully expired: %s", cflock);
-                    unlink(cflock);
+                    Log(LOG_LEVEL_INFO,
+                        "Lock holder disappeared");
                 }
                 else
                 {
-                    Log(LOG_LEVEL_ERR, "Failed to expire lock: %s", cflock);
+                    if (KillLockHolder(cflock))
+                    {
+                        Log(LOG_LEVEL_VERBOSE,
+                            "Lock successfully expired: %s", cflock);
+                        unlink(cflock);
+                    }
+                    else
+                    {
+                        Log(LOG_LEVEL_ERR, "Failed to expire lock: %s", cflock);
+                    }
                 }
             }
             else

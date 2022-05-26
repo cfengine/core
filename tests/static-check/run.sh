@@ -4,12 +4,10 @@ set -e
 trap "echo FAILURE" ERR
 
 if [ -z "$STATIC_CHECKS_FEDORA_VERSION" ]; then
-  # Fedora 33 is the default because it works with old container runtimes
-  # (see https://bugzilla.redhat.com/show_bug.cgi?id=1962080 and linked bugs for
-  # details)
-  echo "No Fedora version for static checks specified, using the default (Fedora 33)"
-  BASE_IMG="fedora:33"
-  STATIC_CHECKS_FEDORA_VERSION="33"
+  default_f_ver="36"
+  echo "No Fedora version for static checks specified, using the default (Fedora $default_f_ver)"
+  BASE_IMG="fedora:$default_f_ver"
+  STATIC_CHECKS_FEDORA_VERSION="$default_f_ver"
 else
   BASE_IMG="fedora:$STATIC_CHECKS_FEDORA_VERSION"
 fi

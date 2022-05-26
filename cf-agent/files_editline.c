@@ -1167,9 +1167,6 @@ static bool DeletePromisedLinesMatching(EvalContext *ctx, Item **start, Item *be
                     }
 
                     np = ip->next;
-                    free((char *) ip);
-
-                    lp = ip;
 
                     if (ip == *start)
                     {
@@ -1192,6 +1189,7 @@ static bool DeletePromisedLinesMatching(EvalContext *ctx, Item **start, Item *be
 
                         lp->next = np;
                     }
+                    free((char *) ip);
 
                     (edcontext->num_edits)++;
 

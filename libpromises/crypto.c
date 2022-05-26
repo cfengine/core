@@ -47,10 +47,7 @@
 #endif
 
 #if OPENSSL_VERSION_NUMBER < 0x10100000
-/* The deprecated is the easy way to setup threads for OpenSSL. */
-#ifdef OPENSSL_NO_DEPRECATED
 void CRYPTO_set_id_callback(unsigned long (*func)(void));
-#endif
 #endif
 
 static void RandomSeed(void);

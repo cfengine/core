@@ -120,7 +120,7 @@ void RemoteSysLog(int log_priority, const char *log_string)
             snprintf(
                 message,
                 sizeof(message),
-                "<%i>%.15s %s %s[%ld]: %s",
+                "<%i>%.15s %.256s %.256s[%ld]: %s",
                 (log_priority | SYSLOG_FACILITY),
                 (cf_strtimestamp_local(now, timebuffer) + 4), // Skips day str
                 VFQNAME,

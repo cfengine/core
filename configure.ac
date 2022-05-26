@@ -475,6 +475,8 @@ CF3_WITH_LIBRARY(openssl, [
       AC_MSG_ERROR(Cannot find OpenSSL)
    fi
 
+   AC_DEFINE([OPENSSL_SUPPRESS_DEPRECATED], [1], [Suppress deprecation warnings from OpenSSL 3])
+
    AC_CHECK_DECL([SSL_OP_NO_TLSv1_1],
     [AC_DEFINE([HAVE_TLS_1_1], [1], [Define if TLS 1.1 is supported by OpenSSL])],
     [], [[#include <openssl/ssl.h>]]

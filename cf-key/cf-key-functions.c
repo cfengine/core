@@ -315,7 +315,6 @@ bool KeepKeyPromises(const char *public_key_file, const char *private_key_file, 
 
     Log(LOG_LEVEL_INFO, "Making a key pair for CFEngine, please wait, this could take a minute...");
 
-#ifdef OPENSSL_NO_DEPRECATED
     RSA *pair = RSA_new();
     BIGNUM *rsa_bignum = BN_new();
     if (pair != NULL && rsa_bignum != NULL)
@@ -334,10 +333,6 @@ bool KeepKeyPromises(const char *public_key_file, const char *private_key_file, 
 
     BN_clear_free(rsa_bignum);
 
-#else
-    RSA *pair = RSA_generate_key(key_size, 65537, NULL, NULL);
-
-#endif
     if (pair == NULL)
     {
         Log(LOG_LEVEL_ERR, "Unable to generate cryptographic key (RSA_generate_key: %s)",

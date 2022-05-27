@@ -1,0 +1,189 @@
+<?xml version="1.0"?>
+<web-app xmlns="http://java.sun.com/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
+                http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+         version="3.0"
+         metadata-complete="true">
+    <!-- General -->
+    <display-name>Atlassian JIRA Web Application</display-name>
+    <description>The Atlassian JIRA web application - see http://www.atlassian.com/software/jira for more information
+    </description>
+
+    <absolute-ordering />
+
+
+    <!-- Filters -->
+
+    <!-- Special filters that must come at the beginning of the chain because they prevent
+         all other filters from running.  This is to prevent those later filters from doing
+         lookups in Pico, which could alter the order in which it instantiates components
+         and thereby trigger a deadlock. -->
+    <filter>
+        <filter-name>JiraImportProgressFilter</filter-name>
+        <filter-class>com.atlassian.jira.web.filters.JiraImportProgressFilter</filter-class>
+    </filter>
+
+    <filter>
+        <filter-name>SetupProgressFilter</filter-name>
+        <filter-class>com.atlassian.jira.web.filters.SetupProgressFilter</filter-class>
+    </filter>
+
+    <filter>
+        <filter-name>StartupProgressFilter</filter-name>
+        <filter-class>com.atlassian.jira.web.filters.StartupProgressFilter</filter-class>
+    </filter>
+
+    <!-- =====================================================
+         THIS MUST BE THE FIRST FILTER IN THE NORMAL FILTER CHAIN
+         ===================================================== -->
+    <filter>
+        <filter-name>JiraFirstFilter</filter-name>
+        <filter-class>com.atlassian.jira.web.filters.JiraFirstFilter</filter-class>
+    </filter>
+
+    <filter>
+        <filter-name>MetricsCollectorFilter</filter-name>
+        <filter-class>com.atlassian.jira.servermetrics.MetricsCollectorFilter</filter-class>
+    </filter>
+
+    <filter>
+        <filter-name>MultipartBoundaryCheckFilter</filter-name>
+        <filter-class>com.atlassian.jira.web.filters.MultipartBoundaryCheckFilter</filter-class>
+    </filter>
+
+    <filter>
+        <filter-name>filter-plugin-dispatcher-before-dispatch-include</filter-name>
+        <filter-class>com.atlassian.plugin.servlet.filter.ServletFilterModuleContainerFilter</filter-class>
+        <init-param>
+            <param-name>location</param-name>
+            <param-value>before-dispatch</param-value>
+        </init-param>
+        <init-param>
+            <param-name>dispatcher</param-name>
+            <param-value>INCLUDE</param-value>
+        </init-param>
+    </filter>
+
+    <filter>
+        <filter-name>filter-plugin-dispatcher-before-dispatch-error</filter-name>
+        <filter-class>com.atlassian.plugin.servlet.filter.ServletFilterModuleContainerFilter</filter-class>
+        <init-param>
+            <param-name>location</param-name>
+            <param-value>before-dispatch</param-value>
+        </init-param>
+        <init-param>
+            <param-name>dispatcher</param-name>
+            <param-value>ERROR</param-value>
+        </init-param>
+    </filter>
+
+    <!-- =====================================================
+         THIS MUST BE THE LAST FILTER IN THE DEFINED CHAIN
+         ===================================================== -->
+<!-- MYLOGINFILTER:BEGIN -->
+<filter>
+    <filter-name>MyLoginFilter</filter-name>
+    <filter-class>com.atlassian.jira.authenticator.my.MyLoginFilter</filter-class>
+</filter>
+
+<filter-mapping>
+
+    <filter-name>MyLoginFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+    <dispatcher>REQUEST</dispatcher>
+    <dispatcher>FORWARD</dispatcher>
+</filter-mapping>
+<!-- MYLOGINFILTER:END -->
+    <filter>
+        <filter-name>JiraLastFilter</filter-name>
+        <filter-class>com.atlassian.jira.web.filters.JiraLastFilter</filter-class>
+    </filter>
+
+    <!-- =====================================================
+         FILTER MAPPINGS FOLLOW :
+         ===================================================== -->
+
+    <filter-mapping>
+        <filter-name>JiraImportProgressFilter</filter-name>
+        <url-pattern>/importprogress</url-pattern>
+    </filter-mapping>
+
+    <!-- Special filters that must come at the beginning of the chain because they prevent
+         all other filters from running.  This is to prevent those later filters from doing
+         lookups in Pico, which could alter the order in which it instantiates components
+         and thereby trigger a deadlock. -->
+
+    <!-- SERVLET CONTEXT LISTENERS -->
+
+    <!-- This goes before the LauncherContextListener because parts of the LauncherContextListener expect
+         the ServletContextProvider to work. And this listener it was makes that work. -->
+    <listener>
+        <listener-class>com.atlassian.jira.web.ServletContextProviderListener</listener-class>
+    </listener>
+
+    <!-- servlets -->
+    <servlet>
+        <servlet-name>appstatus</servlet-name>
+        <servlet-class>com.atlassian.jira.servlet.ApplicationStatusServlet</servlet-class>
+    </servlet>
+
+  <servlet-mapping>
+        <servlet-name>jsp.func.service.service_002dexecutor_jsp</servlet-name>
+        <url-pattern>/func/service/service-executor.jsp</url-pattern>
+    </servlet-mapping>
+
+      <!-- session config -->
+    <session-config>
+        <session-timeout>600</session-timeout>
+    </session-config>
+
+    <!-- mime mapping -->
+    <!-- currently the W3C havent settled on a media type for WSDL;
+    http://www.w3.org/TR/2003/WD-wsdl12-20030303/#ietf-draft
+    for now we go with the basic 'it's XML' response -->
+    <mime-mapping>
+        <extension>wsdl</extension>
+        <mime-type>text/xml</mime-type>
+    </mime-mapping>
+
+    <!-- welcome files -->
+    <welcome-file-list>
+        <welcome-file>default.jsp</welcome-file>
+        <welcome-file>index.html</welcome-file>
+    </welcome-file-list>
+
+    <!-- error pages -->
+    <error-page>
+        <error-code>401</error-code>
+        <location>/display-error</location>
+    </error-page>
+
+    <!-- tag libraries -->
+    <jsp-config>
+        <taglib>
+            <taglib-uri>webwork</taglib-uri>
+            <taglib-location>/WEB-INF/tld/webwork.tld</taglib-location>
+
+        </taglib>
+        <taglib>
+            <taglib-uri>sitemesh-page</taglib-uri>
+            <taglib-location>/WEB-INF/tld/sitemesh-page.tld</taglib-location>
+        </taglib>
+        <taglib>
+            <taglib-uri>sitemesh-decorator</taglib-uri>
+            <taglib-location>/WEB-INF/tld/sitemesh-decorator.tld</taglib-location>
+        </taglib>
+        <taglib>
+            <taglib-uri>jiratags</taglib-uri>
+            <taglib-location>/WEB-INF/tld/atlassian-jira-tags.tld</taglib-location>
+        </taglib>
+    </jsp-config>
+
+<!--
+All session-config, mime-mapping, welcome-file-list, error-page, taglib,
+resource-ref, security-constraint, login-config, security-role,
+env-entry, and ejb-ref elements should follow this fragment.
+-->
+
+</web-app>

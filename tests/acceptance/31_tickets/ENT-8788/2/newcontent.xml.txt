@@ -1,0 +1,12 @@
+<!-- MYLOGINFILTER:BEGIN -->
+<filter>
+    <filter-name>MyLoginFilter</filter-name>
+    <filter-class>com.atlassian.jira.authenticator.my.MyLoginFilter</filter-class>
+</filter>
+<filter-mapping>
+    <filter-name>MyLoginFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+    <dispatcher>REQUEST</dispatcher>
+    <dispatcher>FORWARD</dispatcher>
+</filter-mapping>
+<!-- MYLOGINFILTER:END -->

@@ -1,0 +1,66 @@
+body file control
+{
+        inputs => {
+                    "../../../default.cf.sub",
+        };
+}
+bundle agent __main__
+# If this is the policy entry (cf-agent --file) then this bundle will be run by default.
+{
+  methods:
+        "bundlesequence"  usebundle => default("$(this.promise_filename)");
+}
+
+bundle agent test
+{
+  meta:
+      "description"
+        string => "Inserting content that does not contain blank lines with file_preserve_block before select_line_matching works as expected",
+        meta => { "ENT-8788" };
+
+  vars:
+      "test_file" string => "$(this.promise_dirname)/start.xml.txt";
+      "new_content_file" string => "$(this.promise_dirname)/newcontent.xml.txt";
+
+  files:
+    "$(test_file)"
+        create => "false",
+        edit_defaults => size("500k"),
+        edit_line => insert_file_as_block_relative_to_first_or_last_line(
+                                                          "$(new_content_file)", # File with content to insert if not found
+                                                          "before",              # Relative position to insert content (before|after)
+                                                          "last",                # which line match will we insert based on?
+                                                          "\s+<filter>"          # Regex to match the line we want to insert relative to
+        );
+}
+
+bundle agent check
+{
+  methods:
+
+      "Pass/Fail" usebundle => dcs_check_diff($(test.test_file),
+                                              "$(this.promise_dirname)/desired-result.xml.txt",
+                                              $(this.promise_filename));
+}
+
+bundle edit_line insert_file_as_block_relative_to_first_or_last_line(templatefile, relative_location, first_or_last, location_line_regex)
+{
+  insert_lines:
+
+      "$(templatefile)"
+        comment => "Insert the template file into the file being edited",
+        insert_type => "file_preserve_block",
+        location => location_before_after_first_or_last_line( $(relative_location), $(first_or_last), $(location_line_regex) );
+}
+body location location_before_after_first_or_last_line(relative_position, first_or_last, regex_matching_line)
+{
+        before_after => "$(relative_position)";
+        first_last => "$(first_or_last)";
+        select_line_matching => "$(regex_matching_line)";
+}
+
+body edit_defaults size(bigenough)
+{
+    max_file_size => "$(bigenough)";
+}
+

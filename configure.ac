@@ -466,19 +466,16 @@ CF3_WITH_LIBRARY(openssl, [
    AC_PREPROC_IFELSE([AC_LANG_SOURCE([[
    #include <openssl/opensslv.h>
 
-   #if OPENSSL_VERSION_NUMBER < 0x0090602fL
+   #if OPENSSL_VERSION_NUMBER < 0x1000000fL
    #This OpenSSL is too old
    #endif
-   ]])],[AC_MSG_RESULT(OK)],[AC_MSG_ERROR(This release of CFEngine requires OpenSSL >= 0.9.7)])
+   ]])],[AC_MSG_RESULT(OK)],[AC_MSG_ERROR(This release of CFEngine requires OpenSSL >= 1.0.0)])
 
-   if test "x$ac_cv_lib_crypto_RSA_generate_key_ex" = "xyes" ; then
-      AC_DEFINE(OPENSSL_NO_DEPRECATED, 1, [Define if non deprecated API is available.])
-   fi
-
-   if test "x$ac_cv_lib_crypto_RSA_generate_key_ex" = "xno" && \
-      test "x$ac_cv_lib_crypto_RSA_generate_key" = "xno" ; then
+   if test "x$ac_cv_lib_crypto_RSA_generate_key_ex" = "xno" ; then
       AC_MSG_ERROR(Cannot find OpenSSL)
    fi
+
+   AC_DEFINE([OPENSSL_SUPPRESS_DEPRECATED], [1], [Suppress deprecation warnings from OpenSSL 3])
 
    AC_CHECK_DECL([SSL_OP_NO_TLSv1_1],
     [AC_DEFINE([HAVE_TLS_1_1], [1], [Define if TLS 1.1 is supported by OpenSSL])],

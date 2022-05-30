@@ -750,13 +750,14 @@ bool DiffPkgOperations()
     while ((line = GetCsvLineNext(csv_file)) != NULL)
     {
         Seq *fields = SeqParseCsvString(line);
-        free(line);
         if ((fields == NULL) || (SeqLength(fields) != 4))
         {
             Log(LOG_LEVEL_ERR, "Invalid package operation record: '%s'", line);
+            free(line);
             SeqDestroy(fields);
             continue;
         }
+        free(line);
 
         /* See RecordPkgOperationInChroot() */
         const char *op       = SeqAt(fields, 0);
@@ -941,13 +942,14 @@ bool ManifestPkgOperations()
     while ((line = GetCsvLineNext(csv_file)) != NULL)
     {
         Seq *fields = SeqParseCsvString(line);
-        free(line);
         if ((fields == NULL) || (SeqLength(fields) != 4))
         {
             Log(LOG_LEVEL_ERR, "Invalid package operation record: '%s'", line);
+            free(line);
             SeqDestroy(fields);
             continue;
         }
+        free(line);
 
         /* See RecordPkgOperationInChroot() */
         const char *op       = SeqAt(fields, 0);

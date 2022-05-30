@@ -554,6 +554,34 @@ static void PromiseTypeString(char *dst, size_t dst_size, const Promise *pp)
     }
 }
 
+// returns true if pid points to a cfengine process
+static bool IsCfengineProcess(const int pid)
+{
+    // There is no /proc on windows
+#ifndef _WIN32
+    char* procfile = (char*)xcalloc(1024,sizeof(char));
+    char* cmd = (char*)xcalloc(1024,sizeof(char));
+    if(cmd && procfile){
+        sprintf(procfile, "/proc/%d/cmdline",pid);
+        FILE* f = fopen(procfile,"r");
+        if(f){
+            size_t size;
+            size = fread(cmd, sizeof(char), 1024, f);
+            if(size>0){
+                if('\n'==cmd[size-1])
+                    cmd[size-1]='\0';
+            }
+            fclose(f);
+            // cmd contains the process command path
+            char *name = basename(cmd);
+            return (strncmp("cf-", name, 3) == 0);
+        }
+    }
+#endif
+    // assume true if we don't know
+    return true;
+}
+
 static bool KillLockHolder(const char *lock)
 {
     bool ret;
@@ -586,6 +614,12 @@ static bool KillLockHolder(const char *lock)
     }
 
     CloseLock(dbp);
+
+    if (!IsCfengineProcess(lock_data.pid)) {
+        Log(LOG_LEVEL_INFO,
+            "Lock holder disappeared");
+        return true;
+    }
 
     if (GracefulTerminate(lock_data.pid, lock_data.process_start_time))
     {
@@ -786,30 +820,6 @@ static CfLock CfLockNull(void)
     };
 }
 
-// returns true if pid points to a cfenbgine process
-static bool is_cfengine_process(const int pid)
-{
-    char* cmd = (char*)xcalloc(1024,sizeof(char));
-    if(cmd){
-        sprintf(cmd, "/proc/%d/cmdline",pid);
-        FILE* f = fopen(cmd,"r");
-        if(f){
-            size_t size;
-            size = fread(cmd, sizeof(char), 1024, f);
-            if(size>0){
-                if('\n'==cmd[size-1])
-                    cmd[size-1]='\0';
-            }
-            fclose(f);
-            // cmd contains the process command path
-            char *name = basename(cmd);
-            return (strncmp("cf-", name, 3) == 0);
-        }
-    }
-    // assume true if we don't know
-    return true;
-}
-
 CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host,
                    time_t now, int ifelapsed, int expireafter, const Promise *pp,
                    bool ignoreProcesses)
@@ -927,23 +937,15 @@ CfLock AcquireLock(EvalContext *ctx, const char *operand, const char *host,
                     "Lock expired after %jd/%u minutes: %s",
                     (intmax_t) elapsedtime, expireafter, cflock);
 
-                if (is_cfengine_process(cflock.pid))
+                if (KillLockHolder(cflock))
                 {
-                    Log(LOG_LEVEL_INFO,
-                        "Lock holder disappeared");
+                    Log(LOG_LEVEL_VERBOSE,
+                        "Lock successfully expired: %s", cflock);
+                    unlink(cflock);
                 }
                 else
                 {
-                    if (KillLockHolder(cflock))
-                    {
-                        Log(LOG_LEVEL_VERBOSE,
-                            "Lock successfully expired: %s", cflock);
-                        unlink(cflock);
-                    }
-                    else
-                    {
-                        Log(LOG_LEVEL_ERR, "Failed to expire lock: %s", cflock);
-                    }
+                    Log(LOG_LEVEL_ERR, "Failed to expire lock: %s", cflock);
                 }
             }
             else

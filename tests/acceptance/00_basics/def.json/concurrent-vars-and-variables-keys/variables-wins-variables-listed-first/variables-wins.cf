@@ -1,0 +1,36 @@
+body common control
+{
+        inputs => { "../../../../default.cf.sub" };
+        bundlesequence  => { default("$(this.promise_filename)") };
+        version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-3975" }
+        string => "'variables' in def.json should win if both 'vars' and 'variables' keys define the same variable, even when variables is listed first in augments.";
+      # The variables key was introduced in 3.18.0, so 3.17 and prior should
+      # skip this test since the functionality is unsupported.
+      # Note: This before_version macro was introduced in 3.16.0, 3.15.1, 3.12.4.
+@if before_version(3.18.0)
+      "test_skip_unsupported" string => "any";
+@endif
+}
+
+bundle agent check
+{
+  vars:
+      "expected_value" string => "Set by variables key";
+      "actual_value" string => "$(default:def.my_var)";
+      "expected_difference" string=> "no";
+      "test" string => "$(this.promise_filename)";
+
+  methods:
+      "Pass/Fail" usebundle => dcs_check_strcmp($(expected_value),
+                                                $(actual_value),
+                                                $(test),
+                                                $(expected_difference));
+}

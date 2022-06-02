@@ -1,0 +1,80 @@
+body file control
+{
+        inputs => {
+                    "../../../default.cf.sub",
+        };
+}
+bundle agent __main__
+# If this is the policy entry (cf-agent --file) then this bundle will be run by default.
+{
+  methods:
+        "bundlesequence"  usebundle => default("$(this.promise_filename)");
+}
+
+bundle agent init
+{
+  files:
+      # Seed the file we will exercise the test on
+      "$(G.testfile)"
+        copy_from => local_dcp( "$(this.promise_dirname)/before_test.xml.txt" );
+}
+bundle agent test
+{
+  meta:
+      "description"
+        string => "edit_line should insert after the last matched line when selecting a region where the end delimiter is included",
+        meta => { "CFE-3988" };
+
+      "test_soft_fail"
+        string => "any",
+        meta => { "CFE-3988" };
+
+  vars:
+      "seed_file" string => "$(this.promise_dirname)/before_test.xml.txt";
+      "test_file" string => "$(G.testfile)";
+
+  files:
+    "$(test_file)"
+        edit_line => CFE_3988;
+}
+
+bundle agent check
+{
+  methods:
+      # We expect to find lines that look something like this:
+      #      THIS MUST BE THE LAST FILTER IN THE DEFINED CHAIN
+      #      ===================================================== -->
+      #INSERT ME
+
+      "Pass/FAIL"
+        usebundle => dcs_check_regcmp(
+                                       ".*\s+THIS MUST BE THE LAST FILTER IN THE DEFINED CHAIN\R\s+=+\s+-->\RINSERT\sME.*",
+                                       readfile( "$(test.test_file)" ),
+                                       $(this.promise_filename),
+                                       "no"
+        );
+}
+
+bundle edit_line CFE_3988
+{
+  insert_lines:
+      "INSERT ME"
+        select_region => my_comment_last_filter,
+        location => my_location_after_comment_last_filter;
+}
+body location my_location_after_comment_last_filter
+# @brief Editing occurs after the last line in the selected region
+{
+        before_after => "after";
+        first_last => "last";
+        select_line_matching => ".*";
+}
+
+body select_region my_comment_last_filter
+{
+        select_start => "\s+THIS MUST BE THE LAST FILTER IN THE DEFINED CHAIN";
+        select_end => "\s+=+\s+-->";
+        include_start_delimiter => "true";
+        include_end_delimiter => "true";
+        select_end_match_eof => "false";
+}

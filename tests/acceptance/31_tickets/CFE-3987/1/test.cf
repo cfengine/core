@@ -1,0 +1,72 @@
+body file control
+{
+        inputs => {
+                    "../../../default.cf.sub",
+        };
+}
+bundle agent __main__
+# If this is the policy entry (cf-agent --file) then this bundle will be run by default.
+{
+  methods:
+        "bundlesequence"  usebundle => default("$(this.promise_filename)");
+}
+
+bundle agent init
+{
+  files:
+      # Seed the file we will exercise the test on
+      "$(G.testfile)"
+        copy_from => local_dcp( "$(this.promise_dirname)/before_test.xml.txt" );
+}
+bundle agent test
+{
+  meta:
+      "description"
+        string => "edit_line doesn't insert text immediately before a selected region if a location body only explicitly sets before_after => 'before'",
+        meta => { "CFE-3987" };
+
+      "test_soft_fail"
+        string => "any",
+        meta => { "CFE-3987" };
+
+  vars:
+      "seed_file" string => "$(this.promise_dirname)/before_test.xml.txt";
+      "test_file" string => "$(G.testfile)";
+
+  files:
+    "$(test_file)"
+        edit_line => CFE_3987;
+}
+
+bundle agent check
+{
+  methods:
+      "Pass/FAIL"
+        usebundle => dcs_check_regcmp(
+                                       ".*INSERT\sME\R\s+<!--\s=+\R\s+THIS MUST BE THE LAST FILTER IN THE DEFINED CHAIN.*",
+                                       readfile( "$(test.test_file)" ),
+                                       $(this.promise_filename),
+                                       "no"
+        );
+}
+
+bundle edit_line CFE_3987
+{
+  insert_lines:
+      "INSERT ME"
+        select_region => my_comment_last_filter,
+        location => my_location_before;
+}
+body location my_location_before
+# @brief Editing occurs before the matched line (but here select_line_matching is not defined explicitly)
+{
+        before_after => "before";
+}
+
+body select_region my_comment_last_filter
+{
+        select_start => "\s+<!--.*";
+        select_end => "\s+THIS MUST BE THE LAST FILTER IN THE DEFINED CHAIN";
+        include_start_delimiter => "true";
+        select_end_match_eof => "false";
+}

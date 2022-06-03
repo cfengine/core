@@ -10,13 +10,14 @@ bundle agent test
 {
   meta:
       "test_suppress_fail" string => "windows",
-        meta => { "redmine6405" };
+        meta => { "redmine6405", "ENT-2480"};
 
       # Ubuntu 20 (at least our build machines) doesn't know how to resolve
       # 127.0.0.1/::1 to localhost, the reverse lookup fails and so
       # 'admit => { "localhost" };' and 'admit_hostnames => { "localhost" };'
       # are not enough to allow access for this test.
-      "test_skip_unsupported" string => "ubuntu_20";
+      "test_skip_unsupported" string => "(ubuntu_20|ubuntu_22)",
+        meta => { "ENT-2480", "ENT-7362" };
 
   methods:
       # source file

@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+      <web-app xmlns="http://java.sun.com/xml/ns/javaee"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
+      http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+      version="3.0"
+      metadata-complete="true">
+      <!-- General -->
+      <display-name>Atlassian JIRA Web Application</display-name>
+      <description>The Atlassian JIRA web application - see http://www.atlassian.com/software/jira for more information
+      </description>
+
+      <absolute-ordering />
+
+      <!-- Filters -->
+
+      <!-- Special filters that must come at the beginning of the chain because they prevent
+      all other filters from running.  This is to prevent those later filters from doing
+      lookups in Pico, which could alter the order in which it instantiates components
+      and thereby trigger a deadlock. -->
+
+      <filter>
+      <filter-name>JiraImportProgressFilter</filter-name>
+      <filter-class>com.atlassian.jira.web.filters.JiraImportProgressFilter</filter-class>
+      </filter>
+
+      <!-- ========================================================
+           THIS MUST BE THE FIRST FILTER IN THE NORMAL FILTER CHAIN
+           ======================================================== -->
+
+      <filter>
+      <filter-name>JiraFirstFilter</filter-name>
+      <filter-class>com.atlassian.jira.web.filters.JiraFirstFilter</filter-class>
+      </filter>
+
+      <!-- =====================================================
+           THIS MUST BE THE LAST FILTER IN THE DEFINED CHAIN
+           ===================================================== -->
+
+      <filter>
+      <filter-name>JiraLastFilter</filter-name>
+      <filter-class>com.atlassian.jira.web.filters.JiraLastFilter</filter-class>
+      </filter>
+
+      <!-- =====================================================
+           FILTER MAPPINGS FOLLOW :
+           ===================================================== -->
+
+</web-app>

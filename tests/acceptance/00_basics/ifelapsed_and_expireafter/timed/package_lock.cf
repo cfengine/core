@@ -13,8 +13,7 @@ bundle agent init
       # "no_fds" won't work correctly on Windows.
       # Also Solaris 9 and 10 don't seem to handle the backgrounding used in
       # this test. But it seems unrelated to the actual fix.
-      # Moreover, this test was disabled on all platforms in ENT-6939
-      "test_skip_needs_work" string => "any";
+      "test_skip_needs_work" string => "windows|sunos_5_9|sunos_5_10";
 
       # The backgrounding doesn't work well under fakeroot.
       "test_skip_unsupported" string => "using_fakeroot";
@@ -47,8 +46,8 @@ bundle agent check
     test_pass_1::
       # We wait 61 seconds in the sub invocation, but in practice test platforms
       # experience all sorts of timing delays, let's give it plenty of time to
-      # make sure it finishes.
-      "any" usebundle => dcs_wait($(this.promise_filename), 120);
+      # make sure it finishes. 300 seconds = 5 minutes.
+      "any" usebundle => dcs_wait($(this.promise_filename), 300);
 
     test_pass_2::
       "any" usebundle => dcs_check_diff($(G.testfile),

@@ -85,6 +85,8 @@ require {
 	type postfix_spool_t;
 	type sendmail_exec_t;
 	type sshd_t;
+	type ssh_exec_t;
+	type ssh_home_t;
 	type rpm_script_t;
 	class tcp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown name_connect accept listen name_bind node_bind };
 	class udp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown node_bind };
@@ -151,7 +153,7 @@ require {
 	class process { setrlimit transition dyntransition execstack execheap execmem signull siginh getattr };
 	class file { execute execute_no_trans getattr ioctl map open read unlink write entrypoint lock link rename append setattr create relabelfrom relabelto };
 	class fifo_file { create open getattr setattr read write append rename link unlink ioctl lock relabelfrom relabelto };
-	class dir { getattr read search open write add_name remove_name lock ioctl create };
+	class dir { getattr read search open write add_name remove_name lock ioctl create setattr };
 	class filesystem getattr;
 	class lnk_file { create getattr read unlink };
 	class unix_stream_socket connectto;
@@ -741,6 +743,45 @@ allow cfengine_httpd_t cfengine_action_script_t:process siginh;
 
 allow cfengine_action_script_t cfengine_action_script_exec_t:file entrypoint;
 allow cfengine_action_script_t cfengine_action_script_exec_t:file { ioctl read getattr lock map execute open };
+
+#============= cfengine_cfbs_t ==============
+type cfengine_cfbs_t;
+typeattribute cfengine_cfbs_t domain;
+role system_r types cfengine_cfbs_t;
+
+# /var/cfengine/bin/cf-cfbs has the 'cfengine_cfbs_exec_t' context which is an
+# entrypoint for the 'cfengine_cfbs_t' domain
+type cfengine_cfbs_exec_t;
+typeattribute cfengine_cfbs_exec_t entry_type;
+typeattribute cfengine_cfbs_exec_t exec_type;
+typeattribute cfengine_cfbs_exec_t file_type, non_security_file_type, non_auth_file_type;
+role object_r types cfengine_cfbs_exec_t;
+
+allow cfengine_cfbs_t cfengine_cfbs_exec_t:file entrypoint;
+allow cfengine_cfbs_t cfengine_cfbs_exec_t:file { ioctl read getattr lock map execute open };
+
+allow cfengine_cfbs_t cfengine_var_lib_t:dir { add_name getattr create open read search write remove_name setattr };
+allow cfengine_cfbs_t cfengine_var_lib_t:file { create ioctl lock write unlink append setattr link rename execute execute_no_trans map getattr open read };
+allow cfengine_cfbs_t cfengine_var_lib_t:lnk_file { getattr read create unlink };
+
+allow cfengine_cfbs_t bin_t:file { map execute };
+
+allow cfengine_cfbs_t cert_t:dir search;
+allow cfengine_cfbs_t cert_t:file { getattr open read };
+allow cfengine_cfbs_t cert_t:lnk_file read;
+allow cfengine_cfbs_t http_port_t:tcp_socket name_connect;
+allow cfengine_cfbs_t net_conf_t:file { getattr open read };
+allow cfengine_cfbs_t passwd_file_t:file { getattr open read };
+allow cfengine_cfbs_t self:capability dac_override;
+allow cfengine_cfbs_t self:netlink_route_socket { bind create getattr nlmsg_read };
+allow cfengine_cfbs_t self:tcp_socket { connect create getattr getopt setopt };
+allow cfengine_cfbs_t self:udp_socket { connect create getattr setopt };
+allow cfengine_cfbs_t sssd_public_t:dir search;
+allow cfengine_cfbs_t sssd_public_t:file { map getattr open read };
+allow cfengine_cfbs_t sssd_t:unix_stream_socket connectto;
+allow cfengine_cfbs_t sssd_var_lib_t:dir search;
+allow cfengine_cfbs_t sssd_var_lib_t:sock_file write;
+
 
 #============= special rules for Federated Reporting =============
 # sshd needs access to files in /opt/cfengine

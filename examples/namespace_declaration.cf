@@ -1,0 +1,64 @@
+# By default we are in the default namespace
+
+bundle agent __main__
+{
+  methods:
+      "Main in my_namespace namespace"
+        usebundle => my_namespace:main;
+
+      "Main in your_namespace namespace"
+        usebundle => your_namespace:main;
+
+      "my_bundle in default namespace"
+        usebundle => my_bundle;
+
+  reports:
+      "Inside $(this.namespace):$(this.bundle)";
+}
+
+body file control
+# From here until the next namespace declaration all bundles and bodies are
+# defined in my_namespace.
+{
+      namespace => "my_namespace";
+}
+
+bundle agent main
+{
+  reports:
+      "Inside $(this.namespace):$(this.bundle)";
+}
+
+body file control
+# From here until the next namespace declaration all bundles and bodies are
+# defined in your_namespace.
+{
+        namespace => "your_namespace";
+}
+
+bundle agent main
+{
+  reports:
+      "Inside $(this.namespace):$(this.bundle)";
+}
+
+body file control
+# From here until the next namespace declaration we return to the default namespace.
+{
+        namespace => "default";
+}
+
+bundle agent my_bundle
+{
+  reports:
+      "Inside $(this.namespace):$(this.bundle)";
+}
+###############################################################################
+#+begin_src example_output
+#@ ```
+#@ R: Inside my_namespace:main
+#@ R: Inside your_namespace:main
+#@ R: Inside default:my_bundle
+#@ R: Inside default:main
+#@ ```
+#+end_src

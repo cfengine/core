@@ -148,7 +148,7 @@ require {
 	class dccp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
 	class ib_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
 	class mpls_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
-	class process { setrlimit transition dyntransition execstack execheap execmem signull siginh };
+	class process { setrlimit transition dyntransition execstack execheap execmem signull siginh getattr };
 	class file { execute execute_no_trans getattr ioctl map open read unlink write entrypoint lock link rename append setattr create relabelfrom relabelto };
 	class fifo_file { create open getattr setattr read write append rename link unlink ioctl lock relabelfrom relabelto };
 	class dir { getattr read search open write add_name remove_name lock ioctl create };
@@ -613,6 +613,52 @@ allow cfengine_httpd_t passwd_file_t:file { getattr open read };
 allow cfengine_httpd_t shell_exec_t:file map;
 allow cfengine_httpd_t shell_exec_t:file { execute execute_no_trans };
 
+
+#============= cfengine_apachectl_t ==============
+type cfengine_apachectl_t;
+typeattribute cfengine_apachectl_t domain;
+role system_r types cfengine_apachectl_t;
+
+# /var/cfengine/httpd/bin/apachectl has the 'cfengine_apachectl_exec_t' context which
+# is an entrypoint for the 'cfengine_apachectl_t' domain
+type cfengine_apachectl_exec_t;
+typeattribute cfengine_apachectl_exec_t entry_type;
+typeattribute cfengine_apachectl_exec_t exec_type;
+typeattribute cfengine_apachectl_exec_t file_type, non_security_file_type, non_auth_file_type;
+role object_r types cfengine_apachectl_exec_t;
+
+# allow transitions from init_t (systemd) to cfengine_apachectl_t to cfengine_httpd_t
+type_transition init_t cfengine_apachectl_exec_t:process cfengine_apachectl_t;
+allow init_t cfengine_apachectl_t:process transition;
+allow init_t cfengine_apachectl_exec_t:file { execute getattr open read };
+allow init_t cfengine_apachectl_t:process siginh;
+
+type_transition cfengine_apachectl_t cfengine_httpd_exec_t:process cfengine_httpd_t;
+allow cfengine_apachectl_t cfengine_httpd_t:process transition;
+allow cfengine_apachectl_t cfengine_httpd_exec_t:file { execute getattr open read };
+allow cfengine_apachectl_t cfengine_httpd_t:process siginh;
+
+allow cfengine_apachectl_t cfengine_apachectl_exec_t:file entrypoint;
+allow cfengine_apachectl_t cfengine_apachectl_exec_t:file { ioctl read getattr lock map execute open };
+
+allow cfengine_apachectl_t cfengine_var_lib_t:dir search;
+allow cfengine_apachectl_t cfengine_var_lib_t:file { getattr open read };
+allow cfengine_apachectl_t init_t:unix_stream_socket ioctl;
+allow cfengine_apachectl_t passwd_file_t:file { getattr open read };
+allow cfengine_apachectl_t shell_exec_t:file { map execute };
+allow cfengine_apachectl_t sssd_public_t:dir search;
+allow cfengine_apachectl_t sssd_public_t:file { getattr open read map };
+allow cfengine_apachectl_t sssd_t:unix_stream_socket connectto;
+allow cfengine_apachectl_t sssd_var_lib_t:dir search;
+allow cfengine_apachectl_t sssd_var_lib_t:sock_file write;
+allow cfengine_apachectl_t bin_t:file { execute execute_no_trans map };
+allow cfengine_apachectl_t proc_t:dir read;
+allow cfengine_apachectl_t proc_t:file { open read };
+
+# allow apachectl to run 'ps' and thus gather information about all running processes on the system
+# this is a macro invocation, the file has to be processed with
+# make -f /usr/share/selinux/devel/Makefile
+ps_process_pattern(cfengine_apachectl_t, domain)
 
 #============= cfengine_reactor_t ==============
 type cfengine_reactor_t;

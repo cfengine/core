@@ -584,7 +584,7 @@ allow cfengine_httpd_t self:netlink_route_socket { bind create getattr nlmsg_rea
 allow cfengine_httpd_t self:process execmem;
 allow cfengine_httpd_t unconfined_t:process signull;
 allow cfengine_httpd_t self:tcp_socket { accept bind connect create getattr getopt listen setopt shutdown read write };
-allow cfengine_httpd_t self:udp_socket { connect create getattr };
+allow cfengine_httpd_t self:udp_socket { connect create getattr setopt };
 allow cfengine_httpd_t self:unix_dgram_socket { connect create };
 allow cfengine_httpd_t sssd_public_t:dir search;
 allow cfengine_httpd_t sssd_public_t:file map;

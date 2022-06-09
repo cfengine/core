@@ -1,0 +1,33 @@
+# NOTE: This test file must have it's be renamed from .x.cf to .cf when the bug is fixed.
+body file control
+{
+        inputs => {
+                    "../../../default.cf.sub",
+        };
+}
+bundle agent __main__
+# If this is the policy entry (cf-agent --file) then this bundle will be run by default.
+{
+  methods:
+        "bundlesequence"  usebundle => default("$(this.promise_filename)");
+}
+
+bundle agent test
+{
+  meta:
+      "description" -> { "ENT-8818" }
+        string => "Referencing variables in a namespace that does not exist should not cause the agent to crash";
+
+  reports:
+      # NOTE: Here in the last variable I misspelled default as defult which is how I originally found this bug.
+
+      "In $(this.namespace):$(this.bundle) $(const.dollar)(default:sys.cf_version_major) == $(defult:sys.cf_version_major)";
+}
+
+bundle agent check
+{
+  methods:
+
+      # If we make ti this far we pass.
+      "Pass" usebundle => dcs_pass( $(this.promise_filename) );
+}

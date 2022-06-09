@@ -154,6 +154,9 @@ cscope.*
 /contrib/*.elc
 /contrib/vagrant-ci/centos-7-x64/.vagrant
 
+## Flycheck
+flycheck_*
+
 # eclipse
 .cproject
 .project

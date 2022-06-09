@@ -1,0 +1,57 @@
+# NOTE: This test is nearly identical to ../1/main.cf, the only difference is a
+# single variable definition
+body file control
+{
+        inputs => {
+                    "../../../default.cf.sub",
+        };
+}
+bundle agent __main__
+# If this is the policy entry (cf-agent --file) then this bundle will be run by default.
+{
+  methods:
+        "bundlesequence"  usebundle => default("$(this.promise_filename)");
+}
+
+bundle agent test
+{
+  meta:
+      "description" -> { "ENT-8817" }
+        string => "Bundle qualified variables should target the promisers namespace. This shows the case where a variable is set in a bundle of the same name in the default namespace.";
+
+      "test_soft_fail"
+        string => "any",
+        meta => { "ENT-8817" };
+
+  vars:
+      "color" string => "#052569"; # THIS IS THE ONLY DIFFERENCE BETWEEN ../1/main.cf
+
+  methods:
+      "Test Reporting Namespaced Variables"
+        usebundle => example_space:test( $(G.testfile) );
+}
+
+bundle agent check
+{
+  methods:
+
+      "Pass/Fail" usebundle => dcs_check_diff( "$(this.promise_dirname)/expected_output.txt",
+                                               $(G.testfile),
+                                               $(this.promise_filename));
+}
+
+body file control
+{
+        namespace => "example_space";
+}
+
+bundle agent test(file)
+{
+  vars:
+      "color" string => "#f5821f";
+
+  reports:
+      "Unqualified: The color is $(color)" report_to_file => "$(file)";
+      "Bundle-qualified: The color is $(test.color)" report_to_file => "$(file)";
+      "Fully-qualified: The color is $(example_space:test.color)" report_to_file => "$(file)";
+}

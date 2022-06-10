@@ -18,11 +18,10 @@ INSTDIR=$HOME/cf_install
 #     exit 0
 # fi
 
-# Unshallow the clone. Fetch the tags from upstream even if we are on a
+# Fetch the tags from upstream even if we are on a
 # foreign clone. Needed for determine-version.sh to work.
-git fetch --unshallow
 git remote add upstream https://github.com/cfengine/core.git  \
-    && git fetch upstream 'refs/tags/*:refs/tags/*'
+    && git fetch --no-recurse-submodules upstream 'refs/tags/*:refs/tags/*'
 
 if [ "$TRAVIS_OS_NAME" = osx ]
 then

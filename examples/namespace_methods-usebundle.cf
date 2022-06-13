@@ -1,0 +1,39 @@
+bundle agent __main__
+{
+  methods:
+      # Call the bundle named main within the example_space namespace.
+      "example_space:main";
+}
+body file control
+{
+        namespace => "example_space";
+}
+
+bundle agent main
+{
+  methods:
+      # Call the bundle 'my_bundle' within the current namespace
+      "When not specified, we assume you are refering to a bundle or body within the same namespace"
+        usebundle => my_bundle( "Called 'my_bundle' from $(this.namespace):$(this.bundle) (the same namespace).");
+
+      # Call the bundle 'my_bundle' from the 'example_space' namespace
+      "When explicitly specified, the policy reader has less congnitive burden"
+        usebundle => example_space:my_bundle( "Called 'example_space:my_bundle' $(this.namespace):$(this.bundle) (the same namespace).");
+}
+
+bundle agent my_bundle(string)
+{
+  reports:
+      "In $(this.namespace):$(this.bundle)"
+        handle => "$(string)";
+      "$(string)";
+}
+###############################################################################
+#+begin_src example_output
+#@ ```
+#@ R: In example_space:my_bundle
+#@ R: Called 'my_bundle' from example_space:main (the same namespace).
+#@ R: In example_space:my_bundle
+#@ R: Called 'example_space:my_bundle' example_space:main (the same namespace).
+#@ ```
+#+end_src

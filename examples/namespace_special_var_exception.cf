@@ -1,0 +1,23 @@
+bundle agent __main__
+{
+      methods: "special_variables_example:demo";
+}
+body file control
+{
+        namespace => "special_variables_example";
+}
+bundle agent demo
+{
+  reports:
+      "Special Variables live in the default namespace but don't have to be fully qualified when referenced ...";
+      "In $(this.namespace):$(this.bundle) $(const.dollar)(sys.cf_version_major) == $(sys.cf_version_major)";
+      "In $(this.namespace):$(this.bundle) $(default:const.dollar)(default:sys.cf_version_major) == $(default:sys.cf_version_major)";
+}
+###############################################################################
+#+begin_src example_output
+#@ ```
+#@ R: Special Variables live in the default namespace but don't have to be fully qualified when referenced ...
+#@ R: In special_variables_example:demo $(sys.cf_version_major) == 3
+#@ R: In special_variables_example:demo $(default:sys.cf_version_major) == 3
+#@ ```
+#+end_src

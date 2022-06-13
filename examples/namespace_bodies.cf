@@ -1,0 +1,54 @@
+bundle agent __main__
+{
+  methods:
+      "example_space:main";
+}
+body file control
+{
+        namespace => "example_space";
+}
+
+bundle agent main
+{
+
+  reports:
+      # Use the 'first_line' printfile body from the current namespace
+      "Specifying a body without explict namespace assumes the same namespace.$(const.n)Show me the first 1 line of this file"
+        printfile => first_line( $(this.promise_filename) );
+
+      # Use the 'first_two_lines' printfile body from the 'default' namespace
+      "Forgetting to prefix bodies with 'default:' is a common mistake when using the standard library.$(const.n)Show me the first 2 line of this file"
+        printfile => default:first_two_lines( $(this.promise_filename) );
+
+}
+
+body printfile first_line(file)
+# @brief Report the first 1 lines of a file
+# @param file The full path of the file to report
+{
+        file_to_print => "$(file)";
+        number_of_lines => "1";
+}
+body file control
+{
+        namespace => "default";
+}
+body printfile first_two_lines(file)
+# @brief Report the first 2 lines of a file
+# @param file The full path of the file to report
+{
+        file_to_print => "$(file)";
+        number_of_lines => "2";
+}
+###############################################################################
+#+begin_src example_output
+#@ ```
+#@ R: Specifying a body without explict namespace assumes the same namespace.
+#@ Show me the first 1 line of this file
+#@ R: bundle agent __main__
+#@ R: Forgetting to prefix bodies with 'default:' is a common mistake when using the standard library.
+#@ Show me the first 2 line of this file
+#@ R: bundle agent __main__
+#@ R: {
+#@ ```
+#+end_src

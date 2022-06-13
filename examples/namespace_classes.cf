@@ -1,32 +1,79 @@
-
-body common control
+bundle agent __main__
 {
-      bundlesequence => { "xxx:globalclass", "main" };
-      inputs => { "namespace_class1.cf" };
-}
-
-
-bundle agent main
-{
-  classes:
-
-    cfengine_3::
-
-      "local_default" expression => "any";
-
   methods:
-
-      "namespace demo" usebundle => xxx:localclass;
+      "mynamespace:my_bundle";
 
   reports:
 
-      local_default:: "Got locally set class in default namespace";
+    a_bundle_scoped_class_in_my_namespaced_bundle::
+      "In $(this.namespace):$(this.bundle) I see 'a_bundle_scoped_class_in_my_namespaced_bundle::'";
 
-      xxx:xclass_local:: "Got remote set local class in xxx namespace (impossible)";
+    !a_bundle_scoped_class_in_my_namespaced_bundle::
+      "In $(this.namespace):$(this.bundle) I do not see 'a_bundle_scoped_class_in_my_namespaced_bundle::'";
 
-      xxx:xclass_global:: "Got remote set global class in xxx namespace";
+    a_namespace_scoped_class_in_my_namespaced_bundle::
+      "In $(this.namespace):$(this.bundle) I see 'a_namespace_scoped_class_in_my_namespaced_bundle::'";
 
-      not_a_defined_class:: "test";
+    !a_namespace_scoped_class_in_my_namespaced_bundle::
+      "In $(this.namespace):$(this.bundle) I do not see 'a_namespace_scoped_class_in_my_namespaced_bundle::'";
 
-      cfengine_3::  "Hard classes work everywhere - here too";
+    mynamespace:a_bundle_scoped_class_in_my_namespaced_bundle::
+      "In $(this.namespace):$(this.bundle) I see 'mynamespace:a_bundle_scoped_class_in_my_namespaced_bundle::'";
+
+    !mynamespace:a_bundle_scoped_class_in_my_namespaced_bundle::
+      "In $(this.namespace):$(this.bundle) I do not see 'mynamespace:a_bundle_scoped_class_in_my_namespaced_bundle::'";
+
+    mynamespace:a_namespace_scoped_class_in_my_namespaced_bundle::
+      "In $(this.namespace):$(this.bundle) I see 'mynamespace:a_namespace_scoped_class_in_my_namespaced_bundle::'";
 }
+
+body file control
+{
+      namespace => "mynamespace";
+}
+
+bundle agent my_bundle
+{
+  classes:
+      "a_bundle_scoped_class_in_my_namespaced_bundle";
+
+      "a_namespace_scoped_class_in_my_namespaced_bundle"
+        scope => "namespace";
+
+  reports:
+
+    a_bundle_scoped_class_in_my_namespaced_bundle::
+      "In $(this.namespace):$(this.bundle) I see 'a_bundle_scoped_class_in_my_namespaced_bundle::'";
+
+    !a_bundle_scoped_class_in_my_namespaced_bundle::
+      "In $(this.namespace):$(this.bundle) I do not see 'a_bundle_scoped_class_in_my_namespaced_bundle::'";
+
+    a_namespace_scoped_class_in_my_namespaced_bundle::
+      "In $(this.namespace):$(this.bundle) I see 'a_namespace_scoped_class_in_my_namespaced_bundle::'";
+
+    !a_namespace_scoped_class_in_my_namespaced_bundle::
+      "In $(this.namespace):$(this.bundle) I do not see 'a_namespace_scoped_class_in_my_namespaced_bundle::'";
+
+    mynamespace:a_bundle_scoped_class_in_my_namespaced_bundle::
+      "In $(this.namespace):$(this.bundle) I see 'mynamespace:a_bundle_scoped_class_in_my_namespaced_bundle::'";
+
+    !mynamespace:a_bundle_scoped_class_in_my_namespaced_bundle::
+      "In $(this.namespace):$(this.bundle) I do not see 'mynamespace:a_bundle_scoped_class_in_my_namespaced_bundle::'";
+
+    mynamespace:a_namespace_scoped_class_in_my_namespaced_bundle::
+      "In $(this.namespace):$(this.bundle) I see 'mynamespace:a_namespace_scoped_class_in_my_namespaced_bundle::'";
+}
+###############################################################################
+#+begin_src example_output
+#@ ```
+#@ R: In mynamespace:my_bundle I see 'a_bundle_scoped_class_in_my_namespaced_bundle::'
+#@ R: In mynamespace:my_bundle I see 'a_namespace_scoped_class_in_my_namespaced_bundle::'
+#@ R: In mynamespace:my_bundle I see 'mynamespace:a_bundle_scoped_class_in_my_namespaced_bundle::'
+#@ R: In mynamespace:my_bundle I see 'mynamespace:a_namespace_scoped_class_in_my_namespaced_bundle::'
+#@ R: In default:main I do not see 'a_bundle_scoped_class_in_my_namespaced_bundle::'
+#@ R: In default:main I do not see 'a_namespace_scoped_class_in_my_namespaced_bundle::'
+#@ R: In default:main I do not see 'mynamespace:a_bundle_scoped_class_in_my_namespaced_bundle::'
+#@ R: In default:main I see 'mynamespace:a_namespace_scoped_class_in_my_namespaced_bundle::'
+#@ ```
+#+end_src
+

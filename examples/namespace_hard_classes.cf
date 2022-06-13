@@ -1,0 +1,40 @@
+bundle agent __main__
+{
+  methods:
+      "example:my_bundle";
+
+  reports:
+    cfengine::
+      "From the '$(this.namespace)' namespace the class expression 'cfengine::' evaluates true";
+
+    default:cfengine::
+      "From the '$(this.namespace)' namespace the class expression 'default:cfengine::' evaluates true";
+
+      "The class 'cfengine' has tags: $(with)"
+        with => join( ", ", getclassmetatags( "cfengine" ) );
+}
+
+body file control
+{
+        namespace => "example";
+}
+
+bundle agent my_bundle
+{
+  reports:
+    cfengine::
+      "From the '$(this.namespace)' namespace the class expression 'cfengine::' evaluates true";
+
+    default:cfengine::
+      "From the '$(this.namespace)' namespace the class expression 'default:cfengine::' evaluates true";
+}
+###############################################################################
+#+begin_src example_output
+#@ ```
+#@ R: From the 'example' namespace the class expression 'cfengine::' evaluates true
+#@ R: From the 'example' namespace the class expression 'default:cfengine::' evaluates true
+#@ R: From the 'default' namespace the class expression 'cfengine::' evaluates true
+#@ R: From the 'default' namespace the class expression 'default:cfengine::' evaluates true
+#@ R: The class 'cfengine' has tags: inventory, attribute_name=none, source=agent, hardclass
+#@ ```
+#+end_src

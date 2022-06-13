@@ -1,0 +1,25 @@
+bundle agent __main__
+{
+      methods: "example:demo";
+}
+body file control
+{
+        namespace => "example";
+}
+bundle agent demo
+{
+  vars:
+      "color" string => "#f5821f";
+
+  reports:
+      "Unqualified: The color is $(color)";
+      # ENT-8817 "Bundle-qualified: The color is $(demo.color)";
+      "Fully-qualified: The color is $(example:demo.color)";
+}
+###############################################################################
+#+begin_src example_output
+#@ ```
+#@ R: Unqualified: The color is #f5821f
+#@ R: Fully-qualified: The color is #f5821f
+#@ ```
+#+end_src

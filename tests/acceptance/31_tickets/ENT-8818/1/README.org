@@ -1,0 +1,5 @@
+#+title: ENT-8818
+
+This test reproduces a crash (assert). Our test system does not support suppression of crashing tests, instead they must live in staging directories and be moved back out when they are fixed. This is unfortunate as it gives us little ability to run crahsing tests contunually and spot cases when they stop crashing un-expectedly.
+
+So, when a fix for this is ready, move staging/main.cf up to the level of this readme and delete this readme.

@@ -1,0 +1,34 @@
+body file control
+{
+        inputs => {
+                    "../../../default.cf.sub",
+        };
+}
+bundle agent __main__
+# If this is the policy entry (cf-agent --file) then this bundle will be run by default.
+{
+  methods:
+        "bundlesequence"  usebundle => default("$(this.promise_filename)");
+}
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-2367" }
+        string => "cf-agent should not fatally error when fileexists() is given an undefined variable as a parameter";
+
+  files:
+    "$(G.testfile)"
+        content => "CFE-2367",
+        unless => fileexists( $(testfile) ); # testfile is not defined, in the
+                                             # original ticket filed this caused
+                                             # a fatal error
+}
+
+bundle agent check
+{
+  methods:
+      # Since this was testing for the absence of a fatal error, if we get to
+      # this point, we pass.
+      "Pass"
+        usebundle => dcs_pass("$(this.promise_filename)" );
+}

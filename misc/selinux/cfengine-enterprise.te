@@ -148,8 +148,13 @@ require {
 	class dccp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
 	class ib_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
 	class mpls_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+<<<<<<< HEAD
 	class process { setrlimit transition dyntransition execstack execheap execmem signull siginh };
 	class file { execute execute_no_trans getattr ioctl map open read unlink write entrypoint lock link rename append setattr create relabelfrom relabelto watch watch_reads };
+=======
+	class process { setrlimit transition dyntransition execstack execheap execmem signull siginh getattr };
+	class file { execute execute_no_trans getattr ioctl map open read unlink write entrypoint lock link rename append setattr create relabelfrom relabelto };
+>>>>>>> dec0d70c4 (Define a new type for our patched apachectl)
 	class fifo_file { create open getattr setattr read write append rename link unlink ioctl lock relabelfrom relabelto };
 	class dir { getattr read search open write add_name remove_name lock ioctl create };
 	class filesystem getattr;
@@ -574,7 +579,7 @@ allow cfengine_httpd_t self:netlink_route_socket { bind create getattr nlmsg_rea
 allow cfengine_httpd_t self:process execmem;
 allow cfengine_httpd_t unconfined_t:process signull;
 allow cfengine_httpd_t self:tcp_socket { accept bind connect create getattr getopt listen setopt shutdown read write };
-allow cfengine_httpd_t self:udp_socket { connect create getattr };
+allow cfengine_httpd_t self:udp_socket { connect create getattr setopt };
 allow cfengine_httpd_t self:unix_dgram_socket { connect create };
 allow cfengine_httpd_t sssd_public_t:dir search;
 allow cfengine_httpd_t sssd_public_t:file map;
@@ -602,6 +607,53 @@ allow init_t cfengine_httpd_t:dbus send_msg;
 allow cfengine_httpd_t passwd_file_t:file { getattr open read };
 allow cfengine_httpd_t shell_exec_t:file map;
 allow cfengine_httpd_t shell_exec_t:file { execute execute_no_trans };
+
+
+#============= cfengine_apachectl_t ==============
+type cfengine_apachectl_t;
+typeattribute cfengine_apachectl_t domain;
+role system_r types cfengine_apachectl_t;
+
+# /var/cfengine/httpd/bin/apachectl has the 'cfengine_apachectl_exec_t' context which
+# is an entrypoint for the 'cfengine_apachectl_t' domain
+type cfengine_apachectl_exec_t;
+typeattribute cfengine_apachectl_exec_t entry_type;
+typeattribute cfengine_apachectl_exec_t exec_type;
+typeattribute cfengine_apachectl_exec_t file_type, non_security_file_type, non_auth_file_type;
+role object_r types cfengine_apachectl_exec_t;
+
+# allow transitions from init_t (systemd) to cfengine_apachectl_t to cfengine_httpd_t
+type_transition init_t cfengine_apachectl_exec_t:process cfengine_apachectl_t;
+allow init_t cfengine_apachectl_t:process transition;
+allow init_t cfengine_apachectl_exec_t:file { execute getattr open read };
+allow init_t cfengine_apachectl_t:process siginh;
+
+type_transition cfengine_apachectl_t cfengine_httpd_exec_t:process cfengine_httpd_t;
+allow cfengine_apachectl_t cfengine_httpd_t:process transition;
+allow cfengine_apachectl_t cfengine_httpd_exec_t:file { execute getattr open read };
+allow cfengine_apachectl_t cfengine_httpd_t:process siginh;
+
+allow cfengine_apachectl_t cfengine_apachectl_exec_t:file entrypoint;
+allow cfengine_apachectl_t cfengine_apachectl_exec_t:file { ioctl read getattr lock map execute open };
+
+allow cfengine_apachectl_t cfengine_var_lib_t:dir search;
+allow cfengine_apachectl_t cfengine_var_lib_t:file { getattr open read };
+allow cfengine_apachectl_t init_t:unix_stream_socket ioctl;
+allow cfengine_apachectl_t passwd_file_t:file { getattr open read };
+allow cfengine_apachectl_t shell_exec_t:file { map execute };
+allow cfengine_apachectl_t sssd_public_t:dir search;
+allow cfengine_apachectl_t sssd_public_t:file { getattr open read map };
+allow cfengine_apachectl_t sssd_t:unix_stream_socket connectto;
+allow cfengine_apachectl_t sssd_var_lib_t:dir search;
+allow cfengine_apachectl_t sssd_var_lib_t:sock_file write;
+allow cfengine_apachectl_t bin_t:file { execute execute_no_trans map };
+allow cfengine_apachectl_t proc_t:dir read;
+allow cfengine_apachectl_t proc_t:file { open read };
+
+# allow apachectl to run 'ps' and thus gather information about all running processes on the system
+# this is a macro invocation, the file has to be processed with
+# make -f /usr/share/selinux/devel/Makefile
+ps_process_pattern(cfengine_apachectl_t, domain)
 
 
 #============= cfengine_action_script_t ==============
@@ -638,3 +690,17 @@ allow cfengine_action_script_t cfengine_action_script_exec_t:file { ioctl read g
 #============= special rules for Federated Reporting =============
 # sshd needs access to files in /opt/cfengine
 allow sshd_t cfengine_var_lib_t:file { getattr open read };
+
+
+#============= TO REMOVE ==============
+# Daemons should have proper access to files based on DAC rules (file
+# permissions), not just because they run under root.
+dontaudit cfengine_execd_t self:capability dac_override;
+dontaudit cfengine_serverd_t self:capability { dac_override dac_read_search };
+
+# cf-promises run by the daemons shouldn't check if a function is available in
+# PostgreSQL, the respective returnszero() is in an agent bundle
+dontaudit cfengine_execd_t cfengine_postgres_t:unix_stream_socket connectto;
+dontaudit cfengine_execd_t tmp_t:sock_file write;
+dontaudit cfengine_serverd_t cfengine_postgres_t:unix_stream_socket connectto;
+dontaudit cfengine_serverd_t tmp_t:sock_file write;

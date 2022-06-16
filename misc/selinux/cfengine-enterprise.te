@@ -148,13 +148,8 @@ require {
 	class dccp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
 	class ib_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
 	class mpls_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
-<<<<<<< HEAD
-	class process { setrlimit transition dyntransition execstack execheap execmem signull siginh };
-	class file { execute execute_no_trans getattr ioctl map open read unlink write entrypoint lock link rename append setattr create relabelfrom relabelto watch watch_reads };
-=======
 	class process { setrlimit transition dyntransition execstack execheap execmem signull siginh getattr };
-	class file { execute execute_no_trans getattr ioctl map open read unlink write entrypoint lock link rename append setattr create relabelfrom relabelto };
->>>>>>> dec0d70c4 (Define a new type for our patched apachectl)
+	class file { execute execute_no_trans getattr ioctl map open read unlink write entrypoint lock link rename append setattr create relabelfrom relabelto watch watch_reads };
 	class fifo_file { create open getattr setattr read write append rename link unlink ioctl lock relabelfrom relabelto };
 	class dir { getattr read search open write add_name remove_name lock ioctl create };
 	class filesystem getattr;

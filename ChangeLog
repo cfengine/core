@@ -1,3 +1,30 @@
+3.18.2:
+	- 'N' or 'Ns' signal specs can now be used to sleep
+	  between signals sent by 'processes' promises
+	  (CFE-2207, ENT-5899)
+	- Added bootstrap/failsafe exclusion for directories named .no-distrib
+	  (ENT-8079)
+	- Added protocol 3 (cookie) to syntax description (ENT-8560)
+	- cf-secret encrypt now encrypts for localhost if no key or host is
+	  specified (CFE-3874)
+	- CFEngine processes now try to use getent if the
+	  builtin user/group info lookup fails (CFE-3937)
+	- Custom promise modules now never get promise data with unresolved variables
+	  (CFE-3434)
+	- Custom promises now use standard promise locking and support ifelapsed
+	  (CFE-3434)
+	- Federated Reporting is now supported on RHEL 8 hubs (ENT-7493)
+	- Fixed wrong use of log level in users promises log messages (CFE-3906)
+	- Fixed default for ignore_missing_bundles and ignore_missing_inputs
+	  The issue here was that these attributes should default to false,
+	  but when they are assigned with an unresolved variable, they
+	  would default to true. (ENT-8430)
+	- Fixed inconsistencies with methods promises and missing bundles (CFE-3997)
+	- Moved errors from data_sysctlvalues from inform to verbose (CFE-3818)
+	- No longer possible to undefine reserved hard classes (ENT-7718)
+	- Unspecified 'rxdirs' now produces a warning (CFE-951)
+	- cf-agent can now properly install packages on RHEL 8 (ENT-7493)
+
 3.18.1:
 	- 'null' JSON value is now handled as empty data in augments/host-specific data
 	  (ENT-7434)

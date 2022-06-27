@@ -1,36 +1,42 @@
 3.20.0:
+	- 'rxdirs' now defaults to "false". This means that the read permission
+	  bit no longer implies execute bit for directories, by default.
+	  Permission bits will be exactly as specified. To restore the old behavior
+	  you can still enable 'rxdirs' explicitly. (CFE-951)
 	- 'N' or 'Ns' signal specs can now be used to sleep
 	  between signals sent by 'processes' promises
 	  (CFE-2207, ENT-5899)
-	- 'rxdirs' now defaults to "false" (CFE-951)
-	- Added bootstrap/failsafe exclusion for directories named .no-distrib
-	  (ENT-8079)
-	- Added protocol 3 (cookie) to syntax description (ENT-8560)
-	- Added tests related to inserting text based on a location within select_region
-	  (CFE-3987)
-	- cf-secret encrypt now encrypts for localhost if no key or host is
-	  specified (CFE-3874)
+	- Directories named .no-distrib are no longer copied from policy server
+	  (in bootstrap/failsafe) (ENT-8079)
 	- Files promises using content attribute or template method now create
 	  files by default unless `create => "false"` is specified. (CFE-3955,
 	  CFE-3916)
-	- template_method mustache and inline mustache now creates promiser by
-	  default, if promiser is absent and the mustache rendering was
-	  successfull. (ENT-4792)
-	- CFEngine now builds with OpenSSL 3 (ENT-8355)
-	- CFEngine now requires OpenSSL 1.0.0 or newer (ENT-8355)
-	- CFEngine processes now try to use getent if the builtin user/group
-	  info lookup fails (CFE-3937)
+	- template_method mustache and inline_mustache now create file in promiser,
+	  if template rendering was successfull and file does not exist. (ENT-4792)
+	- Added support for use of custom bodies in custom promise types
+	  (CFE-3574)
 	- Custom promise modules now never get promise data with unresolved variables
 	  (CFE-3434)
 	- Custom promises now use standard promise locking and support ifelapsed
 	  (CFE-3434)
-	- Do not unshallow git repo in Travis script (ENT-8819)
 	- Enable comment-attribute for custom promise types (CFE-3432)
-	- Fix wrong use of log level in users promises log messages (CFE-3906)
+	- cf-secret encrypt now encrypts for localhost if no key or host is
+	  specified (CFE-3874)
+	- CFEngine now builds with OpenSSL 3 (ENT-8355)
+	- CFEngine now requires OpenSSL 1.0.0 or newer (ENT-8355)
+	- Moved Skipping loading of duplicate policy file messages from VERBOSE to DEBUG
+	  (CFE-3934)
+	- CFEngine processes now try to use getent if the builtin user/group
+	  info lookup fails (CFE-3937)
+	- No longer possible to undefine reserved hard classes (ENT-7718)
+	- Unspecified 'rxdirs' now produces a warning (CFE-951)
+	- Fixed wrong use of log level in users promises log messages (CFE-3906)
 	- Fixed default for ignore_missing_bundles and ignore_missing_inputs
 	  The issue here was that these attributes should default to false,
 	  but when they are assigned with an unresolved variable, they
 	  would default to true. (ENT-8430)
+	- Added protocol 3 (cookie) to syntax description (ENT-8560)
+	- Moved errors from data_sysctlvalues from inform to verbose (CFE-3818)
 	- Fixed inconsistencies with methods promises and missing bundles
 	  Previously, methods promises acted differently depending on if
 	  you specify the bundle with usebundle or in the promiser string.
@@ -38,16 +44,6 @@
 	  happening on promises with usebundle. It also ensures that
 	  the agent will abort if trying to use an undefined bundle,
 	  regardless of whether it was using promiser string or usebundle.
-	  The checking that was removed did allow you to detect some
-	  missing bundles early (in cf-promises), but it was also not
-	  working correctly, especially in combination with the bug
-	  we fixed for ignore_missing_bundles.
-	  If we want to reintroduce this logic, we have to do it in
-	  a better way, we need to determine which bundles are
-	  "reachable", by starting at the bundlesequence and
-	  traversing methods promises, while respecting if
-	  attributes and class guards. That would be useful, but
-	  quite a bit more complex.
 	  This change, combined with the fix for ignore_missing_bundles
 	  and ignore_missing_inputs, allow you to use inputs and bundles
 	  conditionally (like we do for the enterprise federation policy)
@@ -56,13 +52,6 @@
 	  ignore_missing_bundles). The downside is that there are some
 	  potential situations where undefined bundles would be detected
 	  earlier previously (both correctly and incorrectly).  (ENT-8430)
-	- Implemented support for use of custom bodies in custom promise types
-	  (CFE-3574)
-	- Moved Skipping loading of duplicate policy file messages from VERBOSE to DEBUG
-	  (CFE-3934)
-	- Moved errors from data_sysctlvalues from inform to verbose (CFE-3818)
-	- No longer possible to undefine reserved hard classes (ENT-7718)
-	- Unspecified 'rxdirs' now produces a warning (CFE-951)
 
 3.19.0:
 	- -N/--negate now prevents persistent classes from being defined

@@ -559,17 +559,18 @@ static bool IsCfengineProcess(const int pid)
 {
     // There is no /proc on windows
 #ifndef _WIN32
-    char* procfile = (char*)xcalloc(1024,sizeof(char));
-    char* cmd = (char*)xcalloc(1024,sizeof(char));
-    if(cmd && procfile){
-        sprintf(procfile, "/proc/%d/cmdline",pid);
-        FILE* f = fopen(procfile,"r");
-        if(f){
+    char* procfile = xcalloc(1024, sizeof(char));
+    char* cmd = xcalloc(1024, sizeof(char));
+    if (cmd && procfile){
+        sprintf(procfile, "/proc/%d/cmdline", pid);
+        FILE *f = fopen(procfile, "r");
+        if (f != NULL){
             size_t size;
             size = fread(cmd, sizeof(char), 1024, f);
-            if(size>0){
-                if('\n'==cmd[size-1])
-                    cmd[size-1]='\0';
+            if (size > 0){
+                if ('\n' == cmd[size-1]) {
+                    cmd[size-1] = '\0';
+                }
             }
             fclose(f);
             // cmd contains the process command path

@@ -562,7 +562,7 @@ static bool IsCfengineProcess(const int pid)
     char* procfile = xcalloc(1024, sizeof(char));
     char* cmd = xcalloc(1024, sizeof(char));
     if (cmd && procfile){
-        sprintf(procfile, "/proc/%d/cmdline", pid);
+        snprintf(procfile, 1024, "/proc/%d/cmdline", pid);
         FILE *f = fopen(procfile, "r");
         if (f != NULL){
             size_t size;

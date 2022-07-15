@@ -105,6 +105,8 @@ static bool InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr
 
 bool ScheduleEditLineOperations(EvalContext *ctx, const Bundle *bp, const Attributes *a, const Promise *parentp, EditContext *edcontext)
 {
+    assert(a != NULL);
+
     enum editlinetypesequence type;
     char lockname[CF_BUFSIZE];
     CfLock thislock;
@@ -121,6 +123,9 @@ bool ScheduleEditLineOperations(EvalContext *ctx, const Bundle *bp, const Attrib
     }
 
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_EDIT, "filename", edcontext->filename, CF_DATA_TYPE_STRING, "source=promise");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_EDIT, "empty_before_use",
+                                  (a->edits.empty_before_use ? "true" : "false"),
+                                  CF_DATA_TYPE_STRING, "source=promise");
 
     for (pass = 1; pass < CF_DONEPASSES; pass++)
     {

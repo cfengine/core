@@ -668,7 +668,8 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
 
     *excluded = false;
 
-    Rval returnval = ExpandPrivateRval(ctx, NULL, "this", pp->promiser, RVAL_TYPE_SCALAR);
+    Rval returnval = ExpandPrivateRval(ctx, PromiseGetNamespace(pp),
+                                       "this", pp->promiser, RVAL_TYPE_SCALAR);
     if (returnval.item == NULL)
     {
         assert(returnval.type == RVAL_TYPE_LIST ||

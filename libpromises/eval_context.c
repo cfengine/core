@@ -2447,7 +2447,25 @@ static Variable *VariableResolve2(const EvalContext *ctx, const VarRef *ref)
     Variable *var;
     if (table)
     {
-        var = VariableTableGet(table, ref);
+        /* NOTE: The 'this.' scope should ignore namespaces because it contains
+         *       iteration variables that don't have the namespace in their ref
+         *       string and so VariableTableGet() would fail to find them with
+         *       the namespace. And similar logic applies to other special
+         *       scopes except for 'def.' which is actually not so special. */
+        if ((SpecialScopeFromString(ref->scope) != SPECIAL_SCOPE_NONE) &&
+            (SpecialScopeFromString(ref->scope) != SPECIAL_SCOPE_DEF) &&
+            (ref->ns != NULL))
+        {
+            VarRef *ref2 = VarRefCopy(ref);
+            free(ref2->ns);
+            ref2->ns = NULL;
+            var = VariableTableGet(table, ref2);
+            VarRefDestroy(ref2);
+        }
+        else
+        {
+            var = VariableTableGet(table, ref);
+        }
         if (var)
         {
             return var;

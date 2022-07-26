@@ -3,7 +3,7 @@
 body file control
 {
         inputs => {
-                    "../../../default.cf.sub",
+                    "../../../../../default.cf.sub",
         };
 }
 bundle agent __main__
@@ -18,10 +18,6 @@ bundle agent test
   meta:
       "description" -> { "ENT-8817" }
         string => "Bundle qualified variables should target the promisers namespace. This shows the case where a variable is set in a bundle of the same name in the default namespace.";
-
-      "test_soft_fail"
-        string => "any",
-        meta => { "ENT-8817" };
 
   vars:
       "color" string => "#052569"; # THIS IS THE ONLY DIFFERENCE BETWEEN ../1/main.cf

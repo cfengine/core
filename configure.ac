@@ -136,6 +136,14 @@ AC_CONFIG_LIBOBJ_DIR(libntech/libcompat)
 AC_PATH_PROG(GETCONF, getconf, false, $PATH:$prefix/bin:/usr/bin:/usr/local/bin:/sw/bin)
 AM_CONDITIONAL(CROSS_COMPILING, test "x$cross_compiling" = "xyes")
 
+# Check whether `pkg-config' is available
+AC_ARG_VAR([PKG_CONFIG], [path to pkg-config])
+AC_ARG_VAR([PKG_CONFIG_PATH], [directories to add to the pkg-config search path])
+AC_ARG_VAR([PKG_CONFIG_LIBDIR], [path overriding pkg-config's search path])
+
+if test "x$ac_cv_env_PKG_CONFIG_set" != "xset"; then
+    AC_PATH_TOOL([PKG_CONFIG], [pkg-config])
+fi
 
 dnl ######################################################################
 dnl Use pthreads if available
@@ -611,43 +619,57 @@ AC_ARG_WITH([libxml2],
     [],
     [with_libxml2=check])
 
-if test "x$with_libxml2" != xno
-then
-    if test "x$with_libxml2" != xyes &&
-       test "x$with_libxml2" != xcheck
-    then
-        XML2_CONFIG=$with_libxml2/bin/xml2-config
-    else
-        XML2_CONFIG=xml2-config
-    fi
+have_libxml2="no"
 
-    # xml2-config is only for native builds
-    if test "x$cross_compiling" = "xno" && test x`which $XML2_CONFIG` != x
-    then
-        xml2_include_dir=`$XML2_CONFIG --cflags`
-        if test -n "$xml2_include_dir"
-        then
-            LIBXML2_CPPFLAGS="$xml2_include_dir"
+if test "x$with_libxml2" != "xno"; then
+    if test -n "$PKG_CONFIG"; then
+        AC_MSG_CHECKING([for libxml2 via pkg-config])
+        if `$PKG_CONFIG --exists libxml-2.0`; then
+            LIBXML2_CFLAGS=`$PKG_CONFIG --cflags libxml-2.0`
+            LIBXML2_CPPFLAGS="$LIBXML2_CFLAGS"
+            LIBXML2_LIBS=`$PKG_CONFIG --libs libxml-2.0`
+            LIBXML2_VERSION=`$PKG_CONFIG --modversion libxml-2.0`
+            AC_MSG_RESULT([found version $LIBXML2_VERSION])
+            have_libxml2="yes"
+        else
+            AC_MSG_RESULT([not found])
         fi
-    else                # xml2-config not found
-        # if a path, e.g. /var/cfengine was given, then we
-        # must take into account that libxml2 includes are in
-        # /var/cfengine/include/libxml2
-        LIBXML2_CPPFLAGS=-I$with_libxml2/include/libxml2
     fi
 
-    CF3_WITH_LIBRARY(libxml2,
-        [AC_CHECK_LIB(xml2, xmlFirstElementChild,
-            [],
-            [if test "x$with_libxml2" != xcheck; then
-                AC_MSG_ERROR(Cannotfind libxml2); fi]
-        )
-        AC_CHECK_HEADERS([libxml/xmlwriter.h], [break],
-            [if test "x$with_libxml2" != xcheck; then
-                AC_MSG_ERROR(Cannot find libxml2); fi]
-        )]
-    )
+    if test "x$have_libxml2" = "xno"; then
+        if test "x$with_libxml2" != "xyes" && test "x$with_libxml2" != "xcheck"
+        then
+            XML2_CONFIG=$with_libxml2/bin/xml2-config
+        else
+            AC_PATH_PROG([XML2_CONFIG], [xml2-config])
+        fi
+
+        # xml2-config is only for native builds
+        if test "x$cross_compiling" = "xno" && test -n "$XML2_CONFIG"; then
+            xml2_include_dir=`$XML2_CONFIG --cflags`
+            if test -n "$xml2_include_dir"; then
+                LIBXML2_CPPFLAGS="$xml2_include_dir"
+            fi
+        else # xml2-config not found
+            # if a path, e.g. /var/cfengine was given, then we
+            # must take into account that libxml2 includes are in
+            # /var/cfengine/include/libxml2
+            LIBXML2_CPPFLAGS=-I$with_libxml2/include/libxml2
+        fi
+    fi
 fi
+
+CF3_WITH_LIBRARY(libxml2,
+    [AC_CHECK_LIB(xml2, xmlFirstElementChild,
+    [],
+    [if test "x$with_libxml2" != xcheck; then
+        AC_MSG_ERROR(Cannot find libxml2); fi]
+    )
+    AC_CHECK_HEADERS([libxml/xmlwriter.h], [break],
+        [if test "x$with_libxml2" != xcheck; then
+            AC_MSG_ERROR(Cannot find libxml2); fi]
+    )]
+)
 
 AM_CONDITIONAL([HAVE_LIBXML2],
     [test "x$with_libxml2" != xno &&

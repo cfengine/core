@@ -2,7 +2,7 @@
 
 body common control
 {
-      inputs => { "../../default.cf.sub", "namespaced-bundles.cf.sub1", "namespaced-bundles.cf.sub2" };
+      inputs => { "../../../default.cf.sub", "namespaced-bundles.cf.sub1", "namespaced-bundles.cf.sub2" };
       bundlesequence => { default("$(this.promise_filename)") };
       version => "1.0";
 }

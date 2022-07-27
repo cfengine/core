@@ -1963,41 +1963,29 @@ static bool InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **s
     return retval;
 }
 
-static bool NeighbourItemMatches(EvalContext *ctx, const Item *file_start, const Item *location, const char *string, EditOrder pos, Rlist *insert_match,
-                         const Promise *pp)
+/**
+ * Look for a line matching proposed insert before or after location
+ */
+static bool NeighbourItemMatches(EvalContext *ctx, const Item *file_start, const Item *location,
+                                 const char *string, EditOrder pos, Rlist *insert_match,
+                                 const Promise *pp)
 {
-/* Look for a line matching proposed insert before or after location */
+    if (location == NULL)
+    {
+        return false;
+    }
 
+    if (pos == EDIT_ORDER_AFTER)
+    {
+        return ((location->next != NULL) &&
+                (MatchPolicy(ctx, string, location->next->name, insert_match, pp)));
+    }
+    /* else => (pos == EDIT_ORDER_BEFORE) */
     for (const Item *ip = file_start; ip != NULL; ip = ip->next)
     {
-        if (pos == EDIT_ORDER_BEFORE)
+        if ((ip->next) && (ip->next == location))
         {
-            if ((ip->next) && (ip->next == location))
-            {
-                if (MatchPolicy(ctx, string, ip->name, insert_match, pp))
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-        }
-
-        if (pos == EDIT_ORDER_AFTER)
-        {
-            if (ip == location)
-            {
-                if ((ip->next) && (MatchPolicy(ctx, string, ip->next->name, insert_match, pp)))
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
+            return (MatchPolicy(ctx, string, ip->name, insert_match, pp));
         }
     }
 

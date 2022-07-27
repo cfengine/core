@@ -38,6 +38,8 @@
 
 EditContext *NewEditContext(char *filename, const Attributes *a)
 {
+    assert(a != NULL);
+
     EditContext *ec;
 
     if (!IsAbsoluteFileName(filename))
@@ -65,7 +67,8 @@ EditContext *NewEditContext(char *filename, const Attributes *a)
 
     if (a->haveeditline)
     {
-        if (!LoadFileAsItemList(&(ec->file_start), ec->changes_filename, a->edits))
+        if (!LoadFileAsItemList(&(ec->file_start), ec->changes_filename,
+                                a->edits, a->edits.empty_before_use))
         {
             free(ec);
             return NULL;
@@ -75,7 +78,8 @@ EditContext *NewEditContext(char *filename, const Attributes *a)
     if (a->haveeditxml)
     {
 #ifdef HAVE_LIBXML2
-        if (!LoadFileAsXmlDoc(&(ec->xmldoc), ec->changes_filename, a->edits))
+        if (!LoadFileAsXmlDoc(&(ec->xmldoc), ec->changes_filename,
+                              a->edits, a->edits.empty_before_use))
         {
             free(ec);
             return NULL;
@@ -89,9 +93,7 @@ EditContext *NewEditContext(char *filename, const Attributes *a)
 
     if (a->edits.empty_before_use)
     {
-        Log(LOG_LEVEL_VERBOSE, "Build file model from a blank slate (emptying)");
-        DeleteItemList(ec->file_start);
-        ec->file_start = NULL;
+        Log(LOG_LEVEL_VERBOSE, "Build file model from a blank slate");
     }
 
     return ec;
@@ -186,8 +188,10 @@ end:
 #ifdef HAVE_LIBXML2
 /***************************************************************************/
 
-bool LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, EditDefaults edits)
+bool LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, EditDefaults edits, bool only_checks)
 {
+    assert (doc != NULL);
+
     struct stat statbuf;
 
     if (stat(file, &statbuf) == -1)
@@ -208,16 +212,19 @@ bool LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, EditDefaults edits)
         Log(LOG_LEVEL_INFO, "'%s' is not a plain file", file);
         return false;
     }
-
-    if (statbuf.st_size == 0)
+    if (only_checks || (statbuf.st_size == 0))
     {
+        /* Checks done and none of them failed and returned we can just return
+         * an empty doc here. */
         if ((*doc = xmlNewDoc(BAD_CAST "1.0")) == NULL)
         {
             Log(LOG_LEVEL_INFO, "Document '%s' not parsed successfully. (xmlNewDoc: %s)", file, GetErrorStr());
             return false;
         }
+        return true;
     }
-    else if ((*doc = xmlParseFile(file)) == NULL)
+
+    if ((*doc = xmlParseFile(file)) == NULL)
     {
         Log(LOG_LEVEL_INFO, "Document '%s' not parsed successfully. (xmlParseFile: %s)", file, GetErrorStr());
         return false;

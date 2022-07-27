@@ -2017,7 +2017,7 @@ bool XmlCompareToFile(xmlDocPtr doc, char *file, EditDefaults edits)
         return false;
     }
 
-    if (!LoadFileAsXmlDoc(&cmpdoc, file, edits))
+    if (!LoadFileAsXmlDoc(&cmpdoc, file, edits, false))
     {
         return false;
     }

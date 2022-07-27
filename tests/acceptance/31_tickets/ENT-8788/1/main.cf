@@ -18,10 +18,6 @@ bundle agent test
         string => "Inserting content that contains blank lines with file_preserve_block before select_line_matching does not split inserted content before and after select_line_matching",
         meta => { "ENT-8788" };
 
-      "test_soft_fail"
-        string => "any",
-        meta => { "ENT-8788" };
-
   vars:
       "test_file" string => "$(this.promise_dirname)/start.xml.txt";
       "new_content_file" string => "$(this.promise_dirname)/newcontent.xml.txt";

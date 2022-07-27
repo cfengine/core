@@ -460,7 +460,7 @@ bool CompareToFile(
         return false;
     }
 
-    if (!LoadFileAsItemList(&cmplist, file, a->edits))
+    if (!LoadFileAsItemList(&cmplist, file, a->edits, false))
     {
         return false;
     }

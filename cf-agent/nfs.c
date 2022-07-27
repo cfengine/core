@@ -443,7 +443,7 @@ int VerifyInFstab(EvalContext *ctx, char *name, const Attributes *a, const Promi
 
     if (!FSTABLIST)
     {
-        if (!LoadFileAsItemList(&FSTABLIST, VFSTAB[VSYSTEMHARDCLASS], a->edits))
+        if (!LoadFileAsItemList(&FSTABLIST, VFSTAB[VSYSTEMHARDCLASS], a->edits, false))
         {
             Log(LOG_LEVEL_ERR, "Couldn't open '%s'", VFSTAB[VSYSTEMHARDCLASS]);
             return 0;
@@ -522,7 +522,7 @@ int VerifyNotInFstab(EvalContext *ctx, char *name, const Attributes *a, const Pr
 
     if (!FSTABLIST)
     {
-        if (!LoadFileAsItemList(&FSTABLIST, VFSTAB[VSYSTEMHARDCLASS], a->edits))
+        if (!LoadFileAsItemList(&FSTABLIST, VFSTAB[VSYSTEMHARDCLASS], a->edits, false))
         {
             Log(LOG_LEVEL_ERR, "Couldn't open '%s'", VFSTAB[VSYSTEMHARDCLASS]);
             return 0;

@@ -106,6 +106,8 @@ static bool InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr
 bool ScheduleEditLineOperations(EvalContext *ctx, const Bundle *bp, const Attributes *a, const Promise *parentp, EditContext *edcontext)
 {
     assert(a != NULL);
+    assert(bp != NULL);
+    assert(edcontext != NULL);
 
     enum editlinetypesequence type;
     char lockname[CF_BUFSIZE];
@@ -163,6 +165,9 @@ bool ScheduleEditLineOperations(EvalContext *ctx, const Bundle *bp, const Attrib
 
 Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, const Attributes *a, const Promise *pp, PromiseResult *result)
 {
+    assert(a != NULL);
+    assert(pp != NULL);
+
     FILE *fp = NULL;
     if ((fp = safe_fopen(a->edit_template, "rt" )) == NULL)
     {
@@ -356,6 +361,9 @@ static PromiseResult KeepEditLinePromise(EvalContext *ctx, const Promise *pp, vo
 
 static PromiseResult VerifyLineDeletions(EvalContext *ctx, const Promise *pp, EditContext *edcontext)
 {
+    assert(pp != NULL);
+    assert(edcontext != NULL);
+
     Item **start = &(edcontext->file_start);
     Item *begin_ptr, *end_ptr;
     CfLock thislock;
@@ -448,6 +456,9 @@ static PromiseResult VerifyLineDeletions(EvalContext *ctx, const Promise *pp, Ed
 
 static PromiseResult VerifyColumnEdits(EvalContext *ctx, const Promise *pp, EditContext *edcontext)
 {
+    assert(pp != NULL);
+    assert(edcontext != NULL);
+
     Item **start = &(edcontext->file_start);
     Item *begin_ptr, *end_ptr;
     CfLock thislock;
@@ -539,6 +550,9 @@ static PromiseResult VerifyColumnEdits(EvalContext *ctx, const Promise *pp, Edit
 
 static PromiseResult VerifyPatterns(EvalContext *ctx, const Promise *pp, EditContext *edcontext)
 {
+    assert(pp != NULL);
+    assert(edcontext != NULL);
+
     Item **start = &(edcontext->file_start);
     Item *begin_ptr, *end_ptr;
     CfLock thislock;
@@ -648,6 +662,9 @@ static bool SelectNextItemMatching(EvalContext *ctx, const char *regexp, Item *b
 
 static bool SelectLastItemMatching(EvalContext *ctx, const char *regexp, Item *begin, Item *end, Item **match, Item **prev)
 {
+    assert(match != NULL);
+    assert(prev != NULL);
+
     Item *ip, *ip_last = NULL, *ip_prev = NULL;
 
     *match = NULL;
@@ -682,6 +699,9 @@ static bool SelectLastItemMatching(EvalContext *ctx, const char *regexp, Item *b
 
 static bool SelectItemMatching(EvalContext *ctx, Item *start, char *regex, Item *begin_ptr, Item *end_ptr, Item **match, Item **prev, char *fl)
 {
+    assert(match != NULL);
+    assert(prev != NULL);
+
     Item *ip;
     bool ret = false;
 
@@ -723,6 +743,9 @@ static bool SelectItemMatching(EvalContext *ctx, Item *start, char *regex, Item 
 
 static PromiseResult VerifyLineInsertions(EvalContext *ctx, const Promise *pp, EditContext *edcontext)
 {
+    assert(pp != NULL);
+    assert(edcontext != NULL);
+
     Item **start = &(edcontext->file_start), *match, *prev;
     Item *begin_ptr, *end_ptr;
     CfLock thislock;
@@ -851,6 +874,11 @@ If no such region matches, begin_ptr and end_ptr should point to NULL
 
 */
 {
+    assert(a != NULL);
+    assert(edcontext != NULL);
+    assert(begin_ptr != NULL);
+    assert(end_ptr != NULL);
+
     const char *const select_start = a->region.select_start;
     const char *const select_end = a->region.select_end;
     const int include_start = a->region.include_start;
@@ -984,6 +1012,9 @@ bad:
 static bool InsertMultipleLinesToRegion(EvalContext *ctx, Item **start, Item *begin_ptr, Item *end_ptr, const Attributes *a,
                                        const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
+    assert(a != NULL);
+    assert(edcontext != NULL);
+
     Item *ip, *prev = NULL;
     int allow_multi_lines = StringEqual(a->sourcetype, "preserve_all_lines");
 
@@ -1057,6 +1088,9 @@ static bool InsertMultipleLinesAtLocation(EvalContext *ctx, Item **start, Item *
 // i.e. no insertion will be made if a neighbouring line matches
 
 {
+    assert(pp != NULL);
+    assert(a != NULL);
+
     const char *const type = a->sourcetype;
     int isfileinsert = StringEqual(type, "file") || StringEqual(type, "file_preserve_block");
 
@@ -1076,6 +1110,9 @@ static bool InsertMultipleLinesAtLocation(EvalContext *ctx, Item **start, Item *
 static bool DeletePromisedLinesMatching(EvalContext *ctx, Item **start, Item *begin, Item *end, const Attributes *a,
                                        const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
+    assert(pp != NULL);
+    assert(edcontext != NULL);
+
     Item *ip, *np = NULL, *lp, *initiator = begin, *terminator = NULL;
     int i, matches, noedits = true;
     bool retval = false;
@@ -1222,6 +1259,10 @@ static bool DeletePromisedLinesMatching(EvalContext *ctx, Item **start, Item *be
 static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, const Attributes *a,
                            const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
+    assert(a != NULL);
+    assert(pp != NULL);
+    assert(edcontext != NULL);
+
     char line_buff[CF_EXPANDSIZE];
     char after[CF_BUFSIZE];
     size_t match_len;
@@ -1349,6 +1390,10 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, c
 static bool EditColumns(EvalContext *ctx, Item *file_start, Item *file_end, const Attributes *a,
                         const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
+    assert(a != NULL);
+    assert(pp != NULL);
+    assert(edcontext != NULL);
+
     char separator[CF_MAXVARSIZE];
     int s, e;
     bool retval = false;
@@ -1421,6 +1466,8 @@ static bool EditColumns(EvalContext *ctx, Item *file_start, Item *file_end, cons
 
 static bool SanityCheckInsertions(const Attributes *a)
 {
+    assert(a != NULL);
+
     long not = 0;
     long with = 0;
     bool ok = true;
@@ -1507,6 +1554,9 @@ static bool SanityCheckInsertions(const Attributes *a)
 
 static bool SanityCheckDeletions(const Attributes *a, const Promise *pp)
 {
+    assert(a != NULL);
+    assert(pp != NULL);
+
     if (MultiLineString(pp->promiser))
     {
         if (a->not_matching)
@@ -1764,6 +1814,11 @@ static bool IsItemInRegion(EvalContext *ctx, const char *item, const Item *begin
 static bool InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr, Item *end_ptr, Item *location,
                                 Item *prev, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
+    assert(a != NULL);
+    assert(pp != NULL);
+    assert(edcontext != NULL);
+    assert(result != NULL);
+
     FILE *fin;
     bool retval = false;
     Item *loc = NULL;
@@ -1882,6 +1937,11 @@ static bool InsertCompoundLineAtLocation(EvalContext *ctx, const char *chunk, It
                                         Item *location, Item *prev, const Attributes *a, const Promise *pp, EditContext *edcontext,
                                         PromiseResult *result)
 {
+    assert(a != NULL);
+    assert(pp != NULL);
+    assert(edcontext != NULL);
+    assert(start != NULL);
+
     bool retval = false;
     const char *const type = a->sourcetype;
     const bool preserve_all_lines = StringEqual(type, "preserve_all_lines");
@@ -2110,6 +2170,9 @@ static bool InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, 
 static bool EditLineByColumn(EvalContext *ctx, Rlist **columns, const Attributes *a,
                              const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
+    assert(a != NULL);
+    assert(edcontext != NULL);
+
     Rlist *rp, *this_column = NULL;
     char sep[CF_MAXVARSIZE];
     int i, count = 0;
@@ -2243,6 +2306,8 @@ static bool EditLineByColumn(EvalContext *ctx, Rlist **columns, const Attributes
 
 static bool SelectLine(EvalContext *ctx, const char *line, const Attributes *a)
 {
+    assert(a != NULL);
+
     Rlist *rp, *c;
     int s, e;
     char *selector;
@@ -2349,6 +2414,9 @@ static bool DoEditColumn(Rlist **columns, EditContext *edcontext,
                          EvalContext *ctx, const Promise *pp, const Attributes *a,
                          PromiseResult *result)
 {
+    assert(a != NULL);
+    assert(edcontext != NULL);
+
     Rlist *rp, *found;
     bool retval = false;
 
@@ -2453,6 +2521,8 @@ static bool DoEditColumn(Rlist **columns, EditContext *edcontext,
 
 static bool NotAnchored(char *s)
 {
+    assert(s != NULL);
+
     if (*s != '^')
     {
         return true;
@@ -2470,5 +2540,7 @@ static bool NotAnchored(char *s)
 
 static bool MultiLineString(char *s)
 {
+    assert(s != NULL);
+
     return (strchr(s, '\n') != NULL);
 }

@@ -85,7 +85,7 @@ static bool InsertMultipleLinesAtLocation(EvalContext *ctx, Item **start, Item *
 static bool DeletePromisedLinesMatching(EvalContext *ctx, Item **start, Item *begin, Item *end, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
 static bool InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, Item *location, Item *prev, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
 static bool InsertCompoundLineAtLocation(EvalContext *ctx, const char *newline, Item **start, Item *begin_ptr, Item *end_ptr, Item *location, Item *prev, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
-static int ReplacePatterns(EvalContext *ctx, Item *start, Item *end, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
+static bool ReplacePatterns(EvalContext *ctx, Item *start, Item *end, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
 static bool EditColumns(EvalContext *ctx, Item *file_start, Item *file_end, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
 static bool EditLineByColumn(EvalContext *ctx, Rlist **columns, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
 static bool DoEditColumn(Rlist **columns, EditContext *edcontext,
@@ -1092,7 +1092,7 @@ static bool InsertMultipleLinesAtLocation(EvalContext *ctx, Item **start, Item *
     assert(a != NULL);
 
     const char *const type = a->sourcetype;
-    int isfileinsert = StringEqual(type, "file") || StringEqual(type, "file_preserve_block");
+    bool isfileinsert = StringEqual(type, "file") || StringEqual(type, "file_preserve_block");
 
     if (isfileinsert)
     {
@@ -1256,8 +1256,8 @@ static bool DeletePromisedLinesMatching(EvalContext *ctx, Item **start, Item *be
 
 /********************************************************************/
 
-static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, const Attributes *a,
-                           const Promise *pp, EditContext *edcontext, PromiseResult *result)
+static bool ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, const Attributes *a,
+                            const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
     assert(a != NULL);
     assert(pp != NULL);
@@ -1266,9 +1266,11 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, c
     char line_buff[CF_EXPANDSIZE];
     char after[CF_BUFSIZE];
     size_t match_len;
-    int start_off, end_off, once_only = false, retval = false;
+    int start_off, end_off;
+    bool once_only = false, retval = false;
     Item *ip;
-    int notfound = true, cutoff = 1, replaced = false;
+    int cutoff = 1;
+    bool notfound = true, replaced = false;
 
     if (StringEqual(a->replace.occurrences, "first"))
     {
@@ -1888,7 +1890,7 @@ static bool InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr
             //a->location.before_after = cfe_after;
         }
 
-        if (prev)
+        if (prev != NULL)
         {
             prev = prev->next;
         }
@@ -1897,7 +1899,7 @@ static bool InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr
             prev = *start;
         }
 
-        if (loc)
+        if (loc != NULL)
         {
             loc = loc->next;
         }
@@ -1997,7 +1999,7 @@ static bool InsertCompoundLineAtLocation(EvalContext *ctx, const char *chunk, It
             location = *start;
         }
 
-        if (prev)
+        if (prev != NULL)
         {
             prev = prev->next;
         }
@@ -2006,7 +2008,7 @@ static bool InsertCompoundLineAtLocation(EvalContext *ctx, const char *chunk, It
             prev = *start;
         }
 
-        if (location)
+        if (location != NULL)
         {
             location = location->next;
         }

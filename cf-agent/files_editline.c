@@ -140,7 +140,8 @@ bool ScheduleEditLineOperations(EvalContext *ctx, const Bundle *bp, const Attrib
             }
 
             EvalContextStackPushBundleSectionFrame(ctx, sp);
-            for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
+            const size_t length = SeqLength(sp->promises);
+            for (size_t ppi = 0; ppi < length; ppi++)
             {
                 Promise *pp = SeqAt(sp->promises, ppi);
 

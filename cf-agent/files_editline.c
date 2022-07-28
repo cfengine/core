@@ -112,7 +112,7 @@ bool ScheduleEditLineOperations(EvalContext *ctx, const Bundle *bp, const Attrib
     CfLock thislock;
     int pass;
 
-    assert(strcmp(bp->type, "edit_line") == 0);
+    assert(StringEqual(bp->type, "edit_line"));
 
     snprintf(lockname, CF_BUFSIZE - 1, "masterfilelock-%s", edcontext->filename);
     thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a->transaction.ifelapsed, a->transaction.expireafter, parentp, true);
@@ -213,21 +213,21 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, const 
             // Check closing syntax
 
             // Get Action operator
-            if (strncmp(buffer, "[%CFEngine", strlen("[%CFEngine")) == 0)
+            if (StringEqualN(buffer, "[%CFEngine", strlen("[%CFEngine")))
             {
                 char op[CF_BUFSIZE] = "";
                 char brack[4]       = "";
 
                 sscanf(buffer+strlen("[%CFEngine"), "%1024s %3s", op, brack);
 
-                if (strcmp(brack, "%]") != 0)
+                if (!StringEqual(brack, "%]"))
                 {
                     cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Template file '%s' syntax error, missing close \"%%]\" at line %d", a->edit_template, lineno);
                     *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
                     return NULL;
                 }
 
-                if (strcmp(op, "BEGIN") == 0)
+                if (StringEqual(op, "BEGIN"))
                 {
                     PrependItem(&stack, context, NULL);
                     if (++level > 1)
@@ -240,7 +240,7 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, const 
                     continue;
                 }
 
-                if (strcmp(op, "END") == 0)
+                if (StringEqual(op, "END"))
                 {
                     level--;
                     if (stack != NULL)
@@ -250,7 +250,7 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, const 
                        }
                 }
 
-                if (strcmp(op + strlen(op)-2, "::") == 0)
+                if (StringEqual(op + strlen(op)-2, "::"))
                 {
                     *(op + strlen(op)-2) = '\0';
                     strcpy(context, op);
@@ -322,27 +322,27 @@ static PromiseResult KeepEditLinePromise(EvalContext *ctx, const Promise *pp, vo
 
     PromiseBanner(ctx, pp);
 
-    if (strcmp("classes", PromiseGetPromiseType(pp)) == 0)
+    if (StringEqual("classes", PromiseGetPromiseType(pp)))
     {
         return VerifyClassPromise(ctx, pp, NULL);
     }
-    else if (strcmp("delete_lines", PromiseGetPromiseType(pp)) == 0)
+    else if (StringEqual("delete_lines", PromiseGetPromiseType(pp)))
     {
         return VerifyLineDeletions(ctx, pp, edcontext);
     }
-    else if (strcmp("field_edits", PromiseGetPromiseType(pp)) == 0)
+    else if (StringEqual("field_edits", PromiseGetPromiseType(pp)))
     {
         return VerifyColumnEdits(ctx, pp, edcontext);
     }
-    else if (strcmp("insert_lines", PromiseGetPromiseType(pp)) == 0)
+    else if (StringEqual("insert_lines", PromiseGetPromiseType(pp)))
     {
         return VerifyLineInsertions(ctx, pp, edcontext);
     }
-    else if (strcmp("replace_patterns", PromiseGetPromiseType(pp)) == 0)
+    else if (StringEqual("replace_patterns", PromiseGetPromiseType(pp)))
     {
         return VerifyPatterns(ctx, pp, edcontext);
     }
-    else if (strcmp("reports", PromiseGetPromiseType(pp)) == 0)
+    else if (StringEqual("reports", PromiseGetPromiseType(pp)))
     {
         return VerifyReportPromise(ctx, pp);
     }
@@ -693,7 +693,7 @@ static bool SelectItemMatching(EvalContext *ctx, Item *start, char *regex, Item 
         return false;
     }
 
-    if (fl && (strcmp(fl, "first") == 0))
+    if (StringEqual(fl, "first"))
     {
         if (SelectNextItemMatching(ctx, regex, begin_ptr, end_ptr, match, prev))
         {
@@ -729,7 +729,7 @@ static PromiseResult VerifyLineInsertions(EvalContext *ctx, const Promise *pp, E
     char lockname[CF_BUFSIZE];
 
     Attributes a = GetInsertionAttributes(ctx, pp);
-    int allow_multi_lines = a.sourcetype && strcmp(a.sourcetype, "preserve_all_lines") == 0;
+    int allow_multi_lines = StringEqual(a.sourcetype, "preserve_all_lines");
     a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
 
     if (!SanityCheckInsertions(&a))
@@ -935,7 +935,7 @@ static int MatchRegion(EvalContext *ctx, const char *chunk, const Item *begin, c
             goto bad;
         }
 
-        if (!regex && strcmp(buf, ip->name) != 0)
+        if (!regex && !StringEqual(buf, ip->name))
         {
             lines = 0;
             goto bad;
@@ -1534,7 +1534,7 @@ static bool MatchPolicy(EvalContext *ctx, const char *camel, const char *haystac
     for (Item *ip = list; ip != NULL; ip = ip->next)
     {
         ok = false;
-        bool direct_cmp = (strcmp(camel, haystack) == 0);
+        bool direct_cmp = (StringEqual(camel, haystack));
 
         final             = xstrdup(ip->name);
         size_t final_size = strlen(final) + 1;
@@ -1652,7 +1652,7 @@ static bool MatchPolicy(EvalContext *ctx, const char *camel, const char *haystac
             }
             else if (opt == INSERT_MATCH_TYPE_IGNORE_LEADING)
             {
-                if (strncmp(final, "\\s*", 3) != 0)
+                if (!StringEqualN(final, "\\s*", 3))
                 {
                     char *sp;
                     for (sp = final; isspace((int)*sp); sp++);
@@ -1692,7 +1692,7 @@ static bool MatchPolicy(EvalContext *ctx, const char *camel, const char *haystac
             }
             else if (opt == INSERT_MATCH_TYPE_IGNORE_TRAILING)
             {
-                if (strncmp(final + final_size - 5, "\\s*", 3) != 0)
+                if (!StringEqualN(final + final_size - 5, "\\s*", 3))
                 {
                     const size_t work_size = final_size + 3;
                     char  *work      = xcalloc(1, work_size);
@@ -1885,7 +1885,7 @@ static bool InsertCompoundLineAtLocation(EvalContext *ctx, const char *chunk, It
     bool retval = false;
     const char *const type = a->sourcetype;
     const bool preserve_all_lines = StringEqual(type, "preserve_all_lines");
-    const bool preserve_block = type && (preserve_all_lines || strcmp(type, "preserve_block") == 0 || strcmp(type, "file_preserve_block") == 0);
+    const bool preserve_block = type && (preserve_all_lines || StringEqual(type, "preserve_block") || StringEqual(type, "file_preserve_block"));
 
     if (!preserve_all_lines && MatchRegion(ctx, chunk, location, NULL, false))
     {
@@ -2025,7 +2025,7 @@ static bool InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, 
                 }
             }
 
-            if (strcmp((*start)->name, newline) != 0)
+            if (!StringEqual((*start)->name, newline))
             {
                 if (!MakingChanges(ctx, pp, a, result, "prepend promised line '%s' to '%s'",
                                    newline, edcontext->filename))
@@ -2163,7 +2163,7 @@ static bool EditLineByColumn(EvalContext *ctx, Rlist **columns, const Attributes
     {
         /* internal separator, single char so split again */
 
-        if (strstr(RlistScalarValue(rp), a->column.column_value) || strcmp(RlistScalarValue(rp), a->column.column_value) != 0)
+        if (strstr(RlistScalarValue(rp), a->column.column_value) || !StringEqual(RlistScalarValue(rp), a->column.column_value))
         {
             if (!MakingChanges(ctx, pp, a, result, "edit field '%s' in '%s'",
                                a->column.column_value, edcontext->filename))
@@ -2195,7 +2195,7 @@ static bool EditLineByColumn(EvalContext *ctx, Rlist **columns, const Attributes
     {
         /* No separator, so we set the whole field to the value */
 
-        if (a->column.column_operation && strcmp(a->column.column_operation, "delete") == 0)
+        if (StringEqual(a->column.column_operation, "delete"))
         {
             if (!MakingChanges(ctx, pp, a, result, "delete field value '%s' in '%s'",
                                RlistScalarValue(rp), edcontext->filename))
@@ -2254,7 +2254,7 @@ static bool SelectLine(EvalContext *ctx, const char *line, const Attributes *a)
         {
             selector = RlistScalarValue(rp);
 
-            if (strncmp(selector, line, strlen(selector)) == 0)
+            if (StringEqualN(selector, line, strlen(selector)))
             {
                 return true;
             }
@@ -2269,7 +2269,7 @@ static bool SelectLine(EvalContext *ctx, const char *line, const Attributes *a)
         {
             selector = RlistScalarValue(rp);
 
-            if (strncmp(selector, line, strlen(selector)) == 0)
+            if (StringEqualN(selector, line, strlen(selector)))
             {
                 return false;
             }
@@ -2372,12 +2372,12 @@ static bool DoEditColumn(Rlist **columns, EditContext *edcontext,
     if (StringEqual(column_operation, "set"))
     {
         int length = RlistLen(*columns);
-        if (length == 1 && strcmp(RlistScalarValue(*columns), column_value) == 0)
+        if (length == 1 && StringEqual(RlistScalarValue(*columns), column_value))
         {
             RecordNoChange(ctx, pp, a, "Field sub-value set as promised");
             return false;
         }
-        else if (length == 0 && strcmp("", column_value) == 0)
+        else if (length == 0 && StringEqual("", column_value))
         {
             RecordNoChange(ctx, pp, a, "Empty field sub-value set as promised");
             return false;

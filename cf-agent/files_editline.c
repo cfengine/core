@@ -84,7 +84,7 @@ static bool InsertMultipleLinesToRegion(EvalContext *ctx, Item **start, Item *be
 static bool InsertMultipleLinesAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr, Item *end_ptr, Item *location, Item *prev, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
 static bool DeletePromisedLinesMatching(EvalContext *ctx, Item **start, Item *begin, Item *end, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
 static bool InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, Item *location, Item *prev, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
-static bool InsertCompoundLineAtLocation(EvalContext *ctx, char *newline, Item **start, Item *begin_ptr, Item *end_ptr, Item *location, Item *prev, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
+static bool InsertCompoundLineAtLocation(EvalContext *ctx, const char *newline, Item **start, Item *begin_ptr, Item *end_ptr, Item *location, Item *prev, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
 static int ReplacePatterns(EvalContext *ctx, Item *start, Item *end, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
 static bool EditColumns(EvalContext *ctx, Item *file_start, Item *file_end, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
 static bool EditLineByColumn(EvalContext *ctx, Rlist **columns, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
@@ -918,11 +918,12 @@ static int MatchRegion(EvalContext *ctx, const char *chunk, const Item *begin, c
 */
 {
     const Item *ip = begin;
-    size_t buf_size = strlen(chunk) + 1;
+    const size_t chunk_len = strlen(chunk);
+    size_t buf_size = chunk_len + 1;
     char *buf = xmalloc(buf_size);
     int lines = 0;
 
-    for (const char *sp = chunk; sp <= chunk + strlen(chunk); sp++)
+    for (const char *sp = chunk; sp <= chunk + chunk_len; sp++)
     {
         buf[0] = '\0';
         sscanf(sp, "%[^\n]", buf);
@@ -963,7 +964,7 @@ static int MatchRegion(EvalContext *ctx, const char *chunk, const Item *begin, c
         }
         else                    // if the region runs out before the end
         {
-            if (++sp <= chunk + strlen(chunk))
+            if (++sp <= chunk + chunk_len)
             {
                 lines = 0;
                 goto bad;
@@ -1584,7 +1585,7 @@ static bool MatchPolicy(EvalContext *ctx, const char *camel, const char *haystac
                 // Strip initial and final first
                 char *firstchar, *lastchar;
                 for (firstchar = final; isspace((int)*firstchar); firstchar++);
-                for (lastchar = final + strlen(final) - 1; (lastchar > firstchar) && (isspace((int)*lastchar)); lastchar--);
+                for (lastchar = final + final_size - 2; (lastchar > firstchar) && (isspace((int)*lastchar)); lastchar--);
 
                 // Since we're stripping space and replacing it with \s+, we need to account for that
                 // when allocating work
@@ -1691,14 +1692,14 @@ static bool MatchPolicy(EvalContext *ctx, const char *camel, const char *haystac
             }
             else if (opt == INSERT_MATCH_TYPE_IGNORE_TRAILING)
             {
-                if (strncmp(final + strlen(final) - 4, "\\s*", 3) != 0)
+                if (strncmp(final + final_size - 5, "\\s*", 3) != 0)
                 {
-                    size_t work_size = final_size + 3;
+                    const size_t work_size = final_size + 3;
                     char  *work      = xcalloc(1, work_size);
                     strcpy(work, final);
 
                     char *sp;
-                    for (sp = work + strlen(work) - 1; (sp > work) && (isspace((int)*sp)); sp--);
+                    for (sp = work + work_size - 2; (sp > work) && (isspace((int)*sp)); sp--);
                     *++sp = '\0';
                     int written = snprintf(final, final_size, "%s\\s*", work);
                     if (written < 0)
@@ -1881,7 +1882,7 @@ static bool InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr
 
 /***************************************************************************/
 
-static bool InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **start, Item *begin_ptr, Item *end_ptr,
+static bool InsertCompoundLineAtLocation(EvalContext *ctx, const char *chunk, Item **start, Item *begin_ptr, Item *end_ptr,
                                         Item *location, Item *prev, const Attributes *a, const Promise *pp, EditContext *edcontext,
                                         PromiseResult *result)
 {
@@ -1899,14 +1900,14 @@ static bool InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **s
     }
 
     // Iterate over any lines within the chunk
-
+    const size_t chunk_len = strlen(chunk);
     char *buf = NULL;
     size_t buf_size = 0;
-    for (char *sp = chunk; sp <= chunk + strlen(chunk); sp++)
+    for (const char *sp = chunk; sp <= chunk + chunk_len; sp++)
     {
-        if (strlen(chunk) + 1 > buf_size)
+        if (chunk_len + 1 > buf_size)
         {
-            buf_size = strlen(chunk) + 1;
+            buf_size = chunk_len + 1;
             buf = xrealloc(buf, buf_size);
         }
 

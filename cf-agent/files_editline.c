@@ -1846,10 +1846,6 @@ static bool InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr
         {
             loc = loc->next;
         }
-        else
-        {
-            location = *start;
-        }
 
         free(buf);
         buf = NULL;

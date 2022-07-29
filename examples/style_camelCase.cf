@@ -1,0 +1,31 @@
+bundle agent __main__
+{
+  methods:
+      "Ssh";
+}
+bundle agent ssh
+{
+  vars:
+      "serviceName" string => "ssh";
+      "configFile" string => "/etc/ssh/sshd_config";
+      "conf[Port]" string => "22";
+
+  files:
+      "$(configFile)"
+        edit_line => default:set_line_based("$(this.bundle).conf",
+                                            " ",
+                                            "\s+",
+                                            ".*",
+                                            "\s*#\s*"),
+        classes => default:results( "bundle", "$(configFile)");
+
+  services:
+    _etc_ssh_sshd_config_repaired::
+      "$(serviceName)"
+        service_policy => "restart",
+        classes => default:results( "bundle", "$(serviceName)_restart");
+
+  reports:
+    ssh_restart_repaired._etc_ssh_sshd_config_repaired::
+      "We restarted ssh because the config file was repaired";
+}

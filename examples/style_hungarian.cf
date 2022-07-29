@@ -1,0 +1,52 @@
+#+begin_src cfengine3
+bundle agent __main__
+{
+  vars:
+      "s_one"   string => "one";
+      "ITwo"    int => "2";
+      "rThree"  real => "3.0";
+
+      "lMyList" slist => { "$(s_one)", "$(ITwo)", "$(rThree)" };
+
+  methods:
+      "Iteration inside (bundle called once)"
+        usebundle => dollar_vs_at( @(lMyList) );
+
+      "Iteration outside (bundle called length(lMyList) times)"
+        usebundle => dollar_vs_at( $(lMyList) );
+}
+
+bundle agent dollar_vs_at( myParam )
+{
+  vars:
+    "myParamType" string => type( myParam );
+
+   classes:
+    "myParamType_slist" expression => strcmp( $(myParamType),  "slist" );
+    "myParamType_string" expression => strcmp( $(myParamType),  "string" );
+
+  reports:
+      "Bundle promised by '$(with)'"
+        with => nth( reverse( callstack_promisers() ), 0 );
+
+    myParamType_slist::
+      "myParam is of type '$(myParamType)' with value $(with)"
+        with => join( ", ", @(myParam) );
+
+    myParamType_string::
+      "myParam is of type '$(myParamType)' with value $(myParam)";
+
+}
+#+end_src cfengine3
+
+#+begin_src example_output
+#@ ```
+#@ R: Bundle promised by 'Iteration inside (bundle called once)'
+#@ R: myParam is of type 'slist' with value one, 2, 3.000000
+#@ R: Bundle promised by 'Iteration outside (bundle called length(lMyList) times)'
+#@ R: myParam is of type 'string' with value one
+#@ R: myParam is of type 'string' with value 2
+#@ R: myParam is of type 'string' with value 3.000000
+#@ ```
+#+end_src
+

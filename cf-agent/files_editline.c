@@ -2009,7 +2009,14 @@ static bool InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, 
 
 /* Check line neighbourhood in whole file to avoid edge effects, iff we are not preseving block structure */
 
-{   int preserve_block = StringEqual(a->sourcetype, "preserve_block");
+{
+    assert(start != NULL);
+    assert(a != NULL);
+    assert(edcontext != NULL);
+
+    bool preserve_block = (StringEqual(a->sourcetype, "preserve_block") ||
+                           StringEqual(a->sourcetype, "file_preserve_block") ||
+                           StringEqual(a->sourcetype, "preserve_all_lines"));
 
     if (!prev)      /* Insert at first line */
     {

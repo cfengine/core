@@ -35,3 +35,4 @@ install-data-hook:
 	-systemctl daemon-reload
 
 endif
+dist_bin_SCRIPTS = cf-support

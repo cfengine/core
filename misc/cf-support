@@ -1,0 +1,190 @@
+#!/usr/bin/env bash
+
+export WORKDIR=/var/cfengine
+export BINDIR="$WORKDIR/bin"
+export non_interactive=0
+
+if [ $# -gt 1 ]; then
+  echo "usage: $(basename "$0") [--yes]"
+  echo '	--yes - Non-interactive use. Assume no ticket number and assume include masterfiles.'
+  exit 1
+fi
+
+if [ "$1" = "-M" ]; then
+  cat <<EOF
+.\"Copyright 2022 Northern.tech AS
+.\"
+.\"This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
+.\"
+.\"This program is free software; you can redistribute it and/or modify it
+.\"under the terms of the GNU General Public License as published by the
+.\"Free Software Foundation; version 3.
+.\"
+.\"This program is distributed in the hope that it will be useful,
+.\"but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\"GNU General Public License for more details.
+.\"
+.\"You should have received a copy of the GNU General Public License
+.\"along with this program; if not, write to the Free Software
+.\"Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+.\"
+.\"To the extent this program is licensed as part of the Enterprise
+.\"versions of CFEngine, the applicable Commercial Open Source License
+.\"(COSL) may apply to this file if you as a licensee so wish it. See
+.\"included file COSL.txt.
+e COSL.txt.
+.TH CF-SUPPORT 8 "2022-08-10" "CFEngine" "System Administrator"
+.SH NAME
+cf-support \- create tarball of information to submit for support tickets.
+.SH SYNOPSIS
+.B cf-support
+.RI [ OPTION ]
+.SH DESCRIPTION
+cf-support gathers various details about the system and creates a tarball in the current directory to submit to support. If the system is an enterprise hub then additional details will be gathered and included. The utility will prompt for an optional support ticket number as well as prompt whether to include masterfiles in the tarball.
+
+.SH OPTIONS
+.IP "--yes"
+Non-interactive use. Assume no ticket number and assume include masterfiles.
+.SH CFENGINE
+CFEngine provides automated configuration management of large-scale computer systems. A system administrator describes the desired state of a system using CFEngine policy code. The program \fBcf-agent\fR reads policy code and attempts to bring the current system state to the desired state described. Policy code is downloaded by \fBcf-agent\fR from a \fBcf-serverd\fR daemon. The daemon \fBcf-execd\fR is responsible for running \fBcf-agent\fR periodically.
+.br
+Documentation for CFEngine is available at https://docs.cfengine.com/.
+.SH PROMISE THEORY
+CFEngine is built on principles from promise theory, proposed by Mark Burgess in 2004. Promise theory is a model of voluntary cooperation between individual, autonomous actors or agents who publish their intentions to one another in the form of promises. A promise is a declaration of intent whose purpose is to increase the recipient's certainty about a claim of past, present or future behaviour. For a promise to increase certainty, the recipient needs to trust the promiser, but trust can also be built on the verification that previous promises have been kept, thus trust plays a symbiotic relationship with promises.
+.br
+For an introduction to promise theory, please see http://arxiv.org/abs/0810.3294/
+.SH AVAILABILITY
+cf-support is part of CFEngine.
+.br
+Binary packages may be downloaded from https://cfengine.com/download/.
+.br
+The source code is available at https://github.com/cfengine/
+.SH BUGS
+Please see the public bug-tracker at https://tracker.mender.io/projects/CFE/.
+.br
+GitHub pull-requests may be submitted to https://github.com/cfengine/core/.
+.SH "SEE ALSO"
+.BR cf-promises (8),
+.BR cf-agent (8),
+.BR cf-serverd (8),
+.BR cf-execd (8),
+.BR cf-monitord (8),
+.BR cf-runagent (8),
+.BR cf-key (8)
+.SH AUTHOR
+Northern.tech AS
+EOF
+  exit 0
+fi
+
+[ "$1" = "--yes" ] || [ "$1" = "-y" ] && non_interactive=1
+
+if [ "$EUID" -ne 0 ]; then
+  echo "$0 must be run as root"
+  exit 1
+fi
+
+if ! command -v gzip >/dev/null; then
+  echo "Please install gzip. This is required in order to minimize size of support collection."
+  exit 1
+fi
+
+if [ $non_interactive -eq 0 ]; then
+  read -rp "If you have it, please enter your support case number: " case_number
+fi
+case_number="${case_number:-NA}"
+timestamp=$(date +%F-%H%M)
+collection="cfengine_support_case_$case_number-$(hostname -f)-$timestamp"
+
+tmpdir="$(mktemp -d)/$collection"
+export tmpdir
+mkdir -p "$tmpdir"
+
+export info_file="$tmpdir/system-info.txt"
+
+function file_add
+{
+  local filename
+  filename="$(basename "$1")"
+  if [ -f "$1" ]; then
+    cp "$1" "$tmpdir"/"$filename"
+    echo "Added file $1"
+  else
+    echo "$1 file not found" >> "$info_file"
+  fi
+}
+export -f file_add
+
+function gzip_add
+{
+  local filename
+  filename="$(basename "$1")"
+  if [ -f "$1" ]; then
+    gzip -c "$1" > "$tmpdir"/"$filename".gz
+    echo "Added compressed copy of file $1"
+  else
+    echo "$1 file not found" >> "$info_file"
+  fi
+}
+export -f gzip_add
+
+function log_cmd
+{
+  echo "=== $1 ===" >> "$info_file"
+  eval "$1" >> "$info_file" 2>&1 || true
+  echo >> "$info_file" # one newline for easier to read output
+  echo "Captured output of command $1"
+}
+export -f log_cmd
+
+log_cmd "hostname -f"
+log_cmd "uname -a"
+[ -f "/etc/os-release" ] && log_cmd "cat /etc/os-release"
+log_cmd "$BINDIR/cf-promises -V"
+log_cmd "free -m"
+log_cmd "df -h"
+log_cmd "ps auwwx"
+log_cmd "top -b -H -c -n1"
+log_cmd "netstat -ie"
+log_cmd "ifconfig"
+if command -v lsof 2>/dev/null >/dev/null; then
+  lsof > "$tmpdir/lsof.txt"
+  echo "Captured output of command lsof"
+fi
+log_cmd "mount"
+file_add "/etc/fstab"
+log_cmd "$BINDIR/cf-key -p $WORKDIR/ppkeys/localhost.pub"
+log_cmd "grep 'version =' $WORKDIR/inputs/promises.cf"
+log_cmd "$BINDIR/cf-key -s"
+log_cmd "$BINDIR/cf-check diagnose"
+if command -v systemctl >/dev/null; then
+  log_cmd "systemctl status cfengine3"
+else
+  log_cmd "/etc/init.d/cfengine3 status"
+fi
+for f in /var/log/CFEngine-Install*; do
+  gzip_add "$f"
+done
+[ -f /var/log/messages ] && syslog_cmd="cat /var/log/messages"
+[ -f /var/log/syslog ] && syslog_cmd="cat /var/log/syslog"
+[ "$(command -v journalctl >/dev/null)" ] && syslog_cmd="journalctl"
+[ -z "$syslog_cmd" ] && syslog_cmd="dmesg"
+_syslog_filtered="$tmpdir"/syslog-filtered-for-cfengine.log.gz
+$syslog_cmd | grep -E 'cf-|CFEngine' | gzip -c > "$_syslog_filtered" || true
+echo "Captured output of $syslog_cmd filtered for cf-|CFEngine"
+
+gzip_add $WORKDIR/outputs/previous
+file_add $WORKDIR/policy_server.dat
+
+if [ -f $WORKDIR/share/cf-support-nova-hub.sh ]; then
+  # shellcheck source=/dev/null
+  source $WORKDIR/share/cf-support-nova-hub.sh
+fi
+
+# Here we create the tarball one directory up
+# to preserve a top-level of $collection in the tarball.
+# This gives a nice context of timestamp, hostname and support ticket
+# if provided. (see $collection definition above)
+tar czf "$collection.tar.gz" --directory "$tmpdir/../" . && rm -rf "$tmpdir"
+echo "Please send $collection.tar.gz to CFEngine support staff."

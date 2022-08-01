@@ -254,6 +254,7 @@ git_cfbs_deploy_refspec() {
       # If the above command fails we will have an extra temp dir left.  Otherwise not.
     mv "${temp_stage}/out/masterfiles" "${1}"          || error_exit "Can't mv ${temp_stage}/out/masterfiles to ${1}"
     cp "${temp_stage}/cfbs.json" "${1}"          || error_exit "Can't cp ${temp_stage}/cfbs.json to ${1}"
+    rm -rf "${temp_stage}"
     rm -rf "${third_dir}"
     trap -- EXIT
   fi

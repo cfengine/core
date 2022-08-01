@@ -1,0 +1,54 @@
+#+begin_src cfengine3
+bundle agent __main__
+{
+  files:
+
+      "/tmp/example-edit.filename.txt" content => "Hello World!";
+
+      "/tmp/example-edit.filename.txt"
+        edit_line => show_edit_filename;
+
+}
+
+bundle edit_line show_edit_filename
+{
+  reports:
+      "$(with)"
+        with => concat( "I found the string 'World' in the file being ",
+                        "edited ('$(edit.filename)')"),
+        if => strcmp( "false", "$(edit.empty_before_use)"); # It's probably
+      # useless to probe
+      # the content of the
+      # file if you are
+      # ignoring
+      # pre-existing
+      # content.
+
+      "$(with)"
+        with => concat( "It's probably not very useful to inspect content",
+                        "that is being thrown away." ),
+        if => strcmp( "true", "$(edit.empty_before_use)");
+
+      "$(with)"
+        with => concat ( "This version of CFEngine does not know if the",
+                         "edit operation is expected to ignore pre-existing ",
+                         "content the variable 'edit.empty_before_use' does ",
+                         "not exist"),
+        unless => isvariable ( "edit.empty_before_use" );
+
+}
+
+body edit_defaults my_empty_file_before_editing
+{
+        empty_file_before_editing => "true"; # The variable
+                                             # edit.empty_before_use allows this
+                                             # to be known from within an
+                                             # edit_line bundle.
+}
+#+end_src
+###############################################################################
+#+begin_src example_output
+#@ ```
+#@ R: I found the string 'World' in the file being edited ('/tmp/example-edit.filename.txt')
+#@ ```
+#+end_src

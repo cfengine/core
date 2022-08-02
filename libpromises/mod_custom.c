@@ -666,7 +666,8 @@ static void PromiseModule_AppendAllAttributes(
             || StringEqual(name, "ifvarclass")
             || StringEqual(name, "unless")
             || StringEqual(name, "depends_on")
-            || StringEqual(name, "with"))
+            || StringEqual(name, "with")
+            || StringEqual(name, "meta"))
         {
             // Evaluated by agent and not sent to module, skip
             continue;
@@ -746,7 +747,8 @@ static inline bool CustomPromise_IsFullyResolved(const EvalContext *ctx, const P
     for (size_t i = 0; i < attributes; i++)
     {
         const Constraint *attribute = SeqAt(pp->conlist, i);
-        if (IsClassesBodyConstraint(attribute->lval))
+        if (IsClassesBodyConstraint(attribute->lval) ||
+            StringEqual(attribute->lval, "meta"))
         {
             /* Not passed to the modules, handled on the agent side. */
             continue;

@@ -409,7 +409,7 @@ static bool MakeParentDirectoryImpl(EvalContext *ctx, const Promise *pp, const A
     return true;
 }
 
-bool LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits)
+bool LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits, bool only_checks)
 {
     {
         struct stat statbuf;
@@ -431,6 +431,12 @@ bool LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits)
             Log(LOG_LEVEL_INFO, "%s is not a plain file", file);
             return false;
         }
+    }
+    if (only_checks)
+    {
+        /* Checks done and none of them failed and returned we can just return
+         * true here. */
+        return true;
     }
 
     FILE *fp = safe_fopen(file, "rt");

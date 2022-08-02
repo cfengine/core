@@ -38,6 +38,8 @@ bundle agent test
       "expected" string => "HP-UX";
     suse::
       "expected" string => "SUSE";
+    opensuse::
+      "expected" string => "OpenSUSE";
     windows::
       "expected" string => "Windows";
     freebsd::

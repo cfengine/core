@@ -2685,8 +2685,7 @@ static bool ValidateCustomPromise(const Promise *pp, Seq *errors)
                     promise_type));
             valid = false;
         } else if (StringEqual(name, "action_policy")
-            || StringEqual(name, "expireafter")
-            || StringEqual(name, "meta"))
+                   || StringEqual(name, "expireafter"))
         {
             // TODO: Remove 1 attribute at a time, test and fix.
             //       https://tracker.mender.io/browse/CFE-3392

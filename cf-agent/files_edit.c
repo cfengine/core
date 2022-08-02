@@ -224,7 +224,8 @@ bool LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, EditDefaults edits, bool
         return true;
     }
 
-    if ((*doc = xmlParseFile(file)) == NULL)
+    *doc = xmlParseFile(file);
+    if (doc == NULL)
     {
         Log(LOG_LEVEL_INFO, "Document '%s' not parsed successfully. (xmlParseFile: %s)", file, GetErrorStr());
         return false;

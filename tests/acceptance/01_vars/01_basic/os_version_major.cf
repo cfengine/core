@@ -21,8 +21,8 @@ bundle agent test
     any::
       "platforms"
         slist => { "debian", "ubuntu", "redhat", "rhel", "centos", "fedora",
-                   "aix", "hpux", "suse", "opensuse", "sles", "solaris",
-                   "sunos", "windows", "freebsd", "macos" };
+                   "aix", "hpux", "suse", "opensuse", "opensuse_leap", "sles",
+                   "solaris", "sunos", "windows", "freebsd", "macos" };
 
 
     # Regex matching current platforms OS-class with version numbers
@@ -40,6 +40,7 @@ bundle agent test
     any::
       "extract_regex"
         string => ifelse("solaris|sunos", "^[a-z]+_[0-9]+_([0-9]+$)",
+                         "opensuse_leap", "^[a-z_]+_([0-9]+)$",
                                           "^[a-z]+_([0-9]+)$");
 
     # Find OS-class with version numbers using regex

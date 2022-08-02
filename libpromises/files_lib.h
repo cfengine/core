@@ -31,7 +31,7 @@
 void PurgeItemList(Item **list, char *name);
 bool FileWriteOver(char *filename, char *contents);
 
-bool LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits);
+bool LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits, bool only_checks);
 
 /**
  * @see     MakeParentDirectoryForPromise()

@@ -84,8 +84,8 @@ static bool InsertMultipleLinesToRegion(EvalContext *ctx, Item **start, Item *be
 static bool InsertMultipleLinesAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr, Item *end_ptr, Item *location, Item *prev, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
 static bool DeletePromisedLinesMatching(EvalContext *ctx, Item **start, Item *begin, Item *end, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
 static bool InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, Item *location, Item *prev, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
-static bool InsertCompoundLineAtLocation(EvalContext *ctx, char *newline, Item **start, Item *begin_ptr, Item *end_ptr, Item *location, Item *prev, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
-static int ReplacePatterns(EvalContext *ctx, Item *start, Item *end, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
+static bool InsertCompoundLineAtLocation(EvalContext *ctx, const char *newline, Item **start, Item *begin_ptr, Item *end_ptr, Item *location, Item *prev, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
+static bool ReplacePatterns(EvalContext *ctx, Item *start, Item *end, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
 static bool EditColumns(EvalContext *ctx, Item *file_start, Item *file_end, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
 static bool EditLineByColumn(EvalContext *ctx, Rlist **columns, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
 static bool DoEditColumn(Rlist **columns, EditContext *edcontext,
@@ -106,13 +106,15 @@ static bool InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr
 bool ScheduleEditLineOperations(EvalContext *ctx, const Bundle *bp, const Attributes *a, const Promise *parentp, EditContext *edcontext)
 {
     assert(a != NULL);
+    assert(bp != NULL);
+    assert(edcontext != NULL);
 
     enum editlinetypesequence type;
     char lockname[CF_BUFSIZE];
     CfLock thislock;
     int pass;
 
-    assert(strcmp(bp->type, "edit_line") == 0);
+    assert(StringEqual(bp->type, "edit_line"));
 
     snprintf(lockname, CF_BUFSIZE - 1, "masterfilelock-%s", edcontext->filename);
     thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a->transaction.ifelapsed, a->transaction.expireafter, parentp, true);
@@ -138,7 +140,8 @@ bool ScheduleEditLineOperations(EvalContext *ctx, const Bundle *bp, const Attrib
             }
 
             EvalContextStackPushBundleSectionFrame(ctx, sp);
-            for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
+            const size_t length = SeqLength(sp->promises);
+            for (size_t ppi = 0; ppi < length; ppi++)
             {
                 Promise *pp = SeqAt(sp->promises, ppi);
 
@@ -163,6 +166,9 @@ bool ScheduleEditLineOperations(EvalContext *ctx, const Bundle *bp, const Attrib
 
 Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, const Attributes *a, const Promise *pp, PromiseResult *result)
 {
+    assert(a != NULL);
+    assert(pp != NULL);
+
     FILE *fp = NULL;
     if ((fp = safe_fopen(a->edit_template, "rt" )) == NULL)
     {
@@ -213,21 +219,21 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, const 
             // Check closing syntax
 
             // Get Action operator
-            if (strncmp(buffer, "[%CFEngine", strlen("[%CFEngine")) == 0)
+            if (StringEqualN(buffer, "[%CFEngine", strlen("[%CFEngine")))
             {
                 char op[CF_BUFSIZE] = "";
                 char brack[4]       = "";
 
                 sscanf(buffer+strlen("[%CFEngine"), "%1024s %3s", op, brack);
 
-                if (strcmp(brack, "%]") != 0)
+                if (!StringEqual(brack, "%]"))
                 {
                     cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Template file '%s' syntax error, missing close \"%%]\" at line %d", a->edit_template, lineno);
                     *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
                     return NULL;
                 }
 
-                if (strcmp(op, "BEGIN") == 0)
+                if (StringEqual(op, "BEGIN"))
                 {
                     PrependItem(&stack, context, NULL);
                     if (++level > 1)
@@ -240,7 +246,7 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, const 
                     continue;
                 }
 
-                if (strcmp(op, "END") == 0)
+                if (StringEqual(op, "END"))
                 {
                     level--;
                     if (stack != NULL)
@@ -250,7 +256,7 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, const 
                        }
                 }
 
-                if (strcmp(op + strlen(op)-2, "::") == 0)
+                if (StringEqual(op + strlen(op)-2, "::"))
                 {
                     *(op + strlen(op)-2) = '\0';
                     strcpy(context, op);
@@ -322,27 +328,27 @@ static PromiseResult KeepEditLinePromise(EvalContext *ctx, const Promise *pp, vo
 
     PromiseBanner(ctx, pp);
 
-    if (strcmp("classes", PromiseGetPromiseType(pp)) == 0)
+    if (StringEqual("classes", PromiseGetPromiseType(pp)))
     {
         return VerifyClassPromise(ctx, pp, NULL);
     }
-    else if (strcmp("delete_lines", PromiseGetPromiseType(pp)) == 0)
+    else if (StringEqual("delete_lines", PromiseGetPromiseType(pp)))
     {
         return VerifyLineDeletions(ctx, pp, edcontext);
     }
-    else if (strcmp("field_edits", PromiseGetPromiseType(pp)) == 0)
+    else if (StringEqual("field_edits", PromiseGetPromiseType(pp)))
     {
         return VerifyColumnEdits(ctx, pp, edcontext);
     }
-    else if (strcmp("insert_lines", PromiseGetPromiseType(pp)) == 0)
+    else if (StringEqual("insert_lines", PromiseGetPromiseType(pp)))
     {
         return VerifyLineInsertions(ctx, pp, edcontext);
     }
-    else if (strcmp("replace_patterns", PromiseGetPromiseType(pp)) == 0)
+    else if (StringEqual("replace_patterns", PromiseGetPromiseType(pp)))
     {
         return VerifyPatterns(ctx, pp, edcontext);
     }
-    else if (strcmp("reports", PromiseGetPromiseType(pp)) == 0)
+    else if (StringEqual("reports", PromiseGetPromiseType(pp)))
     {
         return VerifyReportPromise(ctx, pp);
     }
@@ -356,6 +362,9 @@ static PromiseResult KeepEditLinePromise(EvalContext *ctx, const Promise *pp, vo
 
 static PromiseResult VerifyLineDeletions(EvalContext *ctx, const Promise *pp, EditContext *edcontext)
 {
+    assert(pp != NULL);
+    assert(edcontext != NULL);
+
     Item **start = &(edcontext->file_start);
     Item *begin_ptr, *end_ptr;
     CfLock thislock;
@@ -448,6 +457,9 @@ static PromiseResult VerifyLineDeletions(EvalContext *ctx, const Promise *pp, Ed
 
 static PromiseResult VerifyColumnEdits(EvalContext *ctx, const Promise *pp, EditContext *edcontext)
 {
+    assert(pp != NULL);
+    assert(edcontext != NULL);
+
     Item **start = &(edcontext->file_start);
     Item *begin_ptr, *end_ptr;
     CfLock thislock;
@@ -539,6 +551,9 @@ static PromiseResult VerifyColumnEdits(EvalContext *ctx, const Promise *pp, Edit
 
 static PromiseResult VerifyPatterns(EvalContext *ctx, const Promise *pp, EditContext *edcontext)
 {
+    assert(pp != NULL);
+    assert(edcontext != NULL);
+
     Item **start = &(edcontext->file_start);
     Item *begin_ptr, *end_ptr;
     CfLock thislock;
@@ -648,6 +663,9 @@ static bool SelectNextItemMatching(EvalContext *ctx, const char *regexp, Item *b
 
 static bool SelectLastItemMatching(EvalContext *ctx, const char *regexp, Item *begin, Item *end, Item **match, Item **prev)
 {
+    assert(match != NULL);
+    assert(prev != NULL);
+
     Item *ip, *ip_last = NULL, *ip_prev = NULL;
 
     *match = NULL;
@@ -682,6 +700,9 @@ static bool SelectLastItemMatching(EvalContext *ctx, const char *regexp, Item *b
 
 static bool SelectItemMatching(EvalContext *ctx, Item *start, char *regex, Item *begin_ptr, Item *end_ptr, Item **match, Item **prev, char *fl)
 {
+    assert(match != NULL);
+    assert(prev != NULL);
+
     Item *ip;
     bool ret = false;
 
@@ -693,7 +714,7 @@ static bool SelectItemMatching(EvalContext *ctx, Item *start, char *regex, Item 
         return false;
     }
 
-    if (fl && (strcmp(fl, "first") == 0))
+    if (StringEqual(fl, "first"))
     {
         if (SelectNextItemMatching(ctx, regex, begin_ptr, end_ptr, match, prev))
         {
@@ -723,13 +744,16 @@ static bool SelectItemMatching(EvalContext *ctx, Item *start, char *regex, Item 
 
 static PromiseResult VerifyLineInsertions(EvalContext *ctx, const Promise *pp, EditContext *edcontext)
 {
+    assert(pp != NULL);
+    assert(edcontext != NULL);
+
     Item **start = &(edcontext->file_start), *match, *prev;
     Item *begin_ptr, *end_ptr;
     CfLock thislock;
     char lockname[CF_BUFSIZE];
 
     Attributes a = GetInsertionAttributes(ctx, pp);
-    int allow_multi_lines = a.sourcetype && strcmp(a.sourcetype, "preserve_all_lines") == 0;
+    int allow_multi_lines = StringEqual(a.sourcetype, "preserve_all_lines");
     a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
 
     if (!SanityCheckInsertions(&a))
@@ -851,6 +875,11 @@ If no such region matches, begin_ptr and end_ptr should point to NULL
 
 */
 {
+    assert(a != NULL);
+    assert(edcontext != NULL);
+    assert(begin_ptr != NULL);
+    assert(end_ptr != NULL);
+
     const char *const select_start = a->region.select_start;
     const char *const select_end = a->region.select_end;
     const int include_start = a->region.include_start;
@@ -918,11 +947,12 @@ static int MatchRegion(EvalContext *ctx, const char *chunk, const Item *begin, c
 */
 {
     const Item *ip = begin;
-    size_t buf_size = strlen(chunk) + 1;
+    const size_t chunk_len = strlen(chunk);
+    size_t buf_size = chunk_len + 1;
     char *buf = xmalloc(buf_size);
     int lines = 0;
 
-    for (const char *sp = chunk; sp <= chunk + strlen(chunk); sp++)
+    for (const char *sp = chunk; sp <= chunk + chunk_len; sp++)
     {
         buf[0] = '\0';
         sscanf(sp, "%[^\n]", buf);
@@ -934,7 +964,7 @@ static int MatchRegion(EvalContext *ctx, const char *chunk, const Item *begin, c
             goto bad;
         }
 
-        if (!regex && strcmp(buf, ip->name) != 0)
+        if (!regex && !StringEqual(buf, ip->name))
         {
             lines = 0;
             goto bad;
@@ -963,7 +993,7 @@ static int MatchRegion(EvalContext *ctx, const char *chunk, const Item *begin, c
         }
         else                    // if the region runs out before the end
         {
-            if (++sp <= chunk + strlen(chunk))
+            if (++sp <= chunk + chunk_len)
             {
                 lines = 0;
                 goto bad;
@@ -983,6 +1013,9 @@ bad:
 static bool InsertMultipleLinesToRegion(EvalContext *ctx, Item **start, Item *begin_ptr, Item *end_ptr, const Attributes *a,
                                        const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
+    assert(a != NULL);
+    assert(edcontext != NULL);
+
     Item *ip, *prev = NULL;
     int allow_multi_lines = StringEqual(a->sourcetype, "preserve_all_lines");
 
@@ -1056,8 +1089,11 @@ static bool InsertMultipleLinesAtLocation(EvalContext *ctx, Item **start, Item *
 // i.e. no insertion will be made if a neighbouring line matches
 
 {
+    assert(pp != NULL);
+    assert(a != NULL);
+
     const char *const type = a->sourcetype;
-    int isfileinsert = StringEqual(type, "file") || StringEqual(type, "file_preserve_block");
+    bool isfileinsert = StringEqual(type, "file") || StringEqual(type, "file_preserve_block");
 
     if (isfileinsert)
     {
@@ -1075,6 +1111,9 @@ static bool InsertMultipleLinesAtLocation(EvalContext *ctx, Item **start, Item *
 static bool DeletePromisedLinesMatching(EvalContext *ctx, Item **start, Item *begin, Item *end, const Attributes *a,
                                        const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
+    assert(pp != NULL);
+    assert(edcontext != NULL);
+
     Item *ip, *np = NULL, *lp, *initiator = begin, *terminator = NULL;
     int i, matches, noedits = true;
     bool retval = false;
@@ -1218,15 +1257,21 @@ static bool DeletePromisedLinesMatching(EvalContext *ctx, Item **start, Item *be
 
 /********************************************************************/
 
-static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, const Attributes *a,
-                           const Promise *pp, EditContext *edcontext, PromiseResult *result)
+static bool ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, const Attributes *a,
+                            const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
+    assert(a != NULL);
+    assert(pp != NULL);
+    assert(edcontext != NULL);
+
     char line_buff[CF_EXPANDSIZE];
     char after[CF_BUFSIZE];
     size_t match_len;
-    int start_off, end_off, once_only = false, retval = false;
+    int start_off, end_off;
+    bool once_only = false, retval = false;
     Item *ip;
-    int notfound = true, cutoff = 1, replaced = false;
+    int cutoff = 1;
+    bool notfound = true, replaced = false;
 
     if (StringEqual(a->replace.occurrences, "first"))
     {
@@ -1348,6 +1393,10 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, c
 static bool EditColumns(EvalContext *ctx, Item *file_start, Item *file_end, const Attributes *a,
                         const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
+    assert(a != NULL);
+    assert(pp != NULL);
+    assert(edcontext != NULL);
+
     char separator[CF_MAXVARSIZE];
     int s, e;
     bool retval = false;
@@ -1420,6 +1469,8 @@ static bool EditColumns(EvalContext *ctx, Item *file_start, Item *file_end, cons
 
 static bool SanityCheckInsertions(const Attributes *a)
 {
+    assert(a != NULL);
+
     long not = 0;
     long with = 0;
     bool ok = true;
@@ -1506,6 +1557,9 @@ static bool SanityCheckInsertions(const Attributes *a)
 
 static bool SanityCheckDeletions(const Attributes *a, const Promise *pp)
 {
+    assert(a != NULL);
+    assert(pp != NULL);
+
     if (MultiLineString(pp->promiser))
     {
         if (a->not_matching)
@@ -1533,7 +1587,7 @@ static bool MatchPolicy(EvalContext *ctx, const char *camel, const char *haystac
     for (Item *ip = list; ip != NULL; ip = ip->next)
     {
         ok = false;
-        bool direct_cmp = (strcmp(camel, haystack) == 0);
+        bool direct_cmp = StringEqual(camel, haystack);
 
         final             = xstrdup(ip->name);
         size_t final_size = strlen(final) + 1;
@@ -1584,7 +1638,7 @@ static bool MatchPolicy(EvalContext *ctx, const char *camel, const char *haystac
                 // Strip initial and final first
                 char *firstchar, *lastchar;
                 for (firstchar = final; isspace((int)*firstchar); firstchar++);
-                for (lastchar = final + strlen(final) - 1; (lastchar > firstchar) && (isspace((int)*lastchar)); lastchar--);
+                for (lastchar = final + final_size - 2; (lastchar > firstchar) && (isspace((int)*lastchar)); lastchar--);
 
                 // Since we're stripping space and replacing it with \s+, we need to account for that
                 // when allocating work
@@ -1651,7 +1705,7 @@ static bool MatchPolicy(EvalContext *ctx, const char *camel, const char *haystac
             }
             else if (opt == INSERT_MATCH_TYPE_IGNORE_LEADING)
             {
-                if (strncmp(final, "\\s*", 3) != 0)
+                if (!StringEqualN(final, "\\s*", 3))
                 {
                     char *sp;
                     for (sp = final; isspace((int)*sp); sp++);
@@ -1691,14 +1745,14 @@ static bool MatchPolicy(EvalContext *ctx, const char *camel, const char *haystac
             }
             else if (opt == INSERT_MATCH_TYPE_IGNORE_TRAILING)
             {
-                if (strncmp(final + strlen(final) - 4, "\\s*", 3) != 0)
+                if (!StringEqualN(final + final_size - 5, "\\s*", 3))
                 {
-                    size_t work_size = final_size + 3;
+                    const size_t work_size = final_size + 3;
                     char  *work      = xcalloc(1, work_size);
                     strcpy(work, final);
 
                     char *sp;
-                    for (sp = work + strlen(work) - 1; (sp > work) && (isspace((int)*sp)); sp--);
+                    for (sp = work + work_size - 2; (sp > work) && (isspace((int)*sp)); sp--);
                     *++sp = '\0';
                     int written = snprintf(final, final_size, "%s\\s*", work);
                     if (written < 0)
@@ -1763,6 +1817,11 @@ static bool IsItemInRegion(EvalContext *ctx, const char *item, const Item *begin
 static bool InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr, Item *end_ptr, Item *location,
                                 Item *prev, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
+    assert(a != NULL);
+    assert(pp != NULL);
+    assert(edcontext != NULL);
+    assert(result != NULL);
+
     FILE *fin;
     bool retval = false;
     Item *loc = NULL;
@@ -1832,7 +1891,7 @@ static bool InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr
             //a->location.before_after = cfe_after;
         }
 
-        if (prev)
+        if (prev != NULL)
         {
             prev = prev->next;
         }
@@ -1841,13 +1900,9 @@ static bool InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr
             prev = *start;
         }
 
-        if (loc)
+        if (loc != NULL)
         {
             loc = loc->next;
-        }
-        else
-        {
-            location = *start;
         }
 
         free(buf);
@@ -1881,14 +1936,19 @@ static bool InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr
 
 /***************************************************************************/
 
-static bool InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **start, Item *begin_ptr, Item *end_ptr,
+static bool InsertCompoundLineAtLocation(EvalContext *ctx, const char *chunk, Item **start, Item *begin_ptr, Item *end_ptr,
                                         Item *location, Item *prev, const Attributes *a, const Promise *pp, EditContext *edcontext,
                                         PromiseResult *result)
 {
+    assert(a != NULL);
+    assert(pp != NULL);
+    assert(edcontext != NULL);
+    assert(start != NULL);
+
     bool retval = false;
     const char *const type = a->sourcetype;
     const bool preserve_all_lines = StringEqual(type, "preserve_all_lines");
-    const bool preserve_block = type && (preserve_all_lines || strcmp(type, "preserve_block") == 0 || strcmp(type, "file_preserve_block") == 0);
+    const bool preserve_block = type && (preserve_all_lines || StringEqual(type, "preserve_block") || StringEqual(type, "file_preserve_block"));
 
     if (!preserve_all_lines && MatchRegion(ctx, chunk, location, NULL, false))
     {
@@ -1899,14 +1959,14 @@ static bool InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **s
     }
 
     // Iterate over any lines within the chunk
-
+    const size_t chunk_len = strlen(chunk);
     char *buf = NULL;
     size_t buf_size = 0;
-    for (char *sp = chunk; sp <= chunk + strlen(chunk); sp++)
+    for (const char *sp = chunk; sp <= chunk + chunk_len; sp++)
     {
-        if (strlen(chunk) + 1 > buf_size)
+        if (chunk_len + 1 > buf_size)
         {
-            buf_size = strlen(chunk) + 1;
+            buf_size = chunk_len + 1;
             buf = xrealloc(buf, buf_size);
         }
 
@@ -1940,7 +2000,7 @@ static bool InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **s
             location = *start;
         }
 
-        if (prev)
+        if (prev != NULL)
         {
             prev = prev->next;
         }
@@ -1949,7 +2009,7 @@ static bool InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **s
             prev = *start;
         }
 
-        if (location)
+        if (location != NULL)
         {
             location = location->next;
         }
@@ -1963,41 +2023,29 @@ static bool InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **s
     return retval;
 }
 
-static bool NeighbourItemMatches(EvalContext *ctx, const Item *file_start, const Item *location, const char *string, EditOrder pos, Rlist *insert_match,
-                         const Promise *pp)
+/**
+ * Look for a line matching proposed insert before or after location
+ */
+static bool NeighbourItemMatches(EvalContext *ctx, const Item *file_start, const Item *location,
+                                 const char *string, EditOrder pos, Rlist *insert_match,
+                                 const Promise *pp)
 {
-/* Look for a line matching proposed insert before or after location */
+    if (location == NULL)
+    {
+        return false;
+    }
 
+    if (pos == EDIT_ORDER_AFTER)
+    {
+        return ((location->next != NULL) &&
+                (MatchPolicy(ctx, string, location->next->name, insert_match, pp)));
+    }
+    /* else => (pos == EDIT_ORDER_BEFORE) */
     for (const Item *ip = file_start; ip != NULL; ip = ip->next)
     {
-        if (pos == EDIT_ORDER_BEFORE)
+        if ((ip->next != NULL) && (ip->next == location))
         {
-            if ((ip->next) && (ip->next == location))
-            {
-                if (MatchPolicy(ctx, string, ip->name, insert_match, pp))
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-        }
-
-        if (pos == EDIT_ORDER_AFTER)
-        {
-            if (ip == location)
-            {
-                if ((ip->next) && (MatchPolicy(ctx, string, ip->next->name, insert_match, pp)))
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
+            return (MatchPolicy(ctx, string, ip->name, insert_match, pp));
         }
     }
 
@@ -2040,7 +2088,7 @@ static bool InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, 
                 }
             }
 
-            if (strcmp((*start)->name, newline) != 0)
+            if (!StringEqual((*start)->name, newline))
             {
                 if (!MakingChanges(ctx, pp, a, result, "prepend promised line '%s' to '%s'",
                                    newline, edcontext->filename))
@@ -2125,6 +2173,9 @@ static bool InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, 
 static bool EditLineByColumn(EvalContext *ctx, Rlist **columns, const Attributes *a,
                              const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
+    assert(a != NULL);
+    assert(edcontext != NULL);
+
     Rlist *rp, *this_column = NULL;
     char sep[CF_MAXVARSIZE];
     int i, count = 0;
@@ -2178,7 +2229,7 @@ static bool EditLineByColumn(EvalContext *ctx, Rlist **columns, const Attributes
     {
         /* internal separator, single char so split again */
 
-        if (strstr(RlistScalarValue(rp), a->column.column_value) || strcmp(RlistScalarValue(rp), a->column.column_value) != 0)
+        if (strstr(RlistScalarValue(rp), a->column.column_value) || !StringEqual(RlistScalarValue(rp), a->column.column_value))
         {
             if (!MakingChanges(ctx, pp, a, result, "edit field '%s' in '%s'",
                                a->column.column_value, edcontext->filename))
@@ -2210,7 +2261,7 @@ static bool EditLineByColumn(EvalContext *ctx, Rlist **columns, const Attributes
     {
         /* No separator, so we set the whole field to the value */
 
-        if (a->column.column_operation && strcmp(a->column.column_operation, "delete") == 0)
+        if (StringEqual(a->column.column_operation, "delete"))
         {
             if (!MakingChanges(ctx, pp, a, result, "delete field value '%s' in '%s'",
                                RlistScalarValue(rp), edcontext->filename))
@@ -2258,6 +2309,8 @@ static bool EditLineByColumn(EvalContext *ctx, Rlist **columns, const Attributes
 
 static bool SelectLine(EvalContext *ctx, const char *line, const Attributes *a)
 {
+    assert(a != NULL);
+
     Rlist *rp, *c;
     int s, e;
     char *selector;
@@ -2269,7 +2322,7 @@ static bool SelectLine(EvalContext *ctx, const char *line, const Attributes *a)
         {
             selector = RlistScalarValue(rp);
 
-            if (strncmp(selector, line, strlen(selector)) == 0)
+            if (StringStartsWith(line, selector))
             {
                 return true;
             }
@@ -2284,7 +2337,7 @@ static bool SelectLine(EvalContext *ctx, const char *line, const Attributes *a)
         {
             selector = RlistScalarValue(rp);
 
-            if (strncmp(selector, line, strlen(selector)) == 0)
+            if (StringStartsWith(line, selector))
             {
                 return false;
             }
@@ -2364,6 +2417,9 @@ static bool DoEditColumn(Rlist **columns, EditContext *edcontext,
                          EvalContext *ctx, const Promise *pp, const Attributes *a,
                          PromiseResult *result)
 {
+    assert(a != NULL);
+    assert(edcontext != NULL);
+
     Rlist *rp, *found;
     bool retval = false;
 
@@ -2387,12 +2443,12 @@ static bool DoEditColumn(Rlist **columns, EditContext *edcontext,
     if (StringEqual(column_operation, "set"))
     {
         int length = RlistLen(*columns);
-        if (length == 1 && strcmp(RlistScalarValue(*columns), column_value) == 0)
+        if (length == 1 && StringEqual(RlistScalarValue(*columns), column_value))
         {
             RecordNoChange(ctx, pp, a, "Field sub-value set as promised");
             return false;
         }
-        else if (length == 0 && strcmp("", column_value) == 0)
+        else if (length == 0 && StringEqual("", column_value))
         {
             RecordNoChange(ctx, pp, a, "Empty field sub-value set as promised");
             return false;
@@ -2468,6 +2524,8 @@ static bool DoEditColumn(Rlist **columns, EditContext *edcontext,
 
 static bool NotAnchored(char *s)
 {
+    assert(s != NULL);
+
     if (*s != '^')
     {
         return true;
@@ -2485,5 +2543,7 @@ static bool NotAnchored(char *s)
 
 static bool MultiLineString(char *s)
 {
+    assert(s != NULL);
+
     return (strchr(s, '\n') != NULL);
 }

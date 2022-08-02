@@ -1587,7 +1587,7 @@ static bool MatchPolicy(EvalContext *ctx, const char *camel, const char *haystac
     for (Item *ip = list; ip != NULL; ip = ip->next)
     {
         ok = false;
-        bool direct_cmp = (StringEqual(camel, haystack));
+        bool direct_cmp = StringEqual(camel, haystack);
 
         final             = xstrdup(ip->name);
         size_t final_size = strlen(final) + 1;
@@ -2043,7 +2043,7 @@ static bool NeighbourItemMatches(EvalContext *ctx, const Item *file_start, const
     /* else => (pos == EDIT_ORDER_BEFORE) */
     for (const Item *ip = file_start; ip != NULL; ip = ip->next)
     {
-        if ((ip->next) && (ip->next == location))
+        if ((ip->next != NULL) && (ip->next == location))
         {
             return (MatchPolicy(ctx, string, ip->name, insert_match, pp));
         }
@@ -2322,7 +2322,7 @@ static bool SelectLine(EvalContext *ctx, const char *line, const Attributes *a)
         {
             selector = RlistScalarValue(rp);
 
-            if (StringEqualN(selector, line, strlen(selector)))
+            if (StringStartsWith(line, selector))
             {
                 return true;
             }
@@ -2337,7 +2337,7 @@ static bool SelectLine(EvalContext *ctx, const char *line, const Attributes *a)
         {
             selector = RlistScalarValue(rp);
 
-            if (StringEqualN(selector, line, strlen(selector)))
+            if (StringStartsWith(line, selector))
             {
                 return false;
             }

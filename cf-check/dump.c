@@ -47,7 +47,6 @@ static void print_json_string(
     const char *const data, size_t size, const bool strip_strings)
 {
     assert(data != NULL);
-    assert(size != 0); // Don't know of anything we store which can be size 0
 
     printf("\"");
     if (size == 0)

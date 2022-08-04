@@ -37,6 +37,7 @@
 #define CF_TRANSACTION   "action"
 
 static FilePerms GetPermissionConstraints(const EvalContext *ctx, const Promise *pp);
+static TransactionContext GetTransactionConstraints(const EvalContext *ctx, const Promise *pp);
 
 void ClearFilesAttributes(Attributes *whom)
 {
@@ -663,7 +664,7 @@ LogLevel ActionAttributeLogLevelFromString(const char *log_level)
     }
 }
 
-TransactionContext GetTransactionConstraints(const EvalContext *ctx, const Promise *pp)
+static TransactionContext GetTransactionConstraints(const EvalContext *ctx, const Promise *pp)
 {
     TransactionContext t;
     char *value;

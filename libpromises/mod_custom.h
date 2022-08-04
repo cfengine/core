@@ -51,6 +51,7 @@ typedef struct PromiseModule
     char *path;
     char *interpreter;
     bool json;
+    bool action_policy;
     JsonElement *message;
 } PromiseModule;
 

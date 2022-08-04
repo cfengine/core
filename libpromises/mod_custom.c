@@ -506,22 +506,50 @@ static PromiseModule *PromiseModule_Start(char *interpreter, char *path)
         return NULL;
     }
 
-    assert(SeqLength(header) >= 3);
-    Seq *flags = SeqSplit(header, 3);
-    const size_t flags_length = SeqLength(flags);
-    for (size_t i = 0; i < flags_length; ++i)
+    /* line_based is the default, but the module should specify it
+     * explicitly. */
+    module->json = false;
+    bool protocol_specified = false;
+
+    const size_t header_length = SeqLength(header);
+    const size_t flags_offset = 3;        /* where flags start */
+    assert(header_length > flags_offset); /* at least one flag required -- json_based/line_based */
+    for (size_t i = flags_offset; i < header_length; ++i)
     {
-        const char *const flag = SeqAt(flags, i);
+        const char *const flag = SeqAt(header, i);
         if (StringEqual(flag, "json_based"))
         {
             module->json = true;
+            if (protocol_specified)
+            {
+                Log(LOG_LEVEL_WARNING,
+                    "Ambiguous protocol specification from the custom promise module '%s'."
+                    " Please report this as a bug in the module",
+                    module->path);
+            }
+            protocol_specified = true;
         }
         else if (StringEqual(flag, "line_based"))
         {
             module->json = false;
+            if (protocol_specified)
+            {
+                Log(LOG_LEVEL_WARNING,
+                    "Ambiguous protocol specification from the custom promise module '%s'."
+                    " Please report this as a bug in the module",
+                    module->path);
+            }
+            protocol_specified = true;
         }
     }
-    SeqDestroy(flags);
+
+    if (!protocol_specified)
+    {
+        Log(LOG_LEVEL_WARNING,
+            "Custom promise module '%s' didn't fully specify protocol."
+            " Using 'line_based' as the default. Please report this as a bug in the module",
+            module->path);
+    }
 
     SeqDestroy(header);
 

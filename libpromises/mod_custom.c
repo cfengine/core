@@ -125,7 +125,7 @@ static bool GetInterpreterAndPath(
     return true;
 }
 
-static inline bool PromiseModule_LogJson(JsonElement *object, const Promise *pp, const char *promise_log_level)
+static inline LogLevel PromiseModule_LogJson(JsonElement *object, const Promise *pp, const char *promise_log_level)
 {
     const char *level_string = JsonObjectGetAsString(object, "level");
     const char *message = JsonObjectGetAsString(object, "message");
@@ -143,17 +143,13 @@ static inline bool PromiseModule_LogJson(JsonElement *object, const Promise *pp,
             /* Do not log messages that have a higher log level than the log
              * level specified for the promise (e.g. 'info' messages when
              * 'error' was requested for the promise). */
-            return false;
+            return level;
         }
     }
 
     Log(level, "%s", message);
 
-    // We want to keep track of whether the module logged an error,
-    // it must log errors for not kept promises and validation errors.
-    const bool logged_error =
-        (level == LOG_LEVEL_ERR || level == LOG_LEVEL_CRIT);
-    return logged_error;
+    return level;
 }
 
 static inline JsonElement *PromiseModule_ParseResultClasses(char *value)
@@ -171,7 +167,8 @@ static inline JsonElement *PromiseModule_ParseResultClasses(char *value)
     return result_classes;
 }
 
-static JsonElement *PromiseModule_Receive(PromiseModule *module, const Promise *pp)
+static JsonElement *PromiseModule_Receive(PromiseModule *module, const Promise *pp,
+                                          uint16_t n_log_msgs[LOG_LEVEL_DEBUG + 1])
 {
     assert(module != NULL);
 
@@ -187,8 +184,6 @@ static JsonElement *PromiseModule_Receive(PromiseModule *module, const Promise *
     {
         response = JsonObjectCreate(10);
     }
-
-    bool logged_error = false;
 
     const char *promise_log_level = NULL;
     if (pp != NULL)
@@ -240,7 +235,11 @@ static JsonElement *PromiseModule_Receive(PromiseModule *module, const Promise *
             JsonElement *log_message = JsonObjectCreate(2);
             JsonObjectAppendString(log_message, "level", level);
             JsonObjectAppendString(log_message, "message", message);
-            logged_error |= PromiseModule_LogJson(log_message, pp, promise_log_level);
+            LogLevel log_level = PromiseModule_LogJson(log_message, pp, promise_log_level);
+            if (log_level > LOG_LEVEL_NOTHING)
+            {
+                n_log_msgs[log_level]++;
+            }
             JsonArrayAppendObject(log_array, log_message);
 
             free(level);
@@ -324,8 +323,12 @@ static JsonElement *PromiseModule_Receive(PromiseModule *module, const Promise *
             size_t length = JsonLength(json_log_messages);
             for (size_t i = 0; i < length; ++i)
             {
-                logged_error |= PromiseModule_LogJson(
-                    JsonArrayGet(json_log_messages, i), pp, promise_log_level);
+                LogLevel log_level = PromiseModule_LogJson(JsonArrayGet(json_log_messages, i),
+                                                           pp, promise_log_level);
+                if (log_level > LOG_LEVEL_NOTHING)
+                {
+                    n_log_msgs[log_level]++;
+                }
             }
         }
 
@@ -356,7 +359,6 @@ static JsonElement *PromiseModule_Receive(PromiseModule *module, const Promise *
     JsonDestroy(log_array);
 
     assert(response != NULL);
-    JsonObjectAppendBool(response, "_logged_error", logged_error);
     return response;
 }
 
@@ -924,7 +926,8 @@ static bool PromiseModule_Validate(PromiseModule *module, const EvalContext *ctx
     PromiseModule_Send(module);
 
     // Prints errors / log messages from module:
-    JsonElement *response = PromiseModule_Receive(module, pp);
+    uint16_t n_log_msgs[LOG_LEVEL_DEBUG + 1] = {0};
+    JsonElement *response = PromiseModule_Receive(module, pp, n_log_msgs);
 
     if (response == NULL)
     {
@@ -932,7 +935,6 @@ static bool PromiseModule_Validate(PromiseModule *module, const EvalContext *ctx
         return false;
     }
 
-    const bool logged_error = JsonObjectGetAsBool(response, "_logged_error");
     const bool valid = HasResultAndResultIsValid(response);
 
     JsonDestroy(response);
@@ -950,7 +952,7 @@ static bool PromiseModule_Validate(PromiseModule *module, const EvalContext *ctx
             filename,
             line);
 
-        if (!logged_error)
+        if ((n_log_msgs[LOG_LEVEL_ERR] == 0) && (n_log_msgs[LOG_LEVEL_CRIT] == 0))
         {
             Log(LOG_LEVEL_CRIT,
                 "Bug in promise module - No error(s) logged for invalid %s promise with promiser '%s' (%s:%zu)",
@@ -984,7 +986,12 @@ static PromiseResult PromiseModule_Evaluate(
     PromiseModule_AppendAllAttributes(module, ctx, pp);
     PromiseModule_Send(module);
 
-    JsonElement *response = PromiseModule_Receive(module, pp);
+    const char *action_policy = PromiseGetConstraintAsRval(pp, "action_policy", RVAL_TYPE_SCALAR);
+    const bool dontdo = ((EVAL_MODE != EVAL_MODE_NORMAL) ||
+                         StringEqual(action_policy, "warn") || StringEqual(action_policy, "nop"));
+
+    uint16_t n_log_msgs[LOG_LEVEL_DEBUG + 1] = {0};
+    JsonElement *response = PromiseModule_Receive(module, pp, n_log_msgs);
     if (response == NULL)
     {
         // Log from PromiseModule_Receive
@@ -1005,10 +1012,23 @@ static PromiseResult PromiseModule_Evaluate(
 
     PromiseResult result;
     const char *const result_str = JsonObjectGetAsString(response, "result");
-    const bool logged_error = JsonObjectGetAsBool(response, "_logged_error");
 
     /* Attributes needed for setting outcome classes etc. */
     Attributes a = GetClassContextAttributes(ctx, pp);
+
+    const char *const filename = pp->parent_section->parent_bundle->source_path;
+    const size_t line = pp->offset.line;
+
+    if (dontdo && (n_log_msgs[LOG_LEVEL_INFO] > 0))
+    {
+        Log(LOG_LEVEL_CRIT,
+            "Bug in promise module - 'info:' log messages reported for %s promise with promiser '%s' (%s:%zu)"
+            " while making changes on the system disabled",
+            promise_type,
+            promiser,
+            filename,
+            line);
+    }
 
     if (result_str == NULL)
     {
@@ -1049,13 +1069,22 @@ static PromiseResult PromiseModule_Evaluate(
             "Promise with promiser '%s' was not kept by promise module '%s'",
             promiser,
             module->path);
-        if (!logged_error)
+
+        if (!dontdo && (n_log_msgs[LOG_LEVEL_ERR] == 0) && (n_log_msgs[LOG_LEVEL_CRIT] == 0))
         {
-            const char *const filename =
-                pp->parent_section->parent_bundle->source_path;
-            const size_t line = pp->offset.line;
             Log(LOG_LEVEL_CRIT,
                 "Bug in promise module - Failed to log errors for not kept %s promise with promiser '%s' (%s:%zu)",
+                promise_type,
+                promiser,
+                filename,
+                line);
+        }
+        else if (dontdo &&
+                 ((n_log_msgs[LOG_LEVEL_WARNING] + n_log_msgs[LOG_LEVEL_ERR] + n_log_msgs[LOG_LEVEL_CRIT]) == 0))
+        {
+            Log(LOG_LEVEL_CRIT,
+                "Bug in promise module - Failed to log warnings for not kept %s promise with promiser '%s' (%s:%zu)"
+                " while making changes on the system disabled",
                 promise_type,
                 promiser,
                 filename,
@@ -1074,6 +1103,16 @@ static PromiseResult PromiseModule_Evaluate(
             "Promise with promiser '%s' was repaired by promise module '%s'",
             promiser,
             module->path);
+
+        if (n_log_msgs[LOG_LEVEL_INFO] == 0)
+        {
+            Log(LOG_LEVEL_CRIT,
+                "Bug in promise module - Failed to log about changes made by a repaired %s promise with promiser '%s' (%s:%zu)",
+                promise_type,
+                promiser,
+                filename,
+                line);
+        }
     }
     else if (StringEqual(result_str, "error"))
     {
@@ -1116,7 +1155,8 @@ static void PromiseModule_Terminate(PromiseModule *module, const Promise *pp)
         PromiseModule_AppendString(module, "operation", "terminate");
         PromiseModule_Send(module);
 
-        JsonElement *response = PromiseModule_Receive(module, pp);
+        uint16_t n_log_msgs[LOG_LEVEL_DEBUG + 1] = {0};
+        JsonElement *response = PromiseModule_Receive(module, pp, n_log_msgs);
         JsonDestroy(response);
 
         PromiseModule_DestroyInternal(module);

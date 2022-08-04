@@ -829,6 +829,7 @@ bool DBPrivWrite(
 {
     assert(db != NULL);
     assert(key_size >= 0);
+    assert(value_size > 0); // to match cf-check validate assumptions
 
     DBTxn *txn;
     int rc = GetWriteTransaction(db, &txn);

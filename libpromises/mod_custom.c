@@ -887,9 +887,7 @@ static bool PromiseModule_Validate(PromiseModule *module, const EvalContext *ctx
         return false;
     }
 
-    // TODO: const bool logged_error = JsonObjectGetAsBool(response, "_logged_error");
-    const bool logged_error = JsonPrimitiveGetAsBool(
-        JsonObjectGet(response, "_logged_error"));
+    const bool logged_error = JsonObjectGetAsBool(response, "_logged_error");
     const bool valid = HasResultAndResultIsValid(response);
 
     JsonDestroy(response);
@@ -962,9 +960,7 @@ static PromiseResult PromiseModule_Evaluate(
 
     PromiseResult result;
     const char *const result_str = JsonObjectGetAsString(response, "result");
-    // TODO: const bool logged_error = JsonObjectGetAsBool(response, "_logged_error");
-    const bool logged_error = JsonPrimitiveGetAsBool(
-        JsonObjectGet(response, "_logged_error"));
+    const bool logged_error = JsonObjectGetAsBool(response, "_logged_error");
 
     /* Attributes needed for setting outcome classes etc. */
     Attributes a = GetClassContextAttributes(ctx, pp);

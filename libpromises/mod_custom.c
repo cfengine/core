@@ -538,6 +538,10 @@ static PromiseModule *PromiseModule_Start(char *interpreter, char *path)
             }
             protocol_specified = true;
         }
+        else if (StringEqual(flag, "action_policy"))
+        {
+            module->action_policy = true;
+        }
     }
 
     if (!protocol_specified)
@@ -695,6 +699,12 @@ static void PromiseModule_AppendAllAttributes(
             || StringEqual(name, "meta"))
         {
             // Evaluated by agent and not sent to module, skip
+            continue;
+        }
+
+        if (StringEqual(name, "action") || StringEqual(name, "action_name"))
+        {
+            /* We only pass "action_policy" to the module (see below). */
             continue;
         }
 
@@ -868,6 +878,17 @@ static bool PromiseModule_Validate(PromiseModule *module, const EvalContext *ctx
 
     const char *const promise_type = PromiseGetPromiseType(pp);
     const char *const promiser = pp->promiser;
+
+    const char *action_policy = PromiseGetConstraintAsRval(pp, "action_policy", RVAL_TYPE_SCALAR);
+    const bool dontdo = ((EVAL_MODE != EVAL_MODE_NORMAL) ||
+                         StringEqual(action_policy, "warn") || StringEqual(action_policy, "nop"));
+    if (dontdo && !module->action_policy)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Not making changes to the system, but the custom promise module '%s' doesn't support action_policy",
+            module->path);
+        return false;
+    }
 
     PromiseModule_AppendString(module, "operation", "validate_promise");
     PromiseModule_AppendString(module, "log_level", LogLevelToRequestFromModule(pp));

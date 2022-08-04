@@ -742,9 +742,9 @@ int UpdatePackagesDB(Rlist *data, const char *pm_name, UpdateType type)
         char *inventory_list = BufferClose(inventory_data);
 
         /* We can have empty list of installed software or available updates. */
-        if (!inventory_list)
+        if (inventory_list == NULL)
         {
-            WriteDB(db_cached, inventory_key, "\n", 1);
+            WriteDB(db_cached, inventory_key, "", 0);
         }
         else
         {

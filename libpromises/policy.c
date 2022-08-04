@@ -2653,9 +2653,9 @@ bool PromiseBundleOrBodyConstraintExists(const EvalContext *ctx, const char *lva
     return false;
 }
 
-static bool CheckScalarNotEmptyVarRef(const char *scalar)
+static inline bool CheckScalarNotEmptyVarRef(const char *scalar)
 {
-    return (strcmp("$()", scalar) != 0) && (strcmp("${}", scalar) != 0);
+    return (!StringEqual("$()", scalar) && !StringEqual("${}", scalar));
 }
 
 static bool ValidateCustomPromise(const Promise *pp, Seq *errors)

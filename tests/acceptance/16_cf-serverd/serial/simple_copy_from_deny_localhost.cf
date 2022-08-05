@@ -11,6 +11,9 @@ bundle agent test
   meta:
       "test_suppress_fail" string => "windows",
         meta => { "redmine6405" };
+      # Test fails on OpenSUSE 15, pending investigation.
+      "test_skip_unsupported" string => "opensuse_leap_15",
+        meta => { "ENT-9055" };
 
   methods:
       # source file

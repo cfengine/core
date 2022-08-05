@@ -686,6 +686,11 @@ static void PromiseModule_AppendAllAttributes(
     assert(module != NULL);
     assert(pp != NULL);
 
+    /* Need to make sure action_policy is "warn" in case of dry-run/simulate
+     * modes. */
+    const bool dontdo = (EVAL_MODE != EVAL_MODE_NORMAL);
+    bool seen_action_policy = false;
+
     const size_t attributes = SeqLength(pp->conlist);
     for (size_t i = 0; i < attributes; i++)
     {
@@ -717,7 +722,13 @@ static void PromiseModule_AppendAllAttributes(
         }
 
         JsonElement *value = NULL;
-        if (attribute->rval.type == RVAL_TYPE_SCALAR)
+        if (dontdo && StringEqual(name, "action_policy"))
+        {
+            /* Override the value in case of dry-run/simulate modes. */
+            seen_action_policy = true;
+            value = JsonStringCreate("warn");
+        }
+        else if (attribute->rval.type == RVAL_TYPE_SCALAR)
         {
             /* Could be a '@(container)' reference. */
             if (!TryToGetContainerFromScalarRef(ctx, RvalScalarValue(attribute->rval), &value))
@@ -727,8 +738,8 @@ static void PromiseModule_AppendAllAttributes(
                 value = RvalToJson(attribute->rval);
             }
         }
-        if ((attribute->rval.type == RVAL_TYPE_LIST) ||
-            (attribute->rval.type == RVAL_TYPE_CONTAINER))
+        else if ((attribute->rval.type == RVAL_TYPE_LIST) ||
+                 (attribute->rval.type == RVAL_TYPE_CONTAINER))
         {
             value = RvalToJson(attribute->rval);
         }
@@ -743,6 +754,14 @@ static void PromiseModule_AppendAllAttributes(
                 "Unsupported type of the '%s' attribute (%c), cannot be sent to custom promise module",
                 name, attribute->rval.type);
         }
+
+        seen_action_policy = (seen_action_policy || StringEqual(name, "action_policy"));
+    }
+
+    if (dontdo && !seen_action_policy)
+    {
+        /* Make sure action_policy is specified in case of dry-run/simulate modes. */
+        PromiseModule_AppendAttribute(module, "action_policy", JsonStringCreate("warn"));
     }
 }
 

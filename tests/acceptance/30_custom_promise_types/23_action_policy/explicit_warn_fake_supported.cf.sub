@@ -1,0 +1,44 @@
+body common control
+{
+    inputs => { "../../default.cf.sub" };
+    bundlesequence  => { default("$(this.promise_filename)") };
+    version => "1.0";
+}
+
+bundle agent init
+{
+  files:
+    "$(G.testfile)"
+      delete => init_delete;
+}
+
+body delete init_delete
+{
+      dirlinks => "delete";
+      rmdirs   => "true";
+}
+
+promise agent example
+{
+    interpreter => "/bin/bash";
+    path => "$(this.promise_dirname)/example_module_with_fake_action_policy.sh";
+}
+
+
+bundle agent test
+{
+  vars:
+    "test_string"
+      string => "hello, modules";
+
+  example:
+      "$(G.testfile)"
+        message => "$(test_string)",
+        action => policy("warn");
+}
+
+body action policy(pol)
+{
+    action_policy => "${pol}";
+}
+

@@ -1,0 +1,32 @@
+######################################################
+#
+#  Test of a custom promise with '--dry-run' and a module that
+#  doesn't implement action_policy handling.
+#
+#####################################################
+body common control
+{
+    inputs => { "../../default.cf.sub" };
+    bundlesequence  => { default("$(this.promise_filename)") };
+    version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+    "description" -> { "CFE-3433" }
+      string => "Test that --dry-run produces errors when used with custom promise modules not supporting it";
+}
+
+bundle agent check
+{
+  vars:
+    "command" string => "$(sys.cf_agent) --dry-run -D AUTO -KIf $(this.promise_filename).sub";
+
+  methods:
+      "check"
+        usebundle => dcs_passif_output(".*error: Not making changes.*", ".*CRITICAL:.*",
+                                       $(command), $(this.promise_filename));
+}

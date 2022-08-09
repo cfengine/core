@@ -25,6 +25,7 @@ bundle agent check
                          "aix",
                          "hpux",
                          "suse",
+                         "opensuse",
                          "archlinux",
                          "windows",
                          "freebsd",

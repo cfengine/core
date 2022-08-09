@@ -640,15 +640,7 @@ static void ArmClasses(EvalContext *ctx, const Averages *const av)
                 strcat(ldt_buff, buff);
             }
 
-            if (CF_THIS[i] > av->Q[i].expect)
-            {
-                snprintf(buff, CF_BUFSIZE, "%s_high_ldt", name);
-            }
-            else
-            {
-                snprintf(buff, CF_BUFSIZE, "%s_high_ldt", name);
-            }
-
+            snprintf(buff, CF_BUFSIZE, "%s_high_ldt", name);
             AppendItem(&mon_data, buff, "2");
             EvalContextHeapPersistentSave(ctx, buff, CF_PERSISTENCE, CONTEXT_STATE_POLICY_PRESERVE, "");
             EvalContextClassPutSoft(ctx, buff, CONTEXT_SCOPE_NAMESPACE, "");

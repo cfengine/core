@@ -1104,6 +1104,17 @@ static PromiseResult PromiseModule_Evaluate(
             promiser,
             module->path);
 
+        if (dontdo)
+        {
+            Log(LOG_LEVEL_CRIT,
+                "Bug in promise module - %s promise with promiser '%s' (%s:%zu)"
+                " repaired while making changes on the system disabled",
+                promise_type,
+                promiser,
+                filename,
+                line);
+        }
+
         if (n_log_msgs[LOG_LEVEL_INFO] == 0)
         {
             Log(LOG_LEVEL_CRIT,

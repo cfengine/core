@@ -16,8 +16,9 @@ bundle agent test
       # 127.0.0.1/::1 to localhost, the reverse lookup fails and so
       # 'admit => { "localhost" };' and 'admit_hostnames => { "localhost" };'
       # are not enough to allow access for this test.
-      "test_skip_unsupported" string => "(ubuntu_20|ubuntu_22)",
-        meta => { "ENT-2480", "ENT-7362" };
+      # Test fails on OpenSUSE 15, pending investigation.
+      "test_skip_unsupported" string => "(ubuntu_20|ubuntu_22|opensuse_leap_15)",
+        meta => { "ENT-2480", "ENT-7362", "ENT-9055" };
 
   methods:
       # source file

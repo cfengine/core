@@ -1,0 +1,34 @@
+body common control
+{
+      bundlesequence => { "access_rules" };
+      inputs => { "../../default.cf.sub" };
+
+}
+
+#########################################################
+# Server config
+#########################################################
+
+body server control
+
+{
+      port => "9893";
+
+      # Use the defaults, but reordered:
+      allowciphers    => "TLS_AES_256_GCM_SHA384:AES256-GCM-SHA384:AES256-SHA";
+
+      allowconnects         => { "127.0.0.1" , "::1" };
+      allowallconnects      => { "127.0.0.1" , "::1" };
+      trustkeysfrom         => { "127.0.0.1" , "::1" };
+}
+
+#########################################################
+
+bundle server access_rules()
+
+{
+  access:
+      "$(G.testdir)/source_file"
+        admit    => { "127.0.0.1", "::1" },
+        shortcut => "simple_source";
+}

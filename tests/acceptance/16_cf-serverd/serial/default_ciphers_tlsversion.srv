@@ -16,8 +16,8 @@ body server control
 
 # Use the defaults, i.e. the following:
 #
-#      allowciphers    => "AES256-GCM-SHA384:AES256-SHA";
-#      allowtlsversion => "1.0";
+#      allowciphers    => "AES256-GCM-SHA384:AES256-SHA:TLS_AES_256_GCM_SHA384";
+#      allowtlsversion => "1.1";
 
       allowconnects         => { "127.0.0.1" , "::1" };
       allowallconnects      => { "127.0.0.1" , "::1" };

@@ -4,7 +4,7 @@
 #include <sequence.h>
 
 // copy of libpromises/cf3.defs.h, TODO refactor
-#define CF_OBSERVABLES 100
+#define CF_OBSERVABLES 300
 
 char **GetObservableNames(const char *ts_key_path);
 

@@ -5,7 +5,7 @@
 
 void test_load_monitor(void)
 {
-    double cf_this[100];
+    double cf_this[300];
     MonLoadGatherData(cf_this);
     double load1[2] = {0,0};
     double load2[2] = {0,0};

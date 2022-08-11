@@ -124,7 +124,7 @@ static const char *const observable_strings[] =
 };
 
 // Not the actual count, just the room we set aside in struct (and LMDB):
-#define CF_OBSERVABLES 100
+#define CF_OBSERVABLES 300
 
 typedef struct Averages
 {

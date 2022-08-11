@@ -143,7 +143,7 @@ typedef enum
 #define CF_MEASURE_INTERVAL (5.0*60.0)
 #define CF_SHIFT_INTERVAL (6*3600)
 
-#define CF_OBSERVABLES 100
+#define CF_OBSERVABLES 300
 
 /* Special exit codes */
 #define EC_EVAL_ABORTED 6       /* like SIGABRT, but signal exit codes are 120+SIG */

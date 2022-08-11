@@ -12,12 +12,10 @@ body common control
 body server control
 
 {
-      port => "9889";
+      port => "9893";
 
-# Use the defaults, i.e. the following:
-#
-#      allowciphers    => "AES256-GCM-SHA384:AES256-SHA:TLS_AES_256_GCM_SHA384";
-#      allowtlsversion => "1.1";
+      # Use the defaults, but reordered:
+      allowciphers    => "TLS_AES_256_GCM_SHA384:AES256-GCM-SHA384:AES256-SHA";
 
       allowconnects         => { "127.0.0.1" , "::1" };
       allowallconnects      => { "127.0.0.1" , "::1" };

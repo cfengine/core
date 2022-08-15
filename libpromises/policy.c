@@ -2653,9 +2653,9 @@ bool PromiseBundleOrBodyConstraintExists(const EvalContext *ctx, const char *lva
     return false;
 }
 
-static bool CheckScalarNotEmptyVarRef(const char *scalar)
+static inline bool CheckScalarNotEmptyVarRef(const char *scalar)
 {
-    return (strcmp("$()", scalar) != 0) && (strcmp("${}", scalar) != 0);
+    return (!StringEqual("$()", scalar) && !StringEqual("${}", scalar));
 }
 
 static bool ValidateCustomPromise(const Promise *pp, Seq *errors)
@@ -2684,8 +2684,7 @@ static bool ValidateCustomPromise(const Promise *pp, Seq *errors)
                     "if",
                     promise_type));
             valid = false;
-        } else if (StringEqual(name, "action_policy")
-                   || StringEqual(name, "expireafter"))
+        } else if (StringEqual(name, "expireafter"))
         {
             // TODO: Remove 1 attribute at a time, test and fix.
             //       https://tracker.mender.io/browse/CFE-3392

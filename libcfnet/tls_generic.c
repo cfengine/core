@@ -1021,8 +1021,22 @@ bool TLSSetCipherList(SSL_CTX *ssl_ctx, const char *cipher_list)
         }
     }
 
+    /* The above code can leave a trailing colon in the lists because it copies
+     * the items over *with* the colons splitting them. */
+    if ((ciphers_len > 0) && (ciphers[ciphers_len - 1] == ':'))
+    {
+        ciphers[ciphers_len - 1] = '\0';
+        ciphers_len--;
+    }
+    if ((cipher_suites_len > 0) && (cipher_suites[cipher_suites_len - 1] == ':'))
+    {
+        cipher_suites[cipher_suites_len - 1] = '\0';
+        cipher_suites_len--;
+    }
+
     if (ciphers_len != 0)       /* TLS <= 1.2 ciphers */
     {
+        Log(LOG_LEVEL_VERBOSE, "Enabling ciphers '%s' for TLS 1.2 and older", ciphers);
         int ret = SSL_CTX_set_cipher_list(ssl_ctx, ciphers);
         if (ret != 1)
         {
@@ -1034,6 +1048,7 @@ bool TLSSetCipherList(SSL_CTX *ssl_ctx, const char *cipher_list)
 #ifdef HAVE_TLS_1_3
     if (cipher_suites_len != 0) /* TLS >= 1.3 ciphers */
     {
+        Log(LOG_LEVEL_VERBOSE, "Enabling cipher suites '%s' for TLS 1.3 and newer", cipher_suites);
         int ret = SSL_CTX_set_ciphersuites(ssl_ctx, cipher_suites);
         if (ret != 1)
         {

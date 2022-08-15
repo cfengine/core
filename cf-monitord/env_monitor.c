@@ -646,7 +646,7 @@ static void ArmClasses(EvalContext *ctx, const Averages *const av)
             }
             else
             {
-                snprintf(buff, CF_BUFSIZE, "%s_high_ldt", name);
+                snprintf(buff, CF_BUFSIZE, "%s_low_ldt", name);
             }
 
             AppendItem(&mon_data, buff, "2");

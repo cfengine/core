@@ -83,6 +83,5 @@ Report GetReportConstraints(const EvalContext *ctx, const Promise *pp);
 Services GetServicesConstraints(const EvalContext *ctx, const Promise *pp);
 StorageMount GetMountConstraints(const EvalContext *ctx, const Promise *pp);
 StorageVolume GetVolumeConstraints(const EvalContext *ctx, const Promise *pp);
-TransactionContext GetTransactionConstraints(const EvalContext *ctx, const Promise *pp);
 
 #endif

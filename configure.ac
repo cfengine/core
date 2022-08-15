@@ -637,7 +637,9 @@ if test "x$with_libxml2" != "xno"; then
     fi
 
     if test "x$have_libxml2" = "xno"; then
-        if test "x$with_libxml2" != "xyes" && test "x$with_libxml2" != "xcheck"
+        if test "x$with_libxml2" != "xyes" &&
+           test "x$with_libxml2" != "xcheck" &&
+           test -x "$with_libxml2/bin/xml2-config"
         then
             XML2_CONFIG=$with_libxml2/bin/xml2-config
         else

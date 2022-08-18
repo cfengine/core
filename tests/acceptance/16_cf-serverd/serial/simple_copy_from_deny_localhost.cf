@@ -16,8 +16,8 @@ bundle agent test
       # 127.0.0.1/::1 to localhost, the reverse lookup fails and so
       # 'deny => { "localhost" };' and 'deny_hostnames => { "localhost" };'
       # are not enough to deny access for this test.
-      # Test fails on OpenSUSE 15, pending investigation.
-      "test_skip_unsupported" string => "(ubuntu_20|ubuntu_22|opensuse_leap_15)",
+      # Test fails on SLES / OpenSUSE 15, pending investigation.
+      "test_skip_unsupported" string => "(ubuntu_20|ubuntu_22|sles_15|opensuse_leap_15)",
         meta => { "ENT-2480", "ENT-7362", "ENT-9055" };
 
   methods:

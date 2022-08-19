@@ -25,15 +25,22 @@ dnl ####################################################################
 dnl Set GCC CFLAGS only if using GCC.
 dnl ####################################################################
 
-AC_MSG_CHECKING(for HP-UX aC)
 AC_PREPROC_IFELSE([AC_LANG_SOURCE([[
 #if defined __HP_cc
 #This is HP-UX ANSI C
 #endif
-]])], [AC_MSG_RESULT(no)],[AC_MSG_RESULT(yes)
+]])], [
+HP_UX_AC="no"], [
 CFLAGS="$CFLAGS -Agcc"
 CPPFLAGS="$CPPFLAGS -Agcc"
-HP_UX_AC=yes])
+HP_UX_AC="yes"])
+
+AC_MSG_CHECKING(for HP-UX aC)
+if test "x$HP_UX_AC" = "xyes"; then
+    AC_MSG_RESULT([yes])
+else
+    AC_MSG_RESULT([no])
+fi
 
 AC_MSG_CHECKING(for GCC specific compile flags)
 if test x"$GCC" = "xyes" && test x"$HP_UX_AC" != x"yes"; then

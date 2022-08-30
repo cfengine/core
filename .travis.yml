@@ -1,6 +1,6 @@
 language: c
 os: linux
-dist: xenial
+dist: bionic
 
 # This is an addon for uploading artifacts to s3:
 # https://docs.travis-ci.com/user/uploading-artifacts/

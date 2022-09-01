@@ -298,17 +298,26 @@ static void KeepPromises(EvalContext *ctx, const Policy *policy)
             if (strcmp(cp->lval, CFM_CONTROLBODY[MONITOR_CONTROL_HISTOGRAMS].lval) == 0)
             {
                 /* Keep accepting this option for backward compatibility. */
+                continue;
             }
 
             if (strcmp(cp->lval, CFM_CONTROLBODY[MONITOR_CONTROL_TCP_DUMP].lval) == 0)
             {
                 MonNetworkSnifferEnable(BooleanFromString(value));
+                continue;
             }
 
             if (strcmp(cp->lval, CFM_CONTROLBODY[MONITOR_CONTROL_FORGET_RATE].lval) == 0)
             {
                 sscanf(value, "%lf", &FORGETRATE);
                 Log(LOG_LEVEL_DEBUG, "forget rate %f", FORGETRATE);
+                continue;
+            }
+
+            if (StringEqual(cp->lval, CFM_CONTROLBODY[MONITOR_CONTROL_MONITOR_FACILITY].lval))
+            {
+                SetFacility(value);
+                continue;
             }
         }
     }

@@ -64,15 +64,7 @@ static bool is_whitespace_empty(const char *str) {
 }
 
 /**
- * @brief Sets both internal C variables as well as policy sys variables.
- *
- * Called at bootstrap and after reading policy_server.dat.
- * Changes sys.policy_hub and sys.policy_hub_port.
- * NULL is a valid input for new_policy_server, everything will be freed and
- * set to NULL.
- *
- * @param ctx EvalContext is used to set related variables
- * @param new_policy_server can be 'host:port', same as policy_server.dat
+ * @brief Sets the POLICY_SERVER, POLICY_SERVER_HOST and POLICY_SERVER_PORT global variables
  */
 void PolicyServerSet(const char *new_policy_server)
 {

@@ -1,0 +1,23 @@
+#+begin_src prep
+#@ ```
+#@ test -e /tmp/linux && rm /tmp/linux
+#@ ```
+#+end_src
+#+begin_src cfengine3
+body agent control
+{
+      inform => "true";
+}
+bundle agent __main__
+{
+  files:
+    linux::
+      "/tmp/linux"
+        create => "true";
+}
+#+end_src
+#+begin_src example_output
+#@ ```
+#@    info: Created file '/tmp/linux', mode 0600
+#@ ```
+#+end_src

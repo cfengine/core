@@ -47,6 +47,11 @@ void ClearRequestReloadConfig()
     RELOAD_CONFIG = false;
 }
 
+void RequestReloadConfig()
+{
+    RELOAD_CONFIG = true;
+}
+
 /********************************************************************/
 
 static int SIGNAL_PIPE[2] = { -1, -1 }; /* GLOBAL_C */

@@ -487,8 +487,15 @@ static void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConf
             /* Reload HA related configuration */
             ReloadHAConfig();
 
-            KeepPromises(ctx, *policy, config);
+            bool unresolved_constraints;
+            KeepPromises(ctx, *policy, config, &unresolved_constraints);
             Summarize();
+            if (unresolved_constraints)
+            {
+                Log(LOG_LEVEL_WARNING,
+                    "Unresolved variables found in cf-serverd policy, scheduling policy reload");
+                RequestReloadConfig();
+            }
         }
         else
         {

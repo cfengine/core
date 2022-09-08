@@ -63,7 +63,7 @@ static PromiseResult KeepServerPromise(EvalContext *ctx, const Promise *pp, void
 static void InstallServerAuthPath(const char *path, Auth **list, Auth **listtail);
 static void KeepServerRolePromise(EvalContext *ctx, const Promise *pp);
 static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy);
-static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config);
+static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config, bool *unresolved_vars);
 static void KeepBundlesAccessPromise(EvalContext *ctx, const Promise *pp);
 static Auth *GetAuthPath(const char *path, Auth *list);
 
@@ -215,7 +215,7 @@ void Summarize()
     Log(LOG_LEVEL_VERBOSE, " === END summary of access promises === ");
 }
 
-void KeepPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config)
+void KeepPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config, bool *unresolved_constraints)
 {
     if (paths_acl    != NULL || classes_acl != NULL || vars_acl    != NULL ||
         literals_acl != NULL || query_acl   != NULL || bundles_acl != NULL ||
@@ -241,7 +241,7 @@ void KeepPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *co
         DoCleanupAndExit(255);
     }
 
-    KeepControlPromises(ctx, policy, config);
+    KeepControlPromises(ctx, policy, config, unresolved_constraints);
     KeepPromiseBundles(ctx, policy);
 }
 
@@ -277,13 +277,56 @@ static bool SetMaxOpenFiles(int n)
 }
 #endif  /* HAVE_SYS_RESOURCE_H */
 
-static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config)
+static bool ValueHasUnresolvedVars(const void *value, DataType value_type)
+{
+    switch (value_type)
+    {
+    case CF_DATA_TYPE_STRING:
+    case CF_DATA_TYPE_INT:
+    case CF_DATA_TYPE_REAL:
+    case CF_DATA_TYPE_OPTION:
+        /* All just strings, actually. */
+        return StringContainsUnresolved((const char *) value);
+
+    case CF_DATA_TYPE_STRING_LIST:
+    case CF_DATA_TYPE_INT_LIST:
+    case CF_DATA_TYPE_REAL_LIST:
+    case CF_DATA_TYPE_OPTION_LIST:
+        /* All just lists of strings, actually. */
+        for (const Rlist *rp = value; rp != NULL; rp = rp->next)
+        {
+            if (StringContainsUnresolved(RlistScalarValue(rp)))
+            {
+                return true;
+            }
+        }
+        return false;
+
+    /*
+     * TODO: Support for other types in case this is moved somewhere else and is
+     *       supposed to be used in more generic cases than to check cf-serverd
+     *       constraint values. See libpromises/cmdb.c for checking unresolved
+     *       vars in JSON objects (CF_DATA_TYPE_CONTAINER).
+     */
+
+    default:
+        Log(LOG_LEVEL_WARNING, "Unsupported type for checking unresolved vars");
+        debug_abort_if_reached();
+        return false;
+    }
+}
+
+static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config, bool *unresolved_vars)
 {
     CFD_MAXPROCESSES = 30;
     MAXTRIES = 5;
     DENYBADCLOCKS = true;
     CFRUNCOMMAND[0] = '\0';
     SetChecksumUpdatesDefault(ctx, true);
+    if (unresolved_vars != NULL)
+    {
+        *unresolved_vars = false;
+    }
 
     /* Keep promised agent behaviour - control bodies */
 
@@ -309,8 +352,14 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
             }
 
             VarRef *ref = VarRefParseFromScope(cp->lval, "control_server");
-            const void *value = EvalContextVariableGet(ctx, ref, NULL);
+            DataType value_type;
+            const void *value = EvalContextVariableGet(ctx, ref, &value_type);
             VarRefDestroy(ref);
+
+            if (unresolved_vars != NULL)
+            {
+                *unresolved_vars |= ValueHasUnresolvedVars(value, value_type);
+            }
 
             if (IsControlBody(SERVER_CONTROL_SERVER_FACILITY))
             {

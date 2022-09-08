@@ -1,0 +1,23 @@
+#+begin_src prep
+#@ ```
+#@ test -e /tmp/hello && rm -f /tmp/hello
+#@ ```
+#+end_src
+#+begin_src cfengine3
+body agent control
+{
+        inform => "true";
+}
+bundle agent __main__
+{
+  files:
+    "/tmp/hello"
+      content => "Hello, CFEngine";
+}
+#+end_src
+#+begin_src example_output
+#@ ```
+#@    info: Created file '/tmp/hello', mode 0600
+#@    info: Updated file '/tmp/hello' with content 'Hello, CFEngine'
+#@ ```
+#+end_src

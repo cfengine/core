@@ -773,7 +773,7 @@ int main(int argc, char *argv[])
     CFTestD_Config **thread_configs = (CFTestD_Config**) xcalloc(n_threads, sizeof(CFTestD_Config*));
     for (int i = 0; i < n_threads; i++)
     {
-        thread_configs[i] = (CFTestD_Config*) xmalloc(sizeof(CFTestD_Config));
+        thread_configs[i] = (CFTestD_Config*) xcalloc(1, sizeof(CFTestD_Config));
 
         if (config->report_file != NULL && strstr(config->report_file, "%d") != NULL)
         {

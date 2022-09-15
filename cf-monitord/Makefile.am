@@ -77,7 +77,7 @@ if LINUX
 TESTS += get_socket_info
 noinst_PROGRAMS = get_socket_info
 get_socket_info_SOURCES = get_socket_info.c
-get_socket_info_LDADD = ${top_srcdir}/libntech/libutils/libutils.la \
+get_socket_info_LDADD = ../libntech/libutils/libutils.la \
 	$(PCRE_LIBS) \
 	$(LIBYAML_LIBS) \
     libcf-monitord.la

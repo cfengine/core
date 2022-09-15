@@ -559,24 +559,22 @@ static bool IsCfengineProcess(const int pid)
 {
     // There is no /proc on windows
 #ifndef _WIN32
-    char* procfile = xcalloc(1024, sizeof(char));
-    char* cmd = xcalloc(1024, sizeof(char));
-    if (cmd && procfile){
-        snprintf(procfile, 1024, "/proc/%d/cmdline", pid);
-        FILE *f = fopen(procfile, "r");
-        if (f != NULL){
-            size_t size;
-            size = fread(cmd, sizeof(char), 1024, f);
-            if (size > 0){
-                if ('\n' == cmd[size-1]) {
-                    cmd[size-1] = '\0';
-                }
+    char procfile[PATH_MAX];
+    char cmd[PATH_MAX]; // we don't need the full ARG_MAX
+    snprintf(procfile, PATH_MAX, "/proc/%d/cmdline", pid);
+    FILE *f = fopen(procfile, "r");
+    if (f != NULL){
+        size_t size;
+        size = fread(cmd, sizeof(char), PATH_MAX, f);
+        if (size > 0){
+            if ('\n' == cmd[size-1]) {
+                cmd[size-1] = '\0';
             }
-            fclose(f);
-            // cmd contains the process command path
-            char *name = basename(cmd);
-            return (strncmp("cf-", name, 3) == 0);
         }
+        fclose(f);
+        // cmd contains the process command path
+        char *name = basename(cmd);
+        return (strncmp("cf-", name, 3) == 0);
     }
 #endif
     // assume true if we don't know
@@ -617,8 +615,8 @@ static bool KillLockHolder(const char *lock)
     CloseLock(dbp);
 
     if (!IsCfengineProcess(lock_data.pid)) {
-        Log(LOG_LEVEL_INFO,
-            "Lock holder disappeared");
+        Log(LOG_LEVEL_VERBOSE,
+            "Lock holder with pid %d was replaced by a non cfengine process, do not try to kill it!, ", lock_data.pid);
         return true;
     }
 

@@ -370,7 +370,7 @@ static void PromiseModule_SendMessage(PromiseModule *module, Seq *message)
     for (size_t i = 0; i < length; ++i)
     {
         const char *line = SeqAt(message, i);
-        const size_t line_length = strlen(line);
+        NDEBUG_UNUSED const size_t line_length = strlen(line);
         assert(line_length > 0 && memchr(line, '\n', line_length) == NULL);
         fprintf(module->input, "%s\n", line);
     }

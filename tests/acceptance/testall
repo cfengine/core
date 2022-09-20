@@ -929,7 +929,8 @@ do
     esac
 done
 
-if [ -n "$AGENT" -o -n "$CF_PROMISES" -o -n "$CF_SERVERD" -o -n "$CF_EXECD" -o -n "$CF_KEY" -o -n "$CF_SECRET" -o -n "$CF_NET" -o -n "$CF_CHECK" -o -n "$CF_RUNAGENT" -o -n "$RPMVERCMP" -o -n "$DIFF" ]
+# check specified binaries, but only check RPMVERCMP on systems with rpm command
+if [ -n "$AGENT" -o -n "$CF_PROMISES" -o -n "$CF_SERVERD" -o -n "$CF_EXECD" -o -n "$CF_KEY" -o -n "$CF_SECRET" -o -n "$CF_NET" -o -n "$CF_CHECK" -o -n "$CF_RUNAGENT" -o \( -n "$(command -v rpm)" -a -n "$RPMVERCMP" \) -o -n "$DIFF" ]
 then
     if [ -n "$BINDIR" ]
     then

@@ -1,22 +1,12 @@
-name: Unit Tests
-
 on:
-  # run this workflow on pull_request activity
-  # this includes opening and pushing more commits
-  pull_request:
-    branches: [ master, 3.18.x, 3.15.x ]
-
-  # run this workflow on push/merge activity
-  # pull_request activity won't detect changes
-  # in the upstream branch before we merge
-  push:
-    branches: [ master, 3.18.x, 3.15.x ]
+  workflow_call
 
 jobs:
   unit_tests:
+    name: Run Unit Tests
     runs-on: ubuntu-20.04
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: recursive
     - name: Install dependencies

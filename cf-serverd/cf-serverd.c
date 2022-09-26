@@ -31,6 +31,7 @@
 #include <known_dirs.h>
 #include <loading.h>
 #include <cleanup.h>
+#include <signals.h>                     /* RequestReloadConfig() */
 
 static void ThisAgentInit(void)
 {
@@ -72,8 +73,15 @@ int main(int argc, char *argv[])
     GenericAgentPostLoadInit(ctx);
     ThisAgentInit();
 
-    KeepPromises(ctx, policy, config);
+    bool unresolved_constraints;
+    KeepPromises(ctx, policy, config, &unresolved_constraints);
     Summarize();
+    if (unresolved_constraints)
+    {
+        Log(LOG_LEVEL_WARNING,
+            "Unresolved variables found in cf-serverd policy, scheduling policy reload");
+        RequestReloadConfig();
+    }
 
     int threads_left = StartServer(ctx, &policy, config);
 

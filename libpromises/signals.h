@@ -32,6 +32,7 @@ bool IsPendingTermination(void);
 
 bool ReloadConfigRequested(void);
 void ClearRequestReloadConfig();
+void RequestReloadConfig(void);
 
 void MakeSignalPipe(void);
 int GetSignalPipe(void);

@@ -930,7 +930,7 @@ do
 done
 
 # check if rpm is used on this host, sometimes it can be installed but not used say on Ubuntu
-if [ -n "$(command -v rpm)" -a "0" != "$(rpm -qa | wc -l)" ]
+if [ -n "$(command -v rpm)" ] && [ "$(rpm -qa | wc -l)" != "0" ]
 then
   NEED_RPMVERCMP="yes"
 else

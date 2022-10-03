@@ -101,6 +101,57 @@ tmpdir="$(mktemp -d)/$collection"
 export tmpdir
 mkdir -p "$tmpdir"
 
+echo "Analyzing CFEngine core dumps"
+_core_log="$tmpdir"/core-dump.log
+if command -v coredumpctl >/dev/null; then
+  echo "Using coredumpctl to analyze CFEngine core dumps"
+  coredumpctl info /var/cfengine/bin/cf-* 2>/dev/null >> "$_core_log"
+elif command -v apport-unpack >/dev/null; then
+  echo "Using apport-unpack to analyze CFEngine core dumps"
+  # each crash report has a line with ExecutablePath: which tells us if it is a CFEngine core dump
+  crash_reports=$(grep -H "ExecutablePath: /var/cfengine/bin" /var/crash/* | sed "s/:ExecutablePath.*$//")
+  if [ -n "$crash_reports" ]; then
+    if ! command -v gdb >/dev/null; then
+      echo "CFEngine related core dumps were found but gdb is not installed. Please install gdb and retry the cf-support command."
+      exit 1
+    fi
+    # process crash reports with tmp dirs and all
+    for report in $crash_reports; do
+      tmp=$(mktemp -d)
+      apport-unpack "$report" "$tmp"
+      exe=$(cat "$tmp/ExecutablePath")
+      # print out report up to the embedded core dump file
+      # --null-data separate lines by NUL characters
+      sed --null-data 's/CoreDump:.*$//' "$report" >> "$_core_log"
+      gdb "$exe" --core="$tmp/CoreDump" -batch -ex "thread apply all bt full" >> "$_core_log" 2>&1
+      rm -rf "$tmp"
+    done
+  fi
+else
+  if [ "$non_interactive" -eq 0 ]; then
+    read -r -p "Analyze coredumps found under /var/cfengine/bin? [Y/<enter alternate path>/n]: " response
+  fi
+  response=${response:-/var/cfengine/bin}
+  if [ "$response" != "n" ]; then
+    # file command on core files results in lines like the following which we parse for cf-* binaries
+    # core: ELF 64-bit LSB core file, x86-64, version 1 (SYSV), SVR4-style, from '/var/cfengine/bin/cf-key', real uid: 0, effective uid: 0, realgid: 0, effective gid: 0, execfn: '/var/cfengine/bin/cf-key', platform: 'x86_64'
+    cf_core_files=$(find "$response" -name 'core*' -type f -exec file {} \; 2>/dev/null | grep "core file" | grep "cf-" | cut -d' ' -f1 | sed 's/:$//')
+    if [ -n "$cf_core_files" ]; then
+      if ! command -v gdb >/dev/null; then
+        echo "Please install gdb. This is required in order to analyze core dumps."
+        exit 1
+      fi
+      for core_file in $cf_core_files; do
+        file "$core_file" >> "$_core_log"
+        execfn=$(file "$core_file" | sed 's/,/\n/g' | grep execfn | cut -d: -f2 | sed "s/[' ]//g")
+        exe="$(realpath "$execfn")"
+        gdb "$exe" --core="$core_file" -batch -ex "thread apply all bt full" >> "$_core_log" 2>&1
+      done
+    fi
+  fi
+fi
+
+
 export info_file="$tmpdir/system-info.txt"
 
 function file_add

@@ -1,0 +1,49 @@
+# Example illustrating how body agent control files_auto_define works.
+#+begin_src prep
+#@ ```
+#@ # Ensure that the files used in the example do not exist before running the example
+#@ rm -f /tmp/example_files_auto_define.txt
+#@ rm -f /tmp/source_file.txt
+#@ ```
+#+end_src
+###############################################################################
+#+begin_src cfengine3
+body agent control
+{
+      inform => "true"; # So that we can easily see class definition
+      files_auto_define => { ".*" }; # Trigger for any copied file
+}
+bundle agent main
+{
+
+  files:
+      "/tmp/source_file.txt"
+        content => "Hello World!";
+
+      "/tmp/example_files_auto_define.txt"
+        copy_from => local_dcp( "/tmp/source_file.txt" );
+
+  reports:
+      "Defined '$(with)', the canonified form of 'auto_/tmp/example_files_auto_define.txt'"
+        with => canonify( "auto_/tmp/example_files_auto_define.txt"),
+        if => canonify( "auto_/tmp/example_files_auto_define.txt");
+}
+# Copied from the standard library to make self-contained.
+body copy_from local_dcp(from)
+{
+        source      => "$(from)";
+        compare     => "digest";
+}
+#+end_src
+###############################################################################
+#+begin_src example_output
+#@ ```
+#@     info: Created file '/tmp/source_file.txt', mode 0600
+#@     info: Updated file '/tmp/source_file.txt' with content 'Hello World!'
+#@     info: Copied file '/tmp/source_file.txt' to '/tmp/example_files_auto_define.txt.cfnew' (mode '600')
+#@     info: Moved '/tmp/example_files_auto_define.txt.cfnew' to '/tmp/example_files_auto_define.txt'
+#@     info: Updated file '/tmp/example_files_auto_define.txt' from 'localhost:/tmp/source_file.txt'
+#@     info: Auto defining class 'auto__tmp_example_files_auto_define_txt'
+#@ R: Defined 'auto__tmp_example_files_auto_define_txt', the canonified form of 'auto_/tmp/example_files_auto_define.txt'
+#@ ```
+#+end_src

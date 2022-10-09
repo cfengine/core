@@ -36,6 +36,8 @@ AM_CFLAGS = \
 	$(PTHREAD_CFLAGS) \
 	$(ENTERPRISE_CFLAGS)
 
+LIBS += $(SYSTEMD_SOCKET_LIBS)
+
 libcf_serverd_la_LIBADD = ../libpromises/libpromises.la
 
 libcf_serverd_la_SOURCES = \

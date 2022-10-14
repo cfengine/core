@@ -1,11 +1,18 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
+# this script works with plain old POSIX sh so have to allow legacy subshell `command` instead of using $(command)
+# shellcheck disable=SC2006
 
-export WORKDIR=/var/cfengine
-export BINDIR="$WORKDIR/bin"
-export non_interactive=0
+# be double-certain that we have needed PATH entries regardless of execution environment
+PATH=/usr/contrib/bin:$PATH; export PATH # hpux
+PATH=/usr/sbin:$PATH; export PATH # solaris
+PATH=/usr/bin:$PATH; export PATH # sol10sparc has showrev in /usr/bin
 
-if [ $# -gt 1 ] || [ "$1" = "--help" ] || ["$1" = "-h" ]; then
-  echo "usage: $(basename "$0") [OPTIONS]"
+WORKDIR=/var/cfengine; export WORKDIR
+BINDIR="$WORKDIR/bin"; export BINDIR
+non_interactive=0; export non_interactive
+
+if [ $# -gt 1 ] || [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+  echo "usage: `basename "$0"` [OPTIONS]"
   echo ''
   echo 'Options:'
   echo '	--yes, -y - Non-interactive use. Assume no ticket number and assume include masterfiles.'
@@ -42,7 +49,7 @@ if [ "$1" = "-M" ]; then
 e COSL.txt.
 .TH CF-SUPPORT 8 "2022-08-10" "CFEngine" "System Administrator"
 .SH NAME
-cf-support \- create tarball of information to submit for support tickets.
+cf-support \\- create tarball of information to submit for support tickets.
 .SH SYNOPSIS
 .B cf-support
 .RI [ OPTION ]
@@ -53,7 +60,7 @@ cf-support gathers various details about the system and creates a tarball in the
 .IP "--yes"
 Non-interactive use. Assume no ticket number and assume include masterfiles.
 .SH CFENGINE
-CFEngine provides automated configuration management of large-scale computer systems. A system administrator describes the desired state of a system using CFEngine policy code. The program \fBcf-agent\fR reads policy code and attempts to bring the current system state to the desired state described. Policy code is downloaded by \fBcf-agent\fR from a \fBcf-serverd\fR daemon. The daemon \fBcf-execd\fR is responsible for running \fBcf-agent\fR periodically.
+CFEngine provides automated configuration management of large-scale computer systems. A system administrator describes the desired state of a system using CFEngine policy code. The program \\fBcf-agent\\fR reads policy code and attempts to bring the current system state to the desired state described. Policy code is downloaded by \\fBcf-agent\\fR from a \\fBcf-serverd\\fR daemon. The daemon \\fBcf-execd\\fR is responsible for running \\fBcf-agent\\fR periodically.
 .br
 Documentation for CFEngine is available at https://docs.cfengine.com/.
 .SH PROMISE THEORY
@@ -86,7 +93,9 @@ fi
 
 [ "$1" = "--yes" ] || [ "$1" = "-y" ] && non_interactive=1
 
-if [ "$EUID" -ne 0 ]; then
+# POSIX friendly version of bash $EUID
+euid=`id | sed -n 's/uid=\([0-9]*\).*/\1/p'`
+if [ "$euid" -ne 0 ]; then
   echo "$0 must be run as root"
   exit 1
 fi
@@ -97,13 +106,27 @@ if ! command -v gzip >/dev/null; then
 fi
 
 if [ $non_interactive -eq 0 ]; then
-  read -rp "If you have it, please enter your support case number: " case_number
+  printf "If you have it, please enter your support case number: "
+  read -r case_number
 fi
 case_number="${case_number:-NA}"
-timestamp=$(date +%F-%H%M)
-collection="cfengine_support_case_$case_number-$(hostname -f)-$timestamp"
+timestamp=`date +%Y-%m-%d-%H%M`
+collection="cfengine_support_case_$case_number-`hostname`-$timestamp"
 
-tmpdir="$(mktemp -d)/$collection"
+make_temp_dir()
+{
+  if command -v mktemp >/dev/null; then
+    mktemp -d
+  else
+    # shellcheck disable=SC2021
+    # ^^ legacy/POSIX requires square brackets
+    _tmp="/tmp/`tr -dc "[A-Z][a-z][0-9]" </dev/urandom | head -c 8`"
+    mkdir "$_tmp"
+    echo "$_tmp"
+  fi
+}
+
+tmpdir="`make_temp_dir`/$collection"
 export tmpdir
 mkdir -p "$tmpdir"
 
@@ -111,11 +134,11 @@ echo "Analyzing CFEngine core dumps"
 _core_log="$tmpdir"/core-dump.log
 if command -v coredumpctl >/dev/null; then
   echo "Using coredumpctl to analyze CFEngine core dumps"
-  coredumpctl info /var/cfengine/bin/cf-* 2>/dev/null >> "$_core_log"
+  coredumpctl info /var/cfengine/bin/cf-* 2>/dev/null >> "$_core_log" || true
 elif command -v apport-unpack >/dev/null; then
   echo "Using apport-unpack to analyze CFEngine core dumps"
   # each crash report has a line with ExecutablePath: which tells us if it is a CFEngine core dump
-  crash_reports=$(grep -H "ExecutablePath: /var/cfengine/bin" /var/crash/* | sed "s/:ExecutablePath.*$//")
+  crash_reports=`grep -H "ExecutablePath: /var/cfengine/bin" /var/crash/* | sed "s/:ExecutablePath.*$//"`
   if [ -n "$crash_reports" ]; then
     if ! command -v gdb >/dev/null; then
       echo "CFEngine related core dumps were found but gdb is not installed. Please install gdb and retry the cf-support command."
@@ -123,9 +146,9 @@ elif command -v apport-unpack >/dev/null; then
     fi
     # process crash reports with tmp dirs and all
     for report in $crash_reports; do
-      tmp=$(mktemp -d)
+      tmp=`make_temp_dir`
       apport-unpack "$report" "$tmp"
-      exe=$(cat "$tmp/ExecutablePath")
+      exe=`cat "$tmp/ExecutablePath"`
       # print out report up to the embedded core dump file
       # --null-data separate lines by NUL characters
       sed --null-data 's/CoreDump:.*$//' "$report" >> "$_core_log"
@@ -135,13 +158,14 @@ elif command -v apport-unpack >/dev/null; then
   fi
 else
   if [ "$non_interactive" -eq 0 ]; then
-    read -r -p "Analyze coredumps found under /var/cfengine/bin? [Y/<enter alternate path>/n]: " response
+    printf "Analyze coredumps found under /var/cfengine/bin? [Y/<enter alternate path>/n]: "
+    read -r response
   fi
   response=${response:-/var/cfengine/bin}
   if [ "$response" != "n" ]; then
     # file command on core files results in lines like the following which we parse for cf-* binaries
     # core: ELF 64-bit LSB core file, x86-64, version 1 (SYSV), SVR4-style, from '/var/cfengine/bin/cf-key', real uid: 0, effective uid: 0, realgid: 0, effective gid: 0, execfn: '/var/cfengine/bin/cf-key', platform: 'x86_64'
-    cf_core_files=$(find "$response" -name 'core*' -type f -exec file {} \; 2>/dev/null | grep "core file" | grep "cf-" | cut -d' ' -f1 | sed 's/:$//')
+    cf_core_files=`find "$response" -name 'core*' -type f -exec file {} \; 2>/dev/null | grep "core file" | grep "cf-" | cut -d' ' -f1 | sed 's/:$//'`
     if [ -n "$cf_core_files" ]; then
       if ! command -v gdb >/dev/null; then
         echo "Please install gdb. This is required in order to analyze core dumps."
@@ -149,8 +173,8 @@ else
       fi
       for core_file in $cf_core_files; do
         file "$core_file" >> "$_core_log"
-        execfn=$(file "$core_file" | sed 's/,/\n/g' | grep execfn | cut -d: -f2 | sed "s/[' ]//g")
-        exe="$(realpath "$execfn")"
+        execfn=`file "$core_file" | sed 's/,/\n/g' | grep execfn | cut -d: -f2 | sed "s/[' ]//g"`
+        exe="`realpath "$execfn"`"
         gdb "$exe" --core="$core_file" -batch -ex "thread apply all bt full" >> "$_core_log" 2>&1
       done
     fi
@@ -158,12 +182,12 @@ else
 fi
 
 
-export info_file="$tmpdir/system-info.txt"
+info_file="$tmpdir/system-info.txt"
+export info_file
 
-function file_add
+file_add()
 {
-  local filename
-  filename="$(basename "$1")"
+  filename="`basename "$1"`"
   if [ -f "$1" ]; then
     cp "$1" "$tmpdir"/"$filename"
     echo "Added file $1"
@@ -171,12 +195,10 @@ function file_add
     echo "$1 file not found" >> "$info_file"
   fi
 }
-export -f file_add
 
-function gzip_add
+gzip_add()
 {
-  local filename
-  filename="$(basename "$1")"
+  filename="`basename "$1"`"
   if [ -f "$1" ]; then
     gzip -c "$1" > "$tmpdir"/"$filename".gz
     echo "Added compressed copy of file $1"
@@ -184,51 +206,164 @@ function gzip_add
     echo "$1 file not found" >> "$info_file"
   fi
 }
-export -f gzip_add
 
-function log_cmd
+log_cmd()
 {
-  echo "=== $1 ===" >> "$info_file"
-  eval "$1" >> "$info_file" 2>&1 || true
-  echo >> "$info_file" # one newline for easier to read output
-  echo "Captured output of command $1"
+  cmd="`echo "$1" | awk '{print $1}'`"
+  if command -v "$cmd" 2>/dev/null >/dev/null; then
+    echo "** $1" >> "$info_file"
+    sh -c "$1" >> "$info_file" 2>&1 || true
+    echo >> "$info_file" # one newline for easier to read output
+    echo "Captured output of command $1"
+  else
+    echo "Command not found: $cmd"
+  fi
 }
-export -f log_cmd
 
-log_cmd "hostname -f"
+# determine operating system flavor
+if command -v swlist 2>/dev/null; then
+  OS="hpux"
+elif command -v oslevel 2>/dev/null; then 
+  OS=aix
+elif [ -f /etc/release ]; then
+  OS=solaris
+  OS_VERSION=$(uname -r)
+elif [ -f /etc/redhat-release ] || [ -f /etc/os-release ] || [ -f /etc/lsb-release ]; then
+  OS=linux
+elif command -v system_profiler 2>/dev/null; then
+  OS=macos
+else
+  echo "unable to determine operating system, will try generic unix commands."
+  OS=unix
+fi
+
+# first, collect basic information about the system
 log_cmd "uname -a"
-[ -f "/etc/os-release" ] && log_cmd "cat /etc/os-release"
 log_cmd "$BINDIR/cf-promises -V"
-log_cmd "free -m"
-log_cmd "df -h"
-log_cmd "ps auwwx"
-log_cmd "top -b -H -c -n1"
-log_cmd "netstat -ie"
-log_cmd "ifconfig"
+
+if [ "$OS" = "solaris" ]; then
+  log_cmd "prtconf"  # system configuration, memory size, peripherals
+  log_cmd "psrinfo -v"  # verbose information about each processor, on-line since, type, speed
+  if [ "$OS_VERSION" = "5.10" ]; then
+    log_cmd "showrev"  # hostname, hostid, release, kernel architecture, application architecutre, kernel version
+  fi
+  log_cmd "vmstat" # equivalent of free -h
+  log_cmd "zonename" # either global, or a named zone
+  if command -v zonestat 2>/dev/null; then
+    log_cmd "zonestat 1 1" # get information about memory/cpu in this zone
+  fi
+elif [ "$OS" = "hpux" ]; then
+  if [ -x /opt/ignite/bin/print_manifest ]; then
+    log_cmd "/opt/ignite/bin/print_manifest" # contains info provided by other commands below
+  else
+    log_cmd "swlist"    # list of bundles installed, includes HPUX<version>-OE base os version
+    log_cmd "model"    # type of machine
+    # machinfo provides cpu, speed, memory, firmware, platform, id, serial, OS, nodename/hostname, release, sysname
+    if command -v machinfo 2>/dev/null; then
+      log_cmd "machinfo"
+    fi
+  fi
+  # regardless, report status of interfaces/volumes and memory
+  log_cmd "dmesg" # not syslog related like on linux
+elif [ "$OS" = "aix" ]; then
+  log_cmd "prtconf"  # model, type, cpus, speed, memory, firmware, network info, volume groups, peripherals/resources
+  log_cmd "oslevel -s"  # OS version
+else # linux and "generic" unices like macos/bsds?
+  log_cmd "lscpu"
+  log_cmd "free -m"
+  log_cmd "hostname"
+  [ -f "/etc/os-release" ] && log_cmd "cat /etc/os-release"
+fi
+
+# filesystems and usage
+if [ "$OS" != "solaris" ] && [ "$OS" != "aix" ]; then
+  file_add "/etc/fstab"
+fi
+log_cmd "mount"
+if [ "$OS" != "hpux" ] && [ "$OS" != "aix" ]; then
+  log_cmd "df -h"
+else
+  log_cmd "df -g" # only needed on hpux/aix, -h is not available
+fi
+
+# processes
+# shellcheck disable=SC2166
+# ^^ allow grouping in test expression
+if [ "$OS" = "hpux" ] || [ \( "$OS" = "solaris" -a "$OS_VERSION" = "5.10" \) ]; then
+  ps -efl >processes.log 2>&1
+else
+  ps auwwx >processes.log 2>&1
+fi
+
+# top procs
+if [ "$OS" = "hpux" ]; then
+  # use -f option to force -d1 and include no console codes
+  top -f /tmp/top.log
+  file_add /tmp/top.log
+  rm /tmp/top.log
+elif [ "$OS" = "aix" ] || [ "$OS" = "solaris" ]; then
+  log_cmd "ps aux | head -1; ps aux | sed '1d' | sort -rn +2 | head -10"
+else
+  log_cmd "top -b -H -c -n1"
+fi
+
+# network interfaces
+if [ "$OS" = "hpux" ] || [ "$OS" = "solaris" ] || [ "$OS" = "aix" ]; then
+  log_cmd "netstat -in"
+else
+  log_cmd "netstat -ie"
+fi
+if [ "$OS" = "aix" ] || [ "$OS" = "solaris" ]; then
+  log_cmd "ifconfig -a"
+elif [ "$OS" = "hpux" ]; then
+  lanscan -p | while read -r lan
+  do
+    log_cmd "ifconfig lan${lan}"
+  done 2>/dev/null
+else
+  log_cmd "ifconfig"
+fi
+
+# open file handles
 if command -v lsof 2>/dev/null >/dev/null; then
   lsof > "$tmpdir/lsof.txt"
   echo "Captured output of command lsof"
 fi
-log_cmd "mount"
-file_add "/etc/fstab"
+
+# CFEngine specific
 log_cmd "$BINDIR/cf-key -p $WORKDIR/ppkeys/localhost.pub"
 log_cmd "grep 'version =' $WORKDIR/inputs/promises.cf"
-log_cmd "$BINDIR/cf-key -s"
+log_cmd "$BINDIR/cf-key -s -n"
 log_cmd "$BINDIR/cf-check diagnose"
 if command -v systemctl >/dev/null; then
   log_cmd "systemctl status cfengine3"
-else
+elif [ -x /etc/init.d/cfengine3 ]; then
   log_cmd "/etc/init.d/cfengine3 status"
+else
+  echo "No way to check on cfengine service status"
 fi
 for f in /var/log/CFEngine-Install*; do
   gzip_add "$f"
 done
+
+# system log
 [ -f /var/log/messages ] && syslog_cmd="cat /var/log/messages"
 [ -f /var/log/syslog ] && syslog_cmd="cat /var/log/syslog"
-[ "$(command -v journalctl >/dev/null)" ] && syslog_cmd="journalctl"
+command -v journalctl >/dev/null && syslog_cmd="journalctl"
 [ -z "$syslog_cmd" ] && syslog_cmd="dmesg"
+if [ "$OS" = "solaris" ]; then
+  syslog_cmd="cat /var/adm/messages*"
+fi
 _syslog_filtered="$tmpdir"/syslog-filtered-for-cfengine.log.gz
-$syslog_cmd | grep -E 'cf-|CFEngine' | gzip -c > "$_syslog_filtered" || true
+
+if [ "$OS" = "aix" ]; then
+  syslog_cmd="errpt -a"
+  # error report can reference cfengine, reports are delimitted by bars of `-` characters
+  echo "r !errpt -a
+g/cfengine/?---?,/---/p" | ed > "$_syslog_filtered" || true
+else
+  $syslog_cmd | sed -n '/cfe/p;/cf-/p' | gzip -c > "$_syslog_filtered" || true
+fi
 echo "Captured output of $syslog_cmd filtered for cf-|CFEngine"
 
 gzip_add $WORKDIR/outputs/previous
@@ -236,12 +371,13 @@ file_add $WORKDIR/policy_server.dat
 
 if [ -f $WORKDIR/share/cf-support-nova-hub.sh ]; then
   # shellcheck source=/dev/null
-  source $WORKDIR/share/cf-support-nova-hub.sh
+  . $WORKDIR/share/cf-support-nova-hub.sh
 fi
 
 # Here we create the tarball one directory up
 # to preserve a top-level of $collection in the tarball.
 # This gives a nice context of timestamp, hostname and support ticket
 # if provided. (see $collection definition above)
-tar czf "$collection.tar.gz" --directory "$tmpdir/../" . && rm -rf "$tmpdir"
+tar cvf - -C "$tmpdir"/.. "$collection" | gzip > "$collection.tar.gz"
+rm -rf "$tmpdir"
 echo "Please send $collection.tar.gz to CFEngine support staff."

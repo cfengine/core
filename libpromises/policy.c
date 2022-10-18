@@ -61,8 +61,6 @@ static const char *const POLICY_ERROR_PROMISE_DUPLICATE_HANDLE =
     "Duplicate promise handle %s found";
 static const char *const POLICY_ERROR_LVAL_INVALID =
     "Promise type %s has unknown attribute %s";
-static const char *const POLICY_ERROR_PROMISE_ATTRIBUTE_NOT_IMPLEMENTED =
-    "Common attribute '%s' not implemented for custom promises (%s)";
 static const char *const POLICY_ERROR_PROMISE_ATTRIBUTE_NOT_SUPPORTED =
     "Common attribute '%s' not supported for custom promises, use '%s' instead (%s promises)";
 static const char *const POLICY_ERROR_PROMISE_TYPE_UNSUPPORTED =
@@ -2685,19 +2683,6 @@ static bool ValidateCustomPromise(const Promise *pp, Seq *errors)
                     POLICY_ERROR_PROMISE_ATTRIBUTE_NOT_SUPPORTED,
                     name,
                     "if",
-                    promise_type));
-            valid = false;
-        } else if (StringEqual(name, "expireafter"))
-        {
-            // TODO: Remove 1 attribute at a time, test and fix.
-            //       https://tracker.mender.io/browse/CFE-3392
-            SeqAppend(
-                errors,
-                PolicyErrorNew(
-                    POLICY_ELEMENT_TYPE_PROMISE,
-                    pp,
-                    POLICY_ERROR_PROMISE_ATTRIBUTE_NOT_IMPLEMENTED,
-                    name,
                     promise_type));
             valid = false;
         }

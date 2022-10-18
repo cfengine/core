@@ -708,7 +708,8 @@ static void PromiseModule_AppendAllAttributes(
             || StringEqual(name, "unless")
             || StringEqual(name, "depends_on")
             || StringEqual(name, "with")
-            || StringEqual(name, "meta"))
+            || StringEqual(name, "meta")
+            || StringEqual(name, "expireafter"))
         {
             // Evaluated by agent and not sent to module, skip
             continue;
@@ -1282,7 +1283,7 @@ PromiseResult EvaluateCustomPromise(EvalContext *ctx, const Promise *pp)
 
     CfLock promise_lock = AcquireLock(ctx, custom_promise_id, VUQNAME, CFSTARTTIME,
                                       a.transaction.ifelapsed, a.transaction.expireafter,
-                                      pp, true);
+                                      pp, false);
     if (promise_lock.lock == NULL)
     {
         return PROMISE_RESULT_SKIPPED;

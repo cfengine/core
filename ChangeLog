@@ -12,17 +12,15 @@
 	  allowing promises of their custom types to be used in dry-run and
 	  simulation modes and in combination with 'action_policy => "warn"'.
 	  (CFE-3433)
-	- Enabled comment-attribute for custom promise types (CFE-3432)
+	- Enabled comment attribute for custom promise types (CFE-3432)
 	- Fixed definition of _low_ldt class from cf-monitord (CFE-4022)
 	- Fixed git_cfbs_deploy_refspec in masterfiles_stage leaving temp dir
 	  (ENT-9039)
-	- Initialize cf-testd config struct to avoid segfault on aarch64
-	  (ENT-9129)
 	- Insertion of contents of a file with blank lines into another file
 	  with blank lines no longer results in mixed content (ENT-8788)
 	- Use of custom promise modules that don't fully specify
 	  protocol now results in warning (CFE-3433)
-	- Warnings are logged if levels of log messages from custom promise
+	- Warnings are now logged if levels of log messages from custom promise
 	  modules don't match results of their related promises (CFE-3433)
 	- cf-monitord now honors monitorfacility in body monitor control
 	  (ENT-4492)

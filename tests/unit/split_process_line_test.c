@@ -117,6 +117,42 @@ static void test_split_line_noelapsed(void)
     free_and_null_strings(field);
 }
 
+static void test_split_line_nocmd(void)
+{
+    /* Collect all test data in one array to make alignments visible: */
+    static const char *lines[] = {
+        /* Indent any continuation lines so that it's clear that's what they are. */
+        /* Use the username field as a test name to confirm tests are in sync. */
+
+        "USER       PID STAT    VSZ  NI   RSS NLWP STIME     ELAPSED     TIME COMMAND",
+        "spacecmd   4 S         0   0     0    1 10:30       54:29 00:00:01  ",
+        "nullcmd    4 S         0   0     0    1 10:30       54:29 00:00:01 ",
+    };
+    char *name[CF_PROCCOLS] = { 0 }; /* Headers */
+    char *field[CF_PROCCOLS] = { 0 }; /* Content */
+    int start[CF_PROCCOLS] = { 0 };
+    int end[CF_PROCCOLS] = { 0 };
+    int user = 0, command = 10;
+    time_t pstime = 1410000000;
+
+    /* Prepare data needed by tests and assert things assumed by test: */
+    GetProcessColumnNames(lines[0], name, start, end);
+    assert_string_equal(name[user], "USER");
+    assert_string_equal(name[command], "COMMAND");
+
+    assert_true(SplitProcLine(lines[1], pstime, name, start, end, PCA_AllColumnsPresent, field));
+    assert_string_equal(field[user], "spacecmd");
+    assert_string_equal(field[command], lines[1] + 69);
+
+    assert_true(SplitProcLine(lines[2], pstime, name, start, end, PCA_AllColumnsPresent, field));
+    assert_string_equal(field[user], "nullcmd");
+    assert_string_equal(field[command], lines[1] + 69);
+
+    /* Finally, tidy away headers: */
+    free_and_null_strings(name);
+    free_and_null_strings(field);
+}
+
 static void test_split_line_longcmd(void)
 {
     static const char *lines[] = {
@@ -909,6 +945,7 @@ int main(void)
             unit_test(test_split_line_challenges),
             unit_test(test_split_line_noelapsed),
             unit_test(test_split_line_elapsed),
+            unit_test(test_split_line_nocmd),
             unit_test(test_split_line_longcmd),
             unit_test(test_split_line),
             unit_test(test_split_line_serious_overspill),

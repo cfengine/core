@@ -156,7 +156,8 @@ require {
 	class lnk_file { create getattr read unlink };
 	class unix_stream_socket connectto;
 	class capability { dac_read_search sys_module chown dac_read_search dac_override fowner fsetid sys_admin mknod net_raw net_admin sys_nice sys_rawio sys_resource setuid setgid sys_nice sys_ptrace kill net_bind_service };
-	class capability2 { mac_admin mac_override block_suspend syslog compromise_kernel wake_alarm };
+	class cap_userns sys_ptrace;
+	class capability2 { mac_admin mac_override block_suspend syslog wake_alarm };
 	class association { sendto recvfrom setcontext polmatch };
 	class security setsecparam;
 	class service { start stop status reload enable disable };
@@ -211,6 +212,7 @@ allow cfengine_execd_t ssh_port_t:tcp_socket name_connect;
 
 allow cfengine_execd_t cfengine_log_t:file { read unlink write };
 allow cfengine_execd_t cfengine_log_t:lnk_file { create getattr read unlink };
+allow cfengine_execd_t cfengine_log_t:dir add_name;
 allow cfengine_execd_t cfengine_monitord_exec_t:file getattr;
 allow cfengine_execd_t cfengine_serverd_exec_t:file getattr;
 allow cfengine_execd_t cfengine_hub_exec_t:file getattr;

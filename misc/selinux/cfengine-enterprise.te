@@ -153,7 +153,7 @@ require {
 	class process { setrlimit transition dyntransition execstack execheap execmem signull siginh getattr };
 	class file { execute execute_no_trans getattr ioctl map open read unlink write entrypoint lock link rename append setattr create relabelfrom relabelto };
 	class fifo_file { create open getattr setattr read write append rename link unlink ioctl lock relabelfrom relabelto };
-	class dir { getattr read search open write add_name remove_name lock ioctl create setattr };
+	class dir { getattr read search open write add_name remove_name lock ioctl create setattr rmdir };
 	class filesystem getattr;
 	class lnk_file { create getattr read unlink };
 	class unix_stream_socket connectto;
@@ -695,7 +695,7 @@ allow cfengine_reactor_t cfengine_var_lib_t:file { getattr open read };
 allow cfengine_reactor_t cfengine_postgres_t:unix_stream_socket connectto;
 
 allow cfengine_reactor_t cfengine_log_t:dir getattr;
-allow cfengine_reactor_t cfengine_var_lib_t:dir { add_name getattr create open read search write remove_name setattr };
+allow cfengine_reactor_t cfengine_var_lib_t:dir { add_name getattr create open read search write remove_name setattr rmdir };
 allow cfengine_reactor_t cfengine_var_lib_t:file { create ioctl lock write unlink append setattr link rename execute execute_no_trans };
 allow cfengine_reactor_t cfengine_var_lib_t:lnk_file { getattr read create unlink };
 

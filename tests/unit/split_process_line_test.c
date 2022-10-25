@@ -126,7 +126,7 @@ static void test_split_line_nocmd(void)
 
         "USER       PID STAT    VSZ  NI   RSS NLWP STIME     ELAPSED     TIME COMMAND",
         "spacecmd   4 S         0   0     0    1 10:30       54:29 00:00:01  ",
-        "nullcmd    4 S         0   0     0    1 10:30       54:29 00:00:01 ",
+        "nullcmd    4 S         0   0     0    1 10:30       54:29 00:00:01 "
     };
     char *name[CF_PROCCOLS] = { 0 }; /* Headers */
     char *field[CF_PROCCOLS] = { 0 }; /* Content */

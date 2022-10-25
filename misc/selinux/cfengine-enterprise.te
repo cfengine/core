@@ -789,6 +789,8 @@ allow cfengine_cfbs_t cfengine_var_lib_t:dir { add_name getattr create open read
 allow cfengine_cfbs_t cfengine_var_lib_t:file { create ioctl lock write unlink append setattr link rename execute execute_no_trans map getattr open read };
 allow cfengine_cfbs_t cfengine_var_lib_t:lnk_file { getattr read create unlink };
 
+allow cfengine_cfbs_t cfengine_reactor_t:fifo_file { getattr ioctl read };
+
 allow cfengine_cfbs_t bin_t:file { map execute };
 
 allow cfengine_cfbs_t cert_t:dir search;

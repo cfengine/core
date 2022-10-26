@@ -272,6 +272,7 @@ allow cfengine_monitord_t cfengine_reactor_exec_t:file getattr;
 allow cfengine_monitord_t var_log_t:file { open read };
 
 allow cfengine_monitord_t self:capability { dac_override dac_read_search sys_ptrace };
+allow cfengine_monitord_t self:cap_userns sys_ptrace;
 
 allow cfengine_monitord_t crontab_exec_t:file getattr;
 allow cfengine_monitord_t dmidecode_exec_t:file getattr;
@@ -493,6 +494,8 @@ allow cfengine_postgres_t postgresql_port_t:tcp_socket name_bind;
 allow cfengine_postgres_t hugetlbfs_t:file map;
 allow cfengine_postgres_t hugetlbfs_t:file { read write };
 allow cfengine_postgres_t init_t:unix_stream_socket { getattr ioctl read write }; # pg_ctl, systemd, PAM?
+allow cfengine_postgres_t init_var_run_t:dir search;
+allow cfengine_postgres_t system_dbusd_var_run_t:dir search;
 allow cfengine_postgres_t net_conf_t:file { getattr open read };
 allow cfengine_postgres_t node_t:tcp_socket node_bind;
 allow cfengine_postgres_t node_t:udp_socket node_bind;
@@ -515,7 +518,7 @@ allow cfengine_postgres_t tmpfs_t:filesystem getattr;
 allow cfengine_postgres_t var_log_t:file { append open };
 
 # so that PostgreSQL can check if cfpostgres user/group exists
-allow cfengine_postgres_t passwd_file_t:file read;
+allow cfengine_postgres_t passwd_file_t:file { open read };
 
 # Needed for systemd to be able to check PostgreSQL's PID file
 allow init_t cfengine_var_lib_t:dir { read remove_name write };

@@ -250,7 +250,7 @@ allow cfengine_execd_t var_t:dir read;
 allow cfengine_execd_t semanage_exec_t:file getattr;
 allow cfengine_execd_t tty_device_t:chr_file getattr;
 allow cfengine_execd_t user_devpts_t:chr_file getattr;
-
+allow cfengine_execd_t ssh_exec_t:file getattr;
 
 #============= cfengine_monitord_t ==============
 # allow cf-monitord to use/execute libpromises.so
@@ -287,6 +287,7 @@ allow cfengine_monitord_t semanage_exec_t:file getattr;
 allow cfengine_monitord_t tty_device_t:chr_file getattr;
 allow cfengine_monitord_t user_devpts_t:chr_file getattr;
 allow cfengine_monitord_t sysctl_t:dir read;
+allow cfengine_monitord_t ssh_exec_t:file getattr;
 
 # TODO: this should not be needed
 allow cfengine_monitord_t proc_xen_t:dir search;
@@ -339,6 +340,7 @@ allow cfengine_serverd_t user_cron_spool_t:dir getattr;
 allow cfengine_serverd_t useradd_exec_t:file getattr;
 allow cfengine_serverd_t var_t:dir read;
 allow cfengine_serverd_t semanage_exec_t:file getattr;
+allow cfengine_serverd_t ssh_exec_t:file getattr;
 
 
 #============= cfengine_hub_t ==============
@@ -446,6 +448,7 @@ allow cfengine_hub_t tmp_t:sock_file write;
 allow cfengine_hub_t user_cron_spool_t:dir getattr;
 allow cfengine_hub_t useradd_exec_t:file getattr;
 allow cfengine_hub_t var_t:dir read;
+allow cfengine_hub_t ssh_exec_t:file getattr;
 
 # TODO: these should not be needed
 allow cfengine_hub_t ifconfig_exec_t:file { execute execute_no_trans open read getattr map };

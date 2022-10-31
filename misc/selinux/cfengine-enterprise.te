@@ -87,7 +87,7 @@ require {
 	type sshd_t;
 	type rpm_script_t;
 	class tcp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown name_connect accept listen name_bind node_bind };
-	class udp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown node_bind };
+	class udp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown node_bind name_connect };
 	class sock_file { create write getattr setattr unlink };
 	class rawip_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
 	class netlink_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
@@ -583,8 +583,8 @@ allow cfengine_httpd_t self:capability { dac_override dac_read_search kill net_b
 allow cfengine_httpd_t self:netlink_route_socket { bind create getattr nlmsg_read read write };
 allow cfengine_httpd_t self:process execmem;
 allow cfengine_httpd_t unconfined_t:process signull;
-allow cfengine_httpd_t self:tcp_socket { accept bind connect create getattr getopt listen setopt shutdown read write };
-allow cfengine_httpd_t self:udp_socket { connect create getattr setopt };
+allow cfengine_httpd_t self:tcp_socket { accept bind connect create getattr getopt listen setopt shutdown read write ioctl setattr append name_connect };
+allow cfengine_httpd_t self:udp_socket { create ioctl read getattr write setattr append connect getopt setopt shutdown name_connect setattr };
 allow cfengine_httpd_t self:unix_dgram_socket { connect create };
 allow cfengine_httpd_t sssd_public_t:dir search;
 allow cfengine_httpd_t sssd_public_t:file map;
@@ -595,11 +595,14 @@ allow cfengine_httpd_t sssd_var_lib_t:sock_file write;
 allow cfengine_httpd_t syslogd_var_run_t:dir search;
 allow cfengine_httpd_t tmp_t:sock_file write;
 allow cfengine_httpd_t tmp_t:file { create setattr unlink write rename };
-allow cfengine_httpd_t tmp_t:dir { add_name remove_name write };
+allow cfengine_httpd_t tmp_t:dir { add_name remove_name write read };
 allow cfengine_httpd_t var_t:dir read;
 
 # apparently, httpd creates some temporary bits in /tmp that it needs to mmap()
 allow cfengine_httpd_t tmp_t:file map;
+
+# httpd/PHP needs to be able to send emails via an external SMTP server
+allow cfengine_httpd_t smtp_port_t:tcp_socket name_connect;
 
 # Bidirectional DBus communication between httpd and systemd
 allow cfengine_httpd_t system_dbusd_t:dbus send_msg;

@@ -31,6 +31,8 @@
 	  the related files promise (ENT-5866)
 	- Use of an external SMTP server for reports from Mission Portal is no
 	  longer blocked by SELinux (ENT-9473)
+	- SELinux no longer breaks SQL queries with large result sets on RHEL 8
+	  hubs (ENT-9496)
 
 3.18.2:
 	- 'N' or 'Ns' signal specs can now be used to sleep

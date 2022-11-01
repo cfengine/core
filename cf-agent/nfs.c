@@ -486,12 +486,14 @@ int VerifyInFstab(EvalContext *ctx, char *name, const Attributes *a, const Promi
              mountpt, rmountpt, fstype, fstype, host, opts);
 #elif defined(__linux__)
     snprintf(fstab, CF_BUFSIZE, "%s:%s \t %s \t %s \t %s", host, rmountpt, mountpt, fstype, opts);
-#elif defined(__NetBSD__) || defined(__OpenBSD__) || defined(__DragonFly__) || defined(__FreeBSD__)
+#elif defined(__NetBSD__) || defined(__OpenBSD__) || defined(__DragonFly__) || defined(__FreeBSD__) || defined(__APPLE__)
     snprintf(fstab, CF_BUFSIZE, "%s:%s \t %s \t %s \t %s 0 0", host, rmountpt, mountpt, fstype, opts);
 #elif defined(__sun) || defined(sco) || defined(__SCO_DS)
     snprintf(fstab, CF_BUFSIZE, "%s:%s - %s %s - yes %s", host, rmountpt, mountpt, fstype, opts);
 #elif defined(__CYGWIN__)
     snprintf(fstab, CF_BUFSIZE, "/bin/mount %s:%s %s", host, rmountpt, mountpt);
+#else
+  #error "Could not determine format of fstab entry on this platform."
 #endif
 
     Log(LOG_LEVEL_VERBOSE, "Verifying '%s' in '%s'", mountpt, VFSTAB[VSYSTEMHARDCLASS]);

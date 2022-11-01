@@ -477,7 +477,7 @@ allow cfengine_postgres_t cfengine_postgres_exec_t:file { ioctl read getattr loc
 allow cfengine_postgres_t cfengine_var_lib_t:file map;
 allow cfengine_postgres_t cfengine_var_lib_t:file { create execute execute_no_trans getattr link open read rename unlink write };
 
-allow cfengine_postgres_t cfengine_var_lib_t:dir { add_name getattr open read remove_name search write };
+allow cfengine_postgres_t cfengine_var_lib_t:dir { add_name getattr open create read remove_name search write };
 
 allow cfengine_postgres_t postgresql_port_t:tcp_socket name_bind;
 

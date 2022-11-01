@@ -29,6 +29,8 @@
 	- edit_line bundles can now use the new $(edit.empty_before_use)
 	  variable mirroring the value of edit_defaults=>empty_before_use of
 	  the related files promise (ENT-5866)
+	- Use of an external SMTP server for reports from Mission Portal is no
+	  longer blocked by SELinux (ENT-9473)
 
 3.18.2:
 	- 'N' or 'Ns' signal specs can now be used to sleep

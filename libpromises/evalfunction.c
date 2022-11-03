@@ -1787,10 +1787,18 @@ static bool GetPackagesMatching(pcre *matcher, JsonElement *json, const bool ins
 {
     dbid database = (installed_mode == true ? dbid_packages_installed : dbid_packages_updates);
 
+    bool read_some_db = false;
+
     for (const Rlist *rp = default_inventory; rp != NULL; rp = rp->next)
     {
         const char *pm_name =  RlistScalarValue(rp);
         size_t pm_name_size = strlen(pm_name);
+
+        if (StringContainsUnresolved(pm_name))
+        {
+            Log(LOG_LEVEL_DEBUG, "Package module '%s' contains unresolved variables", pm_name);
+            continue;
+        }
 
         Log(LOG_LEVEL_DEBUG, "Reading packages (%d) for package module [%s]",
                 database, pm_name);
@@ -1800,6 +1808,10 @@ static bool GetPackagesMatching(pcre *matcher, JsonElement *json, const bool ins
         {
             Log(LOG_LEVEL_ERR, "Can not open database %d to get packages data.", database);
             return false;
+        }
+        else
+        {
+            read_some_db = true;
         }
 
         char *key = "<inventory>";
@@ -1861,7 +1873,7 @@ static bool GetPackagesMatching(pcre *matcher, JsonElement *json, const bool ins
         }
         CloseDB(db_cached);
     }
-    return true;
+    return read_some_db;
 }
 
 static FnCallResult FnCallPackagesMatching(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
@@ -1889,6 +1901,7 @@ static FnCallResult FnCallPackagesMatching(ARG_UNUSED EvalContext *ctx, ARG_UNUS
     bool ret = false;
 
     Rlist *default_inventory = GetDefaultInventoryFromContext(ctx);
+
     if (!default_inventory)
     {
         // Legacy package promise
@@ -1897,7 +1910,27 @@ static FnCallResult FnCallPackagesMatching(ARG_UNUSED EvalContext *ctx, ARG_UNUS
     else
     {
         // We are using package modules.
-        ret = GetPackagesMatching(matcher, json, installed_mode, default_inventory);
+        bool some_valid_inventory = false;
+        for (const Rlist *rp = default_inventory; !some_valid_inventory && (rp != NULL); rp = rp->next)
+        {
+            const char *pm_name =  RlistScalarValue(rp);
+            if (!StringContainsUnresolved(pm_name))
+            {
+                some_valid_inventory = true;
+            }
+        }
+
+        if (some_valid_inventory)
+        {
+            ret = GetPackagesMatching(matcher, json, installed_mode, default_inventory);
+        }
+        else
+        {
+            Log(LOG_LEVEL_DEBUG, "No valid package module inventory found");
+            pcre_free(matcher);
+            JsonDestroy(json);
+            return FnFailure();
+        }
     }
 
     pcre_free(matcher);

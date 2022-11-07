@@ -436,6 +436,7 @@ allow cfengine_hub_t self:netlink_route_socket { create getopt setopt bind getat
 allow cfengine_hub_t self:unix_dgram_socket { create connect read write };
 allow cfengine_hub_t semanage_exec_t:file getattr;
 allow cfengine_hub_t shadow_t:file getattr;
+allow cfengine_hub_t smtp_port_t:tcp_socket name_connect;
 allow cfengine_hub_t sssd_public_t:dir search;
 allow cfengine_hub_t sssd_public_t:file map;
 allow cfengine_hub_t sssd_public_t:file { getattr open read };

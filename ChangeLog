@@ -36,6 +36,9 @@
 	  hubs (ENT-9496)
 	- Package modules with unresolved variables in their names are now
 	  skipped in package queries (ENT-9377)
+	- Unresolved function calls that return scalar values are now
+	  considered OK for constraints expecting strings during syntax
+	  check (CFE-4094)
 
 3.18.2:
 	- 'N' or 'Ns' signal specs can now be used to sleep

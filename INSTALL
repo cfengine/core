@@ -112,9 +112,17 @@ Here we have examples of command lines for various systems to install dependenci
 needed to build. The version and date checked are noted in parenthesis. Please
 submit PRs with updates to this information.
 
-* Debian (Raspbian 9 2020-04-24)
+* CentOS (centos7 2021-07-02)
 
-# apt-get install build-essential autoconf automake libssl-dev libpcre3 libpcre3-dev bison libbison-dev libacl1 libacl1-dev libpq-dev lmdb-utils liblmdb-dev libpam0g-dev flex libtool
+Note that first you will need to install epel-release (https://fedoraproject.org/wiki/EPEL) for lmdb-devel to be available.
+
+$ sudo yum install -y gcc gdb make git libtool autoconf automake byacc flex openssl-devel pcre-devel lmdb-devel pam-devel flex-devel yaml-devel
+
+For SELinux support you will need selinux-policy-devel package and specify `--with-selinux-policy` to `autogen.sh` or `configure`
+
+* Debian (Raspbian 10 2021-07-02)
+
+$ sudo apt-get install -y build-essential git libtool autoconf automake bison flex libssl-dev libpcre3-dev libbison-dev libacl1 libacl1-dev lmdb-utils liblmdb-dev libpam0g-dev libtool libyaml-dev
 
 * FreeBSD (12.1 2020-04-07)
 

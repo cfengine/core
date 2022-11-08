@@ -33,6 +33,8 @@
 	  longer blocked by SELinux (ENT-9473)
 	- SELinux no longer breaks SQL queries with large result sets on RHEL 8
 	  hubs (ENT-9496)
+	- Package modules with unresolved variables in their names are now
+	  skipped in package queries (ENT-9377)
 
 3.18.2:
 	- 'N' or 'Ns' signal specs can now be used to sleep

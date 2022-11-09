@@ -935,47 +935,54 @@ bool CheckParseVariableName(const char *const name)
 
 /****************************************************************************/
 
-static SyntaxTypeMatch CheckFnCallType(const char *s, DataType dtype)
+static SyntaxTypeMatch CheckFnCallType(const char *s, DataType desired_type)
 {
-    DataType dt;
-    const FnCallType *fn;
-
-    fn = FnCallTypeGet(s);
-
-    if (fn)
+    const FnCallType *fn = FnCallTypeGet(s);
+    if (fn != NULL)
     {
-        dt = fn->dtype;
-
-        if (dtype != dt)
+        DataType fn_ret_type = fn->dtype;
+        if (desired_type != fn_ret_type)
         {
+            /* All scalar values can be used where string is expected (they are,
+             * in fact, strings internally, see RvalType).  */
+            if ((desired_type == CF_DATA_TYPE_STRING) &&
+                ((fn_ret_type == CF_DATA_TYPE_INT) ||
+                 (fn_ret_type == CF_DATA_TYPE_REAL) ||
+                 (fn_ret_type == CF_DATA_TYPE_OPTION) ||
+                 (fn_ret_type == CF_DATA_TYPE_CONTEXT)))
+            {
+                return SYNTAX_TYPE_MATCH_OK;
+            }
+
+
             /* Ok to allow fn calls of correct element-type in lists */
 
-            if (dt == CF_DATA_TYPE_STRING && dtype == CF_DATA_TYPE_STRING_LIST)
+            if (fn_ret_type == CF_DATA_TYPE_STRING && desired_type == CF_DATA_TYPE_STRING_LIST)
             {
                 return SYNTAX_TYPE_MATCH_OK;
             }
 
-            if (dt == CF_DATA_TYPE_STRING && dtype == CF_DATA_TYPE_CONTEXT)
+            if (fn_ret_type == CF_DATA_TYPE_STRING && desired_type == CF_DATA_TYPE_CONTEXT)
             {
                 return SYNTAX_TYPE_MATCH_OK;
             }
 
-            if (dt == CF_DATA_TYPE_INT && dtype == CF_DATA_TYPE_INT_LIST)
+            if (fn_ret_type == CF_DATA_TYPE_INT && desired_type == CF_DATA_TYPE_INT_LIST)
             {
                 return SYNTAX_TYPE_MATCH_OK;
             }
 
-            if (dt == CF_DATA_TYPE_REAL && dtype == CF_DATA_TYPE_REAL_LIST)
+            if (fn_ret_type == CF_DATA_TYPE_REAL && desired_type == CF_DATA_TYPE_REAL_LIST)
             {
                 return SYNTAX_TYPE_MATCH_OK;
             }
 
-            if (dt == CF_DATA_TYPE_OPTION && dtype == CF_DATA_TYPE_OPTION_LIST)
+            if (fn_ret_type == CF_DATA_TYPE_OPTION && desired_type == CF_DATA_TYPE_OPTION_LIST)
             {
                 return SYNTAX_TYPE_MATCH_OK;
             }
 
-            if (dt == CF_DATA_TYPE_CONTEXT && dtype == CF_DATA_TYPE_CONTEXT_LIST)
+            if (fn_ret_type == CF_DATA_TYPE_CONTEXT && desired_type == CF_DATA_TYPE_CONTEXT_LIST)
             {
                 return SYNTAX_TYPE_MATCH_OK;
             }

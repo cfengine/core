@@ -1,4 +1,5 @@
 3.18.3:
+	- Adjusted SELinux policy for RHEL 9 (ENT-8824)
 	- '$(this.promiser)' can now be used in 'files' promise
 	  attributes 'if', 'ifvarclass' and 'unless' (CFE-2262, ENT-7008)
 	- 'meta' attribute can now be used in custom promises (CFE-3440)

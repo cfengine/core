@@ -1370,7 +1370,8 @@ static bool ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, 
             {
                 RecordInterruption(ctx, pp, a,
                                    "Promised replacement '%s' for pattern '%s' is not properly convergent while editing '%s'"
-                                   " (pattern still matches the end-state replacement string '%s')",
+                                   " (pattern still matches the end-state replacement string '%s', consider use"
+                                   " of a negative look ahead)",
                                    ip->name, pp->promiser, edcontext->filename, line_buff);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
                 PromiseRef(LOG_LEVEL_INFO, pp);

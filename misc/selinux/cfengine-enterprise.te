@@ -512,7 +512,7 @@ allow cfengine_postgres_t tmp_t:dir { add_name write remove_name };
 allow cfengine_postgres_t tmp_t:file { create write unlink };
 allow cfengine_postgres_t tmp_t:sock_file { create setattr unlink write };
 allow cfengine_postgres_t tmpfs_t:dir { add_name write remove_name };
-allow cfengine_postgres_t tmpfs_t:file { create open read write map unlink };
+allow cfengine_postgres_t tmpfs_t:file { create open read write map unlink getattr };
 allow cfengine_postgres_t tmpfs_t:filesystem getattr;
 allow cfengine_postgres_t var_log_t:file { append open };
 

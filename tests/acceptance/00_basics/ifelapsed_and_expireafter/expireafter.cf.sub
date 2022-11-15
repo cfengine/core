@@ -1,0 +1,28 @@
+##############################################################################
+#
+#  Test that expireafter works with commands promise type
+#
+##############################################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { "hang" };
+  version => "1.0";
+}
+
+##############################################################################
+
+body action timeout
+{
+  expireafter => "1";
+  ifelapsed => "0";
+}
+
+bundle agent hang
+{
+  commands:
+      "/bin/sleep 120; printf 'Hello CFEngine' >> $(G.testfile)"
+        contain => in_shell,
+        action => timeout;
+}

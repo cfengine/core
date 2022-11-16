@@ -89,7 +89,7 @@ require {
 	type ssh_home_t;
 	type rpm_script_t;
 	class tcp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown name_connect accept listen name_bind node_bind name_connect };
-	class udp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown node_bind name_connect };
+	class udp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown node_bind };
 	class sock_file { create write getattr setattr unlink };
 	class rawip_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
 	class netlink_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
@@ -595,7 +595,7 @@ allow cfengine_httpd_t self:netlink_route_socket { bind create getattr nlmsg_rea
 allow cfengine_httpd_t self:process execmem;
 allow cfengine_httpd_t unconfined_t:process signull;
 allow cfengine_httpd_t self:tcp_socket { accept bind connect create getattr getopt listen setopt shutdown read write ioctl setattr append name_connect };
-allow cfengine_httpd_t self:udp_socket { create ioctl read getattr write setattr append connect getopt setopt shutdown name_connect setattr };
+allow cfengine_httpd_t self:udp_socket { create ioctl read getattr write setattr append connect getopt setopt shutdown setattr };
 allow cfengine_httpd_t self:unix_dgram_socket { connect create };
 allow cfengine_httpd_t sssd_public_t:dir search;
 allow cfengine_httpd_t sssd_public_t:file map;
@@ -741,7 +741,7 @@ allow cfengine_reactor_t net_conf_t:file { getattr open read };
 allow cfengine_reactor_t self:capability { chown fsetid };
 allow cfengine_reactor_t self:netlink_route_socket { bind create getattr nlmsg_read };
 allow cfengine_reactor_t self:tcp_socket { create ioctl read getattr write setattr append connect getopt setopt shutdown name_connect };
-allow cfengine_reactor_t self:udp_socket { create ioctl read getattr write setattr append connect getopt setopt shutdown name_connect };
+allow cfengine_reactor_t self:udp_socket { create ioctl read getattr write setattr append connect getopt setopt shutdown };
 allow cfengine_reactor_t self:unix_stream_socket connectto;
 
 allow cfengine_reactor_t ssh_exec_t:file map;
@@ -814,7 +814,7 @@ allow cfengine_cfbs_t passwd_file_t:file { getattr open read };
 allow cfengine_cfbs_t self:capability dac_override;
 allow cfengine_cfbs_t self:netlink_route_socket { bind create getattr nlmsg_read };
 allow cfengine_cfbs_t self:tcp_socket { create ioctl read getattr write setattr append connect getopt setopt shutdown name_connect };
-allow cfengine_cfbs_t self:udp_socket { create ioctl read getattr write setattr append connect getopt setopt shutdown name_connect };
+allow cfengine_cfbs_t self:udp_socket { create ioctl read getattr write setattr append connect getopt setopt shutdown };
 allow cfengine_cfbs_t sssd_public_t:dir search;
 allow cfengine_cfbs_t sssd_public_t:file { map getattr open read };
 allow cfengine_cfbs_t sssd_t:unix_stream_socket connectto;

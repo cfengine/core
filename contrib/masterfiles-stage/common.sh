@@ -108,6 +108,10 @@ git_deploy_refspec() {
   # and https://github.com/cfengine/core/pull/2465#issuecomment-173656475
   git --git-dir="${local_mirrored_repo}" --work-tree="${temp_stage}" checkout -q -f "${2}^0" ||
     error_exit "Failed to checkout '$2' from '${local_mirrored_repo}'"
+  cd "${temp_stage}"
+  git --git-dir="${local_mirrored_repo}" --work-tree="${temp_stage}" submodule sync
+  git --git-dir="${local_mirrored_repo}" --work-tree="${temp_stage}" submodule update --init --recursive
+  cd -
   # Grab HEAD so it can be used to populate cf_promises_release_id
   mkdir -p "${temp_stage}/.git"
   cp "${local_mirrored_repo}/HEAD" "${temp_stage}/.git/"
@@ -212,6 +216,10 @@ git_cfbs_deploy_refspec() {
   # and https://github.com/cfengine/core/pull/2465#issuecomment-173656475
   git --git-dir="${local_mirrored_repo}" --work-tree="${temp_stage}" checkout -q -f "${2}^0" ||
     error_exit "Failed to checkout '$2' from '${local_mirrored_repo}'"
+  cd "${temp_stage}"
+  git --git-dir="${local_mirrored_repo}" --work-tree="${temp_stage}" submodule sync
+  git --git-dir="${local_mirrored_repo}" --work-tree="${temp_stage}" submodule update --init --recursive
+  cd -
 
   ########################## 3. cfbs build
   # Remember what directory we were in when we started.

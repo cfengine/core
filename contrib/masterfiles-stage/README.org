@@ -43,6 +43,18 @@ simple environments this will be =$(sys.masterdir)= (typically
   - =VCS_TYPE="GIT_POLICY_CHANNELS"=
   - =VCS_TYPE="SVN"=
 
+- Git submodules supported
+  Note however that submodules can be "tricky".
+  Because of the way this script currently handles the repo, changes in url or branch of a submodule are handled well.
+  When changing url/branch in your working directory you may notice that the submodule is not updated properly. The following procedure will fix the situation:
+
+```
+  git submodule deinit <name_of_submodule>
+  git rm -rf <name_of_submodule>
+  rm -rf .git/modules/<name_of_submodule>
+  git submodule add --force [-b <branch>] <submodule_url> <name_of_submodule>
+```
+
 * Dependencies
 :PROPERTIES:
 :ID:       b04a05f5-f84f-4c38-aed0-837e2ca6c10c

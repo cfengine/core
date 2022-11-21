@@ -88,7 +88,7 @@ require {
 	type ssh_exec_t;
 	type ssh_home_t;
 	type rpm_script_t;
-	class tcp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown name_connect accept listen name_bind node_bind name_connect };
+	class tcp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown name_connect accept listen name_bind node_bind };
 	class udp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown node_bind };
 	class sock_file { create write getattr setattr unlink };
 	class rawip_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };

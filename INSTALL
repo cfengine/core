@@ -112,11 +112,11 @@ Here we have examples of command lines for various systems to install dependenci
 needed to build. The version and date checked are noted in parenthesis. Please
 submit PRs with updates to this information.
 
-* CentOS (centos7 2021-07-02)
+* RedHat/CentOS (rhel-8/rhel-9/centos-7 2022-11-15)
 
 Note that first you will need to install epel-release (https://fedoraproject.org/wiki/EPEL) for lmdb-devel to be available.
 
-$ sudo yum install -y gcc gdb make git libtool autoconf automake byacc flex openssl-devel pcre-devel lmdb-devel pam-devel flex-devel yaml-devel
+$ sudo yum install -y gcc gdb make git libtool autoconf automake byacc flex openssl-devel pcre-devel lmdb-devel pam-devel flex-devel libyaml-devel
 
 For SELinux support you will need selinux-policy-devel package and specify `--with-selinux-policy` to `autogen.sh` or `configure`
 

@@ -398,8 +398,9 @@ bundle agent failsafe_cfe_internal_trigger_policy
   commands:
 
     bootstrap_mode.!skip_policy_on_bootstrap::
-      "$(sys.cf_agent) --timestamp --debug --define bootstrap_mode | tee -a $(sys.statedir)/bootstrap.log"
+      "$(sys.cf_agent) --timestamp --debug --define bootstrap_mode >> $(sys.statedir)/bootstrap.log"
         handle => "failsafe_cfe_internal_trigger_policy_commands_call_promises_cf",
+        contain => useshell,
         if => fileexists( $(sys.default_policy_path) ),
         classes => failsafe_results("namespace", "trigger_policy"),
         comment => "We run promises.cf in order to prepare system information for
@@ -496,4 +497,9 @@ body contain bootstrap_command_silent
 # @brief Suppress command output
 {
       no_output => "true";
+}
+
+body contain useshell
+{
+  useshell => "useshell";
 }

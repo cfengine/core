@@ -29,6 +29,10 @@
 #include <openssl/bn.h>                                         /* BN_* */
 #include <libcrypto-compat.h>
 
+#if OPENSSL_VERSION_NUMBER > 0x30000000
+#include <openssl/provider.h>                                   /* OSSL_PROVIDER_* */
+#endif
+
 #include <cf3.defs.h>
 #include <lastseen.h>
 #include <files_interfaces.h>
@@ -47,10 +51,7 @@
 #endif
 
 #if OPENSSL_VERSION_NUMBER < 0x10100000
-/* The deprecated is the easy way to setup threads for OpenSSL. */
-#ifdef OPENSSL_NO_DEPRECATED
 void CRYPTO_set_id_callback(unsigned long (*func)(void));
-#endif
 #endif
 
 static void RandomSeed(void);
@@ -77,6 +78,13 @@ void CryptoInitialize()
         OpenSSL_add_all_digests();
         ERR_load_crypto_strings();
 
+#if OPENSSL_VERSION_NUMBER > 0x30000000
+        /* We need Blowfish for legacy encrypted network stuff and in OpenSSL
+         * 3+, it's only available when the legacy provider is loaded. And we
+         * also need the default provider. */
+        OSSL_PROVIDER_load(NULL, "legacy");
+        OSSL_PROVIDER_load(NULL, "default");
+#endif
         RandomSeed();
 
         crypto_initialized = true;

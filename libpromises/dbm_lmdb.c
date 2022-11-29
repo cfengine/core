@@ -603,6 +603,7 @@ DBPriv *DBPrivOpenDB(const char *const dbpath, const dbid id)
     int attempts = N_LMDB_EINVAL_RETRIES;
     while ((rc != 0) && (attempts-- > 0))
     {
+        Log(LOG_LEVEL_ERR, "mdb_txn_begin() returned %d, retry %d more times", rc, attempts);
         CheckLMDBCorrupted(rc, db->env);
         if (rc != EINVAL)
         {
@@ -615,6 +616,8 @@ DBPriv *DBPrivOpenDB(const char *const dbpath, const dbid id)
         // condition will persist.
         sched_yield();
 #endif
+        Log(LOG_LEVEL_ERR, "mdb_txn_begin() retry backoff: sleep %d", N_LMDB_EINVAL_RETRIES - attempts);
+        sleep(N_LMDB_EINVAL_RETRIES - attempts);
         rc = mdb_txn_begin(db->env, NULL, MDB_RDONLY, &txn);
     }
     if (rc != 0)

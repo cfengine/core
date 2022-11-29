@@ -972,7 +972,7 @@ void YieldCurrentLock(CfLock lock)
 
     if (RemoveLock(lock.lock) == -1)
     {
-        Log(LOG_LEVEL_VERBOSE, "Unable to remove lock %s", lock.lock);
+        Log(LOG_LEVEL_ERR, "Unable to remove lock %s", lock.lock);
         free(lock.last);
         free(lock.lock);
         return;

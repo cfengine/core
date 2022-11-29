@@ -398,7 +398,7 @@ bundle agent failsafe_cfe_internal_trigger_policy
   commands:
 
     bootstrap_mode.!skip_policy_on_bootstrap::
-      "$(sys.cf_agent) --timestamp --debug --define bootstrap_mode >> $(sys.statedir)/bootstrap.log"
+      "$(sys.cf_agent) --timestamp --define bootstrap_mode >> $(sys.workdir)/outputs/bootstrap.logstrap.log"
         handle => "failsafe_cfe_internal_trigger_policy_commands_call_promises_cf",
         contain => useshell,
         if => fileexists( $(sys.default_policy_path) ),

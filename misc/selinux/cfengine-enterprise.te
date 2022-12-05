@@ -375,6 +375,10 @@ allow cfengine_hub_t cfengine_var_lib_t:file map;
 allow cfengine_hub_t cfengine_var_lib_t:file execute;
 allow cfengine_hub_t cfengine_var_lib_t:file { getattr open read };
 
+# allow cf-hub to read/write from/to a socket owned by cf-serverd (passed in
+# case of call-collect)
+allow cfengine_hub_t cfengine_serverd_t:tcp_socket { read write };
+
 allow cfengine_hub_t cfengine_agent_exec_t:file getattr;
 allow cfengine_hub_t cfengine_execd_exec_t:file getattr;
 allow cfengine_hub_t cfengine_monitord_exec_t:file getattr;

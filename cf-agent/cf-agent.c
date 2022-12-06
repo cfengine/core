@@ -102,6 +102,11 @@
 
 #include <ornaments.h>
 
+// OPENSSL_Applink - glue between OpenSSL BIO and Win32 compiler run-time
+#ifdef _WIN32
+#include <openssl/applink.c>
+#endif // _WIN32
+
 
 extern int PR_KEPT;
 extern int PR_REPAIRED;

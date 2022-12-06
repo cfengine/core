@@ -43,6 +43,11 @@
 
 #include <cf-key-functions.h>
 
+// OPENSSL_Applink - glue between OpenSSL BIO and Win32 compiler run-time
+#ifdef _WIN32
+#include <openssl/applink.c>
+#endif // _WIN32
+
 bool SHOWHOSTS = false;                                         /* GLOBAL_A */
 bool NO_TRUNCATE = false;                                       /* GLOBAL_A */
 bool FORCEREMOVAL = false;                                      /* GLOBAL_A */

@@ -39,6 +39,10 @@ AM_CFLAGS = \
 libcf_key_la_SOURCES = \
 	cf-key.c \
 	cf-key-functions.c cf-key-functions.h
+if WINDOWS
+# OPENSSL_Applink - glue between OpenSSL BIO and Win32 compiler run-time
+libcf_key_la_SOURCES += $(OPENSSL_PATH)/applink.c
+endif
 
 
 libcf_key_la_LIBADD = ../libpromises/libpromises.la

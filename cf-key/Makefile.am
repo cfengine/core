@@ -43,10 +43,16 @@ libcf_key_la_SOURCES = \
 
 libcf_key_la_LIBADD = ../libpromises/libpromises.la
 
+cf_key_LDADD =
+
 if !BUILTIN_EXTENSIONS
 bin_PROGRAMS = cf-key
-cf_key_LDADD = libcf-key.la
+cf_key_LDADD += libcf-key.la
 cf_key_SOURCES =
+endif
+
+if WINDOWS
+cf_key_LDADD += -lssl -lcrypto
 endif
 
 CLEANFILES = *.gcno *.gcda

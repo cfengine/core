@@ -135,6 +135,8 @@ manifest_file_LDADD = ../libntech/libutils/libutils.la \
 TESTS += manifest_file
 endif
 
+cf_agent_LDADD =
+
 if !BUILTIN_EXTENSIONS
 bin_PROGRAMS = cf-agent
 
@@ -142,7 +144,11 @@ bin_PROGRAMS = cf-agent
 cf_agent_CFLAGS = $(AM_CFLAGS)
 
 # Build both a libcf-agent.la library, and a cf-agent executable
-cf_agent_LDADD = libcf-agent.la
+cf_agent_LDADD += libcf-agent.la
+endif
+
+if WINDOWS
+cf_agent_LDADD += -lssl -lcrypto
 endif
 
 CLEANFILES = *.gcno *.gcda

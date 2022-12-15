@@ -1,3 +1,59 @@
+3.21.0:
+	- Added cf-support utility for generating support information
+	  (ENT-9037)
+	- Adjusted cf-check and package module code for empty updates list
+	  (ENT-9050)
+	- '$(this.promiser)' can now be used in 'files' promise
+	  attributes 'if', 'ifvarclass' and 'unless'
+	  (CFE-2262, ENT-7008)
+	- Fixed storage promise for nfs on MacOS (CFE-4093)
+	- Fixed definition of _low_ldt class from cf-monitord (CFE-4022)
+	- Insertion of contents of a file with blank lines into
+	  another file with blank lines no longer results in
+	  mixed content (ENT-8788)
+	- Added suggestion to use a negative lookahead when non-convergent edits 
+	  are attempted
+	  (CFE-192)
+	- Unresolved function calls that return scalar values
+	  are now considered OK for constraints expecting
+	  strings during syntax check (CFE-4094)
+	- cf-monitord now honors monitorfacility in body monitor control
+	  (ENT-4492)
+	- cf-serverd now periodically reloads its policy if it
+	  contains unresolved variables (e.g. $(sys.policy_hub)
+	  in 'allowconnect'). (ENT-8456)
+	- cf-serverd now starts in the network-online.target on
+	  systemd-based systems (ENT-8456)
+	- edit_line bundles can now use the new
+	  $(edit.empty_before_use) variable mirroring the value of
+	  edit_defaults=>empty_before_use of the related files promise
+	  (ENT-5866)
+	- Package modules with unresolved variables in their
+	  names are now skipped in package queries (ENT-9377)
+	- Removed unsupported name_connect capability for udp_socket class
+	  (ENT-8824)
+	- 'meta' attribute can now be used in custom promises (CFE-3440)
+	- Custom promise modules can now support the 'action_policy'
+	  feature allowing promises of their custom types to be used
+	  in dry-run and simulation modes and in combination with
+	  'action_policy => "warn"'. (CFE-3433)
+	- Use of custom promise modules that don't fully specify
+	  protocol now results in warning (CFE-3433)
+	- Warnings are logged if levels of log messages from
+	  custom promise modules don't match results of their
+	  related promises (CFE-3433)
+	- Adjusted SELinux policy for RHEL 9 (ENT-8824)
+	- Fixed SELinux policy to allow hub to send emails (ENT-9557, ENT-9473)
+	- SELinux no longer breaks SQL queries with large result
+	  sets on RHEL 8 hubs (ENT-9496)
+	- Added SELinux LDAP port access for Mission Portal (ENT-9694)
+	- Allowed ciphers are now properly split into TLS 1.3
+	  cipher suites and ciphers used for TLS 1.2 and older
+	  (ENT-9018)
+	- Fixed git_cfbs_deploy_refspec in masterfiles_stage leaving temp dir
+	  (ENT-9039)
+
+
 3.20.0:
 	- 'rxdirs' now defaults to "false". This means that the read permission
 	  bit no longer implies execute bit for directories, by default.

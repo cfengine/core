@@ -36,6 +36,7 @@ require {
 	type proc_xen_t;
 	type cfengine_serverd_exec_t;
 	type http_port_t;
+	type ldap_port_t;
 	type postgresql_port_t;
 	type smtp_port_t;
 	type ssh_port_t;
@@ -622,6 +623,9 @@ allow cfengine_httpd_t tmp_t:file map;
 
 # httpd/PHP needs to be able to send emails via an external SMTP server
 allow cfengine_httpd_t smtp_port_t:tcp_socket name_connect;
+
+# httpd/PHP needs to be able to contact LDAP servers
+allow cfengine_httpd_t ldap_port_t:tcp_socket name_connect;
 
 # Bidirectional DBus communication between httpd and systemd
 allow cfengine_httpd_t system_dbusd_t:dbus send_msg;

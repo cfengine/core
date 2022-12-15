@@ -46,6 +46,7 @@
 	- Fixed SELinux policy to allow hub to send emails (ENT-9557, ENT-9473)
 	- SELinux no longer breaks SQL queries with large result
 	  sets on RHEL 8 hubs (ENT-9496)
+	- Added SELinux LDAP port access for Mission Portal (ENT-9694)
 	- Allowed ciphers are now properly split into TLS 1.3
 	  cipher suites and ciphers used for TLS 1.2 and older
 	  (ENT-9018)

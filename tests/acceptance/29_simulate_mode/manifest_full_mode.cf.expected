@@ -34,7 +34,7 @@ foobar
 ===========================================================================
 'WORKDIR/tmp/SUBDIR' is a directory
 Size: SIZE
-Access: (0755/rwxr-xr-x)  Uid: (0/root)   Gid: (0/root)
+Access: (0700/rwx------)  Uid: (0/root)   Gid: (0/root)
 Access: TIMESTAMP
 Modify: TIMESTAMP
 Change: TIMESTAMP
@@ -58,7 +58,7 @@ These are my source file contents.
 ===========================================================================
 'WORKDIR/tmp/sub-dir/.' is a directory
 Size: SIZE
-Access: (0755/rwxr-xr-x)  Uid: (0/root)   Gid: (0/root)
+Access: (0700/rwx------)  Uid: (0/root)   Gid: (0/root)
 Access: TIMESTAMP
 Modify: TIMESTAMP
 Change: TIMESTAMP

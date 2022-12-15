@@ -1,6 +1,6 @@
 3.21.0:
 	- '$(this.promiser)' can now be used in 'files' promise
-	             attributes 'if', 'ifvarclass' and 'unless'
+	  attributes 'if', 'ifvarclass' and 'unless'
 	  (CFE-2262, ENT-7008)
 	- 'meta' attribute can now be used in custom promises (CFE-3440)
 	- Added cf-support utility for generating support information
@@ -14,15 +14,15 @@
 	- Adjust selinux policy for RHEL 9 (ENT-8824)
 	- Allow selinux hub context to send email (ENT-9557)
 	- Allowed ciphers are now properly split into TLS 1.3
-	             cipher suites and ciphers used for TLS 1.2 and older
+	  cipher suites and ciphers used for TLS 1.2 and older
 	  (ENT-9018)
 	- Bundle-qualified references (of the form
 	  "$(bundle.var)") now properly resolve to variables from bundles
 	  from the current namespace (ENT-8817)
 	- Custom promise modules can now support the 'action_policy'
-	             feature allowing promises of their custom types to be used
-	             in dry-run and simulation modes and in combination with
-	             'action_policy => "warn"'. (CFE-3433)
+	  feature allowing promises of their custom types to be used
+	  in dry-run and simulation modes and in combination with
+	  'action_policy => "warn"'. (CFE-3433)
 	- Fix storage promise for nfs on MacOS (CFE-4093)
 	- Fixed definition of _low_ldt class from cf-monitord (CFE-4022)
 	- Fixed git_cfbs_deploy_refspec in masterfiles_stage leaving temp dir
@@ -30,32 +30,32 @@
 	- Initialize cf-testd config struct to avoid segfault on aarch64
 	  (ENT-9129)
 	- Insertion of contents of a file with blank lines into
-	             another file with blank lines no longer results in
-	             mixed content (ENT-8788)
+	  another file with blank lines no longer results in
+	  mixed content (ENT-8788)
 	- Moved cfengine-code-style to it's own repository (CFE-4097)
 	- Package modules with unresolved variables in their
-	             names are now skipped in package queries (ENT-9377)
+	  names are now skipped in package queries (ENT-9377)
 	- Removed unsupported name_connect capability for udp_socket class
 	  (ENT-8824)
 	- SELinux no longer breaks SQL queries with large result
-	             sets on RHEL 8 hubs (ENT-9496)
+	  sets on RHEL 8 hubs (ENT-9496)
 	- Unresolved function calls that return scalar values
-	             are now considered OK for constraints expecting
-	             strings during syntax check (CFE-4094)
+	  are now considered OK for constraints expecting
+	  strings during syntax check (CFE-4094)
 	- Use of an external SMTP server for reports from
-	             Mission Portal is no longer blocked by SELinux (ENT-9473)
+	  Mission Portal is no longer blocked by SELinux (ENT-9473)
 	- Use of custom promise modules that don't fully specify
-	             protocol now results in warning (CFE-3433)
+	  protocol now results in warning (CFE-3433)
 	- Warnings are logged if levels of log messages from
-	             custom promise modules don't match results of their
-	             related promises (CFE-3433)
+	  custom promise modules don't match results of their
+	  related promises (CFE-3433)
 	- cf-monitord now honors monitorfacility in body monitor control
 	  (ENT-4492)
 	- cf-serverd now periodically reloads its policy if it
-	             contains unresolved variables (e.g. $(sys.policy_hub)
-	             in 'allowconnect'). (ENT-8456)
+	  contains unresolved variables (e.g. $(sys.policy_hub)
+	  in 'allowconnect'). (ENT-8456)
 	- cf-serverd now starts in the network-online.target on
-	             systemd-based systems (ENT-8456)
+	  systemd-based systems (ENT-8456)
 	- cf3_gcc_flags.m4: Fixed order of 'configure' output (CFE-4027)
 	- configure.ac: Enabled use of pkg-config to find libxml2 (CFE-4014)
 	- edit_line bundles can now use the new

@@ -1,0 +1,71 @@
+##############################################################################
+#
+#  Test that expireafter works with commands promise type
+#
+##############################################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+##############################################################################
+
+bundle agent init
+{
+  meta:
+      # Solaris 9 & 10 don't seem to handle the backgrounding
+      "test_skip_needs_work"
+        string => "windows|sunos_5_9|sunos_5_10";
+  files:
+      "$(G.testfile)"
+        delete => tidy;
+}
+
+##############################################################################
+
+body action background {
+  background => "true";
+}
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-1188" }
+        string => "Test that expireafter works with commands promise type";
+
+  commands:
+      "$(sys.cf_agent) --inform --file $(this.promise_filename).sub --"
+        action => background,
+        comment => "I will get killed by the second agent";
+      "$(G.sleep) 90"
+        comment => "I will wait for the first agent to expire";
+      "$(sys.cf_agent) --inform --file $(this.promise_filename).sub"
+        comment => "I will kill the first agent";
+}
+
+##############################################################################
+
+bundle agent check
+{
+  vars:
+      "expected"
+        string => "Hello CFEngine";
+      "actual"
+        string => readfile("$(G.testfile)"),
+        if => fileexists("$(G.testfile)");
+
+  classes:
+      "ok"
+        expression => strcmp("$(expected)", "$(actual)");
+
+  reports:
+    DEBUG::
+      "Expected '$(expected)', found '$(actual)'";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

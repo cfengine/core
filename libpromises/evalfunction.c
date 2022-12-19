@@ -73,6 +73,7 @@
 #include <string_sequence.h>
 #include <string_lib.h>
 #include <version_comparison.h>
+#include <mutex.h>          /* ThreadWait */
 
 #include <math_eval.h>
 
@@ -8451,6 +8452,212 @@ static FnCallResult FnCallNetworkConnections(EvalContext *ctx, ARG_UNUSED const 
 
 /*********************************************************************/
 
+struct IsReadableThreadData
+{
+    pthread_t thread;
+    pthread_cond_t cond;
+    pthread_mutex_t mutex;
+    const char *path;
+    FnCallResult result;
+};
+
+static void *IsReadableThreadRoutine(void *data)
+{
+    assert(data != NULL);
+
+    struct IsReadableThreadData *const thread_data = data;
+
+    // Give main thread time to call pthread_cond_timedwait(3)
+    int ret = pthread_mutex_lock(&thread_data->mutex);
+    if (ret != 0)
+    {
+        ProgrammingError("Failed to lock mutex: %s",
+                         GetErrorStrFromCode(ret));
+    }
+
+    thread_data->result = FnReturnContext(false);
+
+    // Allow main thread to require lock on pthread_cond_timedwait(3)
+    ret = pthread_mutex_unlock(&thread_data->mutex);
+    if (ret != 0)
+    {
+        ProgrammingError("Failed to unlock mutex: %s",
+                         GetErrorStrFromCode(ret));
+    }
+
+    char buf[1];
+    const int fd = open(thread_data->path, O_RDONLY);
+    if (fd < 0) {
+        Log(LOG_LEVEL_DEBUG, "Failed to open file '%s': %s",
+            thread_data->path, GetErrorStr());
+    }
+    else if (read(fd, buf, sizeof(buf)) < 0)
+    {
+        Log(LOG_LEVEL_DEBUG, "Failed to read from file '%s': %s",
+            thread_data->path, GetErrorStr());
+        close(fd);
+    }
+    else
+    {
+        close(fd);
+        thread_data->result = FnReturnContext(true);
+    }
+
+    ret = pthread_cond_signal(&(thread_data->cond));
+    if (ret != 0)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to signal waiting thread: %s",
+            GetErrorStrFromCode(ret));
+    }
+
+    return NULL;
+}
+
+static FnCallResult FnCallIsReadable(ARG_UNUSED EvalContext *const ctx,
+                                     ARG_UNUSED const Policy *const policy,
+                                     const FnCall *const fp,
+                                     const Rlist *finalargs)
+{
+    assert(fp != NULL);
+    assert(fp->name != NULL);
+
+    if (finalargs == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Function %s requires path as first argument",
+            fp->name);
+        return FnFailure();
+    }
+    const char *const path = RlistScalarValue(finalargs);
+
+    long timeout = (finalargs->next == NULL) ? 3L /* default timeout */
+                 : IntFromString(RlistScalarValue(finalargs->next));
+    assert(timeout >= 0);
+
+    if (timeout == 0) // Try read in main thread, possibly blocking forever
+    {
+        Log(LOG_LEVEL_DEBUG,
+            "Checking if file '%s' is readable in main thread, "
+            "possibly blocking forever.", path);
+
+        char buf[1];
+        const int fd = open(path, O_RDONLY);
+        if (fd < 0)
+        {
+            Log(LOG_LEVEL_DEBUG, "Failed to open file '%s': %s", path,
+                GetErrorStr());
+            return FnReturnContext(false);
+        }
+        else if (read(fd, buf, sizeof(buf)) < 0)
+        {
+            Log(LOG_LEVEL_DEBUG, "Failed to read from file '%s': %s", path,
+                GetErrorStr());
+            close(fd);
+            return FnReturnContext(false);
+        }
+
+        close(fd);
+        return FnReturnContext(true);
+    }
+
+    // Else try read in separate thread, possibly blocking for N seconds
+    Log(LOG_LEVEL_DEBUG,
+        "Checking if file '%s' is readable in separate thread, "
+        "possibly blocking for %ld seconds.", path, timeout);
+
+    struct IsReadableThreadData thread_data = {0};
+    thread_data.path = path;
+
+    int ret = pthread_mutex_init(&thread_data.mutex, NULL);
+    if (ret != 0)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to initialize mutex: %s",
+            GetErrorStrFromCode(ret));
+        return FnFailure();
+    }
+
+    ret = pthread_cond_init(&thread_data.cond, NULL);
+    if (ret != 0)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to initialize condition: %s",
+            GetErrorStrFromCode(ret));
+        return FnFailure();
+    }
+
+    // Keep thread from doing its thing until we call
+    // pthread_cond_timedwait(3)
+    ret = pthread_mutex_lock(&thread_data.mutex);
+    if (ret != 0)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to lock mutex: %s",
+            GetErrorStrFromCode(ret));
+        return FnFailure();
+    }
+
+    ret = pthread_create(&thread_data.thread, NULL, &IsReadableThreadRoutine,
+                         &thread_data);
+    if (ret != 0)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to create thread: %s",
+            GetErrorStrFromCode(ret));
+        return FnFailure();
+    }
+
+    FnCallResult result;
+    // Wait on thread to finish or timeout
+    ret = ThreadWait(&thread_data.cond, &thread_data.mutex, timeout);
+    switch (ret)
+    {
+        case 0: // Thread finished in time
+            result = thread_data.result;
+            break;
+
+        case ETIMEDOUT: // Thread timed out
+            Log(LOG_LEVEL_DEBUG, "File '%s' is not readable: "
+                "Read operation timed out, exceeded %ld seconds.", path,
+                timeout);
+
+            ret = pthread_cancel(thread_data.thread);
+            if (ret != 0)
+            {
+                Log(LOG_LEVEL_ERR, "Failed to cancel thread");
+                return FnFailure();
+            }
+
+            result = FnReturnContext(false);
+            break;
+
+        default:
+            Log(LOG_LEVEL_ERR, "Failed to wait for condition: %s",
+                GetErrorStrFromCode(ret));
+            return FnFailure();
+
+    }
+
+    ret = pthread_mutex_unlock(&thread_data.mutex);
+    if (ret != 0)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to unlock mutex");
+        return FnFailure();
+    }
+
+    void *status;
+    ret = pthread_join(thread_data.thread, &status);
+    if (ret != 0)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to join thread");
+        return FnFailure();
+    }
+
+    if (status == PTHREAD_CANCELED)
+    {
+        Log(LOG_LEVEL_DEBUG, "Thread was canceled");
+    }
+
+    return result;
+}
+
+/*********************************************************************/
+
 static FnCallResult FnCallFindfilesUp(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
     assert(fp != NULL);
@@ -9996,6 +10203,13 @@ static const FnCallArg FINDFILES_UP_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg ISREADABLE_ARGS[] =
+{
+    {CF_ABSPATHRANGE, CF_DATA_TYPE_STRING, "Path to file"},
+    {CF_VALRANGE, CF_DATA_TYPE_INT, "Timeout interval"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
 static const FnCallArg DATATYPE_ARGS[] =
 {
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Variable identifier"},
@@ -10402,6 +10616,8 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("findfiles_up", CF_DATA_TYPE_CONTAINER, FINDFILES_UP_ARGS, &FnCallFindfilesUp, "Find files matching a glob pattern by searching up the directory three from a given point in the tree structure",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("search_up", CF_DATA_TYPE_CONTAINER, FINDFILES_UP_ARGS, &FnCallFindfilesUp, "Hush... This is a super secret alias name for function 'findfiles_up'",
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("isreadable", CF_DATA_TYPE_CONTEXT, ISREADABLE_ARGS, &FnCallIsReadable, "Check if file is readable. Timeout immediately or after optional timeout interval",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
 
     // Datatype functions

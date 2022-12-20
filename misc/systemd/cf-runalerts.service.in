@@ -3,6 +3,7 @@ Description=CFEngine Enterprise SQL Alerts
 After=syslog.target
 ConditionPathExists=@bindir@/runalerts.php
 ConditionFileIsExecutable=@workdir@/httpd/php/bin/php
+ConditionPathIsDirectory=@workdir@/httpd/php/runalerts-stamp
 
 PartOf=cfengine3.service
 After=cf-postgres.service

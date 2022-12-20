@@ -97,32 +97,39 @@ bool FileWriteOver(char *filename, char *contents)
 
 static bool MakeParentDirectoryImpl(EvalContext *ctx, const Promise *pp, const Attributes *attr,
                                     PromiseResult *result, const char *parentandchild,
-                                    bool force, bool internal, bool *created);
+                                    bool force, bool internal, bool *created,
+                                    mode_t perms_mode);
 
 bool MakeParentDirectory(const char *parentandchild, bool force, bool *created)
 {
     /* just use the complex function with no promise info */
     return MakeParentDirectoryImpl(NULL, NULL, NULL, NULL,
-                                   parentandchild, force, false, created);
+                                   parentandchild, force, false, created, DEFAULTMODE);
+}
+
+bool MakeParentDirectoryPerms(const char *parentandchild, bool force, bool *created, mode_t perms_mode)
+{
+    return MakeParentDirectoryImpl(NULL, NULL, NULL, NULL,
+                                   parentandchild, force, false, created, perms_mode);
 }
 
 bool MakeParentInternalDirectory(const char *parentandchild, bool force, bool *created)
 {
     /* just use the complex function with no promise info */
     return MakeParentDirectoryImpl(NULL, NULL, NULL, NULL,
-                                   parentandchild, force, true, created);
+                                   parentandchild, force, true, created, DEFAULTMODE);
 }
 
 bool MakeParentDirectoryForPromise(EvalContext *ctx, const Promise *pp, const Attributes *attr,
                                    PromiseResult *result, const char *parentandchild,
                                    bool force, bool *created)
 {
-    return MakeParentDirectoryImpl(ctx, pp, attr, result, parentandchild, force, false, created);
+    return MakeParentDirectoryImpl(ctx, pp, attr, result, parentandchild, force, false, created, DEFAULTMODE);
 }
 
 static bool MakeParentDirectoryImpl(EvalContext *ctx, const Promise *pp, const Attributes *attr,
                                     PromiseResult *result, const char *parentandchild,
-                                    bool force, bool internal, bool *created)
+                                    bool force, bool internal, bool *created, mode_t perms_mode)
 {
     char *sp;
     char currentpath[CF_BUFSIZE];
@@ -332,7 +339,7 @@ static bool MakeParentDirectoryImpl(EvalContext *ctx, const Promise *pp, const A
             {
                 mask = umask(0);
 
-                if (mkdir(currentpath, DEFAULTMODE) == -1)
+                if (mkdir(currentpath, perms_mode) == -1)
                 {
                     if (errno != EEXIST)
                     {

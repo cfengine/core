@@ -4,13 +4,13 @@ on:
   # run this workflow on pull_request activity
   # this includes opening and pushing more commits
   pull_request:
-    branches: [ master, 3.18.x, 3.15.x ]
+    branches: [ master, 3.21.x, 3.18.x ]
 
   # run this workflow on push/merge activity
   # pull_request activity won't detect changes
   # in the upstream branch before we merge
   push:
-    branches: [ master, 3.18.x, 3.15.x ]
+    branches: [ master, 3.21.x, 3.18.x ]
 
 
 jobs:

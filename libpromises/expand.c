@@ -607,8 +607,10 @@ char *ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope,
 
     BufferDestroy(current_item);
 
-    LogDebug(LOG_MOD_EXPAND, "ExpandScalar( %s : %s . %s )  =>  %s",
-             SAFENULL(ns), SAFENULL(scope), string, BufferData(out));
+    LogDebug(LOG_MOD_EXPAND,
+             "Expanded scalar '%s' to '%s' using %s namespace and %s scope.",
+             string, BufferData(out), (ns == NULL) ? "current" : ns,
+             (scope == NULL) ? "current" : scope);
 
     return out_belongs_to_us ? BufferClose(out) : BufferGet(out);
 }

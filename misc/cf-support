@@ -4,9 +4,15 @@ export WORKDIR=/var/cfengine
 export BINDIR="$WORKDIR/bin"
 export non_interactive=0
 
-if [ $# -gt 1 ]; then
-  echo "usage: $(basename "$0") [--yes]"
-  echo '	--yes - Non-interactive use. Assume no ticket number and assume include masterfiles.'
+if [ $# -gt 1 ] || [ "$1" = "--help" ] || ["$1" = "-h" ]; then
+  echo "usage: $(basename "$0") [OPTIONS]"
+  echo ''
+  echo 'Options:'
+  echo '	--yes, -y - Non-interactive use. Assume no ticket number and assume include masterfiles.'
+  echo '	--help, -h - Print the help message'
+  echo ''
+  echo 'Website: http://www.cfengine.com'
+  echo 'This software is Copyright (C) 2008,2010-present Northern.tech AS.'
   exit 1
 fi
 

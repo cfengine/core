@@ -28,10 +28,6 @@ jobs:
         with:
           submodules: recursive
 
-      - name: After Prepare (cpp)
-        if: ${{ matrix.language == 'cpp' }}
-        run: git fetch --all --tags
-
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v2
         with:

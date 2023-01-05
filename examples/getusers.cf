@@ -29,6 +29,25 @@ body common control
 bundle agent example
 {
   vars:
+
+      # The getusers function takes two filtering arguments: exclude_names and
+      # exclude_ids, both a comma separated list of usernames and user IDs
+      # respectively.
+
+      # To get users with a uid 1000 and greater we generate a list of uids from
+      # 0 to 999 and convert it into a comma separated string used to filter the
+      # list of users.
+
+      "users_with_uid_gt_999"
+        slist => getusers( "", join( ",", expandrange( "[0-999]", 1 ) ) );
+
+      # Here we get a list of users except usernames nfsnobody and vagrant as
+      # well as any users with uid 8 or 9
+
+      "users_except_nfsnobody_and_vagrant_and_uid_8_and_9"
+        slist => getusers( "nfsnobody,vagrant", "8,9" );
+
+      # Here we get a list of all users by not filtering any
       "allusers" slist => getusers("","");
       "root_list" slist => { "root" };
       # this will get just the root users out of the full user list

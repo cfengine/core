@@ -48,6 +48,24 @@ bundle agent main
       "description"
         string => "Perform bootstrap or failsafe recovery operations.";
 
+  vars:
+      # In order to preserve the log level used during bootstrap we build the
+      # string to set log level on any direct sub-agent calls based on classes
+      # that are defined when the options are set.
+
+      #  --log-level, -g value - Specify how detailed logs should be.
+      # Possible values: 'error', 'warning', 'notice', 'info', 'verbose', 'debug'
+
+      "log_level"
+        string => ifelse("debug_mode",   "--log-level=debug",
+                         "verbose_mode", "--log-level=verbose",
+                         "info_mode",    "--log-level=info",
+                         # CFE-4121 - Not yet implemented
+                         # "notice_mode",  "--log-level=notice",
+                         # "warning_mode", "--log-level=warning",
+                         # "error_mode",   "--log-level=error",
+                         "");
+
   methods:
 
       "Check Keys"
@@ -384,7 +402,7 @@ bundle agent failsafe_cfe_internal_call_update
     # On Windows we need cf-execd to call update.cf, otherwise the daemons will
     # not run under the SYSTEM account.
     !windows.!skip_policy_on_bootstrap::
-      "$(sys.cf_agent) -f $(sys.update_policy_path) --define $(mode)"
+      "$(sys.cf_agent) -f $(sys.update_policy_path) --define $(mode) $(main.log_level)"
         handle => "failsafe_cfe_internal_call_update_commands_call_update_cf",
         if => fileexists( $(sys.update_policy_path) ),
         comment => "We run update.cf in order to prepare system information for
@@ -398,7 +416,7 @@ bundle agent failsafe_cfe_internal_trigger_policy
   commands:
 
     bootstrap_mode.!skip_policy_on_bootstrap::
-      "$(sys.cf_agent) --define bootstrap_mode"
+      "$(sys.cf_agent) --define bootstrap_mode $(main.log_level)"
         handle => "failsafe_cfe_internal_trigger_policy_commands_call_promises_cf",
         if => fileexists( $(sys.default_policy_path) ),
         classes => failsafe_results("namespace", "trigger_policy"),

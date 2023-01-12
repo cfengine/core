@@ -42,5 +42,5 @@ jobs:
       run: /var/cfengine/bin/cf-agent --version
 
     - name: Run valgrind.sh
-      run: sudo bash travis-scripts/valgrind.sh
+      run: sudo bash .github/workflows/valgrind.sh
 

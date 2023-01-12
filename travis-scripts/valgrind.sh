@@ -1,48 +1,6 @@
 #!/usr/bin/env bash
 set -e
 
-if [ -d /var/cfengine ]; then
-    rm -rf /var/cfengine
-fi
-
-# Test assumes we start in core or masterfiles directory
-cd ../
-
-if [ ! -d core ]; then
-    echo "Cloning core (master)"
-    git clone --recursive https://github.com/cfengine/core.git
-fi
-
-if [ ! -d masterfiles ]; then
-    echo "Cloning masterfiles (master)"
-    git clone --recursive https://github.com/cfengine/masterfiles.git
-fi
-
-echo "Checking for systemctl"
-systemctl --version
-
-cd core/
-echo "Building CFEngine core"
-set +e
-git fetch --unshallow 2>&1 >> /dev/null
-git remote add upstream https://github.com/cfengine/core.git  \
-    && git fetch upstream 'refs/tags/*:refs/tags/*' 2>&1 >> /dev/null
-set -e
-
-./autogen.sh --enable-debug --with-systemd-service
-make
-
-echo "Installing CFEngine core"
-make install
-cd ../
-
-cd masterfiles/
-./autogen.sh
-echo "Installing CFEngine masterfiles"
-make install
-
-systemctl daemon-reload
-
 function print_ps {
     set +e
     echo "CFEngine processes:"
@@ -118,10 +76,8 @@ function check_masterfiles_and_inputs {
     diff /var/cfengine/inputs/promises.cf /var/cfengine/masterfiles/promises.cf
 }
 
-/var/cfengine/bin/cf-agent --version
-
 VG_OPTS="--leak-check=full --track-origins=yes --error-exitcode=1"
-BOOTSTRAP_IP="$(ifconfig | grep -A1 Ethernet | sed '2!d;s/.*addr:\([0-9.]*\).*/\1/')"
+BOOTSTRAP_IP="$(ifconfig | grep -C1 Ethernet | sed 's/.*inet \([0-9.]*\).*/\1/;t;d')"
 
 valgrind $VG_OPTS /var/cfengine/bin/cf-key 2>&1 | tee cf-key.txt
 check_output cf-key.txt

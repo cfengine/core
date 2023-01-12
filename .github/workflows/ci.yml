@@ -28,3 +28,6 @@ jobs:
   cifuzz_tests:
     needs: unit_tests
     uses: ./.github/workflows/cifuzz.yml
+  valgrind_tests:
+    needs: unit_tests
+    uses: ./.github/workflows/valgrind.yml

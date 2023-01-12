@@ -1,0 +1,113 @@
+##############################################################################
+#
+#  Test policy function isreadable
+#
+##############################################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+##############################################################################
+
+bundle agent init
+{
+  files:
+      # Has content
+      "$(G.testfile)_1"
+        content => "Hello CFEngine!";
+      # No content
+      "$(G.testfile)_2"
+        content => "";
+      # Does not exists
+      "$(G.testfile)_3"
+        delete => tidy;
+      # Not a regular file
+      "$(G.testfile)_4/."
+        create => "true";
+}
+
+##############################################################################
+
+bundle agent test
+{
+  meta:
+      "description" -> { "ENT-9380" }
+        string => "Test policy function filereadable";
+}
+
+##############################################################################
+
+bundle agent check
+{
+  classes:
+      # Possibly block for 3 seconds (default)
+      "test_1" # Has content
+        expression => isreadable("$(G.testfile)_1");
+      "test_2" # No content
+        expression => isreadable("$(G.testfile)_2");
+      "test_3" # Does not exist
+        expression => not(isreadable("$(G.testfile)_3"));
+      "test_4" # Not a regular file
+        expression => not(isreadable("$(G.testfile)_4"));
+
+      # Possibly block forever
+      "test_5" # Has content
+        expression => isreadable("$(G.testfile)_1", 0);
+      "test_6" # No content
+        expression => isreadable("$(G.testfile)_2", 0);
+      "test_7" # Does not exist
+        expression => not(isreadable("$(G.testfile)_3", 0));
+      "test_8" # Not a regular file
+        expression => not(isreadable("$(G.testfile)_4", 0));
+
+      # Possibly block for 5 seconds
+      "test_9" # Has content
+        expression => isreadable("$(G.testfile)_1", 5);
+      "test_10" # No content
+        expression => isreadable("$(G.testfile)_2", 5);
+      "test_11" # Does not exists
+        expression => not(isreadable("$(G.testfile)_3", 5));
+      "test_12" # Not a regular file
+        expression => not(isreadable("$(G.testfile)_4", 5));
+      "ok"
+        expression => and("test_1", "test_2",  "test_3",  "test_4",
+                          "test_5", "test_6",  "test_7",  "test_8",
+                          "test_9", "test_10", "test_11", "test_12");
+
+  reports:
+    DEBUG.!test_1::
+       "Expected 'test_1' to be defined, but 'test_1' was not defined";
+    DEBUG.!test_2::
+       "Expected 'test_2' to be defined, but 'test_2' was not defined";
+    DEBUG.!test_3::
+       "Expected 'test_3' to be defined, but 'test_3' was not defined";
+    DEBUG.!test_4::
+       "Expected 'test_4' to be defined, but 'test_4' was not defined";
+
+    DEBUG.!test_5::
+       "Expected 'test_5' to be defined, but 'test_5' was not defined";
+    DEBUG.!test_6::
+       "Expected 'test_6' to be defined, but 'test_6' was not defined";
+    DEBUG.!test_7::
+       "Expected 'test_7' to be defined, but 'test_7' was not defined";
+    DEBUG.!test_8::
+       "Expected 'test_8' to be defined, but 'test_8' was not defined";
+
+    DEBUG.!test_9::
+       "Expected 'test_9' to be defined, but 'test_9' was not defined";
+    DEBUG.!test_10::
+       "Expected 'test_10' to be defined, but 'test_10' was not defined";
+    DEBUG.!test_11::
+       "Expected 'test_11' to be defined, but 'test_11' was not defined";
+    DEBUG.!test_12::
+       "Expected 'test_12' to be defined, but 'test_12' was not defined";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

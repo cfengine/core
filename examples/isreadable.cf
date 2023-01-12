@@ -1,0 +1,25 @@
+#+begin_src prep
+#@ ```
+#@ echo "Hello CFEngine!" > /tmp/foo.txt
+#@ ```
+#+end_src
+###############################################################################
+#+begin_src cfengine3
+bundle agent __main__
+{
+  vars:
+      "filename"
+        string => "/tmp/foo.txt";
+      "timeout"
+        int => "3";
+  reports:
+      "File '$(filename)' is readable"
+        if => isreadable("$(filename)", "$(timeout)");
+}
+#+end_src
+###############################################################################
+#+begin_src example_output
+#@ ```
+#@ R: File '/tmp/foo.txt' is readable
+#@ ```
+#+end_src

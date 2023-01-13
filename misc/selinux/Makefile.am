@@ -4,6 +4,8 @@ cfengine-enterprise.pp: cfengine-enterprise.te cfengine-enterprise.fc
 
 selinuxdir = $(prefix)/selinux
 selinux_DATA = cfengine-enterprise.pp
+selinux_DATA += cfengine-enterprise.te
+selinux_DATA += cfengine-enterprise.fc
 
 clean-local:
 	rm -rf tmp

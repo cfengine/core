@@ -87,6 +87,7 @@ require {
 	type sendmail_exec_t;
 	type sshd_t;
 	type rpm_script_t;
+	class lockdown { confidentiality integrity };
 	class tcp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown name_connect accept listen name_bind node_bind };
 	class udp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown node_bind };
 	class sock_file { create write getattr setattr unlink };

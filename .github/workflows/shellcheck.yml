@@ -1,0 +1,18 @@
+on:
+  workflow_call
+
+jobs:
+  unit_tests:
+    name: Run shellcheck on shell scripts
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+    - name: Install dependencies
+      run: sudo apt-get update -y && sudo apt-get install -y libssl-dev libpam0g-dev liblmdb-dev byacc curl shellcheck
+    - name: Run autotools / configure
+      run: ./autogen.sh --enable-debug
+    - name: Run shellcheck
+# todo: add more places to run shellcheck besides misc/cf-support
+      run: make -C misc check

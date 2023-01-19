@@ -16,6 +16,8 @@ on:
 jobs:
   unit_tests:
     uses: ./.github/workflows/unit_tests.yml
+  shellcheck_tests:
+    uses: ./.github/workflows/shellcheck.yml
   asan_unit_tests:
     needs: unit_tests
     uses: ./.github/workflows/asan_unit_tests.yml

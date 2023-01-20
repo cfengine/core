@@ -16,7 +16,7 @@ cf-remote spawn --platform rhel-7-x64 --count 1 --name rhel7 --role client
 
 cf-remote --version master install --demo --bootstrap hub --hub hub
 
-cf-remote deploy --hub hub "$SCRIPTPATH/../../masterfiles"
+# cf-remote deploy --hub hub "$SCRIPTPATH/../../masterfiles"
 
 cf-remote --version master install --demo --bootstrap hub --clients ubuntu18
 cf-remote --version master install --demo --bootstrap hub --clients ubuntu16

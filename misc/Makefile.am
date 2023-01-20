@@ -36,3 +36,7 @@ install-data-hook:
 
 endif
 dist_bin_SCRIPTS = cf-support
+
+check-local:
+	command -v shellcheck 2>/dev/null && shellcheck --version
+	command -v shellcheck 2>/dev/null && shellcheck cf-support

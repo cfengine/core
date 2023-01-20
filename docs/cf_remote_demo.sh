@@ -5,7 +5,7 @@ set -x
 
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
-cf-remote spawn --platform ubuntu-18-04-x64 --count 1 --name hub --role hub
+cf-remote spawn --platform ubuntu-22-04-x64 --count 1 --name hub --role hub
 cf-remote spawn --platform ubuntu-18-04-x64 --count 1 --name ubuntu18 --role client
 cf-remote spawn --platform ubuntu-16-04-x64 --count 1 --name ubuntu16 --role client
 cf-remote spawn --platform centos-7-x64 --count 1 --name centos7 --role client

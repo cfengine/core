@@ -38,5 +38,9 @@ endif
 dist_bin_SCRIPTS = cf-support
 
 check-local:
-	command -v shellcheck 2>/dev/null && shellcheck --version
-	command -v shellcheck 2>/dev/null && shellcheck cf-support
+	@if command -v shellcheck 2>/dev/null; then \
+	  shellcheck --version; \
+	  shellcheck cf-support; \
+	else \
+	  echo "Install shellcheck to check cf-support script."; \
+	fi

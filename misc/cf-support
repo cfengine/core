@@ -337,6 +337,7 @@ log_cmd "$BINDIR/cf-key -s -n"
 log_cmd "$BINDIR/cf-check diagnose"
 if command -v systemctl >/dev/null; then
   log_cmd "systemctl status cfengine3"
+  log_cmd "systemctl status cf-*"
 elif [ -x /etc/init.d/cfengine3 ]; then
   log_cmd "/etc/init.d/cfengine3 status"
 else

@@ -2497,6 +2497,40 @@ static PromiseResult TouchFile(EvalContext *ctx, char *path, const Attributes *a
     return result;
 }
 
+static inline char *GetFileTypeDescription(const struct stat *const stat_buf,
+                                           const char *const filename)
+{
+    /* Use lstat to check if this is a symlink, and don't worry about race
+     * conditions as the returned string is only used for a log message. */
+    struct stat sb;
+    const bool is_link = (lstat(filename, &sb) == 0 && S_ISLNK(sb.st_mode));
+
+    switch (stat_buf->st_mode & S_IFMT)
+    {
+        case S_IFREG:
+            return (is_link) ? "Symbolic link to regular file"
+                             : "Regular file";
+        case S_IFDIR:
+            return (is_link) ? "Symbolic link to directory"
+                             : "Directory";
+        case S_IFSOCK:
+            return (is_link) ? "Symbolic link to socket"
+                             : "Socket";
+        case S_IFIFO:
+            return (is_link) ? "Symbolic link to named pipe"
+                             : "Named pipe";
+        case S_IFBLK:
+            return (is_link) ? "Symbolic link to block device"
+                             : "Block device";
+        case S_IFCHR:
+            return (is_link) ? "Symbolic link to character device"
+                             : "Character device";
+        default:
+            return (is_link) ? "Symbolic link to object"
+                             : "Object";
+    }
+}
+
 static PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, const struct stat *dstat, const Attributes *attr, const Promise *pp)
 {
     PromiseResult result = PROMISE_RESULT_NOOP;
@@ -2617,8 +2651,11 @@ static PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, co
             }
             else
             {
-                RecordChange(ctx, pp, attr, "Object '%s' had permissions %04jo, changed it to %04jo",
-                             file, (uintmax_t)dstat->st_mode & 07777, (uintmax_t)newperm & 07777);
+                const char *const object = GetFileTypeDescription(dstat, file);
+                RecordChange(ctx, pp, attr,
+                             "%s '%s' had permissions %04jo, changed it to %04jo",
+                             object, file, (uintmax_t)dstat->st_mode & 07777,
+                             (uintmax_t)newperm & 07777);
                 result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
             }
         }

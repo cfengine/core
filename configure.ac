@@ -657,19 +657,20 @@ if test "x$with_libxml2" != "xno"; then
             LIBXML2_CPPFLAGS=-I$with_libxml2/include/libxml2
         fi
     fi
-fi
 
-CF3_WITH_LIBRARY(libxml2,
-    [AC_CHECK_LIB(xml2, xmlFirstElementChild,
-    [],
-    [if test "x$with_libxml2" != xcheck; then
-        AC_MSG_ERROR(Cannot find libxml2); fi]
-    )
-    AC_CHECK_HEADERS([libxml/xmlwriter.h], [break],
+    CF3_WITH_LIBRARY(libxml2,
+        [AC_CHECK_LIB(xml2, xmlFirstElementChild,
+        [],
         [if test "x$with_libxml2" != xcheck; then
             AC_MSG_ERROR(Cannot find libxml2); fi]
-    )]
-)
+        )
+        AC_CHECK_HEADERS([libxml/xmlwriter.h], [break],
+            [if test "x$with_libxml2" != xcheck; then
+                AC_MSG_ERROR(Cannot find libxml2); fi]
+        )]
+    )
+    
+fi
 
 AM_CONDITIONAL([HAVE_LIBXML2],
     [test "x$with_libxml2" != xno &&

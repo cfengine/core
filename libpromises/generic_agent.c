@@ -73,6 +73,7 @@
 #include <libgen.h>
 #include <cleanup.h>
 #include <cmdb.h>               /* LoadCMDBData() */
+#include <acl_tools.h>          /* AllowAccessForUsers() */
 
 #define AUGMENTS_VARIABLES_TAGS "tags"
 #define AUGMENTS_VARIABLES_DATA "value"
@@ -1560,8 +1561,27 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     MakeParentInternalDirectory(vbuff, force, NULL);
     snprintf(vbuff, CF_BUFSIZE, "%s%clastseen%cintermittencies", workdir, FILE_SEPARATOR, FILE_SEPARATOR);
     MakeParentInternalDirectory(vbuff, force, NULL);
+
+    bool created;
     snprintf(vbuff, CF_BUFSIZE, "%s%creports%cvarious", workdir, FILE_SEPARATOR, FILE_SEPARATOR);
-    MakeParentInternalDirectory(vbuff, force, NULL);
+    MakeParentInternalDirectory(vbuff, force, &created);
+
+#ifdef HAVE_LIBACL
+    /* We need cfapache to be able to work with the ${WORKDIR}/reports
+     * directory. */
+    if (created)
+    {
+        ChopLastNode(vbuff);
+        Log(LOG_LEVEL_VERBOSE, "Created directory '%s'", vbuff);
+        StringSet *acl_allow_users = StringSetNew();
+        StringSetAdd(acl_allow_users, xstrdup("cfapache"));
+        if (!AllowAccessForUsers(vbuff, acl_allow_users, true, true))
+        {
+            Log(LOG_LEVEL_WARNING, "Failed to set ACLs on '%s'", vbuff);
+        }
+        StringSetDestroy(acl_allow_users);
+    }
+#endif  /* HAVE_LIBACL */
 
     snprintf(vbuff, CF_BUFSIZE, "%s%c.", GetLogDir(), FILE_SEPARATOR);
     MakeParentInternalDirectory(vbuff, force, NULL);

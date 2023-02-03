@@ -189,7 +189,8 @@ dnl ######################################################################
 AC_ARG_ENABLE([fhs],
         [AS_HELP_STRING([--enable-fhs], [Enable FHS compliance. Defaults to custom CFEngine files layout])])
 
-#
+AM_CONDITIONAL(HAVE_FHS, [test x"$enable_fhs" = xyes])
+
 # pkglibdir/pkgdatadir are not overridable, so use our own invention instead.
 #
 

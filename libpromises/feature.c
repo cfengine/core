@@ -5,6 +5,9 @@
 #include <buffer.h>
 
 static const char* features[] = {
+#ifdef HAVE_FHS
+    "built_with_enable_fhs",
+#endif
 #ifdef HAVE_LIBYAML
     "yaml",
 #endif

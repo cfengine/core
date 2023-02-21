@@ -34,6 +34,7 @@
 #include <var_expressions.h> // StringContainsUnresolved(), StringIsBareNonScalarRef()
 #include <map.h>             // Map*
 #include <locks.h>           // AcquireLock()
+#include <process_lib.h>     // GracefulTerminate(), GetProcessStartTime()
 
 static Map *custom_modules = NULL;
 
@@ -492,6 +493,21 @@ static PromiseModule *PromiseModule_Start(char *interpreter, char *path)
     module->output = module->fds.read_stream;
     module->input = module->fds.write_stream;
     module->message = NULL;
+
+    if (!PipeToPid(&module->pid, module->fds.write_stream))
+    {
+        Log(LOG_LEVEL_ERR, "Failed to get PID of custom promise module '%s'", path);
+        PromiseModule_DestroyInternal(module);
+        return NULL;
+    }
+
+    module->process_start_time = GetProcessStartTime(module->pid);
+    if (module->process_start_time == PROCESS_START_TIME_UNKNOWN)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to get process start time of custom promise module '%s'", path);
+        PromiseModule_DestroyInternal(module);
+        return NULL;
+    }
 
     fprintf(module->input, "cf-agent %s v1\n\n", Version());
     fflush(module->input);
@@ -1179,6 +1195,22 @@ static void PromiseModule_Terminate_untyped(void *data)
 {
     PromiseModule *module = data;
     PromiseModule_Terminate(module, NULL);
+}
+
+void TerminateCustomPromises(void)
+{
+    MapIterator iter = MapIteratorInit(custom_modules);
+
+    for (const MapKeyValue *item = MapIteratorNext(&iter); item != NULL; item = MapIteratorNext(&iter))
+    {
+        const char *const path = item->key;
+        const PromiseModule *const module = item->value;
+
+        if (!GracefulTerminate(module->pid, module->process_start_time))
+        {
+            Log(LOG_LEVEL_ERR, "Failed to terminate custom promise module '%s'", path);
+        }
+    }
 }
 
 bool InitializeCustomPromises()

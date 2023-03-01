@@ -558,7 +558,7 @@ static void PromiseTypeString(char *dst, size_t dst_size, const Promise *pp)
 static bool IsCfengineProcess(const int pid)
 {
     // There is no /proc on windows
-#ifndef _WIN32
+#ifndef __linux__
     char procfile[PATH_MAX];
     char cmd[PATH_MAX]; // we don't need the full ARG_MAX
     snprintf(procfile, PATH_MAX, "/proc/%d/cmdline", pid);

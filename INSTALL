@@ -145,4 +145,4 @@ $ ./autogen.sh --without-pam
 * OSX (2021-10-20)
 
 brew install openssl lmdb autoconf automake libtool bison flex pcre m4 gcc make
-./autogen.sh --enable-debug --with-openssl="$(brew --prefix openssl@1.1)"
+./autogen.sh --enable-debug

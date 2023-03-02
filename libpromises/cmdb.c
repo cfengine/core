@@ -414,12 +414,25 @@ static bool ReadCMDBClasses(EvalContext *ctx, JsonElement *classes)
         else if (JsonGetContainerType(data) == JSON_CONTAINER_TYPE_ARRAY &&
                  JsonArrayContainsOnlyPrimitives(data))
         {
-            if ((JsonLength(data) != 1) ||
-                (!StringEqual(JsonPrimitiveGetAsString(JsonArrayGet(data, 0)), "any::")))
+            switch (JsonLength(data))
             {
+            case 0:
                 Log(LOG_LEVEL_ERR,
-                    "Invalid class specification '%s' in CMDB data, only '[\"any::\"]' allowed",
-                    JsonPrimitiveGetAsString(JsonArrayGet(data, 0)));
+                    "Empty class specification '[]' in CMDB data not allowed, only '[\"any::\"]'");
+                continue;;
+            case 1:
+                if (!StringEqual(JsonPrimitiveGetAsString(JsonArrayGet(data, 0)), "any::"))
+                {
+                    Log(LOG_LEVEL_ERR,
+                        "Invalid class specification '[\"%s\"]' in CMDB data, only '[\"any::\"]' allowed",
+                        JsonPrimitiveGetAsString(JsonArrayGet(data, 0)));
+                    continue;
+                }
+                // All good :)
+                break;
+            default:
+                Log(LOG_LEVEL_ERR,
+                    "Too many elements in class specification in CMDB data, only '[\"any::\"]' allowed");
                 continue;
             }
             StringSet *default_tags = StringSetNew();

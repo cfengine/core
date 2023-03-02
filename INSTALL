@@ -139,5 +139,10 @@ See docs/BSD.md
 
 * Termux (2020-04-24)
 
-# pkg install build-essential autoconf automake bison flex liblmdb openssl pcre libacl
-# ./autogen.sh --without-pam
+$ pkg install build-essential git autoconf automake bison flex liblmdb openssl pcre libacl libyaml
+$ ./autogen.sh --without-pam
+
+* OSX (2021-10-20)
+
+brew install openssl lmdb autoconf automake libtool bison flex pcre m4 gcc make
+./autogen.sh --enable-debug --with-openssl="$(brew --prefix openssl@1.1)"

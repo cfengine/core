@@ -713,7 +713,7 @@ static void FindV6InterfacesInfo(EvalContext *ctx, Rlist **interfaces, Rlist **h
 
                 // We know there was more data, at least a colon:
                 assert(src_length == bytes_to_copy);
-                const size_t dst_length = src_length - 1;
+                NDEBUG_UNUSED const size_t dst_length = src_length - 1;
 
                 // We copied everything up to, but not including, the colon:
                 assert(ifconfig_line[dst_length] == ':');

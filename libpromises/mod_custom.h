@@ -45,6 +45,8 @@ extern const BodySyntax CUSTOM_BODY_BLOCK_SYNTAX;
 
 typedef struct PromiseModule
 {
+    pid_t pid;
+    time_t process_start_time;
     IOData fds;
     FILE *input;
     FILE *output;
@@ -57,6 +59,7 @@ typedef struct PromiseModule
 
 bool InitializeCustomPromises();
 void FinalizeCustomPromises();
+void TerminateCustomPromises();
 
 Body *FindCustomPromiseType(const Promise *promise);
 PromiseResult EvaluateCustomPromise(ARG_UNUSED EvalContext *ctx, const Promise *pp);

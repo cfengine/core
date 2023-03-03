@@ -26,6 +26,7 @@
 #include <cleanup.h>
 #include <known_dirs.h>         /* GetStateDir() */
 #include <file_lib.h>           /* FILE_SEPARATOR */
+#include <mod_custom.h>         /* TerminateCustomPromises */
 
 static bool PENDING_TERMINATION = false; /* GLOBAL_X */
 
@@ -155,6 +156,7 @@ void HandleSignalsForAgent(int signum)
     case SIGINT:
         /* TODO don't exit from the signal handler, just set a flag. Reason is
          * that all the cleanup() hooks we register are not reentrant. */
+        TerminateCustomPromises();
         DoCleanupAndExit(0);
     case SIGBUS:
         /* SIGBUS almost certainly means a violation of mmap() area boundaries

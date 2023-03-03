@@ -447,10 +447,10 @@ if test x"$with_openssl" = xno ; then
     AC_MSG_ERROR([This release of CFEngine requires OpenSSL >= 0.9.7])
 fi
 
-if  test -d /usr/local/Cellar/openssl/ && \
+if  test -d /usr/local/Cellar/ && \
     test -d /usr/local/opt/openssl/ && \
     test "x$with_openssl" = "xyes" ; then
-    with_openssl="/usr/local/opt/openssl"
+    with_openssl=$(brew --prefix openssl)
     echo "OS X Homebrew detected"
     echo "Defaulting to: --with-openssl=$with_openssl"
 fi

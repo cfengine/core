@@ -431,8 +431,14 @@ static bool ReadCMDBClasses(EvalContext *ctx, JsonElement *classes)
                 // All good :)
                 break;
             default:
-                Log(LOG_LEVEL_ERR,
-                    "Too many elements in class specification in CMDB data, only '[\"any::\"]' allowed");
+                {
+                    Writer *const str = StringWriter();
+                    JsonWriteCompact(str, data);
+                    Log(LOG_LEVEL_ERR,
+                        "Too many elements in class specification '%s' in CMDB data, only '[\"any::\"]' allowed",
+                        StringWriterData(str));
+                    WriterClose(str);
+                }
                 continue;
             }
             StringSet *default_tags = StringSetNew();

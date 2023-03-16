@@ -1,0 +1,54 @@
+##############################################################################
+#
+# Test validjson() evaluates to !any:: when there is trailing bogus data after
+# termination for JSON object.
+#
+##############################################################################
+
+body common control
+{
+  bundlesequence => { "test", "check" };
+  version => "1.0";
+}
+
+##############################################################################
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-4080" }
+        string => "Test validjson() with trailing bogus data";
+}
+
+##############################################################################
+
+bundle agent check
+{
+  classes:
+      "ok"
+        and => {
+          not(validjson('""a')),
+          validjson('""'),
+          not(validjson('{}b')),
+          validjson('{}'),
+          not(validjson('[]c')),
+          not(validjson('{}}')),
+          not(validjson('{"d": "e"}}')),
+          not(validjson('[]]')),
+          not(validjson('[[]]]')),
+          not(validjson('[[[]]]]')),
+          not(validjson('  []]')),
+          not(validjson('"some": [ "json" ] }')),
+          not(validjson('{ "some": [ "json" ] } [')),
+          not(validjson('["some", "json"]!')),
+          not(validjson('    ["some", "json"]a')),
+          not(validjson('["some", "json"] {"foo": "var"}   ')),
+          validjson('{"test": [1, 2, 3]}'),
+        };
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

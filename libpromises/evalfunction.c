@@ -7089,7 +7089,7 @@ static FnCallResult ValidateDataGeneric(const char *const fname,
     }
 
     JsonElement *json = NULL;
-    JsonParseError err = JsonParse(&data, &json);
+    JsonParseError err = JsonParseAll(&data, &json);
     if (err != JSON_PARSE_OK)
     {
         Log(LOG_LEVEL_VERBOSE, "%s: %s", fname, JsonParseErrorToString(err));

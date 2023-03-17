@@ -341,8 +341,8 @@ static PromiseResult CfCopyFile(EvalContext *ctx, char *sourcefile,
     else
     {
         bool dir_created = false;
-        if (!MakeParentDirectoryForPromise(ctx, pp, &attr, &result,
-                                           destfile, true, &dir_created))
+        if (!MakeParentDirectoryForPromise(ctx, pp, &attr, &result, destfile,
+                                           true, &dir_created, DEFAULTMODE))
         {
             return result;
         }
@@ -757,8 +757,9 @@ static PromiseResult SourceSearchAndCopy(EvalContext *ctx, const char *from, cha
     struct stat tostat;
 
     bool dir_created = false;
-    if (!MakeParentDirectoryForPromise(ctx, pp, attr, &result,
-                                       newto, attr->move_obstructions, &dir_created))
+    if (!MakeParentDirectoryForPromise(ctx, pp, attr, &result, newto,
+                                       attr->move_obstructions, &dir_created,
+                                       DEFAULTMODE))
     {
         return result;
     }
@@ -3154,8 +3155,9 @@ static PromiseResult CopyFileSources(EvalContext *ctx, char *destination, const 
 
     PromiseResult result = PROMISE_RESULT_NOOP;
     bool dir_created = false;
-    if (!MakeParentDirectoryForPromise(ctx, pp, attr, &result,
-                                       vbuff, attr->move_obstructions, &dir_created))
+    if (!MakeParentDirectoryForPromise(ctx, pp, attr, &result, vbuff,
+                                       attr->move_obstructions, &dir_created,
+                                       DEFAULTMODE))
     {
         BufferDestroy(source_buf);
         return result;
@@ -4339,15 +4341,30 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, const Attribu
 
         if (MakingChanges(ctx, pp, attr, result, "create directory '%s'", file))
         {
+            mode_t filemode = DEFAULTMODE;
+            if (PromiseGetConstraintAsRval(pp, "mode", RVAL_TYPE_SCALAR) == NULL)
+            {
+                Log(LOG_LEVEL_VERBOSE,
+                    "No mode was set, choosing directory default %04jo",
+                    (uintmax_t) filemode);
+            }
+            else
+            {
+                filemode = attr->perms.plus & ~(attr->perms.minus);
+            }
+
             bool dir_created = false;
-            if (!MakeParentDirectoryForPromise(ctx, pp, attr, result,
-                                               file, attr->move_obstructions, &dir_created))
+            if (!MakeParentDirectoryForPromise(ctx, pp, attr, result, file,
+                                               attr->move_obstructions,
+                                               &dir_created, filemode))
             {
                 return false;
             }
             if (dir_created)
             {
-                RecordChange(ctx, pp, attr, "Created directory '%s'", file);
+                RecordChange(ctx, pp, attr,
+                             "Created directory '%s', mode %04jo", file,
+                             (uintmax_t) filemode);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
             }
         }
@@ -4370,8 +4387,9 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, const Attribu
         }
 
         bool dir_created = false;
-        if (!MakeParentDirectoryForPromise(ctx, pp, attr, result,
-                                           file, attr->move_obstructions, &dir_created))
+        if (!MakeParentDirectoryForPromise(ctx, pp, attr, result, file,
+                                           attr->move_obstructions,
+                                           &dir_created, DEFAULTMODE))
         {
             return false;
         }
@@ -4423,8 +4441,9 @@ bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, const Attribu
         }
 
         bool dir_created = false;
-        if (!MakeParentDirectoryForPromise(ctx, pp, attr, result,
-                                           file, attr->move_obstructions, &dir_created))
+        if (!MakeParentDirectoryForPromise(ctx, pp, attr, result, file,
+                                           attr->move_obstructions,
+                                           &dir_created, DEFAULTMODE))
         {
             return false;
         }

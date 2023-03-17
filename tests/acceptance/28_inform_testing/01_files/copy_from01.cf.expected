@@ -1,4 +1,4 @@
-    info: Created directory '/tmp/TEST.destination/subdir/.'
+    info: Created directory '/tmp/TEST.destination/subdir/.', mode 0700
     info: Copied file '/tmp/TEST.source/file-perms-644' to '/tmp/TEST.destination/file-perms-644.cfnew' (permissions preserved)
     info: Moved '/tmp/TEST.destination/file-perms-644.cfnew' to '/tmp/TEST.destination/file-perms-644'
     info: Regular file '/tmp/TEST.destination/file-perms-644' had permissions 0600, changed it to 0644

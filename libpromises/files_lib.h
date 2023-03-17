@@ -47,9 +47,12 @@ bool MakeParentInternalDirectory(const char *parentandchild, bool force, bool *c
  * @warning This function will not behave right on Windows if the path
  *          contains double (back)slashes!
  **/
-bool MakeParentDirectoryForPromise(EvalContext *ctx, const Promise *pp, const Attributes *attr,
-                                   PromiseResult *result, const char *parentandchild,
-                                   bool force, bool *created);
+bool MakeParentDirectoryForPromise(EvalContext *ctx, const Promise *pp,
+                                   const Attributes *attr,
+                                   PromiseResult *result,
+                                   const char *parentandchild,
+                                   bool force, bool *created,
+                                   mode_t perms_mode);
 
 void RotateFiles(const char *name, int number);
 void CreateEmptyFile(char *name);

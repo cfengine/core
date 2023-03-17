@@ -137,9 +137,9 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
         }
 
         bool dir_created = false;
-        if (MakeParentDirectoryForPromise(ctx, pp, attr, &result,
-                                          destination, attr->move_obstructions,
-                                          &dir_created))
+        if (MakeParentDirectoryForPromise(ctx, pp, attr, &result, destination,
+                                          attr->move_obstructions,
+                                          &dir_created, DEFAULTMODE))
         {
             if (dir_created)
             {

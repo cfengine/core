@@ -1,5 +1,5 @@
 name: "CFEngine cpp CodeQL config"
 
 queries:
-  - uses: cfengine/core/.github/codeql/cpp-queries/bool-type-mismatch-return.ql
-  - uses: cfengine/core/.github/codeql/cpp-queries/missing-argument-null-check.ql
+  - uses: cfengine/core/.github/codeql/cpp-queries/bool-type-mismatch-return.ql@master
+  - uses: cfengine/core/.github/codeql/cpp-queries/missing-argument-null-check.ql@master

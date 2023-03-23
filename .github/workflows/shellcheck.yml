@@ -1,3 +1,5 @@
+name: Shellcheck tests
+
 on:
   workflow_call
 

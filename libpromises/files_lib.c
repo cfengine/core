@@ -120,11 +120,15 @@ bool MakeParentInternalDirectory(const char *parentandchild, bool force, bool *c
                                    parentandchild, force, true, created, DEFAULTMODE);
 }
 
-bool MakeParentDirectoryForPromise(EvalContext *ctx, const Promise *pp, const Attributes *attr,
-                                   PromiseResult *result, const char *parentandchild,
-                                   bool force, bool *created)
+bool MakeParentDirectoryForPromise(EvalContext *ctx, const Promise *pp,
+                                   const Attributes *attr,
+                                   PromiseResult *result,
+                                   const char *parentandchild,
+                                   bool force, bool *created,
+                                   const mode_t perms_mode)
 {
-    return MakeParentDirectoryImpl(ctx, pp, attr, result, parentandchild, force, false, created, DEFAULTMODE);
+    return MakeParentDirectoryImpl(ctx, pp, attr, result, parentandchild,
+                                   force, false, created, perms_mode);
 }
 
 static bool MakeParentDirectoryImpl(EvalContext *ctx, const Promise *pp, const Attributes *attr,

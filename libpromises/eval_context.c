@@ -1041,6 +1041,7 @@ void FreePackagePromiseContext(PackagePromiseContext *pp_ctx)
  * EvalContextLogPromiseIterationOutcome() at the end of each promise. */
 char *MissionPortalLogHook(LoggingPrivContext *pctx, LogLevel level, const char *message)
 {
+printf("core, MissionPortalLogHook()\n");
     const EvalContext *ctx = pctx->param;
 
     StackFrame *last_frame = LastStackFrame(ctx, 0);
@@ -1056,6 +1057,7 @@ char *MissionPortalLogHook(LoggingPrivContext *pctx, LogLevel level, const char 
 ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, EvalContextSetupMissionPortalLogHook,
                                       ARG_UNUSED EvalContext *, ctx)
 {
+  printf("core version of EvalContextSetupMissionPortalLogHook\n");
 }
 
 EvalContext *EvalContextNew(void)

@@ -1042,6 +1042,7 @@ void FreePackagePromiseContext(PackagePromiseContext *pp_ctx)
 char *MissionPortalLogHook(LoggingPrivContext *pctx, LogLevel level, const char *message)
 {
 printf("core, MissionPortalLogHook()\n");
+printf("core, MissionPortalLogHook, pctx = %p\n", pctx);
     const EvalContext *ctx = pctx->param;
 
     StackFrame *last_frame = LastStackFrame(ctx, 0);

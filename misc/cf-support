@@ -115,7 +115,7 @@ collection="cfengine_support_case_$case_number-`hostname`-$timestamp"
 
 make_temp_dir()
 {
-  if command -v mktemp >/dev/null; then
+  if command -v mktemp >/dev/null && [ "$OS" != "hpux" ]; then
     mktemp -d
   else
     # shellcheck disable=SC2021

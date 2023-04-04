@@ -32,7 +32,7 @@ function check_with_cppcheck() {
            --suppressions-list=tests/static-check/cppcheck_suppressions.txt \
            --include=config.h \
            -I cf-serverd/ -I libpromises/ -I libcfnet/ -I libntech/libutils/ \
-           -i 3rdparty -i .lgtm -i libntech/.lgtm -i tests -i libpromises/cf3lex.c \
+           -i 3rdparty -i .github/codeql -i libntech/.lgtm -i tests -i libpromises/cf3lex.c \
            2>&1 1>/dev/null
 }
 

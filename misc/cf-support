@@ -126,6 +126,24 @@ make_temp_dir()
   fi
 }
 
+
+# determine operating system flavor
+if command -v swlist 2>/dev/null; then
+  OS="hpux"
+elif command -v oslevel 2>/dev/null; then 
+  OS=aix
+elif [ -f /etc/release ]; then
+  OS=solaris
+  OS_VERSION=$(uname -r)
+elif [ -f /etc/redhat-release ] || [ -f /etc/os-release ] || [ -f /etc/lsb-release ]; then
+  OS=linux
+elif command -v system_profiler 2>/dev/null; then
+  OS=macos
+else
+  echo "unable to determine operating system, will try generic unix commands."
+  OS=unix
+fi
+
 tmpdir="`make_temp_dir`/$collection"
 export tmpdir
 mkdir -p "$tmpdir"
@@ -225,23 +243,6 @@ log_cmd()
     echo "Command not found: $cmd"
   fi
 }
-
-# determine operating system flavor
-if command -v swlist 2>/dev/null; then
-  OS="hpux"
-elif command -v oslevel 2>/dev/null; then 
-  OS=aix
-elif [ -f /etc/release ]; then
-  OS=solaris
-  OS_VERSION=$(uname -r)
-elif [ -f /etc/redhat-release ] || [ -f /etc/os-release ] || [ -f /etc/lsb-release ]; then
-  OS=linux
-elif command -v system_profiler 2>/dev/null; then
-  OS=macos
-else
-  echo "unable to determine operating system, will try generic unix commands."
-  OS=unix
-fi
 
 # first, collect basic information about the system
 log_cmd "uname -a"

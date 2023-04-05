@@ -33,3 +33,6 @@ jobs:
   valgrind_tests:
     needs: unit_tests
     uses: ./.github/workflows/valgrind.yml
+  static_check:
+    needs: unit_tests
+    uses: ./.github/workflows/job-static-check.yml

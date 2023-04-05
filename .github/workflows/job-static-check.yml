@@ -1,0 +1,43 @@
+name: Static Check
+
+on:
+  workflow_call
+
+jobs:
+  static_check:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Core
+      uses: actions/checkout@v3
+      with:
+        submodules: recursive
+        path: core
+
+    - name: Checkout Buildscripts
+      uses: actions/checkout@v3
+      with:
+        repository: cfengine/buildscripts
+        submodules: recursive
+        path: buildscripts
+
+    - name: Checkout Masterfiles
+      uses: actions/checkout@v3
+      with:
+        repository: cfengine/masterfiles
+        submodules: recursive
+        path: masterfiles
+
+    - name: Prepare Environment
+      run: |
+        sudo apt-get update && \
+        sudo apt-get install -y dpkg-dev debhelper g++ libncurses5 pkg-config \
+          build-essential libpam0g-dev fakeroot gcc make autoconf buildah \
+          liblmdb-dev libacl1-dev libcurl4-openssl-dev libyaml-dev libxml2-dev \
+          libssl-dev libpcre3-dev
+
+    - name: Run Autogen
+      run: NO_CONFIGURE=1 PROJECT=community ./buildscripts/build-scripts/autogen
+
+    - name: Run The Test
+      working-directory: ./core
+      run: ./tests/static-check/run.sh

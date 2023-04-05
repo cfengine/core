@@ -1,0 +1,25 @@
+name: Valgrind Check
+
+on:
+  workflow_call
+
+jobs:
+  valgrind_check:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Core
+      uses: actions/checkout@v3
+      with:
+        submodules: recursive
+        path: core
+
+    - name: Checkout Masterfiles
+      uses: actions/checkout@v3
+      with:
+        repository: cfengine/masterfiles
+        submodules: recursive
+        path: masterfiles
+
+    - name: Run The Test
+      working-directory: ./core/tests/valgrind-check
+      run: sudo bash run.sh

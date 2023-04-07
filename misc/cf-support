@@ -115,7 +115,7 @@ collection="cfengine_support_case_$case_number-`hostname`-$timestamp"
 
 make_temp_dir()
 {
-  if command -v mktemp >/dev/null; then
+  if command -v mktemp >/dev/null && [ "$OS" != "hpux" ]; then
     mktemp -d
   else
     # shellcheck disable=SC2021
@@ -125,6 +125,24 @@ make_temp_dir()
     echo "$_tmp"
   fi
 }
+
+
+# determine operating system flavor
+if command -v swlist 2>/dev/null; then
+  OS="hpux"
+elif command -v oslevel 2>/dev/null; then 
+  OS=aix
+elif [ -f /etc/release ]; then
+  OS=solaris
+  OS_VERSION=$(uname -r)
+elif [ -f /etc/redhat-release ] || [ -f /etc/os-release ] || [ -f /etc/lsb-release ]; then
+  OS=linux
+elif command -v system_profiler 2>/dev/null; then
+  OS=macos
+else
+  echo "unable to determine operating system, will try generic unix commands."
+  OS=unix
+fi
 
 tmpdir="`make_temp_dir`/$collection"
 export tmpdir
@@ -167,15 +185,21 @@ else
     # core: ELF 64-bit LSB core file, x86-64, version 1 (SYSV), SVR4-style, from '/var/cfengine/bin/cf-key', real uid: 0, effective uid: 0, realgid: 0, effective gid: 0, execfn: '/var/cfengine/bin/cf-key', platform: 'x86_64'
     cf_core_files=`find "$response" -name 'core*' -type f -exec file {} \; 2>/dev/null | grep "core file" | grep "cf-" | cut -d' ' -f1 | sed 's/:$//'`
     if [ -n "$cf_core_files" ]; then
-      if ! command -v gdb >/dev/null; then
-        echo "Please install gdb. This is required in order to analyze core dumps."
-        exit 1
+      if [ "$OS" != "solaris" ]; then
+        if ! command -v gdb >/dev/null; then
+          echo "Please install gdb. This is required in order to analyze core dumps."
+          exit 1
+        fi
       fi
       for core_file in $cf_core_files; do
         file "$core_file" >> "$_core_log"
-        execfn=`file "$core_file" | sed 's/,/\n/g' | grep execfn | cut -d: -f2 | sed "s/[' ]//g"`
-        exe="`realpath "$execfn"`"
-        gdb "$exe" --core="$core_file" -batch -ex "thread apply all bt full" >> "$_core_log" 2>&1
+        if [ "$OS" = "solaris" ]; then
+          pstack "$core_file" >> "$_core_log" 2>&1
+        else
+          execfn=`file "$core_file" | sed 's/,/\n/g' | grep execfn | cut -d: -f2 | sed "s/[' ]//g"`
+          exe="`realpath "$execfn"`"
+          gdb "$exe" --core="$core_file" -batch -ex "thread apply all bt full" >> "$_core_log" 2>&1
+        fi
       done
     fi
   fi
@@ -219,23 +243,6 @@ log_cmd()
     echo "Command not found: $cmd"
   fi
 }
-
-# determine operating system flavor
-if command -v swlist 2>/dev/null; then
-  OS="hpux"
-elif command -v oslevel 2>/dev/null; then 
-  OS=aix
-elif [ -f /etc/release ]; then
-  OS=solaris
-  OS_VERSION=$(uname -r)
-elif [ -f /etc/redhat-release ] || [ -f /etc/os-release ] || [ -f /etc/lsb-release ]; then
-  OS=linux
-elif command -v system_profiler 2>/dev/null; then
-  OS=macos
-else
-  echo "unable to determine operating system, will try generic unix commands."
-  OS=unix
-fi
 
 # first, collect basic information about the system
 log_cmd "uname -a"

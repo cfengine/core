@@ -156,7 +156,7 @@ static const char *command_strings[] =
 
 // INIT:
 static void CFNetSetDefault(CFNetOptions *opts);
-static void CFNetInit();
+static void CFNetInit(const char *min_tls_version, const char *allow_ciphers);
 static void CFNetOptionsClear(CFNetOptions *opts);
 
 // MAIN LOGIC:

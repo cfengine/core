@@ -203,7 +203,7 @@ static bool RlistCustomItemLess(void *lhs_, void *rhs_, void *ctx)
 {
     Rlist *lhs = lhs_;
     Rlist *rhs = rhs_;
-    bool (*cmp)() = ctx;
+    bool (*cmp)(void *a, void *b) = ctx;
 
     return (*cmp)(lhs->val.item, rhs->val.item);
 }

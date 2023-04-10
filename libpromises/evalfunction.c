@@ -3590,7 +3590,6 @@ static FnCallResult FnCallMapData(EvalContext *ctx, ARG_UNUSED const Policy *pol
         {
             const JsonElement *e2;
             JsonIterator iter2 = JsonIteratorInit(e);
-            int position = 0;
             while ((e2 = JsonIteratorNextValueByType(&iter2, JSON_ELEMENT_TYPE_PRIMITIVE, true)) != NULL)
             {
                 char *key = (char*) JsonGetPropertyAsString(e2);
@@ -3643,7 +3642,6 @@ static FnCallResult FnCallMapData(EvalContext *ctx, ARG_UNUSED const Policy *pol
                     EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "k[1]");
                 }
                 EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_THIS, "v");
-                position++;
             }
         }
         break;

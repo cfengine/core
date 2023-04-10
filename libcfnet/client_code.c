@@ -572,7 +572,7 @@ bool CompareHashNet(const char *file1, const char *file2, bool encrypt, AgentCon
 
 static bool EncryptCopyRegularFileNet(const char *source, const char *dest, off_t size, AgentConnection *conn)
 {
-    int blocksize = 2048, n_read = 0, plainlen, more = true, finlen, cnt = 0;
+    int blocksize = 2048, n_read = 0, plainlen, more = true, finlen;
     int tosend, cipherlen = 0;
     char *buf, in[CF_BUFSIZE], out[CF_BUFSIZE], workbuf[CF_BUFSIZE], cfchangedstr[265];
     unsigned char iv[32] =
@@ -658,7 +658,6 @@ static bool EncryptCopyRegularFileNet(const char *source, const char *dest, off_
             return false;
         }
 
-        cnt++;
 
         /* If the first thing we get is an error message, break. */
 

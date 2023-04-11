@@ -120,7 +120,7 @@ make_temp_dir()
   else
     # shellcheck disable=SC2021
     # ^^ legacy/POSIX requires square brackets
-    _tmp="/tmp/`tr -dc "[A-Z][a-z][0-9]" </dev/urandom | head -c 8`"
+    _tmp="/tmp/`tr -dc "A-Za-z0-9" </dev/urandom | dd count=1 bs=8 2>/dev/null`"
     mkdir "$_tmp"
     echo "$_tmp"
   fi

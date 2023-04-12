@@ -207,7 +207,7 @@ git commit --allow-empty -m 'Jira MEN-1111: Changelog with Jira. N55
 
 jira archive-2
 men-9
-https://tracker.mender.io/browse/men-1
+https://northerntech.atlassian.net/browse/men-1
 
 Changelog: commit'
 
@@ -217,7 +217,7 @@ git commit --allow-empty -m 'Jira MEN-1111: Changelog with Jira tracker. N56
 
 jira archive-2
 men-9
-https://tracker.mender.io/browse/men-1
+https://northerntech.atlassian.net/browse/men-1
 
 Changelog: commit'
 
@@ -227,7 +227,7 @@ git commit --allow-empty -m 'Jira MEN-1111: Changelog with many Jira refs. N57
 
 Ref: jira: archive-2
 Ref: men-9
-Ref: https://tracker.mender.io/browse/men-1
+Ref: https://northerntech.atlassian.net/browse/men-1
 Ref: MEN-12345
 
 Changelog: commit'

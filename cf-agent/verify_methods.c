@@ -95,10 +95,8 @@ PromiseResult VerifyMethod(EvalContext *ctx, const Rval call, const Attributes *
         const FnCall *fp = RvalFnCallValue(call);
         ExpandScalar(ctx, PromiseGetBundle(pp)->ns, PromiseGetBundle(pp)->name, fp->name, method_name);
         args = fp->args;
-        int arg_index = 0;
         while (args)
         {
-           ++arg_index;
            args = args->next;
         }
         args = fp->args;

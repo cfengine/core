@@ -21,7 +21,7 @@ LINKED_SHAS = {}
 SHA_TO_TRACKER = {}
 
 # more relaxed regexp to find JIRA issues anywhere in commit message
-JIRA_REGEX = r"(?:Jira:? *)?(?:https?://tracker.mender.io/browse/)?((?:CFE|ENT|INF|ARCHIVE|MEN|QA)-[0-9]+)"
+JIRA_REGEX = r"(?:Jira:? *)?(?:https?://northerntech.atlassian.net/browse/)?((?:CFE|ENT|INF|ARCHIVE|MEN|QA)-[0-9]+)"
 # more strict regexp to find JIRA issues only in the beginning of title
 JIRA_TITLE_REGEX = r"^(?:CFE|ENT|INF|ARCHIVE|MEN|QA)-[0-9]+"
 TRACKER_REGEX = r"\(?(?:Ref:? *)?%s\)?:? *" % (JIRA_REGEX)

@@ -1,5 +1,5 @@
 # Test that this.promiser works in ifvarclass
-# CFE-2262 (https://tracker.mender.io/browse/CFE-2262)
+# CFE-2262 (https://northerntech.atlassian.net/browse/CFE-2262)
 
 body common control
 {

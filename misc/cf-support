@@ -74,7 +74,7 @@ Binary packages may be downloaded from https://cfengine.com/download/.
 .br
 The source code is available at https://github.com/cfengine/
 .SH BUGS
-Please see the public bug-tracker at https://tracker.mender.io/projects/CFE/.
+Please see the public bug-tracker at https://northerntech.atlassian.net/projects/CFE/.
 .br
 GitHub pull-requests may be submitted to https://github.com/cfengine/core/.
 .SH "SEE ALSO"

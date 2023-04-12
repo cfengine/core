@@ -2689,7 +2689,7 @@ static bool ValidateCustomPromise(const Promise *pp, Seq *errors)
     }
 
     // TODO: If we are running --full-check, spawn promise module and perform
-    //       validate operation. https://tracker.mender.io/browse/CFE-3430
+    //       validate operation. https://northerntech.atlassian.net/browse/CFE-3430
 
     return valid;
 }

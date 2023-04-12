@@ -122,7 +122,7 @@ done
 
 # 15 minutes is three times the out-of-the-box default run interval (5 min)
 # However, as noted by Neil Watson
-# (in this ticket: https://tracker.mender.io/browse/CFE-769),
+# (in this ticket: https://northerntech.atlassian.net/browse/CFE-769),
 # most large CFEngine installations use longer (less frequent) run intervals.
 
 # Note also THIS TEST MAY FAIL ON NON-LINUX SYSTEMS.

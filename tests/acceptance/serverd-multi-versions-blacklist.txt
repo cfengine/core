@@ -2,7 +2,7 @@
 # Lines starting from # are ignored, so are embty lines
 
 # Default behaviour in absence of "allowlegacyconnects" parameter changed
-# since 3.9.0, ref https://tracker.mender.io/browse/CFE-2339
+# since 3.9.0, ref https://northerntech.atlassian.net/browse/CFE-2339
 copy_from_classic_protocol_fail.cf
 copy_from_classic_protocol_success.cf
 

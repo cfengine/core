@@ -10,3 +10,16 @@ memleak:libntech/libcompat/getaddrinfo.c:153
 // cppcheck doesn't understand va_copy() properly
 va_list_usedBeforeStarted:libntech/libcompat/snprintf.c:1505
 va_list_usedBeforeStarted:libntech/libcompat/snprintf.c:1506
+
+// too cryptic code for cppcheck to see that the 'tmp' variable is initialized
+// through a pointer to the same address space
+uninitvar:libntech/libcompat/inet_pton.c:115
+
+// cppcheck completely confused by our macro-based enterprise stubs
+returnDanglingLifetime:libpromises/enterprise_stubs.c:60
+returnDanglingLifetime:libpromises/enterprise_stubs.c:121
+returnDanglingLifetime:libpromises/enterprise_stubs.c:128
+returnDanglingLifetime:libpromises/enterprise_stubs.c:153
+returnDanglingLifetime:libpromises/enterprise_stubs.c:159
+returnDanglingLifetime:libpromises/enterprise_stubs.c:165
+returnDanglingLifetime:libpromises/enterprise_stubs.c:172

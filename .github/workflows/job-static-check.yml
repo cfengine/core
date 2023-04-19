@@ -13,12 +13,19 @@ jobs:
         submodules: recursive
         path: core
 
+    - name: Get Togethers
+      uses: cfengine/together-javascript-action@v1.4
+      id: together
+      with:
+        myToken: ${{ secrets.GITHUB_TOKEN }}
+
     - name: Checkout Buildscripts
       uses: actions/checkout@v3
       with:
         repository: cfengine/buildscripts
         submodules: recursive
         path: buildscripts
+        ref: ${{steps.together.outputs.buildscripts}}
 
     - name: Checkout Masterfiles
       uses: actions/checkout@v3
@@ -26,6 +33,7 @@ jobs:
         repository: cfengine/masterfiles
         submodules: recursive
         path: masterfiles
+        ref: ${{steps.together.outputs.masterfiles}}
 
     - name: Prepare Environment
       run: |

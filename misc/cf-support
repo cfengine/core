@@ -183,7 +183,7 @@ else
   if [ "$response" != "n" ]; then
     # file command on core files results in lines like the following which we parse for cf-* binaries
     # core: ELF 64-bit LSB core file, x86-64, version 1 (SYSV), SVR4-style, from '/var/cfengine/bin/cf-key', real uid: 0, effective uid: 0, realgid: 0, effective gid: 0, execfn: '/var/cfengine/bin/cf-key', platform: 'x86_64'
-    cf_core_files=`find "$response" -name 'core*' -type f -exec file {} \; 2>/dev/null | grep "core file" | grep "cf-" | cut -d' ' -f1 | sed 's/:$//'`
+    cf_core_files=`find "$response/." \( -name . -o -prune \) -name 'core*' -type f -exec file {} \; 2>/dev/null | grep "core file" | grep "cf-" | cut -d' ' -f1 | sed 's/:$//'`
     if [ -n "$cf_core_files" ]; then
       if [ "$OS" != "solaris" ]; then
         if ! command -v gdb >/dev/null; then

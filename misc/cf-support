@@ -150,7 +150,9 @@ mkdir -p "$tmpdir"
 
 echo "Analyzing CFEngine core dumps"
 _core_log="$tmpdir"/core-dump.log
-if command -v coredumpctl >/dev/null; then
+_sysctl_kernel_core_pattern="$(sysctl -n kernel.core_pattern)"
+if expr "$_sysctl_kernel_core_pattern" : ".*/systemd-coredump.*" > /dev/null 2>&1; then
+  echo "Found systemd-coredump used in sysctl kernel.core_pattern \"$_sysctl_kernel_core_pattern\""
   echo "Using coredumpctl to analyze CFEngine core dumps"
   coredumpctl info /var/cfengine/bin/cf-* 2>/dev/null >> "$_core_log" || true
 elif command -v apport-unpack >/dev/null; then

@@ -431,7 +431,10 @@ runtest() {
                 $LN_CMD "$CF_NET" "$WORKDIR/bin"
                 $LN_CMD "$CF_CHECK" "$WORKDIR/bin"
                 $LN_CMD "$CF_RUNAGENT" "$WORKDIR/bin"
-                $LN_CMD "$RPMVERCMP" "$WORKDIR/bin"
+                if [ "$NEED_RPMVERCMP" = "yes" ]
+                then
+                    $LN_CMD "$RPMVERCMP" "$WORKDIR/bin"
+                fi
                 $LN_CMD "$DIFF" "$WORKDIR/bin"
             fi
             for inc in $INCLUDE_IN_WORKDIR

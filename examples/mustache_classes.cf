@@ -28,7 +28,6 @@ The class you are looking for is not defined.
 
 }
 #+end_src
-
 #@ Here we define the class `known_day_of_week` as long as there is a class
 #@ representing a known day. Then we render the value of the string variable
 #@ "rendered" using `string_mustache()` with a template that includes a section
@@ -37,7 +36,6 @@ The class you are looking for is not defined.
 #@ provided from `datastate()` which is the default set of data to use for mustache
 #@ templates when explicit data is not provided. Finally we report the variable to
 #@ see the rendered template.
-
 #+begin_src example_output
 #@ ```
 #@ R: I recognize the day of the week.

@@ -41,10 +41,10 @@ bundle agent main
 #@ that contains invalid characters you must canonify it.
 
 #+begin_src example_output
-#@ ```
+#@
 #@ R: my_illegal_class
 #@ R: my-illegal-class is NOT defined (as expected, its invalid)
 #@ R: my_illegal_class is defined
 #@ R: Slice and dice using `with`
-#@ ```
+#@
 #+end_src

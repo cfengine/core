@@ -18,6 +18,8 @@ bundle agent test
   meta:
     "description" -> { "CFE-3433" }
       string => "Test that --dry-run produces errors when used with custom promise modules not supporting it";
+    "test_soft_fail" string => "windows",
+      meta => { "ENT-10217" };
 }
 
 bundle agent check

@@ -35,6 +35,10 @@ body contain shell
 
 bundle agent test
 {
+  meta:
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10257" };
+
   files:
       "$(G.testdir)/destfile"
       copy_from => cp_2_file("$(G.testdir)/afile");

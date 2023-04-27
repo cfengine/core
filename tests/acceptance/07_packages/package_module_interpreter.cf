@@ -20,7 +20,7 @@ body package_module test_module
     query_installed_ifelapsed => "60";
     query_updates_ifelapsed => "14400";
     default_options => { "$(G.testfile)" };
-    interpreter => "/bin/sh";   # NOTE: no hashbang in the test_module script
+    interpreter => "$(G.sh)";   # /bin/sh; NOTE: no hashbang in the test_module script
 }
 
 bundle agent test
@@ -29,6 +29,8 @@ bundle agent test
       "description"
         string => "Test that the interpreter for the package module script can be set",
         meta => { "CFE-2880" };
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10254" };
 
   packages:
       "first_pkg"

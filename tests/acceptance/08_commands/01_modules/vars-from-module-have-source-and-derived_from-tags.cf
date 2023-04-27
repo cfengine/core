@@ -11,8 +11,9 @@ bundle agent test
       "description" -> { "ENT-7725" }
         string => "Test that vars defined by modules without explicit tags still have automatic tags identifying the source";
 
-      "test_skip_unsupported"
+      "test_soft_fail"
         string => "windows",
+        meta => { "ENT-10217" },
         comment => "The subtest policy uses /bin/echo";
 
   commands:

@@ -83,27 +83,24 @@ bundle common G
       "paths[usr_local_bin]" string          => "/usr/local/bin";
       "paths[usr_contrib_bin]" string        => "/usr/contrib/bin";
     windows::
-      "paths[mingw_msys_1_0_bin]" string     => "c:\\mingw\\msys\\1.0\\bin";
-      "paths[msys_1_0_bin]" string           => "c:\\msys\\1.0\\bin";
-      "paths[msys_bin]" string               => "c:\\msys\\bin";
-      "paths[pstools]" string                => "c:\\PSTools";
-      "paths[strawberry_perl_bin]" string    => "c:\\strawberry\\perl\\bin";
+      "paths[msys64_usr_bin]" string         => "c:\\msys64\\usr\\bin";
+      "paths[temp_msys64_usr_bin]" string    => "d:\\a\\_temp\\msys64\\usr\\bin";
       "paths[tool_wrappers]" string          => "$(this.promise_dirname)\\tool_wrappers";
 
     any::
       "paths_indices" slist => getindices("paths");
 
       # dereferenced path of the executable
-      "deref_paths[$(paths[$(paths_indices)])][$(cmds)]" string =>
+      "deref_paths[$(paths[$(paths_indices)])][$(cmds)$(exeext)]" string =>
           filestat("$(paths[$(paths_indices)])$(const.dirsep)$(cmds)$(exeext)",
                    "linktarget");
 
   classes:
       # General commands.
       "$(paths_indices)_$(cmds)$(exeext)" expression =>
-          fileexists("$(deref_paths[$(paths[$(paths_indices)])][$(cmds)])");
+          fileexists("$(deref_paths[$(paths[$(paths_indices)])][$(cmds)$(exeext)])");
       "has_$(cmds)"                       expression =>
-          fileexists("$(deref_paths[$(paths[$(paths_indices)])][$(cmds)])"),
+          fileexists("$(deref_paths[$(paths[$(paths_indices)])][$(cmds)$(exeext)])"),
           scope => "namespace";
 
       # Special cases.

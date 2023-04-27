@@ -1,7 +1,6 @@
 ######################################################
 #
 #  Test that @if works with patch level
-#
 #####################################################
 
 body common control
@@ -13,7 +12,7 @@ body common control
 bundle agent init
 {
   files:
-      "$(G.testdir)/test.cf"
+      "$(G.testdir)$(const.dirsep)test.cf"
         create => "true",
         edit_template => "$(this.promise_filename).sub.template",
         template_method => "mustache";
@@ -22,9 +21,15 @@ bundle agent init
 bundle agent check
 {
   methods:
-      "check" usebundle => dcs_passif_output(".*$(G.testdir)/test.cf Pass.*",
+      # Note: dcs_passif_output expects first argument to be regexp.
+      # To convert Windows-style path (with backslashes) to a regex which will match this path,
+      # we need to convert all backslashes to double-backslashes.
+      # In the command below, each backslash is escaped twice:
+      # once for regex, and once for CFEngine string parser.
+      "check" usebundle => dcs_passif_output(regex_replace(".*$(G.testdir)$(const.dirsep)test.cf Pass.*",
+                                                           "\\\\", "\\\\\\\\", "g"),
                                              ".*FAIL.*",
-                                             "$(sys.cf_agent) -D AUTO -Kf $(G.testdir)/test.cf",
+                                             "$(sys.cf_agent) -D AUTO -Kf $(G.testdir)$(const.dirsep)test.cf",
                                              $(this.promise_filename));
 }
 

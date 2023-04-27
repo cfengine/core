@@ -74,6 +74,10 @@ echo DONE > $(G.testdir)/exec_command.status
 
 bundle agent test
 {
+  meta:
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10215" };
+
   commands:
 
       "$(sys.cf_execd) -f $(this.promise_dirname)/kill_myself.execd.srv"

@@ -22,6 +22,9 @@ bundle agent test
         string => "Test that there is no difference when rendering the same
         mustache template with edit_template and edit_template_string";
 
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10254" };
+
   vars:
 
       "pghbadirectives" data => '[

@@ -47,6 +47,9 @@ bundle agent test
       "description" -> { "CFE-3874" }
         string => "Test that encrypting with no host- / key argument defaults to encrypting for localhost.";
 
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10405" };
+
   commands:
     # Encrypt test file
       "$(sys.cf_secret)"

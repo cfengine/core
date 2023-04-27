@@ -34,6 +34,9 @@ bundle agent init
 
 bundle agent test
 {
+  meta:
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10254" };
   vars:
       "list1" slist => { "a", "b", "c", "d", "e", "f" };
       "list2" slist => { "a", "b", "c", "d", "e", "f" };

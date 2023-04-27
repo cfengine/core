@@ -19,6 +19,10 @@ bundle common init
 
 bundle agent test
 {
+  meta:
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10254" };
+
   vars:
       "base_list" slist => { "a", "b", "c", "aaa", "bbb", "ccc" };
       "base_data" data => '{ "x": 100, "y": "z"  }';

@@ -52,6 +52,10 @@ body edit_defaults init_empty
 #######################################################
 bundle agent test
 {
+  meta:
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10215" };
+
   vars:
       "content" string =>
       "<Host name=\"cfe_host\" debug=\"0\" appBase=\"webapps/cfe_host\"

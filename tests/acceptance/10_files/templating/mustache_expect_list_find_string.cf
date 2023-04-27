@@ -48,6 +48,10 @@ bundle agent init_filestat(n, f)
 
 bundle agent test
 {
+  meta:
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10257" };
+
   methods:
       "mustache good" usebundle => file_mustache_jsonstring($(template),
                                                                 '{"mykeys": ["template expects list of strings"]}',

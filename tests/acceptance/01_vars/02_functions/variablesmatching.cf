@@ -22,6 +22,10 @@ bundle common init
 
 bundle agent test
 {
+  meta:
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10254" };
+
   vars:
       "vars" slist => variablesmatching("default:init.test_fbeae67f3e347b5e0032302200141131.*");
       "x_vars" slist => variablesmatching("default:init.test_fbeae67f3e347b5e0032302200141131.*", "x");

@@ -21,6 +21,8 @@ bundle agent test
         "description"
             string => "Test that cf-secret basic key based encryption and decryption work";
 
+        "test_soft_fail" string => "windows",
+            meta => { "ENT-10405" };
 
     vars:
         "text"

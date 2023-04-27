@@ -26,6 +26,8 @@ bundle agent test
   meta:
       "description" -> {"ENT-7478"}
         string => "If 'ifelapsed => 0' is used, execresult() should run the given command every time";
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10217" };
 
   methods:
       "foo" usebundle => check_date("foo");

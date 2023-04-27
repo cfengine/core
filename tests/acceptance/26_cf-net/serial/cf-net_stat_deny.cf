@@ -38,6 +38,8 @@ bundle agent test
             contain => myshell;
     meta:
         "description" string => "Attempt to stat file without permission";
+        "test_soft_fail" string => "windows",
+          meta => { "ENT-10254" };
 }
 
 bundle agent check

@@ -18,6 +18,8 @@ bundle agent test
   meta:
     "description" -> { "CFE-3433" }
       string => "Test that a bug in a module is reported if it advertises action_policy feature, but doesn't properly implement it";
+    "test_soft_fail" string => "windows",
+      meta => { "ENT-10217" };
 }
 
 bundle agent check

@@ -9,6 +9,8 @@ bundle agent test
   meta:
       "description" -> { "ENT-4988" }
         string => "Test some basic expectations when using process_stop in processes type promises";
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10257" };
 
   processes:
 

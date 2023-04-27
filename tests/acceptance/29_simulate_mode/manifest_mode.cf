@@ -19,9 +19,10 @@ bundle agent init
 bundle agent test
 {
   meta:
-    "test_soft_fail" string => "(solaris|aix|hpux)",
-      meta => { "ENT-6540" };
+    "test_soft_fail" string => "(solaris|aix|hpux|windows)",
+      meta => { "ENT-6540,ENT-10254" };
       # ENT-6540 exotics fail to delete chroot
+      # ENT-10254 tests fail on Windows due to CRLF
 
     "description" -> { "ENT-5301" }
       string => "Test that files promises in --simulate=manifest mode produce proper output and only make changes in chroot";

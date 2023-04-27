@@ -10,9 +10,6 @@ body common control
 
 bundle agent init
 {
-  meta:
-      "test_skip_unsupported" string => "!has_mkfifo";
-
   vars:
       "test_fifo" string => "$(G.testfile).fifo";
 
@@ -22,6 +19,9 @@ bundle agent init
 
 bundle agent test
 {
+  meta:
+      "test_skip_unsupported" string => "!has_mkfifo|windows";
+
   files:
       "$(init.test_fifo)"
         create => "false",

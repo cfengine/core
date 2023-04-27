@@ -38,6 +38,9 @@ bundle common b
 
 bundle agent test
 {
+  meta:
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10254" };
   vars:
       "user[name]"              string => "zamboni";
       "user[fullname][first]"   string => "Diego";

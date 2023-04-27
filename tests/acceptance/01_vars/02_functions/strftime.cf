@@ -50,6 +50,10 @@ bundle edit_line init_insert
 
 bundle agent test
 {
+    meta:
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10253" };
+
   vars:
       "vals" slist => {
                         strftime('gmtime', '%F %T', 100000000),

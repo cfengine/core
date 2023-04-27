@@ -17,6 +17,8 @@ bundle agent test
   meta:
       "description"
         string => "Test that ifelse can use the result of isvariable as a class identifer";
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10254" };
 
   vars:
       # Since init.passwd_file is defined, I expect the value to be

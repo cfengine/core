@@ -47,6 +47,10 @@ body edit_defaults init_empty
 #######################################################
 bundle agent test
 {
+  meta:
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10215" };
+
   vars:
       "xpath" string =>
       "/Server/Service/Engine/Host[ @name=\"cfe_host\" | Alias = cfe_alias ]";

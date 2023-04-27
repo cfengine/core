@@ -12,6 +12,9 @@ promise agent binary
 
 bundle agent test
 {
+  meta:
+    "test_soft_fail" string => "windows",
+      meta => { "ENT-10217" };
   binary:
     "foobar"
       classes => if_ok("binary_ok");

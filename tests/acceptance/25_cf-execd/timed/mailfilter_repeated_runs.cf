@@ -107,6 +107,13 @@ bundle agent init
       "any" usebundle => run_cf_execd(@(expected5), @(unexpected));
 }
 
+bundle agent test
+{
+  meta:
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10215" };
+}
+
 bundle agent check
 {
   methods:

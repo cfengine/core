@@ -25,6 +25,10 @@ bundle common init
 
 bundle agent test
 {
+  meta:
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10254" };
+
   vars:
       "tags1" slist => getclassmetatags("myclass");
       "tags2" slist => getclassmetatags("myplainclass");

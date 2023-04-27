@@ -7,6 +7,10 @@ body common control
 
 bundle agent test
 {
+  meta:
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10254" };
+
   vars:
       "tests" slist => { "q1", "q2", "q3", "q4" };
       "offsets" ilist => { "-1", "-2", "-5", "-10", "-20", "-26", "-27", "-28", "-10240",

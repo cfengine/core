@@ -15,6 +15,10 @@ body common control
 
 bundle agent test
 {
+  meta:
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10254" };
+
   classes:
       "zeroes_range_match" expression => isipinsubnet("0.0.0.0/0", "1.2.3.4"),
         meta => { "collect" };

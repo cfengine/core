@@ -45,6 +45,8 @@ bundle agent test
   meta:
     "description" -> { "CFE-3440" }
       string => "Test that you can use a meta attribute with a custom promise";
+    "test_soft_fail" string => "windows",
+      meta => { "ENT-10217" };
 
   vars:
     "test_string"

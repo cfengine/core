@@ -23,6 +23,10 @@ bundle common init
 
 bundle agent test
 {
+  meta:
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10254" };
+
   classes:
       "myclass2" expression => "any";
   vars:

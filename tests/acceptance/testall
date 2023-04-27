@@ -458,7 +458,7 @@ runtest() {
         fi
         if uname | grep MINGW > /dev/null
         then
-            PLATFORM_WORKDIR="$(echo $WORKDIR | sed -e 's%^/\([a-cA-Z]\)/%\1:/%' | sed -e 's%/%\\%g')"
+            PLATFORM_WORKDIR="$(echo $WORKDIR | sed -e 's%^/\([a-zA-Z]\)/%\1:/%' | sed -e 's%/%\\%g')"
             DS="\\"
         else
             PLATFORM_WORKDIR="$WORKDIR"
@@ -734,6 +734,13 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
                     ;;
             esac
         done
+        if [ "$GITHUB_ACTIONS" = "true" ] && [ "$RUNNER_OS" = "Windows" ]
+        then
+            # on Github Actions Windows runners, `rm -rf` moves files into /d/d/ directory.
+            # To clean this "Recycle bin", we delete this directory.
+            # Otherwise, runner promptly run out of disk space.
+            rm -rf /d/d/
+        fi
     fi
 
     if [ -z "$QUIET" ]

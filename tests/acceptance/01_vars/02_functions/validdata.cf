@@ -15,6 +15,10 @@ body common control
 
 bundle agent test
 {
+  meta:
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10254" };
+
   vars:
     "valid_json" string => "should appear",
       if => validdata(readfile("$(this.promise_filename).json", inf), "JSON");

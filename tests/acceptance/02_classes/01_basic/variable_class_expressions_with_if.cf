@@ -71,7 +71,7 @@ bundle agent test
 
   commands:
 
-     "/bin/true"
+     "$(G.true)"
        handle => "delay",
        comment => "This is a benign promise that is used to delay detection of
                    failure classes until after normal order begins.";

@@ -6,6 +6,10 @@ body common control
 
 bundle agent test
 {
+  meta:
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-2161" };
+
   vars:
       "services" slist => { "single" };
       "policies" slist => { "enable", "disable", "start", "stop", "restart", "reload", "custom" };

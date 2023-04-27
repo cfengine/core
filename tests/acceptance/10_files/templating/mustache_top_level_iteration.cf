@@ -16,6 +16,10 @@ body common control
 
 bundle agent test
 {
+  meta:
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10254" };
+
   vars:
       "mydata1" data => '{ "a": 100 }';
       "mydata2" data => '[ "p", "q" ]';

@@ -41,7 +41,7 @@ bundle agent test
 {
   meta:
       "test_suppress_fail" string => "windows",
-        meta => { "redmine4730" };
+        meta => { "redmine4730,ENT-2145" };
 
   vars:
       "patterns[a]" string => "$(G.testdir)/?";

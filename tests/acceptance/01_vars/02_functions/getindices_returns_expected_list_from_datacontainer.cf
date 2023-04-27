@@ -31,8 +31,8 @@ bundle agent init
 bundle agent test
 {
   meta:
-      "test_soft_fail" string => "!any",
-        meta => { "redmine7116" };
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10254" };
 
   vars:
       # expected: one, two

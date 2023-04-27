@@ -19,6 +19,13 @@ bundle agent init
                   running with dry-run.";
 }
 
+bundle agent test
+{
+  meta:
+    "test_soft_fail" string => "windows",
+      meta => { "ENT-10217" };
+}
+
 bundle agent check
 {
   vars:

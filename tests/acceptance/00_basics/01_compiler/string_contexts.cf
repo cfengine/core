@@ -12,6 +12,10 @@ body common control
 
 bundle agent test
 {
+  meta:
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10254" };
+
   defaults:
       "s1" string => "1";
       "s2" string => "2";

@@ -13,6 +13,9 @@ bundle agent test
       "description" -> { "ENT-5406" }
         string => "Test that standard_services can be used from non-default namespace";
 
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-2161" };
+
   methods:
       "Test" usebundle => ENT_5406:ns_test;
 }

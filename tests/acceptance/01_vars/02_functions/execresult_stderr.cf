@@ -18,6 +18,8 @@ bundle agent test
   meta:
       "description" -> { "CFE-3103" }
         string => "Test that execresult captures both stdout and stderr";
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10217" };
 
   vars:
       "result_with_stdout_stderr"

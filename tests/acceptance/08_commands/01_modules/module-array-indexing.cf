@@ -14,9 +14,6 @@ body common control
 
 bundle agent test
 {
-  meta:
-      "test_suppress_fail" string => "windows";
-
   commands:
       "$(G.cat) $(this.promise_filename).txt" module => "true";
 

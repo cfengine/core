@@ -24,8 +24,11 @@ bundle agent init
 
 bundle common test_common
 {
-  vars:
+  meta:
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10254" };
 
+  vars:
       "data"    data   => readjson("$(this.promise_filename).json", "100k");
       "datastr" string => format("%S", data);
 

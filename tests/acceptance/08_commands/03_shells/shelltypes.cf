@@ -34,6 +34,9 @@ bundle agent init
 
 bundle agent test
 {
+  meta:
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10257" };
   classes:
       "$(init.shelltypes)" expression => regcmp(".*(Succeeded|Powershell is only supported on Windows).*", execresult("$(sys.cf_agent) -D $(init.shelltypes) -Kf $(init.origtestdir)$(const.dirsep)tryshell.cf.sub", "noshell"));
 

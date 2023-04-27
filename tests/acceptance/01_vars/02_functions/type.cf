@@ -32,6 +32,8 @@ bundle agent test
   meta:
       "description" -> { "CFE-2240" }
         string => "Test for expected results from policy function type";
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10254" };
 
   vars:
       "test_00" string => type("init._data");

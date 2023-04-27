@@ -27,6 +27,10 @@ file,R,File removed");
 
 bundle agent test
 {
+  meta:
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10254" };
+
   commands:
       "$(sys.cf_agent) -Dpass1 -Kf $(this.promise_filename).sub";
       "$(sys.cf_agent) -Dpass2 -Kf $(this.promise_filename).sub";

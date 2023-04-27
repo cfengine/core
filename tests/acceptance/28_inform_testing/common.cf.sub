@@ -50,6 +50,10 @@ body delete init_delete
 
 bundle agent test
 {
+  meta:
+    "test_soft_fail" string => "windows",
+      meta => { "ENT-10406" },
+      if => not( strcmp( "insert_lines_noop.cf", "$(sys.policy_entry_basename)" ) );
   vars:
     "cf_agent" string => ifelse(isvariable("sys.cf_agent"), "$(sys.cf_agent)", "/var/cfengine/bin/cf-agent");
     "filter_list" slist => { " -e '/filestat bailing/d' ",

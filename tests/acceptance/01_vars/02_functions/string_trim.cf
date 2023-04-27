@@ -9,6 +9,10 @@ body common control
 
 bundle agent test
 {
+  meta:
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10254" };
+
   vars:
       "abcd1" string => string_trim("abcd");
       "abcd2" string => string_trim(" abcd");

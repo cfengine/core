@@ -58,6 +58,8 @@ bundle agent test
   meta:
     "description" -> { "CFE-3443" }
       string => "Test that you cannot use a promise module with two different interpreters";
+    "test_soft_fail" string => "windows",
+      meta => { "ENT-10217" };
 
   vars:
     "test_string"

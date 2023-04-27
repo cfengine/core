@@ -21,10 +21,6 @@ bundle agent test
     "description"
       string => "Test that file paths with spaces can be created without special treatment";
 
-    "test_soft_fail"
-      string => "windows",
-      meta => { "redmine7934" };
-
   vars:
     "file[1]" string => "file with space.txt";
     "file[2]" string => "path with/a space.txt";

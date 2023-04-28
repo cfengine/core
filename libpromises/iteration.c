@@ -100,9 +100,6 @@ typedef struct {
      * field never changes after Wheel initialisation. */
     char *varname_unexp;
 
-    /* Number of dependencies of varname_unexp */
-    //    const size_t deps;
-
     /* On each iteration of the wheels, the unexpanded string is
      * re-expanded, so the following is refilled, again and again. */
     char *varname_exp;
@@ -527,7 +524,6 @@ static char *ProcessVar(PromiseIterator *iterctx, const EvalContext *evalctx,
         s_end = s + s_max;
     }
     char *next_var = s + FindDollarParen(s, s_max);
-    size_t deps    = 0;
 
     while (next_var < s_end)              /* does it have nested variables? */
     {
@@ -552,7 +548,6 @@ static char *ProcessVar(PromiseIterator *iterctx, const EvalContext *evalctx,
         else                          /* inner variable processed correctly */
         {
             /* This variable depends on inner expansions. */
-            deps++;
             /* We are sure (subvar_end+1) is not out of bounds. */
             char *s_next = subvar_end + 1;
             const size_t s_next_len = strlen(s_next);

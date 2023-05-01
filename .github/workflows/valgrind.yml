@@ -14,11 +14,16 @@ jobs:
       with:
         path: core
         submodules: recursive
+    - name: Get Togethers
+      uses: cfengine/together-javascript-action@v1.6
+      id: together
+      with:
+        myToken: ${{ secrets.GITHUB_TOKEN }}
     - name: Clone masterfiles (master)
       uses: actions/checkout@v3
       with:
         repository: cfengine/masterfiles
-        ref: master
+        ref: ${{steps.together.outputs.masterfiles}}
         path: masterfiles
         submodules: recursive
     - name: Install dependencies

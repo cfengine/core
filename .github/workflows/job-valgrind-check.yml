@@ -25,7 +25,7 @@ jobs:
         repository: cfengine/masterfiles
         submodules: recursive
         path: masterfiles
-        ref: ${{steps.together.outputs.masterfiles}}
+        ref: ${{steps.together.outputs.masterfiles || github.base_ref || github.ref}}
 
     - name: Run The Test
       working-directory: ./core/tests/valgrind-check

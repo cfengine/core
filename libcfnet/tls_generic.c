@@ -988,7 +988,7 @@ bool TLSSetCipherList(SSL_CTX *ssl_ctx, const char *cipher_list)
 {
     assert(ssl_ctx);
 
-    if (cipher_list == NULL)
+    if (NULL_OR_EMPTY(cipher_list))
     {
         Log(LOG_LEVEL_VERBOSE, "Using the OpenSSL's default cipher list");
         /* nothing more to do */
@@ -999,13 +999,15 @@ bool TLSSetCipherList(SSL_CTX *ssl_ctx, const char *cipher_list)
         cipher_list);
 
     const size_t max_len = strlen(cipher_list) + 1; /* NUL byte */
-    size_t n_specs = StringCountTokens(cipher_list, max_len, ":");
+    size_t n_specs = StringCountTokens(cipher_list, max_len - 1, ":");
 
     /* TLS 1.3 defines cipher suites, they start with "TLS_" */
     char ciphers[max_len];
+    ciphers[0] = '\0';
     size_t ciphers_len = 0;
 
     char cipher_suites[max_len];
+    cipher_suites[0] = '\0';
     size_t cipher_suites_len = 0;
 
     for (size_t i = 0; i < n_specs; i++)

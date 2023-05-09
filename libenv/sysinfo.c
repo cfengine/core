@@ -467,7 +467,7 @@ static void GetNameInfo3(EvalContext *ctx)
         "cf-promises", "cf-upgrade", "cf-net", "cf-check", "cf-secret",
         NULL
     };
-    int have_component[COMPONENTS_SIZE];
+    int have_component[COMPONENTS_SIZE] = {0};
     struct stat sb;
     char name[CF_MAXVARSIZE], quoteName[CF_MAXVARSIZE + 2], shortname[CF_MAXVARSIZE];
 

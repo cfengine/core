@@ -74,6 +74,6 @@ body perms m(m)
 #@   "Bus 002 Device 055: ID 074d:0005": "Micronas GmbH",
 #@   "Bus 003 Device 001: ID 1d6b:0003": "Linux Foundation 3.0 root hub",
 #@   "Bus 003 Device 003: ID 17ef:1010": "Lenovo Lenovo ThinkPad Dock"
-#@  }
+#@ }
 #@ ```
 #+end_src

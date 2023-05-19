@@ -15,10 +15,6 @@ bundle agent test
         string => "windows",
         comment => "The subtest policy uses /bin/echo";
 
-      "test_soft_fail"
-        string => "any",
-        meta => { "ENT-7725" };
-
   commands:
       "/bin/echo"
         args => "=my_var_from_module= my val from module",
@@ -34,12 +30,12 @@ bundle agent check
   reports:
 
       # Every variable should have a source=SOMETHING tag
-      "Pass $(this.promise_filename)"
+      "$(this.promise_filename) Pass"
         if => and(
                    reglist( @(my_var_from_module_tags), "source=.*" ),
                    reglist( @(my_var_from_module_tags), "derived_from=.*" )
                    );
-      "FAIL $(this.promise_filename)"
+      "$(this.promise_filename) FAIL"
         unless => and(
                    reglist( @(my_var_from_module_tags), "source=.*" ),
                    reglist( @(my_var_from_module_tags), "derived_from=.*" )

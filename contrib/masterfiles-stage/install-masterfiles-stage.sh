@@ -13,11 +13,11 @@ chown root:root ${DC_SCRIPTS_DIR}/masterfiles-stage.sh \
   ${DC_SCRIPTS_DIR}/common.sh \
   ${DC_SCRIPTS_DIR}/git-askpass.sh \
   ${DC_SCRIPTS_DIR}/ssh-wrapper.sh \
-  ${DEFAULT_PARAMs_FILE}
+  ${DEFAULT_PARAMS_FILE}
 chmod 500 ${DC_SCRIPTS_DIR}/masterfiles-stage.sh
 chmod 400 ${DC_SCRIPTS_DIR}/common.sh \
   ${DC_SCRIPTS_DIR}/git-askpass.sh \
-  ${DC_SCRITPS_DIR}/ssh-wrapper.sh
+  ${DC_SCRIPTS_DIR}/ssh-wrapper.sh
 chmod 600 ${DEFAULT_PARAMS_FILE}
 echo "Now, edit ${DEFAULT_PARAMS_FILE} to conigure your upstream repository."
 echo "Then, run '${DC_SCRIPTS_DIR}/masterfiles-stage.sh --DEBUG' to test deployment"

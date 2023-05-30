@@ -1883,6 +1883,7 @@ AC_CONFIG_FILES([Makefile
     cf-secret/Makefile
     config.post.h
     contrib/vagrant-ci/centos-7-x64/Makefile
+    contrib/masterfiles-stage/Makefile
     misc/Makefile
     misc/selinux/Makefile
     ext/Makefile

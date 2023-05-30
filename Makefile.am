@@ -48,7 +48,8 @@ SUBDIRS = \
 	ext \
 	examples \
 	tests \
-	contrib/vagrant-ci/centos-7-x64
+	contrib/vagrant-ci/centos-7-x64 \
+	contrib/masterfiles-stage
 
 
 # Hide the buildsystem's username, at least with GNU tar.

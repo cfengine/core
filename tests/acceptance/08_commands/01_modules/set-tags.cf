@@ -62,10 +62,10 @@ bundle agent check
       "jtags2" string => join(",", "tags2");
       "jtags3" string => join(",", "tags3");
 
-      "etags0" string => "xyz,abc=def,,??what is this??,source=module";
-      "etags1" string => "xyz,abc=def,,??what is this??,source=module";
-      "etags2" string => "1,2,3,source=module";
-      "etags3" string => "a,b,c,source=module";
+      "etags0" string => "xyz,abc=def,,\?\?what is this\?\?,source=module,derived_from=.*";
+      "etags1" string => "xyz,abc=def,,\?\?what is this\?\?,source=module,derived_from=.*";
+      "etags2" string => "1,2,3,source=module,derived_from=.*";
+      "etags3" string => "a,b,c,source=module,derived_from=.*";
 
   classes:
 
@@ -76,10 +76,10 @@ bundle agent check
       "var3ok" expression => strcmp("${this.joined3}" , "${this.actual3}");
       "var4ok" expression => strcmp("hello there" , "${xyz.myvar}");
 
-      "tags0ok" expression => strcmp($(jtags0), $(etags0));
-      "tags1ok" expression => strcmp($(jtags1), $(etags1));
-      "tags2ok" expression => strcmp($(jtags2), $(etags2));
-      "tags3ok" expression => strcmp($(jtags3), $(etags3));
+      "tags0ok" expression => regcmp($(etags0), $(jtags0));
+      "tags1ok" expression => regcmp($(etags1), $(jtags1));
+      "tags2ok" expression => regcmp($(etags2), $(jtags2));
+      "tags3ok" expression => regcmp($(etags3), $(jtags3));
 
       "ok" and => { "myclass", "var0ok", "var1ok", "var2ok", "var3ok", "var4ok",
                     "tags0ok", "tags1ok", "tags2ok", "tags3ok", };
@@ -88,15 +88,15 @@ bundle agent check
     DEBUG::
       "xyzvars = $(xyzvars)";
 
-      "tags0ok => strcmp('$(jtags0)', '$(etags0)')" if => "tags0ok";
-      "tags1ok => strcmp('$(jtags1)', '$(etags1)')" if => "tags1ok";
-      "tags2ok => strcmp('$(jtags2)', '$(etags2)')" if => "tags2ok";
-      "tags3ok => strcmp('$(jtags3)', '$(etags3)')" if => "tags3ok";
+      "tags0ok => regcmp('$(etags0)', '$(jtags0)')" if => "tags0ok";
+      "tags1ok => regcmp('$(etags1)', '$(jtags1)')" if => "tags1ok";
+      "tags2ok => regcmp('$(etags2)', '$(jtags2)')" if => "tags2ok";
+      "tags3ok => regcmp('$(etags3)', '$(jtags3)')" if => "tags3ok";
 
-      "tags0 NOT ok => strcmp('$(jtags0)', '$(etags0)')" if => "!tags0ok";
-      "tags1 NOT ok => strcmp('$(jtags1)', '$(etags1)')" if => "!tags1ok";
-      "tags2 NOT ok => strcmp('$(jtags2)', '$(etags2)')" if => "!tags2ok";
-      "tags3 NOT ok => strcmp('$(jtags3)', '$(etags3)')" if => "!tags3ok";
+      "tags0 NOT ok => regcmp('$(etags0)', '$(jtags0)')" if => "!tags0ok";
+      "tags1 NOT ok => regcmp('$(etags1)', '$(jtags1)')" if => "!tags1ok";
+      "tags2 NOT ok => regcmp('$(etags2)', '$(jtags2)')" if => "!tags2ok";
+      "tags3 NOT ok => regcmp('$(etags3)', '$(jtags3)')" if => "!tags3ok";
 
     ok::
       "$(this.promise_filename) Pass";

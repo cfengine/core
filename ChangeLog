@@ -1,3 +1,34 @@
+3.21.2:
+	- Added --help option to cf-support and aligned output with other
+	  components (ENT-9740)
+	- Added classes and vars to cf-support (CFE-4160)
+	- Added condition to runalerts service to require stamp directory
+	  (ENT-9711)
+	- Added mctp_socket class to selinux policy (ENT-10206)
+	- Added native core dump handling in cf-support for solaris (ENT-9786)
+	- Added needed selinux class lockdown for latest rhel-9 hosts
+	  (ENT-9685)
+	- Adjusted cf-support for exotic/legacy POSIX systems (ENT-9340)
+	- Adjusted cf-support for hpux mktemp command (ENT-9786)
+	- Instead of creating the directories with the default file
+	  permissions, then change them to the desired state; directories are
+	  now created with the desired set of permissions (CFE-4114)
+	- Enabled install-time selinux policy compiling (ENT-9685)
+	- Fixed debug module expand logging for scalars (CFE-4122)
+	- Fixed syntax description of validjson() (ENT-9759)
+	- Prevented cf-support from searching more than 1 level for core files
+	  (ENT-9981)
+	- Started checking status of all cf- prefixed systemd services in cf-support
+	  (ENT-9804)
+	- validjson() no longer accepts trailing bogus data (CFE-4080)
+
+3.21.1:
+	- This release contains fixes to CVE-2023-26560, a security vulnerability in the
+	  CFEngine Enterprise Hub / Mission Portal. Beyond this, there were no other changes.
+	  For more information about the vulnerability and release see our blog;
+	  https://cfengine.com/blog/2023/cve-2023-26560/
+	  https://cfengine.com/blog/2023/cfengine-3-18-4-and-3-21-1-released/
+
 3.21.0:
 	- Added cf-support utility for generating support information
 	  (ENT-9037)

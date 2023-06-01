@@ -1,4 +1,6 @@
 3.21.2:
+	- The CF3_WITH_LIBRARY and AC_CHECK_HEADERS were moved to outside of the check for with-libxml2=no (CFE-4023)
+	- configure.ac: Enabled use of pkg-config to find libxml2 (CFE-4014)
 	- Added --help option to cf-support and aligned output with other
 	  components (ENT-9740)
 	- Added classes and vars to cf-support (CFE-4160)

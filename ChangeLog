@@ -22,6 +22,13 @@
 	  (ENT-9804)
 	- validjson() no longer accepts trailing bogus data (CFE-4080)
 
+3.21.1:
+	- This release contains fixes to CVE-2023-26560, a security vulnerability in the
+	  CFEngine Enterprise Hub / Mission Portal. Beyond this, there were no other changes.
+	  For more information about the vulnerability and release see our blog;
+	  https://cfengine.com/blog/2023/cve-2023-26560/
+	  https://cfengine.com/blog/2023/cfengine-3-18-4-and-3-21-1-released/
+
 3.21.0:
 	- Added cf-support utility for generating support information
 	  (ENT-9037)

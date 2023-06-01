@@ -8,18 +8,14 @@
 	- Added native core dump handling in cf-support for solaris (ENT-9786)
 	- Added needed selinux class lockdown for latest rhel-9 hosts
 	  (ENT-9685)
-	- Adjust cf-support for exotic/legacy POSIX systems (ENT-9340)
-	- Adjust cf-support for hpux mktemp command (ENT-9786)
+	- Adjusted cf-support for exotic/legacy POSIX systems (ENT-9340)
+	- Adjusted cf-support for hpux mktemp command (ENT-9786)
 	- Instead of creating the directories with the default file
 	  permissions, then change them to the desired state; directories are
 	  now created with the desired set of permissions (CFE-4114)
 	- Enabled install-time selinux policy compiling (ENT-9685)
-	- Fixed --with-libxml2=no case in configure.ac (CFE-4023)
-	- Fixed compiler warnings about unused variables (ENT-9878)
 	- Fixed debug module expand logging for scalars (CFE-4122)
-	- Fixed deprecated-non-prototype compiler warnings (ENT-9878)
 	- Fixed syntax description of validjson() (ENT-9759)
-	- Moved OS detection earlier in cf-support (ENT-9786)
 	- Prevented cf-support from searching more than 1 level for core files
 	  (ENT-9981)
 	- Started checking status of all cf- prefixed systemd services in cf-support

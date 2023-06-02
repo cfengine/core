@@ -86,6 +86,7 @@ require {
 	type postfix_spool_t;
 	type sendmail_exec_t;
 	type sshd_t;
+	type ssh_exec_t;
 	type rpm_script_t;
 	class lockdown { confidentiality integrity };
 	class tcp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown name_connect accept listen name_bind node_bind };
@@ -95,7 +96,7 @@ require {
 	class rawip_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
 	class netlink_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
 	class packet_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
-	class unix_stream_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
+	class unix_stream_socket { create ioctl read getattr lock write setattr append bind connect connectto getopt setopt shutdown };
 	class unix_dgram_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown sendto };
 	class appletalk_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
 	class netlink_route_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown nlmsg_read getopt };
@@ -157,7 +158,6 @@ require {
 	class dir { getattr read search open write add_name remove_name lock ioctl create };
 	class filesystem getattr;
 	class lnk_file { create getattr read unlink };
-	class unix_stream_socket connectto;
 	class capability { dac_read_search sys_module chown dac_read_search dac_override fowner fsetid sys_admin mknod net_raw net_admin sys_nice sys_rawio sys_resource setuid setgid sys_nice sys_ptrace kill net_bind_service };
 	class cap_userns sys_ptrace;
 	class capability2 { mac_admin mac_override block_suspend syslog wake_alarm };
@@ -253,7 +253,7 @@ allow cfengine_execd_t var_t:dir read;
 allow cfengine_execd_t semanage_exec_t:file getattr;
 allow cfengine_execd_t tty_device_t:chr_file getattr;
 allow cfengine_execd_t user_devpts_t:chr_file getattr;
-
+allow cfengine_execd_t ssh_exec_t:file getattr;
 
 #============= cfengine_monitord_t ==============
 # allow cf-monitord to use/execute libpromises.so
@@ -272,6 +272,7 @@ allow cfengine_monitord_t cfengine_reactor_exec_t:file getattr;
 allow cfengine_monitord_t var_log_t:file { open read };
 
 allow cfengine_monitord_t self:capability { dac_override dac_read_search sys_ptrace };
+allow cfengine_monitord_t self:cap_userns sys_ptrace;
 
 allow cfengine_monitord_t crontab_exec_t:file getattr;
 allow cfengine_monitord_t dmidecode_exec_t:file getattr;
@@ -290,6 +291,7 @@ allow cfengine_monitord_t semanage_exec_t:file getattr;
 allow cfengine_monitord_t tty_device_t:chr_file getattr;
 allow cfengine_monitord_t user_devpts_t:chr_file getattr;
 allow cfengine_monitord_t sysctl_t:dir read;
+allow cfengine_monitord_t ssh_exec_t:file getattr;
 
 # TODO: this should not be needed
 allow cfengine_monitord_t proc_xen_t:dir search;
@@ -308,8 +310,11 @@ allow cfengine_serverd_t cfengine_var_lib_t:file execute;
 # allow cf-serverd to execute cf-promises
 allow cfengine_serverd_t cfengine_var_lib_t:file execute_no_trans;
 
-# allow cf-serverd to connect in case of call-collect
+# allow cf-serverd to connect to the CFEngine port and to write into a local socket (in case of
+# call-collect on hosts and the hub itself, respectively)
 allow cfengine_serverd_t unreserved_port_t:tcp_socket name_connect;
+allow cfengine_serverd_t cfengine_var_lib_t:sock_file write;
+allow cfengine_serverd_t cfengine_hub_t:unix_stream_socket connectto;
 
 # TODO: this should not be needed
 allow cfengine_serverd_t ssh_port_t:tcp_socket name_connect;
@@ -342,6 +347,7 @@ allow cfengine_serverd_t user_cron_spool_t:dir getattr;
 allow cfengine_serverd_t useradd_exec_t:file getattr;
 allow cfengine_serverd_t var_t:dir read;
 allow cfengine_serverd_t semanage_exec_t:file getattr;
+allow cfengine_serverd_t ssh_exec_t:file getattr;
 
 
 #============= cfengine_hub_t ==============
@@ -369,6 +375,10 @@ allow cfengine_hub_t cfengine_hub_exec_t:file { ioctl read getattr lock map exec
 allow cfengine_hub_t cfengine_var_lib_t:file map;
 allow cfengine_hub_t cfengine_var_lib_t:file execute;
 allow cfengine_hub_t cfengine_var_lib_t:file { getattr open read };
+
+# allow cf-hub to read/write from/to a socket owned by cf-serverd (passed in
+# case of call-collect)
+allow cfengine_hub_t cfengine_serverd_t:tcp_socket { read write setopt };
 
 allow cfengine_hub_t cfengine_agent_exec_t:file getattr;
 allow cfengine_hub_t cfengine_execd_exec_t:file getattr;
@@ -450,6 +460,8 @@ allow cfengine_hub_t tmp_t:sock_file write;
 allow cfengine_hub_t user_cron_spool_t:dir getattr;
 allow cfengine_hub_t useradd_exec_t:file getattr;
 allow cfengine_hub_t var_t:dir read;
+allow cfengine_hub_t ssh_exec_t:file getattr;
+allow cfengine_hub_t tmp_t:dir read;
 
 # TODO: these should not be needed
 allow cfengine_hub_t ifconfig_exec_t:file { execute execute_no_trans open read getattr map };
@@ -490,6 +502,8 @@ allow cfengine_postgres_t postgresql_port_t:tcp_socket name_bind;
 allow cfengine_postgres_t hugetlbfs_t:file map;
 allow cfengine_postgres_t hugetlbfs_t:file { read write };
 allow cfengine_postgres_t init_t:unix_stream_socket { getattr ioctl read write }; # pg_ctl, systemd, PAM?
+allow cfengine_postgres_t init_var_run_t:dir search;
+allow cfengine_postgres_t system_dbusd_var_run_t:dir search;
 allow cfengine_postgres_t net_conf_t:file { getattr open read };
 allow cfengine_postgres_t node_t:tcp_socket node_bind;
 allow cfengine_postgres_t node_t:udp_socket node_bind;
@@ -512,7 +526,7 @@ allow cfengine_postgres_t tmpfs_t:filesystem getattr;
 allow cfengine_postgres_t var_log_t:file { append open };
 
 # so that PostgreSQL can check if cfpostgres user/group exists
-allow cfengine_postgres_t passwd_file_t:file read;
+allow cfengine_postgres_t passwd_file_t:file { open read getattr };
 
 # Needed for systemd to be able to check PostgreSQL's PID file
 allow init_t cfengine_var_lib_t:dir { read remove_name write };
@@ -568,6 +582,7 @@ allow cfengine_httpd_t cfengine_action_script_exec_t:file { create write setattr
 # sending reports via email
 allow cfengine_httpd_t postfix_etc_t:dir { getattr open read search };
 allow cfengine_httpd_t postfix_etc_t:file { getattr open read };
+allow cfengine_httpd_t postfix_master_t:unix_stream_socket connectto;
 allow cfengine_httpd_t postfix_postdrop_exec_t:file { execute execute_no_trans map open read };
 allow cfengine_httpd_t postfix_public_t:dir search;
 allow cfengine_httpd_t postfix_public_t:sock_file { getattr write };

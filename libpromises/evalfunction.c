@@ -8817,6 +8817,9 @@ void ModuleProtocol(EvalContext *ctx, const char *command, const char *line, int
 {
     assert(tags);
 
+    StringSetAdd(tags, xstrdup("source=module"));
+    StringSetAddF(tags, "derived_from=%s", command);
+
     // see the sscanf() limit below
     if(context_size < 51)
     {
@@ -8879,6 +8882,7 @@ void ModuleProtocol(EvalContext *ctx, const char *command, const char *line, int
 
             StringSetAddSplit(tags, content, ',');
             StringSetAdd(tags, xstrdup("source=module"));
+            StringSetAddF(tags, "derived_from=%s", command);
         }
         else if (sscanf(line + 1, "persistence=%ld", persistence) == 1)
         {

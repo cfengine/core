@@ -23,7 +23,7 @@
 	- Started checking status of all cf- prefixed systemd services in cf-support
 	  (ENT-9804)
 	- validjson() no longer accepts trailing bogus data (CFE-4080)
-	- Variables & Classes Modules are now automatically tagged with 'source=module' and 'derived_from=<COMMAND>' (ENT-7725)
+	- Variables & classes modules are now automatically tagged with 'source=module' and 'derived_from=<COMMAND>' (ENT-7725)
 
 3.21.1:
 	- This release contains fixes to CVE-2023-26560, a security vulnerability in the

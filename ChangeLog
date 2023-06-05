@@ -27,7 +27,7 @@
 	  (ENT-9981)
 	- Started checking status of all cf- prefixed systemd services in
 	  cf-support (ENT-9804)
-	- Variables & Classes Modules are now automatically tagged with 'source=module' and 'derived_from=<COMMAND>' (ENT-7725)
+	- Variables & classes modules are now automatically tagged with 'source=module' and 'derived_from=<COMMAND>' (ENT-7725)
 
 3.18.4:
 	- This release contains fixes to CVE-2023-26560, a security vulnerability in the

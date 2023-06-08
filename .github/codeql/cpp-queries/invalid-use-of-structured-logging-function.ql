@@ -11,4 +11,6 @@
 
 import cpp
 
-select "Does this get run?"
+from FunctionCall fc
+where fc.getTarget().getQualifiedName() = "LogToSystemLogStructured"
+select fc, "Does this get run?"

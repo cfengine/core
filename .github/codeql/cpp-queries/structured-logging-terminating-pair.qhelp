@@ -1,0 +1,40 @@
+<!DOCTYPE qhelp PUBLIC
+  "-//Semmle//qhelp//EN"
+  "qhelp.dtd">
+<qhelp>
+
+<overview>
+
+<p>
+Any use of the structured logging function <code>LogToSystemLogStructured<code>
+must include the terminating key-value pair containing the <code>"MESSAGE"<code>
+key followed by a format-string and its respective arguments representing the
+value.
+</p>
+
+</overview>
+<recommendation>
+
+<p>
+Make sure the terminating key-value pair containing the <code>"MESSAGE"</code>
+key is present.
+</p>
+
+</recommendation>
+<example>
+
+<p>
+This example has one correct (good) function, and one incorrect (bad) function:
+</p>
+
+<sample src="structured-logging-terminating-pair.c" />
+
+</example>
+<references>
+
+<li>
+CFEngine Contribution guidelines: <a href="https://github.com/cfengine/core/blob/master/CONTRIBUTING.md">CONTRIBUTING.md</a>
+</li>
+
+</references>
+</qhelp>

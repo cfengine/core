@@ -290,6 +290,9 @@ int main(int argc, char *argv[])
         DoCleanupAndExit(EXIT_FAILURE);
     }
 
+    LogToSystemLogStructured(LOG_LEVEL_INFO, "FOO", "good", "MESSAGE", "%s!", "alright");
+    LogToSystemLogStructured(LOG_LEVEL_DEBUG, "BAR", "bad");
+
     int ret = 0;
 
     GenericAgentPostLoadInit(ctx);

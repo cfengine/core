@@ -407,8 +407,10 @@ static bool ReadCMDBClasses(EvalContext *ctx, JsonElement *classes)
             bool ret = AddCMDBClass(ctx, key, default_tags, NULL);
             if (!ret)
             {
-                /* Details should have been logged already. */
-                Log(LOG_LEVEL_ERR, "Failed to add CMDB class '%s'", key);
+                /* It does not have to be and error, it could be a result of
+                 * the class already existing. Anyways, details about
+                 * potential errors should have been logged already. */
+                Log(LOG_LEVEL_DEBUG, "Did not add CMDB class '%s'", key);
             }
         }
         else if (JsonGetContainerType(data) == JSON_CONTAINER_TYPE_ARRAY &&
@@ -446,8 +448,10 @@ static bool ReadCMDBClasses(EvalContext *ctx, JsonElement *classes)
             bool ret = AddCMDBClass(ctx, key, default_tags, NULL);
             if (!ret)
             {
-                /* Details should have been logged already. */
-                Log(LOG_LEVEL_ERR, "Failed to add CMDB class '%s'", key);
+                /* It does not have to be and error, it could be a result of
+                 * the class already existing. Anyways, details about
+                 * potential errors should have been logged already. */
+                Log(LOG_LEVEL_DEBUG, "Did not add CMDB class '%s'", key);
             }
         }
         else if (JsonGetContainerType(data) == JSON_CONTAINER_TYPE_OBJECT)
@@ -484,8 +488,10 @@ static bool ReadCMDBClasses(EvalContext *ctx, JsonElement *classes)
             bool ret = AddCMDBClass(ctx, key, tags, comment);
             if (!ret)
             {
-                /* Details should have been logged already. */
-                Log(LOG_LEVEL_ERR, "Failed to add CMDB class '%s'", key);
+                /* It does not have to be and error, it could be a result of
+                 * the class already existing. Anyways, details about
+                 * potential errors should have been logged already. */
+                Log(LOG_LEVEL_DEBUG, "Did not add CMDB class '%s'", key);
             }
         }
         else

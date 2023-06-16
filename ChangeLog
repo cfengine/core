@@ -590,7 +590,7 @@
 	- Added a new utility to contrib: cf-remote
 	  cf-remote is a python + fabric tool to log in to remote hosts
 	  you have ssh access to. It can be used to download, transfer,
-	  and install cfengine packages as well as bootstrapping etc.
+	  and install CFEngine packages as well as bootstrapping etc.
 	  At this point, cf-remote is not packaged with CFEngine, but can be
 	  installed separately from:
 	  https://github.com/cfengine/cf-remote
@@ -1067,7 +1067,7 @@
 	  (CFE-2429)
 	- Change: Switch processes restart_class logging to verbose
 	- Change: Log level for keeping verbatim JSON to DEBUG (CFE-2141)
-	- Change: Require network before cfengine services (CFE-2435)
+	- Change: Require network before CFEngine services (CFE-2435)
 	- Behaviour change: getvalues(inexistent_var) returns an empty list.
 	  Restores 3.7.x and earlier behaviour. (CFE-2479)
 	- Behaviour change: when used with CFEngine 3.10.0 or greater,
@@ -1376,7 +1376,7 @@
 	  started" messages in the log, most notably in long running cf-agent
 	  runs (longer than one minute). (Redmine #7933)
 	- TTY detection should be more reliable. (Redmine #7606)
-	- cf-promises -p cf now produces valid cfengine code (Redmine #7956)
+	- cf-promises -p cf now produces valid CFEngine code (Redmine #7956)
 	- Fix ps options for FreeBSD to check processes only in current host and not in jails
 	- cf-runagent now properly supports multiple -D or -s arguments
 	  (Redmine #7191)
@@ -1444,7 +1444,7 @@
 	  hub can execute package promises. (Redmine #7602)
 	- Fix: CFEngine choking on standard services (Jira CFE-2086)
 	- Fix: cf-upgrade on SUSE
-	- Fix: Stop cfengine choking on systemctl output (Jira CFE-2806)
+	- Fix: Stop CFEngine choking on systemctl output (Jira CFE-2806)
 	- storage: Properly initialize the list of current mounts
 	  (Jira CFE-1803)
 	- Fix bug which caused empty emails to be sent from cf-execd
@@ -2278,7 +2278,7 @@
 	- TLS authentication and fully encrypted network protocol.
 	  Additions specific to the new type of connections:
 	  - New attribute "allowlegacyconnects" in body server control,
-	    which enables serving policy via non-latest cfengine protocol,
+	    which enables serving policy via non-latest CFEngine protocol,
 	    to the given list of hosts. If the option is absent, it
 	    defaults to allow all hosts. To refuse non-TLS connections,
 	    specify an empty list.
@@ -3332,7 +3332,7 @@
 
 	sys.crontab variable
 
-	Unknown user is now interpretated as "same user", so that we give cfengine a chance to
+	Unknown user is now interpretated as "same user", so that we give CFEngine a chance to
 	fix
 
 	Unregistered addresses no longer report "(Non registered IP)", but return as the address
@@ -3500,7 +3500,7 @@
 
 
 3.0.1
-	First standalone release, independent of cfengine 2
+	First standalone release, independent of CFEngine 2
 	Purge old definitions and check consistency.
 
 	NB: changed search_mode to be a list of matching values
@@ -3508,14 +3508,14 @@
 	Reporting rationalized in cf-promises with -r only to avoid
 	leaving output files everywhere.
 
-	Hooks added for upcoming commercial additions to cfengine.
+	Hooks added for upcoming commercial additions to CFEngine.
 
 	Added classify() and hostinnetgroup() functions
 	Added additional change management options for change detection
 
 	Package management added - generic mechanisms.
 
-	Limits on backgrounding added to avoid resource contention during cfengine runs.
+	Limits on backgrounding added to avoid resource contention during CFEngine runs.
 	Image type added to cf-know.
 
 	New classes for quartly shifts: Morning,Afternoon,Evening,Night
@@ -3532,7 +3532,7 @@
 	License notices updated for dual license editions.
 
 3.0.0
-	First release of cfengine 3. Known omissions:
+	First release of CFEngine 3. Known omissions:
 	- no support for ACLs
 	- no support for packages
 	- no support for interface configuration

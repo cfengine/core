@@ -1893,7 +1893,6 @@
 
 	          # Optional.
 	          architecture => "x86_64";
-
 	- Full systemd support for all relevant platforms
 	- New classes to determine whether certain features are enabled:
 	  * feature_yaml
@@ -2688,74 +2687,53 @@
 3.4.1   (Bugfix and Stability release)
 
 	New feature/behavior:
-
 	- cf-execd terminates agent processes that are not responsive
 	  for a configurable amount of time (see agent_expireafter in body
 	  executor control), defaulting to 1 week
 
 	Bugfixes:
-
 	- fix regression of classmatch() failing with hard classes (Redmine #1834)
-
 	- create promise-defined and persistent classes in correct
 	  namespace (Redmine #1836)
-
 	- several fixes to namespace support
-
 	- fix several crash bugs caused by buffer overflow and race
 	  conditions in cf-serverd
-
 	- regenerate time classes in cf-execd for each run (Redmine #1838)
-
 	- edit_xml: fix select_xpath implementation and update documentation
 	  NOTE: code that uses select_xpath_region needs to be changed to
 	  select_xpath
-
 	- edit_xml: make sure that text-modification functions don't overwrite
 	  child nodes
-
 	- edit_xml: improve error logging
 
 3.4.0
 
 	New features:
-
 	- Added rpmvercmp utility to compare versions of RPM packages for
 	  accurate sorting of RPM packages for packages promises.
-
 	- Implement network timeout on server side to avoid keeping stale
 	  connections for hours.
-
 	- XML editing capabilities. See the documentation for edit_xml
 	  body. Note the new dependency: libxml2.
-
 	- Implement inheritance of local classes by bundles called using
 	  "usebundle". By default classes are not inherited. See the
 	  examples/unit_inherit.cf for an example.
-
 	- Moved from Nova/Enterprise:
 	  - POSIX ACL support,
 	  - "outputs" promise type,
 	  - remote syslog support.
-
 	- packages_default_arch_command hook in packages promises, to
 	  specify default architecture of the packages on the system.
-
 	- packages_version_less_command / packages_version_equal_command hooks
 	  in packages promises, to specify external command for native package
 	  manager versions comparison
-
 	- agent_expireafter in body executor control allows you to set a
 	  timeout on all cf-agent runs, to enforce a threshold on the
 	  number of concurrent agents
-
 	- Running in Solaris zone is now detected and classes "zone" and
 	  "zone_<name>" are created in this case.
-
 	- VirtualBox support added to guest_environment promises.
-
 	- guest_environment promises are supported under OS X.
-
 	- The "depends_on" attribute is now active, for the partal ordering
 	  of promises. If a promise depends on another (referred by handle)
 	  it will only be considered if the depends_on list is either kept
@@ -2766,23 +2744,16 @@
 	  unintentionally ignored. This can happen if you are
 	  currently referring to non-existent or never-run handles
 	  in depends_on attributes.
-
 	- methods return values, initial implementation
-
 	- New format for cf-key -s, includes timestamp of last connection
-
 	- cf-promises --parse-tree option to parse policy file and dump it
 	  in JSON format
-
 	- Namespaces support for bundles and bodies. See the
 	  examples/unit_namespace*.cf for the usage.
-
 	- Default arguments for bundles. See the examples/unit_defaults.cf
-
 	- Metadata promise type. See the examples/unit_meta.cf
 
 	New semantics:
-
 	- Methods promises now return the status of promises
 	  kept within them. If any promise was not kept, the method is not
 	  kept, else if any promise is repaired, the method was repaired
@@ -2790,14 +2761,12 @@
 	- Remote variable access in namespaces by $(namespace:bundle.variable)
 
 	Changed functionality:
-
 	- cf-execd -F switch no longer implies 'run once'. New -O/--once
 	  option is added to achieve this behaviour. This makes cf-execd
 	  easier to run from systemd, launchd and other supervision
 	  systems.
 
 	Misc:
-
 	- Support for the following outdated platforms and corresponding
 	  classes has been removed. De facto those platforms were
 	  unsupported for a long time, as CFEngine codebase uses C99
@@ -2816,38 +2785,29 @@
 	   - NeXTSTEP (nextstep)
 	   - GNU Hurd (gnu)
 	   - NEC UX/4800 (ux4800)
-
 	- (Old news) Since 3.3.0 the layout of CFEngine Community packages
 	  has changed slightly.
 
 	  cf-* binaries have been moved to /var/cfengine/bin, due to the
 	  following reasons:
-
 	  - cf-* binaries are linked to libraries installed to
 	    /var/cfengine/lib, so placing binaries in /usr/local/sbin does not
 	    increase reliability of the CFEngine,
-
 	  - keeping whole CFEngine under single prefix (/var/cfengine)
 	    makes packaging simpler,
-
 	  - it matches the layout of CFEngine Enterprise packages.
 
 	  Please adjust your policies (the recommended ways to deal with
 	  the move are either to adjust $PATH to include /var/cfengine or to
 	  create symlinks in /usr/local/sbin in case you are relying on
 	  binaries to be available in $PATH).
-
 	- Workdir location is properly changed if --prefix or --enable-fhs
 	  options are supplied to configure (Mantis #1195).
-
 	- Added check for broken libmysqlclient implementations (Mantis #1217).
-
 	- Standard library is updated from COPBL repository.
-
 	- cf-know is no longer built in Community releases. The only
 	  functionality useful in Community, namely the reference manual
 	  generation, is provided by new compile-time cf-gendoc tool.
-
 	- Filename (for storing filechanges) changed
 	  from file_change.log -> file_changes.log (in /var/cfengine/state)
 
@@ -2858,17 +2818,12 @@
 	  C = Content Changed
 	  S = Stats changed
 	  R = File removed
-
 	- Acceptance test suite passes on Mac OS X.
-
 	- Changed some port numbers to replace old services with imap(s)
-
 	- archlinux hard class on Arch Linux.
-
 	- Detect BSD Make and automatically switch to GNU Make during build.
 
 	Bugfixes:
-
 	- cfruncommand for cf-execd is an arbitrary shell command now (Mantis #1268).
 	- Fixed broken "daily" splayclasses (Mantis #1307).
 	- Allow filenames up to 4096 bytes in network transfers (Redmine #1199).
@@ -2894,7 +2849,6 @@
 3.3.9   (Bugfix and Stability release)
 
 	Bugfixes:
-
 	- Do not lose hard classes in cf-serverd during policy reload
 	  (Mantis #1218).
 	- Implement receive network timeout in cf-serverd. Prevents
@@ -2905,7 +2859,6 @@
 	Versions 3.3.6, 3.3.7 were internal and weren't released.
 
 	Bugfixes:
-
 	- Propery set sys.domain variable if hostname is fully-qualified.
 	- Fixed several small memory leaks.
 	- Make network timeout for network reads configurable. Previously
@@ -2915,12 +2868,10 @@
 3.3.5   (Bugfix and Stability release)
 
 	Bugfixes:
-
 	- Fixed cf-execd memory leak on hosts with cf-monitord running.
 	- Robustify against wrongly-sized entires in embedded databases.
 
 	Standard library:
-
 	- Bugfixes from upstream COPBL repository.
 	- standard_services bundle from upstream COPBL repository.
 
@@ -2928,27 +2879,23 @@
 3.3.4   (Bugfix and Stability release)
 
 	Evaluation of policies:
-
 	- Fix wrong classes set after installation of several packages
 	  using packages promises (Mantis #829).
 	- Fix segfault using edit_template on existing file (Mantis #1155).
 
 	Misc:
-
 	- Fix memory leak during re-read of network interfaces'
 	  information in cf-execd/cf-serverd.
 
 3.3.3   (Bugfix and Stability release)
 
 	Evaluation of policies:
-
 	- Zero-length files are valid for readfile() and similar functions
 	  (Mantis #1136).
 	- Unchoke agent in case it encounters symlinks in form ./foo
 	  (Similar to Mantis #1117).
 
 	Misc:
-
 	- Fix generation of reference manual on machines with umask more
 	  relaxed than 022.
 	- Use statvfs(3) on OpenBSD to obtain filesystem information
@@ -2957,7 +2904,6 @@
 3.3.2   (Bugfix and Stability release)
 
 	Evaluation of policies:
-
 	- Do not segfault if file copy was interrupted due to network
 	  connectivity or server going away (Mantis #1089).
 	- Do not segfault if log_failed attribute is present in body, but
@@ -2970,14 +2916,12 @@
 	  (Mantis #890, #1066).
 
 	Base policy:
-
 	- Properly set permissions on files for /var/cfengine/lib on HP-UX
 	  (Mantis #1114).
 	- Standard library (cfengine_stdlib.cf) is synced with COPBL
 	  repository.
 
 	Misc:
-
 	- Do not create huge file in case corrupted TokyoCabinet database
 	  is detected (Mantis #1106).
 	- Fix file descriptor leak on error paths, may have caused crashes
@@ -2993,7 +2937,6 @@
 3.3.1   (Bugfix and Stability release)
 
 	Evaluation of policies:
-
 	- Do not cut off name of bundle in variables interpolation (Mantis #975).
 	- Do not segfault in function evaluation guarded by ifvaclass clause (Mantis #1084, #864).
 	- Do not segfault if "classes" promise does not declare any value to be evaluated (Mantis #1074).
@@ -3001,7 +2944,6 @@
 	  database_operation provided (Mantis #1046).
 
 	Built-in functions:
-
 	- Fix countclassesmatching() function which was misbehaving trying
 	  to match classes starting with alphanumeric symbol (Mantis #1073).
 	- Fix diskfree() to return kilobytes, as described in documentation (Mantis #980, #955).
@@ -3010,20 +2952,17 @@
 	- Do not output misleading error message if readtcp() is unable to connect (Mantis #1085).
 
 	Command-line interface:
-
 	- -d option previously reqired an argument, though help message disagreed (Mantis #1053).
 	- Disable --parse-tree option, not ready for the release (Mantis #1063).
 	- Acept -h as a --help option.
 	- Ensure that cf-execd might be started right after being shut down.
 
 	Misc:
-
 	- Plug file descriptor leak after failed file copy (Mantis #990).
 	- Fix unsafe admit rules in default promises.cf (Mantis #1040).
 	- Fix splaytime to match documentation: it is specified in minutes, not seconds (Mantis #1099).
 
 	Packaging:
-
 	- Fix owner/group of initscript and profile.d snippet in RPM builds (Mantis #1061, #1058).
 	- Fix location of libvirt socket CFEngine uses to connect to libvirtd (Mantis #1072).
 	- Install CoreBase to /var/cfengine/masterfiles during installation (Mantis #1075).
@@ -3067,7 +3006,6 @@
 	- mac_<mac_address>:: - discovered MAC addresses
 
 	Changes:
-
 	- Major cleanup of database handling code. Should radically decrease
 	  amount of database issues experienced under heavy load.
 
@@ -3080,10 +3018,8 @@
 
 	  For the older systems QDBM, which relies only on C89, is a
 	  better replacement, and deemed to be as portable, as Berkeley DB.
-
 	- Change of lastseen database schema. Should radically decrease
 	  I/O contention on lasteen database.
-
 	- Automatic reload of policies by cf-execd.
 	- Documentation is generated during build, PDF and HTML files are
 	  retired from repository.

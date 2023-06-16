@@ -3228,24 +3228,17 @@
 	  itself when doing reverse lookups.
 
 3.0.2:
-	IMPORTANT: Change in normal ordering of editing. replace comes
-	after insert lines Much testing and minor bug fixing
-
-	Memory leaks fixed
-	Many hooks added for Nova enterprise extensions.
-
-	promise_output reports now placed in WORKDIR/reports directory
-
-	Initialization correction and self-correx in monitord
-
-	Many new body constraints added.
-
-	Code readied for enterprise version Nova.
-
-	-b option can override the bundlesequence (must not contain parameters yet)
-
-	collapse_destination_dir option added to copy so that files can be
-	aggregated from subdirectories into a single destination.
+	- IMPORTANT: Change in normal ordering of editing. replace comes
+	  after insert lines Much testing and minor bug fixing
+	- Memory leaks fixed
+	- Many hooks added for Nova enterprise extensions.
+	- promise_output reports now placed in WORKDIR/reports directory
+	- Initialization correction and self-correx in monitord
+	- Many new body constraints added.
+	- Code readied for enterprise version Nova.
+	- -b option can override the bundlesequence (must not contain parameters yet)
+	- collapse_destination_dir option added to copy so that files can be
+	  aggregated from subdirectories into a single destination.
 
 3.0.1:
 	- First standalone release, independent of CFEngine 2

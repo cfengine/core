@@ -786,17 +786,17 @@
 	  use string comparison to find matches. The documentation is clear;
 	  arguments should be regexes (so you have to escape special
 	  characters).
-	  bundle agent main
-	  {
-	      vars:
-		  "myvar"
-		      string => "example",
-		      meta => {"os[linux]"};
-		  "matches"
-		      slist => variablesmatching(".*", "os\[linux\]");
-	      reports:
-		  "Match: $(matches)";
-	  }
+	      bundle agent main
+	      {
+	        vars:
+	          "myvar"
+	            string => "example",
+	            meta => {"os[linux]"};
+	          "matches"
+	            slist => variablesmatching(".*", "os\[linux\]");
+	        reports:
+	          "Match: $(matches)";
+	      }
 	  The above example is correct. If you don't escape the brackets
 	  like above, it will no longer work. (You probably shouldn't use
 	  brackets in tags anyway).
@@ -821,8 +821,8 @@
 	  special variable sys.flavor will also be set by determining major
 	  version from VERSION_ID.
 	  Example os-release file:
-		ID=coreos
-		VERSION_ID=1185.3.0
+	    ID=coreos
+	    VERSION_ID=1185.3.0
 	  For the example above, sys.flavor will be coreos_1185 and 4 hard
 	  classes will be set; coreos_1185_3_0, coreos_1185_3, coreos_1185,
 	  and coreos.
@@ -1027,29 +1027,29 @@
 	  This speeds up enormously the execution of policies that included long
 	  slists or JSON containers, that in the past didn't even terminate.
 	  Change: "cf_null" string literal was changed to not be something
-		  special, and it's now a string that can be used anywhere, like
-		  in slists or part of bundlesequence etc.
+	  special, and it's now a string that can be used anywhere, like
+	  in slists or part of bundlesequence etc.
 	  NOTE: Old policy should be grep'ed for "cf_null" and in case such
-		occurences were handled specially, they should be reworked.
+	  occurences were handled specially, they should be reworked.
 	  Change: "--empty-list--" is now never printed by format(),
-		  an empty list is now printed as "{  }".
+	  an empty list is now printed as "{  }".
 	  Change: Order of pre-evaluation was slightly changed, A new "vars" pass
-		  at the beginning of pre-evaluation was added. It used to be
-		  classes-vars, but it was changed to vars-classes-vars. As a
-		  result some classes or variables might be evaluated at a
-		  different time than before. As always try to write policy code that works no matter what the
-		  order of execution is.
-		  One way is to always *guard* the execution of functions to avoid
-		  bogus function results.  For example the following will avoid
-		  running execresult() bevore the file has been created:
-		    execresult("cmd /path/to/filename") if => fileexists("/path/to/filename");
+	  at the beginning of pre-evaluation was added. It used to be
+	  classes-vars, but it was changed to vars-classes-vars. As a
+	  result some classes or variables might be evaluated at a
+	  different time than before. As always try to write policy code that works no matter what the
+	  order of execution is.
+	  One way is to always *guard* the execution of functions to avoid
+	  bogus function results.  For example the following will avoid
+	  running execresult() bevore the file has been created:
+	  execresult("cmd /path/to/filename") if => fileexists("/path/to/filename");
 	  C internals: NULL Rlist is now perfectly valid, in fact it is the only
-		       way to denote an empty Rlist.
+	  way to denote an empty Rlist.
 	  C internals: Since a slist variable can be NULL, API of
-		       EvalContextVariableGet() changed: The way to detect if a
-		       variable is found, is not to check return value for NULL,
-		       but to check returned *type* for CF_DATA_TYPE_NONE.
-		       Fixed what I could find as wrong API uses. (CFE-2162)
+	  EvalContextVariableGet() changed: The way to detect if a
+	  variable is found, is not to check return value for NULL,
+	  but to check returned *type* for CF_DATA_TYPE_NONE.
+	  Fixed what I could find as wrong API uses. (CFE-2162)
 	- Allow arbitrary service policies (CFE-2402)
 	- Behaviour change: cf-execd: Do not append -Dfrom_cfexecd to exec_command .
 	  (CFE-2386)
@@ -1285,8 +1285,8 @@
 	  defined, it will be used by all promises of type <promise_type>
 	  unless another body is explicitly used.
 	- cf-serverd no longer appends "-I -Dcfruncommand" to
-		     cfruncommand, this has to be done manually in masterfiles
-		     body server control. (Redmine #7732)
+	  cfruncommand, this has to be done manually in masterfiles
+	  body server control. (Redmine #7732)
 	- eval() function arguments mode and options are now
 	  optional.
 	- sort() function argument mode is now optional.
@@ -1552,7 +1552,7 @@
 	  inherit from, plus any arguments it accepts. For example:
 	    body classes myclasses
 	    {
-		inherit_from => classes_generic("myname");
+	      inherit_from => classes_generic("myname");
 	    }
 	    (Redmine #4309)
 	- Add url_get() function. (Redmine #6480)
@@ -1619,7 +1619,7 @@
 	- Redmine #6027 Directories should no more be changed randomly
 	  into files. (Redmine #6027)
 	- Improve cf-serverd's lock contention because of getpwnam()
-		     call. (Redmine #7643) (Redmine #7643)
+	  call. (Redmine #7643) (Redmine #7643)
 	- action_policy "warn" now correctly produces warnings instead
 	  of various other verbosity levels. (Redmine #7274)
 	- If there is an error saving a mustache template file
@@ -1881,18 +1881,18 @@
 	- New package promise implementation.
 	  The syntax is much simpler, to try it out, check out the syntax:
 	      packages:
-		  "mypackage"
-		    policy => "absent/present",
+	        "mypackage"
+	          policy => "absent/present",
 
-		      # Optional, default taken from common control
-		    package_module => apt_get,
+	          # Optional, default taken from common control
+	          package_module => apt_get,
 
-		      # Optional, will only match exact version. May be
-		      # "latest".
-		    version => "32.0",
+	          # Optional, will only match exact version. May be
+	          # "latest".
+	          version => "32.0",
 
-		      # Optional.
-		    architecture => "x86_64";
+	          # Optional.
+	          architecture => "x86_64";
 
 	- Full systemd support for all relevant platforms
 	- New classes to determine whether certain features are enabled:
@@ -2848,16 +2848,16 @@
 	  functionality useful in Community, namely the reference manual
 	  generation, is provided by new compile-time cf-gendoc tool.
 
-    - Filename (for storing filechanges) changed
-      from file_change.log -> file_changes.log (in /var/cfengine/state)
+	- Filename (for storing filechanges) changed
+	  from file_change.log -> file_changes.log (in /var/cfengine/state)
 
-      New format for storing file changes introduced:
-      [timestamp,filename,<N/C/S/R>,Message]
+	  New format for storing file changes introduced:
+	  [timestamp,filename,<N/C/S/R>,Message]
 
-      N = New file found
-      C = Content Changed
-      S = Stats changed
-      R = File removed
+	  N = New file found
+	  C = Content Changed
+	  S = Stats changed
+	  R = File removed
 
 	- Acceptance test suite passes on Mac OS X.
 
@@ -2998,7 +2998,7 @@
 	- Do not segfault in function evaluation guarded by ifvaclass clause (Mantis #1084, #864).
 	- Do not segfault if "classes" promise does not declare any value to be evaluated (Mantis #1074).
 	- Do not segfault in database promises if there is no
-	    database_operation provided (Mantis #1046).
+	  database_operation provided (Mantis #1046).
 
 	Built-in functions:
 

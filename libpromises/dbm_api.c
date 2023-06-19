@@ -168,6 +168,34 @@ char *DBIdToSubPath(dbid id, const char *subdb_name)
     return native_filename;
 }
 
+Seq *SearchExistingSubDBNames(const dbid id)
+{
+    char *const glob_pattern = DBIdToSubPath(id, "*");
+    StringSet *const db_paths = GlobFileList(glob_pattern);
+    free(glob_pattern);
+
+    Seq *const db_names = SeqNew(StringSetSize(db_paths), free);
+    StringSetIterator iter = StringSetIteratorInit(db_paths);
+    const char *db_path;
+
+    // Start after the '$(sys.statedir)/packages_installed_' part of the path
+    const size_t from = strlen(GetStateDir()) + 1 +
+                        strlen(DB_PATHS_STATEDIR[id]) + 1;
+
+    // End before the '.lmdb' part of the path
+    const size_t chop = from + 1 + strlen(DBPrivGetFileExtension());
+
+    while ((db_path = StringSetIteratorNext(&iter)) != NULL)
+    {
+        char *const db_name = SafeStringNDuplicate(db_path + from,
+                                                   strlen(db_path) - chop);
+        SeqAppend(db_names, db_name);
+    }
+
+    StringSetDestroy(db_paths);
+    return db_names;
+}
+
 char *DBIdToPath(dbid id)
 {
     assert(DB_PATHS_STATEDIR[id] != NULL);

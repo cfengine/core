@@ -1902,6 +1902,24 @@ static FnCallResult FnCallPackagesMatching(ARG_UNUSED EvalContext *ctx, ARG_UNUS
 
     Rlist *default_inventory = GetDefaultInventoryFromContext(ctx);
 
+    bool inventory_allocated = false;
+    if (default_inventory == NULL)
+    {
+        // Did not find default inventory from context, try looking for
+        // existing LMDB databases in the state directory
+        dbid database = (installed_mode ? dbid_packages_installed
+                                        : dbid_packages_updates);
+        Seq *const seq = SearchExistingSubDBNames(database);
+        const size_t length = SeqLength(seq);
+        for (size_t i = 0; i < length; i++)
+        {
+            const char *const db_name = SeqAt(seq, i);
+            RlistAppendString(&default_inventory, db_name);
+            inventory_allocated = true;
+        }
+        SeqDestroy(seq);
+    }
+
     if (!default_inventory)
     {
         // Legacy package promise
@@ -1929,10 +1947,18 @@ static FnCallResult FnCallPackagesMatching(ARG_UNUSED EvalContext *ctx, ARG_UNUS
             Log(LOG_LEVEL_DEBUG, "No valid package module inventory found");
             pcre_free(matcher);
             JsonDestroy(json);
+            if (inventory_allocated)
+            {
+                RlistDestroy(default_inventory);
+            }
             return FnFailure();
         }
     }
 
+    if (inventory_allocated)
+    {
+        RlistDestroy(default_inventory);
+    }
     pcre_free(matcher);
 
     if (ret == false)

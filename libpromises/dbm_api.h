@@ -29,6 +29,7 @@
 #define EC_CORRUPTION_REPAIR_FAILED 121
 
 #include <map.h>
+#include <sequence.h>
 #include <dbm_api_types.h>
 
 // Only append to the end, keep in sync with DB_PATHS_STATEDIR array
@@ -106,6 +107,7 @@ bool DeleteDBCursor(CF_DBC *dbcp);
 
 char *DBIdToPath(dbid id);
 char *DBIdToSubPath(dbid id, const char *subdb_name);
+Seq *SearchExistingSubDBNames(dbid id);
 
 StringMap *LoadDatabaseToStringMap(dbid database_id);
 

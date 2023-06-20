@@ -9482,7 +9482,7 @@ static const FnCallArg READFILE_ARGS[] =
 
 static const FnCallArg VALIDDATATYPE_ARGS[] =
 {
-    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Data to validate"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "String to validate as JSON"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 

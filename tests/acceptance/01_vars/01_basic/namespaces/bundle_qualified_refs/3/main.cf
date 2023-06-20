@@ -1,0 +1,74 @@
+# NOTE: This test is nearly identical to ../1/main.cf, the only difference is a
+# single variable definition
+
+body file control
+{
+        inputs => {
+                    "../../../../../default.cf.sub",
+        };
+}
+bundle agent __main__
+# If this is the policy entry (cf-agent --file) then this bundle will be run by default.
+{
+  methods:
+        "bundlesequence"  usebundle => default("$(this.promise_filename)");
+}
+bundle agent my_bundle
+{
+  vars:
+      "My_Variable" string => "WRONG VARIABLE VALUE";
+}
+bundle agent test
+{
+  meta:
+      "description" -> { "ENT-10397" }
+        string => concat( "The with attribute should be namespace aware.",
+                          "This shows the case where a variable is set in a bundle of a",
+                          "different name." );
+
+      "test_soft_fail"
+        string => "any",
+        meta => { "ENT-10397" };
+
+  methods:
+      "Test Reporting Namespaced Variables"
+        usebundle => example_space:test( $(G.testfile) );
+}
+
+bundle agent check
+{
+  methods:
+
+      "Pass/Fail" usebundle => dcs_check_diff( "$(this.promise_dirname)/expected_output.txt",
+                                               $(G.testfile),
+                                               $(this.promise_filename));
+}
+
+body file control
+{
+        namespace => "example_space";
+}
+
+bundle agent my_bundle
+{
+  vars:
+      "My_Variable" string => "GOOD VARIABLE VALUE";
+
+}
+bundle agent test(file)
+{
+  methods:
+      "My Bundle" usebundle => my_bundle;
+      "write output" usebundle => write_output( $(file) );
+}
+bundle agent write_output(file) {
+
+  reports:
+      "Bundle-qualified another bundle: The value of my_bundle.My_Variable is $(with)"
+        report_to_file => "$(file)",
+        with => "$(my_bundle.My_Variable)";
+
+      "Fully-qualified another bundle: The value of example_space:my_bundle.My_Variable $(with)"
+        report_to_file => "$(file)",
+        with => "$(example_space:my_bundle.My_Variable)";
+}

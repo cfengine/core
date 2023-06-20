@@ -1,5 +1,6 @@
 # NOTE: This test is nearly identical to ../1/main.cf, the only difference is a
 # single variable definition
+
 body file control
 {
         inputs => {

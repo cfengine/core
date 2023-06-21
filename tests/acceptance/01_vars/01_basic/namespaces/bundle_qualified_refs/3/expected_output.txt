@@ -1,0 +1,2 @@
+Bundle-qualified another bundle: The value of my_bundle.My_Variable is GOOD VARIABLE VALUE
+Fully-qualified another bundle: The value of example_space:my_bundle.My_Variable GOOD VARIABLE VALUE

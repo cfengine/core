@@ -514,6 +514,10 @@ CF3_WITH_LIBRARY(pcre, [
                       AC_MSG_ERROR(Cannot find PCRE))])
 ])
 
+dnl defined for libntech
+
+AC_DEFINE(WITH_PCRE, 1, [Define if PCRE is being used])
+
 dnl systemd-socket activation
 
 AC_ARG_WITH([systemd-socket], [AS_HELP_STRING([--with-systemd-socket[[=PATH]]], [support systemd socket activation])], [], [with_systemd_socket=check])

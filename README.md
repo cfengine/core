@@ -1,5 +1,4 @@
 [![Gitter chat](https://badges.gitter.im/cfengine/core.png)](https://gitter.im/cfengine/core)
-[![Language grade: C](https://img.shields.io/lgtm/grade/cpp/g/cfengine/core.svg?logo=lgtm&logoWidth=18&label=code%20quality)](https://lgtm.com/projects/g/cfengine/core/)
 
 # CFEngine 3
 

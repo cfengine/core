@@ -23,6 +23,7 @@
 */
 
 #include <platform.h>
+#include <getopt.h>
 
 #include <client_code.h>        // cfnet_init
 #include <crypto.h>             // CryptoInitialize

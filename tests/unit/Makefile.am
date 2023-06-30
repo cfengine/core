@@ -26,6 +26,7 @@ EXTRA_DIST = data
 
 AM_CPPFLAGS = $(CORE_CPPFLAGS) \
 	$(ENTERPRISE_CPPFLAGS) \
+	-I$(srcdir)/../../libcfecompat \
 	-I$(srcdir)/../../libcfnet \
 	-I$(srcdir)/../../libenv \
 	-I$(srcdir)/../../libpromises \
@@ -108,6 +109,7 @@ libdb_la_CFLAGS = $(AM_CFLAGS)
 check_PROGRAMS = \
 	arg_split_test \
 	assoc_test \
+	getopt_test \
 	item_test \
 	rlist_test \
 	domainname_test \

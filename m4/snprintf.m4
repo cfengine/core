@@ -247,11 +247,10 @@ AC_DEFUN([HW_FUNC_ASPRINTF],
 # ------------------------
 # Arrange for building snprintf.c.  Must be called if one or more of the
 # functions provided by snprintf.c are needed.
+# XXX: We provide an empty version of this macro because building snprintf.c is
+#      taken care of in libntech/libutils and its libcompat not in libcfecompat.
 AC_DEFUN([_HW_FUNC_XPRINTF_REPLACE],
 [
-  AC_C_CONST
-  HW_HEADER_STDARG_H
-  AC_LIBOBJ([snprintf])
 ])# _HW_FUNC_XPRINTF_REPLACE
 
 dnl vim: set joinspaces textwidth=80:

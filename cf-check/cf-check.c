@@ -1,3 +1,5 @@
+#include <platform.h>
+#include <getopt.h>
 #include <lmdump.h>
 #include <dump.h>
 #include <diagnose.h>

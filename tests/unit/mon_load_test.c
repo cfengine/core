@@ -2,6 +2,7 @@
 
 #include "generic_agent.h"
 #include "mon.h"
+#include <cfecompat.h>                  /* getloadavg() */
 
 void test_load_monitor(void)
 {

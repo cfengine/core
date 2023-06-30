@@ -25,6 +25,7 @@ noinst_LTLIBRARIES = libcf-check.la
 
 AM_CPPFLAGS = -I$(srcdir)/../libntech/libutils \
 	-I$(srcdir)/../libntech/libcompat \
+	-I$(srcdir)/../libcfecompat \
 	@CPPFLAGS@ \
 	$(PCRE_CPPFLAGS) \
 	$(LIBYAML_CPPFLAGS) \
@@ -45,6 +46,7 @@ AM_LDFLAGS = \
 	$(LMDB_LDFLAGS)
 
 libcf_check_la_LIBADD = ../libntech/libutils/libutils.la \
+	../libcfecompat/libcfecompat.la \
 	$(LMDB_LIBS) \
 	$(PCRE_LIBS) \
 	$(LIBYAML_LIBS) \

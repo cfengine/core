@@ -44,6 +44,7 @@
 */
 
 #include <platform.h>
+#include <getopt.h>
 #include <openssl/err.h>
 
 #include <lastseen.h>

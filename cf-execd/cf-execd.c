@@ -22,6 +22,9 @@
   included file COSL.txt.
 */
 
+#include <platform.h>
+#include <getopt.h>
+
 #include <cf-execd.h>
 
 #ifndef __MINGW32__

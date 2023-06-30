@@ -1,4 +1,5 @@
-#include <cf3.defs.h>
+#include <platform.h>
+#include <getopt.h>
 
 #include <rlist.h>
 #include <generic_agent.h> // Syntax()

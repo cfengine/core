@@ -132,7 +132,8 @@ AM_PROG_LEX
 AC_PROG_YACC
 AC_PROG_INSTALL
 AC_PATH_PROG([PERL], [perl])
-AC_CONFIG_LIBOBJ_DIR(libntech/libcompat)
+AC_CONFIG_LIBOBJ_DIR(libcfecompat)
+CFECOMPAT_CPPFLAGS="-I$srcdir/libcfecompat"
 AC_PATH_PROG(GETCONF, getconf, false, $PATH:$prefix/bin:/usr/bin:/usr/local/bin:/sw/bin)
 AM_CONDITIONAL(CROSS_COMPILING, test "x$cross_compiling" = "xyes")
 
@@ -728,6 +729,7 @@ AC_CHECK_HEADERS(net/if_arp.h, , , [AC_INCLUDES_DEFAULT
 #include <sys/socket.h>
 ])
 
+AC_CHECK_HEADERS(getopt.h)
 AC_CHECK_HEADERS(utime.h)
 AC_CHECK_HEADERS(time.h)
 AC_CHECK_HEADERS(sys/time.h)
@@ -792,7 +794,6 @@ dnl ######################################################################
 
 AC_C_CONST
 
-AC_FUNC_FSEEKO
 AC_SYS_LARGEFILE
 AC_TYPE_OFF_T
 
@@ -822,88 +823,60 @@ dnl Check for special functions
 dnl ######################################################################
 
 AC_CHECK_DECLS(clock_gettime, [], [], [[#include <time.h>]])
-AC_REPLACE_FUNCS(clock_gettime)
 
 AC_CHECK_DECLS(unsetenv)
-AC_REPLACE_FUNCS(unsetenv)
 
 AC_CHECK_DECLS(strnlen)
-AC_REPLACE_FUNCS(strnlen)
-
-cf3_FUNC_STRNDUP
 
 AC_CHECK_DECLS(seteuid)
-AC_REPLACE_FUNCS(seteuid)
 
 AC_CHECK_DECLS(setlinebuf)
-AC_REPLACE_FUNCS(setlinebuf)
 
 AC_CHECK_DECLS(strlcat)
-AC_REPLACE_FUNCS(strlcat)
 
 AC_CHECK_DECLS(strlcpy)
-AC_REPLACE_FUNCS(strlcpy)
 
 AC_CHECK_DECLS(realpath)
 
 AC_CHECK_DECLS(strdup)
-AC_REPLACE_FUNCS(strdup)
 
 AC_CHECK_DECLS(memrchr)
-AC_REPLACE_FUNCS(memrchr)
 
 AC_CHECK_DECLS(round, [], [], [[#include <math.h>]])
-AC_REPLACE_FUNCS(round)
 
 AC_CHECK_DECLS(nanosleep)
-AC_REPLACE_FUNCS(nanosleep)
 
 AC_CHECK_DECLS(memdup)
-AC_REPLACE_FUNCS(memdup)
 
 AC_CHECK_DECLS(memmem)
-AC_REPLACE_FUNCS(memmem)
 
 AC_CHECK_DECLS(srand48)
-AC_REPLACE_FUNCS(srand48)
 
 AC_CHECK_DECLS(drand48)
-AC_REPLACE_FUNCS(drand48)
 
 AC_CHECK_DECLS(strerror)
-AC_REPLACE_FUNCS(strerror)
 
 AC_CHECK_DECLS(strstr)
-AC_REPLACE_FUNCS(strstr)
 
 AC_CHECK_DECLS(strcasestr)
-AC_REPLACE_FUNCS(strcasestr)
 
 AC_CHECK_DECLS(strcasecmp)
-AC_REPLACE_FUNCS(strcasecmp)
 
 AC_CHECK_DECLS(strncasecmp)
-AC_REPLACE_FUNCS(strncasecmp)
 
 AC_CHECK_DECLS(strsep)
-AC_REPLACE_FUNCS(strsep)
 
 AC_CHECK_DECLS(strsignal)
-AC_REPLACE_FUNCS(strsignal)
 
 AC_CHECK_DECLS(gmtime_r, [], [], [[#include <time.h>]])
-AC_REPLACE_FUNCS(gmtime_r)
 
 AC_CHECK_DECLS(getline, [], [], [#define _GNU_SOURCE 1
 AC_INCLUDES_DEFAULT])
-AC_REPLACE_FUNCS(getline)
 
 AC_CHECK_DECLS(strchrnul, [], [], [#define _GNU_SOURCE 1
 AC_INCLUDES_DEFAULT])
-AC_REPLACE_FUNCS(strchrnul)
 
 AC_CHECK_DECLS(localtime_r, [], [], [[#include <time.h>]])
-AC_REPLACE_FUNCS(localtime_r)
 
 AC_CHECK_DECLS(fgetgrent, [], [], [[#include <grp.h>]])
 
@@ -927,7 +900,6 @@ AC_CHECK_DECLS(le32toh, [], [], [[#include <endian.h>]])
 
 AC_CHECK_DECLS(closefrom, [], [], [[#include <unistd.h>
                                     #include <stdlib.h>]])
-AC_REPLACE_FUNCS(closefrom)
 
 AC_CHECK_HEADERS([sys/pstat.h])
 AC_CHECK_FUNCS(pstat_getfile2)
@@ -1069,7 +1041,6 @@ CF3_CHECK_PROPER_FUNC([ctime],
   [],
   [[#error ctime(3) may produce different results on different OSes. Let's have our POSIX-compliant implementation all the time]],
   [#define ctime rpl_ctime])
-CF3_REPLACE_PROPER_FUNC([ctime])
 
 dnl Check whether mkdir accepts two parameters
 CF3_CHECK_PROPER_FUNC([mkdir],
@@ -1101,13 +1072,10 @@ CF3_CHECK_PROPER_FUNC([rename],
   [#define rename rpl_rename])
 
 AC_CHECK_DECLS(mkdtemp)
-AC_REPLACE_FUNCS(mkdtemp)
 
 AC_CHECK_DECLS(strrstr)
-AC_REPLACE_FUNCS(strrstr)
 
 AC_CHECK_DECLS(stpncpy)
-AC_REPLACE_FUNCS(stpncpy)
 
 AC_CHECK_FUNCS(seteuid setegid setreuid setregid)
 AC_CHECK_FUNCS(uname gethostname chflags)
@@ -1158,9 +1126,7 @@ AC_CHECK_FUNCS(dirfd, [], [
   [AC_MSG_RESULT(yes)
   DIRFD_MACRO_FOUND=1],
   [AC_MSG_RESULT(no)])
-  if test x$DIRFD_MACRO_FOUND = x; then
-    AC_LIBOBJ([dirfd])
-  fi])
+  ])
 
 AC_CHECK_FUNCS(jail_get)
 
@@ -1186,7 +1152,7 @@ AC_CHECK_TYPES(struct sockaddr_storage, [], [], [[
     #include <netdb.h>
 #endif]])
 
-AC_CHECK_DECLS(getaddrinfo, [], [AC_LIBOBJ(getaddrinfo)], [[
+AC_CHECK_DECLS(getaddrinfo, [], [], [[
 #if HAVE_WINSOCK2_H
     #include <winsock2.h>
 #endif
@@ -1199,7 +1165,6 @@ AC_CHECK_DECLS(getaddrinfo, [], [AC_LIBOBJ(getaddrinfo)], [[
 ]])
 
 AC_CHECK_DECLS([[inet_ntop], [inet_pton]], [], [], [[#include <arpa/inet.h>]])
-AC_REPLACE_FUNCS(inet_ntop inet_pton)
 
 AC_CHECK_FUNCS(getifaddrs)
 
@@ -1208,10 +1173,8 @@ AC_CHECK_FUNCS(getprocs64)
 AC_CHECK_FUNC(lchown, AC_DEFINE(HAVE_LCHOWN, 1, [Whether to use lchown(3) to change ownerships]))
 
 AC_CHECK_DECLS(pthread_attr_setstacksize, [], [], [[#include <pthread.h>]])
-AC_REPLACE_FUNCS(pthread_attr_setstacksize)
 
 AC_CHECK_DECLS(pthread_sigmask, [], [], [[#include <signal.h>]])
-AC_REPLACE_FUNCS(pthread_sigmask)
 
 AC_CHECK_DECLS(sched_yield, [], [], [[#include <sched.h>]])
 AC_CHECK_FUNCS(sched_yield)
@@ -1226,10 +1189,8 @@ AC_CHECK_DECLS([fchmodat], [], [], [[#define _GNU_SOURCE 1
                                     #include <sys/stat.h>]])
 AC_CHECK_DECLS([readlinkat], [], [], [[#define _GNU_SOURCE 1
                                        #include <unistd.h>]])
-AC_REPLACE_FUNCS(openat fstatat fchownat fchmodat readlinkat)
 
 AC_CHECK_DECLS([log2], [], [], [[#include <math.h>]])
-AC_REPLACE_FUNCS(log2)
 
 dnl ######################################################################
 dnl Required by cf-upgrade. It cannot be implemented in libcompat because
@@ -1340,7 +1301,7 @@ dnl ######################################################################
 dnl Collect all the options
 dnl ######################################################################
 
-CORE_CPPFLAGS="$LMDB_CPPFLAGS $TOKYOCABINET_CPPFLAGS $QDBM_CPPFLAGS $PCRE_CPPFLAGS $OPENSSL_CPPFLAGS $SQLITE3_CPPFLAGS $LIBACL_CPPFLAGS $LIBCURL_CPPFLAGS $LIBYAML_CPPFLAGS $POSTGRESQL_CPPFLAGS $MYSQL_CPPFLAGS $LIBXML2_CPPFLAGS $CPPFLAGS"
+CORE_CPPFLAGS="$LMDB_CPPFLAGS $TOKYOCABINET_CPPFLAGS $QDBM_CPPFLAGS $PCRE_CPPFLAGS $OPENSSL_CPPFLAGS $SQLITE3_CPPFLAGS $LIBACL_CPPFLAGS $LIBCURL_CPPFLAGS $LIBYAML_CPPFLAGS $POSTGRESQL_CPPFLAGS $MYSQL_CPPFLAGS $LIBXML2_CPPFLAGS $CPPFLAGS $CFECOMPAT_CPPFLAGS"
 CORE_CFLAGS="$LMDB_CFLAGS $TOKYOCABINET_CFLAGS $QDBM_CFLAGS $PCRE_CFLAGS $OPENSSL_CFLAGS $SQLITE3_CFLAGS $LIBACL_CFLAGS $LIBCURL_CFLAGS $LIBYAML_CFLAGS $POSTGRESQL_CFLAGS $MYSQL_CFLAGS $LIBXML2_CFLAGS $CFLAGS"
 CORE_LDFLAGS="$LMDB_LDFLAGS $TOKYOCABINET_LDFLAGS $QDBM_LDFLAGS $PCRE_LDFLAGS $OPENSSL_LDFLAGS $SQLITE3_LDFLAGS $LIBACL_LDFLAGS $LIBCURL_LDFLAGS $LIBYAML_LDFLAGS $POSTGRESQL_LDFLAGS $MYSQL_LDFLAGS $LIBXML2_LDFLAGS $LDFLAGS"
 CORE_LIBS="$LMDB_LIBS $TOKYOCABINET_LIBS $QDBM_LIBS $PCRE_LIBS $OPENSSL_LIBS $SQLITE3_LIBS $LIBACL_LIBS $LIBCURL_LIBS $LIBYAML_LIBS $POSTGRESQL_LIBS $MYSQL_LIBS $LIBXML2_LIBS $LIBS"
@@ -1873,6 +1834,7 @@ AC_CONFIG_FILES([Makefile
     libcfnet/Makefile
     libenv/Makefile
     libpromises/Makefile
+    libcfecompat/Makefile
     cf-agent/Makefile
     cf-check/Makefile
     cf-promises/Makefile

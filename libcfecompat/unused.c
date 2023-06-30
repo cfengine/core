@@ -22,48 +22,6 @@
   included file COSL.txt.
 */
 
-#include <cf3.defs.h>
-
-#include <mon.h>
-
-#ifdef HAVE_SYS_LOADAVG_H
-# include <sys/loadavg.h>
-#else
-# define LOADAVG_5MIN    1
-#endif
-
-#include <cfecompat.h>
-
-/* Implementation */
-
-#ifdef HAVE_GETLOADAVG
-
-void MonLoadGatherData(double *cf_this)
-{
-    double load[LOADAVG_5MIN], sum = 0.0;
-    int i, n;
-
-    if ((n = getloadavg(load, LOADAVG_5MIN)) == -1)
-    {
-        cf_this[ob_loadavg] = 0.0;
-    }
-
-    for (i = 0; i < n; ++i)
-    {
-        sum += load[i];
-    }
-
-    sum /= (double) n;
-
-    cf_this[ob_loadavg] = sum;
-    Log(LOG_LEVEL_VERBOSE, "Load Average = %.2lf", cf_this[ob_loadavg]);
-}
-
-#else
-
-void MonLoadGatherData(double *cf_this)
-{
-    Log(LOG_LEVEL_DEBUG, "Average load data is not available.");
-}
-
-#endif
+/* We need at least something to always be part of libcfecompat and this
+ * functions is just good enough for it.  */
+void __unused_cfecompat_function() {};

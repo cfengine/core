@@ -12,6 +12,9 @@ bundle agent test
   meta:
       "description" -> { "CFE-1968" }
         string => "Test that process_select body can have (failing) function calls";
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10217" };
+
   vars:
     "canonified_uid"
         string => canonify(getuid("nosuchuser"));

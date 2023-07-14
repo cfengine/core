@@ -12,6 +12,13 @@ body common control
         version => "1.0";
 }
 
+bundle agent test
+{
+    meta:
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10257" };
+}
+
 bundle agent check
 {
   vars:

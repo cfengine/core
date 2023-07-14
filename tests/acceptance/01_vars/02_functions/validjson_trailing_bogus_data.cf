@@ -18,6 +18,8 @@ bundle agent test
   meta:
       "description" -> { "CFE-4080" }
         string => "Test validjson() with trailing bogus data";
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10254" };
 }
 
 ##############################################################################

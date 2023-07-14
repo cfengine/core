@@ -38,6 +38,8 @@ bundle agent test
   meta:
     "description" -> { "CFE-3723" }
       string => "Test that input from cf-agent to promise module matches expected data";
+    "test_soft_fail" string => "windows",
+      meta => { "ENT-10217" };
 
   example:
     cfengine::

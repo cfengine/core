@@ -24,6 +24,9 @@ bundle common init
 
 bundle agent test
 {
+  meta:
+      "test_flakey_fail" string => "windows",
+        meta => { "ENT-10257" };
   commands:
       "$(G.cat) $(init.script_name)"
         contain => in_shell,

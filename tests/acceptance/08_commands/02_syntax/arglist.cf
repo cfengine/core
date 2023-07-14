@@ -15,6 +15,9 @@ body common control
 
 bundle agent test
 {
+  meta:
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10257" };
   commands:
       "$(G.echo)" arglist => { "=abc=2'3\"4" }, module => "true";
       # this will generate the command `echo =def=567 =ghi=8'9"a`

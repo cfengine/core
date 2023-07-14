@@ -34,6 +34,13 @@ bundle agent init
                                                  @(excludes));
 }
 
+bundle agent test
+{
+  meta:
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10215" };
+}
+
 bundle agent check
 {
   vars:

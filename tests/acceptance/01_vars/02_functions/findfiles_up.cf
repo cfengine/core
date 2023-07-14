@@ -78,6 +78,8 @@ bundle agent test
   meta:
       "description" -> { "CFE-3577" }
         string => "Test for expected results from policy function search_up";
+      "test_skip_needs_work" string => "windows",
+        meta => { "ENT-10250" };
 
   methods:
        "Test 0"

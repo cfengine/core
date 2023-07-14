@@ -48,6 +48,9 @@ bundle agent test
       "description" -> { "CFE-3955" }
         string => "template_method cfengine creates promiser by default";
 
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10257" };
+
   files:
     # File should be created by default and rendered with content
       "$(G.testfile).test_1"

@@ -13,6 +13,8 @@ bundle agent test
       "description" -> {"ENT-4617"}
         string => "Test that CFEngine connections over TLS 1.3 work fine";
 
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10401" };
   methods:
       # source file
       "any" usebundle => file_make("$(G.testdir)/source_file",

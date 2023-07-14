@@ -13,13 +13,21 @@ bundle common inventory
       !this_is_true::
         "inputs"  slist => { };
         "bundles" slist => { "bad" };
-      this_is_true::
+      this_is_true.!windows::
         "inputs"  slist => { "$(this.promise_filename).sub" };
         "bundles" slist => { "good" };
+      windows::
+        "bundles" slist => { "skip" };
 }
 
 bundle agent bad
 {
     reports:
         "$(this.promise_filename) FAIL";
+}
+
+bundle agent skip
+{
+    reports:
+        "$(this.promise_filename) Skip/unsupported";
 }

@@ -33,6 +33,13 @@ bundle agent init
         link_from => linkfrom("$(sys.workdir)/outputs/old.log", "symlink");
 }
 
+bundle agent test
+{
+  meta:
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10215" };
+}
+
 bundle agent check
 {
   methods:

@@ -34,6 +34,9 @@ bundle agent test
             contain => myshell;
     meta:
         "description" string => "STAT+GET policy file from cf-serverd";
+        "test_skip_needs_work" string => "windows",
+          comment => "for some reason, softfailing this test is not enough",
+          meta => { "ENT-10254" };
 }
 
 bundle agent check

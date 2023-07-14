@@ -21,7 +21,7 @@ bundle common test
 {
   meta:
       "test_suppress_fail" string => "windows",
-        meta => { "redmine4772" };
+        meta => { "redmine4772,ENT-2161" };
 
   classes:
       "resolution_warning" expression => returnszero("$(command) Service | $(G.grep) 'cannot be resolved' 2>&1", "useshell");

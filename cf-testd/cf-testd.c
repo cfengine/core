@@ -779,7 +779,7 @@ int main(int argc, char *argv[])
         if (config->report_file != NULL && strstr(config->report_file, "%d") != NULL)
         {
             /* replace the '%d' with the thread number */
-            asprintf(&(thread_configs[i]->report_file), config->report_file, i);
+            xasprintf(&(thread_configs[i]->report_file), config->report_file, i);
         }
         else
         {
@@ -789,7 +789,7 @@ int main(int argc, char *argv[])
         if (config->key_file != NULL && strstr(config->key_file, "%d") != NULL)
         {
             /* replace the '%d' with the thread number */
-            asprintf(&(thread_configs[i]->key_file), config->key_file, i);
+            xasprintf(&(thread_configs[i]->key_file), config->key_file, i);
         }
         else
         {

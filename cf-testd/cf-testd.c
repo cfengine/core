@@ -775,11 +775,16 @@ int main(int argc, char *argv[])
     for (int i = 0; i < n_threads; i++)
     {
         thread_configs[i] = (CFTestD_Config*) xcalloc(1, sizeof(CFTestD_Config));
+        char *thread_num_str;
+        xasprintf(&thread_num_str, "%d", i);
 
         if (config->report_file != NULL && strstr(config->report_file, "%d") != NULL)
         {
-            /* replace the '%d' with the thread number */
-            xasprintf(&(thread_configs[i]->report_file), config->report_file, i);
+            /* replace the (first) '%d' with the thread number */
+            size_t report_file_len = strlen(config->report_file) + strlen(thread_num_str) - 2 + 1;
+            thread_configs[i]->report_file = xmalloc(report_file_len);
+            StringReplaceN(thread_configs[i]->report_file, report_file_len,
+                           "%d", thread_num_str, 1);
         }
         else
         {
@@ -788,8 +793,11 @@ int main(int argc, char *argv[])
 
         if (config->key_file != NULL && strstr(config->key_file, "%d") != NULL)
         {
-            /* replace the '%d' with the thread number */
-            xasprintf(&(thread_configs[i]->key_file), config->key_file, i);
+            /* replace the (first) '%d' with the thread number */
+            size_t key_file_len = strlen(config->key_file) + strlen(thread_num_str) - 2 + 1;
+            thread_configs[i]->key_file = xmalloc(key_file_len);
+            StringReplaceN(thread_configs[i]->key_file, key_file_len,
+                           "%d", thread_num_str, 1);
         }
         else
         {
@@ -804,6 +812,7 @@ int main(int argc, char *argv[])
         {
             thread_configs[i]->address = IncrementIPaddress(thread_configs[i-1]->address);
         }
+        free(thread_num_str);
     }
 
     CFTestD_ConfigDestroy(config);

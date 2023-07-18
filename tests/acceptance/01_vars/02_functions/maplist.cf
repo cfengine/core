@@ -15,10 +15,6 @@ body common control
 
 bundle agent test
 {
-  meta:
-      "test_soft_fail" string => "windows",
-        meta => { "ENT-10254" };
-
   vars:
       "testlist" slist => { "zero", "two", "three's", "four-fore:quatre", "last" };
       "empty" slist => { };

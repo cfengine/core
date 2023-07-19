@@ -18,6 +18,10 @@ bundle agent init
   meta:
     "tags" slist => { "find" };
 
+  commands:
+    windows::
+      "$(G.dos2unix) $(this.promise_filename).expected" -> { "ENT-10433" };
+
   vars:
 # We want to be sure we can reference this data subsequently
   "d" data => parsejson( '{

@@ -24,6 +24,7 @@ bundle common G
       # General commands.
       "cmds" slist => { "date",
                         "dd",
+                        "dos2unix",
                         "diff",
                         "cat",
                         "colordiff",

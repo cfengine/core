@@ -7,6 +7,9 @@ body common control
 
 bundle agent init
 {
+  commands:
+    windows::
+      "$(G.dos2unix) $(this.promise_filename).expected" -> { "ENT-10433" };
 
   files:
       "$(G.testdir)/actual.txt"

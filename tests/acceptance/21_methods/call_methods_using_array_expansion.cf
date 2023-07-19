@@ -13,6 +13,10 @@ body common control
 
 bundle agent init
 {
+  commands:
+    windows::
+      "$(G.dos2unix) $(this.promise_filename).expected.txt" -> { "ENT-10433" };
+
   files:
       "$(G.testdir)/reports.txt"
         delete => tidy;

@@ -17,6 +17,10 @@ bundle agent init
 {
   meta:
       "tags" slist => { "find" };
+  commands:
+    windows::
+      "$(G.dos2unix) $(this.promise_filename).expected" -> { "ENT-10433" };
+
 }
 
 bundle agent test

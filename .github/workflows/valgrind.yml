@@ -15,7 +15,7 @@ jobs:
         path: core
         submodules: recursive
     - name: Get Togethers
-      uses: cfengine/together-javascript-action@v1.7
+      uses: cfengine/together-javascript-action@main
       id: together
       with:
         myToken: ${{ secrets.GITHUB_TOKEN }}

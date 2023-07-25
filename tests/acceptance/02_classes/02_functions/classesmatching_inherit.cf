@@ -1,0 +1,38 @@
+bundle agent __main__
+{
+   classes:
+     "defined_in_parent" expression => "cfengine";
+
+   methods:
+     "ENT-5850"
+       usebundle => ENT_5850,
+       inherit => "true";
+}
+
+bundle agent ENT_5850
+{
+  vars:
+    "c_matching"
+      slist => classesmatching(".*");
+    "c_matching_defined_in_parent"
+      slist => classesmatching("defined_in_parent");
+
+  classes:
+    "defined_here" expression => "cfengine";
+
+  reports:
+    "$(this.promise_filename) Pass"
+      if => some( "defined_in_parent", c_matching);
+
+    "$(this.promise_filename) FAIL $(this.promise_filename)$(const.n)Could not find class 'defined_in_parent' in classesmatching() but it's defined"
+      if => and( not( some( "defined_in_parent", c_matching) ),
+                 defined_in_parent
+      );
+
+     "Classes found by classesmatching() starting with 'defined' $(with)"
+       with => join( ", ", classesmatching("defined.*") );
+
+     "'defined_here' is defined" if => "defined_here";
+     "'defined_in_parent' is defined" if => "defined_in_parent";
+     "Running CFEngine: $(sys.cf_version)";
+}

@@ -1,0 +1,65 @@
+bundle agent common
+{
+  vars:
+    "logfile" string => "$(this.promise_dirname)$(const.dirsep)defined_classes.log";
+}
+
+bundle agent __main__
+{
+  classes: "defined_in_main";
+  methods:
+    "init";
+    "first" inherit => "true";
+    "check";
+}
+
+bundle agent init
+{
+  files:
+    "$(common.logfile)"
+      delete => tidy;
+}
+
+bundle agent first
+{
+  classes: "defined_in_first";
+  methods: "second" inherit => "true";
+}
+
+bundle agent second
+{
+  classes: "defined_in_second";
+  methods: "third" inherit => "true";
+}
+
+bundle agent third
+{
+  vars:
+    "defined_classes" slist => classesmatching("defined.*");
+
+  reports:
+    "defined_classes: $(defined_classes)"
+      report_to_file => "$(common.logfile)";
+}
+
+bundle agent check
+{
+  vars:
+    "expected" string => concat("defined_classes: defined_in_main$(const.n)",
+                                "defined_classes: defined_in_first$(const.n)",
+                                "defined_classes: defined_in_second$(const.n)");
+    "actual" string => readfile("$(common.logfile)", inf);
+
+  reports:
+    "$(this.promise_filename) Pass"
+      if => strcmp($(expected), $(actual));
+
+    "$(this.promise_filename) FAIL"
+      if => not(strcmp($(expected), $(actual)));
+}
+
+body delete tidy
+{
+        dirlinks => "delete";
+        rmdirs   => "true";
+}

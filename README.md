@@ -42,6 +42,13 @@ stated otherwise in the copyright notice inside the particular file.
 
 ## Example Usage
 
+In order to use the built cf-agent in the source tree you must add a $HOME/.cfagent/bin/cf-promises file:
+
+$ pwd
+<something>/core
+$ echo "cd $(pwd); cf-promises/cf-promises \"\$@\"" > ~/.cfagent/bin/cf-promises
+
+
 ### Hello World
 
 The following code demonstrates simple CFEngine output through a reports promise.
@@ -62,6 +69,13 @@ The following policy code may be executed with cf-agent (the main CFEngine binar
 
     $ cf-agent/cf-agent hello.cf
     R: Hello, world
+
+
+## Debugging
+
+As this project uses autotools you must use libtool to run gdb/lldb/debuggers
+
+./libtool --mode=execute <gdb|lldb|yourdebugger> ./cf-agent/cf-agent
 
 ## Contributing
 

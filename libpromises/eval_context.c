@@ -3484,6 +3484,65 @@ bool EvalContextIsIgnoringLocks(const EvalContext *ctx)
     return ctx->ignore_locks;
 }
 
+StringSet *ClassesMatchingLocalRecursive(
+    const EvalContext *ctx,
+    const char *regex,
+    const Rlist *tags,
+    bool first_only,
+    size_t stack_index)
+{
+    assert(ctx != NULL);
+    StackFrame *frame = SeqAt(ctx->stack, stack_index);
+    StringSet *matches;
+    if (frame->type == STACK_FRAME_TYPE_BUNDLE)
+    {
+        ClassTableIterator *iter = ClassTableIteratorNew(
+            frame->data.bundle.classes,
+            frame->data.bundle.owner->ns,
+            false,
+            true); // from EvalContextClassTableIteratorNewLocal()
+        matches = ClassesMatching(ctx, iter, regex, tags, first_only);
+        ClassTableIteratorDestroy(iter);
+    }
+    else
+    {
+        matches = StringSetNew(); // empty for passing up the recursion chain
+    }
+
+    if (stack_index > 0 && frame->inherits_previous)
+    {
+        StringSet *parent_matches = ClassesMatchingLocalRecursive(
+            ctx, regex, tags, first_only, stack_index - 1);
+        StringSetJoin(matches, parent_matches, xstrdup);
+        StringSetDestroy(parent_matches);
+    }
+
+    return matches;
+}
+
+StringSet *ClassesMatchingLocal(
+    const EvalContext *ctx,
+    const char *regex,
+    const Rlist *tags,
+    bool first_only)
+{
+    assert(ctx != NULL);
+    return ClassesMatchingLocalRecursive(
+        ctx, regex, tags, first_only, SeqLength(ctx->stack) - 1);
+}
+
+StringSet *ClassesMatchingGlobal(
+    const EvalContext *ctx,
+    const char *regex,
+    const Rlist *tags,
+    bool first_only)
+{
+    ClassTableIterator *iter =
+        EvalContextClassTableIteratorNewGlobal(ctx, NULL, true, true);
+    StringSet *matches = ClassesMatching(ctx, iter, regex, tags, first_only);
+    ClassTableIteratorDestroy(iter);
+    return matches;
+}
 StringSet *ClassesMatching(const EvalContext *ctx, ClassTableIterator *iter, const char* regex, const Rlist *tags, bool first_only)
 {
     StringSet *matching = StringSetNew();

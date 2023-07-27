@@ -29,10 +29,21 @@ AM_CPPFLAGS = -I$(top_srcdir)/libntech/libutils            # platform.h
 libcfecompat_la_LIBADD = $(LTLIBOBJS)
 
 libcfecompat_la_SOURCES = \
-	unused.c \
+	unused.c
+
+EXTRA_DIST = \
+	cfecompat.h \
+	compat_getopt.h
+
+if NO_SYSTEM_GETOPT_H
+BUILT_SOURCES = getopt.h
+
+getopt.h:
+	cp $(srcdir)/compat_getopt.h $(srcdir)/getopt.h
+
+libcfecompat_la_SOURCES += \
 	getopt.c \
 	getopt1.c
 
-EXTRA_DIST = \
-	getopt.h \
-	cfecompat.h
+nodist_libcfecompat_la_SOURCES = getopt.h
+endif

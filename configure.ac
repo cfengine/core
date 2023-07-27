@@ -730,7 +730,7 @@ AC_CHECK_HEADERS(net/if_arp.h, , , [AC_INCLUDES_DEFAULT
 ])
 
 AC_CHECK_HEADERS(getopt.h, [system_getopt_h=1], [system_getopt_h=0])
-AM_CONDITIONAL([SYSTEM_GETOPT_H], [test x$system_getopt_h = x1])
+AM_CONDITIONAL([NO_SYSTEM_GETOPT_H], [test x$system_getopt_h = x0])
 AC_CHECK_HEADERS(utime.h)
 AC_CHECK_HEADERS(time.h)
 AC_CHECK_HEADERS(sys/time.h)

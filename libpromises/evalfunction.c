@@ -1329,6 +1329,7 @@ static FnCallResult FnCallIfElse(EvalContext *ctx,
 
 static FnCallResult FnCallClassesMatching(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
+    assert(finalargs != NULL);
     bool count_only = false;
     bool check_only = false;
     unsigned count = 0;
@@ -1367,8 +1368,7 @@ static FnCallResult FnCallClassesMatching(EvalContext *ctx, ARG_UNUSED const Pol
     Rlist *matches = NULL;
 
     {
-        ClassTableIterator *iter = EvalContextClassTableIteratorNewGlobal(ctx, NULL, true, true);
-        StringSet *global_matches = ClassesMatching(ctx, iter, RlistScalarValue(finalargs), finalargs->next, check_only);
+        StringSet *global_matches = ClassesMatchingGlobal(ctx, RlistScalarValue(finalargs), finalargs->next, check_only);
 
         StringSetIterator it = StringSetIteratorInit(global_matches);
         const char *element = NULL;
@@ -1385,7 +1385,6 @@ static FnCallResult FnCallClassesMatching(EvalContext *ctx, ARG_UNUSED const Pol
         }
 
         StringSetDestroy(global_matches);
-        ClassTableIteratorDestroy(iter);
     }
 
     if (check_only && count >= 1)
@@ -1394,8 +1393,7 @@ static FnCallResult FnCallClassesMatching(EvalContext *ctx, ARG_UNUSED const Pol
     }
 
     {
-        ClassTableIterator *iter = EvalContextClassTableIteratorNewLocal(ctx);
-        StringSet *local_matches = ClassesMatching(ctx, iter, RlistScalarValue(finalargs), finalargs->next, check_only);
+        StringSet *local_matches = ClassesMatchingLocal(ctx, RlistScalarValue(finalargs), finalargs->next, check_only);
 
         StringSetIterator it = StringSetIteratorInit(local_matches);
         const char *element = NULL;
@@ -1412,7 +1410,6 @@ static FnCallResult FnCallClassesMatching(EvalContext *ctx, ARG_UNUSED const Pol
         }
 
         StringSetDestroy(local_matches);
-        ClassTableIteratorDestroy(iter);
     }
 
     if (check_only)

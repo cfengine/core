@@ -246,7 +246,8 @@ static inline bool IsDefinedClass(const EvalContext *ctx, const char *context)
     return (CheckClassExpression(ctx, context) == EXPRESSION_VALUE_TRUE);
 }
 StringSet *ClassesMatching(const EvalContext *ctx, ClassTableIterator *iter, const char* regex, const Rlist *tags, bool first_only);
-
+StringSet *ClassesMatchingGlobal(const EvalContext *ctx, const char* regex, const Rlist *tags, bool first_only);
+StringSet *ClassesMatchingLocal(const EvalContext *ctx, const char* regex, const Rlist *tags, bool first_only);
 bool EvalProcessResult(const char *process_result, StringSet *proc_attr);
 bool EvalFileResult(const char *file_result, StringSet *leaf_attr);
 

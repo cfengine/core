@@ -14,6 +14,7 @@ jobs:
       - uses: msys2/setup-msys2@v2
         with:
           install: >-
+            dos2unix
             diffutils
             util-linux
             python-pip
@@ -45,9 +46,6 @@ jobs:
 
       - name: run cf-agent
         run: "'/c/Program Files/Cfengine/bin/cf-agent.exe' --version"
-
-      - name: dummy cf-secret, ENT-10405
-        run: "touch 'c:/Program Files/Cfengine/bin/cf-secret.exe' && chmod a+x 'c:/Program Files/Cfengine/bin/cf-secret.exe'"
 
       - name: expect an unknown synthax error in packagesmatching.cf, ENT-10422
         run: "cd tests/acceptance/01_vars/02_functions/ && mv packagesmatching.cf packagesmatching.x.cf"

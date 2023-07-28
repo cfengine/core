@@ -12,6 +12,10 @@ bundle agent init
   vars:
       "autorun" slist => bundlesmatching(".*", "autorun");
 
+  commands:
+    windows::
+      "$(G.dos2unix) $(this.promise_filename).expected" -> { "ENT-10433" };
+
   files:
       "$(G.testfile)"
         edit_line => empty;

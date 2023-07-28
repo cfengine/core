@@ -22,6 +22,8 @@ bundle agent check
   classes:
     "passed" expression => strcmp("$(test.expected)", "$(test.actual)");
   reports:
+    windows::
+      "$(this.promise_filename) SFAIL/ENT-10433";
     DEBUG::
       "Expected: '$(test.expected)'";
       "Found: '$(test.actual)'";

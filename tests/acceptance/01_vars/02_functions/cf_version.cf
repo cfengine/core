@@ -15,9 +15,6 @@ body common control
 
 bundle agent test
 {
-  meta:
-    "test_soft_fail" string => "windows",
-      meta => { "ENT-10254" };
   vars:
     "after_newer" string => "yes",
       if => cf_version_after("1.0.0");

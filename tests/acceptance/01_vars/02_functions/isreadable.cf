@@ -37,6 +37,10 @@ bundle agent test
   meta:
       "description" -> { "ENT-9380" }
         string => "Test policy function filereadable";
+
+      "test_soft_fail" -> { "ENT-9930" }
+        string => "hpux|aix",
+        meta => { "ENT-9930" };
 }
 
 ##############################################################################

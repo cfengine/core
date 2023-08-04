@@ -22,6 +22,9 @@
   included file COSL.txt.
 */
 
+#include <platform.h>
+#include <getopt.h>
+
 #include <generic_agent.h>
 
 #include <known_dirs.h>

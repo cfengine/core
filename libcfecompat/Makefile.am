@@ -1,5 +1,5 @@
 #
-#  Copyright 2021 Northern.tech AS
+#  Copyright 2023 Northern.tech AS
 #
 #  This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
 #
@@ -21,32 +21,29 @@
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
 #
-noinst_LTLIBRARIES = libcf-net.la
 
-AM_CPPFLAGS = -I$(srcdir)/../libpromises -I$(srcdir)/../libntech/libutils \
-	-I$(srcdir)/../libcfecompat \
-	-I$(srcdir)/../libcfnet \
-	$(OPENSSL_CPPFLAGS) \
-	$(PCRE_CPPFLAGS) \
-	$(ENTERPRISE_CPPFLAGS)
+noinst_LTLIBRARIES = libcfecompat.la
 
-AM_CFLAGS = @CFLAGS@ \
-	$(OPENSSL_CFLAGS) \
-	$(ENTERPRISE_CFLAGS)
+AM_CPPFLAGS = -I$(top_srcdir)/libntech/libutils            # platform.h
 
-libcf_net_la_LIBADD = ../libpromises/libpromises.la
+libcfecompat_la_LIBADD = $(LTLIBOBJS)
 
-libcf_net_la_SOURCES = cf-net.c
+libcfecompat_la_SOURCES = \
+	unused.c
 
-if !BUILTIN_EXTENSIONS
-bin_PROGRAMS = cf-net
-cf_net_LDADD = libcf-net.la
-cf_net_SOURCES =
+EXTRA_DIST = \
+	cfecompat.h \
+	compat_getopt.h
+
+if NO_SYSTEM_GETOPT_H
+BUILT_SOURCES = getopt.h
+
+getopt.h:
+	cp $(srcdir)/compat_getopt.h $(srcdir)/getopt.h
+
+libcfecompat_la_SOURCES += \
+	getopt.c \
+	getopt1.c
+
+nodist_libcfecompat_la_SOURCES = getopt.h
 endif
-
-CLEANFILES = *.gcno *.gcda
-
-#
-# Some basic clean ups
-#
-MOSTLYCLEANFILES = *~ *.orig *.rej

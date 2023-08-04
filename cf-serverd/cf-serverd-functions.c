@@ -22,6 +22,9 @@
   included file COSL.txt.
 */
 
+#include <platform.h>
+#include <getopt.h>
+
 #include <cf-serverd-functions.h>
 #include <cf-serverd-enterprise-stubs.h>
 

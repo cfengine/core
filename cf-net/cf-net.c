@@ -26,6 +26,7 @@
 #define CF_NET_VERSION "0.1.2"
 
 #include <platform.h>
+#include <getopt.h>
 #include <libgen.h>
 #include <client_code.h>        // ServerConnection
 #include <logging.h>            // Log, LogSetGlobalLevel

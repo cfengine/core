@@ -25,6 +25,7 @@ noinst_LTLIBRARIES = libcf-monitord.la
 
 AM_CPPFLAGS = \
 	-I$(srcdir)/../libntech/libutils \
+	-I$(srcdir)/../libcfecompat \
 	-I$(srcdir)/../libcfnet \
 	-I$(srcdir)/../libenv \
 	-I$(srcdir)/../libpromises \

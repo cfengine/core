@@ -24,6 +24,7 @@
 
 
 #include <platform.h>
+#include <getopt.h>
 #include <generic_agent.h>
 
 #include <actuator.h>

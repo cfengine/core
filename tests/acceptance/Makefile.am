@@ -26,6 +26,7 @@ SUBDIRS = 25_cf-execd
 
 AM_CPPFLAGS = \
 	-I$(top_srcdir)/libntech/libutils \
+	-I$(top_srcdir)/libcfecompat \
 	-I$(top_srcdir)/libpromises \
 	-I$(top_srcdir)/libcfnet \
 	$(CORE_CPPFLAGS) $(ENTERPRISE_CPPFLAGS)

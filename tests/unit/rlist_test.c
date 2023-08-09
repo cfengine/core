@@ -713,6 +713,36 @@ static void test_regex_split_overlapping_delimiters()
     RlistDestroy(list);
 }
 
+static void test_rval_write()
+{
+    Rval rval = { "\"Hello World!\"", RVAL_TYPE_SCALAR };
+    Writer *writer = StringWriter();
+    RvalWrite(writer, rval);
+    const char *actual = StringWriterData(writer);
+    assert_string_equal(actual, "\\\"Hello World!\\\"");
+    WriterClose(writer);
+}
+
+static void test_rval_write_quoted()
+{
+    Rval rval = { "\"Hello World!\"", RVAL_TYPE_SCALAR };
+    Writer *writer = StringWriter();
+    RvalWriteQuoted(writer, rval);
+    const char *actual = StringWriterData(writer);
+    assert_string_equal(actual, "\"\\\"Hello World!\\\"\"");
+    WriterClose(writer);
+}
+
+static void test_rval_write_raw()
+{
+    Rval rval = { "\"Hello World!\"", RVAL_TYPE_SCALAR };
+    Writer *writer = StringWriter();
+    RvalWriteRaw(writer, rval);
+    const char *actual = StringWriterData(writer);
+    assert_string_equal(actual, "\"Hello World!\"");
+    WriterClose(writer);
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -744,7 +774,10 @@ int main()
         unit_test(test_regex_split_no_match),
         unit_test(test_regex_split_adjacent_separators),
         unit_test(test_regex_split_real_regex),
-        unit_test(test_regex_split_overlapping_delimiters)
+        unit_test(test_regex_split_overlapping_delimiters),
+        unit_test(test_rval_write),
+        unit_test(test_rval_write_quoted),
+        unit_test(test_rval_write_raw),
     };
 
     return run_tests(tests);

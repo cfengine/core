@@ -1339,7 +1339,7 @@ void RlistWrite(Writer *writer, const Rlist *list)
     WriterWriteChar(writer, '}');
 }
 
-void ScalarWrite(Writer *writer, const char *s, bool quote)
+void ScalarWrite(Writer *writer, const char *s, bool quote, bool raw)
 {
     if (quote)
     {
@@ -1347,7 +1347,7 @@ void ScalarWrite(Writer *writer, const char *s, bool quote)
     }
     for (; *s; s++)
     {
-        if (*s == '"')
+        if (*s == '"' && !raw)
         {
             WriterWriteChar(writer, '\\');
         }
@@ -1359,7 +1359,7 @@ void ScalarWrite(Writer *writer, const char *s, bool quote)
     }
 }
 
-static void RvalWriteParts(Writer *writer, const void* item, RvalType type, bool quote)
+static void RvalWriteParts(Writer *writer, const void* item, RvalType type, bool quote, bool raw)
 {
     if (item == NULL)
     {
@@ -1369,7 +1369,7 @@ static void RvalWriteParts(Writer *writer, const void* item, RvalType type, bool
     switch (type)
     {
     case RVAL_TYPE_SCALAR:
-        ScalarWrite(writer, item, quote);
+        ScalarWrite(writer, item, quote, raw);
         break;
 
     case RVAL_TYPE_LIST:
@@ -1392,12 +1392,17 @@ static void RvalWriteParts(Writer *writer, const void* item, RvalType type, bool
 
 void RvalWrite(Writer *writer, Rval rval)
 {
-    RvalWriteParts(writer, rval.item, rval.type, false);
+    RvalWriteParts(writer, rval.item, rval.type, false, false);
 }
 
 void RvalWriteQuoted(Writer *writer, Rval rval)
 {
-    RvalWriteParts(writer, rval.item, rval.type, true);
+    RvalWriteParts(writer, rval.item, rval.type, true, false);
+}
+
+void RvalWriteRaw(Writer *writer, Rval rval)
+{
+    RvalWriteParts(writer, rval.item, rval.type, false, true);
 }
 
 char *RvalToString(Rval rval)

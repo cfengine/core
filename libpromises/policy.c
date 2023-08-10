@@ -2105,7 +2105,7 @@ void BundleToString(Writer *writer, Bundle *bundle)
             }
 
             IndentPrint(writer, 2);
-            ScalarWrite(writer, pp->promiser, true);
+            ScalarWrite(writer, pp->promiser, true, false);
 
             /* FIX: add support
              *

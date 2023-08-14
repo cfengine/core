@@ -65,6 +65,7 @@ char *RvalToString(Rval rval);
 char *RlistToString(const Rlist *rlist);
 void RvalWrite(Writer *writer, Rval rval);
 void RvalWriteQuoted(Writer *writer, Rval rval);
+void RvalWriteRaw(Writer *writer, Rval rval);
 unsigned RvalHash(Rval rval, unsigned seed);
 
 Rlist *RlistCopy(const Rlist *list);
@@ -109,7 +110,7 @@ void RlistWrite(Writer *writer, const Rlist *list);
 Rlist *RlistLast(Rlist *start);
 void RlistFilter(Rlist **list, bool (*KeepPredicate)(void *item, void *predicate_data), void *predicate_user_data, void (*DestroyItem)(void *item));
 void RlistReverse(Rlist **list);
-void ScalarWrite(Writer *w, const char *s, bool quote);
+void ScalarWrite(Writer *w, const char *s, bool quote, bool raw);
 void RlistFlatten(EvalContext *ctx, Rlist **list);
 bool RlistEqual        (const Rlist *list1, const Rlist *list2);
 bool RlistEqual_untyped(const void *list1, const void *list2);

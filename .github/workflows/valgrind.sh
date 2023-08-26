@@ -49,7 +49,7 @@ function check_serverd_valgrind_output {
         exit 1
     fi
     set -e
-    echo "Serverd has 1 expected valgrind error in travis because of old glibc"
+    echo "Serverd has 1 expected valgrind error because of old glibc"
     echo "Because of this we use special assertions on output"
     echo "Looking for problems in $1:"
     grep -i "definitely lost" $1

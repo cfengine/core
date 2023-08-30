@@ -555,29 +555,30 @@ static void PromiseTypeString(char *dst, size_t dst_size, const Promise *pp)
 }
 
 // returns true if pid points to a cfengine process
-static bool IsCfengineProcess(const int pid)
+static bool IsCfengineProcess(pid_t pid)
 {
-    // There is no /proc on windows
-#ifndef __linux__
     char procfile[PATH_MAX];
     char cmd[PATH_MAX]; // we don't need the full ARG_MAX
     snprintf(procfile, PATH_MAX, "/proc/%d/cmdline", pid);
     FILE *f = fopen(procfile, "r");
+    // this will just return null on platform where /proc doesn't exist and return true as before
     if (f != NULL){
         size_t size;
-        size = fread(cmd, sizeof(char), PATH_MAX, f);
-        if (size > 0){
+        size = FullRead(f, cmd, PATH_MAX);
+        if (size > 0)
+        {
             if ('\n' == cmd[size-1]) {
                 cmd[size-1] = '\0';
             }
         }
         fclose(f);
-        // cmd contains the process command path
-        char *name = basename(cmd);
-        return (strncmp("cf-", name, 3) == 0);
+        if (size > 0) {
+            // cmd contains the process command path
+            char *name = basename(cmd);
+            return StringStartsWith(name, "cf-");
+        }
     }
-#endif
-    // assume true if we don't know
+    // assume true where we cannot check
     return true;
 }
 
@@ -617,6 +618,7 @@ static bool KillLockHolder(const char *lock)
     if (!IsCfengineProcess(lock_data.pid)) {
         Log(LOG_LEVEL_VERBOSE,
             "Lock holder with pid %d was replaced by a non cfengine process, do not try to kill it!, ", lock_data.pid);
+        // if the process doesn't exist anymore, then the original lock is not there, avoid producing an error
         return true;
     }
 

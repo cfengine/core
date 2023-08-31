@@ -1,0 +1,41 @@
+#######################################################
+#
+# Test the ability to call the same command with execresult and execresult_as_data
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+
+bundle agent init
+{
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+    !windows::
+     "res1" string => execresult("echo test", "useshell");
+     "res2" data   => execresult_as_data("echo test", "useshell", "stdout");
+    windows::
+     "res1" string => execresult("echo test", "powershell");
+     "res2" data   => execresult_as_data("echo test", "powershell", "stdout");
+}
+
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "any" usebundle => dcs_check_strcmp("${test.res1}", "${test.res2[output]}", "$(this.promise_filename)", "no");
+}

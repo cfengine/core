@@ -1,4 +1,5 @@
 #!/bin/sh
+set -x
 #
 #  Copyright 2021 Northern.tech AS
 #

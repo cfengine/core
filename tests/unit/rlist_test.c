@@ -31,6 +31,23 @@ static void test_length(void)
     RlistDestroy(list);
 }
 
+static void test_equality(void)
+{
+    Rlist *list1 = RlistFromSplitString("a,b,c", ',');
+    Rlist *list2 = RlistFromSplitString("a,b,c", ',');
+    Rlist *list3 = RlistFromSplitString("z,b,c", ',');
+    Rlist *list4 = RlistFromSplitString("a,b,c,d", ',');
+
+    assert_true(RlistEqual(list1, list2));
+    assert_false(RlistEqual(list1, list3));
+    assert_false(RlistEqual(list1, list4));
+
+    RlistDestroy(list1);
+    RlistDestroy(list2);
+    RlistDestroy(list3);
+    RlistDestroy(list4);
+}
+
 static void test_prepend_scalar_idempotent(void)
 {
     Rlist *list = NULL;
@@ -750,6 +767,7 @@ int main()
     {
         unit_test(test_prepend_scalar_idempotent),
         unit_test(test_length),
+        unit_test(test_equality),
         unit_test(test_copy),
         unit_test(test_rval_to_scalar),
         unit_test(test_rval_to_scalar2),

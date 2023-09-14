@@ -1657,8 +1657,8 @@ bool RlistEqual(const Rlist *list1, const Rlist *list2)
             assert(rp1->val.item == NULL && rp2->val.item == NULL);
         }
     }
-
-    return true;
+    // return false if lengths are different
+    return (rp1 == NULL && rp2 == NULL);
 }
 
 bool RlistEqual_untyped(const void *list1, const void *list2)

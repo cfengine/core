@@ -20,7 +20,7 @@ bundle agent init
 bundle common test
 {
   meta:
-      "test_suppress_fail" string => "windows",
+      "test_soft_fail" string => "windows",
         meta => { "redmine4772,ENT-2161" };
 
   classes:

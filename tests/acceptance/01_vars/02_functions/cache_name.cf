@@ -1,0 +1,51 @@
+#######################################################
+#
+# Test that the function result cache checks function name
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+
+bundle agent init
+{
+  vars:
+      "agent_regex" string => ".*cf-agent.*";
+}
+
+#######################################################
+
+bundle common test
+{
+  meta:
+    "description" -> { "CFE-4244" }
+      string => "Test that the function result cache checks function name";
+
+  vars:
+      "res1" data => findprocesses("${init.agent_regex}");
+
+  classes:
+      # must not reuse result from previous line
+      # is reused, produces a type error
+      "_pass" expression => processexists("${init.agent_regex}");
+}
+
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+    _pass:: 
+      "pass" usebundle => dcs_pass("$(this.promise_filename)");
+
+    !_pass::
+      "pass" usebundle => dcs_fail("$(this.promise_filename)");
+}

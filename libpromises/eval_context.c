@@ -2832,12 +2832,20 @@ bool EvalContextFunctionCacheGet(const EvalContext *ctx,
                                  const FnCall *fp ARG_UNUSED,
                                  const Rlist *args, Rval *rval_out)
 {
+    assert(fp != NULL);
+    assert(fp->name != NULL);
+    assert(ctx != NULL);
+
     if (!(ctx->eval_options & EVAL_OPTION_CACHE_SYSTEM_FUNCTIONS))
     {
         return false;
     }
 
-    Rval *rval = FuncCacheMapGet(ctx->function_cache, args);
+    // The cache key is made of the function name and all args values
+    Rlist *args_copy = RlistCopy(args);
+    Rlist *key = RlistPrepend(&args_copy, fp->name, RVAL_TYPE_SCALAR);
+    Rval *rval = FuncCacheMapGet(ctx->function_cache, key);
+    RlistDestroy(key);
     if (rval)
     {
         if (rval_out)
@@ -2856,6 +2864,10 @@ void EvalContextFunctionCachePut(EvalContext *ctx,
                                  const FnCall *fp ARG_UNUSED,
                                  const Rlist *args, const Rval *rval)
 {
+    assert(fp != NULL);
+    assert(fp->name != NULL);
+    assert(ctx != NULL);
+
     if (!(ctx->eval_options & EVAL_OPTION_CACHE_SYSTEM_FUNCTIONS))
     {
         return;
@@ -2863,7 +2875,11 @@ void EvalContextFunctionCachePut(EvalContext *ctx,
 
     Rval *rval_copy = xmalloc(sizeof(Rval));
     *rval_copy = RvalCopy(*rval);
-    FuncCacheMapInsert(ctx->function_cache, RlistCopy(args), rval_copy);
+
+    Rlist *args_copy = RlistCopy(args);
+    Rlist *key = RlistPrepend(&args_copy, fp->name, RVAL_TYPE_SCALAR);
+    
+    FuncCacheMapInsert(ctx->function_cache, key, rval_copy);
 }
 
 /* cfPS and associated machinery */

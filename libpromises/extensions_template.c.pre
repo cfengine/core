@@ -26,6 +26,9 @@ BEGIN_MARKER // Do not include this file directly! Build process should replace 
 
 #include <XextensionX_extension.h>
 
+#include <stdlib.h>             /* getenv() */
+#include <string.h>             /* strerror() */
+
 #include <logging.h>
 
 #include <pthread.h>

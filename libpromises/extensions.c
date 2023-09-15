@@ -22,7 +22,12 @@
   included file COSL.txt.
 */
 
+#include <platform.h>
 #include <enterprise_extension.h>
+
+#include <stdio.h>						/* sscanf() */
+#include <stdlib.h>						/* getenv() */
+#include <string.h>						/* strcmp() */
 
 #include <known_dirs.h>
 #include <misc_lib.h>

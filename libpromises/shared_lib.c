@@ -24,9 +24,12 @@
 
 #ifndef __MINGW32__
 
+#include <platform.h>
 #include <shared_lib.h>
 #include <logging.h>
 #include <mutex.h>
+#include <pthread.h>
+#include <sys/stat.h>
 
 #include <dlfcn.h>
 

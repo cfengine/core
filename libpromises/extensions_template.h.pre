@@ -91,6 +91,7 @@ BEGIN_MARKER // Do not include this file directly! Build process should replace 
 #ifndef xEXTENSIONx_EXTENSION_H
 #define xEXTENSIONx_EXTENSION_H
 
+#include <platform.h>
 #include <extensions.h>
 
 #include <logging.h>

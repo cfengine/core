@@ -23,6 +23,7 @@
 */
 
 #include <stdio.h>
+#include <string.h>						/* strchr() */
 #include <arpa/inet.h>
 
 #include <logging.h>

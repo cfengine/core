@@ -246,8 +246,19 @@ static bool GetUserGroupInfoFromGetent(const char *type, const char *query,
                                        char *name, size_t name_size, uintmax_t *id,
                                        LogLevel error_log_level)
 {
+    struct stat sb;
+    char* getent_bin;
+    if (stat("/bin/getent", &sb) == 0)
+    {
+        getent_bin = "/bin/getent";
+    }
+    else
+    {
+        getent_bin = "/usr/bin/getent";
+    }
+
     char buf[CF_BUFSIZE];
-    NDEBUG_UNUSED int print_ret = snprintf(buf, sizeof(buf), "/bin/getent %s %s", type, query);
+    NDEBUG_UNUSED int print_ret = snprintf(buf, sizeof(buf), "%s %s %s", getent_bin, type, query);
     assert(print_ret < sizeof(buf));
 
     FILE *out = cf_popen(buf, "r", OUTPUT_SELECT_STDOUT);

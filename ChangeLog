@@ -1,3 +1,18 @@
+3.21.3:
+	- Cached policy function results now take into account number of arguments
+	  and function name (CFE-4244)
+	- Improved the syntax description for validjson() (ENT-9759)
+	- Modified classesmatching() function to search parent bundles with inherit
+	  => true (ENT-5850)
+	- packagesmatching() and packageupdatesmatching() now look for the software
+	  inventory databases in the state directory and use them if found. This
+	  change enables the usage of these functions in standalone policy files
+	  without the demand for specifying the default package inventory attribute
+	  in body common control. However, you still need the default package
+	  inventory attribute specified in the policy framework for the software
+	  inventory databases to exist in the first place and to be maintained.
+	  (ENT-9083)
+
 3.21.2:
 	- The CF3_WITH_LIBRARY and AC_CHECK_HEADERS were moved to outside of the check for with-libxml2=no (CFE-4023)
 	- configure.ac: Enabled use of pkg-config to find libxml2 (CFE-4014)

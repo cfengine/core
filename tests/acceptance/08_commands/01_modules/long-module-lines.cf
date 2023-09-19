@@ -26,8 +26,8 @@ bundle agent init
 bundle agent test
 {
   meta:
-      "test_suppress_fail" string => "windows",
-        meta => { "redmine1884" };
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-1623" };
 
   commands:
       "$(init.script_name)" module => "true";

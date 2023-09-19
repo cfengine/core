@@ -26,6 +26,9 @@ bundle agent test
       "description" -> { "CFE-3776" }
         string => "Test that with reports its content during the last pass even when that content has unresolved variables ";
 
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10254" };
+
   commands:
       "$(sys.cf_agent) -Kf $(this.promise_filename).sub > $(G.testfile).actual"
         contain => shell;

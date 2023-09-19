@@ -25,9 +25,6 @@ bundle agent init
 bundle agent test
 {
   meta:
-      "test_suppress_fail" string => "windows",
-        meta => { "redmine4747" };
-
       "test_flakey_fail" string => "aix_7_1",
         meta => { "CFE-3313" };
 

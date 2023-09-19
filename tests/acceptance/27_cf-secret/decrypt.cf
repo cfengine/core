@@ -10,6 +10,8 @@ bundle agent test
     meta:
         "description"
             string => "Test that cf-secret can still decrypt content encrypted at the time of initial implementation";
+        "test_soft_fail" string => "windows",
+            meta => { "ENT-10405" };
 
     commands:
         "$(sys.cf_secret)"

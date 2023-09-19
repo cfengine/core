@@ -20,8 +20,8 @@ bundle agent init
 bundle common test
 {
   meta:
-      "test_suppress_fail" string => "windows",
-        meta => { "redmine4772" };
+      "test_soft_fail" string => "windows",
+        meta => { "redmine4772,ENT-2161" };
 
   classes:
       "resolution_warning" expression => returnszero("$(command) Service | $(G.grep) 'cannot be resolved' 2>&1", "useshell");

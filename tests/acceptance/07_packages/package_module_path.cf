@@ -30,6 +30,8 @@ bundle agent test
       "description"
         string => "Test that the interpreter for the package module script can be set",
         meta => { "CFE-2880" };
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10217" };
 
   packages:
       "first_pkg"

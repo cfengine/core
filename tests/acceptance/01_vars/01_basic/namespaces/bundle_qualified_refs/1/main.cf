@@ -13,6 +13,13 @@ bundle agent __main__
         "bundlesequence"  usebundle => default("$(this.promise_filename)");
 }
 
+bundle agent init
+{
+  commands:
+    windows::
+      "$(G.dos2unix) $(this.promise_dirname)/expected_output.txt" -> { "ENT-10433" };
+}
+
 bundle agent test
 {
   meta:

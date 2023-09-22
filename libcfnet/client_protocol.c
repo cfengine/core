@@ -26,7 +26,7 @@
 
 #include <openssl/bn.h>                                    /* BN_* */
 #include <openssl/err.h>                                   /* ERR_get_error */
-#include <libcrypto-compat.h>
+#include <openssl/rsa.h>
 
 #include <communication.h>
 #include <net.h>

@@ -373,13 +373,14 @@ Rval RvalNewRewriter(const void *item, RvalType type, JsonElement *map)
 
             Buffer *format = BufferNew();
             StringCopy(item, buffer_from, max_size);
+            buffer_to[0] = '\0';
 
             for (int iteration = 0; iteration < 10; iteration++)
             {
                 bool replacement_made = false;
                 int var_start = -1;
                 char closing_brace = 0;
-                for (int c = 0; c < buffer_from[c]; c++)
+                for (int c = 0; buffer_from[c] != '\0'; c++)
                 {
                     if (buffer_from[c] == '$')
                     {
@@ -402,6 +403,7 @@ Rval RvalNewRewriter(const void *item, RvalType type, JsonElement *map)
                     {
                         char saved = buffer_from[c];
                         buffer_from[c] = '\0';
+
                         const char *repl = JsonObjectGetAsString(map, buffer_from + var_start + 2);
                         buffer_from[c] = saved;
 
@@ -433,7 +435,15 @@ Rval RvalNewRewriter(const void *item, RvalType type, JsonElement *map)
                 }
             }
 
-            char *ret = xstrdup(buffer_to);
+            char* ret;
+            if (buffer_to[0] == '\0') {
+                // If nothing has been written to buffer_to, we pass the input verbatim.
+                // This function only evaluates body parameters, but the body can also reference the global
+                // context.
+                ret = xstrdup(buffer_from);
+            } else {
+                ret = xstrdup(buffer_to);
+            }
 
             BufferDestroy(format);
             free(buffer_to);

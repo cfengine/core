@@ -27,7 +27,6 @@
 #include <openssl/err.h>                                        /* ERR_* */
 #include <openssl/rand.h>                                       /* RAND_* */
 #include <openssl/bn.h>                                         /* BN_* */
-#include <libcrypto-compat.h>
 
 #if OPENSSL_VERSION_NUMBER > 0x30000000
 #include <openssl/provider.h>                                   /* OSSL_PROVIDER_* */

@@ -69,7 +69,6 @@
 #include <signals.h>
 #include <addr_lib.h>
 #include <openssl/evp.h>
-#include <libcrypto-compat.h>
 #include <libgen.h>
 #include <cleanup.h>
 #include <cmdb.h>               /* LoadCMDBData() */

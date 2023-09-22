@@ -1,0 +1,55 @@
+#######################################################
+#
+# Test that bodies can inherit attributes containing global variables
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+
+bundle agent init
+{
+  vars:
+      "class" string => "_pass";
+}
+
+#######################################################
+
+body classes parent(p)
+{
+      promise_kept => { "${init.class}" };
+}
+
+body classes static(p)
+{
+      inherit_from => parent(p);
+}
+
+bundle agent test {
+  meta:
+    "description" -> { "CFE-4254" }
+      string => "Test that bodies can inherit attributes containing global variables";
+
+  vars:
+    "test" string => "test",
+          classes => static("placeholder");
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+    _pass:: 
+      "pass" usebundle => dcs_pass("$(this.promise_filename)");
+
+    !_pass::
+      "pass" usebundle => dcs_fail("$(this.promise_filename)");
+}

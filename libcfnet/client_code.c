@@ -30,7 +30,6 @@
 #include <net.h>                      /* SendTransaction,ReceiveTransaction */
 #include <openssl/err.h>                                   /* ERR_get_error */
 #include <protocol.h>                              /* ProtocolIsUndefined() */
-#include <libcrypto-compat.h>
 #include <tls_client.h>               /* TLSTry */
 #include <tls_generic.h>              /* TLSVerifyPeer */
 #include <dir.h>

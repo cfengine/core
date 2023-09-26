@@ -41,7 +41,6 @@
 #include <known_dirs.h>
 #include <sysinfo.h>
 #include <openssl/evp.h>
-#include <libcrypto-compat.h>
 
 #ifdef LMDB
 // Be careful if you want to change this,

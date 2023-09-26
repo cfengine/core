@@ -27,7 +27,6 @@
 
 #include <openssl/bn.h>                                     /* BN_*, BIGNUM */
 #include <openssl/rand.h>                                   /* RAND_* */
-#include <libcrypto-compat.h>
 
 #include <lastseen.h>
 #include <dir.h>

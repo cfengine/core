@@ -355,6 +355,8 @@ type cfengine_hub_t;
 typeattribute cfengine_hub_t domain;
 role system_r types cfengine_hub_t;
 
+# cf-hub uses setuid/setgid to initiate scheduled reports as cfapache:cfpostgres
+allow cfengine_hub_t self:capability { setgid setuid };
 # /var/cfengine/bin/cf-hub has the 'cfengine_hub_exec_t' context which is an
 # entrypoint for the 'cfengine_hub_t' domain
 type cfengine_hub_exec_t;

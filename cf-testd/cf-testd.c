@@ -94,6 +94,13 @@ typedef struct
 /* Command line option parsing                                     */
 /*******************************************************************/
 
+static const Component COMPONENT =
+{
+    .name = "cf-testd",
+    .website = CF_WEBSITE,
+    .copyright = CF_COPYRIGHT
+};
+
 static const struct option OPTIONS[] = {
     {"address", required_argument, 0, 'a'},
     {"debug", no_argument, 0, 'd'},
@@ -145,7 +152,7 @@ void CFTestD_ConfigDestroy(CFTestD_Config *config)
 void CFTestD_Help()
 {
     Writer *w = FileWriter(stdout);
-    WriterWriteHelp(w, "cf-testd", OPTIONS, HINTS, NULL, false, true);
+    WriterWriteHelp(w, &COMPONENT, OPTIONS, HINTS, NULL, false, true);
     FileWriterDetach(w);
 }
 

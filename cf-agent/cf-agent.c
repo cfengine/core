@@ -179,6 +179,13 @@ static const char *const CF_AGENT_MANPAGE_LONG_DESCRIPTION =
         "For each bundle, cf-agent groups promise statements according to their type. Promise types are then evaluated in a preset "
         "order to ensure fast system convergence to policy.\n";
 
+static const Component COMPONENT =
+{
+    .name = "cf-agent",
+    .website = CF_WEBSITE,
+    .copyright = CF_COPYRIGHT
+};
+
 static const struct option OPTIONS[] =
 {
     {"bootstrap", required_argument, 0, 'B'},
@@ -599,7 +606,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         case 'h':
             {
                 Writer *w = FileWriter(stdout);
-                WriterWriteHelp(w, "cf-agent", OPTIONS, HINTS, NULL, false, true);
+                WriterWriteHelp(w, &COMPONENT, OPTIONS, HINTS, NULL, false, true);
                 FileWriterDetach(w);
             }
             DoCleanupAndExit(EXIT_SUCCESS);
@@ -756,7 +763,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         default:
             {
                 Writer *w = FileWriter(stdout);
-                WriterWriteHelp(w, "cf-agent", OPTIONS, HINTS, NULL, false, true);
+                WriterWriteHelp(w, &COMPONENT, OPTIONS, HINTS, NULL, false, true);
                 FileWriterDetach(w);
             }
             DoCleanupAndExit(EXIT_FAILURE);

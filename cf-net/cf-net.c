@@ -78,6 +78,13 @@ static const char *const CF_NET_MANPAGE_LONG_DESCRIPTION =
     "host. This is due to ACLs and key-pairs and can be made easier in the "
     "future.";
 
+static const Component COMPONENT =
+{
+    .name = "cf-net",
+    .website = CF_WEBSITE,
+    .copyright = CF_COPYRIGHT
+};
+
 static const Description COMMANDS[] =
 {
     {"help",    "Prints general help or per topic",
@@ -558,7 +565,7 @@ static int CFNetHelp(const char *topic)
     else
     {
         Writer *w = FileWriter(stdout);
-        WriterWriteHelp(w, "cf-net", OPTIONS, HINTS, COMMANDS, false, false);
+        WriterWriteHelp(w, &COMPONENT, OPTIONS, HINTS, COMMANDS, false, false);
         FileWriterDetach(w);
         DoCleanupAndExit(EXIT_SUCCESS);
     }

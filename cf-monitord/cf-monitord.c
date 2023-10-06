@@ -76,6 +76,13 @@ static const char *const CF_MONITORD_MANPAGE_LONG_DESCRIPTION =
     "normal system state based on current and past observations. Current estimates are made available as "
     "special variables (e.g. $(mon.av_cpu)) to cf-agent, which may use them to inform policy decisions.";
 
+static const Component COMPONENT =
+{
+    .name = "cf-monitord",
+    .website = CF_WEBSITE,
+    .copyright = CF_COPYRIGHT
+};
+
 static const struct option OPTIONS[] =
 {
     {"help", no_argument, 0, 'h'},
@@ -210,7 +217,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         case 'h':
         {
             Writer *w = FileWriter(stdout);
-            WriterWriteHelp(w, "cf-monitord", OPTIONS, HINTS, NULL, false, true);
+            WriterWriteHelp(w, &COMPONENT, OPTIONS, HINTS, NULL, false, true);
             FileWriterDetach(w);
         }
         DoCleanupAndExit(EXIT_SUCCESS);
@@ -257,7 +264,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         default:
         {
             Writer *w = FileWriter(stdout);
-            WriterWriteHelp(w, "cf-monitord", OPTIONS, HINTS, NULL, false, true);
+            WriterWriteHelp(w, &COMPONENT, OPTIONS, HINTS, NULL, false, true);
             FileWriterDetach(w);
         }
         DoCleanupAndExit(EXIT_FAILURE);

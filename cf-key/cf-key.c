@@ -71,6 +71,13 @@ static const char *const CF_KEY_SHORT_DESCRIPTION =
 static const char *const CF_KEY_MANPAGE_LONG_DESCRIPTION =
     "The CFEngine key generator makes key pairs for remote authentication.\n";
 
+static const Component COMPONENT =
+{
+    .name = "cf-key",
+    .website = CF_WEBSITE,
+    .copyright = CF_COPYRIGHT
+};
+
 #define TIMESTAMP_VAL 1234 // Anything outside ASCII range.
 static const struct option OPTIONS[] =
 {
@@ -267,7 +274,7 @@ int main(int argc, char *argv[])
 static void PrintHelp()
 {
     Writer *w = FileWriter(stdout);
-    WriterWriteHelp(w, "cf-key", OPTIONS, HINTS, NULL, false, false);
+    WriterWriteHelp(w, &COMPONENT, OPTIONS, HINTS, NULL, false, false);
     FileWriterDetach(w);
 }
 

@@ -81,6 +81,13 @@ static const char *const CF_SERVERD_MANPAGE_LONG_DESCRIPTION =
         "cf-serverd employs role based access control (defined in policy code) to authorize requests. "
         "Note: this daemon reloads it's config when the SIGHUP signal is received.";
 
+static const Component COMPONENT =
+{
+    .name = "cf-serverd",
+    .website = CF_WEBSITE,
+    .copyright = CF_COPYRIGHT
+};
+
 static const struct option OPTIONS[] =
 {
     {"help", no_argument, 0, 'h'},
@@ -252,7 +259,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
         case 'h':
             {
                 Writer *w = FileWriter(stdout);
-                WriterWriteHelp(w, "cf-serverd", OPTIONS, HINTS, NULL, false, true);
+                WriterWriteHelp(w, &COMPONENT, OPTIONS, HINTS, NULL, false, true);
                 FileWriterDetach(w);
             }
             DoCleanupAndExit(EXIT_SUCCESS);
@@ -323,7 +330,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
         default:
             {
                 Writer *w = FileWriter(stdout);
-                WriterWriteHelp(w, "cf-serverd", OPTIONS, HINTS, NULL, false, true);
+                WriterWriteHelp(w, &COMPONENT, OPTIONS, HINTS, NULL, false, true);
                 FileWriterDetach(w);
             }
             DoCleanupAndExit(EXIT_FAILURE);

@@ -15,33 +15,6 @@ static void print_version()
     printf("cf-check BETA version %s\n", VERSION);
 }
 
-static void print_help()
-{
-    printf(
-        "\n"
-        "cf-check:\n"
-        "\tUtility for diagnosis and repair of local CFEngine databases.\n"
-        "\tThis BETA version of the tool is for testing purposes only.\n"
-        "\n"
-        "Commands:\n"
-        "\tdump - Print the contents of a database file\n"
-        "\tdiagnose - Assess the health of one or more database files\n"
-        "\tbackup - Copy database files to a timestamped folder\n"
-        "\trepair - Diagnose, then backup and delete any corrupt databases\n"
-        "\tversion - Print version information\n"
-        "\thelp - Print this help menu\n"
-        "\n"
-        "Usage:\n"
-        "\t$ cf-check <command> [options] [file ...]\n"
-        "\n"
-        "Examples:\n"
-        "\t$ cf-check dump " WORKDIR "/state/cf_lastseen.lmdb\n"
-        "\t$ cf-check lmdump -a " WORKDIR "/state/cf_lastseen.lmdb\n"
-        "\t$ cf-check diagnose\n"
-        "\t$ cf-check repair\n"
-        "\n");
-}
-
 static const char *const CF_CHECK_SHORT_DESCRIPTION =
     "Utility for diagnosis and repair of local CFEngine databases.";
 
@@ -49,6 +22,13 @@ static const char *const CF_CHECK_MANPAGE_LONG_DESCRIPTION =
     "cf-check does not evaluate policy or rely on the integrity of the\n"
     "databases. It is intended to be able to detect and repair a corrupt\n"
     "database.";
+
+static const Component COMPONENT =
+{
+    .name = "cf-check",
+    .website = CF_WEBSITE,
+    .copyright = CF_COPYRIGHT
+};
 
 static const Description COMMANDS[] =
 {
@@ -140,7 +120,9 @@ int main(int argc, const char *const *argv)
 
     if (argc < 2)
     {
-        print_help();
+        Writer *w = FileWriter(stdout);
+        WriterWriteHelp(w, &COMPONENT, OPTIONS, HINTS, NULL, false, true);
+        FileWriterDetach(w);
         Log(LOG_LEVEL_ERR, "No command given");
         CallCleanupFunctions();
         return EXIT_FAILURE;
@@ -183,7 +165,9 @@ int main(int argc, const char *const *argv)
         }
         case 'h':
         {
-            print_help();
+            Writer *w = FileWriter(stdout);
+            WriterWriteHelp(w, &COMPONENT, OPTIONS, HINTS, NULL, false, true);
+            FileWriterDetach(w);
             CallCleanupFunctions();
             return EXIT_SUCCESS;
             break;
@@ -255,7 +239,9 @@ int main(int argc, const char *const *argv)
         }
         else if (cmd_argc <= 1)
         {
-            print_help();
+            Writer *w = FileWriter(stdout);
+            WriterWriteHelp(w, &COMPONENT, OPTIONS, HINTS, NULL, false, true);
+            FileWriterDetach(w);
         }
         else
         {
@@ -272,7 +258,9 @@ int main(int argc, const char *const *argv)
         return EXIT_SUCCESS;
     }
 
-    print_help();
+    Writer *w = FileWriter(stdout);
+    WriterWriteHelp(w, &COMPONENT, OPTIONS, HINTS, NULL, false, true);
+    FileWriterDetach(w);
     Log(LOG_LEVEL_ERR, "Unrecognized command: '%s'", command);
     CallCleanupFunctions();
     return EXIT_FAILURE;

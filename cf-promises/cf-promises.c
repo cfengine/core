@@ -59,6 +59,13 @@ static const char *const CF_PROMISES_MANPAGE_LONG_DESCRIPTION = "cf-promises is 
     "Finally, cf-promises attempts to expose errors by partially evaluating the policy, resolving as many variable and "
     "classes promise statements as possible. At no point does cf-promises make any changes to the system.";
 
+static const Component COMPONENT =
+{
+    .name = "cf-promises",
+    .website = CF_WEBSITE,
+    .copyright = CF_COPYRIGHT
+};
+
 /* Long-style only options, values must start above max ASCII value. */
 enum
 {
@@ -428,7 +435,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
         case 'h':
         {
             Writer *w = FileWriter(stdout);
-            WriterWriteHelp(w, "cf-promises", OPTIONS, HINTS, NULL, false, true);
+            WriterWriteHelp(w, &COMPONENT, OPTIONS, HINTS, NULL, false, true);
             FileWriterDetach(w);
         }
         DoCleanupAndExit(EXIT_SUCCESS);
@@ -501,7 +508,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
         default:
         {
             Writer *w = FileWriter(stdout);
-            WriterWriteHelp(w, "cf-promises", OPTIONS, HINTS, NULL, false, true);
+            WriterWriteHelp(w, &COMPONENT, OPTIONS, HINTS, NULL, false, true);
             FileWriterDetach(w);
         }
         DoCleanupAndExit(EXIT_FAILURE);

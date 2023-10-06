@@ -96,6 +96,13 @@ static const char *const CF_SECRET_MANPAGE_LONG_DESCRIPTION =
     "corresponding private key. Original author: Jon Henrik Bjornstad "
     "<jonhenrik@cfengineers.net>";
 
+static const Component COMPONENT =
+{
+    .name = "cf-secrets",
+    .website = CF_WEBSITE,
+    .copyright = CF_COPYRIGHT
+};
+
 static const struct option OPTIONS[] =
 {
     {"help",        no_argument,        0, 'h'},
@@ -832,7 +839,7 @@ static Seq *LoadPublicKeys(Seq *key_paths)
 static void CFKeyCryptHelp()
 {
     Writer *w = FileWriter(stdout);
-    WriterWriteHelp(w, "cf-secret", OPTIONS, HINTS, COMMANDS, true, true);
+    WriterWriteHelp(w, &COMPONENT, OPTIONS, HINTS, COMMANDS, true, true);
     FileWriterDetach(w);
 }
 

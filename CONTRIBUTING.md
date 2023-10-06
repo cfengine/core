@@ -1037,7 +1037,7 @@ a remote etc.)
 If you need to make changes to the `libntech` submodule, you will need to
 submit a PR to that repo:
 
-https://github.com/cfengine/libntech
+https://github.com/NorthernTechHQ/libntech
 
 The `libntech` PR has to be merged, before we can test your changes in `core`.
 

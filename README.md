@@ -12,7 +12,7 @@ CFEngine is comprised of several source code repositories.
 As you might be looking for another part of the open source code base, here is a list to ease navigation:
 
 * [core](https://github.com/cfengine/core) (This repo) - The C source code for core components, like cf-agent and cf-serverd.
-  * [libntech](https://github.com/cfengine/libntech) (submodule in core) - Library of reusable C code, such as data structures, string manipulation, JSON parsing, file handling, etc.
+  * [libntech](https://github.com/NorthernTechHQ/libntech) (submodule in core) - Library of reusable C code, such as data structures, string manipulation, JSON parsing, file handling, etc.
   * [core/contrib](https://github.com/cfengine/core/tree/master/contrib) (subdirectory in core) - User-contributed tools and scripts
 * [masterfiles](https://github.com/cfengine/masterfiles) - The Masterfiles Policy Framework (MPF) contains the default policy (.cf) files
 * [documentation](https://github.com/cfengine/documentation) - Documentation on how CFEngine components work, the policy language, the enterprise features, etc.

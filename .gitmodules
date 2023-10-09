@@ -1,6 +1,6 @@
 [submodule "libntech"]
 	path = libntech
-	url = https://github.com/cfengine/libntech
+	url = https://github.com/NorthernTechHQ/libntech
 [submodule "contrib/emacs-code-style"]
 	path = contrib/emacs-code-style
 	url = https://github.com/cfengine/cfengine-code-style

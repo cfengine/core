@@ -112,17 +112,20 @@ Here we have examples of command lines for various systems to install dependenci
 needed to build. The version and date checked are noted in parenthesis. Please
 submit PRs with updates to this information.
 
-* RedHat/CentOS (rhel-8/rhel-9/centos-7 2022-11-15)
+* RedHat/CentOS (rhel-9 2023-10-09)
 
-Note that first you will need to install epel-release (https://fedoraproject.org/wiki/EPEL) for lmdb-devel to be available.
+On CentOS:
+$ sudo yum install epel-release && sudo yum update
+Or on RHEL, replacing the version number with yours:
+$ sudo subscription-manager repos --enable codeready-builder-for-rhel-9-x86_64-rpms && sudo yum update
 
-$ sudo yum install -y gcc gdb make git libtool autoconf automake byacc flex openssl-devel pcre-devel lmdb-devel pam-devel flex-devel libyaml-devel
+$ sudo yum install -y gcc gdb make git libtool autoconf automake byacc flex openssl-devel pcre-devel lmdb-devel pam-devel flex-devel libyaml-devel fakeroot libxml2-devel
 
 For SELinux support you will need selinux-policy-devel package and specify `--with-selinux-policy` to `autogen.sh` or `configure`
 
-* Debian (Raspbian 10 2021-07-02)
+* Debian (Debian 12 2023-10-09)
 
-$ sudo apt-get install -y build-essential git libtool autoconf automake bison flex libssl-dev libpcre3-dev libbison-dev libacl1 libacl1-dev lmdb-utils liblmdb-dev libpam0g-dev libtool libyaml-dev
+$ sudo apt-get install -y build-essential git libtool autoconf automake bison flex libssl-dev libpcre3-dev libbison-dev libacl1 libacl1-dev lmdb-utils liblmdb-dev libpam0g-dev libtool libyaml-dev libxml2-dev
 
 * FreeBSD (12.1 2020-04-07)
 

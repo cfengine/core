@@ -11,6 +11,16 @@ bundle agent __main__
         "bundlesequence"  usebundle => default("$(this.promise_filename)");
 }
 
+bundle agent init
+{
+  vars:
+      "original_file" string => "$(this.promise_dirname)/start.xml.txt";
+      "test_file" string => "$(sys.workdir)/start.xml.test";
+  files:
+      "$(test_file)"
+        copy_from => local_cp("${original_file}");
+}
+
 bundle agent test
 {
   meta:
@@ -19,11 +29,10 @@ bundle agent test
         meta => { "ENT-8788" };
 
   vars:
-      "test_file" string => "$(this.promise_dirname)/start.xml.txt";
       "new_content_file" string => "$(this.promise_dirname)/newcontent.xml.txt";
 
   files:
-    "$(test_file)"
+    "$(init.test_file)"
         create => "false",
         edit_defaults => size("500k"),
         edit_line => insert_file_as_block_relative_to_first_or_last_line(
@@ -38,7 +47,7 @@ bundle agent check
 {
   methods:
 
-      "Pass/Fail" usebundle => dcs_check_diff($(test.test_file),
+      "Pass/Fail" usebundle => dcs_check_diff($(init.test_file),
                                               "$(this.promise_dirname)/desired-result.xml.txt",
                                               $(this.promise_filename));
 }

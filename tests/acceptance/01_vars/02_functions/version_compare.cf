@@ -1,0 +1,109 @@
+###########################################################
+#
+# Test version_compare function
+#
+###########################################################
+
+body common control
+{
+    inputs => { "../../default.cf.sub" };
+    bundlesequence => { default($(this.promise_filename)) };
+    version => "1.0";
+}
+
+###########################################################
+
+bundle agent test
+{
+  vars:
+    "true_a"
+      string => version_compare("1.0.0", "=", "1.0.0");
+    "true_b"
+      string => version_compare("0.1.0", "=", "0.1.0");
+    "true_c"
+      string => version_compare("0.0.1", "=", "0.0.1");
+    "true_d"
+      string => version_compare("1.0.1", "!=", "1.0.0");
+    "true_e"
+      string => version_compare("0.0.0", "==", "0.0.0");
+    "true_f"
+      string => version_compare("1.2.3", ">", "1.1.999");
+    "true_g"
+      string => version_compare("1.2.3", ">", "1.1.999");
+    "true_h"
+      string => version_compare("1.2.3", "!=", "1.1.999");
+    "true_i"
+      string => version_compare("0.0.0", "<", "0.0.1");
+    "true_j"
+      string => version_compare("0.0.0", "<=", "0.0.1");
+    "true_k"
+      string => version_compare("0.0.0", "!=", "0.0.1");
+    "true_l"
+      string => version_compare("0.0.0", "<=", "0.0.1");
+    "true_m"
+      string => version_compare("7.7.7", "==", "7.7.7-1");
+    "true_n"
+      string => version_compare("7.7.7-1", "==", "7.7.7-2");
+    "true_o"
+      string => version_compare("7.7.7a", "==", "7.7.7");
+    "true_p"
+      string => version_compare("7.7.7a", ">=", "7.7.7");
+    "true_q"
+      string => version_compare("7.7.7a", "<=", "7.7.7");
+    "true_r"
+      string => version_compare("3.2.1", "==", "3.2");
+    "true_s"
+      string => version_compare("3", "=", "3.2.1");
+    "true_t"
+      string => version_compare("3.2", "<=", "3");
+    "false_a"
+      string => version_compare("1.0.0", "!=", "1.0.0");
+    "false_b"
+      string => version_compare("0.1.0", "!=", "0.1.0");
+    "false_c"
+      string => version_compare("0.0.1", "!=", "0.0.1");
+    "false_d"
+      string => version_compare("1.0.1", "=", "1.0.0");
+    "false_e"
+      string => version_compare("0.0.0", "!=", "0.0.0");
+    "false_f"
+      string => version_compare("1.2.3", "<=", "1.1.999");
+    "false_g"
+      string => version_compare("1.2.3", "<=", "1.1.999");
+    "false_h"
+      string => version_compare("1.2.3", "=", "1.1.999");
+    "false_i"
+      string => version_compare("0.0.0", ">=", "0.0.1");
+    "false_j"
+      string => version_compare("0.0.0", ">", "0.0.1");
+    "false_k"
+      string => version_compare("0.0.0", "==", "0.0.1");
+    "false_l"
+      string => version_compare("0.0.0", ">", "0.0.1");
+    "false_m"
+      string => version_compare("7.7.7", "!=", "7.7.7-1");
+    "false_n"
+      string => version_compare("7.7.7-1", "!=", "7.7.7-2");
+    "false_o"
+      string => version_compare("7.7.7a", "!=", "7.7.7");
+    "false_p"
+      string => version_compare("7.7.7a", "<", "7.7.7");
+    "false_q"
+      string => version_compare("7.7.7a", ">", "7.7.7");
+    "false_r"
+      string => version_compare("3.2.1", "!=", "3.2");
+    "false_s"
+      string => version_compare("3", "!=", "3.2.1");
+    "false_t"
+      string => version_compare("3.2", ">", "3");
+}
+
+###########################################################
+
+bundle agent check
+{
+  methods:
+    "check" usebundle => dcs_check_state(test,
+                                         "$(this.promise_filename).expected.json",
+                                         $(this.promise_filename));
+}

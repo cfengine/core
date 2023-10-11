@@ -96,6 +96,13 @@ static const char *const CF_RUNAGENT_MANPAGE_LONG_DESCRIPTION =
     "the user requests cf-agent should define on execution. "
     "The latter type is regulated by cf-serverd's role based access control.";
 
+static const Component COMPONENT =
+{
+    .name = "cf-runagent",
+    .website = CF_WEBSITE,
+    .copyright = CF_COPYRIGHT
+};
+
 static const struct option OPTIONS[] =
 {
     {"help", no_argument, 0, 'h'},
@@ -416,7 +423,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         case 'h':
         {
             Writer *w = FileWriter(stdout);
-            WriterWriteHelp(w, "cf-runagent", OPTIONS, HINTS, NULL, false, true);
+            WriterWriteHelp(w, &COMPONENT, OPTIONS, HINTS, NULL, false, true);
             FileWriterDetach(w);
         }
         DoCleanupAndExit(EXIT_SUCCESS);
@@ -481,7 +488,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         default:
         {
             Writer *w = FileWriter(stdout);
-            WriterWriteHelp(w, "cf-runagent", OPTIONS, HINTS, NULL, false, true);
+            WriterWriteHelp(w, &COMPONENT, OPTIONS, HINTS, NULL, false, true);
             FileWriterDetach(w);
         }
         DoCleanupAndExit(EXIT_FAILURE);

@@ -14,6 +14,13 @@ static const int MAX_PACKAGE_ENTRY_LENGTH = 256;
 
 #define Error(msg) fprintf(stderr, "%s:%d: %s", __FILE__, __LINE__, msg)
 
+static const Component COMPONENT =
+{
+    .name = "mock-package-manager - pretend that you are managing packages!",
+    .website = CF_WEBSITE,
+    .copyright = CF_COPYRIGHT
+};
+
 static const struct option OPTIONS[] =
 {
     {"clear-installed", no_argument, 0, 'c'},
@@ -445,7 +452,7 @@ int main(int argc, char *argv[])
         default:
             {
                 Writer *w = FileWriter(stdout);
-                WriterWriteHelp(w, "mock-package-manager - pretend that you are managing packages!", OPTIONS, HINTS, NULL, false, false);
+                WriterWriteHelp(w, &COMPONENT, OPTIONS, HINTS, NULL, false, false);
                 FileWriterDetach(w);
             }
             exit(EXIT_FAILURE);

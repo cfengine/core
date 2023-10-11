@@ -114,6 +114,13 @@ static const char *const CF_EXECD_MANPAGE_LONG_DESCRIPTION =
     "execution schedule to prevent synchronized cf-agent runs across a network. "
     "Note: this daemon reloads it's config when the SIGHUP signal is received.";
 
+static const Component COMPONENT =
+{
+    .name = "cf-execd",
+    .website = CF_WEBSITE,
+    .copyright = CF_COPYRIGHT
+};
+
 static const struct option OPTIONS[] =
 {
     {"help", no_argument, 0, 'h'},
@@ -330,7 +337,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         case 'h':
         {
             Writer *w = FileWriter(stdout);
-            WriterWriteHelp(w, "cf-execd", OPTIONS, HINTS, NULL, false, true);
+            WriterWriteHelp(w, &COMPONENT, OPTIONS, HINTS, NULL, false, true);
             FileWriterDetach(w);
         }
         DoCleanupAndExit(EXIT_SUCCESS);
@@ -403,7 +410,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         default:
         {
             Writer *w = FileWriter(stdout);
-            WriterWriteHelp(w, "cf-execd", OPTIONS, HINTS, NULL, false, true);
+            WriterWriteHelp(w, &COMPONENT, OPTIONS, HINTS, NULL, false, true);
             FileWriterDetach(w);
         }
         DoCleanupAndExit(EXIT_FAILURE);

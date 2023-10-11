@@ -2229,6 +2229,40 @@ static VersionComparison GenericVersionCheck(
     return comparison;
 }
 
+static FnCallResult FnCallVersionCompare(
+        ARG_UNUSED EvalContext *ctx,
+        ARG_UNUSED const Policy *policy,
+        const FnCall *fp,
+        const Rlist *args)
+{
+    assert(fp != NULL);
+    assert(fp->name != NULL);
+    if (args == NULL || args->next == NULL || args->next->next == NULL)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Policy function %s requires 3 arguments:"
+            " %s(version, operator, version)",
+            fp->name,
+            fp->name);
+        return FnFailure();
+    }
+    const char *const version_a = RlistScalarValue(args);
+    const char *const operator = RlistScalarValue(args->next);
+    const char *const version_b = RlistScalarValue(args->next->next);
+
+    const BooleanOrError result = CompareVersionExpression(version_a, operator, version_b);
+    if (result == BOOLEAN_ERROR) {
+        Log(LOG_LEVEL_ERR,
+            "Cannot compare versions: %s(\"%s\", \"%s\", \"%s\")",
+            fp->name,
+            version_a,
+            operator,
+            version_b);
+        return FnFailure();
+    }
+    return FnReturnContext(result == BOOLEAN_TRUE);
+}
+
 static FnCallResult FnCallVersionMinimum(
         ARG_UNUSED EvalContext *ctx,
         ARG_UNUSED const Policy *policy,
@@ -9329,6 +9363,14 @@ static const FnCallArg CFVERSIONBETWEEN_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg VERSION_COMPARE_ARGS[] =
+{
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "First version to compare"},
+    {"=,==,!=,>,<,>=,<=", CF_DATA_TYPE_OPTION, "Operator to use in comparison"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Second version to compare"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
 static const FnCallArg CLASSIFY_ARGS[] =
 {
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Input string"},
@@ -10570,6 +10612,8 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("variablesmatching", CF_DATA_TYPE_STRING_LIST, CLASSMATCH_ARGS, &FnCallVariablesMatching, "List the variables matching regex arg1 and tag regexes arg2,arg3,...",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("version_compare", CF_DATA_TYPE_CONTEXT, VERSION_COMPARE_ARGS, &FnCallVersionCompare, "Compare two version numbers with a specified operator",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
 
     // Functions section following new naming convention
     FnCallTypeNew("string_mustache", CF_DATA_TYPE_STRING, STRING_MUSTACHE_ARGS, &FnCallStringMustache, "Expand a Mustache template from arg1 into a string using the optional data container in arg2 or datastate()",

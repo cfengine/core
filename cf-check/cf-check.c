@@ -121,7 +121,7 @@ int main(int argc, const char *const *argv)
     if (argc < 2)
     {
         Writer *w = FileWriter(stdout);
-        WriterWriteHelp(w, &COMPONENT, OPTIONS, HINTS, NULL, false, true);
+        WriterWriteHelp(w, &COMPONENT, OPTIONS, HINTS, COMMANDS, false, true);
         FileWriterDetach(w);
         Log(LOG_LEVEL_ERR, "No command given");
         CallCleanupFunctions();
@@ -166,7 +166,7 @@ int main(int argc, const char *const *argv)
         case 'h':
         {
             Writer *w = FileWriter(stdout);
-            WriterWriteHelp(w, &COMPONENT, OPTIONS, HINTS, NULL, false, true);
+            WriterWriteHelp(w, &COMPONENT, OPTIONS, HINTS, COMMANDS, false, true);
             FileWriterDetach(w);
             CallCleanupFunctions();
             return EXIT_SUCCESS;

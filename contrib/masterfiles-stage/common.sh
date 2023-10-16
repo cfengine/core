@@ -190,7 +190,7 @@ git_cfbs_deploy_refspec() {
   #    (See long comment at end of function def.)
 
   # The chipmunk in cfbs output breaks things without this or similar
-  export LANG=en_US.utf-8
+  export LC_ALL=en_US.utf-8
 
   # Ensure absolute pathname is given
   [ "${1:0:1}" = / ] ||

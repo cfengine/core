@@ -838,18 +838,42 @@ static void InitIgnoreInterfaces()
     FILE *fin;
     char filename[CF_BUFSIZE], regex[256];
 
-    snprintf(
+    int ret = snprintf(
         filename,
         sizeof(filename),
         "%s%c%s",
-        GetInputDir(),
+        GetWorkDir(),
         FILE_SEPARATOR,
         CF_IGNORE_INTERFACES);
+    assert(ret >= 0 && (size_t) ret < sizeof(filename));
 
     if ((fin = fopen(filename, "r")) == NULL)
     {
-        Log(LOG_LEVEL_VERBOSE, "No interface exception file %s", filename);
-        return;
+        /* LEGACY: The 'ignore_interfaces.rx' file was previously located in
+         * $(sys.inputdir). Consequently, if the file is found in this
+         * directory but not in $(sys.workdir), we will still process it, but
+         * issue a warning. */
+        ret = snprintf(
+            filename,
+            sizeof(filename),
+            "%s%c%s",
+            GetInputDir(),
+            FILE_SEPARATOR,
+            CF_IGNORE_INTERFACES);
+        assert(ret >= 0 && (size_t) ret < sizeof(filename));
+
+        if ((fin = fopen(filename, "r")) == NULL)
+        {
+            Log(LOG_LEVEL_VERBOSE, "No interface exception file %s", filename);
+            return;
+        }
+
+        Log(LOG_LEVEL_WARNING,
+            "Found interface exception file %s in %s but it should be in %s. "
+            "Please consider moving it to the appropriate location.",
+            CF_IGNORE_INTERFACES,
+            GetInputDir(),
+            GetWorkDir());
     }
 
     while (!feof(fin))

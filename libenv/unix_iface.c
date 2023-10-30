@@ -836,24 +836,30 @@ static void FindV6InterfacesInfo(EvalContext *ctx, Rlist **interfaces, Rlist **h
 static void InitIgnoreInterfaces()
 {
     FILE *fin;
-    char filename[CF_BUFSIZE],regex[256];
+    char filename[CF_BUFSIZE], regex[256];
 
-    snprintf(filename, sizeof(filename), "%s%c%s", GetInputDir(), FILE_SEPARATOR, CF_IGNORE_INTERFACES);
+    snprintf(
+        filename,
+        sizeof(filename),
+        "%s%c%s",
+        GetInputDir(),
+        FILE_SEPARATOR,
+        CF_IGNORE_INTERFACES);
 
-    if ((fin = fopen(filename,"r")) == NULL)
+    if ((fin = fopen(filename, "r")) == NULL)
     {
-        Log(LOG_LEVEL_VERBOSE, "No interface exception file %s",filename);
+        Log(LOG_LEVEL_VERBOSE, "No interface exception file %s", filename);
         return;
     }
 
     while (!feof(fin))
     {
         regex[0] = '\0';
-        int scanCount = fscanf(fin,"%255s",regex);
+        int scanCount = fscanf(fin, "%255s", regex);
 
         if (scanCount != 0 && *regex != '\0')
         {
-           RlistPrependScalarIdemp(&IGNORE_INTERFACES, regex);
+            RlistPrependScalarIdemp(&IGNORE_INTERFACES, regex);
         }
     }
 

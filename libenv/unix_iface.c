@@ -849,6 +849,11 @@ static void InitIgnoreInterfaces()
 
     if ((fin = fopen(filename, "r")) == NULL)
     {
+        Log((errno == ENOENT) ? LOG_LEVEL_VERBOSE : LOG_LEVEL_ERR,
+            "Failed to open interface exception file %s: %s",
+            filename,
+            GetErrorStr());
+
         /* LEGACY: The 'ignore_interfaces.rx' file was previously located in
          * $(sys.inputdir). Consequently, if the file is found in this
          * directory but not in $(sys.workdir), we will still process it, but
@@ -864,7 +869,10 @@ static void InitIgnoreInterfaces()
 
         if ((fin = fopen(filename, "r")) == NULL)
         {
-            Log(LOG_LEVEL_VERBOSE, "No interface exception file %s", filename);
+            Log((errno == ENOENT) ? LOG_LEVEL_VERBOSE : LOG_LEVEL_ERR,
+                "Failed to open interface exception file %s: %s",
+                filename,
+                GetErrorStr());
             return;
         }
 

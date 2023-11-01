@@ -1,4 +1,7 @@
 if WITH_SELINUX
+cfengine-enterprise.te: cfengine-enterprise.te.all $(PLATFORM_SELINUX_POLICIES)
+	cat cfengine-enterprise.te.all $(PLATFORM_SELINUX_POLICIES) > cfengine-enterprise.te
+
 cfengine-enterprise.pp: cfengine-enterprise.te cfengine-enterprise.fc
 	$(MAKE) -f /usr/share/selinux/devel/Makefile -j1
 
@@ -13,6 +16,6 @@ endif
 
 # explicit DISTFILES are required for these files to be part of a 'make dist'
 # tarball even without running './configure --with-selinux-policy'
-DISTFILES  = Makefile.in Makefile.am cfengine-enterprise.te cfengine-enterprise.fc
+DISTFILES  = Makefile.in Makefile.am cfengine-enterprise.fc cfengine-enterprise.te.all
 
-CLEANFILES = cfengine-enterprise.pp cfengine-enterprise.if
+CLEANFILES = cfengine-enterprise.pp cfengine-enterprise.if cfengine-enterprise.te

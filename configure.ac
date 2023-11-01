@@ -1623,6 +1623,13 @@ AC_ARG_WITH(selinux-policy,
             [], [with_selinux_policy=no])
 AM_CONDITIONAL([WITH_SELINUX], [test "x$with_selinux_policy" != "xno"])
 
+if test "x$with_selinux_policy" != "xno"; then
+   platform_id=$(sed -r -e '/PLATFORM_ID/!d;s/PLATFORM_ID="platform:(@<:@^"@:>@+)"/\1/' < /etc/os-release)
+   if test -f ${srcdir}/misc/selinux/cfengine-enterprise.te.$platform_id; then
+     PLATFORM_SELINUX_POLICIES=cfengine-enterprise.te.$platform_id
+     AC_SUBST(PLATFORM_SELINUX_POLICIES)
+   fi
+fi
 
 dnl #####################################################################
 dnl Hostname and Version stuff
@@ -1819,6 +1826,7 @@ fi
 
 if test "x$with_selinux_policy" != "xno"; then
   AC_MSG_RESULT([-> SELinux policy: enabled])
+  AC_MSG_RESULT([-> SELinux platform policies: $PLATFORM_SELINUX_POLICIES])
 else
   AC_MSG_RESULT([-> SELinux policy: disabled])
 fi

@@ -53,6 +53,7 @@ require {
 	type hugetlbfs_t;
 	type init_exec_t;
 	type init_var_run_t;
+	type ifconfig_t;
 	type ifconfig_exec_t;
 	type journalctl_exec_t;
 	type cfengine_execd_t;
@@ -154,7 +155,8 @@ require {
 	class dccp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
 	class ib_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
 	class mpls_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown };
-	class process { setrlimit transition dyntransition execstack execheap execmem signull siginh getattr };
+	class process { setrlimit transition dyntransition execstack execheap execmem signull siginh getattr sigchld };
+	class fd use;
 	class file { execute execute_no_trans getattr ioctl map open read unlink write entrypoint lock link rename append setattr create relabelfrom relabelto watch watch_reads };
 	class fifo_file { create open getattr setattr read write append rename link unlink ioctl lock relabelfrom relabelto };
 	class dir { getattr read search open write add_name remove_name lock ioctl create };
@@ -239,6 +241,7 @@ allow cfengine_execd_t init_t:unix_stream_socket connectto;
 allow cfengine_execd_t journalctl_exec_t:file getattr;
 allow cfengine_execd_t ping_exec_t:file getattr;
 allow cfengine_execd_t proc_net_t:file { getattr open read };
+allow cfengine_execd_t proc_net_t:lnk_file { getattr read };
 allow cfengine_execd_t proc_security_t:file { getattr open read };
 allow cfengine_execd_t rpm_exec_t:file getattr;
 allow cfengine_execd_t rpm_var_lib_t:dir search;
@@ -343,6 +346,7 @@ allow cfengine_serverd_t init_t:file { getattr open read };
 allow cfengine_serverd_t journalctl_exec_t:file getattr;
 allow cfengine_serverd_t ping_exec_t:file getattr;
 allow cfengine_serverd_t proc_net_t:file { getattr open read };
+allow cfengine_serverd_t proc_net_t:lnk_file { getattr read };
 allow cfengine_serverd_t proc_security_t:file { getattr open read };
 allow cfengine_serverd_t rpm_exec_t:file getattr;
 allow cfengine_serverd_t self:process setrlimit;
@@ -443,6 +447,7 @@ allow cfengine_hub_t net_conf_t:file { getattr open read };
 allow cfengine_hub_t passwd_file_t:file { getattr open read };
 allow cfengine_hub_t ping_exec_t:file getattr;
 allow cfengine_hub_t proc_net_t:file { getattr open read };
+allow cfengine_hub_t proc_net_t:lnk_file { getattr read };
 allow cfengine_hub_t proc_security_t:file { getattr open read };
 allow cfengine_hub_t proc_t:dir read;
 allow cfengine_hub_t rpm_exec_t:file getattr;
@@ -477,7 +482,9 @@ allow cfengine_hub_t tmp_t:dir read;
 allow cfengine_hub_t kernel_t:system module_request;
 
 # TODO: these should not be needed
-allow cfengine_hub_t ifconfig_exec_t:file { execute execute_no_trans open read getattr map };
+# this is a macro invocation, the file has to be processed with
+# make -f /usr/share/selinux/devel/Makefile
+sysnet_domtrans_ifconfig(cfengine_hub_t)
 allow cfengine_hub_t shell_exec_t:file map;
 allow cfengine_hub_t shell_exec_t:file { execute execute_no_trans };
 allow cfengine_hub_t proc_xen_t:dir search;
@@ -506,12 +513,14 @@ allow cfengine_postgres_t cfengine_postgres_exec_t:file { ioctl read getattr loc
 
 # TODO: Why are 'map', 'execute' and 'execute_no_trans' needed for postgres?
 allow cfengine_postgres_t cfengine_var_lib_t:file map;
-allow cfengine_postgres_t cfengine_var_lib_t:file { create execute execute_no_trans getattr link open read rename unlink write };
-
+allow cfengine_postgres_t cfengine_var_lib_t:file { create execute execute_no_trans getattr link open read rename unlink write rename };
+allow cfengine_postgres_t cfengine_var_lib_t:lnk_file read;
 allow cfengine_postgres_t cfengine_var_lib_t:dir { add_name getattr open create read remove_name search write };
 
 allow cfengine_postgres_t postgresql_port_t:tcp_socket name_bind;
 
+allow cfengine_postgres_t cert_t:dir search;
+allow cfengine_postgres_t cert_t:file { getattr open read };
 allow cfengine_postgres_t hugetlbfs_t:file map;
 allow cfengine_postgres_t hugetlbfs_t:file { read write };
 allow cfengine_postgres_t init_t:unix_stream_socket { getattr ioctl read write }; # pg_ctl, systemd, PAM?
@@ -524,6 +533,7 @@ allow cfengine_postgres_t proc_t:file { getattr open read };
 allow cfengine_postgres_t self:netlink_route_socket { bind create getattr nlmsg_read read write };
 allow cfengine_postgres_t self:tcp_socket { bind create listen setopt read write };
 allow cfengine_postgres_t self:udp_socket { bind connect create getattr getopt read write };
+allow cfengine_postgres_t self:unix_stream_socket connectto;
 allow cfengine_postgres_t sssd_public_t:dir search;
 allow cfengine_postgres_t sssd_public_t:file map;
 allow cfengine_postgres_t sssd_public_t:file { getattr open read };
@@ -531,7 +541,7 @@ allow cfengine_postgres_t sssd_var_lib_t:sock_file write;
 allow cfengine_postgres_t sssd_var_lib_t:dir search;
 allow cfengine_postgres_t sssd_t:unix_stream_socket connectto;
 allow cfengine_postgres_t tmp_t:dir { add_name write remove_name };
-allow cfengine_postgres_t tmp_t:file { create write unlink };
+allow cfengine_postgres_t tmp_t:file { create open write unlink };
 allow cfengine_postgres_t tmp_t:sock_file { create setattr unlink write };
 allow cfengine_postgres_t tmpfs_t:dir { add_name write remove_name };
 allow cfengine_postgres_t tmpfs_t:file { create open read write map unlink };
@@ -543,7 +553,7 @@ allow cfengine_postgres_t passwd_file_t:file { open read getattr };
 
 # Needed for systemd to be able to check PostgreSQL's PID file
 allow init_t cfengine_var_lib_t:dir { read remove_name write };
-allow init_t cfengine_var_lib_t:file { getattr open read unlink };
+allow init_t cfengine_var_lib_t:file { getattr open read unlink ioctl };
 
 # TODO: these should not be needed
 allow cfengine_postgres_t shell_exec_t:file map;

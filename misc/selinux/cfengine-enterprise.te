@@ -166,6 +166,7 @@ require {
 	class association { sendto recvfrom setcontext polmatch };
 	class security setsecparam;
 	class service { start stop status reload enable disable };
+	class system { module_request };
 	class memprotect mmap_zero;
 	class peer recv;
 	class chr_file { getattr };
@@ -471,6 +472,9 @@ allow cfengine_hub_t useradd_exec_t:file getattr;
 allow cfengine_hub_t var_t:dir read;
 allow cfengine_hub_t ssh_exec_t:file getattr;
 allow cfengine_hub_t tmp_t:dir read;
+
+# Use of the TLS kernel module
+allow cfengine_hub_t kernel_t:system module_request;
 
 # TODO: these should not be needed
 allow cfengine_hub_t ifconfig_exec_t:file { execute execute_no_trans open read getattr map };

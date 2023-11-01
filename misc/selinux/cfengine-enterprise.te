@@ -74,6 +74,7 @@ require {
 	type syslogd_var_run_t;
 	type system_dbusd_t;
 	type system_dbusd_var_run_t;
+	type systemd_userdbd_runtime_t;
 	type tmp_t;
 	type tmpfs_t;
 	role system_r;
@@ -630,6 +631,11 @@ allow cfengine_httpd_t tmp_t:sock_file write;
 allow cfengine_httpd_t tmp_t:file { create setattr unlink write rename };
 allow cfengine_httpd_t tmp_t:dir { add_name remove_name write read };
 allow cfengine_httpd_t var_t:dir read;
+
+# PAM module for dynamic users
+allow cfengine_httpd_t systemd_userdbd_runtime_t:dir { getattr open read search };
+allow cfengine_httpd_t systemd_userdbd_runtime_t:sock_file write;
+allow cfengine_httpd_t kernel_t:unix_stream_socket connectto;
 
 # apparently, httpd creates some temporary bits in /tmp that it needs to mmap()
 allow cfengine_httpd_t tmp_t:file map;

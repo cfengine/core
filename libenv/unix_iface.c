@@ -849,7 +849,15 @@ static void InitIgnoreInterfaces()
     while (!feof(fin))
     {
         regex[0] = '\0';
-        int scanCount = fscanf(fin,"%255s",regex);
+        int scanCount = fscanf(fin, "%255s", regex);
+        if (ferror(fin) != 0)
+        {
+            Log(LOG_LEVEL_ERR,
+                "Failed to read interface exception file %s: %s",
+                filename,
+                GetErrorStr());
+            break;
+        }
 
         if (scanCount != 0 && *regex != '\0')
         {

@@ -15,4 +15,3 @@ RestartSec=10
 
 [Install]
 WantedBy=network-online.target
-WantedBy=cfengine3.service

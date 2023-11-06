@@ -17,4 +17,3 @@ UMask=0177
 
 [Install]
 WantedBy=multi-user.target
-WantedBy=cfengine3.service

@@ -518,6 +518,63 @@ static void PromiseTypeString(char *dst, size_t dst_size, const Promise *pp)
     }
 }
 
+/**
+ * A helper best-effort function to prevent us from killing non CFEngine
+ * processes with matching PID-start_time combinations **when/where it's easy to
+ * check**.
+ */
+static bool IsCfengineLockHolder(pid_t pid)
+{
+    char procfile[PATH_MAX];
+    snprintf(procfile, PATH_MAX, "/proc/%ju/comm", (uintmax_t) pid);
+    int f = open(procfile, O_RDONLY);
+    /* On platforms where /proc doesn't exist, we would have to do a more
+       complicated check probably not worth it in this helper best-effort
+       function. */
+    if (f == -1)
+    {
+        /* assume true where we cannot check */
+        return true;
+    }
+
+    /* more than any possible CFEngine lock holder's name */
+    char command[32] = {0};
+    ssize_t n_read = FullRead(f, command, sizeof(command));
+    close(f);
+    if ((n_read <= 1) || (n_read == sizeof(command)))
+    {
+        Log(LOG_LEVEL_VERBOSE, "Failed to get command for process %ju", (uintmax_t) pid);
+        /* assume true where we cannot check */
+        return true;
+    }
+    if (command[n_read - 1] == '\n')
+    {
+        command[n_read - 1] = '\0';
+    }
+
+    /* potential CFEngine lock holders (others like cf-net, cf-key,... are not
+     * supposed/expected to be lock holders) */
+    const char *const cfengine_procs[] = {
+        "cf-promises",
+        "lt-cf-agent",  /* when running from a build with 'libtool --mode=execute' */
+        "cf-agent",
+        "cf-execd",
+        "cf-serverd",
+        "cf-monitord",
+        "cf-hub",
+        NULL
+    };
+    for (size_t i = 0; cfengine_procs[i] != NULL; i++)
+    {
+        if (StringEqual(cfengine_procs[i], command))
+        {
+            return true;
+        }
+    }
+    Log(LOG_LEVEL_DEBUG, "'%s' not considered a CFEngine process", command);
+    return false;
+}
+
 static bool KillLockHolder(const char *lock)
 {
     bool ret;
@@ -550,6 +607,13 @@ static bool KillLockHolder(const char *lock)
     }
 
     CloseLock(dbp);
+
+    if (!IsCfengineLockHolder(lock_data.pid)) {
+        Log(LOG_LEVEL_VERBOSE,
+            "Lock holder with PID %ju was replaced by a non CFEngine process, ignoring request to kill it",
+            (uintmax_t) lock_data.pid);
+        return true;
+    }
 
     if (GracefulTerminate(lock_data.pid, lock_data.process_start_time))
     {

@@ -94,45 +94,9 @@ static void CopyLockDatabaseAtomically(const char *from, const char *to,
                                        const char *from_pretty_name,
                                        const char *to_pretty_name);
 
-static void RestoreLockDatabase(void);
-
-static void VerifyThatDatabaseIsNotCorrupt_once(void)
-{
-    int uptime = GetUptimeSeconds(time(NULL));
-    if (uptime <= 0)
-    {
-        Log(LOG_LEVEL_VERBOSE,
-            "Not able to determine uptime when verifying lock database. "
-            "Will assume the database is in order.");
-        return;
-    }
-
-    char *db_path = DBIdToPath(dbid_locks);
-    struct stat statbuf;
-    if (stat(db_path, &statbuf) == 0)
-    {
-        if (statbuf.st_mtime < time(NULL) - uptime)
-        {
-            // We have rebooted since the database was last updated.
-            // Restore it from our backup.
-            RestoreLockDatabase();
-        }
-    }
-
-    free(db_path);
-}
-
-static void VerifyThatDatabaseIsNotCorrupt(void)
-{
-    static pthread_once_t uptime_verified = PTHREAD_ONCE_INIT;
-    pthread_once(&uptime_verified, &VerifyThatDatabaseIsNotCorrupt_once);
-}
-
 CF_DB *OpenLock()
 {
     CF_DB *dbp;
-
-    VerifyThatDatabaseIsNotCorrupt();
 
     if (!OpenDB(&dbp, dbid_locks))
     {

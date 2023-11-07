@@ -17,7 +17,7 @@ bundle agent test
       # 'deny => { "localhost" };' and 'deny_hostnames => { "localhost" };'
       # are not enough to deny access for this test.
       # Test fails on SLES / OpenSUSE 15, pending investigation.
-      "test_skip_unsupported" string => "(ubuntu_20|ubuntu_22|sles_15|opensuse_leap_15)",
+      "test_skip_unsupported" string => "(ubuntu_20|ubuntu_22|debian_12|sles_15|opensuse_leap_15)",
         meta => { "ENT-2480", "ENT-7362", "ENT-9055" };
 
   methods:

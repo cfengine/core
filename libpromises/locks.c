@@ -1037,11 +1037,10 @@ void GetLockName(char *lockname, const char *locktype,
     }
 }
 
-static void RestoreLockDatabase(void)
+void RestoreLockDatabase(void)
 {
     // We don't do any locking here (since we can't trust the database), but
-    // this should be right after bootup, so we should be the only one.
-    // Worst case someone else will just copy the same file to the same
+    // worst case someone else will just copy the same file to the same
     // location.
     char *db_path = DBIdToPath(dbid_locks);
     char *db_path_backup;

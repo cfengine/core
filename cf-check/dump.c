@@ -277,16 +277,16 @@ static void print_struct_or_string(
 {
     if (structs)
     {
-        if (StringEndsWith(file, "cf_lastseen.lmdb")
+        if (StringContains(file, "cf_lastseen.lmdb")
             && StringStartsWith(key.mv_data, "q"))
         {
             print_struct_lastseen_quality(value, strip_strings);
         }
-        else if (StringEndsWith(file, "cf_lock.lmdb"))
+        else if (StringContains(file, "cf_lock.lmdb"))
         {
             print_struct_lock_data(value, strip_strings);
         }
-        else if (StringEndsWith(file, "cf_observations.lmdb"))
+        else if (StringContains(file, "cf_observations.lmdb"))
         {
             if (StringEqual(key.mv_data, "DATABASE_AGE"))
             {
@@ -299,15 +299,18 @@ static void print_struct_or_string(
                 print_struct_averages(value, strip_strings, tskey_filename);
             }
         }
-        else if (StringEndsWith(file, "history.lmdb"))
+        else if (StringEqual(file, "history.lmdb") ||
+                 StringEndsWith(file, FILE_SEPARATOR_STR"history.lmdb") ||
+                 StringEqual(file, "history.lmdb.backup") ||
+                 StringEndsWith(file, FILE_SEPARATOR_STR"history.lmdb.backup"))
         {
             print_struct_averages(value, strip_strings, tskey_filename);
         }
-        else if (StringEndsWith(file, "cf_state.lmdb"))
+        else if (StringContains(file, "cf_state.lmdb"))
         {
             print_struct_persistent_class(value, strip_strings);
         }
-        else if (StringEndsWith(file, "nova_agent_execution.lmdb"))
+        else if (StringContains(file, "nova_agent_execution.lmdb"))
         {
             if (StringEqual(key.mv_data, "delta_gavr"))
             {

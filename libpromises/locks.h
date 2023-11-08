@@ -38,6 +38,7 @@ void GetLockName(char *lockname, const char *locktype,
                  const char *base, const Rlist *params);
 void PurgeLocks(void);
 void BackupLockDatabase(void);
+void RestoreLockDatabase(void);
 
 // Used in enterprise/nova code:
 CF_DB *OpenLock();

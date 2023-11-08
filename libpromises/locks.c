@@ -94,45 +94,9 @@ static void CopyLockDatabaseAtomically(const char *from, const char *to,
                                        const char *from_pretty_name,
                                        const char *to_pretty_name);
 
-static void RestoreLockDatabase(void);
-
-static void VerifyThatDatabaseIsNotCorrupt_once(void)
-{
-    int uptime = GetUptimeSeconds(time(NULL));
-    if (uptime <= 0)
-    {
-        Log(LOG_LEVEL_VERBOSE,
-            "Not able to determine uptime when verifying lock database. "
-            "Will assume the database is in order.");
-        return;
-    }
-
-    char *db_path = DBIdToPath(dbid_locks);
-    struct stat statbuf;
-    if (stat(db_path, &statbuf) == 0)
-    {
-        if (statbuf.st_mtime < time(NULL) - uptime)
-        {
-            // We have rebooted since the database was last updated.
-            // Restore it from our backup.
-            RestoreLockDatabase();
-        }
-    }
-
-    free(db_path);
-}
-
-static void VerifyThatDatabaseIsNotCorrupt(void)
-{
-    static pthread_once_t uptime_verified = PTHREAD_ONCE_INIT;
-    pthread_once(&uptime_verified, &VerifyThatDatabaseIsNotCorrupt_once);
-}
-
 CF_DB *OpenLock()
 {
     CF_DB *dbp;
-
-    VerifyThatDatabaseIsNotCorrupt();
 
     if (!OpenDB(&dbp, dbid_locks))
     {
@@ -553,6 +517,63 @@ static void PromiseTypeString(char *dst, size_t dst_size, const Promise *pp)
     }
 }
 
+/**
+ * A helper best-effort function to prevent us from killing non CFEngine
+ * processes with matching PID-start_time combinations **when/where it's easy to
+ * check**.
+ */
+static bool IsCfengineLockHolder(pid_t pid)
+{
+    char procfile[PATH_MAX];
+    snprintf(procfile, PATH_MAX, "/proc/%ju/comm", (uintmax_t) pid);
+    int f = open(procfile, O_RDONLY);
+    /* On platforms where /proc doesn't exist, we would have to do a more
+       complicated check probably not worth it in this helper best-effort
+       function. */
+    if (f == -1)
+    {
+        /* assume true where we cannot check */
+        return true;
+    }
+
+    /* more than any possible CFEngine lock holder's name */
+    char command[32] = {0};
+    ssize_t n_read = FullRead(f, command, sizeof(command));
+    close(f);
+    if ((n_read <= 1) || (n_read == sizeof(command)))
+    {
+        Log(LOG_LEVEL_VERBOSE, "Failed to get command for process %ju", (uintmax_t) pid);
+        /* assume true where we cannot check */
+        return true;
+    }
+    if (command[n_read - 1] == '\n')
+    {
+        command[n_read - 1] = '\0';
+    }
+
+    /* potential CFEngine lock holders (others like cf-net, cf-key,... are not
+     * supposed/expected to be lock holders) */
+    const char *const cfengine_procs[] = {
+        "cf-promises",
+        "lt-cf-agent",  /* when running from a build with 'libtool --mode=execute' */
+        "cf-agent",
+        "cf-execd",
+        "cf-serverd",
+        "cf-monitord",
+        "cf-hub",
+        NULL
+    };
+    for (size_t i = 0; cfengine_procs[i] != NULL; i++)
+    {
+        if (StringEqual(cfengine_procs[i], command))
+        {
+            return true;
+        }
+    }
+    Log(LOG_LEVEL_DEBUG, "'%s' not considered a CFEngine process", command);
+    return false;
+}
+
 static bool KillLockHolder(const char *lock)
 {
     bool ret;
@@ -585,6 +606,13 @@ static bool KillLockHolder(const char *lock)
     }
 
     CloseLock(dbp);
+
+    if (!IsCfengineLockHolder(lock_data.pid)) {
+        Log(LOG_LEVEL_VERBOSE,
+            "Lock holder with PID %ju was replaced by a non CFEngine process, ignoring request to kill it",
+            (uintmax_t) lock_data.pid);
+        return true;
+    }
 
     if (GracefulTerminate(lock_data.pid, lock_data.process_start_time))
     {
@@ -1073,11 +1101,10 @@ void GetLockName(char *lockname, const char *locktype,
     }
 }
 
-static void RestoreLockDatabase(void)
+void RestoreLockDatabase(void)
 {
     // We don't do any locking here (since we can't trust the database), but
-    // this should be right after bootup, so we should be the only one.
-    // Worst case someone else will just copy the same file to the same
+    // worst case someone else will just copy the same file to the same
     // location.
     char *db_path = DBIdToPath(dbid_locks);
     char *db_path_backup;

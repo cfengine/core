@@ -14,4 +14,3 @@ KillMode=process
 
 [Install]
 WantedBy=multi-user.target
-WantedBy=cfengine3.service

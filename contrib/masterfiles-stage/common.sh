@@ -222,8 +222,8 @@ git_cfbs_deploy_refspec() {
   # Switch back to the original working dir
   cd "${_start_wrkdir}"
   # Grab HEAD so it can be used to populate cf_promises_release_id
-  mkdir -p "${temp_stage}/.git"
-  cp "${local_mirrored_repo}/HEAD" "${temp_stage}/.git/"
+  mkdir -p "${temp_stage}/out/masterfiles/.git"
+  cp "${local_mirrored_repo}/HEAD" "${temp_stage}/out/masterfiles/.git/"
 
   ########################## 3. SET PERMISSIONS ON POLICY SET
   chown -R root:root "${temp_stage}" || error_exit "Unable to chown '${temp_stage}'"

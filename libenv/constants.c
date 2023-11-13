@@ -27,6 +27,12 @@
 #include <eval_context.h>
 #include <file_lib.h>
 
+#ifdef _WIN32
+#define LINESEP "\r\n"
+#else
+#define LINESEP "\n"
+#endif
+
 void LoadSystemConstants(EvalContext *ctx)
 {
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_CONST, "at", "@", CF_DATA_TYPE_STRING, "source=agent");
@@ -36,5 +42,6 @@ void LoadSystemConstants(EvalContext *ctx)
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_CONST, "t", "\t", CF_DATA_TYPE_STRING, "source=agent");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_CONST, "endl", "\n", CF_DATA_TYPE_STRING, "source=agent");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_CONST, "dirsep", FILE_SEPARATOR_STR, CF_DATA_TYPE_STRING, "source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_CONST, "linesep", LINESEP, CF_DATA_TYPE_STRING, "source=agent");
     /* NewScalar("const","0","\0",cf_str);  - this cannot work */
 }

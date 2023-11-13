@@ -1214,7 +1214,7 @@ void PurgeLocks(void)
 
     if (ReadDB(dbp, "lock_horizon", &lock_horizon, sizeof(lock_horizon)))
     {
-        if (now - lock_horizon.time < SECONDS_PER_WEEK * 4)
+        if ((now - lock_horizon.time) < CF_LOCKHORIZON)
         {
             Log(LOG_LEVEL_VERBOSE, "No lock purging scheduled");
             CloseLock(dbp);

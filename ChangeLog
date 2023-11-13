@@ -1,3 +1,51 @@
+3.23.0:
+	- Added selinux policy to allow cf-hub to initiate scheduled reports
+	  (ENT-10696, ENT-9825)
+	- Added version_compare() policy function (CFE-3991)
+	- Bodies can now inherit attributes containing global variables
+	  (CFE-4254)
+	- Cached policy function results now take into account number of arguments
+	  and function name (CFE-4244)
+	- Fixed infinite loop on error bug while reading interface exception file
+	- Fixed inventoried policy release id when masterfiles-stage.sh deploys with cfbs
+	  (ENT-10832)
+	- Improved locale override in masterfiles stage scripts (ENT-10753)
+	- Improved syntax description for validjson() (ENT-9759)
+	- Made cf-support use coredumpctl for core analysis only when configured in kerenl.core_pattern
+	  (ENT-9985)
+	- Modified classesmatching() function to search parent bundles with inherit => true
+	  (ENT-5850)
+	- Moved expected location of ignore_interfaces.rx from $(sys.inputdir) to
+	  $(sys.workdir). If the file is found in $(sys.inputdir) but not in
+	  $(sys.workdir), we will still process it for backwards compatability,
+	  but issue a warning prompting the user to move it to the appropriate
+	  location. (ENT-9402)
+	- Only CFEngine processes are now killed as expired lock owners
+	  (CFE-3982)
+	- SELinux no longer blocks CFEngine deamons in reading security parameters from /proc/sys/kernel
+	  (ENT-9684)
+	- cf-hub is now allowed to use the TLS kernel module on
+	  SELinux-enabled systems (ENT-9727)
+	- cf_lock.lmdb is no longer restored from backup on
+	  every boot (CFE-3982)
+	- packagesmatching() and packageupdatesmatching() now look for the software
+	  inventory databases in the state directory and use them if found. This
+	  change enables the usage of these functions in standalone policy files
+	  without the demand for specifying the default package inventory attribute
+	  in body common control. However, you still need the default package
+	  inventory attribute specified in the policy framework for the software
+	  inventory databases to exist in the first place and to be maintained.
+	  (ENT-9083)
+	- CFEngine locks are now purged dynamically based on the local locks DB
+	  usage/size ranging from no purging (<=25% usage) (ENT-8201, CFE-2136, ENT-5898)
+	- `cf-check repair` now rotates DB files with high usage (>95%) (CFE-3374)
+	- Full LMDB files are now handled gracefully by moving them aside and using new
+	  empty LMDB files (ENT-8201)
+	- `cf-check repair` now supports the `--test-write` option to check if DBs can
+	  be written to as part of identifying DBs that need repairing (CFE-3375)
+	- `cf-check diagnose` now shows DB usage and a hint if rotation is required
+	- /usr/bin/getent is now attempted to be used if /bin/getent doesn't exist (CFE-4256)
+
 3.22.0:
 	- Added --help option to cf-support and aligned output with other
 	  components (ENT-9740)

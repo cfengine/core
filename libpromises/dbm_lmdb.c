@@ -700,6 +700,18 @@ bool DBPrivClean(DBPriv *db)
     return (mdb_drop(txn->txn, db->dbi, EMPTY_DB) != 0);
 }
 
+int DBPrivGetDBUsagePercentage(const char *db_path)
+{
+    struct stat sb;
+    int ret = stat(db_path, &sb);
+    if (ret == -1)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to get size of '%s': %s", db_path, GetErrorStr());
+        return -1;
+    }
+    return (int) ((((float) sb.st_size) / LMDB_MAXSIZE) * 100);
+}
+
 void DBPrivCommit(DBPriv *db)
 {
     assert(db != NULL);

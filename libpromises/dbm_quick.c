@@ -206,6 +206,12 @@ bool DBPrivClean(DBPriv *db)
     return true;
 }
 
+int DBPrivGetDBUsagePercentage(ARG_UNUSED const char *db_path)
+{
+    Log(LOG_LEVEL_WARNING, "Cannot determine usage of a QuickDB database");
+    return -1;
+}
+
 bool DBPrivRead(DBPriv *db, const void *key, int key_size, void *dest, size_t dest_size)
 {
     if (!Lock(db))

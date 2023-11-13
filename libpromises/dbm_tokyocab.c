@@ -245,6 +245,12 @@ bool DBPrivClean(DBPriv *db)
     return true;
 }
 
+int DBPrivGetDBUsagePercentage(ARG_UNUSED const char *db_path)
+{
+    Log(LOG_LEVEL_WARNING, "Cannot determine usage of a TokyoCabinet database");
+    return -1;
+}
+
 bool DBPrivHasKey(DBPriv *db, const void *key, int key_size)
 {
     // FIXME: distinguish between "entry not found" and "error occurred"

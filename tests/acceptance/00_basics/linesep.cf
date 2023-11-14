@@ -1,0 +1,29 @@
+body common control
+{
+  bundlesequence => { "test", "check" };
+  version => "1.0";
+}
+
+bundle agent test
+{
+  meta:
+    "description" -> { "ENT-10432" }
+      string => "Test platform-agnostic linesep constant";
+}
+
+bundle agent check
+{
+  classes:
+    windows::
+      "ok"
+        expression => strcmp("$(const.linesep)", "$(const.r)$(const.n)");
+    !windows::
+      "ok"
+        expression => strcmp("$(const.linesep)", "$(const.n)");
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

@@ -1209,20 +1209,15 @@ void BackupLockDatabase(void)
 
 void PurgeLocks(void)
 {
-    CF_DBC *dbcp;
-    char *key;
-    int ksize, vsize;
-    LockData lock_horizon;
-    LockData *entry = NULL;
-    time_t now = time(NULL);
-
-    CF_DB *dbp = OpenLock();
-    if (dbp == NULL)
+    DBHandle *db = OpenLock();
+    if (db == NULL)
     {
         return;
     }
 
-    int usage_pct = GetDBUsagePercentage(dbp);
+    time_t now = time(NULL);
+
+    int usage_pct = GetDBUsagePercentage(db);
     if (usage_pct == -1)
     {
         /* error already logged */
@@ -1236,19 +1231,19 @@ void PurgeLocks(void)
     if (lock_horizon_interval == 0)
     {
         Log(LOG_LEVEL_VERBOSE, "No lock purging needed (lock DB usage: %d %%)", usage_pct);
-        CloseLock(dbp);
+        CloseLock(db);
         return;
     }
     const time_t purge_horizon = now - lock_horizon_interval;
 
+    LockData lock_horizon;
     memset(&lock_horizon, 0, sizeof(lock_horizon));
-
-    if (ReadDB(dbp, "lock_horizon", &lock_horizon, sizeof(lock_horizon)))
+    if (ReadDB(db, "lock_horizon", &lock_horizon, sizeof(lock_horizon)))
     {
         if (lock_horizon.time > purge_horizon)
         {
             Log(LOG_LEVEL_VERBOSE, "No lock purging scheduled");
-            CloseLock(dbp);
+            CloseLock(db);
             return;
         }
     }
@@ -1257,22 +1252,26 @@ void PurgeLocks(void)
         "Looking for stale locks (older than %jd seconds) to purge",
         (intmax_t) lock_horizon_interval);
 
-    if (!NewDBCursor(dbp, &dbcp))
+    DBCursor *cursor;
+    if (!NewDBCursor(db, &cursor))
     {
         char *db_path = DBIdToPath(dbid_locks);
         Log(LOG_LEVEL_ERR, "Unable to get cursor for locks database '%s'",
             db_path);
         free(db_path);
-        CloseLock(dbp);
+        CloseLock(db);
         return;
     }
 
-    while (NextDB(dbcp, &key, &ksize, (void **)&entry, &vsize))
+    char *key;
+    int ksize, vsize;
+    LockData *entry = NULL;
+    while (NextDB(cursor, &key, &ksize, (void **)&entry, &vsize))
     {
 #ifdef LMDB
         LOG_LOCK_OP("<unknown>", key, entry);
 #endif
-        if (STARTSWITH(key, "last.internal_bundle.track_license.handle"))
+        if (StringStartsWith(key, "last.internal_bundle.track_license.handle"))
         {
             continue;
         }
@@ -1281,15 +1280,14 @@ void PurgeLocks(void)
         {
             Log(LOG_LEVEL_VERBOSE, "Purging lock (%jd s elapsed): %s",
                 (intmax_t) (now - entry->time), key);
-            DBCursorDeleteEntry(dbcp);
+            DBCursorDeleteEntry(cursor);
         }
     }
+    DeleteDBCursor(cursor);
 
     Log(LOG_LEVEL_DEBUG, "Finished purging locks");
 
     lock_horizon.time = now;
-    DeleteDBCursor(dbcp);
-
-    WriteDB(dbp, "lock_horizon", &lock_horizon, sizeof(lock_horizon));
-    CloseLock(dbp);
+    WriteDB(db, "lock_horizon", &lock_horizon, sizeof(lock_horizon));
+    CloseLock(db);
 }

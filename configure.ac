@@ -504,20 +504,12 @@ CF3_WITH_LIBRARY(openssl, [
     )
 ])
 
-dnl PCRE
+dnl PCRE2
 
-AC_ARG_WITH([pcre], [AS_HELP_STRING([--with-pcre[[=PATH]]], [Specify PCRE path])], [], [with_pcre=yes])
-
-if test "x$with_pcre" = "xno"; then
-   AC_MSG_ERROR([PCRE is required])
+if test "x$with_pcre2" = "xno"; then
+   AC_MSG_ERROR([PCRE2 is required])
 fi
-
-CF3_WITH_LIBRARY(pcre, [
-  AC_CHECK_LIB(pcre, pcre_exec, [], [AC_MSG_ERROR(Cannot find PCRE)])
-  AC_CHECK_HEADERS([pcre.h], [],
-    [AC_CHECK_HEADERS([pcre/pcre.h], [PCRE_CPPFLAGS="-Ipcre"],
-                      AC_MSG_ERROR(Cannot find PCRE))])
-])
+AX_CHECK_PCRE2([], [], AC_MSG_ERROR(Cannot find PCRE2))
 
 dnl defined for libntech
 

@@ -13,6 +13,7 @@ bundle agent __main__
                           "before const.at $(const.at) after const.at$(const.n)",
                           "before const.dollar $(const.dollar) after const.dollar$(const.n)",
                           "before const.dirsep $(const.dirsep) after const.dirsep$(const.n)",
+                          "before const.linesep $(const.linesep) after const.linesep$(const.n)",
                           "before const.endl$(const.endl) after const.endl$(const.n)",
                           "before const.n$(const.n) after const.n$(const.n)",
                           "before const.r $(const.r) after const.r$(const.n)",
@@ -41,6 +42,7 @@ body printfile cat(file)
 #@       "default:const.dirsep": "/",
 #@       "default:const.dollar": "$",
 #@       "default:const.endl": "\n",
+#@       "default:const.linesep": "\n",
 #@       "default:const.n": "\n",
 #@       "default:const.r": "\r",
 #@       "default:const.t": "\t"
@@ -50,6 +52,8 @@ body printfile cat(file)
 #@ R: before const.at @ after const.at
 #@ R: before const.dollar $ after const.dollar
 #@ R: before const.dirsep / after const.dirsep
+#@ R: before const.linesep 
+#@ R:  after const.linesep
 #@ R: before const.endl
 #@ R:  after const.endl
 #@ R: before const.n

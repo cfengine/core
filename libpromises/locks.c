@@ -50,7 +50,6 @@
 #endif
 
 #define CFLOGSIZE 1048576       /* Size of lock-log before rotation */
-#define CF_LOCKHORIZON ((time_t)(SECONDS_PER_WEEK * 4))
 #define CF_MAXLOCKNUM 8192
 
 #define CF_CRITIAL_SECTION "CF_CRITICAL_SECTION"
@@ -61,6 +60,20 @@
     log_lock("Exiting", __FUNCTION__, __lock, __lock_sum, __lock_data)
 #define LOG_LOCK_OP(__lock, __lock_sum, __lock_data)            \
     log_lock("Performing", __FUNCTION__, __lock, __lock_sum, __lock_data)
+
+/**
+ * Map the locks DB usage percentage to the lock horizon interval (how old locks
+ * we want to keep).
+ */
+#define N_LOCK_HORIZON_USAGE_INTERVALS 4 /* 0-25, 26-50,... */
+static const time_t LOCK_HORIZON_USAGE_INTERVALS[N_LOCK_HORIZON_USAGE_INTERVALS] = {
+    0,                    /* plenty of space, no cleanup needed (0 is a special
+                           * value) */
+    4 * SECONDS_PER_WEEK, /* used to be the fixed value */
+    2 * SECONDS_PER_WEEK, /* a bit more aggressive, but still reasonable  */
+    SECONDS_PER_WEEK,     /* as far as we want to go to avoid making long locks
+                           * unreliable and practically non-functional */
+};
 
 typedef struct CfLockStack_ {
     char lock[CF_BUFSIZE];
@@ -1210,11 +1223,30 @@ void PurgeLocks(void)
         return;
     }
 
+    int usage_pct = GetDBUsagePercentage(dbp);
+    if (usage_pct == -1)
+    {
+        /* error already logged */
+        /* no usage info, assume 50% */
+        usage_pct = 50;
+    }
+
+    unsigned short interval_idx = MIN(usage_pct / (100 / N_LOCK_HORIZON_USAGE_INTERVALS),
+                                      N_LOCK_HORIZON_USAGE_INTERVALS - 1);
+    const time_t lock_horizon_interval = LOCK_HORIZON_USAGE_INTERVALS[interval_idx];
+    if (lock_horizon_interval == 0)
+    {
+        Log(LOG_LEVEL_VERBOSE, "No lock purging needed (lock DB usage: %d %%)", usage_pct);
+        CloseLock(dbp);
+        return;
+    }
+    const time_t purge_horizon = now - lock_horizon_interval;
+
     memset(&lock_horizon, 0, sizeof(lock_horizon));
 
     if (ReadDB(dbp, "lock_horizon", &lock_horizon, sizeof(lock_horizon)))
     {
-        if ((now - lock_horizon.time) < CF_LOCKHORIZON)
+        if (lock_horizon.time > purge_horizon)
         {
             Log(LOG_LEVEL_VERBOSE, "No lock purging scheduled");
             CloseLock(dbp);
@@ -1222,7 +1254,9 @@ void PurgeLocks(void)
         }
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Looking for stale locks to purge");
+    Log(LOG_LEVEL_VERBOSE,
+        "Looking for stale locks (older than %jd seconds) to purge",
+        (intmax_t) lock_horizon_interval);
 
     if (!NewDBCursor(dbp, &dbcp))
     {
@@ -1244,7 +1278,7 @@ void PurgeLocks(void)
             continue;
         }
 
-        if (now - entry->time > (time_t) CF_LOCKHORIZON)
+        if (entry->time < purge_horizon)
         {
             Log(LOG_LEVEL_VERBOSE, "Purging lock (%jd s elapsed): %s",
                 (intmax_t) (now - entry->time), key);

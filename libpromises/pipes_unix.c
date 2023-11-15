@@ -287,7 +287,7 @@ IOData cf_popen_full_duplex(const char *command, bool capture_stderr, bool requi
     int parent_pipe[2]; /* From parent to child */
     pid_t pid;
 
-    char **argv = ArgSplitCommand(command);
+    char **argv = ArgSplitCommand(command, NULL);
 
     fflush(NULL); /* Empty file buffers */
     pid = CreatePipesAndFork("r+t", child_pipe, parent_pipe);
@@ -377,7 +377,7 @@ FILE *cf_popen_select(const char *command, const char *type, OutputSelect output
     pid_t pid;
     FILE *pp = NULL;
 
-    char **argv = ArgSplitCommand(command);
+    char **argv = ArgSplitCommand(command, NULL);
 
     pid = CreatePipeAndFork(type, pd);
     if (pid == (pid_t) -1)
@@ -475,7 +475,7 @@ FILE *cf_popensetuid(const char *command, const char *type,
     pid_t pid;
     FILE *pp = NULL;
 
-    char **argv = ArgSplitCommand(command);
+    char **argv = ArgSplitCommand(command, NULL);
 
     pid = CreatePipeAndFork(type, pd);
     if (pid == (pid_t) -1)

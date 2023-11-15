@@ -34,7 +34,15 @@ bool ShellCommandReturnsZero(const char *command, ShellType shell);
 bool GetExecOutput(const char *command, char **buffer, size_t *buffer_size, ShellType shell, OutputSelect output_select, int *ret_out);
 void ActAsDaemon();
 void ArgGetExecutableAndArgs(const char *comm, char **exec, char **args);
-char **ArgSplitCommand(const char *comm);
+
+/**
+ * Create a argument list as expected by execv(3)
+ * @param command is split on spaces, unless quoted
+ * @param arglist is not split (can have embedded spaces)
+ * @return null-terminated argument list
+ */
+char **ArgSplitCommand(const char *command, const Seq *arglist);
+
 void ArgFree(char **args);
 
 #endif

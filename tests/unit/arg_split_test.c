@@ -8,7 +8,7 @@
 
 static void test_split_empty(void)
 {
-    char **s = ArgSplitCommand("");
+    char **s = ArgSplitCommand("", NULL);
 
     assert_true(s);
     assert_false(*s);
@@ -22,7 +22,7 @@ static void test_split_empty(void)
 
 static void test_split_easy(void)
 {
-    char **s = ArgSplitCommand("zero one two");
+    char **s = ArgSplitCommand("zero one two", NULL);
 
     assert_string_equal(s[0], "zero");
     assert_string_equal(s[1], "one");
@@ -42,7 +42,7 @@ static void test_split_easy(void)
 
 static void test_split_whitespace_prefix(void)
 {
-    char **s = ArgSplitCommand("  zero one two");
+    char **s = ArgSplitCommand("  zero one two", NULL);
 
     assert_string_equal(s[0], "zero");
     assert_string_equal(s[1], "one");
@@ -62,7 +62,7 @@ static void test_split_whitespace_prefix(void)
 
 static void test_split_quoted_beginning(void)
 {
-    char **s = ArgSplitCommand("\"quoted string\" atbeginning");
+    char **s = ArgSplitCommand("\"quoted string\" atbeginning", NULL);
 
     assert_string_equal(s[0], "quoted string");
     assert_string_equal(s[1], "atbeginning");
@@ -80,7 +80,7 @@ static void test_split_quoted_beginning(void)
 
 static void test_split_quoted_end(void)
 {
-    char **s = ArgSplitCommand("atend 'quoted string'");
+    char **s = ArgSplitCommand("atend 'quoted string'", NULL);
 
     assert_string_equal(s[0], "atend");
     assert_string_equal(s[1], "quoted string");
@@ -98,7 +98,7 @@ static void test_split_quoted_end(void)
 
 static void test_split_quoted_middle(void)
 {
-    char **s = ArgSplitCommand("at `quoted string` middle");
+    char **s = ArgSplitCommand("at `quoted string` middle", NULL);
 
     assert_string_equal(s[0], "at");
     assert_string_equal(s[1], "quoted string");
@@ -117,7 +117,7 @@ static void test_split_quoted_middle(void)
 
 static void test_complex_quoting(void)
 {
-    char **s = ArgSplitCommand("\"foo`'bar\"");
+    char **s = ArgSplitCommand("\"foo`'bar\"", NULL);
 
     assert_string_equal(s[0], "foo`'bar");
     assert_false(s[1]);
@@ -135,7 +135,7 @@ static void test_arguments_resize_for_null(void)
 {
 /* This test checks that extending returned argument list for NULL terminator
  * works correctly */
-    char **s = ArgSplitCommand("0 1 2 3 4 5 6 7");
+    char **s = ArgSplitCommand("0 1 2 3 4 5 6 7", NULL);
 
     assert_string_equal(s[7], "7");
     assert_false(s[8]);
@@ -144,12 +144,33 @@ static void test_arguments_resize_for_null(void)
 
 static void test_arguments_resize(void)
 {
-    char **s = ArgSplitCommand("0 1 2 3 4 5 6 7 8");
+    char **s = ArgSplitCommand("0 1 2 3 4 5 6 7 8", NULL);
 
     assert_string_equal(s[7], "7");
     assert_string_equal(s[8], "8");
     assert_false(s[9]);
     ArgFree(s);
+}
+
+static void test_arguments_with_arglist(void)
+{
+    char *command = "lorem ipsum dolor sit amet";
+
+    Seq *arglist = SeqNew(10, NULL);
+    char extra[][32] = { "consectetur adipiscing", "elit", "sed do", "eiusmod" };
+    for (size_t i = 0; i < sizeof(extra) / sizeof(*extra); i++) {
+        SeqAppend(arglist, extra[i]);
+    }
+
+    char **argv = ArgSplitCommand(command, arglist);
+    SeqDestroy(arglist);
+
+    assert_string_equal(argv[0], "lorem");
+    assert_string_equal(argv[2], "dolor");
+    assert_string_equal(argv[5], "consectetur adipiscing");
+    assert_string_equal(argv[8], "eiusmod");
+    assert_false(argv[9]);
+    ArgFree(argv);
 }
 
 static void test_command_promiser(void)
@@ -227,6 +248,7 @@ int main()
         unit_test(test_complex_quoting),
         unit_test(test_arguments_resize_for_null),
         unit_test(test_arguments_resize),
+        unit_test(test_arguments_with_arglist),
         unit_test(test_command_promiser),
     };
 

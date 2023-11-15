@@ -38,7 +38,9 @@ static void print_usage(void)
 {
     printf("Usage: cf-check repair [-f] [FILE ...]\n");
     printf("Example: cf-check repair /var/cfengine/state/cf_lastseen.lmdb\n");
-    printf("Options: -f|--force repair LMDB files that look OK ");
+    printf("Options:\n"
+           "-f|--force repair LMDB files that look OK\n"
+           "-w|--test-write test writing when checking files\n");
 }
 
 int remove_files(Seq *files)
@@ -281,7 +283,7 @@ int rotate_lmdb_file(const char *file, int fd_tstamp)
     return ret;
 }
 
-int repair_lmdb_files(Seq *files, bool force)
+static int repair_lmdb_files(Seq *files, bool force, bool test_write)
 {
     assert(files != NULL);
     assert(SeqLength(files) > 0);
@@ -293,7 +295,7 @@ int repair_lmdb_files(Seq *files, bool force)
     }
     else
     {
-        const int corruptions = diagnose_files(files, &corrupt, false, false, false);
+        const int corruptions = diagnose_files(files, &corrupt, false, false, test_write);
         if (corruptions != 0)
         {
             assert(corrupt != NULL);
@@ -350,14 +352,18 @@ int repair_lmdb_files(Seq *files, bool force)
 
 int repair_main(int argc, const char *const *const argv)
 {
-    size_t offset = 1;
     bool force = false;
-    if (argc > 1 && argv[1] != NULL && argv[1][0] == '-')
+    bool test_write = false;
+    int i = 1;
+    for (; (i < argc) && (argv[i] != NULL) && (argv[i][0] == '-'); i++)
     {
-        if (StringMatchesOption(argv[1], "--force", "-f"))
+        if (StringMatchesOption(argv[i], "--force", "-f"))
         {
-            offset++;
             force = true;
+        }
+        else if (StringMatchesOption(argv[i], "--test-write", "-w"))
+        {
+            test_write = true;
         }
         else
         {
@@ -366,13 +372,18 @@ int repair_main(int argc, const char *const *const argv)
             return 1;
         }
     }
+    if (force && test_write)
+    {
+        Log(LOG_LEVEL_WARNING, "Ignoring --test-write due to --force skipping DB checks");
+    }
+    size_t offset = i;
     Seq *files = argv_to_lmdb_files(argc, argv, offset);
     if (files == NULL || SeqLength(files) == 0)
     {
         Log(LOG_LEVEL_ERR, "No database files to repair");
         return 1;
     }
-    const int ret = repair_lmdb_files(files, force);
+    const int ret = repair_lmdb_files(files, force, test_write);
     SeqDestroy(files);
     return ret;
 }
@@ -397,7 +408,7 @@ int repair_lmdb_default(bool force)
         Log(LOG_LEVEL_INFO, "Skipping local database repair, no lmdb files");
         return 0;
     }
-    const int ret = repair_lmdb_files(files, force);
+    const int ret = repair_lmdb_files(files, force, false);
     SeqDestroy(files);
 
     if (ret != 0)

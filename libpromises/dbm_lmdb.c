@@ -197,6 +197,7 @@ const char *DBPrivGetFileExtension(void)
     return "lmdb";
 }
 
+/* NOTE: Must be in sync with LMDB_MAXSIZE in cf-check/diagnose.c. */
 #ifndef LMDB_MAXSIZE
 #define LMDB_MAXSIZE    104857600
 #endif

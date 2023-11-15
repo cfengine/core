@@ -614,18 +614,26 @@ size_t diagnose_files(
 
         if (symlink_target != NULL)
         {
+            int usage;
+            bool needs_rotation = lmdb_file_needs_rotation(symlink_target, &usage);
             Log(LOG_LEVEL_INFO,
-                "Status of '%s' -> '%s': %s\n",
+                "Status of '%s' -> '%s': %s [%d%% usage%s]\n",
                 symlink,
                 symlink_target,
-                CF_CHECK_STRING(r));
+                CF_CHECK_STRING(r),
+                usage,
+                needs_rotation ? ", needs rotation" : "");
         }
         else
         {
+            int usage;
+            bool needs_rotation = lmdb_file_needs_rotation(filename, &usage);
             Log(LOG_LEVEL_INFO,
-                "Status of '%s': %s\n",
+                "Status of '%s': %s [%d%% usage%s]\n",
                 filename,
-                CF_CHECK_STRING(r));
+                CF_CHECK_STRING(r),
+                usage,
+                needs_rotation ? ", needs rotation" : "");
         }
 
 

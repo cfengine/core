@@ -39,6 +39,11 @@ size_t diagnose_files(
 #include <validate.h>
 #include <openssl/rand.h>
 
+/* NOTE: Must be in sync with LMDB_MAXSIZE in libpromises/dbm_lmdb.c. */
+#ifndef LMDB_MAXSIZE
+#define LMDB_MAXSIZE    104857600
+#endif
+
 #define CF_CHECK_CREATE_STRING(name) \
   #name,
 
@@ -522,6 +527,25 @@ static char *follow_symlink(const char *path)
     }
     target_buf[r] = '\0';
     return xstrdup(target_buf);
+}
+
+bool lmdb_file_needs_rotation(const char *file, int *usage)
+{
+    struct stat sb;
+    if (stat(file, &sb) == 0)
+    {
+        int usage_pct = (((float) sb.st_size) / LMDB_MAXSIZE) * 100;
+        if (usage != NULL)
+        {
+            *usage = usage_pct;
+        }
+        return (usage_pct >= 95);
+    }
+    else
+    {
+        Log(LOG_LEVEL_ERR, "Failed to stat() '%s' when checking usage: %s", file, GetErrorStr());
+        return false;
+    }
 }
 
 /**

@@ -1,0 +1,67 @@
+##############################################################################
+#
+# CFE-2724: Test that arglist attribute preserves white-spaces
+#
+##############################################################################
+
+body common control
+{
+  inputs => { "../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+##############################################################################
+
+bundle agent init
+{
+  files:
+    "$(G.testfile).actual"
+      delete => tidy;
+    "$(G.testfile).sh"
+      perms => mog("700", "root", "root"),
+      content => '#!/bin/sh
+for arg in "$(const.dollar)$(const.at)"
+do
+    echo "$(const.dollar)arg" >> $(G.testfile).actual
+done';
+}
+
+##############################################################################
+
+bundle agent test
+{
+  meta:
+    "description" -> { "CFE-2724" }
+      string => "Test that arglist attribute preserves white-spaces";
+    "test_skip_unsupported"
+      string => "windows",
+      comment => "See ticket CFE-4294";
+
+  commands:
+    "$(G.testfile).sh"
+      args => "one two three",
+      arglist => { "four", "five six", " seven$(const.t)" };
+}
+
+##############################################################################
+
+bundle agent check
+{
+  vars:
+    "actual"
+      string => readfile("$(G.testfile).actual");
+    "expected"
+      string => "one
+two
+three
+four
+five six
+ seven$(const.t)
+";
+
+  methods:
+    "any"
+      usebundle => dcs_check_strcmp("$(actual)", "$(expected)",
+                                    "$(this.promise_filename)", "no");
+}

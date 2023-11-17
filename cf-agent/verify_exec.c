@@ -335,9 +335,34 @@ static ActionResult RepairExec(EvalContext *ctx, const Attributes *a,
         }
         else
         {
-            pfp =
-                cf_popensetuid(cmdline, NULL, open_mode, a->contain.owner, a->contain.group, a->contain.chdir, a->contain.chroot,
-                               a->transaction.background);
+            char *const command = (a->args == NULL)
+                                ? xstrdup(pp->promiser)
+                                : StringFormat("%s %s", pp->promiser,
+                                               a->args);
+            Seq *arglist = NULL;
+            if (a->arglist != NULL)
+            {
+                arglist = SeqNew(8, NULL);
+                for (const Rlist *rp = a->arglist; rp != NULL; rp = rp->next)
+                {
+                    if (rp->val.type == RVAL_TYPE_SCALAR)
+                    {
+                        SeqAppend(arglist, RlistScalarValue(rp));
+                    }
+                    else
+                    {
+                        Log(LOG_LEVEL_ERR,
+                            "RepairExec: invalid rval (not a scalar) in arglist of commands promise '%s'",
+                            pp->promiser);
+                    }
+                }
+            }
+            pfp = cf_popensetuid(command, arglist, open_mode,
+                                 a->contain.owner, a->contain.group,
+                                 a->contain.chdir, a->contain.chroot,
+                                 a->transaction.background);
+            free(command);
+            SeqDestroy(arglist);
         }
 
         if (pfp == NULL)

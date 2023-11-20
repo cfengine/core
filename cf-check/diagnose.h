@@ -85,6 +85,8 @@ int lmdb_errno_to_cf_check_code(int r);
 int signal_to_cf_check_code(int sig);
 void report_mdb_error(const char *db_file, const char *op, int rc);
 
+bool lmdb_file_needs_rotation(const char *file, int *usage);
+
 size_t diagnose_files(
     const Seq *filenames, Seq **corrupt, bool foreground, bool validate, bool test_write);
 int diagnose_main(int argc, const char *const *argv);

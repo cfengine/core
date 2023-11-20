@@ -548,6 +548,12 @@ bool CleanDB(DBHandle *handle)
     return ret;
 }
 
+int GetDBUsagePercentage(const DBHandle *handle)
+{
+    assert(handle != NULL);
+    return DBPrivGetDBUsagePercentage(handle->filename);
+}
+
 /**
  * Freezes the DB so that it is never touched by this process again. In
  * particular, new OpenDB() calls are ignored and CloseAllDBExit() also ignores

@@ -38,7 +38,9 @@ static void print_usage(void)
 {
     printf("Usage: cf-check repair [-f] [FILE ...]\n");
     printf("Example: cf-check repair /var/cfengine/state/cf_lastseen.lmdb\n");
-    printf("Options: -f|--force repair LMDB files that look OK ");
+    printf("Options:\n"
+           "-f|--force repair LMDB files that look OK\n"
+           "-w|--test-write test writing when checking files\n");
 }
 
 int remove_files(Seq *files)
@@ -80,7 +82,7 @@ int remove_files(Seq *files)
     return failures;
 }
 
-static bool record_repair_timestamp(int fd_tstamp)
+static bool record_timestamp(int fd_tstamp)
 {
     time_t this_timestamp = time(NULL);
     lseek(fd_tstamp, 0, SEEK_SET);
@@ -158,7 +160,7 @@ int repair_lmdb_file(const char *file, int fd_tstamp)
             }
             else
             {
-                if (!record_repair_timestamp(fd_tstamp))
+                if (!record_timestamp(fd_tstamp))
                 {
                     Log(LOG_LEVEL_ERR, "Failed to write the timestamp of repair of the '%s' file",
                         file);
@@ -178,7 +180,7 @@ int repair_lmdb_file(const char *file, int fd_tstamp)
             }
             else
             {
-                if (!record_repair_timestamp(fd_tstamp))
+                if (!record_timestamp(fd_tstamp))
                 {
                     Log(LOG_LEVEL_ERR, "Failed to write the timestamp of repair of the '%s' file",
                         file);
@@ -200,7 +202,7 @@ int repair_lmdb_file(const char *file, int fd_tstamp)
                 ret = -1;
                 goto cleanup;
             }
-            if (!record_repair_timestamp(fd_tstamp))
+            if (!record_timestamp(fd_tstamp))
             {
                 Log(LOG_LEVEL_ERR, "Failed to write the timestamp of repair of the '%s' file",
                     file);
@@ -217,7 +219,71 @@ int repair_lmdb_file(const char *file, int fd_tstamp)
     return ret;
 }
 
-int repair_lmdb_files(Seq *files, bool force)
+/**
+ * @param file      LMDB file to rotate
+ * @param fd_tstamp An open FD to the repair timestamp file or -1
+ *
+ * @note If #fd_tstamp != -1 then it is expected to be open and with file locks
+ *       taken care of. If #fd_tstamp == -1, this function opens the rotation
+ *       timestamp file on its own and takes care of the file locks.
+ */
+int rotate_lmdb_file(const char *file, int fd_tstamp)
+{
+    int ret;
+    FileLock lock = EMPTY_FILE_LOCK;
+    if (fd_tstamp == -1)
+    {
+        char *tstamp_file = StringFormat("%s.rotated", file);
+        int lock_ret = ExclusiveFileLockPath(&lock, tstamp_file, true); /* wait=true */
+        free(tstamp_file);
+        if (lock_ret < 0)
+        {
+            /* Should never happen because we tried to wait for the lock. */
+            Log(LOG_LEVEL_ERR,
+                "Failed to acquire lock for the '%s' DB repair timestamp file",
+                file);
+            ret = -1;
+            goto cleanup;
+        }
+        fd_tstamp = lock.fd;
+    }
+
+    time_t now = time(NULL);
+    {
+        char *rotated_file = StringFormat("%s.rotated_%jd", file, (intmax_t) now);
+        ret = rename(file, rotated_file);
+        free(rotated_file);
+    }
+    if (ret != 0)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Failed to rotate the '%s' DB file (%s), will be removed instead",
+            file, GetErrorStr());
+        ret = unlink(file);
+        if (ret != 0)
+        {
+            Log(LOG_LEVEL_ERR, "Failed to remove the '%s' DB file: %s",
+                file, GetErrorStr());
+        }
+    }
+    if (ret == 0)
+    {
+        if (!record_timestamp(fd_tstamp))
+        {
+            Log(LOG_LEVEL_ERR, "Failed to write the timestamp of rotation of the '%s' DB file",
+                file);
+        }
+    }
+
+  cleanup:
+    if (lock.fd != -1)
+    {
+        ExclusiveFileUnlock(&lock, true); /* close=true */
+    }
+    return ret;
+}
+
+static int repair_lmdb_files(Seq *files, bool force, bool test_write)
 {
     assert(files != NULL);
     assert(SeqLength(files) > 0);
@@ -229,7 +295,7 @@ int repair_lmdb_files(Seq *files, bool force)
     }
     else
     {
-        const int corruptions = diagnose_files(files, &corrupt, false, false, false);
+        const int corruptions = diagnose_files(files, &corrupt, false, false, test_write);
         if (corruptions != 0)
         {
             assert(corrupt != NULL);
@@ -256,6 +322,14 @@ int repair_lmdb_files(Seq *files, bool force)
         {
             ret++;
         }
+        int usage;
+        if (lmdb_file_needs_rotation(file, &usage))
+        {
+            if (rotate_lmdb_file(file, -1) != -1)
+            {
+                Log(LOG_LEVEL_INFO, "Rotated '%s' DB with %d%% usage", file, usage);
+            }
+        }
     }
 
     if (!force)
@@ -278,14 +352,18 @@ int repair_lmdb_files(Seq *files, bool force)
 
 int repair_main(int argc, const char *const *const argv)
 {
-    size_t offset = 1;
     bool force = false;
-    if (argc > 1 && argv[1] != NULL && argv[1][0] == '-')
+    bool test_write = false;
+    int i = 1;
+    for (; (i < argc) && (argv[i] != NULL) && (argv[i][0] == '-'); i++)
     {
-        if (StringMatchesOption(argv[1], "--force", "-f"))
+        if (StringMatchesOption(argv[i], "--force", "-f"))
         {
-            offset++;
             force = true;
+        }
+        else if (StringMatchesOption(argv[i], "--test-write", "-w"))
+        {
+            test_write = true;
         }
         else
         {
@@ -294,13 +372,18 @@ int repair_main(int argc, const char *const *const argv)
             return 1;
         }
     }
+    if (force && test_write)
+    {
+        Log(LOG_LEVEL_WARNING, "Ignoring --test-write due to --force skipping DB checks");
+    }
+    size_t offset = i;
     Seq *files = argv_to_lmdb_files(argc, argv, offset);
     if (files == NULL || SeqLength(files) == 0)
     {
         Log(LOG_LEVEL_ERR, "No database files to repair");
         return 1;
     }
-    const int ret = repair_lmdb_files(files, force);
+    const int ret = repair_lmdb_files(files, force, test_write);
     SeqDestroy(files);
     return ret;
 }
@@ -325,7 +408,7 @@ int repair_lmdb_default(bool force)
         Log(LOG_LEVEL_INFO, "Skipping local database repair, no lmdb files");
         return 0;
     }
-    const int ret = repair_lmdb_files(files, force);
+    const int ret = repair_lmdb_files(files, force, false);
     SeqDestroy(files);
 
     if (ret != 0)

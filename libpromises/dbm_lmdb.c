@@ -79,12 +79,17 @@ static int DB_MAX_READERS = -1;
 /******************************************************************************/
 
 static void HandleLMDBCorruption(MDB_env *env, const char *msg);
+static void HandleFullLMDB(MDB_env *env);
 
-static inline void CheckLMDBCorrupted(int rc, MDB_env *env)
+static inline void CheckLMDBUsable(int rc, MDB_env *env)
 {
     if (rc == MDB_CORRUPTED)
     {
         HandleLMDBCorruption(env, "");
+    }
+    else if (rc == MDB_MAP_FULL)
+    {
+        HandleFullLMDB(env);
     }
 }
 
@@ -134,7 +139,7 @@ static int GetWriteTransaction(DBPriv *const db, DBTxn **const txn)
     if (db_txn->txn != NULL && !db_txn->rw_txn)
     {
         rc = mdb_txn_commit(db_txn->txn);
-        CheckLMDBCorrupted(rc, db->env);
+        CheckLMDBUsable(rc, db->env);
         if (rc != MDB_SUCCESS)
         {
             Log(LOG_LEVEL_ERR, "Unable to close read-only transaction in '%s': %s",
@@ -146,7 +151,7 @@ static int GetWriteTransaction(DBPriv *const db, DBTxn **const txn)
     if (db_txn->txn == NULL)
     {
         rc = mdb_txn_begin(db->env, NULL, 0, &db_txn->txn);
-        CheckLMDBCorrupted(rc, db->env);
+        CheckLMDBUsable(rc, db->env);
         if (rc == MDB_SUCCESS)
         {
             db_txn->rw_txn = true;
@@ -197,6 +202,7 @@ const char *DBPrivGetFileExtension(void)
     return "lmdb";
 }
 
+/* NOTE: Must be in sync with LMDB_MAXSIZE in cf-check/diagnose.c. */
 #ifndef LMDB_MAXSIZE
 #define LMDB_MAXSIZE    104857600
 #endif
@@ -273,6 +279,43 @@ static bool RepairedAfterOpen(const char *lmdb_file, int fd_tstamp)
          * an already-handled one. */
         DBHandle *handle = GetDBHandleFromFilename(lmdb_file);
         if (repaired_tstamp > GetDBOpenTimestamp(handle))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * @warning Expects @fd_stamp to be locked.
+ */
+static bool RotatedAfterOpen(const char *lmdb_file, int fd_tstamp)
+{
+    time_t rotated_tstamp = -1;
+    ssize_t n_read = read(fd_tstamp, &rotated_tstamp, sizeof(time_t));
+    lseek(fd_tstamp, 0, SEEK_SET);
+
+    if (n_read < 0)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to read %s: %s", lmdb_file, GetErrorStr());
+    }
+    else if (n_read == 0)
+    {
+        /* EOF (empty file) => never rotated */
+        Log(LOG_LEVEL_VERBOSE, "DB '%s' never rotated before", lmdb_file);
+    }
+    else if ((size_t) n_read < sizeof(time_t))
+    {
+        /* error */
+        Log(LOG_LEVEL_ERR, "Failed to read the timestamp of rotation of the '%s' DB",
+            lmdb_file);
+    }
+    else
+    {
+        /* read the timestamp => Check if the LMDB file was rotated after
+         * we opened it last time. */
+        DBHandle *handle = GetDBHandleFromFilename(lmdb_file);
+        if (rotated_tstamp > GetDBOpenTimestamp(handle))
         {
             return true;
         }
@@ -490,6 +533,220 @@ static void HandleLMDBCorruption(MDB_env *env, const char *msg)
 #endif  /* __MINGW32__ */
 }
 
+/**
+ * A modified clone of HandleLMDBCorruption() for handling full LMDBs. It's not
+ * easy and nice to share much code between the two functions, unfortunately.
+ */
+static void HandleFullLMDB(MDB_env *env)
+{
+    const char *lmdb_file = mdb_env_get_userctx(env);
+    Log(LOG_LEVEL_CRIT, "'%s' DB full!", lmdb_file);
+
+    /* Freeze the DB ASAP. This also makes the call to exit() safe regarding
+     * this particular DB because exit handlers will ignore it. */
+    DBHandle *handle = GetDBHandleFromFilename(lmdb_file);
+    FreezeDB(handle);
+
+#ifdef _WIN32
+    /* Not much we can do on Windows because there is no fork() and file locking
+     * is also not so nice. */
+    Log(LOG_LEVEL_WARNING, "Moving the full DB file '%s' aside",
+        lmdb_file);
+    time_t now = time(NULL);
+    char *rotated_file = StringFormat("%s.rotated.%jd", lmdb_file, (intmax_t) now);
+    if (rename(lmdb_file, rotated_file) != 0)
+    {
+        free(rotated_file);
+        Log(LOG_LEVEL_CRIT,
+            "Failed to move the full DB file '%s' aside (%s), will be removed instead",
+            lmdb_file, GetErrorStr());
+        if (unlink(lmdb_file) != 0)
+        {
+            Log(LOG_LEVEL_CRIT, "Failed to remove the full DB file '%s': %s",
+                lmdb_file, GetErrorStr());
+        }
+        exit(EC_CORRUPTION_REPAIR_FAILED);
+    }
+    free(rotated_file);
+    exit(EC_CORRUPTION_REPAIRED);
+#else
+    /* To avoid two processes acting on the same corrupted file at once, file
+     * locks are involved. Looking at OpenDBInstance() and DBPathLock()
+     * in libpromises/db_api.c might also be useful.*/
+
+    /* Only allow one thread at a time to handle a full or corrupted DB. File
+     * locks are *process* specific so threads could step on each others
+     * toes. */
+    ThreadLock(cft_db_corruption_lock);
+
+    char *tstamp_file = StringFormat("%s.rotated", lmdb_file);
+    char *db_lock_file = StringFormat("%s.lock", lmdb_file);
+
+    int fd_tstamp = safe_open(tstamp_file, O_CREAT|O_RDWR);
+    if (fd_tstamp == -1)
+    {
+        Log(LOG_LEVEL_CRIT, "Failed to open the '%s' DB rotation timestamp file",
+            lmdb_file);
+        ThreadUnlock(cft_db_corruption_lock);
+        free(db_lock_file);
+        free(tstamp_file);
+
+        exit(EC_CORRUPTION_REPAIR_FAILED);
+    }
+    FileLock tstamp_lock = { .fd = fd_tstamp };
+
+    int fd_db_lock = safe_open(db_lock_file, O_CREAT|O_RDWR);
+    if (fd_db_lock == -1)
+    {
+        Log(LOG_LEVEL_CRIT, "Failed to open the '%s' DB lock file",
+            lmdb_file);
+        ThreadUnlock(cft_db_corruption_lock);
+        close(fd_tstamp);
+        free(db_lock_file);
+        free(tstamp_file);
+
+        exit(EC_CORRUPTION_REPAIR_FAILED);
+    }
+    FileLock db_lock = { .fd = fd_db_lock };
+
+    int ret;
+    bool handle_rotation = true;
+
+    /* Make sure we are not holding the DB's lock (potentially needed by some
+     * other process for the repair or rotation) to avoid deadlocks. */
+    Log(LOG_LEVEL_DEBUG, "Releasing lock on the '%s' DB", lmdb_file);
+    ExclusiveFileUnlock(&db_lock, false); /* close=false */
+
+    ret = SharedFileLock(&tstamp_lock, true);
+    if (ret == 0)
+    {
+        if (RotatedAfterOpen(lmdb_file, fd_tstamp))
+        {
+            /* The corruption has already been handled. This process should just
+             * die because we have no way to return to the point where it would
+             * just open the new (repaired or rotated) LMDB file. */
+            handle_rotation = false;
+        }
+        SharedFileUnlock(&tstamp_lock, false);
+    }
+    else
+    {
+        /* should never happen (we tried to wait), but if it does, just log an
+         * error and keep going */
+        Log(LOG_LEVEL_ERR,
+            "Failed to get shared lock for the rotation timestamp of the '%s' DB",
+            lmdb_file);
+    }
+
+    if (!handle_rotation)
+    {
+        /* Just clean after ourselves and terminate the process. */
+        ThreadUnlock(cft_db_corruption_lock);
+        close(fd_db_lock);
+        close(fd_tstamp);
+        free(db_lock_file);
+        free(tstamp_file);
+
+        exit(EC_CORRUPTION_REPAIRED);
+    }
+
+    /* HERE is a window for some other process to do the rotation between when we
+     * checked the timestamp using the shared lock above and the attempt to get
+     * the exclusive lock right below. However, this is detected by checking the
+     * contents of the timestamp file again below, while holding the EXCLUSIVE
+     * lock. */
+
+    ret = ExclusiveFileLock(&tstamp_lock, true);
+    if (ret != 0)
+    {
+        /* should never happen (we tried to wait), but if it does, just
+         * terminate because doing the rotation without the lock could be
+         * disasterous */
+        Log(LOG_LEVEL_ERR,
+            "Failed to get shared lock for the rotation timestamp of the '%s' DB",
+            lmdb_file);
+
+        ThreadUnlock(cft_db_corruption_lock);
+        close(fd_db_lock);
+        close(fd_tstamp);
+        free(db_lock_file);
+        free(tstamp_file);
+
+        exit(EC_CORRUPTION_REPAIR_FAILED);
+    }
+
+    /* Cleared to resolve the corruption. */
+
+    /* 1. Acquire the lock for the DB to prevent more processes trying to use
+     *    it while it is corrupted (wait till the lock is available). */
+    while (ExclusiveFileLock(&db_lock, false) == -1)
+    {
+        /* busy wait to do the logging */
+        Log(LOG_LEVEL_INFO, "Waiting for the lock on the '%s' DB",
+            lmdb_file);
+        sleep(1);
+    }
+
+    /* 2. Check the last rotation timestamp again (see the big "HERE..." comment
+     *    above) */
+    if (RotatedAfterOpen(lmdb_file, fd_tstamp))
+    {
+        /* Some other process rotated the DB since we checked last time,
+         * nothing more to do here. */
+        ThreadUnlock(cft_db_corruption_lock);
+        close(fd_db_lock);      /* releases locks */
+        close(fd_tstamp);       /* releases locks */
+        free(db_lock_file);
+        free(tstamp_file);
+
+        exit(EC_CORRUPTION_REPAIRED);
+    }
+
+    /* 3. Rotate the DB or at least move it out of the way. */
+    ret = rotate_lmdb_file(lmdb_file, fd_tstamp);
+    bool rotation_successful = (ret == 0);
+    if (rotation_successful)
+    {
+        Log(LOG_LEVEL_NOTICE, "DB '%s' successfully rotated", lmdb_file);
+    }
+    else
+    {
+        Log(LOG_LEVEL_CRIT, "Failed to rotate '%s' DB", lmdb_file);
+    }
+
+    /* 4. Make the rotated DB available for others. Also release the locks
+     *    in the opposite order in which they were acquired to avoid
+     *    deadlocks. */
+    if (ExclusiveFileUnlock(&db_lock, true) != 0)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to release the acquired lock for '%s'",
+            db_lock_file);
+    }
+
+    /* 5. Signal that the rotation is done (also closes fd_tstamp). */
+    if (ExclusiveFileUnlock(&tstamp_lock, true) != 0)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to release the acquired lock for '%s'",
+            tstamp_file);
+    }
+
+    ThreadUnlock(cft_db_corruption_lock);
+    free(db_lock_file);
+    free(tstamp_file);
+    /* fd_db_lock and fd_tstamp are already closed by the calls to
+     * ExclusiveFileUnlock above. */
+
+    if (rotation_successful)
+    {
+        exit(EC_CORRUPTION_REPAIRED);
+    }
+    else
+    {
+        exit(EC_CORRUPTION_REPAIR_FAILED);
+    }
+#endif  /* _WIN32 */
+}
+
 DBPriv *DBPrivOpenDB(const char *const dbpath, const dbid id)
 {
     DBPriv *const db = xcalloc(1, sizeof(DBPriv));
@@ -603,7 +860,7 @@ DBPriv *DBPrivOpenDB(const char *const dbpath, const dbid id)
     int attempts = N_LMDB_EINVAL_RETRIES;
     while ((rc != 0) && (attempts-- > 0))
     {
-        CheckLMDBCorrupted(rc, db->env);
+        CheckLMDBUsable(rc, db->env);
         if (rc != EINVAL)
         {
             Log(LOG_LEVEL_ERR, "Could not open database txn %s: %s",
@@ -624,7 +881,7 @@ DBPriv *DBPrivOpenDB(const char *const dbpath, const dbid id)
         goto err;
     }
     rc = mdb_open(txn, NULL, 0, &db->dbi);
-    CheckLMDBCorrupted(rc, db->env);
+    CheckLMDBUsable(rc, db->env);
     if (rc)
     {
         Log(LOG_LEVEL_ERR, "Could not open database dbi %s: %s",
@@ -633,7 +890,7 @@ DBPriv *DBPrivOpenDB(const char *const dbpath, const dbid id)
         goto err;
     }
     rc = mdb_txn_commit(txn);
-    CheckLMDBCorrupted(rc, db->env);
+    CheckLMDBUsable(rc, db->env);
     if (rc)
     {
         Log(LOG_LEVEL_ERR, "Could not commit database dbi %s: %s",
@@ -700,6 +957,18 @@ bool DBPrivClean(DBPriv *db)
     return (mdb_drop(txn->txn, db->dbi, EMPTY_DB) != 0);
 }
 
+int DBPrivGetDBUsagePercentage(const char *db_path)
+{
+    struct stat sb;
+    int ret = stat(db_path, &sb);
+    if (ret == -1)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to get size of '%s': %s", db_path, GetErrorStr());
+        return -1;
+    }
+    return (int) ((((float) sb.st_size) / LMDB_MAXSIZE) * 100);
+}
+
 void DBPrivCommit(DBPriv *db)
 {
     assert(db != NULL);
@@ -709,7 +978,7 @@ void DBPrivCommit(DBPriv *db)
     {
         assert(!db_txn->cursor_open);
         const int rc = mdb_txn_commit(db_txn->txn);
-        CheckLMDBCorrupted(rc, db->env);
+        CheckLMDBUsable(rc, db->env);
         if (rc != MDB_SUCCESS)
         {
             Log(LOG_LEVEL_ERR, "Could not commit database transaction to '%s': %s",
@@ -735,7 +1004,7 @@ bool DBPrivHasKey(DBPriv *db, const void *key, int key_size)
         mkey.mv_data = (void *) key;
         mkey.mv_size = key_size;
         rc = mdb_get(txn->txn, db->dbi, &mkey, &data);
-        CheckLMDBCorrupted(rc, db->env);
+        CheckLMDBUsable(rc, db->env);
         if (rc != 0 && rc != MDB_NOTFOUND)
         {
             Log(LOG_LEVEL_ERR, "Could not read database entry from '%s': %s",
@@ -764,7 +1033,7 @@ int DBPrivGetValueSize(DBPriv *const db, const void *const key, const int key_si
         mkey.mv_data = (void *) key;
         mkey.mv_size = key_size;
         rc = mdb_get(txn->txn, db->dbi, &mkey, &data);
-        CheckLMDBCorrupted(rc, db->env);
+        CheckLMDBUsable(rc, db->env);
         if (rc && rc != MDB_NOTFOUND)
         {
             Log(LOG_LEVEL_ERR, "Could not read database entry from '%s': %s",
@@ -800,7 +1069,7 @@ bool DBPrivRead(
         mkey.mv_data = (void *) key;
         mkey.mv_size = key_size;
         rc = mdb_get(txn->txn, db->dbi, &mkey, &data);
-        CheckLMDBCorrupted(rc, db->env);
+        CheckLMDBUsable(rc, db->env);
         if (rc == MDB_SUCCESS)
         {
             if (dest_size > data.mv_size)
@@ -842,7 +1111,7 @@ bool DBPrivWrite(
         data.mv_data = (void *)value;
         data.mv_size = value_size;
         rc = mdb_put(txn->txn, db->dbi, &mkey, &data, 0);
-        CheckLMDBCorrupted(rc, db->env);
+        CheckLMDBUsable(rc, db->env);
         if (rc != MDB_SUCCESS)
         {
             Log(LOG_LEVEL_ERR, "Could not write database entry to '%s': %s",
@@ -873,7 +1142,7 @@ bool DBPrivOverwrite(DBPriv *db, const char *key, int key_size, const void *valu
     mkey.mv_data = (void *) key;
     mkey.mv_size = key_size;
     rc = mdb_get(txn->txn, db->dbi, &mkey, &orig_data);
-    CheckLMDBCorrupted(rc, db->env);
+    CheckLMDBUsable(rc, db->env);
     if ((rc != MDB_SUCCESS) && (rc != MDB_NOTFOUND))
     {
         Log(LOG_LEVEL_ERR, "Could not read database entry from '%s': %s",
@@ -914,7 +1183,7 @@ bool DBPrivOverwrite(DBPriv *db, const char *key, int key_size, const void *valu
     new_data.mv_data = (void *)value;
     new_data.mv_size = value_size;
     rc = mdb_put(txn->txn, db->dbi, &mkey, &new_data, 0);
-    CheckLMDBCorrupted(rc, db->env);
+    CheckLMDBUsable(rc, db->env);
     if (rc != MDB_SUCCESS)
     {
         Log(LOG_LEVEL_ERR, "Could not write database entry to '%s': %s",
@@ -940,7 +1209,7 @@ bool DBPrivDelete(DBPriv *const db, const void *const key, const int key_size)
         mkey.mv_data = (void *) key;
         mkey.mv_size = key_size;
         rc = mdb_del(txn->txn, db->dbi, &mkey, NULL);
-        CheckLMDBCorrupted(rc, db->env);
+        CheckLMDBUsable(rc, db->env);
         if (rc == MDB_NOTFOUND)
         {
             Log(LOG_LEVEL_DEBUG, "Entry not found in '%s': %s",
@@ -969,7 +1238,7 @@ DBCursorPriv *DBPrivOpenCursor(DBPriv *const db)
     {
         assert(!txn->cursor_open);
         rc = mdb_cursor_open(txn->txn, db->dbi, &mc);
-        CheckLMDBCorrupted(rc, db->env);
+        CheckLMDBUsable(rc, db->env);
         if (rc == MDB_SUCCESS)
         {
             cursor = xcalloc(1, sizeof(DBCursorPriv));
@@ -1009,7 +1278,7 @@ bool DBPrivAdvanceCursor(
     }
 
     int rc = mdb_cursor_get(cursor->mc, &mkey, &data, MDB_NEXT);
-    CheckLMDBCorrupted(rc, cursor->db->env);
+    CheckLMDBUsable(rc, cursor->db->env);
     if (rc == MDB_SUCCESS)
     {
         // Align second buffer to 64-bit boundary, to avoid alignment errors on
@@ -1048,7 +1317,7 @@ bool DBPrivAdvanceCursor(
         {
             mkey.mv_data = *key;
             rc = mdb_cursor_get(cursor->mc, &mkey, NULL, MDB_SET);
-            CheckLMDBCorrupted(rc, cursor->db->env);
+            CheckLMDBUsable(rc, cursor->db->env);
             // TODO: Should the return value be checked?
         }
         cursor->pending_delete = false;
@@ -1061,7 +1330,7 @@ bool DBPrivDeleteCursorEntry(DBCursorPriv *const cursor)
     assert(cursor != NULL);
 
     int rc = mdb_cursor_get(cursor->mc, &cursor->delkey, NULL, MDB_GET_CURRENT);
-    CheckLMDBCorrupted(rc, cursor->db->env);
+    CheckLMDBUsable(rc, cursor->db->env);
     if (rc == MDB_SUCCESS)
     {
         cursor->pending_delete = true;
@@ -1089,7 +1358,7 @@ bool DBPrivWriteCursorEntry(
         curkey.mv_size = sizeof(cursor->curkv);
 
         rc = mdb_cursor_put(cursor->mc, &curkey, &data, MDB_CURRENT);
-        CheckLMDBCorrupted(rc, cursor->db->env);
+        CheckLMDBUsable(rc, cursor->db->env);
         if (rc != MDB_SUCCESS)
         {
             Log(LOG_LEVEL_ERR, "Could not write cursor entry to '%s': %s",

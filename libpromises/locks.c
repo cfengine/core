@@ -50,7 +50,6 @@
 #endif
 
 #define CFLOGSIZE 1048576       /* Size of lock-log before rotation */
-#define CF_LOCKHORIZON ((time_t)(SECONDS_PER_WEEK * 4))
 #define CF_MAXLOCKNUM 8192
 
 #define CF_CRITIAL_SECTION "CF_CRITICAL_SECTION"
@@ -61,6 +60,20 @@
     log_lock("Exiting", __FUNCTION__, __lock, __lock_sum, __lock_data)
 #define LOG_LOCK_OP(__lock, __lock_sum, __lock_data)            \
     log_lock("Performing", __FUNCTION__, __lock, __lock_sum, __lock_data)
+
+/**
+ * Map the locks DB usage percentage to the lock horizon interval (how old locks
+ * we want to keep).
+ */
+#define N_LOCK_HORIZON_USAGE_INTERVALS 4 /* 0-25, 26-50,... */
+static const time_t LOCK_HORIZON_USAGE_INTERVALS[N_LOCK_HORIZON_USAGE_INTERVALS] = {
+    0,                    /* plenty of space, no cleanup needed (0 is a special
+                           * value) */
+    4 * SECONDS_PER_WEEK, /* used to be the fixed value */
+    2 * SECONDS_PER_WEEK, /* a bit more aggressive, but still reasonable  */
+    SECONDS_PER_WEEK,     /* as far as we want to go to avoid making long locks
+                           * unreliable and practically non-functional */
+};
 
 typedef struct CfLockStack_ {
     char lock[CF_BUFSIZE];
@@ -1197,66 +1210,85 @@ void BackupLockDatabase(void)
 
 void PurgeLocks(void)
 {
-    CF_DBC *dbcp;
-    char *key;
-    int ksize, vsize;
-    LockData lock_horizon;
-    LockData *entry = NULL;
-    time_t now = time(NULL);
-
-    CF_DB *dbp = OpenLock();
-    if (dbp == NULL)
+    DBHandle *db = OpenLock();
+    if (db == NULL)
     {
         return;
     }
 
-    memset(&lock_horizon, 0, sizeof(lock_horizon));
+    time_t now = time(NULL);
 
-    if (ReadDB(dbp, "lock_horizon", &lock_horizon, sizeof(lock_horizon)))
+    int usage_pct = GetDBUsagePercentage(db);
+    if (usage_pct == -1)
     {
-        if (now - lock_horizon.time < SECONDS_PER_WEEK * 4)
+        /* error already logged */
+        /* no usage info, assume 50% */
+        usage_pct = 50;
+    }
+
+    unsigned short interval_idx = MIN(usage_pct / (100 / N_LOCK_HORIZON_USAGE_INTERVALS),
+                                      N_LOCK_HORIZON_USAGE_INTERVALS - 1);
+    const time_t lock_horizon_interval = LOCK_HORIZON_USAGE_INTERVALS[interval_idx];
+    if (lock_horizon_interval == 0)
+    {
+        Log(LOG_LEVEL_VERBOSE, "No lock purging needed (lock DB usage: %d %%)", usage_pct);
+        CloseLock(db);
+        return;
+    }
+    const time_t purge_horizon = now - lock_horizon_interval;
+
+    LockData lock_horizon;
+    memset(&lock_horizon, 0, sizeof(lock_horizon));
+    if (ReadDB(db, "lock_horizon", &lock_horizon, sizeof(lock_horizon)))
+    {
+        if (lock_horizon.time > purge_horizon)
         {
             Log(LOG_LEVEL_VERBOSE, "No lock purging scheduled");
-            CloseLock(dbp);
+            CloseLock(db);
             return;
         }
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Looking for stale locks to purge");
+    Log(LOG_LEVEL_VERBOSE,
+        "Looking for stale locks (older than %jd seconds) to purge",
+        (intmax_t) lock_horizon_interval);
 
-    if (!NewDBCursor(dbp, &dbcp))
+    DBCursor *cursor;
+    if (!NewDBCursor(db, &cursor))
     {
         char *db_path = DBIdToPath(dbid_locks);
         Log(LOG_LEVEL_ERR, "Unable to get cursor for locks database '%s'",
             db_path);
         free(db_path);
-        CloseLock(dbp);
+        CloseLock(db);
         return;
     }
 
-    while (NextDB(dbcp, &key, &ksize, (void **)&entry, &vsize))
+    char *key;
+    int ksize, vsize;
+    LockData *entry = NULL;
+    while (NextDB(cursor, &key, &ksize, (void **)&entry, &vsize))
     {
 #ifdef LMDB
         LOG_LOCK_OP("<unknown>", key, entry);
 #endif
-        if (STARTSWITH(key, "last.internal_bundle.track_license.handle"))
+        if (StringStartsWith(key, "last.internal_bundle.track_license.handle"))
         {
             continue;
         }
 
-        if (now - entry->time > (time_t) CF_LOCKHORIZON)
+        if (entry->time < purge_horizon)
         {
             Log(LOG_LEVEL_VERBOSE, "Purging lock (%jd s elapsed): %s",
                 (intmax_t) (now - entry->time), key);
-            DBCursorDeleteEntry(dbcp);
+            DBCursorDeleteEntry(cursor);
         }
     }
+    DeleteDBCursor(cursor);
 
     Log(LOG_LEVEL_DEBUG, "Finished purging locks");
 
     lock_horizon.time = now;
-    DeleteDBCursor(dbcp);
-
-    WriteDB(dbp, "lock_horizon", &lock_horizon, sizeof(lock_horizon));
-    CloseLock(dbp);
+    WriteDB(db, "lock_horizon", &lock_horizon, sizeof(lock_horizon));
+    CloseLock(db);
 }

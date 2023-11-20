@@ -1,0 +1,44 @@
+##############################################################################
+#
+# Test that simplistic IP-address classes are set (e.g., 192_168_56_10)
+#
+##############################################################################
+
+body common control
+{
+      bundlesequence  => { "test", "check" };
+      version => "1.0";
+}
+
+##############################################################################
+
+bundle agent test
+{
+  meta:
+    "description" -> { "ENT-2044" }
+      string => "Test that simplistic IP classes are set";
+
+  vars:
+      "ip_classes"
+        slist => maplist(canonify("$(this)"), "@(sys.ip_addresses)");
+}
+
+##############################################################################
+
+bundle agent check
+{
+  classes:
+      "ok"
+        and => { "@(test.ip_classes)" };
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+
+    !ok::
+      "$(this.promise_filename) FAIL";
+
+    DEBUG::
+      "IP Classes: $(with)"
+        with => join(", ", "test.ip_classes");
+}

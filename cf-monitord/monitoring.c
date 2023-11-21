@@ -147,26 +147,26 @@ static void Nova_DumpSlots(void)
     }
 }
 
-void GetObservable(int i, char *name, char *desc)
+void GetObservable(int i, char *name, size_t name_size, char *desc, size_t desc_size)
 {
     Nova_LoadSlots();
 
     if (i < ob_spare)
     {
-        strncpy(name, OBSERVABLES[i][0], CF_MAXVARSIZE - 1);
-        strncpy(desc, OBSERVABLES[i][1], CF_MAXVARSIZE - 1);
+        strncpy(name, OBSERVABLES[i][0], name_size - 1);
+        strncpy(desc, OBSERVABLES[i][1], desc_size - 1);
     }
     else
     {
         if (SLOTS[i - ob_spare])
         {
-            strncpy(name, SLOTS[i - ob_spare]->name, CF_MAXVARSIZE - 1);
-            strncpy(desc, SLOTS[i - ob_spare]->description, CF_MAXVARSIZE - 1);
+            strncpy(name, SLOTS[i - ob_spare]->name, name_size - 1);
+            strncpy(desc, SLOTS[i - ob_spare]->description, desc_size - 1);
         }
         else
         {
-            strncpy(name, OBSERVABLES[i][0], CF_MAXVARSIZE - 1);
-            strncpy(desc, OBSERVABLES[i][1], CF_MAXVARSIZE - 1);
+            strncpy(name, OBSERVABLES[i][0], name_size - 1);
+            strncpy(desc, OBSERVABLES[i][1], desc_size - 1);
         }
     }
 }

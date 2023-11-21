@@ -2744,14 +2744,9 @@ static FnCallResult FnCallUrlGet(ARG_UNUSED EvalContext *ctx,
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, 3L); // set default timeout
     curl_easy_setopt(curl, CURLOPT_VERBOSE, 0);
     curl_easy_setopt(curl,
-                     CURLOPT_PROTOCOLS,
-
+                     CURLOPT_PROTOCOLS_STR,
                      // Allowed protocols
-                     CURLPROTO_FILE |
-                     CURLPROTO_FTP |
-                     CURLPROTO_FTPS |
-                     CURLPROTO_HTTP |
-                     CURLPROTO_HTTPS);
+                     "file,ftp,ftps,http,https");
 
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, cfengine_curl_write_callback);
     curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, cfengine_curl_write_callback);

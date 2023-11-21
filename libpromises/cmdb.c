@@ -505,7 +505,7 @@ static bool ReadCMDBClasses(EvalContext *ctx, JsonElement *classes)
 bool LoadCMDBData(EvalContext *ctx)
 {
     char file_path[PATH_MAX] = {0};
-    strncpy(file_path, GetDataDir(), sizeof(file_path));
+    strncpy(file_path, GetDataDir(), sizeof(file_path) - 1);
     JoinPaths(file_path, sizeof(file_path), HOST_SPECIFIC_DATA_FILE);
     if (access(file_path, F_OK) != 0)
     {

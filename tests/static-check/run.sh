@@ -4,7 +4,7 @@ set -e
 trap "echo FAILURE" ERR
 
 if [ -z "$STATIC_CHECKS_FEDORA_VERSION" ]; then
-  default_f_ver="37"
+  default_f_ver="39"
   echo "No Fedora version for static checks specified, using the default (Fedora $default_f_ver)"
   BASE_IMG="fedora:$default_f_ver"
   STATIC_CHECKS_FEDORA_VERSION="$default_f_ver"

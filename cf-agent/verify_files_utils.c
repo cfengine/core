@@ -2148,7 +2148,7 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
         }
         else
         {
-            strncpy(newname, path, sizeof(newname));
+            strncpy(newname, path, sizeof(newname) - 1);
             ChopLastNode(newname);
 
             if (!PathAppend(newname, sizeof(newname),

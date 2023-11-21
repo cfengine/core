@@ -944,7 +944,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config,
     strcpy(VPREFIX, "");
     if (program_name != NULL)
     {
-        strncpy(CF_PROGRAM_NAME, program_name, sizeof(CF_PROGRAM_NAME));
+        strncpy(CF_PROGRAM_NAME, program_name, sizeof(CF_PROGRAM_NAME) - 1);
     }
 
     Log(LOG_LEVEL_VERBOSE, " %s", NameVersion());

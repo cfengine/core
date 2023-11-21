@@ -385,7 +385,7 @@ static Averages EvalAvQ(EvalContext *ctx, char *t)
         char desc[CF_BUFSIZE];
         double This;
         name[0] = '\0';
-        GetObservable(i, name, desc);
+        GetObservable(i, name, sizeof(name), desc, sizeof(desc));
 
         /* Overflow protection */
 
@@ -589,7 +589,8 @@ static void ArmClasses(EvalContext *ctx, const Averages *const av)
     double sigma;
     Item *ip, *mon_data = NULL;
     int i, j, k;
-    char buff[CF_BUFSIZE], ldt_buff[CF_BUFSIZE], name[CF_MAXVARSIZE];
+    char buff[CF_BUFSIZE], ldt_buff[CF_BUFSIZE];
+    char name[CF_MAXVARSIZE - 100]; /* used for names of variables with all sorts of prefixes */
     static int anomaly[CF_OBSERVABLES][LDT_BUFSIZE] = { { 0 } };
     extern Item *ALL_INCOMING;
     extern Item *MON_UDP4, *MON_UDP6, *MON_TCP4, *MON_TCP6;
@@ -598,7 +599,7 @@ static void ArmClasses(EvalContext *ctx, const Averages *const av)
     {
         char desc[CF_BUFSIZE];
 
-        GetObservable(i, name, desc);
+        GetObservable(i, name, sizeof(name), desc, sizeof(desc));
         sigma = SetClasses(ctx, name, CF_THIS[i], av->Q[i].expect, av->Q[i].var, LOCALAV.Q[i].expect, LOCALAV.Q[i].var, &mon_data);
         SetVariable(name, CF_THIS[i], av->Q[i].expect, sigma, &mon_data);
 

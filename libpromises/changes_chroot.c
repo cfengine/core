@@ -46,18 +46,18 @@ static inline const char *GetLastFileSeparator(const char *path, const char *end
     return cp;
 }
 
-static char *GetFirstNonExistingParentDir(const char *path, char *buf)
+static char *GetFirstNonExistingParentDir(const char *path, char buf[PATH_MAX])
 {
     /* Get rid of the trailing file separator (if any). */
     size_t path_len = strlen(path);
     if (path[path_len - 1] == FILE_SEPARATOR)
     {
-        strncpy(buf, path, path_len);
+        strncpy(buf, path, PATH_MAX - 1);
         buf[path_len] = '\0';
     }
     else
     {
-        strncpy(buf, path, path_len + 1);
+        strncpy(buf, path, PATH_MAX - 1);
     }
 
     char *last_sep = (char *) GetLastFileSeparator(buf, buf + path_len);

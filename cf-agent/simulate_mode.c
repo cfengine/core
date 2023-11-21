@@ -360,7 +360,7 @@ bool ManifestRename(const char *orig_name, const char *new_name)
 static bool RunDiff(const char *path1, const char *path2)
 {
     char diff_path[PATH_MAX];
-    strncpy(diff_path, GetBinDir(), sizeof(diff_path));
+    strncpy(diff_path, GetBinDir(), sizeof(diff_path) - 1);
     JoinPaths(diff_path, sizeof(diff_path), "diff");
 
     /* We use the '--label' option to override the paths in the output, for example:

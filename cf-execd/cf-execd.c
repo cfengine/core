@@ -631,19 +631,7 @@ static int SetupRunagentSocket(const ExecdConfig *execd_config)
     if (GetRunagentSocketInfo(&sock_info))
     {
         sock_info.sun_family = AF_LOCAL;
-
-        bool created;
-        MakeParentDirectory(sock_info.sun_path, true, &created);
-
-        /* Make sure the permissions are correct if the directory was created
-         * (note: this code doesn't run on Windows). */
-        if (created)
-        {
-            char *last_slash = strrchr(sock_info.sun_path, '/');
-            *last_slash = '\0';
-            chmod(sock_info.sun_path, (mode_t) 0750);
-            *last_slash = '/';
-        }
+        MakeParentDirectoryPerms(sock_info.sun_path, true, NULL, (mode_t) 0700);
 
         /* Remove potential left-overs from old processes. */
         unlink(sock_info.sun_path);
@@ -667,6 +655,7 @@ static int SetupRunagentSocket(const ExecdConfig *execd_config)
         }
         else
         {
+            safe_chmod(sock_info.sun_path, (mode_t) 0600);
             ret = listen(runagent_socket, CF_EXECD_RUNAGENT_SOCKET_LISTEN_QUEUE);
             assert(ret == 0);
             if (ret == -1)

@@ -32,7 +32,7 @@ Vagrant.configure("2") do |config|
 sed -ri '/-build/d' /etc/hosts
 yum -q -y install epel-release
 yum -q -y update
-yum -q -y install '@Development tools' pkgconfig pam-devel
+yum -q -y install '@Development tools' pkgconfig pam-devel libtool libtool-ltdl
 SHELL
 
   no_deps_vm_name = "no-deps-build"

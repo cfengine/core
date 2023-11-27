@@ -74,7 +74,7 @@ SHELL
     fd.vm.provision "shell", inline: <<-SHELL
 set -e
 yum -q -y install http://opensource.wandisco.com/centos/7/git/x86_64/wandisco-git-release-7-1.noarch.rpm || true
-yum -q -y install 'perl(ExtUtils::MakeMaker)' 'perl(Digest::MD5)' 'perl(Module::Load::Conditional)' 'perl(IO::Uncompress::Gunzip)' 'perl(JSON::PP)' ncurses-devel rpm-build
+yum -q -y install 'perl(ExtUtils::MakeMaker)' 'perl(Digest::MD5)' 'perl(Module::Load::Conditional)' 'perl(IO::Uncompress::Gunzip)' 'perl(JSON::PP)' 'perl(IPC::Cmd)' ncurses-devel rpm-build
 yum -q -y install psmisc # for fuser command
 yum -q -y install wget
 SHELL

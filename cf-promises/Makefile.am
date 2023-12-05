@@ -30,7 +30,7 @@ AM_CPPFLAGS = \
 	-I$(srcdir)/../libcfnet \
 	@CPPFLAGS@ \
 	$(OPENSSL_CPPFLAGS) \
-	$(PCRE_CPPFLAGS) \
+	$(PCRE2_CPPFLAGS) \
 	$(ENTERPRISE_CPPFLAGS)
 
 AM_CFLAGS = @CFLAGS@ \

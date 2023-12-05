@@ -177,7 +177,7 @@ Class *ClassTableMatch(const ClassTable *table, const char *regex)
     ClassTableIterator *it = ClassTableIteratorNew(table, NULL, true, true);
     Class *cls = NULL;
 
-    pcre *pattern = CompileRegex(regex);
+    pcre2_code *pattern = CompileRegex(regex);
     if (pattern == NULL)
     {
         // TODO: perhaps pcre has can give more info on this error?
@@ -205,7 +205,7 @@ Class *ClassTableMatch(const ClassTable *table, const char *regex)
         }
     }
 
-    pcre_free(pattern);
+    pcre2_code_free(pattern);
 
     ClassTableIteratorDestroy(it);
     return cls;

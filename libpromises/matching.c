@@ -37,32 +37,32 @@
 
 
 /* Pure, non-thread-safe */
-static char *FirstBackReference(pcre *rx, const char *teststring)
+static char *FirstBackReference(pcre2_code *regex, const char *teststring)
 {
     static char backreference[CF_BUFSIZE]; /* GLOBAL_R, no initialization needed */
-
-    int ovector[OVECCOUNT], i, rc;
-
     memset(backreference, 0, CF_BUFSIZE);
 
-    if ((rc = pcre_exec(rx, NULL, teststring, strlen(teststring), 0, 0, ovector, OVECCOUNT)) >= 0)
+    pcre2_match_data *match_data = pcre2_match_data_create_from_pattern(regex, NULL);
+    int result = pcre2_match(regex, (PCRE2_SPTR) teststring, PCRE2_ZERO_TERMINATED,
+                             0, 0, match_data, NULL);
+    /* pcre2_match() returns the highest capture group number + 1, i.e. 1 means
+     * a match with 0 capture groups. 0 means the vector of offsets is small,
+     * negative numbers are errors (incl. no match). */
+    if (result > 0)
     {
-        for (i = 1; i < rc; i++)        /* make backref vars $(1),$(2) etc */
+        size_t *ovector = pcre2_get_ovector_pointer(match_data);
+        /* ovector[0] and ovector[1] are for the start and end of the whole
+         * match, the capture groups follow in [1] and [2], etc. */
+        const char *backref_start = teststring + ovector[2];
+        size_t backref_len = ovector[3] - ovector[2];
+        if (backref_len < CF_MAXVARSIZE)
         {
-            const char *backref_start = teststring + ovector[i * 2];
-            int backref_len = ovector[i * 2 + 1] - ovector[i * 2];
-
-            if (backref_len < CF_MAXVARSIZE)
-            {
-                strncpy(backreference, backref_start, backref_len);
-            }
-
-            break;
+            strncpy(backreference, backref_start, backref_len);
         }
     }
 
-    free(rx);
-
+    pcre2_match_data_free(match_data);
+    pcre2_code_free(regex);
     return backreference;
 }
 
@@ -70,14 +70,12 @@ char *ExtractFirstReference(const char *regexp, const char *teststring)
 {
     char *backreference;
 
-    pcre *rx;
-
     if ((regexp == NULL) || (teststring == NULL))
     {
         return "";
     }
 
-    rx = CompileRegex(regexp);
+    pcre2_code *rx = CompileRegex(regexp);
     if (rx == NULL)
     {
         return "";

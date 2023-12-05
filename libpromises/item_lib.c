@@ -875,7 +875,7 @@ bool DeleteItemGeneral(Item **list, const char *string, ItemMatchType type)
         return false;
     }
 
-    pcre *rx = NULL;
+    pcre2_code *rx = NULL;
     if (type == ITEM_MATCH_TYPE_REGEX_COMPLETE_NOT ||
         type == ITEM_MATCH_TYPE_REGEX_COMPLETE)
     {
@@ -947,7 +947,7 @@ bool DeleteItemGeneral(Item **list, const char *string, ItemMatchType type)
                 free(ip);
                 if (rx)
                 {
-                    pcre_free(rx);
+                    pcre2_code_free(rx);
                 }
 
                 return true;
@@ -960,7 +960,7 @@ bool DeleteItemGeneral(Item **list, const char *string, ItemMatchType type)
 
     if (rx)
     {
-        pcre_free(rx);
+        pcre2_code_free(rx);
     }
 
     return false;

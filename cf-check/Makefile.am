@@ -27,7 +27,7 @@ AM_CPPFLAGS = -I$(srcdir)/../libntech/libutils \
 	-I$(srcdir)/../libntech/libcompat \
 	-I$(srcdir)/../libcfecompat \
 	@CPPFLAGS@ \
-	$(PCRE_CPPFLAGS) \
+	$(PCRE2_CPPFLAGS) \
 	$(LIBYAML_CPPFLAGS) \
 	$(LMDB_CPPFLAGS) \
 	$(OPENSSL_CPPFLAGS)
@@ -35,20 +35,20 @@ AM_CPPFLAGS = -I$(srcdir)/../libntech/libutils \
 AM_CFLAGS = \
 	@CFLAGS@ \
 	$(LMDB_CFLAGS) \
-	$(PCRE_CFLAGS) \
+	$(PCRE2_CFLAGS) \
 	$(LIBYAML_CFLAGS) \
 	$(PTHREAD_CFLAGS)
 
 AM_LDFLAGS = \
 	@LDFLAGS@ \
-	$(PCRE_LDFLAGS) \
+	$(PCRE2_LDFLAGS) \
 	$(LIBYAML_LDFLAGS) \
 	$(LMDB_LDFLAGS)
 
 libcf_check_la_LIBADD = ../libntech/libutils/libutils.la \
 	../libcfecompat/libcfecompat.la \
 	$(LMDB_LIBS) \
-	$(PCRE_LIBS) \
+	$(PCRE2_LIBS) \
 	$(LIBYAML_LIBS) \
 	$(PTHREAD_LIBS) \
 	$(OPENSSL_LIBS)

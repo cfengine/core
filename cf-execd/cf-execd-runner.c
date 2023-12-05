@@ -447,19 +447,12 @@ static bool CompareResultEqualOrFiltered(const ExecConfig *config,
     FILE *new_fp = safe_fopen(filename, "r");
     if (new_fp)
     {
-        const char *errptr;
-        int erroffset;
-        pcre_extra *regex_extra = NULL;
         // Match timestamps and remove them. Not Y21K safe! :-)
-        pcre *regex = pcre_compile(LOGGING_TIMESTAMP_REGEX, PCRE_MULTILINE, &errptr, &erroffset, NULL);
+        pcre2_code *regex = CompileRegex(LOGGING_TIMESTAMP_REGEX);
         if (!regex)
         {
             UnexpectedError("Compiling regular expression failed");
             rtn = false;
-        }
-        else
-        {
-            regex_extra = pcre_study(regex, 0, &errptr);
         }
 
         size_t old_line_size = CF_BUFSIZE;
@@ -508,7 +501,7 @@ static bool CompareResultEqualOrFiltered(const ExecConfig *config,
 
             // Remove timestamps from lines before comparison.
             char *index;
-            if (pcre_exec(regex, regex_extra, old_msg, strlen(old_msg), 0, 0, NULL, 0) >= 0)
+            if (StringMatchWithPrecompiledRegex(regex, old_msg, NULL, NULL))
             {
                 index = strstr(old_msg, ": ");
                 if (index != NULL)
@@ -516,7 +509,7 @@ static bool CompareResultEqualOrFiltered(const ExecConfig *config,
                     old_msg = index + 2;
                 }
             }
-            if (pcre_exec(regex, regex_extra, new_msg, strlen(new_msg), 0, 0, NULL, 0) >= 0)
+            if (StringMatchWithPrecompiledRegex(regex, new_msg, NULL, NULL))
             {
                 index = strstr(new_msg, ": ");
                 if (index != NULL)
@@ -535,11 +528,7 @@ static bool CompareResultEqualOrFiltered(const ExecConfig *config,
         free(old_line);
         free(new_line);
 
-        if (regex_extra)
-        {
-            free(regex_extra);
-        }
-        pcre_free(regex);
+        pcre2_code_free(regex);
     }
     else
     {

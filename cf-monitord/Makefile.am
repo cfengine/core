@@ -29,7 +29,7 @@ AM_CPPFLAGS = \
 	-I$(srcdir)/../libcfnet \
 	-I$(srcdir)/../libenv \
 	-I$(srcdir)/../libpromises \
-	$(PCRE_CPPFLAGS) \
+	$(PCRE2_CPPFLAGS) \
 	$(OPENSSL_CPPFLAGS) \
 	$(ENTERPRISE_CPPFLAGS)
 
@@ -79,7 +79,7 @@ TESTS += get_socket_info
 noinst_PROGRAMS = get_socket_info
 get_socket_info_SOURCES = get_socket_info.c
 get_socket_info_LDADD = ../libntech/libutils/libutils.la \
-	$(PCRE_LIBS) \
+	$(PCRE2_LIBS) \
 	$(LIBYAML_LIBS) \
     libcf-monitord.la
 endif

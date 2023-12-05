@@ -30,7 +30,7 @@ AM_CPPFLAGS = -I$(srcdir)/../libpromises -I$(srcdir)/../libntech/libutils \
 	@CPPFLAGS@ \
 	$(ENTERPRISE_CPPFLAGS) \
 	$(OPENSSL_CPPFLAGS) \
-	$(PCRE_CPPFLAGS) \
+	$(PCRE2_CPPFLAGS) \
 	$(LIBVIRT_CPPFLAGS) \
 	$(POSTGRESQL_CPPFLAGS) \
 	$(MYSQL_CPPFLAGS) \
@@ -41,7 +41,7 @@ AM_CFLAGS = \
 	@CFLAGS@ \
 	$(ENTERPRISE_CFLAGS) \
 	$(OPENSSL_CFLAGS) \
-	$(PCRE_CFLAGS) \
+	$(PCRE2_CFLAGS) \
 	$(LIBVIRT_CFLAGS) \
 	$(POSTGRESQL_CFLAGS) \
 	$(MYSQL_CFLAGS) \
@@ -51,7 +51,7 @@ AM_CFLAGS = \
 AM_LDFLAGS = \
 	@LDFLAGS@ \
 	$(OPENSSL_LDFLAGS) \
-	$(PCRE_LDFLAGS) \
+	$(PCRE2_LDFLAGS) \
 	$(LIBVIRT_LDFLAGS) \
 	$(POSTGRESQL_LDFLAGS) \
 	$(MYSQL_LDFLAGS) \
@@ -64,7 +64,7 @@ endif
 
 libcf_agent_la_LIBADD = ../libpromises/libpromises.la \
 	$(OPENSSL_LIBS) \
-	$(PCRE_LIBS) \
+	$(PCRE2_LIBS) \
 	$(LIBVIRT_LIBS) \
 	$(POSTGRESQL_LIBS) \
 	$(MYSQL_LIBS) \

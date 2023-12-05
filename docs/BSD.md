@@ -44,7 +44,7 @@ $ git rebase master
 Within `core` directory:
 
 ```
-$ ./autogen.sh --enable-debug -C --with-lmdb=/usr/local/ --with-pcre=/usr/local/
+$ ./autogen.sh --enable-debug -C --with-lmdb=/usr/local/ --with-pcre2=/usr/local/
 $ gmake -j8
 ```
 

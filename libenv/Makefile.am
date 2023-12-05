@@ -40,7 +40,7 @@ endif
 
 AM_CPPFLAGS  = -I$(top_srcdir)/libntech/libutils
 AM_CPPFLAGS += $(OPENSSL_CPPFLAGS)         # because libutils needs it
-AM_CPPFLAGS += $(PCRE_CPPFLAGS)
+AM_CPPFLAGS += $(PCRE2_CPPFLAGS)
 
 # Those dependencies are ought to go away ASAP
 AM_CPPFLAGS += -I$(top_srcdir)/libcfnet

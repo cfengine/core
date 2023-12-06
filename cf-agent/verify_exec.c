@@ -336,7 +336,7 @@ static ActionResult RepairExec(EvalContext *ctx, const Attributes *a,
         else
         {
             pfp =
-                cf_popensetuid(cmdline, open_mode, a->contain.owner, a->contain.group, a->contain.chdir, a->contain.chroot,
+                cf_popensetuid(cmdline, NULL, open_mode, a->contain.owner, a->contain.group, a->contain.chdir, a->contain.chroot,
                                a->transaction.background);
         }
 

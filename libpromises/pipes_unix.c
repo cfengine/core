@@ -467,15 +467,15 @@ FILE *cf_popen(const char *command, const char *type, bool capture_stderr)
  * WARNING: this is only allowed to be called from single-threaded code,
  *          because of the safe_chdir() call in the forked child.
  */
-FILE *cf_popensetuid(const char *command, const char *type,
-                     uid_t uid, gid_t gid, char *chdirv, char *chrootv,
-                     ARG_UNUSED int background)
+FILE *cf_popensetuid(const char *command, const Seq *arglist,
+                     const char *type, uid_t uid, gid_t gid, char *chdirv,
+                     char *chrootv, ARG_UNUSED int background)
 {
     int pd[2];
     pid_t pid;
     FILE *pp = NULL;
 
-    char **argv = ArgSplitCommand(command, NULL);
+    char **argv = ArgSplitCommand(command, arglist);
 
     pid = CreatePipeAndFork(type, pd);
     if (pid == (pid_t) -1)

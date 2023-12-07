@@ -63,6 +63,11 @@ static void CleanupOpenSSLThreadLocks(void);
 
 static bool crypto_initialized = false; /* GLOBAL_X */
 
+#if OPENSSL_VERSION_NUMBER > 0x30000000
+static OSSL_PROVIDER *legacy_provider = NULL;
+static OSSL_PROVIDER *default_provider = NULL;
+#endif
+
 const char *CryptoLastErrorString()
 {
     const char *errmsg = ERR_reason_error_string(ERR_get_error());
@@ -82,8 +87,8 @@ void CryptoInitialize()
         /* We need Blowfish for legacy encrypted network stuff and in OpenSSL
          * 3+, it's only available when the legacy provider is loaded. And we
          * also need the default provider. */
-        OSSL_PROVIDER_load(NULL, "legacy");
-        OSSL_PROVIDER_load(NULL, "default");
+        legacy_provider = OSSL_PROVIDER_load(NULL, "legacy");
+        default_provider = OSSL_PROVIDER_load(NULL, "default");
 #endif
         RandomSeed();
 
@@ -114,6 +119,20 @@ void CryptoDeInitialize()
         EVP_cleanup();
         CleanupOpenSSLThreadLocks();
         ERR_free_strings();
+
+#if OPENSSL_VERSION_NUMBER > 0x30000000
+        if (legacy_provider != NULL)
+        {
+            OSSL_PROVIDER_unload(legacy_provider);
+            legacy_provider = NULL;
+        }
+        if (default_provider != NULL)
+        {
+            OSSL_PROVIDER_unload(default_provider);
+            default_provider = NULL;
+        }
+#endif
+
         crypto_initialized = false;
     }
 }

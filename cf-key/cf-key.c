@@ -172,10 +172,10 @@ int main(int argc, char *argv[])
 
     if (print_digest_arg)
     {
-        GenericAgentFinalize(ctx, config);
-        CallCleanupFunctions();
         int rc = PrintDigest(print_digest_arg);
         free(print_digest_arg);
+        GenericAgentFinalize(ctx, config);
+        CallCleanupFunctions();
         return rc;
     }
 

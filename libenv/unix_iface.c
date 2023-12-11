@@ -1297,7 +1297,7 @@ JsonElement* GetProcFileInfo(EvalContext *ctx, const char* filename, const char*
     {
         Log(LOG_LEVEL_VERBOSE, "Reading %s info from %s", key, filename);
 
-        pcre2_code *regex = CompileRegex(pattern);
+        Regex *regex = CompileRegex(pattern);
         if (regex != NULL)
         {
             size_t line_size = CF_BUFSIZE;
@@ -1371,7 +1371,7 @@ JsonElement* GetProcFileInfo(EvalContext *ctx, const char* filename, const char*
                 BufferDestroy(varname);
             }
 
-            pcre2_code_free(regex);
+            RegexDestroy(regex);
         }
 
         fclose(fin);

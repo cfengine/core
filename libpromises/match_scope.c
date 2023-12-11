@@ -31,7 +31,7 @@
 
 
 /* Sets variables */
-static bool RegExMatchSubString(EvalContext *ctx, pcre2_code *regex, const char *teststring, int *start, int *end)
+static bool RegExMatchSubString(EvalContext *ctx, Regex *regex, const char *teststring, int *start, int *end)
 {
     pcre2_match_data *match_data = pcre2_match_data_create_from_pattern(regex, NULL);
     int result = pcre2_match(regex, (PCRE2_SPTR) teststring, PCRE2_ZERO_TERMINATED,
@@ -69,12 +69,12 @@ static bool RegExMatchSubString(EvalContext *ctx, pcre2_code *regex, const char 
     }
 
     pcre2_match_data_free(match_data);
-    pcre2_code_free(regex);
+    RegexDestroy(regex);
     return result > 0;
 }
 
 /* Sets variables */
-static bool RegExMatchFullString(EvalContext *ctx, pcre2_code *rx, const char *teststring)
+static bool RegExMatchFullString(EvalContext *ctx, Regex *rx, const char *teststring)
 {
     int match_start;
     int match_len;
@@ -96,7 +96,7 @@ bool FullTextMatch(EvalContext *ctx, const char *regexp, const char *teststring)
         return true;
     }
 
-    pcre2_code *rx = CompileRegex(regexp);
+    Regex *rx = CompileRegex(regexp);
     if (rx == NULL)
     {
         return false;
@@ -114,16 +114,16 @@ bool FullTextMatch(EvalContext *ctx, const char *regexp, const char *teststring)
 
 bool ValidateRegEx(const char *regex)
 {
-    pcre2_code *rx = CompileRegex(regex);
+    Regex *rx = CompileRegex(regex);
     bool regex_valid = rx != NULL;
 
-    pcre2_code_free(rx);
+    RegexDestroy(rx);
     return regex_valid;
 }
 
 bool BlockTextMatch(EvalContext *ctx, const char *regexp, const char *teststring, int *start, int *end)
 {
-    pcre2_code *rx = CompileRegex(regexp);
+    Regex *rx = CompileRegex(regexp);
 
     if (rx == NULL)
     {

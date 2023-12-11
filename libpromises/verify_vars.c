@@ -61,7 +61,7 @@ static bool IsLegalVariableName(EvalContext *ctx, const Promise *pp)
 
     /* TODO: remove at some point (global, leaked), but for now
      * this offers an attractive speedup. */
-    static pcre2_code *rx = NULL;
+    static Regex *rx = NULL;
     if (!rx)
     {
         /* \200-\377 is there for multibyte unicode characters */

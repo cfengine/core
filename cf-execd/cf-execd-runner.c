@@ -448,7 +448,7 @@ static bool CompareResultEqualOrFiltered(const ExecConfig *config,
     if (new_fp)
     {
         // Match timestamps and remove them. Not Y21K safe! :-)
-        pcre2_code *regex = CompileRegex(LOGGING_TIMESTAMP_REGEX);
+        Regex *regex = CompileRegex(LOGGING_TIMESTAMP_REGEX);
         if (!regex)
         {
             UnexpectedError("Compiling regular expression failed");
@@ -528,7 +528,7 @@ static bool CompareResultEqualOrFiltered(const ExecConfig *config,
         free(old_line);
         free(new_line);
 
-        pcre2_code_free(regex);
+        RegexDestroy(regex);
     }
     else
     {

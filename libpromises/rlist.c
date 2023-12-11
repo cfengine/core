@@ -241,7 +241,7 @@ bool RlistMatchesRegex(const Rlist *list, const char *regex)
         return false;
     }
 
-    pcre2_code *rx = CompileRegex(regex);
+    Regex *rx = CompileRegex(regex);
     if (!rx)
     {
         return false;
@@ -252,12 +252,12 @@ bool RlistMatchesRegex(const Rlist *list, const char *regex)
         if (rp->val.type == RVAL_TYPE_SCALAR &&
             StringMatchFullWithPrecompiledRegex(rx, RlistScalarValue(rp)))
         {
-            pcre2_code_free(rx);
+            RegexDestroy(rx);
             return true;
         }
     }
 
-    pcre2_code_free(rx);
+    RegexDestroy(rx);
     return false;
 }
 
@@ -1168,7 +1168,7 @@ Rlist *RlistFromSplitRegex(const char *string, const char *regex, size_t max_ent
     Rlist *result = NULL;
     Buffer *buffer = BufferNewWithCapacity(CF_MAXVARSIZE);
 
-    pcre2_code *rx = CompileRegex(regex);
+    Regex *rx = CompileRegex(regex);
     if (rx)
     {
         while ((entry_count < max_entries) &&
@@ -1191,7 +1191,7 @@ Rlist *RlistFromSplitRegex(const char *string, const char *regex, size_t max_ent
             sp += end;
         }
 
-        pcre2_code_free(rx);
+        RegexDestroy(rx);
     }
 
     if (entry_count < max_entries)
@@ -1231,7 +1231,7 @@ Rlist *RlistFromRegexSplitNoOverflow(const char *string, const char *regex, int 
 
     const char *sp = string;
     // We will avoid compiling regex multiple times.
-    pcre2_code *pattern = CompileRegex(regex);
+    Regex *pattern = CompileRegex(regex);
 
     if (pattern == NULL)
     {
@@ -1262,7 +1262,7 @@ Rlist *RlistFromRegexSplitNoOverflow(const char *string, const char *regex, int 
     assert(count < max);
     RlistAppendScalar(&liststart, sp);
 
-    pcre2_code_free(pattern);
+    RegexDestroy(pattern);
 
     return liststart;
 }

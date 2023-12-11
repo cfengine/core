@@ -2720,7 +2720,7 @@ void GenericAgentShowContextsFormatted(EvalContext *ctx, const char *regexp)
 
     Seq *seq = SeqNew(1000, free);
 
-    pcre2_code *rx = CompileRegex(regexp);
+    Regex *rx = CompileRegex(regexp);
 
     if (rx == NULL)
     {
@@ -2750,7 +2750,7 @@ void GenericAgentShowContextsFormatted(EvalContext *ctx, const char *regexp)
         free(class_name);
     }
 
-    pcre2_code_free(rx);
+    RegexDestroy(rx);
 
     SeqSort(seq, StrCmpWrapper, NULL);
 
@@ -2776,7 +2776,7 @@ void GenericAgentShowVariablesFormatted(EvalContext *ctx, const char *regexp)
 
     Seq *seq = SeqNew(2000, free);
 
-    pcre2_code *rx = CompileRegex(regexp);
+    Regex *rx = CompileRegex(regexp);
 
     if (rx == NULL)
     {
@@ -2838,7 +2838,7 @@ void GenericAgentShowVariablesFormatted(EvalContext *ctx, const char *regexp)
         free(varname);
     }
 
-    pcre2_code_free(rx);
+    RegexDestroy(rx);
 
     SeqSort(seq, StrCmpWrapper, NULL);
 

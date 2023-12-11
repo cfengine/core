@@ -1433,7 +1433,7 @@ static JsonElement *VariablesMatching(const EvalContext *ctx, const FnCall *fp, 
     JsonElement *matching = JsonObjectCreate(10);
 
     const char *regex = RlistScalarValue(args);
-    pcre2_code *rx = CompileRegex(regex);
+    Regex *rx = CompileRegex(regex);
 
     Variable *v = NULL;
     while ((v = VariableTableIteratorNext(iter)))
@@ -1507,7 +1507,7 @@ static JsonElement *VariablesMatching(const EvalContext *ctx, const FnCall *fp, 
 
     if (rx)
     {
-        pcre2_code_free(rx);
+        RegexDestroy(rx);
     }
 
     return matching;
@@ -1681,7 +1681,7 @@ static FnCallResult FnCallBundlesMatching(EvalContext *ctx, const Policy *policy
     }
 
     const char *regex = RlistScalarValue(finalargs);
-    pcre2_code *rx = CompileRegex(regex);
+    Regex *rx = CompileRegex(regex);
     if (!rx)
     {
         return FnFailure();
@@ -1744,14 +1744,14 @@ static FnCallResult FnCallBundlesMatching(EvalContext *ctx, const Policy *policy
         free(bundle_name);
     }
 
-    pcre2_code_free(rx);
+    RegexDestroy(rx);
 
     return (FnCallResult) { FNCALL_SUCCESS, { matches, RVAL_TYPE_LIST } };
 }
 
 /*********************************************************************/
 
-static bool AddPackagesMatchingJsonLine(pcre2_code *matcher, JsonElement *json, char *line)
+static bool AddPackagesMatchingJsonLine(Regex *matcher, JsonElement *json, char *line)
 {
     const size_t line_length = strlen(line);
     if (line_length > CF_BUFSIZE - 80)
@@ -1788,7 +1788,7 @@ static bool AddPackagesMatchingJsonLine(pcre2_code *matcher, JsonElement *json, 
     return true;
 }
 
-static bool GetLegacyPackagesMatching(pcre2_code *matcher, JsonElement *json, const bool installed_mode)
+static bool GetLegacyPackagesMatching(Regex *matcher, JsonElement *json, const bool installed_mode)
 {
     char filename[CF_MAXVARSIZE];
     if (installed_mode)
@@ -1836,7 +1836,7 @@ static bool GetLegacyPackagesMatching(pcre2_code *matcher, JsonElement *json, co
     return ret;
 }
 
-static bool GetPackagesMatching(pcre2_code *matcher, JsonElement *json, const bool installed_mode, Rlist *default_inventory)
+static bool GetPackagesMatching(Regex *matcher, JsonElement *json, const bool installed_mode, Rlist *default_inventory)
 {
     dbid database = (installed_mode == true ? dbid_packages_installed : dbid_packages_updates);
 
@@ -1932,7 +1932,7 @@ static bool GetPackagesMatching(pcre2_code *matcher, JsonElement *json, const bo
 static FnCallResult FnCallPackagesMatching(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
     const bool installed_mode = (strcmp(fp->name, "packagesmatching") == 0);
-    pcre2_code *matcher;
+    Regex *matcher;
     {
         const char *regex_package = RlistScalarValue(finalargs);
         const char *regex_version = RlistScalarValue(finalargs->next);
@@ -1998,7 +1998,7 @@ static FnCallResult FnCallPackagesMatching(ARG_UNUSED EvalContext *ctx, ARG_UNUS
         else
         {
             Log(LOG_LEVEL_DEBUG, "No valid package module inventory found");
-            pcre2_code_free(matcher);
+            RegexDestroy(matcher);
             JsonDestroy(json);
             if (inventory_allocated)
             {
@@ -2012,7 +2012,7 @@ static FnCallResult FnCallPackagesMatching(ARG_UNUSED EvalContext *ctx, ARG_UNUS
     {
         RlistDestroy(default_inventory);
     }
-    pcre2_code_free(matcher);
+    RegexDestroy(matcher);
 
     if (ret == false)
     {
@@ -3262,7 +3262,7 @@ static FnCallResult FnCallGetFields(EvalContext *ctx,
                                     const FnCall *fp,
                                     const Rlist *finalargs)
 {
-    pcre2_code *rx = CompileRegex(RlistScalarValue(finalargs));
+    Regex *rx = CompileRegex(RlistScalarValue(finalargs));
     if (!rx)
     {
         return FnFailure();
@@ -3276,7 +3276,7 @@ static FnCallResult FnCallGetFields(EvalContext *ctx,
     if (!fin)
     {
         Log(LOG_LEVEL_ERR, "File '%s' could not be read in getfields(). (fopen: %s)", filename, GetErrorStr());
-        pcre2_code_free(rx);
+        RegexDestroy(rx);
         return FnFailure();
     }
 
@@ -3318,7 +3318,7 @@ static FnCallResult FnCallGetFields(EvalContext *ctx,
                         VarRefDestroy(ref);
                         free(line);
                         RlistDestroy(newlist);
-                        pcre2_code_free(rx);
+                        RegexDestroy(rx);
                         return FnFailure();
                     }
                 }
@@ -3335,7 +3335,7 @@ static FnCallResult FnCallGetFields(EvalContext *ctx,
         line_count++;
     }
 
-    pcre2_code_free(rx);
+    RegexDestroy(rx);
     free(line);
 
     if (!feof(fin))
@@ -3354,7 +3354,7 @@ static FnCallResult FnCallGetFields(EvalContext *ctx,
 
 static FnCallResult FnCallCountLinesMatching(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
-    pcre2_code *rx = CompileRegex(RlistScalarValue(finalargs));
+    Regex *rx = CompileRegex(RlistScalarValue(finalargs));
     if (!rx)
     {
         return FnFailure();
@@ -3366,7 +3366,7 @@ static FnCallResult FnCallCountLinesMatching(ARG_UNUSED EvalContext *ctx, ARG_UN
     if (!fin)
     {
         Log(LOG_LEVEL_ERR, "File '%s' could not be read in countlinesmatching(). (fopen: %s)", filename, GetErrorStr());
-        pcre2_code_free(rx);
+        RegexDestroy(rx);
         return FnReturn("0");
     }
 
@@ -3388,7 +3388,7 @@ static FnCallResult FnCallCountLinesMatching(ARG_UNUSED EvalContext *ctx, ARG_UN
         free(line);
     }
 
-    pcre2_code_free(rx);
+    RegexDestroy(rx);
 
     if (!feof(fin))
     {
@@ -4844,7 +4844,7 @@ static FnCallResult FilterInternal(EvalContext *ctx,
                                    bool invert,
                                    long max)
 {
-    pcre2_code *rx = NULL;
+    Regex *rx = NULL;
     if (do_regex)
     {
         rx = CompileRegex(regex);
@@ -4860,7 +4860,7 @@ static FnCallResult FilterInternal(EvalContext *ctx,
     // we failed to produce a valid JsonElement, so give up
     if (json == NULL)
     {
-        pcre2_code_free(rx);
+        RegexDestroy(rx);
         return FnFailure();
     }
     else if (JsonGetElementType(json) != JSON_ELEMENT_TYPE_CONTAINER)
@@ -4868,7 +4868,7 @@ static FnCallResult FilterInternal(EvalContext *ctx,
         Log(LOG_LEVEL_VERBOSE, "Function '%s', argument '%s' was not a data container or list",
             fp->name, RlistScalarValueSafe(rp));
         JsonDestroyMaybe(json, allocated);
-        pcre2_code_free(rx);
+        RegexDestroy(rx);
         return FnFailure();
     }
 
@@ -4923,7 +4923,7 @@ static FnCallResult FilterInternal(EvalContext *ctx,
 
     if (rx)
     {
-        pcre2_code_free(rx);
+        RegexDestroy(rx);
     }
 
     bool contextmode = false;
@@ -6408,7 +6408,7 @@ static FnCallResult FnCallRegExtract(EvalContext *ctx, ARG_UNUSED const Policy *
 
 static FnCallResult FnCallRegLine(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
-    pcre2_code *rx = CompileRegex(RlistScalarValue(finalargs));
+    Regex *rx = CompileRegex(RlistScalarValue(finalargs));
     if (!rx)
     {
         return FnFailure();
@@ -6419,7 +6419,7 @@ static FnCallResult FnCallRegLine(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const 
     FILE *fin = safe_fopen(arg_filename, "rt");
     if (!fin)
     {
-        pcre2_code_free(rx);
+        RegexDestroy(rx);
         return FnReturnContext(false);
     }
 
@@ -6432,12 +6432,12 @@ static FnCallResult FnCallRegLine(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const 
         {
             free(line);
             fclose(fin);
-            pcre2_code_free(rx);
+            RegexDestroy(rx);
             return FnReturnContext(true);
         }
     }
 
-    pcre2_code_free(rx);
+    RegexDestroy(rx);
     free(line);
 
     if (!feof(fin))
@@ -8237,7 +8237,7 @@ static char *StripPatterns(char *file_buffer, const char *pattern, const char *f
         return file_buffer;
     }
 
-    pcre2_code *rx = CompileRegex(pattern);
+    Regex *rx = CompileRegex(pattern);
     if (!rx)
     {
         return file_buffer;
@@ -8268,7 +8268,7 @@ static char *StripPatterns(char *file_buffer, const char *pattern, const char *f
         }
     }
 
-    pcre2_code_free(rx);
+    RegexDestroy(rx);
     return file_buffer;
 }
 
@@ -8904,7 +8904,7 @@ void ModuleProtocol(EvalContext *ctx, const char *command, const char *line, int
             content[0] != '\0')
         {
             /* Symbol ID without \200 to \377: */
-            pcre2_code *context_name_rx = CompileRegex("[a-zA-Z0-9_]+");
+            Regex *context_name_rx = CompileRegex("[a-zA-Z0-9_]+");
             if (!context_name_rx)
             {
                 Log(LOG_LEVEL_ERR,
@@ -8923,7 +8923,7 @@ void ModuleProtocol(EvalContext *ctx, const char *command, const char *line, int
 
             if (context_name_rx)
             {
-                pcre2_code_free(context_name_rx);
+                RegexDestroy(context_name_rx);
             }
         }
         else if (sscanf(line + 1, "meta=%1024[^\n]", content) == 1 &&

@@ -37,7 +37,7 @@
 
 
 /* Pure, non-thread-safe */
-static char *FirstBackReference(pcre2_code *regex, const char *teststring)
+static char *FirstBackReference(Regex *regex, const char *teststring)
 {
     static char backreference[CF_BUFSIZE]; /* GLOBAL_R, no initialization needed */
     memset(backreference, 0, CF_BUFSIZE);
@@ -62,7 +62,7 @@ static char *FirstBackReference(pcre2_code *regex, const char *teststring)
     }
 
     pcre2_match_data_free(match_data);
-    pcre2_code_free(regex);
+    RegexDestroy(regex);
     return backreference;
 }
 
@@ -75,7 +75,7 @@ char *ExtractFirstReference(const char *regexp, const char *teststring)
         return "";
     }
 
-    pcre2_code *rx = CompileRegex(regexp);
+    Regex *rx = CompileRegex(regexp);
     if (rx == NULL)
     {
         return "";

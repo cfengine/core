@@ -110,7 +110,7 @@ TYPED_MAP_DEFINE(RemoteVarPromises, char *, Seq *,
                  SeqDestroy_untyped)
 
 
-static pcre2_code *context_expression_whitespace_rx = NULL;
+static Regex *context_expression_whitespace_rx = NULL;
 
 #include <policy.h>
 
@@ -3563,7 +3563,7 @@ StringSet *ClassesMatching(const EvalContext *ctx, ClassTableIterator *iter, con
 {
     StringSet *matching = StringSetNew();
 
-    pcre2_code *rx = CompileRegex(regex);
+    Regex *rx = CompileRegex(regex);
 
     Class *cls;
     while ((cls = ClassTableIteratorNext(iter)))
@@ -3623,7 +3623,7 @@ StringSet *ClassesMatching(const EvalContext *ctx, ClassTableIterator *iter, con
 
     if (rx)
     {
-        pcre2_code_free(rx);
+        RegexDestroy(rx);
     }
 
     return matching;

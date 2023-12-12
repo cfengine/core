@@ -1,6 +1,8 @@
 #!/bin/bash
+# Note that this container build requires about 700MB minimum RAM for dnf to operate
+# use debian-12+ or rhel-8+, debian-11 buildah seems to fail setting up networking/dns for the container so dnf doesn't work (CFE-4295)
 
-set -e
+set -eE # include E so that create_image() failures bubble up to the surface
 trap "echo FAILURE" ERR
 
 if [ -z "$STATIC_CHECKS_FEDORA_VERSION" ]; then

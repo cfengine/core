@@ -52,7 +52,7 @@ static char *FirstBackReference(Regex *regex, const char *teststring)
     {
         size_t *ovector = pcre2_get_ovector_pointer(match_data);
         /* ovector[0] and ovector[1] are for the start and end of the whole
-         * match, the capture groups follow in [1] and [2], etc. */
+         * match, the capture groups follow in [2] and [3], etc. */
         const char *backref_start = teststring + ovector[2];
         size_t backref_len = ovector[3] - ovector[2];
         if (backref_len < CF_MAXVARSIZE)

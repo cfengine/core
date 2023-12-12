@@ -58,7 +58,7 @@
 #define ParserDebug(...) ((void) 0)
 #define P PARSER_STATE
 
-static pcre *context_expression_whitespace_rx = NULL;
+static Regex *context_expression_whitespace_rx = NULL;
 
 static int DeEscapeQuotedString(const char *from, char *to);
 

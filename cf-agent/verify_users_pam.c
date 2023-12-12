@@ -35,6 +35,7 @@
 #include <files_lib.h>
 #include <eval_context.h>
 #include <regex.h> // CompileRegex()
+#include <buffer.h> // BufferData()
 
 #include <cf3.defs.h>
 #include <verify_methods.h>
@@ -146,8 +147,8 @@ static bool GetAIXShadowHash(const char *puser, const char **result)
     size_t puser_len = strlen(puser);
     char name_regex_str[strlen(puser) + 3];
 
-    pcre *name_regex = CompileRegex("^(\\S+):");
-    pcre *hash_regex = CompileRegex("^\\s+password\\s*=\\s*(\\S+)");
+    Regex *name_regex = CompileRegex("^(\\S+):");
+    Regex *hash_regex = CompileRegex("^\\s+password\\s*=\\s*(\\S+)");
     bool in_user_section = false;
 
     while (true)
@@ -162,13 +163,13 @@ static bool GetAIXShadowHash(const char *puser, const char **result)
             goto end;
         }
 
-        int submatch_vec[6];
 
-        int pcre_result = pcre_exec(name_regex, NULL, buf, strlen(buf), 0, 0, submatch_vec, 6);
-        if (pcre_result >= 0)
+        size_t match_start;
+        size_t match_end;
+        if (StringMatchWithPrecompiledRegex(name_regex, buf, &match_start, &match_end))
         {
-            if (submatch_vec[3] - submatch_vec[2] == puser_len
-                && strncmp(buf + submatch_vec[2], puser, puser_len) == 0)
+            /* Compare the part without the ':' */
+            if (StringEqualN(buf, puser, match_end - match_start - 1))
             {
                 in_user_section = true;
             }
@@ -178,35 +179,27 @@ static bool GetAIXShadowHash(const char *puser, const char **result)
             }
             continue;
         }
-        else if (pcre_result != PCRE_ERROR_NOMATCH)
-        {
-            errno = EINVAL;
-            goto end;
-        }
-
         if (!in_user_section)
         {
             continue;
         }
 
-        pcre_result = pcre_exec(hash_regex, NULL, buf, strlen(buf), 0, 0, submatch_vec, 6);
-        if (pcre_result >= 0)
+        Seq *captures = StringMatchCapturesWithPrecompiledRegex(hash_regex, buf, false);
+        if (captures != NULL)
         {
-            memcpy(hash_buf, buf + submatch_vec[2], submatch_vec[3] - submatch_vec[2]);
+            /* captures are buffers, the first one being the full match, the
+             * second being the first capture group, etc. */
+            StringCopy(BufferData(SeqAt(captures, 1)), hash_buf, sizeof(hash_buf));
             *result = hash_buf;
             ret = true;
-            goto end;
-        }
-        else if (pcre_result != PCRE_ERROR_NOMATCH)
-        {
-            errno = EINVAL;
+            SeqDestroy(captures);
             goto end;
         }
     }
 
 end:
-    pcre_free(name_regex);
-    pcre_free(hash_regex);
+    RegexDestroy(name_regex);
+    RegexDestroy(hash_regex);
     free(buf);
     fclose(fptr);
     return ret;

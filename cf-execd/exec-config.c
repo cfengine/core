@@ -23,7 +23,8 @@
 */
 
 #include <exec-config.h>
-
+#define PCRE2_CODE_UNIT_WIDTH 8
+#include <pcre2.h>
 #include <alloc.h>
 #include <string_lib.h>
 #include <writer.h>
@@ -32,7 +33,6 @@
 #include <eval_context.h>
 #include <conversion.h>
 #include <generic_agent.h> // TODO: fix
-#include <regex.h> // pcre_free()
 #include <item_lib.h>
 
 
@@ -54,30 +54,44 @@ static char *GetIpAddresses(const EvalContext *ctx)
 
 static void RegexFree(void *ptr)
 {
-    pcre_free(ptr);
+    pcre2_code_free(ptr);
 }
 
-static void MailFilterFill(const char *str,
+static void MailFilterFill(const char *pattern,
                            Seq **output, Seq **output_regex,
                            const char *filter_type)
 {
-    const char *errorstr;
-    int erroffset;
-    pcre *rx = pcre_compile(str,
-                            PCRE_MULTILINE | PCRE_DOTALL | PCRE_ANCHORED,
-                            &errorstr, &erroffset, NULL);
-    if (!rx)
+    int err_code;
+    size_t err_offset;
+    pcre2_code *regex = pcre2_compile((PCRE2_SPTR) pattern, PCRE2_ZERO_TERMINATED,
+                                      PCRE2_MULTILINE | PCRE2_DOTALL | PCRE2_ANCHORED,
+                                      &err_code, &err_offset, NULL);
+
+    if (regex != NULL)
     {
-        Log(LOG_LEVEL_ERR,
-            "Invalid regular expression in mailfilter_%s: "
-            "pcre_compile() '%s' in expression '%s' (offset: %d). "
-            "Ignoring expression.", filter_type,
-            errorstr, str, erroffset);
+        SeqAppend(*output, xstrdup(pattern));
+        SeqAppend(*output_regex, regex);
     }
     else
     {
-        SeqAppend(*output, xstrdup(str));
-        SeqAppend(*output_regex, rx);
+        char err_msg[128];
+        if (pcre2_get_error_message(err_code, (PCRE2_UCHAR*) err_msg, sizeof(err_msg)) !=
+            PCRE2_ERROR_BADDATA)
+        {
+            Log(LOG_LEVEL_ERR,
+                "Invalid regular expression in mailfilter_%s: "
+                "pcre2_compile() '%s' in expression '%s' (offset: %zd). "
+                "Ignoring expression.",
+                filter_type, err_msg, pattern, err_offset);
+        }
+        else
+        {
+            Log(LOG_LEVEL_ERR,
+                "Invalid regular expression in mailfilter_%s: "
+                "pcre2_compile() failed for expression '%s' (offset: %zd). "
+                "Ignoring expression.",
+                filter_type, pattern, err_offset);
+        }
     }
 }
 

@@ -1287,7 +1287,7 @@ static JsonElement* GetNetworkingStatsInfo(const char *filename)
 // always returns the parsed data. If the key is not NULL, also
 // creates a sys.KEY variable.
 
-JsonElement* GetProcFileInfo(EvalContext *ctx, const char* filename, const char* key, const char* extracted_key, ProcPostProcessFn post, ProcTiebreakerFn tiebreak, const char* regex)
+JsonElement* GetProcFileInfo(EvalContext *ctx, const char* filename, const char* key, const char* extracted_key, ProcPostProcessFn post, ProcTiebreakerFn tiebreak, const char* pattern)
 {
     JsonElement *info = NULL;
     bool extract_key_mode = (extracted_key != NULL);
@@ -1297,15 +1297,8 @@ JsonElement* GetProcFileInfo(EvalContext *ctx, const char* filename, const char*
     {
         Log(LOG_LEVEL_VERBOSE, "Reading %s info from %s", key, filename);
 
-        pcre *pattern = NULL;
-        {
-            const char *errorstr;
-            int erroffset;
-            pattern = pcre_compile(regex, PCRE_MULTILINE | PCRE_DOTALL,
-                                   &errorstr, &erroffset, NULL);
-        }
-
-        if (pattern != NULL)
+        Regex *regex = CompileRegex(pattern);
+        if (regex != NULL)
         {
             size_t line_size = CF_BUFSIZE;
             char *line = xmalloc(line_size);
@@ -1314,7 +1307,7 @@ JsonElement* GetProcFileInfo(EvalContext *ctx, const char* filename, const char*
 
             while (CfReadLine(&line, &line_size, fin) != -1)
             {
-                JsonElement *item = StringCaptureData(pattern, regex, line);
+                JsonElement *item = StringCaptureData(regex, NULL, line);
 
                 if (item != NULL)
                 {
@@ -1378,7 +1371,7 @@ JsonElement* GetProcFileInfo(EvalContext *ctx, const char* filename, const char*
                 BufferDestroy(varname);
             }
 
-            pcre_free(pattern);
+            RegexDestroy(regex);
         }
 
         fclose(fin);

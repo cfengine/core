@@ -44,7 +44,7 @@ SHELL
 
     nd.vm.provision "shell", inline: <<-SHELL
 set -e
-yum -q -y install lmdb-devel pcre-devel openssl-devel libyaml-devel libxml2-devel
+yum -q -y install lmdb-devel pcre2-devel openssl-devel libyaml-devel libxml2-devel
 SHELL
 
     nd.vm.provision "shell", inline: <<-SHELL

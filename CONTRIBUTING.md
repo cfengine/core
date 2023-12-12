@@ -294,7 +294,7 @@ Keep in mind that these are guidelines, there will always be some situations whe
   ```
   AM_CFLAGS = \
   <TAB>$(OPENSSL_CFLAGS) \
-  <TAB>$(PCRE_CFLAGS) \
+  <TAB>$(PCRE2_CFLAGS) \
   <TAB>$(ENTERPRISE_CFLAGS)
   ```
 * Inside an `if`, you cannot indent with tabs (lines will be silently skipped):

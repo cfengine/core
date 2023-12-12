@@ -29,11 +29,11 @@ AM_CPPFLAGS = \
 	-I$(srcdir)/../../../libcfnet \
 	-I$(srcdir)/../../../libenv \
 	-I$(srcdir)/../../../cf-execd \
-	$(PCRE_CPPFLAGS) \
+	$(PCRE2_CPPFLAGS) \
 	$(ENTERPRISE_CPPFLAGS)
 
 AM_CFLAGS = \
-	$(PCRE_CFLAGS) \
+	$(PCRE2_CFLAGS) \
 	$(OPENSSL_CFLAGS) \
 	$(ENTERPRISE_CFLAGS)
 

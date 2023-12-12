@@ -31,19 +31,23 @@
 
 
 /* Sets variables */
-static bool RegExMatchSubString(EvalContext *ctx, pcre *rx, const char *teststring, int *start, int *end)
+static bool RegExMatchSubString(EvalContext *ctx, Regex *regex, const char *teststring, int *start, int *end)
 {
-    int ovector[OVECCOUNT];
-    int rc = 0;
-
-    if ((rc = pcre_exec(rx, NULL, teststring, strlen(teststring), 0, 0, ovector, OVECCOUNT)) >= 0)
+    pcre2_match_data *match_data = pcre2_match_data_create_from_pattern(regex, NULL);
+    int result = pcre2_match(regex, (PCRE2_SPTR) teststring, PCRE2_ZERO_TERMINATED,
+                             0, 0, match_data, NULL);
+    /* pcre2_match() returns the highest capture group number + 1, i.e. 1 means
+     * a match with 0 capture groups. 0 means the vector of offsets is small,
+     * negative numbers are errors (incl. no match). */
+    if (result > 0)
     {
+        size_t *ovector = pcre2_get_ovector_pointer(match_data);
         *start = ovector[0];
         *end = ovector[1];
 
         EvalContextVariableClearMatch(ctx);
 
-        for (int i = 0; i < rc; i++)        /* make backref vars $(1),$(2) etc */
+        for (int i = 0; i < result; i++)        /* make backref vars $(1),$(2) etc */
         {
             const char *backref_start = teststring + ovector[i * 2];
             int backref_len = ovector[i * 2 + 1] - ovector[i * 2];
@@ -64,12 +68,13 @@ static bool RegExMatchSubString(EvalContext *ctx, pcre *rx, const char *teststri
         *end = 0;
     }
 
-    pcre_free(rx);
-    return rc >= 0;
+    pcre2_match_data_free(match_data);
+    RegexDestroy(regex);
+    return result > 0;
 }
 
 /* Sets variables */
-static bool RegExMatchFullString(EvalContext *ctx, pcre *rx, const char *teststring)
+static bool RegExMatchFullString(EvalContext *ctx, Regex *rx, const char *teststring)
 {
     int match_start;
     int match_len;
@@ -86,14 +91,12 @@ static bool RegExMatchFullString(EvalContext *ctx, pcre *rx, const char *teststr
 
 bool FullTextMatch(EvalContext *ctx, const char *regexp, const char *teststring)
 {
-    pcre *rx;
-
     if (strcmp(regexp, teststring) == 0)
     {
         return true;
     }
 
-    rx = CompileRegex(regexp);
+    Regex *rx = CompileRegex(regexp);
     if (rx == NULL)
     {
         return false;
@@ -111,16 +114,16 @@ bool FullTextMatch(EvalContext *ctx, const char *regexp, const char *teststring)
 
 bool ValidateRegEx(const char *regex)
 {
-    pcre *rx = CompileRegex(regex);
+    Regex *rx = CompileRegex(regex);
     bool regex_valid = rx != NULL;
 
-    pcre_free(rx);
+    RegexDestroy(rx);
     return regex_valid;
 }
 
 bool BlockTextMatch(EvalContext *ctx, const char *regexp, const char *teststring, int *start, int *end)
 {
-    pcre *rx = CompileRegex(regexp);
+    Regex *rx = CompileRegex(regexp);
 
     if (rx == NULL)
     {

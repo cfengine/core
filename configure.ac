@@ -1211,6 +1211,9 @@ AC_CHECK_FUNCS(sleep)
 AC_CHECK_DECLS(socketpair, [], [], [[#include <sys/socket.h>]])
 AC_CHECK_DECLS(fsync)
 AC_CHECK_DECLS(glob, [], [], [[#include <glob.h>]])
+AC_CHECK_DECLS(gettid, [], [], [[
+#define _GNU_SOURCE
+#include <unistd.h>]])
 
 dnl ######################################################################
 dnl Check for sa_len in struct sockaddr

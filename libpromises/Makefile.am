@@ -219,6 +219,13 @@ endif
 
 endif # !NT
 
+if !NDEBUG
+if LINUX
+libpromises_la_SOURCES += \
+	dbm_test_api.c dbm_test_api.h
+endif
+endif
+
 
 ########## Sources pre-generated and distributed in the tarball ##########
 # Make sure you include the generated file as a dependency to a target

@@ -344,7 +344,7 @@ log_cmd "$BINDIR/cf-key -p $WORKDIR/ppkeys/localhost.pub"
 log_cmd "grep 'version =' $WORKDIR/inputs/promises.cf"
 log_cmd "$BINDIR/cf-key -s -n"
 log_cmd "$BINDIR/cf-check diagnose"
-$BINDIR/cf-promises --no-lock --show-classes --show-vars > "$tmpdir/classes-and-vars.txt" 2>&1
+$BINDIR/cf-promises --show-classes --show-vars > "$tmpdir/classes-and-vars.txt" 2>&1
 $BINDIR/cf-agent --no-lock --file update.cf --show-evaluated-classes --show-evaluated-vars > "$tmpdir/update-evaluated-classes-and-vars.txt" 2>&1
 $BINDIR/cf-agent --no-lock --file promises.cf --show-evaluated-classes --show-evaluated-vars > "$tmpdir/promises-evaluated-classes-and-vars.txt" 2>&1
 

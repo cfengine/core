@@ -261,7 +261,7 @@ void ArgGetExecutableAndArgs(const char *comm, char **exec, char **args)
 
 #define INITIAL_ARGS 8
 
-char **ArgSplitCommand(const char *comm)
+char **ArgSplitCommand(const char *comm, const Seq *arglist)
 {
     const char *s = comm;
 
@@ -320,14 +320,16 @@ char **ArgSplitCommand(const char *comm)
         args[argc++] = arg;
     }
 
-/* Trailing NULL */
-
-    if (argc == argslen)
+    size_t extra = (arglist == NULL) ? 0 : SeqLength(arglist);
+    if (argc + extra + 1 /* NULL */ > argslen)
     {
-        argslen += 1;
-        args = xrealloc(args, argslen * sizeof(char *));
+        args = xrealloc(args, (argc + extra + 1) * sizeof(char *));
     }
-    args[argc++] = NULL;
+
+    for (size_t i = 0; i < extra; i++) {
+        args[argc++] = xstrdup(SeqAt(arglist, i));
+    }
+    args[argc] = NULL;
 
     return args;
 }

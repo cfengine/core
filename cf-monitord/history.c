@@ -179,6 +179,8 @@ static void Nova_HistoryUpdate(time_t time, const Averages *newvals)
 static Item *NovaReSample(EvalContext *ctx, int slot, const Attributes *attr, const Promise *pp, PromiseResult *result)
 {
     assert(attr != NULL);
+    assert(pp != NULL);
+
     Attributes a = *attr; // TODO: try to remove this local copy
     CfLock thislock;
     char eventname[CF_BUFSIZE];
@@ -311,7 +313,7 @@ static Item *NovaReSample(EvalContext *ctx, int slot, const Attributes *attr, co
             else
             {
                 fin =
-                    cf_popensetuid(pp->promiser, "r", a.contain.owner, a.contain.group, a.contain.chdir,
+                    cf_popensetuid(pp->promiser, NULL, "r", a.contain.owner, a.contain.group, a.contain.chdir,
                                    a.contain.chroot, false);
             }
         }

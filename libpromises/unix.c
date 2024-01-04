@@ -195,7 +195,7 @@ bool ShellCommandReturnsZero(const char *command, ShellType shell)
         }
         else
         {
-            char **argv = ArgSplitCommand(command);
+            char **argv = ArgSplitCommand(command, NULL);
             int devnull;
 
             if (LogGetGlobalLevel() < LOG_LEVEL_INFO)

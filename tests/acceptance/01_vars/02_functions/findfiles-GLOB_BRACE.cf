@@ -14,11 +14,7 @@ body common control
 bundle common findfiles
 {
   vars:
-    # * in filenames not allowed on win
-    windows::
       "names" slist => { "a", "bc", "d/e/f", "g/h/i/j", "klm/nop/qrs" };
-    !windows::
-      "names" slist => { "a", "bc", "d/e/f", "g/h/i/j", "klm/nop/qrs", "tu/*" };
 }
 
 #######################################################
@@ -43,13 +39,6 @@ bundle agent test
       "description" -> { "CFE-3292" }
         string => "Test that findfiles() works as expected.";
 
-      #"test_suppress_fail" string => "windows",
-      #  meta => { "redmine4730" };
-      # This test should be merged with findfiles.cf when it's fixed.
-      # In order to soft-fail it as requested, I had to strip it to a separate-test
-      "test_soft_fail" string => "any",
-        meta => { "CFE-3292" };
-
   vars:
       "patterns[GLOB_BRACE]" string => "$(G.testdir)/{a,bc}";
 
@@ -70,7 +59,7 @@ bundle agent test
 bundle agent check
 {
   vars:
-      "expected[GLOB_BRACE]" string => "$(G.testdir)/a,$(G.testdir)/bc";
+      "expected[GLOB_BRACE]" string => "$(G.testdir)$(const.dirsep)a,$(G.testdir)$(const.dirsep)bc";
 
       "expects" slist => getindices("expected");
 

@@ -1,3 +1,28 @@
+3.18.7:
+	- 'cf-check diagnose' now shows DB usage and a hint if rotation is required
+	- 'cf-check repair' now rotates DB files with high usage (>95%) (CFE-3374)
+	- 'cf-check repair' now supports the '--test-write' option to check if DBs can
+	  be written to as part of identifying DBs that need repairing (CFE-3375)
+	- /usr/bin/getent is now attempted to be used if /bin/getent doesn't exist
+	  (CFE-4256)
+	- CFEngine locks are now purged dynamically based on the local locks DB
+	  usage/size ranging from no purging (<=25% usage) to purging of locks older
+	  than 1 week (>75% usage) (CFE-2136, ENT-5898, ENT-8201)
+	- Fixed infinite loop on error bug while reading interface exception file
+	- Fixed inventoried policy release id when masterfiles-stage.sh deploys with
+	  cfbs (ENT-10832)
+	- Full LMDB files are now handled gracefully by moving them aside and using
+	  new empty LMDB files (ENT-8201)
+	- Improved locale override in masterfiles stage scripts (ENT-10753)
+	- Only CFEngine processes are now killed as expired lock owners (CFE-3982)
+	- SELinux no longer blocks CFEngine deamons in reading security parameters
+	  from /proc/sys/kernel (ENT-9684)
+	- cf-hub is now allowed to use the TLS kernel module on SELinux-enabled
+	  systems (ENT-9727)
+	- cf_lock.lmdb is no longer restored from backup on every boot (CFE-3982)
+	- Fixed cf-support call to cf-promises to collect all classes and vars
+	  (CFE-4300)
+
 3.18.6:
 	- Fixed and improved postgresql server state handling in package installer
 	  scriptlets (ENT-10647)

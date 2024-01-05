@@ -17,7 +17,7 @@ bundle common findfiles
     # * in filenames not allowed on win
     windows::
       "names" slist => { "a", "bc", "d/e/f", "g/h/i/j", "klm/nop/qrs" };
-    !windows::
+   !windows::
       "names" slist => { "a", "bc", "d/e/f", "g/h/i/j", "klm/nop/qrs", "tu/*" };
 }
 
@@ -39,10 +39,6 @@ bundle agent init
 
 bundle agent test
 {
-  meta:
-      "test_suppress_fail" string => "windows",
-        meta => { "redmine4730,ENT-2145" };
-
   vars:
       "patterns[a]" string => "$(G.testdir)/?";
       "patterns[b]" string => "$(G.testdir)/*";
@@ -52,11 +48,12 @@ bundle agent test
       "patterns[relative_path_1]" string => "./*";
       "patterns[relative_path_2]" string => "**";
       "patterns[relative_path_3]" string => "../**";
-
-    !windows::
+  !windows::
+      # First of all '*' is an illegal filename on Windows. Also you cannot
+      # escape wildcards with backslash when it is a file separator.
       "patterns[f]" string => "$(G.testdir)/tu/\\*";
-    any::
-      "patterns[g]" string => "$(G.testdir)/*/**";
+  any::
+      "patterns[g]" string => "$(G.testdir)/**";
       "patterns[h]" string => "$(G.testdir)/**/j";
 
       "pnames" slist => getindices("patterns");
@@ -76,27 +73,33 @@ bundle agent test
 bundle agent check
 {
   vars:
-      "expected[a]" string => "$(G.testdir)/a,$(G.testdir)/d,$(G.testdir)/g";
-    windows::
-      "expected[b]" string => "$(G.testdir)/a,$(G.testdir)/bc,$(G.testdir)/d,$(G.testdir)/g,$(G.testdir)/klm";
     !windows::
+      "expected[a]" string => "$(G.testdir)/a,$(G.testdir)/d,$(G.testdir)/g";
       "expected[b]" string => "$(G.testdir)/a,$(G.testdir)/bc,$(G.testdir)/d,$(G.testdir)/g,$(G.testdir)/klm,$(G.testdir)/tu";
 
-    any::
       "expected[c]" string => "$(G.testdir)/d/e,$(G.testdir)/g/h";
       "expected[d]" string => "$(G.testdir)/a,$(G.testdir)/bc";
       "expected[e]" string => "";
 
-    !windows::
       "expected[f]" string => "$(G.testdir)/tu/*";
       "expected[g]" string => "$(G.testdir)/a,$(G.testdir)/bc,$(G.testdir)/d,$(G.testdir)/g,$(G.testdir)/klm,$(G.testdir)/tu,$(G.testdir)/d/e,$(G.testdir)/g/h,$(G.testdir)/klm/nop,$(G.testdir)/tu/*,$(G.testdir)/d/e/f,$(G.testdir)/g/h/i,$(G.testdir)/klm/nop/qrs,$(G.testdir)/g/h/i/j";
       "expected[h]" string => "$(G.testdir)/g/h/i/j";
+    windows::
+      "expected[a]" string => "$(G.testdir)\\a,$(G.testdir)\\d,$(G.testdir)\\g";
+      "expected[b]" string => "$(G.testdir)\\a,$(G.testdir)\\bc,$(G.testdir)\\d,$(G.testdir)\\g,$(G.testdir)\\klm";
+
+      "expected[c]" string => "$(G.testdir)\\d\\e,$(G.testdir)\\g\\h";
+      "expected[d]" string => "$(G.testdir)\\a,$(G.testdir)\\bc";
+      "expected[e]" string => "";
+
+      "expected[g]" string => "$(G.testdir)\\a,$(G.testdir)\\bc,$(G.testdir)\\d,$(G.testdir)\\g,$(G.testdir)\\klm,$(G.testdir)\\d\\e,$(G.testdir)\\g\\h,$(G.testdir)\\klm\\nop,$(G.testdir)\\d\\e\\f,$(G.testdir)\\g\\h\\i,$(G.testdir)\\klm\\nop\\qrs,$(G.testdir)\\g\\h\\i\\j";
+      "expected[h]" string => "$(G.testdir)\\g\\h\\i\\j";
+    any::
       # relative paths are skipped, thus return empty list
       "expected[relative_path_1]" string => "";
       "expected[relative_path_2]" string => "";
       "expected[relative_path_3]" string => "";
 
-    any::
       "expects" slist => getindices("expected");
 
       "fstring" slist => getindices("test.found_string");

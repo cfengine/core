@@ -658,6 +658,11 @@ allow cfengine_httpd_t system_dbusd_var_run_t:dir search;
 allow cfengine_httpd_t system_dbusd_var_run_t:sock_file write;
 allow init_t cfengine_httpd_t:dbus send_msg;
 
+# allow httpd to run 'ps' and thus gather information about all running processes on the system
+# this is a macro invocation, the file has to be processed with
+# make -f /usr/share/selinux/devel/Makefile
+ps_process_pattern(cfengine_httpd_t, domain)
+
 # TODO: these should not be needed
 allow cfengine_httpd_t passwd_file_t:file { getattr open read };
 allow cfengine_httpd_t shell_exec_t:file map;

@@ -297,6 +297,9 @@ classpromises:         classpromise
 
 classpromise:          class
                      | promise_decl
+                       {
+                          ParserCheckPromiseLine();
+                       }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 

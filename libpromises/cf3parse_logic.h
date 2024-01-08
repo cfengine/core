@@ -1058,4 +1058,66 @@ static inline void ParserHandleQuotedListItem()
     FREE_AND_NULL(P.currentstring);
 }
 
+/**
+ * A sanity check that prints a warning if there is a promise without any
+ * actions (i.e., the promise is a no-op). This check is naive and assumes
+ * promises containing any non-common attributes perform actions. It also has
+ * exceptions for promises that perform actions without any attributes. We can
+ * expect false negatives. However, there should not be any false positives. The
+ * motivation for this check is to aid policy writers in detecting semantic
+ * errors early.
+ */
+static inline void ParserCheckPromiseLine()
+{
+    if (P.currentpromise == NULL)
+    {
+        return;
+    }
+
+    const char *const promise_type = P.currenttype;
+    if (!IsBuiltInPromiseType(promise_type))
+    {
+        // We leave sanity checking to the custom promise module.
+        return;
+    }
+
+    // The following promise types does not require any actions
+    static const char *const exceptions[] = {
+        "classes", "commands", "methods", "reports", "insert_lines",
+        "delete_lines", "build_xpath", "insert_tree" };
+    static const size_t num_exceptions = sizeof(exceptions) / sizeof(exceptions[0]);
+
+    if (IsStringInArray(promise_type, exceptions, num_exceptions))
+    {
+        // This promise type does not require any action attributes.
+        return;
+    }
+
+    // We don't consider common attributes an actions.
+    static const char *const common_attrs[] = {
+        "action", "classes", "comment", "depends_on",
+        "handle", "if", "meta", "with" };
+
+    const Seq *const constraints = P.currentpromise->conlist;
+    const size_t num_constraints = SeqLength(constraints);
+    for (size_t i = 0; i < num_constraints; i++)
+    {
+        const Constraint *const constraint = SeqAt(constraints, i);
+        if (!IsStringInArray(constraint->lval, common_attrs,
+                             sizeof(common_attrs) / sizeof(common_attrs[0])))
+        {
+            // Not in common attributes, we assume it is an action
+            return;
+        }
+    }
+
+    const char *const promiser = P.currentpromise->promiser;
+    const char *const file = P.filename;
+    const char *const bundle = P.currentbundle->name;
+    size_t line = P.currentpromise->offset.line;
+    ParseWarning(PARSER_WARNING_SANITY_CHECK,
+        "No action requested for %s promise with promiser '%s' in %s:%s close to line %zu",
+        promise_type, promiser, file, bundle, line);
+}
+
 #endif // CF3_PARSE_LOGIC_H

@@ -164,6 +164,10 @@ int ParserWarningFromString(const char *warning_str)
     {
         return PARSER_WARNING_REMOVED;
     }
+    else if (strcmp("sanity-check", warning_str) == 0)
+    {
+        return PARSER_WARNING_SANITY_CHECK;
+    }
     else if (strcmp("all", warning_str) == 0)
     {
         return PARSER_WARNING_ALL;
@@ -182,6 +186,8 @@ const char *ParserWarningToString(unsigned int warning)
         return "deprecated";
     case PARSER_WARNING_REMOVED:
         return "removed";
+    case PARSER_WARNING_SANITY_CHECK:
+        return "sanity-check";
 
     default:
         ProgrammingError("Invalid parser warning: %u", warning);

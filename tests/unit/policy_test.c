@@ -174,7 +174,7 @@ static void test_policy_json_to_from(void)
     assert_true(policy);
 
     assert_int_equal(1, SeqLength(policy->bundles));
-    assert_int_equal(2, SeqLength(policy->bodies));
+    assert_int_equal(3, SeqLength(policy->bodies));
 
     {
         Bundle *main_bundle = PolicyGetBundle(policy, NULL, "agent", "main");
@@ -320,7 +320,7 @@ static void test_policy_json_offsets(void)
 
         JsonElement *myperms_body = JsonArrayGetAsObject(json_bodies, 1);
         line = JsonPrimitiveGetAsInteger(JsonObjectGet(myperms_body, "line"));
-        assert_int_equal(28, line);
+        assert_int_equal(29, line);
 
         JsonElement *myperms_contexts = JsonObjectGetAsArray(myperms_body, "contexts");
         JsonElement *any_context = JsonArrayGetAsObject(myperms_contexts, 0);
@@ -328,7 +328,7 @@ static void test_policy_json_offsets(void)
         {
             JsonElement *mode_attrib = JsonArrayGetAsObject(any_attribs, 0);
             line = JsonPrimitiveGetAsInteger(JsonObjectGet(mode_attrib, "line"));
-            assert_int_equal(30, line);
+            assert_int_equal(31, line);
         }
     }
 

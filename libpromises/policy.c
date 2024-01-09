@@ -2328,7 +2328,7 @@ static Body *PolicyAppendBodyJson(Policy *policy, JsonElement *json_body)
     }
 
     Body *body = PolicyAppendBody(policy, ns, name, type, args, source_path, false);
-
+    RlistDestroy(args); // It's copied by PolicyAppendBody()
     {
         JsonElement *json_contexts = JsonObjectGetAsArray(json_body, "contexts");
         for (size_t i = 0; i < JsonLength(json_contexts); i++)

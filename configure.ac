@@ -514,19 +514,6 @@ CF3_WITH_LIBRARY(pcre, [
                       AC_MSG_ERROR(Cannot find PCRE))])
 ])
 
-dnl systemd-socket activation
-
-AC_ARG_WITH([systemd-socket], [AS_HELP_STRING([--with-systemd-socket[[=PATH]]], [support systemd socket activation])], [], [with_systemd_socket=check])
-
-
-if test "x$with_systemd_socket" != xno
-then
-   CF3_WITH_LIBRARY(systemd_socket, [
-      AC_CHECK_LIB(systemd, sd_listen_fds, [], [if test "x$with_systemd_socket" != xcheck; then AC_MSG_ERROR(Cannot find systemd library); fi])
-      AC_CHECK_LIB(systemd, sd_notify_barrier, [AC_DEFINE([HAVE_SD_NOTIFY_BARRIER],[1],[sd_notify_barrier on recent systemd])])
-      AC_CHECK_HEADERS(systemd/sd-daemon.h, [], [if test "x$with_systemd_socket" != xcheck; then AC_MSG_ERROR(Cannot find systemd headers); fi])
-   ])
-fi
 
 dnl libvirt
 
@@ -1638,6 +1625,22 @@ else
     fi
 fi
 AC_SUBST([OS_ENVIRONMENT_PATH])
+
+dnl systemd-socket activation
+
+AC_ARG_WITH([systemd-socket], [AS_HELP_STRING([--with-systemd-socket[[=PATH]]], [support systemd socket activation])], [], [with_systemd_socket=check])
+
+dnl ########################################################################
+dnl systemd socket feature, only available if systemd init scripts requested
+dnl ########################################################################
+if test "x$with_systemd_service" != xno && test "x$with_systemd_socket" != xno
+then
+   CF3_WITH_LIBRARY(systemd_socket, [
+      AC_CHECK_LIB(systemd, sd_listen_fds, [], [if test "x$with_systemd_socket" != xcheck; then AC_MSG_ERROR(Cannot find systemd library); fi])
+      AC_CHECK_LIB(systemd, sd_notify_barrier, [AC_DEFINE([HAVE_SD_NOTIFY_BARRIER],[1],[sd_notify_barrier on recent systemd])])
+      AC_CHECK_HEADERS(systemd/sd-daemon.h, [], [if test "x$with_systemd_socket" != xcheck; then AC_MSG_ERROR(Cannot find systemd headers); fi])
+   ])
+fi
 
 dnl #####################################################################
 dnl SELinux policy build and installation

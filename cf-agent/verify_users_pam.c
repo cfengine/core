@@ -593,7 +593,9 @@ static bool ChangePasswordHashUsingLckpwdf(const char *puser, const char *passwo
     }
 
     fclose(edit_fd);
+    edit_fd = NULL; // mark as NULL so we don't close it later
     fclose(passwd_fd);
+    passwd_fd = NULL; // mark as NULL so we don't close it later
 
     if (!CopyFilePermissionsDisk(passwd_file, edit_file))
     {
@@ -613,10 +615,16 @@ static bool ChangePasswordHashUsingLckpwdf(const char *puser, const char *passwo
     goto unlock_passwd;
 
 close_both:
-    fclose(edit_fd);
+    if (edit_fd != NULL)
+    {
+        fclose(edit_fd);
+    }
     unlink(edit_file);
 close_passwd_fd:
-    fclose(passwd_fd);
+    if (passwd_fd != NULL)
+    {
+        fclose(passwd_fd);
+    }
 unlock_passwd:
     ulckpwdf();
 

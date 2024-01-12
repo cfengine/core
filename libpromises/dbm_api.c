@@ -35,6 +35,7 @@
 #include <known_dirs.h>
 #include <string_lib.h>
 #include <time.h>          /* time() */
+#include <glob_lib.h>
 
 
 static bool DBPathLock(FileLock *lock, const char *filename);

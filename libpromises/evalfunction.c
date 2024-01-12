@@ -72,6 +72,8 @@
 #include <string_sequence.h>
 #include <string_lib.h>
 #include <version_comparison.h>
+#include <mutex.h>          /* ThreadWait */
+#include <glob_lib.h>
 
 #include <math_eval.h>
 

@@ -281,6 +281,7 @@ static int diagnose(const char *path, bool temporary_redirect, bool validate)
             return errno;
         }
         assert(f_result == stdout);
+        fclose(f_result);
         ret = lmdump(LMDUMP_VALUES_ASCII, path);
     }
     return lmdb_errno_to_cf_check_code(ret);

@@ -19,7 +19,7 @@ if [ $# -gt 1 ] || [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
   echo '	--help, -h - Print the help message'
   echo ''
   echo 'Website: https://cfengine.com'
-  echo 'This software is Copyright 2023 Northern.tech AS.'
+  echo 'This software is Copyright 2024 Northern.tech AS.'
   exit 1
 fi
 

@@ -7,6 +7,20 @@ jobs:
   static_check:
     runs-on: ubuntu-latest
     steps:
+    - name: Checkout Together Action
+      uses: actions/checkout@v3
+      with:
+        repository: cfengine/together-javascript-action
+        ref: main
+        ssh-key: ${{ secrets.GH_ACTIONS_SSH_DEPLOY_KEY_TOGETHER_REPO }}
+        ssh-known-hosts: github.com
+
+    - name: Action step
+      uses: ./
+      id: together
+      with:
+        myToken: ${{ secrets.GITHUB_TOKEN }}
+
     - name: Checkout Core
       uses: actions/checkout@v3
       with:
@@ -19,6 +33,7 @@ jobs:
         repository: cfengine/buildscripts
         submodules: recursive
         path: buildscripts
+        ref: ${{steps.together.outputs.buildscripts || github.base_ref}}
 
     - name: Checkout Masterfiles
       uses: actions/checkout@v3
@@ -26,6 +41,7 @@ jobs:
         repository: cfengine/masterfiles
         submodules: recursive
         path: masterfiles
+        ref: ${{steps.together.outputs.masterfiles || github.base_ref}}
 
     - name: Prepare Environment
       run: |

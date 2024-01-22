@@ -20,6 +20,9 @@ jobs:
   macos_unit_tests:
     needs: unit_tests
     uses: ./.github/workflows/macos_unit_tests.yml
-  valgrind_tests:
+  valgrind_check:
     needs: unit_tests
-    uses: ./.github/workflows/valgrind.yml
+    uses: ./.github/workflows/job-valgrind-check.yml
+  static_check:
+    needs: unit_tests
+    uses: ./.github/workflows/job-static-check.yml

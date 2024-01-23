@@ -78,6 +78,10 @@ void CloseDB(CF_DB *dbp);
 
 DBHandle *GetDBHandleFromFilename(const char *db_file_name);
 time_t GetDBOpenTimestamp(const DBHandle *handle);
+
+/**
+ * @return -1 in case of unknown a number between 0 and 100 otherwise
+ */
 int GetDBUsagePercentage(const DBHandle *handle);
 
 bool HasKeyDB(CF_DB *dbp, const char *key, int key_size);

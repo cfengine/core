@@ -46,6 +46,7 @@ SUBDIRS = \
 	cf-net \
 	cf-secret \
 	misc \
+	python \
 	ext \
 	examples \
 	tests \

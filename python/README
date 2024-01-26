@@ -1,0 +1,10 @@
+This directory contains Python packages and modules for working with CFEngine
+and its libraries.
+
+If you want to use one of these, PYTHONPATH and LD_LIBRARY_PATH variables can
+make things easier when used like this:
+
+  PYTHONPATH=/var/cfengine/lib/python LD_LIBRARY_PATH=/var/cfengine/lib python3
+
+That will make sure that the bindings are found by Python and that CFEngine's
+libraries are found by dlopen() (used by ctypes.CDLL() etc.).

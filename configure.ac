@@ -1872,6 +1872,7 @@ AC_CONFIG_FILES([Makefile
     contrib/vagrant-ci/centos-7-x64/Makefile
     misc/Makefile
     misc/selinux/Makefile
+    python/Makefile
     ext/Makefile
     examples/Makefile
     tests/Makefile

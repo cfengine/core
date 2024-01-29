@@ -80,6 +80,8 @@ typedef struct
             bool eval_functions;
             char *show_classes;
             char *show_variables;
+            bool no_augments;
+            bool no_host_specific;
         } common;
         struct
         {

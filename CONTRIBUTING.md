@@ -274,10 +274,11 @@ Keep in mind that these are guidelines, there will always be some situations whe
           // ...
       } Name;
       ```
-* Type casts should be separated with one space from the variable:
+* Type casts should be separated with one space from the value:
   ```c
   bool ok = true;
   int res = (int) ok;
+  char *msg = (char *) malloc(64 * sizeof(char *));
   ```
 
 #### Indentation in (auto)make files

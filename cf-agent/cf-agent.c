@@ -203,6 +203,8 @@ static const struct option OPTIONS[] =
     /* Only long option for the rest */
     {"ignore-preferred-augments", no_argument, 0, 0},
     {"log-modules", required_argument, 0, 0},
+    {"no-augments", no_argument, 0, 0},
+    {"no-host-specific-data", no_argument, 0, 0},
     {"show-evaluated-classes", optional_argument, 0, 0 },
     {"show-evaluated-vars", optional_argument, 0, 0 },
     {"skip-bootstrap-policy-run", no_argument, 0, 0 },
@@ -235,6 +237,8 @@ static const char *const HINTS[] =
     "Log timestamps on each line of log output",
     "Ignore def_preferred.json file in favor of def.json",
     "Enable even more detailed debug logging for specific areas of the implementation. Use together with '-d'. Use --log-modules=help for a list of available modules",
+    "Do not load augments (def.json)",
+    "Do not load host-specific data (host_specific.json)",
     "Show *final* evaluated classes, including those defined in common bundles in policy. Optionally can take a regular expression.",
     "Show *final* evaluated variables, including those defined without dependency to user-defined classes in policy. Optionally can take a regular expression.",
     "Do not run policy as the last step of the bootstrap process",
@@ -679,6 +683,14 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 {
                     DoCleanupAndExit(EXIT_FAILURE);
                 }
+            }
+            else if (StringEqual(option_name, "no-augments"))
+            {
+                config->agent_specific.common.no_augments = true;
+            }
+            else if (StringEqual(option_name, "no-host-specific-data"))
+            {
+                config->agent_specific.common.no_host_specific = true;
             }
             else if (StringEqual(option_name, "show-evaluated-classes"))
             {

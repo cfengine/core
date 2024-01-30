@@ -941,6 +941,8 @@ static void AddPolicyEntryVariables (EvalContext *ctx, const GenericAgentConfig 
 void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config,
                                  const char *program_name)
 {
+    assert(config != NULL);
+
     strcpy(VPREFIX, "");
     if (program_name != NULL)
     {
@@ -1079,14 +1081,17 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config,
     }
 
     /* Load CMDB data *before* augments. */
-    if (!LoadCMDBData(ctx))
+    if (!config->agent_specific.common.no_host_specific && !LoadCMDBData(ctx))
     {
         Log(LOG_LEVEL_ERR, "Failed to load CMDB data");
     }
 
-    /* load augments here so that they can make use of the classes added above
-     * (especially 'am_policy_hub' and 'policy_server') */
-    LoadAugments(ctx, config);
+    if (!config->agent_specific.common.no_augments)
+    {
+        /* load augments here so that they can make use of the classes added above
+         * (especially 'am_policy_hub' and 'policy_server') */
+        LoadAugments(ctx, config);
+    }
 }
 
 static bool IsPolicyPrecheckNeeded(GenericAgentConfig *config, bool force_validation)
@@ -2516,6 +2521,9 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type, bool tty_
 
     /* Log classes */
     config->agent_specific.agent.report_class_log = false;
+
+    config->agent_specific.common.no_augments = false;
+    config->agent_specific.common.no_host_specific = false;
 
     switch (agent_type)
     {

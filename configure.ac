@@ -1211,6 +1211,9 @@ AC_CHECK_FUNCS(sleep)
 AC_CHECK_DECLS(socketpair, [], [], [[#include <sys/socket.h>]])
 AC_CHECK_DECLS(fsync)
 AC_CHECK_DECLS(glob, [], [], [[#include <glob.h>]])
+AC_CHECK_DECLS(gettid, [], [], [[
+#define _GNU_SOURCE
+#include <unistd.h>]])
 
 dnl ######################################################################
 dnl Check for sa_len in struct sockaddr
@@ -1869,6 +1872,7 @@ AC_CONFIG_FILES([Makefile
     contrib/vagrant-ci/centos-7-x64/Makefile
     misc/Makefile
     misc/selinux/Makefile
+    python/Makefile
     ext/Makefile
     examples/Makefile
     tests/Makefile

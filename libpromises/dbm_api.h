@@ -35,30 +35,30 @@
 // Only append to the end, keep in sync with DB_PATHS_STATEDIR array
 typedef enum
 {
-    dbid_classes,   // Deprecated
-    dbid_variables, // Deprecated
-    dbid_performance,
-    dbid_checksums, // Deprecated
-    dbid_filestats, // Deprecated
-    dbid_changes,
-    dbid_observations,
-    dbid_state,
-    dbid_lastseen,
-    dbid_audit,
-    dbid_locks,
-    dbid_history,
-    dbid_measure,
-    dbid_static,
-    dbid_scalars,
-    dbid_windows_registry,
-    dbid_cache,
-    dbid_license,
-    dbid_value,
-    dbid_agent_execution,
-    dbid_bundles,   // Deprecated
-    dbid_packages_installed, //new package promise installed packages list
-    dbid_packages_updates,   //new package promise list of available updates
-    dbid_cookies, // Enterprise reporting cookies for duplicate host detection
+    dbid_classes            = 0, // Deprecated
+    dbid_variables          = 1, // Deprecated
+    dbid_performance        = 2,
+    dbid_checksums          = 3, // Deprecated
+    dbid_filestats          = 4, // Deprecated
+    dbid_changes            = 5,
+    dbid_observations       = 6,
+    dbid_state              = 7,
+    dbid_lastseen           = 8,
+    dbid_audit              = 9,
+    dbid_locks              = 10,
+    dbid_history            = 11,
+    dbid_measure            = 12,
+    dbid_static             = 13,
+    dbid_scalars            = 14,
+    dbid_windows_registry   = 15,
+    dbid_cache              = 16,
+    dbid_license            = 17,
+    dbid_value              = 18,
+    dbid_agent_execution    = 19,
+    dbid_bundles            = 20, // Deprecated
+    dbid_packages_installed = 21, // new package promise installed packages list
+    dbid_packages_updates   = 22, // new package promise list of available updates
+    dbid_cookies            = 23, // Enterprise reporting cookies for duplicate host detection
 
     dbid_max
 } dbid;
@@ -78,6 +78,10 @@ void CloseDB(CF_DB *dbp);
 
 DBHandle *GetDBHandleFromFilename(const char *db_file_name);
 time_t GetDBOpenTimestamp(const DBHandle *handle);
+
+/**
+ * @return -1 in case of unknown a number between 0 and 100 otherwise
+ */
 int GetDBUsagePercentage(const DBHandle *handle);
 
 bool HasKeyDB(CF_DB *dbp, const char *key, int key_size);

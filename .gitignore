@@ -52,6 +52,7 @@ stamp-h1
 /libpromises/Makefile
 /misc/Makefile
 /misc/selinux/Makefile
+/python/Makefile
 /tests/Makefile
 /tests/acceptance/25_cf-execd/Makefile
 /tests/acceptance/Makefile

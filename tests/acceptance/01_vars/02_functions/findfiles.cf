@@ -53,7 +53,7 @@ bundle agent test
       # escape wildcards with backslash when it is a file separator.
       "patterns[f]" string => "$(G.testdir)/tu/\\*";
   any::
-      "patterns[g]" string => "$(G.testdir)/**";
+      "patterns[g]" string => "$(G.testdir)/*/**";
       "patterns[h]" string => "$(G.testdir)/**/j";
 
       "pnames" slist => getindices("patterns");

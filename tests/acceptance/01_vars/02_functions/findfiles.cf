@@ -55,10 +55,10 @@ bundle agent test
 
     !windows::
       "patterns[f]" string => "$(G.testdir)/tu/\\*";
-      "patterns[g]" string => "$(G.testdir)/**";
+    any::
+      "patterns[g]" string => "$(G.testdir)/*/**";
       "patterns[h]" string => "$(G.testdir)/**/j";
 
-    any::
       "pnames" slist => getindices("patterns");
 
       "found[$(pnames)]" slist => findfiles("$(patterns[$(pnames)])");

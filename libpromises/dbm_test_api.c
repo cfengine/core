@@ -558,7 +558,7 @@ void StopSimulation(DBLoadSimulation *simulation)
         Log(LOG_LEVEL_NOTICE, "Joining simulation threads with no timeout");
         if (simulation->read_th_started)
         {
-            ret = pthread_join(simulation->read_th_started, NULL);
+            ret = pthread_join(simulation->read_th, NULL);
             simulation->read_th_started = (ret == 0);
             if (ret != 0)
             {
@@ -568,7 +568,7 @@ void StopSimulation(DBLoadSimulation *simulation)
         }
         if (simulation->write_th_started)
         {
-            ret = pthread_join(simulation->write_th_started, NULL);
+            ret = pthread_join(simulation->write_th, NULL);
             simulation->write_th_started = (ret == 0);
             if (ret != 0)
             {
@@ -578,7 +578,7 @@ void StopSimulation(DBLoadSimulation *simulation)
         }
         if (simulation->iter_th_started)
         {
-            ret = pthread_join(simulation->iter_th_started, NULL);
+            ret = pthread_join(simulation->iter_th, NULL);
             simulation->iter_th_started = (ret == 0);
             if (ret != 0)
             {
@@ -592,8 +592,8 @@ void StopSimulation(DBLoadSimulation *simulation)
     ts.tv_sec += 5;
     if (simulation->read_th_started)
     {
-        ret = pthread_timedjoin_np(simulation->read_th_started, NULL, &ts);
-        simulation->read_th_started = (ret == 0);
+        ret = pthread_timedjoin_np(simulation->read_th, NULL, &ts);
+        simulation->read_th_started = (ret != 0);
         if (ret != 0)
         {
             Log(LOG_LEVEL_ERR, "Failed to join read simulation thread: %s", GetErrorStrFromCode(ret));
@@ -601,8 +601,8 @@ void StopSimulation(DBLoadSimulation *simulation)
     }
     if (simulation->write_th_started)
     {
-        ret = pthread_timedjoin_np(simulation->write_th_started, NULL, &ts);
-        simulation->write_th_started = (ret == 0);
+        ret = pthread_timedjoin_np(simulation->write_th, NULL, &ts);
+        simulation->write_th_started = (ret != 0);
         if (ret != 0)
         {
             Log(LOG_LEVEL_ERR, "Failed to join write simulation thread: %s", GetErrorStrFromCode(ret));
@@ -610,8 +610,8 @@ void StopSimulation(DBLoadSimulation *simulation)
     }
     if (simulation->iter_th_started)
     {
-        ret = pthread_timedjoin_np(simulation->iter_th_started, NULL, &ts);
-        simulation->iter_th_started = (ret == 0);
+        ret = pthread_timedjoin_np(simulation->iter_th, NULL, &ts);
+        simulation->iter_th_started = (ret != 0);
         if (ret != 0)
         {
             Log(LOG_LEVEL_ERR, "Failed to join iteration simulation thread: %s",

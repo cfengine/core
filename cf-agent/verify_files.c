@@ -617,8 +617,9 @@ exit:
     free(chrooted_path);
     if (AttrHasNoAction(&a))
     {
-        Log(LOG_LEVEL_WARNING,
-            "No action was requested for file '%s'. Maybe a typo in the policy?", path);
+        Log(LOG_LEVEL_VERBOSE, "No action was requested for file '%s'. "
+            "Maybe all attributes are skipped due to unresolved arguments in policy functions? "
+            "Maybe a typo in the policy?", path);
     }
 
     switch(result)

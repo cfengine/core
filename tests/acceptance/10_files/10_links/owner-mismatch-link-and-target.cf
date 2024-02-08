@@ -28,13 +28,7 @@ bundle agent test
       "description" -> { "CFE-3116" }
         string => "Test that promising ownership of symlinks is not confused by target";
 
-      "test_soft_fail"
-        string => "any",
-        meta => { "CFE-3116" };
-
-      # this test isn't super comprehensive, once the issue is fixed, it will
-      # need to be skipped on various platforms, at least windows.
-      # "test_skip_unsupported" string => "windows";
+      "test_skip_unsupported" string => "windows";
 
   files:
        "/tmp/symlink"

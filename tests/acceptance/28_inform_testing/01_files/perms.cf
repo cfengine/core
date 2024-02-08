@@ -33,16 +33,6 @@ bundle agent setup
     "$(G.testdir)/foobar/."
       create => "true",
       comment => "A directory";
-
-# See ticket CFE-4148:
-#
-#   "$(G.testdir)/foobaz/."
-#     create => "true",
-#     comment => "A directory symlink taget";
-#
-#   "$(G.testdir)/barbaz/."
-#     link_from => link_info("$(G.testdir)/foobaz"),
-#     comment => "A symbolic link to a directory";
 }
 
 bundle agent main
@@ -56,9 +46,4 @@ bundle agent main
 
       "$(G.testdir)/foobar"
         perms => m(777);
-
-# See ticket CFE-4148:
-#
-#     "$(G.testdir)/barbaz/."
-#       perms => m(777);
 }

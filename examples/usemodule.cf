@@ -14,20 +14,7 @@ bundle agent init_module
         content => '#!/bin/env bash
 /bin/echo ^context=my_module
 /bin/echo ^meta=inventory,attribute_name=USB Devices
-/bin/echo "=usb_device[Bus 001 Device 002: ID 8087:8001]=Intel Corp."
-/bin/echo "=usb_device[Bus 001 Device 001: ID 1d6b:0002]=Linux Foundation 2.0 root hub"
-/bin/echo "=usb_device[Bus 003 Device 003: ID 17ef:1010]=Lenovo Lenovo ThinkPad Dock"
-/bin/echo "=usb_device[Bus 003 Device 001: ID 1d6b:0003]=Linux Foundation 3.0 root hub"
-/bin/echo "=usb_device[Bus 002 Device 009: ID 04ca:703c]=Lite-On Technology Corp. Integrated Camera"
-/bin/echo "=usb_device[Bus 002 Device 007: ID 8087:0a2a]=Intel Corp."
-/bin/echo "=usb_device[Bus 002 Device 005: ID 04f3:036d]=Elan Microelectronics Corp. Touchscreen"
-/bin/echo "=usb_device[Bus 002 Device 054: ID 046d:081a]=Logitech, Inc. Webcam C260"
-/bin/echo "=usb_device[Bus 002 Device 053: ID 17ef:100f]=Lenovo"
-/bin/echo "=usb_device[Bus 002 Device 055: ID 074d:0005]=Micronas GmbH"
 /bin/echo "=usb_device[Bus 002 Device 052: ID 17ef:1010]=Lenovo Lenovo ThinkPad Dock"
-/bin/echo "=usb_device[Bus 002 Device 004: ID 413c:2006]=Dell Computer Corp."
-/bin/echo "=usb_device[Bus 002 Device 002: ID 413c:1004]=Dell Computer Corp. Dell USB Keyboard Hub"
-/bin/echo "=usb_device[Bus 002 Device 001: ID 1d6b:0002]=Linux Foundation 2.0 root hub"
 /bin/echo ^meta=
 /bin/echo "+connected_to_docking_station"';
 }
@@ -60,20 +47,7 @@ body perms m(m)
 #@ R: The module was executed successfully
 #@ R: The machine is connected to a docking station
 #@ R: Connected USB Devices: {
-#@   "Bus 001 Device 001: ID 1d6b:0002": "Linux Foundation 2.0 root hub",
-#@   "Bus 001 Device 002: ID 8087:8001": "Intel Corp.",
-#@   "Bus 002 Device 001: ID 1d6b:0002": "Linux Foundation 2.0 root hub",
-#@   "Bus 002 Device 002: ID 413c:1004": "Dell Computer Corp. Dell USB Keyboard Hub",
-#@   "Bus 002 Device 004: ID 413c:2006": "Dell Computer Corp.",
-#@   "Bus 002 Device 005: ID 04f3:036d": "Elan Microelectronics Corp. Touchscreen",
-#@   "Bus 002 Device 007: ID 8087:0a2a": "Intel Corp.",
-#@   "Bus 002 Device 009: ID 04ca:703c": "Lite-On Technology Corp. Integrated Camera",
-#@   "Bus 002 Device 052: ID 17ef:1010": "Lenovo Lenovo ThinkPad Dock",
-#@   "Bus 002 Device 053: ID 17ef:100f": "Lenovo",
-#@   "Bus 002 Device 054: ID 046d:081a": "Logitech, Inc. Webcam C260",
-#@   "Bus 002 Device 055: ID 074d:0005": "Micronas GmbH",
-#@   "Bus 003 Device 001: ID 1d6b:0003": "Linux Foundation 3.0 root hub",
-#@   "Bus 003 Device 003: ID 17ef:1010": "Lenovo Lenovo ThinkPad Dock"
+#@   "Bus 002 Device 052: ID 17ef:1010": "Lenovo Lenovo ThinkPad Dock"
 #@ }
 #@ ```
 #+end_src

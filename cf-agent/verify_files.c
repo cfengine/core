@@ -599,9 +599,9 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
 
 // Once more in case a file has been created as a result of editing or copying
 
-    exists = (stat(changes_path, &osb) != -1);
+    exists = (lstat(changes_path, &osb) != -1);
 
-    if (exists && (S_ISREG(osb.st_mode))
+    if (exists && (S_ISREG(osb.st_mode) || S_ISLNK(osb.st_mode))
         && (!a.haveselect || SelectLeaf(ctx, path, &osb, &(a.select))))
     {
         VerifyFileLeaf(ctx, path, &osb, &a, pp, &result);

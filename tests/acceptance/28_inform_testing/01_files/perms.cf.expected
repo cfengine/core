@@ -1,3 +1,2 @@
     info: Regular file '/tmp/TESTDIR.cfengine/foo' had permissions 0600, changed it to 0777
-    info: Symbolic link to regular file '/tmp/TESTDIR.cfengine/baz' had permissions 0600, changed it to 0777
     info: Directory '/tmp/TESTDIR.cfengine/foobar' had permissions 0700, changed it to 0777

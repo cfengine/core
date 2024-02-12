@@ -1869,7 +1869,7 @@ AC_CONFIG_FILES([Makefile
     cf-net/Makefile
     cf-secret/Makefile
     config.post.h
-    contrib/vagrant-ci/centos-7-x64/Makefile
+    contrib/vagrant-ci/centos-9s-x64/Makefile
     misc/Makefile
     misc/selinux/Makefile
     python/Makefile

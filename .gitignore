@@ -43,7 +43,7 @@ stamp-h1
 /cf-serverd/Makefile
 /cf-testd/Makefile
 /cf-upgrade/Makefile
-/contrib/vagrant-ci/centos-7-x64/Makefile
+/contrib/vagrant-ci/centos-9s-x64/Makefile
 /examples/Makefile
 /ext/Makefile
 /libcfecompat/Makefile
@@ -154,7 +154,7 @@ cscope.*
 \#*#
 .dir-locals.el
 /contrib/*.elc
-/contrib/vagrant-ci/centos-7-x64/.vagrant
+/contrib/vagrant-ci/centos-9s-x64/.vagrant
 
 ## Flycheck
 flycheck_*

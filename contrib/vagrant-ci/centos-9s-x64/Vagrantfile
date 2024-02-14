@@ -20,7 +20,7 @@ Vagrant.configure("2") do |config|
   config.vm.synced_folder "../../../", "/cfe/core", type: "rsync",
                           rsync__args: ["--archive", "--links", "--delete"]
 
-  config.vm.box = "centos/7"
+  config.vm.box = "generic/centos9s"
   config.vm.provider :libvirt do |lv|
     lv.cpus = os_cpu_cores
     lv.memory = 1024
@@ -30,9 +30,11 @@ Vagrant.configure("2") do |config|
   # common provisioning
   config.vm.provision "shell", inline: <<-SHELL
 sed -ri '/-build/d' /etc/hosts
-yum -q -y install epel-release
-yum -q -y update
-yum -q -y install '@Development tools' pkgconfig pam-devel libtool libtool-ltdl
+dnf -q -y install epel-release
+dnf config-manager --set-enabled crb
+dnf -q -y install '@Development tools' pkgconfig pam-devel libtool libtool-ltdl
+dnf -q -y install 'perl(Sys::Hostname)'  # needed for remake_outputs.pl
+dnf -q -y update
 SHELL
 
   no_deps_vm_name = "no-deps-build"
@@ -44,7 +46,7 @@ SHELL
 
     nd.vm.provision "shell", inline: <<-SHELL
 set -e
-yum -q -y install lmdb-devel pcre2-devel openssl-devel libyaml-devel libxml2-devel
+dnf -q -y install lmdb-devel pcre2-devel openssl-devel libyaml-devel libxml2-devel
 SHELL
 
     nd.vm.provision "shell", inline: <<-SHELL
@@ -73,10 +75,10 @@ SHELL
 
     fd.vm.provision "shell", inline: <<-SHELL
 set -e
-yum -q -y install http://opensource.wandisco.com/centos/7/git/x86_64/wandisco-git-release-7-1.noarch.rpm || true
-yum -q -y install 'perl(ExtUtils::MakeMaker)' 'perl(Digest::MD5)' 'perl(Module::Load::Conditional)' 'perl(IO::Uncompress::Gunzip)' 'perl(JSON::PP)' 'perl(IPC::Cmd)' ncurses-devel rpm-build
-yum -q -y install psmisc # for fuser command
-yum -q -y install wget
+dnf -q -y install 'perl(ExtUtils::MakeMaker)' 'perl(Digest::MD5)' 'perl(Module::Load::Conditional)' 'perl(IO::Uncompress::Gunzip)' 'perl(JSON::PP)' 'perl(IPC::Cmd)' \
+                  ncurses-devel rpm-build
+dnf -q -y install psmisc # for fuser command
+dnf -q -y install wget
 SHELL
 
     fd.vm.provision "shell", inline: <<-SHELL

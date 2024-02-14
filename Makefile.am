@@ -50,7 +50,7 @@ SUBDIRS = \
 	ext \
 	examples \
 	tests \
-	contrib/vagrant-ci/centos-7-x64
+	contrib/vagrant-ci/centos-9s-x64
 
 
 # Hide the buildsystem's username, at least with GNU tar.
@@ -158,13 +158,13 @@ cf__v_SED_0 = @echo "  SED     " "$@";
 cf__v_SED_1 =
 
 vm-check:
-	$(MAKE) -C contrib/vagrant-ci/centos-7-x64/ vm-check
+	$(MAKE) -C contrib/vagrant-ci/centos-9s-x64/ vm-check
 
 vm-check-full:
-	$(MAKE) -C contrib/vagrant-ci/centos-7-x64/ vm-check-full
+	$(MAKE) -C contrib/vagrant-ci/centos-9s-x64/ vm-check-full
 
 destroy-vms:
-	$(MAKE) -C contrib/vagrant-ci/centos-7-x64/ destroy-vms
+	$(MAKE) -C contrib/vagrant-ci/centos-9s-x64/ destroy-vms
 
 static-check:
 	tests/static-check/run.sh

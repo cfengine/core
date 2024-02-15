@@ -869,11 +869,13 @@ static void SetupOpenSSLThreadLocks(void)
     }
 
 #ifndef __MINGW32__
+#if OPENSSL_VERSION_NUMBER < 0x10100000
     CRYPTO_set_id_callback((unsigned long (*)())ThreadId_callback);
 #endif
-    // This is a no-op macro for OpenSSL >= 1.1.0
-    // The callback function is not used (or defined) then
+#endif
+#if OPENSSL_VERSION_NUMBER < 0x10100000
     CRYPTO_set_locking_callback((void (*)())OpenSSLLock_callback);
+#endif
 }
 
 static void CleanupOpenSSLThreadLocks(void)
@@ -881,7 +883,9 @@ static void CleanupOpenSSLThreadLocks(void)
     const int numLocks = CRYPTO_num_locks();
     CRYPTO_set_locking_callback(NULL);
 #ifndef __MINGW32__
+#if OPENSSL_VERSION_NUMBER < 0x10100000
     CRYPTO_set_id_callback(NULL);
+#endif
 #endif
 
     for (int i = 0; i < numLocks; i++)

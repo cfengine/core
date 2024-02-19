@@ -28,6 +28,7 @@
 #include <policy_server.h>
 #include <promises.h>
 #include <dir.h>
+#include <file_lib.h>
 #include <dbm_api.h>
 #include <lastseen.h>
 #include <files_copy.h>

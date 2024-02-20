@@ -127,6 +127,14 @@ For SELinux support you will need selinux-policy-devel package and specify `--wi
 
 $ sudo apt-get install -y build-essential git libtool autoconf automake bison flex libssl-dev libpcre3-dev libbison-dev libacl1 libacl1-dev lmdb-utils liblmdb-dev libpam0g-dev libtool libyaml-dev libxml2-dev
 
+* OpenBSD (7.4 2024-02-15)
+
+doas pkg_add git automake-1.16.5 autoconf-2.71 bison pcre2 m4 libtool lmdb gmake
+
+$ MAKE=/usr/local/bin/gmake LDFLAGS=-L/usr/local/lib CPPFLAGS=-I/usr/local/include AUTOMAKE_VERSION=1.16 AUTOCONF_VERSION=2.71 ./autogen.sh --enable-debug
+$ gmake -j8
+$ doas gmake install
+
 * FreeBSD (12.1 2020-04-07)
 
 See docs/BSD.md

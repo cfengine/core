@@ -374,7 +374,7 @@ if [ "$OS" = "aix" ]; then
   echo "r !errpt -a
 g/cfengine/?---?,/---/p" | ed > "$_syslog_filtered" || true
 else
-  $syslog_cmd | sed -n '/cfe/p;/cf-/p' | gzip -c > "$_syslog_filtered" || true
+  $syslog_cmd | sed -n '/[Cc][Ff][Ee-]/p' | gzip -c > "$_syslog_filtered" || true
 fi
 echo "Captured output of $syslog_cmd filtered for cf-|CFEngine"
 

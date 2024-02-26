@@ -4,6 +4,7 @@
 #include <alloc.h>
 #include <string_lib.h>
 #include <getopt.h>
+#include <sequence.h>
 
 /* Test that we have a working version of getopt functionality, either
  * system-provided or our own in libcfecompat. */

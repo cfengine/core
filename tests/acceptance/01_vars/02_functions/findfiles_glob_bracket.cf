@@ -1,0 +1,114 @@
+#######################################################
+#
+# Test that square bracket works in glob patterns
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { "init", "test", "check" };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "filenames"
+        slist => { "foo", "bar", "baz" };
+
+  files:
+      "$(G.testdir)/$(filenames)"
+        create => "true";
+
+  reports:
+    DEBUG::
+      "Created $(G.testdir)/$(filenames)";
+}
+
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+      "description"
+        string => "Test that square bracket works in glob patterns.";
+
+  vars:
+      "patterns[a]"
+        string => "$(G.testdir)/[f]oo";
+      "patterns[b]"
+        string => "$(G.testdir)/b[a]r";
+      "patterns[c]"
+        string => "$(G.testdir)/ba[z]";
+      "patterns[d]"
+        string => "$(G.testdir)/[a-z][a-z][a-z]";
+      "patterns[e]"
+        string => "$(G.testdir)/ba[rz]";
+      "patterns[f]"
+        string => "$(G.testdir)/[fb][oa][orz]";
+
+      "pnames"
+        slist => getindices("patterns");
+      "found[$(pnames)]"
+        slist => findfiles("$(patterns[$(pnames)])");
+      "found_string[$(pnames)]"
+        string => join(",", "found[$(pnames)]");
+
+  reports:
+    DEBUG::
+      "findfiles pattern $(pnames) '$(patterns[$(pnames)])' => '$(found_string[$(pnames)])'";
+}
+
+
+#######################################################
+
+bundle agent check
+{
+  meta:
+      "test_skip_needs_work" string => "windows",
+        meta => { "ENT-11176" };
+
+  vars:
+      "expected[a]"
+        string => "$(G.testdir)$(const.dirsep)foo";
+      "expected[b]"
+        string => "$(G.testdir)$(const.dirsep)bar";
+      "expected[c]"
+        string => "$(G.testdir)$(const.dirsep)baz";
+      "expected[d]"
+        string => "$(G.testdir)$(const.dirsep)bar,$(G.testdir)$(const.dirsep)baz,$(G.testdir)$(const.dirsep)foo";
+      "expected[e]"
+        string => "$(G.testdir)$(const.dirsep)bar,$(G.testdir)$(const.dirsep)baz";
+      "expected[f]"
+        string => "$(G.testdir)$(const.dirsep)bar,$(G.testdir)$(const.dirsep)baz,$(G.testdir)$(const.dirsep)foo";
+
+      "expects"
+        slist => getindices("expected");
+      "fstring"
+        slist => getindices("test.found_string");
+      "joint_condition"
+        string => join(".", "expects");
+
+  classes:
+      "$(expects)"
+        expression => strcmp("$(test.found_string[$(expects)])", "$(expected[$(expects)])");
+      "ok"
+        expression => "$(joint_condition)";
+
+  reports:
+    DEBUG::
+      "pattern $(expects) matches as expected: '$(expected[$(expects)])'"
+        if => "$(expects)";
+
+      "pattern $(expects) does NOT match expected: '$(test.found_string[$(expects)])' != '$(expected[$(expects)])'"
+        if => "!$(expects)";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

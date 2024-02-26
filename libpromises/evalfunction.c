@@ -75,6 +75,7 @@
 #include <string_lib.h>
 #include <version_comparison.h>
 #include <mutex.h>          /* ThreadWait */
+#include <glob_lib.h>
 
 #include <math_eval.h>
 
@@ -8755,6 +8756,7 @@ static FnCallResult FnCallFindfilesUp(ARG_UNUSED EvalContext *ctx, ARG_UNUSED co
         return FnFailure();
     }
 
+    MapName(path); // Makes sure we get host native path separators
     DeleteRedundantSlashes(path);
 
     size_t len = strlen(path);

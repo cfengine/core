@@ -1,132 +1,177 @@
 body common control
 {
-  inputs => { "../../default.cf.sub" };
-  bundlesequence => { default("$(this.promise_filename)") };
+  bundlesequence => { "init", "test", "check" };
   version => "1.0";
 }
 
-bundle common my_vars
-{
+bundle common G {
   vars:
-      "files" slist => {
-        "file_1.txt",
-        "file_1.png",
-        "a/file_2.txt",
-        "a/file_22.txt",
-        "a/b/file_3.txt",
-        "a/b/c/d/file_3.txt",
-        "a/b/c/d/e/f/file_3.txt"
-      };
+      "testdir"
+        string => concat(
+          getenv("TEMP", "65535"),
+          "$(const.dirsep)TESTDIR.cfengine"
+        );
 }
 
 bundle agent init
 {
+  vars:
+      "files"
+        slist => {
+          "core/.gitignore",
+          "core/.git/config",
+          "core/libpromises/cf3parse.y",
+          "core/libpromises/cf3lex.l",
+          "core/libntech/.gitignore",
+          "core/libntech/.git/config",
+          "core/libntech/libutils/string.h",
+          "core/libntech/libutils/string.c"
+        };
+
   files:
-      "$(G.testdir)/$(my_vars.files)"
+      "$(G.testdir)/$(files)"
         create => "true";
 
   reports:
     DEBUG::
-      "Created $(G.testdir)/$(my_vars.files)";
-}
-
-# Test findfiles_up with optional third argument specified
-bundle agent test_wapper_1(index, path, glob, level)
-{
-  vars:
-      "test"
-        data => findfiles_up("$(G.testdir)$(path)", "$(glob)", "$(level)"),
-        if => isdir("$(G.testdir)$(path)");
-
-      "test"
-        slist => filter("^$(G.testdir)/.*", test, true, false, inf);
-
-      "test"
-        slist => maplist(regex_replace("$(this)", "$(G.testdir)", "", "g"), test);
-
-      "test"
-        string => join(", ", getvalues(test));
-  reports:
-      "$(test)"
-        bundle_return_value_index => "$(index)";
-}
-
-# Test findfiles_up with optional third argument not specified
-bundle agent test_wapper_2(index, path, glob)
-{
-  vars:
-      "test"
-        data => findfiles_up("$(G.testdir)$(path)", "$(glob)"),
-        if => isdir("$(G.testdir)$(path)");
-
-      "test"
-        slist => filter("^$(G.testdir)/.*", test, true, false, inf);
-
-      "test"
-        slist => maplist(regex_replace("$(this)", "$(G.testdir)", "", "g"), test);
-
-      "test"
-        string => join(", ", getvalues(test));
-
-  reports:
-      "$(test)"
-        bundle_return_value_index => "$(index)";
+      "Created $(G.testdir)/$(files)";
 }
 
 bundle agent test
 {
   meta:
       "description" -> { "CFE-3577" }
-        string => "Test for expected results from policy function search_up";
-      "test_skip_needs_work" string => "windows",
-        meta => { "ENT-10250" };
+        string => "Test for expected results from policy function findfiles_up";
 
-  methods:
-       "Test 0"
-        usebundle => test_wapper_1("0", "/", "*", 123),
-        useresult => "test";
-
-      "Test 1"
-        usebundle => test_wapper_1("1", "/a/b/c/d/e/f", ".", inf),
-        useresult => "test";
-
-      "Test 2"
-        usebundle => test_wapper_1("2", "/a/b/c/d/e/f", "file_1.txt", inf),
-        useresult => "test";
-
-      "Test 3"
-        usebundle => test_wapper_2("3", "/a/b/c/d/e/f", "file_2.txt"),
-        useresult => "test";
-
-      "Test 4"
-        usebundle => test_wapper_1("4", "/a/b/c/d/e/f", "file_3.txt", 0),
-        useresult => "test";
-
-      "Test 5"
-        usebundle => test_wapper_1("5", "/a/b/c/d/e/f", "file_3.txt", 2),
-        useresult => "test";
-
-      "Test 6"
-        usebundle => test_wapper_2("6", "/a/b//c/d/e/f", "file_1.*"),
-        useresult => "test";
-
-      "Test 7"
-        usebundle => test_wapper_2("7", "/a/b/c/d/e/f", "file_?.txt"),
-        useresult => "test";
-
-      "Test 8"
-        usebundle => test_wapper_2("8", "/a/b/c/d/e/f", "c//d/file_?.txt"),
-        useresult => "test";
-
-      "Test 9"
-        usebundle => test_wapper_1("9", "/a//b//c//d/e/f", "c/d/file_?.txt", 4),
-        useresult => "test";
+  vars:
+      "t1"
+        data => findfiles_up("$(G.testdir)/core/libntech/libutils/", ".gitignore", "inf");
+      "t2"
+        data => findfiles_up("$(G.testdir)/core/libntech/libutils/", "string.?");
+      "t3"
+        data => findfiles_up("$(G.testdir)/core/libntech/libutils/", ".git/");
+      "t4"
+        data => findfiles_up("$(G.testdir)/core/libntech/libutils/", ".git/", "1");
+      "t5"
+        data => findfiles_up("$(G.testdir)/core/libntech/libutils/", ".git/config");
+      "t6"
+        data => findfiles_up("$(G.testdir)/core/libntech/libutils/", "*/cf?{lex,parse}.[ly]");
 }
 
 bundle agent check
 {
-  methods:
-      "check"  usebundle => dcs_check_state(test,
-                                           "$(this.promise_filename).expected.json",
-                                           "$(this.promise_filename)");
+  classes:
+    windows::
+      "c1"
+        expression => and(
+          strcmp("$(G.testdir)\\core\\libntech\\.gitignore", "$(test.t1[0])"),
+          strcmp("$(G.testdir)\\core\\.gitignore", "$(test.t1[1])")
+        );
+      "c2"
+        expression => and(
+          strcmp("$(G.testdir)\\core\\libntech\\libutils\\string.c", "$(test.t2[0])"),
+          strcmp("$(G.testdir)\\core\\libntech\\libutils\\string.h", "$(test.t2[1])")
+        );
+      "c3"
+        expression => and(
+          strcmp("$(G.testdir)\\core\\libntech\\.git", "$(test.t3[0])"),
+          strcmp("$(G.testdir)\\core\\.git", "$(test.t3[1])")
+        );
+      "c4"
+        expression => and(
+          strcmp("$(G.testdir)\\core\\libntech\\.git", "$(test.t4[0])"),
+          not(isvariable("test.t4[1]"))
+        );
+      "c5"
+        expression => and(
+          strcmp("$(G.testdir)\\core\\libntech\\.git\\config", "$(test.t5[0])"),
+          strcmp("$(G.testdir)\\core\\.git\\config", "$(test.t5[1])")
+        );
+      "c6"
+        expression => and(
+          strcmp("$(G.testdir)\\core\\libpromises\\cf3lex.l", "$(test.t6[0])"),
+          strcmp("$(G.testdir)\\core\\libpromises\\cf3parse.y", "$(test.t6[1])")
+        );
+
+    !windows::
+      "c1"
+        expression => and(
+          strcmp("$(G.testdir)/core/libntech/.gitignore", "$(test.t1[0])"),
+          strcmp("$(G.testdir)/core/.gitignore", "$(test.t1[1])")
+        );
+      "c2"
+        expression => and(
+          strcmp("$(G.testdir)/core/libntech/libutils/string.c", "$(test.t2[0])"),
+          strcmp("$(G.testdir)/core/libntech/libutils/string.h", "$(test.t2[1])")
+        );
+      "c3"
+        expression => and(
+          strcmp("$(G.testdir)/core/libntech/.git", "$(test.t3[0])"),
+          strcmp("$(G.testdir)/core/.git", "$(test.t3[1])")
+        );
+      "c4"
+        expression => and(
+          strcmp("$(G.testdir)/core/libntech/.git", "$(test.t4[0])"),
+          not(isvariable("test.t4[1]"))
+        );
+      "c5"
+        expression => and(
+          strcmp("$(G.testdir)/core/libntech/.git/config", "$(test.t5[0])"),
+          strcmp("$(G.testdir)/core/.git/config", "$(test.t5[1])")
+        );
+      "c6"
+        expression => and(
+          strcmp("$(G.testdir)/core/libpromises/cf3lex.l", "$(test.t6[0])"),
+          strcmp("$(G.testdir)/core/libpromises/cf3parse.y", "$(test.t6[1])")
+        );
+
+    any::
+      "ok"
+        expression => and("c1", "c2", "c3", "c4", "c5", "c6");
+
+  reports:
+    DEBUG.windows.!c1::
+      "$(const.dollar)(test.t1[0]): Expected '$(G.testdir)\\core\\libntech\\.gitignore', found '$(test.t1[0])'";
+      "$(const.dollar)(test.t1[1]): Expected '$(G.testdir)\\core\\.gitignore', found '$(test.t1[1])'";
+    DEBUG.windows.!c2::
+      "$(const.dollar)(test.t2[0]): Expected '$(G.testdir)\\core\\libntech\\libutils\\string.c', found '$(test.t2[0])'";
+      "$(const.dollar)(test.t2[1]): Expected '$(G.testdir)\\core\\libntech\\libutils\\string.h', found '$(test.t2[1])'";
+    DEBUG.windows.!c3::
+      "$(const.dollar)(test.t3[0]): Expected '$(G.testdir)\\core\\libntech\\.git', found '$(test.t3[0])'";
+      "$(const.dollar)(test.t3[1]): Expected '$(G.testdir)\\core\\.git', found '$(test.t3[1])'";
+    DEBUG.windows.!c4::
+      "$(const.dollar)(test.t4[0]): Expected '$(G.testdir)\\core\\libntech\\.git', found '$(test.t4[0])'";
+      "$(const.dollar)(test.t4[1]): Should not exist, $(with). Expanded value: '$(test.t4[1])'"
+        with => ifelse(isvariable("test.t4[1]"), "but does exist", "and does not exist");
+    DEBUG.windows.!c5::
+      "$(const.dollar)(test.t5[0]): Expected '$(G.testdir)\\core\\libntech\\.git\\config', found '$(test.t5[0])'";
+      "$(const.dollar)(test.t5[1]): Expected '$(G.testdir)\\core\\.git\\config', found '$(test.t5[1])'";
+    DEBUG.windows.!c6::
+      "$(const.dollar)(test.t6[0]): Expected '$(G.testdir)\\core\\libpromises\\cf3lex.l', found '$(test.t6[0])'";
+      "$(const.dollar)(test.t6[1]): Expected '$(G.testdir)\\core\\libpromises\\cf3parse.y', found '$(test.t6[1])'";
+
+    DEBUG.!windows.!c1::
+      "$(const.dollar)(test.t1[0]): Expected '$(G.testdir)/core/libntech/.gitignore', found '$(test.t1[0])'";
+      "$(const.dollar)(test.t1[1]): Expected '$(G.testdir)/core/.gitignore', found '$(test.t1[1])'";
+    DEBUG.!windows.!c2::
+      "$(const.dollar)(test.t2[0]): Expected '$(G.testdir)/core/libntech/libutils/string.c', found '$(test.t2[0])'";
+      "$(const.dollar)(test.t2[1]): Expected '$(G.testdir)/core/libntech/libutils/string.h', found '$(test.t2[1])'";
+    DEBUG.!windows.!c3::
+      "$(const.dollar)(test.t3[0]): Expected '$(G.testdir)/core/libntech/.git', found '$(test.t3[0])'";
+      "$(const.dollar)(test.t3[1]): Expected '$(G.testdir)/core/.git', found '$(test.t3[1])'";
+    DEBUG.!windows.!c4::
+      "$(const.dollar)(test.t4[0]): Expected '$(G.testdir)/core/libntech/.git', found '$(test.t4[0])'";
+      "$(const.dollar)(test.t4[1]): Should not exist, $(with). Expanded value: '$(test.t4[1])'"
+        with => ifelse(isvariable("test.t4[1]"), "but does exist", "and does not exist");
+    DEBUG.!windows.!c5::
+      "$(const.dollar)(test.t5[0]): Expected '$(G.testdir)/core/libntech/.git/config', found '$(test.t5[0])'";
+      "$(const.dollar)(test.t5[1]): Expected '$(G.testdir)/core/.git/config', found '$(test.t5[1])'";
+    DEBUG.!windows.!c6::
+      "$(const.dollar)(test.t6[0]): Expected '$(G.testdir)/core/libpromises/cf3lex.l', found '$(test.t6[0])'";
+      "$(const.dollar)(test.t6[1]): Expected '$(G.testdir)/core/libpromises/cf3parse.y', found '$(test.t6[1])'";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
 }

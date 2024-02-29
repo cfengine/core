@@ -39,6 +39,7 @@
 #include <eval_context.h>
 #include <changes_chroot.h>     /* RecordPkgOperationInChroot() */
 #include <simulate_mode.h>      /* CHROOT_PKG_OPERATION_* */
+#include <csv_writer.h>         /* safely write csv entries */
 
 #define INVENTORY_LIST_BUFFER_SIZE 100 * 80 /* 100 entries with 80 characters
                                              * per line */
@@ -658,7 +659,8 @@ int UpdatePackagesDB(Rlist *data, const char *pm_name, UpdateType type)
     {
         CleanDB(db_cached);
 
-        Buffer *inventory_data = BufferNewWithCapacity(INVENTORY_LIST_BUFFER_SIZE);
+        Writer *idw = StringWriter();
+        CsvWriter *idcw = CsvWriterOpen(idw);
 
         const char *package_data[3] = {NULL, NULL, NULL};
 
@@ -676,9 +678,10 @@ int UpdatePackagesDB(Rlist *data, const char *pm_name, UpdateType type)
                                              package_data[1], package_data[2],
                                              type);
 
-                        BufferAppendF(inventory_data, "%s,%s,%s\n",
-                                      package_data[0], package_data[1],
-                                      package_data[2]);
+                        CsvWriterField(idcw, package_data[0]);
+                        CsvWriterField(idcw, package_data[1]);
+                        CsvWriterField(idcw, package_data[2]);
+                        CsvWriterNewRecord(idcw);
                     }
                     else
                     {
@@ -726,8 +729,10 @@ int UpdatePackagesDB(Rlist *data, const char *pm_name, UpdateType type)
             WritePackageDataToDB(db_cached, package_data[0],
                              package_data[1], package_data[2], type);
 
-            BufferAppendF(inventory_data, "%s,%s,%s\n", package_data[0],
-                          package_data[1], package_data[2]);
+            CsvWriterField(idcw, package_data[0]);
+            CsvWriterField(idcw, package_data[1]);
+            CsvWriterField(idcw, package_data[2]);
+            CsvWriterNewRecord(idcw);
         }
         else if (package_data[0] || package_data[1] || package_data[2])
         {
@@ -739,7 +744,14 @@ int UpdatePackagesDB(Rlist *data, const char *pm_name, UpdateType type)
         }
 
         char *inventory_key = "<inventory>";
-        char *inventory_list = BufferClose(inventory_data);
+        CsvWriterClose(idcw);
+        char *inventory_list = StringWriterClose(idw);
+
+        // Legacy: the lines are expected to be separated by newlines, not CRLF
+        const size_t buf_size = strlen(inventory_list);
+        NDEBUG_UNUSED const ssize_t num_repl =
+            StringReplace(inventory_list, buf_size, "\r\n", "\n");
+        assert(num_repl >= 0);
 
         /* We can have empty list of installed software or available updates. */
         if (inventory_list == NULL)

@@ -7,7 +7,7 @@ Tested on FreeBSD 12.1 VM in AWS EC2.
 ## Dependencies
 
 ```
-$ su root -c 'pkg update -f && pkg install -y gdb gcc gmake lmdb autoconf automake libtool git python3 emacs-nox'
+$ su root -c 'pkg update -f && pkg install -y gdb gcc gmake lmdb autoconf automake libtool git python3'
 ```
 
 ## Download

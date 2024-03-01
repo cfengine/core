@@ -3488,7 +3488,7 @@ static void SysOSNameHuman(EvalContext *ctx)
                                       "Unknown", CF_DATA_TYPE_STRING,
                                       "source=agent");
         Log(LOG_LEVEL_WARNING,
-            "Operating System not properly recognized, setting sys.os_name_human to \"Unkown\", please submit a bug report for us to fix this");
+            "Operating System not properly recognized, setting sys.os_name_human to \"Unknown\", please submit a bug report for us to fix this");
     }
 }
 

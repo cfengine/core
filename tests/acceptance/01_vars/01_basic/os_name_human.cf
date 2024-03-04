@@ -48,6 +48,8 @@ bundle agent test
       "expected" string => "macOS";
     solaris::
       "expected" string => "Solaris";
+    amazon_linux::
+      "expected" string => "Amazon";
 }
 
 bundle agent check

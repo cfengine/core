@@ -2659,7 +2659,7 @@ static void Linux_Amazon_Version(EvalContext *ctx)
 {
     char buffer[CF_BUFSIZE];
 
-    // Amazon Linux AMI release 2016.09
+    // Amazon Linux release 2 (Karoo)
 
     if (ReadLine("/etc/system-release", buffer, sizeof(buffer)))
     {
@@ -2670,7 +2670,7 @@ static void Linux_Amazon_Version(EvalContext *ctx)
                 ",derived-from-file=/etc/system-release");
 
             char version[128];
-            if (sscanf(buffer, "%*s %*s %*s %*s %127s", version) == 1)
+            if (sscanf(buffer, "%*s %*s %*s %127s", version) == 1)
             {
                 char class[CF_MAXVARSIZE];
 
@@ -2679,8 +2679,16 @@ static void Linux_Amazon_Version(EvalContext *ctx)
                 EvalContextClassPutHard(ctx, class,
                     "inventory,attribute_name=none,source=agent"
                     ",derived-from-file=/etc/system-release");
+                SetFlavor(ctx, class);
             }
-            SetFlavor(ctx, "AmazonLinux");
+            else
+            {
+                SetFlavor(ctx, "amazon_linux");
+            }
+            // We set this class for backwards compatibility
+            EvalContextClassPutHard(ctx, "AmazonLinux",
+                    "inventory,attribute_name=none,source=agent,"
+                    "derived-from=sys.flavor");
         }
     }
 }
@@ -3474,6 +3482,12 @@ static void SysOSNameHuman(EvalContext *ctx)
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, lval,
                                       "Solaris", CF_DATA_TYPE_STRING,
                                       "source=agent,derived-from=solaris");
+    }
+    else if (EvalContextClassGet(ctx, NULL, "amazon_linux") != NULL)
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, lval,
+                                      "Amazon", CF_DATA_TYPE_STRING,
+                                      "source=agent,derived-from=amazon_linux");
     }
     else
     {

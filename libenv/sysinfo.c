@@ -3496,6 +3496,12 @@ static void SysOSNameHuman(EvalContext *ctx)
                                       "Amazon", CF_DATA_TYPE_STRING,
                                       "source=agent,derived-from=amazon_linux");
     }
+    else if (EvalContextClassGet(ctx, NULL, "arch") != NULL)
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, lval,
+                                      "Arch", CF_DATA_TYPE_STRING,
+                                      "source=agent,derived-from=arch");
+    }
     else
     {
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, lval,

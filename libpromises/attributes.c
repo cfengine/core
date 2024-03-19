@@ -1152,6 +1152,7 @@ Packages GetPackageConstraints(const EvalContext *ctx, const Promise *pp)
         if (bodies_and_args != NULL &&
             SeqLength(bodies_and_args) > 0)
         {
+            Log(LOG_LEVEL_INFO, "Package promise had no package_method attribute so it's being assigned a value of 'generic' as default.");
             const Body *bp = SeqAt(bodies_and_args, 0); // guaranteed to be non-NULL
             CopyBodyConstraintsToPromise((EvalContext*)ctx, (Promise*)pp, bp);
             has_generic_package_method = true;
@@ -1245,10 +1246,26 @@ NewPackages GetNewPackageConstraints(const EvalContext *ctx, const Promise *pp)
     p.package_options = PromiseGetConstraintAsList(ctx, "options", pp);
 
     p.is_empty = (memcmp(&p, &empty, sizeof(NewPackages)) == 0);
+
+    bool have_policy = PromiseBundleOrBodyConstraintExists(ctx, "policy", pp);
+    bool have_package_policy = PromiseBundleOrBodyConstraintExists(ctx, "package_policy", pp);
+    if (!have_policy && !have_package_policy)
+    {
+        Log(LOG_LEVEL_DEBUG, "Package promise has no policy or package_policy attribute. Checking if package_module_knowledge.platform_default is defined to default the policy attribute to 'present' and force use of v2 package promise (package_module).");
+
+        VarRef *ref = VarRefParseFromScope("package_module_knowledge.platform_default", NULL);
+        const void *ret = EvalContextVariableGet(ctx, ref, NULL);
+        if (ret != NULL)
+        {
+            Log(LOG_LEVEL_INFO, "Package promise had no policy or package_policy attribute and package_module_knowledge.platform_default is defined so defaulting to v2 package promise (package_module) and setting 'policy' attribute to 'present'.");
+            PromiseAppendConstraint((Promise*)pp, "policy", (Rval) {xstrdup("present"), RVAL_TYPE_SCALAR }, false);
+        }
+        VarRefDestroy(ref);
+    }
     p.package_policy = GetNewPackagePolicy(PromiseGetConstraintAsRval(pp, "policy", RVAL_TYPE_SCALAR),
                                            new_packages_actions);
 
-    /* We can have only policy specified in new package promise definition. */
+    /* We can have only policy specified in v2 package promise (package_module) definition. */
     if (p.package_policy != NEW_PACKAGE_ACTION_NONE)
     {
         p.is_empty = false;

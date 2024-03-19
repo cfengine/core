@@ -189,21 +189,17 @@ PromiseResult VerifyPackagesPromise(EvalContext *ctx, const Promise *pp)
     switch (package_promise_type)
     {
         case PACKAGE_PROMISE_TYPE_NEW:
-            Log(LOG_LEVEL_VERBOSE, "Using new package promise.");
+            Log(LOG_LEVEL_VERBOSE, "Using v2 package promises (package_module)");
 
             result = HandleNewPackagePromiseType(ctx, pp, &a);
             break;
 
         case PACKAGE_PROMISE_TYPE_OLD:
-            Log(LOG_LEVEL_VERBOSE,
-                "Using old package promise. Please note that this old "
-                "implementation is being phased out. The old "
-                "implementation will continue to work, but forward development "
-                "will be directed toward the new implementation.");
+            Log(LOG_LEVEL_VERBOSE, "Using v1 package promises (package_method)");
 
             result = HandleOldPackagePromiseType(ctx, pp, &a);
 
-            /* Update new package promise cache in case we have mixed old and new
+            /* Update v2 package promise cache in case we have mixed v2 and v1
              * package promises in policy. */
             if (result == PROMISE_RESULT_CHANGE || result == PROMISE_RESULT_FAIL)
             {
@@ -212,15 +208,15 @@ PromiseResult VerifyPackagesPromise(EvalContext *ctx, const Promise *pp)
             break;
         case PACKAGE_PROMISE_TYPE_NEW_ERROR:
             cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a,
-                         "New package promise failed sanity check.");
+                         "v1 package promise (package_method) failed sanity check.");
             break;
         case PACKAGE_PROMISE_TYPE_OLD_ERROR:
             cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a,
-                         "Old package promise failed sanity check.");
+                         "v1 package promise (package_method) failed sanity check.");
             break;
         case PACKAGE_PROMISE_TYPE_MIXED:
             cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a,
-                         "Mixed old and new package promise attributes inside "
+                         "Mixed v1 and v2 package promise attributes inside "
                          "one package promise.");
             break;
         default:

@@ -3484,6 +3484,18 @@ static void SysOSNameHuman(EvalContext *ctx)
                                       "FreeBSD", CF_DATA_TYPE_STRING,
                                       "source=agent,derived-from=freebsd");
     }
+    else if (EvalContextClassGet(ctx, NULL, "openbsd") != NULL)
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, lval,
+                                      "OpenBSD", CF_DATA_TYPE_STRING,
+                                      "source=agent,derived-from=openbsd");
+    }
+    else if (EvalContextClassGet(ctx, NULL, "netbsd") != NULL)
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, lval,
+                                      "NetBSD", CF_DATA_TYPE_STRING,
+                                      "source=agent,derived-from=netbsd");
+    }
     else if (EvalContextClassGet(ctx, NULL, "solaris") != NULL)
     {
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, lval,
@@ -3501,6 +3513,18 @@ static void SysOSNameHuman(EvalContext *ctx)
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, lval,
                                       "Arch", CF_DATA_TYPE_STRING,
                                       "source=agent,derived-from=arch");
+    }
+    else if (EvalContextClassGet(ctx, NULL, "postmarketos") != NULL)
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, lval,
+                                      "postmarketOS", CF_DATA_TYPE_STRING,
+                                      "source=agent,derived-from=postmarketos");
+    }
+    else if (EvalContextClassGet(ctx, NULL, "alpine") != NULL)
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, lval,
+                                      "Alpine", CF_DATA_TYPE_STRING,
+                                      "source=agent,derived-from=alpine");
     }
     else
     {

@@ -115,11 +115,12 @@ submit PRs with updates to this information.
 * RedHat/CentOS (rhel-9 2023-10-09)
 
 On CentOS:
-$ sudo yum install epel-release && sudo yum update
-Or on RHEL, replacing the version number with yours:
-$ sudo subscription-manager repos --enable codeready-builder-for-rhel-9-x86_64-rpms && sudo yum update
+sudo yum install epel-release && sudo yum update
 
-$ sudo yum install -y gcc gdb make git libtool autoconf automake byacc flex openssl-devel pcre-devel lmdb-devel pam-devel flex-devel libyaml-devel fakeroot libxml2-devel
+Or on RHEL, replacing the version number with yours:
+sudo subscription-manager repos --enable codeready-builder-for-rhel-9-x86_64-rpms && sudo yum update
+
+sudo yum install -y gcc gdb make git libtool autoconf automake byacc flex openssl-devel pcre-devel lmdb-devel pam-devel flex-devel libyaml-devel fakeroot libxml2-devel
 
 For SELinux support you will need selinux-policy-devel package and specify `--with-selinux-policy` to `autogen.sh` or `configure`
 
@@ -127,13 +128,19 @@ For SELinux support you will need selinux-policy-devel package and specify `--wi
 
 $ sudo apt-get install -y build-essential git libtool autoconf automake bison flex libssl-dev libpcre3-dev libbison-dev libacl1 libacl1-dev lmdb-utils liblmdb-dev libpam0g-dev libtool libyaml-dev libxml2-dev
 
+* NetBSD (9.3 2024-03-01)
+
+doas pkgin install automake  autoconf bison pcre m4 libtool lmdb gmake
+LDFLAGS=-L/usr/pkg/lib CPPFLAGS=-I/usr/pkg/include ./autogen.sh --enable-debug --without-systemd-service --without-systemd-socket
+gmake -j8
+doas /usr/pkg/bin/gmake install
+
 * OpenBSD (7.4 2024-02-15)
 
-doas pkg_add git automake-1.16.5 autoconf-2.71 bison pcre2 m4 libtool lmdb gmake
-
-$ MAKE=/usr/local/bin/gmake LDFLAGS=-L/usr/local/lib CPPFLAGS=-I/usr/local/include AUTOMAKE_VERSION=1.16 AUTOCONF_VERSION=2.71 ./autogen.sh --enable-debug
-$ gmake -j8
-$ doas gmake install
+pkg_add git automake-1.16.5 autoconf-2.71 bison pcre m4 libtool lmdb gmake
+MAKE=/usr/local/bin/gmake LDFLAGS=-L/usr/local/lib CPPFLAGS=-I/usr/local/include AUTOMAKE_VERSION=1.16 AUTOCONF_VERSION=2.71 ./autogen.sh --enable-debug
+gmake -j8
+doas gmake install
 
 * FreeBSD (12.1 2020-04-07)
 
@@ -141,16 +148,16 @@ See docs/BSD.md
 
 * SUSE (Tumbleweed 2020-02-02)
 
-# zypper install gdb gcc make lmdb autoconf automake libtool git python3 pcre-devel libopenssl-devel pam-devel
+sudo zypper install gdb gcc make lmdb autoconf automake libtool git python3 pcre-devel libopenssl-devel pam-devel
 
 * AlpineOS (3.11.3 x86_64 2020-04-13)
 
-# apk add alpine-sdk lmdb-dev openssl-dev bison flex-dev acl-dev pcre-dev autoconf automake libtool git python3 gdb
-# ./autogen.sh --without-pam
+sudo apk add alpine-sdk lmdb-dev openssl-dev bison flex-dev acl-dev pcre-dev autoconf automake libtool git python3 gdb
+./autogen.sh --without-pam
 
 * Termux (2020-04-24)
 
-$ pkg install build-essential git autoconf automake bison flex liblmdb openssl pcre libacl libyaml
+pkg install build-essential git autoconf automake bison flex liblmdb openssl pcre libacl libyaml
 $ ./autogen.sh --without-pam
 
 * OSX (2021-10-20)

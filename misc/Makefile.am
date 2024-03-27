@@ -32,7 +32,7 @@ systemd_DATA  += systemd/cf-runalerts.service
 systemd_DATA  += systemd/cf-serverd.service
 
 install-data-hook:
-	-systemctl daemon-reload
+	-systemctl --no-ask-password daemon-reload
 
 endif
 dist_bin_SCRIPTS = cf-support

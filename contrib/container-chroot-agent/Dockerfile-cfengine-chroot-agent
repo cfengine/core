@@ -1,0 +1,5 @@
+FROM debian:11
+COPY ./dunfell-cfengine-nova.tar.gz /
+COPY ./liblmdb.tar.gz /
+COPY ./entrypoint-agent.sh /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]

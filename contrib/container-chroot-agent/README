@@ -1,0 +1,20 @@
+# CFEngine container chroot agent
+
+The goal of the files in this directory is to install an agent in a container on a host system which for various reasons we don't want to or can't install and run the CFEngine agent.
+
+- Torizon Core/Yocto hosts providing docker
+- Kubernetes Nodes
+
+# Usage
+
+On a host system you have access to place these files and execute run.sh
+
+See the other .sh files for various purposes:
+
+- clean.sh - cleans the cfengine-chroot-agent container and image
+- shell.sh - shells into the cfengine-chroot-agent container
+- chrootshell.sh - shells into the chroot inside the cfengine-chroot-agent container, this is where CFEngine is available and running
+
+# Impact on host
+
+Since the chroot has the host systems root filesystem mounted it can affect many changes and execute many programs.

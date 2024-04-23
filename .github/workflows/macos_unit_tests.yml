@@ -11,7 +11,7 @@ jobs:
       with:
         submodules: recursive
     - name: Check on libtool
-      run: sudo find / -name 'libtoolm4' && false
+      run: sudo find / -name 'libtool.m4' && false
     - name: Install dependencies
       run: brew install lmdb automake openssl pcre2
     - name: Run autotools / configure

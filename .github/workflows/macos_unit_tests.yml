@@ -11,9 +11,13 @@ jobs:
       with:
         submodules: recursive
     - name: Install dependencies
-      run: brew install lmdb automake openssl pcre
+      run: brew install lmdb automake openssl pcre2 autoconf libtool
+    - name: Check tools
+      run: command -v libtool && command -v automake && command -v autoconf
+    - name: Check tools versions
+      run: libtool -V && automake --version && autoconf --version
     - name: Run autotools / configure
-      run: ./autogen.sh --enable-debug
+      run: PATH="/opt/homebrew/opt/libtool/libexec/gnubin:$PATH" ./autogen.sh --enable-debug
     - name: Compile and link
       run: make -j8 CFLAGS="-Werror -Wall"
     - name: Run unit tests

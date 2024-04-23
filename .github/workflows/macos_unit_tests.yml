@@ -10,10 +10,8 @@ jobs:
     - uses: actions/checkout@v3
       with:
         submodules: recursive
-    - name: Check on libtool
-      run: sudo find / -name 'libtool.m4' && false
     - name: Install dependencies
-      run: brew install lmdb automake openssl pcre2
+      run: brew install lmdb automake openssl pcre2 autoconf libtool
     - name: Run autotools / configure
       run: ./autogen.sh --enable-debug
     - name: Compile and link

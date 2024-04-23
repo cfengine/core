@@ -11,7 +11,11 @@ jobs:
       with:
         submodules: recursive
     - name: Install dependencies
-      run: brew install lmdb automake openssl pcre
+      run: brew install lmdb automake openssl pcre autoconf libtool
+    - name: Check tools
+      run: command -v libtool && command -v automake && command -v autoconf
+    - name: Check tools versions
+      run: libtool -V && automake --version && autoconf --version
     - name: Run autotools / configure
       run: >
         LDFLAGS="-L`brew --prefix lmdb`/lib -L`brew --prefix openssl`/lib -L`brew --prefix pcre`/lib"

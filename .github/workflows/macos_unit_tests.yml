@@ -13,7 +13,11 @@ jobs:
     - name: Install dependencies
       run: brew install lmdb automake openssl pcre
     - name: Run autotools / configure
-      run: ./autogen.sh --enable-debug
+      run: >
+        LDFLAGS="-L`brew --prefix lmdb`/lib -L`brew --prefix openssl`/lib -L`brew --prefix pcre`/lib"
+        CPPFLAGS="-I`brew --prefix lmdb`/include -I`brew --prefix openssl`/include -I`brew --prefix pcre`/include"
+        PATH="/opt/homebrew/opt/libtool/libexec/gnubin:$PATH"
+        ./autogen.sh --enable-debug
     - name: Compile and link
       run: make -j8 CFLAGS="-Werror -Wall"
     - name: Run unit tests

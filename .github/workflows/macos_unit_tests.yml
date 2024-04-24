@@ -17,7 +17,11 @@ jobs:
     - name: Check tools versions
       run: libtool -V && automake --version && autoconf --version
     - name: Run autotools / configure
-      run: LDFLAGS="-L`brew --prefix lmdb`/lib" CPPFLAGS="-I`brew --prefix lmdb`/include" PATH="/opt/homebrew/opt/libtool/libexec/gnubin:$PATH" ./autogen.sh --enable-debug
+      run: >
+        LDFLAGS="-L`brew --prefix lmdb`/lib -L`brew --prefix openssl`/lib"
+        CPPFLAGS="-I`brew --prefix lmdb`/include -I`brew --prefix openssl`/include"
+        PATH="/opt/homebrew/opt/libtool/libexec/gnubin:$PATH"
+        ./autogen.sh --enable-debug
     - name: Compile and link
       run: make -j8 CFLAGS="-Werror -Wall"
     - name: Run unit tests

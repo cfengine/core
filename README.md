@@ -63,7 +63,7 @@ bundle agent main
 The following policy code may be executed with cf-agent (the main CFEngine binary) as follows.
 
 ```bash
-$ cf-agent/cf-agent hello.cf
+$ cf-agent/cf-agent ./hello.cf
 R: Hello, world
 ```
 

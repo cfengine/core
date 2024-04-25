@@ -48,28 +48,24 @@ $ pwd
 <something>/core
 $ echo "cd $(pwd); cf-promises/cf-promises \"\$@\"" > ~/.cfagent/bin/cf-promises
 
-
 ### Hello World
 
 The following code demonstrates simple CFEngine output through a reports promise.
 
-    body common control
-    {
-      bundlesequence => { "run" };
-    }
-
-    bundle agent run
-    {
-      reports:
-        cfengine::
-          "Hello, world";
-    }
+```cfengine3
+bundle agent main
+{
+  reports:
+    "Hello, world";
+}
+```
 
 The following policy code may be executed with cf-agent (the main CFEngine binary) as follows.
 
-    $ cf-agent/cf-agent hello.cf
-    R: Hello, world
-
+```bash
+$ cf-agent/cf-agent ./hello.cf
+R: Hello, world
+```
 
 ## Debugging
 

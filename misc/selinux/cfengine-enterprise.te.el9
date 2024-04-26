@@ -6,3 +6,5 @@ require {
 allow cfengine_httpd_t systemd_userdbd_runtime_t:dir { getattr open read search };
 allow cfengine_httpd_t systemd_userdbd_runtime_t:sock_file write;
 allow cfengine_httpd_t kernel_t:unix_stream_socket connectto;
+allow cfengine_reactor_t systemd_userdbd_runtime_t:dir { getattr open read search };
+allow cfengine_reactor_t systemd_userdbd_runtime_t:sock_file write;

@@ -740,6 +740,11 @@ type_transition cfengine_reactor_t cfengine_cfbs_exec_t:process cfengine_cfbs_t;
 allow cfengine_reactor_t cfengine_cfbs_t:process transition;
 allow cfengine_reactor_t cfengine_cfbs_exec_t:file { execute open read };
 
+# cf-reactor runs PHP code to evaluate alerts (as cfapache user)
+allow cfengine_reactor_t cfengine_httpd_exec_t:file { execute execute_no_trans getattr open read map };
+allow cfengine_reactor_t self:capability { setgid setuid };
+allow cfengine_reactor_t self:process execmem;
+
 allow cfengine_reactor_t cfengine_reactor_exec_t:file entrypoint;
 allow cfengine_reactor_t cfengine_reactor_exec_t:file { ioctl read getattr lock map execute open };
 
@@ -764,12 +769,16 @@ allow cfengine_reactor_t sssd_public_t:dir search;
 allow cfengine_reactor_t sssd_public_t:file { open read getattr map };
 allow cfengine_reactor_t sssd_t:unix_stream_socket connectto;
 allow cfengine_reactor_t tmp_t:sock_file write;
+allow cfengine_reactor_t tmp_t:dir { add_name remove_name write };
+allow cfengine_reactor_t tmp_t:file { create open setattr unlink write };
 allow cfengine_reactor_t devlog_t:sock_file write;
 allow cfengine_reactor_t devlog_t:lnk_file read;
 allow cfengine_reactor_t syslogd_var_run_t:dir search;
 allow cfengine_reactor_t kernel_t:unix_dgram_socket sendto;
+allow cfengine_reactor_t kernel_t:unix_stream_socket connectto;
 allow cfengine_reactor_t init_var_run_t:dir search;
-allow cfengine_reactor_t init_t:unix_stream_socket getattr;
+allow cfengine_reactor_t init_t:unix_stream_socket { getattr ioctl };
+
 allow cfengine_reactor_t var_t:dir read;
 allow cfengine_reactor_t bin_t:file { execute execute_no_trans map };
 allow cfengine_reactor_t fs_t:filesystem getattr;
@@ -796,9 +805,9 @@ allow cfengine_reactor_t ssh_port_t:tcp_socket name_connect;
 
 #============= cfengine_action_script_t ==============
 # A special type and domain for action (notification/alert) scripts executed by
-# Mission Portal. They can do anything, so they need to run in an unconstrained
-# domain. At the same time we don't want our Apache and PHP to do anything so
-# these scripts cannot just run in the http_t domain.
+# PHP. They can do anything, so they need to run in an unconstrained domain. At
+# the same time we don't want our Apache and PHP to do anything so these scripts
+# cannot just run in the http_t domain.
 
 type cfengine_action_script_t;
 typeattribute cfengine_action_script_t domain;
@@ -817,10 +826,15 @@ typeattribute cfengine_action_script_exec_t exec_type;
 typeattribute cfengine_action_script_exec_t file_type, non_security_file_type, non_auth_file_type;
 role object_r types cfengine_action_script_exec_t;
 
-type_transition cfengine_httpd_t cfengine_action_script_exec_t:process cfengine_action_script_t;
-allow cfengine_httpd_t cfengine_action_script_t:process transition;
-allow cfengine_httpd_t cfengine_action_script_exec_t:file { execute execute_no_trans getattr open read };
-allow cfengine_httpd_t cfengine_action_script_t:process siginh;
+# cf-apache/httpd manipulates with the action scripts
+allow cfengine_httpd_t cfengine_action_script_exec_t:file { getattr open read };
+
+# cf-reactor runs alerts periodically and these can trigger custom action scripts
+type_transition cfengine_reactor_t cfengine_action_script_exec_t:process cfengine_action_script_t;
+allow cfengine_reactor_t cfengine_action_script_t:process transition;
+allow cfengine_reactor_t cfengine_action_script_exec_t:file { execute execute_no_trans getattr open read };
+allow cfengine_reactor_t cfengine_action_script_exec_t:dir { getattr search };
+allow cfengine_reactor_t cfengine_action_script_t:process siginh;
 
 allow cfengine_action_script_t cfengine_action_script_exec_t:file entrypoint;
 allow cfengine_action_script_t cfengine_action_script_exec_t:file { ioctl read getattr lock map execute open };

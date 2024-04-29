@@ -6,7 +6,7 @@ set -eE # include E so that create_image() failures bubble up to the surface
 trap "echo FAILURE" ERR
 
 if [ -z "$STATIC_CHECKS_FEDORA_VERSION" ]; then
-  default_f_ver="39"
+  default_f_ver="40"
   echo "No Fedora version for static checks specified, using the default (Fedora $default_f_ver)"
   BASE_IMG="fedora:$default_f_ver"
   STATIC_CHECKS_FEDORA_VERSION="$default_f_ver"

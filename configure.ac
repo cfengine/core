@@ -1254,6 +1254,25 @@ AC_CHECK_HEADERS(utmp.h)
 dnl POSIX way to get uptime
 AC_CHECK_HEADERS(utmpx.h)
 
+
+dnl ######################################################################
+dnl Fancy new Linux syscalls for file/data copying (config for libntech)
+dnl ######################################################################
+AC_CHECK_HEADERS([linux/fs.h])
+AC_CHECK_DECLS([FICLONE], [], [], [#include <linux/fs.h>])
+AC_CHECK_DECLS([SEEK_DATA], [], [], [
+#define _GNU_SOURCE
+#include <unistd.h>
+])
+AC_CHECK_DECLS([FALLOC_FL_PUNCH_HOLE], [], [], [
+#define _GNU_SOURCE
+#include <fcntl.h>
+])
+AC_CHECK_HEADERS([sys/sendfile.h])
+AC_CHECK_FUNCS([sendfile])
+AC_CHECK_FUNCS([copy_file_range])
+
+
 dnl #######################################################################
 dnl Newer BSD systems don't have a compatible rtentry - use ortentry
 dnl #######################################################################

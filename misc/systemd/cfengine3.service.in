@@ -10,7 +10,6 @@ Wants=cf-execd.service
 Wants=cf-monitord.service
 Wants=cf-postgres.service
 Wants=cf-apache.service
-Wants=cf-runalerts.service
 Wants=cf-hub.service
 Wants=cf-reactor.service
 
@@ -20,7 +19,6 @@ Before=cf-execd.service
 Before=cf-monitord.service
 Before=cf-postgres.service
 Before=cf-apache.service
-Before=cf-runalerts.service
 Before=cf-hub.service
 Before=cf-reactor.service
 

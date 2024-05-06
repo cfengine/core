@@ -526,8 +526,14 @@ void CloseDB(DBHandle *handle)
         handle->refcount--;
         if (handle->refcount == 0)
         {
+            FileLock lock = EMPTY_FILE_LOCK;
+            bool locked = DBPathLock(&lock, handle->filename);
             DBPrivCloseDB(handle->priv);
             handle->open_tstamp = -1;
+            if (locked)
+            {
+                DBPathUnLock(&lock);
+            }
         }
     }
 

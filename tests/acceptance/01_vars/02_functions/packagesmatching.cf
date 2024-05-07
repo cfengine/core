@@ -109,7 +109,7 @@ bundle agent test
 {
   meta:
       "test_suppress_fail" string => "windows",
-        meta => { "redmine4741" };
+        meta => { "redmine4741", "ENT-10422" };
 
   vars:
       "all_packages" data => packagesmatching(".*", ".*", ".*", ".*");

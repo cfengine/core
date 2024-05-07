@@ -18,6 +18,12 @@ bundle agent init
         template_method => "mustache";
 }
 
+bundle agent test
+{
+  meta:
+      "test_skip_needs_work" string => "windows";
+}
+
 bundle agent check
 {
   methods:

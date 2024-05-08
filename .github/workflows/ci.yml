@@ -17,12 +17,9 @@ jobs:
   acceptance_tests:
     needs: unit_tests
     uses: ./.github/workflows/acceptance_tests.yml
-# Disable win-acceptance tests for now due to two issues
-# cf-agent.exe is not always installed "in-time" ENT-10699
-# job uses latest nightly instead of building the PR code ENT-10754
-#  windows_acceptance_tests:
-#    needs: unit_tests
-#    uses: ./.github/workflows/windows_acceptance_tests.yml
+  windows_acceptance_tests:
+    needs: unit_tests
+    uses: ./.github/workflows/windows_acceptance_tests.yml
   macos_unit_tests:
     needs: unit_tests
     uses: ./.github/workflows/macos_unit_tests.yml

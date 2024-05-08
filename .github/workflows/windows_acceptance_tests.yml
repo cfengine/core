@@ -38,17 +38,16 @@ jobs:
         run: "mv $HOME/.cfengine/cf-remote/packages/*.msi cfengine.msi"
 
       - name: install CFEngine
-        run: msiexec /i cfengine.msi
+        run: |
+          Get-Location # pwd
+          New-Item -Path "c:\" -Name "artifacts" -ItemType Directory
+          Start-Process msiexec.exe -Wait -ArgumentList '/quiet /qn /i cfengine.msi /L*V c:\tmp.log'
+          Get-Content c:\tmp.log | Set-Content -Encoding utf8 c:\artifacts\CFEngine-Install.log
+          file c:\artifacts\CFEngine-Install.log
         shell: pwsh
-
-      - name: give msiexec some time to finish in background
-        run: sleep 10
 
       - name: run cf-agent
         run: "'/c/Program Files/Cfengine/bin/cf-agent.exe' --version"
-
-      - name: expect an unknown synthax error in packagesmatching.cf, ENT-10422
-        run: "cd tests/acceptance/01_vars/02_functions/ && mv packagesmatching.cf packagesmatching.x.cf"
 
       # Note that msiexec install CFEngine onto the C: drive (/c/ partition),
       # but testall expects it to be on the same partition as where all tests are located (D: drive),
@@ -56,7 +55,11 @@ jobs:
       - name: copy CFEngine to workdir partition
         run: 'cp -a "/c/Program Files/Cfengine" /d/a/'
 
-      - name: run all tests
+      - name: prune platform independent tests to make the job more efficient
+        run: 'Remove-Item -Recurse -Force 00_basics, 01_vars, 02_classes, 10_files, 14_reports, 15_control, 16_cf-serverd, 21_methods, 22_cf-runagent, 26_cf-net, 27_cf-secret, 28_inform_testing'
+        working-directory: "tests/acceptance"
+        shell: pwsh
+      - name: run the tests
         run: './testall --bindir="/d/a/Cfengine/bin" --extraclasses=EXTRA'
         working-directory: "tests/acceptance"
         env:
@@ -67,4 +70,14 @@ jobs:
       - name: print test.log
         run: 'cat ./tests/acceptance/test.log || true'
         if: ${{ always() }}
+      - name: save test.log in artifacts
+        run: 'cp ./tests/acceptance/test.log /c/artifacts/test.log || true'
+        if: ${{ always() }}
 
+
+      - name: save artifacts
+        if: success() || failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: artifacts
+          path: c:\artifacts

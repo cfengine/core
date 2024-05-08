@@ -21,9 +21,6 @@ bundle agent test
         "description"
         string => "Test cf-secret with different arguments/order";
 
-        "test_soft_fail" string => "windows",
-            meta => { "ENT-10405" };
-
     vars:
         "text" string => "This secret sauce should be encrypted and decrypted.";
 

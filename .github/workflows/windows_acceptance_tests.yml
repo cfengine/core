@@ -32,7 +32,7 @@ jobs:
       # and install it by msiexec running under powershell.
 
       - name: get CFEngine package
-        run: cf-remote --version 3.18.x download 64 msi
+        run: cf-remote --version 3.18.x download x86_64 msi
 
       - name: move CFEngine package to current workdir
         run: "mv $HOME/.cfengine/cf-remote/packages/*.msi cfengine.msi"

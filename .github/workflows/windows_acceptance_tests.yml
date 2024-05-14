@@ -59,6 +59,9 @@ jobs:
         run: 'Remove-Item -Recurse -Force 00_basics, 01_vars, 02_classes, 10_files, 14_reports, 15_control, 16_cf-serverd, 21_methods, 22_cf-runagent, 26_cf-net, 27_cf-secret, 28_inform_testing'
         working-directory: "tests/acceptance"
         shell: pwsh
+      - name: debug contents of copied Cfengine/bin
+        run: 'ls -l /d/a/Cfengine/bin'
+
       - name: run the tests
         run: './testall --bindir="/d/a/Cfengine/bin" --extraclasses=EXTRA'
         working-directory: "tests/acceptance"

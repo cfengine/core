@@ -22,8 +22,8 @@ jobs:
       - name: Checkout Core
         uses: actions/checkout@v3
 
-      - name: install cf-remote
-        run: pip install cf-remote
+#      - name: install cf-remote
+#        run: pip install cf-remote
 
       # Note that msiexec can't install packages when running under msys;
       # But cf-remote currently can't run under powershell
@@ -31,11 +31,14 @@ jobs:
       # Hence, we _download_ msi package using cf-remote under msys,
       # and install it by msiexec running under powershell.
 
-      - name: get CFEngine package
-        run: cf-remote --version 3.18.x download x86_64 msi
+#      - name: get CFEngine package
+#        run: cf-remote --version 3.18.x download x86_64 msi
+#
+#      - name: move CFEngine package to current workdir
+#        run: "mv $HOME/.cfengine/cf-remote/packages/*.msi cfengine.msi"
 
-      - name: move CFEngine package to current workdir
-        run: "mv $HOME/.cfengine/cf-remote/packages/*.msi cfengine.msi"
+      - name: Download yesterdays nightly package
+        run: 'wget https://buildcache.cfengine.com/packages/testing-pr/jenkins-3.18.x-nightly-pipeline-751/PACKAGES_x86_64_mingw/cfengine-nova-3.18.8a-32986-x86_64.msi -o cfengine.msi'
 
       - name: install CFEngine
         run: |

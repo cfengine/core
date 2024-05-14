@@ -50,7 +50,7 @@ jobs:
         shell: pwsh
 
       - name: check install
-        run: "find '/c/Program Files/Cfengine"
+        run: "find '/c/Program Files/Cfengine'"
 
       - name: run cf-agent
         run: "'/c/Program Files/Cfengine/bin/cf-agent.exe' --version"

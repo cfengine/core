@@ -53,7 +53,7 @@ jobs:
         shell: pwsh
 
       - name: check install
-        run: "find / -iname '*cfengine*'"
+        run: "ls -l '/c/Program Files'"
 
       - name: run cf-agent
         run: "'/c/Program Files/Cfengine/bin/cf-agent.exe' --version"

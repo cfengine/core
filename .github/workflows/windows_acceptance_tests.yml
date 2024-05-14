@@ -43,12 +43,14 @@ jobs:
       - name: install CFEngine
         run: |
           Get-Location # pwd
-          dir
           New-Item -Path "c:\" -Name "artifacts" -ItemType Directory
           Start-Process msiexec.exe -Wait -ArgumentList '/quiet /qn /i cfengine.msi /L*V c:\tmp.log'
           Get-Content c:\tmp.log | Set-Content -Encoding utf8 c:\artifacts\CFEngine-Install.log
           file c:\artifacts\CFEngine-Install.log
         shell: pwsh
+
+      - name: check install
+        run: "find '/c/Program Files/Cfengine"
 
       - name: run cf-agent
         run: "'/c/Program Files/Cfengine/bin/cf-agent.exe' --version"

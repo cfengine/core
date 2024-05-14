@@ -40,6 +40,9 @@ jobs:
       - name: Download yesterdays nightly package
         run: 'pwd && wget https://buildcache.cfengine.com/packages/testing-pr/jenkins-3.18.x-nightly-pipeline-751/PACKAGES_x86_64_mingw/cfengine-nova-3.18.8a-32986-x86_64.msi -o cfengine.msi'
 
+      - name: check download
+        run: 'ls -l /d/a/core/core/cfengine.msi'
+
       - name: install CFEngine
         run: |
           Get-Location # pwd
@@ -50,7 +53,7 @@ jobs:
         shell: pwsh
 
       - name: check install
-        run: "find '/c/Program Files/Cfengine'"
+        run: "find / -iname '*cfengine*'"
 
       - name: run cf-agent
         run: "'/c/Program Files/Cfengine/bin/cf-agent.exe' --version"

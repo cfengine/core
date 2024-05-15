@@ -38,16 +38,16 @@ jobs:
 #        run: "mv $HOME/.cfengine/cf-remote/packages/*.msi cfengine.msi"
 
       - name: Download yesterdays nightly package
-        run: 'pwd && wget http://buildcache.cfengine.com/packages/testing-pr/jenkins-3.18.x-nightly-pipeline-753/PACKAGES_i386_mingw/cfengine-nova-3.18.8a-33042-i686.msi -o cfengine.msi'
+        run: 'pwd && wget http://buildcache.cfengine.com/packages/testing-pr/jenkins-3.18.x-nightly-pipeline-753/PACKAGES_i386_mingw/cfengine-nova-3.18.8a-33042-i686.msi -o /c/cfengine.msi'
 
       - name: check download
-        run: 'ls -l /d/a/core/core/cfengine.msi'
+        run: 'ls -l /c/cfengine.msi'
 
       - name: install CFEngine
         run: |
           Get-Location # pwd
           New-Item -Path "c:\" -Name "artifacts" -ItemType Directory
-          Start-Process msiexec.exe -Wait -ArgumentList '/quiet /qn /i cfengine.msi /L*V c:\tmp.log'
+          Start-Process msiexec.exe -Wait -ArgumentList '/quiet /qn /i c:\cfengine.msi /L*V c:\tmp.log'
           Get-Content c:\tmp.log | Set-Content -Encoding utf8 c:\artifacts\CFEngine-Install.log
           file c:\artifacts\CFEngine-Install.log
         shell: pwsh

@@ -38,7 +38,7 @@ jobs:
 #        run: "mv $HOME/.cfengine/cf-remote/packages/*.msi cfengine.msi"
 
       - name: Download yesterdays nightly package
-        run: 'pwd && wget http://buildcache.cfengine.com/packages/testing-pr/jenkins-3.18.x-nightly-pipeline-753/PACKAGES_x86_64_mingw/cfengine-nova-3.18.8a-33048-x86_64.msi -o cfengine.msi'
+        run: 'pwd && wget http://buildcache.cfengine.com/packages/testing-pr/jenkins-3.18.x-nightly-pipeline-753/PACKAGES_i386_mingw/cfengine-nova-3.18.8a-33042-i686.msi -o cfengine.msi'
 
       - name: check download
         run: 'ls -l /d/a/core/core/cfengine.msi'

@@ -201,6 +201,7 @@ static void finalise(void)
 }
 
 
+/* Fill a buffer with non-NULL garbage. */
 static void FillBufferWithGarbage(char *buf, size_t buf_size)
 {
     for (size_t i = 0; i < TESTFILE_SIZE; i += GARBAGE_LEN)
@@ -210,17 +211,27 @@ static void FillBufferWithGarbage(char *buf, size_t buf_size)
     }
 }
 
-/* Fill a buffer with non-NULL garbage. */
-static void WriteBufferToFile(const char *name, const void *buf, size_t count)
+static void WriteBufferToFile(const char *name, const void *buf, const size_t count)
 {
     int fd = open(name, O_CREAT | O_WRONLY | O_TRUNC | O_BINARY, 0700);
     assert_int_not_equal(fd, -1);
 
-    ssize_t written = FullWrite(fd, buf, count);
-    assert_int_equal(written, count);
+    int ret = ftruncate(fd, count);
+    assert_int_not_equal(ret, -1);
 
-    int close_ret = close(fd);
-    assert_int_not_equal(close_ret, -1);
+    size_t remaining = count;
+    bool last_wrote_hole;
+    while (remaining > 0)
+    {
+        size_t to_write = MIN(remaining, blk_size);
+        bool success = FileSparseWrite(fd, buf, to_write, &last_wrote_hole);
+        assert_true(success);
+        remaining -= to_write;
+        buf += to_write;
+    }
+
+    bool success = FileSparseClose(fd, name, true, count, last_wrote_hole);
+    assert_true(success);
 }
 
 static bool CompareFileToBuffer(const char *filename,

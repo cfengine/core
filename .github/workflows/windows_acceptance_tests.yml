@@ -22,8 +22,8 @@ jobs:
       - name: Checkout Core
         uses: actions/checkout@v3
 
-#      - name: install cf-remote
-#        run: pip install cf-remote
+      - name: install cf-remote
+        run: pip install cf-remote
 
       # Note that msiexec can't install packages when running under msys;
       # But cf-remote currently can't run under powershell
@@ -31,29 +31,20 @@ jobs:
       # Hence, we _download_ msi package using cf-remote under msys,
       # and install it by msiexec running under powershell.
 
-#      - name: get CFEngine package
-#        run: cf-remote --version 3.18.x download x86_64 msi
-#
-#      - name: move CFEngine package to current workdir
-#        run: "mv $HOME/.cfengine/cf-remote/packages/*.msi cfengine.msi"
+      - name: get CFEngine package
+        run: cf-remote --version 3.18.x download x86_64 msi
 
-      - name: Download yesterdays nightly package
-        run: 'pwd && wget http://buildcache.cfengine.com/packages/testing-pr/jenkins-3.18.x-nightly-pipeline-753/PACKAGES_i386_mingw/cfengine-nova-3.18.8a-33042-i686.msi -o /c/cfengine.msi'
-
-      - name: check download
-        run: 'ls -l /c/cfengine.msi'
+      - name: move CFEngine package to current workdir
+        run: "mv $HOME/.cfengine/cf-remote/packages/*.msi cfengine.msi"
 
       - name: install CFEngine
         run: |
           Get-Location # pwd
           New-Item -Path "c:\" -Name "artifacts" -ItemType Directory
-          Start-Process msiexec.exe -Wait -ArgumentList '/quiet /qn /i c:\cfengine.msi /L*V c:\tmp.log'
+          Start-Process msiexec.exe -Wait -ArgumentList '/quiet /qn /i cfengine.msi /L*V c:\tmp.log'
           Get-Content c:\tmp.log | Set-Content -Encoding utf8 c:\artifacts\CFEngine-Install.log
           file c:\artifacts\CFEngine-Install.log
         shell: pwsh
-
-      - name: check install
-        run: "ls -l '/c/Program Files'"
 
       - name: run cf-agent
         run: "'/c/Program Files/Cfengine/bin/cf-agent.exe' --version"
@@ -68,8 +59,8 @@ jobs:
         run: 'Remove-Item -Recurse -Force 00_basics, 01_vars, 02_classes, 10_files, 14_reports, 15_control, 16_cf-serverd, 21_methods, 22_cf-runagent, 26_cf-net, 27_cf-secret, 28_inform_testing'
         working-directory: "tests/acceptance"
         shell: pwsh
-      - name: debug contents of copied Cfengine/bin
-        run: 'ls -l /d/a/Cfengine/bin'
+      - name: check copied cfengine contents
+        run: "ls -l /d/a/Cfengine/bin"
 
       - name: run the tests
         run: './testall --bindir="/d/a/Cfengine/bin" --extraclasses=EXTRA'

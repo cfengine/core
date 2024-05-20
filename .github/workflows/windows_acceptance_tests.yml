@@ -59,6 +59,7 @@ jobs:
         run: 'Remove-Item -Recurse -Force 00_basics, 01_vars, 02_classes, 10_files, 14_reports, 15_control, 16_cf-serverd, 21_methods, 22_cf-runagent, 26_cf-net, 27_cf-secret, 28_inform_testing'
         working-directory: "tests/acceptance"
         shell: pwsh
+
       - name: check copied cfengine contents
         run: "ls -l /d/a/Cfengine/bin"
 
@@ -73,9 +74,14 @@ jobs:
       - name: print test.log
         run: 'cat ./tests/acceptance/test.log || true'
         if: ${{ always() }}
+
       - name: save test.log in artifacts
         run: 'cp ./tests/acceptance/test.log /c/artifacts/test.log || true'
         if: ${{ always() }}
+      - name: save workdir to artifacts
+        run: 'cp -a ./tests/acceptance/workdir /c/artifacts/workdir || true'
+        if: ${{ always() }}
+
 
 
       - name: save artifacts

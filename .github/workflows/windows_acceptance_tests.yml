@@ -78,8 +78,9 @@ jobs:
       - name: save test.log in artifacts
         run: 'cp ./tests/acceptance/test.log /c/artifacts/test.log || true'
         if: ${{ always() }}
+      # make a tarball because otherwise there will be too many files and github won't save in the artifact
       - name: save workdir to artifacts
-        run: 'cp -a ./tests/acceptance/workdir /c/artifacts/workdir || true'
+        run: 'tar cfz /c/artifacts/workdir.tar.gz ./tests/acceptance/workdir || true'
         if: ${{ always() }}
 
 

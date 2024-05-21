@@ -54,7 +54,7 @@ jobs:
       # but testall expects it to be on the same partition as where all tests are located (D: drive),
       # hence we just copy it over.
       - name: copy CFEngine to workdir partition
-        run: 'rsync -avz /d/a/core /c/'
+        run: 'rsync -avz /d/a/core /c/ || true'
       - name: check with msys the copy
         run: 'ls -l /c; ls -l /c/core'
 

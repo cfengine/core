@@ -56,17 +56,17 @@ jobs:
 # must copy /da/core/core as /d/a/core is just the root/workdir and github checks out core inside there so two cores, /core/core
       - name: copy core checkout to main partition
         run: 'rsync -avz /d/a/core/core /c/ || true'
-      - name: check with msys the copy
-        run: 'ls -l /c; ls -l /c/core'
-
-      - name: check the copy of core
-        run: 'dir'
-        working-directory: C:/
-
-      - name: check inside copy of core
-        run: 'dir'
-        working-directory: C:/core
-
+#      - name: check with msys the copy
+#        run: 'ls -l /c; ls -l /c/core'
+#
+#      - name: check the copy of core
+#        run: 'dir'
+#        working-directory: C:/
+#
+#      - name: check inside copy of core
+#        run: 'dir'
+#        working-directory: C:/core
+#
       - name: prune platform independent tests to make the job more efficient
         run: 'Remove-Item -Recurse -Force 00_basics, 01_vars, 02_classes, 10_files, 14_reports, 15_control, 16_cf-serverd, 21_methods, 22_cf-runagent, 26_cf-net, 27_cf-secret, 28_inform_testing'
         working-directory: C:/core/tests/acceptance
@@ -76,7 +76,7 @@ jobs:
 #        run: "ls -l /d/a/Cfengine/bin"
 #
       - name: run the tests
-        run: './testall --bindir="/d/a/Cfengine/bin" --extraclasses=EXTRA ./05_processes/01_matching/process_count_found.cf '
+        run: './testall --bindir="/c/Program Files/Cfengine/bin" --extraclasses=EXTRA ./05_processes/01_matching/process_count_found.cf '
         working-directory: C:/core/tests/acceptance
         env:
           # env vars for testall script to properly detect environment

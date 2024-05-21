@@ -53,8 +53,9 @@ jobs:
       # Note that msiexec install CFEngine onto the C: drive (/c/ partition),
       # but testall expects it to be on the same partition as where all tests are located (D: drive),
       # hence we just copy it over.
-      - name: copy CFEngine to workdir partition
-        run: 'rsync -avz /d/a/core /c/ || true'
+# must copy /da/core/core as /d/a/core is just the root/workdir and github checks out core inside there so two cores, /core/core
+      - name: copy core checkout to main partition
+        run: 'rsync -avz /d/a/core/core /c/ || true'
       - name: check with msys the copy
         run: 'ls -l /c; ls -l /c/core'
 

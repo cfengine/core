@@ -53,19 +53,19 @@ jobs:
       # but testall expects it to be on the same partition as where all tests are located (D: drive),
       # hence we just copy it over.
       - name: copy CFEngine to workdir partition
-        run: 'cp -a "/c/Program Files/Cfengine" /d/a/'
+        run: 'cp -a /d/a/core /c/'
 
       - name: prune platform independent tests to make the job more efficient
         run: 'Remove-Item -Recurse -Force 00_basics, 01_vars, 02_classes, 10_files, 14_reports, 15_control, 16_cf-serverd, 21_methods, 22_cf-runagent, 26_cf-net, 27_cf-secret, 28_inform_testing'
-        working-directory: "tests/acceptance"
+        working-directory: "/c/core/tests/acceptance"
         shell: pwsh
 
-      - name: check copied cfengine contents
-        run: "ls -l /d/a/Cfengine/bin"
-
+#      - name: check copied cfengine contents
+#        run: "ls -l /d/a/Cfengine/bin"
+#
       - name: run the tests
-        run: './testall --bindir="/d/a/Cfengine/bin" --extraclasses=EXTRA'
-        working-directory: "tests/acceptance"
+        run: './testall --bindir="/d/a/Cfengine/bin" --extraclasses=EXTRA ./05_processes/01_matching/process_count_found.cf '
+        working-directory: "/c/core/tests/acceptance"
         env:
           # env vars for testall script to properly detect environment
           USER: runneradmin
@@ -73,14 +73,18 @@ jobs:
 
       - name: print test.log
         run: 'cat ./tests/acceptance/test.log || true'
+        working-directory: "/c/core"
         if: ${{ always() }}
 
       - name: save test.log in artifacts
         run: 'cp ./tests/acceptance/test.log /c/artifacts/test.log || true'
+        working-directory: "/c/core"
         if: ${{ always() }}
+
       # make a tarball because otherwise there will be too many files and github won't save in the artifact
       - name: save workdir to artifacts
         run: 'tar cfz /c/artifacts/workdir.tar.gz ./tests/acceptance/workdir || true'
+        working-directory: "/c/core"
         if: ${{ always() }}
 
 

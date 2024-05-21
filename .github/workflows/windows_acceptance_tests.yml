@@ -57,7 +57,7 @@ jobs:
 
       - name: prune platform independent tests to make the job more efficient
         run: 'Remove-Item -Recurse -Force 00_basics, 01_vars, 02_classes, 10_files, 14_reports, 15_control, 16_cf-serverd, 21_methods, 22_cf-runagent, 26_cf-net, 27_cf-secret, 28_inform_testing'
-        working-directory: "/c/core/tests/acceptance"
+        working-directory: C:\core\tests\acceptance
         shell: pwsh
 
 #      - name: check copied cfengine contents

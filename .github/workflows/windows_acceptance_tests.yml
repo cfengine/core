@@ -55,6 +55,14 @@ jobs:
       - name: copy CFEngine to workdir partition
         run: 'cp -a /d/a/core /c/'
 
+      - name: check the copy of core
+        run: 'dir'
+        working-directory: C:\
+
+      - name: check inside copy of core
+        run: 'dir'
+        working-directory: C:\core
+
       - name: prune platform independent tests to make the job more efficient
         run: 'Remove-Item -Recurse -Force 00_basics, 01_vars, 02_classes, 10_files, 14_reports, 15_control, 16_cf-serverd, 21_methods, 22_cf-runagent, 26_cf-net, 27_cf-secret, 28_inform_testing'
         working-directory: C:\core\tests\acceptance

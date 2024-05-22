@@ -11,8 +11,29 @@ jobs:
     # windows image reference: https://github.com/actions/runner-images/blob/main/images/windows/Windows2022-Readme.md
     runs-on: windows-latest
     steps:
+      - name: download cfengine with cf-remote
+        shell: msys2 {0}
+        run: |
+          pacman -S python-pip
+          pip install cf-remote
+          cf-remote --version master download x86_64 msi
+          mv $HOME/.cfengine/cf-remote/packages/*.msi cfengine.msi
+
+      - name: install cfengine
+        shell: pwsh
+        run: |
+          Start-Process msiexec.exe -Wait -ArgumentList '/quiet /qn /i cfengine.msi /L*V c:\tmp.log'
+          Get-Content c:\tmp.log
       - name: Checkout Core
         uses: actions/checkout@v4
+
+      - name: setup tests
+        shell: msys2 {0}
+        run: |
+          rsync -avz "/c/Program Files/Cfengine" /d/a/ || true
+          cd /d/a/core/core/tests/acceptance && rm -rf 00_basics 01_vars 02_classes 10_files 14_reports 15_control 16_cf-serverd 21_methods 22_cf-runagent 26_cf-net 27_cf-secret 28_inform_testing
+          cd /d/a/core/core/tests/acceptance && ./testall --bindir="/d/a/Cfengine/bin" --extraclasses=EXTRA ./05_processes/01_matching/process_count_found.cf
+          cat /d/a/core/core/tests/acceptance/test.log || true
 
 #      - name: find visual studio tools
 #        run: |

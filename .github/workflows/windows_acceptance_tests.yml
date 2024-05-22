@@ -20,7 +20,7 @@ jobs:
       - name: hello world C program
         run: |
           type 'C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat'
-          set VSCCMD_DEBUG=3
+          set VSCMD_DEBUG=3
           'C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat x86_amd64'
           cl hello.c
           hello

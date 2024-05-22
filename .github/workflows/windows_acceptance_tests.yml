@@ -6,6 +6,7 @@ on:
 defaults:
   run:
     shell: cmd
+
 jobs:
   windows_acceptance_tests:
     # windows image reference: https://github.com/actions/runner-images/blob/main/images/windows/Windows2022-Readme.md
@@ -14,11 +15,13 @@ jobs:
       - name: download cfengine with cf-remote
         shell: msys2 {0}
         run: |
-          pacman -S python-pip
-          pip install cf-remote
-          cf-remote --version master download x86_64 msi
-          mv $HOME/.cfengine/cf-remote/packages/*.msi cfengine.msi
+          echo "^
+          pacman -S python-pip^
+          pip install cf-remote^
+          cf-remote --version master download x86_64 msi^
+          mv $HOME/.cfengine/cf-remote/packages/*.msi cfengine.msi^
 
+          " | C:\msys64\usr\bin\bash.exe
       - name: install cfengine
         shell: pwsh
         run: |

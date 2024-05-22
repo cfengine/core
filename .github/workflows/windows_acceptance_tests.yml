@@ -11,14 +11,8 @@ jobs:
   windows_acceptance_tests:
     runs-on: windows-latest
     steps:
-      - uses: msys2/setup-msys2@v2
-        with:
-          install: >-
-            rsync
-            dos2unix
-            diffutils
-            util-linux
-            python-pip
+      - name: Install msys2 packages
+        run: pacman -S rsync dos2unix diffutils util-linux python-pip
 
       - name: Checkout Core
         uses: actions/checkout@v3

@@ -6,6 +6,7 @@ on:
 jobs:
   windows_acceptance_tests:
     runs-on: windows-latest
+    steps:
       - name: Checkout Core
         uses: actions/checkout@v3
 

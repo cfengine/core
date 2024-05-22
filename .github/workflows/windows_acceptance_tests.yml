@@ -16,16 +16,16 @@ jobs:
 
       - name: find visual studio tools
         run: |
-          dir 'C:\Program Files'
-          dir 'C:\Program Files\Microsoft Visual Studio\2022\Enterprise'
-          dir 'C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC'
+          dir "C:\Program Files"
+          dir "C:\Program Files\Microsoft Visual Studio\2022\Enterprise"
+          dir "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC"
 # where is vcvarsall.bat? https://developercommunity.visualstudio.com/t/vcvarsallbat-fails-after-upgrade-from-2022-preview/1477538
       - name: hello world C program
         run: |
-          type 'C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat'
+          type "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat"
           set VSCMD_DEBUG=3
           set
-          'C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat x86_amd64'
+          "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat x86_amd64"
           set
           cl hello.c
           hello

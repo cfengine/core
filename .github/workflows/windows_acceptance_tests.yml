@@ -5,11 +5,17 @@ on:
 
 jobs:
   windows_acceptance_tests:
+    # windows image reference: https://github.com/actions/runner-images/blob/main/images/windows/Windows2022-Readme.md
     runs-on: windows-latest
     steps:
       - name: Checkout Core
         uses: actions/checkout@v3
 
+      - name: find visual studio tools
+        run: |
+          dir 'C:\Program Files'
+          dir 'C:\Program Files\Microsoft Visual Studio\2022\Enterprise'
+          dir 'C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC'
       - name: hello world C program
         run: |
           cl hello.c

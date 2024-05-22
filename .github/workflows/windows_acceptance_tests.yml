@@ -3,6 +3,9 @@ name: Windows Acceptance Tests
 on:
   workflow_call
 
+defaults:
+  run:
+    shell: cmd
 jobs:
   windows_acceptance_tests:
     # windows image reference: https://github.com/actions/runner-images/blob/main/images/windows/Windows2022-Readme.md

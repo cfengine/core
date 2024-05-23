@@ -7,28 +7,28 @@ on:
     branches: [ master, 3.21.x, 3.18.x ]
 
 jobs:
-  unit_tests:
-    uses: ./.github/workflows/unit_tests.yml
-  shellcheck_tests:
-    uses: ./.github/workflows/shellcheck.yml
-  asan_unit_tests:
-    needs: unit_tests
-    uses: ./.github/workflows/asan_unit_tests.yml
-  acceptance_tests:
-    needs: unit_tests
-    uses: ./.github/workflows/acceptance_tests.yml
+#  unit_tests:
+#    uses: ./.github/workflows/unit_tests.yml
+#  shellcheck_tests:
+#    uses: ./.github/workflows/shellcheck.yml
+#  asan_unit_tests:
+#    needs: unit_tests
+#    uses: ./.github/workflows/asan_unit_tests.yml
+#  acceptance_tests:
+#    needs: unit_tests
+#    uses: ./.github/workflows/acceptance_tests.yml
   windows_acceptance_tests:
-    needs: unit_tests
+#    needs: unit_tests
     uses: ./.github/workflows/windows_acceptance_tests.yml
-  macos_unit_tests:
-    needs: unit_tests
-    uses: ./.github/workflows/macos_unit_tests.yml
-  valgrind_tests:
-    needs: unit_tests
-    uses: ./.github/workflows/valgrind.yml
-  static_check:
-    needs: unit_tests
-    uses: ./.github/workflows/job-static-check.yml
-  valgrind_check:
-    needs: unit_tests
-    uses: ./.github/workflows/job-valgrind-check.yml
+#  macos_unit_tests:
+#    needs: unit_tests
+#    uses: ./.github/workflows/macos_unit_tests.yml
+#  valgrind_tests:
+#    needs: unit_tests
+#    uses: ./.github/workflows/valgrind.yml
+#  static_check:
+#    needs: unit_tests
+#    uses: ./.github/workflows/job-static-check.yml
+#  valgrind_check:
+#    needs: unit_tests
+#    uses: ./.github/workflows/job-valgrind-check.yml

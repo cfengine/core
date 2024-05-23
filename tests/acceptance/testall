@@ -419,8 +419,7 @@ runtest() {
         then
             if [ -n "$BINDIR" ]
             then
-                # Copy everything, because Windows depends on DLLs.
-                $LN_CMD "$BINDIR"/* "$WORKDIR/bin"
+                $LN_CMD "$BINDIR"/*.exe "$WORKDIR/bin"
             else
                 $LN_CMD "$AGENT" "$WORKDIR/bin"
                 $LN_CMD "$CF_PROMISES" "$WORKDIR/bin"

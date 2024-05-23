@@ -68,6 +68,10 @@ jobs:
           USER: runneradmin
           OSTYPE: msys
 
+      - name: check the workdir
+        if: ${{ always() }}
+        run: 'find \d\a\core\core\tests\acceptance\workdir'
+
       - name: hello world C program
         if: ${{ always() }}
         shell: cmd

@@ -1,4 +1,5 @@
 #!/bin/sh
+set -x # revertme, debug PLATFORM_WORKDIR
 #
 #  Copyright 2021 Northern.tech AS
 #

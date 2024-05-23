@@ -59,6 +59,7 @@ jobs:
         run: 'Remove-Item -Recurse -Force 00_basics, 01_vars, 02_classes, 10_files, 14_reports, 15_control, 16_cf-serverd, 21_methods, 22_cf-runagent, 26_cf-net, 27_cf-secret, 28_inform_testing'
         working-directory: "tests/acceptance"
         shell: pwsh
+
       - name: run the tests
         run: './testall --bindir="/d/a/Cfengine/bin" --extraclasses=EXTRA ./05_processes/01_matching/process_count_found.cf'
         working-directory: "tests/acceptance"
@@ -67,13 +68,32 @@ jobs:
           USER: runneradmin
           OSTYPE: msys
 
+      - name: hello world C program
+        if: ${{ always() }}
+        shell: cmd
+        run: |
+          echo "start of cmd.exe commands..."
+          cd
+          dir
+          REM type "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat"
+          REM set VSCMD_DEBUG=3
+          REM set
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x86_amd64
+          REM set
+          echo "calling cl hello.c"
+          cl hello.c
+          echo "after cl hello.c"
+          dir
+          hello.exe
+          echo "end of cmd.exe commands"
+
       - name: print test.log
         run: 'cat ./tests/acceptance/test.log || true'
         if: ${{ always() }}
+
       - name: save test.log in artifacts
         run: 'cp ./tests/acceptance/test.log /c/artifacts/test.log || true'
         if: ${{ always() }}
-
 
       - name: save artifacts
         if: success() || failure()

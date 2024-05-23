@@ -21,7 +21,7 @@ jobs:
         run: |
           pacman -S --noconfirm python-pip
           pip install cf-remote
-          cf-remote --version master download x86_64 msi
+          cf-remote --version 3.18.x download x86_64 msi
           mv $HOME/.cfengine/cf-remote/packages/*.msi cfengine.msi
       - name: install cfengine
         shell: pwsh

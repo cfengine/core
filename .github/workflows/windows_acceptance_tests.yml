@@ -19,7 +19,7 @@ jobs:
       - name: download cfengine with cf-remote
         shell: bash
         run: |
-          pacman -S python-pip
+          pacman -S --noconfirm python-pip
           pip install cf-remote
           cf-remote --version master download x86_64 msi
           mv $HOME/.cfengine/cf-remote/packages/*.msi cfengine.msi

@@ -30,6 +30,8 @@ jobs:
           Get-Content c:\tmp.log
       - name: Checkout Core
         uses: actions/checkout@v4
+        with:
+          ref: 3.18.x
 
       - name: setup tests
         shell: bash

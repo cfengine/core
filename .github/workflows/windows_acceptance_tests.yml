@@ -61,7 +61,7 @@ jobs:
         shell: pwsh
 
       - name: run the tests
-        run: './testall --bindir="/d/a/Cfengine/bin" --extraclasses=EXTRA ./05_processes/01_matching/process_count_found.cf'
+        run: './testall --bindir="/d/a/Cfengine/bin" --extraclasses=EXTRA'
         working-directory: "tests/acceptance"
         env:
           # env vars for testall script to properly detect environment

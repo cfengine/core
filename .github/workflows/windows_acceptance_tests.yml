@@ -12,11 +12,10 @@ jobs:
     # windows image reference: https://github.com/actions/runner-images/blob/main/images/windows/Windows2022-Readme.md
     runs-on: windows-latest
     steps:
-      - name: switch bash from git to msys2
-        shell: cmd
+      - name: switch to msys2 bash
+        shell: bash
         run:
-          echo ::add-path::C:\msys64\usr\bin
-          dir C:\msys64\usr\bin
+          echo "C:\\msys64\\usr\\bin" >> $GITHUB_PATH
       - name: download cfengine with cf-remote
         shell: bash
         run: |

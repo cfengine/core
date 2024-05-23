@@ -70,7 +70,7 @@ jobs:
 
       - name: check the workdir
         if: ${{ always() }}
-        run: 'find \d\a\core\core\tests\acceptance\workdir'
+        run: 'find /d/a/core/core/tests/acceptance/workdir'
 
       - name: hello world C program
         if: ${{ always() }}

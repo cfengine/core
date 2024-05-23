@@ -7,7 +7,7 @@ int main()
 
   //const char *filename = "\\d\\a\\core\\core\\tests\\acceptance\\workdir\\__05_processes_01_matching_process_count_found_cf\\bin\\cf.events.dll";
   const char *filename =
-      "/d/a/core/core/tests/acceptance/workdir/__05_processes_01_matching_process_count_found_cf/bin/cf.events.dll";
+      "D:/a/core/core/tests/acceptance/workdir/__05_processes_01_matching_process_count_found_cf/bin/cf.events.dll";
   DWORD fileAttr;
   fileAttr = GetFileAttributes(filename);
   DWORD err = GetLastError();

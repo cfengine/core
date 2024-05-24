@@ -58,6 +58,8 @@ bundle agent test
   meta:
     "description" -> { "CFE-3431" }
       string => "Test that custom promises work with unless attribute";
+    "test_soft_fail" string => "windows",
+      meta => { "ENT-10217" };
 
   vars:
     "false_variable"

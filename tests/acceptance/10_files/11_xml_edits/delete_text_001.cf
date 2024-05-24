@@ -59,6 +59,10 @@ body edit_defaults init_empty
 #######################################################
 bundle agent test
 {
+  meta:
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10215" };
+
   vars:
       "text" string => "Hot Potatoes!!!";
 

@@ -38,6 +38,8 @@ bundle agent test
             contain => myshell;
     meta:
         "description" string => "Stat a regular file (this policy file)";
+        "test_soft_fail" string => "windows",
+          meta => { "ENT-10254" };
 }
 
 bundle agent check

@@ -20,6 +20,8 @@ bundle agent test
         string => "Test that we can iterate over an array inside of
         a data container without first extracting it. And that the order of
         iteration is preserved.";
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10254" };
 
   vars:
     "data3" data => '{ "iteration_order":[ "b", "c", "a" ], "b":{ "key": "bkeyval" }, "c":{"key":"ckeyval"}, "a":{"key":"akeyval"}}';

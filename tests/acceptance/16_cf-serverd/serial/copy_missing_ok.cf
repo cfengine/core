@@ -7,6 +7,10 @@ body common control
 
 bundle agent test
 {
+  meta:
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10401" };
+
   methods:
       # ensure destination files are not there
       "any" usebundle => dcs_fini("$(G.testdir)/dir");

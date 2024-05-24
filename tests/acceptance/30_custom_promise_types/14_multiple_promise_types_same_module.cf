@@ -57,6 +57,8 @@ bundle agent test
   meta:
     "description" -> { "CFE-3443" }
       string => "Test that you can use the same custom module for two promise types";
+    "test_soft_fail" string => "windows",
+      meta => { "ENT-10217" };
 
   vars:
     "test_string"

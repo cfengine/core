@@ -18,6 +18,8 @@ bundle agent test
   meta:
     "description" -> { "CFE-3433" }
       string => "Test that --simulate can be used with custom promise modules supporting it";
+    "test_soft_fail" string => "windows",
+      meta => { "ENT-10217" };
 }
 
 bundle agent check

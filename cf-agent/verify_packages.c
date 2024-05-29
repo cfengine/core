@@ -3461,7 +3461,7 @@ static bool PrependPatchItem(
     char vbuff[CF_MAXVARSIZE];
 
     strlcpy(vbuff, ExtractFirstReference(a->packages.package_patch_name_regex, item), CF_MAXVARSIZE);
-    sscanf(vbuff, "%s", name);  /* trim */
+    name = TrimWhitespace(vbuff);
     strlcpy(vbuff, ExtractFirstReference(a->packages.package_patch_version_regex, item), CF_MAXVARSIZE);
     sscanf(vbuff, "%s", version);       /* trim */
 

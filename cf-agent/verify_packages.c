@@ -3528,7 +3528,7 @@ static bool PrependMultiLinePackageItem(
     if (FullTextMatch(ctx, a->packages.package_list_name_regex, item))
     {
         strlcpy(vbuff, ExtractFirstReference(a->packages.package_list_name_regex, item), CF_MAXVARSIZE);
-        sscanf(vbuff, "%s", name);      /* trim */
+        strlcpy(TrimWhitespace(vbuff), name, CF_MAXVARSIZE);
     }
 
     if (FullTextMatch(ctx, a->packages.package_list_version_regex, item))
@@ -3564,7 +3564,7 @@ static bool PrependListPackageItem(
     char vbuff[CF_MAXVARSIZE];
 
     strlcpy(vbuff, ExtractFirstReference(a->packages.package_list_name_regex, item), CF_MAXVARSIZE);
-    sscanf(vbuff, "%s", name);  /* trim */
+    strlcpy(TrimWhitespace(vbuff), name, CF_MAXVARSIZE);
 
     strlcpy(vbuff, ExtractFirstReference(a->packages.package_list_version_regex, item), CF_MAXVARSIZE);
     sscanf(vbuff, "%s", version);       /* trim */

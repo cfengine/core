@@ -2743,7 +2743,7 @@ const size_t name_len = strlen(pi->name);
                     {
                         strcat(offset, "\"");
 strcat(offset+1, pi->name);
-strcat(offset+name_len, "\"");
+strcat(offset+1+name_len, "\"");
                     }
 
                     PromiseResult result = PROMISE_RESULT_NOOP;
@@ -2804,7 +2804,7 @@ const size_t name_len = strlen(pi->name);
                         {
 strcpy(offset, "\"");
 strcpy(offset+1, pi->name);
-strcpy(offset+name_len, "\"");
+strcpy(offset+1+name_len, "\"");
                         }
 
                         strcat(command_string, " ");

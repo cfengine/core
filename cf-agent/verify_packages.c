@@ -2741,9 +2741,9 @@ const size_t name_len = strlen(pi->name);
                     }
                     else
                     {
-                        strcat(offset, "\"");
+                        strcat(offset, "'");
 strcat(offset+1, pi->name);
-strcat(offset+1+name_len, "\"");
+strcat(offset+1+name_len, "'");
                     }
 
                     PromiseResult result = PROMISE_RESULT_NOOP;
@@ -2802,9 +2802,9 @@ const size_t name_len = strlen(pi->name);
                         }
                         else
                         {
-strcpy(offset, "\"");
+strcpy(offset, "'");
 strcpy(offset+1, pi->name);
-strcpy(offset+1+name_len, "\"");
+strcpy(offset+1+name_len, "'");
                         }
 
                         strcat(command_string, " ");

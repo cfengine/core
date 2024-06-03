@@ -112,6 +112,10 @@ git_deploy_refspec() {
   mkdir -p "${temp_stage}/.git"
   cp "${local_mirrored_repo}/HEAD" "${temp_stage}/.git/"
 
+  if git_check_is_in_sync "${local_mirrored_repo}" "${temp_stage}" "$2"; then
+    return 0
+  fi
+
   ########################## 3. SET PERMISSIONS ON POLICY SET
   chown -R root:root "${temp_stage}" || error_exit "Unable to chown '${temp_stage}'"
   find "${temp_stage}" \( -type f -exec chmod 600 {} + \) -o \
@@ -224,6 +228,10 @@ git_cfbs_deploy_refspec() {
   # Grab HEAD so it can be used to populate cf_promises_release_id
   mkdir -p "${temp_stage}/out/masterfiles/.git"
   cp "${local_mirrored_repo}/HEAD" "${temp_stage}/out/masterfiles/.git/"
+
+  if git_check_is_in_sync "${local_mirrored_repo}" "${temp_stage}/out/masterfiles" "$2"; then
+    return 0
+  fi
 
   ########################## 3. SET PERMISSIONS ON POLICY SET
   chown -R root:root "${temp_stage}" || error_exit "Unable to chown '${temp_stage}'"

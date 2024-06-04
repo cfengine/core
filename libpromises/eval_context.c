@@ -628,7 +628,7 @@ static ExpressionValue EvalTokenFromList(const char *token, void *param)
 
 /**********************************************************************/
 
-static bool EvalWithTokenFromList(const char *expr, StringSet *token_set)
+bool EvalWithTokenFromList(const char *expr, StringSet *token_set)
 {
     ParseResult res = ParseExpression(expr, 0, strlen(expr));
 

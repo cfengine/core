@@ -27,6 +27,20 @@
 
 #include <cf3.defs.h>
 
+/**
+ * @brief Get a string set of time classes based on a timestamp.
+ * @param time Unix timestamp
+ * @return Set of time classes or NULL in case of error.
+ * @note On success, returned value must be free'd using StringSetDestroy().
+ * @example GetTimeClasses(1716989621) in the GMT+2 timezone would return the
+ *          following classes: { 'Afternoon', 'Day29', 'GMT_Afternoon',
+ *          'GMT_Day29', 'GMT_Hr13', 'GMT_Hr13_Q3', 'GMT_Lcycle_2', 'GMT_May',
+ *          'GMT_Min30_35', 'GMT_Min33', 'GMT_Q3', 'GMT_Wednesday',
+ *          'GMT_Yr2024', 'Hr15', 'Hr15_Q3', 'Lcycle_2', 'May', 'Min30_35',
+ *          'Min33', 'Q3', 'Wednesday', 'Yr2024' }
+ */
+StringSet *GetTimeClasses(time_t time);
+
 void UpdateTimeClasses(EvalContext *ctx, time_t t);
 
 #endif

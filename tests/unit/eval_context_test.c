@@ -3,6 +3,7 @@
 #include <eval_context.h>
 #include <misc_lib.h>                                          /* xsnprintf */
 #include <known_dirs.h>
+#include <time_classes.h>
 
 char CFWORKDIR[CF_BUFSIZE];
 
@@ -124,6 +125,30 @@ void test_changes_chroot(void)
 #endif
 }
 
+void test_eval_with_token_from_list(void)
+{
+    /* The timestamp should generate these classes (among others):
+     *  'GMT_Afternoon', 'GMT_Day29', 'GMT_Hr13', 'GMT_Hr13_Q3', 'GMT_Lcycle_2',
+     *  'GMT_May', 'GMT_Min30_35', 'GMT_Min33', 'GMT_Q3', 'GMT_Wednesday',
+     *  'GMT_Yr2024'
+     */
+    const time_t timestamp = 1716989621;
+    StringSet *time_classes = GetTimeClasses(timestamp);
+    StringSetIterator iter = StringSetIteratorInit(time_classes);
+    const char *time_class = NULL;
+    while((time_class = StringSetIteratorNext(&iter)) != NULL) {
+        printf("Time class: %s\n", time_class);
+    }
+
+    assert_true(EvalWithTokenFromList("GMT_Wednesday", time_classes));
+    assert_false(EvalWithTokenFromList("GMT_Monday", time_classes));
+    assert_false(EvalWithTokenFromList("GMT_Wednesday.GMT_Monday", time_classes));
+    assert_true(EvalWithTokenFromList("GMT_Monday|GMT_Wednesday", time_classes));
+    assert_true(EvalWithTokenFromList("!GMT_Monday", time_classes));
+
+    StringSetDestroy(time_classes);
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -133,6 +158,7 @@ int main()
     {
         unit_test(test_class_persistence),
         unit_test(test_changes_chroot),
+        unit_test(test_eval_with_token_from_list),
     };
 
     int ret = run_tests(tests);

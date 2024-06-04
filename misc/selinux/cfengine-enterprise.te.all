@@ -637,7 +637,7 @@ allow cfengine_httpd_t sssd_var_lib_t:dir search;
 allow cfengine_httpd_t sssd_var_lib_t:sock_file write;
 allow cfengine_httpd_t syslogd_var_run_t:dir search;
 allow cfengine_httpd_t tmp_t:sock_file write;
-allow cfengine_httpd_t tmp_t:file { create setattr unlink write rename };
+allow cfengine_httpd_t tmp_t:file { create setattr unlink write rename open };
 allow cfengine_httpd_t tmp_t:dir { add_name remove_name write read };
 allow cfengine_httpd_t var_t:dir read;
 

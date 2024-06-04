@@ -412,8 +412,8 @@ static bool FileChangesSetDirectoryList(CF_DB *db, const char *path, const Seq *
 {
     assert(change != NULL);
 
-    int size = 0;
-    int n_files = SeqLength(files);
+    size_t size = 0;
+    size_t n_files = SeqLength(files);
 
     char key[strlen(path) + 3];
     xsnprintf(key, sizeof(key), "D_%s", path);

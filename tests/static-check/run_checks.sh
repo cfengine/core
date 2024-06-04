@@ -30,6 +30,7 @@ function check_with_cppcheck() {
   # Identified issues are printed to stderr
   cppcheck --quiet -j${n_procs} --error-exitcode=1 ./ \
            --suppressions-list=tests/static-check/cppcheck_suppressions.txt \
+           --check-level=exhaustive \
            --include=config.h \
            -I cf-serverd/ -I libpromises/ -I libcfnet/ -I libntech/libutils/ \
            -i 3rdparty -i .github/codeql -i libntech/.lgtm -i tests -i libpromises/cf3lex.c \

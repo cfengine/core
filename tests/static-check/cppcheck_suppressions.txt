@@ -12,8 +12,12 @@ va_list_usedBeforeStarted:libntech/libcompat/snprintf.c:1505
 va_list_usedBeforeStarted:libntech/libcompat/snprintf.c:1506
 
 // too cryptic code for cppcheck to see that the 'tmp' variable is initialized
-// through a pointer to the same address space
+// through a pointer to the same address space (and the same applies to 'dst')
 uninitvar:libntech/libcompat/inet_pton.c:115
+uninitvar:libntech/libcompat/snprintf.c:1494
+
+// cppcheck doesn't like VA_COPY, it seems
+Uninit:libntech/libcompat/snprintf.c:1505
 
 // cppcheck completely confused by our macro-based enterprise stubs
 returnDanglingLifetime:libpromises/enterprise_stubs.c:60

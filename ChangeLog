@@ -14,6 +14,8 @@
 	  (ENT-11526)
 	- Modified package promise default. If platform_default is present use that
 	  package module. (CFE-4315)
+	- Fixed bug where `default:sys.fqhost` contained many spaces when domain is
+	   set in body common control (CFE-4053)
 
 3.18.7:
 	- 'cf-check diagnose' now shows DB usage and a hint if rotation is required

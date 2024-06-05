@@ -1,0 +1,33 @@
+##############################################################
+#
+# Test default:sys.fqhost with domain CFE-4053
+#
+##############################################################
+
+body common control
+{
+  domain => "cfengine.com";
+  bundlesequence => { "check" };
+}
+
+bundle agent __main__
+{
+  methods:
+    "check";
+}
+
+##############################################################
+
+bundle agent check
+{
+  reports:
+    DEBUG::
+      "$(sys.fqhost), $(sys.uqhost).cfengine.com";
+
+    any::
+      "$(this.promise_filename) Pass"
+        if => strcmp( "$(sys.fqhost)", "$(sys.uqhost).cfengine.com" );
+
+      "$(this.promise_filename) FAIL"
+        unless => strcmp( "$(sys.fqhost)", "$(sys.uqhost).cfengine.com" );
+}

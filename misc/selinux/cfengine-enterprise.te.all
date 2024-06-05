@@ -366,8 +366,6 @@ type cfengine_hub_t;
 typeattribute cfengine_hub_t domain;
 role system_r types cfengine_hub_t;
 
-# cf-hub uses setuid/setgid to initiate scheduled reports as cfapache:cfpostgres
-allow cfengine_hub_t self:capability { setgid setuid };
 # /var/cfengine/bin/cf-hub has the 'cfengine_hub_exec_t' context which is an
 # entrypoint for the 'cfengine_hub_t' domain
 type cfengine_hub_exec_t;
@@ -404,26 +402,9 @@ allow cfengine_hub_t unreserved_port_t:tcp_socket name_connect;
 
 allow cfengine_hub_t cfengine_log_t:dir getattr;
 allow cfengine_hub_t cfengine_var_lib_t:dir { add_name getattr open read search write remove_name };
-allow cfengine_hub_t cfengine_var_lib_t:file { create ioctl lock write unlink append setattr };
+allow cfengine_hub_t cfengine_var_lib_t:file { create ioctl lock write unlink };
 allow cfengine_hub_t cfengine_var_lib_t:lnk_file { getattr read };
 allow cfengine_hub_t cfengine_var_lib_t:sock_file { create unlink };
-
-# cf-hub executes PHP in case of scheduled reports
-allow cfengine_hub_t cfengine_httpd_exec_t:file map;
-allow cfengine_hub_t cfengine_httpd_exec_t:file { execute execute_no_trans getattr open read };
-
-# sending scheduled reports via email
-allow cfengine_hub_t postfix_etc_t:dir { getattr open read search };
-allow cfengine_hub_t postfix_etc_t:file { getattr open read };
-allow cfengine_hub_t postfix_master_t:unix_stream_socket connectto;
-allow cfengine_hub_t postfix_postdrop_exec_t:file map;
-allow cfengine_hub_t postfix_postdrop_exec_t:file { execute execute_no_trans open read };
-allow cfengine_hub_t postfix_public_t:dir search;
-allow cfengine_hub_t postfix_public_t:sock_file { getattr write };
-allow cfengine_hub_t postfix_spool_t:dir { add_name remove_name search write };
-allow cfengine_hub_t postfix_spool_t:file { create getattr open read rename setattr write };
-allow cfengine_hub_t sendmail_exec_t:file map;
-allow cfengine_hub_t sendmail_exec_t:file { execute execute_no_trans open read };
 
 allow cfengine_hub_t bin_t:file map;
 allow cfengine_hub_t bin_t:file { execute execute_no_trans };
@@ -451,15 +432,13 @@ allow cfengine_hub_t proc_net_t:lnk_file { getattr read };
 allow cfengine_hub_t proc_security_t:file { getattr open read };
 allow cfengine_hub_t proc_t:dir read;
 allow cfengine_hub_t rpm_exec_t:file getattr;
-allow cfengine_hub_t self:capability { dac_override chown dac_read_search };
-allow cfengine_hub_t self:process { execmem setrlimit };
+allow cfengine_hub_t self:capability dac_override;
 allow cfengine_hub_t self:tcp_socket { connect create getopt setopt read write };
 allow cfengine_hub_t self:udp_socket { connect create getattr ioctl setopt read write };
-allow cfengine_hub_t self:netlink_route_socket { create getopt setopt bind getattr nlmsg_read };
+allow cfengine_hub_t self:netlink_route_socket { create getopt setopt bind getattr };
 allow cfengine_hub_t self:unix_dgram_socket { create connect read write };
 allow cfengine_hub_t semanage_exec_t:file getattr;
 allow cfengine_hub_t shadow_t:file getattr;
-allow cfengine_hub_t smtp_port_t:tcp_socket name_connect;
 allow cfengine_hub_t sssd_public_t:dir search;
 allow cfengine_hub_t sssd_public_t:file map;
 allow cfengine_hub_t sssd_public_t:file { getattr open read };
@@ -476,7 +455,6 @@ allow cfengine_hub_t user_cron_spool_t:dir getattr;
 allow cfengine_hub_t useradd_exec_t:file getattr;
 allow cfengine_hub_t var_t:dir read;
 allow cfengine_hub_t ssh_exec_t:file getattr;
-allow cfengine_hub_t tmp_t:dir read;
 
 # Use of the TLS kernel module
 allow cfengine_hub_t kernel_t:system module_request;
@@ -743,7 +721,7 @@ allow cfengine_reactor_t cfengine_cfbs_exec_t:file { execute open read };
 # cf-reactor runs PHP code to evaluate alerts (as cfapache user)
 allow cfengine_reactor_t cfengine_httpd_exec_t:file { execute execute_no_trans getattr open read map };
 allow cfengine_reactor_t self:capability { setgid setuid };
-allow cfengine_reactor_t self:process execmem;
+allow cfengine_reactor_t self:process { execmem setrlimit };
 
 allow cfengine_reactor_t cfengine_reactor_exec_t:file entrypoint;
 allow cfengine_reactor_t cfengine_reactor_exec_t:file { ioctl read getattr lock map execute open };
@@ -761,7 +739,7 @@ allow cfengine_reactor_t cfengine_var_lib_t:file { create ioctl lock write unlin
 allow cfengine_reactor_t cfengine_var_lib_t:lnk_file { getattr read create unlink };
 
 allow cfengine_reactor_t passwd_file_t:file { open read getattr };
-allow cfengine_reactor_t self:capability { dac_override chown fsetid };
+allow cfengine_reactor_t self:capability { dac_override dac_read_search chown fsetid };
 allow cfengine_reactor_t self:unix_dgram_socket { create connect };
 allow cfengine_reactor_t sssd_var_lib_t:dir search;
 allow cfengine_reactor_t sssd_var_lib_t:sock_file write;
@@ -769,7 +747,7 @@ allow cfengine_reactor_t sssd_public_t:dir search;
 allow cfengine_reactor_t sssd_public_t:file { open read getattr map };
 allow cfengine_reactor_t sssd_t:unix_stream_socket connectto;
 allow cfengine_reactor_t tmp_t:sock_file write;
-allow cfengine_reactor_t tmp_t:dir { add_name remove_name write };
+allow cfengine_reactor_t tmp_t:dir { add_name remove_name read write };
 allow cfengine_reactor_t tmp_t:file { create open setattr unlink write };
 allow cfengine_reactor_t devlog_t:sock_file write;
 allow cfengine_reactor_t devlog_t:lnk_file read;
@@ -791,7 +769,6 @@ allow cfengine_reactor_t cert_t:lnk_file read;
 
 allow cfengine_reactor_t http_port_t:tcp_socket name_connect;
 allow cfengine_reactor_t net_conf_t:file { getattr open read };
-allow cfengine_reactor_t self:capability { chown fsetid };
 allow cfengine_reactor_t self:netlink_route_socket { bind create getattr nlmsg_read };
 allow cfengine_reactor_t self:tcp_socket { create ioctl read getattr write setattr append connect getopt setopt shutdown name_connect };
 allow cfengine_reactor_t self:udp_socket { create ioctl read getattr write setattr append connect getopt setopt shutdown };
@@ -801,6 +778,19 @@ allow cfengine_reactor_t ssh_exec_t:file map;
 allow cfengine_reactor_t ssh_exec_t:file { execute execute_no_trans getattr open read };
 allow cfengine_reactor_t ssh_home_t:dir { getattr search };
 allow cfengine_reactor_t ssh_port_t:tcp_socket name_connect;
+
+# Allow cf-reactor to run scheduled reports and send them via email
+allow cfengine_reactor_t postfix_etc_t:dir { getattr open read search };
+allow cfengine_reactor_t postfix_etc_t:file { getattr open read };
+allow cfengine_reactor_t postfix_master_t:unix_stream_socket connectto;
+allow cfengine_reactor_t postfix_postdrop_exec_t:file map;
+allow cfengine_reactor_t postfix_postdrop_exec_t:file { execute execute_no_trans open read };
+allow cfengine_reactor_t postfix_public_t:dir search;
+allow cfengine_reactor_t postfix_public_t:sock_file { getattr write };
+allow cfengine_reactor_t postfix_spool_t:dir { add_name remove_name search write };
+allow cfengine_reactor_t postfix_spool_t:file { create getattr open read rename setattr write };
+allow cfengine_reactor_t sendmail_exec_t:file map;
+allow cfengine_reactor_t sendmail_exec_t:file { execute execute_no_trans open read };
 
 
 #============= cfengine_action_script_t ==============

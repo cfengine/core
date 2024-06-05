@@ -310,7 +310,7 @@ static bool IsMangled(const char *s)
  * whichever comes first.
  *
  * "this" scope is never mangled, no need to VariablePut() a mangled reference
- * in THIS scope, since the non-manled one already exists.
+ * in THIS scope, since the non-mangled one already exists.
  */
 static void MangleVarRefString(char *ref_str, size_t len)
 {
@@ -1041,7 +1041,7 @@ bool PromiseIteratorNext(PromiseIterator *iterctx, EvalContext *evalctx)
                  " count=%zu wheels_num=%zu current_wheel=%zd",
                  iterctx->count, wheels_num, (ssize_t) i);
 
-    /* TODO if not done, then we are re-Put()ing variables in the EvalContect,
+    /* TODO if not done, then we are re-Put()ing variables in the EvalContext,
      *      hopefully overwriting the previous values, but possibly not! */
     }
 

@@ -945,19 +945,26 @@ static void ResolveControlBody(EvalContext *ctx, GenericAgentConfig *config,
             Log(LOG_LEVEL_VERBOSE, "SET domain = %s", VDOMAIN);
 
             EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_SYS, "domain");
-            EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_SYS, "fqhost");
-
-            // We don't expect hostname or domain name longer than 255,
-            // warnings are printed in sysinfo.c.
-            // Here we support up to 511 bytes, just in case, because we can:
-            snprintf(VFQNAME, CF_MAXVARSIZE, "%511s.%511s", VUQNAME, VDOMAIN);
-            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "fqhost",
-                                          VFQNAME, CF_DATA_TYPE_STRING,
-                                          "inventory,source=agent,attribute_name=Host name");
             EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "domain",
                                           VDOMAIN, CF_DATA_TYPE_STRING,
                                           "source=agent");
             EvalContextClassPutHard(ctx, VDOMAIN, "source=agent");
+
+            int ret = snprintf(VFQNAME, CF_MAXVARSIZE, "%s.%s", VUQNAME, VDOMAIN);
+            assert(ret >= 0 && ret < CF_MAXVARSIZE);
+            if (ret < 0 || ret >= CF_MAXVARSIZE)
+            {
+                Log(LOG_LEVEL_ERR,
+                    "Failed to update variable default:sys.fqhost to include domain name: "
+                    "Maximum variable size was exceeded (%d >= %d)", ret, CF_MAXVARSIZE);
+            }
+            else
+            {
+                EvalContextVariableRemoveSpecial(ctx, SPECIAL_SCOPE_SYS, "fqhost");
+                EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "fqhost",
+                                              VFQNAME, CF_DATA_TYPE_STRING,
+                                              "inventory,source=agent,attribute_name=Host name");
+            }
         }
 
         if (strcmp(lval, CFG_CONTROLBODY[COMMON_CONTROL_IGNORE_MISSING_INPUTS].lval) == 0)

@@ -1,3 +1,27 @@
+3.21.5:
+	- Added warning log message when OS is not recognized (CFE-4342)
+	- Adjusted package module inventory to include quotes around fields when needed
+	  (CFE-4341)
+	- Added `sys.os_name_human` and `sys.os_version_major`. Additionally
+	  changed value of `sys.flavor` from `AmazonLinux` to `amazon_linux_2`, so
+	  that it is similar to other supported Linux distros. This change was
+	  necessary, due to the fact that the `sys.os_version_major` variable is
+	  derived from it. However, the `AmazonLinux` class previously derived
+	  from `sys.flavor` is still defined for backwards compatibility.
+	  (ENT-10817)
+	- CFEngine processes no longer suffer from the "Invalid argument" issues when
+	  working with LMDB (ENT-11543)
+	- Changed cf-apache systemd unit to reload configuration gracefully
+	  (ENT-11526)
+	- Changed cf-execd's sleep behavior so it attempts to wake up at the beginning of every minute
+	  (ENT-11765)
+	- Modified package promise default. If platform_default is present use that package module.
+	  (CFE-4315)
+	- Ownership of symlinks is now handled properly (ENT-11235)
+	- cf-agent has two new options --no-augments and --no-host-specific-data to skip
+	  loading augments (def.json or def_preferred.json) and host-specific data
+	  (host_specific.json), respectively (ENT-10792)
+
 3.21.4:
 	- 'cf-check diagnose' now shows DB usage and a hint if rotation is required
 	- 'cf-check repair' now rotates DB files with high usage (>95%) (CFE-3374)

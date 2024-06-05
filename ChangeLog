@@ -1,3 +1,20 @@
+3.18.8:
+	- Adjusted package module inventory to include quotes around fields when needed
+	  (CFE-4341)
+	- Added `sys.os_name_human` and `sys.os_version_major`. Additionally
+	  changed value of `sys.flavor` from `AmazonLinux` to `amazon_linux_2`, so
+	  that it is similar to other supported Linux distros. This change was
+	  necessary, due to the fact that the `sys.os_version_major` variable is
+	  derived from it. However, the `AmazonLinux` class previously derived
+	  from `sys.flavor` is still defined for backwards compatibility.
+	  (ENT-10817)
+	- CFEngine processes no longer suffer from the "Invalid argument" issues when
+	  working with LMDB (ENT-11543)
+	- Changed cf-apache systemd unit to reload configuration gracefully
+	  (ENT-11526)
+	- Modified package promise default. If platform_default is present use that
+	  package module. (CFE-4315)
+
 3.18.7:
 	- 'cf-check diagnose' now shows DB usage and a hint if rotation is required
 	- 'cf-check repair' now rotates DB files with high usage (>95%) (CFE-3374)

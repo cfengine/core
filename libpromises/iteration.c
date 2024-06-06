@@ -314,8 +314,6 @@ static bool IsMangled(const char *s)
  */
 static void MangleVarRefString(char *ref_str, size_t len)
 {
-    //    printf("MangleVarRefString: %.*s\n", (int) len, ref_str);
-
     size_t dollar_paren = FindDollarParen(ref_str, len);
     size_t upto         = MIN(len, dollar_paren);
     char *bracket       = memchr(ref_str, '[', upto);

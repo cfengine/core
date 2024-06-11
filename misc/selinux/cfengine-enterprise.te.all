@@ -454,7 +454,7 @@ allow cfengine_hub_t self:capability { dac_override chown dac_read_search };
 allow cfengine_hub_t self:process { execmem setrlimit };
 allow cfengine_hub_t self:tcp_socket { connect create getopt setopt read write };
 allow cfengine_hub_t self:udp_socket { connect create getattr ioctl setopt read write };
-allow cfengine_hub_t self:netlink_route_socket { create getopt setopt bind getattr nlmsg_read };
+allow cfengine_hub_t self:netlink_route_socket { create getopt setopt bind getattr nlmsg_read read write };
 allow cfengine_hub_t self:unix_dgram_socket { create connect read write };
 allow cfengine_hub_t semanage_exec_t:file getattr;
 allow cfengine_hub_t shadow_t:file getattr;

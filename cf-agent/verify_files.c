@@ -446,16 +446,11 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
     }
     else
     {
-        if (!S_ISDIR(osb.st_mode))
+        if (!S_ISDIR(osb.st_mode) && a.havedepthsearch)
         {
-            if (a.havedepthsearch)
-            {
-                /* TODO: PROMISE_RESULT_DENIED */
-                Log(LOG_LEVEL_DEBUG,
-                    "depth_search (recursion) is promised for a base object '%s' that is not a directory",
-                    path);
-                goto exit;
-            }
+            Log(LOG_LEVEL_WARNING,
+                "depth_search (recursion) is promised for a base object '%s' that is not a directory",
+                path);
         }
 
         exists = true;

@@ -23,6 +23,8 @@
 	  (host_specific.json), respectively (ENT-10792)
 	- Fixed bug where 'default:sys.fqhost' contained many spaces when domain is
 	  set in body common control (CFE-4053)
+	- depth_search acting on a non-directory promiser now handles such
+	  file as if the promise didn't use depth_search, issuing a warning (ENT-8996)
 
 3.21.4:
 	- 'cf-check diagnose' now shows DB usage and a hint if rotation is required

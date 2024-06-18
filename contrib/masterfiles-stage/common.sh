@@ -112,6 +112,10 @@ git_deploy_refspec() {
   mkdir -p "${temp_stage}/.git"
   cp "${local_mirrored_repo}/HEAD" "${temp_stage}/.git/"
 
+  if git_check_is_in_sync "${local_mirrored_repo}" "${temp_stage}" "$2"; then
+    return 0
+  fi
+
   ########################## 3. SET PERMISSIONS ON POLICY SET
   chown -R root:root "${temp_stage}" || error_exit "Unable to chown '${temp_stage}'"
   find "${temp_stage}" \( -type f -exec chmod 600 {} + \) -o \
@@ -225,6 +229,10 @@ git_cfbs_deploy_refspec() {
   mkdir -p "${temp_stage}/out/masterfiles/.git"
   cp "${local_mirrored_repo}/HEAD" "${temp_stage}/out/masterfiles/.git/"
 
+  if git_check_is_in_sync "${local_mirrored_repo}" "${temp_stage}/out/masterfiles" "$2"; then
+    return 0
+  fi
+
   ########################## 3. SET PERMISSIONS ON POLICY SET
   chown -R root:root "${temp_stage}" || error_exit "Unable to chown '${temp_stage}'"
   find "${temp_stage}" \( -type f -exec chmod 600 {} + \) -o \
@@ -287,9 +295,30 @@ git_cfbs_deploy_refspec() {
 ######################################################
 ##           VCS_TYPE-based main functions           #
 ######################################################
+git_check_is_in_sync() {
+  # $1 -- git repo mirror
+  # $2 -- checked out work-tree
+  # $3 -- refspec
+
+  # Get the hash of the refspec in the mirror and compare it to the checked out
+  # work-tree (see git_deploy_refspec() for details).
+  # ^0 is to make sure we get just the commit hash without any unwanted info
+  # (like we would otherwise get for a tag, for example).
+  mirror_rev="$(git --git-dir="$1" show --pretty=format:%H -s "${3}^0")"
+  work_tree_rev="$(cat "$2/.git/HEAD")"
+
+  test "$mirror_rev" = "$work_tree_rev"
+}
 
 git_stage_policy_channels() {
-# Contributed by Mike Weilgart
+  # $1 -- whether to check only [true/false; optional]
+  check="false"
+  if [ "$#" -gt 0 ]; then
+    check="$1"
+    shift
+  fi
+
+  # Contributed by Mike Weilgart
 
   # Depends on ${channel_config[@]} and $dir_to_hold_mirror
   # Calls functions dependent on $GIT_URL
@@ -321,6 +350,17 @@ git_stage_policy_channels() {
   check_git_installed
   git_setup_local_mirrored_repo "$dir_to_hold_mirror"
 
+  if [ "$check" = "true" ]; then
+    while [ "$#" -gt 1 ] ; do
+      # At start of every loop, "$1" contains deploy dir and "$2" is refspec.
+      if ! git_check_is_in_sync "$dir_to_hold_mirror" "$1" "$2"; then
+        return 0  # something to update
+      fi
+      shift 2
+    done
+    return 1  # nothing to update
+  fi
+
   while [ "$#" -gt 1 ] ; do
     # At start of every loop, "$1" contains deploy dir and "$2" is refspec.
     git_deploy_refspec "$1" "$2"
@@ -332,24 +372,41 @@ git_stage_policy_channels() {
 }
 
 git_masterstage() {
+  # $1 -- whether to check only [true/false; optional]
   # Depends on $GIT_URL, $ROOT, $MASTERDIR, $GIT_REFSPEC
   check_git_installed
   git_setup_local_mirrored_repo "$( dirname "$ROOT" )"
+  if [ "x$1" = "xtrue" ]; then
+    if git_check_is_in_sync "$( dirname "$ROOT" )" "$MASTERDIR" "$GIT_REFSPEC"; then
+      return 1  # in sync => nothing to do
+    else
+      return 0  # not in sync => update available
+    fi
+  fi
   git_deploy_refspec "$MASTERDIR" "${GIT_REFSPEC}"
   echo "Successfully deployed '${GIT_REFSPEC}' from '${GIT_URL}' to '${MASTERDIR}' on $(date)"
 }
 
 git_cfbs_masterstage() {
+    # $1 -- whether to check only [true/false; optional]
     # Depends on $GIT_URL, $ROOT, $MASTERDIR, $GIT_REFSPEC
     check_git_installed
     check_cfbs_installed
     git_setup_local_mirrored_repo "$( dirname "$ROOT" )"
+    if [ "x$1" = "xtrue" ]; then
+      if git_check_is_in_sync "$( dirname "$ROOT" )" "$MASTERDIR" "$GIT_REFSPEC"; then
+        return 1  # in sync => nothing to do
+      else
+        return 0  # not in sync => update available
+      fi
+    fi
     git_cfbs_deploy_refspec "$MASTERDIR" "${GIT_REFSPEC}"
     echo "Successfully built and deployed '${GIT_REFSPEC}' from '${GIT_URL}' to '${MASTERDIR}' on $(date) with cfbs"
 }
 
 svn_branch() {
 # Contributed by John Farrar
+    # $1 -- whether to check only [true/false; optional]
 
     # We probably want a different temporary location for each remote repository
     # so that we can avoid conflicts and potential confusion.
@@ -381,7 +438,15 @@ svn_branch() {
         if /usr/bin/diff -q "${STAGING_DIR}/${CHECKSUM_FILE}" "${MASTERDIR}/${CHECKSUM_FILE}" ; then
             # echo "No release needs to be made, the checksum files are the same"
             touch "${STAGING_DIR}"
+            if [ "x$1" = "xtrue" ]; then
+              # check-only, update not needed => exit code 1
+              return 1
+            fi
         else
+            if [ "x$1" = "xtrue" ]; then
+              # check-only, update needed => exit code 0
+              return 0
+            fi
             cd "${STAGING_DIR}" && (
                 chown -R root:root "${STAGING_DIR}" && \
                 rsync -CrltDE -c --delete-after --chmod=u+rwX,go-rwx "${STAGING_DIR}/" "${MASTERDIR}/" && \

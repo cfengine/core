@@ -194,7 +194,16 @@ git_cfbs_deploy_refspec() {
   #    (See long comment at end of function def.)
 
   # The chipmunk in cfbs output breaks things without this or similar
-  export LC_ALL=en_US.utf-8
+  # The chipmunk in cfbs output breaks things without this or similar
+  if [ -f "/etc/locale.conf" ]; then
+    source "/etc/locale.conf"
+    export LC_ALL="$LANG" # retrieved from locale.conf
+  else
+    _LOCALE=$(locale -a | grep -i utf | head -1)
+    if [ -n "$_LOCALE" ]; then
+      export LC_ALL="$_LOCALE"
+    fi
+  fi
 
   # Ensure absolute pathname is given
   [ "${1:0:1}" = / ] ||

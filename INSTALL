@@ -124,9 +124,9 @@ sudo yum install -y gcc gdb make git libtool autoconf automake byacc flex openss
 
 For SELinux support you will need selinux-policy-devel package and specify `--with-selinux-policy` to `autogen.sh` or `configure`
 
-* Debian (Debian 12 2023-10-09)
+* Debian (Debian 12 2024-06-21)
 
-sudo apt-get install -y build-essential git libtool autoconf automake bison flex libssl-dev libpcre2-dev libbison-dev libacl1 libacl1-dev lmdb-utils liblmdb-dev libpam0g-dev libtool libyaml-dev libxml2-dev
+sudo apt-get install -y build-essential git libtool autoconf automake bison flex libssl-dev libpcre3-dev libpcre3 libbison-dev libacl1 libacl1-dev lmdb-utils liblmdb-dev libpam0g-dev libtool libyaml-dev libxml2-dev
 
 * NetBSD (9.3 2024-03-01)
 

@@ -1158,10 +1158,14 @@ Packages GetPackageConstraints(const EvalContext *ctx, const Promise *pp)
         if (bodies_and_args != NULL &&
             SeqLength(bodies_and_args) > 0)
         {
-            Log(LOG_LEVEL_INFO, "Package promise had no package_method attribute so it's being assigned a value of 'generic' as default.");
+            Log(LOG_LEVEL_VERBOSE, "Package promise had no package_method attribute so it's being assigned a value of 'generic' as default.");
             const Body *bp = SeqAt(bodies_and_args, 0); // guaranteed to be non-NULL
             CopyBodyConstraintsToPromise((EvalContext*)ctx, (Promise*)pp, bp);
             has_generic_package_method = true;
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "Package promise had no package_method attibute and policy had no 'generic' package_method body so will use v2 package modules.");
         }
         SeqDestroy(bodies_and_args);
     }
@@ -1257,16 +1261,21 @@ NewPackages GetNewPackageConstraints(const EvalContext *ctx, const Promise *pp)
     bool have_package_policy = PromiseBundleOrBodyConstraintExists(ctx, "package_policy", pp);
     if (!have_policy && !have_package_policy)
     {
-        Log(LOG_LEVEL_DEBUG, "Package promise has no policy or package_policy attribute. Checking if package_module_knowledge.platform_default is defined to default the policy attribute to 'present' and force use of v2 package promise (package_module).");
+        Log(LOG_LEVEL_DEBUG, "Package promise has no policy or package_policy attribute. Checking if default:control_common.package_module is defined to default the policy attribute to 'present' and force use of v2 package promise (package_module).");
 
-        VarRef *ref = VarRefParseFromScope("package_module_knowledge.platform_default", NULL);
-        const void *ret = EvalContextVariableGet(ctx, ref, NULL);
-        if (ret != NULL)
+        const void *ret = EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_PACKAGE_MODULE);
+        PackageModuleBody *package_module = GetPackageModuleFromContext(ctx, ret);
+
+        if (package_module != NULL)
         {
-            Log(LOG_LEVEL_INFO, "Package promise had no policy or package_policy attribute and package_module_knowledge.platform_default is defined so defaulting to v2 package promise (package_module) and setting 'policy' attribute to 'present'.");
+            Log(LOG_LEVEL_DEBUG, "Package promise had no policy or package_policy attribute and default:control_common.package_module is defined so defaulting to v2 package promise (package_module) and setting 'policy' attribute to 'present' and 'package_module' to %s.", package_module->name);
             PromiseAppendConstraint((Promise*)pp, "policy", (Rval) {xstrdup("present"), RVAL_TYPE_SCALAR }, false);
+            PromiseAppendConstraint((Promise*)pp, "package_module_name", (Rval) {xstrdup(package_module->name), RVAL_TYPE_SCALAR }, false);
         }
-        VarRefDestroy(ref);
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "Package promise had no policy or package_policy attribute and default:control_common.package_module is undefined so will use v1 package promise (package_method).");
+        }
     }
     p.package_policy = GetNewPackagePolicy(PromiseGetConstraintAsRval(pp, "policy", RVAL_TYPE_SCALAR),
                                            new_packages_actions);

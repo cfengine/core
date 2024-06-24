@@ -1084,6 +1084,7 @@ static inline void ParserCheckPromiseLine()
     // The following promise types does not require any actions
     static const char *const exceptions[] = {
         "classes", "commands", "methods", "reports", "insert_lines",
+        "packages",
         "delete_lines", "build_xpath", "insert_tree" };
     static const size_t num_exceptions = sizeof(exceptions) / sizeof(exceptions[0]);
 

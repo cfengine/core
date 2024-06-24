@@ -208,7 +208,7 @@ PromiseResult VerifyPackagesPromise(EvalContext *ctx, const Promise *pp)
             break;
         case PACKAGE_PROMISE_TYPE_NEW_ERROR:
             cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a,
-                         "v1 package promise (package_method) failed sanity check.");
+                         "v2 package promise (package_method) failed sanity check.");
             break;
         case PACKAGE_PROMISE_TYPE_OLD_ERROR:
             cfPS_HELPER_0ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a,

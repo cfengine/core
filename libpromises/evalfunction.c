@@ -1960,6 +1960,7 @@ static FnCallResult FnCallPackagesMatching(ARG_UNUSED EvalContext *ctx, ARG_UNUS
     bool inventory_allocated = false;
     if (default_inventory == NULL)
     {
+Log(LOG_LEVEL_INFO, "CRAIG: default_inventory was NULL, look for LMDB databases in state directory...");
         // Did not find default inventory from context, try looking for
         // existing LMDB databases in the state directory
         dbid database = (installed_mode ? dbid_packages_installed
@@ -1977,11 +1978,13 @@ static FnCallResult FnCallPackagesMatching(ARG_UNUSED EvalContext *ctx, ARG_UNUS
 
     if (!default_inventory)
     {
+Log(LOG_LEVEL_INFO, "CRAIG: no default_inventory still after looking for LMDBs, legacy package promise...");
         // Legacy package promise
         ret = GetLegacyPackagesMatching(matcher, json, installed_mode);
     }
     else
     {
+Log(LOG_LEVEL_INFO, "CRAIG: found default_inventory somehow, code says: We are using package modules.");
         // We are using package modules.
         bool some_valid_inventory = false;
         for (const Rlist *rp = default_inventory; !some_valid_inventory && (rp != NULL); rp = rp->next)
@@ -2024,6 +2027,7 @@ static FnCallResult FnCallPackagesMatching(ARG_UNUSED EvalContext *ctx, ARG_UNUS
         return FnFailure();
     }
 
+Log(LOG_LEVEL_INFO, "CRAIG: calling return FnReturnContainerNoCopy(json), should be OK");
     return FnReturnContainerNoCopy(json);
 }
 

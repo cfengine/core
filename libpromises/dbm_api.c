@@ -190,6 +190,7 @@ Seq *SearchExistingSubDBNames(const dbid id)
     {
         char *const db_name = SafeStringNDuplicate(db_path + from,
                                                    strlen(db_path) - chop);
+Log(LOG_LEVEL_INFO, "CRAIG: db_path '%s' becomes db_name '%s'", db_path, db_name);
         SeqAppend(db_names, db_name);
     }
 

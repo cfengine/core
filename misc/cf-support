@@ -381,6 +381,7 @@ fi
 echo "Captured output of $syslog_cmd filtered for cf-|CFEngine"
 
 gzip_add $WORKDIR/outputs/previous
+gzip_add $WORKDIR/outputs/dc-scripts.log # masterfiles-stage log
 file_add $WORKDIR/policy_server.dat
 
 if [ -f $WORKDIR/share/cf-support-nova-hub.sh ]; then

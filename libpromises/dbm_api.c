@@ -170,7 +170,15 @@ char *DBIdToSubPath(dbid id, const char *subdb_name)
 
 Seq *SearchExistingSubDBNames(const dbid id)
 {
+    // On Windows, GetStateDir() used in DBIdToSubPath() has backslashes
+    // GlobFileList() won't work with backslashes in 3.21.x so workaround this issue
+#ifdef _WIN32
+    char *const broken_pattern = DBIdToSubPath(id, "*");
+    char *const glob_pattern = SearchAndReplace(broken_pattern, "\\", "/");
+    free(broken_pattern);
+#else
     char *const glob_pattern = DBIdToSubPath(id, "*");
+#endif
     StringSet *const db_paths = GlobFileList(glob_pattern);
     free(glob_pattern);
 

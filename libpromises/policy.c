@@ -43,6 +43,8 @@
 #include <audit.h>
 #include <logging.h>
 #include <expand.h>
+#include <file_lib.h>                   /* FileLock */
+#include <known_dirs.h>                 /* GetStateDir() */
 
 static const char *const POLICY_ERROR_BUNDLE_NAME_RESERVED =
     "Use of a reserved container name as a bundle name \"%s\"";
@@ -96,6 +98,29 @@ Rval DefaultBundleConstraint(const Promise *pp, char *promisetype)
 const char *NamespaceDefault(void)
 {
     return "default";
+}
+
+/*************************************************************************/
+
+#define MASTERFILES_STAGE_LOCK_FNAME "masterfiles-stage.lock"
+
+bool GetMasterfilesStageLock(FileLock *lock, bool exclusive, bool wait)
+{
+    assert(lock != NULL);
+    char path[PATH_MAX];
+    NDEBUG_UNUSED size_t ret = StringCopy(GetStateDir(), path, sizeof(path));
+    assert(ret < sizeof(path));
+    NDEBUG_UNUSED char *path_ret = JoinPaths(path, sizeof(path), MASTERFILES_STAGE_LOCK_FNAME);
+    assert(path_ret != NULL);
+
+    if (exclusive)
+    {
+        return (ExclusiveFileLockPath(lock, path, wait) == 0);
+    }
+    else
+    {
+        return (SharedFileLockPath(lock, path, wait) == 0);
+    }
 }
 
 /*************************************************************************/

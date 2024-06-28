@@ -1,0 +1,68 @@
+##############################################################################
+#
+# Test double expansion of list from remote bundle (ENT-9491)
+#
+##############################################################################
+
+body common control
+{
+  bundlesequence => { "check" };
+}
+
+bundle agent test(parent_bundle)
+{
+  meta:
+    "description" -> { "ENT-9491", "CFE-1644" }
+      string => "Test double expension of list from remote bundle";
+
+  reports:
+    "$($(parent_bundle).str)"
+      comment => "Double expansion of remote string works prior to fix",
+      bundle_return_value_index => "foo";
+
+    "$($(parent_bundle).lst)"
+      comment => "But double expansion of remote list does not work prior to fix",
+      bundle_return_value_index => "bar";
+
+    "$(check.lst)"
+      comment => "Single expansion of remote list works prior to fix",
+      bundle_return_value_index => "baz";
+
+    "$($(parent_bundle)#lst)"
+      comment => "We force mangle the variable, it works, but should this be possible?",
+      bundle_return_value_index => "qux";
+
+}
+
+bundle agent check
+{
+  vars:
+    "str"
+      string => "EXPANDED";
+    "lst"
+      slist => { "EXPANDED" };
+
+  methods:
+    "holder"
+      usebundle => test("$(this.bundle)"),
+      useresult => "ret";
+
+  reports:
+      "$(this.promise_filename) Pass"
+        if => and(strcmp("$(ret[foo])", "EXPANDED"),
+                  strcmp("$(ret[bar])", "EXPANDED"),
+                  strcmp("$(ret[baz])", "EXPANDED"),
+                  strcmp("$(ret[qux])", "EXPANDED"));
+
+      "$(this.promise_filename) FAIL"
+        unless => and(strcmp("$(ret[foo])", "EXPANDED"),
+                      strcmp("$(ret[bar])", "EXPANDED"),
+                      strcmp("$(ret[qux])", "EXPANDED"),
+                      strcmp("$(ret[baz])", "EXPANDED"));
+
+    DEBUG::
+      "$(const.dollar)($(const.dollar)(parent_bundle).str) => $(ret[foo])";
+      "$(const.dollar)($(const.dollar)(parent_bundle).lst) => $(ret[bar])";
+      "$(const.dollar)(check.lst)            => $(ret[baz])";
+      "$(const.dollar)($(const.dollar)(parent_bundle)#lst) => $(ret[qux])";
+}

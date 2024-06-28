@@ -310,12 +310,10 @@ static bool IsMangled(const char *s)
  * whichever comes first.
  *
  * "this" scope is never mangled, no need to VariablePut() a mangled reference
- * in THIS scope, since the non-manled one already exists.
+ * in THIS scope, since the non-mangled one already exists.
  */
 static void MangleVarRefString(char *ref_str, size_t len)
 {
-    //    printf("MangleVarRefString: %.*s\n", (int) len, ref_str);
-
     size_t dollar_paren = FindDollarParen(ref_str, len);
     size_t upto         = MIN(len, dollar_paren);
     char *bracket       = memchr(ref_str, '[', upto);
@@ -799,6 +797,11 @@ static void ExpandAndPutWheelVariablesAfter(
     EvalContext *evalctx,
     size_t wheel_idx)
 {
+    assert(iterctx != NULL);
+    assert(iterctx->wheels != NULL);
+    assert(iterctx->pp != NULL);
+    assert(iterctx->pp->promiser != NULL);
+
     /* Buffer to store the expanded wheel variable name, for each wheel. */
     Buffer *tmpbuf = BufferNew();
 
@@ -858,6 +861,56 @@ static void ExpandAndPutWheelVariablesAfter(
                     assert(          wheel->values     != NULL);
                     assert(SeqLength(wheel->values)     > 0);
                     assert(    SeqAt(wheel->values, 0) != NULL);
+
+                    /* During initialization of the iteration engine, lists from
+                     * foreign bundles are mangled in order to avoid overwriting
+                     * the values in that bundle. However, the iteration engine
+                     * has no way of knowing that some variables like
+                     * $($(parent_bundle).lst) is a list during initialization.
+                     * Hence, while crunching the wheels, this hack makes sure
+                     * foreign variables are mangled when ever they expand into
+                     * a list.
+                     *
+                     * How does it work? It looks for a '.' in both
+                     * #iterctx->pp->promiser and #varname, where the left side
+                     * of #varname is a bundle name and the right side of
+                     * #iterctx->pp->promiser begins with the right side of
+                     * #varname. If all of the constraints are fulfilled it
+                     * swaps the '.' with '#' in both variables.
+                     *
+                     * See ticket ENT-9491 for more info.
+                     */
+                    if (!IsMangled(varname))
+                    {
+                        const StringSet *scopes = EvalContextGetBundleNames(evalctx);
+
+                        bool done = false;
+                        char *unexp_pos = iterctx->pp->promiser;
+                        while (!done && (unexp_pos = strchr(unexp_pos, '.')) != NULL)
+                        {
+                            char *exp_pos = (char *)varname;
+                            while (!done && (exp_pos = strchr(exp_pos, '.')) != NULL)
+                            {
+                                if (StringStartsWith(unexp_pos + 1, exp_pos + 1))
+                                {
+                                    char tmp = *exp_pos;
+                                    *exp_pos = '\0';
+                                    if (StringSetContains(scopes, varname))
+                                    {
+                                        *exp_pos = CF_MANGLED_SCOPE;
+                                        *unexp_pos = CF_MANGLED_SCOPE;
+                                        done = true;
+                                    }
+                                    else
+                                    {
+                                        *exp_pos = tmp;
+                                    }
+                                }
+                                exp_pos += 1;
+                            }
+                            unexp_pos += 1;
+                        }
+                    }
 
                     /* Put the first value of the iterable. */
                     IterListElementVariablePut(evalctx, varname, value_type,
@@ -1041,7 +1094,7 @@ bool PromiseIteratorNext(PromiseIterator *iterctx, EvalContext *evalctx)
                  " count=%zu wheels_num=%zu current_wheel=%zd",
                  iterctx->count, wheels_num, (ssize_t) i);
 
-    /* TODO if not done, then we are re-Put()ing variables in the EvalContect,
+    /* TODO if not done, then we are re-Put()ing variables in the EvalContext,
      *      hopefully overwriting the previous values, but possibly not! */
     }
 

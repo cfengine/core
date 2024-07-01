@@ -29,10 +29,6 @@ bundle agent test
       "description" -> { "CFE-3806" }
         string => "Test that trailing newline on insert_tree promisers do not remove ending tag for select_xpath";
 
-      "test_soft_fail"
-        string => "any",
-        meta => { "CFE-3860" };
-
   files:
 
       "$(G.testfile)-1.xml"

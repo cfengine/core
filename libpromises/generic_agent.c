@@ -2519,6 +2519,9 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type, bool tty_
     /* By default we run promises.cf as the last step of boostrapping */
     config->agent_specific.agent.bootstrap_trigger_policy = true;
 
+    /* By default we start services during bootstrap */
+    config->agent_specific.agent.skip_bootstrap_service_start = false;
+
     /* Log classes */
     config->agent_specific.agent.report_class_log = false;
 

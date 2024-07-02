@@ -221,7 +221,7 @@ bundle agent failsafe_cfe_internal_update
 
   commands:
 
-    cf_execd_not_running.!(windows|systemd)::
+    cf_execd_not_running.!(windows|systemd|bootstrap_skip_services)::
 
       # Windows and systemd do not launch cf-execd directly and are
       # handeled separately.
@@ -230,7 +230,7 @@ bundle agent failsafe_cfe_internal_update
         handle => "failsafe_cfe_internal_bootstrap_update_commands_check_sys_cf_execd_start",
         classes => failsafe_results("namespace", "cf_execd_running");
 
-    cf_serverd_not_running.!(windows|systemd)::
+    cf_serverd_not_running.!(windows|systemd|bootstrap_skip_services)::
 
       # cf-serverd is not launched directly on Windows and systemd and is
       # handled separately.
@@ -245,7 +245,7 @@ bundle agent failsafe_cfe_internal_update
                     the component is necessay it is expected to be
                     started by a separate policy.";
 
-    cf_execd_not_running.systemd::
+    cf_execd_not_running.systemd.!bootstrap_skip_services::
 
       # We explicitly use "restart", because it is possible that cf-serverd
       # is running, even if cf-execd isn't, for example. Here we want to be
@@ -261,7 +261,7 @@ bundle agent failsafe_cfe_internal_update
       # TODO: Is this restriction to only promise the service running
       # when inputs are repaired appropriate? Perhaps it should always
       # be checked.
-    windows.inputdir_update_repaired::
+    windows.inputdir_update_repaired.!bootstrap_skip_services::
 
       "CfengineNovaExec"
         handle => "failsafe_cfe_internal_bootstrap_update_services_windows_executor",

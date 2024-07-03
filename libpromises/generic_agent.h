@@ -91,6 +91,7 @@ typedef struct
             char *bootstrap_ip;
             bool bootstrap_trust_server;
             bool bootstrap_trigger_policy;
+            bool skip_bootstrap_service_start;
             char *show_evaluated_classes;
             char *show_evaluated_variables;
 

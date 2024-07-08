@@ -58,6 +58,14 @@ function check_masterfiles_and_inputs {
 set -e
 set -x
 
+# In case things go wrong and this hangs, let's make sure things get properly
+# cleaned up from here rather than relying on the outer environment doing the
+# cleanup. In case this runs in a container, it could be a big
+# difference. Especially in a case of an SPC.
+{ sleep 30m && kill -9 $$; } &
+auto_destruct_pid=$!
+trap "kill $auto_destruct_pid" EXIT
+
 # Assume we are in core directory
 if [ -f ./configure ] ; then
   ./configure -C --enable-debug

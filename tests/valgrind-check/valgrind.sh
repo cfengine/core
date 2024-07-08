@@ -58,13 +58,21 @@ function check_masterfiles_and_inputs {
 set -e
 set -x
 
+# In case things go wrong and this hangs, let's make sure things get properly
+# cleaned up from here rather than relying on the outer environment doing the
+# cleanup. In case this runs in a container, it could be a big
+# difference. Especially in a case of an SPC.
+{ sleep 30m && kill -9 $$; } &
+auto_destruct_pid=$!
+trap "kill $auto_destruct_pid" EXIT
+
 # Assume we are in core directory
 if [ -f ./configure ] ; then
   ./configure -C --enable-debug
 else
   ./autogen.sh -C --enable-debug
 fi
-make
+make -j -l $(getconf _NPROCESSORS_ONLN)
 make install
 
 cd ../masterfiles
@@ -102,14 +110,24 @@ print_ps
 echo "Starting cf-serverd with valgrind in background:"
 valgrind $VG_OPTS --log-file=serverd.txt /var/cfengine/bin/cf-serverd --no-fork 2>&1 > serverd_output.txt &
 server_pid="$!"
-sleep 20
 
 echo "Starting cf-execd with valgrind in background:"
 valgrind $VG_OPTS --log-file=execd.txt /var/cfengine/bin/cf-execd --no-fork 2>&1 > execd_output.txt &
 exec_pid="$!"
-sleep 10
 
 print_ps
+
+# cf-serverd running under valgrind can be really slow to start, let's give it
+# some time before we move on and potentially hit the wall if it's actually
+# malfunctioning
+tries=12 # max 2 minutes
+while /var/cfengine/bin/cf-net -H $BOOTSTRAP_IP connect | grep Failed; do
+  tries=$((tries - 1))
+  if [ $tries -le 0 ]; then
+    break;
+  fi
+  sleep 10
+done
 
 echo "Running cf-net:"
 valgrind $VG_OPTS /var/cfengine/bin/cf-net GET /var/cfengine/masterfiles/promises.cf 2>&1 | tee get.txt

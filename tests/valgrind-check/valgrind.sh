@@ -102,14 +102,24 @@ print_ps
 echo "Starting cf-serverd with valgrind in background:"
 valgrind $VG_OPTS --log-file=serverd.txt /var/cfengine/bin/cf-serverd --no-fork 2>&1 > serverd_output.txt &
 server_pid="$!"
-sleep 20
 
 echo "Starting cf-execd with valgrind in background:"
 valgrind $VG_OPTS --log-file=execd.txt /var/cfengine/bin/cf-execd --no-fork 2>&1 > execd_output.txt &
 exec_pid="$!"
-sleep 10
 
 print_ps
+
+# cf-serverd running under valgrind can be really slow to start, let's give it
+# some time before we move on and potentially hit the wall if it's actually
+# malfunctioning
+tries=12 # max 2 minutes
+while /var/cfengine/bin/cf-net -H $BOOTSTRAP_IP connect | grep Failed; do
+  tries=$((tries - 1))
+  if [ $tries -le 0 ]; then
+    break;
+  fi
+  sleep 10
+done
 
 echo "Running cf-net:"
 valgrind $VG_OPTS /var/cfengine/bin/cf-net GET /var/cfengine/masterfiles/promises.cf 2>&1 | tee get.txt

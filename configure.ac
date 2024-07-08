@@ -152,6 +152,7 @@ fi
 
 dnl ######################################################################
 dnl Use pthreads if available
+AC_CHECK_FUNCS([pthread_cancel])
 dnl ######################################################################
 
 AC_ARG_WITH([pthreads],

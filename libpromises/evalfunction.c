@@ -8668,7 +8668,11 @@ static FnCallResult FnCallIsReadable(ARG_UNUSED EvalContext *const ctx,
                 "Read operation timed out, exceeded %ld seconds.", path,
                 timeout);
 
+#ifdef HAVE_PTHREAD_CANCEL
             ret = pthread_cancel(thread_data.thread);
+#else
+            ret = pthread_kill(thread_data.thread, 0);
+#endif
             if (ret != 0)
             {
                 Log(LOG_LEVEL_ERR, "Failed to cancel thread");
@@ -8700,10 +8704,12 @@ static FnCallResult FnCallIsReadable(ARG_UNUSED EvalContext *const ctx,
         return FnFailure();
     }
 
+#ifdef HAVE_PTHREAD_CANCEL
     if (status == PTHREAD_CANCELED)
     {
         Log(LOG_LEVEL_DEBUG, "Thread was canceled");
     }
+#endif
 
     return result;
 }

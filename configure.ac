@@ -182,6 +182,14 @@ CFLAGS="$PTHREAD_CFLAGS $CFLAGS"
 LIBS="$PTHREAD_LIBS $LIBS"
 
 dnl ######################################################################
+dnl libpromises/evalfunction.c isreadable() uses pthread_cancel so check
+dnl if available and reverts to pthread_kill if not.
+dnl This check must come after ACX_PTHREAD is called so that CC, CFLAGS,
+dnl and LIBS are appropriately set for the local pthreads situation.
+dnl ######################################################################
+AC_CHECK_FUNCS([pthread_cancel])
+
+dnl ######################################################################
 dnl Whether to build extensions as builtin extensions or a separate
 dnl plugin. The default is plugin.
 dnl --enable-builtin-extensions is the default on Windows, and can be

@@ -849,6 +849,10 @@ allow cfengine_cfbs_t cfengine_reactor_t:fifo_file { getattr ioctl read write };
 
 allow cfengine_cfbs_t bin_t:file { map execute };
 
+# cfbs runs some commands in a shell
+allow cfengine_cfbs_t shell_exec_t:file map;
+allow cfengine_cfbs_t shell_exec_t:file { execute execute_no_trans };
+
 allow cfengine_cfbs_t cert_t:dir search;
 allow cfengine_cfbs_t cert_t:file { getattr open read };
 allow cfengine_cfbs_t cert_t:lnk_file read;

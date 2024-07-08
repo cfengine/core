@@ -64,7 +64,7 @@ if [ -f ./configure ] ; then
 else
   ./autogen.sh -C --enable-debug
 fi
-make
+make -j -l $(getconf _NPROCESSORS_ONLN)
 make install
 
 cd ../masterfiles

@@ -231,7 +231,7 @@ git_cfbs_deploy_refspec() {
   _start_wrkdir=$(pwd)
   # Switch to the staging directory and build with cfbs
   cd "${temp_stage}"
-  cfbs build || error_exit "cfbs build failed"
+  CFBS_GLOBAL_DIR="/opt/cfengine/build/cfbs_global" cfbs build || error_exit "cfbs build failed"
   # Switch back to the original working dir
   cd "${_start_wrkdir}"
   # Grab HEAD so it can be used to populate cf_promises_release_id

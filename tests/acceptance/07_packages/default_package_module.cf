@@ -1,0 +1,48 @@
+# Based on 07_package/package_module_path.cf
+
+body common control
+{
+    inputs => { "../default.cf.sub" };
+    bundlesequence => { default("$(this.promise_filename)") };
+    package_module => test_module; # important! part of this specific test
+}
+
+bundle agent init
+{
+  files:
+      "$(sys.workdir)/modules/packages/."
+        create => "true";
+      "$(sys.workdir)/modules/packages/test_module_script.sh"
+        copy_from => local_cp("$(this.promise_filename).module"),
+        perms => m("ugo+x");
+}
+
+body package_module test_module
+{
+    query_installed_ifelapsed => "60";
+    query_updates_ifelapsed => "14400";
+    default_options => { "$(G.testfile)" };
+    module_path => "$(sys.workdir)/modules/packages/test_module_script.sh";
+}
+
+bundle agent test
+{
+  meta:
+      "description"
+        string => "Test that a package with no attributes uses a configured common control package_module",
+        meta => { "CFE-4408" };
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10217" };
+
+  packages:
+      "first_pkg";
+      "second_pkg";
+}
+
+bundle agent check
+{
+  methods:
+      "any" usebundle => dcs_check_diff($(G.testfile),
+                                        "$(this.promise_filename).expected",
+                                        $(this.promise_filename));
+}

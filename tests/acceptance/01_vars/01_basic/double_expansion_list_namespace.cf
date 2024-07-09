@@ -1,0 +1,65 @@
+##############################################################################
+#
+# Test double expansion of list from remote bundle with namespace (ENT-11923)
+#
+##############################################################################
+
+body common control
+{
+  bundlesequence => { "bogus:check" };
+}
+
+bundle agent test(parent_namespace, parent_bundle)
+{
+  meta:
+    "description" -> { "ENT-11923" }
+      string => "Test double expension of list from remote bundle with namespace";
+
+  reports:
+    "$($(parent_namespace):$(parent_bundle).str)"
+      comment => "Double expansion of remote string works prior to fix",
+      bundle_return_value_index => "foo";
+
+    "$($(parent_namespace):$(parent_bundle).lst)"
+      comment => "But double expansion of remote list does not work prior to fix",
+      bundle_return_value_index => "bar";
+
+    "$(bogus:check.lst)"
+      comment => "Single expansion of remote list works prior to fix",
+      bundle_return_value_index => "baz";
+}
+
+body file control
+{
+  namespace => "bogus";
+}
+
+bundle agent check
+{
+  vars:
+    "str"
+      string => "EXPANDED";
+    "lst"
+      slist => { "EXPANDED" };
+
+  methods:
+    "holder"
+      usebundle => default:test("$(this.namespace)", "$(this.bundle)"),
+      useresult => "ret";
+
+  reports:
+      "$(this.promise_filename) Pass"
+        if => and(strcmp("$(ret[foo])", "EXPANDED"),
+                  strcmp("$(ret[bar])", "EXPANDED"),
+                  strcmp("$(ret[baz])", "EXPANDED"));
+
+      "$(this.promise_filename) FAIL"
+        unless => and(strcmp("$(ret[foo])", "EXPANDED"),
+                      strcmp("$(ret[bar])", "EXPANDED"),
+                      strcmp("$(ret[baz])", "EXPANDED"));
+
+    default:DEBUG::
+      "$(const.dollar)($(const.dollar)(parent_namespace):$(const.dollar)(parent_bundle).str) => $(ret[foo])";
+      "$(const.dollar)($(const.dollar)(parent_namespace):$(const.dollar)(parent_bundle).lst) => $(ret[bar])";
+      "$(const.dollar)(default:check.lst)                        => $(ret[baz])";
+}

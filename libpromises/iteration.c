@@ -784,6 +784,108 @@ static Seq *IterableToSeq(const void *v, DataType t)
     }
 }
 
+/* During initialization of the iteration engine, lists from foreign bundles are
+ * mangled in order to avoid overwriting the values in that bundle. However, the
+ * iteration engine has no way of knowing that some variables like
+ * $($(parent_bundle).lst) is a list during initialization. Hence, while
+ * crunching the wheels, this hack makes sure foreign variables are mangled when
+ * ever they expand into a list.
+ *
+ * How does it work? It looks for a '.' in both #iterctx->pp->promiser and
+ * #varname, where the left side of #varname is a bundle name and the right side
+ * of #iterctx->pp->promiser begins with the right side of #varname. If all of
+ * the constraints are fulfilled it swaps the '.' with '#' in both variables.
+ * Furthermore, if the variable also contains a scope, it will mangle ':' with
+ * '*'.
+ *
+ * See ticket ENT-9491 & ENT-11923 for more info.
+ */
+static void WheelMangleAfterExpandingToList(const PromiseIterator *iterctx,
+                                            EvalContext *evalctx, char *varname)
+{
+    assert(iterctx != NULL);
+    assert(iterctx->pp != NULL);
+    assert(iterctx->pp->promiser != NULL);
+
+    const StringSet *scopes = EvalContextGetBundleNames(evalctx);
+
+    // In case there is a namespace
+    char *unexp_namespace_token = iterctx->pp->promiser;
+    while ((unexp_namespace_token = strchr(unexp_namespace_token, CF_NS)) != NULL)
+    {
+        char *exp_namespace_token = varname;
+        while ((exp_namespace_token = strchr(exp_namespace_token, CF_NS)) != NULL)
+        {
+            char *unexp_scope_token = iterctx->pp->promiser;
+            while ((unexp_scope_token = strchr(unexp_scope_token, '.')) != NULL)
+            {
+                char *exp_scope_token = varname;
+                while ((exp_scope_token = strchr(exp_scope_token, '.')) != NULL)
+                {
+                    if (exp_scope_token < exp_namespace_token)
+                    {
+                        // A scope token cannot come before a namespace token
+                        continue;
+                    }
+
+                    *exp_scope_token = '\0';
+                    const char *exp_scope = exp_namespace_token + 1;
+                    const char *unexp_name = unexp_scope_token + 1;
+                    const char *exp_name = exp_scope_token + 1;
+
+                    if (StringStartsWith(unexp_name, exp_name) &&
+                        StringSetContains(scopes, exp_scope))
+                    {
+                        *unexp_namespace_token = CF_MANGLED_NS;
+                        *exp_namespace_token = CF_MANGLED_NS;
+                        *unexp_scope_token = CF_MANGLED_SCOPE;
+                        *exp_scope_token = CF_MANGLED_SCOPE;
+
+                        // We are done!
+                        return;
+                    }
+
+                    // Put things back the way they were
+                    *exp_scope_token = '.';
+                    exp_scope_token += 1;
+                }
+                unexp_scope_token += 1;
+            }
+            exp_namespace_token += 1;
+        }
+        unexp_namespace_token += 1;
+    }
+
+    // In case there is no namespace
+    char *unexp_scope_token = iterctx->pp->promiser;
+    while ((unexp_scope_token = strchr(unexp_scope_token, '.')) != NULL)
+    {
+        char *exp_scope_token = varname;
+        while ((exp_scope_token = strchr(exp_scope_token, '.')) != NULL)
+        {
+            *exp_scope_token = '\0';
+            const char *exp_scope = varname;
+            const char *unexp_name = unexp_scope_token + 1 ;
+            const char *exp_name = exp_scope_token + 1;
+
+            if (StringStartsWith(unexp_name, exp_name) &&
+                StringSetContains(scopes, exp_scope))
+            {
+                *unexp_scope_token = CF_MANGLED_SCOPE;
+                *exp_scope_token = CF_MANGLED_SCOPE;
+
+                // We are done!
+                return;
+            }
+
+            // Put things back the way they were
+            *exp_scope_token = '.';
+            exp_scope_token += 1;
+        }
+        unexp_scope_token += 1;
+    }
+}
+
 /**
  * For each of the wheels to the right of wheel_idx (including this one)
  *
@@ -864,54 +966,10 @@ static void ExpandAndPutWheelVariablesAfter(
                     assert(SeqLength(wheel->values)     > 0);
                     assert(    SeqAt(wheel->values, 0) != NULL);
 
-                    /* During initialization of the iteration engine, lists from
-                     * foreign bundles are mangled in order to avoid overwriting
-                     * the values in that bundle. However, the iteration engine
-                     * has no way of knowing that some variables like
-                     * $($(parent_bundle).lst) is a list during initialization.
-                     * Hence, while crunching the wheels, this hack makes sure
-                     * foreign variables are mangled when ever they expand into
-                     * a list.
-                     *
-                     * How does it work? It looks for a '.' in both
-                     * #iterctx->pp->promiser and #varname, where the left side
-                     * of #varname is a bundle name and the right side of
-                     * #iterctx->pp->promiser begins with the right side of
-                     * #varname. If all of the constraints are fulfilled it
-                     * swaps the '.' with '#' in both variables.
-                     *
-                     * See ticket ENT-9491 for more info.
-                     */
                     if (!IsMangled(varname))
                     {
-                        const StringSet *scopes = EvalContextGetBundleNames(evalctx);
-
-                        bool done = false;
-                        char *unexp_pos = iterctx->pp->promiser;
-                        while (!done && (unexp_pos = strchr(unexp_pos, '.')) != NULL)
-                        {
-                            char *exp_pos = (char *)varname;
-                            while (!done && (exp_pos = strchr(exp_pos, '.')) != NULL)
-                            {
-                                if (StringStartsWith(unexp_pos + 1, exp_pos + 1))
-                                {
-                                    char tmp = *exp_pos;
-                                    *exp_pos = '\0';
-                                    if (StringSetContains(scopes, varname))
-                                    {
-                                        *exp_pos = CF_MANGLED_SCOPE;
-                                        *unexp_pos = CF_MANGLED_SCOPE;
-                                        done = true;
-                                    }
-                                    else
-                                    {
-                                        *exp_pos = tmp;
-                                    }
-                                }
-                                exp_pos += 1;
-                            }
-                            unexp_pos += 1;
-                        }
+                        WheelMangleAfterExpandingToList(iterctx, evalctx,
+                                                        (char *) varname);
                     }
 
                     /* Put the first value of the iterable. */

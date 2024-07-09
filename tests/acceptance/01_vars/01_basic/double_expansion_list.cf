@@ -13,7 +13,7 @@ bundle agent test(parent_bundle)
 {
   meta:
     "description" -> { "ENT-9491", "CFE-1644" }
-      string => "Test double expension of list from remote bundle";
+      string => "Test double expansion of list from remote bundle";
 
   reports:
     "$($(parent_bundle).str)"

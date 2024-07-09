@@ -13,7 +13,7 @@ bundle agent test(parent_namespace, parent_bundle)
 {
   meta:
     "description" -> { "ENT-11923" }
-      string => "Test double expension of list from remote bundle with namespace";
+      string => "Test double expansion of list from remote bundle with namespace";
 
   reports:
     "$($(parent_namespace):$(parent_bundle).str)"

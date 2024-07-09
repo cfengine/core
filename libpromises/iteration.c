@@ -795,8 +795,8 @@ static Seq *IterableToSeq(const void *v, DataType t)
  * #varname, where the left side of #varname is a bundle name and the right side
  * of #iterctx->pp->promiser begins with the right side of #varname. If all of
  * the constraints are fulfilled it swaps the '.' with '#' in both variables.
- * Furthermore, if the variable also contains a scope, it will mangle ':' with
- * '*'.
+ * Furthermore, if the variable also contains a namespace, it will mangle ':'
+ * with '*'.
  *
  * See ticket ENT-9491 & ENT-11923 for more info.
  */

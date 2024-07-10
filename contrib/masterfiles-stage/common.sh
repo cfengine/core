@@ -112,9 +112,6 @@ git_deploy_refspec() {
   mkdir -p "${temp_stage}/.git"
   cp "${local_mirrored_repo}/HEAD" "${temp_stage}/.git/"
 
-  if git_check_is_in_sync "${local_mirrored_repo}" "${temp_stage}" "$2"; then
-    return 0
-  fi
 
   ########################## 3. SET PERMISSIONS ON POLICY SET
   chown -R root:root "${temp_stage}" || error_exit "Unable to chown '${temp_stage}'"
@@ -238,9 +235,6 @@ git_cfbs_deploy_refspec() {
   mkdir -p "${temp_stage}/out/masterfiles/.git"
   cp "${local_mirrored_repo}/HEAD" "${temp_stage}/out/masterfiles/.git/"
 
-  if git_check_is_in_sync "${local_mirrored_repo}" "${temp_stage}/out/masterfiles" "$2"; then
-    return 0
-  fi
 
   ########################## 3. SET PERMISSIONS ON POLICY SET
   chown -R root:root "${temp_stage}" || error_exit "Unable to chown '${temp_stage}'"
@@ -385,15 +379,22 @@ git_masterstage() {
   # Depends on $GIT_URL, $ROOT, $MASTERDIR, $GIT_REFSPEC
   check_git_installed
   git_setup_local_mirrored_repo "$( dirname "$ROOT" )"
-  if [ "x$1" = "xtrue" ]; then
-    if git_check_is_in_sync "$( dirname "$ROOT" )" "$MASTERDIR" "$GIT_REFSPEC"; then
-      return 1  # in sync => nothing to do
+  git_check_is_in_sync "$local_mirrored_repo" "$MASTERDIR" "$GIT_REFSPEC"
+  local in_sync=$?
+  if [ "$1" = "true" ]; then
+    if [ "$in_sync" = "0" ]; then
+      return 1 # in sync => nothing to do
     else
-      return 0  # not in sync => update available
+      return 0 # not in sync => update available
+    fi
+  else
+    if [ "$in_sync" != "0" ]; then
+      git_deploy_refspec "$MASTERDIR" "${GIT_REFSPEC}"
+      echo "Successfully deployed '${GIT_REFSPEC}' from '${GIT_URL}' to '${MASTERDIR}' on $(date)"
+    else
+      echo "'${GIT_REFSPEC}' from '${GIT_URL}' has no changes. Will not update."
     fi
   fi
-  git_deploy_refspec "$MASTERDIR" "${GIT_REFSPEC}"
-  echo "Successfully deployed '${GIT_REFSPEC}' from '${GIT_URL}' to '${MASTERDIR}' on $(date)"
 }
 
 git_cfbs_masterstage() {
@@ -402,15 +403,22 @@ git_cfbs_masterstage() {
     check_git_installed
     check_cfbs_installed
     git_setup_local_mirrored_repo "$( dirname "$ROOT" )"
-    if [ "x$1" = "xtrue" ]; then
-      if git_check_is_in_sync "$( dirname "$ROOT" )" "$MASTERDIR" "$GIT_REFSPEC"; then
-        return 1  # in sync => nothing to do
+    git_check_is_in_sync "$local_mirrored_repo" "$MASTERDIR" "$GIT_REFSPEC"
+    local in_sync=$?
+    if [ "$1" = "true" ]; then
+      if [ "$in_sync" = "0" ]; then
+        return 1 # in sync => nothing to do
       else
-        return 0  # not in sync => update available
+        return 0 # not in sync => update available
+      fi
+    else
+      if [ "$in_sync" != "0" ]; then
+        git_cfbs_deploy_refspec "$MASTERDIR" "${GIT_REFSPEC}"
+        echo "Successfully built and deployed '${GIT_REFSPEC}' from '${GIT_URL}' to '${MASTERDIR}' on $(date) with cfbs"
+      else
+        echo "'${GIT_REFSPEC}' from '${GIT_URL}' has no changes. Will not update."
       fi
     fi
-    git_cfbs_deploy_refspec "$MASTERDIR" "${GIT_REFSPEC}"
-    echo "Successfully built and deployed '${GIT_REFSPEC}' from '${GIT_URL}' to '${MASTERDIR}' on $(date) with cfbs"
 }
 
 svn_branch() {

@@ -84,7 +84,7 @@ debug_mode=false
 check_only=false
 
 # Process using getopts
-while getopts ":d:p:vDc" option; do
+while getopts ":d:p:vD" option; do
   case "$option" in
     d)
       MASTERDIR="$OPTARG"

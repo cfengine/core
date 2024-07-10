@@ -25,10 +25,6 @@ OPTIONS:
                             to interface with UPSTREAM.
                             Default: /opt/cfengine/dc-scripts/params.sh
 
-        -c --check-only:    Only check if the local checkout is in sync with
-                            the remote or there is something new.
-                            (exit code 0 means in sync, 1 means something new)
-
         -v --verbose:       Set verbose mode on
         -D --DEBUG:         DEBUG mode (do not log to the logfile)
         -? --help:          Display this usage message
@@ -45,9 +41,6 @@ for param; do
       ;;
     --params-file)
       params+=("-p")
-      ;;
-    --check-only)
-      params+=("-c")
       ;;
     --verbose)
       params+=("-v")
@@ -81,7 +74,6 @@ MASTERDIR=/var/cfengine/masterfiles
 PARAMS=/opt/cfengine/dc-scripts/params.sh
 verbose_mode=false
 debug_mode=false
-check_only=false
 
 # Process using getopts
 while getopts ":d:p:vD" option; do
@@ -91,9 +83,6 @@ while getopts ":d:p:vD" option; do
       ;;
     p)
       PARAMS="$OPTARG"
-      ;;
-    c)
-      check_only="true"
       ;;
     v)
       verbose_mode="true"
@@ -151,16 +140,16 @@ source "$PARAMS"
 
 case "${VCS_TYPE}" in
     GIT_CFBS)
-        git_cfbs_masterstage $check_only
+        git_cfbs_masterstage
         ;;
     GIT_POLICY_CHANNELS)
-        git_stage_policy_channels $check_only
+        git_stage_policy_channels
         ;;
     GIT)
-        git_masterstage $check_only
+        git_masterstage
         ;;
     SVN)
-        svn_branch $check_only
+        svn_branch
         ;;
     *)
         error_exit "Unknown VCS TYPE: '${VCS_TYPE}'."

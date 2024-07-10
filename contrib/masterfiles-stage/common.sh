@@ -59,6 +59,7 @@ git_setup_local_mirrored_repo() {
   # /opt/cfengine/git_mygitserver.net_joeblow_my_policy_repo.git
 
   if [ -d "${local_mirrored_repo}" ] ; then
+    git --git-dir="${local_mirrored_repo}" fetch --dry-run # to provide information in logs about from and to commits
     git --git-dir="${local_mirrored_repo}" fetch && return 0
 
     # If execution arrives here, the local_mirrored_repo exists but is messed up somehow

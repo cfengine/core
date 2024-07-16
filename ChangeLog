@@ -1,3 +1,67 @@
+3.24.0:
+	- Added a sanity check to policy parser that checks for and warns
+	  in case of promise declarations with no actions. The motivation
+	  for this check is to aid policy writers in detecting semantic
+	  errors early. (ENT-11137)
+	- Added sys.os_name_human for Alpine, postmarketOS, OpenBSD and NetBSD
+	- Added warning log message when OS is not recognized (CFE-4342)
+	- Adjusted locale settings in masterfiles stage common script to
+	  handle more cases (ENT-11885)
+	- Adjusted package module inventory to include quotes around
+	  fields when needed (CFE-4341)
+	- Added `sys.os_name_human` and `sys.os_version_major` variables
+	  for Amazon. Additionally changed value of `sys.flavor` from
+	  `AmazonLinux` to `amazon_linux_2`, so that it is similar to other
+	  supported Linux distros. This change was necessary, due to the
+	  fact that the `sys.os_version_major` variable is derived from
+	  it. However, the `AmazonLinux` class previously derived from
+	  `sys.flavor` is still defined for backwards compatibility.
+	  (ENT-10817)
+	- CFEngine now uses PCRE2 for regular expressions (ENT-10629)
+	- CFEngine processes no longer suffer from the "Invalid argument"
+	  issues when working with LMDB (ENT-11543)
+	- Changed cf-apache systemd unit to reload configuration gracefully
+	  (ENT-11526)
+	- Changed cf-execd's sleep behavior so it attempts to wake up at
+	  the beginning of every minute (ENT-11765)
+	- File copying now uses more efficient implementation on Linux
+	  platforms (CFE-4380)
+	- Fixed bug in double expansion of foreign list variables with namespaces
+	  (ENT-11923)
+	- Fixed bug related to failing backwards directory traversial when
+	  using forward slashes in path argument of the findfiles_up()
+	  policy function on Windows.
+	- Fixed bug where 'default:sys.fqhost' contained many spaces when domain is
+	  set in body common control (CFE-4053)
+	- Fixed cf-support call to cf-promises to collect all classes and vars
+	  (CFE-4300)
+	- Fixed package promises with only promisers and no other attributes
+	  (CFE-4315, CFE-4398, CFE-4408)
+	- Modified package promise default. If platform_default is present
+	  use that package module. (CFE-4315)
+	- Ownership of symlinks is now handled properly (ENT-11235)
+	- SELinux no longer breaks exporting large reports as PDF (ENT-11154)
+	- The 'arglist' attribute in the 'commands' promises now preserves
+	  whitespaces in the arguments. Whitespaces are currently not preserved on
+	  Windows, or if the 'useshell' attribute is set to anything other than
+	  '"noshell"'. (CFE-2724, CFE-4294)
+	- Trailing newline on insert_tree promisers no longer removes
+	  ending tag for select_xpath (CFE-3806)
+	- cf-agent has two new options --no-augments and
+	  --no-host-specific-data to skip loading augments
+	  (def.json or def_preferred.json) and host-specific
+	  data (host_specific.json), respectively (ENT-10792)
+	- cf-agent now has a new option --skip-bootstrap-service-start to
+	  skip starting CFEngine services during the bootstrap process
+	  (ENT-11932)
+	- cf-runalerts.service no longer exists, alerts are now
+	  periodically run by cf-reactor (ENT-11538)
+	- depth_search acting on a non-directory promiser now handles such
+	  file as if the promise didn't use depth_search. A warning is issued in this case.
+	  (ENT-8996)
+	- masterfiles-stage.sh now supports a new --check-only option
+	  (ENT-9386)
+
 3.23.0:
 	- Added selinux policy to allow cf-hub to initiate scheduled reports
 	  (ENT-10696, ENT-9825)

@@ -9,13 +9,13 @@
 	  handle more cases (ENT-11885)
 	- Adjusted package module inventory to include quotes around
 	  fields when needed (CFE-4341)
-	- Added `sys.os_name_human` and `sys.os_version_major` variables
-	  for Amazon. Additionally changed value of `sys.flavor` from
-	  `AmazonLinux` to `amazon_linux_2`, so that it is similar to other
+	- Added 'sys.os_name_human' and 'sys.os_version_major' variables
+	  for Amazon. Additionally changed value of 'sys.flavor' from
+	  'AmazonLinux' to 'amazon_linux_2', so that it is similar to other
 	  supported Linux distros. This change was necessary, due to the
-	  fact that the `sys.os_version_major` variable is derived from
-	  it. However, the `AmazonLinux` class previously derived from
-	  `sys.flavor` is still defined for backwards compatibility.
+	  fact that the 'sys.os_version_major' variable is derived from
+	  it. However, the 'AmazonLinux' class previously derived from
+	  'sys.flavor' is still defined for backwards compatibility.
 	  (ENT-10817)
 	- CFEngine now uses PCRE2 for regular expressions (ENT-10629)
 	- CFEngine processes no longer suffer from the "Invalid argument"

@@ -32,6 +32,7 @@
 #include <eval_context.h>
 #include <policy.h>
 #include <promises.h>
+#include <file_lib.h> // FileCanOpen()
 #include <files_lib.h>
 #include <files_names.h>
 #include <files_interfaces.h>
@@ -48,7 +49,7 @@
 #include <cleanup.h>
 #include <unix.h>
 #include <client_code.h>
-#include <string_lib.h>
+#include <string_lib.h> // StringCopy()
 #include <regex.h>      // CompileRegex()
 #include <writer.h>
 #include <exec_tools.h>
@@ -72,6 +73,7 @@
 #include <libgen.h>
 #include <cleanup.h>
 #include <cmdb.h>               /* LoadCMDBData() */
+#include "cf3.defs.h"
 
 #define AUGMENTS_VARIABLES_TAGS "tags"
 #define AUGMENTS_VARIABLES_DATA "value"
@@ -132,13 +134,61 @@ ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, GenericAgentSetDefaultDigest, HashMe
     *digest_len = CF_MD5_LEN;
 }
 
+void SetCFEngineRoles(EvalContext *ctx)
+{
+    char cf_hub_path[PATH_MAX];
+    snprintf(cf_hub_path, sizeof(cf_hub_path), "%s%ccf-hub", GetBinDir(), FILE_SEPARATOR);
+
+    const bool is_reporting_hub = (access(cf_hub_path, F_OK) == 0);
+    const bool is_policy_server = EvalContextClassGet(ctx, "default", "policy_server");
+
+    if (!is_policy_server && !is_reporting_hub)
+    {
+        EvalContextClassPutHard(ctx, "cfengine_client", "report");
+        Rlist *const roles = RlistFromSplitString("Client", ',');
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cfengine_roles", roles, CF_DATA_TYPE_STRING_LIST, "inventory,attribute_name=CFEngine roles");
+        RlistDestroy(roles);
+        return;
+    }
+
+    if (is_reporting_hub)
+    {
+        EvalContextClassPutHard(ctx, "cfengine_reporting_hub", "report");
+    }
+
+    // Community policy server:
+    if (is_policy_server && !is_reporting_hub)
+    {
+        Rlist *const roles = RlistFromSplitString("Policy server", ',');
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cfengine_roles", roles, CF_DATA_TYPE_STRING_LIST, "inventory,attribute_name=CFEngine roles");
+        RlistDestroy(roles);
+        return;
+    }
+
+    // Enterprise hub bootstrapped to another policy server:
+    // TODO: This is a weird situation, should we print a warning?
+    if (is_reporting_hub && !is_policy_server)
+    {
+        Rlist *const roles = RlistFromSplitString("Reporting hub", ',');
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cfengine_roles", roles, CF_DATA_TYPE_STRING_LIST, "inventory,attribute_name=CFEngine roles");
+        RlistDestroy(roles);
+        return;
+    }
+
+    // Normal Enterprise hub:
+    assert(is_policy_server && is_reporting_hub);
+    Rlist *const roles = RlistFromSplitString("Policy server,Reporting hub", ',');
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cfengine_roles", roles, CF_DATA_TYPE_STRING_LIST, "inventory,attribute_name=CFEngine roles");
+    RlistDestroy(roles);
+    return;
+}
+
 void MarkAsPolicyServer(EvalContext *ctx)
 {
     EvalContextClassPutHard(ctx, "am_policy_hub",
                             "source=bootstrap,deprecated,alias=policy_server");
     Log(LOG_LEVEL_VERBOSE, "Additional class defined: am_policy_hub");
-    EvalContextClassPutHard(ctx, "policy_server",
-                            "inventory,attribute_name=CFEngine roles,source=bootstrap");
+    EvalContextClassPutHard(ctx, "policy_server", "report");
     Log(LOG_LEVEL_VERBOSE, "Additional class defined: policy_server");
 }
 
@@ -1010,7 +1060,8 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config,
         {
             Log(LOG_LEVEL_INFO, "Assuming role as policy server,"
                 " with policy distribution point at: %s", GetMasterDir());
-            MarkAsPolicyServer(ctx);
+            MarkAsPolicyServer(ctx); // Sets policy_server class
+            SetCFEngineRoles(ctx); // Checks policy_server class
 
             if (!MasterfileExists(GetMasterDir()))
             {
@@ -1025,6 +1076,9 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config,
         {
             Log(LOG_LEVEL_INFO, "Assuming role as regular client,"
                 " bootstrapping to policy server: %s", bootstrap_arg);
+            // Once we have set, or in this case not set,
+            // the policy_server class, we can set roles:
+            SetCFEngineRoles(ctx);
 
             if (config->agent_specific.agent.bootstrap_trust_server)
             {
@@ -1067,10 +1121,17 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config,
             UpdateLastPolicyUpdateTime(ctx);
             if (GetAmPolicyHub())
             {
-                MarkAsPolicyServer(ctx);
+                // Hub:
+                MarkAsPolicyServer(ctx); // Sets policy_server class
+                SetCFEngineRoles(ctx); // Checks policy_server class
 
                 /* Should this go in MarkAsPolicyServer() ? */
                 CheckAndSetHAState(GetWorkDir(), ctx);
+            }
+            else
+            {
+                // Client, set appropriate role:
+                SetCFEngineRoles(ctx);
             }
         }
         else

@@ -2724,6 +2724,7 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
                     Attributes a = GetPackageAttributes(ctx, ppi);
 
                     const size_t command_len = strlen(command_string);
+const size_t name_len = strlen(pi->name);
                     char *offset = command_string + command_len;
 
                     if ((a.packages.package_file_repositories) && ((action == PACKAGE_ACTION_ADD) || (action == PACKAGE_ACTION_UPDATE)))
@@ -2740,7 +2741,9 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
                     }
                     else
                     {
-                        strcat(offset, pi->name);
+                        strcat(offset, "'");
+strcat(offset+1, pi->name);
+strcat(offset+1+name_len, "'");
                     }
 
                     PromiseResult result = PROMISE_RESULT_NOOP;
@@ -2780,6 +2783,7 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
                     if (pi->name)
                     {
                         const size_t command_len = strlen(command_string);
+const size_t name_len = strlen(pi->name);
                         char *offset = command_string + command_len;
 
                         if (a.packages.package_file_repositories &&
@@ -2798,7 +2802,9 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
                         }
                         else
                         {
-                            strcpy(offset, pi->name);
+strcpy(offset, "'");
+strcpy(offset+1, pi->name);
+strcpy(offset+1+name_len, "'");
                         }
 
                         strcat(command_string, " ");
@@ -3461,7 +3467,7 @@ static bool PrependPatchItem(
     char vbuff[CF_MAXVARSIZE];
 
     strlcpy(vbuff, ExtractFirstReference(a->packages.package_patch_name_regex, item), CF_MAXVARSIZE);
-    sscanf(vbuff, "%s", name);  /* trim */
+    strlcpy(name, TrimWhitespace(vbuff), CF_MAXVARSIZE);
     strlcpy(vbuff, ExtractFirstReference(a->packages.package_patch_version_regex, item), CF_MAXVARSIZE);
     sscanf(vbuff, "%s", version);       /* trim */
 
@@ -3528,7 +3534,7 @@ static bool PrependMultiLinePackageItem(
     if (FullTextMatch(ctx, a->packages.package_list_name_regex, item))
     {
         strlcpy(vbuff, ExtractFirstReference(a->packages.package_list_name_regex, item), CF_MAXVARSIZE);
-        sscanf(vbuff, "%s", name);      /* trim */
+        strlcpy(name, TrimWhitespace(vbuff), CF_MAXVARSIZE);
     }
 
     if (FullTextMatch(ctx, a->packages.package_list_version_regex, item))
@@ -3564,7 +3570,7 @@ static bool PrependListPackageItem(
     char vbuff[CF_MAXVARSIZE];
 
     strlcpy(vbuff, ExtractFirstReference(a->packages.package_list_name_regex, item), CF_MAXVARSIZE);
-    sscanf(vbuff, "%s", name);  /* trim */
+    strlcpy(name, TrimWhitespace(vbuff), CF_MAXVARSIZE);
 
     strlcpy(vbuff, ExtractFirstReference(a->packages.package_list_version_regex, item), CF_MAXVARSIZE);
     sscanf(vbuff, "%s", version);       /* trim */

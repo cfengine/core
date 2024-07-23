@@ -61,6 +61,13 @@
 	  (ENT-8996)
 	- masterfiles-stage.sh now supports a new --check-only option
 	  (ENT-9386)
+	- Added new policy variable 'sys.cfengine_roles'. This
+	  variable is a string list, containing "Reporting hub" if cf-hub
+	  exists (hub package installed), "Policy server" if the host is
+	  bootstrapped to itself ('policy_server' class defined), and just
+	  "Client" if none of the other options are true.
+	- Added 2 new classes correlating to the values in 'sys.cfengine_roles':
+	  'cfengine_reporting_hub' and 'cfengine_client'.
 
 3.23.0:
 	- Added selinux policy to allow cf-hub to initiate scheduled reports

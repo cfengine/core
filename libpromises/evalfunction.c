@@ -8739,9 +8739,26 @@ struct IsReadableThreadData
     FnCallResult result;
 };
 
+#ifndef HAVE_PTHREAD_CANCEL
+#define PTHREAD_CANCELED ((void *)-1)
+static void ThreadSignalHandler(int signum)
+{
+    pthread_exit(PTHREAD_CANCELED);
+}
+#endif
+
 static void *IsReadableThreadRoutine(void *data)
 {
     assert(data != NULL);
+
+#ifndef HAVE_PTHREAD_CANCEL
+    struct sigaction actions;
+    memset(&actions, 0, sizeof(actions));
+    sigemptyset(&actions.sa_mask);
+    actions.sa_flags = 0;
+    actions.sa_handler = ThreadSignalHandler;
+    sigaction(SIGUSR2, &actions, NULL);
+#endif
 
     struct IsReadableThreadData *const thread_data = data;
 
@@ -8897,7 +8914,7 @@ static FnCallResult FnCallIsReadable(ARG_UNUSED EvalContext *const ctx,
 #ifdef HAVE_PTHREAD_CANCEL
             ret = pthread_cancel(thread_data.thread);
 #else
-            ret = pthread_kill(thread_data.thread, 0);
+            ret = pthread_kill(thread_data.thread, SIGUSR2);
 #endif
             if (ret != 0)
             {

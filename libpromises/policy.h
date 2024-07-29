@@ -31,6 +31,7 @@
 #include <sequence.h>
 #include <json.h>
 #include <set.h>
+#include <file_lib.h>                   /* FileLock */
 
 typedef enum
 {
@@ -140,6 +141,18 @@ struct Constraint_
 
     SourceOffset offset;
 };
+
+/**
+ * Get lock for masterfiles stage (update)
+ * @param lock       file lock to initialize (not-%NULL)
+ * @param exclusive  %true to get exclusive lock (for write access),
+ *                   %false for a shared lock (read access)
+ * @param wait       whether to wait for the lock (blocks) or give up immediately
+ * @return           whether the lock was successfully obtained or not
+ * @note             Unlock the lock with ExclusiveFileUnlock() or SharedFileUnlock()
+ *                   when done.
+ */
+bool GetMasterfilesStageLock(FileLock *lock, bool exclusive, bool wait);
 
 const char *NamespaceDefault(void);
 

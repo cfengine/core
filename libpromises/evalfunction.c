@@ -76,6 +76,7 @@
 #include <version_comparison.h>
 #include <mutex.h>          /* ThreadWait */
 #include <glob_lib.h>
+#include <signal_lib.h> /* MaskTerminationSignalsInThread */
 
 #include <math_eval.h>
 
@@ -8752,12 +8753,14 @@ static void *IsReadableThreadRoutine(void *data)
     assert(data != NULL);
 
 #ifndef HAVE_PTHREAD_CANCEL
+    MaskTerminationSignalsInThread();
     struct sigaction actions;
     memset(&actions, 0, sizeof(actions));
     sigemptyset(&actions.sa_mask);
     actions.sa_flags = 0;
     actions.sa_handler = ThreadSignalHandler;
-    sigaction(SIGUSR2, &actions, NULL);
+    sigaction(SIGHUP, &actions, NULL);
+    MaskTerminationSignalsInThread();
 #endif
 
     struct IsReadableThreadData *const thread_data = data;

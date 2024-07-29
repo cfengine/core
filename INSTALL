@@ -160,7 +160,8 @@ Note that in order for process promises to work you must install the procps pack
 * Termux (2020-04-24)
 
 pkg install build-essential git autoconf automake bison flex liblmdb openssl pcre2 libacl libyaml
-./autogen.sh --without-pam
+LDFLAGS='-landroid-glob' ./autogen.sh --without-pam
+make && make install
 
 * OSX (2021-10-20)
 

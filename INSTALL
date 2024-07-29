@@ -158,7 +158,8 @@ sudo apk add alpine-sdk lmdb-dev openssl-dev bison flex-dev acl-dev pcre2-dev au
 * Termux (2020-04-24)
 
 pkg install build-essential git autoconf automake bison flex liblmdb openssl pcre2 libacl libyaml
-./autogen.sh --without-pam
+LDFLAGS='-landroid-glob' ./autogen.sh --without-pam
+make && make install
 
 * OSX (2021-10-20)
 

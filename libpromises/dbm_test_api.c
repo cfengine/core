@@ -22,6 +22,7 @@
   included file COSL.txt.
 */
 
+#ifndef __ANDROID__
 #include <platform.h>
 #include <stdlib.h>             /* lrand48_r() */
 #include <unistd.h>             /* usleep(), syscall()/gettid() */
@@ -735,3 +736,4 @@ void RemoveFilament(DBFilament *filament)
     free(filament);
     CloseDB(db);
 }
+#endif /* not __ANDROID__ */

@@ -17,6 +17,6 @@ bundle agent __main__
 
 #+begin_src example_output
 #@ ```
-#@ R: Hello from policy.cf
+#@ R: Library: Hello from main_entry_point.cf.
 #@ ```
 #+end_src

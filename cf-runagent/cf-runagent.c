@@ -715,13 +715,13 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy)
                 if (strlen(value) >= sizeof(OUTPUT_DIRECTORY))
                 {
                     Log(LOG_LEVEL_ERR,
-                        "Could not set output direcory to '%s' - too long path",
+                        "Could not set output directory to '%s' - too long path",
                         (const char *) value);
                 }
                 else if (IsAbsPath(value))
                 {
                     strlcpy(OUTPUT_DIRECTORY, value, sizeof(OUTPUT_DIRECTORY));
-                    Log(LOG_LEVEL_VERBOSE, "Setting output direcory to '%s'", OUTPUT_DIRECTORY);
+                    Log(LOG_LEVEL_VERBOSE, "Setting output directory to '%s'", OUTPUT_DIRECTORY);
                 }
                 continue;
             }

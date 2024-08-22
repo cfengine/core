@@ -380,6 +380,11 @@ else
 fi
 echo "Captured output of $syslog_cmd filtered for cf-|CFEngine"
 
+# cf- component related SELinux denials
+if command -v ausearch >/dev/null; then
+  ausearch -m avc -su cfengine > "$tmpdir"/ausearch-cfengine-avcs.log
+fi
+
 gzip_add $WORKDIR/outputs/previous
 gzip_add $WORKDIR/outputs/dc-scripts.log # masterfiles-stage log
 file_add $WORKDIR/policy_server.dat

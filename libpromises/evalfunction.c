@@ -9976,7 +9976,7 @@ static const FnCallArg REMOTESCALAR_ARGS[] =
 {
     {CF_IDRANGE, CF_DATA_TYPE_STRING, "Variable identifier"},
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Hostname or IP address of server"},
-    {CF_BOOL, CF_DATA_TYPE_OPTION, "Use enryption"},
+    {CF_BOOL, CF_DATA_TYPE_OPTION, "Use encryption"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 

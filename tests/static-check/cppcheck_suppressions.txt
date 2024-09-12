@@ -27,3 +27,6 @@ returnDanglingLifetime:libpromises/enterprise_stubs.c:153
 returnDanglingLifetime:libpromises/enterprise_stubs.c:159
 returnDanglingLifetime:libpromises/enterprise_stubs.c:165
 returnDanglingLifetime:libpromises/enterprise_stubs.c:172
+
+// generated file not in our control
+nullPointer:libpromises/cf3lex.c

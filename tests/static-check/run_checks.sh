@@ -21,6 +21,8 @@ function check_with_clang() {
 
 function check_with_cppcheck() {
   rm -f config.cache
+  make clean
+  make -C libpromises/ bootstrap.inc # needed by libpromises/bootstrap.c
   ./configure -C --enable-debug
 
   # cppcheck options:

@@ -10,7 +10,7 @@ PartOf=cfengine3.service
 ExecStart=@workdir@/httpd/php/sbin/php-fpm --nodaemonize
 ExecReload=/bin/kill -USR2 $MAINPID
 PIDFile=@workdir@/httpd/php-fpm.pid
-Type=simple
+Type=forked
 
 [Install]
 WantedBy=multi-user.target

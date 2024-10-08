@@ -751,7 +751,7 @@ static void FlushFileStream(int sd, int toget)
 /* TODO finalise socket or TLS session in all cases that this function fails
  * and the transaction protocol is out of sync. */
 bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
-                        bool encrypt, AgentConnection *conn)
+                        bool encrypt, AgentConnection *conn, mode_t mode)
 {
     char *buf, workbuf[CF_BUFSIZE], cfchangedstr[265];
     const int buf_size = 2048;
@@ -775,7 +775,7 @@ bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
 
     unlink(dest);                /* To avoid link attacks */
 
-    int dd = safe_open_create_perms(dest, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY, CF_PERMS_DEFAULT);
+    int dd = safe_open_create_perms(dest, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY, mode);
     if (dd == -1)
     {
         Log(LOG_LEVEL_ERR,

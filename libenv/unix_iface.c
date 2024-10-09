@@ -721,6 +721,11 @@ static void FindV6InterfacesInfo(EvalContext *ctx, Rlist **interfaces, Rlist **h
             }
         }
 
+        if (IgnoreInterface(current_interface))
+        {
+            // Ignore interfaces listed in ignore_interfaces.rx
+            continue;
+        }
 
         const char *const stripped_ifconfig_line =
             TrimWhitespace(ifconfig_line);

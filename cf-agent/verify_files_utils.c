@@ -1552,7 +1552,7 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
         }
 
         if (!CopyRegularFileNet(source, ToChangesPath(new),
-                                sstat->st_size, attr->copy.encrypt, conn))
+                                sstat->st_size, attr->copy.encrypt, conn, sstat->st_mode))
         {
             RecordFailure(ctx, pp, attr, "Failed to copy file '%s' from '%s'",
                           source, conn->remoteip);
@@ -1712,7 +1712,7 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
                 }
             }
 
-            if (rename(dest, changes_backup) == 0)
+            if (CopyRegularFileDisk(dest, changes_backup))
             {
                 RecordChange(ctx, pp, attr, "Backed up '%s' as '%s'", dest, backup);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);

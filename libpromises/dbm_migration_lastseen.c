@@ -34,6 +34,12 @@ typedef struct
     double var;
 } QPoint0;
 
+typedef struct
+{
+    time_t lastseen;
+    QPoint Q; // Average time between connections (rolling weighted average)
+} KeyHostSeen1;
+
 #define QPOINT0_OFFSET 128
 
 /*
@@ -182,8 +188,94 @@ static bool LastseenMigrationVersion0(DBHandle *db)
     return !errors;
 }
 
+static bool LastseenMigrationVersion1(DBHandle *db)
+{
+    DBCursor *cursor;
+    if (!NewDBCursor(db, &cursor))
+    {
+        Log(LOG_LEVEL_ERR,
+            "Unable to create database cursor during lastseen migration");
+        return false;
+    }
+
+    char *key;
+    void *value;
+    int key_size, value_size;
+
+    // Iterate through all key-value pairs
+    while (NextDB(cursor, &key, &key_size, &value, &value_size))
+    {
+        if (key_size == 0)
+        {
+            Log(LOG_LEVEL_WARNING,
+                "Found zero-length key during lastseen migration");
+            continue;
+        }
+
+        // Only look for old KeyHostSeen entries
+        if (key[0] != 'q')
+        {
+            // Warn about completely unexpected keys
+            if ((key[0] != 'k') && (key[0] != 'a'))
+            {
+                Log(LOG_LEVEL_WARNING,
+                    "Found unexpected key '%s' during lastseen migration. "
+                    "Only expecting 'k', 'a' and 'q[i|o]' prefixed keys.",
+                    key);
+            }
+            continue;
+        }
+
+        KeyHostSeen1 *old_value = value;
+        KeyHostSeen new_value = {
+            .acknowledged = true, // We don't know, assume yes
+            .lastseen = old_value->lastseen,
+            .Q = old_value->Q,
+        };
+
+        if (!DBCursorDeleteEntry(cursor))
+        {
+            Log(LOG_LEVEL_ERR,
+                "Unable to delete version 1 of entry for key '%s' during lastseen migration",
+                key);
+            if (DeleteDBCursor(cursor) == false)
+            {
+                Log(LOG_LEVEL_ERR,
+                    "Unable to close cursor during lastseen migration");
+            }
+            return false;
+        }
+
+        if (!DBCursorWriteEntry(cursor, &new_value, sizeof(new_value)))
+        {
+            /* Entry is lost... There is nothing to do about it. However, it's
+             * not fatal. A new entry will be added on the next
+             * incoming/outgoing connection. Let's continue the migration. */
+            Log(LOG_LEVEL_ERR,
+                "Unable to write version 2 of entry for key '%s' during lastseen migration. "
+                "This entry is lost.", key);
+        }
+    }
+
+    if (!DeleteDBCursor(cursor))
+    {
+        Log(LOG_LEVEL_ERR, "Unable to close cursor during lastseen migration");
+        return false;
+    }
+
+    if (!WriteDB(db, "version", "2", sizeof("2")))
+    {
+        Log(LOG_LEVEL_ERR, "Failed to update version number during lastseen migration");
+        return false;
+    }
+
+    Log(LOG_LEVEL_INFO, "Migrated lastseen database from version 1 to 2");
+    return true;
+}
+
 const DBMigrationFunction dbm_migration_plan_lastseen[] =
 {
     LastseenMigrationVersion0,
+    LastseenMigrationVersion1,
     NULL
 };

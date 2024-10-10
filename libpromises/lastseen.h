@@ -29,6 +29,7 @@
 
 typedef struct
 {
+    bool acknowledged; // True when acknowledged by cf-hub, false when updated
     time_t lastseen;
     QPoint Q; // Average time between connections (rolling weighted average)
 } KeyHostSeen;

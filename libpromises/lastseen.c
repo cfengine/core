@@ -121,7 +121,10 @@ void UpdateLastSawHost(const char *hostkey, const char *address,
     char quality_key[CF_BUFSIZE];
     snprintf(quality_key, CF_BUFSIZE, "q%c%s", incoming ? 'i' : 'o', hostkey);
 
-    KeyHostSeen newq = { .lastseen = timestamp };
+    KeyHostSeen newq = {
+        .acknowledged = false,
+        .lastseen = timestamp,
+    };
 
     KeyHostSeen q;
     if (ReadDB(db, quality_key, &q, sizeof(q)))

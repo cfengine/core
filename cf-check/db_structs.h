@@ -17,6 +17,7 @@
 // Struct used for quality entries in /var/cfengine/state/cf_lastseen.lmdb:
 typedef struct
 {
+    bool acknowledged;
     time_t lastseen;
     QPoint Q;
 } KeyHostSeen; // Keep in sync with lastseen.h

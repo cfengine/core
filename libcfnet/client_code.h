@@ -48,7 +48,7 @@ void DisconnectServer(AgentConnection *conn);
 
 bool CompareHashNet(const char *file1, const char *file2, bool encrypt, AgentConnection *conn);
 bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
-                        bool encrypt, AgentConnection *conn);
+                        bool encrypt, AgentConnection *conn, mode_t mode);
 Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn);
 
 int TLSConnectCallCollect(ConnectionInfo *conn_info, const char *username);

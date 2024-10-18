@@ -107,6 +107,7 @@ static void print_struct_lastseen_quality(
         memcpy(&quality, value.mv_data, sizeof(quality));
         const time_t lastseen = quality.lastseen;
         const QPoint Q = quality.Q;
+        bool acknowledged = quality.acknowledged;
 
         JsonElement *q_json = JsonObjectCreate(4);
         JsonObjectAppendReal(q_json, "q", Q.q);
@@ -115,6 +116,7 @@ static void print_struct_lastseen_quality(
         JsonObjectAppendReal(q_json, "dq", Q.dq);
 
         JsonElement *top_json = JsonObjectCreate(2);
+        JsonObjectAppendBool(top_json, "acknowledged", acknowledged);
         JsonObjectAppendInteger(top_json, "lastseen", lastseen);
         JsonObjectAppendObject(top_json, "Q", q_json);
 

@@ -606,7 +606,8 @@ static bool EncryptCopyRegularFileNet(const char *source, const char *dest, off_
 
     workbuf[0] = '\0';
 
-    snprintf(in, CF_BUFSIZE - CF_PROTO_OFFSET, "GET dummykey %s", source);
+    NDEBUG_UNUSED int rc = snprintf(in, CF_BUFSIZE - CF_PROTO_OFFSET, "GET dummykey %s", source);
+    assert(rc >= 0 && rc < sizeof(in));
     cipherlen = EncryptString(out, sizeof(out), in, strlen(in) + 1, conn->encryption_type, conn->session_key);
 
     tosend = cipherlen + CF_PROTO_OFFSET;
@@ -621,7 +622,8 @@ static bool EncryptCopyRegularFileNet(const char *source, const char *dest, off_
                          tosend, sizeof(workbuf));
     }
 
-    snprintf(workbuf, CF_BUFSIZE, "SGET %4d %4d", cipherlen, blocksize);
+    rc = snprintf(workbuf, CF_BUFSIZE, "SGET %4d %4d", cipherlen, blocksize);
+    assert(rc >= 0 && rc < sizeof(workbuf));
     memcpy(workbuf + CF_PROTO_OFFSET, out, cipherlen);
 
 /* Send proposition C0 - query */
@@ -764,7 +766,8 @@ bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
         return EncryptCopyRegularFileNet(source, dest, size, conn);
     }
 
-    snprintf(cfchangedstr, 255, "%s%s", CF_CHANGEDSTR1, CF_CHANGEDSTR2);
+    NDEBUG_UNUSED int rc = snprintf(cfchangedstr, 255, "%s%s", CF_CHANGEDSTR1, CF_CHANGEDSTR2);
+    assert(rc >= 0 && rc < sizeof(cfchangedstr));
 
     if ((strlen(dest) > CF_BUFSIZE - 20))
     {

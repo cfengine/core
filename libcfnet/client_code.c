@@ -749,7 +749,7 @@ static void FlushFileStream(int sd, int toget)
     }
 }
 
-/* TODO finalise socket or TLS session in all cases that this function fails
+/* TODO finalize socket or TLS session in all cases that this function fails
  * and the transaction protocol is out of sync. */
 bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
                         bool encrypt, AgentConnection *conn, mode_t mode)

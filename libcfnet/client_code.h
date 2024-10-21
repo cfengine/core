@@ -47,8 +47,24 @@ AgentConnection *ServerConnection(const char *server, const char *port, const Rl
 void DisconnectServer(AgentConnection *conn);
 
 bool CompareHashNet(const char *file1, const char *file2, bool encrypt, AgentConnection *conn);
+
+/**
+ * @brief Copy regular file over network.
+ * @param source The source filename.
+ * @param dest The destination filename.
+ * @param size The source file size.
+ * @param encrypt Whether or not to encrypt the transmission.
+ * @param conn The connection object to communicate with server.
+ * @param mode The source file mode (perms) to be used when creating the
+ *             destination file.
+ * @return %true on success, %false on error.
+ * @note Note that the #encrypt parameter only has an effect on the CLASSIC
+ *       protocol (used in CFEngine Community). The TLS protocol (used in
+ *       CFEngine Enterprise) is always encrypted.
+ */
 bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
                         bool encrypt, AgentConnection *conn, mode_t mode);
+
 Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn);
 
 int TLSConnectCallCollect(ConnectionInfo *conn_info, const char *username);

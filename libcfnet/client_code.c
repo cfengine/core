@@ -571,6 +571,8 @@ bool CompareHashNet(const char *file1, const char *file2, bool encrypt, AgentCon
 
 static bool EncryptCopyRegularFileNet(const char *source, const char *dest, off_t size, AgentConnection *conn)
 {
+    assert(conn != NULL);
+
     int blocksize = 2048, n_read = 0, plainlen, more = true, finlen;
     int tosend, cipherlen = 0;
     char *buf, in[CF_BUFSIZE], out[CF_BUFSIZE], workbuf[CF_BUFSIZE], cfchangedstr[265];
@@ -695,11 +697,20 @@ static bool EncryptCopyRegularFileNet(const char *source, const char *dest, off_
 
         bool w_ok = FileSparseWrite(dd, workbuf, n_read,
                                     &last_write_made_hole);
-        if (!w_ok)
+        n_wrote_total += n_read;
+        if (!w_ok || n_wrote_total > size)
         {
-            Log(LOG_LEVEL_ERR,
-                "Local disk write failed copying '%s:%s' to '%s'",
-                conn->this_server, source, dest);
+            if (!w_ok)
+            {
+                Log(LOG_LEVEL_ERR,
+                    "Local disk write failed copying '%s:%s' to '%s'",
+                    conn->this_server, source, dest);
+            }
+            else // if (n_wrote_total > size)
+            {
+                Log(LOG_LEVEL_INFO, "Source '%s:%s' changed while copying",
+                    conn->this_server, source);
+            }
             free(buf);
             unlink(dest);
             close(dd);
@@ -707,8 +718,6 @@ static bool EncryptCopyRegularFileNet(const char *source, const char *dest, off_
             EVP_CIPHER_CTX_free(crypto_ctx);
             return false;
         }
-
-        n_wrote_total += n_read;
     }
 
     const bool do_sync = false;
@@ -746,6 +755,8 @@ static void FlushFileStream(int sd, int toget)
 bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
                         bool encrypt, AgentConnection *conn, mode_t mode)
 {
+    assert(conn != NULL);
+
     char *buf, workbuf[CF_BUFSIZE], cfchangedstr[265];
     const int buf_size = 2048;
 
@@ -881,20 +892,27 @@ bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
 
         bool w_ok = FileSparseWrite(dd, buf, n_read,
                                     &last_write_made_hole);
-        if (!w_ok)
+        n_wrote_total += n_read;
+        if (!w_ok || n_wrote_total > size)
         {
-            Log(LOG_LEVEL_ERR,
-                "Local disk write failed copying '%s:%s' to '%s'",
-                conn->this_server, source, dest);
+            if (!w_ok)
+            {
+                Log(LOG_LEVEL_ERR,
+                    "Local disk write failed copying '%s:%s' to '%s'",
+                    conn->this_server, source, dest);
+            }
+            else // if (n_wrote_total > size)
+            {
+                Log(LOG_LEVEL_INFO, "Source '%s:%s' changed while copying",
+                    conn->this_server, source);
+            }
             free(buf);
             unlink(dest);
             close(dd);
-            FlushFileStream(conn->conn_info->sd, size - n_wrote_total - n_read);
+            FlushFileStream(conn->conn_info->sd, size - n_wrote_total);
             conn->error = true;
             return false;
         }
-
-        n_wrote_total += n_read;
     }
 
     const bool do_sync = false;

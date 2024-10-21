@@ -598,8 +598,6 @@ static bool EncryptCopyRegularFileNet(const char *source, const char *dest, off_
         return true;
     }
 
-    workbuf[0] = '\0';
-
     NDEBUG_UNUSED int rc = snprintf(in, CF_BUFSIZE - CF_PROTO_OFFSET, "GET dummykey %s", source);
     assert(rc >= 0 && rc < sizeof(in));
     cipherlen = EncryptString(out, sizeof(out), in, strlen(in) + 1, conn->encryption_type, conn->session_key);
@@ -775,7 +773,6 @@ bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
         return false;
     }
 
-    workbuf[0] = '\0';
     int tosend = snprintf(workbuf, CF_BUFSIZE, "GET %d %s", buf_size, source);
     if (tosend <= 0 || tosend >= CF_BUFSIZE)
     {

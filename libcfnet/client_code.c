@@ -579,12 +579,6 @@ static bool EncryptCopyRegularFileNet(const char *source, const char *dest, off_
 
     snprintf(cfchangedstr, 255, "%s%s", CF_CHANGEDSTR1, CF_CHANGEDSTR2);
 
-    if ((strlen(dest) > CF_BUFSIZE - 20))
-    {
-        Log(LOG_LEVEL_ERR, "Filename too long");
-        return false;
-    }
-
     unlink(dest);                /* To avoid link attacks */
 
     int dd = safe_open_create_perms(dest, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY, CF_PERMS_DEFAULT);
@@ -768,12 +762,6 @@ bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
 
     NDEBUG_UNUSED int rc = snprintf(cfchangedstr, 255, "%s%s", CF_CHANGEDSTR1, CF_CHANGEDSTR2);
     assert(rc >= 0 && rc < sizeof(cfchangedstr));
-
-    if ((strlen(dest) > CF_BUFSIZE - 20))
-    {
-        Log(LOG_LEVEL_ERR, "Filename too long");
-        return false;
-    }
 
     unlink(dest);                /* To avoid link attacks */
 

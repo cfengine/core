@@ -403,7 +403,7 @@ static void FailedTransfer(ConnectionInfo *connection)
 void CfGetFile(ServerFileGetState *args)
 {
     int fd;
-    off_t n_read, total = 0, sendlen = 0, count = 0;
+    off_t n_read, total = 0, sendlen = 0;
     char sendbuffer[CF_BUFSIZE + 256], filename[CF_BUFSIZE - 128];
     struct stat sb;
     int blocksize = 2048;
@@ -459,13 +459,6 @@ void CfGetFile(ServerFileGetState *args)
     }
     else
     {
-        int div = 3;
-
-        if (sb.st_size > 10485760L) /* File larger than 10 MB, checks every 64kB */
-        {
-            div = 32;
-        }
-
         while (true)
         {
             memset(sendbuffer, 0, CF_BUFSIZE);
@@ -488,14 +481,11 @@ void CfGetFile(ServerFileGetState *args)
 
                 /* check the file is not changing at source */
 
-                if (count++ % div == 0)   /* Don't do this too often */
+                if (stat(filename, &sb) == -1)
                 {
-                    if (stat(filename, &sb))
-                    {
-                        Log(LOG_LEVEL_ERR, "Cannot stat file '%s'. (stat: %s)",
-                            filename, GetErrorStr());
-                        break;
-                    }
+                    Log(LOG_LEVEL_ERR, "Cannot stat file '%s'. (stat: %s)",
+                        filename, GetErrorStr());
+                    break;
                 }
 
                 if (sb.st_size != savedlen)

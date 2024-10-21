@@ -575,7 +575,8 @@ static bool EncryptCopyRegularFileNet(const char *source, const char *dest, off_
 
     int blocksize = 2048, n_read = 0, plainlen, more = true, finlen;
     int tosend, cipherlen = 0;
-    char *buf, in[CF_BUFSIZE], out[CF_BUFSIZE], workbuf[CF_BUFSIZE], cfchangedstr[265];
+    // TODO: CFE-4449
+    char buf[CF_BUFSIZE + sizeof(int)], in[CF_BUFSIZE], out[CF_BUFSIZE], workbuf[CF_BUFSIZE], cfchangedstr[265];
     unsigned char iv[32] =
         { 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8 };
 
@@ -638,8 +639,6 @@ static bool EncryptCopyRegularFileNet(const char *source, const char *dest, off_
         return false;
     }
 
-    buf = xmalloc(CF_BUFSIZE + sizeof(int));
-
     bool   last_write_made_hole = false;
     size_t n_wrote_total        = 0;
 
@@ -648,7 +647,6 @@ static bool EncryptCopyRegularFileNet(const char *source, const char *dest, off_
         if ((cipherlen = ReceiveTransaction(conn->conn_info, buf, &more)) == -1)
         {
             close(dd);
-            free(buf);
             EVP_CIPHER_CTX_free(crypto_ctx);
             return false;
         }
@@ -661,7 +659,6 @@ static bool EncryptCopyRegularFileNet(const char *source, const char *dest, off_
         {
             Log(LOG_LEVEL_INFO, "Network access to '%s:%s' denied", conn->this_server, source);
             close(dd);
-            free(buf);
             EVP_CIPHER_CTX_free(crypto_ctx);
             return false;
         }
@@ -670,7 +667,6 @@ static bool EncryptCopyRegularFileNet(const char *source, const char *dest, off_
         {
             Log(LOG_LEVEL_INFO, "Source '%s:%s' changed while copying", conn->this_server, source);
             close(dd);
-            free(buf);
             EVP_CIPHER_CTX_free(crypto_ctx);
             return false;
         }
@@ -680,7 +676,6 @@ static bool EncryptCopyRegularFileNet(const char *source, const char *dest, off_
         if (!EVP_DecryptUpdate(crypto_ctx, (unsigned char *) workbuf, &plainlen, (unsigned char *) buf, cipherlen))
         {
             close(dd);
-            free(buf);
             EVP_CIPHER_CTX_free(crypto_ctx);
             return false;
         }
@@ -688,7 +683,6 @@ static bool EncryptCopyRegularFileNet(const char *source, const char *dest, off_
         if (!EVP_DecryptFinal_ex(crypto_ctx, (unsigned char *) workbuf + plainlen, &finlen))
         {
             close(dd);
-            free(buf);
             EVP_CIPHER_CTX_free(crypto_ctx);
             return false;
         }
@@ -711,7 +705,6 @@ static bool EncryptCopyRegularFileNet(const char *source, const char *dest, off_
                 Log(LOG_LEVEL_INFO, "Source '%s:%s' changed while copying",
                     conn->this_server, source);
             }
-            free(buf);
             unlink(dest);
             close(dd);
             conn->error = true;
@@ -727,12 +720,10 @@ static bool EncryptCopyRegularFileNet(const char *source, const char *dest, off_
     if (!ret)
     {
         unlink(dest);
-        free(buf);
         EVP_CIPHER_CTX_free(crypto_ctx);
         return false;
     }
 
-    free(buf);
     EVP_CIPHER_CTX_free(crypto_ctx);
     return true;
 }
@@ -757,7 +748,9 @@ bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
 {
     assert(conn != NULL);
 
-    char *buf, workbuf[CF_BUFSIZE], cfchangedstr[265];
+    // TODO: CFE-4449
+    char buf[CF_BUFSIZE + sizeof(int)]; /* Note CF_BUFSIZE not buf_size !! */
+    char workbuf[CF_BUFSIZE], cfchangedstr[265];
     const int buf_size = 2048;
 
     /* We encrypt only for CLASSIC protocol. The TLS protocol is always over
@@ -802,8 +795,6 @@ bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
         return false;
     }
 
-    buf = xmalloc(CF_BUFSIZE + sizeof(int));    /* Note CF_BUFSIZE not buf_size !! */
-
     Log(LOG_LEVEL_VERBOSE, "Copying remote file '%s:%s', expecting %jd bytes",
           conn->this_server, source, (intmax_t)size);
 
@@ -847,7 +838,6 @@ bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
                 conn->this_server, source, n_read);
 
             close(dd);
-            free(buf);
             return false;
         }
 
@@ -859,7 +849,6 @@ bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
             Log(LOG_LEVEL_INFO, "Network access to '%s:%s' denied",
                 conn->this_server, source);
             close(dd);
-            free(buf);
             return false;
         }
 
@@ -868,7 +857,6 @@ bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
             Log(LOG_LEVEL_INFO, "Source '%s:%s' changed while copying",
                 conn->this_server, source);
             close(dd);
-            free(buf);
             return false;
         }
 
@@ -886,7 +874,6 @@ bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
             Log(LOG_LEVEL_INFO, "Network access to cleartext '%s:%s' denied",
                 conn->this_server, source);
             close(dd);
-            free(buf);
             return false;
         }
 
@@ -906,7 +893,6 @@ bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
                 Log(LOG_LEVEL_INFO, "Source '%s:%s' changed while copying",
                     conn->this_server, source);
             }
-            free(buf);
             unlink(dest);
             close(dd);
             FlushFileStream(conn->conn_info->sd, size - n_wrote_total);
@@ -922,11 +908,9 @@ bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
     if (!ret)
     {
         unlink(dest);
-        free(buf);
         FlushFileStream(conn->conn_info->sd, size - n_wrote_total);
         return false;
     }
 
-    free(buf);
     return true;
 }

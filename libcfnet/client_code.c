@@ -864,7 +864,11 @@ bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
         /* Check for mismatch between encryption here and on server. */
 
         int value = -1;
-        sscanf(buf, "t %d", &value);
+        rc = sscanf(buf, "t %d", &value);
+        if (rc != 1)
+        {
+            value = -1;
+        }
 
         if ((value > 0) && (strncmp(buf + CF_INBAND_OFFSET, "BAD: ", 5) == 0))
         {

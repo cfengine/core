@@ -30,7 +30,7 @@
 extern const DBMigrationFunction dbm_migration_plan_lastseen[];
 
 
-#ifdef LMDB
+#ifndef LMDB
 bool DBMigrate(ARG_UNUSED DBHandle *db, ARG_UNUSED  dbid id)
 {
     return true;

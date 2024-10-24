@@ -26,6 +26,7 @@
 
 #include <lastseen.h>
 #include <string_lib.h>
+#include <backup.h>
 
 extern const DBMigrationFunction dbm_migration_plan_lastseen[];
 
@@ -64,6 +65,11 @@ bool DBMigrate(DBHandle *db, dbid id)
         {
             if (step_version == DBVersion(db))
             {
+                Seq *seq = SeqNew(1, free);
+                SeqAppend(seq, DBIdToPath(id));
+                backup_files_copy(seq);
+                SeqDestroy(seq);
+
                 if (!(*step)(db))
                 {
                     return false;

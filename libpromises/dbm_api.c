@@ -426,17 +426,23 @@ bool OpenDBInstance(DBHandle **dbp, dbid id, DBHandle *handle)
                 }
             }
 
-            DBPathUnLock(&lock);
-        }
-
-        if (handle->priv)
-        {
-            if (!DBMigrate(handle, id))
+            if (handle->priv != NULL)
             {
-                DBPrivCloseDB(handle->priv);
-                handle->priv = NULL;
-                handle->open_tstamp = -1;
+                if (!DBMigrate(handle, id))
+                {
+                    /* Migration failed. The best we can do is to move the
+                     * broken DB to the side and start fresh. */
+                    DBPrivCloseDB(handle->priv);
+                    DBPathMoveBroken(handle->filename);
+                    handle->priv = DBPrivOpenDB(handle->filename, id);
+                    if (handle->priv == DB_PRIV_DATABASE_BROKEN)
+                    {
+                        handle->priv = NULL;
+                    }
+                }
             }
+
+            DBPathUnLock(&lock);
         }
     }
 

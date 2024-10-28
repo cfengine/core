@@ -121,7 +121,10 @@ void UpdateLastSawHost(const char *hostkey, const char *address,
     char quality_key[CF_BUFSIZE];
     snprintf(quality_key, CF_BUFSIZE, "q%c%s", incoming ? 'i' : 'o', hostkey);
 
-    KeyHostSeen newq = { .lastseen = timestamp };
+    KeyHostSeen newq = {
+        .acknowledged = false,
+        .lastseen = timestamp,
+    };
 
     KeyHostSeen q;
     if (ReadDB(db, quality_key, &q, sizeof(q)))
@@ -762,4 +765,55 @@ int RemoveKeysFromLastSeen(const char *input, bool must_be_coherent,
     Log(LOG_LEVEL_INFO, "Removed corresponding entries from lastseen database.");
 
     return 0;
+}
+
+static bool OnlyRewriteIfChanged(KeyHostSeen *entry, ARG_UNUSED size_t size, KeyHostSeen *new)
+{
+    assert(entry != NULL);
+    assert(new != NULL);
+
+    if (entry->acknowledged)
+    {
+        return false;
+    }
+
+    new->acknowledged = true;
+    new->lastseen = entry->lastseen;
+    new->Q = entry->Q;
+
+    return true;
+}
+
+bool LastSeenHostAcknowledge(const char *host_key, bool incoming)
+{
+    DBHandle *db = NULL;
+    if (!OpenDB(&db, dbid_lastseen))
+    {
+        Log(LOG_LEVEL_ERR, "Unable to open lastseen DB");
+        return false;
+    }
+
+    // Update quality-of-connection entry
+    char key[CF_BUFSIZE];
+    NDEBUG_UNUSED int ret = snprintf(key, CF_BUFSIZE, "q%c%s", incoming ? 'i' : 'o', host_key);
+    assert(ret > 0 && ret < CF_BUFSIZE);
+
+    KeyHostSeen value;
+    value.lastseen = 0; /* To distinguish between entry not found and error */
+    if (OverwriteDB(db, key, &value, sizeof(value), (OverwriteCondition)OnlyRewriteIfChanged, &value))
+    {
+        Log(LOG_LEVEL_DEBUG, "Acknowledged observation of key '%s' to lastseen DB", key);
+    }
+    else if (value.lastseen != 0 /* was found */ &&
+             !value.acknowledged /* should update */)
+    {
+        /* In this case, the entry was found and should have been updated.
+         * However, false was returned. Hence, this must be due to error. */
+        Log(LOG_LEVEL_ERR, "Unable to overwrite key '%s' to lastseen DB", key);
+        CloseDB(db);
+        return false;
+    }
+
+    CloseDB(db);
+    return true;
 }

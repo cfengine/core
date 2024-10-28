@@ -568,6 +568,18 @@ bool CompareHashNet(const char *file1, const char *file2, bool encrypt, AgentCon
 
 /*********************************************************************/
 
+static void FlushFileStream(int sd, int toget)
+{
+    int i;
+    char buffer[2];
+
+    Log(LOG_LEVEL_VERBOSE, "Flushing rest of file...%d bytes", toget);
+
+    for (i = 0; i < toget; i++)
+    {
+        recv(sd, buffer, 1, 0); /* flush to end of current file */
+    }
+}
 
 static bool EncryptCopyRegularFileNet(const char *source, const char *dest, off_t size, AgentConnection *conn)
 {
@@ -675,6 +687,7 @@ static bool EncryptCopyRegularFileNet(const char *source, const char *dest, off_
 
         if (!EVP_DecryptUpdate(crypto_ctx, (unsigned char *) workbuf, &plainlen, (unsigned char *) buf, cipherlen))
         {
+            FlushFileStream(conn->conn_info->sd, size - n_wrote_total - n_read);
             close(dd);
             EVP_CIPHER_CTX_free(crypto_ctx);
             return false;
@@ -682,6 +695,7 @@ static bool EncryptCopyRegularFileNet(const char *source, const char *dest, off_
 
         if (!EVP_DecryptFinal_ex(crypto_ctx, (unsigned char *) workbuf + plainlen, &finlen))
         {
+            FlushFileStream(conn->conn_info->sd, size - n_wrote_total - n_read);
             close(dd);
             EVP_CIPHER_CTX_free(crypto_ctx);
             return false;
@@ -705,6 +719,7 @@ static bool EncryptCopyRegularFileNet(const char *source, const char *dest, off_
                 Log(LOG_LEVEL_INFO, "Source '%s:%s' changed while copying",
                     conn->this_server, source);
             }
+            FlushFileStream(conn->conn_info->sd, size - n_wrote_total);
             unlink(dest);
             close(dd);
             conn->error = true;
@@ -726,19 +741,6 @@ static bool EncryptCopyRegularFileNet(const char *source, const char *dest, off_
 
     EVP_CIPHER_CTX_free(crypto_ctx);
     return true;
-}
-
-static void FlushFileStream(int sd, int toget)
-{
-    int i;
-    char buffer[2];
-
-    Log(LOG_LEVEL_VERBOSE, "Flushing rest of file...%d bytes", toget);
-
-    for (i = 0; i < toget; i++)
-    {
-        recv(sd, buffer, 1, 0); /* flush to end of current file */
-    }
 }
 
 /* TODO finalize socket or TLS session in all cases that this function fails

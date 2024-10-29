@@ -33,6 +33,10 @@ ProtocolVersion ParseProtocolVersionPolicy(const char *const s)
     {
         return CF_PROTOCOL_COOKIE;
     }
+    else if (StringEqual(s, "4") || StringEqual(s, "safeget"))
+    {
+        return CF_PROTOCOL_SAFEGET;
+    }
     else if (StringEqual(s, "latest"))
     {
         return CF_PROTOCOL_LATEST;

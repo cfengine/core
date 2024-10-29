@@ -15,6 +15,7 @@ Names of protocol versions:
 1. `"classic"` - Legacy, pre-TLS, protocol. Not enabled or allowed by default.
 2. `"tls"` - TLS Protocol using OpenSSL. Encrypted and 2-way authentication.
 3. `"cookie"` - TLS Protocol with cookie command for duplicate host detection.
+3. `"safeget"` - Same as cookie, but with an atomic and safe `GET` request.
 
 Wanted protocol version can be specified from policy:
 
@@ -59,3 +60,25 @@ Both server and client will then set `conn_info->protocol` to `2`, and use proto
 There is currently no way to require a specific version number (only allow / disallow version 1).
 This is because version 2 and 3 are practically identical.
 Downgrade from version 3 to 2 happens seamlessly, but crucially, it doesn't downgrade to version 1 inside the TLS code.
+
+
+## Requests
+
+### `GET <FILENAME>` (protocol v4)
+
+The following is a description of the `GET <FILENAME>` request at protocol
+version v4 `"safeget"` (introduced in CFEngine 3.25).
+
+PDUs from the response following a `GET <FILENAME>` request now contain a
+protocol header consisting of a NULL-byte terminated string of four unsigned
+integers (`uint64_t`). We will refer to the four integers as ERROR_CODE,
+FILE_SIZE, FILE_OFFSET, and PAYLOAD_SIZE. The integers will appear in this order
+in the protocol header. Each integer is separated by a whitespace character.
+
+A non-zero ERROR_CODE signals that an error occurred. Furthermore, the exact
+value of ERROR_CODE specifies what went wrong on the server side. FILE_SIZE and
+FILE_OFFSET are mainly used to determine when the last PDU is received (i.e.,
+when FILE_SIZE = FILE_OFFSET + PAYLOAD_SIZE). However, FILE_SIZE is also used to
+detect if the file is modified at the source during transmission. The payload
+starts immediately after the NULL-terminating byte in the protocol header and
+consists of PAYLOAD_SIZE bytes.

@@ -346,7 +346,12 @@ log_cmd "$BINDIR/cf-key -s -n"
 log_cmd "$BINDIR/cf-check diagnose"
 $BINDIR/cf-promises --show-classes --show-vars > "$tmpdir/classes-and-vars.txt" 2>&1
 $BINDIR/cf-agent --no-lock --file update.cf --show-evaluated-classes --show-evaluated-vars > "$tmpdir/update-evaluated-classes-and-vars.txt" 2>&1
-$BINDIR/cf-agent --no-lock --file promises.cf --show-evaluated-classes --show-evaluated-vars > "$tmpdir/promises-evaluated-classes-and-vars.txt" 2>&1
+# if dpkg/apt is running auto update the next bit will take a long time
+ps -efl | grep -P '(dpkg|apt)'
+# only for debugging, don't keep here
+pkill -9 dpkg || true
+pkill -9 apt || true
+$BINDIR/cf-agent --verbose --no-lock --file promises.cf --show-evaluated-classes --show-evaluated-vars > "$tmpdir/promises-evaluated-classes-and-vars.txt" 2>&1
 
 if command -v systemctl >/dev/null; then
   log_cmd "systemctl status cfengine3"

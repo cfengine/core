@@ -46,4 +46,5 @@ libcfnet_la_SOURCES = \
 	server_code.c server_code.h \
 	stat_cache.c stat_cache.h \
 	tls_client.c tls_client.h \
-	tls_generic.c tls_generic.h
+	tls_generic.c tls_generic.h \
+	file_stream.c file_stream.h

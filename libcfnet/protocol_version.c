@@ -33,6 +33,10 @@ ProtocolVersion ParseProtocolVersionPolicy(const char *const s)
     {
         return CF_PROTOCOL_COOKIE;
     }
+    else if (StringEqual(s, "4") || StringEqual(s, "filestream"))
+    {
+        return CF_PROTOCOL_FILESTREAM;
+    }
     else if (StringEqual(s, "latest"))
     {
         return CF_PROTOCOL_LATEST;

@@ -31,6 +31,7 @@
 #include <stat_cache.h>
 #include <string_lib.h>
 #include <tls_generic.h>
+#include <file_stream.h>
 
 Seq *ProtocolOpenDir(AgentConnection *conn, const char *path)
 {
@@ -123,6 +124,38 @@ bool ProtocolGet(AgentConnection *conn, const char *remote_path,
         fclose(file_ptr);
         return false;
     }
+
+    /* Use file stream API if it is available */
+    const ProtocolVersion version = ConnectionInfoProtocolVersion(conn->conn_info);
+    if (ProtocolSupportsFileStream(version))
+    {
+        fclose(file_ptr);
+
+        char dest[PATH_MAX];
+        ret = snprintf(dest, sizeof(dest), "%s.cfnew", local_path);
+        if (ret < 0 || (size_t)ret >= sizeof(dest))
+        {
+            Log(LOG_LEVEL_ERR, "Truncation error: Path too long (%d >= %zu)", ret, sizeof(dest));
+            return false;
+        }
+
+        if (!FileStreamFetch(conn->conn_info->ssl, local_path, dest, perms))
+        {
+            /* Error is already logged */
+            return false;
+        }
+
+        Log(LOG_LEVEL_VERBOSE, "Replacing file '%s' with '%s'...", dest, local_path);
+        if (rename(dest, local_path) == -1)
+        {
+            Log(LOG_LEVEL_ERR, "Failed to replace destination file '%s' with basis file '%s': %s", dest, local_path, GetErrorStr());
+            return false;
+        }
+
+        return true;
+    }
+
+    /* Otherwise, use old protocol */
 
     char cfchangedstr[sizeof(CF_CHANGEDSTR1 CF_CHANGEDSTR2)];
     snprintf(cfchangedstr, sizeof(cfchangedstr), "%s%s",

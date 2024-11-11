@@ -1,3 +1,34 @@
+3.21.6:
+	- Added logging CFEngine component related SELinux denials in cf-support
+	  (ENT-12137)
+	- Agent now also ignores interfaces listed in ignore_interfaces.rx when
+	  looking for IPv6 interface info. Variables such as
+	  'default:sys.hardware_mac[<INTERFACE>]' will no longer be defined for
+	  ignored interfaces. (ENT-11840)
+	- Atomic copy_from in files promise
+	  Changes to 'files' promise in 'copy_from' attribute:
+	  - The new file (i.e., '<FILENAME>.cfnew') is now created with correct
+	    permission during remote copy. Previously it would be created with
+	    default permissions.
+	  - The destination file (i.e., '<FILENAME>') is no longer deleted on
+	    backup during file copy. Previously it would be renamed to
+	    '<FILENAME>.cfsaved', causing the original file to dissappear. Now an
+	    actual copy of the original file with the same permissions is created
+	    instead.
+	  As a result, there will no longer be a brief moment where the original
+	  file is inaccessible. (ENT-11988)
+	- Fixed bug in double expansion of foreign list variables with namespaces
+	  (ENT-11923)
+	- Fixed package promises with only promisers and no other attributes
+	  (CFE-4315, CFE-4398, CFE-4408)
+	- Fixed packagesmatching() function segfaulting on Windows platform
+	  (ENT-11900)
+	- Trailing newline on insert_tree promisers no longer removes ending tag for select_xpath
+	  (CFE-3806)
+	- commands promises with exit codes not matching any
+	   _returncodes attributes from classes body now log an
+	   error message not just an info message (CFE-4429, ENT-12103)
+
 3.21.5:
 	- Added warning log message when OS is not recognized (CFE-4342)
 	- Adjusted package module inventory to include quotes around fields when needed

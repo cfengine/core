@@ -1,3 +1,26 @@
+3.24.1:
+	- Added logging CFEngine component related SELinux denials in cf-support
+	  (ENT-12137)
+	- Agent now also ignores interfaces listed in ignore_interfaces.rx when
+	  looking for IPv6 interface info. Variables such as
+	  'default:sys.hardware_mac[<INTERFACE>]' will no longer be defined for
+	  ignored interfaces. (ENT-11840)
+	- Atomic copy_from in files promise
+	  Changes to 'files' promise in 'copy_from' attribute:
+	  - The new file (i.e., '<FILENAME>.cfnew') is now created with correct
+	    permission during remote copy. Previously it would be created with
+	    default permissions.
+	  - The destination file (i.e., '<FILENAME>') is no longer deleted on
+	    backup during file copy. Previously it would be renamed to
+	    '<FILENAME>.cfsaved', causing the original file to dissappear. Now an
+	    actual copy of the original file with the same permissions is created
+	    instead.
+	  As a result, there will no longer be a brief moment where the original
+	  file is inaccessible. (ENT-11988)
+	- commands promises with exit codes not matching any
+	  _returncodes attributes from classes body now log and
+	  error message not just an info message (CFE-4429, ENT-12103)
+
 3.24.0:
 	- Added a sanity check to policy parser that checks for and warns
 	  in case of promise declarations with no actions. The motivation

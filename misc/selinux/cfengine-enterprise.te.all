@@ -229,6 +229,7 @@ allow cfengine_execd_t cfengine_reactor_exec_t:file getattr;
 allow cfengine_execd_t cfengine_var_lib_t:sock_file { create unlink getattr setattr };
 
 allow cfengine_execd_t self:capability sys_ptrace;
+allow cfengine_execd_t self:cap_userns sys_ptrace;
 
 allow cfengine_execd_t crontab_exec_t:file getattr;
 allow cfengine_execd_t dmidecode_exec_t:file getattr;

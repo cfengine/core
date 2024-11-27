@@ -443,7 +443,7 @@ allow cfengine_hub_t sendmail_exec_t:file { execute execute_no_trans open read }
 
 allow cfengine_hub_t bin_t:file map;
 allow cfengine_hub_t bin_t:file { execute execute_no_trans };
-allow cfengine_hub_t cert_t:dir search;
+allow cfengine_hub_t cert_t:dir { search getattr };
 allow cfengine_hub_t cert_t:file { getattr open read };
 allow cfengine_hub_t crontab_exec_t:file getattr;
 allow cfengine_hub_t devlog_t:lnk_file read;
@@ -535,7 +535,7 @@ allow cfengine_postgres_t cfengine_var_lib_t:dir { add_name getattr open create 
 
 allow cfengine_postgres_t postgresql_port_t:tcp_socket name_bind;
 
-allow cfengine_postgres_t cert_t:dir search;
+allow cfengine_postgres_t cert_t:dir { search getattr };
 allow cfengine_postgres_t cert_t:file { getattr open read };
 allow cfengine_postgres_t hugetlbfs_t:file map;
 allow cfengine_postgres_t hugetlbfs_t:file { read write };
@@ -597,7 +597,7 @@ allow init_t cfengine_httpd_t:process siginh;
 allow cfengine_httpd_t cfengine_httpd_exec_t:file entrypoint;
 allow cfengine_httpd_t cfengine_httpd_exec_t:file { ioctl read getattr lock map execute open };
 
-allow cfengine_httpd_t cert_t:dir search;
+allow cfengine_httpd_t cert_t:dir { search getattr };
 allow cfengine_httpd_t cert_t:file { getattr open read };
 allow cfengine_httpd_t cert_t:lnk_file read;
 allow cfengine_httpd_t cfengine_httpd_exec_t:file execute_no_trans;
@@ -794,7 +794,7 @@ allow cfengine_reactor_t fs_t:filesystem getattr;
 allow cfengine_reactor_t shell_exec_t:file map;
 allow cfengine_reactor_t shell_exec_t:file { execute execute_no_trans };
 
-allow cfengine_reactor_t cert_t:dir search;
+allow cfengine_reactor_t cert_t:dir { search getattr };
 allow cfengine_reactor_t cert_t:file { getattr open read };
 allow cfengine_reactor_t cert_t:lnk_file read;
 
@@ -871,7 +871,7 @@ allow cfengine_cfbs_t bin_t:file { map execute };
 allow cfengine_cfbs_t shell_exec_t:file map;
 allow cfengine_cfbs_t shell_exec_t:file { execute execute_no_trans };
 
-allow cfengine_cfbs_t cert_t:dir search;
+allow cfengine_cfbs_t cert_t:dir { search getattr };
 allow cfengine_cfbs_t cert_t:file { getattr open read };
 allow cfengine_cfbs_t cert_t:lnk_file read;
 allow cfengine_cfbs_t http_port_t:tcp_socket name_connect;

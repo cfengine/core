@@ -278,6 +278,9 @@ allow cfengine_monitord_t cfengine_hub_exec_t:file getattr;
 allow cfengine_monitord_t cfengine_reactor_exec_t:file getattr;
 
 allow cfengine_monitord_t var_log_t:file { open read };
+# cf-monitord collects arbitrary system data so needs complete access to filesystems and files
+fs_unconfined(cfengine_monitord_t)
+files_unconfined(cfengine_monitord_t)
 
 allow cfengine_monitord_t self:capability { dac_override dac_read_search sys_ptrace };
 allow cfengine_monitord_t self:cap_userns sys_ptrace;

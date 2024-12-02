@@ -842,8 +842,9 @@ static bool RecvDelta(
     char in_buf[MESSAGE_SIZE * 2], out_buf[MESSAGE_SIZE];
 
     /* Open/create the destination file */
-    FILE *new = safe_fopen_create_perms(dest, "wb", perms);
-    if (new == NULL)
+    int new = safe_open_create_perms(
+        dest, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY, perms);
+    if (new == -1)
     {
         Log(LOG_LEVEL_ERR,
             "Failed to open/create destination file '%s': %s",
@@ -867,6 +868,8 @@ static bool RecvDelta(
             basis,
             GetErrorStr());
         FlushStream(conn);
+        close(new);
+        unlink(dest);
         return false;
     }
 
@@ -876,6 +879,9 @@ static bool RecvDelta(
     {
         Log(LOG_LEVEL_ERR, "Failed to begin job for patching");
         FlushStream(conn);
+        close(new);
+        fclose(old);
+        unlink(dest);
         return false;
     }
 
@@ -883,6 +889,10 @@ static bool RecvDelta(
     rs_buffers_t bufs = {0};
     bufs.next_out = out_buf;
     bufs.avail_out = sizeof(out_buf);
+
+    /* Sparse file specific */
+    bool last_write_made_hole = false;
+    size_t n_wrote_total = 0;
 
     rs_result res;
     do
@@ -902,9 +912,10 @@ static bool RecvDelta(
                     MESSAGE_SIZE);
                 FlushStream(conn);
 
-                fclose(new);
+                close(new);
                 fclose(old);
                 rs_job_free(job);
+                unlink(dest);
                 return false;
             }
 
@@ -919,9 +930,10 @@ static bool RecvDelta(
             if (!RecvMessage(conn, in_buf + bufs.avail_in, &n_bytes, &eof))
             {
                 /* Error is already logged */
-                fclose(new);
+                close(new);
                 fclose(old);
                 rs_job_free(job);
+                unlink(dest);
                 return false;
             }
 
@@ -941,9 +953,10 @@ static bool RecvDelta(
                 FlushStream(conn);
             }
 
-            fclose(new);
+            close(new);
             fclose(old);
             rs_job_free(job);
+            unlink(dest);
             return false;
         }
 
@@ -951,8 +964,7 @@ static bool RecvDelta(
         size_t present = bufs.next_out - out_buf;
         if (present > 0)
         {
-            size_t n_bytes = fwrite(out_buf, 1 /* Byte */, present, new);
-            if (n_bytes == 0)
+            if (!FileSparseWrite(new, out_buf, present, &last_write_made_hole))
             {
                 Log(LOG_LEVEL_ERR,
                     "Failed to write to destination file '%s' during file stream: %s",
@@ -963,20 +975,29 @@ static bool RecvDelta(
                     FlushStream(conn);
                 }
 
-                fclose(new);
+                close(new);
                 fclose(old);
                 rs_job_free(job);
+                unlink(dest);
                 return false;
             }
 
+            n_wrote_total += present;
             bufs.next_out = out_buf;
             bufs.avail_out = sizeof(out_buf);
         }
     } while (res != RS_DONE);
 
-    fclose(new);
     fclose(old);
     rs_job_free(job);
+
+    if (!FileSparseClose(
+            new, dest, false, n_wrote_total, last_write_made_hole))
+    {
+        /* Error is already logged */
+        unlink(dest);
+        return false;
+    }
 
     return true;
 }

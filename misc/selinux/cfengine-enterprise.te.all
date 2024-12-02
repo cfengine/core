@@ -338,7 +338,7 @@ files_read_all_symlinks(cfengine_serverd_t)
 # allow cf-serverd to connect to the CFEngine port and to write into a local socket (in case of
 # call-collect on hosts and the hub itself, respectively)
 allow cfengine_serverd_t unreserved_port_t:tcp_socket name_connect;
-allow cfengine_serverd_t cfengine_var_lib_t:sock_file write;
+allow cfengine_serverd_t cfengine_var_lib_t:sock_file { getattr write };
 allow cfengine_serverd_t cfengine_hub_t:unix_stream_socket connectto;
 
 # TODO: this should not be needed

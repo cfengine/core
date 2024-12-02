@@ -699,6 +699,8 @@ allow cfengine_apachectl_t proc_t:file { open read };
 # this is a macro invocation, the file has to be processed with
 # make -f /usr/share/selinux/devel/Makefile
 ps_process_pattern(cfengine_apachectl_t, domain)
+# ps_process_pattern() above doesn't include needed sys_ptrace capability for apachectl to run 'ps'
+allow cfengine_apachectl_t self:cap_userns sys_ptrace;
 
 #============= cfengine_reactor_t ==============
 type cfengine_reactor_t;

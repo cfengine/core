@@ -17,9 +17,10 @@ jobs:
   acceptance_tests:
     needs: unit_tests
     uses: ./.github/workflows/acceptance_tests.yml
-  windows_acceptance_tests:
-    needs: unit_tests
-    uses: ./.github/workflows/windows_acceptance_tests.yml
+# Disable windows_acceptance_tests as of Nov 27 2024, taking 6 hours so exceeding github job limit and gets cancelled.
+#  windows_acceptance_tests:
+#    needs: unit_tests
+#    uses: ./.github/workflows/windows_acceptance_tests.yml
   macos_unit_tests:
     needs: unit_tests
     uses: ./.github/workflows/macos_unit_tests.yml

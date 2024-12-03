@@ -61,7 +61,7 @@
  *       in the payload. If the Error flag is set, there may be an error
  *       message in the payload.
  */
-#define HEADER_SIZE 2
+#define PROTOCOL_HEADER_SIZE 2
 
 /**
  * @note The TLS Generic API requires that the message length is less than
@@ -69,28 +69,29 @@
  *       Bytes, because it's the largest unsigned integer you can represent
  *       with 12 bits (2^12 - 1 = 4095).
  */
-#define MESSAGE_SIZE MIN(CF_BUFSIZE - 1, 4095)
+#define PROTOCOL_MESSAGE_SIZE MIN(CF_BUFSIZE - 1, 4095)
 
 /**
  * @brief Send a message using the file stream protocol
- * @warning You probably want to use SendMessage() or SendError() instead
+ * @warning You probably want to use ProtocolSendMessage() or
+ *          ProtocolSendError() instead
  *
  * @param conn The SSL connection object
  * @param msg The message to send
  * @param len The length of the message to send (must be less or equal to
- *            MESSAGE_SIZE Bytes)
+ *            PROTOCOL_MESSAGE_SIZE Bytes)
  * @param eof Set to true if this is the last message in a transaction,
  *            otherwise false
  * @param err Set to true if transaction must be canceled (e.g., due to an
  *            unexpected error), otherwise false
  * @return true on success, otherwise false
  */
-static bool __SendMessage(
+static bool __ProtocolSendMessage(
     SSL *conn, const char *msg, size_t len, bool eof, bool err)
 {
     assert(conn != NULL);
     assert(msg != NULL || len == 0);
-    assert(len <= MESSAGE_SIZE);
+    assert(len <= PROTOCOL_MESSAGE_SIZE);
 
     /* Set message length */
     assert(sizeof(len) >= 3); /* It's probably guaranteed, but let's make sure
@@ -111,14 +112,14 @@ static bool __SendMessage(
 
     /* Send header */
     header = htons(header);
-    int ret = TLSSend(conn, (char *) &header, HEADER_SIZE);
-    if (ret != HEADER_SIZE)
+    int ret = TLSSend(conn, (char *) &header, PROTOCOL_HEADER_SIZE);
+    if (ret != PROTOCOL_HEADER_SIZE)
     {
         Log(LOG_LEVEL_ERR,
             "Failed to send message header during file stream: "
             "Expected to send %d bytes, but sent %d bytes",
             ret,
-            HEADER_SIZE);
+            PROTOCOL_HEADER_SIZE);
         return false;
     }
 
@@ -146,34 +147,35 @@ static bool __SendMessage(
  * @param conn The SSL connection object
  * @param msg The message to send
  * @param len The length of the message to send (must be less or equal to
- *            MESSAGE_SIZE Bytes)
+ *            PROTOCOL_MESSAGE_SIZE Bytes)
  * @param eof Set to true if this is the last message in a transaction,
  *            otherwise false
  * @return true on success, otherwise false
  */
-static inline bool SendMessage(
+static inline bool ProtocolSendMessage(
     SSL *conn, const char *msg, size_t len, bool eof)
 {
     assert(conn != NULL);
     assert(msg != NULL || len == 0);
 
-    return __SendMessage(conn, msg, len, eof, false);
+    return __ProtocolSendMessage(conn, msg, len, eof, false);
 }
 
 /**
  * @brief Receive a message using the file stream protocol
  *
  * @param conn The SSL connection object
- * @param msg The message receive buffer (must be MESSAGE_SIZE Bytes large)
+ * @param msg The message receive buffer (must be PROTOCOL_MESSAGE_SIZE bytes
+ *            large)
  * @param len The length of the reveived message
  * @param eof Is set to true if this was the last message in the transaction
  * @return true on success, otherwise false
  *
- * @note RecvMessage fails if the communication is broken or if we received an
- *       error from the remote host. In both cases, we should not try to flush
- *       the stream.
+ * @note ProtocolRecvMessage fails if the communication is broken or if we
+ *       received an error from the remote host. In both cases, we should not
+ *       try to flush the stream.
  */
-static bool RecvMessage(SSL *conn, char *msg, size_t *len, bool *eof)
+static bool ProtocolRecvMessage(SSL *conn, char *msg, size_t *len, bool *eof)
 {
     assert(conn != NULL);
     assert(msg != NULL);
@@ -184,14 +186,14 @@ static bool RecvMessage(SSL *conn, char *msg, size_t *len, bool *eof)
     char recv_buffer[CF_BUFSIZE];
 
     /* Receive header */
-    int ret = TLSRecv(conn, recv_buffer, HEADER_SIZE);
-    if (ret != HEADER_SIZE)
+    int ret = TLSRecv(conn, recv_buffer, PROTOCOL_HEADER_SIZE);
+    if (ret != PROTOCOL_HEADER_SIZE)
     {
         Log(LOG_LEVEL_ERR,
             "Failed to receive message header during file stream: "
             "Expected to receive %d bytes, but received %d bytes",
             ret,
-            HEADER_SIZE);
+            PROTOCOL_HEADER_SIZE);
         return false;
     }
 
@@ -199,7 +201,7 @@ static bool RecvMessage(SSL *conn, char *msg, size_t *len, bool *eof)
      * Because it actually writes a NUL-Byte after the requested bytes which
      * would cause memory violations. */
     uint16_t header;
-    memcpy(&header, recv_buffer, HEADER_SIZE);
+    memcpy(&header, recv_buffer, PROTOCOL_HEADER_SIZE);
     header = ntohs(header);
 
     /* Extract Error flag */
@@ -257,14 +259,14 @@ static bool RecvMessage(SSL *conn, char *msg, size_t *len, bool *eof)
  * @param conn The SSL connection object
  * @return true on success, otherwise false
  */
-static bool FlushStream(SSL *conn)
+static bool ProtocolFlushStream(SSL *conn)
 {
     assert(conn != NULL);
 
-    char msg[MESSAGE_SIZE];
+    char msg[PROTOCOL_MESSAGE_SIZE];
     size_t len;
     bool eof;
-    while (RecvMessage(conn, msg, &len, &eof))
+    while (ProtocolRecvMessage(conn, msg, &len, &eof))
     {
         if (eof)
         {
@@ -280,24 +282,24 @@ static bool FlushStream(SSL *conn)
  * @brief Send an error message using the file stream protocol
  *
  * @param conn The SSL connection object
- * @param flush Whether or not to flush the stream (see FlushStream())
+ * @param flush Whether or not to flush the stream (see ProtocolFlushStream())
  * @param fmt The format string
  * @param ... The format string arguments
  * @return true on success, otherwise false
  */
-static bool SendError(SSL *conn, bool flush, const char *fmt, ...)
+static bool ProtocolSendError(SSL *conn, bool flush, const char *fmt, ...)
     FUNC_ATTR_PRINTF(3, 4);
 
-static bool SendError(SSL *conn, bool flush, const char *fmt, ...)
+static bool ProtocolSendError(SSL *conn, bool flush, const char *fmt, ...)
 {
     assert(conn != NULL);
     assert(fmt != NULL);
 
     va_list ap;
-    char msg[MESSAGE_SIZE];
+    char msg[PROTOCOL_MESSAGE_SIZE];
 
     va_start(ap, fmt);
-    int len = vsnprintf(msg, MESSAGE_SIZE, fmt, ap);
+    int len = vsnprintf(msg, PROTOCOL_MESSAGE_SIZE, fmt, ap);
     va_end(ap);
 
     assert(len >= 0); /* Let's make sure we detect this in debug builds */
@@ -307,28 +309,28 @@ static bool SendError(SSL *conn, bool flush, const char *fmt, ...)
             "Failed to format error message during file stream");
         len = 0; /* We still want to send the header */
     }
-    else if (len >= MESSAGE_SIZE)
+    else if (len >= PROTOCOL_MESSAGE_SIZE)
     {
         Log(LOG_LEVEL_WARNING,
             "Error message truncated during file stream: "
             "Message is %d bytes, but maximum message size is %d bytes",
             len,
-            MESSAGE_SIZE);
+            PROTOCOL_MESSAGE_SIZE);
         /* Add dots to indicate message truncation. We don't need the
          * terminating NULL-byte in the buffer. Furthermore, TLSRecv() will
          * append one, upon receiving the message */
-        msg[MESSAGE_SIZE - 1] = '.';
-        msg[MESSAGE_SIZE - 2] = '.';
-        msg[MESSAGE_SIZE - 3] = '.';
-        len = MESSAGE_SIZE;
+        msg[PROTOCOL_MESSAGE_SIZE - 1] = '.';
+        msg[PROTOCOL_MESSAGE_SIZE - 2] = '.';
+        msg[PROTOCOL_MESSAGE_SIZE - 3] = '.';
+        len = PROTOCOL_MESSAGE_SIZE;
     }
 
     if (flush)
     {
-        FlushStream(conn);
+        ProtocolFlushStream(conn);
     }
 
-    return __SendMessage(conn, msg, (size_t) len, false, true);
+    return __ProtocolSendMessage(conn, msg, (size_t) len, false, true);
 }
 
 /*********************************************************/
@@ -340,7 +342,8 @@ static bool SendError(SSL *conn, bool flush, const char *fmt, ...)
 
 bool FileStreamRefuse(SSL *conn)
 {
-    return SendError(conn, false, ERROR_MSG_UNSPECIFIED_SERVER_REFUSAL);
+    return ProtocolSendError(
+        conn, false, ERROR_MSG_UNSPECIFIED_SERVER_REFUSAL);
 }
 
 /**
@@ -357,14 +360,14 @@ static bool RecvSignature(SSL *conn, rs_signature_t **sig)
 
     /* The input buffer has to be twice the message size, so that it can fit a
      * new message, as well as some tail data from the last job iteration */
-    char in_buf[MESSAGE_SIZE * 2];
+    char in_buf[PROTOCOL_MESSAGE_SIZE * 2];
 
     /* Start a job for loading a signature into memory */
     rs_job_t *job = rs_loadsig_begin(sig);
     if (job == NULL)
     {
         Log(LOG_LEVEL_ERR, "Failed to begin job for loading signature");
-        SendError(conn, true, ERROR_MSG_INTERNAL_SERVER_ERROR);
+        ProtocolSendError(conn, true, ERROR_MSG_INTERNAL_SERVER_ERROR);
         return false;
     }
 
@@ -377,7 +380,7 @@ static bool RecvSignature(SSL *conn, rs_signature_t **sig)
         /* Fill input buffers */
         if (bufs.eof_in == 0)
         {
-            if (bufs.avail_in > MESSAGE_SIZE)
+            if (bufs.avail_in > PROTOCOL_MESSAGE_SIZE)
             {
                 /* The job requires more data, but we cannot fit another
                  * message into the input buffer */
@@ -386,8 +389,8 @@ static bool RecvSignature(SSL *conn, rs_signature_t **sig)
                     "%zu of %zu bytes available, but %d bytes is required to fit another message",
                     sizeof(in_buf) - bufs.avail_in,
                     sizeof(in_buf),
-                    MESSAGE_SIZE);
-                SendError(conn, true, ERROR_MSG_INTERNAL_SERVER_ERROR);
+                    PROTOCOL_MESSAGE_SIZE);
+                ProtocolSendError(conn, true, ERROR_MSG_INTERNAL_SERVER_ERROR);
 
                 rs_job_free(job);
                 return false;
@@ -401,7 +404,8 @@ static bool RecvSignature(SSL *conn, rs_signature_t **sig)
 
             size_t n_bytes;
             bool eof;
-            if (!RecvMessage(conn, in_buf + bufs.avail_in, &n_bytes, &eof))
+            if (!ProtocolRecvMessage(
+                    conn, in_buf + bufs.avail_in, &n_bytes, &eof))
             {
                 /* Error is already logged */
                 rs_job_free(job);
@@ -420,7 +424,8 @@ static bool RecvSignature(SSL *conn, rs_signature_t **sig)
             Log(LOG_LEVEL_ERR,
                 "Failed to iterate job for loading signature: %s",
                 rs_strerror(res));
-            SendError(conn, bufs.eof_in == 0, ERROR_MSG_INTERNAL_SERVER_ERROR);
+            ProtocolSendError(
+                conn, bufs.eof_in == 0, ERROR_MSG_INTERNAL_SERVER_ERROR);
             rs_job_free(job);
             return false;
         }
@@ -448,7 +453,7 @@ static bool SendDelta(SSL *conn, rs_signature_t *sig, const char *filename)
 
     /* In this case, the input buffer does not need to be twice the message
      * size, because we can control how much we read into it */
-    char in_buf[MESSAGE_SIZE], out_buf[MESSAGE_SIZE];
+    char in_buf[PROTOCOL_MESSAGE_SIZE], out_buf[PROTOCOL_MESSAGE_SIZE];
 
     /* Open source file */
     FILE *file = safe_fopen(filename, "rb");
@@ -458,7 +463,7 @@ static bool SendDelta(SSL *conn, rs_signature_t *sig, const char *filename)
             "Failed to open the source file '%s' for computing delta during file stream: %s",
             filename,
             GetErrorStr());
-        SendError(conn, false, ERROR_MSG_INTERNAL_SERVER_ERROR);
+        ProtocolSendError(conn, false, ERROR_MSG_INTERNAL_SERVER_ERROR);
         return false;
     }
 
@@ -467,7 +472,7 @@ static bool SendDelta(SSL *conn, rs_signature_t *sig, const char *filename)
     if (res != RS_DONE)
     {
         Log(LOG_LEVEL_ERR, "Failed to build hash table: %s", rs_strerror(res));
-        SendError(conn, false, ERROR_MSG_INTERNAL_SERVER_ERROR);
+        ProtocolSendError(conn, false, ERROR_MSG_INTERNAL_SERVER_ERROR);
         fclose(file);
         return false;
     }
@@ -477,7 +482,7 @@ static bool SendDelta(SSL *conn, rs_signature_t *sig, const char *filename)
     if (job == NULL)
     {
         Log(LOG_LEVEL_ERR, "Failed to begin job for generating delta");
-        SendError(conn, false, ERROR_MSG_INTERNAL_SERVER_ERROR);
+        ProtocolSendError(conn, false, ERROR_MSG_INTERNAL_SERVER_ERROR);
         fclose(file);
         return false;
     }
@@ -485,7 +490,8 @@ static bool SendDelta(SSL *conn, rs_signature_t *sig, const char *filename)
     /* Setup buffers for the job */
     rs_buffers_t bufs = {0};
     bufs.next_out = out_buf;
-    bufs.avail_out = MESSAGE_SIZE; /* We cannot send more using the protocol */
+    bufs.avail_out =
+        PROTOCOL_MESSAGE_SIZE; /* We cannot send more using the protocol */
 
     do
     {
@@ -500,7 +506,8 @@ static bool SendDelta(SSL *conn, rs_signature_t *sig, const char *filename)
                     "%zu of %zu bytes available",
                     sizeof(in_buf) - bufs.avail_in,
                     sizeof(in_buf));
-                SendError(conn, false, ERROR_MSG_INTERNAL_SERVER_ERROR);
+                ProtocolSendError(
+                    conn, false, ERROR_MSG_INTERNAL_SERVER_ERROR);
 
                 fclose(file);
                 rs_job_free(job);
@@ -526,7 +533,8 @@ static bool SendDelta(SSL *conn, rs_signature_t *sig, const char *filename)
                         "Failed to read the source file '%s' during file stream: %s",
                         filename,
                         GetErrorStr());
-                    SendError(conn, false, ERROR_MSG_INTERNAL_SERVER_ERROR);
+                    ProtocolSendError(
+                        conn, false, ERROR_MSG_INTERNAL_SERVER_ERROR);
 
                     fclose(file);
                     rs_job_free(job);
@@ -549,7 +557,7 @@ static bool SendDelta(SSL *conn, rs_signature_t *sig, const char *filename)
             Log(LOG_LEVEL_ERR,
                 "Failed to iterate job for generating delta: %s",
                 rs_strerror(res));
-            SendError(conn, false, ERROR_MSG_INTERNAL_SERVER_ERROR);
+            ProtocolSendError(conn, false, ERROR_MSG_INTERNAL_SERVER_ERROR);
 
             fclose(file);
             rs_job_free(job);
@@ -560,8 +568,8 @@ static bool SendDelta(SSL *conn, rs_signature_t *sig, const char *filename)
         size_t present = bufs.next_out - out_buf;
         if (present > 0)
         {
-            assert(present <= MESSAGE_SIZE);
-            if (!SendMessage(conn, out_buf, present, res == RS_DONE))
+            assert(present <= PROTOCOL_MESSAGE_SIZE);
+            if (!ProtocolSendMessage(conn, out_buf, present, res == RS_DONE))
             {
                 fclose(file);
                 rs_job_free(job);
@@ -569,12 +577,12 @@ static bool SendDelta(SSL *conn, rs_signature_t *sig, const char *filename)
             }
 
             bufs.next_out = out_buf;
-            bufs.avail_out = MESSAGE_SIZE;
+            bufs.avail_out = PROTOCOL_MESSAGE_SIZE;
         }
         else if (res == RS_DONE)
         {
             /* Send End-of-File */
-            if (!SendMessage(conn, NULL, 0, 1))
+            if (!ProtocolSendMessage(conn, NULL, 0, 1))
             {
                 fclose(file);
                 rs_job_free(job);
@@ -633,7 +641,7 @@ bool FileStreamServe(SSL *conn, const char *filename)
  * @note -1 on error is quite handy, because rs_sig_args() interprets it as
  *       unknown file size
  */
-static rs_long_t GetFileSize(FILE *file)
+static rs_long_t GetSizeOfFile(FILE *file)
 {
     /* librsync has rs_file_size() as a utility/convenience function which
      * basically does the exact same thing. However, it is not available in
@@ -671,7 +679,7 @@ static bool SendSignature(SSL *conn, const char *filename)
 
     /* In this case, the input buffer does not need to be twice the message
      * size, because we can control how much we read into it */
-    char in_buf[MESSAGE_SIZE], out_buf[MESSAGE_SIZE];
+    char in_buf[PROTOCOL_MESSAGE_SIZE], out_buf[PROTOCOL_MESSAGE_SIZE];
 
     /* Open basis file */
     FILE *file = safe_fopen(filename, "rb");
@@ -681,12 +689,12 @@ static bool SendSignature(SSL *conn, const char *filename)
             "Failed to open the basis file '%s' for computing delta during file stream: %s",
             filename,
             GetErrorStr());
-        SendError(conn, false, ERROR_MSG_INTERNAL_CLIENT_ERROR);
+        ProtocolSendError(conn, false, ERROR_MSG_INTERNAL_CLIENT_ERROR);
         return false;
     }
 
     /* Get file size */
-    rs_long_t fsize = GetFileSize(file);
+    rs_long_t fsize = GetSizeOfFile(file);
 
     /* Get recommended arguments */
     rs_magic_number sig_magic = 0;
@@ -697,7 +705,7 @@ static bool SendSignature(SSL *conn, const char *filename)
         Log(LOG_LEVEL_ERR,
             "Failed to get recommended signature arguments: %s",
             rs_strerror(res));
-        SendError(conn, false, ERROR_MSG_INTERNAL_CLIENT_ERROR);
+        ProtocolSendError(conn, false, ERROR_MSG_INTERNAL_CLIENT_ERROR);
         fclose(file);
         return false;
     }
@@ -707,7 +715,7 @@ static bool SendSignature(SSL *conn, const char *filename)
     if (job == NULL)
     {
         Log(LOG_LEVEL_ERR, "Failed to begin job for generating signature");
-        SendError(conn, false, ERROR_MSG_INTERNAL_CLIENT_ERROR);
+        ProtocolSendError(conn, false, ERROR_MSG_INTERNAL_CLIENT_ERROR);
         fclose(file);
         return false;
     }
@@ -715,7 +723,8 @@ static bool SendSignature(SSL *conn, const char *filename)
     /* Setup buffers */
     rs_buffers_t bufs = {0};
     bufs.next_out = out_buf;
-    bufs.avail_out = MESSAGE_SIZE; /* We cannot send more using the protocol */
+    bufs.avail_out =
+        PROTOCOL_MESSAGE_SIZE; /* We cannot send more using the protocol */
 
     do
     {
@@ -729,7 +738,8 @@ static bool SendSignature(SSL *conn, const char *filename)
                     "%zu of %zu bytes available",
                     sizeof(in_buf) - bufs.avail_in,
                     sizeof(in_buf));
-                SendError(conn, false, ERROR_MSG_INTERNAL_CLIENT_ERROR);
+                ProtocolSendError(
+                    conn, false, ERROR_MSG_INTERNAL_CLIENT_ERROR);
 
                 fclose(file);
                 rs_job_free(job);
@@ -756,7 +766,8 @@ static bool SendSignature(SSL *conn, const char *filename)
                         "Failed to read the basis file '%s' during file stream: %s",
                         filename,
                         GetErrorStr());
-                    SendError(conn, false, ERROR_MSG_INTERNAL_CLIENT_ERROR);
+                    ProtocolSendError(
+                        conn, false, ERROR_MSG_INTERNAL_CLIENT_ERROR);
 
                     fclose(file);
                     rs_job_free(job);
@@ -779,7 +790,7 @@ static bool SendSignature(SSL *conn, const char *filename)
             Log(LOG_LEVEL_ERR,
                 "Failed to iterate job for generating signature: %s",
                 rs_strerror(res));
-            SendError(conn, false, ERROR_MSG_INTERNAL_CLIENT_ERROR);
+            ProtocolSendError(conn, false, ERROR_MSG_INTERNAL_CLIENT_ERROR);
 
             fclose(file);
             rs_job_free(job);
@@ -790,8 +801,8 @@ static bool SendSignature(SSL *conn, const char *filename)
         size_t present = bufs.next_out - out_buf;
         if (present > 0)
         {
-            assert(present <= MESSAGE_SIZE);
-            if (!SendMessage(conn, out_buf, present, res == RS_DONE))
+            assert(present <= PROTOCOL_MESSAGE_SIZE);
+            if (!ProtocolSendMessage(conn, out_buf, present, res == RS_DONE))
             {
                 fclose(file);
                 rs_job_free(job);
@@ -799,12 +810,12 @@ static bool SendSignature(SSL *conn, const char *filename)
             }
 
             bufs.next_out = out_buf;
-            bufs.avail_out = MESSAGE_SIZE;
+            bufs.avail_out = PROTOCOL_MESSAGE_SIZE;
         }
         else if (res == RS_DONE)
         {
             /* Send End-of-File */
-            if (!SendMessage(conn, NULL, 0, 1))
+            if (!ProtocolSendMessage(conn, NULL, 0, 1))
             {
                 fclose(file);
                 rs_job_free(job);
@@ -837,7 +848,7 @@ static bool RecvDelta(
 
     /* The input buffer has to be twice the message size, so that it can fit a
      * new message, as well as some tail data from the last job iteration */
-    char in_buf[MESSAGE_SIZE * 2], out_buf[MESSAGE_SIZE];
+    char in_buf[PROTOCOL_MESSAGE_SIZE * 2], out_buf[PROTOCOL_MESSAGE_SIZE];
 
     /* Open/create the destination file */
     int new = safe_open_create_perms(
@@ -853,7 +864,7 @@ static bool RecvDelta(
          * from the client as far as the File Stream API is concerned. Hence,
          * we don't have to send error message. Instead we just flush the
          * stream. */
-        FlushStream(conn);
+        ProtocolFlushStream(conn);
         return false;
     }
 
@@ -865,7 +876,7 @@ static bool RecvDelta(
             "Failed to open basis file '%s': %s",
             basis,
             GetErrorStr());
-        FlushStream(conn);
+        ProtocolFlushStream(conn);
         close(new);
         unlink(dest);
         return false;
@@ -876,7 +887,7 @@ static bool RecvDelta(
     if (job == NULL)
     {
         Log(LOG_LEVEL_ERR, "Failed to begin job for patching");
-        FlushStream(conn);
+        ProtocolFlushStream(conn);
         close(new);
         fclose(old);
         unlink(dest);
@@ -898,7 +909,7 @@ static bool RecvDelta(
         /* Fill input buffers */
         if (bufs.eof_in == 0)
         {
-            if (bufs.avail_in > MESSAGE_SIZE)
+            if (bufs.avail_in > PROTOCOL_MESSAGE_SIZE)
             {
                 /* The job requires more data, but we cannot fit another
                  * message into the input buffer */
@@ -907,8 +918,8 @@ static bool RecvDelta(
                     "%zu of %zu bytes available, but %d bytes is required to fit another message",
                     sizeof(in_buf) - bufs.avail_in,
                     sizeof(in_buf),
-                    MESSAGE_SIZE);
-                FlushStream(conn);
+                    PROTOCOL_MESSAGE_SIZE);
+                ProtocolFlushStream(conn);
 
                 close(new);
                 fclose(old);
@@ -925,7 +936,8 @@ static bool RecvDelta(
 
             size_t n_bytes;
             bool eof;
-            if (!RecvMessage(conn, in_buf + bufs.avail_in, &n_bytes, &eof))
+            if (!ProtocolRecvMessage(
+                    conn, in_buf + bufs.avail_in, &n_bytes, &eof))
             {
                 /* Error is already logged */
                 close(new);
@@ -948,7 +960,7 @@ static bool RecvDelta(
                 rs_strerror(res));
             if (bufs.eof_in == 0)
             {
-                FlushStream(conn);
+                ProtocolFlushStream(conn);
             }
 
             close(new);
@@ -970,7 +982,7 @@ static bool RecvDelta(
                     GetErrorStr());
                 if (bufs.eof_in == 0)
                 {
-                    FlushStream(conn);
+                    ProtocolFlushStream(conn);
                 }
 
                 close(new);

@@ -212,6 +212,10 @@ allow cfengine_execd_t cfengine_var_lib_t:file execute;
 
 # allow cf-execd to execute cf-promises
 allow cfengine_execd_t cfengine_var_lib_t:file execute_no_trans;
+# allow cf-promises run by cf-execd to getattr everywhere and read symlinks
+files_getattr_all_dirs(cfengine_execd_t)
+files_getattr_all_files(cfengine_execd_t)
+files_read_all_symlinks(cfengine_execd_t)
 
 # TODO: this should not be needed
 allow cfengine_execd_t ssh_port_t:tcp_socket name_connect;
@@ -270,6 +274,10 @@ allow cfengine_monitord_t cfengine_var_lib_t:file execute;
 
 # allow cf-monitord to execute cf-promises
 allow cfengine_monitord_t cfengine_var_lib_t:file execute_no_trans;
+# allow cf-promises run by cf-monitord to getattr everywhere and read symlinks
+files_getattr_all_dirs(cfengine_monitord_t)
+files_getattr_all_files(cfengine_monitord_t)
+files_read_all_symlinks(cfengine_monitord_t)
 
 allow cfengine_monitord_t cfengine_execd_exec_t:file getattr;
 allow cfengine_monitord_t cfengine_serverd_exec_t:file getattr;
@@ -322,6 +330,10 @@ allow cfengine_serverd_t cfengine_var_lib_t:file execute;
 
 # allow cf-serverd to execute cf-promises
 allow cfengine_serverd_t cfengine_var_lib_t:file execute_no_trans;
+# allow cf-promises run by cf-serverd to getattr everywhere and read symlinks
+files_getattr_all_dirs(cfengine_serverd_t)
+files_getattr_all_files(cfengine_serverd_t)
+files_read_all_symlinks(cfengine_serverd_t)
 
 # allow cf-serverd to connect to the CFEngine port and to write into a local socket (in case of
 # call-collect on hosts and the hub itself, respectively)

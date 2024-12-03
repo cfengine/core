@@ -212,6 +212,10 @@ allow cfengine_execd_t cfengine_var_lib_t:file execute;
 
 # allow cf-execd to execute cf-promises
 allow cfengine_execd_t cfengine_var_lib_t:file execute_no_trans;
+# allow cf-promises run by cf-execd to getattr everywhere and read symlinks
+files_getattr_all_dirs(cfengine_execd_t)
+files_getattr_all_files(cfengine_execd_t)
+files_read_all_symlinks(cfengine_execd_t)
 
 # TODO: this should not be needed
 allow cfengine_execd_t ssh_port_t:tcp_socket name_connect;
@@ -270,6 +274,10 @@ allow cfengine_monitord_t cfengine_var_lib_t:file execute;
 
 # allow cf-monitord to execute cf-promises
 allow cfengine_monitord_t cfengine_var_lib_t:file execute_no_trans;
+# allow cf-promises run by cf-monitord to getattr everywhere and read symlinks
+files_getattr_all_dirs(cfengine_monitord_t)
+files_getattr_all_files(cfengine_monitord_t)
+files_read_all_symlinks(cfengine_monitord_t)
 
 allow cfengine_monitord_t cfengine_execd_exec_t:file getattr;
 allow cfengine_monitord_t cfengine_serverd_exec_t:file getattr;
@@ -278,6 +286,9 @@ allow cfengine_monitord_t cfengine_hub_exec_t:file getattr;
 allow cfengine_monitord_t cfengine_reactor_exec_t:file getattr;
 
 allow cfengine_monitord_t var_log_t:file { open read };
+# cf-monitord collects arbitrary system data so needs complete access to filesystems and files
+fs_unconfined(cfengine_monitord_t)
+files_unconfined(cfengine_monitord_t)
 
 allow cfengine_monitord_t self:capability { dac_override dac_read_search sys_ptrace };
 allow cfengine_monitord_t self:cap_userns sys_ptrace;
@@ -319,11 +330,15 @@ allow cfengine_serverd_t cfengine_var_lib_t:file execute;
 
 # allow cf-serverd to execute cf-promises
 allow cfengine_serverd_t cfengine_var_lib_t:file execute_no_trans;
+# allow cf-promises run by cf-serverd to getattr everywhere and read symlinks
+files_getattr_all_dirs(cfengine_serverd_t)
+files_getattr_all_files(cfengine_serverd_t)
+files_read_all_symlinks(cfengine_serverd_t)
 
 # allow cf-serverd to connect to the CFEngine port and to write into a local socket (in case of
 # call-collect on hosts and the hub itself, respectively)
 allow cfengine_serverd_t unreserved_port_t:tcp_socket name_connect;
-allow cfengine_serverd_t cfengine_var_lib_t:sock_file write;
+allow cfengine_serverd_t cfengine_var_lib_t:sock_file { getattr write };
 allow cfengine_serverd_t cfengine_hub_t:unix_stream_socket connectto;
 
 # TODO: this should not be needed
@@ -404,7 +419,7 @@ allow cfengine_hub_t cfengine_postgres_t:unix_stream_socket connectto;
 allow cfengine_hub_t unreserved_port_t:tcp_socket name_connect;
 
 allow cfengine_hub_t cfengine_log_t:dir getattr;
-allow cfengine_hub_t cfengine_var_lib_t:dir { add_name getattr open read search write remove_name };
+allow cfengine_hub_t cfengine_var_lib_t:dir { add_name create getattr open read search write remove_name };
 allow cfengine_hub_t cfengine_var_lib_t:file { create ioctl lock write unlink append setattr };
 allow cfengine_hub_t cfengine_var_lib_t:lnk_file { getattr read };
 allow cfengine_hub_t cfengine_var_lib_t:sock_file { create unlink };
@@ -428,7 +443,7 @@ allow cfengine_hub_t sendmail_exec_t:file { execute execute_no_trans open read }
 
 allow cfengine_hub_t bin_t:file map;
 allow cfengine_hub_t bin_t:file { execute execute_no_trans };
-allow cfengine_hub_t cert_t:dir search;
+allow cfengine_hub_t cert_t:dir { getattr open read search };
 allow cfengine_hub_t cert_t:file { getattr open read };
 allow cfengine_hub_t crontab_exec_t:file getattr;
 allow cfengine_hub_t devlog_t:lnk_file read;
@@ -520,7 +535,7 @@ allow cfengine_postgres_t cfengine_var_lib_t:dir { add_name getattr open create 
 
 allow cfengine_postgres_t postgresql_port_t:tcp_socket name_bind;
 
-allow cfengine_postgres_t cert_t:dir search;
+allow cfengine_postgres_t cert_t:dir { getattr open read search };
 allow cfengine_postgres_t cert_t:file { getattr open read };
 allow cfengine_postgres_t hugetlbfs_t:file map;
 allow cfengine_postgres_t hugetlbfs_t:file { read write };
@@ -582,7 +597,7 @@ allow init_t cfengine_httpd_t:process siginh;
 allow cfengine_httpd_t cfengine_httpd_exec_t:file entrypoint;
 allow cfengine_httpd_t cfengine_httpd_exec_t:file { ioctl read getattr lock map execute open };
 
-allow cfengine_httpd_t cert_t:dir search;
+allow cfengine_httpd_t cert_t:dir { getattr open read search };
 allow cfengine_httpd_t cert_t:file { getattr open read };
 allow cfengine_httpd_t cert_t:lnk_file read;
 allow cfengine_httpd_t cfengine_httpd_exec_t:file execute_no_trans;
@@ -718,6 +733,8 @@ allow cfengine_apachectl_t proc_t:file { open read };
 # this is a macro invocation, the file has to be processed with
 # make -f /usr/share/selinux/devel/Makefile
 ps_process_pattern(cfengine_apachectl_t, domain)
+# ps_process_pattern() above doesn't include needed sys_ptrace capability for apachectl to run 'ps'
+allow cfengine_apachectl_t self:cap_userns sys_ptrace;
 
 #============= cfengine_reactor_t ==============
 type cfengine_reactor_t;
@@ -777,7 +794,7 @@ allow cfengine_reactor_t fs_t:filesystem getattr;
 allow cfengine_reactor_t shell_exec_t:file map;
 allow cfengine_reactor_t shell_exec_t:file { execute execute_no_trans };
 
-allow cfengine_reactor_t cert_t:dir search;
+allow cfengine_reactor_t cert_t:dir { getattr open read search };
 allow cfengine_reactor_t cert_t:file { getattr open read };
 allow cfengine_reactor_t cert_t:lnk_file read;
 
@@ -854,7 +871,7 @@ allow cfengine_cfbs_t bin_t:file { map execute };
 allow cfengine_cfbs_t shell_exec_t:file map;
 allow cfengine_cfbs_t shell_exec_t:file { execute execute_no_trans };
 
-allow cfengine_cfbs_t cert_t:dir search;
+allow cfengine_cfbs_t cert_t:dir { getattr open read search };
 allow cfengine_cfbs_t cert_t:file { getattr open read };
 allow cfengine_cfbs_t cert_t:lnk_file read;
 allow cfengine_cfbs_t http_port_t:tcp_socket name_connect;

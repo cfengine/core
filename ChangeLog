@@ -1,4 +1,7 @@
 3.21.6:
+	- Fixed multiple issues in cfengine-enterprise SELinux policy which could
+	  cause AVC denials / warnings for various CFEngine components.
+	  (ENT-12466, ENT-12446)
 	- Added logging CFEngine component related SELinux denials in cf-support
 	  (ENT-12137)
 	- Agent now also ignores interfaces listed in ignore_interfaces.rx when

@@ -28,8 +28,6 @@ function create_image() {
   rm $SUM_FILE
 
   buildah commit $c cfengine-static-checker-f$STATIC_CHECKS_FEDORA_VERSION >/dev/null 2>&1
-  buildah rm $c >/dev/null
-  c=$(buildah from cfengine-static-checker-f$STATIC_CHECKS_FEDORA_VERSION)
   echo $c
 }
 

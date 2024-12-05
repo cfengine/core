@@ -38,11 +38,18 @@ set -x
 if buildah inspect cfengine-static-checker-f$STATIC_CHECKS_FEDORA_VERSION >/dev/null 2>&1; then
   c=$(buildah from cfengine-static-checker-f$STATIC_CHECKS_FEDORA_VERSION)
 
-  # Recreate the image if the checksum of this file has changed
-  SUM_A=$(sha256sum $0)
-  SUM_B=$(buildah run $c cat $SUM_FILE)
-  if [[ $SUM_A != $SUM_B ]]; then
-    echo "Recreating image due to mismatching checksum..."
+  # Recreate the image if the checksum of this file has changed 
+  if [[ `buildah run $c ls $SUM_FILE` == $SUM_FILE ]]; then
+    SUM_A=$(sha256sum $0)
+    SUM_B=$(buildah run $c cat $SUM_FILE)
+    if [[ $SUM_A != $SUM_B ]]; then
+      echo "Recreating image due to mismatching checksum..."
+      IMAGE_ID=$(buildah inspect $c | jq -r '.FromImageID')
+      buildah rmi --force $IMAGE_ID >/dev/null
+      c=$(create_image)
+    fi
+  else
+    echo "Recreating image due to missing checksum..."
     IMAGE_ID=$(buildah inspect $c | jq -r '.FromImageID')
     buildah rmi --force $IMAGE_ID >/dev/null
     c=$(create_image)

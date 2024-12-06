@@ -341,6 +341,9 @@ allow cfengine_serverd_t unreserved_port_t:tcp_socket name_connect;
 allow cfengine_serverd_t cfengine_var_lib_t:sock_file { getattr write };
 allow cfengine_serverd_t cfengine_hub_t:unix_stream_socket connectto;
 
+# allow cf-serverd to set its own limits, e.g. def.control_server_maxconnections
+allow cfengine_serverd_t self:capability sys_resource;
+
 # TODO: this should not be needed
 allow cfengine_serverd_t ssh_port_t:tcp_socket name_connect;
 allow cfengine_serverd_t proc_xen_t:dir search;

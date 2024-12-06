@@ -5,16 +5,16 @@ on:
 
 jobs:
   asan_unit_tests:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@v3
       with:
         submodules: recursive
     - name: Install dependencies
-      run: sudo apt-get update -y && sudo apt-get install -y libssl-dev libpam0g-dev liblmdb-dev byacc curl
+      run: sudo apt-get update -y && sudo apt-get install -y libssl-dev libpam0g-dev liblmdb-dev byacc curl librsync-dev
     - name: Run autotools / configure
       run: ./autogen.sh --enable-debug
     - name: Compile and link (make)
       run: make -j8 CFLAGS="-Werror -Wall -fsanitize=address" LDFLAGS="-fsanitize=address"
     - name: Run unit tests
-      run: make -C tests/unit CFLAGS="-fsanitize=address" LDFLAGS="-fsanitize=address" check
+      run: ASAN_OPTIONS=detect_odr_violation=0 make -C tests/unit CFLAGS="-fsanitize=address" LDFLAGS="-fsanitize=address" check

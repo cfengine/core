@@ -19,7 +19,7 @@ fi
 function create_image() {
   local c=$(buildah from -q $BASE_IMG)
   buildah run $c -- dnf -q -y install "@C Development Tools and Libraries" clang cppcheck which diffutils file >/dev/null 2>&1
-  buildah run $c -- dnf -q -y install pcre-devel pcre2-devel openssl-devel libxml2-devel pam-devel lmdb-devel libacl-devel libyaml-devel curl-devel libvirt-devel >/dev/null 2>&1
+  buildah run $c -- dnf -q -y install pcre-devel pcre2-devel openssl-devel libxml2-devel pam-devel lmdb-devel libacl-devel libyaml-devel curl-devel libvirt-devel librsync-devel >/dev/null 2>&1
   buildah run $c -- dnf clean all >/dev/null 2>&1
 
   # Copy checksum of this file into container. We use the checksum to detect

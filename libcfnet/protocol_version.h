@@ -39,10 +39,11 @@ typedef enum
     /* --- Greater versions use TLS as secure communications layer --- */
     CF_PROTOCOL_TLS = 2,
     CF_PROTOCOL_COOKIE = 3,
+    CF_PROTOCOL_FILESTREAM = 4,
 } ProtocolVersion;
 
 /* We use CF_PROTOCOL_LATEST as the default for new connections. */
-#define CF_PROTOCOL_LATEST CF_PROTOCOL_COOKIE
+#define CF_PROTOCOL_LATEST CF_PROTOCOL_FILESTREAM
 
 static inline const char *ProtocolVersionString(const ProtocolVersion p)
 {
@@ -54,6 +55,8 @@ static inline const char *ProtocolVersionString(const ProtocolVersion p)
         return "tls";
     case CF_PROTOCOL_CLASSIC:
         return "classic";
+    case CF_PROTOCOL_FILESTREAM:
+        return "filestream";
     default:
         return "undefined";
     }
@@ -82,6 +85,11 @@ static inline bool ProtocolIsUndefined(const ProtocolVersion p)
 static inline bool ProtocolIsClassic(const ProtocolVersion p)
 {
     return (p == CF_PROTOCOL_CLASSIC);
+}
+
+static inline bool ProtocolSupportsFileStream(const ProtocolVersion p)
+{
+    return (p >= CF_PROTOCOL_FILESTREAM);
 }
 
 static inline bool ProtocolTerminateCSV(const ProtocolVersion p)

@@ -194,17 +194,20 @@ else
       if [ "$OS" != "solaris" ]; then
         if ! command -v gdb >/dev/null; then
           echo "Please install gdb. This is required in order to analyze core dumps."
-          exit 1
+          echo "Core dumps needing to be analyzed will be listed below:"
         fi
       fi
       for core_file in $cf_core_files; do
         file "$core_file" >> "$_core_log"
         if [ "$OS" = "solaris" ]; then
           pstack "$core_file" >> "$_core_log" 2>&1
-        else
+        elif command -v gdb >/dev/null; then
           execfn=`file "$core_file" | sed 's/,/\n/g' | grep execfn | cut -d: -f2 | sed "s/[' ]//g"`
           exe="`realpath "$execfn"`"
           gdb "$exe" --core="$core_file" -batch -ex "thread apply all bt full" >> "$_core_log" 2>&1
+        else
+          # shellcheck disable=SC2012
+          ls -l "$core_file" | tee "$_core_log"
         fi
       done
     fi

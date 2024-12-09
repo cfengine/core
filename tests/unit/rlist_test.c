@@ -825,7 +825,6 @@ const void *EvalContextVariableGet(const EvalContext *ctx, const VarRef *lval, D
     fail();
 }
 
-pthread_mutex_t *cft_lock;
 int __ThreadLock(pthread_mutex_t *name)
 {
     return true;

@@ -78,28 +78,11 @@ libstr_la_LIBADD = libtest.la
 
 
 check_LTLIBRARIES += libdb.la
-libdb_la_SOURCES = db_stubs.c \
-	../../libpromises/dbm_api.c \
-	../../libpromises/dbm_quick.c \
-	../../libpromises/dbm_tokyocab.c \
-	../../libpromises/dbm_lmdb.c \
-	../../libpromises/dbm_migration.c \
-	../../libpromises/dbm_migration_lastseen.c \
-	../../libpromises/global_mutex.c \
-	../../cf-check/backup.c \
-	../../cf-check/diagnose.c \
-	../../cf-check/lmdump.c \
-	../../cf-check/repair.c \
-	../../cf-check/replicate_lmdb.c \
-	../../cf-check/utilities.c \
-	../../cf-check/validate.c \
-	../../libntech/libutils/logging.c \
-	../../libntech/libutils/mutex.c \
-	../../libntech/libutils/cleanup.c
+libdb_la_SOURCES = db_stubs.c
 if HPUX
 libdb_la_SOURCES += ../../libpromises/cf3globals.c
 endif
-libdb_la_LIBADD = libstr.la ../../libntech/libutils/libutils.la
+libdb_la_LIBADD = libstr.la ../../libntech/libutils/libutils.la ../../libpromises/libpromises.la
 #libdb_la_CPPFLAGS = $(LMDB_CPPFLAGS) $(TOKYOCABINET_CPPFLAGS) $(QDBM_CPPFLAGS)
 # Make sure that source files are compiled to separate object files
 # libdb_la-file.o
@@ -269,16 +252,12 @@ db_concurrent_test_SOURCES = db_concurrent_test.c
 db_concurrent_test_LDADD = libdb.la
 
 lastseen_test_SOURCES = lastseen_test.c \
-	../../libpromises/item_lib.c \
-	../../libpromises/lastseen.c \
 	../../libntech/libutils/statistics.c
 #lastseen_test_CPPFLAGS = $(libdb_la_CPPFLAGS)
 lastseen_test_LDADD = libdb.la ../../libpromises/libpromises.la
 
 lastseen_migration_test_SOURCES = lastseen_migration_test.c \
-	../../libpromises/lastseen.c \
-	../../libntech/libutils/statistics.c \
-	../../libpromises/item_lib.c
+	../../libntech/libutils/statistics.c
 #lastseen_migration_test_CPPFLAGS = $(libdb_la_CPPFLAGS)
 lastseen_migration_test_LDADD = libdb.la ../../libpromises/libpromises.la
 
@@ -370,7 +349,6 @@ exec_config_test_SOURCES = exec-config-test.c \
 exec_config_test_LDADD = libtest.la ../../libpromises/libpromises.la
 
 sysinfo_test_LDADD = libtest.la \
-	../../libenv/libenv.la \
 	../../libpromises/libpromises.la
 
 mon_cpu_test_SOURCES = mon_cpu_test.c \

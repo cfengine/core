@@ -87,7 +87,11 @@ typedef struct
     SyntaxStatus status;
 } FnCallType;
 
+/* Avoid one definition rule violations, because this file is included in
+ * evalfunction.c where this variable is defined. */
+#ifndef CFENGINE_EVALFUNCTION_C
 extern const FnCallType CF_FNCALL_TYPES[];
+#endif /* CFENGINE_EVALFUNCTION_C */
 
 bool FnCallIsBuiltIn(Rval rval);
 

@@ -1,5 +1,7 @@
 #include <test.h>
 
+#define CFENGINE_EVALFUNCTION_TEST_C
+
 #include <eval_context.h>
 #include <evalfunction.c>
 

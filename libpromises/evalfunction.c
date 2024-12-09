@@ -22,6 +22,8 @@
   included file COSL.txt.
 */
 
+#define CFENGINE_EVALFUNCTION_C /* To avoid one definition rule violations */
+
 #include <platform.h>
 #include <evalfunction.h>
 
@@ -10311,6 +10313,10 @@ static const FnCallArg DATATYPE_ARGS[] =
 
 /* see fncall.h enum FnCallType */
 
+/* The evalfunction_test.c unit test both includes this .c file and links with
+ * libpromises which causes the "one definition rule" to be violated when
+ * running ASAN Unit Tests unless we add this guard. */
+#ifndef CFENGINE_EVALFUNCTION_TEST_C
 const FnCallType CF_FNCALL_TYPES[] =
 {
     FnCallTypeNew("accessedbefore", CF_DATA_TYPE_CONTEXT, ACCESSEDBEFORE_ARGS, &FnCallIsAccessedBefore, "True if arg1 was accessed before arg2 (atime)",
@@ -10715,3 +10721,4 @@ const FnCallType CF_FNCALL_TYPES[] =
 
     FnCallTypeNewNull()
 };
+#endif /* CFENGINE_EVALFUNCTION_TEST_C */

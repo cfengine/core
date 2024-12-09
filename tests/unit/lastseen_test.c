@@ -664,11 +664,7 @@ void FatalError(ARG_UNUSED char *s, ...)
     exit(42);
 }
 
-HashMethod CF_DEFAULT_DIGEST;
 pthread_mutex_t *cft_output;
-char VIPADDRESS[CF_MAX_IP_LEN];
-RSA *PUBKEY;
-bool MINUSF;
 
 char *HashPrintSafe(ARG_UNUSED char *dst, ARG_UNUSED size_t dst_size,
                     ARG_UNUSED const unsigned char *digest,

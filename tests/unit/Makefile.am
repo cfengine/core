@@ -78,14 +78,7 @@ libstr_la_LIBADD = libtest.la
 
 
 check_LTLIBRARIES += libdb.la
-libdb_la_SOURCES = db_stubs.c \
-	../../cf-check/backup.c \
-	../../cf-check/diagnose.c \
-	../../cf-check/lmdump.c \
-	../../cf-check/repair.c \
-	../../cf-check/replicate_lmdb.c \
-	../../cf-check/utilities.c \
-	../../cf-check/validate.c
+libdb_la_SOURCES = db_stubs.c
 if HPUX
 libdb_la_SOURCES += ../../libpromises/cf3globals.c
 endif

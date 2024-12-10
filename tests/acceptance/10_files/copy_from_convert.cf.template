@@ -1,0 +1,29 @@
+############################################################
+# CFE-2216: Files converted to directories should be changed
+#           back on recursive copy
+############################################################
+
+bundle common G {
+  vars:
+    "testdir"
+      string => "{{testdir}}";
+}
+
+body depth_search recurse {
+  depth => "inf";
+  xdev  => "true";
+}
+
+body copy_from source_dir {
+  source  => "$(G.testdir)/src";
+  compare => "digest";
+}
+
+bundle agent main
+{
+  files:
+    "$(G.testdir)/dst"
+      copy_from => source_dir,
+      move_obstructions => "true",
+      depth_search => recurse;
+}

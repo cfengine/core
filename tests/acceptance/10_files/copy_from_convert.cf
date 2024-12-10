@@ -1,0 +1,93 @@
+############################################################
+# CFE-2216: Files converted to directories should be changed
+#           back on recursive copy
+############################################################
+
+body common control
+{
+  inputs => { "../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+############################################################
+
+bundle agent init
+{
+  files:
+    "$(G.testdir)/src/."
+      create => "true";
+    "$(G.testdir)/src/foo"
+      content => "Hello CFEngine!";
+    "$(G.testdir)/src/bar/."
+      create => "true";
+
+    # The .sub file needs to know the value of $(G.testdir). We can use a
+    # template in order to hardcode it in before execution.
+    "$(this.promise_filename).sub"
+      create => "true",
+      edit_template => "$(this.promise_filename).template",
+      template_method => "mustache",
+      template_data => parsejson('{ "testdir": "$(G.testdir)" }');
+}
+
+############################################################
+
+bundle agent test
+{
+  meta:
+    "description" -> { "CFE-2216" }
+      string => "Files converted to directories should be changed back on recursive copy";
+
+    # This bug is not yet fixed, so we need to soft fail it
+    "test_soft_fail"
+      string => "any",
+      meta => { "CFE-2216" };
+
+  commands:
+    # Sync files between source and destination dir
+    "$(sys.cf_agent) -Kf $(this.promise_filename).sub";
+
+    # Change foo from a file to a directory
+    "rm $(G.testdir)/dst/foo && mkdir $(G.testdir)/dst/foo"
+      contain => dcs_useshell;
+
+    # Change bar from a directory to a file
+    "rmdir $(G.testdir)/dst/bar && touch $(G.testdir)/dst/bar"
+      contain => dcs_useshell;
+
+    # Sync the files again. We append -- at the end to make sure the promise
+    # hash is different
+    "$(sys.cf_agent) -Kf $(this.promise_filename).sub --";
+}
+
+############################################################
+
+bundle agent check
+{
+  classes:
+    # Check that foo is converted back to a file and that bar is converted
+    # back to a directory
+    "ok"
+      expression => and(
+        not(isdir("$(G.testdir)/dst/foo")),
+        isdir("$(G.testdir)/dst/bar")
+      );
+
+  methods:
+    ""
+      usebundle => dcs_passif("ok", "$(this.promise_filename)"),
+      inherit => "true";
+}
+
+############################################################
+
+bundle agent clean
+{
+  # Clean up the files generated from the template
+  files:
+    "$(this.promise_filename).sub"
+      delete => tidy;
+    "$(this.promise_filename).sub.cf-before-edit"
+      delete => tidy;
+}

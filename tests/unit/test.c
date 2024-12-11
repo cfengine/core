@@ -3,9 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <alloc.h>
 
-char *file_read_string(FILE *in)
+static char *file_read_string(FILE *in)
 {
     fpos_t pos;
     long size;
@@ -19,7 +18,12 @@ char *file_read_string(FILE *in)
 
     assert_int_equal(fseek(in, 0, SEEK_SET), 0);
 
-    buffer = xcalloc(size + 1L, sizeof(char));
+    buffer = calloc(size + 1L, sizeof(char));
+    if (buffer == NULL)
+    {
+        fputs("CRITICAL: Unable to allocate memory\n", stderr);
+        exit(255);
+    }
     assert_int_equal(fread(buffer, 1, size, in), size);
 
     assert_int_equal(fsetpos(in, &pos), 0);

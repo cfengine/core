@@ -52,15 +52,7 @@ AM_CFLAGS = $(PTHREAD_CFLAGS)
 
 
 check_LTLIBRARIES = libtest.la
-libtest_la_SOURCES = cmockery.c cmockery.h schema.h test.c test.h \
-	../../libntech/libutils/alloc.c \
-	../../libpromises/patches.c \
-	../../libpromises/constants.c \
-	../../libntech/libutils/known_dirs.c \
-	../../libntech/libutils/map.c \
-	../../libntech/libutils/array_map.c \
-	../../libntech/libutils/hash.c \
-	../../libntech/libutils/hash_map.c
+libtest_la_SOURCES = cmockery.c cmockery.h schema.h test.c test.h
 
 libtest_la_LIBADD = ../../libntech/libcompat/libcompat.la
 
@@ -303,7 +295,10 @@ files_copy_test_LDADD    = libtest.la ../../libpromises/libpromises.la
 sort_test_SOURCES = sort_test.c
 sort_test_LDADD = libtest.la ../../libpromises/libpromises.la
 
-logging_test_SOURCES = logging_test.c ../../libpromises/syslog_client.c
+logging_test_SOURCES = logging_test.c \
+	../../libpromises/syslog_client.c \
+	../../libpromises/patches.c \
+	../../libpromises/constants.c
 logging_test_LDADD = libtest.la ../../libntech/libutils/libutils.la
 
 connection_management_test_SOURCES = connection_management_test.c \

@@ -55,6 +55,7 @@ typedef struct
     bool used_default;
     char *min_tls_version;
     char *allow_ciphers;
+    char *use_protocol_version;
 } CFNetOptions;
 
 //*******************************************************************
@@ -112,6 +113,7 @@ static const struct option OPTIONS[] =
     {"inform",      no_argument,        0, 'I'},
     {"tls-version", required_argument,  0, 't'},
     {"ciphers",     required_argument,  0, 'c'},
+    {"protocol",    required_argument,  0, 'p'},
     {NULL,          0,                  0, '\0'}
 };
 
@@ -126,6 +128,7 @@ static const char *const HINTS[] =
     "Enable basic information output",
     "Minimum TLS version to use",
     "TLS ciphers to use (comma-separated list)",
+    "Specify CFEngine protocol to use. Possible values: 'classic', 'tls', 'cookie', 'filestream', 'latest' (default)",
     NULL
 };
 
@@ -176,21 +179,21 @@ static int CFNetRun(CFNetOptions *opts, char **args, char *hostnames);
 static char *RequireHostname(char *hostnames);
 
 // PROTOCOL:
-static AgentConnection *CFNetOpenConnection(const char *server);
+static AgentConnection *CFNetOpenConnection(const char *server, const char *use_protocol_version);
 static void CFNetDisconnect(AgentConnection *conn);
 static int JustConnect(const char *server, char *port);
 
 // COMMANDS:
 static int CFNetHelpTopic(const char *topic);
 static int CFNetHelp(const char *topic);
-static int CFNetConnectSingle(const char *server, bool print);
-static int CFNetConnect(const char *hostname, char **args);
+static int CFNetConnectSingle(const char *server, const char *use_protocol_version, bool print);
+static int CFNetConnect(const char *hostname, const char *use_protocol_version, char **args);
 static void CFNetStatPrint(const char *file, int st_mode, const char *server);
 static int CFNetStat(CFNetOptions *opts, const char *hostname, char **args);
 static int CFNetGet(CFNetOptions *opts, const char *hostname, char **args);
 static int CFNetOpenDir(CFNetOptions *opts, const char *hostname, char **args);
 static int CFNetMulti(const char *server);
-static int CFNetMultiTLS(const char *server);
+static int CFNetMultiTLS(const char *server, const char *use_protocol_version);
 
 
 //*******************************************************************
@@ -230,6 +233,7 @@ static void CFNetSetDefault(CFNetOptions *opts){
     opts->used_default= false;
     opts->min_tls_version = NULL;
     opts->allow_ciphers   = NULL;
+    opts->use_protocol_version = NULL;
 }
 
 static void CFNetOptionsClear(CFNetOptions *opts)
@@ -237,6 +241,7 @@ static void CFNetOptionsClear(CFNetOptions *opts)
     assert(opts != NULL);
     free(opts->min_tls_version);
     free(opts->allow_ciphers);
+    free(opts->use_protocol_version);
 }
 
 static void CFNetInit(const char *min_tls_version, const char *allow_ciphers)
@@ -351,6 +356,11 @@ static int CFNetParse(int argc, char **argv,
                 opts->allow_ciphers = xstrdup(optarg);
                 break;
             }
+            case 'p':
+            {
+                opts->use_protocol_version = xstrdup(optarg);
+                break;
+            }
             default:
             {
                 // printf("Default optarg = '%s', c = '%c' = %i\n",
@@ -381,9 +391,11 @@ static int CFNetCommandNumber(char *command)
 static int CFNetCommandSwitch(CFNetOptions *opts, const char *hostname,
                               char **args, enum command_enum cmd)
 {
+    assert(opts != NULL);
+
     switch (cmd) {
         case CFNET_CMD_CONNECT:
-            return CFNetConnect(hostname, args);
+            return CFNetConnect(hostname, opts->use_protocol_version, args);
         case CFNET_CMD_STAT:
             return CFNetStat(opts, hostname, args);
         case CFNET_CMD_GET:
@@ -393,7 +405,7 @@ static int CFNetCommandSwitch(CFNetOptions *opts, const char *hostname,
         case CFNET_CMD_MULTI:
             return CFNetMulti(hostname);
         case CFNET_CMD_MULTITLS:
-            return CFNetMultiTLS(hostname);
+            return CFNetMultiTLS(hostname, opts->use_protocol_version);
         default:
             break;
     }
@@ -471,12 +483,22 @@ static int CFNetRun(CFNetOptions *opts, char **args, char *hostnames)
 // PROTOCOL:
 //*******************************************************************
 
-static AgentConnection *CFNetOpenConnection(const char *server)
+static AgentConnection *CFNetOpenConnection(const char *server, const char *use_protocol_version)
 {
+    ProtocolVersion protocol_version = (use_protocol_version == NULL)
+                                     ? CF_PROTOCOL_LATEST
+                                     : ParseProtocolVersionPolicy(use_protocol_version);
+    if (protocol_version == CF_PROTOCOL_UNDEFINED)
+    {
+        Log(LOG_LEVEL_ERR, "Unknown CFEngine protocol version '%s'",
+            use_protocol_version);
+        return NULL;
+    }
+
     AgentConnection *conn = NULL;
     ConnectionFlags connflags =
     {
-        .protocol_version = CF_PROTOCOL_LATEST,
+        .protocol_version = protocol_version,
         .trust_server = true,
         .off_the_record = true
     };
@@ -495,6 +517,19 @@ static AgentConnection *CFNetOpenConnection(const char *server)
         printf("Failed to connect to '%s'\n", server);
         return NULL;
     }
+
+    ProtocolVersion negotiated_version = ConnectionInfoProtocolVersion(conn->conn_info);
+    if ((use_protocol_version != NULL) && (negotiated_version != protocol_version))
+    {
+        Log(LOG_LEVEL_ERR,
+            "Negotiated protocol version '%s' does not match specified protocol version '%s'. "
+            "Maybe the server does not support it?",
+            ProtocolVersionString(negotiated_version),
+            use_protocol_version);
+        DisconnectServer(conn);
+        return NULL;
+    }
+
     return conn;
 }
 
@@ -572,9 +607,9 @@ static int CFNetHelp(const char *topic)
     return 0;
 }
 
-static int CFNetConnectSingle(const char *server, bool print)
+static int CFNetConnectSingle(const char *server, const char *use_protocol_version, bool print)
 {
-    AgentConnection *conn = CFNetOpenConnection(server);
+    AgentConnection *conn = CFNetOpenConnection(server, use_protocol_version);
     if (conn == NULL)
     {
         return -1;
@@ -587,7 +622,7 @@ static int CFNetConnectSingle(const char *server, bool print)
     return 0;
 }
 
-static int CFNetConnect(const char *hostname, char **args)
+static int CFNetConnect(const char *hostname, const char *use_protocol_version, char **args)
 {
     assert(args != NULL);
     if (args[1] != NULL)
@@ -601,7 +636,7 @@ static int CFNetConnect(const char *hostname, char **args)
         Log(LOG_LEVEL_ERR, "No hostname specified");
         return -1;
     }
-    CFNetConnectSingle(hostname, true);
+    CFNetConnectSingle(hostname, use_protocol_version, true);
     return 0;
 }
 
@@ -649,9 +684,10 @@ static void CFNetStatPrint(const char *file, int st_mode, const char *server)
 
 static int CFNetStat(ARG_UNUSED CFNetOptions *opts, const char *hostname, char **args)
 {
-    assert(opts);
+    assert(opts != NULL);
+
     char *file = args[1];
-    AgentConnection *conn = CFNetOpenConnection(hostname);
+    AgentConnection *conn = CFNetOpenConnection(hostname, opts->use_protocol_version);
     if (conn == NULL)
     {
         return -1;
@@ -687,6 +723,7 @@ static int invalid_command(const char *cmd)
 
 typedef struct _GetFileData {
     const char *hostname;
+    const char *use_protocol_version;
     char remote_file[PATH_MAX];
     char local_file[PATH_MAX];
     bool ret;
@@ -695,7 +732,7 @@ typedef struct _GetFileData {
 static void *CFNetGetFile(void *arg)
 {
     GetFileData *data = (GetFileData *) arg;
-    AgentConnection *conn = CFNetOpenConnection(data->hostname);
+    AgentConnection *conn = CFNetOpenConnection(data->hostname, data->use_protocol_version);
     if (conn == NULL)
     {
         data->ret = false;
@@ -819,6 +856,7 @@ static int CFNetGet(ARG_UNUSED CFNetOptions *opts, const char *hostname, char **
         threads[i] = (CFNetThreadData*) xcalloc(1, sizeof(CFNetThreadData));
         threads[i]->data = (GetFileData*) xcalloc(1, sizeof(GetFileData));
         threads[i]->data->hostname = hostname;
+        threads[i]->data->use_protocol_version = opts->use_protocol_version;
         if (n_threads > 1)
         {
             if (strstr(local_file, "%d") != NULL)
@@ -891,10 +929,11 @@ static void PrintDirs(const Seq *list)
 
 static int CFNetOpenDir(ARG_UNUSED CFNetOptions *opts, const char *hostname, char **args)
 {
-    assert(opts);
-    assert(hostname);
-    assert(args);
-    AgentConnection *conn = CFNetOpenConnection(hostname);
+    assert(opts != NULL);
+    assert(hostname != NULL);
+    assert(args != NULL);
+
+    AgentConnection *conn = CFNetOpenConnection(hostname, opts->use_protocol_version);
     if (conn == NULL)
     {
         return -1;
@@ -962,7 +1001,7 @@ static int CFNetMulti(const char *server)
     return 0;
 }
 
-static int CFNetMultiTLS(const char *server)
+static int CFNetMultiTLS(const char *server, const char *use_protocol_version)
 {
     time_t start;
     time(&start);
@@ -972,7 +1011,7 @@ static int CFNetMultiTLS(const char *server)
     int attempts = 0;
     while(ret == 0)
     {
-        ret = CFNetConnectSingle(server, false);
+        ret = CFNetConnectSingle(server, use_protocol_version, false);
         ++attempts;
     }
     time_t stop;

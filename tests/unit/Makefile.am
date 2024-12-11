@@ -56,18 +56,6 @@ libtest_la_SOURCES = cmockery.c cmockery.h schema.h test.c test.h
 
 libtest_la_LIBADD = ../../libntech/libcompat/libcompat.la
 
-check_LTLIBRARIES += libstr.la
-libstr_la_SOURCES = \
-	../../libntech/libutils/buffer.c \
-	../../libntech/libutils/encode.c \
-	../../libntech/libutils/logging.c \
-	../../libntech/libutils/misc_lib.c \
-	../../libntech/libutils/regex.c \
-	../../libntech/libutils/sequence.c \
-	../../libntech/libutils/string_lib.c \
-	../../libntech/libutils/writer.c
-libstr_la_LIBADD = libtest.la
-
 
 check_LTLIBRARIES += libdb.la
 libdb_la_SOURCES = db_stubs.c \
@@ -91,7 +79,7 @@ libdb_la_SOURCES = db_stubs.c \
 if HPUX
 libdb_la_SOURCES += ../../libpromises/cf3globals.c
 endif
-libdb_la_LIBADD = libstr.la ../../libntech/libutils/libutils.la
+libdb_la_LIBADD = ../../libntech/libutils/libutils.la
 #libdb_la_CPPFLAGS = $(LMDB_CPPFLAGS) $(TOKYOCABINET_CPPFLAGS) $(QDBM_CPPFLAGS)
 # Make sure that source files are compiled to separate object files
 # libdb_la-file.o
@@ -214,10 +202,9 @@ EXTRA_enterprise_extension_test_DEPENDENCIES = cfengine-enterprise.la
 endif
 
 set_domainname_test_SOURCES = set_domainname_test.c
-set_domainname_test_LDADD = libstr.la ../../libpromises/libpromises.la
+set_domainname_test_LDADD = libtest.la ../../libpromises/libpromises.la
 
 str_test_SOURCES = str_test.c
-str_test_LDADD = libstr.la
 
 regex_test_SOURCES = regex_test.c ../../libpromises/match_scope.c
 
@@ -258,14 +245,14 @@ db_test_LDADD = libtest.la ../../libpromises/libpromises.la
 
 db_concurrent_test_SOURCES = db_concurrent_test.c
 #db_concurrent_test_CPPFLAGS = $(libdb_la_CPPFLAGS)
-db_concurrent_test_LDADD = libdb.la
+db_concurrent_test_LDADD = libtest.la libdb.la
 
 lastseen_test_SOURCES = lastseen_test.c \
 	../../libpromises/item_lib.c \
 	../../libpromises/lastseen.c \
 	../../libntech/libutils/statistics.c
 #lastseen_test_CPPFLAGS = $(libdb_la_CPPFLAGS)
-lastseen_test_LDADD = libdb.la ../../libpromises/libpromises.la
+lastseen_test_LDADD = libtest.la libdb.la ../../libpromises/libpromises.la
 
 lastseen_migration_test_SOURCES = lastseen_migration_test.c \
 	../../libpromises/lastseen.c \

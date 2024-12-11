@@ -204,8 +204,6 @@ endif
 set_domainname_test_SOURCES = set_domainname_test.c
 set_domainname_test_LDADD = libtest.la ../../libpromises/libpromises.la
 
-str_test_SOURCES = str_test.c
-
 regex_test_SOURCES = regex_test.c ../../libpromises/match_scope.c
 
 protocol_test_SOURCES = protocol_test.c \

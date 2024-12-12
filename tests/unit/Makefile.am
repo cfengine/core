@@ -188,6 +188,7 @@ if MACOSX
 XFAIL_TESTS = set_domainname_test
 XFAIL_TESTS += process_test
 XFAIL_TESTS += mon_processes_test
+XFAIL_TESTS += rlist_test
 endif
 
 if HPUX

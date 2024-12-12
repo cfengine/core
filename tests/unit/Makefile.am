@@ -269,18 +269,13 @@ db_concurrent_test_SOURCES = db_concurrent_test.c
 db_concurrent_test_LDADD = libdb.la
 
 lastseen_test_SOURCES = lastseen_test.c \
-	../../libpromises/item_lib.c \
-	../../libpromises/lastseen.c \
 	../../libntech/libutils/statistics.c
 #lastseen_test_CPPFLAGS = $(libdb_la_CPPFLAGS)
 lastseen_test_LDADD = libdb.la ../../libpromises/libpromises.la
 
-lastseen_migration_test_SOURCES = lastseen_migration_test.c \
-	../../libpromises/lastseen.c \
-	../../libntech/libutils/statistics.c \
-	../../libpromises/item_lib.c
+lastseen_migration_test_SOURCES = lastseen_migration_test.c
 #lastseen_migration_test_CPPFLAGS = $(libdb_la_CPPFLAGS)
-lastseen_migration_test_LDADD = libdb.la ../../libpromises/libpromises.la
+lastseen_migration_test_LDADD = ../../libpromises/libpromises.la
 
 CLEANFILES = *.gcno *.gcda cfengine-enterprise.so
 
@@ -313,8 +308,7 @@ connection_management_test_LDADD = ../../libpromises/libpromises.la \
 	 libtest.la \
 	../../cf-serverd/libcf-serverd.la
 
-rlist_test_SOURCES = rlist_test.c \
-	../../libpromises/rlist.c
+rlist_test_SOURCES = rlist_test.c
 rlist_test_LDADD = libtest.la ../../libpromises/libpromises.la
 # Workaround for object file basename conflicts, search the web for
 # "automake created with both libtool and without"

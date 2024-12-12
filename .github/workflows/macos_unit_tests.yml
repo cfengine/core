@@ -11,15 +11,15 @@ jobs:
       with:
         submodules: recursive
     - name: Install dependencies
-      run: brew install lmdb automake openssl pcre2 autoconf libtool
+      run: brew install lmdb automake openssl pcre2 autoconf libtool librsync
     - name: Check tools
       run: command -v libtool && command -v automake && command -v autoconf
     - name: Check tools versions
       run: libtool -V && automake --version && autoconf --version
     - name: Run autotools / configure
       run: >
-        LDFLAGS="-L`brew --prefix lmdb`/lib -L`brew --prefix openssl`/lib -L`brew --prefix pcre2`/lib"
-        CPPFLAGS="-I`brew --prefix lmdb`/include -I`brew --prefix openssl`/include -I`brew --prefix pcre2`/include"
+        LDFLAGS="-L`brew --prefix lmdb`/lib -L`brew --prefix openssl`/lib -L`brew --prefix pcre2`/lib -L`brew --prefix librsync`/lib"
+        CPPFLAGS="-I`brew --prefix lmdb`/include -I`brew --prefix openssl`/include -I`brew --prefix pcre2`/include -I`brew --prefix librsync`/include"
         PATH="/opt/homebrew/opt/libtool/libexec/gnubin:$PATH"
         ./autogen.sh --enable-debug
     - name: Compile and link

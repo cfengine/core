@@ -45,6 +45,7 @@
 #include <misc_lib.h>                                   /* ProgrammingError */
 #include <printsize.h>                                         /* PRINTSIZE */
 #include <lastseen.h>                                            /* LastSaw */
+#include <file_stream.h>
 
 
 #define CFENGINE_SERVICE "cfengine"
@@ -749,9 +750,11 @@ static void FlushFileStream(int sd, int toget)
 
 /* TODO finalise socket or TLS session in all cases that this function fails
  * and the transaction protocol is out of sync. */
-bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
+bool CopyRegularFileNet(const char *source, const char *basis, const char *dest, off_t size,
                         bool encrypt, AgentConnection *conn, mode_t mode)
 {
+    assert(conn != NULL);
+
     char *buf, workbuf[CF_BUFSIZE], cfchangedstr[265];
     const int buf_size = 2048;
 
@@ -774,23 +777,12 @@ bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
 
     unlink(dest);                /* To avoid link attacks */
 
-    int dd = safe_open_create_perms(dest, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY, mode);
-    if (dd == -1)
-    {
-        Log(LOG_LEVEL_ERR,
-            "Copy from server '%s' to destination '%s' failed (open: %s)",
-            conn->this_server, dest, GetErrorStr());
-        unlink(dest);
-        return false;
-    }
-
     workbuf[0] = '\0';
     int tosend = snprintf(workbuf, CF_BUFSIZE, "GET %d %s", buf_size, source);
     if (tosend <= 0 || tosend >= CF_BUFSIZE)
     {
         Log(LOG_LEVEL_ERR, "Failed to compose GET command for file %s",
             source);
-        close(dd);
         return false;
     }
 
@@ -799,7 +791,21 @@ bool CopyRegularFileNet(const char *source, const char *dest, off_t size,
     if (SendTransaction(conn->conn_info, workbuf, tosend, CF_DONE) == -1)
     {
         Log(LOG_LEVEL_ERR, "Couldn't send GET command");
-        close(dd);
+        return false;
+    }
+
+    const ProtocolVersion version = ConnectionInfoProtocolVersion(conn->conn_info);
+    if (ProtocolSupportsFileStream(version)) {
+        return FileStreamFetch(conn->conn_info->ssl, basis, dest, mode);
+    }
+
+    int dd = safe_open_create_perms(dest, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY, mode);
+    if (dd == -1)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Copy from server '%s' to destination '%s' failed (open: %s)",
+            conn->this_server, dest, GetErrorStr());
+        unlink(dest);
         return false;
     }
 

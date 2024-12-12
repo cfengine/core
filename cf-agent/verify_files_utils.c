@@ -1551,7 +1551,7 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
             return false;
         }
 
-        if (!CopyRegularFileNet(source, ToChangesPath(new),
+        if (!CopyRegularFileNet(source, dest, ToChangesPath(new),
                                 sstat->st_size, attr->copy.encrypt, conn, sstat->st_mode))
         {
             RecordFailure(ctx, pp, attr, "Failed to copy file '%s' from '%s'",

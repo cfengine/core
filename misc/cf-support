@@ -120,7 +120,7 @@ make_temp_dir()
   else
     # shellcheck disable=SC2021
     # ^^ legacy/POSIX requires square brackets
-    _tmp="/tmp/`tr -dc "[A-Z][a-z][0-9]" </dev/urandom | head -c 8`"
+    _tmp="/tmp/`LC_CTYPE=C tr -dc "[A-Z][a-z][0-9]" </dev/urandom | dd count=1 bs=8 2>/dev/null`"
     mkdir "$_tmp"
     echo "$_tmp"
   fi
@@ -150,7 +150,11 @@ mkdir -p "$tmpdir"
 
 echo "Analyzing CFEngine core dumps"
 _core_log="$tmpdir"/core-dump.log
-_sysctl_kernel_core_pattern="$(sysctl -n kernel.core_pattern)"
+if command -v sysctl >/dev/null; then
+  _sysctl_kernel_core_pattern="$(sysctl -n kernel.core_pattern)"
+else
+  _sysctl_kernel_core_pattern=""
+fi
 if expr "$_sysctl_kernel_core_pattern" : ".*/systemd-coredump.*" > /dev/null 2>&1; then
   echo "Found systemd-coredump used in sysctl kernel.core_pattern \"$_sysctl_kernel_core_pattern\""
   echo "Using coredumpctl to analyze CFEngine core dumps"
@@ -190,17 +194,20 @@ else
       if [ "$OS" != "solaris" ]; then
         if ! command -v gdb >/dev/null; then
           echo "Please install gdb. This is required in order to analyze core dumps."
-          exit 1
+          echo "Core dumps needing to be analyzed will be listed below:"
         fi
       fi
       for core_file in $cf_core_files; do
         file "$core_file" >> "$_core_log"
         if [ "$OS" = "solaris" ]; then
           pstack "$core_file" >> "$_core_log" 2>&1
-        else
+        elif command -v gdb >/dev/null; then
           execfn=`file "$core_file" | sed 's/,/\n/g' | grep execfn | cut -d: -f2 | sed "s/[' ]//g"`
           exe="`realpath "$execfn"`"
           gdb "$exe" --core="$core_file" -batch -ex "thread apply all bt full" >> "$_core_log" 2>&1
+        else
+          # shellcheck disable=SC2012
+          ls -l "$core_file" | tee "$_core_log"
         fi
       done
     fi

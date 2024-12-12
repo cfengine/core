@@ -1,5 +1,9 @@
 #include <test.h>
 
+/* Protect against duplicate definition of symbol CF_FNCALL_TYPES since we are
+ * including evalfunction.c */
+#define CFENGINE_EVALFUNCTION_TEST_C
+
 #include <eval_context.h>
 #include <evalfunction.c>
 

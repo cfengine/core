@@ -54,6 +54,7 @@ static const int CF_NOSIZE = -1;
 #include <mutex.h>                                 /* ThreadLock */
 #include <stat_cache.h>                            /* struct Stat */
 #include <unix.h>                                  /* GetUserID() */
+#include <file_stream.h>
 #include "server_access.h"
 
 
@@ -402,6 +403,9 @@ static void FailedTransfer(ConnectionInfo *connection)
 
 void CfGetFile(ServerFileGetState *args)
 {
+    assert(args != NULL);
+    assert(args->conn != NULL);
+
     int fd;
     off_t n_read, total = 0, sendlen = 0, count = 0;
     char sendbuffer[CF_BUFSIZE + 256], filename[CF_BUFSIZE - 128];
@@ -421,12 +425,23 @@ void CfGetFile(ServerFileGetState *args)
 
     if (!TransferRights(args->conn, filename, &sb))
     {
+        const ProtocolVersion version = ConnectionInfoProtocolVersion(conn_info);
+        assert(ProtocolIsKnown(version));
+
         Log(LOG_LEVEL_INFO, "REFUSE access to file: %s", filename);
+
+        if (ProtocolSupportsFileStream(version)) {
+            Log(LOG_LEVEL_VERBOSE, "REFUSAL to user='%s' of request: %s",
+                NULL_OR_EMPTY(args->conn->username) ? "?" : args->conn->username,
+                args->replyfile);
+            FileStreamRefuse(args->conn->conn_info->ssl);
+            return;
+        }
+        /* Else then handle older protocols */
+
         RefuseAccess(args->conn, args->replyfile);
         snprintf(sendbuffer, CF_BUFSIZE, "%s", CF_FAILEDSTR);
 
-        const ProtocolVersion version = ConnectionInfoProtocolVersion(conn_info);
-        assert(ProtocolIsKnown(version));
         if (ProtocolIsClassic(version))
         {
             SendSocketStream(ConnectionInfoSocket(conn_info), sendbuffer, args->buf_size);
@@ -439,6 +454,12 @@ void CfGetFile(ServerFileGetState *args)
     }
 
 /* File transfer */
+
+    const ProtocolVersion version = ConnectionInfoProtocolVersion(conn_info);
+    if (ProtocolSupportsFileStream(version)) {
+        FileStreamServe(conn_info->ssl, filename);
+        return;
+    }
 
     if ((fd = safe_open(filename, O_RDONLY)) == -1)
     {

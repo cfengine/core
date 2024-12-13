@@ -37,6 +37,7 @@ libcfnet_la_SOURCES = \
 	communication.c communication.h \
 	connection_info.c connection_info.h \
 	conn_cache.c conn_cache.h \
+	file_stream.c file_stream.h \
 	key.c key.h \
 	misc.c \
 	net.c net.h \

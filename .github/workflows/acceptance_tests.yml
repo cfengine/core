@@ -5,13 +5,13 @@ on:
 
 jobs:
   acceptance_tests:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@v3
       with:
         submodules: recursive
     - name: Install dependencies
-      run: sudo apt-get update -y && sudo apt-get install -y libssl-dev libpam0g-dev liblmdb-dev byacc curl libyaml-dev
+      run: sudo apt-get update -y && sudo apt-get install -y libssl-dev libpam0g-dev liblmdb-dev byacc curl libyaml-dev librsync-dev
     - name: Run autotools / configure
       run: ./autogen.sh --enable-debug
     - name: Compile and link (make)

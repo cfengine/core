@@ -359,6 +359,8 @@ static void *HandleConnection(void *c)
     }
 
     ProtocolVersion protocol_version = ConnectionInfoProtocolVersion(conn->conn_info);
+    Log(LOG_LEVEL_DEBUG, "CFEngine protocol version '%s'", ProtocolVersionString(protocol_version));
+
     if (ProtocolIsTLS(protocol_version))
     {
         bool established = ServerTLSSessionEstablish(conn, NULL);

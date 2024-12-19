@@ -5697,6 +5697,14 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
 static FnCallResult FnCallIPRange(EvalContext *ctx, ARG_UNUSED const Policy *policy,
                                   const FnCall *fp, const Rlist *finalargs)
 {
+    assert(fp != NULL);
+
+    if (finalargs == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Function '%s' requires at least one argument", fp->name);
+        return FnFailure();
+    }
+
     const char *range   = RlistScalarValue(finalargs);
     const Rlist *ifaces = finalargs->next;
 
@@ -5761,6 +5769,14 @@ static FnCallResult FnCallIsIpInSubnet(ARG_UNUSED EvalContext *ctx,
                                        ARG_UNUSED const Policy *policy,
                                        const FnCall *fp, const Rlist *finalargs)
 {
+    assert(fp != NULL);
+
+    if (finalargs == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Function '%s' requires at least one argument", fp->name);
+        return FnFailure();
+    }
+
     const char *range = RlistScalarValue(finalargs);
     const Rlist *ips  = finalargs->next;
 
@@ -6878,6 +6894,12 @@ static FnCallResult FnCallEval(EvalContext *ctx, ARG_UNUSED const Policy *policy
 
 static FnCallResult FnCallReadFile(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
+    if (finalargs == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Function 'readfile' requires at least one argument");
+        return FnFailure();
+    }
+
     char *filename = RlistScalarValue(finalargs);
     const Rlist *next = finalargs->next; // max_size argument, default to inf:
     long maxsize = next ? IntFromString(RlistScalarValue(next)) : IntFromString("inf");

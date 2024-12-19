@@ -101,12 +101,11 @@ bool ProtocolGet(AgentConnection *conn, const char *remote_path,
 
     perms = (perms == 0) ? CF_PERMS_DEFAULT : perms;
 
-    unlink(local_path);
-    FILE *file_ptr = safe_fopen_create_perms(local_path, "wx", perms);
-    if (file_ptr == NULL)
+    char dest[PATH_MAX];
+    int ret = snprintf(dest, sizeof(dest), "%s.cfnew", local_path);
+    if (ret < 0 || (size_t)ret >= sizeof(dest))
     {
-        Log(LOG_LEVEL_WARNING, "Failed to open file %s (fopen: %s)",
-            local_path, GetErrorStr());
+        Log(LOG_LEVEL_ERR, "Truncation error: Path too long (%d >= %zu)", ret, sizeof(dest));
         return false;
     }
 
@@ -115,112 +114,111 @@ bool ProtocolGet(AgentConnection *conn, const char *remote_path,
                            CF_MSGSIZE, remote_path);
 
 
-    int ret = SendTransaction(conn->conn_info, buf, to_send, CF_DONE);
+    ret = SendTransaction(conn->conn_info, buf, to_send, CF_DONE);
     if (ret == -1)
     {
         Log(LOG_LEVEL_WARNING, "Failed to send request for remote file %s:%s",
             conn->this_server, remote_path);
-        unlink(local_path);
-        fclose(file_ptr);
         return false;
     }
 
-    /* Use file stream API if it is available */
+    bool success = true;
+
     const ProtocolVersion version = ConnectionInfoProtocolVersion(conn->conn_info);
     if (ProtocolSupportsFileStream(version))
     {
-        fclose(file_ptr);
-
-        char dest[PATH_MAX];
-        ret = snprintf(dest, sizeof(dest), "%s.cfnew", local_path);
-        if (ret < 0 || (size_t)ret >= sizeof(dest))
-        {
-            Log(LOG_LEVEL_ERR, "Truncation error: Path too long (%d >= %zu)", ret, sizeof(dest));
-            return false;
-        }
-
+        /* Use file stream API if it is available */
         if (!FileStreamFetch(conn->conn_info->ssl, local_path, dest, perms))
         {
             /* Error is already logged */
-            return false;
+            success = false;
         }
-
-        Log(LOG_LEVEL_VERBOSE, "Replacing file '%s' with '%s'...", dest, local_path);
-        if (rename(dest, local_path) == -1)
-        {
-            Log(LOG_LEVEL_ERR, "Failed to replace destination file '%s' with basis file '%s': %s", dest, local_path, GetErrorStr());
-            return false;
-        }
-
-        return true;
     }
-
-    /* Otherwise, use old protocol */
-
-    char cfchangedstr[sizeof(CF_CHANGEDSTR1 CF_CHANGEDSTR2)];
-    snprintf(cfchangedstr, sizeof(cfchangedstr), "%s%s",
-             CF_CHANGEDSTR1, CF_CHANGEDSTR2);
-
-    bool success = true;
-    uint32_t received_bytes = 0;
-    while (received_bytes < file_size)
-    {
-        int len = TLSRecv(conn->conn_info->ssl, buf, CF_MSGSIZE);
-        if (len == -1)
+    else {
+        /* Otherwise, use older protocol */
+        unlink(dest);
+        FILE *file_ptr = safe_fopen_create_perms(dest, "wx", perms);
+        if (file_ptr == NULL)
         {
-            Log(LOG_LEVEL_WARNING, "Failed to GET file %s:%s",
-                conn->this_server, remote_path);
-            success = false;
-            break;
-        }
-        else if (len > CF_MSGSIZE)
-        {
-            Log(LOG_LEVEL_WARNING,
-                "Incorrect length of incoming packet "
-                "while retrieving %s:%s, %d > %d",
-                conn->this_server, remote_path, len, CF_MSGSIZE);
-            success = false;
-            break;
+            Log(LOG_LEVEL_WARNING, "Failed to open file %s (fopen: %s)",
+                dest, GetErrorStr());
+            return false;
         }
 
-        if (BadProtoReply(buf))
+        char cfchangedstr[sizeof(CF_CHANGEDSTR1 CF_CHANGEDSTR2)];
+        snprintf(cfchangedstr, sizeof(cfchangedstr), "%s%s",
+                 CF_CHANGEDSTR1, CF_CHANGEDSTR2);
+
+        uint32_t received_bytes = 0;
+        while (received_bytes < file_size)
         {
-            Log(LOG_LEVEL_ERR,
-                "Error from server while retrieving file %s:%s: %s",
-                conn->this_server, remote_path, buf);
-            success = false;
-            break;
+            int len = TLSRecv(conn->conn_info->ssl, buf, CF_MSGSIZE);
+            if (len == -1)
+            {
+                Log(LOG_LEVEL_WARNING, "Failed to GET file %s:%s",
+                    conn->this_server, remote_path);
+                success = false;
+                break;
+            }
+            else if (len > CF_MSGSIZE)
+            {
+                Log(LOG_LEVEL_WARNING,
+                    "Incorrect length of incoming packet "
+                    "while retrieving %s:%s, %d > %d",
+                    conn->this_server, remote_path, len, CF_MSGSIZE);
+                success = false;
+                break;
+            }
+
+            if (BadProtoReply(buf))
+            {
+                Log(LOG_LEVEL_ERR,
+                    "Error from server while retrieving file %s:%s: %s",
+                    conn->this_server, remote_path, buf);
+                success = false;
+                break;
+            }
+
+            if (StringEqualN(buf, cfchangedstr, sizeof(cfchangedstr) - 1))
+            {
+                Log(LOG_LEVEL_ERR,
+                    "Remote file %s:%s changed during file transfer",
+                    conn->this_server, remote_path);
+                success = false;
+                break;
+            }
+
+            ret = fwrite(buf, sizeof(char), len, file_ptr);
+            if (ret < 0)
+            {
+                Log(LOG_LEVEL_ERR,
+                    "Failed to write during retrieval of file %s:%s (fwrite: %s)",
+                    conn->this_server, remote_path, GetErrorStr());
+                success = false;
+                break;
+            }
+
+            received_bytes += len;
         }
 
-        if (StringEqualN(buf, cfchangedstr, sizeof(cfchangedstr) - 1))
-        {
-            Log(LOG_LEVEL_ERR,
-                "Remote file %s:%s changed during file transfer",
-                conn->this_server, remote_path);
-            success = false;
-            break;
-        }
-
-        ret = fwrite(buf, sizeof(char), len, file_ptr);
-        if (ret < 0)
-        {
-            Log(LOG_LEVEL_ERR,
-                "Failed to write during retrieval of file %s:%s (fwrite: %s)",
-                conn->this_server, remote_path, GetErrorStr());
-            success = false;
-            break;
-        }
-
-        received_bytes += len;
+        fclose(file_ptr);
     }
 
     if (!success)
     {
-        unlink(local_path);
+        Log(LOG_LEVEL_VERBOSE, "Removing file '%s'...", dest);
+        unlink(dest);
+        return false;
     }
 
-    fclose(file_ptr);
-    return success;
+    Log(LOG_LEVEL_VERBOSE, "Replacing file '%s' with '%s'...", dest, local_path);
+    if (rename(dest, local_path) == -1)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to replace destination file '%s' with basis file '%s': %s", dest, local_path, GetErrorStr());
+        return false;
+    }
+
+    return true;
 }
 
 bool ProtocolStatGet(AgentConnection *conn, const char *remote_path,

@@ -853,6 +853,7 @@ static bool RecvDelta(
     char in_buf[PROTOCOL_MESSAGE_SIZE * 2], out_buf[PROTOCOL_MESSAGE_SIZE];
 
     /* Open/create the destination file */
+    unlink(dest);
     int new = safe_open_create_perms(
         dest, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY, perms);
     if (new == -1)

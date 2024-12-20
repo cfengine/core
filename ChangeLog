@@ -1,3 +1,61 @@
+3.25.0:
+	- Added acknowledged field to lastseen DB (ENT-11838)
+	- Various SELinux fixes:
+	  - Added create capability on cfengine_var_lib_t:dir to cf-hub
+	  - Added filesystem and files unconfined access to cf-monitord in cfengine-enterprise SELinux policy
+	  - Added getattr access for cf-serverd to socket file in CFEngine SELinux policy
+	  - Added getattr capability for cert_t:dir as needed to CFEngine components in cfengine-enterprise SELinux policy
+	  - Added sys_ptrace access for apachectl to run ps in CFEngine SELinux enterprise policy
+	  - Adjusted CFEngine SELinux policy to allow cf-execd to run ps command with policy version 33
+	  - Adjusted SELinux policy to allow components which run cf-promises to getattr everywhere and read symlinks
+	  - Granted more access to certificates directory for CFEngine components in SELinux policy
+	  (ENT-12466)
+	- Added logging CFEngine component related SELinux denials in cf-support
+	  (ENT-12137)
+	- Added option to choose protocol version in cf-net (ENT-12519)
+	- Adjusted cf-support for exotic UNIX platforms (ENT-9786)
+	- Adjusted cf-support to not fail if core dumps are available and gdb is missing
+	  (ENT-9786)
+	- Agent now also ignores interfaces listed in ignore_interfaces.rx when
+	  looking for IPv6 interface info. Variables such as
+	  'default:sys.hardware_mac[<INTERFACE>]' will no longer be defined for
+	  ignored interfaces.
+	  (ENT-11840)
+	- Atomic copy_from in files promise
+	  Changes to 'files' promise in 'copy_from' attribute:
+	  - The new file (i.e., '<FILENAME>.cfnew') is now created with correct
+	    permission during remote copy. Previously it would be created with
+	    default permissions.
+	  - The destination file (i.e., '<FILENAME>') is no longer deleted on
+	    backup during file copy.  Previously it would be renamed to
+	    '<FILENAME>.cfsaved', causing the original file to dissappear. Now an
+	    actual copy of the original file with the same permissions is created
+	    instead.
+	  As a result, there will no longer be a brief moment where the original
+	  file is inaccessible.
+	  (ENT-11988)
+	- File Stream API now unlinks before open with 'O_EXCL'
+	  The File Stream API now unlinks the destination file (i.e.,
+	  '<FILENAME>.cfnew') before opening it with the 'O_EXCL' flag. Previously
+	  the agent would fail if the destination file already exists.
+	  Fortunately, the File Stream API unlinks this file afterwards, both on
+	  success and error, causing the agent to recover. Both the 'cf-net get
+	  <FILENAME>' command and the 'copy_from' attribute were affected.
+	- File Stream API now writes sparse files (ENT-12414)
+	- Fixed bug causing LMDB database corruption
+	- Fixed possible segfault when backing up LMDB databases
+	- Re-enabled DB migration support for LMDB
+	  - Now creates backup before LMDB migration
+	  - Handle LMDB migration failures
+	  - In case of LMDB migration failures, the respective database file is
+	    moved to the side, and a fresh database is created.
+	- New network protocol version v4 - filestream (ENT-12414)
+	- Now 'cf-net get' no longer unlinks original file (ENT-12511)
+	- SELinux: Allow cf-serverd to set its own limits (ENT-12446)
+	- commands promises with exit codes not matching any
+	  _returncodes attributes from classes body now log and
+	  error message not just an info message. (CFE-4429, ENT-12103)
+
 3.24.0:
 	- Added a sanity check to policy parser that checks for and warns
 	  in case of promise declarations with no actions. The motivation
@@ -857,7 +915,7 @@
 	  cf-check will include much more functionality in the future
 	  and some of the code will be added to other binaries,
 	  for example to do health checks of databases on startup.
-	  Ticket: (ENT-4064)
+	  (ENT-4064)
 	- Added function string_replace. (CFE-2850)
 	- Allow dots in variable identifiers with no such bundle
 	  As described and discussed in CFE-1915, defining remote variables

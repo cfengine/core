@@ -472,7 +472,9 @@ static int CFNetRun(CFNetOptions *opts, char **args, char *hostnames)
     int ret = 0;
     char *hostname = strtok(hosts, ",");
     while (hostname != NULL){
-        CFNetCommandSwitch(opts, hostname, args, cmd);
+        if (CFNetCommandSwitch(opts, hostname, args, cmd) != 0) {
+            ret = -1;
+        }
         hostname = strtok(NULL, ",");
     }
     free(hosts);
@@ -636,8 +638,7 @@ static int CFNetConnect(const char *hostname, const char *use_protocol_version, 
         Log(LOG_LEVEL_ERR, "No hostname specified");
         return -1;
     }
-    CFNetConnectSingle(hostname, use_protocol_version, true);
-    return 0;
+    return CFNetConnectSingle(hostname, use_protocol_version, true);
 }
 
 static void CFNetDisconnect(AgentConnection *conn)

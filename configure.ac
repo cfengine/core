@@ -69,7 +69,7 @@ m4_define(SERIAL_TESTS, m4_bmatch(AUTOMAKE_VERSION, [^1\.\([0-9]\|1[0-1]\)\(\.\|
 AC_MSG_RESULT(AUTOMAKE_VERSION)
 
 
-AM_INIT_AUTOMAKE([tar-ustar] SERIAL_TESTS)
+AM_INIT_AUTOMAKE([tar-ustar] SERIAL_TESTS [subdir-objects])
 AM_MAINTAINER_MODE([enable])
 
 m4_divert_text([DEFAULTS], [: "${AR_FLAGS=cr}"])

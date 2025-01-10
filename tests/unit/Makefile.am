@@ -407,6 +407,7 @@ nfs_test_LDADD = ../../libpromises/libpromises.la libtest.la
 init_script_test_helper_SOURCES = init_script_test_helper.c
 init_script_test.sh: init_script_test_helper
 CLEANFILES += init_script_test_helper
+noinst_PROGRAMS += init_script_test_helper
 endif
 EXTRA_DIST += init_script_test_helper.c
 EXTRA_DIST += init_script_test.sh

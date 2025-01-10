@@ -29,7 +29,7 @@ dnl # Run ./autogen.sh to build configure script
 dnl #
 dnl ##########################################################################
 
-AC_PREREQ(2.63)
+AC_PREREQ([2.63])
 
 m4_define([cfversion_from_env],  m4_normalize(m4_esyscmd([echo $EXPLICIT_VERSION])))
 m4_define([cfversion_from_file], m4_normalize(m4_esyscmd([cat CFVERSION])))
@@ -46,7 +46,7 @@ m4_ifval(cfversion_from_env, [
 ])
 
 
-AC_INIT(cfengine, cfversion)
+AC_INIT([cfengine],[cfversion])
 AC_CONFIG_SRCDIR([libpromises/generic_agent.c])
 AC_CANONICAL_TARGET
 
@@ -137,11 +137,11 @@ AS_CASE([${target_os}],
 dnl GCC specific flags
 m4_include([m4/cf3_gcc_flags.m4])
 
-# Use either new LT_INIT or old AC_DISABLE_STATIC/AC_PROG_LIBTOOL macros
+# Use either new LT_INIT or old AC_DISABLE_STATIC/LT_INIT macros
 m4_ifdef([LT_INIT],
   [LT_INIT([disable-static])],
   [AC_DISABLE_STATIC
-   AC_PROG_LIBTOOL])
+   LT_INIT])
 
 AC_PROG_LEX(noyywrap)
 AC_PROG_YACC
@@ -819,9 +819,6 @@ AC_CHECK_HEADERS(sys/jail.h, [], [], [AC_INCLUDES_DEFAULT
 ])
 AC_CHECK_HEADERS(net/route.h netinet/in.h netinet/ip.h)
 
-
-AC_HEADER_STDC
-AC_HEADER_TIME
 AC_HEADER_SYS_WAIT
 AC_HEADER_DIRENT
 AC_HEADER_STDBOOL

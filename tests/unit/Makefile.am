@@ -386,17 +386,17 @@ verify_databases_test_LDADD = ../../cf-agent/libcf-agent.la libtest.la
 iteration_test_SOURCES = iteration_test.c
 
 cf_upgrade_test_SOURCES = cf_upgrade_test.c \
-	$(top_srcdir)/cf-upgrade/alloc-mini.c \
-	$(top_srcdir)/cf-upgrade/alloc-mini.h \
-	$(top_srcdir)/cf-upgrade/command_line.c \
-	$(top_srcdir)/cf-upgrade/command_line.h \
-	$(top_srcdir)/cf-upgrade/configuration.c \
-	$(top_srcdir)/cf-upgrade/configuration.h \
-	$(top_srcdir)/cf-upgrade/log.c $(top_srcdir)/cf-upgrade/log.h \
-	$(top_srcdir)/cf-upgrade/process.c $(top_srcdir)/cf-upgrade/process.h \
-	$(top_srcdir)/cf-upgrade/update.c \
-	$(top_srcdir)/cf-upgrade/update.h
-cf_upgrade_test_CPPFLAGS = -I$(top_srcdir)/cf-upgrade -I$(top_srcdir)/libntech/libutils -I$(top_srcdir)
+	../../cf-upgrade/alloc-mini.c \
+	../../cf-upgrade/alloc-mini.h \
+	../../cf-upgrade/command_line.c \
+	../../cf-upgrade/command_line.h \
+	../../cf-upgrade/configuration.c \
+	../../cf-upgrade/configuration.h \
+	../../cf-upgrade/log.c ../../cf-upgrade/log.h \
+	../../cf-upgrade/process.c ../../cf-upgrade/process.h \
+	../../cf-upgrade/update.c \
+	../../cf-upgrade/update.h
+cf_upgrade_test_CPPFLAGS = -I../../cf-upgrade -I../../libntech/libutils -I../../
 cf_upgrade_test_LDADD = libtest.la ../../libntech/libcompat/libcompat.la
 
 if !NT

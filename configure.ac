@@ -29,7 +29,7 @@ dnl # Run ./autogen.sh to build configure script
 dnl #
 dnl ##########################################################################
 
-AC_PREREQ([2.71])
+AC_PREREQ([2.63])
 
 m4_define([cfversion_from_env],  m4_normalize(m4_esyscmd([echo $EXPLICIT_VERSION])))
 m4_define([cfversion_from_file], m4_normalize(m4_esyscmd([cat CFVERSION])))

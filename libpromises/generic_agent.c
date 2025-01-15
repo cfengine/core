@@ -1591,7 +1591,17 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
 
     EvalContextClassPutHard(ctx, "any", "source=agent");
 
-    GenericAgentAddEditionClasses(ctx);
+    GenericAgentAddEditionClasses(ctx); // May set "enterprise_edition" class
+
+    const Class *enterprise_edition = EvalContextClassGet(ctx, "default", "enterprise_edition");
+    if (enterprise_edition == NULL)
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_edition", "community", CF_DATA_TYPE_STRING, "derived-from=enterprise_edition,report");
+    }
+    else 
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cf_edition", "enterprise", CF_DATA_TYPE_STRING, "derived-from=enterprise_edition,report");
+    }
 
     /* Make sure the chroot for recording changes this process would normally
      * make on the system is setup if that was requested. */

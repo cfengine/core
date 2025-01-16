@@ -29,14 +29,18 @@ AM_CPPFLAGS = -I$(srcdir)/../libpromises -I$(srcdir)/../libntech/libutils \
 	-I$(srcdir)/../libenv \
 	$(OPENSSL_CPPFLAGS) \
 	$(PCRE2_CPPFLAGS) \
-	$(ENTERPRISE_CPPFLAGS)
+	$(ENTERPRISE_CPPFLAGS) \
+	$(LEECH_CPPFLAGS)
 
 AM_CFLAGS = \
 	$(OPENSSL_CFLAGS) \
 	$(PTHREAD_CFLAGS) \
-	$(ENTERPRISE_CFLAGS)
+	$(ENTERPRISE_CFLAGS) \
+	$(LEECH_CFLAGS)
 
-libcf_serverd_la_LIBADD = ../libpromises/libpromises.la
+AM_LDFLAGS = $(LEECH_LDFLAGS)
+
+libcf_serverd_la_LIBADD = ../libpromises/libpromises.la $(LEECH_LIBS)
 
 libcf_serverd_la_SOURCES = \
 	cf-serverd.c \

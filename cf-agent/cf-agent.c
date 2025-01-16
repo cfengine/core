@@ -103,6 +103,9 @@
 
 #include <ornaments.h>
 
+#if HAVE_LEECH_H
+#include <leech.h>
+#endif
 
 extern int PR_KEPT;
 extern int PR_REPAIRED;
@@ -270,6 +273,10 @@ static PromiseResult DefaultVarPromiseWrapper(EvalContext *ctx, const Promise *p
 
 int main(int argc, char *argv[])
 {
+#if HAVE_LIBLEECH
+    LCH_Version();
+#endif
+
     SetupSignalsForAgent();
 #ifdef HAVE_LIBXML2
         xmlInitParser();

@@ -35,7 +35,8 @@ AM_CPPFLAGS = -I$(srcdir)/../libpromises -I$(srcdir)/../libntech/libutils \
 	$(POSTGRESQL_CPPFLAGS) \
 	$(MYSQL_CPPFLAGS) \
 	$(LIBXML2_CPPFLAGS) \
-	$(PAM_CPPFLAGS)
+	$(PAM_CPPFLAGS) \
+	$(LEECH_CPPFLAGS)
 
 AM_CFLAGS = \
 	@CFLAGS@ \
@@ -46,7 +47,8 @@ AM_CFLAGS = \
 	$(POSTGRESQL_CFLAGS) \
 	$(MYSQL_CFLAGS) \
 	$(LIBXML2_CFLAGS) \
-	$(PAM_CFLAGS)
+	$(PAM_CFLAGS) \
+	$(LEECH_CFLAGS)
 
 AM_LDFLAGS = \
 	@LDFLAGS@ \
@@ -56,7 +58,8 @@ AM_LDFLAGS = \
 	$(POSTGRESQL_LDFLAGS) \
 	$(MYSQL_LDFLAGS) \
 	$(LIBXML2_LDFLAGS) \
-	$(PAM_LDFLAGS)
+	$(PAM_LDFLAGS) \
+	$(LEECH_LDFLAGS)
 
 if FREEBSD
     AM_LDFLAGS += -lutil
@@ -69,7 +72,8 @@ libcf_agent_la_LIBADD = ../libpromises/libpromises.la \
 	$(POSTGRESQL_LIBS) \
 	$(MYSQL_LIBS) \
 	$(LIBXML2_LIBS) \
-	$(PAM_LIBS)
+	$(PAM_LIBS) \
+	$(LEECH_LIBS)
 
 libcf_agent_la_SOURCES = \
 	agent-diagnostics.c agent-diagnostics.h \

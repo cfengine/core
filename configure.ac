@@ -521,6 +521,17 @@ CF3_WITH_LIBRARY(pcre2, [
   )]
 )
 
+dnl leech is required in enterprise, but we need to link it in core
+
+AC_ARG_WITH([leech], [AS_HELP_STRING([--with-leech[[=PATH]]], [Enable Leech])], [], [with_leech=check])
+
+if test "x$with_leech" != xno; then
+   CF3_WITH_LIBRARY(leech, [
+      AC_CHECK_HEADERS(leech.h, [], [if test "x$with_leech" != xcheck; then AC_MSG_ERROR(Cannot find leech library headers); fi])
+      AC_CHECK_LIB(leech, LCH_Version, [], [if test "x$with_leech" != xcheck; then AC_MSG_ERROR(Cannot find leech library); fi])
+   ])
+fi
+
 dnl librsync
 
 AC_ARG_WITH([librsync], [AS_HELP_STRING([--with-librsync[[=PATH]]], [Specify librsync path])], [], [with_librsync=yes])

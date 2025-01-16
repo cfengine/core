@@ -289,7 +289,7 @@ static int CFNetParse(int argc, char **argv,
     *hostnames = NULL;
     int c = 0;
     int start_index = 1;
-    const char *optstr = "+hMg:H:dvI"; // + means stop for non opt arg. :)
+    const char *optstr = "+hMg:H:p:dvI"; // + means stop for non opt arg. :)
     while ((c = getopt_long(argc, argv, optstr, OPTIONS, &start_index))
             != -1)
     {

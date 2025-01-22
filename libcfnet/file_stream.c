@@ -672,12 +672,17 @@ static rs_long_t GetSizeOfFile(FILE *file)
  *
  * @param conn The SSL connection object
  * @param filename The name of the basis file
+ * @param print_stats Whether or not to print performance statistics
  * @return true on success, otherwise false
  */
-static bool SendSignature(SSL *conn, const char *filename)
+static bool SendSignature(SSL *conn, const char *filename, bool print_stats)
 {
     assert(conn != NULL);
     assert(filename != NULL);
+
+    /* Variables used for performance statistics */
+    size_t bytes_in = 0;
+    size_t bytes_out = 0;
 
     /* In this case, the input buffer does not need to be twice the message
      * size, because we can control how much we read into it */
@@ -783,6 +788,7 @@ static bool SendSignature(SSL *conn, const char *filename)
 
             bufs.next_in = in_buf;
             bufs.avail_in += n_bytes;
+            bytes_in += n_bytes;
         }
 
         /* Iterate job */
@@ -813,6 +819,7 @@ static bool SendSignature(SSL *conn, const char *filename)
 
             bufs.next_out = out_buf;
             bufs.avail_out = PROTOCOL_MESSAGE_SIZE;
+            bytes_out += present;
         }
         else if (res == RS_DONE)
         {
@@ -829,6 +836,16 @@ static bool SendSignature(SSL *conn, const char *filename)
     fclose(file);
     rs_job_free(job);
 
+    const char *msg =
+        "Send signature statistics:\n"
+        "  %zu bytes in (read from '%s')\n"
+        "  %zu bytes out (sent to server)\n";
+    Log(LOG_LEVEL_DEBUG, msg, bytes_in, filename, bytes_out);
+    if (print_stats)
+    {
+        fprintf(stderr, msg, bytes_in, filename, bytes_out);
+    }
+
     return true;
 }
 
@@ -839,14 +856,23 @@ static bool SendSignature(SSL *conn, const char *filename)
  * @param basis The name of basis file
  * @param dest The name of destination file
  * @param perms The desired file permissions of the destination file
+ * @param print_stats Whether or not to print performance statistics
  * @return true on success, otherwise false
  */
 static bool RecvDelta(
-    SSL *conn, const char *basis, const char *dest, mode_t perms)
+    SSL *conn,
+    const char *basis,
+    const char *dest,
+    mode_t perms,
+    bool print_stats)
 {
     assert(conn != NULL);
     assert(basis != NULL);
     assert(dest != NULL);
+
+    /* Variables used for performance statistics */
+    size_t bytes_in = 0;
+    size_t bytes_out = 0;
 
     /* The input buffer has to be twice the message size, so that it can fit a
      * new message, as well as some tail data from the last job iteration */
@@ -953,6 +979,7 @@ static bool RecvDelta(
             bufs.eof_in = eof ? 1 : 0;
             bufs.next_in = in_buf;
             bufs.avail_in += n_bytes;
+            bytes_in += n_bytes;
         }
 
         res = rs_job_iter(job, &bufs);
@@ -998,6 +1025,7 @@ static bool RecvDelta(
             n_wrote_total += present;
             bufs.next_out = out_buf;
             bufs.avail_out = sizeof(out_buf);
+            bytes_out += present;
         }
     } while (res != RS_DONE);
 
@@ -1012,11 +1040,25 @@ static bool RecvDelta(
         return false;
     }
 
+    const char *msg =
+        "Receive delta statistics:\n"
+        "  %zu bytes in (received from server)\n"
+        "  %zu bytes out (written to '%s')\n";
+    Log(LOG_LEVEL_DEBUG, msg, bytes_in, bytes_out, dest);
+    if (print_stats)
+    {
+        fprintf(stderr, msg, bytes_in, bytes_out, dest);
+    }
+
     return true;
 }
 
 bool FileStreamFetch(
-    SSL *conn, const char *basis, const char *dest, mode_t perms)
+    SSL *conn,
+    const char *basis,
+    const char *dest,
+    mode_t perms,
+    bool print_stats)
 {
     assert(conn != NULL);
     assert(basis != NULL);
@@ -1032,7 +1074,7 @@ bool FileStreamFetch(
     Log(LOG_LEVEL_VERBOSE,
         "Computing- & sending signature of file '%s'...",
         basis);
-    if (!SendSignature(conn, basis))
+    if (!SendSignature(conn, basis, print_stats))
     {
         /* Error is already logged */
         return false;
@@ -1041,7 +1083,7 @@ bool FileStreamFetch(
     Log(LOG_LEVEL_VERBOSE,
         "Receiving delta & applying patch to file '%s'...",
         dest);
-    if (!RecvDelta(conn, basis, dest, perms))
+    if (!RecvDelta(conn, basis, dest, perms, print_stats))
     {
         /* Error is already logged */
         return false;

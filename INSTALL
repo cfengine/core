@@ -54,6 +54,7 @@ CFEngine is regularly built and tested on the following CPU architectures:
 * x86
 * x86-64
 * SPARC
+* ARM64
 
 OTHER CONFIGURATIONS
 --------------------

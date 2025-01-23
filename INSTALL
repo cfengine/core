@@ -51,9 +51,9 @@ HARDWARE PLATFORMS
 
 CFEngine is regularly built and tested on the following CPU architectures:
 
-* x86
 * x86-64
 * SPARC
+* ARM64
 
 OTHER CONFIGURATIONS
 --------------------
@@ -120,13 +120,13 @@ sudo yum install epel-release && sudo yum update
 Or on RHEL, replacing the version number with yours:
 sudo subscription-manager repos --enable codeready-builder-for-rhel-9-x86_64-rpms && sudo yum update
 
-sudo yum install -y gcc gdb make git libtool autoconf automake byacc flex openssl-devel pcre2-devel lmdb-devel pam-devel flex-devel libyaml-devel fakeroot libxml2-devel
+sudo yum install -y gcc gdb make git libtool autoconf automake byacc flex openssl-devel pcre2-devel lmdb-devel pam-devel flex-devel libyaml-devel fakeroot libxml2-devel librsync-devel
 
 For SELinux support you will need selinux-policy-devel package and specify `--with-selinux-policy` to `autogen.sh` or `configure`
 
 * Debian (Debian 12 2023-10-09)
 
-sudo apt-get install -y build-essential git libtool autoconf automake bison flex libssl-dev libpcre2-dev libbison-dev libacl1 libacl1-dev lmdb-utils liblmdb-dev libpam0g-dev libtool libyaml-dev libxml2-dev
+sudo apt-get install -y build-essential git libtool autoconf automake bison flex libssl-dev libpcre2-dev libbison-dev libacl1 libacl1-dev lmdb-utils liblmdb-dev libpam0g-dev libtool libyaml-dev libxml2-dev librsync-dev
 
 * NetBSD (9.3 2024-03-01)
 
@@ -162,5 +162,5 @@ pkg install build-essential git autoconf automake bison flex liblmdb openssl pcr
 
 * OSX (2021-10-20)
 
-brew install openssl lmdb autoconf automake libtool bison flex pcre2 m4 gcc make
+brew install openssl lmdb autoconf automake libtool bison flex pcre2 m4 gcc make librsync
 ./autogen.sh --enable-debug

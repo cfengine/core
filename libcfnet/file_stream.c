@@ -1022,8 +1022,8 @@ bool FileStreamFetch(
     assert(basis != NULL);
     assert(dest != NULL);
 
-    /* Let's make sure the basis file exists */
-    FILE *file = safe_fopen_create_perms(basis, "wb", perms);
+    /* Let's make sure the basis file exists, but don't truncate it */
+    FILE *file = safe_fopen_create_perms(basis, "ab+", perms);
     if (file != NULL)
     {
         fclose(file);

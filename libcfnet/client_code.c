@@ -796,7 +796,7 @@ bool CopyRegularFileNet(const char *source, const char *basis, const char *dest,
 
     const ProtocolVersion version = ConnectionInfoProtocolVersion(conn->conn_info);
     if (ProtocolSupportsFileStream(version)) {
-        return FileStreamFetch(conn->conn_info->ssl, basis, dest, mode);
+        return FileStreamFetch(conn->conn_info->ssl, basis, dest, mode, false);
     }
 
     int dd = safe_open_create_perms(dest, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY, mode);

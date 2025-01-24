@@ -92,7 +92,8 @@ Seq *ProtocolOpenDir(AgentConnection *conn, const char *path)
 }
 
 bool ProtocolGet(AgentConnection *conn, const char *remote_path,
-                 const char *local_path, const uint32_t file_size, int perms)
+                 const char *local_path, const uint32_t file_size, int perms,
+                 bool print_stats)
 {
     assert(conn != NULL);
     assert(remote_path != NULL);
@@ -128,7 +129,8 @@ bool ProtocolGet(AgentConnection *conn, const char *remote_path,
     if (ProtocolSupportsFileStream(version))
     {
         /* Use file stream API if it is available */
-        if (!FileStreamFetch(conn->conn_info->ssl, local_path, dest, perms))
+        if (!FileStreamFetch(conn->conn_info->ssl, local_path, dest, perms,
+                             print_stats))
         {
             /* Error is already logged */
             success = false;
@@ -222,7 +224,7 @@ bool ProtocolGet(AgentConnection *conn, const char *remote_path,
 }
 
 bool ProtocolStatGet(AgentConnection *conn, const char *remote_path,
-                     const char *local_path, int perms)
+                     const char *local_path, int perms, bool print_stats)
 {
     assert(conn != NULL);
     assert(remote_path != NULL);
@@ -237,7 +239,7 @@ bool ProtocolStatGet(AgentConnection *conn, const char *remote_path,
         return false;
     }
 
-    return ProtocolGet(conn, remote_path, local_path, sb.st_size, perms);
+    return ProtocolGet(conn, remote_path, local_path, sb.st_size, perms, print_stats);
 }
 
 bool ProtocolStat(AgentConnection *const conn, const char *const remote_path,

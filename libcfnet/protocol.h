@@ -84,6 +84,7 @@ Seq *ProtocolOpenDir(AgentConnection *conn, const char *path);
  * @param [in] local_path   Path of received file
  * @param [in] file_size    Size of file to get
  * @param [in] perms        Permissions of local file
+ * @param [in] print_stats  Print RSYNC performance statistics
  * @return True if file was successfully transferred, false otherwise
  *
  * Example (for printing each directory entry):
@@ -104,7 +105,8 @@ Seq *ProtocolOpenDir(AgentConnection *conn, const char *path);
  *     Translated to: GET /var/cfengine/masterfiles/update.cf
  */
 bool ProtocolGet(AgentConnection *conn, const char *remote_path,
-                 const char *local_path, const uint32_t file_size, int perms);
+                 const char *local_path, const uint32_t file_size, int perms,
+                 bool print_stats);
 
 
 /**
@@ -114,7 +116,7 @@ bool ProtocolGet(AgentConnection *conn, const char *remote_path,
  * it.
  */
 bool ProtocolStatGet(AgentConnection *conn, const char *remote_path,
-                     const char *local_path, int perms);
+                     const char *local_path, int perms, bool print_stats);
 
 /**
  * Receives statistics about a remote file.

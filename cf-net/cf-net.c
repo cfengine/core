@@ -56,6 +56,7 @@ typedef struct
     char *min_tls_version;
     char *allow_ciphers;
     char *use_protocol_version;
+    bool print_stats;
 } CFNetOptions;
 
 //*******************************************************************
@@ -114,6 +115,7 @@ static const struct option OPTIONS[] =
     {"tls-version", required_argument,  0, 't'},
     {"ciphers",     required_argument,  0, 'c'},
     {"protocol",    required_argument,  0, 'p'},
+    {"stats",       no_argument,        0, 's'},
     {NULL,          0,                  0, '\0'}
 };
 
@@ -129,6 +131,7 @@ static const char *const HINTS[] =
     "Minimum TLS version to use",
     "TLS ciphers to use (comma-separated list)",
     "Specify CFEngine protocol to use. Possible values: 'classic', 'tls', 'cookie', 'filestream', 'latest' (default)",
+    "Print rsync performance statistics to stderr",
     NULL
 };
 
@@ -234,6 +237,7 @@ static void CFNetSetDefault(CFNetOptions *opts){
     opts->min_tls_version = NULL;
     opts->allow_ciphers   = NULL;
     opts->use_protocol_version = NULL;
+    opts->print_stats = false;
 }
 
 static void CFNetOptionsClear(CFNetOptions *opts)
@@ -289,7 +293,7 @@ static int CFNetParse(int argc, char **argv,
     *hostnames = NULL;
     int c = 0;
     int start_index = 1;
-    const char *optstr = "+hMg:H:p:dvI"; // + means stop for non opt arg. :)
+    const char *optstr = "+hMg:H:p:sdvI"; // + means stop for non opt arg. :)
     while ((c = getopt_long(argc, argv, optstr, OPTIONS, &start_index))
             != -1)
     {
@@ -359,6 +363,11 @@ static int CFNetParse(int argc, char **argv,
             case 'p':
             {
                 opts->use_protocol_version = xstrdup(optarg);
+                break;
+            }
+            case 's':
+            {
+                opts->print_stats = true;
                 break;
             }
             default:
@@ -725,6 +734,7 @@ static int invalid_command(const char *cmd)
 typedef struct _GetFileData {
     const char *hostname;
     const char *use_protocol_version;
+    bool print_stats;
     char remote_file[PATH_MAX];
     char local_file[PATH_MAX];
     bool ret;
@@ -741,7 +751,7 @@ static void *CFNetGetFile(void *arg)
     }
 
     data->ret = ProtocolStatGet(conn, data->remote_file,
-                                data->local_file, 0644);
+                                data->local_file, 0644, data->print_stats);
     if (!data->ret)
     {
         printf("Could not stat: '%s'\n", data->remote_file);
@@ -858,6 +868,7 @@ static int CFNetGet(ARG_UNUSED CFNetOptions *opts, const char *hostname, char **
         threads[i]->data = (GetFileData*) xcalloc(1, sizeof(GetFileData));
         threads[i]->data->hostname = hostname;
         threads[i]->data->use_protocol_version = opts->use_protocol_version;
+        threads[i]->data->print_stats = opts->print_stats;
         if (n_threads > 1)
         {
             if (strstr(local_file, "%d") != NULL)

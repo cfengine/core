@@ -93,12 +93,17 @@ bool FileStreamServe(SSL *conn, const char *filename);
  * @param basis The name of the basis file
  * @param dest The name of the destination file
  * @param perms The desired permissions of the destination file
+ * @param print_stats Print performance statistics
  * @return true on success, otherwise false
  *
  * @note If the destination file is a symlink, this function fetches the
  *       contents into the symlink target.
  */
 bool FileStreamFetch(
-    SSL *conn, const char *basis, const char *dest, mode_t perms);
+    SSL *conn,
+    const char *basis,
+    const char *dest,
+    mode_t perms,
+    bool print_stats);
 
 #endif // FILE_STREAM_H

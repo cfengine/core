@@ -70,8 +70,9 @@ const char *create_backup_dir()
         return NULL;
     }
 
-    const int n =
-        snprintf(backup_dir, PATH_MAX, "%s%jd/", backup_root, (intmax_t)ts);
+    int n =
+        snprintf(backup_dir, PATH_MAX - 1, // trailing slash for later
+                 "%s%jd-XXXXXX", backup_root, (intmax_t)ts);
     if (n >= PATH_MAX)
     {
         Log(LOG_LEVEL_ERR,
@@ -81,7 +82,7 @@ const char *create_backup_dir()
         return NULL;
     }
 
-    if (mkdir(backup_dir, 0700) != 0)
+    if (mkdtemp(backup_dir) == NULL)
     {
         Log(LOG_LEVEL_ERR,
             "Could not create directory '%s' (%s)",
@@ -89,6 +90,10 @@ const char *create_backup_dir()
             strerror(errno));
         return NULL;
     }
+
+    // Add trailing forward slash
+    backup_dir[n++] = FILE_SEPARATOR;
+    backup_dir[n] = '\0';
 
     return backup_dir;
 }
@@ -102,6 +107,11 @@ int backup_files_copy(Seq *filenames)
     assert_or_return(length > 0, 1);
 
     const char *backup_dir = create_backup_dir();
+    if (backup_dir == NULL)
+    {
+        // Error already logged
+        return -1;
+    }
 
     Log(LOG_LEVEL_INFO, "Backing up to '%s'", backup_dir);
 

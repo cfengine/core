@@ -126,14 +126,14 @@ static const char *const HINTS[] =
     "Specify how detailed logs should be. Possible values: 'error', 'warning', 'notice', 'info', 'verbose', 'debug'",
     "Enable basic information output",
     "Comma-separated list of key files to use (one of -k/-H options is required for encryption)",
-    "Comma-separated list of hosts to encrypt/decrypt for (defaults to 'localhost' for decryption)",
+    "Comma-separated list of hosts to encrypt/decrypt for (defaults to 'localhost')",
     "Output file (required)",
     NULL
 };
 
 static const Description COMMANDS[] =
 {
-    {"encrypt", "Encrypt data for one or more hosts/keys", "cf-secret encrypt -k/-H KEY/HOST -o OUTPUT INPUT"},
+    {"encrypt", "Encrypt data for one or more hosts/keys", "cf-secret encrypt [-k/-H KEY/HOST] -o OUTPUT INPUT"},
     {"decrypt", "Decrypt data", "cf-secret decrypt [-k/-H KEY/HOST] -o OUTPUT INPUT"},
     {"print-headers", "Print headers from an encrypted file", "cf-secret print-headers ENCRYPTED_FILE"},
     {NULL, NULL, NULL}

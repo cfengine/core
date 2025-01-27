@@ -69,6 +69,7 @@ struct DBCursorPriv_
     MDB_cursor *mc;
     MDB_val delkey;
     void *curkv;
+    size_t curks;
     bool pending_delete;
 };
 
@@ -1290,6 +1291,7 @@ bool DBPrivAdvanceCursor(
         }
         cursor->curkv = xmalloc(keybuf_size + data.mv_size);
         memcpy(cursor->curkv, mkey.mv_data, mkey.mv_size);
+        cursor->curks = mkey.mv_size;
         *key = cursor->curkv;
         *key_size = mkey.mv_size;
         *value_size = data.mv_size;
@@ -1355,7 +1357,7 @@ bool DBPrivWriteCursorEntry(
     {
         MDB_val curkey;
         curkey.mv_data = cursor->curkv;
-        curkey.mv_size = sizeof(cursor->curkv);
+        curkey.mv_size = cursor->curks;
 
         rc = mdb_cursor_put(cursor->mc, &curkey, &data, MDB_CURRENT);
         CheckLMDBUsable(rc, cursor->db->env);

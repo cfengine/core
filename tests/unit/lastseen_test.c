@@ -70,6 +70,7 @@ static void test_newentry(void)
     KeyHostSeen q;
     assert_int_equal(ReadDB(db, "qiSHA-12345", &q, sizeof(q)), true);
 
+    assert_false(q.acknowledged);
     assert_int_equal(q.lastseen, 666);
     assert_double_close(q.Q.q, 0.0);
     assert_double_close(q.Q.dq, 0.0);
@@ -102,6 +103,7 @@ static void test_update(void)
     KeyHostSeen q;
     assert_int_equal(ReadDB(db, "qiSHA-12345", &q, sizeof(q)), true);
 
+    assert_false(q.acknowledged);
     assert_int_equal(q.lastseen, 1110);
     assert_double_close(q.Q.q, 555.0);
     assert_double_close(q.Q.dq, 555.0);

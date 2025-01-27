@@ -29,6 +29,7 @@
 
 typedef struct
 {
+    bool acknowledged; // True when acknowledged by cf-hub, false when updated
     time_t lastseen;
     QPoint Q; // Average time between connections (rolling weighted average)
 } KeyHostSeen;
@@ -61,5 +62,13 @@ int LastSeenHostKeyCount(void);
 bool IsLastSeenCoherent(void);
 int RemoveKeysFromLastSeen(const char *input, bool must_be_coherent,
                            char *equivalent, size_t equivalent_size);
+
+/**
+ * @brief Acknowledge that lastseen host entry is observed.
+ * @param host_key The host key of the lastseen entry.
+ * @param incoming Whether it is an incoming or outgoing entry.
+ * @return true if host entry was successfully acknowledged, otherwise false.
+ */
+bool LastSeenHostAcknowledge(const char *host_key, bool incoming);
 
 #endif

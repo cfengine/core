@@ -227,6 +227,15 @@ static const ConstraintSyntax delete_constraints[] =
 
 static const BodySyntax delete_body = BodySyntaxNew("delete", delete_constraints, NULL, SYNTAX_STATUS_NORMAL);
 
+static const ConstraintSyntax fsattrs_constraints[] =
+{
+    CONSTRAINT_SYNTAX_GLOBAL,
+    ConstraintSyntaxNewBool("immutable", "true to set / false to clear the immutable flag", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewNull()
+};
+
+static const BodySyntax fsattrs_body = BodySyntaxNew("fsattrs", fsattrs_constraints, NULL, SYNTAX_STATUS_NORMAL);
+
 static const ConstraintSyntax rename_constraints[] =
 {
     CONSTRAINT_SYNTAX_GLOBAL,
@@ -339,6 +348,7 @@ static const ConstraintSyntax CF_FILES_BODIES[] =
     ConstraintSyntaxNewBody("copy_from", &copy_from_body, "Criteria for copying file from a source", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("create", "true/false whether to create non-existing file. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBody("delete", &delete_body, "Criteria for deleting files", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBody("fsattrs", &fsattrs_body, "Control file system attributes", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("content", CF_ANYSTRING, "Complete content the promised file should contain", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBody("depth_search", &depth_search_body, "Criteria for file depth searches", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBody("edit_defaults", &edit_defaults_body, "Default promise details for file edits", SYNTAX_STATUS_NORMAL),

@@ -5276,38 +5276,21 @@ static FnCallResult FnCallFold(EvalContext *ctx,
 
 /*********************************************************************/
 
-static FnCallResult FnCallDatatype(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
+static char * DataTypeStringFromVarName(EvalContext *ctx, const char *var_name, bool detail)
 {
-    assert(fp != NULL);
-    assert(fp->name != NULL);
-
-    if (finalargs == NULL)
-    {
-        Log(LOG_LEVEL_ERR,
-            "Function %s requires variable identifier as first argument",
-            fp->name);
-        return FnFailure();
-    }
-    const char* const var_name = RlistScalarValue(finalargs);
+    assert(var_name != NULL);
 
     VarRef* const var_ref = VarRefParse(var_name);
     DataType type;
     const void *value = EvalContextVariableGet(ctx, var_ref, &type);
     VarRefDestroy(var_ref);
 
-    /* detail argument defaults to false */
-    bool detail = false;
-    if (finalargs->next != NULL)
-    {
-        detail = BooleanFromString(RlistScalarValue(finalargs->next));
-    }
-
     const char *const type_str =
         (type == CF_DATA_TYPE_NONE) ? "none" : DataTypeToString(type);
 
     if (!detail)
     {
-        return FnReturn(type_str);
+        return SafeStringDuplicate(type_str);
     }
 
     if (type == CF_DATA_TYPE_CONTAINER)
@@ -5339,15 +5322,95 @@ static FnCallResult FnCallDatatype(EvalContext *ctx, ARG_UNUSED const Policy *po
             subtype_str = "null";
             break;
         default:
-            Log(LOG_LEVEL_ERR,
-                "Function %s failed to get subtype of type data", fp->name);
-            return FnFailure();
+            return NULL;
         }
 
-        return FnReturnF("%s %s", type_str, subtype_str);
+        return StringConcatenate(3, type_str, " ", subtype_str);
+    }
+    return StringConcatenate(2, "policy ", type_str);
+}
+
+static FnCallResult FnCallDatatype(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
+{
+    assert(fp != NULL);
+    assert(fp->name != NULL);
+
+    if (finalargs == NULL)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Function %s requires variable identifier as first argument",
+            fp->name);
+        return FnFailure();
+    }
+    const char* const var_name = RlistScalarValue(finalargs);
+
+    /* detail argument defaults to false */
+    bool detail = false;
+    if (finalargs->next != NULL)
+    {
+        detail = BooleanFromString(RlistScalarValue(finalargs->next));
+    }
+    char * const ouptput_string = DataTypeStringFromVarName(ctx, var_name, detail);
+
+    if (ouptput_string == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Function %s could not parse var type",
+            fp->name);
+        return FnFailure();
     }
 
-    return FnReturnF("policy %s", type_str);
+    return FnReturnNoCopy(ouptput_string);
+}
+
+/*********************************************************************/
+
+static FnCallResult FnCallIsDatatype(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
+{
+    assert(fp != NULL);
+    assert(fp->name != NULL);
+
+    // checks args
+    const Rlist *const var_arg = finalargs;
+    if (var_arg == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Function %s requires a variable as first argument",
+            fp->name);
+        return FnFailure();
+    }
+
+    assert(finalargs != NULL); // assumes finalargs is already checked by var_arg
+    const Rlist *const type_arg = finalargs->next;
+    if (type_arg == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Function %s requires a type as second argument",
+            fp->name);
+        return FnFailure();
+    }
+
+    const char* const var_name = RlistScalarValue(var_arg);
+    const char* const type_name = RlistScalarValue(type_arg);
+    bool detail = false;
+
+    const char *p = type_name;
+    for (char c = *p; c != '\0'; c = *++p)
+    {
+        if (c == ' ')
+        {
+            detail = true;
+        }
+    }
+    char * const type_string = DataTypeStringFromVarName(ctx, var_name, detail);
+
+    if (type_string == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Function %s could not parse var type",
+            fp->name);
+        return FnFailure();
+    }
+    const bool matching = StringEqual(type_name, type_string);
+    free(type_string);
+
+    return FnReturnContext(matching);
 }
 
 /*********************************************************************/
@@ -10303,6 +10366,13 @@ static const FnCallArg DATATYPE_ARGS[] =
     {CF_BOOL, CF_DATA_TYPE_OPTION, "Enable detailed type decription"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
+static const FnCallArg IS_DATATYPE_ARGS[] =
+{
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Variable identifier"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Type"},
+    {CF_BOOL, CF_DATA_TYPE_OPTION, "Enable detailed type decription"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
 
 
 /*********************************************************/
@@ -10714,6 +10784,8 @@ const FnCallType CF_FNCALL_TYPES[] =
 
     // Datatype functions
     FnCallTypeNew("type", CF_DATA_TYPE_STRING, DATATYPE_ARGS, &FnCallDatatype, "Get type description as string",
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("is_type", CF_DATA_TYPE_STRING, IS_DATATYPE_ARGS, &FnCallIsDatatype, "Compare type of variable with type",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
 
     FnCallTypeNewNull()

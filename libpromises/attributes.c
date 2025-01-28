@@ -55,6 +55,7 @@ Attributes GetFilesAttributes(const EvalContext *ctx, const Promise *pp)
     attr.haveselect = PromiseGetConstraintAsBoolean(ctx, "file_select", pp);
     attr.haverename = PromiseGetConstraintAsBoolean(ctx, "rename", pp);
     attr.havedelete = PromiseGetConstraintAsBoolean(ctx, "delete", pp);
+    attr.havefsattrs = PromiseBundleOrBodyConstraintExists(ctx, "fsattrs", pp);
     attr.content = PromiseGetConstraintAsRval(pp, "content", RVAL_TYPE_SCALAR);
     attr.haveperms = PromiseGetConstraintAsBoolean(ctx, "perms", pp);
     attr.havechange = PromiseGetConstraintAsBoolean(ctx, "changes", pp);
@@ -89,6 +90,7 @@ Attributes GetFilesAttributes(const EvalContext *ctx, const Promise *pp)
     attr.perms = GetPermissionConstraints(ctx, pp);
     attr.select = GetSelectConstraints(ctx, pp);
     attr.delete = GetDeleteConstraints(ctx, pp);
+    attr.fsattrs = GetFSAttrsConstraints(ctx, pp);
     attr.rename = GetRenameConstraints(ctx, pp);
     attr.change = GetChangeMgtConstraints(ctx, pp);
     attr.copy = GetCopyConstraints(ctx, pp);
@@ -829,6 +831,23 @@ FileDelete GetDeleteConstraints(const EvalContext *ctx, const Promise *pp)
     f.rmdirs = PromiseGetConstraintAsBoolean(ctx, "rmdirs", pp);
     return f;
 }
+
+/*******************************************************************/
+
+FileFSAttrs GetFSAttrsConstraints(const EvalContext *ctx, const Promise *pp)
+{
+    assert(ctx != NULL);
+    assert(pp != NULL);
+
+    FileFSAttrs f =
+    {
+        .immutable = PromiseGetConstraintAsBoolean(ctx, "immutable", pp),
+        .haveimmutable = PromiseBundleOrBodyConstraintExists(ctx, "immutable", pp),
+    };
+
+    return f;
+}
+
 
 /*******************************************************************/
 

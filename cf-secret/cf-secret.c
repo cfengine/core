@@ -125,9 +125,9 @@ static const char *const HINTS[] =
     "Enable verbose output",
     "Specify how detailed logs should be. Possible values: 'error', 'warning', 'notice', 'info', 'verbose', 'debug'",
     "Enable basic information output",
-    "Comma-separated list of key files to use (one of -k/-H options is required for encryption)",
+    "Comma-separated list of key files to use",
     "Comma-separated list of hosts to encrypt/decrypt for (defaults to 'localhost')",
-    "Output file (required)",
+    "Output file (required for encrypt/decrypt)",
     NULL
 };
 
@@ -981,12 +981,10 @@ int main(int argc, char *argv[])
         DoCleanupAndExit(EXIT_SUCCESS);
     }
 
-    if (decrypt && (host_arg == NULL) && (key_path_arg == NULL))
+    // Default to localhost
+    if ((encrypt || decrypt) && (host_arg == NULL) && (key_path_arg == NULL))
     {
-        /* Decryption requires a private key which is usually only available for
-         * the local host. Let's just default to localhost if no other specific
-         * host/key is given for decryption. */
-        Log(LOG_LEVEL_VERBOSE, "Using the localhost private key for decryption");
+        Log(LOG_LEVEL_VERBOSE, "Using the localhost private key as default");
         host_arg = "localhost";
     }
 
@@ -1020,13 +1018,6 @@ int main(int argc, char *argv[])
     else
     {
         key_paths = SeqNew(16, free);
-    }
-
-    // Default to localhost on encryption
-    char *localhost = "127.0.0.1";
-    if (encrypt && key_path_arg == NULL && host_arg == NULL)
-    {
-        host_arg = localhost;
     }
 
     if (host_arg != NULL)

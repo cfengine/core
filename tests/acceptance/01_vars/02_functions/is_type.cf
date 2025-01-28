@@ -1,0 +1,89 @@
+body common control 
+{
+  bundlesequence => { test, check };
+  version => "1.0";
+}
+
+bundle agent test 
+{
+  meta:
+    "description" -> { "CFE-3641" }
+      string => "Test policy function is_type";
+}
+
+bundle agent check
+{
+  vars:
+    "mystring" string => "one";
+    "myint" int => "1";
+    "myreal" real => "0.2";
+    "myslist" slist => { "one", "two", "three" };
+    "myilist" ilist => { "1", "2", "3" };
+    "myrlist" rlist => { "0.1", "0.2", "0.3" };
+    "mydata" data => '{ "dstring": "two", "dint": 2, "darray": [1,2,3], "dreal": 0.3, "dbool": true, "dnull": null }';
+
+  classes:
+    "isstring"
+      expression => is_type("mystring", "string");
+    "isint"
+      expression => is_type("myint", "int");
+    "isreal"
+      expression => is_type("myreal", "real");
+    "isslist"
+      expression => is_type("myslist", "slist");
+    "isilist"
+      expression => is_type("myilist", "ilist");
+    "isrlist"
+      expression => is_type("myrlist", "rlist");
+    "ispolicystring"
+      expression => is_type("mystring", "policy string");
+    "ispolicyint"
+      expression => is_type("myint", "policy int");
+    "ispolicyreal"
+      expression => is_type("myreal", "policy real");
+    "ispolicyslist"
+      expression => is_type("myslist", "policy slist");
+    "ispolicyilist"
+      expression => is_type("myilist", "policy ilist");
+    "ispolicyrlist"
+      expression => is_type("myrlist", "policy rlist");
+    "isdata"
+      expression => is_type("mydata", "data");
+    "isdataobject"
+      expression => is_type("mydata", "data object");
+    "isdatastring"
+      expression => is_type("mydata[dstring]", "data string");
+    "isdataint"
+      expression => is_type("mydata[dint]", "data int");
+    "isdataarray"
+      expression => is_type("mydata[darray]", "data array");
+    "isdatareal"
+      expression => is_type("mydata[dreal]", "data real");
+    "isdataboolean"
+      expression => is_type("mydata[dbool]", "data boolean");
+    "isdatanull"
+      expression => is_type("mydata[dnull]", "data null");
+
+    "isnottype"
+      expression => not(is_type("mystring", "int"));
+    "containerisnottype"
+      expression => not(is_type("mydata[darray]", "string"));
+    "isnotcontainer"
+      expression => not(is_type("myreal", "data array"));
+    "containerisnotcontainer"
+      expression => not(is_type("mydata[dbool]", "data int"));
+
+
+    "ok"
+      and => { "isstring", "isint", "isreal", "isslist", "isilist", "isrlist",
+              "ispolicystring", "ispolicyint", "ispolicyreal", "ispolicyslist", "ispolicyilist",
+              "isdata", "isdataobject", "isdatastring", "isdataint", "isdataarray",
+              "isdatareal", "isdataboolean", "isdatanull", "isnottype", "containerisnottype",
+              "isnotcontainer", "containerisnotcontainer" };
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

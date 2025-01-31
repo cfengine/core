@@ -9594,7 +9594,7 @@ static const FnCallArg HOSTSSEEN_ARGS[] =
 static const FnCallArg HOSTSWITHCLASS_ARGS[] =
 {
     {"[a-zA-Z0-9_]+", CF_DATA_TYPE_STRING, "Class name to look for"},
-    {"name,address", CF_DATA_TYPE_OPTION, "Type of return value desired"},
+    {"name,address,hostkey", CF_DATA_TYPE_OPTION, "Type of return value desired"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 

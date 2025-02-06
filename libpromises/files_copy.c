@@ -99,7 +99,6 @@ bool CopyRegularFileDiskPerms(const char *source, const char *destination,
     }
 
     close(sd);
-    close(dd);
     return ret;
 }
 

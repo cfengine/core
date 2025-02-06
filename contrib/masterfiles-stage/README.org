@@ -188,6 +188,11 @@ when developing new staging methods.
     - =my_tag=
     - =88335d36b48c8808b12b48667a463182dc8d0338=
     - =cb375d0f=
+    
+- =PROJECT_SUBDIRECTORY= :: The subdirectory inside GIT repository where the project is located (optional).
+  - Example values:
+    - =path/to/policy_set=
+    - =path/to/build_project=
 
 - =PKEY= :: Fully qualified path to passphraseless private SSH Key used for authorization.
   This file should be owned by root and have only user read/write permissions.

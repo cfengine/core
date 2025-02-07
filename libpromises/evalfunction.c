@@ -7208,7 +7208,8 @@ static FnCallResult FnCallReadJson(ARG_UNUSED EvalContext *ctx,
 
 static FnCallResult ValidateDataGeneric(const char *const fname,
                                         const char *data,
-                                        const DataFileType requested_mode)
+                                        const DataFileType requested_mode,
+                                        bool strict)
 {
     assert(data != NULL);
     if (requested_mode != DATAFILETYPE_JSON)
@@ -7226,7 +7227,13 @@ static FnCallResult ValidateDataGeneric(const char *const fname,
         Log(LOG_LEVEL_VERBOSE, "%s: %s", fname, JsonParseErrorToString(err));
     }
 
-    FnCallResult ret = FnReturnContext(json != NULL);
+    bool isvalid = json != NULL;
+    if (strict)
+    {
+        isvalid = isvalid && JsonGetElementType(json) != JSON_ELEMENT_TYPE_PRIMITIVE;
+    }
+    
+    FnCallResult ret = FnReturnContext(isvalid);
     JsonDestroy(json);
     return ret;
 }
@@ -7242,12 +7249,17 @@ static FnCallResult FnCallValidData(ARG_UNUSED EvalContext *ctx,
         Log(LOG_LEVEL_ERR, "Function '%s' requires two arguments", fp->name);
         return FnFailure();
     }
+    bool strict = false;
+    if (args->next != NULL)
+    {
+        strict = BooleanFromString(RlistScalarValue(args->next));
+    }
 
     const char *data = RlistScalarValue(args);
     const char *const mode_string = RlistScalarValue(args->next);
     DataFileType requested_mode = GetDataFileTypeFromString(mode_string);
 
-    return ValidateDataGeneric(fp->name, data, requested_mode);
+    return ValidateDataGeneric(fp->name, data, requested_mode, strict);
 }
 
 static FnCallResult FnCallValidJson(ARG_UNUSED EvalContext *ctx,
@@ -7261,9 +7273,14 @@ static FnCallResult FnCallValidJson(ARG_UNUSED EvalContext *ctx,
         Log(LOG_LEVEL_ERR, "Function '%s' requires one argument", fp->name);
         return FnFailure();
     }
+    bool strict = false;
+    if (args->next != NULL)
+    {
+        strict = BooleanFromString(RlistScalarValue(args->next));
+    }
 
     const char *data = RlistScalarValue(args);
-    return ValidateDataGeneric(fp->name, data, DATAFILETYPE_JSON);
+    return ValidateDataGeneric(fp->name, data, DATAFILETYPE_JSON, strict);
 }
 
 static FnCallResult FnCallReadModuleProtocol(
@@ -9885,6 +9902,7 @@ static const FnCallArg READFILE_ARGS[] =
 static const FnCallArg VALIDDATATYPE_ARGS[] =
 {
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "String to validate as JSON"},
+    {CF_BOOL, CF_DATA_TYPE_OPTION, "Enable more strict validation, requiring the result to be a valid data container, matching the requirements of parsejson()."},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
@@ -9941,6 +9959,7 @@ static const FnCallArg VALIDDATA_ARGS[] =
 {
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "String to validate as JSON"},
     {"JSON", CF_DATA_TYPE_OPTION, "Type of data to validate"},
+    {CF_BOOL, CF_DATA_TYPE_OPTION, "Enable more strict validation, requiring the result to be a valid data container, matching the requirements of parsejson()."},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
@@ -10691,7 +10710,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("userexists", CF_DATA_TYPE_CONTEXT, USEREXISTS_ARGS, &FnCallUserExists, "True if user name or numerical id exists on this host",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("validdata", CF_DATA_TYPE_CONTEXT, VALIDDATA_ARGS, &FnCallValidData, "Check for errors in JSON or YAML data",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("validjson", CF_DATA_TYPE_CONTEXT, VALIDDATATYPE_ARGS, &FnCallValidJson, "Check for errors in JSON data",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("variablesmatching", CF_DATA_TYPE_STRING_LIST, CLASSMATCH_ARGS, &FnCallVariablesMatching, "List the variables matching regex arg1 and tag regexes arg2,arg3,...",

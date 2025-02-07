@@ -25,6 +25,27 @@ bundle agent test
       if => validjson(readfile("$(this.promise_filename).json", inf));
     "invalid_validjson" string => "should not appear",
       if => validjson(readfile("$(this.promise_filename).inv.json", inf));
+
+    "valid_json_string_primitive" string => "should appear",
+      if => validjson("\"hello\"", "false");
+    "invalid_json_string_primitive" string => "should not appear",
+      if => validjson("\"hello\"", "true")
+
+    "valid_json_number_primitive" string => "should appear",
+      if => validjson("123.45", "false");
+    "invalid_json_number_primitive" string => "should not appear",
+      if => validjson("123.45", "true")
+
+    "valid_json_boolean_primitive" string => "should appear",
+      if => validjson("true", "false");
+    "invalid_json_boolean_primitive" string => "should not appear",
+      if => validjson("true", "true")
+
+    "valid_json_null_primitive" string => "should appear",
+      if => validjson("null", "false");
+    "invalid_json_null_primitive" string => "should not appear",
+      if => validjson("null", "true")
+
 }
 
 ###########################################################

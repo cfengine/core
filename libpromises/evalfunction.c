@@ -7153,7 +7153,8 @@ static FnCallResult FnCallReadJson(ARG_UNUSED EvalContext *ctx,
 
 static FnCallResult ValidateDataGeneric(const char *const fname,
                                         const char *data,
-                                        const DataFileType requested_mode)
+                                        const DataFileType requested_mode,
+                                        bool nojsonprimitive)
 {
     assert(data != NULL);
     if (requested_mode != DATAFILETYPE_JSON)
@@ -7171,7 +7172,13 @@ static FnCallResult ValidateDataGeneric(const char *const fname,
         Log(LOG_LEVEL_VERBOSE, "%s: %s", fname, JsonParseErrorToString(err));
     }
 
-    FnCallResult ret = FnReturnContext(json != NULL);
+    bool isvalid = json != NULL;
+    if (nojsonprimitive)
+    {
+        isvalid = isvalid && JsonGetElementType(json) != JSON_ELEMENT_TYPE_PRIMITIVE;
+    }
+    
+    FnCallResult ret = FnReturnContext(isvalid);
     JsonDestroy(json);
     return ret;
 }
@@ -7187,12 +7194,17 @@ static FnCallResult FnCallValidData(ARG_UNUSED EvalContext *ctx,
         Log(LOG_LEVEL_ERR, "Function '%s' requires two arguments", fp->name);
         return FnFailure();
     }
+    bool nojsonprimitive = false;
+    if (args->next != NULL)
+    {
+        nojsonprimitive = BooleanFromString(RlistScalarValue(args->next));
+    }
 
     const char *data = RlistScalarValue(args);
     const char *const mode_string = RlistScalarValue(args->next);
     DataFileType requested_mode = GetDataFileTypeFromString(mode_string);
 
-    return ValidateDataGeneric(fp->name, data, requested_mode);
+    return ValidateDataGeneric(fp->name, data, requested_mode, nojsonprimitive);
 }
 
 static FnCallResult FnCallValidJson(ARG_UNUSED EvalContext *ctx,
@@ -7206,9 +7218,14 @@ static FnCallResult FnCallValidJson(ARG_UNUSED EvalContext *ctx,
         Log(LOG_LEVEL_ERR, "Function '%s' requires one argument", fp->name);
         return FnFailure();
     }
+    bool nojsonprimitive = false;
+    if (args->next != NULL)
+    {
+        nojsonprimitive = BooleanFromString(RlistScalarValue(args->next));
+    }
 
     const char *data = RlistScalarValue(args);
-    return ValidateDataGeneric(fp->name, data, DATAFILETYPE_JSON);
+    return ValidateDataGeneric(fp->name, data, DATAFILETYPE_JSON, nojsonprimitive);
 }
 
 static FnCallResult FnCallReadModuleProtocol(
@@ -9830,6 +9847,7 @@ static const FnCallArg READFILE_ARGS[] =
 static const FnCallArg VALIDDATATYPE_ARGS[] =
 {
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "String to validate as JSON"},
+    {CF_BOOL, CF_DATA_TYPE_OPTION, "Disable json primitive validation"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
@@ -9886,6 +9904,7 @@ static const FnCallArg VALIDDATA_ARGS[] =
 {
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "String to validate as JSON"},
     {"JSON", CF_DATA_TYPE_OPTION, "Type of data to validate"},
+    {CF_BOOL, CF_DATA_TYPE_OPTION, "Disable json primitive validation"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 

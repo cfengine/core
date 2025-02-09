@@ -1596,6 +1596,7 @@ AC_ARG_WITH(systemd-service, AS_HELP_STRING([--with-systemd-service=PATH],
 AS_IF([test "x$SYSTEMD_SERVICE_PATH" = "x"], [], [
     AC_SUBST([SYSTEMD_SERVICE_PATH])
     AC_CONFIG_FILES([misc/systemd/cfengine3.service])
+    AC_CONFIG_FILES([misc/systemd/cf-php-fpm.service])
     AC_CONFIG_FILES([misc/systemd/cf-apache.service])
     AC_CONFIG_FILES([misc/systemd/cf-execd.service])
     AC_CONFIG_FILES([misc/systemd/cf-hub.service])

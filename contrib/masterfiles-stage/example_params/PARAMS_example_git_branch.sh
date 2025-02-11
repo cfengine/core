@@ -2,6 +2,7 @@
 ROOT="/opt/cfengine/masterfiles_staging"
 GIT_URL="https://gitlab.com/nickanderson/masterfiles-vcs"
 GIT_REFSPEC="3.15.x"
+PROJECT_SUBDIRECTORY=""
 GIT_USERNAME=""
 GIT_PASSWORD=""
 GIT_WORKING_BRANCH="CF_WORKING_BRANCH"

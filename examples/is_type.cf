@@ -1,0 +1,43 @@
+#+begin_src cfengine3
+body common control
+{
+      bundlesequence => { "example" };
+}
+
+bundle agent example
+{
+  vars:
+      "foo"
+        data => '{ "bar": true }';    
+      "a" string => "hello";
+  classes:
+      "isdata"
+        expression => is_type("foo", "data");
+      "isdata_boolean"
+        expression => is_type("foo[bar]", "data boolean");
+      "isstring"
+        expression => is_type("a", "string");
+      "isint"
+        expression => is_type("a", "int");
+
+
+  reports:
+      isdata::
+	    "'foo' is of type 'data'";
+      isdata_boolean::
+	    "'foo[bar]' is of type 'data boolean'";
+      isstring::
+        "'a' is of type 'string'";
+      isint::
+	    "'a' is of type 'int'";
+}
+
+#+end_src
+#############################################################################
+#+begin_src example_output
+#@ ```
+#@ R: 'foo' is of type 'data'
+#@ R: 'foo[bar]' is of type 'data boolean'
+#@ R: 'a' is of type 'string'
+#@ ```
+#+end_src

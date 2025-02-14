@@ -1,0 +1,64 @@
+body common control
+{
+  bundlesequence  => { "init", "test", "check", "clean" };
+}
+
+body fsattrs set_immutable
+{
+  immutable => "true";
+}
+
+body fsattrs set_mutable
+{
+  immutable => "false";
+}
+
+bundle agent init
+{
+  files:
+    "/tmp/immutable.txt"
+      content => "I'm immutable",
+      fsattrs => set_immutable;
+}
+
+bundle agent test
+{
+  meta:
+    "description" -> { "CFE-1840", "ENT-10961" }
+      string => "Test fsattrs immutable constraint";
+
+    "test_soft_fail"
+      string => "hpux|aix|windows";
+
+  commands:
+    "$(sys.cf_agent) -Kf $(this.promise_filename).sub";
+}
+
+bundle agent check
+{
+  vars:
+    "expected"
+      string => "I'm mutable";
+    "actual"
+      string => readfile("/tmp/immutable.txt");
+
+  classes:
+    "ok"
+      expression => strcmp("$(actual)", "I'm mutable");
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+    any::
+      "Expected: '$(expected)', actual: '$(actual)'";
+}
+
+bundle agent clean
+{
+  files:
+    # Make sure immutable bit is not set
+    "$(G.testfile)"
+      fsattrs => set_mutable;
+}

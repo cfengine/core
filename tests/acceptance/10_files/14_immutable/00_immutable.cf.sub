@@ -1,0 +1,6 @@
+bundle agent main
+{
+  files:
+    "/tmp/immutable.txt"
+      content => "I'm mutable";
+}

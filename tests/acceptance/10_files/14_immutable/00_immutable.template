@@ -1,0 +1,12 @@
+bundle common G {
+  vars:
+    "testdir"
+      string => "{{testdir}}";
+}
+
+bundle agent main
+{
+  files:
+    "$(G.testfile)"
+      content => "I'm mutable";
+}

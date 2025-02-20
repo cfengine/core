@@ -1,0 +1,16 @@
+[Unit]
+Description=CFEngine Enterprise PHP FastCGI Process Manager
+After=syslog.target
+Wants=cf-postgres.service
+After=cf-postgres.service
+ConditionPathExists=@workdir@/httpd/php/sbin/php-fpm
+PartOf=cfengine3.service
+
+[Service]
+ExecStart=@workdir@/httpd/php/sbin/php-fpm --nodaemonize --force-stderr
+ExecReload=/bin/kill -USR2 $MAINPID
+PIDFile=@workdir@/httpd/php-fpm.pid
+Type=simple
+
+[Install]
+WantedBy=multi-user.target

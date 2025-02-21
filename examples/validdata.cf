@@ -3,12 +3,18 @@ bundle agent main
 {
   vars:
     "json_string" string => '{"test": [1, 2, 3]}';
-
+    "primitive" string => "\"hello\"";
+    
   reports:
-    "This JSON string is valid!"
+    "$(json_string) is a valid JSON!"
       if => validdata("$(json_string)", "JSON");
-    "This JSON string is not valid."
+    "$(json_string) string is not a valid JSON."
       unless => validdata("$(json_string)", "JSON");
+
+    "$(primitive) is a valid JSON! (default)"
+      if => validjson("$(primitive)", "JSON");
+    "$(primitive) is a not valid JSON! (strict) "
+      unless => validjson("$(primitive)", "JSON", "true");
 }
 #+end_src
 ###############################################################################

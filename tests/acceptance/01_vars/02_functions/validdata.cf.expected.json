@@ -1,4 +1,5 @@
 {
   "valid_json": "should appear",
-  "valid_validjson": "should appear"
+  "valid_validjson": "should appear",
+  "valid_json_string_primitive": "should appear"
 }

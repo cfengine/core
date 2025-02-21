@@ -1563,9 +1563,48 @@ static FnCallResult FnCallVariablesMatching(EvalContext *ctx, ARG_UNUSED const P
 }
 
 /*********************************************************************/
-
-static FnCallResult FnCallGetMetaTags(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
+static Bundle *GetBundleFromPolicy(const Policy *policy, const char *namespace, const char *bundlename)
 {
+    assert(policy != NULL);
+    const size_t bundles_length = SeqLength(policy->bundles);
+
+    for (size_t i = 0; i < bundles_length; i++)
+    {
+        Bundle *bp = SeqAt(policy->bundles, i);
+        if (StringEqual(bp->name, bundlename) && StringEqual(bp->ns, namespace))
+        {
+            return bp;
+        }
+    }
+    return NULL;
+}
+
+static Promise *GetPromiseFromBundle(const Bundle *bundle, const char *promise_type, const char *promiser)
+{
+    assert(bundle != NULL);
+    const size_t sections_length = SeqLength(bundle->sections);
+    for (size_t i = 0; i < sections_length; i++)
+    {
+        BundleSection *bsection = SeqAt(bundle->sections, i);
+        if (StringEqual(bsection->promise_type, promise_type))
+        {
+            const size_t promises_length = SeqLength(bsection->promises);
+            for (size_t i = 0; i < promises_length; i++)
+            {
+                Promise *promise = SeqAt(bsection->promises, i);
+                if (StringEqual(promise->promiser, promiser))
+                {
+                    return promise;
+                }
+            }
+        }
+    }
+    return NULL;
+}
+
+static FnCallResult FnCallGetMetaTags(EvalContext *ctx, const Policy *policy, const FnCall *fp, const Rlist *finalargs)
+{
+    assert(fp != NULL);
     if (!finalargs)
     {
         FatalError(ctx, "Function '%s' requires at least one argument", fp->name);
@@ -1574,17 +1613,62 @@ static FnCallResult FnCallGetMetaTags(EvalContext *ctx, ARG_UNUSED const Policy 
     Rlist *tags = NULL;
     StringSet *tagset = NULL;
 
-    if (strcmp(fp->name, "getvariablemetatags") == 0)
+    if (StringEqual(fp->name, "getvariablemetatags"))
     {
         VarRef *ref = VarRefParse(RlistScalarValue(finalargs));
         tagset = EvalContextVariableTags(ctx, ref);
         VarRefDestroy(ref);
     }
-    else if (strcmp(fp->name, "getclassmetatags") == 0)
+    else if (StringEqual(fp->name, "getclassmetatags"))
     {
         ClassRef ref = ClassRefParse(RlistScalarValue(finalargs));
         tagset = EvalContextClassTags(ctx, ref.ns, ref.name);
         ClassRefDestroy(ref);
+    }
+    else if (StringEqual(fp->name, "getbundlemetatags"))
+    {
+        const char *bundleref = RlistScalarValue(finalargs);
+        assert(bundleref != NULL);
+        const Rlist *args = RlistFromSplitString(bundleref, ':');
+        const char *namespace = (args->next == NULL) ? "default" : RlistScalarValue(args);
+        const char *name = RlistScalarValue((args->next == NULL) ? args : args->next);
+
+        const Bundle *bundle = GetBundleFromPolicy(policy, namespace, name);
+        if (bundle == NULL)
+        {
+            Log(LOG_LEVEL_ERR,
+                "Function %s couldn't find bundle '%s' with namespace '%s'",
+                fp->name,
+                name,
+                namespace);
+            return FnFailure();
+        }
+        const Promise *promise = GetPromiseFromBundle(bundle, "meta", "tags");
+        if (bundle == NULL)
+        {
+            Log(LOG_LEVEL_ERR,
+                "Function %s couldn't find meta tags in '%s:%s'",
+                fp->name,
+                namespace,
+                name);
+            return FnFailure();
+        }
+        Rlist *start = PromiseGetConstraintAsList(ctx, "slist", promise);
+        if (start == NULL)
+        {
+            Log(LOG_LEVEL_ERR,
+                "Function %s couldn't find meta tags constraint string list",
+                fp->name);
+            return FnFailure();
+        }
+
+        tagset = StringSetNew();
+        Rlist *temp = start;
+        while (temp != NULL)
+        {
+            StringSetAdd(tagset, temp->val.item);
+            temp = temp->next;
+        }
     }
     else
     {
@@ -10482,6 +10566,8 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("getvalues", CF_DATA_TYPE_STRING_LIST, GETINDICES_ARGS, &FnCallGetValues, "Get a list of values in the list or array or data container arg1",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("getvariablemetatags", CF_DATA_TYPE_STRING_LIST, GETVARIABLEMETATAGS_ARGS, &FnCallGetMetaTags, "Collect the variable arg1's meta tags into an slist, optionally collecting only tag key arg2",
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("getbundlemetatags", CF_DATA_TYPE_STRING_LIST, GETVARIABLEMETATAGS_ARGS, &FnCallGetMetaTags, "Collect the bundle arg1's meta tags into an slist, optionally collecting only tag key arg2",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("grep", CF_DATA_TYPE_STRING_LIST, GREP_ARGS, &FnCallGrep, "Extract the sub-list if items matching the regular expression in arg1 of the list or array or data container arg2",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),

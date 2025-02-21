@@ -8,6 +8,8 @@ body common control
 
 bundle common init
 {
+  meta:
+      "tags" slist => { "bundletag1", "foo=bar" };
   classes:
       "myclass" expression => "any", meta => { "mytag1" };
       "myotherclass" expression => "any", meta => { "mytag5", "mytag51" };
@@ -37,6 +39,10 @@ bundle agent test
       "tags9" slist => getclassmetatags("keyclass2", "foo");
       "tagsa" slist => getvariablemetatags("init.keyvar", "foo");
       "tagsb" slist => getvariablemetatags("init.keyvar2", "foo");
+      "tagsc" slist => getbundlemetatags("default:init");
+      "tagsd" slist => getbundlemetatags("init", "foo");
+      "tagse" slist => getbundlemetatags("something:dummy");
+      "tagsf" slist => getbundlemetatags("something:dummy", "foo");
 }
 
 
@@ -47,3 +53,15 @@ bundle agent check
                                            "$(this.promise_filename).expected.json",
                                            $(this.promise_filename));
 }
+
+body file control
+{
+  namespace => "something";
+}
+
+bundle common dummy
+{
+  meta:
+      "tags" slist => { "dummytag1", "dummytag2", "foo=bar", "foo=hello" };
+}
+

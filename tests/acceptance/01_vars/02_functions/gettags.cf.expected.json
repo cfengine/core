@@ -27,5 +27,22 @@
     "1",
     "2"
   ],
-  "tagsb": []
+  "tagsb": [],
+  "tagsc": [
+    "bundletag1",
+    "foo=bar"
+  ],
+  "tagsd": [
+    "bar"
+  ],
+  "tagse": [
+    "dummytag1",
+    "dummytag2",
+    "foo=bar",
+    "foo=hello"
+  ],
+  "tagsf": [
+    "bar",
+    "hello"
+  ]
 }

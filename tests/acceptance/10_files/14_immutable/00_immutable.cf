@@ -1,0 +1,72 @@
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+body fsattrs set_immutable
+{
+  immutable => "true";
+}
+
+body fsattrs set_mutable
+{
+  immutable => "false";
+}
+
+bundle agent init
+{
+  files:
+    "$(G.testfile)"
+      content => "I'm immutable",
+      fsattrs => set_immutable;
+
+    "$(this.promise_filename.sub)"
+      create => "true",
+      edit_template => "$(this.promise_filename.template)",
+      template_method => "mustache",
+      template_data => parsejson('{ "testdir": "$(G.testdir)" }');
+}
+
+bundle agent test
+{
+  meta:
+    "description" -> { "CFE-1840", "ENT-10961" }
+      string => "Test fsattrs immutable constraint";
+
+    "test_soft_fail"
+      string => "hpux|aix|windows";
+
+  commands:
+    "$(sys.cf_agent) -Kf $(this.promise_filename).sub";
+}
+
+bundle agent check
+{
+  vars:
+    "actual"
+      string => readfile("$(G.testfile)");
+
+  classes:
+    "ok"
+      expression => strcmp("$(actual)", "I'm immutable");
+
+  methods:
+    "any"
+      usebundle => dcs_passif("ok", "$(this.promise_filename)");
+}
+
+bundle agent clean
+{
+  files:
+    # Clean up the files generated from the template
+    "$(this.promise_filename).sub"
+      delete => tidy;
+    "$(this.promise_filename).sub.cf-before-edit"
+      delete => tidy;
+
+    # Make sure immuatble bit is not set
+    "$(G.testfile)"
+      fsattrs => set_mutable;
+}

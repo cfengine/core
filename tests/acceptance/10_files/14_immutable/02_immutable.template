@@ -1,0 +1,18 @@
+bundle common G {
+  vars:
+    "testdir"
+      string => "{{testdir}}";
+}
+
+body fsattrs set_immutable
+{
+  immutable => "false";
+}
+
+bundle agent main
+{
+  files:
+    "$(G.testfile)"
+      content => "I'm mutable",
+      fsattrs => set_immutable;
+}

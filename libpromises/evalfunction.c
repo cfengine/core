@@ -76,6 +76,7 @@
 #include <version_comparison.h>
 #include <mutex.h>          /* ThreadWait */
 #include <glob_lib.h>
+#include <signal_lib.h> /* MaskTerminationSignalsInThread */
 
 #include <math_eval.h>
 
@@ -8590,9 +8591,28 @@ struct IsReadableThreadData
     FnCallResult result;
 };
 
+#ifndef HAVE_PTHREAD_CANCEL
+#define PTHREAD_CANCELED ((void *)-1)
+static void ThreadSignalHandler(int signum)
+{
+    pthread_exit(PTHREAD_CANCELED);
+}
+#endif
+
 static void *IsReadableThreadRoutine(void *data)
 {
     assert(data != NULL);
+
+#ifndef HAVE_PTHREAD_CANCEL
+    MaskTerminationSignalsInThread();
+    struct sigaction actions;
+    memset(&actions, 0, sizeof(actions));
+    sigemptyset(&actions.sa_mask);
+    actions.sa_flags = 0;
+    actions.sa_handler = ThreadSignalHandler;
+    sigaction(SIGHUP, &actions, NULL);
+    MaskTerminationSignalsInThread();
+#endif
 
     struct IsReadableThreadData *const thread_data = data;
 
@@ -8745,7 +8765,11 @@ static FnCallResult FnCallIsReadable(ARG_UNUSED EvalContext *const ctx,
                 "Read operation timed out, exceeded %ld seconds.", path,
                 timeout);
 
+#ifdef HAVE_PTHREAD_CANCEL
             ret = pthread_cancel(thread_data.thread);
+#else
+            ret = pthread_kill(thread_data.thread, SIGUSR2);
+#endif
             if (ret != 0)
             {
                 Log(LOG_LEVEL_ERR, "Failed to cancel thread");
@@ -8777,10 +8801,12 @@ static FnCallResult FnCallIsReadable(ARG_UNUSED EvalContext *const ctx,
         return FnFailure();
     }
 
+#ifdef HAVE_PTHREAD_CANCEL
     if (status == PTHREAD_CANCELED)
     {
         Log(LOG_LEVEL_DEBUG, "Thread was canceled");
     }
+#endif
 
     return result;
 }

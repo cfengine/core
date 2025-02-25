@@ -1390,12 +1390,13 @@ JsonElement* GetProcFileInfo(EvalContext *ctx, const char* filename, const char*
 void GetNetworkingInfo(EvalContext *ctx)
 {
     const char *procdir_root = GetRelocatedProcdirRoot();
+    int promiser_pid = (int) getpid();
 
     Buffer *pbuf = BufferNew();
 
     JsonElement *inet = JsonObjectCreate(2);
 
-    BufferPrintf(pbuf, "%s/proc/net/netstat", procdir_root);
+    BufferPrintf(pbuf, "%s/proc/%d/net/netstat", procdir_root, promiser_pid);
     JsonElement *inet_stats = GetNetworkingStatsInfo(BufferData(pbuf));
 
     if (inet_stats != NULL)
@@ -1403,7 +1404,7 @@ void GetNetworkingInfo(EvalContext *ctx)
         JsonObjectAppendElement(inet, "stats", inet_stats);
     }
 
-    BufferPrintf(pbuf, "%s/proc/net/route", procdir_root);
+    BufferPrintf(pbuf, "%s/proc/%d/net/route", procdir_root, promiser_pid);
     JsonElement *routes = GetProcFileInfo(ctx, BufferData(pbuf),  NULL, NULL, &NetworkingRoutesPostProcessInfo, NULL,
                     // format: Iface	Destination	Gateway 	Flags	RefCnt	Use	Metric	Mask		MTU	Window	IRTT
                     //         eth0	00000000	0102A8C0	0003	0	0	1024	00000000	0	0	0
@@ -1451,7 +1452,7 @@ void GetNetworkingInfo(EvalContext *ctx)
 
     JsonElement *inet6 = JsonObjectCreate(3);
 
-    BufferPrintf(pbuf, "%s/proc/net/snmp6", procdir_root);
+    BufferPrintf(pbuf, "%s/proc/%d/net/snmp6", procdir_root, promiser_pid);
     JsonElement *inet6_stats = GetProcFileInfo(ctx, BufferData(pbuf), NULL, NULL, NULL, NULL,
                                                "^\\s*(?<key>\\S+)\\s+(?<value>\\d+)");
 
@@ -1477,7 +1478,7 @@ void GetNetworkingInfo(EvalContext *ctx)
         JsonDestroy(inet6_stats);
     }
 
-    BufferPrintf(pbuf, "%s/proc/net/ipv6_route", procdir_root);
+    BufferPrintf(pbuf, "%s/proc/%d/net/ipv6_route", procdir_root, promiser_pid);
     JsonElement *inet6_routes = GetProcFileInfo(ctx, BufferData(pbuf),  NULL, NULL, &NetworkingIPv6RoutesPostProcessInfo, NULL,
                     // format: dest                    dest_prefix source                source_prefix next_hop                         metric   refcnt   use      flags        interface
                     //         fe800000000000000000000000000000 40 00000000000000000000000000000000 00 00000000000000000000000000000000 00000100 00000000 00000000 00000001     eth0
@@ -1492,7 +1493,7 @@ void GetNetworkingInfo(EvalContext *ctx)
         JsonObjectAppendElement(inet6, "routes", inet6_routes);
     }
 
-    BufferPrintf(pbuf, "%s/proc/net/if_inet6", procdir_root);
+    BufferPrintf(pbuf, "%s/proc/%d/net/if_inet6", procdir_root, promiser_pid);
     JsonElement *inet6_addresses = GetProcFileInfo(ctx, BufferData(pbuf),  NULL, "interface", &NetworkingIPv6AddressesPostProcessInfo, &NetworkingIPv6AddressesTiebreaker,
                     // format: address device_number prefix_length scope flags interface_name
                     // 00000000000000000000000000000001 01 80 10 80       lo
@@ -1515,7 +1516,7 @@ void GetNetworkingInfo(EvalContext *ctx)
     //  face |bytes    packets errs drop fifo frame compressed multicast|bytes    packets errs drop fifo colls carrier compressed
     //   eth0: 74850544807 75236137    0    0    0     0          0   1108775 63111535625 74696758    0    0    0     0       0          0
 
-    BufferPrintf(pbuf, "%s/proc/net/dev", procdir_root);
+    BufferPrintf(pbuf, "%s/proc/%d/net/dev", procdir_root, promiser_pid);
     JsonElement *interfaces_data =
     GetProcFileInfo(ctx, BufferData(pbuf), "interfaces_data", "device", NULL, NULL,
                     "^\\s*(?<device>[^:]+)\\s*:\\s*"
@@ -1543,34 +1544,35 @@ void GetNetworkingInfo(EvalContext *ctx)
 JsonElement* GetNetworkingConnections(EvalContext *ctx)
 {
     const char *procdir_root = GetRelocatedProcdirRoot();
+    int promiser_pid = (int) getpid();
     JsonElement *json = JsonObjectCreate(5);
     const char* ports_regex = "^\\s*\\d+:\\s+(?<raw_local>[0-9A-F:]+)\\s+(?<raw_remote>[0-9A-F:]+)\\s+(?<raw_state>[0-9]+)";
 
     JsonElement *data = NULL;
     Buffer *pbuf = BufferNew();
 
-    BufferPrintf(pbuf, "%s/proc/net/tcp", procdir_root);
+    BufferPrintf(pbuf, "%s/proc/%d/net/tcp", procdir_root, promiser_pid);
     data = GetProcFileInfo(ctx, BufferData(pbuf), NULL, NULL, &NetworkingPortsPostProcessInfo, NULL, ports_regex);
     if (data != NULL)
     {
         JsonObjectAppendElement(json, "tcp", data);
     }
 
-    BufferPrintf(pbuf, "%s/proc/net/tcp6", procdir_root);
+    BufferPrintf(pbuf, "%s/proc/%d/net/tcp6", procdir_root, promiser_pid);
     data = GetProcFileInfo(ctx, BufferData(pbuf), NULL, NULL, &NetworkingPortsPostProcessInfo, NULL, ports_regex);
     if (data != NULL)
     {
         JsonObjectAppendElement(json, "tcp6", data);
     }
 
-    BufferPrintf(pbuf, "%s/proc/net/udp", procdir_root);
+    BufferPrintf(pbuf, "%s/proc/%d/net/udp", procdir_root, promiser_pid);
     data = GetProcFileInfo(ctx, BufferData(pbuf), NULL, NULL, &NetworkingPortsPostProcessInfo, NULL, ports_regex);
     if (data != NULL)
     {
         JsonObjectAppendElement(json, "udp", data);
     }
 
-    BufferPrintf(pbuf, "%s/proc/net/udp6", procdir_root);
+    BufferPrintf(pbuf, "%s/proc/%d/net/udp6", procdir_root, promiser_pid);
     data = GetProcFileInfo(ctx, BufferData(pbuf), NULL, NULL, &NetworkingPortsPostProcessInfo, NULL, ports_regex);
     if (data != NULL)
     {

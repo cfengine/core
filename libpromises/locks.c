@@ -85,7 +85,7 @@ static CfLockStack *LOCK_STACK = NULL;
 
 static void PushLock(char *lock, char *last)
 {
-    CfLockStack *new_lock = malloc(sizeof(CfLockStack));
+    CfLockStack *new_lock = xmalloc(sizeof(CfLockStack));
     strlcpy(new_lock->lock, lock, CF_BUFSIZE);
     strlcpy(new_lock->last, last, CF_BUFSIZE);
 

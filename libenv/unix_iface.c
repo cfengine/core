@@ -1283,6 +1283,10 @@ static JsonElement* GetNetworkingStatsInfo(const char *filename)
 
         fclose(fin);
     }
+    else
+    {
+        Log(LOG_LEVEL_VERBOSE, "netstat file not found at '%s'", filename);
+    }
 
     return stats;
 }

@@ -1286,7 +1286,7 @@ static JsonElement* GetNetworkingStatsInfo(const char *filename)
     }
     else
     {
-        Log(LOG_LEVEL_ERROR, "netstat file not found at '%s'", filename);
+        Log(LOG_LEVEL_ERR, "netstat file not found at '%s'", filename);
     }
 
     return stats;
@@ -1395,7 +1395,7 @@ JsonElement* GetProcFileInfo(EvalContext *ctx, const char* filename, const char*
 void GetNetworkingInfo(EvalContext *ctx)
 {
     const char *procdir_root = GetRelocatedProcdirRoot();
-    int promiser_pid = (int) getpid();
+    int promiser_pid = GetProcdirPid();
 
     Buffer *pbuf = BufferNew();
 
@@ -1549,7 +1549,7 @@ void GetNetworkingInfo(EvalContext *ctx)
 JsonElement* GetNetworkingConnections(EvalContext *ctx)
 {
     const char *procdir_root = GetRelocatedProcdirRoot();
-    int promiser_pid = (int) getpid();
+    int promiser_pid = GetProcdirPid();
     JsonElement *json = JsonObjectCreate(5);
     const char* ports_regex = "^\\s*\\d+:\\s+(?<raw_local>[0-9A-F:]+)\\s+(?<raw_remote>[0-9A-F:]+)\\s+(?<raw_state>[0-9]+)";
 

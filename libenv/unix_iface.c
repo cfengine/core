@@ -39,6 +39,7 @@
 #include <ip_address.h>
 #include <file_lib.h>
 #include <cleanup.h>
+#include <unix.h> /* GetRelocatedProcdirRoot() and GetProcdirPid() */
 
 #ifdef HAVE_SYS_JAIL_H
 # include <sys/jail.h>

@@ -34,6 +34,17 @@ bool GetCurrentUserName(char *userName, int userNameLen);
 
 #ifndef __MINGW32__
 /**
+ * @brief For testing things against /proc, uses env var CFENGINE_TEST_OVERRIDE_PROCDIR
+ * @return the extra directory to add BEFORE /proc in the path
+ */
+const char* GetRelocatedProcdirRoot();
+/**
+ * @brief For testing things against /proc, use env var CFENGINE_TEST_OVERRIDE_PROCPID
+ * @return the fake pid to use in proc paths
+ */
+int GetProcdirPid();
+
+/**
  * Get user name for the user with UID #uid
  *
  * @param uid              UID of the user

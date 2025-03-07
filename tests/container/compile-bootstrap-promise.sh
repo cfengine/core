@@ -15,26 +15,27 @@ rm -f bootstrap.log
 rm -f update.log
 rm -f promise.log
 
-build_image=cfengine-core-alpine-build-image
-installed_image=cfengine-core-alpine-installed-image # cfengine built and installed
+build_host=cfengine-core-alpine-build-host
+built_installed=cfengine-core-alpine-built-installed # cfengine built and installed
 
-# TODO: separate build_image from installed_image
-# e.g. install alpine-sdk/etc for build_image but then start fresh from alpine and installed bits in /var/cfengine?
-if ! buildah images "$build_image"; then
+# TODO: separate build_host from built_installed
+# e.g. install alpine-sdk/etc for build_host but then start fresh from alpine and installed bits in /var/cfengine?
+if ! buildah images "$build_host"; then
   c=$(buildah from alpine)
   buildah run "$c" apk update
   buildah run "$c" apk add alpine-sdk lmdb-dev openssl-dev bison flex-dev acl-dev pcre2-dev autoconf automake libtool git python3 gdb librsync-dev
-  buildah commit $c "$build_image"
+  buildah run "$c" apk add strace gdb # for debugging
+  buildah commit $c "$build_host"
 fi
 
 
-if ! buildah images "$installed_image"; then
-  c=$(buildah from "$build_image")
+if ! buildah images "$built_installed"; then
+  c=$(buildah from "$build_host")
   buildah run --volume $(realpath ../../):/core --workingdir /core "$c" ./autogen.sh --without-pam
   buildah run --volume $(realpath ../../):/core --workingdir /core "$c" make install
   buildah run --volume $(realpath ../../../masterfiles):/mpf --workingdir /mpf "$c" ./autogen.sh
   buildah run --volume $(realpath ../../../masterfiles):/mpf --workingdir /mpf "$c" make install
-  buildah commit "$c" "$installed_image"
+  buildah commit "$c" "$built_installed"
 fi
 
 # run from a blank alpine container to save space and what not
@@ -43,7 +44,7 @@ c=$(buildah from alpine)
 # python3 and procps are needed for running
 buildah run "$c" apk update
 buildah run "$c" apk add python3 procps lmdb-dev openssl-dev flex-dev acl-dev pcre2-dev librsync-dev
-buildah copy --from "$installed_image" "$c" /var/cfengine /var/cfengine
+buildah copy --from "$built_installed" "$c" /var/cfengine /var/cfengine
 
 
 # generate hostkey if needed (repeated runs should skip)
@@ -51,8 +52,8 @@ if ! buildah run "$c" test -f /var/cfengine/ppkeys/localhost.pub; then
   buildah run "$c" /var/cfengine/bin/cf-key
 fi
 # bootstrap
-  buildah run "$c" apk add strace # debug bootstrap hanging on waiting for background process, track fork()
-buildah run "$c" sh -c 'strace /var/cfengine/bin/cf-agent --timestamp --debug --bootstrap $(hostname -i)' | tee bootstrap.log
+#  buildah run "$c" apk add strace # debug bootstrap hanging on waiting for background process, track fork()
+buildah run "$c" sh -c '/var/cfengine/bin/cf-agent --timestamp --debug --bootstrap $(hostname -i)' | tee bootstrap.log
 check_errors bootstrap.log
 
 # run update

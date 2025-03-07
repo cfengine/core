@@ -177,6 +177,7 @@ bool ShellCommandReturnsZero(const char *command, ShellType shell)
         return false;
     }
 
+Log(LOG_LEVEL_DEBUG, "Backgrounding for ShellCommandReturnsZero(), command = '%s'", command);
     if ((pid = fork()) < 0)
     {
         Log(LOG_LEVEL_ERR, "Failed to fork new process: %s", command);

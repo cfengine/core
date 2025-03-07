@@ -196,6 +196,7 @@ static pid_t GenericCreatePipeAndFork(IOPipe *pipes)
 
     pid_t pid = -1;
 
+Log(LOG_LEVEL_DEBUG, "Backgrounding for GenericCreatePipeAndFork()");
     if ((pid = fork()) == (pid_t) -1)
     {
         /* One pipe will be always here. */

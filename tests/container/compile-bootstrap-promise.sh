@@ -51,7 +51,8 @@ if ! buildah run "$c" test -f /var/cfengine/ppkeys/localhost.pub; then
   buildah run "$c" /var/cfengine/bin/cf-key
 fi
 # bootstrap
-buildah run "$c" sh -c '/var/cfengine/bin/cf-agent --timestamp --debug --bootstrap $(hostname -i)' | tee bootstrap.log
+  buildah run "$c" apk add strace # debug bootstrap hanging on waiting for background process, track fork()
+buildah run "$c" sh -c 'strace /var/cfengine/bin/cf-agent --timestamp --debug --bootstrap $(hostname -i)' | tee bootstrap.log
 check_errors bootstrap.log
 
 # run update

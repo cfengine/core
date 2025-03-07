@@ -923,6 +923,170 @@ static FnCallResult FnCallGetUsers(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
 
 /*********************************************************************/
 
+
+#if defined(HAVE_GETPWENT) && !defined(__ANDROID__)
+
+static FnCallResult FnCallFindLocalUsers(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
+{
+    assert(fp != NULL);
+    bool allocated = false;
+    JsonElement *json = VarNameOrInlineToJson(ctx, fp, finalargs, false, &allocated);
+    
+    // we failed to produce a valid JsonElement, so give up
+    if (json == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Function '%s' couldn't parse argument '%s'",
+            fp->name, RlistScalarValueSafe(finalargs));
+        return FnFailure();
+    }
+    else if (JsonGetElementType(json) != JSON_ELEMENT_TYPE_CONTAINER)
+    {
+        Log(LOG_LEVEL_ERR, "Bad argument '%s' in function '%s': Expected data container or slist",
+            RlistScalarValueSafe(finalargs), fp->name);
+        JsonDestroyMaybe(json, allocated);
+        return FnFailure();
+    }
+   
+    JsonElement *parent = JsonObjectCreate(10);
+    setpwent();
+    struct passwd *pw;
+    while ((pw = getpwent()) != NULL)
+    {
+        JsonIterator iter = JsonIteratorInit(json);
+        bool can_add_to_json = true;
+        JsonElement *element = JsonIteratorNextValue(&iter);
+        while (element != NULL)
+        {
+            if (JsonGetElementType(element) != JSON_ELEMENT_TYPE_PRIMITIVE)
+            {
+                Log(LOG_LEVEL_ERR, "Bad argument '%s' in function '%s': Filter cannot include nested data",
+                    RlistScalarValueSafe(finalargs), fp->name);
+                JsonDestroyMaybe(json, allocated);
+                JsonDestroy(parent);
+                return FnFailure();
+            }
+            const char *field = JsonPrimitiveGetAsString(element);
+            const Rlist *tuple = RlistFromSplitString(field, '=');
+            assert(tuple != NULL);
+            const char *attribute = TrimWhitespace(RlistScalarValue(tuple));
+
+            if (tuple->next == NULL)
+            {
+                Log(LOG_LEVEL_ERR, "Invalid filter field '%s' in function '%s': Expected attributes and values to be separated with '='",
+                    fp->name, field);
+                JsonDestroyMaybe(json, allocated);
+                JsonDestroy(parent);
+                return FnFailure();
+            }
+            const char *value = TrimWhitespace(RlistScalarValue(tuple->next));
+
+            if (StringEqual(attribute, "name"))
+            {
+                if (!StringMatchFull(value, pw->pw_name))
+                {
+                    can_add_to_json = false;
+                }
+            }
+            else if (StringEqual(attribute, "uid"))
+            {
+                char uid_string[PRINTSIZE(pw->pw_uid)];
+                int ret = snprintf(uid_string, sizeof(uid_string), "%u", pw->pw_uid);
+                
+                if (ret < 0)
+                {
+                    Log(LOG_LEVEL_ERR, "Couldn't convert the uid of '%s' to string in function '%s'",
+                        pw->pw_name, fp->name);
+                    JsonDestroyMaybe(json, allocated);
+                    JsonDestroy(parent);
+                    return FnFailure();
+                }
+                assert((size_t) ret < sizeof(uid_string));
+
+                if (!StringMatchFull(value, uid_string))
+                {
+                    can_add_to_json = false;
+                }
+            }
+            else if (StringEqual(attribute, "gid"))
+            {
+                char gid_string[PRINTSIZE(pw->pw_uid)];
+                int ret = snprintf(gid_string, sizeof(gid_string), "%u", pw->pw_uid);
+
+                if (ret < 0)
+                {
+                    Log(LOG_LEVEL_ERR, "Couldn't convert the gid of '%s' to string in function '%s'",
+                        pw->pw_name, fp->name);
+                    JsonDestroyMaybe(json, allocated);
+                    JsonDestroy(parent);
+                    return FnFailure();
+                }
+                assert((size_t) ret < sizeof(gid_string));
+
+                if (!StringMatchFull(value, gid_string))
+                {   
+                    can_add_to_json = false;
+                }
+            }
+            else if (StringEqual(attribute, "gecos"))
+            {
+                if (!StringMatchFull(value, pw->pw_gecos))
+                {
+                    can_add_to_json = false;
+                }
+            }
+            else if (StringEqual(attribute, "dir"))
+            {
+                if ((!StringMatchFull(value, pw->pw_dir)))
+                {
+                    can_add_to_json = false;
+                }
+            }
+            else if (StringEqual(attribute, "shell"))
+            {
+                if (!StringMatchFull(value, pw->pw_shell))
+                {
+                    can_add_to_json = false;
+                }
+            }
+            else 
+            {
+                Log(LOG_LEVEL_ERR, "Invalid attribute '%s' in function '%s': not supported",
+                    attribute, fp->name);
+                JsonDestroyMaybe(json, allocated);
+                JsonDestroy(parent);
+                return FnFailure(); 
+            }
+            element = JsonIteratorNextValue(&iter);
+        }
+        if (can_add_to_json)
+        {
+            JsonElement *child = JsonObjectCreate(6);
+            JsonObjectAppendInteger(child, "uid", pw->pw_uid);
+            JsonObjectAppendInteger(child, "gid", pw->pw_gid);
+            JsonObjectAppendString(child, "gecos", pw->pw_gecos);
+            JsonObjectAppendString(child, "dir", pw->pw_dir);
+            JsonObjectAppendString(child, "shell", pw->pw_shell);
+            JsonObjectAppendObject(parent, pw->pw_name, child);
+        }
+    }
+    endpwent();
+    JsonDestroyMaybe(json, allocated);
+
+    return FnReturnContainerNoCopy(parent);
+}
+
+#else
+
+static FnCallResult FnCallFindLocalUsers(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, ARG_UNUSED const Rlist *finalargs)
+{
+    Log(LOG_LEVEL_ERR, "findlocalusers is not implemented");
+    return FnFailure();
+}
+
+#endif
+
+/*********************************************************************/
+
 static FnCallResult FnCallEscape(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
     char buffer[CF_BUFSIZE];
@@ -10467,7 +10631,11 @@ static const FnCallArg IS_DATATYPE_ARGS[] =
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Type"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
-
+static const FnCallArg FIND_LOCAL_USERS_ARGS[] =
+{   
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Filter list"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
 
 /*********************************************************/
 /* FnCalls are rvalues in certain promise constraints    */
@@ -10803,6 +10971,8 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("version_compare", CF_DATA_TYPE_CONTEXT, VERSION_COMPARE_ARGS, &FnCallVersionCompare, "Compare two version numbers with a specified operator",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("findlocalusers", CF_DATA_TYPE_CONTAINER, FIND_LOCAL_USERS_ARGS, &FnCallFindLocalUsers, "Find matching local users",
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
 
     // Functions section following new naming convention
     FnCallTypeNew("string_mustache", CF_DATA_TYPE_STRING, STRING_MUSTACHE_ARGS, &FnCallStringMustache, "Expand a Mustache template from arg1 into a string using the optional data container in arg2 or datastate()",

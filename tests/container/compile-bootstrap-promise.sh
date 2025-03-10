@@ -52,6 +52,7 @@ if ! buildah run "$c" test -f /var/cfengine/ppkeys/localhost.pub; then
   buildah run "$c" /var/cfengine/bin/cf-key
 fi
 # workaround: during bootstrap, update policy starts cf-execd, cf-serverd and cf-monitord but this causes the bootstrap to "hang" waiting for these child processes to finish
+# nodaemons causes bootstrap to fail, but doesnt hang so thats a slight improvement?
 buildah copy "$c" nodaemons.json /var/cfengine/masterfiles/def.json
 # bootstrap
 #  buildah run "$c" apk add strace # debug bootstrap hanging on waiting for background process, track fork()

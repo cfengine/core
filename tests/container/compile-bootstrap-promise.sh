@@ -51,6 +51,8 @@ buildah copy --from "$built_installed" "$c" /var/cfengine /var/cfengine
 if ! buildah run "$c" test -f /var/cfengine/ppkeys/localhost.pub; then
   buildah run "$c" /var/cfengine/bin/cf-key
 fi
+# workaround: during bootstrap, update policy starts cf-execd, cf-serverd and cf-monitord but this causes the bootstrap to "hang" waiting for these child processes to finish
+buildah copy "$c" nodaemons.json /var/cfengine/masterfiles/def.json
 # bootstrap
 #  buildah run "$c" apk add strace # debug bootstrap hanging on waiting for background process, track fork()
 buildah run "$c" sh -c '/var/cfengine/bin/cf-agent --timestamp --debug --bootstrap $(hostname -i)' | tee bootstrap.log

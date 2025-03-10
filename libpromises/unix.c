@@ -186,6 +186,7 @@ Log(LOG_LEVEL_DEBUG, "Backgrounding for ShellCommandReturnsZero(), command = '%s
     else if (pid == 0)          /* child */
     {
         ALARM_PID = -1;
+Log(LOG_LEVEL_DEBUG, "ShellCommandReturnsZero(), Backgrounded child pid %jd", (intmax_t) getpid());
 
         if (shell == SHELL_TYPE_USE)
         {

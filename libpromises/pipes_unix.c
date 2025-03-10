@@ -199,6 +199,7 @@ static pid_t GenericCreatePipeAndFork(IOPipe *pipes)
 Log(LOG_LEVEL_DEBUG, "Backgrounding for GenericCreatePipeAndFork()");
     if ((pid = fork()) == (pid_t) -1)
     {
+Log(LOG_LEVEL_DEBUG, "GenericCreatePipeAndFork(), Backgrounded child pid=%jd", (intmax_t) getpid());
         /* One pipe will be always here. */
         close(pipes[0].pipe_desc[0]);
         close(pipes[0].pipe_desc[1]);

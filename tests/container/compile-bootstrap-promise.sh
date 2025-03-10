@@ -31,7 +31,8 @@ fi
 
 if ! buildah images "$built_installed"; then
   c=$(buildah from "$build_host")
-  buildah run --volume $(realpath ../../):/core --workingdir /core "$c" ./autogen.sh --without-pam
+  # use --config-cache to speed up configuration by letting libntech re-use core's config cache
+  buildah run --volume $(realpath ../../):/core --workingdir /core "$c" ./autogen.sh --config-cache --without-pam
   buildah run --volume $(realpath ../../):/core --workingdir /core "$c" make install
   buildah run --volume $(realpath ../../../masterfiles):/mpf --workingdir /mpf "$c" ./autogen.sh
   buildah run --volume $(realpath ../../../masterfiles):/mpf --workingdir /mpf "$c" make install
@@ -53,7 +54,7 @@ if ! buildah run "$c" test -f /var/cfengine/ppkeys/localhost.pub; then
 fi
 # workaround: during bootstrap, update policy starts cf-execd, cf-serverd and cf-monitord but this causes the bootstrap to "hang" waiting for these child processes to finish
 # nodaemons causes bootstrap to fail, but doesnt hang so thats a slight improvement?
-buildah copy "$c" nodaemons.json /var/cfengine/masterfiles/def.json
+#buildah copy "$c" nodaemons.json /var/cfengine/masterfiles/def.json
 # bootstrap
 #  buildah run "$c" apk add strace # debug bootstrap hanging on waiting for background process, track fork()
 buildah run "$c" sh -c '/var/cfengine/bin/cf-agent --timestamp --debug --bootstrap $(hostname -i)' | tee bootstrap.log

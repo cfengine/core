@@ -38,13 +38,7 @@ jobs:
     - name: Prepare Environment
       run: |
         sudo apt-get update && \
-        sudo apt-get install -y dpkg-dev debhelper g++ libncurses6 pkg-config \
-          build-essential libpam0g-dev fakeroot gcc make autoconf buildah \
-          liblmdb-dev libacl1-dev libcurl4-openssl-dev libyaml-dev libxml2-dev \
-          libssl-dev libpcre2-dev librsync-dev
-
-    - name: Run Autogen
-      run: NO_CONFIGURE=1 PROJECT=community ./buildscripts/build-scripts/autogen
+        sudo apt-get install -y buildah
 
     - name: Run The Test
       working-directory: ./core

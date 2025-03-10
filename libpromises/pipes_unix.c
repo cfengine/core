@@ -390,6 +390,7 @@ FILE *cf_popen_select(const char *command, const char *type, OutputSelect output
 
     if (pid == 0)                                               /* child */
     {
+Log(LOG_LEVEL_DEBUG, "cf_open_select() command '%s' child pid is %jd", command, (intmax_t) getpid());
         /* WARNING only call async-signal-safe functions in child. */
 
         switch (*type)
@@ -488,6 +489,7 @@ FILE *cf_popensetuid(const char *command, const Seq *arglist,
 
     if (pid == 0)                                               /* child */
     {
+Log(LOG_LEVEL_DEBUG, "cf_popensetuid() command '%s' child pid is %jd", command, (intmax_t) getpid());
         /* WARNING only call async-signal-safe functions in child. */
 
         switch (*type)
@@ -603,6 +605,7 @@ FILE *cf_popen_sh_select(const char *command, const char *type, OutputSelect out
 
     if (pid == 0)                                               /* child */
     {
+Log(LOG_LEVEL_DEBUG, "cf_popen_sh_select() command '%s' child pid is %jd", command, (intmax_t) getpid());
         /* WARNING only call async-signal-safe functions in child. */
 
         switch (*type)
@@ -691,6 +694,7 @@ FILE *cf_popen_shsetuid(const char *command, const char *type,
 
     if (pid == 0)                                               /* child */
     {
+Log(LOG_LEVEL_DEBUG, "cf_popen_shsetuid() command '%s' child pid is %jd", command, (intmax_t) getpid());
         /* WARNING only call async-signal-safe functions in child. */
 
         switch (*type)

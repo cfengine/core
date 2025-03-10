@@ -7,11 +7,35 @@ body common control
 
 ###########################################################
 
+bundle agent init
+{
+  vars:
+    "pid_for_testing" int => "11";
+
+  methods:
+    "" usebundle => dir_sync(
+      "$(this.promise_dirname)/proc",
+      "$(G.testdir)/proc"
+    );
+
+  commands:
+    "
+cd $(G.testdir)/proc/proc
+mkdir $(pid_for_testing)
+mv net $(pid_for_testing)/
+ln -s $(pid_for_testing) self
+ln -s self/net net
+"
+      comment => "Create a semi-real structure with symlinks and a pid dir",
+      contain => in_shell;
+}
+
+
 bundle agent test
 {
   meta:
       "test_skip_unsupported" string => "!linux";
 
   commands:
-      "$(G.env) CFENGINE_TEST_OVERRIDE_PROCDIR=$(this.promise_dirname)/proc $(sys.cf_agent) -DAUTO -f $(this.promise_filename).sub";
+      "$(G.env) CFENGINE_TEST_OVERRIDE_PROCPID=$(init.pid_for_testing) CFENGINE_TEST_OVERRIDE_PROCDIR=$(G.testdir)/proc $(sys.cf_agent) -DAUTO -f $(this.promise_filename).sub";
 }

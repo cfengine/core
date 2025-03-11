@@ -224,7 +224,7 @@ static void print_struct_persistent_class(
         /* Make a copy to ensure proper alignment. We cannot just copy data to a
          * local PersistentClassInfo variable because it contains a
          * variable-length string at the end (see the struct definition). */
-        PersistentClassInfo *class_info = malloc(value.mv_size);
+        PersistentClassInfo *class_info = xmalloc(value.mv_size);
         memcpy(class_info, value.mv_data, value.mv_size);
         const unsigned int expires = class_info->expires;
         const PersistentClassPolicy policy = class_info->policy;

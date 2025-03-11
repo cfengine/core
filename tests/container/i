@@ -1,0 +1,5 @@
+# ../../../ e.g. NTECH_ROOT TODO
+docker build -t docker-cfe -f Dockerfile ../../../
+exit 0
+buildah rmi cfengine-core-alpine-built-installed || true
+./compile-bootstrap-promise.sh 2>&1 | tee log

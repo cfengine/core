@@ -16,4 +16,4 @@ RUN /var/cfengine/bin/cf-key
 #RUN /var/cfengine/bin/cf-agent -KI
 #RUN /var/cfengine/bin/cf-agent -KI
 #RUN /var/cfengine/bin/cf-agent -KI
-CMD [ "sleep infinity" ]
+ENTRYPOINT [ "sleep infinity" ]

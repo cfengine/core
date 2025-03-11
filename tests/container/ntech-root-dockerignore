@@ -1,0 +1,13 @@
+**/.git
+**/tests/container
+mission-portal
+enterprise
+system-testing
+documentation
+nova
+buildscripts
+termux-packages
+website
+misc
+build-website
+packages

@@ -1,0 +1,7 @@
+{
+  "classes": {
+    "default:persistent_disable_cf_execd": [ "any::" ],
+    "default:persistent_disable_cf_serverd": [ "any::" ],
+    "default:persistent_disable_cf_monitord": [ "any::" ]
+  }
+}

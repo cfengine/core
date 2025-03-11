@@ -25,6 +25,7 @@
 #include <unix.h>
 #include <exec_tools.h>
 #include <file_lib.h>
+#include <string_lib.h> /* StringToInt64() */
 
 #ifdef HAVE_SYS_UIO_H
 # include <sys/uio.h>
@@ -176,6 +177,7 @@ bool ShellCommandReturnsZero(const char *command, ShellType shell)
         return false;
     }
 
+Log(LOG_LEVEL_DEBUG, "Backgrounding for ShellCommandReturnsZero(), command = '%s'", command);
     if ((pid = fork()) < 0)
     {
         Log(LOG_LEVEL_ERR, "Failed to fork new process: %s", command);
@@ -184,6 +186,7 @@ bool ShellCommandReturnsZero(const char *command, ShellType shell)
     else if (pid == 0)          /* child */
     {
         ALARM_PID = -1;
+Log(LOG_LEVEL_DEBUG, "ShellCommandReturnsZero(), Backgrounded child pid %jd", (intmax_t) getpid());
 
         if (shell == SHELL_TYPE_USE)
         {
@@ -526,5 +529,46 @@ bool GetGroupID(const char *group_name, gid_t *gid, LogLevel error_log_level)
 
     return true;
 }
+
+const char* GetRelocatedProcdirRoot()
+{
+    const char *procdir = getenv("CFENGINE_TEST_OVERRIDE_PROCDIR");
+    if (procdir == NULL)
+    {
+        procdir = "";
+    }
+    else
+    {
+        Log(LOG_LEVEL_VERBOSE, "Overriding /proc location to be %s", procdir);
+    }
+
+    return procdir;
+}
+
+/**
+ * With the addition of using the current PID when examining the proc filesystem for details
+ * we need a test-override option for acceptance tests.
+ */
+int GetProcdirPid()
+{
+    const char *procpid = getenv("CFENGINE_TEST_OVERRIDE_PROCPID");
+    if (procpid != NULL)
+    {
+        int64_t pid_int;
+        int rc;
+        rc = StringToInt64(procpid, &pid_int);
+        if (rc != 0)
+        {
+            Log(LOG_LEVEL_ERR, "Could not parse CFENGINE_TEST_OVERRIDE_PROCPID '%s' as integer: '%s'", procpid, strerror(errno));
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "Overriding proc pid from env var CFENGINE_TEST_OVERRIDE_PROCPID with value %jd", (intmax_t) pid_int);
+            return (int) pid_int;
+        }
+    }
+    return (int) getpid();
+}
+
 
 #endif /* !__MINGW32__ */

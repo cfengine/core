@@ -667,16 +667,16 @@ bundle edit_line set_variable_values_ini(tab, sectionName)
 
       # If the line is there, but commented out, first uncomment it
       "#+\s*$(index)\s*=.*"
-      select_region => INI_section("$(sectionName)"),
-      edit_field => col("=","1","$(index)","set"),
-      ifvarclass => "edit_$(cindex[$(index)])";
+      select_region => INI_section(escape("$(sectionName)")),
+      edit_field => col("\s*=\s*","1","$(index)","set"),
+      if => "edit_$(cindex[$(index)])";
 
       # match a line starting like the key something
-      "$(index)\s*=.*"
-      edit_field => col("=","2","$($(tab)[$(sectionName)][$(index)])","set"),
-      select_region => INI_section("$(sectionName)"),
+      "\s*$(index)\s*=.*"
+      edit_field => col("\s*=\s*","2","$($(tab)[$(sectionName)][$(index)])","set"),
+      select_region => INI_section(escape("$(sectionName)")),
       classes => results("bundle", "set_variable_values_ini_not_$(cindex[$(index)])"),
-      ifvarclass => "edit_$(cindex[$(index)])";
+      if => "edit_$(cindex[$(index)])";
 
   insert_lines:
       "[$(sectionName)]"
@@ -684,8 +684,8 @@ bundle edit_line set_variable_values_ini(tab, sectionName)
       comment => "Insert lines";
 
       "$(index)=$($(tab)[$(sectionName)][$(index)])"
-      select_region => INI_section("$(sectionName)"),
-        ifvarclass => "!(set_variable_values_ini_not_$(cindex[$(index)])_kept|set_variable_values_ini_not_$(cindex[$(index)])_repaired).edit_$(cindex[$(index)])";
+      select_region => INI_section(escape("$(sectionName)")),
+        if => "!(set_variable_values_ini_not_$(cindex[$(index)])_kept|set_variable_values_ini_not_$(cindex[$(index)])_repaired).edit_$(cindex[$(index)])";
 
 }
 

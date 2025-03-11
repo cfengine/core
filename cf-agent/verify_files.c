@@ -59,6 +59,7 @@
 #include <known_dirs.h>
 #include <evalfunction.h>
 #include <changes_chroot.h>     /* PrepareChangesChroot(), RecordFileChangedInChroot() */
+#include <fsattrs.h>
 
 static PromiseResult FindFilePromiserObjects(EvalContext *ctx, const Promise *pp);
 static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promise *pp);
@@ -303,6 +304,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
     CfLock thislock;
     int exists;
     bool link = false;
+    bool is_immutable = false;
 
     Attributes attr = GetFilesAttributes(ctx, pp);
 
@@ -349,6 +351,82 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
     {
         chrooted_path = xstrdup(ToChangesChroot(path));
         changes_path = chrooted_path;
+    }
+
+    FSAttrsResult res = FSAttrsGetImmutableFlag(path, &is_immutable);
+    switch (res)
+    {
+    case FS_ATTRS_SUCCESS:
+        /* Nothing more to do */
+        break;
+    case FS_ATTRS_FAILURE:
+        Log(LOG_LEVEL_VERBOSE, "Failed to get immutable bit for file '%s': %s", changes_path, GetErrorStr());
+        break;
+    case FS_ATTRS_NOT_SUPPORTED:
+        Log(LOG_LEVEL_VERBOSE, "Failed to get immutable bit for file '%s': Operation not supported", changes_path);
+        break;
+    case FS_ATTRS_DOES_NOT_EXIST:
+        /* The file does not exist. Nothing more to do */
+        break;
+    }
+
+    if (a.havefsattrs && a.fsattrs.haveimmutable)
+    {
+        if (a.fsattrs.immutable) /* file should be immutable */
+        {
+            if (is_immutable) /* file is already immutable */
+            {
+                /* Temporarily remove the immutable flag */
+                res = FSAttrsUpdateImmutableFlag(changes_path, false);
+                switch (res)
+                {
+                case FS_ATTRS_SUCCESS:
+                    Log(LOG_LEVEL_VERBOSE, "Temporarily cleared immutable bit for file '%s'", changes_path);
+                    break;
+                case FS_ATTRS_FAILURE:
+                    /* Things still may be fine as long as the agent does not try to mutate the file */
+                    Log(LOG_LEVEL_VERBOSE, "Failed to temporarily clear immutable bit for file '%s': %s", changes_path, GetErrorStr());
+                    break;
+                case FS_ATTRS_NOT_SUPPORTED:
+                    /* Things still may be fine as long as the agent does not try to mutate the file */
+                    Log(LOG_LEVEL_VERBOSE, "Failed to temporarily clear immutable bit for file '%s': Operation not supported", changes_path);
+                    break;
+                case FS_ATTRS_DOES_NOT_EXIST:
+                    /* The file does not exist. Nothing more to do */
+                    break;
+                }
+            } /* else then file is not immutable, but we will fix that later */
+        }
+        else /* file should not be immutable */
+        {
+            if (is_immutable) /* file is immutable */
+            {
+                /* Remove immutable flag for good */
+                res = FSAttrsUpdateImmutableFlag(changes_path, false);
+                switch (res)
+                {
+                case FS_ATTRS_SUCCESS:
+                    RecordChange(ctx, pp, &a, "Cleared immutable bit for file '%s'", changes_path);
+                    result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
+                    break;
+                case FS_ATTRS_FAILURE:
+                    RecordFailure(ctx, pp, &a, "Failed to clear immutable bit for file '%s'", changes_path);
+                    result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+                    break;
+                case FS_ATTRS_NOT_SUPPORTED:
+                    /* We will not treat this as a promise failure because this will happen on many platforms. Instead we will log a verbose message. */
+                    Log(LOG_LEVEL_VERBOSE, "Failed to temporarily clear immutable bit for file '%s': Operation not supported", changes_path);
+                    break;
+                case FS_ATTRS_DOES_NOT_EXIST:
+                    /* Nothing to do */
+                    break;
+                }
+            }
+            else /* file is not immutable */
+            {
+                RecordNoChange(ctx, pp, &a, "Immutable bit is not set for file '%s' as promised", changes_path);
+            }
+        }
     }
 
     if (lstat(changes_path, &oslb) == -1)       /* Careful if the object is a link */
@@ -609,6 +687,76 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
     }
 
 exit:
+    ; /* A label can only be part of a statement and a declaration is not a
+       * statement. This is a quirk of standard C grammar. Hence, we put an
+       * empty statement here. */
+    bool was_immutable = is_immutable;
+    is_immutable = false;
+    res = FSAttrsGetImmutableFlag(path, &is_immutable);
+    switch (res)
+    {
+    case FS_ATTRS_SUCCESS:
+        /* Nothing to do */
+        break;
+    case FS_ATTRS_FAILURE:
+        Log(LOG_LEVEL_VERBOSE, "Failed to get immutable bit for file '%s': %s", changes_path, GetErrorStr());
+        break;
+    case FS_ATTRS_NOT_SUPPORTED:
+        Log(LOG_LEVEL_VERBOSE, "Failed to get immutable bit for file '%s': Operation not supported", changes_path);
+        break;
+    case FS_ATTRS_DOES_NOT_EXIST:
+        /* Nothing to do */
+        break;
+    }
+
+    if (a.havefsattrs && a.fsattrs.haveimmutable && a.fsattrs.immutable) {
+        if (was_immutable && !is_immutable)
+        {
+            /* Reset immutable flag that we cleared before */
+            res = FSAttrsUpdateImmutableFlag(changes_path, true);
+            switch (res)
+            {
+            case FS_ATTRS_SUCCESS:
+                Log(LOG_LEVEL_VERBOSE, "Reset immutable bit for file '%s' after temporarily clearing it", changes_path);
+                break;
+            case FS_ATTRS_FAILURE:
+                /* Things still may be fine as long as the agent does not try to mutate the file */
+                Log(LOG_LEVEL_VERBOSE, "Failed to reset immutable bit for file '%s' after temporarily clearing it: %s", changes_path, GetErrorStr());
+                break;
+            case FS_ATTRS_NOT_SUPPORTED:
+                /* Things still may be fine as long as the agent does not try to mutate the file */
+                Log(LOG_LEVEL_VERBOSE, "Failed to reset immutable bit for file '%s' after temporarily clearing it: Operation not supported", changes_path);
+                break;
+            case FS_ATTRS_DOES_NOT_EXIST:
+                /* The file must have been removed by the agent. Nothing more to do */
+                break;
+            }
+        }
+        else
+        {
+            /* The file was never immutable, but should be. We'll fix that now */
+            res = FSAttrsUpdateImmutableFlag(changes_path, true);
+            switch (res)
+            {
+            case FS_ATTRS_SUCCESS:
+                RecordChange(ctx, pp, &a, "Set immutable bit for file '%s'", changes_path);
+                result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
+                break;
+            case FS_ATTRS_FAILURE:
+                RecordFailure(ctx, pp, &a, "Failed to set immutable bit for file '%s'", changes_path);
+                result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+                break;
+            case FS_ATTRS_NOT_SUPPORTED:
+                /* We will not treat this as a promise failure because this will happen on many platforms. Instead we will log a verbose message. */
+                Log(LOG_LEVEL_VERBOSE, "Failed set immutable bit for file '%s': Operation not supported", changes_path);
+                break;
+            case FS_ATTRS_DOES_NOT_EXIST:
+                /* The file must have been removed by the agent. Nothing more to do */
+                break;
+            }
+        }
+    }
+
     free(chrooted_path);
     if (AttrHasNoAction(&a))
     {

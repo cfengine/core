@@ -55,7 +55,7 @@ failures=""
 # in jenkins the workdir is already autogen'd
 # in github it is not, so do that work here
 if [ ! -f configure ]; then
-  ./autogen.sh --enable-debug
+  NO_CONFIGURE=1 ./autogen.sh --enable-debug
 fi
 
 check_with_gcc              || { failures="${failures}FAIL: GCC check failed\n"; failure=1; }

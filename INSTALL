@@ -150,9 +150,9 @@ See docs/BSD.md
 
 sudo zypper install gdb gcc make lmdb autoconf automake libtool git python3 pcre2-devel libopenssl-devel pam-devel
 
-* AlpineOS (3.11.3 x86_64 2020-04-13)
+* Alpine Linux (3.21.3 2025-02-25)
 
-sudo apk add alpine-sdk lmdb-dev openssl-dev bison flex-dev acl-dev pcre2-dev autoconf automake libtool git python3 gdb
+sudo apk add alpine-sdk lmdb-dev openssl-dev bison flex-dev acl-dev pcre2-dev autoconf automake libtool git python3 gdb librsync-dev
 ./autogen.sh --without-pam
 
 * Termux (2020-04-24)

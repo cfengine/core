@@ -98,6 +98,10 @@ echo "Running cf-check diagnose --validate on all databases:"
 valgrind $VG_OPTS /var/cfengine/bin/cf-check diagnose --validate 2>&1 | tee cf_check_validate_all_1.txt
 check_valgrind_output cf_check_validate_all_1.txt
 
+echo "Running cf-check diagnose --validate on non-existent file:"
+valgrind $VG_OPTS /var/cfengine/bin/cf-check diagnose --validate no-such-file.lmdb 2>&1 | tee cf_check_validate_non_existent.txt
+check_valgrind_output cf_check_validate_non_existent.txt
+
 check_masterfiles_and_inputs
 
 print_ps

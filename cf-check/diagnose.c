@@ -615,7 +615,7 @@ size_t diagnose_files(
 
         if (symlink_target != NULL)
         {
-            int usage;
+            int usage = 0;
             bool needs_rotation = lmdb_file_needs_rotation(symlink_target, &usage);
             Log(LOG_LEVEL_INFO,
                 "Status of '%s' -> '%s': %s [%d%% usage%s]\n",
@@ -627,7 +627,7 @@ size_t diagnose_files(
         }
         else
         {
-            int usage;
+            int usage = 0;
             bool needs_rotation = lmdb_file_needs_rotation(filename, &usage);
             Log(LOG_LEVEL_INFO,
                 "Status of '%s': %s [%d%% usage%s]\n",

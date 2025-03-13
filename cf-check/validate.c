@@ -592,6 +592,7 @@ int CFCheck_Validate(const char *path)
     rc = mdb_env_open(env, path, MDB_NOSUBDIR | MDB_RDONLY, 0644);
     if (rc != 0)
     {
+        mdb_env_close(env);
         return rc;
     }
 
@@ -599,6 +600,7 @@ int CFCheck_Validate(const char *path)
     rc = mdb_txn_begin(env, NULL, MDB_RDONLY, &txn);
     if (rc != 0)
     {
+        mdb_env_close(env);
         return rc;
     }
 
@@ -606,6 +608,8 @@ int CFCheck_Validate(const char *path)
     rc = mdb_open(txn, NULL, 0, &dbi);
     if (rc != 0)
     {
+        mdb_txn_abort(txn);
+        mdb_env_close(env);
         return rc;
     }
 
@@ -613,6 +617,9 @@ int CFCheck_Validate(const char *path)
     rc = mdb_cursor_open(txn, dbi, &cursor);
     if (rc != 0)
     {
+        mdb_close(env, dbi);
+        mdb_txn_abort(txn);
+        mdb_env_close(env);
         return rc;
     }
 
@@ -627,6 +634,10 @@ int CFCheck_Validate(const char *path)
     {
         // At this point, not found is expected, anything else is an error
         DestroyValidator(&state);
+        mdb_cursor_close(cursor);
+        mdb_close(env, dbi);
+        mdb_txn_abort(txn);
+        mdb_env_close(env);
         return rc;
     }
     mdb_cursor_close(cursor);

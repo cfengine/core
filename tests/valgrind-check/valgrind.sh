@@ -37,7 +37,7 @@ function check_valgrind_output {
     fi
     echo "Looking for problems in $1:"
     grep -i "ERROR SUMMARY: 0 errors" "$1"
-    cat $1 | sed -e "/ 0 errors/d" -e "/and suppressed error/d" -e "/a memory error detector/d" -e "/This database contains unknown binary data/d" > filtered.txt
+    cat $1 | sed -e "/ 0 errors/d" -e "/and suppressed error/d" -e "/a memory error detector/d" -e "/This database contains unknown binary data/d" -e "/error: Problems detected in 1\/1 databases/d" -e "/error: Failed to stat() 'no-such-file.lmdb'/d" -e "/Status of 'no-such-file.lmdb': SYSTEM_ERROR 2/d" > filtered.txt
     no_errors filtered.txt
     set +e
     grep -i "at 0x" filtered.txt

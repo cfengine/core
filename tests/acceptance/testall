@@ -167,7 +167,7 @@ if [ $? -ne 0 ]
 then
     HAVE_DATE_PCT_S=1
 fi
-PERL=`which perl 2>/dev/null`
+PERL=`command -v perl 2>/dev/null`
 
 # color!
 if [ "${CFENGINE_COLOR}" = "1" ]

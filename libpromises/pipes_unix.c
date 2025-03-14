@@ -800,7 +800,7 @@ static int cf_pwait(pid_t pid)
 
     if (!WIFEXITED(status))
     {
-        Log(LOG_LEVEL_VERBOSE,
+        Log(LOG_LEVEL_ERR,
             "Child PID %jd exited abnormally (%s)", (intmax_t) pid,
             WIFSIGNALED(status) ? "signalled" : (
                 WIFSTOPPED(status) ? "stopped" : (
@@ -843,6 +843,7 @@ int cf_pclose(FILE *pp)
 
     ThreadLock(cft_count);
 
+    assert(CHILDREN != NULL);   /* We would want to know (ENT-10783) */
     if (CHILDREN == NULL)       /* popen hasn't been called */
     {
         ThreadUnlock(cft_count);
@@ -852,6 +853,7 @@ int cf_pclose(FILE *pp)
 
     ALARM_PID = -1;
 
+    assert(fd >= MAX_FD);       /* We would want to know (ENT-10783)*/
     if (fd >= MAX_FD)
     {
         ThreadUnlock(cft_count);

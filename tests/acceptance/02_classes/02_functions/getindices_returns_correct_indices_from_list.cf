@@ -1,0 +1,35 @@
+body common control
+{
+        inputs => { "../../default.cf.sub" };
+        bundlesequence  => { default("$(this.promise_filename)") };
+        version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+
+  meta:
+      "description" -> { "CFE-2930" }
+        string => "Test that getindices() returns the correct indices from a list";
+
+  vars:
+      "list" slist => { "beta", "alpha", "gamma" };
+      "getindices_list" slist => getindices( list );
+}
+
+#######################################################
+bundle agent check
+{
+  vars:
+      "expected_value" string => "beta";
+      "first_index"    string => nth( "test.getindices_list", 0 );
+
+  reports:
+      "$(this.promise_filename) Pass"
+        if => and( strcmp( $(first_index), 0 ), strcmp( nth( "test.list", $(first_index) ), $(expected_value) ) );
+
+      "$(this.promise_filename) FAIL"
+        unless => and( strcmp( $(first_index), 0 ), strcmp( nth( "test.list", $(first_index) ), $(expected_value) ) );
+}

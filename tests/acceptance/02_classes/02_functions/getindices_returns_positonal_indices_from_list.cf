@@ -14,10 +14,6 @@ bundle agent test
       "description" -> { "CFE-2930" }
         string => "Test that getindices() returns the positional indices from a list";
 
-      "test_soft_fail"
-        string => "any",
-        meta => { "CFE-2930" };
-
   vars:
       "list" slist => { "beta", "alpha", "gamma" };
       "getindices_list" slist => getindices( list );

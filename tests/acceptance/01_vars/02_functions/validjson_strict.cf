@@ -1,0 +1,64 @@
+body common control 
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence => { test, check };
+  version => "1.0";
+}
+
+bundle agent test 
+{
+  meta:
+    "description" -> { "CFE-4163" }
+      string => "Test policy strict parameter of validjson and validdata";
+}
+
+bundle agent check
+{
+  vars:
+    "json" string => readfile("$(this.promise_dirname)/validdata.cf.json", inf);
+    "invjson" string => readfile("$(this.promise_dirname)/validdata.cf.inv.json", inf);
+    "mystring" string => "\"foo\"";
+    "mynumber" string => "3.14";
+    "mybool" string => "true";
+    "mynull" string => "null";
+
+  classes:
+    "isvalid_json"
+      expression => validjson("$(json)", "false");
+    "isinvalid_json"
+      expression => not(validjson("$(invjson)", "false"));
+    "isvalid_string_primitive"
+      expression => validjson("$(mystring)", "false");
+    "isvalid_number_primitive_strict"
+      expression => validjson("$(mynumber)", "false");
+    "isvalid_bool_primitive"
+      expression => validjson("$(mybool)", "false");
+    "isvalid_null_primitive"
+      expression => validjson("$(mynull)", "false");
+
+    "invalid_json_strict"
+      expression => validjson("$(json)", "true");
+    "isinvalid_json_strict"
+      expression => not(validjson("$(invjson)", "true"));
+    "isinvalid_string_primitive_strict"
+      expression => not(validjson("$(mystring)", "true"));
+    "isinvalid_number_primitive_strict"
+      expression => not(validjson("$(mynumber)", "true"));
+    "isinvalid_bool_primitive_strict"
+      expression => not(validjson("$(mybool)", "true"));
+    "isinvalid_null_primitive_strict"
+      expression => not(validjson("$(mynull)", "true"));
+
+    "ok"
+      and => { "isvalid_json", "isvalid_string_primitive", "isvalid_number_primitive_strict", "isvalid_bool_primitive",
+       "isvalid_null_primitive", "invalid_json_strict", "isinvalid_string_primitive_strict",
+      "isinvalid_number_primitive_strict", "isinvalid_bool_primitive_strict", "isinvalid_null_primitive_strict",
+      "isinvalid_json", "isinvalid_json_strict" };
+
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

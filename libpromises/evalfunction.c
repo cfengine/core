@@ -3039,6 +3039,39 @@ static FnCallResult FnCallReadTcp(ARG_UNUSED EvalContext *ctx,
 
 /*********************************************************************/
 
+static FnCallResult FnCallIsConnectable(ARG_UNUSED EvalContext *ctx,
+                                        ARG_UNUSED const Policy *policy,
+                                        const FnCall *fp,
+                                        const Rlist *finalargs)
+{
+    assert(fp != NULL);
+    if (finalargs == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Function %s requires a host name, or IP address as first argument",
+            fp->name);
+        return FnFailure();
+    }
+    char *hostnameip = RlistScalarValue(finalargs);
+    if (finalargs->next == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Function %s requires a port number as second argument",
+            fp->name);
+        return FnFailure();
+    }
+    char *port = RlistScalarValue(finalargs->next);
+    long connect_timeout = (finalargs->next->next != NULL) ? IntFromString(RlistScalarValue(finalargs->next->next)) : CONNTIMEOUT;
+
+    char txtaddr[CF_MAX_IP_LEN] = "";
+    int sd = SocketConnect(hostnameip, port, connect_timeout, false, txtaddr, sizeof(txtaddr));
+    if (sd > -1) {
+        cf_closesocket(sd);
+    }
+
+    return FnReturnContext(sd > -1);
+} 
+
+/*********************************************************************/
+
 /**
  * Look for the indices of a variable in #finalargs if it is an array.
  *
@@ -9778,6 +9811,14 @@ static const FnCallArg IRANGE_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg ISCONNECTABLE_ARGS[] =
+{
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Host name, domain name or IP address"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Port number"},
+    {CF_VALRANGE, CF_DATA_TYPE_INT, "Connection timeout (in seconds)"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
 static const FnCallArg ISGREATERTHAN_ARGS[] =
 {
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Larger string or value"},
@@ -10622,6 +10663,8 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("irange", CF_DATA_TYPE_INT_RANGE, IRANGE_ARGS, &FnCallIRange, "Define a range of integer values for cfengine internal use",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("isconnectable", CF_DATA_TYPE_CONTEXT, ISCONNECTABLE_ARGS, &FnCallIsConnectable, "Check if a port is connectable",
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("isdir", CF_DATA_TYPE_CONTEXT, FILESTAT_ARGS, &FnCallFileStat, "True if the named object is a directory",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("isexecutable", CF_DATA_TYPE_CONTEXT, FILESTAT_ARGS, &FnCallFileStat, "True if the named object has execution rights for the current user",

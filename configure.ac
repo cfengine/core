@@ -318,7 +318,7 @@ then
     # pg_config is only for native builds
     if test "x$cross_compiling" = "xno"
     then
-        if test x`which $PG_CONFIG` != x
+        if test x`command -v $PG_CONFIG` != x
         then
             pg_include_dir=`$PG_CONFIG --includedir`
             if test -n "$pg_include_dir"
@@ -364,7 +364,7 @@ then
     # mysql_config is only for native builds
     if test "x$cross_compiling" = "xno"
     then
-        if test x`which $MYSQL_CONFIG` != x
+        if test x`command -v $MYSQL_CONFIG` != x
         then
             mysql_include_dir=`$MYSQL_CONFIG --include`
             if test -n "$mysql_include_dir"
@@ -1674,7 +1674,7 @@ dnl #####################################################################
 AC_PATH_PROG(HOSTNAME, hostname, "", $PATH)
 
 AC_DEFINE_UNQUOTED(AUTOCONF_HOSTNAME, "`$HOSTNAME`", [Special CFEngine symbol])
-AC_DEFINE_UNQUOTED(AUTOCONF_SYSNAME, "$target_os", [Speial CFEngine symbol])
+AC_DEFINE_UNQUOTED(AUTOCONF_SYSNAME, "$target_os", [Special CFEngine symbol])
 
 
 dnl #####################################################################

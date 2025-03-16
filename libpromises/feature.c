@@ -5,6 +5,9 @@
 #include <buffer.h>
 
 static const char* features[] = {
+#ifdef HAVE_LIBPAM
+    "pam",
+#endif
 #ifdef HAVE_LIBYAML
     "yaml",
 #endif

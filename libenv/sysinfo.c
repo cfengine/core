@@ -54,6 +54,7 @@
 #include <evalfunction.h>
 #include <json-utils.h>
 #include <unix.h>               /* GetCurrentUserName() */
+#include <glob_lib.h>
 
 #ifdef HAVE_ZONE_H
 # include <zone.h>
@@ -3057,6 +3058,43 @@ static void GetCPUInfo(EvalContext *ctx)
 #if defined(HAVE_SYSCONF) && defined(_SC_NPROCESSORS_ONLN)
     // Linux, AIX, Solaris, Darwin >= 10.4
     count = (int)sysconf(_SC_NPROCESSORS_ONLN);
+#endif
+
+#ifdef __linux__
+    int package_id = 0, max_package_id = 0;
+    char buffer[CF_SMALLBUF] = "";
+    StringSet *package_id_files = GlobFileList("/sys/devices/system/cpu/cpu*/topology/physical_package_id");
+    StringSetIterator it = StringSetIteratorInit(package_id_files);
+    const char *file = NULL;
+
+    while ((file = StringSetIteratorNext(&it)))
+    {
+        int f = open(file, O_RDONLY);
+        if (f == -1)
+            continue;
+        ssize_t n_read = FullRead(f, buffer, sizeof(buffer));
+        if (n_read < 1)
+            continue;
+        if (sscanf(buffer, "%d", &package_id) == 1)
+        {
+            if (package_id > max_package_id)
+                max_package_id = package_id;
+        }
+    }
+    max_package_id++;
+    StringSetDestroy(package_id_files);
+
+    if (max_package_id == 1)
+    {
+        snprintf(buffer, CF_SMALLBUF, "%d_cpusocket", max_package_id);
+    }
+    else
+    {
+        snprintf(buffer, CF_SMALLBUF, "%d_cpusockets", max_package_id);
+    }
+    EvalContextClassPutHard(ctx, buffer, "source=agent,derived-from=sys.cpusockets");
+    snprintf(buffer, CF_SMALLBUF, "%d", max_package_id);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cpusockets", buffer, CF_DATA_TYPE_STRING, "inventory,source=agent,attribute_name=CPU sockets");
 #endif
 
 #if defined(HAVE_SYS_SYSCTL_H) && defined(HW_NCPU)

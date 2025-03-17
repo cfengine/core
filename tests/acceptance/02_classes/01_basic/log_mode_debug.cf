@@ -1,0 +1,32 @@
+#######################################################
+#
+# Test mode_debug hard class
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+    "description" -> { "CFE-4126" }
+      string => "Test mode debug class";
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+    "Check Agent Output"
+      usebundle => dcs_passif_output1(".*R: is debug mode.*",
+                                      "$(sys.cf_agent) --log-level debug -Kf $(this.promise_dirname)/log_mode.cf.sub",
+                                      "$(this.promise_filename)");
+}

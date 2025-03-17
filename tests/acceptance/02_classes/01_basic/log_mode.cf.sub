@@ -1,0 +1,16 @@
+bundle agent main
+{
+  reports:
+    debug_mode.opt_debug::
+      "is debug mode";
+    verbose_mode::
+      "is verbose mode";
+    inform_mode::
+      "is inform mode";
+    notice_mode::
+      "is notice mode";
+    warning_mode::
+      "is warning mode";
+    error_mode::
+      "is error mode";
+}

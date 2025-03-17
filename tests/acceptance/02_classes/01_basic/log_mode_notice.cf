@@ -1,0 +1,33 @@
+#######################################################
+#
+# Test mode_notice hard class
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+    "description" -> { "CFE-4126" }
+      string => "Test mode notice class";
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+    "Check Agent Output"
+      usebundle => dcs_passif_output(".*R: is notice mode.*",
+                                     ".*R: is (debug|verbose|inform) mode.*",
+                                     "$(sys.cf_agent) --log-level notice -Kf $(this.promise_dirname)/log_mode.cf.sub",
+                                     "$(this.promise_filename)");
+}

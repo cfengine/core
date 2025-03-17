@@ -3071,14 +3071,20 @@ static void GetCPUInfo(EvalContext *ctx)
     {
         int f = open(file, O_RDONLY);
         if (f == -1)
+        {
             continue;
+        }
         ssize_t n_read = FullRead(f, buffer, sizeof(buffer));
         if (n_read < 1)
+        {
             continue;
+        }
         if (sscanf(buffer, "%d", &package_id) == 1)
         {
             if (package_id > max_package_id)
+            {
                 max_package_id = package_id;
+            }
         }
     }
     max_package_id++;

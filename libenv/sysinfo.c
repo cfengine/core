@@ -3092,14 +3092,17 @@ static void GetCPUInfo(EvalContext *ctx)
 
     if (max_package_id == 1)
     {
-        snprintf(buffer, CF_SMALLBUF, "%d_cpusocket", max_package_id);
+        NDEBUG_UNUSED int ret = snprintf(buffer, CF_SMALLBUF, "%d_cpusocket", max_package_id);
+        assert(ret >= 0 && ret < CF_SMALLBUF);
     }
     else
     {
-        snprintf(buffer, CF_SMALLBUF, "%d_cpusockets", max_package_id);
+        NDEBUG_UNUSED int ret = snprintf(buffer, CF_SMALLBUF, "%d_cpusockets", max_package_id);
+        assert(ret >= 0 && ret < CF_SMALLBUF);
     }
     EvalContextClassPutHard(ctx, buffer, "source=agent,derived-from=sys.cpusockets");
-    snprintf(buffer, CF_SMALLBUF, "%d", max_package_id);
+    NDEBUG_UNUSED int ret = snprintf(buffer, CF_SMALLBUF, "%d", max_package_id);
+    assert(ret >= 0 && ret < CF_SMALLBUF);
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cpusockets", buffer, CF_DATA_TYPE_STRING, "inventory,source=agent,attribute_name=CPU sockets");
 #endif
 

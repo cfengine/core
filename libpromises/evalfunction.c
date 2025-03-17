@@ -3121,7 +3121,7 @@ static FnCallResult FnCallGetIndices(EvalContext *ctx, ARG_UNUSED const Policy *
         EvalContextVariableGet(ctx, ref, &type);
 
         /* A variable holding a data container. */
-        if (type == CF_DATA_TYPE_CONTAINER)
+        if (DataTypeToRvalType(type) == RVAL_TYPE_CONTAINER || DataTypeToRvalType(type) == RVAL_TYPE_LIST)
         {
             json = VarRefValueToJson(ctx, fp, ref, NULL, 0, true, &allocated);
         }

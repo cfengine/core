@@ -1,0 +1,42 @@
+#######################################################
+#
+# Test that sys.cpusockets variable exists on Linux
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+    "description" -> { "CFE-30" }
+      string => "Test that sys.cpusockets variable exists on Linux";
+
+    "test_soft_fail"
+      string => "!linux",
+      meta => { "CFE-30" };
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+    "ok"
+      expression => isvariable("sys.cpusockets");
+
+  methods:
+    "any"
+      usebundle => dcs_passif("ok", "$(this.promise_filename)"),
+      inherit => "true";
+
+  reports:
+    "I have $(sys.cpusockets) CPU socket(s)";
+}

@@ -1,0 +1,43 @@
+#######################################################
+#
+# Test that n_cpusocket(s) class exists on Linux
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+    "description" -> { "CFE-30" }
+      string => "Test that n_cpusocket(s) class exists on Linux";
+
+    "test_soft_fail"
+      string => "!linux",
+      meta => { "CFE-30" };
+
+  vars:
+    "num_matching"
+      int => countclassesmatching("[0-9]+_cpusockets?");
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+    "ok"
+      expression => eval("$(test.num_matching) == 1", "class", "infix");
+
+  methods:
+    "any"
+      usebundle => dcs_passif("ok", "$(this.promise_filename)"),
+      inherit => "true";
+}

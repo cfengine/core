@@ -29,13 +29,13 @@
 # Good example: use LINUX to select code which uses inotify and netlink sockets.
 # Bad example: use LINUX to select code which parses output of coreutils' ps(1).
 #
-AM_CONDITIONAL([LINUX], [test -n "`echo ${target_os} | grep linux`"])
-AM_CONDITIONAL([MACOSX], [test -n "`echo ${target_os} | grep darwin`"])
-AM_CONDITIONAL([SOLARIS], [test -n "`(echo ${target_os} | egrep 'solaris|sunos')`"])
-AM_CONDITIONAL([NT], [test -n "`(echo ${target_os} | egrep 'mingw|cygwin')`"])
-AM_CONDITIONAL([CYGWIN], [test -n "`(echo ${target_os} | egrep 'cygwin')`"])
-AM_CONDITIONAL([AIX], [test -n "`(echo ${target_os} | grep aix)`"])
-AM_CONDITIONAL([HPUX], [test -n "`(echo ${target_os} | egrep 'hpux|hp-ux')`"])
-AM_CONDITIONAL([FREEBSD], [test -n "`(echo ${target_os} | grep freebsd)`"])
-AM_CONDITIONAL([NETBSD], [test -n "`(echo ${target_os} | grep netbsd)`"])
-AM_CONDITIONAL([XNU], [test -n "`(echo ${target_os} | grep darwin)`"])
+AM_CONDITIONAL([LINUX], [echo ${target_os} | grep -q linux])
+AM_CONDITIONAL([MACOSX], [echo ${target_os} | grep -q darwin])
+AM_CONDITIONAL([SOLARIS], [echo ${target_os} | grep -qE 'solaris|sunos'])
+AM_CONDITIONAL([NT], [echo ${target_os} | grep -qE 'mingw|cygwin'])
+AM_CONDITIONAL([CYGWIN], [echo ${target_os} | grep -qE 'cygwin'])
+AM_CONDITIONAL([AIX], [echo ${target_os} | grep -q aix])
+AM_CONDITIONAL([HPUX], [echo ${target_os} | grep -qE 'hpux|hp-ux'])
+AM_CONDITIONAL([FREEBSD], [echo ${target_os} | grep -q freebsd])
+AM_CONDITIONAL([NETBSD], [echo ${target_os} | grep -q netbsd])
+AM_CONDITIONAL([XNU], [echo ${target_os} | grep -q darwin])

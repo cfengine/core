@@ -2682,6 +2682,15 @@ void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config)
         // fall through
     case LOG_LEVEL_INFO:
         EvalContextClassPutHard(ctx, "inform_mode", "cfe_internal,source=agent");
+        // fall through
+    case LOG_LEVEL_NOTICE:
+        EvalContextClassPutHard(ctx, "notice_mode", "cfe_internal,source=agent");
+        // fall through
+    case LOG_LEVEL_WARNING:
+        EvalContextClassPutHard(ctx, "warning_mode", "cfe_internal,source=agent");
+        // fall through
+    case LOG_LEVEL_ERR:
+        EvalContextClassPutHard(ctx, "error_mode", "cfe_internal,source=agent");
         break;
     default:
         break;

@@ -1,0 +1,33 @@
+#######################################################
+#
+# Test mode_error hard class
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+    "description" -> { "CFE-4126" }
+      string => "Test mode error class";
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+    "Check Agent Output"
+      usebundle => dcs_passif_output(".*R: is error mode.*",
+                                     ".*R: is (debug|verbose|inform|notice|warning) mode.*",
+                                     "$(sys.cf_agent) --log-level error -Kf $(this.promise_dirname)/log_mode.cf.sub",
+                                     "$(this.promise_filename)");
+}

@@ -1,0 +1,79 @@
+##############################################################################
+#
+# Test that immutable bit can be cleared by agent with fsattrs immutable
+# constraint set to false.
+#
+##############################################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+body fsattrs set_immutable
+{
+  immutable => "true";
+}
+
+body fsattrs set_mutable
+{
+  immutable => "false";
+}
+
+bundle agent init
+{
+  files:
+    "/tmp/02_immutable.txt"
+      content => "I'm immutable",
+      fsattrs => set_immutable;
+}
+
+bundle agent test
+{
+  meta:
+    "description" -> { "CFE-1840", "ENT-10961" }
+      string => "Test that immutable bit can be cleared by agent with fsattrs immutable constraint set to false";
+
+    # "test_soft_fail" will not work here, because init will not be able to set
+    # the immutable bit, hence the agent will be able to mutate it, even without
+    # actually clearing it.
+    "test_skip_unsupported"
+      string => "hpux|aix|windows",
+      meta => { "CFE-1840", "ENT-10961" };
+
+  commands:
+    "$(sys.cf_agent) -Kf $(this.promise_filename).sub";
+}
+
+bundle agent check
+{
+  vars:
+    "expected"
+      string => "I'm mutable";
+    "actual"
+      string => readfile("/tmp/02_immutable.txt");
+
+  classes:
+    "ok"
+      expression => strcmp("$(actual)", "$(expected)");
+
+  methods:
+    "any"
+      usebundle => dcs_passif("ok", "$(this.promise_filename)"),
+      inherit => "true";
+
+  reports:
+    any::
+      "Expected: '$(expected)', actual: '$(actual)'";
+}
+
+bundle agent destroy
+{
+  files:
+    # Make sure immutable bit is not set
+    "/tmp/02_immutable.txt"
+      fsattrs => set_mutable,
+      delete => tidy;
+}

@@ -1,0 +1,23 @@
+#+begin_src cfengine3
+body common control
+{
+    bundlesequence => { "example" };
+}
+bundle agent example
+{
+    vars:
+        "filter" slist => {"gid=0", "name=root"};
+        "container" data => findlocalusers("@(filter)");
+        "root_list" slist => getindices("container");
+
+    reports:
+        "List: $(root_list)";
+}
+
+#+end_src
+#############################################################################
+#+begin_src example_output
+#@ ```
+#@ R: List: root
+#@ ```
+#+end_src

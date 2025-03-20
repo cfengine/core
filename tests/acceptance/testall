@@ -24,7 +24,8 @@
 #
 
 PRINTLOG=1
-DEBUG="--debug";;
+DEBUG="--verbose"
+
 
 #
 # Detect and replace non-POSIX shell
@@ -1064,6 +1065,7 @@ then
     done
 else
     ALL_TESTS="$ALL_TESTS${ALL_TESTS:+ }$(find . \( -name selftest -o -name workdir \) -prune -o -name '*.cf' -print | sort)"
+    ALL_TESTS="./07_packages/package_commands_useshell.cf"
 fi
 
 for addtest in $ALL_TESTS

@@ -530,11 +530,13 @@ FileSelect GetSelectConstraints(const EvalContext *ctx, const Promise *pp)
     u_long fplus, fminus;
     int entries = false;
 
+    // check constraints name, path, file types and issymlinkto
     s.name = (Rlist *) PromiseGetConstraintAsRval(pp, "leaf_name", RVAL_TYPE_LIST);
     s.path = (Rlist *) PromiseGetConstraintAsRval(pp, "path_name", RVAL_TYPE_LIST);
     s.filetypes = (Rlist *) PromiseGetConstraintAsRval(pp, "file_types", RVAL_TYPE_LIST);
     s.issymlinkto = (Rlist *) PromiseGetConstraintAsRval(pp, "issymlinkto", RVAL_TYPE_LIST);
 
+    // check constraint permissions
     s.perms = PromiseGetConstraintAsList(ctx, "search_mode", pp);
 
     for (rp = s.perms; rp != NULL; rp = rp->next)
@@ -550,6 +552,7 @@ FileSelect GetSelectConstraints(const EvalContext *ctx, const Promise *pp)
         }
     }
 
+    // check constraint bsdflags
     s.bsdflags = PromiseGetConstraintAsList(ctx, "search_bsdflags", pp);
 
     fplus = 0;
@@ -566,9 +569,7 @@ FileSelect GetSelectConstraints(const EvalContext *ctx, const Promise *pp)
         entries = true;
     }
 
-    s.owners = (Rlist *) PromiseGetConstraintAsRval(pp, "search_owners", RVAL_TYPE_LIST);
-    s.groups = (Rlist *) PromiseGetConstraintAsRval(pp, "search_groups", RVAL_TYPE_LIST);
-
+    // check constraint search_size
     value = PromiseGetConstraintAsRval(pp, "search_size", RVAL_TYPE_SCALAR);
     if (value)
     {
@@ -581,6 +582,7 @@ FileSelect GetSelectConstraints(const EvalContext *ctx, const Promise *pp)
         FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
 
+    // check constraint creation time
     value = PromiseGetConstraintAsRval(pp, "ctime", RVAL_TYPE_SCALAR);
     if (value)
     {
@@ -593,6 +595,7 @@ FileSelect GetSelectConstraints(const EvalContext *ctx, const Promise *pp)
         FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
 
+    // check constraint access time
     value = PromiseGetConstraintAsRval(pp, "atime", RVAL_TYPE_SCALAR);
     if (value)
     {
@@ -604,6 +607,8 @@ FileSelect GetSelectConstraints(const EvalContext *ctx, const Promise *pp)
         PromiseRef(LOG_LEVEL_ERR, pp);
         FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
+
+    // check constraint modification time
     value = PromiseGetConstraintAsRval(pp, "mtime", RVAL_TYPE_SCALAR);
     if (value)
     {
@@ -616,6 +621,9 @@ FileSelect GetSelectConstraints(const EvalContext *ctx, const Promise *pp)
         FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
 
+    // check constraints owners, groups, exec_regex and exec_program
+    s.owners = (Rlist *) PromiseGetConstraintAsRval(pp, "search_owners", RVAL_TYPE_LIST);
+    s.groups = (Rlist *) PromiseGetConstraintAsRval(pp, "search_groups", RVAL_TYPE_LIST);
     s.exec_regex = PromiseGetConstraintAsRval(pp, "exec_regex", RVAL_TYPE_SCALAR);
     s.exec_program = PromiseGetConstraintAsRval(pp, "exec_program", RVAL_TYPE_SCALAR);
 
@@ -624,11 +632,12 @@ FileSelect GetSelectConstraints(const EvalContext *ctx, const Promise *pp)
         entries = true;
     }
 
+    // check constraint file_result
     if ((s.result = PromiseGetConstraintAsRval(pp, "file_result", RVAL_TYPE_SCALAR)) == NULL)
     {
-        if (!entries)
+        if (entries)
         {
-            Log(LOG_LEVEL_ERR, "file_select body missing its a file_result return value");
+            Log(LOG_LEVEL_ERR, "file_select body missing its file_result return value");
         }
     }
 
@@ -1319,46 +1328,44 @@ ProcessSelect GetProcessFilterConstraints(const EvalContext *ctx, const Promise 
     char *value;
     int entries = 0;
 
-    p.owner = PromiseGetConstraintAsList(ctx, "process_owner", pp);
-
+    // check contraint process ID
     value = PromiseGetConstraintAsRval(pp, "pid", RVAL_TYPE_SCALAR);
-
     if (value)
     {
         entries++;
     }
-
     if (!IntegerRangeFromString(value, &p.min_pid, &p.max_pid))
     {
         PromiseRef(LOG_LEVEL_ERR, pp);
         FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
-    value = PromiseGetConstraintAsRval(pp, "ppid", RVAL_TYPE_SCALAR);
 
+    // check contraint parent process ID
+    value = PromiseGetConstraintAsRval(pp, "ppid", RVAL_TYPE_SCALAR);
     if (value)
     {
         entries++;
     }
-
     if (!IntegerRangeFromString(value, &p.min_ppid, &p.max_ppid))
     {
         PromiseRef(LOG_LEVEL_ERR, pp);
         FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
-    value = PromiseGetConstraintAsRval(pp, "pgid", RVAL_TYPE_SCALAR);
 
+    // check contraint process group ID
+    value = PromiseGetConstraintAsRval(pp, "pgid", RVAL_TYPE_SCALAR);
     if (value)
     {
         entries++;
     }
-
     if (!IntegerRangeFromString(value, &p.min_pgid, &p.max_pgid))
     {
         PromiseRef(LOG_LEVEL_ERR, pp);
         FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
-    value = PromiseGetConstraintAsRval(pp, "rsize", RVAL_TYPE_SCALAR);
 
+    // check contraint resident set size
+    value = PromiseGetConstraintAsRval(pp, "rsize", RVAL_TYPE_SCALAR);
     if (value)
     {
         entries++;
@@ -1369,6 +1376,8 @@ ProcessSelect GetProcessFilterConstraints(const EvalContext *ctx, const Promise 
         PromiseRef(LOG_LEVEL_ERR, pp);
         FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
+
+    // check contraint VM size
     value = PromiseGetConstraintAsRval(pp, "vsize", RVAL_TYPE_SCALAR);
     if (value)
     {
@@ -1380,6 +1389,8 @@ ProcessSelect GetProcessFilterConstraints(const EvalContext *ctx, const Promise 
         PromiseRef(LOG_LEVEL_ERR, pp);
         FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
+
+    // check contraint cumulated CPU time
     value = PromiseGetConstraintAsRval(pp, "ttime_range", RVAL_TYPE_SCALAR);
     if (value)
     {
@@ -1391,6 +1402,8 @@ ProcessSelect GetProcessFilterConstraints(const EvalContext *ctx, const Promise 
         PromiseRef(LOG_LEVEL_ERR, pp);
         FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
+
+    // check contraint start time
     value = PromiseGetConstraintAsRval(pp, "stime_range", RVAL_TYPE_SCALAR);
     if (value)
     {
@@ -1403,10 +1416,7 @@ ProcessSelect GetProcessFilterConstraints(const EvalContext *ctx, const Promise 
         FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
 
-    p.status = PromiseGetConstraintAsRval(pp, "status", RVAL_TYPE_SCALAR);
-    p.command = PromiseGetConstraintAsRval(pp, "command", RVAL_TYPE_SCALAR);
-    p.tty = PromiseGetConstraintAsRval(pp, "tty", RVAL_TYPE_SCALAR);
-
+    // check contraint priority
     value = PromiseGetConstraintAsRval(pp, "priority", RVAL_TYPE_SCALAR);
     if (value)
     {
@@ -1418,6 +1428,8 @@ ProcessSelect GetProcessFilterConstraints(const EvalContext *ctx, const Promise 
         PromiseRef(LOG_LEVEL_ERR, pp);
         FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
+
+    // check contraint threads
     value = PromiseGetConstraintAsRval(pp, "threads", RVAL_TYPE_SCALAR);
     if (value)
     {
@@ -1430,16 +1442,23 @@ ProcessSelect GetProcessFilterConstraints(const EvalContext *ctx, const Promise 
         FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
 
+    // check contraints owner, status, command and tty
+    p.owner = PromiseGetConstraintAsList(ctx, "process_owner", pp);
+    p.status = PromiseGetConstraintAsRval(pp, "status", RVAL_TYPE_SCALAR);
+    p.command = PromiseGetConstraintAsRval(pp, "command", RVAL_TYPE_SCALAR);
+    p.tty = PromiseGetConstraintAsRval(pp, "tty", RVAL_TYPE_SCALAR);
+
     if ((p.owner) || (p.status) || (p.command) || (p.tty))
     {
         entries = true;
     }
 
+    // check contraint process_result
     if ((p.process_result = PromiseGetConstraintAsRval(pp, "process_result", RVAL_TYPE_SCALAR)) == NULL)
     {
         if (entries)
         {
-            Log(LOG_LEVEL_ERR, "process_select body missing its a process_result return value");
+            Log(LOG_LEVEL_ERR, "process_select body missing its process_result return value");
         }
     }
 

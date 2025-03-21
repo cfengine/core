@@ -165,13 +165,6 @@ static bool FileSanityChecks(char *path, const Attributes *a, const Promise *pp)
         return false;
     }
 
-    if ((a->haveselect) && (a->select.result == NULL))
-    {
-        Log(LOG_LEVEL_ERR, "Missing file_result attribute in file_select body");
-        PromiseRef(LOG_LEVEL_ERR, pp);
-        return false;
-    }
-
     if ((a->havedepthsearch) && (a->change.report_diffs))
     {
         Log(LOG_LEVEL_ERR, "Difference reporting is not allowed during a depth_search");

@@ -130,7 +130,7 @@ static bool FileSanityChecks(char *path, const Attributes *a, const Promise *pp)
 
     if ((a->haveselect) && (!a->select.result))
     {
-        Log(LOG_LEVEL_ERR, "File select constraint body promised no result (check body definition)");
+        Log(LOG_LEVEL_ERR, "File selection failed: check file_select body definition; file_result attribute is not defined.");
         PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
     }
@@ -161,13 +161,6 @@ static bool FileSanityChecks(char *path, const Attributes *a, const Promise *pp)
     {
         Log(LOG_LEVEL_ERR, "File object(s) '%s' cannot both be a copy of source and transformed simultaneously",
               pp->promiser);
-        PromiseRef(LOG_LEVEL_ERR, pp);
-        return false;
-    }
-
-    if ((a->haveselect) && (a->select.result == NULL))
-    {
-        Log(LOG_LEVEL_ERR, "Missing file_result attribute in file_select body");
         PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
     }

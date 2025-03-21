@@ -3531,20 +3531,28 @@ static bool PrependMultiLinePackageItem(
         sscanf(vbuff, "%s", name);      /* trim */
     }
 
+    Log(LOG_LEVEL_INFO, "Debug #1");
     if (FullTextMatch(ctx, a->packages.package_list_version_regex, item))
     {
+        Log(LOG_LEVEL_INFO, "Debug #2");
         strlcpy(vbuff, ExtractFirstReference(a->packages.package_list_version_regex, item), CF_MAXVARSIZE );
+        Log(LOG_LEVEL_INFO, "Debug #3");
         sscanf(vbuff, "%s", version);   /* trim */
     }
 
+    Log(LOG_LEVEL_INFO, "Debug #4");
     if ((a->packages.package_list_arch_regex) && (FullTextMatch(ctx, a->packages.package_list_arch_regex, item)))
     {
+        Log(LOG_LEVEL_INFO, "Debug #5");
         if (a->packages.package_list_arch_regex)
         {
+            Log(LOG_LEVEL_INFO, "Debug #6");
             strlcpy(vbuff, ExtractFirstReference(a->packages.package_list_arch_regex, item), CF_MAXVARSIZE);
+            Log(LOG_LEVEL_INFO, "Debug #7");
             sscanf(vbuff, "%s", arch);  /* trim */
         }
     }
+    Log(LOG_LEVEL_INFO, "Debug #8");
 
     return true;
 }

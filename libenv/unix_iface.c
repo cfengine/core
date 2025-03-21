@@ -844,7 +844,7 @@ static void InitIgnoreInterfaces()
     FILE *fin;
     char filename[CF_BUFSIZE], regex[256];
 
-    int ret = snprintf(
+    NDEBUG_UNUSED int ret = snprintf(
         filename,
         sizeof(filename),
         "%s%c%s",

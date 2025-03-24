@@ -23,6 +23,9 @@
 # included file COSL.txt.
 #
 
+PRINTLOG=1
+DEBUG="--debug"
+
 #
 # Detect and replace non-POSIX shell
 #
@@ -1062,6 +1065,8 @@ then
 else
     ALL_TESTS="$ALL_TESTS${ALL_TESTS:+ }$(find . \( -name selftest -o -name workdir \) -prune -o -name '*.cf' -print | sort)"
 fi
+
+ALL_TESTS="./07_packages/package_commands_useshell.cf"
 
 for addtest in $ALL_TESTS
 do

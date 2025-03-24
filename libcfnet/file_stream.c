@@ -242,8 +242,10 @@ static bool ProtocolRecvMessage(SSL *conn, char *msg, size_t *len, bool *eof)
         if (err)
         {
             /* If the error flag is set, then the payload contains an error
-             * message in the form of a NUL-byte terminated string. */
-            Log(LOG_LEVEL_ERR, "Remote file stream error: %s", msg);
+             * message of 'len' bytes. */
+            assert(*len < sizeof(recv_buffer));
+            recv_buffer[*len] = '\0'; /* Set terminating null-byte */
+            Log(LOG_LEVEL_ERR, "Remote file stream error: %s", recv_buffer);
         }
     }
 
@@ -276,7 +278,7 @@ static bool ProtocolFlushStream(SSL *conn)
         }
     }
 
-    Log(LOG_LEVEL_ERR, "Remote file stream error: %s", msg);
+    /* Error is already logged in ProtocolRecvMessage() */
     return false;
 }
 

@@ -23,6 +23,8 @@
 # included file COSL.txt.
 #
 
+PRINTLOG=1
+
 #
 # Detect and replace non-POSIX shell
 #

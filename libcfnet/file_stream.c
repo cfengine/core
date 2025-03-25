@@ -169,7 +169,7 @@ static inline bool ProtocolSendMessage(
  * @param conn The SSL connection object
  * @param msg The message receive buffer (must be PROTOCOL_MESSAGE_SIZE bytes
  *            large)
- * @param len The length of the reveived message
+ * @param len The length of the received message
  * @param eof Is set to true if this was the last message in the transaction
  * @return true on success, otherwise false
  *
@@ -223,10 +223,11 @@ static bool ProtocolRecvMessage(SSL *conn, char *msg, size_t *len, bool *eof)
         /* The TLSRecv() function's doc string says that the returned value
          * may be less than the requested length if the other side completed a
          * send with less bytes. I take it that this means that there is no
-         * short reads/recvs. Futhermore, TLSSend() says that its return value
-         * is always equal to the requested length as long as TLS is setup
-         * correctly. I take it that the same is true for TLSRecv(). Hence, we
-         * will interpret a shorter read than what we expect as an error. */
+         * short reads/recvs. Furthermore, TLSSend() says that its return
+         * value is always equal to the requested length as long as TLS is
+         * setup correctly. I take it that the same is true for TLSRecv().
+         * Hence, we will interpret a shorter read than what we expect as an
+         * error. */
         ret = TLSRecv(conn, recv_buffer, *len);
         if (ret != *len)
         {

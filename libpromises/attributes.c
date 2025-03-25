@@ -626,7 +626,7 @@ FileSelect GetSelectConstraints(const EvalContext *ctx, const Promise *pp)
     // get constraint file_result
     if ((s.result = PromiseGetConstraintAsRval(pp, "file_result", RVAL_TYPE_SCALAR)) == NULL)
     {
-        if (!entries)
+        if (entries)
         {
             Log(LOG_LEVEL_ERR, "file_select body missing its a file_result return value");
         }

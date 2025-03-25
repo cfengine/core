@@ -589,7 +589,7 @@ void CfEncryptGetFile(ServerFileGetState *args)
 {
     int fd, n_read, cipherlen = 0, finlen = 0;
     off_t total = 0, count = 0;
-    char filename[CF_BUFSIZE];
+    char filename[CF_BUFSIZE - 128];
     unsigned char sendbuffer[CF_BUFSIZE + 256];
     unsigned char out[CF_BUFSIZE];
     unsigned char iv[32] =

@@ -376,8 +376,15 @@ static void AbortTransfer(ConnectionInfo *connection, char *filename)
     Log(LOG_LEVEL_VERBOSE, "Aborting transfer of file due to source changes");
 
     char sendbuffer[CF_BUFSIZE];
-    snprintf(sendbuffer, CF_BUFSIZE, "%s%s: %s",
+    int ret = snprintf(sendbuffer, CF_BUFSIZE, "%s%s: %s",
              CF_CHANGEDSTR1, CF_CHANGEDSTR2, filename);
+
+    if (ret < 0 || (size_t) ret >= CF_BUFSIZE)
+    {
+        Log(LOG_LEVEL_WARNING,
+            "Error message truncated in abort transfer transaction: "
+            "Filename too long");
+    }
 
     if (SendTransaction(connection, sendbuffer, 0, CF_DONE) == -1)
     {
@@ -589,7 +596,7 @@ void CfEncryptGetFile(ServerFileGetState *args)
 {
     int fd, n_read, cipherlen = 0, finlen = 0;
     off_t total = 0, count = 0;
-    char filename[CF_BUFSIZE - 128];
+    char filename[CF_BUFSIZE];
     unsigned char sendbuffer[CF_BUFSIZE + 256];
     unsigned char out[CF_BUFSIZE];
     unsigned char iv[32] =

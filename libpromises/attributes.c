@@ -535,8 +535,6 @@ FileSelect GetSelectConstraints(const EvalContext *ctx, const Promise *pp)
 
     for (rp = s.perms; rp != NULL; rp = rp->next)
     {
-        plus = 0;
-        minus = 0;
         value = RlistScalarValue(rp);
 
         if (!ParseModeString(value, &plus, &minus))
@@ -548,9 +546,6 @@ FileSelect GetSelectConstraints(const EvalContext *ctx, const Promise *pp)
 
     // get constraint bsdflags
     s.bsdflags = PromiseGetConstraintAsList(ctx, "search_bsdflags", pp);
-
-    fplus = 0;
-    fminus = 0;
 
     // cannot fail, ParseFlagString always returns true
     if (!ParseFlagString(s.bsdflags, &fplus, &fminus))

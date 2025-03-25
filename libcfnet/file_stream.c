@@ -385,41 +385,28 @@ static bool RecvSignature(SSL *conn, rs_signature_t **sig)
         /* Fill input buffers */
         if (bufs.eof_in == 0)
         {
-            if (bufs.avail_in > PROTOCOL_MESSAGE_SIZE)
-            {
-                /* The job requires more data, but we cannot fit another
-                 * message into the input buffer */
-                Log(LOG_LEVEL_ERR,
-                    "Insufficient buffer capacity to receive file stream signature: "
-                    "%zu of %zu bytes available, but %d bytes is required to fit another message",
-                    sizeof(in_buf) - bufs.avail_in,
-                    sizeof(in_buf),
-                    PROTOCOL_MESSAGE_SIZE);
-                ProtocolSendError(conn, true, ERROR_MSG_INTERNAL_SERVER_ERROR);
-
-                rs_job_free(job);
-                return false;
-            }
-
             if (bufs.avail_in > 0)
             {
                 /* Move leftover tail data to the front of the buffer */
                 memmove(in_buf, bufs.next_in, bufs.avail_in);
+                bufs.next_in = in_buf;
             }
 
-            size_t n_bytes;
-            bool eof;
-            if (!ProtocolRecvMessage(
-                    conn, in_buf + bufs.avail_in, &n_bytes, &eof))
+            if (bufs.avail_in <= PROTOCOL_MESSAGE_SIZE)
             {
-                /* Error is already logged */
-                rs_job_free(job);
-                return false;
-            }
+                size_t n_bytes;
+                bool eof;
+                if (!ProtocolRecvMessage(
+                        conn, in_buf + bufs.avail_in, &n_bytes, &eof))
+                {
+                    /* Error is already logged */
+                    rs_job_free(job);
+                    return false;
+                }
 
-            bufs.eof_in = eof ? 1 : 0;
-            bufs.next_in = in_buf;
-            bufs.avail_in += n_bytes;
+                bufs.eof_in = eof ? 1 : 0;
+                bufs.avail_in += n_bytes;
+            }
         }
 
         /* Iterate job */
@@ -503,56 +490,43 @@ static bool SendDelta(SSL *conn, rs_signature_t *sig, const char *filename)
         /* Fill input buffers */
         if (bufs.eof_in == 0)
         {
-            if (bufs.avail_in >= sizeof(in_buf))
-            {
-                /* The job requires more data, but the input buffer is full */
-                Log(LOG_LEVEL_ERR,
-                    "Insufficient buffer capacity to compute delta: "
-                    "%zu of %zu bytes available",
-                    sizeof(in_buf) - bufs.avail_in,
-                    sizeof(in_buf));
-                ProtocolSendError(
-                    conn, false, ERROR_MSG_INTERNAL_SERVER_ERROR);
-
-                fclose(file);
-                rs_job_free(job);
-                return false;
-            }
-
             if (bufs.avail_in > 0)
             {
                 /* Move leftover tail data to the front of the buffer */
                 memmove(in_buf, bufs.next_in, bufs.avail_in);
+                bufs.next_in = in_buf;
             }
 
-            size_t n_bytes = fread(
-                in_buf + bufs.avail_in,
-                1 /* Byte */,
-                sizeof(in_buf) - bufs.avail_in,
-                file);
-            if (n_bytes == 0)
+            if ((sizeof(in_buf) - bufs.avail_in) > 0)
             {
-                if (ferror(file))
+                size_t n_bytes = fread(
+                    in_buf + bufs.avail_in,
+                    1 /* Byte */,
+                    sizeof(in_buf) - bufs.avail_in,
+                    file);
+                if (n_bytes == 0)
                 {
-                    Log(LOG_LEVEL_ERR,
-                        "Failed to read the source file '%s' during file stream: %s",
-                        filename,
-                        GetErrorStr());
-                    ProtocolSendError(
-                        conn, false, ERROR_MSG_INTERNAL_SERVER_ERROR);
+                    if (ferror(file))
+                    {
+                        Log(LOG_LEVEL_ERR,
+                            "Failed to read the source file '%s' during file stream: %s",
+                            filename,
+                            GetErrorStr());
+                        ProtocolSendError(
+                            conn, false, ERROR_MSG_INTERNAL_SERVER_ERROR);
 
-                    fclose(file);
-                    rs_job_free(job);
-                    return false;
+                        fclose(file);
+                        rs_job_free(job);
+                        return false;
+                    }
+
+                    /* End-of-File reached */
+                    bufs.eof_in = feof(file);
+                    assert(bufs.eof_in != 0);
                 }
 
-                /* End-of-File reached */
-                bufs.eof_in = feof(file);
-                assert(bufs.eof_in != 0);
+                bufs.avail_in += n_bytes;
             }
-
-            bufs.next_in = in_buf;
-            bufs.avail_in += n_bytes;
         }
 
         /* Iterate job */
@@ -740,58 +714,45 @@ static bool SendSignature(SSL *conn, const char *filename, bool print_stats)
     {
         if (bufs.eof_in == 0)
         {
-            if (bufs.avail_in >= sizeof(in_buf))
-            {
-                /* The job requires more data, but the input buffer is full */
-                Log(LOG_LEVEL_ERR,
-                    "Insufficient buffer capacity to compute delta: "
-                    "%zu of %zu bytes available",
-                    sizeof(in_buf) - bufs.avail_in,
-                    sizeof(in_buf));
-                ProtocolSendError(
-                    conn, false, ERROR_MSG_INTERNAL_CLIENT_ERROR);
-
-                fclose(file);
-                rs_job_free(job);
-                return false;
-            }
-
             if (bufs.avail_in > 0)
             {
                 /* Move leftover tail data to the front of the buffer */
                 memmove(in_buf, bufs.next_in, bufs.avail_in);
+                bufs.next_in = in_buf;
             }
 
             /* Fill input buffer */
-            size_t n_bytes = fread(
-                in_buf + bufs.avail_in,
-                1 /* Byte */,
-                sizeof(in_buf) - bufs.avail_in,
-                file);
-            if (n_bytes == 0)
+            if ((sizeof(in_buf) - bufs.avail_in) > 0)
             {
-                if (ferror(file))
+                size_t n_bytes = fread(
+                    in_buf + bufs.avail_in,
+                    1 /* Byte */,
+                    sizeof(in_buf) - bufs.avail_in,
+                    file);
+                if (n_bytes == 0)
                 {
-                    Log(LOG_LEVEL_ERR,
-                        "Failed to read the basis file '%s' during file stream: %s",
-                        filename,
-                        GetErrorStr());
-                    ProtocolSendError(
-                        conn, false, ERROR_MSG_INTERNAL_CLIENT_ERROR);
+                    if (ferror(file))
+                    {
+                        Log(LOG_LEVEL_ERR,
+                            "Failed to read the basis file '%s' during file stream: %s",
+                            filename,
+                            GetErrorStr());
+                        ProtocolSendError(
+                            conn, false, ERROR_MSG_INTERNAL_CLIENT_ERROR);
 
-                    fclose(file);
-                    rs_job_free(job);
-                    return false;
+                        fclose(file);
+                        rs_job_free(job);
+                        return false;
+                    }
+
+                    /* End-of-File reached */
+                    bufs.eof_in = feof(file);
+                    assert(bufs.eof_in != 0);
                 }
 
-                /* End-of-File reached */
-                bufs.eof_in = feof(file);
-                assert(bufs.eof_in != 0);
+                bufs.avail_in += n_bytes;
+                bytes_in += n_bytes;
             }
-
-            bufs.next_in = in_buf;
-            bufs.avail_in += n_bytes;
-            bytes_in += n_bytes;
         }
 
         /* Iterate job */
@@ -941,48 +902,32 @@ static bool RecvDelta(
         /* Fill input buffers */
         if (bufs.eof_in == 0)
         {
-            if (bufs.avail_in > PROTOCOL_MESSAGE_SIZE)
-            {
-                /* The job requires more data, but we cannot fit another
-                 * message into the input buffer */
-                Log(LOG_LEVEL_ERR,
-                    "Insufficient buffer capacity to receive file stream delta: "
-                    "%zu of %zu bytes available, but %d bytes is required to fit another message",
-                    sizeof(in_buf) - bufs.avail_in,
-                    sizeof(in_buf),
-                    PROTOCOL_MESSAGE_SIZE);
-                ProtocolFlushStream(conn);
-
-                close(new);
-                fclose(old);
-                rs_job_free(job);
-                unlink(dest);
-                return false;
-            }
-
             if (bufs.avail_in > 0)
             {
                 /* Move leftover tail data to the front of the buffer */
                 memmove(in_buf, bufs.next_in, bufs.avail_in);
+                bufs.next_in = in_buf;
             }
 
-            size_t n_bytes;
-            bool eof;
-            if (!ProtocolRecvMessage(
-                    conn, in_buf + bufs.avail_in, &n_bytes, &eof))
+            if (bufs.avail_in <= PROTOCOL_MESSAGE_SIZE)
             {
-                /* Error is already logged */
-                close(new);
-                fclose(old);
-                rs_job_free(job);
-                unlink(dest);
-                return false;
-            }
+                size_t n_bytes;
+                bool eof;
+                if (!ProtocolRecvMessage(
+                        conn, in_buf + bufs.avail_in, &n_bytes, &eof))
+                {
+                    /* Error is already logged */
+                    close(new);
+                    fclose(old);
+                    rs_job_free(job);
+                    unlink(dest);
+                    return false;
+                }
 
-            bufs.eof_in = eof ? 1 : 0;
-            bufs.next_in = in_buf;
-            bufs.avail_in += n_bytes;
-            bytes_in += n_bytes;
+                bufs.eof_in = eof ? 1 : 0;
+                bufs.avail_in += n_bytes;
+                bytes_in += n_bytes;
+            }
         }
 
         res = rs_job_iter(job, &bufs);

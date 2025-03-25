@@ -628,7 +628,7 @@ FileSelect GetSelectConstraints(const EvalContext *ctx, const Promise *pp)
     {
         if (entries)
         {
-            Log(LOG_LEVEL_ERR, "file_select body missing its a file_result return value");
+            Log(LOG_LEVEL_ERR, "file_select body missing its file_result return value");
         }
     }
 
@@ -1453,7 +1453,7 @@ ProcessSelect GetProcessFilterConstraints(const EvalContext *ctx, const Promise 
     {
         if (entries)
         {
-            Log(LOG_LEVEL_ERR, "process_select body missing its a process_result return value");
+            Log(LOG_LEVEL_ERR, "process_select body missing its process_result return value");
         }
     }
 

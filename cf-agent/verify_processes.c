@@ -93,13 +93,6 @@ static bool ProcessSanityChecks(const Attributes *a, const Promise *pp)
         ret = false;
     }
 
-    if ((a->haveselect) && (!a->process_select.process_result))
-    {
-        Log(LOG_LEVEL_ERR, "Process select constraint body promised no result (check body definition)");
-        PromiseRef(LOG_LEVEL_ERR, pp);
-        ret = false;
-    }
-
     // CF_NOINT is the value assigned when match_range is not specified
     if ((a->haveprocess_count) && ((a->process_count.min_range == CF_NOINT) || (a->process_count.max_range == CF_NOINT)))
     {
@@ -114,7 +107,6 @@ static bool ProcessSanityChecks(const Attributes *a, const Promise *pp)
         PromiseRef(LOG_LEVEL_ERR, pp);
         ret = false;
     }
-
 
     return ret;
 }

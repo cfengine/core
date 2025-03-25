@@ -151,6 +151,7 @@ static bool SelectProcess(const char *procentry,
     assert(a != NULL);
 
     StringSet *process_select_attributes = StringSetNew();
+    bool unmatched_attribute = false;
 
     memset(column, 0, sizeof(column));
 
@@ -196,34 +197,63 @@ static bool SelectProcess(const char *procentry,
         }
     }
 
+    if (a->owner && !StringSetContains(process_select_attributes, "process_owner"))
+    {
+        unmatched_attribute = true;
+    }
+
     if (SelectProcRangeMatch("PID", "PID", a->min_pid, a->max_pid, names, column))
     {
         StringSetAdd(process_select_attributes, xstrdup("pid"));
+    }
+    else if (a->min_pid != CF_NOINT)
+    {
+        unmatched_attribute = true;
     }
 
     if (SelectProcRangeMatch("PPID", "PPID", a->min_ppid, a->max_ppid, names, column))
     {
         StringSetAdd(process_select_attributes, xstrdup("ppid"));
     }
+    else if (a->min_ppid != CF_NOINT)
+    {
+        unmatched_attribute = true;
+    }
 
     if (SelectProcRangeMatch("PGID", "PGID", a->min_pgid, a->max_pgid, names, column))
     {
         StringSetAdd(process_select_attributes, xstrdup("pgid"));
+    }
+    else if (a->min_pgid != CF_NOINT)
+    {
+        unmatched_attribute = true;
     }
 
     if (SelectProcRangeMatch("VSZ", "SZ", a->min_vsize, a->max_vsize, names, column))
     {
         StringSetAdd(process_select_attributes, xstrdup("vsize"));
     }
+    else if (a->min_vsize != CF_NOINT)
+    {
+        unmatched_attribute = true;
+    }
 
     if (SelectProcRangeMatch("RSS", "RSS", a->min_rsize, a->max_rsize, names, column))
     {
         StringSetAdd(process_select_attributes, xstrdup("rsize"));
     }
+    else if (a->min_rsize != CF_NOINT)
+    {
+        unmatched_attribute = true;
+    }
 
     if (SelectProcTimeCounterRangeMatch("TIME", "TIME", a->min_ttime, a->max_ttime, names, column))
     {
         StringSetAdd(process_select_attributes, xstrdup("ttime"));
+    }
+    else if (a->min_ttime != CF_NOINT)
+    {
+        unmatched_attribute = true;
     }
 
     if (SelectProcTimeAbsRangeMatch
@@ -231,35 +261,63 @@ static bool SelectProcess(const char *procentry,
     {
         StringSetAdd(process_select_attributes, xstrdup("stime"));
     }
+    else if (a->min_stime != CF_NOINT)
+    {
+        unmatched_attribute = true;
+    }
 
     if (SelectProcRangeMatch("NI", "PRI", a->min_pri, a->max_pri, names, column))
     {
         StringSetAdd(process_select_attributes, xstrdup("priority"));
+    }
+    else if (a->min_pri != CF_NOINT)
+    {
+        unmatched_attribute = true;
     }
 
     if (SelectProcRangeMatch("NLWP", "NLWP", a->min_thread, a->max_thread, names, column))
     {
         StringSetAdd(process_select_attributes, xstrdup("threads"));
     }
+    else if (a->min_thread != CF_NOINT)
+    {
+        unmatched_attribute = true;
+    }
 
     if (SelectProcRegexMatch("S", "STAT", a->status, true, names, column))
     {
         StringSetAdd(process_select_attributes, xstrdup("status"));
+    }
+    else if (a->status)
+    {
+        unmatched_attribute = true;
     }
 
     if (SelectProcRegexMatch("CMD", "COMMAND", a->command, true, names, column))
     {
         StringSetAdd(process_select_attributes, xstrdup("command"));
     }
+    else if (a->command)
+    {
+        unmatched_attribute = true;
+    }
 
     if (SelectProcRegexMatch("TTY", "TTY", a->tty, true, names, column))
     {
         StringSetAdd(process_select_attributes, xstrdup("tty"));
     }
+    else if (a->tty)
+    {
+        unmatched_attribute = true;
+    }
 
     if (!a->process_result)
     {
         if (StringSetSize(process_select_attributes) == 0)
+        {
+            result = EvalProcessResult("", process_select_attributes);
+        }
+        else if (unmatched_attribute)
         {
             result = EvalProcessResult("", process_select_attributes);
         }
@@ -371,6 +429,8 @@ static bool SelectProcRangeMatch(char *name1, char *name2, int min, int max, cha
 
         if ((min <= value) && (value <= max))
         {
+            Log(LOG_LEVEL_VERBOSE, "Selection filter matched absolute '%s/%s' = '%s(%jd)' in [%jd,%jd]", name1, name2, line[i], (intmax_t)value,
+                  (intmax_t)min, (intmax_t)max);
             return true;
         }
         else

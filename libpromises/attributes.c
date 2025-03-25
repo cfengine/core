@@ -622,7 +622,7 @@ FileSelect GetSelectConstraints(const EvalContext *ctx, const Promise *pp)
     s.issymlinkto = (Rlist *) PromiseGetConstraintAsRval(pp, "issymlinkto", RVAL_TYPE_LIST);
 
     // check if file_result is needed
-    if ((s.owners) || (s.min_size) || (s.exec_regex) || (s.exec_program) || (s.filetypes)
+    if ((s.owners) || (s.groups) || (s.exec_regex) || (s.exec_program) || (s.filetypes)
             || (s.name) || (s.path) || (s.issymlinkto) || (s.perms) || (s.bsdflags))
     {
         entries = true;

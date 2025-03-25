@@ -120,8 +120,8 @@ static bool __ProtocolSendMessage(
         Log(LOG_LEVEL_ERR,
             "Failed to send message header during file stream: "
             "Expected to send %d bytes, but sent %d bytes",
-            ret,
-            PROTOCOL_HEADER_SIZE);
+            PROTOCOL_HEADER_SIZE,
+            ret);
         return false;
     }
 
@@ -133,9 +133,9 @@ static bool __ProtocolSendMessage(
         {
             Log(LOG_LEVEL_ERR,
                 "Failed to send message payload during file stream: "
-                "Expected to send %d bytes, but sent %zu bytes",
-                ret,
-                len);
+                "Expected to send %zu bytes, but sent %d bytes",
+                len,
+                ret);
             return false;
         }
     }
@@ -194,8 +194,8 @@ static bool ProtocolRecvMessage(SSL *conn, char *msg, size_t *len, bool *eof)
         Log(LOG_LEVEL_ERR,
             "Failed to receive message header during file stream: "
             "Expected to receive %d bytes, but received %d bytes",
-            ret,
-            PROTOCOL_HEADER_SIZE);
+            PROTOCOL_HEADER_SIZE,
+            ret);
         return false;
     }
 
@@ -233,9 +233,9 @@ static bool ProtocolRecvMessage(SSL *conn, char *msg, size_t *len, bool *eof)
         {
             Log(LOG_LEVEL_ERR,
                 "Failed to receive message payload during file stream: "
-                "Expected to receive %d bytes, but received %zu bytes",
-                ret,
-                *len);
+                "Expected to receive %zu bytes, but received %d bytes",
+                *len,
+                ret);
             return false;
         }
         memcpy(msg, recv_buffer, *len);

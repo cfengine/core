@@ -18,9 +18,6 @@ jobs:
       run: libtool -V && automake --version && autoconf --version
     - name: Run autotools / configure
       run: >
-        LDFLAGS="-L`brew --prefix lmdb`/lib -L`brew --prefix openssl`/lib -L`brew --prefix pcre2`/lib"
-        CPPFLAGS="-I`brew --prefix lmdb`/include -I`brew --prefix openssl`/include -I`brew --prefix pcre2`/include"
-        PATH="/opt/homebrew/opt/libtool/libexec/gnubin:$PATH"
         ./autogen.sh --enable-debug
     - name: Compile and link
       run: MACOSX_DEPLOYMENT_TARGET=15.4 make -j8 CFLAGS="-Werror -Wall"

@@ -27,6 +27,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/libntech/libutils \
 	-I$(top_srcdir)/libpromises \
 	$(PCRE2_CPPFLAGS) \
 	$(SYSTEMD_SOCKET_CPPFLAGS) \
+	$(LIBRSYNC_CPPFLAGS) \
 	$(OPENSSL_CPPFLAGS)
 
 libcfnet_la_SOURCES = \

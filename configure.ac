@@ -123,6 +123,17 @@ AC_PROG_CC
 AC_PROG_MKDIR_P
 AC_EXEEXT
 
+AS_CASE([${target_os}],
+[darwin*], [
+    AC_CHECK_PROG([BREW], [brew], [brew])
+    AC_MSG_CHECKING([for OS X Homebrew])
+    AS_IF([test "x$BREW" = "xbrew"], [
+            have_brew=yes
+            AC_MSG_RESULT([OS X Homebrew detected])
+        ],
+        [have_brew=])
+])
+
 dnl GCC specific flags
 m4_include([m4/cf3_gcc_flags.m4])
 
@@ -374,6 +385,8 @@ then
         fi
     fi
 
+    AS_IF([test "x$have_brew" = "xyes" && test -d $(brew --prefix mysql)/], [with_mysql=$(brew --prefix mysql)])
+
     CF3_WITH_LIBRARY(mysql,
         [AC_CHECK_LIB(mysqlclient, mysql_real_connect,
             [],
@@ -437,6 +450,8 @@ AC_ARG_WITH([lmdb],
 AS_IF([test $WITH_TOKYO -eq 0 && test $WITH_QDBM -eq 0 && (! test -n "$with_lmdb" || test "x$with_lmdb" != "xno")], [WITH_LMDB=1], [WITH_LMDB=0])
 
 if test $WITH_LMDB = 1; then
+  AS_IF([test "x$have_brew" = "xyes" && test -d $(brew --prefix lmdb)/], [with_lmdb=$(brew --prefix lmdb)])
+
   CF3_WITH_LIBRARY(lmdb, [
     AC_CHECK_LIB(lmdb, mdb_dbi_open, [], [AC_MSG_ERROR(Cannot find Lightning MDB)])
     AC_CHECK_HEADERS(lmdb.h, [], [AC_MSG_ERROR(Cannot find Lightning MDB)])
@@ -460,13 +475,7 @@ if test x"$with_openssl" = xno ; then
     AC_MSG_ERROR([This release of CFEngine requires OpenSSL >= 0.9.7])
 fi
 
-if  test -d /usr/local/Cellar/ && \
-    test -d /usr/local/opt/openssl/ && \
-    test "x$with_openssl" = "xyes" ; then
-    with_openssl=$(brew --prefix openssl)
-    echo "OS X Homebrew detected"
-    echo "Defaulting to: --with-openssl=$with_openssl"
-fi
+AS_IF([test "x$have_brew" = "xyes" && test -d $(brew --prefix openssl)/], [with_openssl=$(brew --prefix openssl)])
 
 CF3_WITH_LIBRARY(openssl, [
    AC_CHECK_LIB(crypto, RSA_generate_key_ex, [], [])
@@ -505,11 +514,14 @@ CF3_WITH_LIBRARY(openssl, [
 ])
 
 dnl PCRE2
+
 AC_ARG_WITH([pcre2], [AS_HELP_STRING([--with-pcre2[[=PATH]]], [Specify PCRE2 path])], [], [with_pcre2=yes])
 
 if test "x$with_pcre2" = "xno"; then
    AC_MSG_ERROR([PCRE2 is required])
 fi
+
+AS_IF([test "x$have_brew" = "xyes" && test -d $(brew --prefix pcre2)/], [with_pcre2=$(brew --prefix pcre2)])
 
 CF3_WITH_LIBRARY(pcre2, [
   AC_CHECK_LIB(pcre2-8, pcre2_compile_8, [], [AC_MSG_ERROR(Cannot find PCRE2)])
@@ -534,6 +546,8 @@ AC_ARG_WITH([libvirt],
 
 if test "x$with_libvirt" != xno
 then
+    AS_IF([test "x$have_brew" = "xyes" && test -d $(brew --prefix libvirt)/], [with_libvirt=$(brew --prefix libvirt)])
+
    CF3_WITH_LIBRARY(libvirt, [
       AC_CHECK_LIB(virt, virConnectOpen, [], [if test "x$with_libvirt" != xcheck; then AC_MSG_ERROR(Cannot find libvirt library); fi])
       AC_CHECK_HEADERS(libvirt/libvirt.h, [], [if test "x$with_libvirt" != xcheck; then AC_MSG_ERROR(Cannot find libvirt library headers); fi])
@@ -573,6 +587,8 @@ AC_ARG_WITH([libcurl],
 
 if test "x$with_libcurl" != xno
 then
+  AS_IF([test "x$have_brew" = "xyes" && test -d $(brew --prefix curl)/], [with_libcurl=$(brew --prefix curl)])
+
   CF3_WITH_LIBRARY(libcurl, [
     AC_CHECK_LIB(curl, curl_global_init,
       [],
@@ -598,6 +614,8 @@ AC_ARG_WITH([libyaml],
 
 if test "x$with_libyaml" != xno
 then
+  AS_IF([test "x$have_brew" = "xyes" && test -d $(brew --prefix libyaml)/], [with_libyaml=$(brew --prefix libyaml)])
+
   CF3_WITH_LIBRARY(libyaml, [
     AC_CHECK_LIB(yaml, yaml_parser_initialize,
       [],
@@ -620,7 +638,13 @@ AC_ARG_WITH([libxml2],
 have_libxml2="no"
 
 if test "x$with_libxml2" != "xno"; then
-    if test -n "$PKG_CONFIG"; then
+    if test "x$have_brew" = "xyes" && \
+        test -d $(brew --prefix libxml2)/; then
+            with_libxml2=$(brew --prefix libxml2)
+            echo "OS X Homebrew detected"
+            echo "Defaulting to: --with-libxml2=$with_libxml2"
+            have_libxml2="yes"
+    elif test -n "$PKG_CONFIG"; then
         AC_MSG_CHECKING([for libxml2 via pkg-config])
         if `$PKG_CONFIG --exists libxml-2.0`; then
             LIBXML2_CFLAGS=`$PKG_CONFIG --cflags libxml-2.0`
@@ -1758,6 +1782,8 @@ AC_MSG_RESULT([> Required libraries])
 AC_MSG_RESULT([-> OpenSSL: $OPENSSL_PATH])
 
 AC_MSG_RESULT([-> PCRE2: $PCRE2_PATH])
+
+AC_MSG_RESULT([-> Rsync: $LIBRSYNC_PATH])
 
 if test $WITH_TOKYO = 1; then
   AC_MSG_RESULT([-> DB: Tokyo Cabinet: $TOKYOCABINET_PATH])

@@ -737,15 +737,30 @@ static FnCallResult FnCallHostsSeen(ARG_UNUSED EvalContext *ctx, ARG_UNUSED cons
 
 /*********************************************************************/
 
-static FnCallResult FnCallHostsWithClass(EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
+static FnCallResult FnCallHostsWithField(EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
+    assert(fp != NULL);
     Rlist *returnlist = NULL;
 
-    char *class_name = RlistScalarValue(finalargs);
+    char *field_value = RlistScalarValue(finalargs);
     char *return_format = RlistScalarValue(finalargs->next);
-
-    if (!ListHostsWithClass(ctx, &returnlist, class_name, return_format))
+    if (StringEqual(fp->name, "hostswithclass"))
     {
+        if (!ListHostsWithField(ctx, &returnlist, field_value, return_format, HOSTS_WITH_CLASS))
+        {
+            return FnFailure();
+        }
+    }
+    else if (StringEqual(fp->name, "hostswithgroup"))
+    {
+        if (!ListHostsWithField(ctx, &returnlist, field_value, return_format, HOSTS_WITH_GROUP))
+        {
+            return FnFailure();
+        }
+    }
+    else
+    {
+        ProgrammingError("HostsWithField with unknown call function %s, aborting", fp->name);
         return FnFailure();
     }
 
@@ -9754,6 +9769,13 @@ static const FnCallArg HOSTSWITHCLASS_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg HOSTSWITHGROUP_ARGS[] =
+{
+    {"[a-zA-Z0-9_]+", CF_DATA_TYPE_STRING, "Group name to look for"},
+    {"name,address,hostkey", CF_DATA_TYPE_OPTION, "Type of return value desired"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
 static const FnCallArg IFELSE_ARGS[] =
 {
     {NULL, CF_DATA_TYPE_NONE, NULL}
@@ -10606,7 +10628,9 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("hostsseen", CF_DATA_TYPE_STRING_LIST, HOSTSSEEN_ARGS, &FnCallHostsSeen, "Extract the list of hosts last seen/not seen within the last arg1 hours",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("hostswithclass", CF_DATA_TYPE_STRING_LIST, HOSTSWITHCLASS_ARGS, &FnCallHostsWithClass, "Extract the list of hosts with the given class set from the hub database (enterprise extension)",
+    FnCallTypeNew("hostswithclass", CF_DATA_TYPE_STRING_LIST, HOSTSWITHCLASS_ARGS, &FnCallHostsWithField, "Extract the list of hosts with the given class set from the hub database (enterprise extension)",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("hostswithgroup", CF_DATA_TYPE_STRING_LIST, HOSTSWITHGROUP_ARGS, &FnCallHostsWithField, "Extract the list of hosts of a given group from the hub database (enterprise extension)",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("hubknowledge", CF_DATA_TYPE_STRING, HUB_KNOWLEDGE_ARGS, &FnCallHubKnowledge, "Read global knowledge from the hub host by id (enterprise extension)",
                   FNCALL_OPTION_CACHED, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL),

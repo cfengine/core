@@ -1,0 +1,58 @@
+/*
+  Copyright 2025 Northern.tech AS
+
+  This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
+
+  This program is free software; you can redistribute it and/or modify it
+  under the terms of the GNU General Public License as published by the
+  Free Software Foundation; version 3.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+  To the extent this program is licensed as part of the Enterprise
+  versions of CFEngine, the applicable Commercial Open Source License
+  (COSL) may apply to this file if you as a licensee so wish it. See
+  included file COSL.txt.
+*/
+
+#ifndef CFENGINE_OVERRIDE_FSATTRS_H
+#define CFENGINE_OVERRIDE_FSATTRS_H
+
+#include <stdbool.h>
+#include <stddef.h>
+
+/**
+ * @brief Creates a mutable copy of the original file
+ * @param orig The original file (may be immutable)
+ * @param copy Updated to contain the filename of the mutable copy
+ * @param copy_len The size of the buffer to store the filename of the copy
+ * @return false in case of failure
+ */
+bool OverrideImmutableBegin(const char *orig, char *copy, size_t copy_len);
+
+/**
+ * @brief Temporarily clears the immutable bit of the original file and
+ * replaces it with the mutated copy
+ * @param orig The original file (may be immutable)
+ * @param copy The mutated copy to replace the original
+ * @return false in case of failure
+ * @note The immutable bit is reset to it's original state
+ */
+bool OverrideImmutableCommit(const char *orig, const char *copy);
+
+/**
+ * @brief Simply unlinks the mutable copy
+ * @param orig Not used (reserved in for future use)
+ * @param copy The mutated copy to unlink
+ * @return false in case of failure (but you probably don't care)
+ */
+bool OverrideImmutableAbort(const char *orig, const char *copy);
+
+#endif /* CFENGINE_OVERRIDE_FSATTRS_H */

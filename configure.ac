@@ -385,7 +385,10 @@ then
         fi
     fi
 
-    AS_IF([test "x$have_brew" = "xyes" && test -d $(brew --prefix mysql)/], [with_mysql=$(brew --prefix mysql)])
+    AS_IF(
+      [(test "x$with_mysql" = xyes || test "x$with_mysql" = xcheck) \
+       && test "x$have_brew" = "xyes" && test -d $(brew --prefix mysql)/],
+      [with_mysql=$(brew --prefix mysql)])
 
     CF3_WITH_LIBRARY(mysql,
         [AC_CHECK_LIB(mysqlclient, mysql_real_connect,
@@ -450,7 +453,10 @@ AC_ARG_WITH([lmdb],
 AS_IF([test $WITH_TOKYO -eq 0 && test $WITH_QDBM -eq 0 && (! test -n "$with_lmdb" || test "x$with_lmdb" != "xno")], [WITH_LMDB=1], [WITH_LMDB=0])
 
 if test $WITH_LMDB = 1; then
-  AS_IF([test "x$have_brew" = "xyes" && test -d $(brew --prefix lmdb)/], [with_lmdb=$(brew --prefix lmdb)])
+  AS_IF(
+    [(test "x$with_lmdb" = xyes || test "x$with_lmdb" = xcheck || test "x$with_lmdb" = x) \
+     && test "x$have_brew" = "xyes" && test -d $(brew --prefix lmdb)/],
+    [with_lmdb=$(brew --prefix lmdb)])
 
   CF3_WITH_LIBRARY(lmdb, [
     AC_CHECK_LIB(lmdb, mdb_dbi_open, [], [AC_MSG_ERROR(Cannot find Lightning MDB)])
@@ -475,7 +481,10 @@ if test x"$with_openssl" = xno ; then
     AC_MSG_ERROR([This release of CFEngine requires OpenSSL >= 0.9.7])
 fi
 
-AS_IF([test "x$have_brew" = "xyes" && test -d $(brew --prefix openssl)/], [with_openssl=$(brew --prefix openssl)])
+AS_IF(
+  [(test "x$with_openssl" = xyes || test "x$with_openssl" = xcheck) \
+   && test "x$have_brew" = "xyes" && test -d $(brew --prefix openssl)/],
+  [with_openssl=$(brew --prefix openssl)])
 
 CF3_WITH_LIBRARY(openssl, [
    AC_CHECK_LIB(crypto, RSA_generate_key_ex, [], [])
@@ -521,7 +530,10 @@ if test "x$with_pcre2" = "xno"; then
    AC_MSG_ERROR([PCRE2 is required])
 fi
 
-AS_IF([test "x$have_brew" = "xyes" && test -d $(brew --prefix pcre2)/], [with_pcre2=$(brew --prefix pcre2)])
+AS_IF(
+  [(test "x$with_pcre2" = xyes || test "x$with_pcre2" = xcheck) \
+    && test "x$have_brew" = "xyes" && test -d $(brew --prefix pcre2)/],
+  [with_pcre2=$(brew --prefix pcre2)])
 
 CF3_WITH_LIBRARY(pcre2, [
   AC_CHECK_LIB(pcre2-8, pcre2_compile_8, [], [AC_MSG_ERROR(Cannot find PCRE2)])
@@ -541,7 +553,10 @@ if test "x$with_librsync" = "xno"; then
    AC_MSG_ERROR([librsync is required])
 fi
 
-AS_IF([test "x$have_brew" = "xyes" && test -d $(brew --prefix librsync)/], [with_librsync=$(brew --prefix librsync)])
+AS_IF(
+  [(test "x$with_librsync" = xyes || test "x$with_librsync" = xcheck) \
+   && test "x$have_brew" = "xyes" && test -d $(brew --prefix librsync)/],
+  [with_librsync=$(brew --prefix librsync)])
 
 CF3_WITH_LIBRARY(librsync, [
     AC_CHECK_HEADERS([librsync.h], [], AC_MSG_ERROR(Cannot find librsync))
@@ -562,8 +577,10 @@ AC_ARG_WITH([libvirt],
 
 if test "x$with_libvirt" != xno
 then
-    AS_IF([test "x$have_brew" = "xyes" && test -d $(brew --prefix libvirt)/], [with_libvirt=$(brew --prefix libvirt)])
-
+     AS_IF(
+       [(test "x$with_libvirt" = xyes || test "x$with_libvirt" = xcheck) \
+        && test "x$have_brew" = "xyes" && test -d $(brew --prefix libvirt)/],
+       [with_libvirt=$(brew --prefix libvirt)])
    CF3_WITH_LIBRARY(libvirt, [
       AC_CHECK_LIB(virt, virConnectOpen, [], [if test "x$with_libvirt" != xcheck; then AC_MSG_ERROR(Cannot find libvirt library); fi])
       AC_CHECK_HEADERS(libvirt/libvirt.h, [], [if test "x$with_libvirt" != xcheck; then AC_MSG_ERROR(Cannot find libvirt library headers); fi])
@@ -603,8 +620,6 @@ AC_ARG_WITH([libcurl],
 
 if test "x$with_libcurl" != xno
 then
-  AS_IF([test "x$have_brew" = "xyes" && test -d $(brew --prefix curl)/], [with_libcurl=$(brew --prefix curl)])
-
   CF3_WITH_LIBRARY(libcurl, [
     AC_CHECK_LIB(curl, curl_global_init,
       [],
@@ -630,7 +645,10 @@ AC_ARG_WITH([libyaml],
 
 if test "x$with_libyaml" != xno
 then
-  AS_IF([test "x$have_brew" = "xyes" && test -d $(brew --prefix libyaml)/], [with_libyaml=$(brew --prefix libyaml)])
+  AS_IF(
+    [(test "x$with_libyaml" = xyes || test "x$with_libyaml" = xcheck) \
+     && test "x$have_brew" = "xyes" && test -d $(brew --prefix libyaml)/],
+    [with_libyaml=$(brew --prefix libyaml)])
 
   CF3_WITH_LIBRARY(libyaml, [
     AC_CHECK_LIB(yaml, yaml_parser_initialize,
@@ -709,7 +727,7 @@ if test "x$with_libxml2" != "xno"; then
                 AC_MSG_ERROR(Cannot find libxml2); fi]
         )]
     )
-    
+
 fi
 
 AM_CONDITIONAL([HAVE_LIBXML2],

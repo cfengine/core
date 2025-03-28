@@ -620,10 +620,6 @@ AC_ARG_WITH([libcurl],
 
 if test "x$with_libcurl" != xno
 then
-  AS_IF(
-    [(test "x$with_libcurl" = xyes || test "x$with_libcurl" = xcheck) \
-     && test "x$have_brew" = "xyes" && test -d $(brew --prefix libcurl)/],
-    [with_libcurl=$(brew --prefix libcurl)])
   CF3_WITH_LIBRARY(libcurl, [
     AC_CHECK_LIB(curl, curl_global_init,
       [],

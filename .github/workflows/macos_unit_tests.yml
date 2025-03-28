@@ -11,7 +11,7 @@ jobs:
       with:
         submodules: recursive
     - name: Install dependencies
-      run: brew install lmdb automake openssl pcre autoconf libtool
+      run: brew install lmdb automake openssl pcre autoconf libtool libyaml
     - name: Check tools
       run: command -v libtool && command -v automake && command -v autoconf
     - name: Check tools versions

@@ -64,9 +64,9 @@ xml_c14nize_CPPFLAGS = \
 	-I$(srcdir)/../../libntech/libutils \
 	$(LIBXML2_CPPFLAGS)
 
-xml_c14nize_CFLAGS  = $(LIBXML2_CFLAGS)
-xml_c14nize_LDFLAGS = $(LIBXML2_LDFLAGS)
-xml_c14nize_LDADD = ../../libntech/libutils/libutils.la $(LIBXML2_LIBS)
+xml_c14nize_CFLAGS  = $(LIBXML2_CFLAGS) $(LMDB_CFLAGS) $(LIBRSYNC_CFLAGS)
+xml_c14nize_LDFLAGS = $(LIBXML2_LDFLAGS) $(LMDB_LDFLAGS) $(LIBRSYNC_LDFLAGS)
+xml_c14nize_LDADD = ../../libntech/libutils/libutils.la $(LIBXML2_LIBS) $(LMDB_LIBS) $(LIBRSYNC_LIBS)
 endif
 
 TESTS =

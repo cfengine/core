@@ -50,6 +50,16 @@ static char *FirstBackReference(Regex *regex, const char *teststring)
      * negative numbers are errors (incl. no match). */
     if (result > 0)
     {
+        uint32_t num_pairs = pcre2_get_ovector_count(match_data);
+        if (num_pairs <= 1)
+        {
+            /* There was no match */
+            strlcpy(backreference, "CF_NOMATCH", CF_MAXVARSIZE);
+            pcre2_match_data_free(match_data);
+            RegexDestroy(regex);
+            return backreference;
+        }
+
         size_t *ovector = pcre2_get_ovector_pointer(match_data);
         /* ovector[0] and ovector[1] are for the start and end of the whole
          * match, the capture groups follow in [2] and [3], etc. */

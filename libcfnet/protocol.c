@@ -147,9 +147,7 @@ bool ProtocolGet(AgentConnection *conn, const char *remote_path,
             return false;
         }
 
-        char cfchangedstr[sizeof(CF_CHANGEDSTR1 CF_CHANGEDSTR2)];
-        snprintf(cfchangedstr, sizeof(cfchangedstr), "%s%s",
-                 CF_CHANGEDSTR1, CF_CHANGEDSTR2);
+        const char cfchangedstr[] = CF_CHANGEDSTR1 CF_CHANGEDSTR2;
 
         uint32_t received_bytes = 0;
         while (received_bytes < file_size)

@@ -574,11 +574,10 @@ static bool EncryptCopyRegularFileNet(const char *source, const char *dest, off_
 {
     int blocksize = 2048, n_read = 0, plainlen, more = true, finlen;
     int tosend, cipherlen = 0;
-    char *buf, in[CF_BUFSIZE], out[CF_BUFSIZE], workbuf[CF_BUFSIZE], cfchangedstr[265];
+    char *buf, in[CF_BUFSIZE], out[CF_BUFSIZE], workbuf[CF_BUFSIZE];
+    const char cfchangedstr[] = CF_CHANGEDSTR1 CF_CHANGEDSTR2;
     unsigned char iv[32] =
         { 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8 };
-
-    snprintf(cfchangedstr, 255, "%s%s", CF_CHANGEDSTR1, CF_CHANGEDSTR2);
 
     if ((strlen(dest) > CF_BUFSIZE - 20))
     {
@@ -755,7 +754,8 @@ bool CopyRegularFileNet(const char *source, const char *basis, const char *dest,
 {
     assert(conn != NULL);
 
-    char *buf, workbuf[CF_BUFSIZE], cfchangedstr[265];
+    char *buf, workbuf[CF_BUFSIZE];
+    const char cfchangedstr[] = CF_CHANGEDSTR1 CF_CHANGEDSTR2;
     const int buf_size = 2048;
 
     /* We encrypt only for CLASSIC protocol. The TLS protocol is always over
@@ -766,8 +766,6 @@ bool CopyRegularFileNet(const char *source, const char *basis, const char *dest,
     {
         return EncryptCopyRegularFileNet(source, dest, size, conn);
     }
-
-    snprintf(cfchangedstr, 255, "%s%s", CF_CHANGEDSTR1, CF_CHANGEDSTR2);
 
     if ((strlen(dest) > CF_BUFSIZE - 20))
     {

@@ -339,6 +339,137 @@ static bool ProtocolSendError(SSL *conn, bool flush, const char *fmt, ...)
 }
 
 /*********************************************************/
+/* Common                                                */
+/*********************************************************/
+
+/**
+ * @brief Move leftover tail data in the input buffer to the front before next
+ *        job iteration.
+ *
+ * After a job iteration:
+ *  - the 'next_in' attribute will point to the byte after the last one
+ *    consumed.
+ *  - the 'avail_in' attribute will contain the number of remaining/unconsumed
+ *    bytes.
+ *
+ * @param bufs The RS buffers
+ * @param in_buf The input buffer
+ */
+static void MoveLeftoversToFrontOfInputBuffer(rs_buffers_t *bufs, char *in_buf)
+{
+    const size_t offset = bufs->next_in - in_buf;
+    const size_t unused = bufs->avail_in;
+
+    if (bufs->avail_in > 0)
+    {
+        assert(bufs->next_in + offset == in_buf);
+        memmove(in_buf, in_buf + offset, unused);
+        bufs->next_in = in_buf;
+    }
+}
+
+static bool FillInputBufferFromHost(rs_buffers_t *bufs, char *in_buf, SSL *conn)
+{
+    if (bufs->eof_in != 0)
+    {
+        /* No more data to fill the buffer with */
+        return true;
+    }
+
+    MoveLeftoversToFrontOfInputBuffer(bufs, in_buf);
+
+    if (bufs->avail_in > PROTOCOL_MESSAGE_SIZE)
+    {
+        /* We don't have space for another message */
+    }
+
+    size_t msg_len;
+    bool eof;
+    if (!ProtocolRecvMessage(conn, bufs->next_in + bufs->avail_in, &msg_len, &eof))
+    {
+        return false;
+    }
+
+    bufs->eof_in = eof ? 1 : 0;
+    bufs->avail_in += msg_len;
+    return true;
+}
+
+static bool FillInputBufferFromFile(rs_buffers_t *bufs, char *in_buf, size_t in_buf_size, FILE *file)
+{
+    if (bufs->eof_in != 0)
+    {
+        /* No more data to fill the buffer with */
+        return true;
+    }
+
+    MoveLeftoversToFrontOfInputBuffer(bufs, in_buf);
+
+    assert(in_buf_size >= bufs->avail_in);
+    const size_t remaining = in_buf_size - bufs->avail_in;
+
+    if (remaining == 0)
+    {
+        /* There is no more space in buffer */
+        return true;
+    }
+
+    size_t num_bytes_read = fread(bufs->next_in + bufs->avail_in, 1, remaining, file);
+    if ((num_bytes_read == 0) && ferror(file))
+    {
+        /* Failed to read */
+        return false;
+    }
+
+    bufs->eof_in = feof(file);
+    bufs->avail_in += num_bytes_read;
+    return true;
+}
+
+static bool DrainOutputBufferToHost(rs_buffers_t *bufs, char *out_buf, bool is_done, SSL *conn)
+{
+    const size_t num_bytes = bufs->next_out - out_buf;
+    assert(num_bytes <= PROTOCOL_MESSAGE_SIZE);
+
+    if ((num_bytes == 0) && !is_done)
+    {
+        /* There is nothing to send (avoid sending empty messages) */
+        return true;
+    }
+
+    if (!ProtocolSendMessage(conn, out_buf, num_bytes, is_done))
+    {
+        /* Failed to send message (error is already logged) */
+        return false;
+    }
+
+    bufs->next_out = out_buf;
+    bufs->avail_out = PROTOCOL_MESSAGE_SIZE;
+    return true;
+}
+
+static bool DrainOutputBufferToFile(rs_buffers_t *bufs, char *out_buf, int fd, bool *last_write_made_hole)
+{
+    /* Drain output buffer, if there is data */
+    size_t num_bytes = bufs->next_out - out_buf;
+    if (num_bytes == 0)
+    {
+        /* There is nothing to write */
+        return true;
+    }
+
+    if (!FileSparseWrite(fd, out_buf, num_bytes, last_write_made_hole))
+    {
+        /* Error is already logged */
+        return false;
+    }
+
+    bufs->next_out = out_buf;
+    bufs->avail_out = PROTOCOL_MESSAGE_SIZE;
+    return true;
+}
+
+/*********************************************************/
 /* Server specific                                       */
 /*********************************************************/
 
@@ -378,35 +509,16 @@ static bool RecvSignature(SSL *conn, rs_signature_t **sig)
 
     /* Setup buffers for the job */
     rs_buffers_t bufs = {0};
+    bufs.next_in = in_buf;
 
     rs_result res;
     do
     {
-        /* Fill input buffers */
-        if (bufs.eof_in == 0)
+        if (!FillInputBufferFromHost(&bufs, in_buf, conn))
         {
-            if (bufs.avail_in > 0)
-            {
-                /* Move leftover tail data to the front of the buffer */
-                memmove(in_buf, bufs.next_in, bufs.avail_in);
-                bufs.next_in = in_buf;
-            }
-
-            if (bufs.avail_in <= PROTOCOL_MESSAGE_SIZE)
-            {
-                size_t n_bytes;
-                bool eof;
-                if (!ProtocolRecvMessage(
-                        conn, in_buf + bufs.avail_in, &n_bytes, &eof))
-                {
-                    /* Error is already logged */
-                    rs_job_free(job);
-                    return false;
-                }
-
-                bufs.eof_in = eof ? 1 : 0;
-                bufs.avail_in += n_bytes;
-            }
+            /* Error is already logged */
+            rs_job_free(job);
+            return false;
         }
 
         /* Iterate job */
@@ -421,6 +533,8 @@ static bool RecvSignature(SSL *conn, rs_signature_t **sig)
             rs_job_free(job);
             return false;
         }
+
+        /* The job takes care of draining the output buffer */
     } while (res != RS_DONE);
 
     rs_job_free(job);
@@ -484,49 +598,22 @@ static bool SendDelta(SSL *conn, rs_signature_t *sig, const char *filename)
     bufs.next_out = out_buf;
     bufs.avail_out =
         PROTOCOL_MESSAGE_SIZE; /* We cannot send more using the protocol */
+    bufs.next_in = in_buf;
 
     do
     {
-        /* Fill input buffers */
-        if (bufs.eof_in == 0)
+        if (!FillInputBufferFromFile(&bufs, in_buf, sizeof(in_buf), file))
         {
-            if (bufs.avail_in > 0)
-            {
-                /* Move leftover tail data to the front of the buffer */
-                memmove(in_buf, bufs.next_in, bufs.avail_in);
-                bufs.next_in = in_buf;
-            }
+            Log(LOG_LEVEL_ERR,
+                "Failed to read the source file '%s' during file stream: %s",
+                filename,
+                GetErrorStr());
+            ProtocolSendError(
+                conn, false, ERROR_MSG_INTERNAL_SERVER_ERROR);
 
-            if ((sizeof(in_buf) - bufs.avail_in) > 0)
-            {
-                size_t n_bytes = fread(
-                    in_buf + bufs.avail_in,
-                    1 /* Byte */,
-                    sizeof(in_buf) - bufs.avail_in,
-                    file);
-                if (n_bytes == 0)
-                {
-                    if (ferror(file))
-                    {
-                        Log(LOG_LEVEL_ERR,
-                            "Failed to read the source file '%s' during file stream: %s",
-                            filename,
-                            GetErrorStr());
-                        ProtocolSendError(
-                            conn, false, ERROR_MSG_INTERNAL_SERVER_ERROR);
-
-                        fclose(file);
-                        rs_job_free(job);
-                        return false;
-                    }
-
-                    /* End-of-File reached */
-                    bufs.eof_in = feof(file);
-                    assert(bufs.eof_in != 0);
-                }
-
-                bufs.avail_in += n_bytes;
-            }
+            fclose(file);
+            rs_job_free(job);
+            return false;
         }
 
         /* Iterate job */
@@ -543,30 +630,12 @@ static bool SendDelta(SSL *conn, rs_signature_t *sig, const char *filename)
             return false;
         }
 
-        /* Drain output buffer, if there is data */
-        size_t present = bufs.next_out - out_buf;
-        if (present > 0)
+        if (!DrainOutputBufferToHost(&bufs, out_buf, (res == RS_DONE), conn))
         {
-            assert(present <= PROTOCOL_MESSAGE_SIZE);
-            if (!ProtocolSendMessage(conn, out_buf, present, res == RS_DONE))
-            {
-                fclose(file);
-                rs_job_free(job);
-                return false;
-            }
-
-            bufs.next_out = out_buf;
-            bufs.avail_out = PROTOCOL_MESSAGE_SIZE;
-        }
-        else if (res == RS_DONE)
-        {
-            /* Send End-of-File */
-            if (!ProtocolSendMessage(conn, NULL, 0, 1))
-            {
-                fclose(file);
-                rs_job_free(job);
-                return false;
-            }
+            /* Error is already logged in ProtocolSendMessage() */
+            fclose(file);
+            rs_job_free(job);
+            return false;
         }
     } while (res != RS_DONE);
 
@@ -712,50 +781,23 @@ static bool SendSignature(SSL *conn, const char *filename, bool print_stats)
 
     do
     {
-        if (bufs.eof_in == 0)
+        if (!FillInputBufferFromFile(&bufs, in_buf, sizeof(in_buf), file))
         {
-            if (bufs.avail_in > 0)
-            {
-                /* Move leftover tail data to the front of the buffer */
-                memmove(in_buf, bufs.next_in, bufs.avail_in);
-                bufs.next_in = in_buf;
-            }
+            Log(LOG_LEVEL_ERR,
+                "Failed to read the basis file '%s' during file stream: %s",
+                filename,
+                GetErrorStr());
+            ProtocolSendError(
+                conn, false, ERROR_MSG_INTERNAL_CLIENT_ERROR);
 
-            /* Fill input buffer */
-            if ((sizeof(in_buf) - bufs.avail_in) > 0)
-            {
-                size_t n_bytes = fread(
-                    in_buf + bufs.avail_in,
-                    1 /* Byte */,
-                    sizeof(in_buf) - bufs.avail_in,
-                    file);
-                if (n_bytes == 0)
-                {
-                    if (ferror(file))
-                    {
-                        Log(LOG_LEVEL_ERR,
-                            "Failed to read the basis file '%s' during file stream: %s",
-                            filename,
-                            GetErrorStr());
-                        ProtocolSendError(
-                            conn, false, ERROR_MSG_INTERNAL_CLIENT_ERROR);
-
-                        fclose(file);
-                        rs_job_free(job);
-                        return false;
-                    }
-
-                    /* End-of-File reached */
-                    bufs.eof_in = feof(file);
-                    assert(bufs.eof_in != 0);
-                }
-
-                bufs.avail_in += n_bytes;
-                bytes_in += n_bytes;
-            }
+            fclose(file);
+            rs_job_free(job);
+            return false;
         }
 
-        /* Iterate job */
+        /* Count bytes read for logging stats */
+        bytes_in += bufs.avail_in;
+
         res = rs_job_iter(job, &bufs);
         if (res != RS_DONE && res != RS_BLOCKED)
         {
@@ -769,31 +811,15 @@ static bool SendSignature(SSL *conn, const char *filename, bool print_stats)
             return false;
         }
 
-        /* Drain output buffer, if there is data */
-        size_t present = bufs.next_out - out_buf;
-        if (present > 0)
-        {
-            assert(present <= PROTOCOL_MESSAGE_SIZE);
-            if (!ProtocolSendMessage(conn, out_buf, present, res == RS_DONE))
-            {
-                fclose(file);
-                rs_job_free(job);
-                return false;
-            }
+        /* Count bytes sent for logging stats */
+        bytes_out += (bufs.next_out - out_buf);
 
-            bufs.next_out = out_buf;
-            bufs.avail_out = PROTOCOL_MESSAGE_SIZE;
-            bytes_out += present;
-        }
-        else if (res == RS_DONE)
+        if (!DrainOutputBufferToHost(&bufs, out_buf, (res == RS_DONE), conn))
         {
-            /* Send End-of-File */
-            if (!ProtocolSendMessage(conn, NULL, 0, 1))
-            {
-                fclose(file);
-                rs_job_free(job);
-                return false;
-            }
+            /* Error is already logged in ProtocolSendMessage() */
+            fclose(file);
+            rs_job_free(job);
+            return false;
         }
     } while (res != RS_DONE);
 
@@ -889,6 +915,7 @@ static bool RecvDelta(
 
     /* Setup buffers for the job */
     rs_buffers_t bufs = {0};
+    bufs.next_in = in_buf;
     bufs.next_out = out_buf;
     bufs.avail_out = sizeof(out_buf);
 
@@ -899,36 +926,18 @@ static bool RecvDelta(
     rs_result res;
     do
     {
-        /* Fill input buffers */
-        if (bufs.eof_in == 0)
+        if (!FillInputBufferFromHost(&bufs, in_buf, conn))
         {
-            if (bufs.avail_in > 0)
-            {
-                /* Move leftover tail data to the front of the buffer */
-                memmove(in_buf, bufs.next_in, bufs.avail_in);
-                bufs.next_in = in_buf;
-            }
-
-            if (bufs.avail_in <= PROTOCOL_MESSAGE_SIZE)
-            {
-                size_t n_bytes;
-                bool eof;
-                if (!ProtocolRecvMessage(
-                        conn, in_buf + bufs.avail_in, &n_bytes, &eof))
-                {
-                    /* Error is already logged */
-                    close(new);
-                    fclose(old);
-                    rs_job_free(job);
-                    unlink(dest);
-                    return false;
-                }
-
-                bufs.eof_in = eof ? 1 : 0;
-                bufs.avail_in += n_bytes;
-                bytes_in += n_bytes;
-            }
+            /* Error is already logged in ProtocolRecvMessage() */
+            close(new);
+            fclose(old);
+            rs_job_free(job);
+            unlink(dest);
+            return false;
         }
+
+        /* Count bytes received for logging stats */
+        bytes_in += bufs.avail_in;
 
         res = rs_job_iter(job, &bufs);
         if (res != RS_DONE && res != RS_BLOCKED)
@@ -948,32 +957,19 @@ static bool RecvDelta(
             return false;
         }
 
+        /* Count bytes written for logging stats */
+        bytes_out += (bufs.next_out - out_buf);
+        n_wrote_total += (bufs.next_out - out_buf);
+
         /* Drain output buffer, if there is data */
-        size_t present = bufs.next_out - out_buf;
-        if (present > 0)
+        if (!DrainOutputBufferToFile(&bufs, out_buf, new, &last_write_made_hole))
         {
-            if (!FileSparseWrite(new, out_buf, present, &last_write_made_hole))
-            {
-                Log(LOG_LEVEL_ERR,
-                    "Failed to write to destination file '%s' during file stream: %s",
-                    dest,
-                    GetErrorStr());
-                if (bufs.eof_in == 0)
-                {
-                    ProtocolFlushStream(conn);
-                }
-
-                close(new);
-                fclose(old);
-                rs_job_free(job);
-                unlink(dest);
-                return false;
-            }
-
-            n_wrote_total += present;
-            bufs.next_out = out_buf;
-            bufs.avail_out = sizeof(out_buf);
-            bytes_out += present;
+            /* Error is already logged */
+            close(new);
+            fclose(old);
+            rs_job_free(job);
+            unlink(dest);
+            return false;
         }
     } while (res != RS_DONE);
 

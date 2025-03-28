@@ -137,6 +137,7 @@ libpromises_la_SOURCES = \
 	modes.c \
 	monitoring_read.c monitoring_read.h \
 	ornaments.c ornaments.h \
+	override_fsattrs.c override_fsattrs.h \
 	policy.c policy.h \
 	parser.c parser.h \
 	parser_helpers.h \

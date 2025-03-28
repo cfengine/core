@@ -1,0 +1,86 @@
+#######################################################
+#
+# Check process_select bodies without process_result attribute.
+#
+# If process_select bodies do not have a process_result attribute, its
+# given attributes should be AND'ed together for process filtering.
+#
+# Tests:
+#
+# 1.  Negative: using a highly unlikely virtual memory size range.
+#
+# 2.  Positive: using a virtual memory size range, that should match
+#               all processes
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+      "description" -> {"CFE-4511"}
+        string => "process_select body without process_result";
+
+  processes:
+      ### Expect zero processes on a tty with a highly unlikely name.
+      ".*"
+        handle         => "expect_none",
+        process_select => test_without_process_result("1"),
+        process_count  => test_range("0", "0", "pass_bad_vsize", "fail_bad_vsize");
+
+      ### Expect to find one or more processes on these ttys.
+      ".*"
+        handle         => "expect_some",
+        process_select => test_without_process_result("inf"),
+        process_count  => test_range("1", "inf", "pass_good_vsize", "fail_good_vsize");
+
+}
+
+body process_select test_without_process_result(vsize)
+{
+     vsize => "1,$(vsize)";
+     ppid  => "1,1";
+}
+
+body process_count test_range(min, max, class_good, class_bad)
+{
+      match_range => irange("$(min)", "$(max)");
+      in_range_define => { "$(class_good)" };
+      out_of_range_define => { "$(class_bad)" };
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "ok" and => {
+        "pass_good_vsize", "pass_bad_vsize",
+        "!fail_good_vsize", "!fail_bad_vsize",
+      };
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+
+### PROJECT_ID: core
+### CATEGORY_ID: 30

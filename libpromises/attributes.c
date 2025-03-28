@@ -1317,15 +1317,9 @@ ProcessSelect GetProcessFilterConstraints(const EvalContext *ctx, const Promise 
 {
     ProcessSelect p;
     char *value;
-    int entries = 0;
 
     // get constraint process ID
     value = PromiseGetConstraintAsRval(pp, "pid", RVAL_TYPE_SCALAR);
-    if (value)
-    {
-        entries++;
-    }
-
     if (!IntegerRangeFromString(value, &p.min_pid, &p.max_pid))
     {
         PromiseRef(LOG_LEVEL_ERR, pp);
@@ -1334,11 +1328,6 @@ ProcessSelect GetProcessFilterConstraints(const EvalContext *ctx, const Promise 
 
     // get constraint parent process ID
     value = PromiseGetConstraintAsRval(pp, "ppid", RVAL_TYPE_SCALAR);
-    if (value)
-    {
-        entries++;
-    }
-
     if (!IntegerRangeFromString(value, &p.min_ppid, &p.max_ppid))
     {
         PromiseRef(LOG_LEVEL_ERR, pp);
@@ -1347,11 +1336,6 @@ ProcessSelect GetProcessFilterConstraints(const EvalContext *ctx, const Promise 
 
     // get constraint process group ID
     value = PromiseGetConstraintAsRval(pp, "pgid", RVAL_TYPE_SCALAR);
-    if (value)
-    {
-        entries++;
-    }
-
     if (!IntegerRangeFromString(value, &p.min_pgid, &p.max_pgid))
     {
         PromiseRef(LOG_LEVEL_ERR, pp);
@@ -1360,11 +1344,6 @@ ProcessSelect GetProcessFilterConstraints(const EvalContext *ctx, const Promise 
 
     // get constraint resident set size
     value = PromiseGetConstraintAsRval(pp, "rsize", RVAL_TYPE_SCALAR);
-    if (value)
-    {
-        entries++;
-    }
-
     if (!IntegerRangeFromString(value, &p.min_rsize, &p.max_rsize))
     {
         PromiseRef(LOG_LEVEL_ERR, pp);
@@ -1373,11 +1352,6 @@ ProcessSelect GetProcessFilterConstraints(const EvalContext *ctx, const Promise 
 
     // get constraint VM size
     value = PromiseGetConstraintAsRval(pp, "vsize", RVAL_TYPE_SCALAR);
-    if (value)
-    {
-        entries++;
-    }
-
     if (!IntegerRangeFromString(value, &p.min_vsize, &p.max_vsize))
     {
         PromiseRef(LOG_LEVEL_ERR, pp);
@@ -1386,11 +1360,6 @@ ProcessSelect GetProcessFilterConstraints(const EvalContext *ctx, const Promise 
 
     // get constraint cumulated CPU time
     value = PromiseGetConstraintAsRval(pp, "ttime_range", RVAL_TYPE_SCALAR);
-    if (value)
-    {
-        entries++;
-    }
-
     if (!IntegerRangeFromString(value, (long *) &p.min_ttime, (long *) &p.max_ttime))
     {
         PromiseRef(LOG_LEVEL_ERR, pp);
@@ -1399,11 +1368,6 @@ ProcessSelect GetProcessFilterConstraints(const EvalContext *ctx, const Promise 
 
     // get constraint start time
     value = PromiseGetConstraintAsRval(pp, "stime_range", RVAL_TYPE_SCALAR);
-    if (value)
-    {
-        entries++;
-    }
-
     if (!IntegerRangeFromString(value, (long *) &p.min_stime, (long *) &p.max_stime))
     {
         PromiseRef(LOG_LEVEL_ERR, pp);
@@ -1412,11 +1376,6 @@ ProcessSelect GetProcessFilterConstraints(const EvalContext *ctx, const Promise 
 
     // get constraint priority
     value = PromiseGetConstraintAsRval(pp, "priority", RVAL_TYPE_SCALAR);
-    if (value)
-    {
-        entries++;
-    }
-
     if (!IntegerRangeFromString(value, &p.min_pri, &p.max_pri))
     {
         PromiseRef(LOG_LEVEL_ERR, pp);
@@ -1425,11 +1384,6 @@ ProcessSelect GetProcessFilterConstraints(const EvalContext *ctx, const Promise 
 
     // get constraint threads
     value = PromiseGetConstraintAsRval(pp, "threads", RVAL_TYPE_SCALAR);
-    if (value)
-    {
-        entries++;
-    }
-
     if (!IntegerRangeFromString(value, &p.min_thread, &p.max_thread))
     {
         PromiseRef(LOG_LEVEL_ERR, pp);
@@ -1442,20 +1396,8 @@ ProcessSelect GetProcessFilterConstraints(const EvalContext *ctx, const Promise 
     p.command = PromiseGetConstraintAsRval(pp, "command", RVAL_TYPE_SCALAR);
     p.tty = PromiseGetConstraintAsRval(pp, "tty", RVAL_TYPE_SCALAR);
 
-    // check if file_result is needed
-    if ((p.owner) || (p.status) || (p.command) || (p.tty))
-    {
-        entries = true;
-    }
-
     // get constraint process_result
-    if ((p.process_result = PromiseGetConstraintAsRval(pp, "process_result", RVAL_TYPE_SCALAR)) == NULL)
-    {
-        if (entries)
-        {
-            Log(LOG_LEVEL_ERR, "process_select body missing its process_result return value");
-        }
-    }
+    p.process_result = PromiseGetConstraintAsRval(pp, "process_result", RVAL_TYPE_SCALAR);
 
     return p;
 }

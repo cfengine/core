@@ -1,0 +1,12 @@
+body fsattrs set_immutable
+{
+  # Nothing here
+}
+
+bundle agent main
+{
+  files:
+    "/tmp/00_immutable.txt"
+      content => "I'm mutable",
+      fsattrs => set_immutable;
+}

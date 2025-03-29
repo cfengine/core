@@ -161,6 +161,10 @@ void CalculateDomainName(const char *nodename, const char *dnsname,
                          char *uqname, size_t uqname_size,
                          char *domain, size_t domain_size);
 
+#ifdef __APPLE__
+static void Apple_Version(EvalContext *ctx);
+#endif
+
 #ifdef __linux__
 static int Linux_Fedora_Version(EvalContext *ctx);
 static int Linux_Redhat_Version(EvalContext *ctx);
@@ -1414,6 +1418,10 @@ static void OSClasses(EvalContext *ctx)
 
 #else
 
+#ifdef __APPLE__
+    Apple_Version(ctx);
+#endif
+
     char vbuff[CF_MAXVARSIZE];
 
 #ifdef _AIX
@@ -1423,6 +1431,7 @@ static void OSClasses(EvalContext *ctx)
 #endif
 
 
+#ifndef __APPLE__
     for (char *sp = vbuff; *sp != '\0'; sp++)
     {
         if (*sp == '-')
@@ -1435,6 +1444,7 @@ static void OSClasses(EvalContext *ctx)
     char context[CF_BUFSIZE];
     snprintf(context, CF_BUFSIZE, "%s_%s", VSYSNAME.sysname, vbuff);
     SetFlavor(ctx, context);
+#endif
 
 
 #ifdef __hpux
@@ -1597,6 +1607,10 @@ static void OSClasses(EvalContext *ctx)
         {
             snprintf(vbuff, CF_BUFSIZE, "/var/cron/tabs/%s", user_name);
         }
+        else if (EvalContextClassGet(ctx, NULL, "macos"))
+        {
+            snprintf(vbuff, CF_BUFSIZE, "/usr/lib/cron/tabs/%s", user_name);
+        }
         else
         {
             snprintf(vbuff, CF_BUFSIZE, "/var/spool/cron/crontabs/%s", user_name);
@@ -1644,6 +1658,88 @@ static void OSClasses(EvalContext *ctx)
 }
 
 /*********************************************************************************/
+
+#ifdef __APPLE__
+static void Apple_Version(EvalContext *ctx)
+{
+    FILE *pp = NULL;
+
+    if ((!FileCanOpen("/usr/bin/sw_vers", "r") || ((pp = cf_popen("/usr/bin/sw_vers", "r", true)) == NULL)))
+    {
+        Log(LOG_LEVEL_VERBOSE, "Could not find macOS system version information.");
+        return;
+    }
+
+    size_t line_size = CF_BUFSIZE;
+    char *line = xmalloc(line_size), *r;
+    int revcomps = 0, major, minor, patch;
+    char *flavor = NULL;
+
+    while (CfReadLine(&line, &line_size, pp) != -1)
+    {
+        if ((r = strstr(line, "ProductName")))
+        {
+            r = strrchr(line, '\t');
+            if (!r || !++r)
+            {
+                continue;
+            }
+            for (size_t i = 0; i < strlen(r); i++)
+            {
+                r[i] = tolower(r[i]);
+            }
+            EvalContextClassPutHard(
+                    ctx,
+                    r,
+                    "inventory,attribute_name=none,source=agent,derived-from=sw_vers");
+            flavor = SafeStringDuplicate(r);
+        }
+        else if ((r = strstr(line, "ProductVersion")))
+        {
+            r = strrchr(line, '\t');
+            if (!r || !++r)
+            {
+                continue;
+            }
+            revcomps = sscanf(r, "%d.%d.%d", &major, &minor, &patch);
+        }
+    }
+
+    if (!flavor)
+    {
+        goto close;
+    }
+
+    if (revcomps > 0)
+    {
+        char buf[CF_BUFSIZE];
+
+        snprintf(buf, CF_BUFSIZE, "%s_%d", flavor, major);
+        SetFlavor(ctx, buf);
+    }
+
+    if (revcomps > 1)
+    {
+        char buf[CF_BUFSIZE];
+
+        snprintf(buf, CF_BUFSIZE, "%s_%d_%d", flavor, major, minor);
+        EvalContextClassPutHard(ctx, buf, "inventory,attribute_name=none,source=agent");
+    }
+
+    if (revcomps > 2)
+    {
+        char buf[CF_BUFSIZE];
+
+        snprintf(buf, CF_BUFSIZE, "%s_%d_%d_%d", flavor, major, minor, patch);
+        EvalContextClassPutHard(ctx, buf, "inventory,attribute_name=none,source=agent");
+    }
+
+    free(flavor);
+
+close:
+    cf_pclose(pp);
+}
+#endif
 
 #ifdef __linux__
 static void Linux_Oracle_VM_Server_Version(EvalContext *ctx)

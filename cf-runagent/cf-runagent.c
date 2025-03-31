@@ -256,7 +256,7 @@ int main(int argc, char *argv[])
                     if (fork() == 0)    /* child process */
                     {
                         int remote_exit_code = HailServer(ctx, config, RlistScalarValue(rp));
-                        DoCleanupAndExit(remote_exit_code  > 0 ? remote_exit_code : CF_RA_EXIT_CODE_OTHER_ERR);
+                        DoCleanupAndExit(remote_exit_code >= 0 ? remote_exit_code : CF_RA_EXIT_CODE_OTHER_ERR);
                     }
                     else        /* parent process */
                     {

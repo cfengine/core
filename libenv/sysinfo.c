@@ -549,13 +549,9 @@ static void GetNameInfo3(EvalContext *ctx)
     bool found = false;
     for (i = 0; !found && (i < PLATFORM_CONTEXT_MAX); i++)
     {
-        char sysname[CF_BUFSIZE];
-        strlcpy(sysname, VSYSNAME.sysname, CF_BUFSIZE);
-        ToLowerStrInplace(sysname);
-
         /* FIXME: review those strcmps. Moved out from StringMatch */
-        if (!strcmp(CLASSATTRIBUTES[i][0], sysname)
-            || StringMatchFull(CLASSATTRIBUTES[i][0], sysname))
+        if (!strcmp(CLASSATTRIBUTES[i][0], VSYSNAME.sysname)
+            || StringMatchFull(CLASSATTRIBUTES[i][0], VSYSNAME.sysname))
         {
             if (!strcmp(CLASSATTRIBUTES[i][1], VSYSNAME.machine)
                 || StringMatchFull(CLASSATTRIBUTES[i][1], VSYSNAME.machine))
@@ -580,16 +576,10 @@ static void GetNameInfo3(EvalContext *ctx)
         }
     }
 
-    if (!found)
-    {
-        i = 0;
-    }
-
     Log(LOG_LEVEL_VERBOSE, "%s - ready", NameVersion());
     Banner("Environment discovery");
 
-    snprintf(workbuf, CF_BUFSIZE, "%s", CLASSTEXT[i]); // See: cppcheck_suppressions.txt
-
+    snprintf(workbuf, CF_BUFSIZE, "%s", CLASSTEXT[VSYSTEMHARDCLASS]);
 
     Log(LOG_LEVEL_VERBOSE, "Host name is: %s", VSYSNAME.nodename);
     Log(LOG_LEVEL_VERBOSE, "Operating System Type is %s", VSYSNAME.sysname);

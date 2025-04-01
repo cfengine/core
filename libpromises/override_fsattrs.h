@@ -46,19 +46,11 @@ bool OverrideImmutableBegin(
  * @param orig The original file (may be immutable)
  * @param copy The mutated copy to replace the original
  * @param override Whether to actually do override
+ * @param abort Whether to abort the override
  * @return false in case of failure
  * @note The immutable bit is reset to it's original state
  */
 bool OverrideImmutableCommit(
-    const char *orig, const char *copy, bool override);
-
-/**
- * @brief Simply unlinks the mutable copy
- * @param orig Not used (reserved in for future use)
- * @param copy The mutated copy to unlink
- * @param override NOOP if override is false
- * @return false in case of failure (but you probably don't care)
- */
-bool OverrideImmutableAbort(const char *orig, const char *copy, bool override);
+    const char *orig, const char *copy, bool override, bool abort);
 
 #endif /* CFENGINE_OVERRIDE_FSATTRS_H */

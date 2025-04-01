@@ -116,6 +116,28 @@ dnl
 ENV_CFLAGS="$CFLAGS"
 
 dnl ######################################################################
+dnl Enable debugging
+dnl ######################################################################
+
+AC_ARG_ENABLE(debug,
+              AS_HELP_STRING([--enable-debug], [Enable debugging]),
+              [debug=$enableval],
+              [debug=no])
+AM_CONDITIONAL([NDEBUG], [test x"$debug" = x"no"])
+
+AC_MSG_CHECKING([for debug option])
+if test x"$debug" = x"yes"
+then
+    AC_MSG_RESULT(yes)
+    CFLAGS="-g3 -O0"
+else
+    AC_MSG_RESULT(no)
+    CFLAGS="-O2 -DNDEBUG"
+fi
+
+CFLAGS="$CFLAGS $ENV_CFLAGS"
+
+dnl ######################################################################
 dnl Checks for programs.
 dnl ######################################################################
 
@@ -267,31 +289,6 @@ AS_CASE([${target_os}],
     [CFLAGS="$CFLAGS -Wno-format"])
 
 AS_CASE([${target_os}], [mingw*], [AM_CONDITIONAL([WINDOWS], [true])], [AM_CONDITIONAL([WINDOWS], [false])])
-
-dnl ######################################################################
-dnl Enable debugging
-dnl ######################################################################
-
-AC_ARG_ENABLE(debug,
-              AS_HELP_STRING([--enable-debug], [Enable debugging]),
-              [debug=$enableval],
-              [debug=no])
-AM_CONDITIONAL([NDEBUG], [test x"$debug" = x"no"])
-
-dnl Even though CFLAGS should contain the command-line CFLAGS
-dnl as last, some macro seem to messes the order up and insert
-dnl its own optimisation flags as well. So we append ENV_CFLAGS
-dnl at the end manually, causing a bit of flag duplication.
-
-AC_MSG_CHECKING([for debug option])
-if test x"$debug" = x"yes"
-then
-    AC_MSG_RESULT(yes)
-    CFLAGS="$CFLAGS -g3 -O0 $ENV_CFLAGS"
-else
-    AC_MSG_RESULT(no)
-    CFLAGS="$CFLAGS -O2 -DNDEBUG $ENV_CFLAGS"
-fi
 
 dnl ######################################################################
 dnl Checks for libraries.
@@ -1376,7 +1373,7 @@ dnl Collect all the options
 dnl ######################################################################
 
 CORE_CPPFLAGS="$LMDB_CPPFLAGS $TOKYOCABINET_CPPFLAGS $QDBM_CPPFLAGS $PCRE2_CPPFLAGS $OPENSSL_CPPFLAGS $SQLITE3_CPPFLAGS $LIBACL_CPPFLAGS $LIBCURL_CPPFLAGS $LIBRSYNC_CPPFLAGS $LIBYAML_CPPFLAGS $POSTGRESQL_CPPFLAGS $MYSQL_CPPFLAGS $LIBXML2_CPPFLAGS $CPPFLAGS $CFECOMPAT_CPPFLAGS"
-CORE_CFLAGS="$LMDB_CFLAGS $TOKYOCABINET_CFLAGS $QDBM_CFLAGS $PCRE2_CFLAGS $OPENSSL_CFLAGS $SQLITE3_CFLAGS $LIBACL_CFLAGS $LIBCURL_CFLAGS $LIBRSYNC_CFLAGS $LIBYAML_CFLAGS $POSTGRESQL_CFLAGS $MYSQL_CFLAGS $LIBXML2_CFLAGS $CFLAGS"
+CORE_CFLAGS="$LMDB_CFLAGS $TOKYOCABINET_CFLAGS $QDBM_CFLAGS $PCRE2_CFLAGS $OPENSSL_CFLAGS $SQLITE3_CFLAGS $LIBACL_CFLAGS $LIBCURL_CFLAGS $LIBRSYNC_CFLAGS $LIBYAML_CFLAGS $POSTGRESQL_CFLAGS $MYSQL_CFLAGS $LIBXML2_CFLAGS"
 CORE_LDFLAGS="$LMDB_LDFLAGS $TOKYOCABINET_LDFLAGS $QDBM_LDFLAGS $PCRE2_LDFLAGS $OPENSSL_LDFLAGS $SQLITE3_LDFLAGS $LIBACL_LDFLAGS $LIBCURL_LDFLAGS $LIBRSYNC_LDFLAGS $LIBYAML_LDFLAGS $POSTGRESQL_LDFLAGS $MYSQL_LDFLAGS $LIBXML2_LDFLAGS $LDFLAGS"
 CORE_LIBS="$LMDB_LIBS $TOKYOCABINET_LIBS $QDBM_LIBS $PCRE2_LIBS $OPENSSL_LIBS $SQLITE3_LIBS $LIBACL_LIBS $LIBCURL_LIBS $LIBRSYNC_LIBS $LIBYAML_LIBS $POSTGRESQL_LIBS $MYSQL_LIBS $LIBXML2_LIBS $LIBS"
 

@@ -549,6 +549,12 @@ static void GetNameInfo3(EvalContext *ctx)
     bool found = false;
     for (i = 0; !found && (i < PLATFORM_CONTEXT_MAX); i++)
     {
+#ifndef NDEBUG
+        for (const char *ch = VSYSNAME.sysname; *ch != '\0'; ch++)
+        {
+            assert(islower(*ch));
+        }
+#endif /* NDEBUG */
         /* FIXME: review those strcmps. Moved out from StringMatch */
         if (!strcmp(CLASSATTRIBUTES[i][0], VSYSNAME.sysname)
             || StringMatchFull(CLASSATTRIBUTES[i][0], VSYSNAME.sysname))

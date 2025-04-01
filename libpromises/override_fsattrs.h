@@ -33,26 +33,32 @@
  * @param orig The original file (may be immutable)
  * @param copy Updated to contain the filename of the mutable copy
  * @param copy_len The size of the buffer to store the filename of the copy
+ * @param override Whether to actually do override (original filename is
+ * copied to copy buffer if false)
  * @return false in case of failure
  */
-bool OverrideImmutableBegin(const char *orig, char *copy, size_t copy_len);
+bool OverrideImmutableBegin(
+    const char *orig, char *copy, size_t copy_len, bool override);
 
 /**
  * @brief Temporarily clears the immutable bit of the original file and
  * replaces it with the mutated copy
  * @param orig The original file (may be immutable)
  * @param copy The mutated copy to replace the original
+ * @param override Whether to actually do override
  * @return false in case of failure
  * @note The immutable bit is reset to it's original state
  */
-bool OverrideImmutableCommit(const char *orig, const char *copy);
+bool OverrideImmutableCommit(
+    const char *orig, const char *copy, bool override);
 
 /**
  * @brief Simply unlinks the mutable copy
  * @param orig Not used (reserved in for future use)
  * @param copy The mutated copy to unlink
+ * @param override NOOP if override is false
  * @return false in case of failure (but you probably don't care)
  */
-bool OverrideImmutableAbort(const char *orig, const char *copy);
+bool OverrideImmutableAbort(const char *orig, const char *copy, bool override);
 
 #endif /* CFENGINE_OVERRIDE_FSATTRS_H */

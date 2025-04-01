@@ -17,6 +17,7 @@ bool OverrideImmutableBegin(
         {
             Log(LOG_LEVEL_ERR,
                 "Failed to copy filename '%s': Filename too long (%zu >= %zu)",
+                orig,
                 ret,
                 copy_len);
             return false;
@@ -53,11 +54,17 @@ bool OverrideImmutableBegin(
     return true;
 }
 
-bool OverrideImmutableCommit(const char *orig, const char *copy, bool override)
+bool OverrideImmutableCommit(
+    const char *orig, const char *copy, bool override, bool abort)
 {
     if (!override)
     {
         return true;
+    }
+
+    if (abort)
+    {
+        return unlink(copy) == 0;
     }
 
     struct stat sb;
@@ -151,15 +158,4 @@ bool OverrideImmutableCommit(const char *orig, const char *copy, bool override)
     }
 
     return true;
-}
-
-bool OverrideImmutableAbort(
-    ARG_UNUSED const char *orig, const char *copy, bool override)
-{
-    assert(copy != NULL);
-    if (!override)
-    {
-        return true;
-    }
-    return unlink(copy) == 0;
 }

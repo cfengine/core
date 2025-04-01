@@ -7,8 +7,23 @@
 #include <cf3.defs.h>
 #include <string_lib.h>
 
-bool OverrideImmutableBegin(const char *orig, char *copy, size_t copy_len)
+bool OverrideImmutableBegin(
+    const char *orig, char *copy, size_t copy_len, bool override)
 {
+    if (!override)
+    {
+        size_t ret = strlcpy(copy, orig, copy_len);
+        if (ret >= copy_len)
+        {
+            Log(LOG_LEVEL_ERR,
+                "Failed to copy filename '%s': Filename too long (%zu >= %zu)",
+                ret,
+                copy_len);
+            return false;
+        }
+        return true;
+    }
+
     srand(time(NULL)); /* Seed random number generator */
     int rand_number = rand() % 999999;
     assert(rand_number >= 0);
@@ -38,8 +53,13 @@ bool OverrideImmutableBegin(const char *orig, char *copy, size_t copy_len)
     return true;
 }
 
-bool OverrideImmutableCommit(const char *orig, const char *copy)
+bool OverrideImmutableCommit(const char *orig, const char *copy, bool override)
 {
+    if (!override)
+    {
+        return true;
+    }
+
     struct stat sb;
     if (lstat(orig, &sb) == -1)
     {
@@ -133,8 +153,13 @@ bool OverrideImmutableCommit(const char *orig, const char *copy)
     return true;
 }
 
-bool OverrideImmutableAbort(ARG_UNUSED const char *orig, const char *copy)
+bool OverrideImmutableAbort(
+    ARG_UNUSED const char *orig, const char *copy, bool override)
 {
     assert(copy != NULL);
+    if (!override)
+    {
+        return true;
+    }
     return unlink(copy) == 0;
 }

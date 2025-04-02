@@ -1367,6 +1367,75 @@ static FnCallResult FnCallGetGid(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const P
 #endif
 }
 
+/*********************************************************************/ 
+
+static FnCallResult no_entry(int ret, const FnCall *fp, const char *group_name, bool is_user_db)
+{
+    assert(fp != NULL);
+
+    const char *entry_type = is_user_db ? "user" : "group";
+    const char *db_type = is_user_db ? "passwd" : "group";
+    if (ret == 0 || ret == ENOENT || ret == ESRCH || ret == EBADF || ret == EPERM)
+    {
+        Log(LOG_LEVEL_DEBUG, "Couldn't find %s '%s' in %s database", entry_type, group_name, db_type);
+        return FnReturnContext(false);
+    }
+    const char *const error_msg = GetErrorStrFromCode(ret);
+    Log(LOG_LEVEL_ERR, "Couldn't open %s database in function '%s': %s", db_type, fp->name, error_msg);
+    return FnFailure();
+}
+
+static FnCallResult FnCallUserInGroup(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
+{
+    assert(fp != NULL);
+    assert(finalargs != NULL);
+#ifdef _WIN32
+    Log(LOG_LEVEL_ERR, "Function '%s' is POSIX specific", fp->name);
+    return FnFailure();  
+#else
+
+    const char *user_name = RlistScalarValue(finalargs);
+    const char *group_name = RlistScalarValue(finalargs->next);
+    assert(group_name != NULL); // Guaranteed by parser
+
+    int ret;
+
+    // Check secondary group. This is what we expect the user to check for, thus it comes first.
+    struct group grp;
+    struct group *grent;
+    char gr_buf[GETGR_R_SIZE_MAX] = {0};
+    ret = getgrnam_r(group_name, &grp, gr_buf, GETGR_R_SIZE_MAX, &grent);
+    
+    if (grent == NULL)
+    {
+        // Group does not exist at all, so cannot be
+        // primary or secondary group of user
+        return no_entry(ret, fp, group_name, false);
+    }
+    while (grent->gr_mem[0] != NULL)
+    {
+        if (StringEqual(grent->gr_mem[0], user_name))
+        {
+            return FnReturnContext(true);
+        }
+        grent->gr_mem++;
+    }
+
+    // Check primary group
+    struct passwd pwd;
+    struct passwd *pwent;
+    char pw_buf[GETPW_R_SIZE_MAX] = {0};
+    ret = getpwnam_r(user_name, &pwd, pw_buf, GETPW_R_SIZE_MAX, &pwent);
+
+    if (pwent == NULL)
+    {
+        return no_entry(ret, fp, user_name, true);
+    }
+    return FnReturnContext(grent->gr_gid == pwent->pw_gid);
+    
+#endif
+}
+
 /*********************************************************************/
 
 static FnCallResult FnCallHandlerHash(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
@@ -9885,6 +9954,13 @@ static const FnCallArg GETUID_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg USERINGROUP_ARGS[] =
+{
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "User name"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Group name"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
 static const FnCallArg GETUSERINFO_ARGS[] =
 {
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "User name in text"},
@@ -10936,7 +11012,9 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("randomint", CF_DATA_TYPE_INT, RANDOMINT_ARGS, &FnCallRandomInt, "Generate a random integer between the given limits, excluding the upper",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("hash_to_int", CF_DATA_TYPE_INT, HASH_TO_INT_ARGS, &FnCallHashToInt, "Generate an integer in given range based on string hash",
-              FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("useringroup", CF_DATA_TYPE_CONTEXT, USERINGROUP_ARGS, &FnCallUserInGroup, "Checks whether a user is in a group",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
 
     FnCallTypeNew("string", CF_DATA_TYPE_STRING, STRING_ARGS, &FnCallString, "Convert argument to string",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),

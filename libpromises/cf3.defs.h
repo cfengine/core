@@ -73,6 +73,11 @@
 #define SECONDS_PER_WEEK (7 * SECONDS_PER_DAY)
 #define SECONDS_PER_YEAR (365 * SECONDS_PER_DAY)
 
+/* Max size of the 'passwd' string in the getpwuid_r() function,
+ * man:getpwuid_r(3) says that this value "Should be more than enough". */
+#define GETPW_R_SIZE_MAX 16384
+#define GETGR_R_SIZE_MAX 16384  /* same for group name */
+
 /* Long-term monitoring constants */
 
 #define HOURS_PER_SHIFT 6

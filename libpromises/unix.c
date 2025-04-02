@@ -33,10 +33,6 @@
 
 #ifndef __MINGW32__
 
-/* Max size of the 'passwd' string in the getpwuid_r() function,
- * man:getpwuid_r(3) says that this value "Should be more than enough". */
-#define GETPW_R_SIZE_MAX 16384
-#define GETGR_R_SIZE_MAX 16384  /* same for group name */
 
 static bool IsProcessRunning(pid_t pid);
 

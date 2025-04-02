@@ -348,9 +348,9 @@ static bool ProtocolSendError(SSL *conn, bool flush, const char *fmt, ...)
  *
  * After a job iteration:
  *  - the 'next_in' attribute will point to the byte after the last one
- *    consumed.
+ *    consumed from 'in_buf'.
  *  - the 'avail_in' attribute will contain the number of remaining/unconsumed
- *    bytes.
+ *    bytes in 'in_buf'.
  *
  * @param bufs The RS buffers
  * @param in_buf The input buffer

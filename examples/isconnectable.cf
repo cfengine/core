@@ -25,7 +25,7 @@ body common control
 {
   bundlesequence => { "example" };
 }
-bundle agent example 
+bundle agent example
 {
   classes:
     "isconnectable" expression => isconnectable("localhost", 22, "30");
@@ -36,10 +36,4 @@ bundle agent example
     !isconnectable::
       "Port is not connectable";
 }
-#+end_src
-###############################################################################
-#+begin_src example_output
-#@ ```
-#@ R: Port is connectable
-#@ ```
 #+end_src

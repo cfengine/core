@@ -1,0 +1,43 @@
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  vars:
+    # to avoid dependencies (like installing netstat/net-utils), look at proc filesystem for listening port, probably at least one (like ssh or chrony)
+    # header of /proc/net/tcp is: sl  local_address rem_address   st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode
+    # local_address is ip:port
+    # example line for ssh (port 22, hex 16): 0: 00000000:0016 00000000:0000 0A 00000000:00000000 00:00000000 00000000     0        0 25575 2 ffff9eac03038000 100 0 0 10 0
+    # finally, to keep things "simple" only try ports listening on 0.0.0.0 aka 00000000: in the local_address column
+    "port_to_check" string => execresult("cat /proc/net/tcp | grep ': 00000000:' | head -2 | tail -1 | awk '{print $2}' | cut -d: -f2 | xargs -I{} printf '%d\n' 0x{}", "useshell");
+
+  classes:
+    "port_to_check_available" expression => and(
+      isvariable("port_to_check"),
+      not(strcmp("${port_to_check}",""))
+    ),
+      scope => "namespace";
+
+  reports:
+    "init bundle, port_to_check is ${port_to_check}";
+}
+
+bundle agent check
+{
+  meta:
+    "test_skip_unsupported" string => "!linux|!port_to_check_available";
+
+  classes:
+    "isconnectable" expression => isconnectable("localhost", ${init.port_to_check}, "30");
+
+  reports:
+    "Tried isconnectable on port_to_check ${init.port_to_check}";
+    isconnectable::
+      "${this.promise_filename} Pass";
+    !isconnectable::
+      "${this.promise_filename} FAIL";
+}

@@ -86,74 +86,92 @@ bool OverrideImmutableCommit(
         return false;
     }
 
+    return OverrideImmutableRename(copy, orig, override);
+}
+
+bool OverrideImmutableRename(
+    const char *old_filename, const char *new_filename, bool override)
+{
+    assert(old_filename != NULL);
+    assert(new_filename != NULL);
+
     /* If the operations on the file system attributes fails for any reason,
      * we can still proceed to try to replace the original file. We will only
      * log an actual error in case of an unexpected failure (i.e., when
      * FS_ATTRS_FAILURE is returned). Other failures will be logged as verbose
      * messages because they can be useful, but are be quite verbose. */
 
+    FSAttrsResult res;
     bool is_immutable;
-    FSAttrsResult res = FSAttrsGetImmutableFlag(orig, &is_immutable);
-    if (res == FS_ATTRS_SUCCESS)
+
+    if (override)
     {
-        if (is_immutable)
+        res = FSAttrsGetImmutableFlag(new_filename, &is_immutable);
+        if (res == FS_ATTRS_SUCCESS)
         {
-            res = FSAttrsUpdateImmutableFlag(orig, false);
+            if (is_immutable)
+            {
+                res = FSAttrsUpdateImmutableFlag(new_filename, false);
+                if (res == FS_ATTRS_SUCCESS)
+                {
+                    Log(LOG_LEVEL_VERBOSE,
+                        "Temporarily cleared immutable bit for file '%s'",
+                        new_filename);
+                }
+                else
+                {
+                    Log((res == FS_ATTRS_FAILURE) ? LOG_LEVEL_ERR
+                                                  : LOG_LEVEL_VERBOSE,
+                        "Failed to temporarily clear immutable bit for file '%s': %s",
+                        new_filename,
+                        FSAttrsErrorCodeToString(res));
+                }
+            }
+            else
+            {
+                Log(LOG_LEVEL_DEBUG,
+                    "The immutable bit is not set on file '%s'",
+                    new_filename);
+            }
+        }
+        else
+        {
+            Log((res == FS_ATTRS_FAILURE) ? LOG_LEVEL_ERR : LOG_LEVEL_VERBOSE,
+                "Failed to get immutable bit from file '%s': %s",
+                new_filename,
+                FSAttrsErrorCodeToString(res));
+        }
+    }
+
+    if (rename(old_filename, new_filename) == -1)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Failed to replace original file '%s' with copy '%s'",
+            new_filename,
+            old_filename);
+        unlink(old_filename);
+        return false;
+    }
+
+    if (override)
+    {
+        if ((res == FS_ATTRS_SUCCESS) && is_immutable)
+        {
+            res = FSAttrsUpdateImmutableFlag(new_filename, true);
             if (res == FS_ATTRS_SUCCESS)
             {
                 Log(LOG_LEVEL_VERBOSE,
-                    "Temporarily cleared immutable bit for file '%s'",
-                    orig);
+                    "Reset immutable bit after temporarily clearing it from file '%s'",
+                    new_filename);
             }
             else
             {
                 Log((res == FS_ATTRS_FAILURE) ? LOG_LEVEL_ERR
                                               : LOG_LEVEL_VERBOSE,
-                    "Failed to temporarily clear immutable bit for file '%s': %s",
-                    orig,
+                    "Failed to reset immutable bit after temporarily clearing it from file '%s': %s",
+                    new_filename,
                     FSAttrsErrorCodeToString(res));
             }
-        }
-        else
-        {
-            Log(LOG_LEVEL_DEBUG,
-                "The immutable bit is not set on file '%s'",
-                orig);
-        }
-    }
-    else
-    {
-        Log((res == FS_ATTRS_FAILURE) ? LOG_LEVEL_ERR : LOG_LEVEL_VERBOSE,
-            "Failed to get immutable bit from file '%s': %s",
-            orig,
-            FSAttrsErrorCodeToString(res));
-    }
-
-    if (rename(copy, orig) == -1)
-    {
-        Log(LOG_LEVEL_ERR,
-            "Failed to replace original file '%s' with copy '%s'",
-            orig,
-            copy);
-        unlink(copy);
-        return false;
-    }
-
-    if ((res == FS_ATTRS_SUCCESS) && is_immutable)
-    {
-        res = FSAttrsUpdateImmutableFlag(orig, true);
-        if (res == FS_ATTRS_SUCCESS)
-        {
-            Log(LOG_LEVEL_VERBOSE,
-                "Reset immutable bit after temporarily clearing it from file '%s'",
-                orig);
-        }
-        else
-        {
-            Log((res == FS_ATTRS_FAILURE) ? LOG_LEVEL_ERR : LOG_LEVEL_VERBOSE,
-                "Failed to reset immutable bit after temporarily clearing it from file '%s': %s",
-                orig,
-                FSAttrsErrorCodeToString(res));
         }
     }
 

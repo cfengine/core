@@ -192,7 +192,20 @@ struct EvalContext_
     RemoteVarPromisesMap *remote_var_promises;
 
     bool dump_reports;
+    bool override_immutable;
 };
+
+void EvalContextOverrideImmutableSet(EvalContext *ctx, bool should_override)
+{
+    assert(ctx != NULL);
+    ctx->override_immutable = should_override;
+}
+
+bool EvalContextOverrideImmutableGet(EvalContext *ctx)
+{
+    assert(ctx != NULL);
+    return ctx->override_immutable;
+}
 
 void EvalContextSetConfig(EvalContext *ctx, const GenericAgentConfig *config)
 {

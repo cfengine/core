@@ -66,7 +66,7 @@
 static PromiseResult FindFilePromiserObjects(EvalContext *ctx, const Promise *pp);
 static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promise *pp);
 static PromiseResult WriteContentFromString(EvalContext *ctx, const char *path, const Attributes *attr,
-                                            const Promise *pp, bool override_immutable);
+                                            const Promise *pp);
 
 /*****************************************************************************/
 
@@ -406,7 +406,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
     /* If we encounter any promises to mutate the file and the immutable
      * attribute in body fsattrs is "true", we will override the immutable bit
      * by temporarily clearing it when ever needed. */
-    const bool override_immutable = a.havefsattrs && a.fsattrs.haveimmutable && a.fsattrs.immutable && is_immutable;
+    EvalContextOverrideImmutableSet(ctx, a.havefsattrs && a.fsattrs.haveimmutable && a.fsattrs.immutable && is_immutable);
 
     if (lstat(changes_path, &oslb) == -1)       /* Careful if the object is a link */
     {
@@ -617,7 +617,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
         Log(LOG_LEVEL_VERBOSE, "Replacing '%s' with content '%s'",
             path, a.content);
 
-        PromiseResult render_result = WriteContentFromString(ctx, path, &a, pp, override_immutable);
+        PromiseResult render_result = WriteContentFromString(ctx, path, &a, pp);
         result = PromiseResultUpdate(result, render_result);
 
         goto exit;
@@ -711,6 +711,9 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
     }
 
 exit:
+    /* Reset this to false before next file promise */
+    EvalContextOverrideImmutableSet(ctx, false);
+
     free(chrooted_path);
     if (AttrHasNoAction(&a))
     {
@@ -766,7 +769,7 @@ skip:
 /*****************************************************************************/
 
 static PromiseResult WriteContentFromString(EvalContext *ctx, const char *path, const Attributes *attr,
-                                            const Promise *pp, bool override_immutable)
+                                            const Promise *pp)
 {
     assert(path != NULL);
     assert(attr != NULL);
@@ -794,6 +797,7 @@ static PromiseResult WriteContentFromString(EvalContext *ctx, const char *path, 
 
     if (!HashesMatch(existing_content_digest, promised_content_digest, CF_DEFAULT_DIGEST))
     {
+        bool override_immutable = EvalContextOverrideImmutableGet(ctx);
         if (!MakingChanges(ctx, pp, attr, &result,
                           "update file '%s' with content '%s'",
                            path, attr->content))

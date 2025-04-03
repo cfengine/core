@@ -177,3 +177,50 @@ bool OverrideImmutableRename(
 
     return true;
 }
+
+bool OverrideImmutableDelete(const char *filename, bool override)
+{
+    assert(filename != NULL);
+
+    bool is_immutable = false;
+    if (override)
+    {
+        FSAttrsResult res = FSAttrsGetImmutableFlag(filename, &is_immutable);
+        if (res == FS_ATTRS_SUCCESS)
+        {
+            if (is_immutable)
+            {
+                res = FSAttrsUpdateImmutableFlag(filename, false);
+                if (res == FS_ATTRS_SUCCESS)
+                {
+                    Log(LOG_LEVEL_VERBOSE,
+                        "Cleared immutable bit for file '%s'",
+                        filename);
+                }
+                else
+                {
+                    Log((res == FS_ATTRS_FAILURE) ? LOG_LEVEL_ERR
+                                                  : LOG_LEVEL_VERBOSE,
+                        "Failed to clear immutable bit for file '%s': %s",
+                        filename,
+                        FSAttrsErrorCodeToString(res));
+                }
+            }
+            else
+            {
+                Log(LOG_LEVEL_DEBUG,
+                    "The immutable bit is not set on file '%s'",
+                    filename);
+            }
+        }
+        else
+        {
+            Log((res == FS_ATTRS_FAILURE) ? LOG_LEVEL_ERR : LOG_LEVEL_VERBOSE,
+                "Failed to get immutable bit from file '%s': %s",
+                filename,
+                FSAttrsErrorCodeToString(res));
+        }
+    }
+
+    return unlink(filename) == 0;
+}

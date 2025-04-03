@@ -64,4 +64,12 @@ bool OverrideImmutableCommit(
 bool OverrideImmutableRename(
     const char *old_filename, const char *new_filename, bool override);
 
+/**
+ * @brief Delete immutable file
+ * @param filename Name of the file to delete
+ * @param override Whether to actually do override
+ * @return false in case of failure
+ */
+bool OverrideImmutableDelete(const char *filename, bool override);
+
 #endif /* CFENGINE_OVERRIDE_FSATTRS_H */

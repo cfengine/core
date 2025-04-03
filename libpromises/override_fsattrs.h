@@ -53,4 +53,15 @@ bool OverrideImmutableBegin(
 bool OverrideImmutableCommit(
     const char *orig, const char *copy, bool override, bool abort);
 
+/**
+ * @brief Temporarily clears the immutable bit of the old file and renames the
+ * new to the old
+ * @param old_filename Filename of the old file
+ * @param new_filename Filename of the new file
+ * @param override Whether to actually do override
+ * @return false in case of failure
+ */
+bool OverrideImmutableRename(
+    const char *old_filename, const char *new_filename, bool override);
+
 #endif /* CFENGINE_OVERRIDE_FSATTRS_H */

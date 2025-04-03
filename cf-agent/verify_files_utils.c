@@ -2419,8 +2419,8 @@ static PromiseResult VerifyDelete(EvalContext *ctx,
     {
         if (!S_ISDIR(sb->st_mode))                      /* file,symlink */
         {
-            int ret = unlink(lastnode);
-            if (ret == -1)
+            bool override_immutable = EvalContextOverrideImmutableGet(ctx);
+            if (!OverrideImmutableDelete(lastnode, override_immutable))
             {
                 RecordFailure(ctx, pp, attr, "Couldn't unlink '%s' tidying. (unlink: %s)",
                               path, GetErrorStr());

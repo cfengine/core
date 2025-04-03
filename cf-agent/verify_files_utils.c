@@ -67,6 +67,7 @@
 #include <known_dirs.h>
 #include <changes_chroot.h>     /* PrepareChangesChroot(), RecordFileChangedInChroot() */
 #include <unix.h>               /* GetGroupName(), GetUserName() */
+#include <override_fsattrs.h>
 
 #include <cf-windows-functions.h>
 
@@ -1925,7 +1926,8 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
     else
 #endif
     {
-        if (rename(changes_new, changes_dest) == 0)
+        bool override_immutable = EvalContextOverrideImmutableGet(ctx);
+        if (OverrideImmutableRename(changes_new, changes_dest, override_immutable))
         {
             RecordChange(ctx, pp, attr, "Moved '%s' to '%s'", new, dest);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
@@ -1937,7 +1939,7 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
                           dest, GetErrorStr());
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
 
-            if (backupok && (rename(changes_backup, changes_dest) == 0))
+            if (backupok && OverrideImmutableRename(changes_backup, changes_dest, override_immutable))
             {
                 RecordChange(ctx, pp, attr, "Restored '%s' from '%s'", dest, backup);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);

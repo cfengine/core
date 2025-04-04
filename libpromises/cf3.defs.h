@@ -722,6 +722,11 @@ enum cfopaction
     cfa_warn,
 };
 
+enum hostswithfieldenum {
+    HOSTS_WITH_CLASS,
+    HOSTS_WITH_GROUP
+};
+
 typedef enum
 {
     BACKUP_OPTION_BACKUP,

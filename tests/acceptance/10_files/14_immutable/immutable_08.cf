@@ -1,0 +1,76 @@
+##############################################################################
+#
+# Test that agent can override the immutable bit when using touch attribute
+#
+##############################################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+body fsattrs set_immutable
+{
+  immutable => "true";
+}
+
+bundle agent init
+{
+  commands:
+    "touch -d @0 /tmp/immutable_08.txt"
+      contain => in_shell;
+    "chattr +i /tmp/immutable_08.txt"
+      contain => in_shell;
+}
+
+bundle agent test
+{
+  meta:
+    "description" -> { "CFE-1840", "ENT-10961" }
+      string => "Test that agent can override the immutable bit on a file while using the touch attribute";
+
+    "test_soft_fail"
+      string => "hpux|aix|windows",
+      meta => { "CFE-1840", "ENT-10961" };
+
+  files:
+    "/tmp/immutable_08.txt"
+      fsattrs => set_immutable,
+      touch => "true";
+}
+
+bundle agent check
+{
+  vars:
+    "not_expected"
+      string => "0";
+    "actual"
+      string => filestat("/tmp/immutable_08.txt", "mtime");
+
+  classes:
+    "ok"
+      expression => not(strcmp("$(actual)", "$(not_expected)"));
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+    any::
+      "Not expecting $(not_expected), got $(actual)";
+}
+
+bundle agent destroy
+{
+  commands:
+    "chattr -i /tmp/immutable_08.txt"
+      contain => in_shell,
+      handle => "is mutable";
+
+  files:
+    "/tmp/immutable_08.txt"
+      delete => tidy,
+      depends_on => { "is mutable" };
+}

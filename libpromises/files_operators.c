@@ -47,6 +47,7 @@
 #include <files_repository.h>
 #include <files_lib.h>
 #include <buffer.h>
+#include <override_fsattrs.h>
 
 
 bool MoveObstruction(EvalContext *ctx, char *from, const Attributes *attr, const Promise *pp, PromiseResult *result)
@@ -149,7 +150,7 @@ bool MoveObstruction(EvalContext *ctx, char *from, const Attributes *attr, const
 
 /*********************************************************************/
 
-bool SaveAsFile(SaveCallbackFn callback, void *param, const char *file, const Attributes *a, NewLineMode new_line_mode)
+bool SaveAsFile(EvalContext *ctx, SaveCallbackFn callback, void *param, const char *file, const Attributes *a, NewLineMode new_line_mode)
 {
     assert(a != NULL);
     struct stat statbuf;
@@ -277,7 +278,8 @@ bool SaveAsFile(SaveCallbackFn callback, void *param, const char *file, const At
         unlink(backup);
     }
 
-    if (rename(new, BufferData(deref_file)) == -1)
+    const bool override_immutable = EvalContextOverrideImmutableGet(ctx);
+    if (!OverrideImmutableRename(new, BufferData(deref_file), override_immutable))
     {
         Log(LOG_LEVEL_ERR, "Can't rename '%s' to %s - so promised edits could not be moved into place. (rename: %s)",
             new, BufferData(pretty_file), GetErrorStr());
@@ -331,10 +333,10 @@ static bool SaveItemListCallback(const char *dest_filename, void *param, NewLine
 
 /*********************************************************************/
 
-bool SaveItemListAsFile(Item *liststart, const char *file, const Attributes *a, NewLineMode new_line_mode)
+bool SaveItemListAsFile(EvalContext *ctx, Item *liststart, const char *file, const Attributes *a, NewLineMode new_line_mode)
 {
     assert(a != NULL);
-    return SaveAsFile(&SaveItemListCallback, liststart, file, a, new_line_mode);
+    return SaveAsFile(ctx, &SaveItemListCallback, liststart, file, a, new_line_mode);
 }
 
 // Some complex logic here to enable warnings of diffs to be given

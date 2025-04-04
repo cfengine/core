@@ -216,6 +216,7 @@ AS_IF([test x"$enable_fhs" = xyes], [
   INPUTDIR='default'
   DATADIR='default'
   LOGDIR='${localstatedir}/log/${PACKAGE}'
+  MODULEDIR='default'
   PIDDIR='${runstatedir:-${localstatedir}/run}/${PACKAGE}'
   STATEDIR='default'
 ], [
@@ -228,6 +229,7 @@ AS_IF([test x"$enable_fhs" = xyes], [
         INPUTDIR=default
         DATADIR=default
         LOGDIR=$(cmd /c "echo %PROGRAMFILES%\\Cfengine" | sed 's/\\/\\\\/g')
+        MODULEDIR=default
         PIDDIR=$(cmd /c "echo %PROGRAMFILES%\\Cfengine" | sed 's/\\/\\\\/g')
         STATEDIR=default
       ;;
@@ -237,6 +239,7 @@ AS_IF([test x"$enable_fhs" = xyes], [
         INPUTDIR=default
         DATADIR=default
         LOGDIR=/var/cfengine
+        MODULEDIR=default
         PIDDIR=/var/cfengine
         STATEDIR=default
       ;;
@@ -247,6 +250,7 @@ AS_IF([test x"$enable_fhs" = xyes], [
     INPUTDIR="default"
     DATADIR="default"
     LOGDIR="${localstatedir}/${PACKAGE}"
+    MODULEDIR="default"
     PIDDIR="${localstatedir}/${PACKAGE}"
     STATEDIR="default"
   fi
@@ -1455,6 +1459,7 @@ AC_ARG_WITH(workdir,
             WORKDIR="$withval"
             LOGDIR="$withval"
             PIDDIR="$withval"
+            MODULEDIR="$withval"
         fi
     ],
 )
@@ -1539,6 +1544,22 @@ AC_ARG_WITH(piddir,
         fi
     ],
 )
+
+AC_ARG_WITH(moduledir,
+    [  --with-moduledir=MODULEDIR  default for internal module directory ],
+    [
+        if test "x$withval" != x ; then
+            MODULEDIR="$withval"
+        fi
+    ],
+)
+
+dnl Expand ${prefix} and whatnot in MODULEDIR
+
+adl_RECURSIVE_EVAL("${MODULEDIR}", MODULEDIR)
+
+AC_DEFINE_UNQUOTED(MODULEDIR, "${MODULEDIR}", [Moduledir location])
+AC_SUBST(moduledir, "${MODULEDIR}")
 
 dnl Expand ${prefix} and whatnot in PIDDIR
 
@@ -1923,6 +1944,7 @@ AC_MSG_RESULT([-> Logdir: $LOGDIR])
 AC_MSG_RESULT([-> Piddir: $PIDDIR])
 AC_MSG_RESULT([-> Statedir: $STATEDIR])
 AC_MSG_RESULT([-> bindir: $bindir])
+AC_MSG_RESULT([-> Moduledir: $MODULEDIR])
 
 AC_MSG_RESULT( )
 

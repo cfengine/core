@@ -459,6 +459,7 @@ static void GetNameInfo3(EvalContext *ctx)
     unsigned char digest[EVP_MAX_MD_SIZE + 1];
     const char* const workdir = GetWorkDir();
     const char* const bindir = GetBinDir();
+    const char* const moduledir = GetModuleDir();
 
 #ifdef _AIX
     char real_version[_SYS_NMLN];
@@ -608,6 +609,7 @@ static void GetNameInfo3(EvalContext *ctx)
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "version", VSYSNAME.version, CF_DATA_TYPE_STRING, "source=agent");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "arch", VSYSNAME.machine, CF_DATA_TYPE_STRING, "inventory,source=agent,attribute_name=Architecture");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "workdir", workdir, CF_DATA_TYPE_STRING, "source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "moduledir", moduledir, CF_DATA_TYPE_STRING, "source=agent");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "fstab", VFSTAB[VSYSTEMHARDCLASS], CF_DATA_TYPE_STRING, "source=agent");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "resolv", VRESOLVCONF[VSYSTEMHARDCLASS], CF_DATA_TYPE_STRING, "source=agent");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "maildir", VMAILDIR[VSYSTEMHARDCLASS], CF_DATA_TYPE_STRING, "source=agent");

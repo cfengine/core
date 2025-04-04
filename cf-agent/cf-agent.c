@@ -162,7 +162,8 @@ static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save
 static void AllClassesReport(const EvalContext *ctx);
 static bool HasAvahiSupport(void);
 static int AutomaticBootstrap(GenericAgentConfig *config);
-static void BannerStatus(PromiseResult status, const char *type, char *name);
+static void BannerStatusEnd(PromiseResult status, const char *type, char *name);
+static void BannerStatusBegin(const char *type, char *name);
 static PromiseResult DefaultVarPromise(EvalContext *ctx, const Promise *pp);
 static void WaitForBackgroundProcesses();
 
@@ -1852,6 +1853,7 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
     assert(param == NULL);
     assert(pp != NULL);
 
+    BannerStatusBegin(PromiseGetPromiseType(pp), pp->promiser);
     struct timespec start = BeginMeasure();
     PromiseResult result = PROMISE_RESULT_NOOP;
 
@@ -1976,13 +1978,23 @@ static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, ARG_U
         result = PROMISE_RESULT_NOOP;
     }
 
-    BannerStatus(result, PromiseGetPromiseType(pp), pp->promiser);
+    BannerStatusEnd(result, PromiseGetPromiseType(pp), pp->promiser);
     EvalContextLogPromiseIterationOutcome(ctx, pp, result);
     return result;
 }
 
+static void BannerStatusBegin(const char *type, char *name)
+{
+    if (StringEqual(type, "vars") || StringEqual(type, "classes"))
+    {
+        return;
+    }
+    Log(LOG_LEVEL_VERBOSE, "P: BEGIN %s promise (%.30s%s)",
+        type, name,
+        (strlen(name) > 30) ? "..." : "");
+}
 
-static void BannerStatus(PromiseResult status, const char *type, char *name)
+static void BannerStatusEnd(PromiseResult status, const char *type, char *name)
 {
     if ((strcmp(type, "vars") == 0) || (strcmp(type, "classes") == 0))
     {

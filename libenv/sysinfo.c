@@ -455,6 +455,8 @@ static void GetNameInfo3(EvalContext *ctx)
     unsigned char digest[EVP_MAX_MD_SIZE + 1];
     const char* const workdir = GetWorkDir();
     const char* const bindir = GetBinDir();
+    bool keydir_allocated;
+    const char* const keydir = GetKeyDir(&keydir_allocated);
 
 #ifdef _AIX
     char real_version[_SYS_NMLN];
@@ -617,6 +619,10 @@ static void GetNameInfo3(EvalContext *ctx)
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "statedir", GetStateDir(), CF_DATA_TYPE_STRING, "source=agent");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "masterdir", GetMasterDir(), CF_DATA_TYPE_STRING, "source=agent");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "inputdir", GetInputDir(), CF_DATA_TYPE_STRING, "source=agent");
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "keydir", keydir, CF_DATA_TYPE_STRING, "source=agent");
+    if (keydir_allocated) {
+        free((char *) keydir);
+    }
 
     snprintf(workbuf, CF_BUFSIZE, "%s", bindir);
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "bindir", workbuf, CF_DATA_TYPE_STRING, "source=agent");

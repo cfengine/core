@@ -604,7 +604,7 @@ ExpressionValue CheckClassExpression(const EvalContext *ctx, const char *context
 
     if (!res.result)
     {
-        Log(LOG_LEVEL_ERR, "Unable to parse class expression '%s'", context);
+        Log(LOG_LEVEL_ERR, "Couldn't find any class matching '%s'", context);
         return EXPRESSION_VALUE_ERROR;
     }
     else

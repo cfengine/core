@@ -161,6 +161,10 @@ void CalculateDomainName(const char *nodename, const char *dnsname,
                          char *uqname, size_t uqname_size,
                          char *domain, size_t domain_size);
 
+#ifdef __APPLE__
+static void Apple_Version(EvalContext *ctx);
+#endif
+
 #ifdef __linux__
 static int Linux_Fedora_Version(EvalContext *ctx);
 static int Linux_Redhat_Version(EvalContext *ctx);
@@ -1179,7 +1183,7 @@ static void OSReleaseParse(EvalContext *ctx, const char *file_path)
             {
                 alias = "redhat";
             }
-            else if (StringEqual(os_release_id, "opensuse") || 
+            else if (StringEqual(os_release_id, "opensuse") ||
                      StringEqual(os_release_id, "sles"))
             {
                 alias = "suse";
@@ -1410,6 +1414,10 @@ static void OSClasses(EvalContext *ctx)
 
 #else
 
+#ifdef __APPLE__
+    Apple_Version(ctx);
+#endif
+
     char vbuff[CF_MAXVARSIZE];
 
 #ifdef _AIX
@@ -1419,6 +1427,7 @@ static void OSClasses(EvalContext *ctx)
 #endif
 
 
+#ifndef __APPLE__
     for (char *sp = vbuff; *sp != '\0'; sp++)
     {
         if (*sp == '-')
@@ -1431,6 +1440,7 @@ static void OSClasses(EvalContext *ctx)
     char context[CF_BUFSIZE];
     snprintf(context, CF_BUFSIZE, "%s_%s", VSYSNAME.sysname, vbuff);
     SetFlavor(ctx, context);
+#endif
 
 
 #ifdef __hpux
@@ -1593,6 +1603,10 @@ static void OSClasses(EvalContext *ctx)
         {
             snprintf(vbuff, CF_BUFSIZE, "/var/cron/tabs/%s", user_name);
         }
+        else if (EvalContextClassGet(ctx, NULL, "macos"))
+        {
+            snprintf(vbuff, CF_BUFSIZE, "/usr/lib/cron/tabs/%s", user_name);
+        }
         else
         {
             snprintf(vbuff, CF_BUFSIZE, "/var/spool/cron/crontabs/%s", user_name);
@@ -1640,6 +1654,93 @@ static void OSClasses(EvalContext *ctx)
 }
 
 /*********************************************************************************/
+
+#ifdef __APPLE__
+static void Apple_Version(EvalContext *ctx)
+{
+    FILE *pp = NULL;
+
+    Log(LOG_LEVEL_VERBOSE, "This appears to be an apple system.");
+    Log(LOG_LEVEL_VERBOSE, "Looking for product name and version...");
+    if ((!FileCanOpen("/usr/bin/sw_vers", "r") || ((pp = cf_popen("/usr/bin/sw_vers", "r", true)) == NULL)))
+    {
+        Log(LOG_LEVEL_ERR, "Could not open and run /usr/bin/sw_vers to find macOS system version information.");
+        return;
+    }
+
+    size_t line_size = CF_BUFSIZE;
+    char *line = xmalloc(line_size);
+    int revcomps = 0;
+    unsigned int major, minor, patch;
+    char *flavor = NULL, *product_name = NULL, *r;
+
+    while (CfReadLine(&line, &line_size, pp) != -1)
+    {
+        if (STARTSWITH(line, "ProductName:"))
+        {
+            r = strrchr(line, '\t');
+            if (r == NULL || ++r == NULL)
+            {
+                continue;
+            }
+            product_name = SafeStringDuplicate(r);
+            ToLowerStrInplace(r);
+            flavor = SafeStringDuplicate(r);
+            EvalContextClassPutHard(
+                    ctx,
+                    r,
+                    "inventory,attribute_name=none,source=agent,derived-from=sw_vers");
+        }
+        else if (STARTSWITH(line, "ProductVersion:"))
+        {
+            r = strrchr(line, '\t');
+            if (r == NULL || ++r == NULL)
+            {
+                continue;
+            }
+            revcomps = sscanf(r, "%u.%u.%u", &major, &minor, &patch);
+        }
+    }
+
+    if (flavor == NULL)
+    {
+        free(line);
+        cf_pclose(pp);
+        return;
+    }
+
+    char buf[CF_BUFSIZE];
+
+    if (revcomps > 0)
+    {
+        NDEBUG_UNUSED int ret = snprintf(buf, sizeof(buf), "%s_%u", flavor, major);
+        assert(ret >= 0 && (size_t) ret < sizeof(buf));
+        Log(LOG_LEVEL_VERBOSE, "This appears to be a %s %u system.", product_name, major);
+        SetFlavor(ctx, buf);
+    }
+
+    if (revcomps > 1)
+    {
+        NDEBUG_UNUSED int ret = snprintf(buf, sizeof(buf), "%s_%u_%u", flavor, major, minor);
+        assert(ret >= 0 && (size_t) ret < sizeof(buf));
+        Log(LOG_LEVEL_VERBOSE, "This appears to be a %s %u.%u system.", product_name, major, minor);
+        EvalContextClassPutHard(ctx, buf, "inventory,attribute_name=none,source=agent");
+    }
+
+    if (revcomps > 2)
+    {
+        NDEBUG_UNUSED int ret = snprintf(buf, sizeof(buf), "%s_%u_%u_%u", flavor, major, minor, patch);
+        assert(ret >= 0 && (size_t) ret < sizeof(buf));
+        Log(LOG_LEVEL_VERBOSE, "This appears to be a %s %u.%u.%u system.", product_name, major, minor, patch);
+        EvalContextClassPutHard(ctx, buf, "inventory,attribute_name=none,source=agent");
+    }
+
+    free(line);
+    free(flavor);
+    free(product_name);
+    cf_pclose(pp);
+}
+#endif
 
 #ifdef __linux__
 static void Linux_Oracle_VM_Server_Version(EvalContext *ctx)
@@ -3583,13 +3684,13 @@ static void SysOSNameHuman(EvalContext *ctx)
 
 /**
  * Find next integer from string in place. Leading zero's are included.
- * 
+ *
  * @param [in]  str string to extract next integer from
  * @param [out] num pointer to start of next integer or %NULL if no integer
  *                  number was found
- * 
+ *
  * @return pointer to the remaining string in `str` or %NULL if no remainder
- * 
+ *
  * @note `str` will be mutated
  */
 static char *FindNextInteger(char *str, char **num)
@@ -3657,8 +3758,8 @@ static void SysOsVersionMajor(EvalContext *ctx)
     }
     else
     {
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, 
-                                      "os_version_major", major, 
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS,
+                                      "os_version_major", major,
                                       CF_DATA_TYPE_STRING,
                                       "source=agent,derived-from=flavor");
     }

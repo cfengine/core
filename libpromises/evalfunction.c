@@ -1203,6 +1203,95 @@ static FnCallResult FnCallGetGid(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const P
 #endif
 }
 
+/*********************************************************************/ 
+
+static FnCallResult FnCallUserInGroup(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
+{
+    assert(fp != NULL);
+#ifdef _WIN32
+    Log(LOG_LEVEL_ERR, "Function '%s' is POSIX specific", fp->name);
+    return FnFailure();  
+#else
+    assert(finalargs != NULL);
+
+    const char *user_name = RlistScalarValue(finalargs);
+    const char *group_name = RlistScalarValue(finalargs->next);
+
+    StringSet *users = StringSetNew();
+    int ret;
+
+    // check secondary group
+    struct group grp;
+    struct group *grent;
+    char gr_buf[GETGR_R_SIZE_MAX] = {0};
+    ret = getgrnam_r(group_name, &grp, gr_buf, GETGR_R_SIZE_MAX, &grent);
+    
+    if (grent == NULL)
+    {
+        switch(ret)
+        {
+            case 0:
+            case ENOENT:
+            case ESRCH:
+            case EBADF:
+            case EPERM:
+                break;
+            default:
+            {
+                const char *error_msg = GetErrorStrFromCode(ret);
+                Log(LOG_LEVEL_ERR, "Couldn't open group database in function '%s': %s", fp->name, error_msg);
+                StringSetDestroy(users);
+                return FnFailure();
+            }
+        }
+    }
+    else {
+        while (grent->gr_mem[0] != NULL)
+        {
+            char *group_member = xstrdup(grent->gr_mem[0]);
+            StringSetAdd(users, group_member);
+            grent->gr_mem++;
+        }
+    }
+    
+    bool result = StringSetContains(users, user_name);
+    StringSetDestroy(users);
+
+    // check primary group
+    if (!result && grent != NULL)
+    {
+        struct passwd pwd;
+        struct passwd *pwent;
+        char pw_buf[GETPW_R_SIZE_MAX] = {0};
+        ret = getpwnam_r(user_name, &pwd, pw_buf, GETPW_R_SIZE_MAX, &pwent);
+
+        if (pwent == NULL)
+        {
+            switch(ret)
+            {
+                case 0:
+                case ENOENT:
+                case ESRCH:
+                case EBADF:
+                case EPERM:
+                    return FnReturnContext(false);
+                default:
+                {
+                    const char *error_msg = GetErrorStrFromCode(ret);
+                    Log(LOG_LEVEL_ERR, "Couldn't open passwd database in function '%s': %s", fp->name, error_msg);
+                    return FnFailure();
+                }
+            }
+        }
+        else {
+            return FnReturnContext(grent->gr_gid == pwent->pw_gid);
+        }
+    }
+    return FnReturnContext(result); 
+
+#endif
+}
+
 /*********************************************************************/
 
 static FnCallResult FnCallHandlerHash(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
@@ -9721,6 +9810,13 @@ static const FnCallArg GETUID_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg USERINGROUP_ARGS[] =
+{
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "User name"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Group name"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
 static const FnCallArg GETUSERINFO_ARGS[] =
 {
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "User name in text"},
@@ -10768,7 +10864,9 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("randomint", CF_DATA_TYPE_INT, RANDOMINT_ARGS, &FnCallRandomInt, "Generate a random integer between the given limits, excluding the upper",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("hash_to_int", CF_DATA_TYPE_INT, HASH_TO_INT_ARGS, &FnCallHashToInt, "Generate an integer in given range based on string hash",
-              FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("useringroup", CF_DATA_TYPE_CONTEXT, USERINGROUP_ARGS, &FnCallUserInGroup, "Checks whether a user is in a group",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
 
     FnCallTypeNew("string", CF_DATA_TYPE_STRING, STRING_ARGS, &FnCallString, "Convert argument to string",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),

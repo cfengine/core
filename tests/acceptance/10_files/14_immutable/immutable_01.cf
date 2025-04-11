@@ -1,0 +1,63 @@
+##############################################################################
+#
+# Test that agent can clear the immutable bit on a file
+#
+##############################################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+body fsattrs clear_immutable
+{
+  immutable => "false";
+}
+
+bundle agent init
+{
+  files:
+    "/tmp/immutable_01.txt"
+        create => "true";
+
+  commands:
+    "chattr +i /tmp/immutable_01.txt"
+      contain => in_shell;
+}
+
+bundle agent test
+{
+  meta:
+    "description" -> { "CFE-1840", "ENT-10961" }
+      string => "Test that agent can clear the immutable bit on a file";
+
+    "test_soft_fail"
+      string => "hpux|aix|windows",
+      meta => { "CFE-1840", "ENT-10961" };
+
+  files:
+    "/tmp/immutable_01.txt"
+      fsattrs => clear_immutable;
+}
+
+bundle agent check
+{
+  methods:
+    "check"
+      usebundle => dcs_passif_output(".*", ".*Immutable.*", "lsattr -l /tmp/immutable_01.txt", "$(this.promise_filename)");
+}
+
+bundle agent destroy
+{
+  commands:
+    "chattr -i /tmp/immutable_01.txt"
+      contain => in_shell,
+      handle => "is mutable";
+
+  files:
+    "/tmp/immutable_01.txt"
+      delete => tidy,
+      depends_on => { "is mutable" };
+}

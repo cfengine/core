@@ -1336,7 +1336,7 @@ AC_CHECK_DECLS([FALLOC_FL_PUNCH_HOLE], [], [], [
 ])
 AC_CHECK_HEADERS([sys/sendfile.h])
 AC_CHECK_FUNCS([sendfile])
-AC_CHECK_FUNCS([copy_file_range])
+AC_CHECK_DECL([copy_file_range])
 
 
 dnl #######################################################################

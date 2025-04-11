@@ -3,6 +3,7 @@
 set -x
 
 n_procs="$(getconf _NPROCESSORS_ONLN)"
+use_procs=$((n_procs/2))
 
 function check_with_gcc() {
   # previous runs may have cached configuration based on a different CC
@@ -11,7 +12,7 @@ function check_with_gcc() {
   # here --config-cache enables lots of checks in subdir libntech to re-use checks made in core
   ./configure --config-cache --enable-debug CC=gcc
   local gcc_exceptions="-Wno-sign-compare -Wno-enum-int-mismatch"
-  make -j -l${n_procs} --keep-going CFLAGS="-Werror -Wall -Wextra $gcc_exceptions"
+  make -j -l${use_procs} --keep-going CFLAGS="-Werror -Wall -Wextra $gcc_exceptions"
 }
 
 function check_with_clang() {
@@ -20,7 +21,7 @@ function check_with_clang() {
   make clean
   # here --config-cache enables lots of checks in subdir libntech to re-use checks made in core
   ./configure --config-cache --enable-debug CC=clang
-  make -j -l${n_procs} --keep-going CFLAGS="-Werror -Wall -Wextra -Wno-sign-compare"
+  make -j -l${use_procs} --keep-going CFLAGS="-Werror -Wall -Wextra -Wno-sign-compare"
 }
 
 function check_with_cppcheck() {
@@ -39,7 +40,7 @@ function check_with_cppcheck() {
   #   -i -- ignored files/folders
   #   --include=<file> -- force including a file, e.g. config.h
   # Identified issues are printed to stderr
-  cppcheck --quiet -j${n_procs} --error-exitcode=1 ./ \
+  cppcheck --quiet -j${use_procs} --error-exitcode=1 ./ \
            --suppressions-list=tests/static-check/cppcheck_suppressions.txt \
            --include=config.h \
            -I cf-serverd/ -I libpromises/ -I libcfnet/ -I libntech/libutils/ \

@@ -1,0 +1,148 @@
+PREREQUISITES
+-------------
+
+In order to build CFEngine you need the following tools and libraries installed:
+
+* C compiler supporting C90 + selected C99 constructs:
+    - _Bool type
+    - anonymous aggregates "(MyType) { .foo = 1, .bar = 2 }"
+    - declarations in "for" loop
+    - named initializers
+    - uintmax_t and corresponding printf/scanf formats
+  The following compilers are known to work:
+    - gcc >= 3.0
+    - clang >= 2.6
+* GNU make
+
+* PAM library
+* OpenSSL library
+* PCRE library
+* POSIX threads (pthreads) library, if not provided by the operating system
+* Latest available LMDB (Lightning Memory-mapped DataBase), Tokyo Cabinet or QDBM
+
+* MySQL client library (optional)
+* PostgreSQL client library (optional)
+* libacl library (optional)
+
+In order to build CFEngine cloned from git, you will need the
+following additional tools:
+
+* GNU Automake >= 1.10.1
+* GNU Autoconf >= 2.60
+* GNU Libtool >= 1.5.24
+* Yacc (note: GNU Bison 2.4.2 has troubles invoking m4)
+* Lex
+
+Latest stable versions of the tools and libraries are generally advised.
+
+See INSTALL DEPENDENCIES below for example of deps for various systems.
+
+OPERATING SYSTEMS
+-----------------
+
+CFEngine is regularly built and tested on the following operating systems:
+
+* GNU/Linux (many distributions)
+* Solaris
+* Windows with MinGW
+
+HARDWARE PLATFORMS
+------------------
+
+CFEngine is regularly built and tested on the following CPU architectures:
+
+* x86
+* x86-64
+* SPARC
+
+OTHER CONFIGURATIONS
+--------------------
+
+In case you have successfully compiled CFEngine on a different OS and/or using
+different tools or versions of tools, please report it to help-cfengine@ mailing
+list[1]. Please consider running a testsuite (see below), and posting results to
+mailing list too.
+
+[1] https://groups.google.com/forum/#!forum/help-cfengine
+
+BUILD INSTRUCTIONS
+------------------
+
+From tarball:
+
+$ ./configure [configure options]
+$ make [-jN]
+
+From git checkout:
+
+$ ./autogen.sh [configure options]
+$ make [-jN]
+
+See the available configure options:
+
+$ ./configure --help
+or
+$ ./autogen.sh --help
+
+INSTALLATION INSTRUCTIONS
+-------------------------
+
+CFEngine might be installed in two configurations:
+
+ * (default) Native CFEngine file layout. Everything is installed in
+   /var/cfengine, laid out as a "secondary FHS root". This layout is designed to
+   keep CFEngine running even if most of the system is broken (e.g. /usr is not
+   mounted due to NFS breakage).
+
+* FHS file layout, enabled by --enable-fhs. This layout follows FHS 2.3.
+
+After the build process has completed (see BUILD INSTRUCTIONS above), type:
+
+$ make install
+
+RUNNING TESTSUITE
+-----------------
+
+Please refer to the instructions in tests/README file.
+
+INSTALL DEPENDENCIES
+--------------------
+
+Here we have examples of command lines for various systems to install dependencies
+needed to build. The version and date checked are noted in parenthesis. Please
+submit PRs with updates to this information.
+
+* RedHat/CentOS (rhel-8/rhel-9/centos-7 2022-11-15)
+
+Note that first you will need to install epel-release (https://fedoraproject.org/wiki/EPEL) for lmdb-devel to be available.
+
+$ sudo yum install -y gcc gdb make git libtool autoconf automake byacc flex openssl-devel pcre-devel lmdb-devel pam-devel flex-devel libyaml-devel
+
+For SELinux support you will need selinux-policy-devel package and specify `--with-selinux-policy` to `autogen.sh` or `configure`
+
+* Debian (Raspbian 10 2021-07-02)
+
+$ sudo apt-get install -y build-essential git libtool autoconf automake bison flex libssl-dev libpcre3-dev libbison-dev libacl1 libacl1-dev lmdb-utils liblmdb-dev libpam0g-dev libtool libyaml-dev
+
+* FreeBSD (12.1 2020-04-07)
+
+See docs/BSD.md
+
+* SUSE (Tumbleweed 2020-02-02)
+
+$ sudo zypper install gdb gcc make lmdb autoconf automake libtool git python3 pcre-devel libopenssl-devel pam-devel
+
+* AlpineOS (3.11.3 x86_64 2020-04-13)
+
+$ sudo apk add alpine-sdk lmdb-dev openssl-dev bison flex-dev acl-dev pcre-dev autoconf automake libtool git python3 gdb
+$ ./autogen.sh --without-pam
+
+* Termux (2020-04-24)
+
+pkg install -y build-essential git autoconf automake bison flex liblmdb openssl pcre libacl libyaml
+./autogen.sh --without-pam
+
+* OSX (2021-10-20)
+
+brew install openssl@1.1 lmdb autoconf automake libtool bison flex pcre m4 gcc make
+./autogen.sh --enable-debug --with-openssl="$(brew --prefix openssl@1.1)"

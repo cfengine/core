@@ -1,0 +1,1 @@
+DESTDIR=/data/data/com.termux/files make install

@@ -140,6 +140,8 @@ $ ./autogen.sh --without-pam
 * Termux (2020-04-24)
 
 pkg install -y build-essential git autoconf automake bison flex liblmdb openssl pcre libacl libyaml
+# ld is not found with clang (from build-essential?) so add binutils
+# also need rsync
 ./autogen.sh --without-pam
 
 * OSX (2021-10-20)

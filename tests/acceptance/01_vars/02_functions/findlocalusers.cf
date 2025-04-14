@@ -1,0 +1,51 @@
+body common control 
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+bundle agent init
+{
+  vars:
+      # simple filters
+      "simple_filter" slist => { "name=root" };
+      "number_filter" slist => { "uid=0" };
+      
+      # longer filters
+      "slist_filter" slist => { "gid=0", "name=root" };
+
+      # using data
+      "data_filter" data => '[ "gid=0", "name=root" ]';
+
+      # using regex
+      "simple_regex" slist => { "name=roo.*" };
+      "number_regex" slist => { "uid=0.*" };
+      "longer_regex" slist => { "name=ro.*", "uid=0.*" };
+
+      # non-existent user
+      "unknown" slist => { "name=thisuserdoesntexist" };
+}
+bundle agent test 
+{
+  meta:
+      "test_soft_fail" string => "windows",
+        meta => { "CFE-2318" };
+
+  vars:
+    "ulist1" data => findlocalusers("@(init.simple_filter)");
+    "ulist2" data => findlocalusers("init.number_filter");
+    "ulist4" data => findlocalusers("@(init.slist_filter)");
+    "ulist3" data => findlocalusers("@(init.data_filter)");
+    "ulist5" data => findlocalusers("@(init.simple_regex)");
+    "ulist6" data => findlocalusers("@(init.number_regex)");
+    "ulist7" data => findlocalusers("@(init.longer_regex)");
+    "ulist8" data => findlocalusers("@(init.unknown)");
+
+}
+bundle agent check
+{
+  methods:
+      "check"  usebundle => dcs_check_state(test,
+                                           "$(this.promise_filename).expected.json",
+                                           $(this.promise_filename));
+}

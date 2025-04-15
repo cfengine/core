@@ -215,6 +215,7 @@ AS_IF([test x"$enable_fhs" = xyes], [
   MASTERDIR='default'
   INPUTDIR='default'
   DATADIR='default'
+  KEYDIR='default'
   LOGDIR='${localstatedir}/log/${PACKAGE}'
   MODULEDIR='default'
   PIDDIR='${runstatedir:-${localstatedir}/run}/${PACKAGE}'
@@ -228,6 +229,7 @@ AS_IF([test x"$enable_fhs" = xyes], [
         MASTERDIR=default
         INPUTDIR=default
         DATADIR=default
+        KEYDIR=default
         LOGDIR=$(cmd /c "echo %PROGRAMFILES%\\Cfengine" | sed 's/\\/\\\\/g')
         MODULEDIR=default
         PIDDIR=$(cmd /c "echo %PROGRAMFILES%\\Cfengine" | sed 's/\\/\\\\/g')
@@ -238,6 +240,7 @@ AS_IF([test x"$enable_fhs" = xyes], [
         MASTERDIR=default
         INPUTDIR=default
         DATADIR=default
+        KEYDIR=default
         LOGDIR=/var/cfengine
         MODULEDIR=default
         PIDDIR=/var/cfengine
@@ -249,6 +252,7 @@ AS_IF([test x"$enable_fhs" = xyes], [
     MASTERDIR="default"
     INPUTDIR="default"
     DATADIR="default"
+    KEYDIR="default"
     LOGDIR="${localstatedir}/${PACKAGE}"
     MODULEDIR="default"
     PIDDIR="${localstatedir}/${PACKAGE}"
@@ -1520,6 +1524,22 @@ dnl There's a conflict on mingw where they have a type called DATADIR!
 AC_DEFINE_UNQUOTED(CF_DATADIR, "${DATADIR}", [Datadir location])
 AC_SUBST(datadir, "${DATADIR}")
 
+AC_ARG_WITH(keydir,
+    [  --with-keydir=KEYDIR  default for internal log directory ],
+    [
+        if test "x$withval" != x ; then
+            KEYDIR="$withval"
+        fi
+    ],
+)
+
+dnl Expand ${prefix} and whatnot in KEYDIR
+
+adl_RECURSIVE_EVAL("${KEYDIR}", KEYDIR)
+
+AC_DEFINE_UNQUOTED(KEYDIR, "${KEYDIR}", [Keydir location])
+AC_SUBST(keydir, "${KEYDIR}")
+
 AC_ARG_WITH(logdir,
     [  --with-logdir=LOGDIR  default for internal log directory ],
     [
@@ -1940,6 +1960,7 @@ AC_MSG_RESULT([-> Workdir: $WORKDIR])
 AC_MSG_RESULT([-> Masterdir: $MASTERDIR])
 AC_MSG_RESULT([-> Inputdir: $INPUTDIR])
 AC_MSG_RESULT([-> Datadir: $DATADIR])
+AC_MSG_RESULT([-> KeyDir: $KEYDIR])
 AC_MSG_RESULT([-> Logdir: $LOGDIR])
 AC_MSG_RESULT([-> Piddir: $PIDDIR])
 AC_MSG_RESULT([-> Statedir: $STATEDIR])

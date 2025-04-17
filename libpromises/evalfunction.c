@@ -1811,7 +1811,7 @@ static bool GetLegacyPackagesMatching(Regex *matcher, JsonElement *json, const b
             "Cannot open the %s packages inventory '%s' - "
             "This is not necessarily an error. "
             "Either the inventory policy has not been included, "
-            "or it has not had time to have an effect yet or you are using"
+            "or it has not had time to have an effect yet or you are using "
             "new package promise and check for legacy promise is made."
             "A future call may still succeed. (fopen: %s)",
             installed_mode ? "installed" : "available",

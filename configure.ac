@@ -1525,7 +1525,7 @@ AC_DEFINE_UNQUOTED(CF_DATADIR, "${DATADIR}", [Datadir location])
 AC_SUBST(datadir, "${DATADIR}")
 
 AC_ARG_WITH(keydir,
-    [  --with-keydir=KEYDIR  default for internal log directory ],
+    [  --with-keydir=KEYDIR  default for internal key directory ],
     [
         if test "x$withval" != x ; then
             KEYDIR="$withval"

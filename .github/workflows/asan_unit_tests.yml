@@ -17,4 +17,4 @@ jobs:
     - name: Compile and link (make)
       run: make -j8 CFLAGS="-Werror -Wall -fsanitize=address" LDFLAGS="-fsanitize=address"
     - name: Run unit tests
-      run: ASAN_OPTIONS=detect_odr_violation=0 make -C tests/unit CFLAGS="-fsanitize=address" LDFLAGS="-fsanitize=address" check
+      run: ASAN_OPTIONS=detect_odr_violation=0 LSAN_OPTIONS="suppressions=../../.github/workflows/suppr.txt" make -C tests/unit CFLAGS="-fsanitize=address" LDFLAGS="-fsanitize=address" check

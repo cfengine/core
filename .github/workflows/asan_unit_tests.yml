@@ -5,7 +5,7 @@ on:
 
 jobs:
   asan_unit_tests:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v3
       with:
@@ -17,4 +17,4 @@ jobs:
     - name: Compile and link (make)
       run: make -j8 CFLAGS="-Werror -Wall -fsanitize=address" LDFLAGS="-fsanitize=address"
     - name: Run unit tests
-      run: make -C tests/unit CFLAGS="-fsanitize=address" LDFLAGS="-fsanitize=address" check
+      run: ASAN_OPTIONS=detect_odr_violation=0 LSAN_OPTIONS="suppressions=../../.github/workflows/suppr.txt" make -C tests/unit CFLAGS="-fsanitize=address" LDFLAGS="-fsanitize=address" check

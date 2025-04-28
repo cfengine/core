@@ -7,11 +7,6 @@
 #include <rlist.h>
 #include <enterprise_extension.h>
 
-/* Global variables we care about */
-
-char VFQNAME[CF_MAXVARSIZE];
-char VUQNAME[CF_MAXVARSIZE / 2];
-char VDOMAIN[CF_MAXVARSIZE / 2];
 
 static struct hostent h = {
     .h_name = "laptop.intra.cfengine.com"

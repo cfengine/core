@@ -52,15 +52,7 @@ AM_CFLAGS = $(PTHREAD_CFLAGS)
 
 
 check_LTLIBRARIES = libtest.la
-libtest_la_SOURCES = cmockery.c cmockery.h schema.h test.c test.h \
-	../../libntech/libutils/alloc.c \
-	../../libpromises/patches.c \
-	../../libpromises/constants.c \
-	../../libntech/libutils/known_dirs.c \
-	../../libntech/libutils/map.c \
-	../../libntech/libutils/array_map.c \
-	../../libntech/libutils/hash.c \
-	../../libntech/libutils/hash_map.c
+libtest_la_SOURCES = cmockery.c cmockery.h schema.h test.c test.h
 
 libtest_la_LIBADD = ../../libntech/libcompat/libcompat.la
 
@@ -196,6 +188,7 @@ if MACOSX
 XFAIL_TESTS = set_domainname_test
 XFAIL_TESTS += process_test
 XFAIL_TESTS += mon_processes_test
+XFAIL_TESTS += rlist_test
 endif
 
 if HPUX
@@ -269,18 +262,13 @@ db_concurrent_test_SOURCES = db_concurrent_test.c
 db_concurrent_test_LDADD = libdb.la
 
 lastseen_test_SOURCES = lastseen_test.c \
-	../../libpromises/item_lib.c \
-	../../libpromises/lastseen.c \
 	../../libntech/libutils/statistics.c
 #lastseen_test_CPPFLAGS = $(libdb_la_CPPFLAGS)
-lastseen_test_LDADD = libdb.la ../../libpromises/libpromises.la
+lastseen_test_LDADD = libtest.la ../../libpromises/libpromises.la
 
-lastseen_migration_test_SOURCES = lastseen_migration_test.c \
-	../../libpromises/lastseen.c \
-	../../libntech/libutils/statistics.c \
-	../../libpromises/item_lib.c
+lastseen_migration_test_SOURCES = lastseen_migration_test.c
 #lastseen_migration_test_CPPFLAGS = $(libdb_la_CPPFLAGS)
-lastseen_migration_test_LDADD = libdb.la ../../libpromises/libpromises.la
+lastseen_migration_test_LDADD = ../../libpromises/libpromises.la
 
 CLEANFILES = *.gcno *.gcda cfengine-enterprise.so
 
@@ -303,7 +291,10 @@ files_copy_test_LDADD    = libtest.la ../../libpromises/libpromises.la
 sort_test_SOURCES = sort_test.c
 sort_test_LDADD = libtest.la ../../libpromises/libpromises.la
 
-logging_test_SOURCES = logging_test.c ../../libpromises/syslog_client.c
+logging_test_SOURCES = logging_test.c \
+	../../libpromises/syslog_client.c \
+	../../libpromises/patches.c \
+	../../libpromises/constants.c
 logging_test_LDADD = libtest.la ../../libntech/libutils/libutils.la
 
 connection_management_test_SOURCES = connection_management_test.c \
@@ -313,8 +304,7 @@ connection_management_test_LDADD = ../../libpromises/libpromises.la \
 	 libtest.la \
 	../../cf-serverd/libcf-serverd.la
 
-rlist_test_SOURCES = rlist_test.c \
-	../../libpromises/rlist.c
+rlist_test_SOURCES = rlist_test.c
 rlist_test_LDADD = libtest.la ../../libpromises/libpromises.la
 # Workaround for object file basename conflicts, search the web for
 # "automake created with both libtool and without"

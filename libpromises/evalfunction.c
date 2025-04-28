@@ -10311,6 +10311,9 @@ static const FnCallArg DATATYPE_ARGS[] =
 
 /* see fncall.h enum FnCallType */
 
+/* In evalfunction_test.c we both include this file and link with libpromises.
+ * This guard makes sure we don't get a duplicate definition of this symbol */
+#ifndef CFENGINE_EVALFUNCTION_TEST_C
 const FnCallType CF_FNCALL_TYPES[] =
 {
     FnCallTypeNew("accessedbefore", CF_DATA_TYPE_CONTEXT, ACCESSEDBEFORE_ARGS, &FnCallIsAccessedBefore, "True if arg1 was accessed before arg2 (atime)",
@@ -10715,3 +10718,4 @@ const FnCallType CF_FNCALL_TYPES[] =
 
     FnCallTypeNewNull()
 };
+#endif // CFENGINE_EVALFUNCTION_TEST_C

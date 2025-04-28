@@ -1,5 +1,7 @@
 [![Gitter chat](https://badges.gitter.im/cfengine/core.png)](https://gitter.im/cfengine/core)
 
+Test
+
 # CFEngine 3
 
 CFEngine 3 is a popular open source configuration management system. Its primary

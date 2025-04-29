@@ -555,9 +555,13 @@ static void GetNameInfo3(EvalContext *ctx)
     bool found = false;
     for (i = 0; !found && (i < PLATFORM_CONTEXT_MAX); i++)
     {
+        char sysname[CF_BUFSIZE];
+        strlcpy(sysname, VSYSNAME.sysname, CF_BUFSIZE);
+        ToLowerStrInplace(sysname);
+
         /* FIXME: review those strcmps. Moved out from StringMatch */
-        if (!strcmp(CLASSATTRIBUTES[i][0], VSYSNAME.sysname)
-            || StringMatchFull(CLASSATTRIBUTES[i][0], VSYSNAME.sysname))
+        if (!strcmp(CLASSATTRIBUTES[i][0], sysname)
+            || StringMatchFull(CLASSATTRIBUTES[i][0], sysname))
         {
             if (!strcmp(CLASSATTRIBUTES[i][1], VSYSNAME.machine)
                 || StringMatchFull(CLASSATTRIBUTES[i][1], VSYSNAME.machine))

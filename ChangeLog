@@ -1,3 +1,17 @@
+3.24.2:
+	- Added "acknowledged" field to lastseen DB (ENT-11838)
+	- Adjusted cf-support for exotic UNIX platforms (ENT-9786)
+	- Adjusted cf-support to not fail if core dumps are available and gdb is
+	  missing (ENT-9786)
+	- Fixed bug causing LMDB database corruption
+	- Fixed incorrect exit code handling in cf-runagent (ENT-12712)
+	- Fixed possible segmentation fault when backing up LMDB databases
+	- In case of LMDB migration failures, the respective database file is now
+	  moved to the side, and a fresh database is created.
+	- cf-agent now creates backup before LMDB migration
+	- Re-enabled DB migration support for LMDB
+	- SELinux: Allow cf-serverd to set its own limits (ENT-12446)
+
 3.24.1:
 	- Fixed multiple issues in cfengine-enterprise SELinux policy which could
 	  cause AVC denials / warnings for various CFEngine components.

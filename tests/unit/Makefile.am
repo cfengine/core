@@ -106,6 +106,7 @@ libdb_la_LIBADD = libstr.la ../../libntech/libutils/libutils.la
 libdb_la_CFLAGS = $(AM_CFLAGS)
 
 check_PROGRAMS = \
+	processes_select_test \
 	arg_split_test \
 	assoc_test \
 	item_test \
@@ -200,6 +201,10 @@ endif
 if HPUX
 XFAIL_TESTS = mon_load_test # Redmine #3569
 endif
+
+
+processes_select_test_SOURCES = processes_select_test.c
+processes_select_test_LDADD = libtest.la ../../libpromises/libpromises.la
 
 #
 # OS X uses real system calls instead of our stubs unless this option is used

@@ -718,6 +718,17 @@ static bool SplitProcLine(const char *line,
 
       Take these two examples:
 
+Windows:
+    User field can contain spaces. E.g.:
+
+    USER                   PID %CPU %MEM      VSZ       RSS TTY STAT START  TIME COMMAND
+    NETWORK SERVICE        540  0.0  0.3     5092     11180 ?   ?    Apr28 00:00 C:\\Windows\\system32\\svchost.exe -k RPCSS -p
+    etc.
+
+    There is really no good way to do this with the current parsing logic. We
+    know that the next field will be a PID, so we can parse until we find a
+    number.
+
 AIX:
     USER      PID     PPID     PGID  %CPU  %MEM   VSZ NI S    STIME        TIME COMMAND
     root        1        0        0   0.0   0.0   784 20 A   Nov 28    00:00:00 /etc/init
@@ -831,6 +842,7 @@ Solaris 9:
         bool cmd = (strcmp(names[field], "CMD") == 0 ||
                     strcmp(names[field], "COMMAND") == 0);
         bool stime = !cmd && (strcmp(names[field], "STIME") == 0);
+        bool is_user_field = StringEqual(names[field], "USER");
 
         // Equal boolean results, either both must be true, or both must be
         // false. IOW we must either both be at the last field, and it must be
@@ -919,6 +931,41 @@ Solaris 9:
             while (line[last] && !isspace(line[last]))
             {
                 last++;
+            }
+        }
+        else if (is_user_field)
+        {
+            bool done = false;
+            while (!done)
+            {
+                while (line[last] != '\0' && !isspace(line[last]))
+                {
+                    last++;
+                }
+
+                /* On windows the USER field can contain spaces. We know that
+                 * the next field will be PID. Hence, we seek past the spaces
+                 * to see if the next thing is a number. If this is not the
+                 * case, we assume it is still the USER field. This is not
+                 * bulletproof. However, this parser never was. */
+                int seek_past = last;
+                while (line[seek_past] != '\0' && isspace(line[seek_past]))
+                {
+                    seek_past++;
+                }
+
+                if (line[seek_past] == '\0')
+                {
+                    done = true;
+                }
+                else if (isdigit(line[seek_past]))
+                {
+                    done = true;
+                }
+                else
+                {
+                    last = seek_past;
+                }
             }
         }
         else

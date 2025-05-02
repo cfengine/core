@@ -1,4 +1,5 @@
 3.24.2:
+	- Fixed bug in parsing process_select for Windows (ENT-12751)
 	- Added "acknowledged" field to lastseen DB (ENT-11838)
 	- Adjusted cf-support for exotic UNIX platforms (ENT-9786)
 	- Adjusted cf-support to not fail if core dumps are available and gdb is

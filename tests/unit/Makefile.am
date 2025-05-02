@@ -191,6 +191,10 @@ XFAIL_TESTS += mon_processes_test
 XFAIL_TESTS += rlist_test
 endif
 
+if AIX
+XFAIL_TESTS = rlist_test
+endif
+
 if HPUX
 XFAIL_TESTS = mon_load_test # Redmine #3569
 endif

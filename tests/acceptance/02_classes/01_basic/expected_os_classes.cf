@@ -26,6 +26,7 @@ bundle agent check
                          "hpux",
                          "suse",
                          "opensuse",
+                         "manjaro",
                          "archlinux",
                          "windows",
                          "freebsd",

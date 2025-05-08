@@ -1,5 +1,6 @@
 require {
 	type systemd_userdbd_runtime_t;
+	type http_port_t;
 }
 
 # PAM module for dynamic users
@@ -8,3 +9,8 @@ allow cfengine_httpd_t systemd_userdbd_runtime_t:sock_file write;
 allow cfengine_httpd_t kernel_t:unix_stream_socket connectto;
 allow cfengine_reactor_t systemd_userdbd_runtime_t:dir { getattr open read search };
 allow cfengine_reactor_t systemd_userdbd_runtime_t:sock_file write;
+
+# selinux-policy 38.1.45 requires the following http_port permissions whereas 3.14.3 does not.
+# these permissions are not be needed if changes from ENT-12954 to masterfiles policy move inventory from common to an agent bundle are in place.
+allow cfengine_serverd_t http_port_t:tcp_socket name_connect;
+allow cfengine_execd_t http_port_t:tcp_socket name_connect;

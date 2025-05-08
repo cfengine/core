@@ -37,7 +37,7 @@ bundle agent example
 {
   classes:
 
-      "do_it" and => { isnewerthan("/tmp/later","/tmp/earlier"), "cfengine" };
+      "do_it" expression => isnewerthan("/tmp/later","/tmp/earlier");
 
   reports:
 

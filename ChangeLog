@@ -1,4 +1,8 @@
 3.21.7:
+	- Fixed issue where rhel >8 packages would not have correct openssl
+	  dependency version (ENT-12587)
+	- Added http_port and getattr selinux permissions as needed for selinux
+	  policy on rhel-8 and rhel-9 (ENT-12954)
 	- Fixed bug in parsing process_select for Windows (ENT-12751)
 	- Added "acknowledged" field to lastseen DB (ENT-11838)
 	- Adjusted cf-support for exotic UNIX platforms (ENT-9786)

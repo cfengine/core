@@ -1,3 +1,54 @@
+3.26.0:
+	- Fixed issue where rhel >8 packages would not have correct openssl
+	  dependency version (ENT-12587)
+	- Added http_port and getattr selinux permissions as needed for selinux
+	  policy on rhel-8 and rhel-9 (ENT-12954)
+	- Fixed 'cf-net connect' to return exit code 1 in case of error (CFE-4414)
+	- Added feature class for libpam (CFE-3371)
+	- Added hardclasses for log levels notice, warning and error (CFE-4126)
+	- Added policy variable sys.cpusockets (CFE-30)
+	- Added a new policy function to get the list of metatags of a bundle,
+	  in the same manner as getclassmetatags and getvariablemetatags.
+	  (CFE-4019)
+	- Added a new policy function useringroup that returns whether a user
+	  is a member of a group. (ENT-12721)
+	- Added an optional parameter strict for validjson and validdata policy
+	  functions. This makes the functions evaluate to false on json
+	  primitives. (CFE-4163)
+	- Added findlocalusers policy function that returns all the local users
+	  matching certain attributes (CFE-2318)
+	- Added is_type policy function to check type of a variable (CFE-3641)
+	- Added keydir sys variable (CFE-2822)
+	- Added missing "BEGIN meta promises" verbose logging (CFE-2829)
+	- Added moduledir sys variable (CFE-1484)
+	- Added new hostswithgroup function to get hosts from a group,
+	  selecting a specific field. This function is enterprise only
+	  (ENT-11325)
+	- Added new policy function isconnectable to check if a port is
+	  connectable within a time limit in seconds. (ENT-10666)
+	- Added option to print rsync performance stats in cf-net
+	- Added php-fpm systemd service files to enable http2 in Mission Portal
+	  (ENT-11440)
+	- Changed error message in checkclassexpression when no matches
+	  (CFE-4075)
+	- Fixed build on macOS (CFE-4385)
+	- Fixed file closed twice in CopyRegularFileDiskPerms (CFE-4489)
+	- Fixed bug in parsing process_select for Windows (ENT-12751)
+	- Fixed bug which removed performance benefits of rsync in file
+	  transfers (basis file was truncated on remote copy)
+	- Fixed bug where remotely copying large files consisting of random
+	  bytes would cause internal server error. (CFE-4507)
+	- Fixed incorrect exit code handling in cf-runagent (ENT-12712)
+	- Fixed junk printed in case of internal server error (CFE-4507)
+	- Introduced a new variable default:sys.cf_edition that keeps track
+	  whether cfengine is community or enterprise. (ENT-10078)
+	- Updated syntax description to include new protocol_version values
+	  (CFE-4483)
+	- Use current process ID to investigate proc filesystem to workaround
+	  in-container non-root owned symlinks (CFE-3429)
+	- Modified getindices() to return positional index from a list
+	  (CFE-2930)
+
 3.25.0:
 	- Added acknowledged field to lastseen DB (ENT-11838)
 	- Various SELinux fixes:
@@ -215,7 +266,7 @@
 	- Insertion of contents of a file with blank lines into
 	  another file with blank lines no longer results in
 	  mixed content (ENT-8788)
-	- Added suggestion to use a negative lookahead when non-convergent edits 
+	- Added suggestion to use a negative lookahead when non-convergent edits
 	  are attempted
 	  (CFE-192)
 	- Unresolved function calls that return scalar values

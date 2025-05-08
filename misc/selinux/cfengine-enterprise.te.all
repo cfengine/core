@@ -91,6 +91,8 @@ require {
 	type ssh_exec_t;
 	type ssh_home_t;
 	type rpm_script_t;
+	type fsadm_exec_t;
+	type lvm_exec_t;
 	class lockdown { confidentiality integrity };
 	class tcp_socket { create ioctl read getattr lock write setattr append bind connect getopt setopt shutdown name_connect accept listen name_bind node_bind };
 	class mctp_socket { ioctl read write create getattr setattr lock relabelfrom relabelto append map bind connect listen accept getopt setopt shutdown recvfrom sendto recv_msg send_msg name_bind };
@@ -400,6 +402,10 @@ allow init_t cfengine_hub_t:process siginh;
 
 allow cfengine_hub_t cfengine_hub_exec_t:file entrypoint;
 allow cfengine_hub_t cfengine_hub_exec_t:file { ioctl read getattr lock map execute open };
+
+# the following file permissions for cf-hub are not needed if masterfiles includes fixes from ENT-12954 making inventory and paths standard library bundles agent instead of common.
+allow cfengine_hub_t fsadm_exec_t:file getattr;
+allow cfengine_hub_t lvm_exec_t:file getattr;
 
 # allow cf-hub to use/execute libpromises.so
 allow cfengine_hub_t cfengine_var_lib_t:file map;

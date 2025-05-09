@@ -224,7 +224,7 @@ sort_test_SOURCES = sort_test.c
 sort_test_LDADD = libtest.la ../../libpromises/libpromises.la
 
 logging_test_SOURCES = logging_test.c
-logging_test_LDADD = libtest.la ../../libpromises/libpromises.la
+logging_test_LDADD = libtest.la ../../libntech/libutils/libutils.la
 
 connection_management_test_SOURCES = connection_management_test.c
 connection_management_test_LDADD = ../../libpromises/libpromises.la \

@@ -189,7 +189,7 @@ for repo in repos:
                             del ENTRIES[linked_sha]
                     continue
 
-            match = re.match("^\(cherry picked from commit ([0-9a-f]+)\)", line, re.IGNORECASE)
+            match = re.match(r"^\(cherry picked from commit ([0-9a-f]+)\)", line, re.IGNORECASE)
             if match:
                 if log_entry:
                     add_entry(sha, log_entry)

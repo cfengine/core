@@ -2484,15 +2484,16 @@ static PromiseResult TouchFile(EvalContext *ctx, char *path, const Attributes *a
     PromiseResult result = PROMISE_RESULT_NOOP;
     if (MakingChanges(ctx, pp, attr, &result, "update time stamps for '%s'", path))
     {
-        if (utime(ToChangesPath(path), NULL) != -1)
+        bool override_immutable = EvalContextOverrideImmutableGet(ctx);
+        if (OverrideImmutableUtime(ToChangesPath(path), override_immutable, NULL))
         {
             RecordChange(ctx, pp, attr, "Touched (updated time stamps) for path '%s'", path);
             result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
         }
         else
         {
-            RecordFailure(ctx, pp, attr, "Touch '%s' failed to update timestamps. (utime: %s)",
-                          path, GetErrorStr());
+            RecordFailure(ctx, pp, attr, "Touch '%s' failed to update timestamps",
+                          path);
             result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         }
     }

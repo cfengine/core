@@ -1,0 +1,64 @@
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+#######################################################
+
+bundle agent check
+{
+  vars:
+    "test_file"
+      string => "$(this.promise_dirname)/isnewerthantime_file.txt";
+    "nonexistent_file"
+      string => "$(this.promise_dirname)/thisfiledoesntexist_1747148781.txt";
+    "test_file_mtime"
+      string => filestat("$(test_file)", mtime);
+    "test_file_time_just_before_mtime"
+      int => int(eval("$(test_file_mtime) - 1"));
+    "minus_one"
+      int => "-1";
+  classes:
+    "ok1"
+      expression => isnewerthantime("$(test_file)", 0);
+    "ok2"
+      expression => isnewerthantime("$(nonexistent_file)", 0);
+    "ok3"
+      expression => isnewerthantime("$(test_file)", "$(test_file_time_just_before_mtime)");
+    "ok4"
+      expression => isnewerthantime("$(test_file)", "$(test_file_mtime)");
+    "ok5"
+      expression => isnewerthantime("$(nonexistent_file)", "$(test_file_mtime)");
+    "ok6"
+      # as "inf" corresponds to 999999999, this is actually not False
+      expression => isnewerthantime("$(test_file)", "inf");
+    "ok7"
+      expression => isnewerthantime("$(nonexistent_file)", "inf");
+    "ok8"
+      expression => isnewerthantime("$(test_file)", "$(minus_one)");
+    "ok"
+      expression => and("ok1", "!ok2", "ok3", "!ok4", "!ok5", "ok6", "!ok7", "ok8");
+
+  reports:
+    DEBUG.ok1::
+      "1. pass";
+    DEBUG.!ok2::
+      "2. pass";
+    DEBUG.ok3::
+      "3. pass: $(test_file_time_just_before_mtime)";
+    DEBUG.!ok4::
+      "4. pass: $(test_file_mtime)";
+    DEBUG.!ok5::
+      "5. pass";
+    DEBUG.ok6::
+      "6. pass";
+    DEBUG.!ok7::
+      "7. pass";
+    DEBUG.ok8::
+      "8. pass";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

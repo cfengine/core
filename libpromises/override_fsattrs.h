@@ -27,6 +27,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <utime.h>
 
 /**
  * @brief Creates a mutable copy of the original file
@@ -71,5 +72,16 @@ bool OverrideImmutableRename(
  * @return false in case of failure
  */
 bool OverrideImmutableDelete(const char *filename, bool override);
+
+/**
+ * @brief Temporarily clears the immutable bit and changes access and
+ * modification times of the inode
+ * @param filename Name of the file to touch
+ * @param override Whether to actually do override
+ * @param times Modification times (can be NULL)
+ * @return false in case of failure
+ */
+bool OverrideImmutableUtime(
+    const char *filename, bool override, const struct utimbuf *times);
 
 #endif /* CFENGINE_OVERRIDE_FSATTRS_H */

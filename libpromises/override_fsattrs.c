@@ -202,3 +202,26 @@ bool OverrideImmutableDelete(const char *filename, bool override)
 
     return unlink(filename) == 0;
 }
+
+bool OverrideImmutableUtime(
+    const char *filename, bool override, const struct utimbuf *times)
+{
+    assert(filename != NULL);
+
+    FSAttrsResult res;
+    bool is_immutable;
+
+    TemporarilyClearImmutableBit(filename, override, &res, &is_immutable);
+
+    int ret = utime(filename, times);
+    if (ret == -1)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Failed to update access and modification times of file '%s'",
+            filename);
+    }
+
+    ResetTemporarilyClearedImmutableBit(filename, override, res, is_immutable);
+
+    return ret == 0;
+}

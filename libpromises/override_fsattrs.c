@@ -1,6 +1,5 @@
 #include <override_fsattrs.h>
 #include <platform.h>
-#include <fsattrs.h>
 #include <logging.h>
 #include <stdlib.h>
 #include <files_copy.h>
@@ -89,24 +88,21 @@ bool OverrideImmutableCommit(
     return OverrideImmutableRename(copy, orig, override);
 }
 
-static void TemporarilyClearImmutableBit(
-    const char *filename,
-    bool override,
-    FSAttrsResult *res,
-    bool *is_immutable)
+FSAttrsResult TemporarilyClearImmutableBit(
+    const char *filename, bool override, bool *was_immutable)
 {
     if (!override)
     {
-        return;
+        return FS_ATTRS_FAILURE;
     }
 
-    *res = FSAttrsGetImmutableFlag(filename, is_immutable);
-    if (*res == FS_ATTRS_SUCCESS)
+    FSAttrsResult res = FSAttrsGetImmutableFlag(filename, was_immutable);
+    if (res == FS_ATTRS_SUCCESS)
     {
-        if (*is_immutable)
+        if (*was_immutable)
         {
-            *res = FSAttrsUpdateImmutableFlag(filename, false);
-            if (*res == FS_ATTRS_SUCCESS)
+            res = FSAttrsUpdateImmutableFlag(filename, false);
+            if (res == FS_ATTRS_SUCCESS)
             {
                 Log(LOG_LEVEL_VERBOSE,
                     "Temporarily cleared immutable bit for file '%s'",
@@ -114,11 +110,11 @@ static void TemporarilyClearImmutableBit(
             }
             else
             {
-                Log((*res == FS_ATTRS_FAILURE) ? LOG_LEVEL_ERR
-                                               : LOG_LEVEL_VERBOSE,
+                Log((res == FS_ATTRS_FAILURE) ? LOG_LEVEL_ERR
+                                              : LOG_LEVEL_VERBOSE,
                     "Failed to temporarily clear immutable bit for file '%s': %s",
                     filename,
-                    FSAttrsErrorCodeToString(*res));
+                    FSAttrsErrorCodeToString(res));
             }
         }
         else
@@ -130,22 +126,24 @@ static void TemporarilyClearImmutableBit(
     }
     else
     {
-        Log((*res == FS_ATTRS_FAILURE) ? LOG_LEVEL_ERR : LOG_LEVEL_VERBOSE,
+        Log((res == FS_ATTRS_FAILURE) ? LOG_LEVEL_ERR : LOG_LEVEL_VERBOSE,
             "Failed to get immutable bit from file '%s': %s",
             filename,
-            FSAttrsErrorCodeToString(*res));
+            FSAttrsErrorCodeToString(res));
     }
+
+    return res;
 }
 
-static void ResetTemporarilyClearedImmutableBit(
-    const char *filename, bool override, FSAttrsResult res, bool is_immutable)
+void ResetTemporarilyClearedImmutableBit(
+    const char *filename, bool override, FSAttrsResult res, bool was_immutable)
 {
     if (!override)
     {
         return;
     }
 
-    if ((res == FS_ATTRS_SUCCESS) && is_immutable)
+    if ((res == FS_ATTRS_SUCCESS) && was_immutable)
     {
         res = FSAttrsUpdateImmutableFlag(filename, true);
         if (res == FS_ATTRS_SUCCESS)
@@ -170,10 +168,9 @@ bool OverrideImmutableRename(
     assert(old_filename != NULL);
     assert(new_filename != NULL);
 
-    FSAttrsResult res;
     bool is_immutable;
-
-    TemporarilyClearImmutableBit(new_filename, override, &res, &is_immutable);
+    FSAttrsResult res =
+        TemporarilyClearImmutableBit(new_filename, override, &is_immutable);
 
     if (rename(old_filename, new_filename) == -1)
     {
@@ -195,10 +192,8 @@ bool OverrideImmutableDelete(const char *filename, bool override)
 {
     assert(filename != NULL);
 
-    FSAttrsResult res;
     bool is_immutable = false;
-
-    TemporarilyClearImmutableBit(filename, override, &res, &is_immutable);
+    TemporarilyClearImmutableBit(filename, override, &is_immutable);
 
     return unlink(filename) == 0;
 }
@@ -208,10 +203,9 @@ bool OverrideImmutableUtime(
 {
     assert(filename != NULL);
 
-    FSAttrsResult res;
     bool is_immutable;
-
-    TemporarilyClearImmutableBit(filename, override, &res, &is_immutable);
+    FSAttrsResult res =
+        TemporarilyClearImmutableBit(filename, override, &is_immutable);
 
     int ret = utime(filename, times);
     if (ret == -1)

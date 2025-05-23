@@ -2000,7 +2000,7 @@ static bool TransformFile(EvalContext *ctx, char *file, const Attributes *attr, 
 
     if (!IsExecutable(CommandArg0(BufferData(command))))
     {
-        RecordFailure(ctx, pp, attr, "Transformer '%s' for file '%s' failed", attr->transformer, file);
+        RecordFailure(ctx, pp, attr, " '%s' for file '%s' failed", attr->transformer, file);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
         BufferDestroy(command);
         return false;
@@ -2042,6 +2042,10 @@ static bool TransformFile(EvalContext *ctx, char *file, const Attributes *attr, 
                 changes_command = chrooted_command;
             }
         }
+
+        const bool override_immutable = EvalContextOverrideImmutableGet(ctx);
+        bool was_immutable = false;
+        FSAttrsResult res = TemporarilyClearImmutableBit(file, override_immutable, &was_immutable);
 
         Log(LOG_LEVEL_INFO, "Transforming '%s' with '%s'", file, command_str);
         if ((pop = cf_popen(changes_command, "r", true)) == NULL)
@@ -2085,6 +2089,8 @@ static bool TransformFile(EvalContext *ctx, char *file, const Attributes *attr, 
         free(line);
 
         transRetcode = cf_pclose(pop);
+
+        ResetTemporarilyClearedImmutableBit(file, override_immutable, res, was_immutable);
 
         if (VerifyCommandRetcode(ctx, transRetcode, attr, pp, result))
         {

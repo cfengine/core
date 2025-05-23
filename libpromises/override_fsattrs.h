@@ -25,6 +25,7 @@
 #ifndef CFENGINE_OVERRIDE_FSATTRS_H
 #define CFENGINE_OVERRIDE_FSATTRS_H
 
+#include <fsattrs.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <utime.h>
@@ -83,5 +84,29 @@ bool OverrideImmutableDelete(const char *filename, bool override);
  */
 bool OverrideImmutableUtime(
     const char *filename, bool override, const struct utimbuf *times);
+
+/**
+ * @brief Temporarily clears the immutable bit (best effort / no guarantees)
+ * @param filename Name of the file to clear the immutable bit on
+ * @param override Whether to actually do override
+ * @param is_immutable Whether or not the file actually was immutable
+ * @return Result of clearing the immutable bit (no to be interpreted by the
+ * caller)
+ */
+FSAttrsResult TemporarilyClearImmutableBit(
+    const char *filename, bool override, bool *was_immutable);
+
+/**
+ * @brief Reset temporarily cleared immutable bit
+ * @param filename Name of the file to clear the immutable bit on
+ * @param override Whether to actually do override
+ * @param res The result from previously clearing it
+ * @param is_immutable Whether or not the file actually was immutable
+ */
+void ResetTemporarilyClearedImmutableBit(
+    const char *filename,
+    bool override,
+    FSAttrsResult res,
+    bool was_immutable);
 
 #endif /* CFENGINE_OVERRIDE_FSATTRS_H */

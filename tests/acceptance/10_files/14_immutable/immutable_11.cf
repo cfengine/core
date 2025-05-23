@@ -80,7 +80,8 @@ bundle agent destroy
   commands:
     "chattr -i /tmp/immutable_11.txt"
       contain => in_shell,
-      handle => "is mutable";
+      handle => "is mutable",
+      if => fileexists("/tmp/immutable_11.txt");
 
   files:
     "/tmp/immutable_11.txt"

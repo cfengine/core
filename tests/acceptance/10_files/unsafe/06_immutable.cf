@@ -11,6 +11,13 @@ body common control
   version => "1.0";
 }
 
+bundle agent global
+{
+  vars:
+    "testfile"
+      string => "/tmp/06_immutable.txt";
+}
+
 body fsattrs set_immutable
 {
   immutable => "true";
@@ -19,11 +26,11 @@ body fsattrs set_immutable
 bundle agent init
 {
   files:
-    "/tmp/immutable_06.txt"
+    "$(global.testfile)"
       content => '<foo>I\'m immutable</foo>';
 
   commands:
-    "chattr +i /tmp/immutable_06.txt"
+    "chattr +i $(global.testfile)"
       contain => in_shell;
 }
 
@@ -45,7 +52,7 @@ bundle agent test
       meta => { "CFE-1840", "ENT-10961" };
 
   files:
-    "/tmp/immutable_06.txt"
+    "$(global.testfile)"
       fsattrs => set_immutable,
       edit_xml => edit_foo;
 }
@@ -56,7 +63,7 @@ bundle agent check
     "expected"
       string => '<?xml version="1.0"?>$(const.n)<foo>But agent can override</foo>$(const.n)';
     "actual"
-      string => readfile("/tmp/immutable_06.txt");
+      string => readfile("$(global.testfile)");
 
   classes:
     "ok"
@@ -74,14 +81,14 @@ bundle agent check
 bundle agent destroy
 {
   commands:
-    "chattr -i /tmp/immutable_06.txt"
+    "chattr -i $(global.testfile)"
       contain => in_shell,
       handle => "is mutable";
 
   files:
-    "/tmp/immutable_06.txt"
+    "$(global.testfile)"
       delete => tidy,
       depends_on => { "is mutable" };
-    "/tmp/immutable_06.txt.cf-before-edit"
+    "$(global.testfile).cf-before-edit"
       delete => tidy;
 }

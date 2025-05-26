@@ -12,6 +12,13 @@ body common control
   version => "1.0";
 }
 
+bundle agent global
+{
+  vars:
+    "testfile"
+      string => "/tmp/09_immutable.txt";
+}
+
 body fsattrs set_immutable
 {
   immutable => "true";
@@ -20,12 +27,12 @@ body fsattrs set_immutable
 bundle agent init
 {
   files:
-    "/tmp/immutable_09.txt"
+    "$(global.testfile)"
       create => "true",
       content => "Hello olehermanse!";
 
   commands:
-    "chattr +i /tmp/immutable_09.txt"
+    "chattr +i $(global.testfile)"
       contain => in_shell;
 }
 
@@ -44,7 +51,7 @@ bundle agent test
       data => '{ "user": "larsewi" }';
 
   files:
-    "/tmp/immutable_09.txt"
+    "$(global.testfile)"
       fsattrs => set_immutable,
       template_method => "inline_mustache",
       edit_template_string => "Hello {{{user}}}!",
@@ -57,7 +64,7 @@ bundle agent check
     "expected"
       string => "Hello larsewi!";
     "actual"
-      string => readfile("/tmp/immutable_09.txt");
+      string => readfile("$(global.testfile)");
 
   classes:
     "ok"
@@ -75,14 +82,14 @@ bundle agent check
 bundle agent destroy
 {
   commands:
-    "chattr -i /tmp/immutable_09.txt"
+    "chattr -i $(global.testfile)"
       contain => in_shell,
       handle => "is mutable";
 
   files:
-    "/tmp/immutable_09.txt"
+    "$(global.testfile)"
       delete => tidy,
       depends_on => { "is mutable" };
-    "/tmp/immutable_09.txt.cf-before-edit"
+    "$(global.testfile).cf-before-edit"
       delete => tidy;
 }

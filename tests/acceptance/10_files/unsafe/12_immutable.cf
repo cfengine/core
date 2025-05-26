@@ -11,6 +11,13 @@ body common control
   version => "1.0";
 }
 
+bundle agent global
+{
+  vars:
+    "testfile"
+      string => "/tmp/12_immutable.txt";
+}
+
 body fsattrs set_immutable
 {
   immutable => "true";
@@ -19,11 +26,11 @@ body fsattrs set_immutable
 bundle agent init
 {
   files:
-    "/tmp/immutable_12.txt"
+    "$(global.testfile)"
       create => "true";
 
   commands:
-    "chattr +i /tmp/immutable_12.txt"
+    "chattr +i $(global.testfile)"
       contain => in_shell;
 }
 
@@ -44,7 +51,7 @@ bundle agent test
       meta => { "CFE-1840", "ENT-10961" };
 
   files:
-    "/tmp/immutable_12.txt"
+    "$(global.testfile)"
       fsattrs => set_immutable,
       rename => nuke;
 }
@@ -53,9 +60,9 @@ bundle agent check
 {
   classes:
     "original_exists"
-      expression => fileexists("/tmp/immutable_12.txt");
+      expression => fileexists("$(global.testfile)");
     "nuked_exists"
-      expression => fileexists("/tmp/immutable_12.txt.nuked");
+      expression => fileexists("$(global.testfile).nuked");
     "ok"
       expression => "!original_exists&nuked_exists";
 
@@ -65,25 +72,25 @@ bundle agent check
     !ok::
       "$(this.promise_filename) FAIL";
     any::
-      "Expected file '/tmp/immutable_12.txt' to not exists $(with)"
+      "Expected file '$(global.testfile)' to not exists $(with)"
         with => ifelse("!original_exists", "and it does not", "but it does");
-      "Expected file '/tmp/immutable_12.txt.nuked' to exists $(with)"
+      "Expected file '$(global.testfile).nuked' to exists $(with)"
         with => ifelse("nuked_exists", "and it does", "but it does not");
 }
 
 bundle agent destroy
 {
   commands:
-    "chattr -i /tmp/immutable_12.txt"
+    "chattr -i $(global.testfile)"
       contain => in_shell,
       handle => "is mutable",
-      if => fileexists("/tmp/immutable_12.txt");
+      if => fileexists("$(global.testfile)");
 
   files:
-    "/tmp/immutable_12.txt"
+    "$(global.testfile)"
       delete => tidy,
       depends_on => { "is mutable" };
   files:
-    "/tmp/immutable_12.txt.nuked"
+    "$(global.testfile).nuked"
       delete => tidy;
 }

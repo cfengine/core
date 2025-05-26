@@ -2182,10 +2182,10 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
         {
             if (!FileInRepository(newname))
             {
-                if (rename(changes_path, changes_newname) == -1)
+                const bool override_immutable = EvalContextOverrideImmutableGet(ctx);
+                if (!OverrideImmutableRename(changes_path, changes_newname, override_immutable))
                 {
-                    RecordFailure(ctx, pp, attr, "Error occurred while renaming '%s'. (rename: %s)",
-                                  path, GetErrorStr());
+                    RecordFailure(ctx, pp, attr, "Error occurred while renaming '%s'", path);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                 }
                 else
@@ -2335,10 +2335,10 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
 
             if (!FileInRepository(newname))
             {
-                if (rename(changes_path, changes_newname) == -1)
+                const bool override_immutable = EvalContextOverrideImmutableGet(ctx);
+                if (!OverrideImmutableRename(changes_path, changes_newname, override_immutable))
                 {
-                    RecordFailure(ctx, pp, attr, "Error occurred while renaming '%s'. (rename: %s)",
-                                  path, GetErrorStr());
+                    RecordFailure(ctx, pp, attr, "Error occurred while renaming '%s'", path);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                     free(chrooted_path);
                     return result;

@@ -5,6 +5,7 @@
 #include <files_copy.h>
 #include <cf3.defs.h>
 #include <string_lib.h>
+#include <file_lib.h>
 
 bool OverrideImmutableBegin(
     const char *orig, char *copy, size_t copy_len, bool override)
@@ -160,6 +161,28 @@ void ResetTemporarilyClearedImmutableBit(
                 FSAttrsErrorCodeToString(res));
         }
     }
+}
+
+bool OverrideImmutableChmod(const char *filename, mode_t mode, bool override)
+{
+    assert(filename != NULL);
+
+    bool is_immutable;
+    FSAttrsResult res =
+        TemporarilyClearImmutableBit(filename, override, &is_immutable);
+
+    int ret = safe_chmod(filename, mode);
+    if (ret == -1)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Failed to change mode on file '%s': %s",
+            filename,
+            GetErrorStr());
+    }
+
+    ResetTemporarilyClearedImmutableBit(filename, override, res, is_immutable);
+
+    return ret == 0;
 }
 
 bool OverrideImmutableRename(

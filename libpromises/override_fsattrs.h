@@ -29,6 +29,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <utime.h>
+#include <sys/types.h>
 
 /**
  * @brief Creates a mutable copy of the original file
@@ -54,6 +55,16 @@ bool OverrideImmutableBegin(
  */
 bool OverrideImmutableCommit(
     const char *orig, const char *copy, bool override, bool abort);
+
+/**
+ * @brief Change mode on an immutable file
+ * @param filename Name of the file
+ * @param mode The file mode
+ * @param override Whether to actually do override
+ * @return false in case of failure
+ * @note It uses safe_chmod() under the hood
+ */
+bool OverrideImmutableChmod(const char *filename, mode_t mode, bool override);
 
 /**
  * @brief Temporarily clears the immutable bit of the old file and renames the

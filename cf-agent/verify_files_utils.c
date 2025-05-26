@@ -2320,7 +2320,8 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
 
         if (MakingChanges(ctx, pp, attr, &result, "rename file '%s' to '%s'", path, newname))
         {
-            if (safe_chmod(changes_path, newperm) == 0)
+            const bool override_immutable = EvalContextOverrideImmutableGet(ctx);
+            if (OverrideImmutableChmod(changes_path, newperm, override_immutable))
             {
                 RecordChange(ctx, pp, attr, "Changed permissions of '%s' to 'mode %04jo'",
                              path, (uintmax_t)newperm);
@@ -2335,7 +2336,6 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
 
             if (!FileInRepository(newname))
             {
-                const bool override_immutable = EvalContextOverrideImmutableGet(ctx);
                 if (!OverrideImmutableRename(changes_path, changes_newname, override_immutable))
                 {
                     RecordFailure(ctx, pp, attr, "Error occurred while renaming '%s'", path);
@@ -2653,7 +2653,8 @@ static PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, co
         if (MakingChanges(ctx, pp, attr, &result, "change permissions of '%s' from %04jo to %04jo",
                           file, (uintmax_t)dstat->st_mode & 07777, (uintmax_t)newperm & 07777))
         {
-            if (safe_chmod(changes_file, newperm & 07777) == -1)
+            const bool override_immutable = EvalContextOverrideImmutableGet(ctx);
+            if (!OverrideImmutableChmod(changes_file, newperm & 07777, override_immutable))
             {
                 RecordFailure(ctx, pp, attr, "Failed to change permissions of '%s'. (chmod: %s)",
                               file, GetErrorStr());

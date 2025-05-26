@@ -168,22 +168,26 @@ bool OverrideImmutableRename(
     assert(old_filename != NULL);
     assert(new_filename != NULL);
 
-    bool is_immutable;
-    FSAttrsResult res =
-        TemporarilyClearImmutableBit(new_filename, override, &is_immutable);
+    bool new_is_immutable;
+    TemporarilyClearImmutableBit(new_filename, override, &new_is_immutable);
+
+    bool old_is_immutable;
+    FSAttrsResult res_old = TemporarilyClearImmutableBit(
+        old_filename, override, &old_is_immutable);
 
     if (rename(old_filename, new_filename) == -1)
     {
         Log(LOG_LEVEL_ERR,
-            "Failed to replace original file '%s' with copy '%s'",
+            "Failed to replace original file '%s' with copy '%s': %s",
             new_filename,
-            old_filename);
+            old_filename,
+            GetErrorStr());
         unlink(old_filename);
         return false;
     }
 
     ResetTemporarilyClearedImmutableBit(
-        new_filename, override, res, is_immutable);
+        new_filename, override, res_old, old_is_immutable);
 
     return true;
 }

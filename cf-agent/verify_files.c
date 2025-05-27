@@ -748,7 +748,7 @@ static PromiseResult RenderTemplateCFEngine(EvalContext *ctx,
     {
         if (!file_exists && !CfCreateFile(ctx, edcontext->changes_filename,
                                           pp, attr, &result))
-        { 
+        {
             RecordFailure(ctx, pp, attr,
                           "Failed to create file '%s' for rendering cfengine template '%s'",
                           edcontext->filename, attr->edit_template);
@@ -860,7 +860,7 @@ static PromiseResult RenderTemplateMustache(EvalContext *ctx,
                 if (!file_exists && !CfCreateFile(ctx,
                                                   edcontext->changes_filename,
                                                   pp, attr, &result))
-                { 
+                {
                     RecordFailure(ctx, pp, attr,
                                   "Failed to create file '%s' for rendering mustache template '%s'",
                                   edcontext->filename, message);

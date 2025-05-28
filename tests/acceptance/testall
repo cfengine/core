@@ -485,7 +485,7 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
             then
                 printf "\"$LIBTOOL\" --mode=execute " >> "$WORKDIR/runtest"
             fi
-            printf "gdb --args " >> "$WORKDIR/runtest"
+            printf "gdb -silent --args " >> "$WORKDIR/runtest"
         fi
 
         if [ -n "$USE_VALGRIND"  -a  $TEST_TYPE = errorexit ]

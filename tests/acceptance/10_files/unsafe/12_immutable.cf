@@ -83,14 +83,18 @@ bundle agent destroy
   commands:
     "chattr -i $(global.testfile)"
       contain => in_shell,
-      handle => "is mutable",
+      handle => "orig is mutable",
       if => fileexists("$(global.testfile)");
+    "chattr -i $(global.testfile).nuked"
+      contain => in_shell,
+      handle => "nuked is mutable",
+      if => fileexists("$(global.testfile).nuked");
 
   files:
     "$(global.testfile)"
       delete => tidy,
-      depends_on => { "is mutable" };
-  files:
+      depends_on => { "orig is mutable" };
     "$(global.testfile).nuked"
-      delete => tidy;
+      delete => tidy,
+      depends_on => { "nuked is mutable" };
 }

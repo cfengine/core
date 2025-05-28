@@ -946,7 +946,7 @@ static FnCallResult FnCallFindLocalUsers(EvalContext *ctx, ARG_UNUSED const Poli
     assert(fp != NULL);
     bool allocated = false;
     JsonElement *json = VarNameOrInlineToJson(ctx, fp, finalargs, false, &allocated);
-    
+
     // we failed to produce a valid JsonElement, so give up
     if (json == NULL)
     {
@@ -961,7 +961,7 @@ static FnCallResult FnCallFindLocalUsers(EvalContext *ctx, ARG_UNUSED const Poli
         JsonDestroyMaybe(json, allocated);
         return FnFailure();
     }
-   
+
     JsonElement *parent = JsonObjectCreate(10);
     setpwent();
     struct passwd *pw;
@@ -1006,7 +1006,7 @@ static FnCallResult FnCallFindLocalUsers(EvalContext *ctx, ARG_UNUSED const Poli
             {
                 char uid_string[PRINTSIZE(pw->pw_uid)];
                 int ret = snprintf(uid_string, sizeof(uid_string), "%u", pw->pw_uid);
-                
+
                 if (ret < 0)
                 {
                     Log(LOG_LEVEL_ERR, "Couldn't convert the uid of '%s' to string in function '%s'",
@@ -1038,7 +1038,7 @@ static FnCallResult FnCallFindLocalUsers(EvalContext *ctx, ARG_UNUSED const Poli
                 assert((size_t) ret < sizeof(gid_string));
 
                 if (!StringMatchFull(value, gid_string))
-                {   
+                {
                     can_add_to_json = false;
                 }
             }
@@ -1063,13 +1063,13 @@ static FnCallResult FnCallFindLocalUsers(EvalContext *ctx, ARG_UNUSED const Poli
                     can_add_to_json = false;
                 }
             }
-            else 
+            else
             {
                 Log(LOG_LEVEL_ERR, "Invalid attribute '%s' in function '%s': not supported",
                     attribute, fp->name);
                 JsonDestroyMaybe(json, allocated);
                 JsonDestroy(parent);
-                return FnFailure(); 
+                return FnFailure();
             }
             element = JsonIteratorNextValue(&iter);
         }
@@ -1367,7 +1367,7 @@ static FnCallResult FnCallGetGid(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const P
 #endif
 }
 
-/*********************************************************************/ 
+/*********************************************************************/
 
 static FnCallResult no_entry(int ret, const FnCall *fp, const char *group_name, bool is_user_db)
 {
@@ -1391,7 +1391,7 @@ static FnCallResult FnCallUserInGroup(ARG_UNUSED EvalContext *ctx, ARG_UNUSED co
     assert(finalargs != NULL);
 #ifdef _WIN32
     Log(LOG_LEVEL_ERR, "Function '%s' is POSIX specific", fp->name);
-    return FnFailure();  
+    return FnFailure();
 #else
 
     const char *user_name = RlistScalarValue(finalargs);
@@ -1405,7 +1405,7 @@ static FnCallResult FnCallUserInGroup(ARG_UNUSED EvalContext *ctx, ARG_UNUSED co
     struct group *grent;
     char gr_buf[GETGR_R_SIZE_MAX] = {0};
     ret = getgrnam_r(group_name, &grp, gr_buf, GETGR_R_SIZE_MAX, &grent);
-    
+
     if (grent == NULL)
     {
         // Group does not exist at all, so cannot be
@@ -1432,7 +1432,7 @@ static FnCallResult FnCallUserInGroup(ARG_UNUSED EvalContext *ctx, ARG_UNUSED co
         return no_entry(ret, fp, user_name, true);
     }
     return FnReturnContext(grent->gr_gid == pwent->pw_gid);
-    
+
 #endif
 }
 
@@ -10800,7 +10800,7 @@ static const FnCallArg IS_DATATYPE_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 static const FnCallArg FIND_LOCAL_USERS_ARGS[] =
-{   
+{
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Filter list"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };

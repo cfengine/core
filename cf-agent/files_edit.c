@@ -103,9 +103,9 @@ EditContext *NewEditContext(char *filename, const Attributes *a)
 /*****************************************************************************/
 
 void FinishEditContext(EvalContext *ctx, EditContext *ec, const Attributes *a, const Promise *pp,
-                       PromiseResult *result)
+                       PromiseResult *result, bool save_file)
 {
-    if ((*result != PROMISE_RESULT_NOOP) && (*result != PROMISE_RESULT_CHANGE))
+    if (!save_file || ((*result != PROMISE_RESULT_NOOP) && (*result != PROMISE_RESULT_CHANGE)))
     {
         // Failure or skipped. Don't update the file.
         goto end;

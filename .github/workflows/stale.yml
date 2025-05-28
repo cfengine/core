@@ -5,6 +5,7 @@ name: Label and close stale pull requests
 on:
   schedule:
   - cron: '31 19 * * *'
+  workflow_dispatch:
 
 jobs:
   stale:

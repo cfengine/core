@@ -47,9 +47,9 @@ bundle agent test
     !linux.!freebsd.!solaris.!darwin.!openbsd.!hpux.!aix::
       "gid_0" string => "fixme";
 
-    archlinux|SuSE|redhat|gentoo::
+    manjaro|archlinux|SuSE|redhat|gentoo::
       "num_daemon" int => "2";
-    (linux.!archlinux.!SuSE.!redhat.!gentoo)|freebsd|darwin|openbsd::
+    (linux.!manjaro.!archlinux.!SuSE.!redhat.!gentoo)|freebsd|darwin|openbsd::
       "num_daemon" int => "1";
     solaris::
       "num_daemon" int => "12";

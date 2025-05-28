@@ -1379,7 +1379,12 @@ static void OSClasses(EvalContext *ctx)
         SetFlavor(ctx, "gentoo");
     }
 
-    if (stat("/etc/arch-release", &statbuf) != -1)
+    if (stat("/etc/manjaro-release", &statbuf) != -1)
+    {
+        Log(LOG_LEVEL_VERBOSE, "This appears to be a Manjaro Linux system.");
+        SetFlavor(ctx, "manjaro");
+    }
+    else if (stat("/etc/arch-release", &statbuf) != -1)
     {
         Log(LOG_LEVEL_VERBOSE, "This appears to be an Arch Linux system.");
         SetFlavor(ctx, "archlinux");
@@ -3653,6 +3658,12 @@ static void SysOSNameHuman(EvalContext *ctx)
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, lval,
                                       "Amazon", CF_DATA_TYPE_STRING,
                                       "source=agent,derived-from=amazon_linux");
+    }
+    else if (EvalContextClassGet(ctx, NULL, "manjaro") != NULL)
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, lval,
+                                      "Manjaro", CF_DATA_TYPE_STRING,
+                                      "source=agent,derived-from=manjaro");
     }
     else if (EvalContextClassGet(ctx, NULL, "arch") != NULL)
     {

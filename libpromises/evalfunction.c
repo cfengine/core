@@ -3316,7 +3316,7 @@ static FnCallResult FnCallIsConnectable(ARG_UNUSED EvalContext *ctx,
     }
 
     return FnReturnContext(sd > -1);
-} 
+}
 
 /*********************************************************************/
 
@@ -4742,6 +4742,28 @@ static FnCallResult FnCallIsNewerThan(ARG_UNUSED EvalContext *ctx, ARG_UNUSED co
     }
 
     return FnReturnContext(frombuf.st_mtime > tobuf.st_mtime);
+}
+
+static FnCallResult FnCallIsNewerThanTime(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
+{
+    assert(finalargs != NULL);
+
+    const char *arg_file = RlistScalarValue(finalargs);
+    // a comment in `FnCallStrftime`: "this will be a problem on 32-bit systems..."
+    const time_t arg_mtime = IntFromString(RlistScalarValue(finalargs->next));
+
+    struct stat file_buf;
+    int exit_code = stat(arg_file, &file_buf);
+    if (exit_code == -1)
+    {
+        return FnFailure();
+    }
+
+    time_t file_mtime = file_buf.st_mtime;
+
+    bool result = file_mtime > arg_mtime;
+
+    return FnReturnContext(result);
 }
 
 /*********************************************************************/
@@ -7597,7 +7619,7 @@ static FnCallResult ValidateDataGeneric(const char *const fname,
     {
         isvalid = isvalid && JsonGetElementType(json) != JSON_ELEMENT_TYPE_PRIMITIVE;
     }
-    
+
     FnCallResult ret = FnReturnContext(isvalid);
     JsonDestroy(json);
     return ret;
@@ -10102,6 +10124,13 @@ static const FnCallArg ISNEWERTHAN_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg FILE_TIME_ARGS[] =
+{
+    {CF_ABSPATHRANGE, CF_DATA_TYPE_STRING, "File name"},
+    {CF_VALRANGE, CF_DATA_TYPE_INT, "Time as a Unix epoch offset"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
 static const FnCallArg ISVARIABLE_ARGS[] =
 {
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Variable identifier"},
@@ -10944,6 +10973,8 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("islink", CF_DATA_TYPE_CONTEXT, FILESTAT_ARGS, &FnCallFileStat, "True if the named object is a symbolic link",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("isnewerthan", CF_DATA_TYPE_CONTEXT, ISNEWERTHAN_ARGS, &FnCallIsNewerThan, "True if arg1 is newer (modified later) than arg2 (mtime)",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("isnewerthantime", CF_DATA_TYPE_CONTEXT, FILE_TIME_ARGS, &FnCallIsNewerThanTime, "True if arg1 is newer (modified later) (has larger mtime) than time arg2",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("isplain", CF_DATA_TYPE_CONTEXT, FILESTAT_ARGS, &FnCallFileStat, "True if the named object is a plain/regular file",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),

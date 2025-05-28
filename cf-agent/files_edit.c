@@ -33,6 +33,7 @@
 #include <files_editxml.h>
 #include <item_lib.h>
 #include <policy.h>
+#include <cf3.defs.h>
 
 /*****************************************************************************/
 

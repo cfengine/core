@@ -1186,7 +1186,8 @@ static void OSReleaseParse(EvalContext *ctx, const char *file_path)
                 alias = "redhat";
             }
             else if (StringEqual(os_release_id, "opensuse") ||
-                     StringEqual(os_release_id, "sles"))
+                     StringEqual(os_release_id, "sles") ||
+                     StringEqual(os_release_id, "sled"))
             {
                 alias = "suse";
             }

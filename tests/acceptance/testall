@@ -276,6 +276,8 @@ usage() {
     echo "           tests will always run one by one."
     echo " --verbose  Run tests with verbose logging"
     echo " --debug    Run tests with debug logging"
+    echo " --no-no-lock  The --no-lock option is set by default. However it can be"
+    echo "               useful to debug with locks"
 }
 
 workdir() {
@@ -492,12 +494,12 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
             then
                 printf "\"$LIBTOOL\" --mode=execute " >> "$WORKDIR/runtest"
             fi
-            printf "valgrind ${VALGRIND_OPTS} \"$AGENT\" $VERBOSE $DEBUG -Klf \"$TEST\" -D ${PASS_NUM:+test_pass_$PASS_NUM,}${BASECLASSES},${EXTRACLASSES} 2>&1\n" >> "$WORKDIR/runtest"
+            printf "valgrind ${VALGRIND_OPTS} \"$AGENT\" $VERBOSE $DEBUG -${NO_LOCK}lf \"$TEST\" -D ${PASS_NUM:+test_pass_$PASS_NUM,}${BASECLASSES},${EXTRACLASSES} 2>&1\n" >> "$WORKDIR/runtest"
         elif [ x"$PRELOAD_ASAN" != x ]
         then
-            printf "LD_PRELOAD=$PRELOAD_ASAN \"$AGENT\" $VERBOSE $DEBUG -Klf \"$TEST\" -D ${PASS_NUM:+test_pass_$PASS_NUM,}${BASECLASSES},${EXTRACLASSES}\n" >> "$WORKDIR/runtest"
+            printf "LD_PRELOAD=$PRELOAD_ASAN \"$AGENT\" $VERBOSE $DEBUG -${NO_LOCK}lf \"$TEST\" -D ${PASS_NUM:+test_pass_$PASS_NUM,}${BASECLASSES},${EXTRACLASSES}\n" >> "$WORKDIR/runtest"
         else
-            printf "\"$AGENT\" $VERBOSE $DEBUG -Klf \"$TEST\" -D ${PASS_NUM:+test_pass_$PASS_NUM,}${BASECLASSES},${EXTRACLASSES}\n" >> "$WORKDIR/runtest"
+            printf "\"$AGENT\" $VERBOSE $DEBUG -${NO_LOCK}lf \"$TEST\" -D ${PASS_NUM:+test_pass_$PASS_NUM,}${BASECLASSES},${EXTRACLASSES}\n" >> "$WORKDIR/runtest"
         fi
 
         chmod +x "$WORKDIR/runtest"
@@ -777,6 +779,7 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
 }
 
 
+NO_LOCK="K"
 ORIG_ARGS=
 while true
 do
@@ -878,6 +881,8 @@ do
             VERBOSE="-v";;
         --debug)
            DEBUG="--debug";;
+        --no-no-lock)
+           NO_LOCK="";;
         --stay-in-workdir)
             # Internal option. Meant to keep sub invocations from interfering by
             # writing files only into the workdir.

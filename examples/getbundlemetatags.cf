@@ -1,21 +1,28 @@
 #+begin_src cfengine3
 body common control
 {
-      bundlesequence => { "example" };
+  bundlesequence => { "example" };
 }
 
 bundle agent example
 {
   meta:
-      "tags" slist => { "autorun", "myOtherTag", "contact=Some Person <some.person@northern.tech>"};
+    "tags"
+      slist => {
+        "autorun",
+        "myOtherTag",
+        "contact=Some Person <some.person@northern.tech>",
+      };
 
   vars:
-      "bundle_tags" slist => getbundlemetatags("default:example");
-      "contact_tag" slist => getbundlemetatags("default:example", "contact");
+    "bundle_tags"
+      slist => getbundlemetatags("default:example");
+    "contact_tag"
+      slist => getbundlemetatags("default:example", "contact");
 
   reports:
-      "Found tags: $(bundle_tags)"; 
-      "Contact tag: $(contact_tag)";
+    "Found tags: $(bundle_tags)";
+    "Contact tag: $(contact_tag)";
 }
 #+end_src
 ###############################################################################

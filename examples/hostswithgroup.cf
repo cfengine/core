@@ -1,20 +1,19 @@
 body common control
 {
-      bundlesequence => { "example" };
-      inputs => { "$(sys.libdir)/stdlib.cf" };
+  bundlesequence => { "example" };
+  inputs => { "$(sys.libdir)/stdlib.cf" };
 }
-
 
 bundle agent example
 {
   vars:
-
     am_policy_hub::
-      "host_list" slist => hostswithgroup( "Linux", "name" );
+      "host_list"
+        slist => hostswithgroup("Linux", "name");
 
   files:
     am_policy_hub::
       "/tmp/master_config.cfg"
-      edit_line => insert_lines("host=$(host_list)"),
-      create => "true";
+        edit_line => insert_lines("host=$(host_list)"),
+        create => "true";
 }

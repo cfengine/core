@@ -82,6 +82,10 @@
 #include <libgen.h>
 
 #include <ctype.h>
+#include <cf3.defs.h>
+#include <compiler.h>
+#include <rlist.h>
+#include <acl_tools.h>
 
 #ifdef HAVE_LIBCURL
 #include <curl/curl.h>
@@ -650,6 +654,32 @@ static Rlist *GetHostsFromLastseenDB(Seq *host_data, time_t horizon, HostsSeenFi
         RlistDestroy(recent);
         return aged;
     }
+}
+
+/*********************************************************************/
+
+static FnCallResult FnCallGetACLs(ARG_UNUSED EvalContext *ctx,
+    ARG_UNUSED const Policy *policy,
+    const FnCall *fp,
+    const Rlist *final_args)
+{
+    assert(fp != NULL);
+    assert(final_args != NULL);
+    assert(final_args->next != NULL);
+
+    const char *path = RlistScalarValue(final_args);
+    const char *type = RlistScalarValue(final_args->next);
+    assert(StringEqual(type, "default") || StringEqual(type, "access"));
+
+    Rlist *acls = GetACLs(path, StringEqual(type, "access"));
+    if (acls == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Function %s failed to get ACLs for '%s': %s",
+            fp->name, path, GetErrorStr());
+        return FnFailure();
+    }
+
+    return (FnCallResult) { FNCALL_SUCCESS, { acls, RVAL_TYPE_LIST } };
 }
 
 /*********************************************************************/
@@ -9754,6 +9784,13 @@ static const FnCallArg AND_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg GET_ACLS_ARGS[] =
+{
+    {CF_ABSPATHRANGE, CF_DATA_TYPE_STRING, "Path to file or directory"},
+    {"default,access", CF_DATA_TYPE_OPTION, "Whether to get default- or access ACL"},
+    {NULL, CF_DATA_TYPE_NONE, NULL},
+};
+
 static const FnCallArg AGO_ARGS[] =
 {
     {"0,1000", CF_DATA_TYPE_INT, "Years"},
@@ -10791,6 +10828,8 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("accumulated", CF_DATA_TYPE_INT, ACCUM_ARGS, &FnCallAccumulatedDate, "Convert an accumulated amount of time into a system representation",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("getacls", CF_DATA_TYPE_STRING_LIST, GET_ACLS_ARGS, &FnCallGetACLs, "Get ACLs of a given file",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("ago", CF_DATA_TYPE_INT, AGO_ARGS, &FnCallAgoDate, "Convert a time relative to now to an integer system representation",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("and", CF_DATA_TYPE_CONTEXT, AND_ARGS, &FnCallAnd, "Calculate whether all arguments evaluate to true",

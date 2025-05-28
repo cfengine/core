@@ -67,21 +67,14 @@ bundle agent test
 bundle agent check
 {
   vars:
-    "getfacl"
-      string => ifelse(
-        fileexists("/var/cfengine/bin/getfacl"), # if
-        "/var/cfengine/bin/getfacl", # then
-        "/usr/bin/getfacl" # else
-      );
-
     "expected"
       string => ".*user:root:rwx.*";
-    "actual"
-      string => execresult("$(getfacl) $(global.testfile)", "noshell");
+    "acls"
+      slist => getacls("$(global.filename)", "access");
 
   classes:
     "ok"
-      expression => regcmp("$(expected)", "$(actual)");
+      expression => some("$(expected)", "$(acls)");
 
   reports:
     ok::
@@ -89,7 +82,7 @@ bundle agent check
     !ok::
       "$(this.promise_filename) FAIL";
     any::
-      "Expecting output matching '$(expected)', got '$(actual)'";
+      "Expecting output matching '$(expected)', got '$(acls)'";
 }
 
 bundle agent destroy

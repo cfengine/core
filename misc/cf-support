@@ -158,11 +158,11 @@ fi
 if expr "$_sysctl_kernel_core_pattern" : ".*/systemd-coredump.*" > /dev/null 2>&1; then
   echo "Found systemd-coredump used in sysctl kernel.core_pattern \"$_sysctl_kernel_core_pattern\""
   echo "Using coredumpctl to analyze CFEngine core dumps"
-  coredumpctl info /var/cfengine/bin/cf-* 2>/dev/null >> "$_core_log" || true
+  coredumpctl info /var/cfengine/* 2>/dev/null >> "$_core_log" || true
 elif command -v apport-unpack >/dev/null; then
   echo "Using apport-unpack to analyze CFEngine core dumps"
   # each crash report has a line with ExecutablePath: which tells us if it is a CFEngine core dump
-  crash_reports=`grep -H "ExecutablePath: /var/cfengine/bin" /var/crash/* | sed "s/:ExecutablePath.*$//"`
+  crash_reports=`grep -H "ExecutablePath: /var/cfengine" /var/crash/* | sed "s/:ExecutablePath.*$//"`
   if [ -n "$crash_reports" ]; then
     if ! command -v gdb >/dev/null; then
       echo "CFEngine related core dumps were found but gdb is not installed. Please install gdb and retry the cf-support command."
@@ -182,14 +182,14 @@ elif command -v apport-unpack >/dev/null; then
   fi
 else
   if [ "$non_interactive" -eq 0 ]; then
-    printf "Analyze coredumps found under /var/cfengine/bin? [Y/<enter alternate path>/n]: "
+    printf "Analyze coredumps found under /var/cfengine? [Y/<enter alternate path>/n]: "
     read -r response
   fi
-  response=${response:-/var/cfengine/bin}
+  response=${response:-/var/cfengine}
   if [ "$response" != "n" ]; then
     # file command on core files results in lines like the following which we parse for cf-* binaries
     # core: ELF 64-bit LSB core file, x86-64, version 1 (SYSV), SVR4-style, from '/var/cfengine/bin/cf-key', real uid: 0, effective uid: 0, realgid: 0, effective gid: 0, execfn: '/var/cfengine/bin/cf-key', platform: 'x86_64'
-    cf_core_files=`find "$response/." \( -name . -o -prune \) -name 'core*' -type f -exec file {} \; 2>/dev/null | grep "core file" | grep "cf-" | cut -d' ' -f1 | sed 's/:$//'`
+    cf_core_files=`find "$response/." \( -name . -o -prune \) -name 'core*' -type f -exec file {} \; 2>/dev/null | grep "core file" | cut -d' ' -f1 | sed 's/:$//'`
     if [ -n "$cf_core_files" ]; then
       if [ "$OS" != "solaris" ]; then
         if ! command -v gdb >/dev/null; then

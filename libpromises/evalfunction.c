@@ -658,7 +658,8 @@ static Rlist *GetHostsFromLastseenDB(Seq *host_data, time_t horizon, HostsSeenFi
 
 /*********************************************************************/
 
-static FnCallResult FnCallGetACLs(ARG_UNUSED EvalContext *ctx,
+static FnCallResult FnCallGetACLs(
+    ARG_UNUSED EvalContext *ctx,
     ARG_UNUSED const Policy *policy,
     const FnCall *fp,
     const Rlist *final_args)

@@ -1,0 +1,90 @@
+##############################################################################
+#
+# Test policy function getacls()
+#
+##############################################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+##############################################################################
+
+body acl user_root_rwx_acl
+{
+  acl_method => "append";
+  acl_default => "access";
+  aces => { "user:root:rwx" };
+}
+
+##############################################################################
+
+bundle agent init
+{
+  files:
+      "$(G.testdir)/."
+        create => "true",
+        acl => user_root_rwx_acl,
+        handle => "Default ACLs is set";
+      "$(G.testdir)/foo"
+        create => "true",
+        depends_on => { "Default ACLs is set" },
+        comment => "Inherits ACLs from parent directory";
+}
+
+##############################################################################
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-4529" }
+        string => "Test policy function getacls()";
+
+      "test_soft_fail"
+        string => "windows",
+        meta => { "ENT-13019" };
+
+  vars:
+      "default_acls"
+        slist => getacls("$(G.testdir)", "default"),
+        if => fileexists("$(G.testdir)");
+      "access_acls"
+        slist => getacls("$(G.testdir)/foo", "access"),
+        if => fileexists("$(G.testdir)/foo");
+}
+
+##############################################################################
+
+bundle agent check
+{
+  classes:
+      "acls_not_supported"
+        expression => eval("$(with) == 0", "class", "infix"),
+        with => length("test.default_acls"),
+        comment => "getacls() returns empty list if unsupported";
+      "default_ok"
+        expression => some("$(expected)", "test.default_acls");
+      "access_ok"
+        expression => some("$(expected)", "test.access_acls");
+
+  vars:
+      "expected"
+        string => ".*user:root:rwx.*";
+
+  reports:
+    acls_not_supported::
+      "$(this.promise_filename) Skip/unsupported";
+    default_ok&access_ok::
+      "$(this.promise_filename) Pass";
+    !(default_ok&access_ok)::
+      "$(this.promise_filename) FAIL";
+      "Expecting one match of '$(expected)' in default ACLs [$(with)]"
+        with => join(", ", "test.default_acls");
+      "Expecting one match of '$(expected)' in access ACLs [$(with)]"
+        with => join(", ", "test.access_acls");
+}
+
+##############################################################################

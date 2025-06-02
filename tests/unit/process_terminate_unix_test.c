@@ -15,30 +15,30 @@
 
 /* Settings */
 
-time_t proc_1_start_time;
-time_t proc_1_reaction_time;
-bool proc_1_int_blocked;
-bool proc_1_term_blocked;
-bool proc_1_have_access;
+static time_t proc_1_start_time;
+static time_t proc_1_reaction_time;
+static bool proc_1_int_blocked;
+static bool proc_1_term_blocked;
+static bool proc_1_have_access;
 
 /* State */
 
-time_t current_time;
+static time_t current_time;
 
-bool exists;
-bool stopped;
+static bool exists;
+static bool stopped;
 
-time_t signal_time;
-bool has_stop;
-bool has_cont;
-bool has_int;
-bool has_term;
-bool has_kill;
+static time_t signal_time;
+static bool has_stop;
+static bool has_cont;
+static bool has_int;
+static bool has_term;
+static bool has_kill;
 
 /* History */
 
-bool was_stopped;
-int exit_signal;
+static bool was_stopped;
+static int exit_signal;
 
 void InitTime(void)
 {

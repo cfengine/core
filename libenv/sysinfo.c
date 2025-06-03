@@ -1180,8 +1180,9 @@ static void OSReleaseParse(EvalContext *ctx, const char *file_path)
             {
                 alias = "redhat";
             }
-            else if (StringEqual(os_release_id, "opensuse") || 
-                     StringEqual(os_release_id, "sles"))
+            else if (StringEqual(os_release_id, "opensuse") ||
+                     StringEqual(os_release_id, "sles") ||
+                     StringEqual(os_release_id, "sled"))
             {
                 alias = "suse";
             }
@@ -3503,13 +3504,13 @@ static void SysOSNameHuman(EvalContext *ctx)
 
 /**
  * Find next integer from string in place. Leading zero's are included.
- * 
+ *
  * @param [in]  str string to extract next integer from
  * @param [out] num pointer to start of next integer or %NULL if no integer
  *                  number was found
- * 
+ *
  * @return pointer to the remaining string in `str` or %NULL if no remainder
- * 
+ *
  * @note `str` will be mutated
  */
 static char *FindNextInteger(char *str, char **num)
@@ -3577,8 +3578,8 @@ static void SysOsVersionMajor(EvalContext *ctx)
     }
     else
     {
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, 
-                                      "os_version_major", major, 
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS,
+                                      "os_version_major", major,
                                       CF_DATA_TYPE_STRING,
                                       "source=agent,derived-from=flavor");
     }

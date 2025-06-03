@@ -3180,6 +3180,7 @@ static void GetCPUInfo(EvalContext *ctx)
             continue;
         }
         ssize_t n_read = FullRead(f, buffer, sizeof(buffer));
+        close(f);
         if (n_read < 1)
         {
             continue;

@@ -59,6 +59,7 @@
 #include <known_dirs.h>
 #include <evalfunction.h>
 #include <changes_chroot.h>     /* PrepareChangesChroot(), RecordFileChangedInChroot() */
+#include <cf3.defs.h>
 
 static PromiseResult FindFilePromiserObjects(EvalContext *ctx, const Promise *pp);
 static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promise *pp);
@@ -728,7 +729,8 @@ static PromiseResult RenderTemplateCFEngine(EvalContext *ctx,
                                             const Rlist *bundle_args,
                                             const Attributes *attr,
                                             EditContext *edcontext,
-                                            bool file_exists)
+                                            bool file_exists,
+                                            bool *save_file)
 {
     assert(edcontext != NULL);
     assert(attr != NULL);
@@ -741,7 +743,7 @@ static PromiseResult RenderTemplateCFEngine(EvalContext *ctx,
     {
         if (!file_exists && !CfCreateFile(ctx, edcontext->changes_filename,
                                           pp, attr, &result))
-        { 
+        {
             RecordFailure(ctx, pp, attr,
                           "Failed to create file '%s' for rendering cfengine template '%s'",
                           edcontext->filename, attr->edit_template);
@@ -753,7 +755,7 @@ static PromiseResult RenderTemplateCFEngine(EvalContext *ctx,
         EvalContextStackPushBundleFrame(ctx, bp, bundle_args, a.edits.inherit);
         BundleResolve(ctx, bp);
 
-        ScheduleEditLineOperations(ctx, bp, &a, pp, edcontext);
+        *save_file = ScheduleEditLineOperations(ctx, bp, &a, pp, edcontext);
 
         EvalContextStackPopFrame(ctx);
 
@@ -853,7 +855,7 @@ static PromiseResult RenderTemplateMustache(EvalContext *ctx,
                 if (!file_exists && !CfCreateFile(ctx,
                                                   edcontext->changes_filename,
                                                   pp, attr, &result))
-                { 
+                {
                     RecordFailure(ctx, pp, attr,
                                   "Failed to create file '%s' for rendering mustache template '%s'",
                                   edcontext->filename, message);
@@ -964,6 +966,7 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename,
     Rlist *args = NULL;
     char edit_bundle_name[CF_BUFSIZE], lockname[CF_BUFSIZE];
     CfLock thislock;
+    bool save_file = true;
 
     snprintf(lockname, CF_BUFSIZE - 1, "fileedit-%s", filename);
     thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a->transaction.ifelapsed, a->transaction.expireafter, pp, false);
@@ -1066,7 +1069,8 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename,
             PromiseResult render_result = RenderTemplateCFEngine(ctx, pp,
                                                                  args, a,
                                                                  edcontext,
-                                                                 file_exists);
+                                                                 file_exists,
+                                                                 &save_file);
             result = PromiseResultUpdate(result, render_result);
         }
     }
@@ -1098,7 +1102,7 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename,
     }
 
 exit:
-    FinishEditContext(ctx, edcontext, a, pp, &result);
+    FinishEditContext(ctx, edcontext, a, pp, &result, save_file);
     YieldCurrentLock(thislock);
     if (result == PROMISE_RESULT_CHANGE)
     {

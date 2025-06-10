@@ -212,12 +212,12 @@ AS_IF([test x"$enable_fhs" = xyes], [
     prefix=/var/cfengine
     case "$target_os" in
       mingw*)
-        WORKDIR=$(cmd /c "echo %PROGRAMFILES%\\Cfengine" | sed 's/\\/\\\\/g')
+        WORKDIR=$(wine cmd.exe /c "echo %PROGRAMFILES%\\Cfengine" 2>/dev/null |  sed 's/\\/\\\\/g')
         MASTERDIR=default
         INPUTDIR=default
         DATADIR=default
-        LOGDIR=$(cmd /c "echo %PROGRAMFILES%\\Cfengine" | sed 's/\\/\\\\/g')
-        PIDDIR=$(cmd /c "echo %PROGRAMFILES%\\Cfengine" | sed 's/\\/\\\\/g')
+        LOGDIR=$(wine cmd.exe /c "echo %PROGRAMFILES%\\Cfengine" 2>/dev/null |  sed 's/\\/\\\\/g')
+        PIDDIR=$(wine cmd.exe /c "echo %PROGRAMFILES%\\Cfengine" 2>/dev/null |  sed 's/\\/\\\\/g')
         STATEDIR=default
       ;;
       *)

@@ -3786,7 +3786,6 @@ static void SysOsVersionMajor(EvalContext *ctx)
 
 static const char *OSReleaseGet(EvalContext *ctx, const char *field)
 {
-    #ifndef __MINGW32__
     DataType type_out;
     const JsonElement *os_rel = EvalContextVariableGetSpecial(
         ctx, SPECIAL_SCOPE_SYS, "os_release", &type_out);
@@ -3802,52 +3801,75 @@ static const char *OSReleaseGet(EvalContext *ctx, const char *field)
     }
     const char *result = JsonPrimitiveGetAsString(child);
     return result;
+}
 
-    #else
-
-    Log(LOG_LEVEL_ERR, "os-release is not defined on Windows")
-    return NULL;
-
-    #endif
+static void OSVersionMinorPut(EvalContext *ctx, const char *minor)
+{
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS,
+                                "os_version_minor",
+                                (minor == NULL) ? "Unknown" : minor,
+                                CF_DATA_TYPE_STRING, 
+                                "source=agent,derived-from=os_release");
 }
 
 static void SysOSVersionMinor(EvalContext *ctx)
 {
+    #ifndef __MINGW32__
+
     const char *version_id = OSReleaseGet(ctx, "VERSION_ID");
     const char *name = OSReleaseGet(ctx, "NAME");
-
-    char *minor;
-    if (version_id != NULL)
+    if (version_id == NULL)
     {
-        Item *version_tuple = SplitString(version_id, '.');
-
-        if (version_tuple != NULL)
-        {
-            if (name != NULL && (StringStartsWith(name, "solaris") || StringStartsWith(name, "sunos")))
-            {
-                minor = version_tuple->name;
-            }
-            else if (version_tuple->next != NULL)
-            {
-                minor = version_tuple->next->name;
-            }
-        }
-        free(version_tuple);
+        return OSVersionMinorPut(ctx, NULL);
     }
-
-    if (NULL_OR_EMPTY(minor))
+    if (name == NULL)
     {
+        return OSVersionMinorPut(ctx, NULL);
+    }
+    Item *version_tuple = SplitString(version_id, '.');
+    if (version_tuple == NULL)
+    {
+        return OSVersionMinorPut(ctx, NULL);
+    }
+    if (name != NULL && (StringStartsWith(name, "solaris") || StringStartsWith(name, "sunos")))
+    {
+        OSVersionMinorPut(ctx, version_tuple->name);
+        return DeleteItemList(version_tuple);
+    }
+    if (version_tuple->next == NULL)
+    {
+        OSVersionMinorPut(ctx, NULL);
+        return DeleteItemList(version_tuple);
+    }
+    OSVersionMinorPut(ctx, version_tuple->next->name);
+    return DeleteItemList(version_tuple);
+
+    #else
+
+    char *release = SafeStringDuplicate(VSYSNAME.release);
+    char *major = NULL;
+    char *minor = NULL;
+    char *rel;
+    rel = FindNextInteger(release, &major);
+    if (rel == NULL)
+    {
+        free(release);
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS,
-                                      "os_version_minor", "Unknown",
-                                      CF_DATA_TYPE_STRING, "source=agent");
+                                "os_version_minor",
+                                "Unknown",
+                                CF_DATA_TYPE_STRING, 
+                                "source=agent")
+        return;
     }
-    else
-    {
-        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS,
-                                      "os_version_minor", minor,
-                                      CF_DATA_TYPE_STRING,
-                                      "source=agent,derived-from=os_release");
-    }
+    rel = FindNextInteger(rel, &minor);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS,
+                                "os_version_minor",
+                                (minor == NULL) ? "Unknown" : minor,
+                                CF_DATA_TYPE_STRING, 
+                                "source=agent");
+    free(release);
+
+    #endif
 }
 
 

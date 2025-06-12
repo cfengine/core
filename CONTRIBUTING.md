@@ -4,9 +4,8 @@ Thanks for considering contributing to CFEngine! We take pull-requests
 [on GitHub](https://github.com/cfengine/core/pulls) and we have a public
 [bug-tracker](https://northerntech.atlassian.net/projects/CFE/issues/). Discussion
 is taking place on [GitHub Discussions](https://github.com/cfengine/core/discussions)
-and on the [help-cfengine](https://groups.google.com/forum/#!forum/help-cfengine)
-mailing list. You'll find us chatting on the Libera.chat IRC channel
-[#cfengine](https://web.libera.chat/?channel=cfengine).
+and on the [help-cfengine](https://groups.google.com/forum/#!forum/help-cfengine) mailing list.
+You'll find us chatting on [#CFEngine:matrix.org](https://matrix.to/#/#CFEngine:matrix.org) and [#cfengine@Libera.Chat](https://web.libera.chat/?channel=cfengine).
 
 Normally, bug fixes have a higher chance of getting accepted than new
 features, but we certainly welcome feature contributions. If you have an idea
@@ -233,7 +232,7 @@ Add it to the commit message as in the example above.
 
 ## Coding Style
 
-Our coding style is loosely based on Allman-4 and the [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html).
+Our coding style is loosely based on [Allman-4](https://en.wikipedia.org/wiki/Indentation_style#Allman_style) (the 4 indicates the number of spaces for indentation) and the [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html).
 Keep in mind that these are guidelines, there will always be some situations where exceptions are appropriate.
 
 

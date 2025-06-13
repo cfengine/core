@@ -36,8 +36,8 @@
  * @param orig The original file (may be immutable)
  * @param copy Updated to contain the filename of the mutable copy
  * @param copy_len The size of the buffer to store the filename of the copy
- * @param override Whether to actually do override (original filename is
- * copied to copy buffer if false)
+ * @param override Whether to actually do override (i.e. temporarily clear it).
+ * The original filename is copied to copy-buffer if false
  * @return false in case of failure
  */
 bool OverrideImmutableBegin(
@@ -48,7 +48,7 @@ bool OverrideImmutableBegin(
  * replaces it with the mutated copy
  * @param orig The original file (may be immutable)
  * @param copy The mutated copy to replace the original
- * @param override Whether to actually do override
+ * @param override Whether to actually do override (i.e. temporarily clear it)
  * @param abort Whether to abort the override
  * @return false in case of failure
  * @note The immutable bit is reset to it's original state
@@ -60,7 +60,7 @@ bool OverrideImmutableCommit(
  * @brief Change mode on an immutable file
  * @param filename Name of the file
  * @param mode The file mode
- * @param override Whether to actually do override
+ * @param override Whether to actually do override (i.e. temporarily clear it)
  * @return false in case of failure
  * @note It uses safe_chmod() under the hood
  */
@@ -71,7 +71,7 @@ bool OverrideImmutableChmod(const char *filename, mode_t mode, bool override);
  * new to the old
  * @param old_filename Filename of the old file
  * @param new_filename Filename of the new file
- * @param override Whether to actually do override
+ * @param override Whether to actually do override (i.e. temporarily clear it)
  * @return false in case of failure
  */
 bool OverrideImmutableRename(
@@ -80,7 +80,7 @@ bool OverrideImmutableRename(
 /**
  * @brief Delete immutable file
  * @param filename Name of the file to delete
- * @param override Whether to actually do override
+ * @param override Whether to actually do override (i.e. temporarily clear it)
  * @return false in case of failure
  */
 bool OverrideImmutableDelete(const char *filename, bool override);
@@ -89,7 +89,7 @@ bool OverrideImmutableDelete(const char *filename, bool override);
  * @brief Temporarily clears the immutable bit and changes access and
  * modification times of the inode
  * @param filename Name of the file to touch
- * @param override Whether to actually do override
+ * @param override Whether to actually do override (i.e. temporarily clear it)
  * @param times Modification times (can be NULL)
  * @return false in case of failure
  */
@@ -99,7 +99,7 @@ bool OverrideImmutableUtime(
 /**
  * @brief Temporarily clears the immutable bit (best effort / no guarantees)
  * @param filename Name of the file to clear the immutable bit on
- * @param override Whether to actually do override
+ * @param override Whether to actually do override (i.e. temporarily clear it)
  * @param is_immutable Whether or not the file actually was immutable
  * @return Result of clearing the immutable bit (no to be interpreted by the
  * caller)
@@ -110,7 +110,7 @@ FSAttrsResult TemporarilyClearImmutableBit(
 /**
  * @brief Reset temporarily cleared immutable bit
  * @param filename Name of the file to clear the immutable bit on
- * @param override Whether to actually do override
+ * @param override Whether to actually do override (i.e. temporarily clear it)
  * @param res The result from previously clearing it
  * @param is_immutable Whether or not the file actually was immutable
  */

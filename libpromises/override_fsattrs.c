@@ -6,6 +6,7 @@
 #include <cf3.defs.h>
 #include <string_lib.h>
 #include <file_lib.h>
+#include <fsattrs.h>
 
 bool OverrideImmutableBegin(
     const char *orig, char *copy, size_t copy_len, bool override)
@@ -70,7 +71,9 @@ bool OverrideImmutableCommit(
     struct stat sb;
     if (lstat(orig, &sb) == -1)
     {
-        Log(LOG_LEVEL_ERR, "Failed to stat file '%s'", orig);
+        Log(LOG_LEVEL_ERR,
+            "Failed to stat file '%s' during immutable operations",
+            orig);
         unlink(copy);
         return false;
     }
@@ -78,7 +81,7 @@ bool OverrideImmutableCommit(
     if (chmod(copy, sb.st_mode) == -1)
     {
         Log(LOG_LEVEL_ERR,
-            "Failed to change mode bits on file '%s' to %04jo: %s",
+            "Failed to change mode bits on file '%s' to %04jo during immutable operations: %s",
             orig,
             (uintmax_t) sb.st_mode,
             GetErrorStr());
@@ -111,11 +114,20 @@ FSAttrsResult TemporarilyClearImmutableBit(
             }
             else
             {
-                Log((res == FS_ATTRS_FAILURE) ? LOG_LEVEL_ERR
-                                              : LOG_LEVEL_VERBOSE,
-                    "Failed to temporarily clear immutable bit for file '%s': %s",
-                    filename,
-                    FSAttrsErrorCodeToString(res));
+                if (res == FS_ATTRS_FAILURE)
+                {
+                    Log(LOG_LEVEL_ERR,
+                        "Failed to temporarily clear immutable bit for file '%s': %s",
+                        filename,
+                        FSAttrsErrorCodeToString(res));
+                }
+                else
+                {
+                    Log(LOG_LEVEL_VERBOSE,
+                        "Could not temporarily clear immutable bit for file '%s': %s",
+                        filename,
+                        FSAttrsErrorCodeToString(res));
+                }
             }
         }
         else

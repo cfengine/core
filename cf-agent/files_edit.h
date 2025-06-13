@@ -57,7 +57,7 @@ typedef struct
 EditContext *NewEditContext(char *filename, const Attributes *a);
 void FinishEditContext(EvalContext *ctx, EditContext *ec,
                        const Attributes *a, const Promise *pp,
-                       PromiseResult *result);
+                       PromiseResult *result, bool save_file);
 
 #ifdef HAVE_LIBXML2
 bool LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, EditDefaults ed, bool only_checks);

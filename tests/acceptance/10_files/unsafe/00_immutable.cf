@@ -1,0 +1,69 @@
+##############################################################################
+#
+# Test that agent can set the immutable bit on a file
+#
+##############################################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+bundle agent global
+{
+  vars:
+    "testfile"
+      string => "/tmp/00_immutable.txt";
+}
+
+body fsattrs set_immutable
+{
+  immutable => "true";
+}
+
+bundle agent init
+{
+  files:
+    "$(global.testfile)"
+        create => "true";
+
+  commands:
+    "chattr -i $(global.testfile)"
+      contain => in_shell;
+}
+
+bundle agent test
+{
+  meta:
+    "description" -> { "CFE-1840", "ENT-10961" }
+      string => "Test that agent can set the immutable bit on a file";
+
+    "test_skip_unsupported"
+      string => "hpux|aix|solaris|windows";
+
+  files:
+    "$(global.testfile)"
+      fsattrs => set_immutable;
+}
+
+bundle agent check
+{
+  methods:
+    "check"
+      usebundle => dcs_passif_output(".*Immutable.*", "", "lsattr -l $(global.testfile)", "$(this.promise_filename)");
+}
+
+bundle agent destroy
+{
+  commands:
+    "chattr -i $(global.testfile)"
+      contain => in_shell,
+      handle => "is mutable";
+
+  files:
+    "$(global.testfile)"
+      delete => tidy,
+      depends_on => { "is mutable" };
+}

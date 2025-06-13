@@ -82,6 +82,10 @@
 #include <libgen.h>
 
 #include <ctype.h>
+#include <cf3.defs.h>
+#include <compiler.h>
+#include <rlist.h>
+#include <acl_tools.h>
 
 #ifdef HAVE_LIBCURL
 #include <curl/curl.h>
@@ -654,6 +658,43 @@ static Rlist *GetHostsFromLastseenDB(Seq *host_data, time_t horizon, HostsSeenFi
 
 /*********************************************************************/
 
+static FnCallResult FnCallGetACLs(ARG_UNUSED EvalContext *ctx,
+    ARG_UNUSED const Policy *policy,
+    const FnCall *fp,
+    const Rlist *final_args)
+{
+    assert(fp != NULL);
+    assert(final_args != NULL);
+    assert(final_args->next != NULL);
+
+    const char *path = RlistScalarValue(final_args);
+    const char *type = RlistScalarValue(final_args->next);
+    assert(StringEqual(type, "default") || StringEqual(type, "access"));
+
+#ifdef _WIN32
+    /* TODO: Policy function to read Windows ACLs (ENT-13019) */
+    Rlist *acls = NULL;
+    errno = ENOTSUP;
+#else
+    Rlist *acls = GetACLs(path, StringEqual(type, "access"));
+#endif /* _WIN32 */
+    if (acls == NULL)
+    {
+        Log((errno != ENOTSUP) ? LOG_LEVEL_ERR : LOG_LEVEL_VERBOSE,
+            "Function %s failed to get ACLs for '%s': %s",
+            fp->name, path, GetErrorStr());
+
+        if (errno != ENOTSUP)
+        {
+            return FnFailure();
+        } /* else we'll just return an empty list instead */
+    }
+
+    return (FnCallResult) { FNCALL_SUCCESS, { acls, RVAL_TYPE_LIST } };
+}
+
+/*********************************************************************/
+
 static FnCallResult FnCallAnd(EvalContext *ctx,
                               ARG_UNUSED const Policy *policy,
                               ARG_UNUSED const FnCall *fp,
@@ -946,7 +987,7 @@ static FnCallResult FnCallFindLocalUsers(EvalContext *ctx, ARG_UNUSED const Poli
     assert(fp != NULL);
     bool allocated = false;
     JsonElement *json = VarNameOrInlineToJson(ctx, fp, finalargs, false, &allocated);
-    
+
     // we failed to produce a valid JsonElement, so give up
     if (json == NULL)
     {
@@ -961,7 +1002,7 @@ static FnCallResult FnCallFindLocalUsers(EvalContext *ctx, ARG_UNUSED const Poli
         JsonDestroyMaybe(json, allocated);
         return FnFailure();
     }
-   
+
     JsonElement *parent = JsonObjectCreate(10);
     setpwent();
     struct passwd *pw;
@@ -1006,7 +1047,7 @@ static FnCallResult FnCallFindLocalUsers(EvalContext *ctx, ARG_UNUSED const Poli
             {
                 char uid_string[PRINTSIZE(pw->pw_uid)];
                 int ret = snprintf(uid_string, sizeof(uid_string), "%u", pw->pw_uid);
-                
+
                 if (ret < 0)
                 {
                     Log(LOG_LEVEL_ERR, "Couldn't convert the uid of '%s' to string in function '%s'",
@@ -1038,7 +1079,7 @@ static FnCallResult FnCallFindLocalUsers(EvalContext *ctx, ARG_UNUSED const Poli
                 assert((size_t) ret < sizeof(gid_string));
 
                 if (!StringMatchFull(value, gid_string))
-                {   
+                {
                     can_add_to_json = false;
                 }
             }
@@ -1063,13 +1104,13 @@ static FnCallResult FnCallFindLocalUsers(EvalContext *ctx, ARG_UNUSED const Poli
                     can_add_to_json = false;
                 }
             }
-            else 
+            else
             {
                 Log(LOG_LEVEL_ERR, "Invalid attribute '%s' in function '%s': not supported",
                     attribute, fp->name);
                 JsonDestroyMaybe(json, allocated);
                 JsonDestroy(parent);
-                return FnFailure(); 
+                return FnFailure();
             }
             element = JsonIteratorNextValue(&iter);
         }
@@ -1367,7 +1408,7 @@ static FnCallResult FnCallGetGid(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const P
 #endif
 }
 
-/*********************************************************************/ 
+/*********************************************************************/
 
 static FnCallResult no_entry(int ret, const FnCall *fp, const char *group_name, bool is_user_db)
 {
@@ -1391,7 +1432,7 @@ static FnCallResult FnCallUserInGroup(ARG_UNUSED EvalContext *ctx, ARG_UNUSED co
     assert(finalargs != NULL);
 #ifdef _WIN32
     Log(LOG_LEVEL_ERR, "Function '%s' is POSIX specific", fp->name);
-    return FnFailure();  
+    return FnFailure();
 #else
 
     const char *user_name = RlistScalarValue(finalargs);
@@ -1405,7 +1446,7 @@ static FnCallResult FnCallUserInGroup(ARG_UNUSED EvalContext *ctx, ARG_UNUSED co
     struct group *grent;
     char gr_buf[GETGR_R_SIZE_MAX] = {0};
     ret = getgrnam_r(group_name, &grp, gr_buf, GETGR_R_SIZE_MAX, &grent);
-    
+
     if (grent == NULL)
     {
         // Group does not exist at all, so cannot be
@@ -1432,7 +1473,7 @@ static FnCallResult FnCallUserInGroup(ARG_UNUSED EvalContext *ctx, ARG_UNUSED co
         return no_entry(ret, fp, user_name, true);
     }
     return FnReturnContext(grent->gr_gid == pwent->pw_gid);
-    
+
 #endif
 }
 
@@ -9776,6 +9817,13 @@ static const FnCallArg AND_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg GET_ACLS_ARGS[] =
+{
+    {CF_ABSPATHRANGE, CF_DATA_TYPE_STRING, "Path to file or directory"},
+    {"default,access", CF_DATA_TYPE_OPTION, "Whether to get default or access ACL"},
+    {NULL, CF_DATA_TYPE_NONE, NULL},
+};
+
 static const FnCallArg AGO_ARGS[] =
 {
     {"0,1000", CF_DATA_TYPE_INT, "Years"},
@@ -10800,7 +10848,7 @@ static const FnCallArg IS_DATATYPE_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 static const FnCallArg FIND_LOCAL_USERS_ARGS[] =
-{   
+{
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Filter list"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
@@ -10820,6 +10868,8 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("accumulated", CF_DATA_TYPE_INT, ACCUM_ARGS, &FnCallAccumulatedDate, "Convert an accumulated amount of time into a system representation",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("getacls", CF_DATA_TYPE_STRING_LIST, GET_ACLS_ARGS, &FnCallGetACLs, "Get ACLs of a given file",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("ago", CF_DATA_TYPE_INT, AGO_ARGS, &FnCallAgoDate, "Convert a time relative to now to an integer system representation",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("and", CF_DATA_TYPE_CONTEXT, AND_ARGS, &FnCallAnd, "Calculate whether all arguments evaluate to true",

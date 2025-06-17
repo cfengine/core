@@ -6,9 +6,27 @@
 #include <syslog_client.h>
 #include <string_lib.h>
 
+/**
+ * To avoid linking issues with libpromises.so in logging_test, specifically
+ * when mocking the sendto function, the files syslog_client.c, patches.c, and
+ * constants.c must be directly included into test_logging.c.
+ *
+ * This direct inclusion is necessary because:
+ * - Linking with libpromises.so while mocking sendto would cause macOS to use
+ *   the incorrect function during unit testing.
+ * - Adding these files to test_logging_SOURCES is not feasible due to a bug in
+ *   the current autotools version used by the bootstrap PR machine. With
+ *   subdir_objects enabled, this would cause the distclean target to fail by
+ *   attempting to delete generated files twice.
+ */
+#include <syslog_client.c>
+#include <patches.c>
+#include <constants.c>
+
+
 // This test uses syslog_client.c directly, without libpromises,
 // this is necessary so we don't get "undefined symbol" errors:
-char VFQNAME[CF_MAXVARSIZE];
+static char VFQNAME[CF_MAXVARSIZE];
 
 static struct sockaddr *got_address;
 

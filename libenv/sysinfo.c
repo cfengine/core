@@ -3814,15 +3814,11 @@ static void OSVersionMinorPut(EvalContext *ctx, const char *minor)
 
 static void SysOSVersionMinor(EvalContext *ctx)
 {
-    #ifndef __MINGW32__
+#ifndef __MINGW32__
 
     const char *version_id = OSReleaseGet(ctx, "VERSION_ID");
     const char *name = OSReleaseGet(ctx, "NAME");
-    if (version_id == NULL)
-    {
-        return OSVersionMinorPut(ctx, NULL);
-    }
-    if (name == NULL)
+    if ((version_id == NULL) || (name == NULL))
     {
         return OSVersionMinorPut(ctx, NULL);
     }
@@ -3831,7 +3827,7 @@ static void SysOSVersionMinor(EvalContext *ctx)
     {
         return OSVersionMinorPut(ctx, NULL);
     }
-    if (name != NULL && (StringStartsWith(name, "solaris") || StringStartsWith(name, "sunos")))
+    if (StringStartsWith(name, "solaris") || StringStartsWith(name, "sunos"))
     {
         OSVersionMinorPut(ctx, version_tuple->name);
         return DeleteItemList(version_tuple);
@@ -3844,7 +3840,7 @@ static void SysOSVersionMinor(EvalContext *ctx)
     OSVersionMinorPut(ctx, version_tuple->next->name);
     return DeleteItemList(version_tuple);
 
-    #else
+#else
 
     char *release = SafeStringDuplicate(VSYSNAME.release);
     char *major = NULL;
@@ -3869,7 +3865,7 @@ static void SysOSVersionMinor(EvalContext *ctx)
                                 "source=agent");
     free(release);
 
-    #endif
+#endif
 }
 
 

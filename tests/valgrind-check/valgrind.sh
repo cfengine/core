@@ -62,7 +62,7 @@ set -x
 # cleaned up from here rather than relying on the outer environment doing the
 # cleanup. In case this runs in a container, it could be a big
 # difference. Especially in a case of an SPC.
-{ sleep 30m && kill -9 $$; } &
+{ sleep 40m && kill -9 $$; } &
 auto_destruct_pid=$!
 trap "kill $auto_destruct_pid" EXIT
 

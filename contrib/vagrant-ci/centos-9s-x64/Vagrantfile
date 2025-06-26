@@ -92,7 +92,6 @@ cd /cfe
 ./buildscripts/build-scripts/autogen
 yum -q -y remove libtool libtool-ltdl
 ./buildscripts/build-scripts/clean-buildmachine
-./buildscripts/build-scripts/build-environment-check
 ./buildscripts/build-scripts/install-dependencies
 ./buildscripts/build-scripts/configure
 ./buildscripts/build-scripts/compile
@@ -100,7 +99,6 @@ yum -q -y remove libtool libtool-ltdl
 rm -rf /var/cfengine
 export TEST_MACHINE=chroot
 ./buildscripts/build-scripts/clean-buildmachine
-./buildscripts/build-scripts/build-environment-check
 ./buildscripts/build-scripts/install-dependencies
 ./buildscripts/build-scripts/test
 SHELL

@@ -128,6 +128,9 @@ void EvalContextHeapPersistentSave(EvalContext *ctx, const char *name, unsigned 
 void EvalContextHeapPersistentRemove(const char *context);
 void EvalContextHeapPersistentLoadAll(EvalContext *ctx);
 
+void EvalContextOverrideImmutableSet(EvalContext *ctx, bool should_override);
+bool EvalContextOverrideImmutableGet(EvalContext *ctx);
+
 /**
  * Sets negated classes (persistent classes that should not be defined).
  *

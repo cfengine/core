@@ -1063,6 +1063,14 @@ typedef struct
 
 typedef struct
 {
+    int immutable;
+    int haveimmutable;
+} FileFSAttrs;
+
+/*************************************************************************/
+
+typedef struct
+{
     char *newname;
     char *disable_suffix;
     int disable;
@@ -1530,6 +1538,7 @@ typedef struct
     FilePerms perms;
     FileCopy copy;
     FileDelete delete;
+    FileFSAttrs fsattrs;
     char *content;
     FileRename rename;
     FileChange change;
@@ -1581,6 +1590,7 @@ typedef struct
     int haveselect;
     int haverename;
     int havedelete;
+    int havefsattrs;
     int haveperms;
     int havechange;
     int havecopy;

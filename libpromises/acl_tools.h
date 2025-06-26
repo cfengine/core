@@ -25,6 +25,19 @@
 #ifndef CFENGINE_ACL_TOOLS_H
 #define CFENGINE_ACL_TOOLS_H
 
+#include <stdbool.h>
+#include <rlist.h>
+
+
+/**
+ * @brief Get ACLs from a file or directory
+ * @param Path to file or directory
+ * @param access Get access ACLs if true, otherwise default ACLs
+ * @return List of ACLs. On error, NULL is returned and errno is set to
+ * indicate the error.
+ */
+Rlist *GetACLs(const char *path, bool access);
+
 bool CopyACLs(const char *src, const char *dst, bool *change);
 
 /**

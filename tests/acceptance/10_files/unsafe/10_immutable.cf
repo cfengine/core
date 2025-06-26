@@ -1,0 +1,98 @@
+##############################################################################
+#
+# Test that agent can override the immutable bit when using acl attribute
+#
+##############################################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+bundle agent global
+{
+  vars:
+    "testfile"
+      string => "/tmp/10_immutable.txt";
+}
+
+body fsattrs set_immutable
+{
+  immutable => "true";
+}
+
+body acl acl_user_root_rw
+{
+  acl_method => "append";
+  aces => { "user:root:rw" };
+}
+
+body acl acl_user_root_rwx
+{
+  acl_method => "append";
+  aces => { "user:root:rwx" };
+}
+
+bundle agent init
+{
+  files:
+    "$(global.testfile)"
+      create => "true",
+      acl => acl_user_root_rw;
+
+  commands:
+    "chattr +i $(global.testfile)"
+      contain => in_shell;
+}
+
+bundle agent test
+{
+  meta:
+    "description" -> { "CFE-1840", "ENT-10961" }
+      string => "Test that agent can override the immutable bit on a file while using the acl attribute";
+
+    "test_skip_unsupported"
+      string => "hpux|aix|solaris|windows";
+
+  files:
+    "$(global.testfile)"
+      fsattrs => set_immutable,
+      acl => acl_user_root_rwx;
+
+}
+
+bundle agent check
+{
+  vars:
+    "expected"
+      string => ".*user:root:rwx.*";
+    "acls"
+      slist => getacls("$(global.testfile)", "access");
+
+  classes:
+    "ok"
+      expression => some("$(expected)", "acls");
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+    any::
+      "Expecting output matching '$(expected)', got '$(acls)'";
+}
+
+bundle agent destroy
+{
+  commands:
+    "chattr -i $(global.testfile)"
+      contain => in_shell,
+      handle => "is mutable";
+
+  files:
+    "$(global.testfile)"
+      delete => tidy,
+      depends_on => { "is mutable" };
+}

@@ -259,7 +259,38 @@ bool AllowAccessForUsers(const char *path, StringSet *users, bool allow_writes, 
     return true;
 }
 
+Rlist *GetACLs(const char *path, bool access)
+{
+    assert(path != NULL);
+
+    acl_t acl = acl_get_file(path, access ? ACL_TYPE_ACCESS : ACL_TYPE_DEFAULT);
+    if (acl == NULL)
+    {
+        return NULL;
+    }
+
+    char *text = acl_to_any_text(acl, NULL, ',', 0);
+    if (text == NULL)
+    {
+        acl_free(acl);
+        return NULL;
+    }
+
+    Rlist *lst = RlistFromSplitString(text, ',');
+
+    acl_free(text);
+    acl_free(acl);
+    return lst;
+}
+
 #elif !defined(__MINGW32__) /* !HAVE_LIBACL */
+
+Rlist *GetACLs(ARG_UNUSED const char *path, ARG_UNUSED bool access)
+{
+    /* TODO: Handle Windows ACLs (see ENT-13019) */
+    errno = ENOTSUP;
+    return NULL;
+}
 
 bool CopyACLs(ARG_UNUSED const char *src, ARG_UNUSED const char *dst, bool *change)
 {

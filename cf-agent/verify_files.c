@@ -61,6 +61,7 @@
 #include <changes_chroot.h>     /* PrepareChangesChroot(), RecordFileChangedInChroot() */
 #include <cf3.defs.h>
 #include <fsattrs.h>
+#include <override_fsattrs.h>
 
 static PromiseResult FindFilePromiserObjects(EvalContext *ctx, const Promise *pp);
 static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promise *pp);
@@ -796,6 +797,7 @@ static PromiseResult WriteContentFromString(EvalContext *ctx, const char *path, 
 
     if (!HashesMatch(existing_content_digest, promised_content_digest, CF_DEFAULT_DIGEST))
     {
+        bool override_immutable = EvalContextOverrideImmutableGet(ctx);
         if (!MakingChanges(ctx, pp, attr, &result,
                           "update file '%s' with content '%s'",
                            path, attr->content))
@@ -803,12 +805,22 @@ static PromiseResult WriteContentFromString(EvalContext *ctx, const char *path, 
             return result;
         }
 
-        FILE *f = safe_fopen(changes_path, "w");
+        char override_path[PATH_MAX];
+        if (!OverrideImmutableBegin(changes_path, override_path, sizeof(override_path), override_immutable))
+        {
+            RecordFailure(ctx, pp, attr, "Failed to override immutable bit on file '%s'", changes_path);
+            return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+        }
+
+        FILE *f = safe_fopen(override_path, "w");
         if (f == NULL)
         {
             RecordFailure(ctx, pp, attr, "Cannot open file '%s' for writing", path);
+            OverrideImmutableCommit(changes_path, override_path, override_immutable, true);
             return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         }
+
+        bool override_abort = false;
 
         Writer *w = FileWriter(f);
         if (WriterWriteLen(w, attr->content, bytes_to_write) == bytes_to_write )
@@ -824,9 +836,16 @@ static PromiseResult WriteContentFromString(EvalContext *ctx, const char *path, 
             RecordFailure(ctx, pp, attr,
                           "Failed to update file '%s' with content '%s'",
                           path, attr->content);
+            override_abort = true;
             result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         }
         WriterClose(w);
+
+        if (!OverrideImmutableCommit(changes_path, override_path, override_immutable, override_abort))
+        {
+            RecordFailure(ctx, pp, attr, "Failed to override immutable bit on file '%s'", changes_path);
+            result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+        }
     }
 
     return result;

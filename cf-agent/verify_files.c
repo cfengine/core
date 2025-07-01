@@ -990,7 +990,7 @@ static PromiseResult RenderTemplateMustache(EvalContext *ctx,
                                   edcontext->filename, message);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                 }
-                else if (SaveAsFile(SaveBufferCallback, output_buffer,
+                else if (SaveAsFile(ctx, SaveBufferCallback, output_buffer,
                                     edcontext->changes_filename, attr,
                                     edcontext->new_line_mode))
                 {

@@ -402,6 +402,11 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
         }
     }
 
+    /* If we encounter any promises to mutate the file and the immutable
+     * attribute in body fsattrs is "true", we will override the immutable bit
+     * by temporarily clearing it whenever needed. */
+    EvalContextOverrideImmutableSet(ctx, a.havefsattrs && a.fsattrs.haveimmutable && a.fsattrs.immutable && is_immutable);
+
     if (lstat(changes_path, &oslb) == -1)       /* Careful if the object is a link */
     {
         if ((a.create) || (a.touch))
@@ -705,6 +710,9 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
     }
 
 exit:
+    /* Reset this to false before next file promise */
+    EvalContextOverrideImmutableSet(ctx, false);
+
     free(chrooted_path);
     if (AttrHasNoAction(&a))
     {

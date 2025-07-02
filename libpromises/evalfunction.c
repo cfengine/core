@@ -22,6 +22,7 @@
   included file COSL.txt.
 */
 
+#include <limits.h>
 #include <platform.h>
 #include <evalfunction.h>
 
@@ -35,6 +36,8 @@
 #include <files_names.h>
 #include <files_interfaces.h>
 #include <hash.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <vars.h>
 #include <addr_lib.h>
 #include <syntax.h>
@@ -7777,6 +7780,186 @@ static int JsonPrimitiveComparator(JsonElement const *left_obj,
     return StringSafeCompare(left, right);
 }
 
+static bool ClassFilterDataArrayOfArrays(
+    EvalContext *ctx,
+    const char *fn_name,
+    JsonElement *json_array,
+    const char *class_expr_index,
+    bool *remove)
+{
+    size_t index;
+    assert(SIZE_MAX >= ULONG_MAX); /* make sure returned value can fit in size_t */
+    if (StringToUlong(class_expr_index, &index) != 0) {
+        Log(LOG_LEVEL_VERBOSE,
+            "Function %s(): Bad class expression index '%s': Failed to parse integer",
+            fn_name, class_expr_index);
+        return false;
+    }
+
+    size_t length = JsonLength(json_array);
+    if (index >= length)
+    {
+        Log(LOG_LEVEL_VERBOSE,
+            "Function %s(): Bad class expression index '%s': Index out of bounds (%zu >= %zu)",
+            fn_name, class_expr_index, index, length);
+        return false;
+    }
+
+    JsonElement *json_child = JsonArrayGet(json_array, index);
+    if (JsonGetType(json_child) != JSON_TYPE_STRING)
+    {
+        Log(LOG_LEVEL_VERBOSE,
+            "Function %s(): Bad class expression at index '%zu': Expected type string",
+            fn_name, index);
+        return false;
+    }
+
+    const char *class_expr = JsonPrimitiveGetAsString(json_child);
+    assert(class_expr != NULL);
+
+    *remove = !IsDefinedClass(ctx, class_expr);
+    return true;
+}
+
+static bool ClassFilterDataArrayOfObjects(
+    EvalContext *ctx,
+    const char *fn_name,
+    JsonElement *json_object,
+    const char *class_expr_key,
+    bool *remove)
+{
+    JsonElement *json_child = JsonObjectGet(json_object, class_expr_key);
+    if (json_child == NULL)
+    {
+        Log(LOG_LEVEL_VERBOSE,
+            "Function %s(): Bad class expression key '%s': Key not found",
+            fn_name, class_expr_key);
+        return false;
+    }
+
+    if (JsonGetType(json_child) != JSON_TYPE_STRING)
+    {
+        Log(LOG_LEVEL_VERBOSE,
+            "Function %s(): Bad class expression at key '%s': Expected type string",
+            fn_name, class_expr_key);
+        return false;
+    }
+
+    const char *class_expr = JsonPrimitiveGetAsString(json_child);
+    assert(class_expr != NULL);
+
+    *remove = !IsDefinedClass(ctx, class_expr);
+    return true;
+}
+
+static bool ClassFilterDataArray(
+    EvalContext *ctx,
+    const char *fn_name,
+    const char *data_structure,
+    const char *key_or_index,
+    JsonElement *child,
+    bool *remove)
+{
+    switch (JsonGetType(child))
+    {
+    case JSON_TYPE_ARRAY:
+        if (StringEqual(data_structure, "auto") ||
+            StringEqual(data_structure, "array_of_arrays"))
+        {
+            return ClassFilterDataArrayOfArrays(
+                ctx, fn_name, child, key_or_index, remove);
+        }
+        Log(LOG_LEVEL_VERBOSE,
+            "Function %s(): Expected child element to be of container type array",
+            fn_name);
+        break;
+
+    case JSON_TYPE_OBJECT:
+        if (StringEqual(data_structure, "auto") ||
+            StringEqual(data_structure, "array_of_objects"))
+        {
+            return ClassFilterDataArrayOfObjects(
+                ctx, fn_name, child, key_or_index, remove);
+        }
+        Log(LOG_LEVEL_VERBOSE,
+            "Function %s(): Expected child element to be of container type object",
+            fn_name);
+        break;
+
+    default:
+        Log(LOG_LEVEL_VERBOSE,
+            "Function %s(): Expected child element to be of container type",
+            fn_name);
+        break;
+    }
+
+    return false;
+}
+
+static FnCallResult FnCallClassFilterData(
+    EvalContext *ctx,
+    ARG_UNUSED Policy const *policy,
+    FnCall const *fp,
+    Rlist const *args)
+{
+    assert(ctx != NULL);
+    assert(fp != NULL);
+    assert(args != NULL);
+    assert(args->next != NULL);
+    assert(args->next->next != NULL);
+
+    bool allocated = false;
+    JsonElement *parent = VarNameOrInlineToJson(ctx, fp, args, false, &allocated);
+    if (parent == NULL)
+    {
+        Log(LOG_LEVEL_VERBOSE,
+            "Function %s(): Expected parent element to be of container type array",
+            fp->name);
+        return FnFailure();
+    }
+
+    /* Currently only parent type array is supported */
+    if (JsonGetType(parent) != JSON_TYPE_ARRAY)
+    {
+        JsonDestroyMaybe(parent, allocated);
+        return FnFailure();
+    }
+
+    if (!allocated)
+    {
+        parent = JsonCopy(parent);
+        assert(parent != NULL);
+    }
+
+    const char *data_structure = RlistScalarValue(args->next);
+    const char *key_or_index = RlistScalarValue(args->next->next);
+
+    /* Iterate through array backwards so we can avoid having to compute index
+     * offsets for each removed element */
+    for (size_t index_plus_one = JsonLength(parent); index_plus_one > 0; index_plus_one--)
+    {
+        assert(index_plus_one > 0);
+        size_t index = index_plus_one - 1;
+        JsonElement *child = JsonArrayGet(parent, index);
+        assert(child != NULL);
+
+        bool remove;
+        if (!ClassFilterDataArray(ctx, fp->name, data_structure, key_or_index, child, &remove))
+        {
+            /* Error is already logged */
+            JsonDestroy(parent);
+            return FnFailure();
+        }
+
+        if (remove)
+        {
+            JsonArrayRemoveRange(parent, index, index);
+        }
+    }
+
+    return FnReturnContainerNoCopy(parent);
+}
+
 static FnCallResult FnCallClassFilterCsv(EvalContext *ctx,
                                          ARG_UNUSED Policy const *policy,
                                          FnCall const *fp,
@@ -10371,6 +10554,14 @@ static const FnCallArg VALIDJSON_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg CLASSFILTERDATA_ARGS[] =
+{
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "CFEngine variable identifier or inline JSON"},
+    {"array_of_arrays,array_of_objects,auto", CF_DATA_TYPE_OPTION, "Specify type of data structure"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Key or index of class expressions"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
 static const FnCallArg CLASSFILTERCSV_ARGS[] =
 {
     {CF_ABSPATHRANGE, CF_DATA_TYPE_STRING, "File name"},
@@ -10907,6 +11098,8 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("classesmatching", CF_DATA_TYPE_STRING_LIST, CLASSMATCH_ARGS, &FnCallClassesMatching, "List the defined classes matching regex arg1 and tag regexes arg2,arg3,...",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("classfilterdata", CF_DATA_TYPE_CONTAINER, CLASSFILTERDATA_ARGS, &FnCallClassFilterData, "Filter data container by defined classes",
+                  FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("classfiltercsv", CF_DATA_TYPE_CONTAINER, CLASSFILTERCSV_ARGS, &FnCallClassFilterCsv, "Parse a CSV file and create data container filtered by defined classes",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("countclassesmatching", CF_DATA_TYPE_INT, CLASSMATCH_ARGS, &FnCallClassesMatching, "Count the number of defined classes matching regex arg1",

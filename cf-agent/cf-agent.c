@@ -1560,6 +1560,15 @@ static void AllClassesReport(const EvalContext *ctx)
 PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
 // NB - this function can be called recursively through "methods"
 {
+    if (EvalContextGetEvalOption(ctx, EVAL_OPTION_NORMAL_EVALUATION))
+    {
+        return ScheduleAgentOperationsNormalOrder(ctx, bp);
+    }
+    return ScheduleAgentOperationsTopDownOrder(ctx, bp);
+}
+
+PromiseResult ScheduleAgentOperationsNormalOrder(EvalContext *ctx, const Bundle *bp)
+{
     assert(bp != NULL);
 
     int save_pr_kept = PR_KEPT;
@@ -1643,6 +1652,46 @@ PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
                     NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept, start);
                     return result;
                 }
+            }
+            EvalContextStackPopFrame(ctx);
+        }
+    }
+
+    NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept, start);
+    return result;
+}
+
+PromiseResult ScheduleAgentOperationsTopDownOrder(EvalContext *ctx, const Bundle *bp)
+{
+    assert(bp != NULL);
+
+    int save_pr_kept = PR_KEPT;
+    int save_pr_repaired = PR_REPAIRED;
+    int save_pr_notkept = PR_NOTKEPT;
+    struct timespec start = BeginMeasure();
+
+    if (PROCESSREFRESH == NULL || (PROCESSREFRESH && IsRegexItemIn(ctx, PROCESSREFRESH, bp->name)))
+    {
+        ClearProcessTable();
+    }
+
+    PromiseResult result = PROMISE_RESULT_SKIPPED;
+    for (int pass = 1; pass < CF_DONEPASSES; pass++)
+    {
+        for (size_t ppi = 0; ppi < SeqLength(bp->all_promises); ppi++)
+        {
+            Promise *pp = SeqAt(bp->all_promises, ppi);
+            BundleSection *parent_section = pp->parent_section;
+
+            EvalContextStackPushBundleSectionFrame(ctx, parent_section);
+
+            PromiseResult promise_result = ExpandPromise(ctx, pp, KeepAgentPromise, NULL);
+            result = PromiseResultUpdate(result, promise_result);
+            if (EvalAborted(ctx) || BundleAbort(ctx))
+            {
+                EvalContextStackPopFrame(ctx);
+                NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept, start);
+                return result;
             }
             EvalContextStackPopFrame(ctx);
         }

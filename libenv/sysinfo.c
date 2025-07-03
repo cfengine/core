@@ -3784,6 +3784,93 @@ static void SysOsVersionMajor(EvalContext *ctx)
 
 /*****************************************************************************/
 
+static const char *OSReleaseGet(EvalContext *ctx, const char *field)
+{
+    DataType type_out;
+    const JsonElement *os_rel = EvalContextVariableGetSpecial(
+        ctx, SPECIAL_SCOPE_SYS, "os_release", &type_out);
+
+    if (type_out != CF_DATA_TYPE_CONTAINER)
+    {
+        return NULL;
+    }
+    const JsonElement *child = JsonObjectGet(os_rel, field);
+    if (child == NULL)
+    {
+        return NULL;
+    }
+    const char *result = JsonPrimitiveGetAsString(child);
+    return result;
+}
+
+static void OSVersionMinorPut(EvalContext *ctx, const char *minor)
+{
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS,
+                                "os_version_minor",
+                                (minor == NULL) ? "Unknown" : minor,
+                                CF_DATA_TYPE_STRING, 
+                                "source=agent,derived-from=os_release");
+}
+
+static void SysOSVersionMinor(EvalContext *ctx)
+{
+#ifndef __MINGW32__
+
+    const char *version_id = OSReleaseGet(ctx, "VERSION_ID");
+    const char *name = OSReleaseGet(ctx, "NAME");
+    if ((version_id == NULL) || (name == NULL))
+    {
+        return OSVersionMinorPut(ctx, NULL);
+    }
+    Item *version_tuple = SplitString(version_id, '.');
+    if (version_tuple == NULL)
+    {
+        return OSVersionMinorPut(ctx, NULL);
+    }
+    if (StringStartsWith(name, "solaris") || StringStartsWith(name, "sunos"))
+    {
+        OSVersionMinorPut(ctx, version_tuple->name);
+        return DeleteItemList(version_tuple);
+    }
+    if (version_tuple->next == NULL)
+    {
+        OSVersionMinorPut(ctx, NULL);
+        return DeleteItemList(version_tuple);
+    }
+    OSVersionMinorPut(ctx, version_tuple->next->name);
+    return DeleteItemList(version_tuple);
+
+#else
+
+    char *release = SafeStringDuplicate(VSYSNAME.release);
+    char *major = NULL;
+    char *minor = NULL;
+    char *rel;
+    rel = FindNextInteger(release, &major);
+    if (rel == NULL)
+    {
+        free(release);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS,
+                                "os_version_minor",
+                                "Unknown",
+                                CF_DATA_TYPE_STRING, 
+                                "source=agent");
+        return;
+    }
+    rel = FindNextInteger(rel, &minor);
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS,
+                                "os_version_minor",
+                                (minor == NULL) ? "Unknown" : minor,
+                                CF_DATA_TYPE_STRING, 
+                                "source=agent");
+    free(release);
+
+#endif
+}
+
+
+/*****************************************************************************/
+
 void DetectEnvironment(EvalContext *ctx)
 {
     GetNameInfo3(ctx);
@@ -3796,4 +3883,5 @@ void DetectEnvironment(EvalContext *ctx)
     GetDefVars(ctx);
     SysOSNameHuman(ctx);
     SysOsVersionMajor(ctx);
+    SysOSVersionMinor(ctx);
 }

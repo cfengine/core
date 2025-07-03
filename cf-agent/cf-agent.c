@@ -1678,10 +1678,18 @@ PromiseResult ScheduleAgentOperationsTopDownOrder(EvalContext *ctx, const Bundle
     PromiseResult result = PROMISE_RESULT_SKIPPED;
     for (int pass = 1; pass < CF_DONEPASSES; pass++)
     {
+        const char *last_promise_type = "";
         for (size_t ppi = 0; ppi < SeqLength(bp->all_promises); ppi++)
         {
+            EvalContextSetPass(ctx, pass);
             Promise *pp = SeqAt(bp->all_promises, ppi);
             BundleSection *parent_section = pp->parent_section;
+
+            if (!StringEqual(last_promise_type, parent_section->promise_type))
+            {
+                SpecialTypeBannerFromString(parent_section->promise_type, pass);
+            }
+            last_promise_type = parent_section->promise_type;
 
             EvalContextStackPushBundleSectionFrame(ctx, parent_section);
 

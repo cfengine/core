@@ -1,0 +1,78 @@
+body common control
+{
+  bundlesequence => { "check" };
+}
+
+bundle agent test(context, index)
+{
+  meta:
+    "description" -> { "ENT-6193", "CFE-3421" }
+      string => "Test for expected results from policy function classfilterdata() with array of objects using context '$(with)' and key 'key_$(index)'",
+      with => join("', '", "context");
+
+  vars:
+    "test"
+      data => '[
+        { "key_0": "foo", "key_1": "!foo", "key_2": "foo&bar", "key_3": "foo|bar" },
+        { "key_0": "bar", "key_1": "!bar", "key_2": "bar&baz", "key_3": "bar|baz" },
+        { "key_0": "baz", "key_1": "!baz", "key_2": "foo&baz", "key_3": "foo|baz" },
+      ]';
+
+    "actual"
+      data => classfilterdata("@(test)", "array_of_objects", "key_$(index)");
+
+  classes:
+    "$(context)";
+
+  reports:
+    "$(with)"
+      with => storejson("@(actual)"),
+      bundle_return_value_index => "$(index)";
+}
+
+bundle agent check
+{
+  vars:
+    "num_indices" string => "3";
+    "context" slist => { "foo" };
+    "range" slist => expandrange("[0-$(num_indices)]", "1");
+
+    "expected[0]"
+      string => storejson('[
+        { "key_0": "foo", "key_1": "!foo", "key_2": "foo&bar", "key_3": "foo|bar" },
+      ]');
+    "expected[1]"
+      string => storejson('[
+        { "key_0": "bar", "key_1": "!bar", "key_2": "bar&baz", "key_3": "bar|baz" },
+        { "key_0": "baz", "key_1": "!baz", "key_2": "foo&baz", "key_3": "foo|baz" },
+      ]');
+    "expected[2]"
+      string => storejson('[
+      ]');
+    "expected[3]"
+      string => storejson('[
+        { "key_0": "foo", "key_1": "!foo", "key_2": "foo&bar", "key_3": "foo|bar" },
+        { "key_0": "baz", "key_1": "!baz", "key_2": "foo&baz", "key_3": "foo|baz" },
+      ]');
+
+  classes:
+    "ok_$(range)"
+      expression => strcmp("$(expected[$(range)])",
+                           "$(actual[$(range)])");
+    "ok"
+      expression => and(expandrange("ok_[0-$(num_indices)]", "1"));
+
+  methods:
+    "context: '$(with)' and index: $(range)"
+      usebundle => test("@(context)", "$(range)"),
+      useresult => "actual",
+      with => join(", ", "context");
+
+  reports:
+      "Context '$(with)'; index $(range); expected '$(expected[$(range)])'; actual '$(actual[$(range)])'"
+        with => join("', '", "context");
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

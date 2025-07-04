@@ -33,6 +33,8 @@
 #include <rlist.h>
 #include <eval_context.h>
 #include <unix.h>               /* GetGroupID(), GetUserID() */
+#include <override_fsattrs.h>
+#include <fsattrs.h>
 
 #ifdef HAVE_ACL_H
 # include <acl.h>
@@ -389,6 +391,11 @@ static bool CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method,
                 acl_free(acl_text_str);
                 return false;
             }
+
+            bool was_immutable = false;
+            const bool override_immutable = EvalContextOverrideImmutableGet(ctx);
+            FSAttrsResult res = TemporarilyClearImmutableBit(changes_path, override_immutable, &was_immutable);
+
             if ((retv = acl_set_file(changes_path, acl_type, acl_new)) != 0)
             {
                 RecordFailure(ctx, pp, a,
@@ -405,6 +412,8 @@ static bool CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method,
                 return false;
             }
             acl_free(acl_text_str);
+
+            ResetTemporarilyClearedImmutableBit(changes_path, override_immutable, res, was_immutable);
 
             RecordChange(ctx, pp, a, "%s ACL on '%s' successfully changed", acl_type_str, file_path);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);

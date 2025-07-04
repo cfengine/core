@@ -128,7 +128,7 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, const Attributes *a, c
                 RecordNoChange(ctx, pp, a, "No edit changes to file '%s' need saving",
                                ec->filename);
             }
-            else if (SaveItemListAsFile(ec->file_start, ec->changes_filename, a, ec->new_line_mode))
+            else if (SaveItemListAsFile(ctx, ec->file_start, ec->changes_filename, a, ec->new_line_mode))
             {
                 RecordChange(ctx, pp, a, "Edited file '%s'", ec->filename);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
@@ -151,7 +151,7 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, const Attributes *a, c
                                    ec->filename);
                 }
             }
-            else if (SaveXmlDocAsFile(ec->xmldoc, ec->changes_filename, a, ec->new_line_mode))
+            else if (SaveXmlDocAsFile(ctx, ec->xmldoc, ec->changes_filename, a, ec->new_line_mode))
             {
                 RecordChange(ctx, pp, a, "Edited xml file '%s'", ec->filename);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
@@ -254,8 +254,8 @@ static bool SaveXmlCallback(const char *dest_filename, void *param,
 
 /*********************************************************************/
 
-bool SaveXmlDocAsFile(xmlDocPtr doc, const char *file, const Attributes *a, NewLineMode new_line_mode)
+bool SaveXmlDocAsFile(EvalContext *ctx, xmlDocPtr doc, const char *file, const Attributes *a, NewLineMode new_line_mode)
 {
-    return SaveAsFile(&SaveXmlCallback, doc, file, a, new_line_mode);
+    return SaveAsFile(ctx, &SaveXmlCallback, doc, file, a, new_line_mode);
 }
 #endif /* HAVE_LIBXML2 */

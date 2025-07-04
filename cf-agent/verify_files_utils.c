@@ -67,6 +67,7 @@
 #include <known_dirs.h>
 #include <changes_chroot.h>     /* PrepareChangesChroot(), RecordFileChangedInChroot() */
 #include <unix.h>               /* GetGroupName(), GetUserName() */
+#include <override_fsattrs.h>
 
 #include <cf-windows-functions.h>
 
@@ -1925,7 +1926,8 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
     else
 #endif
     {
-        if (rename(changes_new, changes_dest) == 0)
+        bool override_immutable = EvalContextOverrideImmutableGet(ctx);
+        if (OverrideImmutableRename(changes_new, changes_dest, override_immutable))
         {
             RecordChange(ctx, pp, attr, "Moved '%s' to '%s'", new, dest);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
@@ -1937,7 +1939,7 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
                           dest, GetErrorStr());
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
 
-            if (backupok && (rename(changes_backup, changes_dest) == 0))
+            if (backupok && OverrideImmutableRename(changes_backup, changes_dest, override_immutable))
             {
                 RecordChange(ctx, pp, attr, "Restored '%s' from '%s'", dest, backup);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
@@ -2041,6 +2043,10 @@ static bool TransformFile(EvalContext *ctx, char *file, const Attributes *attr, 
             }
         }
 
+        const bool override_immutable = EvalContextOverrideImmutableGet(ctx);
+        bool was_immutable = false;
+        FSAttrsResult res = TemporarilyClearImmutableBit(file, override_immutable, &was_immutable);
+
         Log(LOG_LEVEL_INFO, "Transforming '%s' with '%s'", file, command_str);
         if ((pop = cf_popen(changes_command, "r", true)) == NULL)
         {
@@ -2083,6 +2089,8 @@ static bool TransformFile(EvalContext *ctx, char *file, const Attributes *attr, 
         free(line);
 
         transRetcode = cf_pclose(pop);
+
+        ResetTemporarilyClearedImmutableBit(file, override_immutable, res, was_immutable);
 
         if (VerifyCommandRetcode(ctx, transRetcode, attr, pp, result))
         {
@@ -2174,10 +2182,10 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
         {
             if (!FileInRepository(newname))
             {
-                if (rename(changes_path, changes_newname) == -1)
+                const bool override_immutable = EvalContextOverrideImmutableGet(ctx);
+                if (!OverrideImmutableRename(changes_path, changes_newname, override_immutable))
                 {
-                    RecordFailure(ctx, pp, attr, "Error occurred while renaming '%s'. (rename: %s)",
-                                  path, GetErrorStr());
+                    RecordFailure(ctx, pp, attr, "Error occurred while renaming '%s'", path);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                 }
                 else
@@ -2312,7 +2320,8 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
 
         if (MakingChanges(ctx, pp, attr, &result, "rename file '%s' to '%s'", path, newname))
         {
-            if (safe_chmod(changes_path, newperm) == 0)
+            const bool override_immutable = EvalContextOverrideImmutableGet(ctx);
+            if (OverrideImmutableChmod(changes_path, newperm, override_immutable))
             {
                 RecordChange(ctx, pp, attr, "Changed permissions of '%s' to 'mode %04jo'",
                              path, (uintmax_t)newperm);
@@ -2327,10 +2336,9 @@ static PromiseResult VerifyName(EvalContext *ctx, char *path, const struct stat 
 
             if (!FileInRepository(newname))
             {
-                if (rename(changes_path, changes_newname) == -1)
+                if (!OverrideImmutableRename(changes_path, changes_newname, override_immutable))
                 {
-                    RecordFailure(ctx, pp, attr, "Error occurred while renaming '%s'. (rename: %s)",
-                                  path, GetErrorStr());
+                    RecordFailure(ctx, pp, attr, "Error occurred while renaming '%s'", path);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                     free(chrooted_path);
                     return result;
@@ -2417,8 +2425,8 @@ static PromiseResult VerifyDelete(EvalContext *ctx,
     {
         if (!S_ISDIR(sb->st_mode))                      /* file,symlink */
         {
-            int ret = unlink(lastnode);
-            if (ret == -1)
+            bool override_immutable = EvalContextOverrideImmutableGet(ctx);
+            if (!OverrideImmutableDelete(lastnode, override_immutable))
             {
                 RecordFailure(ctx, pp, attr, "Couldn't unlink '%s' tidying. (unlink: %s)",
                               path, GetErrorStr());
@@ -2482,15 +2490,16 @@ static PromiseResult TouchFile(EvalContext *ctx, char *path, const Attributes *a
     PromiseResult result = PROMISE_RESULT_NOOP;
     if (MakingChanges(ctx, pp, attr, &result, "update time stamps for '%s'", path))
     {
-        if (utime(ToChangesPath(path), NULL) != -1)
+        bool override_immutable = EvalContextOverrideImmutableGet(ctx);
+        if (OverrideImmutableUtime(ToChangesPath(path), override_immutable, NULL))
         {
             RecordChange(ctx, pp, attr, "Touched (updated time stamps) for path '%s'", path);
             result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
         }
         else
         {
-            RecordFailure(ctx, pp, attr, "Touch '%s' failed to update timestamps. (utime: %s)",
-                          path, GetErrorStr());
+            RecordFailure(ctx, pp, attr, "Touch '%s' failed to update timestamps",
+                          path);
             result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         }
     }
@@ -2644,7 +2653,8 @@ static PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, co
         if (MakingChanges(ctx, pp, attr, &result, "change permissions of '%s' from %04jo to %04jo",
                           file, (uintmax_t)dstat->st_mode & 07777, (uintmax_t)newperm & 07777))
         {
-            if (safe_chmod(changes_file, newperm & 07777) == -1)
+            const bool override_immutable = EvalContextOverrideImmutableGet(ctx);
+            if (!OverrideImmutableChmod(changes_file, newperm & 07777, override_immutable))
             {
                 RecordFailure(ctx, pp, attr, "Failed to change permissions of '%s'. (chmod: %s)",
                               file, GetErrorStr());

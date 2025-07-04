@@ -60,6 +60,8 @@
 #include <evalfunction.h>
 #include <changes_chroot.h>     /* PrepareChangesChroot(), RecordFileChangedInChroot() */
 #include <cf3.defs.h>
+#include <fsattrs.h>
+#include <override_fsattrs.h>
 
 static PromiseResult FindFilePromiserObjects(EvalContext *ctx, const Promise *pp);
 static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promise *pp);
@@ -345,6 +347,67 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
         changes_path = chrooted_path;
     }
 
+    bool is_immutable = false; /* We assume not in case of failure */
+    FSAttrsResult res = FSAttrsGetImmutableFlag(changes_path, &is_immutable);
+    if (res != FS_ATTRS_SUCCESS)
+    {
+        Log((res == FS_ATTRS_FAILURE) ? LOG_LEVEL_ERR : LOG_LEVEL_VERBOSE,
+            "Failed to get the state of the immutable bit from file '%s': %s",
+            changes_path, FSAttrsErrorCodeToString(res));
+    }
+
+    if (a.havefsattrs && a.fsattrs.haveimmutable && !a.fsattrs.immutable)
+    {
+        /* Here we only handle the clearing of the immutable bit. Later we'll
+         * handle the setting of the immutable bit. */
+        if (is_immutable)
+        {
+            res = FSAttrsUpdateImmutableFlag(changes_path, false);
+            switch (res)
+            {
+            case FS_ATTRS_SUCCESS:
+                RecordChange(ctx, pp, &a,
+                             "Cleared the immutable bit on file '%s'",
+                             changes_path);
+                result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
+                break;
+            case FS_ATTRS_FAILURE:
+                RecordFailure(ctx, pp, &a,
+                              "Failed to clear the immutable bit on file '%s'",
+                              changes_path);
+                result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+                break;
+            case FS_ATTRS_NOT_SUPPORTED:
+                /* We will not treat this as a promise failure because this
+                 * will happen on many platforms and filesystems. Instead we
+                 * will log a verbose message to make it apparent for the
+                 * users. */
+                Log(LOG_LEVEL_VERBOSE,
+                    "Failed to clear the immutable bit on file '%s': %s",
+                    changes_path, FSAttrsErrorCodeToString(res));
+                break;
+            case FS_ATTRS_DOES_NOT_EXIST:
+                /* File does not exist. Nothing to do really, but let's log a
+                 * debug message for good measures */
+                Log(LOG_LEVEL_DEBUG,
+                    "Failed to clear the immutable bit on file '%s': %s",
+                    changes_path, FSAttrsErrorCodeToString(res));
+                break;
+            }
+        }
+        else
+        {
+            RecordNoChange(ctx, pp, &a,
+                           "The immutable bit is not set on file '%s' as promised",
+                           changes_path);
+        }
+    }
+
+    /* If we encounter any promises to mutate the file and the immutable
+     * attribute in body fsattrs is "true", we will override the immutable bit
+     * by temporarily clearing it whenever needed. */
+    EvalContextOverrideImmutableSet(ctx, a.havefsattrs && a.fsattrs.haveimmutable && a.fsattrs.immutable && is_immutable);
+
     if (lstat(changes_path, &oslb) == -1)       /* Careful if the object is a link */
     {
         if ((a.create) || (a.touch))
@@ -586,6 +649,51 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
         }
     }
 
+    if (a.havefsattrs && a.fsattrs.haveimmutable && a.fsattrs.immutable)
+    {
+        /* Here we only handle the setting of the immutable bit. Previously we
+         * handled the clearing of the immutable bit. */
+        if (is_immutable)
+        {
+            RecordNoChange(ctx, pp, &a,
+                           "The immutable bit is already set on file '%s' as promised",
+                           changes_path);
+        }
+        else
+        {
+            res = FSAttrsUpdateImmutableFlag(changes_path, true);
+            switch (res)
+            {
+            case FS_ATTRS_SUCCESS:
+                Log(LOG_LEVEL_VERBOSE, "Set the immutable bit on file '%s'",
+                    changes_path);
+                break;
+            case FS_ATTRS_FAILURE:
+                /* Things still may be fine as long as the agent does not try to mutate the file */
+                Log(LOG_LEVEL_VERBOSE,
+                    "Failed to set the immutable bit on file '%s': %s",
+                    changes_path, FSAttrsErrorCodeToString(res));
+                break;
+            case FS_ATTRS_NOT_SUPPORTED:
+                /* We will not treat this as a promise failure because this
+                 * will happen on many platforms and filesystems. Instead we
+                 * will log a verbose message to make it apparent for the
+                 * users. */
+                Log(LOG_LEVEL_VERBOSE,
+                    "Failed to set the immutable bit on file '%s': %s",
+                    changes_path, FSAttrsErrorCodeToString(res));
+                break;
+            case FS_ATTRS_DOES_NOT_EXIST:
+                /* File does not exist. Nothing to do really, but let's log a
+                 * debug message for good measures */
+                Log(LOG_LEVEL_DEBUG,
+                    "Failed to set the immutable bit on file '%s': %s",
+                    changes_path, FSAttrsErrorCodeToString(res));
+                break;
+            }
+        }
+    }
+
 // Once more in case a file has been created as a result of editing or copying
 
     exists = (lstat(changes_path, &osb) != -1);
@@ -603,6 +711,9 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
     }
 
 exit:
+    /* Reset this to false before next file promise */
+    EvalContextOverrideImmutableSet(ctx, false);
+
     free(chrooted_path);
     if (AttrHasNoAction(&a))
     {
@@ -686,6 +797,7 @@ static PromiseResult WriteContentFromString(EvalContext *ctx, const char *path, 
 
     if (!HashesMatch(existing_content_digest, promised_content_digest, CF_DEFAULT_DIGEST))
     {
+        bool override_immutable = EvalContextOverrideImmutableGet(ctx);
         if (!MakingChanges(ctx, pp, attr, &result,
                           "update file '%s' with content '%s'",
                            path, attr->content))
@@ -693,12 +805,22 @@ static PromiseResult WriteContentFromString(EvalContext *ctx, const char *path, 
             return result;
         }
 
-        FILE *f = safe_fopen(changes_path, "w");
+        char override_path[PATH_MAX];
+        if (!OverrideImmutableBegin(changes_path, override_path, sizeof(override_path), override_immutable))
+        {
+            RecordFailure(ctx, pp, attr, "Failed to override immutable bit on file '%s'", changes_path);
+            return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+        }
+
+        FILE *f = safe_fopen(override_path, "w");
         if (f == NULL)
         {
             RecordFailure(ctx, pp, attr, "Cannot open file '%s' for writing", path);
+            OverrideImmutableCommit(changes_path, override_path, override_immutable, true);
             return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         }
+
+        bool override_abort = false;
 
         Writer *w = FileWriter(f);
         if (WriterWriteLen(w, attr->content, bytes_to_write) == bytes_to_write )
@@ -714,9 +836,16 @@ static PromiseResult WriteContentFromString(EvalContext *ctx, const char *path, 
             RecordFailure(ctx, pp, attr,
                           "Failed to update file '%s' with content '%s'",
                           path, attr->content);
+            override_abort = true;
             result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         }
         WriterClose(w);
+
+        if (!OverrideImmutableCommit(changes_path, override_path, override_immutable, override_abort))
+        {
+            RecordFailure(ctx, pp, attr, "Failed to override immutable bit on file '%s'", changes_path);
+            result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+        }
     }
 
     return result;
@@ -861,7 +990,7 @@ static PromiseResult RenderTemplateMustache(EvalContext *ctx,
                                   edcontext->filename, message);
                     result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                 }
-                else if (SaveAsFile(SaveBufferCallback, output_buffer,
+                else if (SaveAsFile(ctx, SaveBufferCallback, output_buffer,
                                     edcontext->changes_filename, attr,
                                     edcontext->new_line_mode))
                 {

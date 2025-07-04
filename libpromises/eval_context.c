@@ -1323,6 +1323,7 @@ static StackFrame *StackFrameNew(StackFrameType type, bool inherit_previous)
     frame->type = type;
     frame->inherits_previous = inherit_previous;
     frame->path = NULL;
+    frame->override_immutable = false;
 
     return frame;
 }
@@ -2878,7 +2879,7 @@ void EvalContextFunctionCachePut(EvalContext *ctx,
 
     Rlist *args_copy = RlistCopy(args);
     Rlist *key = RlistPrepend(&args_copy, fp->name, RVAL_TYPE_SCALAR);
-    
+
     FuncCacheMapInsert(ctx->function_cache, key, rval_copy);
 }
 
@@ -3829,4 +3830,20 @@ const char *ToNormalRoot(const char *orig_path)
     assert(strncmp(orig_path, chrooted_path, chroot_len) == 0);
 
     return orig_path + chroot_len - 1;
+}
+
+void EvalContextOverrideImmutableSet(EvalContext *ctx, bool should_override)
+{
+    assert(ctx != NULL);
+    StackFrame *stack_frame = LastStackFrame(ctx, 0);
+    assert(stack_frame != NULL);
+    stack_frame->override_immutable = should_override;
+}
+
+bool EvalContextOverrideImmutableGet(EvalContext *ctx)
+{
+    assert(ctx != NULL);
+    StackFrame *stack_frame = LastStackFrame(ctx, 0);
+    assert(stack_frame != NULL);
+    return stack_frame->override_immutable;
 }

@@ -1,0 +1,88 @@
+body common control
+{
+  bundlesequence => { "check" };
+}
+
+bundle agent test(context, index)
+{
+  meta:
+    "description" -> { "ENT-6193", "CFE-3421" }
+      string => "Test for expected results from policy function classfilterdata()";
+
+  vars:
+    "test"
+      data => '[
+        [ "foo", "!foo", "foo&bar", "foo|bar" ],
+        [ "bar", "!bar", "bar&baz", "bar|baz" ],
+        [ "baz", "!baz", "foo&baz", "foo|baz" ],
+      ]';
+
+    "actual"
+      data => classfilterdata("@(test)", "array_of_arrays", "$(index)");
+
+  classes:
+    "$(context)";
+
+  reports:
+    "$(with)"
+      with => storejson("@(actual)"),
+      bundle_return_value_index => "$(index)";
+}
+
+bundle agent check
+{
+  vars:
+    "context" slist => { "foo" };
+
+    "expected[0]"
+      string => storejson('[
+        [ "foo", "!foo", "foo&bar", "foo|bar" ]
+      ]');
+    "expected[1]"
+      string => storejson('[
+        [ "bar", "!bar", "bar&baz", "bar|baz" ],
+        [ "baz", "!baz", "foo&baz", "foo|baz" ]
+      ]');
+    "expected[2]"
+      string => storejson('[
+      ]');
+
+  classes:
+    "ok_0"
+      expression => strcmp("$(expected[0])",
+                           "$(actual[0])");
+    "ok_1"
+      expression => strcmp("$(expected[1])",
+                           "$(actual[1])");
+    "ok_2"
+      expression => strcmp("$(expected[1])",
+                           "$(actual[1])");
+    "ok"
+      expression => and("ok_0", "ok_1", "ok_2");
+
+  methods:
+    "classes: foo, index: 0"
+      usebundle => test("@(context)", 0),
+      useresult => "actual";
+    "classes: foo, index: 1"
+      usebundle => test("@(context)", 1),
+      useresult => "actual";
+    "classes: foo, index: 2"
+      usebundle => test("@(context)", 1),
+      useresult => "actual";
+
+  reports:
+    !ok_0::
+      "Expected: $(expected[0])";
+      "Actual:   $(actual[0])";
+    !ok_1::
+      "Expected: $(expected[1])";
+      "Actual:   $(actual[1])";
+    !ok_2::
+      "Expected: $(expected[2])";
+      "Actual:   $(actual[2])";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

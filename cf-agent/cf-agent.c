@@ -1560,7 +1560,7 @@ static void AllClassesReport(const EvalContext *ctx)
 PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
 // NB - this function can be called recursively through "methods"
 {
-    if (EvalContextGetEvalOption(ctx, EVAL_OPTION_NORMAL_EVALUATION))
+    if (EvalContextGetEvalOption(ctx, EVAL_OPTION_CLASSIC_EVALUATION))
     {
         return ScheduleAgentOperationsNormalOrder(ctx, bp);
     }

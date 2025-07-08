@@ -1025,6 +1025,15 @@ static void ResolveControlBody(EvalContext *ctx, GenericAgentConfig *config,
             /* Ignored */
         }
 
+        if (strcmp(lval, CFG_CONTROLBODY[COMMON_CONTROL_EVALUATION_ORDER].lval) == 0)
+        {
+            Log(LOG_LEVEL_VERBOSE, "SET evaluation %s",
+                RvalScalarValue(evaluated_rval));
+
+            bool is_normal = (StringEqual(RvalScalarValue(evaluated_rval), "classic"));
+            EvalContextSetEvalOption(ctx, EVAL_OPTION_NORMAL_EVALUATION, is_normal);
+        }
+
         RvalDestroy(evaluated_rval);
     }
 

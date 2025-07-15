@@ -22,6 +22,7 @@
   included file COSL.txt.
 */
 
+#include <sys/types.h>
 #include <verify_files_utils.h>
 
 #include <actuator.h>
@@ -1552,8 +1553,25 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
             return false;
         }
 
+        /* Use perms from source file if preserve is true, otherwise use perms
+         * of destination file if it exists, otherwise use default perms. */
+        mode_t mode;
+        if (attr->copy.preserve)
+        {
+            mode = sstat->st_mode;
+        }
+        else if (dest_exists)
+        {
+            mode = dest_stat.st_mode;
+        }
+        else
+        {
+            mode = CF_PERMS_DEFAULT;
+        }
+        mode &= 0777; /* Never preserve SUID bit */
+
         if (!CopyRegularFileNet(source, dest, ToChangesPath(new),
-                                sstat->st_size, attr->copy.encrypt, conn, sstat->st_mode))
+                                sstat->st_size, attr->copy.encrypt, conn, mode))
         {
             RecordFailure(ctx, pp, attr, "Failed to copy file '%s' from '%s'",
                           source, conn->remoteip);

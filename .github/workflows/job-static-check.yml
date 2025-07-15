@@ -18,22 +18,6 @@ jobs:
         with:
           myToken: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Checkout Buildscripts
-        uses: actions/checkout@v3
-        with:
-          repository: cfengine/buildscripts
-          submodules: recursive
-          path: buildscripts
-          ref: ${{steps.together.outputs.buildscripts || github.base_ref || github.ref}}
-
-      - name: Checkout Masterfiles
-        uses: actions/checkout@v3
-        with:
-          repository: cfengine/masterfiles
-          submodules: recursive
-          path: masterfiles
-          ref: ${{steps.together.outputs.masterfiles || github.base_ref || github.ref}}
-
       - name: Prepare Environment
         run: |
           sudo apt-get update && \

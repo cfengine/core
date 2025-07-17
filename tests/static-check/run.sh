@@ -16,6 +16,28 @@ else
   BASE_IMG="fedora:$STATIC_CHECKS_FEDORA_VERSION"
 fi
 
+# Use this function on verbose commands to silence the output unless it returns
+# a non-zero exit code
+run_and_print_on_failure()
+{
+    local exit_code
+    local temp_output_file
+    temp_output_file=$(mktemp)
+    if "$@" > "$temp_output_file" 2>&1; then
+        : # NOOP
+    else
+        exit_code=$? # Store exit code for later
+        echo "Error: Failed to run:" "$@"
+        echo "--- Start of Output ---"
+        cat "$temp_output_file"
+        echo "--- End of Output (Error Code: $exit_code) ---"
+        exit $exit_code
+    fi
+
+    rm -f "$temp_output_file"
+    return 0
+}
+
 function create_image() {
   local c=$(buildah from -q $BASE_IMG)
   buildah run $c -- dnf -q -y install "@C Development Tools and Libraries" clang cppcheck which diffutils file >/dev/null 2>&1
@@ -28,7 +50,8 @@ function create_image() {
   buildah copy $c $SUM_FILE >/dev/null
   rm $SUM_FILE
 
-  buildah commit $c cfengine-static-checker-f$STATIC_CHECKS_FEDORA_VERSION >/dev/null 2>&1
+  # ENT-13079
+  run_and_print_on_failure buildah --debug commit $c cfengine-static-checker-f$STATIC_CHECKS_FEDORA_VERSION
   echo $c
 }
 

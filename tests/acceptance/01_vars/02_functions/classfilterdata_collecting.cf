@@ -1,0 +1,83 @@
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+}
+
+bundle agent init
+{
+  files:
+    "$(G.testfile).json"
+      content => '[
+  {
+    "file": "/tmp/foo",
+    "mode": "755",
+    "owner": "root",
+    "group": "root",
+    "ifvarclass": "role_1"
+  },
+  {
+    "file": "/tmp/bar",
+    "mode": "600",
+    "owner": "root",
+    "group": "root",
+    "ifvarclass": "role_2"
+  },
+  {
+    "file": "/tmp/baz",
+    "mode": "644",
+    "owner": "root",
+    "group": "root",
+    "ifvarclass": "(role_1|role_2)"
+  }
+]';
+}
+
+bundle agent test
+{
+  meta:
+    "description" -> { "ENT-6193", "CFE-3421" }
+      string => "Test that classfilterdata() is a collecting policy function";
+
+  classes:
+    "role_2";
+
+  vars:
+    "filtered"
+      data => classfilterdata(readjson("$(G.testfile).json"), "auto", "ifvarclass");
+}
+
+bundle agent check
+{
+  vars:
+    "expected"
+      string => storejson('[
+  {
+    "file": "/tmp/bar",
+    "mode": "600",
+    "owner": "root",
+    "group": "root",
+    "ifvarclass": "role_2"
+  },
+  {
+    "file": "/tmp/baz",
+    "mode": "644",
+    "owner": "root",
+    "group": "root",
+    "ifvarclass": "(role_1|role_2)"
+  }
+]');
+    "actual"
+      string => storejson("test.filtered");
+
+  classes:
+    "ok"
+      expression => strcmp("$(expected)", "$(actual)");
+
+  reports:
+    "Expected '$(expected)', actual '$(actual)'";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

@@ -1,0 +1,39 @@
+#+begin_src cfengine3
+bundle agent __main__
+{
+  classes:
+      "role_2";
+
+  vars:
+      "original"
+        data => '[
+            [ "role_1",  "alice",  32 ],
+            [ "!role_1", "bob",    24 ],
+            [ "role_2",  "malcom", 27 ]
+          ]';
+
+      "filtered"
+        data => classfilterdata("original", "array_of_arrays", "0");
+
+  reports:
+      "Filtered data: $(with)"
+        with => storejson("filtered");
+}
+#+end_src
+
+#+begin_src example_output
+#@ ```
+#@ R: Filtered data: [
+#@   [
+#@     "!role_1",
+#@     "bob",
+#@     24
+#@   ],
+#@   [
+#@     "role_2",
+#@     "malcom",
+#@     27
+#@   ]
+#@ ]
+#@ ```
+#+end_src

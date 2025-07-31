@@ -22,6 +22,7 @@
   included file COSL.txt.
 */
 
+#include <grp.h> /* must be included before pwd.h (see ENT-13146) */
 #include <limits.h>
 #include <platform.h>
 #include <evalfunction.h>

@@ -22,6 +22,10 @@
   included file COSL.txt.
 */
 
+#ifdef __sun
+#define _POSIX_PTHREAD_SEMANTICS /* Required on Solaris 11 (see ENT-13146) */
+#endif /* __sun */
+
 #include <limits.h>
 #include <platform.h>
 #include <evalfunction.h>

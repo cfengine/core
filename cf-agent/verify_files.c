@@ -619,8 +619,6 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
 
         PromiseResult render_result = WriteContentFromString(ctx, path, &a, pp);
         result = PromiseResultUpdate(result, render_result);
-
-        goto exit;
     }
 
 /* Phase 3b - content editing */

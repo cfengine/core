@@ -1,0 +1,73 @@
+body common control
+{
+  bundlesequence => { "test", "check" };
+}
+
+bundle agent test
+{
+  meta:
+    "description" -> { "CFE-4562" }
+      string => "Test for expected results from classfilterdata() with object of objects using key in object";
+
+  vars:
+    "test"
+      data => '{
+        "/etc/chrony.conf": {
+          "mode": "0644",
+          "owner": "root",
+          "group": "root",
+          "if": "foo"
+        },
+        "/etc/apt/sources.list": {
+          "mode": "644",
+          "owner": "root",
+          "group": "root",
+          "if": "foo|bar"
+        },
+        "/etc/apt/apt.conf": {
+          "mode": "644",
+          "owner": "root",
+          "group": "root",
+          "if": "bar"
+        }
+      }';
+
+    "actual"
+      data => classfilterdata("@(test)", "object_of_objects", "if");
+
+  classes:
+    "foo";
+}
+
+bundle agent check
+{
+  vars:
+    "expected"
+      string => storejson('{
+        "/etc/chrony.conf": {
+          "mode": "0644",
+          "owner": "root",
+          "group": "root",
+          "if": "foo"
+        },
+        "/etc/apt/sources.list": {
+          "mode": "644",
+          "owner": "root",
+          "group": "root",
+          "if": "foo|bar"
+        }
+      }');
+    "actual"
+      string => storejson("@(test.actual)");
+
+  classes:
+    "ok"
+      expression => strcmp("$(expected)", "$(actual)");
+
+  reports:
+      "Expected: '$(expected)', actual: '$(actual)'";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

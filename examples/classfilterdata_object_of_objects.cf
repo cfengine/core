@@ -1,0 +1,35 @@
+#+begin_src cfengine3
+bundle agent __main__
+{
+  classes:
+      "role_2";
+
+  vars:
+      "original"
+        data => '{
+            "/tmp/foo": { "ifvarclass":          "role_1" },
+            "/tmp/bar": { "ifvarclass":          "role_2" },
+            "/tmp/baz": { "ifvarclass": "(role_1|role_2)" }
+          }';
+
+      "filtered"
+        data => classfilterdata("original", "object_of_objects", "ifvarclass");
+
+  reports:
+      "Filtered data: $(with)"
+        with => storejson("filtered");
+}
+#+end_src
+
+#+begin_src example_output
+#@ ```
+#@ R: Filtered data: {
+#@   "/tmp/bar": {
+#@     "ifvarclass": "role_2"
+#@   },
+#@   "/tmp/baz": {
+#@     "ifvarclass": "(role_1|role_2)"
+#@   }
+#@ }
+#@ ```
+#+end_src

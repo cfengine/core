@@ -7785,12 +7785,36 @@ static int JsonPrimitiveComparator(JsonElement const *left_obj,
     return StringSafeCompare(left, right);
 }
 
-static bool ClassFilterDataArrayOfArrays(
-    EvalContext *ctx,
+static const char *ClassFilterDataGetClassExprFromKey(
+    const char *fn_name,
+    JsonElement *json_object,
+    const char *class_expr_key)
+{
+    JsonElement *json_child = JsonObjectGet(json_object, class_expr_key);
+    if (json_child == NULL)
+    {
+        Log(LOG_LEVEL_VERBOSE,
+            "Function %s(): Bad class expression key '%s': Key not found",
+            fn_name, class_expr_key);
+        return NULL;
+    }
+
+    if (JsonGetType(json_child) != JSON_TYPE_STRING)
+    {
+        Log(LOG_LEVEL_VERBOSE,
+            "Function %s(): Bad class expression at key '%s': Expected type string",
+            fn_name, class_expr_key);
+        return NULL;
+    }
+
+    const char *class_expr = JsonPrimitiveGetAsString(json_child);
+    return class_expr;
+}
+
+static const char *ClassFilterDataGetClassExprFromIndex(
     const char *fn_name,
     JsonElement *json_array,
-    const char *class_expr_index,
-    bool *remove)
+    const char *class_expr_index)
 {
     size_t index;
     assert(SIZE_MAX >= ULONG_MAX); /* make sure returned value can fit in size_t */
@@ -7798,7 +7822,7 @@ static bool ClassFilterDataArrayOfArrays(
         Log(LOG_LEVEL_VERBOSE,
             "Function %s(): Bad class expression index '%s': Failed to parse integer",
             fn_name, class_expr_index);
-        return false;
+        return NULL;
     }
 
     size_t length = JsonLength(json_array);
@@ -7807,7 +7831,7 @@ static bool ClassFilterDataArrayOfArrays(
         Log(LOG_LEVEL_VERBOSE,
             "Function %s(): Bad class expression index '%s': Index out of bounds (%zu >= %zu)",
             fn_name, class_expr_index, index, length);
-        return false;
+        return NULL;
     }
 
     JsonElement *json_child = JsonArrayGet(json_array, index);
@@ -7816,11 +7840,26 @@ static bool ClassFilterDataArrayOfArrays(
         Log(LOG_LEVEL_VERBOSE,
             "Function %s(): Bad class expression at index '%zu': Expected type string",
             fn_name, index);
-        return false;
+        return NULL;
     }
 
     const char *class_expr = JsonPrimitiveGetAsString(json_child);
-    assert(class_expr != NULL);
+    return class_expr;
+}
+
+static bool ClassFilterDataArrayOfArrays(
+    EvalContext *ctx,
+    const char *fn_name,
+    JsonElement *json_array,
+    const char *class_expr_index,
+    bool *remove)
+{
+    const char *class_expr = ClassFilterDataGetClassExprFromIndex(fn_name, json_array, class_expr_index);
+    if (class_expr == NULL)
+    {
+        /* Error is already logged */
+        return false;
+    }
 
     *remove = !IsDefinedClass(ctx, class_expr);
     return true;
@@ -7833,25 +7872,12 @@ static bool ClassFilterDataArrayOfObjects(
     const char *class_expr_key,
     bool *remove)
 {
-    JsonElement *json_child = JsonObjectGet(json_object, class_expr_key);
-    if (json_child == NULL)
+    const char *class_expr = ClassFilterDataGetClassExprFromKey(fn_name, json_object, class_expr_key);
+    if (class_expr == NULL)
     {
-        Log(LOG_LEVEL_VERBOSE,
-            "Function %s(): Bad class expression key '%s': Key not found",
-            fn_name, class_expr_key);
+        /* Error is already logged */
         return false;
     }
-
-    if (JsonGetType(json_child) != JSON_TYPE_STRING)
-    {
-        Log(LOG_LEVEL_VERBOSE,
-            "Function %s(): Bad class expression at key '%s': Expected type string",
-            fn_name, class_expr_key);
-        return false;
-    }
-
-    const char *class_expr = JsonPrimitiveGetAsString(json_child);
-    assert(class_expr != NULL);
 
     *remove = !IsDefinedClass(ctx, class_expr);
     return true;
@@ -7921,34 +7947,12 @@ static bool ClassFilterDataObjectOfArrays(
     const char *class_expr = exogenous_key;
     if (class_expr_index != NULL)
     {
-        size_t index;
-        assert(SIZE_MAX >= ULONG_MAX); /* make sure returned value can fit in size_t */
-        if (StringToUlong(class_expr_index, &index) != 0) {
-            Log(LOG_LEVEL_VERBOSE,
-                "Function %s(): Bad class expression index '%s': Failed to parse integer",
-                fn_name, class_expr_index);
-            return false;
-        }
-
-        size_t length = JsonLength(json_array);
-        if (index >= length)
+        class_expr = ClassFilterDataGetClassExprFromIndex(fn_name, json_array, class_expr_index);
+        if (class_expr == NULL)
         {
-            Log(LOG_LEVEL_VERBOSE,
-                "Function %s(): Bad class expression index '%s': Index out of bounds (%zu >= %zu)",
-                fn_name, class_expr_index, index, length);
+            /* Error is already logged */
             return false;
         }
-
-        JsonElement *json_child = JsonArrayGet(json_array, index);
-        if (JsonGetType(json_child) != JSON_TYPE_STRING)
-        {
-            Log(LOG_LEVEL_VERBOSE,
-                "Function %s(): Bad class expression at index '%zu': Expected type string",
-                fn_name, index);
-            return false;
-        }
-
-        class_expr = JsonPrimitiveGetAsString(json_child);
     }
 
     assert(class_expr != NULL);
@@ -7970,25 +7974,12 @@ static bool ClassFilterDataObjectOfObjects(
     const char *class_expr = exogenous_key;
     if (class_expr_key != NULL)
     {
-        JsonElement *json_child = JsonObjectGet(json_object, class_expr_key);
-        if (json_child == NULL)
+        class_expr = ClassFilterDataGetClassExprFromKey(fn_name, json_object, class_expr_key);
+        if (class_expr == NULL)
         {
-            Log(LOG_LEVEL_VERBOSE,
-                "Function %s(): Bad class expression key '%s': Key not found",
-                fn_name, class_expr_key);
+            /* Error is already logged */
             return false;
         }
-
-        if (JsonGetType(json_child) != JSON_TYPE_STRING)
-        {
-            Log(LOG_LEVEL_VERBOSE,
-                "Function %s(): Bad class expression at key '%s': Expected type string",
-                fn_name, class_expr_key);
-            return false;
-        }
-
-        class_expr = JsonPrimitiveGetAsString(json_child);
-        assert(class_expr != NULL);
     }
 
     assert(class_expr != NULL);

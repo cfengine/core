@@ -7909,17 +7909,52 @@ static bool ClassFilterDataArray(
 }
 
 static bool ClassFilterDataObjectOfArrays(
-    ARG_UNUSED EvalContext *ctx,
-    ARG_UNUSED const char *fn_name,
-    ARG_UNUSED JsonElement *json_array,
-    ARG_UNUSED const char *class_expr_index,
-    ARG_UNUSED const char *exogenous_key,
-    ARG_UNUSED bool *remove)
+    EvalContext *ctx,
+    const char *fn_name,
+    JsonElement *json_array,
+    const char *class_expr_index,
+    const char *exogenous_key,
+    bool *remove)
 {
-    /* Should already have been caught by syntax checker, since it is not yet
-     * added to the validation pattern in CLASSFILTERDATA_ARGS. */
-    ProgrammingError("classfilterdata() with data structure object of arrays is not yet implemented");
-    return false;
+    /* Use the key of the object itself as the class expression, unless a class
+     * expression index is specified */
+    const char *class_expr = exogenous_key;
+    if (class_expr_index != NULL)
+    {
+        size_t index;
+        assert(SIZE_MAX >= ULONG_MAX); /* make sure returned value can fit in size_t */
+        if (StringToUlong(class_expr_index, &index) != 0) {
+            Log(LOG_LEVEL_VERBOSE,
+                "Function %s(): Bad class expression index '%s': Failed to parse integer",
+                fn_name, class_expr_index);
+            return false;
+        }
+
+        size_t length = JsonLength(json_array);
+        if (index >= length)
+        {
+            Log(LOG_LEVEL_VERBOSE,
+                "Function %s(): Bad class expression index '%s': Index out of bounds (%zu >= %zu)",
+                fn_name, class_expr_index, index, length);
+            return false;
+        }
+
+        JsonElement *json_child = JsonArrayGet(json_array, index);
+        if (JsonGetType(json_child) != JSON_TYPE_STRING)
+        {
+            Log(LOG_LEVEL_VERBOSE,
+                "Function %s(): Bad class expression at index '%zu': Expected type string",
+                fn_name, index);
+            return false;
+        }
+
+        class_expr = JsonPrimitiveGetAsString(json_child);
+    }
+
+    assert(class_expr != NULL);
+    *remove = !IsDefinedClass(ctx, class_expr);
+
+    return true;
 }
 
 static bool ClassFilterDataObjectOfObjects(
@@ -8054,6 +8089,7 @@ static FnCallResult FnCallClassFilterData(
     /* This argument can hold one of:
      * - 'array_of_arrays'
      * - 'array_of_objects'
+     * - 'object_of_arrays'
      * - 'object_of_objects'
      * - 'auto' (to automatically detect the data structure)
      */
@@ -10733,7 +10769,7 @@ static const FnCallArg VALIDJSON_ARGS[] =
 static const FnCallArg CLASSFILTERDATA_ARGS[] =
 {
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "CFEngine variable identifier or inline JSON"},
-    {"array_of_arrays,array_of_objects,object_of_objects,auto", CF_DATA_TYPE_OPTION, "Specify type of data structure"},
+    {"array_of_arrays,array_of_objects,object_of_arrays,object_of_objects,auto", CF_DATA_TYPE_OPTION, "Specify type of data structure"},
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Key or index of class expressions"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };

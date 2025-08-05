@@ -1,0 +1,75 @@
+##############################################################################
+#
+# Test that fsattrs validation is not skipped when combining it with the
+# content attribute (see CFE-4569).
+#
+##############################################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+bundle agent global
+{
+  vars:
+    "testfile"
+      string => "/tmp/13_immutable.txt";
+}
+
+body fsattrs immutable(value)
+{
+  immutable => "$(value)";
+}
+
+bundle agent init
+{
+  files:
+    "$(global.testfile)"
+      delete => tidy,
+      depends_on => { "testfile is not immutable" };
+
+  commands:
+    "chattr -i $(global.testfile)"
+      contain => in_shell,
+      if => fileexists("$(global.testfile)"),
+      handle => "testfile is not immutable";
+}
+
+bundle agent test
+{
+  meta:
+    "description" -> { "CFE-4569" }
+      string => "Test that fsattrs validation is not skipped when combining it with the content attribute";
+
+    "test_skip_unsupported"
+      string => "hpux|aix|solaris|windows";
+
+  files:
+    "$(global.testfile)"
+      content => "You can't touch this",
+      fsattrs => immutable("true");
+}
+
+bundle agent check
+{
+  methods:
+    "check"
+      usebundle => dcs_passif_output(".*Immutable.*", "", "lsattr -l $(global.testfile)", "$(this.promise_filename)");
+}
+
+bundle agent destroy
+{
+  files:
+    "$(global.testfile)"
+      delete => tidy,
+      depends_on => { "testfile is no longer immutable" };
+
+  commands:
+    "chattr -i $(global.testfile)"
+      contain => in_shell,
+      if => fileexists("$(global.testfile)"),
+      handle => "testfile is no longer immutable";
+}

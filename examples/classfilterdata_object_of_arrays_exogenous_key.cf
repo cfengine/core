@@ -1,0 +1,38 @@
+#+begin_src cfengine3
+bundle agent __main__
+{
+  classes:
+      "role_2";
+
+  vars:
+      "original"
+        data => '{
+            "role_1"  : [  "alice", 32 ],
+            "!role_1" : [    "bob", 24 ],
+            "role_2"  : [ "malcom", 27 ]
+          }';
+
+      # Using exogenous key (i.e., the key of the child array within the parent object)
+      "filtered"
+        data => classfilterdata("original", "object_of_arrays");
+
+  reports:
+      "Filtered data: $(with)"
+        with => storejson("filtered");
+}
+#+end_src
+
+#+begin_src example_output
+#@ ```
+#@ R: Filtered data: {
+#@   "!role_1": [
+#@     "bob",
+#@     24
+#@   ],
+#@   "role_2": [
+#@     "malcom",
+#@     27
+#@   ]
+#@ }
+#@ ```
+#+end_src

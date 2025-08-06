@@ -1,0 +1,103 @@
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence => { "init", "test", "cleanup" };
+  evaluation_order => "classic";
+}
+
+bundle agent init
+{
+  files:
+    "/tmp/example"
+      create => "true";
+    "/tmp/otherfile"
+      create => "true";
+}
+
+bundle agent test
+{
+  vars:
+    "result"
+      string => "First";  
+    "foo"
+      string => "second";
+    "result"
+      string => concat("$(result)", ", $(foo)"); 
+    "sixth"
+      string => "sixth";
+
+  classes:
+    "bar"
+      if => "any";
+
+  vars:
+    "foo"
+      string => "other";
+   bar::
+    "baz"
+      string => "third";
+
+    "result"
+      string => concat("$(result)", ", $(baz)"); 
+
+  files:
+    "/tmp/example"
+      content => "fourth";
+
+  vars:
+    "content"
+      string => readfile("/tmp/example");
+    "result"
+      string => concat("$(result)", ", $(content)");  
+
+  classes:
+    "test"
+      expression => strcmp("$(content)", "fourth");
+    
+  vars:
+    test::
+      "result"
+        string => concat("$(result)", ", fifth");
+
+
+  files:
+    "/tmp/otherfile"
+      content => "something";
+
+  vars:
+    "othercontent"
+      string => readfile("/tmp/otherfile");
+
+  files:
+    "/tmp/otherfile"
+      delete => tidy;
+
+  classes:
+    "myclass"
+      expression => strcmp("$(othercontent)", "something");
+
+  vars:
+    myclass::
+      "result"
+        string => concat("$(result)", ", $(sixth)");
+
+  classes:
+    "ok"
+      expression => strcmp("$(result)", "First, second, third, fourth, fifth, sixth");
+
+  reports:
+    !ok::
+      "$(this.promise_filename) Pass";
+    ok::
+      "$(this.promise_filename) FAIL";
+
+    DEBUG::
+      "$(result)";
+}
+
+bundle agent cleanup
+{
+  files:
+    "/tmp/example"
+      delete => tidy;
+}

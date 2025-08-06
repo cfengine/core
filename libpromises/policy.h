@@ -79,6 +79,7 @@ struct Bundle_
 
     Seq *sections;
     Seq *custom_sections;
+    Seq *all_promises;
 
     char *source_path;
     SourceOffset offset;

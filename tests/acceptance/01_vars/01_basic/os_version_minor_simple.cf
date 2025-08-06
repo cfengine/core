@@ -1,0 +1,40 @@
+body common control
+{
+  bundlesequence => { "check" };
+}
+
+bundle agent check
+{
+  classes:
+    ubuntu_20_04|ubuntu_22_04|ubuntu_24_04::
+      "ok"
+        if => strcmp("$(sys.os_version_minor)", "04");
+      "not_ok"
+        if => not(strcmp("$(sys.os_version_minor)", "04"));
+
+    debian_12_11::
+      "ok"
+        if => strcmp("$(sys.os_version_minor)", "11");
+      "not_ok"
+        if => not(strcmp("$(sys.os_version_minor)", "11"));
+
+    centos_7_6::
+      "ok"
+        if => strcmp("$(sys.os_version_minor)", "6");
+      "not_ok"
+        if => not(strcmp("$(sys.os_version_minor)", "6"));
+
+    redhat_8_10::
+      "ok"
+        if => strcmp("$(sys.os_version_minor)", "10");
+      "not_ok"
+        if => not(strcmp("$(sys.os_version_minor)", "10"));
+
+  reports:
+    DEBUG::
+      "$(sys.os_name_human)_$(sys.os_version_major)_$(sys.os_version_minor)";
+    ok.!not_ok::
+      "$(this.promise_filename) Pass";
+    !ok|not_ok::
+      "$(this.promise_filename) FAIL";
+}

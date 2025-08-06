@@ -3685,6 +3685,12 @@ static void SysOSNameHuman(EvalContext *ctx)
                                       "Alpine", CF_DATA_TYPE_STRING,
                                       "source=agent,derived-from=alpine");
     }
+    else if (EvalContextClassGet(ctx, NULL, "gentoo") != NULL)
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, lval,
+                                      "Gentoo", CF_DATA_TYPE_STRING,
+                                      "source=agent,derived-from=gentoo");
+    }
     else
     {
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, lval,

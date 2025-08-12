@@ -11,7 +11,7 @@ After=cf-postgres.service
 
 [Service]
 Type=simple
-ExecStart=@bindir@/cf-reactor  --no-fork
+ExecStart=@bindir@/cf-reactor  --no-fork --debug
 Restart=always
 RestartSec=10
 

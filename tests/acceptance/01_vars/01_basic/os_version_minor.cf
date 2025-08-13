@@ -1,0 +1,70 @@
+body common control
+{
+  bundlesequence => { "test", "check" };
+}
+
+bundle agent test
+{
+
+  vars:
+    # Platforms to test
+
+    "platforms"
+      slist => { "debian", "ubuntu", "redhat", "rhel", "centos", "fedora",
+                  "aix", "hpux", "suse", "opensuse", "opensuse_leap", "sles",
+                  "solaris", "sunos", "windows", "freebsd", "macos" };
+
+
+    # Regex matching current platforms OS-class with version numbers
+    "class_regex"
+      string => format("^(%s)_[0-9]+_[0-9]+$", join("|", "platforms"));
+    # Find OS-class with version numbers using regex
+    "os_classes"
+      slist => classesmatching("$(class_regex)");
+
+    # Regex to extract minor version number from OS-class
+    # Edge cases:
+    #  - On Solaris/SunOS minor version comes second
+    #    E.g. Solaris 11 has class "solaris_5_11"
+
+    "extract_regex"
+      string => ifelse("solaris|sunos", "^[a-z]+_([0-9]+)_[0-9]+$",
+                        "opensuse_leap", "^[a-z_]+_[0-9]+_([0-9]+$)",
+                                        "^[a-z]+_[0-9]+_([0-9]+$)");
+
+    # Get extracted minor version number
+    "version_number"
+      data => data_regextract("$(extract_regex)", "$(os_classes)");
+
+    "expected"
+      string => nth("@(version_number)", "1");
+}
+
+bundle agent check
+{
+  vars:
+    "defined_classes"
+      slist => classesmatching(".*");
+
+  classes:
+    "exists"
+      expression => isvariable("test.expected");
+
+    exists::
+      "passed"
+        expression => strcmp("$(test.expected)", "$(sys.os_version_minor)");
+    !exists::
+      "passed"
+        expression => strcmp("Unknown", "$(sys.os_version_minor)");
+
+  reports:
+    DEBUG::
+      "Version number extracted from class: $(test.os_classes)";
+      "Defined classes: $(defined_classes)";
+      "$(this.promise_filename) Expected: $(test.expected)";
+      "$(this.promise_filename) Found: $(sys.os_version_minor)";
+    passed::
+      "$(this.promise_filename) Pass";
+    !passed::
+      "$(this.promise_filename) FAIL";
+}

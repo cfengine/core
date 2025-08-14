@@ -1322,6 +1322,7 @@ Bundle *PolicyAppendBundle(Policy *policy,
     bundle->source_path = SafeStringDuplicate(source_path);
     bundle->sections = SeqNew(10, BundleSectionDestroy);
     bundle->custom_sections = SeqNew(10, BundleSectionDestroy);
+    bundle->all_promises = SeqNew(10, NULL);
 
     return bundle;
 }
@@ -1437,6 +1438,7 @@ Promise *BundleSectionAppendPromise(BundleSection *section, const char *promiser
 {
     assert(promiser && "Missing promiser");
     assert(section != NULL && "Missing promise type");
+    assert(section->parent_bundle != NULL);
 
     Promise *pp = xcalloc(1, sizeof(Promise));
 
@@ -1452,6 +1454,7 @@ Promise *BundleSectionAppendPromise(BundleSection *section, const char *promiser
     }
 
     SeqAppend(section->promises, pp);
+    SeqAppend(section->parent_bundle->all_promises, pp);
 
     pp->parent_section = section;
 
@@ -1479,6 +1482,7 @@ static void BundleDestroy(Bundle *bundle)
         RlistDestroy(bundle->args);
         SeqDestroy(bundle->sections);
         SeqDestroy(bundle->custom_sections);
+        SeqDestroy(bundle->all_promises);
 
         free(bundle);
     }

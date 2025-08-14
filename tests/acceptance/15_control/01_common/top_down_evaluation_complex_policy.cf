@@ -1,0 +1,48 @@
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence => { "test" };
+  evaluation_order => "top_down";
+}
+bundle agent test
+{
+  classes:
+    "first_class" expression => "any";
+
+  vars:
+    first_class::
+      "first_var" string => "hello";
+    !first_class::
+      "first_var" string => "bye";
+
+  classes:
+    "second_class" expression => strcmp("$(first_var)", "hello");
+
+  vars:
+    second_class::
+      "second_var" string => "foo";
+    !second_class::
+      "second_var" string => "bar";
+
+  classes:
+    "third_class" expression => strcmp("$(second_var)", "foo");
+
+  vars:
+    third_class::
+      "third_var" string => "faz";
+    !third_class::
+      "thid_var" string => "baz";
+
+  classes:
+    "ok" expression => strcmp("$(third_var)", "faz");
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+
+    DEBUG::
+      "$(third_var)";
+
+}

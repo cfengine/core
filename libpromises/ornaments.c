@@ -130,6 +130,20 @@ void SpecialTypeBanner(TypeSequence type, int pass)
     }
 }
 
+void SpecialTypeBannerFromString(const char *type, int pass)
+{
+    if (StringEqual(type, "classes"))
+    {
+        Log(LOG_LEVEL_VERBOSE, "C: .........................................................");
+        Log(LOG_LEVEL_VERBOSE, "C: BEGIN classes / conditions (pass %d)", pass);
+    }
+    if (StringEqual(type, "vars"))
+    {
+        Log(LOG_LEVEL_VERBOSE, "V: .........................................................");
+        Log(LOG_LEVEL_VERBOSE, "V: BEGIN variables (pass %d)", pass);
+    }
+}
+
 void PromiseBanner(EvalContext *ctx, const Promise *pp)
 {
     char handle[CF_MAXVARSIZE];

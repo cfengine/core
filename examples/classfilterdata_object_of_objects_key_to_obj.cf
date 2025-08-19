@@ -1,0 +1,36 @@
+#+begin_src cfengine3
+bundle agent __main__
+{
+  classes:
+      "role_2";
+
+  vars:
+      "original"
+        data => '{
+            "role_1":          { "file": "/tmp/foo" },
+            "role_2":          { "file": "/tmp/bar" },
+            "(role_1|role_2)": { "file": "/tmp/baz" }
+          }';
+
+      # Using exogenous key (i.e., the key of the child object within the parent object)
+      "filtered"
+        data => classfilterdata("original", "object_of_objects");
+
+  reports:
+      "Filtered data: $(with)"
+        with => storejson("filtered");
+}
+#+end_src
+
+#+begin_src example_output
+#@ ```
+#@ R: Filtered data: {
+#@   "(role_1|role_2)": {
+#@     "file": "/tmp/baz"
+#@   },
+#@   "role_2": {
+#@     "file": "/tmp/bar"
+#@   }
+#@ }
+#@ ```
+#+end_src

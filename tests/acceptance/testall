@@ -55,7 +55,7 @@ then
 fi
 
 #
-# Unset environment variables which might break runinng acceptance tests
+# Unset environment variables which might break running acceptance tests
 #
 GREP_OPTIONS=
 export GREP_OPTIONS

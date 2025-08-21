@@ -221,7 +221,7 @@ bool OverrideImmutableRename(
     }
 
     ResetTemporarilyClearedImmutableBit(
-        new_filename, override, res_old, old_is_immutable);
+        new_filename, override, res_old, new_is_immutable);
 
     return true;
 }

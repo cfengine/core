@@ -373,8 +373,8 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
                 break;
             case FS_ATTRS_FAILURE:
                 RecordFailure(ctx, pp, &a,
-                              "Failed to clear the immutable bit on file '%s'",
-                              changes_path);
+                              "Failed to clear the immutable bit on file '%s': %s",
+                              changes_path, FSAttrsErrorCodeToString(res));
                 result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
                 break;
             case FS_ATTRS_NOT_SUPPORTED:
@@ -663,14 +663,15 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
             switch (res)
             {
             case FS_ATTRS_SUCCESS:
-                Log(LOG_LEVEL_VERBOSE, "Set the immutable bit on file '%s'",
-                    changes_path);
+                RecordChange(ctx, pp, &a,
+                             "Set the immutable bit on file '%s'",
+                             changes_path);
                 break;
             case FS_ATTRS_FAILURE:
                 /* Things still may be fine as long as the agent does not try to mutate the file */
-                Log(LOG_LEVEL_VERBOSE,
-                    "Failed to set the immutable bit on file '%s': %s",
-                    changes_path, FSAttrsErrorCodeToString(res));
+                RecordFailure(ctx, pp, &a,
+                              "Failed to set the immutable bit on file '%s': %s",
+                              changes_path, FSAttrsErrorCodeToString(res));
                 break;
             case FS_ATTRS_NOT_SUPPORTED:
                 /* We will not treat this as a promise failure because this

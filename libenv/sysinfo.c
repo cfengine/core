@@ -161,6 +161,10 @@ void CalculateDomainName(const char *nodename, const char *dnsname,
                          char *uqname, size_t uqname_size,
                          char *domain, size_t domain_size);
 
+static void SysOSVersionMinorPut(EvalContext *ctx, const char *strminor, const char *tags);
+static void SysOSVersionMinorPutInt(EvalContext *ctx, int minor, const char *tags);
+static void SysOsVersionMinorSetUnknownIfUnset(EvalContext *ctx);
+
 #ifdef __APPLE__
 static void Apple_Version(EvalContext *ctx);
 #endif
@@ -1157,6 +1161,30 @@ static void DefineVersionedHardClasses(
     free(class);
 }
 
+static void SysOSVersionMinorPutFromVersion(EvalContext *ctx, char *name, const char *version_id, const char *tags)
+{
+    assert(version_id != NULL);
+    Item *version_tuple = SplitString(version_id, '_');
+
+    if (version_tuple == NULL)
+    {
+        return;
+    }
+    if (name != NULL && (StringStartsWith(name, "solaris") || StringStartsWith(name, "sunos")))
+    {
+        SysOSVersionMinorPut(ctx, version_tuple->name, tags);
+        DeleteItemList(version_tuple);
+        return;
+    }
+    if (version_tuple->next == NULL)
+    {
+        DeleteItemList(version_tuple);
+        return;
+    }
+    SysOSVersionMinorPut(ctx, version_tuple->next->name, tags);
+    DeleteItemList(version_tuple);
+}
+
 static void OSReleaseParse(EvalContext *ctx, const char *file_path)
 {
     JsonElement *os_release_json = JsonReadDataFile("system info discovery",
@@ -1213,6 +1241,12 @@ static void OSReleaseParse(EvalContext *ctx, const char *file_path)
                     *first_underscore = '\0';
                     SetFlavor2(ctx, os_release_id, os_release_version_id);
                     *first_underscore = '_';
+
+                    // set os version minor
+                    const char *const_os_release_name = JsonObjectGetAsString(os_release_json, "NAME");
+                    char *os_release_name = SafeStringDuplicate(const_os_release_name);
+                    SysOSVersionMinorPutFromVersion(ctx, os_release_name, os_release_version_id, tags);
+                    free(os_release_name);
                 }
                 else
                 {
@@ -1430,6 +1464,12 @@ static void OSClasses(EvalContext *ctx)
 
 #ifdef _AIX
     strlcpy(vbuff, VSYSNAME.version, CF_MAXVARSIZE);
+
+    char strminor[CF_MAXVARSIZE];
+    NDEBUG_UNUSED int ret = snprintf(strminor, CF_MAXVARSIZE, "%s", VSYSNAME.release);
+    assert(ret >= 0 && (size_t) ret < sizeof(strminor));
+
+    SysOSVersionMinorPut(ctx, strminor, "source=agent");
 #else
     strlcpy(vbuff, VSYSNAME.release, CF_MAXVARSIZE);
 #endif
@@ -1461,11 +1501,28 @@ static void OSClasses(EvalContext *ctx)
 
     // Extract major version number
     char *major = NULL;
-    for (char *sp = vbuff; *sp != '\0'; sp++)
+    char *minor = NULL;
+    char *sp;
+    for (sp = vbuff; *sp != '\0'; sp++)
     {
         if (major == NULL && isdigit(*sp))
         {
             major = sp;
+        }
+        if (major == NULL && !isdigit(*sp))
+        {
+            *sp = '\0';
+        }
+        if (major != NULL && !isdigit(*sp))
+        {
+            break;
+        }
+    }
+    for (; *sp != '\0'; sp++)
+    {
+        if (minor == NULL && isdigit(*sp))
+        {
+            minor = sp;
         }
         else if (!isdigit(*sp))
         {
@@ -1478,6 +1535,10 @@ static void OSClasses(EvalContext *ctx)
         snprintf(context, CF_BUFSIZE, "hpux_%s", major);
         EvalContextClassPutHard(ctx, context, "source=agent,derived-from=sys.flavor");
     }
+    if (minor != NULL)
+    {
+        SysOSVersionMinorPut(ctx, minor, "source=agent");
+    }
 #endif
 
 #ifdef __FreeBSD__
@@ -1487,7 +1548,8 @@ static void OSClasses(EvalContext *ctx)
      * For example, when being run on either FreeBSD 10.0 or 10.1 a class
      * called freebsd_10 will be defined
      */
-    for (char *sp = vbuff; *sp != '\0'; sp++)
+    char *sp;
+    for (sp = vbuff; *sp != '\0'; sp++)
     {
         if (*sp == '.')
         {
@@ -1495,9 +1557,15 @@ static void OSClasses(EvalContext *ctx)
             break;
         }
     }
+    sp++;
+    const char *minor = sp;
 
     snprintf(context, CF_BUFSIZE, "%s_%s", VSYSNAME.sysname, vbuff);
     EvalContextClassPutHard(ctx, context, "source=agent,derived-from=sys.flavor");
+    if (minor != NULL)
+    {
+        SysOSVersionMinorPut(ctx, minor, "source=agent");
+    }
 #endif
 
 #endif
@@ -1524,30 +1592,35 @@ static void OSClasses(EvalContext *ctx)
             {
                 Log(LOG_LEVEL_VERBOSE, "This appears to be Windows 2000");
                 EvalContextClassPutHard(ctx, "Win2000", "inventory,attribute_name=none,source=agent");
+                SysOSVersionMinorPut(ctx, "5.0", "source=agent");
             }
 
             if (strncmp(sp, "5.1", 3) == 0)
             {
                 Log(LOG_LEVEL_VERBOSE, "This appears to be Windows XP");
                 EvalContextClassPutHard(ctx, "WinXP", "inventory,attribute_name=none,source=agent");
+                SysOSVersionMinorPut(ctx, "5.1", "source=agent");
             }
 
             if (strncmp(sp, "5.2", 3) == 0)
             {
                 Log(LOG_LEVEL_VERBOSE, "This appears to be Windows Server 2003");
                 EvalContextClassPutHard(ctx, "WinServer2003", "inventory,attribute_name=none,source=agent");
+                SysOSVersionMinorPut(ctx, "5.2", "source=agent");
             }
 
             if (strncmp(sp, "6.1", 3) == 0)
             {
                 Log(LOG_LEVEL_VERBOSE, "This appears to be Windows Vista");
                 EvalContextClassPutHard(ctx, "WinVista", "inventory,attribute_name=none,source=agent");
+                SysOSVersionMinorPut(ctx, "56.1", "source=agent");
             }
 
             if (strncmp(sp, "6.3", 3) == 0)
             {
                 Log(LOG_LEVEL_VERBOSE, "This appears to be Windows Server 2008");
                 EvalContextClassPutHard(ctx, "WinServer2008", "inventory,attribute_name=none,source=agent");
+                SysOSVersionMinorPut(ctx, "6.3", "source=agent");
             }
         }
     }
@@ -1588,6 +1661,25 @@ static void OSClasses(EvalContext *ctx)
     else
     {
         SetFlavor2(ctx, "windows", major);
+        
+        // minor version        
+        char *minor = NULL;
+        char *sp;
+        for (sp = major + strlen(major) + 1; *sp != '\0'; sp++)
+        {
+            if (minor == NULL && isdigit(*sp))
+            {
+                minor = sp;
+            }
+            if ((*sp != '.' || *sp != '_') && !isdigit(*sp))
+            {
+                *sp = '\0';
+            }
+        }
+        if (minor != NULL)
+        {
+            SysOSVersionMinorPut(ctx, minor, "source=agent");
+        }
     }
     free(release);
 
@@ -1733,6 +1825,7 @@ static void Apple_Version(EvalContext *ctx)
         assert(ret >= 0 && (size_t) ret < sizeof(buf));
         Log(LOG_LEVEL_VERBOSE, "This appears to be a %s %u.%u system.", product_name, major, minor);
         EvalContextClassPutHard(ctx, buf, "inventory,attribute_name=none,source=agent");
+        SysOSVersionMinorPutInt(ctx, minor, "source=agent");
     }
 
     if (revcomps > 2)
@@ -1798,6 +1891,7 @@ static void Linux_Oracle_VM_Server_Version(EvalContext *ctx)
 
         snprintf(buf, CF_BUFSIZE, "oraclevmserver_%d_%d", major, minor);
         EvalContextClassPutHard(ctx, buf, "inventory,attribute_name=none,source=agent");
+        SysOSVersionMinorPutInt(ctx, minor, "source=agent");
     }
 
     if (revcomps > 2)
@@ -1849,6 +1943,7 @@ static void Linux_Oracle_Version(EvalContext *ctx)
 
         snprintf(buf, CF_BUFSIZE, "oracle_%d_%d", major, minor);
         EvalContextClassPutHard(ctx, buf, "inventory,attribute_name=none,source=agent");
+        SysOSVersionMinorPutInt(ctx, minor, "source=agent");
     }
 }
 
@@ -2164,6 +2259,11 @@ static int Linux_Redhat_Version(EvalContext *ctx)
         }
     }
 
+    if (minor >= 0)
+    {
+        SysOSVersionMinorPutInt(ctx, minor, "source=agent,derived-from-file="RH_REL_FILENAME);
+    }
+
     return 0;
 }
 
@@ -2345,6 +2445,7 @@ static int Linux_Suse_Version(EvalContext *ctx)
                 strcat(classbuf, strminor);
                 EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
 
+                SysOSVersionMinorPutInt(ctx, minor, "source=agent");
                 Log(LOG_LEVEL_VERBOSE, "Discovered SUSE version %s", classbuf);
                 return 0;
             }
@@ -2376,6 +2477,7 @@ static int Linux_Suse_Version(EvalContext *ctx)
                 snprintf(classbuf, CF_MAXVARSIZE, "SuSE_%d", major);
                 EvalContextClassPutHard(ctx, classbuf, "source=agent");
 
+                SysOSVersionMinorPutInt(ctx, minor, "source=agent");
                 Log(LOG_LEVEL_VERBOSE, "Discovered SUSE version %s", classbuf);
                 return 0;
             }
@@ -2417,6 +2519,7 @@ static int Linux_Slackware_Version(EvalContext *ctx, char *filename)
         Log(LOG_LEVEL_VERBOSE, "This appears to be a Slackware %u.%u system.", major, minor);
         snprintf(classname, CF_MAXVARSIZE, "slackware_%u_%u", major, minor);
         EvalContextClassPutHard(ctx, classname, "inventory,attribute_name=none,source=agent");
+        SysOSVersionMinorPutInt(ctx, minor, "source=agent");
         /* Fall-through */
     case 1:
         Log(LOG_LEVEL_VERBOSE, "This appears to be a Slackware %u system.", major);
@@ -2506,6 +2609,7 @@ static int Linux_Misc_Version(EvalContext *ctx)
                 nt_static_assert((sizeof(version)) > 255);
                 sscanf(sp + strlen("DISTRIB_RELEASE="), "%255[^\n]", version);
                 CanonifyNameInPlace(version);
+                SysOSVersionMinorPutFromVersion(ctx, "", version, "source=agent, derived-from-file=/etc/lsb_release");
             }
         }
         fclose(fp);
@@ -2623,6 +2727,10 @@ static int Linux_Debian_Version(EvalContext *ctx)
                 buffer,
                 "inventory,attribute_name=none,source=agent,derived-from-file="DEBIAN_ISSUE_FILENAME);
         }
+    }
+    if (release >= 0)
+    {
+        SysOSVersionMinorPutInt(ctx, release, "source=agent,derived-from-file="DEBIAN_ISSUE_FILENAME);
     }
 
     return 0;
@@ -2755,6 +2863,8 @@ static int Linux_Mandriva_Version_Real(EvalContext *ctx, char *filename, char *r
             strcat(classbuf, "_");
             strcat(classbuf, strminor);
             EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+
+            SysOSVersionMinorPutInt(ctx, minor, "source=agent");
         }
     }
 
@@ -2820,6 +2930,7 @@ static void Linux_Alpine_Version(EvalContext *ctx)
         {
             char class[CF_MAXVARSIZE];
             CanonifyNameInPlace(version);
+            SysOSVersionMinorPutFromVersion(ctx, "alpine_linux", version, "source=agent,derived-from-file=/etc/alpine-release");
             snprintf(class, sizeof(class), "alpine_linux_%s", version);
             EvalContextClassPutHard(ctx, class,
                 "inventory,attribute_name=none,source=agent"
@@ -2848,6 +2959,7 @@ static int EOS_Version(EvalContext *ctx)
             version[0] = '\0';
             sscanf(buffer, "%*s %*s %*s %255s", version);
             CanonifyNameInPlace(version);
+            SysOSVersionMinorPutFromVersion(ctx, "eos", version, "source=agent");
             snprintf(class, CF_MAXVARSIZE, "eos_%s", version);
             EvalContextClassPutHard(ctx, class, "inventory,attribute_name=none,source=agent");
         }
@@ -2872,6 +2984,7 @@ static int MiscOS(EvalContext *ctx)
            EvalContextClassPutHard(ctx, "big_ip", "inventory,attribute_name=none,source=agent");
            sscanf(buffer, "%*s %255s %*s %255s", version, build);
            CanonifyNameInPlace(version);
+           SysOSVersionMinorPutFromVersion(ctx, "", version, "source=agent");
            CanonifyNameInPlace(build);
            snprintf(class, CF_MAXVARSIZE, "big_ip_%s", version);
            EvalContextClassPutHard(ctx, class, "inventory,attribute_name=none,source=agent");
@@ -2907,6 +3020,7 @@ static int VM_Version(EvalContext *ctx)
             snprintf(classbuf, CF_BUFSIZE, "VMware ESX Server %d.%d.%d", major, minor, bug);
             EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
             sufficient = 1;
+            SysOSVersionMinorPutInt(ctx, minor, "source=agent");
         }
         else if (sscanf(buffer, "VMware ESX Server %255s", version) > 0)
         {
@@ -3790,6 +3904,44 @@ static void SysOsVersionMajor(EvalContext *ctx)
 
 /*****************************************************************************/
 
+static void SysOSVersionMinorPutInt(EvalContext *ctx, int minor, const char *tags)
+{
+    char strminor[PRINTSIZE(minor)];
+    xsnprintf(strminor, sizeof(strminor), "%d", minor);
+
+    SysOSVersionMinorPut(ctx, strminor, tags);
+}
+
+static void SysOSVersionMinorPut(EvalContext *ctx, const char *strminor, const char *tags)
+{
+    EvalContextVariablePutSpecial(ctx,
+        SPECIAL_SCOPE_SYS,
+        "os_version_minor",
+        strminor,
+        CF_DATA_TYPE_STRING,
+        tags
+    );
+}
+
+static void SysOsVersionMinorSetUnknownIfUnset(EvalContext *ctx)
+{
+    DataType type_out;
+    const char *value = (const char *) EvalContextVariableGetSpecial(
+        ctx, SPECIAL_SCOPE_SYS, "os_version_minor", &type_out);
+    if (value == NULL)
+    {
+        EvalContextVariablePutSpecial(ctx,
+            SPECIAL_SCOPE_SYS,
+            "os_version_minor",
+            "Unknown",
+            CF_DATA_TYPE_STRING,
+            "source=agent"
+        );
+    }
+}
+
+/*****************************************************************************/
+
 void DetectEnvironment(EvalContext *ctx)
 {
     GetNameInfo3(ctx);
@@ -3802,4 +3954,5 @@ void DetectEnvironment(EvalContext *ctx)
     GetDefVars(ctx);
     SysOSNameHuman(ctx);
     SysOsVersionMajor(ctx);
+    SysOsVersionMinorSetUnknownIfUnset(ctx);
 }

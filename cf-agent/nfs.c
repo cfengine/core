@@ -468,29 +468,62 @@ int VerifyInFstab(EvalContext *ctx, char *name, const Attributes *a, const Promi
     mountpt = name;
     fstype = a->mount.mount_type;
 
+    char device[CF_BUFSIZE];
+    if (StringEqual(fstype, "cifs") || StringEqual(fstype, "panfs"))
+    {
+        NDEBUG_UNUSED int ret = snprintf(device, sizeof(device), "%s%s", host, rmountpt);
+        assert(ret >= 0 && ret < CF_BUFSIZE);
+    }
+    else
+    {
+        NDEBUG_UNUSED int ret = snprintf(device, sizeof(device), "%s:%s", host, rmountpt);
+        assert(ret >= 0 && ret < CF_BUFSIZE);
+    }
+
 #if defined(__QNX__) || defined(__QNXNTO__)
-    snprintf(fstab, CF_BUFSIZE, "%s:%s \t %s %s\t%s 0 0", host, rmountpt, mountpt, fstype, opts);
+    // QNX documents 4 fstab fields : https://www.qnx.com/developers/docs/7.1/index.html#com.qnx.doc.neutrino.utilities/topic/f/fstab.html
+    // specialdevice mountpoint type mountoptions
+    // TODO Remove DUMP and PASS options used here (unsupported)?
+    NDEBUG_UNUSED int ret = snprintf(fstab, CF_BUFSIZE, "%s \t %s %s\t%s 0 0", device, mountpt, fstype, opts);
+    assert(ret >= 0 && ret < CF_BUFSIZE);
 #elif defined(_CRAY)
     char fstype_upper[CF_BUFSIZE];
     strlcpy(fstype_upper, fstype, CF_BUFSIZE);
     ToUpperStrInplace(fstype_upper);
 
-    snprintf(fstab, CF_BUFSIZE, "%s:%s \t %s %s\t%s", host, rmountpt, mountpt, fstype_upper, opts);
+    NDEBUG_UNUSED int ret = snprintf(fstab, CF_BUFSIZE, "%s \t %s %s\t%s", device, mountpt, fstype_upper, opts);
+    assert(ret >= 0 && ret < CF_BUFSIZE);
     break;
 #elif defined(__hpux)
-    snprintf(fstab, CF_BUFSIZE, "%s:%s %s \t %s \t %s 0 0", host, rmountpt, mountpt, fstype, opts);
+    // HP-UX documents 7 fstab fields: https://nixdoc.net/man-pages/HP-UX/man4/fstab.4.html
+    // deviceSpecialFile directory type options backupFrequency passNumber comment
+    // TODO Bring promise comment in as the 7th comment field # promise comment (stripped of newlines)
+    NDEBUG_UNUSED int ret = snprintf(fstab, CF_BUFSIZE, "%s %s \t %s \t %s 0 0", device, mountpt, fstype, opts);
+    assert(ret >= 0 && ret < CF_BUFSIZE);
 #elif defined(_AIX)
-    snprintf(fstab, CF_BUFSIZE,
-             "%s:\n\tdev\t= %s\n\ttype\t= %s\n\tvfs\t= %s\n\tnodename\t= %s\n\tmount\t= true\n\toptions\t= %s\n\taccount\t= false\n",
-             mountpt, rmountpt, fstype, fstype, host, opts);
+    // AIX uses /etc/filesystems: https://www.ibm.com/docs/en/aix/7.2.0?topic=files-filesystems-file
+    NDEBUG_UNUSED int ret = snprintf(fstab, CF_BUFSIZE,
+                                     "%s:\n\tdev\t= %s\n\ttype\t= %s\n\tvfs\t= %s\n\tnodename\t= %s\n\tmount\t= true\n\toptions\t= %s\n\taccount\t= false\n",
+                                     mountpt, rmountpt, fstype, fstype, host, opts);
+    assert(ret >= 0 && ret < CF_BUFSIZE);
 #elif defined(__linux__)
-    snprintf(fstab, CF_BUFSIZE, "%s:%s \t %s \t %s \t %s", host, rmountpt, mountpt, fstype, opts);
+    NDEBUG_UNUSED int ret = snprintf(fstab, CF_BUFSIZE, "%s \t %s \t %s \t %s", device, mountpt, fstype, opts);
+    assert(ret >= 0 && ret < CF_BUFSIZE);
 #elif defined(__NetBSD__) || defined(__OpenBSD__) || defined(__DragonFly__) || defined(__FreeBSD__) || defined(__APPLE__)
-    snprintf(fstab, CF_BUFSIZE, "%s:%s \t %s \t %s \t %s 0 0", host, rmountpt, mountpt, fstype, opts);
+    // BSDs document 6 fstab fields https://man.freebsd.org/cgi/man.cgi?fstab(5)
+    // Device Mountpoint FStype Options Dump Pass
+    NDEBUG_UNUSED int ret = snprintf(fstab, CF_BUFSIZE, "%s \t %s \t %s \t %s 0 0", device, mountpt, fstype, opts);
+    assert(ret >= 0 && ret < CF_BUFSIZE);
 #elif defined(__sun) || defined(sco) || defined(__SCO_DS)
-    snprintf(fstab, CF_BUFSIZE, "%s:%s - %s %s - yes %s", host, rmountpt, mountpt, fstype, opts);
+    // SunOS uses /etc/fstab and documents 7 fields: https://docs.oracle.com/cd/E19455-01/805-6331/fsadm-59727/index.html
+    // deviceToMount deviceToFsck mountPoint FStype fsckPass automount? mountOptions
+    // - is used for deviceToFsck for read-only and network based file systems
+    NDEBUG_UNUSED int ret = snprintf(fstab, CF_BUFSIZE, "%s - %s %s - yes %s", device, mountpt, fstype, opts);
+    assert(ret >= 0 && ret < CF_BUFSIZE);
 #elif defined(__CYGWIN__)
-    snprintf(fstab, CF_BUFSIZE, "/bin/mount %s:%s %s", host, rmountpt, mountpt);
+    // https://cygwin.com/cygwin-ug-net/using.html#mount-table
+    NDEBUG_UNUSED int ret = snprintf(fstab, CF_BUFSIZE, "/bin/mount %s %s", device, mountpt);
+    assert(ret >= 0 && ret < CF_BUFSIZE);
 #else
   #error "Could not determine format of fstab entry on this platform."
 #endif
@@ -503,7 +536,7 @@ int VerifyInFstab(EvalContext *ctx, char *name, const Attributes *a, const Promi
     {
         AppendItem(&FSTABLIST, fstab, NULL);
         FSTAB_EDITS++;
-        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Adding file system '%s:%s' to '%s'", host, rmountpt,
+        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Adding file system entry '%s' to '%s'", fstab,
              VFSTAB[VSYSTEMHARDCLASS]);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
         changes += 1;

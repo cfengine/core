@@ -8068,8 +8068,8 @@ static FnCallResult FnCallClassFilterData(
     if (parent == NULL)
     {
         Log(LOG_LEVEL_VERBOSE,
-            "Function %s(): Expected parent element to be of container type array, found %s",
-            fp->name, JsonGetTypeAsString(parent));
+            "Function %s(): Expected parent element to be of type data container",
+            fp->name);
         return FnFailure();
     }
 

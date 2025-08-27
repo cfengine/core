@@ -1,0 +1,37 @@
+body common control
+{
+  bundlesequence => { "test" };
+}
+
+
+bundle agent test
+{
+  vars:
+    "time_based_var_names" slist => variablesmatching(".*sys.time_based.*");
+    "time_based_vars" slist => maplist("$($(this))", "@(time_based_var_names)");
+
+  classes:
+    "year_ok" expression => reglist("@(time_based_vars)", "^Yr\d{4}$");
+    "month_ok" expression => reglist("@(time_based_vars)", "^(January|February|March|April|May|June|July|August|September|October|November|December)$");
+    "day_ok" expression => reglist("@(time_based_vars)", "^Day([1-9]|[1-2][0-9]|3[0-1])$");
+    "weekday_ok" expression => reglist("@(time_based_vars)", "^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)$");
+    "shift_ok" expression => reglist("@(time_based_vars)", "^(Night|Morning|Afternoon|Evening)$");
+    "hour_2_ok" expression => reglist("@(time_based_vars)", "^Hr(0[1-9]|1[0-9]|2[0-4])$");
+    "hour_ok" expression => reglist("@(time_based_vars)", "^Hr([1-9]|1[0-9]|2[0-4])$");
+    "quarter_ok" expression => reglist("@(time_based_vars)", "^Q[1-4]$");
+    "minute_ok" expression => reglist("@(time_based_vars)", "^Min([0-5][0-9]|60)$");
+    "minute_span_5_ok" expression => reglist("@(time_based_vars)", "^Min([0-5][0-9]|60)_(05|[0-5][05]|60)$");
+    "hour_2_quarter_ok" expression => reglist("@(time_based_vars)", "^Hr(0[1-9]|1[0-9]|2[0-4])_Q[1-4]$");
+
+    # Testing for one GMT
+    "hour_2_gmt_ok" expression => reglist("@(time_based_vars)", "^GMT_Hr(0[1-9]|1[0-9]|2[0-4])$");
+
+    "ok" expression => and("year_ok", "month_ok", "day_ok", "weekday_ok", "shift_ok", "hour_2_ok", "hour_ok", 
+                          "quarter_ok", "minute_ok", "minute_span_5_ok", "hour_2_quarter_ok", "hour_2_gmt_ok");
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

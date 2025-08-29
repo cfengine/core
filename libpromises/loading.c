@@ -492,6 +492,24 @@ static JsonElement *ReadReleaseIdFileFromInputs()
     return validated_doc;
 }
 
+static void SysPolicyReleaseId(EvalContext *ctx, Policy *policy)
+{
+    DataType type;
+    const char *entry_dirname = EvalContextVariableGetSpecial(ctx, SPECIAL_SCOPE_SYS, "policy_entry_dirname", &type);
+    if (entry_dirname == NULL || policy == NULL)
+    {
+        return;
+    }
+    char *release_id;
+    xasprintf(&release_id, "%s/%s", entry_dirname, policy->release_id);
+
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS,
+                              "policy_release_id",
+                              release_id,
+                              CF_DATA_TYPE_STRING, "source=agent,attribute_name=Policy Release Id");
+    free(release_id);
+}
+
 Policy *LoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
 {
     StringMap *policy_files_hashes = StringMapNew();
@@ -654,5 +672,6 @@ Policy *LoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
         }
     }
 
+    SysPolicyReleaseId(ctx, policy);
     return policy;
 }

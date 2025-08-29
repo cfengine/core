@@ -1,0 +1,24 @@
+body common control
+{
+  bundlesequence => { "test" };
+}
+
+
+bundle agent test
+{
+  vars:
+    "release_id_list" slist => variablesmatching("default:sys.policy_release_id");
+    "escaped" string => escape("$(sys.policy_entry_dirname)");
+    "release_id_regex" string => "^$(escaped)\/[A-Fa-f0-9]+$";
+
+  classes:
+    "var_ok" expression => strcmp("$(release_id_list)", "default:sys.policy_release_id");
+    "reg_ok" expression => regcmp("$(release_id_regex)", "$(sys.policy_release_id)");
+    "ok" expression => and("var_ok", "reg_ok");
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

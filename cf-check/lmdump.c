@@ -87,25 +87,40 @@ int lmdump(lmdump_mode mode, const char *file)
     assert(file != NULL);
 
     int rc;
+    MDB_env *env = NULL;
+    MDB_txn *txn = NULL;
+    MDB_dbi dbi = 0;
+    MDB_cursor *cursor = NULL;
 
-    MDB_env *env;
     rc = mdb_env_create(&env);
-    if (rc) return lmdump_report_error(rc);
+    if (rc != 0)
+    {
+        goto cleanup;
+    }
 
     rc = mdb_env_open(env, file, MDB_NOSUBDIR | MDB_RDONLY, 0644);
-    if (rc) return lmdump_report_error(rc);
+    if (rc != 0)
+    {
+        goto cleanup;
+    }
 
-    MDB_txn *txn;
     rc = mdb_txn_begin(env, NULL, MDB_RDONLY, &txn);
-    if (rc) return lmdump_report_error(rc);
+    if (rc != 0)
+    {
+        goto cleanup;
+    }
 
-    MDB_dbi dbi;
     rc = mdb_open(txn, NULL, 0, &dbi);
-    if (rc) return lmdump_report_error(rc);
+    if (rc != 0)
+    {
+        goto cleanup;
+    }
 
-    MDB_cursor *cursor;
     rc = mdb_cursor_open(txn, dbi, &cursor);
-    if (rc) return lmdump_report_error(rc);
+    if (rc != 0)
+    {
+        goto cleanup;
+    }
 
     MDB_val key, data;
     while ( (rc = mdb_cursor_get(cursor, &key, &data, MDB_NEXT)) == MDB_SUCCESS )
@@ -115,14 +130,31 @@ int lmdump(lmdump_mode mode, const char *file)
     if (rc != MDB_NOTFOUND)
     {
         // At this point, not found is expected, anything else is an error
+        goto cleanup;
+    }
+    rc = 0;
+cleanup:
+    if (cursor != NULL) 
+    {
+        mdb_cursor_close(cursor);
+    }
+    if (dbi != 0) 
+    {
+        mdb_close(env, dbi);
+    }
+    if (txn != NULL) 
+    {
+        mdb_txn_abort(txn);
+    }
+    if (env != NULL) 
+    {
+        mdb_env_close(env);
+    }
+
+    if (rc != 0) 
+    {
         return lmdump_report_error(rc);
     }
-    mdb_cursor_close(cursor);
-    mdb_close(env, dbi);
-
-    mdb_txn_abort(txn);
-    mdb_env_close(env);
-
     return 0;
 }
 

@@ -3790,6 +3790,90 @@ static void SysOsVersionMajor(EvalContext *ctx)
 
 /*****************************************************************************/
 
+
+#define SUPPORTED_PLATFORMS "debian|ubuntu|redhat|rhel|centos|fedora|aix|hpux|suse|opensuse|opensuse_leap|sles|solaris|sunos|windows|freebsd|macos"
+
+static bool SetOsVersionMinorFromOSRelease(EvalContext *ctx)
+{
+
+    DataType type_out;
+    const JsonElement *os_release = EvalContextVariableGetSpecial(ctx, SPECIAL_SCOPE_SYS, "os_release", &type_out);
+
+    if (os_release == NULL)
+    {
+        return false;
+    }
+    const JsonElement *version_id = JsonObjectGet(os_release, "VERSION_ID");
+    if (version_id == NULL)
+    {
+        return false;
+    }
+    const char *version_id_string = JsonPrimitiveGetAsString(version_id);
+    Item *version_tuple = SplitString(version_id_string, '.');
+    if (version_tuple->next == NULL)
+    {
+        DeleteItemList(version_tuple);
+        return false;
+    }
+    bool ret = EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "os_version_minor", version_tuple->next->name, CF_DATA_TYPE_STRING, "source=agent");
+    DeleteItemList(version_tuple);
+    return ret;
+}
+
+static bool SetOsVersionMinorFromHardClass(EvalContext *ctx)
+{
+    const char *regex_string = "^(" SUPPORTED_PLATFORMS ")+_[0-9]+_[0-9]+$";
+    ClassTableIterator *iter = EvalContextClassTableIteratorNewGlobal(ctx, NULL, true, false);
+    StringSet *matches = ClassesMatching(ctx, iter, regex_string, NULL, false);
+
+    StringSetIterator match_iter = StringSetIteratorInit(matches);
+    const char *os_class = StringSetIteratorNext(&match_iter);
+    if (os_class == NULL) // no match
+    {
+        ClassTableIteratorDestroy(iter);
+        StringSetDestroy(matches);
+        return false;
+    }
+    Item *os_class_tuple_start = SplitString(os_class, '_');
+
+    ClassTableIteratorDestroy(iter);
+    StringSetDestroy(matches);
+
+    Item *os_class_tuple = os_class_tuple_start;
+    if (os_class_tuple->next == NULL)
+    {
+        DeleteItemList(os_class_tuple_start);
+        return false;
+    }
+#ifndef __sun
+    os_class_tuple = os_class_tuple->next;
+    if (os_class_tuple->next == NULL)
+    {
+        DeleteItemList(os_class_tuple_start);
+        return false;
+    }
+#endif
+    bool ret = EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "os_version_minor", os_class_tuple->next->name, CF_DATA_TYPE_STRING, "source=agent");
+    DeleteItemList(os_class_tuple_start);
+    return ret;
+}
+
+static void SysOsVersionMinor(EvalContext *ctx)
+{
+    // 1. parse the os-release file
+    if (!SetOsVersionMinorFromOSRelease(ctx))
+    {
+        // 2. if version minor not found, find "<OS_NAME>_major_minor" hard class with classesmatching
+        if (!SetOsVersionMinorFromHardClass(ctx))
+        {
+            // 3. if version minor not found, set to "Unknown"
+            EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "os_version_minor", "Unknown", CF_DATA_TYPE_STRING, "source=agent");
+        }
+    }
+}
+
+/*****************************************************************************/
+
 void DetectEnvironment(EvalContext *ctx)
 {
     GetNameInfo3(ctx);
@@ -3802,4 +3886,5 @@ void DetectEnvironment(EvalContext *ctx)
     GetDefVars(ctx);
     SysOSNameHuman(ctx);
     SysOsVersionMajor(ctx);
+    SysOsVersionMinor(ctx);
 }

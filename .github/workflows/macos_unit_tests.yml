@@ -23,6 +23,6 @@ jobs:
         PATH="/opt/homebrew/opt/libtool/libexec/gnubin:$PATH"
         ./autogen.sh --enable-debug
     - name: Compile and link
-      run: make -j8 CFLAGS="-Werror -Wall"
+      run: MACOSX_DEPLOYMENT_TARGET=15.4 make -j8 CFLAGS="-Werror -Wall"
     - name: Run unit tests
       run: make -C tests/unit check

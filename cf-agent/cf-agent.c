@@ -313,6 +313,8 @@ int main(int argc, char *argv[])
         /* not a fatal issue, let's continue the bootstrap process */
     }
 
+    GenericAgentDetectEnvironmentFromPolicy(ctx, policy);
+
     int ret = 0;
 
     GenericAgentPostLoadInit(ctx);

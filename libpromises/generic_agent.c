@@ -2944,3 +2944,8 @@ void GenericAgentShowVariablesFormatted(EvalContext *ctx, const char *regexp)
     SeqDestroy(seq);
     VariableTableIteratorDestroy(iter);
 }
+
+void GenericAgentDetectEnvironmentFromPolicy(EvalContext *ctx, Policy *policy)
+{
+    DetectEnvironmentFromPolicy(ctx, policy);
+}

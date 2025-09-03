@@ -71,6 +71,7 @@
 #include <override_fsattrs.h>
 
 #include <cf-windows-functions.h>
+#include "cf3.defs.h"
 
 #define CF_RECURSION_LIMIT 100
 
@@ -1569,6 +1570,13 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
             mode = CF_PERMS_DEFAULT;
         }
         mode &= 0777; /* Never preserve SUID bit */
+
+        /* If perms are promised for this file, use those instead */
+        if ((attr->perms.plus != CF_SAMEMODE) && (attr->perms.minus != CF_SAMEMODE))
+        {
+            mode |= attr->perms.plus;
+            mode &= ~(attr->perms.minus);
+        }
 
         if (!CopyRegularFileNet(source, dest, ToChangesPath(new),
                                 sstat->st_size, attr->copy.encrypt, conn, mode))

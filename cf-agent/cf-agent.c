@@ -269,6 +269,15 @@ static PromiseResult DefaultVarPromiseWrapper(EvalContext *ctx, const Promise *p
 
 /*******************************************************************/
 
+static void SysPolicyVersion(EvalContext *ctx)
+{
+    const char *version = EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_VERSION);
+    if (version != NULL)
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "policy_version", version, CF_DATA_TYPE_STRING, "source=agent");
+    }
+}
+
 int main(int argc, char *argv[])
 {
     SetupSignalsForAgent();
@@ -298,6 +307,7 @@ int main(int argc, char *argv[])
     /* FIXME: (CFE-2709) ALWAYS_VALIDATE will always be false here, since it can
      *        only change in KeepPromises(), five lines later on. */
     Policy *policy = SelectAndLoadPolicy(config, ctx, ALWAYS_VALIDATE, true);
+    SysPolicyVersion(ctx);
 
     if (!policy)
     {

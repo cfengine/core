@@ -29,6 +29,7 @@
 #include <eval_context.h>
 
 void DetectEnvironment(EvalContext *ctx);
+void DetectEnvironmentFromPolicy(EvalContext *ctx, Policy *policy);
 
 void CreateHardClassesFromCanonification(EvalContext *ctx, const char *canonified, char *tags);
 int GetUptimeMinutes(time_t now);

@@ -156,4 +156,6 @@ void LoadAugments(EvalContext *ctx, GenericAgentConfig *config);
 void GenericAgentShowContextsFormatted(EvalContext *ctx, const char *regexp);
 void GenericAgentShowVariablesFormatted(EvalContext *ctx, const char *regexp);
 
+void GenericAgentDetectEnvironmentFromPolicy(EvalContext *ctx, Policy *policy);
+
 #endif

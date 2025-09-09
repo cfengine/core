@@ -133,11 +133,13 @@ void test_eval_with_token_from_list(void)
      *  'GMT_Yr2024'
      */
     const time_t timestamp = 1716989621;
-    StringSet *time_classes = GetTimeClasses(timestamp);
-    StringSetIterator iter = StringSetIteratorInit(time_classes);
-    const char *time_class = NULL;
-    while((time_class = StringSetIteratorNext(&iter)) != NULL) {
-        printf("Time class: %s\n", time_class);
+    StringSet *time_classes = StringSetNew();
+
+    StringMap *time_classes_map = GetTimeClasses(timestamp);
+    StringMapIterator iter = StringMapIteratorInit(time_classes_map);
+    MapKeyValue *item;
+    while((item = StringMapIteratorNext(&iter)) != NULL) {
+        StringSetAdd(time_classes, SafeStringDuplicate(item->value));
     }
 
     assert_true(EvalWithTokenFromList("GMT_Wednesday", time_classes));
@@ -146,6 +148,7 @@ void test_eval_with_token_from_list(void)
     assert_true(EvalWithTokenFromList("GMT_Monday|GMT_Wednesday", time_classes));
     assert_true(EvalWithTokenFromList("!GMT_Monday", time_classes));
 
+    StringMapDestroy(time_classes_map);
     StringSetDestroy(time_classes);
 }
 

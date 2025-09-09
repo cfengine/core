@@ -24,6 +24,7 @@
 
 #include <time_classes.h>
 #include <eval_context.h>
+#include <alloc.h> // xvasprintf
 
 static void RemoveTimeClass(EvalContext *ctx, const char* tags)
 {
@@ -44,9 +45,26 @@ static void RemoveTimeClass(EvalContext *ctx, const char* tags)
     RlistDestroy(tags_rlist);
 }
 
-StringSet *GetTimeClasses(time_t time) {
+static void InsertTimeClassF(StringMap *classes, const char *prefix, const char *type, const char *fmt, ...)
+{
+    char *key;
+    xasprintf(&key, "time_based_%s%s", prefix, type);
+
+    va_list args;
+    va_start(args, fmt);
+
+    char *value;
+    NDEBUG_UNUSED int ret = xvasprintf(&value, fmt, args);
+    assert(ret >= 0);
+
+    va_end(args);
+    StringMapInsert(classes, key, value);
+}
+
+StringMap *GetTimeClasses(time_t time) {
     // The first element is the local timezone
     const char* tz_prefix[2] = { "", "GMT_" };
+    const char* tz_var_prefix[2] = { "", "gmt_" };
     const char* tz_function[2] = { "localtime_r", "gmtime_r" };
     struct tm tz_parsed_time[2];
     const struct tm* tz_tm[2] = {
@@ -54,7 +72,7 @@ StringSet *GetTimeClasses(time_t time) {
         gmtime_r(&time, &(tz_parsed_time[1]))
     };
 
-    StringSet *classes = StringSetNew();
+    StringMap *classes = StringMapNew();
 
     for (int tz = 0; tz < 2; tz++)
     {
@@ -67,16 +85,14 @@ StringSet *GetTimeClasses(time_t time) {
         }
 
 /* Lifecycle */
-
-        StringSetAddF(classes, "%sLcycle_%d", tz_prefix[tz], ((tz_parsed_time[tz].tm_year + 1900) % 3));
+        InsertTimeClassF(classes, tz_var_prefix[tz], "lcycle", "%sLcycle_%d", tz_prefix[tz], ((tz_parsed_time[tz].tm_year + 1900) % 3));
 
 /* Year */
-
-        StringSetAddF(classes, "%sYr%04d", tz_prefix[tz], tz_parsed_time[tz].tm_year + 1900);
+        InsertTimeClassF(classes, tz_var_prefix[tz], "yr", "%sYr%04d", tz_prefix[tz], tz_parsed_time[tz].tm_year + 1900);
 
 /* Month */
 
-        StringSetAddF(classes, "%s%s", tz_prefix[tz], MONTH_TEXT[tz_parsed_time[tz].tm_mon]);
+        InsertTimeClassF(classes, tz_var_prefix[tz], "month", "%s%s", tz_prefix[tz], MONTH_TEXT[tz_parsed_time[tz].tm_mon]);
 
 /* Day of week */
 
@@ -85,36 +101,36 @@ StringSet *GetTimeClasses(time_t time) {
    ...
    Sunday  is 0 in tm_wday, 6 in DAY_TEXT */
         day_text_index = (tz_parsed_time[tz].tm_wday + 6) % 7;
-        StringSetAddF(classes, "%s%s", tz_prefix[tz], DAY_TEXT[day_text_index]);
+        InsertTimeClassF(classes, tz_var_prefix[tz], "dow", "%s%s", tz_prefix[tz], DAY_TEXT[day_text_index]);
 
 /* Day */
 
-        StringSetAddF(classes, "%sDay%d", tz_prefix[tz], tz_parsed_time[tz].tm_mday);
+        InsertTimeClassF(classes, tz_var_prefix[tz], "dom", "%sDay%d", tz_prefix[tz], tz_parsed_time[tz].tm_mday);
 
 /* Shift */
 
-        StringSetAddF(classes, "%s%s", tz_prefix[tz], SHIFT_TEXT[tz_parsed_time[tz].tm_hour / 6]);
+        InsertTimeClassF(classes, tz_var_prefix[tz], "pod", "%s%s", tz_prefix[tz], SHIFT_TEXT[tz_parsed_time[tz].tm_hour / 6]);
 
 /* Hour */
 
-        StringSetAddF(classes, "%sHr%02d", tz_prefix[tz], tz_parsed_time[tz].tm_hour);
-        StringSetAddF(classes, "%sHr%d", tz_prefix[tz], tz_parsed_time[tz].tm_hour);
+        InsertTimeClassF(classes, tz_var_prefix[tz], "hr", "%sHr%02d", tz_prefix[tz], tz_parsed_time[tz].tm_hour);
+        InsertTimeClassF(classes, tz_var_prefix[tz], "hr_2", "%sHr%d", tz_prefix[tz], tz_parsed_time[tz].tm_hour);
 
 /* Quarter */
 
         quarter = tz_parsed_time[tz].tm_min / 15 + 1;
 
-        StringSetAddF(classes, "%sQ%d", tz_prefix[tz], quarter);
-        StringSetAddF(classes, "%sHr%02d_Q%d", tz_prefix[tz], tz_parsed_time[tz].tm_hour, quarter);
+        InsertTimeClassF(classes, tz_var_prefix[tz], "qoh", "%sQ%d", tz_prefix[tz], quarter);
+        InsertTimeClassF(classes, tz_var_prefix[tz], "hr_qoh", "%sHr%02d_Q%d", tz_prefix[tz], tz_parsed_time[tz].tm_hour, quarter);
 
 /* Minute */
 
-        StringSetAddF(classes, "%sMin%02d", tz_prefix[tz], tz_parsed_time[tz].tm_min);
+        InsertTimeClassF(classes, tz_var_prefix[tz], "min", "%sMin%02d", tz_prefix[tz], tz_parsed_time[tz].tm_min);
 
         interval_start = (tz_parsed_time[tz].tm_min / 5) * 5;
         interval_end = (interval_start + 5) % 60;
 
-        StringSetAddF(classes, "%sMin%02d_%02d", tz_prefix[tz], interval_start, interval_end);
+        InsertTimeClassF(classes, tz_var_prefix[tz], "min_span_5", "%sMin%02d_%02d", tz_prefix[tz], interval_start, interval_end);
     }
 
     return classes;
@@ -122,18 +138,19 @@ StringSet *GetTimeClasses(time_t time) {
 
 static void AddTimeClass(EvalContext *ctx, time_t time, const char* tags)
 {
-    StringSet *time_classes = GetTimeClasses(time);
+    StringMap *time_classes = GetTimeClasses(time);
     if (time_classes == NULL) {
         return;
     }
 
-    StringSetIterator iter = StringSetIteratorInit(time_classes);
-    const char *time_class = NULL;
-    while ((time_class = StringSetIteratorNext(&iter)) != NULL) {
-        EvalContextClassPutHard(ctx, time_class, tags);
+    StringMapIterator iter = StringMapIteratorInit(time_classes);
+    MapKeyValue *item;
+    while ((item = StringMapIteratorNext(&iter)) != NULL) {
+        EvalContextClassPutHard(ctx, item->value, tags);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, item->key, item->value, CF_DATA_TYPE_STRING, "noreport");
     }
 
-    StringSetDestroy(time_classes);
+    StringMapDestroy(time_classes);
 }
 
 void UpdateTimeClasses(EvalContext *ctx, time_t t)

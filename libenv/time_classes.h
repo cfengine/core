@@ -39,7 +39,7 @@
  *          'GMT_Yr2024', 'Hr15', 'Hr15_Q3', 'Lcycle_2', 'May', 'Min30_35',
  *          'Min33', 'Q3', 'Wednesday', 'Yr2024' }
  */
-StringSet *GetTimeClasses(time_t time);
+StringMap *GetTimeClasses(time_t time);
 
 void UpdateTimeClasses(EvalContext *ctx, time_t t);
 

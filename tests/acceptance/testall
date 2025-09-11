@@ -109,7 +109,7 @@ DIFF=${DIFF:-}                      ; export DIFF
 LIBTOOL=${LIBTOOL:-}                ; export LIBTOOL
 INCLUDE_IN_WORKDIR=${INCLUDE_IN_WORKDIR:-} ; export INCLUDE_IN_WORKDIR
 
-VALGRIND_OPTS="${VALGRIND_OPTS:---leak-check=full --show-reachable=yes --suppressions=valgrind-suppressions}"
+VALGRIND_OPTS="${VALGRIND_OPTS:---leak-check=full --show-reachable=yes --suppressions=valgrind-suppressions --track-fds=yes}"
 export VALGRIND_OPTS
 
 export MAKEFLAGS

@@ -86,7 +86,7 @@ make install
 
 /var/cfengine/bin/cf-agent --version
 
-VG_OPTS="--leak-check=full --track-origins=yes --error-exitcode=1"
+VG_OPTS="--leak-check=full --track-origins=yes --error-exitcode=1 --track-fds=yes"
 BOOTSTRAP_IP="127.0.0.1"
 
 valgrind $VG_OPTS /var/cfengine/bin/cf-key 2>&1 | tee cf-key.txt

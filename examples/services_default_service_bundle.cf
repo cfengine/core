@@ -9,7 +9,7 @@ bundle agent main
 
 body service_method my_custom_service
 {
-      service_type => "generic";
+      service_bundle => service_my_custom_service($(this.promiser), $(this.service_policy));
 }
 
 bundle agent service_my_custom_service(service, state)
@@ -24,6 +24,4 @@ bundle agent service_my_custom_service(service, state)
 #@ R: my-custom-service should have state stop
 #@ ```
 #+end_src
-
-
 

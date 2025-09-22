@@ -1,0 +1,20 @@
+#+begin_src cfengine3
+bundle agent main
+{
+  vars:
+      "d" data => '{ "key1": "dvalue1", "key2": "dvalue2" }';
+      "a[key1]" string => "value1";
+      "a[key2]" string => "value2";
+
+  reports:
+      "$(with)" with => nth( a, key1 );
+      "$(with)" with => nth( d, key1 );
+}
+#+end_src
+###############################################################################
+#+begin_src example_output
+#@ ```
+#@ R: value1
+#@ R: dvalue1
+#@ ```
+#+end_src

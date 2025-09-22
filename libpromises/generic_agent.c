@@ -1486,6 +1486,7 @@ bool GenericAgentArePromisesValid(const GenericAgentConfig *config)
 static void OpenLog(int facility)
 {
     openlog(CF_PROGRAM_NAME, LOG_PID | LOG_NOWAIT | LOG_ODELAY, facility);
+    RegisterCleanupFunction(&CloseLog);
 }
 #endif
 

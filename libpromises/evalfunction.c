@@ -1381,6 +1381,57 @@ static FnCallResult FnCallGetUserInfo(ARG_UNUSED EvalContext *ctx, ARG_UNUSED co
 
 /*********************************************************************/
 
+
+static FnCallResult FnCallGetGroupInfo(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
+{
+#ifdef __MINGW32__
+    return FnFailure();
+
+#else /* !__MINGW32__ */
+
+    struct group *gr = NULL;
+
+    if (finalargs == NULL)
+    {
+        gr = getgrgid(getgid());
+    }
+    else
+    {
+        char *arg = RlistScalarValue(finalargs);
+        if (StringIsNumeric(arg))
+        {
+            gid_t gid = Str2Gid(arg, NULL, NULL);
+            if (gid == CF_SAME_GROUP) // user "*"
+            {
+                gid = getgid();
+            }
+            else if (gid == CF_UNKNOWN_GROUP)
+            {
+                Log(LOG_LEVEL_ERR, "The specified group '%s' doesn't exist", arg);
+                return FnFailure();
+            }
+
+            gr = getgrgid(gid);
+        }
+        else
+        {
+            gr = getgrnam(arg);
+        }
+    }
+
+    JsonElement *result = GetGroupInfo(gr);
+
+    if (result == NULL)
+    {
+        return FnFailure();
+    }
+
+    return FnReturnContainerNoCopy(result);
+#endif
+}
+
+/*********************************************************************/
+
 static FnCallResult FnCallGetUid(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
 #ifdef __MINGW32__
@@ -10426,6 +10477,13 @@ static const FnCallArg GETUSERINFO_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg GETGROUPINFO_ARGS[] =
+{
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Group name or group ID as string"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
+
 static const FnCallArg GREP_ARGS[] =
 {
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Regular expression"},
@@ -11366,6 +11424,8 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("getusers", CF_DATA_TYPE_STRING_LIST, GETUSERS_ARGS, &FnCallGetUsers, "Get a list of all system users defined, minus those names defined in arg1 and uids in arg2",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("getuserinfo", CF_DATA_TYPE_CONTAINER, GETUSERINFO_ARGS, &FnCallGetUserInfo, "Get a data container describing user arg1, defaulting to current user",
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("getgroupinfo", CF_DATA_TYPE_CONTAINER, GETGROUPINFO_ARGS, &FnCallGetGroupInfo, "Get a data container describing specified group, or current group if not specified",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("getvalues", CF_DATA_TYPE_STRING_LIST, GETINDICES_ARGS, &FnCallGetValues, "Get a list of values in the list or array or data container arg1",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),

@@ -3530,6 +3530,44 @@ JsonElement* GetUserInfo(const void *passwd)
 
 /*****************************************************************************/
 
+JsonElement* GetGroupInfo(const void *group)
+{
+#ifdef __MINGW32__
+    return NULL;
+
+#else /* !__MINGW32__ */
+
+    struct group *gr = (struct group*) group;
+
+    if (gr == NULL)
+    {
+        gr = getgrgid(getgid());
+    }
+
+    if (gr == NULL)
+    {
+        return NULL;
+    }
+
+    JsonElement *result = JsonObjectCreate(3);
+    JsonObjectAppendString(result, "name", gr->gr_name);
+    JsonObjectAppendInteger(result, "gid", gr->gr_gid);
+
+    JsonElement *mem = JsonArrayCreate(10);
+    while (gr->gr_mem[0] != NULL)
+    {
+        JsonArrayAppendString(mem, gr->gr_mem[0]);
+        gr->gr_mem++;
+    }
+
+    JsonObjectAppendArray(result, "members", mem);
+
+    return result;
+#endif
+}
+
+/*****************************************************************************/
+
 void GetSysVars(EvalContext *ctx)
 {
     /* Get info for current user. */

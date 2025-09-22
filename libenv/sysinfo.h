@@ -40,5 +40,6 @@ void GetNetworkingInfo(EvalContext *ctx);
 JsonElement* GetNetworkingConnections(EvalContext *ctx);
 
 JsonElement* GetUserInfo(const void *passwd);
+JsonElement* GetGroupInfo(const void *group);
 
 #endif

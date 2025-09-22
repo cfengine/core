@@ -414,24 +414,41 @@ static int dump_db(const char *file, const dump_mode mode, const char *tskey_fil
     MDB_dbi dbi;
     MDB_cursor *cursor = NULL;
 
-    if (0 != (r = mdb_env_create(&env))
-        || 0 != (r = mdb_env_open(env, file, MDB_NOSUBDIR | MDB_RDONLY, 0644))
-        || 0 != (r = mdb_txn_begin(env, NULL, MDB_RDONLY, &txn))
-        || 0 != (r = mdb_open(txn, NULL, 0, &dbi))
-        || 0 != (r = mdb_cursor_open(txn, dbi, &cursor)))
+    r = mdb_env_create(&env);
+    if (r != 0)
     {
-        if (env != NULL)
-        {
-            if (txn != NULL)
-            {
-                if (cursor != NULL)
-                {
-                    mdb_cursor_close(cursor);
-                }
-                mdb_txn_abort(txn);
-            }
-            mdb_env_close(env);
-        }
+        return dump_report_error(r);
+    }
+
+    /* If this function fails, mdb_env_close() must be called to discard the MDB_env handle. */
+    r = mdb_env_open(env, file, MDB_NOSUBDIR | MDB_RDONLY, 0644);
+    if (r != 0)
+    {
+        mdb_env_close(env);
+        return dump_report_error(r);
+    }
+
+    r = mdb_txn_begin(env, NULL, MDB_RDONLY, &txn);
+    if (r != 0)
+    {
+        mdb_env_close(env);
+        return dump_report_error(r);
+    }
+
+    /* If the transaction is aborted the database handle will be closed automatically. */
+    r = mdb_open(txn, NULL, 0, &dbi);
+    if (r != 0)
+    {
+        mdb_txn_abort(txn);
+        mdb_env_close(env);
+        return dump_report_error(r);
+    }
+
+    r = mdb_cursor_open(txn, dbi, &cursor);
+    if (r != 0)
+    {
+        mdb_txn_abort(txn);
+        mdb_env_close(env);
         return dump_report_error(r);
     }
 
@@ -462,11 +479,12 @@ static int dump_db(const char *file, const dump_mode mode, const char *tskey_fil
     if (r != MDB_NOTFOUND)
     {
         // At this point, not found is expected, anything else is an error
+        mdb_cursor_close(cursor);
+        mdb_txn_abort(txn);
+        mdb_env_close(env);
         return dump_report_error(r);
     }
     mdb_cursor_close(cursor);
-    mdb_close(env, dbi);
-
     mdb_txn_abort(txn);
     mdb_env_close(env);
 

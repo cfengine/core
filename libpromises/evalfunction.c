@@ -2704,9 +2704,9 @@ static FnCallResult FnCallUrlGet(ARG_UNUSED EvalContext *ctx,
     Buffer *content = BufferNew();
     Buffer *headers = BufferNew();
     curl_easy_setopt(curl, CURLOPT_URL, url);
-    curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1); // do not use signals
+    curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L); // do not use signals
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, 3L); // set default timeout
-    curl_easy_setopt(curl, CURLOPT_VERBOSE, 0);
+    curl_easy_setopt(curl, CURLOPT_VERBOSE, 0L);
     curl_easy_setopt(curl,
                      CURLOPT_PROTOCOLS,
 

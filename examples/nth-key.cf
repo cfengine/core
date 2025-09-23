@@ -7,8 +7,8 @@ bundle agent main
       "a[key2]" string => "value2";
 
   reports:
-      "$(with)" with => nth( a, key1 );
-      "$(with)" with => nth( d, key1 );
+      "$(with)" with => nth( a, "key1" );
+      "$(with)" with => nth( d, "key1" );
 }
 #+end_src
 ###############################################################################

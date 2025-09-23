@@ -516,6 +516,11 @@ if test "x$with_pcre" = "xno"; then
    AC_MSG_ERROR([PCRE is required])
 fi
 
+AS_IF(
+  [(test "x$with_pcre" = xyes || test "x$with_pcre" = xcheck) \
+    && test "x$have_brew" = "xyes" && test -d $(brew --prefix pcre)/],
+  [with_pcre=$(brew --prefix pcre)])
+
 CF3_WITH_LIBRARY(pcre, [
   AC_CHECK_LIB(pcre, pcre_exec, [], [AC_MSG_ERROR(Cannot find PCRE)])
   AC_CHECK_HEADERS([pcre.h], [],

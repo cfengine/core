@@ -1,0 +1,81 @@
+#######################################################
+#
+# Test getgroups() arg0 and arg1
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };   
+      version => "1.0";
+}
+
+bundle agent init
+{
+  vars:
+      # All groups except root, bin, and daemon so long as non of them have uid 0, 1 or 2.
+      "groups" slist => getgroups("root,bin,daemon","0,1,2");
+
+  files:
+      "$(G.testfile)"
+      delete => init_delete;
+
+  reports:
+    cfengine_3::
+      "$(groups)"
+      report_to_file => "$(G.testfile)";
+}
+
+body delete init_delete
+{
+      dirlinks => "delete";
+      rmdirs   => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+      "test_skip_unsupported" string => "windows";
+
+  files:
+      # Try to delete the lines that shouldn't be there anyway
+      "$(G.testfile)"
+      edit_line => test_delete,
+      classes => full_set;
+}
+
+bundle edit_line test_delete
+{
+  delete_lines:
+      "root";
+      "daemon";
+      "bin";
+}
+
+body classes full_set
+{
+      promise_kept     => { "pass" };
+      promise_repaired => { "fail" };
+      repair_failed    => { "fail" };
+      repair_denied    => { "fail" };
+      repair_timeout   => { "fail" };
+}
+
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "ok" expression => "pass&!fail";
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

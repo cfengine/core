@@ -991,6 +991,54 @@ static FnCallResult FnCallGetUsers(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
 
 #if defined(HAVE_GETPWENT) && !defined(__ANDROID__)
 
+static FnCallResult FnCallGetGroups(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
+{
+    assert(finalargs != NULL);
+    const char *except_name = RlistScalarValue(finalargs);
+    const char *except_uid = RlistScalarValue(finalargs->next);
+
+    Rlist *except_names = RlistFromSplitString(except_name, ',');
+    Rlist *except_uids = RlistFromSplitString(except_uid, ',');
+
+    setgrent();
+
+    Rlist *newlist = NULL;
+    struct group *gr;
+    while ((gr = getgrent()))
+    {
+        char *gid_str = StringFromLong((int) gr->gr_gid);
+
+        if (!RlistKeyIn(except_names, gr->gr_name) && !RlistKeyIn(except_uids, gid_str))
+        {
+            RlistAppendScalarIdemp(&newlist, gr->gr_name);
+        }
+
+        free(gid_str);
+    }
+
+    endgrent();
+
+    RlistDestroy(except_names);
+    RlistDestroy(except_uids);
+
+    return (FnCallResult) { FNCALL_SUCCESS, { newlist, RVAL_TYPE_LIST } };
+}
+
+#else
+
+static FnCallResult FnCallGetGroups(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, ARG_UNUSED const Rlist *finalargs)
+{
+    Log(LOG_LEVEL_ERR, "getgroups is not implemented");
+    return FnFailure();
+}
+
+#endif
+
+/*********************************************************************/
+
+
+#if defined(HAVE_GETPWENT) && !defined(__ANDROID__)
+
 static FnCallResult FnCallFindLocalUsers(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
     assert(fp != NULL);
@@ -10394,6 +10442,13 @@ static const FnCallArg GETUSERS_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg GETGROUPS_ARGS[] =
+{
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Comma separated list of Group names"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Comma separated list of GroupID numbers"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
 static const FnCallArg GETENV_ARGS[] =
 {
     {CF_IDRANGE, CF_DATA_TYPE_STRING, "Name of environment variable"},
@@ -11367,6 +11422,8 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("getuserinfo", CF_DATA_TYPE_CONTAINER, GETUSERINFO_ARGS, &FnCallGetUserInfo, "Get a data container describing user arg1, defaulting to current user",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("getgroups", CF_DATA_TYPE_STRING_LIST, GETGROUPS_ARGS, &FnCallGetGroups, "Get a list of all system groups defined, minus those names defined in arg1 and gids in arg2",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("getvalues", CF_DATA_TYPE_STRING_LIST, GETINDICES_ARGS, &FnCallGetValues, "Get a list of values in the list or array or data container arg1",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("getvariablemetatags", CF_DATA_TYPE_STRING_LIST, GETVARIABLEMETATAGS_ARGS, &FnCallGetMetaTags, "Collect the variable arg1's meta tags into an slist, optionally collecting only tag key arg2",

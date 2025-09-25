@@ -140,7 +140,7 @@ check_output promises.txt
 # Some of the databases have strings containing "error"
 # which check_output greps for.
 echo "Running cf-check dump:"
-valgrind $VG_OPTS /var/cfengine/bin/cf-check dump 2>&1 | grep -E '\s*[{}"]' --invert-match | tee cf_check_dump.txt
+valgrind $VG_OPTS --trace-children-skip='*/liblmdb.so*' /var/cfengine/bin/cf-check dump 2>&1 | grep -E '\s*[{}"]' --invert-match | tee cf_check_dump.txt
 check_output cf_check_dump.txt
 
 echo "Running cf-check diagnose on all databases"

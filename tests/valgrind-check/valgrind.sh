@@ -86,7 +86,7 @@ make install
 
 /var/cfengine/bin/cf-agent --version
 
-VG_OPTS="--leak-check=full --track-origins=yes --error-exitcode=1"
+VG_OPTS="--leak-check=full --track-origins=yes --error-exitcode=1 --track-fds=yes"
 BOOTSTRAP_IP="127.0.0.1"
 
 valgrind $VG_OPTS /var/cfengine/bin/cf-key 2>&1 | tee cf-key.txt
@@ -157,7 +157,7 @@ check_valgrind_output promises.txt
 # Some of the databases have strings containing "error"
 # which check_valgrind_output greps for.
 echo "Running cf-check dump:"
-valgrind $VG_OPTS /var/cfengine/bin/cf-check dump 2>&1 | grep -E '\s*[{}"]' --invert-match | tee cf_check_dump.txt
+valgrind $VG_OPTS --trace-children-skip='*/liblmdb.so*' /var/cfengine/bin/cf-check dump 2>&1 | grep -E '\s*[{}"]' --invert-match | tee cf_check_dump.txt
 check_valgrind_output cf_check_dump.txt
 
 echo "Running cf-check diagnose on all databases"

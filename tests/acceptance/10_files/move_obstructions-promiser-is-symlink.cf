@@ -48,6 +48,7 @@ bundle agent init
       # Create test files that will serve as obstructions
       "test_files" slist => {
                               "$(G.testdir)/copy_from",
+                              "$(G.testdir)/content",
       };
 
       "orig_ln_target_filename"
@@ -102,6 +103,12 @@ bundle agent test
       "$(G.testdir)/copy_from"
         move_obstructions => "true",
         copy_from => local_dcp("$(G.testdir)/copy_from.source"),
+        if => fileexists( "$(this.promiser)" );
+
+      # Test move_obstructions with content attribute
+      "$(G.testdir)/content"
+        move_obstructions => "true",
+        content => "$(check.expected_content)",
         if => fileexists( "$(this.promiser)" );
 }
 

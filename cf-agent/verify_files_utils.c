@@ -2775,6 +2775,60 @@ static PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, co
     return result;
 }
 
+bool HandleFileObstruction(EvalContext *ctx, const char *path, const struct stat *sb, const Attributes *attr, const Promise *pp, PromiseResult *result)
+{
+    if (!sb)
+    {
+        return true;
+    }
+    if (!attr)
+    {
+        return false;
+    }
+
+    // Use local variables to help static analysis tools understand that
+    // the pointers have been checked for NULL before dereferencing
+    const struct stat *const safe_sb = sb;      // Explicit alias after null check
+    const Attributes *const safe_attr = attr;   // Explicit alias after null check
+
+    const mode_t st_mode = safe_sb->st_mode;
+    const bool move_obstructions = safe_attr->move_obstructions;
+
+    // If path exists, but is not a regular file, it's an obstruction
+    if (!S_ISREG(st_mode))
+    {
+        if (move_obstructions)
+        {
+            if (MakingChanges(ctx, pp, safe_attr, result, "move obstruction '%s'", path))
+            {
+                char backup[CF_BUFSIZE];
+                snprintf(backup, sizeof(backup), "%s.cf-moved", path);
+
+                if (rename(path, backup) == -1)
+                {
+                    RecordFailure(ctx, pp, safe_attr, "Could not move obstruction '%s' to '%s'. (rename: %s)",
+                                  path, backup, GetErrorStr());
+                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+                    return false;
+                }
+                else
+                {
+                    RecordChange(ctx, pp, safe_attr, "Moved obstructing path '%s' to '%s'", path, backup);
+                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+                    return true;
+                }
+            }
+        }
+        else if (!S_ISLNK(st_mode))
+        {
+            RecordFailure(ctx, pp, safe_attr, "Path '%s' is not a regular file and move_obstructions is not set", path);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+            return false;
+        }
+    }
+    return true;
+}
+
 bool DepthSearch(EvalContext *ctx, char *name, const struct stat *sb, int rlevel, const Attributes *attr,
                 const Promise *pp, dev_t rootdevice, PromiseResult *result)
 {
@@ -2798,7 +2852,7 @@ bool DepthSearch(EvalContext *ctx, char *name, const struct stat *sb, int rlevel
         {
             Log(LOG_LEVEL_ERR, "Failed to chdir into '%s'. (chdir: '%s')", basedir, GetErrorStr());
             return false;
-        }
+       }
         if (!attr->haveselect || SelectLeaf(ctx, name, sb, &(attr->select)))
         {
             /* Renames are handled separately. */

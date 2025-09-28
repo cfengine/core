@@ -587,7 +587,7 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
         result = PromiseResultUpdate(result, ScheduleLinkOperation(ctx, path, a.link.source, &a, pp));
     }
 
-    if (a.haveedit || a.content)
+    if (a.haveedit || a.content || a.edit_template_string)
     {
         if (exists || link)
         {

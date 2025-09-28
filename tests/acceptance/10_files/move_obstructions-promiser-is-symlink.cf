@@ -50,6 +50,9 @@ bundle agent init
                               "$(G.testdir)/copy_from",
                               "$(G.testdir)/content",
                               "$(G.testdir)/edit_template_string_inline_mustache",
+                              "$(G.testdir)/edit_template_cfengine",
+                              "$(G.testdir)/edit_template_mustache",
+                              "$(G.testdir)/edit_line",
       };
 
       "orig_ln_target_filename"
@@ -106,6 +109,18 @@ bundle agent test
         copy_from => local_dcp("$(G.testdir)/copy_from.source"),
         if => fileexists( "$(this.promiser)" );
 
+      "$(G.testdir)/edit_template_cfengine"
+        move_obstructions => "true",
+        template_method => "cfengine",
+        edit_template => "$(G.testdir)/copy_from.source",
+        if => fileexists( "$(this.promiser)" );
+
+      "$(G.testdir)/edit_template_mustache"
+        move_obstructions => "true",
+        template_method => "mustache",
+        edit_template => "$(G.testdir)/copy_from.source",
+        if => fileexists( "$(this.promiser)" );
+
       # Test move_obstructions with content attribute
       "$(G.testdir)/content"
         move_obstructions => "true",
@@ -118,6 +133,13 @@ bundle agent test
         template_method => "inline_mustache",
         edit_template_string => "$(check.expected_content)",
         if => fileexists( "$(this.promiser)" );
+
+      # Test move_obstructions with edit_line
+      "$(G.testdir)/edit_line"
+        move_obstructions => "true",
+        edit_line => insert_lines("$(check.expected_content)"),
+        if => fileexists( "$(this.promiser)" );
+
 }
 
 ##############################################################################
@@ -137,6 +159,7 @@ bundle agent check
         int => int( eval( "$(num_test_files)*2", math, infix) );
 
   classes:
+      "DEBUG" expression => "any";
       "all_test_files_exist"
         expression => filesexist( @(init.test_files) );
 

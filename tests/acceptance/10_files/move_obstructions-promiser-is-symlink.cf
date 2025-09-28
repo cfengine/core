@@ -49,6 +49,7 @@ bundle agent init
       "test_files" slist => {
                               "$(G.testdir)/copy_from",
                               "$(G.testdir)/content",
+                              "$(G.testdir)/edit_template_string_inline_mustache",
       };
 
       "orig_ln_target_filename"
@@ -109,6 +110,13 @@ bundle agent test
       "$(G.testdir)/content"
         move_obstructions => "true",
         content => "$(check.expected_content)",
+        if => fileexists( "$(this.promiser)" );
+
+      # Test move_obstructions with template_method inline_mustache
+      "$(G.testdir)/edit_template_string_inline_mustache"
+        move_obstructions => "true",
+        template_method => "inline_mustache",
+        edit_template_string => "$(check.expected_content)",
         if => fileexists( "$(this.promiser)" );
 }
 

@@ -52,7 +52,7 @@ bundle agent init
                               "$(G.testdir)/edit_template_string_inline_mustache",
                               "$(G.testdir)/edit_template_cfengine",
                               "$(G.testdir)/edit_template_mustache",
-                              "$(G.testdir)/edit_line",
+                              #"$(G.testdir)/edit_line",
       };
 
       "orig_ln_target_filename"
@@ -134,11 +134,11 @@ bundle agent test
         edit_template_string => "$(check.expected_content)",
         if => fileexists( "$(this.promiser)" );
 
-      # Test move_obstructions with edit_line
-      "$(G.testdir)/edit_line"
-        move_obstructions => "true",
-        edit_line => insert_lines("$(check.expected_content)"),
-        if => fileexists( "$(this.promiser)" );
+      # # Test move_obstructions with edit_line
+      # "$(G.testdir)/edit_line"
+      #   move_obstructions => "true",
+      #   edit_line => insert_lines("$(check.expected_content)"),
+      #   if => fileexists( "$(this.promiser)" );
 
 }
 

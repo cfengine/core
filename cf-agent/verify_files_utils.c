@@ -2790,7 +2790,7 @@ bool HandleFileObstruction(EvalContext *ctx, const char *path, const struct stat
     {
         if (move_obstructions)
         {
-            if (MakingChanges(ctx, pp, attr, result, "move obstruction '%s'", path))
+            if (MakingChanges(ctx, pp, attr, result, "Moving obstructing file '%s'", path))
             {
                 char backup[CF_BUFSIZE];
                 int ret = snprintf(backup, sizeof(backup), "%s.cf-moved", path);

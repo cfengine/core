@@ -22,6 +22,7 @@
   included file COSL.txt.
 */
 
+#include <stddef.h>
 #include <sys/types.h>
 #include <verify_files_utils.h>
 
@@ -2792,7 +2793,14 @@ bool HandleFileObstruction(EvalContext *ctx, const char *path, const struct stat
             if (MakingChanges(ctx, pp, attr, result, "move obstruction '%s'", path))
             {
                 char backup[CF_BUFSIZE];
-                snprintf(backup, sizeof(backup), "%s.cf-moved", path);
+                int ret = snprintf(backup, sizeof(backup), "%s.cf-moved", path);
+                if (ret < 0 || (size_t) ret >= sizeof(backup))
+                {
+                    RecordFailure(ctx, pp, attr, "Could not move obstruction '%s': Path too long",
+                                  path);
+                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+                    return false;
+                }
 
                 if (rename(path, backup) == -1)
                 {

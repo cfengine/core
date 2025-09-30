@@ -2850,7 +2850,7 @@ bool DepthSearch(EvalContext *ctx, char *name, const struct stat *sb, int rlevel
         {
             Log(LOG_LEVEL_ERR, "Failed to chdir into '%s'. (chdir: '%s')", basedir, GetErrorStr());
             return false;
-       }
+        }
         if (!attr->haveselect || SelectLeaf(ctx, name, sb, &(attr->select)))
         {
             /* Renames are handled separately. */

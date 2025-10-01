@@ -1,0 +1,31 @@
+#######################################################
+#
+# Test 'getgroupinfo' function
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent test
+{
+  meta:
+      "test_soft_fail" string => "windows",
+        meta => { "ENT-10217" };
+  vars:
+      # this is pretty much all we can test across platforms
+      "info_root" string => nth(getgroupinfo("root"), "name");
+      "info_0" string => nth(getgroupinfo(0), "gid");
+}
+
+bundle agent check
+{
+  methods:
+      "check"  usebundle => dcs_check_state(test,
+                                            "$(this.promise_filename).expected.json",
+                                            "$(this.promise_filename)");
+}

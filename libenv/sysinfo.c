@@ -3944,7 +3944,19 @@ static void SysPolicyReleaseId(EvalContext *ctx, Policy *policy)
     free(release_id);
 }
 
+static void SysPolicyVersion(EvalContext *ctx)
+{
+    const char *version = EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_VERSION);
+    if (version != NULL)
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "policy_version", version, CF_DATA_TYPE_STRING,
+                                "inventory,source=agent,attribute_name=CFEngine policy version,derived-from=default:control_common.version");
+    }
+}
+
+
 void DetectEnvironmentFromPolicy(EvalContext *ctx, Policy *policy)
 {
     SysPolicyReleaseId(ctx, policy);
+    SysPolicyVersion(ctx);
 }

@@ -215,12 +215,14 @@ bool WriteAmPolicyHubFile(bool am_policy_hub)
     {
         if (!GetAmPolicyHub())
         {
-            if (creat(filename, 0600) == -1)
+            int fd = creat(filename, 0600);
+            if (fd == -1)
             {
                 Log(LOG_LEVEL_ERR, "Error writing marker file '%s'", filename);
                 free(filename);
                 return false;
             }
+            close(fd);
         }
     }
     else

@@ -1074,8 +1074,8 @@ static FnCallResult FnCallFindLocalUsers(EvalContext *ctx, ARG_UNUSED const Poli
             }
             else if (StringEqual(attribute, "gid"))
             {
-                char gid_string[PRINTSIZE(pw->pw_uid)];
-                int ret = snprintf(gid_string, sizeof(gid_string), "%u", pw->pw_uid);
+                char gid_string[PRINTSIZE(pw->pw_gid)];
+                int ret = snprintf(gid_string, sizeof(gid_string), "%u", pw->pw_gid);
 
                 if (ret < 0)
                 {
@@ -1151,6 +1151,161 @@ static FnCallResult FnCallFindLocalUsers(ARG_UNUSED EvalContext *ctx, ARG_UNUSED
 #endif
 
 /*********************************************************************/
+
+#if defined(HAVE_GETPWENT) && !defined(__ANDROID__)
+
+static bool GroupContainsMember(const char *member, const struct group *gr)
+{
+    // if the group doesn't have any members
+    assert(gr != NULL);
+    if (gr->gr_mem[0] == NULL)
+    {
+        return StringMatchFull(member, "");
+    }
+    bool contains = false;
+    for (int i = 0; gr->gr_mem[i] != NULL; i++)
+    {
+        if (StringMatchFull(member, gr->gr_mem[i]))
+        {
+            contains = true;
+        }
+    }
+    return contains;
+}
+
+static bool GroupMatchesFilter(const struct group *gr, JsonElement *filter)
+{
+    assert(gr != NULL);
+
+    bool group_matches_filter = true;
+    JsonIterator iter = JsonIteratorInit(filter);
+    JsonElement *element = JsonIteratorNextValue(&iter);
+
+    while (element != NULL)
+    {
+        if (JsonGetElementType(element) != JSON_ELEMENT_TYPE_PRIMITIVE)
+        {
+            Log(LOG_LEVEL_ERR, "Bad argument: Filter cannot include nested data");
+            return false;
+        }
+        const char *field = JsonPrimitiveGetAsString(element);
+        const Rlist *tuple = RlistFromSplitString(field, '=');
+        assert(tuple != NULL);
+        const char *attribute = TrimWhitespace(RlistScalarValue(tuple));
+
+        if (tuple->next == NULL)
+        {
+            Log(LOG_LEVEL_ERR, "Invalid filter field '%s': Expected attributes and values to be separated with '='",
+                field);
+            return false;
+        }
+        const char *value = TrimWhitespace(RlistScalarValue(tuple->next));
+
+        if (StringEqual(attribute, "name"))
+        {
+            if (!StringMatchFull(value, gr->gr_name))
+            {
+                group_matches_filter = false;
+            }
+        }
+        else if (StringEqual(attribute, "gid"))
+        {
+            char gid_string[PRINTSIZE(gr->gr_gid)];
+            int ret = snprintf(gid_string, sizeof(gid_string), "%u", gr->gr_gid);
+
+            if (ret < 0)
+            {
+                Log(LOG_LEVEL_ERR, "Couldn't convert the gid of '%s'",
+                    gr->gr_name);
+                return false;
+            }
+            assert((size_t) ret < sizeof(gid_string));
+
+            if (!StringMatchFull(value, gid_string))
+            {
+                group_matches_filter = false;
+            }
+        }
+        else if (StringEqual(attribute, "members"))
+        {
+            Rlist *members = RlistFromSplitString(value, ',');
+
+            // we match all groups whose list of members contains the filter's members
+            while (members != NULL)
+            {
+                group_matches_filter &= GroupContainsMember(members->val.item, gr);
+                members = members->next;
+            }
+        }
+        else
+        {
+            Log(LOG_LEVEL_ERR, "Invalid attribute '%s': not supported",
+                attribute);
+            return false;
+        }
+        element = JsonIteratorNextValue(&iter);
+    }
+    return group_matches_filter;
+}
+
+static FnCallResult FnCallFindLocalGroups(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
+{
+    assert(fp != NULL);
+    bool allocated = false;
+    JsonElement *filter = VarNameOrInlineToJson(ctx, fp, finalargs, false, &allocated);
+
+    // we failed to produce a valid JsonElement, so give up
+    if (filter == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Function '%s' couldn't parse argument '%s'",
+            fp->name, RlistScalarValueSafe(finalargs));
+        return FnFailure();
+    }
+    else if (JsonGetElementType(filter) != JSON_ELEMENT_TYPE_CONTAINER)
+    {
+        Log(LOG_LEVEL_ERR, "Bad argument '%s' in function '%s': Expected data container or slist",
+            RlistScalarValueSafe(finalargs), fp->name);
+        JsonDestroyMaybe(filter, allocated);
+        return FnFailure();
+    }
+
+    JsonElement *parent = JsonObjectCreate(10);
+    setgrent();
+    const struct group *gr;
+    while ((gr = getgrent()) != NULL)
+    {
+        if (GroupMatchesFilter(gr, filter))
+        {
+            JsonElement *child = JsonObjectCreate(2);
+            JsonObjectAppendInteger(child, "gid", gr->gr_gid);
+
+            JsonElement *member_array = JsonArrayCreate(10);
+            for (int i = 0; gr->gr_mem[i] != NULL; i++)
+            {
+                JsonArrayAppendString(member_array, gr->gr_mem[i]);
+            }
+            JsonObjectAppendArray(child, "members", member_array);
+            JsonObjectAppendObject(parent, gr->gr_name, child);
+        }
+    }
+    endgrent();
+    JsonDestroyMaybe(filter, allocated);
+
+    return FnReturnContainerNoCopy(parent);
+}
+
+#else
+
+static FnCallResult FnCallFindLocalGroups(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, ARG_UNUSED const Rlist *finalargs)
+{
+    Log(LOG_LEVEL_ERR, "findlocalgroups is not implemented on this platform");
+    return FnFailure();
+}
+
+#endif
+
+/*********************************************************************/
+
 
 static FnCallResult FnCallEscape(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
@@ -11658,6 +11813,8 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("findlocalusers", CF_DATA_TYPE_CONTAINER, FIND_LOCAL_USERS_ARGS, &FnCallFindLocalUsers, "Find matching local users",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("findlocalgroups", CF_DATA_TYPE_CONTAINER, FIND_LOCAL_USERS_ARGS, &FnCallFindLocalGroups, "Find matching local groups",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
 
     // Functions section following new naming convention
     FnCallTypeNew("string_mustache", CF_DATA_TYPE_STRING, STRING_MUSTACHE_ARGS, &FnCallStringMustache, "Expand a Mustache template from arg1 into a string using the optional data container in arg2 or datastate()",

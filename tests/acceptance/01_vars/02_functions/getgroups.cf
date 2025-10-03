@@ -1,0 +1,58 @@
+#######################################################
+#
+# Test getgroups(), list content
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence => { check };
+  version => "1.0";
+}
+
+bundle agent check
+{
+  meta:
+    "description" -> { "ENT-12722" }
+      string => "Test whether the entries of getroups() are like the ones inside /etc/group";
+    "test_skip_unsupported"
+      string => "windows";
+  vars:
+    "group_entries"
+      slist => splitstring(readfile("/etc/group"), "\n", 10);
+    "actual_groups_unfiltered"
+      slist => maplist(
+        nth(splitstring("$(this)", ":", 2), 0), "@(group_entries)"
+      );
+  # slice out the 3 first entries: root, bin, daemon
+    "actual_groups"
+      slist => sublist("@(actual_groups_unfiltered)", "tail", 7);
+  # get the first 7 groups, without root, bin and deamon
+    "retrieved_groups_arg1"
+      slist => sublist(getgroups("root,daemon,bin", ""), "head", 7);
+    "retrieved_groups_arg2"
+      slist => sublist(getgroups("", "0,1,2"), "head", 7);
+    "retrieved_groups_arg1_arg2"
+      slist => sublist(getgroups("root,daemon", "1,2"), "head", 7);
+    "actual_groups_content"
+      string => join(" ", "@(actual_groups)");
+    "retrieved_groups_content_arg1"
+      string => join(" ", "@(retrieved_groups_arg1)");
+    "retrieved_groups_content_arg2"
+      string => join(" ", "@(retrieved_groups_arg2)");
+    "retrieved_groups_content_arg1_arg2"
+      string => join(" ", "@(retrieved_groups_arg1_arg2)");
+  classes:
+    "ok"
+      expression => and(
+        strcmp("$(actual_groups_content)", "$(retrieved_groups_content_arg1)"),
+        strcmp("$(actual_groups_content)", "$(retrieved_groups_content_arg2)"),
+        strcmp("$(actual_groups_content)", "$(retrieved_groups_content_arg1_arg2)")
+      );
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

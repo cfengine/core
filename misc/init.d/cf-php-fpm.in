@@ -1,0 +1,35 @@
+#! /bin/sh
+# copied from /etc/init.d/procps written by Elrond <Elrong@Wunder-Nett.org>
+# kFreeBSD do not accept scripts as interpreters, using #!/bin/sh and sourcing.
+if [ true != "$INIT_D_SCRIPT_SOURCED" ] ; then
+    set "$0" "$@"; INIT_D_SCRIPT_SOURCED=true . /lib/init/init-d-script
+fi
+### BEGIN INIT INFO
+# Provides:          cf-php-fpm
+# Required-Start:
+# Required-Stop:
+# Should-Start:
+# X-Start-Before:
+# Default-Start:     S
+# Default-Stop:
+# Short-Description: Start CFEngine Mission Portal php-fpm service
+# Description: CFEngine Enterprise PHP FastCGI Process Manager
+### END INIT INFO
+
+# shellcheck disable=SC2034
+DESC=cf-php-fpm
+PREFIX=${CFTEST_PREFIX:-@workdir@}
+DAEMON=$PREFIX/httpd/php/sbin/php-fpm
+PIDFILE=$PREFIX/httpd/php-fpm.pid
+
+do_start_cmd() {
+        STATUS=0
+        "$DAEMON" --pid "$PIDFILE" --force-stderr || STATUS="$?"
+        return $STATUS
+}
+
+do_stop_cmd() {
+        if [ -f "$PIDFILE" ]; then
+                kill -9 "-$(cat "$PIDFILE")"
+        fi
+}

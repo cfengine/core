@@ -3812,7 +3812,7 @@ static void SysOSNameHuman(EvalContext *ctx)
     else if (EvalContextClassGet(ctx, NULL, "termux") != NULL)
     {
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, lval,
-                                      "Termux Linux Environment (Android)", CF_DATA_TYPE_STRING,
+                                      "Termux", CF_DATA_TYPE_STRING,
                                       "source=agent,derived-from=termux");
     }
     else if (EvalContextClassGet(ctx, NULL, "gentoo") != NULL)

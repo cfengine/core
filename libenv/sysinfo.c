@@ -3809,6 +3809,12 @@ static void SysOSNameHuman(EvalContext *ctx)
                                       "Alpine", CF_DATA_TYPE_STRING,
                                       "source=agent,derived-from=alpine");
     }
+    else if (EvalContextClassGet(ctx, NULL, "termux") != NULL)
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, lval,
+                                      "Termux", CF_DATA_TYPE_STRING,
+                                      "source=agent,derived-from=termux");
+    }
     else if (EvalContextClassGet(ctx, NULL, "gentoo") != NULL)
     {
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, lval,

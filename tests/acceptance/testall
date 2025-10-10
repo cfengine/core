@@ -285,9 +285,9 @@ workdir() {
 }
 
 # Example:    fgrepvar 'word'  VARNAME
-# Silent fgrep for variables: search for "word" in $VARNAME
-fgrepvar() {
-    eval echo \$$2  |  fgrep "$1"  >  /dev/null
+# Silent grep -F for variables: search for "word" in $VARNAME
+fgrepvar(){
+    eval echo \$$2  |  grep -F "$1"  >  /dev/null
 }
 
 # Same but instead of word search for a regex

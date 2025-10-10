@@ -157,10 +157,11 @@ sudo apk add alpine-sdk lmdb-dev openssl-dev bison flex-dev acl-dev pcre2-dev au
 
 Note that in order for process promises to work you must install the procps package for a "proper" ps command instead of busybox.
 
-* Termux (2020-04-24)
+* Termux (2025-10-10)
 
-pkg install build-essential git autoconf automake bison flex liblmdb openssl pcre2 libacl libyaml
-LDFLAGS='-landroid-glob' ./autogen.sh --without-pam
+pkg install build-essential git autoconf automake bison flex liblmdb openssl pcre2 libacl libyaml binutils librsync
+# maybe binutils-is-llvm - Use llvm as binutils instead of binutils to get ld
+LDFLAGS='-landroid-glob' ./autogen.sh --without-pam --prefix=$PREFIX --with-workdir=$PREFIX/var/lib/cfengine --without-systemd-service --without-selinux-policy
 make && make install
 
 * OSX (2021-10-20)

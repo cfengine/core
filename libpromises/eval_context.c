@@ -127,6 +127,14 @@ static bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *na
 static const char *EvalContextCurrentNamespace(const EvalContext *ctx);
 static ClassRef IDRefQualify(const EvalContext *ctx, const char *id);
 
+static EventFrame *EventFrameCreate(char *type, const char *name, const char *source, SourceOffset offset);
+static void EventFrameDestroy(EventFrame *event);
+static void EventFrameUpdate(EvalContext *ctx, EventFrame *last_event);
+static EventFrame *BundleToEventFrame(const Bundle *bp);
+static EventFrame *PromiseToEventFrame(const Promise *pp);
+static EventFrame *FunctionToEventFrame(const FnCall *fp);
+static EventFrame *PolicyToEventFrame();
+
 /**
  * Every agent has only one EvalContext from process start to finish.
  */
@@ -192,6 +200,12 @@ struct EvalContext_
     RemoteVarPromisesMap *remote_var_promises;
 
     bool dump_reports;
+
+    /* These are needed for policy profiling */
+    bool profiling;
+    EventFrame *root;
+    HashMap *event_map;
+    Seq *events;
 };
 
 void EvalContextSetConfig(EvalContext *ctx, const GenericAgentConfig *config)
@@ -329,6 +343,22 @@ static StackFrame *LastStackFrameByType(const EvalContext *ctx, StackFrameType t
         }
     }
 
+    return NULL;
+}
+
+static StackFrame *LastStackFrameByNonNullEvent(const EvalContext *ctx)
+{
+    assert(ctx != NULL);
+
+    const size_t length = SeqLength(ctx->stack);
+    for (size_t i = 0; i < length; i++)
+    {
+        StackFrame *frame = LastStackFrame(ctx, i);
+        if (frame->event != NULL)
+        {
+            return frame;
+        }
+    }
     return NULL;
 }
 
@@ -1093,55 +1123,62 @@ EvalContext *EvalContextNew(void)
 
     ctx->dump_reports = false;
 
+    ctx->root = PolicyToEventFrame();
+    ctx->event_map = HashMapNew((MapHashFn) StringHash, (MapKeyEqualFn) StringEqual, NULL, NULL, 10);
+    ctx->events = SeqNew(20, EventFrameDestroy);
+
     return ctx;
 }
 
 void EvalContextDestroy(EvalContext *ctx)
 {
-    if (ctx)
+    assert(ctx != NULL);
+
+    free(ctx->launch_directory);
+    free(ctx->entry_point);
+
+    // Freeing logging context doesn't belong here...
     {
-        free(ctx->launch_directory);
-        free(ctx->entry_point);
-
-        // Freeing logging context doesn't belong here...
-        {
-            LoggingPrivContext *pctx = LoggingPrivGetContext();
-            free(pctx);
-            LoggingPrivSetContext(NULL);
-        }
-        LoggingFreeCurrentThreadContext();
-
-        EvalContextDeleteIpAddresses(ctx);
-
-        DeleteItemList(ctx->heap_abort);
-        DeleteItemList(ctx->heap_abort_current_bundle);
-
-        RlistDestroy(ctx->args);
-
-        SeqDestroy(ctx->stack);
-
-        ClassTableDestroy(ctx->global_classes);
-        VariableTableDestroy(ctx->global_variables);
-        VariableTableDestroy(ctx->match_variables);
-
-        StringSetDestroy(ctx->dependency_handles);
-        StringSetDestroy(ctx->promise_lock_cache);
-
-        FuncCacheMapDestroy(ctx->function_cache);
-
-        FreePackagePromiseContext(ctx->package_promise_context);
-
-        StringSetDestroy(ctx->all_classes);
-        StringSetDestroy(ctx->negated_classes);
-        StringSetDestroy(ctx->bundle_names);
-        if (ctx->remote_var_promises != NULL)
-        {
-            RemoteVarPromisesMapDestroy(ctx->remote_var_promises);
-            ctx->remote_var_promises = NULL;
-        }
-
-        free(ctx);
+        LoggingPrivContext *pctx = LoggingPrivGetContext();
+        free(pctx);
+        LoggingPrivSetContext(NULL);
     }
+    LoggingFreeCurrentThreadContext();
+
+    EvalContextDeleteIpAddresses(ctx);
+
+    DeleteItemList(ctx->heap_abort);
+    DeleteItemList(ctx->heap_abort_current_bundle);
+
+    RlistDestroy(ctx->args);
+
+    SeqDestroy(ctx->stack);
+
+    ClassTableDestroy(ctx->global_classes);
+    VariableTableDestroy(ctx->global_variables);
+    VariableTableDestroy(ctx->match_variables);
+
+    StringSetDestroy(ctx->dependency_handles);
+    StringSetDestroy(ctx->promise_lock_cache);
+
+    FuncCacheMapDestroy(ctx->function_cache);
+
+    FreePackagePromiseContext(ctx->package_promise_context);
+
+    StringSetDestroy(ctx->all_classes);
+    StringSetDestroy(ctx->negated_classes);
+    StringSetDestroy(ctx->bundle_names);
+    if (ctx->remote_var_promises != NULL)
+    {
+        RemoteVarPromisesMapDestroy(ctx->remote_var_promises);
+        ctx->remote_var_promises = NULL;
+    }
+
+    HashMapDestroy(ctx->event_map);
+    EventFrameDestroy(ctx->root);
+    SeqDestroy(ctx->events);
+
+    free(ctx);
 }
 
 static bool EvalContextHeapContainsSoft(const EvalContext *ctx, const char *ns, const char *name)
@@ -1324,17 +1361,20 @@ static StackFrame *StackFrameNew(StackFrameType type, bool inherit_previous)
     frame->inherits_previous = inherit_previous;
     frame->path = NULL;
     frame->override_immutable = false;
+    frame->start = EvalContextEventStart();
+    frame->event = NULL;
 
     return frame;
 }
 
-static StackFrame *StackFrameNewBundle(const Bundle *owner, bool inherit_previous)
+static StackFrame *StackFrameNewBundle(const Bundle *owner, bool inherit_previous, bool profiling)
 {
     StackFrame *frame = StackFrameNew(STACK_FRAME_TYPE_BUNDLE, inherit_previous);
 
     frame->data.bundle.owner = owner;
     frame->data.bundle.classes = ClassTableNew();
     frame->data.bundle.vars = VariableTableNew();
+    frame->event = (profiling) ? BundleToEventFrame(owner) : NULL;
 
     return frame;
 }
@@ -1358,11 +1398,12 @@ static StackFrame *StackFrameNewBundleSection(const BundleSection *owner)
     return frame;
 }
 
-static StackFrame *StackFrameNewPromise(const Promise *owner)
+static StackFrame *StackFrameNewPromise(const Promise *owner, bool profiling)
 {
     StackFrame *frame = StackFrameNew(STACK_FRAME_TYPE_PROMISE, true);
 
     frame->data.promise.owner = owner;
+    frame->event = (profiling) ? PromiseToEventFrame(owner) : NULL;
 
     return frame;
 }
@@ -1411,9 +1452,10 @@ static void EvalContextStackPushFrame(EvalContext *ctx, StackFrame *frame)
 
 void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, const Rlist *args, bool inherits_previous)
 {
+    assert(ctx != NULL);
     assert(!LastStackFrame(ctx, 0) || LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_PROMISE_ITERATION);
 
-    EvalContextStackPushFrame(ctx, StackFrameNewBundle(owner, inherits_previous));
+    EvalContextStackPushFrame(ctx, StackFrameNewBundle(owner, inherits_previous, ctx->profiling));
 
     if (RlistLen(args) > 0)
     {
@@ -1487,12 +1529,13 @@ void EvalContextStackPushBundleSectionFrame(EvalContext *ctx, const BundleSectio
 
 void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner)
 {
+    assert(ctx != NULL);
     assert(LastStackFrame(ctx, 0));
     assert(LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_BUNDLE_SECTION);
 
     EvalContextVariableClearMatch(ctx);
 
-    StackFrame *frame = StackFrameNewPromise(owner);
+    StackFrame *frame = StackFrameNewPromise(owner, ctx->profiling);
 
     EvalContextStackPushFrame(ctx, frame);
 
@@ -1579,10 +1622,14 @@ Promise *EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const Promi
 
 void EvalContextStackPopFrame(EvalContext *ctx)
 {
+    assert(ctx != NULL);
     assert(SeqLength(ctx->stack) > 0);
 
     StackFrame *last_frame = LastStackFrame(ctx, 0);
     StackFrameType last_frame_type = last_frame->type;
+    int64_t start = last_frame->start;
+    int64_t end = EvalContextEventStart();
+    EventFrame *last_event = last_frame->event;
 
     switch (last_frame_type)
     {
@@ -1623,6 +1670,14 @@ void EvalContextStackPopFrame(EvalContext *ctx)
 
     LogDebug(LOG_MOD_EVALCTX, "POPPED FRAME (type %s)",
              STACK_FRAME_TYPE_STR[last_frame_type]);
+
+    // if the last StackFrame has no event, we skip
+    if (last_event != NULL)
+    {
+        assert(end >= start); /* sanity check */
+        last_event->elapsed = end - start;
+        EventFrameUpdate(ctx, last_event);
+    }
 }
 
 bool EvalContextClassRemove(EvalContext *ctx, const char *ns, const char *name)
@@ -3846,4 +3901,181 @@ bool EvalContextOverrideImmutableGet(EvalContext *ctx)
     StackFrame *stack_frame = LastStackFrame(ctx, 0);
     assert(stack_frame != NULL);
     return stack_frame->override_immutable;
+}
+
+// ##############################################################
+
+static EventFrame *EventFrameCreate(char *type, const char *name, const char *source, SourceOffset offset)
+{
+    EventFrame *event = (EventFrame *) xmalloc(sizeof(EventFrame));
+
+    event->type = type;
+    event->name = SafeStringDuplicate(name);
+    char *source_path = GetAbsolutePath(source);
+    event->filename = (source_path == NULL) ? SafeStringDuplicate("") : source_path;
+    event->elapsed = 0;
+    event->children = SeqNew(10, NULL);
+    event->offset = offset;
+    event->parent = NULL;
+    event->id = StringFormat("%s_%s_%s_%ld_%ld", type, name, source, offset.start, offset.line);
+    
+    return event;
+}
+
+static void EventFrameDestroy(EventFrame *event)
+{
+    assert(event != NULL);
+    SeqDestroy(event->children);
+    free(event->filename);
+    free(event->id);
+    free(event->name);
+    free(event);
+}
+
+static int EventFrameCompare(const void *event1, const void *event2, ARG_UNUSED void *user_data)
+{
+    assert(event1 != NULL);
+    assert(event2 != NULL);
+    const EventFrame *e1 = event1;
+    const EventFrame *e2 = event2;
+    return strcmp(e1->id, e2->id);
+}
+
+static void EventFrameUpdate(EvalContext *ctx, EventFrame *last_event)
+{
+    assert(ctx != NULL);
+    assert(last_event != NULL);
+    SeqAppend(ctx->events, last_event); // keep track of EventFrames for cleanup
+
+    // if the event is already in the map and has shorter elapsed time, then we ignore it
+    // else, we replace the old with the latest one
+    MapKeyValue *mkv = HashMapGet(ctx->event_map, last_event->id);
+    if (mkv != NULL)
+    {
+        EventFrame *previous = mkv->value;
+
+        if (previous->elapsed > last_event->elapsed)
+        {
+            return;
+        }
+        ssize_t i = SeqIndexOf(previous->parent->children, previous, EventFrameCompare);
+        SeqRemove(previous->parent->children, i);
+    }
+
+    // Insert the event in the map and attach the event to its parent
+    HashMapInsert(ctx->event_map, last_event->id, last_event);
+
+    StackFrame *parent_event_frame = LastStackFrameByNonNullEvent(ctx);
+    if (parent_event_frame != NULL)
+    {
+        SeqAppend(parent_event_frame->event->children, last_event);
+        last_event->parent = parent_event_frame->event;
+    }
+    else
+    {
+        SeqAppend(ctx->root->children, last_event);
+        last_event->parent = ctx->root;
+    }
+}
+
+static EventFrame *BundleToEventFrame(const Bundle *bp)
+{
+    assert(bp != NULL);
+    return EventFrameCreate("bundle", bp->name, bp->source_path, bp->offset);
+}
+
+static EventFrame *PromiseToEventFrame(const Promise *pp)
+{
+    assert(pp != NULL);
+    return EventFrameCreate("promise", PromiseGetPromiseType(pp), PromiseGetBundle(pp)->source_path, pp->offset);
+}
+
+static EventFrame *FunctionToEventFrame(const FnCall *fp)
+{
+    assert(fp != NULL);
+    return EventFrameCreate("function", fp->name, PromiseGetBundle(fp->caller)->source_path, fp->caller->offset);
+}
+
+static EventFrame *PolicyToEventFrame()
+{
+    return EventFrameCreate("policy", "", "", (SourceOffset) {0});
+}
+
+void EvalContextAddFunctionEvent(EvalContext *ctx, const FnCall *fp, int64_t start)
+{
+    assert(ctx != NULL);
+    if (ctx->profiling)
+    {
+        EventFrame *event = FunctionToEventFrame(fp);
+        int64_t end = EvalContextEventStart();
+        assert(end >= start); /* sanity check */
+
+        event->elapsed = end - start;
+        EventFrameUpdate(ctx, event);
+    }
+}
+
+static JsonElement *EventFrameTreeToJson(const EventFrame *node)
+{
+    assert(node != NULL);
+    JsonElement *new_element = JsonObjectCreate(6);
+
+    JsonObjectAppendString(new_element, "name", node->name);
+    JsonObjectAppendString(new_element, "type", node->type);
+    JsonObjectAppendString(new_element, "filename", node->filename);
+    JsonObjectAppendInteger64(new_element, "elapsed", node->elapsed);
+    
+    JsonElement *offset = JsonObjectCreate(3);
+    JsonObjectAppendInteger(offset, "lineno", node->offset.line);
+    JsonObjectAppendInteger(offset, "start", node->offset.start);
+    JsonObjectAppendInteger(offset, "end", node->offset.end);
+    JsonObjectAppendObject(new_element, "offset", offset);
+
+    JsonElement *children = JsonArrayCreate(5);
+
+    const size_t length = SeqLength(node->children);
+    for (size_t i = 0; i < length; i++)
+    {
+        EventFrame *next = SeqAt(node->children, i);
+        JsonElement *child = EventFrameTreeToJson(next);
+        if (child != NULL)
+        {
+            JsonArrayAppendObject(children, child);
+        }
+    }
+    JsonObjectAppendArray(new_element, "children", children);
+    return new_element;
+}
+
+int64_t EvalContextEventStart()
+{
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return ts.tv_sec * 1000000000LL + ts.tv_nsec;
+}
+
+void EvalContextWriteEventTree(EvalContext *ctx, int64_t start)
+{
+    assert(ctx != NULL);
+    int64_t end = EvalContextEventStart();
+    ctx->root->elapsed = end - start;
+
+    if (!ctx->profiling)
+    {
+        return;
+    }
+
+    JsonElement *tree = EventFrameTreeToJson(ctx->root);
+
+    Writer *w = FileWriter(stdout);
+    JsonWrite(w, tree, 0);
+    FileWriterDetach(w);
+
+    JsonDestroy(tree);
+}
+
+void EvalContextSetProfiling(EvalContext *ctx, bool profiling)
+{
+    assert(ctx != NULL);
+    ctx->profiling = profiling;
 }

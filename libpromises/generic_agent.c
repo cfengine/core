@@ -2621,6 +2621,8 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type, bool tty_
         break;
     }
 
+    config->profiling = false;
+
     return config;
 }
 
@@ -2717,6 +2719,8 @@ void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config)
     {
         EvalContextClassPutHard(ctx, "opt_dry_run", "cfe_internal,source=environment");
     }
+
+    EvalContextSetProfiling(ctx, config->profiling);
 }
 
 bool CheckAndGenerateFailsafe(const char *inputdir, const char *input_file)

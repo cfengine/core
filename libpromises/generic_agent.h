@@ -105,6 +105,8 @@ typedef struct
         } daemon;                                     /* execd, serverd etc */
     } agent_specific;
 
+    bool profiling;
+
 } GenericAgentConfig;
 
 ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, GenericAgentSetDefaultDigest, HashMethod *, digest, int *, digest_len);

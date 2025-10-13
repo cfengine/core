@@ -266,12 +266,16 @@ Rlist *GetACLs(const char *path, bool access)
     acl_t acl = acl_get_file(path, access ? ACL_TYPE_ACCESS : ACL_TYPE_DEFAULT);
     if (acl == NULL)
     {
+        Log(LOG_LEVEL_ERR, "Failed to get %s ACLs for '%s': %s",
+            access ? "access" : "default", path, GetErrorStr());
         return NULL;
     }
 
     char *text = acl_to_any_text(acl, NULL, ',', 0);
     if (text == NULL)
     {
+        Log(LOG_LEVEL_ERR, "Failed to translate %s ACLs for '%s' into string: %s",
+            access ? "access" : "default", path, GetErrorStr());
         acl_free(acl);
         return NULL;
     }

@@ -1,0 +1,97 @@
+{
+    "type" : "Policy",
+    "name" : "a38cec43f6896fad9b39595edc122795d0abbb2f",
+    "file" : "",
+    "lineno" : 0,
+    "colno" : 0,
+    "children" : [
+        {
+            "type" : "Bundle",
+            "name" : "default:main",
+            "file" : "/home/vagrant/hello.cf",
+            "enlapsed" : 4.0,
+            "lineno" : 1,
+            "colno" : 13,
+            "children" : [
+                {
+                    "type" : "Promise",
+                    "name" : "classes",
+                    "file" : "/home/vagrant/hello.cf",
+                    "enlapsed" : 0.0,
+                    "lineno" : 4,
+                    "colno" : 59,
+                    "children" : [
+
+                    ]
+                },
+                {
+                    "type" : "Promise",
+                    "name" : "methods",
+                    "file" : "/home/vagrant/hello.cf",
+                    "enlapsed" : 1.0,
+                    "lineno" : 7,
+                    "colno" : 195,
+                    "children" : [
+                        {
+                            "type" : "Bundle",
+                            "name" : "default:one",
+                            "file" : "/home/vagrant/hello.cf",
+                            "enlapsed" : 1.0,
+                            "lineno" : 12,
+                            "colno" : 315,
+                            "children" : [
+                                {
+                                    "type" : "Promise",
+                                    "name" : "commands",
+                                    "file" : "/home/vagrant/hello.cf",
+                                    "enlapsed" : 1.0,
+                                    "lineno" : 15,
+                                    "colno" : 368
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type" : "Promise",
+                    "name" : "methods",
+                    "file" : "/home/vagrant/hello.cf",
+                    "enlapsed" : 1.0,
+                    "lineno" : 8,
+                    "colno" : 216,
+                    "children" : [
+                        {
+                            "type" : "Bundle",
+                            "name" : "default:two",
+                            "file" : "/home/vagrant/hello.cf",
+                            "enlapsed" : 3.0,
+                            "lineno" : 18,
+                            "colno" : 417,
+                            "children" : [
+                                {
+                                    "type" : "Promise",
+                                    "name" : "commands",
+                                    "file" : "/home/vagrant/hello.cf",
+                                    "enlapsed" : 3.0,
+                                    "lineno" : 21,
+                                    "colno" : 470
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type" : "Promise",
+                    "name" : "methods",
+                    "file" : "/home/vagrant/hello.cf",
+                    "enlapsed" : 0.0,
+                    "lineno" : 10,
+                    "colno" : 267,
+                    "children" : [
+
+                    ]
+                }
+            ]
+        }
+    ]
+}

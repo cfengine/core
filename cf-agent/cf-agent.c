@@ -325,7 +325,13 @@ int main(int argc, char *argv[])
 
     BeginAudit();
 
+    EvalContextEventStackClear(ctx);
+
+    EvalContextPushEvent(ctx, EventFrameNew("policy", "policy", "null", "null", (SourceOffset) {0}));
     KeepPromises(ctx, policy, config);
+    EvalContextPopEvent(ctx);
+
+    EvalContextPrintRoot(ctx);
 
     if (EvalAborted(ctx))
     {

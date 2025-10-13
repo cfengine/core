@@ -191,6 +191,9 @@ struct EvalContext_
     /* ONLY INITIALIZED WHEN NON-EMPTY, OTHERWISE NULL */
     RemoteVarPromisesMap *remote_var_promises;
 
+    EventFrame *root;
+    Seq *event_stack;
+
     bool dump_reports;
 };
 
@@ -1093,6 +1096,8 @@ EvalContext *EvalContextNew(void)
 
     ctx->dump_reports = false;
 
+    ctx->event_stack = SeqNew(10, EventFrameDestroy);
+
     return ctx;
 }
 
@@ -1438,6 +1443,7 @@ void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, cons
         }
         VariableTableIteratorDestroy(iter);
     }
+    EvalContextPushEvent(ctx, EventFrameNew("bundle", owner->name, owner->ns, GetAbsolutePath(owner->source_path), owner->offset));
 }
 
 void EvalContextStackPushBodyFrame(EvalContext *ctx, const Promise *caller, const Body *body, const Rlist *args)
@@ -1475,6 +1481,7 @@ void EvalContextStackPushBodyFrame(EvalContext *ctx, const Promise *caller, cons
     {
         ScopeMapBodyArgs(ctx, body, args);
     }
+    EvalContextPushEvent(ctx, NULL);
 }
 
 void EvalContextStackPushBundleSectionFrame(EvalContext *ctx, const BundleSection *owner)
@@ -1483,6 +1490,8 @@ void EvalContextStackPushBundleSectionFrame(EvalContext *ctx, const BundleSectio
 
     StackFrame *frame = StackFrameNewBundleSection(owner);
     EvalContextStackPushFrame(ctx, frame);
+
+    EvalContextPushEvent(ctx, NULL);
 }
 
 void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner)
@@ -1552,6 +1561,8 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner)
             RvalDestroy(final);
         }
     }
+
+    EvalContextPushEvent(ctx, EventFrameNew("promise", PromiseGetPromiseType(owner), PromiseGetNamespace(owner), "null", owner->offset));
 }
 
 Promise *EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const PromiseIterator *iter_ctx)
@@ -1573,6 +1584,8 @@ Promise *EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const Promi
 
     EvalContextStackPushFrame(ctx, StackFrameNewPromiseIteration(pexp, iter_ctx));
     LoggingPrivSetLevels(CalculateLogLevel(pexp), CalculateReportLevel(pexp));
+
+    EvalContextPushEvent(ctx, NULL);
 
     return pexp;
 }
@@ -1623,6 +1636,8 @@ void EvalContextStackPopFrame(EvalContext *ctx)
 
     LogDebug(LOG_MOD_EVALCTX, "POPPED FRAME (type %s)",
              STACK_FRAME_TYPE_STR[last_frame_type]);
+
+    EvalContextPopEvent(ctx);
 }
 
 bool EvalContextClassRemove(EvalContext *ctx, const char *ns, const char *name)
@@ -3846,4 +3861,122 @@ bool EvalContextOverrideImmutableGet(EvalContext *ctx)
     StackFrame *stack_frame = LastStackFrame(ctx, 0);
     assert(stack_frame != NULL);
     return stack_frame->override_immutable;
+}
+
+// ##############################################################
+
+static void EventStackPush(EvalContext *ctx, EventFrame *event)
+{
+    SeqAppend(ctx->event_stack, event);
+}
+
+static EventFrame *EventStackPop(EvalContext *ctx)
+{
+    size_t last = SeqLength(ctx->event_stack) - 1;
+    EventFrame *popped = SeqAt(ctx->event_stack, last);
+    SeqRemove(ctx->event_stack, last);
+
+    return popped;
+}
+
+static EventFrame *EventStackPeek(EvalContext *ctx)
+{
+    size_t last = SeqLength(ctx->event_stack) - 1;
+    EventFrame *peeked = SeqAt(ctx->event_stack, last);
+
+    return peeked;
+}
+
+// Event
+
+void EventFrameDestroy(EventFrame *event)
+{
+    // SeqDestroy(event->children);
+    // free(event);
+}
+
+EventFrame *EventFrameNew(const char *id, const char *name, const char *ns, const char *source_path, SourceOffset offset)
+{
+    EventFrame *event = (EventFrame *) xmalloc(sizeof(EventFrame));
+    event->id = id;
+    event->name = name;
+    event->ns = ns;
+    event->source_path = source_path;
+    event->offset = offset;
+    event->enlapsed = time(NULL);
+
+    event->children = SeqNew(10, EventFrameDestroy);
+
+    return event;
+}
+
+void EvalContextPushEvent(EvalContext *ctx, EventFrame *event)
+{
+    if (event == NULL)
+    {
+        event = EventFrameNew(NULL, NULL, NULL, NULL, (SourceOffset) {0});
+    }
+    EventStackPush(ctx, event);
+}
+
+void EvalContextPopEvent(EvalContext *ctx)
+{
+    if (SeqLength(ctx->event_stack) == 0)
+    return;
+
+    time_t end = time(NULL);
+    EventFrame *popped = EventStackPop(ctx);
+    popped->enlapsed = end - popped->enlapsed; // update time
+
+    if (popped->id == NULL) // junk node
+    {
+        return;
+    }
+    
+    if (SeqLength(ctx->event_stack) < 1)
+    {
+        ctx->root = popped;
+        return;
+    }
+
+    EventFrame *parent = EventStackPeek(ctx);
+    SeqAppend(parent->children, popped);
+}
+
+void EvalContextEventStackClear(EvalContext *ctx)
+{
+    // SeqClear(ctx->event_stack);
+    ctx->event_stack = SeqNew(10, NULL);
+}
+
+static void EventFrameTraverse(const EventFrame *node, int depth)
+{
+    if (node == NULL)
+        return;
+
+    // Print indentation
+    for (int i = 0; i < depth; i++)
+        printf("  ");
+
+    // Print node info
+    printf("• [%lds] %s:%s (ns=%s, src=%s)\n",
+           node->enlapsed,
+           node->id ? node->id : "(no-id)",
+           node->name ? node->name : "(no-name)",
+           node->ns ? node->ns : "(no-ns)",
+           node->source_path ? node->source_path : "(no-src)");
+
+    // Recurse through children
+    size_t len = SeqLength(node->children);
+    for (size_t i = 0; i < len; i++)
+    {
+        EventFrame *child = SeqAt(node->children, i);
+        EventFrameTraverse(child, depth + 1);
+    }
+}
+
+
+void EvalContextPrintRoot(EvalContext *ctx)
+{
+    EventFrameTraverse(ctx->root, 0);
 }

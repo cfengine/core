@@ -114,6 +114,17 @@ typedef enum
     EVAL_OPTION_FULL = 0xFFFFFFFF
 } EvalContextOption;
 
+typedef struct {
+    time_t enlapsed;
+    char *id; // bundle
+    char *name; // main
+    char *ns; // default
+    char *source_path; // profiler.cf
+    SourceOffset offset;
+
+    Seq *children;
+} EventFrame;
+
 EvalContext *EvalContextNew(void);
 void EvalContextDestroy(EvalContext *ctx);
 
@@ -433,5 +444,13 @@ JsonElement* JsonExpandElement(EvalContext *ctx, const JsonElement *source);
 void EvalContextSetDumpReports(EvalContext *ctx, bool dump_reports);
 bool EvalContextGetDumpReports(EvalContext *ctx);
 void EvalContextUpdateDumpReports(EvalContext *ctx);
+
+
+void EventFrameDestroy(EventFrame *event);
+EventFrame *EventFrameNew(const char *id, const char *name, const char *ns, const char *source_path, SourceOffset offset);
+void EvalContextPushEvent(EvalContext *ctx, EventFrame *event);
+void EvalContextPopEvent(EvalContext *ctx);
+void EvalContextEventStackClear(EvalContext *ctx);
+void EvalContextPrintRoot(EvalContext *ctx);
 
 #endif

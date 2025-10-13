@@ -419,7 +419,9 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, const Policy *policy, FnCall *fp, 
         WriterClose(fncall_writer);
     }
 
+    EvalContextPushEvent(ctx, EventFrameNew("function", fp->name, PromiseGetNamespace(fp->caller), "null", fp->caller->offset));
     FnCallResult result = CallFunction(ctx, policy, fp, expargs);
+    EvalContextPopEvent(ctx);
 
     if (result.status == FNCALL_FAILURE)
     {

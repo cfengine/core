@@ -158,7 +158,10 @@ fi
 if expr "$_sysctl_kernel_core_pattern" : ".*/systemd-coredump.*" > /dev/null 2>&1; then
   echo "Found systemd-coredump used in sysctl kernel.core_pattern \"$_sysctl_kernel_core_pattern\""
   echo "Using coredumpctl to analyze CFEngine core dumps"
-  coredumpctl info /var/cfengine/* 2>/dev/null >> "$_core_log" || true
+  find /var/cfengine -type f -executable | while IFS='' read -r line
+  do
+    coredumpctl info "$line" 2>/dev/null >> "$_core_log" || true
+  done
 elif command -v apport-unpack >/dev/null; then
   echo "Using apport-unpack to analyze CFEngine core dumps"
   # each crash report has a line with ExecutablePath: which tells us if it is a CFEngine core dump

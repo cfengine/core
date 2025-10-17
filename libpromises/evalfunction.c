@@ -23,6 +23,7 @@
 */
 
 #include <assert.h>
+#include <errno.h>
 #ifdef __sun
 #define _POSIX_PTHREAD_SEMANTICS /* Required on Solaris 11 (see ENT-13146) */
 #endif /* __sun */
@@ -681,24 +682,11 @@ static FnCallResult FnCallGetACLs(
     assert(StringEqual(type, "default") || StringEqual(type, "access"));
 
 #ifdef _WIN32
-    /* TODO: Policy function to read Windows ACLs (ENT-13019) */
     Rlist *acls = NULL;
-    errno = ENOTSUP;
+    Log(LOG_LEVEL_VERBOSE, "Policy function %s() is not supported on this platform", fp->name);
 #else
     Rlist *acls = GetACLs(path, StringEqual(type, "access"));
-#endif /* _WIN32 */
-    if (acls == NULL)
-    {
-        Log((errno != ENOTSUP) ? LOG_LEVEL_ERR : LOG_LEVEL_VERBOSE,
-            "Function %s failed to get ACLs for '%s': %s",
-            fp->name, path, GetErrorStr());
-
-        if (errno != ENOTSUP)
-        {
-            return FnFailure();
-        } /* else we'll just return an empty list instead */
-    }
-
+#endif
     return (FnCallResult) { FNCALL_SUCCESS, { acls, RVAL_TYPE_LIST } };
 }
 

@@ -135,10 +135,10 @@ LDFLAGS=-L/usr/pkg/lib CPPFLAGS=-I/usr/pkg/include ./autogen.sh --enable-debug -
 gmake -j8
 doas /usr/pkg/bin/gmake install
 
-* OpenBSD (7.4 2024-02-15)
+* OpenBSD (7.4 2025-10-17)
 
-pkg_add git automake-1.16.5 autoconf-2.71 bison pcre2 m4 libtool lmdb gmake
-MAKE=/usr/local/bin/gmake LDFLAGS=-L/usr/local/lib CPPFLAGS=-I/usr/local/include AUTOMAKE_VERSION=1.16 AUTOCONF_VERSION=2.71 ./autogen.sh --enable-debug
+doas pkg_add git automake-1.17 autoconf-2.72p0 bison pcre2 m4 libtool lmdb gmake
+MAKE=/usr/local/bin/gmake LDFLAGS=-L/usr/local/lib CPPFLAGS=-I/usr/local/include AUTOMAKE_VERSION=1.17 AUTOCONF_VERSION=2.72 ./autogen.sh --enable-debug
 gmake -j8
 doas gmake install
 

@@ -209,6 +209,7 @@ static const struct option OPTIONS[] =
     {"color", optional_argument, 0, 'C'},
     {"no-extensions", no_argument, 0, 'E'},
     {"timestamp", no_argument, 0, 'l'},
+    {"profile", no_argument, 0, 'p'},
     /* Only long option for the rest */
     {"ignore-preferred-augments", no_argument, 0, 0},
     {"log-modules", required_argument, 0, 0},
@@ -245,6 +246,7 @@ static const char *const HINTS[] =
     "Enable colorized output. Possible values: 'always', 'auto', 'never'. If option is used, the default value is 'auto'",
     "Disable extension loading (used while upgrading)",
     "Log timestamps on each line of log output",
+    "Output diagnostic of bundle execution (experimental)",
     "Ignore def_preferred.json file in favor of def.json",
     "Enable even more detailed debug logging for specific areas of the implementation. Use together with '-d'. Use --log-modules=help for a list of available modules",
     "Do not load augments (def.json)",
@@ -323,7 +325,9 @@ int main(int argc, char *argv[])
 
     BeginAudit();
 
+    EvalContextProfilingStart(ctx);
     KeepPromises(ctx, policy, config);
+    EvalContextProfilingEnd(ctx, policy);
 
     if (EvalAborted(ctx))
     {
@@ -523,7 +527,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     FreeFixedStringArray(argc_new, argv_tmp);
 
     int longopt_idx;
-    while ((c = getopt_long(argc_new, argv_new, "tdvnKIf:g:w:D:N:VxMB:b:hC::ElT::",
+    while ((c = getopt_long(argc_new, argv_new, "tdvnKIf:g:w:D:N:VxMB:b:hC::ElT::p",
                             OPTIONS, &longopt_idx))
            != -1)
     {
@@ -688,6 +692,9 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                 config->agent_specific.agent.bootstrap_trust_server = false;
             }
 
+            break;
+        case 'p':
+            config->profiling = true;
             break;
 
         /* long options only */

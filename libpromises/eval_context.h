@@ -40,6 +40,19 @@
 #include <ring_buffer.h>
 #include <generic_agent.h>
 
+typedef struct EventFrame_ EventFrame;
+
+struct EventFrame_ {
+    char *id;
+    char *type;
+    char *name;
+    char *filename;
+    SourceOffset offset;
+    int64_t elapsed;
+    Seq *children;
+    struct EventFrame_ *parent;
+};
+
 typedef enum
 {
     STACK_FRAME_TYPE_BUNDLE,
@@ -101,6 +114,8 @@ typedef struct
 
     char *path;
     bool override_immutable;
+    long start;
+    EventFrame *event;
 } StackFrame;
 
 typedef enum
@@ -433,5 +448,10 @@ JsonElement* JsonExpandElement(EvalContext *ctx, const JsonElement *source);
 void EvalContextSetDumpReports(EvalContext *ctx, bool dump_reports);
 bool EvalContextGetDumpReports(EvalContext *ctx);
 void EvalContextUpdateDumpReports(EvalContext *ctx);
+
+int64_t EvalContextEventStart();
+void EvalContextWriteEventTree(EvalContext *ctx, int64_t start);
+void EvalContextAddFunctionEvent(EvalContext *ctx, const FnCall *fp, int64_t start);
+void EvalContextSetProfiling(EvalContext *ctx, bool profiling);
 
 #endif

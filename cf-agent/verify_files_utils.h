@@ -35,6 +35,7 @@ extern StringSet *SINGLE_COPY_CACHE;
 void SetFileAutoDefineList(const Rlist *auto_define_list);
 
 void VerifyFileLeaf(EvalContext *ctx, char *path, const struct stat *sb, const Attributes *attr, const Promise *pp, PromiseResult *result);
+bool HandleFileObstruction(EvalContext *ctx, const char *path, const struct stat *sb, const Attributes *attr, const Promise *pp, PromiseResult *result);
 bool DepthSearch(EvalContext *ctx, char *name, const struct stat *sb, int rlevel, const Attributes *attr, const Promise *pp, dev_t rootdevice, PromiseResult *result);
 bool CfCreateFile(EvalContext *ctx, char *file, const Promise *pp, const Attributes *attr, PromiseResult *result_out);
 void SetSearchDevice(struct stat *sb, const Promise *pp);

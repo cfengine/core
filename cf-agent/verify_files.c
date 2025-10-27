@@ -587,6 +587,20 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
         result = PromiseResultUpdate(result, ScheduleLinkOperation(ctx, path, a.link.source, &a, pp));
     }
 
+    if (a.haveedit || a.content || a.edit_template_string)
+    {
+        if (exists || link)
+        {
+            if (!HandleFileObstruction(ctx, changes_path, &oslb, &a, pp, &result))
+            {
+                 goto exit;
+            }
+            // After moving, it no longer exists at the original path
+            exists = (lstat(changes_path, &oslb) != -1);
+            link = false;
+        }
+    }
+
 /* Phase 3a - direct content */
 
     if (a.content)

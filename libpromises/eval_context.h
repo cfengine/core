@@ -120,10 +120,16 @@ typedef enum
 
     EVAL_OPTION_EVAL_FUNCTIONS = 1 << 0,
     EVAL_OPTION_CACHE_SYSTEM_FUNCTIONS = 1 << 1,
-    EVAL_OPTION_CLASSIC_EVALUATION = 1 << 2,
 
     EVAL_OPTION_FULL = 0xFFFFFFFF
 } EvalContextOption;
+
+typedef enum
+{
+    EVAL_ORDER_UNDEFINED = 0,
+    EVAL_ORDER_CLASSIC,
+    EVAL_ORDER_TOP_DOWN
+} EvalContextEvalOrder;
 
 EvalContext *EvalContextNew(void);
 void EvalContextDestroy(EvalContext *ctx);
@@ -452,5 +458,9 @@ void EvalContextSetProfiling(EvalContext *ctx, bool profiling);
 
 void EvalContextProfilingStart(EvalContext *ctx);
 void EvalContextProfilingEnd(EvalContext *ctx, const Policy *policy);
+
+void EvalContextSetCommonEvalOrder(EvalContext *ctx, EvalContextEvalOrder eval_order);
+void EvalContextSetAgentEvalOrder(EvalContext *ctx, EvalContextEvalOrder eval_order);
+bool EvalContextIsClassicOrder(EvalContext *ctx);
 
 #endif

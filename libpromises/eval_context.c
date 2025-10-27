@@ -206,6 +206,9 @@ struct EvalContext_
         int64_t elapsed;
         Seq *events;
     } profiler;
+
+    EvalContextEvalOrder common_eval_order;
+    EvalContextEvalOrder agent_eval_order;
 };
 
 void EvalContextSetConfig(EvalContext *ctx, const GenericAgentConfig *config)
@@ -1109,6 +1112,10 @@ EvalContext *EvalContextNew(void)
 
     ctx->profiler.events = SeqNew(20, EventFrameDestroy);
     ctx->profiler.elapsed = 0;
+
+    // evaluation order
+    ctx->common_eval_order = EVAL_ORDER_UNDEFINED;
+    ctx->agent_eval_order = EVAL_ORDER_UNDEFINED;
 
     return ctx;
 }
@@ -4046,4 +4053,40 @@ void EvalContextProfilingEnd(EvalContext *ctx, const Policy *policy)
     WriterClose(writer);
 
     JsonDestroy(profiling);
+}
+
+// ##############################################################
+
+void EvalContextSetCommonEvalOrder(EvalContext *ctx, EvalContextEvalOrder eval_order)
+{
+    assert(ctx != NULL);
+    ctx->common_eval_order = eval_order;
+}
+
+void EvalContextSetAgentEvalOrder(EvalContext *ctx, EvalContextEvalOrder eval_order)
+{
+    assert(ctx != NULL);
+    ctx->agent_eval_order = eval_order;
+}
+
+bool EvalContextIsClassicOrder(EvalContext *ctx)
+{
+    assert(ctx != NULL);
+
+    if (ctx->config->agent_type != AGENT_TYPE_AGENT)
+    {
+        // Not cf-agent, so we ignore body agent control
+        return (ctx->common_eval_order != EVAL_ORDER_TOP_DOWN);
+    }
+
+    // cf-agent
+    if (ctx->agent_eval_order != EVAL_ORDER_UNDEFINED)
+    {
+        // evaluation_order from body agent control has priority, if defined
+        return (ctx->agent_eval_order == EVAL_ORDER_CLASSIC);
+    }
+
+    // The fallback is to use what is defined in body common control,
+    // or if not defined there either, default to true (normal order)
+    return (ctx->common_eval_order != EVAL_ORDER_TOP_DOWN);
 }

@@ -2,6 +2,7 @@ SUBDIRS = selinux
 
 # include unconditionally in the distribution tarball
 EXTRA_DIST= init.d/cfengine3.in \
+	init.d/cf-php-fpm.in \
 	systemd/cf-php-fpm.service.in \
 	systemd/cf-apache.service.in \
 	systemd/cf-execd.service.in \
@@ -16,7 +17,8 @@ EXTRA_DIST= init.d/cfengine3.in \
 
 if WITH_INIT_D_SCRIPT
 initddir = $(INIT_D_PATH)
-initd_SCRIPTS = init.d/cfengine3
+initd_SCRIPTS = init.d/cfengine3 \
+	init.d/cf-php-fpm
 endif
 
 if WITH_SYSTEMD_SERVICE

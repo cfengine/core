@@ -41,6 +41,9 @@ if [ -f /etc/os-release ]; then
       echo "Unsupported version of redhat for $0"
       exit 1
     fi
+  elif [ "$ID" = "ubuntu" ]; then
+    sudo apt update -y
+    sudo apt install -y libssl-dev libpam0g-dev liblmdb-dev byacc curl librsync-dev
   else
     echo "Unsupported distribution based on /etc/os-release."
   fi

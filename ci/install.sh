@@ -3,6 +3,7 @@
 set -ex
 thisdir=$(dirname $0)
 "$thisdir"/dependencies.sh
+"$thisdir"/configure.sh
 "$thisdir"/build.sh
 cd "$thisdir"/..
 GAINROOT=""

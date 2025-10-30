@@ -8,7 +8,13 @@ thisdir=$(dirname $0)
 cd "$thisdir"/..
 GAINROOT=""
 if [ ! -n "$TERMUX_VERSION" ]; then
-  GAINROOT="sudo"
+  if [ "$(id -u)" != "0" ]; then
+    if ! command -v sudo >/dev/null; then
+      echo "Sorry, run $0 as root or install and configure sudo."
+      exit 1
+    fi
+    GAINROOT="sudo"
+  fi
 fi
 
 $GAINROOT make install

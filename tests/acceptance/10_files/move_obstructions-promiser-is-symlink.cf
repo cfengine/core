@@ -1,0 +1,206 @@
+
+##############################################################################
+#
+# Test that move_obstructions works consistently for various types of files
+# promises targeting a specific file where the promiser is a symlink
+# - copy_from
+#
+##############################################################################
+
+body file control
+{
+  inputs => { "../default.cf.sub" };
+}
+
+##############################################################################
+bundle agent __main__
+{
+  methods:
+      "init";
+      "test";
+      "check";
+      "cleanup";
+}
+
+bundle agent cleanup
+{
+  vars:
+      "potential_files_to_delete"
+        slist => {
+                   # The files we tested
+                   "@(init.test_files)",
+                   "$(init.orig_ln_target_filename)",
+                   # .cfsaved files get created as copy_from replaces files
+                   maplist( "$(this).cfsaved", @(init.test_files) ),
+                   # The special case source file to copy from
+                   maplist( "$(this).source", @(init.test_files) ),
+        };
+
+  files:
+      "$(potential_files_to_delete)"
+        delete => tidy,
+        if => fileexists( "$(this.promiser)" );
+}
+
+bundle agent init
+{
+  vars:
+      # Create test files that will serve as obstructions
+      "test_files" slist => {
+                              "$(G.testdir)/copy_from",
+                              "$(G.testdir)/content",
+                              "$(G.testdir)/edit_template_string_inline_mustache",
+                              "$(G.testdir)/edit_template_cfengine",
+                              "$(G.testdir)/edit_template_mustache",
+                              #"$(G.testdir)/edit_line",
+      };
+
+      "orig_ln_target_filename"
+        string => "$(G.testdir)/orig_ln_target";
+
+      "orig_ln_target_content"
+        string => "This content originally lived in a symlink target";
+
+  files:
+      # Here we initialize a file which will be a symlinks target
+      "$(orig_ln_target_filename)"
+        create => "true",
+        content => "$(orig_ln_target_content)";
+
+      # Here we have a symlink that we will be targeting with a content files promise
+      "$(test_files)"
+        create => "true",
+        move_obstructions => "true",
+        link_from => ln_s( "$(G.testdir)/orig_ln_target" );
+
+  reports:
+      DEBUG::
+      "$(test_files) initalized"
+        if => and( fileexists( "$(test_files)" ),
+                   islink( $(test_files) ) );
+}
+
+body link_from ln_s(x)
+{
+        link_type => "symlink";
+        source => "$(x)";
+        when_no_source => "force";
+}
+##############################################################################
+
+bundle agent test
+{
+  meta:
+      "description"
+        string => concat(
+                          "Test move_obstructions with content, edit_template,",
+                          " and edit_template_string"
+        );
+
+  files:
+      # Test move_obstructions with copy_from
+      # This isn't in init because it's specific to copy_from needing to have a source file.
+      "$(G.testdir)/copy_from.source"
+        content => "$(check.expected_content)",
+        if => fileexists( "$(G.testdir)/copy_from" );
+
+      "$(G.testdir)/copy_from"
+        move_obstructions => "true",
+        copy_from => local_dcp("$(G.testdir)/copy_from.source"),
+        if => fileexists( "$(this.promiser)" );
+
+      "$(G.testdir)/edit_template_cfengine"
+        move_obstructions => "true",
+        template_method => "cfengine",
+        edit_template => "$(G.testdir)/copy_from.source",
+        if => fileexists( "$(this.promiser)" );
+
+      "$(G.testdir)/edit_template_mustache"
+        move_obstructions => "true",
+        template_method => "mustache",
+        edit_template => "$(G.testdir)/copy_from.source",
+        if => fileexists( "$(this.promiser)" );
+
+      # Test move_obstructions with content attribute
+      "$(G.testdir)/content"
+        move_obstructions => "true",
+        content => "$(check.expected_content)",
+        if => fileexists( "$(this.promiser)" );
+
+      # Test move_obstructions with template_method inline_mustache
+      "$(G.testdir)/edit_template_string_inline_mustache"
+        move_obstructions => "true",
+        template_method => "inline_mustache",
+        edit_template_string => "$(check.expected_content)",
+        if => fileexists( "$(this.promiser)" );
+
+      # # Test move_obstructions with edit_line
+      # "$(G.testdir)/edit_line"
+      #   move_obstructions => "true",
+      #   edit_line => insert_lines("$(check.expected_content)"),
+      #   if => fileexists( "$(this.promiser)" );
+
+}
+
+##############################################################################
+
+bundle agent check
+{
+  vars:
+      "expected_content" string => "This is content promised targeting a symlink.";
+      "num_test_files" int => length( @(init.test_files) );
+
+      # We check the promised:
+      # - for each test file
+      #   - content
+      #   - type
+
+      "num_expected_test_ok_classes"
+        int => int( eval( "$(num_test_files)*2", math, infix) );
+
+  classes:
+      "DEBUG" expression => "any";
+      "all_test_files_exist"
+        expression => filesexist( @(init.test_files) );
+
+    all_test_files_exist::
+      # Once we verified that all the test files exist we can check all the expectations
+
+      # These class strings will be canonified as classes, they are tagged for easy identification
+
+      "$(init.test_files) type as expected"
+        meta => { "test_ok_class" },
+        if => isplain( "$(init.test_files)" );
+
+      "$(init.test_files) content as expected"
+        meta => { "test_ok_class" },
+        if => strcmp( readfile("$(init.test_files)"),
+                      "$(expected_content)");
+
+      "overall_success"
+        expression => strcmp( length( classesmatching( ".*", "test_ok_class" ) ),
+                              "$(num_expected_test_ok_classes)" );
+
+  reports:
+    !all_test_files_exist::
+      "The test does not appear to have been initialized, the expected test files are missing $(with)"
+        with => concat( "(", join( ",", @(init.test_files) ), ")" );
+
+    DEBUG::
+
+      "Number of test files: $(num_test_files)";
+
+      "Number of expected test ok classes to pass: $(num_expected_test_ok_classes)";
+
+      "$(with) test_ok_classes:"
+        with => length( classesmatching( ".*", "test_ok_class" ) );
+
+      "$(with)"
+        with => join( "$(const.n)", classesmatching( ".*", "test_ok_class" ) );
+
+    overall_success::
+      "$(this.promise_filename) Pass";
+
+    !overall_success::
+      "$(this.promise_filename) FAIL";
+}

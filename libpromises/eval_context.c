@@ -206,6 +206,9 @@ struct EvalContext_
         int64_t elapsed;
         Seq *events;
     } profiler;
+
+    EvalContextEvalOrder common;
+    EvalContextEvalOrder agent;
 };
 
 void EvalContextSetConfig(EvalContext *ctx, const GenericAgentConfig *config)
@@ -1109,6 +1112,10 @@ EvalContext *EvalContextNew(void)
 
     ctx->profiler.events = SeqNew(20, EventFrameDestroy);
     ctx->profiler.elapsed = 0;
+
+    // evaluation order
+    ctx->common = EVAL_ORDER_UNDEFINED;
+    ctx->agent = EVAL_ORDER_UNDEFINED;
 
     return ctx;
 }
@@ -4046,4 +4053,33 @@ void EvalContextProfilingEnd(EvalContext *ctx, const Policy *policy)
     WriterClose(writer);
 
     JsonDestroy(profiling);
+}
+
+// ##############################################################
+
+void EvalContextSetCommonEvalOrder(EvalContext *ctx, EvalContextEvalOrder eval_order)
+{
+    assert(ctx != NULL);
+    ctx->common = eval_order;
+}
+
+void EvalContextSetAgentEvalOrder(EvalContext *ctx, EvalContextEvalOrder eval_order)
+{
+    assert(ctx != NULL);
+    ctx->agent = eval_order;
+}
+
+bool EvalContextIsNormalOrder(EvalContext *ctx)
+{
+    assert(ctx != NULL);
+
+    bool agent_is_agent = (ctx->config->agent_type == AGENT_TYPE_AGENT);
+    bool common_is_normal = (ctx->common != EVAL_ORDER_TOP_DOWN);
+    bool agent_is_normal = (ctx->agent != EVAL_ORDER_TOP_DOWN);
+
+    if (ctx->agent != EVAL_ORDER_UNDEFINED)
+    {
+        return (agent_is_agent) ? agent_is_normal : common_is_normal;
+    }
+    return common_is_normal;
 }

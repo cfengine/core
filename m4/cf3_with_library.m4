@@ -84,7 +84,8 @@ AC_DEFUN([CF3_WITH_LIBRARY],
   if test "x$with_[$1]" != xyes &&
      test "x$with_[$1]" != xcheck &&
      test "x$with_[$1]" != x/usr &&
-     test "x$with_[$1]" != x/
+     test "x$with_[$1]" != x/ &&
+     test -n "$with_[$1]"
   then
     ULN[]_LDFLAGS="$ULN[]_LDFLAGS -R$with_[$1]/lib"
   fi

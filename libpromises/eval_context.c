@@ -3972,7 +3972,12 @@ void EvalContextAddFunctionEvent(EvalContext *ctx, const FnCall *fp, int64_t sta
 int64_t EvalContextEventStart()
 {
     struct timespec ts;
+#ifdef CLOCK_MONOTONIC
     clock_gettime(CLOCK_MONOTONIC, &ts);
+#else
+// As in libcfnet/net.c some OS-es don't have monotonic clock, realtime clock is best we can do.
+    clock_gettime(CLOCK_REALTIME, &ts);
+#endif
     return ts.tv_sec * 1000000000LL + ts.tv_nsec;
 }
 

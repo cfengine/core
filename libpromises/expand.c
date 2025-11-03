@@ -1030,8 +1030,14 @@ static void ResolveControlBody(EvalContext *ctx, GenericAgentConfig *config,
             Log(LOG_LEVEL_VERBOSE, "SET evaluation %s",
                 RvalScalarValue(evaluated_rval));
 
-            bool is_classic = (StringEqual(RvalScalarValue(evaluated_rval), "classic"));
-            EvalContextSetEvalOption(ctx, EVAL_OPTION_CLASSIC_EVALUATION, is_classic);
+            if (StringEqual(RvalScalarValue(evaluated_rval), "top_down"))
+            {
+                EvalContextSetCommonEvalOrder(ctx, EVAL_ORDER_TOP_DOWN);
+            }
+            else
+            {
+                EvalContextSetCommonEvalOrder(ctx, EVAL_ORDER_CLASSIC);
+            }
         }
 
         RvalDestroy(evaluated_rval);

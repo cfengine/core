@@ -1002,12 +1002,6 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
                 continue;
             }
 
-            if (CommonControlFromString(cp->lval) != COMMON_CONTROL_MAX)
-            {
-                /* Already handled in generic_agent */
-                continue;
-            }
-
             VarRef *ref = VarRefParseFromScope(cp->lval, "control_agent");
             DataType value_type;
             const void *value = EvalContextVariableGet(ctx, ref, &value_type);
@@ -1353,6 +1347,22 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
                     config->agent_specific.agent.report_class_log? "true" : "false");
                 continue;
             }
+
+            if (StringEqual(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_EVALUATION_ORDER].lval))
+            {
+                assert(value_type == CF_DATA_TYPE_STRING);
+                const char *evaluation_order = (char *) value;
+                Log(LOG_LEVEL_VERBOSE, "SET evaluation %s", evaluation_order);
+
+                if (StringEqual(evaluation_order, "top_down"))
+                {
+                    EvalContextSetAgentEvalOrder(ctx, EVAL_ORDER_TOP_DOWN);
+                }
+                else
+                {
+                    EvalContextSetAgentEvalOrder(ctx, EVAL_ORDER_CLASSIC);
+                }
+            }
         }
     }
 
@@ -1569,7 +1579,7 @@ static void AllClassesReport(const EvalContext *ctx)
 PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
 // NB - this function can be called recursively through "methods"
 {
-    if (EvalContextGetEvalOption(ctx, EVAL_OPTION_CLASSIC_EVALUATION))
+    if (EvalContextIsClassicOrder(ctx))
     {
         return ScheduleAgentOperationsNormalOrder(ctx, bp);
     }

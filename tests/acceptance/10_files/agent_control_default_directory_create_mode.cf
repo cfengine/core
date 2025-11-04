@@ -1,0 +1,71 @@
+##############################################################################
+#
+# Test overriding default directory create mode (CFE-4590, ENT-13239).
+#
+##############################################################################
+
+
+body common control
+{
+  inputs => { "../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+body agent control {
+  # Override the default directory create mode to 0755 (it defaults to 0700 if
+  # not specified)
+  default_directory_create_mode => "a+rx"; # Can also use octets 0755
+}
+
+##############################################################################
+
+bundle agent init
+{
+  methods:
+    "clean";
+}
+
+##############################################################################
+
+bundle agent test
+{
+  meta:
+    "description" -> { "CFE-4590", "ENT-13239" }
+      string => "Test overriding default directory create mode";
+
+  files:
+    "$(G.testdir)/foo/config.txt"
+      create => "true",
+      perms => m(0655);
+}
+
+##############################################################################
+
+bundle agent check
+{
+  vars:
+    "expected"
+      string => "[0-9]*755",
+      comment => "We only care about the last three octets (i.e., 755)";
+    "actual"
+      string => filestat("$(G.testdir)/foo/", "modeoct");
+
+  methods:
+    "Pass/FAIL"
+      usebundle => dcs_check_regcmp("$(expected)", "$(actual)",
+                                    "$(this.promise_filename)", "false");
+
+  reports:
+    "Expected $(expected), actual $(actual)";
+}
+
+##############################################################################
+
+bundle agent clean
+{
+  files:
+    "$(G.testdir)/foo/."
+      delete => tidy,
+      if => fileexist("$(this.promiser)");
+}

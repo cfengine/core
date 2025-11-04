@@ -1,0 +1,4 @@
+/var/cfengine/bin/.* -- gen_context(system_u:object_r:cfengine_exec_t,s0)
+/var/cfengine/notification_scripts(/.*)? -- gen_context(system_u:object_r:cfengine_exec_t,s0)
+/var/cfengine/httpd/bin/.* -- gen_context(system_u:object_r:cfengine_exec_t,s0)
+/var/cfengine/httpd/php/bin/.* -- gen_context(system_u:object_r:cfengine_exec_t,s0)

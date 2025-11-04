@@ -1,0 +1,8 @@
+module cfengine-enterprise-unconfined 1.0;
+require {
+  all_kernel_class_perms # required for unconfined_domain()
+}
+type cfengine_t;
+type cfengine_exec_t;
+unconfined_domain(cfengine_t)
+domain_entry_file(cfengine_t, cfengine_exec_t)

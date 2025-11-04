@@ -1,3 +1,25 @@
+3.24.3:
+	- Added sysvinit cf-php-fpm service script for Mission Portal
+	  (ENT-13234)
+	- Atomic permissions during file copy.
+	  Temporary file is now set to promised permissions before replacing it
+	  with original during remote copy from (ENT-13163)
+	- Fixed bug where remote file copy always preserves source perms
+	  Remote file copy with the 'copy_from' attribute now only preserves
+	  source file permissions if the 'preserve' attribute in 'body copy_from'
+	  is true. Otherwise it will use the permissions of the destination file
+	  if it already exists and default permissions if it does not (ENT-11988)
+	- Fixed cf-support usage of coredumpctl matching (ENT-13272)
+	- Fixed crash in readyaml() policy function when parsing an empty file (CFE-4595)
+	- Fixed move_obstructions support when using content, and edit_template
+	  (CFE-4591)
+	- Fixed handling of promise locking with edit line
+	  Fixed bug where rendered files can result in erroneously empty files
+	  as a result of promise locking (ENT-9980)
+	- Removed useless output from cfengine3 init script (ENT-13234)
+	- Use current process ID to investigate proc filesystem to workaround in-container non-root owned symlinks
+	  (CFE-3429)
+
 3.24.2:
 	- Fixed issue where rhel >8 packages would not have correct openssl
 	  dependency version (ENT-12587)

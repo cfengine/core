@@ -1,56 +1,54 @@
 3.26.0:
-	- Fixed issue where rhel >8 packages would not have correct openssl
-	  dependency version (ENT-12587)
+	- Improved error message in abortbundleclasses, for example when there are
+	  no matches due to using a space in the regular expression (CFE-4075)
+	- Updated syntax description to include new protocol_version values
+	  (CFE-4483)
+	- Switched to using current process ID to investigate proc filesystem
+	  to workaround in-container non-root owned symlinks (CFE-3429)
+	- Modified getindices() to return positional index from a list
+	  (CFE-2930)
+	- Changed 'cf-net connect' to return exit code 1 in case of error (CFE-4414)
 	- Added http_port and getattr selinux permissions as needed for selinux
 	  policy on rhel-8 and rhel-9 (ENT-12954)
-	- Fixed 'cf-net connect' to return exit code 1 in case of error (CFE-4414)
 	- Added feature class for libpam (CFE-3371)
 	- Added hardclasses for log levels notice, warning and error (CFE-4126)
-	- Added policy variable sys.cpusockets (CFE-30)
-	- Added a new policy function to get the list of metatags of a bundle,
-	  in the same manner as getclassmetatags and getvariablemetatags.
+	- Added sys.cf_edition variable that keeps track of whether cfengine is
+	  community or enterprise. (ENT-10078)
+	- Added sys.cpusockets variable (CFE-30)
+	- Added sys.moduledir variable (CFE-1484)
+	- Added sys.keydir variable (CFE-2822)
+	- Added getbundlemetatags() policy function to get the list of metatags
+	  of a bundle, in the same manner as getclassmetatags and getvariablemetatags
 	  (CFE-4019)
-	- Added a new policy function useringroup that returns whether a user
+	- Added is_type() policy function to check type of a variable (CFE-3641)
+	- Added useringroup() policy function that returns whether a user
 	  is a member of a group. (ENT-12721)
+	- Added findlocalusers() policy function that returns all the local users
+	  matching certain attributes (CFE-2318)
+	- Added hostswithgroup() policy function to get hosts from a group,
+	  selecting a specific field. This function is enterprise only
+	  (ENT-11325)
+	- Added isconnectable() policy function to check if a port is
+	  connectable within a time limit in seconds. (ENT-10666)
 	- Added an optional parameter strict for validjson and validdata policy
 	  functions. This makes the functions evaluate to false on json
 	  primitives. (CFE-4163)
-	- Added findlocalusers policy function that returns all the local users
-	  matching certain attributes (CFE-2318)
-	- Added is_type policy function to check type of a variable (CFE-3641)
-	- Added keydir sys variable (CFE-2822)
 	- Added missing "BEGIN meta promises" verbose logging (CFE-2829)
-	- Added moduledir sys variable (CFE-1484)
-	- Added new hostswithgroup function to get hosts from a group,
-	  selecting a specific field. This function is enterprise only
-	  (ENT-11325)
-	- Added new policy function isconnectable to check if a port is
-	  connectable within a time limit in seconds. (ENT-10666)
 	- Added option to print rsync performance stats in cf-net
 	- Added php-fpm systemd service files to enable http2 in Mission Portal
 	  (ENT-11440)
-	- Changed error message in checkclassexpression when no matches
-	  (CFE-4075)
-	- Fixed build on macOS (CFE-4385)
-	- Fixed file closed twice in CopyRegularFileDiskPerms (CFE-4489)
-	- Fixed bug in parsing process_select for Windows (ENT-12751)
-	- Fixed bug which removed performance benefits of rsync in file
+	- Fixed an issue where rhel >8 packages would not have correct openssl
+	  dependency version (ENT-12587)
+	- Fixed a bug causing a file to be closed twice in CopyRegularFileDiskPerms() (CFE-4489)
+	- Fixed a bug in parsing process_select for Windows (ENT-12751)
+	- Fixed a bug which removed performance benefits of rsync in file
 	  transfers (basis file was truncated on remote copy)
-	- Fixed bug where remotely copying large files consisting of random
+	- Fixed a bug where remotely copying large files consisting of random
 	  bytes would cause internal server error. (CFE-4507)
-	- Fixed incorrect exit code handling in cf-runagent (ENT-12712)
+	- Fixed incorrect handling of exit code in cf-runagent (ENT-12712)
 	- Fixed junk printed in case of internal server error (CFE-4507)
-	- Introduced a new variable default:sys.cf_edition that keeps track
-	  whether cfengine is community or enterprise. (ENT-10078)
-	- Updated syntax description to include new protocol_version values
-	  (CFE-4483)
-	- Use current process ID to investigate proc filesystem to workaround
-	  in-container non-root owned symlinks (CFE-3429)
-	- Modified getindices() to return positional index from a list
-	  (CFE-2930)
 
 3.25.0:
-	- Added acknowledged field to lastseen DB (ENT-11838)
 	- Various SELinux fixes:
 	  - Added create capability on cfengine_var_lib_t:dir to cf-hub
 	  - Added filesystem and files unconfined access to cf-monitord in cfengine-enterprise SELinux policy
@@ -61,9 +59,6 @@
 	  - Adjusted SELinux policy to allow components which run cf-promises to getattr everywhere and read symlinks
 	  - Granted more access to certificates directory for CFEngine components in SELinux policy
 	  (ENT-12466)
-	- Added logging CFEngine component related SELinux denials in cf-support
-	  (ENT-12137)
-	- Added option to choose protocol version in cf-net (ENT-12519)
 	- Adjusted cf-support for exotic UNIX platforms (ENT-9786)
 	- Adjusted cf-support to not fail if core dumps are available and gdb is missing
 	  (ENT-9786)
@@ -72,8 +67,7 @@
 	  'default:sys.hardware_mac[<INTERFACE>]' will no longer be defined for
 	  ignored interfaces.
 	  (ENT-11840)
-	- Atomic copy_from in files promise
-	  Changes to 'files' promise in 'copy_from' attribute:
+	- Made copy_from more atomic in files promises:
 	  - The new file (i.e., '<FILENAME>.cfnew') is now created with correct
 	    permission during remote copy. Previously it would be created with
 	    default permissions.
@@ -83,36 +77,38 @@
 	    actual copy of the original file with the same permissions is created
 	    instead.
 	  As a result, there will no longer be a brief moment where the original
-	  file is inaccessible.
-	  (ENT-11988)
-	- File Stream API now unlinks before open with 'O_EXCL'
-	  The File Stream API now unlinks the destination file (i.e.,
+	  file is inaccessible. (ENT-11988)
+	- The file stream API now unlinks the destination file (i.e.,
 	  '<FILENAME>.cfnew') before opening it with the 'O_EXCL' flag. Previously
 	  the agent would fail if the destination file already exists.
 	  Fortunately, the File Stream API unlinks this file afterwards, both on
 	  success and error, causing the agent to recover. Both the 'cf-net get
 	  <FILENAME>' command and the 'copy_from' attribute were affected.
-	- File Stream API now writes sparse files (ENT-12414)
-	- Fixed bug causing LMDB database corruption
-	- Fixed possible segfault when backing up LMDB databases
+	- The file stream API now writes sparse files (ENT-12414)
 	- Re-enabled DB migration support for LMDB
 	  - Now creates backup before LMDB migration
 	  - Handle LMDB migration failures
 	  - In case of LMDB migration failures, the respective database file is
 	    moved to the side, and a fresh database is created.
-	- New network protocol version v4 - filestream (ENT-12414)
-	- Now 'cf-net get' no longer unlinks original file (ENT-12511)
-	- SELinux: Allow cf-serverd to set its own limits (ENT-12446)
+	- Changed 'cf-net get' to no longer unlink original file (ENT-12511)
+	- SELinux: Allowed cf-serverd to set its own limits (ENT-12446)
 	- commands promises with exit codes not matching any
-	  _returncodes attributes from classes body now log and
+	  _returncodes attributes from classes body now log an
 	  error message not just an info message. (CFE-4429, ENT-12103)
+	- Added acknowledged field to lastseen DB (ENT-11838)
+	- Added logging CFEngine component related SELinux denials in cf-support
+	  (ENT-12137)
+	- Added option to choose protocol version in cf-net (ENT-12519)
+	- Added a new network protocol version v4 - filestream (ENT-12414)
+	- Fixed bug causing LMDB database corruption
+	- Fixed possible segfault when backing up LMDB databases
 
 3.24.0:
 	- Added a sanity check to policy parser that checks for and warns
 	  in case of promise declarations with no actions. The motivation
 	  for this check is to aid policy writers in detecting semantic
 	  errors early. (ENT-11137)
-	- Added sys.os_name_human for Alpine, postmarketOS, OpenBSD and NetBSD
+	- Added sys.os_name_human variable for Alpine, postmarketOS, OpenBSD and NetBSD
 	- Added warning log message when OS is not recognized (CFE-4342)
 	- Adjusted locale settings in masterfiles stage common script to
 	  handle more cases (ENT-11885)
@@ -2245,11 +2241,11 @@
 	  that agent email can be easily disabled by augmenting def.json
 
 	Changed:
-	- Relocate def.cf to controls/VER/
-	- Relocate update_def to controls/VER
-	- Relocate all controls to controls/VER
+	- Relocated def.cf to controls/VER/
+	- Relocated update_def to controls/VER
+	- Relocated all controls to controls/VER
 	- Only load cf_hub and reports.cf on CFEngine Enterprise installs
-	- Relocate acls related to report collection from bundle server
+	- Relocated acls related to report collection from bundle server
 	  access_rules to controls/VER/reports.cf into bundle server
 	  report_access_rules
 	- Re-organize cfe_internal splitting core from enterprise specific
@@ -2260,17 +2256,17 @@
 	  to be modified
 	- To improve predictibility autorun bundles are activated in
 	  lexicographical order
-	- Relocate services/file_change.cf to cfe_internal/enterprise. This
+	- Relocated services/file_change.cf to cfe_internal/enterprise. This
 	  policy is most useful for a good OOTB experience with CFEngine
 	  Enterprise Mission Portal.
-	- Relocate service_catalogue from promsies.cf to services/main.cf. It is
+	- Relocated service_catalogue from promsies.cf to services/main.cf. It is
 	  intended to be a user entry. This name change correlates with the main
 	  bundle being activated by default if there is no bundlesequence
 	  specified.
 	- Reduce benchmarks sample history to 1 day.
 	- Update policy no longer generates a keypair if one is not found.
 	  (Redmine: #7167)
-	- Relocate cfe_internal_postgresql_maintenance bundle to lib/VER/
+	- Relocated cfe_internal_postgresql_maintenance bundle to lib/VER/
 	- Set postgresql_monitoring_maintenance only for versions 3.6.0 and
 	  3.6.1
 	- Move hub specific bundles from lib/VER/cfe_internal.cf into

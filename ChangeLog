@@ -1,9 +1,12 @@
 3.24.3:
-	- Added sysvinit cf-php-fpm service script for Mission Portal
-	  (ENT-13234)
 	- Atomic permissions during file copy.
 	  Temporary file is now set to promised permissions before replacing it
 	  with original during remote copy from (ENT-13163)
+	- Removed useless output from cfengine3 init script (ENT-13234)
+	- Use current process ID to investigate proc filesystem to workaround in-container non-root owned symlinks
+	  (CFE-3429)
+	- Added sysvinit cf-php-fpm service script for Mission Portal
+	  (ENT-13234)
 	- Fixed bug where remote file copy always preserves source perms
 	  Remote file copy with the 'copy_from' attribute now only preserves
 	  source file permissions if the 'preserve' attribute in 'body copy_from'
@@ -16,28 +19,25 @@
 	- Fixed handling of promise locking with edit line
 	  Fixed bug where rendered files can result in erroneously empty files
 	  as a result of promise locking (ENT-9980)
-	- Removed useless output from cfengine3 init script (ENT-13234)
-	- Use current process ID to investigate proc filesystem to workaround in-container non-root owned symlinks
-	  (CFE-3429)
 
 3.24.2:
-	- Fixed issue where rhel >8 packages would not have correct openssl
-	  dependency version (ENT-12587)
-	- Added http_port and getattr selinux permissions as needed for selinux
-	  policy on rhel-8 and rhel-9 (ENT-12954)
-	- Fixed bug in parsing process_select for Windows (ENT-12751)
-	- Added "acknowledged" field to lastseen DB (ENT-11838)
 	- Adjusted cf-support for exotic UNIX platforms (ENT-9786)
 	- Adjusted cf-support to not fail if core dumps are available and gdb is
 	  missing (ENT-9786)
-	- Fixed bug causing LMDB database corruption
-	- Fixed incorrect exit code handling in cf-runagent (ENT-12712)
-	- Fixed possible segmentation fault when backing up LMDB databases
 	- In case of LMDB migration failures, the respective database file is now
 	  moved to the side, and a fresh database is created.
 	- cf-agent now creates backup before LMDB migration
 	- Re-enabled DB migration support for LMDB
 	- SELinux: Allow cf-serverd to set its own limits (ENT-12446)
+	- Added http_port and getattr selinux permissions as needed for selinux
+	  policy on rhel-8 and rhel-9 (ENT-12954)
+	- Added "acknowledged" field to lastseen DB (ENT-11838)
+	- Fixed issue where rhel >8 packages would not have correct openssl
+	  dependency version (ENT-12587)
+	- Fixed bug in parsing process_select for Windows (ENT-12751)
+	- Fixed bug causing LMDB database corruption
+	- Fixed incorrect exit code handling in cf-runagent (ENT-12712)
+	- Fixed possible segmentation fault when backing up LMDB databases
 
 3.24.1:
 	- Fixed multiple issues in cfengine-enterprise SELinux policy which could
@@ -224,7 +224,7 @@
 	- Insertion of contents of a file with blank lines into
 	  another file with blank lines no longer results in
 	  mixed content (ENT-8788)
-	- Added suggestion to use a negative lookahead when non-convergent edits 
+	- Added suggestion to use a negative lookahead when non-convergent edits
 	  are attempted
 	  (CFE-192)
 	- Unresolved function calls that return scalar values

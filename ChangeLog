@@ -1,10 +1,10 @@
 3.24.3:
-	- Atomic permissions during file copy.
-	  Temporary file is now set to promised permissions before replacing it
-	  with original during remote copy from (ENT-13163)
+	- Made permissions atomic during file copy:
+	  The temporary file is now set to promised permissions before replacing it
+	  with the original in copy_from files promises (ENT-13163)
 	- Removed useless output from cfengine3 init script (ENT-13234)
-	- Use current process ID to investigate proc filesystem to workaround in-container non-root owned symlinks
-	  (CFE-3429)
+	- Switched to using current process ID to investigate proc filesystem
+	  to workaround in-container non-root owned symlinks (CFE-3429)
 	- Added sysvinit cf-php-fpm service script for Mission Portal
 	  (ENT-13234)
 	- Fixed bug where remote file copy always preserves source perms

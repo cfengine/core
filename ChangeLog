@@ -1,56 +1,54 @@
 3.26.0:
-	- Fixed issue where rhel >8 packages would not have correct openssl
-	  dependency version (ENT-12587)
+	- Improved error message in abortbundleclasses, for example when there are
+	  no matches due to using a space in the regular expression (CFE-4075)
+	- Updated syntax description to include new protocol_version values
+	  (CFE-4483)
+	- Switched to using current process ID to investigate proc filesystem
+	  to workaround in-container non-root owned symlinks (CFE-3429)
+	- Modified getindices() to return positional index from a list
+	  (CFE-2930)
+	- Changed 'cf-net connect' to return exit code 1 in case of error (CFE-4414)
 	- Added http_port and getattr selinux permissions as needed for selinux
 	  policy on rhel-8 and rhel-9 (ENT-12954)
-	- Fixed 'cf-net connect' to return exit code 1 in case of error (CFE-4414)
 	- Added feature class for libpam (CFE-3371)
 	- Added hardclasses for log levels notice, warning and error (CFE-4126)
-	- Added policy variable sys.cpusockets (CFE-30)
-	- Added a new policy function to get the list of metatags of a bundle,
-	  in the same manner as getclassmetatags and getvariablemetatags.
+	- Added sys.cf_edition variable that keeps track of whether cfengine is
+	  community or enterprise. (ENT-10078)
+	- Added sys.cpusockets variable (CFE-30)
+	- Added sys.moduledir variable (CFE-1484)
+	- Added sys.keydir variable (CFE-2822)
+	- Added getbundlemetatags() policy function to get the list of metatags
+	  of a bundle, in the same manner as getclassmetatags and getvariablemetatags
 	  (CFE-4019)
-	- Added a new policy function useringroup that returns whether a user
+	- Added is_type() policy function to check type of a variable (CFE-3641)
+	- Added useringroup() policy function that returns whether a user
 	  is a member of a group. (ENT-12721)
+	- Added findlocalusers() policy function that returns all the local users
+	  matching certain attributes (CFE-2318)
+	- Added hostswithgroup() policy function to get hosts from a group,
+	  selecting a specific field. This function is enterprise only
+	  (ENT-11325)
+	- Added isconnectable() policy function to check if a port is
+	  connectable within a time limit in seconds. (ENT-10666)
 	- Added an optional parameter strict for validjson and validdata policy
 	  functions. This makes the functions evaluate to false on json
 	  primitives. (CFE-4163)
-	- Added findlocalusers policy function that returns all the local users
-	  matching certain attributes (CFE-2318)
-	- Added is_type policy function to check type of a variable (CFE-3641)
-	- Added keydir sys variable (CFE-2822)
 	- Added missing "BEGIN meta promises" verbose logging (CFE-2829)
-	- Added moduledir sys variable (CFE-1484)
-	- Added new hostswithgroup function to get hosts from a group,
-	  selecting a specific field. This function is enterprise only
-	  (ENT-11325)
-	- Added new policy function isconnectable to check if a port is
-	  connectable within a time limit in seconds. (ENT-10666)
 	- Added option to print rsync performance stats in cf-net
 	- Added php-fpm systemd service files to enable http2 in Mission Portal
 	  (ENT-11440)
-	- Changed error message in checkclassexpression when no matches
-	  (CFE-4075)
-	- Fixed build on macOS (CFE-4385)
-	- Fixed file closed twice in CopyRegularFileDiskPerms (CFE-4489)
-	- Fixed bug in parsing process_select for Windows (ENT-12751)
-	- Fixed bug which removed performance benefits of rsync in file
+	- Fixed an issue where rhel >8 packages would not have correct openssl
+	  dependency version (ENT-12587)
+	- Fixed a bug causing a file to be closed twice in CopyRegularFileDiskPerms() (CFE-4489)
+	- Fixed a bug in parsing process_select for Windows (ENT-12751)
+	- Fixed a bug which removed performance benefits of rsync in file
 	  transfers (basis file was truncated on remote copy)
-	- Fixed bug where remotely copying large files consisting of random
+	- Fixed a bug where remotely copying large files consisting of random
 	  bytes would cause internal server error. (CFE-4507)
-	- Fixed incorrect exit code handling in cf-runagent (ENT-12712)
+	- Fixed incorrect handling of exit code in cf-runagent (ENT-12712)
 	- Fixed junk printed in case of internal server error (CFE-4507)
-	- Introduced a new variable default:sys.cf_edition that keeps track
-	  whether cfengine is community or enterprise. (ENT-10078)
-	- Updated syntax description to include new protocol_version values
-	  (CFE-4483)
-	- Use current process ID to investigate proc filesystem to workaround
-	  in-container non-root owned symlinks (CFE-3429)
-	- Modified getindices() to return positional index from a list
-	  (CFE-2930)
 
 3.25.0:
-	- Added acknowledged field to lastseen DB (ENT-11838)
 	- Various SELinux fixes:
 	  - Added create capability on cfengine_var_lib_t:dir to cf-hub
 	  - Added filesystem and files unconfined access to cf-monitord in cfengine-enterprise SELinux policy
@@ -61,9 +59,6 @@
 	  - Adjusted SELinux policy to allow components which run cf-promises to getattr everywhere and read symlinks
 	  - Granted more access to certificates directory for CFEngine components in SELinux policy
 	  (ENT-12466)
-	- Added logging CFEngine component related SELinux denials in cf-support
-	  (ENT-12137)
-	- Added option to choose protocol version in cf-net (ENT-12519)
 	- Adjusted cf-support for exotic UNIX platforms (ENT-9786)
 	- Adjusted cf-support to not fail if core dumps are available and gdb is missing
 	  (ENT-9786)
@@ -72,8 +67,7 @@
 	  'default:sys.hardware_mac[<INTERFACE>]' will no longer be defined for
 	  ignored interfaces.
 	  (ENT-11840)
-	- Atomic copy_from in files promise
-	  Changes to 'files' promise in 'copy_from' attribute:
+	- Made copy_from more atomic in files promises:
 	  - The new file (i.e., '<FILENAME>.cfnew') is now created with correct
 	    permission during remote copy. Previously it would be created with
 	    default permissions.
@@ -83,36 +77,38 @@
 	    actual copy of the original file with the same permissions is created
 	    instead.
 	  As a result, there will no longer be a brief moment where the original
-	  file is inaccessible.
-	  (ENT-11988)
-	- File Stream API now unlinks before open with 'O_EXCL'
-	  The File Stream API now unlinks the destination file (i.e.,
+	  file is inaccessible. (ENT-11988)
+	- The file stream API now unlinks the destination file (i.e.,
 	  '<FILENAME>.cfnew') before opening it with the 'O_EXCL' flag. Previously
 	  the agent would fail if the destination file already exists.
 	  Fortunately, the File Stream API unlinks this file afterwards, both on
 	  success and error, causing the agent to recover. Both the 'cf-net get
 	  <FILENAME>' command and the 'copy_from' attribute were affected.
-	- File Stream API now writes sparse files (ENT-12414)
-	- Fixed bug causing LMDB database corruption
-	- Fixed possible segfault when backing up LMDB databases
+	- The file stream API now writes sparse files (ENT-12414)
 	- Re-enabled DB migration support for LMDB
 	  - Now creates backup before LMDB migration
 	  - Handle LMDB migration failures
 	  - In case of LMDB migration failures, the respective database file is
 	    moved to the side, and a fresh database is created.
-	- New network protocol version v4 - filestream (ENT-12414)
-	- Now 'cf-net get' no longer unlinks original file (ENT-12511)
-	- SELinux: Allow cf-serverd to set its own limits (ENT-12446)
+	- Changed 'cf-net get' to no longer unlink original file (ENT-12511)
+	- SELinux: Allowed cf-serverd to set its own limits (ENT-12446)
 	- commands promises with exit codes not matching any
-	  _returncodes attributes from classes body now log and
+	  _returncodes attributes from classes body now log an
 	  error message not just an info message. (CFE-4429, ENT-12103)
+	- Added acknowledged field to lastseen DB (ENT-11838)
+	- Added logging CFEngine component related SELinux denials in cf-support
+	  (ENT-12137)
+	- Added option to choose protocol version in cf-net (ENT-12519)
+	- Added a new network protocol version v4 - filestream (ENT-12414)
+	- Fixed bug causing LMDB database corruption
+	- Fixed possible segfault when backing up LMDB databases
 
 3.24.0:
 	- Added a sanity check to policy parser that checks for and warns
 	  in case of promise declarations with no actions. The motivation
 	  for this check is to aid policy writers in detecting semantic
 	  errors early. (ENT-11137)
-	- Added sys.os_name_human for Alpine, postmarketOS, OpenBSD and NetBSD
+	- Added sys.os_name_human variable for Alpine, postmarketOS, OpenBSD and NetBSD
 	- Added warning log message when OS is not recognized (CFE-4342)
 	- Adjusted locale settings in masterfiles stage common script to
 	  handle more cases (ENT-11885)
@@ -330,7 +326,7 @@
 	  (CFE-3434)
 	- Custom promises now use standard promise locking and support ifelapsed
 	  (CFE-3434)
-	- Enable comment-attribute for custom promise types (CFE-3432)
+	- Enabled comment-attribute for custom promise types (CFE-3432)
 	- cf-secret encrypt now encrypts for localhost if no key or host is
 	  specified (CFE-3874)
 	- CFEngine now builds with OpenSSL 3 (ENT-8355)
@@ -926,8 +922,8 @@
 	  (ENT-4064)
 
 3.13.0:
-	- Add support for TLS 1.3 and its ciphersuites
-	- Add 'feature' hard classes for supported TLS versions
+	- Added support for TLS 1.3 and its ciphersuites
+	- Added 'feature' hard classes for supported TLS versions
 	  Different versions of TLS are supported depending on what version
 	  of OpenSSL CFEngine was compiled and linked with. Newly added
 	  feature hard classes bring that information to the
@@ -939,16 +935,16 @@
 	  feature_tls_1_1                 source=agent,hardclass
 	  feature_tls_1_2                 source=agent,hardclass
 	  feature_tls_1_3                 source=agent,hardclass
-	- Add a new variable $(sys.default_policy_path)
+	- Added a new variable $(sys.default_policy_path)
 	  A new sys variable that provides the path of the default policy
 	  file evaluated when no file is specified with the '-f' option.
-	- Add an option to skip the initial policy run on bootstrap
+	- Added an option to skip the initial policy run on bootstrap
 	  In some cases it may not be desired to run the policy as the last
 	  step of the bootstrap. This can be done with the new
 	  '--skip-bootstrap-policy-run' option for cf-agent. (CFE-2826)
 	- Trigger promises.cf as the last step of bootstrap (CFE-2826)
-	- Add support for overriding the package module's path (CFE-2103)
-	- Add support for setting package module interpreter (CFE-2880)
+	- Added support for overriding the package module's path (CFE-2103)
+	- Added support for setting package module interpreter (CFE-2880)
 	- Added --log-level option to all components
 	  This allows you to specify any log level (info, verbose, debug etc.).
 	  It is also less strict, allowing different spelling. As an example,
@@ -987,9 +983,9 @@
 	- Do not render templates when passed invalid data (CFE-2194)
 	- Eliminated error messages caused by attempting to kill expired processes
 	  (CFE-2824)
-	- Fix cf-runalerts systemd unit conditions so the service will run
+	- Fixed cf-runalerts systemd unit conditions so the service will run
 	  (ENT-3929)
-	- Fix the off-by-one error in cf-runagent background process spawning
+	- Fixed the off-by-one error in cf-runagent background process spawning
 	  (CFE-2873)
 	- Fixed OOB read / heap buffer overflow in evaluator (ENT-4136)
 	- Fixed a memory leak which occured when reloading RSA keys from disk
@@ -1062,14 +1058,14 @@
 
 3.12.0b1:
 	New Features:
-	- Add a --key-type option to specify RSA key size to cf-key
+	- Added a --key-type option to specify RSA key size to cf-key
 	- New hash_to_int policy function (CFE-2733)
 	- Issue a warning on ignored locking attributes (CFE-2748)
-	- Add IPv6 hard classes with the "ipv6_" prefix (CFE-2310)
+	- Added IPv6 hard classes with the "ipv6_" prefix (CFE-2310)
 	- Introduce "missing_ok" attribute in body copy_from
 	  This allows to ignore missing sources in file copy operations (CFE-2365)
-	- Enable Xen hypervisor detection on all x86 platforms (CFE-2203)
-	- Add sys.policy_entry variables (CFE-2572)
+	- Enabled Xen hypervisor detection on all x86 platforms (CFE-2203)
+	- Added sys.policy_entry variables (CFE-2572)
 	- Added inline_mustache template method (CFE-1846)
 	- New component cf-net (cf-net is a CLI for the CFEngine network protocol,
 	  useful for debugging, testing etc) and accompanying policy variable
@@ -1093,7 +1089,7 @@
 	  tagging the variable so that it will not be collected to the Enterprise
 	  hub and will not be available in Mission Portal. (ENT-3483)
 	- cf-execd now re-parses augments on policy reload (CFE-2406)
-	- Improve misleading verbose message
+	- Improved misleading verbose message
 	  For constraints if/ifvarclass/unless, we now print the whole rval of the constraint.
 	  Previously the message was just "skipping variable because ifvarclass is not defined" while the variable itself was defined.
 	  Old message example:
@@ -1105,11 +1101,11 @@
 	- Suppress output from systemctl based restart of services in
 	  bootstrap/failsafe (CFE-1459)
 	- Parser can now handle larger inbut buffers (CFE-1886)
-	- Improve logging of ACL errors (ENT-3455)
+	- Improved logging of ACL errors (ENT-3455)
 	- cf-execd systemd service now only kills cf-execd itself (ENT-3395)
 	- Load multiple augments from "augments" string array in def.json
 	  (CFE-2084)
-	- Improve support for Alpine Linux
+	- Improved support for Alpine Linux
 	- Set the exit value when running cf-key
 	  When running cf-key to generate new keys, set the exit value of the
 	  program to be 0 on success and 1 on failure. This makes it easier to
@@ -1132,27 +1128,27 @@
 	  the container subkeys over simple values when converting to JSON
 	  (CFE-2536)
 	- Do not ignore meta promises in server bundles (CFE-2066)
-	- Add a debug log for computed class in splayclass
+	- Added a debug log for computed class in splayclass
 	- Don't error when calling isexecutable on broken link (CFE-741)
-	- Fix segfault when no show-evaluated-vars/classes is specified
-	- Fix memory leak in cf-execd, triggered when sending email failed (CFE-2712)
-	- Fix IPv6 parsing to be un-reversed (CFE-2580)
-	- Fix bug preventing permission changes on Unix sockets (CFE-1782)
-	- Fix storage mount promise when existing mountpoint has a similar path
+	- Fixed segfault when no show-evaluated-vars/classes is specified
+	- Fixed memory leak in cf-execd, triggered when sending email failed (CFE-2712)
+	- Fixed IPv6 parsing to be un-reversed (CFE-2580)
+	- Fixed bug preventing permission changes on Unix sockets (CFE-1782)
+	- Fixed storage mount promise when existing mountpoint has a similar path
 	  (CFE-1960)
-	- Fix segfault when cf-promises -p is called against a file with syntax
+	- Fixed segfault when cf-promises -p is called against a file with syntax
 	  errors (CFE-2696)
-	- Fix rare cf-execd hang (CFE-2719)
-	- Fix mergedata segfault when called on a non-container (CFE-2704)
+	- Fixed rare cf-execd hang (CFE-2719)
+	- Fixed mergedata segfault when called on a non-container (CFE-2704)
 	- Do not segfault if policy_server.dat only contains whitespaces and/or line breaks
-	- Fix segfault on JSON policy files with no bundles and bodies (CFE-2754)
+	- Fixed segfault on JSON policy files with no bundles and bodies (CFE-2754)
 
 
 3.11.0:
 	New Features:
 	- Allow function calls in promiser using universal "with" attribute
 	  (CFE-1092)
-	- Add example of with attribute (CFE-1092)
+	- Added example of with attribute (CFE-1092)
 	- Detect Amazon Linux and set "AmazonLinux" hard class and
 	  sys.flavour variable
 	- New sysctlvalue() and data_sysctlvalues() functions from /proc/sys
@@ -1208,21 +1204,21 @@
 	  Affects readfile(), readenvfile(), readcsv()
 
 	Bug fixes:
-	- Fix insert_lines related memory corruption (CFE-2520)
+	- Fixed insert_lines related memory corruption (CFE-2520)
 	- Prevent LMDB assertion on AIX by ensuring nested DB calls are
 	  not occuring during signal handler cleanup (CFE-1996)
-	- Fix a bug which could cause cf-execd to believe there was
+	- Fixed a bug which could cause cf-execd to believe there was
 	  an error when sending the email report, when there really wasn't
 	- zendesk#3204: Fix "lastseenexpireafter" 32-bit signed int overflow
-	- Fix cf-execd not exiting immediately with SIGTERM on AIX (ENT-3147)
-	- Fix automatic service stops based on runlevel (redhat/centos)
+	- Fixed cf-execd not exiting immediately with SIGTERM on AIX (ENT-3147)
+	- Fixed automatic service stops based on runlevel (redhat/centos)
 	  (CFE-2611)
-	- Fix cf-serverd crash when reporting corrupted data (ENT-3023)
-	- Fix rare output truncation on Solaris 10/11 (CFE-2527)
-	- Fix crash on Solaris when ps ucb variant is not available (CFE-2506)
-	- Fix logic to detect when running under a Xen Hypervisor (CFE-1563)
-	- Fix "lastseenexpireafter" 32-bit signed int overflow (zendesk#3204)
-	- Fix IPv6 parsing to be un-reversed (CFE-2580)
+	- Fixed cf-serverd crash when reporting corrupted data (ENT-3023)
+	- Fixed rare output truncation on Solaris 10/11 (CFE-2527)
+	- Fixed crash on Solaris when ps ucb variant is not available (CFE-2506)
+	- Fixed logic to detect when running under a Xen Hypervisor (CFE-1563)
+	- Fixed "lastseenexpireafter" 32-bit signed int overflow (zendesk#3204)
+	- Fixed IPv6 parsing to be un-reversed (CFE-2580)
 
 3.10.0:
 	New features/additions:
@@ -1232,8 +1228,8 @@
 	- Support for custom ports and host names as policy hub (CFE-953)
 	- Add: Definition of from_cfexecd for cf-execd initiated runs
 	  (CFE-2386)
-	- Add < <= > >= operators to eval().
-	- Add testing jUnit and TAP bundles and include them in stdlib.cf
+	- Added < <= > >= operators to eval().
+	- Added testing jUnit and TAP bundles and include them in stdlib.cf
 	- New function isipinsubnet() (ENT-7949)
 	- LogDebug(): implement module-based debug logging.
 	  Now most DEBUG messages are *not* printed even when "-d" is in use, but
@@ -1241,13 +1237,13 @@
 	  example to enable all log modules, run:
 	  cf-agent -d --log-modules=all
 	- Add: edit_line contains_literal_string to stdlib
-	- Add variablesmatching_as_data() function paralleling variablesmatching()
+	- Added variablesmatching_as_data() function paralleling variablesmatching()
 	  (Redmine #7885)
 	- Allow specifying agent maxconnections via def.json (CFE-2461)
-	- Add getuserinfo() function
-	- Add body agent control select_end_match_eof option. (CFE-2390)
-	- Add class to enable post transfer verification during policy updates
-	- Add ability to append to bundlesequnece with def.json (CFE-2460)
+	- Added getuserinfo() function
+	- Added body agent control select_end_match_eof option. (CFE-2390)
+	- Added class to enable post transfer verification during policy updates
+	- Added ability to append to bundlesequnece with def.json (CFE-2460)
 	- policy_server.dat now appends a newline and supports host & port
 
 	Changes:
@@ -1288,7 +1284,7 @@
 	- Change: Verify transfered files during policy update
 	- Allow getvariablemetatags() and getclassmetatags() to get a specific tag key
 	- Change: Use more restrictive unix socket perms (ENT-2705)
-	- Add sys.user_data container for user starting agent.
+	- Added sys.user_data container for user starting agent.
 	- Pass package promise options to underlying apt-get call (#802)
 	  (CFE-2468)
 	- Change: Enable agent component management policy on systemd hosts
@@ -1314,34 +1310,34 @@
 	  (CFE-2519)
 
 	Bug fixes:
-	- Fix files promise not setting ACL properly on directories. (CFE-616)
+	- Fixed files promise not setting ACL properly on directories. (CFE-616)
 	- Upgrade CFEngine dependencies to the following versions:
 	  - lixml2 2.9.4
 	  - OpenSSL 1.0.2j
 	  - LibYAML 0.1.7
 	  - Curl 7.50.3
-	- Fix cumulative() to accept up to 1000 years, like it's documented.
+	- Fixed cumulative() to accept up to 1000 years, like it's documented.
 	- Fixed parsing of host name/IP and port number in cf-runagent
 	  (CFE-546)
-	- Fix intermittent error message of type:
+	- Fixed intermittent error message of type:
 	  "error: Process table lacks space for last columns: <cmd>" (CFE-2371)
 	- storage: Properly initialize the list of current mounts (CFE-1803)
-	- Fix 'contain' attribute 'no_output' having no effect when
+	- Fixed 'contain' attribute 'no_output' having no effect when
 	  the 'commands' promise is using 'module => "true"'. (CFE-2412)
-	- Fix bug which caused empty emails to be sent from cf-execd
+	- Fixed bug which caused empty emails to be sent from cf-execd
 	  if there was no previous output log and the new log was fully filtered
 	  by email filters. (ENT-2739)
 	- Allow ifelse(FALSE, $(x), "something else") to work. (CFE-2260)
-	- Fix connection cache, reuse connections when possible. (CFE-2447)
-	- Fix rare bug that would sometimes prevent redis-server from launching.
-	- Fix bug in files promise when multiple owners are promised
+	- Fixed connection cache, reuse connections when possible. (CFE-2447)
+	- Fixed rare bug that would sometimes prevent redis-server from launching.
+	- Fixed bug in files promise when multiple owners are promised
 	  but first one doesn't exist, and improve logging . (CFE-2432)
 	- Define kept outcome with action warn if edit_line is as expected
 	  (CFE-2424)
 	- Example using getvariablemetatags() and getclassmetatags() to get a specific tag key
 	- Remove 2k limit on strings length when writing JSON policies
 	  (CFE-2383)
-	- Fix ttime_range constraint to go higher than 2G as number of seconds.
+	- Fixed ttime_range constraint to go higher than 2G as number of seconds.
 	- Change: cronjob bundle tolerates different spacing
 	- Allow editing fields in lines longer than 4k (CFE-2438)
 	- Don't send empty emails for logs where everything is filtered.
@@ -1352,10 +1348,10 @@
 	  end of the region if 'select_end' pattern is not matched . (CFE-2263)
 	- Change: Remove executable bit from systemd units (CFE-2436)
 	- cf-serverd should reload def.json when reloading policy (CFE-2406)
-	- Fix cf-monitord detection of usernames of the process table on AIX.
+	- Fixed cf-monitord detection of usernames of the process table on AIX.
 	- Speed up local and remote file copying and fix spurious errors.
 	  (ENT-2769)
-	- Fix occasional segfault when running getindices() on a
+	- Fixed occasional segfault when running getindices() on a
 	  variable that has indices of multiple depths (e.g. both "a[x]" and
 	  "a[x][y]"). (CFE-2397)
 	- When no file is provided when calling cf-promises
@@ -1365,17 +1361,17 @@
 	- Change: Split systemd units (CFE-2278)
 	- EOF is  matched as an end of the region in edit_line
 	  promises only if 'select_end_match_eof' parameter is true. (CFE-2263)
-	- Fix double logging of output_prefix, and log process name for cf-agent syslog messages.
+	- Fixed double logging of output_prefix, and log process name for cf-agent syslog messages.
 	  (CFE-2225)
 	- Be less verbose if a network interface doesn't have a MAC address.
 	  (CFE-1995)
 	- Fix: CFEngine choking on standard services (CFE-2806)
-	- Fix insert_lines related memory corruption (CFE-2520)
-	- Fix cf-serverd crash when reporting corrupted data. (ENT-3023)
-	- Fix ability to manage INI sections with metachars for
+	- Fixed insert_lines related memory corruption (CFE-2520)
+	- Fixed cf-serverd crash when reporting corrupted data. (ENT-3023)
+	- Fixed ability to manage INI sections with metachars for
 	  manage_variable_values_ini and set_variable_values_ini (CFE-2519)
-	- Fix apt_get package module incorrectly using interactive mode.
-	- Fix crash on Solaris when ps ucb variant is not available. (CFE-2506)
+	- Fixed apt_get package module incorrectly using interactive mode.
+	- Fixed crash on Solaris when ps ucb variant is not available. (CFE-2506)
 	- cf-serverd: Do not close connection when file does not exist.
 	  (CFE-2532)
 	- getvalues() now behaves correctly for old CFEngine arrays of depth 1.
@@ -1384,12 +1380,12 @@
 
 3.9.0:
 	New features/additions:
-	- Add optional interface parameter to iprange() to match only one interface.
+	- Added optional interface parameter to iprange() to match only one interface.
 	- Allow '=' in symbolic modes (Redmine #7826)
 	- Add: FreeBSD ports package module
 	- New package module for FreeBSD pkg package manager.
-	- Add support for adding/removing fifos in policy
-	- Add Linux parsing of /proc/net/ data.
+	- Added support for adding/removing fifos in policy
+	- Added Linux parsing of /proc/net/ data.
 	  - sys.inet
 	  - sys.inet6
 	  - sys.interface_data
@@ -1399,7 +1395,7 @@
 	- Namespaced classes can now be specified on the command line.
 	- Namespaces can now be passed to cf-runagent -D and --remote-bundles
 	  (Redmine #7856)
-	- Add 'cf-full' and 'json-full' to cf-promises '-p' option.
+	- Added 'cf-full' and 'json-full' to cf-promises '-p' option.
 	  They generate output based on the entire policy. The existing 'cf'
 	  already behaved this way, and it has now been changed to generate
 	  output only for a single file, which the existing 'json' option
@@ -1407,13 +1403,13 @@
 	- New language functions: processexists() and findprocesses()
 	  (Redmine #7633)
 	- Implement new regex_replace() function. (Redmine #7346)
-	- Add log rotation policy for state/classes.jsonl log. (Redmine #7951)
+	- Added log rotation policy for state/classes.jsonl log. (Redmine #7951)
 	- Added collect_vars utility bundle to stdlib
 	- Intoduce report_class_log attribute to body agent control.
 	  (Redmine #7951)
-	- Add standard_services service_method allowing for explicit usage
+	- Added standard_services service_method allowing for explicit usage
 	- cf-promises --show-vars can now show JSON variables.
-	- Add json_pipe mode to mapdata(), which allows piping a
+	- Added json_pipe mode to mapdata(), which allows piping a
 	  JSON container to an external program for manipulation and receiving
 	  JSON back. The jq tool is a good example where this mode can be
 	  useful. A corresponding $(def.jq) variable has also been added with
@@ -1424,13 +1420,13 @@
 	  This module provides basic functionality for using nimclient as a means
 	  to ensure packages are either present or absent. It does not support
 	  listing package updates available or provide any special caching.
-	- Add callstack_callers() and callstack_promisers() functions.
+	- Added callstack_callers() and callstack_promisers() functions.
 	- Log variable definitions in debug output. (Redmine #7137)
 	- Add: Memory information to host info report (Jira CFE-1177)
 	- In Mustache templates, one can now use {{#-top-}} and
 	  {{/-top-}} tags to iterate over the top level element in a
 	  container. (Redmine #6545)
-	- Add network_connections() function that parses /proc/net
+	- Added network_connections() function that parses /proc/net
 	- Provide new -w argument to override the workdir for testing
 	- New feature: Emails sent by cf-execd can be filtered to get
 	  rid of emails for unwanted log messages. The attributes
@@ -1438,15 +1434,15 @@
 	  control control what to include. See documentation for cf-execd for
 	  more information. (Jira CFE-2283)
 	- Add: file_make_mustache bundle to render mustache templates
-	- Add '-n' flag to cf-key to avoid host name lookups.
+	- Added '-n' flag to cf-key to avoid host name lookups.
 	- cf-agent, cf-execd, cf-promises, cf-runagent and cf-serverd honor multiple -D, -N and -s arguments
 	  (Redmine #7191)
-	- Add "canonify" mode to mapdata().
+	- Added "canonify" mode to mapdata().
 	- Add: printfile bodies to stdlib
 	- Add: New results classes body [] (Redmine #7418, #7481)
 	- Implement cf-runagent --remote-bundles and cf-serverd "bundle" access promise.
 	  (Redmine #7581)
-	- Add commands promise arglist attribute, augmenting args attribute.
+	- Added commands promise arglist attribute, augmenting args attribute.
 	- It's now possible to reference variables in inline JSON,
 	  for example: mergedata('[ thing, { "mykey": otherthing[123] } ]').
 	  thing and otherthing[123] will be resolved as variables, since
@@ -1490,7 +1486,7 @@
 	  For example: mergedata('[ "thing", { "mykey": "myvalue" } ]')
 	  See the documentation for more details. (Jira CFE-2253)
 	- Add: edit_line contains_literal_string to stdlib
-	- Add body agent control select_end_match_eof option. (Jira CFE-2390)
+	- Added body agent control select_end_match_eof option. (Jira CFE-2390)
 
 	Changes:
 	- Change: classesmatching(): order of classes changed
@@ -1538,7 +1534,7 @@
 	  def.json will no longer be auto-loaded. One has to refer to the
 	  which are using the "inputs" field inside def.json. (Redmine #7961)
 	- Change: Separate binary details from policy update (Redmine #7662)
-	- Add guard for binary upgrade during bootstrap (Redmine #7861)
+	- Added guard for binary upgrade during bootstrap (Redmine #7861)
 	- Change: Modernize pkg module and package_method
 	- Remove: Userdir apache module
 	- filestat(path, "linktarget") now follows non-absolute links and returns full path of target.
@@ -1583,7 +1579,7 @@
 	- Upgrade dependencies to latest minor versions.
 	  For Community / Enterprise:
 	  For Enterprise:
-	- Fix bug which sometimes misparses user names in ps output.
+	- Fixed bug which sometimes misparses user names in ps output.
 	- Fix: Problem with git not dropping privileges soon enough
 	- Allow def.json up to 5MB instead of 4K.
 	- It is possible to edit the same value in multiple regions
@@ -1593,39 +1589,39 @@
 	- Fixed a bug which caused def.json not being able to define
 	  classes based on other hard classes. (Jira CFE-2333)
 	- Change: Tighten Enterprise hub permissions (Jira ENT-2708)
-	- Fix a regression which would sometimes cause "Permission
+	- Fixed a regression which would sometimes cause "Permission
 	  denied" errors on files inside directories with very restricted
 	  permissions. (Redmine #7808)
-	- Fix use-after-free in ArrayMap and HashMap (Redmine #7952)
+	- Fixed use-after-free in ArrayMap and HashMap (Redmine #7952)
 	- Package repositories are no more hit every time package promise
 	  is evaluated on SUSE.
-	- Fix a bug which sometimes caused package promises to be
+	- Fixed a bug which sometimes caused package promises to be
 	  skipped with "XX Another cf-agent seems to have done this since I
 	  started" messages in the log, most notably in long running cf-agent
 	  runs (longer than one minute). (Redmine #7933)
 	- TTY detection should be more reliable. (Redmine #7606)
 	- cf-promises -p cf now produces valid CFEngine code (Redmine #7956)
-	- Fix ps options for FreeBSD to check processes only in current host and not in jails
+	- Fixed ps options for FreeBSD to check processes only in current host and not in jails
 	- cf-runagent now properly supports multiple -D or -s arguments
 	  (Redmine #7191)
 	- Fix: Work around impaired class definition from augments
 	  (Jira CFE-2333)
-	- Fix "No such file or directory" LMDB error on heavily loaded hosts.
+	- Fixed "No such file or directory" LMDB error on heavily loaded hosts.
 	  (Jira CFE-2300)
 	- Check for empty server response in RemoteDirList after decryption
 	  (Redmine #7908)
 	- Small performance optimization when cf-execd scans emails before sending.
-	- Fix handling of closed connections during transactions
+	- Fixed handling of closed connections during transactions
 	  (Redmine #7926)
 	- The core ps parsing engine used for processes promises
 	  has been rewritten from scratch, and should be more robust than
 	  before. (Jira CFE-2161)
-	- Fix the lexer which could not handle empty newline(s)
+	- Fixed the lexer which could not handle empty newline(s)
 	  before a @endif.
 	- groupexists() no longer fails to detect a group name
 	  starting with a digit. (Jira CFE-2351)
-	- Fix HP-UX specific bug that caused a lot of log output to disappear.
-	- Fix unresolved variable (Redmine #7931)
+	- Fixed HP-UX specific bug that caused a lot of log output to disappear.
+	- Fixed unresolved variable (Redmine #7931)
 	- Change: Suppress standard services noise on SUSE (Redmine #6968)
 	- Reduce verbosity of yum package module (Redmine #7485)
 	- cf-runagent: Allow connections to localhost instead of failing silently.
@@ -1633,22 +1629,22 @@
 	  when doing a local file copy. Errors could happen when copying
 	  across two different mount points where the support for extended
 	  attributes is different between the mount points.
-	- Fix classes being set because of hash collision in the implementation.
+	- Fixed classes being set because of hash collision in the implementation.
 	  (Redmine #7912)
-	- Fix build failure on FreeBSD 7.1 (Redmine #7415)
-	- Improve logging when managing setuid/setgid
+	- Fixed build failure on FreeBSD 7.1 (Redmine #7415)
+	- Improved logging when managing setuid/setgid
 	- Reduce verbosity of apt_get package module (Redmine #7485)
 	- packagesmatching() and packageupdatesmatching() should work
 	  when new package promise is used. (Jira CFE-2246)
-	- Fix bug which could render host unable to recover from a
+	- Fixed bug which could render host unable to recover from a
 	  syntax error, even if failsafe.cf was utilized. This could happen if
 	  the file containing the syntax error was specified in the def.json
 	  special file. (Redmine #7961)
 	- Prevent crash in cf-execd email code when policy server is not set.
 	- In case of networking error, assume checksum is wrong
-	- Fix two cases where action_policy warn still produces errors
+	- Fixed two cases where action_policy warn still produces errors
 	  (Redmine #7274)
-	- Fix bad option nlwp to vzps on Proxmox / OpenVZ. (Redmine #6961)
+	- Fixed bad option nlwp to vzps on Proxmox / OpenVZ. (Redmine #6961)
 	- @if minimum_version now correctly ignores lines starting with '@'
 	  (Redmine #7862)
 	- No longer hang when changing permissions/ownership on fifos
@@ -1659,8 +1655,8 @@
 	  array variables when specified inline. Previously it would not accept
 	  certain special characters, even though they could be specified
 	  indirectly by using a variable to hold it. (Redmine #7088)
-	- Fix file descriptor leak when there are network errors.
-	- Improve robustness of process table parsing on Solaris.
+	- Fixed file descriptor leak when there are network errors.
+	- Improved robustness of process table parsing on Solaris.
 	  (Jira CFE-2161)
 	- Installing packages containing version numbers using yum
 	  now works correctly. (Redmine #7825)
@@ -1675,12 +1671,12 @@
 	- Fix: Stop CFEngine choking on systemctl output (Jira CFE-2806)
 	- storage: Properly initialize the list of current mounts
 	  (Jira CFE-1803)
-	- Fix bug which caused empty emails to be sent from cf-execd
+	- Fixed bug which caused empty emails to be sent from cf-execd
 	  if there was no previous output log and the new log was fully filtered
 	  by email filters. (Jira ENT-2739)
 	- Don't send empty emails for logs where everything is filtered.
 	  (Jira ENT-2739)
-	- Fix intermittent error message of type:
+	- Fixed intermittent error message of type:
 	  "error: Process table lacks space for last columns: <cmd>"
 	  (Jira CFE-2371)
 	- Be less verbose if a network interface doesn't have a MAC address.
@@ -1706,11 +1702,11 @@
 	  certain special characters, even though they could be specified
 	  indirectly by using a variable to hold it. (Redmine #7088)
 	- Don't follow symbolic links when copying extended attributes.
-	- Fix a bug which sometimes caused package promises to be
+	- Fixed a bug which sometimes caused package promises to be
 	  skipped with "XX Another cf-agent seems to have done this since I
 	  started" messages in the log, most notably in long running cf-agent
 	  runs (longer than one minute). (Redmine #7933)
-	- Fix bug which could render host unable to recover from a
+	- Fixed bug which could render host unable to recover from a
 	  syntax error, even if failsafe.cf was utilized. This could happen if
 	  the file containing the syntax error was specified in the def.json
 	  special file. (Redmine #7961)
@@ -1720,21 +1716,21 @@
 	  masterfiles policies include this by default). This only affects
 	  installations which are not based on the standard masterfiles, and
 	  which are using the "inputs" field inside def.json. (Redmine #7961)
-	- Fix file descriptor leak when there are network errors.
-	- Fix cf-serverd error messages with classic protocol clients
+	- Fixed file descriptor leak when there are network errors.
+	- Fixed cf-serverd error messages with classic protocol clients
 	  (Redmine #7818)
 	- Installing packages containing version numbers using yum
 	  now works correctly. (Redmine #7825)
-	- Fix ps options for FreeBSD to check processes only in current host and not in jails
-	- Fix build failure on FreeBSD 7.1 (Redmine #7415)
+	- Fixed ps options for FreeBSD to check processes only in current host and not in jails
+	- Fixed build failure on FreeBSD 7.1 (Redmine #7415)
 	- Show errors regarding failure to copy extended attributes
 	  when doing a local file copy. Errors could happen when copying
 	  across two different mount points where the support for extended
 	  attributes is different between the mount points.
-	- Fix classes being set because of hash collision in the implementation.
+	- Fixed classes being set because of hash collision in the implementation.
 	  (Redmine #7912)
 	- Allow def.json up to 5MB instead of 4K.
-	- Fix a regression which would sometimes cause "Permission
+	- Fixed a regression which would sometimes cause "Permission
 	  denied" errors on files inside directories with very restricted
 	  permissions. (Redmine #7808)
 	- Change: Suppress standard services noise on SUSE (Redmine #6968)
@@ -1755,16 +1751,16 @@
 	Bug fixes:
 	- @if minimum_version now correctly ignores lines starting with '@'
 	  (Redmine #7862)
-	- Add guard for binary upgrade during bootstrap (Redmine #7861)
+	- Added guard for binary upgrade during bootstrap (Redmine #7861)
 	- Namespaced classes can now be specified on the command line.
-	- Fix bad option nlwp to vzps on Proxmox / OpenVZ. (Redmine #6961)
-	- Fix two cases where action_policy warn still produces errors
+	- Fixed bad option nlwp to vzps on Proxmox / OpenVZ. (Redmine #6961)
+	- Fixed two cases where action_policy warn still produces errors
 	  (Redmine #7274)
 	- Parse def.json vars, classes and inputs from the C
 	  code. This fixes a bug where certain entries in this file would be
 	  parsed too late to have any effect on the evaluation.
 	  (Redmine #7453, #7615)
-	- Fix HP-UX specific bug that caused a lot of log output to disappear.
+	- Fixed HP-UX specific bug that caused a lot of log output to disappear.
 	- Check for empty server response in RemoteDirList after decryption
 	  (Redmine #7908)
 	- getvalues() will now return a list also for data containers,
@@ -1783,8 +1779,8 @@
 	      inherit_from => classes_generic("myname");
 	    }
 	    (Redmine #4309)
-	- Add url_get() function. (Redmine #6480)
-	- Add @if feature() syntax
+	- Added url_get() function. (Redmine #6480)
+	- Added @if feature() syntax
 	  @if feature work like @if minimum_version but allows distinguishing
 	  between features chosen at compile time.
 	- Extend module protocol to create persistent classes.
@@ -1822,14 +1818,14 @@
 	  of one file. (Redmine #7460)
 	- Change package modules permissions on hub package so that
 	  hub can execute package promises. (Rednime #7602) (Redmine #7602)
-	- Fix exporting CSV reports through HTTPS. (Redmine #7267)
+	- Fixed exporting CSV reports through HTTPS. (Redmine #7267)
 	- cf-agent, cf-execd, cf-promises, cf-runagent and cf-serverd honor
 	  multiple -D, -N and -s arguments (Redmine #7191)
 	- readfile() and read*list() should print an error if they fail to read file.
 	  (Redmine #7702)
 	- No longer hang when changing permissions/ownership on fifos
 	  (Redmine #7030)
-	- Fix broken HA policy for 3rd disaster-recovery node.
+	- Fixed broken HA policy for 3rd disaster-recovery node.
 	- Fix: Policy errors for 3.5 and 3.6
 	- Mustache templates: Fix {{@}} key when value is not a
 	  primitive. The old behavior, when iterating across a map or array of
@@ -1837,16 +1833,16 @@
 	  behavior is to always replace {{@}} with either the key name or the
 	  iteration position in the array. An error is printed if {{@}} is used
 	  outside of a Mustache iteration section.
-	- Fix build with musl libc. (Redmine #7455)
+	- Fixed build with musl libc. (Redmine #7455)
 	- Fixed a bug which could cause daemons to not to be killed
 	  correctly when upgrading or manually running "service cfengine3 stop".
 	  (Redmine #7193)
-	- Fix daemons not restarting correctly on upgrade on AIX.
+	- Fixed daemons not restarting correctly on upgrade on AIX.
 	- Package promise: Fix inability to install certain packages
 	  with numbers. (Redmine #7421)
 	- Redmine #6027 Directories should no more be changed randomly
 	  into files. (Redmine #6027)
-	- Improve cf-serverd's lock contention because of getpwnam()
+	- Improved cf-serverd's lock contention because of getpwnam()
 	  call. (Redmine #7643) (Redmine #7643)
 	- action_policy "warn" now correctly produces warnings instead
 	  of various other verbosity levels. (Redmine #7274)
@@ -1856,12 +1852,12 @@
 	- Reduce malloc() thread contention on heavily loaded
 	  cf-serverd, by not exiting early in the logging function, if no message
 	  is to be printed. (Redmine #7624) (Redmine #7624)
-	- Fix a bug which caused daemons not to be restarted on
+	- Fixed a bug which caused daemons not to be restarted on
 	  upgrade. (Redmine #7528)
 	- Include latest security updates for dependencies.
 	- Fixed bug which would cause bff and depot packages not to
 	  run package scripts on removal. (Redmine #7193)
-	- Fix upgrade causing error message under systemd because of open ports.
+	- Fixed upgrade causing error message under systemd because of open ports.
 	- Fixed several bugs which prevented CFEngine from loading
 	  libraries from the correct location. This affected several platforms.
 	  (Redmine #6708)
@@ -1872,20 +1868,20 @@
 	- If file_select.file_types is set to symlink and there
 	  are regular files in the scanned directory, CFEngine no longer
 	  produces an unnecessary error message. (Redmine #6996)
-	- Fix 'AIX_PREINSTALL_ALREADY_DONE.txt: cannot create' error
+	- Fixed 'AIX_PREINSTALL_ALREADY_DONE.txt: cannot create' error
 	  message on AIX.
-	- Fix package promise not removing dependent packages. (Redmine #7424)
+	- Fixed package promise not removing dependent packages. (Redmine #7424)
 	- Fix: Solaris packages no longer contain duplicate library
 	  files, but instead symlinks to them. (Redmine #7591)
-	- Fix select_class not setting class when used in common bundle with slist.
+	- Fixed select_class not setting class when used in common bundle with slist.
 	  (Redmine #7482)
-	- Fix "@endif" keyword sometimes being improperly processed
+	- Fixed "@endif" keyword sometimes being improperly processed
 	  by policy parser. (Redmine #7413)
-	- Fix noise from internal policy to upgrade windows agents
+	- Fixed noise from internal policy to upgrade windows agents
 	  (Redmine #7456)
 	- cfruncommand now works if it contains spaces, with the TLS protocol.
 	  (Redmine #7405)
-	- Fix warning "Failed to parse csv file entry" with certain very long
+	- Fixed warning "Failed to parse csv file entry" with certain very long
 	  commands promises. (Redmine #7400)
 	- CFEngine no longer erronously passes -M to useradd on HP-UX. (Redmine #6734)
 	- cf-monitord no longer complains about missing thermal zone files.
@@ -1918,10 +1914,10 @@
 	  and will descend recursively into the containers. (Redmine #7116)
 	- @if minimum_version now correctly ignores lines starting with '@'
 	  (Redmine #7862)
-	- Fix definition of classes from augments file
+	- Fixed definition of classes from augments file
 	- Don't follow symbolic links when copying extended attributes.
-	- Fix ps options for FreeBSD to check processes only in current host and not in jails
-	- Fix cf-serverd error messages with classic protocol clients
+	- Fixed ps options for FreeBSD to check processes only in current host and not in jails
+	- Fixed cf-serverd error messages with classic protocol clients
 	  (Redmine #7818)
 	- Change: Suppress standard services noise on SUSE (Redmine #6968)
 	- The isvariable() function call now correctly accepts all
@@ -1932,27 +1928,27 @@
 	  when doing a local file copy. Errors could happen when copying
 	  across two different mount points where the support for extended
 	  attributes is different between the mount points.
-	- Fix bad option nlwp to vzps on Proxmox / OpenVZ. (Redmine #6961)
-	- Fix file descriptor leak when there are network errors.
-	- Fix a regression which would sometimes cause "Permission
+	- Fixed bad option nlwp to vzps on Proxmox / OpenVZ. (Redmine #6961)
+	- Fixed file descriptor leak when there are network errors.
+	- Fixed a regression which would sometimes cause "Permission
 	  denied" errors on files inside directories with very restricted
 	  permissions. (Redmine #7808)
 	- Check for empty server response in RemoteDirList after decryption
 	  (Redmine #7908)
 	- Allow def.json up to 5MB instead of 4K.
-	- Add guard for binary upgrade during bootstrap (Redmine #7861)
-	- Fix HP-UX specific bug that caused a lot of log output to disappear.
-	- Fix a bug which sometimes caused package promises to be
+	- Added guard for binary upgrade during bootstrap (Redmine #7861)
+	- Fixed HP-UX specific bug that caused a lot of log output to disappear.
+	- Fixed a bug which sometimes caused package promises to be
 	  skipped with "XX Another cf-agent seems to have done this since I
 	  started" messages in the log, most notably in long running cf-agent
 	  runs (longer than one minute). (Redmine #7933)
 	- Define (bootstrap|failsafe)_mode during update.cf when triggerd from failsafe.cf
 	  (Redmine #7861)
-	- Fix two cases where action_policy warn still produces errors
+	- Fixed two cases where action_policy warn still produces errors
 	  (Redmine #7274)
-	- Fix classes being set because of hash collision in the implementation.
+	- Fixed classes being set because of hash collision in the implementation.
 	  (Redmine #7912)
-	- Fix build failure on FreeBSD 7.1 (Redmine #7415)
+	- Fixed build failure on FreeBSD 7.1 (Redmine #7415)
 	- Installing packages containing version numbers using yum
 	  now works correctly. (Redmine #7825)
 
@@ -1982,10 +1978,10 @@
 	  and will descend recursively into the containers. (Redmine #7116)
 	- @if minimum_version now correctly ignores lines starting with '@'
 	  (Redmine #7862)
-	- Fix definition of classes from augments file
+	- Fixed definition of classes from augments file
 	- Don't follow symbolic links when copying extended attributes.
-	- Fix ps options for FreeBSD to check processes only in current host and not in jails
-	- Fix cf-serverd error messages with classic protocol clients
+	- Fixed ps options for FreeBSD to check processes only in current host and not in jails
+	- Fixed cf-serverd error messages with classic protocol clients
 	  (Redmine #7818)
 	- Change: Suppress standard services noise on SUSE (Redmine #6968)
 	- The isvariable() function call now correctly accepts all
@@ -1996,27 +1992,27 @@
 	  when doing a local file copy. Errors could happen when copying
 	  across two different mount points where the support for extended
 	  attributes is different between the mount points.
-	- Fix bad option nlwp to vzps on Proxmox / OpenVZ. (Redmine #6961)
-	- Fix file descriptor leak when there are network errors.
-	- Fix a regression which would sometimes cause "Permission
+	- Fixed bad option nlwp to vzps on Proxmox / OpenVZ. (Redmine #6961)
+	- Fixed file descriptor leak when there are network errors.
+	- Fixed a regression which would sometimes cause "Permission
 	  denied" errors on files inside directories with very restricted
 	  permissions. (Redmine #7808)
 	- Check for empty server response in RemoteDirList after decryption
 	  (Redmine #7908)
 	- Allow def.json up to 5MB instead of 4K.
-	- Add guard for binary upgrade during bootstrap (Redmine #7861)
-	- Fix HP-UX specific bug that caused a lot of log output to disappear.
-	- Fix a bug which sometimes caused package promises to be
+	- Added guard for binary upgrade during bootstrap (Redmine #7861)
+	- Fixed HP-UX specific bug that caused a lot of log output to disappear.
+	- Fixed a bug which sometimes caused package promises to be
 	  skipped with "XX Another cf-agent seems to have done this since I
 	  started" messages in the log, most notably in long running cf-agent
 	  runs (longer than one minute). (Redmine #7933)
 	- Define (bootstrap|failsafe)_mode during update.cf when triggerd from failsafe.cf
 	  (Redmine #7861)
-	- Fix two cases where action_policy warn still produces errors
+	- Fixed two cases where action_policy warn still produces errors
 	  (Redmine #7274)
-	- Fix classes being set because of hash collision in the implementation.
+	- Fixed classes being set because of hash collision in the implementation.
 	  (Redmine #7912)
-	- Fix build failure on FreeBSD 7.1 (Redmine #7415)
+	- Fixed build failure on FreeBSD 7.1 (Redmine #7415)
 	- Installing packages containing version numbers using yum
 	  now works correctly. (Redmine #7825)
 
@@ -2028,7 +2024,7 @@
 	Bug fixes:
 	- readfile() and read*list() should print an error if they fail to read file.
 	  (Redmine #7702)
-	- Fix 'AIX_PREINSTALL_ALREADY_DONE.txt: cannot create' error
+	- Fixed 'AIX_PREINSTALL_ALREADY_DONE.txt: cannot create' error
 	  message on AIX.
 	- If there is an error saving a mustache template file
 	  it is now logged with log-level error (was inform).
@@ -2043,20 +2039,20 @@
 	  files, but instead symlinks to them. (Redmine #7591)
 	- cf-agent, cf-execd, cf-promises, cf-runagent and cf-serverd honor
 	  multiple -D, -N and -s arguments (Redmine #7191)
-	- Fix "@endif" keyword sometimes being improperly processed
+	- Fixed "@endif" keyword sometimes being improperly processed
 	  by policy parser. (Redmine #7413)
 	- It is possible to edit the same value in multiple regions
 	  of one file. (Redmine #7460)
-	- Fix select_class not setting class when used in common bundle with slist.
+	- Fixed select_class not setting class when used in common bundle with slist.
 	  (Redmine #7482)
-	- Fix broken HA policy for 3rd disaster-recovery node.
+	- Fixed broken HA policy for 3rd disaster-recovery node.
 	- Directories should no more be changed randomly
 	  into files. (Redmine #6027)
 	- Include latest security updates for 3.7.
 	- Reduce malloc() thread contention on heavily loaded
 	  cf-serverd, by not exiting early in the logging function, if no message
 	  is to be printed. (Redmine #7624)
-	- Improve cf-serverd's lock contention because of getpwnam()
+	- Improved cf-serverd's lock contention because of getpwnam()
 	  call. (Redmine #7643)
 	- action_policy "warn" now correctly produces warnings instead
 	  of various other verbosity levels. (Redmine #7274)
@@ -2065,7 +2061,7 @@
 	  hub can execute package promises. (Redmine #7602)
 	- No longer hang when changing permissions/ownership on fifos
 	  (Redmine #7030)
-	- Fix exporting CSV reports through HTTPS. (Redmine #7267)
+	- Fixed exporting CSV reports through HTTPS. (Redmine #7267)
 	- failsafe.cf will be created when needed. (Redmine #7634)
 	- Mustache templates: Fix {{@}} key when value is not a
 	  primitive. The old behavior, when iterating across a map or array of
@@ -2084,9 +2080,9 @@
 
 3.7.1:
 	Bug fixes:
-	- Fix daemons not restarting correctly on upgrade on AIX. (Redmine #7550)
-	- Fix upgrade causing error message under systemd because of open ports.
-	- Fix build with musl libc. (Redmine #7455)
+	- Fixed daemons not restarting correctly on upgrade on AIX. (Redmine #7550)
+	- Fixed upgrade causing error message under systemd because of open ports.
+	- Fixed build with musl libc. (Redmine #7455)
 	- Long promiser strings with multiple lines are now
 	  abbreviated in logs. (Redmine #3964)
 	- Fixed a bug which could cause daemons to not to be killed
@@ -2094,14 +2090,14 @@
 	  (Redmine #7193)
 	- Package promise: Fix inability to install certain packages
 	  with numbers.
-	- Fix package promise not removing dependent packages. (Redmine #7424)
-	- Fix warning "Failed to parse csv file entry" with certain very long
+	- Fixed package promise not removing dependent packages. (Redmine #7424)
+	- Fixed warning "Failed to parse csv file entry" with certain very long
 	  commands promises. (Redmine #7400)
-	- Fix misaligned help output in cf-hub. (Redmine #7273)
+	- Fixed misaligned help output in cf-hub. (Redmine #7273)
 	- Augmenting inputs from the augments_file (Redmine #7420)
-	- Add support for failover to 3rd HA node located outside cluster.
+	- Added support for failover to 3rd HA node located outside cluster.
 	- Upgrade all dependencies for patch release.
-	- Fix a bug which caused daemons not to be restarted on
+	- Fixed a bug which caused daemons not to be restarted on
 	  upgrade. (Redmine #7528)
 
 3.7.0:
@@ -2151,7 +2147,7 @@
 	  improvements from versions that don't understand them.
 	- Compile time option (--with-statedir) to
 	  override the default state/ directory path.
-	- Fix error messages/ handling in process signalling which no longer
+	- Fixed error messages/ handling in process signalling which no longer
 	  allowed any signals to fail silently
 	- Also enable shortcut keyword for cf-serverd classic protocol, eg to
 	  simplify the bootstrap process for clients that have different
@@ -2164,7 +2160,7 @@
 	- Inline JSON in policy files: surrounding with parsejson() is now
 	  optional *when creating a new data container*.
 	- New data_expand() function to interpolate variables in a data container.
-	- Add configurable network bandwidth limit for all outgoing
+	- Added configurable network bandwidth limit for all outgoing
 	  connections ("bwlimit" attribute in "body common control") . To
 	  enforce it in both directions, make sure the attribute is set on both
 	  sides of the connection.
@@ -2203,7 +2199,7 @@
 	- 3.4 is no longer supported in masterfiles.
 
 	Bug fixes:
-	- Fix server common bundles evaluation order (Redmine#7211).
+	- Fixed server common bundles evaluation order (Redmine#7211).
 	- Limit LMDB disk usage by preserving sparse areas in LMDB files
 	  (Redmine#7242).
 	- Fixed LMDB corruption on HP-UX 11.23. (Redmine #6994)
@@ -2240,16 +2236,16 @@
 	- Support for def.json class augmentation in update policy
 	- Run vacuum operation on postgresql every night as a part of
 	  maintenance.
-	- Add measure_promise_time action body to lib (3.5, 3.6, 3.7, 3.8)
+	- Added measure_promise_time action body to lib (3.5, 3.6, 3.7, 3.8)
 	- New negative class guard cfengine_internal_disable_agent_email so
 	  that agent email can be easily disabled by augmenting def.json
 
 	Changed:
-	- Relocate def.cf to controls/VER/
-	- Relocate update_def to controls/VER
-	- Relocate all controls to controls/VER
+	- Relocated def.cf to controls/VER/
+	- Relocated update_def to controls/VER
+	- Relocated all controls to controls/VER
 	- Only load cf_hub and reports.cf on CFEngine Enterprise installs
-	- Relocate acls related to report collection from bundle server
+	- Relocated acls related to report collection from bundle server
 	  access_rules to controls/VER/reports.cf into bundle server
 	  report_access_rules
 	- Re-organize cfe_internal splitting core from enterprise specific
@@ -2260,17 +2256,17 @@
 	  to be modified
 	- To improve predictibility autorun bundles are activated in
 	  lexicographical order
-	- Relocate services/file_change.cf to cfe_internal/enterprise. This
+	- Relocated services/file_change.cf to cfe_internal/enterprise. This
 	  policy is most useful for a good OOTB experience with CFEngine
 	  Enterprise Mission Portal.
-	- Relocate service_catalogue from promsies.cf to services/main.cf. It is
+	- Relocated service_catalogue from promsies.cf to services/main.cf. It is
 	  intended to be a user entry. This name change correlates with the main
 	  bundle being activated by default if there is no bundlesequence
 	  specified.
 	- Reduce benchmarks sample history to 1 day.
 	- Update policy no longer generates a keypair if one is not found.
 	  (Redmine: #7167)
-	- Relocate cfe_internal_postgresql_maintenance bundle to lib/VER/
+	- Relocated cfe_internal_postgresql_maintenance bundle to lib/VER/
 	- Set postgresql_monitoring_maintenance only for versions 3.6.0 and
 	  3.6.1
 	- Move hub specific bundles from lib/VER/cfe_internal.cf into
@@ -2339,10 +2335,10 @@
 	  (Redmine #6484, Redmine #5462)
 	- Skip non-empty directories silently when recursively deleting.
 	  (Redmine #6331)
-	- Fix memory exhaustion with list larger than 4994 items.
+	- Fixed memory exhaustion with list larger than 4994 items.
 	  (Redmine # 6672)
-	- Fix cf-execd segfault on IP address detection (Redmine #6905).
-	- Fix hard class detection of RHEL6 ComputeNode (Redmine #3148).
+	- Fixed cf-execd segfault on IP address detection (Redmine #6905).
+	- Fixed hard class detection of RHEL6 ComputeNode (Redmine #3148).
 
 3.6.3
 	New features:
@@ -2350,57 +2346,57 @@
 	- Experimental support for Red Hat Enterprise Linux 7
 
 	Bug fixes:
-	- Fix getindices on multi-dimensional arrays (Redmine #6779)
-	- Fix mustache template method to run in dryrun mode (Redmine #6739)
+	- Fixed getindices on multi-dimensional arrays (Redmine #6779)
+	- Fixed mustache template method to run in dryrun mode (Redmine #6739)
 	- Set mailto and mailfrom settings for execd in def.cf (Redmine #6702)
-	- Fix conflation of multi-index entries in arrays (Redmine #6674)
-	- Fix promise locking when transferring using update.cf (Redmine #6623)
+	- Fixed conflation of multi-index entries in arrays (Redmine #6674)
+	- Fixed promise locking when transferring using update.cf (Redmine #6623)
 	- Update JSON parser to return an error on truncation (Redmine #6608)
-	- Fix sys.hardware_addresses not expanded (Redmine #6603)
-	- Fix opening database txn /var/cfengine/cf_lastseen.lmdb:
+	- Fixed sys.hardware_addresses not expanded (Redmine #6603)
+	- Fixed opening database txn /var/cfengine/cf_lastseen.lmdb:
 	  MDB_READERS_FULL when running cf-keys --show-hosts (Redmine #6602)
-	- Fix segfault (Null pointer dereference) when select_end in
+	- Fixed segfault (Null pointer dereference) when select_end in
 	  delete_lines never matches (Redmine #6589)
-	- Fix max_file_size => "0" not disabling or allowing any size
+	- Fixed max_file_size => "0" not disabling or allowing any size
 	  (Redmine #6588)
-	- Fix ifvarclass, with iteration over list, failing when deleting
+	- Fixed ifvarclass, with iteration over list, failing when deleting
 	  files with time condition (Redmine #6577)
-	- Fix classes defined with "or" constraint are never set if any value
+	- Fixed classes defined with "or" constraint are never set if any value
 	  doesn't evaluate to a scalar (Redmine #6569)
 	- Update "mailfrom" default in default policy (Redmine #6567)
-	- Fix logrotate ambiguity of filename (Redmine #6563)
-	- Fix parsing JSON files (Redmine #6549)
+	- Fixed logrotate ambiguity of filename (Redmine #6563)
+	- Fixed parsing JSON files (Redmine #6549)
 	- Reduce write count activity to /var partition (Redmine #6523)
-	- Fix files delete attribute incorrectly triggering promise_kept
+	- Fixed files delete attribute incorrectly triggering promise_kept
 	  (Redmine #6509)
 	- Update services bundle output related to chkconfig when run in
 	  inform mode. (Redmine #6492)
-	- Fix Solaris serverd tests (Redmine #6406)
-	- Fix broken bechaviour of merging arrays with readstringarray
+	- Fixed Solaris serverd tests (Redmine #6406)
+	- Fixed broken bechaviour of merging arrays with readstringarray
 	  (Redmine #6369)
-	- Fix ifelapsed bug with bundle nesting (Redmine #6334)
-	- Fix handling cf_null in bundlesequence (Redmine #6119)
-	- Fix maparray reading whole input array when using subarray
+	- Fixed ifelapsed bug with bundle nesting (Redmine #6334)
+	- Fixed handling cf_null in bundlesequence (Redmine #6119)
+	- Fixed maparray reading whole input array when using subarray
 	  (Redmine #6033)
-	- Fix directories being randomly changed to files (Redmine #6027)
+	- Fixed directories being randomly changed to files (Redmine #6027)
 	- Update defaults promise type to work with classes (Redmine #5748)
 	- systemd integration in services promises (Redmine #5415)
-	- Fix touch attribute ignoring action = warn_only (Redmine #3172)
-	- Fix 4KB string limit in functions readfile, string_downcase,
+	- Fixed touch attribute ignoring action = warn_only (Redmine #3172)
+	- Fixed 4KB string limit in functions readfile, string_downcase,
 	  string_head, string_reverse, string_length, string_tail,
 	  string_upcase (Redmine #2912)
 
 3.6.2
 	Bug fixes:
 	- Don't regenerate software_packages.csv every time (Redmine #6441)
-	- Improve verbose message for package_list_command
-	- Fix missing log output on AIX (Redmine #6434)
+	- Improved verbose message for package_list_command
+	- Fixed missing log output on AIX (Redmine #6434)
 	- Assorted fixes to dirname() esp on Windows (Redmine #4716)
-	- Fix package manager detection
-	- Fix build issues on FreeBSD
+	- Fixed package manager detection
+	- Fixed build issues on FreeBSD
 	- Allow copying of dead symbolic links (Redmine #6175)
 	- Preserve order in readstringarrayidx (Redmine #6466)
-	- Fix passing of unexpanded variable references to arrays
+	- Fixed passing of unexpanded variable references to arrays
 	  (Redmine #5893)
 	- Use entries for new {admin,deny}_{ips,hostnames} constraints in
 	  the relevant legacy lists (Redmine #6542)
@@ -2410,7 +2406,7 @@
 	- Remove unexpanded lists when extending lists (Redmine #6541)
 	- Infer start-time of a process from elapsed when needed
 	  (Redmine #4094)
-	- Fix input range definition for laterthan() function (Redmine #6530)
+	- Fixed input range definition for laterthan() function (Redmine #6530)
 	- Don't add trailing delimiter when join()'ing lists ending with a
 	  null-value (Redmine #6552)
 	- 9999999999 (ten 9s) or higher has been historically used as an upper
@@ -2430,7 +2426,7 @@
 
 	Changes:
 	- Short-circuit evaluation of classes promises if class is already set (Redmine #5241)
-	- Fix to assume all non-specified return codes are failed in commands promises (Redmine #5986)
+	- Fixed to assume all non-specified return codes are failed in commands promises (Redmine #5986)
 	- cf-serverd logs reconfiguration message to NOTICE (was INFO) so that it's always logged in syslog
 
 	Bug fixes:
@@ -2443,7 +2439,7 @@
 	  (Redmine #1554, #1496, #3530, #1563)
 	- 'body changes' notifies about disappeared files in file monitoring (Redmine #2917)
 	- Fixed CFEngine template producing a zero sized file (Redmine #6088)
-	- Add 0-9 A-Z _ to allowed context of module protocol (Redmine #6063)
+	- Added 0-9 A-Z _ to allowed context of module protocol (Redmine #6063)
 	- Extend ps command column width and prepend zone name on Solaris
 	- Fixed strftime() function on Solaris when called with certain specifiers.
 	- Fixed users promise bug regarding password hashes in a NIS/NSS setup.
@@ -2460,7 +2456,7 @@
 
 	Changes:
 	- Changes to logging output
-	  - Add process name and pid in syslog message (GitHub #789)
+	  - Added process name and pid in syslog message (GitHub #789)
 	  - cf-serverd logging levels are now more standardised:
 	    - INFO logs only failures
 	    - VERBOSE logs successful requests as well
@@ -2475,7 +2471,7 @@
 	  cf-agent --self-diagnostics (-x) is only implemented for TCDB, not for LMDB
 	- port argument in readtcp() and selectservers() may be a
 	  service name (e.g. "http", "pop3").
-	- Enable source file in agent copy_from promises to be a relative path.
+	- Enabled source file in agent copy_from promises to be a relative path.
 	  - file "changes" reporting now reports with log level "notice", instead of "error".
 	- process_results default to AND'ing of set attributes if not specified (Redmine #3224)
 	- interface is now canonified in sys.hardware_mac[interface] to align with
@@ -2668,7 +2664,7 @@
 
 	Bug fixes: for a complete list of fixed bugs, see Redmine at https://cfengine.com/dev
 	- Various fixes in evaluation and variable resolution
-	- Improve performance of list iteration (Redmine #1875)
+	- Improved performance of list iteration (Redmine #1875)
 	- Removed limitation of input length to internal buffer sizes
 	  - directories ending with "/" are not ignored
 	  - lsdir() always return a list now, never a scalar
@@ -2692,34 +2688,34 @@
 	  will result in the package being installed.
 
 	Bug fixes:
-	- Fix cf-monitord crash due to incorrect array initialization (Redmine #3180)
-	- Fix cf-serverd stat()'ing the file tree every second (Redmine #3479)
+	- Fixed cf-monitord crash due to incorrect array initialization (Redmine #3180)
+	- Fixed cf-serverd stat()'ing the file tree every second (Redmine #3479)
 	- Correctly populate sys.hardware_addresses variable (Redmine #2936)
-	- Add support for Debian's GNU/kfreebsd to build system (Redmine #3500)
-	- Fix possible stack corruption in guest_environments promises (Redmine #3552)
+	- Added support for Debian's GNU/kfreebsd to build system (Redmine #3500)
+	- Fixed possible stack corruption in guest_environments promises (Redmine #3552)
 	- Work-around hostname trunctation in HP-UX's uname (Redmine #3517)
-	- Fix body copy purging of empty directories (Redmine #3429)
+	- Fixed body copy purging of empty directories (Redmine #3429)
 	- Make discovery and loading of avahi libraries more robust
 	- Compile and packaging fixes for HP-UX, AIX and Solaris
-	- Fix fatal error in lsdir() when directory doesn't exist (Redmine #3273)
-	- Fix epoch calculation for stime inrange calculation (Redmine #2921)
+	- Fixed fatal error in lsdir() when directory doesn't exist (Redmine #3273)
+	- Fixed epoch calculation for stime inrange calculation (Redmine #2921)
 
 3.5.2
 	Bug fixes:
-	- Fix delayed abortclasses checking (Redmine #2316, #3114, #3003)
-	- Fix maplist arguments bug (Redmine #3256)
-	- Fix segfaults in cf-pomises (Redmine #3173, 3194)
-	- Fix build on Solaris 10/SmartOS (Redmine #3097)
+	- Fixed delayed abortclasses checking (Redmine #2316, #3114, #3003)
+	- Fixed maplist arguments bug (Redmine #3256)
+	- Fixed segfaults in cf-pomises (Redmine #3173, 3194)
+	- Fixed build on Solaris 10/SmartOS (Redmine #3097)
 	- Sanitize characters from /etc/issue in sys.flavor for Debian (Redmine #2988)
-	- Fix segfault when dealing with files or data > 4K (Redmine #2912, 2698)
+	- Fixed segfault when dealing with files or data > 4K (Redmine #2912, 2698)
 	- Don't truncate keys to 126 characters in getindices (Redmine #2626)
 	- Files created via log_* actions now have mode 600 (Redmine #1578)
-	- Fix wrong log message when a promise is ignored due to 'ifvarclass' not matching
-	- Fix lifetime of persistent classes (Redmine #3259)
-	- Fix segfault when process_select body had no process_result attribute
+	- Fixed wrong log message when a promise is ignored due to 'ifvarclass' not matching
+	- Fixed lifetime of persistent classes (Redmine #3259)
+	- Fixed segfault when process_select body had no process_result attribute
 	  Default to AND'ed expression of all specified attributes (Redmine #3224)
 	- Include system message in output when acl promises fail
-	- Fix invocation of standard_services bundle and corresponding promise compliance (Redmine #2869)
+	- Fixed invocation of standard_services bundle and corresponding promise compliance (Redmine #2869)
 
 3.5.1
 
@@ -2731,18 +2727,18 @@
 	  needed stdlib elements (Redmine #3044)
 
 	Bug fixes:
-	- Fix recursive copying of files (Redmine #2965)
+	- Fixed recursive copying of files (Redmine #2965)
 	- Respect classes in templates (Redmine ##2928)
-	- Fix timestamps on Windows (Redmine #2933)
-	- Fix non-root cf-agent flooding syslog (Redmine #2980)
-	- Fix email flood from cf-execd due to timestamps in agent output (Redmine #3011)
+	- Fixed timestamps on Windows (Redmine #2933)
+	- Fixed non-root cf-agent flooding syslog (Redmine #2980)
+	- Fixed email flood from cf-execd due to timestamps in agent output (Redmine #3011)
 	- Preserve security context when editing or copying local files (Redmine #2728)
-	- Fix path for sys.crontab on redhat systems (Redmine #2553)
+	- Fixed path for sys.crontab on redhat systems (Redmine #2553)
 	- Prevent incorrect "insert_lines promise uses the same select_line_matching anchor" warning (Redmine #2778)
-	- Fix regression of setting VIPADDRESS to 127.0.0.1 (Redmine #3010)
-	- Fix "changes" promise not receiving status when file is missing (Redmine #2820)
-	- Fix symlinks being destroyed when editing them (Redmine #2363)
-	- Fix missing "promise kept" status for the last line in a file (Redmine #2943)
+	- Fixed regression of setting VIPADDRESS to 127.0.0.1 (Redmine #3010)
+	- Fixed "changes" promise not receiving status when file is missing (Redmine #2820)
+	- Fixed symlinks being destroyed when editing them (Redmine #2363)
+	- Fixed missing "promise kept" status for the last line in a file (Redmine #2943)
 
 3.5.0
 
@@ -2770,13 +2766,13 @@
 	- cf-key: new options --trust-key/-t and --print-digest/-p
 	- Class "failsafe_fallback" is defined in failsafe.cf when main policy contains errors and
 	  failsafe is run because of this
-	- Add scope attribute for body classes (Redmine #2013)
+	- Added scope attribute for body classes (Redmine #2013)
 	- Better diagnostics of parsing errors
 	- Error messages from parser now show the context of error
 	- New cf-agent option: --self-diagnostics
 	- New output format, and --legacy-output
 	- Warnings for cf-promises.
-	- Enable zeroconf-discovery of policy hubs for automatic bootstrapping
+	- Enabled zeroconf-discovery of policy hubs for automatic bootstrapping
 	  if Avahi is present
 	- Support for sys.cpus on more platforms than Linux & HPUX
 
@@ -2814,7 +2810,7 @@
 	- Networking code is moved from libpromises to its own library,
 	  libcfnet. Work has begun on making the API more sane and thread-safe.
 	  Lots of legacy code was removed.
-	- Add getaddrinfo() replacement in libcompat (borrowed from PostgreSQL).
+	- Added getaddrinfo() replacement in libcompat (borrowed from PostgreSQL).
 	- Replace old deprecated and non thread-safe resolver calls with
 	  getaddrinfo() and getnameinfo().
 	- Hostname2IPString(), IPString2Hostname() are now thread-safe, and are
@@ -2842,7 +2838,7 @@
 	- Make sure "restart" and "reload" are recognized keywords in packages. (Redmine #2468)
 	- Allocate memory dynamically to avoid out-of-buffer or out-of-hash
 	  situations
-	- Fix edit_xml update of existing attributes  (Redmine #2034)
+	- Fixed edit_xml update of existing attributes  (Redmine #2034)
 	- Use failsafe policy from compile-time specified workdir (Redmine #1991)
 	- ifvarclass checked from classes promises in common bundles
 	- Do not wait for splaytime when executing only once
@@ -2880,14 +2876,14 @@
 	- Fixes to policies in masterfiles (see masterfiles/Changelog for details)
 	- Fixes for OpenBSD (GitHub #278)
 	- Do not canonify values specified in abortbundleclasses/abortclasses (Redmine #1786)
-	- Fix build issues on NetBSD, SLES 12.2
-	- Improve error message when libxml2 support is not compiled (Redmine #1799)
-	- Fix potential segmentation fault when trimming network socket data (GitHub #233)
-	- Fix potential segmentation fault when address-lookups in lastseen db failed (GitHub #233)
+	- Fixed build issues on NetBSD, SLES 12.2
+	- Improved error message when libxml2 support is not compiled (Redmine #1799)
+	- Fixed potential segmentation fault when trimming network socket data (GitHub #233)
+	- Fixed potential segmentation fault when address-lookups in lastseen db failed (GitHub #233)
 	- Execute background promise serially when max_children was reached, rather
 	  than skipping them (GitHub #233)
-	- Fix segmentation fault in cf-promises when invoked with --reports (Redmine #1931)
-	- Fix compilation with Sun Studio 12 (Redmine #1901)
+	- Fixed segmentation fault in cf-promises when invoked with --reports (Redmine #1931)
+	- Fixed compilation with Sun Studio 12 (Redmine #1901)
 	- Silence type-pun warning when building on HP-UX (GitHub #287)
 
 3.4.1: (Bugfix and stability release)
@@ -2898,11 +2894,11 @@
 	  executor control), defaulting to 1 week
 
 	Bugfixes:
-	- Fix regression of classmatch() failing with hard classes (Redmine #1834)
+	- Fixed regression of classmatch() failing with hard classes (Redmine #1834)
 	- Create promise-defined and persistent classes in correct
 	  namespace (Redmine #1836)
 	- Several fixes to namespace support
-	- Fix several crash bugs caused by buffer overflow and race
+	- Fixed several crash bugs caused by buffer overflow and race
 	  conditions in cf-serverd
 	- Regenerate time classes in cf-execd for each run (Redmine #1838)
 	- edit_xml: fix select_xpath implementation and update documentation
@@ -3033,7 +3029,7 @@
 	- cfruncommand for cf-execd is an arbitrary shell command now (Mantis #1268).
 	- Fixed broken "daily" splayclasses (Mantis #1307).
 	- Allow filenames up to 4096 bytes in network transfers (Redmine #1199).
-	- Fix stale state preserved during cf-serverd reload (Redmine #1487).
+	- Fixed stale state preserved during cf-serverd reload (Redmine #1487).
 	- Free disk space calculation is fixed (Mantis #1120).
 	- Numerous portability bugfixes (especially OpenBSD, Solaris, AIX-related).
 	- Compatibility fixes for AIX, HP-UX, Solaris (Mantis #1185, Mantis #1177, Mantis #1109).
@@ -3085,12 +3081,12 @@
 3.3.4: (Bugfix and stability release)
 
 	Evaluation of policies:
-	- Fix wrong classes set after installation of several packages
+	- Fixed wrong classes set after installation of several packages
 	  using packages promises (Mantis #829).
-	- Fix segfault using edit_template on existing file (Mantis #1155).
+	- Fixed segfault using edit_template on existing file (Mantis #1155).
 
 	Misc:
-	- Fix memory leak during re-read of network interfaces'
+	- Fixed memory leak during re-read of network interfaces'
 	  information in cf-execd/cf-serverd.
 
 3.3.3: (Bugfix and stability release)
@@ -3102,7 +3098,7 @@
 	  (Similar to Mantis #1117).
 
 	Misc:
-	- Fix generation of reference manual on machines with umask more
+	- Fixed generation of reference manual on machines with umask more
 	  relaxed than 022.
 	- Use statvfs(3) on OpenBSD to obtain filesystem information
 	  (Mantis #1135).
@@ -3130,15 +3126,15 @@
 	Misc:
 	- Do not create huge file in case corrupted TokyoCabinet database
 	  is detected (Mantis #1106).
-	- Fix file descriptor leak on error paths, may have caused crashes
+	- Fixed file descriptor leak on error paths, may have caused crashes
 	  of cf-execd and cf-serverd (Issue #1096).
-	- Fix intermittent segfault in cf-execd (Mantis #1116).
+	- Fixed intermittent segfault in cf-execd (Mantis #1116).
 	- Impose an upper limit on amount of listening sockets reported by
 	  cf-monitord. Huge amounts of listening sockets caused cf-agent to
 	  segfault on next run (Mantis #1098).
-	- Add missing function prototypes caused errors during compilation
+	- Added missing function prototypes caused errors during compilation
 	  on HP-UX (Mantis #1109).
-	- Fix compilation on Solaris 11 (Mantis #1091).
+	- Fixed compilation on Solaris 11 (Mantis #1091).
 
 3.3.1: (Bugfix and stability release)
 
@@ -3150,10 +3146,10 @@
 	  database_operation provided (Mantis #1046).
 
 	Built-in functions:
-	- Fix countclassesmatching() function which was misbehaving trying
+	- Fixed countclassesmatching() function which was misbehaving trying
 	  to match classes starting with alphanumeric symbol (Mantis #1073).
-	- Fix diskfree() to return kilobytes, as described in documentation (Mantis #980, #955).
-	- Fix hostsseen() function to avoid treating all hosts as not
+	- Fixed diskfree() to return kilobytes, as described in documentation (Mantis #980, #955).
+	- Fixed hostsseen() function to avoid treating all hosts as not
 	  being seen since 1970 (Mantis #886).
 	- Do not output misleading error message if readtcp() is unable to connect (Mantis #1085).
 
@@ -3165,12 +3161,12 @@
 
 	Misc:
 	- Plug file descriptor leak after failed file copy (Mantis #990).
-	- Fix unsafe admit rules in default promises.cf (Mantis #1040).
-	- Fix splaytime to match documentation: it is specified in minutes, not seconds (Mantis #1099).
+	- Fixed unsafe admit rules in default promises.cf (Mantis #1040).
+	- Fixed splaytime to match documentation: it is specified in minutes, not seconds (Mantis #1099).
 
 	Packaging:
-	- Fix owner/group of initscript and profile.d snippet in RPM builds (Mantis #1061, #1058).
-	- Fix location of libvirt socket CFEngine uses to connect to libvirtd (Mantis #1072).
+	- Fixed owner/group of initscript and profile.d snippet in RPM builds (Mantis #1061, #1058).
+	- Fixed location of libvirt socket CFEngine uses to connect to libvirtd (Mantis #1072).
 	- Install CoreBase to /var/cfengine/masterfiles during installation (Mantis #1075).
 	- Do not leave old cf-twin around after upgrade (Mantis #1068)
 	- Do not leave rcS.d symlinks after purging .deb package (Mantis #1092).
@@ -3290,7 +3286,7 @@
 	  packages.
 	- New option cf-key -r to remove host key by IP or hostname.
 	- Added detection of network interfaces which belong to BSD jails.
-	- Improve robustness of multi-threaded code, in particular fix
+	- Improved robustness of multi-threaded code, in particular fix
 	  problems with spurious access denials in server and losing of
 	  authentication rules after policy reload.
 	- cf-promises accepts option -b matching cf-agent, which causes it

@@ -2221,13 +2221,17 @@ static int Linux_Suse_Version(EvalContext *ctx)
     char classbuf[CF_MAXVARSIZE];
 
     Log(LOG_LEVEL_VERBOSE, "This appears to be a SUSE system.");
-    EvalContextClassPutHard(ctx, "SUSE", "inventory,attribute_name=none,source=agent");
-    EvalContextClassPutHard(ctx, "suse", "inventory,attribute_name=none,source=agent");
+    const char *tags =
+        "inventory,attribute_name=none,source=agent,derived-from-file="
+        SUSE_REL_FILENAME;
+
+    EvalContextClassPutHard(ctx, "SUSE", tags);
+    EvalContextClassPutHard(ctx, "suse", tags);
 
     /* The correct spelling for SUSE is "SUSE" but CFEngine used to use "SuSE".
      * Keep this for backwards compatibility until CFEngine 3.7
      */
-    EvalContextClassPutHard(ctx, "SuSE", "inventory,attribute_name=none,source=agent");
+    EvalContextClassPutHard(ctx, "SuSE", tags);
 
     /* Grab the first line from the SuSE-release file and then close it. */
     char relstring[CF_MAXVARSIZE];
@@ -2287,7 +2291,7 @@ static int Linux_Suse_Version(EvalContext *ctx)
     {
         classbuf[0] = '\0';
         strcat(classbuf, "SLES8");
-        EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+        EvalContextClassPutHard(ctx, classbuf, tags);
     }
     else if (strncmp(relstring, "sles", 4) == 0)
     {
@@ -2295,13 +2299,13 @@ static int Linux_Suse_Version(EvalContext *ctx)
 
         nt_static_assert((sizeof(vbuf)) > 255);
         sscanf(relstring, "%255[-_a-zA-Z0-9]", vbuf);
-        EvalContextClassPutHard(ctx, vbuf, "inventory,attribute_name=none,source=agent");
+        EvalContextClassPutHard(ctx, vbuf, tags);
 
         list = SplitString(vbuf, '-');
 
         for (ip = list; ip != NULL; ip = ip->next)
         {
-            EvalContextClassPutHard(ctx, ip->name, "inventory,attribute_name=none,source=agent");
+            EvalContextClassPutHard(ctx, ip->name, tags);
         }
 
         DeleteItemList(list);
@@ -2316,7 +2320,7 @@ static int Linux_Suse_Version(EvalContext *ctx)
             if (!strncmp(relstring, vbuf, strlen(vbuf)))
             {
                 snprintf(classbuf, CF_MAXVARSIZE, "SLES%d", version);
-                EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+                EvalContextClassPutHard(ctx, classbuf, tags);
             }
             else
             {
@@ -2326,7 +2330,7 @@ static int Linux_Suse_Version(EvalContext *ctx)
                 if (!strncmp(relstring, vbuf, strlen(vbuf)))
                 {
                     snprintf(classbuf, CF_MAXVARSIZE, "SLED%d", version);
-                    EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+                    EvalContextClassPutHard(ctx, classbuf, tags);
                 }
             }
         }
@@ -2365,25 +2369,25 @@ static int Linux_Suse_Version(EvalContext *ctx)
             if (major != -1 && minor != -1)
             {
                 strcpy(classbuf, "SUSE");
-                EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+                EvalContextClassPutHard(ctx, classbuf, tags);
                 strcat(classbuf, "_");
                 strcat(classbuf, strmajor);
-                SetFlavor(ctx, classbuf, NULL);
+                SetFlavor(ctx, classbuf, SUSE_REL_FILENAME);
                 strcat(classbuf, "_");
                 strcat(classbuf, strminor);
-                EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+                EvalContextClassPutHard(ctx, classbuf, tags);
 
                 /* The correct spelling for SUSE is "SUSE" but CFEngine used to use "SuSE".
                  * Keep this for backwards compatibility until CFEngine 3.7
                  */
                 strcpy(classbuf, "SuSE");
-                EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+                EvalContextClassPutHard(ctx, classbuf, tags);
                 strcat(classbuf, "_");
                 strcat(classbuf, strmajor);
-                EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+                EvalContextClassPutHard(ctx, classbuf, tags);
                 strcat(classbuf, "_");
                 strcat(classbuf, strminor);
-                EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+                EvalContextClassPutHard(ctx, classbuf, tags);
 
                 Log(LOG_LEVEL_VERBOSE, "Discovered SUSE version %s", classbuf);
                 return 0;
@@ -2399,16 +2403,16 @@ static int Linux_Suse_Version(EvalContext *ctx)
             if (major != -1 && minor != -1)
             {
                 strcpy(classbuf, "SLES");
-                EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+                EvalContextClassPutHard(ctx, classbuf, tags);
                 strcat(classbuf, "_");
                 strcat(classbuf, strmajor);
-                EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+                EvalContextClassPutHard(ctx, classbuf, tags);
                 strcat(classbuf, "_");
                 strcat(classbuf, strminor);
-                EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+                EvalContextClassPutHard(ctx, classbuf, tags);
 
                 snprintf(classbuf, CF_MAXVARSIZE, "SUSE_%d", major);
-                SetFlavor(ctx, classbuf, NULL);
+                SetFlavor(ctx, classbuf, SUSE_REL_FILENAME);
 
                 /* The correct spelling for SUSE is "SUSE" but CFEngine used to use "SuSE".
                  * Keep this for backwards compatibility until CFEngine 3.7

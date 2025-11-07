@@ -1854,7 +1854,11 @@ static void Linux_Oracle_Version(EvalContext *ctx)
 #define ORACLE_ID "Oracle Linux Server"
 
     Log(LOG_LEVEL_VERBOSE, "This appears to be Oracle Linux");
-    EvalContextClassPutHard(ctx, "oracle", "inventory,attribute_name=none,source=agent");
+    const char *tags =
+    "inventory,attribute_name=none,source=agent,derived-from-file="
+    ORACLE_REL_FILENAME;
+
+    EvalContextClassPutHard(ctx, "oracle", tags);
 
     if (!ReadLine(ORACLE_REL_FILENAME, relstring, sizeof(relstring)))
     {
@@ -1878,10 +1882,10 @@ static void Linux_Oracle_Version(EvalContext *ctx)
         char buf[CF_BUFSIZE];
 
         snprintf(buf, CF_BUFSIZE, "oracle_%d", major);
-        SetFlavor(ctx, buf, NULL);
+        SetFlavor(ctx, buf, ORACLE_REL_FILENAME);
 
         snprintf(buf, CF_BUFSIZE, "oracle_%d_%d", major, minor);
-        EvalContextClassPutHard(ctx, buf, "inventory,attribute_name=none,source=agent");
+        EvalContextClassPutHard(ctx, buf, tags);
     }
 }
 

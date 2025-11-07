@@ -155,6 +155,8 @@ sudo zypper install gdb gcc make lmdb autoconf automake libtool git python3 pcre
 sudo apk add alpine-sdk lmdb-dev openssl-dev bison flex-dev acl-dev pcre-dev autoconf automake libtool git python3 gdb
 ./autogen.sh --without-pam
 
+Note that in order for process promises to work you must install the procps package for a "proper" ps command instead of busybox.
+
 * Termux (2020-04-24)
 
 pkg install build-essential git autoconf automake bison flex liblmdb openssl pcre libacl libyaml

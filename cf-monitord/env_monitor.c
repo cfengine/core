@@ -272,7 +272,7 @@ void MonitorStartServer(EvalContext *ctx, const Policy *policy)
     Policy *monitor_cfengine_policy = PolicyNew();
     Promise *pp = NULL;
     {
-        Bundle *bp = PolicyAppendBundle(monitor_cfengine_policy, NamespaceDefault(), "monitor_cfengine_bundle", "agent", NULL, NULL);
+        Bundle *bp = PolicyAppendBundle(monitor_cfengine_policy, NamespaceDefault(), "monitor_cfengine_bundle", "agent", NULL, NULL, EVAL_ORDER_UNDEFINED);
         BundleSection *sp = BundleAppendSection(bp, "monitor_cfengine");
 
         pp = BundleSectionAppendPromise(sp, "the monitor daemon", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, NULL, NULL);

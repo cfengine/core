@@ -50,7 +50,7 @@ When submitting your pull request, please make sure you:
 
 * Tidy up the commit log by squashing commits and [writing good commit messages](#commits).
 
-* Add one or more [ChangeLog Entries](#changelog) to the commit(s).
+* Add one or more [changelog entries](#changelog) to the commit(s).
 
 * Become familiar with the *Northern.tech AS Contributor statement* as described
   in the [*AUTHORS*](./AUTHORS) file.
@@ -203,7 +203,7 @@ cf-net: Fixed networking issues on windows
 
 ### Changelog
 
-Most new features and fixes should have an entry in the `ChangeLog` file.
+Most new features and fixes should have an entry in the `CHANGELOG.md` file.
 We have an automatic way of generating them before the release, by properly formatting *commit messages*.
 
 * To write arbitrary message in the ChangeLog:
@@ -223,7 +223,7 @@ Changes which don't affect users, like changes in tests or in tools which are no
 
 All changelog entries should also include a reference to a ticket:
   `Ticket: CFE-1234`
-  
+
 Note that the `Changelog` and `Ticket` entries must be in a *commit message* and not the description of a PR.
 
 Sometimes is necessary to redact a `Changelog` entry, for example a commit needs

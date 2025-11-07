@@ -2841,11 +2841,11 @@ static void Linux_Amazon_Version(EvalContext *ctx)
                 EvalContextClassPutHard(ctx, class,
                     "inventory,attribute_name=none,source=agent"
                     ",derived-from-file=/etc/system-release");
-                SetFlavor(ctx, class, NULL);
+                SetFlavor(ctx, class, "/etc/system-release");
             }
             else
             {
-                SetFlavor(ctx, "amazon_linux", NULL);
+                SetFlavor(ctx, "amazon_linux", "/etc/system-release");
             }
             // We set this class for backwards compatibility
             EvalContextClassPutHard(ctx, "AmazonLinux",

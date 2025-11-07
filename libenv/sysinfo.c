@@ -1896,10 +1896,13 @@ static int Linux_Fedora_Version(EvalContext *ctx)
 
 /* The full string read in from fedora-release */
     char relstring[CF_MAXVARSIZE];
+    const char *tags =
+        "inventory,attribute_name=none,source=agent,derived-from-file="
+        FEDORA_REL_FILENAME;
 
     Log(LOG_LEVEL_VERBOSE, "This appears to be a fedora system.");
-    EvalContextClassPutHard(ctx, "redhat", "inventory,attribute_name=none,source=agent");
-    EvalContextClassPutHard(ctx, "fedora", "inventory,attribute_name=none,source=agent");
+    EvalContextClassPutHard(ctx, "redhat", tags);
+    EvalContextClassPutHard(ctx, "fedora", tags);
 
 /* Grab the first line from the file and then close it. */
 
@@ -1949,10 +1952,10 @@ static int Linux_Fedora_Version(EvalContext *ctx)
         char classbuf[CF_MAXVARSIZE];
         classbuf[0] = '\0';
         strcat(classbuf, vendor);
-        EvalContextClassPutHard(ctx,classbuf, "inventory,attribute_name=none,source=agent");
+        EvalContextClassPutHard(ctx, classbuf, tags);
         strcat(classbuf, "_");
         strcat(classbuf, strmajor);
-        SetFlavor(ctx, classbuf, NULL);
+        SetFlavor(ctx, classbuf, FEDORA_REL_FILENAME);
     }
 
     return 0;

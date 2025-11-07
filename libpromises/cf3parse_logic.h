@@ -1011,6 +1011,24 @@ static inline void ParserHandleBlockAttributeRval()
                 P.current_namespace = xstrdup(P.rval.item);
             }
         }
+        if (StringEqual(P.lval, "evaluation_order"))
+        {
+            if (P.rval.type != RVAL_TYPE_SCALAR)
+            {
+                yyerror("evaluation_order must be a constant scalar string");
+            }
+            else
+            {
+                if (StringEqual(P.rval.item, "classic"))
+                {
+                    P.current_evaluation_order = EVAL_ORDER_CLASSIC;
+                }
+                else if (StringEqual(P.rval.item, "top_down"))
+                {
+                    P.current_evaluation_order = EVAL_ORDER_TOP_DOWN;
+                }
+            }
+        }
     }
 
     RvalDestroy(P.rval);
@@ -1038,7 +1056,8 @@ static inline void ParserBeginBundleBody()
             P.blockid,
             P.blocktype,
             P.useargs,
-            P.filename);
+            P.filename,
+            P.current_evaluation_order);
         P.currentbundle->offset.line = CURRENT_BLOCKID_LINE;
         P.currentbundle->offset.start = P.offsets.last_block_id;
     }

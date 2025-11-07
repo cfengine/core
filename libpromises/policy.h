@@ -75,6 +75,7 @@ struct Bundle_
     char *type;
     char *name;
     char *ns;
+    EvalOrder evaluation_order;
     Rlist *args;
 
     Seq *sections;
@@ -179,7 +180,7 @@ void PolicyErrorWrite(Writer *writer, const PolicyError *error);
 bool PolicyCheckPartial(const Policy *policy, Seq *errors);
 bool PolicyCheckRunnable(const EvalContext *ctx, const Policy *policy, Seq *errors);
 
-Bundle *PolicyAppendBundle(Policy *policy, const char *ns, const char *name, const char *type, const Rlist *args, const char *source_path);
+Bundle *PolicyAppendBundle(Policy *policy, const char *ns, const char *name, const char *type, const Rlist *args, const char *source_path, const EvalOrder evaluation_order);
 Body *PolicyAppendBody(Policy *policy, const char *ns, const char *name,
                        const char *type, Rlist *args, const char *source_path,
                        bool is_custom);

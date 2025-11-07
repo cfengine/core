@@ -1025,8 +1025,9 @@ static void ResolveControlBody(EvalContext *ctx, GenericAgentConfig *config,
             /* Ignored */
         }
 
-        if (StringEqual(lval, CFG_CONTROLBODY[COMMON_CONTROL_EVALUATION_ORDER].lval))
+        if (StringEqual(lval, CFG_CONTROLBODY[COMMON_CONTROL_EVALUATION_ORDER].lval) && !StringEqual(control_body->type, "file"))
         {
+            /* evaluation_order in file control is already handled in the parser */
             Log(LOG_LEVEL_VERBOSE, "SET evaluation %s",
                 RvalScalarValue(evaluated_rval));
 

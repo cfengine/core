@@ -106,7 +106,7 @@ static void test_array_with_dot_colon_in_index(void)
 static void test_special_scope(void)
 {
     Policy *p = PolicyNew();
-    Bundle *bp = PolicyAppendBundle(p, "ns", "b", "agent", NULL, NULL);
+    Bundle *bp = PolicyAppendBundle(p, "ns", "b", "agent", NULL, NULL, EVAL_ORDER_UNDEFINED);
 
     {
         VarRef *ref = VarRefParseFromBundle("c.lval", bp);

@@ -1307,7 +1307,7 @@ void BundleSectionDestroy(BundleSection *section)
 
 Bundle *PolicyAppendBundle(Policy *policy,
                            const char *ns, const char *name, const char *type,
-                           const Rlist *args, const char *source_path)
+                           const Rlist *args, const char *source_path, const EvalOrder evaluation_order)
 {
     Bundle *bundle = xcalloc(1, sizeof(Bundle));
 
@@ -1323,6 +1323,7 @@ Bundle *PolicyAppendBundle(Policy *policy,
     bundle->sections = SeqNew(10, BundleSectionDestroy);
     bundle->custom_sections = SeqNew(10, BundleSectionDestroy);
     bundle->all_promises = SeqNew(10, NULL);
+    bundle->evaluation_order = evaluation_order;
 
     return bundle;
 }
@@ -2312,7 +2313,7 @@ static Bundle *PolicyAppendBundleJson(Policy *policy, JsonElement *json_bundle)
         }
     }
 
-    Bundle *bundle = PolicyAppendBundle(policy, ns, name, type, args, source_path);
+    Bundle *bundle = PolicyAppendBundle(policy, ns, name, type, args, source_path, EVAL_ORDER_UNDEFINED);
 
     {
         JsonElement *json_promise_types = JsonObjectGetAsArray(json_bundle, "promiseTypes");

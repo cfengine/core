@@ -1788,9 +1788,15 @@ static void Linux_Oracle_VM_Server_Version(EvalContext *ctx)
 #define ORACLE_VM_SERVER_REL_FILENAME "/etc/ovs-release"
 #define ORACLE_VM_SERVER_ID "Oracle VM server"
 
+    const char *tags =
+        "inventory,attribute_name=none,source=agent,derived-from-file="
+        ORACLE_VM_SERVER_REL_FILENAME;
+
     Log(LOG_LEVEL_VERBOSE, "This appears to be Oracle VM Server");
-    EvalContextClassPutHard(ctx, "redhat", "inventory,attribute_name=none,source=agent");
-    EvalContextClassPutHard(ctx, "oraclevmserver", "inventory,attribute_name=Virtual host,source=agent");
+    EvalContextClassPutHard(ctx, "redhat", tags);
+    EvalContextClassPutHard(ctx, "oraclevmserver",
+        "inventory,attribute_name=Virtual host,source=agent,derived-from-file="
+        ORACLE_VM_SERVER_REL_FILENAME);
 
     if (!ReadLine(ORACLE_VM_SERVER_REL_FILENAME, relstring, sizeof(relstring)))
     {
@@ -1816,7 +1822,7 @@ static void Linux_Oracle_VM_Server_Version(EvalContext *ctx)
         char buf[CF_BUFSIZE];
 
         snprintf(buf, CF_BUFSIZE, "oraclevmserver_%d", major);
-        SetFlavor(ctx, buf, NULL);
+        SetFlavor(ctx, buf, ORACLE_VM_SERVER_REL_FILENAME);
     }
 
     if (revcomps > 1)
@@ -1824,7 +1830,7 @@ static void Linux_Oracle_VM_Server_Version(EvalContext *ctx)
         char buf[CF_BUFSIZE];
 
         snprintf(buf, CF_BUFSIZE, "oraclevmserver_%d_%d", major, minor);
-        EvalContextClassPutHard(ctx, buf, "inventory,attribute_name=none,source=agent");
+        EvalContextClassPutHard(ctx, buf, tags);
     }
 
     if (revcomps > 2)
@@ -1832,7 +1838,7 @@ static void Linux_Oracle_VM_Server_Version(EvalContext *ctx)
         char buf[CF_BUFSIZE];
 
         snprintf(buf, CF_BUFSIZE, "oraclevmserver_%d_%d_%d", major, minor, patch);
-        EvalContextClassPutHard(ctx, buf, "inventory,attribute_name=none,source=agent");
+        EvalContextClassPutHard(ctx, buf, tags);
     }
 }
 

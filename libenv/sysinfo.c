@@ -2643,7 +2643,9 @@ static int Linux_Mandrake_Version(EvalContext *ctx)
     char *vendor = NULL;
 
     Log(LOG_LEVEL_VERBOSE, "This appears to be a mandrake system.");
-    EvalContextClassPutHard(ctx, "Mandrake", "inventory,attribute_name=none,source=agent");
+    EvalContextClassPutHard(ctx, "Mandrake",
+        "inventory,attribute_name=none,source=agent,derived-from-file="
+        MANDRAKE_REL_FILENAME);
 
     if (!ReadLine(MANDRAKE_REL_FILENAME, relstring, sizeof(relstring)))
     {
@@ -2687,10 +2689,13 @@ static int Linux_Mandriva_Version(EvalContext *ctx)
 
     char relstring[CF_MAXVARSIZE];
     char *vendor = NULL;
+    const char *tags =
+        "inventory,attribute_name=none,source=agent,derived-from-file="
+        MANDRIVA_REL_FILENAME;
 
     Log(LOG_LEVEL_VERBOSE, "This appears to be a mandriva system.");
-    EvalContextClassPutHard(ctx, "Mandrake", "inventory,attribute_name=none,source=agent");
-    EvalContextClassPutHard(ctx, "Mandriva", "inventory,attribute_name=none,source=agent");
+    EvalContextClassPutHard(ctx, "Mandrake", tags);
+    EvalContextClassPutHard(ctx, "Mandriva", tags);
 
     if (!ReadLine(MANDRIVA_REL_FILENAME, relstring, sizeof(relstring)))
     {
@@ -2741,22 +2746,27 @@ static int Linux_Mandriva_Version_Real(EvalContext *ctx, char *filename, char *r
         }
     }
 
+    char *tags = StringFormat(
+        "inventory,attribute_name=none,source=agent,derived-from-file=%s",
+        filename);
+
     if (major != -1 && minor != -1 && strcmp(vendor, ""))
     {
         char classbuf[CF_MAXVARSIZE];
         classbuf[0] = '\0';
         strcat(classbuf, vendor);
-        EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+        EvalContextClassPutHard(ctx, classbuf, tags);
         strcat(classbuf, "_");
         strcat(classbuf, strmajor);
-        EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+        EvalContextClassPutHard(ctx, classbuf, tags);
         if (minor != -2)
         {
             strcat(classbuf, "_");
             strcat(classbuf, strminor);
-            EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+            EvalContextClassPutHard(ctx, classbuf, tags);
         }
     }
+    free(tags);
 
     return 0;
 }

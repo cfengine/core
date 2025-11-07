@@ -1093,11 +1093,38 @@ void CreateHardClassesFromCanonification(EvalContext *ctx, const char *canonifie
     }
 }
 
-static void SetFlavor(EvalContext *ctx, const char *flavor)
+static void SetFlavor(EvalContext *ctx, const char *flavor, const char *derived_from_file)
 {
-    EvalContextClassPutHard(ctx, flavor, "inventory,attribute_name=none,source=agent,derived-from=sys.flavor");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "flavour", flavor, CF_DATA_TYPE_STRING, "source=agent");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "flavor", flavor, CF_DATA_TYPE_STRING, "inventory,source=agent,attribute_name=none");
+    if (derived_from_file == NULL)
+    {
+        EvalContextClassPutHard(
+            ctx, flavor, "inventory,attribute_name=none,source=agent,"
+            "derived-from=sys.flavor");
+        EvalContextVariablePutSpecial(
+            ctx, SPECIAL_SCOPE_SYS, "flavour", flavor, CF_DATA_TYPE_STRING,
+            "source=agent");
+        EvalContextVariablePutSpecial(
+            ctx, SPECIAL_SCOPE_SYS, "flavor", flavor, CF_DATA_TYPE_STRING,
+            "inventory,source=agent,attribute_name=none");
+    }
+    else
+    {
+        char *tags = StringFormat(
+            "source=agent,derived-from-file=%s", derived_from_file);
+        EvalContextVariablePutSpecial(
+            ctx, SPECIAL_SCOPE_SYS, "flavour", flavor, CF_DATA_TYPE_STRING,
+            tags);
+        free(tags);
+
+        tags = StringFormat(
+            "inventory,source=agent,attribute_name=none,derived-from-file=%s",
+            derived_from_file);
+        EvalContextClassPutHard(ctx, flavor, tags);
+        EvalContextVariablePutSpecial(
+            ctx, SPECIAL_SCOPE_SYS, "flavor", flavor, CF_DATA_TYPE_STRING,
+            tags);
+        free(tags);
+    }
 }
 
 #if defined __linux__ || __MINGW32__
@@ -1118,7 +1145,7 @@ static void SetFlavor2(
 
     char *flavor;
     xasprintf(&flavor, "%s_%s", id, major_version);
-    SetFlavor(ctx, flavor);
+    SetFlavor(ctx, flavor, NULL);
     free(flavor);
 }
 
@@ -1323,7 +1350,7 @@ static void OSClasses(EvalContext *ctx)
     if (stat("/etc/generic-release", &statbuf) != -1)
     {
         Log(LOG_LEVEL_VERBOSE, "This appears to be a sun cobalt system.");
-        SetFlavor(ctx, "SunCobalt");
+        SetFlavor(ctx, "SunCobalt", NULL);
     }
 
     if (stat("/etc/SuSE-release", &statbuf) != -1)
@@ -1366,7 +1393,7 @@ static void OSClasses(EvalContext *ctx)
     if (stat("/etc/UnitedLinux-release", &statbuf) != -1)
     {
         Log(LOG_LEVEL_VERBOSE, "This appears to be a UnitedLinux system.");
-        SetFlavor(ctx, "UnitedLinux");
+        SetFlavor(ctx, "UnitedLinux", NULL);
     }
 
     if (stat("/etc/alpine-release", &statbuf) != -1)
@@ -1377,18 +1404,18 @@ static void OSClasses(EvalContext *ctx)
     if (stat("/etc/gentoo-release", &statbuf) != -1)
     {
         Log(LOG_LEVEL_VERBOSE, "This appears to be a gentoo system.");
-        SetFlavor(ctx, "gentoo");
+        SetFlavor(ctx, "gentoo", NULL);
     }
 
     if (stat("/etc/manjaro-release", &statbuf) != -1)
     {
         Log(LOG_LEVEL_VERBOSE, "This appears to be a Manjaro Linux system.");
-        SetFlavor(ctx, "manjaro");
+        SetFlavor(ctx, "manjaro", NULL);
     }
     else if (stat("/etc/arch-release", &statbuf) != -1)
     {
         Log(LOG_LEVEL_VERBOSE, "This appears to be an Arch Linux system.");
-        SetFlavor(ctx, "archlinux");
+        SetFlavor(ctx, "archlinux", NULL);
     }
 
     if (stat("/proc/vmware/version", &statbuf) != -1 || stat("/etc/vmware-release", &statbuf) != -1)
@@ -1407,7 +1434,7 @@ static void OSClasses(EvalContext *ctx)
     if (stat("/etc/Eos-release", &statbuf) != -1)
     {
         EOS_Version(ctx);
-        SetFlavor(ctx, "Eos");
+        SetFlavor(ctx, "Eos", NULL);
     }
 
     if (stat("/etc/issue", &statbuf) != -1)
@@ -1447,7 +1474,7 @@ static void OSClasses(EvalContext *ctx)
 
     char context[CF_BUFSIZE];
     snprintf(context, CF_BUFSIZE, "%s_%s", VSYSNAME.sysname, vbuff);
-    SetFlavor(ctx, context);
+    SetFlavor(ctx, context, NULL);
 #endif
 
 
@@ -1583,7 +1610,7 @@ static void OSClasses(EvalContext *ctx)
     FindNextInteger(release, &major);
     if (NULL_OR_EMPTY(major))
     {
-        SetFlavor(ctx, "windows");
+        SetFlavor(ctx, "windows", NULL);
     }
     else
     {
@@ -1626,12 +1653,12 @@ static void OSClasses(EvalContext *ctx)
 #endif
 
 #if defined(__ANDROID__)
-    SetFlavor(ctx, "android");
+    SetFlavor(ctx, "android", NULL);
 #endif
 
 /* termux flavor should over-ride android flavor */
 #if defined(__TERMUX__)
-    SetFlavor(ctx, "termux");
+    SetFlavor(ctx, "termux", NULL);
 #endif
 
 #ifdef __sun
@@ -1724,7 +1751,7 @@ static void Apple_Version(EvalContext *ctx)
         NDEBUG_UNUSED int ret = snprintf(buf, sizeof(buf), "%s_%u", flavor, major);
         assert(ret >= 0 && (size_t) ret < sizeof(buf));
         Log(LOG_LEVEL_VERBOSE, "This appears to be a %s %u system.", product_name, major);
-        SetFlavor(ctx, buf);
+        SetFlavor(ctx, buf, NULL);
     }
 
     if (revcomps > 1)
@@ -1789,7 +1816,7 @@ static void Linux_Oracle_VM_Server_Version(EvalContext *ctx)
         char buf[CF_BUFSIZE];
 
         snprintf(buf, CF_BUFSIZE, "oraclevmserver_%d", major);
-        SetFlavor(ctx, buf);
+        SetFlavor(ctx, buf, NULL);
     }
 
     if (revcomps > 1)
@@ -1845,7 +1872,7 @@ static void Linux_Oracle_Version(EvalContext *ctx)
         char buf[CF_BUFSIZE];
 
         snprintf(buf, CF_BUFSIZE, "oracle_%d", major);
-        SetFlavor(ctx, buf);
+        SetFlavor(ctx, buf, NULL);
 
         snprintf(buf, CF_BUFSIZE, "oracle_%d_%d", major, minor);
         EvalContextClassPutHard(ctx, buf, "inventory,attribute_name=none,source=agent");
@@ -1925,7 +1952,7 @@ static int Linux_Fedora_Version(EvalContext *ctx)
         EvalContextClassPutHard(ctx,classbuf, "inventory,attribute_name=none,source=agent");
         strcat(classbuf, "_");
         strcat(classbuf, strmajor);
-        SetFlavor(ctx, classbuf);
+        SetFlavor(ctx, classbuf, NULL);
     }
 
     return 0;
@@ -2154,7 +2181,7 @@ static int Linux_Redhat_Version(EvalContext *ctx)
 
         strcat(classbuf, strmajor);
 
-        SetFlavor(ctx, classbuf);
+        SetFlavor(ctx, classbuf, NULL);
 
         if (minor != -2)
         {
@@ -2328,7 +2355,7 @@ static int Linux_Suse_Version(EvalContext *ctx)
                 EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
                 strcat(classbuf, "_");
                 strcat(classbuf, strmajor);
-                SetFlavor(ctx, classbuf);
+                SetFlavor(ctx, classbuf, NULL);
                 strcat(classbuf, "_");
                 strcat(classbuf, strminor);
                 EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
@@ -2368,7 +2395,7 @@ static int Linux_Suse_Version(EvalContext *ctx)
                 EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
 
                 snprintf(classbuf, CF_MAXVARSIZE, "SUSE_%d", major);
-                SetFlavor(ctx, classbuf);
+                SetFlavor(ctx, classbuf, NULL);
 
                 /* The correct spelling for SUSE is "SUSE" but CFEngine used to use "SuSE".
                  * Keep this for backwards compatibility until CFEngine 3.7
@@ -2514,7 +2541,7 @@ static int Linux_Misc_Version(EvalContext *ctx)
     if (os != NULL && version[0] != '\0')
     {
         snprintf(flavor, CF_MAXVARSIZE, "%s_%s", os, version);
-        SetFlavor(ctx, flavor);
+        SetFlavor(ctx, flavor, NULL);
         return 1;
     }
 
@@ -2558,13 +2585,13 @@ static int Linux_Debian_Version(EvalContext *ctx)
             classname,
             "inventory,attribute_name=none,source=agent,derived-from-file="DEBIAN_VERSION_FILENAME);
         snprintf(classname, CF_MAXVARSIZE, "debian_%u", major);
-        SetFlavor(ctx, classname);
+        SetFlavor(ctx, classname, NULL);
         break;
 
     case 1:
         Log(LOG_LEVEL_VERBOSE, "This appears to be a Debian %u system.", major);
         snprintf(classname, CF_MAXVARSIZE, "debian_%u", major);
-        SetFlavor(ctx, classname);
+        SetFlavor(ctx, classname, NULL);
         break;
 
     default:
@@ -2601,7 +2628,7 @@ static int Linux_Debian_Version(EvalContext *ctx)
             ctx,
             "debian",
             "inventory,attribute_name=none,source=agent,derived-from-file="DEBIAN_ISSUE_FILENAME);
-        SetFlavor(ctx, buffer);
+        SetFlavor(ctx, buffer, NULL);
     }
     else if (strcmp(os, "Ubuntu") == 0)
     {
@@ -2610,7 +2637,7 @@ static int Linux_Debian_Version(EvalContext *ctx)
         nt_static_assert((sizeof(version)) > 255);
         sscanf(buffer, "%*s %255[^.].%255s", version, minor);
         snprintf(buffer, CF_MAXVARSIZE, "ubuntu_%s", version);
-        SetFlavor(ctx, buffer);
+        SetFlavor(ctx, buffer, NULL);
         EvalContextClassPutHard(
             ctx,
             "ubuntu",
@@ -2797,11 +2824,11 @@ static void Linux_Amazon_Version(EvalContext *ctx)
                 EvalContextClassPutHard(ctx, class,
                     "inventory,attribute_name=none,source=agent"
                     ",derived-from-file=/etc/system-release");
-                SetFlavor(ctx, class);
+                SetFlavor(ctx, class, NULL);
             }
             else
             {
-                SetFlavor(ctx, "amazon_linux");
+                SetFlavor(ctx, "amazon_linux", NULL);
             }
             // We set this class for backwards compatibility
             EvalContextClassPutHard(ctx, "AmazonLinux",
@@ -2836,7 +2863,7 @@ static void Linux_Alpine_Version(EvalContext *ctx)
                 ",derived-from-file=/etc/alpine-release");
         }
     }
-    SetFlavor(ctx, "alpinelinux");
+    SetFlavor(ctx, "alpinelinux", NULL);
 }
 
 /******************************************************************/
@@ -2887,7 +2914,7 @@ static int MiscOS(EvalContext *ctx)
            EvalContextClassPutHard(ctx, class, "inventory,attribute_name=none,source=agent");
            snprintf(class, CF_MAXVARSIZE, "big_ip_%s_%s", version, build);
            EvalContextClassPutHard(ctx, class, "inventory,attribute_name=none,source=agent");
-           SetFlavor(ctx, "BIG-IP");
+           SetFlavor(ctx, "BIG-IP", NULL);
        }
     }
 

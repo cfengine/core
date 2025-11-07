@@ -1350,7 +1350,7 @@ static void OSClasses(EvalContext *ctx)
     if (stat("/etc/generic-release", &statbuf) != -1)
     {
         Log(LOG_LEVEL_VERBOSE, "This appears to be a sun cobalt system.");
-        SetFlavor(ctx, "SunCobalt", NULL);
+        SetFlavor(ctx, "SunCobalt", "/etc/generic-release");
     }
 
     if (stat("/etc/SuSE-release", &statbuf) != -1)

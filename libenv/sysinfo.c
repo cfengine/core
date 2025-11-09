@@ -3015,9 +3015,11 @@ static int VM_Version(EvalContext *ctx)
 static int Xen_Domain(EvalContext *ctx)
 {
     int sufficient = 0;
+    const char *tags = "inventory,attribute_name=Virtual host,source=agent,"
+        "derived-from-file=/proc/xen/capabilities";
 
     Log(LOG_LEVEL_VERBOSE, "This appears to be a xen pv system.");
-    EvalContextClassPutHard(ctx, "xen", "inventory,attribute_name=Virtual host,source=agent");
+    EvalContextClassPutHard(ctx, "xen", tags);
 
 /* xen host will have "control_d" in /proc/xen/capabilities, xen guest will not */
 
@@ -3047,14 +3049,14 @@ static int Xen_Domain(EvalContext *ctx)
 
             if (strstr(buffer, "control_d"))
             {
-                EvalContextClassPutHard(ctx, "xen_dom0", "inventory,attribute_name=Virtual host,source=agent");
+                EvalContextClassPutHard(ctx, "xen_dom0", tags);
                 sufficient = 1;
             }
         }
 
         if (!sufficient)
         {
-            EvalContextClassPutHard(ctx, "xen_domu_pv", "inventory,attribute_name=Virtual host,source=agent");
+            EvalContextClassPutHard(ctx, "xen_domu_pv", tags);
             sufficient = 1;
         }
 

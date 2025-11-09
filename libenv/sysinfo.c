@@ -1395,7 +1395,7 @@ static void OSClasses(EvalContext *ctx)
     if (stat("/etc/UnitedLinux-release", &statbuf) != -1)
     {
         Log(LOG_LEVEL_VERBOSE, "This appears to be a UnitedLinux system.");
-        SetFlavor(ctx, "UnitedLinux", NULL);
+        SetFlavor(ctx, "UnitedLinux", "/etc/UnitedLinux-release");
     }
 
     if (stat("/etc/alpine-release", &statbuf) != -1)

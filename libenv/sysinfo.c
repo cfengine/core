@@ -2441,11 +2441,16 @@ static int Linux_Slackware_Version(EvalContext *ctx, char *filename)
     char classname[CF_MAXVARSIZE] = "";
     char buffer[CF_MAXVARSIZE];
 
+    char *tags = StringFormat(
+        "inventory,attribute_name=none,source=agent,derived-from-file=%s",
+        filename);
+
     Log(LOG_LEVEL_VERBOSE, "This appears to be a slackware system.");
-    EvalContextClassPutHard(ctx, "slackware", "inventory,attribute_name=none,source=agent");
+    EvalContextClassPutHard(ctx, "slackware", tags);
 
     if (!ReadLine(filename, buffer, sizeof(buffer)))
     {
+        free(tags);
         return 1;
     }
 
@@ -2455,22 +2460,24 @@ static int Linux_Slackware_Version(EvalContext *ctx, char *filename)
     case 3:
         Log(LOG_LEVEL_VERBOSE, "This appears to be a Slackware %u.%u.%u system.", major, minor, release);
         snprintf(classname, CF_MAXVARSIZE, "slackware_%u_%u_%u", major, minor, release);
-        EvalContextClassPutHard(ctx, classname, "inventory,attribute_name=none,source=agent");
+        EvalContextClassPutHard(ctx, classname, tags);
         /* Fall-through */
     case 2:
         Log(LOG_LEVEL_VERBOSE, "This appears to be a Slackware %u.%u system.", major, minor);
         snprintf(classname, CF_MAXVARSIZE, "slackware_%u_%u", major, minor);
-        EvalContextClassPutHard(ctx, classname, "inventory,attribute_name=none,source=agent");
+        EvalContextClassPutHard(ctx, classname, tags);
         /* Fall-through */
     case 1:
         Log(LOG_LEVEL_VERBOSE, "This appears to be a Slackware %u system.", major);
         snprintf(classname, CF_MAXVARSIZE, "slackware_%u", major);
-        EvalContextClassPutHard(ctx, classname, "inventory,attribute_name=none,source=agent");
+        EvalContextClassPutHard(ctx, classname, tags);
         break;
     case 0:
         Log(LOG_LEVEL_VERBOSE, "No Slackware version number found.");
+        free(tags);
         return 2;
     }
+    free(tags);
     return 0;
 }
 

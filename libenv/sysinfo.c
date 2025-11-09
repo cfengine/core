@@ -1387,7 +1387,9 @@ static void OSClasses(EvalContext *ctx)
     if (stat("/usr/bin/aptitude", &statbuf) != -1)
     {
         Log(LOG_LEVEL_VERBOSE, "This system seems to have the aptitude package system");
-        EvalContextClassPutHard(ctx, "have_aptitude", "inventory,attribute_name=none,source=agent");
+        EvalContextClassPutHard(
+            ctx, "have_aptitude", "inventory,attribute_name=none,source=agent,"
+            "derived-from-file=/usr/bin/aptitude");
     }
 
     if (stat("/etc/UnitedLinux-release", &statbuf) != -1)

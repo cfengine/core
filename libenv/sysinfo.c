@@ -1412,7 +1412,7 @@ static void OSClasses(EvalContext *ctx)
     if (stat("/etc/manjaro-release", &statbuf) != -1)
     {
         Log(LOG_LEVEL_VERBOSE, "This appears to be a Manjaro Linux system.");
-        SetFlavor(ctx, "manjaro", NULL);
+        SetFlavor(ctx, "manjaro", "/etc/manjaro-release");
     }
     else if (stat("/etc/arch-release", &statbuf) != -1)
     {

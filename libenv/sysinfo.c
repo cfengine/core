@@ -3087,11 +3087,17 @@ static void OpenVZ_Detect(EvalContext *ctx)
     if (stat(OPENVZ_HOST_FILENAME, &statbuf) != -1)
     {
         Log(LOG_LEVEL_VERBOSE, "This appears to be an OpenVZ/Virtuozzo/Parallels Cloud Server host system.\n");
-        EvalContextClassPutHard(ctx, "virt_host_vz", "inventory,attribute_name=Virtual host,source=agent");
+        EvalContextClassPutHard(
+            ctx, "virt_host_vz",
+            "inventory,attribute_name=Virtual host,source=agent,"
+            "derived-from-file=" OPENVZ_HOST_FILENAME);
         /* if the file /bin/vzps is there, it is safe to use the processes promise type */
         if (stat(OPENVZ_VZPS_FILE, &statbuf) != -1)
         {
-            EvalContextClassPutHard(ctx, "virt_host_vz_vzps", "inventory,attribute_name=Virtual host,source=agent");
+            EvalContextClassPutHard(
+                ctx, "virt_host_vz_vzps",
+                "inventory,attribute_name=Virtual host,source=agent,"
+                "derived-from-file=" OPENVZ_VZPS_FILE);
             /* here we must redefine the value of VPSHARDCLASS */
             for (int i = 0; i < PLATFORM_CONTEXT_MAX; i++)
             {
@@ -3110,7 +3116,10 @@ static void OpenVZ_Detect(EvalContext *ctx)
     else if (stat(OPENVZ_GUEST_FILENAME, &statbuf) != -1)
     {
         Log(LOG_LEVEL_VERBOSE, "This appears to be an OpenVZ/Virtuozzo/Parallels Cloud Server guest system.\n");
-        EvalContextClassPutHard(ctx, "virt_guest_vz", "inventory,attribute_name=Virtual host,source=agent");
+        EvalContextClassPutHard(
+            ctx, "virt_guest_vz",
+            "inventory,attribute_name=Virtual host,source=agent,"
+            "derived-from-file=" OPENVZ_GUEST_FILENAME);
     }
 }
 

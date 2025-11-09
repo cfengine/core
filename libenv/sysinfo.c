@@ -2892,7 +2892,7 @@ static void Linux_Alpine_Version(EvalContext *ctx)
                 ",derived-from-file=/etc/alpine-release");
         }
     }
-    SetFlavor(ctx, "alpinelinux", NULL);
+    SetFlavor(ctx, "alpinelinux", "/etc/alpine-release");
 }
 
 /******************************************************************/

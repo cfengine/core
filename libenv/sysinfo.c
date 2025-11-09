@@ -1417,7 +1417,7 @@ static void OSClasses(EvalContext *ctx)
     else if (stat("/etc/arch-release", &statbuf) != -1)
     {
         Log(LOG_LEVEL_VERBOSE, "This appears to be an Arch Linux system.");
-        SetFlavor(ctx, "archlinux", NULL);
+        SetFlavor(ctx, "archlinux", "/etc/arch-release");
     }
 
     if (stat("/proc/vmware/version", &statbuf) != -1 || stat("/etc/vmware-release", &statbuf) != -1)

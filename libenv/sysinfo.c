@@ -2923,28 +2923,28 @@ static int EOS_Version(EvalContext *ctx)
 /******************************************************************/
 
 static int MiscOS(EvalContext *ctx)
+{
+    char buffer[CF_BUFSIZE];
 
-{ char buffer[CF_BUFSIZE];
-
- // e.g. BIG-IP 10.1.0 Build 3341.1084
+    // e.g. BIG-IP 10.1.0 Build 3341.1084
 
     if (ReadLine("/etc/issue", buffer, sizeof(buffer)))
     {
-       if (strstr(buffer, "BIG-IP"))
-       {
-           const char *tags =  "inventory,attribute_name=none,source=agent,"
-           "derived-from-file=/etc/issue";
-           char version[256], build[256], class[CF_MAXVARSIZE];
-           EvalContextClassPutHard(ctx, "big_ip", tags);
-           sscanf(buffer, "%*s %255s %*s %255s", version, build);
-           CanonifyNameInPlace(version);
-           CanonifyNameInPlace(build);
-           snprintf(class, CF_MAXVARSIZE, "big_ip_%s", version);
-           EvalContextClassPutHard(ctx, class, tags);
-           snprintf(class, CF_MAXVARSIZE, "big_ip_%s_%s", version, build);
-           EvalContextClassPutHard(ctx, class, tags);
-           SetFlavor(ctx, "BIG-IP", NULL);
-       }
+        if (strstr(buffer, "BIG-IP"))
+        {
+            const char *tags =  "inventory,attribute_name=none,source=agent,"
+            "derived-from-file=/etc/issue";
+            char version[256], build[256], class[CF_MAXVARSIZE];
+            EvalContextClassPutHard(ctx, "big_ip", tags);
+            sscanf(buffer, "%*s %255s %*s %255s", version, build);
+            CanonifyNameInPlace(version);
+            CanonifyNameInPlace(build);
+            snprintf(class, CF_MAXVARSIZE, "big_ip_%s", version);
+            EvalContextClassPutHard(ctx, class, tags);
+            snprintf(class, CF_MAXVARSIZE, "big_ip_%s_%s", version, build);
+            EvalContextClassPutHard(ctx, class, tags);
+            SetFlavor(ctx, "BIG-IP", NULL);
+        }
     }
 
     return 0;

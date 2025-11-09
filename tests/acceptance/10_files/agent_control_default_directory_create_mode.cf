@@ -15,6 +15,7 @@ body common control
 body agent control {
   # Override the default directory create mode to 0755 (it defaults to 0700 if
   # not specified)
+  default_directory_create_mode => "0777"; # Make sure the last one wins
   default_directory_create_mode => "a+rx"; # Can also use octets 0755
 }
 

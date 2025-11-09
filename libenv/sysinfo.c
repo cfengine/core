@@ -2961,25 +2961,29 @@ static int VM_Version(EvalContext *ctx)
     int sufficient = 0;
 
     Log(LOG_LEVEL_VERBOSE, "This appears to be a VMware Server ESX/xSX system.");
-    EvalContextClassPutHard(ctx, "VMware", "inventory,attribute_name=Virtual host,source=agent");
+    EvalContextClassPutHard(
+        ctx, "VMware", "inventory,attribute_name=Virtual host,source=agent,"
+        "derived-from-file=/proc/vmware/version");
 
 /* VMware Server ESX >= 3 has version info in /proc */
     if (ReadLine("/proc/vmware/version", buffer, sizeof(buffer)))
     {
+        const char *tags = "inventory,attribute_name=none,source=agent,"
+            "derived-from-file=/proc/vmware/version";
         if (sscanf(buffer, "VMware ESX Server %d.%d.%d", &major, &minor, &bug) > 0)
         {
             snprintf(classbuf, CF_BUFSIZE, "VMware ESX Server %d", major);
-            EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+            EvalContextClassPutHard(ctx, classbuf, tags);
             snprintf(classbuf, CF_BUFSIZE, "VMware ESX Server %d.%d", major, minor);
-            EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+            EvalContextClassPutHard(ctx, classbuf, tags);
             snprintf(classbuf, CF_BUFSIZE, "VMware ESX Server %d.%d.%d", major, minor, bug);
-            EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+            EvalContextClassPutHard(ctx, classbuf, tags);
             sufficient = 1;
         }
         else if (sscanf(buffer, "VMware ESX Server %255s", version) > 0)
         {
             snprintf(classbuf, CF_BUFSIZE, "VMware ESX Server %s", version);
-            EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+            EvalContextClassPutHard(ctx, classbuf, tags);
             sufficient = 1;
         }
     }
@@ -2989,14 +2993,16 @@ static int VM_Version(EvalContext *ctx)
     if (sufficient < 1 && (ReadLine("/etc/vmware-release", buffer, sizeof(buffer))
                            || ReadLine("/etc/issue", buffer, sizeof(buffer))))
     {
-        EvalContextClassPutHard(ctx, buffer, "inventory,attribute_name=none,source=agent");
+        const char *tags = "inventory,attribute_name=none,source=agent,"
+            "derived-from-file=/etc/vmware-release";
+        EvalContextClassPutHard(ctx, buffer, tags);
 
         /* Strip off the release code name e.g. "(Dali)" */
         if ((sp = strchr(buffer, '(')) != NULL)
         {
             *sp = 0;
             Chop(buffer, CF_EXPANDSIZE);
-            EvalContextClassPutHard(ctx, buffer, "inventory,attribute_name=none,source=agent");
+            EvalContextClassPutHard(ctx, buffer, tags);
         }
         sufficient = 1;
     }

@@ -2546,7 +2546,10 @@ static int Linux_Misc_Version(EvalContext *ctx)
 
             if (strstr(buffer, "Cumulus"))
             {
-                EvalContextClassPutHard(ctx, "cumulus", "inventory,attribute_name=none,source=agent");
+                EvalContextClassPutHard(
+                    ctx, "cumulus",
+                    "inventory,attribute_name=none,source=agent,"
+                    "derived-from-files=" LSB_RELEASE_FILENAME);
                 os = "cumulus";
             }
 
@@ -2565,7 +2568,7 @@ static int Linux_Misc_Version(EvalContext *ctx)
     if (os != NULL && version[0] != '\0')
     {
         snprintf(flavor, CF_MAXVARSIZE, "%s_%s", os, version);
-        SetFlavor(ctx, flavor, NULL);
+        SetFlavor(ctx, flavor, LSB_RELEASE_FILENAME);
         return 1;
     }
 
@@ -2929,15 +2932,17 @@ static int MiscOS(EvalContext *ctx)
     {
        if (strstr(buffer, "BIG-IP"))
        {
+           const char *tags =  "inventory,attribute_name=none,source=agent,"
+           "derived-from-file=/etc/issue";
            char version[256], build[256], class[CF_MAXVARSIZE];
-           EvalContextClassPutHard(ctx, "big_ip", "inventory,attribute_name=none,source=agent");
+           EvalContextClassPutHard(ctx, "big_ip", tags);
            sscanf(buffer, "%*s %255s %*s %255s", version, build);
            CanonifyNameInPlace(version);
            CanonifyNameInPlace(build);
            snprintf(class, CF_MAXVARSIZE, "big_ip_%s", version);
-           EvalContextClassPutHard(ctx, class, "inventory,attribute_name=none,source=agent");
+           EvalContextClassPutHard(ctx, class, tags);
            snprintf(class, CF_MAXVARSIZE, "big_ip_%s_%s", version, build);
-           EvalContextClassPutHard(ctx, class, "inventory,attribute_name=none,source=agent");
+           EvalContextClassPutHard(ctx, class, tags);
            SetFlavor(ctx, "BIG-IP", NULL);
        }
     }

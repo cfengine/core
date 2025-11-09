@@ -2196,7 +2196,7 @@ static int Linux_Redhat_Version(EvalContext *ctx)
 
         strcat(classbuf, strmajor);
 
-        SetFlavor(ctx, classbuf, NULL);
+        SetFlavor(ctx, classbuf, RH_REL_FILENAME);
 
         if (minor != -2)
         {

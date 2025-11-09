@@ -1406,7 +1406,7 @@ static void OSClasses(EvalContext *ctx)
     if (stat("/etc/gentoo-release", &statbuf) != -1)
     {
         Log(LOG_LEVEL_VERBOSE, "This appears to be a gentoo system.");
-        SetFlavor(ctx, "gentoo", NULL);
+        SetFlavor(ctx, "gentoo", "/etc/gentoo-release");
     }
 
     if (stat("/etc/manjaro-release", &statbuf) != -1)

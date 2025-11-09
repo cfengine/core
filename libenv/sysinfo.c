@@ -2609,13 +2609,13 @@ static int Linux_Debian_Version(EvalContext *ctx)
             classname,
             "inventory,attribute_name=none,source=agent,derived-from-file="DEBIAN_VERSION_FILENAME);
         snprintf(classname, CF_MAXVARSIZE, "debian_%u", major);
-        SetFlavor(ctx, classname, NULL);
+        SetFlavor(ctx, classname, DEBIAN_VERSION_FILENAME);
         break;
 
     case 1:
         Log(LOG_LEVEL_VERBOSE, "This appears to be a Debian %u system.", major);
         snprintf(classname, CF_MAXVARSIZE, "debian_%u", major);
-        SetFlavor(ctx, classname, NULL);
+        SetFlavor(ctx, classname, DEBIAN_VERSION_FILENAME);
         break;
 
     default:
@@ -2652,7 +2652,7 @@ static int Linux_Debian_Version(EvalContext *ctx)
             ctx,
             "debian",
             "inventory,attribute_name=none,source=agent,derived-from-file="DEBIAN_ISSUE_FILENAME);
-        SetFlavor(ctx, buffer, NULL);
+        SetFlavor(ctx, buffer, DEBIAN_ISSUE_FILENAME);
     }
     else if (strcmp(os, "Ubuntu") == 0)
     {
@@ -2661,7 +2661,7 @@ static int Linux_Debian_Version(EvalContext *ctx)
         nt_static_assert((sizeof(version)) > 255);
         sscanf(buffer, "%*s %255[^.].%255s", version, minor);
         snprintf(buffer, CF_MAXVARSIZE, "ubuntu_%s", version);
-        SetFlavor(ctx, buffer, NULL);
+        SetFlavor(ctx, buffer, DEBIAN_ISSUE_FILENAME);
         EvalContextClassPutHard(
             ctx,
             "ubuntu",

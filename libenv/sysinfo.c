@@ -1436,7 +1436,7 @@ static void OSClasses(EvalContext *ctx)
     if (stat("/etc/Eos-release", &statbuf) != -1)
     {
         EOS_Version(ctx);
-        SetFlavor(ctx, "Eos", NULL);
+        SetFlavor(ctx, "Eos", "/etc/Eos-release");
     }
 
     if (stat("/etc/issue", &statbuf) != -1)
@@ -2908,14 +2908,16 @@ static int EOS_Version(EvalContext *ctx)
     {
         if (strstr(buffer, "EOS"))
         {
+            const char *tags = "inventory,attribute_name=none,source=agent,"
+                "derived-from-file=/etc/Eos-release";
             char version[256], class[CF_MAXVARSIZE];
-            EvalContextClassPutHard(ctx, "eos", "inventory,attribute_name=none,source=agent");
+            EvalContextClassPutHard(ctx, "eos", tags);
             EvalContextClassPutHard(ctx, "arista", "source=agent");
             version[0] = '\0';
             sscanf(buffer, "%*s %*s %*s %255s", version);
             CanonifyNameInPlace(version);
             snprintf(class, CF_MAXVARSIZE, "eos_%s", version);
-            EvalContextClassPutHard(ctx, class, "inventory,attribute_name=none,source=agent");
+            EvalContextClassPutHard(ctx, class, tags);
         }
     }
 

@@ -81,7 +81,7 @@ static void test_map_iterators_from_rval_empty(void **state)
     EvalContext *ctx = *state;
 
     Policy *p = PolicyNew();
-    Bundle *bp = PolicyAppendBundle(p, "default", "none", "agent", NULL, NULL);
+    Bundle *bp = PolicyAppendBundle(p, "default", "none", "agent", NULL, NULL, EVAL_ORDER_UNDEFINED);
 
     Rlist *lists = NULL;
     Rlist *scalars = NULL;
@@ -99,7 +99,7 @@ static void test_map_iterators_from_rval_literal(void **state)
 {
     EvalContext *ctx = *state;
     Policy *p = PolicyNew();
-    Bundle *bp = PolicyAppendBundle(p, "default", "none", "agent", NULL, NULL);
+    Bundle *bp = PolicyAppendBundle(p, "default", "none", "agent", NULL, NULL, EVAL_ORDER_UNDEFINED);
 
     Rlist *lists = NULL;
     Rlist *scalars = NULL;
@@ -117,7 +117,7 @@ static void test_map_iterators_from_rval_naked_list_var(void **state)
 {
     EvalContext *ctx = *state;
     Policy *p = PolicyNew();
-    Bundle *bp = PolicyAppendBundle(p, "default", "scope", "agent", NULL, NULL);
+    Bundle *bp = PolicyAppendBundle(p, "default", "scope", "agent", NULL, NULL, EVAL_ORDER_UNDEFINED);
 
     {
         Rlist *list = NULL;
@@ -190,7 +190,7 @@ static void test_map_iterators_from_rval_naked_list_var_namespace(void **state)
 {
     EvalContext *ctx = *state;
     Policy *p = PolicyNew();
-    Bundle *bp = PolicyAppendBundle(p, "ns", "scope", "agent", NULL, NULL);
+    Bundle *bp = PolicyAppendBundle(p, "ns", "scope", "agent", NULL, NULL, EVAL_ORDER_UNDEFINED);
 
     {
         Rlist *list = NULL;
@@ -421,7 +421,7 @@ static void test_expand_promise_array_with_scalar_arg(void **state)
     }
 
     Policy *policy = PolicyNew();
-    Bundle *bundle = PolicyAppendBundle(policy, NamespaceDefault(), "bundle", "agent", NULL, NULL);
+    Bundle *bundle = PolicyAppendBundle(policy, NamespaceDefault(), "bundle", "agent", NULL, NULL, EVAL_ORDER_UNDEFINED);
     BundleSection *section = BundleAppendSection(bundle, "dummy");
     Promise *promise = BundleSectionAppendPromise(section, "$(foo[$(bar)])", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, "any", NULL);
 
@@ -476,7 +476,7 @@ static void test_expand_promise_slist(void **state)
 
 
     Policy *policy = PolicyNew();
-    Bundle *bundle = PolicyAppendBundle(policy, NamespaceDefault(), "bundle", "agent", NULL, NULL);
+    Bundle *bundle = PolicyAppendBundle(policy, NamespaceDefault(), "bundle", "agent", NULL, NULL, EVAL_ORDER_UNDEFINED);
     BundleSection *section = BundleAppendSection(bundle, "dummy");
     Promise *promise = BundleSectionAppendPromise(section, "$(foo)", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, "any", NULL);
 
@@ -544,7 +544,7 @@ static void test_expand_promise_array_with_slist_arg(void **state)
 
 
     Policy *policy = PolicyNew();
-    Bundle *bundle = PolicyAppendBundle(policy, NamespaceDefault(), "bundle", "agent", NULL, NULL);
+    Bundle *bundle = PolicyAppendBundle(policy, NamespaceDefault(), "bundle", "agent", NULL, NULL, EVAL_ORDER_UNDEFINED);
     BundleSection *section = BundleAppendSection(bundle, "dummy");
     Promise *promise = BundleSectionAppendPromise(section, "$(arr[$(keys)])", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, "any", NULL);
 

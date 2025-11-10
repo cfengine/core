@@ -4074,6 +4074,32 @@ void EvalContextSetAgentEvalOrder(EvalContext *ctx, EvalOrder eval_order)
     ctx->agent_eval_order = eval_order;
 }
 
+const char *EvalContextEvaluationOrderToString(EvalOrder evaluation_order)
+{
+    if (evaluation_order == EVAL_ORDER_CLASSIC)
+    {
+        return "classic";
+    }
+    if (evaluation_order == EVAL_ORDER_TOP_DOWN)
+    {
+        return "top_down";
+    }
+    return "undefined";
+}
+
+EvalOrder EvalContextEvaluationOrderFromString(const char *evaluation_order_string)
+{
+    if (StringEqual(evaluation_order_string, "classic"))
+    {
+        return EVAL_ORDER_CLASSIC;
+    }
+    if (StringEqual(evaluation_order_string, "top_down"))
+    {
+        return EVAL_ORDER_TOP_DOWN;
+    }
+    return EVAL_ORDER_UNDEFINED;
+}
+
 bool EvalContextIsClassicOrder(EvalContext *ctx, const Bundle *bp)
 {
     assert(ctx != NULL);

@@ -454,6 +454,8 @@ void EvalContextProfilingEnd(EvalContext *ctx, const Policy *policy);
 
 void EvalContextSetCommonEvalOrder(EvalContext *ctx, EvalOrder eval_order);
 void EvalContextSetAgentEvalOrder(EvalContext *ctx, EvalOrder eval_order);
+const char *EvalContextEvaluationOrderToString(EvalOrder evaluation_order);
+EvalOrder EvalContextEvaluationOrderFromString(const char *evaluation_order_string);
 bool EvalContextIsClassicOrder(EvalContext *ctx, const Bundle *bp);
 
 #endif

@@ -844,6 +844,7 @@ void BundleResolve(EvalContext *ctx, const Bundle *bundle)
 static void ResolveControlBody(EvalContext *ctx, GenericAgentConfig *config,
                                const Body *control_body)
 {
+    assert(control_body != NULL);
     const char *filename = control_body->source_path;
 
     assert(CFG_CONTROLBODY[COMMON_CONTROL_MAX].lval == NULL);

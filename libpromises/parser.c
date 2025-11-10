@@ -106,6 +106,8 @@ static void ParserStateReset(ParserState *p, bool discard)
 
 static void ParserStateClean(ParserState *p)
 {
+    assert(p != NULL);
+
     free(p->current_namespace);
     p->current_namespace = NULL;
 

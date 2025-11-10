@@ -1908,6 +1908,7 @@ static JsonElement *BundleContextsToJson(const Seq *promises)
  */
 JsonElement *BundleToJson(const Bundle *bundle)
 {
+    assert(bundle != NULL);
     JsonElement *json_bundle = JsonObjectCreate(10);
 
     if (bundle->source_path)
@@ -1919,6 +1920,7 @@ JsonElement *BundleToJson(const Bundle *bundle)
     JsonObjectAppendString(json_bundle, "namespace", bundle->ns);
     JsonObjectAppendString(json_bundle, "name", bundle->name);
     JsonObjectAppendString(json_bundle, "bundleType", bundle->type);
+    JsonObjectAppendString(json_bundle, "evaluation_order", EvalContextEvaluationOrderToString(bundle->evaluation_order));
 
     {
         JsonElement *json_args = JsonArrayCreate(10);
@@ -2303,6 +2305,7 @@ static Bundle *PolicyAppendBundleJson(Policy *policy, JsonElement *json_bundle)
     const char *name = JsonObjectGetAsString(json_bundle, "name");
     const char *type = JsonObjectGetAsString(json_bundle, "bundleType");
     const char *source_path = JsonObjectGetAsString(json_bundle, "sourcePath");
+    const char *evaluation_order_string = JsonObjectGetAsString(json_bundle, "evaluation_order");
 
     Rlist *args = NULL;
     {
@@ -2313,7 +2316,7 @@ static Bundle *PolicyAppendBundleJson(Policy *policy, JsonElement *json_bundle)
         }
     }
 
-    Bundle *bundle = PolicyAppendBundle(policy, ns, name, type, args, source_path, EVAL_ORDER_UNDEFINED);
+    Bundle *bundle = PolicyAppendBundle(policy, ns, name, type, args, source_path, EvalContextEvaluationOrderFromString(evaluation_order_string));
 
     {
         JsonElement *json_promise_types = JsonObjectGetAsArray(json_bundle, "promiseTypes");

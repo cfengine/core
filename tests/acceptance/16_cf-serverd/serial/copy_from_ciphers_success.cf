@@ -8,8 +8,8 @@ body common control
 bundle agent test
 {
   meta:
-      "test_soft_fail" string => "windows",
-        meta => { "ENT-10401" };
+      "test_soft_fail" string => "windows|redhat_10",
+        meta => { "ENT-10401", "ENT-13494" };
 
   methods:
       # source file

@@ -154,3 +154,10 @@ char BINDINTERFACE[CF_MAXVARSIZE]; /* GLOBAL_P */
     - GenericAgentLoadPolicy (ReadPolicyValidatedFile)
 */
 bool MINUSF = false; /* GLOBAL_A */
+
+/*
+  Can be mutated in cf-agent.c (from control body)
+
+  Used as default directory create mode.
+*/
+mode_t DEFAULTMODE = (mode_t) 0700;

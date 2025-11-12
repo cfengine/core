@@ -1019,7 +1019,7 @@ static PromiseResult SourceSearchAndCopy(EvalContext *ctx, const char *from, cha
 
             if ((!attr->copy.collapse) && (stat(newto, &dsb) == -1))
             {
-                if (mkdir(changes_newto, 0700) == -1)
+                if (mkdir(changes_newto, DEFAULTMODE) == -1)
                 {
                     RecordInterruption(ctx, pp, attr, "Can't make directory '%s'. (mkdir: %s)",
                                        newto, GetErrorStr());

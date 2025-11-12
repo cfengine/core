@@ -1093,11 +1093,38 @@ void CreateHardClassesFromCanonification(EvalContext *ctx, const char *canonifie
     }
 }
 
-static void SetFlavor(EvalContext *ctx, const char *flavor)
+static void SetFlavor(EvalContext *ctx, const char *flavor, const char *derived_from_file)
 {
-    EvalContextClassPutHard(ctx, flavor, "inventory,attribute_name=none,source=agent,derived-from=sys.flavor");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "flavour", flavor, CF_DATA_TYPE_STRING, "source=agent");
-    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "flavor", flavor, CF_DATA_TYPE_STRING, "inventory,source=agent,attribute_name=none");
+    if (derived_from_file == NULL)
+    {
+        EvalContextClassPutHard(
+            ctx, flavor, "inventory,attribute_name=none,source=agent,"
+            "derived-from=sys.flavor");
+        EvalContextVariablePutSpecial(
+            ctx, SPECIAL_SCOPE_SYS, "flavour", flavor, CF_DATA_TYPE_STRING,
+            "source=agent");
+        EvalContextVariablePutSpecial(
+            ctx, SPECIAL_SCOPE_SYS, "flavor", flavor, CF_DATA_TYPE_STRING,
+            "inventory,source=agent,attribute_name=none");
+    }
+    else
+    {
+        char *tags = StringFormat(
+            "source=agent,derived-from-file=%s", derived_from_file);
+        EvalContextVariablePutSpecial(
+            ctx, SPECIAL_SCOPE_SYS, "flavour", flavor, CF_DATA_TYPE_STRING,
+            tags);
+        free(tags);
+
+        tags = StringFormat(
+            "inventory,source=agent,attribute_name=none,derived-from-file=%s",
+            derived_from_file);
+        EvalContextClassPutHard(ctx, flavor, tags);
+        EvalContextVariablePutSpecial(
+            ctx, SPECIAL_SCOPE_SYS, "flavor", flavor, CF_DATA_TYPE_STRING,
+            tags);
+        free(tags);
+    }
 }
 
 #if defined __linux__ || __MINGW32__
@@ -1118,7 +1145,7 @@ static void SetFlavor2(
 
     char *flavor;
     xasprintf(&flavor, "%s_%s", id, major_version);
-    SetFlavor(ctx, flavor);
+    SetFlavor(ctx, flavor, NULL);
     free(flavor);
 }
 
@@ -1323,7 +1350,7 @@ static void OSClasses(EvalContext *ctx)
     if (stat("/etc/generic-release", &statbuf) != -1)
     {
         Log(LOG_LEVEL_VERBOSE, "This appears to be a sun cobalt system.");
-        SetFlavor(ctx, "SunCobalt");
+        SetFlavor(ctx, "SunCobalt", "/etc/generic-release");
     }
 
     if (stat("/etc/SuSE-release", &statbuf) != -1)
@@ -1360,13 +1387,15 @@ static void OSClasses(EvalContext *ctx)
     if (stat("/usr/bin/aptitude", &statbuf) != -1)
     {
         Log(LOG_LEVEL_VERBOSE, "This system seems to have the aptitude package system");
-        EvalContextClassPutHard(ctx, "have_aptitude", "inventory,attribute_name=none,source=agent");
+        EvalContextClassPutHard(
+            ctx, "have_aptitude", "inventory,attribute_name=none,source=agent,"
+            "derived-from-file=/usr/bin/aptitude");
     }
 
     if (stat("/etc/UnitedLinux-release", &statbuf) != -1)
     {
         Log(LOG_LEVEL_VERBOSE, "This appears to be a UnitedLinux system.");
-        SetFlavor(ctx, "UnitedLinux");
+        SetFlavor(ctx, "UnitedLinux", "/etc/UnitedLinux-release");
     }
 
     if (stat("/etc/alpine-release", &statbuf) != -1)
@@ -1377,18 +1406,18 @@ static void OSClasses(EvalContext *ctx)
     if (stat("/etc/gentoo-release", &statbuf) != -1)
     {
         Log(LOG_LEVEL_VERBOSE, "This appears to be a gentoo system.");
-        SetFlavor(ctx, "gentoo");
+        SetFlavor(ctx, "gentoo", "/etc/gentoo-release");
     }
 
     if (stat("/etc/manjaro-release", &statbuf) != -1)
     {
         Log(LOG_LEVEL_VERBOSE, "This appears to be a Manjaro Linux system.");
-        SetFlavor(ctx, "manjaro");
+        SetFlavor(ctx, "manjaro", "/etc/manjaro-release");
     }
     else if (stat("/etc/arch-release", &statbuf) != -1)
     {
         Log(LOG_LEVEL_VERBOSE, "This appears to be an Arch Linux system.");
-        SetFlavor(ctx, "archlinux");
+        SetFlavor(ctx, "archlinux", "/etc/arch-release");
     }
 
     if (stat("/proc/vmware/version", &statbuf) != -1 || stat("/etc/vmware-release", &statbuf) != -1)
@@ -1407,7 +1436,7 @@ static void OSClasses(EvalContext *ctx)
     if (stat("/etc/Eos-release", &statbuf) != -1)
     {
         EOS_Version(ctx);
-        SetFlavor(ctx, "Eos");
+        SetFlavor(ctx, "Eos", "/etc/Eos-release");
     }
 
     if (stat("/etc/issue", &statbuf) != -1)
@@ -1447,7 +1476,7 @@ static void OSClasses(EvalContext *ctx)
 
     char context[CF_BUFSIZE];
     snprintf(context, CF_BUFSIZE, "%s_%s", VSYSNAME.sysname, vbuff);
-    SetFlavor(ctx, context);
+    SetFlavor(ctx, context, NULL);
 #endif
 
 
@@ -1583,7 +1612,7 @@ static void OSClasses(EvalContext *ctx)
     FindNextInteger(release, &major);
     if (NULL_OR_EMPTY(major))
     {
-        SetFlavor(ctx, "windows");
+        SetFlavor(ctx, "windows", NULL);
     }
     else
     {
@@ -1626,12 +1655,12 @@ static void OSClasses(EvalContext *ctx)
 #endif
 
 #if defined(__ANDROID__)
-    SetFlavor(ctx, "android");
+    SetFlavor(ctx, "android", NULL);
 #endif
 
 /* termux flavor should over-ride android flavor */
 #if defined(__TERMUX__)
-    SetFlavor(ctx, "termux");
+    SetFlavor(ctx, "termux", NULL);
 #endif
 
 #ifdef __sun
@@ -1724,7 +1753,7 @@ static void Apple_Version(EvalContext *ctx)
         NDEBUG_UNUSED int ret = snprintf(buf, sizeof(buf), "%s_%u", flavor, major);
         assert(ret >= 0 && (size_t) ret < sizeof(buf));
         Log(LOG_LEVEL_VERBOSE, "This appears to be a %s %u system.", product_name, major);
-        SetFlavor(ctx, buf);
+        SetFlavor(ctx, buf, NULL);
     }
 
     if (revcomps > 1)
@@ -1761,9 +1790,15 @@ static void Linux_Oracle_VM_Server_Version(EvalContext *ctx)
 #define ORACLE_VM_SERVER_REL_FILENAME "/etc/ovs-release"
 #define ORACLE_VM_SERVER_ID "Oracle VM server"
 
+    const char *tags =
+        "inventory,attribute_name=none,source=agent,derived-from-file="
+        ORACLE_VM_SERVER_REL_FILENAME;
+
     Log(LOG_LEVEL_VERBOSE, "This appears to be Oracle VM Server");
-    EvalContextClassPutHard(ctx, "redhat", "inventory,attribute_name=none,source=agent");
-    EvalContextClassPutHard(ctx, "oraclevmserver", "inventory,attribute_name=Virtual host,source=agent");
+    EvalContextClassPutHard(ctx, "redhat", tags);
+    EvalContextClassPutHard(ctx, "oraclevmserver",
+        "inventory,attribute_name=Virtual host,source=agent,derived-from-file="
+        ORACLE_VM_SERVER_REL_FILENAME);
 
     if (!ReadLine(ORACLE_VM_SERVER_REL_FILENAME, relstring, sizeof(relstring)))
     {
@@ -1789,7 +1824,7 @@ static void Linux_Oracle_VM_Server_Version(EvalContext *ctx)
         char buf[CF_BUFSIZE];
 
         snprintf(buf, CF_BUFSIZE, "oraclevmserver_%d", major);
-        SetFlavor(ctx, buf);
+        SetFlavor(ctx, buf, ORACLE_VM_SERVER_REL_FILENAME);
     }
 
     if (revcomps > 1)
@@ -1797,7 +1832,7 @@ static void Linux_Oracle_VM_Server_Version(EvalContext *ctx)
         char buf[CF_BUFSIZE];
 
         snprintf(buf, CF_BUFSIZE, "oraclevmserver_%d_%d", major, minor);
-        EvalContextClassPutHard(ctx, buf, "inventory,attribute_name=none,source=agent");
+        EvalContextClassPutHard(ctx, buf, tags);
     }
 
     if (revcomps > 2)
@@ -1805,7 +1840,7 @@ static void Linux_Oracle_VM_Server_Version(EvalContext *ctx)
         char buf[CF_BUFSIZE];
 
         snprintf(buf, CF_BUFSIZE, "oraclevmserver_%d_%d_%d", major, minor, patch);
-        EvalContextClassPutHard(ctx, buf, "inventory,attribute_name=none,source=agent");
+        EvalContextClassPutHard(ctx, buf, tags);
     }
 }
 
@@ -1821,7 +1856,11 @@ static void Linux_Oracle_Version(EvalContext *ctx)
 #define ORACLE_ID "Oracle Linux Server"
 
     Log(LOG_LEVEL_VERBOSE, "This appears to be Oracle Linux");
-    EvalContextClassPutHard(ctx, "oracle", "inventory,attribute_name=none,source=agent");
+    const char *tags =
+    "inventory,attribute_name=none,source=agent,derived-from-file="
+    ORACLE_REL_FILENAME;
+
+    EvalContextClassPutHard(ctx, "oracle", tags);
 
     if (!ReadLine(ORACLE_REL_FILENAME, relstring, sizeof(relstring)))
     {
@@ -1845,10 +1884,10 @@ static void Linux_Oracle_Version(EvalContext *ctx)
         char buf[CF_BUFSIZE];
 
         snprintf(buf, CF_BUFSIZE, "oracle_%d", major);
-        SetFlavor(ctx, buf);
+        SetFlavor(ctx, buf, ORACLE_REL_FILENAME);
 
         snprintf(buf, CF_BUFSIZE, "oracle_%d_%d", major, minor);
-        EvalContextClassPutHard(ctx, buf, "inventory,attribute_name=none,source=agent");
+        EvalContextClassPutHard(ctx, buf, tags);
     }
 }
 
@@ -1869,10 +1908,13 @@ static int Linux_Fedora_Version(EvalContext *ctx)
 
 /* The full string read in from fedora-release */
     char relstring[CF_MAXVARSIZE];
+    const char *tags =
+        "inventory,attribute_name=none,source=agent,derived-from-file="
+        FEDORA_REL_FILENAME;
 
     Log(LOG_LEVEL_VERBOSE, "This appears to be a fedora system.");
-    EvalContextClassPutHard(ctx, "redhat", "inventory,attribute_name=none,source=agent");
-    EvalContextClassPutHard(ctx, "fedora", "inventory,attribute_name=none,source=agent");
+    EvalContextClassPutHard(ctx, "redhat", tags);
+    EvalContextClassPutHard(ctx, "fedora", tags);
 
 /* Grab the first line from the file and then close it. */
 
@@ -1922,10 +1964,10 @@ static int Linux_Fedora_Version(EvalContext *ctx)
         char classbuf[CF_MAXVARSIZE];
         classbuf[0] = '\0';
         strcat(classbuf, vendor);
-        EvalContextClassPutHard(ctx,classbuf, "inventory,attribute_name=none,source=agent");
+        EvalContextClassPutHard(ctx, classbuf, tags);
         strcat(classbuf, "_");
         strcat(classbuf, strmajor);
-        SetFlavor(ctx, classbuf);
+        SetFlavor(ctx, classbuf, FEDORA_REL_FILENAME);
     }
 
     return 0;
@@ -2154,7 +2196,7 @@ static int Linux_Redhat_Version(EvalContext *ctx)
 
         strcat(classbuf, strmajor);
 
-        SetFlavor(ctx, classbuf);
+        SetFlavor(ctx, classbuf, RH_REL_FILENAME);
 
         if (minor != -2)
         {
@@ -2181,13 +2223,17 @@ static int Linux_Suse_Version(EvalContext *ctx)
     char classbuf[CF_MAXVARSIZE];
 
     Log(LOG_LEVEL_VERBOSE, "This appears to be a SUSE system.");
-    EvalContextClassPutHard(ctx, "SUSE", "inventory,attribute_name=none,source=agent");
-    EvalContextClassPutHard(ctx, "suse", "inventory,attribute_name=none,source=agent");
+    const char *tags =
+        "inventory,attribute_name=none,source=agent,derived-from-file="
+        SUSE_REL_FILENAME;
+
+    EvalContextClassPutHard(ctx, "SUSE", tags);
+    EvalContextClassPutHard(ctx, "suse", tags);
 
     /* The correct spelling for SUSE is "SUSE" but CFEngine used to use "SuSE".
      * Keep this for backwards compatibility until CFEngine 3.7
      */
-    EvalContextClassPutHard(ctx, "SuSE", "inventory,attribute_name=none,source=agent");
+    EvalContextClassPutHard(ctx, "SuSE", tags);
 
     /* Grab the first line from the SuSE-release file and then close it. */
     char relstring[CF_MAXVARSIZE];
@@ -2247,7 +2293,7 @@ static int Linux_Suse_Version(EvalContext *ctx)
     {
         classbuf[0] = '\0';
         strcat(classbuf, "SLES8");
-        EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+        EvalContextClassPutHard(ctx, classbuf, tags);
     }
     else if (strncmp(relstring, "sles", 4) == 0)
     {
@@ -2255,13 +2301,13 @@ static int Linux_Suse_Version(EvalContext *ctx)
 
         nt_static_assert((sizeof(vbuf)) > 255);
         sscanf(relstring, "%255[-_a-zA-Z0-9]", vbuf);
-        EvalContextClassPutHard(ctx, vbuf, "inventory,attribute_name=none,source=agent");
+        EvalContextClassPutHard(ctx, vbuf, tags);
 
         list = SplitString(vbuf, '-');
 
         for (ip = list; ip != NULL; ip = ip->next)
         {
-            EvalContextClassPutHard(ctx, ip->name, "inventory,attribute_name=none,source=agent");
+            EvalContextClassPutHard(ctx, ip->name, tags);
         }
 
         DeleteItemList(list);
@@ -2276,7 +2322,7 @@ static int Linux_Suse_Version(EvalContext *ctx)
             if (!strncmp(relstring, vbuf, strlen(vbuf)))
             {
                 snprintf(classbuf, CF_MAXVARSIZE, "SLES%d", version);
-                EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+                EvalContextClassPutHard(ctx, classbuf, tags);
             }
             else
             {
@@ -2286,7 +2332,7 @@ static int Linux_Suse_Version(EvalContext *ctx)
                 if (!strncmp(relstring, vbuf, strlen(vbuf)))
                 {
                     snprintf(classbuf, CF_MAXVARSIZE, "SLED%d", version);
-                    EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+                    EvalContextClassPutHard(ctx, classbuf, tags);
                 }
             }
         }
@@ -2325,25 +2371,25 @@ static int Linux_Suse_Version(EvalContext *ctx)
             if (major != -1 && minor != -1)
             {
                 strcpy(classbuf, "SUSE");
-                EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+                EvalContextClassPutHard(ctx, classbuf, tags);
                 strcat(classbuf, "_");
                 strcat(classbuf, strmajor);
-                SetFlavor(ctx, classbuf);
+                SetFlavor(ctx, classbuf, SUSE_REL_FILENAME);
                 strcat(classbuf, "_");
                 strcat(classbuf, strminor);
-                EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+                EvalContextClassPutHard(ctx, classbuf, tags);
 
                 /* The correct spelling for SUSE is "SUSE" but CFEngine used to use "SuSE".
                  * Keep this for backwards compatibility until CFEngine 3.7
                  */
                 strcpy(classbuf, "SuSE");
-                EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+                EvalContextClassPutHard(ctx, classbuf, tags);
                 strcat(classbuf, "_");
                 strcat(classbuf, strmajor);
-                EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+                EvalContextClassPutHard(ctx, classbuf, tags);
                 strcat(classbuf, "_");
                 strcat(classbuf, strminor);
-                EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+                EvalContextClassPutHard(ctx, classbuf, tags);
 
                 Log(LOG_LEVEL_VERBOSE, "Discovered SUSE version %s", classbuf);
                 return 0;
@@ -2359,16 +2405,16 @@ static int Linux_Suse_Version(EvalContext *ctx)
             if (major != -1 && minor != -1)
             {
                 strcpy(classbuf, "SLES");
-                EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+                EvalContextClassPutHard(ctx, classbuf, tags);
                 strcat(classbuf, "_");
                 strcat(classbuf, strmajor);
-                EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+                EvalContextClassPutHard(ctx, classbuf, tags);
                 strcat(classbuf, "_");
                 strcat(classbuf, strminor);
-                EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+                EvalContextClassPutHard(ctx, classbuf, tags);
 
                 snprintf(classbuf, CF_MAXVARSIZE, "SUSE_%d", major);
-                SetFlavor(ctx, classbuf);
+                SetFlavor(ctx, classbuf, SUSE_REL_FILENAME);
 
                 /* The correct spelling for SUSE is "SUSE" but CFEngine used to use "SuSE".
                  * Keep this for backwards compatibility until CFEngine 3.7
@@ -2397,11 +2443,16 @@ static int Linux_Slackware_Version(EvalContext *ctx, char *filename)
     char classname[CF_MAXVARSIZE] = "";
     char buffer[CF_MAXVARSIZE];
 
+    char *tags = StringFormat(
+        "inventory,attribute_name=none,source=agent,derived-from-file=%s",
+        filename);
+
     Log(LOG_LEVEL_VERBOSE, "This appears to be a slackware system.");
-    EvalContextClassPutHard(ctx, "slackware", "inventory,attribute_name=none,source=agent");
+    EvalContextClassPutHard(ctx, "slackware", tags);
 
     if (!ReadLine(filename, buffer, sizeof(buffer)))
     {
+        free(tags);
         return 1;
     }
 
@@ -2411,22 +2462,24 @@ static int Linux_Slackware_Version(EvalContext *ctx, char *filename)
     case 3:
         Log(LOG_LEVEL_VERBOSE, "This appears to be a Slackware %u.%u.%u system.", major, minor, release);
         snprintf(classname, CF_MAXVARSIZE, "slackware_%u_%u_%u", major, minor, release);
-        EvalContextClassPutHard(ctx, classname, "inventory,attribute_name=none,source=agent");
+        EvalContextClassPutHard(ctx, classname, tags);
         /* Fall-through */
     case 2:
         Log(LOG_LEVEL_VERBOSE, "This appears to be a Slackware %u.%u system.", major, minor);
         snprintf(classname, CF_MAXVARSIZE, "slackware_%u_%u", major, minor);
-        EvalContextClassPutHard(ctx, classname, "inventory,attribute_name=none,source=agent");
+        EvalContextClassPutHard(ctx, classname, tags);
         /* Fall-through */
     case 1:
         Log(LOG_LEVEL_VERBOSE, "This appears to be a Slackware %u system.", major);
         snprintf(classname, CF_MAXVARSIZE, "slackware_%u", major);
-        EvalContextClassPutHard(ctx, classname, "inventory,attribute_name=none,source=agent");
+        EvalContextClassPutHard(ctx, classname, tags);
         break;
     case 0:
         Log(LOG_LEVEL_VERBOSE, "No Slackware version number found.");
+        free(tags);
         return 2;
     }
+    free(tags);
     return 0;
 }
 
@@ -2495,7 +2548,10 @@ static int Linux_Misc_Version(EvalContext *ctx)
 
             if (strstr(buffer, "Cumulus"))
             {
-                EvalContextClassPutHard(ctx, "cumulus", "inventory,attribute_name=none,source=agent");
+                EvalContextClassPutHard(
+                    ctx, "cumulus",
+                    "inventory,attribute_name=none,source=agent,"
+                    "derived-from-files=" LSB_RELEASE_FILENAME);
                 os = "cumulus";
             }
 
@@ -2514,7 +2570,7 @@ static int Linux_Misc_Version(EvalContext *ctx)
     if (os != NULL && version[0] != '\0')
     {
         snprintf(flavor, CF_MAXVARSIZE, "%s_%s", os, version);
-        SetFlavor(ctx, flavor);
+        SetFlavor(ctx, flavor, LSB_RELEASE_FILENAME);
         return 1;
     }
 
@@ -2558,13 +2614,13 @@ static int Linux_Debian_Version(EvalContext *ctx)
             classname,
             "inventory,attribute_name=none,source=agent,derived-from-file="DEBIAN_VERSION_FILENAME);
         snprintf(classname, CF_MAXVARSIZE, "debian_%u", major);
-        SetFlavor(ctx, classname);
+        SetFlavor(ctx, classname, DEBIAN_VERSION_FILENAME);
         break;
 
     case 1:
         Log(LOG_LEVEL_VERBOSE, "This appears to be a Debian %u system.", major);
         snprintf(classname, CF_MAXVARSIZE, "debian_%u", major);
-        SetFlavor(ctx, classname);
+        SetFlavor(ctx, classname, DEBIAN_VERSION_FILENAME);
         break;
 
     default:
@@ -2601,7 +2657,7 @@ static int Linux_Debian_Version(EvalContext *ctx)
             ctx,
             "debian",
             "inventory,attribute_name=none,source=agent,derived-from-file="DEBIAN_ISSUE_FILENAME);
-        SetFlavor(ctx, buffer);
+        SetFlavor(ctx, buffer, DEBIAN_ISSUE_FILENAME);
     }
     else if (strcmp(os, "Ubuntu") == 0)
     {
@@ -2610,7 +2666,7 @@ static int Linux_Debian_Version(EvalContext *ctx)
         nt_static_assert((sizeof(version)) > 255);
         sscanf(buffer, "%*s %255[^.].%255s", version, minor);
         snprintf(buffer, CF_MAXVARSIZE, "ubuntu_%s", version);
-        SetFlavor(ctx, buffer);
+        SetFlavor(ctx, buffer, DEBIAN_ISSUE_FILENAME);
         EvalContextClassPutHard(
             ctx,
             "ubuntu",
@@ -2643,7 +2699,9 @@ static int Linux_Mandrake_Version(EvalContext *ctx)
     char *vendor = NULL;
 
     Log(LOG_LEVEL_VERBOSE, "This appears to be a mandrake system.");
-    EvalContextClassPutHard(ctx, "Mandrake", "inventory,attribute_name=none,source=agent");
+    EvalContextClassPutHard(ctx, "Mandrake",
+        "inventory,attribute_name=none,source=agent,derived-from-file="
+        MANDRAKE_REL_FILENAME);
 
     if (!ReadLine(MANDRAKE_REL_FILENAME, relstring, sizeof(relstring)))
     {
@@ -2687,10 +2745,13 @@ static int Linux_Mandriva_Version(EvalContext *ctx)
 
     char relstring[CF_MAXVARSIZE];
     char *vendor = NULL;
+    const char *tags =
+        "inventory,attribute_name=none,source=agent,derived-from-file="
+        MANDRIVA_REL_FILENAME;
 
     Log(LOG_LEVEL_VERBOSE, "This appears to be a mandriva system.");
-    EvalContextClassPutHard(ctx, "Mandrake", "inventory,attribute_name=none,source=agent");
-    EvalContextClassPutHard(ctx, "Mandriva", "inventory,attribute_name=none,source=agent");
+    EvalContextClassPutHard(ctx, "Mandrake", tags);
+    EvalContextClassPutHard(ctx, "Mandriva", tags);
 
     if (!ReadLine(MANDRIVA_REL_FILENAME, relstring, sizeof(relstring)))
     {
@@ -2741,22 +2802,27 @@ static int Linux_Mandriva_Version_Real(EvalContext *ctx, char *filename, char *r
         }
     }
 
+    char *tags = StringFormat(
+        "inventory,attribute_name=none,source=agent,derived-from-file=%s",
+        filename);
+
     if (major != -1 && minor != -1 && strcmp(vendor, ""))
     {
         char classbuf[CF_MAXVARSIZE];
         classbuf[0] = '\0';
         strcat(classbuf, vendor);
-        EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+        EvalContextClassPutHard(ctx, classbuf, tags);
         strcat(classbuf, "_");
         strcat(classbuf, strmajor);
-        EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+        EvalContextClassPutHard(ctx, classbuf, tags);
         if (minor != -2)
         {
             strcat(classbuf, "_");
             strcat(classbuf, strminor);
-            EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+            EvalContextClassPutHard(ctx, classbuf, tags);
         }
     }
+    free(tags);
 
     return 0;
 }
@@ -2787,11 +2853,11 @@ static void Linux_Amazon_Version(EvalContext *ctx)
                 EvalContextClassPutHard(ctx, class,
                     "inventory,attribute_name=none,source=agent"
                     ",derived-from-file=/etc/system-release");
-                SetFlavor(ctx, class);
+                SetFlavor(ctx, class, "/etc/system-release");
             }
             else
             {
-                SetFlavor(ctx, "amazon_linux");
+                SetFlavor(ctx, "amazon_linux", "/etc/system-release");
             }
             // We set this class for backwards compatibility
             EvalContextClassPutHard(ctx, "AmazonLinux",
@@ -2826,7 +2892,7 @@ static void Linux_Alpine_Version(EvalContext *ctx)
                 ",derived-from-file=/etc/alpine-release");
         }
     }
-    SetFlavor(ctx, "alpinelinux");
+    SetFlavor(ctx, "alpinelinux", "/etc/alpine-release");
 }
 
 /******************************************************************/
@@ -2842,14 +2908,16 @@ static int EOS_Version(EvalContext *ctx)
     {
         if (strstr(buffer, "EOS"))
         {
+            const char *tags = "inventory,attribute_name=none,source=agent,"
+                "derived-from-file=/etc/Eos-release";
             char version[256], class[CF_MAXVARSIZE];
-            EvalContextClassPutHard(ctx, "eos", "inventory,attribute_name=none,source=agent");
+            EvalContextClassPutHard(ctx, "eos", tags);
             EvalContextClassPutHard(ctx, "arista", "source=agent");
             version[0] = '\0';
             sscanf(buffer, "%*s %*s %*s %255s", version);
             CanonifyNameInPlace(version);
             snprintf(class, CF_MAXVARSIZE, "eos_%s", version);
-            EvalContextClassPutHard(ctx, class, "inventory,attribute_name=none,source=agent");
+            EvalContextClassPutHard(ctx, class, tags);
         }
     }
 
@@ -2859,26 +2927,28 @@ static int EOS_Version(EvalContext *ctx)
 /******************************************************************/
 
 static int MiscOS(EvalContext *ctx)
+{
+    char buffer[CF_BUFSIZE];
 
-{ char buffer[CF_BUFSIZE];
-
- // e.g. BIG-IP 10.1.0 Build 3341.1084
+    // e.g. BIG-IP 10.1.0 Build 3341.1084
 
     if (ReadLine("/etc/issue", buffer, sizeof(buffer)))
     {
-       if (strstr(buffer, "BIG-IP"))
-       {
-           char version[256], build[256], class[CF_MAXVARSIZE];
-           EvalContextClassPutHard(ctx, "big_ip", "inventory,attribute_name=none,source=agent");
-           sscanf(buffer, "%*s %255s %*s %255s", version, build);
-           CanonifyNameInPlace(version);
-           CanonifyNameInPlace(build);
-           snprintf(class, CF_MAXVARSIZE, "big_ip_%s", version);
-           EvalContextClassPutHard(ctx, class, "inventory,attribute_name=none,source=agent");
-           snprintf(class, CF_MAXVARSIZE, "big_ip_%s_%s", version, build);
-           EvalContextClassPutHard(ctx, class, "inventory,attribute_name=none,source=agent");
-           SetFlavor(ctx, "BIG-IP");
-       }
+        if (strstr(buffer, "BIG-IP"))
+        {
+            const char *tags =  "inventory,attribute_name=none,source=agent,"
+            "derived-from-file=/etc/issue";
+            char version[256], build[256], class[CF_MAXVARSIZE];
+            EvalContextClassPutHard(ctx, "big_ip", tags);
+            sscanf(buffer, "%*s %255s %*s %255s", version, build);
+            CanonifyNameInPlace(version);
+            CanonifyNameInPlace(build);
+            snprintf(class, CF_MAXVARSIZE, "big_ip_%s", version);
+            EvalContextClassPutHard(ctx, class, tags);
+            snprintf(class, CF_MAXVARSIZE, "big_ip_%s_%s", version, build);
+            EvalContextClassPutHard(ctx, class, tags);
+            SetFlavor(ctx, "BIG-IP", NULL);
+        }
     }
 
     return 0;
@@ -2893,25 +2963,29 @@ static int VM_Version(EvalContext *ctx)
     int sufficient = 0;
 
     Log(LOG_LEVEL_VERBOSE, "This appears to be a VMware Server ESX/xSX system.");
-    EvalContextClassPutHard(ctx, "VMware", "inventory,attribute_name=Virtual host,source=agent");
+    EvalContextClassPutHard(
+        ctx, "VMware", "inventory,attribute_name=Virtual host,source=agent,"
+        "derived-from-file=/proc/vmware/version");
 
 /* VMware Server ESX >= 3 has version info in /proc */
     if (ReadLine("/proc/vmware/version", buffer, sizeof(buffer)))
     {
+        const char *tags = "inventory,attribute_name=none,source=agent,"
+            "derived-from-file=/proc/vmware/version";
         if (sscanf(buffer, "VMware ESX Server %d.%d.%d", &major, &minor, &bug) > 0)
         {
             snprintf(classbuf, CF_BUFSIZE, "VMware ESX Server %d", major);
-            EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+            EvalContextClassPutHard(ctx, classbuf, tags);
             snprintf(classbuf, CF_BUFSIZE, "VMware ESX Server %d.%d", major, minor);
-            EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+            EvalContextClassPutHard(ctx, classbuf, tags);
             snprintf(classbuf, CF_BUFSIZE, "VMware ESX Server %d.%d.%d", major, minor, bug);
-            EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+            EvalContextClassPutHard(ctx, classbuf, tags);
             sufficient = 1;
         }
         else if (sscanf(buffer, "VMware ESX Server %255s", version) > 0)
         {
             snprintf(classbuf, CF_BUFSIZE, "VMware ESX Server %s", version);
-            EvalContextClassPutHard(ctx, classbuf, "inventory,attribute_name=none,source=agent");
+            EvalContextClassPutHard(ctx, classbuf, tags);
             sufficient = 1;
         }
     }
@@ -2921,14 +2995,16 @@ static int VM_Version(EvalContext *ctx)
     if (sufficient < 1 && (ReadLine("/etc/vmware-release", buffer, sizeof(buffer))
                            || ReadLine("/etc/issue", buffer, sizeof(buffer))))
     {
-        EvalContextClassPutHard(ctx, buffer, "inventory,attribute_name=none,source=agent");
+        const char *tags = "inventory,attribute_name=none,source=agent,"
+            "derived-from-file=/etc/vmware-release";
+        EvalContextClassPutHard(ctx, buffer, tags);
 
         /* Strip off the release code name e.g. "(Dali)" */
         if ((sp = strchr(buffer, '(')) != NULL)
         {
             *sp = 0;
             Chop(buffer, CF_EXPANDSIZE);
-            EvalContextClassPutHard(ctx, buffer, "inventory,attribute_name=none,source=agent");
+            EvalContextClassPutHard(ctx, buffer, tags);
         }
         sufficient = 1;
     }
@@ -2941,9 +3017,11 @@ static int VM_Version(EvalContext *ctx)
 static int Xen_Domain(EvalContext *ctx)
 {
     int sufficient = 0;
+    const char *tags = "inventory,attribute_name=Virtual host,source=agent,"
+        "derived-from-file=/proc/xen/capabilities";
 
     Log(LOG_LEVEL_VERBOSE, "This appears to be a xen pv system.");
-    EvalContextClassPutHard(ctx, "xen", "inventory,attribute_name=Virtual host,source=agent");
+    EvalContextClassPutHard(ctx, "xen", tags);
 
 /* xen host will have "control_d" in /proc/xen/capabilities, xen guest will not */
 
@@ -2973,14 +3051,14 @@ static int Xen_Domain(EvalContext *ctx)
 
             if (strstr(buffer, "control_d"))
             {
-                EvalContextClassPutHard(ctx, "xen_dom0", "inventory,attribute_name=Virtual host,source=agent");
+                EvalContextClassPutHard(ctx, "xen_dom0", tags);
                 sufficient = 1;
             }
         }
 
         if (!sufficient)
         {
-            EvalContextClassPutHard(ctx, "xen_domu_pv", "inventory,attribute_name=Virtual host,source=agent");
+            EvalContextClassPutHard(ctx, "xen_domu_pv", tags);
             sufficient = 1;
         }
 
@@ -3009,11 +3087,17 @@ static void OpenVZ_Detect(EvalContext *ctx)
     if (stat(OPENVZ_HOST_FILENAME, &statbuf) != -1)
     {
         Log(LOG_LEVEL_VERBOSE, "This appears to be an OpenVZ/Virtuozzo/Parallels Cloud Server host system.\n");
-        EvalContextClassPutHard(ctx, "virt_host_vz", "inventory,attribute_name=Virtual host,source=agent");
+        EvalContextClassPutHard(
+            ctx, "virt_host_vz",
+            "inventory,attribute_name=Virtual host,source=agent,"
+            "derived-from-file=" OPENVZ_HOST_FILENAME);
         /* if the file /bin/vzps is there, it is safe to use the processes promise type */
         if (stat(OPENVZ_VZPS_FILE, &statbuf) != -1)
         {
-            EvalContextClassPutHard(ctx, "virt_host_vz_vzps", "inventory,attribute_name=Virtual host,source=agent");
+            EvalContextClassPutHard(
+                ctx, "virt_host_vz_vzps",
+                "inventory,attribute_name=Virtual host,source=agent,"
+                "derived-from-file=" OPENVZ_VZPS_FILE);
             /* here we must redefine the value of VPSHARDCLASS */
             for (int i = 0; i < PLATFORM_CONTEXT_MAX; i++)
             {
@@ -3032,7 +3116,10 @@ static void OpenVZ_Detect(EvalContext *ctx)
     else if (stat(OPENVZ_GUEST_FILENAME, &statbuf) != -1)
     {
         Log(LOG_LEVEL_VERBOSE, "This appears to be an OpenVZ/Virtuozzo/Parallels Cloud Server guest system.\n");
-        EvalContextClassPutHard(ctx, "virt_guest_vz", "inventory,attribute_name=Virtual host,source=agent");
+        EvalContextClassPutHard(
+            ctx, "virt_guest_vz",
+            "inventory,attribute_name=Virtual host,source=agent,"
+            "derived-from-file=" OPENVZ_GUEST_FILENAME);
     }
 }
 

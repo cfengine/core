@@ -63,6 +63,7 @@ body common control()
         {
           "arguments": [],
           "bundleType": "agent",
+          "evaluation_order": "undefined",
           "line": 7,
           "name": "test",
           "namespace": "default",
@@ -189,6 +190,7 @@ body common control()
         {
           "arguments": [],
           "bundleType": "agent",
+          "evaluation_order": "undefined",
           "line": 7,
           "name": "test",
           "namespace": "default",
@@ -243,6 +245,7 @@ body common control()
         {
           "arguments": [],
           "bundleType": "common",
+          "evaluation_order": "undefined",
           "line": 1,
           "name": "extra",
           "namespace": "default",

@@ -4883,7 +4883,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx,
     Policy *select_server_policy = PolicyNew();
     {
         Bundle *bp = PolicyAppendBundle(select_server_policy, NamespaceDefault(),
-                                        "select_server_bundle", "agent", NULL, NULL);
+                                        "select_server_bundle", "agent", NULL, NULL, EVAL_ORDER_UNDEFINED);
         BundleSection *sp = BundleAppendSection(bp, "select_server");
 
         BundleSectionAppendPromise(sp, "function", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, NULL, NULL);

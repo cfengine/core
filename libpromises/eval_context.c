@@ -207,8 +207,8 @@ struct EvalContext_
         Seq *events;
     } profiler;
 
-    EvalContextEvalOrder common_eval_order;
-    EvalContextEvalOrder agent_eval_order;
+    EvalOrder common_eval_order;
+    EvalOrder agent_eval_order;
 };
 
 void EvalContextSetConfig(EvalContext *ctx, const GenericAgentConfig *config)
@@ -4062,21 +4062,54 @@ void EvalContextProfilingEnd(EvalContext *ctx, const Policy *policy)
 
 // ##############################################################
 
-void EvalContextSetCommonEvalOrder(EvalContext *ctx, EvalContextEvalOrder eval_order)
+void EvalContextSetCommonEvalOrder(EvalContext *ctx, EvalOrder eval_order)
 {
     assert(ctx != NULL);
     ctx->common_eval_order = eval_order;
 }
 
-void EvalContextSetAgentEvalOrder(EvalContext *ctx, EvalContextEvalOrder eval_order)
+void EvalContextSetAgentEvalOrder(EvalContext *ctx, EvalOrder eval_order)
 {
     assert(ctx != NULL);
     ctx->agent_eval_order = eval_order;
 }
 
-bool EvalContextIsClassicOrder(EvalContext *ctx)
+const char *EvalContextEvaluationOrderToString(EvalOrder evaluation_order)
+{
+    if (evaluation_order == EVAL_ORDER_CLASSIC)
+    {
+        return "classic";
+    }
+    if (evaluation_order == EVAL_ORDER_TOP_DOWN)
+    {
+        return "top_down";
+    }
+    return "undefined";
+}
+
+EvalOrder EvalContextEvaluationOrderFromString(const char *evaluation_order_string)
+{
+    if (StringEqual(evaluation_order_string, "classic"))
+    {
+        return EVAL_ORDER_CLASSIC;
+    }
+    if (StringEqual(evaluation_order_string, "top_down"))
+    {
+        return EVAL_ORDER_TOP_DOWN;
+    }
+    return EVAL_ORDER_UNDEFINED;
+}
+
+bool EvalContextIsClassicOrder(EvalContext *ctx, const Bundle *bp)
 {
     assert(ctx != NULL);
+    assert(bp != NULL);
+
+    if (bp->evaluation_order != EVAL_ORDER_UNDEFINED)
+    {
+        // bundle evaluation order overrides common or agent control
+        return bp->evaluation_order == EVAL_ORDER_CLASSIC;
+    }
 
     if (ctx->config->agent_type != AGENT_TYPE_AGENT)
     {

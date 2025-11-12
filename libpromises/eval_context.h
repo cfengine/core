@@ -47,6 +47,7 @@ typedef struct {
     char *filename;
     SourceOffset offset;
     int64_t elapsed;
+    char *stacktrace;
 } EventFrame;
 
 typedef enum

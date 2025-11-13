@@ -11,11 +11,44 @@ if [ "$(id -u)" != "0" ]; then
   fi
 fi
 
+build_lmdb() {
+if [ -f /usr/include/lmdb.h ]; then
+  echo lmdb libraries already installed, no-op.
+  return
+fi
+        tmpdir="$(mktemp -d)"
+echo building lmdb in "$tmpdir"
+        (
+          cd "$tmpdir"
+          git clone --recursive --depth 1 https://github.com/LMDB/lmdb
+          cd lmdb/libraries/liblmdb
+          make
+          $GAINROOT make install prefix=/usr
+        )
+}
+
+build_librsync() {
+tmpdir="$(mktemp -d)"
+echo building librsync in "$tmpdir"
+(
+cd "$tmpdir"
+          git clone --recursive --depth 1 https://github.com/librsync/librsync
+          cd librsync
+          cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release .
+          make
+          $GAINROOT make install
+)
+}
+
 # limited support here, focused on rhel-like on aarch64 which has no previous CFEngine version to leverage: ENT-13016
 if [ -f /etc/os-release ]; then
   source /etc/os-release
   VERSION_MAJOR=${VERSION_ID%.*}
-  if [ "$ID" = "rhel" ] || [[ "$ID_LIKE" =~ "rhel" ]]; then
+  if [[ "$ID_LIKE" =~ "suse" ]]; then
+    $GAINROOT zypper -qn install gdb gcc make lmdb autoconf automake libtool git python3 pcre2-devel libopenssl-devel pam-devel cmake flex byacc
+    build_lmdb
+    build_librsync
+  elif [ "$ID" = "rhel" ] || [[ "$ID_LIKE" =~ "rhel" ]]; then
     if [ "$VERSION_MAJOR" -ge "10" ]; then
       # note that having a redhat subscription makes things easier: lmdb-devel and librsync-devel are available from codeready-builder repo
       if subscription-manager status; then
@@ -30,23 +63,10 @@ if [ -f /etc/os-release ]; then
         # here we assume no subscription and so must build those two dependencies from source :)
         $GAINROOT yum groups install -y 'Development Tools'
         $GAINROOT yum update --assumeyes
-        $GAINROOT yum install -y gcc gdb make git libtool autoconf automake byacc flex openssl-devel pcre2-devel pam-devel libxml2-devel
-        tmpdir="$(mktemp -d)"
-        echo "Building lmdb and librsync in $tmpdir"
-        (
-          cd "$tmpdir"
-          git clone --recursive --depth 1 https://github.com/LMDB/lmdb
-          cd lmdb/libraries/liblmdb
-          make
-          $GAINROOT make install prefix=/usr
-          cd -
-          $GAINROOT dnf install -y cmake
-          git clone --recursive --depth 1 https://github.com/librsync/librsync
-          cd librsync
-          cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release .
-          make
-          $GAINROOT make install
-        )
+        # cmake is for building librsync
+        $GAINROOT yum install -y gcc gdb make git libtool autoconf automake byacc flex openssl-devel pcre2-devel pam-devel libxml2-devel cmake
+        build_lmdb
+        build_librsync
       fi
     else
       echo "Unsupported version of redhat for $0"

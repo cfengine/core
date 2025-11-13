@@ -22,7 +22,8 @@ if [ -f /etc/os-release ]; then
         $GAINROOT subscription-manager config --rhsm.manage_repos=1
         $GAINROOT subscription-manager repos --enable codeready-builder-for-rhel-"$VERSION_MAJOR"-"$(uname -m)"-rpms
         $GAINROOT dnf install --assumeyes https://dl.fedoraproject.org/pub/epel/epel-release-latest-"$VERSION_MAJOR".noarch.rpm
-        $GAINROOT dnf install --assumeyes flex-devel lmdb-devel librsync-devel fakeroot # only available via subscription with codeready-builder installed
+        $GAINROOT dnf install --assumeyes autoconf automake
+        $GAINROOT dnf install --assumeyes gcc gdb make git libtool autoconf automake byacc flex openssl-devel pcre2-devel lmdb-devel pam-devel flex-devel libyaml-devel fakeroot libxml2-devel librsync-devel
         # flex-devel, libyaml-devel and fakeroot are also only available easily from codeready-builder but are not critical to building CFEngine usable enough to configure a build host.
         # fakeroot is only needed for running tests but can be worked around by using GAINROOT=env with tests/acceptance/testall script
       else

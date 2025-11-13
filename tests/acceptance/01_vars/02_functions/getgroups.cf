@@ -16,6 +16,11 @@ bundle agent check
   meta:
     "description" -> { "ENT-12722" }
       string => "Test whether the entries of getroups() are like the ones inside /etc/group";
+    "test_skip_needs_work"
+      string => "suse_15|sles_15",
+      comment => "expects first three groups are root, bin, daemon but on suse_15 they are root, shadow, trusted.",
+      meta => { "ENT-13504" };
+
     "test_skip_unsupported"
       string => "windows";
   vars:

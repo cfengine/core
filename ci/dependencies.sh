@@ -61,10 +61,10 @@ if [ -f /etc/os-release ]; then
                 # fakeroot is only needed for running tests but can be worked around by using GAINROOT=env with tests/acceptance/testall script
             else
                 # here we assume no subscription and so must build those two dependencies from source :)
-                $GAINROOT yum groups install -y 'Development Tools'
+                $GAINROOT yum groups install --assumeyes 'Development Tools'
                 $GAINROOT yum update --assumeyes
                 # cmake is for building librsync
-                $GAINROOT yum install -y gcc gdb make git libtool autoconf automake byacc flex openssl-devel pcre2-devel pam-devel libxml2-devel cmake
+                $GAINROOT yum install --assumeyes gcc gdb make git libtool autoconf automake byacc flex openssl-devel pcre2-devel pam-devel libxml2-devel cmake
                 build_lmdb
                 build_librsync
             fi
@@ -73,8 +73,8 @@ if [ -f /etc/os-release ]; then
             exit 1
         fi
     elif [ "$ID" = "debian" ] || [[ "$ID_LIKE" =~ "debian" ]]; then
-        $GAINROOT apt update -y
-        $GAINROOT apt install -y build-essential git libtool autoconf automake bison flex libssl-dev libpcre2-dev libbison-dev libacl1 libacl1-dev lmdb-utils liblmdb-dev libpam0g-dev libtool libyaml-dev libxml2-dev librsync-dev
+        $GAINROOT apt update --yes
+        $GAINROOT apt install --yes build-essential git libtool autoconf automake bison flex libssl-dev libpcre2-dev libbison-dev libacl1 libacl1-dev lmdb-utils liblmdb-dev libpam0g-dev libtool libyaml-dev libxml2-dev librsync-dev
     else
         echo "Unsupported distribution based on /etc/os-release."
     fi

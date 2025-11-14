@@ -1,14 +1,14 @@
 3.27.0
     - Added evaluation order option in body agent control (ENT-13295)
-	- Added findlocalgroups policy function (CFE-4550)
-	- Added getgroupinfo policy function (CFE-4512)
-	- Added getgroups policy function (ENT-12722)
-	- Added isnewerthantime policy function (CFE-2815)
-	- Added missing record changes/failures to when flipping the immutable bit
+	- Added findlocalgroups() policy function (CFE-4550)
+	- Added getgroupinfo() policy function (CFE-4512)
+	- Added getgroups() policy function (ENT-12722)
+	- Added isnewerthantime() policy function (CFE-2815)
+	- Added missing recording of changes/failures when cf-agent is flipping the immutable bit
 	  (ENT-13179)
 	- Added policy function classfilterdata() (CFE-3421, ENT-6193)
-	- Added policy function to get ACLs (CFE-4529)
-	- Added sys policy version variable (ENT-4043)
+	- Added policy function getacls() (CFE-4529)
+	- Added sys.policy_version variable (ENT-4043)
 	- Added sysvinit cf-php-fpm service script for Mission Portal (ENT-13234)
 	- Atomic permissions during file copy
 	  Temporary file is now set to promised permissions before replacing it
@@ -16,11 +16,8 @@
 	- Files promise can now modify immutable bit in file system attributes
 	  (CFE-1840, ENT-10961)
 	- Fixed assertion error in classfilterdata()
-	  An assertion was triggered if the variable name or inline JSON failed to
-	  expand when calling classfilterdata().
 	- Fixed bug in getacls() where no ACLs caused error
-	- Fixed bug where files content promises skips remaining promises
-	  Fixed a bug where a successful files content promise causes remaining
+	- Fixed a bug where a successful files content promise causes remaining
 	  files promise attribute handling to be skipped. (CFE-4569)
 	- Fixed bug where remote file copy always preserves source perms
 	  Remote file copy with the 'copy_from' attribute now only preserves
@@ -42,36 +39,27 @@
 	- The policy profiling logic is now implemented natively within the cf-agent,
 	  replacing the previous reliance on cf-agent logs and the cf-profile.pl
 	  script for faster execution (ENT-8096)
-	- Acl attribute can now override immutable bit
-	  The acl attribute of the files promise can now override the immutable
+	- The acl attribute of the files promise can now override the immutable
 	  bit (CFE-1840, ENT-10961)
 	- Classfilterdata() now supports object of objects and object of arrays
 	  The class expression can be stored in either the key to the object
 	  itself, or key/index inside object (CFE-4562)
-	- Content attribute can now override immutable bit
-	  The content attribute of the files promise can now override the
+	- The content attribute of the files promise can now override the
 	  immutable bit (CFE-1840, ENT-10961)
-	- Copy_from attribute can now override immutable bit
-	  The copy_from attribute of the files promise can now override the
+	- The copy_from attribute of the files promise can now override the
 	  immutable bit (CFE-1840, ENT-10961)
-	- Delete attribute can now override immutable bit
-	  The delete attribute of the files promise can now override the immutable
+	- The delete attribute of the files promise can now override the immutable
 	  bit (CFE-1840, ENT-10961)
-	- Edit_line and edit_xml attributes can now override immutable bit
-	  The edit_line and edit_xml attributes of the files promise can now
+	- The edit_line and edit_xml attributes of the files promise can now
 	  override the immutable bit (CFE-1840, ENT-10961)
-	- Perms attribute can now override immutable bit
-	  The perms attribute of the files promise can now override the immutable
+	- The perms attribute of the files promise can now override the immutable
 	  bit (CFE-1840, ENT-10961)
-	- Rename attribute can now override immutable bit
-	  The rename attribute of the files promise can now override the immutable
+	- The rename attribute of the files promise can now override the immutable
 	  bit. The disabled file will inherit the immutable trait of the original
 	  file (CFE-1840, ENT-10961)
-	- Touch attribute can now override immutable bit
-	  The touch attribute of the files promise can now override the
+	- The touch attribute of the files promise can now override the
 	  immutable bit (CFE-1840, ENT-10961)
-	- Transformer attribute can now override immutable bit
-	  The transformer attribute of the files promise can now override the
+	- The transformer attribute of the files promise can now override the
 	  immutable bit (CFE-1840, ENT-10961)
 	- Added default_directory_create_mode to body agent control (CFE-4590, ENT-13239)
 

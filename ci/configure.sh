@@ -7,7 +7,7 @@ cd "$thisdir"/..
 OPTS="--enable-debug"
 
 if [ -n "$TERMUX_VERSION" ]; then
-  OPTS="$OPTS --without-pam"
+    OPTS="$OPTS --without-pam"
 fi
 
 ./autogen.sh $OPTS

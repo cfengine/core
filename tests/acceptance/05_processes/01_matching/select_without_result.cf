@@ -36,8 +36,8 @@ bundle agent test
   meta:
       # This test exposes a known issue with processes on the Windows platform.
       "test_soft_fail"
-        string => "windows",
-        meta => {"ENT-12751"};
+        string => "windows|solaris",
+        meta => { "ENT-12751", "ENT-13505" };
 
       "description" -> {"CFE-4511"}
         string => "process_select body without process_result";

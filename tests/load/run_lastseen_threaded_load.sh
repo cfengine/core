@@ -1,10 +1,11 @@
 #!/bin/sh
 
-if [ "x$label" = "xPACKAGES_x86_64_solaris_10" ] ;
-then
-    echo "Skipping lastseen_threaded_load on $label"
+for skip_label in PACKAGES_x86_64_solaris_10 PACKAGES_ia64_hpux_11.23; do
+  if [ "$label" = "$skip_label" ]; then
+    echo "Skipping $0 on label $skip_label"
     exit 0;
-fi
+  fi
+done
 
 echo "Starting run_lastseen_threaded_load.sh test"
 

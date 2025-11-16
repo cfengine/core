@@ -1,11 +1,18 @@
 body common control
 {
-  bundlesequence => { "test" };
+  inputs => { "../../default.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 
 bundle agent test
 {
+  meta:
+    "test_skip_needs_work"
+      string => "aix",
+      meta => { "CFE-4606" };
+
   vars:
     "release_id_list" slist => variablesmatching("default:sys.policy_release_id");
     "escaped" string => escape("$(sys.policy_entry_dirname)");

@@ -35,7 +35,7 @@ bundle agent test
 {
   meta:
     "test_soft_fail"
-      string => "!linux|(termux|android)",
+      string => "(!linux&!solaris)|(termux|android)",
       meta => { "CFE-2318" };
   vars:
     "glist1"

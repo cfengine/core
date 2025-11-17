@@ -17,10 +17,10 @@ bundle agent check
     "description" -> { "ENT-12722" }
       string => "Test whether the entries of getroups() are like the ones inside /etc/group";
     "test_skip_needs_work"
-      string => "suse_15|sles_15|aix",
+      string => "suse_15|sles_15|aix|solaris",
       comment => "expects first three groups are root, bin, daemon. However, on:
  - suse_15 they are root, shadow, trusted.
- - aix they are root, daemon, bin (i.e. different order).",
+ - aix and solaris they are root, daemon, bin (i.e. different order)",
       meta => { "ENT-13504", "CFE-4605" };
 
     "test_skip_unsupported"

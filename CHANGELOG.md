@@ -29,7 +29,7 @@
 	- Fixed crash in readyaml when parsing an empty file (CFE-4595)
 	- Fixed file descriptor leak in sys.cpusockets (CFE-4536)
 	- Fixed file descriptor leak when creating the am_policy_hub file
-	- Fixed move_obstructions support when using content, and edit_template
+	- Fixed move_obstructions support when using content and edit_template attributes
 	  (CFE-4591)
 	- Fixed bug causing rendered files can result in erroneously empty files
 	  as a result of promise locking (ENT-9980)
@@ -57,8 +57,7 @@
 	  file (CFE-1840, ENT-10961)
 	- The touch attribute of the files promise can now override the
 	  immutable bit (CFE-1840, ENT-10961)
-	- Transformer attribute can now override immutable bit
-	  The transformer attribute of the files promise can now override the
+	- The transformer attribute of the files promise can now override the
 	  immutable bit (CFE-1840, ENT-10961)
 	- Added default_directory_create_mode to body agent control (CFE-4590, ENT-13239)
 

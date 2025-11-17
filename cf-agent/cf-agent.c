@@ -1337,6 +1337,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
             {
                 Log(LOG_LEVEL_VERBOSE, "SET select_end_match_eof %s", (char *) value);
                 EvalContextSetSelectEndMatchEof(ctx, BooleanFromString(value));
+                continue;
             }
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_REPORTCLASSLOG].lval) == 0)
@@ -1362,6 +1363,27 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
                 {
                     EvalContextSetAgentEvalOrder(ctx, EVAL_ORDER_CLASSIC);
                 }
+                continue;
+            }
+
+            if (StringEqual(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_DEFAULT_DIRECTORY_CREATE_MODE].lval))
+            {
+                assert(value_type == CF_DATA_TYPE_STRING);
+                const char *mode_str = value;
+                mode_t plus, minus;
+                if (ParseModeString(mode_str, &plus, &minus))
+                {
+                    DEFAULTMODE |= plus;
+                    DEFAULTMODE &= ~minus;
+                    Log(LOG_LEVEL_VERBOSE, "Changed default directory create mode to %ju "
+                        "(default_directory_create_mode => \"%s\")", (uintmax_t) DEFAULTMODE, mode_str);
+                }
+                else
+                {
+                    Log(LOG_LEVEL_ERR, "Failed to parse mode string for overriding default directory create mode "
+                        "(default_directory_create_mode => \"%s\")", mode_str);
+                }
+                continue;
             }
         }
     }

@@ -48,6 +48,8 @@ extern char VFQNAME[CF_MAXVARSIZE];
 extern char VDOMAIN[CF_MAXVARSIZE / 2];
 extern char VUQNAME[CF_MAXVARSIZE / 2];
 
+extern mode_t DEFAULTMODE;
+
 typedef enum EvalMode {
     EVAL_MODE_NORMAL = 0,                 /* needs to be 'false' to work for DONTDO below */
     EVAL_MODE_DRY_RUN = 1,

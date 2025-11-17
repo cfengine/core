@@ -3,7 +3,8 @@ cfengine-enterprise.te: cfengine-enterprise.te.all $(PLATFORM_SELINUX_POLICIES)
 	cat cfengine-enterprise.te.all $(PLATFORM_SELINUX_POLICIES) > cfengine-enterprise.te
 
 cfengine-enterprise.pp cfengine-enterprise-unconfined.pp: cfengine-enterprise.te cfengine-enterprise.fc cfengine-enterprise-unconfined.te cfengine-enterprise-unconfined.fc
-	$(MAKE) -f /usr/share/selinux/devel/Makefile -j1
+	rpm -qa selinux-policy # debug output to see version
+	$(MAKE) -f /usr/share/selinux/devel/Makefile -j1 || ls -l tmp/
 
 selinuxdir = $(prefix)/selinux
 selinux_DATA = cfengine-enterprise.pp

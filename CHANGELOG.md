@@ -1,3 +1,66 @@
+3.27.0
+    - Added evaluation order option in body agent control (ENT-13295)
+	- Added findlocalgroups() policy function (CFE-4550)
+	- Added getgroupinfo() policy function (CFE-4512)
+	- Added getgroups() policy function (ENT-12722)
+	- Added isnewerthantime() policy function (CFE-2815)
+	- Added missing recording of changes/failures when cf-agent is flipping the immutable bit
+	  (ENT-13179)
+	- Added policy function classfilterdata() (CFE-3421, ENT-6193)
+	- Added policy function getacls() (CFE-4529)
+	- Added sys.policy_version variable (ENT-4043)
+	- Added sysvinit cf-php-fpm service script for Mission Portal (ENT-13234)
+	- Atomic permissions during file copy
+	  Temporary file is now set to promised permissions before replacing it
+	  with original during remote copy from (ENT-13163)
+	- Files promise can now modify immutable bit in file system attributes
+	  (CFE-1840, ENT-10961)
+	- Fixed assertion error in classfilterdata()
+	- Fixed bug in getacls() where no ACLs caused error
+	- Fixed a bug where a successful files content promise causes remaining
+	  files promise attribute handling to be skipped. (CFE-4569)
+	- Remote file copy with the 'copy_from' attribute now only preserves
+	  source file permissions if the 'preserve' attribute in 'body copy_from'
+	  is true. Otherwise it will use the permissions of the destination file
+	  if it already exists and default permissions if it does not. (ENT-11988)
+	- Fixed bug where rename fails to reset temporarily cleared immutable bit
+	  (ENT-13179)
+	- Fixed cf-support usage of coredumpctl matching (ENT-13272)
+	- Fixed crash in readyaml when parsing an empty file (CFE-4595)
+	- Fixed file descriptor leak in sys.cpusockets (CFE-4536)
+	- Fixed file descriptor leak when creating the am_policy_hub file
+	- Fixed move_obstructions support when using content and edit_template attributes
+	  (CFE-4591)
+	- Fixed bug causing rendered files can result in erroneously empty files
+	  as a result of promise locking (ENT-9980)
+	- Removed useless output from cfengine3 init script (ENT-13234)
+	- The policy profiling logic is now implemented natively within the cf-agent,
+	  replacing the previous reliance on cf-agent logs and the cf-profile.pl
+	  script for faster execution (ENT-8096)
+	- The acl attribute of the files promise can now override the immutable
+	  bit (CFE-1840, ENT-10961)
+	-  Classfilterdata() now supports 'object_of_objects' and 'object_of_arrays'.
+	  The class expression can be stored in either the key to the object
+	  itself, or key/index inside object (CFE-4562)
+	- The content attribute of the files promise can now override the
+	  immutable bit (CFE-1840, ENT-10961)
+	- The copy_from attribute of the files promise can now override the
+	  immutable bit (CFE-1840, ENT-10961)
+	- The delete attribute of the files promise can now override the immutable
+	  bit (CFE-1840, ENT-10961)
+	- The edit_line and edit_xml attributes of the files promise can now
+	  override the immutable bit (CFE-1840, ENT-10961)
+	- The perms attribute of the files promise can now override the immutable
+	  bit (CFE-1840, ENT-10961)
+	- The rename attribute of the files promise can now override the immutable
+	  bit. The disabled file will inherit the immutable trait of the original
+	  file (CFE-1840, ENT-10961)
+	- The touch attribute of the files promise can now override the
+	  immutable bit (CFE-1840, ENT-10961)
+	- The transformer attribute of the files promise can now override the
+	  immutable bit (CFE-1840, ENT-10961)
+	- Added default_directory_create_mode to body agent control (CFE-4590, ENT-13239)
+
 3.26.0:
 	- Improved error message in abortbundleclasses, for example when there are
 	  no matches due to using a space in the regular expression (CFE-4075)

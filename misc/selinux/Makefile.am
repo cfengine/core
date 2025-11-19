@@ -8,7 +8,7 @@ cfengine-enterprise.pp cfengine-enterprise-unconfined.pp: cfengine-enterprise.te
 	m4 --version
 	autoconf --version
 	automake --version
-	openssl sha256 *
+	openssl sha256 * || true
 	$(MAKE) -f /usr/share/selinux/devel/Makefile -j1 2>&1 | tee log
 	test "$?" != "0" && ( \
 	  for line in $(grep m4: log | cut -d: -f3 | sort -u); do echo "$line-2;$line+2n" | ed -s tmp/all_interfaces.conf; done \

@@ -1307,7 +1307,7 @@ void BundleSectionDestroy(BundleSection *section)
 
 Bundle *PolicyAppendBundle(Policy *policy,
                            const char *ns, const char *name, const char *type,
-                           const Rlist *args, const char *source_path)
+                           const Rlist *args, const char *source_path, const EvalOrder evaluation_order)
 {
     Bundle *bundle = xcalloc(1, sizeof(Bundle));
 
@@ -1323,6 +1323,7 @@ Bundle *PolicyAppendBundle(Policy *policy,
     bundle->sections = SeqNew(10, BundleSectionDestroy);
     bundle->custom_sections = SeqNew(10, BundleSectionDestroy);
     bundle->all_promises = SeqNew(10, NULL);
+    bundle->evaluation_order = evaluation_order;
 
     return bundle;
 }
@@ -1907,6 +1908,7 @@ static JsonElement *BundleContextsToJson(const Seq *promises)
  */
 JsonElement *BundleToJson(const Bundle *bundle)
 {
+    assert(bundle != NULL);
     JsonElement *json_bundle = JsonObjectCreate(10);
 
     if (bundle->source_path)
@@ -1918,6 +1920,7 @@ JsonElement *BundleToJson(const Bundle *bundle)
     JsonObjectAppendString(json_bundle, "namespace", bundle->ns);
     JsonObjectAppendString(json_bundle, "name", bundle->name);
     JsonObjectAppendString(json_bundle, "bundleType", bundle->type);
+    JsonObjectAppendString(json_bundle, "evaluation_order", EvalContextEvaluationOrderToString(bundle->evaluation_order));
 
     {
         JsonElement *json_args = JsonArrayCreate(10);
@@ -2302,6 +2305,7 @@ static Bundle *PolicyAppendBundleJson(Policy *policy, JsonElement *json_bundle)
     const char *name = JsonObjectGetAsString(json_bundle, "name");
     const char *type = JsonObjectGetAsString(json_bundle, "bundleType");
     const char *source_path = JsonObjectGetAsString(json_bundle, "sourcePath");
+    const char *evaluation_order_string = JsonObjectGetAsString(json_bundle, "evaluation_order");
 
     Rlist *args = NULL;
     {
@@ -2312,7 +2316,7 @@ static Bundle *PolicyAppendBundleJson(Policy *policy, JsonElement *json_bundle)
         }
     }
 
-    Bundle *bundle = PolicyAppendBundle(policy, ns, name, type, args, source_path);
+    Bundle *bundle = PolicyAppendBundle(policy, ns, name, type, args, source_path, EvalContextEvaluationOrderFromString(evaluation_order_string));
 
     {
         JsonElement *json_promise_types = JsonObjectGetAsArray(json_bundle, "promiseTypes");

@@ -543,7 +543,7 @@ static CfLock AcquireServerLock(EvalContext *ctx,
     {
         Bundle *bp = PolicyAppendBundle(server_policy, NamespaceDefault(),
                                         "server_cfengine_bundle", "agent",
-                                        NULL, NULL);
+                                        NULL, NULL, EVAL_ORDER_UNDEFINED);
         BundleSection *sp = BundleAppendSection(bp, "server_cfengine");
 
         pp = BundleSectionAppendPromise(sp, config->input_file,

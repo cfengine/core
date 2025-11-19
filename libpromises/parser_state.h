@@ -62,6 +62,7 @@ typedef struct
     char *promiser;
     void *promisee;
 
+    EvalOrder current_evaluation_order;
     char *current_namespace;
     char currentid[CF_MAXVARSIZE];
     char currenttype[CF_MAXVARSIZE];

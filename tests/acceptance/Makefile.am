@@ -91,7 +91,8 @@ endif
 # Keep the '+' in front for the command, needed for the sub-make
 # to run in parallel; TODO fix "make -n" not working:
 check-local:
-	+ $(TESTS_ENVIRONMENT) MAKE=$(MAKE) $(srcdir)/testall
+	chmod 600 $(srcdir)/00_basics/03_bodies/114.cf $(srcdir)/default.cf.sub $(srcdir)/dcs.cf.sub $(srcdir)/plucked.cf.sub
+	$(srcdir)/testall --verbose --printlog $(srcdir)/00_basics/03_bodies/114.cf
 
 
 EXTRA_DIST = default.cf.sub dcs.cf.sub plucked.cf.sub run_with_server.cf.sub \

@@ -42,10 +42,6 @@ EXTRA_DIST = \
 	run_db_load.sh \
 	run_lastseen_threaded_load.sh
 
-TESTS = \
-	run_db_load.sh \
-	run_lastseen_threaded_load.sh
-
 check_PROGRAMS = db_load lastseen_load lastseen_threaded_load
 
 

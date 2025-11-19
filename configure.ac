@@ -1666,7 +1666,7 @@ AC_ARG_WITH(selinux-policy,
             AS_HELP_STRING([--with-selinux-policy],
                            [Whether to build and install SELinux policy (default: no)]),
             [], [with_selinux_policy=no])
-AM_CONDITIONAL([WITH_SELINUX], [test "x$with_selinux_policy" != "xno"])
+AM_CONDITIONAL([WITH_SELINUX_POLICY], [test "x$with_selinux_policy" != "xno"])
 
 if test "x$with_selinux_policy" != "xno"; then
    platform_id=$(sed -r -e '/PLATFORM_ID/!d;s/PLATFORM_ID="platform:(@<:@^"@:>@+)"/\1/' < /etc/os-release)

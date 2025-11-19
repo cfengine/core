@@ -190,4 +190,7 @@ __pycache__
 misc/selinux/cfengine-enterprise.pp
 misc/selinux/cfengine-enterprise.if
 misc/selinux/cfengine-enterprise.te
+misc/selinux/cfengine-enterprise-unconfined.pp
+misc/selinux/cfengine-enterprise-unconfined.if
+misc/selinux/cfengine-enterprise-unconfined.te
 misc/selinux/tmp

@@ -10,8 +10,8 @@ cfengine-enterprise.pp cfengine-enterprise-unconfined.pp: cfengine-enterprise.te
 	automake --version
 	openssl sha256 *
 	$(MAKE) -f /usr/share/selinux/devel/Makefile -j1 2>&1 | tee log
-	[ "$?" != "0" ] && (
-	  for line in $(grep m4: log | cut -d: -f3 | sort -u); do echo "$line-2;$line+2n" | ed -s tmp/all_interfaces.conf; done
+	test "$?" != "0" && ( \
+	  for line in $(grep m4: log | cut -d: -f3 | sort -u); do echo "$line-2;$line+2n" | ed -s tmp/all_interfaces.conf; done \
 	)
 
 selinuxdir = $(prefix)/selinux

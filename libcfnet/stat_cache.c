@@ -33,6 +33,7 @@
 #include <logging.h>                          /* Log */
 #include <crypto.h>                           /* EncryptString */
 #include <misc_lib.h>                         /* ProgrammingError */
+#include <stdint.h>
 
 static void NewStatCache(Stat *data, AgentConnection *conn)
 {
@@ -226,6 +227,8 @@ int cf_remote_stat(AgentConnection *conn, bool encrypt, const char *file,
 
     Stat cfst;
 
+    Log(LOG_LEVEL_INFO, "ENT-13508: Received STAT response: '%s'", recvbuffer);
+
     ret = StatParseResponse(recvbuffer, &cfst);
     if (!ret)
     {
@@ -233,6 +236,8 @@ int cf_remote_stat(AgentConnection *conn, bool encrypt, const char *file,
             conn->this_server);
         return -1;
     }
+
+    Log(LOG_LEVEL_INFO, "ENT-13508: Parsed cf_size = %jd", (intmax_t) cfst.cf_size);
 
     // If remote path is symbolic link, receive actual path here
     int recv_len = ReceiveTransaction(conn->conn_info, recvbuffer, NULL);
@@ -358,6 +363,8 @@ bool StatParseResponse(const char *const buf, Stat *const statbuf)
     assert(buf != NULL);
     assert(statbuf != NULL);
 
+    Log(LOG_LEVEL_INFO, "%s", buf);
+
     // use intmax_t here to provide enough space for large values coming over the protocol
     intmax_t d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12 = 0, d13 = 0;
     int res = sscanf(buf, "OK:"
@@ -401,6 +408,8 @@ bool StatParseResponse(const char *const buf, Stat *const statbuf)
     statbuf->cf_ino = d11;
     statbuf->cf_nlink = d12;
     statbuf->cf_dev = (dev_t)d13;
+
+    Log(LOG_LEVEL_INFO, "ENT-13508: Size of file %jd", (intmax_t) statbuf->cf_size);
 
     return true;
 }

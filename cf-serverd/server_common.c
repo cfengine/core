@@ -857,7 +857,10 @@ int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilename)
 
     /* send as plain text */
 
-    Log(LOG_LEVEL_DEBUG, "OK: type = %d, mode = %jo, lmode = %jo, "
+    Log(LOG_LEVEL_INFO, "ENT-13508: statbuf.st_size = %jd, cfst.cf_size = %jd",
+        (intmax_t) statbuf.st_size, (intmax_t) cfst.cf_size);
+
+    Log(LOG_LEVEL_INFO, "OK: type = %d, mode = %jo, lmode = %jo, "
         "uid = %ju, gid = %ju, size = %jd, atime=%jd, mtime = %jd",
         cfst.cf_type, (uintmax_t) cfst.cf_mode, (uintmax_t) cfst.cf_lmode,
         (uintmax_t) cfst.cf_uid, (uintmax_t) cfst.cf_gid, (intmax_t) cfst.cf_size,
@@ -870,6 +873,7 @@ int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilename)
              (intmax_t) cfst.cf_atime, (intmax_t) cfst.cf_mtime, (intmax_t) cfst.cf_ctime,
              (intmax_t) cfst.cf_makeholes, (intmax_t) cfst.cf_ino, (intmax_t) cfst.cf_nlink, (intmax_t) cfst.cf_dev);
 
+    Log(LOG_LEVEL_INFO, "ENT-13508: sendbuffer = '%s'", sendbuffer);
     SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
 
     memset(sendbuffer, 0, CF_MSGSIZE);

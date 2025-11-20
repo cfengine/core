@@ -2,6 +2,13 @@
 # dependencies.sh is called by install.sh to install libraries and packages needed to build and install CFEngine from source.
 set -ex
 
+if [ "$1" = "--remove" ]; then
+  remove=yes
+else
+  remove=no
+fi
+
+
 GAINROOT=""
 if [ "$(id -u)" != "0" ]; then
     GAINROOT="sudo"
@@ -23,7 +30,7 @@ build_lmdb() {
         git clone --recursive --depth 1 https://github.com/LMDB/lmdb
         cd lmdb/libraries/liblmdb
         make
-        $GAINROOT make install prefix=/usr
+        $GAINROOT make install prefix=/tmp/liblmdb
     )
 }
 
@@ -34,7 +41,7 @@ build_librsync() {
         cd "$tmpdir"
         git clone --recursive --depth 1 https://github.com/librsync/librsync
         cd librsync
-        cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release .
+        cmake -DCMAKE_INSTALL_PREFIX=/tmp/librsync -DCMAKE_BUILD_TYPE=Release .
         make
         $GAINROOT make install
     )

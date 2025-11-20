@@ -864,11 +864,11 @@ int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilename)
         (intmax_t) cfst.cf_atime, (intmax_t) cfst.cf_mtime);
 
     snprintf(sendbuffer, CF_MSGSIZE,
-             "OK: %d %ju %ju %ju %ju %jd %jd %jd %jd %d %d %d %jd",
+             "OK: %d %ju %ju %ju %ju %jd %jd %jd %jd %jd %jd %jd %jd",
              cfst.cf_type, (uintmax_t) cfst.cf_mode, (uintmax_t) cfst.cf_lmode,
              (uintmax_t) cfst.cf_uid, (uintmax_t) cfst.cf_gid,   (intmax_t) cfst.cf_size,
              (intmax_t) cfst.cf_atime, (intmax_t) cfst.cf_mtime, (intmax_t) cfst.cf_ctime,
-             cfst.cf_makeholes, cfst.cf_ino, cfst.cf_nlink, (intmax_t) cfst.cf_dev);
+             (intmax_t) cfst.cf_makeholes, (intmax_t) cfst.cf_ino, (intmax_t) cfst.cf_nlink, (intmax_t) cfst.cf_dev);
 
     SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
 

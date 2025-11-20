@@ -22,6 +22,7 @@
   included file COSL.txt.
 */
 
+#include <platform.h>
 #include <stddef.h>
 #include <sys/types.h>
 #include <verify_files_utils.h>

@@ -1119,6 +1119,14 @@ static PromiseResult VerifyCopy(EvalContext *ctx,
         return PROMISE_RESULT_FAIL;
     }
 
+    Log(LOG_LEVEL_INFO, "ENT-13508: After stat of '%s': st_size = %jd, sizeof(struct stat) = %zu, sizeof(off_t) = %zu",
+        source, (intmax_t) ssb.st_size, sizeof(struct stat), sizeof(off_t));
+
+    unsigned char *stat_size_bytes = (unsigned char *)&ssb.st_size;
+    Log(LOG_LEVEL_INFO, "ENT-13508: Raw bytes of ssb.st_size after stat: %02x %02x %02x %02x %02x %02x %02x %02x",
+        stat_size_bytes[0], stat_size_bytes[1], stat_size_bytes[2], stat_size_bytes[3],
+        stat_size_bytes[4], stat_size_bytes[5], stat_size_bytes[6], stat_size_bytes[7]);
+
     PromiseResult result = PROMISE_RESULT_NOOP;
     if (ssb.st_nlink > 1)      /* Preserve hard link structure when copying */
     {
@@ -1802,6 +1810,14 @@ bool CopyRegularFile(EvalContext *ctx, const char *source, const char *dest, con
         free(chrooted_new);
         return false;
     }
+
+    Log(LOG_LEVEL_INFO, "ENT-13508: Comparing sizes: new_stat.st_size = %jd, sstat->st_size = %jd, &sstat = %p, &sstat->st_size = %p",
+        (intmax_t) new_stat.st_size, (intmax_t) sstat->st_size, (void*)sstat, (void*)&sstat->st_size);
+
+    unsigned char *size_bytes = (unsigned char *)&sstat->st_size;
+    Log(LOG_LEVEL_INFO, "ENT-13508: Raw bytes of sstat->st_size (sizeof=%zu): %02x %02x %02x %02x %02x %02x %02x %02x",
+        sizeof(sstat->st_size), size_bytes[0], size_bytes[1], size_bytes[2], size_bytes[3],
+        size_bytes[4], size_bytes[5], size_bytes[6], size_bytes[7]);
 
     if ((S_ISREG(new_stat.st_mode)) && (new_stat.st_size != sstat->st_size))
     {

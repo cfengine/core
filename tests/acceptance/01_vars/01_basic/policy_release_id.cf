@@ -8,15 +8,10 @@ body common control
 
 bundle agent test
 {
-  meta:
-    "test_skip_needs_work"
-      string => "aix",
-      meta => { "CFE-4606" };
-
   vars:
     "release_id_list" slist => variablesmatching("default:sys.policy_release_id");
     "escaped" string => escape("$(sys.policy_entry_dirname)");
-    "release_id_regex" string => "^$(escaped)\/([A-Fa-f0-9]+|bootstrap|failsafe|\(null\))+$";
+    "release_id_regex" string => "^$(escaped)\/(bootstrap|failsafe|\(null\)|[A-Fa-f0-9]+)?$";
 
   classes:
     "var_ok" expression => strcmp("$(release_id_list)", "default:sys.policy_release_id");

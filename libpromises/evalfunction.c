@@ -22,6 +22,7 @@
   included file COSL.txt.
 */
 
+#include <platform.h>
 #include <evalfunction.h>
 
 #include <policy_server.h>

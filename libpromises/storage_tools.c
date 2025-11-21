@@ -22,6 +22,8 @@
   included file COSL.txt.
 */
 
+#include <platform.h>
+
 #include <cf3.defs.h>
 
 #ifdef HAVE_SYS_STATFS_H

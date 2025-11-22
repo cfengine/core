@@ -2466,11 +2466,12 @@ bool GenericAgentConfigParseArguments(GenericAgentConfig *config, int argc, char
     {
 Log(LOG_LEVEL_ERR, "Special 1-arg <policy-file> expected, got %d arguments instead. See debug output for details.", argc);
 for (int i=0; i<argc; i++) {
-char raw[256] = "";
-for(int j=0; j<20; j++) {
-  char chunk[256];
-  snprintf(chunk, 256, "0x%02x ", argv[i][j]);
-  StringAppend(raw, chunk, 256);
+Log(LOG_LEVEL_ERR, "argv[%d]='%s'", i, argv[i]);
+char raw[2048] = "";
+for(int j=0; j<512; j++) {
+  char chunk[5];
+  snprintf(chunk, 5, "0x%02x ", argv[i][j]);
+  StringAppend(raw, chunk, 2048);
   if (argv[i][j] == 0) break;
 }
 Log(LOG_LEVEL_DEBUG, "Too many args, argv[%d] is '%s' [%s]", i, argv[i], raw);

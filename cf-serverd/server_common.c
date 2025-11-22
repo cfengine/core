@@ -1761,10 +1761,10 @@ bool DoExec2(const EvalContext *ctx,
     /* STEP 5: RUN CFRUNCOMMAND. */
 
     snprintf(sendbuf, sendbuf_size,
-             "cf-serverd executing cfruncommand: %s\n",
+             "cf-serverd executing cfruncommand: '%s'\n",
              cmdbuf);
     SendTransaction(conn->conn_info, sendbuf, 0, CF_DONE);
-    Log(LOG_LEVEL_INFO, "%s", sendbuf);
+    Log(LOG_LEVEL_INFO, "'%s'", sendbuf);
 
     FILE *pp = cf_popen(cmdbuf, "r", true);
     if (pp == NULL)

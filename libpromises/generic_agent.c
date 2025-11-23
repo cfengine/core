@@ -2457,6 +2457,7 @@ pid_t ReadPID(char *filename)
 
 bool GenericAgentConfigParseArguments(GenericAgentConfig *config, int argc, char **argv)
 {
+printf("CRAIG ParseArg()\n");
     if (argc == 0)
     {
         return true;

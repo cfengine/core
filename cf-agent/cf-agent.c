@@ -273,6 +273,10 @@ static PromiseResult DefaultVarPromiseWrapper(EvalContext *ctx, const Promise *p
 
 int main(int argc, char *argv[])
 {
+printf("CRAIG: cf-agent argc=%d\n", argc);
+for(int i=0; i<argc; i++) {
+  printf("CRAIG: argv[%d]='%s'\n", i, argv[i]);
+}
     SetupSignalsForAgent();
 #ifdef HAVE_LIBXML2
         xmlInitParser();

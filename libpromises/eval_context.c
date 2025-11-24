@@ -127,8 +127,13 @@ static bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *na
 static const char *EvalContextCurrentNamespace(const EvalContext *ctx);
 static ClassRef IDRefQualify(const EvalContext *ctx, const char *id);
 
-static EventFrame *EventFrameCreate(char *type, const char *name, const char *source, SourceOffset offset);
+static EventFrame *EventFrameCreate(char *type, const char *name, const char *source, SourceOffset offset, char *id);
 static void EventFrameDestroy(EventFrame *event);
+
+static char *BundleGetCallStackID(const Bundle *bp);
+static char *PromiseGetCallStackID(const Promise *pp);
+static char *FunctionGetCallStackID(const FnCall *fp);
+
 static EventFrame *BundleToEventFrame(const Bundle *bp);
 static EventFrame *PromiseToEventFrame(const Promise *pp);
 static EventFrame *FunctionToEventFrame(const FnCall *fp);
@@ -341,6 +346,20 @@ static StackFrame *LastStackFrameByType(const EvalContext *ctx, StackFrameType t
     {
         StackFrame *frame = LastStackFrame(ctx, i);
         if (frame->type == type)
+        {
+            return frame;
+        }
+    }
+
+    return NULL;
+}
+
+static StackFrame *LastStackFrameByEvent(const EvalContext *ctx)
+{
+    for (size_t i = 0; i < SeqLength(ctx->stack); i++)
+    {
+        StackFrame *frame = LastStackFrame(ctx, i);
+        if (frame->event != NULL)
         {
             return frame;
         }
@@ -1443,7 +1462,22 @@ void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, cons
     assert(ctx != NULL);
     assert(!LastStackFrame(ctx, 0) || LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_PROMISE_ITERATION);
 
-    EvalContextStackPushFrame(ctx, StackFrameNewBundle(owner, inherits_previous, ctx->profiling));
+    StackFrame *prev_frame = LastStackFrameByEvent(ctx);
+    StackFrame *frame = StackFrameNewBundle(owner, inherits_previous, ctx->profiling);
+
+    EventFrame *pushed_event = frame->event;
+    EvalContextStackPushFrame(ctx, frame);
+    if (pushed_event != NULL)
+    {
+        if (prev_frame == NULL || prev_frame->event == NULL)
+        {
+            pushed_event->stacktrace = SafeStringDuplicate(pushed_event->id);
+        }
+        else
+        {
+            pushed_event->stacktrace = StringFormat("%s;%s", prev_frame->event->stacktrace, pushed_event->id);
+        }
+    }
 
     if (RlistLen(args) > 0)
     {
@@ -1523,9 +1557,22 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner)
 
     EvalContextVariableClearMatch(ctx);
 
+    StackFrame *prev_frame = LastStackFrameByEvent(ctx);
     StackFrame *frame = StackFrameNewPromise(owner, ctx->profiling);
 
     EvalContextStackPushFrame(ctx, frame);
+    EventFrame *pushed_event = frame->event;
+    if (pushed_event != NULL)
+    {
+        if (prev_frame == NULL || prev_frame->event == NULL)
+        {
+            pushed_event->stacktrace = SafeStringDuplicate(pushed_event->id);
+        }
+        else
+        {
+            pushed_event->stacktrace = StringFormat("%s;%s", prev_frame->event->stacktrace, pushed_event->id);
+        }
+    }
 
     // create an empty table
     frame->data.promise.vars = VariableTableNew();
@@ -3898,7 +3945,7 @@ void EvalContextSetProfiling(EvalContext *ctx, bool profiling)
     ctx->profiling = profiling;
 }
 
-static EventFrame *EventFrameCreate(char *type, const char *name, const char *source, SourceOffset offset)
+static EventFrame *EventFrameCreate(char *type, const char *name, const char *source, SourceOffset offset, char *id)
 {
     EventFrame *event = (EventFrame *) xmalloc(sizeof(EventFrame));
 
@@ -3907,7 +3954,8 @@ static EventFrame *EventFrameCreate(char *type, const char *name, const char *so
     event->filename = GetAbsolutePath(source);
     event->elapsed = 0;
     event->offset = offset;
-    event->id = StringFormat("%s_%s_%s_%ld_%ld", type, name, source, offset.start, offset.line);
+    event->id = id;
+    event->stacktrace = "";
 
     return event;
 }
@@ -3933,6 +3981,7 @@ static JsonElement *EventToJson(EventFrame *event)
     JsonObjectAppendString(json_event, "filename", event->filename);
     JsonObjectAppendString(json_event, "id", event->id);
     JsonObjectAppendInteger64(json_event, "elapsed", event->elapsed);
+    JsonObjectAppendString(json_event, "callstack", event->stacktrace);
 
     JsonElement *offset = JsonObjectCreate(4);
     JsonObjectAppendInteger(offset, "start", event->offset.start);
@@ -3948,19 +3997,19 @@ static JsonElement *EventToJson(EventFrame *event)
 static EventFrame *BundleToEventFrame(const Bundle *bp)
 {
     assert(bp != NULL);
-    return EventFrameCreate("bundle", bp->name, bp->source_path, bp->offset);
+    return EventFrameCreate("bundle", bp->name, bp->source_path, bp->offset, BundleGetCallStackID(bp));
 }
 
 static EventFrame *PromiseToEventFrame(const Promise *pp)
 {
     assert(pp != NULL);
-    return EventFrameCreate("promise", PromiseGetPromiseType(pp), PromiseGetBundle(pp)->source_path, pp->offset);
+    return EventFrameCreate("promise", PromiseGetPromiseType(pp), PromiseGetBundle(pp)->source_path, pp->offset, PromiseGetCallStackID(pp));
 }
 
 static EventFrame *FunctionToEventFrame(const FnCall *fp)
 {
     assert(fp != NULL);
-    return EventFrameCreate("function", fp->name, PromiseGetBundle(fp->caller)->source_path, fp->caller->offset);
+    return EventFrameCreate("function", fp->name, PromiseGetBundle(fp->caller)->source_path, fp->caller->offset, FunctionGetCallStackID(fp));
 }
 
 void EvalContextAddFunctionEvent(EvalContext *ctx, const FnCall *fp, int64_t start)
@@ -3994,31 +4043,6 @@ void EvalContextProfilingStart(EvalContext *ctx)
     ctx->profiler.elapsed = EvalContextEventStart();
 }
 
-static HashMap *SumEventFrames(Seq *events)
-{
-    HashMap *map = HashMapNew((MapHashFn) StringHash, (MapKeyEqualFn) StringEqual, NULL, NULL, 10);
-
-    size_t length = SeqLength(events);
-    EventFrame *curr;
-    EventFrame *prev;
-    MapKeyValue *mkv;
-    for (int i  = 0; i < length; i++)
-    {
-        curr = SeqAt(events, i);
-        mkv = HashMapGet(map, curr->id);
-
-        if (mkv == NULL)
-        {
-            HashMapInsert(map, curr->id, curr);
-            continue;
-        }
-        prev = mkv->value;
-        prev->elapsed += curr->elapsed;
-    }
-
-    return map;
-}
-
 void EvalContextProfilingEnd(EvalContext *ctx, const Policy *policy)
 {
     assert(ctx != NULL);
@@ -4034,7 +4058,6 @@ void EvalContextProfilingEnd(EvalContext *ctx, const Policy *policy)
 
     ctx->profiler.elapsed = end - start;
 
-    HashMap *map = SumEventFrames(ctx->profiler.events);
     JsonElement *profiling = JsonObjectCreate(2);
 
     JsonElement *json_policy = PolicyToJson(policy);
@@ -4042,11 +4065,9 @@ void EvalContextProfilingEnd(EvalContext *ctx, const Policy *policy)
 
     JsonElement *events = JsonArrayCreate(10);
     {
-        HashMapIterator iter = HashMapIteratorInit(map);
-        MapKeyValue *mkv;
-        while ((mkv = HashMapIteratorNext(&iter)) != NULL)
+        for (size_t i = 0; i < SeqLength(ctx->profiler.events); i++)
         {
-            EventFrame *event = mkv->value;
+            EventFrame *event = SeqAt(ctx->profiler.events, i);
             JsonArrayAppendObject(events, EventToJson(event));
         }
     }
@@ -4058,6 +4079,24 @@ void EvalContextProfilingEnd(EvalContext *ctx, const Policy *policy)
     WriterClose(writer);
 
     JsonDestroy(profiling);
+}
+
+static char *BundleGetCallStackID(const Bundle *bp)
+{
+    assert(bp != NULL);
+    return StringFormat("bundle_%s_%s:%s_%s:%ld_%ld-%ld", bp->type, bp->ns, bp->name, bp->source_path, bp->offset.line, bp->offset.start, bp->offset.end);
+}
+
+static char *PromiseGetCallStackID(const Promise *pp)
+{
+    assert(pp != NULL);
+    return StringFormat("promise_%s_%ld_%ld-%ld", PromiseGetPromiseType(pp), pp->offset.line, pp->offset.start, pp->offset.end);
+}
+
+static char *FunctionGetCallStackID(const FnCall *fp)
+{
+    assert(fp != NULL);
+    return StringFormat("function_%s_%ld_%ld-%ld", fp->name, fp->caller->offset.line, fp->caller->offset.start, fp->caller->offset.end);
 }
 
 // ##############################################################

@@ -10,4 +10,11 @@ if [ -n "$TERMUX_VERSION" ]; then
     OPTS="$OPTS --without-pam"
 fi
 
+if [ -d /tmp/liblmdb ]; then
+  OPTS="$OPTS --with-lmdb=/tmp/liblmdb"
+fi
+if [ -d /tmp/librsync ]; then
+  OPTS="$OPTS --with-librsync=/tmp/librsync"
+fi
+
 ./autogen.sh $OPTS

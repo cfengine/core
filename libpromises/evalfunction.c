@@ -22,6 +22,8 @@
   included file COSL.txt.
 */
 
+#include <platform.h>
+
 #include <assert.h>
 #include <errno.h>
 #ifdef __sun
@@ -29,7 +31,6 @@
 #endif /* __sun */
 
 #include <limits.h>
-#include <platform.h>
 #include <evalfunction.h>
 
 #include <policy_server.h>

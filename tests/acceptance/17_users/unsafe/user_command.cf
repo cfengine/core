@@ -1,0 +1,61 @@
+##############################################################################
+#
+#  See ticket ENT-13535 for info.
+#
+##############################################################################
+
+body common control
+{
+  bundlesequence  => { "init", "test", "check", "clean" };
+}
+
+body delete tidy
+{
+  dirlinks => "delete";
+  rmdirs   => "true";
+}
+
+##############################################################################
+
+bundle agent init
+{
+  users:
+      "test_user"
+        policy => "absent";
+
+  files:
+      "/tmp/some-random-file.txt"
+        delete => tidy;
+}
+
+##############################################################################
+
+bundle agent test
+{
+  meta:
+      "description" -> { "ENT-13535" }
+        string => "See ticket ENT-13535 for info";
+      "test_skip_unsupported"
+        string => "windows",
+        comment => "Not applicable for Windows since it uses a C API";
+
+  users:
+    linux::
+      "test_user; echo 'Hello CFEngine' > /tmp/some-random-file.txt"
+        policy => "present";
+}
+
+##############################################################################
+
+bundle agent check
+{
+  reports:
+      "$(this.promise_filename) $(with)"
+        with => ifelse(fileexists("/tmp/some-random-file.txt"), "FAIL", "Pass");
+}
+
+bundle agent clean
+{
+  methods:
+      "init";
+}

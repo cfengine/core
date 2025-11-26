@@ -16,40 +16,41 @@ bundle agent check
   meta:
     "description" -> { "ENT-12722" }
       string => "Test whether the entries of getroups() are like the ones inside /etc/group";
-    "test_skip_needs_work"
-      string => "suse_15|sles_15|aix|solaris|hpux",
-      comment => "expects first three groups are root, bin, daemon. However, on:
- - suse_15 they are root, shadow, trusted.
- - aix and solaris they are root, daemon, bin (i.e. different order)",
-      meta => { "ENT-13504", "CFE-4605" };
-
     "test_skip_unsupported"
       string => "windows";
   vars:
+    # parse /etc/group
     "group_entries"
-      slist => splitstring(readfile("/etc/group"), "\n", 10);
-    "actual_groups_unfiltered"
+      slist => splitstring(string_trim(readfile("/etc/group")), "\n", 999);
+    "name_gid_dict"
       slist => maplist(
-        nth(splitstring("$(this)", ":", 2), 0), "@(group_entries)"
+        concat(nth(splitstring("$(this)", ":", 4), 0), ":", nth(splitstring("$(this)", ":", 4), 2)),
+        "@(group_entries)"
       );
-  # slice out the 3 first entries: root, bin, daemon
+    # extra three arbitrary groups
+    "three_first_dict"
+      slist => sublist("@(name_gid_dict)", "head", 3);
+    "group_filter"
+      string => join("|", "@(three_first_dict)");
+    # list of group names apart from the three extracted
     "actual_groups"
-      slist => sublist("@(actual_groups_unfiltered)", "tail", 7);
-  # get the first 7 groups, without root, bin and deamon
-    "retrieved_groups_arg1"
-      slist => sublist(getgroups("root,daemon,bin", ""), "head", 7);
-    "retrieved_groups_arg2"
-      slist => sublist(getgroups("", "0,1,2"), "head", 7);
-    "retrieved_groups_arg1_arg2"
-      slist => sublist(getgroups("root,daemon", "1,2"), "head", 7);
+      slist => maplist(nth(splitstring("$(this)", ":", 2), 0), filter("($(group_filter))", "@(name_gid_dict)", true, true, 999));
+
+    # prepare getgroups args
+    "arg1"
+      slist => maplist(nth(splitstring("$(this)", ":", 2), 0), "@(three_first_dict)");
+    "arg2"
+      slist => maplist(nth(splitstring("$(this)", ":", 2), 1), "@(three_first_dict)");
+
+    # Concat resulting lists
     "actual_groups_content"
-      string => join(" ", "@(actual_groups)");
+      string => join(" ", sort("@(actual_groups)", "lex"));
     "retrieved_groups_content_arg1"
-      string => join(" ", "@(retrieved_groups_arg1)");
+      string => join(" ", sort(getgroups(join(",", "@(arg1)"), ""), "lex"));
     "retrieved_groups_content_arg2"
-      string => join(" ", "@(retrieved_groups_arg2)");
+      string => join(" ", sort(getgroups("", join(",", "@(arg2)")), "lex"));
     "retrieved_groups_content_arg1_arg2"
-      string => join(" ", "@(retrieved_groups_arg1_arg2)");
+      string => join(" ", sort(getgroups(join(",", sublist("@(arg1)", "head", 2)), join(",", sublist("@(arg2)", "tail", 2))), "lex"));
   classes:
     "ok"
       expression => and(

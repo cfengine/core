@@ -400,7 +400,7 @@ void HistoryUpdate(EvalContext *ctx, const Averages *const newvals)
     Policy *history_db_policy = PolicyNew();
     Promise *pp = NULL;
     {
-        Bundle *bp = PolicyAppendBundle(history_db_policy, NamespaceDefault(), "history_db_bundle", "agent", NULL, NULL);
+        Bundle *bp = PolicyAppendBundle(history_db_policy, NamespaceDefault(), "history_db_bundle", "agent", NULL, NULL, EVAL_ORDER_UNDEFINED);
         BundleSection *sp = BundleAppendSection(bp, "history_db");
 
         pp = BundleSectionAppendPromise(sp, "the long term memory", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, NULL, NULL);

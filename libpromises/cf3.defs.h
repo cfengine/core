@@ -690,6 +690,13 @@ typedef struct
     SyntaxStatus status;
 } PromiseTypeSyntax;
 
+typedef enum
+{
+    EVAL_ORDER_UNDEFINED = 0,
+    EVAL_ORDER_CLASSIC,
+    EVAL_ORDER_TOP_DOWN
+} EvalOrder;
+
 /*************************************************************************/
 
 typedef struct Constraint_ Constraint;

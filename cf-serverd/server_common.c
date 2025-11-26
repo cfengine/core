@@ -732,6 +732,7 @@ int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilename)
 /* the simplest way to transfer the data is to convert them into */
 /* plain text and interpret them on the other side. */
 {
+    assert(conn != NULL);
     Stat cfst;
     struct stat statbuf, statlinkbuf;
     char linkbuf[CF_BUFSIZE], filename[CF_BUFSIZE - 128];
@@ -874,10 +875,17 @@ int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilename)
 
     memset(sendbuffer, 0, CF_MSGSIZE);
 
+    // +3 because we need to prepend 'OK:' to the path
+    if (strlen(linkbuf)+3 > CF_MSGSIZE) {
+        NDEBUG_UNUSED int ret = snprintf(sendbuffer, CF_MSGSIZE, "BAD: Symlink resolves to a path too long (%ld) to send over the protocol.", strlen(linkbuf)+3);
+        assert(ret > 0 && ret < CF_MSGSIZE);
+        SendTransaction(conn->conn_info, sendbuffer, 0, CF_DONE);
+        return -1;
+    }
     if (cfst.cf_readlink != NULL)
     {
-        strcpy(sendbuffer, "OK:");
-        strcat(sendbuffer, cfst.cf_readlink);
+        NDEBUG_UNUSED int ret = snprintf(sendbuffer, CF_MSGSIZE, "OK:%s", linkbuf);
+        assert(ret > 0 && ret < CF_MSGSIZE);
     }
     else
     {

@@ -182,7 +182,7 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, const 
         char bundlename[CF_MAXVARSIZE];
         snprintf(bundlename, CF_MAXVARSIZE, "temp_cf_bundle_%s", CanonifyName(a->edit_template));
 
-        bp = PolicyAppendBundle(policy, "default", bundlename, "edit_line", NULL, NULL);
+        bp = PolicyAppendBundle(policy, "default", bundlename, "edit_line", NULL, NULL, EVAL_ORDER_UNDEFINED);
     }
     assert(bp);
 

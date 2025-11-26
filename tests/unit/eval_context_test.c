@@ -53,7 +53,7 @@ static void test_class_persistence(void)
     // e.g. by a class promise in a bundle with a namespace
     {
         Policy *p = PolicyNew();
-        Bundle *bp = PolicyAppendBundle(p, "ns1", "bundle1", "agent", NULL, NULL);
+        Bundle *bp = PolicyAppendBundle(p, "ns1", "bundle1", "agent", NULL, NULL, EVAL_ORDER_UNDEFINED);
 
         EvalContextStackPushBundleFrame(ctx, bp, NULL, false);
         EvalContextHeapPersistentSave(ctx, "class2", 5, CONTEXT_STATE_POLICY_PRESERVE, "x");

@@ -413,6 +413,7 @@ const ConstraintSyntax file_control_constraints[] =  /* enum cfh_control */
 {
     ConstraintSyntaxNewString("namespace", "[a-zA-Z_][a-zA-Z0-9_]*", "Switch to a private namespace to protect current file from duplicate definitions", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("inputs", ".*", "List of additional filenames to parse for promises", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("evaluation_order", "(classic|top_down)", "Order of evaluation of promises", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

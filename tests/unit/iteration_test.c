@@ -244,7 +244,7 @@ static void IteratorPrepare_TestHelper(
     EvalContext *evalctx = EvalContextNew();
     Policy *policy = PolicyNew();
     Bundle *bundle = PolicyAppendBundle(policy, "ns1", "bundle1", "agent",
-                                        NULL, NULL);
+                                        NULL, NULL, EVAL_ORDER_UNDEFINED);
     BundleSection *section = BundleAppendSection(bundle, "dummy");
     Promise *promise = BundleSectionAppendPromise(section, promiser,
                                                   (Rval) { NULL, RVAL_TYPE_NOPROMISEE },

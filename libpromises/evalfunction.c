@@ -22,6 +22,8 @@
   included file COSL.txt.
 */
 
+#include <platform.h>
+
 #include <assert.h>
 #include <errno.h>
 #ifdef __sun
@@ -29,7 +31,6 @@
 #endif /* __sun */
 
 #include <limits.h>
-#include <platform.h>
 #include <evalfunction.h>
 
 #include <policy_server.h>
@@ -4883,7 +4884,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx,
     Policy *select_server_policy = PolicyNew();
     {
         Bundle *bp = PolicyAppendBundle(select_server_policy, NamespaceDefault(),
-                                        "select_server_bundle", "agent", NULL, NULL);
+                                        "select_server_bundle", "agent", NULL, NULL, EVAL_ORDER_UNDEFINED);
         BundleSection *sp = BundleAppendSection(bp, "select_server");
 
         BundleSectionAppendPromise(sp, "function", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, NULL, NULL);

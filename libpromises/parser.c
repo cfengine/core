@@ -76,6 +76,8 @@ static void ParserStateReset(ParserState *p, bool discard)
     free(p->current_namespace);
     p->current_namespace = xstrdup("default");
 
+    p->current_evaluation_order = EVAL_ORDER_UNDEFINED;
+
     p->currentid[0] = '\0';
     if (p->currentstring)
     {
@@ -104,8 +106,12 @@ static void ParserStateReset(ParserState *p, bool discard)
 
 static void ParserStateClean(ParserState *p)
 {
+    assert(p != NULL);
+
     free(p->current_namespace);
     p->current_namespace = NULL;
+
+    p->current_evaluation_order = EVAL_ORDER_UNDEFINED;
 }
 
 Policy *ParserParseFile(AgentType agent_type, const char *path, unsigned int warnings, unsigned int warnings_error)

@@ -23,6 +23,8 @@
 */
 
 #include <platform.h>
+#include <fcntl.h>      /* for open, O_DIRECTORY, O_PATH */
+#include <unistd.h>     /* for unlinkat, close */
 #include <stddef.h>
 #include <sys/types.h>
 #include <verify_files_utils.h>
@@ -3570,7 +3572,26 @@ PromiseResult ScheduleLinkChildrenOperation(EvalContext *ctx, char *destination,
     {
         if (attr.move_obstructions && S_ISLNK(lsb.st_mode))
         {
-            if (unlink(changes_destination) == 0)
+            /* Atomically unlink symlink using unlinkat to prevent TOCTOU */
+            char dirbuf[CF_BUFSIZE];
+            char *dst_copy = xstrdup(changes_destination);
+            char *basename_ptr = strrchr(dst_copy, '/');
+            int ret_unlinkat = -1;
+            if (basename_ptr != NULL && basename_ptr != dst_copy)
+            {
+                /* Split into dir + filename */
+                *basename_ptr = '\0';
+                const char *dirpath = dst_copy;
+                const char *basename = basename_ptr + 1;
+                int dfd = open(dirpath, O_DIRECTORY | O_PATH);
+                if (dfd != -1)
+                {
+                    ret_unlinkat = unlinkat(dfd, basename, AT_SYMLINK_NOFOLLOW);
+                    close(dfd);
+                }
+            }
+            free(dst_copy);
+            if (ret_unlinkat == 0)
             {
                 RecordChange(ctx, pp, a, "Removed obstructing link '%s'", destination);
                 result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);

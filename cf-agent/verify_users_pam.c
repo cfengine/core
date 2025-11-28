@@ -413,7 +413,7 @@ static bool ChangePasswordHashUsingChpasswd(const char *puser, const char *passw
     int status;
     const char *cmd_str = CHPASSWD " -e";
     Log(LOG_LEVEL_VERBOSE, "Changing password hash for user '%s'. (command: '%s')", puser, cmd_str);
-    FILE *cmd = cf_popen_sh(cmd_str, "w");
+    FILE *cmd = cf_popen(cmd_str, "w", true);
     if (!cmd)
     {
         Log(LOG_LEVEL_ERR, "Could not launch password changing command '%s': %s.", cmd_str, GetErrorStr());
@@ -645,12 +645,20 @@ static bool ExecuteUserCommand(const char *puser, const char *cmd, size_t sizeof
 
     Log(LOG_LEVEL_VERBOSE, "%s user '%s'. (command: '%s')", cap_action_msg, puser, cmd);
 
-    int status = system(cmd);
-    if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
+    FILE *fptr = cf_popen(cmd, "w", true);
+    if (!fptr)
     {
         Log(LOG_LEVEL_ERR, "Command returned error while %s user '%s'. (Command line: '%s')", action_msg, puser, cmd);
         return false;
     }
+
+    int status = cf_pclose(fptr);
+    if (status)
+    {
+        Log(LOG_LEVEL_ERR, "'%s' returned non-zero status: %i\n", cmd, status);
+        return false;
+    }
+
     return true;
 }
 

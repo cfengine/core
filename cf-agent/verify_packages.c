@@ -54,6 +54,7 @@
 #include <csv_writer.h>
 #include <cf-agent-enterprise-stubs.h>
 #include <cf-windows-functions.h>
+#include <cf3.defs.h>
 
 /* Called structure:
 
@@ -104,6 +105,7 @@ typedef enum
     PACKAGE_PROMISE_TYPE_NEW_ERROR
 } PackagePromiseType;
 
+static bool SanitizePackagePromiser(EvalContext *ctx, const Attributes *a, const Promise *pp);
 static bool PackageSanityCheck(EvalContext *ctx, const Attributes *a, const Promise *pp);
 
 static bool VerifyInstalledPackages(EvalContext *ctx, PackageManager **alllists, const char *default_arch, const Attributes *a, const Promise *pp, PromiseResult *result);
@@ -185,6 +187,12 @@ PromiseResult VerifyPackagesPromise(EvalContext *ctx, const Promise *pp)
     Attributes a = GetPackageAttributes(ctx, pp);
     PackagePromiseType package_promise_type =
             GetPackagePromiseVersion(&a.packages, &a.new_packages);
+
+    if (!SanitizePackagePromiser(ctx, &a, pp))
+    {
+        Log(LOG_LEVEL_VERBOSE, "Package promise %s failed sanitization check", pp->promiser);
+        return PROMISE_RESULT_FAIL;
+    }
 
     switch (package_promise_type)
     {
@@ -366,6 +374,51 @@ end:
     }
 
     return result;
+}
+
+static bool SanitizePackagePromiser(EvalContext *ctx, const Attributes *a, const Promise *pp)
+{
+    assert(a != NULL);
+    assert(pp != NULL);
+
+    const char *promiser = pp->promiser;
+
+    /* Shell metacharacters that could be used for command injection
+     *
+     * Here's the rationale for each shell metacharacter in the list:
+     *     ;      Command separator, allows running additional commands
+     *     |      Pipe, can redirect output to another command
+     *     &      Background execution or command chaining (`&&`)
+     *     `      Command substitution (backticks execute enclosed command)
+     *     $      Variable expansion and command substitution (`$(...)`)
+     *     (      Subshell execution, command grouping
+     *     <      Input/output redirection, can overwrite files
+     *     {      Brace expansion, command grouping
+     *     [      Character class matching
+     *     *      Wildcard, matches any characters
+     *     ?      Wildcard, matches single character
+     *     ~      Home directory expansion
+     *     \      Escape character, can break out of quoting
+     *     '      Quotes, can break parsing if unbalanced
+     *     !      History expansion in some shells
+     *     #      Comment character, can truncate commands
+     *     \n \r  Newlines can inject additional commands
+     */
+    const char *shell_metacharacters = ";|&`$(){}[]<>!#*?~\\'\"\n\r";
+
+    if (a->packages.package_commands_useshell)
+    {
+        const char *bad_char = strpbrk(promiser, shell_metacharacters);
+        if (bad_char != NULL)
+        {
+            cfPS_HELPER_2ARG(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
+                "Package promiser '%s' contains shell metacharacter '%c' which could allow command injection",
+                promiser, *bad_char);
+            return false;
+        }
+    }
+
+    return true;
 }
 
 /**

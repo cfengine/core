@@ -2204,9 +2204,9 @@ static bool WillSchedulePackageOperation(EvalContext *ctx, const Attributes *a, 
         break;
 
     default:
-        if (!matches) // why do we schedule a 'not matched' operation?
+        if (!matches)
         {
-            return true;
+            Log(LOG_LEVEL_INFO, "Package '%s' is not an available package.", pp->promiser);
         }
         else if (!installed) // matches and not installed
         {

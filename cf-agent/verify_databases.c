@@ -748,7 +748,7 @@ static bool CreateTableColumns(CfdbConn *cfdb, char *table, Rlist *columns)
     char **name_table, **type_table;
     int no_of_cols = RlistLen(columns);
 
-    Log(LOG_LEVEL_ERR, "Trying to create table '%s'", table);
+    Log(LOG_LEVEL_VERBOSE, "Trying to create table '%s'", table);
 
     if (!NewSQLColumns(table, columns, &name_table, &type_table, &size_table, &done))
     {

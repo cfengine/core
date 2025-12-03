@@ -743,7 +743,6 @@ static int TableExists(CfdbConn *cfdb, char *name)
 
 static bool CreateTableColumns(CfdbConn *cfdb, char *table, Rlist *columns)
 {
-    char entry[CF_MAXVARSIZE], query[CF_BUFSIZE];
     int i, *size_table, *done;
     char **name_table, **type_table;
     int no_of_cols = RlistLen(columns);
@@ -761,7 +760,8 @@ static bool CreateTableColumns(CfdbConn *cfdb, char *table, Rlist *columns)
         return false;
     }
 
-    snprintf(query, CF_BUFSIZE - 1, "create table %s(", table);
+    Buffer *query = BufferNew();
+    BufferPrintf(query, "create table %s(", table);
 
     for (i = 0; i < no_of_cols; i++)
     {
@@ -770,24 +770,23 @@ static bool CreateTableColumns(CfdbConn *cfdb, char *table, Rlist *columns)
 
         if (size_table[i] > 0)
         {
-            snprintf(entry, CF_MAXVARSIZE - 1, "%s %s(%d)", name_table[i], type_table[i], size_table[i]);
+            BufferAppendF(query, "%s %s(%d)", name_table[i], type_table[i], size_table[i]);
         }
         else
         {
-            snprintf(entry, CF_MAXVARSIZE - 1, "%s %s", name_table[i], type_table[i]);
+            BufferAppendF(query, "%s %s", name_table[i], type_table[i]);
         }
-
-        strcat(query, entry);
 
         if (i < no_of_cols - 1)
         {
-            strcat(query, ",");
+            BufferAppendChar(query, ',');
         }
     }
 
-    strcat(query, ")");
+    BufferAppendChar(query, ')');
 
-    CfVoidQueryDB(cfdb, query);
+    CfVoidQueryDB(cfdb, BufferData(query));
+    BufferDestroy(query);
     DeleteSQLColumns(name_table, type_table, size_table, done, no_of_cols);
     return true;
 }

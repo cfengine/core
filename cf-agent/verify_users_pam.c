@@ -420,7 +420,7 @@ static bool ChangePasswordHashUsingChpasswd(const char *puser, const char *passw
     int status;
     const char *cmd_str = CHPASSWD " -e";
     Log(LOG_LEVEL_VERBOSE, "Changing password hash for user '%s'. (command: '%s')", puser, cmd_str);
-    FILE *cmd = cf_popen_sh(cmd_str, "w");
+    FILE *cmd = cf_popen(cmd_str, "w", true);
     if (!cmd)
     {
         Log(LOG_LEVEL_ERR, "Could not launch password changing command '%s': %s.", cmd_str, GetErrorStr());
@@ -652,12 +652,20 @@ static bool ExecuteUserCommand(const char *puser, const char *cmd, size_t sizeof
 
     Log(LOG_LEVEL_VERBOSE, "%s user '%s'. (command: '%s')", cap_action_msg, puser, cmd);
 
-    int status = system(cmd);
-    if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
+    FILE *fptr = cf_popen(cmd, "w", true);
+    if (!fptr)
     {
         Log(LOG_LEVEL_ERR, "Command returned error while %s user '%s'. (Command line: '%s')", action_msg, puser, cmd);
         return false;
     }
+
+    int status = cf_pclose(fptr);
+    if (status)
+    {
+        Log(LOG_LEVEL_ERR, "'%s' returned non-zero status: %i\n", cmd, status);
+        return false;
+    }
+
     return true;
 }
 
@@ -1000,13 +1008,13 @@ static bool EqualGid(const char *key, const struct group *entry)
 {
     assert(entry != NULL);
 
-    unsigned long gid; 
+    unsigned long gid;
     int ret = StringToUlong(key, &gid);
     if (ret != 0)
     {
         LogStringToLongError(key, "EqualGid", ret);
         return false;
-    }   
+    }
 
     return (gid == entry->gr_gid);
 }
@@ -1153,16 +1161,16 @@ static void TransformGidsToGroups(StringSet **list)
     StringSetDestroy(old_list);
 }
 
-static bool VerifyIfUserNeedsModifs(const char *puser, const User *u, 
+static bool VerifyIfUserNeedsModifs(const char *puser, const User *u,
                                     const struct passwd *passwd_info,
-                                    uint32_t *changemap, 
-                                    StringSet *groups_to_set, 
+                                    uint32_t *changemap,
+                                    StringSet *groups_to_set,
                                     StringSet *current_secondary_groups)
 {
     assert(u != NULL);
     assert(passwd_info != NULL);
 
-    if (u->description != NULL && 
+    if (u->description != NULL &&
         !StringEqual(u->description, passwd_info->pw_gecos))
     {
         CFUSR_SETBIT(*changemap, i_comment);
@@ -1212,17 +1220,17 @@ static bool VerifyIfUserNeedsModifs(const char *puser, const User *u,
 
     if (SafeStringLength(u->group_primary) != 0)
     {
-        bool group_could_be_gid = (strlen(u->group_primary) == 
+        bool group_could_be_gid = (strlen(u->group_primary) ==
                                    strspn(u->group_primary, "0123456789"));
 
         // We try name first, even if it looks like a gid. Only fall back to gid.
         errno = 0;
-        struct group *group_info = GetGrEntry(u->group_primary, 
+        struct group *group_info = GetGrEntry(u->group_primary,
                                               &EqualGroupName);
         if (group_info == NULL && errno != 0)
         {
-            Log(LOG_LEVEL_ERR, 
-                "Could not obtain information about group '%s': %s", 
+            Log(LOG_LEVEL_ERR,
+                "Could not obtain information about group '%s': %s",
                 u->group_primary, GetErrorStr());
             CFUSR_SETBIT(*changemap, i_group);
         }
@@ -1234,7 +1242,7 @@ static bool VerifyIfUserNeedsModifs(const char *puser, const User *u,
                 int ret = StringToUlong(u->group_primary, &gid);
                 if (ret != 0)
                 {
-                    LogStringToLongError(u->group_primary, 
+                    LogStringToLongError(u->group_primary,
                                          "VerifyIfUserNeedsModifs", ret);
                     CFUSR_SETBIT(*changemap, i_group);
                 }

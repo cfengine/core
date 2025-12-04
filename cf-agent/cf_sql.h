@@ -42,8 +42,8 @@ typedef struct
 
 void CfConnectDB(CfdbConn *cfdb, DatabaseType dbtype, char *remotehost, char *dbuser, char *passwd, char *db);
 void CfCloseDB(CfdbConn *cfdb);
-void CfVoidQueryDB(CfdbConn *cfdb, char *query);
-void CfNewQueryDB(CfdbConn *cfdb, char *query);
+void CfVoidQueryDB(CfdbConn *cfdb, const char *query);
+void CfNewQueryDB(CfdbConn *cfdb, const char *query);
 char **CfFetchRow(CfdbConn *cfdb);
 char *CfFetchColumn(CfdbConn *cfdb, int col);
 void CfDeleteQuery(CfdbConn *cfdb);

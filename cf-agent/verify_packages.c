@@ -115,7 +115,7 @@ static PromiseResult VerifyPromisedPatch(EvalContext *ctx, const Attributes *a, 
 
 static char *GetDefaultArch(const char *command);
 
-static bool ExecPackageCommand(EvalContext *ctx, char *command, int verify, int setCmdClasses, const Attributes *a, const Promise *pp, PromiseResult *result);
+static bool ExecPackageCommand(EvalContext *ctx, const char *command, int verify, int setCmdClasses, const Attributes *a, const Promise *pp, PromiseResult *result);
 
 static bool PrependPatchItem(EvalContext *ctx, PackageItem ** list, char *item, PackageItem * chklist, const char *default_arch, const Attributes *a, const Promise *pp);
 static bool PrependMultiLinePackageItem(EvalContext *ctx, PackageItem ** list, char *item, int reset, const char *default_arch, const Attributes *a, const Promise *pp);
@@ -3245,14 +3245,14 @@ const char *PrefixLocalRepository(const Rlist *repositories, const char *package
     return NULL;
 }
 
-bool ExecPackageCommand(EvalContext *ctx, char *command, int verify, int setCmdClasses, const Attributes *a,
+bool ExecPackageCommand(EvalContext *ctx, const char *command, int verify, int setCmdClasses, const Attributes *a,
                         const Promise *pp, PromiseResult *result)
 {
     assert(a != NULL);
     assert(pp != NULL); // Dereferenced by cfPS macros
 
     bool retval = true;
-    char *cmd;
+    const char *cmd;
     FILE *pfp;
     int packmanRetval = 0;
 

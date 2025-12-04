@@ -743,48 +743,50 @@ static int TableExists(CfdbConn *cfdb, char *name)
 
 static bool CreateTableColumns(CfdbConn *cfdb, char *table, Rlist *columns)
 {
-    char entry[CF_MAXVARSIZE], query[CF_BUFSIZE];
     int i, *size_table, *done;
     char **name_table, **type_table;
     int no_of_cols = RlistLen(columns);
 
-    Log(LOG_LEVEL_ERR, "Trying to create table '%s'", table);
+    Log(LOG_LEVEL_VERBOSE, "Trying to create table '%s'", table);
 
     if (!NewSQLColumns(table, columns, &name_table, &type_table, &size_table, &done))
     {
         return false;
     }
 
-    if (no_of_cols > 0)
+    if (no_of_cols <= 0)
     {
-        snprintf(query, CF_BUFSIZE - 1, "create table %s(", table);
-
-        for (i = 0; i < no_of_cols; i++)
-        {
-            Log(LOG_LEVEL_VERBOSE, "Forming column template %s %s %d", name_table[i], type_table[i],
-                  size_table[i]);;
-
-            if (size_table[i] > 0)
-            {
-                snprintf(entry, CF_MAXVARSIZE - 1, "%s %s(%d)", name_table[i], type_table[i], size_table[i]);
-            }
-            else
-            {
-                snprintf(entry, CF_MAXVARSIZE - 1, "%s %s", name_table[i], type_table[i]);
-            }
-
-            strcat(query, entry);
-
-            if (i < no_of_cols - 1)
-            {
-                strcat(query, ",");
-            }
-        }
-
-        strcat(query, ")");
+        Log(LOG_LEVEL_ERR, "Attempted to create table '%s' without any columns", table);
+        return false;
     }
 
-    CfVoidQueryDB(cfdb, query);
+    Buffer *query = BufferNew();
+    BufferPrintf(query, "create table %s(", table);
+
+    for (i = 0; i < no_of_cols; i++)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Forming column template %s %s %d", name_table[i], type_table[i],
+              size_table[i]);;
+
+        if (size_table[i] > 0)
+        {
+            BufferAppendF(query, "%s %s(%d)", name_table[i], type_table[i], size_table[i]);
+        }
+        else
+        {
+            BufferAppendF(query, "%s %s", name_table[i], type_table[i]);
+        }
+
+        if (i < no_of_cols - 1)
+        {
+            BufferAppendChar(query, ',');
+        }
+    }
+
+    BufferAppendChar(query, ')');
+
+    CfVoidQueryDB(cfdb, BufferData(query));
+    BufferDestroy(query);
     DeleteSQLColumns(name_table, type_table, size_table, done, no_of_cols);
     return true;
 }

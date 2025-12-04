@@ -1,74 +1,26 @@
 {
-  "ulist1": {
-    "root": {
-      "dir": "/root",
-      "gecos": "root",
-      "gid": 0,
-      "shell": "/bin/bash",
-      "uid": 0
-    }
-  },
-  "ulist2": {
-    "root": {
-      "dir": "/root",
-      "gecos": "root",
-      "gid": 0,
-      "shell": "/bin/bash",
-      "uid": 0
-    }
-  },
-  "ulist3": {
-    "root": {
-      "dir": "/root",
-      "gecos": "root",
-      "gid": 0,
-      "shell": "/bin/bash",
-      "uid": 0
-    }
-  },
-  "ulist4": {
-    "root": {
-      "dir": "/root",
-      "gecos": "root",
-      "gid": 0,
-      "shell": "/bin/bash",
-      "uid": 0
-    }
-  },
-  "ulist5": {
-    "test_user1": {
-      "dir": "/tmp/test_folder1",
-      "gecos": "TestUser 1",
-      "gid": 100,
-      "shell": "/bin/sh",
-      "uid": 12345
-    },
-    "test_user2": {
-      "dir": "/tmp/test_folder2",
-      "gecos": "TestUser 2",
-      "gid": 100,
-      "shell": "/bin/sh",
-      "uid": 54321
-    }
-  },
-  "ulist6": {
-    "test_user1": {
-      "dir": "/tmp/test_folder1",
-      "gecos": "TestUser 1",
-      "gid": 100,
-      "shell": "/bin/sh",
-      "uid": 12345
-    }
-  },
-  "ulist7": {
-    "test_user1": {
-      "dir": "/tmp/test_folder1",
-      "gecos": "TestUser 1",
-      "gid": 100,
-      "shell": "/bin/sh",
-      "uid": 12345
-    }
-  },
+  "ulist1": [
+    "testu1"
+  ],
+  "ulist2": [
+    "testu1"
+  ],
+  "ulist3": [
+    "testu1"
+  ],
+  "ulist4": [
+    "testu1"
+  ],
+  "ulist5": [
+    "testu1",
+    "testu2"
+  ],
+  "ulist6": [
+    "testu1"
+  ],
+  "ulist7": [
+    "testu1"
+  ],
   "ulist8": {
   }
 }

@@ -384,7 +384,7 @@ void CfCloseDB(CfdbConn *cfdb)
 
 /*****************************************************************************/
 
-void CfVoidQueryDB(CfdbConn *cfdb, char *query)
+void CfVoidQueryDB(CfdbConn *cfdb, const char *query)
 {
     if (!cfdb->connected)
     {
@@ -398,7 +398,7 @@ void CfVoidQueryDB(CfdbConn *cfdb, char *query)
 
 /*****************************************************************************/
 
-void CfNewQueryDB(CfdbConn *cfdb, char *query)
+void CfNewQueryDB(CfdbConn *cfdb, const char *query)
 {
     cfdb->result = false;
     cfdb->row = 0;

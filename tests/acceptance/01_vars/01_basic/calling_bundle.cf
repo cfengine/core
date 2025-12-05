@@ -1,0 +1,65 @@
+# Test $(this.calling_bundle)
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+}
+
+#######################################################
+
+bundle agent init
+{
+  methods:
+    "a"
+      usebundle => new_namespace:A,
+      useresult => "return_var";
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+    "expected"
+      string => "default:init/new_namespace:A/B";
+
+  classes:
+    "ok"
+      expression => strcmp("$(init.return_var[1])", "$(expected)");
+
+  reports:
+    DEBUG::
+      "$(this.promise_filename) expected dirname $(init.return_var[1]), actual $(expected)";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+
+body file control
+{
+      namespace => "new_namespace";
+}
+
+
+bundle agent A
+{
+  methods:
+    "b"
+      usebundle => new_namespace:B,
+      useresult => "return_var";
+
+  reports:
+    "$(this.calling_bundle)/$(return_var[1])"
+      bundle_return_value_index => "1";
+
+}
+
+bundle agent B
+{
+  reports:
+    "$(this.calling_bundle)/$(this.bundle)"
+      bundle_return_value_index => "1";
+}

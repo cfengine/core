@@ -680,7 +680,7 @@ static bool ChangePasswordHashUsingChpass(const char *puser, const char *passwor
     StringAppend(cmd, "\' ", sizeof(cmd));
     StringAppend(cmd, puser, sizeof(cmd));
 
-    Log(LOG_LEVEL_VERBOSE, "Changing password hash for user '%s'. (command: '%s')", puser, cmd);
+    Log(LOG_LEVEL_VERBOSE, "Changing password hash for user '%s' using chpass.", puser);
 
     return ExecuteUserCommand(puser, cmd, sizeof(cmd), "changing", "Changing");
 }

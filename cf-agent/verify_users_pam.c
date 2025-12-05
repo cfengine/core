@@ -643,19 +643,19 @@ static bool ExecuteUserCommand(const char *puser, const char *cmd, size_t sizeof
         return false;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "%s user '%s'. (command: '%s')", cap_action_msg, puser, cmd);
+    Log(LOG_LEVEL_VERBOSE, "ExecuteUserCommand: %s user '%s'.", cap_action_msg, puser);
 
     FILE *fptr = cf_popen(cmd, "w", true);
     if (!fptr)
     {
-        Log(LOG_LEVEL_ERR, "Command returned error while %s user '%s'. (Command line: '%s')", action_msg, puser, cmd);
+        Log(LOG_LEVEL_ERR, "ExecuteUserCommand: returned error while %s user '%s'.", action_msg, puser);
         return false;
     }
 
     int status = cf_pclose(fptr);
     if (status)
     {
-        Log(LOG_LEVEL_ERR, "'%s' returned non-zero status: %i\n", cmd, status);
+        Log(LOG_LEVEL_ERR, "ExecuteUserCommand: returned non-zero status: %i\n", status);
         return false;
     }
 

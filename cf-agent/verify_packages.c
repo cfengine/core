@@ -54,6 +54,7 @@
 #include <csv_writer.h>
 #include <cf-agent-enterprise-stubs.h>
 #include <cf-windows-functions.h>
+#include <cf3.defs.h>
 
 /* Called structure:
 
@@ -115,7 +116,7 @@ static PromiseResult VerifyPromisedPatch(EvalContext *ctx, const Attributes *a, 
 
 static char *GetDefaultArch(const char *command);
 
-static bool ExecPackageCommand(EvalContext *ctx, char *command, int verify, int setCmdClasses, const Attributes *a, const Promise *pp, PromiseResult *result);
+static bool ExecPackageCommand(EvalContext *ctx, const char *command, int verify, int setCmdClasses, const Attributes *a, const Promise *pp, PromiseResult *result);
 
 static bool PrependPatchItem(EvalContext *ctx, PackageItem ** list, char *item, PackageItem * chklist, const char *default_arch, const Attributes *a, const Promise *pp);
 static bool PrependMultiLinePackageItem(EvalContext *ctx, PackageItem ** list, char *item, int reset, const char *default_arch, const Attributes *a, const Promise *pp);
@@ -2578,35 +2579,9 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
             continue;
         }
 
-        size_t estimated_size = 0;
-
-        for (const PackageItem *pi = pm->pack_list; pi != NULL; pi = pi->next)
-        {
-            size_t size = strlen(pi->name) + strlen("  ");
-
-            switch (pm->policy)
-            {
-            case PACKAGE_ACTION_POLICY_INDIVIDUAL:
-
-                if (size > estimated_size)
-                {
-                    estimated_size = size + CF_MAXVARSIZE;
-                }
-                break;
-
-            case PACKAGE_ACTION_POLICY_BULK:
-
-                estimated_size += size + CF_MAXVARSIZE;
-                break;
-
-            default:
-                break;
-            }
-        }
-
         const Promise *const pp = pm->pack_list->pp;
         Attributes a = GetPackageAttributes(ctx, pp);
-        char *command_string = NULL;
+        Buffer *command_buffer = BufferNew();
 
         switch (action)
         {
@@ -2617,14 +2592,12 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
             if (a.packages.package_add_command == NULL)
             {
                 ProgrammingError("Package add command undefined");
+                BufferDestroy(command_buffer);
                 return false;
             }
 
             Log(LOG_LEVEL_INFO, "Installing %-.39s...", pp->promiser);
-
-            estimated_size += strlen(a.packages.package_add_command) + 2;
-            command_string = xmalloc(estimated_size);
-            strcpy(command_string, a.packages.package_add_command);
+            BufferAppendString(command_buffer, a.packages.package_add_command);
             break;
 
         case PACKAGE_ACTION_DELETE:
@@ -2634,14 +2607,12 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
             if (a.packages.package_delete_command == NULL)
             {
                 ProgrammingError("Package delete command undefined");
+                BufferDestroy(command_buffer);
                 return false;
             }
 
             Log(LOG_LEVEL_INFO, "Deleting %-.39s...", pp->promiser);
-
-            estimated_size += strlen(a.packages.package_delete_command) + 2;
-            command_string = xmalloc(estimated_size);
-            strcpy(command_string, a.packages.package_delete_command);
+            BufferAppendString(command_buffer, a.packages.package_delete_command);
             break;
 
         case PACKAGE_ACTION_UPDATE:
@@ -2651,14 +2622,12 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
             if (a.packages.package_update_command == NULL)
             {
                 ProgrammingError("Package update command undefined");
+                BufferDestroy(command_buffer);
                 return false;
             }
 
             Log(LOG_LEVEL_INFO, "Updating %-.39s...", pp->promiser);
-
-            estimated_size += strlen(a.packages.package_update_command) + 2;
-            command_string = xcalloc(1, estimated_size);
-            strcpy(command_string, a.packages.package_update_command);
+            BufferAppendString(command_buffer, a.packages.package_update_command);
             break;
 
         case PACKAGE_ACTION_VERIFY:
@@ -2668,33 +2637,32 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
             if (a.packages.package_verify_command == NULL)
             {
                 ProgrammingError("Package verify command undefined");
+                BufferDestroy(command_buffer);
                 return false;
             }
 
-            estimated_size += strlen(a.packages.package_verify_command) + 2;
-            command_string = xmalloc(estimated_size);
-            strcpy(command_string, a.packages.package_verify_command);
+            BufferAppendString(command_buffer, a.packages.package_verify_command);
 
             verify = true;
             break;
 
         default:
             ProgrammingError("Unknown action attempted");
+            BufferDestroy(command_buffer);
             return false;
         }
 
         /* if the command ends with $ then we assume the package manager does not accept package names */
-
-        if (*(command_string + strlen(command_string) - 1) == '$')
+        if (BufferData(command_buffer)[BufferSize(command_buffer) - 1] == '$')
         {
-            *(command_string + strlen(command_string) - 1) = '\0';
+            BufferTrimToMaxLength(command_buffer, BufferSize(command_buffer) - 1);
             Log(LOG_LEVEL_VERBOSE, "Command does not allow arguments");
             PromiseResult result = PROMISE_RESULT_NOOP;
 
             EvalContextStackPushPromiseFrame(ctx, pp);
             if (EvalContextStackPushPromiseIterationFrame(ctx, NULL))
             {
-                if (ExecPackageCommand(ctx, command_string, verify, true, &a, pp, &result))
+                if (ExecPackageCommand(ctx, BufferData(command_buffer), verify, true, &a, pp, &result))
                 {
                     Log(LOG_LEVEL_VERBOSE, "Package schedule execution ok (outcome cannot be promised by cf-agent)");
                 }
@@ -2711,9 +2679,9 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
         }
         else
         {
-            strcat(command_string, " ");
+            BufferAppendChar(command_buffer, ' ');
 
-            Log(LOG_LEVEL_VERBOSE, "Command prefix '%s'", command_string);
+            Log(LOG_LEVEL_VERBOSE, "Command prefix '%s'", BufferData(command_buffer));
 
             if (pm->policy == PACKAGE_ACTION_POLICY_INDIVIDUAL)
             {
@@ -2723,15 +2691,14 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
                     const Promise *const ppi = pi->pp;
                     Attributes a = GetPackageAttributes(ctx, ppi);
 
-                    const size_t command_len = strlen(command_string);
-                    char *offset = command_string + command_len;
+                    const size_t offset = BufferSize(command_buffer);
 
                     if ((a.packages.package_file_repositories) && ((action == PACKAGE_ACTION_ADD) || (action == PACKAGE_ACTION_UPDATE)))
                     {
                         const char *sp = PrefixLocalRepository(a.packages.package_file_repositories, pi->name);
                         if (sp != NULL)
                         {
-                            strlcat(offset, sp, estimated_size - command_len);
+                            BufferAppendString(command_buffer, sp);
                         }
                         else
                         {
@@ -2740,14 +2707,26 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
                     }
                     else
                     {
-                        strcat(offset, pi->name);
+                        if (a.packages.package_commands_useshell)
+                        {
+                            /* Put single quotes around package name and escape
+                             * any pre-existing single quotes to prevent shell
+                             * injection. */
+                            char *escaped = EscapeCharCopy(pi->name, '\'', '\\');
+                            BufferAppendF(command_buffer, "'%s'", escaped);
+                            free(escaped);
+                        }
+                        else
+                        {
+                            BufferAppendString(command_buffer, pi->name);
+                        }
                     }
 
                     PromiseResult result = PROMISE_RESULT_NOOP;
                     EvalContextStackPushPromiseFrame(ctx, ppi);
                     if (EvalContextStackPushPromiseIterationFrame(ctx, NULL))
                     {
-                        bool ok = ExecPackageCommand(ctx, command_string, verify, true, &a, ppi, &result);
+                        bool ok = ExecPackageCommand(ctx, BufferData(command_buffer), verify, true, &a, ppi, &result);
 
                         if (StringEqual(pi->name, PACKAGE_IGNORED_CFE_INTERNAL))
                         {
@@ -2770,7 +2749,7 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
 
                     EvalContextLogPromiseIterationOutcome(ctx, ppi, result);
 
-                    *offset = '\0';
+                    BufferTrimToMaxLength(command_buffer, offset);
                 }
             }
             else if (pm->policy == PACKAGE_ACTION_POLICY_BULK)
@@ -2779,9 +2758,6 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
                 {
                     if (pi->name)
                     {
-                        const size_t command_len = strlen(command_string);
-                        char *offset = command_string + command_len;
-
                         if (a.packages.package_file_repositories &&
                             (action == PACKAGE_ACTION_ADD ||
                              action == PACKAGE_ACTION_UPDATE))
@@ -2789,7 +2765,7 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
                             const char *sp = PrefixLocalRepository(a.packages.package_file_repositories, pi->name);
                             if (sp != NULL)
                             {
-                                strlcpy(offset, sp, estimated_size - command_len);
+                                BufferAppendString(command_buffer, sp);
                             }
                             else
                             {
@@ -2798,10 +2774,21 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
                         }
                         else
                         {
-                            strcpy(offset, pi->name);
+                            if (a.packages.package_commands_useshell)
+                            {
+                                /* Put single quotes around package name and escape
+                                 * any pre-existing single quotes to prevent shell
+                                 * injection. */
+                                char *escaped = EscapeCharCopy(pi->name, '\'', '\\');
+                                BufferAppendF(command_buffer, "'%s'", escaped);
+                                free(escaped);
+                            }
+                            else
+                            {
+                                BufferAppendString(command_buffer, pi->name);
+                            }
                         }
-
-                        strcat(command_string, " ");
+                        BufferAppendChar(command_buffer, ' ');
                     }
                 }
 
@@ -2809,7 +2796,7 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
                 EvalContextStackPushPromiseFrame(ctx, pp);
                 if (EvalContextStackPushPromiseIterationFrame(ctx, NULL))
                 {
-                    bool ok = ExecPackageCommand(ctx, command_string, verify, true, &a, pp, &result);
+                    bool ok = ExecPackageCommand(ctx, BufferData(command_buffer), verify, true, &a, pp, &result);
 
                     for (const PackageItem *pi = pm->pack_list; pi != NULL; pi = pi->next)
                     {
@@ -2837,10 +2824,7 @@ static bool ExecuteSchedule(EvalContext *ctx, const PackageManager *schedule, Pa
             }
         }
 
-        if (command_string)
-        {
-            free(command_string);
-        }
+        BufferDestroy(command_buffer);
     }
 
 /* We have performed some modification operation on packages, our cache is invalid */
@@ -3245,14 +3229,14 @@ const char *PrefixLocalRepository(const Rlist *repositories, const char *package
     return NULL;
 }
 
-bool ExecPackageCommand(EvalContext *ctx, char *command, int verify, int setCmdClasses, const Attributes *a,
+bool ExecPackageCommand(EvalContext *ctx, const char *command, int verify, int setCmdClasses, const Attributes *a,
                         const Promise *pp, PromiseResult *result)
 {
     assert(a != NULL);
     assert(pp != NULL); // Dereferenced by cfPS macros
 
     bool retval = true;
-    char *cmd;
+    const char *cmd;
     FILE *pfp;
     int packmanRetval = 0;
 

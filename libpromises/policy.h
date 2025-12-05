@@ -71,6 +71,7 @@ typedef struct
 struct Bundle_
 {
     Policy *parent_policy;
+    struct Bundle_ *calling_bundle;
 
     char *type;
     char *name;

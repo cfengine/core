@@ -665,6 +665,7 @@ static bool ExecuteUserCommand(const char *puser, const char *cmd, size_t sizeof
 #ifdef HAVE_CHPASS
 static bool ChangePasswordHashUsingChpass(const char *puser, const char *password)
 {
+    assert(false);
     char cmd[CF_BUFSIZE];
 
     strcpy(cmd, CHPASS);

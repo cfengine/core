@@ -1324,6 +1324,7 @@ Bundle *PolicyAppendBundle(Policy *policy,
     bundle->custom_sections = SeqNew(10, BundleSectionDestroy);
     bundle->all_promises = SeqNew(10, NULL);
     bundle->evaluation_order = evaluation_order;
+    bundle->calling_bundle = NULL;
 
     return bundle;
 }

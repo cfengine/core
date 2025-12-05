@@ -169,6 +169,7 @@ PromiseResult VerifyMethod(EvalContext *ctx, const Rval call, const Attributes *
 
             BundleResolve(ctx, bp);
 
+            ((Bundle *) bp)->calling_bundle = (Bundle *) PromiseGetBundle(pp);
             result = ScheduleAgentOperations(ctx, bp);
 
             GetReturnValue(ctx, bp, pp);

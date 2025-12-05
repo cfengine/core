@@ -641,7 +641,7 @@ static bool IsPromiseTypeNotInTypeSequence(const char *promise_type,
 
 static void EvaluateBundle(EvalContext *ctx, const Bundle *bp, const char * const *seq)
 {
-    EvalContextStackPushBundleFrame(ctx, bp, NULL, false);
+    EvalContextStackPushBundleFrame(ctx, bp, NULL, false, NULL);
 
     for (int type = 0; seq[type] != NULL; type++)
     {

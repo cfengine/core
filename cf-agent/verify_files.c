@@ -894,7 +894,7 @@ static PromiseResult RenderTemplateCFEngine(EvalContext *ctx,
 
         a.haveeditline = true;
 
-        EvalContextStackPushBundleFrame(ctx, bp, bundle_args, a.edits.inherit);
+        EvalContextStackPushBundleFrame(ctx, bp, bundle_args, a.edits.inherit, NULL);
         BundleResolve(ctx, bp);
 
         *save_file = ScheduleEditLineOperations(ctx, bp, &a, pp, edcontext);
@@ -1154,7 +1154,7 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename,
         const Bundle *bp = EvalContextResolveBundleExpression(ctx, policy, edit_bundle_name, "edit_line");
         if (bp)
         {
-            EvalContextStackPushBundleFrame(ctx, bp, args, a->edits.inherit);
+            EvalContextStackPushBundleFrame(ctx, bp, args, a->edits.inherit, NULL);
 
             BundleResolve(ctx, bp);
 
@@ -1192,7 +1192,7 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename,
         const Bundle *bp = EvalContextResolveBundleExpression(ctx, policy, edit_bundle_name, "edit_xml");
         if (bp)
         {
-            EvalContextStackPushBundleFrame(ctx, bp, args, a->edits.inherit);
+            EvalContextStackPushBundleFrame(ctx, bp, args, a->edits.inherit, NULL);
             BundleResolve(ctx, bp);
 
             ScheduleEditXmlOperations(ctx, bp, a, pp, edcontext);

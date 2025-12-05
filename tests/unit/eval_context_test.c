@@ -55,7 +55,7 @@ static void test_class_persistence(void)
         Policy *p = PolicyNew();
         Bundle *bp = PolicyAppendBundle(p, "ns1", "bundle1", "agent", NULL, NULL, EVAL_ORDER_UNDEFINED);
 
-        EvalContextStackPushBundleFrame(ctx, bp, NULL, false);
+        EvalContextStackPushBundleFrame(ctx, bp, NULL, false, NULL);
         EvalContextHeapPersistentSave(ctx, "class2", 5, CONTEXT_STATE_POLICY_PRESERVE, "x");
         EvalContextStackPopFrame(ctx);
 

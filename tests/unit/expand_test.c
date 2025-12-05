@@ -130,7 +130,7 @@ static void test_map_iterators_from_rval_naked_list_var(void **state)
         RlistDestroy(list);
     }
 
-    EvalContextStackPushBundleFrame(ctx, bp, NULL, false);
+    EvalContextStackPushBundleFrame(ctx, bp, NULL, false, NULL);
 
     {
         Rlist *lists = NULL;
@@ -203,7 +203,7 @@ static void test_map_iterators_from_rval_naked_list_var_namespace(void **state)
         RlistDestroy(list);
     }
 
-    EvalContextStackPushBundleFrame(ctx, bp, NULL, false);
+    EvalContextStackPushBundleFrame(ctx, bp, NULL, false, NULL);
 
     {
         Rlist *lists = NULL;
@@ -425,7 +425,7 @@ static void test_expand_promise_array_with_scalar_arg(void **state)
     BundleSection *section = BundleAppendSection(bundle, "dummy");
     Promise *promise = BundleSectionAppendPromise(section, "$(foo[$(bar)])", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, "any", NULL);
 
-    EvalContextStackPushBundleFrame(ctx, bundle, NULL, false);
+    EvalContextStackPushBundleFrame(ctx, bundle, NULL, false, NULL);
     EvalContextStackPushBundleSectionFrame(ctx, section);
     ExpandPromise(ctx, promise, actuator_expand_promise_array_with_scalar_arg, NULL);
     EvalContextStackPopFrame(ctx);
@@ -480,7 +480,7 @@ static void test_expand_promise_slist(void **state)
     BundleSection *section = BundleAppendSection(bundle, "dummy");
     Promise *promise = BundleSectionAppendPromise(section, "$(foo)", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, "any", NULL);
 
-    EvalContextStackPushBundleFrame(ctx, bundle, NULL, false);
+    EvalContextStackPushBundleFrame(ctx, bundle, NULL, false, NULL);
     EvalContextStackPushBundleSectionFrame(ctx, section);
     ExpandPromise(ctx, promise, actuator_expand_promise_slist, NULL);
     EvalContextStackPopFrame(ctx);
@@ -548,7 +548,7 @@ static void test_expand_promise_array_with_slist_arg(void **state)
     BundleSection *section = BundleAppendSection(bundle, "dummy");
     Promise *promise = BundleSectionAppendPromise(section, "$(arr[$(keys)])", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, "any", NULL);
 
-    EvalContextStackPushBundleFrame(ctx, bundle, NULL, false);
+    EvalContextStackPushBundleFrame(ctx, bundle, NULL, false, NULL);
     EvalContextStackPushBundleSectionFrame(ctx, section);
     ExpandPromise(ctx, promise, actuator_expand_promise_array_with_slist_arg, NULL);
     EvalContextStackPopFrame(ctx);

@@ -15,16 +15,18 @@ bundle agent init
     # Due to shell rules, windows includes certain characters on certain commands,
     # while Unix does not.
     windows::
+      "single_quote" string => "'";
       "q" string => '"';
       "s" string => ' ';
     !windows::
+      "single_quote" string => '';
       "q" string => '';
       "s" string => '';
 
   methods:
       "make" usebundle => file_make("$(G.testfile).expected",
                                        "
-$(s)filerepo DELETE delete-exact-version-2.2.3.i386.rpm
+$(s)filerepo DELETE $(single_quote)delete-exact-version-2.2.3.i386.rpm$(single_quote)
 $(s)filerepo ADD $(q)$(G.cwd)$(d).$(d)07_packages$(d)test_repository$(d)install-greaterthan-version-2.2.3.i386.rpm$(q)
 $(s)filerepo ADD $(q)$(G.cwd)$(d).$(d)07_packages$(d)test_repository$(d)install-greaterorequal-version-2.2.3.i386.rpm$(q)
 $(s)filerepo ADD $(q)$(G.cwd)$(d).$(d)07_packages$(d)test_repository$(d)install-lessthan-version-2.2.3.i386.rpm$(q)

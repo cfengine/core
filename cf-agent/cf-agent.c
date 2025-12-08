@@ -327,7 +327,7 @@ int main(int argc, char *argv[])
 
     EvalContextProfilingStart(ctx);
     KeepPromises(ctx, policy, config);
-    EvalContextProfilingEnd(ctx, policy);
+    EvalContextProfilingEnd(ctx);
 
     if (EvalAborted(ctx))
     {

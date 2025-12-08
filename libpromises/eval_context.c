@@ -127,11 +127,7 @@ static bool EvalContextClassPut(EvalContext *ctx, const char *ns, const char *na
 static const char *EvalContextCurrentNamespace(const EvalContext *ctx);
 static ClassRef IDRefQualify(const EvalContext *ctx, const char *id);
 
-static EventFrame *EventFrameCreate(char *type, const char *name, const char *source, SourceOffset offset);
 static void EventFrameDestroy(EventFrame *event);
-static EventFrame *BundleToEventFrame(const Bundle *bp);
-static EventFrame *PromiseToEventFrame(const Promise *pp);
-static EventFrame *FunctionToEventFrame(const FnCall *fp);
 
 /**
  * Every agent has only one EvalContext from process start to finish.
@@ -201,11 +197,8 @@ struct EvalContext_
 
     /* These are needed for policy profiling */
     bool profiling;
-
-    struct {
-        int64_t elapsed;
-        Seq *events;
-    } profiler;
+    int64_t elapsed;
+    Seq *events;
 
     EvalOrder common_eval_order;
     EvalOrder agent_eval_order;
@@ -341,6 +334,21 @@ static StackFrame *LastStackFrameByType(const EvalContext *ctx, StackFrameType t
     {
         StackFrame *frame = LastStackFrame(ctx, i);
         if (frame->type == type)
+        {
+            return frame;
+        }
+    }
+
+    return NULL;
+}
+
+static StackFrame *LastStackFrameByEvent(const EvalContext *ctx)
+{
+    assert(ctx != NULL);
+    for (size_t i = 0; i < SeqLength(ctx->stack); i++)
+    {
+        StackFrame *frame = LastStackFrame(ctx, i);
+        if (frame->event != NULL)
         {
             return frame;
         }
@@ -1110,8 +1118,8 @@ EvalContext *EvalContextNew(void)
 
     ctx->dump_reports = false;
 
-    ctx->profiler.events = SeqNew(20, EventFrameDestroy);
-    ctx->profiler.elapsed = 0;
+    ctx->events = SeqNew(20, EventFrameDestroy);
+    ctx->elapsed = 0;
 
     // evaluation order
     ctx->common_eval_order = EVAL_ORDER_UNDEFINED;
@@ -1164,7 +1172,7 @@ void EvalContextDestroy(EvalContext *ctx)
             ctx->remote_var_promises = NULL;
         }
 
-        SeqDestroy(ctx->profiler.events);
+        SeqDestroy(ctx->events);
         free(ctx);
     }
 }
@@ -1349,20 +1357,19 @@ static StackFrame *StackFrameNew(StackFrameType type, bool inherit_previous)
     frame->inherits_previous = inherit_previous;
     frame->path = NULL;
     frame->override_immutable = false;
-    frame->start = EvalContextEventStart();
     frame->event = NULL;
 
     return frame;
 }
 
-static StackFrame *StackFrameNewBundle(const Bundle *owner, bool inherit_previous, bool profiling)
+static StackFrame *StackFrameNewBundle(const Bundle *owner, bool inherit_previous, bool profiling, EventFrame *prev_event)
 {
     StackFrame *frame = StackFrameNew(STACK_FRAME_TYPE_BUNDLE, inherit_previous);
 
     frame->data.bundle.owner = owner;
     frame->data.bundle.classes = ClassTableNew();
     frame->data.bundle.vars = VariableTableNew();
-    frame->event = (profiling) ? BundleToEventFrame(owner) : NULL;
+    frame->event = (profiling) ? BundleToEventFrame(owner, prev_event) : NULL;
 
     return frame;
 }
@@ -1386,12 +1393,12 @@ static StackFrame *StackFrameNewBundleSection(const BundleSection *owner)
     return frame;
 }
 
-static StackFrame *StackFrameNewPromise(const Promise *owner, bool profiling)
+static StackFrame *StackFrameNewPromise(const Promise *owner, bool profiling, EventFrame *prev_event)
 {
     StackFrame *frame = StackFrameNew(STACK_FRAME_TYPE_PROMISE, true);
 
     frame->data.promise.owner = owner;
-    frame->event = (profiling) ? PromiseToEventFrame(owner) : NULL;
+    frame->event = (profiling) ? PromiseToEventFrame(owner, prev_event) : NULL;
 
     return frame;
 }
@@ -1443,7 +1450,8 @@ void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, cons
     assert(ctx != NULL);
     assert(!LastStackFrame(ctx, 0) || LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_PROMISE_ITERATION);
 
-    EvalContextStackPushFrame(ctx, StackFrameNewBundle(owner, inherits_previous, ctx->profiling));
+    StackFrame *frame = StackFrameNewBundle(owner, inherits_previous, ctx->profiling, EvalContextGetLastEventFrame(ctx));
+    EvalContextStackPushFrame(ctx, frame);
 
     if (RlistLen(args) > 0)
     {
@@ -1523,8 +1531,7 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner)
 
     EvalContextVariableClearMatch(ctx);
 
-    StackFrame *frame = StackFrameNewPromise(owner, ctx->profiling);
-
+    StackFrame *frame = StackFrameNewPromise(owner, ctx->profiling, EvalContextGetLastEventFrame(ctx));
     EvalContextStackPushFrame(ctx, frame);
 
     // create an empty table
@@ -1615,15 +1622,11 @@ void EvalContextStackPopFrame(EvalContext *ctx)
 
     StackFrame *last_frame = LastStackFrame(ctx, 0);
     StackFrameType last_frame_type = last_frame->type;
-    int64_t start = last_frame->start;
-    int64_t end = EvalContextEventStart();
 
     EventFrame *last_event = last_frame->event;
     if (last_event != NULL)
     {
-        assert(end >= start); /* sanity check */
-        last_event->elapsed = end - start;
-        SeqAppend(ctx->profiler.events, last_event);
+        EvalContextAppendEventFrame(ctx, last_event);
     }
 
     switch (last_frame_type)
@@ -3892,22 +3895,33 @@ bool EvalContextOverrideImmutableGet(EvalContext *ctx)
 
 // ##############################################################
 
-void EvalContextSetProfiling(EvalContext *ctx, bool profiling)
+static int64_t EvalContextEventStart()
 {
-    assert(ctx != NULL);
-    ctx->profiling = profiling;
+    struct timespec ts;
+#ifdef CLOCK_MONOTONIC
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+#else
+// As in libcfnet/net.c some OS-es don't have monotonic clock, realtime clock is best we can do.
+    clock_gettime(CLOCK_REALTIME, &ts);
+#endif
+    return ts.tv_sec * 1000000000LL + ts.tv_nsec;
 }
 
-static EventFrame *EventFrameCreate(char *type, const char *name, const char *source, SourceOffset offset)
+static EventFrame *EventFrameCreate(const char *source, char *component, char *type, const char *ns, const char *name,
+    SourceOffset offset, EventFrame *prev, char *id)
 {
     EventFrame *event = (EventFrame *) xmalloc(sizeof(EventFrame));
+    event->elapsed = EvalContextEventStart();
 
+    event->source = GetAbsolutePath(source);
+    event->component = component;
     event->type = type;
+    event->ns = SafeStringDuplicate(ns);
     event->name = SafeStringDuplicate(name);
-    event->filename = GetAbsolutePath(source);
-    event->elapsed = 0;
     event->offset = offset;
-    event->id = StringFormat("%s_%s_%s_%ld_%ld", type, name, source, offset.start, offset.line);
+
+    event->id = id;
+    event->callstack = (prev != NULL) ? StringFormat("%s;%s", prev->callstack, event->id) : SafeStringDuplicate(event->id);
 
     return event;
 }
@@ -3916,9 +3930,12 @@ static void EventFrameDestroy(EventFrame *event)
 {
     if (event != NULL)
     {
-        free(event->filename);
-        free(event->id);
+        free(event->source);
+        free(event->ns);
         free(event->name);
+
+        free(event->id);
+        free(event->callstack);
         free(event);
     }
 }
@@ -3928,11 +3945,14 @@ static JsonElement *EventToJson(EventFrame *event)
     assert(event != NULL);
     JsonElement *json_event = JsonObjectCreate(10);
 
+    JsonObjectAppendString(json_event, "component", event->component);
     JsonObjectAppendString(json_event, "type", event->type);
     JsonObjectAppendString(json_event, "name", event->name);
-    JsonObjectAppendString(json_event, "filename", event->filename);
+    JsonObjectAppendString(json_event, "namespace", event->ns);
+    JsonObjectAppendString(json_event, "source", event->source);
     JsonObjectAppendString(json_event, "id", event->id);
     JsonObjectAppendInteger64(json_event, "elapsed", event->elapsed);
+    JsonObjectAppendString(json_event, "callstack", event->callstack);
 
     JsonElement *offset = JsonObjectCreate(4);
     JsonObjectAppendInteger(offset, "start", event->offset.start);
@@ -3945,81 +3965,46 @@ static JsonElement *EventToJson(EventFrame *event)
     return json_event;
 }
 
-static EventFrame *BundleToEventFrame(const Bundle *bp)
+EventFrame *BundleToEventFrame(const Bundle *bp, EventFrame *prev_frame)
 {
     assert(bp != NULL);
-    return EventFrameCreate("bundle", bp->name, bp->source_path, bp->offset);
+    char *id = StringFormat("%s:%ld/%s_%s_%s:%s", GetAbsolutePath(bp->source_path), bp->offset.line, "bundle", bp->type, bp->ns, bp->name);
+    return EventFrameCreate(bp->source_path, "bundle", bp->type, bp->ns, bp->name, bp->offset, prev_frame, id);
 }
 
-static EventFrame *PromiseToEventFrame(const Promise *pp)
+EventFrame *PromiseToEventFrame(const Promise *pp, EventFrame *prev_frame)
 {
     assert(pp != NULL);
-    return EventFrameCreate("promise", PromiseGetPromiseType(pp), PromiseGetBundle(pp)->source_path, pp->offset);
+    char *id = StringFormat("%s:%ld/%s_%s", PromiseGetBundle(pp)->source_path, pp->offset.line, "promise", pp->parent_section->promise_type);
+    return EventFrameCreate(PromiseGetBundle(pp)->source_path, "promise", pp->parent_section->promise_type, "x", "x", pp->offset, prev_frame, id);
 }
 
-static EventFrame *FunctionToEventFrame(const FnCall *fp)
+EventFrame *FunctionToEventFrame(const FnCall *fp, EventFrame *prev_frame)
 {
     assert(fp != NULL);
-    return EventFrameCreate("function", fp->name, PromiseGetBundle(fp->caller)->source_path, fp->caller->offset);
+    char *id = StringFormat("%s:%ld/%s_%s", PromiseGetBundle(fp->caller)->source_path, fp->caller->offset.line, "function", fp->name);
+    return EventFrameCreate(PromiseGetBundle(fp->caller)->source_path, "function", "x", "x", fp->name, fp->caller->offset, prev_frame, id);
 }
 
-void EvalContextAddFunctionEvent(EvalContext *ctx, const FnCall *fp, int64_t start)
+void EvalContextSetProfiling(EvalContext *ctx, bool profiling)
 {
     assert(ctx != NULL);
-    if (ctx->profiling)
-    {
-        EventFrame *event = FunctionToEventFrame(fp);
-        int64_t end = EvalContextEventStart();
-        assert(end >= start); /* sanity check */
-        event->elapsed = end - start;
-        SeqAppend(ctx->profiler.events, event);
-    }
+    ctx->profiling = profiling;
 }
 
-int64_t EvalContextEventStart()
+bool EvalContextGetProfiling(EvalContext *ctx)
 {
-    struct timespec ts;
-#ifdef CLOCK_MONOTONIC
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-#else
-// As in libcfnet/net.c some OS-es don't have monotonic clock, realtime clock is best we can do.
-    clock_gettime(CLOCK_REALTIME, &ts);
-#endif
-    return ts.tv_sec * 1000000000LL + ts.tv_nsec;
+    assert(ctx != NULL);
+    return ctx->profiling;
 }
 
 void EvalContextProfilingStart(EvalContext *ctx)
 {
     assert(ctx != NULL);
-    ctx->profiler.elapsed = EvalContextEventStart();
+    ctx->elapsed = EvalContextEventStart();
 }
 
-static HashMap *SumEventFrames(Seq *events)
-{
-    HashMap *map = HashMapNew((MapHashFn) StringHash, (MapKeyEqualFn) StringEqual, NULL, NULL, 10);
-
-    size_t length = SeqLength(events);
-    EventFrame *curr;
-    EventFrame *prev;
-    MapKeyValue *mkv;
-    for (int i  = 0; i < length; i++)
-    {
-        curr = SeqAt(events, i);
-        mkv = HashMapGet(map, curr->id);
-
-        if (mkv == NULL)
-        {
-            HashMapInsert(map, curr->id, curr);
-            continue;
-        }
-        prev = mkv->value;
-        prev->elapsed += curr->elapsed;
-    }
-
-    return map;
-}
-
-void EvalContextProfilingEnd(EvalContext *ctx, const Policy *policy)
+void EvalContextProfilingEnd(EvalContext *ctx)
 {
     assert(ctx != NULL);
 
@@ -4029,35 +4014,46 @@ void EvalContextProfilingEnd(EvalContext *ctx, const Policy *policy)
     }
 
     int64_t end = EvalContextEventStart();
-    int64_t start = ctx->profiler.elapsed;
+    int64_t start = ctx->elapsed;
     assert(end >= start); /* sanity check */
 
-    ctx->profiler.elapsed = end - start;
-
-    HashMap *map = SumEventFrames(ctx->profiler.events);
-    JsonElement *profiling = JsonObjectCreate(2);
-
-    JsonElement *json_policy = PolicyToJson(policy);
-    JsonObjectAppendObject(profiling, "policy", json_policy);
+    ctx->elapsed = end - start;
 
     JsonElement *events = JsonArrayCreate(10);
     {
-        HashMapIterator iter = HashMapIteratorInit(map);
-        MapKeyValue *mkv;
-        while ((mkv = HashMapIteratorNext(&iter)) != NULL)
+        for (size_t i = 0; i < SeqLength(ctx->events); i++)
         {
-            EventFrame *event = mkv->value;
+            EventFrame *event = SeqAt(ctx->events, i);
             JsonArrayAppendObject(events, EventToJson(event));
         }
     }
-    JsonObjectAppendArray(profiling, "events", events);
-
     // write
     Writer *writer = FileWriter(stdout);
-    JsonWrite(writer, profiling, 2);
+    JsonWrite(writer, events, 2);
     WriterClose(writer);
 
-    JsonDestroy(profiling);
+    JsonDestroy(events);
+}
+
+EventFrame *EvalContextGetLastEventFrame(EvalContext *ctx)
+{
+    StackFrame *frame = LastStackFrameByEvent(ctx);
+
+    return (frame == NULL) ? NULL : frame->event;
+}
+
+void EvalContextAppendEventFrame(EvalContext *ctx, EventFrame *event)
+{
+    assert(ctx != NULL);
+    assert(event != NULL);
+
+    int64_t start = event->elapsed;
+    int64_t end = EvalContextEventStart();
+    assert(end >= start); /* sanity check */
+
+    event->elapsed = end - start;
+
+    SeqAppend(ctx->events, event);
 }
 
 // ##############################################################

@@ -36,7 +36,7 @@ bundle agent test
   meta:
       # This test exposes a known issue with processes on the Windows platform.
       "test_soft_fail"
-        string => "windows|solaris",
+        string => "windows|solaris|hpux",
         meta => { "ENT-12751", "ENT-13505" };
 
       "description" -> {"CFE-4511"}

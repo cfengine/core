@@ -1746,7 +1746,7 @@ static bool MatchPolicy(EvalContext *ctx, const char *camel, const char *haystac
             }
             else if (opt == INSERT_MATCH_TYPE_IGNORE_TRAILING)
             {
-                if (!StringEqualN(final + final_size - 5, "\\s*", 3))
+                if (final_size >= 5 && !StringEqualN(final + final_size - 5, "\\s*", 3))
                 {
                     const size_t work_size = final_size + 3;
                     char  *work      = xcalloc(1, work_size);

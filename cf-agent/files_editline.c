@@ -1715,11 +1715,11 @@ static bool MatchPolicy(EvalContext *ctx, const char *camel, const char *haystac
                     char  *work      = xcalloc(1, work_size);
                     strcpy(work, sp);
 
-                    int written = snprintf(final, final_size, "\\s*%s", 
+                    int written = snprintf(final, final_size, "\\s*%s",
                                            work);
                     if (written < 0)
                     {
-                        Log(LOG_LEVEL_ERR, 
+                        Log(LOG_LEVEL_ERR,
                             "Unexpected failure from snprintf "
                             "(%d - %s) on '%s' (MatchPolicy)",
                             errno, GetErrorStr(), final);
@@ -1729,13 +1729,13 @@ static bool MatchPolicy(EvalContext *ctx, const char *camel, const char *haystac
                     {
                         final = xrealloc(final, work_size);
                         final_size = work_size;
-                        written = snprintf(final, final_size, "\\s*%s", 
+                        written = snprintf(final, final_size, "\\s*%s",
                                            work);
                         if (written < 0)
                         {
-                            Log(LOG_LEVEL_ERR, 
+                            Log(LOG_LEVEL_ERR,
                                 "Unexpected failure from snprintf "
-                                "(%d - %s) on '%s' (MatchPolicy)", 
+                                "(%d - %s) on '%s' (MatchPolicy)",
                                 errno, GetErrorStr(), final);
                             return false;
                         }
@@ -1746,7 +1746,7 @@ static bool MatchPolicy(EvalContext *ctx, const char *camel, const char *haystac
             }
             else if (opt == INSERT_MATCH_TYPE_IGNORE_TRAILING)
             {
-                if (!StringEqualN(final + final_size - 5, "\\s*", 3))
+                if (final_size >= 5 && !StringEqualN(final + final_size - 5, "\\s*", 3))
                 {
                     const size_t work_size = final_size + 3;
                     char  *work      = xcalloc(1, work_size);
@@ -1758,9 +1758,9 @@ static bool MatchPolicy(EvalContext *ctx, const char *camel, const char *haystac
                     int written = snprintf(final, final_size, "%s\\s*", work);
                     if (written < 0)
                     {
-                        Log(LOG_LEVEL_ERR, 
+                        Log(LOG_LEVEL_ERR,
                             "Unexpected failure from snprintf "
-                            "(%d - %s) on '%s' (MatchPolicy)", 
+                            "(%d - %s) on '%s' (MatchPolicy)",
                             errno, GetErrorStr(), final);
                         return false;
                     }
@@ -1771,9 +1771,9 @@ static bool MatchPolicy(EvalContext *ctx, const char *camel, const char *haystac
                         written = snprintf(final, final_size, "%s\\s*", work);
                         if (written < 0)
                         {
-                            Log(LOG_LEVEL_ERR, 
+                            Log(LOG_LEVEL_ERR,
                                 "Unexpected failure from snprintf "
-                                "(%d - %s) on '%s' (MatchPolicy)", 
+                                "(%d - %s) on '%s' (MatchPolicy)",
                                 errno, GetErrorStr(), final);
                             return false;
                         }

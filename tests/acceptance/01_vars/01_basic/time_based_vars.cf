@@ -1,37 +1,84 @@
 body common control
 {
-  bundlesequence => { "test" };
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
+bundle agent init
+{
+  files:
+    "$(G.testfile)" delete => tidy;
+}
+
+bundle agent test_variable(name, regex)
+{
+  classes:
+    "defined" expression => isvariable("$(name)");
+    "match" expression => regcmp("$(regex)", "$($(name))");
+
+  reports:
+    "FAIL: '$(name)' is not defined" unless => "defined";
+    "FAIL: '$(name) => $($(name))' did not match '$(regex)'" unless => "match";
+
+  files:
+    "$(G.testfile)"
+      create => "true",
+      unless => "defined&match";
+}
 
 bundle agent test
 {
+  meta:
+    "description" -> { "ENT-13540" }
+      string => "Test time based variables";
+
   vars:
-    "time_based_var_names" slist => variablesmatching(".*sys.time_based.*");
-    "time_based_vars" slist => maplist("$($(this))", "@(time_based_var_names)");
+    "variables" data => '{
+        "dom": "^Day([1-9]|[1-2][0-9]|3[0-1])$",
+        "dow": "^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)$",
+        "hr": "^Hr(0[0-9]|1[0-9]|2[0-4])$",
+        "hr_2": "^Hr([0-9]|1[0-9]|2[0-4])$",
+        "hr_qoh": "^Hr(0[0-9]|1[0-9]|2[0-4])_Q[1-4]$",
+        "lcycle": "^Lcycle_[0-3]$",
+        "min": "^Min([0-5][0-9]|60)$",
+        "min_span_5": "^Min(00_05|05_10|10_15|15_20|20_25|25_30|30_35|35_40|40_45|45_50|50_55|55_00)$",
+        "month": "^(January|February|March|April|May|June|July|August|September|October|November|December)$",
+        "pod": "^(Night|Morning|Afternoon|Evening)$",
+        "qoh": "^Q[1-4]$",
+        "yr": "^Yr\d{4}$",
 
-  classes:
-    "year_ok" expression => reglist("@(time_based_vars)", "^Yr\d{4}$");
-    "month_ok" expression => reglist("@(time_based_vars)", "^(January|February|March|April|May|June|July|August|September|October|November|December)$");
-    "day_ok" expression => reglist("@(time_based_vars)", "^Day([1-9]|[1-2][0-9]|3[0-1])$");
-    "weekday_ok" expression => reglist("@(time_based_vars)", "^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)$");
-    "shift_ok" expression => reglist("@(time_based_vars)", "^(Night|Morning|Afternoon|Evening)$");
-    "hour_2_ok" expression => reglist("@(time_based_vars)", "^Hr(0[1-9]|1[0-9]|2[0-4])$");
-    "hour_ok" expression => reglist("@(time_based_vars)", "^Hr([1-9]|1[0-9]|2[0-4])$");
-    "quarter_ok" expression => reglist("@(time_based_vars)", "^Q[1-4]$");
-    "minute_ok" expression => reglist("@(time_based_vars)", "^Min([0-5][0-9]|60)$");
-    "minute_span_5_ok" expression => reglist("@(time_based_vars)", "^Min([0-5][0-9]|60)_(05|[0-5][05]|60)$");
-    "hour_2_quarter_ok" expression => reglist("@(time_based_vars)", "^Hr(0[1-9]|1[0-9]|2[0-4])_Q[1-4]$");
+        "gmt_dom": "^GMT_Day([1-9]|[1-2][0-9]|3[0-1])$",
+        "gmt_dow": "^GMT_(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)$",
+        "gmt_hr": "^GMT_Hr(0[0-9]|1[0-9]|2[0-4])$",
+        "gmt_hr_2": "^GMT_Hr([0-9]|1[0-9]|2[0-4])$",
+        "gmt_hr_qoh": "^GMT_Hr(0[0-9]|1[0-9]|2[0-4])_Q[1-4]$",
+        "gmt_lcycle": "^GMT_Lcycle_[0-3]$",
+        "gmt_min": "^GMT_Min([0-5][0-9]|60)$",
+        "gmt_min_span_5": "^GMT_Min(00_05|05_10|10_15|15_20|20_25|25_30|30_35|35_40|40_45|45_50|50_55|55_00)$",
+        "gmt_month": "^GMT_(January|February|March|April|May|June|July|August|September|October|November|December)$",
+        "gmt_pod": "^GMT_(Night|Morning|Afternoon|Evening)$",
+        "gmt_qoh": "^GMT_Q[1-4]$",
+        "gmt_yr": "^GMT_Yr\d{4}$"
+      }';
 
-    # Testing for one GMT
-    "hour_2_gmt_ok" expression => reglist("@(time_based_vars)", "^GMT_Hr(0[1-9]|1[0-9]|2[0-4])$");
+    "names"
+      slist => getindices("variables");
 
-    "ok" expression => and("year_ok", "month_ok", "day_ok", "weekday_ok", "shift_ok", "hour_2_ok", "hour_ok", 
-                          "quarter_ok", "minute_ok", "minute_span_5_ok", "hour_2_quarter_ok", "hour_2_gmt_ok");
+  methods:
+    "any" usebundle => test_variable("default:sys.time_based_$(names)",
+                                     "$(variables[$(names)])");
+}
 
+bundle agent check
+{
   reports:
-    ok::
-      "$(this.promise_filename) Pass";
-    !ok::
-      "$(this.promise_filename) FAIL";
+    "$(this.promise_filename) Pass" unless => fileexists("$(G.testfile)");
+    "$(this.promise_filename) FAIL" if => fileexists("$(G.testfile)");
+}
+
+bundle agent destroy
+{
+  methods:
+    "init";
 }

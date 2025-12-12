@@ -215,7 +215,7 @@ void PrepareChangesChroot(const char *path)
                 continue;
             }
             char entry_path[PATH_MAX];
-            strcpy(entry_path, path);
+            strlcpy(entry_path, path, sizeof(entry_path));
             JoinPaths(entry_path, PATH_MAX, entry->d_name);
             PrepareChangesChroot(entry_path);
         }

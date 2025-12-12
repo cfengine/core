@@ -1566,6 +1566,12 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner)
 
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "bundle", PromiseGetBundle(owner)->name, CF_DATA_TYPE_STRING, "source=promise");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "namespace", PromiseGetNamespace(owner), CF_DATA_TYPE_STRING, "source=promise");
+    if (PromiseGetBundle(owner)->calling_bundle != NULL)
+    {
+        char *calling_bundle_name = StringFormat("%s:%s", PromiseGetBundle(owner)->calling_bundle->ns, PromiseGetBundle(owner)->calling_bundle->name);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "calling_bundle", calling_bundle_name, CF_DATA_TYPE_STRING, "source=promise");
+        free(calling_bundle_name);
+    }
 
     // Recompute `with`
     for (size_t i = 0; i < SeqLength(owner->conlist); i++)

@@ -128,11 +128,11 @@ PromiseResult VerifyMethod(EvalContext *ctx, const Rval call, const Attributes *
 
     PromiseBanner(ctx, pp);
 
-    const Bundle *bp = EvalContextResolveBundleExpression(ctx, PromiseGetPolicy(pp), BufferData(method_name), "agent");
+    Bundle *bp = (Bundle *) EvalContextResolveBundleExpression(ctx, PromiseGetPolicy(pp), BufferData(method_name), "agent");
 
     if (!bp)
     {
-        bp = EvalContextResolveBundleExpression(ctx, PromiseGetPolicy(pp), BufferData(method_name), "common");
+        bp = (Bundle *) EvalContextResolveBundleExpression(ctx, PromiseGetPolicy(pp), BufferData(method_name), "common");
     }
 
     PromiseResult result = PROMISE_RESULT_NOOP;
@@ -169,6 +169,7 @@ PromiseResult VerifyMethod(EvalContext *ctx, const Rval call, const Attributes *
 
             BundleResolve(ctx, bp);
 
+            bp->calling_bundle = (Bundle *) PromiseGetBundle(pp);
             result = ScheduleAgentOperations(ctx, bp);
 
             GetReturnValue(ctx, bp, pp);

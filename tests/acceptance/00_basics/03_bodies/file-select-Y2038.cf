@@ -1,0 +1,27 @@
+body common control
+{
+      inputs => {
+                  "../../default.cf.sub",
+      };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent test
+{
+  meta:
+      "description" string => "Test that the agent does not crash on dates after 2038.";
+
+}
+
+bundle agent check
+{
+  meta:
+      "test_skip_unsupported" string => "!64_bit";
+
+  classes:
+      "ok" expression => "class_defined_from_included_bundle";
+  methods:
+      "" usebundle => dcs_passif_output(".*Pass.*", "", "$(sys.cf_agent) -Kf $(this.promise_filename).sub", $(this.promise_filename));
+
+}

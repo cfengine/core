@@ -562,7 +562,12 @@ typedef enum
 
 #define CF_BOOL      "true,false,yes,no,on,off"
 #define CF_LINKRANGE "symlink,hardlink,relative,absolute"
-#define CF_TIMERANGE "0,2147483647" /* i.e. "0,0x7fffffff" */
+
+#ifdef HAVE_64BIT_TIME_T
+# define CF_TIMERANGE "0,99999999999" /* Same as other max int values */
+#else
+# define CF_TIMERANGE "0,2147483647" /* i.e. "0,0x7fffffff" */
+#endif
 
 /* Syntax checker accepts absurdly big numbers for backwards
  * compatibility. WARNING: internally they are stored as longs, possibly

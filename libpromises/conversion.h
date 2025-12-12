@@ -83,8 +83,8 @@ void GidListDestroy(GidList *gids);
 UidList *Rlist2UidList(Rlist *uidnames, const Promise *pp);
 GidList *Rlist2GidList(Rlist *gidnames, const Promise *pp);
 #ifndef __MINGW32__
-uid_t Str2Uid(const char *uidbuff, char *copy, const Promise *pp);
-gid_t Str2Gid(const char *gidbuff, char *copy, const Promise *pp);
+uid_t Str2Uid(const char *uidbuff, char *copy, size_t copy_size, const Promise *pp);
+gid_t Str2Gid(const char *gidbuff, char *copy, size_t copy_size, const Promise *pp);
 #endif /* !__MINGW32__ */
 
 #endif

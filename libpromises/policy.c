@@ -2964,7 +2964,6 @@ uid_t PromiseGetConstraintAsUid(const EvalContext *ctx, const char *lval, const 
 uid_t PromiseGetConstraintAsUid(const EvalContext *ctx, const char *lval, const Promise *pp)
 {
     int retval = CF_SAME_OWNER;
-    char buffer[CF_MAXVARSIZE];
 
     const Constraint *cp = PromiseGetConstraint(pp, lval);
     if (cp)
@@ -2978,7 +2977,7 @@ uid_t PromiseGetConstraintAsUid(const EvalContext *ctx, const char *lval, const 
             FatalError(ctx, "Aborted");
         }
 
-        retval = Str2Uid((char *) cp->rval.item, buffer, pp);
+        retval = Str2Uid((char *) cp->rval.item, NULL, 0, pp);
     }
 
     return retval;
@@ -3006,7 +3005,6 @@ gid_t PromiseGetConstraintAsGid(const EvalContext *ctx, char *lval, const Promis
 gid_t PromiseGetConstraintAsGid(const EvalContext *ctx, char *lval, const Promise *pp)
 {
     int retval = CF_SAME_GROUP;
-    char buffer[CF_MAXVARSIZE];
 
     const Constraint *cp = PromiseGetConstraint(pp, lval);
     if (cp)
@@ -3020,7 +3018,7 @@ gid_t PromiseGetConstraintAsGid(const EvalContext *ctx, char *lval, const Promis
             FatalError(ctx, "Aborted");
         }
 
-        retval = Str2Gid((char *) cp->rval.item, buffer, pp);
+        retval = Str2Gid((char *) cp->rval.item, NULL, 0, pp);
     }
 
     return retval;

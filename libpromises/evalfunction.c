@@ -1542,7 +1542,7 @@ static FnCallResult FnCallGetUserInfo(ARG_UNUSED EvalContext *ctx, ARG_UNUSED co
         char *arg = RlistScalarValue(finalargs);
         if (StringIsNumeric(arg))
         {
-            uid_t uid = Str2Uid(arg, NULL, NULL);
+            uid_t uid = Str2Uid(arg, NULL, 0, NULL);
             if (uid == CF_SAME_OWNER) // user "*"
             {
                 uid = getuid();
@@ -1592,7 +1592,7 @@ static FnCallResult FnCallGetGroupInfo(ARG_UNUSED EvalContext *ctx, ARG_UNUSED c
         char *arg = RlistScalarValue(finalargs);
         if (StringIsNumeric(arg))
         {
-            gid_t gid = Str2Gid(arg, NULL, NULL);
+            gid_t gid = Str2Gid(arg, NULL, 0, NULL);
             if (gid == CF_SAME_GROUP) // user "*"
             {
                 gid = getgid();
@@ -9261,7 +9261,7 @@ FnCallResult FnCallUserExists(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Poli
 
     if (StringIsNumeric(arg))
     {
-        uid_t uid = Str2Uid(arg, NULL, NULL);
+        uid_t uid = Str2Uid(arg, NULL, 0, NULL);
         if (uid == CF_SAME_OWNER || uid == CF_UNKNOWN_OWNER)
         {
             return FnFailure();
@@ -9288,7 +9288,7 @@ FnCallResult FnCallGroupExists(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Pol
 
     if (StringIsNumeric(arg))
     {
-        gid_t gid = Str2Gid(arg, NULL, NULL);
+        gid_t gid = Str2Gid(arg, NULL, 0, NULL);
         if (gid == CF_SAME_GROUP || gid == CF_UNKNOWN_GROUP)
         {
             return FnFailure();

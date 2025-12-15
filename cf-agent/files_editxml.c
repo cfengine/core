@@ -29,6 +29,8 @@
 #include <promises.h>
 #include <files_names.h>
 #include <files_edit.h>
+#include <stddef.h>
+#include <stdio.h>
 #include <vars.h>
 #include <item_lib.h>
 #include <sort.h>
@@ -42,6 +44,7 @@
 #include <ornaments.h>
 #include <verify_classes.h>
 #include <regex.h>              /* StringMatch() */
+#include <logging.h>
 
 enum editxmltypesequence
 {
@@ -344,6 +347,7 @@ static PromiseResult KeepEditXmlPromise(EvalContext *ctx, const Promise *pp,
 static bool VerifyXPathBuild(EvalContext *ctx, const Attributes *attr, const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
     assert(attr != NULL);
+    assert(pp != NULL);
     Attributes a = *attr; // TODO: Remove this copy
     xmlDocPtr doc = NULL;
     CfLock thislock;
@@ -351,13 +355,14 @@ static bool VerifyXPathBuild(EvalContext *ctx, const Attributes *attr, const Pro
 
     a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
 
-    if (a.xml.havebuildxpath)
-    {
-        strcpy(rawxpath, a.xml.build_xpath);
-    }
-    else
-    {
-        strcpy(rawxpath, pp->promiser);
+    int ret = snprintf(rawxpath, sizeof(rawxpath), "%s",
+        a.xml.havebuildxpath ? a.xml.build_xpath : pp->promiser);
+    if (ret < 0 ||(size_t)ret >= sizeof(rawxpath)) {
+        Log(LOG_LEVEL_VERBOSE, "Build XPath is too long (%d >= %zu)", ret, sizeof(rawxpath));
+        RecordFailure(ctx, pp, &a,
+                      "The promised build XPath build is too long");
+        *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
+        return false;
     }
 
     if (!SanityCheckXPathBuild(ctx, &a, pp, result))

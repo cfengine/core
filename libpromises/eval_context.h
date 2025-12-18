@@ -41,12 +41,17 @@
 #include <generic_agent.h>
 
 typedef struct {
-    char *id;
+    char *source;
     char *type;
+    char *component;
+    char *ns;
     char *name;
-    char *filename;
-    SourceOffset offset;
+
+    char *id;
+    char *callstack;
+
     int64_t elapsed;
+    SourceOffset offset;
 } EventFrame;
 
 typedef enum
@@ -110,7 +115,6 @@ typedef struct
 
     char *path;
     bool override_immutable;
-    int64_t start;
     EventFrame *event;
 } StackFrame;
 
@@ -444,13 +448,15 @@ void EvalContextSetDumpReports(EvalContext *ctx, bool dump_reports);
 bool EvalContextGetDumpReports(EvalContext *ctx);
 void EvalContextUpdateDumpReports(EvalContext *ctx);
 
-int64_t EvalContextEventStart();
-void EvalContextAddFunctionEvent(EvalContext *ctx, const FnCall *fp, int64_t start);
-
 void EvalContextSetProfiling(EvalContext *ctx, bool profiling);
-
+bool EvalContextGetProfiling(EvalContext *ctx);
 void EvalContextProfilingStart(EvalContext *ctx);
-void EvalContextProfilingEnd(EvalContext *ctx, const Policy *policy);
+void EvalContextProfilingEnd(EvalContext *ctx);
+EventFrame *BundleToEventFrame(const Bundle *bp, EventFrame *prev_frame);
+EventFrame *PromiseToEventFrame(const Promise *pp, EventFrame *prev_frame);
+EventFrame *FunctionToEventFrame(const FnCall *fp, EventFrame *prev_frame);
+EventFrame *EvalContextGetLastEventFrame(EvalContext *ctx);
+void EvalContextAppendEventFrame(EvalContext *ctx, EventFrame *event);
 
 void EvalContextSetCommonEvalOrder(EvalContext *ctx, EvalOrder eval_order);
 void EvalContextSetAgentEvalOrder(EvalContext *ctx, EvalOrder eval_order);

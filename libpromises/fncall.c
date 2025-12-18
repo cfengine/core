@@ -419,9 +419,12 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, const Policy *policy, FnCall *fp, 
         WriterClose(fncall_writer);
     }
 
-    int64_t start = EvalContextEventStart();
+    EventFrame *event = EvalContextGetProfiling(ctx) ? FunctionToEventFrame(fp, EvalContextGetLastEventFrame(ctx)) : NULL;
     FnCallResult result = CallFunction(ctx, policy, fp, expargs);
-    EvalContextAddFunctionEvent(ctx, fp, start);
+    if (event != NULL)
+    {
+        EvalContextAppendEventFrame(ctx, event);
+    }
 
     if (result.status == FNCALL_FAILURE)
     {

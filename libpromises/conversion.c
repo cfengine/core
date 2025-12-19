@@ -988,7 +988,7 @@ UidList *Rlist2UidList(Rlist *uidnames, const Promise *pp)
     for (rp = uidnames; rp != NULL; rp = rp->next)
     {
         username[0] = '\0';
-        uid = Str2Uid(RlistScalarValue(rp), username, pp);
+        uid = Str2Uid(RlistScalarValue(rp), username, sizeof(username), pp);
         AddSimpleUidItem(&uidlist, uid, username);
     }
 
@@ -1049,7 +1049,7 @@ GidList *Rlist2GidList(Rlist *gidnames, const Promise *pp)
     for (rp = gidnames; rp != NULL; rp = rp->next)
     {
         groupname[0] = '\0';
-        gid = Str2Gid(RlistScalarValue(rp), groupname, pp);
+        gid = Str2Gid(RlistScalarValue(rp), groupname, sizeof(groupname), pp);
         AddSimpleGidItem(&gidlist, gid, groupname);
     }
 
@@ -1063,7 +1063,7 @@ GidList *Rlist2GidList(Rlist *gidnames, const Promise *pp)
 
 /*********************************************************************/
 
-uid_t Str2Uid(const char *uidbuff, char *usercopy, const Promise *pp)
+uid_t Str2Uid(const char *uidbuff, char *usercopy, size_t copy_size, const Promise *pp)
 {
     if (StringEqual(uidbuff, "*"))
     {
@@ -1126,7 +1126,7 @@ uid_t Str2Uid(const char *uidbuff, char *usercopy, const Promise *pp)
     {
         if (usercopy != NULL)
         {
-            strcpy(usercopy, uidbuff);
+            strlcpy(usercopy, uidbuff, copy_size);
         }
     }
     else
@@ -1142,7 +1142,7 @@ uid_t Str2Uid(const char *uidbuff, char *usercopy, const Promise *pp)
 
 /*********************************************************************/
 
-gid_t Str2Gid(const char *gidbuff, char *groupcopy, const Promise *pp)
+gid_t Str2Gid(const char *gidbuff, char *groupcopy, size_t copy_size, const Promise *pp)
 {
     if (StringEqual(gidbuff, "*"))
     {
@@ -1169,7 +1169,7 @@ gid_t Str2Gid(const char *gidbuff, char *groupcopy, const Promise *pp)
     {
         if (groupcopy != NULL)
         {
-            strcpy(groupcopy, gidbuff);
+            strlcpy(groupcopy, gidbuff, copy_size);
         }
     }
     else

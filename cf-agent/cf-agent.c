@@ -1667,7 +1667,7 @@ static void CheckAgentAccess(const Rlist *list, const Policy *policy)
 
     for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
-        if (Str2Uid(RlistScalarValue(rp), NULL, NULL) == uid)
+        if (Str2Uid(RlistScalarValue(rp), NULL, 0, NULL) == uid)
         {
             return;
         }
@@ -1687,7 +1687,7 @@ static void CheckAgentAccess(const Rlist *list, const Policy *policy)
                 bool access = false;
                 for (const Rlist *rp2 = ACCESSLIST; rp2 != NULL; rp2 = rp2->next)
                 {
-                    if (Str2Uid(RlistScalarValue(rp2), NULL, NULL) == sb.st_uid)
+                    if (Str2Uid(RlistScalarValue(rp2), NULL, 0, NULL) == sb.st_uid)
                     {
                         access = true;
                         break;

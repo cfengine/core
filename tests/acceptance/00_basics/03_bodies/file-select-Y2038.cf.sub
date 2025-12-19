@@ -1,0 +1,24 @@
+bundle agent main {
+  files:
+    "/test"
+      file_select => y2040,
+      classes => always("y2038_ok");
+
+  reports:
+    y2038_ok::
+      "Pass";
+}
+
+body file_select y2040 {
+    mtime => irange(2238260800,2238260863);
+    file_result => "mtime.leaf_name";
+}
+
+body classes always(x)
+{
+      promise_repaired => { "$(x)" };
+      promise_kept => { "$(x)" };
+      repair_failed => { "$(x)" };
+      repair_denied => { "$(x)" };
+      repair_timeout => { "$(x)" };
+}

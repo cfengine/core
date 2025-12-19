@@ -343,13 +343,13 @@ static bool RSAEncrypt(Seq *rsa_keys, const char *input_path, const char *output
 
     const EVP_CIPHER *cipher = EVP_aes_256_cbc();
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
-    const int key_size = EVP_PKEY_size((EVP_PKEY*) SeqAt(evp_keys, 0));
 
     /* This sequence and the 'enc_key_sizes' array are both populated by the
      * EVP_SealInit() call below. */
     Seq *enc_keys = SeqNew(n_keys, free);
     for (size_t i = 0; i < n_keys; i++)
     {
+        const int key_size = EVP_PKEY_size((EVP_PKEY*) SeqAt(evp_keys, i));
         SeqAppend(enc_keys, xmalloc(key_size));
     }
     int enc_key_sizes[n_keys];

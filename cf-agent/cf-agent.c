@@ -1547,7 +1547,7 @@ static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy, GenericAg
         if (bp)
         {
             BundleBanner(bp,args);
-            EvalContextStackPushBundleFrame(ctx, bp, args, false);
+            EvalContextStackPushBundleFrame(ctx, bp, args, false, NULL);
             ScheduleAgentOperations(ctx, bp);
             EvalContextStackPopFrame(ctx);
             EndBundleBanner(bp);

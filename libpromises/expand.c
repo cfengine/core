@@ -1118,7 +1118,7 @@ void PolicyResolve(EvalContext *ctx, const Policy *policy,
         Bundle *bundle = SeqAt(policy->bundles, i);
         if (strcmp("common", bundle->type) == 0)
         {
-            EvalContextStackPushBundleFrame(ctx, bundle, NULL, false);
+            EvalContextStackPushBundleFrame(ctx, bundle, NULL, false, NULL);
             BundleResolve(ctx, bundle);            /* PRE-EVAL classes,vars */
             EvalContextStackPopFrame(ctx);
         }
@@ -1136,7 +1136,7 @@ void PolicyResolve(EvalContext *ctx, const Policy *policy,
         Bundle *bundle = SeqAt(policy->bundles, i);
         if (strcmp("common", bundle->type) != 0)
         {
-            EvalContextStackPushBundleFrame(ctx, bundle, NULL, false);
+            EvalContextStackPushBundleFrame(ctx, bundle, NULL, false, NULL);
             BundleResolve(ctx, bundle);                    /* PRE-EVAL vars */
             EvalContextStackPopFrame(ctx);
         }

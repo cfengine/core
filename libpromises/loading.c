@@ -573,7 +573,7 @@ Policy *LoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
         for (size_t i = 0; i < SeqLength(policy->bundles); i++)
         {
             Bundle *bp = SeqAt(policy->bundles, i);
-            EvalContextStackPushBundleFrame(ctx, bp, NULL, false);
+            EvalContextStackPushBundleFrame(ctx, bp, NULL, false, NULL);
 
             for (size_t j = 0; j < SeqLength(bp->sections); j++)
             {

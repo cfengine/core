@@ -1362,13 +1362,14 @@ static StackFrame *StackFrameNew(StackFrameType type, bool inherit_previous)
     return frame;
 }
 
-static StackFrame *StackFrameNewBundle(const Bundle *owner, bool inherit_previous, bool profiling, EventFrame *prev_event)
+static StackFrame *StackFrameNewBundle(const Bundle *owner, bool inherit_previous, bool profiling, const Bundle *calling_bundle, EventFrame *prev_event)
 {
     StackFrame *frame = StackFrameNew(STACK_FRAME_TYPE_BUNDLE, inherit_previous);
 
     frame->data.bundle.owner = owner;
     frame->data.bundle.classes = ClassTableNew();
     frame->data.bundle.vars = VariableTableNew();
+    frame->data.bundle.calling_bundle = calling_bundle;
     frame->event = (profiling) ? BundleToEventFrame(owner, prev_event) : NULL;
 
     return frame;
@@ -1445,12 +1446,12 @@ static void EvalContextStackPushFrame(EvalContext *ctx, StackFrame *frame)
              STACK_FRAME_TYPE_STR[frame->type]);
 }
 
-void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, const Rlist *args, bool inherits_previous)
+void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, const Rlist *args, bool inherits_previous, const Bundle *calling_bundle)
 {
     assert(ctx != NULL);
     assert(!LastStackFrame(ctx, 0) || LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_PROMISE_ITERATION);
 
-    StackFrame *frame = StackFrameNewBundle(owner, inherits_previous, ctx->profiling, EvalContextGetLastEventFrame(ctx));
+    StackFrame *frame = StackFrameNewBundle(owner, inherits_previous, ctx->profiling, calling_bundle, EvalContextGetLastEventFrame(ctx));
     EvalContextStackPushFrame(ctx, frame);
 
     if (RlistLen(args) > 0)
@@ -1573,6 +1574,14 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner)
 
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "bundle", PromiseGetBundle(owner)->name, CF_DATA_TYPE_STRING, "source=promise");
     EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "namespace", PromiseGetNamespace(owner), CF_DATA_TYPE_STRING, "source=promise");
+
+    StackFrame *bundle_frame = LastStackFrameByType(ctx, STACK_FRAME_TYPE_BUNDLE);
+    if (bundle_frame != NULL && bundle_frame->data.bundle.calling_bundle != NULL)
+    {
+        char *calling_bundle_name = StringFormat("%s:%s", bundle_frame->data.bundle.calling_bundle->ns, bundle_frame->data.bundle.calling_bundle->name);
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_THIS, "calling_bundle", calling_bundle_name, CF_DATA_TYPE_STRING, "source=promise");
+        free(calling_bundle_name);
+    }
 
     // Recompute `with`
     for (size_t i = 0; i < SeqLength(owner->conlist); i++)

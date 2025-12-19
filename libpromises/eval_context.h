@@ -67,6 +67,7 @@ typedef enum
 typedef struct
 {
     const Bundle *owner;
+    const Bundle *calling_bundle;
 
     ClassTable *classes;
     VariableTable *vars;
@@ -187,7 +188,7 @@ void EvalContextClear(EvalContext *ctx);
 
 Rlist *EvalContextGetPromiseCallerMethods(EvalContext *ctx);
 
-void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, const Rlist *args, bool inherits_previous);
+void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, const Rlist *args, bool inherits_previous, const Bundle *calling_bundle);
 void EvalContextStackPushBodyFrame(EvalContext *ctx, const Promise *caller, const Body *body, const Rlist *args);
 void EvalContextStackPushBundleSectionFrame(EvalContext *ctx, const BundleSection *owner);
 void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner);

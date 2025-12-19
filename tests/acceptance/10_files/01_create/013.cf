@@ -1,0 +1,72 @@
+#######################################################
+#
+# Create a file with content attribute and owner via perms,
+# but witout create attribute, check owner
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  files:
+      "$(G.testfile)"
+      delete => init_delete;
+}
+
+body delete init_delete
+{
+      dirlinks => "delete";
+      rmdirs   => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "owner" string => "nobody";
+
+  files:
+      "$(G.testfile)"
+        content => "",
+        perms   => test_perms($(owner));
+}
+
+body perms test_perms(o)
+{
+      rxdirs => "false";
+      mode   => "644";
+      owners => { "$(o)" };
+      groups => { "0" };
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+      "ui" data => getuserinfo(filestat($(G.testfile), "uid"));
+
+  classes:
+      "not_ok" not => strcmp($(test.owner), $(ui[username]));
+
+  reports:
+    DEBUG::
+      "expected: username = '$(test.owner)'";
+      "got:      username = '$(ui[username])'";
+    !not_ok::
+      "$(this.promise_filename) Pass";
+    not_ok::
+      "$(this.promise_filename) FAIL";
+}
+
+### PROJECT_ID: core
+### CATEGORY_ID: 27

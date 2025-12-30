@@ -148,7 +148,7 @@ PromiseResult VerifyMethod(EvalContext *ctx, const Rval call, const Attributes *
         {
             BundleBanner(bp, args);
             EvalContextSetBundleArgs(ctx, args);
-            EvalContextStackPushBundleFrame(ctx, bp, args, a->inherit);
+            EvalContextStackPushBundleFrame(ctx, bp, args, a->inherit, PromiseGetBundle(pp));
 
             /* Clear all array-variables that are already set in the sub-bundle.
                Otherwise, array-data accumulates between multiple bundle evaluations.

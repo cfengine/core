@@ -249,7 +249,7 @@ static void IteratorPrepare_TestHelper(
     Promise *promise = BundleSectionAppendPromise(section, promiser,
                                                   (Rval) { NULL, RVAL_TYPE_NOPROMISEE },
                                                   "any", NULL);
-    EvalContextStackPushBundleFrame(evalctx, bundle, NULL, false);
+    EvalContextStackPushBundleFrame(evalctx, bundle, NULL, false, NULL);
     EvalContextStackPushBundleSectionFrame(evalctx, section);
     PromiseIterator *iterctx = PromiseIteratorNew(promise);
     char *promiser_copy = xstrdup(promiser);

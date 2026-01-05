@@ -574,6 +574,12 @@ allow cfengine_httpd_t smtp_port_t:tcp_socket name_connect;
 # httpd/PHP needs to be able to contact LDAP servers
 allow cfengine_httpd_t ldap_port_t:tcp_socket name_connect;
 
+# allow PHP-FPM to use hugepages for opcache
+allow cfengine_httpd_t hugetlbfs_t:file map;
+
+# allow PHP-FPM to lock opcache files in tmpfs
+allow cfengine_httpd_t tmpfs_t:file lock;
+
 # Bidirectional DBus communication between httpd and systemd
 allow cfengine_httpd_t system_dbusd_t:dbus send_msg;
 allow cfengine_httpd_t system_dbusd_t:unix_stream_socket connectto;

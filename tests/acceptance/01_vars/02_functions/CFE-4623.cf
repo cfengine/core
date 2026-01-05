@@ -1,0 +1,44 @@
+#######################################################
+#
+# Test that findfiles() returns trailing slash on directories when a trailing
+# slash is provided as input
+#
+#######################################################
+
+body common control
+{
+        inputs => { "../../default.cf.sub" };
+        bundlesequence  => { default("$(this.promise_filename)") };
+}
+
+bundle agent test
+{
+  meta:
+      "test_soft_fail" string => "cfengine_3_21_8|cfengine_3_24_0|cfengine_3_24_1|cfengine_3_24_2|cfengine_3_24_3|cfengine_3_27_0",
+        meta => { "CFE-4623" };
+
+  vars:
+      "find_this_promise_dirname"
+        slist => findfiles( "$(this.promise_dirname)/");
+}
+
+bundle agent check
+{
+  classes:
+
+      "ok"
+        expression => regcmp( ".*[\\]$", $(test.find_this_promise_dirname) );
+        # Windows uses backslash, so a better regular expression accounting for
+        # that might be ".*[\\\/]$"
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+
+    ok.(verbose_mode|inform_mode)::
+      "test.find_this_promise_dirname ($(test.find_this_promise_dirname)) has a trailing slash";
+
+    !ok::
+      "$(this.promise_filename) FAIL";
+
+}

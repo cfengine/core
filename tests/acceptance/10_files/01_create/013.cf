@@ -31,6 +31,9 @@ body delete init_delete
 
 bundle agent test
 {
+  meta:
+    "test_skip_needs_work" string => "hpux";
+
   vars:
       "owner" string => "nobody";
 

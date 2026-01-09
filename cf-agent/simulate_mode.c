@@ -146,7 +146,7 @@ static void ManifestStatInfo(const struct stat *st)
 #define MAX_TIMESTAMP_SIZE (sizeof("2020-10-05 12:56:18 +0200"))
     char buf[MAX_TIMESTAMP_SIZE] = {0};
 
-    size_t ret = strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S %z",
+    NDEBUG_UNUSED size_t ret = strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S %z",
                           localtime((time_t*) &(st->st_atime)));
     assert((ret > 0) && (ret < MAX_TIMESTAMP_SIZE));
     printf("Access: %s\n", buf);

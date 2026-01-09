@@ -60,6 +60,28 @@
 	- The transformer attribute of the files promise can now override the
 	  immutable bit (CFE-1840, ENT-10961)
 	- Added default_directory_create_mode to body agent control (CFE-4590, ENT-13239)
+	- Added cf-profile.py script for processing profiling output
+	- Added evaluation_order option in body file control (CFE-4598)
+	- Added tag 'derived-from-file' to Alpine, Amazon Linux, Arch, Debian,
+	  EOS, Fedora/Red Hat, Gentoo, Mandrake/Mandriva, Manjaro, OpenVZ,
+	  Oracle Linux, Oracle VM Server/Red Hat, Red Hat, Slackware, SuSE,
+	  Sun Cobalt, United Linux, VMware, Xen, have_aptitude, and other
+	  OS classes/variables (CFE-4531)
+	- Fixed potential buffer overflow when creating tables using the databases
+	  promise type (ENT-13552)
+	- Fixed buffer overflow in build XPath for edit_xml (ENT-13550)
+	- Fixed buffer overflow in cf-secret when using multiple keys of different sizes
+	  (ENT-13591)
+	- Fixed heap buffer overflow in files edit_line (ENT-13590)
+	- Fixed json policy parsing by adding new field "evaluation_order" to the expected output
+	- Fixed length checking in StatFile (ENT-13542)
+	- Fixed potential buffer overflow when computing chroot path
+	  (ENT-13551)
+	- Fixed potential buffer overflow when converting strings to GIDs/UIDs
+	  (ENT-13551)
+	- Packages promiser is now escaped when using shell commands
+	  (ENT-13535)
+	- Renamed changelog file to CHANGELOG.md (ENT-13497)
 
 3.26.0:
 	- Improved error message in abortbundleclasses, for example when there are

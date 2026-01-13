@@ -1,0 +1,108 @@
+body common control
+{
+      inputs => { "../../../default.cf.sub"};
+      bundlesequence => { "init", "test", "new_namespace:check" };
+      version => "1.0";
+}
+
+bundle agent init
+{
+
+}
+
+bundle agent test
+{
+  meta:
+    "description" -> { "ENT-13304" }
+      string => "Test that quotes are not needed for a fully qualified variable name in a function call";
+  vars:
+    "foo_list"
+      slist => { "1", "2", "3" };
+}
+
+body file control
+{
+  namespace => "new_namespace";
+}
+
+bundle agent check
+{
+  vars:
+    "bar_list"
+      slist => { "1", "2", "3" };
+
+    "unquoted_foo_list1"
+      string => join(", ", foo_list);
+
+    "unquoted_foo_list2"
+      string => join(", ", test.foo_list);
+
+    "unquoted_foo_list3"
+      string => join(", ", default:foo_list);
+
+    "unquoted_foo_list4"
+      string => join(", ", default:test.foo_list);
+
+    "unquoted_bar_list1"
+      string => join(", ", bar_list);
+
+    "unquoted_bar_list2"
+      string => join(", ", check.bar_list);
+
+    "unquoted_bar_list3"
+      string => join(", ", new_namespace:bar_list);
+
+    "unquoted_bar_list4"
+      string => join(", ", new_namespace:check.bar_list);
+
+    "quoted_foo_list1"
+      string => join(", ", foo_list);
+
+    "quoted_foo_list2"
+      string => join(", ", test.foo_list);
+
+    "quoted_foo_list3"
+      string => join(", ", default:foo_list);
+
+    "quoted_foo_list4"
+      string => join(", ", default:test.foo_list);
+
+    "quoted_bar_list1"
+      string => join(", ", bar_list);
+
+    "quoted_bar_list2"
+      string => join(", ", check.bar_list);
+
+    "quoted_bar_list3"
+      string => join(", ", new_namespace:bar_list);
+
+    "quoted_bar_list4"
+      string => join(", ", new_namespace:check.bar_list);
+
+  classes:
+    "undefined_vars"
+      expression => not(or(isvariable("unquoted_foo_list1"),
+                           isvariable("unquoted_foo_list3"),
+                           isvariable("unquoted_bar_list2"),
+                           isvariable("quoted_foo_list1"),
+                           isvariable("quoted_foo_list3"),
+                           isvariable("quoted_bar_list2")));
+
+    "defined_vars"
+      expression => and(strcmp("1, 2, 3", "$(unquoted_foo_list2)"),
+                        strcmp("1, 2, 3", "$(unquoted_foo_list4)"),
+                        strcmp("1, 2, 3", "$(unquoted_bar_list1)"),
+                        strcmp("1, 2, 3", "$(unquoted_bar_list3)"),
+                        strcmp("1, 2, 3", "$(unquoted_bar_list4)"),
+                        strcmp("1, 2, 3", "$(quoted_foo_list2)"),
+                        strcmp("1, 2, 3", "$(quoted_foo_list4)"),
+                        strcmp("1, 2, 3", "$(quoted_bar_list1)"),
+                        strcmp("1, 2, 3", "$(quoted_bar_list3)"),
+                        strcmp("1, 2, 3", "$(quoted_bar_list4)"));
+                    
+  reports:
+    defined_vars.undefined_vars::
+      "$(this.promise_filename) Pass";
+    !defined_vars|!undefined_vars::
+      "$(this.promise_filename) FAIL";
+}

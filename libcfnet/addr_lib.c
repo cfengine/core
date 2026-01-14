@@ -116,6 +116,13 @@ int FuzzySetMatch(const char *s1, const char *s2)
             struct sockaddr_in addr1, addr2;
             unsigned long mask;
 
+            // Checks that the addr to match is a valid address
+            // else bogus addresses will always match /0 range
+            if (inet_pton(AF_INET, s2, &addr2.sin_addr) != 1) {
+              Log(LOG_LEVEL_ERR, "Invalid reference IPv4: %s", s2);
+              return -1;
+            }
+
             address[0] = '\0';
             int ret = sscanf(s1, "%16[^/]/%lu", address, &mask);
             if (ret != 2 || mask > 32)
@@ -129,7 +136,6 @@ int FuzzySetMatch(const char *s1, const char *s2)
             }
 
             inet_pton(AF_INET, address, &addr1.sin_addr);
-            inet_pton(AF_INET, s2, &addr2.sin_addr);
 
             unsigned long a1 = htonl(addr1.sin_addr.s_addr);
             unsigned long a2 = htonl(addr2.sin_addr.s_addr);

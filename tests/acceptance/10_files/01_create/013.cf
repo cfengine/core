@@ -31,6 +31,10 @@ body delete init_delete
 
 bundle agent test
 {
+  meta:
+    "test_skip_needs_work" -> { "ENT-13658" }
+      string => "hpux|aix";
+
   vars:
       "owner" string => "nobody";
 

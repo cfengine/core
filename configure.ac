@@ -848,6 +848,11 @@ AC_CHECK_TYPES(socklen_t, [], [], [[
 #include <sys/socket.h>
 ]])
 
+AC_CHECK_SIZEOF(time_t)
+if test "x$ac_cv_sizeof_time_t" = "x8"; then
+	AC_DEFINE(HAVE_64BIT_TIME_T, 1, [Define if time_t is 64-bit])
+fi
+
 dnl ######################################################################
 dnl Checks for typedefs, structures, and compiler characteristics.
 dnl ######################################################################

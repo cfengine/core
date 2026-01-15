@@ -1,0 +1,32 @@
+bundle agent main {
+  files:
+
+  "$(this.promise_filename).sub.file-with-mtime-after-2038"
+    file_select => y2042,
+    perms => m( "o+r" ),
+    classes => kept_or_repaired("y2038_ok");
+
+  reports:
+    y2038_ok::
+      "Pass";
+}
+
+body file_select y2042 {
+ # January 1, 2042 at 12:00:00 AM December 31, 2042 at 11:59:59 PM
+ mtime => irange(2272896000, 2304431999);
+ file_result => "mtime.leaf_name";
+}
+
+body perms m (x)
+{
+  mode => "$(x)";
+}
+
+body classes kept_or_repaired(x)
+{
+  promise_repaired => { "$(x)" };
+  promise_kept => { "$(x)" };
+  repair_failed => { "NOT_$(x)" };
+  repair_denied => { "NOT_$(x)" };
+  repair_timeout => { "NOT_$(x)" };
+}

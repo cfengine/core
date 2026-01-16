@@ -7,46 +7,67 @@ body common control
 bundle agent init
 {
   vars:
+      # parsing /etc/passwd for 'root' user
+      "root_idx" int => getfields("root.*", "/etc/passwd", ":", "userdata");
+      "root_string" string => ifelse(isvariable("userdata[1]"), 
+        storejson(parsejson('{$(userdata[1]) : { "uid" : $(userdata[3]) , "gid" : $(userdata[4]) , "gecos" : "$(userdata[5])", "dir" : "$(userdata[6])", "shell" : "$(userdata[7])"}}')),
+        storejson(parsejson('{}'))
+      );
+      "empty_string" string => storejson(parsejson('{}'));
+
       # simple filters
-      "simple_filter" slist => { "name=root" };
-      "number_filter" slist => { "uid=0" };
+      "simple_filter" slist => { "name=$(userdata[1])" };
       
       # longer filters
-      "slist_filter" slist => { "gid=0", "name=root" };
+      "slist_filter" slist => { "gid=$(userdata[4])", "name=root" };
 
       # using data
-      "data_filter" data => '[ "gid=0", "name=root" ]';
+      "data_filter" data => '[ "gid=$(userdata[4])", "name=root" ]';
 
       # using regex
       "simple_regex" slist => { "name=roo.*" };
-      "number_regex" slist => { "uid=0.*" };
-      "longer_regex" slist => { "name=ro.*", "uid=0.*" };
+      "longer_regex" slist => { "name=roo.*", "uid=0.*" };
 
       # non-existent user
       "unknown" slist => { "name=thisuserdoesntexist" };
 }
 bundle agent test 
 {
-  meta:
-      "test_soft_fail" string => "windows|aix|solaris|hpux|redhat_10",
-        comment => "redhat_10 user name is 'Super User' not 'root'",
-        meta => { "CFE-2318" };
-
   vars:
-    "ulist1" data => findlocalusers("@(init.simple_filter)");
-    "ulist2" data => findlocalusers("init.number_filter");
-    "ulist4" data => findlocalusers("@(init.slist_filter)");
-    "ulist3" data => findlocalusers("@(init.data_filter)");
-    "ulist5" data => findlocalusers("@(init.simple_regex)");
-    "ulist6" data => findlocalusers("@(init.number_regex)");
-    "ulist7" data => findlocalusers("@(init.longer_regex)");
-    "ulist8" data => findlocalusers("@(init.unknown)");
+    "ulist1" string => storejson(findlocalusers("@(init.simple_filter)"));
+    "ulist2" string => storejson(findlocalusers("@(init.data_filter)"));
+    "ulist3" string => storejson(findlocalusers("@(init.slist_filter)"));
+    "ulist4" string => storejson(findlocalusers("@(init.simple_regex)"));
+    "ulist5" string => storejson(findlocalusers("@(init.longer_regex)"));
+    "ulist6" string => storejson(findlocalusers("@(init.unknown)"));
 
 }
 bundle agent check
 {
-  methods:
-      "check"  usebundle => dcs_check_state(test,
-                                           "$(this.promise_filename).expected.json",
-                                           $(this.promise_filename));
+  meta:
+    "test_soft_fail" string => "windows",
+      meta => { "CFE-2318" };
+  classes:
+    "ok" expression => and(
+      strcmp("$(test.ulist1)", "$(init.root_string)"),
+      strcmp("$(test.ulist2)", "$(init.root_string)"),
+      strcmp("$(test.ulist3)", "$(init.root_string)"),
+      strcmp("$(test.ulist4)", "$(init.root_string)"),
+      strcmp("$(test.ulist5)", "$(init.root_string)"),
+      strcmp("$(test.ulist6)", "$(init.empty_string)")
+    );
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+    DEBUG::
+      "$(init.root_string)";
+
+      "$(test.ulist1)";
+      "$(test.ulist2)";
+      "$(test.ulist3)";
+      "$(test.ulist4)";
+      "$(test.ulist5)";
+      "$(test.ulist6)";
 }

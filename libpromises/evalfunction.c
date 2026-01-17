@@ -8276,7 +8276,7 @@ static bool ClassFilterDataObject(
         break;
     }
 
-    return true;
+    return false;
 }
 
 static FnCallResult FnCallClassFilterData(

@@ -935,11 +935,12 @@ static FnCallResult FnCallGetEnv(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const P
 
 static FnCallResult FnCallGetUsers(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
-    const char *except_name = RlistScalarValue(finalargs);
-    const char *except_uid = RlistScalarValue(finalargs->next);
+    const char *first_arg = (finalargs != NULL) ? RlistScalarValue(finalargs) : NULL;
+    const char *second_arg =  (finalargs != NULL && finalargs->next != NULL) ? RlistScalarValue(finalargs->next) : NULL;
 
-    Rlist *except_names = RlistFromSplitString(except_name, ',');
-    Rlist *except_uids = RlistFromSplitString(except_uid, ',');
+
+    Rlist *except_names = RlistFromSplitString(first_arg, ',');
+    Rlist *except_uids = RlistFromSplitString(second_arg, ',');
 
     setpwent();
 
@@ -11621,7 +11622,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("getuid", CF_DATA_TYPE_INT, GETUID_ARGS, &FnCallGetUid, "Return the integer user id of the named user on this host",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("getusers", CF_DATA_TYPE_STRING_LIST, GETUSERS_ARGS, &FnCallGetUsers, "Get a list of all system users defined, minus those names defined in arg1 and uids in arg2",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("getuserinfo", CF_DATA_TYPE_CONTAINER, GETUSERINFO_ARGS, &FnCallGetUserInfo, "Get a data container describing user arg1, defaulting to current user",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("getgroupinfo", CF_DATA_TYPE_CONTAINER, GETGROUPINFO_ARGS, &FnCallGetGroupInfo, "Get a data container describing specified group, or current group if not specified",

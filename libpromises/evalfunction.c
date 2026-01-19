@@ -983,12 +983,11 @@ static FnCallResult FnCallGetUsers(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const
 
 static FnCallResult FnCallGetGroups(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
-    assert(finalargs != NULL);
-    const char *except_name = RlistScalarValue(finalargs);
-    const char *except_uid = RlistScalarValue(finalargs->next);
+    const char *first_arg = (finalargs != NULL) ? RlistScalarValue(finalargs) : NULL;
+    const char *second_arg =  (finalargs != NULL && finalargs->next != NULL) ? RlistScalarValue(finalargs->next) : NULL;
 
-    Rlist *except_names = RlistFromSplitString(except_name, ',');
-    Rlist *except_uids = RlistFromSplitString(except_uid, ',');
+    Rlist *except_names = RlistFromSplitString(first_arg, ',');
+    Rlist *except_uids = RlistFromSplitString(second_arg, ',');
 
     setgrent();
 
@@ -11628,7 +11627,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("getgroupinfo", CF_DATA_TYPE_CONTAINER, GETGROUPINFO_ARGS, &FnCallGetGroupInfo, "Get a data container describing specified group, or current group if not specified",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("getgroups", CF_DATA_TYPE_STRING_LIST, GETGROUPS_ARGS, &FnCallGetGroups, "Get a list of all system groups defined, minus those names defined in the first argument and group IDs defined in the second argument",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("getvalues", CF_DATA_TYPE_STRING_LIST, GETINDICES_ARGS, &FnCallGetValues, "Get a list of values in the list or array or data container arg1",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("getvariablemetatags", CF_DATA_TYPE_STRING_LIST, GETVARIABLEMETATAGS_ARGS, &FnCallGetMetaTags, "Collect the variable arg1's meta tags into an slist, optionally collecting only tag key arg2",

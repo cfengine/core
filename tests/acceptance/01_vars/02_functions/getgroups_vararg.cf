@@ -1,0 +1,62 @@
+#######################################################
+#
+# Test getgroups() variable args
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+bundle agent test
+{
+	meta:
+    "description"
+      string => "Test variable arguments with getgroups()";
+
+    "test_skip_unsupported"
+      string => "windows";
+  vars:
+    "group_entries" slist => splitstring(string_trim(readfile("/etc/group")), "\n", 999);
+
+    "name_list"
+      slist => maplist(
+       nth(splitstring("$(this)", ":", 1), 0),
+        "@(group_entries)"
+      );
+    "actual_groups_content"
+      string => join(" ", sort("@(name_list)", "lex"));
+
+    "groups1" slist => getgroups();
+    "groups2" slist => getgroups("");
+    "groups3" slist => getgroups("","");
+
+    "retrieved_groups_content_1"
+      string => join(" ", sort("@(groups1)", "lex"));
+    "retrieved_groups_content_2"
+      string => join(" ", sort("@(groups2)", "lex"));
+    "retrieved_groups_content_3"
+      string => join(" ", sort("@(groups3)", "lex"));
+
+}
+
+bundle agent check
+{
+
+  classes:
+    "ok"
+      expression => and(
+        strcmp("$(test.actual_groups_content)", "$(test.retrieved_groups_content_1)"),
+        strcmp("$(test.actual_groups_content)", "$(test.retrieved_groups_content_2)"),
+        strcmp("$(test.actual_groups_content)", "$(test.retrieved_groups_content_3)")
+      );
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

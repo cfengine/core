@@ -1604,8 +1604,6 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     OpenLog(default_facility);
     SetSyslogFacility(default_facility);
 
-    EvalContextClassPutHard(ctx, "any", "source=agent");
-
     GenericAgentAddEditionClasses(ctx); // May set "enterprise_edition" class
 
     const Class *enterprise_edition = EvalContextClassGet(ctx, "default", "enterprise_edition");

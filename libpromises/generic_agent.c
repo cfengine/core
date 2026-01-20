@@ -730,6 +730,10 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
                             EvalContextClassPutSoft(ctx, ckey, CONTEXT_SCOPE_NAMESPACE, default_tags);
                         }
                     }
+                    else if (StringEqual(check, "true"))
+                    {
+                        EvalContextClassPutSoft(ctx, ckey, CONTEXT_SCOPE_NAMESPACE, default_tags);
+                    }
                     free(check);
                 }
                 else if (JsonGetElementType(data) == JSON_ELEMENT_TYPE_CONTAINER &&
@@ -752,6 +756,10 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
                             }
                             free(check);
                             break;
+                        }
+                        else if (StringEqual(check, "true"))
+                        {
+                            EvalContextClassPutSoft(ctx, ckey, CONTEXT_SCOPE_NAMESPACE, default_tags);
                         }
 
                         free(check);
@@ -786,6 +794,11 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
                             Log(LOG_LEVEL_VERBOSE, "Installing augments class '%s' (checked array entry '%s') from file '%s'",
                                 ckey, check, filename);
                             if (CanSetClass(ctx, ckey))
+                            {
+                                installed = EvalContextClassPutSoftTagsSetWithComment(ctx, ckey, CONTEXT_SCOPE_NAMESPACE,
+                                                                                      tags, comment);
+                            }
+                            else if (StringEqual(check, "true"))
                             {
                                 installed = EvalContextClassPutSoftTagsSetWithComment(ctx, ckey, CONTEXT_SCOPE_NAMESPACE,
                                                                                       tags, comment);

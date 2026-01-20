@@ -1,0 +1,59 @@
+body common control
+{
+  bundlesequence => { "check" };
+}
+
+bundle agent check
+{
+  vars:
+    "object_of_arrays"
+      data => '{
+        "bar": "!foo",
+        "foo": [ "!foo", "foo&bar", "foo|bar" ],
+      }';
+    "object_of_arrays_filtered"
+      data => classfilterdata("object_of_arrays", "object_of_arrays", "0");
+
+    "object_of_objects"
+      data => '{
+        "bar": "!foo",
+        "foo": { "foo": "!bar", "key": "value" },
+      }';
+    "object_of_objects_filtered"
+      data => classfilterdata("object_of_objects", "object_of_objects", "foo");
+
+    "array_of_arrays"
+      data => '[
+        "bar",
+        [ "baz", "!baz", "foo&baz", "foo|baz" ],
+      ]';
+    "array_of_arrays_filtered"
+      data => classfilterdata("array_of_arrays", "array_of_arrays", "0");
+
+    "array_of_objects"
+      data => '[
+        "bar",
+        { "baz": "!baz", "key": "value" },
+      ]';
+    "array_of_objects_filtered"
+      data => classfilterdata("array_of_objects", "array_of_objects", "baz");
+
+  classes:
+    "ok" not => or(
+        isvariable("array_of_arrays_filtered"),
+        isvariable("array_of_objects_filtered"),
+        isvariable("object_of_arrays_filtered"),
+        isvariable("object_of_objects_filtered")
+        );
+
+  reports:
+      "Object of Objects filtered: $(with)" with => string(@(object_of_objects_filtered));
+      "Object of Arrays filtered: $(with)" with => string(@(object_of_arrays_filtered));
+      "Array of Arrays filtered: $(with)" with => string(@(array_of_arrays_filtered));
+      "Array of Objects filtered: $(with)" with => string(@(array_of_objects_filtered));
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

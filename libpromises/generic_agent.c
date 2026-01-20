@@ -406,7 +406,8 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
             if (!(StringEqual(key, "vars") ||
                   StringEqual(key, "classes") ||
                   StringEqual(key, "inputs") ||
-                  StringEqual(key, "augments")))
+                  StringEqual(key, "augments") ||
+                  StringEqual(key, "variables")))
             {
                 Log(LOG_LEVEL_VERBOSE, "Unknown augments key '%s' in file '%s', skipping it",
                     key, filename);

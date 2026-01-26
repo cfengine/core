@@ -131,6 +131,7 @@ static const ConstraintSyntax CF_COLUMN_BODIES[] =
 static const ConstraintSyntax CF_REPLACE_BODIES[] =
 {
     ConstraintSyntaxNewBody("replace_with", &replace_with_body, "Search-replace pattern", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBool("allow_non_convergent", "Allow to use non-convergent regular expressions in replace_patterns. Defaults to false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

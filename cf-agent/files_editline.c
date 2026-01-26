@@ -1263,6 +1263,7 @@ static bool ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, 
     assert(a != NULL);
     assert(pp != NULL);
     assert(edcontext != NULL);
+    bool allow_non_convergent = PromiseGetConstraintAsBoolean(ctx, "allow_non_convergent", pp);
 
     char line_buff[CF_EXPANDSIZE];
     char after[CF_BUFSIZE];
@@ -1330,17 +1331,25 @@ static bool ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, 
                 break;
             }
         }
-
+        char line_buff_cp[CF_EXPANDSIZE];
         if (NotAnchored(pp->promiser) && BlockTextMatch(ctx, pp->promiser, line_buff, &start_off, &end_off))
         {
-            RecordInterruption(ctx, pp, a,
-                               "Promised replacement '%s' on line '%s' for pattern '%s'"
-                               " is not convergent while editing '%s'"
-                               " (regular expression matches the replacement string)",
-                               line_buff, ip->name, pp->promiser, edcontext->filename);
-            *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
-            PromiseRef(LOG_LEVEL_ERR, pp);
-            break;
+            strlcpy(line_buff_cp, line_buff, sizeof(line_buff_cp));
+            strlcpy(after, line_buff_cp + end_off, sizeof(after));
+            snprintf(line_buff_cp + start_off, sizeof(line_buff_cp) - start_off,
+                 "%s%s", BufferData(replace), after);
+
+            if (!allow_non_convergent || (strlen(line_buff) != strlen(line_buff_cp)))
+            {
+                RecordInterruption(ctx, pp, a,
+                                "Promised replacement '%s' on line '%s' for pattern '%s'"
+                                " is not convergent while editing '%s'"
+                                " (regular expression matches the replacement string)",
+                                line_buff, ip->name, pp->promiser, edcontext->filename);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
+                PromiseRef(LOG_LEVEL_ERR, pp);
+                break;
+            }
         }
 
         if (!MakingChanges(ctx, pp, a, result, "replace pattern '%s' in '%s'", pp->promiser,
@@ -1366,8 +1375,14 @@ static bool ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, 
                 break;
             }
 
-            if (BlockTextMatch(ctx, pp->promiser, ip->name, &start_off, &end_off))
+            if (BlockTextMatch(ctx, pp->promiser, ip->name, &start_off, &end_off) && (!allow_non_convergent
+                || (strlen(line_buff) != strlen(line_buff_cp))))
             {
+                strlcpy(line_buff_cp, line_buff, sizeof(line_buff_cp));
+                strlcpy(after, line_buff_cp + end_off, sizeof(after));
+                snprintf(line_buff_cp + start_off, sizeof(line_buff_cp) - start_off,
+                    "%s%s", BufferData(replace), after);
+
                 RecordInterruption(ctx, pp, a,
                                    "Promised replacement '%s' for pattern '%s' is not properly convergent while editing '%s'"
                                    " (pattern still matches the end-state replacement string '%s', consider use"

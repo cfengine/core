@@ -83,7 +83,7 @@
   (ENT-13535)
 - Renamed changelog file to CHANGELOG.md (ENT-13497)
 
-## 3.26.0:
+## 3.26.0
 - Improved error message in abortbundleclasses, for example when there are
   no matches due to using a space in the regular expression (CFE-4075)
 - Updated syntax description to include new protocol_version values
@@ -133,7 +133,7 @@
 - Fixed incorrect handling of exit code in cf-runagent (ENT-12712)
 - Fixed junk printed in case of internal server error (CFE-4507)
 
-## 3.25.0:
+## 3.25.0
 - Various SELinux fixes:
   - Added create capability on cfengine_var_lib_t:dir to cf-hub
   - Added filesystem and files unconfined access to cf-monitord in cfengine-enterprise SELinux policy
@@ -188,7 +188,7 @@
 - Fixed bug causing LMDB database corruption
 - Fixed possible segfault when backing up LMDB databases
 
-## 3.24.0:
+## 3.24.0
 - Added a sanity check to policy parser that checks for and warns
   in case of promise declarations with no actions. The motivation
   for this check is to aid policy writers in detecting semantic
@@ -259,7 +259,7 @@
 - Added 2 new classes correlating to the values in `sys.cfengine_roles`:
   `cfengine_reporting_hub` and `cfengine_client`.
 
-## 3.23.0:
+## 3.23.0
 - Added selinux policy to allow cf-hub to initiate scheduled reports
   (ENT-10696, ENT-9825)
 - Added version_compare() policy function (CFE-3991)
@@ -307,7 +307,7 @@
 - `cf-check diagnose` now shows DB usage and a hint if rotation is required
 - /usr/bin/getent is now attempted to be used if /bin/getent doesn't exist (CFE-4256)
 
-## 3.22.0:
+## 3.22.0
 - Added --help option to cf-support and aligned output with other
   components (ENT-9740)
 - Added classes and vars to cf-support (CFE-4160)
@@ -334,7 +334,7 @@
   cf-support (ENT-9804)
 - validjson() no longer accepts trailing bogus data (CFE-4080)
 
-## 3.21.0:
+## 3.21.0
 - Added cf-support utility for generating support information
   (ENT-9037)
 - Adjusted cf-check and package module code for empty updates list
@@ -390,7 +390,7 @@
   (ENT-9039)
 
 
-## 3.20.0:
+## 3.20.0
 - `rxdirs` now defaults to "false". This means that the read permission
   bit no longer implies execute bit for directories, by default.
   Permission bits will be exactly as specified. To restore the old behavior
@@ -445,7 +445,7 @@
   potential situations where undefined bundles would be detected
   earlier previously (both correctly and incorrectly).  (ENT-8430)
 
-## 3.19.0:
+## 3.19.0
 - -N/--negate now prevents persistent classes from being defined
   (ENT-5886)
 - `null` JSON value is now handled as empty data in augments/host-specific data
@@ -486,7 +486,7 @@
 - Fixed crashes (Segfaults) in VariableIsSecret() (ENT-7678)
 - Fixed crashes (Segfaults) in VariablesMatching() (ENT-7678)
 
-## 3.18.0:
+## 3.18.0
 - "No action for file" warning is no longer triggered when only
   `content => "something"` is used (CFE-3507)
 - "source=promise_iteration" variables are no longer created in
@@ -629,7 +629,7 @@
 - CFEngine processes now reuse log facility from previous run for
   early logging before policy is loaded (ENT-6955)
 
-## 3.17.0:
+## 3.17.0
 - cf-agent can now simulate the changes done to files in a chroot, printing
   diff or manifest information about what it would do in a normal evaluation.
   Use the new command line option: `--simulate=diff` or `--simulate=manifest`.
@@ -666,7 +666,7 @@
 - Fixed a small memory leak in cf-promises (CFE-3461)
 - Fixed expansion of variables in data/list references (CFE-3299)
 
-## 3.16.0:
+## 3.16.0
 - Added `cf-secret` binary for host-specific encryption (CFE-2613)
 - `cf-check diagnose --test-write` can now be used to test writing
   into LMDB files (ENT-4484)
@@ -754,7 +754,7 @@
 - storage promises managing nfs mounts should now correctly mount
   after editing fstab entries
 
-## 3.15.0:
+## 3.15.0
 - New policy function basename() added (CFE-3196)
 - Added read_module_protocol() policy function
   This function reads module protocol from a file, and can be used
@@ -881,7 +881,7 @@
 - cf-check: dump command now dumps DB contents to JSON5 (CFE-3126)
 - cf-check: help command can now take a topic as argument
 
-## 3.14.0:
+## 3.14.0
 - A bootstrap_id.dat file is now generated on every bootstrap
   (CFE-2977)
 - Added options to cf-net to set minimum TLS version and ciphers
@@ -1006,7 +1006,7 @@
 - cf-check: diagnose and backup now use state directory by default
   (ENT-4064)
 
-## 3.13.0:
+## 3.13.0
 - Added support for TLS 1.3 and its ciphersuites
 - Added `feature` hard classes for supported TLS versions
   Different versions of TLS are supported depending on what version
@@ -1141,7 +1141,7 @@ slist => variablesmatching(".*", "os\[linux\]");
   atexit() unloads DLLs before and/or during atexit functions being called
   which causes bad behavior. (ENT-3756)
 
-## 3.12.0b1:
+## 3.12.0b1
 New Features:
 - Added a --key-type option to specify RSA key size to cf-key
 - New hash_to_int policy function (CFE-2733)
@@ -1229,7 +1229,7 @@ Bug fixes:
 - Fixed segfault on JSON policy files with no bundles and bodies (CFE-2754)
 
 
-## 3.11.0:
+## 3.11.0
 New Features:
 - Allow function calls in promiser using universal "with" attribute
   (CFE-1092)
@@ -1305,7 +1305,7 @@ Bug fixes:
 - Fixed "lastseenexpireafter" 32-bit signed int overflow (zendesk#3204)
 - Fixed IPv6 parsing to be un-reversed (CFE-2580)
 
-## 3.10.0:
+## 3.10.0
 New features/additions:
 - All new features/additions for 3.8 and 3.9 are also included in 3.10.
 - Add: Classes body tailored for use with diff
@@ -1463,7 +1463,7 @@ Bug fixes:
   Known issues: getvalues() still misbehaves with double-indexed arrays
   (see (CFE-2504, CFE-2536)
 
-## 3.9.0:
+## 3.9.0
 New features/additions:
 - Added optional interface parameter to iprange() to match only one interface.
 - Allow `=` in symbolic modes (Redmine #7826)
@@ -1767,7 +1767,7 @@ Bug fixes:
 - Be less verbose if a network interface doesn't have a MAC address.
   (Jira CFE-1995)
 
-## 3.8.2:
+## 3.8.2
 Fixes:
 - Update library dependencies to latest version.
   Libraries upgraded:
@@ -1823,7 +1823,7 @@ Fixes:
 Changes:
 - Change: classesmatching(): order of classes changed
 
-## 3.8.1:
+## 3.8.1
 Changes:
 - Upgrade CFEngine dependencies to the following versions:
   - OpenSSL1.0.2e
@@ -1854,7 +1854,7 @@ Bug fixes:
   (Redmine #7861)
 
 
-## 3.8.0:
+## 3.8.0
 New features/additions:
 - New feature: Bodies can now inherit attribute values from
   other bodies by specifying "inherit_from" with the name of the body to
@@ -2105,7 +2105,7 @@ Changes:
 - Change: classesmatching(): order of classes changed
 
 
-## 3.7.2:
+## 3.7.2
 Bug fixes:
 - readfile() and read*list() should print an error if they fail to read file.
   (Redmine #7702)
@@ -2163,7 +2163,7 @@ Masterfiles:
 - Add: New results classes body [] (Redmine #7418, #7481)
 - Remove: Support for email settings from augments_file (Redmine #7682)
 
-## 3.7.1:
+## 3.7.1
 Bug fixes:
 - Fixed daemons not restarting correctly on upgrade on AIX. (Redmine #7550)
 - Fixed upgrade causing error message under systemd because of open ports.
@@ -2185,7 +2185,7 @@ Bug fixes:
 - Fixed a bug which caused daemons not to be restarted on
   upgrade. (Redmine #7528)
 
-## 3.7.0:
+## 3.7.0
 New features:
 - New package promise implementation.
   The syntax is much simpler, to try it out, check out the syntax:
@@ -2378,7 +2378,7 @@ Fixes:
   #7258)
 
 
-## 3.6.5:
+## 3.6.5
 Features:
 - Introduced "systemd" hard class. (Redmine #6995)
 - Added paths to dtrace, zfs and zpool on FreeBSD in masterfiles.
@@ -2401,7 +2401,7 @@ Bug fixes:
 - Fixed infinite loop (Redmine #6992) plus a couple more minor
   bugs in edit_xml promises.
 
-## 3.6.4:
+## 3.6.4
 Features:
 - Introduced users promises support on HP-UX platform.
 - Introduced process promises support on HP-UX platform.
@@ -3349,7 +3349,7 @@ Changes:
 - Full list of issues fixed is available on
 - https://cfengine.com/bugtracker/changelog_page.php
 
-## 3.2.0:
+## 3.2.0
 New bootstrap method with single-command bootstrapping:
 - cf-agent --bootstrap --policy-server 123.456.789.123
 - Associated policy template files are added, partially maintained
@@ -3385,7 +3385,7 @@ New bootstrap method with single-command bootstrapping:
 - Full list of issues fixed is available on
 https://cfengine.com/bugtracker/changelog_page.php
 
-## 3.1.5:
+## 3.1.5
 - New class parser, `||` is no longer allowed in expressions (use `|`).
 - Class setting in the promise types insert_lines, delete_lines,
   replace_patterns, field_edits, vars, classes is restored.
@@ -3436,7 +3436,7 @@ https://cfengine.com/bugtracker/changelog_page.php
 - Security issue introduced by change of runcommand shell policy fixed. If users defined a runcommand for cf-runagent/cf-serverd communication, possible to execute commands.
 - cf-key -s command for showing key hash/IP address identity pairs
 
-## 3.1.0:
+## 3.1.0
 - Change in storage of public keys. Cfengine now hashes the public key and uses this
   as the keyname. Keys will be converted automatically.
 - The old dynamic addresses lists are deprecated.
@@ -3474,7 +3474,7 @@ methods:
   and there is no iteration over empty lists. The value "cf_null" is reserved for
   use as a null iterator.
 
-## 3.0.5p1:
+## 3.0.5p1
 - Showing paths allowed/denied access to when cf-serverd is run in verbose mode.
 - Bug in server fixed for dynamic addresses.
 - File handle closure bugfix - too many open databases.
@@ -3487,7 +3487,7 @@ methods:
 - Package_list_update called only once per manager, and fixed crash.
 - Version number bug in packages.
 
-## 3.0.5:
+## 3.0.5
 - Encryption problems fixed - client key buffer was uninitialized.
 - Classes-promisers are now automatically canonified when class
   strings are defined, to simplifying the use of variables in classes.
@@ -3511,7 +3511,7 @@ methods:
 - Multithreading mutex failed to collide during cfservd leading to dropped authentication under heavy load.
 
 
-## 3.0.4:
+## 3.0.4
 - Class cancellation in promises to create better class feedback,
   allows emulation of switch/case semantics etc
 - Value of SA measurement promises
@@ -3530,7 +3530,7 @@ methods:
 - Numerous bugfixes
 
 
-## 3.0.3:
+## 3.0.3
 - sha256 .. new hashes in openssl included in syntax tree.
 - End of line autocropping in readfile (hopefully intelligent)
 - hashmatch function incorrectly implemented - old debugging code left behind. Fix.
@@ -3540,7 +3540,7 @@ methods:
 - Unregistered addresses no longer report "(Non registered IP)", but return as the address
   itself when doing reverse lookups.
 
-## 3.0.2:
+## 3.0.2
 - IMPORTANT: Change in normal ordering of editing. replace comes
   after insert lines Much testing and minor bug fixing
 - Memory leaks fixed
@@ -3553,7 +3553,7 @@ methods:
 - collapse_destination_dir option added to copy so that files can be
   aggregated from subdirectories into a single destination.
 
-## 3.0.1:
+## 3.0.1
 - First standalone release, independent of CFEngine 2
   Purge old definitions and check consistency.
 - NB: changed search_mode to be a list of matching values
@@ -3574,7 +3574,7 @@ methods:
   added "vista","xp" etc..
 - License notices updated for dual license editions.
 
-## 3.0.0:
+## 3.0.0
 - First release of CFEngine 3. Known omissions:
   - no support for ACLs
   - no support for packages

@@ -62,6 +62,9 @@
 #include <cf3.defs.h>
 #include <fsattrs.h>
 #include <override_fsattrs.h>
+#include <logging.h>
+#include <stddef.h>
+#include <string.h>
 
 static PromiseResult FindFilePromiserObjects(EvalContext *ctx, const Promise *pp);
 static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promise *pp);
@@ -1136,12 +1139,28 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename,
         if ((vp = PromiseGetConstraintAsRval(pp, "edit_line", RVAL_TYPE_FNCALL)))
         {
             fp = (FnCall *) vp;
-            strcpy(edit_bundle_name, fp->name);
+            size_t ret = strlcpy(edit_bundle_name, fp->name, sizeof(edit_bundle_name));
+            if (ret >= sizeof(edit_bundle_name))
+            {
+                RecordFailure(ctx, pp, a,
+                    "The edit_line bundle name is too long (%zu >= %zu)",
+                    ret, sizeof(edit_bundle_name));
+                result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+                goto exit;
+            }
             args = fp->args;
         }
         else if ((vp = PromiseGetConstraintAsRval(pp, "edit_line", RVAL_TYPE_SCALAR)))
         {
-            strcpy(edit_bundle_name, (char *) vp);
+            size_t ret = strlcpy(edit_bundle_name, (char *) vp, sizeof(edit_bundle_name));
+            if (ret >= sizeof(edit_bundle_name))
+            {
+                RecordFailure(ctx, pp, a,
+                    "The edit_line bundle name is too long (%zu >= %zu)",
+                    ret, sizeof(edit_bundle_name));
+                result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+                goto exit;
+            }
             args = NULL;
         }
         else
@@ -1174,12 +1193,28 @@ PromiseResult ScheduleEditOperation(EvalContext *ctx, char *filename,
         if ((vp = PromiseGetConstraintAsRval(pp, "edit_xml", RVAL_TYPE_FNCALL)))
         {
             fp = (FnCall *) vp;
-            strcpy(edit_bundle_name, fp->name);
+            size_t ret = strlcpy(edit_bundle_name, fp->name, sizeof(edit_bundle_name));
+            if (ret >= sizeof(edit_bundle_name))
+            {
+                RecordFailure(ctx, pp, a,
+                    "The edit_xml bundle name is too long (%zu >= %zu)",
+                    ret, sizeof(edit_bundle_name));
+                result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+                goto exit;
+            }
             args = fp->args;
         }
         else if ((vp = PromiseGetConstraintAsRval(pp, "edit_xml", RVAL_TYPE_SCALAR)))
         {
-            strcpy(edit_bundle_name, (char *) vp);
+            size_t ret = strlcpy(edit_bundle_name, (char *) vp, sizeof(edit_bundle_name));
+            if (ret >= sizeof(edit_bundle_name))
+            {
+                RecordFailure(ctx, pp, a,
+                    "The edit_xml bundle name is too long (%zu >= %zu)",
+                    ret, sizeof(edit_bundle_name));
+                result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+                goto exit;
+            }
             args = NULL;
         }
         else

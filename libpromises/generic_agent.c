@@ -406,7 +406,8 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
             if (!(StringEqual(key, "vars") ||
                   StringEqual(key, "classes") ||
                   StringEqual(key, "inputs") ||
-                  StringEqual(key, "augments")))
+                  StringEqual(key, "augments") ||
+                  StringEqual(key, "variables")))
             {
                 Log(LOG_LEVEL_VERBOSE, "Unknown augments key '%s' in file '%s', skipping it",
                     key, filename);
@@ -730,6 +731,10 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
                             EvalContextClassPutSoft(ctx, ckey, CONTEXT_SCOPE_NAMESPACE, default_tags);
                         }
                     }
+                    else if (StringEqual(check, "true"))
+                    {
+                        EvalContextClassPutSoft(ctx, ckey, CONTEXT_SCOPE_NAMESPACE, default_tags);
+                    }
                     free(check);
                 }
                 else if (JsonGetElementType(data) == JSON_ELEMENT_TYPE_CONTAINER &&
@@ -752,6 +757,10 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
                             }
                             free(check);
                             break;
+                        }
+                        else if (StringEqual(check, "true"))
+                        {
+                            EvalContextClassPutSoft(ctx, ckey, CONTEXT_SCOPE_NAMESPACE, default_tags);
                         }
 
                         free(check);
@@ -786,6 +795,11 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
                             Log(LOG_LEVEL_VERBOSE, "Installing augments class '%s' (checked array entry '%s') from file '%s'",
                                 ckey, check, filename);
                             if (CanSetClass(ctx, ckey))
+                            {
+                                installed = EvalContextClassPutSoftTagsSetWithComment(ctx, ckey, CONTEXT_SCOPE_NAMESPACE,
+                                                                                      tags, comment);
+                            }
+                            else if (StringEqual(check, "true"))
                             {
                                 installed = EvalContextClassPutSoftTagsSetWithComment(ctx, ckey, CONTEXT_SCOPE_NAMESPACE,
                                                                                       tags, comment);
@@ -1589,8 +1603,6 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     int default_facility = GetDefaultLogFacility();
     OpenLog(default_facility);
     SetSyslogFacility(default_facility);
-
-    EvalContextClassPutHard(ctx, "any", "source=agent");
 
     GenericAgentAddEditionClasses(ctx); // May set "enterprise_edition" class
 

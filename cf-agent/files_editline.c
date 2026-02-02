@@ -1257,6 +1257,24 @@ static bool DeletePromisedLinesMatching(EvalContext *ctx, Item **start, Item *be
 
 /********************************************************************/
 
+static bool ReplaceBufferSafeWrite(char *line_buff, char *after, Buffer *replace, int start_off, int end_off)
+{
+    int needed;
+    // Save portion of line after substitution:
+    needed = strlcpy(after, line_buff + end_off, sizeof(after));
+    if (needed >= sizeof(after))
+    {
+        return false;
+    }
+    needed = snprintf(line_buff + start_off, sizeof(line_buff) - start_off,
+                "%s%s", BufferData(replace), after);
+    if (needed < 0 || (size_t) needed >= (sizeof(line_buff) - start_off))
+    {
+        return false;
+    }
+    return true;
+}
+
 static bool ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, const Attributes *a,
                             const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
@@ -1314,14 +1332,8 @@ static bool ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, 
             Log(LOG_LEVEL_VERBOSE, "Verifying replacement of '%s' with '%s', cutoff %d", pp->promiser, BufferData(replace),
                   cutoff);
 
-            // Save portion of line after substitution:
-            strlcpy(after, line_buff + end_off, sizeof(after));
-            // TODO: gripe if that truncated !
-
-            // Substitute into line_buff:
-            int needed = snprintf(line_buff + start_off, sizeof(line_buff) - start_off,
-                     "%s%s", BufferData(replace), after);
-            if (needed < 0 || needed >= sizeof(line_buff) - start_off) {
+            if (!ReplaceBufferSafeWrite(line_buff, after, replace, start_off, end_off))
+            {
                 RecordInterruption(ctx, pp, a, "Replacement string is too large. '%s' in '%s'",
                                a->column.column_separator, edcontext->filename);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
@@ -1339,14 +1351,22 @@ static bool ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, 
         char line_buff_cp[CF_EXPANDSIZE];
         if (NotAnchored(pp->promiser) && BlockTextMatch(ctx, pp->promiser, line_buff, &start_off, &end_off))
         {
-            strlcpy(line_buff_cp, line_buff, sizeof(line_buff_cp));
-            strlcpy(after, line_buff_cp + end_off, sizeof(after));
-            int needed = snprintf(line_buff_cp + start_off, sizeof(line_buff_cp) - start_off,
-                 "%s%s", BufferData(replace), after);
-
-            if (needed < 0 || needed >= sizeof(line_buff_cp) - start_off) {
-                RecordInterruption(ctx, pp, a, "Replacement string is too large. '%s' in '%s'",
+            int needed = strlcpy(line_buff_cp, line_buff, sizeof(line_buff_cp));
+            if (needed >= sizeof(line_buff_cp))
+            {
+                RecordInterruption(ctx, pp, a, "Original string is too large. '%s' in '%s'",
                                a->column.column_separator, edcontext->filename);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
+                break;
+            }
+
+            if (!ReplaceBufferSafeWrite(line_buff_cp, after, replace, start_off, end_off))
+            {
+                RecordInterruption(ctx, pp, a,
+                                "Promised replacement '%s' on line '%s' for pattern '%s'"
+                                " is not convergent while editing '%s'"
+                                " (regular expression matches the replacement string)",
+                                line_buff, ip->name, pp->promiser, edcontext->filename);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
                 break;
             }
@@ -1390,13 +1410,17 @@ static bool ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, 
             if (BlockTextMatch(ctx, pp->promiser, ip->name, &start_off, &end_off) && (!allow_non_convergent
                 || (strlen(line_buff) != strlen(line_buff_cp))))
             {
-                strlcpy(line_buff_cp, line_buff, sizeof(line_buff_cp));
-                strlcpy(after, line_buff_cp + end_off, sizeof(after));
-                int needed = snprintf(line_buff_cp + start_off, sizeof(line_buff_cp) - start_off,
-                    "%s%s", BufferData(replace), after);
+                int needed = strlcpy(line_buff_cp, line_buff, sizeof(line_buff_cp));
+                if (needed >= sizeof(line_buff_cp))
+                {
+                    RecordInterruption(ctx, pp, a, "Original string is too large. '%s' in '%s'",
+                                a->column.column_separator, edcontext->filename);
+                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
+                    break;
+                }
 
-                if (needed >= sizeof(line_buff_cp) - start_off) {
-                    RecordInterruption(ctx, pp, a, "Buffer overflow: replacement string is too large. '%s' in '%s'",
+                if (!ReplaceBufferSafeWrite(line_buff_cp, after, replace, start_off, end_off)) {
+                    RecordInterruption(ctx, pp, a, "Replacement string is too large. '%s' in '%s'",
                                 a->column.column_separator, edcontext->filename);
                     *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
                     break;

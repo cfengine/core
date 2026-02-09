@@ -4558,9 +4558,11 @@ static FnCallResult FnCallExpandRange(EvalContext *ctx, ARG_UNUSED const Policy 
         sscanf(template, "%[^[\[][%d-%d]%[^\n]", before, &from, &to, after);
     }
 
-    if (step_size < 1 || abs(from-to) < step_size)
+    if (step_size < 1)
     {
-        FatalError(ctx, "EXPANDRANGE Step size cannot be less than 1 or greater than the interval");
+        assert(fp->name != NULL);
+        Log(LOG_LEVEL_ERR, "%s: Step size cannot be less than 1", fp->name);
+        return FnFailure();
     }
 
     if (from == CF_NOINT || to == CF_NOINT)

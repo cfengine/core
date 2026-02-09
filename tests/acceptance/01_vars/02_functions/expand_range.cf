@@ -1,0 +1,43 @@
+# data_regextract() test
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+}
+
+bundle agent test
+{
+  vars:
+    "case1"  slist  => expandrange("case1[1-3]", 1);
+    "case1s" string => format("%S", "case1");
+    "case2"  slist  => expandrange("case2[1-10]", 3);
+    "case2s" string => format("%S", "case2");
+    "case3"  slist  => expandrange("case3[1-1]", 3);
+    "case3s" string => format("%S", "case3");
+    "case4"  slist  => expandrange("case4[1-2]", 3);
+    "case4s" string => format("%S", "case4");
+}
+
+bundle agent check
+{
+  vars:
+      "actual" string => "
+1 $(test.case1s)
+2 $(test.case2s)
+3 $(test.case3s)
+4 $(test.case4s)
+";
+
+      "expected" string => '
+1 { \"case11\", \"case12\", \"case13\" }
+2 { \"case21\", \"case24\", \"case27\", \"case210\" }
+3 { \"case31\" }
+4 { \"case41\" }
+';
+
+  methods:
+      "" usebundle => dcs_check_strcmp($(actual), $(expected),
+                                      $(this.promise_filename),
+                                      "no");
+}

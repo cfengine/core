@@ -957,7 +957,7 @@ static void AddSimpleUidItem(UidList ** uidlist, uid_t uid, char *uidname)
 
     ulp->uid = uid;
 
-    if (uid == CF_UNKNOWN_OWNER)        /* unknown user */
+    if (uid == CF_UNKNOWN_OWNER && uidname != NULL)        /* unknown user */
     {
         ulp->uidname = xstrdup(uidname);
     }
@@ -1019,7 +1019,7 @@ static void AddSimpleGidItem(GidList ** gidlist, gid_t gid, char *gidname)
 
     glp->gid = gid;
 
-    if (gid == CF_UNKNOWN_GROUP)        /* unknown group */
+    if (gid == CF_UNKNOWN_GROUP && gidname != NULL)        /* unknown group */
     {
         glp->gidname = xstrdup(gidname);
     }

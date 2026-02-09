@@ -9664,7 +9664,7 @@ struct IsReadableThreadData
     pthread_cond_t cond;
     pthread_mutex_t mutex;
     const char *path;
-    FnCallResult result;
+    bool success;
 };
 
 static void *IsReadableThreadRoutine(void *data)
@@ -9681,7 +9681,7 @@ static void *IsReadableThreadRoutine(void *data)
                          GetErrorStrFromCode(ret));
     }
 
-    thread_data->result = FnReturnContext(false);
+    thread_data->success = false;
 
     // Allow main thread to require lock on pthread_cond_timedwait(3)
     ret = pthread_mutex_unlock(&thread_data->mutex);
@@ -9706,7 +9706,7 @@ static void *IsReadableThreadRoutine(void *data)
     else
     {
         close(fd);
-        thread_data->result = FnReturnContext(true);
+        thread_data->success = true;
     }
 
     ret = pthread_cond_signal(&(thread_data->cond));
@@ -9808,13 +9808,13 @@ static FnCallResult FnCallIsReadable(ARG_UNUSED EvalContext *const ctx,
         return FnFailure();
     }
 
-    FnCallResult result;
+    bool success = false;
     // Wait on thread to finish or timeout
     ret = ThreadWait(&thread_data.cond, &thread_data.mutex, timeout);
     switch (ret)
     {
         case 0: // Thread finished in time
-            result = thread_data.result;
+            success = thread_data.success;
             break;
 
         case ETIMEDOUT: // Thread timed out
@@ -9828,8 +9828,6 @@ static FnCallResult FnCallIsReadable(ARG_UNUSED EvalContext *const ctx,
                 Log(LOG_LEVEL_ERR, "Failed to cancel thread");
                 return FnFailure();
             }
-
-            result = FnReturnContext(false);
             break;
 
         default:
@@ -9859,7 +9857,7 @@ static FnCallResult FnCallIsReadable(ARG_UNUSED EvalContext *const ctx,
         Log(LOG_LEVEL_DEBUG, "Thread was canceled");
     }
 
-    return result;
+    return FnReturnContext(success);
 }
 
 /*********************************************************************/

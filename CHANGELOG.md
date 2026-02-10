@@ -83,6 +83,10 @@
   (ENT-13535)
 - Renamed changelog file to CHANGELOG.md (ENT-13497)
 
+**Security fixes:**
+- CVE-2026-24712 - Injection in CFEngine Policy Language:
+  https://cfengine.com/blog/2026/cve-2026-24710-and-cve-2026-24711-and-cve-2026-24712/
+
 ## 3.26.0
 - Improved error message in abortbundleclasses, for example when there are
   no matches due to using a space in the regular expression (CFE-4075)

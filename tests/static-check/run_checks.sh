@@ -4,6 +4,9 @@ set -x
 
 n_procs="$(getconf _NPROCESSORS_ONLN)"
 use_procs=$((n_procs/2))
+if [ "$use_procs" -lt "0" ]; then
+  use_procs=1
+fi
 
 function check_with_gcc() {
   # previous runs may have cached configuration based on a different CC

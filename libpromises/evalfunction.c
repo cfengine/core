@@ -4539,6 +4539,8 @@ static FnCallResult FnCallMapList(EvalContext *ctx,
 
 static FnCallResult FnCallExpandRange(EvalContext *ctx, ARG_UNUSED const Policy *policy, ARG_UNUSED const FnCall *fp, const Rlist *finalargs)
 {
+    assert(fp != NULL);
+
     Rlist *newlist = NULL;
     const char *template = RlistScalarValue(finalargs);
     char *step = RlistScalarValue(finalargs->next);
@@ -4560,7 +4562,6 @@ static FnCallResult FnCallExpandRange(EvalContext *ctx, ARG_UNUSED const Policy 
 
     if (step_size < 1)
     {
-        assert(fp->name != NULL);
         Log(LOG_LEVEL_ERR, "%s: Step size cannot be less than 1", fp->name);
         return FnFailure();
     }

@@ -18,5 +18,6 @@ endif
 # tarball even without running './configure --with-selinux-policy'
 DISTFILES  = Makefile.in Makefile.am cfengine-enterprise.fc cfengine-enterprise.te.all
 DISTFILES += cfengine-enterprise.te.el9
+DISTFILES += cfengine-enterprise.te.el10
 
 CLEANFILES = cfengine-enterprise.pp cfengine-enterprise.if cfengine-enterprise.te

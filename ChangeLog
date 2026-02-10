@@ -20,6 +20,10 @@
 	  Fixed bug where rendered files can result in erroneously empty files
 	  as a result of promise locking (ENT-9980)
 
+	Security fixes:
+	- CVE-2026-24712 - Injection in CFEngine Policy Language:
+	  https://cfengine.com/blog/2026/cve-2026-24710-and-cve-2026-24711-and-cve-2026-24712/
+
 3.24.2:
 	- Adjusted cf-support for exotic UNIX platforms (ENT-9786)
 	- Adjusted cf-support to not fail if core dumps are available and gdb is

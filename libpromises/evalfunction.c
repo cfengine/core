@@ -7576,6 +7576,8 @@ static FnCallResult FnCallStrftime(ARG_UNUSED EvalContext *ctx,
                                    const FnCall *fp,
                                    const Rlist *finalargs)
 {
+    assert(fp != NULL);
+
     /* begin fn-specific content */
 
     char *mode = RlistScalarValue(finalargs);
@@ -7599,8 +7601,8 @@ static FnCallResult FnCallStrftime(ARG_UNUSED EvalContext *ctx,
     if (tm_pointer == NULL)
     {
         Log(LOG_LEVEL_WARNING,
-            "Function %s, the given time stamp '%ld' was invalid. (strftime: %s)",
-            fp->name, when, GetErrorStr());
+            "Function %s, the given time stamp '%jd' was invalid. (strftime: %s)",
+            fp->name, (intmax_t) when, GetErrorStr());
     }
     else if (PortablyFormatTime(buffer, sizeof(buffer),
                                 format_string, when, tm_pointer))

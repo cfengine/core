@@ -106,6 +106,11 @@ ENTERPRISE_VOID_FUNC_0ARG_DEFINE_STUB(void, CollectCallMarkProcessed)
 {
 }
 
+ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, NotifyNewHostSeen,
+                                      ARG_UNUSED const char *, hostkey)
+{
+}
+
 ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, FprintAvahiCfengineTag, FILE *, fp)
 {
     fprintf(fp,"<name replace-wildcards=\"yes\" >CFEngine Community %s Policy Server on %s </name>\n", Version(), "%h");

@@ -120,7 +120,7 @@ print_ps
 # cf-serverd running under valgrind can be really slow to start, let's give it
 # some time before we move on and potentially hit the wall if it's actually
 # malfunctioning
-tries=12 # max 2 minutes
+tries=24 # max 4 minutes
 while /var/cfengine/bin/cf-net -H $BOOTSTRAP_IP connect | grep Failed; do
   tries=$((tries - 1))
   if [ $tries -le 0 ]; then

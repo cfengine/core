@@ -6,6 +6,8 @@
         "augments_class_from_classexpression_and": [ "cfengine.cfengine_3::" ],
         "augments_class_from_classexpression_not": [ "!MISSING::" ],
         "augments_class_from_classexpression_or": [ "cfengine|cfengine_3::" ],
-        "augments_class_from_classexpression_complex": [ "(cfengine|cfengine_3).!MISSING::" ]
+        "augments_class_from_classexpression_complex": [ "(cfengine|cfengine_3).!MISSING::" ],
+        "augments_class_from_true": true,
+        "augments_class_from_false": false
     }
 }

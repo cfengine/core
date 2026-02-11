@@ -29,6 +29,8 @@ bundle agent main
                       "augments_class_from_classexpression_not",
                       "augments_class_from_classexpression_or",
                       "augments_class_from_classexpression_complex",
+                      "augments_class_from_true",
+                      not("augments_class_from_false")
       };
 
 

@@ -44,8 +44,13 @@ typedef enum
 bool Address2Hostkey(char *dst, size_t dst_size, const char *address);
 char *HostkeyToAddress(const char *hostkey);
 
-void LastSaw1(const char *ipaddress, const char *hashstr, LastSeenRole role);
-void LastSaw(const char *ipaddress, const unsigned char *digest, LastSeenRole role);
+/**
+ * @brief Record a host connection in the lastseen database.
+ * @return true if this is the first time the host has been seen (new host),
+ *         false if the host was already known.
+ */
+bool LastSaw1(const char *ipaddress, const char *hashstr, LastSeenRole role);
+bool LastSaw(const char *ipaddress, const unsigned char *digest, LastSeenRole role);
 
 bool DeleteIpFromLastSeen(const char *ip, char *digest, size_t digest_size);
 bool DeleteDigestFromLastSeen(const char *key, char *ip, size_t ip_size, bool a_entry_required);

@@ -423,9 +423,9 @@ bool ServerSendWelcome(const ServerConnectionState *conn)
                            "USERNAME", conn->username);
         if (ret < 0)
         {
-            Log(LOG_LEVEL_ERR, 
+            Log(LOG_LEVEL_ERR,
                 "Unexpected failure from snprintf (%d - %s) while "
-                "constructing OK WELCOME message (ServerSendWelcome)", 
+                "constructing OK WELCOME message (ServerSendWelcome)",
                 errno, GetErrorStr());
             return false;
         }

@@ -35,7 +35,7 @@ pthread_mutex_t end_mtx = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
 pthread_cond_t end_cond = PTHREAD_COND_INITIALIZER;
 
 
-void UpdateLastSawHost(const char *hostkey, const char *address,
+bool UpdateLastSawHost(const char *hostkey, const char *address,
                        bool incoming, time_t timestamp);
 
 

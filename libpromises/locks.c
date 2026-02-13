@@ -353,7 +353,7 @@ static bool NoOrObsoleteLock(LockData *entry, ARG_UNUSED size_t entry_size, size
     time_t now = time(NULL);
     if ((now - entry->time) <= (time_t) *max_old)
     {
-        Log(LOG_LEVEL_DEBUG, "Giving time to process '%d' (holding lock for %ld s)", entry->pid, (now - entry->time));
+        Log(LOG_LEVEL_DEBUG, "Giving time to process '%d' (holding lock for %jd s)", entry->pid, (intmax_t) (now - entry->time));
     }
     return ((now - entry->time) > (time_t) *max_old);
 }

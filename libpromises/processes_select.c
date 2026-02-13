@@ -708,7 +708,7 @@ static void MaybeFixStartTime(const char *line,
                     fields[j], ctime(&value));
 
                 free(fields[j]);
-                xasprintf(fields + j, "%ld", value);
+                xasprintf(fields + j, "%jd", (intmax_t) value);
             }
         }
         else if (fields[k])

@@ -1,0 +1,72 @@
+#######################################################
+#
+# Replace a pattern using non-convergent regexes
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+######################################################
+
+bundle agent init
+{
+  files:
+    "/tmp/example.txt"
+      content => "foo PORT=23 bar";
+
+}
+
+######################################################
+
+bundle agent test
+{
+  meta:
+    "description" -> { "ENT-3417" }
+      string => "Test that allow_non_convergent correctly replaces non-convergent regex";
+
+  files:
+    "/tmp/example.txt"
+      edit_line => _regex_replace( "PORT=[0-9]+", "PORT=22" );
+}
+
+bundle edit_line _regex_replace(find,replace)
+{
+  replace_patterns:
+    "$(find)"
+      replace_with => _value("$(replace)"),
+      comment => "Search and replace string",
+      allow_non_convergent => "true";
+}
+
+body replace_with _value(x)
+{
+        replace_value => "$(x)";
+        occurrences => "all";
+}
+
+######################################################
+
+bundle agent check
+{
+  vars:
+    "file_content"
+      string => readfile( "/tmp/example.txt" , "999" );
+
+  classes:
+    "ok" expression => strcmp("$(file_content)", "foo PORT=22 bar");
+
+  files:
+    "/tmp/example.txt"
+      delete => tidy;
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

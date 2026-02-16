@@ -1257,12 +1257,32 @@ static bool DeletePromisedLinesMatching(EvalContext *ctx, Item **start, Item *be
 
 /********************************************************************/
 
+static bool ReplaceBufferSafeWrite(char *line_buff, char *after, Buffer *replace, int start_off, int end_off,
+    size_t after_size, size_t line_buff_size)
+{
+    int needed;
+    // Save portion of line after substitution:
+    needed = strlcpy(after, line_buff + end_off, after_size);
+    if (needed < 0 || (size_t) needed >= after_size)
+    {
+        return false;
+    }
+    needed = snprintf(line_buff + start_off, line_buff_size - start_off,
+                "%s%s", BufferData(replace), after);
+    if (needed < 0 || (size_t) needed >= (line_buff_size - start_off))
+    {
+        return false;
+    }
+    return true;
+}
+
 static bool ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, const Attributes *a,
                             const Promise *pp, EditContext *edcontext, PromiseResult *result)
 {
     assert(a != NULL);
     assert(pp != NULL);
     assert(edcontext != NULL);
+    bool allow_non_convergent = PromiseGetConstraintAsBoolean(ctx, "allow_non_convergent", pp);
 
     char line_buff[CF_EXPANDSIZE];
     char after[CF_BUFSIZE];
@@ -1313,14 +1333,13 @@ static bool ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, 
             Log(LOG_LEVEL_VERBOSE, "Verifying replacement of '%s' with '%s', cutoff %d", pp->promiser, BufferData(replace),
                   cutoff);
 
-            // Save portion of line after substitution:
-            strlcpy(after, line_buff + end_off, sizeof(after));
-            // TODO: gripe if that truncated !
-
-            // Substitute into line_buff:
-            snprintf(line_buff + start_off, sizeof(line_buff) - start_off,
-                     "%s%s", BufferData(replace), after);
-            // TODO: gripe if that truncated or failed !
+            if (!ReplaceBufferSafeWrite(line_buff, after, replace, start_off, end_off, sizeof(after), sizeof(line_buff)))
+            {
+                RecordInterruption(ctx, pp, a, "Replacement string is too large. '%s' in '%s'",
+                               a->column.column_separator, edcontext->filename);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
+                break;
+            }
             notfound = false;
             replaced = true;
 
@@ -1330,17 +1349,40 @@ static bool ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, 
                 break;
             }
         }
-
+        char line_buff_cp[CF_EXPANDSIZE];
         if (NotAnchored(pp->promiser) && BlockTextMatch(ctx, pp->promiser, line_buff, &start_off, &end_off))
         {
-            RecordInterruption(ctx, pp, a,
-                               "Promised replacement '%s' on line '%s' for pattern '%s'"
-                               " is not convergent while editing '%s'"
-                               " (regular expression matches the replacement string)",
-                               line_buff, ip->name, pp->promiser, edcontext->filename);
-            *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
-            PromiseRef(LOG_LEVEL_ERR, pp);
-            break;
+            int needed = strlcpy(line_buff_cp, line_buff, sizeof(line_buff_cp));
+            if (needed < 0 || (size_t) needed >= sizeof(line_buff_cp))
+            {
+                RecordInterruption(ctx, pp, a, "Original string is too large. '%s' in '%s'",
+                               a->column.column_separator, edcontext->filename);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
+                break;
+            }
+
+            if (!ReplaceBufferSafeWrite(line_buff_cp, after, replace, start_off, end_off, sizeof(after), sizeof(line_buff_cp)))
+            {
+                RecordInterruption(ctx, pp, a,
+                                "Promised replacement '%s' on line '%s' for pattern '%s'"
+                                " is not convergent while editing '%s'"
+                                " (regular expression matches the replacement string)",
+                                line_buff, ip->name, pp->promiser, edcontext->filename);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
+                break;
+            }
+
+            if (!allow_non_convergent || (strlen(line_buff) != strlen(line_buff_cp)))
+            {
+                RecordInterruption(ctx, pp, a,
+                                "Promised replacement '%s' on line '%s' for pattern '%s'"
+                                " is not convergent while editing '%s'"
+                                " (regular expression matches the replacement string)",
+                                line_buff, ip->name, pp->promiser, edcontext->filename);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
+                PromiseRef(LOG_LEVEL_ERR, pp);
+                break;
+            }
         }
 
         if (!MakingChanges(ctx, pp, a, result, "replace pattern '%s' in '%s'", pp->promiser,
@@ -1366,8 +1408,25 @@ static bool ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, 
                 break;
             }
 
-            if (BlockTextMatch(ctx, pp->promiser, ip->name, &start_off, &end_off))
+            if (BlockTextMatch(ctx, pp->promiser, ip->name, &start_off, &end_off) && (!allow_non_convergent
+                || (strlen(line_buff) != strlen(line_buff_cp))))
             {
+                int needed = strlcpy(line_buff_cp, line_buff, sizeof(line_buff_cp));
+                if (needed < 0 || (size_t) needed >= sizeof(line_buff_cp))
+                {
+                    RecordInterruption(ctx, pp, a, "Original string is too large. '%s' in '%s'",
+                                a->column.column_separator, edcontext->filename);
+                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
+                    break;
+                }
+
+                if (!ReplaceBufferSafeWrite(line_buff_cp, after, replace, start_off, end_off, sizeof(after), sizeof(line_buff_cp))) {
+                    RecordInterruption(ctx, pp, a, "Replacement string is too large. '%s' in '%s'",
+                                a->column.column_separator, edcontext->filename);
+                    *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
+                    break;
+                }
+
                 RecordInterruption(ctx, pp, a,
                                    "Promised replacement '%s' for pattern '%s' is not properly convergent while editing '%s'"
                                    " (pattern still matches the end-state replacement string '%s', consider use"

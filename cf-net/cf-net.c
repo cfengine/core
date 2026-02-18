@@ -44,6 +44,7 @@
 #include <cleanup.h>
 #include <protocol.h>
 #include <sequence.h>
+#include <files_lib.h>
 
 #define ARG_UNUSED __attribute__((unused))
 
@@ -100,6 +101,8 @@ static const Description COMMANDS[] =
                 "\t\t\t(%d can be used in both the remote and output file paths when '-j' is used)"},
     {"opendir", "List files and folders in a directory",
                 "cf-net opendir masterfiles"},
+    {"getdir", "Recursively downloads files and folders in a directory",
+                "cf-net getdir masterfiles/ -o /tmp/"},
     {NULL, NULL, NULL}
 };
 
@@ -144,6 +147,7 @@ static const char *const HINTS[] =
         generator_macro(STAT)            \
         generator_macro(GET)             \
         generator_macro(OPENDIR)         \
+        generator_macro(GETDIR)          \
         generator_macro(MULTI)           \
         generator_macro(MULTITLS)        \
         generator_macro(HELP)            \
@@ -161,6 +165,12 @@ static const char *command_strings[] =
 {
     CF_NET_COMMANDS(GENERATE_STRING) NULL
 };
+
+
+//*******************************************************************
+// MACRO DECLARATIONS:
+//*******************************************************************
+#define RECURSIONLIMIT 50 // GetDir
 
 
 //*******************************************************************
@@ -197,6 +207,7 @@ static int CFNetGet(CFNetOptions *opts, const char *hostname, char **args);
 static int CFNetOpenDir(CFNetOptions *opts, const char *hostname, char **args);
 static int CFNetMulti(const char *server);
 static int CFNetMultiTLS(const char *server, const char *use_protocol_version);
+static int CFNetGetDir(CFNetOptions *opts, const char *hostname, char **args);
 
 
 //*******************************************************************
@@ -411,6 +422,8 @@ static int CFNetCommandSwitch(CFNetOptions *opts, const char *hostname,
             return CFNetGet(opts, hostname, args);
         case CFNET_CMD_OPENDIR:
             return CFNetOpenDir(opts, hostname, args);
+        case CFNET_CMD_GETDIR:
+            return CFNetGetDir(opts, hostname, args);
         case CFNET_CMD_MULTI:
             return CFNetMulti(hostname);
         case CFNET_CMD_MULTITLS:
@@ -590,6 +603,16 @@ static int CFNetHelpTopic(const char *topic)
                "\ndetermine file size. By default the file is saved as its"
                "\nbasename in current working directory (cwd). Override this"
                "\nusing the -o filename option (-o - for stdout).\n");
+    }
+    else if (strcmp("getdir", topic) == 0)
+    {
+        printf("\ncf-net getdir recursively downloads a directory from a remote host."
+           "\nIt uses OPENDIR to list contents, STAT to check file types, and GET"
+           "\nto download files. By default the directory is saved with its basename"
+           "\nin the current working directory (cwd). Override the destination using"
+           "\nthe -o path option."
+           "\n\nUsage: cf-net getdir [-o output_path] <remote_directory>"
+           "\n\nExample: cf-net getdir -o /tmp/backup masterfiles/\n");
     }
     else
     {
@@ -974,6 +997,297 @@ static int CFNetOpenDir(ARG_UNUSED CFNetOptions *opts, const char *hostname, cha
     SeqDestroy(seq);
     CFNetDisconnect(conn);
     return 0;
+}
+
+enum get_dir_error
+{
+    GET_DIR_OK = 0,
+    GET_DIR_ERROR= 1,
+    GET_DIR_RECURSION_LIMIT = 2,
+};
+
+static bool CFNetGetWithPerms(AgentConnection *conn, const char *remote_path,
+                          const char *local_path, bool print_stats)
+{
+    assert(conn != NULL);
+    assert(remote_path != NULL);
+    assert(local_path != NULL);
+
+    struct stat perms;
+    if (!ProtocolStat(conn, remote_path, &perms))
+    {
+        Log(LOG_LEVEL_ERR, "Failed to stat remote file: %s:%s",
+            conn->this_server, remote_path);
+        return false;
+    }
+
+    if (!ProtocolGet(conn, remote_path, local_path, perms.st_size, perms.st_mode, print_stats))
+    {
+        Log(LOG_LEVEL_ERR, "Failed to get remote file: %s:%s",
+            conn->this_server, remote_path);
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * @brief Creates a local directory path with specified permissions
+ *
+ * This helper function constructs and creates a directory path relative
+ * to a provided base path. Handling path construction and creating 
+ * parent directories as needed.
+ *
+ * @param local_base      Base directory path for the new directory
+ * @param subdir          Subdirectory name to create
+ * @param perms           Permission mode bits to apply to created directories
+ *
+ * @return true if the directory exists or was successfully created, false otherwise
+ */
+static bool create_local_dir(const char *local_base, const char *subdir, mode_t perms)
+{
+    char path[PATH_MAX];
+
+    int written = snprintf(path, sizeof(path), "%s/%s/", local_base, subdir);
+
+    if (written < 0 || (size_t) written >= sizeof(path))
+    {
+        Log(LOG_LEVEL_ERR, "Path too long for new directory: %s", subdir);
+        return false;
+    }
+
+    bool force = false;
+    return MakeParentDirectoryPerms(path, force, NULL, perms);
+}
+
+static int process_dir_recursive(AgentConnection *conn,
+                                 const char *remote_path,
+                                 const char *local_path,
+                                 bool print_stats,
+                                 int limit)
+{
+    int ret = 0;
+    if (limit <= 0)
+    {
+        Log(LOG_LEVEL_ERR, "Recursion limit reached");
+        return GET_DIR_RECURSION_LIMIT;
+    }
+
+    Seq *items = ProtocolOpenDir(conn, remote_path);
+    if (items == NULL)
+    {
+        return GET_DIR_ERROR;
+    }
+
+    for (size_t i = 0; i < SeqLength(items); i++)
+    {
+        const char *item = SeqAt(items, i);
+
+        if (strcmp(".", item) == 0 || strcmp("..", item) == 0)
+        {
+            continue;
+        }
+
+        char remote_full[PATH_MAX];
+        int written = snprintf(remote_full, sizeof(remote_full), "%s/%s", remote_path, item);
+        if (written < 0 || (size_t) written >= sizeof(remote_full))
+        {
+            Log(LOG_LEVEL_ERR,
+                "Path too long for building full remote path: %s/%s",
+                remote_path, item);
+            SeqDestroy(items);
+            return GET_DIR_ERROR;
+        }
+
+        char local_full[PATH_MAX];
+        written = snprintf(local_full, sizeof(local_full), "%s/%s", local_path, item);
+        if (written < 0 || (size_t) written >= sizeof(local_full))
+        {
+            Log(LOG_LEVEL_ERR,
+                "Path too long for building full local path: %s/%s",
+                local_path, item);
+            SeqDestroy(items);
+            return GET_DIR_ERROR;
+        }
+
+        struct stat sb;
+        if (!ProtocolStat(conn, remote_full, &sb))
+        {
+            Log(LOG_LEVEL_ERR, "Could not stat: %s", remote_full);
+            SeqDestroy(items);
+            return GET_DIR_ERROR;
+        }
+
+        if (S_ISDIR(sb.st_mode)) // Is directory
+        {
+            if (!create_local_dir(local_path, item, sb.st_mode))
+            {
+                // Error already logged
+                SeqDestroy(items);
+                return GET_DIR_ERROR;
+            }
+            ret = process_dir_recursive(conn, remote_full, local_full,
+                                        print_stats, (limit - 1));
+
+            if (ret != GET_DIR_OK)
+            {
+                SeqDestroy(items);
+                return ret;
+            }
+        }
+        else
+        {
+            if (!CFNetGetWithPerms(conn, remote_full, local_full, print_stats))
+            {
+                SeqDestroy(items);
+                return GET_DIR_ERROR;
+            }
+        }
+    }
+
+    SeqDestroy(items);
+    return ret;
+}
+
+static int CFNetGetDir(CFNetOptions *opts, const char *hostname, char **args)
+{
+    assert(opts != NULL);
+    assert(hostname != NULL);
+    assert(args != NULL);
+
+    char *local_dir = NULL;
+    bool specified_path = false;
+
+    int argc = 0;
+    while (args[argc] != NULL)
+    {
+        ++argc;
+    }
+
+    static struct option longopts[] = {
+         { "output",     required_argument,      NULL,          'o' },
+         { NULL,         0,                      NULL,           0  }
+    };
+    if (argc <= 1)
+    {
+        return invalid_command("getdir");
+    }
+    extern int optind;
+    optind = 0;
+    extern char *optarg;
+    int c = 0;
+    const char *optstr = "o:";
+    while ((c = getopt_long(argc, args, optstr, longopts, NULL))
+            != -1)
+    {
+        switch (c)
+        {
+            case 'o':
+            {
+                if (local_dir != NULL)
+                {
+                    Log(LOG_LEVEL_INFO,
+                        "Warning: multiple occurrences of -o in command, "\
+                        "only last one will be used.");
+                    free(local_dir);
+                }
+                local_dir = xstrdup(optarg);
+                specified_path = true;
+                break;
+            }
+            case ':':
+            case '?':
+            {
+                free(local_dir);
+                return invalid_command("getdir");
+            }
+            default:
+            {
+                printf("Default optarg = '%s', c = '%c' = %i\n",
+                       optarg, c, (int)c);
+                break;
+            }
+        }
+    }
+
+    if (optind >= argc || args[optind] == NULL)
+    {
+        free(local_dir);
+        return invalid_command("getdir");
+    }
+    args = &(args[optind]);
+    argc -= optind;
+
+    const char *remote_dir = args[0];
+    char *tmp  = xstrdup(remote_dir);
+    char *base = xstrdup(basename(tmp));
+    free(tmp);
+
+    char cwd[PATH_MAX];
+    if (!specified_path && getcwd(cwd, sizeof(cwd)) == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to get current working directory: %s", GetErrorStr());
+        free(base);
+        free(local_dir);
+        return -1;
+    }
+
+    tmp = local_dir;
+    local_dir = StringFormat("%s/%s/", (specified_path ? local_dir : cwd), base);
+    free(tmp);
+
+    if (strlen(local_dir) > PATH_MAX)
+    {
+        Log(LOG_LEVEL_ERR, "Path: %s greater than PATH_MAX", local_dir);
+        free(base);
+        free(local_dir);
+        return -1;
+    }
+
+    AgentConnection *conn = CFNetOpenConnection(hostname, opts->use_protocol_version);
+    if (conn == NULL)
+    {
+        free(local_dir);
+        free(base);
+        return -1;
+    }
+    struct stat sb;
+    if (!ProtocolStat(conn, remote_dir, &sb))
+    {
+        printf("Could not stat: '%s'\n", remote_dir);
+        free(local_dir);
+        free(base);
+        CFNetDisconnect(conn);
+        return -1;
+    }
+    if (!S_ISDIR(sb.st_mode))
+    {
+        printf("'%s' is not a directory, use 'get' for single file download\n",
+                remote_dir);
+        free(local_dir);
+        free(base);
+        CFNetDisconnect(conn);
+        return -1;
+    }
+
+    int ret = process_dir_recursive(conn,
+                                    remote_dir,
+                                    local_dir,
+                                    opts->print_stats,
+                                    RECURSIONLIMIT);
+    if (ret == GET_DIR_RECURSION_LIMIT)
+    {
+        // Already logged
+    }
+    else if (ret == GET_DIR_ERROR)
+    {
+        Log(LOG_LEVEL_INFO, "Failed to copy contents of %s", remote_dir);
+    }
+
+    free(local_dir);
+    free(base);
+    CFNetDisconnect(conn);
+    return (ret == GET_DIR_OK) ? 0 : -1;
 }
 
 static int CFNetMulti(const char *server)

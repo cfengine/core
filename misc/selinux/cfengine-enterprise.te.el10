@@ -1,0 +1,48 @@
+require {
+    type devpts_t;
+    type systemd_userdbd_runtime_t;
+    type systemd_userdbd_t;
+}
+
+#============= cfengine_apachectl_t ==============
+allow cfengine_apachectl_t devpts_t:dir { getattr search };
+allow cfengine_apachectl_t proc_t:file getattr;
+allow cfengine_apachectl_t self:capability { dac_override dac_read_search sys_ptrace };
+allow cfengine_apachectl_t sysfs_t:dir read;
+allow cfengine_apachectl_t sysfs_t:file { open read };
+allow cfengine_apachectl_t tty_device_t:chr_file getattr;
+allow cfengine_apachectl_t user_devpts_t:chr_file getattr;
+
+# selinux-policy requires the following http_port permissions whereas 3.14.3 does not.
+# these permissions are not be needed if changes from ENT-12954 to masterfiles policy move inventory from common to an agent bundle are in place.
+#============= cfengine_execd_t ==============
+allow cfengine_execd_t http_port_t:tcp_socket name_connect;
+
+#============= cfengine_httpd_t ==============
+allow cfengine_httpd_t hugetlbfs_t:file { read write };
+allow cfengine_httpd_t systemd_userdbd_runtime_t:dir { open read getattr search };
+allow cfengine_httpd_t systemd_userdbd_runtime_t:lnk_file read;
+allow cfengine_httpd_t systemd_userdbd_runtime_t:sock_file write;
+allow cfengine_httpd_t systemd_userdbd_t:unix_stream_socket connectto;
+allow cfengine_httpd_t kernel_t:unix_stream_socket connectto;
+
+#============= cfengine_hub_t ==============
+allow cfengine_hub_t cfengine_httpd_exec_t:file getattr;
+allow cfengine_hub_t sysfs_t:lnk_file read;
+
+#============= cfengine_postgres_t ==============
+allow cfengine_postgres_t systemd_userdbd_runtime_t:dir { open read getattr search };
+allow cfengine_postgres_t systemd_userdbd_runtime_t:lnk_file read;
+allow cfengine_postgres_t systemd_userdbd_runtime_t:sock_file write;
+allow cfengine_postgres_t systemd_userdbd_t:unix_stream_socket connectto;
+allow cfengine_postgres_t kernel_t:unix_stream_socket connectto;
+
+#============= cfengine_reactor_t ==============
+allow cfengine_reactor_t systemd_userdbd_runtime_t:dir { open read getattr search };
+allow cfengine_reactor_t systemd_userdbd_runtime_t:lnk_file read;
+allow cfengine_reactor_t systemd_userdbd_runtime_t:sock_file write;
+allow cfengine_reactor_t systemd_userdbd_t:unix_stream_socket connectto;
+allow cfengine_reactor_t kernel_t:unix_stream_socket connectto;
+
+#============= cfengine_serverd_t ==============
+allow cfengine_serverd_t http_port_t:tcp_socket name_connect;

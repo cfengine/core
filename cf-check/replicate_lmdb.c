@@ -1,3 +1,4 @@
+#include <platform.h> // #define LMDB
 #include <logging.h>
 #include <diagnose.h>
 #include <replicate_lmdb.h>

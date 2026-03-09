@@ -1229,7 +1229,16 @@ AC_CHECK_DECLS(getaddrinfo, [], [], [[
 #endif
 ]])
 
-AC_CHECK_DECLS([[inet_ntop], [inet_pton]], [], [], [[#include <arpa/inet.h>]])
+AC_CHECK_DECLS([[inet_ntop], [inet_pton]], [], [], [[
+#if HAVE_WINSOCK2_H
+    #include <winsock2.h>
+#endif
+#if HAVE_WS2TCPIP_H
+    #include <ws2tcpip.h>
+#else
+    #include <arpa/inet.h>
+#endif
+]])
 
 AC_CHECK_FUNCS(getifaddrs)
 

@@ -135,7 +135,9 @@ AC_DEFUN([HW_FUNC_VSNPRINTF],
             return 1;]])],
         [hw_cv_func_vsnprintf_c99=yes],
         [hw_cv_func_vsnprintf_c99=no],
-        [hw_cv_func_vsnprintf_c99=no])])],
+        [AS_CASE([$host_os],
+          [mingw*], [hw_cv_func_vsnprintf_c99=yes],
+          [hw_cv_func_vsnprintf_c99=no])])])],
     [hw_cv_func_snprintf_c99=no])
   AS_IF(
     [test "$hw_cv_func_vsnprintf_c99" = yes],
@@ -178,7 +180,9 @@ AC_DEFUN([HW_FUNC_SNPRINTF],
             return 1;]])],
         [hw_cv_func_snprintf_c99=yes],
         [hw_cv_func_snprintf_c99=no],
-        [hw_cv_func_snprintf_c99=no])])],
+        [AS_CASE([$host_os],
+          [mingw*], [hw_cv_func_snprintf_c99=yes],
+          [hw_cv_func_snprintf_c99=no])])])],
     [hw_cv_func_snprintf_c99=no])
   AS_IF(
     [test "$hw_cv_func_snprintf_c99" = yes],

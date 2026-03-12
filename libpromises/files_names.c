@@ -124,31 +124,6 @@ bool IsNewerFileTree(const char *dir, time_t reftime)
 
 /*********************************************************************/
 
-bool IsDir(const char *path)
-/*
-Checks if the object pointed to by path exists and is a directory.
-Returns true if so, false otherwise.
-*/
-{
-#ifdef __MINGW32__
-    return NovaWin_IsDir(path);
-#else
-    struct stat sb;
-
-    if (stat(path, &sb) != -1)
-    {
-        if (S_ISDIR(sb.st_mode))
-        {
-            return true;
-        }
-    }
-
-    return false;
-#endif /* !__MINGW32__ */
-}
-
-/*********************************************************************/
-
 char *JoinSuffix(char *path, size_t path_size, const char *leaf)
 {
     int len = strlen(leaf);

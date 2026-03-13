@@ -469,6 +469,10 @@ static PromiseResult VerifyFilePromise(EvalContext *ctx, char *path, const Promi
                 Log(LOG_LEVEL_ERR, "%s. There may be a symlink in the path that has a different "
                     "owner from the owner of its target (security risk).", msg);
             }
+            else if (errno == ENOENT)
+            {
+                Log(LOG_LEVEL_INFO, "%s - Attempting to create...", msg);
+            }
             else
             {
                 Log(LOG_LEVEL_ERR, "%s", msg);

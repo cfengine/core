@@ -40,6 +40,6 @@ bundle agent run
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ R: All files that match '/[tT][mM][pP]' = /tmp
+#@ R: All files that match '/[tT][mM][pP]' = /tmp/
 #@ ```
 #+end_src

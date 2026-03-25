@@ -74,15 +74,15 @@ bundle agent check
 {
   vars:
     !windows::
-      "expected[a]" string => "$(G.testdir)/a,$(G.testdir)/d,$(G.testdir)/g";
-      "expected[b]" string => "$(G.testdir)/a,$(G.testdir)/bc,$(G.testdir)/d,$(G.testdir)/g,$(G.testdir)/klm,$(G.testdir)/tu";
+      "expected[a]" string => "$(G.testdir)/a,$(G.testdir)/d/,$(G.testdir)/g/";
+      "expected[b]" string => "$(G.testdir)/a,$(G.testdir)/bc,$(G.testdir)/d/,$(G.testdir)/g/,$(G.testdir)/klm/,$(G.testdir)/tu/";
 
-      "expected[c]" string => "$(G.testdir)/d/e,$(G.testdir)/g/h";
+      "expected[c]" string => "$(G.testdir)/d/e/,$(G.testdir)/g/h/";
       "expected[d]" string => "$(G.testdir)/a,$(G.testdir)/bc";
       "expected[e]" string => "";
 
       "expected[f]" string => "$(G.testdir)/tu/*";
-      "expected[g]" string => "$(G.testdir)/a,$(G.testdir)/bc,$(G.testdir)/d,$(G.testdir)/g,$(G.testdir)/klm,$(G.testdir)/tu,$(G.testdir)/d/e,$(G.testdir)/g/h,$(G.testdir)/klm/nop,$(G.testdir)/tu/*,$(G.testdir)/d/e/f,$(G.testdir)/g/h/i,$(G.testdir)/klm/nop/qrs,$(G.testdir)/g/h/i/j";
+      "expected[g]" string => "$(G.testdir)/a,$(G.testdir)/bc,$(G.testdir)/d/,$(G.testdir)/g/,$(G.testdir)/klm/,$(G.testdir)/tu/,$(G.testdir)/d/e/,$(G.testdir)/g/h/,$(G.testdir)/klm/nop/,$(G.testdir)/tu/*,$(G.testdir)/d/e/f,$(G.testdir)/g/h/i/,$(G.testdir)/klm/nop/qrs,$(G.testdir)/g/h/i/j";
       "expected[h]" string => "$(G.testdir)/g/h/i/j";
     windows::
       "expected[a]" string => "$(G.testdir)\\a,$(G.testdir)\\d,$(G.testdir)\\g";

@@ -74,12 +74,12 @@ bundle agent check
         );
       "c3"
         expression => and(
-          strcmp("$(G.testdir)\\core\\libntech\\.git", "$(test.t3[0])"),
-          strcmp("$(G.testdir)\\core\\.git", "$(test.t3[1])")
+          strcmp("$(G.testdir)\\core\\libntech\\.git\\", "$(test.t3[0])"),
+          strcmp("$(G.testdir)\\core\\.git\\", "$(test.t3[1])")
         );
       "c4"
         expression => and(
-          strcmp("$(G.testdir)\\core\\libntech\\.git", "$(test.t4[0])"),
+          strcmp("$(G.testdir)\\core\\libntech\\.git\\", "$(test.t4[0])"),
           not(isvariable("test.t4[1]"))
         );
       "c5"
@@ -106,12 +106,12 @@ bundle agent check
         );
       "c3"
         expression => and(
-          strcmp("$(G.testdir)/core/libntech/.git", "$(test.t3[0])"),
-          strcmp("$(G.testdir)/core/.git", "$(test.t3[1])")
+          strcmp("$(G.testdir)/core/libntech/.git/", "$(test.t3[0])"),
+          strcmp("$(G.testdir)/core/.git/", "$(test.t3[1])")
         );
       "c4"
         expression => and(
-          strcmp("$(G.testdir)/core/libntech/.git", "$(test.t4[0])"),
+          strcmp("$(G.testdir)/core/libntech/.git/", "$(test.t4[0])"),
           not(isvariable("test.t4[1]"))
         );
       "c5"

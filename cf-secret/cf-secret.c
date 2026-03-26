@@ -951,6 +951,11 @@ int main(int argc, char *argv[])
 
     if (print_headers)
     {
+        if (input_path == NULL)
+        {
+            Log(LOG_LEVEL_ERR, "No input file specified (Use -h for help)");
+            DoCleanupAndExit(EXIT_FAILURE);
+        }
         FILE *input_file = OpenInputOutput(input_path, "r");
         char key[MAX_HEADER_KEY_LEN + 1];
         char value[MAX_HEADER_VAL_LEN + 1];

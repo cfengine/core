@@ -101,6 +101,7 @@ static void exec_config_empty_cb(const EvalContext *ctx, const Policy *policy)
     /* FIXME: exec-config should provide default subject */
     assert_string_equal("", config->mail_subject);
     assert_int_equal(30, config->mail_max_lines);
+    assert_int_equal(25, config->mail_port);
     assert_string_equal("localhost.localdomain", config->fq_name);
     assert_string_equal("127.0.0.100", config->ip_address);
     assert_string_equal("127.0.0.100 127.0.0.101", config->ip_addresses);
@@ -123,6 +124,7 @@ static void CheckFullExecConfig(const ExecConfig *config)
     assert_string_equal("cfengine_mail@example.org", config->mail_to_address);
     assert_string_equal("Test [localhost/127.0.0.1]", config->mail_subject);
     assert_int_equal(50, config->mail_max_lines);
+    assert_int_equal(25, config->mail_port);
     assert_string_equal("localhost.localdomain", config->fq_name);
     assert_string_equal("127.0.0.100", config->ip_address);
     assert_string_equal("127.0.0.100 127.0.0.101", config->ip_addresses);

@@ -394,6 +394,7 @@ const ConstraintSyntax CFEX_CONTROLBODY[] = /* enum cfexcontrol */
     ConstraintSyntaxNewString("exec_command", CF_ABSPATHRANGE,"The full path and command to the executable run by default (overriding builtin)", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("agent_expireafter", "0,10080", "Maximum agent runtime (in minutes). Default value: 120", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("runagent_socket_allow_users", "", "Users allowed to work with the runagent.socket to trigger agent runs", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("smtpport", "0,10080", "Port used for sending mail", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

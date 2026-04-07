@@ -151,6 +151,16 @@ ExecConfig *ExecConfigNew(bool scheduled_run, const EvalContext *ctx, const Poli
     exec_config->ip_address = xstrdup(VIPADDRESS);
     exec_config->ip_addresses = GetIpAddresses(ctx);
 
+    struct servent *server = getservbyname("smtp", "tcp");
+    if (!server)
+    {
+        exec_config->mail_port = 25;
+    }
+    else
+    {
+        exec_config->mail_port = ntohs(server->s_port);
+    }
+
     Seq *constraints = ControlBodyConstraints(policy, AGENT_TYPE_EXECUTOR);
     if (constraints)
     {
@@ -199,6 +209,11 @@ ExecConfig *ExecConfigNew(bool scheduled_run, const EvalContext *ctx, const Poli
                 exec_config->mail_server = xstrdup(value);
                 Log(LOG_LEVEL_DEBUG, "smtpserver '%s'", exec_config->mail_server);
             }
+            else if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_SMTPPORT].lval) == 0)
+            {
+                exec_config->mail_port = IntFromString(value);
+                Log(LOG_LEVEL_DEBUG, "smtpport '%d'", exec_config->mail_port);
+            }
             else if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_EXECCOMMAND].lval) == 0)
             {
                 free(exec_config->exec_command);
@@ -237,12 +252,14 @@ ExecConfig *ExecConfigNew(bool scheduled_run, const EvalContext *ctx, const Poli
 
 ExecConfig *ExecConfigCopy(const ExecConfig *config)
 {
+    assert(config != NULL);
     ExecConfig *copy = xcalloc(1, sizeof(ExecConfig));
 
     copy->scheduled_run = config->scheduled_run;
     copy->exec_command = xstrdup(config->exec_command);
     copy->agent_expireafter = config->agent_expireafter;
     copy->mail_server = xstrdup(config->mail_server);
+    copy->mail_port = config->mail_port;
     copy->mail_from_address = xstrdup(config->mail_from_address);
     copy->mail_to_address = xstrdup(config->mail_to_address);
     copy->mail_subject = xstrdup(config->mail_subject);

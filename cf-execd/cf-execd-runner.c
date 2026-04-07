@@ -564,6 +564,7 @@ static bool CompareResultEqualOrFiltered(const ExecConfig *config,
 #ifndef TEST_CF_EXECD
 int ConnectToSmtpSocket(const ExecConfig *config)
 {
+    assert(config != NULL);
     struct hostent *hp = gethostbyname(config->mail_server);
     if (!hp)
     {
@@ -572,17 +573,11 @@ int ConnectToSmtpSocket(const ExecConfig *config)
         return -1;
     }
 
-    struct servent *server = getservbyname("smtp", "tcp");
-    if (!server)
-    {
-        Log(LOG_LEVEL_ERR, "Mail report: unable to lookup smtp service. (getservbyname: %s)", GetErrorStr());
-        return -1;
-    }
-
     struct sockaddr_in raddr;
     memset(&raddr, 0, sizeof(raddr));
 
-    raddr.sin_port = (unsigned int) server->s_port;
+    /* conevrt the SMTP port in network byte order */
+    raddr.sin_port = htons(config->mail_port);
     raddr.sin_addr.s_addr = ((struct in_addr *) (hp->h_addr))->s_addr;
     raddr.sin_family = AF_INET;
 

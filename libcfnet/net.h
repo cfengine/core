@@ -36,6 +36,7 @@ extern uint32_t bwlimit_kbytes;
 
 int SendTransaction(ConnectionInfo *conn_info, const char *buffer, int len, char status);
 int ReceiveTransaction(ConnectionInfo *conn_info, char *buffer, int *more);
+int SendHeartbeat(ConnectionInfo *conn_info);
 
 int SetReceiveTimeout(int fd, unsigned long ms);
 

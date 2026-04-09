@@ -32,7 +32,14 @@
 #include <misc_lib.h>
 #include <cf3.defs.h>
 #include <protocol.h>
+#include <protocol_version.h>
 
+/* Maximum seconds to spend consuming heartbeats before aborting.
+ * Slightly above the 120s wait gate timeout to allow for the
+ * legitimate use case. A count-based limit would be wrong here —
+ * a malicious peer could send 1 heartbeat every 29.9s (just under
+ * SO_RCVTIMEO) to hold the connection for hours. */
+#define MAX_HEARTBEAT_DURATION 150
 
 /* TODO remove libpromises dependency. */
 extern char BINDINTERFACE[CF_MAXVARSIZE];                  /* cf3globals.c, cf3.extern.h */
@@ -131,11 +138,31 @@ int SendTransaction(ConnectionInfo *conn_info,
     }
 }
 
+/**
+ * Send a heartbeat transaction to keep the connection alive during
+ * long-running server-side operations.
+ *
+ * No-op if the protocol version does not support heartbeats.
+ * Heartbeats are silently consumed by ReceiveTransaction() on the
+ * receiving end - callers never see them.
+ *
+ * @return 0 on success (or no-op), -1 on error
+ */
+int SendHeartbeat(ConnectionInfo *conn_info)
+{
+    assert(conn_info != NULL);
+    if (!ProtocolSupportsHeartbeat(conn_info->protocol))
+    {
+        return 0;
+    }
+    return SendTransaction(conn_info, "HEARTBEAT", sizeof("HEARTBEAT"), CF_MORE);
+}
+
 /*************************************************************************/
 
 /**
- *  Receive a transaction packet of at most CF_BUFSIZE-1 bytes, and
- *  NULL-terminate it.
+ *  Receive a single transaction packet of at most CF_BUFSIZE-1 bytes,
+ *  and NULL-terminate it.
  *
  *  @param #buffer must be of size at least CF_BUFSIZE.
  *
@@ -146,8 +173,10 @@ int SendTransaction(ConnectionInfo *conn_info,
  *  @TODO shutdown() the connection in all cases were this function returns -1,
  *        in order to protect against future garbage reads.
  */
-int ReceiveTransaction(ConnectionInfo *conn_info, char *buffer, int *more)
+static int ReceiveTransactionInner(ConnectionInfo *conn_info, char *buffer, int *more)
 {
+    assert(conn_info != NULL);
+
     char proto[CF_INBAND_OFFSET + 1] = { 0 };
     int ret;
 
@@ -281,6 +310,52 @@ int ReceiveTransaction(ConnectionInfo *conn_info, char *buffer, int *more)
     LogRaw(LOG_LEVEL_DEBUG, "ReceiveTransaction data: ", buffer, ret);
 
     return ret;
+}
+
+/**
+ *  Receive a transaction packet, silently consuming any heartbeat
+ *  transactions (ENT-13699). Callers never see heartbeats.
+ *
+ *  @see ReceiveTransactionInner() for parameter and return value details.
+ */
+int ReceiveTransaction(ConnectionInfo *conn_info, char *buffer, int *more)
+{
+    assert(conn_info != NULL);
+
+    time_t heartbeat_start = 0;
+
+    while (true)
+    {
+        int ret = ReceiveTransactionInner(conn_info, buffer, more);
+        if (ret == -1)
+        {
+            return -1;
+        }
+
+        /* Silently consume heartbeat transactions so callers
+         * never need to handle them. */
+        if (ProtocolSupportsHeartbeat(conn_info->protocol)
+            && ret == (int) sizeof("HEARTBEAT")
+            && memcmp(buffer, "HEARTBEAT", sizeof("HEARTBEAT")) == 0)
+        {
+            if (heartbeat_start == 0)
+            {
+                heartbeat_start = time(NULL);
+            }
+            if (time(NULL) - heartbeat_start > MAX_HEARTBEAT_DURATION)
+            {
+                Log(LOG_LEVEL_WARNING,
+                    "ReceiveTransaction: heartbeats exceeded %ds, aborting",
+                    MAX_HEARTBEAT_DURATION);
+                conn_info->status = CONNECTIONINFO_STATUS_BROKEN;
+                return -1;
+            }
+            Log(LOG_LEVEL_DEBUG, "ReceiveTransaction: heartbeat received");
+            continue;
+        }
+
+        return ret;
+    }
 }
 
 /* BWlimit global variables

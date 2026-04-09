@@ -37,6 +37,10 @@ ProtocolVersion ParseProtocolVersionPolicy(const char *const s)
     {
         return CF_PROTOCOL_FILESTREAM;
     }
+    else if (StringEqual(s, "5") || StringEqual(s, "heartbeat"))
+    {
+        return CF_PROTOCOL_HEARTBEAT;
+    }
     else if (StringEqual(s, "latest"))
     {
         return CF_PROTOCOL_LATEST;

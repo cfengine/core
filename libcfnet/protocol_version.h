@@ -40,10 +40,11 @@ typedef enum
     CF_PROTOCOL_TLS = 2,
     CF_PROTOCOL_COOKIE = 3,
     CF_PROTOCOL_FILESTREAM = 4,
+    CF_PROTOCOL_HEARTBEAT = 5,
 } ProtocolVersion;
 
 /* We use CF_PROTOCOL_LATEST as the default for new connections. */
-#define CF_PROTOCOL_LATEST CF_PROTOCOL_FILESTREAM
+#define CF_PROTOCOL_LATEST CF_PROTOCOL_HEARTBEAT
 
 static inline const char *ProtocolVersionString(const ProtocolVersion p)
 {
@@ -57,6 +58,8 @@ static inline const char *ProtocolVersionString(const ProtocolVersion p)
         return "classic";
     case CF_PROTOCOL_FILESTREAM:
         return "filestream";
+    case CF_PROTOCOL_HEARTBEAT:
+        return "heartbeat";
     default:
         return "undefined";
     }
@@ -90,6 +93,11 @@ static inline bool ProtocolIsClassic(const ProtocolVersion p)
 static inline bool ProtocolSupportsFileStream(const ProtocolVersion p)
 {
     return (p >= CF_PROTOCOL_FILESTREAM);
+}
+
+static inline bool ProtocolSupportsHeartbeat(const ProtocolVersion p)
+{
+    return (p >= CF_PROTOCOL_HEARTBEAT);
 }
 
 static inline bool ProtocolTerminateCSV(const ProtocolVersion p)

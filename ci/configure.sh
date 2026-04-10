@@ -6,7 +6,12 @@ thisdir="$(dirname "$0")"
 cd "$thisdir"/..
 OPTS="--enable-debug"
 
-if [ -n "$TERMUX_VERSION" ]; then
+source /etc/os-release
+if [ "$ID" = "alpine" ]; then
+    OPTS="" # we don't want --enable-debug so that libpromises/dbm_test_api is not built due to lack of srand48_r() and friends on alpine linux libmusl
+fi
+
+if [ -n "$TERMUX_VERSION" ] || [ "$ID" = "alpine" ]; then
     OPTS="$OPTS --without-pam"
 fi
 

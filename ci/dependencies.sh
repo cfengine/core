@@ -72,6 +72,9 @@ if [ -f /etc/os-release ]; then
             echo "Unsupported version of redhat for $0"
             exit 1
         fi
+        elif [ "$ID" = "alpine" ]; then
+            $GAINROOT apk update
+            $GAINROOT apk add alpine-sdk lmdb-dev openssl-dev bison flex-dev acl-dev pcre2-dev autoconf automake libtool git python3 gdb librsync-dev
     elif [ "$ID" = "debian" ] || [[ "$ID_LIKE" =~ "debian" ]]; then
         $GAINROOT apt update --yes
         $GAINROOT apt install --yes build-essential git libtool autoconf automake bison flex libssl-dev libpcre2-dev libbison-dev libacl1 libacl1-dev lmdb-utils liblmdb-dev libpam0g-dev libtool libyaml-dev libxml2-dev librsync-dev

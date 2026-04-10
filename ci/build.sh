@@ -5,4 +5,11 @@ set -ex
 thisdir="$(dirname "$0")"
 cd "$thisdir"/..
 
-make -j8 CFLAGS="-Werror -Wall"
+source /etc/os-release
+CFLAGS="-Wall"
+if [ "$ID" != "alpine" ]; then
+  CFLAGS="$CFLAGS -Werror"
+  # on alpine, with lib musl, there are not re-entrant random functions e.g. srand48_r, lrand48_r see CFE-4654
+fi
+export CFLAGS
+make -j8

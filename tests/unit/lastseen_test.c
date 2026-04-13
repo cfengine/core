@@ -10,7 +10,7 @@
 
 char CFWORKDIR[CF_BUFSIZE];
 
-bool UpdateLastSawHost(const char *hostkey, const char *address,
+void UpdateLastSawHost(const char *hostkey, const char *address,
                        bool incoming, time_t timestamp);
 
 /* For abbreviation of tests. */

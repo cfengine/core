@@ -18,3 +18,4 @@ if [ ! -n "$TERMUX_VERSION" ]; then
 fi
 
 $GAINROOT make install
+$GAINROOT /var/cfengine/bin/cf-key # to generate the hostkey

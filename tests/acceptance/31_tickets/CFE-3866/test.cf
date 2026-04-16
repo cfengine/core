@@ -1,0 +1,93 @@
+body file control
+{
+        inputs => {
+                    "../../default.cf.sub",
+        };
+}
+
+bundle agent __main__
+{
+  methods:
+        "bundlesequence"  usebundle => default("$(this.promise_filename)");
+}
+
+bundle agent init
+{
+  files:
+      "$(G.testfile)"
+        delete => init_delete;
+}
+
+body delete init_delete
+{
+      dirlinks => "delete";
+      rmdirs   => "true";
+}
+
+bundle agent test
+{
+  meta:
+      "description"
+        string => "Test that select_region converges across multiple edit_line passes when the region is created in an earlier pass",
+        meta => { "CFE-3866" };
+
+  files:
+      "$(G.testfile)"
+        create => "true",
+        edit_line => insert_section_then_add_content;
+}
+
+bundle edit_line insert_section_then_add_content
+{
+  # First promise: Create the section header
+  insert_lines:
+      "[section]"
+        location => start;
+
+  # Second promise: Add content within the section using select_region
+  # This should converge even though the section didn't exist when
+  # select_region was first evaluated (pass 1)
+
+  insert_lines:
+      "key=value"
+        location => append,
+        select_region => section_region;
+}
+
+body location append
+{
+      before_after => "after";
+}
+
+body select_region section_region
+{
+      select_start => "^\[section\]";
+      include_start_delimiter => "true";
+      select_end => "^\[.*\]";
+      select_end_match_eof => "true";
+}
+
+bundle agent check
+{
+  vars:
+      "expected"
+        string => "[section]
+key=value
+";
+
+      "actual"
+        string => readfile("$(G.testfile)", "1000");
+
+  classes:
+      "ok" expression => strcmp("$(expected)", "$(actual)");
+
+  reports:
+    DEBUG::
+      "Expected: '$(expected)'";
+      "Actual: '$(actual)'";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

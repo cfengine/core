@@ -1,5 +1,24 @@
 #!/bin/bash
 
+# This test script builds and installs CFEngine, and runs our binaries
+# with valgrind to look for memory leaks, and similar.
+#
+# It is normally run inside a container (see Containerfile next to it).
+# If you want to run it without a container, you can.
+# It assumes a few things:
+# 1. Must be run from inside core (CWD)
+# 2. Masterfiles must be at ../masterfiles
+# 3. Normal build tools must be installed, and valgrind and diff
+# 4. Must be run using sudo / as root, or have necessary permissions
+# 5. CFEngine should not already be installed
+#
+# In order to run this in an Ubuntu VM, you can do something like this:
+# sudo apt-get install -y build-essential git libtool autoconf automake bison flex libssl-dev libpcre2-dev libbison-dev libacl1 libacl1-dev lmdb-utils liblmdb-dev libpam0g-dev libtool libyaml-dev libxml2-dev librsync-dev valgrind
+# git clone https://github.com/cfengine/masterfiles
+# git clone --recursive https://github.com/cfengine/core
+# cd core
+# sudo bash tests/valgrind-check/valgrind.sh
+
 function print_ps {
     set +e
     echo "CFEngine processes:"

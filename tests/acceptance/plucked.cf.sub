@@ -24,12 +24,31 @@ bundle agent run_ifdefined(namespace, mybundle)
 
   methods:
       "any"
-      usebundle  => $(bundlesfound),
-      ifvarclass => strcmp(1, $(count));
+      usebundle => $(bundlesfound),
+      if        => strcmp(1, $(count));
 
   reports:
     verbose_mode::
       "$(this.bundle): found matching bundles $(bundlesfound) for namespace '$(namespace)' and bundle '$(mybundle)'";
+}
+
+body contain powershell
+# @brief Run command with powershell (windows only)
+#
+# **Example:**
+#
+# ```cf3
+#  commands:
+#    windows::
+#      'schtasks /DELETE /TN "$(_taskname)" /F'
+#        contain => powershell;
+# ```
+#
+# **History:**
+#
+# * Introduced in 3.17.0
+{
+        useshell => "powershell";
 }
 
 body contain in_dir_shell(dir)
@@ -115,7 +134,7 @@ body action if_elapsed(x)
 }
 
 body action if_elapsed_day
-# @brief Evalute the promise once every 24 hours
+# @brief Evaluate the promise once every 24 hours
 {
       ifelapsed => "1440";    # 60 x 24
       expireafter => "1400";
@@ -143,7 +162,7 @@ body classes if_repaired(x)
       promise_repaired => { "$(x)" };
 }
 
-body classes if_else(yes,no)
+body classes if_else(yes, no)
 # @brief Define the classes `yes` or `no` depending on promise outcome
 # @param yes The name of the class that should be defined if the promise is kept or repaired
 # @param no The name of the class that should be defined if the promise could not be repaired
@@ -165,7 +184,7 @@ body classes if_notkept(x)
 }
 
 body classes if_ok(x)
-# @brief Define the class `x` if the promise is kept or could be repaired
+# @brief Define the class `x` if the promise is kept or repaired
 # @param x The name of the class that should be defined
 {
       promise_repaired => { "$(x)" };
@@ -173,7 +192,7 @@ body classes if_ok(x)
 }
 
 body classes if_ok_cancel(x)
-# @brief Cancel the class `x` if the promise ks kept or repaired
+# @brief Cancel the class `x` if the promise is kept or repaired
 # @param x The name of the class that should be cancelled
 {
       cancel_repaired => { "$(x)" };
@@ -193,8 +212,8 @@ body classes classes_generic(x)
 
 body classes results(scope, class_prefix)
 # @brief Define classes prefixed with `class_prefix` and suffixed with
-# appropriate outcomes: _kept, _repaired, _not_kept, _error, _failed,
-# _denied, _timeout, _reached
+# appropriate outcomes: `_kept`, `_repaired`, `_not_kept`, `_error`, `_failed`,
+# `_denied`, `_timeout`, `_reached`
 #
 # @param scope The scope in which the class should be defined (`bundle` or `namespace`)
 # @param class_prefix The prefix for the classes defined
@@ -214,7 +233,7 @@ body classes results(scope, class_prefix)
 # This body is a simpler, more consistent version of the body
 # `scoped_classes_generic`, which see. The key difference is that
 # fewer classes are defined, and only for outcomes that we can know.
-# For example this body does not define "OK/not OK" outcome classes,
+# For example this body does not define "OK"/"not OK" outcome classes,
 # since a promise can be both kept and failed at the same time.
 #
 # It's important to understand that promises may do multiple things,
@@ -287,6 +306,42 @@ body classes results(scope, class_prefix)
                       "$(class_prefix)_timeout" };
 }
 
+body classes diff_results(scope, x)
+# @brief Define `x` prefixed/suffixed with promise outcome with command return codes adjusted to align with `diff`.
+# @param scope The scope the class should be defined with (`bundle` or `namespace`).
+# @param x The unique part of the classes to be defined.
+#
+# From man diff:
+# Exit status is 0 if inputs are the  same,  1  if
+# different, 2 if trouble.
+#
+# **Example:**
+#
+# ```cf3
+# bundle agent example
+# {
+#   commands:
+#     "/usr/bin/diff"
+#       args => "/tmp/file1 /tmp/file2",
+#       classes => diff_results("diff");
+#
+#   vars:
+#     "c" slist => classesmatching("diff_.*");
+#
+#   reports:
+#     "Found class '$(c)'";
+#     "Files Differ!"
+#        if => "diff_failed|diff_error|diff_not_kept";
+#     "Files are the same."
+#        if => "diff_kept";
+# }
+# ```
+{
+      inherit_from => results( $(scope), $(x) );
+      kept_returncodes => { "0" };
+      failed_returncodes => { "1", "2" };
+}
+
 body classes scoped_classes_generic(scope, x)
 # @brief Define `x` prefixed/suffixed with promise outcome
 # **See also:** `scope`
@@ -332,19 +387,6 @@ bundle edit_line insert_before_if_no_line(before, string)
         comment => "Prepend a line to the file if it doesn't already exist";
 }
 
-bundle edit_line insert_lines(lines)
-# @brief Append `lines` if they don't exist in the file
-# @param lines The lines to be appended
-#
-# **See also:** [`insert_lines`][insert_lines] in
-# [`edit_line`][bundle edit_line]
-{
-  insert_lines:
-
-      "$(lines)"
-      comment => "Append lines if they don't exist";
-}
-
 bundle edit_line insert_file(templatefile)
 # @brief Reads the lines from `templatefile` and inserts those into the
 # file being edited.
@@ -355,6 +397,60 @@ bundle edit_line insert_file(templatefile)
       "$(templatefile)"
       comment => "Insert the template file into the file being edited",
       insert_type => "file";
+}
+
+bundle edit_line lines_present(lines)
+# @brief Ensure `lines` are present in the file. Lines that do not exist are appended to the file
+# @param lines List or string that should be present in the file
+#
+# **Example:**
+#
+# ```cf3
+# bundle agent example
+# {
+#  vars:
+#    "nameservers" slist => { "8.8.8.8", "8.8.4.4" };
+#
+#  files:
+#      "/etc/resolv.conf" edit_line => lines_present( @(nameservers) );
+#      "/etc/ssh/sshd_config" edit_line => lines_present( "PermitRootLogin no" );
+# }
+# ```
+{
+  insert_lines:
+
+      "$(lines)"
+        comment => "Append lines if they don't exist";
+}
+
+bundle edit_line insert_lines(lines)
+# @brief Alias for `lines_present`
+# @param lines List or string that should be present in the file
+{
+  insert_lines:
+
+      "$(lines)"
+        comment => "Append lines if they don't exist";
+}
+
+bundle edit_line append_if_no_line(lines)
+# @brief Alias for `lines_present`
+# @param lines List or string that should be present in the file
+{
+  insert_lines:
+
+      "$(lines)"
+        comment => "Append lines if they don't exist";
+}
+
+bundle edit_line append_if_no_lines(lines)
+# @brief Alias for `lines_present`
+# @param lines List or string that should be present in the file
+{
+  insert_lines:
+
+      "$(lines)"
+        comment => "Append lines if they don't exist";
 }
 
 bundle edit_line comment_lines_matching(regex,comment)
@@ -368,6 +464,21 @@ bundle edit_line comment_lines_matching(regex,comment)
 
       replace_with => comment("$(comment)"),
       comment => "Search and replace string";
+}
+
+bundle edit_line contains_literal_string(string)
+# @brief Ensure the literal string is present in the promised file
+# @description If the string is not found in the file it is inserted according
+# to CFEngine defaults.
+# @param string The string (potentially multiline) to ensure exists in the
+# promised file.
+{
+
+   insert_lines:
+     "$(string)"
+       insert_type => "preserve_block",
+       expand_scalars => "false",
+       whitespace_policy => { "exact_match" };
 }
 
 bundle edit_line uncomment_lines_matching(regex,comment)
@@ -438,35 +549,15 @@ bundle edit_line prepend_if_no_line(string)
 # @brief Prepend `string` if it doesn't exist in the file
 # @param string The string to be prepended
 #
-# **See also:** [`insert_lines`][insert_lines] in
-# [`edit_line`][bundle edit_line]
+# **See also:**
+#
+# * [`insert_lines` promise type][insert_lines]
+# * [`edit_line` bundles][edit_line]
 {
   insert_lines:
       "$(string)"
       location => start,
       comment => "Prepend a line to the file if it doesn't already exist";
-}
-
-bundle edit_line append_if_no_line(str)
-# @ignore
-# This duplicates the insert_lines bundle
-{
-  insert_lines:
-
-      "$(str)"
-
-      comment => "Append a line to the file if it doesn't already exist";
-}
-
-bundle edit_line append_if_no_lines(list)
-# @ignore
-# This duplicates the insert_lines bundle
-{
-  insert_lines:
-
-      "$(list)"
-
-      comment => "Append lines to the file if they don't already exist";
 }
 
 bundle edit_line replace_line_end(start,end)
@@ -489,6 +580,41 @@ bundle edit_line replace_line_end(start,end)
       "\s*$(start)\s.*"
       comment => "Replace lines with $(this.start) and $(this.end)",
       edit_field => line("(^|\s)$(start)\s*", "2", "$(end)","set");
+}
+
+bundle edit_line replace_uncommented_substrings( _comment, _find, _replace )
+# @brief Replace all occurrences of `_find` with `_replace` on lines that do not follow a `_comment`
+# @param _comment Sequence of characters, each indicating the start of a comment.
+# @param _find String matching substring to replace
+# @param _replace String to substitute `_find` with
+#
+# **Example:**
+#
+# ```cf3
+# bundle agent example_replace_uncommented_substrings
+# {
+#   files:
+#     "/tmp/file.txt"
+#       edit_line => replace_uncommented_substrings( "#", "ME", "YOU");
+# }
+# ```
+#
+# **Notes:**
+#
+# * Only single character comments are supported as `_comment` is used in the PCRE character group (`[^...]`).
+# * `-` in `_comment` is interpreted as a range unless it's used as the first or last character. For example, setting `_comment` to `0-9` means any digit starts a comment.
+#
+# **History:**
+#
+# * Introduced 3.17.0, 3.15.3
+{
+  vars:
+      "_reg_match_uncommented_lines_containing_find"
+        string => "^([^$(_comment)]*)\Q$(_find)\E(.*$)";
+
+  replace_patterns:
+    "$(_reg_match_uncommented_lines_containing_find)"
+      replace_with => text_between_match1_and_match2( $(_replace) );
 }
 
 bundle edit_line append_to_line_end(start,end)
@@ -601,28 +727,6 @@ bundle edit_line manage_variable_values_ini(tab, sectionName)
   vars:
       "index" slist => getindices("$(tab)[$(sectionName)]");
 
-      # Be careful if the index string contains funny chars
-      "cindex[$(index)]" string => canonify("$(index)");
-
-  classes:
-      "edit_$(cindex[$(index)])"     not => strcmp("$($(tab)[$(sectionName)][$(index)])","dontchange"),
-      comment => "Create conditions to make changes";
-
-  field_edits:
-
-      # If the line is there, but commented out, first uncomment it
-      "#+\s*$(index)\s*=.*"
-      select_region => INI_section(escape("$(sectionName)")),
-      edit_field => col("=","1","$(index)","set"),
-      ifvarclass => "edit_$(cindex[$(index)])";
-
-      # match a line starting like the key something
-      "$(index)\s*=.*"
-      edit_field => col("=","2","$($(tab)[$(sectionName)][$(index)])","set"),
-      select_region => INI_section(escape("$(sectionName)")),
-      classes => results("bundle", "manage_variable_values_ini_not_$(cindex[$(index)])"),
-      ifvarclass => "edit_$(cindex[$(index)])";
-
   delete_lines:
       ".*"
       select_region => INI_section(escape("$(sectionName)")),
@@ -634,9 +738,7 @@ bundle edit_line manage_variable_values_ini(tab, sectionName)
       comment => "Insert lines";
 
       "$(index)=$($(tab)[$(sectionName)][$(index)])"
-      select_region => INI_section(escape("$(sectionName)")),
-        ifvarclass => "!(manage_variable_values_ini_not_$(cindex[$(index)])_kept|manage_variable_values_ini_not_$(cindex[$(index)])_repaired).edit_$(cindex[$(index)])";
-
+      select_region => INI_section(escape("$(sectionName)"));
 }
 
 bundle edit_line set_variable_values_ini(tab, sectionName)
@@ -695,7 +797,7 @@ bundle edit_line insert_ini_section(name, config)
 # ```
 # # given an array "barray"
 # files:
-#     "myfile.ini" edit_line => insert_innit_section("foo", "barray");
+#     "myfile.ini" edit_line => insert_ini_section("foo", "barray");
 # ```
 #
 # Inserts a section in an INI file with the given configuration
@@ -705,14 +807,17 @@ bundle edit_line insert_ini_section(name, config)
 # @param config The fully-qualified name of an associative array containing `v[LHS]="rhs"`
 {
   vars:
-      "k" slist => getindices($(config));
+      # TODO: refactor once 3.7.x is EOL
+      "indices" slist => getindices($(config));
+      "k" slist => sort("indices", lex);
 
   insert_lines:
       "[$(name)]"
       location => start,
-      comment => "Prepend a line to the file if it doesn't already exist";
+      comment => "Insert an ini section with values if not present";
 
-      "$(k)=$($(config)[$(k)])";
+      "$(k)=$($(config)[$(k)])"
+      location => after("[$(name)]");
 }
 
 bundle edit_line set_quoted_values(v)
@@ -770,7 +875,7 @@ bundle edit_line set_quoted_values(v)
   insert_lines:
       '$(index)="$($(v)[$(index)])"'
       comment    => "Insert a variable definition",
-        ifvarclass => "!($(cindex[$(index)])_in_file_kept|$(cindex[$(index)])_in_file_repaired)";
+        if => "!($(cindex[$(index)])_in_file_kept|$(cindex[$(index)])_in_file_repaired)";
 }
 
 bundle edit_line set_variable_values(v)
@@ -832,7 +937,7 @@ bundle edit_line set_variable_values(v)
       "$(index)=$($(v)[$(index)])"
 
       comment => "Insert a variable definition",
-        ifvarclass => "!($(cv)_$(cindex[$(index)])_in_file_kept|$(cv)_$(cindex[$(index)])_in_file_repaired)";
+        if => "!($(cv)_$(cindex[$(index)])_in_file_kept|$(cv)_$(cindex[$(index)])_in_file_repaired)";
 }
 
 bundle edit_line set_config_values(v)
@@ -893,7 +998,7 @@ bundle edit_line set_config_values(v)
                     commented occurrence of $(index).",
         handle => "set_config_values_replace_commented_line",
         replace_with => value("$(index) $($(v)[$(index)])"),
-          ifvarclass => "!line_exists_$(cindex[$(index)]).!replace_attempted_$(cindex[$(index)])_reached.!multiple_comments_$(cindex[$(index)])",
+                  if => "!line_exists_$(cindex[$(index)]).!replace_attempted_$(cindex[$(index)])_reached.!multiple_comments_$(cindex[$(index)])",
              classes => results("bundle", "uncommented_$(cindex[$(index)])");
 
       # If the line is there with the wrong value, replace with
@@ -910,13 +1015,13 @@ bundle edit_line set_config_values(v)
       "$(index) $($(v)[$(index)])"
          comment => "Insert the value, marker exists $(index)",
         location => after("^\s*#\s*($(index)\s+.*|$(index))$"),
-      ifvarclass => "replace_attempted_$(cindex[$(index)])_reached.multiple_comments_$(cindex[$(index)])";
+              if => "replace_attempted_$(cindex[$(index)])_reached.multiple_comments_$(cindex[$(index)])";
 
       # If the line doesn't exist and there are no occurrences
       # of the LHS commented out, insert a new line at the eof
       "$(index) $($(v)[$(index)])"
          comment => "Insert the value, marker doesn't exist $(index)",
-      ifvarclass => "replace_attempted_$(cindex[$(index)])_reached.!multiple_comments_$(cindex[$(index)])";
+              if => "replace_attempted_$(cindex[$(index)])_reached.!multiple_comments_$(cindex[$(index)])";
 
 }
 
@@ -946,9 +1051,12 @@ bundle edit_line set_line_based(v, sep, bp, kp, cp)
 # Adds a new line if none exists or if more than one commented-out
 # possible matches exist.
 #
+#
+# **Note:** If the data structure being used for the first parameter is in the current bundle, you can use `$(this.bundle).variable`.
+#
 # Originally `set_config_values` by Ed King.
 #
-# @param v The fully-qualified name of an associative array containing `v[LHS]="rhs"`
+# @param v The fully-qualified name (`bundlename.variable`) of an associative array containing `v[LHS]="rhs"`
 # @param sep The separator to insert, e.g. ` ` for space-separated
 # @param bp The key-value separation regex, e.g. `\s+` for space-separated
 # @param kp The keys to select from v, use `.*` for all
@@ -982,10 +1090,33 @@ bundle edit_line set_line_based(v, sep, bp, kp, cp)
 
 
   classes:
+      # 3.21.0 and greater know about a file being emptied before editing and
+      # skip this check since it does not make sense.
+@if minimum_version(3.21)
       # Check to see if this line exists
       "exists_$(ci[$(i)])"
       expression => regline("^\s*($(i)$(bp).*|$(i))$",
-                            $(edit.filename));
+                            $(edit.filename)),
+      unless => strcmp( "true", $(edit.empty_before_use) );
+@endif
+
+@if minimum_version(3.18)
+    !(cfengine_3_18_0|cfengine_3_18_1|cfengine_3_18_2)::
+      "exists_$(ci[$(i)])"
+        expression => regline("^\s*($(i)$(bp).*|$(i))$",
+                              $(edit.filename)),
+        unless => strcmp( "true", $(edit.empty_before_use) );
+@endif
+
+    (cfengine_3_15|cfengine_3_16|cfengine_3_17|cfengine_3_18_0|cfengine_3_18_1|cfengine_3_18_2|cfengine_3_19|cfengine_3_20)::
+      # Version 3.15.0 does not know about the before_version macro, so we keep the same behavior
+      # TODO Remove after 3.21 is no longer supported. (3.15.0 was supported when 3.21 was released)
+      # Check to see if this line exists
+      "exists_$(ci[$(i)])"
+        expression => regline("^\s*($(i)$(bp).*|$(i))$",
+                              $(edit.filename));
+
+    any::
 
       # if there's more than one comment, just add new (don't know who to use)
       "multiple_comments_$(ci[$(i)])"
@@ -999,7 +1130,7 @@ bundle edit_line set_line_based(v, sep, bp, kp, cp)
       "^$(cp)($(i)$(bp).*|$(i))$"
              comment => "Uncommented the value '$(i)'",
         replace_with => value("$(i)$(sep)$($(v)[$(i)])"),
-          ifvarclass => "!exists_$(ci[$(i)]).!replace_attempted_$(ci[$(i)])_reached.!multiple_comments_$(ci[$(i)])",
+                  if => "!exists_$(ci[$(i)]).!replace_attempted_$(ci[$(i)])_reached.!multiple_comments_$(ci[$(i)])",
              classes => results("bundle", "uncommented_$(ci[$(i)])");
 
       # If the line is there with the wrong value, replace with
@@ -1016,18 +1147,18 @@ bundle edit_line set_line_based(v, sep, bp, kp, cp)
       "$(i)$(sep)$($(v)[$(i)])"
          comment => "Insert the value, marker '$(i)' exists",
         location => after("^$(cp)($(i)$(bp).*|$(i))$"),
-      ifvarclass => "replace_attempted_$(ci[$(i)])_reached.multiple_comments_$(ci[$(i)])";
+              if => "replace_attempted_$(ci[$(i)])_reached.multiple_comments_$(ci[$(i)])";
 
       # If the line doesn't exist and there are no occurrences
       # of the LHS commented out, insert a new line at the eof
       "$(i)$(sep)$($(v)[$(i)])"
          comment => "Insert the value, marker '$(i)' doesn't exist",
-      ifvarclass => "replace_attempted_$(ci[$(i)])_reached.!multiple_comments_$(ci[$(i)]).!exists_$(ci[$(i)])";
+              if => "replace_attempted_$(ci[$(i)])_reached.!multiple_comments_$(ci[$(i)]).!exists_$(ci[$(i)])";
 
   reports:
     verbose_mode|EXTRA::
-      "$(this.bundle): Line for '$(i)' exists" ifvarclass => "exists_$(ci[$(i)])";
-      "$(this.bundle): Line for '$(i)' does not exist" ifvarclass => "!exists_$(ci[$(i)])";
+      "$(this.bundle): Line for '$(i)' exists" if => "exists_$(ci[$(i)])";
+      "$(this.bundle): Line for '$(i)' does not exist" if => "!exists_$(ci[$(i)])";
 }
 
 bundle edit_line set_config_values_matching(v,pat)
@@ -1069,12 +1200,11 @@ bundle edit_line set_config_values_matching(v,pat)
 
   insert_lines:
       "$(index) $($(v)[$(index)])"
-      ifvarclass => "replace_attempted_$(cindex[$(index)])_reached";
+      if => "replace_attempted_$(cindex[$(index)])_reached";
 
 }
 
 bundle edit_line maintain_key_values(v,sep)
-# @ignore
 # @brief Sets the RHS of configuration items with an giving separator
 #
 # Contributed by David Lee
@@ -1113,7 +1243,7 @@ bundle edit_line maintain_key_values(v,sep)
   insert_lines:
       "$(index)$(sep)$($(v)[$(index)])"
       comment => "Insert definition of $(index)",
-      ifvarclass => "!$(cindex[$(index)])_key_in_file";
+      if => "!$(cindex[$(index)])_key_in_file";
 }
 
 bundle edit_line append_users_starting(v)
@@ -1137,7 +1267,7 @@ bundle edit_line append_users_starting(v)
       "$($(v)[$(index)])"
 
       comment => "Append users into a password file format",
-      ifvarclass => "add_$(index)";
+      if => "add_$(index)";
 }
 
 bundle edit_line append_groups_starting(v)
@@ -1161,7 +1291,7 @@ bundle edit_line append_groups_starting(v)
       "$($(v)[$(index)])"
 
       comment => "Append users into a group file format",
-      ifvarclass => "add_$(index)";
+      if => "add_$(index)";
 
 }
 
@@ -1183,19 +1313,51 @@ bundle edit_line set_colon_field(key,field,val)
 bundle edit_line set_user_field(user,field,val)
 # @brief Set the value of field number "field" in a `:-field`
 # formatted file like `/etc/passwd`
+# @param user A regular expression matching the user(s) to be modified
+# @param field The field that should be modified
+# @param val The value for `field`
+#
+# **Note:** To manage local users with CFEngine 3.6 and later,
+# consider making `users` promises instead of modifying system files.
+#
+# **See also:**
+#
+# * [bundle edit_line set_escaped_user_field][lib/files.cf#set_escaped_user_field]
+# * [edit_line field_edits][field_edits]
+{
+  field_edits:
+
+      "$(user):.*"
+
+        comment => "Edit a user attribute in the password file",
+        edit_field => col(":","$(field)","$(val)","set");
+}
+
+bundle edit_line set_escaped_user_field(user,field,val)
+# @brief Set the value of field number "field" in a `:-field`
+# formatted file like `/etc/passwd`
 # @param user The user to be modified
 # @param field The field that should be modified
 # @param val The value for `field`
 #
 # **Note:** To manage local users with CFEngine 3.6 and later,
 # consider making `users` promises instead of modifying system files.
+#
+# **See also:**
+#
+# * [bundle edit_line set_user_field][lib/files.cf#set_user_field]
+# * [edit_line field_edits][field_edits]
 {
+  vars:
+      "escaped_user"
+        string => escape( "$(user)" );
+
   field_edits:
 
-      "$(user):.*"
+      "$(escaped_user):.*"
 
-      comment => "Edit a user attribute in the password file",
-      edit_field => col(":","$(field)","$(val)","set");
+        comment => "Edit a user attribute in the password file",
+        edit_field => col(":","$(field)","$(val)","set");
 }
 
 bundle edit_line append_user_field(group,field,allusers)
@@ -1208,16 +1370,12 @@ bundle edit_line append_user_field(group,field,allusers)
 # **Note:** To manage local users with CFEngine 3.6 and later,
 # consider making `users` promises instead of modifying system files.
 {
-  vars:
-
-      "val" slist => { @(allusers) };
-
   field_edits:
 
       "$(group):.*"
 
       comment => "Append users into a password file format",
-      edit_field => col(":","$(field)","$(val)","alphanum");
+      edit_field => col(":","$(field)","$(allusers)","alphanum");
 }
 
 bundle edit_line expand_template(templatefile)
@@ -1256,7 +1414,7 @@ bundle edit_line replace_or_add(pattern,line)
 
   insert_lines:
       "$(line)"
-      ifvarclass => "replace_$(cline)_reached";
+      if => "replace_$(cline)_reached";
 }
 
 bundle edit_line converge(marker, lines)
@@ -1267,14 +1425,70 @@ bundle edit_line converge(marker, lines)
 #
 # @param marker The marker (not a regular expression; will be escaped)
 # @param lines The lines to insert; all must contain `marker`
+#
+# **Example:**
+#
+# ```cf3
+# bundle agent pam_d_su_include
+# #@brief Ensure /etc/pam.d/su has includes configured properly
+# {
+#   files:
+#     ubuntu::
+#       "/etc/pam.d/su"
+#         edit_line => converge( "@include", "@include common-auth
+# @include common-account
+# @include common-session");
+# }
+# ```
+#
+# **History:**
+#
+# * Introduced in 3.6.0
 {
   vars:
       "regex" string => escape($(marker));
 
   delete_lines:
-      "$(regex)" comment => "Delete lines matching the marker";
+      ".*$(regex).*" comment => "Delete lines matching the marker";
   insert_lines:
       "$(lines)" comment => "Insert the given lines";
+}
+
+bundle edit_line converge_prepend(marker, lines)
+# @brief Converge `lines` marked with `marker` to start of content
+#
+# Any content marked with `marker` is removed, then `lines` are
+# inserted at *start* of content.  Every `line` should contain `marker`.
+#
+# @param marker The marker (not a regular expression; will be escaped)
+# @param lines The lines to insert; all must contain `marker`
+#
+# **Example:**
+#
+# ```cf3
+# bundle agent pam_d_su_session
+# #@brief Ensure /etc/pam.d/su has session configured properly
+# {
+#   files:
+#     ubuntu::
+#       "/etc/pam.d/su"
+#         edit_line => converge_prepend( "session", "session       required   pam_env.so readenv=1 envfile=/etc/default/locale
+# session    optional   pam_mail.so nopen
+# session    required   pam_limits.so" );
+# }
+# ```
+#
+# **History:**
+#
+# * Introduced in 3.17.0, 3.15.3, 3.12.6
+{
+  vars:
+      "regex" string => escape($(marker));
+
+  delete_lines:
+      ".*$(regex).*" comment => "Delete lines matching the marker";
+  insert_lines:
+      "$(lines)" location => start, comment => "Insert the given lines";
 }
 
 bundle edit_line fstab_option_editor(method, mount, option)
@@ -1329,7 +1543,8 @@ body edit_field fstab_options(newval, method)
 body edit_field quoted_var(newval,method)
 # @brief Edit the quoted value of the matching line
 # @param newval The new value
-# @param method The method by which to edit the field
+# @param method The method by which to edit the field (append|prepend|alphanum|set|delete)
+# Ref https://docs.cfengine.com/latest/reference-promise-types-files-edit_line-field_edits.html#field_operation
 {
       field_separator => "\"";
       select_field    => "2";
@@ -1370,6 +1585,14 @@ body edit_field line(split,col,newval,method)
       field_operation    => "$(method)";
       extend_fields      => "true";
       allow_blank_fields => "true";
+}
+
+body replace_with text_between_match1_and_match2( _text )
+# @brief Replace matched line with substituted string
+# @param _text String to substitute between first and second match
+{
+        replace_value => "$(match.1)$(_text)$(match.2)";
+        occurrences => "all";
 }
 
 body replace_with value(x)
@@ -1472,6 +1695,8 @@ body copy_from remote_dcp(from,server)
 #
 # @param from The location of the file on the remote server
 # @param server The hostname or IP of the server from which to download
+#
+# **See Also:** `local_dcp()`
 {
       servers     => { "$(server)" };
       source      => "$(from)";
@@ -1479,17 +1704,42 @@ body copy_from remote_dcp(from,server)
 }
 
 body copy_from local_cp(from)
-# @brief Copy a local file.
-#
+# @brief Copy a file if the modification time or creation time of the source
+# file is newer (the default comparison mechanism).
 # @param from The path to the source file.
+#
+# **Example:**
+#
+# ```cf3
+# bundle agent example
+# {
+#   files:
+#       "/tmp/file.bak"
+#         copy_from => local_cp("/tmp/file");
+# }
+# ```
+#
+# **See Also:** `local_dcp()`
 {
       source      => "$(from)";
 }
 
 body copy_from local_dcp(from)
-# @brief Copy a local file if it is different from the existing copy.
-#
+# @brief Copy a local file if the hash on the source file differs.
 # @param from The path to the source file.
+#
+# **Example:**
+#
+# ```cf3
+# bundle agent example
+# {
+#   files:
+#       "/tmp/file.bak"
+#       copy_from => local_dcp("/tmp/file");
+# }
+# ```
+#
+# **See Also:** `local_cp()`, `remote_dcp()`
 {
       source      => "$(from)";
       compare     => "digest";
@@ -1525,19 +1775,52 @@ body copy_from backup_local_cp(from)
 }
 
 body copy_from seed_cp(from)
-# @brief Copy a local file if the file does not already exist, i.e. seed the placement
-#
+# @brief Copy a local file if the file does not already exist, i.e. seed the
+# placement
 # @param from The path to the source file.
+#
+# **Example:**
+#
+# ```cf3
+# bundle agent home_dir_init
+# {
+#   files:
+#       "/home/mark.burgess/."
+#       copy_from => seed_cp("/etc/skel"),
+#       depth_search => recurse(inf),
+#       file_select => all,
+#       comment => "We want to be sure that the home directory has files that are
+#                   present in the skeleton.";
+# }
+# ```
 {
       source      => "$(from)";
       compare     => "exists";
 }
 
 body copy_from sync_cp(from,server)
-# @brief Download a file if the local copy does not already exist, i.e. seed the placement
+# @brief Synchronize a file with a remote server.
+#
+# * If the file does not exist on the remote server then it should be purged.
+# * Allow types to change (directories to files and vice versa).
+# * The mode of the remote file should be preserved.
+# * Files are compared using the default comparison (mtime or ctime).
 #
 # @param from The location of the file on the remote server
 # @param server The hostname or IP of the server from which to download
+#
+# **Example**:
+#
+# ```cf3
+# files:
+#   "/tmp/masterfiles/."
+#     copy_from => sync_cp( "/var/cfengine/masterfiles", $(sys.policy_server) ),
+#     depth_search => recurse(inf),
+#     file_select => all,
+#     comment => "Mirror masterfiles from the hub to a temporary directory";
+# ```
+#
+# **See Also:** `dir_sync()`, `copyfrom_sync()`
 {
       servers     => { "$(server)" };
       source      => "$(from)";
@@ -1553,6 +1836,17 @@ body copy_from no_backup_cp(from)
 {
       source      => "$(from)";
       copy_backup => "false";
+}
+
+body copy_from no_backup_cp_compare(from, comparison)
+# @brief Copy a local file (`from`) based on comparison (`comparison`) and don't make any backup of the previous version
+#
+# @param from The path to the source file.
+# @param comparison The comparison to use. (mtime|ctime|atime|exists|binary|hash|digest)
+{
+        source      => "$(from)";
+        copy_backup => "false";
+        compare => "$(comparison)";
 }
 
 body copy_from no_backup_dcp(from)
@@ -1580,7 +1874,14 @@ body perms m(mode)
 # @param mode The new mode
 {
       mode   => "$(mode)";
-      rxdirs => "true";
+
+#+begin_ENT-951
+# Remove after 3.20 is not supported
+        rxdirs => "true";
+@if minimum_version(3.20)
+        rxdirs => "false";
+@endif
+#+end
 }
 
 body perms mo(mode,user)
@@ -1590,7 +1891,14 @@ body perms mo(mode,user)
 {
       owners => { "$(user)" };
       mode   => "$(mode)";
-      rxdirs => "true";
+
+#+begin_ENT-951
+# Remove after 3.20 is not supported
+        rxdirs => "true";
+@if minimum_version(3.20)
+        rxdirs => "false";
+@endif
+#+end
 }
 
 body perms mog(mode,user,group)
@@ -1602,7 +1910,14 @@ body perms mog(mode,user,group)
       owners => { "$(user)" };
       groups => { "$(group)" };
       mode   => "$(mode)";
-      rxdirs => "true";
+
+#+begin_ENT-951
+# Remove after 3.20 is not supported
+        rxdirs => "true";
+@if minimum_version(3.20)
+        rxdirs => "false";
+@endif
+#+end
 }
 
 body perms og(u,g)
@@ -1633,15 +1948,44 @@ body perms system_owned(mode)
 # ```
 {
       mode   => "$(mode)";
-      owners => { "root" };
-      groups => { "$(sys.user_data[gid])" };
-      rxdirs => "true";
-}
 
+#+begin_ENT-951
+# Remove after 3.20 is not supported
+        rxdirs => "true";
+@if minimum_version(3.20)
+        rxdirs => "false";
+@endif
+#+end
+
+    !windows::
+        owners => { "root" };
+
+    windows::
+
+      # NOTE: Setting owners will generate an error if the policy is not being
+      # executed as the user who's ownership is being targeted. While it seems
+      # that should typically be Administrator or SYSTEM, both are reported to
+      # result in errors by users, thus owners is currently omitted for Windows.
+
+      # ENT-9778
+      groups => { "Administrators" };
+
+    freebsd|openbsd|netbsd|darwin::
+      groups => { "wheel" };
+
+    linux::
+      groups => { "root" };
+
+    solaris::
+      groups => { "sys" };
+
+    aix::
+      groups => { "system" };
+}
 
 body depth_search recurse(d)
 # @brief Search files and direcories recursively, up to the specified depth
-# Directories on different devices are included.
+# Directories on different devices are excluded.
 #
 # @param d The maximum search depth
 {
@@ -1662,7 +2006,7 @@ body depth_search recurse_ignore(d,list)
 
 body depth_search recurse_with_base(d)
 # @brief Search files and directories recursively up to the specified
-# depth, starting from the base directory and including directories on
+# depth, starting from the base directory excluding directories on
 # other devices.
 #
 # @param d The maximum search depth
@@ -1844,10 +2188,10 @@ bundle agent file_make(file, str)
   reports:
     "DEBUG|DEBUG_$(this.bundle)"::
       "DEBUG $(this.bundle): creating $(file) with contents '$(str)'"
-      ifvarclass => "!summarize";
+      if => "!summarize";
 
       "DEBUG $(this.bundle): creating $(file) with contents '$(summary)'"
-      ifvarclass => "summarize";
+      if => "summarize";
 }
 
 bundle agent file_make_mog(file, str, mode, owner, group)
@@ -1885,10 +2229,71 @@ bundle agent file_make_mog(file, str, mode, owner, group)
   reports:
     "DEBUG|DEBUG_$(this.bundle)"::
       "DEBUG $(this.bundle): creating $(file) with contents '$(str)', mode '$(mode)', owner '$(owner)' and group '$(group)'"
-      ifvarclass => "!summarize";
+      if => "!summarize";
 
       "DEBUG $(this.bundle): creating $(file) with contents '$(summary)', mode '$(mode)', owner '$(owner)' and group '$(group)'"
-      ifvarclass => "summarize";
+      if => "summarize";
+}
+
+bundle agent file_make_mustache(file, template, data)
+# @brief Make a file from a mustache template
+# @param file Target file to render
+# @param template Path to mustache template
+# @param data Data container to use
+#
+# **Example:**
+#
+# ```cf3
+# vars:
+#   "state" data => datastate();
+#
+# methods:
+#      "" usebundle => file_make_mustache( "/tmp/z.txt", "/tmp/z.mustache", @(state) );
+# ```
+{
+  files:
+      "$(file)"
+        create => "true",
+        edit_template => "$(template)",
+        template_method => "mustache",
+        template_data => @(data);
+
+  reports:
+      "DEBUG|DEBUG_$(this.bundle)"::
+      "DEBUG $(this.bundle): rendering $(file) with template '$(template)'";
+}
+
+bundle agent file_make_mustache_with_perms(file, template, data, mode, owner, group)
+# @brief Make a file from a mustache template
+# @param file Target file to render
+# @param template Path to mustache template
+# @param data Data container to use
+# @param mode File permissions
+# @param owner Target file owner
+# @param group Target file group
+#
+# **Example:**
+#
+# ```cf3
+# vars:
+#   "state" data => datastate();
+#
+# methods:
+#      "" usebundle => file_make_mustache( "/tmp/z.txt", "/tmp/z.mustache", @(state),
+#                                          600, "root", "root" );
+# ```
+{
+  files:
+      "$(file)"
+        create => "true",
+        edit_template => "$(template)",
+        template_method => "mustache",
+        perms => mog( $(mode), $(owner), $(group) ),
+        template_data => @(data);
+
+  reports:
+      "DEBUG|DEBUG_$(this.bundle)"::
+      "DEBUG $(this.bundle): rendering $(file) with template '$(template)'";
 }
 
 bundle agent file_empty(file)

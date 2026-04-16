@@ -95,11 +95,3 @@ body classes outcomes(p)
         repair_timeout    => { '$(p)_timeout',  '$(p)_reached', '$(p)_error' };
         scope             => 'bundle';
 }
-bundle edit_line lines_present(lines)
-{
-  insert_lines:
-
-      "$(lines)"
-        comment => "Append lines if they don't exist";
-}
-

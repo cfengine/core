@@ -47,11 +47,15 @@ typedef struct
     char *changes_filename;
     Item *file_start;
     int num_edits;
+    int pass;  // Current convergence pass (1 to CF_DONEPASSES-1)
 #ifdef HAVE_LIBXML2
     xmlDocPtr xmldoc;
 #endif
     NewLineMode new_line_mode;
 } EditContext;
+
+// Check if we're on the final convergence pass where errors should be reported
+#define EDIT_CONTEXT_IS_FINAL_PASS(ec) ((ec)->pass >= CF_DONEPASSES - 1)
 
 // filename must not be freed until FinishEditContext.
 EditContext *NewEditContext(char *filename, const Attributes *a);

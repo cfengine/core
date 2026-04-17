@@ -102,26 +102,3 @@ body printfile cat(file)
         file_to_print => "$(file)";
         number_of_lines => "inf";
 }
-bundle edit_line lines_present(lines)
-# @brief Ensure `lines` are present in the file. Lines that do not exist are appended to the file
-# @param List or string that should be present in the file
-#
-# **Example:**
-#
-# ```cf3
-# bundle agent example
-# {
-#  vars:
-#    "nameservers" slist => { "8.8.8.8", "8.8.4.4" };
-#
-#  files:
-#      "/etc/resolv.conf" edit_line => lines_present( @(nameservers) );
-#      "/etc/ssh/sshd_config" edit_line => lines_present( "PermitRootLogin no" );
-# }
-# ```
-{
-  insert_lines:
-
-      "$(lines)"
-        comment => "Append lines if they don't exist";
-}

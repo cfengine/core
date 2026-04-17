@@ -96,6 +96,7 @@ static bool SanityCheckDeletions(const Attributes *a, const Promise *pp);
 static bool SelectLine(EvalContext *ctx, const char *line, const Attributes *a);
 static bool NotAnchored(char *s);
 static bool SelectRegion(EvalContext *ctx, Item *start, Item **begin_ptr, Item **end_ptr, const Attributes *a, EditContext *edcontext);
+static PromiseResult HandleSelectRegionFailure(EvalContext *ctx, const Promise *pp, const Attributes *a, EditContext *edcontext, const char *operation_type);
 static bool MultiLineString(char *s);
 static bool InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr, Item *end_ptr, Item *location, Item *prev, const Attributes *a, const Promise *pp, EditContext *edcontext, PromiseResult *result);
 
@@ -131,6 +132,7 @@ bool ScheduleEditLineOperations(EvalContext *ctx, const Bundle *bp, const Attrib
 
     for (pass = 1; pass < CF_DONEPASSES; pass++)
     {
+        edcontext->pass = pass;  // Track current pass for convergence
         for (type = 0; EDITLINETYPESEQUENCE[type] != NULL; type++)
         {
             const BundleSection *sp = BundleGetSection(bp, EDITLINETYPESEQUENCE[type]);
@@ -390,22 +392,7 @@ static PromiseResult VerifyLineDeletions(EvalContext *ctx, const Promise *pp, Ed
     }
     else if (!SelectRegion(ctx, *start, &begin_ptr, &end_ptr, &a, edcontext))
     {
-        if (a.region.include_end || a.region.include_start)
-        {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, &a,
-                 "The promised line deletion '%s' could not select an edit region in '%s'"
-                 " (this is a good thing, as policy suggests deleting the markers)",
-                 pp->promiser, edcontext->filename);
-        }
-        else
-        {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, &a,
-                 "The promised line deletion '%s' could not select an edit region in '%s'"
-                 " (but the delimiters were expected in the file)",
-                 pp->promiser, edcontext->filename);
-        }
-        result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
-        return result;
+        return HandleSelectRegionFailure(ctx, pp, &a, edcontext, "line deletion");
     }
     if (!end_ptr && a.region.select_end && !a.region.select_end_match_eof)
     {
@@ -502,11 +489,7 @@ static PromiseResult VerifyColumnEdits(EvalContext *ctx, const Promise *pp, Edit
     }
     else if (!SelectRegion(ctx, *start, &begin_ptr, &end_ptr, &a, edcontext))
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, &a,
-             "The promised column edit '%s' could not select an edit region in '%s'",
-             pp->promiser, edcontext->filename);
-        result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
-        return result;
+        return HandleSelectRegionFailure(ctx, pp, &a, edcontext, "column edit");
     }
 
 /* locate and split line */
@@ -581,11 +564,7 @@ static PromiseResult VerifyPatterns(EvalContext *ctx, const Promise *pp, EditCon
     }
     else if (!SelectRegion(ctx, *start, &begin_ptr, &end_ptr, &a, edcontext))
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, &a,
-             "The promised pattern replace '%s' could not select an edit region in '%s'",
-             pp->promiser, edcontext->filename);
-        result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
-        return result;
+        return HandleSelectRegionFailure(ctx, pp, &a, edcontext, "pattern replace");
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "replace-%s-%s", pp->promiser, edcontext->filename);
@@ -774,11 +753,7 @@ static PromiseResult VerifyLineInsertions(EvalContext *ctx, const Promise *pp, E
     }
     else if (!SelectRegion(ctx, *start, &begin_ptr, &end_ptr, &a, edcontext))
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, &a,
-             "The promised line insertion '%s' could not select an edit region in '%s'",
-             pp->promiser, edcontext->filename);
-        result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
-        return result;
+        return HandleSelectRegionFailure(ctx, pp, &a, edcontext, "line insertion");
     }
 
     if (!end_ptr && a.region.select_end && !a.region.select_end_match_eof)
@@ -935,6 +910,60 @@ If no such region matches, begin_ptr and end_ptr should point to NULL
     *end_ptr = end;
 
     return true;
+}
+
+/*****************************************************************************/
+
+static PromiseResult HandleSelectRegionFailure(EvalContext *ctx, const Promise *pp, 
+                                                const Attributes *a, EditContext *edcontext,
+                                                const char *operation_type)
+/*
+  Common error handling for SelectRegion failures across multiple edit operations.
+  Returns appropriate PromiseResult based on whether we're in final pass or not.
+  Special handling for line deletions where missing region markers may be intended.
+*/
+{
+    assert(pp != NULL);
+    assert(a != NULL);
+    assert(edcontext != NULL);
+    assert(operation_type != NULL);
+
+    if (!EDIT_CONTEXT_IS_FINAL_PASS(edcontext))
+    {
+        int remaining_passes = (CF_DONEPASSES - 1) - edcontext->pass;
+        Log(LOG_LEVEL_VERBOSE,
+            "The promised %s '%s' could not select edit region in '%s' (pass %d/%d, %d more %s to try)",
+            operation_type, pp->promiser, edcontext->filename, 
+            edcontext->pass, CF_DONEPASSES - 1, remaining_passes,
+            remaining_passes == 1 ? "pass" : "passes");
+        return PROMISE_RESULT_NOOP;  // Allow retry in next pass
+    }
+
+    // Special case for line deletions: missing markers might be intentional
+    if (StringEqual(operation_type, "line deletion"))
+    {
+        if (a->region.include_end || a->region.include_start)
+        {
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
+                 "The promised %s '%s' could not select an edit region in '%s' after %d passes"
+                 " (this is a good thing, as policy suggests deleting the markers)",
+                 operation_type, pp->promiser, edcontext->filename, CF_DONEPASSES - 1);
+        }
+        else
+        {
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
+                 "The promised %s '%s' could not select an edit region in '%s' after %d passes"
+                 " (but the delimiters were expected in the file)",
+                 operation_type, pp->promiser, edcontext->filename, CF_DONEPASSES - 1);
+        }
+        return PROMISE_RESULT_INTERRUPTED;
+    }
+
+    // Standard error for final pass
+    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a,
+         "The promised %s '%s' could not select an edit region in '%s' after %d passes",
+         operation_type, pp->promiser, edcontext->filename, CF_DONEPASSES - 1);
+    return PROMISE_RESULT_INTERRUPTED;
 }
 
 /*****************************************************************************/

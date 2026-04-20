@@ -3255,7 +3255,7 @@ static void GetCPUInfo(EvalContext *ctx)
 #ifdef __linux__
     int package_id = 0, max_package_id = 0;
     char buffer[CF_SMALLBUF] = "";
-    StringSet *package_id_files = GlobFileList("/sys/devices/system/cpu/cpu*/topology/physical_package_id");
+    StringSet *package_id_files = GlobFileList("/sys/devices/system/cpu/cpu[0-9]*/topology/physical_package_id");
     StringSetIterator it = StringSetIteratorInit(package_id_files);
     const char *file = NULL;
 

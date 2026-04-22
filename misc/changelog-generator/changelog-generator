@@ -254,12 +254,12 @@ for sha_entry in ENTRIES:
 if SORT_CHANGELOG:
     entry_list.sort()
 for entry in entry_list:
-    entry = "\t- " + entry
+    entry = "- " + entry
     # Blank lines look bad in changelog because entries don't have blank lines
     # between them, so remove that from commit messages.
     entry = re.sub("\n\n+", "\n", entry)
-    # Indent all lines.
-    entry = entry.replace("\n", "\n\t  ")
+    # Indent continuation lines to align with the bullet text.
+    entry = entry.replace("\n", "\n  ")
     print(entry)
 
 for missed in POSSIBLE_MISSED_TICKETS:

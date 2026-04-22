@@ -1272,6 +1272,7 @@ static const char *FnCallCategoryToString(FnCallCategory category)
 
 static JsonElement *FnCallTypeToJson(const FnCallType *fn_syntax)
 {
+    assert(fn_syntax != NULL);
     JsonElement *json_fn = JsonObjectCreate(10);
 
     JsonObjectAppendString(json_fn, "status", SyntaxStatusToString(fn_syntax->status));
@@ -1290,6 +1291,12 @@ static JsonElement *FnCallTypeToJson(const FnCallType *fn_syntax)
             JsonArrayAppendObject(params, json_param);
         }
         JsonObjectAppendArray(json_fn, "parameters", params);
+    }
+    
+    if (!(fn_syntax->argc.min == -1 && fn_syntax->argc.max == -1))
+    {
+        JsonObjectAppendInteger(json_fn, "minArgs", fn_syntax->argc.min);
+        JsonObjectAppendInteger(json_fn, "maxArgs", fn_syntax->argc.max);
     }
 
     JsonObjectAppendBool(json_fn, "variadic", fn_syntax->options & FNCALL_OPTION_VARARG);

@@ -121,8 +121,15 @@ JsonElement *SyntaxToJson(void);
 #define PromiseTypeSyntaxNew(agent_type, promise_type, constraints, check_fn, status) { agent_type, promise_type, constraints, check_fn, status }
 #define PromiseTypeSyntaxNewNull() PromiseTypeSyntaxNew(NULL, NULL, NULL, NULL, SYNTAX_STATUS_NORMAL)
 
-#define FnCallTypeNew(name, return_type, arguments, implementation, description, opts, category, status) { name, return_type, arguments, implementation, description, .options = opts, category, status }
-#define FnCallTypeNewNull() FnCallTypeNew(NULL, CF_DATA_TYPE_NONE, NULL, NULL, NULL, false, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL)
+// -1, -1 // DEFAULT_ARGC, all required
+// 1, -1  // ARGC(1, -1), 1-n
+// 0, -1  // 0-n
+// 2, 3   // 2-3
+#define DEFAULT_ARGC ((FnArgcRange){ .min = -1, .max = -1 })
+#define ARGC(a, b) ((FnArgcRange){ .min = (a), .max = (b) })
+
+#define FnCallTypeNew(name, return_type, arguments, implementation, description, opts, category, status, argc_range) { name, return_type, arguments, implementation, description, .options = opts, category, status, .argc = argc_range}
+#define FnCallTypeNewNull() FnCallTypeNew(NULL, CF_DATA_TYPE_NONE, NULL, NULL, NULL, false, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL, DEFAULT_ARGC)
 
 #define CONSTRAINT_SYNTAX_GLOBAL { "meta", CF_DATA_TYPE_STRING_LIST, .range.validation_string = "", "Tags describing the body", SYNTAX_STATUS_NORMAL }, \
                                  { "inherit_from", CF_DATA_TYPE_BODY, .range.validation_string = "", "Body from which attributes will be inherited", SYNTAX_STATUS_NORMAL }

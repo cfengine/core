@@ -11861,7 +11861,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("version_compare", CF_DATA_TYPE_CONTEXT, VERSION_COMPARE_ARGS, &FnCallVersionCompare, "Compare two version numbers with a specified operator",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL, DEFAULT_ARGC),
     FnCallTypeNew("findlocalusers", CF_DATA_TYPE_CONTAINER, FIND_LOCAL_USERS_ARGS, &FnCallFindLocalUsers, "Find matching local users",
-                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL, DEFAULT_ARGC),
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL, DEFAULT_ARGC),
     FnCallTypeNew("findlocalgroups", CF_DATA_TYPE_CONTAINER, FIND_LOCAL_USERS_ARGS, &FnCallFindLocalGroups, "Find matching local groups",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL, DEFAULT_ARGC),
 
@@ -11943,7 +11943,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("type", CF_DATA_TYPE_STRING, DATATYPE_ARGS, &FnCallDatatype, "Get type description as string",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL, ARGC(1, 2)),
     FnCallTypeNew("is_type", CF_DATA_TYPE_STRING, IS_DATATYPE_ARGS, &FnCallIsDatatype, "Compare type of variable with type",
-                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL, DEFAULT_ARGC),
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL, DEFAULT_ARGC),
 
     FnCallTypeNewNull()
 };

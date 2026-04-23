@@ -423,9 +423,9 @@ bool ServerSendWelcome(const ServerConnectionState *conn)
                            "USERNAME", conn->username);
         if (ret < 0)
         {
-            Log(LOG_LEVEL_ERR,
+            Log(LOG_LEVEL_ERR, 
                 "Unexpected failure from snprintf (%d - %s) while "
-                "constructing OK WELCOME message (ServerSendWelcome)",
+                "constructing OK WELCOME message (ServerSendWelcome)", 
                 errno, GetErrorStr());
             return false;
         }
@@ -537,8 +537,6 @@ bool BasicServerTLSSessionEstablish(ServerConnectionState *conn, SSL_CTX *ssl_ct
  */
 bool ServerTLSSessionEstablish(ServerConnectionState *conn, SSL_CTX *ssl_ctx)
 {
-    assert (conn != NULL);
-
     if (conn->conn_info->status == CONNECTIONINFO_STATUS_ESTABLISHED)
     {
         return true;
@@ -610,13 +608,8 @@ bool ServerTLSSessionEstablish(ServerConnectionState *conn, SSL_CTX *ssl_ctx)
     conn->user_data_set = true;
     conn->rsa_auth = true;
 
-    const char *hostkey = KeyPrintableHash(ConnectionInfoKey(conn->conn_info));
-    bool is_new_host = LastSaw1(conn->ipaddr, hostkey, LAST_SEEN_ROLE_ACCEPT);
-    if (is_new_host)
-    {
-        /* This will trigger immediate report collection */
-        NotifyNewHostSeen(hostkey);
-    }
+    LastSaw1(conn->ipaddr, KeyPrintableHash(ConnectionInfoKey(conn->conn_info)),
+             LAST_SEEN_ROLE_ACCEPT);
 
     ServerSendWelcome(conn);
     return true;

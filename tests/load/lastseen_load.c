@@ -21,7 +21,7 @@ static void tests_setup(void)
     mkdir(GetStateDir(), (S_IRWXU | S_IRWXG | S_IRWXO));
 }
 
-bool UpdateLastSawHost(const char *hostkey, const char *address,
+void UpdateLastSawHost(const char *hostkey, const char *address,
                        bool incoming, time_t timestamp);
 
 int main()

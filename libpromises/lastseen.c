@@ -34,7 +34,7 @@
 #include <lmdb.h>
 #endif
 
-bool UpdateLastSawHost(const char *hostkey, const char *address,
+void UpdateLastSawHost(const char *hostkey, const char *address,
                        bool incoming, time_t timestamp);
 
 /*
@@ -80,40 +80,40 @@ bool UpdateLastSawHost(const char *hostkey, const char *address,
  * @brief Same as LastSaw() but the digest parameter is the hash as a
  *        "SHA=..." string, to avoid converting twice.
  */
-bool LastSaw1(const char *ipaddress, const char *hashstr,
+void LastSaw1(const char *ipaddress, const char *hashstr,
               LastSeenRole role)
 {
     const char *mapip = MapAddress(ipaddress);
-    return UpdateLastSawHost(hashstr, mapip, role == LAST_SEEN_ROLE_ACCEPT, time(NULL));
+    UpdateLastSawHost(hashstr, mapip, role == LAST_SEEN_ROLE_ACCEPT, time(NULL));
 }
 
-bool LastSaw(const char *ipaddress, const unsigned char *digest, LastSeenRole role)
+void LastSaw(const char *ipaddress, const unsigned char *digest, LastSeenRole role)
 {
     char databuf[CF_HOSTKEY_STRING_SIZE];
 
     if (strlen(ipaddress) == 0)
     {
         Log(LOG_LEVEL_INFO, "LastSeen registry for empty IP with role %d", role);
-        return false;
+        return;
     }
 
     HashPrintSafe(databuf, sizeof(databuf), digest, CF_DEFAULT_DIGEST, true);
 
     const char *mapip = MapAddress(ipaddress);
 
-    return UpdateLastSawHost(databuf, mapip, role == LAST_SEEN_ROLE_ACCEPT, time(NULL));
+    UpdateLastSawHost(databuf, mapip, role == LAST_SEEN_ROLE_ACCEPT, time(NULL));
 }
 
 /*****************************************************************************/
 
-bool UpdateLastSawHost(const char *hostkey, const char *address,
+void UpdateLastSawHost(const char *hostkey, const char *address,
                        bool incoming, time_t timestamp)
 {
     DBHandle *db = NULL;
     if (!OpenDB(&db, dbid_lastseen))
     {
         Log(LOG_LEVEL_ERR, "Unable to open last seen db");
-        return false;
+        return;
     }
 
     /* Update quality-of-connection entry */
@@ -127,8 +127,7 @@ bool UpdateLastSawHost(const char *hostkey, const char *address,
     };
 
     KeyHostSeen q;
-    bool host_existed = ReadDB(db, quality_key, &q, sizeof(q));
-    if (host_existed)
+    if (ReadDB(db, quality_key, &q, sizeof(q)))
     {
         newq.Q = QAverage(q.Q, newq.lastseen - q.lastseen, 0.4);
     }
@@ -154,7 +153,6 @@ bool UpdateLastSawHost(const char *hostkey, const char *address,
     WriteDB(db, address_key, hostkey, strlen(hostkey) + 1);
 
     CloseDB(db);
-    return !host_existed;
 }
 /*****************************************************************************/
 

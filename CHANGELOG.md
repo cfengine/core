@@ -1,3 +1,10 @@
+## 3.27.1
+- Enabled select_region to converge across multiple passes (CFE-3866)
+- Fixed buffer overflow in the files promise
+- Fixed memory leak in isreadable() policy function
+- Fixed segfault when cf-secret print-headers is called without an encrypted file
+  (CFE-4647)
+
 ## 3.27.0
 - Added evaluation order option in body agent control (ENT-13295)
 - Added findlocalgroups() policy function (CFE-4550)

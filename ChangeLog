@@ -1,3 +1,18 @@
+3.24.4:
+	- Enabled select_region to converge across multiple passes (CFE-3866)
+	- Fixed buffer overflow in build XPath for edit_xml (ENT-13550)
+	- Fixed buffer overflow in cf-secret when using multiple keys of different sizes
+	  (ENT-13591)
+	- Fixed buffer overflow in the files promise
+	- Fixed heap buffer overflow in files edit_line (ENT-13590)
+	- Fixed memory leak in isreadable() policy function
+	- Fixed potential buffer overflow when computing chroot path
+	  (ENT-13551)
+	- Fixed potential buffer overflow when converting strings to GIDs/UIDs
+	  (ENT-13551)
+	- Fixed segfault when cf-secret print-headers is called without an encrypted file
+	  (CFE-4647)
+
 3.24.3:
 	- Made permissions atomic during file copy:
 	  The temporary file is now set to promised permissions before replacing it

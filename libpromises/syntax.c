@@ -1293,9 +1293,12 @@ static JsonElement *FnCallTypeToJson(const FnCallType *fn_syntax)
         JsonObjectAppendArray(json_fn, "parameters", params);
     }
     
-    if (!(fn_syntax->argc.min == -1 && fn_syntax->argc.max == -1))
+    if (fn_syntax->argc.min != -1)
     {
         JsonObjectAppendInteger(json_fn, "minArgs", fn_syntax->argc.min);
+    }
+    if (fn_syntax->argc.max != -1)
+    {
         JsonObjectAppendInteger(json_fn, "maxArgs", fn_syntax->argc.max);
     }
 

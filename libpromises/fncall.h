@@ -54,6 +54,11 @@ typedef struct
     const char *description;
 } FnCallArg;
 
+typedef struct {
+  int min;
+  int max;
+} FnArgcRange;
+
 typedef enum
 {
     FNCALL_OPTION_NONE = 0,
@@ -85,6 +90,7 @@ typedef struct
     FnCallOption options;
     FnCallCategory category;
     SyntaxStatus status;
+    const FnArgcRange argc;
 } FnCallType;
 
 extern const FnCallType CF_FNCALL_TYPES[];

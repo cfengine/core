@@ -5,6 +5,10 @@
 - Fixed memory leak in isreadable() policy function
 - Fixed segfault when cf-secret print-headers is called without an encrypted file
   (CFE-4647)
+- Fixed bug causing files promise to fail copying files on vfat file system
+  (ENT-13809)
+- standard_services bundle no longer invokes `systemctl` with `--global`
+  with is mutually exclusive from `--system` (CFE-4639)
 
 ## 3.27.0
 

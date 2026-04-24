@@ -1194,7 +1194,7 @@ dnl
 dnl Various functions
 dnl
 
-AC_SEARCH_LIBS(setsockopt, socket)
+AC_SEARCH_LIBS(setsockopt, [socket ws2_32])
 AC_SEARCH_LIBS(gethostent, nsl)
 
 AC_CHECK_FUNCS(socket)

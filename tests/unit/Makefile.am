@@ -405,6 +405,7 @@ nfs_test_SOURCES = nfs_test.c
 nfs_test_LDADD = ../../libpromises/libpromises.la libtest.la
 
 init_script_test_helper_SOURCES = init_script_test_helper.c
+check_PROGRAMS += init_script_test_helper
 init_script_test.sh: init_script_test_helper
 CLEANFILES += init_script_test_helper
 endif

@@ -12,6 +12,7 @@ pipeline {
     stage('submodules') {
       steps { sh "git submodule init && git submodule update" }
     }
+    stage('dependencies') { steps { sh "ci/dependencies.sh" } }
     stage('autoconf') {
       steps {
         sh "./autogen.sh --enable-debug"

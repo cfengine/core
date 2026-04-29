@@ -9,6 +9,9 @@ pipeline {
         sh 'for r in $REPOS; do rm -rf "$(basename "$r")"; done'
       }
     } // clean workspace
+    stage('submodules') {
+      steps { sh "git submodule init && git submodule update" }
+    }
     stage('autoconf') {
       steps {
         sh "./autogen.sh --enable-debug"

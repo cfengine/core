@@ -19,16 +19,11 @@ allow cfengine_apachectl_t user_devpts_t:chr_file getattr;
 allow cfengine_execd_t http_port_t:tcp_socket name_connect;
 
 #============= cfengine_httpd_t ==============
-allow cfengine_httpd_t hugetlbfs_t:file { read write };
 allow cfengine_httpd_t systemd_userdbd_runtime_t:dir { open read getattr search };
 allow cfengine_httpd_t systemd_userdbd_runtime_t:lnk_file read;
 allow cfengine_httpd_t systemd_userdbd_runtime_t:sock_file write;
 allow cfengine_httpd_t systemd_userdbd_t:unix_stream_socket connectto;
 allow cfengine_httpd_t kernel_t:unix_stream_socket connectto;
-
-#============= cfengine_hub_t ==============
-allow cfengine_hub_t cfengine_httpd_exec_t:file getattr;
-allow cfengine_hub_t sysfs_t:lnk_file read;
 
 #============= cfengine_postgres_t ==============
 allow cfengine_postgres_t systemd_userdbd_runtime_t:dir { open read getattr search };

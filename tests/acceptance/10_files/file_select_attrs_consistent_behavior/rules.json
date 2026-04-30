@@ -1,6 +1,6 @@
 [
 {
-"location": "/tmp/logs/tidy"
+"location": "/tmp/logs/tidy",
 "context": "any",
 "action": "TIDY",
 "frequency": "10",

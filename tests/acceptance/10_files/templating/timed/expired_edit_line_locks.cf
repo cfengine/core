@@ -4,13 +4,13 @@
 
 body common control
 {
-    inputs => { "../../../dcs.cf.sub", "../../../plucked.cf.sub" };
+    inputs => { "../../../dcs.cf.sub", "../../../plucked.sub.cf" };
     bundlesequence => { default($(this.promise_filename)) };
 }
 
 bundle agent test
 {
-        
+
   commands:
       # Note, no -K, we are testing locks.
       "$(sys.cf_agent) -v -D AUTO,DEBUG -f $(this.promise_filename).sub"

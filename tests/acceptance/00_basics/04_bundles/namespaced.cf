@@ -2,7 +2,7 @@
 
 body common control
 {
-      inputs => { "../../default.cf.sub", "namespaced.cf.sub" };
+      inputs => { "../../default.sub.cf", "namespaced.cf.sub" };
       bundlesequence => {
                           ns1:mytest("x"),
                           ns2:mytest("x", "y"),

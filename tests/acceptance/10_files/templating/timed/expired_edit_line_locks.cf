@@ -4,7 +4,7 @@
 
 body common control
 {
-    inputs => { "../../../dcs.cf.sub", "../../../plucked.sub.cf" };
+    inputs => { "../../../dcs.sub.cf", "../../../plucked.sub.cf" };
     bundlesequence => { default($(this.promise_filename)) };
 }
 

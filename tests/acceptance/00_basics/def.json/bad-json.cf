@@ -1,7 +1,7 @@
 # test of the def.json facility: complain if a bad JSON file is found
 body common control
 {
-      inputs => { "../../default.cf.sub" };
+      inputs => { "../../default.sub.cf" };
       bundlesequence  => { default("$(this.promise_filename)") };
       version => "1.0";
 }

@@ -6,7 +6,7 @@
 
 body common control
 {
-      inputs => { "../../default.cf.sub" };
+      inputs => { "../../default.sub.cf" };
       bundlesequence  => { test };
       version => "1.0";
 }
@@ -31,4 +31,3 @@ bundle agent test
       "Running: $(cmd2)";
       "Setup comes from $(this.promise_filename).sub1, results come from $(this.promise_filename).sub2";
 }
-

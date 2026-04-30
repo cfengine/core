@@ -5,7 +5,7 @@
 
 body common control
 {
-      inputs => { "../../../default.cf.sub", "101_namespaced_getindices.cf.sub" };
+      inputs => { "../../../default.sub.cf", "101_namespaced_getindices.cf.sub" };
       bundlesequence => { default("$(this.promise_filename)") };
       version => "1.0";
 }

@@ -3,7 +3,7 @@
 
 body common control
 {
-      inputs => { "../../default.cf.sub", "check_file_changes_log.cf.sub" };
+      inputs => { "../../default.sub.cf", "check_file_changes_log.cf.sub" };
       bundlesequence  => { default("$(this.promise_filename)") };
 }
 

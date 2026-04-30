@@ -4,7 +4,7 @@
 
 body common control
 {
-    inputs => { "../../default.cf.sub" };
+    inputs => { "../../default.sub.cf" };
     bundlesequence => { "debug_info", default("$(this.promise_filename)") };
 }
 

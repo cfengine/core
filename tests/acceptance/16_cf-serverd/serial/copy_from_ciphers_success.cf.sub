@@ -11,7 +11,7 @@
 
 body common control
 {
-      inputs => { "../../default.cf.sub" };
+      inputs => { "../../default.sub.cf" };
       bundlesequence  => { default("$(this.promise_filename)") };
 
       # Do not set this, just use the very broad OpenSSL default.

@@ -94,7 +94,7 @@ check-local:
 	+ $(TESTS_ENVIRONMENT) MAKE=$(MAKE) $(srcdir)/testall
 
 
-EXTRA_DIST = default.cf.sub dcs.cf.sub plucked.sub.cf run_with_server.cf.sub \
+EXTRA_DIST = default.sub.cf dcs.sub.cf plucked.sub.cf run_with_server.cf.sub \
 	testall dummy_etc write_args.sh \
 	root-MD5=617eb383deffef843ea856b129d0a423.pub \
 	root-MD5=617eb383deffef843ea856b129d0a423.priv

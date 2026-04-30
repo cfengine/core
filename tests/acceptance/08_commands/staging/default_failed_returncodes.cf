@@ -1,6 +1,6 @@
 body common control
 {
-  inputs => { "../default.cf.sub" };
+  inputs => { "../default.sub.cf" };
   bundlesequence => { default("$(this.promise_filename)") };
 }
 
@@ -37,4 +37,3 @@ body classes scoped_classes_generic_kept_0(scope, x)
       #repaired_returncodes => { "2" };
       #failed_returncodes => { "1" };
 }
-

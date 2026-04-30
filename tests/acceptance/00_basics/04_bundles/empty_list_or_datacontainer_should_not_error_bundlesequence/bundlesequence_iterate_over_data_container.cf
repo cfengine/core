@@ -1,6 +1,6 @@
 body common control
 {
-  inputs => { "../../../default.cf.sub" };
+  inputs => { "../../../default.sub.cf" };
   bundlesequence => { collect_stories_metadata, test_precheck, def, test, @(def.container), check };
 }
 

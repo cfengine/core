@@ -1,6 +1,6 @@
 body common control
 {
-      inputs => { "../../default.cf.sub" };
+      inputs => { "../../default.sub.cf" };
       bundlesequence  => { default("$(this.promise_filename)") };
       version => "1.0";
 }
@@ -58,4 +58,3 @@ body link_from ln_s(x)
       source => "$(x)";
       when_no_source => "force";
 }
-

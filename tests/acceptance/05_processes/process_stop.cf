@@ -1,6 +1,6 @@
 body common control
 {
-    inputs => { "../default.cf.sub" };
+    inputs => { "../default.sub.cf" };
     bundlesequence  => { default("$(this.promise_filename)") };
 }
 
@@ -147,4 +147,3 @@ body classes explicit_results(scope, class_prefix)
 
   repair_timeout => { "$(class_prefix)_timeout" };
 }
-

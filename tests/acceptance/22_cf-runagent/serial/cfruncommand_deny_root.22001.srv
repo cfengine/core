@@ -1,7 +1,7 @@
 body common control
 {
       bundlesequence => { "access_rules" };
-      inputs => { "../../default.cf.sub" };
+      inputs => { "../../default.sub.cf" };
 
 }
 
@@ -36,4 +36,3 @@ bundle server access_rules()
       admit_ips  => { "127.0.0.1", "::1" };
 
 }
-

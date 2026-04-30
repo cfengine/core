@@ -5,7 +5,7 @@ body common control
 {
 
 AUTO::
-      inputs => { "../../default.cf.sub" };
+      inputs => { "../../default.sub.cf" };
       bundlesequence => { default("$(this.promise_filename)") };
 !AUTO::
       bundlesequence => { "init", "check" };
@@ -55,4 +55,3 @@ reports:
   DEBUG.invalid_function::
     "invalid_function";
 }
-

@@ -1,7 +1,7 @@
 #!/var/cfengine/bin/cf-agent -Kf
 body common control
 {
-    inputs => { "../../default.cf.sub" };
+    inputs => { "../../default.sub.cf" };
     bundlesequence => { "main"};
 }
 

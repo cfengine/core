@@ -1,7 +1,7 @@
 body file control
 {
         inputs => {
-                    "../../../default.cf.sub",
+                    "../../../default.sub.cf",
         };
 }
 bundle agent __main__
@@ -72,4 +72,3 @@ body edit_defaults size(bigenough)
 {
     max_file_size => "$(bigenough)";
 }
-

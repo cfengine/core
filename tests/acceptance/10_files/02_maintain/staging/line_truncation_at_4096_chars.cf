@@ -34,7 +34,7 @@ bundle agent init
   # It would create a false negative.
   commands:
       "${G.perl}"
-        args    => "-e 'print \"#\" x ${char_number}; print \"ENDMARK\n\"' > ${G.testfile}"
+        args    => "-e 'print \"#\" x ${char_number}; print \"ENDMARK\n\"' > ${G.testfile}",
         contain => in_shell;
 }
 

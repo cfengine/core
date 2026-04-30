@@ -79,7 +79,7 @@ bundle agent check
 
   reports:
     DEBUG.!ok::
-      "${this.promise_filename} FAILed as the generated file got at least a line truncated to 4096 characters"
+      "${this.promise_filename} FAILed as the generated file got at least a line truncated to 4096 characters";
     ok::
       "${this.promise_filename} Pass";
     !ok::

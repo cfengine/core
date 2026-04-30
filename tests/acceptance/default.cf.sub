@@ -18,7 +18,7 @@ bundle common D
       "inputs"
         slist => {
                    "$(D.owndir)$(const.dirsep)dcs.cf.sub",
-                   "$(D.owndir)$(const.dirsep)plucked.cf.sub",
+                   "$(D.owndir)$(const.dirsep)plucked.sub.cf",
                  };
 
     # If testing the masterfiles policy framework then load the stdlib by
@@ -35,6 +35,6 @@ bundle common D
 
 body file control
 {
-      # plucked.cf.sub comes from the stdlib with `make pluck`
+      # plucked.sub.cf comes from the stdlib with `make pluck`
       inputs => { @(D.inputs) };
 }

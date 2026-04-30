@@ -22,32 +22,32 @@ void test_benchmark(void)
 
 void test_no_bundle_or_body_keyword(void)
 {
-    assert_false(TestParsePolicy("no_bundle_or_body_keyword.cf"));
+    assert_false(TestParsePolicy("no_bundle_or_body_keyword.x.cf"));
 }
 
 void test_bundle_invalid_type(void)
 {
-    assert_false(TestParsePolicy("bundle_invalid_type.cf"));
+    assert_false(TestParsePolicy("bundle_invalid_type.x.cf"));
 }
 
 void test_constraint_ifvarclass_invalid(void)
 {
-    assert_false(TestParsePolicy("constraint_ifvarclass_invalid.cf"));
+    assert_false(TestParsePolicy("constraint_ifvarclass_invalid.x.cf"));
 }
 
 void test_bundle_args_invalid_type(void)
 {
-    assert_false(TestParsePolicy("bundle_args_invalid_type.cf"));
+    assert_false(TestParsePolicy("bundle_args_invalid_type.x.cf"));
 }
 
 void test_bundle_args_forgot_cp(void)
 {
-    assert_false(TestParsePolicy("bundle_args_forgot_cp.cf"));
+    assert_false(TestParsePolicy("bundle_args_forgot_cp.x.cf"));
 }
 
 void test_bundle_body_forgot_ob(void)
 {
-    assert_false(TestParsePolicy("bundle_body_forgot_ob.cf"));
+    assert_false(TestParsePolicy("bundle_body_forgot_ob.x.cf"));
 }
 
 void test_bundle_custom_promise_type(void)
@@ -57,42 +57,42 @@ void test_bundle_custom_promise_type(void)
 
 void test_bundle_body_wrong_promise_type_token(void)
 {
-    assert_false(TestParsePolicy("bundle_body_wrong_promise_type_token.cf"));
+    assert_false(TestParsePolicy("bundle_body_wrong_promise_type_token.x.cf"));
 }
 
 void test_bundle_body_wrong_statement(void)
 {
-    assert_false(TestParsePolicy("bundle_body_wrong_statement.cf"));
+    assert_false(TestParsePolicy("bundle_body_wrong_statement.x.cf"));
 }
 
 void test_bundle_body_forgot_semicolon(void)
 {
-    assert_false(TestParsePolicy("bundle_body_forgot_semicolon.cf"));
+    assert_false(TestParsePolicy("bundle_body_forgot_semicolon.x.cf"));
 }
 
 void test_bundle_body_promiser_statement_contains_colon(void)
 {
-    assert_false(TestParsePolicy("bundle_body_promiser_statement_contains_colon.cf"));
+    assert_false(TestParsePolicy("bundle_body_promiser_statement_contains_colon.x.cf"));
 }
 
 void test_bundle_body_promiser_statement_missing_assign(void)
 {
-    assert_false(TestParsePolicy("bundle_body_promiser_statement_missing_assign.cf"));
+    assert_false(TestParsePolicy("bundle_body_promiser_statement_missing_assign.x.cf"));
 }
 
 void test_bundle_body_promisee_missing_arrow(void)
 {
-    assert_false(TestParsePolicy("bundle_body_promise_missing_arrow.cf"));
+    assert_false(TestParsePolicy("bundle_body_promise_missing_arrow.x.cf"));
 }
 
 void test_bundle_body_promiser_wrong_constraint_token(void)
 {
-    assert_false(TestParsePolicy("bundle_body_promiser_wrong_constraint_token.cf"));
+    assert_false(TestParsePolicy("bundle_body_promiser_wrong_constraint_token.x.cf"));
 }
 
 void test_bundle_body_promiser_unknown_constraint_id(void)
 {
-    assert_false(TestParsePolicy("bundle_body_promiser_unknown_constraint_id.cf"));
+    assert_false(TestParsePolicy("bundle_body_promiser_unknown_constraint_id.x.cf"));
 }
 
 void test_body_edit_line_common_constraints(void)
@@ -107,107 +107,107 @@ void test_body_edit_xml_common_constraints(void)
 
 void test_promise_promiser_nonscalar(void)
 {
-    assert_false(TestParsePolicy("promise_promiser_nonscalar.cf"));
+    assert_false(TestParsePolicy("promise_promiser_nonscalar.x.cf"));
 }
 
 void test_bundle_body_promiser_forgot_colon(void)
 {
-    assert_false(TestParsePolicy("bundle_body_promiser_forgot_colon.cf"));
+    assert_false(TestParsePolicy("bundle_body_promiser_forgot_colon.x.cf"));
 }
 
 void test_bundle_body_promisee_no_colon_allowed(void)
 {
-    assert_false(TestParsePolicy("bundle_body_promisee_no_colon_allowed.cf"));
+    assert_false(TestParsePolicy("bundle_body_promisee_no_colon_allowed.x.cf"));
 }
 
 void test_bundle_body_forget_cb_eof(void)
 {
-    assert_false(TestParsePolicy("bundle_body_forget_cb_eof.cf"));
+    assert_false(TestParsePolicy("bundle_body_forget_cb_eof.x.cf"));
 }
 
 void test_bundle_body_forget_cb_body(void)
 {
-    assert_false(TestParsePolicy("bundle_body_forget_cb_body.cf"));
+    assert_false(TestParsePolicy("bundle_body_forget_cb_body.x.cf"));
 }
 
 void test_bundle_body_forget_cb_bundle(void)
 {
-    assert_false(TestParsePolicy("bundle_body_forget_cb_bundle.cf"));
+    assert_false(TestParsePolicy("bundle_body_forget_cb_bundle.x.cf"));
 }
 
 void test_body_selection_wrong_token(void)
 {
-    assert_false(TestParsePolicy("body_selection_wrong_token.cf"));
+    assert_false(TestParsePolicy("body_selection_wrong_token.x.cf"));
 }
 
 void test_body_selection_forgot_semicolon(void)
 {
-    assert_false(TestParsePolicy("body_selection_forgot_semicolon.cf"));
+    assert_false(TestParsePolicy("body_selection_forgot_semicolon.x.cf"));
 }
 
 void test_body_selection_unknown_selection_id(void)
 {
-    assert_false(TestParsePolicy("body_selection_unknown_selection_id.cf"));
+    assert_false(TestParsePolicy("body_selection_unknown_selection_id.x.cf"));
 }
 
 void test_body_body_forget_cb_eof(void)
 {
-    assert_false(TestParsePolicy("body_body_forget_cb_eof.cf"));
+    assert_false(TestParsePolicy("body_body_forget_cb_eof.x.cf"));
 }
 
 void test_body_body_forget_cb_body(void)
 {
-    assert_false(TestParsePolicy("body_body_forget_cb_body.cf"));
+    assert_false(TestParsePolicy("body_body_forget_cb_body.x.cf"));
 }
 
 void test_body_body_forget_cb_bundle(void)
 {
-    assert_false(TestParsePolicy("body_body_forget_cb_bundle.cf"));
+    assert_false(TestParsePolicy("body_body_forget_cb_bundle.x.cf"));
 }
 
 void test_rval_list_forgot_colon(void)
 {
-    assert_false(TestParsePolicy("rval_list_forgot_colon.cf"));
+    assert_false(TestParsePolicy("rval_list_forgot_colon.x.cf"));
 }
 
 void test_rval_list_wrong_input_type(void)
 {
-    assert_false(TestParsePolicy("rval_list_wrong_input_type.cf"));
+    assert_false(TestParsePolicy("rval_list_wrong_input_type.x.cf"));
 }
 
 void test_rval_function_forgot_colon(void)
 {
-    assert_false(TestParsePolicy("rval_function_forgot_colon.cf"));
+    assert_false(TestParsePolicy("rval_function_forgot_colon.x.cf"));
 }
 
 void test_rval_function_wrong_input_type(void)
 {
-    assert_false(TestParsePolicy("rval_function_wrong_input_type.cf"));
+    assert_false(TestParsePolicy("rval_function_wrong_input_type.x.cf"));
 }
 
 void test_rval_wrong_input_type(void)
 {
-    assert_false(TestParsePolicy("rval_wrong_input_type.cf"));
+    assert_false(TestParsePolicy("rval_wrong_input_type.x.cf"));
 }
 
 void test_rval_list_forgot_cb_semicolon(void)
 {
-    assert_false(TestParsePolicy("rval_list_forgot_cb_semicolon.cf"));
+    assert_false(TestParsePolicy("rval_list_forgot_cb_semicolon.x.cf"));
 }
 
 void test_rval_list_forgot_cb_colon(void)
 {
-    assert_false(TestParsePolicy("rval_list_forgot_cb_colon.cf"));
+    assert_false(TestParsePolicy("rval_list_forgot_cb_colon.x.cf"));
 }
 
 void test_rval_function_forgot_cp_semicolon(void)
 {
-    assert_false(TestParsePolicy("rval_function_forgot_cp_semicolon.cf"));
+    assert_false(TestParsePolicy("rval_function_forgot_cp_semicolon.x.cf"));
 }
 
 void test_rval_function_forgot_cp_colon(void)
 {
-    assert_false(TestParsePolicy("rval_function_forgot_cp_colon.cf"));
+    assert_false(TestParsePolicy("rval_function_forgot_cp_colon.x.cf"));
 }
 
 int main()

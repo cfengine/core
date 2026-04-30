@@ -2,7 +2,7 @@
 body common control
 {
         inputs => {
-                    "../../default.cf.sub"
+                    "../../default.sub.cf"
         };
         bundlesequence => { default("$(this.promise_filename)") };
 }
@@ -32,4 +32,3 @@ bundle agent check
                                     "$(this.promise_filename).expected",
                                     "$(this.promise_filename)");
 }
-

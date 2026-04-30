@@ -7,7 +7,7 @@
 body common control
 {
       inputs => {
-                  "../../default.cf.sub",
+                  "../../default.sub.cf",
                   @(dynamic.inputs),
       };
       bundlesequence  => { dynamic, default("$(this.promise_filename)") };

@@ -6,7 +6,7 @@
 
 body common control
 {
-      inputs => { "../../default.cf.sub" };
+      inputs => { "../../default.sub.cf" };
       bundlesequence  => { default("$(this.promise_filename)") };
       version => "1.0";
 }
@@ -20,7 +20,8 @@ bundle agent init
       "zero"   string => "00000";
       "negate" string => "-137";
       "spacey" string => "17 
-	"; # Spaces ignored after number
+	
+"; # Spaces ignored after number
       "kilo"   string => "42k";
       "kibi"   string => "42K";
       "mega"   string => "42m";

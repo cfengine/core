@@ -8,7 +8,7 @@ body common control
 {
       ignore_missing_inputs => "on";
 
-      inputs => { "../../default.cf.sub", "missing" };
+      inputs => { "../../default.sub.cf", "missing" };
       bundlesequence  => { default("$(this.promise_filename)") };
       version => "1.0";
 }
@@ -45,4 +45,3 @@ bundle agent check
     !ok::
       "$(this.promise_filename) FAIL";
 }
-

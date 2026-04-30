@@ -2,7 +2,7 @@
 
 body common control
 {
-      inputs => { "../../default.cf.sub", "108.cf.sub" };
+      inputs => { "../../default.sub.cf", "108.cf.sub" };
       bundlesequence => { default("$(this.promise_filename)") };
       version => "1.0";
 }

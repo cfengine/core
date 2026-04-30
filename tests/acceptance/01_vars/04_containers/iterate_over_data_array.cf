@@ -1,6 +1,6 @@
 body common control
 {
-      inputs => { "../../default.cf.sub" };
+      inputs => { "../../default.sub.cf" };
       bundlesequence  => { default("$(this.promise_filename)") };
       version => "1.0";
 }
@@ -35,4 +35,3 @@ bundle agent check
   methods:
     "Check" usebundle => dcs_check_diff( $(G.testfile), "$(this.promise_filename).expected", $(this.promise_filename) );
 }
-

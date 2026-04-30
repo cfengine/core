@@ -1,7 +1,7 @@
 #!/var/cfengine/bin/cf-agent -f-
 body common control
 {
-      inputs => { "../../default.cf.sub" };
+      inputs => { "../../default.sub.cf" };
       bundlesequence => {
                           default("$(this.promise_filename)") };
       version => "1.0";

@@ -2,7 +2,7 @@
 
 body common control
 {
-      inputs => { "../../default.cf.sub" };
+      inputs => { "../../default.sub.cf" };
       bundlesequence => { default("$(this.promise_filename)") };
 }
 
@@ -64,4 +64,3 @@ bundle common dummy
   meta:
       "tags" slist => { "dummytag1", "dummytag2", "foo=bar", "foo=hello" };
 }
-

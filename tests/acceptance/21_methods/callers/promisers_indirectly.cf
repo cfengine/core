@@ -6,7 +6,7 @@
 
 body common control
 {
-      inputs => { "../../default.cf.sub" };
+      inputs => { "../../default.sub.cf" };
       bundlesequence  => { default("$(this.promise_filename)") };
       version => "1.0";
 }
@@ -68,4 +68,3 @@ bundle agent dummy {
       "EXPECT (second in ${this.bundle}): callers_promisers_string = ${callers_promisers_expect_second}";
       "ACTUAL (second in ${this.bundle}): callers_promisers_string = ${callers_promisers_actual}";
 }
-

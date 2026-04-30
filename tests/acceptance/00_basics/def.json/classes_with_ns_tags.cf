@@ -1,7 +1,7 @@
 # basic test of the def.json facility: classes with namespace specification and tags
 body common control
 {
-      inputs => { "../../default.cf.sub" };
+      inputs => { "../../default.sub.cf" };
       bundlesequence  => { default("$(this.promise_filename)") };
       version => "1.0";
 }

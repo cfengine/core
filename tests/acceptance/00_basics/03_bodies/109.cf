@@ -11,7 +11,7 @@
 
 body common control
 {
-      inputs => { "../../default.cf.sub" };
+      inputs => { "../../default.sub.cf" };
       bundlesequence  => { "g", default("$(this.promise_filename)") };
       version => "1.0";
 }
@@ -167,4 +167,3 @@ bundle agent check
       "$(this.promise_filename) FAIL"
       report_to_file => "$(G.logfile)";
 }
-

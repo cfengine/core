@@ -10,7 +10,7 @@ bundle common test_meta
 
 body common control
 {
-      inputs => { "../../default.cf.sub",
+      inputs => { "../../default.sub.cf",
                   "user_queries.cf.sub",
                   "disable_sudo_tty_requirement.cf.sub"
                 };

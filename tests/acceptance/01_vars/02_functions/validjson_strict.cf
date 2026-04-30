@@ -16,7 +16,7 @@ bundle agent check
 {
   vars:
     "json" string => readfile("$(this.promise_dirname)/validdata.cf.json", inf);
-    "invjson" string => readfile("$(this.promise_dirname)/validdata.cf.inv.json", inf);
+    "invjson" string => readfile("$(this.promise_dirname)/validdata.cf.x.json", inf);
     "mystring" string => "\"foo\"";
     "mynumber" string => "3.14";
     "mybool" string => "true";

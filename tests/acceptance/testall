@@ -1059,13 +1059,13 @@ then
             ALL_TESTS="$ALL_TESTS${ALL_TESTS:+ }$test"
         elif [ -d $test ]
         then
-            ALL_TESTS="$ALL_TESTS${ALL_TESTS:+ }$(find "$test" -name workdir -prune -o -name '*.cf' -print | sort)"
+            ALL_TESTS="$ALL_TESTS${ALL_TESTS:+ }$(find "$test" -name workdir -prune -o -name '*.cf' -and -not -name '*.sub.cf' -print | sort)"
         else
             echo "Unable to open test file/directory: $test"
         fi
     done
 else
-    ALL_TESTS="$ALL_TESTS${ALL_TESTS:+ }$(find . \( -name selftest -o -name workdir \) -prune -o -name '*.cf' -print | sort)"
+    ALL_TESTS="$ALL_TESTS${ALL_TESTS:+ }$(find . \( -name selftest -o -name workdir \) -prune -o -name '*.cf' -and -not -name '*.sub.cf' -print | sort)"
 fi
 
 for addtest in $ALL_TESTS

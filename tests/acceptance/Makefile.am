@@ -94,7 +94,7 @@ check-local:
 	+ $(TESTS_ENVIRONMENT) MAKE=$(MAKE) $(srcdir)/testall
 
 
-EXTRA_DIST = default.cf.sub dcs.cf.sub plucked.cf.sub run_with_server.cf.sub \
+EXTRA_DIST = default.cf.sub dcs.cf.sub plucked.sub.cf run_with_server.cf.sub \
 	testall dummy_etc write_args.sh \
 	root-MD5=617eb383deffef843ea856b129d0a423.pub \
 	root-MD5=617eb383deffef843ea856b129d0a423.priv
@@ -109,5 +109,5 @@ dist-hook:
 CLEANFILES = *.gcno *.gcda Makefile.testall
 
 pluck:
-	echo '### This is an auto-generated file, see Makefile.am and `make pluck` ###' > plucked.cf.sub
-	../../contrib/cf-locate/cf-locate -f -p '( if_|run_|warn_only|INI_section|kept_successful_command|edit_line|set_user_field|set_variable_values\(|edit_field|set_line_based|location|replace_with|_cp|_dcp|empty|shell|immediate|perms| m\b|recurse|tidy| all|classes_generic|results| start|always|^value|edit_field line|insert_lines|(link|copy)from| file_mustache| (file|dir)_(copy|tidy|sync|make|empty|link|hardlink))' ../../../masterfiles/lib/*.cf >> plucked.cf.sub
+	echo '### This is an auto-generated file, see Makefile.am and `make pluck` ###' > plucked.sub.cf
+	../../contrib/cf-locate/cf-locate -f -p '( if_|run_|warn_only|INI_section|kept_successful_command|edit_line|set_user_field|set_variable_values\(|edit_field|set_line_based|location|replace_with|_cp|_dcp|empty|shell|immediate|perms| m\b|recurse|tidy| all|classes_generic|results| start|always|^value|edit_field line|insert_lines|(link|copy)from| file_mustache| (file|dir)_(copy|tidy|sync|make|empty|link|hardlink))' ../../../masterfiles/lib/*.cf >> plucked.sub.cf

@@ -3,7 +3,7 @@
 
 body common control
 {
-    inputs => { "../../default.cf.sub", "../mailfilter_common.cf.sub" };
+    inputs => { "../../default.sub.cf", "../mailfilter_common.cf.sub" };
     bundlesequence => { default($(this.promiser_filename)) };
 }
 

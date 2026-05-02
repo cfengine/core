@@ -3,7 +3,7 @@
 
 body common control
 {
-    inputs => { "../../dcs.cf.sub",
+    inputs => { "../../dcs.sub.cf",
                 "../../plucked.sub.cf",
                 "check_file_changes_log.cf.sub",
               };

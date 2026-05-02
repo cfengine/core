@@ -6,7 +6,7 @@
 
 body common control
 {
-      inputs => { "../../default.cf.sub" };
+      inputs => { "../../default.sub.cf" };
       bundlesequence  => { test };
       version => "1.0";
 }
@@ -26,4 +26,3 @@ bundle agent test
     DEBUG::
       "Running: $(cmd)";
 }
-

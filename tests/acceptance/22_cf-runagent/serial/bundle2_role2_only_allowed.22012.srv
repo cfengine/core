@@ -1,7 +1,7 @@
 body common control
 {
       bundlesequence => { "access_rules" };
-      inputs => { "../../default.cf.sub" };
+      inputs => { "../../default.sub.cf" };
 
 }
 
@@ -44,4 +44,3 @@ bundle server access_rules()
     "role2" authorize => { "root" };
 
 }
-

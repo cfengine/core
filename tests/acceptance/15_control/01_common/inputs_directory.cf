@@ -4,7 +4,7 @@
 body common control
 {
       ignore_missing_inputs => "true";
-      inputs => { "/x.cf", "/", "../../default.cf.sub" };
+      inputs => { "/x.cf", "/", "../../default.sub.cf" };
       bundlesequence  => { default("$(this.promise_filename)") };
 }
 

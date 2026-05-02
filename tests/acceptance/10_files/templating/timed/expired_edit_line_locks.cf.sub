@@ -1,6 +1,6 @@
 body common control
 {
-    inputs => { "../../../dcs.cf.sub", "../../../plucked.sub.cf" };
+    inputs => { "../../../dcs.sub.cf", "../../../plucked.sub.cf" };
     bundlesequence => { default($(this.promise_filename)) };
 }
 
@@ -28,5 +28,3 @@ bundle agent test
         edit_template => "$(G.testfile).template",
         template_method => "mustache";
 }
-
-

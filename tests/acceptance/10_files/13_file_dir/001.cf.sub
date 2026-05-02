@@ -1,7 +1,7 @@
 body common control 
 {
       bundlesequence => { "create_test_file" };
-      inputs => { "../../default.cf.sub" };
+      inputs => { "../../default.sub.cf" };
 }
 
 body agent control 
@@ -29,4 +29,3 @@ body changes diff
       report_diffs   => "true";                                                                                                                                                                                            
       update_hashes  => "yes";                                                                                                                                                                                             
 }
-

@@ -1,7 +1,7 @@
 # Test that hourly splay class works as expected
 body common control
 {
-      inputs => { "../../default.cf.sub" };
+      inputs => { "../../default.sub.cf" };
       version => "1.0";
 }
 

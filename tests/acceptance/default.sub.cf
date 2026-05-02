@@ -17,7 +17,7 @@ bundle common D
     !testing_masterfiles_policy_framework::
       "inputs"
         slist => {
-                   "$(D.owndir)$(const.dirsep)dcs.cf.sub",
+                   "$(D.owndir)$(const.dirsep)dcs.sub.cf",
                    "$(D.owndir)$(const.dirsep)plucked.sub.cf",
                  };
 
@@ -26,7 +26,7 @@ bundle common D
     testing_masterfiles_policy_framework::
       "inputs"
         slist => {
-                   "$(D.owndir)$(const.dirsep)dcs.cf.sub",
+                   "$(D.owndir)$(const.dirsep)dcs.sub.cf",
                    "$(D.owndir)$(const.dirsep)..$(const.dirsep)..$(const.dirsep)lib$(const.dirsep)stdlib.cf"
                  };
 

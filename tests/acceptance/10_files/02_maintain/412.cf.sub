@@ -6,7 +6,7 @@
 
 body common control
 {
-  inputs => { "../../default.cf.sub" };
+  inputs => { "../../default.sub.cf" };
   bundlesequence  => { "test" };
 }
 
@@ -34,4 +34,3 @@ vars:
 insert_lines:
         "$(ns)";
 }
-

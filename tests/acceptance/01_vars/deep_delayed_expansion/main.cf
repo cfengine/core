@@ -1,6 +1,6 @@
 body common control
 {
-  inputs => { "../../default.cf.sub", @(def.augments_inputs) };
+  inputs => { "../../default.sub.cf", @(def.augments_inputs) };
   bundlesequence => { default("$(this.promise_filename)") };
 }
 

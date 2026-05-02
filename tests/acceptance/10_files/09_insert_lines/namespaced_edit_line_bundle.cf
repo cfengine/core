@@ -6,7 +6,7 @@
 
 body common control
 {
-      inputs => { "../../default.cf.sub", "namespaced_edit_line_bundle.cf.sub" };
+      inputs => { "../../default.sub.cf", "namespaced_edit_line_bundle.cf.sub" };
       bundlesequence  => { default("$(this.promise_filename)") };
       version => "1.0";
 }

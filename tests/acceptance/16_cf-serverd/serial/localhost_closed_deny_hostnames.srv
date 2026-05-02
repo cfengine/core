@@ -3,7 +3,7 @@
 body common control
 {
       bundlesequence => { "access_rules" };
-      inputs => { "../../default.cf.sub" };
+      inputs => { "../../default.sub.cf" };
 
 }
 
@@ -32,4 +32,3 @@ bundle server access_rules()
         admit   => { "0.0.0.0/0" },                                     # admit everyone but
         deny_hostnames    => { "localhost", "localhost.localdomain" };  # deny is stronger than admit
 }
-

@@ -1,9 +1,9 @@
 body common control
 {
-      # Feel free to avoid including "default.cf.sub" and define your
+      # Feel free to avoid including "default.sub.cf" and define your
       # own bundlesequence for simple tests
 
-      inputs => { "../../../default.cf.sub" };
+      inputs => { "../../../default.sub.cf" };
       bundlesequence  => { default("$(this.promise_filename)") };
 }
 

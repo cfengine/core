@@ -1,20 +1,20 @@
 #+Title: Policy Test Framework
 
-The policy testing framework loaded by [[file:default.cf.sub][=default.cf.sub=]]. For full support of the
+The policy testing framework loaded by [[file:default.sub.cf][=default.sub.cf=]]. For full support of the
 test framework this policy file should be included in each test and the
 =bundlesequence= should be set to =default("$(this.promise_filename)")=.
 
-NOTE: Be sure the relative path to =default.cf.sub=
+NOTE: Be sure the relative path to =default.sub.cf=
 #+Caption: Common control template to be included in each test
 #+BEGIN_SRC cfengine3
 body common control
 {
-      inputs => { "../../default.cf.sub" };
+      inputs => { "../../default.sub.cf" };
       bundlesequence  => { default("$(this.promise_filename)") };
 }
 #+END_SRC
 
-[[file:dcs.cf.sub][=dcs.cf.sub=]] contains the majority of the policy testing framework. The
+[[file:dcs.sub.cf][=dcs.sub.cf=]] contains the majority of the policy testing framework. The
 following bundles are useful for common test patterns. In all cases =test=
 should be passed =$(this.promise_filename)=.
 
@@ -65,4 +65,3 @@ should be passed =$(this.promise_filename)=.
 - bundle agent =xml_check_diff(file1, file2, test, expected_difference)= :: Pass/FAIL
      based on =expected_difference= (=yes=/=no=) between xml =file1= and
      xml =file2=.
-

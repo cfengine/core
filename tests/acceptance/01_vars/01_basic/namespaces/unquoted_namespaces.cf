@@ -1,6 +1,6 @@
 body common control
 {
-      inputs => { "../../../default.cf.sub"};
+      inputs => { "../../../default.sub.cf"};
       bundlesequence => { "init", "test", "new_namespace:check" };
       version => "1.0";
 }

@@ -15,7 +15,7 @@ bundle agent test
         meta => { "ENT-10257" };
 
   methods:
-      "" usebundle => file_copy("$(this.promise_filename).json", "$(sys.inputdir)$(const.dirsep)def.json");
+      "" usebundle => file_copy("$(this.promise_filename).x.json", "$(sys.inputdir)$(const.dirsep)def.json");
 }
 
 #######################################################

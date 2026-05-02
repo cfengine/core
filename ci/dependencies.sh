@@ -69,8 +69,9 @@ if [ -f /etc/os-release ]; then
                 build_librsync
             fi
         else
-            echo "Unsupported version of redhat for $0"
-            exit 1
+            sudo yum install epel-release -y
+            sudo yum update -y
+            sudo yum install -y gcc gdb make git libtool autoconf automake byacc flex openssl-devel pcre2-devel lmdb-devel pam-devel flex-devel libyaml-devel fakeroot libxml2-devel librsync-devel
         fi
         elif [ "$ID" = "alpine" ]; then
             $GAINROOT apk update

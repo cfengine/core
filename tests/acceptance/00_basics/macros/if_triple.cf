@@ -38,8 +38,3 @@ bundle agent check
                                              "$(sys.cf_agent) -D AUTO -Kf $(G.testdir)$(const.dirsep)test.cf",
                                              $(this.promise_filename));
 }
-
-@if minimum_version(300.600.0)
-
-This text should never be seen, it's completely ignored
-@endif

@@ -1,6 +1,6 @@
 ######################################################
 #
-#  Test that @if works
+#  Test that @if without @endif errors (2)
 #
 #####################################################
 
@@ -21,4 +21,5 @@ bundle agent check
 
 @if minimum_version(1.1)
 
-# just testing for EOF
+# Even when the if is true / included, we should still error when there
+# is no endif before EOF

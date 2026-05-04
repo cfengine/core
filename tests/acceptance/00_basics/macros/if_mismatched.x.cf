@@ -43,8 +43,3 @@ bundle agent check
                                          "not_expected",
                                          $(this.promise_filename));
 }
-
-@if minimum_version(300.600)
-
-This text should never be seen, it's completely ignored
-@endif

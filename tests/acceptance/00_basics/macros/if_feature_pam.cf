@@ -3,12 +3,11 @@
 #  Test that @if feature() and class guard works for pam
 #
 #####################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle common test
@@ -24,11 +23,13 @@ bundle agent check
 @if feature(pam)
     feature_pam::
       "$(this.promise_filename) Pass";
+
     !feature_pam::
       "$(this.promise_filename) FAIL";
 @else
     !feature_pam::
       "$(this.promise_filename) Pass";
+
     feature_pam::
       "$(this.promise_filename) FAIL";
 @endif

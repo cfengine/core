@@ -3,29 +3,26 @@
 #  Test that @if feature() works
 #
 #####################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle common test
 {
 @if feature(xml)
   classes:
-      "xml" expression => "any";
+    "xml" expression => "any";
 @endif
-
 @if feature(yaml)
   classes:
-      "yaml" expression => "any";
+    "yaml" expression => "any";
 @endif
-
 @if feature(unknown_123)
   classes:
-      "not_expected" expression => "any";
+    "not_expected" expression => "any";
 @endif
 }
 
@@ -34,14 +31,19 @@ bundle agent check
   vars:
     !feature_yaml.!feature_xml::
       "result" string => "";
+
     feature_yaml.!feature_xml::
       "result" string => "yaml";
+
     !feature_yaml.feature_xml::
       "result" string => "xml";
+
     feature_yaml.feature_xml::
       "result" string => "yaml,xml";
+
   methods:
-      "" usebundle => dcs_passif_expected("$(result)",
-                                         "not_expected",
-                                         $(this.promise_filename));
+    ""
+      usebundle => dcs_passif_expected(
+        "$(result)", "not_expected", $(this.promise_filename)
+      );
 }

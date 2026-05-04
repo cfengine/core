@@ -2,39 +2,45 @@
 #
 #  Test that @if works with patch level
 #####################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
 }
 
 bundle agent init
 {
   files:
-      "$(G.testdir)$(const.dirsep)test.cf"
-        create => "true",
-        edit_template => "$(this.promise_filename).sub.template",
-        template_method => "mustache";
+    "$(G.testdir)$(const.dirsep)test.cf"
+      create => "true",
+      edit_template => "$(this.promise_filename).sub.template",
+      template_method => "mustache";
 }
 
 bundle agent test
 {
   meta:
-      "test_skip_needs_work" string => "windows";
+    "test_skip_needs_work" string => "windows";
 }
 
 bundle agent check
 {
   methods:
-      # Note: dcs_passif_output expects first argument to be regexp.
-      # To convert Windows-style path (with backslashes) to a regex which will match this path,
-      # we need to convert all backslashes to double-backslashes.
-      # In the command below, each backslash is escaped twice:
-      # once for regex, and once for CFEngine string parser.
-      "check" usebundle => dcs_passif_output(regex_replace(".*$(G.testdir)$(const.dirsep)test.cf Pass.*",
-                                                           "\\\\", "\\\\\\\\", "g"),
-                                             ".*FAIL.*",
-                                             "$(sys.cf_agent) -D AUTO -Kf $(G.testdir)$(const.dirsep)test.cf",
-                                             $(this.promise_filename));
+    # Note: dcs_passif_output expects first argument to be regexp.
+    # To convert Windows-style path (with backslashes) to a regex which will match this path,
+    # we need to convert all backslashes to double-backslashes.
+    # In the command below, each backslash is escaped twice:
+    # once for regex, and once for CFEngine string parser.
+    "check"
+      usebundle => dcs_passif_output(
+        regex_replace(
+          ".*$(G.testdir)$(const.dirsep)test.cf Pass.*",
+          "\\\\",
+          "\\\\\\\\",
+          "g"
+        ),
+        ".*FAIL.*",
+        "$(sys.cf_agent) -D AUTO -Kf $(G.testdir)$(const.dirsep)test.cf",
+        $(this.promise_filename)
+      );
 }

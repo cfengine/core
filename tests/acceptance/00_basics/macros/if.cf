@@ -3,167 +3,156 @@
 #  Test that @if works
 #
 #####################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle common test
 {
 @if minimum_version(3)
   classes:
-      "expected_3";
+    "expected_3";
 @else
   classes:
-      "not_expected_3";
+    "not_expected_3";
 @endif
-
 @if minimum_version(3.7)
   classes:
-      "expected_3_7";
+    "expected_3_7";
 @else
   classes:
-      "not_expected_3_7";
+    "not_expected_3_7";
 @endif
-
 @if minimum_version(3.6)
   classes:
-      "expected_3_6";
+    "expected_3_6";
 @else
   classes:
-      "not_expected_3_6";
+    "not_expected_3_6";
 @endif
-
 @if minimum_version(2.100)
   classes:
-      "expected_2_100";
+    "expected_2_100";
 @else
   classes:
-      "not_xpected_2_100";
+    "not_xpected_2_100";
 @endif
-
 @if minimum_version(300.700)
   classes:
-      "not_expected_300_700";
+    "not_expected_300_700";
 @else
   classes:
-      "expected_300_700";
+    "expected_300_700";
 @endif
-
 @if maximum_version(3.0)
-    classes:
-      "not_expected_3_0";
+  classes:
+    "not_expected_3_0";
 @else
-    classes:
-      "expected_3_0";
+  classes:
+    "expected_3_0";
 @endif
-
 @if maximum_version(4)
-    classes:
-      "expected_4";
+  classes:
+    "expected_4";
 @else
-    classes:
-      "not_expected_4";
+  classes:
+    "not_expected_4";
 @endif
-
 @if maximum_version(4.0.0)
-    classes:
-      "expected_4_0_0";
+  classes:
+    "expected_4_0_0";
 @else
-    classes:
-      "not_expected_4_0_0";
+  classes:
+    "not_expected_4_0_0";
 @endif
-
 @if between_versions(3.15.0, 4.0.0)
-    classes:
-      "expected_3_15_0_4_0_0";
+  classes:
+    "expected_3_15_0_4_0_0";
 @else
-    classes:
-      "not_expected_3_15_0_4_0_0";
+  classes:
+    "not_expected_3_15_0_4_0_0";
 @endif
-
 @if between_versions(3.11, 3.12)
-    classes:
-      "not_expected_3_11_3_12";
+  classes:
+    "not_expected_3_11_3_12";
 @else
-    classes:
-      "expected_3_11_3_12";
+  classes:
+    "expected_3_11_3_12";
 @endif
-
 @if before_version(4)
-    classes:
-      "expected_before_version_4";
+  classes:
+    "expected_before_version_4";
 @else
-    classes:
-      "not_expected_before_version_4";
+  classes:
+    "not_expected_before_version_4";
 @endif
-
 @if before_version(3)
-    classes:
-      "not_expected_before_version_3";
+  classes:
+    "not_expected_before_version_3";
 @else
-    classes:
-      "expected_before_version_3";
+  classes:
+    "expected_before_version_3";
 @endif
-
 @if at_version(3)
-    classes:
-      "expected_at_version_3";
+  classes:
+    "expected_at_version_3";
 @else
-    classes:
-      "not_expected_at_version_3";
+  classes:
+    "not_expected_at_version_3";
 @endif
-
 @if at_version(2)
-    classes:
-      "not_expected_at_version_2";
+  classes:
+    "not_expected_at_version_2";
 @else
-    classes:
-      "expected_at_version_2";
+  classes:
+    "expected_at_version_2";
 @endif
-
 @if after_version(2)
-    classes:
-      "expected_after_version_2";
+  classes:
+    "expected_after_version_2";
 @else
-    classes:
-      "not_expected_after_version_2";
+  classes:
+    "not_expected_after_version_2";
 @endif
-
 @if after_version(3)
-    classes:
-      "not_expected_after_version_3";
+  classes:
+    "not_expected_after_version_3";
 @else
-    classes:
-      "expected_after_version_3";
+  classes:
+    "expected_after_version_3";
 @endif
 }
 
 bundle agent check
 {
   vars:
-    "expected_classes"     slist => classesmatching("expected.*");
+    "expected_classes" slist => classesmatching("expected.*");
     "not_expected_classes" slist => classesmatching("not_expected.*");
-    "expected_length"      int => length("expected_classes");
-    "not_expected_length"  int => length("not_expected_classes");
+    "expected_length" int => length("expected_classes");
+    "not_expected_length" int => length("not_expected_classes");
+
   classes:
-    "pass_expected"     if => strcmp("$(expected_length)", "16");
+    "pass_expected" if => strcmp("$(expected_length)", "16");
     "pass_not_expected" if => strcmp("$(not_expected_length)", "0");
     "ok" and => { "pass_expected", "pass_not_expected" };
+
   methods:
     ok::
       "" usebundle => dcs_pass($(this.promise_filename));
+
   reports:
     DEBUG::
       "Expected classes: $(expected_classes)";
       "Not expected classes: $(not_expected_classes)";
       "Expected length: $(expected_length)";
       "Not expected length: $(not_expected_length)";
+
     DEBUG.pass_expected::
       "pass_expected";
+
     DEBUG.pass_not_expected::
       "pass_not_expected";
 }

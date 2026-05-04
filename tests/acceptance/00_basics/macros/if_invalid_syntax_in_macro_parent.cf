@@ -1,0 +1,37 @@
+######################################################
+#
+#  Test that macros correctly skip content
+#  even when it is invalid syntax
+#
+#####################################################
+body common control
+{
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+}
+
+bundle agent init
+{
+}
+
+bundle agent check
+{
+  methods:
+    # Note: dcs_passif_output expects first argument to be regexp.
+    # To convert Windows-style path (with backslashes) to a regex which will match this path,
+    # we need to convert all backslashes to double-backslashes.
+    # In the command below, each backslash is escaped twice:
+    # once for regex, and once for CFEngine string parser.
+    "check"
+      usebundle => dcs_passif_output(
+        regex_replace(
+          ".*$(this.promise_dirname)$(const.dirsep)if_invalid_syntax_in_macro.sub.x.cf Pass.*",
+          "\\\\",
+          "\\\\\\\\",
+          "g"
+        ),
+        ".*FAIL.*",
+        "$(sys.cf_agent) -D AUTO -Kf -f $(this.promise_dirname)$(const.dirsep)if_invalid_syntax_in_macro.sub.x.cf",
+        $(this.promise_filename)
+      );
+}

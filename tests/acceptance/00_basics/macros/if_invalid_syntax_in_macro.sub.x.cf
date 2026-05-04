@@ -1,0 +1,28 @@
+@if feature(ABCD)
+  This text should never be seen, it's completely ignored
+@endif
+@if feature(ABCD)
+  Nor this
+  Not this either
+@endif
+@if feature(ABCD)
+  Nothing should be seen here really
+  Who knows, perhaps this text doesn't exist..?
+@endif
+
+@if minimum_version(300.600)
+  This text should never be seen, it's completely ignored
+@endif
+
+@if minimum_version(300.600)
+  Some new function here...
+@should_pass 
+  bundle agent netgroup(@netgroup_list)
+  more text...
+@endif
+
+bundle agent __main__
+{
+  reports:
+    "$(this.promise_filename) Pass";
+}

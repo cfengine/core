@@ -97,6 +97,16 @@ are pre-installed when using CFEngine Enterprise.
 
 Next, configure the default parameter set (=DEFAULT_PARAMS_FILE=).
 
+*** Legacy behavior
+
+Before CFEngine 3.24.0 release the cfbs variant of this script would run cfbs build every update policy run.
+
+This could be used to run scripts to dynamically create files in the policy set but also broke one important feature of cfbs build which is to make deterministic builds that result in the same outputs given the same inputs.
+
+The new default behavior as of 3.24.0 is to not run cfbs build if the repository has not changed.
+
+As of release 3.24.4, 3.27.1 and 3.28.0 you can restore this legacy behavior by touching the file /var/cfengine/state/mpf_masterfiles_stage_build_always.flag.
+
 *** Troubleshooting
 
 You may experience issues trying to use the old versions of various dependencies. Try these solutions to common issues.

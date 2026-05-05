@@ -244,7 +244,9 @@ git_cfbs_deploy_refspec() {
     # We don't mkdir $1 directly, just its parent dir if that doesn't exist.
 
   if git_check_is_in_sync "${local_mirrored_repo}" "$1" "$2"; then
-    return 0
+    if [ ! -f /var/cfengine/state/mpf_masterfiles_stage_build_always.flag ]; then
+      return 0
+    fi
   fi
 
   ########################## 1. CREATE EMPTY TEMP DIR

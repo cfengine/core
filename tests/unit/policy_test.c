@@ -138,7 +138,7 @@ static void test_body_control_no_arguments(void)
 
 static void test_vars_multiple_types(void)
 {
-    Seq *errs = LoadAndCheck("vars_multiple_types.cf");
+    Seq *errs = LoadAndCheck("vars_multiple_types.x.cf");
     assert_int_equal(1, errs->length);
 
     SeqDestroy(errs);

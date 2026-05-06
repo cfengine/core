@@ -1,69 +1,57 @@
 #  Copyright 2021 Northern.tech AS
-
 #  This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
-
 #  This program is free software; you can redistribute it and/or modify it
 #  under the terms of the GNU General Public License as published by the
 #  Free Software Foundation; version 3.
-
 #  This program is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
-
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
-
 # To the extent this program is licensed as part of the Enterprise
 # versions of Cfengine, the applicable Commercial Open Source License
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
-
 #######################################################
 #
 # The starting point for every configuration
 #
 #######################################################
-
 body common control
-
 {
-    inputs => { "$(sys.libdir)/stdlib.cf" };
-    bundlesequence  => { "main", "cfengine2" };
+  inputs => { "$(sys.libdir)/stdlib.cf" };
+  bundlesequence => { "main", "cfengine2" };
 }
-
 #######################################################
-
 bundle agent main
-
 {
-      # do something
+  # do something
   vars:
-      "sys_files"    slist        => {
-                                       "/etc/passwd",
-                                       "/etc/services"
-      };
+    "sys_files" slist => { "/etc/passwd", "/etc/services" };
+
   files:
-      "$(sys_files)" perms        => mo("0644", "root"),
-      changes      => detect_content;
-      "/etc/shadow"  perms        => mo("0600", "root"),
-      changes      => detect_content;
-      "/usr"         changes      => detect_content,
+    "$(sys_files)"
+      perms => mo("0644", "root"),
+      changes => detect_content;
+
+    "/etc/shadow"
+      perms => mo("0600", "root"),
+      changes => detect_content;
+
+    "/usr"
+      changes => detect_content,
       depth_search => recurse("inf");
-      "/tmp"         delete       => tidy,
-      file_select  => days_old("2"),
+
+    "/tmp"
+      delete => tidy,
+      file_select => days_old("2"),
       depth_search => recurse("inf");
 }
-
 #######################################################
-
 bundle agent cfengine2
-
 {
   commands:
-
-      "/var/cfengine/bin/cfagent";
-
-
+    "/var/cfengine/bin/cfagent";
 }

@@ -7,7 +7,7 @@ bundle agent main
 
   packages:
     redhat|centos::
-      "cifs-utils"   policy => "present";
+      "cifs-utils" policy => "present";
       "samba-client" policy => "present";
 
   files:
@@ -16,15 +16,14 @@ bundle agent main
 
   storage:
     redhat|centos::
-      "/mnt/CIFS"
-        mount => cifs_guest( $(cifs[server]) , $(cifs[path]) );
+      "/mnt/CIFS" mount => cifs_guest($(cifs[server]), $(cifs[path]));
 }
 
-body mount cifs_guest(server,source)
+body mount cifs_guest(server, source)
 {
-        mount_type => "cifs";
-        mount_source => "$(source)";
-        mount_server => "$(server)";
-        mount_options => { "guest" };
-        edit_fstab => "false";
+  mount_type => "cifs";
+  mount_source => "$(source)";
+  mount_server => "$(server)";
+  mount_options => { "guest" };
+  edit_fstab => "false";
 }

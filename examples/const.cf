@@ -3,35 +3,36 @@ bundle agent __main__
 # @brief Example illustrating cosnt vars
 {
   vars:
-      "example_file"
-        string => "/tmp/const-vars.txt";
+    "example_file" string => "/tmp/const-vars.txt";
 
   files:
-      "$(example_file)"
-        create => "true",
-        content => concat("CFEngine const vars$(const.n)",
-                          "before const.at $(const.at) after const.at$(const.n)",
-                          "before const.dollar $(const.dollar) after const.dollar$(const.n)",
-                          "before const.dirsep $(const.dirsep) after const.dirsep$(const.n)",
-                          "before const.linesep $(const.linesep) after const.linesep$(const.n)",
-                          "before const.endl$(const.endl) after const.endl$(const.n)",
-                          "before const.n$(const.n) after const.n$(const.n)",
-                          "before const.r $(const.r) after const.r$(const.n)",
-                          "before const.t $(const.t) after const.t$(const.n)");
+    "$(example_file)"
+      create => "true",
+      content => concat(
+        "CFEngine const vars$(const.n)",
+        "before const.at $(const.at) after const.at$(const.n)",
+        "before const.dollar $(const.dollar) after const.dollar$(const.n)",
+        "before const.dirsep $(const.dirsep) after const.dirsep$(const.n)",
+        "before const.linesep $(const.linesep) after const.linesep$(const.n)",
+        "before const.endl$(const.endl) after const.endl$(const.n)",
+        "before const.n$(const.n) after const.n$(const.n)",
+        "before const.r $(const.r) after const.r$(const.n)",
+        "before const.t $(const.t) after const.t$(const.n)"
+      );
 
   reports:
-      "const vars available: $(with)"
-        with => storejson( variablesmatching_as_data( "default:const\..*" ) );
+    "const vars available: $(with)"
+      with => storejson(variablesmatching_as_data("default:const\..*"));
 
-      "$(example_file):"
-        printfile => cat( "$(example_file)" );
+    "$(example_file):" printfile => cat("$(example_file)");
 }
+
 body printfile cat(file)
 # @brief Report the contents of a file
 # @param file The full path of the file to report
 {
-        file_to_print => "$(file)";
-        number_of_lines => "inf";
+  file_to_print => "$(file)";
+  number_of_lines => "inf";
 }
 #+end_src
 ###############################################################################

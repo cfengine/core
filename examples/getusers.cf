@@ -1,60 +1,51 @@
 #  Copyright 2021 Northern.tech AS
-
 #  This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
-
 #  This program is free software; you can redistribute it and/or modify it
 #  under the terms of the GNU General Public License as published by the
 #  Free Software Foundation; version 3.
-
 #  This program is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
-
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
-
 # To the extent this program is licensed as part of the Enterprise
 # versions of Cfengine, the applicable Commercial Open Source License
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
-
 #+begin_src cfengine3
 body common control
 {
-      bundlesequence => { "example" };
+  bundlesequence => { "example" };
 }
 
 bundle agent example
 {
   vars:
+    # The getusers function takes two filtering arguments: exclude_names and
+    # exclude_ids, both a comma separated list of usernames and user IDs
+    # respectively.
+    # To get users with a uid 1000 and greater we generate a list of uids from
+    # 0 to 999 and convert it into a comma separated string used to filter the
+    # list of users.
+    "users_with_uid_gt_999"
+      slist => getusers("", join(",", expandrange("[0-999]", 1)));
 
-      # The getusers function takes two filtering arguments: exclude_names and
-      # exclude_ids, both a comma separated list of usernames and user IDs
-      # respectively.
+    # Here we get a list of users except usernames nfsnobody and vagrant as
+    # well as any users with uid 8 or 9
+    "users_except_nfsnobody_and_vagrant_and_uid_8_and_9"
+      slist => getusers("nfsnobody,vagrant", "8,9");
 
-      # To get users with a uid 1000 and greater we generate a list of uids from
-      # 0 to 999 and convert it into a comma separated string used to filter the
-      # list of users.
+    # Here we get a list of all users by not filtering any
+    "allusers" slist => getusers("", "");
+    "root_list" slist => { "root" };
 
-      "users_with_uid_gt_999"
-        slist => getusers( "", join( ",", expandrange( "[0-999]", 1 ) ) );
-
-      # Here we get a list of users except usernames nfsnobody and vagrant as
-      # well as any users with uid 8 or 9
-
-      "users_except_nfsnobody_and_vagrant_and_uid_8_and_9"
-        slist => getusers( "nfsnobody,vagrant", "8,9" );
-
-      # Here we get a list of all users by not filtering any
-      "allusers" slist => getusers("","");
-      "root_list" slist => { "root" };
-      # this will get just the root users out of the full user list
-      "justroot" slist => intersection(allusers, root_list);
+    # this will get just the root users out of the full user list
+    "justroot" slist => intersection(allusers, root_list);
 
   reports:
-      "Found just the root user: $(justroot)";
+    "Found just the root user: $(justroot)";
 }
 #+end_src
 ###############################################################################

@@ -1,25 +1,19 @@
 #  Copyright 2021 Northern.tech AS
-
 #  This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
-
 #  This program is free software; you can redistribute it and/or modify it
 #  under the terms of the GNU General Public License as published by the
 #  Free Software Foundation; version 3.
-
 #  This program is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
-
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
-
 # To the extent this program is licensed as part of the Enterprise
 # versions of Cfengine, the applicable Commercial Open Source License
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
-
 #+begin_src prep
 #@ ```
 #@ echo "MATCHING before region" > /tmp/example_select_region.txt
@@ -29,48 +23,39 @@
 #@ echo "MATCHING after region" >> /tmp/example_select_region.txt
 #@ ```
 #+end_src
-
 #+begin_src cfengine3
 bundle agent main
 # @brief Demonstrate how edit_line can operate within a region of a file
 {
-
   vars:
-      "file" string => "/tmp/example_select_region.txt";
-  files:
+    "file" string => "/tmp/example_select_region.txt";
 
-      "$(file)"
-        comment => "We want to delete any lines that begin with the string
+  files:
+    "$(file)"
+      comment => "We want to delete any lines that begin with the string
                   MATCHING inside the region described by regular expressions
                   matching the beginning and end of the region.",
-        create    => "true",
-        edit_line => delete_inside_region("^MATCHING.*",
-                                          "^BEGIN.*",
-                                          "^END.*");
+      create => "true",
+      edit_line => delete_inside_region("^MATCHING.*", "^BEGIN.*", "^END.*");
 
   reports:
-      "$(file)" printfile => cat( $(this.promiser) );
+    "$(file)" printfile => cat($(this.promiser));
 }
-
 ########################################################
-
 bundle edit_line delete_inside_region(line_reg, begin_reg, end_reg)
 # @brief Delete lines matching `line_reg` when found within the expected region starting with `begin_reg` and `end_reg`
 {
   delete_lines:
-
-      "$(line_reg)"
-        select_region => between( $(begin_reg), $(end_reg) );
-
+    "$(line_reg)" select_region => between($(begin_reg), $(end_reg));
 }
 
 body select_region between(start, end)
 # @brief Select a region exclusively between regular expressions `start` and `end`.
 {
-      select_start => "$(start)";
-      select_end => "$(end)";
+  select_start => "$(start)";
+  select_end => "$(end)";
 @if minimum_version(3.10)
-      select_end_match_eof => "false";
+  select_end_match_eof => "false";
 @endif
 }
 
@@ -78,11 +63,10 @@ body printfile cat(file)
 # @brief Report the contents of a file
 # @param file The full path of the file to report
 {
-        file_to_print => "$(file)";
-        number_of_lines => "inf";
+  file_to_print => "$(file)";
+  number_of_lines => "inf";
 }
 #+end_src
-
 #+begin_src example_output
 #@ ```
 #@ R: /tmp/example_select_region.txt

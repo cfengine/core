@@ -13,19 +13,27 @@ bundle agent example_readstringlist
 # @brief Example showing readstringlist()
 {
   vars:
-      "my_list_of_strings"
-        slist => readstringlist( "/tmp/list.txt", # File to read
-                              "^\s*#[^\n]*",      # Exclude hash comment lines lines
-                              "\n",               # Split on newlines
-                              inf,                # Maximum number of entries
-                              inf);               # Maximum number of bytes to read
-
+    "my_list_of_strings"
+      slist => readstringlist(
+        "/tmp/list.txt",
+        # File to read
+        "^\s*#[^\n]*",
+        # Exclude hash comment lines lines
+        "\n",
+        # Split on newlines
+        inf,
+        # Maximum number of entries
+        inf
+      );
+  # Maximum number of bytes to read
   reports:
-      "my_list_of_strings includes '$(my_list_of_strings)'";
+    "my_list_of_strings includes '$(my_list_of_strings)'";
 }
+
 bundle agent __main__
 {
-  methods: "example_readstringlist";
+  methods:
+    "example_readstringlist";
 }
 #+end_src
 #+begin_src example_output

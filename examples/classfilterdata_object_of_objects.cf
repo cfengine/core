@@ -2,25 +2,22 @@
 bundle agent __main__
 {
   classes:
-      "role_2";
+    "role_2";
 
   vars:
-      "original"
-        data => '{
+    "original"
+      data => '{
             "/tmp/foo": { "if":          "role_1" },
             "/tmp/bar": { "if":          "role_2" },
             "/tmp/baz": { "if": "(role_1|role_2)" }
           }';
 
-      "filtered"
-        data => classfilterdata("original", "object_of_objects", "if");
+    "filtered" data => classfilterdata("original", "object_of_objects", "if");
 
   reports:
-      "Filtered data: $(with)"
-        with => storejson("filtered");
+    "Filtered data: $(with)" with => storejson("filtered");
 }
 #+end_src
-
 #+begin_src example_output
 #@ ```
 #@ R: Filtered data: {

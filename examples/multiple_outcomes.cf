@@ -1,39 +1,35 @@
 # Note: This is NOT an automatically tested example. The difference between
 # dry-run and normal run output makes it problematic to do so.
-
 #+begin_src cfengine3
 bundle agent main
 {
   meta:
-    "description" string => "
+    "description"
+      string => "
 Illustrate how a promise can have multiple outcomes";
 
   vars:
     !windows::
-      "repaired_and_kept"
-        string => "/tmp/repaired_and_not_kept.txt";
+      "repaired_and_kept" string => "/tmp/repaired_and_not_kept.txt";
 
   files:
     # We make sure our test file is absent so that we
     # can show consistent outcomes.
-      "$(repaired_and_kept)"
-        handle => "testfile_absent",
-        delete => tidy;
+    "$(repaired_and_kept)"
+      handle => "testfile_absent",
+      delete => tidy;
 
-      "$(repaired_and_kept)"
-        handle => "test_outcomes",
-        depends_on => { "testfile_absent" },
-        create => "true",
-        edit_template => "$(this.promsie_filename).broken_mustache",
-        template_method => "mustache",
-        classes => results("bundle", "outcome");
+    "$(repaired_and_kept)"
+      handle => "test_outcomes",
+      depends_on => { "testfile_absent" },
+      create => "true",
+      edit_template => "$(this.promsie_filename).broken_mustache",
+      template_method => "mustache",
+      classes => results("bundle", "outcome");
 
   vars:
-      "result_classes"
-        slist => classesmatching("outcome_.*");
-
-      "s_result_classes"
-        slist => sort( result_classes, "lex");
+    "result_classes" slist => classesmatching("outcome_.*");
+    "s_result_classes" slist => sort(result_classes, "lex");
 
   reports:
     outcome_repaired::
@@ -55,8 +51,8 @@ body delete tidy
 # repository at commit
 # 6244c16e6934546d069052f953e597c4b95747df
 {
-      dirlinks => "delete";
-      rmdirs   => "true";
+  dirlinks => "delete";
+  rmdirs => "true";
 }
 
 body classes results(scope, class_prefix)
@@ -66,30 +62,30 @@ body classes results(scope, class_prefix)
 # 206a8b2e6bf277c3df9b57bf5c535b0b6dba963a
 {
   scope => "$(scope)";
-
-  promise_kept => { "$(class_prefix)_reached",
-                    "$(class_prefix)_kept" };
-
-  promise_repaired => { "$(class_prefix)_reached",
-                        "$(class_prefix)_repaired" };
-
-  repair_failed => { "$(class_prefix)_reached",
-                     "$(class_prefix)_error",
-                     "$(class_prefix)_not_kept",
-                     "$(class_prefix)_failed" };
-
-  repair_denied => { "$(class_prefix)_reached",
-                     "$(class_prefix)_error",
-                     "$(class_prefix)_not_kept",
-                     "$(class_prefix)_denied" };
-
-  repair_timeout => { "$(class_prefix)_reached",
-                      "$(class_prefix)_error",
-                      "$(class_prefix)_not_kept",
-                      "$(class_prefix)_timeout" };
+  promise_kept => { "$(class_prefix)_reached", "$(class_prefix)_kept" };
+  promise_repaired => {
+    "$(class_prefix)_reached", "$(class_prefix)_repaired"
+  };
+  repair_failed => {
+    "$(class_prefix)_reached",
+    "$(class_prefix)_error",
+    "$(class_prefix)_not_kept",
+    "$(class_prefix)_failed",
+  };
+  repair_denied => {
+    "$(class_prefix)_reached",
+    "$(class_prefix)_error",
+    "$(class_prefix)_not_kept",
+    "$(class_prefix)_denied",
+  };
+  repair_timeout => {
+    "$(class_prefix)_reached",
+    "$(class_prefix)_error",
+    "$(class_prefix)_not_kept",
+    "$(class_prefix)_timeout",
+  };
 }
 #+end_src
-
 #########################
 #+begin_src do_not_test_example_output
 #@ ```

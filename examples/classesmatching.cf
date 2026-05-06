@@ -1,53 +1,42 @@
 #  Copyright 2021 Northern.tech AS
-
 #  This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
-
 #  This program is free software; you can redistribute it and/or modify it
 #  under the terms of the GNU General Public License as published by the
 #  Free Software Foundation; version 3.
-
 #  This program is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
-
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
-
 # To the extent this program is licensed as part of the Enterprise
 # versions of Cfengine, the applicable Commercial Open Source License
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
-
 #+begin_src cfengine3
 bundle agent main
 {
   classes:
-      "example_one";
-      "example_two"
-        meta => { "plus", "defined_from=$(this.bundle)" };
-      "example_three"
-        meta => { "plus", "defined_from=$(this.bundle)" };
+    "example_one";
+    "example_two" meta => { "plus", "defined_from=$(this.bundle)" };
+    "example_three" meta => { "plus", "defined_from=$(this.bundle)" };
 
   vars:
-      "cfengine_classes"
-        slist => sort( classesmatching("cfengine"), lex);
+    "cfengine_classes" slist => sort(classesmatching("cfengine"), lex);
 
-      "example_with_plus"
-        slist => sort( classesmatching("example.*", "plus"), lex);
+    "example_with_plus"
+      slist => sort(classesmatching("example.*", "plus"), lex);
 
   reports:
-      # you may find this list of all classes interesting but it
-      # produces different output every time, so it's commented out here
-      # "All classes = '$(all)'";
+    # you may find this list of all classes interesting but it
+    # produces different output every time, so it's commented out here
+    # "All classes = '$(all)'";
+    "Classes matching 'cfengine' = '$(cfengine_classes)'";
 
-      "Classes matching 'cfengine' = '$(cfengine_classes)'";
-
-      # this should produce no output
-      "Classes matching 'example.*' with the 'plus' tag = $(example_with_plus)";
+    # this should produce no output
+    "Classes matching 'example.*' with the 'plus' tag = $(example_with_plus)";
 }
-
 #+end_src
 ###############################################################################
 #+begin_src example_output

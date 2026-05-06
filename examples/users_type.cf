@@ -2,13 +2,12 @@ body file control
 {
   inputs => { "$(sys.libdir)/stdlib.cf" };
 }
-
 ### Users main BEGIN ###
 bundle agent main
 {
   vars:
-      "users" slist => { "jack", "john" };
-      "skel" string => "/etc/skel";
+    "users" slist => { "jack", "john" };
+    "skel" string => "/etc/skel";
 
   users:
     !windows::
@@ -18,7 +17,6 @@ bundle agent main
         home_bundle => home_skel($(users), $(skel));
 }
 ### Users main END ###
-
 ### Home Bundle BEGIN ###
 bundle agent home_skel(user, skel)
 # @brief Initialize a user's home directory with the contents of skel
@@ -32,16 +30,14 @@ bundle agent home_skel(user, skel)
       depth_search => recurse("inf");
 }
 ### Home Bundle END ###
-
 ### Locked User BEGIN ###
 bundle agent service_accounts
 {
   vars:
-      "users" slist => { "apache", "libuuid" };
+    "users" slist => { "apache", "libuuid" };
 
   users:
     !windows::
-      "$(users)"
-        policy => "locked";
+      "$(users)" policy => "locked";
 }
 ### Locked User END ###

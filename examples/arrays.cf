@@ -2,31 +2,27 @@
 bundle common g
 {
   vars:
-
-      "array[key1]" string => "one";
-      "array[key2]" string => "two";
+    "array[key1]" string => "one";
+    "array[key2]" string => "two";
 }
 
 bundle agent __main__
 {
   vars:
-      "thing[1][color]" string => "red";
-      "thing[1][name]" string => "one";
-      "thing[2][color]" string => "blue";
-      "thing[2][name]" string => "two";
-
-      "_thing_idx"
-        slist => sort( getindices( thing ), lex );
+    "thing[1][color]" string => "red";
+    "thing[1][name]" string => "one";
+    "thing[2][color]" string => "blue";
+    "thing[2][name]" string => "two";
+    "_thing_idx" slist => sort(getindices(thing), lex);
 
   reports:
+    "Keys in default:g.array = $(with)"
+      with => join(", ", sort(getindices("default:g.array"), lex));
 
-      "Keys in default:g.array = $(with)"
-        with => join( ", ", sort( getindices( "default:g.array" ), lex));
+    "Keys of default:main.thing[1] = $(with)"
+      with => join(", ", sort(getindices("default:main.thing[1]"), lex));
 
-      "Keys of default:main.thing[1] = $(with)"
-        with => join( ", ", sort( getindices( "default:main.thing[1]" ), lex));
-
-      "Thing $(thing[$(_thing_idx)][name]) is $(thing[$(_thing_idx)][color])";
+    "Thing $(thing[$(_thing_idx)][name]) is $(thing[$(_thing_idx)][color])";
 }
 #+end_src
 ###############################################################################

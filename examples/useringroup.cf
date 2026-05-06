@@ -1,5 +1,5 @@
 #+begin_src cfengine3
-body common control 
+body common control
 {
   bundlesequence => { "example" };
 }
@@ -7,12 +7,12 @@ body common control
 bundle agent example
 {
   classes:
-    "root_in_root"
-      expression => useringroup("root", "root");
+    "root_in_root" expression => useringroup("root", "root");
 
   reports:
     root_in_root::
       "root is indeed in the root group";
+
     !root_in_root::
       "something went wrong";
 }

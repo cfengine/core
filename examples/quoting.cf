@@ -17,7 +17,6 @@ bundle agent main
     "$(double_escape)";
     `$(backtick_escape)`;
 }
-
 ###############################################################################
 #+begin_src example_output
 #@ ```
@@ -29,6 +28,3 @@ bundle agent main
 #@ R: Note: You can't escape backtick quotes
 #@ ```
 #+end_src
-
-
-

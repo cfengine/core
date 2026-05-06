@@ -2,12 +2,11 @@
 # Example showing how bundle __main__ works
 # This file can be used as the main entry (`cf-agent -KIf ./main_library.cf`)
 # This file can also be included from another policy file containing __main__
-
 bundle agent libprint(message)
 # @brief report `message`
 {
   reports:
-      "Library: $(message).";
+    "Library: $(message).";
 }
 
 bundle agent __main__
@@ -15,11 +14,9 @@ bundle agent __main__
 # This bundle is special. It is ignored unless it is the policy entry file
 {
   methods:
-      "test" usebundle => libprint( "ok 1 - libprint works" );
+    "test" usebundle => libprint("ok 1 - libprint works");
 }
-
 #@ The policy promises to call libprint to report that it works when the policy file is the main entry.
-
 #+begin_src example_output
 #@ ```
 #@ R: Library: ok 1 - libprint works

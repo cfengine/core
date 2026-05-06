@@ -4,15 +4,15 @@ bundle agent main
 # @brief Example illustrating the behavior of basename()
 {
   vars:
-      "basename" -> { "CFE-3196" }
-        string => basename( $(this.promise_filename) );
+    "basename" -> { "CFE-3196" }
+      string => basename($(this.promise_filename));
 
-      "basename_wo_extension" -> { "CFE-3196" }
-        string => basename( $(this.promise_filename), ".cf" );
+    "basename_wo_extension" -> { "CFE-3196" }
+      string => basename($(this.promise_filename), ".cf");
+
   reports:
-
-      "basename = '$(basename)'";
-      "basename without '.cf' extension = '$(basename_wo_extension)'";
+    "basename = '$(basename)'";
+    "basename without '.cf' extension = '$(basename_wo_extension)'";
 }
 #+end_src
 ###############################################################################

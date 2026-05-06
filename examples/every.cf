@@ -1,85 +1,99 @@
 #  Copyright 2021 Northern.tech AS
-
 #  This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
-
 #  This program is free software; you can redistribute it and/or modify it
 #  under the terms of the GNU General Public License as published by the
 #  Free Software Foundation; version 3.
-
 #  This program is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
-
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
-
 # To the extent this program is licensed as part of the Enterprise
 # versions of Cfengine, the applicable Commercial Open Source License
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
-
 #+begin_src cfengine3
 body common control
 {
-      bundlesequence => { "test" };
+  bundlesequence => { "test" };
 }
 
 bundle agent test
-
 {
   classes:
-      "every_dot_star" expression => every(".*", test);
-      "every_dot" expression => every(".", test);
-      "every_number" expression => every("[0-9]", test);
-
-      "every2_dot_star" expression => every(".*", test2);
-      "every2_dot" expression => every(".", test2);
-      "every2_number" expression => every("[0-9]", test2);
+    "every_dot_star" expression => every(".*", test);
+    "every_dot" expression => every(".", test);
+    "every_number" expression => every("[0-9]", test);
+    "every2_dot_star" expression => every(".*", test2);
+    "every2_dot" expression => every(".", test2);
+    "every2_number" expression => every("[0-9]", test2);
 
   vars:
-      "test" slist => {
-                        1,2,3,
-                        "one", "two", "three",
-                        "long string",
-                        "four", "fix", "six",
-                        "one", "two", "three",
+    "test"
+      slist => {
+        1,
+        2,
+        3,
+        "one",
+        "two",
+        "three",
+        "long string",
+        "four",
+        "fix",
+        "six",
+        "one",
+        "two",
+        "three",
       };
 
-      "test2" data => parsejson('[1,2,3,
+    "test2"
+      data => parsejson(
+        '[1,2,3,
                         "one", "two", "three",
                         "long string",
                         "four", "fix", "six",
-                        "one", "two", "three",]');
+                        "one", "two", "three",]'
+      );
 
   reports:
-      "The test list is $(test)";
+    "The test list is $(test)";
 
     every_dot_star::
       "every() test passed: every element matches '.*'";
+
     !every_dot_star::
       "every() test failed: not every element matches '.*'";
+
     every_number::
       "every() test failed: every element matches '[0-9]'";
+
     !every_number::
       "every() test passed: not every element matches '[0-9]'";
+
     every_dot::
       "every() test failed: every element matches '.'";
+
     !every_dot::
       "every() test passed: not every element matches '.'";
-
       "The test2 list is $(test2)";
+
     every2_dot_star::
       "every() test2 passed: every element matches '.*'";
+
     !every2_dot_star::
       "every() test2 failed: not every element matches '.*'";
+
     every2_number::
       "every() test2 failed: every element matches '[0-9]'";
+
     !every2_number::
       "every() test2 passed: not every element matches '[0-9]'";
+
     every2_dot::
       "every() test2 failed: every element matches '.'";
+
     !every2_dot::
       "every() test2 passed: not every element matches '.'";
 }

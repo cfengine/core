@@ -1,32 +1,24 @@
 #  Copyright 2021 Northern.tech AS
-
 #  This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
-
 #  This program is free software; you can redistribute it and/or modify it
 #  under the terms of the GNU General Public License as published by the
 #  Free Software Foundation; version 3.
-
 #  This program is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
-
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
-
 # To the extent this program is licensed as part of the Enterprise
 # versions of Cfengine, the applicable Commercial Open Source License
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
-
-
 ########################################################
 #
 # Remote classes from server connection to cfServer
 #
 ########################################################
-
 #
 # run this as follows:
 #
@@ -34,142 +26,99 @@
 # cf-agent   -f runtest_2.cf
 #
 # Notice that the same file configures all parts of cfengine
-
 ########################################################
-
 body common control
-
 {
-      bundlesequence  => { job_chain("Hr16|Hr17") };
-
-      version => "1.2.3";
+  bundlesequence => { job_chain("Hr16|Hr17") };
+  version => "1.2.3";
 }
-
 ########################################################
-
 bundle common g
 {
   vars:
-
-      # Signals are in scope of promiser and promisee
-
-      "signal"   string => "pack_a_name";
-
+    # Signals are in scope of promiser and promisee
+    "signal" string => "pack_a_name";
 }
-
 ########################################################
-
 bundle agent job_chain(time)
-
 {
   vars:
-
-      "client"   string => "localhost";
-      "server"   string => "localhost";
-      "margin"   string => "5"; # mins deadtime
-
+    "client" string => "localhost";
+    "server" string => "localhost";
+    "margin" string => "5";
+  # mins deadtime
   classes:
-
-      "client_primed" expression => classmatch(canonify("$(client)")),
+    "client_primed"
+      expression => classmatch(canonify("$(client)")),
       if => "$(time)";
 
-      "server_primed" expression => classmatch(canonify("$(server)")),
+    "server_primed"
+      expression => classmatch(canonify("$(server)")),
       if => "$(time)";
 
     client_primed::
-
-      "succeeded"     expression => remoteclassesmatching("$(g.signal)","$(server)","yes","myprefix");
-
-      #
-      # Now the job itself
-      #
-
+      "succeeded"
+        expression => remoteclassesmatching(
+          "$(g.signal)", "$(server)", "yes", "myprefix"
+        );
+  # Now the job itself
   methods:
-
     client_primed::
-
-      "downstream" usebundle => do_job("Starting local follow-up job"),
-      action => if_elapsed("$(margin)"),
-      if => "myprefix_$(g.signal)";
+      "downstream"
+        usebundle => do_job("Starting local follow-up job"),
+        action => if_elapsed("$(margin)"),
+        if => "myprefix_$(g.signal)";
 
     server_primed::
-
-      "upstream"   usebundle => do_job("Starting remote job"),
-      action => if_elapsed("$(margin)"),
-      classes => signal_repaired("$(g.signal)");
+      "upstream"
+        usebundle => do_job("Starting remote job"),
+        action => if_elapsed("$(margin)"),
+        classes => signal_repaired("$(g.signal)");
 
   reports:
-
     !succeeded::
-
-      "Server communication failed"
-
-      if => "$(time)";
-
-
-      "Job completed on the server..."
-
-      if => "$(g.signal)";
-
+      "Server communication failed" if => "$(time)";
+      "Job completed on the server..." if => "$(g.signal)";
 }
-
 #########################################################
-
 bundle agent do_job(job)
 {
   commands:
-
-      # do whatever...
-
-      "/bin/echo $(job)";
+    # do whatever...
+    "/bin/echo $(job)";
 }
-
-
 #########################################################
 # Server config
 #########################################################
-
-body server control 
-
+body server control
 {
-      allowconnects         => { "127.0.0.1" , "::1" };
-      allowallconnects      => { "127.0.0.1" , "::1" };
-      trustkeysfrom         => { "127.0.0.1" , "::1" };
-      allowusers            => { "mark" };
+  allowconnects => { "127.0.0.1", "::1" };
+  allowallconnects => { "127.0.0.1", "::1" };
+  trustkeysfrom => { "127.0.0.1", "::1" };
+  allowusers => { "mark" };
 }
-
 #########################################################
-
 bundle server access_rules()
-
 {
   vars:
-
-      "localvar" string => "literal string";
+    "localvar" string => "literal string";
 
   access:
-
-      "$(g.signal)"
-
-      handle  => "test_class_signal",
+    "$(g.signal)"
+      handle => "test_class_signal",
       resource_type => "context",
-      admit   => { "127.0.0.1" };
+      admit => { "127.0.0.1" };
 }
-
-
 #########################################################
 # Standard library
 #########################################################
-
 body action if_elapsed(x)
 {
-      ifelapsed => "$(x)";
+  ifelapsed => "$(x)";
 }
-
 #########################################################
-
 body classes signal_repaired(x)
 {
-      promise_repaired => { "$(x)" };
-      persist_time => "10";
+  promise_repaired => { "$(x)" };
+  persist_time => "10";
 }

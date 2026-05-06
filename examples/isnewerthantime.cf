@@ -20,6 +20,7 @@ bundle agent example
   reports:
     !is_file_a_new::
       "/tmp/file_a is not newer than 2001-09-09 01:46:40";
+
     is_file_b_new::
       "/tmp/file_b is newer than 2001-09-09 01:46:40";
 }

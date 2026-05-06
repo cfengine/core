@@ -3,7 +3,8 @@ bundle agent example_inline_json
 # @brief Example illustrating inline json
 {
   vars:
-      "json_multi_line" data => '{
+    "json_multi_line"
+      data => '{
   "CFEngine Champions": [
     {
       "Name": "Aleksey Tsalolikhin",
@@ -16,20 +17,20 @@ bundle agent example_inline_json
   ]
 }';
 
-
-      "json_single_line" data => '[{"key1":"value1"},{"key2":"value2"}]';
+    "json_single_line" data => '[{"key1":"value1"},{"key2":"value2"}]';
 
   reports:
-      "Data container defined from json_multi_line: $(with)"
-        with => storejson( @(json_multi_line) );
+    "Data container defined from json_multi_line: $(with)"
+      with => storejson(@(json_multi_line));
 
-      "Data container defined from json_single_line: $(with)"
-        with => storejson( @(json_single_line) );
+    "Data container defined from json_single_line: $(with)"
+      with => storejson(@(json_single_line));
 }
+
 bundle agent __main__
 {
   methods:
-      "example_inline_json";
+    "example_inline_json";
 }
 #+end_src
 ###############################################################################

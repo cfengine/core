@@ -1,108 +1,148 @@
 #  Copyright 2021 Northern.tech AS
-
 #  This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
-
 #  This program is free software; you can redistribute it and/or modify it
 #  under the terms of the GNU General Public License as published by the
 #  Free Software Foundation; version 3.
-
 #  This program is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
-
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
-
 # To the extent this program is licensed as part of the Enterprise
 # versions of Cfengine, the applicable Commercial Open Source License
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
-
 #+begin_src cfengine3
 body common control
 {
-      bundlesequence => { "test", "test2", "test3" };
+  bundlesequence => { "test", "test2", "test3" };
 }
 
 bundle agent test
 {
   vars:
-      "d1" data => parsejson('{ "a": [1,2,3], "b": [] }');
-      "d2" data => parsejson('{ "b": [4,5,6] }');
-      "d3" data => parsejson('[4,5,6]');
-      "list1" slist => { "element1", "element2" };
-      "array1[mykey]" slist => { "array_element1", "array_element2" };
-      "array2[otherkey]" string => "hello";
+    "d1" data => parsejson('{ "a": [1,2,3], "b": [] }');
+    "d2" data => parsejson('{ "b": [4,5,6] }');
+    "d3" data => parsejson('[4,5,6]');
+    "list1" slist => { "element1", "element2" };
+    "array1[mykey]" slist => { "array_element1", "array_element2" };
+    "array2[otherkey]" string => "hello";
+    "merged_d1_d2" data => mergedata("d1", "d2");
+    "merged_d1_d3" data => mergedata("d1", "d3");
+    "merged_d3_list1" data => mergedata("d3", "list1");
+    "merged_d1_array1" data => mergedata("d1", "array1");
+    "merged_d2_array2" data => mergedata("d2", "array2");
+    "merged_d1_wrap_array_d2" data => mergedata("d1", "[ d2 ]");
+    "merged_d1_wrap_map_d2" data => mergedata("d1", '{ "newkey": d2 }');
 
-      "merged_d1_d2" data => mergedata("d1", "d2");
-      "merged_d1_d3" data => mergedata("d1", "d3");
-      "merged_d3_list1" data => mergedata("d3", "list1");
+    "merged_d1_d2_str"
+      string => format("merging %S with %S produced %S", d1, d2, merged_d1_d2);
 
-      "merged_d1_array1" data => mergedata("d1", "array1");
-      "merged_d2_array2" data => mergedata("d2", "array2");
+    "merged_d1_wrap_array_d2_str"
+      string => format(
+        "merging %S with wrapped [ %S ] produced %S",
+        d1,
+        d2,
+        merged_d1_wrap_array_d2
+      );
 
-      "merged_d1_wrap_array_d2" data => mergedata("d1", "[ d2 ]");
-      "merged_d1_wrap_map_d2" data => mergedata("d1", '{ "newkey": d2 }');
+    "merged_d1_wrap_map_d2_str"
+      string => format(
+        'merging %S with wrapped { "newkey": %S produced %S',
+        d1,
+        d2,
+        merged_d1_wrap_map_d2
+      );
 
-      "merged_d1_d2_str" string => format("merging %S with %S produced %S", d1, d2, merged_d1_d2);
-      "merged_d1_wrap_array_d2_str" string => format("merging %S with wrapped [ %S ] produced %S", d1, d2, merged_d1_wrap_array_d2);
-      "merged_d1_wrap_map_d2_str" string => format('merging %S with wrapped { "newkey": %S produced %S', d1, d2, merged_d1_wrap_map_d2);
-      "merged_d1_d3_str" string => format("merging %S with %S produced %S", d1, d3, merged_d1_d3);
-      "merged_d3_list1_str" string => format("merging %S with %S produced %S", d3, list1, merged_d3_list1);
+    "merged_d1_d3_str"
+      string => format("merging %S with %S produced %S", d1, d3, merged_d1_d3);
 
-      "merged_d1_array1_str" string => format("merging %S with %s produced %S", d1, array1, merged_d1_array1);
-      "merged_d2_array2_str" string => format("merging %S with %s produced %S", d2, array2, merged_d2_array2);
+    "merged_d3_list1_str"
+      string => format(
+        "merging %S with %S produced %S", d3, list1, merged_d3_list1
+      );
+
+    "merged_d1_array1_str"
+      string => format(
+        "merging %S with %s produced %S", d1, array1, merged_d1_array1
+      );
+
+    "merged_d2_array2_str"
+      string => format(
+        "merging %S with %s produced %S", d2, array2, merged_d2_array2
+      );
+
   reports:
-      "$(merged_d1_d2_str)";
-      "$(merged_d1_wrap_array_d2_str)";
-      "$(merged_d1_wrap_map_d2_str)";
-      "$(merged_d1_d3_str)";
-      "$(merged_d3_list1_str)";
-      "$(merged_d1_array1_str)";
-      "$(merged_d2_array2_str)";
+    "$(merged_d1_d2_str)";
+    "$(merged_d1_wrap_array_d2_str)";
+    "$(merged_d1_wrap_map_d2_str)";
+    "$(merged_d1_d3_str)";
+    "$(merged_d3_list1_str)";
+    "$(merged_d1_array1_str)";
+    "$(merged_d2_array2_str)";
 }
 
 bundle agent test2
 {
   vars:
-      "a"       data  => parsejson('{ "a": "1" }'), meta => { "mymerge" };
-      "b"       data  => parsejson('{ "b": "2" }'), meta => { "mymerge" };
-      "c"       data  => parsejson('{ "c": "3" }'), meta => { "mymerge" };
-      "d"       data  => parsejson('{ "d": "4" }'), meta => { "mymerge" };
-      "todo"    slist => variablesmatching(".*", "mymerge");
+    "a"
+      data => parsejson('{ "a": "1" }'),
+      meta => { "mymerge" };
+
+    "b"
+      data => parsejson('{ "b": "2" }'),
+      meta => { "mymerge" };
+
+    "c"
+      data => parsejson('{ "c": "3" }'),
+      meta => { "mymerge" };
+
+    "d"
+      data => parsejson('{ "d": "4" }'),
+      meta => { "mymerge" };
+
+    "todo" slist => variablesmatching(".*", "mymerge");
 
   methods:
-      "go" usebundle => cmerge(@(todo)); # a, b, c, d
-
+    "go" usebundle => cmerge(@(todo));
+  # a, b, c, d
   reports:
-      "$(this.bundle): merged containers with cmerge = $(cmerge.all_str)";
+    "$(this.bundle): merged containers with cmerge = $(cmerge.all_str)";
 }
-
 # note this bundle is in the standard library, in lib/3.6/bundles.cf
 bundle agent cmerge(varlist)
 {
   vars:
-      "all"     data => parsejson('[]'),            policy => "free";
-      "all"     data => mergedata(all, $(varlist)), policy => "free";
-      "all_str" string => format("%S", all),        policy => "free";
+    "all"
+      data => parsejson('[]'),
+      policy => "free";
+
+    "all"
+      data => mergedata(all, $(varlist)),
+      policy => "free";
+
+    "all_str"
+      string => format("%S", all),
+      policy => "free";
 }
 
 bundle agent test3
 {
-    vars:
-       "dest_files" slist => { "/tmp/default.json", "/tmp/epel.json" };
-       "template_file" string => "repository.mustache";
+  vars:
+    "dest_files" slist => { "/tmp/default.json", "/tmp/epel.json" };
+    "template_file" string => "repository.mustache";
 
-       "process_templates" data => mergedata('{ "$(template_file)" : dest_files }');
-       "process__templates_str" string => format("%S", "process_templates");
+    "process_templates"
+      data => mergedata('{ "$(template_file)" : dest_files }');
 
-    reports:
-        "$(this.bundle) $(process__templates_str)";
-        "$(this.bundle) $(process_templates[$(template_file)])";
+    "process__templates_str" string => format("%S", "process_templates");
+
+  reports:
+    "$(this.bundle) $(process__templates_str)";
+    "$(this.bundle) $(process_templates[$(template_file)])";
 }
-
 #+end_src
 ###############################################################################
 #+begin_src example_output

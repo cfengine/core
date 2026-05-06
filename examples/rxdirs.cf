@@ -4,48 +4,44 @@ bundle agent __main__
 # @brief Illustrating the behavior of rxdirs in perms bodies.
 {
   vars:
-      "example_dirs" slist => {
-                                "/tmp/rxdirs_example/rxdirs=default(false)-r",
-                                "/tmp/rxdirs_example/rxdirs=default(false)-rx",
-                                "/tmp/rxdirs_example/rxdirs=true-r",
-                                "/tmp/rxdirs_example/rxdirs=true-rx",
+    "example_dirs"
+      slist => {
+        "/tmp/rxdirs_example/rxdirs=default(false)-r",
+        "/tmp/rxdirs_example/rxdirs=default(false)-rx",
+        "/tmp/rxdirs_example/rxdirs=true-r",
+        "/tmp/rxdirs_example/rxdirs=true-rx",
       };
 
   files:
-      "$(example_dirs)/."
-        create => "true";
-
-      "/tmp/rxdirs_example/rxdirs=default(false)-r"
-        perms => example:m( 600 );
-
-      "/tmp/rxdirs_example/rxdirs=default(false)-rx"
-        perms => example:m( 700 );
-
-      "/tmp/rxdirs_example/rxdirs=true-r"
-        perms => example:m_rxdirs_on( 600 );
-
-      "/tmp/rxdirs_example/rxdirs=true-rx"
-        perms => example:m_rxdirs_on( 700 );
+    "$(example_dirs)/." create => "true";
+    "/tmp/rxdirs_example/rxdirs=default(false)-r" perms => example:m(600);
+    "/tmp/rxdirs_example/rxdirs=default(false)-rx" perms => example:m(700);
+    "/tmp/rxdirs_example/rxdirs=true-r" perms => example:m_rxdirs_on(600);
+    "/tmp/rxdirs_example/rxdirs=true-rx" perms => example:m_rxdirs_on(700);
 
   reports:
-      "$(example_dirs) modeoct='$(with)'"
-        with => filestat( $(example_dirs), modeoct );
+    "$(example_dirs) modeoct='$(with)'"
+      with => filestat($(example_dirs), modeoct);
 }
 
-body file control{ namespace => "example"; }
+body file control
+{
+  namespace => "example";
+}
 
 body perms m(mode)
 # @brief Set the file mode
 # @param mode The new mode
 {
-        mode   => "$(mode)";
+  mode => "$(mode)";
 }
+
 body perms m_rxdirs_on(mode)
 # @brief Set the file mode and set +x on directory when +r is desired
 # @param mode The new mode
 {
-        inherit_from => m( $(mode) );
-        rxdirs => "true";
+  inherit_from => m($(mode));
+  rxdirs => "true";
 }
 #+end_src
 ###############################################################################

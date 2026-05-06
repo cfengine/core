@@ -1,55 +1,52 @@
 #  Copyright 2021 Northern.tech AS
-
 #  This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
-
 #  This program is free software; you can redistribute it and/or modify it
 #  under the terms of the GNU General Public License as published by the
 #  Free Software Foundation; version 3.
-
 #  This program is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
-
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
-
 # To the extent this program is licensed as part of the Enterprise
 # versions of Cfengine, the applicable Commercial Open Source License
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
-
 #+begin_src cfengine3
 body common control
 {
-      bundlesequence => { "run" };
+  bundlesequence => { "run" };
 }
 
 bundle agent run
 {
   vars:
-      "v" string => "2.5.6";
-      "vlist" slist => splitstring($(v), "\.", 3);
-      "padded" string => format("%04d%04d%04d", nth("vlist", 0), nth("vlist", 1), nth("vlist", 2));
-      "a" string => format("%10.10s", "x");
-      "b" string => format("%-10.10s", "x");
-      "c" string => format("%04d", 1);
-      "d" string => format("%07.2f", 1);
-      "e" string => format("hello my name is %s %s", "Inigo", "Montoya");
+    "v" string => "2.5.6";
+    "vlist" slist => splitstring($(v), "\.", 3);
 
-      "container" data => parsejson('{ "x": "y", "z": true }');
+    "padded"
+      string => format(
+        "%04d%04d%04d", nth("vlist", 0), nth("vlist", 1), nth("vlist", 2)
+      );
 
-      "packed" string => format("slist = %S, container = %S", vlist, container);
+    "a" string => format("%10.10s", "x");
+    "b" string => format("%-10.10s", "x");
+    "c" string => format("%04d", 1);
+    "d" string => format("%07.2f", 1);
+    "e" string => format("hello my name is %s %s", "Inigo", "Montoya");
+    "container" data => parsejson('{ "x": "y", "z": true }');
+    "packed" string => format("slist = %S, container = %S", vlist, container);
 
   reports:
-      "version $(v) => padded $(padded)";
-      "%10.10s on 'x' => '$(a)'";
-      "%-10.10s on 'x' => '$(b)'";
-      "%04d on '1' => '$(c)'";
-      "%07.2f on '1' => '$(d)'";
-      "you killed my father... => '$(e)'";
-      "$(packed)";
+    "version $(v) => padded $(padded)";
+    "%10.10s on 'x' => '$(a)'";
+    "%-10.10s on 'x' => '$(b)'";
+    "%04d on '1' => '$(c)'";
+    "%07.2f on '1' => '$(d)'";
+    "you killed my father... => '$(e)'";
+    "$(packed)";
 }
 #+end_src
 ###############################################################################

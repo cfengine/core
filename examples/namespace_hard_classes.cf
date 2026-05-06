@@ -1,7 +1,7 @@
 bundle agent __main__
 {
   methods:
-      "example:my_bundle";
+    "example:my_bundle";
 
   reports:
     cfengine::
@@ -11,12 +11,12 @@ bundle agent __main__
       "From the '$(this.namespace)' namespace the class expression 'default:cfengine::' evaluates true";
 
       "The class 'cfengine' has tags: $(with)"
-        with => join( ", ", getclassmetatags( "cfengine" ) );
+        with => join(", ", getclassmetatags("cfengine"));
 }
 
 body file control
 {
-        namespace => "example";
+  namespace => "example";
 }
 
 bundle agent my_bundle

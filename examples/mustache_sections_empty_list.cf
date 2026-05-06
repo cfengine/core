@@ -1,5 +1,4 @@
 # Example showing how variables are rendered for empty lists.
-
 #+begin_src cfengine3
 bundle agent main
 {
@@ -8,14 +7,11 @@ bundle agent main
 
   reports:
     "The list contains $(with)."
-      with => string_mustache("{{#list}} {{{.}}}{{/list}}",
-                              data);
+      with => string_mustache("{{#list}} {{{.}}}{{/list}}", data);
 }
 #+end_src
-
 #+begin_src example_output
 #@ ```
 #@ R: The list contains .
 #@ ```
 #+end_src
-

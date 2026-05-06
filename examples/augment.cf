@@ -10,15 +10,14 @@ bundle common def
     "example_augment_list_override"
       slist => { "defined", "in", "bundle", "common", "def" };
 }
+
 bundle agent main
 {
   vars:
-    "def_vars"
-      slist => variablesmatching("default\:def\..*");
+    "def_vars" slist => variablesmatching("default\:def\..*");
 
   reports:
     "Def var: '$(def_vars)'";
-
     "def.example_augment_string = '$(def.example_augment_string)'";
     "def.example_augment_list_override = '$(def.example_augment_list_override)'";
     "def.example_augment_structured_override[key1] = '$(def.example_augment_structured_override[key1])'";

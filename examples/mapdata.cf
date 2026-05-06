@@ -1,46 +1,53 @@
 #  Copyright 2021 Northern.tech AS
-
 #  This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
-
 #  This program is free software; you can redistribute it and/or modify it
 #  under the terms of the GNU General Public License as published by the
 #  Free Software Foundation; version 3.
-
 #  This program is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
-
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
-
 # To the extent this program is licensed as part of the Enterprise
 # versions of Cfengine, the applicable Commercial Open Source License
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
-
 #+begin_src cfengine3
 body common control
 {
-      bundlesequence => { "run" };
+  bundlesequence => { "run" };
 }
 
 bundle agent run
 {
   vars:
-      "myarray[lookup][big]" string => "lookup big";
-      "myarray[lookup][small]" string => "lookup small";
+    "myarray[lookup][big]" string => "lookup big";
+    "myarray[lookup][small]" string => "lookup small";
 
-      # every item must parse as valid JSON when the interpretation is `json`
-      "mapa_json" data => mapdata("json", '{ "key": "$(this.k)", "key2": "$(this.k[1])", "value": "$(this.v)" }', myarray);
-      "mapa_json_str" string => format("%S", mapa_json);
+    # every item must parse as valid JSON when the interpretation is `json`
+    "mapa_json"
+      data => mapdata(
+        "json",
+        '{ "key": "$(this.k)", "key2": "$(this.k[1])", "value": "$(this.v)" }',
+        myarray
+      );
 
-      # every item is just a string when the interpretation is `none`
-      "mapa_none" data => mapdata("none", 'key=$(this.k), level 2 key = $(this.k[1]), value=$(this.v)', myarray);
-      "mapa_none_str" string => format("%S", mapa_none);
+    "mapa_json_str" string => format("%S", mapa_json);
 
-      "mycontainer" data => parsejson('
+    # every item is just a string when the interpretation is `none`
+    "mapa_none"
+      data => mapdata(
+        "none",
+        'key=$(this.k), level 2 key = $(this.k[1]), value=$(this.v)',
+        myarray
+      );
+
+    "mapa_none_str" string => format("%S", mapa_none);
+
+    "mycontainer"
+      data => parsejson('
 {
   "top":
   {
@@ -49,13 +56,25 @@ bundle agent run
   }
 }');
 
-      # every item must parse as valid JSON when the interpretation is `json`
-      "mapc_json" data => mapdata("json", '{ "key": "$(this.k)", "key2": "$(this.k[1])", "value": "$(this.v)" }', mycontainer);
-      "mapc_json_str" string => format("%S", mapc_json);
+    # every item must parse as valid JSON when the interpretation is `json`
+    "mapc_json"
+      data => mapdata(
+        "json",
+        '{ "key": "$(this.k)", "key2": "$(this.k[1])", "value": "$(this.v)" }',
+        mycontainer
+      );
 
-      # every item is just a string when the interpretation is `none`
-      "mapc_none" data => mapdata("none", 'key=$(this.k), level 2 key = $(this.k[1]), value=$(this.v)', mycontainer);
-      "mapc_none_str" string => format("%S", mapc_none);
+    "mapc_json_str" string => format("%S", mapc_json);
+
+    # every item is just a string when the interpretation is `none`
+    "mapc_none"
+      data => mapdata(
+        "none",
+        'key=$(this.k), level 2 key = $(this.k[1]), value=$(this.v)',
+        mycontainer
+      );
+
+    "mapc_none_str" string => format("%S", mapc_none);
 
   reports:
     show_example::
@@ -68,7 +87,6 @@ bundle agent run
       "Note that the output of the above reports is not deterministic,";
       "because the order of the keys returned by mapdata() is not guaranteed.";
 }
-
 #+end_src
 ###############################################################################
 #+begin_src show_example_example_output

@@ -1,78 +1,81 @@
 #  Copyright 2021 Northern.tech AS
-
 #  This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
-
 #  This program is free software; you can redistribute it and/or modify it
 #  under the terms of the GNU General Public License as published by the
 #  Free Software Foundation; version 3.
-
 #  This program is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
-
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
-
 # To the extent this program is licensed as part of the Enterprise
 # versions of Cfengine, the applicable Commercial Open Source License
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
-
 #+begin_src cfengine3
 body common control
 {
-      bundlesequence => { "test" };
+  bundlesequence => { "test" };
 }
 
 bundle agent test
 {
   vars:
-      "test" slist => {
-                        1,2,3,
-                        "one", "two", "three",
-                        "long string",
-                        "one", "two", "three",
+    "test"
+      slist => {
+        1, 2, 3, "one", "two", "three", "long string", "one", "two", "three",
       };
 
-      "test2" data => parsejson('[1,2,3, "ab", "c"]');
+    "test2" data => parsejson('[1,2,3, "ab", "c"]');
+    "test_filtergrep" slist => filter("[0-9]", test, "true", "false", 999);
+    "test_exact1" slist => filter("one", test, "false", "false", 999);
+    "test_exact2" slist => filter(".", test, "false", "false", 999);
+    "test_invert" slist => filter("[0-9]", test, "true", "true", 999);
+    "test_max2" slist => filter(".*", test, "true", "false", 2);
+    "test_max0" slist => filter(".*", test, "true", "false", 0);
+    "test_grep" slist => grep("[0-9]", test);
+    "test2_filtergrep" slist => filter("[0-9]", test2, "true", "false", 999);
+    "test2_exact1" slist => filter("one", test2, "false", "false", 999);
+    "test2_exact2" slist => filter(".", test2, "false", "false", 999);
+    "test2_invert" slist => filter("[0-9]", test2, "true", "true", 999);
+    "test2_max2" slist => filter(".*", test2, "true", "false", 2);
+    "test2_max0" slist => filter(".*", test2, "true", "false", 0);
+    "test2_grep" slist => grep("[0-9]", test2);
 
-      "test_filtergrep" slist => filter("[0-9]", test, "true", "false", 999);
-      "test_exact1" slist => filter("one", test, "false", "false", 999);
-      "test_exact2" slist => filter(".", test, "false", "false", 999);
-      "test_invert" slist => filter("[0-9]", test, "true", "true", 999);
-      "test_max2" slist => filter(".*", test, "true", "false", 2);
-      "test_max0" slist => filter(".*", test, "true", "false", 0);
-      "test_grep" slist => grep("[0-9]", test);
+    "todo"
+      slist => {
+        "test",
+        "test2",
+        "test_filtergrep",
+        "test_exact1",
+        "test_exact2",
+        "test_invert",
+        "test_max2",
+        "test_max0",
+        "test_grep",
+        "test2_filtergrep",
+        "test2_exact1",
+        "test2_exact2",
+        "test2_invert",
+        "test2_max2",
+        "test2_max0",
+        "test2_grep",
+      };
 
-      "test2_filtergrep" slist => filter("[0-9]", test2, "true", "false", 999);
-      "test2_exact1" slist => filter("one", test2, "false", "false", 999);
-      "test2_exact2" slist => filter(".", test2, "false", "false", 999);
-      "test2_invert" slist => filter("[0-9]", test2, "true", "true", 999);
-      "test2_max2" slist => filter(".*", test2, "true", "false", 2);
-      "test2_max0" slist => filter(".*", test2, "true", "false", 0);
-      "test2_grep" slist => grep("[0-9]", test2);
-
-      "todo" slist => { "test", "test2", "test_filtergrep", "test_exact1",
-                        "test_exact2", "test_invert", "test_max2",
-                        "test_max0", "test_grep", "test2_filtergrep",
-                        "test2_exact1", "test2_exact2",
-                        "test2_invert", "test2_max2", "test2_max0",
-                        "test2_grep"};
-
-      "$(todo)_str" string => format("%S", $(todo));
-      "tests" slist => { "test", "test2" };
+    "$(todo)_str" string => format("%S", $(todo));
+    "tests" slist => { "test", "test2" };
 
   reports:
-      "The $(tests) list is $($(tests)_str)";
-      "The grepped list (only single digits from $(tests)) is $($(tests)_grep_str)";
-      "The filter-grepped list (only single digits from $(tests)) is $($(tests)_grep_str)";
-      "The filter-exact list, looking for only 'one' in $(tests), is $($(tests)_exact1_str)";
-      "This list should be empty, the '.' is not literally in the list $(tests): $($(tests)_exact2_str)";
-      "The filter-invert list, looking for non-digits in $(tests), is $($(tests)_invert_str)";
-      "The filter-bound list, matching at most 2 items from the whole list $(tests), is $($(tests)_max2_str)";
-      "This list should be empty because 0 elements of $(tests) were requested: $($(tests)_max0_str)";
+    "The $(tests) list is $($(tests)_str)";
+    "The grepped list (only single digits from $(tests)) is $($(tests)_grep_str)";
+    "The filter-grepped list (only single digits from $(tests)) is $($(tests)_grep_str)";
+    "The filter-exact list, looking for only 'one' in $(tests), is $($(tests)_exact1_str)";
+    "This list should be empty, the '.' is not literally in the list $(tests): $($(tests)_exact2_str)";
+    "The filter-invert list, looking for non-digits in $(tests), is $($(tests)_invert_str)";
+    "The filter-bound list, matching at most 2 items from the whole list $(tests), is $($(tests)_max2_str)";
+    "This list should be empty because 0 elements of $(tests) were requested: $($(tests)_max0_str)";
 }
 #+end_src
 ###############################################################################

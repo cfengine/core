@@ -1,25 +1,19 @@
 #  Copyright 2021 Northern.tech AS
-
 #  This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
-
 #  This program is free software; you can redistribute it and/or modify it
 #  under the terms of the GNU General Public License as published by the
 #  Free Software Foundation; version 3.
-
 #  This program is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
-
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
-
 # To the extent this program is licensed as part of the Enterprise
 # versions of Cfengine, the applicable Commercial Open Source License
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
-
 #+begin_src prep
 #@ ```
 #@ echo 1234567890 > FILE.txt
@@ -32,32 +26,37 @@
 #+begin_src cfengine3
 body common control
 {
-      bundlesequence => { "example" };
+  bundlesequence => { "example" };
 }
 
 bundle agent example
 {
   vars:
-      "file" string => "$(this.promise_filename).txt";
+    "file" string => "$(this.promise_filename).txt";
+
   methods:
-      "fileinfo" usebundle => fileinfo("$(file)");
+    "fileinfo" usebundle => fileinfo("$(file)");
 }
+
 bundle agent fileinfo(f)
 {
   vars:
-      # use the full list if you want to see all the attributes!
-      # "fields" slist => splitstring("size,gid,uid,ino,nlink,ctime,atime,mtime,mode,modeoct,permstr,permoct,type,devno,dev_minor,dev_major,basename,dirname,linktarget,linktarget_shallow", ",", 999);
+    # use the full list if you want to see all the attributes!
+    # "fields" slist => splitstring("size,gid,uid,ino,nlink,ctime,atime,mtime,mode,modeoct,permstr,permoct,type,devno,dev_minor,dev_major,basename,dirname,linktarget,linktarget_shallow", ",", 999);
+    # ino (inode number), ctime (creation time),
+    # devno/dev_minor/dev_major (device numbers) were omitted but
+    # they are all integers
+    "fields"
+      slist => splitstring(
+        "size,gid,uid,nlink,mode,modeoct,permstr,permoct,type,basename",
+        ",",
+        999
+      );
 
-      # ino (inode number), ctime (creation time),
-      # devno/dev_minor/dev_major (device numbers) were omitted but
-      # they are all integers
-
-      "fields" slist => splitstring("size,gid,uid,nlink,mode,modeoct,permstr,permoct,type,basename", ",", 999);
-
-      "stat[$(f)][$(fields)]" string => filestat($(f), $(fields));
+    "stat[$(f)][$(fields)]" string => filestat($(f), $(fields));
 
   reports:
-      "$(this.bundle): file $(stat[$(f)][basename]) has $(fields) = $(stat[$(f)][$(fields)])";
+    "$(this.bundle): file $(stat[$(f)][basename]) has $(fields) = $(stat[$(f)][$(fields)])";
 }
 #+end_src
 ###############################################################################

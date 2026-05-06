@@ -1,25 +1,19 @@
 #  Copyright 2021 Northern.tech AS
-
 #  This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
-
 #  This program is free software; you can redistribute it and/or modify it
 #  under the terms of the GNU General Public License as published by the
 #  Free Software Foundation; version 3.
-
 #  This program is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
-
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
-
 # To the extent this program is licensed as part of the Enterprise
 # versions of Cfengine, the applicable Commercial Open Source License
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
-
 ##+begin_src prep
 #@ ```
 #@ printf "[general]\n" > /tmp/instance.cfg
@@ -32,40 +26,45 @@
 bundle agent main
 {
   vars:
-      # the returned data container is a key-value map:
+    # the returned data container is a key-value map:
+    # the whole matched string is put in key "0"
+    # the first three characters are put in key "name1"
+    # the next three characters go into key "2" (the capture has no name)
+    # the next two characters go into key "3" (the capture has no name)
+    # then the dash is ignored
+    # then three characters are put in key "name2"
+    # then another dash is ignored
+    # the next three characters go into key "5" (the capture has no name)
+    # anything else is ignored
+    "parsed"
+      data => data_regextract(
+        "^(?<name1>...)(...)(..)-(?<name2>...)-(..).*",
+        "abcdef12-345-67andsoon"
+      );
 
-      # the whole matched string is put in key "0"
-      # the first three characters are put in key "name1"
-      # the next three characters go into key "2" (the capture has no name)
-      # the next two characters go into key "3" (the capture has no name)
-      # then the dash is ignored
-      # then three characters are put in key "name2"
-      # then another dash is ignored
-      # the next three characters go into key "5" (the capture has no name)
-      # anything else is ignored
+    "parsed_str" string => format("%S", parsed);
 
-      "parsed" data => data_regextract("^(?<name1>...)(...)(..)-(?<name2>...)-(..).*", "abcdef12-345-67andsoon");
-      "parsed_str" string => format("%S", parsed);
+    # Illustrating multiline regular expression
+    "instance_guid_until_end_of_string"
+      data => data_regextract(
+        "^guid\s?+=\s?+(?<value>.*)$", readfile("/tmp/instance.cfg", 200)
+      );
 
-      # Illustrating multiline regular expression
+    "instance_guid"
+      data => data_regextract(
+        "^guid\s+=\s+(?<value>[^\n]*)", readfile("/tmp/instance.cfg", 200)
+      );
 
-      "instance_guid_until_end_of_string"
-        data => data_regextract( "^guid\s?+=\s?+(?<value>.*)$",
-                                 readfile( "/tmp/instance.cfg", 200));
-
-      "instance_guid"
-         data => data_regextract( "^guid\s+=\s+(?<value>[^\n]*)",
-                                  readfile( "/tmp/instance.cfg", 200));
-
-      "instance_port"
-         data => data_regextract( "^port\s?+=\s?+(?<value>[^\n]*)",
-                                  readfile( "/tmp/instance.cfg", 200));
+    "instance_port"
+      data => data_regextract(
+        "^port\s?+=\s?+(?<value>[^\n]*)", readfile("/tmp/instance.cfg", 200)
+      );
 
   reports:
-      "$(this.bundle): parsed[0] '$(parsed[0])' parses into: $(parsed_str)";
-      "$(this.bundle): instance_guid_until_end_of_string[value] '$(instance_guid_until_end_of_string[value])'";
-      "$(this.bundle): instance_guid[value] '$(instance_guid[value])'";
-      "$(this.bundle): instance_port[value] '$(instance_port[value])'";
+    "$(this.bundle): parsed[0] '$(parsed[0])' parses into: $(parsed_str)";
+    "$(this.bundle): instance_guid_until_end_of_string[value] '$(instance_guid_until_end_of_string[value])'";
+    "$(this.bundle): instance_guid[value] '$(instance_guid[value])'";
+    "$(this.bundle): instance_port[value] '$(instance_port[value])'";
 }
 #+end_src
 ###############################################################################

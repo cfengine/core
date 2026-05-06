@@ -20,4 +20,4 @@ jobs:
       run: |
         cd tests/acceptance
         chmod -R go-w .
-        ./testall --printlog --tests=common,errorlog
+        ./testall --printlog --tests=common,errorlog,errorexit

@@ -1,5 +1,7 @@
 ## 3.27.1
 
+- Added mpf_masterfiles_stage_build_always flag file to enable legacy behavior
+  of masterfiles-stage to always run cfbs build (ENT-13756)
 - Enabled select_region to converge across multiple passes (CFE-3866)
 - Fixed buffer overflow in the files promise
 - Fixed memory leak in isreadable() policy function

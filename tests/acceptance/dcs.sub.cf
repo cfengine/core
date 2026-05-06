@@ -116,16 +116,16 @@ bundle common G
   vars:
       # General commands.
       "$(cmds)" string => "$(paths[$(paths_indices)])$(const.dirsep)$(cmds)$(exeext)",
-      ifvarclass => canonify("$(paths_indices)_$(cmds)$(exeext)");
+      if => canonify("$(paths_indices)_$(cmds)$(exeext)");
 
       # Special cases.
       "$(sbin_cmds)" string => "$(paths[$(paths_indices)])$(const.dirsep)$(sbin_cmds)$(exeext)",
-      ifvarclass => canonify("$(paths_indices)_$(sbin_cmds)$(exeext)");
+      if => canonify("$(paths_indices)_$(sbin_cmds)$(exeext)");
       # gmake has higher priority, so should come last.
       "make" string => "$(paths[$(paths_indices)])$(const.dirsep)make$(exeext)",
-      ifvarclass => canonify("$(paths_indices)_make$(exeext)");
+      if => canonify("$(paths_indices)_make$(exeext)");
       "make" string => "$(paths[$(paths_indices)])$(const.dirsep)gmake$(exeext)",
-      ifvarclass => canonify("$(paths_indices)_gmake$(exeext)");
+      if => canonify("$(paths_indices)_gmake$(exeext)");
 
     # on solaris, gsed works more like GNU sed, such as having `-i` option
     solaris::
@@ -247,7 +247,7 @@ bundle agent test_run(filename)
 
     AUTO::
       "any" usebundle => "$(default.tests)",
-      ifvarclass => canonify("have_test_run_$(default.tests)");
+      if => canonify("have_test_run_$(default.tests)");
 
   reports:
     !AUTO::
@@ -460,15 +460,15 @@ bundle agent dcs_report_generic_classes(x)
 
   reports:
     DEBUG::
-      "class '$(x)_$(choices)' was defined" ifvarclass => '$(x)_$(choices)';
-      "class '$(x)_$(choices)' was NOT defined" ifvarclass => '!$(x)_$(choices)';
+      "class '$(x)_$(choices)' was defined" if => '$(x)_$(choices)';
+      "class '$(x)_$(choices)' was NOT defined" if => '!$(x)_$(choices)';
 }
 
 bundle agent dcs_generic_classes_to_string(x)
 {
   vars:
       "choices" slist => { "repaired", "failed", "denied", "timeout", "kept" };
-      "s[$(choices)]" string => "$(x)_$(choices)", ifvarclass => '$(x)_$(choices)';
+      "s[$(choices)]" string => "$(x)_$(choices)", if => '$(x)_$(choices)';
       "found_unsorted" slist => getvalues(s);
       "found" slist => sort(found_unsorted, "lex");
       "found_str" string => format("%S", found);
@@ -792,13 +792,13 @@ reports:
 bundle agent dcs_passif(classname, test)
 {
   reports:
-      "$(test) Pass" ifvarclass => $(classname);
-      "$(test) FAIL" ifvarclass => not($(classname));
+      "$(test) Pass" if => $(classname);
+      "$(test) FAIL" if => not($(classname));
 
     EXTRA::
-      "$(this.bundle): passing based on class '$(classname)'" ifvarclass => $(classname);
+      "$(this.bundle): passing based on class '$(classname)'" if => $(classname);
     DEBUG::
-      "$(this.bundle): failing based on class '$(classname)'" ifvarclass => not($(classname));
+      "$(this.bundle): failing based on class '$(classname)'" if => not($(classname));
 }
 
 bundle agent dcs_pass(test)
@@ -872,17 +872,17 @@ bundle agent dcs_passif_expected(expected, not_expected, test)
   reports:
     DEBUG::
       "$(this.bundle): bad: $(ex) was NOT defined"
-      ifvarclass => "!$(ex)";
+      if => "!$(ex)";
 
       "$(this.bundle): bad: $(notex) WAS defined"
-      ifvarclass => "$(notex)";
+      if => "$(notex)";
 
     EXTRA::
       "$(this.bundle): good: $(ex) WAS defined"
-      ifvarclass => "$(ex)";
+      if => "$(ex)";
 
       "$(this.bundle): good: $(notex) was NOT defined"
-      ifvarclass => "!$(notex)";
+      if => "!$(notex)";
 }
 
 #######################################################
@@ -906,17 +906,17 @@ bundle agent dcs_passif_output(wanted, unwanted, command, test)
   reports:
     DEBUG::
       "$(this.bundle): bad: '$(wanted)' was NOT found in the output of '$(command)'"
-      ifvarclass => "!__passif_output_wanted";
+      if => "!__passif_output_wanted";
 
       "$(this.bundle): bad: '$(unwanted)' WAS found in the output of '$(command)'"
-      ifvarclass => "__passif_output_unwanted";
+      if => "__passif_output_unwanted";
 
     EXTRA::
       "$(this.bundle): good: '$(wanted)' WAS found in the output of '$(command)'"
-      ifvarclass => "__passif_output_wanted";
+      if => "__passif_output_wanted";
 
       "$(this.bundle): good: '$(unwanted)' was NOT found in the output of '$(command)'"
-      ifvarclass => "!__passif_output_unwanted";
+      if => "!__passif_output_unwanted";
 
     DEBUG::
       "$(this.bundle): the output of command '$(command)' was: '$(subout)'";

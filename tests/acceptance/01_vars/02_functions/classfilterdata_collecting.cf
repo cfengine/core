@@ -14,21 +14,21 @@ bundle agent init
     "mode": "755",
     "owner": "root",
     "group": "root",
-    "ifvarclass": "role_1"
+    "if": "role_1"
   },
   {
     "file": "/tmp/bar",
     "mode": "600",
     "owner": "root",
     "group": "root",
-    "ifvarclass": "role_2"
+    "if": "role_2"
   },
   {
     "file": "/tmp/baz",
     "mode": "644",
     "owner": "root",
     "group": "root",
-    "ifvarclass": "(role_1|role_2)"
+    "if": "(role_1|role_2)"
   }
 ]';
 }
@@ -44,7 +44,7 @@ bundle agent test
 
   vars:
     "filtered"
-      data => classfilterdata(readjson("$(G.testfile).json"), "auto", "ifvarclass");
+      data => classfilterdata(readjson("$(G.testfile).json"), "auto", "if");
 }
 
 bundle agent check
@@ -57,14 +57,14 @@ bundle agent check
     "mode": "600",
     "owner": "root",
     "group": "root",
-    "ifvarclass": "role_2"
+    "if": "role_2"
   },
   {
     "file": "/tmp/baz",
     "mode": "644",
     "owner": "root",
     "group": "root",
-    "ifvarclass": "(role_1|role_2)"
+    "if": "(role_1|role_2)"
   }
 ]');
     "actual"

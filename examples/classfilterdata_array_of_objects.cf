@@ -7,13 +7,13 @@ bundle agent __main__
   vars:
       "original"
         data => '[
-            { "file": "/tmp/foo", "ifvarclass": "role_1"          },
-            { "file": "/tmp/bar", "ifvarclass": "role_2"          },
-            { "file": "/tmp/baz", "ifvarclass": "(role_1|role_2)" }
+            { "file": "/tmp/foo", "if": "role_1"          },
+            { "file": "/tmp/bar", "if": "role_2"          },
+            { "file": "/tmp/baz", "if": "(role_1|role_2)" }
           ]';
 
       "filtered"
-        data => classfilterdata("original", "array_of_objects", "ifvarclass");
+        data => classfilterdata("original", "array_of_objects", "if");
 
   reports:
       "Filtered data: $(with)"
@@ -26,11 +26,11 @@ bundle agent __main__
 #@ R: Filtered data: [
 #@   {
 #@     "file": "/tmp/bar",
-#@     "ifvarclass": "role_2"
+#@     "if": "role_2"
 #@   },
 #@   {
 #@     "file": "/tmp/baz",
-#@     "ifvarclass": "(role_1|role_2)"
+#@     "if": "(role_1|role_2)"
 #@   }
 #@ ]
 #@ ```

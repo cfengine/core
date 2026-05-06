@@ -1,5 +1,7 @@
 ## 3.24.4
 
+- Added mpf_masterfiles_stage_build_always flag file to enable legacy behavior
+  of masterfiles-stage to always run cfbs build (ENT-13756)
 - Enabled select_region to converge across multiple passes (CFE-3866)
 - Fixed buffer overflow in build XPath for edit_xml (ENT-13550)
 - Fixed buffer overflow in cf-secret when using multiple keys of different sizes

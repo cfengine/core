@@ -16,7 +16,7 @@ bundle agent init
 bundle agent test
 {
   vars:
-      "subout" string => execresult("${sys.cf_agent} -Kf ${this.promise_filename}.sub", "noshell");
+      "subout" string => execresult("${sys.cf_agent} -Kf $(this.promise_dirname)/wrong-bundle-type.sub.x.cf", "noshell");
 }
 
 bundle agent check

@@ -3815,6 +3815,12 @@ static void SysOSNameHuman(EvalContext *ctx)
                                       "Gentoo", CF_DATA_TYPE_STRING,
                                       "source=agent,derived-from=gentoo");
     }
+    else if (EvalContextClassGet(ctx, NULL, "slackware") != NULL)
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, lval,
+                                      "Slackware", CF_DATA_TYPE_STRING,
+                                      "source=agent,derived-from=slackware");
+    }
     else
     {
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, lval,
@@ -3915,7 +3921,7 @@ static void SysOsVersionMajor(EvalContext *ctx)
 /*****************************************************************************/
 
 
-#define SUPPORTED_PLATFORMS "debian|ubuntu|redhat|rhel|centos|fedora|aix|hpux|suse|opensuse|opensuse_leap|sles|solaris|sunos|windows|freebsd|macos"
+#define SUPPORTED_PLATFORMS "debian|ubuntu|redhat|rhel|centos|fedora|aix|hpux|suse|opensuse|opensuse_leap|slackware|sles|solaris|sunos|windows|freebsd|macos"
 
 static bool SetOsVersionMinorFromOSRelease(EvalContext *ctx)
 {

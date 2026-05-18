@@ -25,6 +25,7 @@
 #include <unix.h>
 #include <exec_tools.h>
 #include <file_lib.h>
+#include <signals.h>    /* IsPendingTermination() */
 #include <string_lib.h> /* StringToInt64() */
 
 #ifdef HAVE_SYS_UIO_H
@@ -227,12 +228,48 @@ bool ShellCommandReturnsZero(const char *command, ShellType shell)
     {
         ALARM_PID = pid;
 
-        while (waitpid(pid, &status, 0) < 0)
+        /* Poll for the child instead of blocking in waitpid(). signal() on
+         * Linux/glibc installs handlers with SA_RESTART, so SIGTERM does not
+         * interrupt a blocking waitpid() and PENDING_TERMINATION is never
+         * observed until the child exits on its own. With WNOHANG we get
+         * control back between iterations and can react to a pending
+         * termination (e.g. a stuck cf-promises during policy validation
+         * keeping the daemon unresponsive to SIGTERM). nanosleep() is
+         * interruptible regardless of SA_RESTART, so SIGTERM wakes us up
+         * promptly. */
+        while (true)
         {
-            if (errno != EINTR)
+            pid_t wait_result = waitpid(pid, &status, WNOHANG);
+            if (wait_result == pid)
             {
+                break; /* child exited and was reaped */
+            }
+            if (wait_result < 0)
+            {
+                if (errno == EINTR)
+                {
+                    continue;
+                }
                 return false;
             }
+            /* wait_result == 0: child is still running */
+            if (IsPendingTermination())
+            {
+                Log(LOG_LEVEL_VERBOSE,
+                    "Termination pending; aborting child '%s' (pid %jd)",
+                    command, (intmax_t) pid);
+                ProcessSignalTerminate(pid);
+                while (waitpid(pid, &status, 0) < 0 && errno == EINTR)
+                {
+                    /* Child has been signalled; just reap it. */
+                }
+                return false;
+            }
+            struct timespec poll_interval = {
+                .tv_sec = 0,
+                .tv_nsec = 100000000 /* 100 ms */
+            };
+            nanosleep(&poll_interval, NULL);
         }
 
         return (WEXITSTATUS(status) == 0);

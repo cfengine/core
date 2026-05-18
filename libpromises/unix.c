@@ -25,6 +25,7 @@
 #include <unix.h>
 #include <exec_tools.h>
 #include <file_lib.h>
+#include <signals.h>    /* IsPendingTermination() */
 #include <string_lib.h> /* StringToInt64() */
 
 #ifdef HAVE_SYS_UIO_H
@@ -231,6 +232,23 @@ bool ShellCommandReturnsZero(const char *command, ShellType shell)
         {
             if (errno != EINTR)
             {
+                return false;
+            }
+            /* A daemon received a terminating signal while we are blocked on
+             * waitpid(). Stop the child so we can return control to the main
+             * loop, otherwise the daemon would stay unresponsive to SIGTERM
+             * for as long as the child runs (e.g. a stuck cf-promises during
+             * policy validation). */
+            if (IsPendingTermination())
+            {
+                Log(LOG_LEVEL_VERBOSE,
+                    "Termination pending; aborting child '%s' (pid %jd)",
+                    command, (intmax_t) pid);
+                ProcessSignalTerminate(pid);
+                while (waitpid(pid, &status, 0) < 0 && errno == EINTR)
+                {
+                    /* Child has been signalled; just reap it. */
+                }
                 return false;
             }
         }

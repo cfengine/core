@@ -17,9 +17,16 @@ bundle agent setup
   files:
     "$(G.testroot)/TEST.source"
       depth_search => recurse("inf"),
-      perms => system_owned("0644"),
+      perms => agent_owned("0644"),
       copy_from => example("$(this.promise_dirname)/test_files");
 
+}
+
+body perms agent_owned(mode)
+{
+      mode   => "$(mode)";
+      owners => { "$(sys.user_data[username])" };
+      groups => { "$(sys.user_data[gid])" };
 }
 
 bundle agent main

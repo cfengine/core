@@ -224,17 +224,31 @@ bool ShellCommandReturnsZero(const char *command, ShellType shell)
     {
         ALARM_PID = pid;
 
-        while (waitpid(pid, &status, 0) < 0)
+        /* Poll for the child instead of blocking in waitpid(). signal() on
+         * Linux/glibc installs handlers with SA_RESTART, so SIGTERM does not
+         * interrupt a blocking waitpid() and PENDING_TERMINATION is never
+         * observed until the child exits on its own. With WNOHANG we get
+         * control back between iterations and can react to a pending
+         * termination (e.g. a stuck cf-promises during policy validation
+         * keeping the daemon unresponsive to SIGTERM). nanosleep() is
+         * interruptible regardless of SA_RESTART, so SIGTERM wakes us up
+         * promptly. */
+        while (true)
         {
-            if (errno != EINTR)
+            pid_t wait_result = waitpid(pid, &status, WNOHANG);
+            if (wait_result == pid)
             {
+                break; /* child exited and was reaped */
+            }
+            if (wait_result < 0)
+            {
+                if (errno == EINTR)
+                {
+                    continue;
+                }
                 return false;
             }
-            /* A daemon received a terminating signal while we are blocked on
-             * waitpid(). Stop the child so we can return control to the main
-             * loop, otherwise the daemon would stay unresponsive to SIGTERM
-             * for as long as the child runs (e.g. a stuck cf-promises during
-             * policy validation). */
+            /* wait_result == 0: child is still running */
             if (IsPendingTermination())
             {
                 Log(LOG_LEVEL_VERBOSE,
@@ -247,6 +261,11 @@ bool ShellCommandReturnsZero(const char *command, ShellType shell)
                 }
                 return false;
             }
+            struct timespec poll_interval = {
+                .tv_sec = 0,
+                .tv_nsec = 100000000 /* 100 ms */
+            };
+            nanosleep(&poll_interval, NULL);
         }
 
         return (WEXITSTATUS(status) == 0);

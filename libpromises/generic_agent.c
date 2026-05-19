@@ -1484,7 +1484,15 @@ bool GenericAgentArePromisesValid(const GenericAgentConfig *config)
 
     if (!ShellCommandReturnsZero(cmd, true))
     {
-        Log(LOG_LEVEL_ERR, "Policy failed validation with command '%s'", cmd);
+        if (IsPendingTermination())
+        {
+            Log(LOG_LEVEL_VERBOSE,
+                "Policy validation aborted due to termination signal");
+        }
+        else
+        {
+            Log(LOG_LEVEL_ERR, "Policy failed validation with command '%s'", cmd);
+        }
         return false;
     }
 

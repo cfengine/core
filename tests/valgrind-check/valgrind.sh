@@ -85,6 +85,13 @@ set -x
 auto_destruct_pid=$!
 trap "kill $auto_destruct_pid" EXIT
 
+# cf-execd's MailResult connects to localhost:25 whenever a cf-agent run
+# produces output. Run smtp-sink (from the postfix package) so the connect
+# succeeds and cf-execd's mail code path is exercised under valgrind without
+# leaving an "error: Mail report: couldn't connect" line in execd_output.txt.
+echo "Starting smtp-sink to absorb cf-execd mail reports"
+/usr/sbin/smtp-sink 127.0.0.1:25 1000 &
+
 # Assume we are in core directory
 if [ -f ./configure ] ; then
   ./configure -C --enable-debug

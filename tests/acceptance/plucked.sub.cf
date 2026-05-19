@@ -760,10 +760,16 @@ bundle edit_line set_variable_values_ini(tab, sectionName)
 
       # Be careful if the index string contains funny chars
       "cindex[$(index)]" string => canonify("$(index)");
+      "_escaped_section" string => escape("$(sectionName)");
 
   classes:
       "edit_$(cindex[$(index)])"     not => strcmp("$($(tab)[$(sectionName)][$(index)])","dontchange"),
       comment => "Create conditions to make changes";
+
+      "section_$(sectionName)_exists"
+        expression => regline("^\[$(_escaped_section)\]", "$(edit.filename)"),
+        if => fileexists("$(edit.filename)"),
+        comment => "Check if the section header already exists in the file";
 
   field_edits:
 
@@ -771,14 +777,16 @@ bundle edit_line set_variable_values_ini(tab, sectionName)
       "#+\s*$(index)\s*=.*"
       select_region => INI_section(escape("$(sectionName)")),
       edit_field => col("\s*=\s*","1","$(index)","set"),
-      if => "edit_$(cindex[$(index)])";
+      if => and("edit_$(cindex[$(index)])",
+                canonify("section_$(sectionName)_exists"));
 
       # match a line starting like the key something
       "\s*$(index)\s*=.*"
       edit_field => col("\s*=\s*","2","$($(tab)[$(sectionName)][$(index)])","set"),
       select_region => INI_section(escape("$(sectionName)")),
       classes => results("bundle", "set_variable_values_ini_not_$(cindex[$(index)])"),
-      if => "edit_$(cindex[$(index)])";
+      if => and("edit_$(cindex[$(index)])",
+                canonify("section_$(sectionName)_exists"));
 
   insert_lines:
       "[$(sectionName)]"
@@ -787,7 +795,16 @@ bundle edit_line set_variable_values_ini(tab, sectionName)
 
       "$(index)=$($(tab)[$(sectionName)][$(index)])"
       select_region => INI_section(escape("$(sectionName)")),
-        if => "!(set_variable_values_ini_not_$(cindex[$(index)])_kept|set_variable_values_ini_not_$(cindex[$(index)])_repaired).edit_$(cindex[$(index)])";
+        if => and("!(set_variable_values_ini_not_$(cindex[$(index)])_kept|set_variable_values_ini_not_$(cindex[$(index)])_repaired)",
+                  "edit_$(cindex[$(index)])",
+                  canonify("section_$(sectionName)_exists")),
+        handle => "insert_key_in_existing_section_$(sectionName)_$(cindex[$(index)])";
+
+      "$(index)=$($(tab)[$(sectionName)][$(index)])"
+        location => after("^\[$(_escaped_section)\]"),
+        if => and("edit_$(cindex[$(index)])",
+                  not(canonify("section_$(sectionName)_exists"))),
+        handle => "insert_key_in_new_section_$(sectionName)_$(cindex[$(index)])";
 
 }
 

@@ -1,7 +1,7 @@
 body common control
 {
       inputs => {
-        "../default.cf.sub",
+        "../default.sub.cf",
         "./prepare_files_for_simulate_tests.cf.sub",
         "./normalize_agent_output.cf.sub"
       };

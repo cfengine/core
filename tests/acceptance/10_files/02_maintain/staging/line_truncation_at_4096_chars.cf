@@ -9,7 +9,7 @@
 
 body common control
 {
-      inputs => { "../../default.cf.sub" };
+      inputs => { "../../default.sub.cf" };
       bundlesequence  => { default("${this.promise_filename}") };
       version => "1.0";
 }
@@ -34,7 +34,7 @@ bundle agent init
   # It would create a false negative.
   commands:
       "${G.perl}"
-        args    => "-e 'print \"#\" x ${char_number}; print \"ENDMARK\n\"' > ${G.testfile}"
+        args    => "-e 'print \"#\" x ${char_number}; print \"ENDMARK\n\"' > ${G.testfile}",
         contain => in_shell;
 }
 
@@ -79,7 +79,7 @@ bundle agent check
 
   reports:
     DEBUG.!ok::
-      "${this.promise_filename} FAILed as the generated file got at least a line truncated to 4096 characters"
+      "${this.promise_filename} FAILed as the generated file got at least a line truncated to 4096 characters";
     ok::
       "${this.promise_filename} Pass";
     !ok::

@@ -2,7 +2,7 @@
 
 body common control
 {
-      inputs => { "../../default.cf.sub", @(runlist.inputs) };
+      inputs => { "../../default.sub.cf", @(runlist.inputs) };
       bundlesequence  => { prep_runlist, runlist, default("$(this.promise_filename)") };
 }
 

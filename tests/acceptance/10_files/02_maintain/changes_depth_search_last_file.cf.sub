@@ -1,7 +1,7 @@
 body common control
 {
-    inputs => { "../../dcs.cf.sub",
-                "../../plucked.cf.sub",
+    inputs => { "../../dcs.sub.cf",
+                "../../plucked.sub.cf",
               };
     bundlesequence => { "init", "test" };
 }

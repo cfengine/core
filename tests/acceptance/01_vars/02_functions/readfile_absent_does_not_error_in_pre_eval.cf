@@ -3,12 +3,12 @@ body common control
 
    # If you want to see this work on 3.6.x comment out
    # inputs and bundlesequence, and inline the following
-   # bundles from  dcs.cf.sub
+   # bundles from  dcs.sub.cf
    # - dcs_passif_output
    # - dcs_passif_expected
    # - dcs_passif
 
-    inputs => { "../../default.cf.sub" };
+    inputs => { "../../default.sub.cf" };
     bundlesequence => { default($(this.promise_filename)) };
 #    bundlesequence => { "test", "check" };
     version => "1.0";
@@ -36,4 +36,3 @@ bundle agent check
                                        "$(sys.cf_agent) -Kf $(this.promise_filename).sub", $(this.promise_filename));
                                              
 }
-

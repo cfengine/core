@@ -1,7 +1,7 @@
 bundle common inform_tests
 {
   vars:
-    "inputs" slist => { "$(this.promise_dirname)/../default.cf.sub" };
+    "inputs" slist => { "$(this.promise_dirname)/../default.sub.cf" };
 }
 
 body common control

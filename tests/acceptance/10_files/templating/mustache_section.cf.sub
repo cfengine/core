@@ -1,6 +1,6 @@
 body common control
 {
-      inputs => { "../../plucked.cf.sub" };
+      inputs => { "../../plucked.sub.cf" };
       bundlesequence  => { test };
       version => "1.0";
 }

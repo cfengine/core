@@ -2,7 +2,7 @@ body common control
 {
 #  ignore_missing_bundles => "true";
 
-      inputs => { "../../default.cf.sub" };
+      inputs => { "../../default.sub.cf" };
       bundlesequence  => { default("$(this.promise_filename)") };
 
 }
@@ -87,5 +87,3 @@ bundle agent cmerge(name, varlist)
       "$(name)" data => mergedata($(name), $(varlist)), policy => "free"; # iterates!
       "$(name)_str" string => format("%S", $(name)),    policy => "free";
 }
-
-

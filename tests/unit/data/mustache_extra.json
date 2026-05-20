@@ -61,6 +61,6 @@
             },
             "template": "{{#list}}{{k}}={{v}}, {{/list}}",
             "expected": "789=0, =true, -1=-2, "
-        },
+        }
     ]
 }

@@ -3,7 +3,7 @@
 body common control
 {
       #ignore_missing_inputs => "true";
-      inputs => { "../../default.cf.sub", "$(config.myfile)" };
+      inputs => { "../../default.sub.cf", "$(config.myfile)" };
       bundlesequence  => { default("$(this.promise_filename)") };
 }
 

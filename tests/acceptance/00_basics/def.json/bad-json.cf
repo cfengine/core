@@ -1,7 +1,7 @@
 # test of the def.json facility: complain if a bad JSON file is found
 body common control
 {
-      inputs => { "../../default.cf.sub" };
+      inputs => { "../../default.sub.cf" };
       bundlesequence  => { default("$(this.promise_filename)") };
       version => "1.0";
 }
@@ -15,7 +15,7 @@ bundle agent test
         meta => { "ENT-10257" };
 
   methods:
-      "" usebundle => file_copy("$(this.promise_filename).json", "$(sys.inputdir)$(const.dirsep)def.json");
+      "" usebundle => file_copy("$(this.promise_filename).x.json", "$(sys.inputdir)$(const.dirsep)def.json");
 }
 
 #######################################################

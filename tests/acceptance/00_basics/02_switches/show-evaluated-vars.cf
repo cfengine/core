@@ -6,7 +6,7 @@
 
 body common control
 {
-      inputs => { "../../default.cf.sub" };
+      inputs => { "../../default.sub.cf" };
       bundlesequence  => { default("$(this.promise_filename)") };
       version => "1.0";
 }
@@ -35,4 +35,3 @@ bundle agent check
         usebundle => dcs_passif_expected( "sub_agent_repaired", "sub_agent_not_kept",
                                           "$(this.promise_filename)");
 }
-

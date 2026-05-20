@@ -247,7 +247,7 @@ bundle agent git_update
              perms => u_m("755"),
       depth_search => u_recurse_basedir("inf"),
             action => u_immediate,
-        ifvarclass => "hpux";
+                if => "hpux";
 
    "/usr/local/bin"
            comment => "Ensure cfengine binaries were copied to /usr/local/bin",

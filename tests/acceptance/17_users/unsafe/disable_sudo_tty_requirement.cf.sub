@@ -2,7 +2,7 @@
 
 body file control
 {
-    inputs => { "../../plucked.cf.sub" };
+    inputs => { "../../plucked.sub.cf" };
 }
 
 bundle agent disable_sudo_tty_requirement

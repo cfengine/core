@@ -17,7 +17,7 @@
 
 body file control
 {
-    inputs => { "../../plucked.cf.sub" };
+    inputs => { "../../plucked.sub.cf" };
 }
 
 bundle agent check_file_changes_log(file, pass_class, fail_class, checks)

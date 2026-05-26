@@ -29,7 +29,7 @@
     "element3"
   ],
   "load3": {
-    "x"x": "y\"y"
+    "x\"x": "y\"y"
   },
   "load4": [],
   "load5[anotherkey]": "anothervalue",
@@ -149,6 +149,6 @@
   "static[anotherkey]": "anothervalue",
   "static[lastkey!]": "lastvalue",
   "static[mykey]": "myvalue",
-  "static[x"x]": "xxvalue",
+  "static[x\"x]": "xxvalue",
   "static[x]": "xvalue"
 }

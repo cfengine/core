@@ -397,6 +397,11 @@ fi
 
 gzip_add $WORKDIR/outputs/previous
 gzip_add $WORKDIR/outputs/dc-scripts.log # masterfiles-stage log
+# Collect up to the two most recent standalone_self_upgrade logs (separate cf-agent process)
+su_logs=$(find $WORKDIR/outputs/ -name 'standalone_self_upgrade*' -type f -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -2 | cut -d' ' -f2-)
+for f in $su_logs; do
+    gzip_add "$f"
+done
 file_add $WORKDIR/policy_server.dat
 
 if [ -f $WORKDIR/share/cf-support-nova-hub.sh ]; then

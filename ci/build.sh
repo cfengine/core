@@ -5,7 +5,10 @@ set -ex
 thisdir="$(dirname "$0")"
 cd "$thisdir"/..
 
-source /etc/os-release
+if [ -f /etc/os-release ]; then
+  source /etc/os-release
+fi
+
 CFLAGS="-Wall"
 if [ "$ID" != "alpine" ]; then
   CFLAGS="$CFLAGS -Werror"

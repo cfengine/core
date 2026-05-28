@@ -1199,6 +1199,11 @@ static void PromiseModule_Terminate_untyped(void *data)
 
 void TerminateCustomPromises(void)
 {
+    if (custom_modules == NULL)
+    {
+        return;
+    }
+
     MapIterator iter = MapIteratorInit(custom_modules);
 
     for (const MapKeyValue *item = MapIteratorNext(&iter); item != NULL; item = MapIteratorNext(&iter))

@@ -12,5 +12,14 @@ Restart=always
 RestartSec=10
 KillMode=process
 
+# Drain in-flight cf-agent, so it does not pull dependencies back in after the
+# stop is reported successful (as seen in ENT-14108).
+ExecStopPost=/bin/sh -c 't=60; \
+    while [ $$t -gt 0 ] && pgrep -x cf-agent >/dev/null 2>&1; do \
+        sleep 1; \
+        t=$$((t - 1)); \
+    done; \
+    pkill -KILL -x cf-agent >/dev/null 2>&1 || true'
+
 [Install]
 WantedBy=multi-user.target

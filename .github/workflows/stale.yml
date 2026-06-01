@@ -4,23 +4,21 @@ name: Label and close stale pull requests
 
 on:
   schedule:
-  - cron: '31 19 * * *'
+    - cron: "31 19 * * *"
   workflow_dispatch:
 
 jobs:
   stale:
-
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
 
     steps:
-    - uses: actions/stale@v5
-      with:
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
-        stale-pr-message: 'Marking this PR as stale due to inactivity; it will be closed in 7 days.'
-        stale-pr-label: 'stale'
-        days-before-stale: 30
-        days-before-close: 7
-        close-pr-message: "Closing PR due to inactivity. Feel free to open a new PR if necessary."
-        
+      - uses: actions/stale@v5
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          stale-pr-message: "Marking this PR as stale due to inactivity; it will be closed in 7 days."
+          stale-pr-label: "stale"
+          days-before-stale: 30
+          days-before-close: 7
+          close-pr-message: "Closing PR due to inactivity. Feel free to open a new PR if necessary."

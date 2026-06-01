@@ -55,6 +55,10 @@ ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, Nova_Initialize, EvalContext *, ctx)
 {
 }
 
+ENTERPRISE_VOID_FUNC_0ARG_DEFINE_STUB(void, Nova_InitializeLeech2)
+{
+}
+
 /* all agents: generic_agent.c */
 
 ENTERPRISE_FUNC_0ARG_DEFINE_STUB(const char *, GetConsolePrefix)

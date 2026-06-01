@@ -62,6 +62,8 @@ int main(int argc, char *argv[])
     const char *program_name = (last_dir_sep != NULL ? last_dir_sep + 1 : program_invocation_name);
     GenericAgentDiscoverContext(ctx, config, program_name);
 
+    Nova_InitializeLeech2();
+
     Policy *policy = SelectAndLoadPolicy(config, ctx, false, false);
 
     if (!policy)

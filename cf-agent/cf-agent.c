@@ -1430,6 +1430,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
         }
     }
     Nova_Initialize(ctx);
+    Nova_InitializeLeech2();
 
     // If not have been enabled above then should be disabled.
     // By default it's enabled to catch all set classes on startup stage

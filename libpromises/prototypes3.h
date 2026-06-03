@@ -59,6 +59,7 @@ void SetSkipIdentify(bool enabled);
 /* enterprise_stubs.c */
 
 ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, Nova_Initialize, EvalContext *, ctx);
+ENTERPRISE_VOID_FUNC_0ARG_DECLARE(void, Nova_InitializeLeech2);
 ENTERPRISE_FUNC_1ARG_DECLARE(int, CfSessionKeySize, char, c);
 ENTERPRISE_FUNC_0ARG_DECLARE(char, CfEnterpriseOptions);
 ENTERPRISE_FUNC_1ARG_DECLARE(const EVP_CIPHER *, CfengineCipher, char, type);

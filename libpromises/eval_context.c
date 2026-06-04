@@ -748,6 +748,7 @@ void EvalContextHeapPersistentSave(EvalContext *ctx, const char *name, unsigned 
                     Log(LOG_LEVEL_VERBOSE, "Persistent class '%s' is already in a preserved state --  %jd minutes to go",
                         key, (intmax_t)((existing_info->expires - now) / 60));
                     CloseDB(dbp);
+                    free(existing_info);
                     free(key);
                     free(new_info);
                     return;
@@ -757,10 +758,12 @@ void EvalContextHeapPersistentSave(EvalContext *ctx, const char *name, unsigned 
             {
                 Log(LOG_LEVEL_ERR, "While persisting class '%s', error reading existing value", key);
                 CloseDB(dbp);
+                free(existing_info);
                 free(key);
                 free(new_info);
                 return;
             }
+            free(existing_info);
         }
     }
 

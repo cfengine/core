@@ -1,0 +1,13 @@
+body common control
+{
+      bundlesequence => { run };
+}
+
+bundle common run
+{
+  classes:
+      "timer_policy_test_class"
+        expression => "any",
+        persistence => "120",
+        timer_policy => "absolute";
+}

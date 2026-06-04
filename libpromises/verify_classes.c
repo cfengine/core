@@ -131,7 +131,7 @@ PromiseResult VerifyClassPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED
                     pp->promiser, a.context.persistent);
                 Buffer *buf = StringSetToBuffer(tags, ',');
                 EvalContextHeapPersistentSave(ctx, pp->promiser, a.context.persistent,
-                                              CONTEXT_STATE_POLICY_RESET, BufferData(buf));
+                                              a.context.timer, BufferData(buf));
                 BufferDestroy(buf);
             }
             if (inserted && (comment != NULL))

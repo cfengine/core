@@ -1,0 +1,77 @@
+#######################################################
+#
+# CFE-4681: classes: promises should support timer_policy
+#
+# Test that timer_policy => "absolute" on a classes: promise
+# causes the persistent class to be preserved (not reset)
+# on subsequent agent runs.
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.sub.cf" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  vars:
+      "dflags" string => ifelse("EXTRA", "-DDEBUG,EXTRA", "-DDEBUG");
+
+  # Clean up any leftover persistent class from a previous test run
+  commands:
+      "$(G.echo)" classes => init_cancel_always;
+}
+
+body classes init_cancel_always
+{
+      cancel_repaired => { "timer_policy_test_class" };
+      cancel_notkept => { "timer_policy_test_class" };
+      cancel_kept => { "timer_policy_test_class" };
+}
+
+bundle agent test
+{
+  vars:
+      "dflags" string => ifelse("EXTRA", "-DDEBUG,EXTRA", "-DDEBUG");
+
+  # First run: define the persistent class with timer_policy => "absolute"
+  commands:
+      "$(sys.cf_agent) -K $(dflags) -f $(this.promise_filename).sub"
+        classes => test_always("done_persisting");
+}
+
+body classes test_always(x)
+{
+      promise_repaired => { "$(x)" };
+      promise_kept => { "$(x)" };
+      repair_failed => { "$(x)" };
+      repair_denied => { "$(x)" };
+      repair_timeout => { "$(x)" };
+}
+
+bundle agent check
+{
+  vars:
+      "dflags" string => ifelse("EXTRA", "-DDEBUG,EXTRA", "-DDEBUG");
+
+    done_persisting::
+      # Second run: the class should be in a preserved state
+      "subout" string => execresult("$(sys.cf_agent) -Kv $(dflags) -f $(this.promise_filename).sub 2>&1", "useshell");
+
+  classes:
+    done_persisting::
+      "preserved" expression => regcmp(".*already in a preserved state.*", "$(subout)");
+
+  methods:
+    done_persisting::
+      "" usebundle => dcs_passif("preserved", $(this.promise_filename));
+
+  reports:
+    DEBUG.done_persisting::
+      "Agent output: $(subout)";
+    !done_persisting::
+      "$(this.promise_filename) FAIL (first run did not complete)";
+}

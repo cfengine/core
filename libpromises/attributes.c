@@ -1133,6 +1133,18 @@ ContextConstraint GetContextConstraints(const EvalContext *ctx, const Promise *p
     a.persistent = PromiseGetConstraintAsInt(ctx, "persistence", pp);
 
     {
+        const char *tp = PromiseGetConstraintAsRval(pp, "timer_policy", RVAL_TYPE_SCALAR);
+        if (tp != NULL && strncmp(tp, "abs", 3) == 0)
+        {
+            a.timer = CONTEXT_STATE_POLICY_PRESERVE;
+        }
+        else
+        {
+            a.timer = CONTEXT_STATE_POLICY_RESET;
+        }
+    }
+
+    {
         const char *context_scope = PromiseGetConstraintAsRval(pp, "scope", RVAL_TYPE_SCALAR);
         a.scope = ContextScopeFromString(context_scope);
     }
@@ -1143,7 +1155,9 @@ ContextConstraint GetContextConstraints(const EvalContext *ctx, const Promise *p
 
         for (int k = 0; CF_CLASSBODY[k].lval != NULL; k++)
         {
-            if (strcmp(cp->lval, "persistence") == 0 || strcmp(cp->lval, "scope") == 0)
+            if (strcmp(cp->lval, "persistence") == 0 ||
+                strcmp(cp->lval, "scope") == 0 ||
+                strcmp(cp->lval, "timer_policy") == 0)
             {
                 continue;
             }

@@ -839,7 +839,7 @@ givearglist:           '('
 
 gaitems:               /* empty */
                      | gaitem
-                     | gaitems ',' gaitem
+                     | gaitem ',' gaitems
                      | gaitem error
                        {
                            ParseError("Expected ',', wrong input '%s'", yytext);

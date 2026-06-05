@@ -42,6 +42,7 @@ libcfnet_la_SOURCES = \
 	key.c key.h \
 	misc.c \
 	net.c net.h \
+	patch_stream.c patch_stream.h \
 	policy_server.c policy_server.h \
 	protocol.c protocol.h \
 	protocol_version.c protocol_version.h \

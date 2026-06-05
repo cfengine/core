@@ -36,6 +36,7 @@
 #include <lastseen.h>                 /* LastSaw1 */
 #include <net.h>                      /* SendTransaction,ReceiveTransaction */
 #include <tls_generic.h>              /* TLSSend */
+#include <patch_stream.h>             /* PatchStreamRefuse */
 #include <cf-serverd-enterprise-stubs.h>
 #include <connection_info.h>
 #include <regex.h>                                       /* StringMatchFull */
@@ -1115,6 +1116,43 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         }
 
         break;
+    }
+    case PROTOCOL_COMMAND_GETPATCH:
+    {
+        if (ConnectionInfoProtocolVersion(conn->conn_info) < CF_PROTOCOL_LEECH2)
+        {
+            goto protocol_error;
+        }
+
+        char last_hash[64];
+        int ret = sscanf(recvbuffer, "GETPATCH %63s", last_hash);
+        if (ret != 1)
+        {
+            goto protocol_error;
+        }
+
+        Log(LOG_LEVEL_VERBOSE, "%14s %7s %.7s...",
+            "Received:", "GETPATCH", last_hash);
+
+        const char *hostkey = KeyPrintableHash(
+            ConnectionInfoKey(conn->conn_info));
+        const bool access_to_query_delta = acl_CheckExact(
+            query_acl, "delta", conn->ipaddr, conn->revdns, hostkey);
+
+        if (!access_to_query_delta)
+        {
+            Log(LOG_LEVEL_INFO, "access denied to GETPATCH: %s", recvbuffer);
+            /* Refuse using the stream protocol, as opposed to
+             * RefuseAccess(), because the client expects stream protocol
+             * messages after sending the GETPATCH request. */
+            PatchStreamRefuse(ConnectionInfoSSL(conn->conn_info));
+            return true;
+        }
+
+        /* A failed patch stream is not fatal to the connection. The
+         * enterprise hook does all relevant Log()ing. */
+        ServeLeech2Patch(conn, last_hash);
+        return true;
     }
     case PROTOCOL_COMMAND_CALL_ME_BACK:
         /* Server side, handing the collect call off to cf-hub. */

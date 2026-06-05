@@ -26,6 +26,8 @@
 
 #include <server.h>
 #include <cf-serverd-functions.h>
+#include <patch_stream.h>          /* PatchStreamRefuse */
+#include <connection_info.h>       /* ConnectionInfoSSL */
 
 ENTERPRISE_VOID_FUNC_3ARG_DEFINE_STUB(void, RegisterLiteralServerData,
                                       ARG_UNUSED EvalContext *, ctx,
@@ -61,6 +63,13 @@ ENTERPRISE_FUNC_1ARG_DEFINE_STUB(bool, ReceiveCollectCall, ARG_UNUSED ServerConn
 ENTERPRISE_FUNC_1ARG_DEFINE_STUB(bool, ReturnCookies, ARG_UNUSED ServerConnectionState *, conn)
 {
     return false;
+}
+
+ENTERPRISE_FUNC_2ARG_DEFINE_STUB(bool, ServeLeech2Patch, ServerConnectionState *, conn, ARG_UNUSED const char *, last_hash)
+{
+    assert(conn != NULL);
+    Log(LOG_LEVEL_VERBOSE, "Serving leech2 patches is only available in CFEngine Enterprise");
+    return PatchStreamRefuse(ConnectionInfoSSL(conn->conn_info));
 }
 
 ENTERPRISE_FUNC_3ARG_DEFINE_STUB(bool, ReturnQueryData, ARG_UNUSED ServerConnectionState *, conn, ARG_UNUSED char *, menu, ARG_UNUSED int, encrypt)

@@ -36,11 +36,13 @@
 #include <lastseen.h>                 /* LastSaw1 */
 #include <net.h>                      /* SendTransaction,ReceiveTransaction */
 #include <tls_generic.h>              /* TLSSend */
+#include <patch_stream.h>             /* PatchStreamRefuse */
 #include <cf-serverd-enterprise-stubs.h>
 #include <connection_info.h>
 #include <regex.h>                                       /* StringMatchFull */
 #include <known_dirs.h>
 #include <file_lib.h>                                           /* IsDirReal */
+#include <string_lib.h>
 
 #include "server_access.h"          /* access_CheckResource, acl_CheckExact */
 
@@ -706,7 +708,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         char *args = &recvbuffer[EXEC_len];
         args += strspn(args, " \t");                       /* bypass spaces */
 
-        Log(LOG_LEVEL_VERBOSE, "%14s %7s %s",
+        Log(LOG_LEVEL_VERBOSE, "%14s %8s %s",
             "Received:", "EXEC", args);
 
         bool b = DoExec2(ctx, conn, args,
@@ -736,7 +738,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
             goto protocol_error;
         }
 
-        Log(LOG_LEVEL_VERBOSE, "%14s %7s %s",
+        Log(LOG_LEVEL_VERBOSE, "%14s %8s %s",
             "Received:", "GET", filename);
 
         /* TODO batch all the following in one function since it's very
@@ -760,7 +762,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
 
         PathRemoveTrailingSlash(filename, strlen(filename));
 
-        Log(LOG_LEVEL_VERBOSE, "%14s %7s %s",
+        Log(LOG_LEVEL_VERBOSE, "%14s %8s %s",
             "Translated to:", "GET", filename);
 
         if (acl_CheckPath(paths_acl, filename,
@@ -799,7 +801,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
             goto protocol_error;
         }
 
-        Log(LOG_LEVEL_VERBOSE, "%14s %7s %s",
+        Log(LOG_LEVEL_VERBOSE, "%14s %8s %s",
             "Received:", "OPENDIR", filename);
 
         /* sizeof()-1 because we need one extra byte for
@@ -823,7 +825,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         /* OPENDIR *must* be directory. */
         PathAppendTrailingSlash(filename, strlen(filename));
 
-        Log(LOG_LEVEL_VERBOSE, "%14s %7s %s",
+        Log(LOG_LEVEL_VERBOSE, "%14s %8s %s",
             "Translated to:", "OPENDIR", filename);
 
         if (acl_CheckPath(paths_acl, filename,
@@ -863,7 +865,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         time_t trem = (time_t) time_no_see;
         int drift = (int) (tloc - trem);
 
-        Log(LOG_LEVEL_VERBOSE, "%14s %7s %s",
+        Log(LOG_LEVEL_VERBOSE, "%14s %8s %s",
             "Received:", "STAT", filename);
 
         /* sizeof()-1 because we need one extra byte for
@@ -893,7 +895,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
             PathRemoveTrailingSlash(filename, strlen(filename));
         }
 
-        Log(LOG_LEVEL_VERBOSE, "%14s %7s %s",
+        Log(LOG_LEVEL_VERBOSE, "%14s %8s %s",
             "Translated to:", "STAT", filename);
 
         if (acl_CheckPath(paths_acl, filename,
@@ -931,7 +933,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
             goto protocol_error;
         }
 
-        Log(LOG_LEVEL_VERBOSE, "%14s %7s %s",
+        Log(LOG_LEVEL_VERBOSE, "%14s %8s %s",
             "Received:", "MD5", filename);
 
         /* TODO batch all the following in one function since it's very
@@ -955,7 +957,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
 
         PathRemoveTrailingSlash(filename, strlen(filename));
 
-        Log(LOG_LEVEL_VERBOSE, "%14s %7s %s",
+        Log(LOG_LEVEL_VERBOSE, "%14s %8s %s",
             "Translated to:", "MD5", filename);
 
         if (acl_CheckPath(paths_acl, filename,
@@ -1013,7 +1015,7 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
             goto protocol_error;
         }
 
-        Log(LOG_LEVEL_VERBOSE, "%14s %7s %s",
+        Log(LOG_LEVEL_VERBOSE, "%14s %8s %s",
             "Received:", "CONTEXT", client_regex);
 
         /* WARNING: this comes from legacy code and must be killed if we care
@@ -1115,6 +1117,52 @@ bool BusyWithNewProtocol(EvalContext *ctx, ServerConnectionState *conn)
         }
 
         break;
+    }
+    case PROTOCOL_COMMAND_GETPATCH:
+    {
+        if (ConnectionInfoProtocolVersion(conn->conn_info) < CF_PROTOCOL_LEECH2)
+        {
+            goto protocol_error;
+        }
+
+        char last_hash[41];
+        int ret = sscanf(recvbuffer, "GETPATCH %40s", last_hash);
+        if (ret != 1)
+        {
+            goto protocol_error;
+        }
+
+        Log(LOG_LEVEL_VERBOSE, "%14s %8s %.7s...",
+            "Received:", "GETPATCH", last_hash);
+
+        if (!StringIsSHA1Hex(last_hash))
+        {
+            goto protocol_error;
+        }
+
+        const char *hostkey = KeyPrintableHash(
+            ConnectionInfoKey(conn->conn_info));
+        const bool access_to_query_delta = acl_CheckExact(
+            query_acl, "delta", conn->ipaddr, conn->revdns, hostkey);
+
+        if (!access_to_query_delta)
+        {
+            Log(LOG_LEVEL_INFO, "access denied to GETPATCH: %s", recvbuffer);
+            /* Refuse using the stream protocol, as opposed to RefuseAccess(),
+             * because the client expects stream protocol messages after
+             * sending the GETPATCH request.
+             *
+             * Access denied is not fatal to the connection, so keep it open on
+             * success. However, if sending the refusal failed, it means that
+             * the connection is broken (already logged), so close it by
+             * returning false. */
+            return PatchStreamRefuse(ConnectionInfoSSL(conn->conn_info));
+        }
+
+        /* Keep the connection open on success. If serving the patch stream
+         * failed, it means that the connection is broken (already logged), so
+         * close it by returning false */
+        return ServeLeech2Patch(conn, last_hash);
     }
     case PROTOCOL_COMMAND_CALL_ME_BACK:
         /* Server side, handing the collect call off to cf-hub. */

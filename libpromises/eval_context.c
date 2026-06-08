@@ -748,23 +748,43 @@ void EvalContextHeapPersistentSave(EvalContext *ctx, const char *name, unsigned 
                     Log(LOG_LEVEL_VERBOSE, "Persistent class '%s' is already in a preserved state --  %jd minutes to go",
                         key, (intmax_t)((existing_info->expires - now) / 60));
                     CloseDB(dbp);
+                    free(existing_info);
                     free(key);
                     free(new_info);
                     return;
+                }
+                else if (policy == CONTEXT_STATE_POLICY_RESET)
+                {
+                    Log(LOG_LEVEL_VERBOSE,
+                        "Resetting persistent class '%s' timer to %u minutes (was %jd minutes remaining)",
+                        key, ttl_minutes, (intmax_t)((existing_info->expires - now) / 60));
+                }
+                else
+                {
+                    Log(LOG_LEVEL_VERBOSE,
+                        "Updating persistent class '%s' (%u minutes, policy preserve)",
+                        key, ttl_minutes);
                 }
             }
             else
             {
                 Log(LOG_LEVEL_ERR, "While persisting class '%s', error reading existing value", key);
                 CloseDB(dbp);
+                free(existing_info);
                 free(key);
                 free(new_info);
                 return;
             }
+            free(existing_info);
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE,
+                "Creating persistent class '%s' (%u minutes, policy %s)",
+                key, ttl_minutes,
+                policy == CONTEXT_STATE_POLICY_PRESERVE ? "preserve" : "reset");
         }
     }
-
-    Log(LOG_LEVEL_VERBOSE, "Updating persistent class '%s'", key);
 
     WriteDB(dbp, key, new_info, new_info_size);
 

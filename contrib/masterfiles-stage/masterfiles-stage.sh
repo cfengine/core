@@ -10,7 +10,7 @@
 # Generated code modified and refined by Mike Weilgart <mikeweilgart@gmail.com>
 
 usage() {
-cat << EOF
+	cat <<EOF
 usage: $0 [OPTIONS]
 
 OPTIONS:
@@ -39,38 +39,38 @@ EOF
 # Contract long options into short options
 params=()
 for param; do
-  case "$param" in
-    --deploy-dir)
-      params+=("-d")
-      ;;
-    --params-file)
-      params+=("-p")
-      ;;
-    --check-only)
-      params+=("-c")
-      ;;
-    --verbose)
-      params+=("-v")
-      ;;
-    --DEBUG)
-      params+=("-D")
-      ;;
-    "-?"|--help)
-      usage
-      exit 0
-      ;;
-    --*)
-      printf '%s\n' "Unrecognized long option: $param"
-      usage
-      exit 2
-      ;;
-    *)
-      # Assume that any other args should stay as-is
-      # (This would include short option flags as well
-      # as any other arguments passed to the script.)
-      params+=("$param")
-      ;;
-  esac
+	case "$param" in
+	--deploy-dir)
+		params+=("-d")
+		;;
+	--params-file)
+		params+=("-p")
+		;;
+	--check-only)
+		params+=("-c")
+		;;
+	--verbose)
+		params+=("-v")
+		;;
+	--DEBUG)
+		params+=("-D")
+		;;
+	"-?" | --help)
+		usage
+		exit 0
+		;;
+	--*)
+		printf '%s\n' "Unrecognized long option: $param"
+		usage
+		exit 2
+		;;
+	*)
+		# Assume that any other args should stay as-is
+		# (This would include short option flags as well
+		# as any other arguments passed to the script.)
+		params+=("$param")
+		;;
+	esac
 done
 
 set -- "${params[@]}"
@@ -85,43 +85,47 @@ check_only=false
 
 # Process using getopts
 while getopts ":d:p:vDc" option; do
-  case "$option" in
-    d)
-      MASTERDIR="$OPTARG"
-      ;;
-    p)
-      PARAMS="$OPTARG"
-      ;;
-    c)
-      check_only="true"
-      ;;
-    v)
-      verbose_mode="true"
-      ;;
-    D)
-      debug_mode="true"
-      ;;
-    :)
-      echo "$0: Option -$OPTARG requires an argument"
-      usage
-      exit 3
-      ;;
-    *)
-      echo "$0: Invalid option: -$OPTARG"
-      usage
-      exit 2
-      ;;
-  esac
+	case "$option" in
+	d)
+		MASTERDIR="$OPTARG"
+		;;
+	p)
+		PARAMS="$OPTARG"
+		;;
+	c)
+		check_only="true"
+		;;
+	v)
+		verbose_mode="true"
+		;;
+	D)
+		debug_mode="true"
+		;;
+	:)
+		echo "$0: Option -$OPTARG requires an argument"
+		usage
+		exit 3
+		;;
+	*)
+		echo "$0: Invalid option: -$OPTARG"
+		usage
+		exit 2
+		;;
+	esac
 done
-shift "$((OPTIND-1))"
+shift "$((OPTIND - 1))"
 
 # Since we don't do anything with any remaining args, we should fail
 # noisily if we still have args left after the above shift command.
-[ "$#" -gt 0 ] && { echo "Too many arguments." ; usage ; exit 3 ; }
+[ "$#" -gt 0 ] && {
+	echo "Too many arguments."
+	usage
+	exit 3
+}
 
 if [ "$debug_mode" == "true" ]; then
-  echo "Option Deploy Dir: $MASTERDIR";
-  echo "Option Params File: $PARAMS";
+	echo "Option Deploy Dir: $MASTERDIR"
+	echo "Option Params File: $PARAMS"
 fi
 
 # To test this option parsing file by itself, uncomment the below lines.
@@ -134,35 +138,38 @@ fi
 ################################################################################
 
 # Load common functionality, upstream implementations
-mydirname="$(dirname "$0")";
-source "${mydirname}/common.sh" || { echo "common.sh couldn't be sourced" >&2 ; exit 17 ; }
+mydirname="$(dirname "$0")"
+source "${mydirname}/common.sh" || {
+	echo "common.sh couldn't be sourced" >&2
+	exit 17
+}
 
 [ -f "$PARAMS" ] || error_exit "ERROR: Missing '$PARAMS'"
 
 source "$PARAMS"
 
-  # The VCS_TYPE based function calls in the case switch below
-  # can count on the following environment variables to be set:
-  #
-  # MASTERDIR
-  # PARAMS
-  # VCS_TYPE (set in the PARAMS file)
-  # and additional vars set in PARAMS depending on the VCS_TYPE.
+# The VCS_TYPE based function calls in the case switch below
+# can count on the following environment variables to be set:
+#
+# MASTERDIR
+# PARAMS
+# VCS_TYPE (set in the PARAMS file)
+# and additional vars set in PARAMS depending on the VCS_TYPE.
 
 case "${VCS_TYPE}" in
-    GIT_CFBS)
-        git_cfbs_masterstage $check_only
-        ;;
-    GIT_POLICY_CHANNELS)
-        git_stage_policy_channels $check_only
-        ;;
-    GIT)
-        git_masterstage $check_only
-        ;;
-    SVN)
-        svn_branch $check_only
-        ;;
-    *)
-        error_exit "Unknown VCS TYPE: '${VCS_TYPE}'."
-        ;;
+GIT_CFBS)
+	git_cfbs_masterstage $check_only
+	;;
+GIT_POLICY_CHANNELS)
+	git_stage_policy_channels $check_only
+	;;
+GIT)
+	git_masterstage $check_only
+	;;
+SVN)
+	svn_branch $check_only
+	;;
+*)
+	error_exit "Unknown VCS TYPE: '${VCS_TYPE}'."
+	;;
 esac

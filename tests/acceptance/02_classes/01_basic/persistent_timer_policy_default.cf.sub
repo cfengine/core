@@ -1,0 +1,16 @@
+body common control
+{
+      bundlesequence => { run };
+}
+
+bundle agent run
+{
+  classes:
+      # Define a persistent class with NO timer_policy attribute.
+      # The default is "reset", so on the second run the timer should
+      # be reset even though the class is already defined from the
+      # persistent DB.
+      "timer_default_test_class"
+        expression  => "any",
+        persistence => "120";
+}

@@ -40,6 +40,7 @@
 #include <mutex.h>              // ThreadLock
 #include <net.h>
 #include <openssl/err.h>        // ERR_get_error
+#include <patch_stream.h>       // PatchStreamServe
 #include <policy_server.h>      // PolicyServerReadFile
 #include <printsize.h>          // PRINTSIZE
 #include <server_access.h>      // acl_Free
@@ -345,6 +346,8 @@ static bool CFTestD_ProtocolError(
 static bool CFTestD_BusyLoop(
     ServerConnectionState *conn, CFTestD_Config *config)
 {
+    assert(conn != NULL);
+
     char recvbuffer[CF_BUFSIZE + CF_BUFEXT]        = "";
     char sendbuffer[CF_BUFSIZE - CF_INBAND_OFFSET] = "";
 
@@ -399,6 +402,25 @@ static bool CFTestD_BusyLoop(
         }
 
         if (CFTestD_GetServerQuery(conn, recvbuffer, config))
+        {
+            return true;
+        }
+
+        break;
+    }
+    case PROTOCOL_COMMAND_GETPATCH:
+    {
+        char last_hash[64];
+        int ret = sscanf(recvbuffer, "GETPATCH %63s", last_hash);
+        if (ret != 1)
+        {
+            break;
+        }
+
+        /* cf-testd has no leech2 state; serve an empty patch so that the
+         * hub's GETPATCH request succeeds. */
+        Log(LOG_LEVEL_INFO, "Serving empty leech2 patch");
+        if (PatchStreamServe(ConnectionInfoSSL(conn->conn_info), "", 0))
         {
             return true;
         }

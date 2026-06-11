@@ -133,7 +133,7 @@ static const char *const HINTS[] =
     "Enable basic information output",
     "Minimum TLS version to use",
     "TLS ciphers to use (comma-separated list)",
-    "Specify CFEngine protocol to use. Possible values: 'classic', 'tls', 'cookie', 'filestream', 'latest' (default)",
+    "Specify CFEngine protocol to use. Possible values: 'classic', 'tls', 'cookie', 'filestream', 'leech2', 'latest' (default)",
     "Print rsync performance statistics to stderr",
     NULL
 };

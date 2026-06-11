@@ -1,0 +1,43 @@
+#######################################################
+#
+# Test that 'cancel' is mutually exclusive with the class-defining
+# attributes of a classes promise (CFE-4686).
+#
+# Combining 'cancel' with expression/and/or/xor/not/dist/select_class must be
+# rejected with "Irreconcilable constraints", exactly like combining any two
+# of the defining attributes. The sub-policy exercises every combination; this
+# test asserts the rejection appears in the agent output.
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.sub.cf" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+}
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-4686" }
+        string => "'cancel' must be mutually exclusive with the class-defining attributes";
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "" usebundle => dcs_passif_output1(".*Irreconcilable constraints in classes.*",
+                                         "$(sys.cf_agent) -Kf $(this.promise_filename).sub 2>&1",
+                                         $(this.promise_filename));
+}

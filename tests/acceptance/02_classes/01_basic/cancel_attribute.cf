@@ -1,0 +1,65 @@
+#######################################################
+#
+# Test the 'cancel' attribute of classes promises (CFE-4686).
+#
+# A classes promise using 'cancel' undefines its promiser class when the
+# cancel expression evaluates to true. Unlike the class-defining attributes,
+# it must be evaluated even when the class is already defined.
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.sub.cf" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+}
+
+#######################################################
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-4686" }
+        string => "classes promise 'cancel' attribute undefines a defined class when its expression is true";
+
+  classes:
+      # Define global classes so the check bundle can observe the outcome.
+      "to_cancel"   expression => "any", scope => "namespace";
+      "to_keep"     expression => "any", scope => "namespace";
+      "trigger"     expression => "any", scope => "namespace";
+      "func_cancel" expression => "any", scope => "namespace";
+
+      # trigger is set, so to_cancel must be undefined.
+      "to_cancel"   cancel => "trigger";
+
+      # Condition is an undefined class, so to_keep must be retained.
+      "to_keep"     cancel => "class_that_is_not_defined";
+
+      # Function-based boolean trigger: the file does not exist, so not(...)
+      # is true and func_cancel must be undefined.
+      "func_cancel" cancel => not(fileexists("/this/does/not/exist/cfe4686"));
+
+      # Cancelling a class that was never defined is a harmless no-op.
+      "never_defined" cancel => "trigger";
+}
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "ok" expression => "!to_cancel.to_keep.!func_cancel.!never_defined.trigger";
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

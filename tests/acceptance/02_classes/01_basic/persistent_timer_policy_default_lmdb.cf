@@ -1,0 +1,117 @@
+#######################################################
+#
+# CFE-4681: classes: promises default timer_policy is "reset"
+#           -- verified at the source (the cf_state LMDB)
+#
+# Companion to persistent_timer_policy_default.cf, which asserts the
+# default-reset behaviour by matching the agent's verbose log lines
+# ("Creating ..." / "Resetting persistent class ... timer to ...").
+# A log message is a brittle thing to hinge a test on, so this test
+# instead inspects the persistence database itself -- "the truth at
+# the source" -- with `cf-check dump`.
+#
+# A classes: promise with NO timer_policy attribute defaults to
+# "reset", which is observable in the cf_state LMDB two ways:
+#
+#   1. the persistent class record is stored with policy RESET
+#      (an explicit timer_policy => "absolute" would store PRESERVE);
+#   2. the record's expiry (now + persistence*60) is refreshed on each
+#      run -- so across two runs separated by a sleep, the second
+#      expiry is strictly greater (PRESERVE would keep it identical).
+#
+# If the default ever regressed to "absolute", check #1 would see
+# PRESERVE and check #2 would see an unchanged expiry; either fails
+# the test.
+#
+# The relevant code is EvalContextHeapPersistentSave()
+# (libpromises/eval_context.c): new_info->expires = now + ttl*60 and
+# new_info->policy = policy. cf-check renders these as the "expires"
+# and "policy" fields (cf-check/dump.c, print_struct_persistent_class).
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.sub.cf" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  # Remove the persistent class DB to ensure a clean state.
+  files:
+      "$(sys.workdir)/state/cf_state.lmdb"
+        delete => tidy;
+      "$(sys.workdir)/state/cf_state.lmdb-lock"
+        delete => tidy;
+      "$(sys.workdir)/state/cf_state.lmdb.lock"
+        delete => tidy;
+}
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-4681" }
+        string => "classes: promises default to timer_policy => reset, observable in the cf_state LMDB (stored policy RESET; persistence-timer expiry advances on re-evaluation)";
+
+  vars:
+      "state" string => "$(sys.workdir)/state/cf_state.lmdb";
+      "sub"   string => "$(this.promise_filename).sub";
+
+  commands:
+    # One shell invocation runs the whole sequence so it converges in a
+    # single pass (no cross-pass class juggling):
+    #   run 1 -> snapshot the stored policy + expiry from the LMDB
+    #   sleep -> let wall-clock 'now' advance (expiry is now + ttl*60)
+    #   run 2 -> snapshot the expiry again
+    # Each snapshot reads straight from the state DB with 'cf-check dump'
+    # rather than parsing agent log text. The 'grep <class>' isolates our
+    # record; 'tr -dc' keeps only the digits / capital letters we extracted.
+    !done::
+      "$(sys.cf_agent) -Kf $(sub) > /dev/null 2>&1 ;
+       $(sys.cf_check) dump -n $(state) | grep timer_default_lmdb_class | grep -oE 'expires.:[0-9]+' | tr -dc '0-9' > $(G.testdir)/lmdb_expires1 ;
+       $(sys.cf_check) dump -n $(state) | grep timer_default_lmdb_class | grep -oE 'policy.:.[A-Z]+' | tr -dc 'A-Z' > $(G.testdir)/lmdb_policy ;
+       sleep 2 ;
+       $(sys.cf_agent) -Kf $(sub) > /dev/null 2>&1 ;
+       $(sys.cf_check) dump -n $(state) | grep timer_default_lmdb_class | grep -oE 'expires.:[0-9]+' | tr -dc '0-9' > $(G.testdir)/lmdb_expires2"
+        contain => in_shell,
+        classes => always("done");
+}
+
+bundle agent check
+{
+  vars:
+      "policy" string => readfile("$(G.testdir)/lmdb_policy", 4096);
+      "e1"     string => readfile("$(G.testdir)/lmdb_expires1", 4096);
+      "e2"     string => readfile("$(G.testdir)/lmdb_expires2", 4096);
+
+  classes:
+      # #1 The default classes: promise stored its persistent class with
+      #    policy RESET (an explicit "absolute" would store PRESERVE).
+      "policy_is_reset" expression => strcmp("$(policy)", "RESET");
+
+      # Guard the numeric compare: both snapshots must be non-empty integers.
+      "have_expiries" expression => and(regcmp("[0-9]+", "$(e1)"),
+                                        regcmp("[0-9]+", "$(e2)"));
+
+      # #2 The stored expiry advanced between the two runs -> the persistence
+      #    timer was actually reset (PRESERVE would leave it identical).
+      "timer_advanced" expression => eval("$(e2) > $(e1)", "class", "infix"),
+        if => "have_expiries";
+
+      "ok" expression => "policy_is_reset.timer_advanced";
+
+  reports:
+    DEBUG::
+      "stored policy = '$(policy)' (expect RESET)";
+      "expiry run1 = '$(e1)', run2 = '$(e2)' (expect run2 > run1)";
+    DEBUG.!policy_is_reset::
+      "FAIL: persistent class not stored with policy RESET (default reset not applied)";
+    DEBUG.!timer_advanced::
+      "FAIL: persistence-timer expiry did not advance (timer not reset)";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

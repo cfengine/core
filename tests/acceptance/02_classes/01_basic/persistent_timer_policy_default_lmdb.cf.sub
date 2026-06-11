@@ -1,0 +1,15 @@
+body common control
+{
+      bundlesequence => { run };
+}
+
+bundle agent run
+{
+  classes:
+      # Define a persistent class with NO timer_policy attribute. The default
+      # is "reset" (CFE-4681), so the class is stored in the cf_state LMDB with
+      # policy RESET and its expiry is refreshed on every re-evaluation.
+      "timer_default_lmdb_class"
+        expression  => "any",
+        persistence => "120";
+}

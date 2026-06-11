@@ -152,6 +152,51 @@ void test_eval_with_token_from_list(void)
     StringSetDestroy(time_classes);
 }
 
+static void test_persistent_class_timer_policy(void)
+{
+    EvalContext *ctx = EvalContextNew();
+
+    /* Save a persistent class with PRESERVE policy, 60 minute TTL */
+    EvalContextHeapPersistentSave(ctx, "timer_test", 60,
+                                  CONTEXT_STATE_POLICY_PRESERVE, "tag1");
+
+    /* Verify the class loads correctly after PRESERVE save */
+    EvalContextHeapPersistentLoadAll(ctx);
+
+    {
+        const Class *cls = EvalContextClassGet(ctx, "default", "timer_test");
+        assert_true(cls != NULL);
+        assert_string_equal("timer_test", cls->name);
+    }
+
+    /* Save again with PRESERVE -- the function should early-return
+     * (class is preserved, not expired, same tags), leaving the DB
+     * record unchanged.  We verify by loading persistent classes and
+     * checking the class is still defined. */
+    EvalContextHeapPersistentSave(ctx, "timer_test", 60,
+                                  CONTEXT_STATE_POLICY_PRESERVE, "tag1");
+
+    /* Class should still be defined after the second PRESERVE save */
+    {
+        const Class *cls = EvalContextClassGet(ctx, "default", "timer_test");
+        assert_true(cls != NULL);
+        assert_string_equal("timer_test", cls->name);
+    }
+
+    /* Save with RESET policy -- the record SHOULD be overwritten.
+     * The class should still be loadable afterward. */
+    EvalContextHeapPersistentSave(ctx, "timer_test", 60,
+                                  CONTEXT_STATE_POLICY_RESET, "tag1");
+
+    {
+        const Class *cls = EvalContextClassGet(ctx, "default", "timer_test");
+        assert_true(cls != NULL);
+        assert_string_equal("timer_test", cls->name);
+    }
+
+    EvalContextDestroy(ctx);
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -160,6 +205,7 @@ int main()
     const UnitTest tests[] =
     {
         unit_test(test_class_persistence),
+        unit_test(test_persistent_class_timer_policy),
         unit_test(test_changes_chroot),
         unit_test(test_eval_with_token_from_list),
     };

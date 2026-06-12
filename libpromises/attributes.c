@@ -1133,6 +1133,23 @@ ContextConstraint GetContextConstraints(const EvalContext *ctx, const Promise *p
     a.persistent = PromiseGetConstraintAsInt(ctx, "persistence", pp);
 
     {
+        const char *tp = PromiseGetConstraintAsRval(pp, "timer_policy", RVAL_TYPE_SCALAR);
+        if (StringEqual(tp, "absolute"))
+        {
+            a.timer = CONTEXT_STATE_POLICY_PRESERVE;
+        }
+        else
+        {
+            /* Default to RESET: a persistent class that keeps being
+             * rediscovered should keep persisting.  This aligns classes:
+             * promises with classes bodies, whose timer_policy has always
+             * defaulted to reset.  Set timer_policy => "absolute" to keep
+             * the original expiry instead. */
+            a.timer = CONTEXT_STATE_POLICY_RESET;
+        }
+    }
+
+    {
         const char *context_scope = PromiseGetConstraintAsRval(pp, "scope", RVAL_TYPE_SCALAR);
         a.scope = ContextScopeFromString(context_scope);
     }
@@ -1143,7 +1160,9 @@ ContextConstraint GetContextConstraints(const EvalContext *ctx, const Promise *p
 
         for (int k = 0; CF_CLASSBODY[k].lval != NULL; k++)
         {
-            if (strcmp(cp->lval, "persistence") == 0 || strcmp(cp->lval, "scope") == 0)
+            if (StringEqual(cp->lval, "persistence") ||
+                StringEqual(cp->lval, "scope") ||
+                StringEqual(cp->lval, "timer_policy"))
             {
                 continue;
             }

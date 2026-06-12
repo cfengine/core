@@ -1,0 +1,14 @@
+body common control
+{
+      bundlesequence => { run };
+}
+
+bundle agent run
+{
+  classes:
+      # timer_policy only governs the persistence timer, so using it
+      # without 'persistence' is an error (PROMISE_RESULT_FAIL).
+      "timer_policy_no_persistence_class"
+        expression   => "any",
+        timer_policy => "reset";
+}

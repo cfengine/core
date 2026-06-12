@@ -1,0 +1,49 @@
+#######################################################
+#
+# CFE-4681: classes: promises reject timer_policy without persistence
+#
+# timer_policy only governs the persistence timer, so using it on a
+# classes: promise that has no 'persistence' attribute has no meaning.
+# Verify that doing so is an error (PROMISE_RESULT_FAIL) rather than
+# being silently ignored.
+#
+# The offending policy is run in a sub-agent so the check bundle only
+# evaluates assertions against its captured output.
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.sub.cf" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-4681" }
+        string => "Using timer_policy without persistence on a classes: promise is an error";
+
+  commands:
+    !done::
+      "$(sys.cf_agent) -Kv -f $(this.promise_filename).sub > $(G.testdir)/timer_policy_no_persistence.log 2>&1"
+        contain => in_shell,
+        classes => always("done");
+}
+
+bundle agent check
+{
+  classes:
+      "error_ok" expression => regline(".*Cannot use 'timer_policy' without 'persistence'.*timer_policy_no_persistence_class.*",
+                                        "$(G.testdir)/timer_policy_no_persistence.log");
+      "ok" expression => "error_ok";
+
+  reports:
+    DEBUG.!error_ok::
+      "FAIL: did not log the expected 'timer_policy without persistence' error";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

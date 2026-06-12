@@ -38,6 +38,8 @@
 
 
 static bool EvalClassExpression(EvalContext *ctx, Constraint *cp, const Promise *pp);
+static bool EvalClassConstraintRval(EvalContext *ctx, Constraint *cp, const Promise *pp);
+static PromiseResult VerifyClassCancel(EvalContext *ctx, const Promise *pp, Attributes *a);
 
 static bool ValidClassName(const char *str)
 {
@@ -71,6 +73,16 @@ PromiseResult VerifyClassPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Irreconcilable constraints in classes for '%s'", pp->promiser);
         return PROMISE_RESULT_FAIL;
+    }
+
+    /* The 'cancel' attribute undefines the promiser class when its expression
+     * evaluates true. It must be handled before the class-defining path
+     * because, by design, it operates on a class that is already defined and
+     * would otherwise be skipped (see EvalClassExpression()). */
+    if (a.context.expression != NULL &&
+        strcmp(a.context.expression->lval, "cancel") == 0)
+    {
+        return VerifyClassCancel(ctx, pp, &a);
     }
 
     if (a.context.expression == NULL ||
@@ -295,32 +307,18 @@ static bool EvalBoolCombination(EvalContext *ctx, const Rlist *list,
     return result;
 }
 
-static bool EvalClassExpression(EvalContext *ctx, Constraint *cp, const Promise *pp)
+/*
+  Expand the RHS of a class-context constraint in place and evaluate it as a
+  boolean. Shared by the class-defining attributes (expression, not, and, or,
+  xor, select_class, dist) and by the class-cancelling 'cancel' attribute,
+  whose trigger is evaluated exactly like 'expression'. This deliberately does
+  NOT consider whether the promiser class is already defined; that skip logic
+  is specific to class definition and lives in EvalClassExpression().
+*/
+static bool EvalClassConstraintRval(EvalContext *ctx, Constraint *cp, const Promise *pp)
 {
-    assert(pp);
-
-    if (cp == NULL) // ProgrammingError ?  We'll crash RSN anyway ...
-    {
-        Log(LOG_LEVEL_ERR,
-            "EvalClassExpression internal diagnostic discovered an ill-formed condition");
-    }
-
-    if (!IsDefinedClass(ctx, pp->classes))
-    {
-        return false;
-    }
-
-    if (IsDefinedClass(ctx, pp->promiser))
-    {
-        if (PromiseGetConstraintAsInt(ctx, "persistence", pp) == 0)
-        {
-            Log(LOG_LEVEL_VERBOSE,
-                " ?> Cancelling cached persistent class %s",
-                pp->promiser);
-            EvalContextHeapPersistentRemove(pp->promiser);
-        }
-        return false;
-    }
+    assert(cp != NULL);
+    assert(pp != NULL);
 
     switch (cp->rval.type)
     {
@@ -353,7 +351,11 @@ static bool EvalClassExpression(EvalContext *ctx, Constraint *cp, const Promise 
         break;
     }
 
-    if (strcmp(cp->lval, "expression") == 0)
+    /* The 'cancel' trigger is a plain class expression, evaluated like
+     * 'expression': true when the named class(es) resolve to a defined
+     * context. */
+    if (strcmp(cp->lval, "expression") == 0 ||
+        strcmp(cp->lval, "cancel") == 0)
     {
         return (cp->rval.type == RVAL_TYPE_SCALAR &&
                 IsDefinedClass(ctx, RvalScalarValue(cp->rval)));
@@ -400,4 +402,109 @@ static bool EvalClassExpression(EvalContext *ctx, Constraint *cp, const Promise 
     }
 
     return false;
+}
+
+static bool EvalClassExpression(EvalContext *ctx, Constraint *cp, const Promise *pp)
+{
+    assert(pp != NULL);
+    assert(cp != NULL);
+
+    /* assert() is compiled out under NDEBUG, so guard the pointer
+     * dereferences below with an explicit runtime check as well. */
+    if (pp == NULL || cp == NULL)
+    {
+        Log(LOG_LEVEL_ERR,
+            "EvalClassExpression internal diagnostic discovered an ill-formed condition");
+        return false;
+    }
+
+    if (!IsDefinedClass(ctx, pp->classes))
+    {
+        return false;
+    }
+
+    if (IsDefinedClass(ctx, pp->promiser))
+    {
+        if (PromiseGetConstraintAsInt(ctx, "persistence", pp) == 0)
+        {
+            Log(LOG_LEVEL_VERBOSE,
+                " ?> Cancelling cached persistent class %s",
+                pp->promiser);
+            EvalContextHeapPersistentRemove(pp->promiser);
+        }
+        return false;
+    }
+
+    return EvalClassConstraintRval(ctx, cp, pp);
+}
+
+/*
+  Handle a classes promise that uses the 'cancel' attribute. Unlike the
+  class-defining attributes, a cancel promise must be evaluated even when the
+  promiser class is already defined - that is the whole point - so it bypasses
+  the "already defined" skip in EvalClassExpression(). When the cancel
+  expression evaluates true and the promiser class is currently defined, the
+  class is undefined, mirroring how classes bodies cancel classes via
+  DeleteAllClasses().
+*/
+static PromiseResult VerifyClassCancel(EvalContext *ctx, const Promise *pp, Attributes *a)
+{
+    assert(ctx != NULL);
+    assert(pp != NULL);
+    assert(a != NULL);
+
+    Constraint *cp = a->context.expression;
+    assert(cp != NULL);
+
+    /* Respect the promise's class context guard. */
+    if (!IsDefinedClass(ctx, pp->classes))
+    {
+        return PROMISE_RESULT_NOOP;
+    }
+
+    if (!ValidClassName(pp->promiser))
+    {
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
+             "Attempted to cancel a class '%s', which is an illegal class identifier",
+             pp->promiser);
+        return PROMISE_RESULT_FAIL;
+    }
+
+    /* Hard classes describe the running system and must never be undefined
+     * (consistent with how the cancel_* class body attributes ignore them).
+     * Warn and leave the class in place rather than failing the promise. */
+    const Class *promiser_class = EvalContextClassGet(ctx, NULL, pp->promiser);
+    if (promiser_class != NULL && !promiser_class->is_soft)
+    {
+        Log(LOG_LEVEL_WARNING,
+            "Cannot cancel reserved hard class '%s'", pp->promiser);
+        return PROMISE_RESULT_NOOP;
+    }
+
+    /* Evaluate the cancel trigger. If it is false, leave the class as-is. */
+    if (!EvalClassConstraintRval(ctx, cp, pp))
+    {
+        return PROMISE_RESULT_NOOP;
+    }
+
+    /* Trigger is true: undefine the promiser class if it is defined. */
+    if (!IsDefinedClass(ctx, pp->promiser))
+    {
+        Log(LOG_LEVEL_VERBOSE,
+            "C:     -  Class '%s' targeted by cancel is not defined, nothing to do",
+            pp->promiser);
+        return PROMISE_RESULT_NOOP;
+    }
+
+    Log(LOG_LEVEL_VERBOSE, "C:     -  Cancelling class: %s", pp->promiser);
+
+    EvalContextHeapPersistentRemove(pp->promiser);
+    {
+        ClassRef ref = ClassRefParse(pp->promiser);
+        EvalContextClassRemove(ctx, ref.ns, ref.name);
+        ClassRefDestroy(ref);
+    }
+    EvalContextStackFrameRemoveSoft(ctx, pp->promiser);
+
+    return PROMISE_RESULT_NOOP;
 }

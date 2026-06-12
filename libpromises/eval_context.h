@@ -169,6 +169,7 @@ bool EvalContextClassPutHard(EvalContext *ctx, const char *name, const char *tag
 Class *EvalContextClassGet(const EvalContext *ctx, const char *ns, const char *name);
 Class *EvalContextClassMatch(const EvalContext *ctx, const char *regex);
 bool EvalContextClassRemove(EvalContext *ctx, const char *ns, const char *name);
+void EvalContextStackFrameRemoveSoft(EvalContext *ctx, const char *context);
 StringSet *EvalContextClassTags(const EvalContext *ctx, const char *ns, const char *name);
 
 ClassTableIterator *EvalContextClassTableIteratorNewGlobal(const EvalContext *ctx, const char *ns, bool is_hard, bool is_soft);

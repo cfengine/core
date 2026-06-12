@@ -1,0 +1,18 @@
+body common control
+{
+      bundlesequence => { "test" };
+}
+
+bundle agent test
+{
+  classes:
+      # 'cancel' paired with each class-DEFINING attribute must be rejected
+      # with "Irreconcilable constraints".
+      "c_expression" cancel => "any", expression => "any";
+      "c_and"        cancel => "any", and => { "any" };
+      "c_or"         cancel => "any", or => { "any" };
+      "c_xor"        cancel => "any", xor => { "any" };
+      "c_not"        cancel => "any", not => "any";
+      "c_dist"       cancel => "any", dist => { "1", "1" };
+      "c_select"     cancel => "any", select_class => { "x", "y" };
+}

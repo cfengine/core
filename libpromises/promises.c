@@ -704,10 +704,14 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
     pcopy->conlist = SeqNew(10, ConstraintDestroy);
     pcopy->org_pp = pp->org_pp;
 
-    // if this is a class promise, check if it is already set, if so, skip
+    // if this is a class promise, check if it is already set, if so, skip.
+    // Exception: a promise using the 'cancel' attribute must be evaluated
+    // precisely when the class is already defined, since its purpose is to
+    // undefine it.
     if (strcmp("classes", PromiseGetPromiseType(pp)) == 0)
     {
-        if (IsDefinedClass(ctx, CanonifyName(pcopy->promiser)))
+        if (IsDefinedClass(ctx, CanonifyName(pcopy->promiser)) &&
+            PromiseGetConstraint(pp, "cancel") == NULL)
         {
             Log(LOG_LEVEL_DEBUG,
                 "Skipping evaluation of classes promise as class '%s' is already set",

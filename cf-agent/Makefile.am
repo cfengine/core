@@ -27,7 +27,6 @@ AM_CPPFLAGS = -I$(srcdir)/../libpromises -I$(srcdir)/../libntech/libutils \
 	-I$(srcdir)/../libcfecompat \
 	-I$(srcdir)/../libcfnet \
 	-I$(srcdir)/../cf-check \
-	@CPPFLAGS@ \
 	$(ENTERPRISE_CPPFLAGS) \
 	$(OPENSSL_CPPFLAGS) \
 	$(PCRE2_CPPFLAGS) \
@@ -38,7 +37,8 @@ AM_CPPFLAGS = -I$(srcdir)/../libpromises -I$(srcdir)/../libntech/libutils \
 	$(PAM_CPPFLAGS)
 
 AM_CFLAGS = \
-	@CFLAGS@ \
+	$(CF3_CFLAGS) \
+	$(DEBUG_CFLAGS) \
 	$(ENTERPRISE_CFLAGS) \
 	$(OPENSSL_CFLAGS) \
 	$(PCRE2_CFLAGS) \

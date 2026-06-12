@@ -1088,6 +1088,26 @@ static int process_dir_recursive(AgentConnection *conn,
             continue;
         }
 
+        /* A directory entry is a single path component. A separator here
+         * (e.g. "../x" from a hostile server) would escape local_path once
+         * joined below, see http://cwe.mitre.org/data/definitions/32.html */
+        bool has_separator = false;
+        for (const char *s = item; *s != '\0'; s++)
+        {
+            if (IsFileSep(*s))
+            {
+                has_separator = true;
+                break;
+            }
+        }
+        if (has_separator)
+        {
+            Log(LOG_LEVEL_ERR,
+                "Skipping remote directory entry with path separator: '%s'",
+                item);
+            continue;
+        }
+
         char remote_full[PATH_MAX];
         int written = snprintf(remote_full, sizeof(remote_full), "%s/%s", remote_path, item);
         if (written < 0 || (size_t) written >= sizeof(remote_full))

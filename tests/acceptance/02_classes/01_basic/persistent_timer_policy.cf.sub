@@ -1,0 +1,15 @@
+body common control
+{
+      bundlesequence => { run };
+}
+
+bundle agent run
+{
+  classes:
+      # Define persistent class with timer_policy => "absolute"
+      # This stores CONTEXT_STATE_POLICY_PRESERVE in the DB
+      "timer_policy_test_class"
+        expression => "any",
+        persistence => "120",
+        timer_policy => "absolute";
+}

@@ -735,7 +735,7 @@ void EvalContextHeapPersistentSave(EvalContext *ctx, const char *name, unsigned 
 
     // first see if we have an existing record, and if we should bother to update
     {
-        int existing_info_size = ValueSizeDB(dbp, key, strlen(key));
+        int existing_info_size = ValueSizeDB(dbp, key, strlen(key) + 1);
         if (existing_info_size > 0)
         {
             PersistentClassInfo *existing_info = xcalloc(existing_info_size, 1);

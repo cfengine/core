@@ -126,6 +126,39 @@ static void test_basename(void)
     basename_single_testcase("//a//b///c.csv////", ".csv", "c");
 }
 
+static void test_module_protocol_percent_no_delimiter(void)
+{
+    EvalContext *ctx = EvalContextNew();
+    StringSet *tags = StringSetNew();
+    long persistence = 0;
+    char context[CF_BUFSIZE] = "test";
+
+    /* Lines come from CfReadLine() on the heap, so allocate them that way:
+     * the out-of-bounds read past the line is then flagged by ASan/valgrind. */
+
+    /* A well-formed '%name=<json>' line still defines the container. */
+    char *ok = xstrdup("%good={\"k\":1}");
+    ModuleProtocol(ctx, "/dev/null", ok, false, context, sizeof(context),
+                   tags, &persistence);
+    VarRef *good = VarRefParseFromScope("good", context);
+    assert_true(EvalContextVariableGet(ctx, good, NULL) != NULL);
+    VarRefDestroy(good);
+    free(ok);
+
+    /* A '%' line with no '=' delimiter must be skipped, not underflow the
+     * BufferNewFrom() length and read past the line buffer. */
+    char *bad = xstrdup("%bad");
+    ModuleProtocol(ctx, "/dev/null", bad, false, context, sizeof(context),
+                   tags, &persistence);
+    VarRef *ref = VarRefParseFromScope("bad", context);
+    assert_true(EvalContextVariableGet(ctx, ref, NULL) == NULL);
+    VarRefDestroy(ref);
+    free(bad);
+
+    StringSetDestroy(tags);
+    EvalContextDestroy(ctx);
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -133,6 +166,7 @@ int main()
         unit_test(test_hostinnetgroup_found),
         unit_test(test_hostinnetgroup_not_found),
         unit_test(test_basename),
+        unit_test(test_module_protocol_percent_no_delimiter),
     };
 
     return run_tests(tests);

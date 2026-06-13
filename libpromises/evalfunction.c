@@ -10246,7 +10246,10 @@ void ModuleProtocol(EvalContext *ctx, const char *command, const char *line, int
         // context name once it's in the vartable.  Maybe this can be relaxed.
         sscanf(line + 1, "%256[^=]=", name);
 
-        if (CheckID(name))
+        /* A well-formed line is "%name=<json>". Without the '=' delimiter
+         * sscanf() leaves the whole tail in name, so strlen(name) == length-1
+         * and the "length - strlen(name) - 1 - 1" below underflows. */
+        if (CheckID(name) && line[strlen(name) + 1] == '=')
         {
             JsonElement *json = NULL;
             Buffer *holder = BufferNewFrom(line+strlen(name)+1+1,

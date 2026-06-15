@@ -73,8 +73,48 @@ PromiseResult VerifyClassPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED
         return PROMISE_RESULT_FAIL;
     }
 
-    if (a.context.expression == NULL ||
-        EvalClassExpression(ctx, a.context.expression, pp))
+    /* timer_policy only governs the persistence timer, so it is meaningless
+     * without 'persistence'.  Error rather than silently ignoring it. */
+    if (a.context.persistent <= 0 &&
+        PromiseGetConstraintAsRval(pp, "timer_policy", RVAL_TYPE_SCALAR) != NULL)
+    {
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a,
+             "Cannot use 'timer_policy' without 'persistence' in classes promise for '%s'",
+             pp->promiser);
+        return PROMISE_RESULT_FAIL;
+    }
+
+    bool class_expression_true =
+        (a.context.expression == NULL ||
+         EvalClassExpression(ctx, a.context.expression, pp));
+
+    /* When a persistent class is already defined (loaded from DB),
+     * EvalClassExpression short-circuits and returns false.  If the
+     * timer_policy is "reset", we still need to reset the persistence
+     * timer in the DB even though the class is already in the context. */
+    if (!class_expression_true &&
+        a.context.persistent > 0 &&
+        a.context.timer == CONTEXT_STATE_POLICY_RESET &&
+        IsDefinedClass(ctx, pp->promiser))
+    {
+        StringSet *tags = StringSetNew();
+        StringSetAdd(tags, xstrdup("source=promise"));
+        for (const Rlist *rp = PromiseGetConstraintAsList(ctx, "meta", pp); rp; rp = rp->next)
+        {
+            StringSetAdd(tags, xstrdup(RlistScalarValue(rp)));
+        }
+        Log(LOG_LEVEL_VERBOSE,
+            "C:     +  Resetting persistent class timer: '%s' (%d minutes)",
+            pp->promiser, a.context.persistent);
+        Buffer *buf = StringSetToBuffer(tags, ',');
+        EvalContextHeapPersistentSave(ctx, pp->promiser, a.context.persistent,
+                                      CONTEXT_STATE_POLICY_RESET, BufferData(buf));
+        BufferDestroy(buf);
+        StringSetDestroy(tags);
+        return PROMISE_RESULT_NOOP;
+    }
+
+    if (class_expression_true)
     {
         if (a.context.expression == NULL)
         {
@@ -131,7 +171,7 @@ PromiseResult VerifyClassPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED
                     pp->promiser, a.context.persistent);
                 Buffer *buf = StringSetToBuffer(tags, ',');
                 EvalContextHeapPersistentSave(ctx, pp->promiser, a.context.persistent,
-                                              CONTEXT_STATE_POLICY_RESET, BufferData(buf));
+                                              a.context.timer, BufferData(buf));
                 BufferDestroy(buf);
             }
             if (inserted && (comment != NULL))

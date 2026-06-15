@@ -705,16 +705,31 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
     pcopy->org_pp = pp->org_pp;
 
     // if this is a class promise, check if it is already set, if so, skip
+    // Exception: persistent classes with timer_policy => "reset" must not
+    // be skipped — the promise needs to fire so the timer gets reset.
     if (strcmp("classes", PromiseGetPromiseType(pp)) == 0)
     {
         if (IsDefinedClass(ctx, CanonifyName(pcopy->promiser)))
         {
-            Log(LOG_LEVEL_DEBUG,
-                "Skipping evaluation of classes promise as class '%s' is already set",
-                CanonifyName(pcopy->promiser));
+            const char *tp = PromiseGetConstraintAsRval(pp, "timer_policy", RVAL_TYPE_SCALAR);
+            int persistence = PromiseGetConstraintAsInt(ctx, "persistence", pp);
 
-            *excluded = true;
-            return pcopy;
+            if (StringEqual(tp, "reset") && persistence > 0)
+            {
+                Log(LOG_LEVEL_DEBUG,
+                    "Class '%s' is already set but timer_policy is reset"
+                    " — allowing promise evaluation to reset persistence timer",
+                    CanonifyName(pcopy->promiser));
+            }
+            else
+            {
+                Log(LOG_LEVEL_DEBUG,
+                    "Skipping evaluation of classes promise as class '%s' is already set",
+                    CanonifyName(pcopy->promiser));
+
+                *excluded = true;
+                return pcopy;
+            }
         }
     }
 

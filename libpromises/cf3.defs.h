@@ -1178,6 +1178,7 @@ typedef struct
     ContextScope scope;
     int nconstraints;
     int persistent;
+    PersistentClassPolicy timer;
 } ContextConstraint;
 
 /*************************************************************************/

@@ -1,0 +1,92 @@
+#######################################################
+#
+# CFE-4681: classes: promises with timer_policy => "absolute" (default)
+#
+# Verify that timer_policy => "absolute" (the default) on a classes:
+# promise preserves the persistence timer across agent runs.
+#
+# This is the counterpart to persistent_timer_policy_reset.cf and
+# directly demonstrates the "promise is not evaluated" behaviour:
+# once the persistent class is loaded from the DB on a subsequent
+# run, the classes: promise is skipped in ExpandDeRefPromise (it is
+# never handed to VerifyClassPromise), so the timer is left untouched.
+#
+# First run:  expect "Creating persistent class ... policy preserve"
+# Second run: expect "Skipping evaluation of classes promise ... is
+#             already set" and NO "Resetting persistent class".
+#
+# Note: the skip message is logged at LOG_LEVEL_DEBUG, so the second
+# run uses -d.  Both sub-agent runs happen in the test bundle so that
+# the check bundle only evaluates assertions -- this avoids a spurious
+# FAIL report during the agent's convergence passes.
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  # Remove the persistent class DB to ensure a clean state.
+  files:
+      "$(sys.workdir)/state/cf_state.lmdb"
+        delete => tidy;
+      "$(sys.workdir)/state/cf_state.lmdb-lock"
+        delete => tidy;
+      "$(sys.workdir)/state/cf_state.lmdb.lock"
+        delete => tidy;
+}
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-4681" }
+        string => "timer_policy => absolute (default) on classes: promises preserves the timer; the promise is skipped (not evaluated) when the class is already defined";
+
+  commands:
+    # First run: define the persistent class with timer_policy => "absolute".
+    !first_done::
+      "$(sys.cf_agent) -Kv -f $(this.promise_filename).sub > $(G.testdir)/timer_policy_run1.log 2>&1"
+        contain => in_shell,
+        classes => always("first_done");
+
+    # Second run: the class is already loaded from the persistent DB, so with
+    # timer_policy => absolute the classes: promise must be skipped (not
+    # evaluated) and the timer must not be reset.  Run with -d so the
+    # DEBUG-level skip message is captured.
+    first_done.!second_done::
+      "$(sys.cf_agent) -Kd -f $(this.promise_filename).sub > $(G.testdir)/timer_policy_run2.log 2>&1"
+        contain => in_shell,
+        classes => always("second_done");
+}
+
+bundle agent check
+{
+  classes:
+      # Run 1 creates the persistent class with the preserve (absolute) policy.
+      "create_ok" expression => regline(".*Creating persistent class.*timer_policy_test_class.*policy preserve.*",
+                                         "$(G.testdir)/timer_policy_run1.log");
+      # Run 2 must skip the promise because the class is already defined.
+      "skip_ok" expression => regline(".*Skipping evaluation of classes promise as class.*timer_policy_test_class.*is already set.*",
+                                       "$(G.testdir)/timer_policy_run2.log");
+      # Run 2 must NOT reset the timer (no EvalContextHeapPersistentSave call).
+      "reset_seen" expression => regline(".*Resetting persistent class.*timer_policy_test_class.*",
+                                          "$(G.testdir)/timer_policy_run2.log");
+      "ok" expression => "create_ok.skip_ok.!reset_seen";
+
+  reports:
+    DEBUG.!create_ok::
+      "FAIL: first run did not log 'Creating persistent class ... policy preserve'";
+    DEBUG.!skip_ok::
+      "FAIL: second run did not skip the classes promise (expected 'Skipping evaluation of classes promise ... is already set')";
+    DEBUG.reset_seen::
+      "FAIL: second run reset the timer despite timer_policy => absolute";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

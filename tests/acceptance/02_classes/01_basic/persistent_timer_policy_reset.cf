@@ -1,0 +1,83 @@
+#######################################################
+#
+# CFE-4681: classes: promises with timer_policy => "reset"
+#
+# Verify that timer_policy => "reset" on a classes: promise
+# causes the persistence timer to be reset on subsequent
+# agent runs, even though the class is already defined
+# (loaded from the persistent DB).
+#
+# First run:  expect "Creating persistent class"
+# Second run: expect "Resetting persistent class" (not skipped)
+#
+# Both sub-agent runs happen in the test bundle so that the check
+# bundle only evaluates assertions -- this avoids a spurious FAIL
+# report during the agent's convergence passes.
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  # Remove the persistent class DB to ensure a clean state.
+  files:
+      "$(sys.workdir)/state/cf_state.lmdb"
+        delete => tidy;
+      "$(sys.workdir)/state/cf_state.lmdb-lock"
+        delete => tidy;
+      "$(sys.workdir)/state/cf_state.lmdb.lock"
+        delete => tidy;
+}
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-4681" }
+        string => "timer_policy => reset on classes: promises resets the persistence timer on subsequent runs";
+
+  commands:
+    # First run: define the persistent class.
+    !first_done::
+      "$(sys.cf_agent) -Kv -f $(this.promise_filename).sub > $(G.testdir)/timer_reset_run1.log 2>&1"
+        contain => in_shell,
+        classes => always("first_done");
+
+    # Second run: the class already exists in the DB; timer_policy => reset
+    # must cause the promise to be evaluated and the timer to be reset.
+    first_done.!second_done::
+      "$(sys.cf_agent) -Kv -f $(this.promise_filename).sub > $(G.testdir)/timer_reset_run2.log 2>&1"
+        contain => in_shell,
+        classes => always("second_done");
+}
+
+bundle agent check
+{
+  classes:
+      "first_ok" expression => regline(".*Creating persistent class.*timer_reset_test_class.*",
+                                       "$(G.testdir)/timer_reset_run1.log");
+      # Match the EvalContextHeapPersistentSave message specifically (it
+      # reports "... timer to N minutes (was M remaining)").  This only
+      # appears when the existing DB record is actually found, so it would
+      # NOT match the "C: + Resetting persistent class timer: ..." progress
+      # line that VerifyClassPromise logs regardless.  This distinction is
+      # what makes the test catch a broken existing-record lookup.
+      "second_ok" expression => regline(".*Resetting persistent class 'timer_reset_test_class' timer to.*",
+                                        "$(G.testdir)/timer_reset_run2.log");
+      "ok" expression => "first_ok.second_ok";
+
+  reports:
+    DEBUG.!first_ok::
+      "FAIL: first run did not log 'Creating persistent class'";
+    DEBUG.!second_ok::
+      "FAIL: second run did not log 'Resetting persistent class' (short-circuit not bypassed)";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

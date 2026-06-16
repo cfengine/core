@@ -226,7 +226,7 @@ const ConstraintSyntax CF_CLASSBODY[] =
     ConstraintSyntaxNewContext("not", "Evaluate the negation of string expression in normal form", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewContextList("select_class", "Select one of the named list of classes to define based on host identity. Default value: random_selection", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewContextList("xor", "Combine class sources with XOR", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewOption("timer_policy", "absolute,reset", "Whether a persistent class restarts its counter when rediscovered. Default value: absolute", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("timer_policy", "absolute,reset", "Whether a persistent class restarts its counter when rediscovered. Default value: reset", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

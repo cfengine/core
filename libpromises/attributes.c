@@ -1134,21 +1134,18 @@ ContextConstraint GetContextConstraints(const EvalContext *ctx, const Promise *p
 
     {
         const char *tp = PromiseGetConstraintAsRval(pp, "timer_policy", RVAL_TYPE_SCALAR);
-        if (StringEqual(tp, "reset"))
+        if (StringEqual(tp, "absolute"))
         {
-            a.timer = CONTEXT_STATE_POLICY_RESET;
+            a.timer = CONTEXT_STATE_POLICY_PRESERVE;
         }
         else
         {
-            /* Default to PRESERVE (absolute) for backward compatibility:
-             * classes: promises historically skip re-evaluation when the
-             * class is already defined, so the timer was never reset.
-             *
-             * NOTE: this default is planned to change to RESET in 3.28.0
-             * (CFE-4681) to align with classes bodies, whose timer_policy
-             * already defaults to reset.  The absolute default is retained on
-             * the 3.24 and 3.27 LTS backports. */
-            a.timer = CONTEXT_STATE_POLICY_PRESERVE;
+            /* Default to RESET: a persistent class that keeps being
+             * rediscovered should keep persisting.  This aligns classes:
+             * promises with classes bodies, whose timer_policy has always
+             * defaulted to reset.  Set timer_policy => "absolute" to keep
+             * the original expiry instead. */
+            a.timer = CONTEXT_STATE_POLICY_RESET;
         }
     }
 

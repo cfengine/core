@@ -38,7 +38,7 @@ Seq *ProtocolOpenDir(AgentConnection *conn, const char *path)
     assert(conn != NULL);
     assert(path != NULL);
 
-    char buf[CF_MSGSIZE] = {0};
+    char buf[CF_BUFSIZE] = {0};
     int tosend = snprintf(buf, CF_MSGSIZE, "OPENDIR %s", path);
     if (tosend < 0 || tosend >= CF_MSGSIZE)
     {
@@ -110,7 +110,7 @@ bool ProtocolGet(AgentConnection *conn, const char *remote_path,
         return false;
     }
 
-    char buf[CF_MSGSIZE] = {0};
+    char buf[CF_BUFSIZE] = {0};
     int to_send = snprintf(buf, CF_MSGSIZE, "GET %d %s",
                            CF_MSGSIZE, remote_path);
 

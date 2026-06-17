@@ -38,6 +38,7 @@
 
 
 static bool EvalClassExpression(EvalContext *ctx, Constraint *cp, const Promise *pp);
+static PromiseResult VerifyClassCancel(EvalContext *ctx, const Promise *pp, Attributes *a);
 
 static bool ValidClassName(const char *str)
 {
@@ -71,6 +72,19 @@ PromiseResult VerifyClassPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED
     {
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, &a, "Irreconcilable constraints in classes for '%s'", pp->promiser);
         return PROMISE_RESULT_FAIL;
+    }
+
+    /* The 'cancel' attribute (a boolean) undefines the promiser class. Its
+     * trigger is the promise's own class-context guard, not an expression of
+     * its own. It must be handled before the class-defining path because, by
+     * design, it operates on a class that is already defined and would
+     * otherwise be skipped (see ExpandDeRefPromise() in promises.c).
+     * VerifyClassCancel does its own attribute validation, so route to it
+     * before the timer_policy check below. */
+    if (a.context.expression != NULL &&
+        strcmp(a.context.expression->lval, "cancel") == 0)
+    {
+        return VerifyClassCancel(ctx, pp, &a);
     }
 
     /* timer_policy only governs the persistence timer, so it is meaningless
@@ -440,4 +454,99 @@ static bool EvalClassExpression(EvalContext *ctx, Constraint *cp, const Promise 
     }
 
     return false;
+}
+
+/*
+  Handle a classes promise that uses the 'cancel' attribute. 'cancel' is a
+  boolean: when true, the promiser class is undefined. Its trigger is the
+  promise's own class-context guard, not an expression of its own (write
+  "trigger:: \"c\" cancel => \"true\";" rather than a cancel expression).
+  Unlike the class-defining attributes, a cancel promise must be evaluated even
+  when the promiser class is already defined - that is the whole point - so it
+  bypasses the "already defined" skip in ExpandDeRefPromise() (see promises.c).
+  When the promiser class is currently defined, it is undefined, mirroring how
+  classes bodies cancel classes via DeleteAllClasses().
+*/
+static PromiseResult VerifyClassCancel(EvalContext *ctx, const Promise *pp, Attributes *a)
+{
+    assert(ctx != NULL);
+    assert(pp != NULL);
+    assert(a != NULL);
+
+    /* assert() is compiled out under NDEBUG, so guard the pointer
+     * dereferences below with an explicit runtime check as well. */
+    if (ctx == NULL || pp == NULL || a == NULL)
+    {
+        Log(LOG_LEVEL_ERR,
+            "VerifyClassCancel internal diagnostic discovered an ill-formed condition");
+        return PROMISE_RESULT_FAIL;
+    }
+
+    /* 'cancel' only undefines a class; the attributes that tune how a class is
+     * defined or persisted are meaningless alongside it. Reject them rather
+     * than silently ignoring them. (The class-defining attributes are already
+     * mutually exclusive with 'cancel' via the "Irreconcilable constraints"
+     * count.) */
+    if (PromiseGetConstraint(pp, "persistence") != NULL ||
+        PromiseGetConstraint(pp, "scope") != NULL ||
+        PromiseGetConstraint(pp, "timer_policy") != NULL)
+    {
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
+             "The 'cancel' attribute cannot be combined with 'persistence', "
+             "'scope', or 'timer_policy' (class '%s')",
+             pp->promiser);
+        return PROMISE_RESULT_FAIL;
+    }
+
+    /* 'cancel' is a boolean; 'cancel => "false"' is a no-op. */
+    if (!PromiseGetConstraintAsBoolean(ctx, "cancel", pp))
+    {
+        return PROMISE_RESULT_NOOP;
+    }
+
+    /* Respect the promise's class context guard. */
+    if (!IsDefinedClass(ctx, pp->classes))
+    {
+        return PROMISE_RESULT_NOOP;
+    }
+
+    if (!ValidClassName(pp->promiser))
+    {
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
+             "Attempted to cancel a class '%s', which is an illegal class identifier",
+             pp->promiser);
+        return PROMISE_RESULT_FAIL;
+    }
+
+    /* Hard classes describe the running system and must never be undefined
+     * (consistent with how the cancel_* class body attributes ignore them).
+     * Warn and leave the class in place rather than failing the promise. */
+    const Class *promiser_class = EvalContextClassGet(ctx, NULL, pp->promiser);
+    if (promiser_class != NULL && !promiser_class->is_soft)
+    {
+        Log(LOG_LEVEL_WARNING,
+            "Cannot cancel reserved hard class '%s'", pp->promiser);
+        return PROMISE_RESULT_NOOP;
+    }
+
+    /* Undefine the promiser class if it is currently defined. */
+    if (!IsDefinedClass(ctx, pp->promiser))
+    {
+        Log(LOG_LEVEL_VERBOSE,
+            "C:     -  Class '%s' targeted by cancel is not defined, nothing to do",
+            pp->promiser);
+        return PROMISE_RESULT_NOOP;
+    }
+
+    Log(LOG_LEVEL_VERBOSE, "C:     -  Cancelling class: %s", pp->promiser);
+
+    EvalContextHeapPersistentRemove(pp->promiser);
+    {
+        ClassRef ref = ClassRefParse(pp->promiser);
+        EvalContextClassRemove(ctx, ref.ns, ref.name);
+        ClassRefDestroy(ref);
+    }
+    EvalContextStackFrameRemoveSoft(ctx, pp->promiser);
+
+    return PROMISE_RESULT_NOOP;
 }

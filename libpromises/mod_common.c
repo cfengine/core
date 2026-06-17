@@ -219,6 +219,7 @@ const ConstraintSyntax CF_CLASSBODY[] =
 {
     ConstraintSyntaxNewOption("scope", "namespace,bundle", "Scope of the class set by this promise", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewContextList("and", "Combine class sources with AND", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBool("cancel", "true/false undefine the promiser class. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewRealList("dist", "Generate a probabilistic class distribution (from strategies in cfengine 2)", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewContext("expression", "Evaluate string expression of classes in normal form", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewContextList("or", "Combine class sources with inclusive OR", SYNTAX_STATUS_NORMAL),

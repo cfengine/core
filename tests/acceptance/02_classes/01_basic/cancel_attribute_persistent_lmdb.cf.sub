@@ -1,0 +1,11 @@
+body common control
+{
+      bundlesequence => { "main" };
+}
+
+bundle agent main
+{
+  classes:
+      # Define a persistent class; it is written to the cf_state LMDB.
+      "cfe4686_cancel_lmdb_class" expression => "any", persistence => "10";
+}

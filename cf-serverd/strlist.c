@@ -401,7 +401,7 @@ size_t StrList_bsearch(const StrList *sl,
 {
     if (sl != NULL && sl->len > 0)
     {
-        struct string **ret =
+        struct string *const*ret =
             bsearch(&s, sl->list, sl->len, sizeof(sl->list[0]),
                     (int (*)(const void *, const void *)) comparator);
         struct string * const *base = &sl->list[0];
@@ -625,7 +625,7 @@ size_t StrList_SearchLongestPrefix(const StrList *sl,
      * no reason to keep going. */
     while (longer_match_possible && (s_prefix_len < s_len))
     {
-        char *separator_at;
+        const char *separator_at;
         if (direction_forward)
         {
             /* Find next separator, skipping the previous one. */

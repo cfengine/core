@@ -73,8 +73,8 @@ static bool IsLegalVariableName(EvalContext *ctx, const Promise *pp)
         return false;
     }
 
-    char *bracket = strchr(var_name, '[');
-    char *dot = strchr(var_name, '.');
+    const char *bracket = strchr(var_name, '[');
+    const char *dot = strchr(var_name, '.');
     /* we only care about variable name prefix, not dots inside array keys */
     if ((dot != NULL) && ((bracket == NULL) || (dot < bracket)))
     {

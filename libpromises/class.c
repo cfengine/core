@@ -294,7 +294,7 @@ void ClassTableIteratorDestroy(ClassTableIterator *iter)
 
 ClassRef ClassRefParse(const char *expr)
 {
-    char *name_start = strchr(expr, ':');
+    const char *name_start = strchr(expr, ':');
     if (!name_start)
     {
         return (ClassRef) { .ns = NULL, .name = xstrdup(expr) };

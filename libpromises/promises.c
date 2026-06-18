@@ -639,7 +639,7 @@ static void DereferenceAndPutComment(Promise* pp, const char *comment)
 {
     free(pp->comment);
 
-    char *sp;
+    const char *sp;
     if ((sp = strstr(comment, "$(this.promiser)")) != NULL ||
         (sp = strstr(comment, "${this.promiser}")) != NULL)
     {

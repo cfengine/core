@@ -79,7 +79,7 @@ int RemovePublicKey(const char *id)
 
     while ((dirp = DirRead(dirh)) != NULL)
     {
-        char *c = strstr(dirp->d_name, suffix);
+        const char *c = strstr(dirp->d_name, suffix);
 
         if (c && c[strlen(suffix)] == '\0')     /* dirp->d_name ends with suffix */
         {

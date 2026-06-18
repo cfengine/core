@@ -344,7 +344,7 @@ static inline bool CanSetVariable(const EvalContext *ctx, VarRef *var_ref)
 static inline bool CanSetClass(const EvalContext *ctx, const char *class_spec)
 {
     char *ns = NULL;
-    char *ns_delim = strchr(class_spec, ':');
+    const char *ns_delim = strchr(class_spec, ':');
     if (ns_delim != NULL)
     {
         ns = xstrndup(class_spec, ns_delim - class_spec);

@@ -325,7 +325,7 @@ void CalculateDomainName(const char *nodename, const char *dnsname,
     {
         /* If hostname is qualified */
 
-        char *p = strchr(nodename, '.');
+        const char *p = strchr(nodename, '.');
 
         if (p != NULL)
         {

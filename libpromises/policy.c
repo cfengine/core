@@ -311,7 +311,7 @@ const char *PolicyGetPolicyFileHash(const Policy *policy, const char *policy_fil
 
 static const char *StripNamespace(const char *full_symbol)
 {
-    char *sep = strchr(full_symbol, CF_NS);
+    const char *sep = strchr(full_symbol, CF_NS);
 
     if (sep == NULL)
     {
@@ -871,7 +871,7 @@ char *QualifiedNameNamespaceComponent(const char *qualified_name)
  */
 char *QualifiedNameScopeComponent(const char *qualified_name)
 {
-    char *sep = strchr(qualified_name, CF_NS);
+    const char *sep = strchr(qualified_name, CF_NS);
     if (sep)
     {
         return xstrdup(sep + 1);

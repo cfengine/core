@@ -1,0 +1,12 @@
+body common control
+{
+      bundlesequence => { "main" };
+}
+
+bundle agent main
+{
+  classes:
+      # The persistent class is reloaded from the LMDB at startup; cancel must
+      # undefine it AND remove its LMDB record.
+      "cfe4686_cancel_lmdb_class" cancel => "true";
+}

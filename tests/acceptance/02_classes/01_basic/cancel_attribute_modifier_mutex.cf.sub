@@ -1,0 +1,15 @@
+body common control
+{
+      bundlesequence => { "test" };
+}
+
+bundle agent test
+{
+  classes:
+      # 'cancel' paired with a class-MODIFIER attribute must be rejected:
+      # these only tune class definition/persistence and are meaningless
+      # when undefining a class.
+      "c_persist" cancel => "true", persistence => "10";
+      "c_scope"   cancel => "true", scope => "namespace";
+      "c_timer"   cancel => "true", timer_policy => "reset";
+}

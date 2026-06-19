@@ -1,0 +1,83 @@
+#######################################################
+#
+# Test that 'cancel' clears a persistent class from the cf_state LMDB
+# (CFE-4686) -- verified at the source with `cf-check dump`.
+#
+# A persistent class lives in the cf_state LMDB and is reloaded into the
+# context on every agent run. Undefining it from policy must therefore remove
+# the LMDB record too, otherwise the class would simply reappear on the next
+# run. VerifyClassCancel() does this via EvalContextHeapPersistentRemove().
+#
+#   run 1 (sub)  -> define the class persistently            -> LMDB record present
+#   run 2 (sub2) -> 'cancel => "true"' the (reloaded) class  -> LMDB record gone
+#
+# Each snapshot reads the state DB directly rather than parsing agent log
+# text (cf. persistent_timer_policy_default_lmdb.cf).
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.sub.cf" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle agent init
+{
+  # Remove the persistent class DB to ensure a clean state.
+  files:
+      "$(sys.workdir)/state/cf_state.lmdb"
+        delete => tidy;
+      "$(sys.workdir)/state/cf_state.lmdb-lock"
+        delete => tidy;
+      "$(sys.workdir)/state/cf_state.lmdb.lock"
+        delete => tidy;
+}
+
+bundle agent test
+{
+  meta:
+      "description" -> { "CFE-4686" }
+        string => "classes promise 'cancel' removes the persistent class record from the cf_state LMDB";
+
+  vars:
+      "state" string => "$(sys.workdir)/state/cf_state.lmdb";
+      "sub"   string => "$(this.promise_filename).sub";
+      "sub2"  string => "$(this.promise_filename).sub2";
+
+  commands:
+    # One shell invocation runs the whole sequence:
+    #   run 1 -> define persistent class, snapshot LMDB record count (expect 1)
+    #   run 2 -> cancel the class,        snapshot LMDB record count (expect 0)
+    !done::
+      "$(sys.cf_agent) -Kf $(sub) > /dev/null 2>&1 ;
+       $(sys.cf_check) dump -n $(state) | grep -c cfe4686_cancel_lmdb_class | tr -dc '0-9' > $(G.testdir)/cancel_lmdb_before ;
+       $(sys.cf_agent) -Kf $(sub2) > /dev/null 2>&1 ;
+       $(sys.cf_check) dump -n $(state) | grep -c cfe4686_cancel_lmdb_class | tr -dc '0-9' > $(G.testdir)/cancel_lmdb_after"
+        contain => in_shell,
+        classes => always("done");
+}
+
+bundle agent check
+{
+  vars:
+      "before" string => readfile("$(G.testdir)/cancel_lmdb_before", 4096);
+      "after"  string => readfile("$(G.testdir)/cancel_lmdb_after", 4096);
+
+  classes:
+      # The class was stored in the LMDB by run 1 ...
+      "present_before" expression => regcmp("[1-9][0-9]*", "$(before)");
+      # ... and removed by the cancel in run 2.
+      "absent_after"   expression => strcmp("$(after)", "0");
+
+      "ok" expression => "present_before.absent_after";
+
+  reports:
+    DEBUG::
+      "LMDB record count before cancel = '$(before)' (expect >= 1), after = '$(after)' (expect 0)";
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

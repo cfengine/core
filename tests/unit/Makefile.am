@@ -145,7 +145,8 @@ check_PROGRAMS = \
 	policy_server_test \
 	split_process_line_test \
 	new_packages_promise_test \
-	iteration_test
+	iteration_test \
+	protocol_recv_overflow_test
 
 if HAVE_AVAHI_CLIENT
 if HAVE_AVAHI_COMMON

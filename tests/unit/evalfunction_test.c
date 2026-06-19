@@ -7,6 +7,13 @@
 #include <eval_context.h>
 #include <evalfunction.c>
 
+#ifndef __MINGW32__
+#include <sys/mman.h>
+#if !defined(MAP_ANONYMOUS) && defined(MAP_ANON)
+#define MAP_ANONYMOUS MAP_ANON
+#endif
+#endif
+
 static bool netgroup_more = false;
 
 #if SETNETGRENT_RETURNS_INT
@@ -133,10 +140,8 @@ static void test_module_protocol_percent_no_delimiter(void)
     long persistence = 0;
     char context[CF_BUFSIZE] = "test";
 
-    /* Lines come from CfReadLine() on the heap, so allocate them that way:
-     * the out-of-bounds read past the line is then flagged by ASan/valgrind. */
-
-    /* A well-formed '%name=<json>' line still defines the container. */
+    /* A well-formed '%name=<json>' line still defines the container, so the
+     * added delimiter check does not reject valid input. */
     char *ok = xstrdup("%good={\"k\":1}");
     ModuleProtocol(ctx, "/dev/null", ok, false, context, sizeof(context),
                    tags, &persistence);
@@ -145,15 +150,31 @@ static void test_module_protocol_percent_no_delimiter(void)
     VarRefDestroy(good);
     free(ok);
 
-    /* A '%' line with no '=' delimiter must be skipped, not underflow the
-     * BufferNewFrom() length and read past the line buffer. */
-    char *bad = xstrdup("%bad");
-    ModuleProtocol(ctx, "/dev/null", bad, false, context, sizeof(context),
+#ifndef __MINGW32__
+    /* A '%' line with no '=' makes "length - strlen(name) - 1 - 1" underflow
+     * to SIZE_MAX and steps the source pointer one past the terminating NUL,
+     * so BufferAppend() scans off the end of the line buffer. Place the line
+     * so its NUL is the last readable byte before a PROT_NONE guard page: the
+     * unpatched code walks into the guard page (crashes), the patched code
+     * skips the line. */
+    const size_t pagesize = (size_t) sysconf(_SC_PAGESIZE);
+    char *region = mmap(NULL, pagesize * 2, PROT_READ | PROT_WRITE,
+                        MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    assert_true(region != MAP_FAILED);
+    assert_int_equal(mprotect(region + pagesize, pagesize, PROT_NONE), 0);
+
+    const char *bad = "%bad";
+    char *line = region + pagesize - strlen(bad) - 1; /* NUL at page boundary */
+    memcpy(line, bad, strlen(bad) + 1);
+
+    ModuleProtocol(ctx, "/dev/null", line, false, context, sizeof(context),
                    tags, &persistence);
     VarRef *ref = VarRefParseFromScope("bad", context);
     assert_true(EvalContextVariableGet(ctx, ref, NULL) == NULL);
     VarRefDestroy(ref);
-    free(bad);
+
+    assert_int_equal(munmap(region, pagesize * 2), 0);
+#endif
 
     StringSetDestroy(tags);
     EvalContextDestroy(ctx);

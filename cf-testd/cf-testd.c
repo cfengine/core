@@ -40,7 +40,6 @@
 #include <mutex.h>              // ThreadLock
 #include <net.h>
 #include <openssl/err.h>        // ERR_get_error
-#include <patch_stream.h>       // PatchStreamServe
 #include <policy_server.h>      // PolicyServerReadFile
 #include <printsize.h>          // PRINTSIZE
 #include <server_access.h>      // acl_Free
@@ -417,15 +416,11 @@ static bool CFTestD_BusyLoop(
             break;
         }
 
-        /* cf-testd has no leech2 state; serve an empty patch so that the
-         * hub's GETPATCH request succeeds. */
-        Log(LOG_LEVEL_INFO, "Serving empty leech2 patch");
-        if (PatchStreamServe(ConnectionInfoSSL(conn->conn_info), "", 0))
-        {
-            return true;
-        }
-
-        break;
+        /* Serve the patch using the same enterprise code path as cf-serverd.
+         * In a pure core build the stub refuses; with the enterprise plugin
+         * loaded a real leech2 patch is served from the state directory.
+         * Keep the connection open on success. */
+        return ServeLeech2Patch(conn, last_hash);
     }
     case PROTOCOL_COMMAND_BAD:
     default:

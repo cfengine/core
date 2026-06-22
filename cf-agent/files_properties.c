@@ -26,6 +26,7 @@
 
 #include <files_names.h>
 #include <files_interfaces.h>
+#include <file_lib.h>                                      /* IsFileSep */
 #include <item_lib.h>
 
 static Item *SUSPICIOUSLIST = NULL; /* GLOBAL_P */
@@ -67,6 +68,19 @@ static bool ConsiderFile(const char *nodename, const char *path, struct stat *st
     {
         Log(LOG_LEVEL_WARNING, "Possible path traversal attempt detected in '%s/%s', skipping", path, nodename);
         return false;
+    }
+
+    /* A directory entry is a single path component and never contains a
+     * separator. One that does (e.g. "../x" from a hostile server's listing)
+     * would escape 'path' when the two are joined, see
+     * http://cwe.mitre.org/data/definitions/32.html */
+    for (const char *s = nodename; *s != '\0'; s++)
+    {
+        if (IsFileSep(*s))
+        {
+            Log(LOG_LEVEL_WARNING, "Path separator in directory entry '%s/%s', skipping", path, nodename);
+            return false;
+        }
     }
 
     for (i = 0; SKIPFILES[i] != NULL; i++)

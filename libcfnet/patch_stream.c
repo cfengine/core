@@ -90,6 +90,8 @@ bool PatchStreamFetch(SSL *conn, char **data, size_t *len)
             return false;
         }
 
+        /* Message length can be 0 if a PDU contains only a header. Usually
+         * happens when sending End-of-File flag. */
         if (msg_len > 0)
         {
             if (msg_len > PATCH_STREAM_MAX_SIZE - buf_len)

@@ -2,6 +2,6 @@
 # defined in another policy file
 bundle agent foo
 {
-custom_promise_type:
-  "var" string => "test";
+  custom_promise_type:
+    "var" string => "test";
 }

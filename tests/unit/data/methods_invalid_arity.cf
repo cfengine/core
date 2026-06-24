@@ -8,6 +8,5 @@ bundle agent foo(one, two)
 bundle agent bar
 {
   methods:
-      "any"
-      usebundle => foo("snookie");
+    "any" usebundle => foo("snookie");
 }

@@ -1,14 +1,15 @@
 body common control
 {
-      inputs => { "../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent test
 {
   meta:
-    "test_flakey_fail" string => "any",
+    "test_flakey_fail"
+      string => "any",
       meta => { "ENT-6947" };
 }
 

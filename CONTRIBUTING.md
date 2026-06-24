@@ -226,7 +226,7 @@ All changelog entries should also include a reference to a ticket:
 
 Note that the `Changelog` and `Ticket` entries must be in a *commit message* and not the description of a PR.
 
-Sometimes is necessary to redact a `Changelog` entry, for example a commit needs
+Sometimes it is necessary to redact a `Changelog` entry, for example a commit needs
 to be reverted, or it's already been mentioned in another `Changelog` entry in
 another repository. When this is necessary, use the `Cancel-Changelog` keyword
 with the commit of the entry you wish to redact:
@@ -945,7 +945,7 @@ pick 001bd420b Fixed mistake in isrealdir()
 ```
 
 `upstream/master` will be used as a starting point, and the commits / commands
-will be applied tofrom top to bottom of this list. To combine the 2 commits,
+will be applied from top to bottom of this list. To combine the 2 commits,
 replace `pick` with `squash` on the second line:
 
 ```
@@ -1035,7 +1035,7 @@ $ git submodule update
 ```
 
 This will update the submodule, checking out the correct commit for your
-current for your current branch.
+current branch.
 
 Please note that a submodule is like a normal git repo, with the `SHA`
 committed to the parent repo. In many situations, the easiest approach is to
@@ -1082,7 +1082,7 @@ If you are cherry picking your own commit simply use -x option
 $ git cherry-pick -x 80f198
 ```
 
-`-x` adds: `"(cherry picked from commit 80f198baeddcd5d1b9556d9a4890b648fe3c12c5)"``
+`-x` adds: `"(cherry picked from commit 80f198baeddcd5d1b9556d9a4890b648fe3c12c5)"`
 
 If you are cherry picking someone elses commit, use the -s option to make your involvement more obvious.
 

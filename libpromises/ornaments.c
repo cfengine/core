@@ -170,7 +170,7 @@ void PromiseBanner(EvalContext *ctx, const Promise *pp)
     }
 
     const size_t n = 2*CF_MAXFRAGMENT + 3;
-    char pretty_promise_name[n+1];
+    char *pretty_promise_name = alloca(n+1);
     pretty_promise_name[0] = '\0';
     StringAppendAbbreviatedPromise(pretty_promise_name, pp->promiser, n, CF_MAXFRAGMENT);
     Log(LOG_LEVEL_VERBOSE, "P:    Promiser/affected object: '%s'", pretty_promise_name);

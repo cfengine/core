@@ -63,7 +63,7 @@ if buildah inspect "cfengine-static-checker-f$STATIC_CHECKS_FEDORA_VERSION" >/de
 
   # Recreate the image if the checksum of this file has changed or if the
   # checksum file is missing from the container
-  if [[ $(buildah run "$c" ls "$SUM_FILE") == "$SUM_FILE" ]]; then
+  if [[ $(buildah run "$c" ls "$SUM_FILE" 2>/dev/null) == "$SUM_FILE" ]]; then
     SUM_A=$(sha256sum "$0")
     SUM_B=$(buildah run "$c" cat "$SUM_FILE")
     if [[ "$SUM_A" != "$SUM_B" ]]; then

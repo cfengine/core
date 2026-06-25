@@ -226,8 +226,8 @@ bool ServerTLSPeek(ConnectionInfo *conn_info)
 
     const int peek_size = CF_INBAND_OFFSET + sizeof("CAUTH");
 
-    char buf[peek_size];
-    ssize_t got = recv(ConnectionInfoSocket(conn_info), buf, sizeof(buf), MSG_PEEK);
+    char *buf = alloca(peek_size);
+    ssize_t got = recv(ConnectionInfoSocket(conn_info), buf, peek_size, MSG_PEEK);
     assert(got <= peek_size);
     if (got < 0)
     {

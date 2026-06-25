@@ -15,6 +15,6 @@ jobs:
     - name: Run autotools / configure
       run: ./autogen.sh --enable-debug
     - name: Compile and link (make)
-      run: make -j8 CFLAGS="-Werror -Wall -fsanitize=address" LDFLAGS="-fsanitize=address"
+      run: make -j8 CFLAGS="-Werror -Wall -Wextra -Wno-sign-compare -fsanitize=address" LDFLAGS="-fsanitize=address"
     - name: Run unit tests
       run: make -C tests/unit CFLAGS="-fsanitize=address" LDFLAGS="-fsanitize=address" check

@@ -5,20 +5,24 @@
 #####################################################
 body common control
 {
-    inputs => { "../default.sub.cf" };
-    bundlesequence  => { default("$(this.promise_filename)") };
-    version => "1.0";
+  inputs => { "../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent check
 {
   vars:
-    "command" string => "$(sys.cf_agent) -D AUTO -KIf $(this.promise_filename).sub";
+    "command"
+      string => "$(sys.cf_agent) -D AUTO -KIf $(this.promise_filename).sub";
 
   methods:
-      "check"
-        usebundle => dcs_passif_output(".*error:.*", ".*(Assertion.*failed|fault).*",
-                                       $(command), $(this.promise_filename));
+    "check"
+      usebundle => dcs_passif_output(
+        ".*error:.*",
+        ".*(Assertion.*failed|fault).*",
+        $(command),
+        $(this.promise_filename)
+      );
 }

@@ -1,12 +1,10 @@
 # Reachable bundle tests verify that you are allowed have references
 # to undefined bundles, as long as they are not actually called.
-
 # These tests are left very simple on purpose,
 # they are not using the test framework.
 # They should be seen together, note that defined vs undefined variants are
 # almost identical, just replacing one detail to show what should work
 # and what should error.
-
 bundle agent bar(x)
 {
   # bar exists and it's the bundle we want, so this will pass:
@@ -18,6 +16,5 @@ bundle agent bar(x)
 bundle agent main
 {
   methods:
-    "foo"
-      usebundle => bar("baz");
+    "foo" usebundle => bar("baz");
 }

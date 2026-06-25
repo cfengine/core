@@ -1,44 +1,42 @@
 # Tests that no mail is sent by cf-execd on the first run (hence the old log
 # doesn't exist) and if the new log is empty.
-
 body common control
 {
-    inputs => { "../default.sub.cf", "mailfilter_common.cf.sub" };
-    bundlesequence => { default($(this.promiser_filename)) };
+  inputs => { "../default.sub.cf", "mailfilter_common.cf.sub" };
+  bundlesequence => { default($(this.promiser_filename)) };
 }
 
 bundle agent init
 {
   vars:
-      "reports"  slist => {
-                          };
+    "reports" slist => {};
 
-      # No mail is expected at all, since everything is filtered.
-      "expected" slist => { };
-      "unexpected" slist => { ".+" };
-
-      "includes" slist => {
-                          };
-      "excludes" slist => {
-                          };
+    # No mail is expected at all, since everything is filtered.
+    "expected" slist => {};
+    "unexpected" slist => { ".+" };
+    "includes" slist => {};
+    "excludes" slist => {};
 
   methods:
-      "any" usebundle => prepare_mailfilter_test(@(reports),
-                                                 @(includes),
-                                                 @(excludes));
+    "any"
+      usebundle => prepare_mailfilter_test(
+        @(reports), @(includes), @(excludes)
+      );
 }
 
 bundle agent test
 {
   meta:
-      "test_soft_fail" string => "windows",
-        meta => { "ENT-10215" };
+    "test_soft_fail"
+      string => "windows",
+      meta => { "ENT-10215" };
 }
 
 bundle agent check
 {
   methods:
-      "any" usebundle => check_cf_execd_mail(@(init.expected),
-                                             @(init.unexpected),
-                                             $(this.promise_filename));
+    "any"
+      usebundle => check_cf_execd_mail(
+        @(init.expected), @(init.unexpected), $(this.promise_filename)
+      );
 }

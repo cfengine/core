@@ -1,40 +1,40 @@
 # Tests that without mail filters, everything is mailed by cf-execd.
-
 body common control
 {
-    inputs => { "../default.sub.cf", "mailfilter_common.cf.sub" };
-    bundlesequence => { default($(this.promise_filename)) };
+  inputs => { "../default.sub.cf", "mailfilter_common.cf.sub" };
+  bundlesequence => { default($(this.promise_filename)) };
 }
 
 bundle agent init
 {
   vars:
-      "reports"  slist => {
-                            "CorrectString1",
-                            "CorrectString2",
-                          };
-      "includes" slist => { };
-      "excludes" slist => { };
+    "reports" slist => { "CorrectString1", "CorrectString2" };
+    "includes" slist => {};
+    "excludes" slist => {};
 
   methods:
-      "any" usebundle => prepare_mailfilter_test(@(reports),
-                                                 @(includes),
-                                                 @(excludes));
+    "any"
+      usebundle => prepare_mailfilter_test(
+        @(reports), @(includes), @(excludes)
+      );
 }
 
 bundle agent test
 {
   meta:
-      "test_soft_fail" string => "windows",
-        meta => { "ENT-10215" };
+    "test_soft_fail"
+      string => "windows",
+      meta => { "ENT-10215" };
 }
 
 bundle agent check
 {
   vars:
-      "empty_list" slist => { };
+    "empty_list" slist => {};
+
   methods:
-      "any" usebundle => check_cf_execd_mail(@(init.reports),
-                                             @(empty_list),
-                                             $(this.promise_filename));
+    "any"
+      usebundle => check_cf_execd_mail(
+        @(init.reports), @(empty_list), $(this.promise_filename)
+      );
 }

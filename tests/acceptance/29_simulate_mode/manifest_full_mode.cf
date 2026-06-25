@@ -1,14 +1,13 @@
 body common control
 {
-      inputs => {
-        "../default.sub.cf",
-        "./prepare_files_for_simulate_tests.cf.sub",
-        "./normalize_agent_output.cf.sub"
-      };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => {
+    "../default.sub.cf",
+    "./prepare_files_for_simulate_tests.cf.sub",
+    "./normalize_agent_output.cf.sub",
+  };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
-
 
 bundle agent init
 {
@@ -19,11 +18,12 @@ bundle agent init
 bundle agent test
 {
   meta:
-    "test_soft_fail" string => "(solaris|aix|hpux|windows)",
+    "test_soft_fail"
+      string => "(solaris|aix|hpux|windows)",
       meta => { "ENT-6540,ENT-10254" };
-      # ENT-6540 exotics fail to delete chroot
-      # ENT-10254 tests fail on Windows due to CRLF
 
+    # ENT-6540 exotics fail to delete chroot
+    # ENT-10254 tests fail on Windows due to CRLF
     "description" -> { "ENT-5301" }
       string => "Test that files promises in --simulate=manifest-full mode produce proper output and only make changes in chroot";
 
@@ -37,9 +37,15 @@ bundle agent test
 bundle agent check
 {
   methods:
-    "normalize_agent_results" usebundle => normalize_agent_results("$(this.promise_filename).temp",
-                                                                   "$(this.promise_filename).actual");
-    "check" usebundle => dcs_check_diff("$(this.promise_filename).actual",
-                                        "$(this.promise_filename).expected",
-                                        "$(this.promise_filename)");
+    "normalize_agent_results"
+      usebundle => normalize_agent_results(
+        "$(this.promise_filename).temp", "$(this.promise_filename).actual"
+      );
+
+    "check"
+      usebundle => dcs_check_diff(
+        "$(this.promise_filename).actual",
+        "$(this.promise_filename).expected",
+        "$(this.promise_filename)"
+      );
 }

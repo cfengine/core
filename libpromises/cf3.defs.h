@@ -398,6 +398,7 @@ typedef enum
 #define CF_RUNC     "runagent"
 #define CF_KEYGEN   "keygenerator"
 #define CF_HUBC     "hub"
+#define CF_WATCHC   "watch"
 
 typedef enum
 {
@@ -409,6 +410,7 @@ typedef enum
     AGENT_TYPE_RUNAGENT,
     AGENT_TYPE_KEYGEN,
     AGENT_TYPE_HUB,
+    AGENT_TYPE_WATCH,
     AGENT_TYPE_NOAGENT
 } AgentType;
 

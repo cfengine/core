@@ -5,25 +5,26 @@
 # agent execution.
 #
 ##########################################################################
-
-
 body common control
 {
-      inputs => {
-                  "../../default.sub.cf",
-      };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent check
 {
   vars:
-    "command" string => "$(sys.cf_agent) -Kf $(this.promise_filename).sub -DAUTO";
+    "command"
+      string => "$(sys.cf_agent) -Kf $(this.promise_filename).sub -DAUTO";
 
   methods:
     "check"
-      usebundle => dcs_passif_output(".*aborted on defined class 'abort_bundle_please'.*PASS.*", ".*Should Never Reach.*", $(command), $(this.promise_filename));
+      usebundle => dcs_passif_output(
+        ".*aborted on defined class 'abort_bundle_please'.*PASS.*",
+        ".*Should Never Reach.*",
+        $(command),
+        $(this.promise_filename)
+      );
 }

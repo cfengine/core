@@ -1,31 +1,27 @@
 # Test $(this.promise_dirname)
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-      "expected" string => dirname($(this.promise_filename));
+    "expected" string => dirname($(this.promise_filename));
 }
 
 #######################################################
-
 bundle agent test
 {
 }
 
 #######################################################
-
 bundle agent check
 {
   classes:
-      "ok" expression => strcmp($(init.expected), $(this.promise_dirname));
+    "ok" expression => strcmp($(init.expected), $(this.promise_dirname));
 
   reports:
     DEBUG::
@@ -33,6 +29,7 @@ bundle agent check
 
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

@@ -3,39 +3,34 @@
 # Files read in as templates, check variable expansion
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   files:
-      "$(G.testfile).expected"
+    "$(G.testfile).expected"
       create => "true",
       edit_line => init_expected,
       edit_defaults => init_empty;
 
   files:
-      "$(G.testfile).template"
+    "$(G.testfile).template"
       create => "true",
       edit_line => init_template,
       edit_defaults => init_empty;
-
 }
 
 #######
-
 bundle edit_line init_template
 {
-insert_lines:
-
-"BEGIN
+  insert_lines:
+    "BEGIN
 $(const.dollar)(test.scalar)
 
 CCCCCCCC
@@ -47,17 +42,14 @@ DDDDDDDD
 <title>$(const.dollar)(test.list)</title>
 [%CFEngine END %]
 "
-
-insert_type => "preserve_all_lines";
+      insert_type => "preserve_all_lines";
 }
 
 #######
-
 bundle edit_line init_expected
 {
-insert_lines:
-
-"BEGIN
+  insert_lines:
+    "BEGIN
 One upon a time...
 
 CCCCCCCC
@@ -68,43 +60,40 @@ DDDDDDDD
 <title>Many times</title>
 <title>Upon a star</title>
 "
-
-insert_type => "preserve_all_lines";
+      insert_type => "preserve_all_lines";
 }
 
 body edit_defaults init_empty
 {
-      empty_file_before_editing => "true";
+  empty_file_before_editing => "true";
 }
 
 #######################################################
-
 bundle agent test
 {
-vars:
+  vars:
+    "scalar" string => "One upon a time...";
+    "list" slist => { "Many times", "Upon a star" };
 
-  "scalar" string => "One upon a time...";
-  "list"   slist  => { "Many times", "Upon a star" };
+  classes:
+    "fishy" expression => "any";
 
-classes:
-
-  "fishy" expression => "any";
-
-files:
-
-   "$(G.testfile).actual"
-           create => "true",
-    edit_template => "$(G.testfile).template";
+  files:
+    "$(G.testfile).actual"
+      create => "true",
+      edit_template => "$(G.testfile).template";
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
-      "any" usebundle => dcs_check_diff("$(G.testfile).expected",
-                                            "$(G.testfile).actual",
-                                            "$(this.promise_filename)");
+    "any"
+      usebundle => dcs_check_diff(
+        "$(G.testfile).expected",
+        "$(G.testfile).actual",
+        "$(this.promise_filename)"
+      );
 }
 
 ### PROJECT_ID: core

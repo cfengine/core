@@ -1,51 +1,49 @@
 # Test that execresult is called multiple times with the same command if
 # 'ifelapsed => "0"' is used.
-
 body common control
 {
-    inputs => { "../../default.sub.cf" };
-    bundlesequence => { default("$(this.promise_filename)") };
-    version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent check_date(x)
 {
   vars:
-      "reports_file" string => "$(G.testdir)/execresult_action_immediate_report";
+    "reports_file" string => "$(G.testdir)/execresult_action_immediate_report";
 
-      "date" string => execresult("date; sleep 1", "useshell"),
-        action => immediate;
+    "date"
+      string => execresult("date; sleep 1", "useshell"),
+      action => immediate;
 
   reports:
-      "Date for ${x}: ${date}"
-        report_to_file => "$(reports_file)";
+    "Date for ${x}: ${date}" report_to_file => "$(reports_file)";
 }
 
 bundle agent test
 {
   meta:
-      "description" -> {"ENT-7478"}
-        string => "If 'ifelapsed => 0' is used, execresult() should run the given command every time";
-      "test_soft_fail" string => "windows",
-        meta => { "ENT-10217" };
+    "description" -> { "ENT-7478" }
+      string => "If 'ifelapsed => 0' is used, execresult() should run the given command every time";
+
+    "test_soft_fail"
+      string => "windows",
+      meta => { "ENT-10217" };
 
   methods:
-      "foo" usebundle => check_date("foo");
-      "bar" usebundle => check_date("bar");
+    "foo" usebundle => check_date("foo");
+    "bar" usebundle => check_date("bar");
 }
-
 
 bundle agent check
 {
   vars:
-      "content"
-        slist => readstringlist( "$(check_date.reports_file)",
-                                 "",
-                                 '$(const.n)',
-                                 inf,
-                                 inf);
-      "count"
-        int => length( content );
+    "content"
+      slist => readstringlist(
+        "$(check_date.reports_file)", "", '$(const.n)', inf, inf
+      );
+
+    "count" int => length(content);
 
   reports:
     DEBUG|EXTRA::
@@ -55,6 +53,6 @@ bundle agent check
     any::
       # Pass if there are 6 lines, 3 for each check_date bundle actuation,
       # indicating that execresult is being called once for each pass.
-      "$(this.promise_filename) Pass" if => strcmp( $(count), 6 );
-      "$(this.promise_filename) FAIL" unless => strcmp( $(count), 6 );
+      "$(this.promise_filename) Pass" if => strcmp($(count), 6);
+      "$(this.promise_filename) FAIL" unless => strcmp($(count), 6);
 }

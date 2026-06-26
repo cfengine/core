@@ -3,21 +3,19 @@
 # Test filesize(), simple
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };   
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent init
 {
   files:
-      "$(G.testfile)"
-      delete => init_delete;
-      
-      "$(G.testfile)"
+    "$(G.testfile)" delete => init_delete;
+
+    "$(G.testfile)"
       create => "true",
       edit_line => init_fill_in;
 }
@@ -25,46 +23,44 @@ bundle agent init
 bundle edit_line init_fill_in
 {
   insert_lines:
-
-      "0:1:2
+    "0:1:2
 this:is:a:test
 1:2:3";
-
 }
 
 body delete init_delete
 {
-      dirlinks => "delete";
-      rmdirs   => "true";
+  dirlinks => "delete";
+  rmdirs => "true";
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-      "known_val" int => filesize("$(G.testfile)");
-      "known_zero" int => filesize("$(G.etc_null)");
-      "unknown" int => filesize("/There/Is/nosuch/Name/as-this");
+    "known_val" int => filesize("$(G.testfile)");
+    "known_zero" int => filesize("$(G.etc_null)");
+    "unknown" int => filesize("/There/Is/nosuch/Name/as-this");
 }
 
 #######################################################
-
 bundle agent check
 {
   vars:
-      windows::
-        "testfilesize" int => "30";
-      !windows::
-        "testfilesize" int => "27";
+    windows::
+      "testfilesize" int => "30";
+
+    !windows::
+      "testfilesize" int => "27";
 
   classes:
-      "var" expression => isvariable("test.unknown");
+    "var" expression => isvariable("test.unknown");
 
-      "ok" and => {   
-		    "!var",
-		    strcmp("$(test.known_val)", "$(testfilesize)"),
-		    strcmp("$(test.known_zero)", "0"),
+    "ok"
+      and => {
+        "!var",
+        strcmp("$(test.known_val)", "$(testfilesize)"),
+        strcmp("$(test.known_zero)", "0"),
       };
 
   reports:

@@ -3,74 +3,71 @@
 # Create a file, check owners/mode
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   files:
-      "$(G.testfile)"
-      delete => init_delete;
+    "$(G.testfile)" delete => init_delete;
 }
 
 body delete init_delete
 {
-      dirlinks => "delete";
-      rmdirs   => "true";
+  dirlinks => "delete";
+  rmdirs => "true";
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-      "mode" int => "0644";
+    "mode" int => "0644";
 
   files:
-      "$(G.testfile)"
+    "$(G.testfile)"
       create => "true",
       perms => test_perms($(mode));
 }
 
 body perms test_perms(m)
 {
-      mode => "$(m)";
-      owners => { "0" };
-      groups => { "0" };
+  mode => "$(m)";
+  owners => { "0" };
+  groups => { "0" };
 }
 
 #######################################################
-
 bundle agent check
 {
   vars:
     !windows::
       "expect[permoct]" string => "$(test.mode)";
+
     any::
       "expect[nlink]" string => "1";
       "expect[uid]" string => "\d+";
       "expect[gid]" string => "\d+";
       "expect[size]" string => "0";
-
       "fields" slist => getindices("expect");
       "result[$(fields)]" string => filestat("$(G.testfile)", "$(fields)");
 
   classes:
-      "not_ok" not => regcmp("$(expect[$(fields)])", "$(result[$(fields)])");
+    "not_ok" not => regcmp("$(expect[$(fields)])", "$(result[$(fields)])");
 
   reports:
     DEBUG::
       "expected: $(fields) = '$(expect[$(fields)])'";
       "got:      $(fields) = '$(result[$(fields)])'";
+
     !not_ok::
       "$(this.promise_filename) Pass";
+
     not_ok::
       "$(this.promise_filename) FAIL";
 }

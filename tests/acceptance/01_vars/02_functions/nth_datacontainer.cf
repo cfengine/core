@@ -3,60 +3,54 @@
 # Test nth() with data container input
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   files:
-      "$(G.testfile).expected"
+    "$(G.testfile).expected"
       copy_from => local_cp("$(this.promise_filename).expected");
 }
 
 #######################################################
-
 bundle common test_common
 {
   vars:
-      "data"    data   => readjson("$(this.promise_filename).json", "100k");
-      "datastr" string => format("%S", data);
+    "data" data => readjson("$(this.promise_filename).json", "100k");
+    "datastr" string => format("%S", data);
 
-      "numbers"  ilist  => { "-100", "-1", 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 1000 };
-      "keys" slist  => getindices(data);
-      "object_keys" slist => getindices("data[object]");
-      "list_keys" slist => getindices("data[list]");
-      "all_keys" slist =>
-      {
-        @(object_keys),
-        @(list_keys),
-        "foo", "bar", "",
-        $(numbers),
-        $(keys)
+    "numbers"
+      ilist => { "-100", "-1", 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 1000 };
+
+    "keys" slist => getindices(data);
+    "object_keys" slist => getindices("data[object]");
+    "list_keys" slist => getindices("data[list]");
+
+    "all_keys"
+      slist => {
+        @(object_keys), @(list_keys), "foo", "bar", "", $(numbers), $(keys)
       };
 
-      "primitives[$(keys)]" string => nth(data, $(keys));
-      "list[$(all_keys)]" string => nth("data[list]", $(all_keys));
-      "object[$(all_keys)]" string => nth("data[object]", $(all_keys));
+    "primitives[$(keys)]" string => nth(data, $(keys));
+    "list[$(all_keys)]" string => nth("data[list]", $(all_keys));
+    "object[$(all_keys)]" string => nth("data[object]", $(all_keys));
 
   classes:
-
-      "hasprimitive_$(keys)" expression => isvariable("primitives[$(keys)]");
-      "haslist_$(all_keys)" expression => isvariable("list[$(all_keys)]");
-      "hasobject_$(all_keys)" expression => isvariable("object[$(all_keys)]");
+    "hasprimitive_$(keys)" expression => isvariable("primitives[$(keys)]");
+    "haslist_$(all_keys)" expression => isvariable("list[$(all_keys)]");
+    "hasobject_$(all_keys)" expression => isvariable("object[$(all_keys)]");
 }
 
 bundle agent test
 {
   files:
-
-      "$(G.testfile).actual"
+    "$(G.testfile).actual"
       create => "true",
       edit_line => test_insert;
 }
@@ -64,27 +58,27 @@ bundle agent test
 bundle edit_line test_insert
 {
   insert_lines:
+    "jsonstring = $(test_common.datastr)";
+    "keys:json = $(test_common.keys)";
 
-      "jsonstring = $(test_common.datastr)";
-      "keys:json = $(test_common.keys)";
-
-      "primitive:json[$(test_common.keys)] = $(test_common.primitives[$(test_common.keys)])"
+    "primitive:json[$(test_common.keys)] = $(test_common.primitives[$(test_common.keys)])"
       if => "hasprimitive_$(test_common.keys)";
 
-      "list:json[$(test_common.all_keys)] = $(test_common.list[$(test_common.all_keys)])"
+    "list:json[$(test_common.all_keys)] = $(test_common.list[$(test_common.all_keys)])"
       if => "haslist_$(test_common.all_keys)";
 
-      "object:json[$(test_common.all_keys)] = $(test_common.object[$(test_common.all_keys)])"
+    "object:json[$(test_common.all_keys)] = $(test_common.object[$(test_common.all_keys)])"
       if => "hasobject_$(test_common.all_keys)";
-
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
-      "any" usebundle => dcs_check_diff("$(G.testfile).actual",
-                                       "$(G.testfile).expected",
-                                       "$(this.promise_filename)");
+    "any"
+      usebundle => dcs_check_diff(
+        "$(G.testfile).actual",
+        "$(G.testfile).expected",
+        "$(this.promise_filename)"
+      );
 }

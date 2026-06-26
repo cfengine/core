@@ -1,15 +1,12 @@
 # Tests that normal ordering (classes before vars) is adhered to in commmon
 # bundles, leading to correct resolution regardless of policy order.
-
 # This check tests that
 # 1. Common bundles are converged before other bundles.
 # 2. Common bundles promises follow normal ordering
-
 body common control
 {
-
-      bundlesequence  => { check };
-      version => "1.0";
+  bundlesequence => { check };
+  version => "1.0";
 }
 
 bundle agent check
@@ -24,16 +21,14 @@ bundle agent check
 # It is critical that the common bundle is declared after the agent bundles
 bundle common g_stuff
 {
-      # promise type ordering here is critical
+  # promise type ordering here is critical
   vars:
     trigger::
-      "one"  string  => "Pas"; 
+      "one" string => "Pas";
 
     any::
       "two" slist => { "$(one)s" };
 
   classes:
-      "trigger" expression => "any";
-
+    "trigger" expression => "any";
 }
-

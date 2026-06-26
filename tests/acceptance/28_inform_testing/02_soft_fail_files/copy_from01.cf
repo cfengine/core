@@ -31,4 +31,3 @@ body copy_from example(from)
   compare => "digest";
   preserve => "true";
 }
-

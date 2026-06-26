@@ -1,35 +1,33 @@
 # Test that cf-promises doesn't fail if ppkeys are missing
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "2.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "2.0";
 }
 
 bundle agent test
 {
   meta:
-
-      "description" -> { "CFE-2383", "CFE-2310" }
-        string => "Test that json representation of policy is not truncated.";
+    "description" -> { "CFE-2383", "CFE-2310" }
+      string => "Test that json representation of policy is not truncated.";
 
   vars:
-      "output"
-        string => execresult( "$(sys.cf_promises) -p json -f $(this.promise_filename).sub", "noshell" );
-
+    "output"
+      string => execresult(
+        "$(sys.cf_promises) -p json -f $(this.promise_filename).sub", "noshell"
+      );
 }
 
 bundle agent check
 {
   classes:
-
-      "validated_ok" expression => regcmp( ".*endflag.*", $(test.output) );
+    "validated_ok" expression => regcmp(".*endflag.*", $(test.output));
 
   reports:
-
     validated_ok::
       "$(this.promise_filename) Pass";
+
     !validated_ok::
       "$(this.promise_filename) FAIL";
 }

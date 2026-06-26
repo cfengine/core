@@ -1,8 +1,8 @@
 body common control
 {
-        inputs => { "../../default.sub.cf" };
-        bundlesequence  => { default("$(this.promise_filename)") };
-        version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent init
@@ -12,19 +12,19 @@ bundle agent init
       "$(G.dos2unix) $(this.promise_filename).expected" -> { "ENT-10433" };
 
   files:
-      "$(G.testdir)/actual.txt"
-        delete => tidy;
+    "$(G.testdir)/actual.txt" delete => tidy;
 }
 
 bundle agent test
 {
   meta:
-      "description" -> { "CFE-2230" }
-        string => "Test that iteration over the getindices() of a data container
+    "description" -> { "CFE-2230" }
+      string => "Test that iteration over the getindices() of a data container
                    is not interrupted by nulls.";
 
   vars:
-      "data"            data => '{
+    "data"
+      data => '{
   "instanceId": "i-f444554e",
   "billingProducts": null,
   "instanceType": "m3.large",
@@ -41,7 +41,8 @@ bundle agent test
   "devpayProductCodes": null
 }';
 
-      "data2"           data => '{
+    "data2"
+      data => '{
   "instanceId" : "i-f444554e",
   "instanceType" : "m3.large",
   "accountId" : "444444444444",
@@ -55,26 +56,26 @@ bundle agent test
   "privateIp" : "10.44.44.4",
 }';
 
-      "keys" slist => getindices("data");
-      "$(keys)" string => "$(data[$(keys)])";
-
-      "keys2" slist => getindices("data2");
-      "$(keys2)" string => "$(data2[$(keys2)])";
+    "keys" slist => getindices("data");
+    "$(keys)" string => "$(data[$(keys)])";
+    "keys2" slist => getindices("data2");
+    "$(keys2)" string => "$(data2[$(keys2)])";
 
   reports:
+    "with nulls: $(keys) = $(data[$(keys)])"
+      report_to_file => "$(G.testdir)/actual.txt";
 
-      "with nulls: $(keys) = $(data[$(keys)])"
-        report_to_file => "$(G.testdir)/actual.txt";
-
-      "without nulls: $(keys2) = $(data2[$(keys2)])"
-        report_to_file => "$(G.testdir)/actual.txt";
+    "without nulls: $(keys2) = $(data2[$(keys2)])"
+      report_to_file => "$(G.testdir)/actual.txt";
 }
 
 bundle agent check
 {
   methods:
-      "Pass/Fail"
-        usebundle => dcs_check_diff( "$(G.testdir)/actual.txt",
-                                     "$(this.promise_filename).expected",
-                                     $(this.promise_filename) );
+    "Pass/Fail"
+      usebundle => dcs_check_diff(
+        "$(G.testdir)/actual.txt",
+        "$(this.promise_filename).expected",
+        $(this.promise_filename)
+      );
 }

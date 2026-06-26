@@ -3,61 +3,54 @@
 # Test that filesexist() can check for presence of files containing hashes
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-      "test_files" slist => { "example##4567", "example##123" };
+    "test_files" slist => { "example##4567", "example##123" };
 
   files:
-      "$(G.testdir)/$(test_files)"
-        create => "true";
+    "$(G.testdir)/$(test_files)" create => "true";
 }
 
 #######################################################
-
 bundle agent test
 {
   meta:
-      "description" -> { "CFE-2744" }
-        string => "Test that filesexist can verify files containing hashes exist";
+    "description" -> { "CFE-2744" }
+      string => "Test that filesexist can verify files containing hashes exist";
 
   vars:
-      "found_files" slist => findfiles( "$(G.testdir)/example##*");
+    "found_files" slist => findfiles("$(G.testdir)/example##*");
 
   classes:
     # This should always be true.
     # We check that the files that we found exist.
-
     "found_expected_files_with_filesexist"
-      expression => filesexist( "@(found_files)" ),
-        scope => "namespace";
-
+      expression => filesexist("@(found_files)"),
+      scope => "namespace";
 }
-#######################################################
 
+#######################################################
 bundle agent check
 {
   classes:
-      "ok" expression => "found_expected_files_with_filesexist";
+    "ok" expression => "found_expected_files_with_filesexist";
 
   reports:
     DEBUG|EXTRA::
       "Test files: $(init.test_files)";
-
       "Found files: $(test.found_files)";
 
       "filesexist() cannot validate files containing '#', not working as expected"
-        if => not( "ok" );
+        if => not("ok");
 
     ok::
       "$(this.promise_filename) Pass";

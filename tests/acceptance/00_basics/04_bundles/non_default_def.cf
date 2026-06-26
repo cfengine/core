@@ -1,25 +1,24 @@
 # Test that 'def' bundle in a non-default namespace works
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence => { default("$(this.promise_filename)") };
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
 }
 
 body file control
 {
-        namespace => "my_ns";
+  namespace => "my_ns";
 }
 
 bundle common def
 {
   vars:
-      "some_var" string => "some value";
+    "some_var" string => "some value";
 }
 
 body file control
 {
-        namespace => "default";
+  namespace => "default";
 }
 
 bundle agent init
@@ -33,13 +32,15 @@ bundle agent test
 bundle agent check
 {
   classes:
-      "ok" expression => strcmp("$(my_ns:def.some_var)", "some value");
+    "ok" expression => strcmp("$(my_ns:def.some_var)", "some value");
 
   reports:
     ok::
       "$(this.promise_filename) Pass";
+
     !ok.DEBUG::
       "my_ns:def.some_var: $(my_ns:def.some_var)";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

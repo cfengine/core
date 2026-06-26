@@ -5,13 +5,12 @@
 #####################################################
 body common control
 {
-    inputs => { "../../default.sub.cf" };
-    bundlesequence  => { default("$(this.promise_filename)") };
-    version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent test
 {
   meta:
@@ -19,18 +18,19 @@ bundle agent test
       string => "Test that or() behaves as expected";
 
   vars:
-    "f" # false
+    "f"
+      # false
       string => "(cfengine.(!cfengine))";
-    "T" # true, uppercase to be more different visually
+
+    "T"
+      # true, uppercase to be more different visually
       string => "(cfengine|(!cfengine))";
-    "f_name"
-      string => "f";
-    "T_name"
-      string => "T";
-    "f_name_name"
-      string => "f_name";
-    "T_name_name"
-      string => "T_name";
+
+    "f_name" string => "f";
+    "T_name" string => "T";
+    "f_name_name" string => "f_name";
+    "T_name_name" string => "T_name";
+
     "many_true"
       slist => {
         "any",
@@ -39,7 +39,8 @@ bundle agent test
         "(any.cfengine)",
         concat(not(or())),
         concat(not(or(or()))),
-    };
+      };
+
     "many_false"
       slist => {
         "(!any)",
@@ -49,11 +50,10 @@ bundle agent test
         concat(not("any")),
         concat(or()),
       };
-    "many_both"
-      slist => { @(many_true), @(many_false) };
+
+    "many_both" slist => { @(many_true), @(many_false) };
 
   classes:
-
     # All elements should be true, fail if one is false:
     "ok"
       scope => "namespace",
@@ -61,15 +61,12 @@ bundle agent test
         # Sanity check:
         "any",
         "cfengine",
-
         # or() with 0 arguments should default to false:
         not(or()),
-
         # or() with 1 static string:
         or("any"),
         or("cfengine"),
         or("!(!cfengine)"),
-
         # or() with 1 string with variable expansion(s):
         or("$(T)"),
         or("!$(f)"),
@@ -81,7 +78,6 @@ bundle agent test
         or("!(!any)|$(f)"),
         or("$(T)|$(f)"),
         or("$(f)|$(T)"),
-
         # or() with slist:
         # Careful, if there are expressions in list (using | operator)
         # they should be parenthesized for this to work:
@@ -91,7 +87,6 @@ bundle agent test
         or(not(join(".", many_false))),
         or(not(join("|", many_false))),
         or(not(join(".", many_both))),
-
         # or() with 1 function call as argument:
         or(or("any")),
         or(or("cfengine")),
@@ -101,7 +96,6 @@ bundle agent test
         or(not(not("$(T)"))),
         or(strcmp("cfengine", "cfengine")),
         or(strcmp("any", not("$(f)"))),
-
         # or() with 2 arguments:
         or("any", "cfengine"),
         or("any", "!any"),
@@ -112,7 +106,6 @@ bundle agent test
         or("$(T)", "!$(f)"),
         or("$(T)", not("$(f)")),
         or(not("$(f)"), not("$(f)")),
-
         # or() with 3+ arguments (strings):
         or("any", "any", "any"),
         or("any", "any", "any", "any"),
@@ -142,17 +135,29 @@ bundle agent test
         or("$(f)", "$(f)", "$(f)", "$(T)", "$(T)", "$(T)"),
         or("$(f)", "$(f)", "$(T)", "$(T)", "$(T)", "$(T)"),
         or("$(f)", "$(T)", "$(T)", "$(T)", "$(T)", "$(T)"),
-
         # or() with 3+ function calls:
         or(not("any"), not("any"), not("!any")),
         or(not("any"), not("any"), not("any"), not("!any")),
         or(not("any"), not("any"), not("any"), not("any"), not("!any")),
-        or(not("any"), not("any"), not("any"), not("any"), not("any"), not("!any")),
+        or(
+          not("any"),
+          not("any"),
+          not("any"),
+          not("any"),
+          not("any"),
+          not("!any")
+        ),
         or(not("$(T)"), not("$(T)"), not("$(f)")),
         or(not("$(T)"), not("$(T)"), not("$(T)"), not("$(f)")),
         or(not("$(T)"), not("$(T)"), not("$(T)"), not("$(T)"), not("$(f)")),
-        or(not("$(T)"), not("$(T)"), not("$(T)"), not("$(T)"), not("$(T)"), not("$(f)")),
-
+        or(
+          not("$(T)"),
+          not("$(T)"),
+          not("$(T)"),
+          not("$(T)"),
+          not("$(T)"),
+          not("$(f)")
+        ),
         # or() with deep nesting:
         not(or(or())),
         not(or(or(or()))),
@@ -161,7 +166,6 @@ bundle agent test
         not(or(or(or(or(or(or())))))),
         or(or(or(or(or(or("any")))))),
         or(or(or(or(or(or("any", "cfengine")))))),
-
         # Double expansion:
         or("$($(T_name))"),
         or("$($(f_name))", "$($(T_name))"),
@@ -169,15 +173,17 @@ bundle agent test
         or("!$($(T_name))", "!$($(f_name))"),
         or("!$($(T_name))", "!$($(T_name))", "!$($(f_name))"),
         or(not("$($(T_name))"), not("$($(f_name))")),
-
         # Triple expansion:
         or("$($($(T_name_name)))"),
         or("$($($(f_name_name)))", "$($($(T_name_name)))"),
-        or("$($($(f_name_name)))", "$($($(f_name_name)))", "$($($(T_name_name)))"),
+        or(
+          "$($($(f_name_name)))",
+          "$($($(f_name_name)))",
+          "$($($(T_name_name)))"
+        ),
         or("!$($(T_name_name))", "!$($(f_name_name))"),
         or("!$($(T_name_name))", "!$($(T_name_name))", "!$($(f_name_name))"),
         or(not("$($(T_name_name))"), not("$($(f_name_name))")),
-
         # or() should always return any or !any,
         # this is important for backwards compatibility:
         strcmp(or("any"), "any"),
@@ -204,32 +210,26 @@ bundle agent test
         or("$(f)", "$(f)", "$(f)", "$(f)", "$(f)", "$(f)", "$(f)"),
         or("$(f)", "$(f)", "$(f)", "$(f)", "$(f)", "$(f)", "$(f)", "$(f)"),
       };
+
     # Should be skipped because of unresolved variable:
-    "fail_unresolved"
-      and => {
-        "any",
-        or("$(unresolved_var)"),
-      };
+    "fail_unresolved" and => { "any", or("$(unresolved_var)") };
+
     # Check that it's really skipped because of unresolved,
     # and not that it accidentally becomes false:
-    "fail_not_of_unresolved"
-      and => {
-        "any",
-        or(not("$(unresolved_var)")),
-      };
+    "fail_not_of_unresolved" and => { "any", or(not("$(unresolved_var)")) };
+
     "fail"
       scope => "namespace",
       expression => "fail_false|fail_unresolved|fail_not_of_unresolved";
 }
 
 #######################################################
-
 bundle agent check
 {
-
   reports:
     ok.(!fail)::
       "$(this.promise_filename) Pass";
+
     (!ok)|fail::
       "$(this.promise_filename) FAIL";
 }

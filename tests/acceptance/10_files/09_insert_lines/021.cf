@@ -3,83 +3,72 @@
 # Test idempotency of preserve_block
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   files:
-      "$(G.testfile).expected"
+    "$(G.testfile).expected"
       create => "true",
       edit_line => init_expected,
       edit_defaults => init_empty;
 
   files:
-      "$(G.testfile).actual"
+    "$(G.testfile).actual"
       create => "true",
       edit_line => init_file,
       edit_defaults => init_empty;
-
 }
 
 #######
-
 bundle edit_line init_file
 {
-insert_lines:
-
-"auto eth0.1190
+  insert_lines:
+    "auto eth0.1190
 iface eth0.1190 inet manual
 	up ifconfig eth0.1190 up"
-
-insert_type => "preserve_block";
+      insert_type => "preserve_block";
 }
 
 #######
-
 bundle edit_line init_expected
 {
-insert_lines:
-
-"auto eth0.1190
+  insert_lines:
+    "auto eth0.1190
 iface eth0.1190 inet manual
 	up ifconfig eth0.1190 up"
-
-insert_type => "preserve_block";
+      insert_type => "preserve_block";
 }
 
 body edit_defaults init_empty
 {
-      empty_file_before_editing => "true";
+  empty_file_before_editing => "true";
 }
 
 #######################################################
-
 bundle agent test
 {
-files:
-
-  # Do the same again to test idempotency of preserve_block
-
-   "$(G.testfile).actual"
-     edit_line => init_expected;
+  files:
+    # Do the same again to test idempotency of preserve_block
+    "$(G.testfile).actual" edit_line => init_expected;
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
-      "any" usebundle => dcs_check_diff("$(G.testfile).expected",
-                                            "$(G.testfile).actual",
-                                            "$(this.promise_filename)");
+    "any"
+      usebundle => dcs_check_diff(
+        "$(G.testfile).expected",
+        "$(G.testfile).actual",
+        "$(this.promise_filename)"
+      );
 }
 
 ### PROJECT_ID: core

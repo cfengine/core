@@ -4,20 +4,18 @@
 # to change it to an absolute link (but fail to)
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   files:
-      "$(G.testfile)"
+    "$(G.testfile)"
       create => "true",
       move_obstructions => "true",
       link_from => init_link;
@@ -25,67 +23,73 @@ bundle agent init
 
 body link_from init_link
 {
-      source => "$(G.etc_group)";
-      link_type => "relative";
+  source => "$(G.etc_group)";
+  link_type => "relative";
 }
 
 #######################################################
-
 bundle agent test
 {
   meta:
-      "test_skip_unsupported" string => "windows";
-      "test_suppress_fail" string => "freebsd",
-        meta => { "redmine5261" };
+    "test_skip_unsupported" string => "windows";
 
+    "test_suppress_fail"
+      string => "freebsd",
+      meta => { "redmine5261" };
 
   vars:
-      "inode" string => filestat("$(G.etc_group)", "ino");
+    "inode" string => filestat("$(G.etc_group)", "ino");
 
   files:
-      "$(G.testfile)"
+    "$(G.testfile)"
       classes => init_if_failed("test_ok"),
       link_from => test_link;
 }
 
 body link_from test_link
 {
-      source => "$(G.etc_group)";
-      link_type => "absolute";
+  source => "$(G.etc_group)";
+  link_type => "absolute";
 }
 
 body classes init_if_failed(c)
 {
-      repair_failed => { "$(c)" };
+  repair_failed => { "$(c)" };
 }
 
 #######################################################
-
 bundle agent check
 {
   vars:
-      "result" string => filestat(filestat("$(G.testfile)", "linktarget"), "ino");
-      "Lresult" string => filestat("$(G.testfile)", "ino");
+    "result" string => filestat(filestat("$(G.testfile)", "linktarget"), "ino");
+    "Lresult" string => filestat("$(G.testfile)", "ino");
 
-      # Tell us where the link points, but don't follow it
-      "link_target" string => filestat("$(G.testfile)", "linktarget_shallow");
+    # Tell us where the link points, but don't follow it
+    "link_target" string => filestat("$(G.testfile)", "linktarget_shallow");
 
   classes:
-      "okL" not => strcmp("$(test.inode)", "$(Lresult)");
-      "okT" not => strcmp("$(link_target)", "$(G.etc_group)");
-      "ok" and => { "test_ok", "okL", "okT",
-                    strcmp("$(test.inode)", "$(result)"),
-                    # Test that the symlink target starts with dot
-                    regcmp("\..*", "$(link_target)")
-                  };
+    "okL" not => strcmp("$(test.inode)", "$(Lresult)");
+    "okT" not => strcmp("$(link_target)", "$(G.etc_group)");
+
+    "ok"
+      and => {
+        "test_ok",
+        "okL",
+        "okT",
+        strcmp("$(test.inode)", "$(result)"),
+        # Test that the symlink target starts with dot
+        regcmp("\..*", "$(link_target)"),
+      };
 
   reports:
     DEBUG::
       "expected:     '$(test.inode)'";
       "got:          '$(Lresult)' => '$(result)'";
       "got this too: '$(G.etc_group)' => '$(link_target)'";
+
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

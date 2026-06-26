@@ -1,30 +1,39 @@
 # test of the def.json facility: complain if a bad JSON file is found
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent test
 {
   meta:
-      "test_soft_fail" string => "windows",
-        meta => { "ENT-10257" };
+    "test_soft_fail"
+      string => "windows",
+      meta => { "ENT-10257" };
 
   methods:
-      "" usebundle => file_copy("$(this.promise_filename).x.json", "$(sys.inputdir)$(const.dirsep)def.json");
+    ""
+      usebundle => file_copy(
+        "$(this.promise_filename).x.json",
+        "$(sys.inputdir)$(const.dirsep)def.json"
+      );
 }
 
 #######################################################
-
 bundle agent check
 {
   vars:
     "command" string => "$(sys.cf_promises) -v|$(G.grep) JSON";
 
   methods:
-      "" usebundle => dcs_passif_output(".*Could not parse JSON file $(sys.inputdir)$(const.dirsep)def.json.*", "", $(command), $(this.promise_filename));
+    ""
+      usebundle => dcs_passif_output(
+        ".*Could not parse JSON file $(sys.inputdir)$(const.dirsep)def.json.*",
+        "",
+        $(command),
+        $(this.promise_filename)
+      );
 }

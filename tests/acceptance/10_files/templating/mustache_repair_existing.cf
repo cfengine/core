@@ -3,43 +3,39 @@
 # Test that _repaired classes are defined on template repair 
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
-
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-      "origtestdir" string => dirname("$(this.promise_filename)");
+    "origtestdir" string => dirname("$(this.promise_filename)");
 
   files:
-      "$(G.testfile)"
-        create => "true",
-        comment => "Need to see if we define repair when file exists";
+    "$(G.testfile)"
+      create => "true",
+      comment => "Need to see if we define repair when file exists";
 }
 
 body delete init_delete
 {
-      dirlinks => "delete";
-      rmdirs   => "true";
+  dirlinks => "delete";
+  rmdirs => "true";
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-      "template_file" string => "$(init.origtestdir)/demo.mustache";
+    "template_file" string => "$(init.origtestdir)/demo.mustache";
 
   files:
-      "$(G.testfile)"
+    "$(G.testfile)"
       edit_template => "$(template_file)",
       template_method => "mustache",
       classes => classes_generic("templated_file"),
@@ -53,22 +49,25 @@ bundle agent test
 bundle agent check
 {
   vars:
-      "expect" string => readfile("$(init.origtestdir)/demo.expected", 4096);
-      "actual" string => readfile("$(G.testfile)", 4096);
+    "expect" string => readfile("$(init.origtestdir)/demo.expected", 4096);
+    "actual" string => readfile("$(G.testfile)", 4096);
 
   classes:
-      "content_ok" expression => regcmp("$(expect)", "$(actual)");
-      "repair_ok" expression => "templated_file_repaired";
-      "ok" and => { "content_ok", "repair_ok" };
+    "content_ok" expression => regcmp("$(expect)", "$(actual)");
+    "repair_ok" expression => "templated_file_repaired";
+    "ok" and => { "content_ok", "repair_ok" };
 
   reports:
     DEBUG::
       "expect: '$(expect)'";
       "actual: '$(actual)'";
+
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }
+
 ### PROJECT_ID: core
 ### CATEGORY_ID: 27

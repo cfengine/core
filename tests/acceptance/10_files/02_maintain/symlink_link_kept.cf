@@ -4,76 +4,76 @@
 # be happy with that
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   files:
-      "$(G.testfile).linked_to"
-        create => "true";
-      "$(G.testfile)"
-        create => "true",
-        move_obstructions => "true",
-        link_from => init_link;
+    "$(G.testfile).linked_to" create => "true";
+
+    "$(G.testfile)"
+      create => "true",
+      move_obstructions => "true",
+      link_from => init_link;
 }
 
 body link_from init_link
 {
-      source => "$(G.testfile).linked_to";
-      link_type => "absolute";
+  source => "$(G.testfile).linked_to";
+  link_type => "absolute";
 }
 
 #######################################################
-
 bundle agent test
 {
   meta:
-      "test_skip_unsupported" string => "windows";
+    "test_skip_unsupported" string => "windows";
 
   vars:
-      "inode" string => filestat("$(G.testfile).linked_to", "ino");
+    "inode" string => filestat("$(G.testfile).linked_to", "ino");
 
   files:
-      "$(G.testfile)"
+    "$(G.testfile)"
       classes => test_if_ok("test_ok"),
       link_from => test_link;
 }
 
 body link_from test_link
 {
-      source => "$(G.testfile).linked_to";
-      link_type => "symlink";
+  source => "$(G.testfile).linked_to";
+  link_type => "symlink";
 }
 
 body classes test_if_ok(c)
 {
-      promise_kept => { "$(c)" };
+  promise_kept => { "$(c)" };
 }
 
 #######################################################
-
 bundle agent check
 {
   vars:
-      "result" string => filestat(filestat("$(G.testfile)", "linktarget"), "ino");
-      "Lresult" string => filestat("$(G.testfile)", "ino");
+    "result" string => filestat(filestat("$(G.testfile)", "linktarget"), "ino");
+    "Lresult" string => filestat("$(G.testfile)", "ino");
 
-      # This tells us where the link points
-      "link_target" string => filestat("$(G.testfile)", "linktarget");
+    # This tells us where the link points
+    "link_target" string => filestat("$(G.testfile)", "linktarget");
 
   classes:
-      "okL" not => strcmp("$(test.inode)", "$(Lresult)");
-      "ok" and => { "test_ok", "okL",
-                    strcmp("$(test.inode)", "$(result)"),
-                    strcmp("$(link_target)", "$(G.testfile).linked_to")
+    "okL" not => strcmp("$(test.inode)", "$(Lresult)");
+
+    "ok"
+      and => {
+        "test_ok",
+        "okL",
+        strcmp("$(test.inode)", "$(result)"),
+        strcmp("$(link_target)", "$(G.testfile).linked_to"),
       };
 
   reports:
@@ -81,8 +81,10 @@ bundle agent check
       "expected:     '$(test.inode)'";
       "got:          '$(Lresult)' => '$(result)'";
       "got this too: '$(G.testfile).linked_to' => '$(link_target)'";
+
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

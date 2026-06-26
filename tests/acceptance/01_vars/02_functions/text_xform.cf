@@ -1,42 +1,82 @@
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent test
 {
   vars:
-      "tests" slist => { "q1", "q2", "q3", "q4" };
-      "offsets" ilist => { "-1", "-2", "-5", "-10", "-20", "-26", "-27", "-28", "-10240",
-                          "0", "1", "2", "5", "10", "20", "26", "27", "28", "10240" };
-      "fn1" slist => { "string_head", "string_tail" };
-      "data[q1]" string => "this is the Question";
-      "data[q2]" string => "";
-      "data[q3]" string => "some text is not $(const.t) simple
+    "tests" slist => { "q1", "q2", "q3", "q4" };
+
+    "offsets"
+      ilist => {
+        "-1",
+        "-2",
+        "-5",
+        "-10",
+        "-20",
+        "-26",
+        "-27",
+        "-28",
+        "-10240",
+        "0",
+        "1",
+        "2",
+        "5",
+        "10",
+        "20",
+        "26",
+        "27",
+        "28",
+        "10240",
+      };
+
+    "fn1" slist => { "string_head", "string_tail" };
+    "data[q1]" string => "this is the Question";
+    "data[q2]" string => "";
+    "data[q3]" string => "some text is not $(const.t) simple
 
 ";
-      "data[q4]" string => readfile("$(this.promise_filename).txt", "inf");
+    "data[q4]" string => readfile("$(this.promise_filename).txt", "inf");
 
-      "data[$(tests)_string_reverse]" string => string_reverse("$(data[$(tests)])");
-      "data[$(tests)_string_length]" int => string_length("$(data[$(tests)])");
-      "data[$(tests)_string_upcase]" string => string_upcase("$(data[$(tests)])");
-      "data[$(tests)_string_downcase]" string => string_downcase("$(data[$(tests)])");
-      "data[$(tests)_string_head_$(offsets)]" string => string_head("$(data[$(tests)])", $(offsets));
-      "data[$(tests)_string_tail_$(offsets)]" string => string_tail("$(data[$(tests)])", $(offsets));
-      "data[$(tests)_string_head_inline_pos]" string => string_head("$(data[$(tests)])", 3);
-      "data[$(tests)_string_tail_inline_pos]" string => string_tail("$(data[$(tests)])", 3);
-      "data[$(tests)_string_head_inline_neg]" string => string_head("$(data[$(tests)])", "-3");
-      "data[$(tests)_string_tail_inline_neg]" string => string_tail("$(data[$(tests)])", "-3");
+    "data[$(tests)_string_reverse]"
+      string => string_reverse("$(data[$(tests)])");
+
+    "data[$(tests)_string_length]" int => string_length("$(data[$(tests)])");
+    "data[$(tests)_string_upcase]" string => string_upcase("$(data[$(tests)])");
+
+    "data[$(tests)_string_downcase]"
+      string => string_downcase("$(data[$(tests)])");
+
+    "data[$(tests)_string_head_$(offsets)]"
+      string => string_head("$(data[$(tests)])", $(offsets));
+
+    "data[$(tests)_string_tail_$(offsets)]"
+      string => string_tail("$(data[$(tests)])", $(offsets));
+
+    "data[$(tests)_string_head_inline_pos]"
+      string => string_head("$(data[$(tests)])", 3);
+
+    "data[$(tests)_string_tail_inline_pos]"
+      string => string_tail("$(data[$(tests)])", 3);
+
+    "data[$(tests)_string_head_inline_neg]"
+      string => string_head("$(data[$(tests)])", "-3");
+
+    "data[$(tests)_string_tail_inline_neg]"
+      string => string_tail("$(data[$(tests)])", "-3");
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
-      "check"  usebundle => dcs_check_state(test,
-                                           "$(this.promise_filename).expected.json",
-                                           $(this.promise_filename));
+    "check"
+      usebundle => dcs_check_state(
+        test,
+        "$(this.promise_filename).expected.json",
+        $(this.promise_filename)
+      );
 }

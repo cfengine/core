@@ -1,30 +1,26 @@
 bundle common test_meta
 {
   vars:
-      "description" string => "A user present does not get the home bundle run";
-      "story_id" string => "5525";
-      "covers" string => "operational_repaired";
+    "description" string => "A user present does not get the home bundle run";
+    "story_id" string => "5525";
+    "covers" string => "operational_repaired";
 }
 
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf", "user_queries.cf.sub" };
-      bundlesequence  => { default("$(this.promise_filename)") };
+  inputs => { "../../default.sub.cf", "user_queries.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
 }
 
 #######################################################
-
 bundle agent init
 {
   users:
-    "johndoe"
-      policy => "present";
+    "johndoe" policy => "present";
 }
 
 #######################################################
-
 bundle agent test
 {
   users:
@@ -48,15 +44,18 @@ bundle edit_line home_edit(x)
 }
 
 #######################################################
-
 bundle agent check
 {
   classes:
-    "ok" expression => strcmp("0", countlinesmatching("/home/johndoe", "$(G.testfile)"));
+    "ok"
+      expression => strcmp(
+        "0", countlinesmatching("/home/johndoe", "$(G.testfile)")
+      );
 
   reports:
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

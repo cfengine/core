@@ -3,65 +3,61 @@
 # Test that timestamped copying adds .cfsaved suffix (Issue 666)
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   files:
-      "$(G.testdir)/afile"
-      create => "true";
+    "$(G.testdir)/afile" create => "true";
 
-      # We can't use files promise here as it will remember we have created the file
-      # and will not generate backup file which we are trying to get.
+  # We can't use files promise here as it will remember we have created the file
+  # and will not generate backup file which we are trying to get.
   commands:
-      "$(G.echo) LimpBizkit > $(G.testdir)/destfile"
-      contain => shell;
+    "$(G.echo) LimpBizkit > $(G.testdir)/destfile" contain => shell;
 }
 
 body contain shell
 {
-      useshell => "true";
+  useshell => "true";
 }
 
 #######################################################
-
 bundle agent test
 {
   meta:
-      "test_soft_fail" string => "windows",
-        meta => { "ENT-10257" };
+    "test_soft_fail"
+      string => "windows",
+      meta => { "ENT-10257" };
 
   files:
-      "$(G.testdir)/destfile"
-      copy_from => cp_2_file("$(G.testdir)/afile");
+    "$(G.testdir)/destfile" copy_from => cp_2_file("$(G.testdir)/afile");
 }
 
-body copy_from cp_2_file(x) {
-      source => "$(x)";
-      copy_backup => "timestamp";
-      compare => "digest";
+body copy_from cp_2_file(x)
+{
+  source => "$(x)";
+  copy_backup => "timestamp";
+  compare => "digest";
 }
 
 #######################################################
-
 bundle agent check
 {
   files:
-      "$(G.testdir)/destfile.*\.cfsaved"
+    "$(G.testdir)/destfile.*\.cfsaved"
       touch => "true",
       classes => if_repaired("ok");
 
   reports:
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

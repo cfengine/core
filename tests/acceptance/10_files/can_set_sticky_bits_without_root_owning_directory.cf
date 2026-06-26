@@ -6,30 +6,24 @@
 # is set on the directory
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
-
 #######################################################
-
 bundle agent test
 {
   meta:
-
-      "description"
-        string => "Test that the agent can set the sticky
+    "description"
+      string => "Test that the agent can set the sticky
                    bit on a directory that root does not
                    own.";
 
-      "test_skip_unsupported"
-        string => "windows";
-      "test_skip_needs_work"
-        string => "!has_stat";
+    "test_skip_unsupported" string => "windows";
+    "test_skip_needs_work" string => "!has_stat";
 
   vars:
     !windows::
@@ -41,24 +35,31 @@ bundle agent test
   files:
     !windows::
       "$(G.testdir)/test_sgid/."
-      create => "true",
-      perms => mog( $(mode), $(owner), $(group) ),
-      classes => scoped_classes_generic("namespace", "test_sgid_dir");
+        create => "true",
+        perms => mog($(mode), $(owner), $(group)),
+        classes => scoped_classes_generic("namespace", "test_sgid_dir");
 }
 
 #######################################################
-
 bundle agent check
 {
-
   vars:
     test_sgid_dir_reached::
       "expect_permoct" string => "$(test.mode)";
-      "result_permoct" string => execresult('$(G.stat) -c %a $(G.testdir)/test_sgid', "useshell");
+
+      "result_permoct"
+        string => execresult(
+          '$(G.stat) -c %a $(G.testdir)/test_sgid', "useshell"
+        );
 
   methods:
-      "Compare Results"
-        usebundle => dcs_check_strcmp( "$(expect_permoct)", "$(result_permoct)", $(this.promise_filename), "false");
+    "Compare Results"
+      usebundle => dcs_check_strcmp(
+        "$(expect_permoct)",
+        "$(result_permoct)",
+        $(this.promise_filename),
+        "false"
+      );
 
   reports:
     DEBUG::

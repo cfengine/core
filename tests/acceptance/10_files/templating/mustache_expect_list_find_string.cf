@@ -5,146 +5,189 @@
 # (indicating you wrote to a different file and moved into place)
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
-
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   methods:
-      "empty good" usebundle => file_empty("$(G.testfile).good");
-      "empty bad" usebundle => file_empty("$(G.testfile).bad");
+    "empty good" usebundle => file_empty("$(G.testfile).good");
+    "empty bad" usebundle => file_empty("$(G.testfile).bad");
 
-      "first filestat good" usebundle => init_filestat("good1", "$(G.testfile).good");
-      "first filestat bad" usebundle => init_filestat("bad1", "$(G.testfile).bad");
+    "first filestat good"
+      usebundle => init_filestat("good1", "$(G.testfile).good");
 
-      "Remove good" usebundle => dcs_fini("$(G.testfile).good");
-      "Remove bad" usebundle => dcs_fini("$(G.testfile).bad");
+    "first filestat bad"
+      usebundle => init_filestat("bad1", "$(G.testfile).bad");
 
-      "ready good" usebundle => file_make("$(G.testfile).good", "# Set good");
-      "ready bad" usebundle => file_make("$(G.testfile).bad", "# Set bad");
+    "Remove good" usebundle => dcs_fini("$(G.testfile).good");
+    "Remove bad" usebundle => dcs_fini("$(G.testfile).bad");
+    "ready good" usebundle => file_make("$(G.testfile).good", "# Set good");
+    "ready bad" usebundle => file_make("$(G.testfile).bad", "# Set bad");
 
-      "link good" usebundle => file_hardlink("$(G.testfile).good", "$(G.testfile).goodlink");
-      "link bad" usebundle => file_hardlink("$(G.testfile).bad", "$(G.testfile).badlink");
+    "link good"
+      usebundle => file_hardlink(
+        "$(G.testfile).good", "$(G.testfile).goodlink"
+      );
 
-      "second filestat good" usebundle => init_filestat("good2", "$(G.testfile).good");
-      "second filestat bad" usebundle => init_filestat("bad2", "$(G.testfile).bad");
+    "link bad"
+      usebundle => file_hardlink("$(G.testfile).bad", "$(G.testfile).badlink");
+
+    "second filestat good"
+      usebundle => init_filestat("good2", "$(G.testfile).good");
+
+    "second filestat bad"
+      usebundle => init_filestat("bad2", "$(G.testfile).bad");
 }
 
 bundle agent init_filestat(n, f)
 {
   vars:
-      "filestat_$(n)" string => format("%s,%s", filestat($(f), "basename"), filestat($(f), "nlink"));
+    "filestat_$(n)"
+      string => format(
+        "%s,%s", filestat($(f), "basename"), filestat($(f), "nlink")
+      );
 }
 
 #######################################################
-
 bundle agent test
 {
   meta:
-      "test_soft_fail" string => "windows",
-        meta => { "ENT-10257" };
+    "test_soft_fail"
+      string => "windows",
+      meta => { "ENT-10257" };
 
   methods:
-      "mustache good" usebundle => file_mustache_jsonstring($(template),
-                                                                '{"mykeys": ["template expects list of strings"]}',
-                                                                "$(G.testfile).good");
+    "mustache good"
+      usebundle => file_mustache_jsonstring(
+        $(template),
+        '{"mykeys": ["template expects list of strings"]}',
+        "$(G.testfile).good"
+      );
 
-      "mustache bad" usebundle => file_mustache_jsonstring($(template),
-                                                                '{"mykeys": "string but template expects list of strings"}',
-                                                                "$(G.testfile).bad");
+    "mustache bad"
+      usebundle => file_mustache_jsonstring(
+        $(template),
+        '{"mykeys": "string but template expects list of strings"}',
+        "$(G.testfile).bad"
+      );
 
-      "third filestat good" usebundle => init_filestat("good3", "$(G.testfile).good");
-      "third filestat bad" usebundle => init_filestat("bad3", "$(G.testfile).bad");
+    "third filestat good"
+      usebundle => init_filestat("good3", "$(G.testfile).good");
+
+    "third filestat bad"
+      usebundle => init_filestat("bad3", "$(G.testfile).bad");
 
   vars:
-      "template" string => "$(this.promise_filename).mustache";
-
-      "actual_good" string => readfile("$(G.testfile).good", 4096);
-      "actual_bad" string => readfile("$(G.testfile).bad", 4096);
+    "template" string => "$(this.promise_filename).mustache";
+    "actual_good" string => readfile("$(G.testfile).good", 4096);
+    "actual_bad" string => readfile("$(G.testfile).bad", 4096);
 }
 
-
 #######################################################
-
 bundle agent check
 {
   vars:
-      "expected_good" string => "#DO NOT EDIT - MANAGED FILE
+    "expected_good"
+      string => "#DO NOT EDIT - MANAGED FILE
 template expects list of strings
 ";
 
-      "expected_bad" string => "# Set bad";
+    "expected_bad" string => "# Set bad";
 
-      "filestats_good" slist => { "$(init_filestat.filestat_good1)", "$(init_filestat.filestat_good2)", "$(init_filestat.filestat_good3)" };
-      "filestats_bad" slist => { "$(init_filestat.filestat_bad1)", "$(init_filestat.filestat_bad2)", "$(init_filestat.filestat_bad3)" };
+    "filestats_good"
+      slist => {
+        "$(init_filestat.filestat_good1)",
+        "$(init_filestat.filestat_good2)",
+        "$(init_filestat.filestat_good3)",
+      };
 
-      "filestats_good_str" string => format("%S", filestats_good);
-      "filestats_bad_str" string => format("%S", filestats_bad);
+    "filestats_bad"
+      slist => {
+        "$(init_filestat.filestat_bad1)",
+        "$(init_filestat.filestat_bad2)",
+        "$(init_filestat.filestat_bad3)",
+      };
+
+    "filestats_good_str" string => format("%S", filestats_good);
+    "filestats_bad_str" string => format("%S", filestats_bad);
 
   classes:
-      "ok_filestats_good_1_2" not => strcmp("$(init_filestat.filestat_good1)", "$(init_filestat.filestat_good2)");
-      "ok_filestats_good_2_3" not => strcmp("$(init_filestat.filestat_good2)", "$(init_filestat.filestat_good3)");
+    "ok_filestats_good_1_2"
+      not => strcmp(
+        "$(init_filestat.filestat_good1)", "$(init_filestat.filestat_good2)"
+      );
 
-      "ok_filestats_bad_1_2" not => strcmp("$(init_filestat.filestat_bad1)", "$(init_filestat.filestat_bad2)");
-      "ok_filestats_bad_2_3" expression => strcmp("$(init_filestat.filestat_bad2)", "$(init_filestat.filestat_bad3)");
+    "ok_filestats_good_2_3"
+      not => strcmp(
+        "$(init_filestat.filestat_good2)", "$(init_filestat.filestat_good3)"
+      );
 
-      "ok_content_good" expression => strcmp($(expected_good), $(test.actual_good));
-      "ok_content_bad" expression => strcmp($(expected_bad), $(test.actual_bad));
+    "ok_filestats_bad_1_2"
+      not => strcmp(
+        "$(init_filestat.filestat_bad1)", "$(init_filestat.filestat_bad2)"
+      );
 
+    "ok_filestats_bad_2_3"
+      expression => strcmp(
+        "$(init_filestat.filestat_bad2)", "$(init_filestat.filestat_bad3)"
+      );
+
+    "ok_content_good"
+      expression => strcmp($(expected_good), $(test.actual_good));
+
+    "ok_content_bad" expression => strcmp($(expected_bad), $(test.actual_bad));
 
   methods:
-      "" usebundle => dcs_passif_expected("ok_filestats_good_1_2,ok_filestats_good_2_3,ok_filestats_bad_1_2,ok_filestats_bad_2_3,ok_content_good,ok_content_bad",
-                                          "",
-                                          $(this.promise_filename)),
+    ""
+      usebundle => dcs_passif_expected(
+        "ok_filestats_good_1_2,ok_filestats_good_2_3,ok_filestats_bad_1_2,ok_filestats_bad_2_3,ok_content_good,ok_content_bad",
+        "",
+        $(this.promise_filename)
+      ),
       inherit => "true";
 
   reports:
     EXTRA::
-      "OK: As expected good '$(expected_good)'"
-      if => "ok_content_good";
-
-      "OK: As expected bad '$(expected_bad)'"
-      if => "ok_content_bad";
+      "OK: As expected good '$(expected_good)'" if => "ok_content_good";
+      "OK: As expected bad '$(expected_bad)'" if => "ok_content_bad";
 
       "OK: good filestats $(filestats_good_str) change from step 1 to step 2"
-      if => "ok_filestats_good_1_2";
+        if => "ok_filestats_good_1_2";
 
       "OK: good filestats $(filestats_good_str) change from step 2 to step 3"
-      if => "ok_filestats_good_2_3";
+        if => "ok_filestats_good_2_3";
 
       "OK: bad filestats $(filestats_bad_str) change from step 1 to step 2"
-      if => "ok_filestats_bad_1_2";
+        if => "ok_filestats_bad_1_2";
 
       "OK: bad filestats $(filestats_bad_str) don't change from step 2 to step 3"
-      if => "ok_filestats_bad_2_3";
+        if => "ok_filestats_bad_2_3";
 
     DEBUG::
       "FAIL: Expected '$(expected_good)' <> '$(test.actual_good)'"
-      if => "!ok_content_good";
+        if => "!ok_content_good";
 
       "FAIL: Expected '$(expected_bad)' <> '$(test.actual_bad)'"
-      if => "!ok_content_bad";
+        if => "!ok_content_bad";
 
       "FAIL: good filestats $(filestats_good_str) don't change enough from step 1 to step 2"
-      if => "!ok_filestats_good_1_2";
+        if => "!ok_filestats_good_1_2";
 
       "FAIL: good filestats $(filestats_good_str) don't change enough from step 2 to step 3"
-      if => "!ok_filestats_good_2_3";
+        if => "!ok_filestats_good_2_3";
 
       "FAIL: bad filestats $(filestats_bad_str) don't change enough from step 1 to step 2"
-      if => "!ok_filestats_bad_1_2";
+        if => "!ok_filestats_bad_1_2";
 
       "FAIL: bad filestats $(filestats_bad_str) change from step 2 to step 3"
-      if => "!ok_filestats_bad_2_3";
-
+        if => "!ok_filestats_bad_2_3";
 }
+
 ### PROJECT_ID: core
 ### CATEGORY_ID: 27

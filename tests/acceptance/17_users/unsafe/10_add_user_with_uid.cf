@@ -1,31 +1,27 @@
 bundle common test_meta
 {
   vars:
-      "description" string => "A user not present gets added with uid";
-      "story_id" string => "5525";
-      "covers" string => "operational_repaired";
+    "description" string => "A user not present gets added with uid";
+    "story_id" string => "5525";
+    "covers" string => "operational_repaired";
 }
 
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf", "user_queries.cf.sub" };
-      bundlesequence  => { default("$(this.promise_filename)") };
+  inputs => { "../../default.sub.cf", "user_queries.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
 }
 
 #######################################################
-
 bundle agent init
 {
   # Remove him first, should he already be present.
   users:
-    "johndoe"
-      policy => "absent";
+    "johndoe" policy => "absent";
 
   files:
-    "$(G.testfile)"
-      delete => init_delete;
+    "$(G.testfile)" delete => init_delete;
 }
 
 body delete init_delete
@@ -34,7 +30,6 @@ body delete init_delete
 }
 
 #######################################################
-
 body perms test_perms_body
 {
   owners => { "johndoe" };
@@ -54,7 +49,6 @@ bundle agent test
 }
 
 #######################################################
-
 body perms check_perms_body
 {
   owners => { "9999" };
@@ -76,6 +70,7 @@ bundle agent check
   reports:
     (ok.!not_ok)|windows::
       "$(this.promise_filename) Pass";
+
     (!ok|not_ok).!windows::
       "$(this.promise_filename) FAIL";
 }

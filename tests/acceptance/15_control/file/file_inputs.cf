@@ -2,14 +2,14 @@ body common control
 {
   ignore_missing_bundles => "yes";
   inputs => { "../../default.sub.cf" };
-  bundlesequence  => { "missing", default("$(this.promise_filename)") };
+  bundlesequence => { "missing", default("$(this.promise_filename)") };
   version => "1.0";
 }
 
 bundle agent init
 {
-vars:
-  "file" string => "$(this.promise_filename)";
+  vars:
+    "file" string => "$(this.promise_filename)";
 }
 
 bundle agent test

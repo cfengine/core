@@ -12,17 +12,14 @@ bundle common testcase
 bundle agent setup
 {
   files:
-    "$(G.testfile)"
-      create => "true";
-    "$(G.testroot)/TEST.foobar"
-      delete => init_delete;
+    "$(G.testfile)" create => "true";
+    "$(G.testroot)/TEST.foobar" delete => init_delete;
 }
 
 bundle agent main
 {
   files:
-    "$(G.testfile)"
-      rename => newname;
+    "$(G.testfile)" rename => newname;
 }
 
 body rename newname

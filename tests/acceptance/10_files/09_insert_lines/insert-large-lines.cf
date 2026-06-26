@@ -1,8 +1,7 @@
-
 body common control
 {
   inputs => { "../../default.sub.cf" };
-  bundlesequence  => { default("$(this.promise_filename)") };
+  bundlesequence => { default("$(this.promise_filename)") };
   version => "1.0";
 }
 
@@ -10,6 +9,7 @@ bundle agent test
 {
   vars:
     "data" string => readfile("$(this.promise_filename).txt", "16431");
+
   files:
     "$(G.testfile).actual"
       create => "true",
@@ -31,7 +31,10 @@ body edit_defaults init_empty
 bundle agent check
 {
   methods:
-      "any" usebundle => dcs_check_diff("$(G.testfile).actual",
-                                            "$(this.promise_filename).txt",
-                                            "$(this.promise_filename)");
+    "any"
+      usebundle => dcs_check_diff(
+        "$(G.testfile).actual",
+        "$(this.promise_filename).txt",
+        "$(this.promise_filename)"
+      );
 }

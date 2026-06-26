@@ -3,112 +3,135 @@
 # Test laterthan()
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent test
 {
   classes:
-      # On 32-bit systems, dates before 1901-12-13 aren't representable
-      "after_year_1902" expression => laterthan(1902,1,1,0,0,0),
-        scope => "namespace";
+    # On 32-bit systems, dates before 1901-12-13 aren't representable
+    "after_year_1902"
+      expression => laterthan(1902, 1, 1, 0, 0, 0),
+      scope => "namespace";
 
-      "after_year_1902_month" expression => laterthan(1902,12,1,0,0,0),
-        scope => "namespace";
+    "after_year_1902_month"
+      expression => laterthan(1902, 12, 1, 0, 0, 0),
+      scope => "namespace";
 
-      "after_year_1902_day" expression => laterthan(1902,12,31,0,0,0),
-        scope => "namespace";
+    "after_year_1902_day"
+      expression => laterthan(1902, 12, 31, 0, 0, 0),
+      scope => "namespace";
 
-      "after_year_1902_hour" expression => laterthan(1902,12,31,23,0,0),
-        scope => "namespace";
+    "after_year_1902_hour"
+      expression => laterthan(1902, 12, 31, 23, 0, 0),
+      scope => "namespace";
 
-      "after_year_1902_minute" expression => laterthan(1902,12,31,23,59,0),
-        scope => "namespace";
+    "after_year_1902_minute"
+      expression => laterthan(1902, 12, 31, 23, 59, 0),
+      scope => "namespace";
 
-      "after_year_1902_second" expression => laterthan(1902,12,31,23,59,59),
-        scope => "namespace";
+    "after_year_1902_second"
+      expression => laterthan(1902, 12, 31, 23, 59, 59),
+      scope => "namespace";
 
-      # On 32-bit systems, dates after 2038-01-18 aren't representable
-      "after_year_2037" expression => laterthan(2037,1,1,0,0,0),
-        scope => "namespace";
+    # On 32-bit systems, dates after 2038-01-18 aren't representable
+    "after_year_2037"
+      expression => laterthan(2037, 1, 1, 0, 0, 0),
+      scope => "namespace";
 
-      "after_year_2037_month" expression => laterthan(2037,12,1,0,0,0),
-        scope => "namespace";
+    "after_year_2037_month"
+      expression => laterthan(2037, 12, 1, 0, 0, 0),
+      scope => "namespace";
 
-      "after_year_2037_day" expression => laterthan(2037,12,31,0,0,0),
-        scope => "namespace";
+    "after_year_2037_day"
+      expression => laterthan(2037, 12, 31, 0, 0, 0),
+      scope => "namespace";
 
-      "after_year_2037_hour" expression => laterthan(2037,12,31,23,0,0),
-        scope => "namespace";
+    "after_year_2037_hour"
+      expression => laterthan(2037, 12, 31, 23, 0, 0),
+      scope => "namespace";
 
-      "after_year_2037_minute" expression => laterthan(2037,12,31,23,59,0),
-        scope => "namespace";
+    "after_year_2037_minute"
+      expression => laterthan(2037, 12, 31, 23, 59, 0),
+      scope => "namespace";
 
-      "after_year_2037_second" expression => laterthan(2037,12,31,23,59,59),
-        scope => "namespace";
+    "after_year_2037_second"
+      expression => laterthan(2037, 12, 31, 23, 59, 59),
+      scope => "namespace";
 }
 
 #######################################################
-
 bundle agent check
 {
   vars:
     DEBUG::
       # The date and time now, in laterthan-compatible format:
-      "present" string => execresult("$(G.date) +(%Y,%m,%d,%H,%M,%S)", "noshell");
-      # NB: shell would try to sub-shell on this (...), hence noshell.
+      "present"
+        string => execresult("$(G.date) +(%Y,%m,%d,%H,%M,%S)", "noshell");
 
+  # NB: shell would try to sub-shell on this (...), hence noshell.
   classes:
-      "check_after_year_1902" and => {
-                   "after_year_1902",
-                   "after_year_1902_month",
-                   "after_year_1902_day",
-                   "after_year_1902_hour",
-                   "after_year_1902_minute",
-                   "after_year_1902_second"
+    "check_after_year_1902"
+      and => {
+        "after_year_1902",
+        "after_year_1902_month",
+        "after_year_1902_day",
+        "after_year_1902_hour",
+        "after_year_1902_minute",
+        "after_year_1902_second",
       };
 
-      "check_after_year_2037" or => {
-                   "after_year_2037",
-                   "after_year_2037_month",
-                   "after_year_2037_day",
-                   "after_year_2037_hour",
-                   "after_year_2037_minute",
-                   "after_year_2037_second"
+    "check_after_year_2037"
+      or => {
+        "after_year_2037",
+        "after_year_2037_month",
+        "after_year_2037_day",
+        "after_year_2037_hour",
+        "after_year_2037_minute",
+        "after_year_2037_second",
       };
 
-      "ok" expression => "check_after_year_1902.!check_after_year_2037";
+    "ok" expression => "check_after_year_1902.!check_after_year_2037";
 
   reports:
     DEBUG.!after_year_1902::
       "Failed laterthan(1902,1,1,0,0,0); year";
+
     DEBUG.!after_year_1902_month::
       "Failed laterthan(1902,12,1,0,0,0); month";
+
     DEBUG.!after_year_1902_day::
       "Failed laterthan(1902,12,31,0,0,0); day";
+
     DEBUG.!after_year_1902_hour::
       "Failed laterthan(1902,12,31,23,0,0); hour";
+
     DEBUG.!after_year_1902_minute::
       "Failed laterthan(1902,12,31,23,59,0); minute";
+
     DEBUG.!after_year_1902_second::
       "Failed laterthan(1902,12,31,23,59,59); second";
+
     DEBUG.after_year_2037::
       "Satisfied laterthan(2037,1,1,0,0,0); year";
+
     DEBUG.after_year_2037_month::
       "Satisfied laterthan(2037,12,1,0,0,0); month";
+
     DEBUG.after_year_2037_day::
       "Satisfied laterthan(2037,12,31,0,0,0); day";
+
     DEBUG.after_year_2037_hour::
       "Satisfied laterthan(2037,12,31,23,0,0); hour";
+
     DEBUG.after_year_2037_minute::
       "Satisfied laterthan(2037,12,31,23,59,0); minute";
+
     DEBUG.after_year_2037_second::
       "Satisfied laterthan(2037,12,31,23,59,59); second";
 
@@ -117,6 +140,7 @@ bundle agent check
 
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

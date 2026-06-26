@@ -2,25 +2,20 @@
 # CFE-2216: Files converted to directories should be changed
 #           back on recursive copy
 ############################################################
-
 body common control
 {
   inputs => { "../default.sub.cf" };
-  bundlesequence  => { default("$(this.promise_filename)") };
+  bundlesequence => { default("$(this.promise_filename)") };
   version => "1.0";
 }
 
 ############################################################
-
 bundle agent init
 {
   files:
-    "$(G.testdir)/src/."
-      create => "true";
-    "$(G.testdir)/src/foo"
-      content => "Hello CFEngine!";
-    "$(G.testdir)/src/bar/."
-      create => "true";
+    "$(G.testdir)/src/." create => "true";
+    "$(G.testdir)/src/foo" content => "Hello CFEngine!";
+    "$(G.testdir)/src/bar/." create => "true";
 
     # The .sub file needs to know the value of $(G.testdir). We can use a
     # template in order to hardcode it in before execution.
@@ -32,7 +27,6 @@ bundle agent init
 }
 
 ############################################################
-
 bundle agent test
 {
   meta:
@@ -62,7 +56,6 @@ bundle agent test
 }
 
 ############################################################
-
 bundle agent check
 {
   classes:
@@ -70,8 +63,7 @@ bundle agent check
     # back to a directory
     "ok"
       expression => and(
-        not(isdir("$(G.testdir)/dst/foo")),
-        isdir("$(G.testdir)/dst/bar")
+        not(isdir("$(G.testdir)/dst/foo")), isdir("$(G.testdir)/dst/bar")
       );
 
   methods:
@@ -81,13 +73,10 @@ bundle agent check
 }
 
 ############################################################
-
 bundle agent clean
 {
   # Clean up the files generated from the template
   files:
-    "$(this.promise_filename).sub"
-      delete => tidy;
-    "$(this.promise_filename).sub.cf-before-edit"
-      delete => tidy;
+    "$(this.promise_filename).sub" delete => tidy;
+    "$(this.promise_filename).sub.cf-before-edit" delete => tidy;
 }

@@ -1,20 +1,20 @@
 # Testcase for Redmine 6569
-
 body common control
 {
-    inputs => { "../../default.sub.cf" };
-    bundlesequence  => { default("$(this.promise_filename)") };
-    version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
-bundle agent check 
+bundle agent check
 {
-    classes:
-        "PASS" or => { "any", classify( "${never}" ) };
+  classes:
+    "PASS" or => { "any", classify("${never}") };
 
-    reports:
-        PASS::
-            "$(this.promise_filename) Pass";
-        !PASS::
-            "$(this.promise_filename) FAIL";
+  reports:
+    PASS::
+      "$(this.promise_filename) Pass";
+
+    !PASS::
+      "$(this.promise_filename) FAIL";
 }

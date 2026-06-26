@@ -3,46 +3,40 @@
 # Test groupexists()
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-      "dummy" string => "dummy";
+    "dummy" string => "dummy";
 }
 
 #######################################################
-
 bundle agent test
 {
   meta:
-      "test_skip_unsupported" string => "windows";
+    "test_skip_unsupported" string => "windows";
 
   vars:
-      "dummy" string => "dummy";
+    "dummy" string => "dummy";
 }
 
 #######################################################
-
 bundle agent check
 {
   classes:
-      "ok" xor => {
-                    groupexists("bin"),
-                    groupexists("xxxscrabblebin"),
-      };
+    "ok" xor => { groupexists("bin"), groupexists("xxxscrabblebin") };
 
   reports:
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

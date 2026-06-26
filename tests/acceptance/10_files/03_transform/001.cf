@@ -3,16 +3,14 @@
 # Ensure that the transformer runs for every file in a recursive tree
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
@@ -20,30 +18,26 @@ bundle agent init
       "files" slist => { "1", "2", "3" };
 
   files:
-      "$(G.testdir)/."
-      create => "true";
-
-      "$(G.testdir)/$(files)"
-      copy_from => init_copy("$(G.etc_group)");
+    "$(G.testdir)/." create => "true";
+    "$(G.testdir)/$(files)" copy_from => init_copy("$(G.etc_group)");
 }
 
 body copy_from init_copy(file)
 {
-      source => "$(file)";
+  source => "$(file)";
 }
 
 body classes init_set_class(class)
 {
-      promise_kept => { "$(class)" };
-      promise_repaired => { "$(class)" };
+  promise_kept => { "$(class)" };
+  promise_repaired => { "$(class)" };
 }
 
 #######################################################
-
 bundle agent test
 {
   files:
-      "$(G.testdir)"
+    "$(G.testdir)"
       transformer => "$(G.gzip) $(this.promiser)",
       file_select => test_plain,
       depth_search => test_recurse;
@@ -51,36 +45,36 @@ bundle agent test
 
 body file_select test_plain
 {
-      file_types => { "plain" };
-      file_result => "file_types";
+  file_types => { "plain" };
+  file_result => "file_types";
 }
 
 body depth_search test_recurse
 {
-      depth => "inf";
+  depth => "inf";
 }
 
 #######################################################
-
 bundle agent check
 {
   vars:
-      "files" slist => { @{init.files} };
+    "files" slist => { @{init.files} };
 
   classes:
-      "ok$(files)" expression => fileexists("$(G.testdir)/$(files).gz");
-      "ok" and => { "ok1", "ok2", "ok3" };
+    "ok$(files)" expression => fileexists("$(G.testdir)/$(files).gz");
+    "ok" and => { "ok1", "ok2", "ok3" };
 
   reports:
     DEBUG::
-      "$(G.testdir)/$(files).gz exists as expected"
-      if => "ok$(files)";
-      "$(G.testdir)/$(files).gz was not created!"
-      if => "!ok$(files)";
+      "$(G.testdir)/$(files).gz exists as expected" if => "ok$(files)";
+      "$(G.testdir)/$(files).gz was not created!" if => "!ok$(files)";
+
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }
+
 ### PROJECT_ID: core
 ### CATEGORY_ID: 27

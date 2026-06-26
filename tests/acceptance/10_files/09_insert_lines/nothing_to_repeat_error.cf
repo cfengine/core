@@ -3,23 +3,24 @@
 # catch "nothing to repeat" error in file editing
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
-      "" usebundle => dcs_passif_output(".*info: Inserted the promised line.*",
-                                        ".*nothing to repeat.*",
-                                        "$(sys.cf_agent) -KI -f $(this.promise_filename).sub | $(G.grep) nofile",
-                                        $(this.promise_filename));
+    ""
+      usebundle => dcs_passif_output(
+        ".*info: Inserted the promised line.*",
+        ".*nothing to repeat.*",
+        "$(sys.cf_agent) -KI -f $(this.promise_filename).sub | $(G.grep) nofile",
+        $(this.promise_filename)
+      );
 }
 
 ### PROJECT_ID: core

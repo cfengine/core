@@ -3,7 +3,6 @@
 # Test that sys.cpusockets variable exists on Linux
 #
 #######################################################
-
 body common control
 {
   inputs => { "../../default.sub.cf" };
@@ -12,7 +11,6 @@ body common control
 }
 
 #######################################################
-
 bundle agent test
 {
   meta:
@@ -25,12 +23,10 @@ bundle agent test
 }
 
 #######################################################
-
 bundle agent check
 {
   classes:
-    "ok"
-      expression => isvariable("sys.cpusockets");
+    "ok" expression => isvariable("sys.cpusockets");
 
   methods:
     "any"

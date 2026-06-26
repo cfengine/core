@@ -6,12 +6,12 @@ body common control
 bundle agent example
 {
   classes:
-    "isconnectable"
-      expression => isconnectable("localhost", 22, "30");
+    "isconnectable" expression => isconnectable("localhost", 22, "30");
 
   reports:
     isconnectable::
       "Port is connectable";
+
     !isconnectable::
       "Port is not connectable";
 }

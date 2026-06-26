@@ -7,30 +7,27 @@ body common control
 bundle agent example
 {
   vars:
-    "foo"
-      data => '{ "bar": true }';
-    "a"
-      string => "hello";
+    "foo" data => '{ "bar": true }';
+    "a" string => "hello";
 
   classes:
-    "isdata"
-      expression => is_type("foo", "data");
-    "isdata_boolean"
-      expression => is_type("foo[bar]", "data boolean");
-    "isstring"
-      expression => is_type("a", "string");
-    "isint"
-      expression => is_type("a", "int");
+    "isdata" expression => is_type("foo", "data");
+    "isdata_boolean" expression => is_type("foo[bar]", "data boolean");
+    "isstring" expression => is_type("a", "string");
+    "isint" expression => is_type("a", "int");
 
   reports:
     isdata::
-	    "'foo' is of type 'data'";
+      "'foo' is of type 'data'";
+
     isdata_boolean::
-	    "'foo[bar]' is of type 'data boolean'";
+      "'foo[bar]' is of type 'data boolean'";
+
     isstring::
-        "'a' is of type 'string'";
+      "'a' is of type 'string'";
+
     isint::
-	    "'a' is of type 'int'";
+      "'a' is of type 'int'";
 }
 
 #+end_src

@@ -1,77 +1,75 @@
 #  Copyright 2021 Northern.tech AS
-
 #  This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
-
 #  This program is free software; you can redistribute it and/or modify it
 #  under the terms of the GNU General Public License as published by the
 #  Free Software Foundation; version 3.
-
 #  This program is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
-
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
-
 # To the extent this program is licensed as part of the Enterprise
 # versions of Cfengine, the applicable Commercial Open Source License
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
-
 #+begin_src cfengine3
 body common control
 {
-      bundlesequence => { "test" };
+  bundlesequence => { "test" };
 }
 
 bundle agent test
 {
   vars:
-      "test" slist => {
-                        1,2,3,
-                        "one", "two", "three",
-                        "long string",
-                        "four", "fix", "six",
-                        "one", "two", "three",
+    "test"
+      slist => {
+        1,
+        2,
+        3,
+        "one",
+        "two",
+        "three",
+        "long string",
+        "four",
+        "fix",
+        "six",
+        "one",
+        "two",
+        "three",
       };
-      "test_str" string => format("%S", test);
 
-      "test2" data => parsejson("[1, 2, 3, null]");
-      "test2_str" string => format("%S", test2);
+    "test_str" string => format("%S", test);
+    "test2" data => parsejson("[1, 2, 3, null]");
+    "test2_str" string => format("%S", test2);
+    "test3" data => parsejson('{ "x": true, "y": "z" }');
+    "test3_str" string => format("%S", test3);
+    "nth" slist => { 1, 2, 6, 10, 11, 1000 };
+    "nth2" slist => getindices(test2);
+    "nth3" slist => getindices(test3);
+    "access[$(nth)]" string => nth(test, $(nth));
+    "access[0]" string => nth(test, 0);
+    "access2[$(nth2)]" string => nth(test2, $(nth2));
+    "access3[$(nth3)]" string => nth(test3, $(nth3));
+    "nth_neg1" string => nth(test, "-1");
+    "nth_neg100" string => nth(test, "-100");
 
-      "test3" data => parsejson('{ "x": true, "y": "z" }');
-      "test3_str" string => format("%S", test3);
-
-      "nth" slist => { 1, 2, 6, 10, 11, 1000 };
-      "nth2" slist => getindices(test2);
-      "nth3" slist => getindices(test3);
-
-      "access[$(nth)]" string => nth(test, $(nth));
-      "access[0]" string => nth(test, 0);
-
-      "access2[$(nth2)]" string => nth(test2, $(nth2));
-      "access3[$(nth3)]" string => nth(test3, $(nth3));
-
-      "nth_neg1" string => nth(test, "-1");
-      "nth_neg100" string => nth(test, "-100"); # invalid index position requested
-
+  # invalid index position requested
   reports:
-      "The test list is $(test_str)";
-      "element #$(nth) of the test list: $(access[$(nth)])";
-      "element #0 of the test list: $(access[0])";
+    "The test list is $(test_str)";
+    "element #$(nth) of the test list: $(access[$(nth)])";
+    "element #0 of the test list: $(access[0])";
+    "The test2 data container is $(test2_str)";
+    "element #$(nth2) of the test2 data container: $(access2[$(nth2)])";
+    "The test3 data container is $(test3_str)";
+    "element #$(nth3) of the test3 data container: $(access3[$(nth3)])";
+    "The last element of test is $(nth_neg1)";
 
-      "The test2 data container is $(test2_str)";
-      "element #$(nth2) of the test2 data container: $(access2[$(nth2)])";
-
-      "The test3 data container is $(test3_str)";
-      "element #$(nth3) of the test3 data container: $(access3[$(nth3)])";
-
-      "The last element of test is $(nth_neg1)";
-      "nth_neg100 is not defined, because an invalid index was requested"
-        if => not( isvariable( nth_neg100 ));
+    "nth_neg100 is not defined, because an invalid index was requested"
+      if => not(isvariable(nth_neg100));
 }
+
 #+end_src
 ###############################################################################
 #+begin_src example_output

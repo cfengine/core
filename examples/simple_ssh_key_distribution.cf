@@ -1,7 +1,7 @@
 body common control
 {
-    bundlesequence => { "autorun_ssh_key_distribution" };
-    inputs => { "$(sys.libdir)/stdlib.cf" };
+  bundlesequence => { "autorun_ssh_key_distribution" };
+  inputs => { "$(sys.libdir)/stdlib.cf" };
 }
 
 bundle common ssh_key_info
@@ -33,8 +33,8 @@ bundle agent autorun_ssh_key_distribution
 
   methods:
     "Distribute SSH Keys"
-      usebundle => ssh_key_distribution( $(users) ),
-      if => userexists( $(users) ),
+      usebundle => ssh_key_distribution($(users)),
+      if => userexists($(users)),
       comment => "It's important that we make sure each of these users
                   ssh_authorized_keys file has the correct content and
                   permissions so that they can successfully log in, if
@@ -47,26 +47,27 @@ bundle agent ssh_key_distribution(users)
     "description"
       string => "Ensure that specified users are able to log in using their ssh
                  keys";
+
   vars:
     # We get the users UID so that we can set permission appropriately
-    "uid[$(users)]" int =>  getuid( $(users) );
+    "uid[$(users)]" int => getuid($(users));
 
   files:
     "/home/$(users)/.ssh/."
       create => "true",
-      perms => mo( 700, "$(uid[$(users)])"),
+      perms => mo(700, "$(uid[$(users)])"),
       comment => "It is important to set the proper restrictive permissions and
                   ownership so that the ssh authorized_keys feature works
                   correctly.";
 
     "/home/$(users)/.ssh/authorized_keys"
-      perms => mo( 600, "$(uid[$(users)])" ),
-      copy_from => remote_dcp( "$(ssh_key_info.repo_path)/$(users)",
-                               $(ssh_key_info.key_server) ),
+      perms => mo(600, "$(uid[$(users)])"),
+      copy_from => remote_dcp(
+        "$(ssh_key_info.repo_path)/$(users)", $(ssh_key_info.key_server)
+      ),
       comment => "We centrally manage and users authorized keys. We source each
                   users complete authorized_keys file from the central server.";
 }
-
 
 bundle server ssh_key_access_rules
 {

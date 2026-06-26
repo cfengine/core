@@ -1,5 +1,4 @@
 # Example showing how sections are rendered.
-
 #+begin_src cfengine3
 bundle agent main
 {
@@ -9,14 +8,15 @@ bundle agent main
   reports:
     "$(with)"
       with => string_mustache(
-"{{key}}
+        "{{key}}
 {{{key}}}
 {{&key}}
 Missing '{{missing}}' varibles render empty strings.",
-                              data);
+        data
+      );
 }
-#+end_src
 
+#+end_src
 #+begin_src example_output
 #@ ```
 #@ R: Hello World &amp; 3&gt;2!
@@ -25,4 +25,3 @@ Missing '{{missing}}' varibles render empty strings.",
 #@ Missing '' varibles render empty strings.
 #@ ```
 #+end_src
-

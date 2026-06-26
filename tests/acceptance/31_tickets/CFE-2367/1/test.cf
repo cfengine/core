@@ -19,11 +19,10 @@ bundle agent test
   files:
     "$(G.testfile)"
       content => "CFE-2367",
-      unless => fileexists($(testfile));
-
       # testfile is not defined, in the
       # original ticket filed this caused
       # a fatal error
+      unless => fileexists($(testfile));
 }
 
 bundle agent check

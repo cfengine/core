@@ -24,8 +24,7 @@ bundle agent test
 {
   meta:
     "description" -> { "CFE-636" }
-      string => "Check that methods can be called by expanding classic
-                   arrays";
+      string => "Check that methods can be called by expanding classic arrays";
 
   vars:
     "b1" string => "b1";

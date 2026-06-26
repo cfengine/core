@@ -15,8 +15,7 @@ bundle agent main
 
 bundle agent init
 {
-  classes:
-
+  # classes:
   #  "method_FORCE_UNEXPECTED_FAIL" expression => "any";
   vars:
     "method_outcome_classes" slist => classesmatching("method_.*");

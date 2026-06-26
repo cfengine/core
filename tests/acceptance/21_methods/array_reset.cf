@@ -3,41 +3,41 @@
 # Redmine 6369 - make sure that arrays don't accumulate
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent test
 {
   vars:
-      "key_value" slist => { 1, 2, 3 };
+    "key_value" slist => { 1, 2, 3 };
 
   methods:
-      "in" usebundle => test_method($(key_value), $(key_value));
+    "in" usebundle => test_method($(key_value), $(key_value));
 }
 
 bundle agent test_method(key, value)
 {
   vars:
-      "array[$(key)]" string => "$(value)"; 
+    "array[$(key)]" string => "$(value)";
 }
 
 bundle agent check
 {
   vars:
-      "indices" slist => getindices("test_method.array");
-      "dim" int => length("indices");
+    "indices" slist => getindices("test_method.array");
+    "dim" int => length("indices");
 
   classes:
-      "ok" expression => strcmp("$(dim)", "1");
+    "ok" expression => strcmp("$(dim)", "1");
 
   reports:
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 

@@ -26,14 +26,14 @@ noinst_LTLIBRARIES = libcf-check.la
 AM_CPPFLAGS = -I$(srcdir)/../libntech/libutils \
 	-I$(srcdir)/../libntech/libcompat \
 	-I$(srcdir)/../libcfecompat \
-	@CPPFLAGS@ \
 	$(PCRE2_CPPFLAGS) \
 	$(LIBYAML_CPPFLAGS) \
 	$(LMDB_CPPFLAGS) \
 	$(OPENSSL_CPPFLAGS)
 
 AM_CFLAGS = \
-	@CFLAGS@ \
+	$(CF3_CFLAGS) \
+	$(DEBUG_CFLAGS) \
 	$(LMDB_CFLAGS) \
 	$(PCRE2_CFLAGS) \
 	$(LIBYAML_CFLAGS) \

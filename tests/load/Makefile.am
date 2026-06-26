@@ -38,6 +38,10 @@ AM_CPPFLAGS = $(CORE_CPPFLAGS) \
 	-I../../libcfnet \
 	-I../../libpromises
 
+AM_CFLAGS = \
+	$(CF3_CFLAGS) \
+	$(DEBUG_CFLAGS)
+
 EXTRA_DIST = \
 	run_db_load.sh \
 	run_lastseen_threaded_load.sh

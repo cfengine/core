@@ -27,6 +27,8 @@ LIBS=                                # This tool should not link to anything
 AM_LDFLAGS=
 AM_CPPFLAGS=-I$(top_srcdir)/libntech/libutils # platform.h
 
+AM_CFLAGS = $(CF3_CFLAGS) $(DEBUG_CFLAGS)
+
 LDADD=../libntech/libcompat/libcompat.la
 
 cf_upgrade_SOURCES = \

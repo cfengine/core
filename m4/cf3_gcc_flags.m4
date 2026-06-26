@@ -22,7 +22,9 @@
 # included file COSL.txt.
 #
 dnl ####################################################################
-dnl Set GCC CFLAGS only if using GCC.
+dnl Set GCC flags only if using GCC.
+dnl Flags are collected into CF3_CFLAGS for use in AM_CFLAGS.
+dnl CFLAGS is left untouched for the user.
 dnl ####################################################################
 
 AC_PREPROC_IFELSE([AC_LANG_SOURCE([[
@@ -31,8 +33,7 @@ AC_PREPROC_IFELSE([AC_LANG_SOURCE([[
 #endif
 ]])], [
 HP_UX_AC="no"], [
-CFLAGS="$CFLAGS -Agcc"
-CPPFLAGS="$CPPFLAGS -Agcc"
+CF3_CFLAGS="$CF3_CFLAGS -Agcc"
 HP_UX_AC="yes"])
 
 AC_MSG_CHECKING(for HP-UX aC)
@@ -44,48 +45,43 @@ fi
 
 AC_MSG_CHECKING(for GCC specific compile flags)
 if test x"$GCC" = "xyes" && test x"$HP_UX_AC" != x"yes"; then
-    CFLAGS="$CFLAGS -g -Wall"
-    CPPFLAGS="$CPPFLAGS -std=gnu99"
+    CF3_CFLAGS="$CF3_CFLAGS -std=gnu99 -g -Wall"
     AC_MSG_RESULT(yes)
 
-    save_CFLAGS="$CFLAGS"
-    CFLAGS="$CFLAGS -Wno-pointer-sign"
     AC_MSG_CHECKING(for -Wno-pointer-sign)
     AC_COMPILE_IFELSE([AC_LANG_SOURCE([int main() {}])],
-     [AC_MSG_RESULT(yes)],
-     [AC_MSG_RESULT(no)
-     CFLAGS="$save_CFLAGS"])
+     [AC_MSG_RESULT(yes)
+     CF3_CFLAGS="$CF3_CFLAGS -Wno-pointer-sign"],
+     [AC_MSG_RESULT(no)])
 
-    save_CFLAGS="$CFLAGS"
-    CFLAGS="$CFLAGS -Werror=implicit-function-declaration"
     AC_MSG_CHECKING(for -Werror=implicit-function-declaration)
     AC_COMPILE_IFELSE([AC_LANG_SOURCE([int main() {}])],
-     [AC_MSG_RESULT(yes)],
-     [AC_MSG_RESULT(no)
-     CFLAGS="$save_CFLAGS"])
+     [AC_MSG_RESULT(yes)
+     CF3_CFLAGS="$CF3_CFLAGS -Werror=implicit-function-declaration"],
+     [AC_MSG_RESULT(no)])
 
-    save_CFLAGS="$CFLAGS"
-    CFLAGS="$CFLAGS -Wunused-parameter"
     AC_MSG_CHECKING(for -Wunused-parameter)
     AC_COMPILE_IFELSE([AC_LANG_SOURCE([int main() {}])],
-     [AC_MSG_RESULT(yes)],
-     [AC_MSG_RESULT(no)
-     CFLAGS="$save_CFLAGS"])
+     [AC_MSG_RESULT(yes)
+     CF3_CFLAGS="$CF3_CFLAGS -Wunused-parameter"],
+     [AC_MSG_RESULT(no)])
 
-    dnl Clang does not like 'const const' construct arising from
-    dnl expansion of TYPED_SET_DECLARE macro
-    dnl
-    dnl This check is relying on explicit compilator detection due to
-    dnl GCC irregularities checking for -Wno-* command-line options
-    dnl (command line is not fully checked until actual warning occurs)
+    AC_MSG_CHECKING(for -Wno-incompatible-pointer-types)
+    AC_COMPILE_IFELSE([AC_LANG_SOURCE([int main() {}])],
+     [AC_MSG_RESULT(yes)
+     CF3_CFLAGS="$CF3_CFLAGS -Wno-incompatible-pointer-types"],
+     [AC_MSG_RESULT(no)])
+
     AC_MSG_CHECKING(for -Wno-duplicate-decl-specifier)
     AC_COMPILE_IFELSE([AC_LANG_SOURCE([#ifndef __clang__
-# error Not a clang
+# GET_DIR_ERROR Not a clang
 #endif
 int main() {}])],
      [AC_MSG_RESULT(yes)
-     CFLAGS="$save_CFLAGS -Wno-duplicate-decl-specifier"],
+     CF3_CFLAGS="$CF3_CFLAGS -Wno-duplicate-decl-specifier"],
      [AC_MSG_RESULT(no)])
-else 
+else
     AC_MSG_RESULT(no)
 fi
+
+AC_SUBST([CF3_CFLAGS])

@@ -23,4 +23,6 @@
 #
 bin_PROGRAMS = rpmvercmp
 
+AM_CFLAGS = $(CF3_CFLAGS) $(DEBUG_CFLAGS)
+
 LDADD = ../libntech/libcompat/libcompat.la

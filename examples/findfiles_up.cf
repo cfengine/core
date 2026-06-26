@@ -12,18 +12,25 @@
 bundle agent __main__
 {
   vars:
-      "path" # path to search up from
-        string => "/tmp/repo/submodule/some/place/deep/within/my/repo/";
-      "glob" # glob pattern matching filename
-        string => ".git/config";
-      "level" # how far to search
-        int => "inf";
-      "configs"
-        data => findfiles_up("$(path)", "$(glob)", "$(level)");
+    "path"
+      # path to search up from
+      string => "/tmp/repo/submodule/some/place/deep/within/my/repo/";
+
+    "glob"
+      # glob pattern matching filename
+      string => ".git/config";
+
+    "level"
+      # how far to search
+      int => "inf";
+
+    "configs" data => findfiles_up("$(path)", "$(glob)", "$(level)");
+
   reports:
-      "Submodules '$(glob)' is located in '$(configs[0])'";
-      "Parents '$(glob)' is located in '$(configs[1])'";
+    "Submodules '$(glob)' is located in '$(configs[0])'";
+    "Parents '$(glob)' is located in '$(configs[1])'";
 }
+
 #+end_src
 ###############################################################################
 #+begin_src example_output

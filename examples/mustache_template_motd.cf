@@ -2,86 +2,91 @@ bundle agent env_classification
 # @brief Classify environment
 {
   vars:
-      # We use presence of key files to know the hosts environment
-      "environment_semaphores" slist => { "/etc/prod", "/etc/staging" };
-      "environment"
-        string => ifelse( filesexist( @(environment_semaphores) ), "incoherent",
-                          fileexists("/etc/prod"), "production",
-                          fileexists("/etc/staging"), "staging",
-                          "unknown" );
-      "env_issue_msg"
-        string => ifelse( strcmp( "incoherent", $(environment) ),
-                                  "WARNING: Environment incoherent (multiple environment semaphores)",
-                          strcmp( "unknown", $(environment) ),
-                                  "WARNING: Environment unknown (missing environment semaphores)",
-                          "Host environment classified as $(environment)");
+    # We use presence of key files to know the hosts environment
+    "environment_semaphores" slist => { "/etc/prod", "/etc/staging" };
 
-      # This is to extract the cfengine role ( hub or client )
-      "cf_role"
-        string => ifelse( "policy_server", "Policy Server", "Policy Client");
+    "environment"
+      string => ifelse(
+        filesexist(@(environment_semaphores)),
+        "incoherent",
+        fileexists("/etc/prod"),
+        "production",
+        fileexists("/etc/staging"),
+        "staging",
+        "unknown"
+      );
+
+    "env_issue_msg"
+      string => ifelse(
+        strcmp("incoherent", $(environment)),
+        "WARNING: Environment incoherent (multiple environment semaphores)",
+        strcmp("unknown", $(environment)),
+        "WARNING: Environment unknown (missing environment semaphores)",
+        "Host environment classified as $(environment)"
+      );
+
+    # This is to extract the cfengine role ( hub or client )
+    "cf_role"
+      string => ifelse("policy_server", "Policy Server", "Policy Client");
 
   classes:
-
-      # We define a class for the selected environment. It's useful for making
-      # decisions in other policies
-
-      "env_$(environment)"
-        expression => "any",
-        scope => "namespace";
-
+    # We define a class for the selected environment. It's useful for making
+    # decisions in other policies
+    "env_$(environment)"
+      expression => "any",
+      scope => "namespace";
 }
+
 bundle agent env_info
 # @brief Relevant environment information
 {
   vars:
-      ## Based on the environment we define different contacts.
-      "admin_contact"
-        slist => { "admin@acme.com", "oncall@acme.com" },
-        if => strcmp( $(env_classification.environment), "production" );
+    ## Based on the environment we define different contacts.
+    "admin_contact"
+      slist => { "admin@acme.com", "oncall@acme.com" },
+      if => strcmp($(env_classification.environment), "production");
 
-      "admin_contact"
-        slist => { "dev@acme.com" },
-        if => strcmp( $(env_classification.environment), "staging" );
+    "admin_contact"
+      slist => { "dev@acme.com" },
+      if => strcmp($(env_classification.environment), "staging");
 
-      "admin_contact"
-        slist => { "root@localhost" },
-        if => strcmp( $(env_classification.environment), "unknown" );
+    "admin_contact"
+      slist => { "root@localhost" },
+      if => strcmp($(env_classification.environment), "unknown");
 
-      ## This is to extract the available package updates status
-      "updates_available"
-        data => packageupdatesmatching(".*", ".*", ".*", ".*");
-      "count_updates" int => length("updates_available");
+    ## This is to extract the available package updates status
+    "updates_available" data => packageupdatesmatching(".*", ".*", ".*", ".*");
+    "count_updates" int => length("updates_available");
 
   classes:
-
-      # We define a class indicating there are updates available, it might be
-      # useful for various different policies.
-
-      "have_updates_available"
-        expression => isgreaterthan( $(count_updates), 0),
-        scope => "namespace";
-
+    # We define a class indicating there are updates available, it might be
+    # useful for various different policies.
+    "have_updates_available"
+      expression => isgreaterthan($(count_updates), 0),
+      scope => "namespace";
 }
-bundle agent motd {
 
+bundle agent motd
+{
   vars:
-      "motd_path" string => "/etc/motd";
+    "motd_path" string => "/etc/motd";
 
-      # It's considered best practice to prepare a data container holding the
-      # information you need to render the template instead of relying on
-      # current datastate()
+    # It's considered best practice to prepare a data container holding the
+    # information you need to render the template instead of relying on
+    # current datastate()
+    # First we extract currently defined classes from datastate(), then we
+    # construct the template data.
+    "_state"
+      data => datastate(),
+      if => not(isvariable($(this.promiser)));
 
-      # First we extract currently defined classes from datastate(), then we
-      # construct the template data.
-
-      "_state" data => datastate(),
-        if => not( isvariable ( $(this.promiser) ) ); # Limit recursive growth
-                                                      # and multiple calls to
-                                                      # datastate() over
-                                                      # multiple passes.
-
-      "template_data"
-        data => mergedata('{ "fqhost": "$(sys.fqhost)",
+    # Limit recursive growth
+    # and multiple calls to
+    # datastate() over
+    # multiple passes.
+    "template_data"
+      data => mergedata(
+        '{ "fqhost": "$(sys.fqhost)",
                    "primary_ip": "$(sys.ipv4)",
                    "cf_version": "$(sys.cf_version)",
                    "issue_msg": "$(env_classification.env_issue_msg)",
@@ -89,14 +94,15 @@ bundle agent motd {
                    "count_updates": "$(env_info.count_updates)",
                    "contacts": env_info.admin_contact,
                    "classes": _state[classes]
-        }');
+        }'
+      );
 
   files:
-      "$(motd_path)"
-        create => "true",
-        template_method => "inline_mustache",
-        template_data => @(template_data),
-        edit_template_string => '# Managed by CFEngine
+    "$(motd_path)"
+      create => "true",
+      template_method => "inline_mustache",
+      template_data => @(template_data),
+      edit_template_string => '# Managed by CFEngine
 {{{issue_msg}}}
   ***
   *** 	 Welcome to {{{fqhost}}}
@@ -112,12 +118,12 @@ bundle agent motd {
   * *
              For support contact:{{#contacts}}
                - {{{.}}}{{/contacts}}$(const.n)';
-
 }
+
 bundle agent __main__
 {
   methods:
-      "env_classification";
-      "env_info";
-      "motd";
+    "env_classification";
+    "env_info";
+    "motd";
 }

@@ -1,26 +1,21 @@
 ######################################################################
 # Using path regular expressions on Windows (always forward slash)
 ######################################################################
-
 body common control
 {
-      bundlesequence => { "example" };
+  bundlesequence => { "example" };
 }
 
 ########################################################
-
 bundle agent example
 {
   files:
-      "c:/test/.*.xml"
-      edit_line => add_information();
+    "c:/test/.*.xml" edit_line => add_information();
 }
 
 ########################################################
-
 bundle edit_line add_information()
 {
   insert_lines:
-      "a line"
-      comment => "adding line";
+    "a line" comment => "adding line";
 }

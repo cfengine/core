@@ -760,6 +760,30 @@ static void test_rval_write_raw()
     WriterClose(writer);
 }
 
+static void test_key_in_ignore_case()
+{
+    Rlist *list = NULL;
+
+    RlistAppendScalar(&list, "TERM");
+    RlistAppendScalar(&list, "HUP");
+    RlistAppendScalar(&list, "KILL");
+
+    Rlist *match = RlistKeyIn_IgnoreCase(list, "term");
+    assert_true(match != NULL);
+    assert_string_equal(RlistScalarValue(match), "TERM");
+
+    match = RlistKeyIn_IgnoreCase(list, "HuP");
+    assert_true(match != NULL);
+    assert_string_equal(RlistScalarValue(match), "HUP");
+
+    match = RlistKeyIn_IgnoreCase(list, "PIPE");
+    assert_true(match == NULL);
+
+    RlistDestroy(list);
+
+    assert_true(RlistKeyIn_IgnoreCase(NULL, "term") == NULL);
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -796,6 +820,7 @@ int main()
         unit_test(test_rval_write),
         unit_test(test_rval_write_quoted),
         unit_test(test_rval_write_raw),
+        unit_test(test_key_in_ignore_case),
     };
 
     return run_tests(tests);

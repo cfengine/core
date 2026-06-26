@@ -2,6 +2,7 @@
 
 #include <cmockery.h>
 #include <conversion.h>
+#include <signal.h>
 
 static void test_string_is_boolean(void)
 {
@@ -180,6 +181,33 @@ static void test_double_from_string(void)
     assert_true(val == old_val);
 }
 
+/* ===== SignalFromString case-insensitive tests ===== */
+
+static void test_signal_from_string(void)
+{
+    // Lowercase (baseline)
+    assert_int_equal(SignalFromString("hup"), SIGHUP);
+    assert_int_equal(SignalFromString("int"), SIGINT);
+    assert_int_equal(SignalFromString("term"), SIGTERM);
+    assert_int_equal(SignalFromString("kill"), SIGKILL);
+
+    // Uppercase (the CFE-612 fix)
+    assert_int_equal(SignalFromString("HUP"), SIGHUP);
+    assert_int_equal(SignalFromString("INT"), SIGINT);
+    assert_int_equal(SignalFromString("TERM"), SIGTERM);
+    assert_int_equal(SignalFromString("KILL"), SIGKILL);
+
+    // Mixed case
+    assert_int_equal(SignalFromString("Term"), SIGTERM);
+    assert_int_equal(SignalFromString("HuP"), SIGHUP);
+    assert_int_equal(SignalFromString("KiLl"), SIGKILL);
+
+    // Invalid signal names
+    assert_int_equal(SignalFromString("invalid"), -1);
+    assert_int_equal(SignalFromString(""), -1);
+    assert_int_equal(SignalFromString(NULL), -1);
+}
+
 static void test_CommandArg0_bound(void)
 {
     char dst[128];
@@ -284,6 +312,7 @@ int main()
         unit_test(test_int_from_string),
         unit_test(test_double_from_string),
         unit_test(test_CommandArg0_bound),
+        unit_test(test_signal_from_string),
     };
 
     return run_tests(tests);

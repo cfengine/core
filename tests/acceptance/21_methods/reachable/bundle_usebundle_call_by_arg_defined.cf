@@ -14,9 +14,9 @@ bundle agent baz
 bundle agent bar(x)
 {
   methods:
+    # Will call baz, which exists, should work
     "foo" usebundle => "$(x)";
 
-      # Will call baz, which exists, should work
 }
 
 bundle agent main

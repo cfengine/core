@@ -16,8 +16,8 @@ bundle agent main
   methods:
     "foo"
       if => "out_of_context",
+      # Should not error because it's unreachable
       usebundle => "bar";
 
-    # Should not error because it's unreachable
     "baz";
 }

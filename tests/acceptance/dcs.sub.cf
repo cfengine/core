@@ -42,14 +42,16 @@ bundle common G
           "env",
           "false",
           "grep",
-          "gsed", # will override sed on solaris hosts
+          # will override sed on solaris hosts:
+          "gsed",
           "gzip",
           "hexdump",
           "ln",
           "ls",
           "mkdir",
           "mkfifo",
-          "mkgroup", # AIX equivalent of groupadd
+          # AIX equivalent of groupadd:
+          "mkgroup",
           "mock_package_manager",
           "mv",
           "no_fds",

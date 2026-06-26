@@ -35,14 +35,14 @@ bundle agent test
       create => "false",
       edit_defaults => size("500k"),
       edit_line => insert_file_as_block_relative_to_first_or_last_line(
+        # File with content to insert if not found:
         "$(new_content_file)",
-        # File with content to insert if not found
+        # Relative position to insert content (before|after):
         "before",
-        # Relative position to insert content (before|after)
-        "last",
         # which line match will we insert based on?
+        "last",
+        # Regex to match the line we want to insert relative to:
         "\s+<filter>"
-        # Regex to match the line we want to insert relative to
       );
 }
 

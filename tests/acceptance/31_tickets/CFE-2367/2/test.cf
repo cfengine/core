@@ -19,8 +19,6 @@ bundle agent test
   files:
     "$(G.testfile)"
       content => "CFE-2367",
-      unless => and(fileexists($(testfile)));
-
       # testfile is not defined,
       # in the original ticket
       # filed this caused a fatal
@@ -30,6 +28,7 @@ bundle agent test
       # simply test that as in the
       # original case, there is no
       # fatal error.
+      unless => and(fileexists($(testfile)));
 }
 
 bundle agent check

@@ -15,18 +15,17 @@
 #+begin_src cfengine3
 body common control
 {
-      bundlesequence  => { "example" };
+  bundlesequence => { "example" };
 }
 
 bundle agent example
 {
   vars:
-      "example_file" string => "/tmp/example_file.txt";
+    "example_file" string => "/tmp/example_file.txt";
+
   reports:
-      "First three:"
-        printfile => first_three("$(example_file)");
-      "Last three:"
-        printfile => last_three("$(example_file)");
+    "First three:" printfile => first_three("$(example_file)");
+    "Last three:" printfile => last_three("$(example_file)");
 }
 
 body printfile first_three(file)
@@ -40,6 +39,7 @@ body printfile last_three(file)
   file_to_print => "$(file)";
   number_of_lines => "-3";
 }
+
 #+end_src
 ###############################################################################
 #+begin_src example_output

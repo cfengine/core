@@ -2,25 +2,23 @@
 bundle agent __main__
 {
   classes:
-      "role_2";
+    "role_2";
 
   vars:
-      "original"
-        data => '{
+    "original"
+      data => '{
             "alice":  [  "role_1", 32 ],
             "bob":    [ "!role_1", 24 ],
             "malcom": [  "role_2", 27 ]
           }';
 
-      "filtered"
-        data => classfilterdata("original", "object_of_arrays", "0");
+    "filtered" data => classfilterdata("original", "object_of_arrays", "0");
 
   reports:
-      "Filtered data: $(with)"
-        with => storejson("filtered");
+    "Filtered data: $(with)" with => storejson("filtered");
 }
-#+end_src
 
+#+end_src
 #+begin_src example_output
 #@ ```
 #@ R: Filtered data: {

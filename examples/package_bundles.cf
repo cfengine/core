@@ -1,72 +1,68 @@
 #  Copyright 2021 Northern.tech AS
-
 #  This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
-
 #  This program is free software; you can redistribute it and/or modify it
 #  under the terms of the GNU General Public License as published by the
 #  Free Software Foundation; version 3.
-
 #  This program is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
-
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
-
 # To the extent this program is licensed as part of the Enterprise
 # versions of Cfengine, the applicable Commercial Open Source License
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
 #
-
 #+begin_src cfengine3
 body common control
 {
-      inputs => { "$(sys.libdir)/packages.cf" };
-      bundlesequence  => { "runme" };
+  inputs => { "$(sys.libdir)/packages.cf" };
+  bundlesequence => { "runme" };
 }
-
 
 bundle agent runme
 {
   methods:
-      "nozip" usebundle => package_absent("zip"); # delete
-      "pleasezip" usebundle => package_present("zip"); # add
-      "latestzip" usebundle => package_latest("zip"); # add/update
+    "nozip" usebundle => package_absent("zip");
 
-      # add a package from a file with a specific selection method,
-      # version, and architecture
-      "addfilezip"
-      usebundle => package_specific_present("/mydir/zip.deb-or-rpm",
-                                                    "3.0-7",
-                                                    ifelse("debian", "amd64",
-                                                           "x86_64"));
+    # delete
+    "pleasezip" usebundle => package_present("zip");
 
-      # add a package with a specific selection method, version, and
-      # architecture
-      "addzip"
-      usebundle => package_specific_present("zip",
-                                                    ifelse("redhat", "3.0-7",
-                                                           "2.99"),
-                                                    ifelse("debian", "amd64",
-                                                           "x86_64"));
+    # add
+    "latestzip" usebundle => package_latest("zip");
 
-      # add or update a package from a file with a specific selection
-      # method, version, and architecture
-      "upgradefilezip"
-      usebundle => package_specific_latest("/mydir/zip.deb-or-rpm",
-                                                    "3.0-7",
-                                                    ifelse("debian", "amd64",
-                                                           "x86_64"));
+    # add/update
+    # add a package from a file with a specific selection method,
+    # version, and architecture
+    "addfilezip"
+      usebundle => package_specific_present(
+        "/mydir/zip.deb-or-rpm", "3.0-7", ifelse("debian", "amd64", "x86_64")
+      );
 
-      # add or update a package with a specific selection method,
-      # version, and architecture
-      "upgradezip"
-      usebundle => package_specific_latest("zip",
-                                                    "3.0-7",
-                                                    ifelse("debian", "amd64",
-                                                           "x86_64"));
+    # add a package with a specific selection method, version, and
+    # architecture
+    "addzip"
+      usebundle => package_specific_present(
+        "zip",
+        ifelse("redhat", "3.0-7", "2.99"),
+        ifelse("debian", "amd64", "x86_64")
+      );
+
+    # add or update a package from a file with a specific selection
+    # method, version, and architecture
+    "upgradefilezip"
+      usebundle => package_specific_latest(
+        "/mydir/zip.deb-or-rpm", "3.0-7", ifelse("debian", "amd64", "x86_64")
+      );
+
+    # add or update a package with a specific selection method,
+    # version, and architecture
+    "upgradezip"
+      usebundle => package_specific_latest(
+        "zip", "3.0-7", ifelse("debian", "amd64", "x86_64")
+      );
 }
+
 #+end_src

@@ -209,6 +209,29 @@ Rlist *RlistKeyIn(Rlist *list, const char *key)
     return NULL;
 }
 
+Rlist *RlistKeyIn_IgnoreCase(Rlist *list, const char *key)
+/*
+   Case-insensitive variant of RlistKeyIn.  Returns the first Rlist
+   element whose scalar value matches @key ignoring case, or NULL if
+   no match is found.  Non-scalar list elements are skipped.
+*/
+{
+    for (Rlist *rp = list; rp != NULL; rp = rp->next)
+    {
+        if (rp->val.type == RVAL_TYPE_SCALAR)
+        {
+            const char *scalar = RlistScalarValue(rp);
+            if (scalar != NULL &&
+                StringEqual_IgnoreCase(scalar, key))
+            {
+                return rp;
+            }
+        }
+    }
+
+    return NULL;
+}
+
 /*******************************************************************/
 
 bool RlistMatchesRegexRlist(const Rlist *list, const Rlist *search)

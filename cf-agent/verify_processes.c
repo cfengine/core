@@ -69,7 +69,7 @@ static bool ProcessSanityChecks(const Attributes *a, const Promise *pp)
 
     if (a->restart_class)
     {
-        if ((RlistKeyIn(a->signals, "term")) || (RlistKeyIn(a->signals, "kill")))
+        if ((RlistKeyIn_IgnoreCase(a->signals, "term")) || (RlistKeyIn_IgnoreCase(a->signals, "kill")))
         {
             Log(LOG_LEVEL_WARNING, "Promise '%s' kills then restarts - never strictly converges",
                 pp->promiser);
@@ -387,7 +387,7 @@ static int FindPidMatches(Item **killlist, const Attributes *a, const char *prom
         {
             if (pid == 1)
             {
-                if (RlistLen(a->signals) == 1 && RlistKeyIn(a->signals, "hup"))
+                if (RlistLen(a->signals) == 1 && RlistKeyIn_IgnoreCase(a->signals, "hup"))
                 {
                     Log(LOG_LEVEL_VERBOSE, "Okay to send only HUP to init");
                 }

@@ -3,7 +3,6 @@
 # Test getgroups(), list content
 #
 #######################################################
-
 body common control
 {
   inputs => { "../../default.sub.cf" };
@@ -16,51 +15,82 @@ bundle agent check
   meta:
     "description" -> { "ENT-12722" }
       string => "Test whether the entries of getroups() are like the ones inside /etc/group";
-    "test_skip_unsupported"
-      string => "windows";
+
+    "test_skip_unsupported" string => "windows";
+
   vars:
     # parse /etc/group
     "group_entries"
       slist => splitstring(string_trim(readfile("/etc/group")), "\n", 999);
+
     "name_gid_dict"
       slist => maplist(
-        concat(nth(splitstring("$(this)", ":", 4), 0), ":", nth(splitstring("$(this)", ":", 4), 2)),
+        concat(
+          nth(splitstring("$(this)", ":", 4), 0),
+          ":",
+          nth(splitstring("$(this)", ":", 4), 2)
+        ),
         "@(group_entries)"
       );
+
     # extra three arbitrary groups
-    "three_first_dict"
-      slist => sublist("@(name_gid_dict)", "head", 3);
-    "group_filter"
-      string => join("|", "@(three_first_dict)");
+    "three_first_dict" slist => sublist("@(name_gid_dict)", "head", 3);
+    "group_filter" string => join("|", "@(three_first_dict)");
+
     # list of group names apart from the three extracted
     "actual_groups"
-      slist => maplist(nth(splitstring("$(this)", ":", 2), 0), filter("($(group_filter))", "@(name_gid_dict)", true, true, 999));
+      slist => maplist(
+        nth(splitstring("$(this)", ":", 2), 0),
+        filter("($(group_filter))", "@(name_gid_dict)", true, true, 999)
+      );
 
     # prepare getgroups args
     "arg1"
-      slist => maplist(nth(splitstring("$(this)", ":", 2), 0), "@(three_first_dict)");
+      slist => maplist(
+        nth(splitstring("$(this)", ":", 2), 0), "@(three_first_dict)"
+      );
+
     "arg2"
-      slist => maplist(nth(splitstring("$(this)", ":", 2), 1), "@(three_first_dict)");
+      slist => maplist(
+        nth(splitstring("$(this)", ":", 2), 1), "@(three_first_dict)"
+      );
 
     # Concat resulting lists
     "actual_groups_content"
       string => join(" ", sort("@(actual_groups)", "lex"));
+
     "retrieved_groups_content_arg1"
       string => join(" ", sort(getgroups(join(",", "@(arg1)"), ""), "lex"));
+
     "retrieved_groups_content_arg2"
       string => join(" ", sort(getgroups("", join(",", "@(arg2)")), "lex"));
+
     "retrieved_groups_content_arg1_arg2"
-      string => join(" ", sort(getgroups(join(",", sublist("@(arg1)", "head", 2)), join(",", sublist("@(arg2)", "tail", 2))), "lex"));
+      string => join(
+        " ",
+        sort(
+          getgroups(
+            join(",", sublist("@(arg1)", "head", 2)),
+            join(",", sublist("@(arg2)", "tail", 2))
+          ),
+          "lex"
+        )
+      );
+
   classes:
     "ok"
       expression => and(
         strcmp("$(actual_groups_content)", "$(retrieved_groups_content_arg1)"),
         strcmp("$(actual_groups_content)", "$(retrieved_groups_content_arg2)"),
-        strcmp("$(actual_groups_content)", "$(retrieved_groups_content_arg1_arg2)")
+        strcmp(
+          "$(actual_groups_content)", "$(retrieved_groups_content_arg1_arg2)"
+        )
       );
+
   reports:
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

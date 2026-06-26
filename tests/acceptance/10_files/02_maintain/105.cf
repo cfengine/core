@@ -3,44 +3,38 @@
 # Create a file, expect simultaneous absolute symbolic link to fail
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   files:
-      "$(G.testfile)"
-      delete => init_delete;
-
-      "$(G.testfile).SOURCE"
-      create => "true";
+    "$(G.testfile)" delete => init_delete;
+    "$(G.testfile).SOURCE" create => "true";
 }
 
 body delete init_delete
 {
-      dirlinks => "delete";
-      rmdirs   => "true";
+  dirlinks => "delete";
+  rmdirs => "true";
 }
 
 #######################################################
-
 bundle agent test
 {
   meta:
-      "test_skip_unsupported" string => "windows";
+    "test_skip_unsupported" string => "windows";
 
   vars:
-      "mode" int => "0600";
+    "mode" int => "0600";
 
   files:
-      "$(G.testfile)"
+    "$(G.testfile)"
       create => "true",
       perms => test_perms($(test.mode)),
       link_from => test_link;
@@ -48,40 +42,40 @@ bundle agent test
 
 body link_from test_link
 {
-      link_type => "absolute";
-      source => "$(G.testfile).SOURCE";
+  link_type => "absolute";
+  source => "$(G.testfile).SOURCE";
 }
 
 body perms test_perms(m)
 {
-      mode => "$(m)";
-      owners => { "0" };
-      groups => { "0" };
+  mode => "$(m)";
+  owners => { "0" };
+  groups => { "0" };
 }
 
 #######################################################
-
 bundle agent check
 {
   vars:
-      "expect[permoct]" string => "$(test.mode)";
-      "expect[nlink]" string => "1";
-      "expect[uid]" string => "0";
-      "expect[gid]" string => "0";
-      "expect[size]" string => "0";
-
-      "fields" slist => getindices("expect");
-      "result[$(fields)]" string => filestat("$(G.testfile)", "$(fields)");
+    "expect[permoct]" string => "$(test.mode)";
+    "expect[nlink]" string => "1";
+    "expect[uid]" string => "0";
+    "expect[gid]" string => "0";
+    "expect[size]" string => "0";
+    "fields" slist => getindices("expect");
+    "result[$(fields)]" string => filestat("$(G.testfile)", "$(fields)");
 
   classes:
-      "not_ok" not => regcmp("$(expect[$(fields)])", "$(result[$(fields)])");
+    "not_ok" not => regcmp("$(expect[$(fields)])", "$(result[$(fields)])");
 
   reports:
     DEBUG::
       "expected: $(fields) = '$(expect[$(fields)])'";
       "got:      $(fields) = '$(result[$(fields)])'";
+
     !not_ok::
       "$(this.promise_filename) Pass";
+
     not_ok::
       "$(this.promise_filename) FAIL";
 }

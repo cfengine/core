@@ -4,21 +4,20 @@
 # Redmine #6589
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };   
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent init
 {
   vars:
-      "states" slist => { "actual", "expected" };
+    "states" slist => { "actual", "expected" };
 
-      "actual" string =>
-"header
+    "actual"
+      string => "header
 BEGIN
     One potato
     Two potato
@@ -26,8 +25,9 @@ BEGIN
     Four
   END
 trailer";
-      "expected" string =>
-"header
+
+    "expected"
+      string => "header
 BEGIN
     One potato
     Two potato
@@ -35,9 +35,9 @@ BEGIN
     Four
   END
 trailer";
- 
+
   files:
-      "$(G.testfile).$(states)"
+    "$(G.testfile).$(states)"
       create => "true",
       edit_line => init_insert("$(init.$(states))"),
       edit_defaults => init_empty;
@@ -46,44 +46,46 @@ trailer";
 bundle edit_line init_insert(str)
 {
   insert_lines:
-      "$(str)";
+    "$(str)";
 }
 
 body edit_defaults init_empty
 {
-      empty_file_before_editing => "true";
+  empty_file_before_editing => "true";
 }
 
 #######################################################
-
 bundle agent test
 {
   files:
-      "$(G.testfile).actual"
-      edit_line => test_delete(".*");
+    "$(G.testfile).actual" edit_line => test_delete(".*");
 }
 
 bundle edit_line test_delete(str)
 {
   delete_lines:
-      "$(str)"
-      select_region => test_select;
+    "$(str)" select_region => test_select;
 }
 
 body select_region test_select
 {
-      select_start => "BEGIN";
-      select_end => "END"; # anchored regex doesn't match due to whitespace
+  select_start => "BEGIN";
+  select_end => "END";
+
+  # anchored regex doesn't match due to whitespace
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
-      "any" usebundle => dcs_check_diff("$(G.testfile).actual",
-					    "$(G.testfile).expected",
-					    "$(this.promise_filename)");
+    "any"
+      usebundle => dcs_check_diff(
+        "$(G.testfile).actual",
+        "$(G.testfile).expected",
+        "$(this.promise_filename)"
+      );
 }
+
 ### PROJECT_ID: core
 ### CATEGORY_ID: 27

@@ -1,16 +1,14 @@
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent init
 {
-  
   files:
-    "$(G.testfile)"
-      link_from => ln_s( $(this.promise_filename) );
+    "$(G.testfile)" link_from => ln_s($(this.promise_filename));
 }
 
 bundle agent test
@@ -23,12 +21,11 @@ bundle agent test
       string => "windows",
       comment => "Windows does not support symlinks, so it makes no sense to
                   test there";
- 
+
     "test_soft_fail"
       string => "!windows",
       meta => { "redmine7692" };
 }
-
 
 bundle agent check
 {
@@ -46,7 +43,12 @@ bundle agent check
     first_agent_run_reached::
       # We fail if we see Permissions, inode or mtime changes
       "Check second run"
-        usebundle => dcs_passif_output(".*fim_kept.*", ".*(Permissions for|inode for|Last modified time for).*$(G.testfile).*changed.*", $(command), $(this.promise_filename));
+        usebundle => dcs_passif_output(
+          ".*fim_kept.*",
+          ".*(Permissions for|inode for|Last modified time for).*$(G.testfile).*changed.*",
+          $(command),
+          $(this.promise_filename)
+        );
 }
 
 body link_from ln_s(x)
@@ -54,7 +56,7 @@ body link_from ln_s(x)
 # The link is created even if the source of the link does not exist.
 # @param x The source of the link
 {
-      link_type => "symlink";
-      source => "$(x)";
-      when_no_source => "force";
+  link_type => "symlink";
+  source => "$(x)";
+  when_no_source => "force";
 }

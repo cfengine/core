@@ -1,18 +1,15 @@
 body common control
 {
-      # Feel free to avoid including "default.sub.cf" and define your
-      # own bundlesequence for simple tests
-
-      inputs => { "../../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
+  # Feel free to avoid including "default.sub.cf" and define your
+  # own bundlesequence for simple tests
+  inputs => { "../../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
 }
 
 #######################################################
-
 bundle agent init
 # Initialize the environment and prepare for test
 {
-
 }
 
 bundle agent test
@@ -21,13 +18,15 @@ bundle agent test
   meta:
     "description" -> { "CFE-3656" }
       string => "def_preferred.json is preferred over def.json if it exists.";
+
   classes:
     "ok"
       if => and(
         strcmp(length(variablesmatching(".*\.good_var")), "1"),
-        strcmp(length(variablesmatching(".*\.bad_var")),  "0"),
+        strcmp(length(variablesmatching(".*\.bad_var")), "0"),
         fileexists("$(this.promise_dirname)/def.json"),
-        fileexists("$(this.promise_dirname)/def_preferred.json")),
+        fileexists("$(this.promise_dirname)/def_preferred.json")
+      ),
       scope => "namespace";
 }
 
@@ -37,6 +36,7 @@ bundle agent check
   reports:
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

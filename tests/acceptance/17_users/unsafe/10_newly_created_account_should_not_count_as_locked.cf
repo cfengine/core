@@ -1,9 +1,9 @@
 bundle common test_meta
 {
   vars:
-      "description" string => "A user present gets locked";
-      "story_id" string => "5525";
-      "covers" string => "operational_repaired";
+    "description" string => "A user present gets locked";
+    "story_id" string => "5525";
+    "covers" string => "operational_repaired";
 }
 
 #######################################################
@@ -13,26 +13,24 @@ bundle common test_meta
 # "useradd" initially sets the password to '!'.
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf", "user_queries.cf.sub" };
-      bundlesequence  => { default("$(this.promise_filename)") };
+  inputs => { "../../default.sub.cf", "user_queries.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
 }
 
 #######################################################
-
 bundle common hpux_trusted
 {
   classes:
-      "hpux_trusted_mode_test"
-        expression => regcmp(".*hpux_trusted.*", $(this.promise_filename));
+    "hpux_trusted_mode_test"
+      expression => regcmp(".*hpux_trusted.*", $(this.promise_filename));
 }
 
 bundle agent init
 {
   meta:
-      "test_skip_unsupported" string => "hpux_trusted_mode_test.!hpux";
+    "test_skip_unsupported" string => "hpux_trusted_mode_test.!hpux";
 
   # Delete user, then create.
   vars:
@@ -40,16 +38,13 @@ bundle agent init
     "users[n2]" string => "johndoe";
     "policies[n1]" string => "absent";
     "policies[n2]" string => "present";
-
     "iter" slist => { "n1", "n2" };
 
   users:
-    "$(users[$(iter)])"
-      policy => "$(policies[$(iter)])";
+    "$(users[$(iter)])" policy => "$(policies[$(iter)])";
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
@@ -68,20 +63,21 @@ body password test_password
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
-    "any" usebundle => user_is_locked("johndoe", "success", "failure"),
+    "any"
+      usebundle => user_is_locked("johndoe", "success", "failure"),
       classes => always("methods_run");
 
   classes:
-      "ready" expression => "methods_run";
-      "ok" and => { "success", "!failure" };
+    "ready" expression => "methods_run";
+    "ok" and => { "success", "!failure" };
 
   reports:
     ok.ready::
       "$(this.promise_filename) Pass";
+
     !ok.ready::
       "$(this.promise_filename) FAIL";
 }

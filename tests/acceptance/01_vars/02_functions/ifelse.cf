@@ -3,56 +3,76 @@
 # Test ifelse()
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle common init
 {
   classes:
-      "myclass" expression => "any";
+    "myclass" expression => "any";
 }
 
 #######################################################
-
 bundle agent test
 {
   classes:
-      "myclass2" expression => "any";
+    "myclass2" expression => "any";
+
   vars:
-      "one" string => ifelse(1);
-      "single" string => ifelse("single string parameter");
-      "hardclass" string => ifelse("cfengine", "hardclass OK", "hardclass broken");
-      "empty" string => ifelse("cfengine", "", "hardclass broken");
-      "empty2" string => ifelse("!cfengine", "", "hardclass expected");
-      "five" string => ifelse("this is not true", "5 parameters broken",
-             "this is also not true", "5 parameters broken 2",
-             "5 parameters OK");
-      "unresolved1" string => ifelse( isvariable( "missing" ), "$(missing)", "expected fallback 1");
-      "unresolved2" string => ifelse( isvariable( "missing" ), "$($(missing))", "expected fallback 2");
+    "one" string => ifelse(1);
+    "single" string => ifelse("single string parameter");
+
+    "hardclass"
+      string => ifelse("cfengine", "hardclass OK", "hardclass broken");
+
+    "empty" string => ifelse("cfengine", "", "hardclass broken");
+    "empty2" string => ifelse("!cfengine", "", "hardclass expected");
+
+    "five"
+      string => ifelse(
+        "this is not true",
+        "5 parameters broken",
+        "this is also not true",
+        "5 parameters broken 2",
+        "5 parameters OK"
+      );
+
+    "unresolved1"
+      string => ifelse(
+        isvariable("missing"), "$(missing)", "expected fallback 1"
+      );
+
+    "unresolved2"
+      string => ifelse(
+        isvariable("missing"), "$($(missing))", "expected fallback 2"
+      );
 
     any::
-      "mystring" string => ifelse("any","pass","!any","$(foo)","bar");
+      "mystring" string => ifelse("any", "pass", "!any", "$(foo)", "bar");
 
     myclass2::
-      "expression" string => ifelse("myclass.myclass2", "bundle class OK", "bundle class broken");
+      "expression"
+        string => ifelse(
+          "myclass.myclass2", "bundle class OK", "bundle class broken"
+        );
 
   reports:
-      "ifelse result: $(mystring)";
+    "ifelse result: $(mystring)";
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
-      "check"  usebundle => dcs_check_state(test,
-                                           "$(this.promise_filename).expected.json",
-                                           $(this.promise_filename));
+    "check"
+      usebundle => dcs_check_state(
+        test,
+        "$(this.promise_filename).expected.json",
+        $(this.promise_filename)
+      );
 }

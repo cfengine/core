@@ -3,72 +3,70 @@
 # Test not
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-      "dummy" string => "dummy";
+    "dummy" string => "dummy";
 }
 
 #######################################################
-
 bundle agent test
 {
-   files:
-      "/tmp/dont_create_me"
-         create  => 'true',
-         classes => classes_generic( "test_files" ),
-         action  => warnonly;
+  files:
+    "/tmp/dont_create_me"
+      create => 'true',
+      classes => classes_generic("test_files"),
+      action => warnonly;
 
-   commands:
-      "$(G.echo) 'dont_print_me'"
-         classes =>  classes_generic( "test_commands" ),
-         action  => warnonly;
+  commands:
+    "$(G.echo) 'dont_print_me'"
+      classes => classes_generic("test_commands"),
+      action => warnonly;
 
-   processes:
-      "cf-agent-x"
-         restart_class => "restart_cf_agent",
-         classes       => classes_generic( "test_processes" ),
-         action        => warnonly;
+  processes:
+    "cf-agent-x"
+      restart_class => "restart_cf_agent",
+      classes => classes_generic("test_processes"),
+      action => warnonly;
 
   reports:
-      "Test output"
-         classes => classes_generic("test_reports"),
-         action => warnonly;
+    "Test output"
+      classes => classes_generic("test_reports"),
+      action => warnonly;
 }
 
 body action warnonly
 {
-      action_policy => "warn";
+  action_policy => "warn";
 }
 
 #######################################################
-
 bundle agent check
 {
-   vars:
-      "classes" slist => classesmatching( "test_.*" );
+  vars:
+    "classes" slist => classesmatching("test_.*");
 
-   classes:
-      "ok" and => {
-         "test_files_not_kept",
-         "test_commands_not_kept",
-         "test_processes_not_kept",
-         "test_reports_not_kept" 
+  classes:
+    "ok"
+      and => {
+        "test_files_not_kept",
+        "test_commands_not_kept",
+        "test_processes_not_kept",
+        "test_reports_not_kept",
       };
 
   reports:
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 

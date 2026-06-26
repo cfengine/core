@@ -3,25 +3,21 @@
 # Test that the function result cache checks function name
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
-
 bundle agent init
 {
   vars:
-      "agent_regex" string => ".*cf-agent.*";
+    "agent_regex" string => ".*cf-agent.*";
 }
 
 #######################################################
-
 bundle common test
 {
   meta:
@@ -29,21 +25,19 @@ bundle common test
       string => "Test that the function result cache checks function name";
 
   vars:
-      "res1" data => findprocesses("${init.agent_regex}");
+    "res1" data => findprocesses("${init.agent_regex}");
 
   classes:
-      # must not reuse result from previous line
-      # is reused, produces a type error
-      "_pass" expression => processexists("${init.agent_regex}");
+    # must not reuse result from previous line
+    # is reused, produces a type error
+    "_pass" expression => processexists("${init.agent_regex}");
 }
 
-
 #######################################################
-
 bundle agent check
 {
   methods:
-    _pass:: 
+    _pass::
       "pass" usebundle => dcs_pass("$(this.promise_filename)");
 
     !_pass::

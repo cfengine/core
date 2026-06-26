@@ -3,21 +3,19 @@
 # CFE-2724: Test that arglist attribute preserves white-spaces
 #
 ##############################################################################
-
 body common control
 {
   inputs => { "../default.sub.cf" };
-  bundlesequence  => { default("$(this.promise_filename)") };
+  bundlesequence => { default("$(this.promise_filename)") };
   version => "1.0";
 }
 
 ##############################################################################
-
 bundle agent init
 {
   files:
-    "$(G.testfile).actual"
-      delete => tidy;
+    "$(G.testfile).actual" delete => tidy;
+
     "$(G.testfile).sh"
       perms => mog("700", "root", "root"),
       content => '#!/bin/sh
@@ -28,12 +26,12 @@ done';
 }
 
 ##############################################################################
-
 bundle agent test
 {
   meta:
     "description" -> { "CFE-2724" }
       string => "Test that arglist attribute preserves white-spaces";
+
     "test_skip_unsupported"
       string => "windows",
       comment => "See ticket CFE-4294";
@@ -45,14 +43,11 @@ bundle agent test
 }
 
 ##############################################################################
-
 bundle agent check
 {
   vars:
-    "actual"
-      string => readfile("$(G.testfile).actual");
-    "expected"
-      string => "one
+    "actual" string => readfile("$(G.testfile).actual");
+    "expected" string => "one
 two
 three
 four
@@ -62,6 +57,7 @@ five six
 
   methods:
     "any"
-      usebundle => dcs_check_strcmp("$(actual)", "$(expected)",
-                                    "$(this.promise_filename)", "no");
+      usebundle => dcs_check_strcmp(
+        "$(actual)", "$(expected)", "$(this.promise_filename)", "no"
+      );
 }

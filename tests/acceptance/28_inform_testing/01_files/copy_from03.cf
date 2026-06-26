@@ -2,6 +2,7 @@ body file control
 {
   hpux.ia64::
     inputs => { "$(sys.policy_entry_dirname)/../common_soft_fail.cf.sub" };
+
   !(hpux.ia64)::
     inputs => { "$(sys.policy_entry_dirname)/../common.cf.sub" };
 }
@@ -19,7 +20,6 @@ bundle agent setup
       depth_search => recurse("inf"),
       perms => system_owned("0644"),
       copy_from => example("$(this.promise_dirname)/test_files");
-
 }
 
 bundle agent main
@@ -28,8 +28,10 @@ bundle agent main
     "$(G.testroot)/TEST.destination/subdir/purgeme"
       create => "true",
       handle => "step_one";
+
     "$(G.testroot)/TEST.destination/file-perms-644"
       copy_from => example("$(G.testroot)/TEST.source/file-perms-644");
+
     "$(G.testroot)/TEST.destination/subdir/."
       depends_on => { "step_one" },
       depth_search => recurse("inf"),

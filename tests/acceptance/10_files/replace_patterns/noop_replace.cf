@@ -3,35 +3,33 @@
 # Replace a pattern and use match.0
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-      "states" slist => { "actual", "expected" };
+    "states" slist => { "actual", "expected" };
 
-      "actual" string =>
-      "BEGIN
+    "actual"
+      string => "BEGIN
 kernel /vmlinuz-2.6.18-348.el5 ro noapic nolapic apci=off time process_timing=everything root=LABEL=/foo
 kernel /vmlinuz-2.6.18-348.el5 ro root=LABEL=/1
 END";
 
-      "expected" string =>
-      "BEGIN
+    "expected"
+      string => "BEGIN
 kernel /vmlinuz-2.6.18-348.el5 ro noapic nolapic apci=off time process_timing=everything root=LABEL=/foo
 kernel /vmlinuz-2.6.18-348.el5 ro root=LABEL=/1
 END";
 
   files:
-      "$(G.testfile).$(states)"
+    "$(G.testfile).$(states)"
       create => "true",
       edit_line => init_insert("$(init.$(states))"),
       edit_defaults => init_empty;
@@ -40,40 +38,39 @@ END";
 bundle edit_line init_insert(str)
 {
   insert_lines:
-      "$(str)";
+    "$(str)";
 }
 
 body edit_defaults init_empty
 {
-      empty_file_before_editing => "true";
+  empty_file_before_editing => "true";
 }
 
 ######################################################
-#
 bundle agent test
 {
   files:
-      "$(G.testfile).actual"
-      edit_line => test_replace("$(init.parameters)");
+    "$(G.testfile).actual" edit_line => test_replace("$(init.parameters)");
 }
 
 bundle edit_line test_replace(parameters)
 {
   replace_patterns:
-
-      # should not change anything
-      "^.+$"
-      replace_with => value("$(match.0)");
+    # should not change anything
+    "^.+$" replace_with => value("$(match.0)");
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
-      "any" usebundle => dcs_check_diff("$(G.testfile).actual",
-                                            "$(G.testfile).expected",
-                                            "$(this.promise_filename)");
+    "any"
+      usebundle => dcs_check_diff(
+        "$(G.testfile).actual",
+        "$(G.testfile).expected",
+        "$(this.promise_filename)"
+      );
 }
+
 ### PROJECT_ID: core
 ### CATEGORY_ID: 27

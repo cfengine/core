@@ -6,8 +6,8 @@ body common control
 bundle agent test
 {
   meta:
-      "description" -> { "CFE-3609" }
-        string => "Make sure the class 'hpux_<major>' is defined on HP-UX";
+    "description" -> { "CFE-3609" }
+      string => "Make sure the class 'hpux_<major>' is defined on HP-UX";
 
   vars:
     DEBUG::
@@ -20,6 +20,7 @@ bundle agent check
     # if 'hpux': make sure 'hpux_10' or 'hpux_11' is defined
     hpux::
       "passed" expression => "hpux_10|hpux_11";
+
     # if not 'hpux': make sure neither 'hpux_10' nor 'hpux_11' is defined
     !hpux::
       "passed" expression => "!(hpux_10|hpux_11)";
@@ -29,10 +30,13 @@ bundle agent check
       "No class containing OS- name & version major is defined on HP-UX.";
       "Here is a list of defined classes:";
       "$(test.defined_classes)";
+
     DEBUG&!hpux&!passed::
       "A class containing 'hpux_<major>' was defined on a non HP-UX system";
+
     passed::
       "$(this.promise_filename) Pass";
+
     !passed::
       "$(this.promise_filename) FAIL";
 }

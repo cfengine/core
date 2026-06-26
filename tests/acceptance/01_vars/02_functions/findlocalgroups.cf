@@ -8,27 +8,23 @@ body common control
 bundle agent init
 {
   vars:
-  # simple filters
-    "simple_filter"
-      slist => { "name=root" };
-    "number_filter"
-      slist => { "gid=0" };
-  # longer filters
-    "slist_filter"
-      slist => { "gid=0", "name=root" };
-  # using data
-    "data_filter"
-      data => '[ "gid=0", "name=root" ]';
-  # using regex
-    "simple_regex"
-      slist => { "name=roo.*" };
-    "number_regex"
-      slist => { "gid=0.*" };
-    "longer_regex"
-      slist => { "name=ro.*", "gid=0.*" };
-  # non-existent group
-    "unknown"
-      slist => { "name=thisgroupdoesntexist" };
+    # simple filters
+    "simple_filter" slist => { "name=root" };
+    "number_filter" slist => { "gid=0" };
+
+    # longer filters
+    "slist_filter" slist => { "gid=0", "name=root" };
+
+    # using data
+    "data_filter" data => '[ "gid=0", "name=root" ]';
+
+    # using regex
+    "simple_regex" slist => { "name=roo.*" };
+    "number_regex" slist => { "gid=0.*" };
+    "longer_regex" slist => { "name=ro.*", "gid=0.*" };
+
+    # non-existent group
+    "unknown" slist => { "name=thisgroupdoesntexist" };
 }
 
 bundle agent test
@@ -37,23 +33,16 @@ bundle agent test
     "test_soft_fail"
       string => "(!linux&!solaris)|(termux|android)",
       meta => { "CFE-2318" };
+
   vars:
-    "glist1"
-      data => findlocalgroups("@(init.simple_filter)");
-    "glist2"
-      data => findlocalgroups("@(init.number_filter)");
-    "glist4"
-      data => findlocalgroups("@(init.slist_filter)");
-    "glist3"
-      data => findlocalgroups("@(init.data_filter)");
-    "glist5"
-      data => findlocalgroups("@(init.simple_regex)");
-    "glist6"
-      data => findlocalgroups("@(init.number_regex)");
-    "glist7"
-      data => findlocalgroups("@(init.longer_regex)");
-    "glist8"
-      data => findlocalgroups("@(init.unknown)");
+    "glist1" data => findlocalgroups("@(init.simple_filter)");
+    "glist2" data => findlocalgroups("@(init.number_filter)");
+    "glist4" data => findlocalgroups("@(init.slist_filter)");
+    "glist3" data => findlocalgroups("@(init.data_filter)");
+    "glist5" data => findlocalgroups("@(init.simple_regex)");
+    "glist6" data => findlocalgroups("@(init.number_regex)");
+    "glist7" data => findlocalgroups("@(init.longer_regex)");
+    "glist8" data => findlocalgroups("@(init.unknown)");
 }
 
 bundle agent check

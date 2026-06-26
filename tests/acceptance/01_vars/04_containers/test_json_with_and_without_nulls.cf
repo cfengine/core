@@ -1,15 +1,14 @@
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent init
 {
   files:
-    "$(G.testfile)"
-      create => "true";
+    "$(G.testfile)" create => "true";
 }
 
 bundle agent test
@@ -24,26 +23,27 @@ bundle agent test
       meta => { "redmine7821" };
 
   methods:
-      "ec2"
-	comment => "We activate the bundle so that we can grab its state";
+    "ec2" comment => "We activate the bundle so that we can grab its state";
 }
 
 bundle agent check
 {
   methods:
-      "check"
-        usebundle => dcs_check_state("ec2",
-                                     "$(this.promise_filename).expected.json",
-                                     $(this.promise_filename));
+    "check"
+      usebundle => dcs_check_state(
+        "ec2",
+        "$(this.promise_filename).expected.json",
+        $(this.promise_filename)
+      );
 }
+
 bundle agent ec2
 {
   vars:
-
-      # This data has nulls in it, and consists of a single data type for
-      # values (strings)
-      "data"
-        data => '{
+    # This data has nulls in it, and consists of a single data type for
+    # values (strings)
+    "data"
+      data => '{
                    "instanceId" : "i-f444554e",
                    "billingProducts" : null,
                    "instanceType" : "m3.large",
@@ -60,14 +60,13 @@ bundle agent ec2
                    "devpayProductCodes" : null
                 }';
 
-      "keys" slist => getindices("data");
-      "data_$(keys)" string => "$(data[$(keys)])";
+    "keys" slist => getindices("data");
+    "data_$(keys)" string => "$(data[$(keys)])";
 
-
-      # This data has no nulls in it and consists of a single type for values
-      # (strings)
-      "data2"
-        data => '{
+    # This data has no nulls in it and consists of a single type for values
+    # (strings)
+    "data2"
+      data => '{
                    "instanceId" : "i-f444554e",
                    "instanceType" : "m3.large",
                    "accountId" : "444444444444",
@@ -81,32 +80,32 @@ bundle agent ec2
                    "privateIp" : "10.44.44.4",
                  }';
 
-      "keys2" slist => getindices("data2");
-      "data2_$(keys2)" string => "$(data2[$(keys2)])";
+    "keys2" slist => getindices("data2");
+    "data2_$(keys2)" string => "$(data2[$(keys2)])";
 
-
-      # The values in this data contain nulls and are of mixed types
-      # (strings, lists)
-      "data3"
-        data => '{
+    # The values in this data contain nulls and are of mixed types
+    # (strings, lists)
+    "data3"
+      data => '{
                    "a": [],
                    "b": ["one", "two"],
                    "c": null,
                    "d": "should be here"
                  }';
 
-      "keys3" slist => getindices("data3");
-      # I expect that data3_a will not be defined
-      # - because the list is empty and there is nothing to iterate over
-      # - potentially it would make sense to be cf_null (thats what 
-      #   iterating over empty slist does) or null
-      # I expect that data3_b will contain 'two'
-      # - because the list will be iterated over  and two is the last
-      #   element.
-      # I expect data3_c to not be defined
-      # - potentially cf_null or null would make sense as with data3_a
-      # I expect data3_d to be 'should be here'
-      "data3_$(keys3)" string => "$(data3[$(keys3)])";
+    "keys3" slist => getindices("data3");
+
+    # I expect that data3_a will not be defined
+    # - because the list is empty and there is nothing to iterate over
+    # - potentially it would make sense to be cf_null (thats what 
+    #   iterating over empty slist does) or null
+    # I expect that data3_b will contain 'two'
+    # - because the list will be iterated over  and two is the last
+    #   element.
+    # I expect data3_c to not be defined
+    # - potentially cf_null or null would make sense as with data3_a
+    # I expect data3_d to be 'should be here'
+    "data3_$(keys3)" string => "$(data3[$(keys3)])";
 
   reports:
     DEBUG::

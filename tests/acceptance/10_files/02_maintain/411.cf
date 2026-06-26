@@ -3,27 +3,23 @@
 # Test that action => "warn" works correctly for rename { rotate => 0 } (Issue 841)
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
-
 #######################################################
-
 bundle agent init
 {
   vars:
-      "states" slist => { "actual", "expected" };
-
-      "actual" string => "someline";
-      "expected" string => "someline";
+    "states" slist => { "actual", "expected" };
+    "actual" string => "someline";
+    "expected" string => "someline";
 
   files:
-      "$(G.testfile).$(states)"
+    "$(G.testfile).$(states)"
       create => "true",
       edit_line => init_insert("$(init.$(states))"),
       edit_defaults => init_empty;
@@ -32,37 +28,38 @@ bundle agent init
 bundle edit_line init_insert(str)
 {
   insert_lines:
-      "$(str)";
+    "$(str)";
 }
 
 body edit_defaults init_empty
 {
-      empty_file_before_editing => "true";
+  empty_file_before_editing => "true";
 }
 
 #######################################################
-
 bundle agent test
 {
   files:
-      "$(G.testfile).actual"
+    "$(G.testfile).actual"
       rename => rotate,
       action => warn_only;
 }
 
 body rename rotate
 {
-      rotate => "0";
+  rotate => "0";
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
-      "any" usebundle => dcs_check_diff("$(G.testfile).actual",
-                                            "$(G.testfile).expected",
-                                            "$(this.promise_filename)");
+    "any"
+      usebundle => dcs_check_diff(
+        "$(G.testfile).actual",
+        "$(G.testfile).expected",
+        "$(this.promise_filename)"
+      );
 }
 
 ### PROJECT_ID: core

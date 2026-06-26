@@ -1,7 +1,7 @@
 body common control
 {
-      inputs => { "../../default.sub.cf", "user_queries.cf.sub" };
-      bundlesequence  => { default("$(this.promise_filename)") };
+  inputs => { "../../default.sub.cf", "user_queries.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
 }
 
 bundle agent init
@@ -13,8 +13,10 @@ bundle agent init
     "$(G.sudo) $(user_tests.pw_path) $(G.groupdel) testg2";
     "$(G.sudo) $(user_tests.pw_path) $(G.groupadd) testg1";
     "$(G.sudo) $(user_tests.pw_path) $(G.useradd) testu";
+
     freebsd::
       "$(G.sudo) $(user_tests.pw_path) $(G.usermod) testu -G testg1";
+
     !freebsd::
       "$(G.sudo) $(user_tests.pw_path) $(G.usermod) -G testg1 testu";
 }
@@ -34,24 +36,40 @@ bundle agent test
 bundle agent check
 {
   methods:
-    "any" usebundle => user_is_in_secondary_group("testu", "testg1", "testg1_success", "testg1_failure"),
+    "any"
+      usebundle => user_is_in_secondary_group(
+        "testu", "testg1", "testg1_success", "testg1_failure"
+      ),
       classes => always("testg1_method_run");
 
-    "any" usebundle => user_is_in_secondary_group("testu", "testg2", "testg2_success", "testg2_failure"),
+    "any"
+      usebundle => user_is_in_secondary_group(
+        "testu", "testg2", "testg2_success", "testg2_failure"
+      ),
       classes => always("testg2_method_run");
 
-    "any" usebundle => user_exists("testu", "testu_success", "testu_failure"),
+    "any"
+      usebundle => user_exists("testu", "testu_success", "testu_failure"),
       classes => always("testu_method_run");
 
   classes:
-    "ready" and => { "testg1_method_run", "testg2_method_run", "testu_method_run" };
-    "ok" and => { "testg1_success", "!testg1_failure",
-                  "!testg2_success", "testg2_failure",
-                  "testu_success", "!testu_failure" };
+    "ready"
+      and => { "testg1_method_run", "testg2_method_run", "testu_method_run" };
+
+    "ok"
+      and => {
+        "testg1_success",
+        "!testg1_failure",
+        "!testg2_success",
+        "testg2_failure",
+        "testu_success",
+        "!testu_failure",
+      };
 
   reports:
     ok.ready::
       "$(this.promise_filename) Pass";
+
     !ok.ready::
       "$(this.promise_filename) FAIL";
 }

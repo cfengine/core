@@ -1,6 +1,3 @@
 {
-  "vars":
-  {
-    "good_var": "foo"
-  }
+  "vars": { "good_var": "foo" }
 }

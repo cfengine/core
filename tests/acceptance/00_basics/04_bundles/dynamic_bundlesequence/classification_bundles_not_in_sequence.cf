@@ -6,12 +6,11 @@
 # Bundle list built from array
 # Lexicly sorted bundles activated with methods promise
 #######################################################
-
 body common control
 {
-      inputs => { "../../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent init
@@ -20,12 +19,10 @@ bundle agent init
     "template_target" string => "$(G.testfile)";
 
   files:
-      "$(template_target)"
-        create => "true";
+    "$(template_target)" create => "true";
 }
 
 #######################################################
-
 bundle agent check
 {
   vars:
@@ -34,10 +31,14 @@ bundle agent check
   methods:
     "check"
       usebundle => dcs_passif_output(
-".*R: HEY I activated app00_zero
+        ".*R: HEY I activated app00_zero
 R: HEY I activated app_one
-R: HEY I activated app_zero.*", ".*FAIL.*", $(command), $(this.promise_filename));
-
+R: HEY I activated app_zero.*",
+        ".*FAIL.*",
+        $(command),
+        $(this.promise_filename)
+      );
 }
+
 ### PROJECT_ID: core
 ### CATEGORY_ID: 27

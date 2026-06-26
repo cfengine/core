@@ -3,20 +3,19 @@
 # Test url_get() locally
 #
 ###########################################################
-
 body common control
 {
-    inputs => { "../../default.sub.cf" };
-    bundlesequence => { default($(this.promise_filename)) };
-    version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default($(this.promise_filename)) };
+  version => "1.0";
 }
 
 ###########################################################
-
 bundle agent init
 {
   vars:
-      "options_limit" data => '
+    "options_limit"
+      data => '
 {
   "url.max_content": 200,
   "nosuchoption": 100,
@@ -24,33 +23,39 @@ bundle agent init
   "url.headers": [ "Foo: bar" ]
 }';
 
-      "options_clean" data => '{}';
-      # local file: does it work on Windows?
-      "res4" data => url_get("file://$(this.promise_filename)", options_limit);
+    "options_clean" data => '{}';
+
+    # local file: does it work on Windows?
+    "res4" data => url_get("file://$(this.promise_filename)", options_limit);
 }
 
 bundle agent test
 {
   meta:
-      "test_skip_unsupported" string => "!feature_curl";
-      "test_soft_fail" string => "windows",
-        meta => { "ENT-10254" };
+    "test_skip_unsupported" string => "!feature_curl";
+
+    "test_soft_fail"
+      string => "windows",
+      meta => { "ENT-10254" };
 
   vars:
-      "kept" data => mergedata(
-                               '{ "res4": init.res4[content] }',
-                               '{ "res4/returncode": init.res4[returncode] }',
-                               '{ "res4/rc": init.res4[rc] }',
-                               '{ "res4/success": init.res4[success] }'
+    "kept"
+      data => mergedata(
+        '{ "res4": init.res4[content] }',
+        '{ "res4/returncode": init.res4[returncode] }',
+        '{ "res4/rc": init.res4[rc] }',
+        '{ "res4/success": init.res4[success] }'
       );
 }
 
 ###########################################################
-
 bundle agent check
 {
   methods:
-      "check"  usebundle => dcs_check_state(test,
-                                           "$(this.promise_filename).expected.json",
-                                           $(this.promise_filename));
+    "check"
+      usebundle => dcs_check_state(
+        test,
+        "$(this.promise_filename).expected.json",
+        $(this.promise_filename)
+      );
 }

@@ -5,13 +5,12 @@
 #####################################################
 body common control
 {
-      inputs => { "../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent test
 {
   meta:
@@ -20,7 +19,8 @@ bundle agent test
                  characters that are invalid in bundle names.";
 
   vars:
-     "command" string => "$(sys.cf_agent) -KI --define AUTO,DEBUG $(this.promise_filename).sub";
+    "command"
+      string => "$(sys.cf_agent) -KI --define AUTO,DEBUG $(this.promise_filename).sub";
 
   methods:
     # We check the output of a sub policy that we expect to be syntatically
@@ -29,5 +29,7 @@ bundle agent test
     # report to print, because the policy should not be syntatically valid and
     # should never run.
     "check"
-      usebundle => dcs_passif_output(".*syntax error.*", ".*FAIL", $(command), $(this.promise_filename));
+      usebundle => dcs_passif_output(
+        ".*syntax error.*", ".*FAIL", $(command), $(this.promise_filename)
+      );
 }

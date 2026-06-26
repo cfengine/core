@@ -3,25 +3,22 @@
 # Nested iterations of slists (the ordering is not guaranteed, so we sort)
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-      "states" slist => { "actual", "expected" };
+    "states" slist => { "actual", "expected" };
+    "actual" string => "";
 
-      "actual" string => "";
-
-      "expected" string =>
-      "
+    "expected"
+      string => "
 a x
 a y
 a z
@@ -38,7 +35,7 @@ cf_null
 blah";
 
   files:
-      "$(G.testfile).$(states)"
+    "$(G.testfile).$(states)"
       create => "true",
       edit_line => init_insert("$(init.$(states))"),
       edit_defaults => init_empty;
@@ -47,63 +44,70 @@ blah";
 bundle edit_line init_insert(str)
 {
   insert_lines:
-      "$(str)";
+    "$(str)";
 }
 
 body edit_defaults init_empty
 {
-      empty_file_before_editing => "true";
+  empty_file_before_editing => "true";
 }
 
 #######################################################
-
 bundle agent test
 {
   files:
-      "$(G.testfile).actual"
-      edit_line => test_insert;
-
+    "$(G.testfile).actual" edit_line => test_insert;
 }
 
 bundle edit_line test_insert
 {
   vars:
-      "one" slist => { "a", "b", "c" };
-      "two" slist => { "x", "y", "z" };
-      "empty" slist => {};
-      "null" slist => { "cf_null" };
-      "nulls" slist => { "cf_null", "cf_null", "cf_null" };
-
-      "not_an_array" string => "blah";
-      "no_values" slist => getvalues("not_an_array");
+    "one" slist => { "a", "b", "c" };
+    "two" slist => { "x", "y", "z" };
+    "empty" slist => {};
+    "null" slist => { "cf_null" };
+    "nulls" slist => { "cf_null", "cf_null", "cf_null" };
+    "not_an_array" string => "blah";
+    "no_values" slist => getvalues("not_an_array");
 
   insert_lines:
-      "$(one) $(two)";
-      # cf_null is no longer treated specially, they are regular list elements
-      "$(one) $(nulls)";
-      "$(null)";
-      "$(nulls)";
-      # the following should do nothing
-      "$(one) $(two) $(empty)";
-      "$(empty) $(one) $(null) $(two)";
-      "$(null) $(empty)";
-      "$(no_values)";
+    "$(one) $(two)";
+
+    # cf_null is no longer treated specially, they are regular list elements
+    "$(one) $(nulls)";
+    "$(null)";
+    "$(nulls)";
+
+    # the following should do nothing
+    "$(one) $(two) $(empty)";
+    "$(empty) $(one) $(null) $(two)";
+    "$(null) $(empty)";
+    "$(no_values)";
 }
 
 #######################################################
-
 bundle agent check
 {
-
   methods:
-      "any" usebundle => dcs_sort("$(G.testfile).actual", "$(G.testfile).actual.sorted");
-      "any" usebundle => dcs_sort("$(G.testfile).expected", "$(G.testfile).expected.sorted");
-      "any" usebundle => dcs_check_diff("$(G.testfile).actual.sorted",
-                                            "$(G.testfile).expected.sorted",
-                                            "$(this.promise_filename)");
+    "any"
+      usebundle => dcs_sort(
+        "$(G.testfile).actual", "$(G.testfile).actual.sorted"
+      );
+
+    "any"
+      usebundle => dcs_sort(
+        "$(G.testfile).expected", "$(G.testfile).expected.sorted"
+      );
+
+    "any"
+      usebundle => dcs_check_diff(
+        "$(G.testfile).actual.sorted",
+        "$(G.testfile).expected.sorted",
+        "$(this.promise_filename)"
+      );
 }
 
 body contain check_in_shell
 {
-      useshell => "true";
+  useshell => "true";
 }

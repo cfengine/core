@@ -4,25 +4,25 @@
 # datacontainer index merging strings.
 #
 #######################################################
-
 body common control
 {
-        inputs => { "../../default.sub.cf" };
-        bundlesequence  => { default("$(this.promise_filename)") };
-        version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-      "data" data => '
+    "data" data => '
 {
   "foo": [ "alpha", "bravo" ],
   "bar": "zulu"
 }';
-      "data2" data => '
+
+    "data2"
+      data => '
 {
   "foo": [ null, "bravo" ],
   "zed": { "quu": "something else" },
@@ -30,25 +30,26 @@ bundle agent init
   "bar2": 1233333
 }';
 
-      "data3" data => '[ "foo", null, "bravo", { "bar": "barista" } ]';
+    "data3" data => '[ "foo", null, "bravo", { "bar": "barista" } ]';
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-      "values_data" slist => getvalues("init.data");
-      "values_data2" slist => getvalues("init.data2");
-      "values_data3" slist => getvalues("init.data3");
+    "values_data" slist => getvalues("init.data");
+    "values_data2" slist => getvalues("init.data2");
+    "values_data3" slist => getvalues("init.data3");
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
-      "check"  usebundle => dcs_check_state(test,
-                                           "$(this.promise_filename).expected.json",
-                                           $(this.promise_filename));
+    "check"
+      usebundle => dcs_check_state(
+        test,
+        "$(this.promise_filename).expected.json",
+        $(this.promise_filename)
+      );
 }

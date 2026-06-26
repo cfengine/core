@@ -3,16 +3,14 @@
 # Test mode_inform hard class
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent test
 {
   meta:
@@ -21,13 +19,14 @@ bundle agent test
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
     "Check Agent Output"
-      usebundle => dcs_passif_output(".*R: is inform mode.*",
-                                     ".*R: is (debug|verbose) mode.*",
-                                     "$(sys.cf_agent) --log-level inform -Kf $(this.promise_dirname)/log_mode.cf.sub",
-                                     "$(this.promise_filename)");
+      usebundle => dcs_passif_output(
+        ".*R: is inform mode.*",
+        ".*R: is (debug|verbose) mode.*",
+        "$(sys.cf_agent) --log-level inform -Kf $(this.promise_dirname)/log_mode.cf.sub",
+        "$(this.promise_filename)"
+      );
 }

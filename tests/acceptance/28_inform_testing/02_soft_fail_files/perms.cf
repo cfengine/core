@@ -12,13 +12,11 @@ bundle common testcase
 bundle agent setup
 {
   files:
-    "$(G.testfile)"
-      create => "true";
+    "$(G.testfile)" create => "true";
 }
 
 bundle agent main
 {
   files:
-    "$(G.testfile)"
-    perms => m(000);
+    "$(G.testfile)" perms => m(000);
 }

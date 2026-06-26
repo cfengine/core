@@ -5,74 +5,67 @@
 # NOTE: tests conditions have been reversed! cf_null is no longer
 #       treated specially!
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-
-      "expected" string =>
-"cf_null
+    "expected" string => "cf_null
 1
 2
 3";
 
   files:
-      "$(G.testfile).expected"
+    "$(G.testfile).expected"
       create => "true",
       edit_line => init_insert("$(expected)"),
       edit_defaults => init_empty;
-
 }
 
 bundle edit_line init_insert(str)
 {
   insert_lines:
-      "$(str)";
+    "$(str)";
 }
 
 body edit_defaults init_empty
 {
-      empty_file_before_editing => "true";
+  empty_file_before_editing => "true";
 }
 
 #######################################################
-
 bundle agent test
 {
   files:
-      "$(G.testfile).actual"
+    "$(G.testfile).actual"
       create => "true",
       edit_line => test_list_null,
       edit_defaults => init_empty;
-
 }
 
 bundle edit_line test_list_null
 {
   vars:
-
-      "lines" slist => { "cf_null", "1", "2", "3" };
+    "lines" slist => { "cf_null", "1", "2", "3" };
 
   insert_lines:
-      "$(lines)"
-      whitespace_policy => { "exact_match" };
+    "$(lines)" whitespace_policy => { "exact_match" };
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
-      "any" usebundle => dcs_check_diff("$(G.testfile).actual",
-                                            "$(G.testfile).expected",
-                                            "$(this.promise_filename)");
+    "any"
+      usebundle => dcs_check_diff(
+        "$(G.testfile).actual",
+        "$(G.testfile).expected",
+        "$(this.promise_filename)"
+      );
 }

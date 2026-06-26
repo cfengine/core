@@ -3,33 +3,41 @@
 # Test that arglist works properly
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent test
 {
   meta:
-      "test_soft_fail" string => "windows",
-        meta => { "ENT-10257" };
+    "test_soft_fail"
+      string => "windows",
+      meta => { "ENT-10257" };
+
   commands:
-      "$(G.echo)" arglist => { "=abc=2'3\"4" }, module => "true";
-      # this will generate the command `echo =def=567 =ghi=8'9"a`
-      "$(G.echo)" args => "=def=567", arglist => { "=ghi=8'9\"a" }, module => "true";
+    "$(G.echo)"
+      arglist => { "=abc=2'3\"4" },
+      module => "true";
+
+    # this will generate the command `echo =def=567 =ghi=8'9"a`
+    "$(G.echo)"
+      args => "=def=567",
+      arglist => { "=ghi=8'9\"a" },
+      module => "true";
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
-      "check"  usebundle => dcs_check_state(echo,
-                                           "$(this.promise_filename).expected.json",
-                                           $(this.promise_filename));
+    "check"
+      usebundle => dcs_check_state(
+        echo,
+        "$(this.promise_filename).expected.json",
+        $(this.promise_filename)
+      );
 }

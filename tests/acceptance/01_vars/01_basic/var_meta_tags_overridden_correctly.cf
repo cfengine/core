@@ -1,14 +1,13 @@
 body common control
 {
-        inputs => { "../../default.sub.cf" };
-        bundlesequence  => { default("$(this.promise_filename)") };
-        version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
+
 bundle agent init
 {
-
   meta:
-
     "description" -> { "CFE-2601" }
       string => "Test that meta tags are correct when a variable is re-defined with new meta tags.";
 
@@ -31,8 +30,7 @@ bundle agent check
 
   reports:
     DEBUG|EXTRA::
-
-      "Running CFEngine $(sys.cf_version)";  
+      "Running CFEngine $(sys.cf_version)";
       "Tagged with first: $(vars_tagged_first)";
       "Tagged with second: $(vars_tagged_second)";
 
@@ -44,8 +42,16 @@ bundle agent check
 
     any::
       "$(this.promise_filename) Pass"
-        if => and(none("default:init.myvar", vars_tagged_first), every("default:init.myvar", vars_tagged_second));
+        if => and(
+          none("default:init.myvar", vars_tagged_first),
+          every("default:init.myvar", vars_tagged_second)
+        );
 
       "$(this.promise_filename) FAIL"
-        if => not(and(none("default:init.myvar", vars_tagged_first), every("default:init.myvar", vars_tagged_second)));
+        if => not(
+          and(
+            none("default:init.myvar", vars_tagged_first),
+            every("default:init.myvar", vars_tagged_second)
+          )
+        );
 }

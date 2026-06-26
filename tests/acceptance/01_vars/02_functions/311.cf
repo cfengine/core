@@ -3,58 +3,51 @@
 # Test escape() - basic tests inside an slist
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };   
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle common g
 {
   vars:
-      "dummy" string => "dummy";
+    "dummy" string => "dummy";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-      "dummy" string => "dummy";
+    "dummy" string => "dummy";
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-      "s1" slist => {
-		      "bstr",
-		      escape("foo"),
-		      escape("foo.baz"),
-		      escape("foo[baz]"),
-		      "estr",
+    "s1"
+      slist => {
+        "bstr", escape("foo"), escape("foo.baz"), escape("foo[baz]"), "estr",
       };
-      "t1" string => join(",","s1");
-      "e1" string => "bstr,foo,foo.baz,foo[baz],estr";
+
+    "t1" string => join(",", "s1");
+    "e1" string => "bstr,foo,foo.baz,foo[baz],estr";
 }
 
 #######################################################
-
 bundle agent check
 {
   classes:
-      "ok" and => {
-		    regcmp("$(test.t1)", "$(test.e1)"),
-      };
+    "ok" and => { regcmp("$(test.t1)", "$(test.e1)") };
 
   reports:
     DEBUG::
       "'$(test.t1)' comprises $(s1)";
       "Comparing actual vs. expected:";
       "'$(test.t1)' vs. '$(test.e1)'";
+
     ok::
       "$(this.promise_filename) Pass";
 

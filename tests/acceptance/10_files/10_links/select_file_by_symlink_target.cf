@@ -4,16 +4,14 @@
 # Ref: https://dev.cfengine.com/issues/6878
 #
 ########################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
@@ -21,8 +19,7 @@ bundle agent init
     "target" string => "$(G.testdir)/target";
 
   files:
-    "$(target)/."
-      create => "true";
+    "$(target)/." create => "true";
 
     "$(symlink)"
       link_from => linkfrom("$(target)", "symlink"),
@@ -30,12 +27,10 @@ bundle agent init
 }
 
 #######################################################
-
 bundle agent test
 {
   meta:
-    "test_skip_unsupported"
-      string => "windows";
+    "test_skip_unsupported" string => "windows";
 
   # Delete the file only if it is a symlink pointing to the expected target
   files:
@@ -45,12 +40,12 @@ bundle agent test
       pathtype => "literal",
       classes => scoped_classes_generic("namespace", "test_symlink");
 }
-#######################################################
 
+#######################################################
 bundle agent check
 {
   classes:
-      "OK" not => fileexists("$(init.symlink)");
+    "OK" not => fileexists("$(init.symlink)");
 
   reports:
     OK::
@@ -62,15 +57,14 @@ bundle agent check
 
 ### PROJECT_ID: core
 ### CATEGORY_ID: 27
-
 body file_select symlinked_to(name)
 {
-    file_types  => { "symlink" };
-    issymlinkto => { "$(name)" };
-    file_result => "issymlinkto";
+  file_types => { "symlink" };
+  issymlinkto => { "$(name)" };
+  file_result => "issymlinkto";
 }
 
 body delete nodir
 {
-    rmdirs => "false";
+  rmdirs => "false";
 }

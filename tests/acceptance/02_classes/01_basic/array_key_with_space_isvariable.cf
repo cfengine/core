@@ -1,9 +1,9 @@
 # isvariable should be able to check array indexes that have spaces
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent test
@@ -24,6 +24,7 @@ bundle agent test
   reports:
     have_one.DEBUG::
       "Have array key 'one' as expected containing value '$(array[one])'";
+
     have_twenty_one.DEBUG::
       "Have array key 'twenty one' as expected containing value '$(array[twenty one])'";
 }

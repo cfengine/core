@@ -3,47 +3,50 @@
 # Delete a file in a nonexistent directory.
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-      "dummy" string => "1";
+    "dummy" string => "1";
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-      "agent" string => execresult("$(sys.cf_agent) -Kf $(this.promise_filename).sub -D AUTO 2>&1", "useshell");
+    "agent"
+      string => execresult(
+        "$(sys.cf_agent) -Kf $(this.promise_filename).sub -D AUTO 2>&1",
+        "useshell"
+      );
 }
 
 #######################################################
-
 bundle agent check
 {
   classes:
-      "chdir" expression => regcmp(".*chdir.*", $(test.agent));
-      "checkpoint" expression => regcmp(".*CHECKPOINT.*", $(test.agent));
-      "ok" and => { "!chdir", "checkpoint" };
+    "chdir" expression => regcmp(".*chdir.*", $(test.agent));
+    "checkpoint" expression => regcmp(".*CHECKPOINT.*", $(test.agent));
+    "ok" and => { "!chdir", "checkpoint" };
 
   reports:
     DEBUG::
       "This should only pass if $(this.promise_filename).sub does not output anything about failing to chdir";
       "Output from $(this.promise_filename).sub: $(test.agent)";
+
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }
+
 ### PROJECT_ID: core
 ### CATEGORY_ID: 27

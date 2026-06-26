@@ -1,22 +1,21 @@
 # This test should be renamed from .x.cf to .cf when the bug is fixed.
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent test
 {
   meta:
-      "description" -> { "CFE-3320" }
+    "description" -> { "CFE-3320" }
       string => "Test that data container keys can contain spaces";
 
   vars:
-      "d" data => '{
+    "d"
+      data => '{
   "thing s": [
     {
       "Title": "ExpectedPick",
@@ -25,16 +24,16 @@ bundle agent test
   ]
       }';
 
-      "selected"
-        string => "$(d[thing s][0][Title])",
-        if => "$(d[thing s][0][classexpr])";
-      # Note: wrapping with concat or classify prevents the error
-      #        if => concat("$(d[thing s][$(di)][classexpr])");
-      #        if => classify("$(d[thing s][$(di)][classexpr])");
+    "selected"
+      string => "$(d[thing s][0][Title])",
+      if => "$(d[thing s][0][classexpr])";
 
-      "sanity_check"
-        string => "You are sane",
-        if => "$(sys.class)";
+    # Note: wrapping with concat or classify prevents the error
+    #        if => concat("$(d[thing s][$(di)][classexpr])");
+    #        if => classify("$(d[thing s][$(di)][classexpr])");
+    "sanity_check"
+      string => "You are sane",
+      if => "$(sys.class)";
 
   reports:
     EXTRA|DEBUG::
@@ -46,15 +45,14 @@ bundle agent test
 }
 
 #######################################################
-
 bundle agent check
 {
   vars:
-      "expected_selection" string => "ExpectedPick";
+    "expected_selection" string => "ExpectedPick";
 
   methods:
-      "Pass/Fail"
-        usebundle => dcs_check_strcmp($(expected_selection), $(test.selected),
-                                      $(this.promise_filename), "no");
-
+    "Pass/Fail"
+      usebundle => dcs_check_strcmp(
+        $(expected_selection), $(test.selected), $(this.promise_filename), "no"
+      );
 }

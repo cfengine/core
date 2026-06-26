@@ -3,47 +3,49 @@
 #  Test that ${this.promiser} is expanded in comments (Issue 691)
 #
 #####################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-      "dummy" string => "dummy";
+    "dummy" string => "dummy";
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-      "subout" string => execresult("$(sys.cf_agent) -Kvf $(this.promise_filename).sub | grep Comment", "useshell");
+    "subout"
+      string => execresult(
+        "$(sys.cf_agent) -Kvf $(this.promise_filename).sub | grep Comment",
+        "useshell"
+      );
+
   meta:
-      "test_skip_needs_work" string => "windows";
+    "test_skip_needs_work" string => "windows";
 }
 
 #######################################################
-
 bundle agent check
 {
   classes:
-      "ok1" not => regcmp(".*this\.promiser.*", "$(test.subout)");
-      "ok2" expression => regcmp(".*foobar.*", "$(test.subout)");
-
-      "ok" and => { "ok1", "ok2" };
+    "ok1" not => regcmp(".*this\.promiser.*", "$(test.subout)");
+    "ok2" expression => regcmp(".*foobar.*", "$(test.subout)");
+    "ok" and => { "ok1", "ok2" };
 
   reports:
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
+
     DEBUG::
       "$(test.subout)";
 }

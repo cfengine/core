@@ -3,47 +3,45 @@
 # Test classmatch()
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-      "dummy" string => "dummy";
+    "dummy" string => "dummy";
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-      "dummy" string => "dummy";
+    "dummy" string => "dummy";
 }
 
 #######################################################
-
 bundle agent check
 {
   classes:
-      "ok" and => {
-                    classmatch("any"),
-                    classmatch("cfengine"),
-                    classmatch("cf.*"),
-                    classmatch("Hr.*"),
-                    classmatch("Yr.*"),
-                    classmatch("Min.*"),
+    "ok"
+      and => {
+        classmatch("any"),
+        classmatch("cfengine"),
+        classmatch("cf.*"),
+        classmatch("Hr.*"),
+        classmatch("Yr.*"),
+        classmatch("Min.*"),
       };
 
   reports:
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

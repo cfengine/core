@@ -14,36 +14,30 @@ promise agent dummy
 bundle agent init
 {
   files:
-    "/tmp/dummyfile"
-      create => "true";
+    "/tmp/dummyfile" create => "true";
 }
 
 bundle agent test
 {
-
   dummy:
-    "/tmp/dummyfile"
-      smth => "hello";
+    "/tmp/dummyfile" smth => "hello";
 
   vars:
-    "content"
-      string => readfile("/tmp/dummyfile");
+    "content" string => readfile("/tmp/dummyfile");
 
   files:
-    "/tmp/dummyfile"
-      content => "ok";
+    "/tmp/dummyfile" content => "ok";
 
   vars:
-    "content"
-      string => readfile("/tmp/dummyfile");
+    "content" string => readfile("/tmp/dummyfile");
 
   classes:
-    "ok"
-      expression => strcmp("$(content)", "ok");
-  
+    "ok" expression => strcmp("$(content)", "ok");
+
   reports:
     !ok::
       "$(this.promise_filename) Pass";
+
     ok::
       "$(this.promise_filename) FAIL";
 
@@ -54,6 +48,5 @@ bundle agent test
 bundle agent cleanup
 {
   files:
-    "/tmp/dummyfile"
-      delete => tidy;
+    "/tmp/dummyfile" delete => tidy;
 }

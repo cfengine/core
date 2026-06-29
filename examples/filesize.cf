@@ -37,7 +37,7 @@ bundle agent example
 ###############################################################################
 #+begin_src example_output
 #@ ```
-#@ R: File size 301
+#@ R: File size 288
 #@ R: Does not exist: $(nexists)
 #@ ```
 #+end_src

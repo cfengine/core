@@ -7,11 +7,9 @@ body file control
 bundle agent main
 {
   classes:
-      "group_cfengineers_absent"
-        not => groupexists("cfengineers");
+    "group_cfengineers_absent" not => groupexists("cfengineers");
 
   commands:
     linux.group_cfengineers_absent::
-      "$(paths.groupadd)"
-        args => "cfengineers";
+      "$(paths.groupadd)" args => "cfengineers";
 }

@@ -10,30 +10,35 @@
 #+begin_src cfengine3
 body agent control
 {
-      inform => "true"; # So that we can easily see class definition
-      files_auto_define => { ".*" }; # Trigger for any copied file
+  inform => "true";
+
+  # So that we can easily see class definition
+  files_auto_define => { ".*" };
+
+  # Trigger for any copied file
 }
+
 bundle agent main
 {
-
   files:
-      "/tmp/source_file.txt"
-        content => "Hello World!";
+    "/tmp/source_file.txt" content => "Hello World!";
 
-      "/tmp/example_files_auto_define.txt"
-        copy_from => local_dcp( "/tmp/source_file.txt" );
+    "/tmp/example_files_auto_define.txt"
+      copy_from => local_dcp("/tmp/source_file.txt");
 
   reports:
-      "Defined '$(with)', the canonified form of 'auto_/tmp/example_files_auto_define.txt'"
-        with => canonify( "auto_/tmp/example_files_auto_define.txt"),
-        if => canonify( "auto_/tmp/example_files_auto_define.txt");
+    "Defined '$(with)', the canonified form of 'auto_/tmp/example_files_auto_define.txt'"
+      with => canonify("auto_/tmp/example_files_auto_define.txt"),
+      if => canonify("auto_/tmp/example_files_auto_define.txt");
 }
+
 # Copied from the standard library to make self-contained.
 body copy_from local_dcp(from)
 {
-        source      => "$(from)";
-        compare     => "digest";
+  source => "$(from)";
+  compare => "digest";
 }
+
 #+end_src
 ###############################################################################
 #+begin_src example_output

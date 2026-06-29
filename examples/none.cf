@@ -1,76 +1,89 @@
 #  Copyright 2021 Northern.tech AS
-
 #  This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
-
 #  This program is free software; you can redistribute it and/or modify it
 #  under the terms of the GNU General Public License as published by the
 #  Free Software Foundation; version 3.
-
 #  This program is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
-
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
-
 # To the extent this program is licensed as part of the Enterprise
 # versions of Cfengine, the applicable Commercial Open Source License
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
-
 #+begin_src cfengine3
 body common control
 {
-      bundlesequence => { "example" };
+  bundlesequence => { "example" };
 }
 
 bundle agent example
 {
   classes:
-      "none11" expression => none("jebadiah", test1);
-      "none12" expression => none("2", test1);
-      "none21" expression => none("jebadiah", test2);
-      "none22" expression => none("2", test2);
+    "none11" expression => none("jebadiah", test1);
+    "none12" expression => none("2", test1);
+    "none21" expression => none("jebadiah", test2);
+    "none22" expression => none("2", test2);
 
   vars:
-      "test1" slist => {
-                        1,2,3,
-                        "one", "two", "three",
-                        "long string",
-                        "four", "fix", "six",
-                        "one", "two", "three",
+    "test1"
+      slist => {
+        1,
+        2,
+        3,
+        "one",
+        "two",
+        "three",
+        "long string",
+        "four",
+        "fix",
+        "six",
+        "one",
+        "two",
+        "three",
       };
 
-
-      "test2" data => parsejson('[1,2,3,
+    "test2"
+      data => parsejson(
+        '[1,2,3,
                         "one", "two", "three",
                         "long string",
                         "four", "fix", "six",
-                        "one", "two", "three",]');
+                        "one", "two", "three",]'
+      );
 
   reports:
-      "The test1 list is $(test1)";
+    "The test1 list is $(test1)";
+
     none11::
       "none() test1 1 passed";
+
     !none11::
       "none() test1 1 failed";
+
     none12::
       "none() test1 2 failed";
+
     !none12::
       "none() test1 2 passed";
-
       "The test2 list is $(test2)";
+
     none21::
       "none() test2 1 passed";
+
     !none21::
       "none() test2 1 failed";
+
     none22::
       "none() test2 2 failed";
+
     !none22::
       "none() test2 2 passed";
 }
+
 #+end_src
 ###############################################################################
 #+begin_src example_output

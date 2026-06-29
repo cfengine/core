@@ -4,60 +4,57 @@
 # Redmine #1900
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
-
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
 #######################################################
-
 bundle agent test
 {
   meta:
+    "description" -> { "CFE-270" }
+      string => "Test that classic templating does not insert extra newlines";
 
-      "description" -> { "CFE-270" }
-        string => "Test that classic templating does not insert extra newlines";
-
-      "test_soft_fail" -> { "CFE-270" }
-        string => "any",
-        meta => { "CFE-270" };
-
+    "test_soft_fail" -> { "CFE-270" }
+      string => "any",
+      meta => { "CFE-270" };
 
   files:
-      "$(G.testfile).expected"
+    "$(G.testfile).expected"
       copy_from => my_local_cp("$(this.promise_filename).expected");
 
-      "$(G.testfile).actual"
-          create => "true",
-   edit_defaults => my_init_empty,
-   edit_template => "$(this.promise_filename).template";
+    "$(G.testfile).actual"
+      create => "true",
+      edit_defaults => my_init_empty,
+      edit_template => "$(this.promise_filename).template";
 }
 
 #######################################################
-
 body copy_from my_local_cp(from)
 {
-      source      => "$(from)";
+  source => "$(from)";
 }
 
 body edit_defaults my_init_empty
 {
-      empty_file_before_editing => "true";
+  empty_file_before_editing => "true";
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
-      "any" usebundle => dcs_check_diff("$(G.testfile).actual",
-                                            "$(G.testfile).expected",
-                                            "$(this.promise_filename)");
+    "any"
+      usebundle => dcs_check_diff(
+        "$(G.testfile).actual",
+        "$(G.testfile).expected",
+        "$(this.promise_filename)"
+      );
 }
+
 ### PROJECT_ID: core
 ### CATEGORY_ID: 27

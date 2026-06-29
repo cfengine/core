@@ -3,43 +3,69 @@
 # Test hash()
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent test
 {
   vars:
-      # The nulls terminate the string here
-      "test1" string => execresult("$(G.perl) -e 'print \"Test of \0\1\2\n nulls in a string\";'", "noshell");
+    # The nulls terminate the string here
+    "test1"
+      string => execresult(
+        "$(G.perl) -e 'print \"Test of \0\1\2\n nulls in a string\";'",
+        "noshell"
+      );
 
-      # Write the same string to a file and read it in again, they are converted
-      "test2" string => execresult("$(G.perl) -e 'print \"Test of \0\1\2\n nulls in a string\";' > $(G.testfile)", "useshell");
-      "test3" string => readfile("$(G.testfile)","100");
+    # Write the same string to a file and read it in again, they are converted
+    "test2"
+      string => execresult(
+        "$(G.perl) -e 'print \"Test of \0\1\2\n nulls in a string\";' > $(G.testfile)",
+        "useshell"
+      );
 
-      # They are converted here, too, so the split fails
-      "test4a" slist => readstringlist("$(G.testfile)","#no comments", "\0", "2", "100");
-      # And simply quoting the backslash doesn't work, because I think the
-      # regex is also converted
-      "test4b" slist => readstringlist("$(G.testfile)","#no comments", "\\0", "2", "100");
+    "test3" string => readfile("$(G.testfile)", "100");
 
-      # So this doubly incorrect split succeeds because of the two conversions
-      "test4c" slist => readstringlist("$(G.testfile)","#no comments", "\\\0", "2", "100");
+    # They are converted here, too, so the split fails
+    "test4a"
+      slist => readstringlist(
+        "$(G.testfile)", "#no comments", "\0", "2", "100"
+      );
 
-      # readstringarray() (or perhaps getindices) simply breaks
-      "i" int => readstringarray("test5", "$(G.testfile)","#no comments", "no split", "2", "100");
-      "test5_idx" slist => getindices("test5");
+    # And simply quoting the backslash doesn't work, because I think the
+    # regex is also converted
+    "test4b"
+      slist => readstringlist(
+        "$(G.testfile)", "#no comments", "\\0", "2", "100"
+      );
 
-      # readstringarrayidx() converts the results (same split issues as test4)
-      "j" int => readstringarrayidx("test6", "$(G.testfile)","#no comments", "no split", "2", "100");
-      "test6_idx" slist => getindices("test6");
+    # So this doubly incorrect split succeeds because of the two conversions
+    "test4c"
+      slist => readstringlist(
+        "$(G.testfile)", "#no comments", "\\\0", "2", "100"
+      );
 
-      # This shows that the nulls are really there in the file
-      "od_file" string => execresult("$(G.od) -c $(G.testfile)", "noshell");
+    # readstringarray() (or perhaps getindices) simply breaks
+    "i"
+      int => readstringarray(
+        "test5", "$(G.testfile)", "#no comments", "no split", "2", "100"
+      );
+
+    "test5_idx" slist => getindices("test5");
+
+    # readstringarrayidx() converts the results (same split issues as test4)
+    "j"
+      int => readstringarrayidx(
+        "test6", "$(G.testfile)", "#no comments", "no split", "2", "100"
+      );
+
+    "test6_idx" slist => getindices("test6");
+
+    # This shows that the nulls are really there in the file
+    "od_file" string => execresult("$(G.od) -c $(G.testfile)", "noshell");
 
   reports:
     cfengine_3::

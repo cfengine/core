@@ -1,48 +1,49 @@
 # Test that log_failed and log_kept set to the same value do not cause stack overflow (Redmine #2317)
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent init
 {
   vars:
-      "dummy" string => "dummy";
+    "dummy" string => "dummy";
 }
 
 bundle agent test
 {
   meta:
-      "test_skip_unsupported" string => "windows";
+    "test_skip_unsupported" string => "windows";
 
   commands:
-      "$(G.true)"
-      action => log;
+    "$(G.true)" action => log;
 }
 
 body action log
 {
-      log_repaired => "$(G.testfile).action.log";
-      log_failed => "$(G.testfile).action.log";
-      log_kept => "$(G.testfile).action.log";
-      log_string => "ignore me";
+  log_repaired => "$(G.testfile).action.log";
+  log_failed => "$(G.testfile).action.log";
+  log_kept => "$(G.testfile).action.log";
+  log_string => "ignore me";
 }
 
 bundle agent check
 {
   vars:
-      "perms" string => filestat("$(G.testfile).action.log", "permoct");
+    "perms" string => filestat("$(G.testfile).action.log", "permoct");
+
   classes:
-      "ok" expression => strcmp("600", $(perms));
+    "ok" expression => strcmp("600", $(perms));
 
   reports:
     DEBUG::
       "Log file $(G.testfile).action.log had permissions $(perms)";
+
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

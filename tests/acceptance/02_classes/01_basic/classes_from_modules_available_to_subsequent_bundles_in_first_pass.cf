@@ -4,16 +4,14 @@
 # from module protocol right away
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent check
 {
   meta:
@@ -22,8 +20,11 @@ bundle agent check
       meta => { "redmine#6689", "zendesk#1548" };
 
   methods:
-      "" usebundle => dcs_passif_output("should be set",
-                                        "should not be set",
-                                        "$(sys.cf_agent) -KI -f $(this.promise_filename).sub",
-                                        $(this.promise_filename));
+    ""
+      usebundle => dcs_passif_output(
+        "should be set",
+        "should not be set",
+        "$(sys.cf_agent) -KI -f $(this.promise_filename).sub",
+        $(this.promise_filename)
+      );
 }

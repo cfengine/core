@@ -1,31 +1,36 @@
-#
 body common control
 {
-      inputs => { "../../default.sub.cf", "../../run_with_server.cf.sub" };
-      bundlesequence => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf", "../../run_with_server.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent test
 {
   meta:
-      "test_soft_fail" string => "windows",
-        meta => { "ENT-10401" };
+    "test_soft_fail"
+      string => "windows",
+      meta => { "ENT-10401" };
 
   methods:
-      # source file
-      "any" usebundle => file_make("$(G.testdir)/source_file",
-                                   "This is the source file to copy $(sys.date) - always fresh");
+    # source file
+    "any"
+      usebundle => file_make(
+        "$(G.testdir)/source_file",
+        "This is the source file to copy $(sys.date) - always fresh"
+      );
 
-      # ensure destination files are not there
-      "any" usebundle => dcs_fini("$(G.testdir)/destfile1");
-      "any" usebundle => dcs_fini("$(G.testdir)/destfile2");
-      "any" usebundle => dcs_fini("$(G.testdir)/destfile3");
+    # ensure destination files are not there
+    "any" usebundle => dcs_fini("$(G.testdir)/destfile1");
+    "any" usebundle => dcs_fini("$(G.testdir)/destfile2");
+    "any" usebundle => dcs_fini("$(G.testdir)/destfile3");
+    "any" usebundle => generate_key;
 
-      "any" usebundle => generate_key;
-      "any" usebundle => start_server("$(this.promise_dirname)/localhost_open.srv");
+    "any"
+      usebundle => start_server("$(this.promise_dirname)/localhost_open.srv");
 
-      "any" usebundle => run_test("$(this.promise_filename).sub");
+    "any" usebundle => run_test("$(this.promise_filename).sub");
 
-      "any" usebundle => stop_server("$(this.promise_dirname)/localhost_open.srv");
+    "any"
+      usebundle => stop_server("$(this.promise_dirname)/localhost_open.srv");
 }

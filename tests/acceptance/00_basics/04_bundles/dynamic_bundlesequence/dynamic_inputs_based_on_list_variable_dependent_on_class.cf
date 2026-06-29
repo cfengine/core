@@ -1,33 +1,35 @@
 body common control
 {
-    inputs         => { @(inventory.inputs)  };
-    bundlesequence => { @(inventory.bundles) };
+  inputs => { @(inventory.inputs) };
+  bundlesequence => { @(inventory.bundles) };
 }
 
 bundle common inventory
 {
-    classes:
-        "this_is_true" expression => "any";
+  classes:
+    "this_is_true" expression => "any";
 
-    vars:
-      !this_is_true::
-        "inputs"  slist => { };
-        "bundles" slist => { "bad" };
-      this_is_true.!windows::
-        "inputs"  slist => { "$(this.promise_filename).sub" };
-        "bundles" slist => { "good" };
-      windows::
-        "bundles" slist => { "skip" };
+  vars:
+    !this_is_true::
+      "inputs" slist => {};
+      "bundles" slist => { "bad" };
+
+    this_is_true.!windows::
+      "inputs" slist => { "$(this.promise_filename).sub" };
+      "bundles" slist => { "good" };
+
+    windows::
+      "bundles" slist => { "skip" };
 }
 
 bundle agent bad
 {
-    reports:
-        "$(this.promise_filename) FAIL";
+  reports:
+    "$(this.promise_filename) FAIL";
 }
 
 bundle agent skip
 {
-    reports:
-        "$(this.promise_filename) Skip/unsupported";
+  reports:
+    "$(this.promise_filename) Skip/unsupported";
 }

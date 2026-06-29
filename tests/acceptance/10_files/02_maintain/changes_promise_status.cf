@@ -1,15 +1,14 @@
 # Test that monitoring file status gives the right promise status
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
 }
 
 bundle agent init
 {
   files:
-      "$(G.testdir)/existingfile"
+    "$(G.testdir)/existingfile"
       create => "true",
       changes => test_changes;
 }
@@ -17,74 +16,94 @@ bundle agent init
 bundle agent test
 {
   files:
-      "$(G.testdir)/nosuchfile"
+    "$(G.testdir)/nosuchfile"
       changes => test_changes,
-      classes => kept_repaired_notkept("nosuchfile_kept", "nosuchfile_repaired", "nosuchfile_notkept");
-      "$(G.testdir)/newfile"
+      classes => kept_repaired_notkept(
+        "nosuchfile_kept", "nosuchfile_repaired", "nosuchfile_notkept"
+      );
+
+    "$(G.testdir)/newfile"
       create => "true",
       changes => test_changes,
-      classes => kept_repaired_notkept("newfile_kept", "newfile_repaired", "newfile_notkept");
-      "$(G.testdir)/existingfile"
+      classes => kept_repaired_notkept(
+        "newfile_kept", "newfile_repaired", "newfile_notkept"
+      );
+
+    "$(G.testdir)/existingfile"
       changes => test_changes,
-      classes => kept_repaired_notkept("existingfile_kept", "existingfile_repaired", "existingfile_notkept");
+      classes => kept_repaired_notkept(
+        "existingfile_kept", "existingfile_repaired", "existingfile_notkept"
+      );
 }
 
 body changes test_changes
 {
-      hash           => "sha256";
-      report_changes => "all";
-      update_hashes  => "yes";
+  hash => "sha256";
+  report_changes => "all";
+  update_hashes => "yes";
 }
 
 body classes kept_repaired_notkept(kept, repaired, notkept)
 {
-      promise_kept => { "$(kept)" };
-      promise_repaired => { "$(repaired)" };
-      repair_failed    => { "$(notkept)" };
-      repair_denied    => { "$(notkept)" };
-      repair_timeout   => { "$(notkept)" };
+  promise_kept => { "$(kept)" };
+  promise_repaired => { "$(repaired)" };
+  repair_failed => { "$(notkept)" };
+  repair_denied => { "$(notkept)" };
+  repair_timeout => { "$(notkept)" };
 }
 
 bundle agent check
 {
-
   classes:
-      "ok" and => { "!nosuchfile_kept",
-                    "!nosuchfile_repaired",
-                    "nosuchfile_notkept",
-                    # Kept state can be either set or unset depending on number of passes.
-                    # Let's not depend on either.
-                    #"!newfile_kept",
-                    "newfile_repaired",
-                    "!newfile_notkept",
-                    "existingfile_kept",
-                    "!existingfile_repaired",
-                    "!existingfile_notkept",
+    "ok"
+      and => {
+        "!nosuchfile_kept",
+        "!nosuchfile_repaired",
+        "nosuchfile_notkept",
+        # Kept state can be either set or unset depending on number of passes.
+        # Let's not depend on either.
+        #"!newfile_kept",
+        "newfile_repaired",
+        "!newfile_notkept",
+        "existingfile_kept",
+        "!existingfile_repaired",
+        "!existingfile_notkept",
       };
 
   reports:
     DEBUG.nosuchfile_kept::
       "nosuchfile_kept is set, but shouldn't be.";
+
     DEBUG.nosuchfile_repaired::
       "nosuchfile_repaired is set, but shouldn't be.";
+
     DEBUG.!nosuchfile_notkept::
       "nosuchfile_notkept is not set, but should be.";
+
     DEBUG.newfile_kept::
       "newfile_kept is set, but shouldn't be. (tolerated, for now)";
+
     DEBUG.!newfile_repaired::
       "newfile_repaired is not set, but should be.";
+
     DEBUG.newfile_notkept::
       "newfile_notkept is set, but shouldn't be.";
+
     DEBUG.!existingfile_kept::
       "existingfile_kept is not set, but should be.";
+
     DEBUG.existingfile_repaired::
       "existingfile_repaired is set, but shouldn't be.";
+
     DEBUG.existingfile_notkept::
       "existingfile_notkept is set, but shouldn't be.";
+
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }
+
 ### PROJECT_ID: core
 ### CATEGORY_ID: 27

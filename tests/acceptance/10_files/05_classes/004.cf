@@ -3,33 +3,27 @@
 # Delete a line that isn't there, action_policy=>"warn", ensure that a promise_kept class gets set
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-      "states" slist => { "actual", "expected" };
-
-      "actual" string =>
-      "keep this
+    "states" slist => { "actual", "expected" };
+    "actual" string => "keep this
 and this
 keep this too";
-
-      "expected" string =>
-      "keep this
+    "expected" string => "keep this
 and this
 keep this too";
 
   files:
-      "$(G.testfile).$(states)"
+    "$(G.testfile).$(states)"
       create => "true",
       edit_line => init_insert("$(init.$(states))"),
       edit_defaults => init_empty;
@@ -38,59 +32,57 @@ keep this too";
 bundle edit_line init_insert(str)
 {
   insert_lines:
-      "$(str)";
+    "$(str)";
 }
 
 body edit_defaults init_empty
 {
-      empty_file_before_editing => "true";
+  empty_file_before_editing => "true";
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-      "tstr" string => ".*delete.*";
+    "tstr" string => ".*delete.*";
 
   files:
-      "$(G.testfile).actual"
-      edit_line => test_delete("$(test.tstr)");
-
+    "$(G.testfile).actual" edit_line => test_delete("$(test.tstr)");
 }
 
 bundle edit_line test_delete(str)
 {
   delete_lines:
-      "$(str)"
+    "$(str)"
       action => test_warn_only,
       classes => full_set;
 }
 
 body action test_warn_only
 {
-      action_policy => "warn";
+  action_policy => "warn";
 }
 
 body classes full_set
 {
-      promise_kept     => { "pass" };
-      promise_repaired => { "fail" };
-      repair_failed    => { "fail" };
-      repair_denied    => { "fail" };
-      repair_timeout   => { "fail" };
+  promise_kept => { "pass" };
+  promise_repaired => { "fail" };
+  repair_failed => { "fail" };
+  repair_denied => { "fail" };
+  repair_timeout => { "fail" };
 }
 
-
 #######################################################
-
 bundle agent check
 {
   methods:
     pass.!fail::
-      "any" usebundle => dcs_check_diff("$(G.testfile).actual",
-                                            "$(G.testfile).expected",
-                                            "$(this.promise_filename)");
+      "any"
+        usebundle => dcs_check_diff(
+          "$(G.testfile).actual",
+          "$(G.testfile).expected",
+          "$(this.promise_filename)"
+        );
 
   reports:
     !pass|fail::

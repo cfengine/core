@@ -1,28 +1,25 @@
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
 }
 
 bundle agent test
 {
   meta:
-      "description" -> { "CFE-2631" }
-        string => "Test that empty lists or data containers do not return true with filesexist. There are no files provided to verify!";
+    "description" -> { "CFE-2631" }
+      string => "Test that empty lists or data containers do not return true with filesexist. There are no files provided to verify!";
 
   vars:
-      "emptylist" slist => {};
-      "emptydata" data => '{}';
+    "emptylist" slist => {};
+    "emptydata" data => '{}';
 
   classes:
-      "files_in_empty_list_exist"
-      expression => filesexist( @(emptylist) );
+    "files_in_empty_list_exist" expression => filesexist(@(emptylist));
+    "files_in_empty_data_exist" expression => filesexist(@(emptydata));
 
-      "files_in_empty_data_exist"
-      expression => filesexist( @(emptydata) );
-
-      "pass"
-        expression => "!(files_in_empty_list_exist|files_in_empty_data_exist)";
+    "pass"
+      expression => "!(files_in_empty_list_exist|files_in_empty_data_exist)";
 
   reports:
     DEBUG|EXTRA::

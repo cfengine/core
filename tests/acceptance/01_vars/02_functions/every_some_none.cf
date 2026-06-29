@@ -3,105 +3,188 @@
 # Test every(), some(), and none()
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent test
 {
   methods:
-      "pretest";
-      "collect";
+    "pretest";
+    "collect";
 }
 
 bundle common pretest
 {
   vars:
-      "test" slist => {
-                        1,2,3,
-                        "one", "two", "three",
-                        "long string",
-                        "four", "fix", "six",
-                        "one", "two", "three",
+    "test"
+      slist => {
+        1,
+        2,
+        3,
+        "one",
+        "two",
+        "three",
+        "long string",
+        "four",
+        "fix",
+        "six",
+        "one",
+        "two",
+        "three",
       };
 
-      "empty" slist => { };
+    "empty" slist => {};
 
-      "d1" data => parsejson('
+    "d1"
+      data => parsejson(
+        '
 [1,2,3,
  "one", "two", "three",
  "long string",
  "four", "fix", "six",
- "one", "two", "three"]');
+ "one", "two", "three"]'
+      );
 
-      "d2" data => parsejson('
+    "d2"
+      data => parsejson(
+        '
 { "one": 1, "two": 2, "three": 3,
-  "x": "y", "a": "b", "p": "q" }');
+  "x": "y", "a": "b", "p": "q" }'
+      );
 
-      "dempty" data => parsejson('[]');
-
-      "collected" slist => classesmatching(".*", "collect");
-      "collected_sorted" slist => sort(collected, "lex");
+    "dempty" data => parsejson('[]');
+    "collected" slist => classesmatching(".*", "collect");
+    "collected_sorted" slist => sort(collected, "lex");
 
   classes:
-      "every1" meta => { "collect" }, expression => every(".*", "test");
-      "every2" meta => { "collect" }, expression => every(".", "test");
+    "every1"
+      meta => { "collect" },
+      expression => every(".*", "test");
 
-      "some1" meta => { "collect" }, expression => some("long string", "test");
-      "some2" meta => { "collect" }, expression => some("none", "test");
+    "every2"
+      meta => { "collect" },
+      expression => every(".", "test");
 
-      "none1" meta => { "collect" }, expression => none("jebadiah", "test");
-      "none2" meta => { "collect" }, expression => none("2", "test");
+    "some1"
+      meta => { "collect" },
+      expression => some("long string", "test");
 
-      "every_empty" meta => { "collect" }, expression => every(".*", "empty");
-      "some_empty" meta => { "collect" }, expression => some(".*", "empty");
-      "none_empty" meta => { "collect" }, expression => none(".*", "empty");
+    "some2"
+      meta => { "collect" },
+      expression => some("none", "test");
 
-      "everyd11" meta => { "collect" }, expression => every(".*", d1);
-      "everyd12" meta => { "collect" }, expression => every(".", d1);
+    "none1"
+      meta => { "collect" },
+      expression => none("jebadiah", "test");
 
-      "somed11" meta => { "collect" }, expression => some("long string", d1);
-      "somed12" meta => { "collect" }, expression => some("none", d1);
+    "none2"
+      meta => { "collect" },
+      expression => none("2", "test");
 
-      "noned11" meta => { "collect" }, expression => none("jebadiah", d1);
-      "noned12" meta => { "collect" }, expression => none("2", d1);
+    "every_empty"
+      meta => { "collect" },
+      expression => every(".*", "empty");
 
-      "everyd21" meta => { "collect" }, expression => every(".*", d2);
-      "everyd22" meta => { "collect" }, expression => every(".", d2);
+    "some_empty"
+      meta => { "collect" },
+      expression => some(".*", "empty");
 
-      "somed21" meta => { "collect" }, expression => some("long string", d2);
-      "somed22" meta => { "collect" }, expression => some("none", d2);
+    "none_empty"
+      meta => { "collect" },
+      expression => none(".*", "empty");
 
-      "noned21" meta => { "collect" }, expression => none("jebadiah", d2);
-      "noned22" meta => { "collect" }, expression => none("2", d2);
+    "everyd11"
+      meta => { "collect" },
+      expression => every(".*", d1);
 
-      "every_dempty" meta => { "collect" }, expression => every(".*", dempty);
-      "some_dempty" meta => { "collect" }, expression => some(".*", dempty);
-      "none_dempty" meta => { "collect" }, expression => none(".*", dempty);
+    "everyd12"
+      meta => { "collect" },
+      expression => every(".", d1);
 
-      # with inline JSON
-      "inline_every_empty" meta => { "collect" }, expression => every(".*", '[]');
-      "inline_some_data" meta => { "collect" }, expression => every(".*", '[ "foo", "bar" ]');
-      "inline_none_data" meta => { "collect" }, expression => none("jebadiah", '[ "foo", "bar" ]');
+    "somed11"
+      meta => { "collect" },
+      expression => some("long string", d1);
 
+    "somed12"
+      meta => { "collect" },
+      expression => some("none", d1);
+
+    "noned11"
+      meta => { "collect" },
+      expression => none("jebadiah", d1);
+
+    "noned12"
+      meta => { "collect" },
+      expression => none("2", d1);
+
+    "everyd21"
+      meta => { "collect" },
+      expression => every(".*", d2);
+
+    "everyd22"
+      meta => { "collect" },
+      expression => every(".", d2);
+
+    "somed21"
+      meta => { "collect" },
+      expression => some("long string", d2);
+
+    "somed22"
+      meta => { "collect" },
+      expression => some("none", d2);
+
+    "noned21"
+      meta => { "collect" },
+      expression => none("jebadiah", d2);
+
+    "noned22"
+      meta => { "collect" },
+      expression => none("2", d2);
+
+    "every_dempty"
+      meta => { "collect" },
+      expression => every(".*", dempty);
+
+    "some_dempty"
+      meta => { "collect" },
+      expression => some(".*", dempty);
+
+    "none_dempty"
+      meta => { "collect" },
+      expression => none(".*", dempty);
+
+    # with inline JSON
+    "inline_every_empty"
+      meta => { "collect" },
+      expression => every(".*", '[]');
+
+    "inline_some_data"
+      meta => { "collect" },
+      expression => every(".*", '[ "foo", "bar" ]');
+
+    "inline_none_data"
+      meta => { "collect" },
+      expression => none("jebadiah", '[ "foo", "bar" ]');
 }
 
 bundle common collect
 {
   vars:
-      "collected" slist => { @(pretest.collected_sorted) };
+    "collected" slist => { @(pretest.collected_sorted) };
 }
 
 bundle agent check
 {
   methods:
-      "check"  usebundle => dcs_check_state(collect,
-                                           "$(this.promise_filename).expected.json",
-                                           $(this.promise_filename));
+    "check"
+      usebundle => dcs_check_state(
+        collect,
+        "$(this.promise_filename).expected.json",
+        $(this.promise_filename)
+      );
 }

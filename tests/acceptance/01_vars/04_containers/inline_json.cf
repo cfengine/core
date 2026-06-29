@@ -3,50 +3,53 @@
 # Test inline JSON and YAML data
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-      "included" string => "( included text )";
-      "options1" data => '
+    "included" string => "( included text )";
+
+    "options1"
+      data => '
 {
   "max_content": 512,
   "verbose": 0,
   "headers": [ "Foo: bar" ]
 }';
 
-      "options3" data => '
+    "options3"
+      data => '
 {
   "max_content": 512,
   "verbose": "$(included)",
   "headers": [ "Foo: bar" ]
 }';
 
-      # same as options3 but with bareword keys
-      "options4" data => '
+    # same as options3 but with bareword keys
+    "options4"
+      data => '
 {
   max_content: 512,
   verbose: "$(included)",
   headers: [ "Foo: bar" ]
 }';
-
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
-      "check"  usebundle => dcs_check_state(test,
-                                           "$(this.promise_filename).expected.json",
-                                           $(this.promise_filename));
+    "check"
+      usebundle => dcs_check_state(
+        test,
+        "$(this.promise_filename).expected.json",
+        $(this.promise_filename)
+      );
 }

@@ -1,7 +1,7 @@
 body common control
 {
-        inputs => { "../../default.sub.cf" };
-        bundlesequence  => { default("$(this.promise_filename)") };
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
 }
 
 bundle agent test
@@ -14,9 +14,10 @@ bundle agent test
     "data" data => "{\"env\":\"test\"}";
     "node" data => mergedata("[]", "data[env]");
 }
+
 bundle agent check
 {
   methods:
     "Pass if we made it this far"
-      usebundle => dcs_pass( $(this.promise_filename) );
+      usebundle => dcs_pass($(this.promise_filename));
 }

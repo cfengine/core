@@ -5,9 +5,9 @@
 #######################################################
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle common g
@@ -15,6 +15,7 @@ bundle common g
   vars:
     "datafile" string => "$(this.promise_dirname)/rules.json";
 }
+
 bundle agent init
 {
   vars:
@@ -24,9 +25,8 @@ bundle agent init
 
     "tests"
       slist => {
-                 "test_delete_with_spec_from_data",
-                 "test_delete_with_spec_from_policy",
-                },
+        "test_delete_with_spec_from_data", "test_delete_with_spec_from_policy",
+      },
       comment => "We have two tests combined here because they should be kept in sync.";
 
     "data" data => readjson($(g.datafile), 1M);
@@ -55,54 +55,66 @@ bundle agent test
       meta => { "redmine#6584", "zendesk#1466" };
 
   methods:
-      "Test delete with spec from policy"
-        usebundle => test_delete_with_spec_from_policy;
+    "Test delete with spec from policy"
+      usebundle => test_delete_with_spec_from_policy;
 
-      "Test delete with spec from data"
-        usebundle => test_delete_with_spec_from_data($(g.datafile));
+    "Test delete with spec from data"
+      usebundle => test_delete_with_spec_from_data($(g.datafile));
 }
 
-bundle agent test_delete_with_spec_from_policy {
+bundle agent test_delete_with_spec_from_policy
+{
   files:
     # This promise should be an effictive mirror of the promise with handle 'test_delete_with_spec_from_data'
-      "$(G.testdir)/$(this.bundle)/tmp/logs/tidy"
-        delete => tidy,
-        file_select =>
-          select_file_with_extension_retention_mtime(".*.log", # == 'filter' key in JSON
-                                                     "plain",  # == 'type' key in JSON 
-                                                     "2",      # == 'retention' key in JSON
-                                                     "$(G.testdir)/$(this.bundle)/tmp/logs/tidy"), # == 'location' key in JSON
-        depth_search => recurse("2"),                          # == 'depth' key in JSON
-        action => if_elapsed_inform("10"),                     # == 'frequency' key in JSON
-        if => "any";                                           # == 'context' key in JSON
+    "$(G.testdir)/$(this.bundle)/tmp/logs/tidy"
+      delete => tidy,
+      file_select => select_file_with_extension_retention_mtime(
+        ".*.log",
+        # == 'filter' key in JSON
+        "plain",
+        # == 'type' key in JSON 
+        "2",
+        # == 'retention' key in JSON
+        "$(G.testdir)/$(this.bundle)/tmp/logs/tidy"
+      ),
+      # == 'location' key in JSON
+      depth_search => recurse("2"),
+      # == 'depth' key in JSON
+      action => if_elapsed_inform("10"),
+      # == 'frequency' key in JSON
+      if => "any";
 
+  # == 'context' key in JSON
   reports:
     DEBUG::
-    "'$(G.testdir)/$(this.bundle)/tmp/logs/tidy'";
+      "'$(G.testdir)/$(this.bundle)/tmp/logs/tidy'";
 }
 
 bundle agent test_delete_with_spec_from_data(ref)
 {
   vars:
-      "input_cleanup"
-        comment => "Read json file into container",
-        data => readjson("${ref}", 1024);
+    "input_cleanup"
+      comment => "Read json file into container",
+      data => readjson("${ref}", 1024);
 
-      "i"
-        comment => "Get index of json for iteration",
-        slist => getindices("input_cleanup");
+    "i"
+      comment => "Get index of json for iteration",
+      slist => getindices("input_cleanup");
 
   methods:
-      "do_cleanup" usebundle => do_cleanup("${input_cleanup[${i}][location]}",
-                                           "${input_cleanup[${i}][context]}",
-                                           "${input_cleanup[${i}][action]}",
-                                           "${input_cleanup[${i}][frequency]}",
-                                           "${input_cleanup[${i}][type]}",
-                                           "${input_cleanup[${i}][filter]}",
-                                           "${input_cleanup[${i}][retention]}",
-                                           "${input_cleanup[${i}][depth]}",
-                                           "${input_cleanup[${i}][size]}",
-                                           "${input_cleanup[${i}][reason]}");
+    "do_cleanup"
+      usebundle => do_cleanup(
+        "${input_cleanup[${i}][location]}",
+        "${input_cleanup[${i}][context]}",
+        "${input_cleanup[${i}][action]}",
+        "${input_cleanup[${i}][frequency]}",
+        "${input_cleanup[${i}][type]}",
+        "${input_cleanup[${i}][filter]}",
+        "${input_cleanup[${i}][retention]}",
+        "${input_cleanup[${i}][depth]}",
+        "${input_cleanup[${i}][size]}",
+        "${input_cleanup[${i}][reason]}"
+      );
 
   reports:
     DEBUG::
@@ -120,35 +132,27 @@ reason => ${input_cleanup[${i}][reason]}
 ";
 }
 
-
-
-bundle agent do_cleanup(location,
-                        context,
-                        action,
-                        frequency,
-                        type,
-                        filter,
-                        retention,
-                        depth,
-                        size,
-                        reason) {
+bundle agent do_cleanup(location, context, action, frequency, type, filter, retention, depth, size, reason)
+{
   classes:
-      #"action_tidy" expression => strcmp("$(action)", "TIDY");
-      #"action_rotate" expression => strcmp("$(action)", "ROTATE");
-      #"requested_size" expression => regcmp("[0-9]*", "$(size)");
 
+  #"action_tidy" expression => strcmp("$(action)", "TIDY");
+  #"action_rotate" expression => strcmp("$(action)", "ROTATE");
+  #"requested_size" expression => regcmp("[0-9]*", "$(size)");
   files:
     #action_tidy::
-      "$(G.testdir)/test_delete_with_spec_from_data/$(location)"
-        handle => "test_delete_with_spec_from_data",
-        delete => tidy,
-        file_select => select_file_with_extension_retention_mtime("$(filter)",
-                                                                  "$(type)",
-                                                                  "$(retention)",
-                                                                  "$(G.testdir)/test_delete_with_spec_from_data/$(location)"),
-        depth_search => recurse("$(depth)"),
-        action => if_elapsed_inform("$(frequency)"),
-        if => "$(context)";
+    "$(G.testdir)/test_delete_with_spec_from_data/$(location)"
+      handle => "test_delete_with_spec_from_data",
+      delete => tidy,
+      file_select => select_file_with_extension_retention_mtime(
+        "$(filter)",
+        "$(type)",
+        "$(retention)",
+        "$(G.testdir)/test_delete_with_spec_from_data/$(location)"
+      ),
+      depth_search => recurse("$(depth)"),
+      action => if_elapsed_inform("$(frequency)"),
+      if => "$(context)";
 
   reports:
     DEBUG::
@@ -158,16 +162,29 @@ bundle agent do_cleanup(location,
 bundle agent check
 {
   vars:
-    "files[test_delete_with_spec_from_data]" slist => lsdir("$(G.testdir)/test_delete_with_spec_from_data/tmp/logs/tidy", ".*.log", "false");
-    "files[test_delete_with_spec_from_policy]" slist => lsdir("$(G.testdir)/test_delete_with_spec_from_policy/tmp/logs/tidy", ".*.log", "false");
+    "files[test_delete_with_spec_from_data]"
+      slist => lsdir(
+        "$(G.testdir)/test_delete_with_spec_from_data/tmp/logs/tidy",
+        ".*.log",
+        "false"
+      );
+
+    "files[test_delete_with_spec_from_policy]"
+      slist => lsdir(
+        "$(G.testdir)/test_delete_with_spec_from_policy/tmp/logs/tidy",
+        ".*.log",
+        "false"
+      );
 
     "count_files[test_delete_with_spec_from_data]"
-      int => length("files[test_delete_with_spec_from_data]")
-      ;
+      int => length("files[test_delete_with_spec_from_data]");
+
     "count_files[test_delete_with_spec_from_policy]"
       int => length("files[test_delete_with_spec_from_policy]");
 
-    "files_in_tidy_dir_count_$(init.tests)" int => length("files_in_tidy_dir[$(init.tests)]");
+    "files_in_tidy_dir_count_$(init.tests)"
+      int => length("files_in_tidy_dir[$(init.tests)]");
+
     "OK_tests" slist => maplist("OK_$(this)", @(init.tests));
 
   classes:
@@ -185,12 +202,8 @@ bundle agent check
       "files[test_delete_with_spec_from_policy] = $(files[test_delete_with_spec_from_policy])";
       "count_files[test_delete_with_spec_from_data] = $(count_files[test_delete_with_spec_from_data])";
       "count_files[test_delete_with_spec_from_policy] = $(count_files[test_delete_with_spec_from_policy])";
-
-      "$(init.tests) pass"
-        if => "OK_$(init.tests)";
-
-      "$(init.tests) fail"
-        if => "!OK_$(init.tests)";
+      "$(init.tests) pass" if => "OK_$(init.tests)";
+      "$(init.tests) fail" if => "!OK_$(init.tests)";
 
     OK::
       "$(this.promise_filename) Pass";
@@ -198,18 +211,24 @@ bundle agent check
     !OK::
       "$(this.promise_filename) FAIL";
 }
-body file_select select_file_with_extension_retention_mtime(filter, type, days_old, location) {
-    mtime => irange(0, ago(0, 0, $(days_old), 0, 0, 0));
-    path_name => { "$(location)/.*" };
-    leaf_name => { "$(filter)" };
-    file_types => { "$(type)" };
-#    The intention is to select files older than x days (mtime between now and x days ago should be retained) I believe the second file_result is correct.
-#    file_result => "mtime.path_name.leaf_name.file_types"; # Oddly this works for test_delete_with_spec_from_policy, but not with test_delete_with_spec_from_data
-    file_result => "!mtime.path_name.leaf_name.file_types"; # Oddly this works for test_delete_with_spec_from_data, but not with test_delete_with_spec_from_policy
+
+body file_select select_file_with_extension_retention_mtime(filter, type, days_old, location)
+{
+  mtime => irange(0, ago(0, 0, $(days_old), 0, 0, 0));
+  path_name => { "$(location)/.*" };
+  leaf_name => { "$(filter)" };
+  file_types => { "$(type)" };
+
+  #    The intention is to select files older than x days (mtime between now and x days ago should be retained) I believe the second file_result is correct.
+  #    file_result => "mtime.path_name.leaf_name.file_types"; # Oddly this works for test_delete_with_spec_from_policy, but not with test_delete_with_spec_from_data
+  file_result => "!mtime.path_name.leaf_name.file_types";
+
+  # Oddly this works for test_delete_with_spec_from_data, but not with test_delete_with_spec_from_policy
 }
 
-body action if_elapsed_inform(x) {
-    report_level => "inform";
-    ifelapsed => "$(x)";
-    expireafter => "$(x)";
+body action if_elapsed_inform(x)
+{
+  report_level => "inform";
+  ifelapsed => "$(x)";
+  expireafter => "$(x)";
 }

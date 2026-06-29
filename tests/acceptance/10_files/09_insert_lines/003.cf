@@ -3,30 +3,26 @@
 # Insert a number of lines at the end of a partially bounded region
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-      "states" slist => { "actual", "expected" };
-
-      "actual" string =>
-      "BEGIN
+    "states" slist => { "actual", "expected" };
+    "actual" string => "BEGIN
     One potato
     Two potato
     Four
 END";
 
-      "expected" string =>
-      "BEGIN
+    "expected"
+      string => "BEGIN
     One potato
     Two potato
     Four
@@ -34,7 +30,7 @@ END
     Three potatoe";
 
   files:
-      "$(G.testfile).$(states)"
+    "$(G.testfile).$(states)"
       create => "true",
       edit_line => init_insert("$(init.$(states))"),
       edit_defaults => init_empty;
@@ -43,52 +39,50 @@ END
 bundle edit_line init_insert(str)
 {
   insert_lines:
-      "$(str)";
+    "$(str)";
 }
 
 body edit_defaults init_empty
 {
-      empty_file_before_editing => "true";
+  empty_file_before_editing => "true";
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-      "tstr" string =>
-      "    One potato
+    "tstr" string => "    One potato
     Two potato
     Three potatoe
     Four";
 
   files:
-      "$(G.testfile).actual"
+    "$(G.testfile).actual"
       create => "true",
       edit_line => test_insert("$(test.tstr)");
-
 }
 
 bundle edit_line test_insert(str)
 {
   insert_lines:
-      "$(str)"
-      select_region => test_region;
+    "$(str)" select_region => test_region;
 }
 
 body select_region test_region
 {
-      select_start => "BEGIN";
+  select_start => "BEGIN";
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
-      "any" usebundle => dcs_check_diff("$(G.testfile).actual",
-                                            "$(G.testfile).expected",
-                                            "$(this.promise_filename)");
+    "any"
+      usebundle => dcs_check_diff(
+        "$(G.testfile).actual",
+        "$(G.testfile).expected",
+        "$(this.promise_filename)"
+      );
 }
 
 ### PROJECT_ID: core

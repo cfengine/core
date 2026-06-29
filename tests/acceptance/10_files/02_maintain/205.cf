@@ -4,30 +4,32 @@
 # overwrite mode, size, but DOES change owner, group (symbolic IDs)
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
-      cache_system_functions => "false";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+  cache_system_functions => "false";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
     freebsd|solaris::
       "mode" int => "04751";
+
     !freebsd.!solaris::
       "mode" int => "01751";
+
     linux::
       "owner" string => "sys";
       "group" string => "sys";
+
     freebsd::
       "owner" string => "bin";
       "group" string => "sys";
+
     !(linux|freebsd)::
       "owner" string => "undefined-please-fix";
       "group" string => "undefined-please-fix";
@@ -48,7 +50,7 @@ bundle agent init
       "fields" slist => getindices("expect");
 
   files:
-      "$(G.testfile)"
+    "$(G.testfile)"
       copy_from => init_copy("$(G.etc_group)"),
       perms => init_perms("$(mode)", "$(owner)", "$(group)"),
       classes => init_set_class("pass2");
@@ -56,75 +58,82 @@ bundle agent init
 
 body copy_from init_copy(file)
 {
-      source => "$(file)";
+  source => "$(file)";
 }
 
 body perms init_perms(m, o, g)
 {
-      mode => "$(m)";
-      owners => { "$(o)" };
-      groups => { "$(g)" };
+  mode => "$(m)";
+  owners => { "$(o)" };
+  groups => { "$(g)" };
 }
 
 body classes init_set_class(class)
 {
-      promise_kept => { "$(class)" };
-      promise_repaired => { "$(class)" };
+  promise_kept => { "$(class)" };
+  promise_repaired => { "$(class)" };
 }
 
 #######################################################
-
 bundle agent test
 {
   files:
-      "$(G.testfile)"
+    "$(G.testfile)"
       create => "true",
       perms => test_perms("a+r");
 }
 
 body perms test_perms(m)
 {
-      mode => "$(m)";
-      owners => { "root" };
-    linux|hpux|solaris|qnx::
-      groups => { "root" };
-    freebsd|netbsd|openbsd|darwin|dragonfly::
-      groups => { "wheel" };
-    aix::
-      groups => { "system" };
-    cray::
-      groups => { "sys" };
-      # Still need unix_sv, sco, vmware
+  mode => "$(m)";
+  owners => { "root" };
+
+  linux|hpux|solaris|qnx::
+    groups => { "root" };
+
+  freebsd|netbsd|openbsd|darwin|dragonfly::
+    groups => { "wheel" };
+
+  aix::
+    groups => { "system" };
+
+  cray::
+    groups => { "sys" };
+
+    # Still need unix_sv, sco, vmware
 }
 
 #######################################################
-
 bundle agent check
 {
   vars:
     freebsd|solaris::
       "expect[modeoct]" string => "104755";
+
     !freebsd.!solaris.!windows::
       "expect[modeoct]" string => "101755";
+
     !windows::
       "expect[uid]" string => "0";
       "expect[gid]" string => "0";
+
     any::
       "expect[nlink]" string => "1";
       "expect[size]" string => filestat("$(G.etc_group)", "size");
-
       "fields" slist => getindices("expect");
       "result[$(fields)]" string => filestat("$(G.testfile)", "$(fields)");
 
   classes:
-      "not_ok" not => regcmp("$(expect[$(fields)])", "$(result[$(fields)])");
+    "not_ok" not => regcmp("$(expect[$(fields)])", "$(result[$(fields)])");
 
   reports:
     DEBUG::
       "expected:    $(fields) = '$(expect[$(fields)])'";
       "result:      $(fields) = '$(result[$(fields)])'";
+
     !not_ok::
       "$(this.promise_filename) Pass";
+
     not_ok::
       "$(this.promise_filename) FAIL";
 }

@@ -1,37 +1,49 @@
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent init
 {
   vars:
-      "desert" string => "Sahara";
-      "state2" data => parsejson('{"x": 1, "y": [{"item": 2}, {"item": 3}, {"item": 4}]}');
+    "desert" string => "Sahara";
+
+    "state2"
+      data => parsejson(
+        '{"x": 1, "y": [{"item": 2}, {"item": 3}, {"item": 4}]}'
+      );
 }
 
 bundle agent test
 {
   vars:
-      "out11" string => string_mustache("desert = {{vars.init.desert}}");
+    "out11" string => string_mustache("desert = {{vars.init.desert}}");
 
-      "out21" string => string_mustache("desert = {{vars.init.desert}}", "init.state2");
-      "out22" string => string_mustache("x = {{x}}", "init.state2");
-      "out23" string => string_mustache("{{#y}}{{item}} {{/y}}", "init.state2");
+    "out21"
+      string => string_mustache("desert = {{vars.init.desert}}", "init.state2");
 
-      "inline" string => string_mustache("{{#y}}{{item}} {{/y}}", '{ "y": [{"item": 2}, {"item": 3}, {"item": 4}]}');
+    "out22" string => string_mustache("x = {{x}}", "init.state2");
+    "out23" string => string_mustache("{{#y}}{{item}} {{/y}}", "init.state2");
 
-      "badref" string => string_mustache("desert = {{vars.init.desert}}", nosuch);
+    "inline"
+      string => string_mustache(
+        "{{#y}}{{item}} {{/y}}",
+        '{ "y": [{"item": 2}, {"item": 3}, {"item": 4}]}'
+      );
+
+    "badref" string => string_mustache("desert = {{vars.init.desert}}", nosuch);
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
-      "check"  usebundle => dcs_check_state(test,
-                                           "$(this.promise_filename).expected.json",
-                                           $(this.promise_filename));
+    "check"
+      usebundle => dcs_check_state(
+        test,
+        "$(this.promise_filename).expected.json",
+        $(this.promise_filename)
+      );
 }

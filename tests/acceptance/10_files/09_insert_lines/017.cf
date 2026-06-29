@@ -3,39 +3,40 @@
 # Try to insert lines from a file that is really a directory.
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
-
-bundle agent test {
+bundle agent test
+{
   files:
-      "$(G.testfile)"
+    "$(G.testfile)"
       edit_line => insert_dir,
       create => "true";
 }
 
-bundle edit_line insert_dir {
+bundle edit_line insert_dir
+{
   insert_lines:
-      "$(G.testroot)" insert_type => "file",
+    "$(G.testroot)"
+      insert_type => "file",
       classes => if_notkept("ok");
 }
 
 #######################################################
-
 bundle agent check
 {
   reports:
     DEBUG::
       "This should only pass if inserting lines from a directory fails";
+
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

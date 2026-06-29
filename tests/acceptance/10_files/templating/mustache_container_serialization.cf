@@ -3,51 +3,57 @@
 # Demo of Mustache templates with no external JSON data
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-      "a" string => "[]";
-      "b" string => "{}";
-      "c" string => '{"a":100,"b":200}';
-      "d" string => '[{"a":100,"b":200},null,true,false,"abcde"]';
-
-      "test" slist => { "a", "b", "c", "d" };
+    "a" string => "[]";
+    "b" string => "{}";
+    "c" string => '{"a":100,"b":200}';
+    "d" string => '[{"a":100,"b":200},null,true,false,"abcde"]';
+    "test" slist => { "a", "b", "c", "d" };
 
   methods:
-      "" usebundle => file_mustache_jsonstring("$(this.promise_filename).mustache",
-                                              '{ "name": "$(test)", "data": $($(test)) }',
-                                              "$(G.testdir)/$(test)");
+    ""
+      usebundle => file_mustache_jsonstring(
+        "$(this.promise_filename).mustache",
+        '{ "name": "$(test)", "data": $($(test)) }',
+        "$(G.testdir)/$(test)"
+      );
 
-      "" usebundle => test2;
+    "" usebundle => test2;
 }
 
 bundle agent test2
 {
   files:
-      "$(G.testfile).expected" create => "true", edit_line => insertthem;
-      "$(G.testfile).actual" create => "true", edit_line => readthem;
+    "$(G.testfile).expected"
+      create => "true",
+      edit_line => insertthem;
+
+    "$(G.testfile).actual"
+      create => "true",
+      edit_line => readthem;
 }
 
 bundle edit_line insertthem
 {
   vars:
-      "test" slist => { @(test.test) };
-      "parsed_$(test)" data => parsejson("$(test.$(test))");
-      "fulldump_$(test)" string => storejson("parsed_$(test)");
+    "test" slist => { @(test.test) };
+    "parsed_$(test)" data => parsejson("$(test.$(test))");
+    "fulldump_$(test)" string => storejson("parsed_$(test)");
 
   insert_lines:
-      "$(test)$(test.$(test))$(test)
-$(test)$(fulldump_$(test))$(test)" insert_type => "preserve_block";
+    "$(test)$(test.$(test))$(test)
+$(test)$(fulldump_$(test))$(test)"
+      insert_type => "preserve_block";
 
   reports:
     EXTRA::
@@ -57,10 +63,11 @@ $(test)$(fulldump_$(test))$(test)" insert_type => "preserve_block";
 bundle edit_line readthem
 {
   vars:
-      "test" slist => { @(test.test) };
-      "read_$(test)" string => readfile("$(G.testdir)/$(test)", 1k);
+    "test" slist => { @(test.test) };
+    "read_$(test)" string => readfile("$(G.testdir)/$(test)", 1k);
+
   insert_lines:
-      "$(read_$(test))";
+    "$(read_$(test))";
 
   reports:
     EXTRA::
@@ -68,14 +75,16 @@ bundle edit_line readthem
 }
 
 #######################################################
-
 bundle agent check
 {
   vars:
-      "test" slist => { @(test.test) };
+    "test" slist => { @(test.test) };
 
   methods:
-      "" usebundle => dcs_check_diff("$(G.testfile).expected",
-                                    "$(G.testfile).actual",
-                                    $(this.promise_filename));
+    ""
+      usebundle => dcs_check_diff(
+        "$(G.testfile).expected",
+        "$(G.testfile).actual",
+        $(this.promise_filename)
+      );
 }

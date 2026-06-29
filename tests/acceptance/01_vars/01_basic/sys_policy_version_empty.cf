@@ -6,11 +6,12 @@ body common control
 bundle agent check
 {
   classes:
-    "ok"
-      expression => not(isvariable("sys.policy_version"));
+    "ok" expression => not(isvariable("sys.policy_version"));
+
   reports:
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

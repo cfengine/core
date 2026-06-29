@@ -1,27 +1,26 @@
 # Test whether successive package locks can be grabbed, both immediately
 # following each other and after a time delay. (Redmine #7933).
-
 body common control
 {
-    inputs => { "../../../default.sub.cf" };
-    bundlesequence => { default("$(this.promise_filename)") };
+  inputs => { "../../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
 }
 
 bundle agent init
 {
   meta:
-      # "no_fds" won't work correctly on Windows.
-      # Also Solaris 9 and 10 don't seem to handle the backgrounding used in
-      # this test. But it seems unrelated to the actual fix.
-      "test_skip_needs_work" string => "windows|sunos_5_9|sunos_5_10";
+    # "no_fds" won't work correctly on Windows.
+    # Also Solaris 9 and 10 don't seem to handle the backgrounding used in
+    # this test. But it seems unrelated to the actual fix.
+    "test_skip_needs_work" string => "windows|sunos_5_9|sunos_5_10";
 
-      # The backgrounding doesn't work well under fakeroot.
-      "test_skip_unsupported" string => "using_fakeroot";
+    # The backgrounding doesn't work well under fakeroot.
+    "test_skip_unsupported" string => "using_fakeroot";
 
   files:
     test_pass_1::
-      "$(sys.workdir)/modules/packages/."
-        create => "true";
+      "$(sys.workdir)/modules/packages/." create => "true";
+
       "$(sys.workdir)/modules/packages/test_module"
         copy_from => local_cp("$(this.promise_filename).module"),
         perms => m("ugo+x");
@@ -50,7 +49,10 @@ bundle agent check
       "any" usebundle => dcs_wait($(this.promise_filename), 300);
 
     test_pass_2::
-      "any" usebundle => dcs_check_diff($(G.testfile),
-                                        "$(this.promise_filename).expected",
-                                        $(this.promise_filename));
+      "any"
+        usebundle => dcs_check_diff(
+          $(G.testfile),
+          "$(this.promise_filename).expected",
+          $(this.promise_filename)
+        );
 }

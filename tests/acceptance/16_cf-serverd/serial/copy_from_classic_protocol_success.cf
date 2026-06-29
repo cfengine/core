@@ -1,23 +1,33 @@
 body common control
 {
-      inputs => { "../../default.sub.cf", "../../run_with_server.cf.sub" };
-      bundlesequence => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf", "../../run_with_server.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent test
 {
   methods:
-      # source file
-      "any" usebundle => file_make("$(G.testdir)/source_file",
-                                   "Source file to copy, always fresh, $(sys.date)");
+    # source file
+    "any"
+      usebundle => file_make(
+        "$(G.testdir)/source_file",
+        "Source file to copy, always fresh, $(sys.date)"
+      );
 
-      # ensure destination files are not there
-      "any" usebundle => dcs_fini("$(G.testdir)/destfile1");
+    # ensure destination files are not there
+    "any" usebundle => dcs_fini("$(G.testdir)/destfile1");
+    "any" usebundle => generate_key;
 
-      "any" usebundle => generate_key;
+    "any"
+      usebundle => start_server(
+        "$(this.promise_dirname)/allowlegacyconnects_open.srv"
+      );
 
-      "any" usebundle => start_server("$(this.promise_dirname)/allowlegacyconnects_open.srv");
-      "any" usebundle => run_test("$(this.promise_filename).sub");
-      "any" usebundle => stop_server("$(this.promise_dirname)/allowlegacyconnects_open.srv");
+    "any" usebundle => run_test("$(this.promise_filename).sub");
+
+    "any"
+      usebundle => stop_server(
+        "$(this.promise_dirname)/allowlegacyconnects_open.srv"
+      );
 }

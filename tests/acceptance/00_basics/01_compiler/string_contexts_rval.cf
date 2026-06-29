@@ -1,11 +1,10 @@
 # fixes https://dev.cfengine.com/issues/2504 using variables in string
 # contexts when a promise has a previous if *with a FnCall*
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent test
@@ -16,6 +15,5 @@ bundle agent check
 {
   reports:
     "any"::
-      "$(this.promise_filename) Pass"
-      if => and("any");
+      "$(this.promise_filename) Pass" if => and("any");
 }

@@ -3,48 +3,44 @@
 # Set a class if a process does exist
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-      "dummy" string => "dummy";
+    "dummy" string => "dummy";
 }
 
 #######################################################
-
 bundle agent test
 {
   processes:
-      "\bcf-agent\b"
-      process_count => test_no_such;
+    "\bcf-agent\b" process_count => test_no_such;
 }
 
 body process_count test_no_such
 {
-      in_range_define => { "none_found" };
-      out_of_range_define => { "some_found" };
-      match_range => irange(0,0);
+  in_range_define => { "none_found" };
+  out_of_range_define => { "some_found" };
+  match_range => irange(0, 0);
 }
 
 #######################################################
-
 bundle agent check
 {
   classes:
-      "ok" expression => "!none_found.some_found";
+    "ok" expression => "!none_found.some_found";
 
   reports:
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

@@ -3,11 +3,10 @@
 # See ticket ENT-13536 for info
 #
 #######################################################
-
 body common control
 {
   inputs => { "../default.sub.cf" };
-  bundlesequence  => { "G", "g", default("$(this.promise_filename)") };
+  bundlesequence => { "G", "g", default("$(this.promise_filename)") };
   version => "1.0";
   cache_system_functions => "false";
 }
@@ -16,12 +15,10 @@ body package_method mock
 {
   package_changes => "individual";
   package_list_command => "$(g.pm) --list-installed";
-
   package_list_name_regex => "^[^:]*";
   package_list_version_regex => ":(?<=:).*(?=:)";
   package_list_arch_regex => "[^:]\w+$";
   package_installed_regex => "^[^:]*";
-
   package_add_command => "$(g.pm) --add ";
   package_update_command => "$(g.pm) --update ";
   package_delete_command => "$(g.pm) --delete ";
@@ -31,7 +28,7 @@ body package_method mock
 bundle common g
 {
   classes:
-      "mpm_declared" not => strcmp(getenv("MOCK_PACKAGE_MANAGER", "65535"), "");
+    "mpm_declared" not => strcmp(getenv("MOCK_PACKAGE_MANAGER", "65535"), "");
 
   vars:
     mpm_declared::
@@ -42,51 +39,47 @@ bundle common g
 }
 
 #######################################################
-
 bundle agent init
 {
   commands:
-      "$(g.pm) --clear-installed";
-      "$(g.pm) --clear-available";
-      "$(g.pm) --populate-available imagisoft:1.0i:teapot";
+    "$(g.pm) --clear-installed";
+    "$(g.pm) --clear-available";
+    "$(g.pm) --populate-available imagisoft:1.0i:teapot";
 
   files:
-      "$(G.testfile)"
-        delete => tidy;
+    "$(G.testfile)" delete => tidy;
 }
 
 #######################################################
-
 bundle agent test
 {
   meta:
-      "test_skip_unsupported" string => "windows",
-        meta => { "ENT-10215" };
+    "test_skip_unsupported"
+      string => "windows",
+      meta => { "ENT-10215" };
 
   vars:
-      "name" string => "imagisoft";
-      "version" string => "1.0i";
-      "arch" string => "teapot";
+    "name" string => "imagisoft";
+    "version" string => "1.0i";
+    "arch" string => "teapot";
 
   packages:
-      "imagisoft; echo 'Hello CFEngine' > '$(G.testfile)';"
-        package_policy => "add",
-        package_method => mock;
+    "imagisoft; echo 'Hello CFEngine' > '$(G.testfile)';"
+      package_policy => "add",
+      package_method => mock;
 }
 
 #######################################################
-
 bundle agent check
 {
   reports:
-      "$(this.promise_filename) $(with)"
-        with => ifelse(fileexists("$(G.testfile)"), "FAIL", "Pass");
+    "$(this.promise_filename) $(with)"
+      with => ifelse(fileexists("$(G.testfile)"), "FAIL", "Pass");
 }
 
 #######################################################
-
 bundle agent clean
 {
   methods:
-      "init";
+    "init";
 }

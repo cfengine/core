@@ -6,82 +6,81 @@
 # Ticket: https://cfengine.com/dev/issues/3882
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("${this.promise_filename}") };
-      version => "1.0";
-      cache_system_functions => "off";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("${this.promise_filename}") };
+  version => "1.0";
+  cache_system_functions => "off";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
     any::
-      "file_mode"              int => "0644";
-      "char_number"            int => "6144";
-      "line_to_add"         string => "This is a nice short line.";
+      "file_mode" int => "0644";
+      "char_number" int => "6144";
+      "line_to_add" string => "This is a nice short line.";
 
   files:
-      "${G.testfile}"
-        create => "true",
-        perms  => m("${file_mode}");
+    "${G.testfile}"
+      create => "true",
+      perms => m("${file_mode}");
 
   # Using system command instead of CFEngine itself to
   # prevent the bug to be here at file creation too.
   # It would create a false negative.
   commands:
-      "${G.perl}"
-        args    => "-e 'print \"#\" x ${char_number}; print \"ENDMARK\n\"' > ${G.testfile}",
-        contain => in_shell;
+    "${G.perl}"
+      args => "-e 'print \"#\" x ${char_number}; print \"ENDMARK\n\"' > ${G.testfile}",
+      contain => in_shell;
 }
 
 #######################################################
-
 bundle agent test
 {
   meta:
-      "test_skip_unsupported" string => "windows";
+    "test_skip_unsupported" string => "windows";
 
   files:
-      "${G.testfile}"
-        create    => "false",
-        edit_line => insert_lines("${init.line_to_add}");
+    "${G.testfile}"
+      create => "false",
+      edit_line => insert_lines("${init.line_to_add}");
 }
 
 #######################################################
-
 bundle agent check
 {
-
   classes:
     !solaris::
       # ok is defined if the file still contains ENDMARK, meaning the end of the sample very
       # long line did not get truncated during file editing
-      "ok" expression => returnszero("${G.grep} ENDMARK ${G.testfile}", "noshell");
+      "ok"
+        expression => returnszero("${G.grep} ENDMARK ${G.testfile}", "noshell");
+
     solaris::
       # Bug in xpg4 version of Solaris. grep internally has a limit of 4096 chars per line,
       # which is the very thing we're testing. Use /bin/grep.
-      "ok" expression => returnszero("/bin/grep ENDMARK ${G.testfile}", "noshell");
+      "ok"
+        expression => returnszero("/bin/grep ENDMARK ${G.testfile}", "noshell");
 
   reports:
     DEBUG.!ok::
       "${this.promise_filename} FAILed as the generated file got at least a line truncated to 4096 characters";
+
     ok::
       "${this.promise_filename} Pass";
+
     !ok::
       "${this.promise_filename} FAIL";
 }
 
 #######################################################
-
 bundle agent fini
 {
   methods:
-      "any" usebundle => dcs_fini("${G.testfile}");
+    "any" usebundle => dcs_fini("${G.testfile}");
 }
 
 ### PROJECT_ID: core

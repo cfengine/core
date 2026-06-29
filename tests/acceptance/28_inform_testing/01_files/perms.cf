@@ -38,12 +38,7 @@ bundle agent setup
 bundle agent main
 {
   files:
-      "$(G.testdir)/foo"
-        perms => m(777);
-
-      "$(G.testdir)/baz"
-        perms => m(777);
-
-      "$(G.testdir)/foobar"
-        perms => m(777);
+    "$(G.testdir)/foo" perms => m(777);
+    "$(G.testdir)/baz" perms => m(777);
+    "$(G.testdir)/foobar" perms => m(777);
 }

@@ -1,46 +1,88 @@
 # Test that variablesmatching works correctly
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence => { default("$(this.promise_filename)") };
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
 }
 
 bundle common init
 {
   vars:
-      "test_fbeae67f3e347b5e0032302200141131" string => "abc", meta => { "x" };
-      "test_fbeae67f3e347b5e0032302200141131_1" string => "def", meta => { "x" };
-      "test_fbeae67f3e347b5e0032302200141131_2" string => "ghi", meta => { "y" };
+    "test_fbeae67f3e347b5e0032302200141131"
+      string => "abc",
+      meta => { "x" };
 
-      "test_b37ce1b03955522848f0a82d0b2b2e21_1" slist => { "a", "b" }, meta => { "x" };
-      "test_b37ce1b03955522848f0a82d0b2b2e21_2" data => '{ "a": "b" }', meta => { "x" };
-      "test_b37ce1b03955522848f0a82d0b2b2e21_3" string => 'mydata', meta => { "y" };
+    "test_fbeae67f3e347b5e0032302200141131_1"
+      string => "def",
+      meta => { "x" };
 
-      "test_variable_with_weird_tag" string => 'some_data', meta => { "weird[tag]" };
+    "test_fbeae67f3e347b5e0032302200141131_2"
+      string => "ghi",
+      meta => { "y" };
+
+    "test_b37ce1b03955522848f0a82d0b2b2e21_1"
+      slist => { "a", "b" },
+      meta => { "x" };
+
+    "test_b37ce1b03955522848f0a82d0b2b2e21_2"
+      data => '{ "a": "b" }',
+      meta => { "x" };
+
+    "test_b37ce1b03955522848f0a82d0b2b2e21_3"
+      string => 'mydata',
+      meta => { "y" };
+
+    "test_variable_with_weird_tag"
+      string => 'some_data',
+      meta => { "weird[tag]" };
 }
 
 bundle agent test
 {
   vars:
-      "vars" slist => variablesmatching("default:init.test_fbeae67f3e347b5e0032302200141131.*");
-      "x_vars" slist => variablesmatching("default:init.test_fbeae67f3e347b5e0032302200141131.*", "x");
-      "z_vars" slist => variablesmatching("default:init.test_fbeae67f3e347b5e0032302200141131.*", "z");
+    "vars"
+      slist => variablesmatching(
+        "default:init.test_fbeae67f3e347b5e0032302200141131.*"
+      );
 
-      "fullvars" data => variablesmatching_as_data("default:init.test_b37ce1b03955522848f0a82d0b2b2e21.*");
-      "x_fullvars" data => variablesmatching_as_data("default:init.test_b37ce1b03955522848f0a82d0b2b2e21.*", "x");
-      "z_fullvars" data => variablesmatching_as_data("default:init.test_b37ce1b03955522848f0a82d0b2b2e21.*", "z");
+    "x_vars"
+      slist => variablesmatching(
+        "default:init.test_fbeae67f3e347b5e0032302200141131.*", "x"
+      );
 
-      "tag_match" slist => variablesmatching(".*", "weird\[tag\]");
-      "tag_no_match" slist => variablesmatching(".*", "weird[tag]");
-      "tag_match_data" data => variablesmatching_as_data(".*", "weird\[tag\]");
-      "tag_no_match_data" data => variablesmatching_as_data(".*", "weird[tag]");
+    "z_vars"
+      slist => variablesmatching(
+        "default:init.test_fbeae67f3e347b5e0032302200141131.*", "z"
+      );
+
+    "fullvars"
+      data => variablesmatching_as_data(
+        "default:init.test_b37ce1b03955522848f0a82d0b2b2e21.*"
+      );
+
+    "x_fullvars"
+      data => variablesmatching_as_data(
+        "default:init.test_b37ce1b03955522848f0a82d0b2b2e21.*", "x"
+      );
+
+    "z_fullvars"
+      data => variablesmatching_as_data(
+        "default:init.test_b37ce1b03955522848f0a82d0b2b2e21.*", "z"
+      );
+
+    "tag_match" slist => variablesmatching(".*", "weird\[tag\]");
+    "tag_no_match" slist => variablesmatching(".*", "weird[tag]");
+    "tag_match_data" data => variablesmatching_as_data(".*", "weird\[tag\]");
+    "tag_no_match_data" data => variablesmatching_as_data(".*", "weird[tag]");
 }
 
 bundle agent check
 {
   methods:
-      "check"  usebundle => dcs_check_state(test,
-                                           "$(this.promise_filename).expected.json",
-                                           $(this.promise_filename));
+    "check"
+      usebundle => dcs_check_state(
+        test,
+        "$(this.promise_filename).expected.json",
+        $(this.promise_filename)
+      );
 }

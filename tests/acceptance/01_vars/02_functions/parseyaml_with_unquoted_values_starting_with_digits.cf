@@ -1,31 +1,34 @@
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence => { default("$(this.promise_filename)") };
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
 }
 
 bundle agent test
 {
-   meta:
-     "description" -> { "CFE-2033" }
-       string => "Make sure parsing YAML values starting with numbers works";
+  meta:
+    "description" -> { "CFE-2033" }
+      string => "Make sure parsing YAML values starting with numbers works";
 
-   vars:
-      "class" string => "1003_efl_test";
-      "d" data => parseyaml( "- class: ${class}" );
+  vars:
+    "class" string => "1003_efl_test";
+    "d" data => parseyaml("- class: ${class}");
 
-   classes:
-      "PASS" expression => strcmp( ${d[0][class]}, "${class}" );
-      "FAIL" not        => strcmp( ${d[0][class]}, "${class}" );
+  classes:
+    "PASS" expression => strcmp(${d[0][class]}, "${class}");
+    "FAIL" not => strcmp(${d[0][class]}, "${class}");
 
-   reports:
-      PASS::
-         "$(this.promise_filename) Pass";
-      FAIL::
-         "$(this.promise_filename) FAIL";
-      PASS.FAIL::
-         "$(this.promise_filename) EXCEPTION";
-      DEBUG::
-         "version => ${sys.cf_version}";
-         "class   => ${d[0][class]}";
+  reports:
+    PASS::
+      "$(this.promise_filename) Pass";
+
+    FAIL::
+      "$(this.promise_filename) FAIL";
+
+    PASS.FAIL::
+      "$(this.promise_filename) EXCEPTION";
+
+    DEBUG::
+      "version => ${sys.cf_version}";
+      "class   => ${d[0][class]}";
 }

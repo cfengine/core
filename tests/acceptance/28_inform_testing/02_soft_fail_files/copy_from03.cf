@@ -23,6 +23,7 @@ bundle agent main
     "$(G.testroot)/TEST.destination/purgeme"
       create => "true",
       handle => "step_one";
+
     "$(G.testroot)/TEST.destination"
       depends_on => { "step_one" },
       depth_search => recurse("inf"),

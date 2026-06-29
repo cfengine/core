@@ -1,40 +1,37 @@
 # Test a context defined in body classes with scope => bundle
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent init
 {
   vars:
-      "dummy" string => "dummy";
+    "dummy" string => "dummy";
 }
 
 bundle agent test
 {
   processes:
     any::
-      "$(G.true)"
-      classes => bundle_class;
+      "$(G.true)" classes => bundle_class;
 
     bundle_context::
-      "$(G.true)"
-      classes => namespace_class;
+      "$(G.true)" classes => namespace_class;
 }
 
 body classes namespace_class
 {
-      # default to namespace scoping
-      promise_kept => { "namespace_context" };
+  # default to namespace scoping
+  promise_kept => { "namespace_context" };
 }
 
 body classes bundle_class
 {
-      scope => "bundle";
-      promise_kept => { "bundle_context" };
+  scope => "bundle";
+  promise_kept => { "bundle_context" };
 }
 
 bundle agent check
@@ -42,6 +39,7 @@ bundle agent check
   reports:
     namespace_context.!bundle_context::
       "$(this.promise_filename) Pass";
+
     bundle_context::
       "$(this.promise_filename) FAIL";
 }

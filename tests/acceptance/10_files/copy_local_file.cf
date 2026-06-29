@@ -1,30 +1,27 @@
 bundle common test_meta
 {
   vars:
-      "description" string => "Test that copying a file locally works";
-      "story_id" string => "5576";
-      "covers" string => "operational_repaired";
+    "description" string => "Test that copying a file locally works";
+    "story_id" string => "5576";
+    "covers" string => "operational_repaired";
 }
 
 # Ref: https://dev.cfengine.com/issues/5576
-
 #######################################################
-
 body common control
 {
-      inputs => { "../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
     "target" string => "$(G.testdir)/target";
 
-   files:
+  files:
     "$(target)"
       create => "true",
       edit_line => insert_lines("Initial Content");
@@ -34,15 +31,15 @@ bundle agent test
 {
   files:
     # Ensure the target file is exactly the same as this file
-    "$(init.target)"
-      copy_from => local_dcp($(this.promise_filename));
+    "$(init.target)" copy_from => local_dcp($(this.promise_filename));
 }
 
 #######################################################
-
 bundle agent check
 {
-
   methods:
-    "" usebundle => dcs_check_diff($(init.target), $(this.promise_filename), $(this.promise_filename));
+    ""
+      usebundle => dcs_check_diff(
+        $(init.target), $(this.promise_filename), $(this.promise_filename)
+      );
 }

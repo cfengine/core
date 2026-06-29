@@ -4,12 +4,11 @@
 # separators work
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent init
@@ -25,8 +24,7 @@ bundle agent test
     "path" string => join("$(const.dirsep)$(const.dirsep)", "path_list");
 
   files:
-    "$(G.testfile)"
-      copy_from => copy_body("$(path)");
+    "$(G.testfile)" copy_from => copy_body("$(path)");
 }
 
 body copy_from copy_body(file)
@@ -41,6 +39,8 @@ bundle agent check
       "Tested pathname: '$(test.path)'";
 
   methods:
-      "check" usebundle => dcs_check_diff("$(this.promise_filename)",
-                                              "$(G.testfile)", "$(this.promise_filename)");
+    "check"
+      usebundle => dcs_check_diff(
+        "$(this.promise_filename)", "$(G.testfile)", "$(this.promise_filename)"
+      );
 }

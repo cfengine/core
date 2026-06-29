@@ -3,38 +3,38 @@
 # Test getvalues()
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-      "user[name]"              string => "zamboni";
-      "user[fullname][first]"   string => "Diego";
-      "user[fullname][last]"    string => "Zamboni";
-      "user[dirs]"              slist => { "/home/zamboni",
-                                           "/tmp/zamboni",
-                                           "/export/home/zamboni" };
+    "user[name]" string => "zamboni";
+    "user[fullname][first]" string => "Diego";
+    "user[fullname][last]" string => "Zamboni";
 
-      "values"     slist => getvalues("user");
-      "uservalues" slist => getvalues("user[fullname]");
-      "inline_values_map" slist => getvalues('{ "foo": 1, "bar": 2 }');
-      "inline_values_array" slist => getvalues('[ "foo", 1, "bar", 2 ]');
+    "user[dirs]"
+      slist => { "/home/zamboni", "/tmp/zamboni", "/export/home/zamboni" };
+
+    "values" slist => getvalues("user");
+    "uservalues" slist => getvalues("user[fullname]");
+    "inline_values_map" slist => getvalues('{ "foo": 1, "bar": 2 }');
+    "inline_values_array" slist => getvalues('[ "foo", 1, "bar", 2 ]');
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
-      "check"  usebundle => dcs_check_state(test,
-                                           "$(this.promise_filename).expected.json",
-                                           $(this.promise_filename));
+    "check"
+      usebundle => dcs_check_state(
+        test,
+        "$(this.promise_filename).expected.json",
+        $(this.promise_filename)
+      );
 }

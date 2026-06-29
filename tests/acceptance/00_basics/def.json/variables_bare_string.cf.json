@@ -1,5 +1,3 @@
 {
-  "variables": {
-    "bare_test_string": "bare_test_string_value"
-  }
+  "variables": { "bare_test_string": "bare_test_string_value" }
 }

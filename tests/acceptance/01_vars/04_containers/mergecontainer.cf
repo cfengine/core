@@ -3,20 +3,18 @@
 # Test mergedata()
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   files:
-      "$(G.testfile).expected"
+    "$(G.testfile).expected"
       create => "true",
       edit_line => init_insert_lines;
 }
@@ -24,31 +22,33 @@ bundle agent init
 bundle edit_line init_insert_lines
 {
   insert_lines:
-      'a';
-      'b';
-      'c';
+    'a';
+    'b';
+    'c';
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-      "load1" data => parsejson('{"x": "y", "third": 123}');
+    "load1" data => parsejson('{"x": "y", "third": 123}');
 
-      "load2" data => parsejson('
+    "load2"
+      data => parsejson(
+        '
 {
  "first": 1,
  "seconds": 2,
  "third": [ "a", "b", "c" ],
  "fourth": null
 }
-');
+'
+      );
 
-      "load" data => mergedata("load1", "load2");
+    "load" data => mergedata("load1", "load2");
 
   files:
-      "$(G.testfile).actual"
+    "$(G.testfile).actual"
       create => "true",
       edit_line => test_insert;
 }
@@ -56,15 +56,17 @@ bundle agent test
 bundle edit_line test_insert
 {
   insert_lines:
-      "$(test.load[third])";
+    "$(test.load[third])";
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
-      "any" usebundle => sorted_check_diff("$(G.testfile).actual",
-                                           "$(G.testfile).expected",
-                                           "$(this.promise_filename)");
+    "any"
+      usebundle => sorted_check_diff(
+        "$(G.testfile).actual",
+        "$(G.testfile).expected",
+        "$(this.promise_filename)"
+      );
 }

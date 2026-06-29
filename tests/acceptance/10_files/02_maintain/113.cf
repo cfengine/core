@@ -4,41 +4,35 @@
 # to succeed
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   files:
-      "$(G.testfile)"
-      delete => init_delete;
-
-      "$(G.testfile).SOURCE"
-      create => "true";
+    "$(G.testfile)" delete => init_delete;
+    "$(G.testfile).SOURCE" create => "true";
 }
 
 body delete init_delete
 {
-      dirlinks => "delete";
-      rmdirs   => "true";
+  dirlinks => "delete";
+  rmdirs => "true";
 }
 
 #######################################################
-
 bundle agent test
 {
   meta:
-      "test_skip_unsupported" string => "windows";
+    "test_skip_unsupported" string => "windows";
 
   files:
-      "$(G.testfile)"
+    "$(G.testfile)"
       create => "true",
       move_obstructions => "true",
       link_from => test_link;
@@ -46,27 +40,28 @@ bundle agent test
 
 body link_from test_link
 {
-      source => "$(G.testfile).SOURCE";
-      link_type => "hardlink";
+  source => "$(G.testfile).SOURCE";
+  link_type => "hardlink";
 }
 
 #######################################################
-
 bundle agent check
 {
   vars:
-      "expect" string => filestat("$(G.testfile).SOURCE", "ino");
-      "result" string => filestat("$(G.testfile)", "ino");
+    "expect" string => filestat("$(G.testfile).SOURCE", "ino");
+    "result" string => filestat("$(G.testfile)", "ino");
 
   classes:
-      "ok" expression => strcmp("$(expect)", "$(result)");
+    "ok" expression => strcmp("$(expect)", "$(result)");
 
   reports:
     DEBUG::
       "expected: '$(expect)'";
       "got:      '$(result)'";
+
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

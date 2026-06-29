@@ -4,20 +4,20 @@
 # a data container
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-    "data" data => parsejson('{
+    "data"
+      data => parsejson(
+        '{
   "foo": [
           "alpha",
           "bravo"
@@ -26,24 +26,26 @@ bundle agent init
           "one": "1",
           "two": "2"
          }
-}');
+}'
+      );
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-      # expected: one, two
-      "values_data" slist => getindices("init.data[bar]");
+    # expected: one, two
+    "values_data" slist => getindices("init.data[bar]");
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
-      "check"  usebundle => dcs_check_state(test,
-                                           "$(this.promise_filename).expected.json",
-                                           $(this.promise_filename));
+    "check"
+      usebundle => dcs_check_state(
+        test,
+        "$(this.promise_filename).expected.json",
+        $(this.promise_filename)
+      );
 }

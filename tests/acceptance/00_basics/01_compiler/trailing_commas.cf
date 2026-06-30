@@ -1,0 +1,45 @@
+body common control
+{
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+bundle agent init
+{
+  vars:
+    "content"
+      string => '# Policy test file content:
+bundle agent main
+{
+  methods:
+    "target"
+      usebundle => target("xx", "yy", "zz", );
+}
+
+bundle agent target(a,b,c,)
+{
+  reports:
+    "$(a)$(b)$(c)";
+}
+';
+
+  files:
+    "$(G.testfile)" content => "$(content)";
+}
+
+bundle agent test
+{
+}
+
+bundle agent check
+{
+  methods:
+    "test_agent_output"
+      usebundle => dcs_passif_output(
+        "R: xxyyzz",
+        "",
+        "$(sys.cf_agent) -f $(G.testfile)",
+        $(this.promise_filename)
+      );
+}

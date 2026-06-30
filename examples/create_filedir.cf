@@ -24,31 +24,27 @@ body common control
   bundlesequence => { "example" };
 }
 
-########################################################
 bundle agent example
 {
   files:
+    # The promiser specifies the path and name of the file:
     "/home/mark/tmp/test_plain"
-      #@ The promiser specifies the path and name of the file.
+      # The `perms` attribute sets the file permissions as defined in the `system`
+      # body below:
       perms => system,
+      # The `create` attribute makes sure that the files exists. If it
+      # doesn't, CFEngine will create it.
       create => "true";
 
-    #@ The `perms` attribute sets the file permissions as defined in the `system`
-    #@ body below. The `create` attribute makes sure that the files exists. If it
-    #@ doesn't, CFEngine will create it.
+    # The trailing `/.` in the filename tells CFEngine that the promiser is a
+    # directory:
     "/home/mark/tmp/test_dir/."
       perms => system,
       create => "true";
-
-      #@ The trailing `/.` in the filename tells CFEngine that the promiser is a
-      #@ directory.
 }
 
-#########################################################
 body perms system
+# This body sets permissions to "0640"
 {
   mode => "0640";
 }
-
-#@ This body sets permissions to "0640"
-#########################################################

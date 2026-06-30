@@ -46,6 +46,8 @@ AM_CPPFLAGS += $(PCRE2_CPPFLAGS)
 AM_CPPFLAGS += -I$(top_srcdir)/libcfnet
 AM_CPPFLAGS += -I$(top_srcdir)/libpromises
 
+AM_CFLAGS = $(CF3_CFLAGS) $(DEBUG_CFLAGS)
+
 CLEANFILES = *.gcno *.gcda
 
 #

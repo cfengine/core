@@ -26,6 +26,8 @@ noinst_LTLIBRARIES = libcfecompat.la
 
 AM_CPPFLAGS = -I$(top_srcdir)/libntech/libutils            # platform.h
 
+AM_CFLAGS = $(CF3_CFLAGS) $(DEBUG_CFLAGS)
+
 libcfecompat_la_LIBADD = $(LTLIBOBJS)
 
 libcfecompat_la_SOURCES = \

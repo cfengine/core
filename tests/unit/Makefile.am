@@ -48,7 +48,10 @@ LDADD = ../../libpromises/libpromises.la libtest.la
 LIBS = $(CORE_LIBS)
 AM_LDFLAGS = $(CORE_LDFLAGS)
 
-AM_CFLAGS = $(PTHREAD_CFLAGS)
+AM_CFLAGS = \
+	$(CF3_CFLAGS) \
+	$(DEBUG_CFLAGS) \
+	$(PTHREAD_CFLAGS)
 
 
 check_LTLIBRARIES = libtest.la

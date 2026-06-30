@@ -30,6 +30,8 @@ AM_CPPFLAGS = -I$(top_srcdir)/libntech/libutils \
 	$(LIBRSYNC_CPPFLAGS) \
 	$(OPENSSL_CPPFLAGS)
 
+AM_CFLAGS = $(CF3_CFLAGS) $(DEBUG_CFLAGS)
+
 libcfnet_la_SOURCES = \
 	addr_lib.c addr_lib.h \
 	client_protocol.c client_protocol.h cfnet.h\

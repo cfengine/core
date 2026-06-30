@@ -755,7 +755,7 @@ static char *IncrementIPaddress(const char *ip_str)
     }
 
     int step = 1;
-    char *last_dot = strrchr(ip_str, '.');
+    const char *last_dot = strrchr(ip_str, '.');
     assert(last_dot != NULL);   /* the doc comment says there must be dots! */
     if (StringEqual(last_dot + 1, "255"))
     {

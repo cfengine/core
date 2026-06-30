@@ -7396,9 +7396,8 @@ static FnCallResult FnCallClassFilterCsv(EvalContext *ctx,
                 }
                 else
                 {
-                    size_t const key_len = PRINTSIZE(size_t);
-                    char key[key_len];
-                    xsnprintf(key, key_len, "%zu", i);
+                    char key[PRINTSIZE(size_t)];
+                    xsnprintf(key, PRINTSIZE(size_t), "%zu", i);
 
                     JsonObjectAppendString(class_container,
                                            key,

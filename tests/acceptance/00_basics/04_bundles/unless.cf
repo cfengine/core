@@ -49,16 +49,16 @@ bundle agent test
       # If and unless precedence (skipping takes precedence):
       "skipped_variable_precedence_if"
         string => "value",
+        # Causes the promise to be skipped:
         if => "!any",
-        # Causes the promise to be skipped
         unless => "!any";
 
       "skipped_variable_precedence_unless"
         string => "value",
         if => "any",
+        # Causes the promise to be skipped:
         unless => "any";
 
-      # Causes the promise to be skipped
       "skipped_variable_precedence_unexpanded_variable_if"
         string => "value",
         if => "$(undefined_var)",

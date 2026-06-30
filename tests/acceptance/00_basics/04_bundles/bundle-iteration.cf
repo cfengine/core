@@ -16,12 +16,11 @@ bundle agent test
     "values" slist => { "x", "y" };
 
   methods:
+    # runs 2x:
     "b" usebundle => $(bundles)("z");
 
-    # runs 2x
+    # runs 4x:
     "bv" usebundle => $(bundles)($(values));
-
-      # runs 4x
 }
 
 bundle agent a(var)

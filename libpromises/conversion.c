@@ -229,10 +229,14 @@ int SignalFromString(const char *s)
        SIGHUP, SIGINT, SIGTRAP, SIGKILL, SIGPIPE, SIGCONT, SIGABRT, SIGSTOP,
        SIGQUIT, SIGTERM, SIGCHLD, SIGUSR1, SIGUSR2, SIGBUS, SIGSEGV
     };
+    if (s == NULL)
+    {
+        return -1;
+    }
 
     for (size_t i = 0; i < 15; i++)
     {
-        if (StringEqual(s, signal_names[i]))
+        if (StringEqual_IgnoreCase(s, signal_names[i]))
         {
             return signals[i];
         }

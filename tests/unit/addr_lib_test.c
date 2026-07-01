@@ -143,13 +143,51 @@ static void test_ParseHostPort()
     hostname = NULL; port = NULL;
 }
 
+static void test_FuzzySetMatch()
+{
+    /* Sanity: exact and subnet matches still work. */
+    assert_int_equal(FuzzySetMatch("128.39.74.10/23", "128.39.75.56"), 0);
+    assert_int_not_equal(FuzzySetMatch("128.39.74.10/24", "128.39.75.56"), 0);
+    assert_int_equal(FuzzySetMatch("1.2.3.4", "1.2.3.4"), 0);
+    assert_int_not_equal(FuzzySetMatch("1.2.3.4", "1.2.3.5"), 0);
+
+    /* An address with fewer octets than the pattern used to walk the scan
+     * pointer past the end of the string. Heap-allocate the address so that
+     * the over-read is caught under ASan. It must simply not match. */
+    char *s = xstrdup("1");
+    assert_int_not_equal(FuzzySetMatch("1.2.3.4", s), 0);
+    free(s);
+
+    s = xstrdup("1.2");
+    assert_int_not_equal(FuzzySetMatch("1.2.3.4", s), 0);
+    free(s);
+
+    /* Same for an IPv6 range pattern against a short address. */
+    s = xstrdup("2001");
+    assert_int_not_equal(FuzzySetMatch("2001:0-ffff:0:0:0:0:0:1", s), 0);
+    free(s);
+}
+
+static void test_FuzzyMatchParse()
+{
+    assert_true(FuzzyMatchParse("1.2.3.4"));
+    assert_true(FuzzyMatchParse("1-10.2.3.4"));
+
+    /* A range with fewer octets used to read past the end of the string. */
+    char *s = xstrdup("1-2.3");
+    FuzzyMatchParse(s);
+    free(s);
+}
+
 
 int main()
 {
     PRINT_TEST_BANNER();
     const UnitTest tests[] =
     {
-        unit_test(test_ParseHostPort)
+        unit_test(test_ParseHostPort),
+        unit_test(test_FuzzySetMatch),
+        unit_test(test_FuzzyMatchParse)
     };
 
     return run_tests(tests);

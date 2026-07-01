@@ -869,7 +869,13 @@ If no such region matches, begin_ptr and end_ptr should point to NULL
             {
                 if (!include_start)
                 {
-                    if (ip->next == NULL)
+                    /* The start delimiter is the last line of the file, so the
+                     * region (which excludes the delimiter) is empty and sits
+                     * at end of file. Reject it only when select_end_match_eof
+                     * is not set. Otherwise the empty region at EOF is a valid,
+                     * selectable region so that e.g. a trailing INI section can
+                     * still be populated (CFE-2663). */
+                    if (ip->next == NULL && !a->region.select_end_match_eof)
                     {
                         Log(LOG_LEVEL_VERBOSE,
                              "The promised start pattern '%s' found an empty region at the end of file '%s'",

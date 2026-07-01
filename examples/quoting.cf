@@ -29,6 +29,3 @@ bundle agent main
 #@ R: Note: You can't escape backtick quotes
 #@ ```
 #+end_src
-
-
-

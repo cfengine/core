@@ -7,8 +7,8 @@ body file control
 bundle agent main
 {
   vars:
-      "users" slist => { "jack", "john" };
-      "skel" string => "/etc/skel";
+    "users" slist => { "jack", "john" };
+    "skel" string => "/etc/skel";
 
   users:
     !windows::
@@ -17,8 +17,8 @@ bundle agent main
         home_dir => "/home/$(users)",
         home_bundle => home_skel($(users), $(skel));
 }
-### Users main END ###
 
+### Users main END ###
 ### Home Bundle BEGIN ###
 bundle agent home_skel(user, skel)
 # @brief Initialize a user's home directory with the contents of skel
@@ -31,17 +31,17 @@ bundle agent home_skel(user, skel)
       copy_from => seed_cp($(skel)),
       depth_search => recurse("inf");
 }
-### Home Bundle END ###
 
+### Home Bundle END ###
 ### Locked User BEGIN ###
 bundle agent service_accounts
 {
   vars:
-      "users" slist => { "apache", "libuuid" };
+    "users" slist => { "apache", "libuuid" };
 
   users:
     !windows::
-      "$(users)"
-        policy => "locked";
+      "$(users)" policy => "locked";
 }
+
 ### Locked User END ###

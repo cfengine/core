@@ -10,20 +10,24 @@ bundle agent example_readintlist
 # @brief Example showing function return types
 {
   vars:
-      "my_list_of_integers"
-        ilist => readintlist( "/tmp/list.txt",     # File to read
-                              "^(\D+)|(\d+[^\n]+)", # Ignore any lines that are not integers
-                              "\n",                 # Split on newlines
-                              inf,                  # Maximum number of entries
-                              inf);                 # Maximum number of bytes to read
-
+    "my_list_of_integers"
+      ilist => readintlist(
+        "/tmp/list.txt", # File to read
+        "^(\D+)|(\d+[^\n]+)", # Ignore any lines that are not integers
+        "\n", # Split on newlines
+        inf, # Maximum number of entries
+        inf
+      ); # Maximum number of bytes to read
   reports:
-      "my_list_of_integers includes '$(my_list_of_integers)'";
+    "my_list_of_integers includes '$(my_list_of_integers)'";
 }
+
 bundle agent __main__
 {
-  methods: "example_readintlist";
+  methods:
+    "example_readintlist";
 }
+
 #+end_src
 #+begin_src example_output
 #@ ```

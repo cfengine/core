@@ -1,50 +1,36 @@
-
-
 body common control
 {
-      bundlesequence => { "main" };
+  bundlesequence => { "main" };
 }
 
 bundle agent main
 {
   methods:
-
-      "any"  usebundle => one;
-
-      "any"  usebundle => mars:two;
-
+    "any" usebundle => one;
+    "any" usebundle => mars:two;
 }
 
 bundle agent one
 {
   reports:
-
-      "two"
-      depends_on => { "handle_one" };
-
-      "one"
-      handle => "handle_one";
-
+    "two" depends_on => { "handle_one" };
+    "one" handle => "handle_one";
 }
 
 body file control
 {
-      namespace => "mars";
+  namespace => "mars";
 }
-
 
 bundle agent two
 {
   reports:
-
-      "marstwo"
+    "marstwo"
       handle => "mars_two",
       depends_on => { "handle_one" };
 
-      # Currently bugged -> CFE-3206
-      # "marsone"
-      # handle => "handle_one";
-
-      "marsthree"
-      depends_on => { "default.handle_one", "mars_two" };
+    # Currently bugged -> CFE-3206
+    # "marsone"
+    # handle => "handle_one";
+    "marsthree" depends_on => { "default.handle_one", "mars_two" };
 }

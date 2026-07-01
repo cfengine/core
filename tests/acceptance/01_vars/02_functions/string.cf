@@ -24,12 +24,12 @@ bundle agent init
     "string_of_string" string => string("$(a_string)");
     "string_of_bool_true" string => string(and("ExistingClass"));
     "string_of_bool_false" string => string(and("NonExistingClass"));
-    "string_of_data_container_1" string => string(a_data_container_1);
 
-    # Strings not interpretted as references
+    # Strings not interpretted as references:
+    "string_of_data_container_1" string => string(a_data_container_1);
     "string_of_data_container_2" string => string("a_data_container_2");
 
-    # Strings not interpretted as references
+    # @ operator:
     "string_of_data_container_3" string => string(@(a_data_container_3));
 
       #    "test_args" string => string();  # This is caught by the parser

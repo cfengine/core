@@ -66,9 +66,9 @@ body classes all_classes
   cancel_notkept => { "cancel_notkept" };
   kept_returncodes => { "11", "13" };
   repaired_returncodes => { "12" };
-  failed_returncodes => { " 1", "12" };
 
-  # Spaces in number should be ok
+  # Spaces in number should be ok:
+  failed_returncodes => { " 1", "12" };
 }
 
 #######################################################

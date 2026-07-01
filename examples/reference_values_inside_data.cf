@@ -3,8 +3,8 @@
 bundle agent example_reference_values_inside_data
 {
   vars:
-
-    "data" data => '{
+    "data"
+      data => '{
   "Key1": "Value1",
   "Key2": "Value2",
   "Key3": [
@@ -18,10 +18,13 @@ bundle agent example_reference_values_inside_data
     "Key2 contains '$(data[Key2])'";
     "Key3 iterates and contains '$(data[Key3])'";
 }
+
 bundle agent __main__
 {
-   methods: "example_reference_values_inside_data";
+  methods:
+    "example_reference_values_inside_data";
 }
+
 #+end_src
 ###############################################################################
 #+begin_src example_output

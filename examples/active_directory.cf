@@ -1,23 +1,18 @@
 #  This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
-
 #  This program is free software; you can redistribute it and/or modify it
 #  under the terms of the GNU General Public License as published by the
 #  Free Software Foundation; version 3.
-
 #  This program is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
-
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
-
 # To the extent this program is licensed as part of the Enterprise
 # versions of Cfengine, the applicable Commercial Open Source License
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
-
 #########################################################################
 #   active_directory.cf - Extract Data From Windows Domain Controllers
 #
@@ -27,47 +22,43 @@
 #         to the resources we want to read.
 #
 #########################################################################
-
 bundle agent active_directory
 {
   vars:
-      # NOTE: Edit this to your domain, e.g. "corp", may also need more DC's after it
-      "domain_name" string => "cftesting";
-      "user_name"    string => "Guest";
+    # NOTE: Edit this to your domain, e.g. "corp", may also need more DC's after it
+    "domain_name" string => "cftesting";
+    "user_name" string => "Guest";
 
-      
-      # NOTE: We can also extract data from remote Domain Controllers
-
+    # NOTE: We can also extract data from remote Domain Controllers
     dummy.DomainController::
-      "domain_controller"  string => "localhost";
+      "domain_controller" string => "localhost";
 
-      "userlist"    slist => ldaplist(
-                                       "ldap://$(domain_controller)",
-                                       "CN=Users,DC=$(domain_name),DC=com",
-                                       "(objectClass=user)",
-                                       "sAMAccountName",
-                                       "subtree",
-                                       "none");
+      "userlist"
+        slist => ldaplist(
+          "ldap://$(domain_controller)",
+          "CN=Users,DC=$(domain_name),DC=com",
+          "(objectClass=user)",
+          "sAMAccountName",
+          "subtree",
+          "none"
+        );
 
   classes:
-
     dummy.DomainController::
+      "gotuser"
+        expression => ldaparray(
+          "userinfo",
+          "ldap://$(domain_controller)",
+          "CN=$(user_name),CN=Users,DC=$(domain_name),DC=com",
+          "(name=*)",
+          "subtree",
+          "none"
+        );
 
-      "gotuser" expression => ldaparray(
-					 "userinfo",
-					 "ldap://$(domain_controller)",
-					 "CN=$(user_name),CN=Users,DC=$(domain_name),DC=com",
-					 "(name=*)",
-					 "subtree",
-					 "none");
-
-      
   reports:
     dummy.DomainController::
       "Username is \"$(userlist)\"";
 
     dummy.gotuser::
       "Got user data; $(userinfo[name]) has logged on $(userinfo[logonCount]) times";
-
 }
-

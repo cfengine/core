@@ -2,32 +2,26 @@
 bundle agent __main__
 {
   vars:
-
-      #######################################
-      # Define data inline for convenience
-      #######################################
-
-      "table"
-        string => "Eulers Number:2.718
+    #######################################
+    # Define data inline for convenience
+    #######################################
+    "table"
+      string => "Eulers Number:2.718
 A Feigenbaum constant:4.6692
 Tau (2pi):6.28";
 
-      #######################################
-
-      "dim" int => parsestringarray(
-                                     "items",
-                                     "$(table)",
-                                     "\s*#[^\n]*",
-                                     ":",
-                                     "1000",
-                                     "200000"
+    #######################################
+    "dim"
+      int => parsestringarray(
+        "items", "$(table)", "\s*#[^\n]*", ":", "1000", "200000"
       );
 
-      "keys" slist => sort(getindices("items"));
+    "keys" slist => sort(getindices("items"));
 
   reports:
-      "$(keys) - $(items[$(keys)][1])";
+    "$(keys) - $(items[$(keys)][1])";
 }
+
 #+end_src
 ###############################################################################
 #+begin_src example_output

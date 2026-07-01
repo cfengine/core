@@ -1,25 +1,19 @@
 #  Copyright 2021 Northern.tech AS
-
 #  This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
-
 #  This program is free software; you can redistribute it and/or modify it
 #  under the terms of the GNU General Public License as published by the
 #  Free Software Foundation; version 3.
-
 #  This program is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
-
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
-
 # To the extent this program is licensed as part of the Enterprise
 # versions of Cfengine, the applicable Commercial Open Source License
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
-
 #+begin_src prep
 #@ ```
 #@ echo 1 > /tmp/1
@@ -31,27 +25,24 @@
 #+begin_src cfengine3
 body common control
 {
-      bundlesequence => { "example" };
+  bundlesequence => { "example" };
 }
 
 bundle agent example
-
 {
   vars:
-
-      "md5" string => file_hash("/tmp/1","md5");
-      "sha256" string => file_hash("/tmp/2","sha256");
-      "sha384" string => hash("/tmp/3","sha384");
-      "sha512" string => hash("/tmp/3","sha512");
+    "md5" string => file_hash("/tmp/1", "md5");
+    "sha256" string => file_hash("/tmp/2", "sha256");
+    "sha384" string => hash("/tmp/3", "sha384");
+    "sha512" string => hash("/tmp/3", "sha512");
 
   reports:
-
-      "'1\n' hashed to: md5 $(md5)";
-      "'2\n' hashed to: sha256 $(sha256)";
-      "'3\n' hashed to: sha384 $(sha384)";
-      "'3\n' hashed to: sha512 $(sha512)";
-
+    "'1\n' hashed to: md5 $(md5)";
+    "'2\n' hashed to: sha256 $(sha256)";
+    "'3\n' hashed to: sha384 $(sha384)";
+    "'3\n' hashed to: sha512 $(sha512)";
 }
+
 #+end_src
 ###############################################################################
 #+begin_src example_output

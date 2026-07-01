@@ -7,18 +7,12 @@ body common control
 bundle agent example
 {
   vars:
-    "root_filter"
-      slist => {"gid=0", "name=root"};
-    "root_container"
-      data => findlocalusers("@(root_filter)");
-    "root_list"
-      slist => getindices("root_container");
-    "bin_filter"
-      data => '["name=bin"]';
-    "bin_container"
-      data => findlocalusers("@(bin_filter)");
-    "bin_list"
-      slist => getindices("bin_container");
+    "root_filter" slist => { "gid=0", "name=root" };
+    "root_container" data => findlocalusers("@(root_filter)");
+    "root_list" slist => getindices("root_container");
+    "bin_filter" data => '["name=bin"]';
+    "bin_container" data => findlocalusers("@(bin_filter)");
+    "bin_list" slist => getindices("bin_container");
 
   reports:
     "List: $(root_list)";

@@ -1,20 +1,15 @@
 #  Copyright 2021 Northern.tech AS
-
 #  This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
-
 #  This program is free software; you can redistribute it and/or modify it
 #  under the terms of the GNU General Public License as published by the
 #  Free Software Foundation; version 3.
-
 #  This program is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
-
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
-
 # To the extent this program is licensed as part of the Enterprise
 # versions of Cfengine, the applicable Commercial Open Source License
 # (COSL) may apply to this file if you as a licensee so wish it. See
@@ -40,31 +35,30 @@
 #+begin_src cfengine3
 body common control
 {
-      bundlesequence => { "peers" };
+  bundlesequence => { "peers" };
 }
 
 bundle agent peers
 {
   vars:
-
-      "mygroup" slist => peers("/tmp/cfe_hostlist","#.*",4);
-
-      "myleader" string => peerleader("/tmp/cfe_hostlist","#.*",4);
-
-      "all_leaders" slist => peerleaders("/tmp/cfe_hostlist","#.*",4);
+    "mygroup" slist => peers("/tmp/cfe_hostlist", "#.*", 4);
+    "myleader" string => peerleader("/tmp/cfe_hostlist", "#.*", 4);
+    "all_leaders" slist => peerleaders("/tmp/cfe_hostlist", "#.*", 4);
 
   reports:
+    # note that the current host name is fourth in the host list, so
+    # its peer group is the first 4-host group, minus the host itself.
+    "/tmp/cfe_hostlist mypeer $(mygroup)";
 
-      # note that the current host name is fourth in the host list, so
-      # its peer group is the first 4-host group, minus the host itself.
-      "/tmp/cfe_hostlist mypeer $(mygroup)";
-      # note that the current host name is fourth in the host list, so
-      # the peer leader is "alpha"
-      "/tmp/cfe_hostlist myleader $(myleader)";
-      "/tmp/cfe_hostlist another leader $(all_leaders)";
-      "Unable to find my fully qualified hostname $(sys.fqhost) in /tmp/cfe_hostlist. Can't determine peers."
-        if => not( regline( $(sys.fqhost), "/tmp/cfe_hostlist" ) );
+    # note that the current host name is fourth in the host list, so
+    # the peer leader is "alpha"
+    "/tmp/cfe_hostlist myleader $(myleader)";
+    "/tmp/cfe_hostlist another leader $(all_leaders)";
+
+    "Unable to find my fully qualified hostname $(sys.fqhost) in /tmp/cfe_hostlist. Can't determine peers."
+      if => not(regline($(sys.fqhost), "/tmp/cfe_hostlist"));
 }
+
 #+end_src
 ###############################################################################
 #+begin_src example_output

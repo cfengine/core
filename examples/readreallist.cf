@@ -10,20 +10,24 @@ bundle agent example_readreallist
 # @brief Example showing function return types
 {
   vars:
-      "my_list_of_reals"
-        rlist => readreallist( "/tmp/list.txt", # File to read
-                              "^(\D+)",         # Ignore any non-digits
-                              "\n",             # Split on newlines
-                              inf,              # Maximum number of entries
-                              inf );            # Maximum number of bytes to read
-
+    "my_list_of_reals"
+      rlist => readreallist(
+        "/tmp/list.txt", # File to read
+        "^(\D+)", # Ignore any non-digits
+        "\n", # Split on newlines
+        inf, # Maximum number of entries
+        inf
+      ); # Maximum number of bytes to read
   reports:
-      "my_list_of_reals includes '$(my_list_of_reals)'";
+    "my_list_of_reals includes '$(my_list_of_reals)'";
 }
+
 bundle agent __main__
 {
-  methods: "example_readreallist";
+  methods:
+    "example_readreallist";
 }
+
 #+end_src
 #+begin_src example_output
 #@ ```

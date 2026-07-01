@@ -1,0 +1,27 @@
+#######################################################
+#
+# Test isipinsubnet()
+#
+#######################################################
+body common control
+{
+  bundlesequence => { "check" };
+  version => "1.0";
+}
+
+#######################################################
+bundle agent check
+{
+  classes:
+    "ok"
+      expression => isipinsubnet(
+        "2001:700:100::/41", "2001:0700:0100:0000:0000:0000:0000:0000"
+      );
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

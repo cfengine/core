@@ -224,7 +224,6 @@ int FuzzySetMatch(const char *s1, const char *s2)
 
         if (isCIDR)
         {
-            int blocks;
             struct sockaddr_in6 addr1 = {0};
             struct sockaddr_in6 addr2 = {0};
             unsigned long mask;
@@ -236,22 +235,34 @@ int FuzzySetMatch(const char *s1, const char *s2)
                 Log(LOG_LEVEL_ERR, "Invalid IPv6 CIDR: %s", s1);
                 return -1;
             }
-            blocks = mask / 8;
+            int blocks = mask / 8;
+            int remaining_bits = mask % 8;
 
-            if (mask % 8 != 0)
+            addr1.sin6_family = AF_INET6;
+            if (inet_pton(AF_INET6, address, &addr1.sin6_addr) != 1)
             {
-                Log(LOG_LEVEL_ERR, "Cannot handle ipv6 masks which are not 8 bit multiples (fix me)");
+                return -1;
+            }
+            addr2.sin6_family = AF_INET6;
+            if (inet_pton(AF_INET6, s2, &addr2.sin6_addr) != 1)
+            {
                 return -1;
             }
 
-            addr1.sin6_family = AF_INET6;
-            inet_pton(AF_INET6, address, &addr1.sin6_addr);
-            addr2.sin6_family = AF_INET6;
-            inet_pton(AF_INET6, s2, &addr2.sin6_addr);
-
-            for (i = 0; i < blocks; i++)        /* blocks < 16 */
+            for (i = 0; i < blocks; i++)
             {
                 if (addr1.sin6_addr.s6_addr[i] != addr2.sin6_addr.s6_addr[i])
+                {
+                    return -1;
+                }
+            }
+
+            if (remaining_bits > 0)
+            {
+                uint8_t bitmask = (uint8_t)(0xFF << (8 - remaining_bits));
+
+                if ((addr1.sin6_addr.s6_addr[blocks] & bitmask) !=
+                    (addr2.sin6_addr.s6_addr[blocks] & bitmask))
                 {
                     return -1;
                 }
@@ -529,12 +540,6 @@ bool FuzzyMatchParse(const char *s)
         address[0] = '\0';
         mask = 0;
         sscanf(s, "%40[^/]/%d", address, &mask);
-
-        if (mask % 8 != 0)
-        {
-            Log(LOG_LEVEL_ERR, "Cannot handle ipv6 masks which are not 8 bit multiples (fix me)");
-            return false;
-        }
 
         if (mask > 15)
         {

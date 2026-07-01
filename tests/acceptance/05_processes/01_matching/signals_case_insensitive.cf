@@ -1,0 +1,112 @@
+#######################################################
+#
+# CFE-612: processes "signals" accepts signal names case-insensitively.
+# Signal a backgrounded victim with the UPPERCASE "TERM"; its SIGTERM
+# trap records the delivered signal to a sentinel that check verifies.
+# Pre-fix, uppercase fails policy validation. SIGKILL/-1 wouldn't fire
+# the trap, so the sentinel also proves it was specifically SIGTERM.
+#
+#######################################################
+body common control
+{
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+body action background
+{
+  background => "true";
+}
+
+#######################################################
+bundle agent init
+{
+  meta:
+    # Backgrounding + POSIX trap/wait + ps matching need a real POSIX shell.
+    "test_skip_needs_work" string => "!linux";
+
+  vars:
+    "victim" string => "$(G.testdir)/cfe612_signal_victim.sh";
+    "sentinel" string => "$(G.testdir)/cfe612_signal_received";
+    "ready" string => "$(G.testdir)/cfe612_signal_ready";
+    "poll_script" string => "$(G.testdir)/cfe612_poll.sh";
+
+  files:
+    # Remove any artifacts left over from a previous run.
+    "$(sentinel)" delete => tidy;
+    "$(ready)" delete => tidy;
+    "$(poll_script)" delete => tidy;
+
+    # Polling helper: wait up to ~10s for a file to become non-empty.
+    "$(poll_script)"
+      create => "true",
+      content => '#!/bin/sh
+file="$1"
+for _ in $(seq 100); do
+  [ -s "$file" ] && exit 0
+  sleep 0.1
+done
+exit 1';
+
+    # Victim: "sleep & wait" so the SIGTERM trap fires promptly; the trap
+    # records the signal then kills its sleep child (a lingering descendant
+    # would hold the harness's output pipe open and stall the run). 30s is
+    # just a safety bound so a never-signalled victim can't run away.
+    "$(victim)"
+      create => "true",
+      content => "#!/bin/sh
+trap 'printf TERM > $(sentinel); kill $sleeppid 2>/dev/null; exit 0' TERM
+printf ready > $(ready)
+sleep 30 &
+sleeppid=$!
+wait
+";
+
+  commands:
+    # Launch the victim, then poll until its ready-file appears (cap ~10s).
+    "$(G.sh) $(victim)" action => background;
+    "$(G.sh) $(poll_script) \"$(ready)\"";
+}
+
+#######################################################
+bundle agent test
+{
+  meta:
+    "description" -> { "CFE-612" }
+      string => "processes 'signals' attribute accepts signal names case-insensitively";
+
+  processes:
+    # UPPERCASE signal name; the unique token only matches our victim.
+    "cfe612_signal_victim" signals => { "TERM" };
+
+  commands:
+    # Poll for the sentinel becoming non-empty (cap ~10s).
+    # processes run before commands, so this runs after the signal.
+    "$(G.sh) $(init.poll_script) \"$(init.sentinel)\"";
+}
+
+#######################################################
+bundle agent check
+{
+  vars:
+    "expected" string => "TERM";
+
+    "actual"
+      string => readfile("$(init.sentinel)"),
+      if => fileexists("$(init.sentinel)");
+
+  classes:
+    "ok" expression => strcmp("$(expected)", "$(actual)");
+
+  reports:
+    DEBUG::
+      "Expected sentinel '$(expected)', found '$(actual)'";
+
+    ok::
+      "$(this.promise_filename) Pass";
+
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

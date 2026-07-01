@@ -3,20 +3,19 @@
 # Test datatype()
 #
 #######################################################
-
 body common control
 {
-    inputs => { "../../default.sub.cf" };
-    bundlesequence  => { default("$(this.promise_filename)") };
-    version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-    "results" string => 'jsonstring = {
+    "results"
+      string => 'jsonstring = {
   "person": {
     "first": "miyamoto",
     "last": "musashi"
@@ -61,7 +60,8 @@ bundle agent init
   "dituri was here": 3.1416
 }';
 
-    "results2" string => '---------------------
+    "results2"
+      string => '---------------------
 toplevel:key = person
 toplevel:key = birth
 toplevel:key = death
@@ -110,7 +110,8 @@ toplevel[dokkōdō]:key= 19
 toplevel[dokkōdō]:key= 20
 toplevel[styles]:key= 1';
 
-    "results3" string => 'toplevel[person][first]:type = json_string
+    "results3"
+      string => 'toplevel[person][first]:type = json_string
 toplevel[go rin no sho][1]:type = json_string
 toplevel[dokkōdō][0]:type = json_string
 toplevel[styles][0]:type = json_string
@@ -144,15 +145,15 @@ ok: datatype(datastr) failed properly';
 
   files:
     "$(G.testfile).expected"
-    create => "true",
-    edit_defaults => init_empty,
-    edit_line => init_insert;
+      create => "true",
+      edit_defaults => init_empty,
+      edit_line => init_insert;
 }
 
 body edit_defaults init_empty
 {
-    empty_file_before_editing => "true";
-    edit_backup => "false";
+  empty_file_before_editing => "true";
+  edit_backup => "false";
 }
 
 bundle edit_line init_insert
@@ -164,12 +165,14 @@ bundle edit_line init_insert
 }
 
 #######################################################
-
 bundle common test_common
 {
   vars:
     "datastr" string => storejson("data");
-    "data"    data   => parsejson('
+
+    "data"
+      data => parsejson(
+        '
 {
   "person": { "first": "miyamoto", "last": "musashi" },
   "birth": null,
@@ -202,29 +205,22 @@ bundle common test_common
   "decidable": false
   "dituri was here": 3.14159265
 }
-');
+'
+      );
 
-    "typenames" slist  => { "person", "go rin no sho", "dokkōdō", "styles" };
-
-    "keys[top]"
-      slist  => getindices("data");
-
-    "types[top][$(keys[top])]"
-      string => datatype("data[$(keys[top])]");
-
-    "keys[$(typenames)]"
-      slist  => getindices("data[$(typenames)]");
+    "typenames" slist => { "person", "go rin no sho", "dokkōdō", "styles" };
+    "keys[top]" slist => getindices("data");
+    "types[top][$(keys[top])]" string => datatype("data[$(keys[top])]");
+    "keys[$(typenames)]" slist => getindices("data[$(typenames)]");
 
     "types[$(typenames)][$(keys[$(typenames)])]"
       string => datatype("data[$(typenames)][$(keys[$(typenames)])]");
 
-    "bad_type_test"
-      string => datatype("datastr");
+    "bad_type_test" string => datatype("datastr");
 
   classes:
-    "ok_invalid_test_failed"  not => isvariable("bad_type_test");
+    "ok_invalid_test_failed" not => isvariable("bad_type_test");
 }
-
 
 bundle agent test
 {
@@ -239,31 +235,30 @@ bundle edit_line test_insert
   insert_lines:
     cfengine::
       "jsonstring = $(test_common.datastr)";
-
       "---------------------";
       "toplevel:key = $(test_common.keys[top])";
       "toplevel[$(test_common.keys[top])]:type = $(test_common.types[top][$(test_common.keys[top])])";
-
       "------------------------------------------";
       "toplevel[$(test_common.typenames)]:key= $(test_common.keys[$(test_common.typenames)])";
       "toplevel[$(test_common.typenames)][$(test_common.keys[$(test_common.typenames)])]:type = $(test_common.types[$(test_common.typenames)][$(test_common.keys[$(test_common.typenames)])])";
 
-    ok_invalid_test_failed::      
+    ok_invalid_test_failed::
       "------------------------------------------";
       "ok: datatype(datastr) failed properly";
 
-    !ok_invalid_test_failed::      
+    !ok_invalid_test_failed::
       "------------------------------------------";
       "NOT_OK: datatype(datastr) was supposed to fail";
-
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
-      "any" usebundle => dcs_check_diff("$(G.testfile).actual",
-                                            "$(G.testfile).expected",
-                                            "$(this.promise_filename)");
+    "any"
+      usebundle => dcs_check_diff(
+        "$(G.testfile).actual",
+        "$(G.testfile).expected",
+        "$(this.promise_filename)"
+      );
 }

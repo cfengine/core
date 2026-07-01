@@ -5,13 +5,12 @@
 #####################################################
 body common control
 {
-    inputs => { "../../default.sub.cf" };
-    bundlesequence  => { default("$(this.promise_filename)") };
-    version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent test
 {
   meta:
@@ -21,16 +20,15 @@ bundle agent test
   vars:
     "f" # false
       string => "(cfengine.(!cfengine))";
+
     "T" # true, uppercase to be more different visually
       string => "(cfengine|(!cfengine))";
-    "f_name"
-      string => "f";
-    "T_name"
-      string => "T";
-    "f_name_name"
-      string => "f_name";
-    "T_name_name"
-      string => "T_name";
+
+    "f_name" string => "f";
+    "T_name" string => "T";
+    "f_name_name" string => "f_name";
+    "T_name_name" string => "T_name";
+
     "many_true"
       slist => {
         "any",
@@ -39,7 +37,8 @@ bundle agent test
         "(any.cfengine)",
         concat(and()),
         concat(and(and())),
-    };
+      };
+
     "many_false"
       slist => {
         "(!any)",
@@ -49,11 +48,10 @@ bundle agent test
         concat(not("any")),
         concat(not(and())),
       };
-    "many_both"
-      slist => { @(many_true), @(many_false) };
+
+    "many_both" slist => { @(many_true), @(many_false) };
 
   classes:
-
     # All elements should be true, fail if one is false:
     "ok"
       scope => "namespace",
@@ -61,15 +59,12 @@ bundle agent test
         # Sanity check:
         "any",
         "cfengine",
-
         # and() with 0 arguments should default to true:
         and(),
-
         # and() with 1 static string:
         and("any"),
         and("cfengine"),
         and("!(!cfengine)"),
-
         # and() with 1 string with variable expansion(s):
         and("$(T)"),
         and("!$(f)"),
@@ -81,7 +76,6 @@ bundle agent test
         and("!(!any)|$(f)"),
         and("$(T)|$(f)"),
         and("$(f)|$(T)"),
-
         # and() with slist:
         # Careful, if there are expressions in list (using | operator)
         # they should be parenthesized for this to work:
@@ -91,7 +85,6 @@ bundle agent test
         and(not(join(".", many_false))),
         and(not(join("|", many_false))),
         and(not(join(".", many_both))),
-
         # and() with 1 function call as argument:
         and(and("any")),
         and(and("cfengine")),
@@ -101,7 +94,6 @@ bundle agent test
         and(not(not("$(T)"))),
         and(strcmp("cfengine", "cfengine")),
         and(strcmp("any", not("$(f)"))),
-
         # and() with 2 arguments:
         and("any", "cfengine"),
         and("!(!any)", "!(!cfengine)"),
@@ -109,7 +101,6 @@ bundle agent test
         and("$(T)", "!$(f)"),
         and("$(T)", not("$(f)")),
         and(not("$(f)"), not("$(f)")),
-
         # and() with 3+ arguments (strings):
         and("any", "any", "any"),
         and("any", "any", "any", "any"),
@@ -119,17 +110,29 @@ bundle agent test
         and("$(T)", "$(T)", "$(T)", "$(T)"),
         and("$(T)", "$(T)", "$(T)", "$(T)", "$(T)"),
         and("$(T)", "$(T)", "$(T)", "$(T)", "$(T)", "$(T)"),
-
         # and() with 3+ function calls:
         and(not("!any"), not("!any"), not("!any")),
         and(not("!any"), not("!any"), not("!any"), not("!any")),
         and(not("!any"), not("!any"), not("!any"), not("!any"), not("!any")),
-        and(not("!any"), not("!any"), not("!any"), not("!any"), not("!any"), not("!any")),
+        and(
+          not("!any"),
+          not("!any"),
+          not("!any"),
+          not("!any"),
+          not("!any"),
+          not("!any")
+        ),
         and(not("$(f)"), not("$(f)"), not("$(f)")),
         and(not("$(f)"), not("$(f)"), not("$(f)"), not("$(f)")),
         and(not("$(f)"), not("$(f)"), not("$(f)"), not("$(f)"), not("$(f)")),
-        and(not("$(f)"), not("$(f)"), not("$(f)"), not("$(f)"), not("$(f)"), not("$(f)")),
-
+        and(
+          not("$(f)"),
+          not("$(f)"),
+          not("$(f)"),
+          not("$(f)"),
+          not("$(f)"),
+          not("$(f)")
+        ),
         # and() with deep nesting:
         and(and()),
         and(and(and())),
@@ -138,7 +141,6 @@ bundle agent test
         and(and(and(and(and(and()))))),
         and(and(and(and(and(and("any")))))),
         and(and(and(and(and(and("any", "cfengine")))))),
-
         # Double expansion:
         and("$($(T_name))"),
         and("$($(T_name))", "$($(T_name))"),
@@ -146,15 +148,17 @@ bundle agent test
         and("!$($(f_name))", "!$($(f_name))"),
         and("!$($(f_name))", "!$($(f_name))", "!$($(f_name))"),
         and(not("$($(f_name))"), not("$($(f_name))")),
-
         # Triple expansion:
         and("$($($(T_name_name)))"),
         and("$($($(T_name_name)))", "$($($(T_name_name)))"),
-        and("$($($(T_name_name)))", "$($($(T_name_name)))", "$($($(T_name_name)))"),
+        and(
+          "$($($(T_name_name)))",
+          "$($($(T_name_name)))",
+          "$($($(T_name_name)))"
+        ),
         and("!$($(f_name_name))", "!$($(f_name_name))"),
         and("!$($(f_name_name))", "!$($(f_name_name))", "!$($(f_name_name))"),
         and(not("$($(f_name_name))"), not("$($(f_name_name))")),
-
         # and() should always return any or !any,
         # this is important for backwards compatibility:
         strcmp(and("any"), "any"),
@@ -188,32 +192,26 @@ bundle agent test
         and("$(T)", "$(f)", "$(T)", "$(T)", "$(T)", "$(T)", "$(T)", "$(T)"),
         and("$(f)", "$(T)", "$(T)", "$(T)", "$(T)", "$(T)", "$(T)", "$(T)"),
       };
+
     # Should be skipped because of unresolved variable:
-    "fail_unresolved"
-      and => {
-        "any",
-        and("$(unresolved_var)"),
-      };
+    "fail_unresolved" and => { "any", and("$(unresolved_var)") };
+
     # Check that it's really skipped because of unresolved,
     # and not that it accidentally becomes false:
-    "fail_not_of_unresolved"
-      and => {
-        "any",
-        and(not("$(unresolved_var)")),
-      };
+    "fail_not_of_unresolved" and => { "any", and(not("$(unresolved_var)")) };
+
     "fail"
       scope => "namespace",
       expression => "fail_false|fail_unresolved|fail_not_of_unresolved";
 }
 
 #######################################################
-
 bundle agent check
 {
-
   reports:
     ok.(!fail)::
       "$(this.promise_filename) Pass";
+
     (!ok)|fail::
       "$(this.promise_filename) FAIL";
 }

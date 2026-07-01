@@ -4,53 +4,47 @@
 # Redmine #2928
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
-
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
-files:
-      "$(G.testfile).expected"
+  files:
+    "$(G.testfile).expected"
       create => "true",
-edit_defaults => init_empty,
+      edit_defaults => init_empty,
       edit_line => init_expect;
 
-      "$(G.testfile).template"
+    "$(G.testfile).template"
       create => "true",
-   edit_line => template,
-   edit_defaults => init_empty;
+      edit_line => template,
+      edit_defaults => init_empty;
 }
 
 #######################################################
-
 bundle agent test
 {
   classes:
-      "two" expression => "any";
-      "three" expression => "any";
+    "two" expression => "any";
+    "three" expression => "any";
 
   files:
-      "$(G.testfile).actual"
-          create => "true",
-   edit_defaults => init_empty,
-   edit_template => "$(G.testfile).template";
+    "$(G.testfile).actual"
+      create => "true",
+      edit_defaults => init_empty,
+      edit_template => "$(G.testfile).template";
 }
 
 #######################################################
-
 bundle edit_line template
 {
-insert_lines:
-
-"[%CFEngine BEGIN %]
+  insert_lines:
+    "[%CFEngine BEGIN %]
 one
 [%CFEngine END %]
 
@@ -60,38 +54,37 @@ two
 [%CFEngine default:three:: %]
 three
 "
-
-  insert_type => "preserve_block";
+      insert_type => "preserve_block";
 }
 
 #######################################################
-
 bundle edit_line init_expect
 {
-insert_lines:
-
-"one
+  insert_lines:
+    "one
 
 two
 
 three
-"
-  insert_type => "preserve_block";
+" insert_type => "preserve_block";
 }
 
 body edit_defaults init_empty
 {
-      empty_file_before_editing => "true";
+  empty_file_before_editing => "true";
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
-      "any" usebundle => dcs_check_diff("$(G.testfile).actual",
-                                            "$(G.testfile).expected",
-                                            "$(this.promise_filename)");
+    "any"
+      usebundle => dcs_check_diff(
+        "$(G.testfile).actual",
+        "$(G.testfile).expected",
+        "$(this.promise_filename)"
+      );
 }
+
 ### PROJECT_ID: core
 ### CATEGORY_ID: 27

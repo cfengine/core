@@ -4,136 +4,170 @@
 # This test is unstable until we have canonical JSON output
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-      "load1" data => parsejson('[ 1, 2, 3]');
-      "load2" slist => { "element1", "element2", "element3" };
-      "load3" data => parsejson('{ "x": "y" }');
-      "load4" slist => { };
-      "load5[mykey]" slist => { "myvalue" };
-      "load5[anotherkey]" string => "anothervalue";
-      "load5[lastkey!]" slist => {};
-
-      "X" slist => { "1", "2", "3", "4", "5" };
-      "Y" slist => { @(X) };
-
-      "load_$(X)" data => mergedata("load$(X)");
-      "load_$(X)_$(Y)" data => mergedata("load$(X)", "load$(Y)");
-      "wrap_key_$(X)" data => mergedata('{ "wrapkey": load$(X) }');
-      "wrap_array_$(X)" data => mergedata('[ load$(X) ]');
-
-      "bad1" data => mergedata(missingvar);
-      "bad2" data => mergedata(load1, missingvar);
-
-      "justastring" string => "me";
-      "bad3" data => mergedata(justastring);
-      "bad4" data => mergedata(load1, justastring);
+    "load1" data => parsejson('[ 1, 2, 3]');
+    "load2" slist => { "element1", "element2", "element3" };
+    "load3" data => parsejson('{ "x": "y" }');
+    "load4" slist => {};
+    "load5[mykey]" slist => { "myvalue" };
+    "load5[anotherkey]" string => "anothervalue";
+    "load5[lastkey!]" slist => {};
+    "X" slist => { "1", "2", "3", "4", "5" };
+    "Y" slist => { @(X) };
+    "load_$(X)" data => mergedata("load$(X)");
+    "load_$(X)_$(Y)" data => mergedata("load$(X)", "load$(Y)");
+    "wrap_key_$(X)" data => mergedata('{ "wrapkey": load$(X) }');
+    "wrap_array_$(X)" data => mergedata('[ load$(X) ]');
+    "bad1" data => mergedata(missingvar);
+    "bad2" data => mergedata(load1, missingvar);
+    "justastring" string => "me";
+    "bad3" data => mergedata(justastring);
+    "bad4" data => mergedata(load1, justastring);
 }
 
 #######################################################
-
 bundle agent check
 {
   vars:
-      "X" slist => { @(test.X) };
-      "Y" slist => { @(test.X) };
+    "X" slist => { @(test.X) };
+    "Y" slist => { @(test.X) };
+    "expected_1" string => '[1,2,3]';
+    "expected_2" string => '["element1","element2","element3"]';
+    "expected_3" string => '{"x":"y"}';
+    "expected_4" string => '[]';
 
-      "expected_1" string => '[1,2,3]';
-      "expected_2" string => '["element1","element2","element3"]';
-      "expected_3" string => '{"x":"y"}';
-      "expected_4" string => '[]';
-      "expected_5" string => '{"anotherkey":"anothervalue","lastkey!":[],"mykey":["myvalue"]}';
-      "expected_1_1" string => '[1,2,3,1,2,3]';
-      "expected_1_2" string => '[1,2,3,"element1","element2","element3"]';
-      "expected_1_3" string => '{"0":1,"1":2,"2":3,"x":"y"}';
-      "expected_1_4" string => '[1,2,3]';
-      "expected_1_5" string => '{"0":1,"1":2,"2":3,"anotherkey":"anothervalue","lastkey!":[],"mykey":["myvalue"]}';
-      "expected_2_1" string => '["element1","element2","element3",1,2,3]';
-      "expected_2_2" string => '["element1","element2","element3","element1","element2","element3"]';
-      "expected_2_3" string => '{"0":"element1","1":"element2","2":"element3","x":"y"}';
-      "expected_2_4" string => '["element1","element2","element3"]';
-      "expected_2_5" string => '{"0":"element1","1":"element2","2":"element3","anotherkey":"anothervalue","lastkey!":[],"mykey":["myvalue"]}';
-      "expected_3_1" string => '{"0":1,"1":2,"2":3,"x":"y"}';
-      "expected_3_2" string => '{"0":"element1","1":"element2","2":"element3","x":"y"}';
-      "expected_3_3" string => '{"x":"y"}';
-      "expected_3_4" string => '{"x":"y"}';
-      "expected_3_5" string => '{"anotherkey":"anothervalue","lastkey!":[],"mykey":["myvalue"],"x":"y"}';
-      "expected_4_1" string => '[1,2,3]';
-      "expected_4_2" string => '["element1","element2","element3"]';
-      "expected_4_3" string => '{"x":"y"}';
-      "expected_4_4" string => '[]';
-      "expected_4_5" string => '{"anotherkey":"anothervalue","lastkey!":[],"mykey":["myvalue"]}';
-      "expected_5_1" string => '{"0":1,"1":2,"2":3,"anotherkey":"anothervalue","lastkey!":[],"mykey":["myvalue"]}';
-      "expected_5_2" string => '{"0":"element1","1":"element2","2":"element3","anotherkey":"anothervalue","lastkey!":[],"mykey":["myvalue"]}';
-      "expected_5_3" string => '{"anotherkey":"anothervalue","lastkey!":[],"mykey":["myvalue"],"x":"y"}';
-      "expected_5_4" string => '{"anotherkey":"anothervalue","lastkey!":[],"mykey":["myvalue"]}';
-      "expected_5_5" string => '{"anotherkey":"anothervalue","lastkey!":[],"mykey":["myvalue"]}';
+    "expected_5"
+      string => '{"anotherkey":"anothervalue","lastkey!":[],"mykey":["myvalue"]}';
 
-      "expected_wrapped_key_1" string => '{"wrapkey":[1,2,3]}';
-      "expected_wrapped_key_2" string => '{"wrapkey":["element1","element2","element3"]}';
-      "expected_wrapped_key_3" string => '{"wrapkey":{"x":"y"}}';
-      "expected_wrapped_key_4" string => '{"wrapkey":[]}';
-      "expected_wrapped_key_5" string => '{"wrapkey":{"anotherkey":"anothervalue","lastkey!":[],"mykey":["myvalue"]}}';
+    "expected_1_1" string => '[1,2,3,1,2,3]';
+    "expected_1_2" string => '[1,2,3,"element1","element2","element3"]';
+    "expected_1_3" string => '{"0":1,"1":2,"2":3,"x":"y"}';
+    "expected_1_4" string => '[1,2,3]';
 
-      "expected_wrapped_array_1" string => '[[1,2,3]]';
-      "expected_wrapped_array_2" string => '[["element1","element2","element3"]]';
-      "expected_wrapped_array_3" string => '[{"x":"y"}]';
-      "expected_wrapped_array_4" string => '[[]]';
-      "expected_wrapped_array_5" string => '[{"anotherkey":"anothervalue","lastkey!":[],"mykey":["myvalue"]}]';
+    "expected_1_5"
+      string => '{"0":1,"1":2,"2":3,"anotherkey":"anothervalue","lastkey!":[],"mykey":["myvalue"]}';
 
-      "actual_$(X)_$(Y)" string => format("%S", "test.load_$(X)_$(Y)");
-      "actual_$(X)" string => format("%S", "test.load_$(X)");
-      "actual_wrapped_key_$(X)" string => format("%S", "test.wrap_key_$(X)");
-      "actual_wrapped_array_$(X)" string => format("%S", "test.wrap_array_$(X)");
+    "expected_2_1" string => '["element1","element2","element3",1,2,3]';
+
+    "expected_2_2"
+      string => '["element1","element2","element3","element1","element2","element3"]';
+
+    "expected_2_3"
+      string => '{"0":"element1","1":"element2","2":"element3","x":"y"}';
+
+    "expected_2_4" string => '["element1","element2","element3"]';
+
+    "expected_2_5"
+      string => '{"0":"element1","1":"element2","2":"element3","anotherkey":"anothervalue","lastkey!":[],"mykey":["myvalue"]}';
+
+    "expected_3_1" string => '{"0":1,"1":2,"2":3,"x":"y"}';
+
+    "expected_3_2"
+      string => '{"0":"element1","1":"element2","2":"element3","x":"y"}';
+
+    "expected_3_3" string => '{"x":"y"}';
+    "expected_3_4" string => '{"x":"y"}';
+
+    "expected_3_5"
+      string => '{"anotherkey":"anothervalue","lastkey!":[],"mykey":["myvalue"],"x":"y"}';
+
+    "expected_4_1" string => '[1,2,3]';
+    "expected_4_2" string => '["element1","element2","element3"]';
+    "expected_4_3" string => '{"x":"y"}';
+    "expected_4_4" string => '[]';
+
+    "expected_4_5"
+      string => '{"anotherkey":"anothervalue","lastkey!":[],"mykey":["myvalue"]}';
+
+    "expected_5_1"
+      string => '{"0":1,"1":2,"2":3,"anotherkey":"anothervalue","lastkey!":[],"mykey":["myvalue"]}';
+
+    "expected_5_2"
+      string => '{"0":"element1","1":"element2","2":"element3","anotherkey":"anothervalue","lastkey!":[],"mykey":["myvalue"]}';
+
+    "expected_5_3"
+      string => '{"anotherkey":"anothervalue","lastkey!":[],"mykey":["myvalue"],"x":"y"}';
+
+    "expected_5_4"
+      string => '{"anotherkey":"anothervalue","lastkey!":[],"mykey":["myvalue"]}';
+
+    "expected_5_5"
+      string => '{"anotherkey":"anothervalue","lastkey!":[],"mykey":["myvalue"]}';
+
+    "expected_wrapped_key_1" string => '{"wrapkey":[1,2,3]}';
+
+    "expected_wrapped_key_2"
+      string => '{"wrapkey":["element1","element2","element3"]}';
+
+    "expected_wrapped_key_3" string => '{"wrapkey":{"x":"y"}}';
+    "expected_wrapped_key_4" string => '{"wrapkey":[]}';
+
+    "expected_wrapped_key_5"
+      string => '{"wrapkey":{"anotherkey":"anothervalue","lastkey!":[],"mykey":["myvalue"]}}';
+
+    "expected_wrapped_array_1" string => '[[1,2,3]]';
+    "expected_wrapped_array_2" string => '[["element1","element2","element3"]]';
+    "expected_wrapped_array_3" string => '[{"x":"y"}]';
+    "expected_wrapped_array_4" string => '[[]]';
+
+    "expected_wrapped_array_5"
+      string => '[{"anotherkey":"anothervalue","lastkey!":[],"mykey":["myvalue"]}]';
+
+    "actual_$(X)_$(Y)" string => format("%S", "test.load_$(X)_$(Y)");
+    "actual_$(X)" string => format("%S", "test.load_$(X)");
+    "actual_wrapped_key_$(X)" string => format("%S", "test.wrap_key_$(X)");
+    "actual_wrapped_array_$(X)" string => format("%S", "test.wrap_array_$(X)");
 
   classes:
-      "ok_$(X)_$(Y)" expression => strcmp("$(actual_$(X)_$(Y))",
-                                          "$(expected_$(X)_$(Y))");
+    "ok_$(X)_$(Y)"
+      expression => strcmp("$(actual_$(X)_$(Y))", "$(expected_$(X)_$(Y))");
 
-      "ok_$(X)" expression => strcmp("$(actual_$(X))",
-                                     "$(expected_$(X))");
+    "ok_$(X)" expression => strcmp("$(actual_$(X))", "$(expected_$(X))");
 
-      "not_ok_wrapped_key_$(X)" not => strcmp("$(actual_wrapped_key_$(X))",
-                                             "$(expected_wrapped_key_$(X))");
+    "not_ok_wrapped_key_$(X)"
+      not => strcmp(
+        "$(actual_wrapped_key_$(X))", "$(expected_wrapped_key_$(X))"
+      );
 
-      "not_ok_wrapped_array_$(X)" not => strcmp("$(actual_wrapped_array_$(X))",
-                                               "$(expected_wrapped_array_$(X))");
+    "not_ok_wrapped_array_$(X)"
+      not => strcmp(
+        "$(actual_wrapped_array_$(X))", "$(expected_wrapped_array_$(X))"
+      );
 
-      "ok" not => classmatch("not_ok_.*");
+    "ok" not => classmatch("not_ok_.*");
 
   reports:
     DEBUG::
       "$(X): actual $(actual_$(X)) != $(X) expected $(expected_$(X))"
-       if => "!ok_$(X)";
+        if => "!ok_$(X)";
 
       "$(X): actual wrap key $(actual_wrapped_key_$(X)) != $(X) expected wrapped key $(expected_wrapped_key_$(X))"
-       if => "not_ok_wrapped_key_$(X)";
+        if => "not_ok_wrapped_key_$(X)";
 
       "$(X): actual wrap array $(actual_wrapped_array_$(X)) != $(X) expected wrapped array $(expected_wrapped_array_$(X))"
-       if => "not_ok_wrapped_array_$(X)";
+        if => "not_ok_wrapped_array_$(X)";
 
       "$(X)+$(Y): actual $(actual_$(X)_$(Y)) != $(X)+$(Y) expected $(expected_$(X)_$(Y))"
-       if => "!ok_$(X)_$(Y)";
+        if => "!ok_$(X)_$(Y)";
 
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

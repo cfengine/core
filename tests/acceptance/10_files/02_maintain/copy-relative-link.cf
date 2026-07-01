@@ -1,27 +1,26 @@
 # Test that copying relative link does not mangle it (Mantis #1117)
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent init
 {
   commands:
-      "$(G.mkdir) -p $(G.testdir)/a";
-      "$(G.touch) $(G.testdir)/a/dest";
-      "$(G.ln) -s dest $(G.testdir)/a/link";
+    "$(G.mkdir) -p $(G.testdir)/a";
+    "$(G.touch) $(G.testdir)/a/dest";
+    "$(G.ln) -s dest $(G.testdir)/a/link";
 }
 
 bundle agent test
 {
   meta:
-      "test_skip_unsupported" string => "windows";
+    "test_skip_unsupported" string => "windows";
 
   files:
-      "$(G.testdir)/b"
+    "$(G.testdir)/b"
       copy_from => local_cp("$(G.testdir)/a"),
       depth_search => recurse("inf");
 }
@@ -29,18 +28,20 @@ bundle agent test
 bundle agent check
 {
   vars:
-      "expect" string => "dest";
-      "result" string => filestat("$(G.testdir)/b/link", "linktarget_shallow");
+    "expect" string => "dest";
+    "result" string => filestat("$(G.testdir)/b/link", "linktarget_shallow");
 
   classes:
-      "ok" expression => strcmp("$(result)", "$(expect)");
+    "ok" expression => strcmp("$(result)", "$(expect)");
 
   reports:
     DEBUG::
       "expected: '$(expect)'";
       "got:      '$(result)'";
+
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

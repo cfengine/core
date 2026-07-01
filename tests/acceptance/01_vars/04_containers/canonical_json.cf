@@ -3,20 +3,18 @@
 # Test canonical JSON output
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-      "c" data => parsejson('{
+    "c" data => parsejson('{
 "q": 100,
 "a": 200,
 "c": [1,2,3,4]
@@ -26,16 +24,18 @@ bundle agent init
 bundle agent test
 {
   vars:
-      "actual" string => format("%S", "init.c");
+    "actual" string => format("%S", "init.c");
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
-      "any" usebundle => dcs_check_strcmp($(test.actual),
-                                         '{"a":200,"c":[1,2,3,4],"q":100}',
-                                         $(this.promise_filename),
-                                         "no");
+    "any"
+      usebundle => dcs_check_strcmp(
+        $(test.actual),
+        '{"a":200,"c":[1,2,3,4],"q":100}',
+        $(this.promise_filename),
+        "no"
+      );
 }

@@ -3,38 +3,34 @@
 # Create a file, expect simultaneous copy with ctime compare to fail
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   files:
-      "$(G.testfile)"
-      delete => init_delete;
+    "$(G.testfile)" delete => init_delete;
 }
 
 body delete init_delete
 {
-      dirlinks => "delete";
-      rmdirs   => "true";
+  dirlinks => "delete";
+  rmdirs => "true";
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-      "mode" int => "0600";
+    "mode" int => "0600";
 
   files:
-      "$(G.testfile)"
+    "$(G.testfile)"
       create => "true",
       perms => test_perms($(mode)),
       copy_from => test_copy;
@@ -42,19 +38,18 @@ bundle agent test
 
 body copy_from test_copy
 {
-      source => "$(G.etc_group)";
-      compare => "ctime";
+  source => "$(G.etc_group)";
+  compare => "ctime";
 }
 
 body perms test_perms(m)
 {
-      mode => "$(m)";
-      owners => { "0" };
-      groups => { "0" };
+  mode => "$(m)";
+  owners => { "0" };
+  groups => { "0" };
 }
 
 #######################################################
-
 bundle agent check
 {
   vars:
@@ -62,22 +57,24 @@ bundle agent check
       "expect[permoct]" string => "$(test.mode)";
       "expect[uid]" string => "0";
       "expect[gid]" string => "0";
+
     any::
       "expect[nlink]" string => "1";
       "expect[size]" string => "0";
-
       "fields" slist => getindices("expect");
       "result[$(fields)]" string => filestat("$(G.testfile)", "$(fields)");
 
   classes:
-      "not_ok" not => regcmp("$(expect[$(fields)])", "$(result[$(fields)])");
+    "not_ok" not => regcmp("$(expect[$(fields)])", "$(result[$(fields)])");
 
   reports:
     DEBUG::
       "expected: $(fields) = '$(expect[$(fields)])'";
       "got:      $(fields) = '$(result[$(fields)])'";
+
     !not_ok::
       "$(this.promise_filename) Pass";
+
     not_ok::
       "$(this.promise_filename) FAIL";
 }

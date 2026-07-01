@@ -3,34 +3,31 @@
 # Test getuid()
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-      "dummy" string => "dummy";
+    "dummy" string => "dummy";
 }
 
 #######################################################
-
 bundle agent test
 {
   meta:
     "test_skip_needs_work" string => "windows";
-      
 
   vars:
     any::
       "uid_root" int => getuid("root");
       "uid_daemon" int => getuid("daemon");
+
     !darwin::
       "uid_bin" int => getuid("bin");
 
@@ -38,14 +35,17 @@ bundle agent test
       "num_root" int => "0";
       "num_daemon" int => "1";
       "num_bin" int => "2";
+
     manjaro|archlinux|SuSE|redhat|gentoo::
       "num_root" int => "0";
       "num_daemon" int => "2";
       "num_bin" int => "1";
+
     freebsd|openbsd::
       "num_root" int => "0";
       "num_daemon" int => "1";
       "num_bin" int => "3";
+
     darwin::
       "num_root" int => "0";
       "num_daemon" int => "1";
@@ -56,31 +56,33 @@ bundle agent test
       "num_bin" string => "fixme";
 }
 
-
 #######################################################
-
 bundle agent check
 {
   classes:
     darwin::
       "ok_bin" expression => "any";
+
     !darwin::
       "ok_bin" expression => strcmp("$(test.uid_bin)", "$(test.num_bin)");
 
     any::
-      "ok" and => {
-                    strcmp("$(test.uid_root)", "$(test.num_root)"),
-                    strcmp("$(test.uid_daemon)", "$(test.num_daemon)"),
-                    "ok_bin"
-      };
+      "ok"
+        and => {
+          strcmp("$(test.uid_root)", "$(test.num_root)"),
+          strcmp("$(test.uid_daemon)", "$(test.num_daemon)"),
+          "ok_bin",
+        };
 
   reports:
     DEBUG::
       "root is UID $(test.uid_root), expected $(test.num_root)";
       "daemon is UID $(test.uid_daemon), expected $(test.num_daemon)";
       "bin is UID $(test.uid_bin), expected $(test.num_bin)";
+
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

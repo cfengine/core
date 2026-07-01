@@ -1,22 +1,21 @@
 # Test that cf-promises doesn't fail if ppkeys are missing
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent init
 {
   methods:
-      "clear ppkeys" usebundle => dcs_fini("$(sys.workdir)/ppkeys");
+    "clear ppkeys" usebundle => dcs_fini("$(sys.workdir)/ppkeys");
 }
 
 bundle agent test
 {
   commands:
-      "$(sys.cf_promises) -f $(this.promise_filename)"
+    "$(sys.cf_promises) -f $(this.promise_filename)"
       classes => scoped_classes_generic("namespace", "validated");
 }
 
@@ -25,6 +24,7 @@ bundle agent check
   reports:
     validated_ok::
       "$(this.promise_filename) Pass";
+
     validated_not_ok::
       "$(this.promise_filename) FAIL";
 }

@@ -12,6 +12,5 @@ bundle common testcase
 bundle agent main
 {
   files:
-    "$(G.testfile)"
-      touch => "true";
+    "$(G.testfile)" touch => "true";
 }

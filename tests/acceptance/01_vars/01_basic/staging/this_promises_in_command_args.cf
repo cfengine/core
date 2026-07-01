@@ -3,30 +3,27 @@
 # Redmine#5959
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent test
 {
   commands:
-      # should expand to "touch testfile touch testfile.2"
-      "$(G.touch) $(G.testfile)"
-      args => "$(this.promiser).2";
+    # should expand to "touch testfile touch testfile.2"
+    "$(G.touch) $(G.testfile)" args => "$(this.promiser).2";
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
-      "" usebundle => dcs_passif_fileexists("$(G.testfile).2",
-                                            $(this.promise_filename));
-
+    ""
+      usebundle => dcs_passif_fileexists(
+        "$(G.testfile).2", $(this.promise_filename)
+      );
 }

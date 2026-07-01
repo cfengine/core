@@ -8,15 +8,13 @@
 # $ ./testall 04_examples/syntax/check_syntax.cf ; less test.log
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
@@ -28,25 +26,38 @@ bundle agent init
   methods:
     "stdlib_symlink"
       usebundle => lib_maybe_symlink(
-        "$(mock)", "$(G.testdir)/inputs/lib/stdlib.cf");
+        "$(mock)", "$(G.testdir)/inputs/lib/stdlib.cf"
+      );
+
     "paths_symlink"
       usebundle => lib_maybe_symlink(
-        "$(mock)", "$(G.testdir)/inputs/lib/paths.cf");
+        "$(mock)", "$(G.testdir)/inputs/lib/paths.cf"
+      );
+
     "users_symlink"
       usebundle => lib_maybe_symlink(
-        "$(mock)", "$(G.testdir)/inputs/lib/users.cf");
+        "$(mock)", "$(G.testdir)/inputs/lib/users.cf"
+      );
+
     "services_symlink"
       usebundle => lib_maybe_symlink(
-        "$(mock)", "$(G.testdir)/inputs/lib/services.cf");
+        "$(mock)", "$(G.testdir)/inputs/lib/services.cf"
+      );
+
     "packages_symlink"
       usebundle => lib_maybe_symlink(
-        "$(mock)", "$(G.testdir)/inputs/lib/packages.cf");
+        "$(mock)", "$(G.testdir)/inputs/lib/packages.cf"
+      );
+
     "commands_symlink"
       usebundle => lib_maybe_symlink(
-        "$(mock)", "$(G.testdir)/inputs/lib/commands.cf");
+        "$(mock)", "$(G.testdir)/inputs/lib/commands.cf"
+      );
+
     "files_symlink"
       usebundle => lib_maybe_symlink(
-        "$(mock)", "$(G.testdir)/inputs/lib/files.cf");
+        "$(mock)", "$(G.testdir)/inputs/lib/files.cf"
+      );
 
     DEBUG_LOTS::
       "$(this.bundle): will consider example $(all_examples)";
@@ -57,26 +68,21 @@ bundle agent lib_maybe_symlink(src, dst)
 # If dst already exists, assume it's correct (testing with masterfiles)
 {
   classes:
-    "file_missing"
-      if => not(fileexists("$(dst)"));
+    "file_missing" if => not(fileexists("$(dst)"));
+
   methods:
     file_missing::
-      "symlink"
-        usebundle => symlink("$(src)", "$(dst)");
+      "symlink" usebundle => symlink("$(src)", "$(dst)");
 }
 
 bundle agent symlink(src, dst)
 {
   vars:
-    "dir"
-      string => dirname("$(dst)");
+    "dir" string => dirname("$(dst)");
 
   files:
-    "$(dir)/."
-      create => "true";
-
-    "$(dst)"
-      link_from => ln_s("$(src)");
+    "$(dir)/." create => "true";
+    "$(dst)" link_from => ln_s("$(src)");
 }
 
 body link_from ln_s(x)
@@ -86,23 +92,20 @@ body link_from ln_s(x)
 }
 
 #######################################################
-
 bundle agent test
 {
   meta:
-      # It's unrealistic to keep this test perfectly stable on all non-Linux platforms.
-      # It would require examples that quickly get very cluttered.
-      "test_skip_unsupported"
-        string => "!linux";
-      "description"
-        string => "Syntax check each policy (.cf) file in examples";
+    # It's unrealistic to keep this test perfectly stable on all non-Linux platforms.
+    # It would require examples that quickly get very cluttered.
+    "test_skip_unsupported" string => "!linux";
+    "description" string => "Syntax check each policy (.cf) file in examples";
 
   vars:
-      "examples" slist => { @(init.all_examples) };
-      "canon[$(examples)]" string => canonify($(examples));
+    "examples" slist => { @(init.all_examples) };
+    "canon[$(examples)]" string => canonify($(examples));
 
   methods:
-      "$(examples)" usebundle => test_example($(examples));
+    "$(examples)" usebundle => test_example($(examples));
 
   reports:
     DEBUG::
@@ -113,21 +116,22 @@ bundle agent test
 bundle agent test_example(file)
 {
   vars:
-      "cfile" string => canonify($(file));
-      "checker"
-        # -c option is omitted, because it enforces bundlesequence / main
-        string => "$(sys.cf_promises) --workdir=$(G.testdir)";
+    "cfile" string => canonify($(file));
+
+    "checker"
+      # -c option is omitted, because it enforces bundlesequence / main
+      string => "$(sys.cf_promises) --workdir=$(G.testdir)";
 
   classes:
-      "failure_$(cfile)"
-        not => returnszero("$(checker) $(file)", "noshell"),
-        scope => "namespace";
+    "failure_$(cfile)"
+      not => returnszero("$(checker) $(file)", "noshell"),
+      scope => "namespace";
 
   reports:
     DEBUG::
-    "Syntax error in example: '$(file)'"
-      if => "failure_$(cfile)",
-      handle => "reported_error_$(cfile)";
+      "Syntax error in example: '$(file)'"
+        if => "failure_$(cfile)",
+        handle => "reported_error_$(cfile)";
 
   methods:
     "verbose_$(cfile)"
@@ -143,24 +147,24 @@ bundle agent run_with_output(runme)
 {
   vars:
     "c" string => canonify("$(runme)");
+
   reports:
-    "Running: $(runme)"
-      handle => "printed_$(c)";
+    "Running: $(runme)" handle => "printed_$(c)";
+
   commands:
-    "$(runme)"
-      depends_on => { "printed_$(c)" };
+    "$(runme)" depends_on => { "printed_$(c)" };
 }
 
 #######################################################
-
 bundle agent check
 {
   classes:
-      "ok" not => classmatch("failure_.*");
+    "ok" not => classmatch("failure_.*");
 
   reports:
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

@@ -12,9 +12,11 @@ bundle agent check
         strcmp("$(sys.policy_version)", "$(default:control_common.version)"),
         strcmp("$(sys.policy_version)", "1.2.3")
       );
+
   reports:
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

@@ -1,59 +1,58 @@
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence => { default("$(this.promise_filename)") };
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
 }
+
 bundle agent main
 {
   methods:
-      "test";
-      "check";
+    "test";
+    "check";
 }
 
 bundle agent test
 {
   meta:
-      "description" -> { "CFE-2551" }
-        string => "Test that variables defined in other bundles with the same name are not included in a merged result";
+    "description" -> { "CFE-2551" }
+      string => "Test that variables defined in other bundles with the same name are not included in a merged result";
 
   vars:
-
-      "a" string => "string a";
-      "b" string => "string b";
-
-      "vars1[a]" string => "$(a)";
-      "vars1[b]" string => "$(b)";
+    "a" string => "string a";
+    "b" string => "string b";
+    "vars1[a]" string => "$(a)";
+    "vars1[b]" string => "$(b)";
 
   methods:
-      "run_low_test_merged" usebundle => test_merged_low;
-
+    "run_low_test_merged" usebundle => test_merged_low;
 }
 
 bundle agent test_merged_low
 {
   vars:
-      "c" string => "string c";
-      "vars1[c]" string => "$(c)";
+    "c" string => "string c";
+    "vars1[c]" string => "$(c)";
 
-      # We expect that only the values from the classic array vars1 in this
-      # bundle will be merged together. And thus, we should only end up with ={ "vars1" : { "c": "string c" } }=
-
-      "merged_data_vars" data => mergedata('{ "vars1": $(this.bundle).vars1 }');
-      "merged_data_vars_str" string => format( "%S", merged_data_vars );
+    # We expect that only the values from the classic array vars1 in this
+    # bundle will be merged together. And thus, we should only end up with ={ "vars1" : { "c": "string c" } }=
+    "merged_data_vars" data => mergedata('{ "vars1": $(this.bundle).vars1 }');
+    "merged_data_vars_str" string => format("%S", merged_data_vars);
 
   reports:
     DEBUG|EXTRA::
       "$(this.bundle) : merged_data_vars_str : $(merged_data_vars_str)";
-
 }
 
 bundle agent check
 {
   vars:
-      "expected" string => '{"vars1":{"c":"string c"}}';
+    "expected" string => '{"vars1":{"c":"string c"}}';
 
   classes:
-    "pass" expression => strcmp( $(expected), $(test_merged_low.merged_data_vars_str) );
+    "pass"
+      expression => strcmp(
+        $(expected), $(test_merged_low.merged_data_vars_str)
+      );
 
   reports:
     pass::
@@ -63,5 +62,4 @@ bundle agent check
       "$(this.promise_filename) FAIL";
       "expected: '$(expected)'";
       "got: '$(test_merged_low.merged_data_vars_str)'";
-
 }

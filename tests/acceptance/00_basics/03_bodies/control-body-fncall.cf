@@ -1,18 +1,17 @@
 # Test that functions may be called from control bodies
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 body agent control
 {
-# this is just to trigger the desired behavior. here ifelse is evaluated
-# without any caller promise. If it was a non-control body, the caller
-# would have been the promise inlining the body. here there is no caller.
-   default_repository => ifelse("x", "false", "y", "false", "false");
+  # this is just to trigger the desired behavior. here ifelse is evaluated
+  # without any caller promise. If it was a non-control body, the caller
+  # would have been the promise inlining the body. here there is no caller.
+  default_repository => ifelse("x", "false", "y", "false", "false");
 }
 
 bundle agent init

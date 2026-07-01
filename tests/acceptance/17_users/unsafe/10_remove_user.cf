@@ -1,52 +1,48 @@
 bundle common test_meta
 {
   vars:
-      "description" string => "A user present gets removed";
-      "story_id" string => "5526";
-      "covers" string => "operational_repaired";
+    "description" string => "A user present gets removed";
+    "story_id" string => "5526";
+    "covers" string => "operational_repaired";
 }
 
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf", "user_queries.cf.sub" };
-      bundlesequence  => { default("$(this.promise_filename)") };
+  inputs => { "../../default.sub.cf", "user_queries.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
 }
 
 #######################################################
-
 bundle agent init
 {
   users:
-    "johndoe"
-      policy => "present";
+    "johndoe" policy => "present";
 }
 
 #######################################################
-
 bundle agent test
 {
   users:
-    "johndoe"
-      policy => "absent";
+    "johndoe" policy => "absent";
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
-    "any" usebundle => user_exists("johndoe", "failure", "success"),
+    "any"
+      usebundle => user_exists("johndoe", "failure", "success"),
       classes => always("methods_run");
 
   classes:
-      "ready" expression => "methods_run";
-      "ok" and => { "success", "!failure" };
+    "ready" expression => "methods_run";
+    "ok" and => { "success", "!failure" };
 
   reports:
     ok.ready::
       "$(this.promise_filename) Pass";
+
     !ok.ready::
       "$(this.promise_filename) FAIL";
 }

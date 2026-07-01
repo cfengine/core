@@ -3,46 +3,42 @@
 # Test that characters are NOT escaped outside of variables
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
-
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-      "origtestdir" string => dirname("$(this.promise_filename)");
+    "origtestdir" string => dirname("$(this.promise_filename)");
 
   files:
-      "$(G.testfile)"
-      delete => init_delete;
+    "$(G.testfile)" delete => init_delete;
 }
 
 body delete init_delete
 {
-      dirlinks => "delete";
-      rmdirs   => "true";
+  dirlinks => "delete";
+  rmdirs => "true";
 }
 
 #######################################################
-
 bundle agent test
 {
   meta:
-      "test_suppress_fail" string => "!any",
-        meta => { "redmine7620" };
+    "test_suppress_fail"
+      string => "!any",
+      meta => { "redmine7620" };
 
   vars:
-      "template_file" string => "$(this.promise_filename).mustache";
+    "template_file" string => "$(this.promise_filename).mustache";
 
   files:
-      "$(G.testfile)"
+    "$(G.testfile)"
       create => "true",
       edit_template => "$(template_file)",
       template_method => "mustache",
@@ -54,24 +50,26 @@ bundle agent test
 }
 
 #######################################################
-
 bundle agent check
 {
   vars:
-      "expect" string => readfile("$(this.promise_filename).expected", 10000);
-      "actual" string => readfile("$(G.testfile)", 10000);
+    "expect" string => readfile("$(this.promise_filename).expected", 10000);
+    "actual" string => readfile("$(G.testfile)", 10000);
 
   classes:
-      "ok" expression => strcmp("$(expect)", "$(actual)");
+    "ok" expression => strcmp("$(expect)", "$(actual)");
 
   reports:
     DEBUG::
       "expect: '$(expect)'";
       "actual: '$(actual)'";
+
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }
+
 ### PROJECT_ID: core
 ### CATEGORY_ID: 27

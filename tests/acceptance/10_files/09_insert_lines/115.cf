@@ -4,23 +4,21 @@
 # works when given a close-enough exact match
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-      "states" slist => { "actual", "expected" };
+    "states" slist => { "actual", "expected" };
 
-      "actual" string =>
-      "BEGIN
+    "actual"
+      string => "BEGIN
     One potato
     Two potato
     Two potatoes
@@ -28,15 +26,15 @@ bundle agent init
     Four
 END";
 
-      "insert" string =>
-      "    One potato
+    "insert"
+      string => "    One potato
     Two potato
     Three potatoe
     Leading embedded and trailing spaces
     Four";
 
-      "expected" string =>
-      "BEGIN
+    "expected"
+      string => "BEGIN
     One potato
     Two potato
     Two potatoes
@@ -47,7 +45,7 @@ END
     Leading embedded and trailing spaces";
 
   files:
-      "$(G.testfile).$(states)"
+    "$(G.testfile).$(states)"
       create => "true",
       edit_line => init_insert("$(init.$(states))"),
       edit_defaults => init_empty;
@@ -56,38 +54,37 @@ END
 bundle edit_line init_insert(str)
 {
   insert_lines:
-      "$(str)";
+    "$(str)";
 }
 
 body edit_defaults init_empty
 {
-      empty_file_before_editing => "true";
+  empty_file_before_editing => "true";
 }
 
 #######################################################
-
 bundle agent test
 {
   files:
-      "$(G.testfile).actual"
-      edit_line => test_insert("$(init.insert)");
+    "$(G.testfile).actual" edit_line => test_insert("$(init.insert)");
 }
 
 bundle edit_line test_insert(lines)
 {
   insert_lines:
-      "$(lines)"
-      whitespace_policy => { "ignore_trailing" };
+    "$(lines)" whitespace_policy => { "ignore_trailing" };
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
-      "any" usebundle => dcs_check_diff("$(G.testfile).actual",
-                                            "$(G.testfile).expected",
-                                            "$(this.promise_filename)");
+    "any"
+      usebundle => dcs_check_diff(
+        "$(G.testfile).actual",
+        "$(G.testfile).expected",
+        "$(this.promise_filename)"
+      );
 }
 
 ### PROJECT_ID: core

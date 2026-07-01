@@ -3,44 +3,46 @@
 # Test delete a package
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-      "dummy" string => "dummy";
+    "dummy" string => "dummy";
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-      "subout" string => execresult("$(sys.cf_agent) -KI -f $(this.promise_filename).sub --dry-run", "useshell");
+    "subout"
+      string => execresult(
+        "$(sys.cf_agent) -KI -f $(this.promise_filename).sub --dry-run",
+        "useshell"
+      );
 }
 
 #######################################################
-
 bundle agent check
 {
   classes:
-      "ok" expression => regcmp(".*Deleting.*", "$(test.subout)");
+    "ok" expression => regcmp(".*Deleting.*", "$(test.subout)");
 
   reports:
-      #    DEBUG::
-      #        "$(test.subout)";
+    #    DEBUG::
+    #        "$(test.subout)";
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }
+
 ### PROJECT_ID: core
 ### CATEGORY_ID: 29

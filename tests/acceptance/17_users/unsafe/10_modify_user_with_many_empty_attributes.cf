@@ -1,21 +1,21 @@
 bundle common test_meta
 {
   vars:
-      "description" string => "A user present gets multiple empty attributes changed";
-      "story_id" string => "5525";
-      "covers" string => "operational_repaired";
+    "description"
+      string => "A user present gets multiple empty attributes changed";
+
+    "story_id" string => "5525";
+    "covers" string => "operational_repaired";
 }
 
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf", "user_queries.cf.sub" };
-      bundlesequence  => { default("$(this.promise_filename)") };
+  inputs => { "../../default.sub.cf", "user_queries.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
 }
 
 #######################################################
-
 bundle agent init
 {
   # Create him first with some unwanted attributes
@@ -28,54 +28,78 @@ bundle agent init
 }
 
 #######################################################
-
 bundle agent test
 {
   users:
     "johndoe"
       policy => "present",
       group_primary => "",
-      groups_secondary => { },
+      groups_secondary => {},
       description => "";
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
-      "any" usebundle => remove_stale_groups;
+    "any" usebundle => remove_stale_groups;
 
   methods:
     windows::
-      "any" usebundle => user_is_in_primary_group("johndoe", "$(user_tests.group1)", "pgroup_failure", "pgroup_success"),
+      "any"
+        usebundle => user_is_in_primary_group(
+          "johndoe", "$(user_tests.group1)", "pgroup_failure", "pgroup_success"
+        ),
         classes => always("pgroup_methods_run");
+
     # Unix hosts cannot remove the primary group.
     !windows::
-      "any" usebundle => user_is_in_primary_group("johndoe", "$(user_tests.group1)", "pgroup_success", "pgroup_failure"),
+      "any"
+        usebundle => user_is_in_primary_group(
+          "johndoe", "$(user_tests.group1)", "pgroup_success", "pgroup_failure"
+        ),
         classes => always("pgroup_methods_run");
 
     aix::
       # AIX forcibly puts a user in the primary group, even if no group is specified.
-      "any" usebundle => user_is_in_secondary_group("johndoe", "$(user_tests.group1)", "sgroup_success", "sgroup_failure"),
+      "any"
+        usebundle => user_is_in_secondary_group(
+          "johndoe", "$(user_tests.group1)", "sgroup_success", "sgroup_failure"
+        ),
         classes => always("sgroup_methods_run");
 
     !aix::
-      "any" usebundle => user_is_in_any_secondary_group("johndoe", "sgroup_failure", "sgroup_success"),
+      "any"
+        usebundle => user_is_in_any_secondary_group(
+          "johndoe", "sgroup_failure", "sgroup_success"
+        ),
         classes => always("sgroup_methods_run");
 
     any::
-      "any" usebundle => user_has_description("johndoe", "", "desc_success", "desc_failure"),
+      "any"
+        usebundle => user_has_description(
+          "johndoe", "", "desc_success", "desc_failure"
+        ),
         classes => always("desc_methods_run");
 
   classes:
-      "ready" and => { "pgroup_methods_run", "sgroup_methods_run", "desc_methods_run" };
-      "ok" and => { "pgroup_success", "!pgroup_failure", "sgroup_success", "!sgroup_failure",
-                    "desc_success", "!desc_failure",  };
+    "ready"
+      and => { "pgroup_methods_run", "sgroup_methods_run", "desc_methods_run" };
+
+    "ok"
+      and => {
+        "pgroup_success",
+        "!pgroup_failure",
+        "sgroup_success",
+        "!sgroup_failure",
+        "desc_success",
+        "!desc_failure",
+      };
 
   reports:
     ok.ready::
       "$(this.promise_filename) Pass";
+
     !ok.ready::
       "$(this.promise_filename) FAIL";
 }

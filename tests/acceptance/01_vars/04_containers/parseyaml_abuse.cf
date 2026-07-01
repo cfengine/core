@@ -3,20 +3,20 @@
 # Abuse parseyaml()
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-      "strings" data => parsejson('
+    "strings"
+      data => parsejson(
+        '
 [
  "- valid",
  "xyzzz",
@@ -25,13 +25,12 @@ bundle agent test
  "- { xyzzz: }",
  "xyzzz: { p: 100 }",
  "- p class=\\"some class\\" id=\\"some-id\\": abusing the free naming of properties in YAML.",
-]');
+]'
+      );
 
-      "n" slist => getindices(strings);
-
-      "load_$(n)" data => parseyaml("$(strings[$(n)])");
-
-      "load_s_$(n)" string => format("%S", "load_$(n)");
+    "n" slist => getindices(strings);
+    "load_$(n)" data => parseyaml("$(strings[$(n)])");
+    "load_s_$(n)" string => format("%S", "load_$(n)");
 
   reports:
     EXTRA::
@@ -42,5 +41,5 @@ bundle agent test
 bundle agent check
 {
   methods:
-      "any" usebundle => dcs_pass("$(this.promise_filename)");
+    "any" usebundle => dcs_pass("$(this.promise_filename)");
 }

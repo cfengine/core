@@ -3,22 +3,22 @@
 # Abusive Mustache relationship
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
-
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-      "tests" slist => { "0", "1", "2", "3", "4", "5", "6" };
-      "templates" data => parsejson('
+    "tests" slist => { "0", "1", "2", "3", "4", "5", "6" };
+
+    "templates"
+      data => parsejson(
+        '
 [
  "{{x}}",
  "{{x}} {{y}}",
@@ -27,10 +27,11 @@ bundle agent init
  "{{#boolean}}IT IS TRUE{{/boolean}}",
  "{{^boolean}}IT IS FALSE{{/boolean}}",
  "{{#list}}{{k}}={{v}}, {{/list}}"
-]');
+]'
+      );
 
   files:
-      "$(G.testfile).$(tests).tmpl"
+    "$(G.testfile).$(tests).tmpl"
       create => "true",
       edit_defaults => test_empty,
       edit_line => init_insert_lines("$(templates[$(tests)])");
@@ -39,17 +40,16 @@ bundle agent init
 bundle edit_line init_insert_lines(lines)
 {
   insert_lines:
-
-      "$(lines)"
-      comment => "Append lines if they don't exist";
+    "$(lines)" comment => "Append lines if they don't exist";
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-      "tdata" data => parsejson('
+    "tdata"
+      data => parsejson(
+        '
 [
  "{ \\\"x\\\": 123 }",
  "{ \\\"x\\\": 123, \\\"y\\\": 456 }",
@@ -58,10 +58,11 @@ bundle agent test
  "{\\\"boolean\\\": true}",
  "{\\\"boolean\\\": false}",
  "{ \\\"list\\\": [ { \\\"k\\\": 789, \\\"v\\\": 0 }, { \\\"k\\\": null, \\\"v\\\": true }, { \\\"k\\\": -1, \\\"v\\\": -2 } ] }",
-]');
+]'
+      );
 
   files:
-      "$(G.testfile).$(init.tests)"
+    "$(G.testfile).$(init.tests)"
       create => "true",
       edit_defaults => test_empty,
       edit_template => "$(G.testfile).$(init.tests).tmpl",
@@ -75,17 +76,17 @@ bundle agent test
 
 body edit_defaults test_empty
 {
-      empty_file_before_editing => "true";
-      edit_backup => "false";
+  empty_file_before_editing => "true";
+  edit_backup => "false";
 }
 
-
 #######################################################
-
 bundle agent check
 {
   vars:
-      "expected" data => parsejson('
+    "expected"
+      data => parsejson(
+        '
 [
  "123",
  "123 456",
@@ -94,28 +95,34 @@ bundle agent check
  "IT IS TRUE"
  "IT IS FALSE",
  "789=0, =true, -1=-2, "
-]');
+]'
+      );
 
-      "actual_$(init.tests)" string => readfile("$(G.testfile).$(init.tests)", 10000);
+    "actual_$(init.tests)"
+      string => readfile("$(G.testfile).$(init.tests)", 10000);
 
   classes:
-      "ok_$(init.tests)" expression => regcmp("$(expected[$(init.tests)])",
-                                              "$(actual_$(init.tests))");
+    "ok_$(init.tests)"
+      expression => regcmp(
+        "$(expected[$(init.tests)])", "$(actual_$(init.tests))"
+      );
 
-      "ok" and => { ok_0, ok_1, ok_2, ok_3, ok_4, ok_5 };
+    "ok" and => { ok_0, ok_1, ok_2, ok_3, ok_4, ok_5 };
 
   reports:
     DEBUG::
       "OK $(init.tests): Expected  '$(expected[$(init.tests)])' == '$(actual_$(init.tests))'"
-      if => "ok_$(init.tests)";
+        if => "ok_$(init.tests)";
 
       "FAIL $(init.tests): Expected '$(expected[$(init.tests)])' <> '$(actual_$(init.tests))'"
-      if => "!ok_$(init.tests)";
+        if => "!ok_$(init.tests)";
 
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }
+
 ### PROJECT_ID: core
 ### CATEGORY_ID: 27

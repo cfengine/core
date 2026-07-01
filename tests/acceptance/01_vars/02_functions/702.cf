@@ -1,29 +1,31 @@
 # Test maplist expansion with ${this} syntax (Mantis #1249)
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence => { default("$(this.promise_filename)") };
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
 }
 
 bundle common init
 {
   vars:
-      "s" slist => { "suffix" };
+    "s" slist => { "suffix" };
 }
 
 bundle agent test
 {
   vars:
-      "list1" slist => maplist("prefix${this}", "init.s");
-      "list2" slist => maplist("prefix$(this)", "init.s");
+    "list1" slist => maplist("prefix${this}", "init.s");
+    "list2" slist => maplist("prefix$(this)", "init.s");
 }
 
 bundle agent check
 {
   classes:
-      "ok" and => { reglist("@(test.list1)", "prefixsuffix"),
-                    reglist("@(test.list2)", "prefixsuffix") };
+    "ok"
+      and => {
+        reglist("@(test.list1)", "prefixsuffix"),
+        reglist("@(test.list2)", "prefixsuffix"),
+      };
 
   reports:
     DEBUG::
@@ -32,6 +34,7 @@ bundle agent check
 
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

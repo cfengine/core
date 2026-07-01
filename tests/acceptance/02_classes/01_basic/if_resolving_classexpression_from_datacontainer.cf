@@ -1,21 +1,20 @@
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent test
 {
   meta:
-      "description" -> { "CFE-3319" }
+    "description" -> { "CFE-3319" }
       string => "Test that if can check class expressions from within a data container";
 
   vars:
-
-      "d" data => '{
+    "d"
+      data => '{
   "things": [
     {
       "Title": "NOPE",
@@ -32,15 +31,15 @@ bundle agent test
   ]
       }';
 
-      "di" slist => getindices( "d[things]" );
+    "di" slist => getindices("d[things]");
 
-      "selected"
-        string => "$(d[things][$(di)][Title])",
-        if => "$(d[things][$(di)][classexpr])";
+    "selected"
+      string => "$(d[things][$(di)][Title])",
+      if => "$(d[things][$(di)][classexpr])";
 
-      "sanity_check"
-        string => "You are sane",
-        if => "$(sys.class)";
+    "sanity_check"
+      string => "You are sane",
+      if => "$(sys.class)";
 
   reports:
     EXTRA|DEBUG::
@@ -52,15 +51,14 @@ bundle agent test
 }
 
 #######################################################
-
 bundle agent check
 {
   vars:
-      "expected_selection" string => "ExpectedPick";
+    "expected_selection" string => "ExpectedPick";
 
   methods:
-      "Pass/Fail"
-        usebundle => dcs_check_strcmp($(expected_selection), $(test.selected),
-                                      $(this.promise_filename), "no");
-
+    "Pass/Fail"
+      usebundle => dcs_check_strcmp(
+        $(expected_selection), $(test.selected), $(this.promise_filename), "no"
+      );
 }

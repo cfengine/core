@@ -1,27 +1,24 @@
 # Test that nested variables including namespaces are expanded correctly
-
 body common control
 {
-      inputs => { "../../../default.sub.cf",};
-      bundlesequence => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent init
 {
   meta:
-      "tags" slist => { "redmine6349" };
+    "tags" slist => { "redmine6349" };
 
   vars:
-      "dummy" string => "dummy";
+    "dummy" string => "dummy";
 }
 
 bundle agent check
 {
-
   methods:
     "Check" usebundle => check2("default:init");
-
 }
 
 bundle agent check2(data_bundle)
@@ -36,8 +33,7 @@ bundle agent check2(data_bundle)
 
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
-
-
 }

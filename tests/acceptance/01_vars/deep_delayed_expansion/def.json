@@ -1,6 +1,4 @@
 {
-	"vars": {
-		"policy_root": "$(this.promise_dirname)"
-	},
-	"inputs": ["my_globals.cf.sub"]
+  "vars": { "policy_root": "$(this.promise_dirname)" },
+  "inputs": ["my_globals.cf.sub"]
 }

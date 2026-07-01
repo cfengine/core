@@ -1,8 +1,8 @@
 # Test that hourly splay class works as expected
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  version => "1.0";
 }
 
 bundle agent main
@@ -27,16 +27,14 @@ bundle agent main
     "hourly[Min55_00]" string => "24";
     "hourly_idx" slist => getindices(hourly);
     "hourly_inputs" slist => getvalues(hourly);
-    
     "splay_classes" slist => classesmatching("splayclass_hourly_.*");
 
   classes:
-
     "splayclass_hourly_$(hourly_inputs)"
-      expression => splayclass( $(hourly_inputs), hourly);
+      expression => splayclass($(hourly_inputs), hourly);
 
-    "ok" 
-      and => { "$(hourly_idx)", "splayclass_hourly_$(hourly[$(hourly_idx)])"};
+    "ok"
+      and => { "$(hourly_idx)", "splayclass_hourly_$(hourly[$(hourly_idx)])" };
 
   reports:
     DEBUG::
@@ -49,7 +47,9 @@ bundle agent main
 
       # Show the class expression that is satisfied
       "DEBUG $(this.bundle): $(hourly_idx).splayclass_hourly_$(hourly[$(hourly_idx)])"
-        if => and("$(hourly_idx)", "splayclass_hourly_$(hourly[$(hourly_idx)])");
+        if => and(
+          "$(hourly_idx)", "splayclass_hourly_$(hourly[$(hourly_idx)])"
+        );
 
       # Show the time with the splay class defined
       "DEBUG $(this.bundle): $(sys.date) splayclass_hourly_$(hourly_inputs) defined"
@@ -58,7 +58,7 @@ bundle agent main
     ok::
       # We pass when the splay class is defined during the expected window
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
-
 }

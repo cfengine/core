@@ -3,7 +3,6 @@
 # Test double expansion of list from remote bundle with namespace (ENT-11923)
 #
 ##############################################################################
-
 body common control
 {
   bundlesequence => { "bogus:check" };
@@ -37,10 +36,8 @@ body file control
 bundle agent check
 {
   vars:
-    "str"
-      string => "EXPANDED";
-    "lst"
-      slist => { "EXPANDED" };
+    "str" string => "EXPANDED";
+    "lst" slist => { "EXPANDED" };
 
   methods:
     "holder"
@@ -48,15 +45,19 @@ bundle agent check
       useresult => "ret";
 
   reports:
-      "$(this.promise_filename) Pass"
-        if => and(strcmp("$(ret[foo])", "EXPANDED"),
-                  strcmp("$(ret[bar])", "EXPANDED"),
-                  strcmp("$(ret[baz])", "EXPANDED"));
+    "$(this.promise_filename) Pass"
+      if => and(
+        strcmp("$(ret[foo])", "EXPANDED"),
+        strcmp("$(ret[bar])", "EXPANDED"),
+        strcmp("$(ret[baz])", "EXPANDED")
+      );
 
-      "$(this.promise_filename) FAIL"
-        unless => and(strcmp("$(ret[foo])", "EXPANDED"),
-                      strcmp("$(ret[bar])", "EXPANDED"),
-                      strcmp("$(ret[baz])", "EXPANDED"));
+    "$(this.promise_filename) FAIL"
+      unless => and(
+        strcmp("$(ret[foo])", "EXPANDED"),
+        strcmp("$(ret[bar])", "EXPANDED"),
+        strcmp("$(ret[baz])", "EXPANDED")
+      );
 
     default:DEBUG::
       "$(const.dollar)($(const.dollar)(parent_namespace):$(const.dollar)(parent_bundle).str) => $(ret[foo])";

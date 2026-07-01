@@ -7,60 +7,213 @@
 # NOTE: Syntax doesn't allow empty body, but body with 1 class guard is OK
 # NOTE: It would be nice if this was auto-generated, but it isn't,
 #       just add another body / bundle if you need to use it in an example.
+body package_method yum
+{
+}
 
-body package_method yum {}
-body package_method generic {}
-body classes enumerate(x) {}
-body perms p(user,mode) {}
-body changes tripwire {}
-body depth_search recurse(d) {}
-body delete tidy {}
-body file_select days_old(days) {}
-body edit_defaults empty {}
-body acl ntfs(acl) {}
-body action if_elapsed(x) {}
-body action warn_only {}
-body classes if_ok(x) {}
-body classes if_repaired(x) {}
-body contain setuid(owner) {}
-body copy_from local_cp(from) {}
-body copy_from remote_cp(from, server) {}
-body copy_from secure_cp(from,server) {}
-body depth_search include_base {}
-body package_method solaris(pkgname, spoolfile, adminfile) {}
-body package_method zypper {}
-body perms mo(mode, user) {}
-body perms mog(mode, user, group) {}
-body perms owner(user) {}
-body rename disable {}
-body rename rotate(level) {}
-body rename to(file) {}
-body replace_with value(x) {}
-body acl strict {}
-body changes detect_content {}
-body classes if_else (yes, no) {}
-body contain in_shell {}
-body copy_from remote_dcp(from,server) {}
-body package_method msi_explicit(repo) {}
-body package_method msi_implicit(repo) {}
+body package_method generic
+{
+}
 
-bundle edit_line insert_lines(lines) {}
-bundle edit_line append_if_no_line(lines) {}
-bundle edit_line prepend_if_no_line(string) {}
-bundle edit_line append_user_field(group,field,allusers) {}
-bundle edit_line set_user_field(user,field,val) {}
-bundle agent package_absent(package) {}
-bundle agent package_present(package) {}
-bundle agent package_latest(package) {}
-bundle agent package_specific_present(packageorfile, package_version, package_arch) {}
-bundle agent package_specific_latest(packageorfile, package_version, package_arch) {}
-bundle edit_xml xml_insert_tree_nopath(treestring) {}
-bundle edit_xml xml_set_value(value, xpath) {}
-bundle edit_xml xml_set_attribute(attr, value, xpath) {}
-bundle edit_line set_variable_values(v) {}
-bundle edit_line expand_template(templatefile) {}
-bundle edit_line create_solaris_admin_file {}
-bundle common paths {}
+body classes enumerate(x)
+{
+}
+
+body perms p(user, mode)
+{
+}
+
+body changes tripwire
+{
+}
+
+body depth_search recurse(d)
+{
+}
+
+body delete tidy
+{
+}
+
+body file_select days_old(days)
+{
+}
+
+body edit_defaults empty
+{
+}
+
+body acl ntfs(acl)
+{
+}
+
+body action if_elapsed(x)
+{
+}
+
+body action warn_only
+{
+}
+
+body classes if_ok(x)
+{
+}
+
+body classes if_repaired(x)
+{
+}
+
+body contain setuid(owner)
+{
+}
+
+body copy_from local_cp(from)
+{
+}
+
+body copy_from remote_cp(from, server)
+{
+}
+
+body copy_from secure_cp(from, server)
+{
+}
+
+body depth_search include_base
+{
+}
+
+body package_method solaris(pkgname, spoolfile, adminfile)
+{
+}
+
+body package_method zypper
+{
+}
+
+body perms mo(mode, user)
+{
+}
+
+body perms mog(mode, user, group)
+{
+}
+
+body perms owner(user)
+{
+}
+
+body rename disable
+{
+}
+
+body rename rotate(level)
+{
+}
+
+body rename to(file)
+{
+}
+
+body replace_with value(x)
+{
+}
+
+body acl strict
+{
+}
+
+body changes detect_content
+{
+}
+
+body classes if_else(yes, no)
+{
+}
+
+body contain in_shell
+{
+}
+
+body copy_from remote_dcp(from, server)
+{
+}
+
+body package_method msi_explicit(repo)
+{
+}
+
+body package_method msi_implicit(repo)
+{
+}
+
+bundle edit_line insert_lines(lines)
+{
+}
+
+bundle edit_line append_if_no_line(lines)
+{
+}
+
+bundle edit_line prepend_if_no_line(string)
+{
+}
+
+bundle edit_line append_user_field(group, field, allusers)
+{
+}
+
+bundle edit_line set_user_field(user, field, val)
+{
+}
+
+bundle agent package_absent(package)
+{
+}
+
+bundle agent package_present(package)
+{
+}
+
+bundle agent package_latest(package)
+{
+}
+
+bundle agent package_specific_present(packageorfile, package_version, package_arch)
+{
+}
+
+bundle agent package_specific_latest(packageorfile, package_version, package_arch)
+{
+}
+
+bundle edit_xml xml_insert_tree_nopath(treestring)
+{
+}
+
+bundle edit_xml xml_set_value(value, xpath)
+{
+}
+
+bundle edit_xml xml_set_attribute(attr, value, xpath)
+{
+}
+
+bundle edit_line set_variable_values(v)
+{
+}
+
+bundle edit_line expand_template(templatefile)
+{
+}
+
+bundle edit_line create_solaris_admin_file
+{
+}
+
+bundle common paths
+{
+}
 
 # This "test" always passes, it is meant to be included from examples:
 bundle agent __main__

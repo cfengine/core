@@ -1,16 +1,15 @@
 # Check that it's OK to have an empty list in inputs
-
 body common control
 {
-      inputs => { @(g.inputs) };
-      bundlesequence  => { check };
-      version => "1.0";
+  inputs => { @(g.inputs) };
+  bundlesequence => { check };
+  version => "1.0";
 }
 
 bundle common g
 {
   vars:
-      "inputs" slist => { };
+    "inputs" slist => {};
 }
 
 bundle agent check
@@ -18,6 +17,7 @@ bundle agent check
   reports:
     DEBUG::
       "This test should pass as a precursor to a bunch of related failures";
+
     any::
       "$(this.promise_filename) Pass";
 }

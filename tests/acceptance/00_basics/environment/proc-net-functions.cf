@@ -1,22 +1,21 @@
 body common control
 {
-    inputs => { "../../default.sub.cf" };
-    bundlesequence => { default($(this.promise_filename)) };
-    version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default($(this.promise_filename)) };
+  version => "1.0";
 }
 
 ###########################################################
-
 bundle agent init
 {
   vars:
     "pid_for_testing" int => "11";
 
   methods:
-    "" usebundle => dir_sync(
-      "$(this.promise_dirname)/proc",
-      "$(G.testdir)/proc"
-    );
+    ""
+      usebundle => dir_sync(
+        "$(this.promise_dirname)/proc", "$(G.testdir)/proc"
+      );
 
   commands:
     "
@@ -30,12 +29,11 @@ ln -s self/net net
       contain => in_shell;
 }
 
-
 bundle agent test
 {
   meta:
-      "test_skip_unsupported" string => "!linux";
+    "test_skip_unsupported" string => "!linux";
 
   commands:
-      "$(G.env) CFENGINE_TEST_OVERRIDE_PROCPID=$(init.pid_for_testing) CFENGINE_TEST_OVERRIDE_PROCDIR=$(G.testdir)/proc $(sys.cf_agent) -DAUTO -f $(this.promise_filename).sub";
+    "$(G.env) CFENGINE_TEST_OVERRIDE_PROCPID=$(init.pid_for_testing) CFENGINE_TEST_OVERRIDE_PROCDIR=$(G.testdir)/proc $(sys.cf_agent) -DAUTO -f $(this.promise_filename).sub";
 }

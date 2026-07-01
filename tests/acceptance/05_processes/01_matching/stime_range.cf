@@ -24,29 +24,35 @@
 # which to notice the failure).
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-      "now_raw" string => execresult("$(G.ps) -o stime $$", "useshell");
+    "now_raw" string => execresult("$(G.ps) -o stime $$", "useshell");
+
     got_ps.got_now::
       # Get pid and parsed etime for processes whose stime isn't
       # actually a time; use sed to munge ps's output into a csv
       # format for ease of ingestion:
-      "ps_list" string => execresult("$(G.ps) -eo pid,stime,etime | sed -n -e 's/[ \t]*\([0-9][0-9]*\)[ \t][ \t]*[A-Z][a-z0-9]*[ \t][ \t]*\(\([0-9][0-9]*\)-\)\?\([0-9][0-9]*\):\([0-9][0-9]*\):\([0-9][0-9]*\)/\1,\3,\4,\5,\6/p'", "useshell");
+      "ps_list"
+        string => execresult(
+          "$(G.ps) -eo pid,stime,etime | sed -n -e 's/[ \t]*\([0-9][0-9]*\)[ \t][ \t]*[A-Z][a-z0-9]*[ \t][ \t]*\(\([0-9][0-9]*\)-\)\?\([0-9][0-9]*\):\([0-9][0-9]*\):\([0-9][0-9]*\)/\1,\3,\4,\5,\6/p'",
+          "useshell"
+        );
+
       # Ingest the results, save in procs[i][j]:
-      "count" int => parsestringarrayidx("procs", "$(ps_list)",
-                                         "no comment", ",",
-                                         "1000", "100000");
+      "count"
+        int => parsestringarrayidx(
+          "procs", "$(ps_list)", "no comment", ",", "1000", "100000"
+        );
+
       # procs[i][j] for each i describe one process;
       # for j = 0, ..., 4, entries are a pid and its age in days, hrs, mins, secs
       "pndx" slist => getindices("procs");
@@ -54,126 +60,149 @@ bundle agent init
       # Now flatten h:m:s to total seconds, for each proc-index:
       "hrassec[$(pndx)]" ilist => { "$(procs[$(pndx)][2])", "3600" };
       "min2sec[$(pndx)]" ilist => { "$(procs[$(pndx)][3])", "60" };
-      "hms[$(pndx)]" rlist => { product("hrassec[$(pndx)]"),
-                                product("min2sec[$(pndx)]"),
-                                "$(procs[$(pndx)][4])" };
+
+      "hms[$(pndx)]"
+        rlist => {
+          product("hrassec[$(pndx)]"),
+          product("min2sec[$(pndx)]"),
+          "$(procs[$(pndx)][4])",
+        };
+
       # Map pids to seconds before a whole number of days ago:
-      "when[$(procs[$(pndx)][0])]" string => format("%.0f", sum("hms[$(pndx)]"));
+      "when[$(procs[$(pndx)][0])]"
+        string => format("%.0f", sum("hms[$(pndx)]"));
 
       # Likewise reduce "now" to a number of seconds into today:
       "hrassec[now]" ilist => { "$(now[1])", "3600" };
       "min2sec[now]" ilist => { "$(now[2])", "60" };
-      "hms[now]" rlist => { product("hrassec[now]"),
-                            product("min2sec[now]") };
+      "hms[now]" rlist => { product("hrassec[now]"), product("min2sec[now]") };
       "present" string => format("%.0f", sum("hms[now]"));
+
       # Allow for up to 10s delay between when we asked for now_raw
       # and when bundle agent test runs:
       "pausing" rlist => { @(hms[now]), "10" };
       "paused" string => format("%.0f", sum("pausing"));
+
       # Naturally, this doesn't work so well if the interval between
       # present and paused straddles midnight; see bad_timing, below.
-
       # How many days back is each pid ?
-      "past[$(pndx)]" slist => {
+      "past[$(pndx)]"
+        slist => {
           # Number of days from elapsed time, 0 if none specified:
           ifelse("got_day_$(pndx)", "$(proc_day[$(pndx)][0])", "0"),
           # Plus one for those started late in their days:
-          ifelse("late_$(procs[$(pndx)][0])", "1", "0") };
-      "days[$(procs[$(pndx)][0])]" string => format("%.0f", sum("past[$(pndx)]"));
+          ifelse("late_$(procs[$(pndx)][0])", "1", "0"),
+        };
+
+      "days[$(procs[$(pndx)][0])]"
+        string => format("%.0f", sum("past[$(pndx)]"));
+
       "pid" slist => getindices("days");
 
   classes:
-      # Give up on test unless these are set:
-      "got_now" expression => regextract("^(\d+):(\d+)$", "$(now_raw)", "now");
-      "got_ps" expression => isexecutable("$(G.ps)");
+    # Give up on test unless these are set:
+    "got_now" expression => regextract("^(\d+):(\d+)$", "$(now_raw)", "now");
+    "got_ps" expression => isexecutable("$(G.ps)");
+
     got_ps.got_now::
       "got_data" expression => isgreaterthan(length("pndx"), 0);
-      # Filtering processes
+
+    # Filtering processes
     got_data::
       # Are we too close to midnight ?
       "bad_timing" expression => isgreaterthan("$(paused)", 86400); # 24*60*60
       # Which procs[$(pndx)] have non-empty days, procs[$(pndx)][1] ?
       "got_day_$(pndx)"
-        expression => regextract("(\d+)", "$(procs[$(pndx)][1])",
-                                 "proc_day[$(pndx)]");
+        expression => regextract(
+          "(\d+)", "$(procs[$(pndx)][1])", "proc_day[$(pndx)]"
+        );
+
       # A process started late in its day if less than $(present)
       # seconds before a whole number of days ago:
       "late_$(procs[$(pndx)][0])"
-        expression => isgreaterthan("$(present)", "$(when[$(procs[$(pndx)][0])])"),
+        expression => isgreaterthan(
+          "$(present)", "$(when[$(procs[$(pndx)][0])])"
+        ),
         scope => "namespace";
+
       # ... and early in its day if more than $(paused) seconds before
       # a whole number of days ago:
       "early_$(procs[$(pndx)][0])"
-        and => { isgreaterthan("$(when[$(procs[$(pndx)][0])])", "$(paused)"),
-                 "got_day_$(pndx)" },
+        and => {
+          isgreaterthan("$(when[$(procs[$(pndx)][0])])", "$(paused)"),
+          "got_day_$(pndx)",
+        },
         scope => "namespace";
-      "got_early" or => { classmatch("early_\d+") }, scope => "namespace";
-      "got_late"  or => { classmatch("late_\d+") }, scope => "namespace";
 
-      # So now a search for pid=$(pid) within the last $(days[$(pid)])
-      # days should fail if early_$(pid) is set and succeed if
-      # late_$(pid) is set; if neither is set, it may go either way.
+      "got_early"
+        or => { classmatch("early_\d+") },
+        scope => "namespace";
 
-#  reports:
-#    DEBUG.got_early::
-#      "Early: $(pid)	from $(days[$(pid)]) days ago" if => "early_$(pid)";
-#    DEBUG.got_late::
-#      "Late:  $(pid)	from $(days[$(pid)]) days ago" if => "late_$(pid)";
+      "got_late"
+        or => { classmatch("late_\d+") },
+        scope => "namespace";
+
+        # So now a search for pid=$(pid) within the last $(days[$(pid)])
+        # days should fail if early_$(pid) is set and succeed if
+        # late_$(pid) is set; if neither is set, it may go either way.
+        #  reports:
+        #    DEBUG.got_early::
+        #      "Early: $(pid)	from $(days[$(pid)]) days ago" if => "early_$(pid)";
+        #    DEBUG.got_late::
+        #      "Late:  $(pid)	from $(days[$(pid)]) days ago" if => "late_$(pid)";
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-      "pid" ilist => { @(init.pid) };
+    "pid" ilist => { @(init.pid) };
 
   processes:
-      ""
-        process_select => pid_is_newer_than($(pid), "$(init.days[$(pid)])"),
-        process_count => any_procs("early_$(pid)"),
-        if => "early_$(pid)";
+    ""
+      process_select => pid_is_newer_than($(pid), "$(init.days[$(pid)])"),
+      process_count => any_procs("early_$(pid)"),
+      if => "early_$(pid)";
 
-      ""
-        process_select => pid_is_newer_than($(pid), "$(init.days[$(pid)])"),
-        process_count => any_procs("late_$(pid)"),
-        if => "late_$(pid)";
+    ""
+      process_select => pid_is_newer_than($(pid), "$(init.days[$(pid)])"),
+      process_count => any_procs("late_$(pid)"),
+      if => "late_$(pid)";
 }
 
 body process_select pid_is_newer_than(pid, days)
 {
-      pid => irange($(pid), $(pid));
-      stime_range => irange(ago(0, 0, $(days), 0, 0, 0), now());
-      process_result => "pid.stime";
+  pid => irange($(pid), $(pid));
+  stime_range => irange(ago(0, 0, $(days), 0, 0, 0), now());
+  process_result => "pid.stime";
 }
 
 body process_count any_procs(prefix)
 {
-      match_range => "1,1";
-      in_range_define => { "$(prefix)_in" };
-      out_of_range_define => { "$(prefix)_out" };
+  match_range => "1,1";
+  in_range_define => { "$(prefix)_in" };
+  out_of_range_define => { "$(prefix)_out" };
 }
 
 #######################################################
-
 bundle agent check
 {
   vars:
-      "pid" ilist => { @(init.pid) };
-  classes:
-      "bad_$(pid)_in"   and => { "early_$(pid)", "early_$(pid)_in" };
-      "good_$(pid)_out" and => { "early_$(pid)", "early_$(pid)_out" };
-      "good_$(pid)_in"  and =>  { "late_$(pid)", "late_$(pid)_in" };
-      "bad_$(pid)_out"  and =>  { "late_$(pid)", "late_$(pid)_out" };
+    "pid" ilist => { @(init.pid) };
 
-      "early_in"  or => { classmatch("bad_\d+_in") };
-      "early_out" or => { classmatch("good_\d+_out") };
-      "late_in"   or => { classmatch("good_\d+_in") };
-      "late_out"  or => { classmatch("bad_\d+_out") };
-      "early_ok" or => { "!got_early", "!early_in.early_out" };
-      "late_ok"  or => { "!got_late", "late_in.!late_out" };
-      "pass" and => { "late_ok", "early_ok" };
-      "ok"    or => { "pass", "bad_timing" };
+  classes:
+    "bad_$(pid)_in" and => { "early_$(pid)", "early_$(pid)_in" };
+    "good_$(pid)_out" and => { "early_$(pid)", "early_$(pid)_out" };
+    "good_$(pid)_in" and => { "late_$(pid)", "late_$(pid)_in" };
+    "bad_$(pid)_out" and => { "late_$(pid)", "late_$(pid)_out" };
+    "early_in" or => { classmatch("bad_\d+_in") };
+    "early_out" or => { classmatch("good_\d+_out") };
+    "late_in" or => { classmatch("good_\d+_in") };
+    "late_out" or => { classmatch("bad_\d+_out") };
+    "early_ok" or => { "!got_early", "!early_in.early_out" };
+    "late_ok" or => { "!got_late", "late_in.!late_out" };
+    "pass" and => { "late_ok", "early_ok" };
+    "ok" or => { "pass", "bad_timing" };
 
   reports:
     bad_timing::
@@ -181,28 +210,37 @@ bundle agent check
 
     DEBUG.!got_early::
       "Found no processes, early in past days, to test";
+
     DEBUG.!got_late::
       "Found no processes, late in past days, to test";
 
     DEBUG.got_early.early_in::
       "Early processes reported as in range";
+
       "Process $(pid), reported within $(init.days[$(pid)]) days, is older"
         if => "bad_$(pid)_in";
+
     DEBUG.got_early.!early_out::
       "Early processes not reported as out of range";
+
       "Process $(pid), not reported outside $(init.days[$(pid)]) days, is so old"
         if => "early_$(pid).!early_$(pid)_out";
+
     DEBUG.got_late.!late_in::
       "Late processes not reported as in range";
+
       "Process $(pid), not reported within $(init.days[$(pid)]) days, is so new"
         if => "late_$(pid).!late_$(pid)_in";
+
     DEBUG.got_late.late_out::
       "Late processes reported as out of range";
+
       "Process $(pid), reported outside $(init.days[$(pid)]) days, is newer"
         if => "bad_$(pid)_out";
 
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

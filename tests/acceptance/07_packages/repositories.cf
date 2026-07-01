@@ -1,31 +1,33 @@
 # Tests that package upgrade works properly
-
 body common control
 {
-      inputs => { "../default.sub.cf" };
-      bundlesequence => { default("$(this.promise_filename)") };
-      version => "1.0";
-
+  inputs => { "../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent init
 {
   vars:
-      "d" string => "$(const.dirsep)";
+    "d" string => "$(const.dirsep)";
+
     # Due to shell rules, windows includes certain characters on certain commands,
     # while Unix does not.
     windows::
       "single_quote" string => "'";
       "q" string => '"';
       "s" string => ' ';
+
     !windows::
       "single_quote" string => '';
       "q" string => '';
       "s" string => '';
 
   methods:
-      "make" usebundle => file_make("$(G.testfile).expected",
-                                       "
+    "make"
+      usebundle => file_make(
+        "$(G.testfile).expected",
+        "
 $(s)filerepo DELETE $(single_quote)delete-exact-version-2.2.3.i386.rpm$(single_quote)
 $(s)filerepo ADD $(q)$(G.cwd)$(d).$(d)07_packages$(d)test_repository$(d)install-greaterthan-version-2.2.3.i386.rpm$(q)
 $(s)filerepo ADD $(q)$(G.cwd)$(d).$(d)07_packages$(d)test_repository$(d)install-greaterorequal-version-2.2.3.i386.rpm$(q)
@@ -38,20 +40,24 @@ $(s)filerepo UPDATE $(q)$(G.cwd)$(d).$(d)07_packages$(d)test_repository$(d)updat
 $(s)filerepo UPDATE $(q)$(G.cwd)$(d).$(d)07_packages$(d)test_repository$(d)update-to-greaterorequal-version-2.2.3.i386.rpm$(q)
 $(s)filerepo UPDATE $(q)$(G.cwd)$(d).$(d)07_packages$(d)test_repository$(d)update-to-lessthan-version-2.2.3.i386.rpm$(q)
 $(s)filerepo UPDATE $(q)$(G.cwd)$(d).$(d)07_packages$(d)test_repository$(d)update-to-lessorequal-version-2.2.3.i386.rpm$(q)
-$(s)filerepo UPDATE $(q)$(G.cwd)$(d).$(d)07_packages$(d)test_repository$(d)update-to-exact-version-2.2.3.i386.rpm$(q)");
-
+$(s)filerepo UPDATE $(q)$(G.cwd)$(d).$(d)07_packages$(d)test_repository$(d)update-to-exact-version-2.2.3.i386.rpm$(q)"
+      );
 }
 
 bundle agent test
 {
   methods:
-      "run" usebundle => dcs_runagent("$(this.promise_filename).sub");
+    "run" usebundle => dcs_runagent("$(this.promise_filename).sub");
 }
 
 bundle agent check
 {
   methods:
-    "any" usebundle => sorted_check_diff("$(G.testfile)", "$(G.testfile).expected", "$(this.promise_filename)");
+    "any"
+      usebundle => sorted_check_diff(
+        "$(G.testfile)", "$(G.testfile).expected", "$(this.promise_filename)"
+      );
 }
+
 ### PROJECT_ID: core
 ### CATEGORY_ID: 29

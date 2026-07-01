@@ -15,36 +15,32 @@
 # text (cf. persistent_timer_policy_default_lmdb.cf).
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent init
 {
   # Remove the persistent class DB to ensure a clean state.
   files:
-      "$(sys.workdir)/state/cf_state.lmdb"
-        delete => tidy;
-      "$(sys.workdir)/state/cf_state.lmdb-lock"
-        delete => tidy;
-      "$(sys.workdir)/state/cf_state.lmdb.lock"
-        delete => tidy;
+    "$(sys.workdir)/state/cf_state.lmdb" delete => tidy;
+    "$(sys.workdir)/state/cf_state.lmdb-lock" delete => tidy;
+    "$(sys.workdir)/state/cf_state.lmdb.lock" delete => tidy;
 }
 
 bundle agent test
 {
   meta:
-      "description" -> { "CFE-4686" }
-        string => "classes promise 'cancel' removes the persistent class record from the cf_state LMDB";
+    "description" -> { "CFE-4686" }
+      string => "classes promise 'cancel' removes the persistent class record from the cf_state LMDB";
 
   vars:
-      "state" string => "$(sys.workdir)/state/cf_state.lmdb";
-      "sub"   string => "$(this.promise_filename).sub";
-      "sub2"  string => "$(this.promise_filename).sub2";
+    "state" string => "$(sys.workdir)/state/cf_state.lmdb";
+    "sub" string => "$(this.promise_filename).sub";
+    "sub2" string => "$(this.promise_filename).sub2";
 
   commands:
     # One shell invocation runs the whole sequence:
@@ -62,22 +58,24 @@ bundle agent test
 bundle agent check
 {
   vars:
-      "before" string => readfile("$(G.testdir)/cancel_lmdb_before", 4096);
-      "after"  string => readfile("$(G.testdir)/cancel_lmdb_after", 4096);
+    "before" string => readfile("$(G.testdir)/cancel_lmdb_before", 4096);
+    "after" string => readfile("$(G.testdir)/cancel_lmdb_after", 4096);
 
   classes:
-      # The class was stored in the LMDB by run 1 ...
-      "present_before" expression => regcmp("[1-9][0-9]*", "$(before)");
-      # ... and removed by the cancel in run 2.
-      "absent_after"   expression => strcmp("$(after)", "0");
+    # The class was stored in the LMDB by run 1 ...
+    "present_before" expression => regcmp("[1-9][0-9]*", "$(before)");
 
-      "ok" expression => "present_before.absent_after";
+    # ... and removed by the cancel in run 2.
+    "absent_after" expression => strcmp("$(after)", "0");
+    "ok" expression => "present_before.absent_after";
 
   reports:
     DEBUG::
       "LMDB record count before cancel = '$(before)' (expect >= 1), after = '$(after)' (expect 0)";
+
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

@@ -4,51 +4,51 @@
 # verify that insertion is convergent - Redmine #1525
 #
 #######################################################
-
 body common control
 {
-	inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-      "header" string => "###############
+    "header"
+      string => "###############
 ### This file is managed by CFEngine 
 ### Do not update it manually, oh no
 ### do not
 ###############";
 
   files:
-      "$(G.testfile).expected"
+    "$(G.testfile).expected"
       create => "true",
       edit_line => insert_header;
 
   commands:
-     !windows::
+    !windows::
       "$(G.echo)"
-        args    => "\"${init.header}\" > \"$(G.testfile).actual\"",
+        args => "\"${init.header}\" > \"$(G.testfile).actual\"",
         contain => in_shell;
-     windows:: # newlines in shell are not handled properly on Windows...
+
+    windows:: # newlines in shell are not handled properly on Windows...
       "$(G.printf)"
         args => '"###############\n### This file is managed by CFEngine\n### Do not update it manually, oh no\n### do not\n###############\n" > "$(G.testfile).actual"',
         contain => in_shell;
 }
 
 #######################################################
-
 bundle agent test
 {
   meta:
-      "test_soft_fail" string => "windows",
-        meta => { "ENT-10254" };
+    "test_soft_fail"
+      string => "windows",
+      meta => { "ENT-10254" };
 
   files:
-      "$(G.testfile).actual"
+    "$(G.testfile).actual"
       create => "true",
       edit_line => insert_header;
 }
@@ -61,15 +61,16 @@ bundle edit_line insert_header
       insert_type => "preserve_block";
 }
 
-
 #######################################################
-
 bundle agent check
 {
   methods:
-      "any" usebundle => dcs_check_diff("$(G.testfile).actual",
-                                        "$(G.testfile).expected",
-                                        "$(this.promise_filename)");
+    "any"
+      usebundle => dcs_check_diff(
+        "$(G.testfile).actual",
+        "$(G.testfile).expected",
+        "$(this.promise_filename)"
+      );
 }
 
 ### PROJECT_ID: core

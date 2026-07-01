@@ -7,48 +7,53 @@
 # Redmine:4320 (https://cfengine.com/dev/issues/4320)
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle common init
 {
   classes:
-
     "one" expression => "any";
 }
 
 #######################################################
-
 bundle common test
 {
   classes:
-      "fail_direct" expression => "any",
-        if => and("one", "non_existing_class");
+    "fail_direct"
+      expression => "any",
+      if => and("one", "non_existing_class");
 
-      "fail_split" expression => "any",
-        if => and(splitstring("one,non_existing_class", ",", "20"));
+    "fail_split"
+      expression => "any",
+      if => and(splitstring("one,non_existing_class", ",", "20"));
 
-      "pass_direct" expression => "any",
-        if => or("one", "non_existing_class");
+    "pass_direct"
+      expression => "any",
+      if => or("one", "non_existing_class");
 
-      "pass_split" expression => "any",
-        if => or(splitstring("one,non_existing_class", ",", "20"));
+    "pass_split"
+      expression => "any",
+      if => or(splitstring("one,non_existing_class", ",", "20"));
 
-      "pass_split1" expression => "any",
-        if => not(splitstring("non_existing_class", ",", "20"));
+    "pass_split1"
+      expression => "any",
+      if => not(splitstring("non_existing_class", ",", "20"));
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
-      "" usebundle => dcs_passif_expected("pass_direct,pass_split,pass_split1", "fail_direct,fail_split", $(this.promise_filename));
+    ""
+      usebundle => dcs_passif_expected(
+        "pass_direct,pass_split,pass_split1",
+        "fail_direct,fail_split",
+        $(this.promise_filename)
+      );
 }

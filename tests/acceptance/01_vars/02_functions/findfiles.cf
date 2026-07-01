@@ -3,12 +3,11 @@
 # Test findfiles()
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle common findfiles
@@ -17,109 +16,115 @@ bundle common findfiles
     # * in filenames not allowed on win
     windows::
       "names" slist => { "a", "bc", "d/e/f", "g/h/i/j", "klm/nop/qrs" };
-   !windows::
+
+    !windows::
       "names" slist => { "a", "bc", "d/e/f", "g/h/i/j", "klm/nop/qrs", "tu/*" };
 }
 
 #######################################################
-
 bundle agent init
 {
   files:
-      "$(G.testdir)/$(findfiles.names)"
-      create => "true";
+    "$(G.testdir)/$(findfiles.names)" create => "true";
 
   reports:
     DEBUG::
       "Created $(G.testdir)/$(findfiles.names)";
 }
 
-
 #######################################################
-
 bundle agent test
 {
   vars:
-      "patterns[a]" string => "$(G.testdir)/?";
-      "patterns[b]" string => "$(G.testdir)/*";
-      "patterns[c]" string => "$(G.testdir)/?/*";
-      "patterns[d]" string => "$(G.testdir)/[ab]*";
-      "patterns[e]" string => "$(G.testdir)/nosuch/*";
-      "patterns[relative_path_1]" string => "./*";
-      "patterns[relative_path_2]" string => "**";
-      "patterns[relative_path_3]" string => "../**";
-  !windows::
+    "patterns[a]" string => "$(G.testdir)/?";
+    "patterns[b]" string => "$(G.testdir)/*";
+    "patterns[c]" string => "$(G.testdir)/?/*";
+    "patterns[d]" string => "$(G.testdir)/[ab]*";
+    "patterns[e]" string => "$(G.testdir)/nosuch/*";
+    "patterns[relative_path_1]" string => "./*";
+    "patterns[relative_path_2]" string => "**";
+    "patterns[relative_path_3]" string => "../**";
+
+    !windows::
       # First of all '*' is an illegal filename on Windows. Also you cannot
       # escape wildcards with backslash when it is a file separator.
       "patterns[f]" string => "$(G.testdir)/tu/\\*";
-  any::
+
+    any::
       "patterns[g]" string => "$(G.testdir)/*/**";
       "patterns[h]" string => "$(G.testdir)/**/j";
-
       "pnames" slist => getindices("patterns");
-
       "found[$(pnames)]" slist => findfiles("$(patterns[$(pnames)])");
       "found_string[$(pnames)]" string => join(",", "found[$(pnames)]");
-
 
   reports:
     DEBUG::
       "findfiles pattern $(pnames) '$(patterns[$(pnames)])' => '$(found_string[$(pnames)])'";
 }
 
-
 #######################################################
-
 bundle agent check
 {
   vars:
     !windows::
       "expected[a]" string => "$(G.testdir)/a,$(G.testdir)/d/,$(G.testdir)/g/";
-      "expected[b]" string => "$(G.testdir)/a,$(G.testdir)/bc,$(G.testdir)/d/,$(G.testdir)/g/,$(G.testdir)/klm/,$(G.testdir)/tu/";
+
+      "expected[b]"
+        string => "$(G.testdir)/a,$(G.testdir)/bc,$(G.testdir)/d/,$(G.testdir)/g/,$(G.testdir)/klm/,$(G.testdir)/tu/";
 
       "expected[c]" string => "$(G.testdir)/d/e/,$(G.testdir)/g/h/";
       "expected[d]" string => "$(G.testdir)/a,$(G.testdir)/bc";
       "expected[e]" string => "";
-
       "expected[f]" string => "$(G.testdir)/tu/*";
-      "expected[g]" string => "$(G.testdir)/a,$(G.testdir)/bc,$(G.testdir)/d/,$(G.testdir)/g/,$(G.testdir)/klm/,$(G.testdir)/tu/,$(G.testdir)/d/e/,$(G.testdir)/g/h/,$(G.testdir)/klm/nop/,$(G.testdir)/tu/*,$(G.testdir)/d/e/f,$(G.testdir)/g/h/i/,$(G.testdir)/klm/nop/qrs,$(G.testdir)/g/h/i/j";
+
+      "expected[g]"
+        string => "$(G.testdir)/a,$(G.testdir)/bc,$(G.testdir)/d/,$(G.testdir)/g/,$(G.testdir)/klm/,$(G.testdir)/tu/,$(G.testdir)/d/e/,$(G.testdir)/g/h/,$(G.testdir)/klm/nop/,$(G.testdir)/tu/*,$(G.testdir)/d/e/f,$(G.testdir)/g/h/i/,$(G.testdir)/klm/nop/qrs,$(G.testdir)/g/h/i/j";
+
       "expected[h]" string => "$(G.testdir)/g/h/i/j";
+
     windows::
       "expected[a]" string => "$(G.testdir)\\a,$(G.testdir)\\d,$(G.testdir)\\g";
-      "expected[b]" string => "$(G.testdir)\\a,$(G.testdir)\\bc,$(G.testdir)\\d,$(G.testdir)\\g,$(G.testdir)\\klm";
+
+      "expected[b]"
+        string => "$(G.testdir)\\a,$(G.testdir)\\bc,$(G.testdir)\\d,$(G.testdir)\\g,$(G.testdir)\\klm";
 
       "expected[c]" string => "$(G.testdir)\\d\\e,$(G.testdir)\\g\\h";
       "expected[d]" string => "$(G.testdir)\\a,$(G.testdir)\\bc";
       "expected[e]" string => "";
 
-      "expected[g]" string => "$(G.testdir)\\a,$(G.testdir)\\bc,$(G.testdir)\\d,$(G.testdir)\\g,$(G.testdir)\\klm,$(G.testdir)\\d\\e,$(G.testdir)\\g\\h,$(G.testdir)\\klm\\nop,$(G.testdir)\\d\\e\\f,$(G.testdir)\\g\\h\\i,$(G.testdir)\\klm\\nop\\qrs,$(G.testdir)\\g\\h\\i\\j";
+      "expected[g]"
+        string => "$(G.testdir)\\a,$(G.testdir)\\bc,$(G.testdir)\\d,$(G.testdir)\\g,$(G.testdir)\\klm,$(G.testdir)\\d\\e,$(G.testdir)\\g\\h,$(G.testdir)\\klm\\nop,$(G.testdir)\\d\\e\\f,$(G.testdir)\\g\\h\\i,$(G.testdir)\\klm\\nop\\qrs,$(G.testdir)\\g\\h\\i\\j";
+
       "expected[h]" string => "$(G.testdir)\\g\\h\\i\\j";
+
     any::
       # relative paths are skipped, thus return empty list
       "expected[relative_path_1]" string => "";
       "expected[relative_path_2]" string => "";
       "expected[relative_path_3]" string => "";
-
       "expects" slist => getindices("expected");
-
       "fstring" slist => getindices("test.found_string");
-
       "joint_condition" string => join(".", "expects");
 
   classes:
-      "$(expects)" expression => strcmp("$(test.found_string[$(expects)])", "$(expected[$(expects)])");
-      "ok" expression => "$(joint_condition)";
+    "$(expects)"
+      expression => strcmp(
+        "$(test.found_string[$(expects)])", "$(expected[$(expects)])"
+      );
+
+    "ok" expression => "$(joint_condition)";
 
   reports:
     DEBUG::
       "pattern $(expects) matches as expected: '$(expected[$(expects)])'"
-      if => "$(expects)";
+        if => "$(expects)";
 
       "pattern $(expects) does NOT match expected: '$(test.found_string[$(expects)])' != '$(expected[$(expects)])'"
-      if => "!$(expects)";
+        if => "!$(expects)";
 
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

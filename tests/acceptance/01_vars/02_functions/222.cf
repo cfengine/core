@@ -3,35 +3,31 @@
 # Test grep(), size 0, global array
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };   
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent init
 {
   vars:
-      "dummy" string => "dummy";
+    "dummy" string => "dummy";
 
   files:
-      "$(G.testfile).expected"
-      create => "true";
+    "$(G.testfile).expected" create => "true";
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-      "array" slist => { "One", "Two", "Three", "Four", "Five" };
-
-      "vals" slist => grep("Z.*", "test.array");
+    "array" slist => { "One", "Two", "Three", "Four", "Five" };
+    "vals" slist => grep("Z.*", "test.array");
 
   files:
-      "$(G.testfile).actual"
+    "$(G.testfile).actual"
       create => "true",
       edit_line => test_insert;
 
@@ -43,18 +39,20 @@ bundle agent test
 bundle edit_line test_insert
 {
   vars:
-      "vals" slist => { @{test.vals} };
+    "vals" slist => { @{test.vals} };
 
   insert_lines:
-      "$(vals)";
+    "$(vals)";
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
-      "any" usebundle => sorted_check_diff("$(G.testfile).actual",
-					   "$(G.testfile).expected",
-					   "$(this.promise_filename)");
+    "any"
+      usebundle => sorted_check_diff(
+        "$(G.testfile).actual",
+        "$(G.testfile).expected",
+        "$(this.promise_filename)"
+      );
 }

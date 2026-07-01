@@ -1,51 +1,79 @@
 # Test $(sys.inputdir), $(sys.masterdir), $(sys.libdir), $(sys.bindir), $(sys.failsafe_policy_path), $(sys.update_policy_path), $(sys.local_libdir)
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-      "expected[bindir]" string => "$(sys.workdir)$(const.dirsep)bin";
-      "expected[default_policy_path]" string => "$(sys.workdir)$(const.dirsep)inputs$(const.dirsep)promises.cf";
-      "expected[failsafe_policy_path]" string => "$(sys.workdir)$(const.dirsep)inputs$(const.dirsep)failsafe.cf";
-      "expected[inputdir]" string => "$(sys.workdir)$(const.dirsep)inputs";
-      "expected[libdir]" string => "$(sys.workdir)$(const.dirsep)inputs$(const.dirsep)lib";
-      "expected[local_libdir]" string => "lib";
-      "expected[masterdir]" string => "$(sys.workdir)$(const.dirsep)masterfiles";
-      "expected[update_policy_path]" string => "$(sys.workdir)$(const.dirsep)inputs$(const.dirsep)update.cf";
+    "expected[bindir]" string => "$(sys.workdir)$(const.dirsep)bin";
 
-      # sys.policy_entry variables are the same as this.promise variables in case the cf-agent is with '-f THIS_POLICY_FILENAME'
-      # except that "/./" can appear in some places in this.promise variables
-      "expected[policy_entry_dirname]" string => regex_replace("$(this.promise_dirname)", "/\./", "/", "");
-      "expected[policy_entry_filename]" string => regex_replace("$(this.promise_filename)", "/\./", "/", "");
-      "expected[policy_entry_basename]" string => regex_replace("$(this.promise_filename)", ".*/", "", "");
+    "expected[default_policy_path]"
+      string => "$(sys.workdir)$(const.dirsep)inputs$(const.dirsep)promises.cf";
 
-      "sysvars" slist => getindices("expected");
+    "expected[failsafe_policy_path]"
+      string => "$(sys.workdir)$(const.dirsep)inputs$(const.dirsep)failsafe.cf";
+
+    "expected[inputdir]" string => "$(sys.workdir)$(const.dirsep)inputs";
+
+    "expected[libdir]"
+      string => "$(sys.workdir)$(const.dirsep)inputs$(const.dirsep)lib";
+
+    "expected[local_libdir]" string => "lib";
+    "expected[masterdir]" string => "$(sys.workdir)$(const.dirsep)masterfiles";
+
+    "expected[update_policy_path]"
+      string => "$(sys.workdir)$(const.dirsep)inputs$(const.dirsep)update.cf";
+
+    # sys.policy_entry variables are the same as this.promise variables in case the cf-agent is with '-f THIS_POLICY_FILENAME'
+    # except that "/./" can appear in some places in this.promise variables
+    "expected[policy_entry_dirname]"
+      string => regex_replace("$(this.promise_dirname)", "/\./", "/", "");
+
+    "expected[policy_entry_filename]"
+      string => regex_replace("$(this.promise_filename)", "/\./", "/", "");
+
+    "expected[policy_entry_basename]"
+      string => regex_replace("$(this.promise_filename)", ".*/", "", "");
+
+    "sysvars" slist => getindices("expected");
 }
 
 #######################################################
-
 bundle agent test
 {
   meta:
-      "test_soft_fail" string => "windows",
-        meta => { "ENT-10257" };
+    "test_soft_fail"
+      string => "windows",
+      meta => { "ENT-10257" };
 }
 
 #######################################################
-
 bundle agent check
 {
   classes:
-      "$(init.sysvars)_ok" expression => strcmp("$(sys.$(init.sysvars))", "$(init.expected[$(init.sysvars)])");
+    "$(init.sysvars)_ok"
+      expression => strcmp(
+        "$(sys.$(init.sysvars))", "$(init.expected[$(init.sysvars)])"
+      );
 
-      "ok" and => { "inputdir_ok", "masterdir_ok", "libdir_ok", "bindir_ok", "default_policy_path_ok", "failsafe_policy_path_ok", "update_policy_path_ok",
-                    "local_libdir_ok", "policy_entry_dirname_ok", "policy_entry_filename_ok", "policy_entry_basename_ok" };
+    "ok"
+      and => {
+        "inputdir_ok",
+        "masterdir_ok",
+        "libdir_ok",
+        "bindir_ok",
+        "default_policy_path_ok",
+        "failsafe_policy_path_ok",
+        "update_policy_path_ok",
+        "local_libdir_ok",
+        "policy_entry_dirname_ok",
+        "policy_entry_filename_ok",
+        "policy_entry_basename_ok",
+      };
 
   reports:
     DEBUG::
@@ -53,6 +81,7 @@ bundle agent check
 
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

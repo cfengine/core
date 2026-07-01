@@ -1,35 +1,32 @@
 bundle common test_meta
 {
   vars:
-      "description" string => "A user not present gets added with description";
-      "story_id" string => "5525";
-      "covers" string => "operational_repaired";
+    "description" string => "A user not present gets added with description";
+    "story_id" string => "5525";
+    "covers" string => "operational_repaired";
 }
 
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf", "user_queries.cf.sub" };
-      bundlesequence  => { default("$(this.promise_filename)") };
+  inputs => { "../../default.sub.cf", "user_queries.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
 }
 
 #######################################################
-
 bundle agent init
 {
   # Remove him first, should he already be present.
   users:
-    "johndoe"
-      policy => "absent";
+    "johndoe" policy => "absent";
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-    "desc_string" string => "This description should make the CFEngine test pass";
+    "desc_string"
+      string => "This description should make the CFEngine test pass";
 
   users:
     "johndoe"
@@ -38,20 +35,23 @@ bundle agent test
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
-    "any" usebundle => user_has_description("johndoe", "$(test.desc_string)", "success", "failure"),
+    "any"
+      usebundle => user_has_description(
+        "johndoe", "$(test.desc_string)", "success", "failure"
+      ),
       classes => always("methods_run");
 
   classes:
-      "ready" expression => "methods_run";
-      "ok" and => { "success", "!failure" };
+    "ready" expression => "methods_run";
+    "ok" and => { "success", "!failure" };
 
   reports:
     ok.ready::
       "$(this.promise_filename) Pass";
+
     !ok.ready::
       "$(this.promise_filename) FAIL";
 }

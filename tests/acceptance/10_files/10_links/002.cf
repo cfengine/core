@@ -4,42 +4,38 @@
 # the current namespace.
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf", "002-namespaced_links.cf.sub" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf", "002-namespaced_links.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
 }
 
 #######################################################
-
 bundle agent test
 {
   methods:
-      "run" usebundle => testing_links:namespaced_test();
+    "run" usebundle => testing_links:namespaced_test();
 }
 
 body link_from ln_s(x)
 {
-      link_type => "symlink";
-      source => "$(x)";
-      when_no_source => "force";
+  link_type => "symlink";
+  source => "$(x)";
+  when_no_source => "force";
 }
 
 #######################################################
-
 bundle agent check
 {
   classes:
-      "subdir_created" expression => fileexists("$(G.testdir)/subdir");
+    "subdir_created" expression => fileexists("$(G.testdir)/subdir");
 
   reports:
     !subdir_created::

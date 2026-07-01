@@ -3,54 +3,59 @@
 # Test execresult() captures stdout and stderr
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent test
 {
   meta:
-      "description" -> { "CFE-3103" }
-        string => "Test that execresult captures both stdout and stderr";
-      "test_soft_fail" string => "windows",
-        meta => { "ENT-10217" };
+    "description" -> { "CFE-3103" }
+      string => "Test that execresult captures both stdout and stderr";
+
+    "test_soft_fail"
+      string => "windows",
+      meta => { "ENT-10217" };
 
   vars:
-      "result_with_stdout_stderr"
-        string => execresult("$(G.echo) stdout; $(G.echo) stderr >&2", "useshell");
+    "result_with_stdout_stderr"
+      string => execresult(
+        "$(G.echo) stdout; $(G.echo) stderr >&2", "useshell"
+      );
 
-      "result_with_stdout"
-        string => execresult("$(G.echo) stdout", "useshell");
+    "result_with_stdout" string => execresult("$(G.echo) stdout", "useshell");
 
-      "result_with_stderr"
-        string => execresult("$(G.echo) stderr >&2", "useshell");
+    "result_with_stderr"
+      string => execresult("$(G.echo) stderr >&2", "useshell");
 
   classes:
-      "pass_stdout_stderr"
-        scope => "namespace",
-        expression => strcmp( "stdout$(const.n)stderr", $(result_with_stdout_stderr) );
+    "pass_stdout_stderr"
+      scope => "namespace",
+      expression => strcmp(
+        "stdout$(const.n)stderr", $(result_with_stdout_stderr)
+      );
 
-      "pass_stdout"
-        scope => "namespace",
-        expression => strcmp( "stdout", $(result_with_stdout) );
+    "pass_stdout"
+      scope => "namespace",
+      expression => strcmp("stdout", $(result_with_stdout));
 
-      "pass_stderr"
-        scope => "namespace",
-        expression => strcmp( "stderr", $(result_with_stderr) );
+    "pass_stderr"
+      scope => "namespace",
+      expression => strcmp("stderr", $(result_with_stderr));
 
   methods:
-      "Pass/Fail"
-        usebundle => dcs_passif("pass_stdout_stderr.pass_stdout.pass_stderr", $(this.promise_filename));
-
+    "Pass/Fail"
+      usebundle => dcs_passif(
+        "pass_stdout_stderr.pass_stdout.pass_stderr", $(this.promise_filename)
+      );
 }
 
 bundle agent __main__
 {
-  methods: "test";
+  methods:
+    "test";
 }

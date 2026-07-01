@@ -4,66 +4,64 @@
 # we wanted not to (irange(0,0))
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-      "dummy" string => "dummy";
+    "dummy" string => "dummy";
 }
 
 #######################################################
-
 bundle agent test
 {
   meta:
-      "test_flakey_fail" string => "aix_7_1",
-        meta => { "CFE-3313" };
+    "test_flakey_fail"
+      string => "aix_7_1",
+      meta => { "CFE-3313" };
 
   processes:
-      ".*"
+    ".*"
       process_count => test_range,
       process_select => test_select_high_users;
 }
 
 body process_count test_range
 {
-        in_range_define => { "none_found" };
-        out_of_range_define => { "some_found" };
+  in_range_define => { "none_found" };
+  out_of_range_define => { "some_found" };
 
-    aix::
-        # Allow one process with CPU time not between 0 seconds and 99 years on
-        # AIX because a process with TIME '-' sometimes appears there.
-        match_range => irange(0, 1);
-    !aix::
-        match_range => irange(0, 0);
+  aix::
+    # Allow one process with CPU time not between 0 seconds and 99 years on
+    # AIX because a process with TIME '-' sometimes appears there.
+    match_range => irange(0, 1);
+
+  !aix::
+    match_range => irange(0, 0);
 }
 
 body process_select test_select_high_users
 {
-      ttime_range => irange(0, accumulated(99,0,0,0,0,0));       # Anything
-      process_result => "!ttime";                                # Nothing
+  ttime_range => irange(0, accumulated(99, 0, 0, 0, 0, 0)); # Anything
+  process_result => "!ttime"; # Nothing
 }
 
-
 #######################################################
-
 bundle agent check
 {
   classes:
-      "ok" expression => "none_found.!some_found";
+    "ok" expression => "none_found.!some_found";
 
   reports:
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

@@ -1,18 +1,17 @@
 body common control
 {
-      inputs => { "../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent init
 {
-   meta:
-     "description" string => "ensure clean starting point before test";
+  meta:
+    "description" string => "ensure clean starting point before test";
 
-   files:
-     "$(G.testdir)/$(test.file[$(test.idx)])"
-       delete => tidy;
+  files:
+    "$(G.testdir)/$(test.file[$(test.idx)])" delete => tidy;
 }
 
 bundle agent test
@@ -24,8 +23,7 @@ bundle agent test
   vars:
     "file[1]" string => "file with space.txt";
     "file[2]" string => "path with/a space.txt";
-
-    "idx" slist => getindices( file );
+    "idx" slist => getindices(file);
 
   files:
     "$(G.testdir)/$(file[$(idx)])"
@@ -36,32 +34,35 @@ bundle agent test
 bundle agent check
 {
   vars:
-    "expected_classes" slist => maplist( "file_$(this)_repaired", "test.idx" );
-# NOT WORKING  --  variable not expanded "/tmp/TESTDIR.cfengine/$(test#file[2])"
-    "expected_files" slist => maplist( "$(G.testdir)/$(test.file[$(this)])", "test.idx");
-# NOT WORKING  --  Only the first file is actually tested
-#    "expected_files" slist => { "$(G.testdir)/$(test.file[@(test.idx)])" };
-# NOT WORKING  --  only the second file is created
-#    "expected_files" slist => { "$(G.testdir)/$(test.file[$(test.idx)])" };
+    "expected_classes" slist => maplist("file_$(this)_repaired", "test.idx");
 
+    # NOT WORKING  --  variable not expanded "/tmp/TESTDIR.cfengine/$(test#file[2])"
+    "expected_files"
+      slist => maplist("$(G.testdir)/$(test.file[$(this)])", "test.idx");
+
+    # NOT WORKING  --  Only the first file is actually tested
+    #    "expected_files" slist => { "$(G.testdir)/$(test.file[@(test.idx)])" };
+    # NOT WORKING  --  only the second file is created
+    #    "expected_files" slist => { "$(G.testdir)/$(test.file[$(test.idx)])" };
     "classes" slist => classesmatching("file_.*");
+
   classes:
     "have_expected_classes" and => { @(expected_classes) };
-    "have_expected_files" expression => filesexist( @(expected_files) );
+    "have_expected_files" expression => filesexist(@(expected_files));
 
   methods:
     "Report Test Result"
-       usebundle => dcs_passif_expected("have_expected_classes,have_expected_files", "FAIL", $(this.promise_filename) ),
-       inherit => "true";
+      usebundle => dcs_passif_expected(
+        "have_expected_classes,have_expected_files",
+        "FAIL",
+        $(this.promise_filename)
+      ),
+      inherit => "true";
 
   reports:
     DEBUG::
-    "Expecting class: '$(expected_classes)'";
-    "Expecting file: '$(expected_files)'";
-
-    "Have expected classes"
-      if => "have_expected_classes";
-
-    "Have expected files"
-      if => "have_expected_files";
+      "Expecting class: '$(expected_classes)'";
+      "Expecting file: '$(expected_files)'";
+      "Have expected classes" if => "have_expected_classes";
+      "Have expected files" if => "have_expected_files";
 }

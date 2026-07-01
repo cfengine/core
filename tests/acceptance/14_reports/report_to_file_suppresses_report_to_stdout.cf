@@ -8,32 +8,35 @@ body common control
 bundle common test_meta
 {
   vars:
-      "description" string => "Test that report_to_file attribute suppresses report on stdout.";
+    "description"
+      string => "Test that report_to_file attribute suppresses report on stdout.";
 }
 
 bundle agent init
 {
   files:
-    "$(G.testfile)"
-      delete => tidy;
+    "$(G.testfile)" delete => tidy;
 }
 
 bundle agent test
 {
   vars:
-    "subout" string => execresult("$(sys.cf_agent) -Kf $(this.promise_filename).sub -DAUTO", "noshell");
+    "subout"
+      string => execresult(
+        "$(sys.cf_agent) -Kf $(this.promise_filename).sub -DAUTO", "noshell"
+      );
 }
 
 bundle agent check
 {
-
   classes:
     "not_found_report_in_agent_output"
-      not => regcmp(".*This should not be reported to stdout.*", "$(test.subout)");
+      not => regcmp(
+        ".*This should not be reported to stdout.*", "$(test.subout)"
+      );
 
     "sub_ok" expression => regcmp(".*Pass", "$(test.subout)");
-
-    "ok" and => { "sub_ok", "not_found_report_in_agent_output" }; 
+    "ok" and => { "sub_ok", "not_found_report_in_agent_output" };
 
   reports:
     DEBUG::

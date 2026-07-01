@@ -1,13 +1,14 @@
 body common control
 {
-        inputs => { "../../default.sub.cf" };
-        bundlesequence => { default("$(this.promise_filename)") };
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
 }
 
 bundle common init
 {
   vars:
-      "expect" data => '{
+    "expect"
+      data => '{
         "pos_int": {
           "in": "12",
           "out": "12"
@@ -42,39 +43,37 @@ bundle common init
         },
       }';
 
-      "cases" slist => getindices( @{expect} );
-      "all_ok_classes" slist => maplist( "ok_${this}", @{cases} );
+    "cases" slist => getindices(@{expect});
+    "all_ok_classes" slist => maplist("ok_${this}", @{cases});
 }
 
 bundle common test
 {
   meta:
-      "description" -> { "CFE-3616" }
-        string => "Test whether the int() policy function properly returns integer from string";
+    "description" -> { "CFE-3616" }
+      string => "Test whether the int() policy function properly returns integer from string";
 
   classes:
-      "ok_${init.cases}"
-        expression => strcmp( int( "${init.expect[${init.cases}][in]}" ),
-                              "${init.expect[${init.cases}][out]}"
-        );
+    "ok_${init.cases}"
+      expression => strcmp(
+        int("${init.expect[${init.cases}][in]}"),
+        "${init.expect[${init.cases}][out]}"
+      );
 }
 
 bundle agent check
 {
   vars:
-      "difference"
-        slist => difference( @{init.all_ok_classes},
-                             classesmatching( "ok_.*" )
-        );
+    "difference"
+      slist => difference(@{init.all_ok_classes}, classesmatching("ok_.*"));
 
   classes:
-      "ok"
-        expression => strcmp( "0", length( @{difference} ) );
+    "ok" expression => strcmp("0", length(@{difference}));
 
   methods:
-      "Pass/FAIL"
-        usebundle => dcs_passif( "ok", ${this.promise_filename} ),
-        inherit => "true";
+    "Pass/FAIL"
+      usebundle => dcs_passif("ok", ${this.promise_filename}),
+      inherit => "true";
 
   reports:
     !ok.DEBUG::

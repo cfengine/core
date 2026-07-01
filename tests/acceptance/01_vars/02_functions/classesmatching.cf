@@ -1,49 +1,72 @@
 # Test that classesmatching and countclassesmatching work correctly
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence => { default("$(this.promise_filename)") };
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
 }
 
 bundle common init
 {
   classes:
-      "test_fbeae67f3e347b5e0032302200141131" expression => "any", meta => { "x" };
-      "test_fbeae67f3e347b5e0032302200141131_1" expression => "any", meta => { "x" };
-      "test_fbeae67f3e347b5e0032302200141131_2" expression => "any", meta => { "y" };
+    "test_fbeae67f3e347b5e0032302200141131"
+      expression => "any",
+      meta => { "x" };
+
+    "test_fbeae67f3e347b5e0032302200141131_1"
+      expression => "any",
+      meta => { "x" };
+
+    "test_fbeae67f3e347b5e0032302200141131_2"
+      expression => "any",
+      meta => { "y" };
 }
 
 bundle common test
 {
   vars:
-      "classes" slist => classesmatching("test_fbeae67f3e347b5e0032302200141131.*");
-      "x_classes" slist => classesmatching("test_fbeae67f3e347b5e0032302200141131.*", "x");
-      "z_classes" slist => classesmatching("test_fbeae67f3e347b5e0032302200141131.*", "z");
+    "classes"
+      slist => classesmatching("test_fbeae67f3e347b5e0032302200141131.*");
 
-      "ccm_classes" int => countclassesmatching("test_fbeae67f3e347b5e0032302200141131.*");
-      "ccm_x_classes" int => countclassesmatching("test_fbeae67f3e347b5e0032302200141131.*", "x");
-      "ccm_z_classes" int => countclassesmatching("test_fbeae67f3e347b5e0032302200141131.*", "z");
+    "x_classes"
+      slist => classesmatching("test_fbeae67f3e347b5e0032302200141131.*", "x");
 
-      "count" int => length(classes);
-      "x_count" int => length(x_classes);
-      "z_count" int => length(z_classes);
+    "z_classes"
+      slist => classesmatching("test_fbeae67f3e347b5e0032302200141131.*", "z");
+
+    "ccm_classes"
+      int => countclassesmatching("test_fbeae67f3e347b5e0032302200141131.*");
+
+    "ccm_x_classes"
+      int => countclassesmatching(
+        "test_fbeae67f3e347b5e0032302200141131.*", "x"
+      );
+
+    "ccm_z_classes"
+      int => countclassesmatching(
+        "test_fbeae67f3e347b5e0032302200141131.*", "z"
+      );
+
+    "count" int => length(classes);
+    "x_count" int => length(x_classes);
+    "z_count" int => length(z_classes);
 
   classes:
-      "have_count_classes" expression => strcmp($(count), 3);
-      "have_count_x_classes" expression => strcmp($(x_count), 2);
-      "have_count_z_classes" expression => strcmp($(z_count), 0);
-
-      "have_ccm_classes" expression => strcmp($(ccm_classes), 3);
-      "have_ccm_x_classes" expression => strcmp($(ccm_x_classes), 2);
-      "have_ccm_z_classes" expression => strcmp($(ccm_z_classes), 0);
+    "have_count_classes" expression => strcmp($(count), 3);
+    "have_count_x_classes" expression => strcmp($(x_count), 2);
+    "have_count_z_classes" expression => strcmp($(z_count), 0);
+    "have_ccm_classes" expression => strcmp($(ccm_classes), 3);
+    "have_ccm_x_classes" expression => strcmp($(ccm_x_classes), 2);
+    "have_ccm_z_classes" expression => strcmp($(ccm_z_classes), 0);
 }
 
 bundle agent check
 {
- methods:
-      "" usebundle => dcs_passif_expected("have_count_classes,have_count_x_classes,have_count_z_classes,have_ccm_classes,have_ccm_x_classes,have_ccm_z_classes",
-                                          "",
-                                          $(this.promise_filename)),
+  methods:
+    ""
+      usebundle => dcs_passif_expected(
+        "have_count_classes,have_count_x_classes,have_count_z_classes,have_ccm_classes,have_ccm_x_classes,have_ccm_z_classes",
+        "",
+        $(this.promise_filename)
+      ),
       inherit => "true";
 }

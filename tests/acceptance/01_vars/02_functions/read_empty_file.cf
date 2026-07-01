@@ -1,47 +1,49 @@
 # Test that empty file is successfully read by readfile() function
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent init
 {
   files:
-      "$(G.testfile)"
-      create => "true";
+    "$(G.testfile)" create => "true";
 }
 
 bundle agent test
 {
   vars:
-      "value1" string => readfile("$(G.testfile)", 10000);
-      "value2" string => readfile("$(G.testfile)", 0);
+    "value1" string => readfile("$(G.testfile)", 10000);
+    "value2" string => readfile("$(G.testfile)", 0);
 }
 
 bundle agent check
 {
   classes:
-      "ok1" expression => strcmp("$(test.value1)", "");
-      "ok2" expression => strcmp("$(test.value2)", "");
-      "not_ok1" not => strcmp("$(test.value1)", "");
-      "not_ok2" not => strcmp("$(test.value2)", "");
-      "ok" and => { "ok1", "ok2" };
+    "ok1" expression => strcmp("$(test.value1)", "");
+    "ok2" expression => strcmp("$(test.value2)", "");
+    "not_ok1" not => strcmp("$(test.value1)", "");
+    "not_ok2" not => strcmp("$(test.value2)", "");
+    "ok" and => { "ok1", "ok2" };
 
   reports:
     DEBUG.ok1::
       "passed1: '$(test.value1)' == ''";
+
     DEBUG.ok2::
       "passed2: '$(test.value1)' == ''";
+
     DEBUG.not_ok1::
       "failed1: '$(test.value1)' != ''";
+
     DEBUG.not_ok2::
       "failed2: '$(test.value2)' != ''";
 
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

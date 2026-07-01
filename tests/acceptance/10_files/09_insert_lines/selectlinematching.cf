@@ -24,7 +24,6 @@
 # December 2013
 #
 ##############################################################################
-
 body common control
 {
   inputs => { "../../default.sub.cf" };
@@ -33,14 +32,11 @@ body common control
 }
 
 #######################################################
-
 bundle agent init
 {
-
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
@@ -48,8 +44,17 @@ bundle agent test
       # Run subtests.  Need to be in verbose mode to see the output.
       # The full verbose output is too big for variable assignment here.
       # So extract (grep) only potentially interesting lines.
-      "subout_1" string => execresult("$(sys.cf_agent) -Kv -f $(this.promise_filename).sub_1 2>&1 | $(G.egrep) -i 'select_line_matching'", "useshell");
-      "subout_2" string => execresult("$(sys.cf_agent) -Kv -f $(this.promise_filename).sub_2 2>&1 | $(G.egrep) -i 'select_line_matching'", "useshell");
+      "subout_1"
+        string => execresult(
+          "$(sys.cf_agent) -Kv -f $(this.promise_filename).sub_1 2>&1 | $(G.egrep) -i 'select_line_matching'",
+          "useshell"
+        );
+
+      "subout_2"
+        string => execresult(
+          "$(sys.cf_agent) -Kv -f $(this.promise_filename).sub_2 2>&1 | $(G.egrep) -i 'select_line_matching'",
+          "useshell"
+        );
 
   reports:
     DEBUG::
@@ -60,9 +65,7 @@ bundle agent test
       "bundle test: subout_2:  $(subout_2)";
 }
 
-
 #######################################################
-
 bundle agent check
 {
   vars:
@@ -91,6 +94,7 @@ bundle agent check
 
     ok_pattern_1.ok_pattern_2::
       "$(this.promise_filename) Pass";
+
     !(ok_pattern_1.ok_pattern_2)::
       "$(this.promise_filename) FAIL";
 }

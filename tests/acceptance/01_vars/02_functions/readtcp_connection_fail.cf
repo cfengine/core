@@ -1,37 +1,41 @@
 # Test that failure to connect to remote host does not result in "Could not
 # close socket" error messages.
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent init
 {
   vars:
-      "dummy" string => "dummy";
+    "dummy" string => "dummy";
 }
 
 bundle agent test
 {
   vars:
-      "subout" string => execresult("$(sys.cf_agent) -Kf $(this.promise_filename).sub", "useshell");
+    "subout"
+      string => execresult(
+        "$(sys.cf_agent) -Kf $(this.promise_filename).sub", "useshell"
+      );
 }
 
 bundle agent check
 {
   classes:
-      "ok_output" not => regcmp(".*Bad file descriptor.*", "$(test.subout)");
-      "ok_no_crash" expression => isvariable("test.subout");
-      "ok" and => { "ok_output", "ok_no_crash" };
+    "ok_output" not => regcmp(".*Bad file descriptor.*", "$(test.subout)");
+    "ok_no_crash" expression => isvariable("test.subout");
+    "ok" and => { "ok_output", "ok_no_crash" };
 
   reports:
     DEBUG::
       "$(test.subout)";
+
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

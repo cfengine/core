@@ -1,29 +1,44 @@
 body common control
 {
-      inputs => { "../../default.sub.cf", "../../run_with_server.cf.sub" };
-      bundlesequence => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf", "../../run_with_server.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent test
 {
   meta:
-      "test_soft_fail" string => "windows",
-        meta => { "ENT-10401" };
+    "test_soft_fail"
+      string => "windows",
+      meta => { "ENT-10401" };
 
   methods:
-      # source file
-      "any" usebundle => file_make("$(G.testdir)/source_file",
-                                   "Source and Destination are DIFFERENT_A");
-      # destination files
-      "any" usebundle => file_make("$(G.testdir)/destfile_classic",
-                                   "Source and Destination are DIFFERENT_B");
-      "any" usebundle => file_make("$(G.testdir)/destfile_latest",
-                                   "Source and Destination are DIFFERENT_B");
+    # source file
+    "any"
+      usebundle => file_make(
+        "$(G.testdir)/source_file", "Source and Destination are DIFFERENT_A"
+      );
 
-      "any" usebundle => generate_key;
+    # destination files
+    "any"
+      usebundle => file_make(
+        "$(G.testdir)/destfile_classic",
+        "Source and Destination are DIFFERENT_B"
+      );
 
-      "any" usebundle => start_server("$(this.promise_dirname)/localhost_open.srv");
-      "any" usebundle => run_test("$(this.promise_filename).sub");
-      "any" usebundle => stop_server("$(this.promise_dirname)/localhost_open.srv");
+    "any"
+      usebundle => file_make(
+        "$(G.testdir)/destfile_latest",
+        "Source and Destination are DIFFERENT_B"
+      );
+
+    "any" usebundle => generate_key;
+
+    "any"
+      usebundle => start_server("$(this.promise_dirname)/localhost_open.srv");
+
+    "any" usebundle => run_test("$(this.promise_filename).sub");
+
+    "any"
+      usebundle => stop_server("$(this.promise_dirname)/localhost_open.srv");
 }

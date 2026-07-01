@@ -1,13 +1,11 @@
 # Test $(this.calling_bundle)
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
 }
 
 #######################################################
-
 bundle agent init
 {
   methods:
@@ -17,16 +15,13 @@ bundle agent init
 }
 
 #######################################################
-
 bundle agent check
 {
   vars:
-    "expected"
-      string => "default:init/new_namespace:A/B";
+    "expected" string => "default:init/new_namespace:A/B";
 
   classes:
-    "ok"
-      expression => strcmp("$(init.return_var[1])", "$(expected)");
+    "ok" expression => strcmp("$(init.return_var[1])", "$(expected)");
 
   reports:
     DEBUG::
@@ -34,15 +29,15 @@ bundle agent check
 
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }
 
 body file control
 {
-      namespace => "new_namespace";
+  namespace => "new_namespace";
 }
-
 
 bundle agent A
 {
@@ -52,14 +47,11 @@ bundle agent A
       useresult => "return_var";
 
   reports:
-    "$(this.calling_bundle)/$(return_var[1])"
-      bundle_return_value_index => "1";
-
+    "$(this.calling_bundle)/$(return_var[1])" bundle_return_value_index => "1";
 }
 
 bundle agent B
 {
   reports:
-    "$(this.calling_bundle)/$(this.bundle)"
-      bundle_return_value_index => "1";
+    "$(this.calling_bundle)/$(this.bundle)" bundle_return_value_index => "1";
 }

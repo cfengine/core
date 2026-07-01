@@ -1,35 +1,39 @@
 # Test that variables can be passed across bundles and namespaces
-
 body common control
 {
-      inputs => { "../../../default.sub.cf", "namespaced-bundles.cf.sub1", "namespaced-bundles.cf.sub2" };
-      bundlesequence => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => {
+    "../../../default.sub.cf",
+    "namespaced-bundles.cf.sub1",
+    "namespaced-bundles.cf.sub2",
+  };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent init
 {
   vars:
-      "dummy" string => "dummy";
+    "dummy" string => "dummy";
 }
 
 bundle agent test
 {
   methods:
-      "1" usebundle => namespaced_bundles_1:unique;
-      "2" usebundle => namespaced_bundles_2:unique;
-      "3" usebundle => namespaced_bundles_1:unique2("a", "b");
-      "4" usebundle => namespaced_bundles_2:unique2("one value");
+    "1" usebundle => namespaced_bundles_1:unique;
+    "2" usebundle => namespaced_bundles_2:unique;
+    "3" usebundle => namespaced_bundles_1:unique2("a", "b");
+    "4" usebundle => namespaced_bundles_2:unique2("one value");
 }
 
 bundle agent check
 {
   classes:
-      "ok" expression => "any";
+    "ok" expression => "any";
 
   reports:
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

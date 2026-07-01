@@ -4,23 +4,21 @@
 # Double (nested) header/trailer
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-      "states" slist => { "actual", "expected" };
+    "states" slist => { "actual", "expected" };
 
-      "actual" string =>
-      "header
+    "actual"
+      string => "header
 BEGIN
 header
 BEGIN
@@ -33,10 +31,10 @@ trailer
 END
 trailer";
 
-      "expected" string => "$(actual)";
+    "expected" string => "$(actual)";
 
   files:
-      "$(G.testfile).$(states)"
+    "$(G.testfile).$(states)"
       create => "true",
       edit_line => init_insert("$(init.$(states))"),
       edit_defaults => init_empty;
@@ -45,50 +43,46 @@ trailer";
 bundle edit_line init_insert(str)
 {
   insert_lines:
-      "$(str)";
+    "$(str)";
 }
 
 body edit_defaults init_empty
 {
-      empty_file_before_editing => "true";
+  empty_file_before_editing => "true";
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-      "tstr" string =>
-      "    Three potatoe";
+    "tstr" string => "    Three potatoe";
 
   files:
-      "$(G.testfile).actual"
-      edit_line => test_delete("$(test.tstr)");
-
+    "$(G.testfile).actual" edit_line => test_delete("$(test.tstr)");
 }
 
 bundle edit_line test_delete(str)
 {
   delete_lines:
-      "$(str)$(const.n)BEGIN$(const.n)END"
-      select_region => test_select;
+    "$(str)$(const.n)BEGIN$(const.n)END" select_region => test_select;
 }
 
 body select_region test_select
 {
-      select_start => "header";
-      select_end => "trailer";
+  select_start => "header";
+  select_end => "trailer";
 }
 
-
 #######################################################
-
 bundle agent check
 {
   methods:
-      "any" usebundle => dcs_check_diff("$(G.testfile).actual",
-                                            "$(G.testfile).expected",
-                                            "$(this.promise_filename)");
+    "any"
+      usebundle => dcs_check_diff(
+        "$(G.testfile).actual",
+        "$(G.testfile).expected",
+        "$(this.promise_filename)"
+      );
 }
 
 ### PROJECT_ID: core

@@ -1,7 +1,7 @@
 body common control
 {
   inputs => { "../../default.sub.cf" };
-  bundlesequence  => { default("$(this.promise_filename)") };
+  bundlesequence => { default("$(this.promise_filename)") };
   version => "1.0";
 }
 
@@ -34,7 +34,8 @@ bundle agent test
       string => "Test time based variables";
 
   vars:
-    "variables" data => '{
+    "variables"
+      data => '{
         "dom": "^Day([1-9]|[1-2][0-9]|3[0-1])$",
         "dow": "^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)$",
         "hr": "^Hr(0[0-9]|1[0-9]|2[0-4])$",
@@ -62,12 +63,13 @@ bundle agent test
         "gmt_yr": "^GMT_Yr\d{4}$"
       }';
 
-    "names"
-      slist => getindices("variables");
+    "names" slist => getindices("variables");
 
   methods:
-    "any" usebundle => test_variable("default:sys.time_based_$(names)",
-                                     "$(variables[$(names)])");
+    "any"
+      usebundle => test_variable(
+        "default:sys.time_based_$(names)", "$(variables[$(names)])"
+      );
 }
 
 bundle agent check

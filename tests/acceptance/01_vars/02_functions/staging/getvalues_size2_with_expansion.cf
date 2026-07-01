@@ -3,21 +3,20 @@
 # Test getvalues(), size 2 with variable expansion
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };   
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent init
 {
   vars:
-      "dummy" string => "dummy";
+    "dummy" string => "dummy";
 
   files:
-      "$(G.testfile).expected"
+    "$(G.testfile).expected"
       create => "true",
       edit_line => init_insert;
 }
@@ -25,29 +24,26 @@ bundle agent init
 bundle edit_line init_insert
 {
   insert_lines:
-      "one
-extra line"
-      "the end$(const.dollar)fini";
-      "XXX dummy XXX";
-      "YYY $(init.dummy) YYY";
+    "one
+extra line";
+    "the end$(const.dollar)fini";
+    "XXX dummy XXX";
+    "YYY $(init.dummy) YYY";
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-      "array[the fini$end]" string =>
-      "additional line
+    "array[the fini$end]" string => "additional line
 again";
-      "array[the end$(const.dollar)fini]" string => "one$(const.n)extra line";
-      "array[XXX dummy XXX]" string => "XXX dummy XXX";
-      "array[YYY $(init.dummy) YYY]" string => "YYY $(init.dummy) YYY";
-
-      "vals" slist => getvalues("array");
+    "array[the end$(const.dollar)fini]" string => "one$(const.n)extra line";
+    "array[XXX dummy XXX]" string => "XXX dummy XXX";
+    "array[YYY $(init.dummy) YYY]" string => "YYY $(init.dummy) YYY";
+    "vals" slist => getvalues("array");
 
   files:
-      "$(G.testfile).actual"
+    "$(G.testfile).actual"
       create => "true",
       edit_line => test_insert;
 
@@ -59,26 +55,27 @@ again";
 bundle edit_line test_insert
 {
   vars:
-      "vals" slist => { @{test.vals} };
+    "vals" slist => { @{test.vals} };
 
   insert_lines:
-      "$(vals)";
+    "$(vals)";
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
-      "any" usebundle => sorted_check_diff("$(G.testfile).actual",
-					   "$(G.testfile).expected",
-					   "$(this.promise_filename)");
+    "any"
+      usebundle => sorted_check_diff(
+        "$(G.testfile).actual",
+        "$(G.testfile).expected",
+        "$(this.promise_filename)"
+      );
 }
 
 #######################################################
-
 bundle agent fini
 {
   methods:
-      "any" usebundle => dcs_fini("$(G.testfile).*");
+    "any" usebundle => dcs_fini("$(G.testfile).*");
 }

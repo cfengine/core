@@ -1,39 +1,34 @@
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle common test_meta
 {
   vars:
-      "description" string => "Test that data containers are NOT defined when mergedata is used with a non-existing data container";
+    "description"
+      string => "Test that data containers are NOT defined when mergedata is used with a non-existing data container";
 }
 
 bundle agent check
 {
   vars:
-    "data"
-      data => mergedata("missing_ns:missing_bundle.missing_var");
+    "data" data => mergedata("missing_ns:missing_bundle.missing_var");
 
   classes:
-    "fail"
-      expression => isvariable("data");
-
-    "ok"
-      not => isvariable("data");
-
-    "exception"
-      and => { "fail", "ok" };
+    "fail" expression => isvariable("data");
+    "ok" not => isvariable("data");
+    "exception" and => { "fail", "ok" };
 
   reports:
-     fail::
-       "$(this.promise_filename) FAIL";
+    fail::
+      "$(this.promise_filename) FAIL";
 
-     ok.!fail::
-       "$(this.promise_filename) Pass";
+    ok.!fail::
+      "$(this.promise_filename) Pass";
 
-     exception::
-       "$(this.promise_filename) EXCEPTION";
+    exception::
+      "$(this.promise_filename) EXCEPTION";
 }

@@ -3,45 +3,41 @@
 # Test sublist()
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-      "test" slist => {
-                        1,2,3,
-                        "one", "two", "three",
-                        "long string",
-                        "one", "two", "three",
+    "test"
+      slist => {
+        1, 2, 3, "one", "two", "three", "long string", "one", "two", "three",
       };
 
-      "test_head9999" slist => sublist("test", "head", 9999);
-      "test_head1" slist => sublist("test", "head", 1);
-      "test_head0" slist => sublist("test", "head", 0);
-
-      "test_tail9999" slist => sublist("test", "tail", 9999);
-      "test_tail10" slist => sublist("test", "tail", 10);
-      "test_tail2" slist => sublist("test", "tail", 2);
-      "test_tail1" slist => sublist("test", "tail", 1);
-      "test_tail0" slist => sublist("test", "tail", 0);
-
-      "test_inline" slist => sublist('[1,2,3,4,5,6,7]', "tail", 3);
+    "test_head9999" slist => sublist("test", "head", 9999);
+    "test_head1" slist => sublist("test", "head", 1);
+    "test_head0" slist => sublist("test", "head", 0);
+    "test_tail9999" slist => sublist("test", "tail", 9999);
+    "test_tail10" slist => sublist("test", "tail", 10);
+    "test_tail2" slist => sublist("test", "tail", 2);
+    "test_tail1" slist => sublist("test", "tail", 1);
+    "test_tail0" slist => sublist("test", "tail", 0);
+    "test_inline" slist => sublist('[1,2,3,4,5,6,7]', "tail", 3);
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
-      "check"  usebundle => dcs_check_state(test,
-                                           "$(this.promise_filename).expected.json",
-                                           $(this.promise_filename));
+    "check"
+      usebundle => dcs_check_state(
+        test,
+        "$(this.promise_filename).expected.json",
+        $(this.promise_filename)
+      );
 }

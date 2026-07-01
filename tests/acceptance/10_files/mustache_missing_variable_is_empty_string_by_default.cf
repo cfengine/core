@@ -1,20 +1,19 @@
 bundle common test_meta
 {
   vars:
-      "description" -> { "Mustache Specification" }
-        string => "Missed variables should be empty strings by
+    "description" -> { "Mustache Specification" }
+      string => "Missed variables should be empty strings by
 		   default in rendered mustache templates as described in the
                    Mustache Manual.",
-        comment => "https://mustache.github.io/mustache.5.html";
+      comment => "https://mustache.github.io/mustache.5.html";
 }
 
 #######################################################
-
 body common control
 {
-      inputs => { "../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent init
@@ -24,12 +23,10 @@ bundle agent init
     "template_data" data => '{ "key1": "value1", "key3": "value3" }';
 
   files:
-      "$(template_target)"
-        create => "true";
+    "$(template_target)" create => "true";
 }
 
 #######################################################
-
 bundle agent test
 {
   files:
@@ -42,13 +39,15 @@ bundle agent test
 bundle agent check
 {
   vars:
-    "command" string => "$(sys.cf_agent) -KIf $(this.promise_filename).sub -DAUTO";
+    "command"
+      string => "$(sys.cf_agent) -KIf $(this.promise_filename).sub -DAUTO";
+
     "actual" string => "$(init.template_target)";
     "expected" string => "$(this.promise_filename).mustache.expected";
     "test" string => "$(this.promise_filename)";
 
   methods:
-    "check" usebundle => dcs_check_diff( $(actual), $(expected), $(test) );
+    "check" usebundle => dcs_check_diff($(actual), $(expected), $(test));
 
   reports:
     DEBUG::

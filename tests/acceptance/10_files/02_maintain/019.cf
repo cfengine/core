@@ -3,62 +3,61 @@
 # Test that disable_mode => "333" in body rename works (Issue 688)
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   files:
-      "$(G.testfile)"
-      create => "true";
+    "$(G.testfile)" create => "true";
 }
 
 #######################################################
-
 bundle agent test
 {
   meta:
-      "test_skip_unsupported" string => "windows";
+    "test_skip_unsupported" string => "windows";
 
   files:
-      "$(G.testfile)"
-      rename => disable_file;
+    "$(G.testfile)" rename => disable_file;
 }
 
-body rename disable_file {
-      disable_mode => "333";
-      disable => "true";
+body rename disable_file
+{
+  disable_mode => "333";
+  disable => "true";
 }
 
 #######################################################
-
 bundle agent check
 {
   vars:
-      "expect[permoct]" string => "333";
-      "expect[nlink]" string => "1";
+    "expect[permoct]" string => "333";
+    "expect[nlink]" string => "1";
+    "fields" slist => getindices("expect");
 
-      "fields" slist => getindices("expect");
-      "result[$(fields)]" string => filestat("$(G.testfile).cfdisabled", "$(fields)");
+    "result[$(fields)]"
+      string => filestat("$(G.testfile).cfdisabled", "$(fields)");
 
   classes:
-      "not_ok" not => regcmp("$(expect[$(fields)])", "$(result[$(fields)])");
+    "not_ok" not => regcmp("$(expect[$(fields)])", "$(result[$(fields)])");
 
   reports:
     DEBUG::
       "expected: $(fields) = '$(expect[$(fields)])'";
       "got:      $(fields) = '$(result[$(fields)])'";
+
     !not_ok::
       "$(this.promise_filename) Pass";
+
     not_ok::
       "$(this.promise_filename) FAIL";
 }
+
 ### PROJECT_ID: core
 ### CATEGORY_ID: 27

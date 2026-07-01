@@ -6,12 +6,17 @@ body common control
 bundle agent test
 {
   meta:
-      "description" -> { "CFE-3558" }
-        string => "Test reports printfile with number_of_lines as positive number";
+    "description" -> { "CFE-3558" }
+      string => "Test reports printfile with number_of_lines as positive number";
 
   vars:
-      "actual" string => execresult("$(sys.cf_agent) -Kf $(this.promise_filename).sub", "noshell");
-      "expected" string => "R: First three:
+    "actual"
+      string => execresult(
+        "$(sys.cf_agent) -Kf $(this.promise_filename).sub", "noshell"
+      );
+
+    "expected"
+      string => "R: First three:
 R: # Line 1 from top
 R: # Line 2 from top
 R: # Line 3 from top";
@@ -21,14 +26,18 @@ bundle agent check
 {
   classes:
     "passed" expression => strcmp("$(test.expected)", "$(test.actual)");
+
   reports:
     windows::
       "$(this.promise_filename) SFAIL/ENT-10433";
+
     DEBUG::
       "Expected: '$(test.expected)'";
       "Found: '$(test.actual)'";
+
     passed::
       "$(this.promise_filename) Pass";
+
     !passed::
       "$(this.promise_filename) FAIL";
 }

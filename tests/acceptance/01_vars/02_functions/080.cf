@@ -3,57 +3,56 @@
 # Test getuid()
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };   
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle common g
 {
   vars:
-      "dummy" string => "dummy";
+    "dummy" string => "dummy";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-      "dummy" string => "dummy";
+    "dummy" string => "dummy";
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-      # NOTE: We need to make this test work on Windows by finding a good
-      # registry value to use (and we always expect it to fail on non-Windows
-      #
-      # Always execute this - the return value depends on the OS used, but
-      # we always expect registryvalue() to not crash
-      "regval" string => registryvalue("HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Currentversion", "ProgramFilesDir");
+    # NOTE: We need to make this test work on Windows by finding a good
+    # registry value to use (and we always expect it to fail on non-Windows
+    #
+    # Always execute this - the return value depends on the OS used, but
+    # we always expect registryvalue() to not crash
+    "regval"
+      string => registryvalue(
+        "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Currentversion",
+        "ProgramFilesDir"
+      );
 }
 
-
 #######################################################
-
 bundle agent check
 {
   classes:
     windows::
-      "ok" and => {
-		    strcmp("$(test.regval)", "C:\Program Files"),
-      };
+      "ok" and => { strcmp("$(test.regval)", "C:\Program Files") };
+
     !windows::
       "ok" not => isvariable("test.regval");
 
   reports:
     DEBUG::
       "Registry value is $(test.regval)";
+
     ok::
       "$(this.promise_filename) Pass";
 
@@ -62,9 +61,8 @@ bundle agent check
 }
 
 #######################################################
-
 bundle agent fini
 {
   vars:
-      "dummy" string => "dummy";
+    "dummy" string => "dummy";
 }

@@ -1,17 +1,20 @@
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent check
 {
   vars:
-      "ipv6_classes" slist => classesmatching("ipv6_.*");
+    "ipv6_classes" slist => classesmatching("ipv6_.*");
 
   classes:
-      "has_ipv6" expression => returnszero("ifconfig -a | grep 'inet6 [a-z0-9].*'", "useshell");
+    "has_ipv6"
+      expression => returnszero(
+        "ifconfig -a | grep 'inet6 [a-z0-9].*'", "useshell"
+      );
 
     has_ipv6::
       "ok" expression => some(".*", "ipv6_classes");

@@ -6,10 +6,9 @@ body common control
 bundle agent test
 {
   meta:
-      "description" -> { "CFE-3569" }
-        string => "Test for expected values of variable sys.os_name_human";
+    "description" -> { "CFE-3569" }
+      string => "Test for expected values of variable sys.os_name_human";
 
-  #
   # Note:
   #
   # Order is important, the last variable assignment wins.
@@ -17,37 +16,50 @@ bundle agent test
   #
   # This test should also succeed if none of the os-classes are defined.
   # This should be covered in another test.
-  #
   vars:
     any::
       "actual" string => "$(sys.os_name_human)";
       "expected" string => "Unknown";
+
     debian::
       "expected" string => "Debian";
+
     ubuntu::
       "expected" string => "Ubuntu";
+
     redhat::
       "expected" string => "RHEL";
+
     centos::
       "expected" string => "CentOS";
+
     fedora::
       "expected" string => "Fedora";
+
     aix::
       "expected" string => "AIX";
+
     hpux::
       "expected" string => "HP-UX";
+
     suse::
       "expected" string => "SUSE";
+
     opensuse::
       "expected" string => "OpenSUSE";
+
     windows::
       "expected" string => "Windows";
+
     freebsd::
       "expected" string => "FreeBSD";
+
     macos::
       "expected" string => "macOS";
+
     solaris::
       "expected" string => "Solaris";
+
     amazon_linux::
       "expected" string => "Amazon";
 }
@@ -55,14 +67,16 @@ bundle agent test
 bundle agent check
 {
   classes:
-      "passed" expression => strcmp("$(test.actual)", "$(test.expected)");
+    "passed" expression => strcmp("$(test.actual)", "$(test.expected)");
 
   reports:
     DEBUG::
       "$(this.promise_filename) Expected: $(test.expected)";
       "$(this.promise_filename) Found: $(test.actual)";
+
     passed::
       "$(this.promise_filename) Pass";
+
     !passed::
       "$(this.promise_filename) FAIL";
 }

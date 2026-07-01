@@ -3,79 +3,99 @@
 # test join()
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-      "a" slist => { "b", "c", "a" };
-      "b" slist => { "100", "9", "10" };
-      "c" slist => { };
-      "d" slist => { "", "a", "", "b" };
-      "e" slist => { "a", "1", "b" };
-      "f" rlist => { "100", "200", "300" };
-      "g" rlist => { "1.11", "-2.22", "-3.33" };
-      "h" ilist => { "-10", "0", "200" };
-      "i" data => parsejson('[ 1, 2, "", 3000, "" ]');
-      "j" data => parsejson('[ 1, 2, [ 3, 4, 5 ], null, true, false ]');
-      "k" data => parsejson('{}');
-      "l" data => parsejson('{ "a": 100, "b": 200, "c": null}');
-      "m" slist => { "cf_null" };
-      "n" slist => { "a", "b", "c", "cf_null" };
-      "o" slist => { @(a), @(c) };
-      "p" slist => { @(c), @(m) };
-      "q" slist => { ":", ":" };
-      "r" slist => { ":", @(c) };
-      "s" slist => { ":", @(c), @(m) };
-      "t" slist => { @(n), @(m), @(n), ":" };
+    "a" slist => { "b", "c", "a" };
+    "b" slist => { "100", "9", "10" };
+    "c" slist => {};
+    "d" slist => { "", "a", "", "b" };
+    "e" slist => { "a", "1", "b" };
+    "f" rlist => { "100", "200", "300" };
+    "g" rlist => { "1.11", "-2.22", "-3.33" };
+    "h" ilist => { "-10", "0", "200" };
+    "i" data => parsejson('[ 1, 2, "", 3000, "" ]');
+    "j" data => parsejson('[ 1, 2, [ 3, 4, 5 ], null, true, false ]');
+    "k" data => parsejson('{}');
+    "l" data => parsejson('{ "a": 100, "b": 200, "c": null}');
+    "m" slist => { "cf_null" };
+    "n" slist => { "a", "b", "c", "cf_null" };
+    "o" slist => { @(a), @(c) };
+    "p" slist => { @(c), @(m) };
+    "q" slist => { ":", ":" };
+    "r" slist => { ":", @(c) };
+    "s" slist => { ":", @(c), @(m) };
+    "t" slist => { @(n), @(m), @(n), ":" };
 
-      "lists" slist => { "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t" };
+    "lists"
+      slist => {
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g",
+        "h",
+        "i",
+        "j",
+        "k",
+        "l",
+        "m",
+        "n",
+        "o",
+        "p",
+        "q",
+        "r",
+        "s",
+        "t",
+      };
 }
 
 #######################################################
-
 bundle agent test
 {
-      # "expected_a" string => "b:c:a";
-      # "expected_b" string => "100:9:10";
-      # "expected_c" string => "";
-      # "expected_d" string => ":a::b";
-      # "expected_e" string => "a:1:b";
-      # "expected_f" string => "100:200:300";
-      # "expected_g" string => "1.11:-2.22:-3.33";
-      # "expected_h" string => "-10:0:200";
-      # "expected_i" string => "1:2::3000:";
-      # "expected_j" string => "1:2:true:false";
-      # "expected_k" string => "";
-      # "expected_l" string => "100:200";
-      # "expected_m" string => "cf_null";
-      # "expected_n" string => "a:b:c:cf_null";
-      # "expected_o" string => "b:c:a";
-      # "expected_p" string => "cf_null";
-      # "expected_q" string => ":::";
-      # "expected_r" string => ":";
-      # "expected_s" string => "::cf_null";
-      # "expected_t" string => "a:b:c:cf_null:cf_null:a:b:c:cf_null::";
+  # "expected_a" string => "b:c:a";
+  # "expected_b" string => "100:9:10";
+  # "expected_c" string => "";
+  # "expected_d" string => ":a::b";
+  # "expected_e" string => "a:1:b";
+  # "expected_f" string => "100:200:300";
+  # "expected_g" string => "1.11:-2.22:-3.33";
+  # "expected_h" string => "-10:0:200";
+  # "expected_i" string => "1:2::3000:";
+  # "expected_j" string => "1:2:true:false";
+  # "expected_k" string => "";
+  # "expected_l" string => "100:200";
+  # "expected_m" string => "cf_null";
+  # "expected_n" string => "a:b:c:cf_null";
+  # "expected_o" string => "b:c:a";
+  # "expected_p" string => "cf_null";
+  # "expected_q" string => ":::";
+  # "expected_r" string => ":";
+  # "expected_s" string => "::cf_null";
+  # "expected_t" string => "a:b:c:cf_null:cf_null:a:b:c:cf_null::";
   vars:
-      "lists" slist => { @(init.lists) };
-      "join_$(lists)" string => join(":", "init.$(lists)");
+    "lists" slist => { @(init.lists) };
+    "join_$(lists)" string => join(":", "init.$(lists)");
 }
 
-
 #######################################################
-
 bundle agent check
 {
   methods:
-      "check"  usebundle => dcs_check_state(test,
-                                           "$(this.promise_filename).expected.json",
-                                           $(this.promise_filename));
+    "check"
+      usebundle => dcs_check_state(
+        test,
+        "$(this.promise_filename).expected.json",
+        $(this.promise_filename)
+      );
 }

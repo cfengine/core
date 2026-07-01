@@ -4,16 +4,14 @@
 # scalar
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
@@ -21,32 +19,29 @@ bundle agent init
 }
 
 #######################################################
-
 bundle agent test
 {
   meta:
-      "test_soft_fail" string => "!any",
-        meta => { "redmine7116" };
+    "test_soft_fail"
+      string => "!any",
+      meta => { "redmine7116" };
 
   vars:
     "values_data" slist => getvalues("init.data");
 }
 
 #######################################################
-
 bundle agent check
 {
   vars:
     "expected_elements" slist => { "bar" };
-
-    "diff1" slist => difference( "test.values_data", expected_elements );
-    "diff2" slist => difference( expected_elements, "test.values_data");
-
+    "diff1" slist => difference("test.values_data", expected_elements);
+    "diff2" slist => difference(expected_elements, "test.values_data");
     "len_diff1" int => length(diff1);
     "len_diff2" int => length(diff2);
 
   classes:
-    "ok" expression => strcmp( $(len_diff1), $(len_diff2) );
+    "ok" expression => strcmp($(len_diff1), $(len_diff2));
 
   reports:
     DEBUG::

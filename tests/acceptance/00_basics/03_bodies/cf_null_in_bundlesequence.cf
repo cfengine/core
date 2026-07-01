@@ -1,24 +1,24 @@
 # cf_null now is just another string, bundles names as such should be
 # executed like every other bundle
-
-
-body common control {
-    bundlesequence => { "cf_null", "test" };
+body common control
+{
+  bundlesequence => { "cf_null", "test" };
 }
 
 bundle agent cf_null
 {
   classes:
-      "ok" expression => "any",
-          scope => "namespace";
+    "ok"
+      expression => "any",
+      scope => "namespace";
 }
 
 bundle agent test
-       {
+{
   reports:
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }
-

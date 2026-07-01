@@ -4,38 +4,34 @@
 # but not change owner/group
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   files:
-      "$(G.testfile)"
-      delete => init_delete;
+    "$(G.testfile)" delete => init_delete;
 }
 
 body delete init_delete
 {
-      dirlinks => "delete";
-      rmdirs   => "true";
+  dirlinks => "delete";
+  rmdirs => "true";
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-      "mode" string => filestat("$(G.etc_group)", "modeoct");
+    "mode" string => filestat("$(G.etc_group)", "modeoct");
 
   files:
-      "$(G.testfile)"
+    "$(G.testfile)"
       create => "true",
       perms => test_og,
       copy_from => test_copy;
@@ -43,19 +39,18 @@ bundle agent test
 
 body perms test_og
 {
-      owners => { "3" };
-      groups => { "3" };
+  owners => { "3" };
+  groups => { "3" };
 }
 
 body copy_from test_copy
 {
-      preserve => "true";
-      source => "$(G.etc_group)";
-      compare => "atime";
+  preserve => "true";
+  source => "$(G.etc_group)";
+  compare => "atime";
 }
 
 #######################################################
-
 bundle agent check
 {
   vars:
@@ -63,22 +58,24 @@ bundle agent check
       "expect[modeoct]" string => "$(test.mode)";
       "expect[uid]" string => "3";
       "expect[gid]" string => "3";
+
     any::
       "expect[nlink]" string => "1";
       "expect[size]" string => filestat("$(G.etc_group)", "size");
-
       "fields" slist => getindices("expect");
       "result[$(fields)]" string => filestat("$(G.testfile)", "$(fields)");
 
   classes:
-      "not_ok" not => regcmp("$(expect[$(fields)])", "$(result[$(fields)])");
+    "not_ok" not => regcmp("$(expect[$(fields)])", "$(result[$(fields)])");
 
   reports:
     DEBUG::
       "expected: $(fields) = '$(expect[$(fields)])'";
       "got:      $(fields) = '$(result[$(fields)])'";
+
     !not_ok::
       "$(this.promise_filename) Pass";
+
     not_ok::
       "$(this.promise_filename) FAIL";
 }

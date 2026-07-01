@@ -3,7 +3,6 @@
 # Test that n_cpusocket(s) class exists on Linux
 #
 #######################################################
-
 body common control
 {
   inputs => { "../../default.sub.cf" };
@@ -12,7 +11,6 @@ body common control
 }
 
 #######################################################
-
 bundle agent test
 {
   meta:
@@ -24,17 +22,14 @@ bundle agent test
       meta => { "CFE-30" };
 
   vars:
-    "num_matching"
-      int => countclassesmatching("[0-9]+_cpusockets?");
+    "num_matching" int => countclassesmatching("[0-9]+_cpusockets?");
 }
 
 #######################################################
-
 bundle agent check
 {
   classes:
-    "ok"
-      expression => eval("$(test.num_matching) == 1", "class", "infix");
+    "ok" expression => eval("$(test.num_matching) == 1", "class", "infix");
 
   methods:
     "any"

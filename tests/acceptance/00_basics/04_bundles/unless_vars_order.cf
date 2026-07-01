@@ -1,7 +1,7 @@
 body common control
 {
-    inputs => { "../../default.sub.cf" };
-    bundlesequence => { default($(this.promise_filename)) };
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default($(this.promise_filename)) };
 }
 
 bundle agent test
@@ -13,15 +13,13 @@ bundle agent test
 
   vars:
     any::
-      "target_variable"
-        string => "value";
+      "target_variable" string => "value";
 
       "vars_promise_which_should_be_skipped"
         string => "value",
-        unless => isvariable( $(variable_defined_later) );
+        unless => isvariable($(variable_defined_later));
 
-      "variable_defined_later"
-        string => "target_variable";
+      "variable_defined_later" string => "target_variable";
 }
 
 bundle agent check
@@ -29,13 +27,12 @@ bundle agent check
   classes:
     any::
       "not_ok"
-        or => {
-            isvariable("test.vars_promise_which_should_be_skipped"),
-        };
+        or => { isvariable("test.vars_promise_which_should_be_skipped") };
 
   reports:
     !not_ok::
       "$(this.promise_filename) Pass";
+
     not_ok::
       "$(this.promise_filename) FAIL";
 }

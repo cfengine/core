@@ -1,24 +1,25 @@
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle common test_meta
 {
   vars:
-      "description" string => "Test that a mustache template does not try to render when its given an invalid container directly";
+    "description"
+      string => "Test that a mustache template does not try to render when its given an invalid container directly";
 }
 
 bundle agent init
 {
-    # First we make sure to start of with am emty target
-    files:
+  # First we make sure to start of with am emty target
+  files:
     "$(G.testfile)"
       handle => "init_testfile_absent",
       delete => tidy;
-    
+
     "$(G.testfile)"
       handle => "init_testfile_present",
       create => "true",
@@ -32,14 +33,18 @@ bundle agent test
   # Second we promise to render template passing data that does not exist via template_data 
   vars:
     "classes"
-      slist => classesmatching("template_render_with_non_existing_data_container.*");
+      slist => classesmatching(
+        "template_render_with_non_existing_data_container.*"
+      );
 
   files:
     "$(G.testfile)"
       edit_template => "$(this.promise_filename).mustache",
       template_method => "mustache",
       template_data => @(missing_ns:missing_bundle.missing_data),
-      classes => scoped_classes_generic("bundle", "template_render_with_non_existing_data_container");
+      classes => scoped_classes_generic(
+        "bundle", "template_render_with_non_existing_data_container"
+      );
 
   reports:
     DEBUG::
@@ -49,29 +54,25 @@ bundle agent test
 bundle agent check
 {
   meta:
-    "test_soft_fail" string => "any", meta => { "redmine7699" };
+    "test_soft_fail"
+      string => "any",
+      meta => { "redmine7699" };
 
   # Finally we look to see what classes were defined, and look at the target file to see if it has changed.
   vars:
-     "expected" string => "";
-     "actual" string => readfile($(G.testfile), inf);
-   
+    "expected" string => "";
+    "actual" string => readfile($(G.testfile), inf);
+
   classes:
     # I assume here that the promise should not even be actuated when invalid
     # data is provided thus we should have found 0 classes
-    "fail_classes"
-      expression => isgreaterthan(length("test.classes"), 0);
+    "fail_classes" expression => isgreaterthan(length("test.classes"), 0);
 
     # Another failure condition is if the rendered file is not empty as
     # expected
-    "fail_content"
-      not => strcmp($(expected), $(actual));
-
-    "fail"
-      or => { "fail_classes", "fail_content" };
-
-    "exception"
-      and => { "fail", "ok" };
+    "fail_content" not => strcmp($(expected), $(actual));
+    "fail" or => { "fail_classes", "fail_content" };
+    "exception" and => { "fail", "ok" };
 
   reports:
     DEBUG::
@@ -81,12 +82,12 @@ bundle agent check
       "DEBUG $(this.bundle): Found the content of $(G.testfile) was not as expected"
         if => "fail_content";
 
-     fail::
-       "$(this.promise_filename) FAIL";
+    fail::
+      "$(this.promise_filename) FAIL";
 
-     !fail|exception::
-       "$(this.promise_filename) Pass";
+    !fail|exception::
+      "$(this.promise_filename) Pass";
 
-     exception::
-       "$(this.promise_filename) EXCEPTION";
+    exception::
+      "$(this.promise_filename) EXCEPTION";
 }

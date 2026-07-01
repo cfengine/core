@@ -51,7 +51,8 @@ bundle agent check
 {
   vars:
     "expected"
-      string => storejson('[
+      string => storejson(
+        '[
   {
     "file": "/tmp/bar",
     "mode": "600",
@@ -66,18 +67,20 @@ bundle agent check
     "group": "root",
     "if": "(role_1|role_2)"
   }
-]');
-    "actual"
-      string => storejson("test.filtered");
+]'
+      );
+
+    "actual" string => storejson("test.filtered");
 
   classes:
-    "ok"
-      expression => strcmp("$(expected)", "$(actual)");
+    "ok" expression => strcmp("$(expected)", "$(actual)");
 
   reports:
     "Expected '$(expected)', actual '$(actual)'";
+
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

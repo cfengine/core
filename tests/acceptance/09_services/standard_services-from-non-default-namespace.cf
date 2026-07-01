@@ -1,23 +1,23 @@
 body common control
 {
-      inputs => { "../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent test
 {
   meta:
-      "description" -> { "ENT-5406" }
-        string => "Test that standard_services can be used from non-default namespace";
+    "description" -> { "ENT-5406" }
+      string => "Test that standard_services can be used from non-default namespace";
 
-      "test_soft_fail" string => "windows",
-        meta => { "ENT-2161" };
+    "test_soft_fail"
+      string => "windows",
+      meta => { "ENT-2161" };
 
   methods:
-      "Test" usebundle => ENT_5406:ns_test;
+    "Test" usebundle => ENT_5406:ns_test;
 }
 
 bundle agent standard_services(service, state)
@@ -27,34 +27,31 @@ bundle agent standard_services(service, state)
 # to test starting and stopping services, we only want to test that the correct
 # bundle is selected.
 {
-
   files:
-      "$(G.testfile)"
-        create => "true";
+    "$(G.testfile)" create => "true";
 }
 
 #######################################################
-
 bundle agent check
 {
   classes:
-      "ok" expression => fileexists( $(G.testfile) );
+    "ok" expression => fileexists($(G.testfile));
 
   reports:
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }
 
 body file control
 {
-        namespace => "ENT_5406";
+  namespace => "ENT_5406";
 }
 
 bundle agent ns_test
 {
   services:
-      "myservice"
-        service_policy => "start";
+    "myservice" service_policy => "start";
 }

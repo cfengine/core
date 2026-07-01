@@ -5,43 +5,41 @@
 #
 # Redmine: https://dev.cfengine.com/issues/6516
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
-
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-      "variable_containing_double_quote" string => 'Something "special" with quotes';
-      "variable_containing_single_quote" string => "Something 'special' with quotes";
+    "variable_containing_double_quote"
+      string => 'Something "special" with quotes';
+
+    "variable_containing_single_quote"
+      string => "Something 'special' with quotes";
 
   files:
-      "$(G.testfile)"
-      delete => init_delete;
+    "$(G.testfile)" delete => init_delete;
 }
 
 body delete init_delete
 {
-      dirlinks => "delete";
-      rmdirs   => "true";
+  dirlinks => "delete";
+  rmdirs => "true";
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-      "template_file" string => "$(this.promise_filename).mustache";
+    "template_file" string => "$(this.promise_filename).mustache";
 
   files:
-      "$(G.testfile)"
+    "$(G.testfile)"
       create => "true",
       edit_template => "$(template_file)",
       template_method => "mustache";
@@ -52,24 +50,26 @@ bundle agent test
 }
 
 #######################################################
-
 bundle agent check
 {
   vars:
-      "expect" string => readfile("$(this.promise_filename).expected", 4000);
-      "actual" string => readfile("$(G.testfile)", 4000);
+    "expect" string => readfile("$(this.promise_filename).expected", 4000);
+    "actual" string => readfile("$(G.testfile)", 4000);
 
   classes:
-      "ok" expression => regcmp("$(expect)", "$(actual)");
+    "ok" expression => regcmp("$(expect)", "$(actual)");
 
   reports:
     DEBUG::
       "expect: '$(expect)'";
       "actual: '$(actual)'";
+
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }
+
 ### PROJECT_ID: core
 ### CATEGORY_ID: 27

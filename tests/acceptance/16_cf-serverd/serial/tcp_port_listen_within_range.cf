@@ -1,8 +1,5 @@
-#
 # Check the parser enforces standard TCP port ( 1 <= port <= 65535) for:
 # -cf-serverd listening port
-#
-
 body common control
 {
   bundlesequence => { default("$(this.promise_filename)") };

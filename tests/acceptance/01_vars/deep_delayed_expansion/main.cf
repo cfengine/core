@@ -7,8 +7,11 @@ body common control
 bundle agent test
 {
   meta:
-    "description" string => "Test that variables containing other variales are de-referenced";
-    "test_soft_fail" string => "windows",
+    "description"
+      string => "Test that variables containing other variales are de-referenced";
+
+    "test_soft_fail"
+      string => "windows",
       meta => { "ENT-10256" };
 }
 
@@ -16,12 +19,12 @@ bundle agent check
 {
   reports:
     "$(this.promise_filename) Pass"
-      if => strcmp( $(this.promise_dirname), $(my_globals.policy_root) );
+      if => strcmp($(this.promise_dirname), $(my_globals.policy_root));
 
     "$(this.promise_filename) FAIL"
-      unless => strcmp( $(this.promise_dirname), $(my_globals.policy_root) );
+      unless => strcmp($(this.promise_dirname), $(my_globals.policy_root));
 
-    EXTRA:: 
-    "my_globals.policy_root = $(my_globals.policy_root)";
-    "def.policy_root = $(def.policy_root)";
+    EXTRA::
+      "my_globals.policy_root = $(my_globals.policy_root)";
+      "def.policy_root = $(def.policy_root)";
 }

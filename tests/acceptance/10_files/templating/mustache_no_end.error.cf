@@ -3,6 +3,5 @@
 bundle agent main
 {
   reports:
-    "With: $(with)"
-      with => string_mustache("{{");
+    "With: $(with)" with => string_mustache("{{");
 }

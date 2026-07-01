@@ -1,27 +1,40 @@
-#
 body common control
 {
-      inputs => { "../../default.sub.cf", "../../run_with_server.cf.sub" };
-      bundlesequence => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf", "../../run_with_server.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent test
 {
   methods:
-      "any" usebundle => file_make("$(G.testdir)/source_file",
-                                   "This is the source file to copy $(sys.date) - always fresh");
+    "any"
+      usebundle => file_make(
+        "$(G.testdir)/source_file",
+        "This is the source file to copy $(sys.date) - always fresh"
+      );
 
-      # We generate key in-between the two files on purpose, to
-      # introduce latency and make sure that destination file is newer
-      "any" usebundle => generate_key;
+    # We generate key in-between the two files on purpose, to
+    # introduce latency and make sure that destination file is newer
+    "any" usebundle => generate_key;
 
-      "any" usebundle => file_make("$(G.testdir)/destfile_classic",
-                                   "This is the source file to copy $(sys.date) - different!");
-      "any" usebundle => file_make("$(G.testdir)/destfile_latest",
-                                   "This is the source file to copy $(sys.date) - different!");
+    "any"
+      usebundle => file_make(
+        "$(G.testdir)/destfile_classic",
+        "This is the source file to copy $(sys.date) - different!"
+      );
 
-      "any" usebundle => start_server("$(this.promise_dirname)/localhost_open.srv");
-      "any" usebundle => run_test("$(this.promise_filename).sub");
-      "any" usebundle => stop_server("$(this.promise_dirname)/localhost_open.srv");
+    "any"
+      usebundle => file_make(
+        "$(G.testdir)/destfile_latest",
+        "This is the source file to copy $(sys.date) - different!"
+      );
+
+    "any"
+      usebundle => start_server("$(this.promise_dirname)/localhost_open.srv");
+
+    "any" usebundle => run_test("$(this.promise_filename).sub");
+
+    "any"
+      usebundle => stop_server("$(this.promise_dirname)/localhost_open.srv");
 }

@@ -5,24 +5,24 @@
 # we start with a non-registered user/group name.
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
-      cache_system_functions => "false";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+  cache_system_functions => "false";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
     freebsd|solaris::
       "mode" int => "04751";
+
     !freebsd.!solaris::
       "mode" int => "01751";
+
     any::
       "owner" string => "786756";
       "group" string => "786756";
@@ -38,7 +38,7 @@ bundle agent init
       "fields" slist => getindices("expect");
 
   files:
-      "$(G.testfile)"
+    "$(G.testfile)"
       copy_from => init_copy("$(G.etc_group)"),
       perms => init_perms("$(mode)", "$(owner)", "$(group)"),
       classes => init_set_class("pass2");
@@ -46,41 +46,39 @@ bundle agent init
 
 body copy_from init_copy(file)
 {
-      source => "$(file)";
-      compare => "mtime";
+  source => "$(file)";
+  compare => "mtime";
 }
 
 body perms init_perms(m, o, g)
 {
-      mode => "$(m)";
-      owners => { "$(o)" };
-      groups => { "$(g)" };
+  mode => "$(m)";
+  owners => { "$(o)" };
+  groups => { "$(g)" };
 }
 
 body classes init_set_class(class)
 {
-      promise_kept => { "$(class)" };
-      promise_repaired => { "$(class)" };
+  promise_kept => { "$(class)" };
+  promise_repaired => { "$(class)" };
 }
 
 #######################################################
-
 bundle agent test
 {
   files:
-      "$(G.testfile)"
+    "$(G.testfile)"
       create => "true",
       perms => test_perms;
 }
 
 body perms test_perms
 {
-      # Mode, owner is unspecified - should not change anything
-      groups => { "23459", "none" };        # Should change to 23459
+  # Mode, owner is unspecified - should not change anything
+  groups => { "23459", "none" }; # Should change to 23459
 }
 
 #######################################################
-
 bundle agent check
 {
   vars:
@@ -88,22 +86,24 @@ bundle agent check
       "expect[modeoct]" string => "\d+$(init.mode)";
       "expect[uid]" string => "$(init.owner)";
       "expect[gid]" string => "23459";
+
     any::
       "expect[nlink]" string => "1";
       "expect[size]" string => filestat("$(G.etc_group)", "size");
-
       "fields" slist => getindices("expect");
       "result[$(fields)]" string => filestat("$(G.testfile)", "$(fields)");
 
   classes:
-      "not_ok" not => regcmp("$(expect[$(fields)])", "$(result[$(fields)])");
+    "not_ok" not => regcmp("$(expect[$(fields)])", "$(result[$(fields)])");
 
   reports:
     DEBUG::
       "expected:    $(fields) = '$(expect[$(fields)])'";
       "result:      $(fields) = '$(result[$(fields)])'";
+
     !not_ok::
       "$(this.promise_filename) Pass";
+
     not_ok::
       "$(this.promise_filename) FAIL";
 }

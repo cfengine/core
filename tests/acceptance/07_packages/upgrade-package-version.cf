@@ -1,43 +1,38 @@
 # Tests that package upgrade works properly with "more than" version
-
 body common control
 {
-      inputs => { "../default.sub.cf" };
-      bundlesequence => { default("$(this.promise_filename)") };
-      version => "1.0";
-
+  inputs => { "../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent init
 {
   meta:
-      # Windows has its own mechanism to list packages, and doesn't use the package body.
-      "test_skip_needs_work" string => "windows";
+    # Windows has its own mechanism to list packages, and doesn't use the package body.
+    "test_skip_needs_work" string => "windows";
 
   vars:
-      "dummy" string => "dummy";
+    "dummy" string => "dummy";
 }
 
 body package_method yum_rpm
 {
-      package_changes => "individual";
-      package_list_command => "$(G.printf) 'which 1 i386'";
-
-      package_list_name_regex    => "^(\S+?)\s\S+?\s\S+$";
-      package_list_version_regex => "^\S+?\s(\S+?)\s\S+$";
-      package_list_arch_regex    => "^\S+?\s\S+?\s(\S+)$";
-
-      package_installed_regex => ".*";
-
-      package_add_command    => "$(G.false)";
-      package_update_command => "$(G.true)";
-      package_delete_command => "$(G.false)";
+  package_changes => "individual";
+  package_list_command => "$(G.printf) 'which 1 i386'";
+  package_list_name_regex => "^(\S+?)\s\S+?\s\S+$";
+  package_list_version_regex => "^\S+?\s(\S+?)\s\S+$";
+  package_list_arch_regex => "^\S+?\s\S+?\s(\S+)$";
+  package_installed_regex => ".*";
+  package_add_command => "$(G.false)";
+  package_update_command => "$(G.true)";
+  package_delete_command => "$(G.false)";
 }
 
 bundle agent test
 {
   packages:
-      "which"
+    "which"
       package_policy => "addupdate",
       package_select => ">",
       package_version => "2",
@@ -50,8 +45,10 @@ bundle agent check
   reports:
     whichrepaired::
       "$(this.promise_filename) Pass";
+
     !whichrepaired::
       "$(this.promise_filename) FAIL";
 }
+
 ### PROJECT_ID: core
 ### CATEGORY_ID: 29

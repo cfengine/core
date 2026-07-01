@@ -12,13 +12,11 @@ bundle common testcase
 bundle agent setup
 {
   files:
-    "$(G.testdir)/sub-directory/."
-      create => "true";
+    "$(G.testdir)/sub-directory/." create => "true";
 }
 
 bundle agent main
 {
   files:
-    "$(G.testdir)/sub-directory/."
-    delete => init_delete;
+    "$(G.testdir)/sub-directory/." delete => init_delete;
 }

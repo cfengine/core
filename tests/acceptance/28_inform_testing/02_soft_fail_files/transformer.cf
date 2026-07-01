@@ -26,6 +26,5 @@ banana
 bundle agent main
 {
   files:
-    "$(G.testfile)"
-      transformer => "$(G.gzip) $(G.testfile)";
+    "$(G.testfile)" transformer => "$(G.gzip) $(G.testfile)";
 }

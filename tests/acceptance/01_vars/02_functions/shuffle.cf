@@ -3,53 +3,45 @@
 # Test shuffle()
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-      "a" slist => { "a", "b", "c", "d", "e", "f", "g" };
-      "b" slist => { };
+    "a" slist => { "a", "b", "c", "d", "e", "f", "g" };
+    "b" slist => {};
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-      "sa" slist => shuffle("init.a", "skruf");
-      "sb" slist => shuffle("init.b", "skruf");
+    "sa" slist => shuffle("init.a", "skruf");
+    "sb" slist => shuffle("init.b", "skruf");
 }
 
-
 #######################################################
-
 bundle agent check
 {
   vars:
-      "asorted" slist => sort("test.sa", "lex");
-
-      "jaorig" string => join(",", "init.a");
-      "jasorted" string => join(",", "asorted");
-      "ja" string => join(",", "test.sa");
-      "jb" string => join(",", "test.sb");
+    "asorted" slist => sort("test.sa", "lex");
+    "jaorig" string => join(",", "init.a");
+    "jasorted" string => join(",", "asorted");
+    "ja" string => join(",", "test.sa");
+    "jb" string => join(",", "test.sb");
 
   classes:
-      "a_not_changed" expression => strcmp($(jaorig), $(ja));
-      "a_is_permutation" expression => strcmp($(jasorted), $(jaorig));
-      "ok_a" and => { "!a_not_changed", "a_is_permutation" };
-
-      "ok_b" expression => strcmp("", $(jb));
-
-      "ok" and => { "ok_a", "ok_b" };
+    "a_not_changed" expression => strcmp($(jaorig), $(ja));
+    "a_is_permutation" expression => strcmp($(jasorted), $(jaorig));
+    "ok_a" and => { "!a_not_changed", "a_is_permutation" };
+    "ok_b" expression => strcmp("", $(jb));
+    "ok" and => { "ok_a", "ok_b" };
 
   reports:
     DEBUG::
@@ -58,6 +50,7 @@ bundle agent check
 
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

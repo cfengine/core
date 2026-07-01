@@ -1,57 +1,81 @@
 # Test that getvariabletags and getclasstags work correctly
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence => { default("$(this.promise_filename)") };
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
 }
 
 bundle common init
 {
   meta:
-      "tags" slist => { "bundletag1", "foo=bar" };
+    "tags" slist => { "bundletag1", "foo=bar" };
+
   classes:
-      "myclass" expression => "any", meta => { "mytag1" };
-      "myotherclass" expression => "any", meta => { "mytag5", "mytag51" };
-      "myplainclass" expression => "any";
-      "keyclass" expression => "any", meta => { "foo=1", "mytag51", "foo", "foo=2" };
-      "keyclass2" expression => "any", meta => { "foo" };
+    "myclass"
+      expression => "any",
+      meta => { "mytag1" };
+
+    "myotherclass"
+      expression => "any",
+      meta => { "mytag5", "mytag51" };
+
+    "myplainclass" expression => "any";
+
+    "keyclass"
+      expression => "any",
+      meta => { "foo=1", "mytag51", "foo", "foo=2" };
+
+    "keyclass2"
+      expression => "any",
+      meta => { "foo" };
 
   vars:
-      "tests" slist => { "1", "2", "3", "4", "5" };
-      "myvar" string => "123", meta => { "mytag3" };
-      "myothervar" string => "123";
-      "keyvar" int => "1", meta => { "foo=1", "mytag51", "foo", "foo=2" };
-      "keyvar2" real => "20", meta => { "foo" };
+    "tests" slist => { "1", "2", "3", "4", "5" };
+
+    "myvar"
+      string => "123",
+      meta => { "mytag3" };
+
+    "myothervar" string => "123";
+
+    "keyvar"
+      int => "1",
+      meta => { "foo=1", "mytag51", "foo", "foo=2" };
+
+    "keyvar2"
+      real => "20",
+      meta => { "foo" };
 }
 
 bundle agent test
 {
   vars:
-      "tags1" slist => getclassmetatags("myclass");
-      "tags2" slist => getclassmetatags("myplainclass");
-      "tags3" slist => getvariablemetatags("init.myvar");
-      "tags4" slist => getvariablemetatags("init.myothervar");
-      "tags5" slist => getclassmetatags("myotherclass");
-      "tags6" slist => getclassmetatags("nosuchclass");
-      "tags7" slist => getvariablemetatags("nosuchvariable");
-      "tags8" slist => getclassmetatags("keyclass", "foo");
-      "tags9" slist => getclassmetatags("keyclass2", "foo");
-      "tagsa" slist => getvariablemetatags("init.keyvar", "foo");
-      "tagsb" slist => getvariablemetatags("init.keyvar2", "foo");
-      "tagsc" slist => getbundlemetatags("default:init");
-      "tagsd" slist => getbundlemetatags("init", "foo");
-      "tagse" slist => getbundlemetatags("something:dummy");
-      "tagsf" slist => getbundlemetatags("something:dummy", "foo");
+    "tags1" slist => getclassmetatags("myclass");
+    "tags2" slist => getclassmetatags("myplainclass");
+    "tags3" slist => getvariablemetatags("init.myvar");
+    "tags4" slist => getvariablemetatags("init.myothervar");
+    "tags5" slist => getclassmetatags("myotherclass");
+    "tags6" slist => getclassmetatags("nosuchclass");
+    "tags7" slist => getvariablemetatags("nosuchvariable");
+    "tags8" slist => getclassmetatags("keyclass", "foo");
+    "tags9" slist => getclassmetatags("keyclass2", "foo");
+    "tagsa" slist => getvariablemetatags("init.keyvar", "foo");
+    "tagsb" slist => getvariablemetatags("init.keyvar2", "foo");
+    "tagsc" slist => getbundlemetatags("default:init");
+    "tagsd" slist => getbundlemetatags("init", "foo");
+    "tagse" slist => getbundlemetatags("something:dummy");
+    "tagsf" slist => getbundlemetatags("something:dummy", "foo");
 }
-
 
 bundle agent check
 {
   methods:
-      "check"  usebundle => dcs_check_state(test,
-                                           "$(this.promise_filename).expected.json",
-                                           $(this.promise_filename));
+    "check"
+      usebundle => dcs_check_state(
+        test,
+        "$(this.promise_filename).expected.json",
+        $(this.promise_filename)
+      );
 }
 
 body file control
@@ -62,5 +86,5 @@ body file control
 bundle common dummy
 {
   meta:
-      "tags" slist => { "dummytag1", "dummytag2", "foo=bar", "foo=hello" };
+    "tags" slist => { "dummytag1", "dummytag2", "foo=bar", "foo=hello" };
 }

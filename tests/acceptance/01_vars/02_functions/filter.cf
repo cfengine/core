@@ -3,69 +3,82 @@
 # Test filter()
 #
 #######################################################
-
 body common control
 {
-    inputs => { "../../default.sub.cf" };
-    bundlesequence => { default($(this.promise_filename)) };
-    version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default($(this.promise_filename)) };
+  version => "1.0";
 }
 
 ###########################################################
-
 bundle agent test
 {
   vars:
-      "tests" slist => { "fgrep09", "exact1", "exactdot", "regexdot", "invert", "max2", "max0", "grep09" };
-      "lists" slist => { "s1", "d1", "d2", "dempty" };
-
-      "s1" slist => {
-                      1,2,3,
-                      "one", "two", "three",
-                      "long string",
-                      "one", "two", "three",
+    "tests"
+      slist => {
+        "fgrep09",
+        "exact1",
+        "exactdot",
+        "regexdot",
+        "invert",
+        "max2",
+        "max0",
+        "grep09",
       };
 
-      "d1" data => parsejson('
+    "lists" slist => { "s1", "d1", "d2", "dempty" };
+
+    "s1"
+      slist => {
+        1, 2, 3, "one", "two", "three", "long string", "one", "two", "three",
+      };
+
+    "d1"
+      data => parsejson(
+        '
 [1,2,3,
  "one", "two", "three",
  "long string",
  "four", "fix", "six",
- "one", "two", "three"]');
+ "one", "two", "three"]'
+      );
 
-      "d2" data => parsejson('
+    "d2"
+      data => parsejson(
+        '
 { "one": 1, "two": 2, "three": 3,
-  "x": "y", "a": "b", "p": "q" }');
+  "x": "y", "a": "b", "p": "q" }'
+      );
 
-      "dempty" data => parsejson('[]');
+    "dempty" data => parsejson('[]');
+    "$(lists)_fgrep09" slist => filter("[0-9]", $(lists), "true", "false", 999);
+    "$(lists)_exact1" slist => filter("one", $(lists), "false", "false", 999);
+    "$(lists)_exactdot" slist => filter(".", $(lists), "false", "false", 999);
+    "$(lists)_regexdot" slist => filter(".", $(lists), "true", "false", 999);
+    "$(lists)_invert" slist => filter("[0-9]", $(lists), "true", "true", 999);
+    "$(lists)_max2" slist => filter(".*", $(lists), "true", "false", 2);
+    "$(lists)_max0" slist => filter(".*", $(lists), "true", "false", 0);
+    "$(lists)_grep09" slist => grep("[0-9]", $(lists));
 
-      "$(lists)_fgrep09" slist => filter("[0-9]", $(lists), "true", "false", 999);
-      "$(lists)_exact1" slist => filter("one", $(lists), "false", "false", 999);
-      "$(lists)_exactdot" slist => filter(".", $(lists), "false", "false", 999);
-      "$(lists)_regexdot" slist => filter(".", $(lists), "true", "false", 999);
-      "$(lists)_invert" slist => filter("[0-9]", $(lists), "true", "true", 999);
-      "$(lists)_max2" slist => filter(".*", $(lists), "true", "false", 2);
-      "$(lists)_max0" slist => filter(".*", $(lists), "true", "false", 0);
-      "$(lists)_grep09" slist => grep("[0-9]", $(lists));
-
-      # with inline JSON
-      "inline_fgrep09" slist => filter("[0-9]", '[1,2,3]', "true", "false", 999);
-      "inline_exact1" slist => filter("one", '[1,2,3]', "false", "false", 999);
-      "inline_exactdot" slist => filter(".", '[1,2,3]', "false", "false", 999);
-      "inline_regexdot" slist => filter(".", '[1,2,3]', "true", "false", 999);
-      "inline_invert" slist => filter("[0-9]", '[1,2,3]', "true", "true", 999);
-      "inline_max2" slist => filter(".*", '[1,2,3]', "true", "false", 2);
-      "inline_max0" slist => filter(".*", '[1,2,3]', "true", "false", 0);
-      "inline_grep09" slist => grep("[0-9]", '[1,2,3]');
-
+    # with inline JSON
+    "inline_fgrep09" slist => filter("[0-9]", '[1,2,3]', "true", "false", 999);
+    "inline_exact1" slist => filter("one", '[1,2,3]', "false", "false", 999);
+    "inline_exactdot" slist => filter(".", '[1,2,3]', "false", "false", 999);
+    "inline_regexdot" slist => filter(".", '[1,2,3]', "true", "false", 999);
+    "inline_invert" slist => filter("[0-9]", '[1,2,3]', "true", "true", 999);
+    "inline_max2" slist => filter(".*", '[1,2,3]', "true", "false", 2);
+    "inline_max0" slist => filter(".*", '[1,2,3]', "true", "false", 0);
+    "inline_grep09" slist => grep("[0-9]", '[1,2,3]');
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
-      "check"  usebundle => dcs_check_state(test,
-                                           "$(this.promise_filename).expected.json",
-                                           $(this.promise_filename));
+    "check"
+      usebundle => dcs_check_state(
+        test,
+        "$(this.promise_filename).expected.json",
+        $(this.promise_filename)
+      );
 }

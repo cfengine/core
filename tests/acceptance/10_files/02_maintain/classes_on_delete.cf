@@ -3,24 +3,19 @@
 # Redmine#6509: repairs from delete bodies should not be seen as kept 
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent init
 {
   files:
-    "$(G.testdir)/redmine_6509_1/."
-      create => "true";
-
-    "$(G.testdir)/redmine_6509_2"
-      delete => tidy;
+    "$(G.testdir)/redmine_6509_1/." create => "true";
+    "$(G.testdir)/redmine_6509_2" delete => tidy;
 }
-
 
 bundle agent test
 {
@@ -39,32 +34,30 @@ bundle agent check
   vars:
     "expected_ok"
       slist => {
-                 "dir1_absent_ok",
-                 "dir1_absent_repaired",
-                 "dir1_absent_reached",
-                 "dir2_absent_ok",
-                 "dir2_absent_kept",
-                 "dir2_absent_reached",
-               };
+        "dir1_absent_ok",
+        "dir1_absent_repaired",
+        "dir1_absent_reached",
+        "dir2_absent_ok",
+        "dir2_absent_kept",
+        "dir2_absent_reached",
+      };
 
     "seen_fail"
       slist => {
-                 "dir1_absent_error",
-                 "dir1_absent_repair_failed",
-                 "dir1_absent_repair_denied",
-                 "dir1_absent_repair_timeout",
-                 "dir1_absent_kept",
-               };
+        "dir1_absent_error",
+        "dir1_absent_repair_failed",
+        "dir1_absent_repair_denied",
+        "dir1_absent_repair_timeout",
+        "dir1_absent_kept",
+      };
 
   classes:
     "ok" and => { @(expected_ok) };
-
     "fail" or => { @(seen_fail) };
 
   reports:
     DEBUG.fail::
-      "Found $(expected_ok) defined as expected"
-        if => "$(expected_ok)";
+      "Found $(expected_ok) defined as expected" if => "$(expected_ok)";
 
       "Found $(seen_fail) which is not expected and causes the test to fail"
         if => "$(seen_fail)";
@@ -77,14 +70,13 @@ bundle agent check
 
     fail::
       "$(this.promise_filename) FAIL";
-
 }
 
 body classes mygeneric(x)
 {
-      promise_kept => { "$(x)_ok", "$(x)_kept", "$(x)_reached" };
+  promise_kept => { "$(x)_ok", "$(x)_kept", "$(x)_reached" };
   promise_repaired => { "$(x)_ok", "$(x)_repaired", "$(x)_reached" };
-     repair_failed => { "$(x)_error", "$(x)_repair_failed", "$(x)_reached" };
-     repair_denied => { "$(x)_error", "$(x)_repair_denied", "$(x)_reached" };
-    repair_timeout => { "$(x)_error", "$(x)_repair_timeout", "$(x)_reached" };
+  repair_failed => { "$(x)_error", "$(x)_repair_failed", "$(x)_reached" };
+  repair_denied => { "$(x)_error", "$(x)_repair_denied", "$(x)_reached" };
+  repair_timeout => { "$(x)_error", "$(x)_repair_timeout", "$(x)_reached" };
 }

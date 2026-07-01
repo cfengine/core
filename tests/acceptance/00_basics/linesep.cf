@@ -15,15 +15,15 @@ bundle agent check
 {
   classes:
     windows::
-      "ok"
-        expression => strcmp("$(const.linesep)", "$(const.r)$(const.n)");
+      "ok" expression => strcmp("$(const.linesep)", "$(const.r)$(const.n)");
+
     !windows::
-      "ok"
-        expression => strcmp("$(const.linesep)", "$(const.n)");
+      "ok" expression => strcmp("$(const.linesep)", "$(const.n)");
 
   reports:
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

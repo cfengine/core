@@ -4,20 +4,18 @@
 # works when given a close-enough exact match
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   files:
-      "$(G.testfile).expected"
+    "$(G.testfile).expected"
       create => "true",
       edit_line => init_insert,
       edit_defaults => init_empty;
@@ -26,21 +24,20 @@ bundle agent init
 bundle edit_line init_insert
 {
   insert_lines:
-      "line1
+    "line1
 line2";
 }
 
 body edit_defaults init_empty
 {
-      empty_file_before_editing => "true";
+  empty_file_before_editing => "true";
 }
 
 #######################################################
-
 bundle agent test
 {
   files:
-      "$(G.testfile).actual"
+    "$(G.testfile).actual"
       create => "true",
       edit_line => test_insert;
 }
@@ -48,23 +45,25 @@ bundle agent test
 bundle edit_line test_insert
 {
   delete_lines:
-      ".*";
+    ".*";
 
   insert_lines:
-      "line1
+    "line1
 line2"
       insert_type => "preserve_block",
       location => start;
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
-      "any" usebundle => dcs_check_diff("$(G.testfile).actual",
-                                            "$(G.testfile).expected",
-                                            "$(this.promise_filename)");
+    "any"
+      usebundle => dcs_check_diff(
+        "$(G.testfile).actual",
+        "$(G.testfile).expected",
+        "$(this.promise_filename)"
+      );
 }
 
 ### PROJECT_ID: core

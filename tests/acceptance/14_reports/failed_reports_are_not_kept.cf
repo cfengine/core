@@ -1,5 +1,4 @@
 # Check that reports are printed just once (Redmine#3446 https://cfengine.com/dev/issues/3446)
-
 body common control
 {
   inputs => { "../default.sub.cf" };
@@ -37,11 +36,10 @@ bundle agent test
       classes => scoped_classes_generic("namespace", "report_to_file");
 }
 
-
 bundle agent check
 {
   classes:
-      "ok" not => "report_to_file_kept";
+    "ok" not => "report_to_file_kept";
 
   commands:
     "/usr/bin/chattr"
@@ -58,8 +56,10 @@ bundle agent check
   reports:
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }
+
 ### PROJECT_ID: core
 ### CATEGORY_ID: 2

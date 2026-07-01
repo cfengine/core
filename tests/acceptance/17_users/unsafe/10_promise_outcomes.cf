@@ -3,37 +3,37 @@
 # Test that promise outcomes are set correctly.
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf", "user_queries.cf.sub" };
-      bundlesequence  => { default("$(this.promise_filename)") };
+  inputs => { "../../default.sub.cf", "user_queries.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
 }
 
 #######################################################
-
 bundle common hpux_trusted
 {
   classes:
-      "hpux_trusted_mode_test"
-        expression => regcmp(".*hpux_trusted.*", $(this.promise_filename));
+    "hpux_trusted_mode_test"
+      expression => regcmp(".*hpux_trusted.*", $(this.promise_filename));
 }
 
 bundle agent init
 {
   meta:
-      "test_skip_unsupported" string => "hpux_trusted_mode_test.!hpux";
+    "test_skip_unsupported" string => "hpux_trusted_mode_test.!hpux";
 
-      # Something in the Solaris chroot test environment makes it impossible
-      # to test matching passwords, the pam module always returns error.
-      # This should not happen in a production system though.
-      # Since the error is not on our part, and likely unsolvable, we set
-      # Redmine to zero. However, it would be nice to know if the problem ever
-      # goes away, so using soft_fail.
-      "test_soft_fail" string => "!hpux_trusted_mode_test.(solaris.!sunos_5_9)",
-        meta => { "redmine0" };
-      # On Solaris 9 PAM just crashes inside chroot.
-      "test_skip_needs_work" string => "!hpux_trusted_mode_test.sunos_5_9";
+    # Something in the Solaris chroot test environment makes it impossible
+    # to test matching passwords, the pam module always returns error.
+    # This should not happen in a production system though.
+    # Since the error is not on our part, and likely unsolvable, we set
+    # Redmine to zero. However, it would be nice to know if the problem ever
+    # goes away, so using soft_fail.
+    "test_soft_fail"
+      string => "!hpux_trusted_mode_test.(solaris.!sunos_5_9)",
+      meta => { "redmine0" };
+
+    # On Solaris 9 PAM just crashes inside chroot.
+    "test_skip_needs_work" string => "!hpux_trusted_mode_test.sunos_5_9";
 
   # AIX doesn't like long names (> 8 chars), so keep them short.
   # a = absent
@@ -43,14 +43,11 @@ bundle agent init
   # l = locked
   # r = repair
   users:
-    "akeep"
-      policy => "absent";
-    "arepair"
-      policy => "present";
-    "pkeep"
-      policy => "present";
-    "prepair"
-      policy => "absent";
+    "akeep" policy => "absent";
+    "arepair" policy => "present";
+    "pkeep" policy => "present";
+    "prepair" policy => "absent";
+
     "tkeep"
       policy => "present",
       uid => "9878",
@@ -58,6 +55,7 @@ bundle agent init
       groups_secondary => { "$(user_tests.group2)" },
       shell => "/bin/csh",
       description => "Description";
+
     "trepair"
       policy => "present",
       uid => "9877",
@@ -65,18 +63,18 @@ bundle agent init
       groups_secondary => { "$(user_tests.group2)" },
       shell => "/bin/csh",
       description => "Description";
+
     "wkeep"
       policy => "present",
       password => init_password;
+
     "wrepair"
       policy => "present",
       password => init_password;
-    "lkeep"
-      policy => "locked";
-    "lr_byadd"
-      policy => "absent";
-    "lr_bymod"
-      policy => "present";
+
+    "lkeep" policy => "locked";
+    "lr_byadd" policy => "absent";
+    "lr_bymod" policy => "present";
 }
 
 body password init_password
@@ -86,65 +84,114 @@ body password init_password
 }
 
 #######################################################
-
 bundle agent test
 {
   users:
-   !ok::
-    "akeep"
-      classes => set_classes_kept_repaired("absent_keep", "not_absent_keep"),
-      policy => "absent";
-    "arepair"
-      classes => set_classes_kept_repaired("not_absent_repair", "absent_repair"),
-      policy => "absent";
-    "pkeep"
-      classes => set_classes_kept_repaired("present_keep", "not_present_keep"),
-      policy => "present";
-    "prepair"
-      classes => set_classes_kept_repaired("not_present_repair", "present_repair"),
-      policy => "present";
-    "tkeep"
-      classes => set_classes_kept_repaired("attributes_keep", "not_attributes_keep"),
-      policy => "present",
-      uid => "9878",
-      group_primary => "$(user_tests.group1)",
-      groups_secondary => { "$(user_tests.group2)" },
-      shell => "/bin/csh",
-      description => "Description";
-    "trepair"
-      classes => set_classes_kept_repaired("not_attributes_repair", "attributes_repair"),
-      policy => "present",
-      uid => "9877",
-      group_primary => "$(user_tests.group1)",
-      groups_secondary => {  },
-      shell => "/bin/ksh",
-      description => "Description";
-    "wkeep"
-      classes => set_classes_kept_repaired("password_keep", "not_password_keep"),
-      policy => "present",
-      password => init_password;
-    "wrepair"
-      classes => set_classes_kept_repaired("not_password_repair", "password_repair"),
-      policy => "present",
-      password => test_password;
-    "lkeep"
-      classes => set_classes_kept_repaired("locked_keep", "not_locked_keep"),
-      policy => "locked";
-    "lr_byadd"
-      classes => set_classes_kept_repaired("not_locked_repair_by_add", "locked_repair_by_add"),
-      policy => "locked";
-    "lr_bymod"
-      classes => set_classes_kept_repaired("not_locked_repair_by_mod", "locked_repair_by_mod"),
-      policy => "locked";
+    !ok::
+      "akeep"
+        classes => set_classes_kept_repaired("absent_keep", "not_absent_keep"),
+        policy => "absent";
 
+      "arepair"
+        classes => set_classes_kept_repaired(
+          "not_absent_repair", "absent_repair"
+        ),
+        policy => "absent";
+
+      "pkeep"
+        classes => set_classes_kept_repaired(
+          "present_keep", "not_present_keep"
+        ),
+        policy => "present";
+
+      "prepair"
+        classes => set_classes_kept_repaired(
+          "not_present_repair", "present_repair"
+        ),
+        policy => "present";
+
+      "tkeep"
+        classes => set_classes_kept_repaired(
+          "attributes_keep", "not_attributes_keep"
+        ),
+        policy => "present",
+        uid => "9878",
+        group_primary => "$(user_tests.group1)",
+        groups_secondary => { "$(user_tests.group2)" },
+        shell => "/bin/csh",
+        description => "Description";
+
+      "trepair"
+        classes => set_classes_kept_repaired(
+          "not_attributes_repair", "attributes_repair"
+        ),
+        policy => "present",
+        uid => "9877",
+        group_primary => "$(user_tests.group1)",
+        groups_secondary => {},
+        shell => "/bin/ksh",
+        description => "Description";
+
+      "wkeep"
+        classes => set_classes_kept_repaired(
+          "password_keep", "not_password_keep"
+        ),
+        policy => "present",
+        password => init_password;
+
+      "wrepair"
+        classes => set_classes_kept_repaired(
+          "not_password_repair", "password_repair"
+        ),
+        policy => "present",
+        password => test_password;
+
+      "lkeep"
+        classes => set_classes_kept_repaired("locked_keep", "not_locked_keep"),
+        policy => "locked";
+
+      "lr_byadd"
+        classes => set_classes_kept_repaired(
+          "not_locked_repair_by_add", "locked_repair_by_add"
+        ),
+        policy => "locked";
+
+      "lr_bymod"
+        classes => set_classes_kept_repaired(
+          "not_locked_repair_by_mod", "locked_repair_by_mod"
+        ),
+        policy => "locked";
 
   classes:
-    "and_ok" and => { "absent_keep", "absent_repair", "present_keep", "present_repair",
-                  "attributes_keep", "attributes_repair", "password_keep", "password_repair",
-                  "locked_keep", "locked_repair_by_add", "locked_repair_by_mod"  };
-    "not_ok" or => { "not_absent_keep", "not_absent_repair", "not_present_keep", "not_present_repair",
-                  "not_attributes_keep", "not_attributes_repair", "not_password_keep", "not_password_repair",
-                  "not_locked_keep", "not_locked_repair_by_add", "not_locked_repair_by_mod"  };
+    "and_ok"
+      and => {
+        "absent_keep",
+        "absent_repair",
+        "present_keep",
+        "present_repair",
+        "attributes_keep",
+        "attributes_repair",
+        "password_keep",
+        "password_repair",
+        "locked_keep",
+        "locked_repair_by_add",
+        "locked_repair_by_mod",
+      };
+
+    "not_ok"
+      or => {
+        "not_absent_keep",
+        "not_absent_repair",
+        "not_present_keep",
+        "not_present_repair",
+        "not_attributes_keep",
+        "not_attributes_repair",
+        "not_password_keep",
+        "not_password_repair",
+        "not_locked_keep",
+        "not_locked_repair_by_add",
+        "not_locked_repair_by_mod",
+      };
 
     "ok" and => { "and_ok", "!not_ok" };
     "fail" or => { "!and_ok", "not_ok" };
@@ -152,52 +199,73 @@ bundle agent test
   reports:
     !absent_keep.DEBUG::
       "absent_keep is NOT set, but should be";
+
     !absent_repair.DEBUG::
       "absent_repair is NOT set, but should be";
+
     !present_keep.DEBUG::
       "present_keep is NOT set, but should be";
+
     !present_repair.DEBUG::
       "present_repair is NOT set, but should be";
+
     !attributes_keep.DEBUG::
       "attributes_keep is NOT set, but should be";
+
     !attributes_repair.DEBUG::
       "attributes_repair is NOT set, but should be";
+
     !password_keep.DEBUG::
       "password_keep is NOT set, but should be";
+
     !password_repair.DEBUG::
       "password_repair is NOT set, but should be";
+
     !locked_keep.DEBUG::
       "locked_keep is NOT set, but should be";
+
     !locked_repair_by_add.DEBUG::
       "locked_repair_by_add is NOT set, but should be";
+
     !locked_repair_by_mod.DEBUG::
       "locked_repair_by_mod is NOT set, but should be";
 
     not_absent_keep.DEBUG::
       "not_absent_keep is SET, but shouldn't be";
+
     not_absent_repair.DEBUG::
       "not_absent_repair is SET, but shouldn't be";
+
     not_present_keep.DEBUG::
       "not_present_keep is SET, but shouldn't be";
+
     not_present_repair.DEBUG::
       "not_present_repair is SET, but shouldn't be";
+
     not_attributes_keep.DEBUG::
       "not_attributes_keep is SET, but shouldn't be";
+
     not_attributes_repair.DEBUG::
       "not_attributes_repair is SET, but shouldn't be";
+
     not_password_keep.DEBUG::
       "not_password_keep is SET, but shouldn't be";
+
     not_password_repair.DEBUG::
       "not_password_repair is SET, but shouldn't be";
+
     not_locked_keep.DEBUG::
       "not_locked_keep is SET, but shouldn't be";
+
     not_locked_repair_by_add.DEBUG::
       "not_locked_repair_by_add is SET, but shouldn't be";
+
     not_locked_repair_by_mod.DEBUG::
       "not_locked_repair_by_mod is SET, but shouldn't be";
 
     ok::
       "$(this.promise_filename) Pass";
+
     fail|!ok::
       "$(this.promise_filename) FAIL";
 }
@@ -215,7 +283,6 @@ body classes set_classes_kept_repaired(x, y)
 }
 
 #######################################################
-
 bundle agent check
 {
 }

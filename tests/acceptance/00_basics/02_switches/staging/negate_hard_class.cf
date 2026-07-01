@@ -3,38 +3,39 @@
 # Test hard class negation with -N
 #
 #######################################################
-
 body common control
 {
   inputs => { "../../default.sub.cf" };
-  bundlesequence  => { default("$(this.promise_filename)") };
+  bundlesequence => { default("$(this.promise_filename)") };
   version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
 }
 
 #######################################################
-
 bundle common test
 {
   classes:
-      "rejected" not => returnszero("$(sys.cf_agent) -Kf $(this.promise_filename).sub -Ncfengine", "noshell");
+    "rejected"
+      not => returnszero(
+        "$(sys.cf_agent) -Kf $(this.promise_filename).sub -Ncfengine",
+        "noshell"
+      );
 }
 
 #######################################################
-
 bundle agent check
 {
-classes:
+  classes:
     "ok" and => { "rejected" };
 
-reports:
+  reports:
     ok::
-        "$(this.promise_filename) Pass";
+      "$(this.promise_filename) Pass";
+
     !ok::
-        "$(this.promise_filename) FAIL";
+      "$(this.promise_filename) FAIL";
 }

@@ -1,73 +1,104 @@
-body common control 
+body common control
 {
   inputs => { "../../../default.sub.cf" };
   bundlesequence => { default("$(this.promise_filename)") };
   version => "1.0";
 }
+
 bundle agent init
 {
   files:
-    "/tmp/test_folder1/."
-      create => "true";
-
-    "/tmp/test_folder2/."
-      create => "true";
+    "/tmp/test_folder1/." create => "true";
+    "/tmp/test_folder2/." create => "true";
 
   users:
-      "testu1"
-        policy => "present",
-        home_dir => "/tmp/test_folder1",
-        description => "TestUser 1",
-        group_primary => "root", # we need a group which we know for sure the gid
-        shell => "/bin/sh",
-        uid => "12345";
+    "testu1"
+      policy => "present",
+      home_dir => "/tmp/test_folder1",
+      description => "TestUser 1",
+      group_primary => "root", # we need a group which we know for sure the gid
+      shell => "/bin/sh",
+      uid => "12345";
 
-      "testu2"
-        policy => "present",
-        home_dir => "/tmp/test_folder2",
-        description => "TestUser 2",
-        group_primary => "root",
-        shell => "/bin/sh",
-        uid => "54321";
+    "testu2"
+      policy => "present",
+      home_dir => "/tmp/test_folder2",
+      description => "TestUser 2",
+      group_primary => "root",
+      shell => "/bin/sh",
+      uid => "54321";
+
   vars:
-      "no" int => getfields("root:.*", "/etc/group", ":", "groupdata");
-      "root_gid" string => "$(groupdata[3])";
+    "no" int => getfields("root:.*", "/etc/group", ":", "groupdata");
+    "root_gid" string => "$(groupdata[3])";
 
-      # simple filters
-      "simple_filter" slist => { "name=testu1" };
-      "number_filter" slist => { "uid=12345" };
-      
-      # longer filters
-      "slist_filter" slist => { "gid=$(root_gid)", "name=testu1" };
+    # simple filters
+    "simple_filter" slist => { "name=testu1" };
+    "number_filter" slist => { "uid=12345" };
 
-      # using data
-      "data_filter" data => '[ "gid=$(root_gid)", "name=testu1" ]';
+    # longer filters
+    "slist_filter" slist => { "gid=$(root_gid)", "name=testu1" };
 
-      # using regex
-      "simple_regex" slist => { "name=testu.*" };
-      "number_regex" slist => { "uid=1234.*" };
-      "longer_regex" slist => { "name=testu.*", "uid=1.*" };
+    # using data
+    "data_filter" data => '[ "gid=$(root_gid)", "name=testu1" ]';
 
-      # non-existent user
-      "unknown" slist => { "name=thisuserdoesntexist" };
+    # using regex
+    "simple_regex" slist => { "name=testu.*" };
+    "number_regex" slist => { "uid=1234.*" };
+    "longer_regex" slist => { "name=testu.*", "uid=1.*" };
+
+    # non-existent user
+    "unknown" slist => { "name=thisuserdoesntexist" };
 }
-bundle agent test 
+
+bundle agent test
 {
   vars:
-    "ulist1" data => mapdata(json, '"$(this.k)"', findlocalusers("@(init.simple_filter)"));
-    "ulist2" data => mapdata(json, '"$(this.k)"', findlocalusers("init.number_filter"));
-    "ulist3" data => mapdata(json, '"$(this.k)"', findlocalusers("@(init.data_filter)"));
-    "ulist4" data => mapdata(json, '"$(this.k)"', findlocalusers("@(init.slist_filter)"));
-    "ulist5" data => mapdata(json, '"$(this.k)"', findlocalusers("@(init.simple_regex)"));
-    "ulist6" data => mapdata(json, '"$(this.k)"', findlocalusers("@(init.number_regex)"));
-    "ulist7" data => mapdata(json, '"$(this.k)"', findlocalusers("@(init.longer_regex)"));
-    "ulist8" data => findlocalusers("@(init.unknown)");
+    "ulist1"
+      data => mapdata(
+        json, '"$(this.k)"', findlocalusers("@(init.simple_filter)")
+      );
 
+    "ulist2"
+      data => mapdata(
+        json, '"$(this.k)"', findlocalusers("init.number_filter")
+      );
+
+    "ulist3"
+      data => mapdata(
+        json, '"$(this.k)"', findlocalusers("@(init.data_filter)")
+      );
+
+    "ulist4"
+      data => mapdata(
+        json, '"$(this.k)"', findlocalusers("@(init.slist_filter)")
+      );
+
+    "ulist5"
+      data => mapdata(
+        json, '"$(this.k)"', findlocalusers("@(init.simple_regex)")
+      );
+
+    "ulist6"
+      data => mapdata(
+        json, '"$(this.k)"', findlocalusers("@(init.number_regex)")
+      );
+
+    "ulist7"
+      data => mapdata(
+        json, '"$(this.k)"', findlocalusers("@(init.longer_regex)")
+      );
+
+    "ulist8" data => findlocalusers("@(init.unknown)");
 }
+
 bundle agent check
 {
   methods:
-      "check"  usebundle => dcs_check_state(test,
-                                           "$(this.promise_filename).expected.json",
-                                           $(this.promise_filename));
+    "check"
+      usebundle => dcs_check_state(
+        test,
+        "$(this.promise_filename).expected.json",
+        $(this.promise_filename)
+      );
 }

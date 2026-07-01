@@ -1,32 +1,30 @@
 bundle common test_meta
 {
   vars:
-      "description" string => "Test that body action_policy warn restricts mustache template rendering";
-      "story_id" string => "5535";
-      "covers" string => "dryrun_repaired";
+    "description"
+      string => "Test that body action_policy warn restricts mustache template rendering";
+
+    "story_id" string => "5535";
+    "covers" string => "dryrun_repaired";
 }
 
 # Ref: https://dev.cfengine.com/issues/6739
-
 #######################################################
-
 body common control
 {
-      inputs => { "../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
     "template_target" string => "$(G.testfile)";
 
-   files:
-    "$(template_target)"
-      create => "true";
+  files:
+    "$(template_target)" create => "true";
 }
 
 bundle agent test
@@ -44,16 +42,16 @@ bundle agent test
 }
 
 #######################################################
-
 bundle agent check
 {
   classes:
-    "fail" expression => regline("SHOULD NOT RENDER", $(test.template_target) );
+    "fail" expression => regline("SHOULD NOT RENDER", $(test.template_target));
     "defined_class" expression => "mustache_warn_failed";
 
   reports:
     !fail.defined_class::
       "$(this.promise_filename) Pass";
+
     fail|!defined_class::
       "$(this.promise_filename) FAIL";
 }

@@ -3,20 +3,18 @@
 # Test that backslashes are correctly passed to commands (Issue 471)
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   files:
-      "$(G.testfile)"
+    "$(G.testfile)"
       create => "true",
       edit_defaults => empty,
       edit_line => setup_lines;
@@ -24,38 +22,46 @@ bundle agent init
 
 body edit_defaults empty
 {
-      empty_file_before_editing => "true";
+  empty_file_before_editing => "true";
 }
 
 bundle edit_line setup_lines
 {
   insert_lines:
-      "a test";
-      "a.test";
-      "nottest";
+    "a test";
+    "a.test";
+    "nottest";
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-      "all_lines" string => execresult("$(G.egrep) -c '.' $(G.testfile)", "useshell");
-      "re_lines" string => execresult("$(G.egrep) -c 'a.test' $(G.testfile)", "useshell");
-      "lit_lines" string => execresult("$(G.egrep) -c 'a\.test' $(G.testfile)", "useshell");
-      "doubleslash_lit_lines" string => execresult("$(G.egrep) -c 'a\\.test' $(G.testfile)", "useshell");
+    "all_lines"
+      string => execresult("$(G.egrep) -c '.' $(G.testfile)", "useshell");
+
+    "re_lines"
+      string => execresult("$(G.egrep) -c 'a.test' $(G.testfile)", "useshell");
+
+    "lit_lines"
+      string => execresult("$(G.egrep) -c 'a\.test' $(G.testfile)", "useshell");
+
+    "doubleslash_lit_lines"
+      string => execresult(
+        "$(G.egrep) -c 'a\\.test' $(G.testfile)", "useshell"
+      );
 }
 
 #######################################################
-
 bundle agent check
 {
   classes:
-      "ok" and => {
-                    strcmp("$(test.all_lines)", "3"),
-                    strcmp("$(test.re_lines)", "2"),
-                    strcmp("$(test.lit_lines)", "1"),
-                    strcmp("$(test.doubleslash_lit_lines)", "1")
+    "ok"
+      and => {
+        strcmp("$(test.all_lines)", "3"),
+        strcmp("$(test.re_lines)", "2"),
+        strcmp("$(test.lit_lines)", "1"),
+        strcmp("$(test.doubleslash_lit_lines)", "1"),
       };
 
   reports:
@@ -64,8 +70,10 @@ bundle agent check
       "re_lines: $(test.re_lines) =?= 2";
       "lit_lines: $(test.lit_lines) =?= 1";
       "doubleslash_lit_lines: $(test.doubleslash_lit_lines) =?= 1";
+
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

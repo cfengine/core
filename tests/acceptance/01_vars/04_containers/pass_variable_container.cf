@@ -3,16 +3,14 @@
 # Test datacontainers can be passed with a variable name.
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   meta:
@@ -23,50 +21,67 @@ bundle agent init
       "$(G.dos2unix) $(this.promise_filename).expected" -> { "ENT-10433" };
 
   vars:
-# We want to be sure we can reference this data subsequently
-  "d" data => parsejson( '{
+    # We want to be sure we can reference this data subsequently
+    "d"
+      data => parsejson(
+        '{
 "hosts": {
   "path": "/etc/hosts"
   },
 "auto_master" {
   "path": "/etc/auto.master"
 }
-}');
-
+}'
+      );
 }
 
-bundle agent test 
+bundle agent test
 {
-
   meta:
     "description" -> { "CFE-2434" }
       string => "Test that variable data containers can be passed.";
 
   vars:
-    "found" slist  => bundlesmatching(".*", "find");
+    "found" slist => bundlesmatching(".*", "find");
+
     # "ns_bundle" string => "default:init"; # This is the same content as the
     # "found" variable, so we just use that instead.
-
     "bundle_name" string => "init";
     "bundle_name_suffix" string => "it";
 
   methods:
     "" usebundle => report_data("Pass by name:", @(init.d));
     "" usebundle => report_data("Pass by namespace:name:", @(default:init.d));
-    "" usebundle => report_data("Pass by variable name:", "@($(bundle_name).d)");
-    "" usebundle => report_data("Pass by variable name including namespace:", "@($(found).d)");
-    "" usebundle => report_data("Pass by variable name with prefix:", "@(in$(bundle_name_suffix).d)");
-    "" usebundle => report_data("Pass by variable name with namespace:", "@(default:$(bundle_name).d)");
+
+    ""
+      usebundle => report_data("Pass by variable name:", "@($(bundle_name).d)");
+
+    ""
+      usebundle => report_data(
+        "Pass by variable name including namespace:", "@($(found).d)"
+      );
+
+    ""
+      usebundle => report_data(
+        "Pass by variable name with prefix:", "@(in$(bundle_name_suffix).d)"
+      );
+
+    ""
+      usebundle => report_data(
+        "Pass by variable name with namespace:", "@(default:$(bundle_name).d)"
+      );
 }
 
 bundle agent check
 {
   methods:
-    "" usebundle => dcs_check_diff( $(G.testfile),
-                                    "$(this.promise_filename).expected",
-                                    $(this.promise_filename));
+    ""
+      usebundle => dcs_check_diff(
+        $(G.testfile),
+        "$(this.promise_filename).expected",
+        $(this.promise_filename)
+      );
 }
-
 
 bundle agent report_data(id, datacontainer)
 {
@@ -78,13 +93,10 @@ bundle agent report_data(id, datacontainer)
 
   reports:
     DEBUG::
-    "$(id) found keys in data container"
-      if => "some_keys";
-
-    "$(id) did *not* find keys in data container"
-      unless => "some_keys";
+      "$(id) found keys in data container" if => "some_keys";
+      "$(id) did *not* find keys in data container" unless => "some_keys";
 
     any::
-    "$(id) $(keys)=$(datacontainer[$(keys)][path])"
-      report_to_file => "$(G.testfile)";
+      "$(id) $(keys)=$(datacontainer[$(keys)][path])"
+        report_to_file => "$(G.testfile)";
 }

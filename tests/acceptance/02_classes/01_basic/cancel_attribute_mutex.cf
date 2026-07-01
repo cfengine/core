@@ -9,35 +9,34 @@
 # test asserts the rejection appears in the agent output.
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
 }
 
 #######################################################
-
 bundle agent test
 {
   meta:
-      "description" -> { "CFE-4686" }
-        string => "'cancel' must be mutually exclusive with the class-defining attributes";
+    "description" -> { "CFE-4686" }
+      string => "'cancel' must be mutually exclusive with the class-defining attributes";
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
-      "" usebundle => dcs_passif_output1(".*Irreconcilable constraints in classes.*",
-                                         "$(sys.cf_agent) -Kf $(this.promise_filename).sub 2>&1",
-                                         $(this.promise_filename));
+    ""
+      usebundle => dcs_passif_output1(
+        ".*Irreconcilable constraints in classes.*",
+        "$(sys.cf_agent) -Kf $(this.promise_filename).sub 2>&1",
+        $(this.promise_filename)
+      );
 }

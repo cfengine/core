@@ -20,31 +20,27 @@
 # report during the agent's convergence passes.
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent init
 {
   # Remove the persistent class DB to ensure a clean state.
   files:
-      "$(sys.workdir)/state/cf_state.lmdb"
-        delete => tidy;
-      "$(sys.workdir)/state/cf_state.lmdb-lock"
-        delete => tidy;
-      "$(sys.workdir)/state/cf_state.lmdb.lock"
-        delete => tidy;
+    "$(sys.workdir)/state/cf_state.lmdb" delete => tidy;
+    "$(sys.workdir)/state/cf_state.lmdb-lock" delete => tidy;
+    "$(sys.workdir)/state/cf_state.lmdb.lock" delete => tidy;
 }
 
 bundle agent test
 {
   meta:
-      "description" -> { "CFE-4681" }
-        string => "classes: promises default to timer_policy => reset, resetting the persistence timer on subsequent runs";
+    "description" -> { "CFE-4681" }
+      string => "classes: promises default to timer_policy => reset, resetting the persistence timer on subsequent runs";
 
   commands:
     # First run: define the persistent class (no timer_policy).
@@ -65,25 +61,36 @@ bundle agent test
 bundle agent check
 {
   classes:
-      "first_ok" expression => regline(".*Creating persistent class.*timer_default_test_class.*",
-                                       "$(G.testdir)/timer_default_run1.log");
-      # Match the EvalContextHeapPersistentSave message specifically (it
-      # reports "... timer to N minutes (was M remaining)").  This only
-      # appears when the existing DB record is actually found, so it would
-      # NOT match the "C: + Resetting persistent class timer: ..." progress
-      # line that VerifyClassPromise logs regardless.  This distinction is
-      # what makes the test catch a broken existing-record lookup.
-      "second_ok" expression => regline(".*Resetting persistent class 'timer_default_test_class' timer to.*",
-                                        "$(G.testdir)/timer_default_run2.log");
-      "ok" expression => "first_ok.second_ok";
+    "first_ok"
+      expression => regline(
+        ".*Creating persistent class.*timer_default_test_class.*",
+        "$(G.testdir)/timer_default_run1.log"
+      );
+
+    # Match the EvalContextHeapPersistentSave message specifically (it
+    # reports "... timer to N minutes (was M remaining)").  This only
+    # appears when the existing DB record is actually found, so it would
+    # NOT match the "C: + Resetting persistent class timer: ..." progress
+    # line that VerifyClassPromise logs regardless.  This distinction is
+    # what makes the test catch a broken existing-record lookup.
+    "second_ok"
+      expression => regline(
+        ".*Resetting persistent class 'timer_default_test_class' timer to.*",
+        "$(G.testdir)/timer_default_run2.log"
+      );
+
+    "ok" expression => "first_ok.second_ok";
 
   reports:
     DEBUG.!first_ok::
       "FAIL: first run did not log 'Creating persistent class'";
+
     DEBUG.!second_ok::
       "FAIL: second run did not log 'Resetting persistent class' (default reset not applied)";
+
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

@@ -3,20 +3,18 @@
 # Test filestat()
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   files:
-      "$(G.testfile)"
+    "$(G.testfile)"
       create => "true",
       perms => init_m(600),
       edit_defaults => init_empty,
@@ -29,54 +27,58 @@ bundle agent init
 
 body edit_defaults init_empty
 {
-      empty_file_before_editing => "true";
-      edit_backup => "false";
+  empty_file_before_editing => "true";
+  edit_backup => "false";
 }
 
 body perms init_m(mode)
 {
-      mode   => "$(mode)";
+  mode => "$(mode)";
 }
 
 bundle edit_line init_fill_in
 {
   insert_lines:
-      "012345789";
-      "112345789";
-      "212345789";
-      "312345789";
-      "4";
+    "012345789";
+    "112345789";
+    "212345789";
+    "312345789";
+    "4";
 }
 
 body delete init_delete
 {
-      dirlinks => "delete";
-      rmdirs   => "true";
+  dirlinks => "delete";
+  rmdirs => "true";
 }
 
-
 #######################################################
-
 bundle agent test
 {
   vars:
-      "fields" slist => splitstring("size,gid,uid,ino,nlink,ctime,atime,mtime,mode,modeoct,permstr,permoct,type,devno,dev_minor,dev_major,basename,dirname,linktarget,linktarget_shallow", ",", 999);
+    "fields"
+      slist => splitstring(
+        "size,gid,uid,ino,nlink,ctime,atime,mtime,mode,modeoct,permstr,permoct,type,devno,dev_minor,dev_major,basename,dirname,linktarget,linktarget_shallow",
+        ",",
+        999
+      );
 
-      "stat[$(fields)]" string => filestat($(G.testfile), $(fields));
+    "stat[$(fields)]" string => filestat($(G.testfile), $(fields));
 }
 
-
 #######################################################
-
 bundle agent check
 {
   vars:
-      "expected[type]" string => "regular file";
-      "expected[nlink]" string => "1";
-      "expected[dirname]" string => dirname($(G.testfile));
-      "expected[basename]" string => lastnode($(G.testfile), escape("$(const.dirsep)"));
-      "expected[linktarget]" string => $(G.testfile);
-      "expected[linktarget_shallow]" string => $(G.testfile);
+    "expected[type]" string => "regular file";
+    "expected[nlink]" string => "1";
+    "expected[dirname]" string => dirname($(G.testfile));
+
+    "expected[basename]"
+      string => lastnode($(G.testfile), escape("$(const.dirsep)"));
+
+    "expected[linktarget]" string => $(G.testfile);
+    "expected[linktarget_shallow]" string => $(G.testfile);
 
     windows::
       "expected[size]" string => "47";
@@ -84,6 +86,7 @@ bundle agent check
       "expected[permoct]" string => "666";
       "expected[modeoct]" string => "100666";
       "expected[permstr]" string => "-rw-rw-rw-";
+
     !windows::
       "expected[size]" string => "42";
       "expected[mode]" string => "33152"; # 100600
@@ -93,26 +96,30 @@ bundle agent check
 
     any::
       "expects" slist => getindices("expected");
-
       "fields" slist => getindices("test.stat");
-
       "joint_condition" string => join(".", "expects");
+
   classes:
-      "$(expects)" expression => strcmp("$(test.stat[$(expects)])", "$(expected[$(expects)])");
-      "ok" expression => "$(joint_condition)";
+    "$(expects)"
+      expression => strcmp(
+        "$(test.stat[$(expects)])", "$(expected[$(expects)])"
+      );
+
+    "ok" expression => "$(joint_condition)";
 
   reports:
     DEBUG::
       "got $(G.testfile) field $(fields)=$(test.stat[$(fields)])";
 
       "got $(G.testfile) field $(expects)=$(test.stat[$(expects)]) matches expected"
-      if => "$(expects)";
+        if => "$(expects)";
 
       "got $(G.testfile) field $(expects)=$(test.stat[$(expects)]) did NOT match expected $(expected[$(expects)])"
-      if => "!$(expects)";
+        if => "!$(expects)";
 
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

@@ -1,68 +1,82 @@
 bundle common test_meta
 {
   vars:
-      "description" string => "A user not present gets added with several empty attributes";
-      "story_id" string => "5525";
-      "covers" string => "operational_repaired";
+    "description"
+      string => "A user not present gets added with several empty attributes";
+
+    "story_id" string => "5525";
+    "covers" string => "operational_repaired";
 }
 
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf", "user_queries.cf.sub" };
-      bundlesequence  => { default("$(this.promise_filename)") };
+  inputs => { "../../default.sub.cf", "user_queries.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
 }
 
 #######################################################
-
 bundle agent init
 {
   # Remove him first, should he already be present.
   users:
-    "johndoe"
-      policy => "absent";
+    "johndoe" policy => "absent";
 }
 
 #######################################################
-
 bundle agent test
 {
   users:
     "johndoe"
       policy => "present",
       group_primary => "",
-      groups_secondary => { },
+      groups_secondary => {},
       description => "",
       classes => if_ok("promise_ok");
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
     aix::
       # AIX forcibly puts a user in the staff group, even if no group is specified.
-      "any" usebundle => user_is_in_secondary_group("johndoe", "staff", "sgroup_success", "sgroup_failure"),
+      "any"
+        usebundle => user_is_in_secondary_group(
+          "johndoe", "staff", "sgroup_success", "sgroup_failure"
+        ),
         classes => always("sgroup_methods_run");
 
     !aix::
-      "any" usebundle => user_is_in_any_secondary_group("johndoe", "sgroup_failure", "sgroup_success"),
+      "any"
+        usebundle => user_is_in_any_secondary_group(
+          "johndoe", "sgroup_failure", "sgroup_success"
+        ),
         classes => always("sgroup_methods_run");
 
     any::
-      "any" usebundle => user_has_description("johndoe", "", "desc_success", "desc_failure"),
+      "any"
+        usebundle => user_has_description(
+          "johndoe", "", "desc_success", "desc_failure"
+        ),
         classes => always("desc_methods_run");
 
   classes:
-      "ready" and => { "sgroup_methods_run", "desc_methods_run" };
-      "ok" and => { "sgroup_success", "!sgroup_failure",
-                    "desc_success", "!desc_failure", "promise_ok" };
+    "ready" and => { "sgroup_methods_run", "desc_methods_run" };
+
+    "ok"
+      and => {
+        "sgroup_success",
+        "!sgroup_failure",
+        "desc_success",
+        "!desc_failure",
+        "promise_ok",
+      };
 
   reports:
     ok.ready::
       "$(this.promise_filename) Pass";
+
     !ok.ready::
       "$(this.promise_filename) FAIL";
 }

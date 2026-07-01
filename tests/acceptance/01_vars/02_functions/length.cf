@@ -3,48 +3,43 @@
 # Test 'length' function
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-      "normal_list" slist => { "b", "c", "a" }; # 3
-      "empty_list" slist => { }; # 0
-      "normal_object" data => parsejson('{ "a": 1, "b": 2 }'); # 2
-      "empty_object" data => parsejson('{}'); # 0
-
-      "normal_list_len" int => length(normal_list);
-      "empty_list_len" int => length(empty_list);
-      "normal_object_len" int => length(normal_object);
-      "empty_object_len" int => length(empty_object);
-
-      "inline_object_len" int => length('{ "a": 1, "b": 2 }'); # 2
-      "inline_array_len" int => length('[ "a", 1, "b", 2 ]'); # 4
+    "normal_list" slist => { "b", "c", "a" }; # 3
+    "empty_list" slist => {}; # 0
+    "normal_object" data => parsejson('{ "a": 1, "b": 2 }'); # 2
+    "empty_object" data => parsejson('{}'); # 0
+    "normal_list_len" int => length(normal_list);
+    "empty_list_len" int => length(empty_list);
+    "normal_object_len" int => length(normal_object);
+    "empty_object_len" int => length(empty_object);
+    "inline_object_len" int => length('{ "a": 1, "b": 2 }'); # 2
+    "inline_array_len" int => length('[ "a", 1, "b", 2 ]'); # 4
 }
 
-
 #######################################################
-
 #######################################################
-
 bundle agent check
 {
   methods:
-      "check"  usebundle => dcs_check_state(test,
-                                           "$(this.promise_filename).expected.json",
-                                           $(this.promise_filename));
+    "check"
+      usebundle => dcs_check_state(
+        test,
+        "$(this.promise_filename).expected.json",
+        $(this.promise_filename)
+      );
 }

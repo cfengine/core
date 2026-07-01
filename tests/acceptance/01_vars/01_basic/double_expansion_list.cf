@@ -3,7 +3,6 @@
 # Test double expansion of list from remote bundle (ENT-9491)
 #
 ##############################################################################
-
 body common control
 {
   bundlesequence => { "check" };
@@ -31,16 +30,13 @@ bundle agent test(parent_bundle)
     "$($(parent_bundle)#lst)"
       comment => "We force mangle the variable, it works, but should this be possible?",
       bundle_return_value_index => "qux";
-
 }
 
 bundle agent check
 {
   vars:
-    "str"
-      string => "EXPANDED";
-    "lst"
-      slist => { "EXPANDED" };
+    "str" string => "EXPANDED";
+    "lst" slist => { "EXPANDED" };
 
   methods:
     "holder"
@@ -48,17 +44,21 @@ bundle agent check
       useresult => "ret";
 
   reports:
-      "$(this.promise_filename) Pass"
-        if => and(strcmp("$(ret[foo])", "EXPANDED"),
-                  strcmp("$(ret[bar])", "EXPANDED"),
-                  strcmp("$(ret[baz])", "EXPANDED"),
-                  strcmp("$(ret[qux])", "EXPANDED"));
+    "$(this.promise_filename) Pass"
+      if => and(
+        strcmp("$(ret[foo])", "EXPANDED"),
+        strcmp("$(ret[bar])", "EXPANDED"),
+        strcmp("$(ret[baz])", "EXPANDED"),
+        strcmp("$(ret[qux])", "EXPANDED")
+      );
 
-      "$(this.promise_filename) FAIL"
-        unless => and(strcmp("$(ret[foo])", "EXPANDED"),
-                      strcmp("$(ret[bar])", "EXPANDED"),
-                      strcmp("$(ret[qux])", "EXPANDED"),
-                      strcmp("$(ret[baz])", "EXPANDED"));
+    "$(this.promise_filename) FAIL"
+      unless => and(
+        strcmp("$(ret[foo])", "EXPANDED"),
+        strcmp("$(ret[bar])", "EXPANDED"),
+        strcmp("$(ret[qux])", "EXPANDED"),
+        strcmp("$(ret[baz])", "EXPANDED")
+      );
 
     DEBUG::
       "$(const.dollar)($(const.dollar)(parent_bundle).str) => $(ret[foo])";

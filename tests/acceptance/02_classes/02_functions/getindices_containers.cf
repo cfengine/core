@@ -1,46 +1,45 @@
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-      "obj" data => parsejson('{ "a": 1, "b": 2 }');
-      "arr" data => parsejson('["a", "b"]');
+    "obj" data => parsejson('{ "a": 1, "b": 2 }');
+    "arr" data => parsejson('["a", "b"]');
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-      "obj_i" slist => getindices("init.obj");
-      "arr_i" slist => getindices("init.arr");
+    "obj_i" slist => getindices("init.obj");
+    "arr_i" slist => getindices("init.arr");
 
-reports:
-  DEBUG::
-    "obj_i $(obj_i)";
-    "arr_i $(arr_i)";
+  reports:
+    DEBUG::
+      "obj_i $(obj_i)";
+      "arr_i $(arr_i)";
 }
 
 #######################################################
-
 bundle agent check
 {
   classes:
-      "ok" and => {
-                    strcmp("a,b", join(",", "test.obj_i")),
-                    strcmp("0,1", join(",", "test.arr_i"))
+    "ok"
+      and => {
+        strcmp("a,b", join(",", "test.obj_i")),
+        strcmp("0,1", join(",", "test.arr_i")),
       };
 
   reports:
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

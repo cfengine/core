@@ -3,69 +3,65 @@
 # Test that invalid mustache template does not cause a segfault 
 # Redmine:4702 (https://cfengine.com/dev/issues/4702)
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
-
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-      "template_content" string => '
+    "template_content"
+      string => '
 {{#vars.sys.interfaces}}{{.}} {{#vars.sys.interface_flags[{{.}}]}} {{/vars.sys.interfaces}}';
 
   files:
-      "$(G.testfile).template"
-        create => "true",
-        edit_line => insert_lines($(template_content)),
-        edit_defaults => empty;
+    "$(G.testfile).template"
+      create => "true",
+      edit_line => insert_lines($(template_content)),
+      edit_defaults => empty;
 
-      "$(G.testfile).output"
-        delete => init_delete;
+    "$(G.testfile).output" delete => init_delete;
 }
 
 body delete init_delete
 {
-      dirlinks => "delete";
-      rmdirs   => "true";
+  dirlinks => "delete";
+  rmdirs => "true";
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
     "template_file" string => "$(G.testfile).template";
 
   files:
-      "$(G.testfile).output"
-        create => "true",
-        edit_template => "$(template_file)",
-        template_method => "mustache";
+    "$(G.testfile).output"
+      create => "true",
+      edit_template => "$(template_file)",
+      template_method => "mustache";
 
   reports:
     DEBUG::
       "Rendering template file $(template_file) to $(G.testfile).output";
 }
 
-
 #######################################################
-
 bundle agent check
 {
   classes:
-      "ok" expression => "any",
-        comment => "If we made it to here we didn't segfault";
+    "ok"
+      expression => "any",
+      comment => "If we made it to here we didn't segfault";
 
   reports:
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

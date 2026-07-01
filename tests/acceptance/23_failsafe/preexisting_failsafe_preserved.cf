@@ -1,6 +1,4 @@
 # Test that failsafe.cf is not created when it exists
-
-
 body common control
 {
   inputs => { "../default.sub.cf", "../plucked.sub.cf" };
@@ -10,13 +8,16 @@ body common control
 bundle agent init
 {
   methods:
-      # Remove the custom failsafe output file
-      "any" usebundle => dcs_fini("$(sys.inputdir)/failsafe_output.txt");
+    # Remove the custom failsafe output file
+    "any" usebundle => dcs_fini("$(sys.inputdir)/failsafe_output.txt");
+
   files:
-      "$(sys.inputdir)/failsafe.cf"
-         create    => "true",
-         perms     => m("600"),
-         copy_from => dcs_sync("$(this.promise_dirname)/preexisting_failsafe_preserved.failsafe.cf.sub");
+    "$(sys.inputdir)/failsafe.cf"
+      create => "true",
+      perms => m("600"),
+      copy_from => dcs_sync(
+        "$(this.promise_dirname)/preexisting_failsafe_preserved.failsafe.cf.sub"
+      );
 }
 
 bundle agent test
@@ -28,9 +29,10 @@ bundle agent test
 bundle agent check
 {
   methods:
-    "any" usebundle =>
-        # Verify that the custom failsafe.cf did run and created the
-        # file that we removed earlier.
-        dcs_passif_fileexists("$(sys.inputdir)/failsafe_output.txt",
-                              "$(this.promise_filename)");
+    "any"
+      # Verify that the custom failsafe.cf did run and created the
+      # file that we removed earlier.
+      usebundle => dcs_passif_fileexists(
+        "$(sys.inputdir)/failsafe_output.txt", "$(this.promise_filename)"
+      );
 }

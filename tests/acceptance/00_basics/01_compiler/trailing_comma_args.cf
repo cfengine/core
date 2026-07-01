@@ -8,12 +8,12 @@ bundle agent test
   classes:
     # Testing function call
     "exists" expression => fileexists($(this.promise_filename));
-    "exists_trailing" expression => fileexists($(this.promise_filename), );
+    "exists_trailing" expression => fileexists($(this.promise_filename));
 
   methods:
     # Testing bundle call
     "check" usebundle => check("a", "b", "c");
-    "check_trailing" usebundle => check("d", "e", "f", );
+    "check_trailing" usebundle => check("d", "e", "f");
 
   reports:
     exists.exists_trailing.abc.def::
@@ -26,6 +26,5 @@ bundle agent test
 bundle agent check(a, b, c)
 {
   classes:
-    "$(a)$(b)$(c)"
-      scope => "namespace";
+    "$(a)$(b)$(c)" scope => "namespace";
 }

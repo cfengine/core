@@ -3,25 +3,22 @@
 # Insert lines with preserve_block "after" and check convergence
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-      "states" slist => { "actual", "expected" };
+    "states" slist => { "actual", "expected" };
+    "actual" string => "START";
 
-      "actual" string => "START";
-
-      "expected" string =>
-"START
+    "expected"
+      string => "START
          1
         x2x
        xx3xx
@@ -45,7 +42,7 @@ xxxxxxxxx15xxxxxxxxx
 xxxxxxxxx21xxxxxxx";
 
   files:
-      "$(G.testfile).$(states)"
+    "$(G.testfile).$(states)"
       create => "true",
       edit_line => init_insert("$(init.$(states))"),
       edit_defaults => init_empty;
@@ -54,28 +51,25 @@ xxxxxxxxx21xxxxxxx";
 bundle edit_line init_insert(str)
 {
   insert_lines:
-      "$(str)";
+    "$(str)";
 }
 
 body edit_defaults init_empty
 {
-      empty_file_before_editing => "true";
+  empty_file_before_editing => "true";
 }
 
 #######################################################
-
 bundle agent test
 {
   files:
-      "$(G.testfile).actual"
-      edit_line => test_insert("$(init.insert)");
+    "$(G.testfile).actual" edit_line => test_insert("$(init.insert)");
 }
 
 bundle edit_line test_insert(lines)
 {
-insert_lines:
-
-"         1
+  insert_lines:
+    "         1
         x2x
        xx3xx
         x4x
@@ -96,26 +90,26 @@ xxxxxxxxx15xxxxxxxxx
       xxx19xx
       xxx20xx
 xxxxxxxxx21xxxxxxx"
-
       location => prepend,
-   insert_type => "preserve_block";
+      insert_type => "preserve_block";
 }
 
 body location prepend
 {
-before_after => "after";
+  before_after => "after";
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
-      "any" usebundle => dcs_check_diff("$(G.testfile).actual",
-                                            "$(G.testfile).expected",
-                                            "$(this.promise_filename)");
+    "any"
+      usebundle => dcs_check_diff(
+        "$(G.testfile).actual",
+        "$(G.testfile).expected",
+        "$(this.promise_filename)"
+      );
 }
-
 
 ### PROJECT_ID: core
 ### CATEGORY_ID: 27

@@ -1,24 +1,23 @@
 bundle common test_meta
 {
   vars:
-      "description" string => "Test file_selection attributes are only checked as necessary";
-      "story_id" string => "";
-      "covers" string => "";
+    "description"
+      string => "Test file_selection attributes are only checked as necessary";
+
+    "story_id" string => "";
+    "covers" string => "";
 }
 
 # Ref: https://dev.cfengine.com/issues/6997
-
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent check
 {
   meta:
@@ -32,9 +31,15 @@ bundle agent check
                   windows";
 
   vars:
-    "command" string => "$(sys.cf_agent) -KIf $(this.promise_filename).sub -DAUTO";
+    "command"
+      string => "$(sys.cf_agent) -KIf $(this.promise_filename).sub -DAUTO";
 
   methods:
     "check"
-      usebundle => dcs_passif_output(".*Pass.*", ".*executed command for.*", $(command), $(this.promise_filename));
+      usebundle => dcs_passif_output(
+        ".*Pass.*",
+        ".*executed command for.*",
+        $(command),
+        $(this.promise_filename)
+      );
 }

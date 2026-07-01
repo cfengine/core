@@ -3,70 +3,56 @@
 # Test sum()
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-      "dummy" string => "dummy";
+    "dummy" string => "dummy";
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-      "six" ilist => { "1", "2", "3" };
-      "sum_six" real => sum("six");
-
-      "minus_six" ilist => { "-1", "-2", "-3" };
-      "sum_minus_six" real => sum("minus_six");
-
-      "zero" ilist => { "-1", "-2", "3" };
-      "sum_zero" real => sum("zero");
-
-      "sixpoint" rlist => { "1.", "2", "3e0" };
-      "sum_sixpoint" real => sum("sixpoint");
-
-      "minus_sixpoint" rlist => { "-1.", "-2", "-3e0" };
-      "sum_minus_sixpoint" real => sum("minus_sixpoint");
-
-      "zeropoint" rlist => { "-1.", "-2", "3e0" };
-      "sum_zeropoint" real => sum("zeropoint");
-
+    "six" ilist => { "1", "2", "3" };
+    "sum_six" real => sum("six");
+    "minus_six" ilist => { "-1", "-2", "-3" };
+    "sum_minus_six" real => sum("minus_six");
+    "zero" ilist => { "-1", "-2", "3" };
+    "sum_zero" real => sum("zero");
+    "sixpoint" rlist => { "1.", "2", "3e0" };
+    "sum_sixpoint" real => sum("sixpoint");
+    "minus_sixpoint" rlist => { "-1.", "-2", "-3e0" };
+    "sum_minus_sixpoint" real => sum("minus_sixpoint");
+    "zeropoint" rlist => { "-1.", "-2", "3e0" };
+    "sum_zeropoint" real => sum("zeropoint");
 }
 
 #######################################################
-
 bundle agent check
 {
   classes:
-      "ok" and => {
-                    isgreaterthan("$(test.sum_six)", "5.9999999"),
-                    islessthan("$(test.sum_six)", "6.0000001"),
-
-                    islessthan("$(test.sum_minus_six)", "-5.9999999"),
-                    isgreaterthan("$(test.sum_minus_six)", "-6.0000001"),
-
-                    isgreaterthan("$(test.sum_zero)", "-.0000001"),
-                    islessthan("$(test.sum_zero)", ".0000001"),
-
-                    isgreaterthan("$(test.sum_sixpoint)", "5.9999999"),
-                    islessthan("$(test.sum_sixpoint)", "6.0000001"),
-
-                    islessthan("$(test.sum_minus_sixpoint)", "-5.9999999"),
-                    isgreaterthan("$(test.sum_minus_sixpoint)", "-6.0000001"),
-
-                    isgreaterthan("$(test.sum_zeropoint)", "-.0000001"),
-                    islessthan("$(test.sum_zeropoint)", ".0000001"),
+    "ok"
+      and => {
+        isgreaterthan("$(test.sum_six)", "5.9999999"),
+        islessthan("$(test.sum_six)", "6.0000001"),
+        islessthan("$(test.sum_minus_six)", "-5.9999999"),
+        isgreaterthan("$(test.sum_minus_six)", "-6.0000001"),
+        isgreaterthan("$(test.sum_zero)", "-.0000001"),
+        islessthan("$(test.sum_zero)", ".0000001"),
+        isgreaterthan("$(test.sum_sixpoint)", "5.9999999"),
+        islessthan("$(test.sum_sixpoint)", "6.0000001"),
+        islessthan("$(test.sum_minus_sixpoint)", "-5.9999999"),
+        isgreaterthan("$(test.sum_minus_sixpoint)", "-6.0000001"),
+        isgreaterthan("$(test.sum_zeropoint)", "-.0000001"),
+        islessthan("$(test.sum_zeropoint)", ".0000001"),
       };
 
   reports:
@@ -77,8 +63,10 @@ bundle agent check
       "test.sum_sixpoint = $(test.sum_sixpoint)";
       "test.sum_minus_sixpoint = $(test.sum_minus_sixpoint)";
       "test.sum_zeropoint = $(test.sum_zeropoint)";
+
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

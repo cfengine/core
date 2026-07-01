@@ -4,49 +4,45 @@
 # warn. Related to bug #926.
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
 }
 
 #######################################################
-
 bundle agent test
 {
   files:
-      "$(G.testdir)/subdir/mylink"
+    "$(G.testdir)/subdir/mylink"
       link_from => ln_s("$(G.testdir)/sourcefile"),
       action => test_warn_only;
 }
 
 body action test_warn_only
 {
-      action_policy => "warn";
+  action_policy => "warn";
 }
 
 body link_from ln_s(x)
 {
-      link_type => "symlink";
-      source => "$(x)";
-      when_no_source => "force";
+  link_type => "symlink";
+  source => "$(x)";
+  when_no_source => "force";
 }
 
 #######################################################
-
 bundle agent check
 {
   classes:
-      "subdir_created" expression => fileexists("$(G.testdir)/subdir");
+    "subdir_created" expression => fileexists("$(G.testdir)/subdir");
 
   reports:
     !subdir_created::

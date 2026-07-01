@@ -17,10 +17,11 @@ bundle common def
 bundle agent test
 {
   meta:
-    "description" string => "Test that an empty data container does not trigger an undefined bundle error";
+    "description"
+      string => "Test that an empty data container does not trigger an undefined bundle error";
 }
 
-bundle agent check 
+bundle agent check
 {
   reports:
     "$(this.promise_filename) Pass";

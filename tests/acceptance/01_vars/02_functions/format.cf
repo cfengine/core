@@ -3,23 +3,21 @@
 # Test formatint(), formatreal(), and formatstring()
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-      "dummy" string => "dummy";
+    "dummy" string => "dummy";
 
   files:
-      "$(G.testfile).expected"
+    "$(G.testfile).expected"
       create => "true",
       edit_defaults => empty,
       edit_line => init_insert;
@@ -28,68 +26,65 @@ bundle agent init
 bundle edit_line init_insert
 {
   insert_lines:
-      "key='c32' value='(unhandled format)'";
-      "key='c107' value='(unhandled format)'";
-      "key='int100' value='100'";
-      "key='string100' value='100'";
-      "key='int0100' value='0100'";
-      "key='string0100' value='0100'";
-      "key='real200' value='200.0'";
-      "key='string200' value='200.0'";
-      "key='real0200_00' value='0200.00'";
-      "key='string0200_00' value='0200.00'";
-      "key='stringabc' value='abc'";
-      "key='string6abc' value='   abc'";
-      "key='string-6abc' value='abc   '";
-      "key='2strings-6abc-6def' value='abc   def   '";
-      "key='S_empty_list' value='{  }'";
-      "key='badend' value='ends badly '";
-      "key='escape' value='% should be a single percent'";
-      "key='S_123_list' value='{ \"one\", \"two\", \"\\\"three\\\"\" }'";
-      "key='S_container_1' value='[null]'";
-      "key='S_container_2' value='[{\"x\":123},\"yz\"]'";
+    "key='c32' value='(unhandled format)'";
+    "key='c107' value='(unhandled format)'";
+    "key='int100' value='100'";
+    "key='string100' value='100'";
+    "key='int0100' value='0100'";
+    "key='string0100' value='0100'";
+    "key='real200' value='200.0'";
+    "key='string200' value='200.0'";
+    "key='real0200_00' value='0200.00'";
+    "key='string0200_00' value='0200.00'";
+    "key='stringabc' value='abc'";
+    "key='string6abc' value='   abc'";
+    "key='string-6abc' value='abc   '";
+    "key='2strings-6abc-6def' value='abc   def   '";
+    "key='S_empty_list' value='{  }'";
+    "key='badend' value='ends badly '";
+    "key='escape' value='% should be a single percent'";
+    "key='S_123_list' value='{ \"one\", \"two\", \"\\\"three\\\"\" }'";
+    "key='S_container_1' value='[null]'";
+    "key='S_container_2' value='[{\"x\":123},\"yz\"]'";
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-      "array[c32]" string => format("%c", 32);
-      "array[c107]" string => format("%c", 107);
-      "array[int100]" string => format("%d", 100);
-      "array[string100]" string => format("%d", "100");
-      "array[int0100]" string => format("%04d", 100);
-      "array[string0100]" string => format("%04d", "100");
-      "array[real200]" string => format("%.1f", 200);
-      "array[string200]" string => format("%.1f", "200.00");
-      "array[real0200_00]" string => format("%07.2f", 200);
-      "array[string0200_00]" string => format("%07.2f", "200.00");
-      "array[stringabc]" string => format("%s", "abc");
-      "array[string6abc]" string => format("%6s", "abc");
-      "array[string-6abc]" string => format("%-6s", "abc");
-      "array[2strings-6abc-6def]" string => format("%-6s%-6s", "abc", "def");
-      "array[badend]" string => format("ends badly %");
-      "array[escape]" string => format("%% should be a single percent");
+    "array[c32]" string => format("%c", 32);
+    "array[c107]" string => format("%c", 107);
+    "array[int100]" string => format("%d", 100);
+    "array[string100]" string => format("%d", "100");
+    "array[int0100]" string => format("%04d", 100);
+    "array[string0100]" string => format("%04d", "100");
+    "array[real200]" string => format("%.1f", 200);
+    "array[string200]" string => format("%.1f", "200.00");
+    "array[real0200_00]" string => format("%07.2f", 200);
+    "array[string0200_00]" string => format("%07.2f", "200.00");
+    "array[stringabc]" string => format("%s", "abc");
+    "array[string6abc]" string => format("%6s", "abc");
+    "array[string-6abc]" string => format("%-6s", "abc");
+    "array[2strings-6abc-6def]" string => format("%-6s%-6s", "abc", "def");
+    "array[badend]" string => format("ends badly %");
+    "array[escape]" string => format("%% should be a single percent");
 
-      # %S specifier
-      "mydata" string => 'simplest data';
-      "emptylist" slist => {};
-      "list123" slist => { "one", "two", '"three"'};
-      "mycontainer1" data => parsejson("[ null ]");
-      "mycontainer2" data => parsejson('[ { "x": 123 }, "yz" ]');
-
-      "array[S_string]" string => format("prefix %S suffix", "simple data");
-      "array[S_var]" string => format("%S", $(mydata));
-      "array[S_empty_list]" string => format("%S", emptylist);
-      "array[S_123_list]" string => format("%S", list123);
-      "array[S_container_1]" string => format("%S", mycontainer1);
-      "array[S_container_2]" string => format("%S", mycontainer2);
-
-      "formatted" slist => maparray("key='$(this.k)' value='$(this.v)'", "array");
+    # %S specifier
+    "mydata" string => 'simplest data';
+    "emptylist" slist => {};
+    "list123" slist => { "one", "two", '"three"' };
+    "mycontainer1" data => parsejson("[ null ]");
+    "mycontainer2" data => parsejson('[ { "x": 123 }, "yz" ]');
+    "array[S_string]" string => format("prefix %S suffix", "simple data");
+    "array[S_var]" string => format("%S", $(mydata));
+    "array[S_empty_list]" string => format("%S", emptylist);
+    "array[S_123_list]" string => format("%S", list123);
+    "array[S_container_1]" string => format("%S", mycontainer1);
+    "array[S_container_2]" string => format("%S", mycontainer2);
+    "formatted" slist => maparray("key='$(this.k)' value='$(this.v)'", "array");
 
   files:
-      "$(G.testfile).actual"
+    "$(G.testfile).actual"
       create => "true",
       edit_line => test_insert;
 
@@ -101,18 +96,20 @@ bundle agent test
 bundle edit_line test_insert
 {
   vars:
-      "formatted" slist => { @{test.formatted} };
+    "formatted" slist => { @{test.formatted} };
 
   insert_lines:
-      "$(formatted)";
+    "$(formatted)";
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
-      "any" usebundle => sorted_check_diff("$(G.testfile).actual",
-                                           "$(G.testfile).expected",
-                                           "$(this.promise_filename)");
+    "any"
+      usebundle => sorted_check_diff(
+        "$(G.testfile).actual",
+        "$(G.testfile).expected",
+        "$(this.promise_filename)"
+      );
 }

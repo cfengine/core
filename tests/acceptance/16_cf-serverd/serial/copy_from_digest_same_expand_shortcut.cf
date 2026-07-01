@@ -1,26 +1,37 @@
-#
 body common control
 {
-      inputs => { "../../default.sub.cf", "../../run_with_server.cf.sub" };
-      bundlesequence => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf", "../../run_with_server.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent test
 {
   methods:
-      # source file
-      "any" usebundle => file_make("$(G.testdir)/source_file",
-                                   "Source and Destination are identical");
-      # destination files
-      "any" usebundle => file_make("$(G.testdir)/destfile_classic",
-                                   "Source and Destination are identical");
-      "any" usebundle => file_make("$(G.testdir)/destfile_latest",
-                                   "Source and Destination are identical");
+    # source file
+    "any"
+      usebundle => file_make(
+        "$(G.testdir)/source_file", "Source and Destination are identical"
+      );
 
-      "any" usebundle => generate_key;
+    # destination files
+    "any"
+      usebundle => file_make(
+        "$(G.testdir)/destfile_classic", "Source and Destination are identical"
+      );
 
-      "any" usebundle => start_server("$(this.promise_dirname)/localhost_open.srv");
-      "any" usebundle => run_test("$(this.promise_filename).sub");
-      "any" usebundle => stop_server("$(this.promise_dirname)/localhost_open.srv");
+    "any"
+      usebundle => file_make(
+        "$(G.testdir)/destfile_latest", "Source and Destination are identical"
+      );
+
+    "any" usebundle => generate_key;
+
+    "any"
+      usebundle => start_server("$(this.promise_dirname)/localhost_open.srv");
+
+    "any" usebundle => run_test("$(this.promise_filename).sub");
+
+    "any"
+      usebundle => stop_server("$(this.promise_dirname)/localhost_open.srv");
 }

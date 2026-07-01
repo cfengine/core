@@ -3,45 +3,43 @@
 # Test countlinesmatching()
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-      "dummy" string => "dummy";
+    "dummy" string => "dummy";
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-      "zero_regex" string => "impossible line";
-      "one_regex" string => "root:.*";
-      "positive_regex" string => ".*:\d+:.*";
+    "zero_regex" string => "impossible line";
+    "one_regex" string => "root:.*";
+    "positive_regex" string => ".*:\d+:.*";
+    "zero" int => countlinesmatching("$(zero_regex)", "$(G.etc_passwd)");
+    "one" int => countlinesmatching("$(one_regex)", "$(G.etc_passwd)");
 
-      "zero" int => countlinesmatching("$(zero_regex)", "$(G.etc_passwd)");
-      "one" int => countlinesmatching("$(one_regex)", "$(G.etc_passwd)");
-      "positive" int => countlinesmatching("$(positive_regex)", "$(G.etc_passwd)");
+    "positive"
+      int => countlinesmatching("$(positive_regex)", "$(G.etc_passwd)");
 }
 
 #######################################################
-
 bundle agent check
 {
   classes:
-      "ok" and => {
-                    strcmp("$(test.zero)", "0"),
-                    strcmp("$(test.one)", "1"),
-                    isgreaterthan("$(test.positive)", "1"),
+    "ok"
+      and => {
+        strcmp("$(test.zero)", "0"),
+        strcmp("$(test.one)", "1"),
+        isgreaterthan("$(test.positive)", "1"),
       };
 
   reports:
@@ -49,8 +47,10 @@ bundle agent check
       "Expected 0 matches to '$(test.zero_regex)', found $(test.zero)";
       "Expected 1 matches to '$(test.one_regex)', found $(test.one)";
       "Expected >1 matches to '$(test.positive_regex)', found $(test.positive)";
+
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

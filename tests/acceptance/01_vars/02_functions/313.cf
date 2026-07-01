@@ -3,50 +3,45 @@
 # Test escape() - strings that end with \, issue 690
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };   
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle common g
 {
   vars:
-      "dummy" string => "dummy";
+    "dummy" string => "dummy";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-      "dummy" string => "dummy";
+    "dummy" string => "dummy";
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-      "t1" string => escape("\\");
-      "e1" string => "\\";
+    "t1" string => escape("\\");
+    "e1" string => "\\";
 }
 
 #######################################################
-
 bundle agent check
 {
   classes:
-      "ok" and => {
-		    regcmp("$(test.t1)", "$(test.e1)"),
-      };
+    "ok" and => { regcmp("$(test.t1)", "$(test.e1)") };
 
   reports:
     DEBUG::
       "Comparing actual vs. expected:";
       "'$(test.t1)' vs. '$(test.e1)'";
+
     ok::
       "$(this.promise_filename) Pass";
 

@@ -3,99 +3,102 @@
 # Test the ^meta module protocol extension
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf", "../../plucked.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf", "../../plucked.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle common init
 {
   vars:
-      "script_name" string => "$(this.promise_filename).txt";
-
+    "script_name" string => "$(this.promise_filename).txt";
 }
 
 #######################################################
-
 bundle agent test
 {
   meta:
-      "test_flakey_fail" string => "windows",
-        meta => { "ENT-10257" };
+    "test_flakey_fail"
+      string => "windows",
+      meta => { "ENT-10257" };
+
   commands:
-      "$(G.cat) $(init.script_name)"
-        contain => in_shell,
-        module => "true";
+    "$(G.cat) $(init.script_name)"
+      contain => in_shell,
+      module => "true";
 }
 
 #######################################################
-
 bundle agent check
 {
   vars:
-      "xyzvars" slist => variablesmatching("default:xyz.*");
+    "xyzvars" slist => variablesmatching("default:xyz.*");
+    "list0" slist => { "abc", "def", "ghi" };
+    "list1" slist => { "{{abc}}", "  ' def}", "ghi'''" };
+    "list2" slist => { '{{a,bc}}', '  " de,f}', 'gh,,i"""' };
+    "list3" slist => { "{{a'bc',,}}", '  ",, d"ef}', "ghi,},'''" };
+    "actual0" string => join(":", "list0");
+    "actual1" string => join(":", "list1");
+    "actual2" string => join(":", "list2");
+    "actual3" string => join(":", "list3");
+    "joined0" string => join(":", "xyz.mylist");
+    "joined1" string => join(":", "xyz.myalist");
+    "joined2" string => join(":", "xyz.myblist");
+    "joined3" string => join(":", "xyz.myclist");
+    "tags0" slist => getvariablemetatags("xyz.mylist");
+    "tags1" slist => getvariablemetatags("xyz.myalist");
+    "tags2" slist => getvariablemetatags("xyz.myblist");
+    "tags3" slist => getclassmetatags("mycclass");
+    "jtags0" string => join(",", "tags0");
+    "jtags1" string => join(",", "tags1");
+    "jtags2" string => join(",", "tags2");
+    "jtags3" string => join(",", "tags3");
 
-      "list0" slist => {"abc", "def", "ghi"};
-      "list1" slist => {"{{abc}}", "  ' def}", "ghi'''"};
-      "list2" slist => {'{{a,bc}}', '  " de,f}', 'gh,,i"""'};
-      "list3" slist => {"{{a'bc',,}}", '  ",, d"ef}', "ghi,},'''"};
+    "etags0"
+      string => "xyz,abc=def,,\?\?what is this\?\?,source=module,derived_from=.*";
 
-      "actual0" string => join(":", "list0");
-      "actual1" string => join(":", "list1");
-      "actual2" string => join(":", "list2");
-      "actual3" string => join(":", "list3");
+    "etags1"
+      string => "xyz,abc=def,,\?\?what is this\?\?,source=module,derived_from=.*";
 
-      "joined0" string => join(":", "xyz.mylist");
-      "joined1" string => join(":", "xyz.myalist");
-      "joined2" string => join(":", "xyz.myblist");
-      "joined3" string => join(":", "xyz.myclist");
-
-      "tags0" slist => getvariablemetatags("xyz.mylist");
-      "tags1" slist => getvariablemetatags("xyz.myalist");
-      "tags2" slist => getvariablemetatags("xyz.myblist");
-      "tags3" slist => getclassmetatags("mycclass");
-
-      "jtags0" string => join(",", "tags0");
-      "jtags1" string => join(",", "tags1");
-      "jtags2" string => join(",", "tags2");
-      "jtags3" string => join(",", "tags3");
-
-      "etags0" string => "xyz,abc=def,,\?\?what is this\?\?,source=module,derived_from=.*";
-      "etags1" string => "xyz,abc=def,,\?\?what is this\?\?,source=module,derived_from=.*";
-      "etags2" string => "1,2,3,source=module,derived_from=.*";
-      "etags3" string => "a,b,c,source=module,derived_from=.*";
+    "etags2" string => "1,2,3,source=module,derived_from=.*";
+    "etags3" string => "a,b,c,source=module,derived_from=.*";
 
   classes:
-
     any::
-      "var0ok" expression => strcmp("${this.joined0}" , "${this.actual0}");
-      "var1ok" expression => strcmp("${this.joined1}" , "${this.actual1}");
-      "var2ok" expression => strcmp("${this.joined2}" , "${this.actual2}");
-      "var3ok" expression => strcmp("${this.joined3}" , "${this.actual3}");
-      "var4ok" expression => strcmp("hello there" , "${xyz.myvar}");
-
+      "var0ok" expression => strcmp("${this.joined0}", "${this.actual0}");
+      "var1ok" expression => strcmp("${this.joined1}", "${this.actual1}");
+      "var2ok" expression => strcmp("${this.joined2}", "${this.actual2}");
+      "var3ok" expression => strcmp("${this.joined3}", "${this.actual3}");
+      "var4ok" expression => strcmp("hello there", "${xyz.myvar}");
       "tags0ok" expression => regcmp($(etags0), $(jtags0));
       "tags1ok" expression => regcmp($(etags1), $(jtags1));
       "tags2ok" expression => regcmp($(etags2), $(jtags2));
       "tags3ok" expression => regcmp($(etags3), $(jtags3));
 
-      "ok" and => { "myclass", "var0ok", "var1ok", "var2ok", "var3ok", "var4ok",
-                    "tags0ok", "tags1ok", "tags2ok", "tags3ok", };
+      "ok"
+        and => {
+          "myclass",
+          "var0ok",
+          "var1ok",
+          "var2ok",
+          "var3ok",
+          "var4ok",
+          "tags0ok",
+          "tags1ok",
+          "tags2ok",
+          "tags3ok",
+        };
 
   reports:
     DEBUG::
       "xyzvars = $(xyzvars)";
-
       "tags0ok => regcmp('$(etags0)', '$(jtags0)')" if => "tags0ok";
       "tags1ok => regcmp('$(etags1)', '$(jtags1)')" if => "tags1ok";
       "tags2ok => regcmp('$(etags2)', '$(jtags2)')" if => "tags2ok";
       "tags3ok => regcmp('$(etags3)', '$(jtags3)')" if => "tags3ok";
-
       "tags0 NOT ok => regcmp('$(etags0)', '$(jtags0)')" if => "!tags0ok";
       "tags1 NOT ok => regcmp('$(etags1)', '$(jtags1)')" if => "!tags1ok";
       "tags2 NOT ok => regcmp('$(etags2)', '$(jtags2)')" if => "!tags2ok";
@@ -103,6 +106,7 @@ bundle agent check
 
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

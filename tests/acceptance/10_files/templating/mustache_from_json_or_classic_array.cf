@@ -1,21 +1,20 @@
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
-
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
-bundle agent init {
-
+bundle agent init
+{
   methods:
     any::
       "json_data";
       "array_data";
 }
 
-bundle agent json_data {
-
+bundle agent json_data
+{
   vars:
     any::
       "key_values"
@@ -25,51 +24,42 @@ bundle agent json_data {
             "two": "2",
             "three": "3",
           }';
-
 }
 
-bundle agent array_data {
-
+bundle agent array_data
+{
   vars:
     any::
-
-      "key_values[one]"
-        string => "1";
-
-      "key_values[two]"
-        string => "2";
-
-      "key_values[three]"
-        string => "3";
-
+      "key_values[one]" string => "1";
+      "key_values[two]" string => "2";
+      "key_values[three]" string => "3";
 }
 
-bundle agent test {
-
+bundle agent test
+{
   meta:
-      "description" -> { "CFE-3124" }
-        string => "Test that rendering mustache from classic arrays works like rendering from JSON data";
-      "test_soft_fail"
-        string => "any",
-        meta => { "CFE-3124" };
+    "description" -> { "CFE-3124" }
+      string => "Test that rendering mustache from classic arrays works like rendering from JSON data";
+
+    "test_soft_fail"
+      string => "any",
+      meta => { "CFE-3124" };
 
   vars:
-
-      "cases"
-        slist => {
-                   "from_json_with_explicit_data",
-                   "from_array_with_explicit_data",
-                   "from_json_with_implicit_datastate",
-                   "from_array_with_implicit_datastate",
-                   "from_json_with_bundlestate",
-                   "from_array_with_bundlestate",
-                   "from_json_with_explicit_datastate",
-                   "from_array_with_explicit_datastate",
-        };
+    "cases"
+      slist => {
+        "from_json_with_explicit_data",
+        "from_array_with_explicit_data",
+        "from_json_with_implicit_datastate",
+        "from_array_with_implicit_datastate",
+        "from_json_with_bundlestate",
+        "from_array_with_bundlestate",
+        "from_json_with_explicit_datastate",
+        "from_array_with_explicit_datastate",
+      };
 
   files:
     any::
-
       "$(G.testdir)/$(this.handle)"
         create => "true",
         handle => "from_json_with_explicit_data",
@@ -112,7 +102,7 @@ bundle agent test {
         create => "true",
         handle => "from_json_with_bundlestate",
         template_method => "inline_mustache",
-        template_data => bundlestate( "json_data" ),
+        template_data => bundlestate("json_data"),
         edit_template_string => "TEMPLATE=RENDERED
 {{#key_values}}
 {{@}}={{.}}
@@ -122,7 +112,7 @@ bundle agent test {
         create => "true",
         handle => "from_array_with_bundlestate",
         template_method => "inline_mustache",
-        template_data => bundlestate( "array_data" ),
+        template_data => bundlestate("array_data"),
         edit_template_string => "TEMPLATE=RENDERED
 {{#key_values}}
 {{@}}={{.}}
@@ -148,50 +138,46 @@ bundle agent test {
 {{@}}={{.}}
 {{/vars.array_data.key_values}}";
 
-      # "datastate()$(const.n)$(with)"
-      #   with => string_mustache("{{%-top-}}", datastate() );
+        # "datastate()$(const.n)$(with)"
+        #   with => string_mustache("{{%-top-}}", datastate() );
 }
+
 bundle agent check
 {
   vars:
+    # Here we read in the data file create by each test case so that we can
+    # check if it was rendered as expected. Reading in the data as an env file
+    # we can ignore ordering which classic arrays do not promise.
+    "env_$(test.cases)" data => readenvfile("$(G.testdir)/$(test.cases)");
+    "passed_tests" slist => classesmatching(".*", "class_for_passing_case");
 
-      # Here we read in the data file create by each test case so that we can
-      # check if it was rendered as expected. Reading in the data as an env file
-      # we can ignore ordering which classic arrays do not promise.
+    "implicitly_failed_tests"
+      slist => classesmatching(".*", "class_for_failing_case");
 
-      "env_$(test.cases)"
-        data => readenvfile( "$(G.testdir)/$(test.cases)" );
-
-      "passed_tests"
-        slist => classesmatching( ".*", "class_for_passing_case" );
-
-      "implicitly_failed_tests"
-        slist => classesmatching( ".*", "class_for_failing_case" );
-
-      "expected_passing"
-        slist => maplist( "passed_$(this)", @(test.cases) );
+    "expected_passing" slist => maplist("passed_$(this)", @(test.cases));
 
   classes:
-
     "passed_$(test.cases)"
       and => {
-               strcmp( "1", "$(env_$(test.cases)[one])" ),
-               strcmp( "2", "$(env_$(test.cases)[two])" ),
-               strcmp( "3", "$(env_$(test.cases)[three])" ),
-               strcmp( "TEMPLATE", "RENDERED" ),
-               },
+        strcmp("1", "$(env_$(test.cases)[one])"),
+        strcmp("2", "$(env_$(test.cases)[two])"),
+        strcmp("3", "$(env_$(test.cases)[three])"),
+        strcmp("TEMPLATE", "RENDERED"),
+      },
       meta => { "class_for_passing_case" },
       comment => "We pass a test case if each expected key value pair is found in the rendered data";
-
 
     "implicitly_failed_$(test.cases)"
       not => "passed_$(test.cases)",
       meta => { "class_for_failing_case" },
       comment => "With no passing class for the test case, we must have failed";
 
+    "ok" and => { @(expected_passing) };
 
-      "ok" and => { @(expected_passing) };
-      "fail" expression => isgreaterthan( length( "$(this.bundle).implicitly_failed_tests" ), 0 );
+    "fail"
+      expression => isgreaterthan(
+        length("$(this.bundle).implicitly_failed_tests"), 0
+      );
 
   reports:
     ok::
@@ -201,24 +187,25 @@ bundle agent check
       "$(this.promise_filename) FAIL";
 
     DEBUG|EXTRA::
-      "test cases passed: $(with)" with => join(", ", passed_tests );
-      "test cases that failed implicitly: $(with)" with => join(", ", implicitly_failed_tests );
-      "Output from each test case:";
-      "$(G.testdir)/$(test.cases)"
-        printfile => my_cat( $(this.promiser) );
+      "test cases passed: $(with)" with => join(", ", passed_tests);
 
+      "test cases that failed implicitly: $(with)"
+        with => join(", ", implicitly_failed_tests);
+
+      "Output from each test case:";
+      "$(G.testdir)/$(test.cases)" printfile => my_cat($(this.promiser));
 }
 
 body printfile my_cat(file)
 # @brief Report the contents of a file
 # @param file The full path of the file to report
 {
-        file_to_print => "$(file)";
-        number_of_lines => "inf";
+  file_to_print => "$(file)";
+  number_of_lines => "inf";
 }
 
-bundle agent __main__ {
-
+bundle agent __main__
+{
   methods:
     any::
       "init";

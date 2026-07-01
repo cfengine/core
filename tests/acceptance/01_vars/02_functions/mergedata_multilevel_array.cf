@@ -2,34 +2,33 @@
 # Ref: https://dev.cfengine.com/issues/4566
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence => { default("$(this.promise_filename)") };
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
 }
 
 bundle agent check
 {
-   vars:
-      "a[0][class]"   string => "any";
-      "a[0][command]" string => "/bin/true";
-      "a[1][class]"   string => "linux";
-      "a[1][command]" string => "/bin/false";
+  vars:
+    "a[0][class]" string => "any";
+    "a[0][command]" string => "/bin/true";
+    "a[1][class]" string => "linux";
+    "a[1][command]" string => "/bin/false";
+    "m" data => mergedata(a);
+    "i" slist => getindices(m);
 
-      "m" data => mergedata( a );
+  classes:
+    "PASS" expression => strcmp("any", "$(m[0][class])");
 
-      "i" slist => getindices( m );
+  reports:
+    PASS::
+      "$(this.promise_filename) Pass";
 
-   classes:
-      "PASS" expression => strcmp( "any", "$(m[0][class])" );
+    !PASS::
+      "$(this.promise_filename) FAIL";
 
-   reports:
-      PASS::
-         "$(this.promise_filename) Pass";
-      !PASS::
-         "$(this.promise_filename) FAIL";
-
-      DEBUG::
-        "i       => [$(i)]";
-        "class   => $(m[$(i)][class])";
-        "command => $(m[$(i)][command])";
-        "version => $(sys.cf_version)";
+    DEBUG::
+      "i       => [$(i)]";
+      "class   => $(m[$(i)][class])";
+      "command => $(m[$(i)][command])";
+      "version => $(sys.cf_version)";
 }

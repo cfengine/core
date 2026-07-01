@@ -2,10 +2,12 @@
 bundle agent main
 {
   reports:
-      "$(with)"
-        with => string_mustache( "{{%mykey}}",
-                                 '{ "mykey": { "msg": "Hello World" } }' );
+    "$(with)"
+      with => string_mustache(
+        "{{%mykey}}", '{ "mykey": { "msg": "Hello World" } }'
+      );
 }
+
 #+end_src
 ###############################################################################
 #+begin_src example_output

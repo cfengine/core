@@ -1,79 +1,76 @@
 #  Copyright 2021 Northern.tech AS
-
 #  This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
-
 #  This program is free software; you can redistribute it and/or modify it
 #  under the terms of the GNU General Public License as published by the
 #  Free Software Foundation; version 3.
-
 #  This program is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
-
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
-
 # To the extent this program is licensed as part of the Enterprise
 # versions of Cfengine, the applicable Commercial Open Source License
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
-
 # This example shows how to use the missing_ok attribute in copy from bodies. If
 # the source file is missing, the promise will be seen to be a promise kept
 # instead of a failure. The exception is that a remote copy that fails to make a
 # connection to the remote server will still be seen as a promise failure.
-
 #+begin_src cfengine3
 bundle agent main
 {
   files:
     "/tmp/copied_from_missing_ok"
-      copy_from => missing_ok( "/var/cfengine/masterfiles/missing" ),
+      copy_from => missing_ok("/var/cfengine/masterfiles/missing"),
       classes => results("bundle", "copy_from_missing_ok");
 
   reports:
     "$(with)"
-      with => string_mustache( "{{%-top-}}", sort( classesmatching( "copy_from_.*" ), lex));
+      with => string_mustache(
+        "{{%-top-}}", sort(classesmatching("copy_from_.*"), lex)
+      );
 }
-body copy_from missing_ok( file_path )
+
+body copy_from missing_ok(file_path)
 {
   source => "$(file_path)";
   missing_ok => "true";
 
-    # Run with these classes to try remote copies
-    remote_copy_self::
-        servers => { "127.0.0.1" };
+  # Run with these classes to try remote copies
+  remote_copy_self::
+    servers => { "127.0.0.1" };
 
-    remote_copy_policy_hub::
-        servers => { $(sys.policy_hub) };
+  remote_copy_policy_hub::
+    servers => { $(sys.policy_hub) };
 }
+
 body classes results(scope, class_prefix)
 {
   scope => "$(scope)";
-
-  promise_kept => { "$(class_prefix)_reached",
-                    "$(class_prefix)_kept" };
-
-  promise_repaired => { "$(class_prefix)_reached",
-                        "$(class_prefix)_repaired" };
-
-  repair_failed => { "$(class_prefix)_reached",
-                     "$(class_prefix)_error",
-                     "$(class_prefix)_not_kept",
-                     "$(class_prefix)_failed" };
-
-  repair_denied => { "$(class_prefix)_reached",
-                     "$(class_prefix)_error",
-                     "$(class_prefix)_not_kept",
-                     "$(class_prefix)_denied" };
-
-  repair_timeout => { "$(class_prefix)_reached",
-                      "$(class_prefix)_error",
-                      "$(class_prefix)_not_kept",
-                      "$(class_prefix)_timeout" };
+  promise_kept => { "$(class_prefix)_reached", "$(class_prefix)_kept" };
+  promise_repaired => { "$(class_prefix)_reached", "$(class_prefix)_repaired" };
+  repair_failed => {
+    "$(class_prefix)_reached",
+    "$(class_prefix)_error",
+    "$(class_prefix)_not_kept",
+    "$(class_prefix)_failed",
+  };
+  repair_denied => {
+    "$(class_prefix)_reached",
+    "$(class_prefix)_error",
+    "$(class_prefix)_not_kept",
+    "$(class_prefix)_denied",
+  };
+  repair_timeout => {
+    "$(class_prefix)_reached",
+    "$(class_prefix)_error",
+    "$(class_prefix)_not_kept",
+    "$(class_prefix)_timeout",
+  };
 }
+
 #+end_src
 #@ In the above example `/tmp/copied_from_missing_ok` promises to be a copy of the local file
 #@ `/var/cfengine/masterfiles/missing`. In the `missing_ok` `copy_from` body

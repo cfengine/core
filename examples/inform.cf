@@ -4,12 +4,10 @@
 # etc. Since commands promises CAN modify the system, they create INFO
 # messages by default. However, not all commands promises do change the
 # system, so we let the policy writer customize this.
-
 bundle agent main
 {
   commands:
-    "/bin/touch /tmp/module_cache"
-      inform => "true"; # Default
+    "/bin/touch /tmp/module_cache" inform => "true"; # Default
     "/bin/cat /tmp/module_cache"
       inform => "false", # Read-only promise, no INFO logging wanted
       module => "true";

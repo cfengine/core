@@ -15,15 +15,14 @@ bundle agent example
       };
 
   vars:
-    "bundle_tags"
-      slist => getbundlemetatags("default:example");
-    "contact_tag"
-      slist => getbundlemetatags("default:example", "contact");
+    "bundle_tags" slist => getbundlemetatags("default:example");
+    "contact_tag" slist => getbundlemetatags("default:example", "contact");
 
   reports:
     "Found tags: $(bundle_tags)";
     "Contact tag: $(contact_tag)";
 }
+
 #+end_src
 ###############################################################################
 #+begin_src example_output

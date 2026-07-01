@@ -1,51 +1,49 @@
 #  Copyright 2021 Northern.tech AS
-
 #  This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
-
 #  This program is free software; you can redistribute it and/or modify it
 #  under the terms of the GNU General Public License as published by the
 #  Free Software Foundation; version 3.
-
 #  This program is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
-
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
-
 # To the extent this program is licensed as part of the Enterprise
 # versions of Cfengine, the applicable Commercial Open Source License
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
-
 #+begin_src cfengine3
 body common control
 {
-      bundlesequence => { "test" };
+  bundlesequence => { "test" };
 }
 
 bundle agent test
 {
   vars:
+    "mylist" slist => { "one", "two", "three", "four", "five" };
 
-      "mylist" slist => { "one", "two", "three", "four", "five" };
-      "datalist" data => parsejson('[1,2,3,
+    "datalist"
+      data => parsejson(
+        '[1,2,3,
                         "one", "two", "three",
                         "long string",
                         "four", "fix", "six",
-                        "one", "two", "three",]');
+                        "one", "two", "three",]'
+      );
 
-      "mylist_str" string => format("%S", mylist);
-      "datalist_str" string => format("%S", datalist);
-      "myscalar" string => join("->", mylist);
-      "datascalar" string => join("->", datalist);
+    "mylist_str" string => format("%S", mylist);
+    "datalist_str" string => format("%S", datalist);
+    "myscalar" string => join("->", mylist);
+    "datascalar" string => join("->", datalist);
 
   reports:
-      "Concatenated $(mylist_str): $(myscalar)";
-      "Concatenated $(datalist_str): $(datascalar)";
+    "Concatenated $(mylist_str): $(myscalar)";
+    "Concatenated $(datalist_str): $(datascalar)";
 }
+
 #+end_src
 ###############################################################################
 #+begin_src example_output

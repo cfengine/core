@@ -5,6 +5,5 @@ bundle agent main
 
   users:
     linux::
-      "$(users)"
-        policy => "locked";
+      "$(users)" policy => "locked";
 }

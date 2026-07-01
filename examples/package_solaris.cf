@@ -1,60 +1,47 @@
 #  Copyright 2021 Northern.tech AS
-
 #  This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
-
 #  This program is free software; you can redistribute it and/or modify it
 #  under the terms of the GNU General Public License as published by the
 #  Free Software Foundation; version 3.
-
 #  This program is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
-
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
-
 # To the extent this program is licensed as part of the Enterprise
 # versions of Cfengine, the applicable Commercial Open Source License
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
-
-
 #
 # Package management
-#
-
 body common control
 {
-      bundlesequence => { "packages" };
-      inputs => { "$(sys.libdir)/stdlib.cf" };
+  bundlesequence => { "packages" };
+  inputs => { "$(sys.libdir)/stdlib.cf" };
 }
 
 #############################################
-
 bundle agent packages
 {
   vars:
-
-      "solaris_packages[SMCzlib]" string => "zlib-1.2.3-sol10-sparc-local";
-      "admin_file"                string => "cfengine_admin_file";
-
-      "package_names"              slist => getindices("solaris_packages");
+    "solaris_packages[SMCzlib]" string => "zlib-1.2.3-sol10-sparc-local";
+    "admin_file" string => "cfengine_admin_file";
+    "package_names" slist => getindices("solaris_packages");
 
   files:
-
-      "/tmp/$(admin_file)"
+    "/tmp/$(admin_file)"
       create => "true",
       edit_defaults => empty,
       edit_line => create_solaris_admin_file;
 
   packages:
-
-      "$(package_names)"
-
+    "$(package_names)"
       package_policy => "add",
-      package_method => solaris("$(package_names)", "$(solaris_packages[$(package_names)])", "$(admin_file)");
-
+      package_method => solaris(
+        "$(package_names)",
+        "$(solaris_packages[$(package_names)])",
+        "$(admin_file)"
+      );
 }
-

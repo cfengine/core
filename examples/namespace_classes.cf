@@ -1,10 +1,9 @@
 bundle agent __main__
 {
   methods:
-      "mynamespace:my_bundle";
+    "mynamespace:my_bundle";
 
   reports:
-
     a_bundle_scoped_class_in_my_namespaced_bundle::
       "In $(this.namespace):$(this.bundle) I see 'a_bundle_scoped_class_in_my_namespaced_bundle::'";
 
@@ -29,19 +28,16 @@ bundle agent __main__
 
 body file control
 {
-      namespace => "mynamespace";
+  namespace => "mynamespace";
 }
 
 bundle agent my_bundle
 {
   classes:
-      "a_bundle_scoped_class_in_my_namespaced_bundle";
-
-      "a_namespace_scoped_class_in_my_namespaced_bundle"
-        scope => "namespace";
+    "a_bundle_scoped_class_in_my_namespaced_bundle";
+    "a_namespace_scoped_class_in_my_namespaced_bundle" scope => "namespace";
 
   reports:
-
     a_bundle_scoped_class_in_my_namespaced_bundle::
       "In $(this.namespace):$(this.bundle) I see 'a_bundle_scoped_class_in_my_namespaced_bundle::'";
 
@@ -63,6 +59,7 @@ bundle agent my_bundle
     mynamespace:a_namespace_scoped_class_in_my_namespaced_bundle::
       "In $(this.namespace):$(this.bundle) I see 'mynamespace:a_namespace_scoped_class_in_my_namespaced_bundle::'";
 }
+
 ###############################################################################
 #+begin_src example_output
 #@ ```
@@ -76,4 +73,3 @@ bundle agent my_bundle
 #@ R: In default:main I see 'mynamespace:a_namespace_scoped_class_in_my_namespaced_bundle::'
 #@ ```
 #+end_src
-

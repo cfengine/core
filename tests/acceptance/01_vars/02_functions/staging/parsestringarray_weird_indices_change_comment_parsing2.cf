@@ -48,7 +48,7 @@ body delete init_delete
 bundle agent test
 {
   vars:
-    "teststr" string => readfile("$(G.testfile)", "", ":"1000);
+    "teststr" string => readfile("$(G.testfile)");
     "cnt" int => parsestringarrayidx("ary", "$(teststr)", "", ":", 10, 1000);
     "num" int => "9";
 }

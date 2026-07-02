@@ -13,11 +13,9 @@
   (CFE-2986)
 - Added `mpf_masterfiles_stage_build_always` flag file to enable legacy behavior of `masterfiles-stage` to always run `cfbs` build
   (ENT-13756)
-- Made arguments in `getgroups()` optional (ENT-9962)
-- Made arguments in `getusers()` optional (ENT-9962)
+- Added `timer_policy` support for `classes` promises and changed its
+  default to `"reset"` (CFE-4681)
 - Enabled `expandrange` to output a single value
-- Changed default `timer_policy` for `classes:` promises to reset
-  (CFE-4681)
 - Enabled `select_region` to converge across multiple passes (CFE-3866)
 - Expanded syntax-description to include min/max argcount for func
   (ENT-13879)
@@ -35,11 +33,11 @@
   (CFE-664)
 - Fixed wording of premature error when changing into non-existent directory
   (CFE-4007)
-- Improve persistent class logging in `EvalContextHeapPersistentSave`
+- Improved persistent class logging in `EvalContextHeapPersistentSave`
   (ENT-3868)
+- Made arguments in `getgroups()` and `getusers()` optional (ENT-9962)
 - `cf-execd` `systemctl` stop now waits for in-flight `cf-agent` to finish
   (ENT-14108)
-- Added `timer_policy` support for `classes` promises (CFE-4681)
 
 ## 3.27.0
 

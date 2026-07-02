@@ -44,7 +44,7 @@ jobs:
         only_changed: false
 
     - name: Create Pull Request
-      uses: cfengine/create-pull-request@v6
+      uses: cfengine/create-pull-request@v7
       with:
         path: repos/core
         branch: changelog/auto-update-changelog-${{ inputs.branch }}

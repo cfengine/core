@@ -1,6 +1,6 @@
 ## 3.28.0
 
-- Adapt date constraints to allow dates after Y2038 (CFE-4620)
+- Adapted date constraints to allow dates after Y2038 (CFE-4620)
 - Added 2 most recent self upgrade log files to `cf-support` collection
   (ENT-14144)
 - Added `GETPATCH` protocol command for serving leech2 patches
@@ -13,10 +13,9 @@
   (CFE-2986)
 - Added `mpf_masterfiles_stage_build_always` flag file to enable legacy behavior of `masterfiles-stage` to always run `cfbs` build
   (ENT-13756)
-- Adds optionality to arguments in the `getgroups()`-function (ENT-9962)
-- Adds optionality to the arguments in the `getusers()`-function.
-  (ENT-9962)
-- Allow `expandrange` to output a single value
+- Made arguments in `getgroups()` optional (ENT-9962)
+- Made arguments in `getusers()` optional (ENT-9962)
+- Enabled `expandrange` to output a single value
 - Changed default `timer_policy` for `classes:` promises to reset
   (CFE-4681)
 - Enabled `select_region` to converge across multiple passes (CFE-3866)
@@ -40,7 +39,7 @@
   (ENT-3868)
 - `cf-execd` `systemctl` stop now waits for in-flight `cf-agent` to finish
   (ENT-14108)
-- `timer_policy` support for `classes:` promises (CFE-4681)
+- Adde `timer_policy` support for `classes` promises (CFE-4681)
 
 ## 3.27.0
 

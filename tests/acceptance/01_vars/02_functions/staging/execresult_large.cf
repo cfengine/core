@@ -31,7 +31,7 @@ bundle agent check
         "$(G.perl) -e 'my $x = qw/x/ x $(testlengths); print $x;'", "useshell"
       );
 
-    "length_$(testlengths)" int => strlen("$(result_$(testlengths))");
+    "length_$(testlengths)" int => string_length("$(result_$(testlengths))");
 
   classes:
     "ok_$(testlengths)"

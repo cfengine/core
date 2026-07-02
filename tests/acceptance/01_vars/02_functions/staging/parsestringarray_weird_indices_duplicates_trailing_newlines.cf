@@ -68,42 +68,39 @@ bundle agent check
   classes:
     "ok"
       and => {
+        strcmp("$(test.num)", "$(test.cnt)"),
+        strcmp("$(test.ary[0][0])", "0"),
+        strcmp("$(test.ary[0][1])", "1"),
+        strcmp("$(test.ary[0][2])", "2"),
+        strcmp("$(test.ary[1][0])", "1"),
+        strcmp("$(test.ary[1][1])", "2"),
+        strcmp("$(test.ary[1][2])", "3"),
+        strcmp("$(test.ary[here is][0])", "here is"),
+        strcmp("$(test.ary[here is][1])", "a line"),
+        strcmp("$(test.ary[here is][2])", " with spaces "),
+        strcmp("$(test.ary[here is][3])", " in it"),
+        strcmp("$(test.ary[blank][0])", "blank"),
+        strcmp("$(test.ary[blank][1])", "fields"),
+        strcmp("$(test.ary[blank][2])", ""),
+        strcmp("$(test.ary[blank][3])", ""),
+        strcmp("$(test.ary[blank][4])", "in here"),
+        strcmp("$(test.ary[blank][5])", ""),
+        strcmp("$(test.ary[blank][6])", ""),
+        strcmp("$(test.ary[][0])", ""),
+        strcmp("$(test.ary[][1])", "leading blank field"),
         strcmp(
-          "$(test.num)",
-          "$(test.cnt)",
-          strcmp("$(test.ary[0][0])", "0"),
-          strcmp("$(test.ary[0][1])", "1"),
-          strcmp("$(test.ary[0][2])", "2"),
-          strcmp("$(test.ary[1][0])", "1"),
-          strcmp("$(test.ary[1][1])", "2"),
-          strcmp("$(test.ary[1][2])", "3"),
-          strcmp("$(test.ary[here is][0])", "here is"),
-          strcmp("$(test.ary[here is][1])", "a line"),
-          strcmp("$(test.ary[here is][2])", " with spaces "),
-          strcmp("$(test.ary[here is][3])", " in it"),
-          strcmp("$(test.ary[blank][0])", "blank"),
-          strcmp("$(test.ary[blank][1])", "fields"),
-          strcmp("$(test.ary[blank][2])", ""),
-          strcmp("$(test.ary[blank][3])", ""),
-          strcmp("$(test.ary[blank][4])", "in here"),
-          strcmp("$(test.ary[blank][5])", ""),
-          strcmp("$(test.ary[blank][6])", ""),
-          strcmp("$(test.ary[][0])", ""),
-          strcmp("$(test.ary[][1])", "leading blank field"),
-          strcmp(
-            "$(test.ary[# A duplicate follows][0])", "# A duplicate follows"
-          ),
-          strcmp(
-            "$(test.ary[# A duplicate follows][1])",
-            "this line is not always a comment"
-          ),
-          strcmp("$(test.ary[this][0])", "this"),
-          strcmp("$(test.ary[this][1])", "also"),
-          strcmp("$(test.ary[this][2])", "$(const.dollar)test.ary[this][2]"),
-          strcmp("$(test.ary[this][3])", "$(const.dollar)test.ary[this][3]"),
-          strcmp("$(test.ary[last][0])", "last"),
-          strcmp("$(test.ary[last][1])", "one")
-        ,
+          "$(test.ary[# A duplicate follows][0])", "# A duplicate follows"
+        ),
+        strcmp(
+          "$(test.ary[# A duplicate follows][1])",
+          "this line is not always a comment"
+        ),
+        strcmp("$(test.ary[this][0])", "this"),
+        strcmp("$(test.ary[this][1])", "also"),
+        strcmp("$(test.ary[this][2])", "$(const.dollar)test.ary[this][2]"),
+        strcmp("$(test.ary[this][3])", "$(const.dollar)test.ary[this][3]"),
+        strcmp("$(test.ary[last][0])", "last"),
+        strcmp("$(test.ary[last][1])", "one"),
       };
 
   reports:

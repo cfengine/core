@@ -39,7 +39,7 @@
   (ENT-3868)
 - `cf-execd` `systemctl` stop now waits for in-flight `cf-agent` to finish
   (ENT-14108)
-- Adde `timer_policy` support for `classes` promises (CFE-4681)
+- Added `timer_policy` support for `classes` promises (CFE-4681)
 
 ## 3.27.0
 

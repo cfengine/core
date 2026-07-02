@@ -1,3 +1,46 @@
+### 3.28.0
+- Adapt date constraints to allow dates after Y2038 (CFE-4620)
+- Added 2 most recent self upgrade log files to cf-support collection
+  (ENT-14144)
+- Added GETPATCH protocol command for serving leech2 patches
+  (ENT-14104)
+- Added a new smtpport body executor control attribute to specify on which port to send mail
+  (ENT-4648)
+- Added cancel attribute to classes promises to undefine a class
+  (CFE-4686)
+- Added getdir command to cf-net, recursively copies directory
+  (CFE-2986)
+- Added mpf_masterfiles_stage_build_always flag file to enable legacy behavior of masterfiles-stage to always run cfbs build
+  (ENT-13756)
+- Adds optionality to arguments in the getgroups()-function (ENT-9962)
+- Adds optionality to the arguments in the getusers()-function.
+  (ENT-9962)
+- Allow expandrange to output a single value
+- Changed default timer_policy for classes: promises to reset
+  (CFE-4681)
+- Enabled select_region to converge across multiple passes (CFE-3866)
+- Expanded syntax-description to include min/max argcount for func
+  (ENT-13879)
+- Fixed buffer overflow in the files promise
+- Fixed bug where isipinsubnet() fails to validate bogus IPv4 addresses when checking the 0.0.0.0/0 range
+  (CFE-3081)
+- Fixed cf-agent SIGABRT on SIGTERM during early policy validation
+  (ENT-14139)
+- Fixed daemon hang on SIGTERM during child process wait (ENT-13720)
+- Fixed memory leak in isreadable() policy function
+- Fixed out-of-bounds read in module protocol when a '%' line has no '='
+- Fixed segfault when cf-secret print-headers is called without an encrypted file
+  (CFE-4647)
+- Fixed unwanted syntax-error due to trailing commas in function/body calls
+  (CFE-664)
+- Fixed wording of premature error when changing into non-existant directory
+  (CFE-4007)
+- Improve persistent class logging in EvalContextHeapPersistentSave
+  (ENT-3868)
+- cf-execd systemctl stop now waits for in-flight cf-agent to finish
+  (ENT-14108)
+- timer_policy support for classes: promises (CFE-4681)
+
 ## 3.27.0
 - Added evaluation order option in body agent control (ENT-13295)
 - Added findlocalgroups() policy function (CFE-4550)

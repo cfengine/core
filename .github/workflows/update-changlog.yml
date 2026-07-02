@@ -50,6 +50,7 @@ jobs:
         branch: changelog/auto-update-changelog-${{ inputs.branch }}
         base: ${{ inputs.branch }}
         delete-branch: true
+        sign-commits: true
         title: "docs: update changelog for ${{ inputs.branch }}"
         body: |
           Auto-generated changelog update.

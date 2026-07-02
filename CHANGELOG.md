@@ -219,8 +219,8 @@
   `<FILENAME>.cfnew`) before opening it with the `O_EXCL` flag. Previously
   the agent would fail if the destination file already exists.
   Fortunately, the File Stream API unlinks this file afterwards, both on
-  success and error, causing the agent to recover. Both the `cf-net get
-<FILENAME>` command and the `copy_from` attribute were affected.
+  success and error, causing the agent to recover. Both the `cf-net get <FILENAME>`
+  command and the `copy_from` attribute were affected.
 - The file stream API now writes sparse files (ENT-12414)
 - Re-enabled DB migration support for LMDB
   - Now creates backup before LMDB migration

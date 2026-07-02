@@ -7,7 +7,10 @@ on:
     branches: [ master, 3.27.x, 3.24.x ]
 
 jobs:
+  cfengine_cli:
+    uses: ./.github/workflows/cfengine_cli.yml
   unit_tests:
+    needs: cfengine_cli
     uses: ./.github/workflows/unit_tests.yml
   shellcheck_tests:
     uses: ./.github/workflows/shellcheck.yml

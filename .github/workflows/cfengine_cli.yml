@@ -1,0 +1,23 @@
+name: Lint policy and check formatting with CFEngine CLI
+on:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - name: Checkout masterfiles
+        uses: actions/checkout@v7
+      - name: Install CFEngine CLI
+        run: pipx install cfengine
+      - name: Run cfengine lint
+        run: |
+          cfengine lint --strict no ./
+      - name: Run cfengine format --check
+        run: |
+          cfengine format --check

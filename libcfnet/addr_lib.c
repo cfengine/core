@@ -174,12 +174,27 @@ int FuzzySetMatch(const char *s1, const char *s2)
                     break;
                 }
 
-                sp1 += strlen(buffer1) + 1;
+                sp1 += strlen(buffer1);
+                if (*sp1 == '.')
+                {
+                    sp1++;
+                }
 
+                buffer2[0] = '\0';
                 sscanf(sp2, "%63[^.]", buffer2);
                 buffer2[63] = '\0';
 
-                sp2 += strlen(buffer2) + 1;
+                if (strlen(buffer2) == 0)
+                {
+                    /* s2 has fewer octets than the pattern: no match */
+                    return -1;
+                }
+
+                sp2 += strlen(buffer2);
+                if (*sp2 == '.')
+                {
+                    sp2++;
+                }
 
                 if (strstr(buffer1, "-"))
                 {
@@ -268,15 +283,25 @@ int FuzzySetMatch(const char *s1, const char *s2)
 
             for (i = 0; i < 8; i++)
             {
+                buffer1[0] = '\0';
                 sscanf(sp1, "%63[^:]", buffer1);
                 buffer1[63] = '\0';
 
-                sp1 += strlen(buffer1) + 1;
+                sp1 += strlen(buffer1);
+                if (*sp1 == ':')
+                {
+                    sp1++;
+                }
 
+                buffer2[0] = '\0';
                 sscanf(sp2, "%63[^:]", buffer2);
                 buffer2[63] = '\0';
 
-                sp2 += strlen(buffer2) + 1;
+                sp2 += strlen(buffer2);
+                if (*sp2 == ':')
+                {
+                    sp2++;
+                }
 
                 if (strstr(buffer1, "-"))
                 {
@@ -487,7 +512,18 @@ bool FuzzyMatchParse(const char *s)
         {
             buffer1[0] = '\0';
             sscanf(sp1, "%63[^.]", buffer1);
-            sp1 += strlen(buffer1) + 1;
+            buffer1[63] = '\0';
+
+            if (strlen(buffer1) == 0)
+            {
+                break;
+            }
+
+            sp1 += strlen(buffer1);
+            if (*sp1 == '.')
+            {
+                sp1++;
+            }
 
             if (strstr(buffer1, "-"))
             {

@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       branch:
-        description: 'Version to release (3.24.x, 3.27.x, master)'
+        description: 'Branch to release (3.24.x, 3.27.x, master)'
         required: true
         default: 'master'
         type: string

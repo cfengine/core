@@ -62,6 +62,8 @@ leads to Hash Association (lval,rval) => (user,"$(person)")
 
 Rlist *NewExpArgs(EvalContext *ctx, const Policy *policy, const FnCall *fp, const FnCallType *fp_type)
 {
+    assert(fp != NULL);
+
     // Functions with delayed evaluation will call this themselves later
     if (fp_type && fp_type->options & FNCALL_OPTION_DELAYED_EVALUATION)
     {
@@ -101,7 +103,19 @@ Rlist *NewExpArgs(EvalContext *ctx, const Policy *policy, const FnCall *fp, cons
         }
         else
         {
-            rval = ExpandPrivateRval(ctx, NULL, NULL, rp->val.item, rp->val.type);
+            const Bundle *caller_bundle = fp->caller ? PromiseGetBundle(fp->caller) : NULL;
+            const char *caller_ns = caller_bundle ? caller_bundle->ns : NULL;
+            rval = ExpandPrivateRval(ctx, caller_ns, NULL, rp->val.item, rp->val.type);
+            /*
+             * Scope is intentionally left as NULL, since this function is called when expanding vars inside function-calls
+             * E.g. A bundle write, defined in a namespace "ns" with the var "file", then scope is already set (write)
+             * expression => read_module_protocol( "$(write.file)" );
+             * but the namespace needs to be added as it is missing,
+             * otherwise it would interpret it as (default:write.file), even though we are inside a custom namespace
+             *
+             * expression => read_module_protocol( "$($(this.namespace):write.file)" );
+             * would insert ns correctly without this fix since the internal ns would resolve first :ENT-10199
+             */
             assert(rval.item);
         }
 

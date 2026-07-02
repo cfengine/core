@@ -43,6 +43,7 @@ stamp-h1
 /cf-serverd/Makefile
 /cf-testd/Makefile
 /cf-upgrade/Makefile
+/cf-watchd/Makefile
 /contrib/vagrant-ci/centos-9s-x64/Makefile
 /examples/Makefile
 /ext/Makefile
@@ -112,6 +113,8 @@ xml_tmp_suite
 /cf-testd/cf-testd.exe
 /cf-upgrade/cf-upgrade
 /cf-upgrade/cf-upgrade.exe
+/cf-watchd/cf-watchd
+/cf-watchd/cf-watchd.exe
 /ext/rpmvercmp
 /ext/rpmvercmp.exe
 

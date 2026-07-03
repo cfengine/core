@@ -3797,6 +3797,12 @@ static void SysOSNameHuman(EvalContext *ctx)
                                       "Arch", CF_DATA_TYPE_STRING,
                                       "source=agent,derived-from=arch");
     }
+    else if (EvalContextClassGet(ctx, NULL, "archarm") != NULL)
+    {
+        EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, lval,
+                                      "Arch", CF_DATA_TYPE_STRING,
+                                      "source=agent,derived-from=archarm");
+    }
     else if (EvalContextClassGet(ctx, NULL, "postmarketos") != NULL)
     {
         EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, lval,

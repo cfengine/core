@@ -3,16 +3,14 @@
 # Ensure that the transformer does not run when --dry-run is used
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
@@ -20,42 +18,38 @@ bundle agent init
       "files" slist => { "1", "2", "3" };
 
   files:
-      "$(G.testdir)/."
-      create => "true";
-
-      "$(G.testdir)/$(files)"
-      copy_from => init_copy("$(G.etc_group)");
+    "$(G.testdir)/." create => "true";
+    "$(G.testdir)/$(files)" copy_from => init_copy("$(G.etc_group)");
 }
 
 body copy_from init_copy(file)
 {
-      source => "$(file)";
+  source => "$(file)";
 }
 
 body classes init_set_class(class)
 {
-      promise_kept => { "$(class)" };
-      promise_repaired => { "$(class)" };
+  promise_kept => { "$(class)" };
+  promise_repaired => { "$(class)" };
 }
 
 #######################################################
-
 bundle agent test
 {
   commands:
-      "$(sys.cf_agent) -f $(this.promise_filename) -D AUTO -K -b init,test_dry_run --dry-run"
+    "$(sys.cf_agent) -f $(this.promise_filename) -D AUTO -K -b init,test_dry_run --dry-run"
       contain => start_from_cwd;
 }
 
 body contain start_from_cwd
 {
-      chdir => "$(G.cwd)";
+  chdir => "$(G.cwd)";
 }
 
 bundle agent test_dry_run
 {
   files:
-      "$(G.testdir)"
+    "$(G.testdir)"
       transformer => "$(G.gzip) $(this.promiser)",
       file_select => test_plain,
       depth_search => test_recurse;
@@ -67,40 +61,40 @@ bundle agent test_dry_run
 
 body file_select test_plain
 {
-      file_types => { "plain" };
-      file_result => "file_types";
+  file_types => { "plain" };
+  file_result => "file_types";
 }
 
 body depth_search test_recurse
 {
-      depth => "inf";
+  depth => "inf";
 }
 
 #######################################################
-
 bundle agent check
 {
   vars:
-      "files" slist => { @{init.files} };
+    "files" slist => { @{init.files} };
 
   classes:
-      "ok$(files)" expression => fileexists("$(G.testdir)/$(files)");
-      "no$(files)" expression => fileexists("$(G.testdir)/$(files).gz");
-      "ok" and => {
-                    "ok1", "ok2", "ok3",
-                    "!no1", "!no2", "!no3",
-      };
+    "ok$(files)" expression => fileexists("$(G.testdir)/$(files)");
+    "no$(files)" expression => fileexists("$(G.testdir)/$(files).gz");
+    "ok" and => { "ok1", "ok2", "ok3", "!no1", "!no2", "!no3" };
 
   reports:
     DEBUG::
       "$(G.testdir)/$(files) exists with no $(G.testdir)/$(files).gz"
-      if => "ok$(files).!no$(files)";
+        if => "ok$(files).!no$(files)";
+
       "$(G.testdir)/$(files).gz was created during --dry-run!"
-      if => "no$(files)";
+        if => "no$(files)";
+
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }
+
 ### PROJECT_ID: core
 ### CATEGORY_ID: 27

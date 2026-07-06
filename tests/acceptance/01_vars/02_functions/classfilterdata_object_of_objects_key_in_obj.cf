@@ -32,8 +32,7 @@ bundle agent test
         }
       }';
 
-    "actual"
-      data => classfilterdata("@(test)", "object_of_objects", "if");
+    "actual" data => classfilterdata("@(test)", "object_of_objects", "if");
 
   classes:
     "foo";
@@ -43,7 +42,8 @@ bundle agent check
 {
   vars:
     "expected"
-      string => storejson('{
+      string => storejson(
+        '{
         "/etc/chrony.conf": {
           "mode": "0644",
           "owner": "root",
@@ -56,18 +56,20 @@ bundle agent check
           "group": "root",
           "if": "foo|bar"
         }
-      }');
-    "actual"
-      string => storejson("@(test.actual)");
+      }'
+      );
+
+    "actual" string => storejson("@(test.actual)");
 
   classes:
-    "ok"
-      expression => strcmp("$(expected)", "$(actual)");
+    "ok" expression => strcmp("$(expected)", "$(actual)");
 
   reports:
-      "Expected: '$(expected)', actual: '$(actual)'";
+    "Expected: '$(expected)', actual: '$(actual)'";
+
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

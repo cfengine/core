@@ -3,20 +3,20 @@
 # Call an edit_line bundle from another namespace
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf", "edit_line_bundle_called_from_namespace.cf.sub" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => {
+    "../../default.sub.cf", "edit_line_bundle_called_from_namespace.cf.sub"
+  };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   files:
-      "$(G.testfile).expected"
+    "$(G.testfile).expected"
       create => "true",
       edit_line => init_insert,
       edit_defaults => init_empty;
@@ -25,36 +25,38 @@ bundle agent init
 bundle edit_line init_insert
 {
   insert_lines:
-      "Hello";
+    "Hello";
 }
 
 bundle edit_line simple_insert(line)
 {
   insert_lines:
-      "$(line)";
+    "$(line)";
 }
 
 body edit_defaults init_empty
 {
-      empty_file_before_editing => "true";
+  empty_file_before_editing => "true";
 }
 
 #######################################################
-
 bundle agent test
 {
   methods:
-      "jump" usebundle => testing_namespace:namespaced_test("$(G.testfile).actual");
+    "jump"
+      usebundle => testing_namespace:namespaced_test("$(G.testfile).actual");
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
-      "any" usebundle => dcs_check_diff("$(G.testfile).actual",
-                                        "$(G.testfile).expected",
-                                        "$(this.promise_filename)");
+    "any"
+      usebundle => dcs_check_diff(
+        "$(G.testfile).actual",
+        "$(G.testfile).expected",
+        "$(this.promise_filename)"
+      );
 }
 
 ### PROJECT_ID: core

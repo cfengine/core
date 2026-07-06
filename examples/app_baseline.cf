@@ -1,23 +1,18 @@
 #  This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
-
 #  This program is free software; you can redistribute it and/or modify it
 #  under the terms of the GNU General Public License as published by the
 #  Free Software Foundation; version 3.
-
 #  This program is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
-
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
-
 # To the extent this program is licensed as part of the Enterprise
 # versions of Cfengine, the applicable Commercial Open Source License
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
-
 #########################################################################
 #
 #   app_baseline.cf - Verify Existence of Applications
@@ -28,39 +23,46 @@
 #         and act upon or report any anomalies.
 #
 #########################################################################
-
-
 bundle agent app_baseline
 {
-
   methods:
     windows::
       "any" usebundle => detect_adobereader;
-
 }
 
 ###
-
 bundle agent detect_adobereader
 {
   vars:
-
     windows::
-      "value1" string => registryvalue("HKEY_LOCAL_MACHINE\SOFTWARE\Adobe\Acrobat Reader\9.0\Installer", "ENU_GUID");
-      "value2" string => registryvalue("HKEY_LOCAL_MACHINE\SOFTWARE\Adobe\Acrobat Reader\9.0\Installer", "VersionMax");
-      "value3" string => registryvalue("HKEY_LOCAL_MACHINE\SOFTWARE\Adobe\Acrobat Reader\9.0\Installer", "VersionMin");
-      
+      "value1"
+        string => registryvalue(
+          "HKEY_LOCAL_MACHINE\SOFTWARE\Adobe\Acrobat Reader\9.0\Installer",
+          "ENU_GUID"
+        );
+
+      "value2"
+        string => registryvalue(
+          "HKEY_LOCAL_MACHINE\SOFTWARE\Adobe\Acrobat Reader\9.0\Installer",
+          "VersionMax"
+        );
+
+      "value3"
+        string => registryvalue(
+          "HKEY_LOCAL_MACHINE\SOFTWARE\Adobe\Acrobat Reader\9.0\Installer",
+          "VersionMin"
+        );
+
   classes:
-
     windows::
-      "is_correct" and => { 
-			    strcmp("$(value1)", "{AC76BA86-7AD7-1033-7B44-A93000000001}"),
-			    strcmp("$(value2)", "90003"),
-			    islessthan("$(value3)", "10001" )
-      };
-      
-  reports:
+      "is_correct"
+        and => {
+          strcmp("$(value1)", "{AC76BA86-7AD7-1033-7B44-A93000000001}"),
+          strcmp("$(value2)", "90003"),
+          islessthan("$(value3)", "10001"),
+        };
 
+  reports:
     windows.!is_correct::
       "Adobe Reader is not correctly deployed - got \"$(value1)\", \"$(value2)\", \"$(value3)\"";
 }

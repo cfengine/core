@@ -15,7 +15,7 @@ bundle agent main
       "$(users)"
         home_dir => "/home/$(users)",
         policy => "present",
-        home_bundle => home_skel( $(users), $(skel) );
+        home_bundle => home_skel($(users), $(skel));
 }
 
 bundle agent home_skel(user, skel)
@@ -26,6 +26,6 @@ bundle agent home_skel(user, skel)
   files:
     "/home/$(user)/."
       create => "true",
-      copy_from => seed_cp( $(skel) ),
-      depth_search => recurse( "inf" );
+      copy_from => seed_cp($(skel)),
+      depth_search => recurse("inf");
 }

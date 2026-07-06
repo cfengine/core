@@ -7,18 +7,22 @@ body common control
 bundle agent init
 {
   vars:
-    "usemodule_unsafe_module_path" string => "$(sys.workdir)$(const.dirsep)modules$(const.dirsep)usemodule_unsafe.sh";
-    "usemodule_safe_module_path" string => "$(sys.workdir)$(const.dirsep)modules$(const.dirsep)usemodule_safe.sh";
+    "usemodule_unsafe_module_path"
+      string => "$(sys.workdir)$(const.dirsep)modules$(const.dirsep)usemodule_unsafe.sh";
+
+    "usemodule_safe_module_path"
+      string => "$(sys.workdir)$(const.dirsep)modules$(const.dirsep)usemodule_safe.sh";
 
   files:
-    "$(sys.statedir)/*safe"
-      delete => tidy;
+    "$(sys.statedir)/*safe" delete => tidy;
+
     "$(usemodule_unsafe_module_path)"
       create => "true",
       perms => m(700),
       content => "#!/bin/bash
 touch $(sys.statedir)/usemodule_unsafe
 ";
+
     "$(usemodule_safe_module_path)"
       create => "true",
       perms => m(700),
@@ -34,7 +38,12 @@ bundle agent test
       string => "Test that unsafe functions are only evaluated in --simulate mode when tagged as simulate_safe";
 
   vars:
-    "cf_agent" string => ifelse(isvariable("sys.cf_agent"), "$(sys.cf_agent)", "/var/cfengine/bin/cf-agent");
+    "cf_agent"
+      string => ifelse(
+        isvariable("sys.cf_agent"),
+        "$(sys.cf_agent)",
+        "/var/cfengine/bin/cf-agent"
+      );
 
   commands:
     "$(cf_agent) --timestamp --debug --simulate=manifest -Kf $(this.promise_filename).sub >$(sys.workdir)$(const.dirsep)state$(const.dirsep)agent.log"
@@ -44,8 +53,14 @@ bundle agent test
 bundle agent check
 {
   vars:
-    "result" string => readfile("$(sys.workdir)$(const.dirsep)state$(const.dirsep)agent.log");
+    "result"
+      string => readfile(
+        "$(sys.workdir)$(const.dirsep)state$(const.dirsep)agent.log"
+      );
 
   methods:
-    "Pass/FAIL" usebundle => dcs_check_strcmp( "$(result)", "FAIL", $(this.promise_filename), "yes");
+    "Pass/FAIL"
+      usebundle => dcs_check_strcmp(
+        "$(result)", "FAIL", $(this.promise_filename), "yes"
+      );
 }

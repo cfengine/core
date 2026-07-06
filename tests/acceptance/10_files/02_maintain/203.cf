@@ -4,27 +4,28 @@
 # overwrite mode, size, owner, group (different ordering of groups)
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
     any::
       "mode" int => "01751";
+
     linux::
       "owner" string => "sys";
       "group" string => "sys";
+
     freebsd::
       "owner" string => "bin";
       "group" string => "sys";
+
     !(linux|freebsd)::
       "owner" string => "undefined-please-fix";
       "group" string => "undefined-please-fix";
@@ -41,7 +42,7 @@ bundle agent init
       "result[$(fields)]" string => filestat("$(G.testfile)", "$(fields)");
 
   files:
-      "$(G.testfile)"
+    "$(G.testfile)"
       copy_from => init_copy("$(G.etc_group)"),
       perms => init_perms("$(mode)", "$(owner)", "$(group)"),
       classes => init_set_class("pass2");
@@ -49,45 +50,44 @@ bundle agent init
 
 body copy_from init_copy(file)
 {
-      source => "$(file)";
+  source => "$(file)";
 }
 
 body perms init_perms(m, o, g)
 {
-      mode => "$(m)";
-      owners => { "$(o)" };
-      groups => { "$(g)" };
+  mode => "$(m)";
+  owners => { "$(o)" };
+  groups => { "$(g)" };
 }
 
 body classes init_set_class(class)
 {
-      promise_kept => { "$(class)" };
-      promise_repaired => { "$(class)" };
+  promise_kept => { "$(class)" };
+  promise_repaired => { "$(class)" };
 }
 
 #######################################################
-
 bundle agent test
 {
-
   files:
-      "$(G.testfile)"
+    "$(G.testfile)"
       create => "true",
       perms => test_perms("$(init.mode)", "$(init.owner)", "$(init.group)");
 }
 
 body perms test_perms(m, o, g)
 {
-      mode => "$(m)";
-      owners => { "root", "$(o)" };
-    linux::
-      groups => { "root", "$(g)" };
-    freebsd::
-      groups => { "wheel", "$(g)" };
+  mode => "$(m)";
+  owners => { "root", "$(o)" };
+
+  linux::
+    groups => { "root", "$(g)" };
+
+  freebsd::
+    groups => { "wheel", "$(g)" };
 }
 
 #######################################################
-
 bundle agent check
 {
   vars:
@@ -95,23 +95,25 @@ bundle agent check
       "expect[permoct]" string => "$(test.mode)";
       "expect[uid]" string => "0";
       "expect[gid]" string => "0";
+
     any::
       "expect[nlink]" string => "1";
       "expect[size]" string => "0";
-
       "fields" slist => getindices("expect");
       "result[$(fields)]" string => filestat("$(G.testfile)", "$(fields)");
 
   classes:
-      "ok" expression => strcmp("$(init.result)", "$(result)");
-      "not_ok" not => regcmp("$(init.result[$(fields)])", "$(result[$(fields)])");
+    "ok" expression => strcmp("$(init.result)", "$(result)");
+    "not_ok" not => regcmp("$(init.result[$(fields)])", "$(result[$(fields)])");
 
   reports:
     DEBUG::
       "expected: $(fields) = '$(init.result[$(fields)])'";
       "got:      $(fields) = '$(check.result[$(fields)])'";
+
     !not_ok::
       "$(this.promise_filename) Pass";
+
     not_ok::
       "$(this.promise_filename) FAIL";
 }

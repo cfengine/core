@@ -3,56 +3,53 @@
 # Test escape() - basic tests
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };   
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle common g
 {
   vars:
-      "dummy" string => "dummy";
+    "dummy" string => "dummy";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-      "dummy" string => "dummy";
+    "dummy" string => "dummy";
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-      "t1" string => escape("foo");
-      "e1" string => "foo";
-      "t2" string => escape("foo.baz");
-      "e2" string => "foo.baz";
-      "t3" string => escape("foo[baz]");
-      "e3" string => "foo[baz]";
-      "t4" string => escape("(fo?o|baz)+x{3}y*");
-      "e4" string => "(fo?o|baz)+x{3}y*";
-      "t5" string => escape("~`!@#%&_=\"';:,/<>");
-      "e5" string => "~`!@#%&_=\"';:,/<>";
+    "t1" string => escape("foo");
+    "e1" string => "foo";
+    "t2" string => escape("foo.baz");
+    "e2" string => "foo.baz";
+    "t3" string => escape("foo[baz]");
+    "e3" string => "foo[baz]";
+    "t4" string => escape("(fo?o|baz)+x{3}y*");
+    "e4" string => "(fo?o|baz)+x{3}y*";
+    "t5" string => escape("~`!@#%&_=\"';:,/<>");
+    "e5" string => "~`!@#%&_=\"';:,/<>";
 }
 
 #######################################################
-
 bundle agent check
 {
   classes:
-      "ok" and => {
-		    regcmp("$(test.t1)", "$(test.e1)"),
-		    regcmp("$(test.t2)", "$(test.e2)"),
-		    regcmp("$(test.t3)", "$(test.e3)"),
-		    regcmp("$(test.t4)", "$(test.e4)"),
-		    regcmp("$(test.t5)", "$(test.e5)"),
+    "ok"
+      and => {
+        regcmp("$(test.t1)", "$(test.e1)"),
+        regcmp("$(test.t2)", "$(test.e2)"),
+        regcmp("$(test.t3)", "$(test.e3)"),
+        regcmp("$(test.t4)", "$(test.e4)"),
+        regcmp("$(test.t5)", "$(test.e5)"),
       };
 
   reports:
@@ -63,6 +60,7 @@ bundle agent check
       "'$(test.t3)' vs. '$(test.e3)'";
       "'$(test.t4)' vs. '$(test.e4)'";
       "'$(test.t5)' vs. '$(test.e5)'";
+
     ok::
       "$(this.promise_filename) Pass";
 

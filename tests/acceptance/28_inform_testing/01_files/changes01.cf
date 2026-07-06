@@ -12,15 +12,13 @@ bundle common testcase
 bundle agent setup
 {
   files:
-    "$(G.testfile)"
-      create => "true";
+    "$(G.testfile)" create => "true";
 }
 
 bundle agent main
 {
   files:
-    "$(G.testfile)"
-      changes => example;
+    "$(G.testfile)" changes => example;
 }
 
 body changes example

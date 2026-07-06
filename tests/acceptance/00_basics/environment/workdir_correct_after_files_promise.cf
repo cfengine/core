@@ -1,31 +1,32 @@
 ##############################################################################
 #
-#
 ##############################################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent check
 {
   meta:
-
     # This test should be skipped on non linux hosts when its fixed (or
     # improved to do something similar on platforms that don't have /bin/pwd
     "test_soft_fail"
       string => "any",
-      meta =>  { "redmine7569" };
+      meta => { "redmine7569" };
 
   vars:
     # When the agent runs the test, pwd should not return /tmp
     "fail_string" string => 'Q: ".*/bin/pwd": /tmp';
-    "command" string => "$(sys.cf-agent) -KIf $(this.promise_filename).sub -DAUTO";
+
+    "command"
+      string => "$(sys.cf-agent) -KIf $(this.promise_filename).sub -DAUTO";
 
   methods:
     "check"
-      usebundle => dcs_passif_output(".*", escape($(fail_string)), $(command), $(this.promise_filename));
+      usebundle => dcs_passif_output(
+        ".*", escape($(fail_string)), $(command), $(this.promise_filename)
+      );
 }

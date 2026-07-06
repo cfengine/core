@@ -4,20 +4,18 @@
 # to change it to an relative link (but fail to)
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   files:
-      "$(G.testfile)"
+    "$(G.testfile)"
       create => "true",
       move_obstructions => "true",
       link_from => init_link;
@@ -25,54 +23,56 @@ bundle agent init
 
 body link_from init_link
 {
-      source => "$(G.etc_group)";
-      link_type => "absolute";
+  source => "$(G.etc_group)";
+  link_type => "absolute";
 }
 
 #######################################################
-
 bundle agent test
 {
   meta:
-      "test_skip_unsupported" string => "windows";
+    "test_skip_unsupported" string => "windows";
 
   vars:
-      "inode" string => filestat("$(G.etc_group)", "ino");
+    "inode" string => filestat("$(G.etc_group)", "ino");
 
   files:
-      "$(G.testfile)"
+    "$(G.testfile)"
       classes => init_if_failed("test_ok"),
       link_from => test_link;
 }
 
 body link_from test_link
 {
-      source => "$(G.etc_group)";
-      link_type => "relative";
+  source => "$(G.etc_group)";
+  link_type => "relative";
 }
 
 body classes init_if_failed(c)
 {
-      repair_failed => { "$(c)" };
+  repair_failed => { "$(c)" };
 }
 
 #######################################################
-
 bundle agent check
 {
   vars:
-      "result" string => filestat(filestat("$(G.testfile)", "linktarget"), "ino");
-      "Lresult" string => filestat("$(G.testfile)", "ino");
+    "result" string => filestat(filestat("$(G.testfile)", "linktarget"), "ino");
+    "Lresult" string => filestat("$(G.testfile)", "ino");
 
-      # This tells us where the link points
-      "link_target" string => filestat("$(G.testfile)", "linktarget");
+    # This tells us where the link points
+    "link_target" string => filestat("$(G.testfile)", "linktarget");
 
   classes:
-      "okL" not => strcmp("$(test.inode)", "$(Lresult)");
-      "ok" and => { "test_ok", "okL",
-                    strcmp("$(test.inode)", "$(result)"),
-                    # Might be slightly different from link_target because of redundant '../../'.
-                    regcmp("/.*/group", "$(link_target)")
+    "okL" not => strcmp("$(test.inode)", "$(Lresult)");
+
+    "ok"
+      and => {
+        "test_ok",
+        "okL",
+        strcmp("$(test.inode)", "$(result)"),
+        # Might be slightly different from link_target because of redundant '../../'.
+        regcmp("/.*/group", "$(link_target)"),
       };
 
   reports:
@@ -80,8 +80,10 @@ bundle agent check
       "expected:     '$(test.inode)'";
       "got:          '$(Lresult)' => '$(result)'";
       "got this too: '$(G.etc_group)' => '$(link_target)'";
+
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

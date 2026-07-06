@@ -3,43 +3,49 @@
 # Test that we do not complain about license.
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-      "dummy" string => "dummy";
+    "dummy" string => "dummy";
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-      "agent" string => execresult("$(sys.cf_agent) -Kf $(this.promise_filename).sub -D AUTO 2>&1", "useshell");
+    "agent"
+      string => execresult(
+        "$(sys.cf_agent) -Kf $(this.promise_filename).sub -D AUTO 2>&1",
+        "useshell"
+      );
 }
 
 #######################################################
-
 bundle agent check
 {
   classes:
-      "fail" expression => regcmp(".*Your configuration promises no host_licenses_paid in common control.*", $(test.agent));
+    "fail"
+      expression => regcmp(
+        ".*Your configuration promises no host_licenses_paid in common control.*",
+        $(test.agent)
+      );
 
   reports:
     DEBUG::
       "This should only pass if $(this.promise_filename).sub does not output anything about license";
       "Output from $(this.promise_filename).sub: $(test.agent)";
+
     !fail::
       "$(this.promise_filename) Pass";
+
     fail::
       "$(this.promise_filename) FAIL";
 }

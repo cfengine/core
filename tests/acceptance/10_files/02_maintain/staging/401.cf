@@ -1,84 +1,77 @@
 #######################################################
 #
-# 
-#
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };   
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
-
 
 bundle common g
 {
   vars:
-      "testfile" string => "/tmp/TEST.cfengine";
+    "testfile" string => "/tmp/TEST.cfengine";
 }
 
 #######################################################
-
 bundle agent init
 {
   files:
-      "$(G.testfile).*"
-      delete => init_delete;
+    "$(G.testfile).*" delete => init_delete;
 
-      "$(G.testfile)"
+    "$(G.testfile)"
       move_obstructions => "true",
       copy_from => init_copy;
 }
 
 body copy_from init_copy
 {
-      source => "$(G.etc_group)";
-      compare => "digest";
+  source => "$(G.etc_group)";
+  compare => "digest";
 }
 
 body delete init_delete
 {
-      dirlinks => "delete";
-      rmdirs   => "true";
+  dirlinks => "delete";
+  rmdirs => "true";
 }
 
 #######################################################
-
 bundle agent test
 {
   files:
-      "$(G.testfile)"
+    "$(G.testfile)"
       move_obstructions => "true",
       copy_from => test_copy;
 }
 
 body copy_from test_copy
 {
-      source => "$(G.etc_motd)";
-      compare => "digest";
+  source => "$(G.etc_motd)";
+  compare => "digest";
 }
 
 #######################################################
-
 bundle agent check
 {
   classes:
-      "ok" expression => fileexists("$(G.testfile).cfsaved");
+    "ok" expression => fileexists("$(G.testfile).cfsaved");
 
   reports:
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }
 
 #######################################################
-
 bundle agent fini
 {
   methods:
-      "any" usebundle => dcs_fini("$(G.testfile)");
+    "any" usebundle => dcs_fini("$(G.testfile)");
 }
+
 ### PROJECT_ID: core
 ### CATEGORY_ID: 27

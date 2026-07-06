@@ -4,16 +4,14 @@
 #
 # Ref: https://dev.cfengine.com/issues/6878
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
@@ -21,11 +19,8 @@ bundle agent init
     "target" string => "$(G.testdir)/target";
 
   files:
-    "$(target)/."
-      create => "true";
-
-    "$(symlink)"
-      delete => tidy;
+    "$(target)/." create => "true";
+    "$(symlink)" delete => tidy;
 
     "$(symlink)"
       link_from => linkfrom("$(target)", "symlink"),
@@ -35,19 +30,19 @@ bundle agent init
 #######################################################
 bundle agent test
 {
-    files:
-        "$(init.symlink)"
-            file_select  => select_type("symlink"),
-            delete       => nodir,
-            pathtype     => "literal",
-            classes => scoped_classes_generic("namespace", "test_symlink");
+  files:
+    "$(init.symlink)"
+      file_select => select_type("symlink"),
+      delete => nodir,
+      pathtype => "literal",
+      classes => scoped_classes_generic("namespace", "test_symlink");
 }
-#######################################################
 
+#######################################################
 bundle agent check
 {
   classes:
-      "OK" not => fileexists("$(init.symlink)");
+    "OK" not => fileexists("$(init.symlink)");
 
   reports:
     OK::
@@ -61,11 +56,11 @@ bundle agent check
 ### CATEGORY_ID: 27
 body delete nodir
 {
-    rmdirs => "false";
+  rmdirs => "false";
 }
 
 body file_select select_type(type)
 {
-    file_types  => { "$(type)" };
-    file_result => "file_types";
+  file_types => { "$(type)" };
+  file_result => "file_types";
 }

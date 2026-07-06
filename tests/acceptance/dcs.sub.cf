@@ -3,128 +3,170 @@
 #
 # See README for details about writing test cases.
 ########################################################################
-
 bundle common G
 {
   vars:
     windows::
-      "cwd" string => execresult("C:\windows\system32\cmd.exe /C cd", "noshell"),
+      "cwd"
+        string => execresult("C:\windows\system32\cmd.exe /C cd", "noshell"),
         meta => { "simulate_safe" };
+
       # Use for redirection, not as a real file.
       "dev_null" string => "nul";
       "exeext" slist => { ".exe", ".bat" };
+
     !windows::
-      "cwd" string => execresult("/bin/pwd 2>/dev/null || /usr/bin/pwd", "useshell"),
+      "cwd"
+        string => execresult(
+          "/bin/pwd 2>/dev/null || /usr/bin/pwd", "useshell"
+        ),
         meta => { "simulate_safe" };
+
       # Use for redirection, not as a real file.
       "dev_null" string => "/dev/null";
       "exeext" string => "";
 
     any::
       # General commands.
-      "cmds" slist => { "date",
-                        "dd",
-                        "dos2unix",
-                        "diff",
-                        "cat",
-                        "colordiff",
-                        "cp",
-                        "echo",
-                        "egrep",
-                        "env",
-                        "false",
-                        "grep",
-                        "gsed",  # will override sed on solaris hosts
-                        "gzip",
-                        "hexdump",
-                        "ln",
-                        "ls",
-                        "mkdir",
-                        "mkfifo",
-                        "mkgroup",  # AIX equivalent of groupadd
-                        "mock_package_manager",
-                        "mv",
-                        "no_fds",
-                        "od",
-                        "perl",
-                        "printf",
-                        "ps",
-                        "psexec",
-                        "pwd",
-                        "rm",
-                        "sed",
-                        "seq",
-                        "sh",
-                        "sleep",
-                        "sort",
-                        "stat",
-                        "sudo",
-                        "tee",
-                        "touch",
-                        "true",
-                        "yes",
-                        "wc",
-                      };
+      "cmds"
+        slist => {
+          "date",
+          "dd",
+          "dos2unix",
+          "diff",
+          "cat",
+          "colordiff",
+          "cp",
+          "echo",
+          "egrep",
+          "env",
+          "false",
+          "grep",
+          # will override sed on solaris hosts:
+          "gsed",
+          "gzip",
+          "hexdump",
+          "ln",
+          "ls",
+          "mkdir",
+          "mkfifo",
+          # AIX equivalent of groupadd:
+          "mkgroup",
+          "mock_package_manager",
+          "mv",
+          "no_fds",
+          "od",
+          "perl",
+          "printf",
+          "ps",
+          "psexec",
+          "pwd",
+          "rm",
+          "sed",
+          "seq",
+          "sh",
+          "sleep",
+          "sort",
+          "stat",
+          "sudo",
+          "tee",
+          "touch",
+          "true",
+          "yes",
+          "wc",
+        };
+
       # Special cases.
       "make_cmds" slist => { "gmake", "make" };
+
       # rmgroup is AIX equivalent of groupdel
-      "sbin_cmds" slist => { "rmgroup", "groupadd", "groupdel", "useradd", "userdel", "usermod" };
+      "sbin_cmds"
+        slist => {
+          "rmgroup", "groupadd", "groupdel", "useradd", "userdel", "usermod"
+        };
 
     any::
-      "paths[tests]" string                  => "$(this.promise_dirname)";
+      "paths[tests]" string => "$(this.promise_dirname)";
+
     solaris::
-      "paths[usr_xpg4_bin]" string           => "/usr/xpg4/bin";
-      "paths[usr_ucb_sparcv7]" string        => "/usr/ucb/sparcv7";
-      "paths[opt_csw_bin]" string            => "/opt/csw/bin";
-      "paths[usr_sfw_bin]" string            => "/usr/sfw/bin";
+      "paths[usr_xpg4_bin]" string => "/usr/xpg4/bin";
+      "paths[usr_ucb_sparcv7]" string => "/usr/ucb/sparcv7";
+      "paths[opt_csw_bin]" string => "/opt/csw/bin";
+      "paths[usr_sfw_bin]" string => "/usr/sfw/bin";
+
     !windows::
-      "paths[bin]" string                    => "/bin";
-      "paths[usr_bin]" string                => "/usr/bin";
-      "paths[usr_sbin]" string               => "/usr/sbin";
-      "paths[usr_local_bin]" string          => "/usr/local/bin";
-      "paths[usr_contrib_bin]" string        => "/usr/contrib/bin";
+      "paths[bin]" string => "/bin";
+      "paths[usr_bin]" string => "/usr/bin";
+      "paths[usr_sbin]" string => "/usr/sbin";
+      "paths[usr_local_bin]" string => "/usr/local/bin";
+      "paths[usr_contrib_bin]" string => "/usr/contrib/bin";
+
     windows::
-      "paths[msys64_usr_bin]" string         => "c:\\msys64\\usr\\bin";
-      "paths[temp_msys64_usr_bin]" string    => "d:\\a\\_temp\\msys64\\usr\\bin";
-      "paths[tool_wrappers]" string          => "$(this.promise_dirname)\\tool_wrappers";
+      "paths[msys64_usr_bin]" string => "c:\\msys64\\usr\\bin";
+      "paths[temp_msys64_usr_bin]" string => "d:\\a\\_temp\\msys64\\usr\\bin";
+      "paths[tool_wrappers]" string => "$(this.promise_dirname)\\tool_wrappers";
 
     any::
       "paths_indices" slist => getindices("paths");
 
       # dereferenced path of the executable
-      "deref_paths[$(paths[$(paths_indices)])][$(cmds)$(exeext)]" string =>
-          filestat("$(paths[$(paths_indices)])$(const.dirsep)$(cmds)$(exeext)",
-                   "linktarget");
+      "deref_paths[$(paths[$(paths_indices)])][$(cmds)$(exeext)]"
+        string => filestat(
+          "$(paths[$(paths_indices)])$(const.dirsep)$(cmds)$(exeext)",
+          "linktarget"
+        );
 
   classes:
-      # General commands.
-      "$(paths_indices)_$(cmds)$(exeext)" expression =>
-          fileexists("$(deref_paths[$(paths[$(paths_indices)])][$(cmds)$(exeext)])");
-      "has_$(cmds)"                       expression =>
-          fileexists("$(deref_paths[$(paths[$(paths_indices)])][$(cmds)$(exeext)])"),
-          scope => "namespace";
+    # General commands.
+    "$(paths_indices)_$(cmds)$(exeext)"
+      expression => fileexists(
+        "$(deref_paths[$(paths[$(paths_indices)])][$(cmds)$(exeext)])"
+      );
 
-      # Special cases.
-      "$(paths_indices)_$(sbin_cmds)$(exeext)" expression => fileexists("$(paths[$(paths_indices)])$(const.dirsep)$(sbin_cmds)$(exeext)");
-      "$(paths_indices)_$(make_cmds)$(exeext)" expression => fileexists("$(paths[$(paths_indices)])$(const.dirsep)$(make_cmds)$(exeext)");
-      "has_make"                          expression => fileexists("$(paths[$(paths_indices)])$(const.dirsep)$(make_cmds)$(exeext)"),
+    "has_$(cmds)"
+      expression => fileexists(
+        "$(deref_paths[$(paths[$(paths_indices)])][$(cmds)$(exeext)])"
+      ),
       scope => "namespace";
 
-      "want_color" expression => strcmp(getenv("CFENGINE_COLOR", 4k), "1");
-      "have_colordiff" expression => fileexists($(colordiff));
+    # Special cases.
+    "$(paths_indices)_$(sbin_cmds)$(exeext)"
+      expression => fileexists(
+        "$(paths[$(paths_indices)])$(const.dirsep)$(sbin_cmds)$(exeext)"
+      );
+
+    "$(paths_indices)_$(make_cmds)$(exeext)"
+      expression => fileexists(
+        "$(paths[$(paths_indices)])$(const.dirsep)$(make_cmds)$(exeext)"
+      );
+
+    "has_make"
+      expression => fileexists(
+        "$(paths[$(paths_indices)])$(const.dirsep)$(make_cmds)$(exeext)"
+      ),
+      scope => "namespace";
+
+    "want_color" expression => strcmp(getenv("CFENGINE_COLOR", 4k), "1");
+    "have_colordiff" expression => fileexists($(colordiff));
 
   vars:
-      # General commands.
-      "$(cmds)" string => "$(paths[$(paths_indices)])$(const.dirsep)$(cmds)$(exeext)",
+    # General commands.
+    "$(cmds)"
+      string => "$(paths[$(paths_indices)])$(const.dirsep)$(cmds)$(exeext)",
       if => canonify("$(paths_indices)_$(cmds)$(exeext)");
 
-      # Special cases.
-      "$(sbin_cmds)" string => "$(paths[$(paths_indices)])$(const.dirsep)$(sbin_cmds)$(exeext)",
+    # Special cases.
+    "$(sbin_cmds)"
+      string => "$(paths[$(paths_indices)])$(const.dirsep)$(sbin_cmds)$(exeext)",
       if => canonify("$(paths_indices)_$(sbin_cmds)$(exeext)");
-      # gmake has higher priority, so should come last.
-      "make" string => "$(paths[$(paths_indices)])$(const.dirsep)make$(exeext)",
+
+    # gmake has higher priority, so should come last.
+    "make"
+      string => "$(paths[$(paths_indices)])$(const.dirsep)make$(exeext)",
       if => canonify("$(paths_indices)_make$(exeext)");
-      "make" string => "$(paths[$(paths_indices)])$(const.dirsep)gmake$(exeext)",
+
+    "make"
+      string => "$(paths[$(paths_indices)])$(const.dirsep)gmake$(exeext)",
       if => canonify("$(paths_indices)_gmake$(exeext)");
 
     # on solaris, gsed works more like GNU sed, such as having `-i` option
@@ -138,26 +180,46 @@ bundle common G
 
     want_color.have_colordiff::
       "diff_maybecolor" string => $(colordiff);
+
     !want_color|!have_colordiff::
       "diff_maybecolor" string => $(diff);
 
   classes:
-      "temp_declared" not => strcmp(getenv("TEMP", "65536"), "");
+    "temp_declared" not => strcmp(getenv("TEMP", "65536"), "");
 
   vars:
-      "etc"           string => "$(this.promise_dirname)$(const.dirsep)dummy_etc";
-      "etc_motd"      string => "$(this.promise_dirname)$(const.dirsep)dummy_etc$(const.dirsep)motd";
-      "etc_passwd"    string => "$(this.promise_dirname)$(const.dirsep)dummy_etc$(const.dirsep)passwd";
-      "etc_shadow"    string => "$(this.promise_dirname)$(const.dirsep)dummy_etc$(const.dirsep)shadow";
-      "etc_group"     string => "$(this.promise_dirname)$(const.dirsep)dummy_etc$(const.dirsep)group";
-      # Use instead of /dev/null when you need a real empty file to open.
-      "etc_null"      string => "$(this.promise_dirname)$(const.dirsep)dummy_etc$(const.dirsep)null";
-      "write_args_sh" string => "$(this.promise_dirname)/write_args.sh";
+    "etc" string => "$(this.promise_dirname)$(const.dirsep)dummy_etc";
+
+    "etc_motd"
+      string => "$(this.promise_dirname)$(const.dirsep)dummy_etc$(const.dirsep)motd";
+
+    "etc_passwd"
+      string => "$(this.promise_dirname)$(const.dirsep)dummy_etc$(const.dirsep)passwd";
+
+    "etc_shadow"
+      string => "$(this.promise_dirname)$(const.dirsep)dummy_etc$(const.dirsep)shadow";
+
+    "etc_group"
+      string => "$(this.promise_dirname)$(const.dirsep)dummy_etc$(const.dirsep)group";
+
+    # Use instead of /dev/null when you need a real empty file to open.
+    "etc_null"
+      string => "$(this.promise_dirname)$(const.dirsep)dummy_etc$(const.dirsep)null";
+
+    "write_args_sh" string => "$(this.promise_dirname)/write_args.sh";
 
     temp_declared::
       "testroot" string => getenv("TEMP", "65535");
-      "testdir" string => concat(getenv("TEMP", "65535"), "$(const.dirsep)TESTDIR.cfengine");
-      "testfile" string => concat(getenv("TEMP", "65535"), "$(const.dirsep)TEST.cfengine");
+
+      "testdir"
+        string => concat(
+          getenv("TEMP", "65535"), "$(const.dirsep)TESTDIR.cfengine"
+        );
+
+      "testfile"
+        string => concat(
+          getenv("TEMP", "65535"), "$(const.dirsep)TEST.cfengine"
+        );
 
     !temp_declared::
       "testroot" string => "$(const.dirsep)tmp";
@@ -165,23 +227,22 @@ bundle common G
       "testfile" string => "$(const.dirsep)tmp$(const.dirsep)TEST.cfengine";
 
   classes:
-      "using_fakeroot"
-        expression => regcmp(".+", getenv("FAKEROOTKEY", "10"));
+    "using_fakeroot" expression => regcmp(".+", getenv("FAKEROOTKEY", "10"));
 }
 
 bundle common dcs_strings
 {
   vars:
-      "multiline_potatoes" string =>
-      "BEGIN
+    "multiline_potatoes"
+      string => "BEGIN
     One potato
     Two potato
     Three potatoes
     Four
 END";
 
-      "multiline_potatoes_lesser" string =>
-      "BEGIN
+    "multiline_potatoes_lesser"
+      string => "BEGIN
     One potato
     Three potatoes
     Four
@@ -191,44 +252,43 @@ END";
 bundle agent paths_init(filename)
 {
   classes:
-      "filename_absolute" expression => regcmp("/.*", "$(filename)");
+    "filename_absolute" expression => regcmp("/.*", "$(filename)");
 }
 
 bundle agent paths_absolute(filename)
 {
   vars:
     filename_absolute::
-      "input_file"
-      string => "$(filename)";
+      "input_file" string => "$(filename)";
+
     !filename_absolute::
-      "input_file"
-      string => "$(G.cwd)/$(filename)";
+      "input_file" string => "$(G.cwd)/$(filename)";
 }
 
 bundle agent default(filename)
 {
   classes:
-      "have_test_run_$(bundles)" expression => "any";
+    "have_test_run_$(bundles)" expression => "any";
 
   vars:
-
-      "tests" slist => { "default:init",
-                         "default:test",
-                         "default:check",
-                         "default:destroy"
+    "tests"
+      slist => {
+        "default:init", "default:test", "default:check", "default:destroy"
       };
 
-      "bundles" slist => bundlesmatching("default:(init|test|check|destroy)");
+    "bundles" slist => bundlesmatching("default:(init|test|check|destroy)");
 
   files:
-      "$(G.testdir)/."    create => "true";
+    "$(G.testdir)/." create => "true";
 
   methods:
-      "any" usebundle => collect_stories_metadata;
-      "any" usebundle => test_precheck;
+    "any" usebundle => collect_stories_metadata;
+    "any" usebundle => test_precheck;
 
     proceed_with_test::
-      "any" usebundle => test_run("$(filename)"), inherit => "true";
+      "any"
+        usebundle => test_run("$(filename)"),
+        inherit => "true";
 
   reports:
     EXTRA.verbose_mode::
@@ -240,14 +300,13 @@ bundle agent test_run(filename)
   vars:
 
   methods:
-      "any"
-      usebundle => paths_init("$(filename)");
-      "any"
-      usebundle => paths_absolute("$(filename)");
+    "any" usebundle => paths_init("$(filename)");
+    "any" usebundle => paths_absolute("$(filename)");
 
     AUTO::
-      "any" usebundle => "$(default.tests)",
-      if => canonify("have_test_run_$(default.tests)");
+      "any"
+        usebundle => "$(default.tests)",
+        if => canonify("have_test_run_$(default.tests)");
 
   reports:
     !AUTO::
@@ -259,14 +318,18 @@ bundle agent collect_stories_metadata
 {
   vars:
     "test_meta_vars" slist => { "description", "story_id", "covers" };
+
   classes:
-    "have_$(test_meta_vars)" expression => isvariable("test_meta.$(test_meta_vars)");
+    "have_$(test_meta_vars)"
+      expression => isvariable("test_meta.$(test_meta_vars)");
 
   reports:
     have_description::
       "test description: $(test_meta.description)";
+
     have_story_id::
       "test story_id: $(test_meta.story_id)";
+
     have_covers::
       "test covers: $(test_meta.covers)";
 }
@@ -274,76 +337,108 @@ bundle agent collect_stories_metadata
 bundle agent test_precheck
 {
   vars:
-      "fail_types" slist => { "suppress", "soft", "flakey" };
+    "fail_types" slist => { "suppress", "soft", "flakey" };
 
-      "test_skip_unsupported" slist => variablesmatching(".*_meta\.test_skip_unsupported");
-      "test_skip_needs_work" slist => variablesmatching(".*_meta\.test_skip_needs_work");
-      "test_$(fail_types)_fail" slist => variablesmatching(".*_meta\.test_$(fail_types)_fail");
-      "test_$(fail_types)_fail_metatags" slist => getvariablemetatags("$(test_$(fail_types)_fail)");
-      "test_$(fail_types)_fail_ticket" slist => filter("(redmine|CFE-|ENT-|ARCHIVE-|QA-).*", "test_$(fail_types)_fail_metatags", "true", "false", 1);
+    "test_skip_unsupported"
+      slist => variablesmatching(".*_meta\.test_skip_unsupported");
+
+    "test_skip_needs_work"
+      slist => variablesmatching(".*_meta\.test_skip_needs_work");
+
+    "test_$(fail_types)_fail"
+      slist => variablesmatching(".*_meta\.test_$(fail_types)_fail");
+
+    "test_$(fail_types)_fail_metatags"
+      slist => getvariablemetatags("$(test_$(fail_types)_fail)");
+
+    "test_$(fail_types)_fail_ticket"
+      slist => filter(
+        "(redmine|CFE-|ENT-|ARCHIVE-|QA-).*",
+        "test_$(fail_types)_fail_metatags",
+        "true",
+        "false",
+        1
+      );
 
   classes:
-      "test_skip_unsupported_set" expression => some(".*", "test_skip_unsupported");
-      "test_skip_needs_work_set" expression => some(".*", "test_skip_needs_work");
-      "test_$(fail_types)_fail_set" expression => some(".*", "test_$(fail_types)_fail");
-      "test_$(fail_types)_fail_ticket_set" expression => some(".*", "test_$(fail_types)_fail_ticket");
+    "test_skip_unsupported_set"
+      expression => some(".*", "test_skip_unsupported");
 
-      "test_skip_unsupported_match" and => { "test_skip_unsupported_set", "$($(test_skip_unsupported))" };
-      "test_skip_needs_work_match" and => { "test_skip_needs_work_set", "$($(test_skip_needs_work))" };
-      "test_$(fail_types)_fail_match" and => { "test_$(fail_types)_fail_set", "$($(test_$(fail_types)_fail))" };
+    "test_skip_needs_work_set" expression => some(".*", "test_skip_needs_work");
 
-      "proceed_with_test"
+    "test_$(fail_types)_fail_set"
+      expression => some(".*", "test_$(fail_types)_fail");
+
+    "test_$(fail_types)_fail_ticket_set"
+      expression => some(".*", "test_$(fail_types)_fail_ticket");
+
+    "test_skip_unsupported_match"
+      and => { "test_skip_unsupported_set", "$($(test_skip_unsupported))" };
+
+    "test_skip_needs_work_match"
+      and => { "test_skip_needs_work_set", "$($(test_skip_needs_work))" };
+
+    "test_$(fail_types)_fail_match"
+      and => { "test_$(fail_types)_fail_set", "$($(test_$(fail_types)_fail))" };
+
+    "proceed_with_test"
       and => { "!test_skip_unsupported_match", "!test_skip_needs_work_match" },
       scope => "namespace";
 
   reports:
     test_skip_unsupported_match::
       "$(this.promise_filename) Skip/unsupported";
+
     test_skip_needs_work_match::
       "$(this.promise_filename) Skip/needs_work";
+
     test_suppress_fail_match.test_suppress_fail_ticket_set::
       "$(this.promise_filename) XFAIL/$(test_suppress_fail_ticket)";
+
     test_suppress_fail_match.!test_suppress_fail_ticket_set::
       "$(this.promise_filename) FAIL/no_ticket_number";
+
     test_soft_fail_match.test_soft_fail_ticket_set::
       "$(this.promise_filename) SFAIL/$(test_soft_fail_ticket)";
+
     test_soft_fail_match.!test_soft_fail_ticket_set::
       "$(this.promise_filename) FAIL/no_ticket_number";
+
     test_flakey_fail_match.test_flakey_fail_ticket_set::
       "$(this.promise_filename) FLAKEY/$(test_flakey_fail_ticket)";
+
     test_flakey_fail_match.!test_flakey_fail_ticket_set::
       "$(this.promise_filename) FAIL/no_ticket_number";
 }
 
 #######################################################
-
 bundle agent dcs_sort(infile, outfile)
 {
   commands:
-      # Enforce byte sort order with LC_ALL.
-      "$(G.env) LC_ALL=C $(G.sort) $(infile) > $(outfile)"
-      contain => in_shell;
+    # Enforce byte sort order with LC_ALL.
+    "$(G.env) LC_ALL=C $(G.sort) $(infile) > $(outfile)" contain => in_shell;
 }
 
 bundle agent dcs_check_state(bundlename, expected_file, test)
 {
   vars:
-      "state" data => bundlestate($(bundlename));
+    "state" data => bundlestate($(bundlename));
 
   methods:
-      "" usebundle => file_make("$(G.testdir)/template", "{{%state}}");
-      "" usebundle => file_make("$(G.testdir)/actual", "");
-      "any" usebundle => dcs_check_state_prep(@(state));
-      "any" usebundle => dcs_check_diff_expected("$(G.testdir)/actual",
-                                                $(expected_file),
-                                                $(test),
-                                                "no");
+    "" usebundle => file_make("$(G.testdir)/template", "{{%state}}");
+    "" usebundle => file_make("$(G.testdir)/actual", "");
+    "any" usebundle => dcs_check_state_prep(@(state));
+
+    "any"
+      usebundle => dcs_check_diff_expected(
+        "$(G.testdir)/actual", $(expected_file), $(test), "no"
+      );
 }
 
 bundle agent dcs_check_state_prep(state_container)
 {
   files:
-      "$(G.testdir)/actual"
+    "$(G.testdir)/actual"
       create => "true",
       edit_template => "$(G.testdir)/template",
       template_data => mergedata('{ "state": state_container }'),
@@ -354,89 +449,116 @@ bundle agent dcs_check_diff(file1, file2, test)
 # @brief Pass if two files do not differ.
 {
   methods:
-      "any" usebundle => dcs_check_diff_expected($(file1),
-                                                 $(file2),
-                                                 $(test),
-                                                 "no");
+    "any"
+      usebundle => dcs_check_diff_expected($(file1), $(file2), $(test), "no");
 }
 
 bundle agent dcs_if_diff(file1, file2, pass_class, fail_class)
 {
   methods:
-      "any" usebundle => dcs_if_diff_expected($(file1),
-                                              $(file2),
-                                              "no",
-                                              $(pass_class),
-                                              $(fail_class));
+    "any"
+      usebundle => dcs_if_diff_expected(
+        $(file1), $(file2), "no", $(pass_class), $(fail_class)
+      );
 }
 
 bundle agent sorted_check_diff(file1, file2, test)
 {
   methods:
-      "any" usebundle => dcs_sort("$(file1)", "$(file1).sort");
-      "any" usebundle => dcs_sort("$(file2)", "$(file2).sort");
-      "any" usebundle => dcs_check_diff_expected("$(file1).sort",
-                                                 "$(file2).sort",
-                                                 $(test),
-                                                 "no");
+    "any" usebundle => dcs_sort("$(file1)", "$(file1).sort");
+    "any" usebundle => dcs_sort("$(file2)", "$(file2).sort");
+
+    "any"
+      usebundle => dcs_check_diff_expected(
+        "$(file1).sort", "$(file2).sort", $(test), "no"
+      );
 }
 
 bundle agent xml_check_diff(file1, file2, test, expected_difference)
 {
   vars:
     DEBUG.check_ready.!no_difference::
-      "file1r" string => execresult("$(G.cwd)/xml-c14nize $(file1)", "noshell"),
+      "file1r"
+        string => execresult("$(G.cwd)/xml-c14nize $(file1)", "noshell"),
         meta => { "simulate_safe" };
-      "file2r" string => execresult("$(G.cwd)/xml-c14nize $(file2)", "noshell"),
+
+      "file2r"
+        string => execresult("$(G.cwd)/xml-c14nize $(file2)", "noshell"),
         meta => { "simulate_safe" };
 
     DEBUG.check_ready.!no_difference.has_hexdump::
-      "file1h" string => execresult("$(G.hexdump) -C $(file1)", "useshell"),
+      "file1h"
+        string => execresult("$(G.hexdump) -C $(file1)", "useshell"),
         meta => { "simulate_safe" };
-      "file2h" string => execresult("$(G.hexdump) -C $(file2)", "useshell"),
+
+      "file2h"
+        string => execresult("$(G.hexdump) -C $(file2)", "useshell"),
         meta => { "simulate_safe" };
 
     DEBUG.check_ready.!no_difference.!has_hexdump::
-      "file1h" string => execresult("$(G.od) -c $(file1)", "useshell"),
+      "file1h"
+        string => execresult("$(G.od) -c $(file1)", "useshell"),
         meta => { "simulate_safe" };
-      "file2h" string => execresult("$(G.od) -c $(file2)", "useshell"),
+
+      "file2h"
+        string => execresult("$(G.od) -c $(file2)", "useshell"),
         meta => { "simulate_safe" };
 
     DEBUG.check_ready.!no_difference.has_unified_diff::
-      "diffu" string => execresult("$(G.diff_maybecolor) -u $(file2) $(file1) 2>$(G.dev_null)", "useshell"),
+      "diffu"
+        string => execresult(
+          "$(G.diff_maybecolor) -u $(file2) $(file1) 2>$(G.dev_null)",
+          "useshell"
+        ),
         meta => { "simulate_safe" };
+
     DEBUG.check_ready.!no_difference.!has_unified_diff::
-      "diffu" string => execresult("$(G.diff_maybecolor) -c $(file2) $(file1) 2>$(G.dev_null)", "useshell"),
+      "diffu"
+        string => execresult(
+          "$(G.diff_maybecolor) -c $(file2) $(file1) 2>$(G.dev_null)",
+          "useshell"
+        ),
         meta => { "simulate_safe" };
 
   classes:
-      "has_unified_diff" expression => returnszero(
-                                                    "$(G.diff_maybecolor) -u $(G.etc_null) $(G.etc_null) >$(G.dev_null) 2>&1", "useshell"),
-        meta => { "simulate_safe" };
+    "has_unified_diff"
+      expression => returnszero(
+        "$(G.diff_maybecolor) -u $(G.etc_null) $(G.etc_null) >$(G.dev_null) 2>&1",
+        "useshell"
+      ),
+      meta => { "simulate_safe" };
 
     c14n_files_created::
-      "no_difference" expression => returnszero(
-                                                 "$(G.diff_maybecolor) $(G.testfile).default-xml-check-diff-1 $(G.testfile).default-xml-check-diff-2 >$(G.dev_null) 2>&1",
-                                                 "useshell"),
+      "no_difference"
+        expression => returnszero(
+          "$(G.diff_maybecolor) $(G.testfile).default-xml-check-diff-1 $(G.testfile).default-xml-check-diff-2 >$(G.dev_null) 2>&1",
+          "useshell"
+        ),
         meta => { "simulate_safe" };
 
-      "expected_difference" expression => strcmp("$(expected_difference)", "yes");
+      "expected_difference"
+        expression => strcmp("$(expected_difference)", "yes");
+
       "check_ready" expression => "any";
 
   commands:
-      "$(G.cwd)/xml-c14nize $(file1) > $(G.testfile).default-xml-check-diff-1"
+    "$(G.cwd)/xml-c14nize $(file1) > $(G.testfile).default-xml-check-diff-1"
       contain => in_shell;
-      "$(G.cwd)/xml-c14nize $(file2) > $(G.testfile).default-xml-check-diff-2"
+
+    "$(G.cwd)/xml-c14nize $(file2) > $(G.testfile).default-xml-check-diff-2"
       contain => in_shell,
       classes => if_ok("c14n_files_created");
 
   reports:
     check_ready.no_difference.!expected_difference::
       "$(test) Pass";
+
     check_ready.!no_difference.expected_difference::
       "$(test) Pass";
+
     check_ready.!no_difference.!expected_difference::
       "$(test) FAIL";
+
     check_ready.no_difference.expected_difference::
       "$(test) FAIL";
 
@@ -449,6 +571,7 @@ $(file1h)";
       "dump $(file2):
 $(file2h)";
       "$(diffu)";
+
     DEBUG.check_ready.no_difference.expected_difference::
       "Contents of $(file1) and $(file) is the same.";
 }
@@ -456,7 +579,7 @@ $(file2h)";
 bundle agent dcs_report_generic_classes(x)
 {
   vars:
-      "choices" slist => { "repaired", "failed", "denied", "timeout", "kept" };
+    "choices" slist => { "repaired", "failed", "denied", "timeout", "kept" };
 
   reports:
     DEBUG::
@@ -467,60 +590,82 @@ bundle agent dcs_report_generic_classes(x)
 bundle agent dcs_generic_classes_to_string(x)
 {
   vars:
-      "choices" slist => { "repaired", "failed", "denied", "timeout", "kept" };
-      "s[$(choices)]" string => "$(x)_$(choices)", if => '$(x)_$(choices)';
-      "found_unsorted" slist => getvalues(s);
-      "found" slist => sort(found_unsorted, "lex");
-      "found_str" string => format("%S", found);
+    "choices" slist => { "repaired", "failed", "denied", "timeout", "kept" };
+
+    "s[$(choices)]"
+      string => "$(x)_$(choices)",
+      if => '$(x)_$(choices)';
+
+    "found_unsorted" slist => getvalues(s);
+    "found" slist => sort(found_unsorted, "lex");
+    "found_str" string => format("%S", found);
 
   reports:
-      "$(found_str)" bundle_return_value_index => "str";
+    "$(found_str)" bundle_return_value_index => "str";
 }
 
 # These set/clear global classes, so they can be tested in another bundle
 body classes dcs_all_classes(prefix)
 {
-      promise_kept => { "$(prefix)_promise_kept" };
-      promise_repaired => { "$(prefix)_promise_repaired" };
-      repair_failed => { "$(prefix)_repair_failed" };
-      repair_denied => { "$(prefix)_repair_denied" };
-      repair_timeout => { "$(prefix)_repair_timeout" };
-      cancel_kept => { "$(prefix)_cancel_kept" };
-      cancel_repaired => { "$(prefix)_cancel_repaired" };
-      cancel_notkept => { "$(prefix)_cancel_notkept" };
+  promise_kept => { "$(prefix)_promise_kept" };
+  promise_repaired => { "$(prefix)_promise_repaired" };
+  repair_failed => { "$(prefix)_repair_failed" };
+  repair_denied => { "$(prefix)_repair_denied" };
+  repair_timeout => { "$(prefix)_repair_timeout" };
+  cancel_kept => { "$(prefix)_cancel_kept" };
+  cancel_repaired => { "$(prefix)_cancel_repaired" };
+  cancel_notkept => { "$(prefix)_cancel_notkept" };
 }
 
 bundle agent dcs_all_negative_classes(prefix)
 {
-      # These must be global classes so they can be tested in another bundle
-      # We set them here, so they can be (possibly) cleared later
+  # These must be global classes so they can be tested in another bundle
+  # We set them here, so they can be (possibly) cleared later
   classes:
-      "$(prefix)_cancel_kept"     expression => "any", scope => "namespace";
-      "$(prefix)_cancel_repaired" expression => "any", scope => "namespace";
-      "$(prefix)_cancel_notkept"  expression => "any", scope => "namespace";
+    "$(prefix)_cancel_kept"
+      expression => "any",
+      scope => "namespace";
+
+    "$(prefix)_cancel_repaired"
+      expression => "any",
+      scope => "namespace";
+
+    "$(prefix)_cancel_notkept"
+      expression => "any",
+      scope => "namespace";
 }
 
 bundle agent dcs_all_classes_to_string(prefix)
 {
   vars:
-      "classes_all" slist => classesmatching("$(prefix)_.*(kept|notkept|failed|denied|repaired|timeout)");
-      "classes" slist => sort(classes_all, "lex");
-      "found_str" string => format("%S", classes);
+    "classes_all"
+      slist => classesmatching(
+        "$(prefix)_.*(kept|notkept|failed|denied|repaired|timeout)"
+      );
+
+    "classes" slist => sort(classes_all, "lex");
+    "found_str" string => format("%S", classes);
 
   reports:
-      "$(found_str)" bundle_return_value_index => "str";
+    "$(found_str)" bundle_return_value_index => "str";
 }
 
 bundle agent dcs_check_diff_expected(file1, file2, test, expected_difference)
 {
   methods:
-      "any" usebundle => dcs_if_diff_expected($(file1), $(file2), $(expected_difference),
-                                              "dcs_check_diff_expected_pass_class",
-                                              "dcs_check_diff_expected_fail_class");
+    "any"
+      usebundle => dcs_if_diff_expected(
+        $(file1),
+        $(file2),
+        $(expected_difference),
+        "dcs_check_diff_expected_pass_class",
+        "dcs_check_diff_expected_fail_class"
+      );
 
   reports:
     dcs_check_diff_expected_pass_class::
       "$(test) Pass";
+
     dcs_check_diff_expected_fail_class::
       "$(test) FAIL";
 }
@@ -533,48 +678,75 @@ bundle agent dcs_if_diff_expected(file1, file2, expected_difference, pass_class,
       "file2r" string => readfile("$(file2)", "4096");
 
     (EXTRA|DEBUG_HEXDUMP).check_ready.!no_difference.has_hexdump::
-      "file1h" string => execresult("$(G.hexdump) -C $(file1)", "useshell"),
+      "file1h"
+        string => execresult("$(G.hexdump) -C $(file1)", "useshell"),
         meta => { "simulate_safe" };
-      "file2h" string => execresult("$(G.hexdump) -C $(file2)", "useshell"),
+
+      "file2h"
+        string => execresult("$(G.hexdump) -C $(file2)", "useshell"),
         meta => { "simulate_safe" };
 
     (EXTRA|DEBUG_HEXDUMP).check_ready.!no_difference.!has_hexdump::
-      "file1h" string => execresult("$(G.od) -c $(file1)", "useshell"),
+      "file1h"
+        string => execresult("$(G.od) -c $(file1)", "useshell"),
         meta => { "simulate_safe" };
-      "file2h" string => execresult("$(G.od) -c $(file2)", "useshell"),
+
+      "file2h"
+        string => execresult("$(G.od) -c $(file2)", "useshell"),
         meta => { "simulate_safe" };
 
     DEBUG.check_ready.!no_difference.has_unified_diff::
-      "diffu" string => execresult("$(G.diff_maybecolor) -u $(file2) $(file1) 2>$(G.dev_null)", "useshell"),
+      "diffu"
+        string => execresult(
+          "$(G.diff_maybecolor) -u $(file2) $(file1) 2>$(G.dev_null)",
+          "useshell"
+        ),
         meta => { "simulate_safe" };
+
     DEBUG.check_ready.!no_difference.!has_unified_diff::
-      "diffu" string => execresult("$(G.diff_maybecolor) -c $(file2) $(file1) 2>$(G.dev_null)", "useshell"),
+      "diffu"
+        string => execresult(
+          "$(G.diff_maybecolor) -c $(file2) $(file1) 2>$(G.dev_null)",
+          "useshell"
+        ),
         meta => { "simulate_safe" };
 
   classes:
-      "has_unified_diff" expression => returnszero(
-                                                    "$(G.diff_maybecolor) -u $(G.etc_null) $(G.etc_null) >$(G.dev_null) 2>&1", "useshell"),
-        meta => { "simulate_safe" };
+    "has_unified_diff"
+      expression => returnszero(
+        "$(G.diff_maybecolor) -u $(G.etc_null) $(G.etc_null) >$(G.dev_null) 2>&1",
+        "useshell"
+      ),
+      meta => { "simulate_safe" };
 
-      "no_difference" expression => returnszero(
-                                                 "$(G.diff_maybecolor) $(file1) $(file2) >$(G.dev_null) 2>&1",
-                                                 "useshell"),
-        meta => { "simulate_safe" };
+    "no_difference"
+      expression => returnszero(
+        "$(G.diff_maybecolor) $(file1) $(file2) >$(G.dev_null) 2>&1",
+        "useshell"
+      ),
+      meta => { "simulate_safe" };
 
-      "expected_difference" expression => strcmp("$(expected_difference)", "yes");
-      "check_ready" expression => "any";
+    "expected_difference" expression => strcmp("$(expected_difference)", "yes");
+    "check_ready" expression => "any";
 
     check_ready.no_difference.!expected_difference::
-      "$(pass_class)" expression => "any",
+      "$(pass_class)"
+        expression => "any",
         scope => "namespace";
+
     check_ready.!no_difference.expected_difference::
-      "$(pass_class)" expression => "any",
+      "$(pass_class)"
+        expression => "any",
         scope => "namespace";
+
     check_ready.!no_difference.!expected_difference::
-      "$(fail_class)" expression => "any",
+      "$(fail_class)"
+        expression => "any",
         scope => "namespace";
+
     check_ready.no_difference.expected_difference::
-      "$(fail_class)" expression => "any",
+      "$(fail_class)"
+        expression => "any",
         scope => "namespace";
 
   reports:
@@ -585,13 +757,16 @@ $(file1r)";
       "CONTENTS OF $(file2):
 $(file2r)";
       "$(diffu)";
+
     (DEBUG_HEXDUMP|EXTRA).check_ready.!no_difference.!expected_difference::
       "hexdump $(file1):
 $(file1h)";
       "hexdump $(file2):
 $(file2h)";
+
     DEBUG.check_ready.no_difference.expected_difference::
       "Contents of $(file1) and $(file) are the same but should differ.";
+
     EXTRA::
       "Diff command: $(G.diff_maybecolor) -u $(file2) $(file1) 2>$(G.dev_null)";
 }
@@ -599,24 +774,21 @@ $(file2h)";
 bundle agent dcs_sleep(t)
 {
   commands:
-      "$(G.perl) -e 'sleep $(t)'";
+    "$(G.perl) -e 'sleep $(t)'";
+
   reports:
     EXTRA::
       "Sleeping $(t) seconds";
 }
 
 #######################################################
-
 # Uses rm -rf instead of selecting and deleting files to avoid side-effects in
 # tests due to problems in file deleletion promises.
-
 bundle agent dcs_fini(file)
 {
   commands:
-      "$(G.rm) -rf $(file)*"
-      contain => dcs_useshell;
-      "$(G.rm) -rf $(sys.statedir)/cf_state.*"
-      contain => dcs_useshell;
+    "$(G.rm) -rf $(file)*" contain => dcs_useshell;
+    "$(G.rm) -rf $(sys.statedir)/cf_state.*" contain => dcs_useshell;
 
   reports:
     EXTRA::
@@ -626,7 +798,7 @@ bundle agent dcs_fini(file)
 bundle agent dcs_copyfile(from, to)
 {
   files:
-      "$(to)"
+    "$(to)"
       create => "true",
       copy_from => dcs_sync($(from));
 
@@ -637,17 +809,17 @@ bundle agent dcs_copyfile(from, to)
 
 body copy_from dcs_sync(f)
 {
-      source => "$(f)";
-      purge => "true";
-      preserve => "false";
-      type_check => "false";
-      compare => "digest";
+  source => "$(f)";
+  purge => "true";
+  preserve => "false";
+  type_check => "false";
+  compare => "digest";
 }
 
 body contain dcs_useshell
 {
-      useshell => "true";
-      chdir => "/";
+  useshell => "true";
+  chdir => "/";
 }
 
 bundle agent dcs_runagent(args)
@@ -655,36 +827,45 @@ bundle agent dcs_runagent(args)
   commands:
     debug_mode::
       "$(sys.cf_agent) -Kdf $(args)";
+
     verbose_mode::
       "$(sys.cf_agent) -Kvf $(args)";
+
     inform_mode::
       "$(sys.cf_agent) -KIf $(args)";
+
     !debug_mode.!verbose_mode.!inform_mode::
       "$(sys.cf_agent) -Kf $(args)";
 }
 
 #######################################################
 # Test based on whether two strings are the same
-
 bundle agent dcs_check_strcmp(strA, strB, test, expected_difference)
 {
   classes:
-      "equal" expression => strcmp($(strA), $(strB));
-      "expected_difference" or => { strcmp($(expected_difference), "yes"),
-                                    strcmp($(expected_difference), "true") };
+    "equal" expression => strcmp($(strA), $(strB));
 
-      "__passif" xor => { "equal", "expected_difference" };
+    "expected_difference"
+      or => {
+        strcmp($(expected_difference), "yes"),
+        strcmp($(expected_difference), "true"),
+      };
+
+    "__passif" xor => { "equal", "expected_difference" };
+
   reports:
     EXTRA|!__passif::
       "$(this.bundle): STRING A: '$(strA)'";
       "$(this.bundle): STRING B: '$(strB)'";
+
     __passif::
       "$(test) Pass";
+
     !__passif::
       "$(test) FAIL";
 }
 
-bundle agent dcs_check_diff_elements( setA, setB, test, expected_difference)
+bundle agent dcs_check_diff_elements(setA, setB, test, expected_difference)
 # @brief Test that there is or is not a difference between two lists or data containers elements (order elements does not matter)
 #
 # **Example:**
@@ -708,61 +889,69 @@ bundle agent dcs_check_diff_elements( setA, setB, test, expected_difference)
 # ```
 {
   vars:
-      "length_A" int => length( setA );
-      "length_B" int => length( setB );
-      "difference_A_B" slist => difference( setA, setB );
-      "difference_B_A" slist => difference( setB, setA );
+    "length_A" int => length(setA);
+    "length_B" int => length(setB);
+    "difference_A_B" slist => difference(setA, setB);
+    "difference_B_A" slist => difference(setB, setA);
 
   classes:
-      "_pass_same_length"
-        expression => eval( "$(length_A) == $(length_B)", class, infix );
-      "_pass_no_elements_in_setA_that_are_not_in_setB"
-        expression => islessthan( length( difference_A_B ), 1 );
-      "_pass_no_elements_in_setB_that_are_not_in_setA"
-        expression => islessthan( length( difference_B_A ), 1 );
+    "_pass_same_length"
+      expression => eval("$(length_A) == $(length_B)", class, infix);
 
-      "__passif" and => { "_pass_same_length",
-                          "_pass_no_elements_in_setA_that_are_not_in_setB",
-                          "_pass_no_elements_in_setB_that_are_not_in_setA"};
+    "_pass_no_elements_in_setA_that_are_not_in_setB"
+      expression => islessthan(length(difference_A_B), 1);
+
+    "_pass_no_elements_in_setB_that_are_not_in_setA"
+      expression => islessthan(length(difference_B_A), 1);
+
+    "__passif"
+      and => {
+        "_pass_same_length",
+        "_pass_no_elements_in_setA_that_are_not_in_setB",
+        "_pass_no_elements_in_setB_that_are_not_in_setA",
+      };
 
   reports:
     DEBUG|EXTRA::
-
-    # We print each element of the list out individually on versions that didn't
-    # have the with attribute. No great way to specify a version less than a
-    # cfengine version.
-      "setA: $(setA)" if => eval( "$(sys.cf_version_minor) < 11", class, infix );
-      "setB: $(setB)" if => eval( "$(sys.cf_version_minor) < 11", class, infix );
+      # We print each element of the list out individually on versions that didn't
+      # have the with attribute. No great way to specify a version less than a
+      # cfengine version.
+      "setA: $(setA)" if => eval("$(sys.cf_version_minor) < 11", class, infix);
+      "setB: $(setB)" if => eval("$(sys.cf_version_minor) < 11", class, infix);
 @if minimum_version(3.11)
-      "setA: $(with)" with => join( ", ", setA );
-      "setB: $(with)" with => join( ", ", setB );
+      "setA: $(with)" with => join(", ", setA);
+      "setB: $(with)" with => join(", ", setB);
 @endif
       "setA and setB have the same number of elements"
         if => "_pass_same_length";
+
       "setA and setB do not have the same number of elements"
         if => not("_pass_same_length");
+
       "setA has $(length_A) elements and setB has $(length_B) ements"
         if => not("_pass_same_length");
 
       "There are no elements in setA that are not in setB"
         if => "_pass_no_elements_in_setA_that_are_not_in_setB";
+
       "Element in setA that is not in setB: $(difference_A_B)"
-        if => not( "_pass_no_elements_in_setA_that_are_not_in_setB" );
+        if => not("_pass_no_elements_in_setA_that_are_not_in_setB");
 
       "There are no elements in setB that are not in setA"
         if => "_pass_no_elements_in_setB_that_are_not_in_setA";
+
       "Element in setB that is not in setA: $(difference_B_A)"
-        if => not( "_pass_no_elements_in_setB_that_are_not_in_setA" );
+        if => not("_pass_no_elements_in_setB_that_are_not_in_setA");
 
     __passif::
       "$(test) Pass";
+
     !__passif::
       "$(test) FAIL";
 }
 
 #######################################################
 # Test based on whether a string matches a regular expression
-
 bundle agent dcs_check_regcmp(regex, thestring, test, expected_mismatch)
 # @brief Check if `regex` matches `thestring` Pass if they match, unless `expected_mismatch` is `true|yes`, in which case, FAIL
 # @param regex The regular expression to check `thestring` against
@@ -771,40 +960,50 @@ bundle agent dcs_check_regcmp(regex, thestring, test, expected_mismatch)
 # @param expected_mismatch When `yes|true` the test will Pass if `regex` does not match `thestring`
 {
   classes:
-      "matched" expression => regcmp($(regex), $(thestring));
-      "expected_mismatch" or => { strcmp($(expected_mismatch), "yes"),
-                                  strcmp($(expected_mismatch), "true") };
+    "matched" expression => regcmp($(regex), $(thestring));
 
-      "__passif" xor => { "matched", "expected_mismatch" };
-reports:
+    "expected_mismatch"
+      or => {
+        strcmp($(expected_mismatch), "yes"),
+        strcmp($(expected_mismatch), "true"),
+      };
+
+    "__passif" xor => { "matched", "expected_mismatch" };
+
+  reports:
     EXTRA|!__passif::
       "$(this.bundle): REGEX: '$(regex)'";
       "$(this.bundle): STRING TO MATCH: '$(thestring)'";
+
     __passif::
       "$(test) Pass";
+
     !__passif::
       "$(test) FAIL";
 }
 
 #######################################################
 # Pass the test if class
-
 bundle agent dcs_passif(classname, test)
 {
   reports:
-      "$(test) Pass" if => $(classname);
-      "$(test) FAIL" if => not($(classname));
+    "$(test) Pass" if => $(classname);
+    "$(test) FAIL" if => not($(classname));
 
     EXTRA::
-      "$(this.bundle): passing based on class '$(classname)'" if => $(classname);
+      "$(this.bundle): passing based on class '$(classname)'"
+        if => $(classname);
+
     DEBUG::
-      "$(this.bundle): failing based on class '$(classname)'" if => not($(classname));
+      "$(this.bundle): failing based on class '$(classname)'"
+        if => not($(classname));
 }
 
 bundle agent dcs_pass(test)
 {
   reports:
-      "$(test) Pass";
+    "$(test) Pass";
+
     EXTRA::
       "$(this.bundle): Explicitly passing...";
 }
@@ -812,7 +1011,8 @@ bundle agent dcs_pass(test)
 bundle agent dcs_fail(test)
 {
   reports:
-      "$(test) FAIL";
+    "$(test) FAIL";
+
     EXTRA::
       "$(this.bundle): Explicitly failing...";
 }
@@ -820,7 +1020,8 @@ bundle agent dcs_fail(test)
 bundle agent dcs_wait(test, seconds)
 {
   reports:
-      "$(test) Wait/$(seconds)";
+    "$(test) Wait/$(seconds)";
+
     EXTRA::
       "$(this.bundle): Explicitly waiting $(seconds) seconds...";
 }
@@ -828,14 +1029,17 @@ bundle agent dcs_wait(test, seconds)
 bundle agent dcs_passif_fileexists(file, test)
 {
   classes:
-      "__passif" expression => fileexists($(file));
+    "__passif" expression => fileexists($(file));
 
   methods:
-      "" usebundle => dcs_passif("__passif", $(test)), inherit => "true";
+    ""
+      usebundle => dcs_passif("__passif", $(test)),
+      inherit => "true";
 
   reports:
     DEBUG.!__passif::
       "$(this.bundle): $(file) did not exist!";
+
     EXTRA.__passif::
       "$(this.bundle): $(file) exists.";
 }
@@ -843,14 +1047,17 @@ bundle agent dcs_passif_fileexists(file, test)
 bundle agent dcs_passif_file_absent(file, test)
 {
   classes:
-      "__passif" not => fileexists($(file));
+    "__passif" not => fileexists($(file));
 
   methods:
-      "" usebundle => dcs_passif("__passif", $(test)), inherit => "true";
+    ""
+      usebundle => dcs_passif("__passif", $(test)),
+      inherit => "true";
 
   reports:
     DEBUG.__passif::
       "$(this.bundle): $(file) did not exist.";
+
     EXTRA.!__passif::
       "$(this.bundle): $(file) exists!";
 }
@@ -858,65 +1065,65 @@ bundle agent dcs_passif_file_absent(file, test)
 bundle agent dcs_passif_expected(expected, not_expected, test)
 {
   vars:
-      "ex" slist => splitstring($(expected), ",", 1000);
-      "notex" slist => splitstring($(not_expected), ",", 1000);
-      "e[$(ex)]" string => $(ex);
-      "e[$(notex)]" string => "!$(notex)";
-      "classes" slist => getvalues(e);
+    "ex" slist => splitstring($(expected), ",", 1000);
+    "notex" slist => splitstring($(not_expected), ",", 1000);
+    "e[$(ex)]" string => $(ex);
+    "e[$(notex)]" string => "!$(notex)";
+    "classes" slist => getvalues(e);
 
   classes:
-      "__passif" and => { @(classes) };
+    "__passif" and => { @(classes) };
+
   methods:
-      "" usebundle => dcs_passif("__passif", $(test)), inherit => "true";
+    ""
+      usebundle => dcs_passif("__passif", $(test)),
+      inherit => "true";
 
   reports:
     DEBUG::
-      "$(this.bundle): bad: $(ex) was NOT defined"
-      if => "!$(ex)";
-
-      "$(this.bundle): bad: $(notex) WAS defined"
-      if => "$(notex)";
+      "$(this.bundle): bad: $(ex) was NOT defined" if => "!$(ex)";
+      "$(this.bundle): bad: $(notex) WAS defined" if => "$(notex)";
 
     EXTRA::
-      "$(this.bundle): good: $(ex) WAS defined"
-      if => "$(ex)";
-
-      "$(this.bundle): good: $(notex) was NOT defined"
-      if => "!$(notex)";
+      "$(this.bundle): good: $(ex) WAS defined" if => "$(ex)";
+      "$(this.bundle): good: $(notex) was NOT defined" if => "!$(notex)";
 }
 
 #######################################################
-
 bundle agent dcs_passif_output(wanted, unwanted, command, test)
 {
   vars:
-      "subout" string => execresult($(command), "useshell"),
-        meta => { "simulate_safe" };
+    "subout"
+      string => execresult($(command), "useshell"),
+      meta => { "simulate_safe" };
 
   classes:
-      "__passif_output_unwanted" expression => regcmp($(unwanted), $(subout));
-      "__passif_output_wanted" expression => regcmp($(wanted), $(subout));
+    "__passif_output_unwanted" expression => regcmp($(unwanted), $(subout));
+    "__passif_output_wanted" expression => regcmp($(wanted), $(subout));
 
   methods:
-      "" usebundle => dcs_passif_expected("__passif_output_wanted", # expected
-                                          "__passif_output_unwanted", # not expected
-                                          $(test)),
+    ""
+      usebundle => dcs_passif_expected(
+        "__passif_output_wanted", # expected
+        "__passif_output_unwanted", # not expected
+        $(test)
+      ),
       inherit => "true";
 
   reports:
     DEBUG::
       "$(this.bundle): bad: '$(wanted)' was NOT found in the output of '$(command)'"
-      if => "!__passif_output_wanted";
+        if => "!__passif_output_wanted";
 
       "$(this.bundle): bad: '$(unwanted)' WAS found in the output of '$(command)'"
-      if => "__passif_output_unwanted";
+        if => "__passif_output_unwanted";
 
     EXTRA::
       "$(this.bundle): good: '$(wanted)' WAS found in the output of '$(command)'"
-      if => "__passif_output_wanted";
+        if => "__passif_output_wanted";
 
       "$(this.bundle): good: '$(unwanted)' was NOT found in the output of '$(command)'"
-      if => "!__passif_output_unwanted";
+        if => "!__passif_output_unwanted";
 
     DEBUG::
       "$(this.bundle): the output of command '$(command)' was: '$(subout)'";
@@ -925,54 +1132,77 @@ bundle agent dcs_passif_output(wanted, unwanted, command, test)
 bundle agent dcs_passif_output1(wanted, command, test)
 {
   methods:
-      "" usebundle => dcs_passif_output($(wanted), # expected
-                                        "^(unlikely data){400}$", # not expected
-                                        $(command),
-                                        $(test)),
+    ""
+      usebundle => dcs_passif_output(
+        $(wanted), # expected
+        "^(unlikely data){400}$", # not expected
+        $(command),
+        $(test)
+      ),
       inherit => "true";
 }
 
 bundle agent generate_key
 {
   classes:
-      "key_exists" expression => fileexists("$(sys.workdir)/ppkeys/localhost.pub");
+    "key_exists"
+      expression => fileexists("$(sys.workdir)/ppkeys/localhost.pub");
+
   files:
     !key_exists::
       "$(sys.workdir)/ppkeys/localhost.priv"
         create => "true",
-        copy_from => dcs_sync("$(this.promise_dirname)/root-MD5=617eb383deffef843ea856b129d0a423.priv");
+        copy_from => dcs_sync(
+          "$(this.promise_dirname)/root-MD5=617eb383deffef843ea856b129d0a423.priv"
+        );
+
       "$(sys.workdir)/ppkeys/localhost.pub"
         create => "true",
-        copy_from => dcs_sync("$(this.promise_dirname)/root-MD5=617eb383deffef843ea856b129d0a423.pub");
+        copy_from => dcs_sync(
+          "$(this.promise_dirname)/root-MD5=617eb383deffef843ea856b129d0a423.pub"
+        );
 }
 
 bundle agent trust_key
 {
   classes:
     nova::
-      "key_exists" expression => fileexists("$(sys.workdir)/ppkeys/root-SHA=ba71659fc294990d4f61ec1734515f89ce24524fbaeebad5b3f76da532da7390.pub");
+      "key_exists"
+        expression => fileexists(
+          "$(sys.workdir)/ppkeys/root-SHA=ba71659fc294990d4f61ec1734515f89ce24524fbaeebad5b3f76da532da7390.pub"
+        );
+
     !nova::
-      "key_exists" expression => fileexists("$(sys.workdir)/ppkeys/root-MD5=617eb383deffef843ea856b129d0a423.pub");
+      "key_exists"
+        expression => fileexists(
+          "$(sys.workdir)/ppkeys/root-MD5=617eb383deffef843ea856b129d0a423.pub"
+        );
+
   files:
     !key_exists.nova::
       "$(sys.workdir)/ppkeys/root-SHA=ba71659fc294990d4f61ec1734515f89ce24524fbaeebad5b3f76da532da7390.pub"
         create => "true",
-        copy_from => dcs_sync("$(this.promise_dirname)/root-MD5=617eb383deffef843ea856b129d0a423.pub");
+        copy_from => dcs_sync(
+          "$(this.promise_dirname)/root-MD5=617eb383deffef843ea856b129d0a423.pub"
+        );
+
     !key_exists.!nova::
       "$(sys.workdir)/ppkeys/root-MD5=617eb383deffef843ea856b129d0a423.pub"
         create => "true",
-        copy_from => dcs_sync("$(this.promise_dirname)/root-MD5=617eb383deffef843ea856b129d0a423.pub");
+        copy_from => dcs_sync(
+          "$(this.promise_dirname)/root-MD5=617eb383deffef843ea856b129d0a423.pub"
+        );
 }
 
-body copy_from dcs_remote_cp(from,server, port)
+body copy_from dcs_remote_cp(from, server, port)
 # @brief Download a file from a remote server. They server is always trusted.
 #
 # @param from The location of the file on the remote server
 # @param server The hostname or IP of the server from which to download
 {
-      servers     => { "$(server)" };
-      portnumber  => "$(port)";
-      source      => "$(from)";
-      compare     => "mtime";
-      trustkey    => "true";
+  servers => { "$(server)" };
+  portnumber => "$(port)";
+  source => "$(from)";
+  compare => "mtime";
+  trustkey => "true";
 }

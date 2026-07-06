@@ -1,9 +1,8 @@
 # Test that bundlesmatching works correctly
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence => { default("$(this.promise_filename)") };
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
 }
 
 bundle agent init
@@ -13,34 +12,50 @@ bundle agent init
 bundle agent test
 {
   vars:
-      "bundle_runs" slist => bundlesmatching("default:bundle_run.*");
-      "bundle_run_123s" slist => bundlesmatching("default:bundle_run_123.*");
-      "bundle_123" string => nth(bundle_run_123s, 0);
+    "bundle_runs" slist => bundlesmatching("default:bundle_run.*");
+    "bundle_run_123s" slist => bundlesmatching("default:bundle_run_123.*");
+    "bundle_123" string => nth(bundle_run_123s, 0);
 
-      "bundle_run_meta_deprecated_unsorted" slist => bundlesmatching("default:bundle_run_meta.*", "deprecated");
-      "bundle_run_meta_deprecated" slist => sort(bundle_run_meta_deprecated_unsorted, "lex");
-      "bundle_deprecated" string => nth(bundle_run_meta_deprecated, 0);
+    "bundle_run_meta_deprecated_unsorted"
+      slist => bundlesmatching("default:bundle_run_meta.*", "deprecated");
 
-      "bundle_run_meta_obsoleted_unsorted" slist => bundlesmatching("default:bundle_run_meta.*", "obs.*", "deprecated");
-      "bundle_run_meta_obsoleted" slist => sort(bundle_run_meta_obsoleted_unsorted, "lex");
-      "bundle_obsoleted" string => nth(bundle_run_meta_obsoleted, 0);
+    "bundle_run_meta_deprecated"
+      slist => sort(bundle_run_meta_deprecated_unsorted, "lex");
 
-      "count" int => length(bundle_runs);
-      "123_count" int => length(bundle_run_123s);
-      "deprecated_count" int => length(bundle_run_meta_deprecated);
-      "obsoleted_count" int => length(bundle_run_meta_obsoleted);
+    "bundle_deprecated" string => nth(bundle_run_meta_deprecated, 0);
+
+    "bundle_run_meta_obsoleted_unsorted"
+      slist => bundlesmatching(
+        "default:bundle_run_meta.*", "obs.*", "deprecated"
+      );
+
+    "bundle_run_meta_obsoleted"
+      slist => sort(bundle_run_meta_obsoleted_unsorted, "lex");
+
+    "bundle_obsoleted" string => nth(bundle_run_meta_obsoleted, 0);
+    "count" int => length(bundle_runs);
+    "123_count" int => length(bundle_run_123s);
+    "deprecated_count" int => length(bundle_run_meta_deprecated);
+    "obsoleted_count" int => length(bundle_run_meta_obsoleted);
 }
 
 bundle agent check
 {
   classes:
-      "ok" and => { strcmp("$(test.count)", "6"),
-                    strcmp("$(test.123_count)", "1"),
-                    strcmp("$(test.deprecated_count)", "2"),
-                    strcmp("$(test.bundle_deprecated)", "default:bundle_run_meta_deprecated"),
-                    strcmp("$(test.obsoleted_count)", "1"),
-                    strcmp("$(test.bundle_obsoleted)", "default:bundle_run_meta_deprecated"),
-                    strcmp("$(test.bundle_123)", "default:bundle_run_123_456") };
+    "ok"
+      and => {
+        strcmp("$(test.count)", "6"),
+        strcmp("$(test.123_count)", "1"),
+        strcmp("$(test.deprecated_count)", "2"),
+        strcmp(
+          "$(test.bundle_deprecated)", "default:bundle_run_meta_deprecated"
+        ),
+        strcmp("$(test.obsoleted_count)", "1"),
+        strcmp(
+          "$(test.bundle_obsoleted)", "default:bundle_run_meta_deprecated"
+        ),
+        strcmp("$(test.bundle_123)", "default:bundle_run_123_456"),
+      };
 
   reports:
     DEBUG::
@@ -55,8 +70,10 @@ bundle agent check
       "First deprecated bundle is $(test.bundle_deprecated)";
       "Found obsoleted bundles $(test.bundle_run_meta_obsoleted)";
       "First obsoleted bundle is $(test.bundle_obsoleted)";
+
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }
@@ -76,13 +93,13 @@ bundle agent bundle_run_cde_fgh
 bundle agent bundle_run_meta_deprecated
 {
   meta:
-      "tags" slist => { "deprecated", "obsoleted" };
+    "tags" slist => { "deprecated", "obsoleted" };
 }
 
 bundle agent bundle_run_meta_string_tags
 {
   meta:
-      "tags" string => "deprecated";
+    "tags" string => "deprecated";
 }
 
 bundle agent bundle_run_meta_missing_tags

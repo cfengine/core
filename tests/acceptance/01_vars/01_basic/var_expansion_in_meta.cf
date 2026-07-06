@@ -1,35 +1,30 @@
 # Test that variables in meta tags are expanded
 # Redmine:4885 (https://cfengine.com/dev/issues/4885)
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent init
 {
   vars:
-      "variables" slist => { "item1", "item2" };
-      "variable_tag" string => "mytag";
+    "variables" slist => { "item1", "item2" };
+    "variable_tag" string => "mytag";
 
   classes:
     "$(variables)_class"
       expression => "any",
       scope => "namespace",
       meta => { "$(variable_tag)" };
-
 }
 
 bundle agent test
 {
   vars:
-    "found_classes"
-      slist => classesmatching(".*", $(init.variable_tag));
-
-    "joined_found_classes"
-      string => join(",", found_classes);
+    "found_classes" slist => classesmatching(".*", $(init.variable_tag));
+    "joined_found_classes" string => join(",", found_classes);
 }
 
 bundle agent check
@@ -38,7 +33,10 @@ bundle agent check
     "expected_joined_found_classes" string => "item1_class,item2_class";
 
   classes:
-      "ok" expression => strcmp($(expected_joined_found_classes), $(test.joined_found_classes));
+    "ok"
+      expression => strcmp(
+        $(expected_joined_found_classes), $(test.joined_found_classes)
+      );
 
   reports:
     DEBUG::
@@ -47,6 +45,7 @@ bundle agent check
 
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

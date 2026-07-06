@@ -1,50 +1,46 @@
 #  Copyright 2021 Northern.tech AS
-
 #  This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
-
 #  This program is free software; you can redistribute it and/or modify it
 #  under the terms of the GNU General Public License as published by the
 #  Free Software Foundation; version 3.
-
 #  This program is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
-
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
-
 # To the extent this program is licensed as part of the Enterprise
 # versions of Cfengine, the applicable Commercial Open Source License
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
-
 #+begin_src cfengine3
 bundle agent main
 {
   vars:
-
-      "range" string => "1-32";
-      "hostname_f" string => execresult( "hostname -f", useshell);
-      "hostname_s" string => execresult( "hostname -s", useshell);
-      "hostname" string => execresult( "hostname", useshell);
+    "range" string => "1-32";
+    "hostname_f" string => execresult("hostname -f", useshell);
+    "hostname_s" string => execresult("hostname -s", useshell);
+    "hostname" string => execresult("hostname", useshell);
 
   classes:
+    "hostgroup_alpha_no_leading_zeros"
+      expression => hostrange("host", $(range));
 
-      "hostgroup_alpha_no_leading_zeros" expression => hostrange("host", $(range) );
-      "hostgroup_alpha_leading_zeros"    expression => hostrange("host", "00$(range)" );
-      "hostgroup_alpha_UPPERCASE_prefix" expression => hostrange("HOST", "0$(range)" );
+    "hostgroup_alpha_leading_zeros"
+      expression => hostrange("host", "00$(range)");
+
+    "hostgroup_alpha_UPPERCASE_prefix"
+      expression => hostrange("HOST", "0$(range)");
 
   reports:
-      "sys.fqhost = '$(sys.fqhost)'";
-      "sys.uqhost = '$(sys.uqhost)'";
-      "hostname -f = '$(hostname_f)'";
-      "hostname -s = '$(hostname_s)'";
-      "hostname = '$(hostname)'";
+    "sys.fqhost = '$(sys.fqhost)'";
+    "sys.uqhost = '$(sys.uqhost)'";
+    "hostname -f = '$(hostname_f)'";
+    "hostname -s = '$(hostname_s)'";
+    "hostname = '$(hostname)'";
 
     hostgroup_alpha_no_leading_zeros::
-
       "This host is within the alpha host group range (host$(range))";
 
     hostgroup_alpha_leading_zeros::
@@ -53,6 +49,7 @@ bundle agent main
     hostgroup_alpha_UPPERCASE_prefix::
       "This host is within the alpha host group range (HOST0$(range)) (NOTE: Leading zeros and prefix capitalization is insignificant)";
 }
+
 #+end_src
 ###############################################################################
 #+begin_src static_example_output

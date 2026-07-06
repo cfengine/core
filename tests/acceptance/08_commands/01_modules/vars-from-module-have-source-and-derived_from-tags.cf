@@ -1,46 +1,46 @@
 body common control
 {
-        inputs => { "../../default.sub.cf", "../../plucked.sub.cf" };
-        bundlesequence  => { default("$(this.promise_filename)") };
-        version => "1.0";
+  inputs => { "../../default.sub.cf", "../../plucked.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent test
 {
   meta:
-      "description" -> { "ENT-7725" }
-        string => "Test that vars defined by modules without explicit tags still have automatic tags identifying the source";
+    "description" -> { "ENT-7725" }
+      string => "Test that vars defined by modules without explicit tags still have automatic tags identifying the source";
 
-      "test_soft_fail"
-        string => "windows",
-        meta => { "ENT-10217" },
-        comment => "The subtest policy uses /bin/echo";
+    "test_soft_fail"
+      string => "windows",
+      meta => { "ENT-10217" },
+      comment => "The subtest policy uses /bin/echo";
 
   commands:
-      "/bin/echo"
-        args => "=my_var_from_module= my val from module",
-        module => "true";
+    "/bin/echo"
+      args => "=my_var_from_module= my val from module",
+      module => "true";
 }
 
 bundle agent check
 {
   vars:
-      "my_var_from_module_tags"
-        slist => getvariablemetatags( "echo.my_var_from_module" );
+    "my_var_from_module_tags"
+      slist => getvariablemetatags("echo.my_var_from_module");
 
   reports:
+    # Every variable should have a source=SOMETHING tag
+    "$(this.promise_filename) Pass"
+      if => and(
+        reglist(@(my_var_from_module_tags), "source=.*"),
+        reglist(@(my_var_from_module_tags), "derived_from=.*")
+      );
 
-      # Every variable should have a source=SOMETHING tag
-      "$(this.promise_filename) Pass"
-        if => and(
-                   reglist( @(my_var_from_module_tags), "source=.*" ),
-                   reglist( @(my_var_from_module_tags), "derived_from=.*" )
-                   );
-      "$(this.promise_filename) FAIL"
-        unless => and(
-                   reglist( @(my_var_from_module_tags), "source=.*" ),
-                   reglist( @(my_var_from_module_tags), "derived_from=.*" )
-        );
+    "$(this.promise_filename) FAIL"
+      unless => and(
+        reglist(@(my_var_from_module_tags), "source=.*"),
+        reglist(@(my_var_from_module_tags), "derived_from=.*")
+      );
 
     EXTRA|DEBUG::
       "my_var_from_module_tags == $(my_var_from_module_tags)";

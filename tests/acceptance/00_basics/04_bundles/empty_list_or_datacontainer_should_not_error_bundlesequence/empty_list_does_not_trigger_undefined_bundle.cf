@@ -7,7 +7,7 @@ bundle common def
 {
   vars:
     "v" slist => variablesmatching("default\:def.*");
-    "bundlesequnece_end" slist => { };
+    "bundlesequnece_end" slist => {};
 
   reports:
     DEBUG::
@@ -17,7 +17,8 @@ bundle common def
 bundle agent test
 {
   meta:
-    "description" string => "Test that an empty list does not trigger an undefined bundle error";
+    "description"
+      string => "Test that an empty list does not trigger an undefined bundle error";
 }
 
 bundle agent check

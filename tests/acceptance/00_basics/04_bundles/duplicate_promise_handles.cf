@@ -1,12 +1,11 @@
 # Test that we don't get errors about duplicate handles when using variables in
 # handle name that do not expand identically
 # Redmine:4682 (https://cfengine.com/dev/issues/4682)
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent init
@@ -24,24 +23,26 @@ bundle agent test
       handle => "$(this.handle)_$(this.promiser)",
       string => "bar";
 
-
   # Two promises with equal handle but different classes is allowed
   reports:
-   debian::
-    "this is debian" handle => "os_handle";
-   redhat::
-    "this is redhat" handle => "os_handle";
+    debian::
+      "this is debian" handle => "os_handle";
+
+    redhat::
+      "this is redhat" handle => "os_handle";
 }
 
 bundle agent check
 {
   classes:
-      "ok" and => { "any" },
-        comment => "Policy validation failing will cause us to never reach this if the test fails";
+    "ok"
+      and => { "any" },
+      comment => "Policy validation failing will cause us to never reach this if the test fails";
 
   reports:
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

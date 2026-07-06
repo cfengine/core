@@ -1,22 +1,19 @@
-#
 # Check the parser enforces standard TCP port ( 1 <= port <= 65535) for:
 # -copy_from bodies "portnumber"
-#
-
 body common control
 {
-      bundlesequence => { default("$(this.promise_filename)") };
-      inputs => { "../../default.sub.cf" };
-      version => "1.0";
+  bundlesequence => { default("$(this.promise_filename)") };
+  inputs => { "../../default.sub.cf" };
+  version => "1.0";
 }
 
 bundle agent test
 {
   reports:
-      "$(this.promise_filename) Pass";
+    "$(this.promise_filename) Pass";
 }
 
 body copy_from dummy_copy_from
 {
-      portnumber => "5308";
+  portnumber => "5308";
 }

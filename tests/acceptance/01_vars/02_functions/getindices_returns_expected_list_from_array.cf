@@ -4,16 +4,14 @@
 # an array
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
@@ -21,12 +19,10 @@ bundle agent init
     "data[bar]" string => "zulu";
     "data[bar][one]" string => "1";
     "data[bar][two]" string => "2";
-
     "data[zebra][gazelle]" slist => { "alpha", "bravo" };
     "data[zebra][lion]" string => "zulu";
     "data[zebra][lion][first]" string => "1st";
     "data[zebra][lion][second]" string => "2nd";
-
     "data[one][two][zero]" slist => { "alpha", "bravo" };
     "data[one][two][three]" string => "zulu";
     "data[one][two][three][a]" string => "c";
@@ -34,7 +30,6 @@ bundle agent init
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
@@ -44,11 +39,13 @@ bundle agent test
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
-      "any" usebundle => dcs_check_state(test,
-                                         "$(this.promise_filename).expected.json",
-                                         $(this.promise_filename));
+    "any"
+      usebundle => dcs_check_state(
+        test,
+        "$(this.promise_filename).expected.json",
+        $(this.promise_filename)
+      );
 }

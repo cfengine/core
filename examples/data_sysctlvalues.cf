@@ -3,31 +3,30 @@ bundle agent inventory_sysctl
 # @brief Inventory each sysctl variable
 {
   vars:
-      # Get the complete set of sysctl variables and values as a data structure
-      "_sysctl_d"
-        data => data_sysctlvalues(),
-        unless => isvariable( _sysctl_d );
+    # Get the complete set of sysctl variables and values as a data structure
+    "_sysctl_d"
+      data => data_sysctlvalues(),
+      unless => isvariable(_sysctl_d);
 
-      # Get the sysctl variable names
-      "_sysctl_i"
-        slist => getindices( "_sysctl_d" );
+    # Get the sysctl variable names
+    "_sysctl_i" slist => getindices("_sysctl_d");
 
-      # Define a variable tagged for inventory for each sysctl variable
-      "sysctl[$(_sysctl_i)]"
-        string => "$(_sysctl_d[$(_sysctl_i)])",
-        meta => { "inventory", "attribute_name=Kernel Tunable $(_sysctl_i)" };
+    # Define a variable tagged for inventory for each sysctl variable
+    "sysctl[$(_sysctl_i)]"
+      string => "$(_sysctl_d[$(_sysctl_i)])",
+      meta => { "inventory", "attribute_name=Kernel Tunable $(_sysctl_i)" };
 
   reports:
-      # Show what data_sysctlvalues() returned.
-      "data_sysctlvalues() returned:$(with)"
-        with => storejson( @(_sysctl_d) );
-
+    # Show what data_sysctlvalues() returned.
+    "data_sysctlvalues() returned:$(with)" with => storejson(@(_sysctl_d));
 }
+
 bundle agent __main__
 {
-      methods: "inventory_sysctl";
-
+  methods:
+    "inventory_sysctl";
 }
+
 #+end_src
 ###############################################################################
 #+begin_src mock_example_output

@@ -8,86 +8,68 @@ body common control
 bundle agent init
 {
   files:
-    "/tmp/example"
-      create => "true";
-    "/tmp/otherfile"
-      create => "true";
+    "/tmp/example" create => "true";
+    "/tmp/otherfile" create => "true";
 }
 
 bundle agent test
 {
   vars:
-    "result"
-      string => "First";  
-    "foo"
-      string => "second";
-    "result"
-      string => concat("$(result)", ", $(foo)"); 
-    "sixth"
-      string => "sixth";
+    "result" string => "First";
+    "foo" string => "second";
+    "result" string => concat("$(result)", ", $(foo)");
+    "sixth" string => "sixth";
 
   classes:
-    "bar"
-      if => "any";
+    "bar" if => "any";
 
   vars:
-    "foo"
-      string => "other";
-   bar::
-    "baz"
-      string => "third";
+    "foo" string => "other";
 
-    "result"
-      string => concat("$(result)", ", $(baz)"); 
+    bar::
+      "baz" string => "third";
+      "result" string => concat("$(result)", ", $(baz)");
 
   files:
-    "/tmp/example"
-      content => "fourth";
+    "/tmp/example" content => "fourth";
 
   vars:
-    "content"
-      string => readfile("/tmp/example");
-    "result"
-      string => concat("$(result)", ", $(content)");  
+    "content" string => readfile("/tmp/example");
+    "result" string => concat("$(result)", ", $(content)");
 
   classes:
-    "test"
-      expression => strcmp("$(content)", "fourth");
-    
+    "test" expression => strcmp("$(content)", "fourth");
+
   vars:
     test::
-      "result"
-        string => concat("$(result)", ", fifth");
-
+      "result" string => concat("$(result)", ", fifth");
 
   files:
-    "/tmp/otherfile"
-      content => "something";
+    "/tmp/otherfile" content => "something";
 
   vars:
-    "othercontent"
-      string => readfile("/tmp/otherfile");
+    "othercontent" string => readfile("/tmp/otherfile");
 
   files:
-    "/tmp/otherfile"
-      delete => tidy;
+    "/tmp/otherfile" delete => tidy;
 
   classes:
-    "myclass"
-      expression => strcmp("$(othercontent)", "something");
+    "myclass" expression => strcmp("$(othercontent)", "something");
 
   vars:
     myclass::
-      "result"
-        string => concat("$(result)", ", $(sixth)");
+      "result" string => concat("$(result)", ", $(sixth)");
 
   classes:
     "ok"
-      expression => strcmp("$(result)", "First, second, third, fourth, fifth, sixth");
+      expression => strcmp(
+        "$(result)", "First, second, third, fourth, fifth, sixth"
+      );
 
   reports:
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 
@@ -98,6 +80,5 @@ bundle agent test
 bundle agent cleanup
 {
   files:
-    "/tmp/example"
-      delete => tidy;
+    "/tmp/example" delete => tidy;
 }

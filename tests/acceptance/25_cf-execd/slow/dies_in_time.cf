@@ -1,23 +1,16 @@
 # ENT-3147, zd#3157
-
 # Ensure that cf-execd dies within 3 seconds after being signalled.
-
-
 body common control
 {
-      inputs => {
-          "../../default.sub.cf",
-          "../../run_with_server.cf.sub"
-      };
-      bundlesequence => { default("$(this.promise_filename)") };
+  inputs => { "../../default.sub.cf", "../../run_with_server.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
 }
 
 bundle agent init
 {
   vars:
-
-      "exec_command_script" string =>
-"#!/bin/sh -x
+    "exec_command_script"
+      string => "#!/bin/sh -x
 
 sleep 10
 
@@ -60,36 +53,34 @@ echo DONE > $(G.testdir)/exec_command.status
 ";
 
   files:
-      "$(G.testdir)/exec_command.sh"
-         create => "true",
-         perms  => m(777),
-         edit_line => insert_lines("$(exec_command_script)");
+    "$(G.testdir)/exec_command.sh"
+      create => "true",
+      perms => m(777),
+      edit_line => insert_lines("$(exec_command_script)");
 
   methods:
-      "any" usebundle => dcs_fini("$(sys.piddir)/cf-execd.pid");
-      "any" usebundle => dcs_fini("$(G.testdir)/EXECUTOR_WAS_SIGNALLED");
-      "any" usebundle => dcs_fini("$(G.testdir)/cf_execd.status");
-      "any" usebundle => dcs_fini("$(G.testdir)/exec_command.status");
+    "any" usebundle => dcs_fini("$(sys.piddir)/cf-execd.pid");
+    "any" usebundle => dcs_fini("$(G.testdir)/EXECUTOR_WAS_SIGNALLED");
+    "any" usebundle => dcs_fini("$(G.testdir)/cf_execd.status");
+    "any" usebundle => dcs_fini("$(G.testdir)/exec_command.status");
 }
 
 bundle agent test
 {
   meta:
-      "test_soft_fail" string => "windows",
-        meta => { "ENT-10215" };
+    "test_soft_fail"
+      string => "windows",
+      meta => { "ENT-10215" };
 
   commands:
-
-      "$(sys.cf_execd) -f $(this.promise_dirname)/kill_myself.execd.srv"
-        classes => if_repaired("executor_started");
+    "$(sys.cf_execd) -f $(this.promise_dirname)/kill_myself.execd.srv"
+      classes => if_repaired("executor_started");
 
     executor_started::
       # Make sure it started fully
-      "$(G.sleep) 5"
-        classes => if_repaired("waited");
+      "$(G.sleep) 5" classes => if_repaired("waited");
 
     executor_started.waited::
-
       # Ensure executor PID is up
       "kill -0 `cat $(sys.piddir)/cf-execd.pid`"
         contain => in_shell,
@@ -117,20 +108,18 @@ exit 1        # Executor was never signalled!
 
     executor_was_signalled::
       # Wait again until executor runs the signal handler and exits gracefully
-      "$(G.sleep) 3"
-        classes => if_repaired("waited_for_cleanup");
+      "$(G.sleep) 3" classes => if_repaired("waited_for_cleanup");
 
     waited_for_cleanup::
       # and another 10s for exec_command.sh script to exit
-      "$(G.sleep) 10"
-        classes => if_repaired("script_should_have_exited");
+      "$(G.sleep) 10" classes => if_repaired("script_should_have_exited");
 
   classes:
-      "test_bundle_done" expression => "script_should_have_exited",
-                              scope => "namespace";
+    "test_bundle_done"
+      expression => "script_should_have_exited",
+      scope => "namespace";
 
   reports:
-
     !executor_was_signalled::
       "$(this.promise_filename) FAIL";
 }
@@ -140,20 +129,26 @@ bundle agent check
 {
   classes:
     test_bundle_done::
-      "executor_is_dead" expression =>
-        returnszero("$(G.grep) DEAD $(G.testdir)/cf_execd.status",
-                    "useshell");
-      "exec_command_finished" expression =>
-        returnszero("$(G.grep) DONE $(G.testdir)/exec_command.status",
-                    "useshell");
+      "executor_is_dead"
+        expression => returnszero(
+          "$(G.grep) DEAD $(G.testdir)/cf_execd.status", "useshell"
+        );
+
+      "exec_command_finished"
+        expression => returnszero(
+          "$(G.grep) DONE $(G.testdir)/exec_command.status", "useshell"
+        );
 
   methods:
-      "" usebundle =>
-        dcs_passif_expected("executor_is_dead,exec_command_finished","",
-                            "$(this.promise_filename)"),
-        inherit => "true";
+    ""
+      usebundle => dcs_passif_expected(
+        "executor_is_dead,exec_command_finished",
+        "",
+        "$(this.promise_filename)"
+      ),
+      inherit => "true";
 
   reports:
     !executor_is_dead.DEBUG::
-        "FAIL: cf-execd did not die within 3s after TERM signal!";
+      "FAIL: cf-execd did not die within 3s after TERM signal!";
 }

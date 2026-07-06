@@ -3,34 +3,35 @@
 # Test datas creation through readyaml()
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle common yaml_check
 {
   classes:
-      "no_yaml_support"
-        not => regline(" *# *define *HAVE_LIBYAML.*", "$(this.promise_dirname)/../../../../libutils/config.h");
+    "no_yaml_support"
+      not => regline(
+        " *# *define *HAVE_LIBYAML.*",
+        "$(this.promise_dirname)/../../../../libutils/config.h"
+      );
 }
 
 bundle agent init
 {
   meta:
-      "test_skip_unsupported" string => "no_yaml_support";
+    "test_skip_unsupported" string => "no_yaml_support";
 
   files:
-      "$(G.testfile).expected"
+    "$(G.testfile).expected"
       create => "true",
       edit_line => init_insert_lines;
 
-      "$(G.testfile).yaml"
+    "$(G.testfile).yaml"
       create => "true",
       edit_line => init_insert_yaml;
 }
@@ -38,7 +39,7 @@ bundle agent init
 bundle edit_line init_insert_yaml
 {
   insert_lines:
-      "- hello
+    "- hello
 - there
 - where: 1
 - where_else: 1.0023E2
@@ -51,7 +52,7 @@ bundle edit_line init_insert_yaml
 bundle edit_line init_insert_lines
 {
   insert_lines:
-      '[
+    '[
   "hello",
   "there",
   {
@@ -70,15 +71,14 @@ bundle edit_line init_insert_lines
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-      "load" data => readyaml("$(G.testfile).yaml", 1024);
-      "load_s" string => storejson(load);
+    "load" data => readyaml("$(G.testfile).yaml", 1024);
+    "load_s" string => storejson(load);
 
   files:
-      "$(G.testfile).actual"
+    "$(G.testfile).actual"
       create => "true",
       edit_line => test_insert;
 }
@@ -86,15 +86,17 @@ bundle agent test
 bundle edit_line test_insert
 {
   insert_lines:
-      "$(test.load_s)";
+    "$(test.load_s)";
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
-      "any" usebundle => dcs_check_diff("$(G.testfile).actual",
-                                       "$(G.testfile).expected",
-                                       "$(this.promise_filename)");
+    "any"
+      usebundle => dcs_check_diff(
+        "$(G.testfile).actual",
+        "$(G.testfile).expected",
+        "$(this.promise_filename)"
+      );
 }

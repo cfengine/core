@@ -3,47 +3,45 @@
 # Test abortclasses - control case 1, no abort
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
-body agent control {
-      abortclasses => { "quitquit", "quit.*" };
+body agent control
+{
+  abortclasses => { "quitquit", "quit.*" };
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-      "dummy" string => "dummy";
+    "dummy" string => "dummy";
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-      "dummy" string => "dummy";
+    "dummy" string => "dummy";
 }
 
 #######################################################
-
 bundle agent check
 {
   vars:
-      "dummy" string => "dummy";
+    "dummy" string => "dummy";
 
   classes:
-      "ok" expression => "any";
+    "ok" expression => "any";
 
   reports:
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

@@ -1,8 +1,8 @@
 body common control
 {
-        inputs => { "../../default.sub.cf" };
-        bundlesequence  => { default("$(this.promise_filename)") };
-        version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent init
@@ -10,29 +10,28 @@ bundle agent init
   files:
     any::
       "$(G.testfile).json"
-      create => "true",
-      edit_line => init_insert_json;
+        create => "true",
+        edit_line => init_insert_json;
 }
 
 bundle edit_line init_insert_json
 {
   insert_lines:
-      '{ "hello": "world" }';
+    '{ "hello": "world" }';
 }
-
 
 bundle agent test
 {
   meta:
-      "description"
-        string => "Test module file protocol";
-      "test_soft_fail" string => "windows",
-        meta => { "ENT-10257" };
+    "description" string => "Test module file protocol";
+
+    "test_soft_fail"
+      string => "windows",
+      meta => { "ENT-10257" };
 
   commands:
     any::
-      "$(G.echo) &data=$(G.testfile).json"
-        module => "true";
+      "$(G.echo) &data=$(G.testfile).json" module => "true";
 
   reports:
     DEBUG::
@@ -42,7 +41,7 @@ bundle agent test
 bundle agent check
 {
   classes:
-      "pass" expression => strcmp("$(echo.data[hello])", "world");
+    "pass" expression => strcmp("$(echo.data[hello])", "world");
 
   reports:
     pass::

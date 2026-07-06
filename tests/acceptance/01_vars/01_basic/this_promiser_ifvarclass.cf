@@ -1,43 +1,42 @@
 # Test that this.promiser works in ifvarclass
 # CFE-2262 (https://northerntech.atlassian.net/browse/CFE-2262)
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent init
 {
   files:
-    "$(G.testfile)"
-      create => "true";
+    "$(G.testfile)" create => "true";
 }
 
 bundle agent test
 {
   meta:
-      "description" -> { "redmine#7880", "CFE-2262" }
-        string => "Test that it is possible to use this.promiser in ifvarclass.",
-        meta => { "redmine#7880", "CFE-2262" };
+    "description" -> { "redmine#7880", "CFE-2262" }
+      string => "Test that it is possible to use this.promiser in ifvarclass.",
+      meta => { "redmine#7880", "CFE-2262" };
 
   files:
     # I should be able to use this.promiser to check if the file is a plain
     # file
     "$(G.testfile)"
       delete => tidy,
-      ifvarclass => isplain( "$(this.promiser)" );
+      ifvarclass => isplain("$(this.promiser)");
 }
 
 bundle agent check
 {
   classes:
-    "ok" not => fileexists( "$(G.testfile)" );
+    "ok" not => fileexists("$(G.testfile)");
 
   reports:
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

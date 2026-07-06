@@ -1,5 +1,3 @@
 {
-  "variables": {
-    "bare_test_array": ["bare_test_array_element"]
-  }
+  "variables": { "bare_test_array": ["bare_test_array_element"] }
 }

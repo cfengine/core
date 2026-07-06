@@ -1,54 +1,63 @@
 # fixes https://dev.cfengine.com/issues/2504
 # using variables in string contexts
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent test
 {
   defaults:
-      "s1" string => "1";
-      "s2" string => "2";
-      "s3" string => "3";
-      "s4" string => "4";
-      "s5" string => "5";
-      "s6" string => "6";
-      "s7" string => "7";
-      "s8" string => "8";
+    "s1" string => "1";
+    "s2" string => "2";
+    "s3" string => "3";
+    "s4" string => "4";
+    "s5" string => "5";
+    "s6" string => "6";
+    "s7" string => "7";
+    "s8" string => "8";
 
   classes:
-      "$(mylist)" expression => "any";
+    "$(mylist)" expression => "any";
 
   vars:
-      "mylist" slist => { "a", "b", "c" };
-      "myvar" string => "me";
-      "myclass" string => "any";
-      "s1" string => "hello, this is $(myvar)",
+    "mylist" slist => { "a", "b", "c" };
+    "myvar" string => "me";
+    "myclass" string => "any";
+
+    "s1"
+      string => "hello, this is $(myvar)",
       if => "$(myclass)";
+
     any::
       "s2" string => "any hello";
+
     'any'::
       "s3" string => "string hello";
+
     "$(myclass)"::
       "s4" string => "variable context hello!!!";
       "s4_2" string => "variable context hello!!!";
+
     "$(myclass).any"::
       "s5" string => "compound variable context hello!!!";
+
     "not$(myclass)"::
       "s6" string => "BAD variable context hello!!!";
-    "$(myclass)"::
-      "s7" string => "augmented variable context hello!!!",
-      if => "any";
 
     "$(myclass)"::
-      "s8" string => "BAD augmented variable context hello!!!",
-      if => "nonesuch";
+      "s7"
+        string => "augmented variable context hello!!!",
+        if => "any";
+
+    "$(myclass)"::
+      "s8"
+        string => "BAD augmented variable context hello!!!",
+        if => "nonesuch";
+
     "$(mylist).cfengine"::
       "iterated_$(mylist)" string => "iteration class $(mylist)";
 
@@ -56,31 +65,38 @@ bundle agent test
       "whitespace1" string => "$(this.promiser): quoted with spaces";
 
     myclass . cfengine | any::
-      "whitespace2" string => "$(this.promiser): unquoted with spaces, starts with valid class";
+      "whitespace2"
+        string => "$(this.promiser): unquoted with spaces, starts with valid class";
 
     nosuchclass . any::
-      "whitespace3" string => "$(this.promiser): unquoted with spaces, should be missing";
+      "whitespace3"
+        string => "$(this.promiser): unquoted with spaces, should be missing";
 
     nosuchclass | any::
-      "whitespace4" string => "$(this.promiser): unquoted with spaces, starts with missing class but is true";
+      "whitespace4"
+        string => "$(this.promiser): unquoted with spaces, starts with missing class but is true";
 
     any	 |	 ( cfengine | linux )::
-      "whitespace5" string => "$(this.promiser): remove spaces and tabs from an expression";
+      "whitespace5"
+        string => "$(this.promiser): remove spaces and tabs from an expression";
 
     any	 .	 ( nosuchclass . any )::
-      "whitespace6" string => "$(this.promiser): remove spaces and tabs from an expression that is false in the end, should be missing";
+      "whitespace6"
+        string => "$(this.promiser): remove spaces and tabs from an expression that is false in the end, should be missing";
 
     "cf engine"::
-      "whitespace7" string => "$(this.promiser): quoted with spaces but no operators, should be missing with an error";
-
+      "whitespace7"
+        string => "$(this.promiser): quoted with spaces but no operators, should be missing with an error";
 }
 
 #######################################################
-
 bundle agent check
 {
   methods:
-      "check"  usebundle => dcs_check_state(test,
-                                           "$(this.promise_filename).expected.json",
-                                           $(this.promise_filename));
+    "check"
+      usebundle => dcs_check_state(
+        test,
+        "$(this.promise_filename).expected.json",
+        $(this.promise_filename)
+      );
 }

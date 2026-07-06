@@ -5,7 +5,6 @@
 #
 #####################################################
 @endif
-
 body common control
 {
   inputs => { "../../default.sub.cf" };

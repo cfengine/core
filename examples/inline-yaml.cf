@@ -3,31 +3,33 @@ bundle agent example_inline_yaml
 # @brief Example illustrating inline yaml
 {
   vars:
-      # YAML requires "---" header (followed by newline)
-      # NOTE \n is not interpreted as a newline, instead use $(const.n)
-
-      "yaml_multi_line" data => '---
+    # YAML requires "---" header (followed by newline)
+    # NOTE \n is not interpreted as a newline, instead use $(const.n)
+    "yaml_multi_line"
+      data => '---
 - "CFEngine Champions":
    - Name: "Aleksey Tsalolikhin"
      Year: 2011
    - Name: "Ted Zlatanov"
      Year : 2013';
 
-
-      "yaml_single_line" data => '---$(const.n)- key1: value1$(const.n)- key2: value2';
+    "yaml_single_line"
+      data => '---$(const.n)- key1: value1$(const.n)- key2: value2';
 
   reports:
-      "Data container defined from yaml_multi_line: $(with)"
-        with => storejson( @(yaml_multi_line) );
+    "Data container defined from yaml_multi_line: $(with)"
+      with => storejson(@(yaml_multi_line));
 
-      "Data container defined from yaml_single_line: $(with)"
-        with => storejson( @(yaml_single_line) );
+    "Data container defined from yaml_single_line: $(with)"
+      with => storejson(@(yaml_single_line));
 }
+
 bundle agent __main__
 {
   methods:
-      "example_inline_yaml";
+    "example_inline_yaml";
 }
+
 #+end_src
 ###############################################################################
 #+begin_src example_output

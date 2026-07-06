@@ -3,73 +3,70 @@
 # Test that symlinks outside of copying root are NOT set aside while copying trees of directorise (Issue 585)
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   files:
-      "$(G.testdir)/srcdir/"
-      create => "true";
-      "$(G.testdir)/srcdir/foo"
-      create => "true";
-      "$(G.testdir)/realdestdir/"
-      create => "true";
-      "$(G.testdir)/destdir"
+    "$(G.testdir)/srcdir/" create => "true";
+    "$(G.testdir)/srcdir/foo" create => "true";
+    "$(G.testdir)/realdestdir/" create => "true";
+
+    "$(G.testdir)/destdir"
       comment => "Create a relative link to the target.",
       link_from => ln_s("$(G.testdir)/realdestdir");
 }
 
-
-body link_from ln_s(x) {
-      link_type => "relative";
-      source => "$(x)";
-      when_no_source => "nop";
+body link_from ln_s(x)
+{
+  link_type => "relative";
+  source => "$(x)";
+  when_no_source => "nop";
 }
 
 #######################################################
-
 bundle agent test
 {
   meta:
-      "test_skip_unsupported" string => "windows";
+    "test_skip_unsupported" string => "windows";
 
   files:
-      "$(G.testdir)/destdir/foo"
+    "$(G.testdir)/destdir/foo"
       copy_from => test_sync_cp("$(G.testdir)/srcdir/foo");
 }
 
 body copy_from test_sync_cp(from)
 {
-      source      => "$(from)";
+  source => "$(from)";
 }
 
 #######################################################
-
 bundle agent check
 {
   vars:
-      "expect" string => "symlink";
-      "result" string => filestat("$(G.testdir)/destdir", "type");
+    "expect" string => "symlink";
+    "result" string => filestat("$(G.testdir)/destdir", "type");
 
   classes:
-      "ok" expression => strcmp("$(expect)", "$(result)");
+    "ok" expression => strcmp("$(expect)", "$(result)");
 
   reports:
     DEBUG::
       "expected: '$(expect)'";
       "got:      '$(result)'";
+
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }
+
 ### PROJECT_ID: core
 ### CATEGORY_ID: 27

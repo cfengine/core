@@ -4,104 +4,113 @@
 # Redmine#3991: support data containers
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf", "../../plucked.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf", "../../plucked.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   vars:
-      "script_name" string => "$(this.promise_filename).txt";
-
+    "script_name" string => "$(this.promise_filename).txt";
 }
 
 #######################################################
-
 bundle agent test
 {
   commands:
-      "$(G.cat) $(init.script_name)"
-        contain => in_shell,
-        module => "true";
+    "$(G.cat) $(init.script_name)"
+      contain => in_shell,
+      module => "true";
 }
 
 #######################################################
-
 bundle agent check
 {
   vars:
-      "list0" slist => {"abc", "def", "ghi"};
-      "list1" slist => {"{{abc}}", "  ' def}", "ghi'''"};
-      "list2" slist => {'{{a,bc}}', '  " de,f}', 'gh,,i"""'};
-      "list3" slist => {"{{a'bc',,}}", '  ",, d"ef}', "ghi,},'''"};
+    "list0" slist => { "abc", "def", "ghi" };
+    "list1" slist => { "{{abc}}", "  ' def}", "ghi'''" };
+    "list2" slist => { '{{a,bc}}', '  " de,f}', 'gh,,i"""' };
+    "list3" slist => { "{{a'bc',,}}", '  ",, d"ef}', "ghi,},'''" };
+    "actual0" string => join(":", "list0");
+    "actual1" string => join(":", "list1");
+    "actual2" string => join(":", "list2");
+    "actual3" string => join(":", "list3");
+    "joined0" string => join(":", "xyz_123___456.mylist");
+    "joined1" string => join(":", "xyz_123___456.myalist");
+    "joined2" string => join(":", "xyz_123___456.myblist");
+    "joined3" string => join(":", "xyz_123___456.myclist");
+    "c" slist => { "1", "2", "3", "4", "5", "6" };
+    "c$(c)" string => format("%S", "xyz_123___456.mycontainer$(c)");
+    "e1" string => '{"x":[456,789]}';
+    "e5" string => '["read","some","strings"]';
 
-      "actual0" string => join(":", "list0");
-      "actual1" string => join(":", "list1");
-      "actual2" string => join(":", "list2");
-      "actual3" string => join(":", "list3");
+    "e6"
+      string => '{"mix":["match"],"nothing":null,"paddle":true,"ping":"pong"}';
 
-      "joined0" string => join(":", "xyz_123___456.mylist");
-      "joined1" string => join(":", "xyz_123___456.myalist");
-      "joined2" string => join(":", "xyz_123___456.myblist");
-      "joined3" string => join(":", "xyz_123___456.myclist");
-
-      "c" slist => { "1", "2", "3", "4", "5", "6" };
-      "c$(c)" string => format("%S", "xyz_123___456.mycontainer$(c)");
-
-      "e1" string => '{"x":[456,789]}';
-      "e5" string => '["read","some","strings"]';
-      "e6" string => '{"mix":["match"],"nothing":null,"paddle":true,"ping":"pong"}';
-
-      "hello_contexts" slist => { "xyz_123___456", "_456", "456", "_", "a__456__", "__a__", };
+    "hello_contexts"
+      slist => { "xyz_123___456", "_456", "456", "_", "a__456__", "__a__" };
 
   classes:
-
     any::
-      "var0ok" expression => strcmp("${this.joined0}" , "${this.actual0}");
-      "var1ok" expression => strcmp("${this.joined1}" , "${this.actual1}");
-      "var2ok" expression => strcmp("${this.joined2}" , "${this.actual2}");
-      "var3ok" expression => strcmp("${this.joined3}" , "${this.actual3}");
-      "var4ok" expression => strcmp("hello there" , "${xyz_123___456.myvar}");
+      "var0ok" expression => strcmp("${this.joined0}", "${this.actual0}");
+      "var1ok" expression => strcmp("${this.joined1}", "${this.actual1}");
+      "var2ok" expression => strcmp("${this.joined2}", "${this.actual2}");
+      "var3ok" expression => strcmp("${this.joined3}", "${this.actual3}");
+      "var4ok" expression => strcmp("hello there", "${xyz_123___456.myvar}");
 
-      "hello_$(hello_contexts)_ok" expression => strcmp("hello there" , "${$(hello_contexts).myvar}");
+      "hello_$(hello_contexts)_ok"
+        expression => strcmp("hello there", "${$(hello_contexts).myvar}");
 
-      "ok_c1" expression => strcmp($(e1) , $(c1));
+      "ok_c1" expression => strcmp($(e1), $(c1));
       "ok_c2" not => isvariable("c2");
       "ok_c3" not => isvariable("c3");
       "ok_c4" not => isvariable("c4");
-      "ok_c5" expression => strcmp($(e5) , $(c5));
-      "ok_c6" expression => strcmp($(e6) , $(c6));
+      "ok_c5" expression => strcmp($(e5), $(c5));
+      "ok_c6" expression => strcmp($(e6), $(c6));
 
       "ok_injected_var" -> { "CFE-1915" }
         expression => strcmp($(test.myvar), "hello there"),
         comment => "This remote variable injection should work, BUT IS A DIRTY HACK!";
 
-      "ok" and => { "myclass", "var0ok", "var1ok", "var2ok", "var3ok", "var4ok",
-                    "hello_xyz_123___456_ok", "hello__456_ok", "hello_456_ok", "hello___ok", "hello_a__456___ok", "hello___a___ok",
-                    "ok_c1", "ok_c2", "ok_c3", "ok_c4", "ok_c5", "ok_c6",
-                    "ok_injected_var" };
+      "ok"
+        and => {
+          "myclass",
+          "var0ok",
+          "var1ok",
+          "var2ok",
+          "var3ok",
+          "var4ok",
+          "hello_xyz_123___456_ok",
+          "hello__456_ok",
+          "hello_456_ok",
+          "hello___ok",
+          "hello_a__456___ok",
+          "hello___a___ok",
+          "ok_c1",
+          "ok_c2",
+          "ok_c3",
+          "ok_c4",
+          "ok_c5",
+          "ok_c6",
+          "ok_injected_var",
+        };
 
   reports:
     DEBUG::
-      "container $(c): $(e$(c)) != $(c$(c))"
-      if => "!ok_c$(c)";
-
+      "container $(c): $(e$(c)) != $(c$(c))" if => "!ok_c$(c)";
       "context $(hello_contexts) failed" if => "!hello_$(hello_contexts)_ok";
-
-      "test.myvar = $(test.myvar)"
-        if => "!ok_injected_var";
+      "test.myvar = $(test.myvar)" if => "!ok_injected_var";
 
     EXTRA::
       "context $(hello_contexts) worked" if => "hello_$(hello_contexts)_ok";
 
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

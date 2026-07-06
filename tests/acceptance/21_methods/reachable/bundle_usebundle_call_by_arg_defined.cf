@@ -1,12 +1,10 @@
 # Reachable bundle tests verify that you are allowed have references
 # to undefined bundles, as long as they are not actually called.
-
 # These tests are left very simple on purpose,
 # they are not using the test framework.
 # They should be seen together, note that defined vs undefined variants are
 # almost identical, just replacing one detail to show what should work
 # and what should error.
-
 bundle agent baz
 {
   reports:
@@ -16,13 +14,12 @@ bundle agent baz
 bundle agent bar(x)
 {
   methods:
-    "foo"
-      usebundle => "$(x)"; # Will call baz, which exists, should work
+    # Will call baz, which exists, should work
+    "foo" usebundle => "$(x)";
 }
 
 bundle agent main
 {
   methods:
-    "foo"
-      usebundle => bar("baz");
+    "foo" usebundle => bar("baz");
 }

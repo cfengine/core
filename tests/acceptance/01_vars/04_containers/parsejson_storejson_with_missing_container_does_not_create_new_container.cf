@@ -1,14 +1,15 @@
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle common test_meta
 {
   vars:
-      "description" string => "Test that a data container defined by using parsejson(storejson()) against a non existing data container will not define a new data container.";
+    "description"
+      string => "Test that a data container defined by using parsejson(storejson()) against a non existing data container will not define a new data container.";
 }
 
 bundle agent init
@@ -21,28 +22,23 @@ bundle agent init
 
   reports:
     DEBUG::
-    "DEBUG $(this.bundle): serialized_data: '$(serialized_data)'";
+      "DEBUG $(this.bundle): serialized_data: '$(serialized_data)'";
 }
 
 bundle agent check
 {
   classes:
-    "fail"
-      expression => isvariable("init.data");
-
-    "ok"
-      not => isvariable("init.data");
-
-    "exception"
-      and => { "fail", "ok" };
+    "fail" expression => isvariable("init.data");
+    "ok" not => isvariable("init.data");
+    "exception" and => { "fail", "ok" };
 
   reports:
-     fail::
-       "$(this.promise_filename) FAIL";
+    fail::
+      "$(this.promise_filename) FAIL";
 
-     ok.!fail::
-       "$(this.promise_filename) Pass";
+    ok.!fail::
+      "$(this.promise_filename) Pass";
 
-     exception::
-       "$(this.promise_filename) EXCEPTION";
+    exception::
+      "$(this.promise_filename) EXCEPTION";
 }

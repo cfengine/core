@@ -1,18 +1,17 @@
 # Redmine#4993: default bundlesequence calls main()
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
+  inputs => { "../../default.sub.cf" };
 }
 
 bundle agent main
 {
   methods:
-      "" usebundle => default("$(this.promise_filename)");
+    "" usebundle => default("$(this.promise_filename)");
 }
 
 bundle agent check
 {
   methods:
-      "" usebundle => dcs_pass("$(this.promise_filename)");
+    "" usebundle => dcs_pass("$(this.promise_filename)");
 }

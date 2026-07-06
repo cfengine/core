@@ -2,9 +2,12 @@
 bundle agent main
 {
   reports:
-      "$(with)"
-        with => string_mustache("datastate() provides {{#-top-}} {{{@}}}{{/-top-}}", datastate() );
+    "$(with)"
+      with => string_mustache(
+        "datastate() provides {{#-top-}} {{{@}}}{{/-top-}}", datastate()
+      );
 }
+
 #+end_src
 ###############################################################################
 #+begin_src example_output

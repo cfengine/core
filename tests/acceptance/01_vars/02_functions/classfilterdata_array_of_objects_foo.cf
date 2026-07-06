@@ -38,29 +38,36 @@ bundle agent check
     "range" slist => expandrange("[0-$(num_indices)]", "1");
 
     "expected[0]"
-      string => storejson('[
+      string => storejson(
+        '[
         { "key_0": "foo", "key_1": "!foo", "key_2": "foo&bar", "key_3": "foo|bar" },
-      ]');
+      ]'
+      );
+
     "expected[1]"
-      string => storejson('[
+      string => storejson(
+        '[
         { "key_0": "bar", "key_1": "!bar", "key_2": "bar&baz", "key_3": "bar|baz" },
         { "key_0": "baz", "key_1": "!baz", "key_2": "foo&baz", "key_3": "foo|baz" },
+      ]'
+      );
+
+    "expected[2]" string => storejson('[
       ]');
-    "expected[2]"
-      string => storejson('[
-      ]');
+
     "expected[3]"
-      string => storejson('[
+      string => storejson(
+        '[
         { "key_0": "foo", "key_1": "!foo", "key_2": "foo&bar", "key_3": "foo|bar" },
         { "key_0": "baz", "key_1": "!baz", "key_2": "foo&baz", "key_3": "foo|baz" },
-      ]');
+      ]'
+      );
 
   classes:
     "ok_$(range)"
-      expression => strcmp("$(expected[$(range)])",
-                           "$(actual[$(range)])");
-    "ok"
-      expression => and(expandrange("ok_[0-$(num_indices)]", "1"));
+      expression => strcmp("$(expected[$(range)])", "$(actual[$(range)])");
+
+    "ok" expression => and(expandrange("ok_[0-$(num_indices)]", "1"));
 
   methods:
     "context: '$(with)' and index: $(range)"
@@ -69,10 +76,12 @@ bundle agent check
       with => join(", ", "context");
 
   reports:
-      "Context '$(with)'; index $(range); expected '$(expected[$(range)])'; actual '$(actual[$(range)])'"
-        with => join("', '", "context");
+    "Context '$(with)'; index $(range); expected '$(expected[$(range)])'; actual '$(actual[$(range)])'"
+      with => join("', '", "context");
+
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

@@ -3,46 +3,42 @@
 # Test getusers(), arg0 only
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };   
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent init
 {
   vars:
-      # All users except root, bin, and daemon
-      "users" slist => getusers("root,daemon,bin","");
+    # All users except root, bin, and daemon
+    "users" slist => getusers("root,daemon,bin", "");
 
   files:
-      "$(G.testfile)"
-      delete => init_delete;
+    "$(G.testfile)" delete => init_delete;
 
   reports:
     cfengine_3::
-      "$(users)"
-      report_to_file => "$(G.testfile)";
+      "$(users)" report_to_file => "$(G.testfile)";
 }
 
 body delete init_delete
 {
-      dirlinks => "delete";
-      rmdirs   => "true";
+  dirlinks => "delete";
+  rmdirs => "true";
 }
 
 #######################################################
-
 bundle agent test
 {
   meta:
-      "test_skip_unsupported" string => "windows";
+    "test_skip_unsupported" string => "windows";
 
   files:
-      # Try to delete the lines that shouldn't be there anyway
-      "$(G.testfile)"
+    # Try to delete the lines that shouldn't be there anyway
+    "$(G.testfile)"
       edit_line => test_delete,
       classes => full_set;
 }
@@ -50,27 +46,25 @@ bundle agent test
 bundle edit_line test_delete
 {
   delete_lines:
-      "root";
-      "daemon";
-      "bin";
+    "root";
+    "daemon";
+    "bin";
 }
 
 body classes full_set
 {
-      promise_kept     => { "pass" };
-      promise_repaired => { "fail" };
-      repair_failed    => { "fail" };
-      repair_denied    => { "fail" };
-      repair_timeout   => { "fail" };
+  promise_kept => { "pass" };
+  promise_repaired => { "fail" };
+  repair_failed => { "fail" };
+  repair_denied => { "fail" };
+  repair_timeout => { "fail" };
 }
 
-
 #######################################################
-
 bundle agent check
 {
   classes:
-      "ok" expression => "pass&!fail";
+    "ok" expression => "pass&!fail";
 
   reports:
     ok::

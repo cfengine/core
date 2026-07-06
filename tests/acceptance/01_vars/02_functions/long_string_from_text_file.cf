@@ -4,49 +4,46 @@
 # Redmine:3957 (https://cfengine.com/dev/issues/3957)
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 #######################################################
-
 bundle agent init
 {
   files:
-      "$(G.testfile).data"
-        create => "true",
-        edit_defaults => empty,
-        edit_line => seed_data;
+    "$(G.testfile).data"
+      create => "true",
+      edit_defaults => empty,
+      edit_line => seed_data;
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-    "keyfile" string  => "$(G.testfile).data";
-    "keys"    slist   => readstringlist("$(keyfile)", "#[^\n]*", "\n", 10, 3072);
+    "keyfile" string => "$(G.testfile).data";
+    "keys" slist => readstringlist("$(keyfile)", "#[^\n]*", "\n", 10, 3072);
 }
 
 #######################################################
-
 bundle agent check
 {
   classes:
-      "ok" expression => "any",
-        comment => "If we made it to here, we didn't crash";
+    "ok"
+      expression => "any",
+      comment => "If we made it to here, we didn't crash";
 
   reports:
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }
-
 
 bundle edit_line seed_data
 {

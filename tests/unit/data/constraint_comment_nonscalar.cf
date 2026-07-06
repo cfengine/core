@@ -1,6 +1,5 @@
 bundle agent foo
 {
   reports:
-      "hello"
-      comment => { "a" };
+    "hello" comment => { "a" };
 }

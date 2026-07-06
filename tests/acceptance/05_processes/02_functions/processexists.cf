@@ -6,26 +6,26 @@
 # 00_hpux_ps_setup_serial.cf setup test having run first.
 #
 ###########################################################
-
 body common control
 {
-    inputs => { "../../default.sub.cf" };
-    bundlesequence => { default($(this.promise_filename)) };
-    version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default($(this.promise_filename)) };
+  version => "1.0";
 }
 
 ###########################################################
-
 bundle common test
 {
   classes:
-      "descartes" expression => processexists(".+agent.+");
+    "descartes" expression => processexists(".+agent.+");
 }
 
 ###########################################################
-
 bundle agent check
 {
   methods:
-      "" usebundle => dcs_passif_expected("descartes", "", $(this.promise_filename));
+    ""
+      usebundle => dcs_passif_expected(
+        "descartes", "", $(this.promise_filename)
+      );
 }

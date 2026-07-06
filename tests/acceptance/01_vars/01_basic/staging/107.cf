@@ -4,44 +4,45 @@
 # another file.
 #
 #######################################################
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
-
 
 bundle agent init
 {
   vars:
-      "dummy" string => "dummy";
+    "dummy" string => "dummy";
 }
 
 #######################################################
-
 bundle agent test
 {
   vars:
-      "subout" string => execresult("$(sys.cf_agent) -vKf $(this.promise_filename).sub -DAUTO | grep Q:", "useshell");
+    "subout"
+      string => execresult(
+        "$(sys.cf_agent) -vKf $(this.promise_filename).sub -DAUTO | grep Q:",
+        "useshell"
+      );
 }
 
 #######################################################
-
 bundle agent check
 {
   classes:
-      "default" expression => regcmp(".*default\\.cf.*", "$(test.subout)");
-      "itself" expression => regcmp(".*107\\.cf.*", "$(test.subout)");
-
-      "ok" and => { "!default", "itself" };
+    "default" expression => regcmp(".*default\\.cf.*", "$(test.subout)");
+    "itself" expression => regcmp(".*107\\.cf.*", "$(test.subout)");
+    "ok" and => { "!default", "itself" };
 
   reports:
     DEBUG::
       "$(test.subout)";
+
     ok::
       "$(this.promise_filename) Pass";
+
     !ok::
       "$(this.promise_filename) FAIL";
 }

@@ -1,20 +1,19 @@
 # Not a test, but just setting up non-trusted mode on HPUX.
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
 }
 
 bundle agent init
 {
   meta:
-      "test_skip_unsupported" string => "!hpux";
+    "test_skip_unsupported" string => "!hpux";
 
   classes:
-      "non_trusted_mode"
-        not => fileexists("/etc/shadow"),
-        scope => "namespace";
+    "non_trusted_mode"
+      not => fileexists("/etc/shadow"),
+      scope => "namespace";
 
   commands:
     !not_trusted_mode::
@@ -26,6 +25,7 @@ bundle agent check
   reports:
     non_trusted_mode::
       "$(this.promise_filename) Pass";
+
     !non_trusted_mode::
       "$(this.promise_filename) FAIL";
 }

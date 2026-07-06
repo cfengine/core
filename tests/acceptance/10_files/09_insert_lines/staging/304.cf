@@ -1,23 +1,21 @@
 body common control
 {
-      inputs => { "../../default.sub.cf", "304.cf.namespaced.sub" };
-      bundlesequence => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf", "304.cf.namespaced.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 ########################################################
-
 bundle agent init
 {
   vars:
-      "expected" slist => { "var1=value1" };
-
-      "files" slist => { "actual", "expected" };
+    "expected" slist => { "var1=value1" };
+    "files" slist => { "actual", "expected" };
 
   files:
-      "$(G.testfile).actual" touch => "true";
+    "$(G.testfile).actual" touch => "true";
 
-      "$(G.testfile).expected"
+    "$(G.testfile).expected"
       touch => "true",
       edit_defaults => init_empty,
       edit_line => init_insert("$(expected)");
@@ -26,27 +24,31 @@ bundle agent init
 bundle edit_line init_insert(str)
 {
   insert_lines:
-      "$(str)";
+    "$(str)";
 }
 
 body edit_defaults init_empty
 {
-      empty_file_before_editing => "true";
+  empty_file_before_editing => "true";
 }
 
 bundle agent test
 {
   methods:
-      "call" usebundle => cfdc_yumclient:config("$(G.testfile).actual", "2");
-      "call" usebundle => cfdc_yumclient:config("$(G.testfile).actual", "1");
+    "call" usebundle => cfdc_yumclient:config("$(G.testfile).actual", "2");
+    "call" usebundle => cfdc_yumclient:config("$(G.testfile).actual", "1");
 }
 
 bundle agent check
 {
   methods:
-      "first" usebundle => dcs_check_diff("$(G.testfile).actual",
-                                              "$(G.testfile).expected",
-                                              "$(this.promise_filename)");
+    "first"
+      usebundle => dcs_check_diff(
+        "$(G.testfile).actual",
+        "$(G.testfile).expected",
+        "$(this.promise_filename)"
+      );
 }
+
 ### PROJECT_ID: core
 ### CATEGORY_ID: 27

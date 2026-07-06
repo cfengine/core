@@ -3,7 +3,6 @@
 # Test reworked in CFE-3644 to be more dynamic
 #
 ##############################################################
-
 body common control
 {
   bundlesequence => { "test", "check" };
@@ -20,15 +19,30 @@ bundle agent test
     # Platforms to test
     any::
       "platforms"
-        slist => { "debian", "ubuntu", "redhat", "rhel", "centos", "fedora",
-                   "aix", "hpux", "suse", "opensuse", "opensuse_leap", "sles",
-                   "solaris", "sunos", "windows", "freebsd", "macos" };
-
+        slist => {
+          "debian",
+          "ubuntu",
+          "redhat",
+          "rhel",
+          "centos",
+          "fedora",
+          "aix",
+          "hpux",
+          "suse",
+          "opensuse",
+          "opensuse_leap",
+          "sles",
+          "solaris",
+          "sunos",
+          "windows",
+          "freebsd",
+          "macos",
+        };
 
     # Regex matching current platforms OS-class with version numbers
     !solaris&!sunos::
-      "class_regex"
-        string => format("^(%s)_[0-9]+$", join("|", "platforms"));
+      "class_regex" string => format("^(%s)_[0-9]+$", join("|", "platforms"));
+
     solaris|sunos::
       "class_regex"
         string => format("^(%s)_[0-9]+_[0-9]+$", join("|", "platforms"));
@@ -39,32 +53,35 @@ bundle agent test
     #    E.g. Solaris 11 has class "solaris_5_11"
     any::
       "extract_regex"
-        string => ifelse("solaris|sunos", "^[a-z]+_[0-9]+_([0-9]+$)",
-                         "opensuse_leap", "^[a-z_]+_([0-9]+)$",
-                                          "^[a-z]+_([0-9]+)$");
+        string => ifelse(
+          "solaris|sunos",
+          "^[a-z]+_[0-9]+_([0-9]+$)",
+          "opensuse_leap",
+          "^[a-z_]+_([0-9]+)$",
+          "^[a-z]+_([0-9]+)$"
+        );
 
     # Find OS-class with version numbers using regex
     any::
-      "os_class"
-        string => nth(classesmatching("$(class_regex)"), "0");
+      "os_class" string => nth(classesmatching("$(class_regex)"), "0");
 
     # Get extracted major version number
     any::
-      "expected"
-        string => nth("version_number", "1");
+      "expected" string => nth("version_number", "1");
 
   classes:
     any::
       "regextract_success"
-        expression => regextract("$(extract_regex)", "$(os_class)", "version_number");
+        expression => regextract(
+          "$(extract_regex)", "$(os_class)", "version_number"
+        );
 }
 
 bundle agent check
 {
   vars:
     any::
-      "defined_classes"
-        slist => classesmatching(".*");
+      "defined_classes" slist => classesmatching(".*");
 
   classes:
     any::
@@ -77,8 +94,10 @@ bundle agent check
       "Defined classes: $(defined_classes)";
       "$(this.promise_filename) Expected: $(test.expected)";
       "$(this.promise_filename) Found: $(sys.os_version_major)";
+
     passed::
       "$(this.promise_filename) Pass";
+
     !passed::
       "$(this.promise_filename) FAIL";
 }

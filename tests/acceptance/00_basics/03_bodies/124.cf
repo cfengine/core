@@ -1,55 +1,49 @@
 # Test a context defined in body classes with scope => bundle,
 # check that the bundle context goes away after the bundle is done
-
 body common control
 {
-      inputs => { "../../default.sub.cf" };
-      bundlesequence  => { default("$(this.promise_filename)") };
-      version => "1.0";
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
 }
 
 bundle agent init
 {
   vars:
-      "dummy" string => "dummy";
+    "dummy" string => "dummy";
 }
 
 bundle agent test
 {
   methods:
     !pass_one::
-      "whatever"
-      usebundle => set_context("yes");
+      "whatever" usebundle => set_context("yes");
+
     pass_one::
-      "whatever2"
-      usebundle => set_context("no");
+      "whatever2" usebundle => set_context("no");
 }
 
 bundle agent set_context(doit)
 {
   classes:
-      "set_bundle_class" expression => strcmp(${doit}, "yes");
+    "set_bundle_class" expression => strcmp(${doit}, "yes");
 
   processes:
     set_bundle_class::
-      "$(G.true)"
-      classes => bundle_class;
-
-      "$(G.true)"
-      classes => namespace_class;
+      "$(G.true)" classes => bundle_class;
+      "$(G.true)" classes => namespace_class;
 }
-
 
 body classes namespace_class
 {
-      scope => "namespace";
-      promise_kept => { "pass_one" };
+  scope => "namespace";
+  promise_kept => { "pass_one" };
 }
 
 body classes bundle_class
 {
-      scope => "bundle";
-      promise_kept => { "bundle_context" };
+  scope => "bundle";
+  promise_kept => { "bundle_context" };
 }
 
 bundle agent check
@@ -57,6 +51,7 @@ bundle agent check
   reports:
     !bundle_context::
       "$(this.promise_filename) Pass";
+
     bundle_context::
       "$(this.promise_filename) FAIL";
 }

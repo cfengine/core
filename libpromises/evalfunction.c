@@ -8974,11 +8974,56 @@ static FnCallResult FnCallStringSplit(ARG_UNUSED EvalContext *ctx,
 
 /*********************************************************************/
 
-static FnCallResult FnCallStringReplace(ARG_UNUSED EvalContext *ctx,
-                                        ARG_UNUSED Policy const *policy,
-                                        ARG_UNUSED FnCall const *fp,
-                                        Rlist const *finalargs)
+static char *StringReplaceWithStrings(const char *input_string, const char *match_string, const char *substitute_string, const FnCall *fp)
 {
+    assert(fp != NULL);
+    char *ret = SearchAndReplace(input_string, match_string, substitute_string);
+    if (ret == NULL)
+    {
+        Log(LOG_LEVEL_WARNING,
+            "Failed to replace with function '%s', string: '%s', "
+            "match: '%s', substitute: '%s'",
+            fp->name, input_string, match_string, substitute_string);
+        return NULL;
+    }
+    return ret;
+}
+
+static char *StringReplaceWithLists(const char *input_string, JsonElement *match_list, JsonElement *substitute_list, const FnCall *fp)
+{
+    assert(fp != NULL);
+    char *ret = SafeStringDuplicate(input_string);
+
+    const size_t len = JsonLength(match_list);
+    for (size_t i = 0; i < len; i++)
+    {
+        const char *m = JsonPrimitiveGetAsString(JsonAt(match_list, i));
+        const char *s = JsonPrimitiveGetAsString(JsonAt(substitute_list, i));
+
+        char *next = SearchAndReplace(ret, m, s);
+        free(ret);
+
+        if (next == NULL)
+        {
+            Log(LOG_LEVEL_WARNING,
+                "Failed to replace with function '%s', string: '%s', "
+                "match: '%s', substitute: '%s'",
+                fp->name, input_string, m, s);
+            ret = NULL;
+            break;
+        }
+        ret = next;
+    }
+    return ret;
+}
+
+static FnCallResult FnCallStringReplace(EvalContext *ctx,
+                                        ARG_UNUSED Policy const *policy,
+                                        const FnCall *fp,
+                                        const Rlist *finalargs)
+{
+    assert(fp != NULL);
+    assert(finalargs != NULL);
     if (finalargs->next == NULL || finalargs->next->next == NULL)
     {
         Log(LOG_LEVEL_WARNING,
@@ -8987,22 +9032,80 @@ static FnCallResult FnCallStringReplace(ARG_UNUSED EvalContext *ctx,
         return FnFailure();
     }
 
-    char *string = RlistScalarValue(finalargs);
-    char *match = RlistScalarValue(finalargs->next);
-    char *substitute = RlistScalarValue(finalargs->next->next);
-
-    char *ret = SearchAndReplace(string, match, substitute);
-
-    if (ret == NULL)
+    const char *input_string = RlistScalarValue(finalargs);
+    const char *option = "strings";
+    if (finalargs->next->next->next != NULL)
     {
-        Log(LOG_LEVEL_WARNING,
-            "Failed to replace with function '%s', string: '%s', match: '%s', "
-            "substitute: '%s'",
-            fp->name, string, match, substitute);
+        option = RlistScalarValue(finalargs->next->next->next);
+    }
+
+    if (StringEqual(option, "strings"))
+    {
+        char *ret = StringReplaceWithStrings(input_string,
+            RlistScalarValue(finalargs->next), 
+            RlistScalarValue(finalargs->next->next), 
+            fp);
+
+        return (ret != NULL) ? FnReturnNoCopy(ret) : FnFailure();
+    }
+
+    assert(StringEqual(option, "lists"));
+    bool match_allocated = false;
+    JsonElement *match_list = VarNameOrInlineToJson(ctx, fp, finalargs->next, true, &match_allocated);
+
+    if (match_list == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to replace with function '%s' in '%s': "
+            "Couldn't resolve match pattern '%s' to an array", 
+            fp->name, input_string, RlistScalarValue(finalargs->next));
         return FnFailure();
     }
 
-    return FnReturnNoCopy(ret);
+    if (JsonGetType(match_list) != JSON_TYPE_ARRAY)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to replace with function '%s' in '%s': "
+            "Match pattern expected 'array' but got '%s'",
+            fp->name, input_string, JsonGetTypeAsString(match_list));
+        JsonDestroyMaybe(match_list, match_allocated);
+        return FnFailure();
+    }
+
+    bool substitute_allocated = false;
+    JsonElement *substitute_list = VarNameOrInlineToJson(ctx, fp, finalargs->next->next, true, &substitute_allocated);
+    if (substitute_list == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to replace with function '%s' in '%s': "
+            "Couldn't resolve substitute pattern '%s' to an array", 
+            fp->name, input_string, RlistScalarValue(finalargs->next->next));
+        JsonDestroyMaybe(match_list, match_allocated);
+        return FnFailure();
+    }
+
+    if (JsonGetType(substitute_list) != JSON_TYPE_ARRAY)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to replace with function '%s' in '%s': "
+            "Substitute pattern expected 'array' but got '%s'",
+            fp->name, input_string, JsonGetTypeAsString(substitute_list));
+        JsonDestroyMaybe(substitute_list, substitute_allocated);
+        JsonDestroyMaybe(match_list, match_allocated);
+        return FnFailure();
+    }
+
+    if (JsonLength(match_list) != JsonLength(substitute_list))
+    {
+        Log(LOG_LEVEL_ERR, "Failed to replace with function '%s' in '%s': "
+            "Match and substitute pattern lists must have equal lengths",
+            fp->name, input_string);
+        JsonDestroyMaybe(substitute_list, substitute_allocated);
+        JsonDestroyMaybe(match_list, match_allocated);
+        return FnFailure();
+    }
+
+    char *ret = StringReplaceWithLists(input_string, match_list, substitute_list, fp);
+    JsonDestroyMaybe(substitute_list, substitute_allocated);
+    JsonDestroyMaybe(match_list, match_allocated);
+
+    return (ret != NULL) ? FnReturnNoCopy(ret) : FnFailure();
 }
 
 /*********************************************************************/
@@ -11272,8 +11375,9 @@ static const FnCallArg STRFTIME_ARGS[] =
 static const FnCallArg STRING_REPLACE_ARGS[] =
 {
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Source string"},
-    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "String to replace"},
-    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Replacement string"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "String or list of strings to replace"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Replacement string or list of strings"},
+    {"strings,lists", CF_DATA_TYPE_OPTION, "Whether to expect strings or list of strings"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
@@ -11873,7 +11977,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("string_split", CF_DATA_TYPE_STRING_LIST, SPLITSTRING_ARGS, &FnCallStringSplit, "Convert a string in arg1 into a list of at most arg3 strings by splitting on a regular expression in arg2",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL, DEFAULT_ARGC),
     FnCallTypeNew("string_replace", CF_DATA_TYPE_STRING, STRING_REPLACE_ARGS, &FnCallStringReplace, "Search through arg1, replacing occurences of arg2 with arg3.",
-                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL, DEFAULT_ARGC),
+                  FNCALL_OPTION_COLLECTING | FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL, ARGC(3, 4)),
     FnCallTypeNew("string_trim", CF_DATA_TYPE_STRING, STRING_TRIM_ARGS, &FnCallStringTrim, "Trim whitespace from beginning and end of string",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL, DEFAULT_ARGC),
     FnCallTypeNew("regex_replace", CF_DATA_TYPE_STRING, REGEX_REPLACE_ARGS, &FnCallRegReplace, "Replace occurrences of arg1 in arg2 with arg3, allowing backreferences.  Perl-style options accepted in arg4.",

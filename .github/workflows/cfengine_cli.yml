@@ -11,13 +11,26 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.14"
-      - name: Checkout masterfiles
+      - name: Checkout core
         uses: actions/checkout@v7
+        with:
+          submodules: recursive
       - name: Install CFEngine CLI
         run: pipx install cfengine
+      - name: Install dependencies
+        run: ./ci/dependencies.sh
+      - name: Run autotools / configure
+        run: ./autogen.sh --enable-debug
+      - name: Compile and link (make)
+        run: make -j8 CFLAGS="-Werror -Wall"
+      - name: Install CFEngine
+        run: ./ci/install.sh
+      
       - name: Run cfengine lint
         run: |
-          cfengine lint --strict no ./
+          /var/cfengine/bin/cf-promises --syntax-description json > /tmp/syntax.json
+          cfengine lint --syntax-description /tmp/syntax.json --strict no ./
+
       - name: Run cfengine format --check
         run: |
           cfengine format --check

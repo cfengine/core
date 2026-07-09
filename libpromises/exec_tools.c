@@ -37,6 +37,14 @@
 bool GetExecOutput(const char *command, char **buffer, size_t *buffer_size, ShellType shell, OutputSelect output_select, int *ret_out)
 /* Buffer initially contains whole exec string */
 {
+    assert(buffer != NULL && *buffer != NULL);
+    assert(buffer_size != NULL && *buffer_size > 0);
+
+    /* Terminate up front: if the command produces no output the read loop
+     * below never writes to the buffer, and a caller that allocated it with
+     * malloc() would otherwise see stale heap data as command output. */
+    (*buffer)[0] = '\0';
+
     FILE *pp;
 
     if (shell == SHELL_TYPE_USE)

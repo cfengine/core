@@ -1,4 +1,0 @@
-name: cfengine/codeql-cpp-queries
-version: 1.0.0
-dependencies:
-  codeql/cpp-all: ~0.5.4

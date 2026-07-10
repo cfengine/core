@@ -6293,7 +6293,7 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
                 {
                     const char *format_piece = BufferData(SeqAt(s, 1));
                     bool percent = StringEqualN(format_piece, "%%", 2);
-                    char *data = NULL;
+                    const Rlist *arg = NULL;
 
                     if (percent)
                     {
@@ -6301,10 +6301,10 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
                     }
                     else if (rp != NULL)
                     {
-                        data = RlistScalarValue(rp);
+                        arg = rp;
                         rp = rp->next;
                     }
-                    else // not %% and no data
+                    else // not %% and no arg
                     {
                         Log(LOG_LEVEL_ERR, "format() didn't have enough parameters");
                         BufferDestroy(buf);
@@ -6333,7 +6333,7 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
                     if (strrchr(format_piece, 'd') != NULL || strrchr(format_piece, 'o') != NULL || strrchr(format_piece, 'x') != NULL)
                     {
                         long x = 0;
-                        sscanf(data, "%ld", &x);
+                        sscanf(RlistScalarValue(arg), "%ld", &x);
                         snprintf(piece, CF_BUFSIZE, format_piece, x);
                         BufferAppend(buf, piece, strlen(piece));
                     }
@@ -6345,13 +6345,13 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
                     else if (strrchr(format_piece, 'f') != NULL)
                     {
                         double x = 0;
-                        sscanf(data, "%lf", &x);
+                        sscanf(RlistScalarValue(arg), "%lf", &x);
                         snprintf(piece, CF_BUFSIZE, format_piece, x);
                         BufferAppend(buf, piece, strlen(piece));
                     }
                     else if (strrchr(format_piece, 's') != NULL)
                     {
-                        BufferAppendF(buf, format_piece, data);
+                        BufferAppendF(buf, format_piece, RlistScalarValue(arg));
                     }
                     else if (strrchr(format_piece, 'S') != NULL)
                     {
@@ -6370,50 +6370,59 @@ static FnCallResult FnCallFormat(EvalContext *ctx, ARG_UNUSED const Policy *poli
                             ProgrammingError("Couldn't find the expected S format spec in %s", format_piece);
                         }
 
-                        const char* const varname = data;
-                        VarRef *ref = VarRefParse(varname);
-                        DataType type;
-                        const void *value = EvalContextVariableGet(ctx, ref, &type);
-                        VarRefDestroy(ref);
-
-                        if (type == CF_DATA_TYPE_CONTAINER)
+                        if (arg->val.type == RVAL_TYPE_CONTAINER)
                         {
                             Writer *w = StringWriter();
-                            JsonWriteCompact(w, value);
+                            JsonWriteCompact(w, (JsonElement*) arg->val.item);
                             BufferAppendF(buf, format_rewrite, StringWriterData(w));
                             WriterClose(w);
                         }
-                        else            // it might be a list reference
-                        {
-                            DataType data_type;
-                            const Rlist *list = GetListReferenceArgument(ctx, fp, varname, &data_type);
-                            if (data_type == CF_DATA_TYPE_STRING_LIST)
+                        else {
+                            const char* const varname = RlistScalarValue(arg);
+                            VarRef *ref = VarRefParse(varname);
+                            DataType type;
+                            const void *value = EvalContextVariableGet(ctx, ref, &type);
+                            VarRefDestroy(ref);
+
+                            if (type == CF_DATA_TYPE_CONTAINER)
                             {
                                 Writer *w = StringWriter();
-                                WriterWrite(w, "{ ");
-                                for (const Rlist *rp = list; rp; rp = rp->next)
-                                {
-                                    char *escaped = EscapeCharCopy(RlistScalarValue(rp), '"', '\\');
-                                    WriterWriteF(w, "\"%s\"", escaped);
-                                    free(escaped);
-
-                                    if (rp != NULL && rp->next != NULL)
-                                    {
-                                        WriterWrite(w, ", ");
-                                    }
-                                }
-                                WriterWrite(w, " }");
-
+                                JsonWriteCompact(w, value);
                                 BufferAppendF(buf, format_rewrite, StringWriterData(w));
                                 WriterClose(w);
                             }
-                            else        // whatever this is, it's not a list reference or a data container
+                            else            // it might be a list reference
                             {
-                                Log(LOG_LEVEL_VERBOSE, "format() with %%S specifier needs a data container or a list instead of '%s'.",
-                                    varname);
-                                BufferDestroy(buf);
-                                SeqDestroy(s);
-                                return FnFailure();
+                                DataType data_type;
+                                const Rlist *list = GetListReferenceArgument(ctx, fp, varname, &data_type);
+                                if (data_type == CF_DATA_TYPE_STRING_LIST)
+                                {
+                                    Writer *w = StringWriter();
+                                    WriterWrite(w, "{ ");
+                                    for (const Rlist *tmp = list; tmp; tmp = tmp->next)
+                                    {
+                                        char *escaped = EscapeCharCopy(RlistScalarValue(tmp), '"', '\\');
+                                        WriterWriteF(w, "\"%s\"", escaped);
+                                        free(escaped);
+
+                                        if (tmp != NULL && tmp->next != NULL)
+                                        {
+                                            WriterWrite(w, ", ");
+                                        }
+                                    }
+                                    WriterWrite(w, " }");
+
+                                    BufferAppendF(buf, format_rewrite, StringWriterData(w));
+                                    WriterClose(w);
+                                }
+                                else        // whatever this is, it's not a list reference or a data container
+                                {
+                                    Log(LOG_LEVEL_VERBOSE, "format() with %%S specifier needs a data container or a list instead of '%s'.",
+                                        varname);
+                                    BufferDestroy(buf);
+                                    SeqDestroy(s);
+                                    return FnFailure();
+                                }
                             }
                         }
                     }
@@ -11612,7 +11621,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("findprocesses", CF_DATA_TYPE_CONTAINER, PROCESSEXISTS_ARGS, &FnCallProcessExists, "Returns data container of processes matching the regular expression",
                   FNCALL_OPTION_CACHED, FNCALL_CATEGORY_SYSTEM, SYNTAX_STATUS_NORMAL, DEFAULT_ARGC),
     FnCallTypeNew("format", CF_DATA_TYPE_STRING, FORMAT_ARGS, &FnCallFormat, "Applies a list of string values in arg2,arg3... to a string format in arg1 with sprintf() rules",
-                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL, ARGC(1, -1)),
+                  FNCALL_OPTION_VARARG | FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL, ARGC(1, -1)),
     FnCallTypeNew("getclassmetatags", CF_DATA_TYPE_STRING_LIST, GETCLASSMETATAGS_ARGS, &FnCallGetMetaTags, "Collect the class arg1's meta tags into an slist, optionally collecting only tag key arg2",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_UTILS, SYNTAX_STATUS_NORMAL, ARGC(1, -1)),
     FnCallTypeNew("getenv", CF_DATA_TYPE_STRING, GETENV_ARGS, &FnCallGetEnv, "Return the environment variable named arg1, truncated at arg2 characters",

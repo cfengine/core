@@ -46,6 +46,7 @@ bundle edit_line init_insert
     "key='S_123_list' value='{ \"one\", \"two\", \"\\\"three\\\"\" }'";
     "key='S_container_1' value='[null]'";
     "key='S_container_2' value='[{\"x\":123},\"yz\"]'";
+    "key='S_function' value='{\"hello\": \"world\"}'";
 }
 
 #######################################################
@@ -82,6 +83,7 @@ bundle agent test
     "array[S_container_1]" string => format("%S", mycontainer1);
     "array[S_container_2]" string => format("%S", mycontainer2);
     "formatted" slist => maparray("key='$(this.k)' value='$(this.v)'", "array");
+    "array[S_function]" string => format("%S", parsejson('{"hello": "world"}'));
 
   files:
     "$(G.testfile).actual"

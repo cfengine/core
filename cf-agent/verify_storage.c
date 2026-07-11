@@ -401,8 +401,10 @@ static bool FileSystemMountedCorrectly(Seq *list, char *name, const Attributes *
     {
         if (!a->mount.unmount)
         {
+            /* CFE-1863: do not arm MountAll ('mount -a') here - the caller
+             * mounts this one filesystem surgically.  CF_MOUNTALL is reserved
+             * for the explicit 'mountfilesystems' agent control. */
             Log(LOG_LEVEL_VERBOSE, "File system '%s' seems not to be mounted correctly", name);
-            CF_MOUNTALL = true;
         }
     }
 
@@ -484,7 +486,8 @@ static PromiseResult VerifyMountPromise(EvalContext *ctx, char *name, const Attr
     PromiseResult result = PROMISE_RESULT_NOOP;
     if (!FileSystemMountedCorrectly(GetGlobalMountedFSList(), name, a))
     {
-        /* Declared at this scope so the CF_MOUNTALL guard below can see it. */
+        /* Whether something is already mounted at the promiser (vs. nothing
+         * mounted there at all). */
         bool already_mounted = false;
 
         if (!a->mount.unmount)
@@ -539,19 +542,13 @@ static PromiseResult VerifyMountPromise(EvalContext *ctx, char *name, const Attr
             }
             else
             {
-                /* Not mounted at all - mount it (historical behavior). */
+                /* CFE-1863: not mounted - mount just THIS filesystem instead of
+                 * arming MountAll ('mount -a'), which would also mount every
+                 * other unmounted fstab entry. Then persist to fstab. */
+                result = PromiseResultUpdate(result, VerifyMount(ctx, name, a, pp));
                 if (a->mount.editfstab)
                 {
                     changes += VerifyInFstab(ctx, name, a, pp, &result);
-                }
-                else
-                {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
-                         "Filesystem '%s' was not mounted as promised, and no edits were promised in '%s'", name,
-                         VFSTAB[VSYSTEMHARDCLASS]);
-                    result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
-                    // Mount explicitly
-                    result = PromiseResultUpdate(result, VerifyMount(ctx, name, a, pp));
                 }
             }
         }
@@ -561,13 +558,6 @@ static PromiseResult VerifyMountPromise(EvalContext *ctx, char *name, const Attr
             {
                 changes += VerifyNotInFstab(ctx, name, a, pp, &result);
             }
-        }
-
-        /* mount -a can only help filesystems that are NOT already mounted; it
-         * never remounts or changes options on a live mount. */
-        if (changes > 0 && !already_mounted)
-        {
-            CF_MOUNTALL = true;
         }
     }
     else

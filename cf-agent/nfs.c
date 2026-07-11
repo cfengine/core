@@ -755,9 +755,16 @@ int VerifyInFstab(EvalContext *ctx, char *name, const Attributes *a, const Promi
     }
     else
     {
-        /* CFE-90: Entry exists - check if options differ and update if needed */
+        /* CFE-90: Entry exists - rewrite it if the options differ.  The compare
+         * is exact (order-sensitive) on purpose: for duplicated/conflicting
+         * options the kernel uses the last one, so option order is significant
+         * in an fstab line and must not be normalized away.  Since
+         * GetFstabEntryOptions now reads the real options field (it previously
+         * returned the fstype), this converges - a differently-ordered entry is
+         * rewritten once to the promised form, then matches - rather than being
+         * rewritten on every run. */
         char *existing_opts = GetFstabEntryOptions(mountpt);
-        if (existing_opts != NULL && strcmp(existing_opts, opts) != 0)
+        if (existing_opts != NULL && !StringEqual(existing_opts, opts))
         {
             /* Replace the entire fstab entry with the corrected options */
             ReplaceFstabEntry(&FSTABLIST, mountpt, fstab);

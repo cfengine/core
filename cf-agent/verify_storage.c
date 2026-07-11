@@ -582,7 +582,18 @@ static PromiseResult VerifyMountPromise(EvalContext *ctx, char *name, const Attr
         }
         else
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_NOOP, pp, a, "Filesystem '%s' seems to be mounted as promised", name);
+            /* CFE-1539: mounted correctly, but still maintain fstab (add a
+             * missing entry, correct drifted options) so the promise persists
+             * across reboots. Independent of 'remount' - keeping fstab correct
+             * is documented mount_options behavior; remounting live is not. */
+            if (a->mount.editfstab)
+            {
+                changes += VerifyInFstab(ctx, name, a, pp, &result);
+            }
+            if (changes == 0)
+            {
+                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_NOOP, pp, a, "Filesystem '%s' seems to be mounted as promised", name);
+            }
         }
     }
 

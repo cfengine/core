@@ -1343,6 +1343,15 @@ static bool LiveMountConverged(const char *name, const Attributes *a)
             {
                 converged = false;
             }
+            else if ((a->mount.mount_server != NULL)
+                     && ((mp->host == NULL) || !StringEqual(mp->host, a->mount.mount_server)))
+            {
+                /* CFE-2350: the server is part of the mount identity, so a
+                 * remounted-in-place mount that kept the old server has not
+                 * converged - a remount in place cannot change the server, so
+                 * reconciling it requires unmount_mount in remount_methods. */
+                converged = false;
+            }
             else if (a->mount.mount_options != NULL)
             {
                 char *opts = Rlist2String(a->mount.mount_options, ",");

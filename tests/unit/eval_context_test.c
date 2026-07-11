@@ -1,9 +1,14 @@
 #include <test.h>
 
 #include <eval_context.h>
+#include <policy.h>
+#include <attributes.h>
 #include <misc_lib.h>                                          /* xsnprintf */
+#include <alloc.h>                                            /* xstrdup */
+#include <string_lib.h>
 #include <known_dirs.h>
 #include <time_classes.h>
+#include <unistd.h>                                           /* unlink */
 
 char CFWORKDIR[CF_BUFSIZE];
 
@@ -197,6 +202,99 @@ static void test_persistent_class_timer_policy(void)
     EvalContextDestroy(ctx);
 }
 
+/* CFE-85: a single promise must produce at most one entry in its log_*
+ * file, even when cfPS() (and thus SummarizeTransaction) is invoked multiple
+ * times for that promise during a run (once per evaluation pass / sub-check).
+ *
+ * This test verifies three scenarios:
+ *   1. Same promise, same promiser, two cfPS calls -> deduped to one line.
+ *   2. Different promise (different file/line), same promiser -> each gets a line.
+ *   3. Same source promise (same PromiseID), different expanded promiser
+ *      (simulates a parameterized bundle) -> each gets a line. */
+static void test_log_action_dedupe(void)
+{
+    char logpath[CF_BUFSIZE];
+    xsnprintf(logpath, sizeof(logpath), "%s/cfe85_dedupe_test.log", CFWORKDIR);
+
+    EvalContext *ctx = EvalContextNew();
+    Policy *policy = PolicyNew();
+    Bundle *bundle = PolicyAppendBundle(policy, "default", "bundle1",
+                                        "agent", NULL, NULL,
+                                        EVAL_ORDER_UNDEFINED);
+    bundle->source_path = xstrdup("/policy1.cf");
+    BundleSection *section = BundleAppendSection(bundle, "files");
+    Promise *promise = BundleSectionAppendPromise(section, "/tmp/cfe85_dedupe_test",
+                                                  (Rval) { NULL, RVAL_TYPE_NOPROMISEE },
+                                                  "any", NULL);
+    promise->offset.line = 10;
+
+    /* Minimal attributes: only the transaction log_* fields matter for
+     * ClassAuditLog -> DoSummarizeTransaction. The classes list is left
+     * NULL, which SetPromiseOutcomeClasses tolerates. */
+    Attributes attr;
+    memset(&attr, 0, sizeof(attr));
+    attr.transaction.log_string = xstrdup("logged");
+    attr.transaction.log_repaired = xstrdup(logpath);
+
+    /* First call simulates the first evaluation (e.g. repaired). */
+    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, promise, &attr,
+         "files promise '%s' repaired", promise->promiser);
+
+    /* Second call simulates a later pass / sub-check for the same promise.
+     * Without the CFE-85 fix this would append a second duplicate line. */
+    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, promise, &attr,
+         "files promise '%s' repaired", promise->promiser);
+
+    /* Scenario 2: a distinct promise (different file/line identity) targeting
+     * the SAME path must still get its own line. */
+    Bundle *bundle2 = PolicyAppendBundle(policy, "default", "bundle2",
+                                         "agent", NULL, NULL,
+                                         EVAL_ORDER_UNDEFINED);
+    bundle2->source_path = xstrdup("/policy2.cf");
+    BundleSection *section2 = BundleAppendSection(bundle2, "files");
+    Promise *promise2 = BundleSectionAppendPromise(section2, "/tmp/cfe85_dedupe_test",
+                                                   (Rval) { NULL, RVAL_TYPE_NOPROMISEE },
+                                                   "any", NULL);
+    promise2->offset.line = 20;
+    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, promise2, &attr,
+         "files promise '%s' repaired", promise2->promiser);
+
+    /* Scenario 3: same source location (same PromiseID) but different
+     * expanded promiser, simulating a parameterized bundle called twice
+     * with different arguments -- e.g. install("vim") then install("curl").
+     * Must NOT be suppressed. */
+    Promise *promise3 = BundleSectionAppendPromise(section, "/tmp/cfe85_other_path",
+                                                   (Rval) { NULL, RVAL_TYPE_NOPROMISEE },
+                                                   "any", NULL);
+    promise3->offset.line = 10;  /* same line as promise1 in same bundle */
+    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, promise3, &attr,
+         "files promise '%s' repaired", promise3->promiser);
+
+    FILE *f = fopen(logpath, "r");
+    assert_true(f != NULL);
+    int lines = 0;
+    char buf[1024];
+    while (fgets(buf, sizeof(buf), f) != NULL)
+    {
+        if (buf[0] != '\0' && buf[0] != '\n')
+        {
+            lines++;
+        }
+    }
+    fclose(f);
+    unlink(logpath);
+
+    /* Three entries: scenario 1 deduped from 2 calls to 1, scenario 2 adds 1
+     * (different promise identity), scenario 3 adds 1 (same PromiseID but
+     * different expanded promiser). */
+    assert_int_equal(lines, 3);
+
+    free(attr.transaction.log_string);
+    free(attr.transaction.log_repaired);
+    PolicyDestroy(policy);
+    EvalContextDestroy(ctx);
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -208,6 +306,7 @@ int main()
         unit_test(test_persistent_class_timer_policy),
         unit_test(test_changes_chroot),
         unit_test(test_eval_with_token_from_list),
+        unit_test(test_log_action_dedupe),
     };
 
     int ret = run_tests(tests);

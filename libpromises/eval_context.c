@@ -162,6 +162,11 @@ struct EvalContext_
     StringSet *dependency_handles;
     FuncCacheMap *function_cache;
 
+    /* Promisers whose log_* actions have already been written during this
+     * run. Used to avoid duplicate entries in the log files (see
+     * SummarizeTransaction / CFE-85). */
+    StringSet *logged_promisers;
+
     uid_t uid;
     uid_t gid;
     pid_t pid;
@@ -1124,6 +1129,7 @@ EvalContext *EvalContextNew(void)
 
     ctx->promise_lock_cache = StringSetNew();
     ctx->function_cache = FuncCacheMapNew();
+    ctx->logged_promisers = StringSetNew();
 
     EvalContextSetupMissionPortalLogHook(ctx);
 
@@ -1178,6 +1184,7 @@ void EvalContextDestroy(EvalContext *ctx)
 
         StringSetDestroy(ctx->dependency_handles);
         StringSetDestroy(ctx->promise_lock_cache);
+        StringSetDestroy(ctx->logged_promisers);
 
         FuncCacheMapDestroy(ctx->function_cache);
 
@@ -3170,19 +3177,39 @@ static void SummarizeTransaction(EvalContext *ctx, const TransactionContext *tc,
         }
 
         BufferDestroy(buffer);
-        // FIXME: This was overwriting a local copy, with no side effects.
-        // The intention was clearly to skip this function if called
-        // repeatedly. Try to introduce this change:
-        // tc.log_string = NULL;     /* To avoid repetition */
     }
 }
 
 static void DoSummarizeTransaction(EvalContext *ctx, PromiseResult status, const Promise *pp, const TransactionContext *tc)
 {
+    assert(ctx != NULL);
+    assert(tc != NULL);
+
     if (!IsPromiseValuableForLogging(pp))
     {
         return;
     }
+
+    /* CFE-85: a single promise is evaluated several times per run (per
+     * evaluation pass, per sub-attribute check such as create vs perms), each
+     * producing a log_* entry. Suppress duplicates by recording the promise's
+     * identity and skipping later calls; the first outcome wins.
+     *
+     * The key combines PromiseID (source location / handle) with the expanded
+     * promiser so that a parameterized bundle called with different arguments
+     * (e.g. install("vim") and install("curl")) is not falsely suppressed. */
+    if (tc->log_repaired == NULL && tc->log_kept == NULL && tc->log_failed == NULL)
+    {
+        return;  /* No log targets configured -- nothing to deduplicate. */
+    }
+
+    char key[CF_BUFSIZE];
+    xsnprintf(key, sizeof(key), "%s:%s", PromiseID(pp), pp->promiser);
+    if (StringSetContains(ctx->logged_promisers, key))
+    {
+        return;
+    }
+    StringSetAdd(ctx->logged_promisers, xstrdup(key));
 
     char *log_name = NULL;
 

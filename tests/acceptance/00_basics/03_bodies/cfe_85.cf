@@ -1,0 +1,70 @@
+# Test that a single promise writes at most one entry to the log_kept /
+# log_repaired / log_failed files set in an action body, instead of one entry
+# per evaluation pass and per sub-attribute check (CFE-85).
+body common control
+{
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+bundle agent init
+{
+  vars:
+    "software" slist => { "$(G.testdir)/123", "$(G.testdir)/xyz" };
+}
+
+bundle agent test
+{
+  files:
+    "$(init.software)"
+      create => "true",
+      perms => m("644"),
+      action => logme;
+}
+
+body action logme
+{
+  log_kept => "$(G.testdir)/private_keptlog.log";
+  log_repaired => "$(G.testdir)/private_replog.log";
+  log_failed => "$(G.testdir)/private_faillog.log";
+  log_string => "$(this.promiser) promise status";
+}
+
+bundle agent check
+{
+  vars:
+    # Each promiser should be logged exactly once in total across the three
+    # log files. Two promisers therefore means exactly two lines in total.
+    # Without the fix (CFE-85) many duplicate lines are written.
+    "kept_lines"
+      int => countlinesmatching(".*", "$(G.testdir)/private_keptlog.log");
+
+    "repair_lines"
+      int => countlinesmatching(".*", "$(G.testdir)/private_replog.log");
+
+    "fail_lines"
+      int => countlinesmatching(".*", "$(G.testdir)/private_faillog.log");
+
+    "counts" slist => { "$(kept_lines)", "$(repair_lines)", "$(fail_lines)" };
+    "total" real => sum("counts");
+
+  classes:
+    # Both promisers are created fresh (create => "true"), so each lands once
+    # in the repaired log and nowhere else. The fix (CFE-85) guarantees exactly
+    # one entry per promiser: repair_lines == 2 and total == 2 means neither
+    # missing nor duplicated.
+    "ok"
+      expression => strcmp("$(repair_lines)", "2"),
+      and => strcmp("$(total)", "2");
+
+  reports:
+    DEBUG::
+      "kept=$(kept_lines) repaired=$(repair_lines) failed=$(fail_lines) total=$(total)";
+
+    ok::
+      "$(this.promise_filename) Pass";
+
+    !ok::
+      "$(this.promise_filename) FAIL: total log entries = $(total), expected exactly 2 (one per promiser)";
+}

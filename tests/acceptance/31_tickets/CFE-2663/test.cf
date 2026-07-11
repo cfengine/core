@@ -1,6 +1,6 @@
 body file control
 {
-  inputs => { "../../default.sub.cf" };
+  inputs => { "../../default.cf.sub" };
 }
 
 bundle agent __main__

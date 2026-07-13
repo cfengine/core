@@ -50,9 +50,16 @@ static Item *FSTABLIST = NULL; /* GLOBAL_X */
 
 static void GetHostAndSource(const char *buf, char *host, char *source);
 
-static void AugmentMountInfo(Seq *list, char *host, char *source, char *mounton, char *options);
+static bool ConflictingOptions(const char *a, const char *b);
+static bool OptionPresent(const char *opt, const Seq *actual);
+static bool ConflictingOptionPresent(const char *opt, const Seq *actual);
+static char *OptionStringExpandDefaults(const char *opts);
+
+static void AugmentMountInfo(Seq *list, char *host, char *source, char *mounton, char *fstype, char *options);
 static bool MatchFSInFstab(char *match);
 static void DeleteThisItem(Item **liststart, Item *entry);
+static char *GetFstabEntryOptions(const char *mountpt);
+static void ReplaceFstabEntry(Item *liststart, const char *mountpt, const char *new_entry);
 
 static const char *const VMOUNTCOMM[] =
 {
@@ -172,6 +179,208 @@ static void GetHostAndSource(const char *buf, char *host, char *source)
         source[source_index++] = buf[index++];
     }
     source[source_index] = '\0';
+}
+
+/**
+ * True if 'a' and 'b' are mutually exclusive mount options that cannot both
+ * hold: ro/rw, hard/soft, sync/async, noatime/relatime, or a "no"-prefixed
+ * option and its bare form (e.g. noexec/exec).
+ */
+static bool ConflictingOptions(const char *a, const char *b)
+{
+    /* A "no"-prefixed option vs its bare form, in either direction. */
+    if (StringEqualN(a, "no", 2) && StringEqual(a + 2, b))
+    {
+        return true;
+    }
+    if (StringEqualN(b, "no", 2) && StringEqual(b + 2, a))
+    {
+        return true;
+    }
+
+    /* Inverse pairs that do not share the "no" prefix. */
+    static const char *const pairs[][2] = {
+        { "noatime", "relatime" },
+        { "hard", "soft" },
+        { "sync", "async" },
+        { "ro", "rw" },
+    };
+    for (size_t i = 0; i < sizeof(pairs) / sizeof(pairs[0]); i++)
+    {
+        if ((StringEqual(a, pairs[i][0]) && StringEqual(b, pairs[i][1])) ||
+            (StringEqual(a, pairs[i][1]) && StringEqual(b, pairs[i][0])))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * True if 'opt' is present in the live options, directly or via a
+ * tcp/udp<->proto= alias.
+ */
+static bool OptionPresent(const char *opt, const Seq *actual)
+{
+    const size_t len = SeqLength(actual);
+    for (size_t i = 0; i < len; i++)
+    {
+        const char *act = SeqAt(actual, i);
+        if (StringEqual(opt, act))
+        {
+            return true;
+        }
+        if ((StringEqual(opt, "tcp") && StringEqual(act, "proto=tcp")) ||
+            (StringEqual(opt, "udp") && StringEqual(act, "proto=udp")) ||
+            (StringEqual(opt, "proto=tcp") && StringEqual(act, "tcp")) ||
+            (StringEqual(opt, "proto=udp") && StringEqual(act, "udp")))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * True if an option contradicting 'opt' is present in the live mount.
+ */
+static bool ConflictingOptionPresent(const char *opt, const Seq *actual)
+{
+    const size_t len = SeqLength(actual);
+    for (size_t i = 0; i < len; i++)
+    {
+        if (ConflictingOptions(opt, SeqAt(actual, i)))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * Expand a bare "defaults" in an option string to its positives
+ * rw,suid,dev,exec,async: util-linux ignores the flags implied by a bare
+ * "defaults" on a `mount -o remount,...`, so the explicit form is needed both to
+ * restore a drifted mount in place and to compare against the live options.
+ * Newly allocated (caller frees), NULL if opts empty.
+ */
+static char *OptionStringExpandDefaults(const char *opts)
+{
+    if ((opts == NULL) || (opts[0] == '\0'))
+    {
+        return NULL;
+    }
+
+    Seq *in = SeqStringFromString(opts, ',');
+    const size_t len = SeqLength(in);
+    for (size_t i = 0; i < len; i++)
+    {
+        if (StringEqual(SeqAt(in, i), "defaults"))
+        {
+            SeqSet(in, i, xstrdup("rw,suid,dev,exec,async"));
+        }
+    }
+    char *result = StringJoin(in, ",");
+    SeqDestroy(in);
+    return result;
+}
+
+/**
+ * Extract the options from the parenthesized tail of a mount(8) output line
+ * ("host:/source on /mountpoint type nfs (rw,noatime)"), without the enclosing
+ * parentheses and with surrounding whitespace trimmed. The closing parenthesis
+ * must not be left on the last option or it will never compare equal to the
+ * promised one.
+ * Newly allocated (caller frees), NULL if the line has no "(...)" section.
+ */
+static char *MountOptionsFromLine(const char *line)
+{
+    const char *paren = strchr(line, '(');
+    if (paren == NULL)
+    {
+        return NULL;
+    }
+    const char *end = strchr(paren, ')');
+    if (end == NULL)
+    {
+        return NULL;
+    }
+
+    /* TrimWhitespace() can return an interior pointer, which is not free()-able. */
+    char *tail = xstrndup(paren + 1, (size_t) (end - paren - 1));
+    char *opts = xstrdup(TrimWhitespace(tail));
+    free(tail);
+    return opts;
+}
+
+/**
+ * Whether the live mount (actual_opts, from /proc/mounts) satisfies the promise.
+ * Only named options are enforced; unnamed ones are left alone. The promise is
+ * resolved "last wins" like `mount -o` (defaults,ro is read-only, ro,rw is rw),
+ * with "defaults" expanded to rw,suid,dev,exec,async (auto/nouser aren't runtime
+ * state). Each surviving option must then hold: its inverse absent, and it
+ * present or a default-on flag (suid/dev/exec/async only show when negated).
+ */
+bool OptionsSubsetMatches(const char *promised_opts, const char *actual_opts)
+{
+    if (promised_opts == NULL || promised_opts[0] == '\0')
+    {
+        return true;
+    }
+
+    Seq *actual = SeqStringFromString(actual_opts, ',');
+
+    /* Expand a bare "defaults" to its positives (rw,suid,dev,exec,async),
+     * preserving order for the last-wins pass, then split into options. */
+    char *expanded = OptionStringExpandDefaults(promised_opts);
+    Seq *eff = SeqStringFromString(expanded, ',');
+    free(expanded);
+
+    /* On-by-default flags the kernel does not echo (only their negatives show). */
+    static const char *const default_on[] = { "suid", "dev", "exec", "async" };
+
+    bool mismatch = false;
+    const size_t n_eff = SeqLength(eff);
+    for (size_t i = 0; (i < n_eff) && !mismatch; i++)
+    {
+        const char *x = SeqAt(eff, i);
+
+        /* Last wins: skip this option if a later one overrides it (its inverse)
+         * or repeats it. */
+        bool overridden = false;
+        for (size_t j = i + 1; j < n_eff; j++)
+        {
+            const char *y = SeqAt(eff, j);
+            if (ConflictingOptions(x, y))
+            {
+                Log(LOG_LEVEL_VERBOSE, "Mount option '%s' overridden by later '%s'", x, y);
+                overridden = true;
+                break;
+            }
+            if (StringEqual(x, y))
+            {
+                overridden = true;
+                break;
+            }
+        }
+        if (overridden)
+        {
+            continue;
+        }
+
+        const bool is_default_on = IsStringInArray(
+            x, default_on, sizeof(default_on) / sizeof(default_on[0]));
+
+        if (ConflictingOptionPresent(x, actual) || !(OptionPresent(x, actual) || is_default_on))
+        {
+            mismatch = true;
+        }
+    }
+
+    SeqDestroy(eff);
+    SeqDestroy(actual);
+
+    return !mismatch;
 }
 
 bool LoadMountInfo(Seq *list)
@@ -346,22 +555,26 @@ bool LoadMountInfo(Seq *list)
 
         Log(LOG_LEVEL_DEBUG, "LoadMountInfo: host '%s', source '%s', mounton '%s'", host, source, mounton);
 
+        char *mountopts = MountOptionsFromLine(vbuff);
+
         if (panfs)
         {
-            AugmentMountInfo(list, host, source, mounton, "panfs");
+            AugmentMountInfo(list, host, source, mounton, "panfs", mountopts);
         }
         else if (nfs)
         {
-            AugmentMountInfo(list, host, source, mounton, "nfs");
+            AugmentMountInfo(list, host, source, mounton, "nfs", mountopts);
         }
         else if (cifs)
         {
-            AugmentMountInfo(list, host, source, mounton, "cifs");
+            AugmentMountInfo(list, host, source, mounton, "cifs", mountopts);
         }
         else
         {
-            AugmentMountInfo(list, host, source, mounton, NULL);
+            AugmentMountInfo(list, host, source, mounton, NULL, mountopts);
         }
+
+        free(mountopts);
     }
 
     free(vbuff);
@@ -373,7 +586,7 @@ bool LoadMountInfo(Seq *list)
 
 /*******************************************************************/
 
-static void AugmentMountInfo(Seq *list, char *host, char *source, char *mounton, char *options)
+static void AugmentMountInfo(Seq *list, char *host, char *source, char *mounton, char *fstype, char *options)
 {
     Mount *entry = xcalloc(1, sizeof(Mount));
 
@@ -392,9 +605,19 @@ static void AugmentMountInfo(Seq *list, char *host, char *source, char *mounton,
         entry->mounton = xstrdup(mounton);
     }
 
-    if (options)
+    /* Store the fstype in options so IsForeignFileSystem can detect
+     * foreign filesystems via strstr(entry->options, "nfs"/"panfs"/"cifs"). */
+    if (fstype != NULL)
     {
-        entry->options = xstrdup(options);
+        entry->options = xstrdup(fstype);
+    }
+
+    /* Store the full kernel-resolved options in raw_opts.
+     * For unmounted filesystems (options == NULL or empty), raw_opts stays NULL
+     * and will be checked in FileSystemMountedCorrectly as "not mounted". */
+    if (options != NULL && options[0] != '\0')
+    {
+        entry->raw_opts = xstrdup(options);
     }
 
     SeqAppend(list, entry);
@@ -408,25 +631,11 @@ void DeleteMountInfo(Seq *list)
     {
         Mount *entry = SeqAt(list, i);
 
-        if (entry->host)
-        {
-            free(entry->host);
-        }
-
-        if (entry->source)
-        {
-            free(entry->source);
-        }
-
-        if (entry->mounton)
-        {
-            free(entry->mounton);
-        }
-
-        if (entry->options)
-        {
-            free(entry->options);
-        }
+        free(entry->host);
+        free(entry->source);
+        free(entry->mounton);
+        free(entry->options);
+        free(entry->raw_opts);
     }
 
     SeqClear(list);
@@ -534,12 +743,29 @@ int VerifyInFstab(EvalContext *ctx, char *name, const Attributes *a, const Promi
 
     if (!MatchFSInFstab(mountpt))
     {
+        /* CFE-90: Entry not in fstab - add it */
         AppendItem(&FSTABLIST, fstab, NULL);
         FSTAB_EDITS++;
         cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Adding file system entry '%s' to '%s'", fstab,
              VFSTAB[VSYSTEMHARDCLASS]);
         *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
         changes += 1;
+    }
+    else
+    {
+        /* CFE-90: Entry exists - check if options differ and update if needed */
+        char *existing_opts = GetFstabEntryOptions(mountpt);
+        if (existing_opts != NULL && !StringEqual(existing_opts, opts))
+        {
+            /* Replace the entire fstab entry with the corrected options */
+            ReplaceFstabEntry(FSTABLIST, mountpt, fstab);
+            FSTAB_EDITS++;
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Updating file system entry for '%s' in '%s' (options: '%s' -> '%s')",
+                 mountpt, VFSTAB[VSYSTEMHARDCLASS], existing_opts, opts);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+            changes += 1;
+        }
+        free(existing_opts);
     }
 
     free(opts);
@@ -679,54 +905,67 @@ PromiseResult VerifyMount(EvalContext *ctx, char *name, const Attributes *a, con
     }
 
     PromiseResult result = PROMISE_RESULT_NOOP;
-    if (!DONTDO)
+
+    /* CFE-3366: gate the mount on the promise action, not just DONTDO, so a
+     * dry-run (or action_policy => "warn") reports a warning and does not
+     * define promise_repaired for a run that changes nothing. */
+    if (!MakingInternalChanges(ctx, pp, a, &result, "mount '%s' to keep promise", mountpt))
     {
-        if (StringEqual(a->mount.mount_type, "panfs"))
-        {
-            snprintf(comm, CF_BUFSIZE, "%s -t panfs -o %s %s%s %s", CommandArg0(VMOUNTCOMM[VSYSTEMHARDCLASS]), opts, host, rmountpt, mountpt);
-        }
-        else if (StringEqual(a->mount.mount_type, "cifs"))
-        {
-            snprintf(comm, CF_BUFSIZE, "%s -t cifs -o %s %s%s %s", CommandArg0(VMOUNTCOMM[VSYSTEMHARDCLASS]), opts, host, rmountpt, mountpt);
-        }
-        else
-        {
-            snprintf(comm, CF_BUFSIZE, "%s -o %s %s:%s %s", CommandArg0(VMOUNTCOMM[VSYSTEMHARDCLASS]), opts, host, rmountpt, mountpt);
-        }
+        free(opts);
+        return result;
+    }
 
-        if ((pfp = cf_popen(comm, "r", true)) == NULL)
-        {
-            Log(LOG_LEVEL_ERR, "Failed to open pipe from '%s'", CommandArg0(VMOUNTCOMM[VSYSTEMHARDCLASS]));
-            return PROMISE_RESULT_FAIL;
-        }
+    if (StringEqual(a->mount.mount_type, "panfs"))
+    {
+        NDEBUG_UNUSED int ret = snprintf(comm, CF_BUFSIZE, "%s -t panfs -o %s %s%s %s", CommandArg0(VMOUNTCOMM[VSYSTEMHARDCLASS]), opts, host, rmountpt, mountpt);
+        assert(ret >= 0 && ret < CF_BUFSIZE);
+    }
+    else if (StringEqual(a->mount.mount_type, "cifs"))
+    {
+        NDEBUG_UNUSED int ret = snprintf(comm, CF_BUFSIZE, "%s -t cifs -o %s %s%s %s", CommandArg0(VMOUNTCOMM[VSYSTEMHARDCLASS]), opts, host, rmountpt, mountpt);
+        assert(ret >= 0 && ret < CF_BUFSIZE);
+    }
+    else
+    {
+        NDEBUG_UNUSED int ret = snprintf(comm, CF_BUFSIZE, "%s -o %s %s:%s %s", CommandArg0(VMOUNTCOMM[VSYSTEMHARDCLASS]), opts, host, rmountpt, mountpt);
+        assert(ret >= 0 && ret < CF_BUFSIZE);
+    }
 
-        size_t line_size = CF_BUFSIZE;
-        char *line = xmalloc(line_size);
+    if ((pfp = cf_popen(comm, "r", true)) == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to open pipe from '%s'", CommandArg0(VMOUNTCOMM[VSYSTEMHARDCLASS]));
+        free(opts);
+        return PROMISE_RESULT_FAIL;
+    }
 
-        ssize_t res = CfReadLine(&line, &line_size, pfp);
+    size_t line_size = CF_BUFSIZE;
+    char *line = xmalloc(line_size);
 
-        if (res == -1)
+    ssize_t res = CfReadLine(&line, &line_size, pfp);
+
+    if (res == -1)
+    {
+        if (!feof(pfp))
         {
-            if (!feof(pfp))
-            {
-                Log(LOG_LEVEL_ERR, "Unable to read output of mount command. (fread: %s)", GetErrorStr());
-                cf_pclose(pfp);
-                free(line);
-                return PROMISE_RESULT_FAIL;
-            }
-        }
-        else if ((strstr(line, "busy")) || (strstr(line, "Busy")))
-        {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp, a, "The device under '%s' cannot be mounted", mountpt);
-            result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
+            Log(LOG_LEVEL_ERR, "Unable to read output of mount command. (fread: %s)", GetErrorStr());
             cf_pclose(pfp);
             free(line);
-            return 1;
+            free(opts);
+            return PROMISE_RESULT_FAIL;
         }
-
-        free(line);
-        cf_pclose(pfp);
     }
+    else if (StringContains(line, "busy") || StringContains(line, "Busy"))
+    {
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "The device under '%s' cannot be mounted", mountpt);
+        result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
+        cf_pclose(pfp);
+        free(line);
+        free(opts);
+        return result;
+    }
+
+    free(line);
+    cf_pclose(pfp);
 
     /* Since opts is either Rlist2String or xstrdup'd, we need to always free it */
     free(opts);
@@ -748,39 +987,51 @@ PromiseResult VerifyUnmount(EvalContext *ctx, char *name, const Attributes *a, c
     mountpt = name;
 
     PromiseResult result = PROMISE_RESULT_NOOP;
-    if (!DONTDO)
+
+    /* CFE-3366: gate the unmount on the promise action, not just DONTDO, so a
+     * dry-run (or action_policy => "warn") reports a warning and does not
+     * define promise_repaired for a run that changes nothing. */
+    if (!MakingInternalChanges(ctx, pp, a, &result, "unmount '%s' to keep promise", mountpt))
     {
-        snprintf(comm, CF_BUFSIZE, "%s %s", VUNMOUNTCOMM[VSYSTEMHARDCLASS], mountpt);
+        return result;
+    }
 
-        if ((pfp = cf_popen(comm, "r", true)) == NULL)
+    NDEBUG_UNUSED int ret = snprintf(comm, CF_BUFSIZE, "%s %s", VUNMOUNTCOMM[VSYSTEMHARDCLASS], mountpt);
+    assert(ret >= 0 && ret < CF_BUFSIZE);
+
+    if ((pfp = cf_popen(comm, "r", true)) == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to open pipe from %s", VUNMOUNTCOMM[VSYSTEMHARDCLASS]);
+        return result;
+    }
+
+    size_t line_size = CF_BUFSIZE;
+    char *line = xmalloc(line_size);
+
+    ssize_t res = CfReadLine(&line, &line_size, pfp);
+    if (res == -1)
+    {
+        /* CfReadLine() returns -1 both at end-of-output and on a read error. A
+         * successful unmount is silent, so EOF is the normal case here; only a
+         * genuine read error should be reported. feof() must be consulted
+         * before cf_pclose() closes and invalidates the stream. */
+        bool read_error = !feof(pfp);
+        cf_pclose(pfp);
+        free(line);
+
+        if (read_error)
         {
-            Log(LOG_LEVEL_ERR, "Failed to open pipe from %s", VUNMOUNTCOMM[VSYSTEMHARDCLASS]);
+            Log(LOG_LEVEL_ERR, "Unable to read output of unmount command. (fread: %s)", GetErrorStr());
             return result;
         }
-
-        size_t line_size = CF_BUFSIZE;
-        char *line = xmalloc(line_size);
-
-        ssize_t res = CfReadLine(&line, &line_size, pfp);
-        if (res == -1)
-        {
-            cf_pclose(pfp);
-            free(line);
-
-            if (!feof(pfp))
-            {
-                Log(LOG_LEVEL_ERR, "Unable to read output of unmount command. (fread: %s)", GetErrorStr());
-                return result;
-            }
-        }
-        else if (res > 0 && ((strstr(line, "busy")) || (strstr(line, "Busy"))))
-        {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp, a, "The device under '%s' cannot be unmounted", mountpt);
-            result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
-            cf_pclose(pfp);
-            free(line);
-            return result;
-        }
+    }
+    else if (res > 0 && (StringContains(line, "busy") || StringContains(line, "Busy")))
+    {
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "The device under '%s' cannot be unmounted", mountpt);
+        result = PromiseResultUpdate(result, PROMISE_RESULT_INTERRUPTED);
+        cf_pclose(pfp);
+        free(line);
+        return result;
     }
 
     cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Unmounting '%s' to keep promise", mountpt);
@@ -954,6 +1205,275 @@ static void DeleteThisItem(Item **liststart, Item *entry)
 
         free((char *) entry);
     }
+}
+
+/*******************************************************************/
+/* CFE-90: Helper functions for fstab options comparison          */
+/*******************************************************************/
+
+/* fstab fields, 1-based: device, mount point, type, options, dump, pass. */
+#define FSTAB_FIELD_MOUNTPOINT 2
+#define FSTAB_FIELD_OPTIONS    4
+
+/**
+ * Field 'n' (1-based) of a whitespace-separated fstab line.
+ * Newly allocated (caller frees), NULL for a comment line or one with fewer
+ * than 'n' fields.
+ */
+static char *FstabField(const char *line, size_t n)
+{
+    if ((line == NULL) || (line[0] == '#'))
+    {
+        return NULL;
+    }
+
+    char *copy = xstrdup(line);
+    char *saveptr = NULL;
+    char *token = strtok_r(copy, " \t", &saveptr);
+    for (size_t i = 1; (i < n) && (token != NULL); i++)
+    {
+        token = strtok_r(NULL, " \t", &saveptr);
+    }
+    char *field = (token != NULL) ? xstrdup(token) : NULL;
+
+    free(copy);
+    return field;
+}
+
+/**
+ * True if the fstab line is the entry for 'mountpt'.
+ */
+static bool FstabEntryIsFor(const char *line, const char *mountpt)
+{
+    char *mp = FstabField(line, FSTAB_FIELD_MOUNTPOINT);
+    bool match = (mp != NULL) && StringEqual(mp, mountpt);
+    free(mp);
+    return match;
+}
+
+/**
+ * Extract the options field from the fstab entry matching mountpt.
+ * Newly allocated (caller frees), NULL if there is no such entry.
+ */
+static char *GetFstabEntryOptions(const char *mountpt)
+{
+    for (Item *ip = FSTABLIST; ip != NULL; ip = ip->next)
+    {
+        if (FstabEntryIsFor(ip->name, mountpt))
+        {
+            return FstabField(ip->name, FSTAB_FIELD_OPTIONS);
+        }
+    }
+
+    return NULL;
+}
+
+/**
+ * Replace the fstab entry for mountpt with new_entry.
+ */
+static void ReplaceFstabEntry(Item *liststart, const char *mountpt, const char *new_entry)
+{
+    for (Item *ip = liststart; ip != NULL; ip = ip->next)
+    {
+        if (FstabEntryIsFor(ip->name, mountpt))
+        {
+            free(ip->name);
+            ip->name = xstrdup(new_entry);
+            return;
+        }
+    }
+}
+
+/*******************************************************************/
+/* CFE-90: Remount reconciliation                                  */
+/*******************************************************************/
+
+/**
+ * Re-read the mount table from scratch (the cached global list is stale after
+ * a mount operation) and report whether the filesystem now mounted at 'name'
+ * satisfies the promise: correct source (when specified) and, when options are
+ * promised, a superset of the promised options.  NFS-specific options
+ * (transport, NFS version, etc.) cannot be changed by a remount - see nfs(5)
+ * "THE REMOUNT OPTION": https://man7.org/linux/man-pages/man5/nfs.5.html
+ * The remount call can still return success without applying them, so we
+ * verify the resulting state rather than trust the command's exit status.
+ */
+static bool LiveMountConverged(const char *name, const Attributes *a)
+{
+    assert(a != NULL);
+    if (a == NULL)
+    {
+        return false;
+    }
+    Seq *tmp = SeqNew(100, free);
+    bool converged = false;
+
+    if (LoadMountInfo(tmp))
+    {
+        const size_t n_mounted = SeqLength(tmp);
+        for (size_t i = 0; i < n_mounted; i++)
+        {
+            Mount *mp = SeqAt(tmp, i);
+            if (mp == NULL || mp->mounton == NULL || !StringEqual(mp->mounton, name))
+            {
+                continue;
+            }
+
+            /* Something is mounted here - check source, then options. */
+            if ((a->mount.mount_source != NULL)
+                && ((mp->source == NULL) || !StringEqual(mp->source, a->mount.mount_source)))
+            {
+                converged = false;
+            }
+            else if (a->mount.mount_options != NULL)
+            {
+                char *opts = Rlist2String(a->mount.mount_options, ",");
+                converged = (mp->raw_opts != NULL) && OptionsSubsetMatches(opts, mp->raw_opts);
+                free(opts);
+            }
+            else
+            {
+                converged = true;
+            }
+            break;
+        }
+    }
+
+    DeleteMountInfo(tmp);
+    SeqDestroy(tmp);
+    return converged;
+}
+
+/**
+ * CFE-90: Reconcile an already-mounted filesystem that has drifted from the
+ * promise, trying each a->mount.remount_methods mechanism in order (default:
+ * just "remount"; the disruptive "unmount_mount" is opt-in) and re-checking
+ * after each. Honors DONTDO; reports its own cfPS outcome.
+ */
+PromiseResult ReconcileMountOptions(EvalContext *ctx, char *name, const Attributes *a, const Promise *pp)
+{
+    assert(a != NULL);
+    if (a == NULL)
+    {
+        return PROMISE_RESULT_NOOP;
+    }
+    PromiseResult result = PROMISE_RESULT_NOOP;
+    char *opts = Rlist2String(a->mount.mount_options, ",");
+    int timeout = (a->mount.remount_timeout != CF_NOINT) ? a->mount.remount_timeout : RPCTIMEOUT;
+
+    /* Ordered method list: promise-specified, else the default remount. */
+    /* Borrows the const char *, does not own them. */
+    Seq *methods = SeqNew(
+        (a->mount.remount_methods != NULL) ? RlistLen(a->mount.remount_methods) : 1, NULL);
+    if (a->mount.remount_methods != NULL)
+    {
+        for (const Rlist *rp = a->mount.remount_methods; rp != NULL; rp = rp->next)
+        {
+            SeqAppend(methods, RlistScalarValue(rp));
+        }
+    }
+    else
+    {
+        /* Default: in-place remount only. unmount_mount tears the filesystem
+         * down and back up, so it is opt-in (needed for options a remount
+         * can't change, e.g. NFS-negotiated vers=/rsize= or the server). */
+        SeqAppend(methods, "remount");
+    }
+
+    /* CFE-3366: gate on the promise action, not just DONTDO, so a dry-run or
+     * action_policy => "warn" reports a warning without defining
+     * promise_repaired on a run that changes nothing. */
+    if (!MakingInternalChanges(ctx, pp, a, &result,
+             "reconcile mount '%s' to promised options '%s'", name,
+             (opts != NULL) ? opts : ""))
+    {
+        SeqDestroy(methods);
+        free(opts);
+        return result;
+    }
+
+    bool converged = false;
+    const size_t n_methods = SeqLength(methods);
+    for (size_t i = 0; (i < n_methods) && !converged; i++)
+    {
+        const char *method = SeqAt(methods, i);
+
+        if (StringEqual(method, "remount"))
+        {
+            char comm[CF_BUFSIZE];
+            char *ropts = OptionStringExpandDefaults(opts);
+            if (ropts != NULL)
+            {
+                NDEBUG_UNUSED int ret = snprintf(comm, CF_BUFSIZE, "%s -o remount,%s %s",
+                                                 CommandArg0(VMOUNTCOMM[VSYSTEMHARDCLASS]), ropts, name);
+                assert(ret >= 0 && ret < CF_BUFSIZE);
+            }
+            else
+            {
+                NDEBUG_UNUSED int ret = snprintf(comm, CF_BUFSIZE, "%s -o remount %s",
+                                                 CommandArg0(VMOUNTCOMM[VSYSTEMHARDCLASS]), name);
+                assert(ret >= 0 && ret < CF_BUFSIZE);
+            }
+            free(ropts);
+
+            Log(LOG_LEVEL_VERBOSE, "Reconciling '%s' via remount: %s", name, comm);
+            SetTimeOut(timeout);
+
+            FILE *pfp = cf_popen(comm, "r", true);
+            if (pfp == NULL)
+            {
+                Log(LOG_LEVEL_ERR, "Failed to open pipe from '%s'", CommandArg0(VMOUNTCOMM[VSYSTEMHARDCLASS]));
+            }
+            else
+            {
+                size_t line_size = CF_BUFSIZE;
+                char *line = xmalloc(line_size);
+                while (CfReadLine(&line, &line_size, pfp) != -1)
+                {
+                    /* drain command output */
+                }
+                free(line);
+                cf_pclose(pfp);
+            }
+        }
+        else if (StringEqual(method, "unmount_mount"))
+        {
+            /* Reuse the tested helpers - both honor DONTDO and build the correct
+             * per-fstype command.  This also handles a wrong-source mount, which
+             * an in-place remount cannot fix. */
+            Log(LOG_LEVEL_VERBOSE, "Reconciling '%s' via unmount + mount", name);
+            SetTimeOut(timeout);
+            result = PromiseResultUpdate(result, VerifyUnmount(ctx, name, a, pp));
+            result = PromiseResultUpdate(result, VerifyMount(ctx, name, a, pp));
+        }
+        else
+        {
+            Log(LOG_LEVEL_WARNING, "Unknown remount_method '%s' for '%s' - skipping", method, name);
+            continue;
+        }
+
+        /* Verify-after-act: confirm the live mount actually satisfies the promise. */
+        if (LiveMountConverged(name, a))
+        {
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a,
+                 "Reconciled mount '%s' to promised options '%s' via '%s'", name,
+                 (opts != NULL) ? opts : "", method);
+            result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
+            converged = true;
+        }
+    }
+
+    if (!converged)
+    {
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
+             "Could not reconcile mount '%s' to promised options '%s'", name,
+             (opts != NULL) ? opts : "");
+        result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+    }
+
+    SeqDestroy(methods);
+    free(opts);
+    return result;
 }
 
 void CleanupNFS(void)

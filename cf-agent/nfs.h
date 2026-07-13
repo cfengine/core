@@ -29,6 +29,8 @@
 #include <sequence.h> // Seq
 
 bool LoadMountInfo(Seq *list);
+bool OptionsSubsetMatches(const char *promised_opts, const char *actual_opts);
+PromiseResult ReconcileMountOptions(EvalContext *ctx, char *name, const Attributes *a, const Promise *pp);
 void DeleteMountInfo(Seq *list);
 int VerifyNotInFstab(EvalContext *ctx, char *name, const Attributes *a, const Promise *pp, PromiseResult *result);
 int VerifyInFstab(EvalContext *ctx, char *name, const Attributes *a, const Promise *pp, PromiseResult *result);

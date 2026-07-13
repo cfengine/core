@@ -341,6 +341,11 @@ static PromiseResult VolumeScanArrivals(ARG_UNUSED char *file, ARG_UNUSED const 
 #if !defined(__MINGW32__)
 static bool FileSystemMountedCorrectly(Seq *list, char *name, const Attributes *a)
 {
+    assert(a != NULL);
+    if (a == NULL)
+    {
+        return false;
+    }
     bool found = false;
 
     for (size_t i = 0; i < SeqLength(list); i++)
@@ -366,11 +371,29 @@ static bool FileSystemMountedCorrectly(Seq *list, char *name, const Attributes *
                       mp->host, mp->source, name);
                 return false;
             }
-            else
+
+            /* CFE-90: option drift is only managed when 'remount' is on; without
+             * it a mount with the correct source is "mounted correctly" whatever
+             * the options (they still drive the initial mount and fstab). */
+            if (a->mount.remount && a->mount.mount_options != NULL)
             {
-                Log(LOG_LEVEL_VERBOSE, "File system '%s' seems to be mounted correctly", mp->source);
-                break;
+                char *opts = Rlist2String(a->mount.mount_options, ",");
+                if (mp->raw_opts == NULL || mp->raw_opts[0] == '\0'
+                    || !OptionsSubsetMatches(opts, mp->raw_opts))
+                {
+                    Log(LOG_LEVEL_INFO,
+                        "Mount options for '%s' do not match promise (actual: '%s', promised: '%s')",
+                        name,
+                        mp->raw_opts ? mp->raw_opts : "(none)",
+                        opts);
+                    free(opts);
+                    return false;
+                }
+                free(opts);
             }
+
+            Log(LOG_LEVEL_VERBOSE, "File system '%s' seems to be mounted correctly", mp->source);
+            break;
         }
     }
 
@@ -440,7 +463,11 @@ static bool IsForeignFileSystem(struct stat *childstat, char *dir)
 
 static PromiseResult VerifyMountPromise(EvalContext *ctx, char *name, const Attributes *a, const Promise *pp)
 {
-    char *options;
+    assert(a != NULL);
+    if (a == NULL)
+    {
+        return PROMISE_RESULT_NOOP;
+    }
     char dir[CF_BUFSIZE];
     int changes = 0;
 
@@ -454,13 +481,16 @@ static PromiseResult VerifyMountPromise(EvalContext *ctx, char *name, const Attr
         return PROMISE_RESULT_INTERRUPTED;
     }
 
-    options = Rlist2String(a->mount.mount_options, ",");
-
     PromiseResult result = PROMISE_RESULT_NOOP;
     if (!FileSystemMountedCorrectly(GetGlobalMountedFSList(), name, a))
     {
+        /* Declared at this scope so the CF_MOUNTALL guard below can see it. */
+        bool already_mounted = false;
+
         if (!a->mount.unmount)
         {
+            /* Ensure the mount point exists before mounting or remounting.
+             * dir is "<name>/.", so this creates the mount point directory. */
             if (!MakeParentDirectory(dir, a->move_obstructions, NULL))
             {
                 // Could not create parent directory, assume this is okay,
@@ -470,18 +500,59 @@ static PromiseResult VerifyMountPromise(EvalContext *ctx, char *name, const Attr
                     dir);
             }
 
-            if (a->mount.editfstab)
+            /* CFE-90: distinguish "not mounted at all" from "mounted, but not as
+             * promised" (wrong source, or drifted options with remount enabled). */
+            for (size_t i = 0; i < SeqLength(GetGlobalMountedFSList()); i++)
             {
-                changes += VerifyInFstab(ctx, name, a, pp, &result);
+                Mount *mp = SeqAt(GetGlobalMountedFSList(), i);
+                if (mp != NULL && mp->mounton != NULL && strcmp(name, mp->mounton) == 0)
+                {
+                    already_mounted = true;
+                    break;
+                }
+            }
+
+            if (already_mounted)
+            {
+                /* CFE-90: mounted but not as promised.  Correct the live mount
+                 * first (only when remount is enabled), then update fstab. */
+                if (a->mount.remount)
+                {
+                    result = PromiseResultUpdate(result, ReconcileMountOptions(ctx, name, a, pp));
+                    changes++;
+                }
+                else
+                {
+                    /* Reachable only for a wrong-source mount: option drift with
+                     * remount disabled is reported as mounted correctly. */
+                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
+                         "A different filesystem is mounted on '%s' than promised; enable 'remount' to correct", name);
+                    result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+                }
+
+                /* Persist to fstab regardless of the live outcome (reported
+                 * above); it converges at the next remount/reboot. */
+                if (a->mount.editfstab)
+                {
+                    changes += VerifyInFstab(ctx, name, a, pp, &result);
+                }
             }
             else
             {
-                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
-                     "Filesystem '%s' was not mounted as promised, and no edits were promised in '%s'", name,
-                     VFSTAB[VSYSTEMHARDCLASS]);
-                result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
-                // Mount explicitly
-                result = PromiseResultUpdate(result, VerifyMount(ctx, name, a, pp));
+                /* Not mounted at all - mount it (historical behavior). */
+                if (a->mount.editfstab)
+                {
+                    changes += VerifyInFstab(ctx, name, a, pp, &result);
+                }
+                else
+                {
+                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
+                         "Filesystem '%s' was not mounted as promised, and no edits were promised in '%s'", name,
+                         VFSTAB[VSYSTEMHARDCLASS]);
+                    result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+                    // Mount explicitly
+                    result = PromiseResultUpdate(result, VerifyMount(ctx, name, a, pp));
+                }
             }
         }
         else
@@ -492,7 +563,9 @@ static PromiseResult VerifyMountPromise(EvalContext *ctx, char *name, const Attr
             }
         }
 
-        if (changes > 0)
+        /* mount -a can only help filesystems that are NOT already mounted; it
+         * never remounts or changes options on a live mount. */
+        if (changes > 0 && !already_mounted)
         {
             CF_MOUNTALL = true;
         }
@@ -513,7 +586,6 @@ static PromiseResult VerifyMountPromise(EvalContext *ctx, char *name, const Attr
         }
     }
 
-    free(options);
     return result;
 }
 

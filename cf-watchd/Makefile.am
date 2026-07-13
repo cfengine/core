@@ -30,7 +30,8 @@ AM_CPPFLAGS = -I$(srcdir)/../libpromises -I$(srcdir)/../libntech/libutils \
 	$(PCRE2_CPPFLAGS) \
 	$(ENTERPRISE_CPPFLAGS)
 
-AM_CFLAGS = @CFLAGS@ \
+AM_CFLAGS = $(CF3_CFLAGS) \
+	$(DEBUG_CFLAGS) \
 	$(OPENSSL_CFLAGS) \
 	$(ENTERPRISE_CFLAGS)
 

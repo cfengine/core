@@ -84,12 +84,14 @@ int main(int argc, char **argv)
   EvalContext *ctx = EvalContextNew();
   GenericAgentConfigApply(ctx, config);
 
+#ifndef __MINGW32__
   pid_t existing_pid = ReadPID("cf-watchd.pid");
   if ((existing_pid != -1) && (kill(existing_pid, 0) == 0))
   {
       Log(LOG_LEVEL_ERR, "Another instance of cf-watchd is already running, terminating");
       return 1;
   }
+#endif
 
 #ifdef __MINGW32__
 

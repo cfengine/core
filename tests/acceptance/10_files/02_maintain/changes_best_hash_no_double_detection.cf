@@ -1,0 +1,103 @@
+# Test that a files 'changes' body with hash => "best" reports a content change
+# exactly ONCE, with no phantom re-detection on the following run (CFE-3725).
+#
+# hash => "best" now resolves to a single strong hash (SHA-512). Previously
+# Community "best" checked MD5 and SHA1 in sequence with a short-circuit: when
+# MD5 detected a change the SHA1 update was skipped, leaving the stored SHA1
+# stale, so the NEXT run fired a second "Content changed" via the SHA1 check.
+# With a single hash a content change is logged exactly once.
+#
+# Runs, all inside one agent invocation:
+#   init   - baseline an (empty) file with hash => "best"
+#   test   - change the content, then re-check (run 2), then re-check again (run 3)
+#   check  - the change log must contain EXACTLY ONE "Content changed" for the file
+#            (before the fix there are two: run 2 real + run 3 phantom).
+body common control
+{
+  inputs => { "../../default.sub.cf", "check_file_changes_log.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+bundle agent init
+{
+  files:
+    # Baseline the file with hash => "best" (records the stored hash).
+    "$(G.testfile).best"
+      create => "true",
+      changes => changes_best;
+}
+
+bundle agent test
+{
+  meta:
+    "test_skip_unsupported" string => "windows";
+
+  files:
+    # Change the content so the next check detects a difference.
+    "$(G.testfile).best" edit_line => insert_marker;
+
+  methods:
+    # Run 2: re-check the now-changed file -> reports the change (once).
+    "run2" usebundle => recheck_best;
+
+    # Run 3: CFEngine skips a bundle it already ran, so a duplicate bundle
+    # gives us a third run. No further content change -> must report nothing.
+    "run3" usebundle => recheck_best_again;
+}
+
+bundle edit_line insert_marker
+{
+  insert_lines:
+    "changed content for CFE-3725";
+}
+
+bundle agent recheck_best
+{
+  files:
+    "$(G.testfile).best" changes => changes_best;
+}
+
+bundle agent recheck_best_again
+{
+  files:
+    "$(G.testfile).best" changes => changes_best;
+}
+
+body changes changes_best
+{
+  hash => "best";
+  report_changes => "content";
+  update_hashes => "yes";
+}
+
+bundle agent check
+{
+  methods:
+    # Expected: exactly one "Content changed" entry for our file. check_file_changes_log
+    # reads the real $(sys.workdir)/state/file_changes.log, strips unstable fields
+    # (timestamp/promise-id/path) down to "<leafname>,C,Content changed", and diffs.
+    "any"
+      usebundle => file_make(
+        "$(G.testfile).expected", "TEST.cfengine.best,C,Content changed"
+      );
+
+    "any"
+      usebundle => check_file_changes_log(
+        "$(G.testfile).expected", "cfe3725_log_ok", "cfe3725_log_fail", ""
+      );
+
+  reports:
+    # Decide the outcome from the classes that check_file_changes_log sets in
+    # the methods promises above. Guarding the reports directly (instead of
+    # via an intermediate "ok" class in a classes promise, which would be
+    # evaluated a pass earlier) means exactly one of Pass/FAIL is emitted.
+    cfe3725_log_ok.!cfe3725_log_fail::
+      "$(this.promise_filename) Pass";
+
+    cfe3725_log_fail|!cfe3725_log_ok::
+      "$(this.promise_filename) FAIL: expected exactly one 'Content changed' for the file (hash=>best must not re-detect on the next run)";
+}
+
+### PROJECT_ID: core
+### CATEGORY_ID: 27

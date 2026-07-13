@@ -3690,7 +3690,6 @@ static PromiseResult VerifyFileIntegrity(EvalContext *ctx, const char *file, con
 {
     assert(attr != NULL);
     unsigned char digest1[EVP_MAX_MD_SIZE + 1];
-    unsigned char digest2[EVP_MAX_MD_SIZE + 1];
 
     if ((attr->change.report_changes != FILE_CHANGE_REPORT_CONTENT_CHANGE) && (attr->change.report_changes != FILE_CHANGE_REPORT_ALL))
     {
@@ -3698,27 +3697,22 @@ static PromiseResult VerifyFileIntegrity(EvalContext *ctx, const char *file, con
     }
 
     memset(digest1, 0, EVP_MAX_MD_SIZE + 1);
-    memset(digest2, 0, EVP_MAX_MD_SIZE + 1);
 
     PromiseResult result = PROMISE_RESULT_NOOP;
     bool changed = false;
-    if (attr->change.hash == HASH_METHOD_BEST)
-    {
-        HashFile(file, digest1, HASH_METHOD_MD5, false);
-        HashFile(file, digest2, HASH_METHOD_SHA1, false);
 
-        changed = (changed ||
-                   FileChangesCheckAndUpdateHash(ctx, file, digest1, HASH_METHOD_MD5, attr, pp, &result));
-        changed = (changed ||
-                   FileChangesCheckAndUpdateHash(ctx, file, digest2, HASH_METHOD_SHA1, attr, pp, &result));
-    }
-    else
-    {
-        HashFile(file, digest1, attr->change.hash, false);
+    /* "best" resolves to a single strong hash (SHA-512) in both Community and
+     * Enterprise (see GetBestFileChangeHashMethod()), so HASH_METHOD_BEST is
+     * never a runtime hash value here. Previously the Community stub returned
+     * HASH_METHOD_BEST and this function checked MD5 and SHA1 in sequence with
+     * a short-circuiting ||, which skipped updating the second hash once the
+     * first reported a change -- leaving it stale and firing a phantom
+     * "Content changed" on the next run (CFE-3725). */
+    assert(attr->change.hash != HASH_METHOD_BEST);
 
-        changed = (changed ||
-                   FileChangesCheckAndUpdateHash(ctx, file, digest1, attr->change.hash, attr, pp, &result));
-    }
+    HashFile(file, digest1, attr->change.hash, false);
+
+    changed = FileChangesCheckAndUpdateHash(ctx, file, digest1, attr->change.hash, attr, pp, &result);
 
     if (changed && MakingInternalChanges(ctx, pp, attr, &result, "record integrity changes in '%s'", file))
     {

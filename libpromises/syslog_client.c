@@ -27,6 +27,8 @@
 
 #include <cf3.defs.h>
 
+
+#define RFC3164_LENGTH 1024
 /*
  * Set by cf-agent/cf-serverd from body agent/server control.
  */
@@ -112,8 +114,7 @@ void RemoteSysLog(int log_priority, const char *log_string)
         }
         else
         {
-            const size_t rfc3164_len = 1024;
-            char message[rfc3164_len];
+            char message[RFC3164_LENGTH];
             char timebuffer[26];
             pid_t pid = getpid();
 

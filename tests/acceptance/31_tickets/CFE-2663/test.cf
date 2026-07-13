@@ -1,0 +1,80 @@
+body file control
+{
+  inputs => { "../../default.sub.cf" };
+}
+
+bundle agent __main__
+{
+  methods:
+    "bundlesequence" usebundle => default("$(this.promise_filename)");
+}
+
+bundle agent init
+{
+  vars:
+    # No trailing newline in the strings, so the "[section2]" header is
+    # genuinely the last line of the "actual" file. The region selected for
+    # section2 is therefore empty and sits at the end of the file.
+    "actual" string => "[section]
+keyone=valueone
+[section2]";
+    "expected" string => "[section]
+keyone=valueone
+[section2]
+keytwo=valuetwo";
+    "files" slist => { "actual", "expected" };
+
+  files:
+    "$(G.testfile).$(files)"
+      create => "true",
+      edit_line => init_insert("$(init.$(files))"),
+      edit_defaults => init_empty;
+}
+
+bundle edit_line init_insert(str)
+{
+  insert_lines:
+    "$(str)";
+}
+
+body edit_defaults init_empty
+{
+  empty_file_before_editing => "true";
+}
+
+bundle agent test
+{
+  meta:
+    "description"
+      string => "Insertion into an empty trailing region (the select_start delimiter is the last line of the file) must succeed when select_end_match_eof is true",
+      meta => { "CFE-2663" };
+
+  files:
+    "$(G.testfile).actual" edit_line => insert_into_trailing_section;
+}
+
+bundle edit_line insert_into_trailing_section
+{
+  insert_lines:
+    "keytwo=valuetwo" select_region => ini_section("section2");
+}
+
+body select_region ini_section(x)
+# @brief Restrict the edit to the lines in section [x], matching to EOF when
+# [x] is the final section in the file.
+{
+  select_start => "\[$(x)\]\s*";
+  select_end => "\[.*\]\s*";
+  select_end_match_eof => "true";
+}
+
+bundle agent check
+{
+  methods:
+    "any"
+      usebundle => dcs_check_diff(
+        "$(G.testfile).actual",
+        "$(G.testfile).expected",
+        "$(this.promise_filename)"
+      );
+}

@@ -955,7 +955,33 @@ bool DBPrivClean(DBPriv *db)
     assert(txn != NULL);
     assert(!txn->cursor_open);
 
-    return (mdb_drop(txn->txn, db->dbi, EMPTY_DB) != 0);
+    const int drop_rc = mdb_drop(txn->txn, db->dbi, EMPTY_DB);
+    if (drop_rc != MDB_SUCCESS)
+    {
+        Log(LOG_LEVEL_ERR, "Could not empty database '%s': %s",
+            (char *) mdb_env_get_userctx(db->env), mdb_strerror(drop_rc));
+        return false;
+    }
+
+    /* LMDB 1.0.0 changed mdb_drop() semantics: emptying the main DBI marks the
+     * transaction with MDB_TXN_DROPPED, after which it may only be committed or
+     * aborted -- any further read/write on it returns MDB_BAD_TXN. CFEngine
+     * reuses a single write transaction per thread, and callers (e.g. the
+     * package module in cf-agent) repopulate the DB immediately after cleaning
+     * it, so we must release the transaction here; the next write opens a fresh
+     * one. On LMDB 0.9.x this is simply an earlier commit of the same data. */
+    const int commit_rc = mdb_txn_commit(txn->txn);
+    CheckLMDBUsable(commit_rc, db->env);
+    txn->txn = NULL;
+    txn->rw_txn = false;
+    if (commit_rc != MDB_SUCCESS)
+    {
+        Log(LOG_LEVEL_ERR, "Could not commit emptied database '%s': %s",
+            (char *) mdb_env_get_userctx(db->env), mdb_strerror(commit_rc));
+        return false;
+    }
+
+    return true;
 }
 
 int DBPrivGetDBUsagePercentage(const char *db_path)

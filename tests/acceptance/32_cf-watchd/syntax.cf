@@ -1,0 +1,28 @@
+bundle agent main
+{
+  reports:
+    "$(this.promise_filename) Pass";
+}
+
+body when file_deleted(filename)
+{
+  files_deleted => { "$(filename)" };
+}
+
+bundle agent create_file(filename)
+{
+  files:
+    "$(filename)" create => "true";
+}
+
+bundle watch event_handler
+{
+  events:
+    "Create /tmp/a"
+      when => file_deleted("/tmp/a"),
+      then => create_file("/tmp/a");
+
+    "Create /tmp/b"
+      when => file_deleted("/tmp/b"),
+      then => create_file("/tmp/b");
+}

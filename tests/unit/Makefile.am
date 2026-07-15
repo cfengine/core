@@ -108,6 +108,7 @@ check_PROGRAMS = \
 	package_versions_compare_test \
 	files_lib_test \
 	files_copy_test \
+	files_links_test \
 	parsemode_test \
 	parser_test \
 	passopenfile_test \
@@ -284,6 +285,9 @@ package_versions_compare_test_LDADD = ../../libpromises/libpromises.la \
 
 files_copy_test_SOURCES  = files_copy_test.c
 files_copy_test_LDADD    = libtest.la ../../libpromises/libpromises.la
+
+files_links_test_SOURCES = files_links_test.c
+files_links_test_LDADD   = libtest.la ../../libpromises/libpromises.la
 
 sort_test_SOURCES = sort_test.c
 sort_test_LDADD = libtest.la ../../libpromises/libpromises.la

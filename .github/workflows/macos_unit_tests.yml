@@ -20,6 +20,6 @@ jobs:
       run: >
         ./autogen.sh --enable-debug
     - name: Compile and link
-      run: MACOSX_DEPLOYMENT_TARGET=15.4 make -j8 CFLAGS="-Werror -Wall"
+      run: MACOSX_DEPLOYMENT_TARGET=15.4 make -j8 CFLAGS="-Werror -Wall -Wextra -Wno-sign-compare"
     - name: Run unit tests
       run: make -C tests/unit check

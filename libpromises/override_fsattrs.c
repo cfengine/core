@@ -211,11 +211,33 @@ bool OverrideImmutableRename(
 
     if (rename(old_filename, new_filename) == -1)
     {
-        Log(LOG_LEVEL_ERR,
-            "Failed to replace original file '%s' with copy '%s': %s",
-            new_filename,
-            old_filename,
-            GetErrorStr());
+        const int saved_errno = errno;
+
+        /* This is the common landing point for edit_line, edit_xml, copy_from
+         * and templating (they write a temporary file and rename it into
+         * place). When not overriding the immutable bit, an immutable
+         * destination is the likely reason the rename failed, so flag it -
+         * confirmed via the flag, not guessed from errno, so other causes are
+         * not mislabeled. */
+        bool is_immutable = false;
+        if (!override
+            && (FSAttrsGetImmutableFlag(new_filename, &is_immutable) == FS_ATTRS_SUCCESS)
+            && is_immutable)
+        {
+            Log(LOG_LEVEL_ERR,
+                "Failed to replace original file '%s' with copy '%s': %s (the immutable bit is set)",
+                new_filename,
+                old_filename,
+                GetErrorStrFromCode(saved_errno));
+        }
+        else
+        {
+            Log(LOG_LEVEL_ERR,
+                "Failed to replace original file '%s' with copy '%s': %s",
+                new_filename,
+                old_filename,
+                GetErrorStrFromCode(saved_errno));
+        }
         unlink(old_filename);
         return false;
     }

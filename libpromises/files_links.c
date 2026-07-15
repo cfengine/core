@@ -707,8 +707,17 @@ bool ExpandLinks(char *dest, const char *from, int level, int max_level)
             continue;
         }
 
-        sscanf(sp, "%[^/]", node);
-        sp += strlen(node);
+        size_t node_len = strcspn(sp, "/");
+        if (node_len >= sizeof(node))
+        {
+            Log(LOG_LEVEL_ERR,
+                "Internal limit reached in ExpandLinks(),"
+                " path component too long: '%s'", sp);
+            return false;
+        }
+        memcpy(node, sp, node_len);
+        node[node_len] = '\0';
+        sp += node_len;
 
         if (*sp == '\0')
         {

@@ -96,6 +96,7 @@
 #include <compiler.h>
 #include <rlist.h>
 #include <acl_tools.h>
+#include <date_parser.h>
 
 #ifdef HAVE_LIBCURL
 #include <curl/curl.h>
@@ -7615,6 +7616,21 @@ static FnCallResult FnCallStrftime(ARG_UNUSED EvalContext *ctx,
 
 /*********************************************************************/
 
+static FnCallResult FnCallStrToTime(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
+{
+    char *string = RlistScalarValue(finalargs);
+    time_t out;
+
+    if (StringToTime(string, &out) != 0)
+    {
+        Log(LOG_LEVEL_ERR, "'%s': Invalid date '%s'", fp->name, string);
+        return FnFailure();
+    }
+    return FnReturnF("%ld", out);
+}
+
+/*********************************************************************/
+
 static FnCallResult FnCallEval(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
     if (finalargs == NULL)
@@ -11269,6 +11285,12 @@ static const FnCallArg STRFTIME_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg STRTOTIME_ARGS[] =
+{
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "String to parse"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
 static const FnCallArg STRING_REPLACE_ARGS[] =
 {
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Source string"},
@@ -11839,6 +11861,8 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("strcmp", CF_DATA_TYPE_CONTEXT, STRCMP_ARGS, &FnCallStrCmp, "True if the two strings match exactly",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL, DEFAULT_ARGC),
     FnCallTypeNew("strftime", CF_DATA_TYPE_STRING, STRFTIME_ARGS, &FnCallStrftime, "Format a date and time string",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL, DEFAULT_ARGC),
+    FnCallTypeNew("strtotime", CF_DATA_TYPE_INT, STRTOTIME_ARGS, &FnCallStrToTime, "Parse a timestamp from a string",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL, DEFAULT_ARGC),
     FnCallTypeNew("sublist", CF_DATA_TYPE_STRING_LIST, SUBLIST_ARGS, &FnCallSublist, "Returns arg3 element from either the head or the tail (according to arg2) of list or array or data container arg1.",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL, DEFAULT_ARGC),

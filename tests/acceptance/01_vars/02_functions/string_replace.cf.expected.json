@@ -1,6 +1,13 @@
 {
   "empty": "",
   "empty2": "",
+  "list_replace": "ccce",
+  "list_replace_inline_json": "Hell0 Every0ne",
+  "match_list": [
+    "a",
+    "b",
+    "d"
+  ],
   "match_none": "abdc",
   "match_none2": "abcdefghij\\t\\n",
   "match_once": "ABCd",
@@ -12,6 +19,11 @@
   "special": "1{}[].*?",
   "special2": "()\\1[].*?",
   "special3": "(){}[]\\2",
+  "sub_list": [
+    "b",
+    "c",
+    "e"
+  ],
   "test": "abcdefghij\\t\\n",
   "test2": "(){}[].*?"
 }

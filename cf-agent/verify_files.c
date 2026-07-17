@@ -835,7 +835,29 @@ static PromiseResult WriteContentFromString(EvalContext *ctx, const char *path, 
         FILE *f = safe_fopen(override_path, "w");
         if (f == NULL)
         {
-            RecordFailure(ctx, pp, attr, "Cannot open file '%s' for writing", path);
+            const int saved_errno = errno;
+
+            /* Always report the actual system error. When not overriding the
+             * immutable bit we write in place, so also flag it if the file is
+             * immutable - confirmed via the flag, not guessed from errno (which
+             * is EPERM but not exclusive to immutability), so other causes are
+             * not mislabeled. When overriding we write to a temporary copy, so
+             * the immutable bit is not the cause. */
+            bool is_immutable = false;
+            if (!override_immutable
+                && (FSAttrsGetImmutableFlag(changes_path, &is_immutable) == FS_ATTRS_SUCCESS)
+                && is_immutable)
+            {
+                RecordFailure(ctx, pp, attr,
+                              "Cannot open file '%s' for writing: %s (the immutable bit is set)",
+                              path, GetErrorStrFromCode(saved_errno));
+            }
+            else
+            {
+                RecordFailure(ctx, pp, attr,
+                              "Cannot open file '%s' for writing: %s",
+                              path, GetErrorStrFromCode(saved_errno));
+            }
             OverrideImmutableCommit(changes_path, override_path, override_immutable, true);
             return PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
         }

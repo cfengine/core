@@ -1,0 +1,35 @@
+body common control
+{
+  bundlesequence => { "setup", "try_modify" };
+}
+
+body fsattrs set_immutable
+{
+  immutable => "true";
+}
+
+bundle edit_line insert_a_line
+{
+  insert_lines:
+    "a line the agent tries to insert into an immutable file";
+}
+
+bundle agent setup
+{
+  files:
+    # Create the target and set the immutable bit natively. This runs in its
+    # own agent process (invoked from the test's check bundle), so setup is
+    # ordered before the edit below and does not depend on the parent test.
+    "/tmp/15_immutable.txt"
+      content => "original line",
+      fsattrs => set_immutable;
+}
+
+bundle agent try_modify
+{
+  files:
+    # No fsattrs => ... immutable, so the immutable bit is not overridden.
+    # Inserting a new line changes the file, so the agent writes a temporary
+    # file and renames it over the immutable target, which fails.
+    "/tmp/15_immutable.txt" edit_line => insert_a_line;
+}

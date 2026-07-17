@@ -1,0 +1,201 @@
+###############################################################################
+# ENT-10199 - namespace/scope resolution
+#
+# Data bundles live in ns_a, ns_b, default. Caller bundles live in ns_a, ns_b,
+# default.
+# Each caller tests:
+#   - bare same-bundle var                         -> PASS
+#   - unqualified ref to data in ITS OWN namespace -> PASS post-fix
+#   - explicit qualified cross-ns ref              -> PASS
+###############################################################################
+# Default namespace
+###############################################################################
+bundle agent __main__
+{
+  methods:
+    "data";
+    "ns_a:data";
+    "ns_b:data";
+    "caller_default";
+    "ns_a:caller_a";
+    "ns_b:caller_b";
+    "check";
+}
+
+bundle agent data
+{
+  vars:
+    "val" string => "VALUE_FROM_DEFAULT";
+}
+
+bundle agent caller_default
+{
+  vars:
+    "val" string => "LOCAL_DEFAULT";
+    "bare" string => format("%s", "$(val)");
+    "own_ns" string => format("%s", "$(data.val)");
+    "qualified_a" string => format("%s", "$(ns_a:data.val)");
+    "qualified_b" string => format("%s", "$(ns_b:data.val)");
+
+  reports:
+    "[caller_default] bare        => '$(bare)'        (expect: LOCAL_DEFAULT)";
+    "[caller_default] own_ns      => '$(own_ns)'      (expect: VALUE_FROM_DEFAULT - baseline, always worked)";
+    "[caller_default] qualified_a => '$(qualified_a)' (expect: VALUE_FROM_NS_A)";
+    "[caller_default] qualified_b => '$(qualified_b)' (expect: VALUE_FROM_NS_B)";
+}
+
+bundle agent check
+{
+  classes:
+    # caller_a
+    "check_01"
+      expression => and(
+        isvariable("ns_a:caller_a.bare"),
+        strcmp("$(ns_a:caller_a.bare)", "LOCAL_A")
+      );
+
+    "check_02"
+      expression => and(
+        isvariable("ns_a:caller_a.own_ns"),
+        strcmp("$(ns_a:caller_a.own_ns)", "VALUE_FROM_NS_A")
+      );
+
+    "check_03" expression => not(isvariable("ns_a:caller_a.default_ns"));
+
+    # caller_b
+    "check_04"
+      expression => and(
+        isvariable("ns_b:caller_b.bare"),
+        strcmp("$(ns_b:caller_b.bare)", "LOCAL_B")
+      );
+
+    "check_05"
+      expression => and(
+        isvariable("ns_b:caller_b.own_ns"),
+        strcmp("$(ns_b:caller_b.own_ns)", "VALUE_FROM_NS_B")
+      );
+
+    "check_06" expression => not(isvariable("ns_b:caller_b.default_ns"));
+
+    # caller_default
+    "check_07"
+      expression => and(
+        isvariable("default:caller_default.bare"),
+        strcmp("$(default:caller_default.bare)", "LOCAL_DEFAULT")
+      );
+
+    "check_08"
+      expression => and(
+        isvariable("default:caller_default.own_ns"),
+        strcmp("$(default:caller_default.own_ns)", "VALUE_FROM_DEFAULT")
+      );
+
+    "check_09"
+      expression => and(
+        isvariable("default:caller_default.qualified_a"),
+        strcmp("$(default:caller_default.qualified_a)", "VALUE_FROM_NS_A")
+      );
+
+    "check_10"
+      expression => and(
+        isvariable("default:caller_default.qualified_b"),
+        strcmp("$(default:caller_default.qualified_b)", "VALUE_FROM_NS_B")
+      );
+
+    "all_passed"
+      expression => and(
+        check_01,
+        check_02,
+        check_03,
+        check_04,
+        check_06,
+        check_07,
+        check_08,
+        check_09,
+        check_10
+      );
+
+  reports:
+    all_passed::
+      "$(this.promise_filename) Pass";
+
+    !all_passed::
+      "$(this.promise_filename) Fail";
+}
+
+###############################################################################
+# DATA bundles
+###############################################################################
+body file control
+{
+  namespace => "ns_a";
+}
+
+bundle agent data
+{
+  vars:
+    "val" string => "VALUE_FROM_NS_A";
+}
+
+body file control
+{
+  namespace => "ns_b";
+}
+
+bundle agent data
+{
+  vars:
+    "val" string => "VALUE_FROM_NS_B";
+}
+
+###############################################################################
+# CALLER in ns_a
+###############################################################################
+body file control
+{
+  namespace => "ns_a";
+}
+
+bundle agent caller_a
+{
+  vars:
+    "val" string => "LOCAL_A";
+    "bare" string => format("%s", "$(val)");
+    "own_ns" string => format("%s", "$(data.val)");
+    "default_ns" string => format("%s", "$(data_default.val)");
+    "qualified_a" string => format("%s", "$(ns_a:data.val)");
+    "qualified_b" string => format("%s", "$(ns_b:data.val)");
+
+  reports:
+    "[caller_a] bare        => '$(bare)'        (expect: LOCAL_A)";
+    "[caller_a] own_ns      => '$(own_ns)'      (expect: VALUE_FROM_NS_A - ENT-10199 Fixes this)";
+    "[caller_a] default_ns  => '$(default_ns)'  (expect: unresolved - not a bug)";
+    "[caller_a] qualified_a => '$(qualified_a)' (expect: VALUE_FROM_NS_A)";
+    "[caller_a] qualified_b => '$(qualified_b)' (expect: VALUE_FROM_NS_B)";
+}
+
+###############################################################################
+# CALLER in ns_b
+###############################################################################
+body file control
+{
+  namespace => "ns_b";
+}
+
+bundle agent caller_b
+{
+  vars:
+    "val" string => "LOCAL_B";
+    "bare" string => format("%s", "$(val)");
+    "own_ns" string => format("%s", "$(data.val)");
+    "default_ns" string => format("%s", "$(data_default.val)");
+    "qualified_a" string => format("%s", "$(ns_a:data.val)");
+    "qualified_b" string => format("%s", "$(ns_b:data.val)");
+
+  reports:
+    "[caller_b] bare        => '$(bare)'        (expect: LOCAL_B)";
+    "[caller_b] own_ns      => '$(own_ns)'      (expect: VALUE_FROM_NS_B - ENT-10199 Fixes this)";
+    "[caller_b] default_ns  => '$(default_ns)'  (expect: unresolved - not a bug)";
+    "[caller_b] qualified_a => '$(qualified_a)' (expect: VALUE_FROM_NS_A)";
+    "[caller_b] qualified_b => '$(qualified_b)' (expect: VALUE_FROM_NS_B)";
+}

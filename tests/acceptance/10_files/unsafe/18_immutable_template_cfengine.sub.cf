@@ -1,0 +1,34 @@
+body common control
+{
+  bundlesequence => { "setup", "try_modify" };
+}
+
+body fsattrs set_immutable
+{
+  immutable => "true";
+}
+
+bundle agent setup
+{
+  files:
+    # Template is a normal file; the destination is immutable. This runs in its
+    # own agent process (invoked from the test's check bundle), so setup is
+    # ordered before the render below and does not depend on the parent test.
+    "/tmp/18_immutable.cf-template"
+      content => "rendered by the cfengine template method";
+
+    "/tmp/18_immutable.txt"
+      content => "original destination content",
+      fsattrs => set_immutable;
+}
+
+bundle agent try_modify
+{
+  files:
+    # No fsattrs => ... immutable, so the immutable bit is not overridden.
+    # The rendered output differs from the destination, so the agent writes a
+    # temporary file and renames it over the immutable target, which fails.
+    "/tmp/18_immutable.txt"
+      edit_template => "/tmp/18_immutable.cf-template",
+      template_method => "cfengine";
+}

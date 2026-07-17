@@ -1,0 +1,31 @@
+body common control
+{
+  bundlesequence => { "setup", "try_modify" };
+}
+
+body fsattrs set_immutable
+{
+  immutable => "true";
+}
+
+bundle agent setup
+{
+  files:
+    # Create the immutable target. This runs in its own agent process (invoked
+    # from the test's check bundle), so setup is ordered before the render
+    # below and does not depend on the parent test.
+    "/tmp/20_immutable.txt"
+      content => "original destination content",
+      fsattrs => set_immutable;
+}
+
+bundle agent try_modify
+{
+  files:
+    # No fsattrs => ... immutable, so the immutable bit is not overridden.
+    # The rendered output differs from the destination, so the agent writes a
+    # temporary file and renames it over the immutable target, which fails.
+    "/tmp/20_immutable.txt"
+      edit_template_string => "rendered from an inline mustache template",
+      template_method => "inline_mustache";
+}

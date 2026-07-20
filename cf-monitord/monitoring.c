@@ -170,8 +170,9 @@ void GetObservable(int i, char *name, size_t name_size, char *desc, size_t desc_
         }
         else
         {
-            strncpy(name, OBSERVABLES[i][0], name_size - 1);
-            strncpy(desc, OBSERVABLES[i][1], desc_size - 1);
+            /* OBSERVABLES has no rows at or above ob_spare. */
+            strncpy(name, "spare", name_size - 1);
+            strncpy(desc, "unused", desc_size - 1);
         }
     }
 }

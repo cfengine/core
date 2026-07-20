@@ -52,7 +52,7 @@ static double GetCpuStat()
 
 void test_cpu_monitor(void)
 {
-    double cf_this[100];
+    double cf_this[300];
     double dq1 = GetCpuStat();
     if (dq1 == -1.0)
     {

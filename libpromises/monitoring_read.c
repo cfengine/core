@@ -25,6 +25,7 @@
 
 #include <monitoring_read.h>
 
+#include <stddef.h>                                       /* offsetof */
 #include <file_lib.h>                                     /* FILE_SEPARATOR */
 #include <known_dirs.h>
 
@@ -225,6 +226,27 @@ bool NovaHasSlot(int idx)
     return idx < ob_spare || SLOTS[idx - ob_spare];
 }
 
+/**
+ * Bytes of an Averages record in use: the built-in observables plus every slot
+ * through the highest one a measurement has registered. cf-monitord writes only
+ * this much, so unused slots cost no disk.
+ */
+size_t AveragesUsedSize(void)
+{
+    Nova_LoadSlots();
+
+    size_t slots = ob_spare;
+    for (int i = CF_OBSERVABLES - 1; i >= ob_spare; i--)
+    {
+        if (SLOTS[i - ob_spare] != NULL)
+        {
+            slots = i + 1;
+            break;
+        }
+    }
+    return offsetof(Averages, Q) + slots * sizeof(QPoint);
+}
+
 const char *NovaGetSlotName(int idx)
 {
     Nova_LoadSlots();
@@ -324,6 +346,8 @@ bool GetRecordForTime(CF_DB *db, time_t time, Averages *result)
 
     MakeTimekey(time, timekey);
 
+    /* Records may be short (AveragesUsedSize); unstored slots must read zero. */
+    memset(result, 0, sizeof(Averages));
     return ReadDB(db, timekey, result, sizeof(Averages));
 }
 

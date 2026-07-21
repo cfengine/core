@@ -68,6 +68,7 @@ libdb_la_SOURCES = db_stubs.c \
 	../../libpromises/dbm_lmdb.c \
 	../../libpromises/dbm_migration.c \
 	../../libpromises/dbm_migration_lastseen.c \
+	../../libpromises/dbm_migration_observations.c \
 	../../libpromises/global_mutex.c \
 	../../cf-check/backup.c \
 	../../cf-check/diagnose.c \
@@ -103,6 +104,7 @@ check_PROGRAMS = \
 	lastseen_test \
 	lastseen_migration_test \
 	changes_migration_test \
+	observations_migration_test \
 	db_test \
 	db_concurrent_test \
 	item_lib_test \
@@ -260,6 +262,9 @@ db_test_LDADD = libtest.la ../../libpromises/libpromises.la
 db_concurrent_test_SOURCES = db_concurrent_test.c
 #db_concurrent_test_CPPFLAGS = $(libdb_la_CPPFLAGS)
 db_concurrent_test_LDADD = libtest.la libdb.la
+
+observations_migration_test_SOURCES = observations_migration_test.c
+observations_migration_test_LDADD = libtest.la libdb.la
 
 lastseen_test_SOURCES = lastseen_test.c \
 	../../libntech/libutils/statistics.c

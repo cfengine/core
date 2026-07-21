@@ -30,6 +30,16 @@ bundle agent main
 
     # replace ambiguous order
     "replace_ambiguous" string => string_replace("aaaaa", "aaa", "b");
+    "matches" slist => { "e", "r" };
+    "subs" slist => { "E", "R" };
+
+    "replace_list"
+      string => string_replace("Hello World", "@(matches)", "@(subs)", "lists");
+
+    "replace_list_json"
+      string => string_replace(
+        "Hello World", '["World", "o"]', '["Everyone", "0"]', "lists"
+      );
 
   reports:
     # in order, the above...
@@ -37,6 +47,8 @@ bundle agent main
     "replace_several = '$(replace_several)'";
     "replace_none = '$(replace_none)'";
     "replace_ambiguous = '$(replace_ambiguous)'";
+    "replace_list = '$(replace_list)'";
+    "replace_list_json = '$(replace_list_json)'";
 }
 
 #+end_src
@@ -47,5 +59,7 @@ bundle agent main
 #@ R: replace_several = 'Thos os a strong'
 #@ R: replace_none = 'This is a string'
 #@ R: replace_ambiguous = 'baa'
+#@ R: replace_list = 'HEllo WoRld'
+#@ R: replace_list_json = 'Hell0 Every0ne'
 #@ ```
 #+end_src

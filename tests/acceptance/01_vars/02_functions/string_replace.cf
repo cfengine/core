@@ -16,6 +16,8 @@ bundle agent test
   vars:
     "test" string => "abcdefghij\t\n";
     "test2" string => "(){}[].*?";
+    "match_list" slist => { "a", "b", "d" };
+    "sub_list" slist => { "b", "c", "e" };
 
     # normal tests
     "match_once" string => string_replace("abcd", "abc", "ABC");
@@ -35,6 +37,18 @@ bundle agent test
     # empty cases
     "empty" string => string_replace("", "abc", "ABC");
     "empty2" string => string_replace("", "abc", "");
+
+    # list
+    "list_replace"
+      string => string_replace("abcd", "@(match_list)", "@(sub_list)", "lists");
+
+    "list_replace_inline_json"
+      string => string_replace(
+        "Hello World",
+        '["World", "o"]',
+        parsejson('["Everyone", "0"]'),
+        "lists"
+      );
 }
 
 #######################################################

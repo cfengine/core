@@ -1,10 +1,6 @@
 body file control
 {
-  hpux.ia64::
-    inputs => { "$(sys.policy_entry_dirname)/../common_soft_fail.cf.sub" };
-
-  !(hpux.ia64)::
-    inputs => { "$(sys.policy_entry_dirname)/../common.cf.sub" };
+  inputs => { "$(sys.policy_entry_dirname)/../common.cf.sub" };
 }
 
 bundle common testcase

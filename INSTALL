@@ -146,9 +146,9 @@ doas gmake install
 
 See docs/BSD.md
 
-* SUSE (Tumbleweed 2020-02-02)
+* SUSE (opensuse/leap 16.0 2026-07-22)
 
-sudo zypper install gdb gcc make lmdb autoconf automake libtool git python3 pcre2-devel libopenssl-devel pam-devel
+sudo zypper install gdb gcc make autoconf automake libtool git python3 pcre2-devel libopenssl-devel pam-devel byacc flex lmdb-devel librsync-devel
 
 * Alpine Linux (3.21.3 2025-02-25)
 

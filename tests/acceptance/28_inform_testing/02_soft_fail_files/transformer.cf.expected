@@ -1,2 +1,0 @@
-    info: files promise '/tmp/TEST.cfengine' repaired, transformer => "$(G.gzip) $(G.testfile)"
-    info: Transformed '/tmp/TEST.cfengine' with '/bin/bzip /tmp/TEST.cfengine'

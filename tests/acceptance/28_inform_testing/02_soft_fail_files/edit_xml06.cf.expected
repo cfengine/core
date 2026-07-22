@@ -1,2 +1,0 @@
-    info: files promise '/tmp/TEST.cfengine' repaired, edit_xml => xml_delete_attribute("foo", "//Root")
-    info: Deleted attribute 'foo' at XPath '//Root' in the XML document '/tmp/TEST.cfengine'

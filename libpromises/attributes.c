@@ -876,7 +876,10 @@ FileRename GetRenameConstraints(const EvalContext *ctx, const Promise *pp)
 
 ENTERPRISE_FUNC_0ARG_DEFINE_STUB(HashMethod, GetBestFileChangeHashMethod)
 {
-    return HASH_METHOD_BEST;
+    /* "best" resolves to the strongest available hash (SHA-512), matching the
+     * Enterprise implementation of this function. The legacy MD5+SHA1 pairing
+     * was neither the "best" pair of algorithms nor FIPS-approved. */
+    return HASH_METHOD_SHA512;
 }
 
 FileChange GetChangeMgtConstraints(const EvalContext *ctx, const Promise *pp)

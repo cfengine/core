@@ -67,10 +67,23 @@ char **GetObservableNames(const char *ts_key_path)
 
             if (fgets(line, CF_MAXVARSIZE, f) == NULL)
             {
-                Log(LOG_LEVEL_ERR,
-                    "Error trying to read ts_key from file '%s'. (fgets: %s)",
-                    filename,
-                    GetErrorStr());
+                if (ferror(f))
+                {
+                    Log(LOG_LEVEL_ERR,
+                        "Error trying to read ts_key from file '%s'. (fgets: %s)",
+                        filename,
+                        GetErrorStr());
+                }
+                /* The ts_key has fewer entries than CF_OBSERVABLES -- e.g. it
+                 * was written by an older agent with a smaller CF_OBSERVABLES.
+                 * Fill the remaining names so the returned array keeps its
+                 * documented non-NULL guarantee (callers index all
+                 * CF_OBSERVABLES entries). */
+                for (int j = i; j < CF_OBSERVABLES; ++j)
+                {
+                    snprintf(buf, CF_MAXVARSIZE, "spare[%d]", j);
+                    temp[j] = xstrdup(buf);
+                }
                 break;
             }
 

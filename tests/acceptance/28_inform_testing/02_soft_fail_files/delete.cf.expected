@@ -1,2 +1,0 @@
-    info: files promise '/tmp/TEST.cfengine' repaired, delete => init_delete
-    info: Deleted file '/tmp/TEST.cfengine'

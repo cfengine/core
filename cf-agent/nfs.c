@@ -851,7 +851,7 @@ int VerifyNotInFstab(EvalContext *ctx, char *name, const Attributes *a, const Pr
 
                 if (strstr(line, "busy"))
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp, a, "The device under '%s' cannot be removed from '%s'",
+                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "The device under '%s' cannot be removed from '%s'",
                          mountpt, VFSTAB[VSYSTEMHARDCLASS]);
                     *result = PromiseResultUpdate(*result, PROMISE_RESULT_INTERRUPTED);
                     free(line);

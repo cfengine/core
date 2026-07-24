@@ -48,6 +48,9 @@ static const ConstraintSyntax mount_constraints[] =
     ConstraintSyntaxNewString("mount_server", "", "Hostname or IP or remote file system server", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("mount_options", "", "List of option strings to add to the file system table (\"fstab\")", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("unmount", "true/false unmount a previously mounted filesystem. Default value: false", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBool("remount", "true/false correct the options of an already-mounted filesystem when they differ from the promise. Default value: false", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOptionList("remount_methods", "remount,unmount_mount", "Ordered list of mechanisms to reconcile a mounted filesystem with the promise (tried in order). Default: remount", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("remount_timeout", CF_VALRANGE, "Timeout in seconds for each remount_method", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

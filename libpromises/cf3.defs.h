@@ -913,7 +913,8 @@ typedef struct
     char *host;
     char *source;
     char *mounton;
-    char *options;
+    char *options;          /* fstype string (e.g. "nfs", "panfs", "cifs") for foreign-FS detection */
+    char *raw_opts;         /* full kernel-resolved options from /proc/mounts */
     int unmount;
 } Mount;
 
@@ -1292,6 +1293,9 @@ typedef struct
     Rlist *mount_options;
     int editfstab;
     int unmount;
+    int remount;
+    Rlist *remount_methods;
+    int remount_timeout;
 } StorageMount;
 
 typedef struct

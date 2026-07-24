@@ -28,7 +28,20 @@
 #include <cf3.defs.h>
 #include <sequence.h> // Seq
 
-bool LoadMountInfo(Seq *list);
+extern bool LoadMountInfo(Seq *list);
+
+/* Option subset matching for CFE-90 mount option verification.
+ * Checks whether all options in 'promised_opts' are present in
+ * 'actual_opts' (kernel-resolved options).  Kernel-added NFS
+ * auto-negotiated options are ignored.  Returns true if all
+ * user-specified options are satisfied. */
+extern bool OptionsSubsetMatches(const char *promised_opts, const char *actual_opts);
+
+/* CFE-90: Reconcile an already-mounted filesystem whose source or options
+ * diverge from the promise, using the mechanisms in a->mount.remount_methods
+ * (in order, verifying after each).  Only invoked when remount is enabled. */
+PromiseResult ReconcileMountOptions(EvalContext *ctx, char *name, const Attributes *a, const Promise *pp);
+
 void DeleteMountInfo(Seq *list);
 int VerifyNotInFstab(EvalContext *ctx, char *name, const Attributes *a, const Promise *pp, PromiseResult *result);
 int VerifyInFstab(EvalContext *ctx, char *name, const Attributes *a, const Promise *pp, PromiseResult *result);

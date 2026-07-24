@@ -618,8 +618,14 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
                 fi
             elif egrep "R: .*$ESCAPED_TEST Pass" $OUTFILE > /dev/null
             then
-                RESULT=Pass
-                RESULT_MSG="${COLOR_SUCCESS}Pass${COLOR_NORMAL}"
+                if egrep "error: " $OUTFILE > /dev/null
+                then
+                    RESULT=FAIL
+                    RESULT_MSG="${COLOR_FAILURE}FAIL (Test passed, but printed error message(s))${COLOR_NORMAL}"
+                else
+                    RESULT=Pass
+                    RESULT_MSG="${COLOR_SUCCESS}Pass${COLOR_NORMAL}"
+                fi
             elif egrep "R: .*$ESCAPED_TEST Skip/unsupported" $OUTFILE > /dev/null
             then
                 RESULT=Skip

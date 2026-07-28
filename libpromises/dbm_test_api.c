@@ -22,8 +22,9 @@
   included file COSL.txt.
 */
 
+#ifndef __ANDROID__
 #include <platform.h>
-#include <stdlib.h>             /* lrand48_r() */
+#include <stdlib.h>             /* lrand48() */
 #include <unistd.h>             /* usleep(), syscall()/gettid() */
 #include <alloc.h>              /* xstrndup() */
 #include <dbm_api.h>
@@ -70,23 +71,22 @@ static void DBItemDestroy(DBItem *item)
     }
 }
 
-static __thread struct drand48_data rng_data;
 
 static void InitializeRNG(long int seed)
 {
-    srand48_r(seed, &rng_data);
+    srand48(seed);
 }
 
 static long GetRandomNumber(long limit)
 {
     long rnd_val;
-    lrand48_r(&rng_data, &rnd_val); /* generates a value in the [0, 2^31) interval */
+    rnd_val = lrand48();
     const long random_max = ((0x80000000 - 1) / limit) * limit;
     while (rnd_val > random_max)
     {
         /* got a bad value past the greatest multiple of the limit interval,
          * retry (see "modulo bias" if this is unclear) */
-        lrand48_r(&rng_data, &rnd_val);
+        rnd_val = lrand48();
     }
     return rnd_val % limit;
 }
@@ -735,3 +735,4 @@ void RemoveFilament(DBFilament *filament)
     free(filament);
     CloseDB(db);
 }
+#endif /* not __ANDROID__ */

@@ -404,6 +404,16 @@ for f in $su_logs; do
 done
 file_add $WORKDIR/policy_server.dat
 
+# Collect client-side report dumps from /var/cfengine/diagnostics
+if [ -d "$WORKDIR/diagnostics" ]; then
+  echo "Collecting diagnostics directory (includes report_dumps)..."
+  mkdir -p "$tmpdir/diagnostics"
+  cp -a "$WORKDIR/diagnostics/." "$tmpdir/diagnostics/"
+  echo "Added diagnostics directory (includes report_dumps)"
+else
+  echo "diagnostics directory not found, skipping"
+fi
+
 if [ -f $WORKDIR/share/cf-support-nova-hub.sh ]; then
   # shellcheck source=/dev/null
   . $WORKDIR/share/cf-support-nova-hub.sh

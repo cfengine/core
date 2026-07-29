@@ -1,0 +1,26 @@
+body common control
+{
+  inputs => { "../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+}
+
+#######################################################
+bundle agent test
+{
+  meta:
+    "description" -> { "CFE-4228" }
+      string => "Test that promisees on reports are emitted in verbose output.";
+}
+
+#######################################################
+bundle agent check
+{
+  methods:
+    ""
+      usebundle => dcs_passif_output(
+        ".*promisee 'the_promisee_of_a_report'.*",
+        "",
+        "$(sys.cf_agent) -Kvf $(this.promise_filename).sub",
+        $(this.promise_filename)
+      );
+}

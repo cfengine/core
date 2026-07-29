@@ -129,7 +129,9 @@ PromiseResult VerifyReportPromise(EvalContext *ctx, const Promise *pp)
 
     YieldCurrentLock(thislock);
 
-    ClassAuditLog(ctx, pp, &a, result);
+    /* cfPS calls ClassAuditLog itself and also logs the promise context,
+     * which is where the promisee comes from */
+    cfPS(ctx, LOG_LEVEL_VERBOSE, result, pp, &a, "Reports promise '%s' processed", pp->promiser);
     return result;
 }
 

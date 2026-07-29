@@ -913,6 +913,12 @@ static int LaunchParsingMachine(const char *str, Rlist **newlist)
                 {
                     current_state = ST_ELM2;
                 }
+                else if (CLASS_BRA2(*s))
+                {
+                    /* A trailing comma, as in { "a", }. Two commas in a row
+                     * still fall through to the catch-all below. */
+                    current_state = ST_PRECLOSED;
+                }
                 else if (CLASS_ANY6(*s))
                 {
                     current_state = ST_ERROR;

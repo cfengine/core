@@ -1065,10 +1065,10 @@ static bool InsertMultipleLinesToRegion(EvalContext *ctx, Item **start, Item *be
 
     if (a->location.before_after == EDIT_ORDER_BEFORE)
     {
-        /* As region was already selected by SelectRegion() and we know
-         * what are the region boundaries (begin_ptr and end_ptr) there
-         * is no reason to iterate over whole file. */
-        for (ip = begin_ptr; ip != NULL; ip = ip->next)
+        /* Start at the top of the file so prev ends up as the line before
+         * the region. From begin_ptr prev stays NULL, and a NULL prev means
+         * prepend to the file. */
+        for (ip = *start; ip != NULL; ip = ip->next)
         {
             if (ip == begin_ptr)
             {

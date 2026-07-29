@@ -1,0 +1,27 @@
+body common control
+{
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+}
+
+#######################################################
+bundle agent test
+{
+  meta:
+    "description" -> { "CFE-1982" }
+      string => "Test that an unrecognized action_policy is a fatal error instead of being silently treated as fix";
+}
+
+#######################################################
+bundle agent check
+{
+  methods:
+    ""
+      usebundle => dcs_passif_output(
+        ".*Fatal CFEngine error: Unrecognized 'action_policy' value 'waarn'.*",
+        # The agent should refuse to run, so the promise must not be actuated
+        ".*R: Report with a misspelled action_policy.*",
+        "$(sys.cf_agent) -Kf $(this.promise_filename).sub",
+        $(this.promise_filename)
+      );
+}

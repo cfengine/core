@@ -673,13 +673,22 @@ static TransactionContext GetTransactionConstraints(const EvalContext *ctx, cons
 
     value = PromiseGetConstraintAsRval(pp, "action_policy", RVAL_TYPE_SCALAR);
 
-    if (value && ((strcmp(value, "warn") == 0) || (strcmp(value, "nop") == 0)))
+    if ((value == NULL) || StringEqual(value, "fix"))
+    {
+        t.action = cfa_fix;     // default
+    }
+    else if (StringEqual(value, "warn") || StringEqual(value, "nop"))
     {
         t.action = cfa_warn;
     }
     else
     {
-        t.action = cfa_fix;     // default
+        /* The parser only checks the option list for literal values, so an
+         * expanded one gets here unchecked. Falling back to 'fix' would make
+         * changes on a host where the policy asked only to warn, so refuse to
+         * run instead. A literal typo is already fatal at policy check time. */
+        PromiseRef(LOG_LEVEL_ERR, pp);
+        FatalError(ctx, "Unrecognized 'action_policy' value '%s'", value);
     }
 
     t.background = PromiseGetConstraintAsBoolean(ctx, "background", pp);

@@ -42,10 +42,8 @@ bundle agent test
     "description" -> { "CFE-942" }
       string => "Test that when a module executed by usemodule() returns nonzero, it's not interpreted as successful";
 
-      "test_soft_fail"
-        string => "any",
-        meta => { "CFE-942" },
-        comment => "usemodule seems to return true no matter if the module exists returning 0 or nonzero";
+      # The modules this test writes are /bin/sh scripts
+      "test_skip_unsupported" string => "windows";
 
   classes:
 
@@ -54,26 +52,35 @@ bundle agent test
       "usemodule_expect_no_class_defined_because_return_nonzero"
         expression => usemodule( "foo-usemodule", "" ),
         scope => "namespace",
-        if => isexecutable( "$(sys.workdir)/foo-usemodule" );
+        if => isexecutable( "$(sys.workdir)/modules/foo-usemodule" );
 
       # Since the module exists non zero, we should get this class
       "usemodule_expect_class_defined_because_return_nonzero"
         not => usemodule( "foo-usemodule", "" ),
         scope => "namespace",
-        if => isexecutable( "$(sys.workdir)/foo-usemodule" );
+        if => isexecutable( "$(sys.workdir)/modules/foo-usemodule" );
 
   commands:
       "$(sys.workdir)/modules/foo-commands_module"
         module => "true",
+        classes => expected_nonzero_exit,
         if => isexecutable( $(this.promiser) );
 }
+
+body classes expected_nonzero_exit
+# @brief The module here exits non-zero on purpose, so don't fail the promise
+# over it and take the whole test bundle down with it
+{
+      kept_returncodes => { "1" };
+}
+
 bundle agent check
 {
   methods:
     usemodule_expect_no_class_defined_because_return_nonzero.!usemodule_expect_class_defined_because_return_nonzero::
       "FAIL" usebundle => dcs_fail( $(this.promise_filename) );
 
-    !usemodule_expect_class_defined_because_return_nonzero.usemodule_expect_class_defined_because_return_nonzero::
+    !usemodule_expect_no_class_defined_because_return_nonzero.usemodule_expect_class_defined_because_return_nonzero::
       "Pass" usebundle => dcs_pass( $(this.promise_filename) );
 
   reports:

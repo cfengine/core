@@ -14,9 +14,12 @@ body common control
 bundle agent test
 {
   meta:
+    "description" -> { "CFE-2140", "redmine7578" }
+      string => "Test that modules are allowed to define lists with trailing commas";
+
     "test_soft_fail"
-      string => "any",
-      meta => { "redmine7578" };
+      string => "windows",
+      meta => { "ENT-10257" };
 
   commands:
     "$(G.cat)"

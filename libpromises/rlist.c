@@ -828,6 +828,12 @@ static int LaunchParsingMachine(const char *str, Rlist **newlist)
                     BufferClear(buf);
                     current_state = ST_ELM2;
                 }
+                else if (CLASS_BRA2(*s))
+                {
+                    /* "{}" -- a closing brace before any element. Has to come
+                     * before the catch-all below. */
+                    current_state = ST_PRECLOSED;
+                }
                 else if (CLASS_ANY1(*s))
                 {
                     current_state = ST_ERROR;
@@ -955,19 +961,26 @@ static int LaunchParsingMachine(const char *str, Rlist **newlist)
 clean:
     BufferDestroy(buf);
     RlistDestroy(*newlist);
+    *newlist = NULL;
     assert(ret != 0);
     return ret;
 }
 
-Rlist *RlistParseString(const char *string)
+/**
+ * @brief Parse a list in the format used by the module protocol, e.g. { "a", "b" }
+ * @param string String to parse
+ * @param[out] newlist The parsed list, NULL for the empty list "{}"
+ * @return Whether the string was parsed successfully
+ *
+ * An empty list parses fine and gives NULL, so check the return value.
+ */
+bool RlistParseString(const char *string, Rlist **newlist)
 {
-    Rlist *newlist = NULL;
-    if (LaunchParsingMachine(string, &newlist))
-    {
-        return NULL;
-    }
+    assert(newlist != NULL);
 
-    return newlist;
+    *newlist = NULL;
+
+    return (LaunchParsingMachine(string, newlist) == 0);
 }
 
 /*******************************************************************/

@@ -292,6 +292,11 @@ static struct ParseRoulette
     char *str;
 } PR[] =
 {
+        /*Empty list */
+    {
+    0, "{}"},
+    {
+    0, "{ }"},
         /*Simple */
     {
     1, "{\"a\"}"},
@@ -567,7 +572,7 @@ static void test_new_parser_success()
     int i = 0;
     while (PR[i].nfields != -1)
     {
-        list = RlistParseString(PR[i].str);
+        assert_true(RlistParseString(PR[i].str, &list));
         assert_int_equal(PR[i].nfields, RlistLen(list));
         if (list != NULL)
         {
@@ -583,7 +588,7 @@ static void test_new_parser_failure()
     Rlist *list = NULL;
     while (PFR[i] != NULL)
     {
-        list = RlistParseString(PFR[i]);
+        assert_false(RlistParseString(PFR[i], &list));
         assert_true(RlistLast(list) == NULL);
         if(list) RlistDestroy(list);
         i++;

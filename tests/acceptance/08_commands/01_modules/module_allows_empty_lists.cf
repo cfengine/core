@@ -14,9 +14,12 @@ body common control
 bundle agent test
 {
   meta:
+    "description" -> { "CFE-2139", "redmine7577" }
+      string => "Test that modules are allowed to emit empty lists";
+
     "test_soft_fail"
-      string => "any",
-      meta => { "redmine7577" };
+      string => "windows",
+      meta => { "ENT-10257" };
 
   commands:
     "$(G.cat)"

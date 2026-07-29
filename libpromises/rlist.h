@@ -80,7 +80,7 @@ char *RlistScalarValueSafe(const Rlist *rlist);
 FnCall *RlistFnCallValue(const Rlist *rlist);
 Rlist *RlistRlistValue(const Rlist *rlist);
 Rlist *RlistParseShown(const char *string);
-Rlist *RlistParseString(const char *string);
+bool RlistParseString(const char *string, Rlist **newlist);
 Rlist *RlistKeyIn(Rlist *list, const char *key);
 Rlist *RlistKeyIn_IgnoreCase(Rlist *list, const char *key);
 int RlistLen(const Rlist *start);

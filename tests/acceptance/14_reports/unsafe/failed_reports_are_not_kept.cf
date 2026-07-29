@@ -1,7 +1,7 @@
 # Check that reports are printed just once (Redmine#3446 https://cfengine.com/dev/issues/3446)
 body common control
 {
-  inputs => { "../default.sub.cf" };
+  inputs => { "../../default.sub.cf" };
   bundlesequence => { default("$(this.promise_filename)") };
   version => "1.0";
 }
@@ -22,13 +22,11 @@ bundle agent init
 bundle agent test
 {
   meta:
-    "description"
-      string => "Test that we do not conisder failure to report to a file a kept outcome";
+    "description" -> { "CFE-4699", "redmine7833" }
+      string => "Test that we do not consider failure to report to a file a kept outcome";
 
-    # this test should be skipped on platforms that do not have chattr!
-    "test_soft_fail"
-      string => "any",
-      meta => { "redmine7833" };
+    # The test makes the file immutable with chattr to provoke the failure
+    "test_skip_unsupported" string => "hpux|aix|solaris|windows";
 
   reports:
     "Hello World"

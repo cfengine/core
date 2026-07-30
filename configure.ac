@@ -911,6 +911,7 @@ AC_CHECK_LIB([sec], [fgetspent], [
 
 AC_CHECK_DECLS(getloadavg)
 AC_FUNC_GETLOADAVG
+AC_FUNC_ALLOCA
 
 AC_C_BIGENDIAN
 AC_CHECK_HEADERS([endian.h])

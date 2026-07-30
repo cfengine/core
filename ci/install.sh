@@ -18,4 +18,13 @@ if [ ! -n "$TERMUX_VERSION" ]; then
 fi
 
 $GAINROOT make install
-$GAINROOT /var/cfengine/bin/cf-key # to generate the hostkey
+CFKEY=$(command -v cf-key)
+if ! command -v cf-key; then
+  CFKEY=/var/cfengine/bin/cf-key
+  if [ ! -f /var/cfengine/bin/cf-key ]; then
+    echo "Can't find cf-key in PATH or at /var/cfengine/bin/cf-key. You will need to generate a hostkey yourself."
+    exit 0
+  fi
+fi
+echo Generating hostkey with $CFKEY
+$GAINROOT $CFKEY

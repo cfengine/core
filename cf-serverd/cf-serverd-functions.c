@@ -174,7 +174,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_SERVER, GetTTYInteractive());
 
     int longopt_idx;
-    while ((c = getopt_long(argc, argv, "dvIKf:g:D:N:VSxLFMhAC::lt::",
+    while ((c = getopt_long(argc, argv, "dvIKf:g:D:N:VxL:FMhAC::lt::",
                             OPTIONS, &longopt_idx))
            != -1)
     {

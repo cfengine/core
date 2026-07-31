@@ -240,7 +240,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
 
     int longopt_idx;
-    while ((c = getopt_long(argc, argv, "dvnKIf:g:D:N:VxL:hFOV1gMWC::l",
+    while ((c = getopt_long(argc, argv, "dvnKIf:g:D:N:VxL:hFOVgMWC::l",
                             OPTIONS, &longopt_idx))
            != -1)
     {

@@ -5,11 +5,13 @@ set -x
 
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
-cf-remote spawn --platform ubuntu-24-04-x64 --count 1 --name hub --role hub
-cf-remote spawn --platform ubuntu-24-04-x64 --count 1 --name ubuntu-24 --role client
-cf-remote spawn --platform ubuntu-22-04-x64 --count 1 --name ubuntu-22 --role client
-cf-remote spawn --platform debian-13-x64 --count 1 --name debian-13 --role client
-cf-remote spawn --platform rhel-10-x64 --count 1 --name rhel-10 --role client
+cf-remote spawn --platform ubuntu-24-04 --count 1 --name hub --role hub
+cf-remote spawn --platform ubuntu-24-04 --count 1 --name ubuntu-24 --role client
+cf-remote spawn --platform ubuntu-22-04 --count 1 --name ubuntu-22 --role client
+cf-remote spawn --platform debian-13 --count 1 --name debian-13 --role client
+cf-remote spawn --platform rhel-10 --count 1 --name rhel-10 --role client
+
+sleep 15
 
 cf-remote --version master install --demo --bootstrap hub --hub hub
 

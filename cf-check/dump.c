@@ -288,7 +288,18 @@ static void print_struct_or_string(
 {
     if (structs)
     {
-        if (StringContains(file, "cf_lastseen.lmdb")
+        if ((StringContains(file, "cf_observations.lmdb")
+             || StringContains(file, "history.lmdb"))
+            && StringEqual(key.mv_data, "version"))
+        {
+            // After the CF_OBSERVABLES migration (dbm_migration_observations.c)
+            // these DBs hold a "version" bookkeeping key whose value is a short
+            // version string, not an Averages struct. Print it as a string;
+            // otherwise it would reach print_struct_averages() and trip its
+            // struct-size assertion.
+            print_json_string(value.mv_data, value.mv_size, strip_strings);
+        }
+        else if (StringContains(file, "cf_lastseen.lmdb")
             && StringStartsWith(key.mv_data, "q"))
         {
             print_struct_lastseen_quality(value, strip_strings);

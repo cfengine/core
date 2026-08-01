@@ -29,6 +29,7 @@
 #include <backup.h>
 
 extern const DBMigrationFunction dbm_migration_plan_lastseen[];
+extern const DBMigrationFunction dbm_migration_plan_observations[];
 
 
 #ifndef LMDB
@@ -51,7 +52,11 @@ static size_t DBVersion(DBHandle *db)
 }
 
 static const DBMigrationFunction *const dbm_migration_plans[dbid_max] = {
-    [dbid_lastseen] = dbm_migration_plan_lastseen
+    [dbid_lastseen] = dbm_migration_plan_lastseen,
+    /* Both DBs store the same fixed-size Averages records, so they share the
+     * plan that expands them when CF_OBSERVABLES grows. */
+    [dbid_observations] = dbm_migration_plan_observations,
+    [dbid_history] = dbm_migration_plan_observations
 };
 
 bool DBMigrate(DBHandle *db, dbid id)

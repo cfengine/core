@@ -104,6 +104,7 @@ check_PROGRAMS = \
 	lastseen_migration_test \
 	changes_migration_test \
 	observations_storage_test \
+	observables_names_test \
 	db_test \
 	db_concurrent_test \
 	item_lib_test \
@@ -265,6 +266,8 @@ db_concurrent_test_LDADD = libtest.la libdb.la
 observations_storage_test_SOURCES = observations_storage_test.c
 observations_storage_test_LDADD = libtest.la ../../libpromises/libpromises.la
 
+observables_names_test_SOURCES = observables_names_test.c \
+	../../cf-check/observables.c
 
 lastseen_test_SOURCES = lastseen_test.c \
 	../../libntech/libutils/statistics.c

@@ -22,7 +22,7 @@ bundle agent test
 {
   meta:
     "description"
-      string => "edit_line should insert after the last matched line when selecting a region where the end delimiter is included",
+      string => "edit_line should insert before the end delimiter when the end delimiter is not included in the region",
       meta => { "CFE-3988" };
 
   vars:
@@ -30,30 +30,33 @@ bundle agent test
     "test_file" string => "$(G.testfile)";
 
   files:
-    "$(test_file)" edit_line => CFE_3988;
+    "$(test_file)" edit_line => CFE_3988_excluded_end;
 }
 
 bundle agent check
+# @brief Companion to case 1. With include_end_delimiter left at its default of
+# false the end delimiter is not part of the region, so the last matching line
+# is the one before it and the insertion must land above the delimiter.
 {
   methods:
     # We expect to find lines that look something like this:
     #      THIS MUST BE THE LAST FILTER IN THE DEFINED CHAIN
-    #      ===================================================== -->
     #INSERT ME
+    #      ===================================================== -->
     "Pass/FAIL"
       usebundle => dcs_check_regcmp(
-        ".*\s+THIS MUST BE THE LAST FILTER IN THE DEFINED CHAIN\R\s+=+\s+-->\RINSERT\sME.*",
+        ".*\s+THIS MUST BE THE LAST FILTER IN THE DEFINED CHAIN\RINSERT\sME\R\s+=+\s+-->.*",
         readfile("$(test.test_file)"),
         $(this.promise_filename),
         "no"
       );
 }
 
-bundle edit_line CFE_3988
+bundle edit_line CFE_3988_excluded_end
 {
   insert_lines:
     "INSERT ME"
-      select_region => my_comment_last_filter,
+      select_region => my_comment_last_filter_excluded_end,
       location => my_location_after_comment_last_filter;
 }
 
@@ -65,11 +68,11 @@ body location my_location_after_comment_last_filter
   select_line_matching => ".*";
 }
 
-body select_region my_comment_last_filter
+body select_region my_comment_last_filter_excluded_end
 {
   select_start => "\s+THIS MUST BE THE LAST FILTER IN THE DEFINED CHAIN";
   select_end => "\s+=+\s+-->";
   include_start_delimiter => "true";
-  include_end_delimiter => "true";
+  include_end_delimiter => "false";
   select_end_match_eof => "false";
 }

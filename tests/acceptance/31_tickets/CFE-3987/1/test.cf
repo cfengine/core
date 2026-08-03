@@ -25,10 +25,6 @@ bundle agent test
         string => "edit_line doesn't insert text immediately before a selected region if a location body only explicitly sets before_after => 'before'",
         meta => { "CFE-3987" };
 
-      "test_soft_fail"
-        string => "any",
-        meta => { "CFE-3987" };
-
   vars:
       "seed_file" string => "$(this.promise_dirname)/before_test.xml.txt";
       "test_file" string => "$(G.testfile)";
@@ -39,11 +35,14 @@ bundle agent test
 }
 
 bundle agent check
+# @brief The selected region begins at the first line matching select_start,
+# which is '<!-- General -->', so the line must be inserted immediately before
+# it and not at the start of the file.
 {
   methods:
       "Pass/FAIL"
         usebundle => dcs_check_regcmp(
-                                       ".*INSERT\sME\R\s+<!--\s=+\R\s+THIS MUST BE THE LAST FILTER IN THE DEFINED CHAIN.*",
+                                       ".*\R\s+metadata-complete=\S+\RINSERT\sME\R\s+<!--\sGeneral\s-->.*",
                                        readfile( "$(test.test_file)" ),
                                        $(this.promise_filename),
                                        "no"

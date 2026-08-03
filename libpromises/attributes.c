@@ -1697,6 +1697,9 @@ StorageMount GetMountConstraints(const EvalContext *ctx, const Promise *pp)
     m.mount_options = PromiseGetConstraintAsList(ctx, "mount_options", pp);
     m.editfstab = PromiseGetConstraintAsBoolean(ctx, "edit_fstab", pp);
     m.unmount = PromiseGetConstraintAsBoolean(ctx, "unmount", pp);
+    m.remount = PromiseGetConstraintAsBoolean(ctx, "remount", pp);
+    m.remount_methods = PromiseGetConstraintAsList(ctx, "remount_methods", pp);
+    m.remount_timeout = PromiseGetConstraintAsInt(ctx, "remount_timeout", pp);
 
     return m;
 }

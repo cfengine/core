@@ -4059,9 +4059,18 @@ static void SysPolicyVersion(EvalContext *ctx)
     }
 }
 
+static void SysCFEngineRole(EvalContext *ctx)
+{
+    const bool is_policy_server = EvalContextClassGet(ctx, "default", "policy_server");
+    const bool am_policy_hub = EvalContextClassGet(ctx, "default", "am_policy_hub");
+
+    const char *role = (is_policy_server || am_policy_hub) ? "hub" : "client";
+    EvalContextVariablePutSpecial(ctx, SPECIAL_SCOPE_SYS, "cfengine_role", role, CF_DATA_TYPE_STRING, "source=agent,derived-from=policy_server,derived-from=am_policy_hub");
+}
 
 void DetectEnvironmentFromPolicy(EvalContext *ctx, Policy *policy)
 {
     SysPolicyReleaseId(ctx, policy);
     SysPolicyVersion(ctx);
+    SysCFEngineRole(ctx);
 }

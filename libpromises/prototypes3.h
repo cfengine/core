@@ -85,6 +85,8 @@ ENTERPRISE_VOID_FUNC_0ARG_DECLARE(void, ReloadHAConfig);
 ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, Nova_ClassHistoryAddContextName, const StringSet *, list, const char *, context_name);
 ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, Nova_ClassHistoryEnable, StringSet **, list, bool, enable);
 
+ENTERPRISE_FUNC_1ARG_DECLARE(int, ReactorEnterpriseMain, bool, no_fork);
+
 /* manual.c */
 
 void TexinfoManual(EvalContext *ctx, const char *source_dir, const char *output_file);

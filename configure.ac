@@ -88,7 +88,7 @@ AC_DEFINE(BUILD_YEAR, esyscmd([date +%Y | tr -d '\n']), "Software build year")
 
 AC_DEFINE(CF_WEBSITE, "https://cfengine.com", "Website. To be used in help screens")
 
-AC_DEFINE(CF_COPYRIGHT, "2023 Northern.tech AS", "Copyright. To be used in help screens")
+AC_DEFINE(CF_COPYRIGHT, "2026 Northern.tech AS", "Copyright. To be used in help screens")
 
 AC_DEFINE_UNQUOTED(ABS_TOP_SRCDIR,
 "`cd -- "$srcdir"; pwd`",

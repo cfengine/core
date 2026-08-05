@@ -1,0 +1,64 @@
+name: Copyright year
+
+# Keeps the copyright year in the help output (`--help`) current.
+#
+# The year is a plain literal in configure.ac, updated by a reviewed pull
+# request -- this workflow only opens that pull request, it never pushes to a
+# release branch. Scheduled runs act on the default branch; to refresh a
+# maintained branch, dispatch this workflow with that branch selected and the
+# pull request will target it.
+#
+# The edit itself lives in ci/update-copyright-year.sh so it can be linted and
+# run by hand.
+
+on:
+  schedule:
+    # 03:00 UTC on January 2nd, by which point the year has rolled over
+    # in every timezone.
+    - cron: '0 3 2 1 *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bump_copyright_year:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update the copyright year
+        id: bump
+        run: |
+          year=$(ci/update-copyright-year.sh)
+          echo "year=$year" >> "$GITHUB_OUTPUT"
+          echo "branch=copyright-year-${GITHUB_REF_NAME//\//-}-$year" >> "$GITHUB_OUTPUT"
+
+      # sign-commits creates the commit through the GitHub API so it is signed
+      # by GitHub and shows as verified; it also ignores the committer and
+      # author inputs, so there is no bot identity to configure here.
+      #
+      # If the year was already current there is nothing to commit and the
+      # action exits without opening anything.
+      - name: Open a pull request
+        uses: cfengine/create-pull-request@v7
+        with:
+          base: ${{ github.ref_name }}
+          branch: ${{ steps.bump.outputs.branch }}
+          delete-branch: true
+          sign-commits: true
+          add-paths: configure.ac
+          commit-message: |
+            Updated help menu copyright year to ${{ steps.bump.outputs.year }}
+
+            Opened automatically by .github/workflows/copyright_year.yml.
+
+            Changelog: none
+          title: Updated help menu copyright year to ${{ steps.bump.outputs.year }}
+          body: |
+            The copyright year shown by `--help` is a literal in `configure.ac`; this updates it to ${{ steps.bump.outputs.year }}.
+
+            Opened automatically by [.github/workflows/copyright_year.yml](.github/workflows/copyright_year.yml).
+
+            Pull requests opened with `GITHUB_TOKEN` do not trigger other workflows, so CI has not started on its own -- comment `@cf-bottom jenkins, please` to run it.

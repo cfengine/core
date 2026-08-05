@@ -54,9 +54,42 @@ SUBDIRS = \
 	contrib/vagrant-ci/centos-9s-x64
 
 
-# Hide the buildsystem's username, at least with GNU tar.
-TAR_OPTIONS = --owner=0 --group=0
+# Normalize tar header fields so two builds of the same source tree produce a
+# byte-identical tarball, following the GNU tar reproducibility guidance:
+# https://www.gnu.org/software/tar/manual/html_section/Reproducibility.html
+#   --format=posix      stable, version-independent header encoding (configure.ac
+#                       selects tar-pax so $(am__tar) emits posix)
+#   --pax-option=...    keep tar's PID out of extended-header names and omit
+#                       atime/ctime, leaving the archive in the ustar subset
+#   --sort=name         stable member order
+#   --numeric-owner     do not record buildslave user/group names
+#   --owner=0 --group=0 deterministic ownership
+#   --mode=go+u,go-w    deterministic permissions
+# mtime clamping (the manual's --clamp-mtime --mtime) is handled by the
+# touch -d @$$SOURCE_DATE_EPOCH call in dist-hook below.
+TAR_OPTIONS = \
+	--format=posix \
+	--pax-option=exthdr.name=%d/PaxHeaders/%f \
+	--pax-option=delete=atime,delete=ctime \
+	--sort=name \
+	--numeric-owner --owner=0 --group=0 \
+	--mode=go+u,go-w
 export TAR_OPTIONS
+
+# The same guidance says to "run GNU tar in the C locale" alongside the options
+# above; its example invokes "LC_ALL=C tar ...".
+LC_ALL = C
+export LC_ALL
+
+# --no-name strips the mtime from the gzip header. --best is automake's default
+GZIP_ENV = "--best --no-name"
+
+# Clamp every mtime in the source tarball to SOURCE_DATE_EPOCH, so that it
+# follows the commit the tarball was made from rather than the time it was built.
+dist-hook:
+	if [ -n "$$SOURCE_DATE_EPOCH" ]; then \
+	    find $(distdir) -exec touch -d @$$SOURCE_DATE_EPOCH {} + ; \
+	fi
 
 
 EXTRA_DIST = CHANGELOG.md INSTALL README.md LICENSE CFVERSION

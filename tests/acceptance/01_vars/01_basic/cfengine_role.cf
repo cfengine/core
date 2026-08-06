@@ -1,0 +1,23 @@
+body common control
+{
+  bundlesequence => { "check" };
+}
+
+bundle agent check
+{
+  vars:
+    "role" string => ifelse("policy_server|am_policy_hub", "hub", "client");
+
+  classes:
+    "ok" expression => strcmp("$(sys.cfengine_role)", "$(role)");
+
+  reports:
+    DEBUG::
+      "sys.cfengine_role resolved to '$(sys.cfengine_role)', role resolved to '$(role)'";
+
+    ok::
+      "$(this.promise_filename) Pass";
+
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

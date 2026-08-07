@@ -22,6 +22,7 @@
   included file COSL.txt.
 */
 
+#ifndef __ANDROID__
 #ifndef CFENGINE_DBM_TEST_API_H
 #define CFENGINE_DBM_TEST_API_H
 
@@ -55,3 +56,4 @@ DBFilament *FillUpDB(dbid db_id, int usage_pct);
 void RemoveFilament(DBFilament *filament);
 
 #endif  /* CFENGINE_DBM_TEST_API_H */
+#endif /* not __ANDROID__ */

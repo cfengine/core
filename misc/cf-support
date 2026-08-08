@@ -400,11 +400,18 @@ log_cmd "sestatus"
 log_cmd "semodule -l | grep cfengine"
 log_cmd "semanage fcontext -C -l"
 
-# Federated Reporting transport: metadata only, the transport private key is here
-if [ -d /opt/cfengine/federation ]; then
-  log_cmd "getent passwd cftransport"
-  log_cmd "ls -ldZ /opt /opt/cfengine /opt/cfengine/federation /opt/cfengine/federation/cftransport /opt/cfengine/federation/cftransport/.ssh"
-  log_cmd "ls -laZ /opt/cfengine/federation/cftransport/.ssh"
+# Federated Reporting transport: metadata only, the transport private key is here.
+# The transport user and prefix are configurable, so take them from the config
+# the hub generated rather than assuming cftransport under /opt/cfengine.
+_fr_config=/opt/cfengine/federation/bin/config.sh
+# shellcheck source=/dev/null
+[ -f "$_fr_config" ] && . "$_fr_config"
+_fr_user="${CFE_FR_FEEDER_USERNAME:-cftransport}"
+_fr_home="`dirname "${CFE_FR_TRANSPORT_DIR:-/opt/cfengine/federation/$_fr_user/source}"`"
+if [ -d "$_fr_home" ]; then
+  log_cmd "getent passwd $_fr_user"
+  log_cmd "ls -ldZ `dirname "$_fr_home"` $_fr_home $_fr_home/.ssh"
+  log_cmd "ls -laZ $_fr_home/.ssh"
   log_cmd "ssh -V"
 fi
 

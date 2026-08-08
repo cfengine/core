@@ -2,7 +2,14 @@ require {
     type devpts_t;
     type systemd_userdbd_runtime_t;
     type systemd_userdbd_t;
+    type sshd_session_t;
 }
+
+#============= special rules for Federated Reporting =============
+# EL10 serves connections in sshd_session_t, not sshd_t, and does not grant it
+# the generic file_type:dir search
+allow sshd_session_t cfengine_var_lib_t:dir { getattr open search };
+allow sshd_session_t cfengine_var_lib_t:file { getattr open read };
 
 #============= cfengine_apachectl_t ==============
 allow cfengine_apachectl_t devpts_t:dir { getattr search };

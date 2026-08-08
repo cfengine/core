@@ -390,9 +390,22 @@ else
 fi
 echo "Captured output of $syslog_cmd filtered for cf-|CFEngine"
 
-# cf- component related SELinux denials
+# cf- component related SELinux denials, as either subject or object
 if command -v ausearch >/dev/null; then
-  ausearch -m avc -su cfengine > "$tmpdir"/ausearch-cfengine-avcs.log
+  ausearch -m avc -se cfengine > "$tmpdir"/ausearch-cfengine-avcs.log || true
+fi
+
+# SELinux state, to interpret the denials above
+log_cmd "sestatus"
+log_cmd "semodule -l | grep cfengine"
+log_cmd "semanage fcontext -C -l"
+
+# Federated Reporting transport: metadata only, the transport private key is here
+if [ -d /opt/cfengine/federation ]; then
+  log_cmd "getent passwd cftransport"
+  log_cmd "ls -ldZ /opt /opt/cfengine /opt/cfengine/federation /opt/cfengine/federation/cftransport /opt/cfengine/federation/cftransport/.ssh"
+  log_cmd "ls -laZ /opt/cfengine/federation/cftransport/.ssh"
+  log_cmd "ssh -V"
 fi
 
 gzip_add $WORKDIR/outputs/previous

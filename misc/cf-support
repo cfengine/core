@@ -413,6 +413,9 @@ if [ -d "$_fr_home" ]; then
   log_cmd "ls -ldZ `dirname "$_fr_home"` $_fr_home $_fr_home/.ssh"
   log_cmd "ls -laZ $_fr_home/.ssh"
   log_cmd "ssh -V"
+  # sshd's own refusals for this user; the syslog capture above only matches
+  # CFEngine paths, and sshd does not always name one
+  log_cmd "journalctl -t sshd -t sshd-session --no-pager --lines 20 --grep '$_fr_user'"
 fi
 
 gzip_add $WORKDIR/outputs/previous

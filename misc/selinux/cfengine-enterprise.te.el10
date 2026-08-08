@@ -2,7 +2,24 @@ require {
     type devpts_t;
     type systemd_userdbd_runtime_t;
     type systemd_userdbd_t;
+    type sshd_session_t;
 }
+
+#============= special rules for Federated Reporting =============
+# OpenSSH 9.8 moved the per-connection code out of sshd into sshd-session. EL10
+# labels that binary sshd_session_exec_t and transitions sshd_t into a separate
+# sshd_session_t domain, so the `allow sshd_t cfengine_var_lib_t:file` rule in
+# cfengine-enterprise.te.all no longer covers the process that opens a
+# transport user's authorized_keys under /opt/cfengine -- the superhub's rsync
+# pull then fails with "Permission denied (publickey)" and the feeder logs
+# "Could not open user ... authorized keys". EL9 and older have no such domain;
+# sshd-session is plain bin_t there and stays in sshd_t.
+#
+# The dir rule is required as well: unlike sshd_t, sshd_session_t is not
+# granted the generic `file_type:dir search`, so it cannot even traverse
+# /opt/cfengine to reach the .ssh directory.
+allow sshd_session_t cfengine_var_lib_t:dir { getattr open search };
+allow sshd_session_t cfengine_var_lib_t:file { getattr open read };
 
 #============= cfengine_apachectl_t ==============
 allow cfengine_apachectl_t devpts_t:dir { getattr search };

@@ -390,9 +390,12 @@ else
 fi
 echo "Captured output of $syslog_cmd filtered for cf-|CFEngine"
 
-# cf- component related SELinux denials
+# cf- component related SELinux denials. Search on either the subject or the
+# object context: a denial can just as well be another domain being refused
+# access to a CFEngine file, e.g. sshd_t reading the Federated Reporting
+# transport user's authorized_keys under /opt/cfengine (cfengine_var_lib_t).
 if command -v ausearch >/dev/null; then
-  ausearch -m avc -su cfengine > "$tmpdir"/ausearch-cfengine-avcs.log
+  ausearch -m avc -se cfengine > "$tmpdir"/ausearch-cfengine-avcs.log || true
 fi
 
 gzip_add $WORKDIR/outputs/previous

@@ -390,9 +390,9 @@ else
 fi
 echo "Captured output of $syslog_cmd filtered for cf-|CFEngine"
 
-# cf- component related SELinux denials
+# cf- component related SELinux denials, as either subject or object
 if command -v ausearch >/dev/null; then
-  ausearch -m avc -su cfengine > "$tmpdir"/ausearch-cfengine-avcs.log
+  ausearch -m avc -se cfengine > "$tmpdir"/ausearch-cfengine-avcs.log || true
 fi
 
 gzip_add $WORKDIR/outputs/previous

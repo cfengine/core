@@ -398,6 +398,27 @@ if command -v ausearch >/dev/null; then
   ausearch -m avc -se cfengine > "$tmpdir"/ausearch-cfengine-avcs.log || true
 fi
 
+# SELinux state, needed to interpret the denials above. An empty AVC log means
+# nothing unless we also know whether SELinux is enforcing and whether our own
+# policy module is loaded.
+log_cmd "sestatus"
+log_cmd "semodule -l | grep cfengine"
+log_cmd "semanage fcontext -C -l" # local rules, e.g. the ssh_home_t one below
+
+# Federated Reporting transport. A broken transport looks like "no dump files
+# from <feeder>" on the superhub, but the cause is usually metadata rather than
+# the key: sshd has to traverse every directory down to the transport user's
+# .ssh and then read authorized_keys. `ls -Z` reports mode, ownership and
+# SELinux label together, which is what separates a permissions problem from a
+# mislabelled file. Only metadata is collected, never contents -- the transport
+# user's private key lives in this directory.
+if [ -d /opt/cfengine/federation ]; then
+  log_cmd "getent passwd cftransport"
+  log_cmd "ls -ldZ /opt /opt/cfengine /opt/cfengine/federation /opt/cfengine/federation/cftransport /opt/cfengine/federation/cftransport/.ssh"
+  log_cmd "ls -laZ /opt/cfengine/federation/cftransport/.ssh"
+  log_cmd "ssh -V"
+fi
+
 gzip_add $WORKDIR/outputs/previous
 gzip_add $WORKDIR/outputs/dc-scripts.log # masterfiles-stage log
 # Collect up to the two most recent standalone_self_upgrade logs (separate cf-agent process)

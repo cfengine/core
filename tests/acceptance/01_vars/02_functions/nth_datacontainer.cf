@@ -28,9 +28,9 @@ bundle common test_common
     "numbers"
       ilist => { "-100", "-1", 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 1000 };
 
-    "keys" slist => getindices(data);
-    "object_keys" slist => getindices("data[object]");
-    "list_keys" slist => getindices("data[list]");
+    "keys" slist => sort(getindices(data), "lex");
+    "object_keys" slist => sort(getindices("data[object]"), "lex");
+    "list_keys" slist => sort(getindices("data[list]"), "lex");
 
     "all_keys"
       slist => {

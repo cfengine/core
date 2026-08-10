@@ -20,3 +20,5 @@ jobs:
     - name: Run shellcheck
 # todo: add more places to run shellcheck besides misc/cf-support
       run: make -C misc check
+    - name: Run shellcheck on ci scripts
+      run: shellcheck ci/update-copyright-year.sh

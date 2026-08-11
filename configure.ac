@@ -1025,9 +1025,19 @@ AS_IF([test x$with_pam != xno],
               [users_promises_ok=yes],
               [users_promises_ok=no])
      ])
-], [
-  users_promises_ok=no
+],
+[
+   user_promises_ok=no
 ])
+AS_CASE(["$target_os"],
+   [sles|*suse*|*alpine*],
+   [
+      AS_IF([test "x$have_userprogs" = "xyes"],
+            [users_promises_ok=yes],
+            [users_promises_ok=no])
+      users_promises_ok=no
+   ])
+
 AM_CONDITIONAL(HAVE_USERS_PROMISE_DEPS, [test "x$users_promises_ok" = "xyes"])
 
 AC_CHECK_DECLS(getnetgrent, [], [], [[#include <netdb.h>]])

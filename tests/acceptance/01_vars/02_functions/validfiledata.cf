@@ -1,0 +1,99 @@
+body common control
+{
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { init, test, check };
+  version => "1.0";
+}
+
+bundle agent generate_files(template, data)
+{
+  vars:
+    "content" string => string_mustache("$(template[mustache])", @(data));
+
+  files:
+    "$(G.testdir)/validfiledata/config.$(template[format])"
+      create => "true",
+      content => "$(content)";
+
+    "$(G.testdir)/validfiledata/config.x.$(template[format])"
+      create => "true",
+      content => "-$(content)", # Add some text that makes the json and yaml invalid
+      if => strcmp("$(template[create_invalid])", "yes"); # csv and env are invalid ONLY when the file doesn't exist
+}
+
+bundle agent init
+{
+  vars:
+    "config_data"
+      data => parsejson(
+        '{"hello" : "world", "bye" : "everyone", "pizza" : "hamburger"}'
+      );
+@if feature(yaml)
+    "templates"
+      data => parsejson(
+        '[
+          {"format": "json", "mustache": "{{%-top-}}", "create_invalid" : "yes"},
+          {"format": "yaml", "mustache": "---\\n{{#-top-}}\\n{{@}}: \\\"{{.}}\\\"\\n{{/-top-}}", "create_invalid" : "yes"},
+          {"format": "csv", "mustache": "Key,Value\\r\\n{{#-top-}}\\r\\n{{@}},\\\"{{.}}\\\"\\r\\n{{/-top-}}", "create_invalid" : "no"},
+          {"format": "env", "mustache": "{{#-top-}}\\n{{{@}}}={{{.}}}\\n{{/-top-}}", "create_invalid" : "no"}
+        ]'
+      );
+@else
+    "templates"
+      data => parsejson(
+        '[
+          {"format": "json", "mustache": "{{%-top-}}", "create_invalid" : "yes"},
+          {"format": "csv", "mustache": "Key,Value\\r\\n{{#-top-}}\\r\\n{{@}},\\\"{{.}}\\\"\\r\\n{{/-top-}}", "create_invalid" : "no"},
+          {"format": "env", "mustache": "{{#-top-}}\\n{{{@}}}={{{.}}}\\n{{/-top-}}", "create_invalid" : "no"}
+        ]'
+      );
+@endif
+    "template_idx" slist => getindices(templates);
+
+  methods:
+    "generate"
+      usebundle => generate_files(
+        "@(templates[$(template_idx)])", @(config_data)
+      );
+}
+
+bundle agent test
+{
+  vars:
+    "formats"
+      slist => maparray("$(init.templates[$(this.k)][format])", init.templates);
+
+    "valid_classes" slist => maplist("valid_$(this)", formats);
+    "invalid_classes" slist => maplist("invalid_$(this)", formats);
+
+  classes:
+    "valid_$(formats)"
+      expression => validfiledata(
+        "$(G.testdir)/validfiledata/config.$(formats)", "auto"
+      ),
+      scope => "namespace";
+
+    "invalid_$(formats)"
+      expression => validfiledata(
+        "$(G.testdir)/validfiledata/config.x.$(formats)", "auto"
+      ),
+      scope => "namespace";
+}
+
+bundle agent check
+{
+  classes:
+    "valid" and => { @(test.valid_classes) };
+    "invalid" or => { @(test.invalid_classes) };
+
+  files:
+    "$(G.testdir)/validfiledata/config.$(test.formats)" delete => tidy;
+    "$(G.testdir)/validfiledata/config.x.$(test.formats)" delete => tidy;
+
+  reports:
+    valid.!invalid::
+      "$(this.promise_filename) Pass";
+
+    !valid|invalid::
+      "$(this.promise_filename) FAIL";
+}

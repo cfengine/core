@@ -7779,13 +7779,30 @@ static FnCallResult ReadDataGeneric(const char *const fname,
     assert(fname != NULL);
     assert(input_path != NULL);
 
-    JsonElement *json = JsonReadDataFile(fname, input_path, requested_mode, size_max);
+    JsonElement *json = JsonReadDataFile(fname, input_path, requested_mode, size_max, true);
     if (json == NULL)
     {
         return FnFailure();
     }
 
     return FnReturnContainerNoCopy(json);
+}
+
+static DataFileType ParseRequestedMode(const char *fname, const char *input_path, const char *const mode_string)
+{
+    DataFileType requested_mode = DATAFILETYPE_UNKNOWN;
+    if (StringEqual("auto", mode_string))
+    {
+        requested_mode = GetDataFileTypeFromSuffix(input_path);
+        Log(LOG_LEVEL_VERBOSE,
+            "%s: automatically selected data type %s from filename %s",
+            fname, DataFileTypeToString(requested_mode), input_path);
+    }
+    else
+    {
+        requested_mode = GetDataFileTypeFromString(mode_string);
+    }
+    return requested_mode;
 }
 
 static FnCallResult FnCallReadData(ARG_UNUSED EvalContext *ctx,
@@ -7802,20 +7819,32 @@ static FnCallResult FnCallReadData(ARG_UNUSED EvalContext *ctx,
 
     const char *input_path = RlistScalarValue(args);
     const char *const mode_string = RlistScalarValue(args->next);
-    DataFileType requested_mode = DATAFILETYPE_UNKNOWN;
-    if (StringEqual("auto", mode_string))
-    {
-        requested_mode = GetDataFileTypeFromSuffix(input_path);
-        Log(LOG_LEVEL_VERBOSE,
-            "%s: automatically selected data type %s from filename %s",
-            fp->name, DataFileTypeToString(requested_mode), input_path);
-    }
-    else
-    {
-        requested_mode = GetDataFileTypeFromString(mode_string);
-    }
+    DataFileType requested_mode = ParseRequestedMode(fp->name, input_path, mode_string);
 
     return ReadDataGeneric(fp->name, input_path, CF_INFINITY, requested_mode);
+}
+
+static FnCallResult FnCallValidFileData(ARG_UNUSED EvalContext *ctx,
+                                   ARG_UNUSED const Policy *policy,
+                                   const FnCall *fp,
+                                   const Rlist *args)
+{
+    assert(fp != NULL);
+    if (args == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Function '%s' requires at least one argument", fp->name);
+        return FnFailure();
+    }
+
+    const char *input_path = RlistScalarValue(args);
+    const char *const mode_string = RlistScalarValue(args->next);
+    DataFileType requested_mode = ParseRequestedMode(fp->name, input_path, mode_string);
+
+    JsonElement *json = JsonReadDataFile(fp->name, input_path, requested_mode, CF_INFINITY, false);
+    bool is_valid = (json != NULL);
+    JsonDestroy(json);
+
+    return FnReturnContext(is_valid);
 }
 
 static FnCallResult ReadGenericDataType(const FnCall *fp,
@@ -10326,7 +10355,7 @@ void ModuleProtocol(EvalContext *ctx, const char *command, const char *line, int
                 Log(LOG_LEVEL_DEBUG, "Module protocol parsing %s file '%s'",
                     DataFileTypeToString(requested_mode), content);
 
-                JsonElement *json = JsonReadDataFile("module file protocol", content, requested_mode, size_max);
+                JsonElement *json = JsonReadDataFile("module file protocol", content, requested_mode, size_max, true);
                 if (json != NULL)
                 {
                     Buffer *tagbuf = StringSetToBuffer(tags, ',');
@@ -11906,6 +11935,8 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL, DEFAULT_ARGC),
     FnCallTypeNew("readtcp", CF_DATA_TYPE_STRING, READTCP_ARGS, &FnCallReadTcp, "Connect to tcp port, send string and assign result to variable",
                   FNCALL_OPTION_CACHED, FNCALL_CATEGORY_COMM, SYNTAX_STATUS_NORMAL, DEFAULT_ARGC),
+    FnCallTypeNew("validfiledata", CF_DATA_TYPE_CONTEXT, READDATA_ARGS, &FnCallValidFileData, "Validate a YAML, JSON, CSV, etc.",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_IO, SYNTAX_STATUS_NORMAL, DEFAULT_ARGC),
 
     // reg functions for regex
     FnCallTypeNew("regarray", CF_DATA_TYPE_CONTEXT, REGARRAY_ARGS, &FnCallRegList, "True if the regular expression in arg1 matches any item in the list or array or data container arg2",

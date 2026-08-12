@@ -1188,7 +1188,7 @@ static void OSReleaseParse(EvalContext *ctx, const char *file_path)
 {
     JsonElement *os_release_json = JsonReadDataFile("system info discovery",
                                                     file_path, DATAFILETYPE_ENV,
-                                                    100 * 1024);
+                                                    100 * 1024, true);
     if (os_release_json != NULL)
     {
         char *tags;

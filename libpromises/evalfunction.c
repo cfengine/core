@@ -11585,6 +11585,8 @@ static const FnCallArg DATA_EXPAND_ARGS[] =
 
 static const FnCallArg STRING_MUSTACHE_ARGS[] =
 {
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Mustache template string"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "CFEngine variable identifier or inline JSON, can be blank"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 

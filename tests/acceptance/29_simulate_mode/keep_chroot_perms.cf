@@ -1,0 +1,95 @@
+body common control
+{
+  inputs => {
+    "../default.sub.cf",
+  };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+bundle agent init
+{
+  vars:
+    "existing" string => "$(G.testdir)$(const.dirsep)existing.changes";
+
+  files:
+    "$(existing)/."
+      create => "true";
+}
+
+bundle agent test
+{
+  meta:
+    "test_skip_unsupported"
+      string => "windows",
+      comment => "umask and the 0700 permissions of the kept chroot are Unix
+                  permission semantics";
+
+    "description"
+      string => "Test that the changes chroot kept by --simulate-keep-chroot is created with 0700 permissions regardless of umask, that a trailing separator in the path is handled, and that an existing directory is refused";
+
+  vars:
+    "kept_umask" string => "$(G.testdir)$(const.dirsep)kept-umask.changes";
+    "kept_slash" string => "$(G.testdir)$(const.dirsep)kept-slash.changes";
+
+  commands:
+    # The braces make sure the log file is created before umask is changed,
+    # otherwise it would not be readable by the check bundle below. mkdir(2)
+    # applies umask to its mode argument, so with an umask this restrictive a
+    # kept chroot that is not explicitly given its permissions would end up
+    # with mode 0000.
+    "{ umask 0777; $(sys.cf_agent) -Kf $(this.promise_dirname)$(const.dirsep)keep_chroot_perms.cf.sub --simulate=manifest --simulate-keep-chroot=$(kept_umask); } > $(G.testdir)$(const.dirsep)perms-umask.log 2>&1"
+      contain => in_shell,
+      comment => "Run sub policy keeping the changes chroot under a fully restrictive umask";
+
+    "{ umask 0777; $(sys.cf_agent) -Kf $(this.promise_dirname)$(const.dirsep)keep_chroot_perms.cf.sub --simulate=manifest --simulate-keep-chroot=$(kept_slash)$(const.dirsep); } > $(G.testdir)$(const.dirsep)perms-slash.log 2>&1"
+      contain => in_shell,
+      comment => "Run sub policy with a trailing separator in the kept chroot path";
+
+    "$(sys.cf_agent) -Kf $(this.promise_dirname)$(const.dirsep)keep_chroot_perms.cf.sub --simulate=manifest --simulate-keep-chroot=$(init.existing) > $(G.testdir)$(const.dirsep)perms-existing.log 2>&1"
+      contain => in_shell,
+      comment => "Run sub policy with an already existing directory as the kept chroot path";
+}
+
+bundle agent check
+{
+  classes:
+    "umask_run_kept_chroot"
+      expression => regline(".*Keeping changes chroot.*",
+                            "$(G.testdir)$(const.dirsep)perms-umask.log"),
+      if => fileexists("$(G.testdir)$(const.dirsep)perms-umask.log");
+
+    "umask_dir_mode_0700"
+      expression => strcmp(filestat("$(test.kept_umask)", "permoct"), "700"),
+      if => isdir("$(test.kept_umask)");
+
+    "slash_run_kept_chroot"
+      expression => regline(".*Keeping changes chroot.*",
+                            "$(G.testdir)$(const.dirsep)perms-slash.log"),
+      if => fileexists("$(G.testdir)$(const.dirsep)perms-slash.log");
+
+    # The trailing separator is stripped, the directory is created at the
+    # normalized path (with the same enforced permissions).
+    "slash_dir_mode_0700"
+      expression => strcmp(filestat("$(test.kept_slash)", "permoct"), "700"),
+      if => isdir("$(test.kept_slash)");
+
+    "existing_dir_error_logged"
+      expression => regline(".*Failed to create the directory.*for keeping the changes chroot.*",
+                            "$(G.testdir)$(const.dirsep)perms-existing.log"),
+      if => fileexists("$(G.testdir)$(const.dirsep)perms-existing.log");
+
+    "existing_dir_refused"
+      expression => not(returnszero("$(sys.cf_agent) -Kf $(this.promise_dirname)$(const.dirsep)keep_chroot_perms.cf.sub --simulate=manifest --simulate-keep-chroot=$(init.existing)", "noshell")),
+      if => fileexists("$(G.testdir)$(const.dirsep)perms-existing.log");
+
+    "ok"
+      expression => and("umask_run_kept_chroot", "umask_dir_mode_0700",
+                        "slash_run_kept_chroot", "slash_dir_mode_0700",
+                        "existing_dir_error_logged", "existing_dir_refused");
+
+  methods:
+    "Pass/Fail"
+      usebundle => dcs_passif("ok", "$(this.promise_filename)"),
+      inherit => "true"; # We want dcs_passif to inherit bundle scoped classes from our check bundle
+}

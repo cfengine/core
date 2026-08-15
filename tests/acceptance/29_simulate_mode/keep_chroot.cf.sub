@@ -1,0 +1,17 @@
+bundle common simulate_keep_chroot_promises
+{
+  vars:
+    "inputs" slist => { "$(this.promise_dirname)/../default.sub.cf" };
+}
+
+body common control
+{
+  inputs => { "@(simulate_keep_chroot_promises.inputs)" };
+}
+
+bundle agent main
+{
+  files:
+    "$(G.testdir)$(const.dirsep)keep-chroot-file"
+      content => "This is the would-be content of the file.";
+}

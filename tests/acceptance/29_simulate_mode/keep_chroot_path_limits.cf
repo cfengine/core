@@ -1,0 +1,110 @@
+body common control
+{
+  inputs => {
+    "../default.sub.cf",
+  };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+bundle agent test
+{
+  meta:
+    "test_skip_unsupported"
+      string => "windows",
+      comment => "the limits below assume Unix absolute paths";
+
+    "test_skip_needs_work"
+      string => "!has_perl";
+
+    "description"
+      string => "Test that --simulate-keep-chroot rejects a path longer than the limit it prints, accepts one of exactly that length, and that mapping a too long path into the chroot aborts the run instead of truncating the path";
+
+  vars:
+    "toolong_keep" string => "$(G.testdir)$(const.dirsep)path-limits-toolong.changes";
+
+  commands:
+    # An argument this long is over the limit on all platforms (the limit is
+    # PATH_MAX / 2 and the error message prints its value, used by the
+    # boundary checks below).
+    "$(sys.cf_agent) -Kf $(this.promise_dirname)$(const.dirsep)keep_chroot_path_limits.cf.sub --simulate=manifest --simulate-keep-chroot=`$(G.perl) -e 'print \"/\", \"a\" x 2999'` > $(G.testdir)$(const.dirsep)pl-reject.log 2>&1"
+      contain => in_shell,
+      comment => "Run sub policy with a kept chroot path longer than the limit";
+
+    # The sub policy promises a path of more than 4000 bytes, which cannot be
+    # mapped to a path under the chroot within PATH_MAX on any platform. The
+    # run has to abort -- a truncated mapping would record the copy at a
+    # different path than reported and could map two long paths to one copy.
+    "$(sys.cf_agent) -Kf $(this.promise_dirname)$(const.dirsep)keep_chroot_path_limits.cf.sub --simulate=manifest --simulate-keep-chroot=$(toolong_keep) > $(G.testdir)$(const.dirsep)pl-mapped.log 2>&1 || echo SIMULATE_RUN_FAILED >> $(G.testdir)$(const.dirsep)pl-mapped.log"
+      contain => in_shell,
+      comment => "Run sub policy that promises a path too long to be mapped into the chroot";
+}
+
+bundle agent check
+{
+  vars:
+    "reject_output"
+      string => readfile("$(G.testdir)$(const.dirsep)pl-reject.log", 0),
+      if => fileexists("$(G.testdir)$(const.dirsep)pl-reject.log");
+
+  classes:
+    "arg_rejected"
+      expression => regline(".*Invalid argument for --simulate-keep-chroot, path longer than [0-9]+ bytes.*",
+                            "$(G.testdir)$(const.dirsep)pl-reject.log"),
+      if => fileexists("$(G.testdir)$(const.dirsep)pl-reject.log");
+
+    # The limit printed in the message ends up in $(bound[1]) and the runs
+    # below make sure it is really the enforced one.
+    "have_bound"
+      expression => regextract("(?s).*path longer than ([0-9]+) bytes.*",
+                               "$(reject_output)", "bound");
+
+    # A path of exactly the printed length has to make it past the argument
+    # check. It fails later (no path component this long can be created), but
+    # with the error from the creation attempt, not the argument check.
+    "bound_arg_ran"
+      expression => not(returnszero("$(sys.cf_agent) -Kf $(this.promise_dirname)$(const.dirsep)keep_chroot_path_limits.cf.sub --simulate=manifest --simulate-keep-chroot=`$(G.perl) -e 'print \"/\", \"a\" x ($(bound[1]) - 1)'` > $(G.testdir)$(const.dirsep)pl-boundary-pass.log 2>&1", "useshell")),
+      if => "have_bound";
+
+    "bound_arg_not_rejected"
+      not => regline(".*Invalid argument for --simulate-keep-chroot.*",
+                     "$(G.testdir)$(const.dirsep)pl-boundary-pass.log"),
+      if => fileexists("$(G.testdir)$(const.dirsep)pl-boundary-pass.log");
+
+    "bound_arg_reached_creation"
+      expression => regline(".*Failed to create the directory.*",
+                            "$(G.testdir)$(const.dirsep)pl-boundary-pass.log"),
+      if => fileexists("$(G.testdir)$(const.dirsep)pl-boundary-pass.log");
+
+    # One byte more has to be rejected by the argument check.
+    "over_bound_arg_rejected"
+      expression => not(returnszero("$(sys.cf_agent) -Kf $(this.promise_dirname)$(const.dirsep)keep_chroot_path_limits.cf.sub --simulate=manifest --simulate-keep-chroot=`$(G.perl) -e 'print \"/\", \"a\" x $(bound[1])'` > $(G.testdir)$(const.dirsep)pl-boundary-reject.log 2>&1", "useshell")),
+      if => "have_bound";
+
+    "over_bound_arg_reject_logged"
+      expression => regline(".*Invalid argument for --simulate-keep-chroot, path longer than [0-9]+ bytes.*",
+                            "$(G.testdir)$(const.dirsep)pl-boundary-reject.log"),
+      if => fileexists("$(G.testdir)$(const.dirsep)pl-boundary-reject.log");
+
+    "mapped_error_logged"
+      expression => regline(".*too long to be mapped into the changes chroot.*",
+                            "$(G.testdir)$(const.dirsep)pl-mapped.log"),
+      if => fileexists("$(G.testdir)$(const.dirsep)pl-mapped.log");
+
+    "mapped_run_failed"
+      expression => regline("SIMULATE_RUN_FAILED",
+                            "$(G.testdir)$(const.dirsep)pl-mapped.log"),
+      if => fileexists("$(G.testdir)$(const.dirsep)pl-mapped.log");
+
+    "ok"
+      expression => and("arg_rejected", "have_bound",
+                        "bound_arg_ran", "bound_arg_not_rejected",
+                        "bound_arg_reached_creation",
+                        "over_bound_arg_rejected", "over_bound_arg_reject_logged",
+                        "mapped_error_logged", "mapped_run_failed");
+
+  methods:
+    "Pass/Fail"
+      usebundle => dcs_passif("ok", "$(this.promise_filename)"),
+      inherit => "true"; # We want dcs_passif to inherit bundle scoped classes from our check bundle
+}

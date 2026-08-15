@@ -94,6 +94,7 @@ typedef struct
             bool skip_bootstrap_service_start;
             char *show_evaluated_classes;
             char *show_evaluated_variables;
+            char *simulate_keep_chroot; // --simulate-keep-chroot
 
             // BODY AGENT CONTROL
             bool report_class_log;

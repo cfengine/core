@@ -122,6 +122,46 @@ void test_changes_chroot(void)
     /* Inverse should work as expected */
     const char *normal = ToNormalRoot(chrooted);
     assert_string_equal(normal, "/etc/sysctl.d/00-default.conf");
+
+    /* The longest path that still fits: with the chroot above the mapped path
+     * is PATH_MAX - 1 bytes long. */
+    const size_t chroot_len = strlen("/changes/go/here/");
+    char long_path[PATH_MAX];
+    size_t orig_len = PATH_MAX - chroot_len;
+    memset(long_path, 'a', orig_len);
+    long_path[0] = '/';
+    long_path[orig_len] = '\0';
+    chrooted = ToChangesChroot(long_path);
+    assert_int_equal(strlen(chrooted), PATH_MAX - 1);
+    assert_true(strncmp(chrooted, "/changes/go/here/", chroot_len) == 0);
+
+    /* One byte more must not be truncated -- the run has to abort cleanly
+     * with EXIT_FAILURE (in a child process, since ToChangesChroot() does not
+     * return in that case). */
+    orig_len = PATH_MAX - chroot_len + 1;
+    memset(long_path, 'a', orig_len);
+    long_path[0] = '/';
+    long_path[orig_len] = '\0';
+    pid_t child = fork();
+    assert_true(child >= 0);
+    if (child == 0)
+    {
+        /* Silence the error message logged before the abort. */
+        int devnull = open("/dev/null", O_WRONLY);
+        if (devnull != -1)
+        {
+            dup2(devnull, STDOUT_FILENO);
+            dup2(devnull, STDERR_FILENO);
+        }
+        ToChangesChroot(long_path);
+
+        /* Not reached -- returning means the path was truncated. */
+        _exit(0);
+    }
+    int status;
+    assert_int_equal(waitpid(child, &status, 0), child);
+    assert_true(WIFEXITED(status));
+    assert_int_equal(WEXITSTATUS(status), EXIT_FAILURE);
 #endif
 }
 

@@ -3872,17 +3872,18 @@ const char *ToChangesChroot(const char *orig_path)
 
     assert(orig_path != NULL);
     assert(IsAbsPath(orig_path));
-    assert(strlen(orig_path) <= (PATH_MAX - chroot_len - 1));
+
+    const char *const given_path = orig_path;
 
     size_t offset = 0;
 #ifdef __MINGW32__
     /* On Windows, absolute path starts with the drive letter and colon followed
      * by '\'. Let's replace the ":\" with just "\" so that each drive has its
      * own directory tree in the chroot. */
+    char drive_letter = '\0';
     if ((orig_path[0] > 'A') && ((orig_path[0] < 'Z')) && (orig_path[1] == ':'))
     {
-        chrooted_path[chroot_len] = orig_path[0];
-        chrooted_path[chroot_len + 1] = FILE_SEPARATOR;
+        drive_letter = orig_path[0];
         orig_path += 2;
         offset += 2;
     }
@@ -3893,8 +3894,29 @@ const char *ToChangesChroot(const char *orig_path)
         orig_path++;
     }
 
-    /* Adds/copies the NUL-byte at the end of the string. */
-    strncpy(chrooted_path + chroot_len + offset, orig_path, (PATH_MAX - chroot_len - offset - 1));
+    /* A path that does not fit must not be truncated -- the copy would
+     * silently be made at a different path than the one recorded and
+     * reported, and two long paths could even be mapped to the same copy.
+     * Checked before anything is written into the buffer. */
+    const size_t orig_len = strlen(orig_path);
+    if ((chroot_len + offset + orig_len) >= PATH_MAX)
+    {
+        Log(LOG_LEVEL_ERR,
+            "The path '%s' is too long to be mapped into the changes chroot, aborting",
+            given_path);
+        DoCleanupAndExit(EXIT_FAILURE);
+    }
+
+#ifdef __MINGW32__
+    if (drive_letter != '\0')
+    {
+        chrooted_path[chroot_len] = drive_letter;
+        chrooted_path[chroot_len + 1] = FILE_SEPARATOR;
+    }
+#endif
+
+    /* Copies the NUL-byte at the end of the string. */
+    memcpy(chrooted_path + chroot_len + offset, orig_path, orig_len + 1);
 
     return chrooted_path;
 }

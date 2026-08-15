@@ -1,0 +1,18 @@
+bundle common keep_chroot_perms_promises
+{
+  vars:
+    "inputs" slist => { "$(this.promise_dirname)/../default.sub.cf" };
+}
+
+body common control
+{
+  inputs => { "@(keep_chroot_perms_promises.inputs)" };
+}
+
+bundle agent main
+{
+  files:
+    "$(G.testdir)$(const.dirsep)keep-chroot-perms-file"
+      create => "true",
+      content => "This is the would-be content of the file.";
+}

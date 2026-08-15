@@ -1,0 +1,86 @@
+body common control
+{
+  inputs => {
+    "../default.sub.cf",
+  };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+bundle agent init
+{
+  files:
+    "$(G.testdir)$(const.dirsep)keep-chroot-file"
+      create => "true",
+      content => "This is the original content of the file.";
+}
+
+bundle agent test
+{
+  meta:
+    "test_soft_fail"
+      string => "(solaris|aix|hpux|windows)",
+      # ENT-6540 exotics fail to delete chroot
+      # On Windows the chroot maps drive letters to a different layout so the
+      # path of the kept copy checked below does not apply there
+      meta => { "ENT-6540" };
+
+    "description"
+      string => "Test that --simulate-keep-chroot keeps the changes chroot and that it is still deleted by default";
+
+  vars:
+    "kept_chroot" string => "$(G.testdir)$(const.dirsep)kept.changes";
+
+  commands:
+    # add --verbose here and look at the log for debugging sub policy runs
+    "$(sys.cf_agent) -Kf $(this.promise_dirname)$(const.dirsep)keep_chroot.cf.sub --simulate=manifest --simulate-keep-chroot=$(kept_chroot) > $(G.testdir)$(const.dirsep)keep.log 2>&1"
+      contain => in_shell,
+      comment => "Run sub policy in simulate mode, keeping the changes chroot";
+
+    "$(sys.cf_agent) -Kf $(this.promise_dirname)$(const.dirsep)keep_chroot.cf.sub --simulate=manifest > $(G.testdir)$(const.dirsep)default.log 2>&1"
+      contain => in_shell,
+      comment => "Run sub policy in simulate mode with the default chroot cleanup";
+}
+
+bundle agent check
+{
+  vars:
+    "kept_copy"
+      string => "$(test.kept_chroot)$(G.testdir)$(const.dirsep)keep-chroot-file";
+
+  classes:
+    "kept_copy_has_changes"
+      expression => strcmp(readfile("$(kept_copy)", 0),
+                           "This is the would-be content of the file."),
+      if => fileexists("$(kept_copy)");
+
+    "real_file_untouched"
+      expression => strcmp(readfile("$(G.testdir)$(const.dirsep)keep-chroot-file", 0),
+                           "This is the original content of the file."),
+      if => fileexists("$(G.testdir)$(const.dirsep)keep-chroot-file");
+
+    "keep_notice_logged"
+      expression => regline(".*Keeping changes chroot.*",
+                            "$(G.testdir)$(const.dirsep)keep.log"),
+      if => fileexists("$(G.testdir)$(const.dirsep)keep.log");
+
+    # The default.log check below makes sure this is not evaluated before the
+    # run without --simulate-keep-chroot has actually happened
+    "default_chroot_deleted"
+      expression => strcmp(length(findfiles("$(sys.statedir)$(const.dirsep)*.changes")), "0"),
+      if => fileexists("$(G.testdir)$(const.dirsep)default.log");
+
+    "keep_requires_simulate"
+      expression => not(returnszero("$(sys.cf_agent) -Kf $(this.promise_dirname)$(const.dirsep)keep_chroot.cf.sub --simulate-keep-chroot=$(G.testdir)$(const.dirsep)unused.changes", "noshell")),
+      if => fileexists("$(G.testdir)$(const.dirsep)default.log");
+
+    "ok"
+      expression => and("kept_copy_has_changes", "real_file_untouched",
+                        "keep_notice_logged", "default_chroot_deleted",
+                        "keep_requires_simulate");
+
+  methods:
+    "Pass/Fail"
+      usebundle => dcs_passif("ok", "$(this.promise_filename)"),
+      inherit => "true"; # We want dcs_passif to inherit bundle scoped classes from our check bundle
+}

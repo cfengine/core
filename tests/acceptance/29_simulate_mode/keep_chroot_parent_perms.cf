@@ -1,0 +1,88 @@
+body common control
+{
+  inputs => {
+    "../default.sub.cf",
+  };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+bundle agent init
+{
+  vars:
+    "loose_parent" string => "$(G.testdir)$(const.dirsep)loose";
+    "sticky_parent" string => "$(G.testdir)$(const.dirsep)sticky";
+
+  files:
+    "$(loose_parent)/."
+      create => "true",
+      perms => m("777");
+
+    "$(sticky_parent)/."
+      create => "true",
+      perms => m("1777");
+}
+
+bundle agent test
+{
+  meta:
+    "test_skip_unsupported"
+      string => "windows",
+      # The parent directory permission check is Unix-only
+      comment => "the check is not compiled in on Windows where these
+                  permission bits do not apply";
+
+    "description"
+      string => "Test that --simulate-keep-chroot refuses a parent directory writable by other users unless it has the sticky bit set";
+
+  vars:
+    "refused" string => "$(init.loose_parent)$(const.dirsep)refused.changes";
+    "kept" string => "$(init.sticky_parent)$(const.dirsep)kept.changes";
+
+  commands:
+    "$(sys.cf_agent) -Kf $(this.promise_dirname)$(const.dirsep)keep_chroot_parent_perms.cf.sub --simulate=manifest --simulate-keep-chroot=$(refused) > $(G.testdir)$(const.dirsep)parent-loose.log 2>&1"
+      contain => in_shell,
+      comment => "Run sub policy with the kept chroot inside a world-writable directory";
+
+    # The umask makes sure the 0700 permissions are still enforced when the
+    # sticky bit on the parent directory is what allows the creation.
+    "{ umask 0777; $(sys.cf_agent) -Kf $(this.promise_dirname)$(const.dirsep)keep_chroot_parent_perms.cf.sub --simulate=manifest --simulate-keep-chroot=$(kept); } > $(G.testdir)$(const.dirsep)parent-sticky.log 2>&1"
+      contain => in_shell,
+      comment => "Run sub policy with the kept chroot inside a world-writable directory with the sticky bit";
+}
+
+bundle agent check
+{
+  classes:
+    "loose_parent_error_logged"
+      expression => regline(".*Refusing to create the directory.*writable by other users.*",
+                            "$(G.testdir)$(const.dirsep)parent-loose.log"),
+      if => fileexists("$(G.testdir)$(const.dirsep)parent-loose.log");
+
+    "loose_parent_nothing_created"
+      expression => not(isdir("$(test.refused)")),
+      if => fileexists("$(G.testdir)$(const.dirsep)parent-loose.log");
+
+    "loose_parent_refused"
+      expression => not(returnszero("$(sys.cf_agent) -Kf $(this.promise_dirname)$(const.dirsep)keep_chroot_parent_perms.cf.sub --simulate=manifest --simulate-keep-chroot=$(test.refused)", "noshell")),
+      if => fileexists("$(G.testdir)$(const.dirsep)parent-loose.log");
+
+    "sticky_parent_kept_chroot"
+      expression => regline(".*Keeping changes chroot.*",
+                            "$(G.testdir)$(const.dirsep)parent-sticky.log"),
+      if => fileexists("$(G.testdir)$(const.dirsep)parent-sticky.log");
+
+    "sticky_parent_dir_mode_0700"
+      expression => strcmp(filestat("$(test.kept)", "permoct"), "700"),
+      if => isdir("$(test.kept)");
+
+    "ok"
+      expression => and("loose_parent_error_logged", "loose_parent_nothing_created",
+                        "loose_parent_refused", "sticky_parent_kept_chroot",
+                        "sticky_parent_dir_mode_0700");
+
+  methods:
+    "Pass/Fail"
+      usebundle => dcs_passif("ok", "$(this.promise_filename)"),
+      inherit => "true"; # We want dcs_passif to inherit bundle scoped classes from our check bundle
+}

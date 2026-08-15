@@ -89,6 +89,10 @@ static char PIDFILE[CF_BUFSIZE] = ""; /* GLOBAL_C */
 /* Used for 'ident' argument to openlog() */
 static char CF_PROGRAM_NAME[256] = "";
 
+/* Path of the changes chroot kept after a run because of
+ * --simulate-keep-chroot, reported at exit by KeepChangesChroot(). */
+static char KEEP_CHANGES_CHROOT[PATH_MAX] = ""; /* GLOBAL_C */
+
 static void CheckWorkingDirectories(EvalContext *ctx);
 
 static void GetAutotagDir(char *dirname, size_t max_size, const char *maybe_dirname);
@@ -106,6 +110,7 @@ static bool LoadAugmentsFiles(EvalContext *ctx, const char* filename);
 
 static void GetChangesChrootDir(char *buf, size_t buf_size);
 static void DeleteChangesChroot();
+static void KeepChangesChroot();
 static int ParseFacility(const char *name);
 static inline const char *LogFacilityToString(int facility);
 
@@ -1629,9 +1634,89 @@ void GenericAgentInitialize(EvalContext *ctx, GenericAgentConfig *config)
     if (ChrootChanges())
     {
         char changes_chroot[PATH_MAX] = {0};
-        GetChangesChrootDir(changes_chroot, sizeof(changes_chroot));
+        const char *keep_chroot =
+            config->agent_specific.agent.simulate_keep_chroot;
+        if (keep_chroot != NULL)
+        {
+            strlcpy(changes_chroot, keep_chroot, sizeof(changes_chroot));
+
+            /* Strip any trailing separators so that the parent directory is
+             * determined correctly below. */
+            DeleteSlash(changes_chroot);
+
+            /* The chroot is created in the requested directory and kept after
+             * the run instead of being deleted. The directory is required to
+             * not exist yet so that the copies of potentially sensitive system
+             * files made in it below cannot mix with stale contents from a
+             * previous run and are only made in a directory created by this
+             * process, with the permissions enforced below. */
+#ifndef __MINGW32__
+            /* Creating the directory with restrictive permissions is no
+             * protection if another user can replace the directory itself, so
+             * refuse a parent directory writable by group or others, unless
+             * the sticky bit keeps them from renaming or unlinking entries
+             * they don't own. */
+            char *parent = GetParentDirectoryCopy(changes_chroot);
+            if (parent == NULL)
+            {
+                FatalError(
+                    ctx,
+                    "Failed to determine the parent directory of '%s' for keeping the changes chroot",
+                    changes_chroot);
+            }
+            struct stat sb;
+            if (stat(parent, &sb) != 0)
+            {
+                FatalError(
+                    ctx,
+                    "Failed to check the parent directory '%s' for keeping the changes chroot (stat: %s)",
+                    parent,
+                    GetErrorStr());
+            }
+            if (((sb.st_mode & (S_IWGRP | S_IWOTH)) != 0) &&
+                ((sb.st_mode & S_ISVTX) == 0))
+            {
+                FatalError(
+                    ctx,
+                    "Refusing to create the directory '%s' for keeping the changes chroot, its parent directory '%s' is writable by other users",
+                    changes_chroot,
+                    parent);
+            }
+            free(parent);
+#endif /* !__MINGW32__ */
+
+            if (mkdir(changes_chroot, 0700) != 0)
+            {
+                FatalError(
+                    ctx,
+                    "Failed to create the directory '%s' for keeping the changes chroot (mkdir: %s)",
+                    changes_chroot,
+                    GetErrorStr());
+            }
+
+            /* mkdir()'s mode argument is masked by umask, make sure the
+             * directory really is only accessible to its owner. */
+            if (chmod(changes_chroot, 0700) != 0)
+            {
+                FatalError(
+                    ctx,
+                    "Failed to set the permissions of the directory '%s' for keeping the changes chroot (chmod: %s)",
+                    changes_chroot,
+                    GetErrorStr());
+            }
+
+            strlcpy(
+                KEEP_CHANGES_CHROOT,
+                changes_chroot,
+                sizeof(KEEP_CHANGES_CHROOT));
+            RegisterCleanupFunction(KeepChangesChroot);
+        }
+        else
+        {
+            GetChangesChrootDir(changes_chroot, sizeof(changes_chroot));
+            RegisterCleanupFunction(DeleteChangesChroot);
+        }
         SetChangesChroot(changes_chroot);
-        RegisterCleanupFunction(DeleteChangesChroot);
         Log(LOG_LEVEL_WARNING, "All changes in files will be made in the '%s' chroot",
             changes_chroot);
     }
@@ -1797,6 +1882,11 @@ static void DeleteChangesChroot()
     {
         Log(LOG_LEVEL_ERR, "Failed to delete changes chroot '%s'", changes_chroot);
     }
+}
+
+static void KeepChangesChroot()
+{
+    Log(LOG_LEVEL_NOTICE, "Keeping changes chroot '%s'", KEEP_CHANGES_CHROOT);
 }
 
 void GenericAgentFinalize(EvalContext *ctx, GenericAgentConfig *config)
@@ -2614,6 +2704,9 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type, bool tty_
     /* By default we start services during bootstrap */
     config->agent_specific.agent.skip_bootstrap_service_start = false;
 
+    /* By default the changes chroot from a simulate run is deleted at exit */
+    config->agent_specific.agent.simulate_keep_chroot = NULL;
+
     /* Log classes */
     config->agent_specific.agent.report_class_log = false;
 
@@ -2661,6 +2754,7 @@ void GenericAgentConfigDestroy(GenericAgentConfig *config)
         free(config->agent_specific.agent.bootstrap_host);
         free(config->agent_specific.agent.bootstrap_ip);
         free(config->agent_specific.agent.bootstrap_port);
+        free(config->agent_specific.agent.simulate_keep_chroot);
         free(config);
     }
 }

@@ -221,6 +221,7 @@ static const struct option OPTIONS[] =
     {"skip-bootstrap-service-start", no_argument, 0, 0 },
     {"skip-db-check", optional_argument, 0, 0 },
     {"simulate", required_argument, 0, 0},
+    {"simulate-keep-chroot", required_argument, 0, 0},
     {NULL, 0, 0, '\0'}
 };
 
@@ -257,6 +258,7 @@ static const char *const HINTS[] =
     "Do not start CFEngine services as part of the bootstrap process",
     "Do not run database integrity checks and repairs at startup",
     "Run in simulate mode, either 'manifest', 'manifest-full' or 'diff'",
+    "Keep the changes chroot from a --simulate run, creating it at the given path, which must not already exist",
     NULL
 };
 
@@ -795,6 +797,38 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
                     DoCleanupAndExit(EXIT_FAILURE);
                 }
             }
+            else if (StringEqual(option_name, "simulate-keep-chroot"))
+            {
+                if (optarg == NULL)
+                {
+                    Log(LOG_LEVEL_ERR,
+                        "Missing argument for --simulate-keep-chroot, a directory path required");
+                    DoCleanupAndExit(EXIT_FAILURE);
+                }
+                else if (!IsAbsPath(optarg))
+                {
+                    Log(LOG_LEVEL_ERR,
+                        "Invalid argument for --simulate-keep-chroot, an absolute path required, not '%s'",
+                        optarg);
+                    DoCleanupAndExit(EXIT_FAILURE);
+                }
+                else if (strlen(optarg) > (PATH_MAX / 2))
+                {
+                    /* Every path the run touches is mapped to a path under
+                     * this directory and the result has to fit in PATH_MAX,
+                     * so roughly half of that budget is reserved for the
+                     * original paths (and mapping a path that still does not
+                     * fit aborts the run instead of truncating the path). */
+                    Log(LOG_LEVEL_ERR,
+                        "Invalid argument for --simulate-keep-chroot, path longer than %d bytes",
+                        PATH_MAX / 2);
+                    DoCleanupAndExit(EXIT_FAILURE);
+                }
+                else
+                {
+                    config->agent_specific.agent.simulate_keep_chroot = xstrdup(optarg);
+                }
+            }
             break;
         }
         default:
@@ -819,6 +853,14 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     {
         Log(LOG_LEVEL_ERR,
             "Option --trust-server can only be used when bootstrapping");
+        DoCleanupAndExit(EXIT_FAILURE);
+    }
+
+    if ((config->agent_specific.agent.simulate_keep_chroot != NULL) &&
+        !ChrootChanges())
+    {
+        Log(LOG_LEVEL_ERR,
+            "Option --simulate-keep-chroot can only be used together with --simulate");
         DoCleanupAndExit(EXIT_FAILURE);
     }
 

@@ -1,0 +1,27 @@
+bundle common keep_chroot_path_limits_promises
+{
+  vars:
+    "inputs" slist => { "$(this.promise_dirname)/../default.sub.cf" };
+}
+
+body common control
+{
+  inputs => { "@(keep_chroot_path_limits_promises.inputs)" };
+}
+
+bundle agent main
+{
+  vars:
+    # A path of more than 4000 bytes, built without external tools so that it
+    # works in simulate mode: prepended with the chroot directory path it can
+    # never fit in PATH_MAX (4096 at most on the supported platforms), so
+    # mapping it has to abort the run.
+    "a16" string => "aaaaaaaaaaaaaaaa";
+    "a240" string => "$(a16)$(a16)$(a16)$(a16)$(a16)$(a16)$(a16)$(a16)$(a16)$(a16)$(a16)$(a16)$(a16)$(a16)$(a16)";
+    "a256" string => "$(a240)$(a16)";
+    "long" string => "$(a256)$(a256)$(a256)$(a256)$(a256)$(a256)$(a256)$(a256)$(a256)$(a256)$(a256)$(a256)$(a256)$(a256)$(a256)$(a240)";
+
+  files:
+    "/$(long)"
+      create => "true";
+}

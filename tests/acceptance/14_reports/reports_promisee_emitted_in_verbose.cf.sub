@@ -1,0 +1,5 @@
+bundle agent main
+{
+  reports:
+    "This is an example report" -> "the_promisee_of_a_report";
+}

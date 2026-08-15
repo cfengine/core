@@ -10453,8 +10453,9 @@ void ModuleProtocol(EvalContext *ctx, const char *command, const char *line, int
 
         if (CheckID(name))
         {
-            Rlist *list = RlistParseString(content);
-            if (!list)
+            /* An empty list is NULL too, so check the return value */
+            Rlist *list = NULL;
+            if (!RlistParseString(content, &list))
             {
                 Log(LOG_LEVEL_ERR, "Module protocol could not parse variable %s's data content %s", name, content);
             }

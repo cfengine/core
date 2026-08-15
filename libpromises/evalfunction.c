@@ -114,7 +114,7 @@ static char *StripPatterns(char *file_buffer, const char *pattern, const char *f
 static int BuildLineArray(EvalContext *ctx, const Bundle *bundle, const char *array_lval, const char *file_buffer,
                           const char *split, int maxent, DataType type, bool int_index);
 static JsonElement* BuildData(EvalContext *ctx, const char *file_buffer,  const char *split, int maxent, bool make_array);
-static bool ExecModule(EvalContext *ctx, char *command);
+static bool ExecModule(EvalContext *ctx, char *command, int *retcode);
 
 static bool CheckIDChar(const char ch);
 static bool CheckID(const char *id);
@@ -3199,12 +3199,15 @@ static FnCallResult FnCallUseModule(EvalContext *ctx,
 
     Log(LOG_LEVEL_VERBOSE, "Executing and using module [%s]", modulecmd);
 
-    if (!ExecModule(ctx, modulecmd))
+    /* A module which exits non-zero has not told us anything we should act on,
+     * so the function is false. Not being able to run it at all is a failure. */
+    int retcode = 0;
+    if (!ExecModule(ctx, modulecmd, &retcode))
     {
         return FnFailure();
     }
 
-    return FnReturnContext(true);
+    return FnReturnContext(retcode == 0);
 }
 
 /*********************************************************************/
@@ -9975,7 +9978,7 @@ static FnCallResult FnCallFindfilesUp(ARG_UNUSED EvalContext *ctx, ARG_UNUSED co
 
 /*********************************************************************/
 
-static bool ExecModule(EvalContext *ctx, char *command)
+static bool ExecModule(EvalContext *ctx, char *command, int *retcode)
 {
     FILE *pp = cf_popen(command, "rt", true);
     if (!pp)
@@ -10006,7 +10009,7 @@ static bool ExecModule(EvalContext *ctx, char *command)
         ModuleProtocol(ctx, command, line, print, context, sizeof(context), tags, &persistence);
     }
     bool atend = feof(pp);
-    cf_pclose(pp);
+    *retcode = cf_pclose(pp);
     free(line);
     StringSetDestroy(tags);
 
@@ -10014,6 +10017,11 @@ static bool ExecModule(EvalContext *ctx, char *command)
     {
         Log(LOG_LEVEL_ERR, "Unable to read output from '%s'. (fread: %s)", command, GetErrorStr());
         return false;
+    }
+
+    if (*retcode != 0)
+    {
+        Log(LOG_LEVEL_ERR, "Module '%s' returned non-zero exit code %d", command, *retcode);
     }
 
     return true;

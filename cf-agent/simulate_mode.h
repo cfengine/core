@@ -50,4 +50,6 @@ bool DiffChangedFiles(StringSet **audited_files);
 bool DiffPkgOperations();
 bool ManifestPkgOperations();
 
+bool WriteChangesJson(const char *output_file);
+
 #endif  /* _SIMULATE_H_ */

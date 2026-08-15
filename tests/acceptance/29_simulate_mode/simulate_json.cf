@@ -1,0 +1,65 @@
+body common control
+{
+  inputs => {
+    "../default.sub.cf",
+    "./prepare_files_for_simulate_tests.cf.sub",
+  };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+bundle agent init
+{
+  methods:
+    "prepare_files_for_simulate_tests";
+}
+
+bundle agent test
+{
+  meta:
+    "test_soft_fail"
+      string => "(solaris|aix|hpux|windows)",
+      # ENT-6540 exotics fail to delete chroot
+      # ENT-10254 tests fail on Windows due to CRLF
+      meta => { "ENT-6540,ENT-10254" };
+
+    "description" -> { "CFE-4716" }
+      string => "Test that --simulate-json writes a proper JSON change set and only makes changes in chroot";
+
+  commands:
+    # add --verbose here and look at the .prose.temp log for debugging sub policy runs
+    "$(sys.cf_agent) -Kf $(this.promise_dirname)$(const.dirsep)promises.cf.sub --simulate=manifest --simulate-json=$(this.promise_filename).json.temp > $(this.promise_filename).prose.temp 2>&1"
+      contain => in_shell,
+      comment => "Run sub policy in manifest mode and write the JSON change set to $(this.promise_filename).json.temp.";
+}
+
+bundle agent normalize_json_results(original, normalized)
+{
+  commands:
+    "$(G.sed)"
+      args => " \
+-e 's,$(sys.workdir),WORKDIR,g' \
+-e '/\"sha256\": /d' \
+-e 's/\"size\": [0-9]*/\"size\": SIZE/' \
+-e 's/\"uid\": [0-9]*/\"uid\": UID/' \
+-e 's/\"gid\": [0-9]*/\"gid\": GID/' \
+$(original) > $(normalized)",
+      contain => in_shell,
+      comment => "Normalize workdir paths, sizes and owners so that we can compare to an expected output. The sha256 field is dropped entirely because it is omitted when the digest cannot be computed (e.g. the mode-0000 file when the test runs unprivileged), so its presence is privilege-dependent; the unit tests verify the digests.";
+}
+
+bundle agent check
+{
+  methods:
+    "normalize_json_results"
+      usebundle => normalize_json_results(
+        "$(this.promise_filename).json.temp", "$(this.promise_filename).actual"
+      );
+
+    "check"
+      usebundle => dcs_check_diff(
+        "$(this.promise_filename).actual",
+        "$(this.promise_filename).expected",
+        "$(this.promise_filename)"
+      );
+}

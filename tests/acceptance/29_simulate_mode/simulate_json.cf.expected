@@ -1,0 +1,158 @@
+{
+  "files": [
+    {
+      "change": "created",
+      "gid": GID,
+      "path": "WORKDIR/tmp/source-file",
+      "permissions": "0600",
+      "size": SIZE,
+      "type": "regular file",
+      "uid": UID
+    },
+    {
+      "change": "created",
+      "gid": GID,
+      "path": "WORKDIR/tmp/create-true",
+      "permissions": "0600",
+      "size": SIZE,
+      "type": "regular file",
+      "uid": UID
+    },
+    {
+      "change": "created",
+      "gid": GID,
+      "path": "WORKDIR/tmp/insert-lines",
+      "permissions": "0600",
+      "size": SIZE,
+      "type": "regular file",
+      "uid": UID
+    },
+    {
+      "change": "created",
+      "gid": GID,
+      "path": "WORKDIR/tmp/SUBDIR",
+      "permissions": "0700",
+      "type": "directory",
+      "uid": UID
+    },
+    {
+      "change": "created",
+      "gid": GID,
+      "path": "WORKDIR/tmp/copy-from",
+      "permissions": "0600",
+      "size": SIZE,
+      "type": "regular file",
+      "uid": UID
+    },
+    {
+      "change": "deleted",
+      "path": "WORKDIR/tmp/delete-me"
+    },
+    {
+      "change": "deleted",
+      "path": "WORKDIR/tmp/sub-dir/./sub-file"
+    },
+    {
+      "change": "modified",
+      "gid": GID,
+      "path": "WORKDIR/tmp/sub-dir/.",
+      "permissions": "0700",
+      "type": "directory",
+      "uid": UID
+    },
+    {
+      "change": "modified",
+      "gid": GID,
+      "path": "WORKDIR/tmp/set-colon-field",
+      "permissions": "0600",
+      "size": SIZE,
+      "type": "regular file",
+      "uid": UID
+    },
+    {
+      "change": "modified",
+      "gid": GID,
+      "path": "WORKDIR/tmp/delete-lines-matching",
+      "permissions": "0600",
+      "size": SIZE,
+      "type": "regular file",
+      "uid": UID
+    },
+    {
+      "change": "modified",
+      "gid": GID,
+      "path": "WORKDIR/tmp/regex-replace",
+      "permissions": "0600",
+      "size": SIZE,
+      "type": "regular file",
+      "uid": UID
+    },
+    {
+      "change": "modified",
+      "gid": GID,
+      "path": "WORKDIR/tmp/edit-template-string",
+      "permissions": "0600",
+      "size": SIZE,
+      "type": "regular file",
+      "uid": UID
+    },
+    {
+      "change": "modified",
+      "gid": GID,
+      "path": "WORKDIR/tmp/build-xpath",
+      "permissions": "0600",
+      "size": SIZE,
+      "type": "regular file",
+      "uid": UID
+    },
+    {
+      "change": "modified",
+      "gid": GID,
+      "path": "WORKDIR/tmp/xml-insert-tree",
+      "permissions": "0600",
+      "size": SIZE,
+      "type": "regular file",
+      "uid": UID
+    },
+    {
+      "change": "modified",
+      "gid": GID,
+      "path": "WORKDIR/tmp/perms",
+      "permissions": "0000",
+      "size": SIZE,
+      "type": "regular file",
+      "uid": UID
+    },
+    {
+      "change": "deleted",
+      "path": "WORKDIR/tmp/transformer"
+    },
+    {
+      "change": "created",
+      "gid": GID,
+      "path": "WORKDIR/tmp/hardlink",
+      "permissions": "0600",
+      "size": SIZE,
+      "type": "regular file",
+      "uid": UID
+    },
+    {
+      "change": "created",
+      "gid": GID,
+      "path": "WORKDIR/tmp/link",
+      "permissions": "0700",
+      "target": "WORKDIR/tmp/already-created",
+      "type": "symbolic link",
+      "uid": UID
+    }
+  ],
+  "format_version": 1,
+  "packages": [],
+  "renames": [
+    {
+      "new_name": "WORKDIR/tmp/rename-newname",
+      "old_name": "WORKDIR/tmp/rename-me"
+    }
+  ],
+  "simulate_mode": "manifest"
+}

@@ -44,7 +44,7 @@
 #include <actuator.h>
 
 static bool PrintFile(const char *filename, ssize_t max_lines);
-static void ReportToFile(const char *logfile, const char *message);
+static bool ReportToFile(const char *logfile, const char *message);
 static void ReportToLog(const char *message);
 
 PromiseResult VerifyReportPromise(EvalContext *ctx, const Promise *pp)
@@ -109,16 +109,20 @@ PromiseResult VerifyReportPromise(EvalContext *ctx, const Promise *pp)
         return PROMISE_RESULT_WARN;
     }
 
+    PromiseResult result = PROMISE_RESULT_NOOP;
+
     if (a.report.to_file)
     {
-        ReportToFile(a.report.to_file, pp->promiser);
+        if (!ReportToFile(a.report.to_file, pp->promiser))
+        {
+            result = PromiseResultUpdate(result, PROMISE_RESULT_FAIL);
+        }
     }
     else
     {
         ReportToLog(pp->promiser);
     }
 
-    PromiseResult result = PROMISE_RESULT_NOOP;
     if (a.report.haveprintfile)
     {
         if (!PrintFile(a.report.filename, a.report.numlines))
@@ -145,18 +149,29 @@ static void ReportToLog(const char *message)
     free(report_message);
 }
 
-static void ReportToFile(const char *logfile, const char *message)
+static bool ReportToFile(const char *logfile, const char *message)
 {
     FILE *fp = safe_fopen_create_perms(logfile, "a", CF_PERMS_DEFAULT);
     if (!fp)
     {
         Log(LOG_LEVEL_ERR, "Could not open log file '%s', message '%s'. (fopen: %s)", logfile, message, GetErrorStr());
+        return false;
     }
-    else
+
+    bool reported = (fprintf(fp, "%s\n", message) >= 0);
+    if (!reported)
     {
-        fprintf(fp, "%s\n", message);
-        fclose(fp);
+        Log(LOG_LEVEL_ERR, "Could not write to log file '%s', message '%s'. (fprintf: %s)", logfile, message, GetErrorStr());
     }
+
+    /* The write may still be buffered, so a failed close loses the message too */
+    if (fclose(fp) != 0)
+    {
+        Log(LOG_LEVEL_ERR, "Could not close log file '%s', message '%s'. (fclose: %s)", logfile, message, GetErrorStr());
+        reported = false;
+    }
+
+    return reported;
 }
 
 static bool PrintFile(const char *filename, ssize_t max_lines)

@@ -42,7 +42,27 @@ void TimeOut()
     if (ALARM_PID != -1)
     {
         Log(LOG_LEVEL_VERBOSE, "Time out of process %jd", (intmax_t)ALARM_PID);
+
+        /* Read the process group while the process is still alive to be read:
+         * once GracefulTerminate() has killed it, getpgid() fails with ESRCH and
+         * we would have no safe way to tell whether it led a group of its own. */
+        const pid_t pgid = getpgid(ALARM_PID);
+
         GracefulTerminate(ALARM_PID, PROCESS_START_TIME_UNKNOWN);
+
+        /* GracefulTerminate() only reaches the process we started. Anything that
+         * process spawned survives it, and keeps the pipe open, so the caller
+         * stays blocked reading a command it has already given up on.
+         *
+         * Guarded on the timed-out process leading its own group, which
+         * cf_popen()'s child arranges with setpgid(). If that did not take
+         * effect the process is still in our group, its pgid is not its pid, and
+         * a negative kill() here would signal an unrelated group -- possibly our
+         * own. */
+        if (pgid == ALARM_PID)
+        {
+            kill(-ALARM_PID, SIGKILL);
+        }
     }
     else
     {

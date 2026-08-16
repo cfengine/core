@@ -236,6 +236,13 @@ static pid_t GenericCreatePipeAndFork(IOPipe *pipes)
         sigset_t sigmask;
         sigemptyset(&sigmask);
         sigprocmask(SIG_SETMASK, &sigmask, NULL);
+
+        /* Lead a new process group, so that anything the command spawns can be
+         * signalled as a unit. Without this only the direct child is reachable,
+         * and a grandchild outlives exec_timeout still holding the pipe open,
+         * which leaves the parent blocked reading it. setpgid() is
+         * async-signal-safe, so it is legal here. */
+        setpgid(0, 0);
     }
 
     ALARM_PID = (pid != 0 ? pid : -1);

@@ -1725,18 +1725,13 @@ static void RlistAppendContainerPrimitive(Rlist **list, const JsonElement *primi
         RlistAppendScalar(list, JsonPrimitiveGetAsBool(primitive) ? "true" : "false");
         break;
     case JSON_PRIMITIVE_TYPE_INTEGER:
-        {
-            char *str = StringFromLong(JsonPrimitiveGetAsInteger(primitive));
-            RlistAppendScalar(list, str);
-            free(str);
-        }
-        break;
     case JSON_PRIMITIVE_TYPE_REAL:
-        {
-            char *str = StringFromDouble(JsonPrimitiveGetAsReal(primitive));
-            RlistAppendScalar(list, str);
-            free(str);
-        }
+        /* Use the number as it was parsed. Converting through long or double
+         * first is lossy for reals ("%.2f" turns 0.00049 into 0.00) and fatal
+         * for integers JSON permits but this platform cannot represent --
+         * JsonPrimitiveGetAsInteger() reaches StringToLongExitOnError(),
+         * which calls DoCleanupAndExit(). */
+        RlistAppendScalar(list, JsonPrimitiveGetAsString(primitive));
         break;
     case JSON_PRIMITIVE_TYPE_STRING:
         RlistAppendScalar(list, JsonPrimitiveGetAsString(primitive));

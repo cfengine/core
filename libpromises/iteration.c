@@ -697,17 +697,12 @@ static void SeqAppendContainerPrimitive(Seq *seq, const JsonElement *primitive)
                         xstrdup("true") : xstrdup("false")));
         break;
     case JSON_PRIMITIVE_TYPE_INTEGER:
-    {
-        char *str = StringFromLong(JsonPrimitiveGetAsInteger(primitive));
-        SeqAppend(seq, str);
-        break;
-    }
     case JSON_PRIMITIVE_TYPE_REAL:
-    {
-        char *str = StringFromDouble(JsonPrimitiveGetAsReal(primitive));
-        SeqAppend(seq, str);
+        /* Use the number as it was parsed -- see RlistAppendJson(). Going
+         * through long or double is lossy for reals and fatal for integers
+         * too large for this platform. */
+        SeqAppend(seq, xstrdup(JsonPrimitiveGetAsString(primitive)));
         break;
-    }
     case JSON_PRIMITIVE_TYPE_STRING:
         SeqAppend(seq, xstrdup(JsonPrimitiveGetAsString(primitive)));
         break;

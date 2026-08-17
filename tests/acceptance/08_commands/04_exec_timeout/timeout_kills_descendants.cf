@@ -1,0 +1,98 @@
+#######################################################
+#
+# Test that a fired exec_timeout also ends the command's
+# descendants. The termination ladder only reaches the direct
+# child; the sleep the shell spawned inherits the write end of
+# the output pipe, and if it survives the timeout it holds that
+# pipe open for its full 30 seconds while the agent sits in its
+# read loop -- exec_timeout then does not bound the promise's
+# wall clock at all. Killing the command's process group ends
+# the sleep at the timeout, so the promise completes in well
+# under 20 seconds.
+#
+# The elapsed time is measured between two marker files touched
+# immediately before and after the timed promise; commands in a
+# bundle run in order of declaration.
+#
+#######################################################
+body common control
+{
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+bundle agent init
+{
+  files:
+    # The markers must come from this run: a stale pair could carry a
+    # bounded-looking mtime difference from an earlier one.
+    "$(G.testdir)/desc_start" delete => tidy;
+    "$(G.testdir)/desc_end" delete => tidy;
+}
+
+#######################################################
+bundle agent test
+{
+  meta:
+    "description"
+      string => "A fired exec_timeout terminates the command's descendants";
+
+    "test_skip_unsupported"
+      string => "windows",
+      comment => "Drives /bin/sh with POSIX shell payloads";
+
+  commands:
+    "/bin/sh"
+      arglist => { "-c", "touch $(G.testdir)/desc_start" };
+
+    # The shell waits for its sleep, so at the 2 second timeout the
+    # sleep is alive holding the pipe. Only ending it too releases
+    # the pipe before its natural end at 30 seconds.
+    "/bin/sh"
+      arglist => { "-c", "sleep 30; exit 0" },
+      contain => exec_timeout_2,
+      classes => dcs_all_classes("desc_timed");
+
+    "/bin/sh"
+      arglist => { "-c", "touch $(G.testdir)/desc_end" };
+}
+
+body contain exec_timeout_2
+{
+  exec_timeout => "2";
+}
+
+#######################################################
+bundle agent check
+{
+  vars:
+    "start" string => filestat("$(G.testdir)/desc_start", "mtime");
+    "end" string => filestat("$(G.testdir)/desc_end", "mtime");
+    "elapsed" string => eval("$(end) - $(start)", "math", "infix");
+
+  classes:
+    # 20 is well past the ~10 seconds the timeout plus termination
+    # ladder takes, and well short of the sleep's 30. The fileexists()
+    # guards keep a missing marker from passing as boundedness.
+    "bounded"
+      and => {
+        fileexists("$(G.testdir)/desc_start"),
+        fileexists("$(G.testdir)/desc_end"),
+        islessthan("$(elapsed)", "20")
+      },
+      scope => "namespace";
+
+  methods:
+    "any"
+      usebundle => dcs_passif_expected(
+        "desc_timed_repair_timeout,bounded",
+        "desc_timed_promise_kept,desc_timed_promise_repaired",
+        $(this.promise_filename)
+      ),
+      inherit => "true";
+}
+
+### PROJECT_ID: core
+### CATEGORY_ID: 26

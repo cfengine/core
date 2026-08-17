@@ -288,6 +288,9 @@ static ActionResult RepairExec(EvalContext *ctx, const Attributes *a,
 
     CommandPrefix(cmdline, comm);
 
+    /* Set once the command has been reaped, if its exec_timeout fired. */
+    bool timed_out = false;
+
     bool do_work_here = true;
 
 #ifndef __MINGW32__
@@ -448,7 +451,31 @@ static ActionResult RepairExec(EvalContext *ctx, const Attributes *a,
         {
             int ret = cf_pclose(pfp);
 
-            if (ret == -1)
+            /* Sample only now, and never earlier. The read loop above ends as
+             * soon as the command closes its output, which it can do long
+             * before it exits -- so the alarm may not fire until cf_pclose()
+             * is already waiting for the child. Reading the flag before that
+             * wait misses exactly the case this is here to catch. It is still
+             * read before the alarm is disarmed further down. */
+            timed_out = (a->contain.timeout != CF_NOINT) && TimeOutHasFired();
+
+            if (timed_out)
+            {
+                /* The command exceeded exec_timeout and was signalled, so its
+                 * exit status cannot be trusted to say so. A command killed
+                 * after it has written its last output, or one that exits
+                 * normally while only its children are killed, is reaped with a
+                 * status VerifyCommandRetcode() reads as success -- and the
+                 * promise is then reported kept or repaired even though the
+                 * command never completed. Classify on the timeout instead. */
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_TIMEOUT, pp, a,
+                     TimeOutSignalledProcess()
+                         ? "Command '%s' exceeded exec_timeout of %d seconds and was terminated"
+                         : "Command '%s' exceeded exec_timeout of %d seconds; it was NOT terminated and ran to completion",
+                     pp->promiser, a->contain.timeout);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_TIMEOUT);
+            }
+            else if (ret == -1)
             {
                 cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Finished script '%s' - failed (abnormal termination)", pp->promiser);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
@@ -492,7 +519,7 @@ static ActionResult RepairExec(EvalContext *ctx, const Attributes *a,
     }
 #endif /* !__MINGW32__ */
 
-    return ACTION_RESULT_OK;
+    return timed_out ? ACTION_RESULT_TIMEOUT : ACTION_RESULT_OK;
 }
 
 /*************************************************************/

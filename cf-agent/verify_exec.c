@@ -499,8 +499,7 @@ static ActionResult RepairExec(EvalContext *ctx, const Attributes *a,
 
     if (a->contain.timeout != CF_NOINT)
     {
-        alarm(0);
-        signal(SIGALRM, SIG_DFL);
+        ClearTimeOut();
     }
 
     Log(info_or_verbose, "Completed execution of '%s'", cmdline);

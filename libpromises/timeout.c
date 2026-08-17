@@ -37,13 +37,34 @@ static volatile sig_atomic_t TIMEOUT_FIRED = 0; /* GLOBAL_X */
  * otherwise would be a false statement in an error message. */
 static volatile sig_atomic_t TIMEOUT_SIGNALLED = 0; /* GLOBAL_X */
 
+/* Set while a timeout alarm is pending. cf_popen()'s child consults it to
+ * decide whether to lead a process group of its own; only a child that may
+ * have to be killed as a tree needs one. */
+static bool TIMEOUT_ARMED = false; /* GLOBAL_X */
+
 void SetTimeOut(int timeout)
 {
     ALARM_PID = -1;
     TIMEOUT_FIRED = 0;
     TIMEOUT_SIGNALLED = 0;
+    TIMEOUT_ARMED = true;
     signal(SIGALRM, (void *) TimeOut);
     alarm(timeout);
+}
+
+void ClearTimeOut(void)
+{
+    /* Deliberately leaves TIMEOUT_FIRED and TIMEOUT_SIGNALLED alone: they
+     * record what happened to the last armed timeout, and remain readable
+     * after the disarm. Only the next SetTimeOut() resets them. */
+    alarm(0);
+    signal(SIGALRM, SIG_DFL);
+    TIMEOUT_ARMED = false;
+}
+
+bool TimeOutIsArmed(void)
+{
+    return TIMEOUT_ARMED;
 }
 
 bool TimeOutHasFired(void)
@@ -62,12 +83,33 @@ void TimeOut()
 {
     alarm(0);
     TIMEOUT_FIRED = 1;
+    TIMEOUT_ARMED = false;
 
     if (ALARM_PID != -1)
     {
         TIMEOUT_SIGNALLED = 1;
         Log(LOG_LEVEL_VERBOSE, "Time out of process %jd", (intmax_t)ALARM_PID);
+
+        /* Read the process group while the process is still alive to be read:
+         * once GracefulTerminate() has killed it, getpgid() fails with ESRCH and
+         * we would have no safe way to tell whether it led a group of its own. */
+        const pid_t pgid = getpgid(ALARM_PID);
+
         GracefulTerminate(ALARM_PID, PROCESS_START_TIME_UNKNOWN);
+
+        /* GracefulTerminate() only reaches the process we started. Anything that
+         * process spawned survives it, and keeps the pipe open, so the caller
+         * stays blocked reading a command it has already given up on.
+         *
+         * Guarded on the timed-out process leading its own group, which
+         * cf_popen()'s child arranges with setpgid(). If that did not take
+         * effect the process is still in our group, its pgid is not its pid, and
+         * a negative kill() here would signal an unrelated group -- possibly our
+         * own. */
+        if (pgid == ALARM_PID)
+        {
+            kill(-ALARM_PID, SIGKILL);
+        }
     }
     else
     {

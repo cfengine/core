@@ -578,8 +578,7 @@ bool LoadMountInfo(Seq *list)
     }
 
     free(vbuff);
-    alarm(0);
-    signal(SIGALRM, SIG_DFL);
+    ClearTimeOut();
     cf_pclose(pp);
     return true;
 }
@@ -1175,8 +1174,7 @@ void MountAll()
     }
 
     free(line);
-    alarm(0);
-    signal(SIGALRM, SIG_DFL);
+    ClearTimeOut();
     cf_pclose(pp);
 }
 

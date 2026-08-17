@@ -94,6 +94,12 @@ void TimeOut()
          * once GracefulTerminate() has killed it, getpgid() fails with ESRCH and
          * we would have no safe way to tell whether it led a group of its own. */
         const pid_t pgid = getpgid(ALARM_PID);
+        if (pgid == -1)
+        {
+            Log(LOG_LEVEL_WARNING,
+                "Could not read the process group of timed-out process %jd (getpgid: %s), not signalling its process group",
+                (intmax_t)ALARM_PID, GetErrorStr());
+        }
 
         GracefulTerminate(ALARM_PID, PROCESS_START_TIME_UNKNOWN);
 

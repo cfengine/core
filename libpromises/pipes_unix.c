@@ -255,7 +255,17 @@ static pid_t GenericCreatePipeAndFork(IOPipe *pipes)
          * must stay in ours. */
         if (TimeOutIsArmed())
         {
-            setpgid(0, 0);
+            if (setpgid(0, 0) != 0)
+            {
+                /* The command stays in our group, so TimeOut()'s check of its
+                 * group will skip the group kill; only its descendants are
+                 * then out of the timeout's reach. Log() is not
+                 * async-signal-safe, so it is confined to this failure branch,
+                 * where the alternative is losing the descendants silently. */
+                Log(LOG_LEVEL_WARNING,
+                    "Could not give the timed command its own process group (setpgid: %s), its descendants will survive a timeout",
+                    GetErrorStr());
+            }
         }
     }
 

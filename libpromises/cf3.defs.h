@@ -592,6 +592,10 @@ typedef enum
 #define CF_NAKEDLRANGE "@[(][a-zA-Z0-9_$(){}\\[\\].:]+[)]"
 #define CF_ANYSTRING   ".*"
 
+/* Accepted items of the 'silence' list in a changes body. Keep in sync with
+ * FILE_CHANGE_SILENCE_CATEGORIES in attributes.c. */
+#define CF_CHANGE_SILENCE_RANGE "content|add|remove|owner|group|perms|device|mtime|inode|stats|all"
+
 #define CF_KEYSTRING   "^(SHA|MD5)=[0123456789abcdef]*$"
 
 
@@ -777,6 +781,35 @@ typedef enum
     FILE_CHANGE_REPORT_STATS_CHANGE,
     FILE_CHANGE_REPORT_ALL
 } FileChangeReport;
+
+/*************************************************************************/
+
+/* Categories of file change whose alert output the 'silence' attribute of a
+ * changes body can suppress. Used as a bit set, both for what a promise
+ * silences and for which categories a single change belongs to. */
+typedef enum
+{
+    FILE_CHANGE_SILENCE_NONE    = 0,
+    FILE_CHANGE_SILENCE_CONTENT = (1 << 0),
+    FILE_CHANGE_SILENCE_ADD     = (1 << 1),
+    FILE_CHANGE_SILENCE_REMOVE  = (1 << 2),
+    FILE_CHANGE_SILENCE_OWNER   = (1 << 3),
+    FILE_CHANGE_SILENCE_GROUP   = (1 << 4),
+    FILE_CHANGE_SILENCE_PERMS   = (1 << 5),
+    FILE_CHANGE_SILENCE_DEVICE  = (1 << 6),
+    FILE_CHANGE_SILENCE_MTIME   = (1 << 7),
+    FILE_CHANGE_SILENCE_INODE   = (1 << 8),
+
+    /* The categories reported by FileChangesCheckAndUpdateStats(). */
+    FILE_CHANGE_SILENCE_STATS   = (FILE_CHANGE_SILENCE_OWNER | FILE_CHANGE_SILENCE_GROUP |
+                                   FILE_CHANGE_SILENCE_PERMS | FILE_CHANGE_SILENCE_DEVICE |
+                                   FILE_CHANGE_SILENCE_MTIME | FILE_CHANGE_SILENCE_INODE),
+
+    FILE_CHANGE_SILENCE_ALL     = (FILE_CHANGE_SILENCE_STATS | FILE_CHANGE_SILENCE_CONTENT |
+                                   FILE_CHANGE_SILENCE_ADD | FILE_CHANGE_SILENCE_REMOVE)
+} FileChangeSilence;
+
+/*************************************************************************/
 
 typedef enum
 {
@@ -1104,6 +1137,7 @@ typedef struct
     FileChangeReport report_changes;
     int report_diffs;
     int update;
+    FileChangeSilence silence;
 } FileChange;
 
 /*************************************************************************/

@@ -331,6 +331,13 @@ void cfPS(EvalContext *ctx, LogLevel level, PromiseResult status, const Promise 
  * multiple changes done by the given promise.
  */
 void RecordChange(EvalContext *ctx, const Promise *pp, const Attributes *attr, const char *fmt, ...) FUNC_ATTR_PRINTF(4, 5);
+
+/**
+ * va_list variant of RecordChange(), for callers that wrap it in their own
+ * variadic function.
+ */
+void VRecordChange(EvalContext *ctx, const Promise *pp, const Attributes *attr, const char *fmt, va_list ap);
+
 void RecordNoChange(EvalContext *ctx, const Promise *pp, const Attributes *attr, const char *fmt, ...) FUNC_ATTR_PRINTF(4, 5);
 void RecordFailure(EvalContext *ctx, const Promise *pp, const Attributes *attr, const char *fmt, ...) FUNC_ATTR_PRINTF(4, 5);
 void RecordWarning(EvalContext *ctx, const Promise *pp, const Attributes *attr, const char *fmt, ...) FUNC_ATTR_PRINTF(4, 5);

@@ -1392,6 +1392,56 @@ JsonElement* GetProcFileInfo(EvalContext *ctx, const char* filename, const char*
 
 /*******************************************************************/
 
+/**
+ * @brief Select the active default route with the lowest metric.
+ *
+ * NetworkingRoutesPostProcessInfo() marks a route with
+ * "active_default_gateway": true when its destination is 0.0.0.0 and its
+ * flags include RTF_UP and RTF_GATEWAY. Among those routes, the one with
+ * the numerically lowest metric is preferred; equal metrics keep the
+ * earliest entry.
+ *
+ * @param routes JSON array of routes parsed from /proc/net/route
+ * @return the preferred default route (owned by @p routes), or NULL if
+ *         there is no active default route with a usable metric
+ */
+static const JsonElement *FindLowestMetricDefaultRoute(const JsonElement *routes)
+{
+    assert(routes != NULL);
+
+    const JsonElement *default_route = NULL;
+    long lowest_metric = 0;
+
+    JsonIterator iter = JsonIteratorInit(routes);
+    const JsonElement *route = NULL;
+    while ((route = JsonIteratorNextValue(&iter)))
+    {
+        JsonElement *active = JsonObjectGet(route, "active_default_gateway");
+        if (active != NULL &&
+            JsonGetElementType(active) == JSON_ELEMENT_TYPE_PRIMITIVE &&
+            JsonGetPrimitiveType(active) == JSON_PRIMITIVE_TYPE_BOOL &&
+            JsonPrimitiveGetAsBool(active))
+        {
+            JsonElement *metric = JsonObjectGet(route, "metric");
+            if (metric != NULL &&
+                JsonGetElementType(metric) == JSON_ELEMENT_TYPE_PRIMITIVE &&
+                JsonGetPrimitiveType(metric) == JSON_PRIMITIVE_TYPE_INTEGER)
+            {
+                long metric_value = JsonPrimitiveGetAsInteger(metric);
+                if (default_route == NULL || metric_value < lowest_metric)
+                {
+                    default_route = route;
+                    lowest_metric = metric_value;
+                }
+            }
+        }
+    }
+
+    return default_route;
+}
+
+/*******************************************************************/
+
 void GetNetworkingInfo(EvalContext *ctx)
 {
     const char *procdir_root = GetRelocatedProcdirRoot();
@@ -1420,29 +1470,7 @@ void GetNetworkingInfo(EvalContext *ctx)
     {
         JsonObjectAppendElement(inet, "routes", routes);
 
-        JsonIterator iter = JsonIteratorInit(routes);
-        const JsonElement *default_route = NULL;
-        long lowest_metric = 0;
-        const JsonElement *route = NULL;
-        while ((route = JsonIteratorNextValue(&iter)))
-        {
-            JsonElement *active = JsonObjectGet(route, "active_default_gateway");
-            if (active != NULL &&
-                JsonGetElementType(active) == JSON_ELEMENT_TYPE_PRIMITIVE &&
-                JsonGetPrimitiveType(active) == JSON_PRIMITIVE_TYPE_BOOL &&
-                JsonPrimitiveGetAsBool(active))
-            {
-                JsonElement *metric = JsonObjectGet(route, "metric");
-                if (metric != NULL &&
-                    JsonGetElementType(metric) == JSON_ELEMENT_TYPE_PRIMITIVE &&
-                    JsonGetPrimitiveType(metric) == JSON_PRIMITIVE_TYPE_INTEGER &&
-                    (default_route == NULL ||
-                     JsonPrimitiveGetAsInteger(metric) < lowest_metric))
-                {
-                    default_route = route;
-                }
-            }
-        }
+        const JsonElement *default_route = FindLowestMetricDefaultRoute(routes);
 
         if (default_route != NULL)
         {

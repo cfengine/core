@@ -585,12 +585,18 @@ bool DoubleFromString(const char *s, double *value_out)
 /****************************************************************************/
 
 /**
+ * Parse a "min,max" range into 64-bit bounds.
+ *
+ * Shared implementation behind IntegerRangeFromString() and
+ * TimeRangeFromString(). Parsing is always done in 64 bits so that the typed
+ * wrappers, not this function, decide how wide the caller's storage is.
+ *
  * @return true if successful
  */
-bool IntegerRangeFromString(const char *intrange, long *min_out, long *max_out)
+static bool Int64RangeFromString(const char *intrange, int64_t *min_out, int64_t *max_out)
 {
     Item *split;
-    long lmax = CF_LOWINIT, lmin = CF_HIGHINIT;
+    int64_t lmax = CF_LOWINIT, lmin = CF_HIGHINIT;
 
 /* Numeric types are registered by range separated by comma str "min,max" */
 
@@ -603,15 +609,15 @@ bool IntegerRangeFromString(const char *intrange, long *min_out, long *max_out)
 
     split = SplitString(intrange, ',');
 
-    sscanf(split->name, "%ld", &lmin);
+    sscanf(split->name, "%" SCNd64, &lmin);
 
     if (strcmp(split->next->name, "inf") == 0)
     {
-        lmax = (long) CF_INFINITY;
+        lmax = (int64_t) CF_INFINITY;
     }
     else
     {
-        sscanf(split->next->name, "%ld", &lmax);
+        sscanf(split->next->name, "%" SCNd64, &lmax);
     }
 
     DeleteItemList(split);
@@ -623,6 +629,46 @@ bool IntegerRangeFromString(const char *intrange, long *min_out, long *max_out)
 
     *min_out = lmin;
     *max_out = lmax;
+    return true;
+}
+
+/**
+ * @return true if successful
+ */
+bool IntegerRangeFromString(const char *intrange, long *min_out, long *max_out)
+{
+    int64_t min, max;
+
+    if (!Int64RangeFromString(intrange, &min, &max))
+    {
+        return false;
+    }
+
+    *min_out = min;
+    *max_out = max;
+    return true;
+}
+
+/**
+ * Like IntegerRangeFromString(), but for bounds stored as time_t.
+ *
+ * A separate entry point is needed because time_t is wider than long on LLP64
+ * platforms (Windows). Hence, writing a bound through a long * there would
+ * leave half of the caller's time_t untouched.
+ *
+ * @return true if successful
+ */
+bool TimeRangeFromString(const char *timerange, time_t *min_out, time_t *max_out)
+{
+    int64_t min, max;
+
+    if (!Int64RangeFromString(timerange, &min, &max))
+    {
+        return false;
+    }
+
+    *min_out = min;
+    *max_out = max;
     return true;
 }
 

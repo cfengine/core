@@ -181,6 +181,75 @@ static void test_double_from_string(void)
     assert_true(val == old_val);
 }
 
+static void test_integer_range_from_string(void)
+{
+    long min, max;
+
+    assert_true(IntegerRangeFromString("0,0", &min, &max));
+    assert_int_equal(min, 0L);
+    assert_int_equal(max, 0L);
+
+    assert_true(IntegerRangeFromString("-20,19", &min, &max));
+    assert_int_equal(min, -20L);
+    assert_int_equal(max, 19L);
+
+    assert_true(IntegerRangeFromString("1,inf", &min, &max));
+    assert_int_equal(min, 1L);
+    assert_int_equal(max, CF_INFINITY);
+
+    /* An absent attribute is reported as CF_NOINT. */
+    assert_true(IntegerRangeFromString(NULL, &min, &max));
+    assert_int_equal(min, CF_NOINT);
+    assert_int_equal(max, CF_NOINT);
+}
+
+/**
+ * TimeRangeFromString() exists because time_t is wider than long on some
+ * platforms (notably Windows), where writing a bound through a long * fills
+ * only its low half and leaves the rest untouched. These cases check that
+ * bounds reach a time_t intact, at full width and with the correct sign.
+ */
+static void test_time_range_from_string(void)
+{
+    /* Pre-fill with a pattern that is wrong in both halves, so that a bound
+     * written only 4 bytes wide fails these assertions. */
+    const time_t poison = (time_t) 0x5A5A5A5A5A5A5A5A;
+    time_t min = poison, max = poison;
+
+    /* A bound that fits in 32 bits. */
+    assert_true(TimeRangeFromString("0,283824000", &min, &max));
+    assert_int_equal(min, 0);
+    assert_int_equal(max, 283824000);
+
+    /* A bound beyond INT32_MAX, which cannot survive a round trip through a
+     * 32-bit long. Policy reaches these values easily: this one is what
+     * irange(0, accumulated(99,0,0,0,0,0)) expands to, i.e. 99 years. */
+    min = poison;
+    max = poison;
+    assert_true(TimeRangeFromString("0,3122064000", &min, &max));
+    assert_int_equal(min, 0);
+    assert_int_equal(max, (time_t) 3122064000);
+
+    min = poison;
+    max = poison;
+    assert_true(TimeRangeFromString("-3122064000,-1", &min, &max));
+    assert_int_equal(min, (time_t) -3122064000);
+    assert_int_equal(max, (time_t) -1);
+
+    min = poison;
+    max = poison;
+    assert_true(TimeRangeFromString("0,inf", &min, &max));
+    assert_int_equal(min, 0);
+    assert_int_equal(max, CF_INFINITY);
+
+    /* An absent attribute is reported as CF_NOINT */
+    min = poison;
+    max = poison;
+    assert_true(TimeRangeFromString(NULL, &min, &max));
+    assert_int_equal(min, CF_NOINT);
+    assert_int_equal(max, CF_NOINT);
+}
+
 static void test_signal_from_string(void)
 {
     /* Lowercase (baseline -- should always work) */
@@ -309,6 +378,8 @@ int main()
         unit_test(test_boolean_from_string),
         unit_test(test_int_from_string),
         unit_test(test_double_from_string),
+        unit_test(test_integer_range_from_string),
+        unit_test(test_time_range_from_string),
         unit_test(test_CommandArg0_bound),
         unit_test(test_signal_from_string),
     };

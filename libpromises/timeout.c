@@ -26,11 +26,29 @@
 #include <timeout.h>
 #include <process_lib.h>
 
+/* Set while a timeout alarm is pending. cf_popen()'s child consults it to
+ * decide whether to lead a process group of its own; only a child that may
+ * have to be killed as a tree needs one. */
+static bool TIMEOUT_ARMED = false; /* GLOBAL_X */
+
 void SetTimeOut(int timeout)
 {
     ALARM_PID = -1;
+    TIMEOUT_ARMED = true;
     signal(SIGALRM, (void *) TimeOut);
     alarm(timeout);
+}
+
+void ClearTimeOut(void)
+{
+    alarm(0);
+    signal(SIGALRM, SIG_DFL);
+    TIMEOUT_ARMED = false;
+}
+
+bool TimeOutIsArmed(void)
+{
+    return TIMEOUT_ARMED;
 }
 
 /*************************************************************************/
@@ -38,6 +56,7 @@ void SetTimeOut(int timeout)
 void TimeOut()
 {
     alarm(0);
+    TIMEOUT_ARMED = false;
 
     if (ALARM_PID != -1)
     {

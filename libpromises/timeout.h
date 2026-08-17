@@ -26,6 +26,16 @@
 #define CFENGINE_TIMEOUT_H
 
 void SetTimeOut(int timeout);
+
+/* True between SetTimeOut() arming the alarm and the alarm being disarmed.
+ * Consulted by code that forks a child which the timeout may have to
+ * terminate, to decide whether that child needs a process group of its own. */
+bool TimeOutIsArmed(void);
+
+/* Cancel a pending alarm and restore the default handler. Callers used to
+ * open-code this; it also has to clear the armed flag, so that a command which
+ * completes in time does not leave it set for the next, unrelated, child. */
+void ClearTimeOut(void);
 void TimeOut(void);
 time_t SetReferenceTime(void);
 

@@ -33,6 +33,7 @@
 #include <file_lib.h>
 #include <signals.h>
 #include <string_lib.h>
+#include <timeout.h>
 
 static bool CfSetuid(uid_t uid, gid_t gid);
 
@@ -237,12 +238,25 @@ static pid_t GenericCreatePipeAndFork(IOPipe *pipes)
         sigemptyset(&sigmask);
         sigprocmask(SIG_SETMASK, &sigmask, NULL);
 
-        /* Lead a new process group, so that anything the command spawns can be
-         * signalled as a unit. Without this only the direct child is reachable,
-         * and a grandchild outlives exec_timeout still holding the pipe open,
-         * which leaves the parent blocked reading it. setpgid() is
-         * async-signal-safe, so it is legal here. */
-        setpgid(0, 0);
+        /* When a timeout is armed, lead a new process group, so that anything
+         * the command spawns can be signalled as a unit. Without this only the
+         * direct child is reachable, and a grandchild outlives exec_timeout
+         * still holding the pipe open, which leaves the parent blocked reading
+         * it. setpgid() is async-signal-safe, so it is legal here.
+         *
+         * Only when a timeout is armed. A child in a process group of its own
+         * is no longer in the terminal's foreground group, so on an interactive
+         * run it is stopped by SIGTTIN the moment it reads the terminal, and
+         * the agent then blocks forever on the pipe -- the very hang this is
+         * meant to bound, reintroduced on a path with no timeout to end it. It
+         * also leaves the child out of reach of a terminal SIGINT and of
+         * cf-execd's agent_expireafter, both of which kill by process group.
+         * Children with no timeout have nothing to bound their wait, so they
+         * must stay in ours. */
+        if (TimeOutIsArmed())
+        {
+            setpgid(0, 0);
+        }
     }
 
     ALARM_PID = (pid != 0 ? pid : -1);

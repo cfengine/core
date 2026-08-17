@@ -374,8 +374,7 @@ static Item *NovaReSample(EvalContext *ctx, int slot, const Attributes *attr, co
 
     if (a.contain.timeout != 0)
     {
-        alarm(0);
-        signal(SIGALRM, SIG_DFL);
+        ClearTimeOut();
     }
 
     Log(LOG_LEVEL_INFO, "Collected sample of %s", pp->promiser);

@@ -3,6 +3,8 @@
 #include <stdlib.h>
 
 #include <rlist.h>
+#include <json.h>
+#include <buffer.h>
 #include <string_lib.h>
 
 #include <assoc.h>
@@ -797,6 +799,62 @@ static void test_key_in_ignore_case()
     assert_true(RlistKeyIn_IgnoreCase(NULL, "term") == NULL);
 }
 
+static void test_from_container_numbers(void)
+{
+    /* Every element of this array is a number RFC 8259 allows and JsonParse()
+     * accepts. Before the fix, building an Rlist from it converted each one
+     * through long or double first, which lost information for the reals and
+     * called DoCleanupAndExit() for the integers too large for a long -- so
+     * a data container holding one of these terminated the agent rather than
+     * producing a list. Each element must come back exactly as written. */
+    static const char *const expected[] = {
+        "42",
+        "-42",
+        "9223372036854775807",              /* LONG_MAX */
+        "9223372036854775808",              /* one past it: was fatal */
+        "1000000000000000000000000000000",  /* 10^30: was fatal */
+        "2000000000000",                    /* fits long, not int */
+        "0.00049",                          /* was truncated to 0.00 */
+        "3.14159265",                       /* was truncated to 3.14 */
+        "1e-8",                             /* was fatal on stock libntech */
+        "1.5e3",
+    };
+    const size_t n = sizeof(expected) / sizeof(expected[0]);
+
+    Buffer *doc = BufferNew();
+    BufferAppendChar(doc, '[');
+    for (size_t i = 0; i < n; i++)
+    {
+        if (i > 0)
+        {
+            BufferAppendChar(doc, ',');
+        }
+        BufferAppendString(doc, expected[i]);
+    }
+    BufferAppendChar(doc, ']');
+
+    const char *data = BufferData(doc);
+    JsonElement *json = NULL;
+    assert_int_equal(JSON_PARSE_OK, JsonParse(&data, &json));
+    assert_true(json != NULL);
+    assert_int_equal(n, JsonLength(json));
+
+    Rlist *list = RlistFromContainer(json);
+    assert_true(list != NULL);
+    assert_int_equal(n, RlistLen(list));
+
+    const Rlist *rp = list;
+    for (size_t i = 0; i < n; i++, rp = rp->next)
+    {
+        assert_true(rp != NULL);
+        assert_string_equal(expected[i], RlistScalarValue(rp));
+    }
+
+    RlistDestroy(list);
+    JsonDestroy(json);
+    BufferDestroy(doc);
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -806,6 +864,7 @@ int main()
         unit_test(test_length),
         unit_test(test_equality),
         unit_test(test_copy),
+        unit_test(test_from_container_numbers),
         unit_test(test_rval_to_scalar),
         unit_test(test_rval_to_scalar2),
         unit_test(test_rval_to_list),

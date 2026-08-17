@@ -677,6 +677,9 @@ void FileChangesCheckAndUpdateStats(EvalContext *ctx,
                                     const Promise *pp,
                                     PromiseResult *result)
 {
+    assert(attr != NULL);
+    assert(sb != NULL);
+
     struct stat cmpsb;
     CF_DB *dbp;
 

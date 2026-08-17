@@ -737,6 +737,8 @@ static PromiseResult PurgeLocalFiles(EvalContext *ctx, Item *filelist, const cha
 static PromiseResult SourceSearchAndCopy(EvalContext *ctx, const char *from, char *to, int maxrecurse, const Attributes *attr,
                                          const Promise *pp, dev_t rootdevice, CompressedArray **inode_cache, AgentConnection *conn)
 {
+    assert(attr != NULL);
+
     /* TODO overflow check all these str*cpy()s in here! */
     Item *namecache = NULL;
 
@@ -2437,6 +2439,7 @@ static PromiseResult VerifyDelete(EvalContext *ctx,
                                   const Attributes *attr, const Promise *pp)
 {
     assert(attr != NULL);
+    assert(sb != NULL);
     Log(LOG_LEVEL_VERBOSE, "Verifying file deletions for '%s'", path);
 
     const char *changes_path = path;
@@ -2571,6 +2574,8 @@ static inline char *GetFileTypeDescription(const struct stat *const stat_buf,
 
 static PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, const struct stat *dstat, const Attributes *attr, const Promise *pp)
 {
+    assert(dstat != NULL);
+
     PromiseResult result = PROMISE_RESULT_NOOP;
 
 #ifndef __MINGW32__

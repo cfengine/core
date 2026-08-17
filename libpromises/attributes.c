@@ -1138,6 +1138,8 @@ EditDefaults GetEditDefaults(const EvalContext *ctx, const Promise *pp)
 
 ContextConstraint GetContextConstraints(const EvalContext *ctx, const Promise *pp)
 {
+    assert(pp != NULL);
+
     ContextConstraint a;
 
     a.nconstraints = 0;

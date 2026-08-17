@@ -2048,7 +2048,17 @@ time_t ReadTimestampFromPolicyValidatedFile(const GenericAgentConfig *config, co
             JsonElement *timestamp = JsonObjectGet(validated_doc, "timestamp");
             if (timestamp)
             {
-                validated_at = JsonPrimitiveGetAsInteger(timestamp);
+                /* Not JsonPrimitiveGetAsInteger(): it reaches
+                 * StringToLongExitOnError(), which would terminate the agent
+                 * over a corrupt or crafted timestamp in this file. A
+                 * timestamp we cannot read leaves validated_at at 0, meaning
+                 * "not validated", which is the safe direction. */
+                long parsed;
+                if (StringToLong(JsonPrimitiveGetAsString(timestamp), &parsed)
+                    == 0)
+                {
+                    validated_at = parsed;
+                }
             }
             JsonDestroy(validated_doc);
         }

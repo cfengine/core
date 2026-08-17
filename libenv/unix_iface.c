@@ -1435,11 +1435,19 @@ void GetNetworkingInfo(EvalContext *ctx)
                 JsonElement *metric = JsonObjectGet(route, "metric");
                 if (metric != NULL &&
                     JsonGetElementType(metric) == JSON_ELEMENT_TYPE_PRIMITIVE &&
-                    JsonGetPrimitiveType(metric) == JSON_PRIMITIVE_TYPE_INTEGER &&
-                    (default_route == NULL ||
-                     JsonPrimitiveGetAsInteger(metric) < lowest_metric))
+                    JsonGetPrimitiveType(metric) == JSON_PRIMITIVE_TYPE_INTEGER)
                 {
-                    default_route = route;
+                    /* Not JsonPrimitiveGetAsInteger(): it reaches
+                     * StringToLongExitOnError(), which would terminate the
+                     * agent over a metric too large for a long. A metric we
+                     * cannot read simply does not win. */
+                    long metric_value;
+                    if (StringToLong(JsonPrimitiveGetAsString(metric),
+                                     &metric_value) == 0 &&
+                        (default_route == NULL || metric_value < lowest_metric))
+                    {
+                        default_route = route;
+                    }
                 }
             }
         }

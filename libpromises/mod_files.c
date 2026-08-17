@@ -184,6 +184,7 @@ static const ConstraintSyntax changes_constraints[] =
     ConstraintSyntaxNewOption("report_changes", "all,stats,content,none", "Specify criteria for change warnings", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("update_hashes", "Update hash values immediately after change warning", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("report_diffs","Generate reports summarizing the major differences between individual text files", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("silence", CF_CHANGE_SILENCE_RANGE, "Suppress alert messages for the listed change categories", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

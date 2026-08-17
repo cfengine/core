@@ -27,6 +27,22 @@
 
 #include <promises.h>
 
+/**
+ * Returns true if *every* one of the given change categories is silenced by
+ * the 'silence' attribute of the promise's changes body. An empty category
+ * set is never silenced.
+ */
+bool IsChangeSilenced(const Attributes *attr, FileChangeSilence categories);
+
+/**
+ * Like RecordChange(), but omits the log message when the change belongs
+ * entirely to silenced categories. The promise outcome classes are set either
+ * way, so silencing never hides a change from the policy itself.
+ */
+void RecordFileChange(EvalContext *ctx, const Promise *pp, const Attributes *attr,
+                      FileChangeSilence categories, const char *fmt, ...)
+    FUNC_ATTR_PRINTF(5, 6);
+
 typedef enum
 {
     FILE_STATE_NEW,
@@ -44,7 +60,7 @@ bool FileChangesCheckAndUpdateHash(EvalContext *ctx,
                                    const Promise *pp,
                                    PromiseResult *result);
 bool FileChangesGetDirectoryList(const char *path, Seq *files);
-bool FileChangesLogNewFile(const char *path, const Promise *pp);
+bool FileChangesLogNewFile(const char *path, const Promise *pp, bool silent);
 void FileChangesCheckAndUpdateDirectory(EvalContext *ctx, const Attributes *attr,
                                         const char *name, const Seq *file_set, const Seq *db_file_set,
                                         bool update, const Promise *pp, PromiseResult *result);

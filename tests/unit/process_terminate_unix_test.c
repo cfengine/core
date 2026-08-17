@@ -258,6 +258,24 @@ int nanosleep(const struct timespec *req, struct timespec *rem)
     }
 }
 
+/* The poll loops in process_unix.c measure how long they have actually waited
+ * instead of assuming every nanosleep() costs exactly what was requested, so
+ * the fake clock has to drive clock_gettime() as well. Without this the mocked
+ * nanosleep() above advances fake time while the loops read real time, and the
+ * fake process reacts on a schedule the loops cannot observe.
+ *
+ * current_time is a nanosecond counter, matching the units the tests already
+ * use for reaction times (e.g. 2000000000 for two seconds). */
+int clock_gettime(clockid_t clk_id, struct timespec *tp)
+{
+    (void) clk_id;
+
+    tp->tv_sec = current_time / 1000000000;
+    tp->tv_nsec = current_time % 1000000000;
+
+    return 0;
+}
+
 /* Tests */
 
 void test_kill_simple_process(void)

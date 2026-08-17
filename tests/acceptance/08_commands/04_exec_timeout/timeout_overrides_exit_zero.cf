@@ -1,0 +1,58 @@
+#######################################################
+#
+# Test that a commands: promise whose exec_timeout fires is
+# reported as timed out even though the command exits 0. The
+# exit status of a command that was signalled does not say
+# whether it ran to completion, so a fired timeout must take
+# precedence over a successful exit status.
+#
+#######################################################
+body common control
+{
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+bundle agent test
+{
+  meta:
+    "description"
+      string => "A fired exec_timeout takes precedence over a successful exit status";
+
+    "test_skip_unsupported"
+      string => "windows",
+      comment => "Drives /bin/sh with a POSIX shell payload";
+
+  commands:
+    # The sleep outlives the 2 second timeout by less than the
+    # termination ladder's grace period, so the signalled shell
+    # still reaps its child and exits 0 -- the shape in which the
+    # exit status used to win over the fired timeout.
+    "/bin/sh"
+      arglist => { "-c", "sleep 2.4; exit 0" },
+      contain => exec_timeout_2,
+      classes => dcs_all_classes("timeout_exit0");
+}
+
+body contain exec_timeout_2
+{
+  exec_timeout => "2";
+}
+
+#######################################################
+bundle agent check
+{
+  methods:
+    "any"
+      usebundle => dcs_passif_expected(
+        "timeout_exit0_repair_timeout",
+        "timeout_exit0_promise_kept,timeout_exit0_promise_repaired",
+        $(this.promise_filename)
+      ),
+      inherit => "true";
+}
+
+### PROJECT_ID: core
+### CATEGORY_ID: 26

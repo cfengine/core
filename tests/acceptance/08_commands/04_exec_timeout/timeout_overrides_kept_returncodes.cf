@@ -1,0 +1,66 @@
+#######################################################
+#
+# Test that kept_returncodes does not resurrect "kept" when
+# exec_timeout fired: the timed-out command exits 0, and 0 is
+# listed in kept_returncodes, but the promise must still be
+# reported as timed out, not kept.
+#
+#######################################################
+body common control
+{
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+bundle agent test
+{
+  meta:
+    "description"
+      string => "kept_returncodes does not resurrect kept when exec_timeout fired";
+
+    "test_skip_unsupported"
+      string => "windows",
+      comment => "Drives /bin/sh with a POSIX shell payload";
+
+  commands:
+    "/bin/sh"
+      arglist => { "-c", "sleep 2.4; exit 0" },
+      contain => exec_timeout_2,
+      classes => all_classes_kept_0("timeout_kept0");
+}
+
+body contain exec_timeout_2
+{
+  exec_timeout => "2";
+}
+
+# dcs_all_classes (dcs.sub.cf) carries no returncode attributes and
+# classes bodies do not compose, so this is dcs_all_classes plus
+# kept_returncodes.
+body classes all_classes_kept_0(prefix)
+{
+  promise_kept => { "$(prefix)_promise_kept" };
+  promise_repaired => { "$(prefix)_promise_repaired" };
+  repair_failed => { "$(prefix)_repair_failed" };
+  repair_denied => { "$(prefix)_repair_denied" };
+  repair_timeout => { "$(prefix)_repair_timeout" };
+  kept_returncodes => { "0" };
+}
+
+#######################################################
+bundle agent check
+{
+  methods:
+    "any"
+      usebundle => dcs_passif_expected(
+        "timeout_kept0_repair_timeout",
+        "timeout_kept0_promise_kept,timeout_kept0_promise_repaired",
+        $(this.promise_filename)
+      ),
+      inherit => "true";
+}
+
+### PROJECT_ID: core
+### CATEGORY_ID: 26

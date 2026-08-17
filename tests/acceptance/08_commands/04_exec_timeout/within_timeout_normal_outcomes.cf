@@ -1,0 +1,59 @@
+#######################################################
+#
+# Test that an armed exec_timeout that does not fire leaves
+# the outcome of a commands: promise to the exit status: 0
+# repairs the promise and non-zero fails it, exactly as if no
+# timeout were set. Guards the normal path against
+# regressions from the timed-out path.
+#
+#######################################################
+body common control
+{
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+bundle agent test
+{
+  meta:
+    "description"
+      string => "An exec_timeout that does not fire leaves the outcome to the exit status";
+
+    "test_skip_unsupported"
+      string => "windows",
+      comment => "Drives /bin/sh with POSIX shell payloads";
+
+  commands:
+    "/bin/sh"
+      arglist => { "-c", "sleep 1; exit 0" },
+      contain => exec_timeout_10,
+      classes => dcs_all_classes("within_exit0");
+
+    "/bin/sh"
+      arglist => { "-c", "sleep 1; exit 3" },
+      contain => exec_timeout_10,
+      classes => dcs_all_classes("within_exit3");
+}
+
+body contain exec_timeout_10
+{
+  exec_timeout => "10";
+}
+
+#######################################################
+bundle agent check
+{
+  methods:
+    "any"
+      usebundle => dcs_passif_expected(
+        "within_exit0_promise_repaired,within_exit3_repair_failed",
+        "within_exit0_repair_timeout,within_exit0_repair_failed,within_exit3_repair_timeout,within_exit3_promise_repaired",
+        $(this.promise_filename)
+      ),
+      inherit => "true";
+}
+
+### PROJECT_ID: core
+### CATEGORY_ID: 26

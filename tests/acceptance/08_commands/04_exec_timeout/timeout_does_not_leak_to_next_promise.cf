@@ -1,0 +1,66 @@
+#######################################################
+#
+# Test that a fired exec_timeout is charged to the promise
+# whose command timed out, and only that promise: a
+# subsequent commands: promise that finishes inside its own
+# timeout must come out repaired, not timed out.
+#
+#######################################################
+body common control
+{
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+bundle agent test
+{
+  meta:
+    "description"
+      string => "A fired exec_timeout does not leak into the next commands promise";
+
+    "test_skip_unsupported"
+      string => "windows",
+      comment => "Drives /bin/sh with POSIX shell payloads";
+
+  commands:
+    "/bin/sh"
+      arglist => { "-c", "sleep 2.4; exit 0" },
+      contain => exec_timeout_2,
+      classes => dcs_all_classes("leak_first");
+
+    # Runs after the first command has already timed out, armed with
+    # its own timeout so that a stale flag surviving from the first
+    # promise would be sampled here if it leaked.
+    "/bin/sh"
+      arglist => { "-c", "exit 0" },
+      contain => exec_timeout_10,
+      classes => dcs_all_classes("leak_second");
+}
+
+body contain exec_timeout_2
+{
+  exec_timeout => "2";
+}
+
+body contain exec_timeout_10
+{
+  exec_timeout => "10";
+}
+
+#######################################################
+bundle agent check
+{
+  methods:
+    "any"
+      usebundle => dcs_passif_expected(
+        "leak_first_repair_timeout,leak_second_promise_repaired",
+        "leak_first_promise_kept,leak_first_promise_repaired,leak_second_repair_timeout",
+        $(this.promise_filename)
+      ),
+      inherit => "true";
+}
+
+### PROJECT_ID: core
+### CATEGORY_ID: 26

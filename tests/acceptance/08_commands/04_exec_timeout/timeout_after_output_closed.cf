@@ -1,0 +1,61 @@
+#######################################################
+#
+# Test that exec_timeout is detected even when the command
+# closes its output long before it exits. The agent's read
+# loop ends at EOF, so it is already waiting for the child
+# when the alarm fires; a timeout sampled while output was
+# still open misses exactly this shape. The command then runs
+# to completion and exits 0, and must still be reported as
+# timed out.
+#
+# Deliberately slow: with its output already closed there is
+# no process left registered for the alarm to signal, so the
+# child's full 10 second sleep runs out before it is reaped.
+# Expect around 12 seconds of wall clock.
+#
+#######################################################
+body common control
+{
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+bundle agent test
+{
+  meta:
+    "description"
+      string => "exec_timeout is detected when the command closes its output before it exits";
+
+    "test_skip_unsupported"
+      string => "windows",
+      comment => "Drives /bin/sh with a POSIX shell payload";
+
+  commands:
+    "/bin/sh"
+      arglist => { "-c", "exec 1>&- 2>&-; sleep 10; exit 0" },
+      contain => exec_timeout_2,
+      classes => dcs_all_classes("output_closed");
+}
+
+body contain exec_timeout_2
+{
+  exec_timeout => "2";
+}
+
+#######################################################
+bundle agent check
+{
+  methods:
+    "any"
+      usebundle => dcs_passif_expected(
+        "output_closed_repair_timeout",
+        "output_closed_promise_kept,output_closed_promise_repaired",
+        $(this.promise_filename)
+      ),
+      inherit => "true";
+}
+
+### PROJECT_ID: core
+### CATEGORY_ID: 26

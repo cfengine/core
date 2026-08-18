@@ -67,17 +67,38 @@ JsonElement *ReadJsonFile(const char *filename, LogLevel log_level, size_t size_
     return doc;
 }
 
-static bool CheckPrimitiveForUnexpandedVars(JsonElement *primitive, ARG_UNUSED void *data)
+/* What made the unexpanded-variable walk below stop: exactly one of these is
+ * set, depending on which visitor stopped it. Both point into the JSON
+ * document being walked and must not be freed. */
+typedef struct
+{
+    const char *key;            /* set if a key held the reference */
+    const char *value;          /* set if a value held the reference */
+} CMDBUnexpandedVar;
+
+static bool CheckPrimitiveForUnexpandedVars(JsonElement *primitive, void *data)
 {
     assert(JsonGetElementType(primitive) == JSON_ELEMENT_TYPE_PRIMITIVE);
+    assert(data != NULL);
 
-    /* Stop the iteration if a variable expression is found. */
-    return (!StringContainsUnresolved(JsonPrimitiveGetAsString(primitive)));
+    const char *const value = JsonPrimitiveGetAsString(primitive);
+    if (!StringContainsUnresolved(value))
+    {
+        return true;
+    }
+
+    /* Stop the iteration and report what stopped it. The primitive's own
+     * property name is not recorded: it is the metadata key 'value' in the
+     * 'variables' format, and nothing at all for an array element, whereas
+     * the caller knows the top-level entry and reports that instead. */
+    ((CMDBUnexpandedVar *) data)->value = value;
+    return false;
 }
 
-static bool CheckObjectForUnexpandedVars(JsonElement *object, ARG_UNUSED void *data)
+static bool CheckObjectForUnexpandedVars(JsonElement *object, void *data)
 {
     assert(JsonGetType(object) == JSON_TYPE_OBJECT);
+    assert(data != NULL);
 
     /* Stop the iteration if a variable expression is found among children
      * keys. (elements inside the object are checked separately) */
@@ -87,9 +108,80 @@ static bool CheckObjectForUnexpandedVars(JsonElement *object, ARG_UNUSED void *d
         const char *key = JsonIteratorNextKey(&iter);
         if (StringContainsUnresolved(key))
         {
+            ((CMDBUnexpandedVar *) data)->key = key;
             return false;
         }
     }
+    return true;
+}
+
+/**
+ * Reject CMDB data containing unresolved variable references, naming the entry
+ * that was rejected.
+ *
+ * Each top-level entry is walked separately so that the entry can be named,
+ * which is what an operator needs to find the offending line. A single walk of
+ * the whole section could only report the immediate property name, and in the
+ * 'variables' format (CFE-3633) that is the metadata key 'value' rather than
+ * the name of the variable holding it.
+ *
+ * @param data      the CMDB section to check, which must be a JSON object
+ * @param section   the section's key, as it appears in the CMDB file
+ * @param file_path the CMDB file the data came from
+ * @return          whether the data is free of variable references
+ */
+static bool CheckCMDBDataForUnexpandedVars(JsonElement *data,
+                                           const char *section,
+                                           const char *file_path)
+{
+    assert(data != NULL);
+    assert(JsonGetType(data) == JSON_TYPE_OBJECT);
+    assert(section != NULL);
+    assert(file_path != NULL);
+
+    JsonIterator iter = JsonIteratorInit(data);
+    while (JsonIteratorHasMore(&iter))
+    {
+        JsonElement *child = JsonIteratorNextValue(&iter);
+        const char *entry = JsonGetPropertyAsString(child);
+
+        if (StringContainsUnresolved(entry))
+        {
+            Log(LOG_LEVEL_ERR,
+                "Invalid '%s' CMDB data in '%s', cannot contain variable"
+                " references (offending key: '%s')",
+                section, file_path, entry);
+            return false;
+        }
+
+        CMDBUnexpandedVar offender = {NULL, NULL};
+        if (JsonWalk(child, CheckObjectForUnexpandedVars,
+                     NULL, CheckPrimitiveForUnexpandedVars, &offender))
+        {
+            continue;
+        }
+
+        /* The walk stops only when one of the two visitors above stops it,
+         * and each records what it found before doing so. */
+        assert((offender.value != NULL) || (offender.key != NULL));
+
+        if (offender.value != NULL)
+        {
+            Log(LOG_LEVEL_ERR,
+                "Invalid '%s' CMDB data in '%s', cannot contain variable"
+                " references (offending value in entry '%s': '%s')",
+                section, file_path, entry, offender.value);
+        }
+        else
+        {
+            Log(LOG_LEVEL_ERR,
+                "Invalid '%s' CMDB data in '%s', cannot contain variable"
+                " references (offending key in entry '%s': '%s')",
+                section, file_path, entry, offender.key);
+        }
+        return false;
+    }
+
     return true;
 }
 
@@ -167,19 +259,21 @@ static bool AddCMDBVariable(EvalContext *ctx, const char *key, const VarRef *ref
     return ret;
 }
 
-static bool ReadCMDBVars(EvalContext *ctx, JsonElement *vars)
+static bool ReadCMDBVars(EvalContext *ctx, JsonElement *vars,
+                         const char *file_path)
 {
     assert(vars != NULL);
 
     if (JsonGetType(vars) != JSON_TYPE_OBJECT)
     {
-        Log(LOG_LEVEL_ERR, "Invalid 'vars' CMDB data, must be a JSON object");
+        Log(LOG_LEVEL_ERR,
+            "Invalid 'vars' CMDB data in '%s', must be a JSON object",
+            file_path);
         return false;
     }
 
-    if (!JsonWalk(vars, CheckObjectForUnexpandedVars, NULL, CheckPrimitiveForUnexpandedVars, NULL))
+    if (!CheckCMDBDataForUnexpandedVars(vars, "vars", file_path))
     {
-        Log(LOG_LEVEL_ERR, "Invalid 'vars' CMDB data, cannot contain variable references");
         return false;
     }
 
@@ -268,19 +362,21 @@ static inline const char *GetCMDBComment(const char *item_type, const char *iden
 }
 
 /** Uses the new format allowing metadata (CFE-3633) */
-static bool ReadCMDBVariables(EvalContext *ctx, JsonElement *variables)
+static bool ReadCMDBVariables(EvalContext *ctx, JsonElement *variables,
+                              const char *file_path)
 {
     assert(variables != NULL);
 
     if (JsonGetType(variables) != JSON_TYPE_OBJECT)
     {
-        Log(LOG_LEVEL_ERR, "Invalid 'variables' CMDB data, must be a JSON object");
+        Log(LOG_LEVEL_ERR,
+            "Invalid 'variables' CMDB data in '%s', must be a JSON object",
+            file_path);
         return false;
     }
 
-    if (!JsonWalk(variables, CheckObjectForUnexpandedVars, NULL, CheckPrimitiveForUnexpandedVars, NULL))
+    if (!CheckCMDBDataForUnexpandedVars(variables, "variables", file_path))
     {
-        Log(LOG_LEVEL_ERR, "Invalid 'variables' CMDB data, cannot contain variable references");
         return false;
     }
 
@@ -371,19 +467,21 @@ static bool AddCMDBClass(EvalContext *ctx, const char *key, StringSet *tags, con
     return ret;
 }
 
-static bool ReadCMDBClasses(EvalContext *ctx, JsonElement *classes)
+static bool ReadCMDBClasses(EvalContext *ctx, JsonElement *classes,
+                            const char *file_path)
 {
     assert(classes != NULL);
 
     if (JsonGetType(classes) != JSON_TYPE_OBJECT)
     {
-        Log(LOG_LEVEL_ERR, "Invalid 'classes' CMDB data, must be a JSON object");
+        Log(LOG_LEVEL_ERR,
+            "Invalid 'classes' CMDB data in '%s', must be a JSON object",
+            file_path);
         return false;
     }
 
-    if (!JsonWalk(classes, CheckObjectForUnexpandedVars, NULL, CheckPrimitiveForUnexpandedVars, NULL))
+    if (!CheckCMDBDataForUnexpandedVars(classes, "classes", file_path))
     {
-        Log(LOG_LEVEL_ERR, "Invalid 'classes' CMDB data, cannot contain variable references");
         return false;
     }
 
@@ -548,18 +646,19 @@ bool LoadCMDBData(EvalContext *ctx)
 
     bool success = true;
     JsonElement *vars = JsonObjectGet(data, "vars");
-    if (JSON_NOT_NULL(vars) && !ReadCMDBVars(ctx, vars))
+    if (JSON_NOT_NULL(vars) && !ReadCMDBVars(ctx, vars, file_path))
     {
         success = false;
     }
     /* Uses the new format allowing metadata (CFE-3633) */
     JsonElement *variables = JsonObjectGet(data, "variables");
-    if (JSON_NOT_NULL(variables) && !ReadCMDBVariables(ctx, variables))
+    if (JSON_NOT_NULL(variables) &&
+        !ReadCMDBVariables(ctx, variables, file_path))
     {
         success = false;
     }
     JsonElement *classes = JsonObjectGet(data, "classes");
-    if (JSON_NOT_NULL(classes) && !ReadCMDBClasses(ctx, classes))
+    if (JSON_NOT_NULL(classes) && !ReadCMDBClasses(ctx, classes, file_path))
     {
         success = false;
     }

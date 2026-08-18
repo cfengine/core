@@ -238,30 +238,21 @@ static pid_t GenericCreatePipeAndFork(IOPipe *pipes)
         sigemptyset(&sigmask);
         sigprocmask(SIG_SETMASK, &sigmask, NULL);
 
-        /* When a timeout is armed, lead a new process group, so that anything
-         * the command spawns can be signalled as a unit. Without this only the
-         * direct child is reachable, and a grandchild outlives exec_timeout
-         * still holding the pipe open, which leaves the parent blocked reading
-         * it. setpgid() is async-signal-safe, so it is legal here.
+        /* Lead a new process group so a timeout can signal the command and
+         * everything it spawns as a unit; setpgid() is async-signal-safe.
          *
-         * Only when a timeout is armed. A child in a process group of its own
-         * is no longer in the terminal's foreground group, so on an interactive
-         * run it is stopped by SIGTTIN the moment it reads the terminal, and
-         * the agent then blocks forever on the pipe -- the very hang this is
-         * meant to bound, reintroduced on a path with no timeout to end it. It
-         * also leaves the child out of reach of a terminal SIGINT and of
-         * cf-execd's agent_expireafter, both of which kill by process group.
-         * Children with no timeout have nothing to bound their wait, so they
-         * must stay in ours. */
+         * Only when a timeout is armed. A child outside the terminal's
+         * foreground group is stopped by SIGTTIN as soon as it reads the
+         * terminal, and is out of reach of a terminal SIGINT and of cf-execd's
+         * agent_expireafter, which kill by group. Without a timeout to bound
+         * the wait, that is a hang with nothing to end it. */
         if (TimeOutIsArmed())
         {
             if (setpgid(0, 0) != 0)
             {
-                /* The command stays in our group, so TimeOut()'s check of its
-                 * group will skip the group kill; only its descendants are
-                 * then out of the timeout's reach. Log() is not
-                 * async-signal-safe, so it is confined to this failure branch,
-                 * where the alternative is losing the descendants silently. */
+                /* Only descendants are lost: TimeOut()'s pgid check skips the
+                 * group kill. Log() is not async-signal-safe, so it is
+                 * confined to this branch. */
                 Log(LOG_LEVEL_WARNING,
                     "Could not give the timed command its own process group (setpgid: %s), its descendants will survive a timeout",
                     GetErrorStr());

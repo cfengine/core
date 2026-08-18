@@ -451,23 +451,17 @@ static ActionResult RepairExec(EvalContext *ctx, const Attributes *a,
         {
             int ret = cf_pclose(pfp);
 
-            /* Sample only now, and never earlier. The read loop above ends as
-             * soon as the command closes its output, which it can do long
-             * before it exits -- so the alarm may not fire until cf_pclose()
-             * is already waiting for the child. Reading the flag before that
-             * wait misses exactly the case this is here to catch. It is still
-             * read before the alarm is disarmed further down. */
+            /* Only after cf_pclose(): the read loop ends when the command
+             * closes its output, which can be long before it exits, so the
+             * alarm may not fire until cf_pclose() is already waiting. */
             timed_out = (a->contain.timeout != CF_NOINT) && TimeOutHasFired();
 
             if (timed_out)
             {
-                /* The command exceeded exec_timeout and was signalled, so its
-                 * exit status cannot be trusted to say so. A command killed
-                 * after it has written its last output, or one that exits
-                 * normally while only its children are killed, is reaped with a
-                 * status VerifyCommandRetcode() reads as success -- and the
-                 * promise is then reported kept or repaired even though the
-                 * command never completed. Classify on the timeout instead. */
+                /* Classify on the timeout, not the exit status: a command
+                 * killed after its last output, or one whose children alone
+                 * are killed, is reaped with a status VerifyCommandRetcode()
+                 * reads as success. */
                 cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_TIMEOUT, pp, a,
                      TimeOutSignalledProcess()
                          ? "Command '%s' exceeded exec_timeout of %d seconds and was terminated"

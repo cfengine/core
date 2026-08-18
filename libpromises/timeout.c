@@ -26,21 +26,16 @@
 #include <timeout.h>
 #include <process_lib.h>
 
-/* Set by TimeOut() when the alarm fires, so that the caller can tell "the
- * command timed out" from "the command finished". Written from a signal
- * handler, hence volatile sig_atomic_t. */
+/* All three are written from the signal handler, hence sig_atomic_t. */
+
+/* The alarm fired. */
 static volatile sig_atomic_t TIMEOUT_FIRED = 0; /* GLOBAL_X */
 
-/* Set only when TimeOut() actually had a process to signal. The alarm can fire
- * with ALARM_PID already cleared -- cf_pclose() clears it before waiting -- in
- * which case the command timed out but was never terminated, and saying
- * otherwise would be a false statement in an error message. */
+/* ...and had a process to signal. The alarm can fire with ALARM_PID already
+ * cleared, i.e. timed out but never terminated. */
 static volatile sig_atomic_t TIMEOUT_SIGNALLED = 0; /* GLOBAL_X */
 
-/* Set while a timeout alarm is pending. cf_popen()'s child consults it to
- * decide whether to lead a process group of its own; only a child that may
- * have to be killed as a tree needs one. Cleared from the signal handler as
- * well as from ClearTimeOut(), hence volatile sig_atomic_t. */
+/* An alarm is pending. */
 static volatile sig_atomic_t TIMEOUT_ARMED = 0; /* GLOBAL_X */
 
 void SetTimeOut(int timeout)
@@ -55,9 +50,8 @@ void SetTimeOut(int timeout)
 
 void ClearTimeOut(void)
 {
-    /* Deliberately leaves TIMEOUT_FIRED and TIMEOUT_SIGNALLED alone: they
-     * record what happened to the last armed timeout, and remain readable
-     * after the disarm. Only the next SetTimeOut() resets them. */
+    /* Leaves TIMEOUT_FIRED/TIMEOUT_SIGNALLED readable after the disarm; only
+     * SetTimeOut() resets them. */
     alarm(0);
     signal(SIGALRM, SIG_DFL);
     TIMEOUT_ARMED = 0;
@@ -92,9 +86,8 @@ void TimeOut()
         Log(LOG_LEVEL_VERBOSE, "Time out of process %jd", (intmax_t)ALARM_PID);
 
 #ifndef __MINGW32__
-        /* Read the process group while the process is still alive to be read:
-         * once GracefulTerminate() has killed it, getpgid() fails with ESRCH and
-         * we would have no safe way to tell whether it led a group of its own. */
+        /* Must be read before GracefulTerminate(): afterwards getpgid() fails
+         * with ESRCH. */
         const pid_t pgid = getpgid(ALARM_PID);
         if (pgid == -1)
         {
@@ -107,19 +100,10 @@ void TimeOut()
         GracefulTerminate(ALARM_PID, PROCESS_START_TIME_UNKNOWN);
 
 #ifndef __MINGW32__
-        /* GracefulTerminate() only reaches the process we started. Anything that
-         * process spawned survives it, and keeps the pipe open, so the caller
-         * stays blocked reading a command it has already given up on.
-         *
-         * Guarded on the timed-out process leading its own group, which
-         * cf_popen()'s child arranges with setpgid(). If that did not take
-         * effect the process is still in our group, its pgid is not its pid, and
-         * a negative kill() here would signal an unrelated group -- possibly our
-         * own.
-         *
-         * Windows has no POSIX process groups and no setpgid() in the child
-         * (cf_popen() lives in pipes_unix.c), so there is nothing to widen the
-         * signal to there. */
+        /* GracefulTerminate() reaches only the process we started; its
+         * descendants keep the pipe open. The pgid check matters: if setpgid()
+         * in cf_popen()'s child did not take effect, the process is still in
+         * our group and a negative kill() would signal us. */
         if (pgid == ALARM_PID)
         {
             kill(-ALARM_PID, SIGKILL);

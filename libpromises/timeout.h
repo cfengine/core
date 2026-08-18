@@ -27,26 +27,20 @@
 
 void SetTimeOut(int timeout);
 
-/* Cancel a pending alarm and restore the default handler. Callers used to
- * open-code this; it also has to clear the armed flag, so that a command which
- * completes in time does not leave it set for the next, unrelated, child. It
- * does not clear what TimeOutHasFired() and TimeOutSignalledProcess() report:
- * that record stays readable after the disarm, until the next SetTimeOut(). */
+/* Cancel a pending alarm and restore the default handler. Does not clear what
+ * TimeOutHasFired()/TimeOutSignalledProcess() report; SetTimeOut() does. */
 void ClearTimeOut(void);
 
-/* True between SetTimeOut() arming the alarm and the alarm being disarmed.
- * Consulted by code that forks a child which the timeout may have to
- * terminate, to decide whether that child needs a process group of its own. */
+/* True between SetTimeOut() and the disarm. Tells a forking caller whether the
+ * child needs a process group of its own. */
 bool TimeOutIsArmed(void);
 
-/* True if the alarm armed by the last SetTimeOut() actually fired. Lets a
- * caller report that a command was timed out even when the command's own exit
- * status would otherwise read as success. Cleared by SetTimeOut(). */
+/* True if the last armed alarm fired, even if the command's exit status reads
+ * as success. Cleared by SetTimeOut(). */
 bool TimeOutHasFired(void);
 
-/* True if that alarm also had a process to signal. False means the command
- * exceeded its timeout but was never terminated, which callers must not
- * describe as a termination. */
+/* True if that alarm also had a process to signal. False means timed out but
+ * not terminated. */
 bool TimeOutSignalledProcess(void);
 void TimeOut(void);
 time_t SetReferenceTime(void);

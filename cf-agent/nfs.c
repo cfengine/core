@@ -1468,6 +1468,10 @@ PromiseResult ReconcileMountOptions(EvalContext *ctx, char *name, const Attribut
             continue;
         }
 
+        /* Clear the mount reconciliation timeout before moving on to other things */
+        alarm(0);
+        signal(SIGALRM, SIG_DFL);
+
         /* Verify-after-act: confirm the live mount actually satisfies the promise. */
         if (LiveMountConverged(name, a))
         {

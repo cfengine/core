@@ -31,10 +31,11 @@
  * handler, hence volatile sig_atomic_t. */
 static volatile sig_atomic_t TIMEOUT_FIRED = 0; /* GLOBAL_X */
 
-/* Set only when TimeOut() actually had a process to signal. The alarm can fire
- * with ALARM_PID already cleared -- cf_pclose() clears it before waiting -- in
- * which case the command timed out but was never terminated, and saying
- * otherwise would be a false statement in an error message. */
+/* Set only when TimeOut() actually had a process to signal. The alarm can
+ * still fire with no process registered -- before cf_popen() has forked, or
+ * after cf_pclose() has reaped a child that finished just under the wire --
+ * in which case nothing was terminated, and saying otherwise would be a false
+ * statement in an error message. */
 static volatile sig_atomic_t TIMEOUT_SIGNALLED = 0; /* GLOBAL_X */
 
 /* Set while a timeout alarm is pending. cf_popen()'s child consults it to

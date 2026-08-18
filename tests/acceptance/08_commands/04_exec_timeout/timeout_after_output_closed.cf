@@ -1,17 +1,27 @@
 #######################################################
 #
-# Test that exec_timeout is detected even when the command
-# closes its output long before it exits. The agent's read
-# loop ends at EOF, so it is already waiting for the child
+# Test that exec_timeout is detected AND enforced when the
+# command closes its output long before it exits. The agent's
+# read loop ends at EOF, so it is already waiting for the child
 # when the alarm fires; a timeout sampled while output was
-# still open misses exactly this shape. The command then runs
-# to completion and exits 0, and must still be reported as
-# timed out.
+# still open misses exactly this shape, and a pid registry
+# cleared before the wait leaves the alarm nothing to signal --
+# the child then runs its full sleep out. The command must be
+# reported as timed out and be terminated, never reaching the
+# completion marker after its sleep.
 #
-# Deliberately slow: with its output already closed there is
-# no process left registered for the alarm to signal, so the
-# child's full 10 second sleep runs out before it is reaped.
-# Expect around 12 seconds of wall clock.
+# The sleep is 30 seconds and the elapsed bound 25 because the
+# termination can take a while: each of the ladder's two waits
+# is nominally 1 second but iteration-counted, which overshoots
+# several-fold on Darwin (CFE-4728), and without process_darwin.c
+# the ladder cannot see the child die and burns its full waits
+# regardless (CFE-4718). Terminated is ~2+2 seconds where those
+# are fixed and up to ~20 here; only running to completion
+# reaches 30.
+#
+# The elapsed time is measured between two marker files touched
+# immediately before and after the timed promise; commands in a
+# bundle run in order of declaration.
 #
 #######################################################
 body common control
@@ -22,11 +32,23 @@ body common control
 }
 
 #######################################################
+bundle agent init
+{
+  files:
+    # The markers must come from this run: a stale pair could carry a
+    # bounded-looking mtime difference from an earlier one, and a stale
+    # completion marker would fail the run for the wrong reason.
+    "$(G.testdir)/oc_start" delete => tidy;
+    "$(G.testdir)/oc_end" delete => tidy;
+    "$(G.testdir)/oc_completed" delete => tidy;
+}
+
+#######################################################
 bundle agent test
 {
   meta:
     "description"
-      string => "exec_timeout is detected when the command closes its output before it exits";
+      string => "exec_timeout terminates a command that closed its output before it exits";
 
     "test_skip_unsupported"
       string => "windows",
@@ -34,9 +56,15 @@ bundle agent test
 
   commands:
     "/bin/sh"
-      arglist => { "-c", "exec 1>&- 2>&-; sleep 10; exit 0" },
+      arglist => { "-c", "touch $(G.testdir)/oc_start" };
+
+    "/bin/sh"
+      arglist => { "-c", "exec 1>&- 2>&-; sleep 30; touch $(G.testdir)/oc_completed; exit 0" },
       contain => exec_timeout_2,
       classes => dcs_all_classes("output_closed");
+
+    "/bin/sh"
+      arglist => { "-c", "touch $(G.testdir)/oc_end" };
 }
 
 body contain exec_timeout_2
@@ -47,10 +75,32 @@ body contain exec_timeout_2
 #######################################################
 bundle agent check
 {
+  vars:
+    "start" string => filestat("$(G.testdir)/oc_start", "mtime");
+    "end" string => filestat("$(G.testdir)/oc_end", "mtime");
+    "elapsed" string => eval("$(end) - $(start)", "math", "infix");
+
+  classes:
+    # The fileexists() guards keep a missing marker from passing as
+    # boundedness.
+    "bounded"
+      and => {
+        fileexists("$(G.testdir)/oc_start"),
+        fileexists("$(G.testdir)/oc_end"),
+        islessthan("$(elapsed)", "25")
+      },
+      scope => "namespace";
+
+    # The payload only touches this after its sleep; a terminated
+    # command never reaches it.
+    "terminated"
+      not => fileexists("$(G.testdir)/oc_completed"),
+      scope => "namespace";
+
   methods:
     "any"
       usebundle => dcs_passif_expected(
-        "output_closed_repair_timeout",
+        "output_closed_repair_timeout,bounded,terminated",
         "output_closed_promise_kept,output_closed_promise_repaired",
         $(this.promise_filename)
       ),

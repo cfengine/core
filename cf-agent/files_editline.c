@@ -765,6 +765,13 @@ static PromiseResult VerifyLineInsertions(EvalContext *ctx, const Promise *pp, E
         return result;
     }
 
+    /* The region is half open, [begin_ptr, end_ptr), so including the end
+     * delimiter means moving the bound past it -- after the NULL check above. */
+    if (a.region.include_end != 0 && end_ptr != NULL)
+    {
+        end_ptr = end_ptr->next;
+    }
+
     if (allow_multi_lines)
     {
         // promise to insert duplicates on first pass only

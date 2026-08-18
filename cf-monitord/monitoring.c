@@ -93,14 +93,14 @@ void NovaNamedEvent(const char *eventname, double value)
 
 static void Nova_DumpSlots(void)
 {
-#define MAX_KEY_FILE_SIZE 16384  /* usually around 4000, cannot grow much */
-
     char filename[CF_BUFSIZE];
     int i;
 
     snprintf(filename, CF_BUFSIZE - 1, "%s%cts_key", GetStateDir(), FILE_SEPARATOR);
 
-    char file_contents_new[MAX_KEY_FILE_SIZE] = {0};
+    /* Line length depends on the name, description and units a measurement
+     * promise gives the slot, so there is no useful bound to size a buffer to. */
+    Writer *contents = StringWriter();
 
     for (i = 0; i < CF_OBSERVABLES; i++)
     {
@@ -120,12 +120,15 @@ static void Nova_DumpSlots(void)
             snprintf(line, sizeof(line), "%d,spare,unused\n", i);
         }
 
-        strlcat(file_contents_new, line, sizeof(file_contents_new));
+        WriterWrite(contents, line);
     }
+
+    char *file_contents_new = StringWriterClose(contents);
 
     bool contents_changed = true;
 
-    Writer *w = FileRead(filename, MAX_KEY_FILE_SIZE, NULL);
+    /* One byte more than we generated: a longer file differs anyway. */
+    Writer *w = FileRead(filename, strlen(file_contents_new) + 1, NULL);
     if (w)
     {
         if(strcmp(StringWriterData(w), file_contents_new) == 0)
@@ -145,6 +148,8 @@ static void Nova_DumpSlots(void)
                 GetErrorStr());
         }
     }
+
+    free(file_contents_new);
 }
 
 void GetObservable(int i, char *name, size_t name_size, char *desc, size_t desc_size)
@@ -165,8 +170,9 @@ void GetObservable(int i, char *name, size_t name_size, char *desc, size_t desc_
         }
         else
         {
-            strncpy(name, OBSERVABLES[i][0], name_size - 1);
-            strncpy(desc, OBSERVABLES[i][1], desc_size - 1);
+            /* OBSERVABLES has no rows at or above ob_spare. */
+            strncpy(name, "spare", name_size - 1);
+            strncpy(desc, "unused", desc_size - 1);
         }
     }
 }

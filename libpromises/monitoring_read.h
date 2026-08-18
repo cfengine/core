@@ -40,6 +40,7 @@ MonitoringSlot *Nova_MakeSlot(const char *name, const char *description,
                               bool consolidable);
 void Nova_LoadSlots(void);
 bool NovaHasSlot(int idx);
+size_t AveragesUsedSize(void);
 const char *NovaGetSlotName(int idx);
 const char *NovaGetSlotDescription(int index);
 const char *NovaGetSlotUnits(int index);

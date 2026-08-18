@@ -50,6 +50,7 @@
 #include <probes.h>                      /* MonOtherInit,MonOtherGatherData */
 #include <history.h>                     /* HistoryUpdate */
 #include <monitoring.h>                  /* GetObservable */
+#include <monitoring_read.h>             /* AveragesUsedSize */
 #include <cleanup.h>
 
 
@@ -773,7 +774,7 @@ static void UpdateAverages(EvalContext *ctx, char *timekey, const Averages *cons
 
     Log(LOG_LEVEL_INFO, "Updated averages at '%s'", timekey);
 
-    WriteDB(dbp, timekey, newvals, sizeof(Averages));
+    WriteDB(dbp, timekey, newvals, AveragesUsedSize());
     WriteDB(dbp, "DATABASE_AGE", &AGE, sizeof(double));
 
     CloseDB(dbp);

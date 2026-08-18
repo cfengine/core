@@ -5,7 +5,7 @@
 #include <file_lib.h>    // FILE_SEPARATOR
 #include <alloc.h>       // xstrdup()
 #include <db_structs.h>  // observable_strings
-#include <string_lib.h>  // StringEqual
+#include <string_lib.h>  // StringEqual(), StringCopy()
 #include <observables.h>
 
 /**
@@ -100,16 +100,19 @@ char **GetObservableNames(const char *ts_key_path)
             if ((fields != 2) && (fields != 6))
             {
                 Log(LOG_LEVEL_ERR, "Wrong line format in ts_key: %s", line);
+                /* sscanf() may have left name untouched. */
+                StringCopy("spare", name, sizeof(name));
             }
 
             if (StringEqual(name, "spare"))
             {
-                temp[i] = xstrdup(name);
+                /* Numbered, not a shared "spare": these become JSON keys. */
+                snprintf(buf, CF_MAXVARSIZE, "spare[%d]", i);
+                temp[i] = xstrdup(buf);
             }
             else
             {
-                snprintf(buf, CF_MAXVARSIZE, "spare[%d]", i);
-                temp[i] = xstrdup(buf);
+                temp[i] = xstrdup(name);
             }
         }
         fclose(f);

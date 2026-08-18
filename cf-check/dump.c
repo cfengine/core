@@ -162,18 +162,20 @@ static void print_struct_lock_data(
 static void print_struct_averages(
     const MDB_val value, const bool strip_strings, const char *tskey_filename)
 {
-    assert(sizeof(Averages) == value.mv_size);
-    if (sizeof(Averages) != value.mv_size)
+    // Records hold only the in-use slots (AveragesUsedSize), so a short record
+    // is normal. Copy into a zeroed struct so unstored slots read as zero.
+    assert(value.mv_size <= sizeof(Averages));
+    if (value.mv_size > sizeof(Averages))
     {
-        // Fall back to simple printing in release builds:
+        // Larger than the struct: fall back to simple printing.
         print_json_string(value.mv_data, value.mv_size, strip_strings);
     }
     else
     {
         // TODO: clean up Averages
         char **obnames = NULL;
-        Averages averages;
-        memcpy(&averages, value.mv_data, sizeof(averages));
+        Averages averages = {0};
+        memcpy(&averages, value.mv_data, value.mv_size);
         const time_t last_seen = averages.last_seen;
 
         obnames = GetObservableNames(tskey_filename);
@@ -288,18 +290,7 @@ static void print_struct_or_string(
 {
     if (structs)
     {
-        if ((StringContains(file, "cf_observations.lmdb")
-             || StringContains(file, "history.lmdb"))
-            && StringEqual(key.mv_data, "version"))
-        {
-            // After the CF_OBSERVABLES migration (dbm_migration_observations.c)
-            // these DBs hold a "version" bookkeeping key whose value is a short
-            // version string, not an Averages struct. Print it as a string;
-            // otherwise it would reach print_struct_averages() and trip its
-            // struct-size assertion.
-            print_json_string(value.mv_data, value.mv_size, strip_strings);
-        }
-        else if (StringContains(file, "cf_lastseen.lmdb")
+        if (StringContains(file, "cf_lastseen.lmdb")
             && StringStartsWith(key.mv_data, "q"))
         {
             print_struct_lastseen_quality(value, strip_strings);

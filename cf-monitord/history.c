@@ -26,6 +26,7 @@
 #include <history.h>
 
 #include <monitoring.h>                                      /* MakeTimekey */
+#include <monitoring_read.h>                                 /* AveragesUsedSize */
 #include <actuator.h>
 #include <promises.h>
 #include <ornaments.h>
@@ -71,7 +72,7 @@ static void PutRecordForTime(CF_DB *db, time_t time, const Averages *values)
 
     MakeTimekey(time, timekey);
 
-    WriteDB(db, timekey, values, sizeof(Averages));
+    WriteDB(db, timekey, values, AveragesUsedSize());
 }
 
 static void Nova_SaveFilePosition(const char *handle, const char *name, long fileptr)

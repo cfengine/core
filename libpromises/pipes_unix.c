@@ -38,6 +38,7 @@
 static bool CfSetuid(uid_t uid, gid_t gid);
 
 static int cf_pwait(pid_t pid);
+static void ClearAlarmedPid(pid_t pid);
 
 static pid_t *CHILDREN = NULL; /* GLOBAL_X */
 static int MAX_FD = 2048; /* GLOBAL_X */ /* Max number of simultaneous pipes */
@@ -458,6 +459,7 @@ FILE *cf_popen_select(const char *command, const char *type, OutputSelect output
             if ((pp = fdopen(pd[0], type)) == NULL)
             {
                 cf_pwait(pid);
+                ClearAlarmedPid(pid);
                 ArgFree(argv);
                 return NULL;
             }
@@ -470,6 +472,7 @@ FILE *cf_popen_select(const char *command, const char *type, OutputSelect output
             if ((pp = fdopen(pd[1], type)) == NULL)
             {
                 cf_pwait(pid);
+                ClearAlarmedPid(pid);
                 ArgFree(argv);
                 return NULL;
             }
@@ -588,6 +591,7 @@ FILE *cf_popensetuid(const char *command, const Seq *arglist,
             if ((pp = fdopen(pd[0], type)) == NULL)
             {
                 cf_pwait(pid);
+                ClearAlarmedPid(pid);
                 ArgFree(argv);
                 return NULL;
             }
@@ -600,6 +604,7 @@ FILE *cf_popensetuid(const char *command, const Seq *arglist,
             if ((pp = fdopen(pd[1], type)) == NULL)
             {
                 cf_pwait(pid);
+                ClearAlarmedPid(pid);
                 ArgFree(argv);
                 return NULL;
             }
@@ -670,6 +675,7 @@ FILE *cf_popen_sh_select(const char *command, const char *type, OutputSelect out
             if ((pp = fdopen(pd[0], type)) == NULL)
             {
                 cf_pwait(pid);
+                ClearAlarmedPid(pid);
                 return NULL;
             }
             break;
@@ -681,6 +687,7 @@ FILE *cf_popen_sh_select(const char *command, const char *type, OutputSelect out
             if ((pp = fdopen(pd[1], type)) == NULL)
             {
                 cf_pwait(pid);
+                ClearAlarmedPid(pid);
                 return NULL;
             }
         }
@@ -789,6 +796,7 @@ FILE *cf_popen_shsetuid(const char *command, const char *type,
             if ((pp = fdopen(pd[0], type)) == NULL)
             {
                 cf_pwait(pid);
+                ClearAlarmedPid(pid);
                 return NULL;
             }
             break;
@@ -800,6 +808,7 @@ FILE *cf_popen_shsetuid(const char *command, const char *type,
             if ((pp = fdopen(pd[1], type)) == NULL)
             {
                 cf_pwait(pid);
+                ClearAlarmedPid(pid);
                 return NULL;
             }
         }

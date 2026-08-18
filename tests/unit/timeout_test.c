@@ -4,6 +4,7 @@
 #include <cf3.extern.h>
 #include <timeout.h>
 #include <pipes.h>
+#include <sys/resource.h>
 
 /* The alarm handler interrupts the sleep, so this normally returns as soon as
  * it fires. Loop anyway: the alarm may already have fired before we get here,
@@ -150,6 +151,78 @@ static void test_pclose_leaves_the_alarm_its_process(void)
     assert_true(ALARM_PID == -1);
 }
 
+/* CFE-4735: RepairExec() armed a timeout, then a cf_popen*() call could fail
+ * (pipe()/fork() failure, or fdopen() failure on the successfully forked
+ * pipe) and return early without ever calling ClearTimeOut(). The alarm
+ * stayed armed and ticking. If the *next* command -- even one with no
+ * exec_timeout of its own -- happened to be running when that leftover
+ * alarm fired, TimeOut() would find ALARM_PID naming that unrelated child
+ * (GenericCreatePipeAndFork() publishes it unconditionally) and kill it.
+ * The fix is ClearTimeOut() on the early-return path; this pins that it
+ * actually prevents the kill, not just that the flags look right.
+ *
+ * RepairExec() itself lives in cf-agent and is not reachable from this
+ * libpromises-only unit test, so this drives the same primitives it calls:
+ * SetTimeOut() to arm, a real cf_popen_sh() failure to reach the early
+ * return, then ClearTimeOut() standing in for RepairExec()'s new call.
+ * Portable POSIX, no interposition: RLIMIT_NOFILE is dropped low enough
+ * that the pipe() inside cf_popen_sh() fails deterministically (a plain
+ * fdopen() failure cannot be forced this way -- fdopen() does not consume
+ * a new fd on this libc -- so this exercises the pipe()/fork()-failure
+ * shape of the same early-return family, not the eight fdopen()-failure
+ * sites; those are covered by inspection and object-code review instead).
+ *
+ * Asserting on TimeOutHasFired()/TimeOutSignalledProcess() rather than on
+ * whether the decoy is actually dead: a SIGKILLed child that nothing has
+ * waitpid()ed yet is a zombie, and kill(pid, 0) succeeds against a zombie
+ * exactly as it does against a live process -- that ambiguity, not a real
+ * pass, is what an earlier attempt at this test using a liveness poll was
+ * actually measuring. Whether TimeOut() ran and decided to act on
+ * ALARM_PID is unambiguous and doesn't need the termination ladder (whose
+ * own timing, CFE-4728/CFE-4718, is orthogonal to this defect) to finish.
+ *
+ * Discriminate by commenting out this test's own ClearTimeOut() call (not
+ * touching verify_exec.c, which this test cannot reach): the leftover
+ * alarm then fires against the decoy's freshly published ALARM_PID, and
+ * the assertions below fail. */
+static void test_leftover_alarm_does_not_kill_next_child(void)
+{
+    struct rlimit original;
+    assert_true(getrlimit(RLIMIT_NOFILE, &original) == 0);
+
+    SetTimeOut(2);
+
+    struct rlimit tiny = { .rlim_cur = 3, .rlim_max = original.rlim_max };
+    assert_true(setrlimit(RLIMIT_NOFILE, &tiny) == 0);
+
+    FILE *failed = cf_popen_sh("true", "r");
+    assert_true(failed == NULL);
+
+    assert_true(setrlimit(RLIMIT_NOFILE, &original) == 0);
+
+    /* Stand-in for RepairExec()'s new early-return call. */
+    ClearTimeOut();
+
+    FILE *decoy = cf_popen_sh("exec sleep 10", "r");
+    assert_true(decoy != NULL);
+    pid_t decoy_pid;
+    assert_true(PipeToPid(&decoy_pid, decoy));
+
+    /* Past when the leftover 2 second alarm would have fired, well short of
+     * the decoy's own 10 second sleep. */
+    struct timespec ts = { .tv_sec = 3, .tv_nsec = 0 };
+    nanosleep(&ts, NULL);
+
+    /* Fixed: ClearTimeOut() cancelled the alarm outright (alarm(0) plus
+     * SIG_DFL), so it never fires again and never touches the decoy's now-
+     * current ALARM_PID. */
+    assert_false(TimeOutHasFired());
+    assert_false(TimeOutSignalledProcess());
+
+    kill(decoy_pid, SIGKILL);
+    cf_pclose(decoy);
+}
+
 static void test_next_set_resets_the_record(void)
 {
     SetTimeOut(1);
@@ -173,6 +246,7 @@ int main()
         unit_test(test_clear_preserves_the_record),
         unit_test(test_clear_preserves_a_true_signalled_flag),
         unit_test(test_pclose_leaves_the_alarm_its_process),
+        unit_test(test_leftover_alarm_does_not_kill_next_child),
         unit_test(test_next_set_resets_the_record)
     };
 

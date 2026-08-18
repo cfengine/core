@@ -1,0 +1,17 @@
+{
+  "vars": {
+    "null_scalar": null,
+    "null_list": ["a", null],
+    "good_vars": "value_from_vars"
+  },
+  "variables": {
+    "null_bare": null,
+    "null_value_list": ["a", null],
+    "good_variables": "value_from_variables"
+  },
+  "classes": {
+    "null_class": null,
+    "test_class_29665402e2b4331f10b8d767b512cd916eeb5db9": "any"
+  },
+  "inputs": ["a", null]
+}

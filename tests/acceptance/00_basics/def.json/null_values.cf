@@ -1,0 +1,70 @@
+# test of the def.json facility: JSON null values are rejected per entry
+# (used to crash cf-promises/cf-agent -- CFE-4739), the rest of the
+# augments data is still installed
+body common control
+{
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+bundle agent test
+{
+  methods:
+    "" usebundle => file_make("$(sys.inputdir)/promises.cf", '');
+
+    ""
+      usebundle => file_copy(
+        "$(this.promise_filename).json", "$(sys.inputdir)/def.json"
+      );
+}
+
+#######################################################
+bundle agent check
+{
+  vars:
+    "vars_command"
+      string => "$(sys.cf_promises) --show-vars -f $(sys.inputdir)/promises.cf | $(G.grep) -E 'error:|value_from_'";
+
+    # Errors are logged once per cf-promises invocation regardless of which
+    # section they came from, so both commands below see all five. The
+    # offending entries are reported in the order they appear in the
+    # augments data (vars, then variables, then classes); the remaining
+    # entries are still installed and shown by --show-vars/--show-classes.
+    "all_errors"
+      string => concat(
+        "\s*error: Invalid value for augments variable 'null_scalar'.*null is not a supported value.*",
+        "\s+error: Invalid value for augments variable 'null_list'.*a list must not contain null.*",
+        "\s+error: Invalid value for augments variable 'null_bare'.*null is not a supported value.*",
+        "\s+error: Invalid value for augments variable 'null_value_list'.*a list must not contain null.*",
+        "\s+error: Invalid augments class expression for class 'null_class'.*null is not a supported value.*",
+        "\s+error: Trying to augment inputs in.*but the value was not a list of strings.*"
+      );
+
+    "vars_expected"
+      string => "$(all_errors)\s+default:def\.good_variables\s+value_from_variables\s+source=augments_file\s+default:def\.good_vars\s+value_from_vars\s+source=augments_file\s*";
+
+    "classes_command"
+      string => "$(sys.cf_promises) --show-classes -f $(sys.inputdir)/promises.cf | $(G.grep) -E 'error:|test_class'";
+
+    "classes_expected"
+      string => "$(all_errors)\s+test_class_29665402e2b4331f10b8d767b512cd916eeb5db9\s+source=augments_file\s*";
+
+  methods:
+    "vars"
+      usebundle => dcs_passif_output(
+        $(vars_expected),
+        "",
+        $(vars_command),
+        $(this.promise_filename)
+      );
+
+    "classes"
+      usebundle => dcs_passif_output(
+        $(classes_expected),
+        "",
+        $(classes_command),
+        $(this.promise_filename)
+      );
+}

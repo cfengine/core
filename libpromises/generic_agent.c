@@ -385,6 +385,22 @@ static inline const char *GetAugmentsComment(const char *item_type, const char *
     return JsonPrimitiveGetAsString(json_comment);
 }
 
+/** Does the given JSON array have a JSON null among its direct children? */
+static bool JsonArrayContainsNull(const JsonElement *array)
+{
+    assert(JsonGetType(array) == JSON_TYPE_ARRAY);
+
+    const size_t length = JsonLength(array);
+    for (size_t i = 0; i < length; i++)
+    {
+        if (JsonGetType(JsonArrayGet(array, i)) == JSON_TYPE_NULL)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonElement* augment)
 {
     bool loaded = false;
@@ -451,6 +467,15 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
                 JsonElement *data = JsonObjectGet(vars, vkey);
                 if (JsonGetElementType(data) == JSON_ELEMENT_TYPE_PRIMITIVE)
                 {
+                    if (JsonGetPrimitiveType(data) == JSON_PRIMITIVE_TYPE_NULL)
+                    {
+                        /* JsonPrimitiveToString() returns NULL for JSON null and
+                         * there is no scalar to install in its place. */
+                        Log(LOG_LEVEL_ERR, "Invalid value for augments variable '%s' in '%s'"
+                            " (null is not a supported value)", vkey, filename);
+                        VarRefDestroy(ref);
+                        continue;
+                    }
                     char *value = JsonPrimitiveToString(data);
                     if ((ref->ns == NULL) && (ref->scope == NULL))
                     {
@@ -476,6 +501,16 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
                          JsonGetContainerType(data) == JSON_CONTAINER_TYPE_ARRAY &&
                          JsonArrayContainsOnlyPrimitives(data))
                 {
+                    if (JsonArrayContainsNull(data))
+                    {
+                        /* RlistFromContainer() skips JSON nulls, so the resulting
+                         * slist would silently be shorter than the data it came
+                         * from. */
+                        Log(LOG_LEVEL_ERR, "Invalid value for augments variable '%s' in '%s'"
+                            " (a list must not contain null)", vkey, filename);
+                        VarRefDestroy(ref);
+                        continue;
+                    }
                     // map to slist if the data only has primitives
                     Rlist *data_as_rlist = RlistFromContainer(data);
                     if ((ref->ns == NULL) && (ref->scope == NULL))
@@ -603,6 +638,18 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
                 bool installed = false;
                 if (JsonGetElementType(data) == JSON_ELEMENT_TYPE_PRIMITIVE)
                 {
+                    if (JsonGetPrimitiveType(data) == JSON_PRIMITIVE_TYPE_NULL)
+                    {
+                        /* JsonPrimitiveToString() returns NULL for JSON null and
+                         * there is no scalar to install in its place. This is the
+                         * bare-value form ("key": null); {"value": null} is
+                         * already rejected above by the NULL_JSON(data) check. */
+                        Log(LOG_LEVEL_ERR, "Invalid value for augments variable '%s' in '%s'"
+                            " (null is not a supported value)", vkey, filename);
+                        VarRefDestroy(ref);
+                        StringSetDestroy(tags);
+                        continue;
+                    }
                     char *value = JsonPrimitiveToString(data);
                     if ((ref->ns == NULL) && (ref->scope == NULL))
                     {
@@ -630,6 +677,17 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
                          JsonGetContainerType(data) == JSON_CONTAINER_TYPE_ARRAY &&
                          JsonArrayContainsOnlyPrimitives((JsonElement *) data))
                 {
+                    if (JsonArrayContainsNull(data))
+                    {
+                        /* RlistFromContainer() skips JSON nulls, so the resulting
+                         * slist would silently be shorter than the data it came
+                         * from. */
+                        Log(LOG_LEVEL_ERR, "Invalid value for augments variable '%s' in '%s'"
+                            " (a list must not contain null)", vkey, filename);
+                        VarRefDestroy(ref);
+                        StringSetDestroy(tags);
+                        continue;
+                    }
                     // map to slist if the data only has primitives
                     Rlist *data_as_rlist = RlistFromContainer(data);
                     if ((ref->ns == NULL) && (ref->scope == NULL))
@@ -720,6 +778,14 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
                 JsonElement *data = JsonObjectGet(classes, ckey);
                 if (JsonGetElementType(data) == JSON_ELEMENT_TYPE_PRIMITIVE)
                 {
+                    if (JsonGetPrimitiveType(data) == JSON_PRIMITIVE_TYPE_NULL)
+                    {
+                        /* JsonPrimitiveToString() returns NULL for JSON null and
+                         * there is no class expression to check in its place. */
+                        Log(LOG_LEVEL_ERR, "Invalid augments class expression for class '%s' in '%s'"
+                            " (null is not a supported value)", ckey, filename);
+                        continue;
+                    }
                     char *check = JsonPrimitiveToString(data);
                     // check if class is true
                     if (CheckContextClassmatch(ctx, check))
@@ -836,7 +902,8 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
 
             if (JsonGetElementType(inputs) == JSON_ELEMENT_TYPE_CONTAINER &&
                 JsonGetContainerType(inputs) == JSON_CONTAINER_TYPE_ARRAY &&
-                JsonArrayContainsOnlyPrimitives(inputs))
+                JsonArrayContainsOnlyPrimitives(inputs) &&
+                !JsonArrayContainsNull(inputs))
             {
                 Log(LOG_LEVEL_VERBOSE, "Installing augments def.augments_inputs from file '%s'",
                     filename);
@@ -849,6 +916,9 @@ static bool LoadAugmentsData(EvalContext *ctx, const char *filename, const JsonE
             }
             else
             {
+                /* Also reached when the array contains a null: RlistFromContainer()
+                 * skips JSON nulls, so the installed list would silently be shorter
+                 * than the data it came from. */
                 Log(LOG_LEVEL_ERR, "Trying to augment inputs in '%s' but the value was not a list of strings",
                     filename);
             }

@@ -194,6 +194,27 @@ static FnCallResult FnReturnF(const char *fmt, ...)
     return FnReturnNoCopy(buffer);
 }
 
+/*
+ * Return a double, rendered as an integer when it has no fractional part
+ * and fits in a long, and with "%lf" otherwise.
+ */
+static FnCallResult FnReturnRealOrInt(double result)
+{
+    /* The bounds are deliberately asymmetric. LONG_MIN is a power of two and
+     * converts to double exactly, but (double) LONG_MAX rounds up to
+     * LONG_MAX + 1 where long is 64 bits, so testing "result <= (double)
+     * LONG_MAX" would admit a value the cast cannot represent -- which is
+     * undefined behaviour, not a wrapped result. */
+    if (isfinite(result) && (result == floor(result)) &&
+        (result >= (double) LONG_MIN) &&
+        (result < (double) LONG_MAX + 1.0))
+    {
+        return FnReturnF("%ld", (long) result);
+    }
+
+    return FnReturnF("%lf", result);
+}
+
 static FnCallResult FnReturnContext(bool result)
 {
     return FnReturn(result ? "any" : "!any");
@@ -7640,7 +7661,7 @@ static FnCallResult FnCallEval(EvalContext *ctx, ARG_UNUSED const Policy *policy
         return FnReturn(""); /* TODO: why not FnFailure() ? */
     }
 
-    return FnReturnF("%lf", result);
+    return FnReturnRealOrInt(result);
 }
 
 /*********************************************************************/

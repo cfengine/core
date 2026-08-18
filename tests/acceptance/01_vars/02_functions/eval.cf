@@ -60,6 +60,11 @@ bundle agent init
 
     "values[43]" -> { "CFE-2762" }
       string => "1 * .75";
+
+    # An integral result is rendered without a fractional part. Negative zero
+    # is integral, so it renders as a plain zero rather than "-0.000000".
+    "values[44]" -> { "CFE-4721" }
+      string => "-1 * 0";
 }
 
 #######################################################
@@ -81,14 +86,14 @@ bundle agent check
     # note this test will be MUCH more accurate when we have sprintf and rounding
     "verify[0]" string => '';
     "verify[1]" string => '';
-    "verify[2]" string => '300.000000';
-    "verify[3]" string => '100.000000';
+    "verify[2]" string => '300';
+    "verify[3]" string => '100';
     "verify[4]" string => '';
-    "verify[5]" string => '0.000000';
-    "verify[6]" string => '0.000000';
+    "verify[5]" string => '0';
+    "verify[6]" string => '0';
     "verify[7]" string => 'inf';
-    "verify[8]" string => '27.000000';
-    "verify[9]" string => '1.000000';
+    "verify[8]" string => '27';
+    "verify[9]" string => '1';
     "verify[10]" string => '0.912945';
     "verify[11]" string => '0.408082';
     "verify[12]" string => '0.201358';
@@ -98,33 +103,36 @@ bundle agent check
     "verify[16]" string => '-1.609438';
     "verify[17]" string => '0.693147';
     "verify[18]" string => '2.302585';
-    "verify[19]" string => '2.000000';
+    "verify[19]" string => '2';
     "verify[20]" string => '0.447214';
-    "verify[21]" string => '4.000000';
-    "verify[22]" string => '3.000000';
+    "verify[21]" string => '4';
+    "verify[22]" string => '3';
     "verify[23]" string => '3.400000';
     "verify[24]" string => '-6.800000';
     "verify[25]" string => '-6.800001';
     "verify[26]" string => '3.141593';
     "verify[27]" string => '2.718282';
-    "verify[28]" string => '1.000000';
-    "verify[29]" string => '0.000000';
-    "verify[30]" string => '1.000000';
-    "verify[31]" string => '1.000000';
-    "verify[32]" string => '0.000000';
-    "verify[33]" string => '100000.000000';
+    "verify[28]" string => '1';
+    "verify[29]" string => '0';
+    "verify[30]" string => '1';
+    "verify[31]" string => '1';
+    "verify[32]" string => '0';
+    "verify[33]" string => '100000';
     "verify[34]" string => '0.000050';
-    "verify[35]" string => '0.000000';
-    "verify[36]" string => '0.000000';
-    "verify[37]" string => '1.000000';
-    "verify[38]" string => '0.000000';
-    "verify[39]" string => '0.000000';
-    "verify[40]" string => '1.000000';
-    "verify[41]" string => '1.000000';
-    "verify[42]" string => '1.000000';
+    "verify[35]" string => '0';
+    "verify[36]" string => '0';
+    "verify[37]" string => '1';
+    "verify[38]" string => '0';
+    "verify[39]" string => '0';
+    "verify[40]" string => '1';
+    "verify[41]" string => '1';
+    "verify[42]" string => '1';
 
     "verify[43]" -> { "CFE-2762" }
       string => '0.750000';
+
+    "verify[44]" -> { "CFE-4721" }
+      string => '0';
 
     "indices" slist => getindices("verify");
 
@@ -178,6 +186,7 @@ bundle agent check
         ok_41,
         ok_42,
         ok_43,
+        ok_44,
       };
 
   reports:

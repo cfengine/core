@@ -133,6 +133,86 @@ static void test_basename(void)
     basename_single_testcase("//a//b///c.csv////", ".csv", "c");
 }
 
+/* Evaluate 'input' the way eval() does by default, i.e. as infix math, and
+ * hand the caller the string the function would return. */
+static char *eval_math(const char *input)
+{
+    EvalContext *ctx = EvalContextNew();
+    Rlist *args = NULL;
+
+    RlistAppendScalar(&args, input);
+    FnCall *call = FnCallNew("eval", args);
+
+    FnCallResult res = FnCallEval(ctx, NULL, call, args);
+    assert_int_equal(FNCALL_SUCCESS, res.status);
+    char *result = xstrdup(res.rval.item);
+
+    RvalDestroy(res.rval);
+    FnCallDestroy(call);
+    EvalContextDestroy(ctx);
+
+    return result;
+}
+
+static void eval_single_testcase(const char *input, const char *expected)
+{
+    char *result = eval_math(input);
+    assert_string_equal(expected, result);
+    free(result);
+}
+
+/* Assert only that the result was not rendered as an integer. Used for
+ * infinities and NaN, whose "%lf" spelling ("inf", "Inf", "nan", "-nan",
+ * ...) is platform dependent. */
+static void eval_not_integer_testcase(const char *input)
+{
+    char *result = eval_math(input);
+    assert_int_not_equal(strspn(result, "-0123456789"), strlen(result));
+    free(result);
+}
+
+static void test_eval_integral_result(void)
+{
+    /* An integral result is rendered without a fractional part, so that it
+     * can be handed straight to a function taking a count, for example
+     * sublist(list, "tail", eval("$(n) - 1", "math", "infix")). */
+    eval_single_testcase("4 - 1", "3");
+    eval_single_testcase("2 + 2", "4");
+    eval_single_testcase("2 - (3 - 1)", "0");
+    eval_single_testcase("3^3", "27");
+    eval_single_testcase("100k", "100000");
+    eval_single_testcase("10 == 10", "1");
+    eval_single_testcase("0 - 7", "-7");
+
+    /* Negative zero is integral and renders as a plain zero, not
+     * "-0.000000". */
+    eval_single_testcase("-1 * 0", "0");
+
+    /* Non-integral results keep the historical "%lf" rendering. */
+    eval_single_testcase("10 / 4", "2.500000");
+    eval_single_testcase("1 * .75", "0.750000");
+    eval_single_testcase("pi", "3.141593");
+    eval_single_testcase("0 - 3.4", "-3.400000");
+
+    /* Infinities and NaN have no integer representation. */
+    eval_not_integer_testcase("3 / 0");
+    eval_not_integer_testcase("-3 / 0");
+    eval_not_integer_testcase("sqrt(-1)");
+
+#if LONG_MAX == 9223372036854775807L
+    /* 2^62 fits in a long. */
+    eval_single_testcase("2^62", "4611686018427387904");
+
+    /* LONG_MIN is -2^63 and is exactly representable as a double. */
+    eval_single_testcase("0 - 2^63", "-9223372036854775808");
+
+    /* 2^63 is one past LONG_MAX, so the cast would be undefined behaviour
+     * rather than a wrapped value. Such results stay real. */
+    eval_single_testcase("2^63", "9223372036854775808.000000");
+    eval_single_testcase("0 - 2^64", "-18446744073709551616.000000");
+#endif
+}
+
 static void test_module_protocol_percent_no_delimiter(void)
 {
     EvalContext *ctx = EvalContextNew();
@@ -187,6 +267,7 @@ int main()
         unit_test(test_hostinnetgroup_found),
         unit_test(test_hostinnetgroup_not_found),
         unit_test(test_basename),
+        unit_test(test_eval_integral_result),
         unit_test(test_module_protocol_percent_no_delimiter),
     };
 

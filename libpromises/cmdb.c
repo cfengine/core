@@ -93,6 +93,45 @@ static bool CheckObjectForUnexpandedVars(JsonElement *object, ARG_UNUSED void *d
     return true;
 }
 
+/**
+ * Report that the dots in a CMDB key were taken as a scope separator.
+ *
+ * VarRefParse() splits a key at its first dot, so the flat-looking key
+ * "com.dotted.key" does not become a variable of that name, it becomes the
+ * variable "dotted.key" in the scope "com". Naming a scope like this is a
+ * supported feature, so a key of the documented "[namespace:]bundle.variable"
+ * form is only reported at the verbose level; warning on every agent run
+ * about a working policy would just be noise.
+ *
+ * The remaining keys cannot be of that form: it has room for exactly one dot,
+ * and neither the bundle name nor the variable name can be empty. A variable
+ * name that still contains a dot is a particularly good hint, since a vars
+ * promise cannot create one (the same splitting happens there), so nothing
+ * but CMDB data can address it. Those keys are much more likely to be flat
+ * keys meant literally, and get a warning.
+ */
+static void LogCMDBVariableScope(const char *key, const VarRef *ref)
+{
+    assert(key != NULL);
+    assert(ref != NULL);
+
+    char *address = VarRefToString(ref, true);
+    if (!StringEqual(ref->scope, "") && !StringEqual(ref->lval, "") &&
+        (strchr(ref->lval, '.') == NULL))
+    {
+        Log(LOG_LEVEL_VERBOSE, "The CMDB key '%s' names the '%s' scope,"
+            " the variable is addressed as '%s'",
+            key, ref->scope, address);
+    }
+    else
+    {
+        Log(LOG_LEVEL_WARNING, "The '.' in the CMDB key '%s' was taken as a"
+            " scope separator: the variable is named '%s' in the '%s' scope,"
+            " addressed as '%s'", key, ref->lval, ref->scope, address);
+    }
+    free(address);
+}
+
 static VarRef *GetCMDBVariableRef(const char *key)
 {
     VarRef *ref = VarRefParse(key);
@@ -115,24 +154,32 @@ static VarRef *GetCMDBVariableRef(const char *key)
     {
         ref->scope = xstrdup("variables");
     }
+    else
+    {
+        /* The key contained a dot, so the variable did not land in the
+         * default scope. Tell the operator where it went instead. */
+        LogCMDBVariableScope(key, ref);
+    }
     return ref;
 }
 
-static bool AddCMDBVariable(EvalContext *ctx, const char *key, const VarRef *ref,
+static bool AddCMDBVariable(EvalContext *ctx, const VarRef *ref,
                             JsonElement *data, StringSet *tags, const char *comment)
 {
     assert(ctx != NULL);
-    assert(key != NULL);
     assert(ref != NULL);
     assert(data != NULL);
     assert(tags != NULL);
 
     bool ret;
+    /* Not '%s:%s.%s' of ref->ns, ref->scope and key: a key that names a scope
+     * already contains that scope, which would then be printed twice. */
+    char *address = VarRefToString(ref, true);
     if (JsonGetElementType(data) == JSON_ELEMENT_TYPE_PRIMITIVE)
     {
         char *value = JsonPrimitiveToString(data);
-        Log(LOG_LEVEL_VERBOSE, "Installing CMDB variable '%s:%s.%s=%s'",
-            ref->ns, ref->scope, key, value);
+        Log(LOG_LEVEL_VERBOSE, "Installing CMDB variable '%s=%s'",
+            address, value);
         ret = EvalContextVariablePutTagsSetWithComment(ctx, ref, value, CF_DATA_TYPE_STRING,
                                                        tags, comment);
         free(value);
@@ -141,8 +188,7 @@ static bool AddCMDBVariable(EvalContext *ctx, const char *key, const VarRef *ref
              JsonArrayContainsOnlyPrimitives(data))
     {
         // map to slist if the data only has primitives
-        Log(LOG_LEVEL_VERBOSE, "Installing CMDB slist variable '%s:%s.%s'",
-            ref->ns, ref->scope, key);
+        Log(LOG_LEVEL_VERBOSE, "Installing CMDB slist variable '%s'", address);
         Rlist *data_rlist = RlistFromContainer(data);
         ret = EvalContextVariablePutTagsSetWithComment(ctx, ref,
                                                        data_rlist, CF_DATA_TYPE_STRING_LIST,
@@ -152,12 +198,13 @@ static bool AddCMDBVariable(EvalContext *ctx, const char *key, const VarRef *ref
     else
     {
         // install as a data container
-        Log(LOG_LEVEL_VERBOSE, "Installing CMDB data container variable '%s:%s.%s'",
-            ref->ns, ref->scope, key);
+        Log(LOG_LEVEL_VERBOSE, "Installing CMDB data container variable '%s'",
+            address);
         ret = EvalContextVariablePutTagsSetWithComment(ctx, ref,
                                                        data, CF_DATA_TYPE_CONTAINER,
                                                        tags, comment);
     }
+    free(address);
     if (!ret)
     {
         /* On success, EvalContextVariablePutTagsSet() consumes the tags set,
@@ -197,7 +244,7 @@ static bool ReadCMDBVars(EvalContext *ctx, JsonElement *vars)
 
         StringSet *tags = StringSetNew();
         StringSetAdd(tags, xstrdup(CMDB_SOURCE_TAG));
-        bool ret = AddCMDBVariable(ctx, key, ref, data, tags, NULL);
+        bool ret = AddCMDBVariable(ctx, ref, data, tags, NULL);
         VarRefDestroy(ref);
         if (!ret)
         {
@@ -326,7 +373,7 @@ static bool ReadCMDBVariables(EvalContext *ctx, JsonElement *variables)
         assert(tags != NULL);
         assert(data != NULL);
 
-        bool ret = AddCMDBVariable(ctx, key, ref, data, tags, comment);
+        bool ret = AddCMDBVariable(ctx, ref, data, tags, comment);
         VarRefDestroy(ref);
         if (!ret)
         {

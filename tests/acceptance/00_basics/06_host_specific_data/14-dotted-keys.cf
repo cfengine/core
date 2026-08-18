@@ -1,0 +1,52 @@
+# test of the host_specific.json functionality: keys with more dots than the
+# "[namespace:]bundle.variable" form allows are warned about, plain scope
+# qualification is not
+body common control
+{
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+bundle agent init
+{
+  files:
+    "$(sys.workdir)$(const.dirsep)data$(const.dirsep)."
+      create => "true",
+      perms => mog(
+        "0700", "$(sys.user_data[username])", "$(sys.user_data[username])"
+      );
+
+  methods:
+    "prepare_host_specific_data"
+      usebundle => file_copy(
+        "$(this.promise_filename).json",
+        "$(sys.workdir)$(const.dirsep)data$(const.dirsep)host_specific.json"
+      ),
+      handle => "prepare_host_specific_data";
+
+    "empty_promises_cf"
+      usebundle => file_make("$(sys.inputdir)/promises.cf", '');
+}
+
+#######################################################
+bundle agent check
+{
+  vars:
+    "command"
+      string => "$(sys.cf_promises) --show-vars -f $(sys.inputdir)/promises.cf";
+
+  methods:
+    ""
+      usebundle => dcs_passif_output(
+        # both dotted keys are warned about, and both variables are still
+        # installed at the address the dots ask for
+        ".*warning: The '.' in the CMDB key 'com\.dotted\.key' was taken as a scope separator: the variable is named 'dotted\.key' in the 'com' scope, addressed as 'data:com\.dotted\.key'.*warning: The '.' in the CMDB key 'vcom\.vdotted\.vkey' was taken as a scope separator.*data:com\.dotted\.key\s+dotted_value\s.*data:myscope\.myvar\s+scoped_value\s.*data:vcom\.vdotted\.vkey\s+dotted_value2\s.*",
+        # a plain "bundle.variable" key is a supported way to pick a scope,
+        # it must not be warned about
+        ".*warning:[^\n]*'myscope\.myvar'.*",
+        $(command),
+        $(this.promise_filename)
+      );
+}

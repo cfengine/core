@@ -206,13 +206,20 @@ libpromises_la_SOURCES += \
 	process_freebsd.c
 endif
 
+if MACOSX
+libpromises_la_SOURCES += \
+	process_darwin.c
+endif
+
 if !LINUX
 if !AIX
 if !HPUX
 if !SOLARIS
 if !FREEBSD
+if !MACOSX
 libpromises_la_SOURCES += \
 	process_unix_stub.c
+endif
 endif
 endif
 endif

@@ -238,7 +238,8 @@ bool ShellCommandReturnsZero(const char *command, ShellType shell)
             pid_t wait_result = waitpid(pid, &status, WNOHANG);
             if (wait_result == pid)
             {
-                break; /* child exited and was reaped */
+                ALARM_PID = -1; /* reaped: pid can be recycled, stop naming it */
+                break;
             }
             if (wait_result < 0)
             {
@@ -259,6 +260,7 @@ bool ShellCommandReturnsZero(const char *command, ShellType shell)
                 {
                     /* Child has been signalled; just reap it. */
                 }
+                ALARM_PID = -1; /* reaped: pid can be recycled, stop naming it */
                 return false;
             }
             struct timespec poll_interval = {

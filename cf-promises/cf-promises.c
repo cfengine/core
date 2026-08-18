@@ -263,7 +263,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_COMMON, GetTTYInteractive());
 
     int longopt_idx;
-    while ((c = getopt_long(argc, argv, "dvnIw:f:g:D:N:VrxMb:p:s:cg:hW:C::T:l",
+    while ((c = getopt_long(argc, argv, "dvnIw:f:g:D:N:VrxMb:p:s:chW:C::T:l",
                             OPTIONS, &longopt_idx))
            != -1)
     {

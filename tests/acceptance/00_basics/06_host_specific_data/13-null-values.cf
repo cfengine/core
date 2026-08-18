@@ -1,0 +1,60 @@
+# test of the host_specific.json functionality: JSON null values are rejected
+# per entry, the rest of the CMDB data is still installed (used to crash)
+body common control
+{
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+bundle agent init
+{
+  files:
+    "$(sys.workdir)$(const.dirsep)data$(const.dirsep)."
+      create => "true",
+      perms => mog(
+        "0700", "$(sys.user_data[username])", "$(sys.user_data[username])"
+      );
+
+  methods:
+    "prepare_host_specific_data"
+      usebundle => file_copy(
+        "$(this.promise_filename).json",
+        "$(sys.workdir)$(const.dirsep)data$(const.dirsep)host_specific.json"
+      ),
+      handle => "prepare_host_specific_data";
+
+    "empty_promises_cf"
+      usebundle => file_make("$(sys.inputdir)/promises.cf", '');
+}
+
+#######################################################
+bundle agent check
+{
+  vars:
+    "command"
+      string => "$(sys.cf_promises) --show-vars -f $(sys.inputdir)/promises.cf | $(G.grep) -E 'CMDB data|value_from_'";
+
+    # The offending entries are reported in the order they appear in the CMDB
+    # data, the remaining variables are installed and shown by --show-vars.
+    "expected"
+      string => concat(
+        "\s*error: Invalid value in 'null_scalar'.*null is not a supported value.*",
+        "\s+error: Invalid value in 'null_list'.*a list must not contain null.*",
+        "\s+error: Invalid value in 'null_value'.*null is not a supported value.*",
+        "\s+error: Invalid value in 'null_bare'.*null is not a supported value.*",
+        "\s+error: Invalid value in 'null_value_list'.*a list must not contain null.*",
+        "\s+data:variables\.good_variables\s+value_from_variables\s+source=cmdb",
+        "\s+data:variables\.good_vars\s+value_from_vars\s+source=cmdb\s*"
+      );
+
+  methods:
+    ""
+      usebundle => dcs_passif_output(
+        $(expected),
+        "",
+        $(command),
+        $(this.promise_filename)
+      );
+}

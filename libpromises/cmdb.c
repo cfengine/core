@@ -118,6 +118,22 @@ static VarRef *GetCMDBVariableRef(const char *key)
     return ref;
 }
 
+/** Does the given JSON array have a JSON null among its direct children? */
+static bool JsonArrayContainsNull(const JsonElement *array)
+{
+    assert(JsonGetType(array) == JSON_TYPE_ARRAY);
+
+    const size_t length = JsonLength(array);
+    for (size_t i = 0; i < length; i++)
+    {
+        if (JsonGetType(JsonArrayGet(array, i)) == JSON_TYPE_NULL)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 static bool AddCMDBVariable(EvalContext *ctx, const char *key, const VarRef *ref,
                             JsonElement *data, StringSet *tags, const char *comment)
 {
@@ -130,24 +146,46 @@ static bool AddCMDBVariable(EvalContext *ctx, const char *key, const VarRef *ref
     bool ret;
     if (JsonGetElementType(data) == JSON_ELEMENT_TYPE_PRIMITIVE)
     {
-        char *value = JsonPrimitiveToString(data);
-        Log(LOG_LEVEL_VERBOSE, "Installing CMDB variable '%s:%s.%s=%s'",
-            ref->ns, ref->scope, key, value);
-        ret = EvalContextVariablePutTagsSetWithComment(ctx, ref, value, CF_DATA_TYPE_STRING,
-                                                       tags, comment);
-        free(value);
+        if (JsonGetPrimitiveType(data) == JSON_PRIMITIVE_TYPE_NULL)
+        {
+            /* JsonPrimitiveToString() returns NULL for JSON null and there is
+             * no scalar to install in its place. */
+            Log(LOG_LEVEL_ERR, "Invalid value in '%s' variable specification in CMDB data"
+                " (null is not a supported value)", key);
+            ret = false;
+        }
+        else
+        {
+            char *value = JsonPrimitiveToString(data);
+            Log(LOG_LEVEL_VERBOSE, "Installing CMDB variable '%s:%s.%s=%s'",
+                ref->ns, ref->scope, key, value);
+            ret = EvalContextVariablePutTagsSetWithComment(ctx, ref, value, CF_DATA_TYPE_STRING,
+                                                           tags, comment);
+            free(value);
+        }
     }
     else if ((JsonGetType(data) == JSON_TYPE_ARRAY) &&
              JsonArrayContainsOnlyPrimitives(data))
     {
-        // map to slist if the data only has primitives
-        Log(LOG_LEVEL_VERBOSE, "Installing CMDB slist variable '%s:%s.%s'",
-            ref->ns, ref->scope, key);
-        Rlist *data_rlist = RlistFromContainer(data);
-        ret = EvalContextVariablePutTagsSetWithComment(ctx, ref,
-                                                       data_rlist, CF_DATA_TYPE_STRING_LIST,
-                                                       tags, comment);
-        RlistDestroy(data_rlist);
+        if (JsonArrayContainsNull(data))
+        {
+            /* RlistFromContainer() skips JSON nulls, so the resulting slist
+             * would silently be shorter than the data it came from. */
+            Log(LOG_LEVEL_ERR, "Invalid value in '%s' variable specification in CMDB data"
+                " (a list must not contain null)", key);
+            ret = false;
+        }
+        else
+        {
+            // map to slist if the data only has primitives
+            Log(LOG_LEVEL_VERBOSE, "Installing CMDB slist variable '%s:%s.%s'",
+                ref->ns, ref->scope, key);
+            Rlist *data_rlist = RlistFromContainer(data);
+            ret = EvalContextVariablePutTagsSetWithComment(ctx, ref,
+                                                           data_rlist, CF_DATA_TYPE_STRING_LIST,
+                                                           tags, comment);
+            RlistDestroy(data_rlist);
+        }
     }
     else
     {

@@ -1,0 +1,19 @@
+{
+  "vars": {
+    "null_scalar": null,
+    "null_list": ["a", null],
+    "good_vars": "value_from_vars"
+  },
+  "variables": {
+    "null_value": {
+      "value": null
+    },
+    "null_bare": null,
+    "null_value_list": {
+      "value": ["a", null]
+    },
+    "good_variables": {
+      "value": "value_from_variables"
+    }
+  }
+}

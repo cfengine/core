@@ -169,6 +169,7 @@ redirection_test_stub_SOURCES = redirection_test_stub.c
 endif
 
 check_SCRIPTS = dynamic_dependency_test.sh \
+	getopt_optstring_test.sh \
 	tar_portability_test.sh
 
 if WITH_INIT_D_SCRIPT

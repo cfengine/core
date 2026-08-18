@@ -146,7 +146,7 @@ static void test_module_protocol_percent_no_delimiter(void)
     ModuleProtocol(ctx, "/dev/null", ok, false, context, sizeof(context),
                    tags, &persistence);
     VarRef *good = VarRefParseFromScope("good", context);
-    assert_true(EvalContextVariableGet(ctx, good, NULL) != NULL);
+    assert_true(EvalContextVariableGetPlaintext(ctx, good, NULL) != NULL);
     VarRefDestroy(good);
     free(ok);
 
@@ -170,7 +170,7 @@ static void test_module_protocol_percent_no_delimiter(void)
     ModuleProtocol(ctx, "/dev/null", line, false, context, sizeof(context),
                    tags, &persistence);
     VarRef *ref = VarRefParseFromScope("bad", context);
-    assert_true(EvalContextVariableGet(ctx, ref, NULL) == NULL);
+    assert_true(EvalContextVariableGetPlaintext(ctx, ref, NULL) == NULL);
     VarRefDestroy(ref);
 
     assert_int_equal(munmap(region, pagesize * 2), 0);

@@ -2237,11 +2237,26 @@ const void *EvalContextVariableGetSpecial(
     const EvalContext *const ctx,
     const SpecialScope scope,
     const char *const varname,
+    DataType *const type_out,
+    bool get_secret)
+{
+    VarRef *const ref = VarRefParseFromScope(
+        varname, SpecialScopeToString(scope));
+    const void *const result = EvalContextVariableGet(ctx, ref, type_out, get_secret);
+    VarRefDestroy(ref);
+
+    return result;
+}
+
+const void *EvalContextVariableGetSpecialPlaintext(
+    const EvalContext *const ctx,
+    const SpecialScope scope,
+    const char *const varname,
     DataType *const type_out)
 {
     VarRef *const ref = VarRefParseFromScope(
         varname, SpecialScopeToString(scope));
-    const void *const result = EvalContextVariableGet(ctx, ref, type_out);
+    const void *const result = EvalContextVariableGet(ctx, ref, type_out, true);
     VarRefDestroy(ref);
 
     return result;
@@ -2254,11 +2269,12 @@ const void *EvalContextVariableGetSpecial(
 const char *EvalContextVariableGetSpecialString(
     const EvalContext *const ctx,
     const SpecialScope scope,
-    const char *const varname)
+    const char *const varname,
+    bool get_secret)
 {
     DataType type_out;
     const void *const result = EvalContextVariableGetSpecial(
-        ctx, scope, varname, &type_out);
+        ctx, scope, varname, &type_out, get_secret);
     assert(type_out == CF_DATA_TYPE_STRING); // Programming error if not string
     return (type_out == CF_DATA_TYPE_STRING) ? result : NULL;
 }
@@ -2660,14 +2676,14 @@ static Variable *VariableResolve(const EvalContext *ctx, const VarRef *ref)
  *       list is empty. To check if the variable didn't resolve, check if
  *       #type_out was set to CF_DATA_TYPE_NONE.
  */
-const void *EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, DataType *type_out)
+const void *EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, DataType *type_out, bool get_secret)
 {
     Variable *var = VariableResolve(ctx, ref);
     if (var)
     {
         const VarRef *var_ref = VariableGetRef(var);
         DataType var_type = VariableGetType(var);
-        Rval var_rval = VariableGetRval(var, true);
+        Rval var_rval = VariableGetRval(var, get_secret);
 
         if (var_ref->num_indices == 0    &&
                  ref->num_indices > 0     &&
@@ -2688,7 +2704,18 @@ const void *EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, Da
         {
             if (type_out)
             {
-                *type_out = var_type;
+                /* When a secret is redacted (get_secret=false + secret variable),
+                 * VariableGetRval returns a scalar sentinel "************".
+                 * Report the actual returned type (string) to avoid type confusion
+                 * in callers that switch on the reported type (e.g., VarRefValueToJson). */
+                if (!get_secret && VariableIsSecret(var))
+                {
+                    *type_out = CF_DATA_TYPE_STRING;
+                }
+                else
+                {
+                    *type_out = var_type;
+                }
             }
             return var_rval.item;
         }
@@ -2699,6 +2726,11 @@ const void *EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, Da
         *type_out = CF_DATA_TYPE_NONE;
     }
     return NULL;
+}
+
+const void *EvalContextVariableGetPlaintext(const EvalContext *ctx, const VarRef *ref, DataType *type_out)
+{
+    return EvalContextVariableGet(ctx, ref, type_out, true);
 }
 
 const Promise *EvalContextVariablePromiseGet(const EvalContext *ctx, const VarRef *ref)
@@ -2755,7 +2787,7 @@ const void *EvalContextVariableControlCommonGet(const EvalContext *ctx, CommonCo
     assert(lval >= 0 && lval < COMMON_CONTROL_MAX);
 
     VarRef *ref = VarRefParseFromScope(CFG_CONTROLBODY[lval].lval, "control_common");
-    const void *ret = EvalContextVariableGet(ctx, ref, NULL);
+    const void *ret = EvalContextVariableGetPlaintext(ctx, ref, NULL);
     VarRefDestroy(ref);
     return ret;
 }

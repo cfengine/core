@@ -46,11 +46,11 @@ ExpectedVars expected_vars[] =
 static void TestSysVar(EvalContext *ctx, const char *lval, const char *expected)
 {
     VarRef *ref = VarRefParseFromScope(lval, "sys");
-    assert_string_equal(expected, EvalContextVariableGet(ctx, ref, NULL));
+    assert_string_equal(expected, EvalContextVariableGetPlaintext(ctx, ref, NULL));
     VarRefDestroy(ref);
 
-    assert_string_equal(expected, EvalContextVariableGetSpecial(ctx, SPECIAL_SCOPE_SYS, lval, NULL));
-    assert_string_equal(expected, EvalContextVariableGetSpecialString(ctx, SPECIAL_SCOPE_SYS, lval));
+    assert_string_equal(expected, EvalContextVariableGetSpecialPlaintext(ctx, SPECIAL_SCOPE_SYS, lval, NULL));
+    assert_string_equal(expected, EvalContextVariableGetSpecialString(ctx, SPECIAL_SCOPE_SYS, lval, true));
 }
 
 static void test_set_names(void)

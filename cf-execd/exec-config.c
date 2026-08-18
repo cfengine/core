@@ -175,7 +175,7 @@ ExecConfig *ExecConfigNew(bool scheduled_run, const EvalContext *ctx, const Poli
 
             VarRef *ref = VarRefParseFromScope(cp->lval, "control_executor");
             DataType t;
-            const void *value = EvalContextVariableGet(ctx, ref, &t);
+            const void *value = EvalContextVariableGetPlaintext(ctx, ref, &t);
             VarRefDestroy(ref);
 
             if (t == CF_DATA_TYPE_NONE)

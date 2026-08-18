@@ -177,7 +177,7 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp,
     }
     else
     {
-        existing_value = EvalContextVariableGet(ctx, ref, &existing_value_type);
+        existing_value = EvalContextVariableGetPlaintext(ctx, ref, &existing_value_type);
     }
 
     Rval rval = opts.cp_save->rval;
@@ -426,7 +426,7 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp,
             {
                 DataType existing_type;
                 VarRef *base_ref = VarRefCopyIndexless(ref);
-                if (EvalContextVariableGet(ctx, ref, &existing_type) && existing_type == CF_DATA_TYPE_CONTAINER)
+                if (EvalContextVariableGetPlaintext(ctx, ref, &existing_type) && existing_type == CF_DATA_TYPE_CONTAINER)
                 {
                     char *lval_str = VarRefToString(ref, true);
                     char *base_ref_str = VarRefToString(base_ref, true);

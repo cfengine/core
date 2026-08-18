@@ -353,7 +353,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
 
             VarRef *ref = VarRefParseFromScope(cp->lval, "control_server");
             DataType value_type;
-            const void *value = EvalContextVariableGet(ctx, ref, &value_type);
+            const void *value = EvalContextVariableGetPlaintext(ctx, ref, &value_type);
             VarRefDestroy(ref);
 
             if (unresolved_vars != NULL)

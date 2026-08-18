@@ -39,15 +39,16 @@ static volatile sig_atomic_t TIMEOUT_SIGNALLED = 0; /* GLOBAL_X */
 
 /* Set while a timeout alarm is pending. cf_popen()'s child consults it to
  * decide whether to lead a process group of its own; only a child that may
- * have to be killed as a tree needs one. */
-static bool TIMEOUT_ARMED = false; /* GLOBAL_X */
+ * have to be killed as a tree needs one. Cleared from the signal handler as
+ * well as from ClearTimeOut(), hence volatile sig_atomic_t. */
+static volatile sig_atomic_t TIMEOUT_ARMED = 0; /* GLOBAL_X */
 
 void SetTimeOut(int timeout)
 {
     ALARM_PID = -1;
     TIMEOUT_FIRED = 0;
     TIMEOUT_SIGNALLED = 0;
-    TIMEOUT_ARMED = true;
+    TIMEOUT_ARMED = 1;
     signal(SIGALRM, (void *) TimeOut);
     alarm(timeout);
 }
@@ -59,12 +60,12 @@ void ClearTimeOut(void)
      * after the disarm. Only the next SetTimeOut() resets them. */
     alarm(0);
     signal(SIGALRM, SIG_DFL);
-    TIMEOUT_ARMED = false;
+    TIMEOUT_ARMED = 0;
 }
 
 bool TimeOutIsArmed(void)
 {
-    return TIMEOUT_ARMED;
+    return TIMEOUT_ARMED != 0;
 }
 
 bool TimeOutHasFired(void)
@@ -83,13 +84,14 @@ void TimeOut()
 {
     alarm(0);
     TIMEOUT_FIRED = 1;
-    TIMEOUT_ARMED = false;
+    TIMEOUT_ARMED = 0;
 
     if (ALARM_PID != -1)
     {
         TIMEOUT_SIGNALLED = 1;
         Log(LOG_LEVEL_VERBOSE, "Time out of process %jd", (intmax_t)ALARM_PID);
 
+#ifndef __MINGW32__
         /* Read the process group while the process is still alive to be read:
          * once GracefulTerminate() has killed it, getpgid() fails with ESRCH and
          * we would have no safe way to tell whether it led a group of its own. */
@@ -100,9 +102,11 @@ void TimeOut()
                 "Could not read the process group of timed-out process %jd (getpgid: %s), not signalling its process group",
                 (intmax_t)ALARM_PID, GetErrorStr());
         }
+#endif
 
         GracefulTerminate(ALARM_PID, PROCESS_START_TIME_UNKNOWN);
 
+#ifndef __MINGW32__
         /* GracefulTerminate() only reaches the process we started. Anything that
          * process spawned survives it, and keeps the pipe open, so the caller
          * stays blocked reading a command it has already given up on.
@@ -111,11 +115,16 @@ void TimeOut()
          * cf_popen()'s child arranges with setpgid(). If that did not take
          * effect the process is still in our group, its pgid is not its pid, and
          * a negative kill() here would signal an unrelated group -- possibly our
-         * own. */
+         * own.
+         *
+         * Windows has no POSIX process groups and no setpgid() in the child
+         * (cf_popen() lives in pipes_unix.c), so there is nothing to widen the
+         * signal to there. */
         if (pgid == ALARM_PID)
         {
             kill(-ALARM_PID, SIGKILL);
         }
+#endif
     }
     else
     {

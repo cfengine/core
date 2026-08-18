@@ -116,73 +116,66 @@ static bool CheckObjectForUnexpandedVars(JsonElement *object, void *data)
 }
 
 /**
- * Reject CMDB data containing unresolved variable references, naming the entry
- * that was rejected.
+ * Reject a single CMDB entry containing unresolved variable references,
+ * naming the entry that was rejected.
  *
- * Each top-level entry is walked separately so that the entry can be named,
- * which is what an operator needs to find the offending line. A single walk of
- * the whole section could only report the immediate property name, and in the
- * 'variables' format (CFE-3633) that is the metadata key 'value' rather than
- * the name of the variable holding it.
+ * Checked per entry, rather than once for the whole section, so that one
+ * offending entry does not take every other entry in the section down with
+ * it -- matching the skip-and-continue idiom the rest of this file already
+ * uses for other per-entry problems (an invalid variable specification, a
+ * missing "value" field).
  *
- * @param data      the CMDB section to check, which must be a JSON object
+ * @param entry     the entry's value, as found under key in its section
+ * @param key       the entry's key, as it appears in the CMDB file
  * @param section   the section's key, as it appears in the CMDB file
  * @param file_path the CMDB file the data came from
- * @return          whether the data is free of variable references
+ * @return          whether the entry is free of variable references
  */
-static bool CheckCMDBDataForUnexpandedVars(JsonElement *data,
-                                           const char *section,
-                                           const char *file_path)
+static bool CheckCMDBEntryForUnexpandedVars(JsonElement *entry,
+                                            const char *key,
+                                            const char *section,
+                                            const char *file_path)
 {
-    assert(data != NULL);
-    assert(JsonGetType(data) == JSON_TYPE_OBJECT);
+    assert(entry != NULL);
+    assert(key != NULL);
     assert(section != NULL);
     assert(file_path != NULL);
 
-    JsonIterator iter = JsonIteratorInit(data);
-    while (JsonIteratorHasMore(&iter))
+    if (StringContainsUnresolved(key))
     {
-        JsonElement *child = JsonIteratorNextValue(&iter);
-        const char *entry = JsonGetPropertyAsString(child);
-
-        if (StringContainsUnresolved(entry))
-        {
-            Log(LOG_LEVEL_ERR,
-                "Invalid '%s' CMDB data in '%s', cannot contain variable"
-                " references (offending key: '%s')",
-                section, file_path, entry);
-            return false;
-        }
-
-        CMDBUnexpandedVar offender = {NULL, NULL};
-        if (JsonWalk(child, CheckObjectForUnexpandedVars,
-                     NULL, CheckPrimitiveForUnexpandedVars, &offender))
-        {
-            continue;
-        }
-
-        /* The walk stops only when one of the two visitors above stops it,
-         * and each records what it found before doing so. */
-        assert((offender.value != NULL) || (offender.key != NULL));
-
-        if (offender.value != NULL)
-        {
-            Log(LOG_LEVEL_ERR,
-                "Invalid '%s' CMDB data in '%s', cannot contain variable"
-                " references (offending value in entry '%s': '%s')",
-                section, file_path, entry, offender.value);
-        }
-        else
-        {
-            Log(LOG_LEVEL_ERR,
-                "Invalid '%s' CMDB data in '%s', cannot contain variable"
-                " references (offending key in entry '%s': '%s')",
-                section, file_path, entry, offender.key);
-        }
+        Log(LOG_LEVEL_ERR,
+            "Invalid '%s' CMDB data in '%s', cannot contain variable"
+            " references (offending key: '%s')",
+            section, file_path, key);
         return false;
     }
 
-    return true;
+    CMDBUnexpandedVar offender = {NULL, NULL};
+    if (JsonWalk(entry, CheckObjectForUnexpandedVars,
+                 NULL, CheckPrimitiveForUnexpandedVars, &offender))
+    {
+        return true;
+    }
+
+    /* The walk stops only when one of the two visitors above stops it, and
+     * each records what it found before doing so. */
+    assert((offender.value != NULL) || (offender.key != NULL));
+
+    if (offender.value != NULL)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Invalid '%s' CMDB data in '%s', cannot contain variable"
+            " references (offending value in entry '%s': '%s')",
+            section, file_path, key, offender.value);
+    }
+    else
+    {
+        Log(LOG_LEVEL_ERR,
+            "Invalid '%s' CMDB data in '%s', cannot contain variable"
+            " references (offending key in entry '%s': '%s')",
+            section, file_path, key, offender.key);
+    }
+    return false;
 }
 
 static VarRef *GetCMDBVariableRef(const char *key)
@@ -272,16 +265,16 @@ static bool ReadCMDBVars(EvalContext *ctx, JsonElement *vars,
         return false;
     }
 
-    if (!CheckCMDBDataForUnexpandedVars(vars, "vars", file_path))
-    {
-        return false;
-    }
-
     JsonIterator iter = JsonIteratorInit(vars);
     while (JsonIteratorHasMore(&iter))
     {
         const char *key = JsonIteratorNextKey(&iter);
         JsonElement *data = JsonObjectGet(vars, key);
+
+        if (!CheckCMDBEntryForUnexpandedVars(data, key, "vars", file_path))
+        {
+            continue;
+        }
 
         VarRef *ref = GetCMDBVariableRef(key);
         if (ref == NULL)
@@ -375,23 +368,22 @@ static bool ReadCMDBVariables(EvalContext *ctx, JsonElement *variables,
         return false;
     }
 
-    if (!CheckCMDBDataForUnexpandedVars(variables, "variables", file_path))
-    {
-        return false;
-    }
-
     JsonIterator iter = JsonIteratorInit(variables);
     while (JsonIteratorHasMore(&iter))
     {
         const char *key = JsonIteratorNextKey(&iter);
+        JsonElement *const var_info = JsonObjectGet(variables, key);
+
+        if (!CheckCMDBEntryForUnexpandedVars(var_info, key, "variables", file_path))
+        {
+            continue;
+        }
 
         VarRef *ref = GetCMDBVariableRef(key);
         if (ref == NULL)
         {
             continue;
         }
-
-        JsonElement *const var_info = JsonObjectGet(variables, key);
 
         JsonElement *data;
         StringSet *tags;
@@ -480,16 +472,17 @@ static bool ReadCMDBClasses(EvalContext *ctx, JsonElement *classes,
         return false;
     }
 
-    if (!CheckCMDBDataForUnexpandedVars(classes, "classes", file_path))
-    {
-        return false;
-    }
-
     JsonIterator iter = JsonIteratorInit(classes);
     while (JsonIteratorHasMore(&iter))
     {
         const char *key = JsonIteratorNextKey(&iter);
         JsonElement *data = JsonObjectGet(classes, key);
+
+        if (!CheckCMDBEntryForUnexpandedVars(data, key, "classes", file_path))
+        {
+            continue;
+        }
+
         if (JsonGetElementType(data) == JSON_ELEMENT_TYPE_PRIMITIVE)
         {
             const char *expr = JsonPrimitiveGetAsString(data);

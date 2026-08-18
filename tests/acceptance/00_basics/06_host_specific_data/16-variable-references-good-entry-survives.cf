@@ -1,0 +1,78 @@
+# test that one entry with an unresolved variable reference does not drop
+# every other entry in the same section
+body common control
+{
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+bundle agent init
+{
+  files:
+    "$(sys.workdir)$(const.dirsep)data$(const.dirsep)."
+      create => "true",
+      perms => mog(
+        "0700", "$(sys.user_data[username])", "$(sys.user_data[username])"
+      );
+
+  methods:
+    "prepare_host_specific_data"
+      usebundle => file_copy(
+        "$(this.promise_filename).json",
+        "$(sys.workdir)$(const.dirsep)data$(const.dirsep)host_specific.json"
+      ),
+      handle => "prepare_host_specific_data";
+
+    "empty_promises_cf"
+      usebundle => file_make("$(sys.inputdir)/promises.cf", '');
+}
+
+#######################################################
+bundle agent check
+{
+  vars:
+    "error_output"
+      string => execresult(
+        "$(sys.cf_promises) --show-classes -f $(sys.inputdir)/promises.cf",
+        "useshell"
+      ),
+      depends_on => { "prepare_host_specific_data" };
+
+    "vars_output"
+      string => execresult(
+        "$(sys.cf_promises) --show-vars -f $(sys.inputdir)/promises.cf | $(G.grep) good_key",
+        "useshell"
+      ),
+      depends_on => { "prepare_host_specific_data" };
+
+  classes:
+    # The offending entry is still rejected and named.
+    "offender_named"
+      expression => regcmp(
+        ".*error: Invalid 'vars' CMDB data in '.*host_specific\.json', cannot contain variable references \(offending value in entry 'key_with_unresolved_value': .*",
+        "$(error_output)"
+      );
+
+    # Its sibling entry in the same section is installed anyway -- a single
+    # bad entry must not take the rest of the section down with it.
+    "good_entry_survived"
+      expression => regcmp(
+        "data:variables\.good_key\s+a literal value\s+source=cmdb",
+        "$(vars_output)"
+      );
+
+    "ok" and => { "offender_named", "good_entry_survived" };
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+
+    !ok::
+      "$(this.promise_filename) FAIL";
+
+    !ok.DEBUG::
+      "error_output was: '$(error_output)'";
+      "vars_output was: '$(vars_output)'";
+}

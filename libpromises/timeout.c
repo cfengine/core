@@ -43,6 +43,11 @@ static volatile sig_atomic_t TIMEOUT_SIGNALLED = 0; /* GLOBAL_X */
  * well as from ClearTimeOut(), hence volatile sig_atomic_t. */
 static volatile sig_atomic_t TIMEOUT_ARMED = 0; /* GLOBAL_X */
 
+/* Seconds requested by SetTimeOut(), held until StartTimeOutClock() arms the
+ * real timer once cf_popen() has a pid to kill. Not touched from the
+ * handler. */
+static int TIMEOUT_PENDING = 0; /* GLOBAL_X */
+
 void SetTimeOut(int timeout)
 {
     ALARM_PID = -1;
@@ -50,7 +55,30 @@ void SetTimeOut(int timeout)
     TIMEOUT_SIGNALLED = 0;
     TIMEOUT_ARMED = 1;
     signal(SIGALRM, (void *) TimeOut);
+#if defined(__MINGW32__) || defined(__CYGWIN__)
+    /* Keep starting the clock here on exactly the platforms that do not build
+     * pipes_unix.c -- Makefile NT, i.e. mingw and cygwin. Their pipe
+     * implementation is outside this tree, so nothing there would ever reach
+     * StartTimeOutClock() and a deferred clock would never start at all. */
     alarm(timeout);
+#else
+    /* Hold the clock until there is a process registered to terminate. Cancel
+     * any timer leaked by an earlier caller first, so it cannot fire as ours. */
+    alarm(0);
+    TIMEOUT_PENDING = timeout;
+#endif
+}
+
+void StartTimeOutClock(void)
+{
+    /* One-shot: a second fork under the same timeout runs on the time already
+     * ticking, rather than restarting the command's budget. */
+    if ((TIMEOUT_ARMED != 0) && (TIMEOUT_PENDING > 0))
+    {
+        int seconds = TIMEOUT_PENDING;
+        TIMEOUT_PENDING = 0;
+        alarm(seconds);
+    }
 }
 
 void ClearTimeOut(void)
@@ -61,6 +89,7 @@ void ClearTimeOut(void)
     alarm(0);
     signal(SIGALRM, SIG_DFL);
     TIMEOUT_ARMED = 0;
+    TIMEOUT_PENDING = 0;
 }
 
 bool TimeOutIsArmed(void)

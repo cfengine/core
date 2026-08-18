@@ -2,6 +2,7 @@
 
 #include <cf3.defs.h>
 #include <cf3.extern.h>
+#include <pipes.h>
 #include <timeout.h>
 
 /* The alarm handler interrupts the sleep, so this normally returns as soon as
@@ -38,6 +39,9 @@ static void test_clear_disarms(void)
 static void test_fired_alarm_without_a_process(void)
 {
     SetTimeOut(1);
+    /* Production starts the clock only once a pid is registered; start it by
+     * hand to reach the handler's no-process branch. */
+    StartTimeOutClock();
     WaitForAlarm();
 
     assert_true(TimeOutHasFired());
@@ -54,6 +58,7 @@ static void test_fired_alarm_without_a_process(void)
 static void test_clear_preserves_the_record(void)
 {
     SetTimeOut(1);
+    StartTimeOutClock();
     WaitForAlarm();
     assert_true(TimeOutHasFired());
 
@@ -81,6 +86,8 @@ static void test_clear_preserves_a_true_signalled_flag(void)
 
     SetTimeOut(1);
     ALARM_PID = child;
+    /* Same order as cf_popen(): publish the pid, then start the clock. */
+    StartTimeOutClock();
     WaitForAlarm();
 
     assert_true(TimeOutHasFired());
@@ -97,6 +104,7 @@ static void test_clear_preserves_a_true_signalled_flag(void)
 static void test_next_set_resets_the_record(void)
 {
     SetTimeOut(1);
+    StartTimeOutClock();
     WaitForAlarm();
     assert_true(TimeOutHasFired());
 
@@ -105,6 +113,86 @@ static void test_next_set_resets_the_record(void)
     assert_false(TimeOutHasFired());
     assert_false(TimeOutSignalledProcess());
     ClearTimeOut();
+}
+
+/* The arming-order half of the timeout guarantee: the clock must not run
+ * before cf_popen() has a pid to kill. Arming immediately, as SetTimeOut()
+ * used to, lets the alarm fire during the caller's own setup -- umask(),
+ * logging, cf_popen dispatch -- and burn the whole timeout on nothing, after
+ * which the command runs unbounded.
+ *
+ * Deliberately not a fixed-wait liveness check: it waits twice the timeout
+ * before forking at all, so the old behaviour fires with certainty rather than
+ * by timing luck, and the command it then runs outlives its timeout by 4s. */
+static void test_clock_does_not_run_before_the_fork(void)
+{
+    SetTimeOut(1);
+
+    for (int i = 0; (i < 20) && !TimeOutHasFired(); i++)
+    {
+        struct timespec ts = { .tv_sec = 0, .tv_nsec = 100 * 1000 * 1000 };
+        nanosleep(&ts, NULL);
+    }
+    /* Two seconds into a one-second timeout, with no child yet. */
+    assert_false(TimeOutHasFired());
+
+    FILE *pp = cf_popen("/bin/sleep 5", "r", true);
+    assert_true(pp != NULL);
+
+    /* Ends at EOF, which arrives when the alarm terminates the child. */
+    char buf[64];
+    while (fread(buf, 1, sizeof(buf), pp) > 0)
+    {
+    }
+    cf_pclose(pp);
+
+    assert_true(TimeOutHasFired());
+    assert_true(TimeOutSignalledProcess());
+    ClearTimeOut();
+}
+
+static void test_set_leaves_the_clock_stopped(void)
+{
+    SetTimeOut(3600);
+    assert_true(TimeOutIsArmed());
+    /* alarm(0) returns the seconds left on a running clock, and 0 if none is
+     * running. Armed, but not yet ticking. */
+    assert_int_equal(alarm(0), 0);
+    ClearTimeOut();
+}
+
+/* One-shot: a second fork under the same timeout runs on the time already
+ * ticking, so the second start must not restart the command's budget. The
+ * second StartTimeOutClock() is deliberately issued against a *running* clock
+ * -- reading it with alarm(0) first would cancel it, and a starter that resets
+ * a live timer would then look identical to one that leaves it alone. */
+static void test_start_runs_the_clock_once(void)
+{
+    SetTimeOut(5);
+    StartTimeOutClock();
+
+    struct timespec ts = { .tv_sec = 1, .tv_nsec = 0 };
+    nanosleep(&ts, NULL);
+
+    StartTimeOutClock();
+
+    const int left = alarm(0);
+    assert_true(left > 0);
+    /* The remainder of the original 5s, not a fresh 5s. */
+    assert_true(left <= 4);
+    ClearTimeOut();
+}
+
+/* A timeout armed but never followed by a fork -- cf_popen() failing, or a
+ * caller returning early -- must be fully retired, not left able to start. */
+static void test_clear_retires_an_unstarted_clock(void)
+{
+    SetTimeOut(3600);
+    ClearTimeOut();
+
+    StartTimeOutClock();
+    assert_int_equal(alarm(0), 0);
+    assert_false(TimeOutIsArmed());
 }
 
 int main()
@@ -116,7 +204,11 @@ int main()
         unit_test(test_fired_alarm_without_a_process),
         unit_test(test_clear_preserves_the_record),
         unit_test(test_clear_preserves_a_true_signalled_flag),
-        unit_test(test_next_set_resets_the_record)
+        unit_test(test_next_set_resets_the_record),
+        unit_test(test_clock_does_not_run_before_the_fork),
+        unit_test(test_set_leaves_the_clock_stopped),
+        unit_test(test_start_runs_the_clock_once),
+        unit_test(test_clear_retires_an_unstarted_clock)
     };
 
     PRINT_TEST_BANNER();

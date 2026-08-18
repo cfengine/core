@@ -25,7 +25,16 @@
 #ifndef CFENGINE_TIMEOUT_H
 #define CFENGINE_TIMEOUT_H
 
+/* Arm a timeout, but leave its clock stopped: wherever cf_popen() lives in this
+ * tree, the alarm is started by StartTimeOutClock() once there is a child to
+ * terminate. Platforms whose pipes are implemented elsewhere start it here. */
 void SetTimeOut(int timeout);
+
+/* Start the clock armed by SetTimeOut(). Called by cf_popen() right after the
+ * child's pid reaches ALARM_PID, so an alarm can never be pending with nothing
+ * registered to kill. No-op when no timeout is armed, or when the clock is
+ * already running. */
+void StartTimeOutClock(void);
 
 /* Cancel a pending alarm and restore the default handler. Callers used to
  * open-code this; it also has to clear the armed flag, so that a command which
@@ -34,9 +43,11 @@ void SetTimeOut(int timeout);
  * that record stays readable after the disarm, until the next SetTimeOut(). */
 void ClearTimeOut(void);
 
-/* True between SetTimeOut() arming the alarm and the alarm being disarmed.
- * Consulted by code that forks a child which the timeout may have to
- * terminate, to decide whether that child needs a process group of its own. */
+/* True between SetTimeOut() arming the timeout and it being disarmed, whether
+ * or not its clock has started. Consulted by code that forks a child which the
+ * timeout may have to terminate, to decide whether that child needs a process
+ * group of its own -- a question that has the same answer either side of the
+ * fork that starts the clock. */
 bool TimeOutIsArmed(void);
 
 /* True if the alarm armed by the last SetTimeOut() actually fired. Lets a

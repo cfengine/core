@@ -271,6 +271,15 @@ static pid_t GenericCreatePipeAndFork(IOPipe *pipes)
 
     ALARM_PID = (pid != 0 ? pid : -1);
 
+    if (pid > 0)
+    {
+        /* Only now is there a process for TimeOut() to terminate. Starting the
+         * clock any earlier -- as SetTimeOut() used to -- lets the alarm fire
+         * in the window before this assignment, where it finds nothing
+         * registered and the command then runs unbounded. */
+        StartTimeOutClock();
+    }
+
     return pid;
 }
 

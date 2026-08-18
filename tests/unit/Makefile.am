@@ -170,6 +170,13 @@ noinst_PROGRAMS = redirection_test_stub
 redirection_test_stub_SOURCES = redirection_test_stub.c
 endif
 
+# Waits for a real SIGALRM. platform.h declares alarm() for Windows but no
+# implementation of it ships in this tree, so the test would have nothing to
+# wait for there.
+if !NT
+check_PROGRAMS += timeout_test
+endif
+
 check_SCRIPTS = dynamic_dependency_test.sh \
 	tar_portability_test.sh
 

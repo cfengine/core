@@ -900,6 +900,11 @@ AC_CHECK_DECLS(fgetgrent, [], [], [[#include <grp.h>]])
 
 AC_CHECK_DECLS(isfinite, [], [], [[#include <math.h>]])
 
+AC_CHECK_DECL([SCNd64], [],
+  [AC_MSG_ERROR(Cannot find SCNd64 in inttypes.h)],
+  [[#include <inttypes.h>]]
+  )
+
 AC_CHECK_FUNCS(getpwent setpwent endpwent)
 
 AC_CHECK_FUNCS(fgetspent lckpwdf ulckpwdf)

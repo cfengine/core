@@ -575,7 +575,7 @@ FileSelect GetSelectConstraints(const EvalContext *ctx, const Promise *pp)
         entries++;
     }
 
-    if (!IntegerRangeFromString(value, (long *) &s.min_size, (long *) &s.max_size))
+    if (!IntegerRangeFromString(value, &s.min_size, &s.max_size))
     {
         PromiseRef(LOG_LEVEL_ERR, pp);
         FatalError(ctx, "Could not make sense of integer range [%s]", value);
@@ -587,7 +587,7 @@ FileSelect GetSelectConstraints(const EvalContext *ctx, const Promise *pp)
         entries++;
     }
 
-    if (!IntegerRangeFromString(value, (long *) &s.min_ctime, (long *) &s.max_ctime))
+    if (!TimeRangeFromString(value, &s.min_ctime, &s.max_ctime))
     {
         PromiseRef(LOG_LEVEL_ERR, pp);
         FatalError(ctx, "Could not make sense of integer range [%s]", value);
@@ -599,7 +599,7 @@ FileSelect GetSelectConstraints(const EvalContext *ctx, const Promise *pp)
         entries++;
     }
 
-    if (!IntegerRangeFromString(value, (long *) &s.min_atime, (long *) &s.max_atime))
+    if (!TimeRangeFromString(value, &s.min_atime, &s.max_atime))
     {
         PromiseRef(LOG_LEVEL_ERR, pp);
         FatalError(ctx, "Could not make sense of integer range [%s]", value);
@@ -610,7 +610,7 @@ FileSelect GetSelectConstraints(const EvalContext *ctx, const Promise *pp)
         entries++;
     }
 
-    if (!IntegerRangeFromString(value, (long *) &s.min_mtime, (long *) &s.max_mtime))
+    if (!TimeRangeFromString(value, &s.min_mtime, &s.max_mtime))
     {
         PromiseRef(LOG_LEVEL_ERR, pp);
         FatalError(ctx, "Could not make sense of integer range [%s]", value);
@@ -1408,7 +1408,7 @@ ProcessSelect GetProcessFilterConstraints(const EvalContext *ctx, const Promise 
         entries++;
     }
 
-    if (!IntegerRangeFromString(value, (long *) &p.min_ttime, (long *) &p.max_ttime))
+    if (!TimeRangeFromString(value, &p.min_ttime, &p.max_ttime))
     {
         PromiseRef(LOG_LEVEL_ERR, pp);
         FatalError(ctx, "Could not make sense of integer range [%s]", value);
@@ -1419,7 +1419,7 @@ ProcessSelect GetProcessFilterConstraints(const EvalContext *ctx, const Promise 
         entries++;
     }
 
-    if (!IntegerRangeFromString(value, (long *) &p.min_stime, (long *) &p.max_stime))
+    if (!TimeRangeFromString(value, &p.min_stime, &p.max_stime))
     {
         PromiseRef(LOG_LEVEL_ERR, pp);
         FatalError(ctx, "Could not make sense of integer range [%s]", value);

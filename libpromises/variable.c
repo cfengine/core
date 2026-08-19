@@ -28,8 +28,6 @@
 #include <writer.h>
 #include <conversion.h>                                 /* DataTypeToString */
 
-#define VARIABLE_TAG_SECRET "secret"
-
 struct Variable_
 {
     VarRef *ref;

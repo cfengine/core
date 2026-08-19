@@ -61,6 +61,9 @@ void VariableSetRval(Variable *var, Rval new_rval);
  */
 bool VariableIsSecret(const Variable *var);
 
+/** The tag string used to mark variables as secret. */
+#define VARIABLE_TAG_SECRET "secret"
+
 VariableTable *VariableTableNew(void);
 void VariableTableDestroy(VariableTable *table);
 

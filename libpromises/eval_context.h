@@ -232,6 +232,12 @@ const Promise *EvalContextVariablePromiseGet(const EvalContext *ctx, const VarRe
 bool EvalContextVariableRemoveSpecial(const EvalContext *ctx, SpecialScope scope, const char *lval);
 bool EvalContextVariableRemove(const EvalContext *ctx, const VarRef *ref);
 StringSet *EvalContextVariableTags(const EvalContext *ctx, const VarRef *ref);
+/**
+ * @return Whether the variable #ref resolves to carries the "secret" tag.
+ * @note Callers that copy a variable's value into a NEW variable must consult
+ *       this and propagate the tag, or the copy launders the secret.
+ */
+bool EvalContextVariableIsTaggedSecret(const EvalContext *ctx, const VarRef *ref);
 bool EvalContextVariableClearMatch(EvalContext *ctx);
 VariableTableIterator *EvalContextVariableTableIteratorNew(const EvalContext *ctx, const char *ns, const char *scope, const char *lval);
 VariableTableIterator *EvalContextVariableTableFromRefIteratorNew(const EvalContext *ctx, const VarRef *ref);

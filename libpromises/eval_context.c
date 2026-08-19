@@ -2760,6 +2760,12 @@ StringSet *EvalContextVariableTags(const EvalContext *ctx, const VarRef *ref)
     return var_tags;
 }
 
+bool EvalContextVariableIsTaggedSecret(const EvalContext *ctx, const VarRef *ref)
+{
+    Variable *var = VariableResolve(ctx, ref);
+    return (var != NULL) && VariableIsSecret(var);
+}
+
 bool EvalContextVariableClearMatch(EvalContext *ctx)
 {
     return VariableTableClear(ctx->match_variables, NULL, NULL, NULL);

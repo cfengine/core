@@ -2015,6 +2015,7 @@ AC_CONFIG_FILES([Makefile
     cf-net/Makefile
     cf-secret/Makefile
     cf-watchd/Makefile
+    cf-reactor/Makefile
     config.post.h
     contrib/vagrant-ci/centos-9s-x64/Makefile
     misc/Makefile

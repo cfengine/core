@@ -231,3 +231,10 @@ ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, Nova_ClassHistoryEnable,
                                       ARG_UNUSED bool, enable)
 {
 }
+
+ENTERPRISE_FUNC_1ARG_DEFINE_STUB(int, ReactorEnterpriseMain, ARG_UNUSED bool, no_fork)
+{
+    Log(LOG_LEVEL_VERBOSE, "Nova extension library is not available.");
+    Log(LOG_LEVEL_VERBOSE, "Running cf-reactor community edition.");
+    return 0;
+}

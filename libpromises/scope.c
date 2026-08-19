@@ -36,6 +36,7 @@
 #include <policy.h>
 #include <eval_context.h>
 #include <audit.h>
+#include <variable.h>      /* VARIABLE_TAG_SECRET */
 
 /*******************************************************************/
 
@@ -153,18 +154,31 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
 
             DataType value_type;
             const void *value;
+            /* Whether the ARGUMENT is secret-tagged. The copy published into the
+             * callee's scope below must inherit that tag, or passing a secret
+             * list or container as a bundle parameter silently launders it: the
+             * callee's copy would be an ordinary variable, readable in plaintext
+             * by every reporting and logging path. (CFE-3294) */
+            bool value_is_secret = false;
             if (pbp != NULL)
             {
                 VarRef *ref = VarRefParseFromBundle(naked, pbp);
                 value = EvalContextVariableGetPlaintext(ctx, ref, &value_type);
+                value_is_secret = EvalContextVariableIsTaggedSecret(ctx, ref);
                 VarRefDestroy(ref);
             }
             else
             {
                 VarRef *ref = VarRefParseFromBundle(naked, bp);
                 value = EvalContextVariableGetPlaintext(ctx, ref, &value_type);
+                value_is_secret = EvalContextVariableIsTaggedSecret(ctx, ref);
                 VarRefDestroy(ref);
             }
+
+            /* EvalContextVariablePut() takes a comma-separated tag list. */
+            const char *const param_tags =
+                value_is_secret ? "source=promise," VARIABLE_TAG_SECRET
+                                : "source=promise";
 
             switch (value_type)
             {
@@ -173,14 +187,14 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
             case CF_DATA_TYPE_REAL_LIST:
             {
                 VarRef *ref = VarRefParseFromBundle(lval, bp);
-                EvalContextVariablePut(ctx, ref, value, CF_DATA_TYPE_STRING_LIST, "source=promise");
+                EvalContextVariablePut(ctx, ref, value, CF_DATA_TYPE_STRING_LIST, param_tags);
                 VarRefDestroy(ref);
             }
             break;
             case CF_DATA_TYPE_CONTAINER:
             {
                 VarRef *ref = VarRefParseFromBundle(lval, bp);
-                EvalContextVariablePut(ctx, ref, value, CF_DATA_TYPE_CONTAINER, "source=promise");
+                EvalContextVariablePut(ctx, ref, value, CF_DATA_TYPE_CONTAINER, param_tags);
                 VarRefDestroy(ref);
             }
             break;

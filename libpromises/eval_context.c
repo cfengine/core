@@ -2682,7 +2682,15 @@ const void *EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, Da
     if (var)
     {
         const VarRef *var_ref = VariableGetRef(var);
-        DataType var_type = VariableGetType(var);
+
+        /* A redacted secret comes back from VariableGetRval() as the scalar
+         * sentinel "************" whatever the variable's declared type is, so
+         * report it as a string. This also keeps indices into a secret data
+         * container redacted: with the declared type the container branch below
+         * would hand the sentinel to RvalContainerValue(), which aborts with a
+         * ProgrammingError, and any index that resolved would return plaintext. */
+        const bool redacted = (!get_secret && VariableIsSecret(var));
+        DataType var_type = redacted ? CF_DATA_TYPE_STRING : VariableGetType(var);
         Rval var_rval = VariableGetRval(var, get_secret);
 
         if (var_ref->num_indices == 0    &&
@@ -2704,18 +2712,7 @@ const void *EvalContextVariableGet(const EvalContext *ctx, const VarRef *ref, Da
         {
             if (type_out)
             {
-                /* When a secret is redacted (get_secret=false + secret variable),
-                 * VariableGetRval returns a scalar sentinel "************".
-                 * Report the actual returned type (string) to avoid type confusion
-                 * in callers that switch on the reported type (e.g., VarRefValueToJson). */
-                if (!get_secret && VariableIsSecret(var))
-                {
-                    *type_out = CF_DATA_TYPE_STRING;
-                }
-                else
-                {
-                    *type_out = var_type;
-                }
+                *type_out = var_type;
             }
             return var_rval.item;
         }

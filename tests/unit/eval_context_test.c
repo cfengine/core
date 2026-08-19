@@ -197,6 +197,53 @@ static void test_persistent_class_timer_policy(void)
     EvalContextDestroy(ctx);
 }
 
+/* A secret-tagged container must redact for an INDEXED read too, not just for
+ * the whole variable. Before the type was derived from the redacted value, this
+ * took the container branch of EvalContextVariableGet() and handed the scalar
+ * sentinel to RvalContainerValue(), which is a ProgrammingError -> abort. */
+static void test_secret_container_redacts_indexed_read(void)
+{
+    EvalContext *ctx = EvalContextNew();
+
+    JsonElement *data = JsonObjectCreate(1);
+    JsonObjectAppendString(data, "key", "hunter2");
+
+    VarRef *ref = VarRefParse("default:secret_bundle.mydata");
+    assert_true(EvalContextVariablePut(ctx, ref, data, CF_DATA_TYPE_CONTAINER,
+                                       "secret"));
+    VarRef *indexed = VarRefParse("default:secret_bundle.mydata[key]");
+
+    /* Control: asking for plaintext still yields the real container and the
+     * real value behind the index, so redaction cannot be faked by breaking
+     * container reads. */
+    DataType type = CF_DATA_TYPE_NONE;
+    const void *value = EvalContextVariableGetPlaintext(ctx, ref, &type);
+    assert_int_equal(CF_DATA_TYPE_CONTAINER, type);
+    assert_true(value != NULL);
+
+    type = CF_DATA_TYPE_NONE;
+    value = EvalContextVariableGetPlaintext(ctx, indexed, &type);
+    assert_int_equal(CF_DATA_TYPE_CONTAINER, type);
+    assert_string_equal("hunter2", JsonPrimitiveGetAsString(value));
+
+    /* The whole variable, redacted. */
+    type = CF_DATA_TYPE_NONE;
+    value = EvalContextVariableGet(ctx, ref, &type, false);
+    assert_int_equal(CF_DATA_TYPE_STRING, type);
+    assert_string_equal("************", (const char *) value);
+
+    /* And one of its indices. */
+    type = CF_DATA_TYPE_NONE;
+    value = EvalContextVariableGet(ctx, indexed, &type, false);
+    assert_int_equal(CF_DATA_TYPE_STRING, type);
+    assert_string_equal("************", (const char *) value);
+
+    VarRefDestroy(ref);
+    VarRefDestroy(indexed);
+    JsonDestroy(data);          /* VariableTablePut() copies the Rval */
+    EvalContextDestroy(ctx);
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -208,6 +255,7 @@ int main()
         unit_test(test_persistent_class_timer_policy),
         unit_test(test_changes_chroot),
         unit_test(test_eval_with_token_from_list),
+        unit_test(test_secret_container_redacts_indexed_read),
     };
 
     int ret = run_tests(tests);

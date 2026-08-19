@@ -25,14 +25,24 @@
 
 #include <platform.h>
 #include <logging.h>
-#include <stdio.h>
 #include <stdlib.h>
+#include <eval_context.h>
 #include <writer.h>
 #include <config.h>
 #include <generic_agent.h>
 #include <man.h>
 #include <cleanup.h>
 #include <prototypes3.h>
+
+/*****************************************************************************/
+/* Globals                                                                   */
+/*****************************************************************************/
+
+int NO_FORK = false;
+
+/*******************************************************************/
+/* Command line options                                            */
+/*******************************************************************/
 
 static const Component COMPONENT =
 {
@@ -44,7 +54,8 @@ static const Component COMPONENT =
 static const char *const CF_REACTOR_SHORT_DESCRIPTION = "CFEngine event reaction daemon";
 
 static const char *const CF_REACTOR_MANPAGE_LONG_DESCRIPTION =
-        "cf-reactor is a daemon reacting on events, currently only NOTIFY events from PostgreSQL.";
+    "cf-reactor is a daemon reacting on events. It watches specific events defined in the policy "
+    "and runs policy code on reaction to these events.";
 
 static const struct option OPTIONS[] =
 {
@@ -54,6 +65,7 @@ static const struct option OPTIONS[] =
     {"help", no_argument, 0, 'h'},
     {"inform", no_argument, 0, 'I'},
     {"timestamp", no_argument, 0, 'l'},
+    {"man", no_argument, 0, 'M'},
     {"verbose", no_argument, 0, 'v'},
     {"version", no_argument, 0, 'V'},
     {NULL, 0, 0, '\0'}
@@ -72,76 +84,111 @@ static const char *const HINTS[] =
     NULL
 };
 
-int main(int argc, char *argv[])
+static GenericAgentConfig *CheckOpts(int argc, char **argv)
 {
-    bool no_fork = false;
-
     extern char *optarg;
-    int longopt_idx;
     int c;
+    GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_REACTOR, GetTTYInteractive());
+
+    int longopt_idx;
     while ((c = getopt_long(argc, argv, "dFg:hIlMvV",
-                            OPTIONS, &longopt_idx))
-           != -1)
+                            OPTIONS, &longopt_idx)) != -1)
     {
         switch (c)
         {
         case 'd':
             LogSetGlobalLevel(LOG_LEVEL_DEBUG);
-            no_fork = true;
+            NO_FORK = true;
             break;
 
-        case 'F':
-            no_fork = true;
+        case 'I':
+            LogSetGlobalLevel(LOG_LEVEL_INFO);
+            break;
+
+        case 'v':
+            LogSetGlobalLevel(LOG_LEVEL_VERBOSE);
+            NO_FORK = true;
             break;
 
         case 'g':
             LogSetGlobalLevelArgOrExit(optarg);
             break;
 
-        case 'h':
-            {
-                Writer *w = FileWriter(stdout);
-                WriterWriteHelp(w, &COMPONENT, OPTIONS, HINTS, NULL, false, true);
-                FileWriterDetach(w);
-            }
-            DoCleanupAndExit(EXIT_SUCCESS);
-
-        case 'I':
-            LogSetGlobalLevel(LOG_LEVEL_INFO);
+        case 'F':
+            NO_FORK = true;
             break;
+
+        case 'V':
+        {
+            Writer *w = FileWriter(stdout);
+            GenericAgentWriteVersion(w);
+            FileWriterDetach(w);
+        }
+        DoCleanupAndExit(EXIT_SUCCESS);
+
+        case 'h':
+        {
+            Writer *w = FileWriter(stdout);
+            WriterWriteHelp(w, &COMPONENT, OPTIONS, HINTS, NULL, false, true);
+            FileWriterDetach(w);
+        }
+        DoCleanupAndExit(EXIT_SUCCESS);
+
+        case 'M':
+        {
+            Writer *out = FileWriter(stdout);
+            ManPageWrite(out, "cf-reactor", time(NULL),
+                         CF_REACTOR_SHORT_DESCRIPTION,
+                         CF_REACTOR_MANPAGE_LONG_DESCRIPTION,
+                         OPTIONS, HINTS,
+                         NULL, false,
+                         true);
+            FileWriterDetach(out);
+            DoCleanupAndExit(EXIT_SUCCESS);
+        }
 
         case 'l':
             LoggingEnableTimestamps(true);
             break;
 
-        case 'M':
-            {
-                Writer *out = FileWriter(stdout);
-                ManPageWrite(out, "cf-reactor", time(NULL),
-                             CF_REACTOR_SHORT_DESCRIPTION,
-                             CF_REACTOR_MANPAGE_LONG_DESCRIPTION,
-                             OPTIONS, HINTS,
-                             NULL, false,
-                             true);
-                FileWriterDetach(out);
-                DoCleanupAndExit(EXIT_SUCCESS);
-            }
-
-        case 'v':
-            LogSetGlobalLevel(LOG_LEVEL_VERBOSE);
-            no_fork = true;
+        /* long options only */
+        case 0:
+        {
+            // TODO: handle long options if they are added in the future
             break;
+        }
 
-        case 'V':
-            {
-                Writer *w = FileWriter(stdout);
-                GenericAgentWriteVersion(w);
-                FileWriterDetach(w);
-            }
-            DoCleanupAndExit(EXIT_SUCCESS);
-
+        default:
+        {
+            Writer *w = FileWriter(stdout);
+            WriterWriteHelp(w, &COMPONENT, OPTIONS, HINTS, NULL, false, true);
+            FileWriterDetach(w);
+        }
+        DoCleanupAndExit(EXIT_FAILURE);
         }
     }
 
-    return ReactorEnterpriseMain(no_fork);
+    if (!GenericAgentConfigParseArguments(config, argc - optind, argv + optind))
+    {
+        Log(LOG_LEVEL_ERR, "Too many arguments");
+        DoCleanupAndExit(EXIT_FAILURE);
+    }
+
+    return config;
+}
+
+/*****************************************************************************/
+
+int main(int argc, char *argv[])
+{
+    GenericAgentConfig *config = CheckOpts(argc, argv);
+    EvalContext *ctx = EvalContextNew();
+    GenericAgentConfigApply(ctx, config);
+
+    int ret = ReactorEnterpriseMain(NO_FORK);
+
+    GenericAgentFinalize(ctx, config);
+    CallCleanupFunctions();
+
+    return ret;
 }

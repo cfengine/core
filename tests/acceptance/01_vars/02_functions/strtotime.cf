@@ -1,0 +1,29 @@
+#######################################################
+#
+# Test strtotime function
+#
+#######################################################
+body common control
+{
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+bundle agent test
+{
+  vars:
+    "some_date" int => strtotime("2009-09-21T00:00:00Z");
+    "epoch" int => int(1253491200);
+
+  classes:
+    "ok" expression => strcmp("$(epoch)", "$(some_date)");
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

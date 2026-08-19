@@ -7597,6 +7597,101 @@ static FnCallResult FnCallStrftime(ARG_UNUSED EvalContext *ctx,
 
 /*********************************************************************/
 
+static const char *date_paths[] = {
+    "/usr/bin/date",
+    "/bin/date",
+    NULL
+};
+
+static const char *LocateDateBinary()
+{
+    for (size_t i = 0; date_paths[i] != NULL; i++)
+    {
+        const char *path = date_paths[i];
+
+        if (IsExecutable(path))
+        {
+            return path;
+        }
+    }
+    return NULL;
+}
+
+static int ParseDate(const char *input_string, time_t *out)
+{
+    const char *date_path = LocateDateBinary();
+
+    if (date_path == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Unable to find 'date' binary");
+        return -1;
+    }
+
+    char buffer[MAX_INPUT];
+    int n = snprintf(buffer, sizeof(buffer), "--date=%s", input_string);
+
+    if (n < 0 || (size_t) n >= sizeof(buffer)) {
+        Log(LOG_LEVEL_ERR, "Truncation error: input string '%.10s...' is too long (%d >= %zu)",
+            input_string, n, sizeof(buffer));
+        return -1;
+    }
+
+    const char *argv[] = {date_path, buffer, "+%s", NULL};
+    FILE *fd = cf_popen_exact_args(argv, "r", true);
+
+    if (fd == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Couldn't run date \"--date='%s' +%%s\"", input_string);
+        return -1;
+    }
+
+    size_t bytes_read = fread(buffer, 1, sizeof(buffer) - 1 , fd);
+    buffer[bytes_read] = '\0';
+
+    if (bytes_read == 0)
+    {
+        if (ferror(fd))
+        {
+            Log(LOG_LEVEL_ERR, "Error reading output for '%s'", input_string);
+        }
+        else if (feof(fd))
+        {
+            Log(LOG_LEVEL_DEBUG, "No output read for '%s'", input_string);
+        }
+        fclose(fd);
+        return -1;
+    }
+    fclose(fd);
+
+    int ret = StringToLong(buffer, (long *) out);
+    if (ret != 0)
+    {
+        LogStringToLongError(buffer, "ParseDate", ret);
+        return -1;
+    }
+
+    return 0;
+}
+
+static FnCallResult FnCallStrToTime(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
+{
+    assert(fp != NULL);
+
+    const char *input_string = RlistScalarValue(finalargs);
+    time_t result;
+    int ret = ParseDate(input_string, &result);
+
+    if (ret != 0)
+    {
+        Log(LOG_LEVEL_ERR, "'%s': Invalid date '%s'", fp->name, input_string);
+        return FnFailure();
+    }
+
+    return FnReturnF("%ld", result);
+}
+
+/*********************************************************************/
+
 static FnCallResult FnCallEval(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
     if (finalargs == NULL)
@@ -11427,6 +11522,12 @@ static const FnCallArg STRFTIME_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg STRTOTIME_ARGS[] =
+{
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "String to parse"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
 static const FnCallArg STRING_REPLACE_ARGS[] =
 {
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Source string"},
@@ -12002,6 +12103,8 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("strcmp", CF_DATA_TYPE_CONTEXT, STRCMP_ARGS, &FnCallStrCmp, "True if the two strings match exactly",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL, DEFAULT_ARGC),
     FnCallTypeNew("strftime", CF_DATA_TYPE_STRING, STRFTIME_ARGS, &FnCallStrftime, "Format a date and time string",
+                  FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL, DEFAULT_ARGC),
+    FnCallTypeNew("strtotime", CF_DATA_TYPE_INT, STRTOTIME_ARGS, &FnCallStrToTime, "Parse a timestamp from a string",
                   FNCALL_OPTION_NONE, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL, DEFAULT_ARGC),
     FnCallTypeNew("sublist", CF_DATA_TYPE_STRING_LIST, SUBLIST_ARGS, &FnCallSublist, "Returns arg3 element from either the head or the tail (according to arg2) of list or array or data container arg1.",
                   FNCALL_OPTION_COLLECTING, FNCALL_CATEGORY_DATA, SYNTAX_STATUS_NORMAL, DEFAULT_ARGC),

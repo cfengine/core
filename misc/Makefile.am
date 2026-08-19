@@ -33,7 +33,16 @@ install-data-hook:
 	-systemctl --no-ask-password daemon-reload
 
 endif
-dist_bin_SCRIPTS = cf-support
+# cf-support is POSIX sh; Windows gets the PowerShell port and a .cmd wrapper.
+# All three are distributed regardless of build host: the dist tarball is
+# produced on Unix and consumed by the Windows packaging.
+if WINDOWS
+bin_SCRIPTS = cf-support.ps1 cf-support.cmd
+else
+bin_SCRIPTS = cf-support
+endif
+
+EXTRA_DIST += cf-support cf-support.ps1 cf-support.cmd
 
 check-local:
 	@if command -v shellcheck 2>/dev/null; then \

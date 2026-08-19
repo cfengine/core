@@ -62,6 +62,7 @@ bool StringIsBoolean(const char *val);
 long IntFromString(const char *s);
 bool DoubleFromString(const char *s, double *value_out);
 bool IntegerRangeFromString(const char *intrange, long *min_out, long *max_out);
+bool TimeRangeFromString(const char *timerange, time_t *min_out, time_t *max_out);
 bool IsRealNumber(const char *s);
 
 

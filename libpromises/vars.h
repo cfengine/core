@@ -36,4 +36,10 @@ bool IsQualifiedVariable(const char *var);
 bool StringContainsVar(const char *s, const char *v);
 bool IsCf3VarString(const char *str);
 
+/**
+ * Check if the unexpanded string value references any secret-tagged variables.
+ * Returns a list of secret variable names found (caller must destroy), or NULL if none.
+ */
+StringSet *FindSecretVariableReferences(const EvalContext *ctx, const char *ns, const char *scope, const char *value);
+
 #endif

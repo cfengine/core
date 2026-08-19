@@ -193,6 +193,66 @@ bool IsCf3VarString(const char *str)
     return (vars != 0);
 }
 
+/**
+ * Check if the unexpanded string value references any secret-tagged variables.
+ * Returns a list of secret variable names found (caller must destroy), or NULL if none.
+ */
+StringSet *FindSecretVariableReferences(const EvalContext *ctx, const char *ns, const char *scope, const char *value)
+{
+    if (!value || !IsCf3VarString(value))
+    {
+        return NULL;
+    }
+
+    StringSet *secret_refs = NULL;
+    Buffer *current_item = BufferNew();
+
+    for (const char *sp = value; *sp != '\0'; sp++)
+    {
+        BufferClear(current_item);
+        ExtractScalarPrefix(current_item, sp, strlen(sp));
+        sp += BufferSize(current_item);
+        if (*sp == '\0')
+        {
+            break;
+        }
+
+        BufferClear(current_item);
+        ExtractScalarReference(current_item, sp, strlen(sp), true);
+        sp += BufferSize(current_item) + 2;
+
+        if (IsCf3VarString(BufferData(current_item)))
+        {
+            // Recursively expand nested variables
+            Buffer *temp = BufferCopy(current_item);
+            BufferClear(current_item);
+            ExpandScalar(ctx, ns, scope, BufferData(temp), current_item);
+            BufferDestroy(temp);
+        }
+
+        if (!IsExpandable(BufferData(current_item)))
+        {
+            VarRef *ref = VarRefParseFromNamespaceAndScope(
+                BufferData(current_item),
+                ns, scope, CF_NS, '.');
+            StringSet *var_tags = EvalContextVariableTags(ctx, ref);
+            VarRefDestroy(ref);
+
+            if (var_tags != NULL && StringSetContains(var_tags, VARIABLE_TAG_SECRET))
+            {
+                if (!secret_refs)
+                {
+                    secret_refs = StringSetNew();
+                }
+                StringSetAdd(secret_refs, xstrdup(BufferData(current_item)));
+            }
+        }
+    }
+
+    BufferDestroy(current_item);
+    return secret_refs;
+}
+
 /*********************************************************************/
 
 static bool IsCf3Scalar(char *str)

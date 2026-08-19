@@ -483,6 +483,69 @@ PromiseResult VerifyVarPromise(EvalContext *ctx, const Promise *pp,
 
         const char *comment = PromiseGetConstraintAsRval(pp, "comment", RVAL_TYPE_SCALAR);
 
+        /* SECRET TAINT PROPAGATION. If the UNEXPANDED value references a
+         * secret-tagged variable, the variable defined here inherits the tag.
+         *
+         * Without this the tag does not travel with the value, and the tag is the
+         * only thing any redaction can key on:
+         *
+         *   "password"  string => "hunter2", meta => { "secret" };
+         *   "laundered" string => "$(password)";
+         *
+         * left 'laundered' an ordinary variable holding the plaintext, readable
+         * by every reporting and logging path. Inheriting fails closed.
+         *
+         * This runs on EVERY pass, unlike the warning it replaces, which ran only
+         * on the last one. The variable is written on each pass, and a copy
+         * written untagged in an earlier pass stays readable in plaintext for the
+         * rest of that pass.
+         *
+         * Cost is bounded: FindSecretVariableReferences() returns immediately
+         * unless the value actually contains a reference (IsCf3VarString).
+         *
+         * KNOWN GAP: only RVAL_TYPE_SCALAR values are inspected, so a list or
+         * container assembled out of secrets does not inherit. (CFE-3294)
+         *
+         * READ THE VALUE FROM pp->org_pp, NOT FROM opts.cp_save. CFEngine copies
+         * and fully expands the promise before calling any verify function
+         * (ExpandDeRefPromise), so opts.cp_save->rval.item is already "hunter2" --
+         * the "$(password)" reference this check exists to find is gone by then,
+         * FindSecretVariableReferences() short-circuits on IsCf3VarString, and the
+         * whole block is dead code. That is precisely how the CFE-3293 taint
+         * warning this replaces came to never fire. pp->org_pp is the unexpanded
+         * raw promise (policy.h:122). */
+        const Constraint *unexpanded_cp =
+            (pp->org_pp != NULL)
+                ? PromiseGetConstraintWithType(pp->org_pp, opts.cp_save->lval,
+                                               RVAL_TYPE_SCALAR)
+                : NULL;
+        if (unexpanded_cp != NULL && unexpanded_cp->rval.item != NULL)
+        {
+            StringSet *secret_refs = FindSecretVariableReferences(ctx,
+                PromiseGetBundle(pp)->ns, PromiseGetBundle(pp)->name,
+                unexpanded_cp->rval.item);
+            if (secret_refs != NULL)
+            {
+                if (!StringSetContains(tags, VARIABLE_TAG_SECRET))
+                {
+                    StringSetAdd(tags, xstrdup(VARIABLE_TAG_SECRET));
+
+                    /* Announce once, on the final pass, so the inheritance is
+                     * visible without repeating it every pass. */
+                    if (EvalContextGetPass(ctx) == CF_DONEPASSES - 1)
+                    {
+                        Buffer *b = StringSetToBuffer(secret_refs, ',');
+                        Log(LOG_LEVEL_VERBOSE,
+                            "Variable '%s' inherits meta => { \"secret\" }"
+                            " from secret variable(s) [%s]",
+                            pp->promiser, BufferData(b));
+                        BufferDestroy(b);
+                    }
+                }
+                StringSetDestroy(secret_refs);
+            }
+        }
+
         /* WRITE THE VARIABLE AT LAST. */
         bool success = EvalContextVariablePutTagsSetWithComment(ctx, ref, rval.item, required_datatype,
                                                                 tags, comment);

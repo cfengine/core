@@ -858,7 +858,7 @@ bool FullTextMatch(const char *regptr, const char *cmpptr)
     fail();
 }
 
-const void *EvalContextVariableGet(const EvalContext *ctx, const VarRef *lval, DataType *type_out)
+const void *EvalContextVariableGetPlaintext(const EvalContext *ctx, const VarRef *lval, DataType *type_out)
 {
     fail();
 }

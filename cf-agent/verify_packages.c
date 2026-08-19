@@ -264,7 +264,7 @@ static PromiseResult HandleOldPackagePromiseType(EvalContext *ctx, const Promise
     {
         const char *reserved = reserved_vars[c];
         VarRef *var_ref = VarRefParseFromScope(reserved, "this");
-        if (EvalContextVariableGet(ctx, var_ref, NULL))
+        if (EvalContextVariableGetPlaintext(ctx, var_ref, NULL))
         {
             Log(LOG_LEVEL_WARNING, "$(%s) variable has a special meaning in packages promises. "
                 "Things may not work as expected if it is already defined.", reserved);

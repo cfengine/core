@@ -7692,6 +7692,71 @@ static FnCallResult FnCallStrToTime(ARG_UNUSED EvalContext *ctx, ARG_UNUSED cons
 
 /*********************************************************************/
 
+static FnCallResult FnCallFileOlderThan(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
+{
+    assert(fp != NULL);
+
+    if (finalargs == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Function '%s' requires path as first argument",
+            fp->name);
+        return FnFailure();
+    }
+    const char *filename = RlistScalarValue(finalargs);
+
+    if (finalargs->next == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Function '%s' requires date or date offset as second argument",
+            fp->name);
+        return FnFailure();
+    }
+    const char *date = RlistScalarValue(finalargs->next);
+    const char *option = (finalargs->next->next != NULL) ? RlistScalarValue(finalargs->next->next) : "modification";
+
+    struct stat statbuf;
+
+    if (stat(filename, &statbuf) != 0)
+    {
+        Log(LOG_LEVEL_ERR, "'%s': Couldn't stat '%s'", fp->name, filename);
+        return FnFailure();
+    }
+
+    time_t file_ts;
+
+    if (StringEqual_IgnoreCase(option, "modification") || StringEqual_IgnoreCase(option, "modif") )
+    {
+        file_ts = statbuf.st_mtime;
+    }
+    else if (StringEqual_IgnoreCase(option, "access"))
+    {
+        file_ts = statbuf.st_atime;
+    }
+    else if (StringEqual_IgnoreCase(option, "change"))
+    {
+        file_ts = statbuf.st_ctime;
+    }
+    else
+    {
+        ProgrammingError("Unknown option for %s\n", fp->name);
+    }
+
+    time_t input_time;
+    int ret = ParseDate(date, &input_time);
+
+    if (ret != 0)
+    {
+        Log(LOG_LEVEL_ERR, "'%s': Couldn't parse '%s'", fp->name, date);
+        return FnFailure();
+    }
+
+    time_t now = time(NULL);
+    time_t offset = input_time - now; // convert date to an offset
+
+    return FnReturnContext(file_ts + offset <= now);
+}
+
+/*********************************************************************/
+
 static FnCallResult FnCallEval(EvalContext *ctx, ARG_UNUSED const Policy *policy, const FnCall *fp, const Rlist *finalargs)
 {
     if (finalargs == NULL)
@@ -11756,6 +11821,14 @@ static const FnCallArg ISREADABLE_ARGS[] =
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
+static const FnCallArg FILE_OLDER_THAN_ARGS[] =
+{
+    {CF_ABSPATHRANGE, CF_DATA_TYPE_STRING, "Path to file"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Date string"},
+    {"modification,modif,access,change", CF_DATA_TYPE_OPTION, "file timespec"},
+    {NULL, CF_DATA_TYPE_NONE, NULL}
+};
+
 static const FnCallArg DATATYPE_ARGS[] =
 {
     {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Variable identifier"},
@@ -12206,6 +12279,9 @@ const FnCallType CF_FNCALL_TYPES[] =
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL, ARGC(2, 3)),
     FnCallTypeNew("isreadable", CF_DATA_TYPE_CONTEXT, ISREADABLE_ARGS, &FnCallIsReadable, "Check if file is readable. Timeout immediately or after optional timeout interval",
                   FNCALL_OPTION_VARARG, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL, ARGC(1, 2)),
+    FnCallTypeNew("file_older_than", CF_DATA_TYPE_CONTEXT, FILE_OLDER_THAN_ARGS, &FnCallFileOlderThan, "Check if file is older than a time offset or date.",
+                  FNCALL_OPTION_VARARG, FNCALL_CATEGORY_FILES, SYNTAX_STATUS_NORMAL, ARGC(2, 3)),
+
 
     // Datatype functions
     FnCallTypeNew("type", CF_DATA_TYPE_STRING, DATATYPE_ARGS, &FnCallDatatype, "Get type description as string",

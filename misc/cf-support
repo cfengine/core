@@ -390,6 +390,23 @@ else
 fi
 echo "Captured output of $syslog_cmd filtered for cf-|CFEngine"
 
+# Report entries the client dropped before sending. This warning is the only
+# record that the row existed: the hub never receives it, so the resulting
+# CFPA_ERR_ZERO_ROWS has no hub-side explanation. Surfaced separately because
+# the filtered syslog above is routinely hundreds of megabytes.
+_dropped="$tmpdir"/report-entries-over-network-limit.log
+gzip -cd "$_syslog_filtered" 2>/dev/null | grep "exceeds network limit" > "$_dropped" 2>/dev/null
+_dropped_n=$(wc -l < "$_dropped" 2>/dev/null | tr -d ' ')
+echo "** Report entries dropped for exceeding CF_MAXTRANSSIZE" >> "$info_file"
+if [ "${_dropped_n:-0}" -eq 0 ]; then
+  echo "- none found in the collected system log" >> "$info_file"
+  rm -f "$_dropped"
+else
+  echo "- ${_dropped_n} entr(ies) dropped before reaching the hub [[./report-entries-over-network-limit.log]]" >> "$info_file"
+fi
+echo >> "$info_file"
+echo "Checked system log for report entries over the network limit"
+
 # cf- component related SELinux denials, as either subject or object
 if command -v ausearch >/dev/null; then
   ausearch -m avc -se cfengine > "$tmpdir"/ausearch-cfengine-avcs.log || true
@@ -435,6 +452,36 @@ if [ -d "$WORKDIR/diagnostics" ]; then
   echo "Added diagnostics directory (includes report_dumps)"
 else
   echo "diagnostics directory not found, skipping"
+fi
+
+# Rows over CF_MAXTRANSSIZE (4024) are dropped from the reply to the hub with
+# only a WARNING here, so the resulting CFPA_ERR_ZERO_ROWS has no hub-side
+# explanation. state/diff holds the same serialization, so count them first.
+# Records are delimited by quote parity, not newlines: a quoted field may
+# contain an embedded CRLF.
+if [ -d "$WORKDIR/state/diff" ]; then
+  echo "** Report rows exceeding CF_MAXTRANSSIZE (4024 bytes) in state/diff" >> "$info_file"
+  for _diff in "$WORKDIR"/state/diff/*.diff; do
+    [ -f "$_diff" ] || continue
+    awk -v LIMIT=4024 '
+      BEGIN { rec = ""; inq = 0; n = 0; max = 0; over = 0 }
+      {
+        line = $0; sub(/\r$/, "", line)
+        tmp = line; q = gsub(/"/, "", tmp)
+        rec = (rec == "") ? line : rec "\r\n" line
+        inq = (inq + q) % 2
+        if (inq == 0) {
+          len = length(rec); n++
+          if (len > max) max = len
+          if (len > LIMIT) over++
+          rec = ""
+        }
+      }
+      END { printf "- %s: records=%d max_bytes=%d over_limit=%d\n", FILENAME, n, max, over }
+    ' "$_diff" >> "$info_file"
+  done
+  echo >> "$info_file"
+  echo "Captured report row sizes from $WORKDIR/state/diff"
 fi
 
 if [ -f $WORKDIR/share/cf-support-nova-hub.sh ]; then

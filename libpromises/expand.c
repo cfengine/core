@@ -446,7 +446,7 @@ static Rval ExpandListEntry(const EvalContext *ctx,
                 VarRef *ref = VarRefParseFromScope(naked, scope);
 
                 DataType value_type;
-                const void *value = EvalContextVariableGet(ctx, ref, &value_type);
+                const void *value = EvalContextVariableGetPlaintext(ctx, ref, &value_type);
                 VarRefDestroy(ref);
 
                 if (value_type != CF_DATA_TYPE_NONE)     /* variable found? */
@@ -567,7 +567,7 @@ char *ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope,
                 BufferData(current_item),
                 ns, scope, CF_NS, '.');
             DataType value_type;
-            const void *value = EvalContextVariableGet(ctx, ref, &value_type);
+            const void *value = EvalContextVariableGetPlaintext(ctx, ref, &value_type);
             VarRefDestroy(ref);
 
             switch (DataTypeToRvalType(value_type))
@@ -639,7 +639,7 @@ Rval EvaluateFinalRval(EvalContext *ctx, const Policy *policy,
         {
             VarRef *ref = VarRefParseFromScope(naked, scope);
             DataType value_type;
-            const void *value = EvalContextVariableGet(ctx, ref, &value_type);
+            const void *value = EvalContextVariableGetPlaintext(ctx, ref, &value_type);
             VarRefDestroy(ref);
 
             if (DataTypeToRvalType(value_type) == RVAL_TYPE_LIST)

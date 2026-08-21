@@ -28,7 +28,7 @@
 #include <string_lib.h>      // StringStartsWith()
 #include <string_sequence.h> // SeqStrginFromString()
 #include <policy.h>          // Promise
-#include <eval_context.h>    // cfPS(), EvalContextVariableGet()
+#include <eval_context.h>    // cfPS(), EvalContextVariableGetPlaintext()
 #include <attributes.h>      // GetClassContextAttributes(), IsClassesBodyConstraint()
 #include <expand.h>          // ExpandScalar()
 #include <var_expressions.h> // StringContainsUnresolved(), StringIsBareNonScalarRef()
@@ -685,7 +685,7 @@ static inline bool TryToGetContainerFromScalarRef(const EvalContext *ctx, const 
         VarRef *ref = VarRefParse(var_ref_str);
 
         DataType type = CF_DATA_TYPE_NONE;
-        const void *val = EvalContextVariableGet(ctx, ref, &type);
+        const void *val = EvalContextVariableGetPlaintext(ctx, ref, &type);
         free(var_ref_str);
         VarRefDestroy(ref);
 

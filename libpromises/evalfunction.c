@@ -249,7 +249,7 @@ static JsonElement* VarRefValueToJson(const EvalContext *ctx, const FnCall *fp, 
     assert(ref);
 
     DataType value_type = CF_DATA_TYPE_NONE;
-    const void *value = EvalContextVariableGet(ctx, ref, &value_type);
+    const void *value = EvalContextVariableGetPlaintext(ctx, ref, &value_type);
     bool want_type = true;
 
     // Convenience storage for the name of the function, since fp can be NULL
@@ -2327,7 +2327,7 @@ static FnCallResult FnCallBundlesMatching(EvalContext *ctx, const Policy *policy
             VarRef *ref = VarRefParseFromBundle("tags", bp);
             VarRefSetMeta(ref, true);
             DataType type;
-            const void *bundle_tags = EvalContextVariableGet(ctx, ref, &type);
+            const void *bundle_tags = EvalContextVariableGetPlaintext(ctx, ref, &type);
             VarRefDestroy(ref);
 
             bool found = false; // case where tag_args are given and the bundle has no tags
@@ -3695,7 +3695,7 @@ static FnCallResult FnCallGetIndices(EvalContext *ctx, ARG_UNUSED const Policy *
     {
         VarRef *ref = ResolveAndQualifyVarName(fp, name_str);
         DataType type;
-        EvalContextVariableGet(ctx, ref, &type);
+        EvalContextVariableGetPlaintext(ctx, ref, &type);
 
         /* A variable holding a data container. */
         if (DataTypeToRvalType(type) == RVAL_TYPE_CONTAINER || DataTypeToRvalType(type) == RVAL_TYPE_LIST)
@@ -4852,7 +4852,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx,
 
     VarRef *ref = VarRefParse(naked);
     DataType value_type;
-    const Rlist *hostnameip = EvalContextVariableGet(ctx, ref, &value_type);
+    const Rlist *hostnameip = EvalContextVariableGetPlaintext(ctx, ref, &value_type);
     if (value_type == CF_DATA_TYPE_NONE)
     {
         Log(LOG_LEVEL_VERBOSE,
@@ -5933,7 +5933,7 @@ static char *DataTypeStringFromVarName(EvalContext *ctx, const char *var_name, b
 
     VarRef *const var_ref = VarRefParse(var_name);
     DataType type;
-    const void *value = EvalContextVariableGet(ctx, var_ref, &type);
+    const void *value = EvalContextVariableGetPlaintext(ctx, var_ref, &type);
     VarRefDestroy(var_ref);
 
     const char *const type_str =
@@ -6229,7 +6229,7 @@ static bool CanFormatAsStringList(EvalContext *ctx, const Rlist *arg, const Rlis
     const char* const varname = RlistScalarValue(arg);
     VarRef *ref = VarRefParse(varname);
     DataType type;
-    *out = EvalContextVariableGet(ctx, ref, &type);
+    *out = EvalContextVariableGetPlaintext(ctx, ref, &type);
     VarRefDestroy(ref);
 
     return type == CF_DATA_TYPE_STRING_LIST;
@@ -6615,7 +6615,7 @@ static FnCallResult FnCallIsVariable(EvalContext *ctx, ARG_UNUSED const Policy *
     {
         VarRef *ref = VarRefParse(lval);
         DataType value_type;
-        EvalContextVariableGet(ctx, ref, &value_type);
+        EvalContextVariableGetPlaintext(ctx, ref, &value_type);
         if (value_type != CF_DATA_TYPE_NONE)
         {
             found = true;

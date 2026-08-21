@@ -891,6 +891,42 @@ ENTERPRISE_FUNC_0ARG_DEFINE_STUB(HashMethod, GetBestFileChangeHashMethod)
     return HASH_METHOD_SHA512;
 }
 
+/* Keep in sync with CF_CHANGE_SILENCE_RANGE in cf3.defs.h, which is what
+ * rejects unknown category names during policy validation. */
+static const struct
+{
+    const char *name;
+    FileChangeSilence categories;
+} FILE_CHANGE_SILENCE_CATEGORIES[] = {
+    { "content", FILE_CHANGE_SILENCE_CONTENT },
+    { "add",     FILE_CHANGE_SILENCE_ADD     },
+    { "remove",  FILE_CHANGE_SILENCE_REMOVE  },
+    { "owner",   FILE_CHANGE_SILENCE_OWNER   },
+    { "group",   FILE_CHANGE_SILENCE_GROUP   },
+    { "perms",   FILE_CHANGE_SILENCE_PERMS   },
+    { "device",  FILE_CHANGE_SILENCE_DEVICE  },
+    { "mtime",   FILE_CHANGE_SILENCE_MTIME   },
+    { "inode",   FILE_CHANGE_SILENCE_INODE   },
+    { "stats",   FILE_CHANGE_SILENCE_STATS   },
+    { "all",     FILE_CHANGE_SILENCE_ALL     },
+};
+
+static FileChangeSilence FileChangeSilenceFromString(const char *s)
+{
+    assert(s != NULL);
+
+    for (size_t i = 0;
+         i < sizeof(FILE_CHANGE_SILENCE_CATEGORIES) / sizeof(FILE_CHANGE_SILENCE_CATEGORIES[0]);
+         i++)
+    {
+        if (StringEqual(s, FILE_CHANGE_SILENCE_CATEGORIES[i].name))
+        {
+            return FILE_CHANGE_SILENCE_CATEGORIES[i].categories;
+        }
+    }
+    return FILE_CHANGE_SILENCE_NONE;
+}
+
 FileChange GetChangeMgtConstraints(const EvalContext *ctx, const Promise *pp)
 {
     FileChange c;
@@ -950,6 +986,25 @@ FileChange GetChangeMgtConstraints(const EvalContext *ctx, const Promise *pp)
     else
     {
         c.report_changes = FILE_CHANGE_REPORT_NONE;
+    }
+
+    c.silence = FILE_CHANGE_SILENCE_NONE;
+
+    for (const Rlist *rp = PromiseGetConstraintAsList(ctx, "silence", pp);
+         rp != NULL; rp = rp->next)
+    {
+        const char *cat = RlistScalarValue(rp);
+        FileChangeSilence flag = FileChangeSilenceFromString(cat);
+        if (flag != FILE_CHANGE_SILENCE_NONE)
+        {
+            c.silence |= flag;
+        }
+        else
+        {
+            Log(LOG_LEVEL_WARNING,
+                "Unknown 'silence' category '%s' in changes body", cat);
+            PromiseRef(LOG_LEVEL_WARNING, pp);
+        }
     }
 
     if (PromiseGetConstraintAsRval(pp, "update_hashes", RVAL_TYPE_SCALAR))
@@ -1138,6 +1193,8 @@ EditDefaults GetEditDefaults(const EvalContext *ctx, const Promise *pp)
 
 ContextConstraint GetContextConstraints(const EvalContext *ctx, const Promise *pp)
 {
+    assert(pp != NULL);
+
     ContextConstraint a;
 
     a.nconstraints = 0;

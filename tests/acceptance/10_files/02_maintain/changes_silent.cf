@@ -1,0 +1,153 @@
+#######################################################
+#
+# Test the 'silence' attribute of a changes body.
+#
+# Listing a change category in 'silence' must stop its alert from being
+# printed, while leaving everything a policy can act on intact: the promise
+# outcome classes, the checksum_alerts class, and the persistent audit log
+# in state/file_changes.log.
+#
+# Every silenced expectation is paired with an unsilenced control file, so
+# that an agent where 'silence' does nothing at all fails this test instead
+# of passing it. CHECKPOINT_DONE proves the sub-policy reached the end,
+# since a policy that aborts early also prints no alerts.
+#
+# The sub-policy is run from a commands promise rather than execresult() so
+# that it runs exactly once; execresult() would re-run it on each evaluation
+# pass and we would inspect the output of an already converged run.
+#
+# Only content, perms and stat categories are covered; owner and group
+# silencing would need chown/chgrp, which needs root.
+#
+#######################################################
+body common control
+{
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+bundle agent init
+{
+  files:
+    "$(G.testdir)/silent"
+      depth_search => recurse("inf"),
+      file_select => all,
+      delete => tidy;
+
+    "$(test.output)" delete => tidy;
+}
+
+#######################################################
+bundle agent test
+{
+  vars:
+    "output" string => "$(G.testdir)/changes_silent.out";
+
+  commands:
+    "$(sys.cf_agent) -KI -f $(this.promise_filename).sub > $(output) 2>&1"
+      contain => in_shell;
+}
+
+#######################################################
+bundle agent check
+{
+  vars:
+    # Alerts that 'silence' must have suppressed. The stat summary for
+    # quiet_all.txt is here because it is logged after the individual
+    # categories and is easy to leave unsilenced.
+    "must_be_absent"
+      slist => {
+        "Hash 'sha256' for '.*quiet_content\.txt' changed!",
+        "Recorded integrity changes in '.*quiet_content\.txt'",
+        "Hash 'sha256' for '.*quiet_all\.txt' changed!",
+        "Recorded integrity changes in '.*quiet_all\.txt'",
+        "Permissions for '.*quiet_all\.txt' changed",
+        "Recorded permissions changes in '.*quiet_all\.txt'",
+        "Wrote stat information changes for '.*quiet_all\.txt'",
+        "CHECKPOINT_quiet_content_not_kept",
+        "CHECKPOINT_quiet_all_not_kept",
+      };
+
+    # The controls: the same alerts unsilenced, so that a build which
+    # suppresses nothing still fails, plus the outcome classes that
+    # silencing must leave alone.
+    "must_be_present"
+      slist => {
+        "Hash 'sha256' for '.*loud_content\.txt' changed!",
+        "Recorded integrity changes in '.*loud_content\.txt'",
+        "Permissions for '.*loud_stats\.txt' changed",
+        "Recorded permissions changes in '.*loud_stats\.txt'",
+        "Wrote stat information changes for '.*loud_stats\.txt'",
+        "CHECKPOINT_quiet_content_repaired",
+        "CHECKPOINT_quiet_all_repaired",
+        "CHECKPOINT_loud_content_repaired",
+        "CHECKPOINT_loud_stats_repaired",
+        "CHECKPOINT_checksum_alerts",
+        "CHECKPOINT_DONE",
+      };
+
+    "log"
+      string => "$(sys.workdir)$(const.dirsep)state$(const.dirsep)file_changes.log";
+
+    # A silenced change must still reach the persistent audit log.
+    "n_quiet_content"
+      int => countlinesmatching(
+        ".*quiet_content\.txt,C,Content changed.*", "$(log)"
+      );
+
+    "n_quiet_all_content"
+      int => countlinesmatching(
+        ".*quiet_all\.txt,C,Content changed.*", "$(log)"
+      );
+
+    "n_quiet_all_stats"
+      int => countlinesmatching(".*quiet_all\.txt,S,.*", "$(log)");
+
+  classes:
+    "leaked"
+      expression => isgreaterthan(
+        countlinesmatching(".*$(must_be_absent).*", "$(test.output)"), "0"
+      );
+
+    "missing"
+      expression => islessthan(
+        countlinesmatching(".*$(must_be_present).*", "$(test.output)"), "1"
+      );
+
+    "audit_ok"
+      and => {
+        isgreaterthan("$(n_quiet_content)", "0"),
+        isgreaterthan("$(n_quiet_all_content)", "0"),
+        isgreaterthan("$(n_quiet_all_stats)", "0"),
+      };
+
+    "ok" and => { "!leaked", "!missing", "audit_ok" };
+
+  reports:
+    DEBUG::
+      "silence leaked an alert matching '$(must_be_absent)'"
+        if => isgreaterthan(
+          countlinesmatching(".*$(must_be_absent).*", "$(test.output)"), "0"
+        );
+
+      "expected output matching '$(must_be_present)' is missing"
+        if => islessthan(
+          countlinesmatching(".*$(must_be_present).*", "$(test.output)"), "1"
+        );
+
+      "Output of $(this.promise_filename).sub is in '$(test.output)'";
+
+    DEBUG.!audit_ok::
+      "a silenced change is missing from the audit log '$(log)' (content $(n_quiet_content)/$(n_quiet_all_content), stats $(n_quiet_all_stats))";
+
+    ok::
+      "$(this.promise_filename) Pass";
+
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+
+### PROJECT_ID: core
+### CATEGORY_ID: 27

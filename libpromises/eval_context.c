@@ -3327,20 +3327,23 @@ void cfPS(EvalContext *ctx, LogLevel level, PromiseResult status, const Promise 
     }
 }
 
-void RecordChange(EvalContext *ctx, const Promise *pp, const Attributes *attr, const char *fmt, ...)
+void VRecordChange(EvalContext *ctx, const Promise *pp, const Attributes *attr, const char *fmt, va_list ap)
 {
     assert(ctx != NULL);
     assert(pp != NULL);
     assert(attr != NULL);
 
     LogPromiseContext(ctx, pp);
+    VLog(LOG_LEVEL_INFO, fmt, ap);
+    SetPromiseOutcomeClasses(ctx, PROMISE_RESULT_CHANGE, &(attr->classes));
+}
 
+void RecordChange(EvalContext *ctx, const Promise *pp, const Attributes *attr, const char *fmt, ...)
+{
     va_list ap;
     va_start(ap, fmt);
-    VLog(LOG_LEVEL_INFO, fmt, ap);
+    VRecordChange(ctx, pp, attr, fmt, ap);
     va_end(ap);
-
-    SetPromiseOutcomeClasses(ctx, PROMISE_RESULT_CHANGE, &(attr->classes));
 }
 
 void RecordNoChange(EvalContext *ctx, const Promise *pp, const Attributes *attr, const char *fmt, ...)

@@ -737,6 +737,8 @@ static PromiseResult PurgeLocalFiles(EvalContext *ctx, Item *filelist, const cha
 static PromiseResult SourceSearchAndCopy(EvalContext *ctx, const char *from, char *to, int maxrecurse, const Attributes *attr,
                                          const Promise *pp, dev_t rootdevice, CompressedArray **inode_cache, AgentConnection *conn)
 {
+    assert(attr != NULL);
+
     /* TODO overflow check all these str*cpy()s in here! */
     Item *namecache = NULL;
 
@@ -2437,6 +2439,7 @@ static PromiseResult VerifyDelete(EvalContext *ctx,
                                   const Attributes *attr, const Promise *pp)
 {
     assert(attr != NULL);
+    assert(sb != NULL);
     Log(LOG_LEVEL_VERBOSE, "Verifying file deletions for '%s'", path);
 
     const char *changes_path = path;
@@ -2571,6 +2574,8 @@ static inline char *GetFileTypeDescription(const struct stat *const stat_buf,
 
 static PromiseResult VerifyFileAttributes(EvalContext *ctx, const char *file, const struct stat *dstat, const Attributes *attr, const Promise *pp)
 {
+    assert(dstat != NULL);
+
     PromiseResult result = PROMISE_RESULT_NOOP;
 
 #ifndef __MINGW32__
@@ -2996,7 +3001,7 @@ bool DepthSearch(EvalContext *ctx, char *name, const struct stat *sb, int rlevel
                 {
                     // See comments in FileChangesCheckAndUpdateDirectory(),
                     // regarding this function call.
-                    FileChangesLogNewFile(path, pp);
+                    FileChangesLogNewFile(path, pp, IsChangeSilenced(attr, FILE_CHANGE_SILENCE_ADD));
                 }
                 SeqAppend(selected_files, xstrdup(dirp->d_name));
             }
@@ -3720,7 +3725,8 @@ static PromiseResult VerifyFileIntegrity(EvalContext *ctx, const char *file, con
         EvalContextClassPutSoft(ctx, "checksum_alerts", CONTEXT_SCOPE_NAMESPACE, "");
         if (FileChangesLogChange(file, FILE_STATE_CONTENT_CHANGED, "Content changed", pp))
         {
-            RecordChange(ctx, pp, attr, "Recorded integrity changes in '%s'", file);
+            RecordFileChange(ctx, pp, attr, FILE_CHANGE_SILENCE_CONTENT,
+                             "Recorded integrity changes in '%s'", file);
             result = PromiseResultUpdate(result, PROMISE_RESULT_CHANGE);
         }
         else

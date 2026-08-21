@@ -1,0 +1,141 @@
+#######################################################
+#
+# Sub-policy for changes_silent.cf.
+#
+# Makes one round of file changes with various 'silence' categories in
+# effect. Everything this policy prints is what the parent test inspects,
+# so the interesting part is which change alerts do and do not appear.
+#
+# The CHECKPOINT_ reports let the parent tell "silenced correctly" apart
+# from "never ran": a policy that dies early prints no alerts either.
+#
+#######################################################
+body common control
+{
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { "prep", "modify", "monitor", "done" };
+}
+
+#######################################################
+body changes silenced(category)
+{
+  hash => "sha256";
+  report_changes => "all";
+  update_hashes => "yes";
+  silence => { "$(category)" };
+}
+
+body changes loud
+{
+  hash => "sha256";
+  report_changes => "all";
+  update_hashes => "yes";
+}
+
+bundle edit_line append_marker
+{
+  insert_lines:
+    "SILENT_TEST_MARKER";
+}
+
+#######################################################
+bundle agent prep
+# @brief Register the files in the changes database, so that the edits made
+#        by 'modify' are detected as changes and not as first sightings.
+{
+  vars:
+    "dir" string => "$(G.testdir)/silent";
+
+  files:
+    "$(dir)/." create => "true";
+
+    "$(dir)/quiet_content.txt"
+      create => "true",
+      changes => silenced("content"),
+      perms => m("644");
+
+    "$(dir)/loud_content.txt"
+      create => "true",
+      changes => loud,
+      perms => m("644");
+
+    "$(dir)/quiet_all.txt"
+      create => "true",
+      changes => silenced("all"),
+      perms => m("644");
+
+    "$(dir)/loud_stats.txt"
+      create => "true",
+      changes => loud,
+      perms => m("644");
+}
+
+#######################################################
+bundle agent modify
+# @brief Change the files behind CFEngine's back, as another service would.
+{
+  files:
+    "$(prep.dir)/quiet_content.txt" edit_line => append_marker;
+    "$(prep.dir)/loud_content.txt" edit_line => append_marker;
+
+    # Content *and* permissions, with every category silenced.
+    "$(prep.dir)/quiet_all.txt"
+      edit_line => append_marker,
+      perms => m("600");
+
+    # Permissions only, nothing silenced: the control for the stat alerts.
+    "$(prep.dir)/loud_stats.txt" perms => m("600");
+}
+
+#######################################################
+bundle agent monitor
+# @brief Detect the changes made above and record the promise outcomes.
+{
+  files:
+    "$(prep.dir)/quiet_content.txt"
+      changes => silenced("content"),
+      classes => results("namespace", "quiet_content");
+
+    "$(prep.dir)/loud_content.txt"
+      changes => loud,
+      classes => results("namespace", "loud_content");
+
+    "$(prep.dir)/quiet_all.txt"
+      changes => silenced("all"),
+      classes => results("namespace", "quiet_all");
+
+    "$(prep.dir)/loud_stats.txt"
+      changes => loud,
+      classes => results("namespace", "loud_stats");
+
+  reports:
+    # Silencing the alert must not change what the policy can react to.
+    quiet_content_repaired::
+      "CHECKPOINT_quiet_content_repaired";
+
+    quiet_all_repaired::
+      "CHECKPOINT_quiet_all_repaired";
+
+    loud_content_repaired::
+      "CHECKPOINT_loud_content_repaired";
+
+    loud_stats_repaired::
+      "CHECKPOINT_loud_stats_repaired";
+
+    checksum_alerts::
+      "CHECKPOINT_checksum_alerts";
+
+    # ... and must not turn a detected change into a failure.
+    quiet_content_not_kept::
+      "CHECKPOINT_quiet_content_not_kept";
+
+    quiet_all_not_kept::
+      "CHECKPOINT_quiet_all_not_kept";
+}
+
+#######################################################
+bundle agent done
+{
+  reports:
+    "CHECKPOINT_DONE";
+}

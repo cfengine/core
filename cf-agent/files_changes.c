@@ -34,6 +34,35 @@
 #include <eval_context.h>
 #include <known_dirs.h>
 
+bool IsChangeSilenced(const Attributes *attr, FileChangeSilence categories)
+{
+    assert(attr != NULL);
+
+    /* An empty set is never silenced, so that a caller which found no change
+     * to attribute still reports whatever it was going to report. */
+    return (categories != FILE_CHANGE_SILENCE_NONE) &&
+           ((categories & ~attr->change.silence) == FILE_CHANGE_SILENCE_NONE);
+}
+
+void RecordFileChange(EvalContext *ctx, const Promise *pp, const Attributes *attr,
+                      FileChangeSilence categories, const char *fmt, ...)
+{
+    assert(attr != NULL);
+
+    if (IsChangeSilenced(attr, categories))
+    {
+        /* Only the message is suppressed; the promise must still look repaired
+         * to the policy, which is the whole point of silencing it. */
+        SetPromiseOutcomeClasses(ctx, PROMISE_RESULT_CHANGE, &(attr->classes));
+        return;
+    }
+
+    va_list ap;
+    va_start(ap, fmt);
+    VRecordChange(ctx, pp, attr, fmt, ap);
+    va_end(ap);
+}
+
 /*
   The format of the changes database is as follows:
 
@@ -493,7 +522,7 @@ bool FileChangesCheckAndUpdateHash(EvalContext *ctx,
     {
         found = true;
         different = (memcmp(digest, dbdigest, size) != 0);
-        if (different)
+        if (different && !IsChangeSilenced(attr, FILE_CHANGE_SILENCE_CONTENT))
         {
             Log(LOG_LEVEL_INFO, "Hash '%s' for '%s' changed!", HashNameFromId(type), filename);
             if (pp->comment)
@@ -521,9 +550,10 @@ bool FileChangesCheckAndUpdateHash(EvalContext *ctx,
         {
             const char *action = found ? "Updated" : "Stored";
             char buffer[CF_HOSTKEY_STRING_SIZE];
-            RecordChange(ctx, pp, attr, "%s %s hash for '%s' (%s)",
-                         action, HashNameFromId(type), filename,
-                         HashPrintSafe(buffer, sizeof(buffer), digest, type, true));
+            RecordFileChange(ctx, pp, attr, FILE_CHANGE_SILENCE_CONTENT,
+                             "%s %s hash for '%s' (%s)",
+                             action, HashNameFromId(type), filename,
+                             HashPrintSafe(buffer, sizeof(buffer), digest, type, true));
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
 
             WriteHash(dbp, type, filename, digest);
@@ -548,9 +578,12 @@ bool FileChangesCheckAndUpdateHash(EvalContext *ctx,
     return ret;
 }
 
-bool FileChangesLogNewFile(const char *path, const Promise *pp)
+bool FileChangesLogNewFile(const char *path, const Promise *pp, bool silent)
 {
-    Log(LOG_LEVEL_NOTICE, "New file '%s' found", path);
+    if (!silent)
+    {
+        Log(LOG_LEVEL_NOTICE, "New file '%s' found", path);
+    }
     return FileChangesLogChange(path, FILE_STATE_NEW, "New file found", pp);
 }
 
@@ -618,13 +651,16 @@ void FileChangesCheckAndUpdateDirectory(EvalContext *ctx, const Attributes *attr
             char path[strlen(name) + strlen(db_file) + 2];
             xsnprintf(path, sizeof(path), "%s/%s", name, db_file);
 
-            Log(LOG_LEVEL_NOTICE, "File '%s' no longer exists", path);
+            if (!IsChangeSilenced(attr, FILE_CHANGE_SILENCE_REMOVE))
+            {
+                Log(LOG_LEVEL_NOTICE, "File '%s' no longer exists", path);
+            }
             if (MakingInternalChanges(ctx, pp, attr, result,
                                       "record removal of '%s'", path))
             {
                 if (FileChangesLogChange(path, FILE_STATE_REMOVED, "File removed", pp))
                 {
-                    RecordChange(ctx, pp, attr, "Removal of '%s' recorded", path);
+                    RecordFileChange(ctx, pp, attr, FILE_CHANGE_SILENCE_REMOVE, "Removal of '%s' recorded", path);
                     *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
                 }
                 else
@@ -677,6 +713,9 @@ void FileChangesCheckAndUpdateStats(EvalContext *ctx,
                                     const Promise *pp,
                                     PromiseResult *result)
 {
+    assert(attr != NULL);
+    assert(sb != NULL);
+
     struct stat cmpsb;
     CF_DB *dbp;
 
@@ -702,7 +741,11 @@ void FileChangesCheckAndUpdateStats(EvalContext *ctx,
             }
             else
             {
-                RecordChange(ctx, pp, attr, "Wrote stat information for '%s' to database", file);
+                /* Baselining a file we have never seen is not a change in any
+                 * single category, so it stays quiet only if the caller has
+                 * silenced stat reporting as a whole. */
+                RecordFileChange(ctx, pp, attr, FILE_CHANGE_SILENCE_STATS,
+                                 "Wrote stat information for '%s' to database", file);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
             }
         }
@@ -723,10 +766,20 @@ void FileChangesCheckAndUpdateStats(EvalContext *ctx,
         return;
     }
 
+    /* The categories this file actually changed in, so that the summary logged
+     * after the database write below can tell whether any of it is worth
+     * reporting. */
+    FileChangeSilence changed = FILE_CHANGE_SILENCE_NONE;
+
     if (cmpsb.st_mode != sb->st_mode)
     {
-        Log(LOG_LEVEL_NOTICE, "Permissions for '%s' changed %04jo -> %04jo",
-                 file, (uintmax_t)cmpsb.st_mode, (uintmax_t)sb->st_mode);
+        changed |= FILE_CHANGE_SILENCE_PERMS;
+
+        if (!IsChangeSilenced(attr, FILE_CHANGE_SILENCE_PERMS))
+        {
+            Log(LOG_LEVEL_NOTICE, "Permissions for '%s' changed %04jo -> %04jo",
+                     file, (uintmax_t)cmpsb.st_mode, (uintmax_t)sb->st_mode);
+        }
 
         char msg_temp[CF_MAXVARSIZE];
         snprintf(msg_temp, sizeof(msg_temp), "Permission: %04jo -> %04jo",
@@ -736,7 +789,7 @@ void FileChangesCheckAndUpdateStats(EvalContext *ctx,
         {
             if (FileChangesLogChange(file, FILE_STATE_STATS_CHANGED, msg_temp, pp))
             {
-                RecordChange(ctx, pp, attr, "Recorded permissions changes in '%s'", file);
+                RecordFileChange(ctx, pp, attr, FILE_CHANGE_SILENCE_PERMS, "Recorded permissions changes in '%s'", file);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
             }
             else
@@ -749,8 +802,12 @@ void FileChangesCheckAndUpdateStats(EvalContext *ctx,
 
     if (cmpsb.st_uid != sb->st_uid)
     {
-        Log(LOG_LEVEL_NOTICE, "Owner for '%s' changed %ju -> %ju",
-            file, (uintmax_t) cmpsb.st_uid, (uintmax_t) sb->st_uid);
+        changed |= FILE_CHANGE_SILENCE_OWNER;
+        if (!IsChangeSilenced(attr, FILE_CHANGE_SILENCE_OWNER))
+        {
+            Log(LOG_LEVEL_NOTICE, "Owner for '%s' changed %ju -> %ju",
+                file, (uintmax_t) cmpsb.st_uid, (uintmax_t) sb->st_uid);
+        }
 
         char msg_temp[CF_MAXVARSIZE];
         snprintf(msg_temp, sizeof(msg_temp), "Owner: %ju -> %ju",
@@ -761,7 +818,7 @@ void FileChangesCheckAndUpdateStats(EvalContext *ctx,
         {
             if (FileChangesLogChange(file, FILE_STATE_STATS_CHANGED, msg_temp, pp))
             {
-                RecordChange(ctx, pp, attr, "Recorded ownership changes in '%s'", file);
+                RecordFileChange(ctx, pp, attr, FILE_CHANGE_SILENCE_OWNER, "Recorded ownership changes in '%s'", file);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
             }
             else
@@ -774,8 +831,12 @@ void FileChangesCheckAndUpdateStats(EvalContext *ctx,
 
     if (cmpsb.st_gid != sb->st_gid)
     {
-        Log(LOG_LEVEL_NOTICE, "Group for '%s' changed %ju -> %ju",
-            file, (uintmax_t) cmpsb.st_gid, (uintmax_t) sb->st_gid);
+        changed |= FILE_CHANGE_SILENCE_GROUP;
+        if (!IsChangeSilenced(attr, FILE_CHANGE_SILENCE_GROUP))
+        {
+            Log(LOG_LEVEL_NOTICE, "Group for '%s' changed %ju -> %ju",
+                file, (uintmax_t) cmpsb.st_gid, (uintmax_t) sb->st_gid);
+        }
 
         char msg_temp[CF_MAXVARSIZE];
         snprintf(msg_temp, sizeof(msg_temp), "Group: %ju -> %ju",
@@ -786,7 +847,7 @@ void FileChangesCheckAndUpdateStats(EvalContext *ctx,
         {
             if (FileChangesLogChange(file, FILE_STATE_STATS_CHANGED, msg_temp, pp))
             {
-                RecordChange(ctx, pp, attr, "Recorded group changes in '%s'", file);
+                RecordFileChange(ctx, pp, attr, FILE_CHANGE_SILENCE_GROUP, "Recorded group changes in '%s'", file);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
             }
             else
@@ -799,8 +860,12 @@ void FileChangesCheckAndUpdateStats(EvalContext *ctx,
 
     if (cmpsb.st_dev != sb->st_dev)
     {
-        Log(LOG_LEVEL_NOTICE, "Device for '%s' changed %ju -> %ju",
-            file, (uintmax_t) cmpsb.st_dev, (uintmax_t) sb->st_dev);
+        changed |= FILE_CHANGE_SILENCE_DEVICE;
+        if (!IsChangeSilenced(attr, FILE_CHANGE_SILENCE_DEVICE))
+        {
+            Log(LOG_LEVEL_NOTICE, "Device for '%s' changed %ju -> %ju",
+                file, (uintmax_t) cmpsb.st_dev, (uintmax_t) sb->st_dev);
+        }
 
         char msg_temp[CF_MAXVARSIZE];
         snprintf(msg_temp, sizeof(msg_temp), "Device: %ju -> %ju",
@@ -810,7 +875,7 @@ void FileChangesCheckAndUpdateStats(EvalContext *ctx,
         {
             if (FileChangesLogChange(file, FILE_STATE_STATS_CHANGED, msg_temp, pp))
             {
-                RecordChange(ctx, pp, attr, "Recorded device changes in '%s'", file);
+                RecordFileChange(ctx, pp, attr, FILE_CHANGE_SILENCE_DEVICE, "Recorded device changes in '%s'", file);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
             }
             else
@@ -823,12 +888,17 @@ void FileChangesCheckAndUpdateStats(EvalContext *ctx,
 
     if (cmpsb.st_ino != sb->st_ino)
     {
-        Log(LOG_LEVEL_NOTICE, "inode for '%s' changed %ju -> %ju",
-            file, (uintmax_t) cmpsb.st_ino, (uintmax_t) sb->st_ino);
+        changed |= FILE_CHANGE_SILENCE_INODE;
+        if (!IsChangeSilenced(attr, FILE_CHANGE_SILENCE_INODE))
+        {
+            Log(LOG_LEVEL_NOTICE, "inode for '%s' changed %ju -> %ju",
+                file, (uintmax_t) cmpsb.st_ino, (uintmax_t) sb->st_ino);
+        }
     }
 
     if (cmpsb.st_mtime != sb->st_mtime)
     {
+        changed |= FILE_CHANGE_SILENCE_MTIME;
         char from[25]; // ctime() string is 26 bytes (incl NUL)
         char to[25];   // we ignore the newline at the end
         // Example: "Thu Nov 24 18:22:48 1986\n"
@@ -842,7 +912,10 @@ void FileChangesCheckAndUpdateStats(EvalContext *ctx,
         assert(strlen(from) == 24);
         assert(strlen(to) == 24);
 
-        Log(LOG_LEVEL_NOTICE, "Last modified time for '%s' changed '%s' -> '%s'", file, from, to);
+        if (!IsChangeSilenced(attr, FILE_CHANGE_SILENCE_MTIME))
+        {
+            Log(LOG_LEVEL_NOTICE, "Last modified time for '%s' changed '%s' -> '%s'", file, from, to);
+        }
 
         char msg_temp[CF_MAXVARSIZE];
         snprintf(msg_temp, sizeof(msg_temp), "Modified time: %s -> %s",
@@ -852,7 +925,7 @@ void FileChangesCheckAndUpdateStats(EvalContext *ctx,
         {
             if (FileChangesLogChange(file, FILE_STATE_STATS_CHANGED, msg_temp, pp))
             {
-                RecordChange(ctx, pp, attr, "Recorded mtime changes in '%s'", file);
+                RecordFileChange(ctx, pp, attr, FILE_CHANGE_SILENCE_MTIME, "Recorded mtime changes in '%s'", file);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
             }
             else
@@ -880,7 +953,8 @@ void FileChangesCheckAndUpdateStats(EvalContext *ctx,
             }
             else
             {
-                RecordChange(ctx, pp, attr, "Wrote stat information changes for '%s' to database", file);
+                RecordFileChange(ctx, pp, attr, changed,
+                                 "Wrote stat information changes for '%s' to database", file);
                 *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
             }
         }

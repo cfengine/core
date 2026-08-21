@@ -650,7 +650,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy)
 
             VarRef *ref = VarRefParseFromScope(cp->lval, "control_runagent");
             DataType value_type;
-            const void *value = EvalContextVariableGet(ctx, ref, &value_type);
+            const void *value = EvalContextVariableGetPlaintext(ctx, ref, &value_type);
             VarRefDestroy(ref);
 
             /* If var not found, or if it's an empty list. */

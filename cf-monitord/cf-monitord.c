@@ -297,7 +297,7 @@ static void KeepPromises(EvalContext *ctx, const Policy *policy)
             }
 
             VarRef *ref = VarRefParseFromScope(cp->lval, "control_monitor");
-            const void *value = EvalContextVariableGet(ctx, ref, NULL);
+            const void *value = EvalContextVariableGetPlaintext(ctx, ref, NULL);
             VarRefDestroy(ref);
             if (!value)
             {

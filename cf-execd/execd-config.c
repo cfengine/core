@@ -74,7 +74,7 @@ ExecdConfig *ExecdConfigNew(const EvalContext *ctx, const Policy *policy)
 
             VarRef *ref = VarRefParseFromScope(cp->lval, "control_executor");
             DataType t;
-            const void *value = EvalContextVariableGet(ctx, ref, &t);
+            const void *value = EvalContextVariableGetPlaintext(ctx, ref, &t);
             VarRefDestroy(ref);
 
             if (t == CF_DATA_TYPE_NONE)

@@ -370,7 +370,7 @@ static const void *IterVariableGet(const PromiseIterator *iterctx,
     VarRef *ref =
         VarRefParseFromNamespaceAndScope(varname, bundle->ns, bundle->name,
                                          CF_MANGLED_NS, CF_MANGLED_SCOPE);
-    value = EvalContextVariableGet(evalctx, ref, type);
+    value = EvalContextVariableGetPlaintext(evalctx, ref, type);
     VarRefDestroy(ref);
 
     if (*type == CF_DATA_TYPE_NONE)                             /* did not resolve */
@@ -383,7 +383,7 @@ static const void *IterVariableGet(const PromiseIterator *iterctx,
              * variable that is not an iterable, so it was not mangled in
              * ProcessVar(). */
             VarRef *ref2 = VarRefParse(varname);
-            value = EvalContextVariableGet(evalctx, ref2, type);
+            value = EvalContextVariableGetPlaintext(evalctx, ref2, type);
             VarRefDestroy(ref2);
         }
     }
@@ -445,7 +445,7 @@ static bool ShouldAddVariableAsIterationWheel(
     VarRef *ref = VarRefParseFromBundle(varname,
                                         PromiseGetBundle(iterctx->pp));
     DataType t;
-    ARG_UNUSED const void *value = EvalContextVariableGet(evalctx, ref, &t);
+    ARG_UNUSED const void *value = EvalContextVariableGetPlaintext(evalctx, ref, &t);
     VarRefDestroy(ref);
 
     size_t dollar_paren = FindDollarParen(varname, varname_len);

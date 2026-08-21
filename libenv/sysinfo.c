@@ -3893,8 +3893,7 @@ static char *FindNextInteger(char *str, char **num)
 
 static void SysOsVersionMajor(EvalContext *ctx)
 {
-    const char *const_flavor = EvalContextVariableGetSpecialString(
-        ctx, SPECIAL_SCOPE_SYS, "flavor");
+    const char *const_flavor = EvalContextVariableGetSpecialString(ctx, SPECIAL_SCOPE_SYS, "flavor", true);
     char *flavor = SafeStringDuplicate(const_flavor);
 
     char *major;
@@ -3939,7 +3938,7 @@ static bool SetOsVersionMinorFromOSRelease(EvalContext *ctx)
 {
 
     DataType type_out;
-    const JsonElement *os_release = EvalContextVariableGetSpecial(ctx, SPECIAL_SCOPE_SYS, "os_release", &type_out);
+    const JsonElement *os_release = EvalContextVariableGetSpecialPlaintext(ctx, SPECIAL_SCOPE_SYS, "os_release", &type_out);
 
     if (os_release == NULL)
     {
@@ -4034,7 +4033,7 @@ void DetectEnvironment(EvalContext *ctx)
 static void SysPolicyReleaseId(EvalContext *ctx, Policy *policy)
 {
     DataType type;
-    const char *entry_dirname = EvalContextVariableGetSpecial(ctx, SPECIAL_SCOPE_SYS, "policy_entry_dirname", &type);
+    const char *entry_dirname = EvalContextVariableGetSpecialPlaintext(ctx, SPECIAL_SCOPE_SYS, "policy_entry_dirname", &type);
     if (entry_dirname == NULL || policy == NULL)
     {
         return;

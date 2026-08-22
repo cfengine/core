@@ -34,6 +34,7 @@ function stop_daemons {
     pkill -f cf-serverd  || echo "Did not kill cf-serverd"
     pkill -f cf-execd    || echo "Did not kill cf-execd"
     pkill -f cf-monitord || echo "Did not kill cf-monitord"
+    pkill -f cf-reactor  || echo "Did not kill cf-reactor"
 }
 
 function no_errors {
@@ -145,6 +146,10 @@ echo "Starting cf-execd with valgrind in background:"
 valgrind $VG_OPTS --log-file=execd.txt /var/cfengine/bin/cf-execd --no-fork 2>&1 > execd_output.txt &
 exec_pid="$!"
 
+echo "Starting cf-reactor with valgrind in background:"
+valgrind $VG_OPTS --log-file=reactor.txt /var/cfengine/bin/cf-reactor --no-fork 2>&1 > reactor_output.txt &
+reactor_pid="$!"
+
 print_ps
 
 # cf-serverd running under valgrind can be really slow to start, let's give it
@@ -213,17 +218,25 @@ echo "cf-serverd outputs:"
 tail serverd_output.txt
 tail serverd.txt
 
+echo "cf-reactor outputs:"
+tail reactor_output.txt
+tail reactor.txt
+
 echo "Checking that serverd and execd PIDs are still correct/alive:"
 ps -p $exec_pid
 ps -p $server_pid
+ps -p $reactor_pid
 
 echo "Killing valgrind cf-execd"
 kill $exec_pid
 echo "Killing valgrind cf-serverd"
 kill $server_pid
+echo "Killing valgrind cf-reactor"
+kill $reactor_pid
 
 wait $exec_pid
 wait $server_pid
+wait $reactor_pid
 
 echo "Output from cf-execd in valgrind:"
 cat execd.txt
@@ -234,6 +247,11 @@ echo "Output from cf-serverd in valgrind:"
 cat serverd.txt
 check_valgrind_output serverd.txt
 check_daemon_output serverd_output.txt
+
+echo "Output from cf-reactor valgrind:"
+cat reactor.txt
+check_valgrind_output reactor.txt
+check_daemon_output reactor_output.txt
 
 stop_daemons
 

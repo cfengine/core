@@ -371,18 +371,16 @@ IOData cf_popen_full_duplex(const char *command, bool capture_stderr, bool requi
     }
 }
 
-FILE *cf_popen_select(const char *command, const char *type, OutputSelect output_select)
+// do not use with user input
+FILE *cf_popen_exact_args_select(const char **argv, const char *type, OutputSelect output_select)
 {
     int pd[2];
     pid_t pid;
     FILE *pp = NULL;
 
-    char **argv = ArgSplitCommand(command, NULL);
-
     pid = CreatePipeAndFork(type, pd);
     if (pid == (pid_t) -1)
     {
-        ArgFree(argv);
         return NULL;
     }
 
@@ -427,7 +425,6 @@ FILE *cf_popen_select(const char *command, const char *type, OutputSelect output
             if ((pp = fdopen(pd[0], type)) == NULL)
             {
                 cf_pwait(pid);
-                ArgFree(argv);
                 return NULL;
             }
             break;
@@ -439,18 +436,34 @@ FILE *cf_popen_select(const char *command, const char *type, OutputSelect output
             if ((pp = fdopen(pd[1], type)) == NULL)
             {
                 cf_pwait(pid);
-                ArgFree(argv);
                 return NULL;
             }
         }
 
         ChildrenFDSet(fileno(pp), pid);
-        ArgFree(argv);
         return pp;
     }
 
     ProgrammingError("Unreachable code");
     return NULL;
+}
+
+// do not use with user input
+FILE *cf_popen_exact_args(const char **argv, const char *type, bool capture_stderr)
+{
+    return cf_popen_exact_args_select(
+        argv,
+        type,
+        capture_stderr ? OUTPUT_SELECT_BOTH : OUTPUT_SELECT_STDOUT);
+}
+
+FILE *cf_popen_select(const char *command, const char *type, OutputSelect output_select)
+{
+    char **argv = ArgSplitCommand(command, NULL);
+    FILE *ret = cf_popen_exact_args_select(argv, type, output_select);
+    ArgFree(argv);
+
+    return ret;
 }
 
 FILE *cf_popen(const char *command, const char *type, bool capture_stderr)

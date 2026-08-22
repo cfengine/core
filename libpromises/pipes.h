@@ -53,6 +53,8 @@ FILE *cf_popensetuid(const char *command, const Seq *arglist, const char *type, 
 FILE *cf_popen_sh(const char *command, const char *type);
 FILE *cf_popen_sh_select(const char *command, const char *type, OutputSelect output_select);
 FILE *cf_popen_shsetuid(const char *command, const char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, int background);
+FILE *cf_popen_exact_args_select(const char **argv, const char *type, OutputSelect output_select);
+FILE *cf_popen_exact_args(const char **argv, const char *type, bool capture_stderr);
 int cf_pclose(FILE *pp);
 void cf_pclose_nowait(FILE *pp);
 bool PipeToPid(pid_t *pid, FILE *pp);

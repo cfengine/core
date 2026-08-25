@@ -972,6 +972,7 @@ bool ManifestPkgOperations()
         {
             /* If there is a previous install/present operation, we want to choose the message with
              * the higher version or the message which has a specific version (if any). */
+
             /* Cancels any previous remove/absent message. */
             MapRemove(absent, name_arch);
 

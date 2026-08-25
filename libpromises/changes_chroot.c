@@ -265,7 +265,7 @@ bool RecordFileEvaluatedInChroot(const char *path)
     return ret;
 }
 
-bool RecordPkgOperationInChroot(const char *op, const char *name, const char *arch, const char *version)
+bool RecordPkgOperationInChroot(const char *op, const char *name, const char *version, const char *arch)
 {
     assert(op != NULL);
     assert(name != NULL);

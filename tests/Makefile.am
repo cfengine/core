@@ -21,4 +21,4 @@
 # (COSL) may apply to this file if you as a licensee so wish it. See
 # included file COSL.txt.
 #
-SUBDIRS = unit load acceptance static-check valgrind-check
+SUBDIRS = unit load acceptance static-check valgrind-check asan-check

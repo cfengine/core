@@ -1940,7 +1940,8 @@ AC_CONFIG_FILES([Makefile
     tests/unit/Makefile
     tests/load/Makefile
     tests/static-check/Makefile
-    tests/valgrind-check/Makefile])
+    tests/valgrind-check/Makefile
+    tests/asan-check/Makefile])
 
 # Run autoconf/configure in libutils, generating necessary makefiles:
 AC_CONFIG_SUBDIRS([libntech])

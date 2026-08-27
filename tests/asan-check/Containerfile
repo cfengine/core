@@ -1,0 +1,6 @@
+FROM ubuntu:24.04 AS build
+RUN DEBIAN_FRONTEND=noninteractive apt-get update -y --fix-missing && \
+ DEBIAN_FRONTEND=noninteractive apt-get install -y libssl-dev libxml2-dev libpam0g-dev liblmdb-dev libacl1-dev libpcre2-dev librsync-dev git flex bison byacc automake make autoconf libtool
+COPY . core
+WORKDIR core
+CMD bash tests/asan-check/run_checks.sh

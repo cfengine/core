@@ -1,0 +1,64 @@
+#######################################################
+#
+# Test file_older_than function
+#
+#######################################################
+body common control
+{
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+bundle agent init
+{
+  files:
+    "$(G.testdir)/somefile.txt" create => "true";
+}
+
+#######################################################
+bundle agent test
+{
+  classes:
+    "long_time_past"
+      expression => file_older_than(
+        "$(G.testdir)/somefile.txt", "100 years ago"
+      );
+
+    "long_time_future"
+      expression => not(
+        file_older_than("$(G.testdir)/somefile.txt", "100 years")
+      );
+
+    "newer_than_a_week"
+      expression => file_older_than(
+        "$(G.testdir)/somefile.txt", "-1 week", "modify"
+      );
+
+    "created_after_exact_date"
+      expression => file_older_than("$(G.testdir)/somefile.txt", "2020-10-10");
+
+    "ok"
+      expression => and(
+        "long_time_past",
+        "long_time_future",
+        "newer_than_a_week",
+        "created_after_exact_date"
+      ),
+      scope => "namespace";
+}
+
+#######################################################
+bundle agent check
+{
+  files:
+    "$(G.testdir)/somefile.txt" delete => tidy;
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

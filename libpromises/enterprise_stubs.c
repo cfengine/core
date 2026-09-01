@@ -232,9 +232,19 @@ ENTERPRISE_VOID_FUNC_2ARG_DEFINE_STUB(void, Nova_ClassHistoryEnable,
 {
 }
 
-ENTERPRISE_FUNC_1ARG_DEFINE_STUB(int, ReactorEnterpriseMain, ARG_UNUSED bool, no_fork)
+ENTERPRISE_FUNC_4ARG_DEFINE_STUB(bool, ReactorNovaInitialize, ARG_UNUSED int*, fds, ARG_UNUSED size_t, max_size, ARG_UNUSED size_t *, num_fds, volatile sig_atomic_t *, terminate)
 {
-    Log(LOG_LEVEL_VERBOSE, "Nova extension library is not available.");
-    Log(LOG_LEVEL_VERBOSE, "Running cf-reactor community edition.");
-    return 0;
+    return false;
+}
+
+ENTERPRISE_VOID_FUNC_1ARG_DEFINE_STUB(void, ReactorNovaHandleTimeout, ARG_UNUSED time_t *, next_tick)
+{
+}
+
+ENTERPRISE_VOID_FUNC_4ARG_DEFINE_STUB(void, ReactorNovaHandleEvents, ARG_UNUSED fd_set *, readfds, ARG_UNUSED int *, fds, ARG_UNUSED time_t *, next_tick, volatile sig_atomic_t *, terminate)
+{
+}
+
+ENTERPRISE_VOID_FUNC_0ARG_DEFINE_STUB(void, ReactorNovaFinalize)
+{
 }

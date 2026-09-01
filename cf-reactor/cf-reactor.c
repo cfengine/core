@@ -33,12 +33,21 @@
 #include <man.h>
 #include <cleanup.h>
 #include <prototypes3.h>
+#include <signal.h>             /* signal, kill */
+#include <signals.h>            /* GetSignalPipe, MakeSignalPipe */
+#include <exec_tools.h>
 
 /*****************************************************************************/
 /* Globals                                                                   */
 /*****************************************************************************/
 
 int NO_FORK = false;
+
+#define DEFAULT_POLL_INTERVAL_SECS 30
+// this is just an arbitrary number that has to be higher or equal to the number of fds used by reactor-plugin
+#define N_ALL_FDS 8
+
+static volatile sig_atomic_t terminate = 0;
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -179,16 +188,183 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
 /*****************************************************************************/
 
+
+static void HandleReactorSignals(int signum)
+{
+    HandleSignalsForDaemon(signum);
+
+    if (IsPendingTermination())
+    {
+        terminate = 1;
+    }
+
+    /* HandleSignalsForDaemon() re-arms itself, which would take this wrapper
+     * out of the chain. Re-arm ours afterwards, so that a second delivery
+     * still reaches the code above. */
+    signal(signum, HandleReactorSignals);
+}
+
+static int SetupFileDescriptors(fd_set *readfds, int *fds, size_t num_fds)
+{
+    assert(readfds != NULL);
+
+    FD_ZERO(readfds);
+    int signal_pipe = GetSignalPipe();
+    FD_SET(signal_pipe, readfds);
+
+    int max_fd = signal_pipe;
+
+    for (size_t i = 0; i < num_fds; i++)
+    {
+        FD_SET(fds[i], readfds);
+        max_fd = MAX(fds[i], max_fd);
+    }
+    return max_fd + 1;
+}
+
+static bool ReactorNovaHasTimedOut(fd_set *readfds, int *fds, size_t num_fds)
+{
+    assert(readfds != NULL);
+
+    for (size_t i = 0; i < num_fds; i++)
+    {
+        if (FD_ISSET(fds[i], readfds))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
 int main(int argc, char *argv[])
 {
     GenericAgentConfig *config = CheckOpts(argc, argv);
     EvalContext *ctx = EvalContextNew();
     GenericAgentConfigApply(ctx, config);
 
-    int ret = ReactorEnterpriseMain(NO_FORK);
+#ifdef __MINGW32__
+
+    if (!NO_FORK)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Windows does not support starting processes in the background - starting in foreground");
+    }
+
+#else /* !__MINGW32__ */
+    pid_t existing_pid = ReadPID("cf-reactor.pid");
+    if ((existing_pid != -1) && (kill(existing_pid, 0) == 0))
+    {
+        Log(LOG_LEVEL_ERR, "Another instance of cf-reactor is already running (pid %jd), terminating",
+            (intmax_t) existing_pid);
+        return 1;
+    }
+
+    if ((!NO_FORK) && (fork() != 0))
+    {
+        Log(LOG_LEVEL_INFO, "cf-reactor: starting");
+        _exit(EXIT_SUCCESS);
+    }
+
+    if (!NO_FORK)
+    {
+        ActAsDaemon();
+    }
+
+#endif /* !__MINGW32__ */
+
+    umask(077);
+    WritePID("cf-reactor.pid");
+    MakeSignalPipe();
+
+    signal(SIGINT, HandleReactorSignals);
+    signal(SIGTERM, HandleReactorSignals);
+    signal(SIGBUS, HandleReactorSignals);
+    signal(SIGHUP, HandleReactorSignals);
+    signal(SIGUSR1, HandleReactorSignals);
+    signal(SIGUSR2, HandleReactorSignals);
+
+    int all_fds[N_ALL_FDS];
+    // the first num_nova_fds fds are populated with nova fds
+    size_t num_nova_fds;
+    if (!ReactorNovaInitialize(all_fds, N_ALL_FDS, &num_nova_fds, &terminate))
+    {
+        GenericAgentFinalize(ctx, config);
+        DoCleanupAndExit(EXIT_FAILURE);
+    }
+    // returns the number of fds used by nova reactor
+    size_t num_fds = num_nova_fds;
+    // TODO: populate all_fds with other fd used for event driven code
+
+    /* Writing to a pipe whose spawned process already exited (e.g. cfbs
+     * rejecting its arguments before reading its stdin) must fail with EPIPE
+     * rather than terminate the whole daemon. Set after ReactorNovaInitialize(),
+     * so that the spawner and the processes it execs keep the default handling. */
+    signal(SIGPIPE, SIG_IGN);
+
+    /* We need an initial value here for the first iteration of the cycle
+     * below. */
+    time_t next_tick = time(NULL) + DEFAULT_POLL_INTERVAL_SECS;
+    while (!terminate)
+    {
+        fd_set readfds;
+        int max_fd = SetupFileDescriptors(&readfds, all_fds, num_fds);
+
+        /* Determine how much time is remaining until the next tick. */
+        time_t last_tick = time(NULL);
+        time_t remaining = next_tick > last_tick ? next_tick - last_tick : 0;
+
+        struct timeval timeout = { .tv_sec = remaining };
+        int ret = select(max_fd, &readfds, NULL, NULL, &timeout);
+
+        next_tick = last_tick + DEFAULT_POLL_INTERVAL_SECS;
+
+        if (ret < 0)
+        {
+            if (errno == EINTR)
+            {
+                /* Not an error, just a signal delivered while blocked in
+                 * select(). Loop around: the top of the loop re-checks
+                 * `terminate` and rebuilds the fd set from scratch. */
+                continue;
+            }
+
+            /*** error ***/
+            Log(LOG_LEVEL_ERR, "Failed to poll events: %s", GetErrorStr());
+            break;
+        }
+        else if (ret == 0)
+        {
+            /*** timeout ***/
+            Log(LOG_LEVEL_DEBUG, "Timed-out waiting for next notification");
+
+            next_tick += DEFAULT_POLL_INTERVAL_SECS;
+            ReactorNovaHandleTimeout(&next_tick);
+            continue;
+        }
+        /* else */
+
+        /* The signal pipe is always in the watched set so we wake up
+         * promptly on a pending signal, but (per its own contract in
+         * signals.c) it must be drained or it stays "ready" forever, which
+         * would stop select() from ever blocking again. */
+        if (FD_ISSET(GetSignalPipe(), &readfds))
+        {
+            unsigned char buf;
+            while (recv(GetSignalPipe(), &buf, 1, 0) > 0) { /* drain */ }
+        }
+
+        /* This is needed since num_nova_fds < N_ALL_FDS */
+        if (ReactorNovaHasTimedOut(&readfds, all_fds, num_nova_fds))
+        {
+            ReactorNovaHandleTimeout(&next_tick);
+            continue;
+        }
+
+        ReactorNovaHandleEvents(&readfds, all_fds, &next_tick, &terminate);
+    }
+    ReactorNovaFinalize();
 
     GenericAgentFinalize(ctx, config);
     CallCleanupFunctions();
 
-    return ret;
+    return 0;
 }

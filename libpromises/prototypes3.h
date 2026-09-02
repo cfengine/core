@@ -85,9 +85,10 @@ ENTERPRISE_VOID_FUNC_0ARG_DECLARE(void, ReloadHAConfig);
 ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, Nova_ClassHistoryAddContextName, const StringSet *, list, const char *, context_name);
 ENTERPRISE_VOID_FUNC_2ARG_DECLARE(void, Nova_ClassHistoryEnable, StringSet **, list, bool, enable);
 
-ENTERPRISE_FUNC_4ARG_DECLARE(bool, ReactorNovaInitialize, int*, fds, size_t, max_size, size_t *, num_fds, volatile sig_atomic_t *, terminate);
+ENTERPRISE_FUNC_0ARG_DECLARE(size_t, ReactorNovaMaxFds);
+ENTERPRISE_FUNC_3ARG_DECLARE(bool, ReactorNovaInitialize, int*, fds, size_t, max_size, size_t *, num_fds);
 ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, ReactorNovaHandleTimeout, time_t *, next_tick);
-ENTERPRISE_VOID_FUNC_4ARG_DECLARE(void, ReactorNovaHandleEvents, fd_set *, readfds, int *, fds, time_t *, next_tick, volatile sig_atomic_t *, terminate);
+ENTERPRISE_VOID_FUNC_3ARG_DECLARE(void, ReactorNovaHandleEvents, fd_set *, readfds, int *, fds, time_t *, next_tick);
 ENTERPRISE_VOID_FUNC_0ARG_DECLARE(void, ReactorNovaFinalize);
 
 /* manual.c */

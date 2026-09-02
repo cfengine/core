@@ -823,6 +823,9 @@ bool DiffPkgOperations()
              * operation. So 'install' operation must mean a newer version than what's present would
              * be installed. */
 
+            /* Package installation cancels a previous removal (if any). */
+            MapRemove(removed, name_arch);
+
             PkgOperationRecord *prev_record = MapGet(installed, name_arch);
             if ((prev_record == NULL) || PkgVersionIsGreater(pkg_ver, prev_record->pkg_ver))
             {
@@ -832,9 +835,6 @@ bool DiffPkgOperations()
                 MapInsert(installed, name_arch, record);
                 name_arch = NULL; /* name_arch is now owned by the map (as a key) */
             }
-
-            /* Package installation cancels a previous removal (if any). */
-            MapRemove(removed, name_arch);
         }
         else
         {
@@ -972,6 +972,10 @@ bool ManifestPkgOperations()
         {
             /* If there is a previous install/present operation, we want to choose the message with
              * the higher version or the message which has a specific version (if any). */
+
+            /* Cancels any previous remove/absent message. */
+            MapRemove(absent, name_arch);
+
             PkgOperationRecord *prev_record = MapGet(present, name_arch);
             if ((prev_record == NULL) ||
                 (NULL_OR_EMPTY(prev_record->pkg_ver) && !NULL_OR_EMPTY(pkg_ver)) ||
@@ -984,9 +988,6 @@ bool ManifestPkgOperations()
                 MapInsert(present, name_arch, record);
                 name_arch = NULL; /* name_arch is now owned by the map (as a key) */
             }
-
-            /* Cancels any previous remove/absent message. */
-            MapRemove(absent, name_arch);
         }
         else
         {

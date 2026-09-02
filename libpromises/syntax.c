@@ -488,7 +488,7 @@ vars:
             if (!IsExpandable(BufferData(inner_value)))
             {
                 VarRef *ref = VarRefParse(BufferData(inner_value));
-                EvalContextVariableGet(ctx, ref, &dtype);
+                EvalContextVariableGetPlaintext(ctx, ref, &dtype);
                 VarRefDestroy(ref);
 
                 if (DataTypeToRvalType(dtype) == RVAL_TYPE_LIST)

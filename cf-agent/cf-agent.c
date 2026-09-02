@@ -1004,7 +1004,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
 
             VarRef *ref = VarRefParseFromScope(cp->lval, "control_agent");
             DataType value_type;
-            const void *value = EvalContextVariableGet(ctx, ref, &value_type);
+            const void *value = EvalContextVariableGetPlaintext(ctx, ref, &value_type);
             VarRefDestroy(ref);
 
             /* If var not found */
@@ -1831,7 +1831,7 @@ static PromiseResult DefaultVarPromise(EvalContext *ctx, const Promise *pp)
     const void *value = NULL;
     {
         VarRef *ref = VarRefParseFromScope(pp->promiser, "this");
-        value = EvalContextVariableGet(ctx, ref, &value_type);
+        value = EvalContextVariableGetPlaintext(ctx, ref, &value_type);
         VarRefDestroy(ref);
     }
 
@@ -1891,7 +1891,7 @@ static void LogVariableValue(const EvalContext *ctx, const Promise *pp)
     char *out = NULL;
 
     DataType type;
-    const void *var = EvalContextVariableGet(ctx, ref, &type);
+    const void *var = EvalContextVariableGetPlaintext(ctx, ref, &type);
     switch (type)
     {
         case CF_DATA_TYPE_INT:

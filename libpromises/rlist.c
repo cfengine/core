@@ -1612,7 +1612,7 @@ void RlistFlatten(EvalContext *ctx, Rlist **list)
 
                 VarRef *ref = VarRefParse(naked);
                 DataType value_type;
-                const void *value = EvalContextVariableGet(ctx, ref, &value_type);
+                const void *value = EvalContextVariableGetPlaintext(ctx, ref, &value_type);
                 VarRefDestroy(ref);
 
                 if (value_type == CF_DATA_TYPE_NONE)

@@ -156,13 +156,13 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
             if (pbp != NULL)
             {
                 VarRef *ref = VarRefParseFromBundle(naked, pbp);
-                value = EvalContextVariableGet(ctx, ref, &value_type);
+                value = EvalContextVariableGetPlaintext(ctx, ref, &value_type);
                 VarRefDestroy(ref);
             }
             else
             {
                 VarRef *ref = VarRefParseFromBundle(naked, bp);
-                value = EvalContextVariableGet(ctx, ref, &value_type);
+                value = EvalContextVariableGetPlaintext(ctx, ref, &value_type);
                 VarRefDestroy(ref);
             }
 

@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -e
+WORKDIR=/tmp/cfengine-test-workdir
+mkdir -p "$WORKDIR/bin"
+cp ./result/bin/* "$WORKDIR/bin/"
+sudo CFENGINE_TEST_OVERRIDE_WORKDIR="$WORKDIR" ./result/bin/cf-agent "$@"

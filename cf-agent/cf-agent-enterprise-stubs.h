@@ -45,14 +45,14 @@ typedef bool (*CopyRegularFileFunction)(EvalContext *ctx,
                                        AgentConnection *conn,
                                        PromiseResult *result);
 typedef void (*DeleteCompressedArrayFunction)(CompressedArray *start);
-ENTERPRISE_FUNC_8ARG_DECLARE(PromiseResult, LogFileChange,
+ENTERPRISE_FUNC_7ARG_DECLARE(PromiseResult, LogFileChange,
                              EvalContext *, ctx,
                              const char *, file,
                              int, change,
                              const Attributes *, attr,
                              const Promise *, pp,
                              CopyRegularFileFunction, CopyRegularFilePtr,
-                             const char *, destination, DeleteCompressedArrayFunction, DeleteCompressedArrayPtr);
+                             DeleteCompressedArrayFunction, DeleteCompressedArrayPtr);
 
 ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, ReportPatches, PackageManager *, list);
 ENTERPRISE_VOID_FUNC_1ARG_DECLARE(void, Nova_TrackExecution, const char *, input_file);

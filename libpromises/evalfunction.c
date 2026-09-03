@@ -10451,6 +10451,7 @@ static const FnCallArg ACCUM_ARGS[] =
 
 static const FnCallArg AND_ARGS[] =
 {
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Class expression"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
@@ -10543,11 +10544,14 @@ static const FnCallArg CLASSIFY_ARGS[] =
 
 static const FnCallArg CLASSMATCH_ARGS[] =
 {
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Regular expression"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Tag regular expression"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
 static const FnCallArg CONCAT_ARGS[] =
 {
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "String to concatenate"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
@@ -10607,6 +10611,7 @@ static const FnCallArg FILESEXIST_ARGS[] =
 
 static const FnCallArg FINDFILES_ARGS[] =
 {
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Glob pattern to match files"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
@@ -10772,6 +10777,8 @@ static const FnCallArg HOSTSWITHGROUP_ARGS[] =
 
 static const FnCallArg IFELSE_ARGS[] =
 {
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Class expression"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Value if the preceding class expression is true"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
@@ -10922,6 +10929,8 @@ static const FnCallArg MAPDATA_ARGS[] =
 
 static const FnCallArg MERGEDATA_ARGS[] =
 {
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "CFEngine variable identifier or inline JSON"},
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "CFEngine variable identifier or inline JSON"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 
@@ -10938,6 +10947,7 @@ static const FnCallArg NOW_ARGS[] =
 
 static const FnCallArg OR_ARGS[] =
 {
+    {CF_ANYSTRING, CF_DATA_TYPE_STRING, "Class expression"},
     {NULL, CF_DATA_TYPE_NONE, NULL}
 };
 

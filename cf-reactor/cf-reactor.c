@@ -36,7 +36,7 @@
 #include <signal.h>             /* signal, kill */
 #include <signals.h>            /* GetSignalPipe, MakeSignalPipe, IsPendingTermination, HandleSignalsForDaemon */
 #include <exec_tools.h>
-#include <alloc.h>              /* xmalloc */
+#include <reactor_context.h>
 
 /*****************************************************************************/
 /* Globals                                                                   */
@@ -190,38 +190,6 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 /*****************************************************************************/
 
 
-static int SetupFileDescriptors(fd_set *readfds, int *fds, size_t num_fds)
-{
-    assert(readfds != NULL);
-
-    FD_ZERO(readfds);
-    int signal_pipe = GetSignalPipe();
-    FD_SET(signal_pipe, readfds);
-
-    int max_fd = signal_pipe;
-
-    for (size_t i = 0; i < num_fds; i++)
-    {
-        FD_SET(fds[i], readfds);
-        max_fd = MAX(fds[i], max_fd);
-    }
-    return max_fd + 1;
-}
-
-static bool ReactorNovaHasTimedOut(fd_set *readfds, int *fds, size_t num_fds)
-{
-    assert(readfds != NULL);
-
-    for (size_t i = 0; i < num_fds; i++)
-    {
-        if (FD_ISSET(fds[i], readfds))
-        {
-            return false;
-        }
-    }
-    return true;
-}
-
 int main(int argc, char *argv[])
 {
     GenericAgentConfig *config = CheckOpts(argc, argv);
@@ -268,28 +236,16 @@ int main(int argc, char *argv[])
     signal(SIGUSR1, HandleSignalsForDaemon);
     signal(SIGUSR2, HandleSignalsForDaemon);
 
-    /* Ask Nova how many fds it needs, rather than guessing a number here that
-     * really belongs to reactor-plugin (and would silently go stale if the
-     * two drift apart across releases). */
-    size_t max_nova_fds = ReactorNovaMaxFds();
-    int *all_fds = xmalloc(max_nova_fds * sizeof(int));
-    // the first num_nova_fds fds are populated with nova fds
-    size_t num_nova_fds;
-    if (!ReactorNovaInitialize(all_fds, max_nova_fds, &num_nova_fds))
+    ReactorContext reactor_ctx;
+    if (!ReactorContextInitialize(&reactor_ctx))
     {
-        free(all_fds);
         GenericAgentFinalize(ctx, config);
         DoCleanupAndExit(EXIT_FAILURE);
     }
-    // returns the number of fds used by nova reactor
-    size_t num_fds = num_nova_fds;
-    // TODO: populate all_fds with other fd used for event driven code (the
-    // allocation above will need to grow accordingly, e.g. by adding a fixed
-    // count on top of max_nova_fds before calling xmalloc())
 
     /* Writing to a pipe whose spawned process already exited (e.g. cfbs
      * rejecting its arguments before reading its stdin) must fail with EPIPE
-     * rather than terminate the whole daemon. Set after ReactorNovaInitialize(),
+     * rather than terminate the whole daemon. Set after ReactorContextInitialize(),
      * so that the spawner and the processes it execs keep the default handling. */
     signal(SIGPIPE, SIG_IGN);
 
@@ -298,22 +254,20 @@ int main(int argc, char *argv[])
     time_t next_tick = time(NULL) + DEFAULT_POLL_INTERVAL_SECS;
     while (!IsPendingTermination())
     {
-        fd_set readfds;
-        int max_fd = SetupFileDescriptors(&readfds, all_fds, num_fds);
+        int max_fd = ReactorContextSetupFileDescriptors(&reactor_ctx);
 
         /* Determine how much time is remaining until the next tick. */
         time_t last_tick = time(NULL);
         time_t remaining = next_tick > last_tick ? next_tick - last_tick : 0;
 
         struct timeval timeout = { .tv_sec = remaining };
-        int ret = select(max_fd, &readfds, NULL, NULL, &timeout);
+        int ret = select(max_fd, &reactor_ctx.readfds, NULL, NULL, &timeout);
 
         /* Reschedule the backstop tick against the current time (not
          * `last_tick`, which was captured before select() potentially
          * blocked for the whole `remaining` duration), so that both call
-         * sites of ReactorNovaHandleTimeout() below agree on what "the next
-         * tick" means, instead of one of them silently doubling the
-         * interval. */
+         * sites of ReactorNovaHandleTimeout() agree on what "the next tick"
+         * means, instead of one of them silently doubling the interval. */
         next_tick = time(NULL) + DEFAULT_POLL_INTERVAL_SECS;
 
         if (ret < 0)
@@ -334,35 +288,14 @@ int main(int argc, char *argv[])
         else if (ret == 0)
         {
             /*** timeout ***/
-            Log(LOG_LEVEL_DEBUG, "Timed-out waiting for next notification");
-
             ReactorNovaHandleTimeout(&next_tick);
             continue;
         }
         /* else */
 
-        /* The signal pipe is always in the watched set so we wake up
-         * promptly on a pending signal, but (per its own contract in
-         * signals.c) it must be drained or it stays "ready" forever, which
-         * would stop select() from ever blocking again. */
-        if (FD_ISSET(GetSignalPipe(), &readfds))
-        {
-            unsigned char buf;
-            while (recv(GetSignalPipe(), &buf, 1, 0) > 0) { /* drain */ }
-        }
-
-        /* This is needed since num_nova_fds may end up smaller than num_fds
-         * once other event-driven fds are added (see the TODO above). */
-        if (ReactorNovaHasTimedOut(&readfds, all_fds, num_nova_fds))
-        {
-            ReactorNovaHandleTimeout(&next_tick);
-            continue;
-        }
-
-        ReactorNovaHandleEvents(&readfds, all_fds, &next_tick);
+        ReactorContextHandleEvents(&reactor_ctx, &next_tick);
     }
-    ReactorNovaFinalize();
-    free(all_fds);
+    ReactorContextFinalize(&reactor_ctx);
 
     GenericAgentFinalize(ctx, config);
     CallCleanupFunctions();

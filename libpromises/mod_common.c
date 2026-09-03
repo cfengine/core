@@ -42,7 +42,6 @@
 #include <mod_measurement.h>
 #include <mod_knowledge.h>
 #include <mod_users.h>
-#include <mod_watch.h>
 #include <mod_reactor.h>
 
 #include <conversion.h>
@@ -551,7 +550,6 @@ const PromiseTypeSyntax *const CF_ALL_PROMISE_TYPES[] =
     CF_MEASUREMENT_PROMISE_TYPES,    /* mod_measurement.c */
     CF_KNOWLEDGE_PROMISE_TYPES,      /* mod_knowledge.c */
     CF_USERS_PROMISE_TYPES,          /* mod_users.c */
-    CF_WATCH_PROMISE_TYPES,          /* mod_watch.c */
     CF_REACTOR_PROMISE_TYPES         /* mod_reactor.c */
 };
 

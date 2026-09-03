@@ -143,6 +143,7 @@ check_PROGRAMS = \
 	sysinfo_test \
 	variable_test \
 	verify_databases_test \
+	simulate_mode_test \
 	protocol_test \
 	mon_cpu_test \
 	mon_load_test \
@@ -398,6 +399,8 @@ strlist_test_SOURCES = strlist_test.c \
 	../../cf-serverd/strlist.h
 
 verify_databases_test_LDADD = ../../cf-agent/libcf-agent.la libtest.la
+
+simulate_mode_test_LDADD = ../../cf-agent/libcf-agent.la libtest.la
 
 iteration_test_SOURCES = iteration_test.c
 

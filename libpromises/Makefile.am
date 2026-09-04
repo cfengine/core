@@ -134,7 +134,6 @@ libpromises_la_SOURCES = \
 	mod_storage.c mod_storage.h \
 	mod_knowledge.c mod_knowledge.h \
 	mod_users.c mod_users.h \
-	mod_watch.c mod_watch.h \
 	mod_reactor.c mod_reactor.h \
 	modes.c \
 	monitoring_read.c monitoring_read.h \

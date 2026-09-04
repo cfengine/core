@@ -1,5 +1,5 @@
 {
-  description = "A multi-platform dev shell using flake-utils";
+  description = "CFEngine Core";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -13,20 +13,19 @@
         pkgs = nixpkgs.legacyPackages.${system};
         lib = pkgs.lib;
 
-        baseVersion = lib.strings.trim (builtins.readFile ./../../.CFVERSION);
-
+        baseVersion = lib.strings.trim (builtins.readFile ../../.CFVERSION);
         shortSha =
           if self ? rev then builtins.substring 0 9 self.rev
           else if self ? dirtyRev then builtins.substring 0 9 self.dirtyRev
           else "unknown0";
-
         version = "${baseVersion}a.${shortSha}";
+
+        core = pkgs.callPackage ./core.nix { version = version; };
       in
       {
         packages = {
-          community-agent = pkgs.callPackage ./core.nix { version = version; is-enterprise = false; is-hub = false; };
-          enterprise-agent = pkgs.callPackage ./core.nix { version = version; is-enterprise = true; is-hub = false; };
-          enterprise-hub = pkgs.callPackage ./core.nix { version = version; is-enterprise = true; is-hub = true; };
+          default = core;
+          buildTree = core.buildTree;
         };
       }
     );

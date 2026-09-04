@@ -225,14 +225,14 @@ tail reactor.txt
 echo "Checking that serverd, execd and reactor PIDs are still correct/alive:"
 ps -p $exec_pid
 ps -p $server_pid
-# ps -p $reactor_pid
+ps -p $reactor_pid
 
 echo "Killing valgrind cf-execd"
 kill $exec_pid
 echo "Killing valgrind cf-serverd"
 kill $server_pid
-# echo "Killing valgrind cf-reactor"
-# kill $reactor_pid
+echo "Killing valgrind cf-reactor"
+kill $reactor_pid
 
 wait $exec_pid
 wait $server_pid

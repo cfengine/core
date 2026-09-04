@@ -1,0 +1,126 @@
+#######################################################
+#
+# A commands promise must work with a secret variable's reference, not its
+# value, until it runs the command (CFE-3298). So every log line carries
+# "$(value)" while the output files hold the real value.
+#
+# Each absent value is paired with a present control -- the reference that
+# replaced it, an ordinary variable that must still expand, and every promise
+# outcome -- so an agent that expanded nothing also fails.
+#
+# The sub-policy runs from a commands promise, not execresult(), so that it
+# runs exactly once instead of on every evaluation pass.
+#
+#######################################################
+body file control
+{
+  inputs => { "../../default.sub.cf" };
+}
+
+bundle agent __main__
+{
+  methods:
+    "bundlesequence" usebundle => default("$(this.promise_filename)");
+}
+
+#######################################################
+bundle agent init
+{
+  files:
+    "$(test.output)" delete => tidy;
+}
+
+#######################################################
+bundle agent test
+{
+  meta:
+    "description"
+      string => "A commands promise keeps the reference to a secret variable unexpanded until it runs the command",
+      meta => { "CFE-3298" };
+
+  vars:
+    "output" string => "$(G.testdir)$(const.dirsep)CFE-3298.out";
+
+  commands:
+    "$(sys.cf_agent) -KI -f $(this.promise_filename).sub > $(output) 2>&1"
+      contain => in_shell;
+}
+
+#######################################################
+bundle agent check
+{
+  vars:
+    "dir" string => "$(G.testdir)$(const.dirsep)CFE-3298";
+
+    # Must not have reached any log line. $(G.touch) is the resolved 'exe'.
+    "must_be_absent" slist => { "S3CR3T-CFE3298-VALUE", "$(G.touch)" };
+
+    # The controls: the references that replaced them, an ordinary variable
+    # that must still expand, and the promise outcomes.
+    "must_be_present"
+      slist => {
+        # A bare "$" would anchor the regex, hence the character class.
+        "[$(const.dollar)]\(value\)",
+        "[$(const.dollar)]\(exe\)",
+        "PLAIN-CFE3298-VALUE",
+        "CHECKPOINT_shell_repaired",
+        "CHECKPOINT_noshell_repaired",
+        "CHECKPOINT_plain_repaired",
+        "CHECKPOINT_DONE",
+      };
+
+    "shell_got" string => readfile("$(dir)$(const.dirsep)shell.out", 128);
+    "plain_got" string => readfile("$(dir)$(const.dirsep)plain.out", 128);
+
+  classes:
+    "leaked"
+      expression => isgreaterthan(
+        countlinesmatching(".*$(must_be_absent).*", "$(test.output)"), "0"
+      );
+
+    "missing"
+      expression => islessthan(
+        countlinesmatching(".*$(must_be_present).*", "$(test.output)"), "1"
+      );
+
+    # Keeping the reference must not stop the command getting the value.
+    "shell_delivered"
+      expression => strcmp("$(shell_got)", "S3CR3T-CFE3298-VALUE");
+
+    "plain_delivered"
+      expression => strcmp("$(plain_got)", "PLAIN-CFE3298-VALUE");
+
+    "noshell_delivered"
+      expression => fileexists("$(dir)$(const.dirsep)noshell.out");
+
+    "delivered"
+      and => { "shell_delivered", "plain_delivered", "noshell_delivered" };
+
+    "ok" and => { "!leaked", "!missing", "delivered" };
+
+  reports:
+    DEBUG::
+      "a secret value matching '$(must_be_absent)' reached the agent output"
+        if => isgreaterthan(
+          countlinesmatching(".*$(must_be_absent).*", "$(test.output)"), "0"
+        );
+
+      "expected output matching '$(must_be_present)' is missing"
+        if => islessthan(
+          countlinesmatching(".*$(must_be_present).*", "$(test.output)"), "1"
+        );
+
+      "Output of $(this.promise_filename).sub is in '$(test.output)'";
+
+    DEBUG.!delivered::
+      "a command did not receive the value (shell '$(shell_got)', plain '$(plain_got)')";
+
+    DEBUG.!noshell_delivered::
+      "the noshell command did not run: '$(dir)$(const.dirsep)noshell.out' was not created";
+
+    ok::
+      "$(this.promise_filename) Pass";
+
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

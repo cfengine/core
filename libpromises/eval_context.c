@@ -2757,6 +2757,18 @@ StringSet *EvalContextVariableTags(const EvalContext *ctx, const VarRef *ref)
     return var_tags;
 }
 
+/**
+ * Whether the variable #ref resolves to is tagged secret.
+ *
+ * Unlike EvalContextVariableGet() with get_secret=false, this answers without
+ * producing a value, so a caller can decide before the plaintext exists.
+ */
+bool EvalContextVariableIsTaggedSecret(const EvalContext *ctx, const VarRef *ref)
+{
+    Variable *var = VariableResolve(ctx, ref);
+    return (var != NULL) && VariableIsSecret(var);
+}
+
 bool EvalContextVariableClearMatch(EvalContext *ctx)
 {
     return VariableTableClear(ctx->match_variables, NULL, NULL, NULL);

@@ -43,6 +43,7 @@
 #include <scope.h>
 #include <ornaments.h>
 #include <eval_context.h>
+#include <expand.h>
 #include <retcode.h>
 #include <timeout.h>
 
@@ -202,6 +203,33 @@ static char *GetLockNameExec(const Attributes *a, const Promise *pp)
 
 /*****************************************************************************/
 
+/**
+ * Resolve the secret references the promiser of a commands promise carries
+ * unexpanded (PromiseTypeResolvesSecretsAtUse() in promises.c).
+ *
+ * Every result goes straight to the process being started; it must not reach a
+ * log message, a lock name or a report.
+ *
+ * @return A new string, always; the caller owns it.
+ */
+static char *ResolveSecrets(const EvalContext *ctx, const char *ns,
+                            const char *string)
+{
+    assert(string != NULL);
+    if (string == NULL)
+    {
+        return NULL;
+    }
+
+    /* Nothing was deferred if no reference is left, the usual case. */
+    if (!IsCf3VarString(string))
+    {
+        return xstrdup(string);
+    }
+
+    return ExpandScalarSecretsOnly(ctx, ns, "this", string, NULL);
+}
+
 static ActionResult RepairExec(EvalContext *ctx, const Attributes *a,
                                const Promise *pp, PromiseResult *result)
 {
@@ -221,9 +249,22 @@ static ActionResult RepairExec(EvalContext *ctx, const Attributes *a,
 
     module_context[0] = '\0';
 
-    if (IsAbsoluteFileName(CommandArg0(pp->promiser)) || a->contain.shelltype == SHELL_TYPE_NONE)
+    const char *const ns = PromiseGetNamespace(pp);
+
+    /* "$(x)" never names an executable, so this check needs the values; the
+     * diagnostics below keep pp->promiser, which does not have them. Freed at
+     * once, and fetched again as late as possible at cf_popen(). CommandArg0()
+     * returns a static buffer, hence the copy. */
+    char *real_arg0;
     {
-        if (!IsExecutable(CommandArg0(pp->promiser)))
+        char *const real_promiser = ResolveSecrets(ctx, ns, pp->promiser);
+        real_arg0 = xstrdup(CommandArg0(real_promiser));
+        free(real_promiser);
+    }
+
+    if (IsAbsoluteFileName(real_arg0) || a->contain.shelltype == SHELL_TYPE_NONE)
+    {
+        if (!IsExecutable(real_arg0))
         {
             cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "'%s' promises to be executable but isn't", pp->promiser);
             *result = PromiseResultUpdate(*result, PROMISE_RESULT_FAIL);
@@ -233,6 +274,7 @@ static ActionResult RepairExec(EvalContext *ctx, const Attributes *a,
                 Log(LOG_LEVEL_VERBOSE, "Paths with spaces must be inside escaped quoutes (e.g. \\\"%s\\\")", pp->promiser);
             }
 
+            free(real_arg0);
             return ACTION_RESULT_FAILED;
         }
         else
@@ -240,6 +282,7 @@ static ActionResult RepairExec(EvalContext *ctx, const Attributes *a,
             Log(LOG_LEVEL_VERBOSE, "Promiser string contains a valid executable '%s' - ok", CommandArg0(pp->promiser));
         }
     }
+    free(real_arg0);
 
     char timeout_str[CF_BUFSIZE];
     if (a->contain.timeout == CF_NOINT)
@@ -315,13 +358,18 @@ static ActionResult RepairExec(EvalContext *ctx, const Attributes *a,
         }
 #endif /* !__MINGW32__ */
 
+        /* Point of use: nothing below cf_popen*() needs the values, so the
+         * strings holding them are built and freed here. 'cmdline' keeps the
+         * references and is what every log message in this function prints. */
         const char *open_mode = a->module ? "rt" : "r";
         if (a->contain.shelltype == SHELL_TYPE_POWERSHELL)
         {
 #ifdef __MINGW32__
+            char *const real_cmdline = ResolveSecrets(ctx, ns, cmdline);
             pfp =
-                cf_popen_powershell_setuid(cmdline, open_mode, a->contain.owner, a->contain.group, a->contain.chdir, a->contain.chroot,
+                cf_popen_powershell_setuid(real_cmdline, open_mode, a->contain.owner, a->contain.group, a->contain.chdir, a->contain.chroot,
                                            a->transaction.background);
+            free(real_cmdline);
 #else // !__MINGW32__
             Log(LOG_LEVEL_ERR, "Powershell is only supported on Windows");
             return ACTION_RESULT_FAILED;
@@ -329,9 +377,11 @@ static ActionResult RepairExec(EvalContext *ctx, const Attributes *a,
         }
         else if (a->contain.shelltype == SHELL_TYPE_USE)
         {
+            char *const real_cmdline = ResolveSecrets(ctx, ns, cmdline);
             pfp =
-                cf_popen_shsetuid(cmdline, open_mode, a->contain.owner, a->contain.group, a->contain.chdir, a->contain.chroot,
+                cf_popen_shsetuid(real_cmdline, open_mode, a->contain.owner, a->contain.group, a->contain.chdir, a->contain.chroot,
                                   a->transaction.background);
+            free(real_cmdline);
         }
         else
         {
@@ -339,15 +389,21 @@ static ActionResult RepairExec(EvalContext *ctx, const Attributes *a,
                                 ? xstrdup(pp->promiser)
                                 : StringFormat("%s %s", pp->promiser,
                                                a->args);
+            char *const real_command = ResolveSecrets(ctx, ns, command);
+            free(command);
+
+            /* arglist entries are ordinary constraints, already expanded, but
+             * one can hold $(this.promiser), which here is unexpanded. */
             Seq *arglist = NULL;
             if (a->arglist != NULL)
             {
-                arglist = SeqNew(8, NULL);
+                arglist = SeqNew(RlistLen(a->arglist), free);
                 for (const Rlist *rp = a->arglist; rp != NULL; rp = rp->next)
                 {
                     if (rp->val.type == RVAL_TYPE_SCALAR)
                     {
-                        SeqAppend(arglist, RlistScalarValue(rp));
+                        SeqAppend(arglist,
+                                  ResolveSecrets(ctx, ns, RlistScalarValue(rp)));
                     }
                     else
                     {
@@ -357,11 +413,11 @@ static ActionResult RepairExec(EvalContext *ctx, const Attributes *a,
                     }
                 }
             }
-            pfp = cf_popensetuid(command, arglist, open_mode,
+            pfp = cf_popensetuid(real_command, arglist, open_mode,
                                  a->contain.owner, a->contain.group,
                                  a->contain.chdir, a->contain.chroot,
                                  a->transaction.background);
-            free(command);
+            free(real_command);
             SeqDestroy(arglist);
         }
 

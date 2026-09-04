@@ -1,8 +1,4 @@
 { stdenv
-, version
-, is-enterprise
-, is-hub
-, lib
 , pkg-config
 , autoreconfHook
 , bison
@@ -22,12 +18,14 @@
 , pam
 , perl
 , shadow
+, version
 }:
 
 stdenv.mkDerivation {
-  pname = "cfengine";
+  pname = "cfengine-core";
   version = version;
   src = ../../.;
+  outputs = [ "out" "buildTree" ];
 
   postPatch = ''
     echo "${version}" > CFVERSION
@@ -71,5 +69,8 @@ stdenv.mkDerivation {
   postInstall = ''
     cp ${coreutils}/bin/date $out/bin/date
     cp ${diffutils}/bin/diff $out/bin/diffutils
+
+    mkdir -p "$buildTree"
+    cp -a . "$buildTree"/
   '';
 }

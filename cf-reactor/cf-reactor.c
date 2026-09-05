@@ -89,6 +89,7 @@ static const char *const HINTS[] =
     "Print the help message",
     "Print basic information about actions being taken",
     "Log timestamps on each line of log output",
+    "Print the man page",
     "Output verbose information about the behaviour of the agent",
     "Output the version of the software",
     NULL

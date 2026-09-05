@@ -1713,9 +1713,9 @@ AS_IF([test "x$SYSTEMD_SERVICE_PATH" = "x"], [], [
     AC_CONFIG_FILES([misc/systemd/cf-apache.service])
     AC_CONFIG_FILES([misc/systemd/cf-execd.service])
     AC_CONFIG_FILES([misc/systemd/cf-hub.service])
-    AC_CONFIG_FILES([misc/systemd/cf-reactor.service])
     AC_CONFIG_FILES([misc/systemd/cf-monitord.service])
     AC_CONFIG_FILES([misc/systemd/cf-postgres.service])
+    AC_CONFIG_FILES([misc/systemd/cf-reactor.service])
     AC_CONFIG_FILES([misc/systemd/cf-serverd.service])
 ])
 

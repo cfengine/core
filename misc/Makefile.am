@@ -9,6 +9,7 @@ EXTRA_DIST= init.d/cfengine3.in \
 	systemd/cf-hub.service.in \
 	systemd/cf-monitord.service.in \
 	systemd/cf-postgres.service.in \
+	systemd/cf-reactor.service.in \
 	systemd/cf-serverd.service.in \
 	systemd/cfengine3.service.in
 
@@ -28,9 +29,9 @@ systemd_DATA  += systemd/cf-php-fpm.service
 systemd_DATA  += systemd/cf-apache.service
 systemd_DATA  += systemd/cf-execd.service
 systemd_DATA  += systemd/cf-hub.service
-systemd_DATA  += systemd/cf-reactor.service
 systemd_DATA  += systemd/cf-monitord.service
 systemd_DATA  += systemd/cf-postgres.service
+systemd_DATA  += systemd/cf-reactor.service
 systemd_DATA  += systemd/cf-serverd.service
 
 install-data-hook:

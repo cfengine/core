@@ -1,5 +1,5 @@
 [Unit]
-Description=CFEngine Enterprise event reaction daemon
+Description=CFEngine event reaction daemon
 PartOf=cfengine3.service
 ConditionPathExists=@bindir@/cf-reactor
 ConditionPathExists=@workdir@/inputs/promises.cf

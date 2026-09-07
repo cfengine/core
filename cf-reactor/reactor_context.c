@@ -25,6 +25,7 @@
 #include <reactor_context.h>
 #include <prototypes3.h>        /* ReactorNova*() */
 #include <signals.h>            /* GetSignalPipe() */
+#include <watcher.h>
 #include <alloc.h>
 
 #define INIT_FD_COUNT 8
@@ -43,6 +44,8 @@ bool ReactorContextInitialize(ReactorContext *ctx)
 
     ctx->fds = SeqNew(INIT_FD_COUNT, free);
 
+    WatcherRegistryInitialize();
+
     // Initialize Nova fds
     {
         ctx->max_nova_fds = ReactorNovaMaxFds();
@@ -54,9 +57,15 @@ bool ReactorContextInitialize(ReactorContext *ctx)
             free(nova_fds);
             SeqDestroy(ctx->fds);
             ctx->fds = NULL;
+            WatcherRegistryFinalize();
             return false;
         }
 
+        // num_nova_fds can never end up less than max_nova_fds here: Nova
+        // asserts internally that it always reports back the same fd count
+        // it advertises as its max (see the assert on poll_fd_idx in
+        // SetupEventProcessing(), nova/reactor-plugin/cf-reactor.c),
+        // so this loop always appends exactly max_nova_fds entries.
         for (size_t i = 0; i < num_nova_fds; i++)
         {
             SeqAppend(ctx->fds, ReactorFdNew(nova_fds[i], REACTOR_FD_NOVA));
@@ -64,8 +73,20 @@ bool ReactorContextInitialize(ReactorContext *ctx)
         free(nova_fds);
     }
 
-    // TODO: initialize other event sources here.
-    
+    // Initialize event watcher fd
+    {
+        int watcher_fd;
+        if (!EventWatcherInitialize(&watcher_fd))
+        {
+            ReactorNovaFinalize();
+            WatcherRegistryFinalize();
+            SeqDestroy(ctx->fds);
+            ctx->fds = NULL;
+            return false;
+        }
+        SeqAppend(ctx->fds, ReactorFdNew(watcher_fd, REACTOR_FD_WATCHER));
+    }
+
     return true;
 }
 
@@ -121,7 +142,11 @@ static int *GetNovaFds(const ReactorContext *ctx)
         {
             continue;
         }
-        // Since we came so far, this should be always true
+        // This can never go out of bounds: ctx->fds always
+        // holds exactly max_nova_fds REACTOR_FD_NOVA entries (see the
+        // comment in ReactorContextInitialize()), so num_nova_fds cannot
+        // exceed max_nova_fds and nova_fds is always fully populated by
+        // the time this function returns.
         assert(num_nova_fds < ctx->max_nova_fds);
         nova_fds[num_nova_fds++] = rfd->fd;
     }
@@ -144,6 +169,21 @@ static void SetNovaFds(ReactorContext *ctx, const int *nova_fds)
         }
         rfd->fd = nova_fds[num_nova_fds++];
     }
+}
+static int GetWatcherFd(const ReactorContext *ctx)
+{
+    assert(ctx != NULL);
+    for (size_t i = 0; i < SeqLength(ctx->fds); i++)
+    {
+        const ReactorFd *rfd = SeqAt(ctx->fds, i);
+
+        if (rfd->type == REACTOR_FD_WATCHER)
+        {
+            return rfd->fd;
+        }
+    }
+    ProgrammingError("Reactor was not initialized with event watcher fd");
+    return 0;
 }
 
 void ReactorContextHandleEvents(ReactorContext *ctx, time_t *next_tick)
@@ -174,13 +214,14 @@ void ReactorContextHandleEvents(ReactorContext *ctx, time_t *next_tick)
         while (recv(GetSignalPipe(), &buf, 1, 0) > 0) { /* drain */ }
     }
 
-    // TODO: handle events for other event sources here.
+    EventWatcherHandleEvents(GetWatcherFd(ctx), &ctx->readfds);
 }
 
 void ReactorContextFinalize(ReactorContext *ctx)
 {
     assert(ctx != NULL);
 
+    EventWatcherFinalize();
     ReactorNovaFinalize();
     ctx->max_nova_fds = 0;
 

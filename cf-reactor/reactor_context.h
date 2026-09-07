@@ -30,7 +30,8 @@
 
 typedef enum
 {
-  REACTOR_FD_NOVA
+  REACTOR_FD_NOVA,
+  REACTOR_FD_WATCHER
 } ReactorFdType;
 
 /**

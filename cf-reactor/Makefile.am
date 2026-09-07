@@ -39,10 +39,11 @@ libcf_reactor_la_LIBADD = ../libpromises/libpromises.la
 
 libcf_reactor_la_SOURCES = \
 	cf-reactor.c \
+	file_watcher.c file_watcher.h \
 	reactor_context.c reactor_context.h \
-	watcher.c watcher.h \
 	stoppable_thread.c stoppable_thread.h \
-	wakeup_channel.c wakeup_channel.h
+	wakeup_channel.c wakeup_channel.h \
+	watcher.c watcher.h
 
 if !BUILTIN_EXTENSIONS
  bin_PROGRAMS = cf-reactor

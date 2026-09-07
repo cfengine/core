@@ -232,6 +232,7 @@ regex_test_SOURCES = regex_test.c ../../libpromises/match_scope.c
 
 watcher_test_SOURCES = watcher_test.c \
 	../../cf-reactor/watcher.c \
+	../../cf-reactor/file_watcher.c \
 	../../cf-reactor/stoppable_thread.c \
 	../../cf-reactor/wakeup_channel.c
 

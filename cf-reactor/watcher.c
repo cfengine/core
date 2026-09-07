@@ -33,6 +33,7 @@
 #include <map.h>
 #include <sequence.h>
 #include <threaded_queue.h>
+#include <file_watcher.h>
 
 /* Upper bound on how long the watcher thread ever sleeps in one go, so that
  * IsPendingTermination() is re-checked at least this often during shutdown,
@@ -94,10 +95,12 @@ void WatcherRegister(const char *key, EventType type, void *state, Bundle *bundl
     WatcherStateDestroyFn destroy_state = NULL;
     switch (type)
     {
-
     case EVENT_FILE_DELETED:
-        // TODO: initialize check_callback and destroy_state
+        check_callback = CheckFileDeleted;
+        destroy_state = DestroyFileWatcherState;
         break;
+
+    // TODO: add more event types
 
     default:
         ProgrammingError("Unknown reactor event type %d for watcher '%s'", (int) type, key);

@@ -124,10 +124,11 @@ void WatcherRegister(const char *key, EventType type, void *state, Rval val, tim
     WatcherStateDestroyFn destroy_state = NULL;
     switch (type)
     {
-
     case EVENT_FILE_DELETED:
-        // TODO: initialize check_callback and destroy_state
+        check_fn = CheckFileExists;
+        destroy_payload = DestroyFileWatcherPayload;
         break;
+    // TODO: add more cases
 
     default:
         ProgrammingError("Unknown reactor event type %d for watcher '%s'", (int) type, key);

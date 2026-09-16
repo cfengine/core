@@ -221,7 +221,6 @@ static int LmdbEnvOpen(
 {
     assert(env != NULL);  // dereferenced in lmdb (mdb_env_open)
     assert(path != NULL); // dereferenced (strlen) in lmdb (mdb_env_open)
-    assert(mdb_env_get_maxkeysize(env) == 511); // Search for 511 in locks.c
 
     /* There is a race condition in LMDB that will fail to open the database
      * environment if another process is opening it at the exact same time. This
@@ -233,6 +232,10 @@ static int LmdbEnvOpen(
     while (attempts-- > 0)
     {
         int rc = mdb_env_open(env, path, flags, mode);
+        if (rc == MDB_SUCCESS)
+        {
+            assert(mdb_env_get_maxkeysize(env) >= 511); // Search for 511 in locks.c
+        }
         if (rc != ENOENT)
         {
             return rc;

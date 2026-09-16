@@ -33,12 +33,7 @@ Rather than exposing the raw file-descriptor bookkeeping required for `select(2)
 ```C
 typedef struct ReactorContext
 {
-    int *all_fds; // heap allocated array of fds
-    size_t all_fds_capacity; // total number of fds. number of nova fds + number of event fds 
-    size_t num_nova_fds; // this is returned by the reactor-plugin
-    size_t num_fds; // this is 1
-    // the first (num_nova_fds - 1) slots in the array are reserved for the reactor-plugin, the last one is reserved for the event driven code.
-
+    Seq *fds // array of ReactorFd, which holds the fd and some metadata
     fd_set readfds;
 } ReactorContext;
 ```

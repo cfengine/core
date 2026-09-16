@@ -1,0 +1,189 @@
+/*
+  Copyright 2026 Northern.tech AS
+
+  This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
+
+  This program is free software; you can redistribute it and/or modify it
+  under the terms of the GNU General Public License as published by the
+  Free Software Foundation; version 3.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+  To the extent this program is licensed as part of the Enterprise
+  versions of CFEngine, the applicable Commercial Open Source License
+  (COSL) may apply to this file if you as a licensee so wish it. See
+  included file COSL.txt.
+*/
+
+#include <reactor_context.h>
+#include <prototypes3.h>        /* ReactorNova*() */
+#include <signals.h>            /* GetSignalPipe() */
+#include <alloc.h>
+
+#define INIT_FD_COUNT 8
+
+static ReactorFd *ReactorFdNew(int fd, ReactorFdType type)
+{
+    ReactorFd *rfd = xmalloc(sizeof(ReactorFd));
+    rfd->fd = fd;
+    rfd->type = type;
+    return rfd;
+}
+
+bool ReactorContextInitialize(ReactorContext *ctx)
+{
+    assert(ctx != NULL);
+
+    ctx->fds = SeqNew(INIT_FD_COUNT, free);
+
+    // Initialize Nova fds
+    {
+        ctx->max_nova_fds = ReactorNovaMaxFds();
+        int *nova_fds = (int *) xmalloc(ctx->max_nova_fds * sizeof(int));
+        size_t num_nova_fds = 0;
+
+        if (!ReactorNovaInitialize(nova_fds, ctx->max_nova_fds, &num_nova_fds))
+        {
+            free(nova_fds);
+            SeqDestroy(ctx->fds);
+            ctx->fds = NULL;
+            return false;
+        }
+
+        for (size_t i = 0; i < num_nova_fds; i++)
+        {
+            SeqAppend(ctx->fds, ReactorFdNew(nova_fds[i], REACTOR_FD_NOVA));
+        }
+        free(nova_fds);
+    }
+
+    // TODO: initialize other event sources here.
+    
+    return true;
+}
+
+int ReactorContextSetupFileDescriptors(ReactorContext *ctx)
+{
+    assert(ctx != NULL);
+
+    FD_ZERO(&ctx->readfds);
+    int signal_pipe = GetSignalPipe();
+    FD_SET(signal_pipe, &ctx->readfds);
+
+    int max_fd = signal_pipe;
+    for (size_t i = 0; i < SeqLength(ctx->fds); i++)
+    {
+        const ReactorFd *rfd = SeqAt(ctx->fds, i);
+        FD_SET(rfd->fd, &ctx->readfds);
+        max_fd = MAX(rfd->fd, max_fd);
+    }
+    return max_fd + 1;
+}
+
+static bool NovaHasTimedOut(const ReactorContext *ctx)
+{
+    assert(ctx != NULL);
+    for (size_t i = 0; i < SeqLength(ctx->fds); i++)
+    {
+        const ReactorFd *rfd = SeqAt(ctx->fds, i);
+
+        if (rfd->type != REACTOR_FD_NOVA)
+        {
+            continue;
+        }
+
+        if (FD_ISSET(rfd->fd, &ctx->readfds))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+static int *GetNovaFds(const ReactorContext *ctx)
+{
+    assert(ctx != NULL);
+    int *nova_fds = (int *) xmalloc(ctx->max_nova_fds * sizeof(int));
+    size_t num_nova_fds = 0;
+
+    for (size_t i = 0; i < SeqLength(ctx->fds); i++)
+    {
+        const ReactorFd *rfd = SeqAt(ctx->fds, i);
+
+        if (rfd->type != REACTOR_FD_NOVA)
+        {
+            continue;
+        }
+        // Since we came so far, this should be always true
+        assert(num_nova_fds < ctx->max_nova_fds);
+        nova_fds[num_nova_fds++] = rfd->fd;
+    }
+
+    return nova_fds;
+}
+
+static void SetNovaFds(ReactorContext *ctx, const int *nova_fds)
+{
+    assert(ctx != NULL);
+    size_t num_nova_fds = 0;
+
+    for (size_t i = 0; i < SeqLength(ctx->fds); i++)
+    {
+        ReactorFd *rfd = SeqAt(ctx->fds, i);
+
+        if (rfd->type != REACTOR_FD_NOVA)
+        {
+            continue;
+        }
+        rfd->fd = nova_fds[num_nova_fds++];
+    }
+}
+
+void ReactorContextHandleEvents(ReactorContext *ctx, time_t *next_tick)
+{
+    assert(ctx != NULL);
+
+    if (NovaHasTimedOut(ctx))
+    {
+        ReactorNovaHandleTimeout(next_tick);
+    }
+    else
+    {
+        int *nova_fds = GetNovaFds(ctx);
+        ReactorNovaHandleEvents(&ctx->readfds, nova_fds, next_tick);
+        // ReactorNova replaces the fd of broken connection
+        SetNovaFds(ctx, nova_fds);
+
+        free(nova_fds);
+    }
+
+    /* The signal pipe is always in the watched set so we wake up
+    * promptly on a pending signal, but (per its own contract in
+    * signals.c) it must be drained or it stays "ready" forever, which
+    * would stop select() from ever blocking again. */
+    if (FD_ISSET(GetSignalPipe(), &ctx->readfds))
+    {
+        unsigned char buf;
+        while (recv(GetSignalPipe(), &buf, 1, 0) > 0) { /* drain */ }
+    }
+
+    // TODO: handle events for other event sources here.
+}
+
+void ReactorContextFinalize(ReactorContext *ctx)
+{
+    assert(ctx != NULL);
+
+    ReactorNovaFinalize();
+    ctx->max_nova_fds = 0;
+
+    SeqDestroy(ctx->fds);
+    ctx->fds = NULL;
+}

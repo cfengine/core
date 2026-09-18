@@ -48,6 +48,12 @@ static bool GetSysUsers( int *userListSz, int *numRootProcs, int *numOtherProcs)
     xsnprintf(cbuff, CF_BUFSIZE, "UNIX95=1  /bin/ps -eo user,pid > %s/users.txt", CFWORKDIR);
     /* SKIP on HP-UX since cf-monitord doesn't count processes correctly! */
     return false;
+#elif defined(__APPLE__)
+    /* macOS's BSD ps doesn't understand procps's "keyword:width" column
+     * sizing syntax used in the generic branch below (it errors out with
+     * "ps: user:30: keyword not found"). BSD ps doesn't truncate the "user"
+     * column the way Linux's does, so plain "user,pid" is enough here. */
+    xsnprintf(cbuff, CF_BUFSIZE, "ps -eo user,pid > %s/users.txt", CFWORKDIR);
 #else
     xsnprintf(cbuff, CF_BUFSIZE, "ps -eo user:30,pid > %s/users.txt", CFWORKDIR);
 #endif

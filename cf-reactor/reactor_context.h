@@ -53,9 +53,9 @@ typedef struct
   size_t max_nova_fds;
 } ReactorContext;
 
-bool ReactorContextInitialize(ReactorContext *ctx);
-int ReactorContextSetupFileDescriptors(ReactorContext *ctx);
-void ReactorContextHandleEvents(ReactorContext *ctx, time_t *next_tick);
-void ReactorContextFinalize(ReactorContext *ctx);
+bool ReactorContextInitialize(ReactorContext *reactor_context);
+int ReactorContextSetupFileDescriptors(ReactorContext *reactor_context);
+void ReactorContextHandleEvents(ReactorContext *reactor_context, time_t *next_tick);
+void ReactorContextFinalize(ReactorContext *reactor_context);
 
 #endif

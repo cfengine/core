@@ -1,3 +1,81 @@
+## 3.29.0
+- Added --no-lock long option to cf-runagent, matching the existing -K short option
+- Added SELinux state and Federated Reporting transport metadata to cf-support
+  (ENT-14405)
+- Added Termux for sys.os_name_human when running in Termux Linux Environment (Android)
+  (CFE-4427)
+- Added file_older_than policy function (ENT-6065)
+- Added opt-in remount reconciliation for storage mount options
+  (CFE-1864, CFE-3366, CFE-90)
+- Added sshd logs to the cf-support Federated Reporting collection
+  (ENT-14405)
+- Added the 'silence' attribute to 'body changes', which suppresses the alert output of selected file-change categories while still setting the change classes and writing the audit log.
+  (CFE-159)
+- Added the parameters of string_mustache() to the syntax description
+  (CFE-4534)
+- Added the parameters of the remaining variadic functions to the syntax description
+  and(), or(), concat(), ifelse(), findfiles(), mergedata() and the classmatch()
+  family reported no parameters at all. Only the leading arguments are described,
+  as bundlesmatching() and format() already do, and CF_ANYSTRING keeps the
+  argument type check they activate as permissive as it was.
+  Ticket: (CFE-4714)
+- Added the promisee to verbose output for reports promises (CFE-4228)
+- Added validfiledata policy function (ENT-8193)
+- Adjusted IsReadable() to not use pthread_cancel() on Termux platform
+  (CFE-4401)
+- Allowed modules to define empty lists (CFE-2139)
+- Allowed modules to define lists with a trailing comma (CFE-2140)
+- Allowed mount promises to target a specific server (CFE-2350)
+- Community 'files' promises using hash => "best" now use SHA-512 (previously MD5+SHA1) and no longer report a content change on two consecutive agent runs. Affected files are re-baselined on the first run after upgrade.
+  (CFE-3725)
+- Extended string_replace with list arguments (CFE-4694)
+- Fix ipv6 mask check (CFE-2034)
+- Fixed Federated Reporting transport failing on RHEL 10 hubs
+  (ENT-14405)
+- Fixed a bug regarding the resolution of namespaces inside function-calls
+  (ENT-10199)
+- Fixed cf-check -V (--version) short option
+- Fixed cf-net -t (--tls-version) and -c (--ciphers) short options
+- Fixed cf-secret -v (--verbose), -g (--log-level) and -I (--inform) short options
+- Fixed cf-serverd -L (--ld-library-path) to accept its argument
+- Fixed insert_lines ignoring include_end_delimiter when locating the region
+  (CFE-3988)
+- Fixed insert_lines prepending to the file instead of to the selected region
+  (CFE-3987)
+- Fixed lmdb maxkeysize assertion for macos
+- Fixed macOS process start-time/state detection (process_macos.c) and the macOS ps syntax bug in mon_processes_test.c
+  (ENT-14471)
+- Fixed process_select and file_select time ranges on Windows
+- Fixed reports promise being kept when the report could not be written
+  (CFE-4699)
+- Fixed simulate mode reporting both removal and install of the same package
+  (CFE-4742)
+- Fixed usemodule() reporting success when the module exited non-zero
+  (CFE-942)
+- Increased the maximum number of cf-monitord measurement slots (CF_OBSERVABLES) from 100 to 300
+  (ENT-6511)
+- Made an unrecognized action_policy fatal instead of defaulting to fix
+  (CFE-1982)
+- Made format function collect data container (CFE-3105)
+- Maintained fstab entries for already-mounted filesystems (CFE-1539)
+- Mounted a single filesystem surgically instead of running mount -a
+  (CFE-1863)
+- Moved cf-reactor binary to core (ENT-14275)
+- Remove obsolete audit-mode soft-fail acceptance tests (ENT-3787)
+- The source tarball is now reproducible
+- cf-check dump reports measurement names instead of labelling them spare
+  Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+  (ENT-14329)
+- cf-monitord no longer silently truncates the ts_key measurement name file
+  Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+  (ENT-14329)
+- cf-monitord stores only in-use measurement slots
+  Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+  (ENT-14329)
+- cf-reactor: Fixed missing option description in --help output
+- fix out-of-bounds read in FuzzySetMatch/FuzzyMatchParse octet scan
+- testall egrep & fgrep warnings (CFE-4526)
+
 ## 3.28.0
 
 - Adapted date constraints to allow dates after Y2038 (CFE-4620)

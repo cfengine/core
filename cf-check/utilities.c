@@ -15,6 +15,7 @@ Seq *default_lmdb_files()
     if (files == NULL)
     {
         Log(LOG_LEVEL_ERR, "Could not open %s", state);
+        files = SeqNew(1, NULL);
     }
     return files;
 }

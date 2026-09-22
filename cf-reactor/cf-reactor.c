@@ -32,6 +32,7 @@
 #include <generic_agent.h>
 #include <loading.h>            /* LoadPolicy */
 #include <bootstrap.h>          /* UpdateLastPolicyUpdateTime */
+#include <known_dirs.h>         /* GetInputDir */
 #include <man.h>
 #include <cleanup.h>
 #include <prototypes3.h>
@@ -73,6 +74,7 @@ static const char *const CF_REACTOR_MANPAGE_LONG_DESCRIPTION =
 static const struct option OPTIONS[] =
 {
     {"debug", no_argument, 0, 'd'},
+    {"file", required_argument, 0, 'f'},
     {"no-fork", no_argument, 0, 'F'},
     {"log-level", required_argument, 0, 'g'},
     {"help", no_argument, 0, 'h'},
@@ -87,6 +89,7 @@ static const struct option OPTIONS[] =
 static const char *const HINTS[] =
 {
     "Enable debugging output and run in foreground",
+    "Specify an alternative input file than the default. This option is overridden by FILE if supplied as argument.",
     "Run as a foreground process (do not fork)",
     "Specify how detailed logs should be. Possible values: 'error', 'warning', 'notice', 'info', 'verbose', 'debug'",
     "Print the help message",
@@ -105,11 +108,15 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_REACTOR, GetTTYInteractive());
 
     int longopt_idx;
-    while ((c = getopt_long(argc, argv, "dFg:hIlMvV",
+    while ((c = getopt_long(argc, argv, "df:Fg:hIlMvV",
                             OPTIONS, &longopt_idx)) != -1)
     {
         switch (c)
         {
+        case 'f':
+            GenericAgentConfigSetInputFile(config, GetInputDir(), optarg);
+            MINUSF = true;
+            break;
         case 'd':
             LogSetGlobalLevel(LOG_LEVEL_DEBUG);
             NO_FORK = true;

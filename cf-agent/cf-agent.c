@@ -29,6 +29,7 @@
 
 #include <actuator.h>
 #include <audit.h>
+#include <bundle_schedule.h>
 #include <cleanup.h>
 #include <eval_context.h>
 #include <verify_classes.h>
@@ -104,10 +105,6 @@
 #include <ornaments.h>
 
 
-extern int PR_KEPT;
-extern int PR_REPAIRED;
-extern int PR_NOTKEPT;
-
 static bool ALLCLASSESREPORT = false; /* GLOBAL_P */
 static bool ALWAYS_VALIDATE = false; /* GLOBAL_P */
 static bool CFPARANOID = false; /* GLOBAL_P */
@@ -158,7 +155,6 @@ static PromiseResult ParallelFindAndVerifyFilesPromises(EvalContext *ctx, const 
 static bool VerifyBootstrap(bool skip_cf_execd_check);
 static void KeepPromiseBundles(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config);
 static void KeepPromises(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config);
-static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save_pr_repaired, int save_pr_notkept, struct timespec start);
 static void AllClassesReport(const EvalContext *ctx);
 static bool HasAvahiSupport(void);
 static int AutomaticBootstrap(GenericAgentConfig *config);
@@ -1609,146 +1605,33 @@ PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
     return ScheduleAgentOperationsTopDownOrder(ctx, bp);
 }
 
+/* The generic "run every promise in this bundle, converging over multiple
+ * passes" loops (shared with cf-reactor, for running the bundle named in an
+ * events promise's "then") live in libpromises/bundle_schedule.c. Only the
+ * agent-specific bits stay here: which promise types to run and in what
+ * order (AGENT_TYPESEQUENCE), how to run each one (KeepAgentPromise()), the
+ * per-type setup/teardown (NewTypeContext()/DeleteTypeContext()), the
+ * "defaults" promise type pass, and refreshing the process table cache
+ * before the run. */
 PromiseResult ScheduleAgentOperationsNormalOrder(EvalContext *ctx, const Bundle *bp)
 {
-    assert(bp != NULL);
-
-    int save_pr_kept = PR_KEPT;
-    int save_pr_repaired = PR_REPAIRED;
-    int save_pr_notkept = PR_NOTKEPT;
-    struct timespec start = BeginMeasure();
-
     if (PROCESSREFRESH == NULL || (PROCESSREFRESH && IsRegexItemIn(ctx, PROCESSREFRESH, bp->name)))
     {
         ClearProcessTable();
     }
 
-    PromiseResult result = PROMISE_RESULT_SKIPPED;
-
-    for (int pass = 1; pass < CF_DONEPASSES; pass++)
-    {
-        // Evaluate built-in (non-custom) promise types, according to type sequence (normal order):
-        for (TypeSequence type = 0; AGENT_TYPESEQUENCE[type] != NULL; type++)
-        {
-            const BundleSection *sp = BundleGetSection((Bundle *)bp, AGENT_TYPESEQUENCE[type]);
-
-            if (!sp || SeqLength(sp->promises) == 0)
-            {
-                continue;
-            }
-
-            NewTypeContext(type);
-
-            SpecialTypeBanner(type, pass);
-            EvalContextStackPushBundleSectionFrame(ctx, sp);
-
-            for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
-            {
-                Promise *pp = SeqAt(sp->promises, ppi);
-
-                EvalContextSetPass(ctx, pass);
-
-                PromiseResult promise_result = ExpandPromise(ctx, pp, KeepAgentPromise, NULL);
-                result = PromiseResultUpdate(result, promise_result);
-
-                if (EvalAborted(ctx) || BundleAbort(ctx))
-                {
-                    DeleteTypeContext(ctx, type);
-                    EvalContextStackPopFrame(ctx);
-                    NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept, start);
-                    return result;
-                }
-            }
-
-            DeleteTypeContext(ctx, type);
-            EvalContextStackPopFrame(ctx);
-
-            if (type == TYPE_SEQUENCE_CONTEXTS)
-            {
-                BundleResolve(ctx, bp);
-                BundleResolvePromiseType(ctx, bp, "defaults", DefaultVarPromiseWrapper);
-            }
-        }
-
-        // Custom promises are evaluated at the end of an evaluation pass:
-        const size_t sections = SeqLength(bp->custom_sections);
-        for (size_t i = 0; i < sections; ++i)
-        {
-            BundleSection *section = SeqAt(bp->custom_sections, i);
-
-            EvalContextStackPushBundleSectionFrame(ctx, section);
-
-            const size_t promises = SeqLength(section->promises);
-            for (size_t ppi = 0; ppi < promises; ppi++)
-            {
-                Promise *pp = SeqAt(section->promises, ppi);
-
-                EvalContextSetPass(ctx, pass);
-
-                PromiseResult promise_result = ExpandPromise(ctx, pp, KeepAgentPromise, NULL);
-                result = PromiseResultUpdate(result, promise_result);
-
-                if (EvalAborted(ctx) || BundleAbort(ctx))
-                {
-                    EvalContextStackPopFrame(ctx);
-                    NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept, start);
-                    return result;
-                }
-            }
-            EvalContextStackPopFrame(ctx);
-        }
-    }
-
-    NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept, start);
-    return result;
+    return ScheduleBundleOperationsNormalOrder(ctx, bp, AGENT_TYPESEQUENCE, KeepAgentPromise,
+                                               NewTypeContext, DeleteTypeContext, DefaultVarPromiseWrapper);
 }
 
 PromiseResult ScheduleAgentOperationsTopDownOrder(EvalContext *ctx, const Bundle *bp)
 {
-    assert(bp != NULL);
-
-    int save_pr_kept = PR_KEPT;
-    int save_pr_repaired = PR_REPAIRED;
-    int save_pr_notkept = PR_NOTKEPT;
-    struct timespec start = BeginMeasure();
-
     if (PROCESSREFRESH == NULL || (PROCESSREFRESH && IsRegexItemIn(ctx, PROCESSREFRESH, bp->name)))
     {
         ClearProcessTable();
     }
 
-    PromiseResult result = PROMISE_RESULT_SKIPPED;
-    for (int pass = 1; pass < CF_DONEPASSES; pass++)
-    {
-        const char *last_promise_type = "";
-        for (size_t ppi = 0; ppi < SeqLength(bp->all_promises); ppi++)
-        {
-            EvalContextSetPass(ctx, pass);
-            Promise *pp = SeqAt(bp->all_promises, ppi);
-            BundleSection *parent_section = pp->parent_section;
-
-            if (!StringEqual(last_promise_type, parent_section->promise_type))
-            {
-                SpecialTypeBannerFromString(parent_section->promise_type, pass);
-            }
-            last_promise_type = parent_section->promise_type;
-
-            EvalContextStackPushBundleSectionFrame(ctx, parent_section);
-
-            PromiseResult promise_result = ExpandPromise(ctx, pp, KeepAgentPromise, NULL);
-            result = PromiseResultUpdate(result, promise_result);
-            if (EvalAborted(ctx) || BundleAbort(ctx))
-            {
-                EvalContextStackPopFrame(ctx);
-                NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept, start);
-                return result;
-            }
-            EvalContextStackPopFrame(ctx);
-        }
-    }
-
-    NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept, start);
-    return result;
+    return ScheduleBundleOperationsTopDownOrder(ctx, bp, KeepAgentPromise);
 }
 
 /*********************************************************************/
@@ -2300,67 +2183,6 @@ static bool VerifyBootstrap(bool skip_cf_execd_check)
 
     Log(LOG_LEVEL_NOTICE, "Bootstrap to '%s' completed successfully!", policy_server);
     return true;
-}
-
-/**************************************************************/
-/* Compliance comp                                            */
-/**************************************************************/
-
-static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save_pr_repaired, int save_pr_notkept, struct timespec start)
-{
-    double delta_pr_kept, delta_pr_repaired, delta_pr_notkept;
-    double bundle_compliance = 0.0;
-
-    delta_pr_kept = (double) (PR_KEPT - save_pr_kept);
-    delta_pr_notkept = (double) (PR_NOTKEPT - save_pr_notkept);
-    delta_pr_repaired = (double) (PR_REPAIRED - save_pr_repaired);
-
-    Log(LOG_LEVEL_VERBOSE, "A: ...................................................");
-    Log(LOG_LEVEL_VERBOSE, "A: Bundle Accounting Summary for '%s' in namespace %s", bundle->name, bundle->ns);
-
-    if (delta_pr_kept + delta_pr_notkept + delta_pr_repaired <= 0)
-    {
-        Log(LOG_LEVEL_VERBOSE, "A: Zero promises executed for bundle '%s'", bundle->name);
-        Log(LOG_LEVEL_VERBOSE, "A: ...................................................");
-        return PROMISE_RESULT_NOOP;
-    }
-    else
-    {
-        Log(LOG_LEVEL_VERBOSE, "A: Promises kept in '%s' = %.0lf", bundle->name, delta_pr_kept);
-        Log(LOG_LEVEL_VERBOSE, "A: Promises not kept in '%s' = %.0lf", bundle->name, delta_pr_notkept);
-        Log(LOG_LEVEL_VERBOSE, "A: Promises repaired in '%s' = %.0lf", bundle->name, delta_pr_repaired);
-
-        bundle_compliance = (delta_pr_kept + delta_pr_repaired) / (delta_pr_kept + delta_pr_notkept + delta_pr_repaired);
-
-        Log(LOG_LEVEL_VERBOSE, "A: Aggregate compliance (promises kept/repaired) for bundle '%s' = %.1lf%%",
-          bundle->name, bundle_compliance * 100.0);
-
-        if (LogGetGlobalLevel() >= LOG_LEVEL_INFO)
-        {
-            char name[CF_MAXVARSIZE];
-            snprintf(name, CF_MAXVARSIZE, "%s:%s", bundle->ns, bundle->name);
-            EndMeasure(name, start);
-        }
-        else
-        {
-            EndMeasure(NULL, start);
-        }
-        Log(LOG_LEVEL_VERBOSE, "A: ...................................................");
-    }
-
-    // return the worst case for the bundle status
-
-    if (delta_pr_notkept > 0)
-    {
-        return PROMISE_RESULT_FAIL;
-    }
-
-    if (delta_pr_repaired > 0)
-    {
-        return PROMISE_RESULT_CHANGE;
-    }
-
-    return PROMISE_RESULT_NOOP;
 }
 
 #if defined(HAVE_AVAHI_CLIENT_CLIENT_H) && defined(HAVE_AVAHI_COMMON_ADDRESS_H)

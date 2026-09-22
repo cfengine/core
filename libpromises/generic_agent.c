@@ -1194,12 +1194,15 @@ static bool IsPolicyPrecheckNeeded(GenericAgentConfig *config, bool force_valida
 
 bool GenericAgentCheckPolicy(GenericAgentConfig *config, bool force_validation, bool write_validated_file)
 {
+    assert(config != NULL);
+
     if (!MissingInputFile(config->input_file))
     {
         {
             if (config->agent_type == AGENT_TYPE_SERVER ||
                 config->agent_type == AGENT_TYPE_MONITOR ||
-                config->agent_type == AGENT_TYPE_EXECUTOR)
+                config->agent_type == AGENT_TYPE_EXECUTOR ||
+                config->agent_type == AGENT_TYPE_REACTOR)
             {
                 time_t validated_at = ReadTimestampFromPolicyValidatedFile(config, NULL);
                 config->agent_specific.daemon.last_validated_at = validated_at;

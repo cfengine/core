@@ -30,11 +30,13 @@
 #include <writer.h>
 #include <config.h>
 #include <generic_agent.h>
+#include <loading.h>            /* LoadPolicy */
+#include <bootstrap.h>          /* UpdateLastPolicyUpdateTime */
 #include <man.h>
 #include <cleanup.h>
 #include <prototypes3.h>
 #include <signal.h>             /* signal, kill */
-#include <signals.h>            /* GetSignalPipe, MakeSignalPipe, IsPendingTermination, HandleSignalsForDaemon */
+#include <signals.h>            /* GetSignalPipe, MakeSignalPipe, IsPendingTermination, HandleSignalsForDaemon, ReloadConfigRequested, ClearRequestReloadConfig */
 #include <exec_tools.h>
 #include <reactor_context.h>
 
@@ -49,6 +51,7 @@ int NO_FORK = false;
 /*****************************************************************************/
 
 #define DEFAULT_POLL_INTERVAL_SECS 30
+#define DEFAULT_POLICY_CHECK_INTERVAL_SECS (5 * 60)
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -190,12 +193,74 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
 /*****************************************************************************/
 
+static void CheckPolicyUpdates(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
+{
+    assert(config != NULL);
+
+    time_t validated_at = ReadTimestampFromPolicyValidatedFile(config, NULL);
+
+    bool reload_policy = false;
+    if (config->agent_specific.daemon.last_validated_at < validated_at)
+    {
+        Log(LOG_LEVEL_VERBOSE, "Policy changes detected by cf-reactor, reloading policy");
+        reload_policy = true;
+    }
+    if (ReloadConfigRequested())
+    {
+        Log(LOG_LEVEL_VERBOSE, "Policy reload requested, reloading policy");
+        reload_policy = true;
+    }
+
+    if (!reload_policy)
+    {
+        Log(LOG_LEVEL_DEBUG, "No policy changes seen by cf-reactor");
+        return;
+    }
+
+    ClearRequestReloadConfig();
+    config->agent_specific.daemon.last_validated_at = validated_at;
+
+    if (!GenericAgentArePromisesValid(config))
+    {
+        Log(LOG_LEVEL_INFO, "Policy file '%s' has errors, cf-reactor keeping the previous policy",
+            config->input_file);
+        return;
+    }
+
+    Log(LOG_LEVEL_NOTICE, "Rereading policy file '%s'", config->input_file);
+
+    EvalContextClear(ctx);
+    PolicyDestroy(*policy);
+    *policy = NULL;
+
+    UpdateLastPolicyUpdateTime(ctx);
+    GenericAgentDiscoverContext(ctx, config, NULL);
+
+    *policy = LoadPolicy(ctx, config);
+}
+
+/*****************************************************************************/
+
 
 int main(int argc, char *argv[])
 {
     GenericAgentConfig *config = CheckOpts(argc, argv);
     EvalContext *ctx = EvalContextNew();
     GenericAgentConfigApply(ctx, config);
+
+    const char *program_invocation_name = argv[0];
+    const char *last_dir_sep = strrchr(program_invocation_name, FILE_SEPARATOR);
+    const char *program_name = (last_dir_sep != NULL ? last_dir_sep + 1 : program_invocation_name);
+    GenericAgentDiscoverContext(ctx, config, program_name);
+
+    Policy *policy = SelectAndLoadPolicy(config, ctx, false, false);
+    if (policy == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Error reading CFEngine policy. Exiting...");
+        DoCleanupAndExit(EXIT_FAILURE);
+    }
+
+    GenericAgentPostLoadInit(ctx);
 
 #ifdef __MINGW32__
 
@@ -253,15 +318,17 @@ int main(int argc, char *argv[])
     /* We need an initial value here for the first iteration of the cycle
      * below. */
     time_t next_tick = time(NULL) + DEFAULT_POLL_INTERVAL_SECS;
+    time_t next_policy_check = time(NULL) + DEFAULT_POLICY_CHECK_INTERVAL_SECS;
     while (!IsPendingTermination())
     {
         int max_fd = ReactorContextSetupFileDescriptors(&reactor_ctx);
 
         /* Determine how much time is remaining until the next tick. */
         time_t last_tick = time(NULL);
-        time_t remaining = next_tick > last_tick ? next_tick - last_tick : 0;
+        time_t remaining_tick = next_tick > last_tick ? next_tick - last_tick : 0;
+        time_t remaining_policy_check = next_policy_check > last_tick ? next_policy_check - last_tick : 0;
 
-        struct timeval timeout = { .tv_sec = remaining };
+        struct timeval timeout = { .tv_sec = MIN(remaining_tick, remaining_policy_check) };
         int ret = select(max_fd, &reactor_ctx.readfds, NULL, NULL, &timeout);
 
         /* Reschedule the backstop tick against the current time (not
@@ -290,14 +357,23 @@ int main(int argc, char *argv[])
         {
             /*** timeout ***/
             ReactorNovaHandleTimeout(&next_tick);
-            continue;
         }
-        /* else */
+        else
+        {
+            ReactorContextHandleEvents(&reactor_ctx, &next_tick);
+        }
 
-        ReactorContextHandleEvents(&reactor_ctx, &next_tick);
+
+        time_t now = time(NULL);
+        if (now >= next_policy_check || ReloadConfigRequested())
+        {
+            CheckPolicyUpdates(ctx, &policy, config);
+            next_policy_check = now + DEFAULT_POLICY_CHECK_INTERVAL_SECS;
+        }
     }
     ReactorContextFinalize(&reactor_ctx);
 
+    PolicyDestroy(policy);
     GenericAgentFinalize(ctx, config);
     CallCleanupFunctions();
 

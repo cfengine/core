@@ -223,6 +223,13 @@ static bool RelevantBundle(const char *agent, const char *blocktype)
         return true;
     }
 
+    // cf-reactor should keep agent bundles
+    if (StringEqual(agent, CF_AGENTTYPES[AGENT_TYPE_REACTOR])
+        && StringEqual(blocktype, CF_AGENTTYPES[AGENT_TYPE_AGENT]))
+    {
+        return true;
+    }
+
     /* Here are some additional bundle types handled by cfAgent */
 
     Item *ip = SplitString("edit_line,edit_xml", ',');

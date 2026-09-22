@@ -76,7 +76,7 @@ void WatcherRegistryInitialize(void)
     assert(event_to_bundle == NULL);
 
     watchers = SeqNew(4, WatcherDestroy);
-    event_to_bundle = MapNew(StringHash_untyped, StringEqual_untyped, NULL, NULL);
+    event_to_bundle = MapNew(StringHash_untyped, StringEqual_untyped, NULL, free);
 }
 
 void WatcherRegistryFinalize(void)
@@ -102,10 +102,19 @@ void WatcherRegistryClear(void)
     pthread_mutex_unlock(&watchers_mutex);
 }
 
-void WatcherRegister(const char *key, EventType type, void *state, Bundle *bundle, time_t interval)
+static Rval *AllocateRval(Rval val)
+{
+    Rval *new = xmalloc(sizeof(Rval));
+
+    new->item = val.item;
+    new->type = val.type;
+
+    return new;
+}
+
+void WatcherRegister(const char *key, EventType type, void *state, Rval val, time_t interval)
 {
     assert(key != NULL);
-    assert(bundle != NULL);
     assert(watchers != NULL && event_to_bundle != NULL);
 
     WatcherCheckFn check_callback = NULL;
@@ -143,7 +152,7 @@ void WatcherRegister(const char *key, EventType type, void *state, Bundle *bundl
     w->destroy_state = destroy_state;
 
     SeqAppend(watchers, w);
-    MapInsert(event_to_bundle, w->key, bundle);
+    MapInsert(event_to_bundle, w->key, AllocateRval(val));
 
     pthread_mutex_unlock(&watchers_mutex);
 }
@@ -257,7 +266,7 @@ void EventWatcherHandleEvents(int fd, fd_set *readfds)
         const char *key = item;
 
         pthread_mutex_lock(&watchers_mutex);
-        const Bundle *bundle = MapGet(event_to_bundle, key);
+        Rval *bundle = MapGet(event_to_bundle, key);
         pthread_mutex_unlock(&watchers_mutex);
 
         if (bundle == NULL)

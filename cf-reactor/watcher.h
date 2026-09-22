@@ -39,6 +39,12 @@ void WatcherRegistryInitialize(void);
 void WatcherRegistryFinalize(void);
 
 /**
+ * @brief Discard every currently registered watcher and start over. Call
+ * this before re-registering watchers from a freshly (re-)read policy.
+ */
+void WatcherRegistryClear(void);
+
+/**
  * @brief Register a specific watcher instance.
  * 
  * @param key the events promise identifier

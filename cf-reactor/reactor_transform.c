@@ -152,6 +152,8 @@ static void EvaluateReactorBundle(EvalContext *ctx, const Bundle *bp)
 
 void KeepReactorPromises(EvalContext *ctx, const Policy *policy)
 {
+    WatcherRegistryClear();
+
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
         Bundle *bp = SeqAt(policy->bundles, i);

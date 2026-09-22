@@ -55,9 +55,12 @@ typedef struct
 
 static void WatcherDestroy(void *item); /* defined below, next to WatcherRegister() */
 
-// TODO: potential race condition. If the policy is reparsed and watchers are re-registered 
-// while the watcher thread is iterating over this Seq, 
-// it may read a Watcher that is being freed or reallocated concurrently
+/* Guards `watchers` (and, for the same atomic-rebuild reason, its paired
+ * `event_to_bundle`) against the watcher thread (WatcherThreadMain())
+ * iterating over `watchers` concurrently with the main thread re-registering
+ * watchers from a freshly (re-)read policy (WatcherRegister(),
+ * WatcherRegistryClear()). */
+static pthread_mutex_t watchers_mutex = PTHREAD_MUTEX_INITIALIZER;
 static Seq *watchers = NULL;
 static Map *event_to_bundle = NULL;
 
@@ -84,6 +87,21 @@ void WatcherRegistryFinalize(void)
     event_to_bundle = NULL;
 }
 
+void WatcherRegistryClear(void)
+{
+    assert(watchers != NULL && event_to_bundle != NULL);
+
+    pthread_mutex_lock(&watchers_mutex);
+
+    SeqDestroy(watchers);
+    watchers = SeqNew(4, WatcherDestroy);
+
+    MapDestroy(event_to_bundle);
+    event_to_bundle = MapNew(StringHash_untyped, StringEqual_untyped, NULL, NULL);
+
+    pthread_mutex_unlock(&watchers_mutex);
+}
+
 void WatcherRegister(const char *key, EventType type, void *state, Bundle *bundle, time_t interval)
 {
     assert(key != NULL);
@@ -103,9 +121,12 @@ void WatcherRegister(const char *key, EventType type, void *state, Bundle *bundl
         ProgrammingError("Unknown reactor event type %d for watcher '%s'", (int) type, key);
     }
 
+    pthread_mutex_lock(&watchers_mutex);
+
     if (MapHasKey(event_to_bundle, key))
     {
         Log(LOG_LEVEL_ERR, "Reactor watcher key '%s' is already registered, ignoring the duplicate", key);
+        pthread_mutex_unlock(&watchers_mutex);
         if (destroy_state != NULL)
         {
             destroy_state(state);
@@ -123,6 +144,8 @@ void WatcherRegister(const char *key, EventType type, void *state, Bundle *bundl
 
     SeqAppend(watchers, w);
     MapInsert(event_to_bundle, w->key, bundle);
+
+    pthread_mutex_unlock(&watchers_mutex);
 }
 
 static void WatcherDestroy(void *item)
@@ -151,6 +174,8 @@ static void *WatcherThreadMain(ARG_UNUSED void *unused)
         time_t sleep_for = MAX_WATCHER_THREAD_SLEEP_SECS;
         bool any_event = false;
 
+        pthread_mutex_lock(&watchers_mutex);
+
         for (size_t i = 0; i < SeqLength(watchers); i++)
         {
             Watcher *w = SeqAt(watchers, i);
@@ -161,9 +186,7 @@ static void *WatcherThreadMain(ARG_UNUSED void *unused)
                 w->next_due = now + w->poll_interval_secs;
                 if (fired)
                 {
-                    /** TODO: potential use after free. If a policy reparse destroys this Watcher (and frees w->key)
-                     * before the queued key is consumed, the consumer will read freed memory */
-                    ThreadedQueuePush(event_queue, w->key);
+                    ThreadedQueuePush(event_queue, SafeStringDuplicate(w->key));
                     any_event = true;
                 }
             }
@@ -171,6 +194,8 @@ static void *WatcherThreadMain(ARG_UNUSED void *unused)
             time_t until_due = (w->next_due > now) ? (w->next_due - now) : 0;
             sleep_for = MIN(sleep_for, until_due);
         }
+
+        pthread_mutex_unlock(&watchers_mutex);
 
         if (any_event)
         {
@@ -197,7 +222,7 @@ bool EventWatcherInitialize(int *fd)
         return false;
     }
 
-    event_queue = ThreadedQueueNew(16, NULL);
+    event_queue = ThreadedQueueNew(16, free);
 
     int ret = pthread_create(&watcher_thread, NULL, WatcherThreadMain, NULL);
     if (ret != 0)
@@ -230,9 +255,23 @@ void EventWatcherHandleEvents(int fd, fd_set *readfds)
     while (ThreadedQueuePop(event_queue, &item, 0))
     {
         const char *key = item;
-        ARG_UNUSED const Bundle *bundle = MapGet(event_to_bundle, key);
-        Log(LOG_LEVEL_NOTICE, "Reactor watcher '%s' fired", key);
-        // TODO: run bundle
+
+        pthread_mutex_lock(&watchers_mutex);
+        const Bundle *bundle = MapGet(event_to_bundle, key);
+        pthread_mutex_unlock(&watchers_mutex);
+
+        if (bundle == NULL)
+        {
+            Log(LOG_LEVEL_VERBOSE, "Reactor watcher '%s' fired but is no longer registered, ignoring", key);
+            return;
+        }
+        else
+        {
+            Log(LOG_LEVEL_NOTICE, "Reactor watcher '%s' fired", key);
+            // TODO: run bundle
+        }
+
+        free(item);
     }
 }
 

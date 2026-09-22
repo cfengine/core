@@ -29,10 +29,13 @@
 #include <policy.h>
 
 /**
- * @brief Evaluate every `bundle reactor NAME { ... }` in the given policy.
+ * @brief Evaluate every `bundle reactor NAME { ... }` in the given policy:
+ * keep its "meta", "vars" and "classes" promises, and register a watcher
+ * (see watcher.h) for each of its "events" promises.
  *
- * Only the "meta", "vars" and "classes" promise types are evaluated;
- * "events" promises are not evaluated yet (see watcher.c).
+ * Safe to call again for every re-read of the policy: it first discards all
+ * previously registered watchers (see WatcherRegistryClear()), so the
+ * result always reflects only the given policy, not a stale prior one.
  */
 void KeepReactorPromises(EvalContext *ctx, const Policy *policy);
 

@@ -26,6 +26,7 @@
 #define CFENGINE_REACTOR_CONTEXT_H
 
 #include <platform.h>
+#include <eval_context.h>
 #include <sequence.h>
 
 typedef enum
@@ -55,7 +56,7 @@ typedef struct
 
 bool ReactorContextInitialize(ReactorContext *reactor_context);
 int ReactorContextSetupFileDescriptors(ReactorContext *reactor_context);
-void ReactorContextHandleEvents(ReactorContext *reactor_context, time_t *next_tick);
+void ReactorContextHandleEvents(EvalContext *ctx, Policy *policy, ReactorContext *reactor_context, time_t *next_tick);
 void ReactorContextFinalize(ReactorContext *reactor_context);
 
 #endif

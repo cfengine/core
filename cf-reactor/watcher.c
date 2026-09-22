@@ -33,6 +33,9 @@
 #include <sequence.h>
 #include <threaded_queue.h>
 #include <pthread.h>
+#include <file_watcher.h>
+#include <eval_context.h>
+#include <ornaments.h>
 
 /* Upper bound on how long the watcher thread ever sleeps in one go, so that
  * IsPendingTermination() is re-checked at least this often during shutdown,
@@ -249,7 +252,44 @@ bool EventWatcherInitialize(int *fd)
     return true;
 }
 
-void EventWatcherHandleEvents(int fd, fd_set *readfds)
+static void RunBundleFromRval(EvalContext *ctx, Policy *policy, Rval val)
+{
+    const char *name = NULL;
+    const Rlist *args = NULL;
+    if (val.type == RVAL_TYPE_FNCALL)
+    {
+        name = RvalFnCallValue(val)->name;
+        args = RvalFnCallValue(val)->args;
+    }
+    else
+    {
+        name = RvalScalarValue(val);
+        args = NULL;
+    }
+
+    EvalContextSetBundleArgs(ctx, args);
+    const Bundle *bp = EvalContextResolveBundleExpression(ctx, policy, name, "agent");
+    if (bp == NULL)
+    {
+        bp = EvalContextResolveBundleExpression(ctx, policy, name, "common");
+    }
+    if (bp == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Failed to resolve bundle from '%s'", name);
+        return;
+    }
+    BundleBanner(bp, args);
+    EvalContextStackPushBundleFrame(ctx, bp, args, false, NULL);
+    ScheduleAgentOperations(ctx, bp);
+    EvalContextStackPopFrame(ctx);
+    EndBundleBanner(bp);
+    if (EvalAborted(ctx))
+    {
+        Log(LOG_LEVEL_ERR, "Eval aborted");
+    }
+}
+
+void EventWatcherHandleEvents(EvalContext *ctx, Policy *policy, int fd, fd_set *readfds)
 {
     assert(readfds != NULL);
 
@@ -272,12 +312,11 @@ void EventWatcherHandleEvents(int fd, fd_set *readfds)
         if (bundle == NULL)
         {
             Log(LOG_LEVEL_VERBOSE, "Reactor watcher '%s' fired but is no longer registered, ignoring", key);
-            return;
         }
         else
         {
             Log(LOG_LEVEL_NOTICE, "Reactor watcher '%s' fired", key);
-            // TODO: run bundle
+            RunBundleFromRval(ctx, policy, *bundle);
         }
 
         free(item);

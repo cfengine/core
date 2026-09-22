@@ -185,7 +185,7 @@ static int GetWatcherFd(const ReactorContext *reactor_context)
     return 0;
 }
 
-void ReactorContextHandleEvents(ReactorContext *reactor_context, time_t *next_tick)
+void ReactorContextHandleEvents(EvalContext *ctx, Policy *policy, ReactorContext *reactor_context, time_t *next_tick)
 {
     assert(reactor_context != NULL);
 
@@ -213,7 +213,7 @@ void ReactorContextHandleEvents(ReactorContext *reactor_context, time_t *next_ti
         while (recv(GetSignalPipe(), &buf, 1, 0) > 0) { /* drain */ }
     }
 
-    EventWatcherHandleEvents(GetWatcherFd(reactor_context), &reactor_context->readfds);
+    EventWatcherHandleEvents(ctx, policy, GetWatcherFd(reactor_context), &reactor_context->readfds);
 }
 
 void ReactorContextFinalize(ReactorContext *reactor_context)

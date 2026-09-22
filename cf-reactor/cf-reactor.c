@@ -369,7 +369,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-            ReactorContextHandleEvents(&reactor_ctx, &next_tick);
+            ReactorContextHandleEvents(ctx, policy, &reactor_ctx, &next_tick);
         }
         
 

@@ -53,9 +53,9 @@ void WatcherRegistryClear(void);
  * @param bundle the bundle to run on event
  * @param interval interval between runs
  */
-void WatcherRegister(const char *key, EventType type, void *state, Bundle *bundle, time_t interval);
+void WatcherRegister(const char *key, EventType type, void *state, Rval val, time_t interval);
 bool EventWatcherInitialize(int *fd);
-void EventWatcherHandleEvents(int fd, fd_set *readfds);
+void EventWatcherHandleEvents(EvalContext *ctx, Policy *policy, int fd, fd_set *readfds);
 void EventWatcherFinalize(void);
 
 #endif

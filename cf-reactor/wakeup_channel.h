@@ -1,5 +1,5 @@
 /*
-  Copyright 2024 Northern.tech AS
+  Copyright 2026 Northern.tech AS
 
   This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
 
@@ -22,29 +22,28 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_SIGNALS_H
-#define CFENGINE_SIGNALS_H
+#ifndef CFENGINE_WAKEUP_CHANNEL_H
+#define CFENGINE_WAKEUP_CHANNEL_H
 
-#include <cf3.defs.h>
-
-// check whether the running daemon should terminate after having received a signal.
-bool IsPendingTermination(void);
-
-bool ReloadConfigRequested(void);
-void ClearRequestReloadConfig();
-void RequestReloadConfig(void);
-
-void MakeSignalPipe(void);
-int GetSignalPipe(void);
+#include <platform.h>
 
 /**
- * Creates an AF_UNIX SOCK_STREAM socket pair with both ends set
- * non-blocking, the way MakeSignalPipe() and cf-reactor's WakeupChannel
- * both need. On failure, fds[0] and fds[1] are left at -1 and the cause is
- * logged at LOG_LEVEL_ERR.
+ * @brief A cross-platform self-pipe: lets a background thread wake up the
+ * daemon's select(2) loop on demand.
+ *
+ * Any current or future background event source (the watcher subsystem
+ * today, potentially others later) that needs to interrupt select() should
+ * own one of these rather than inventing its own pipe/socketpair handling.
  */
-bool MakeNonBlockingSocketPair(int fds[2]);
-void HandleSignalsForDaemon(int signum);
-void HandleSignalsForAgent(int signum);
+typedef struct
+{
+    int fds[2]; /* [0] = read end, add to the select() fd_set; [1] = write end */
+} WakeupChannel;
 
-#endif
+bool WakeupChannelOpen(WakeupChannel *channel);
+int WakeupChannelReadFd(const WakeupChannel *channel);
+void WakeupChannelNotify(const WakeupChannel *channel);
+void WakeupChannelDrain(const WakeupChannel *channel);
+void WakeupChannelClose(WakeupChannel *channel);
+
+#endif /* CFENGINE_WAKEUP_CHANNEL_H */

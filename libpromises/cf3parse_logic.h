@@ -236,6 +236,13 @@ static bool RelevantBundle(const char *agent, const char *blocktype)
         }
     }
 
+    // cf-reactor should keep agent bundles
+    if (StringEqual(agent, CF_AGENTTYPES[AGENT_TYPE_REACTOR])
+            && StringEqual(blocktype, CF_AGENTTYPES[AGENT_TYPE_AGENT]))
+    {
+        return true;
+    }
+
     DeleteItemList(ip);
     return false;
 }

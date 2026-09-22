@@ -1,5 +1,5 @@
 /*
-  Copyright 2024 Northern.tech AS
+  Copyright 2026 Northern.tech AS
 
   This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
 
@@ -22,29 +22,34 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_SIGNALS_H
-#define CFENGINE_SIGNALS_H
+#ifndef CFENGINE_WATCHER_H
+#define CFENGINE_WATCHER_H
 
-#include <cf3.defs.h>
+#include <cf3.defs.h>   /* Bundle */
 
-// check whether the running daemon should terminate after having received a signal.
-bool IsPendingTermination(void);
+typedef enum
+{
+  EVENT_FILE_DELETED,
+} EventType;
 
-bool ReloadConfigRequested(void);
-void ClearRequestReloadConfig();
-void RequestReloadConfig(void);
+typedef bool (*WatcherCheckFn)(void *state);
+typedef void (*WatcherStateDestroyFn)(void *state);
 
-void MakeSignalPipe(void);
-int GetSignalPipe(void);
+void WatcherRegistryInitialize(void);
+void WatcherRegistryFinalize(void);
 
 /**
- * Creates an AF_UNIX SOCK_STREAM socket pair with both ends set
- * non-blocking, the way MakeSignalPipe() and cf-reactor's WakeupChannel
- * both need. On failure, fds[0] and fds[1] are left at -1 and the cause is
- * logged at LOG_LEVEL_ERR.
+ * @brief Register a specific watcher instance.
+ * 
+ * @param key the events promise identifier
+ * @param type the type of watcher, defined in when bodies
+ * @param state the data used for by the watcher, depending on the type
+ * @param bundle the bundle to run on event
+ * @param interval interval between runs
  */
-bool MakeNonBlockingSocketPair(int fds[2]);
-void HandleSignalsForDaemon(int signum);
-void HandleSignalsForAgent(int signum);
+void WatcherRegister(const char *key, EventType type, void *state, Bundle *bundle, time_t interval);
+bool EventWatcherInitialize(int *fd);
+void EventWatcherHandleEvents(int fd, fd_set *readfds);
+void EventWatcherFinalize(void);
 
 #endif

@@ -1,5 +1,5 @@
 /*
-  Copyright 2024 Northern.tech AS
+  Copyright 2026 Northern.tech AS
 
   This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
 
@@ -22,29 +22,21 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_SIGNALS_H
-#define CFENGINE_SIGNALS_H
+#ifndef CFENGINE_REACTOR_TRANSFORM_H
+#define CFENGINE_REACTOR_TRANSFORM_H
 
-#include <cf3.defs.h>
-
-// check whether the running daemon should terminate after having received a signal.
-bool IsPendingTermination(void);
-
-bool ReloadConfigRequested(void);
-void ClearRequestReloadConfig();
-void RequestReloadConfig(void);
-
-void MakeSignalPipe(void);
-int GetSignalPipe(void);
+#include <eval_context.h>
+#include <policy.h>
 
 /**
- * Creates an AF_UNIX SOCK_STREAM socket pair with both ends set
- * non-blocking, the way MakeSignalPipe() and cf-reactor's WakeupChannel
- * both need. On failure, fds[0] and fds[1] are left at -1 and the cause is
- * logged at LOG_LEVEL_ERR.
+ * @brief Evaluate every `bundle reactor NAME { ... }` in the given policy:
+ * keep its "meta", "vars" and "classes" promises, and register a watcher
+ * (see watcher.h) for each of its "events" promises.
+ *
+ * Safe to call again for every re-read of the policy: it first discards all
+ * previously registered watchers (see WatcherRegistryClear()), so the
+ * result always reflects only the given policy, not a stale prior one.
  */
-bool MakeNonBlockingSocketPair(int fds[2]);
-void HandleSignalsForDaemon(int signum);
-void HandleSignalsForAgent(int signum);
+void KeepReactorPromises(EvalContext *ctx, const Policy *policy);
 
 #endif

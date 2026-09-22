@@ -77,6 +77,7 @@ libcf_agent_la_SOURCES = \
 	tokyo_check.c tokyo_check.h \
 	abstract_dir.c abstract_dir.h \
 	cf-agent.c \
+	agent_operations.c agent_operations.h \
 	cf-agent-enterprise-stubs.c cf-agent-enterprise-stubs.h \
 	comparray.c comparray.h \
 	acl_posix.c acl_posix.h \

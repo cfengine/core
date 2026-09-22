@@ -26,11 +26,13 @@
 #define CFENGINE_REACTOR_CONTEXT_H
 
 #include <platform.h>
+#include <eval_context.h>
 #include <sequence.h>
 
 typedef enum
 {
-  REACTOR_FD_NOVA
+  REACTOR_FD_NOVA,
+  REACTOR_FD_WATCHER
 } ReactorFdType;
 
 /**
@@ -52,9 +54,9 @@ typedef struct
   size_t max_nova_fds;
 } ReactorContext;
 
-bool ReactorContextInitialize(ReactorContext *ctx);
-int ReactorContextSetupFileDescriptors(ReactorContext *ctx);
-void ReactorContextHandleEvents(ReactorContext *ctx, time_t *next_tick);
-void ReactorContextFinalize(ReactorContext *ctx);
+bool ReactorContextInitialize(ReactorContext *reactor_context);
+int ReactorContextSetupFileDescriptors(ReactorContext *reactor_context);
+void ReactorContextHandleEvents(EvalContext *ctx, Policy *policy, ReactorContext *reactor_context, time_t *next_tick);
+void ReactorContextFinalize(ReactorContext *reactor_context);
 
 #endif

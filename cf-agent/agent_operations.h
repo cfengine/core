@@ -1,5 +1,5 @@
 /*
-  Copyright 2024 Northern.tech AS
+  Copyright 2026 Northern.tech AS
 
   This file is part of CFEngine 3 - written and maintained by Northern.tech AS.
 
@@ -22,29 +22,17 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_SIGNALS_H
-#define CFENGINE_SIGNALS_H
+#ifndef CFENGINE_AGENT_OPERATIONS_H
+#define CFENGINE_AGENT_OPERATIONS_H
 
 #include <cf3.defs.h>
 
-// check whether the running daemon should terminate after having received a signal.
-bool IsPendingTermination(void);
+/* ScheduleAgentOperations() itself is declared in prototypes3.h. */
 
-bool ReloadConfigRequested(void);
-void ClearRequestReloadConfig();
-void RequestReloadConfig(void);
+extern int CFA_BACKGROUND;              /* GLOBAL_X */
+extern int CFA_BACKGROUND_LIMIT;        /* GLOBAL_P, body agent control: max_children */
+extern Item *PROCESSREFRESH;            /* GLOBAL_P, body agent control: refresh_processes */
 
-void MakeSignalPipe(void);
-int GetSignalPipe(void);
-
-/**
- * Creates an AF_UNIX SOCK_STREAM socket pair with both ends set
- * non-blocking, the way MakeSignalPipe() and cf-reactor's WakeupChannel
- * both need. On failure, fds[0] and fds[1] are left at -1 and the cause is
- * logged at LOG_LEVEL_ERR.
- */
-bool MakeNonBlockingSocketPair(int fds[2]);
-void HandleSignalsForDaemon(int signum);
-void HandleSignalsForAgent(int signum);
+PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp);
 
 #endif

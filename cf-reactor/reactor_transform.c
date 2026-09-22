@@ -33,6 +33,7 @@
 #include <verify_classes.h>
 #include <verify_vars.h>
 #include <watcher.h>
+#include <file_watcher.h>
 
 /* Promise types evaluated within `bundle reactor NAME { ... }`. */
 static const char *const REACTOR_TYPESEQUENCE[] =
@@ -62,41 +63,10 @@ static void KeepEventsPromise(EvalContext *ctx, const Promise *pp)
     }
 
     Constraint *then_constraint = PromiseGetConstraint(pp, "then");
-    const char *bundle_name = NULL;
-    if (then_constraint != NULL)
-    {
-        switch (then_constraint->rval.type)
-        {
-        case RVAL_TYPE_SCALAR:
-            bundle_name = RvalScalarValue(then_constraint->rval);
-            break;
-        case RVAL_TYPE_FNCALL:
-            bundle_name = RvalFnCallValue(then_constraint->rval)->name;
-            break;
-        default:
-            break;
-        }
-    }
-
-    if (bundle_name == NULL)
-    {
-        Log(LOG_LEVEL_ERR, "Reactor events promise '%s' does not specify a 'then' bundle, ignoring", key);
-        return;
-    }
-
-    const Bundle *bundle = EvalContextResolveBundleExpression(ctx, PromiseGetPolicy(pp), bundle_name, "agent");
-    if (bundle == NULL)
-    {
-        bundle = EvalContextResolveBundleExpression(ctx, PromiseGetPolicy(pp), bundle_name, "common");
-    }
-    if (bundle == NULL)
-    {
-        Log(LOG_LEVEL_ERR, "Reactor events promise '%s' refers to unknown bundle '%s', ignoring", key, bundle_name);
-        return;
-    }
 
     // TODO: Call WatcherRegister. We have here all the information we need (event type, state, events promiser)
     Log(LOG_LEVEL_INFO, "Registering a file_deleted watcher with key '%s', on file '%s'", key, path);
+    WatcherRegister(key, EVENT_FILE_DELETED, FileWatcherPayloadNew(path), then_constraint->rval, 1);
 }
 
 static PromiseResult KeepReactorPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED void *param)

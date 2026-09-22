@@ -67,7 +67,6 @@ libpromises_la_SOURCES = \
 	attributes.c attributes.h \
 	audit.c audit.h \
 	bootstrap.c bootstrap.h bootstrap.inc failsafe.cf \
-	bundle_schedule.c bundle_schedule.h \
 	cf-windows-functions.h \
 	cf3.defs.h \
 	cf3.extern.h \

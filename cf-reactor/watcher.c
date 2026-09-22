@@ -125,8 +125,8 @@ void WatcherRegister(const char *key, EventType type, void *state, Rval val, tim
     switch (type)
     {
     case EVENT_FILE_DELETED:
-        check_fn = CheckFileExists;
-        destroy_payload = DestroyFileWatcherPayload;
+        check_callback = CheckFileExists;
+        destroy_state = DestroyFileWatcherPayload;
         break;
     // TODO: add more cases
 

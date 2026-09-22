@@ -47,7 +47,7 @@ libcf_reactor_la_SOURCES = \
 
 if !BUILTIN_EXTENSIONS
  bin_PROGRAMS = cf-reactor
- cf_reactor_LDADD = libcf-reactor.la
+ cf_reactor_LDADD = libcf-reactor.la ../cf-agent/libcf-agent.la
  cf_reactor_SOURCES =
 endif
 

@@ -31,7 +31,7 @@ static const ConstraintSyntax when_constraints[] =
     CONSTRAINT_SYNTAX_GLOBAL,
 
     /* Row models */
-    ConstraintSyntaxNewStringList("files_deleted", CF_ANYSTRING, "List of files to react for on deletion", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("file_deleted", CF_ANYSTRING, "File to react for on deletion", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

@@ -27,6 +27,7 @@
 #include <known_dirs.h>         /* GetStateDir() */
 #include <file_lib.h>           /* FILE_SEPARATOR */
 #include <mod_custom.h>         /* TerminateCustomPromises */
+#include <prototypes3.h>        /* cf_closesocket() */
 
 static bool PENDING_TERMINATION = false; /* GLOBAL_X */
 
@@ -72,45 +73,63 @@ static void CloseSignalPipe(void)
 }
 
 /**
- * Make a pipe that can be used to flag that a signal has arrived.
- * Using a pipe avoids race conditions, since it saves its values until emptied.
- * Use GetSignalPipe() to get the pipe.
+ * Creates an AF_UNIX SOCK_STREAM socket pair and sets both ends
+ * non-blocking. 
  * Note that we use a real socket as the pipe, because Windows only supports
  * using select() with real sockets. This means also using send() and recv()
  * instead of write() and read().
  */
-void MakeSignalPipe(void)
+bool MakeNonBlockingSocketPair(int fds[2])
 {
-    if (socketpair(AF_UNIX, SOCK_STREAM, 0, SIGNAL_PIPE) != 0)
-    {
-        Log(LOG_LEVEL_CRIT, "Could not create internal communication pipe. Cannot continue. (socketpair: '%s')",
-            GetErrorStr());
-        DoCleanupAndExit(EXIT_FAILURE);
-    }
+    fds[0] = -1;
+    fds[1] = -1;
 
-    RegisterCleanupFunction(&CloseSignalPipe);
+    if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) != 0)
+    {
+        Log(LOG_LEVEL_ERR, "Could not create socket pair (socketpair: '%s')", GetErrorStr());
+        return false;
+    }
 
     for (int c = 0; c < 2; c++)
     {
 #ifdef __MINGW32__
         u_long enable = 1;
-        int ret = ioctlsocket(SIGNAL_PIPE[c], FIONBIO, &enable);
+        int ret = ioctlsocket(fds[c], FIONBIO, &enable);
 #define CNTLNAME "ioctlsocket"
 #else /* Unix: */
-        int ret = fcntl(SIGNAL_PIPE[c], F_SETFL, O_NONBLOCK);
+        int ret = fcntl(fds[c], F_SETFL, O_NONBLOCK);
 #define CNTLNAME "fcntl"
 #endif /* __MINGW32__ */
 
         if (ret != 0)
         {
-            Log(LOG_LEVEL_CRIT,
-                "Could not unblock internal communication pipe. "
-                "Cannot continue. (" CNTLNAME ": '%s')",
-                GetErrorStr());
-            DoCleanupAndExit(EXIT_FAILURE);
+            Log(LOG_LEVEL_ERR, "Could not set socket pair to non-blocking (" CNTLNAME ": '%s')", GetErrorStr());
+            cf_closesocket(fds[0]);
+            cf_closesocket(fds[1]);
+            fds[0] = -1;
+            fds[1] = -1;
+            return false;
         }
 #undef CNTLNAME
     }
+
+    return true;
+}
+
+/**
+ * Make a pipe that can be used to flag that a signal has arrived.
+ * Using a pipe avoids race conditions, since it saves its values until emptied.
+ * Use GetSignalPipe() to get the pipe.
+ */
+void MakeSignalPipe(void)
+{
+    if (!MakeNonBlockingSocketPair(SIGNAL_PIPE))
+    {
+        Log(LOG_LEVEL_CRIT, "Could not create internal communication pipe. Cannot continue.");
+        DoCleanupAndExit(EXIT_FAILURE);
+    }
+
+    RegisterCleanupFunction(&CloseSignalPipe);
 }
 
 /**

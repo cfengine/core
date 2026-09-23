@@ -37,6 +37,7 @@ AM_CPPFLAGS = $(CORE_CPPFLAGS) \
 	-I$(srcdir)/../../cf-execd \
 	-I$(srcdir)/../../cf-key \
 	-I$(srcdir)/../../cf-check \
+	-I$(srcdir)/../../cf-reactor \
 	-DTESTDATADIR='"$(srcdir)/data"'
 
 LDADD = ../../libpromises/libpromises.la libtest.la
@@ -154,7 +155,10 @@ check_PROGRAMS = \
 	split_process_line_test \
 	new_packages_promise_test \
 	iteration_test \
-	protocol_recv_overflow_test
+	protocol_recv_overflow_test \
+	watcher_test \
+	stoppable_thread_test \
+	wakeup_channel_test
 
 if HAVE_AVAHI_CLIENT
 if HAVE_AVAHI_COMMON
@@ -225,6 +229,17 @@ set_domainname_test_SOURCES = set_domainname_test.c
 set_domainname_test_LDADD = libtest.la ../../libpromises/libpromises.la
 
 regex_test_SOURCES = regex_test.c ../../libpromises/match_scope.c
+
+watcher_test_SOURCES = watcher_test.c \
+	../../cf-reactor/watcher.c \
+	../../cf-reactor/stoppable_thread.c \
+	../../cf-reactor/wakeup_channel.c
+
+stoppable_thread_test_SOURCES = stoppable_thread_test.c \
+	../../cf-reactor/stoppable_thread.c
+
+wakeup_channel_test_SOURCES = wakeup_channel_test.c \
+	../../cf-reactor/wakeup_channel.c
 
 protocol_test_SOURCES = protocol_test.c \
 	../../cf-serverd/server_common.c \

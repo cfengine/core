@@ -713,6 +713,7 @@ void RemoveFilament(DBFilament *filament)
     {
         StringSetDestroy(filament->items);
         free(filament);
+        return;
     }
 
     DBHandle *db;

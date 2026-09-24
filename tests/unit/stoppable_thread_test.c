@@ -4,6 +4,10 @@
 #include <alloc.h>
 #include <threaded_queue.h>
 #include <mutex.h>              /* ThreadLock(), ThreadUnlock() */
+#include <logging.h>
+#include <logging_priv.h>       /* LoggingPrivContext, LoggingPrivSetContext() */
+
+#include <string.h>             /* strstr() */
 
 /* How long the thread routines below wait for the test to do something
  * before failing, so that a broken StoppableThread can't hang the test. */
@@ -38,16 +42,21 @@ static void WaitForStart(RoutineData *data)
 }
 
 /* Loops until stopped, sleeping for a long time on each iteration, so it only
- * returns promptly if StoppableThreadStop() wakes it up. */
+ * returns promptly if StoppableThreadStop() wakes it up. Signals the start
+ * only once inside the loop, so a stop requested after WaitForStart() can't
+ * arrive before the first iteration. */
 static void LoopUntilStopped(StoppableThread *thread, void *arg)
 {
     RoutineData *data = arg;
     data->should_stop_at_start = StoppableThreadShouldStop(thread);
-    ThreadedQueuePush(data->started, data);
 
     while (!StoppableThreadShouldStop(thread))
     {
         data->iterations++;
+        if (data->iterations == 1)
+        {
+            ThreadedQueuePush(data->started, data);
+        }
         StoppableThreadSleep(thread, 60);
     }
     data->saw_stop = true;
@@ -195,6 +204,19 @@ static void IgnoreStop(ARG_UNUSED StoppableThread *thread, ARG_UNUSED void *arg)
     }
 }
 
+static int captured_err_count = 0;
+static char captured_err_message[256];
+
+static char *CaptureErrorLogHook(ARG_UNUSED LoggingPrivContext *pctx, LogLevel level, const char *message)
+{
+    if (level == LOG_LEVEL_ERR)
+    {
+        captured_err_count++;
+        strlcpy(captured_err_message, message, sizeof(captured_err_message));
+    }
+    return (char *) message;
+}
+
 static void test_stop_timeout(void)
 {
     ignore_stop_started = ThreadedQueueNew(1, NULL);
@@ -205,12 +227,31 @@ static void test_stop_timeout(void)
     assert_true(ThreadedQueuePop(ignore_stop_started, &item, TEST_TIMEOUT_SECS));
 
     /* The routine never checks for a stop, so this must give up after the
-     * timeout, not wait for the routine to return. */
+     * timeout, not wait for the routine to return, and report it. The error
+     * is captured instead of printed, since it's expected here. Logging is
+     * restored before asserting, so a failure can't leave it silenced. */
+    captured_err_count = 0;
+    captured_err_message[0] = '\0';
+    LoggingPrivContext log_ctx = {
+        .log_hook = CaptureErrorLogHook,
+        .force_hook_level = LOG_LEVEL_ERR,
+    };
+    LoggingPrivSetContext(&log_ctx);
+    const LogLevel old_level = LogGetGlobalLevel();
+    LogSetGlobalLevel(LOG_LEVEL_CRIT);
+
     const time_t start = time(NULL);
-    assert_false(StoppableThreadStop(abandoned_thread, 1));
+    const bool stopped = StoppableThreadStop(abandoned_thread, 1);
     const time_t elapsed = time(NULL) - start;
+
+    LogSetGlobalLevel(old_level);
+    LoggingPrivSetContext(NULL);
+
+    assert_false(stopped);
     assert_true(elapsed >= 1);
     assert_true(elapsed < TEST_TIMEOUT_SECS);
+    assert_int_equal(captured_err_count, 1);
+    assert_true(strstr(captured_err_message, "did not exit") != NULL);
 
     /* Let the routine return in case it wasn't cancelled (no pthread_cancel()
      * on this platform). ignore_stop_started is leaked on purpose, since the

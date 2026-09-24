@@ -163,7 +163,7 @@ CFTestD_Config *CFTestD_CheckOpts(int argc, char **argv, long *n_threads)
     CFTestD_Config *config = CFTestD_ConfigInit();
     assert(config != NULL);
 
-    while ((c = getopt_long(argc, argv, "a:df:g:hIj:k:lp:vV", OPTIONS, NULL)) != -1)
+    while ((c = getopt_long(argc, argv, "a:dg:hIj:k:lp:r:vV", OPTIONS, NULL)) != -1)
     {
         switch (c)
         {

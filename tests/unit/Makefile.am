@@ -189,9 +189,10 @@ TESTS = $(check_PROGRAMS) $(check_SCRIPTS)
 
 if MACOSX
 XFAIL_TESTS = set_domainname_test
-XFAIL_TESTS += process_test
-XFAIL_TESTS += mon_processes_test
 XFAIL_TESTS += rlist_test
+# NOTE: cf-monitord's own process-table gathering has a separate, real bug on
+# macOS
+XFAIL_TESTS += mon_processes_test
 endif
 
 if AIX

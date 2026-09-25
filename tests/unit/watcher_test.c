@@ -1,6 +1,7 @@
 #include <test.h>
 
 #include <watcher.h>
+#include <file_watcher.h>       /* FileWatcherStateNew() */
 #include <cf3.defs.h>           /* Bundle */
 #include <logging_priv.h>       /* LoggingPrivContext, LoggingPrivSetContext() */
 
@@ -34,7 +35,7 @@ static void test_watcher_register_single(void)
      * fine here. */
     Bundle *fake_bundle = (Bundle *) 0x1;
 
-    WatcherRegister("test-event", EVENT_FILE_DELETED, NULL, fake_bundle, 5);
+    WatcherRegister("test-event", EVENT_FILE_DELETED, FileWatcherStateNew("/nonexistent/test-event"), fake_bundle, 5);
 
     WatcherRegistryFinalize();
 }
@@ -46,7 +47,7 @@ static void test_watcher_register_duplicate_key_ignored(void)
     Bundle *fake_bundle_a = (Bundle *) 0x1;
     Bundle *fake_bundle_b = (Bundle *) 0x2;
 
-    WatcherRegister("dup-event", EVENT_FILE_DELETED, NULL, fake_bundle_a, 5);
+    WatcherRegister("dup-event", EVENT_FILE_DELETED, FileWatcherStateNew("/nonexistent/dup-event-a"), fake_bundle_a, 5);
 
     captured_err_count = 0;
     captured_err_message[0] = '\0';
@@ -63,7 +64,7 @@ static void test_watcher_register_duplicate_key_ignored(void)
     /* Registering the same key again must be rejected: an error is logged
      * (not silently swallowed) and the first registration is kept, not
      * replaced. */
-    WatcherRegister("dup-event", EVENT_FILE_DELETED, NULL, fake_bundle_b, 5);
+    WatcherRegister("dup-event", EVENT_FILE_DELETED, FileWatcherStateNew("/nonexistent/dup-event-b"), fake_bundle_b, 5);
 
     LogSetGlobalLevel(old_level);
     LoggingPrivSetContext(NULL);

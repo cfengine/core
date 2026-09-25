@@ -1,0 +1,80 @@
+#######################################################
+#
+# Sub-policy for CFE-3298 test.cf.
+#
+# Everything this prints is what the parent inspects, so what matters is
+# whether each log line carries the reference or the value. CHECKPOINT_DONE
+# separates "the value was not printed" from "the policy never got there".
+#
+#######################################################
+body common control
+{
+  inputs => { "../../default.sub.cf" };
+  bundlesequence => { "prep", "run", "done" };
+}
+
+#######################################################
+body contain no_shell
+# @brief Take the argv path through cf_popensetuid() rather than a shell.
+{
+  useshell => "noshell";
+}
+
+#######################################################
+bundle agent prep
+{
+  vars:
+    "dir" string => "$(G.testdir)$(const.dirsep)CFE-3298";
+
+  files:
+    "$(dir)$(const.dirsep)." create => "true";
+
+    "$(dir)$(const.dirsep)shell.out" delete => tidy;
+    "$(dir)$(const.dirsep)noshell.out" delete => tidy;
+    "$(dir)$(const.dirsep)plain.out" delete => tidy;
+}
+
+#######################################################
+bundle agent run
+{
+  vars:
+    "value" string => "S3CR3T-CFE3298-VALUE", meta => { "secret" };
+
+    # The command itself is secret, so the reference has to be resolved
+    # before the promiser can be checked for executability.
+    "exe" string => "$(G.touch)", meta => { "secret" };
+
+    # Control: an ordinary variable must still expand, or a build that
+    # stopped expanding promisers entirely would pass.
+    "plain" string => "PLAIN-CFE3298-VALUE";
+
+  commands:
+    "$(G.printf) %s $(value) > $(prep.dir)$(const.dirsep)shell.out"
+      contain => in_shell,
+      classes => results("namespace", "shell");
+
+    "$(exe) $(prep.dir)$(const.dirsep)noshell.out"
+      contain => no_shell,
+      classes => results("namespace", "noshell");
+
+    "$(G.printf) %s $(plain) > $(prep.dir)$(const.dirsep)plain.out"
+      contain => in_shell,
+      classes => results("namespace", "plain");
+}
+
+#######################################################
+bundle agent done
+{
+  reports:
+    shell_repaired::
+      "CHECKPOINT_shell_repaired";
+
+    noshell_repaired::
+      "CHECKPOINT_noshell_repaired";
+
+    plain_repaired::
+      "CHECKPOINT_plain_repaired";
+
+    any::
+      "CHECKPOINT_DONE";
+}

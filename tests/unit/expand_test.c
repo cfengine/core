@@ -559,6 +559,122 @@ static void test_expand_promise_array_with_slist_arg(void **state)
     PolicyDestroy(policy);
 }
 
+/* Puts one secret-tagged and one ordinary variable in the same bundle, and
+ * asserts the tag really landed -- without that control every expectation
+ * below would also hold for a build where nothing is ever tagged secret. */
+static void PutSecretAndPlain(EvalContext *ctx)
+{
+    VarRef *secret = VarRefParse("default:bundle.password");
+    assert_true(EvalContextVariablePut(ctx, secret, "hunter2",
+                                       CF_DATA_TYPE_STRING, "secret"));
+    assert_true(EvalContextVariableIsTaggedSecret(ctx, secret));
+    VarRefDestroy(secret);
+
+    VarRef *plain = VarRefParse("default:bundle.user");
+    assert_true(EvalContextVariablePut(ctx, plain, "alice",
+                                       CF_DATA_TYPE_STRING, NULL));
+    assert_false(EvalContextVariableIsTaggedSecret(ctx, plain));
+    VarRefDestroy(plain);
+}
+
+/* ExpandScalar() itself is unchanged: a secret expands like anything else. */
+static void test_expand_scalar_secret_inlined_by_default(void **state)
+{
+    EvalContext *ctx = *state;
+    PutSecretAndPlain(ctx);
+
+    Buffer *res = BufferNew();
+    ExpandScalar(ctx, "default", "bundle", "$(user):$(password)", res);
+
+    assert_string_equal("alice:hunter2", BufferData(res));
+    BufferDestroy(res);
+}
+
+static void test_expand_scalar_keep_secrets(void **state)
+{
+    EvalContext *ctx = *state;
+    PutSecretAndPlain(ctx);
+
+    Buffer *res = BufferNew();
+    ExpandScalarKeepSecrets(ctx, "default", "bundle", "$(user):$(password)", res);
+
+    /* Only the secret is held back; the ordinary variable still expands. */
+    assert_string_equal("alice:$(password)", BufferData(res));
+    BufferDestroy(res);
+}
+
+static void test_expand_scalar_secrets_only(void **state)
+{
+    EvalContext *ctx = *state;
+    PutSecretAndPlain(ctx);
+
+    Buffer *res = BufferNew();
+    ExpandScalarSecretsOnly(ctx, "default", "bundle", "$(user):$(password)", res);
+
+    /* The mirror image: a resolvable non-secret reference is left alone. */
+    assert_string_equal("$(user):hunter2", BufferData(res));
+    BufferDestroy(res);
+}
+
+/* Deferring and then resolving has to end up where expanding in one go would,
+ * or a commands promise would run something other than what it promised. */
+static void test_expand_scalar_secret_round_trip(void **state)
+{
+    EvalContext *ctx = *state;
+    PutSecretAndPlain(ctx);
+
+    const char *const cases[] = {
+        "$(user):$(password)",
+        "${user}:${password}",          /* the brace form is preserved too */
+        "$(password)$(password)",
+        "no references at all",
+        "a$(undefined)b",               /* unresolvable, untouched by both */
+    };
+
+    for (size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); i++)
+    {
+        char *const direct = ExpandScalar(ctx, "default", "bundle", cases[i], NULL);
+        char *const deferred = ExpandScalarKeepSecrets(ctx, "default", "bundle",
+                                                       cases[i], NULL);
+        char *const resolved = ExpandScalarSecretsOnly(ctx, "default", "bundle",
+                                                       deferred, NULL);
+        assert_string_equal(direct, resolved);
+        free(direct);
+        free(deferred);
+        free(resolved);
+    }
+}
+
+/* A secret used as part of a variable *name* cannot be resolved late: the
+ * outer name is not known until the inner one is substituted. Both modes leave
+ * the whole reference alone rather than leaking the inner value. */
+static void test_expand_scalar_secret_nested_reference(void **state)
+{
+    EvalContext *ctx = *state;
+    PutSecretAndPlain(ctx);
+    {
+        VarRef *lval = VarRefParse("default:bundle.foo[hunter2]");
+        EvalContextVariablePut(ctx, lval, "bar", CF_DATA_TYPE_STRING, NULL);
+        VarRefDestroy(lval);
+    }
+
+    /* Control: expanded in one go, this resolves all the way through. */
+    char *const direct = ExpandScalar(ctx, "default", "bundle",
+                                      "a$(foo[$(password)])b", NULL);
+    assert_string_equal("abarb", direct);
+    free(direct);
+
+    char *const deferred = ExpandScalarKeepSecrets(ctx, "default", "bundle",
+                                                   "a$(foo[$(password)])b", NULL);
+    assert_string_equal("a$(foo[$(password)])b", deferred);
+
+    char *const resolved = ExpandScalarSecretsOnly(ctx, "default", "bundle",
+                                                   deferred, NULL);
+    assert_string_equal("a$(foo[$(password)])b", resolved);
+    free(deferred);
+    free(resolved);
+}
+
 static void test_setup(void **state)
 {
     *state = EvalContextNew();
@@ -589,6 +705,11 @@ int main()
         unit_test_setup_teardown(test_expand_scalar_array_concat, test_setup, test_teardown),
         unit_test_setup_teardown(test_expand_scalar_array_with_scalar_arg, test_setup, test_teardown),
         unit_test_setup_teardown(test_expand_scalar_undefined, test_setup, test_teardown),
+        unit_test_setup_teardown(test_expand_scalar_secret_inlined_by_default, test_setup, test_teardown),
+        unit_test_setup_teardown(test_expand_scalar_keep_secrets, test_setup, test_teardown),
+        unit_test_setup_teardown(test_expand_scalar_secrets_only, test_setup, test_teardown),
+        unit_test_setup_teardown(test_expand_scalar_secret_round_trip, test_setup, test_teardown),
+        unit_test_setup_teardown(test_expand_scalar_secret_nested_reference, test_setup, test_teardown),
         unit_test_setup_teardown(test_expand_scalar_nested_inner_undefined, test_setup, test_teardown),
         unit_test_setup_teardown(test_expand_list_nested, test_setup, test_teardown),
         unit_test_setup_teardown(test_expand_promise_array_with_scalar_arg, test_setup, test_teardown),

@@ -197,6 +197,33 @@ static void test_persistent_class_timer_policy(void)
     EvalContextDestroy(ctx);
 }
 
+/* The predicate has to answer for a variable that exists, one that is not
+ * tagged, and one that does not exist at all -- code that expands variables
+ * asks about every reference it meets, resolvable or not. */
+static void test_variable_is_tagged_secret(void)
+{
+    EvalContext *ctx = EvalContextNew();
+
+    VarRef *secret = VarRefParse("default:bundle.password");
+    assert_true(EvalContextVariablePut(ctx, secret, "hunter2",
+                                       CF_DATA_TYPE_STRING, "secret"));
+
+    VarRef *plain = VarRefParse("default:bundle.user");
+    assert_true(EvalContextVariablePut(ctx, plain, "alice",
+                                       CF_DATA_TYPE_STRING, "source=promise"));
+
+    VarRef *missing = VarRefParse("default:bundle.nosuchvariable");
+
+    assert_true(EvalContextVariableIsTaggedSecret(ctx, secret));
+    assert_false(EvalContextVariableIsTaggedSecret(ctx, plain));
+    assert_false(EvalContextVariableIsTaggedSecret(ctx, missing));
+
+    VarRefDestroy(secret);
+    VarRefDestroy(plain);
+    VarRefDestroy(missing);
+    EvalContextDestroy(ctx);
+}
+
 /* A secret-tagged container must redact for an INDEXED read too, not just for
  * the whole variable. Before the type was derived from the redacted value, this
  * took the container branch of EvalContextVariableGet() and handed the scalar
@@ -255,6 +282,7 @@ int main()
         unit_test(test_persistent_class_timer_policy),
         unit_test(test_changes_chroot),
         unit_test(test_eval_with_token_from_list),
+        unit_test(test_variable_is_tagged_secret),
         unit_test(test_secret_container_redacts_indexed_read),
     };
 

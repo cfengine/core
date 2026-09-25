@@ -232,6 +232,7 @@ const Promise *EvalContextVariablePromiseGet(const EvalContext *ctx, const VarRe
 bool EvalContextVariableRemoveSpecial(const EvalContext *ctx, SpecialScope scope, const char *lval);
 bool EvalContextVariableRemove(const EvalContext *ctx, const VarRef *ref);
 StringSet *EvalContextVariableTags(const EvalContext *ctx, const VarRef *ref);
+bool EvalContextVariableIsTaggedSecret(const EvalContext *ctx, const VarRef *ref);
 bool EvalContextVariableClearMatch(EvalContext *ctx);
 VariableTableIterator *EvalContextVariableTableIteratorNew(const EvalContext *ctx, const char *ns, const char *scope, const char *lval);
 VariableTableIterator *EvalContextVariableTableFromRefIteratorNew(const EvalContext *ctx, const VarRef *ref);

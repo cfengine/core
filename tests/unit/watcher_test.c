@@ -50,14 +50,22 @@ static void test_watcher_register_duplicate_key_ignored(void)
 
     captured_err_count = 0;
     captured_err_message[0] = '\0';
-    LoggingPrivContext log_ctx = { .log_hook = CaptureErrorLogHook };
+    /* force_hook_level makes the hook still see the error while the console
+     * level is lowered, so the expected error isn't printed. */
+    LoggingPrivContext log_ctx = {
+        .log_hook = CaptureErrorLogHook,
+        .force_hook_level = LOG_LEVEL_ERR,
+    };
     LoggingPrivSetContext(&log_ctx);
+    const LogLevel old_level = LogGetGlobalLevel();
+    LogSetGlobalLevel(LOG_LEVEL_CRIT);
 
     /* Registering the same key again must be rejected: an error is logged
      * (not silently swallowed) and the first registration is kept, not
      * replaced. */
     WatcherRegister("dup-event", EVENT_FILE_DELETED, NULL, fake_bundle_b, 5);
 
+    LogSetGlobalLevel(old_level);
     LoggingPrivSetContext(NULL);
 
     assert_int_equal(captured_err_count, 1);

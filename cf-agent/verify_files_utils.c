@@ -3738,12 +3738,7 @@ static PromiseResult VerifyFileIntegrity(EvalContext *ctx, const char *file, con
 
     if (attr->change.report_diffs && MakingInternalChanges(ctx, pp, attr, &result, "report diffs in '%s'", file))
     {
-        char destination[CF_BUFSIZE];
-        if (!GetRepositoryPath(file, attr, destination))
-        {
-            destination[0] = '\0';
-        }
-        LogFileChange(ctx, file, changed, attr, pp, &CopyRegularFile, destination, &DeleteCompressedArray);
+        LogFileChange(ctx, file, changed, attr, pp, &CopyRegularFile, &DeleteCompressedArray);
     }
 
     return result;

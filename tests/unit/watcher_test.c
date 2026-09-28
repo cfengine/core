@@ -2,7 +2,7 @@
 
 #include <watcher.h>
 #include <file_watcher.h>       /* FileWatcherStateNew() */
-#include <cf3.defs.h>           /* Bundle */
+#include <cf3.defs.h>           /* Rval */
 #include <logging_priv.h>       /* LoggingPrivContext, LoggingPrivSetContext() */
 
 #include <string.h>             /* strstr() */
@@ -30,12 +30,11 @@ static void test_watcher_register_single(void)
 {
     WatcherRegistryInitialize();
 
-    /* WatcherRegister()/WatcherDestroy() never dereference the bundle
-     * pointer, they only store it in a map, so a fake non-NULL pointer is
-     * fine here. */
-    Bundle *fake_bundle = (Bundle *) 0x1;
+    /* WatcherRegister() only deep-copies the rval, it never resolves the
+     * bundle it names, so the bundle doesn't need to exist. */
+    const Rval bundle = { .item = (char *) "test_bundle", .type = RVAL_TYPE_SCALAR };
 
-    WatcherRegister("test-event", EVENT_FILE_DELETED, FileWatcherStateNew("/nonexistent/test-event"), fake_bundle, 5);
+    assert_true(WatcherRegister("test-event", EVENT_FILE_DELETED, FileWatcherStateNew("/nonexistent/test-event"), bundle, 5));
 
     WatcherRegistryFinalize();
 }
@@ -44,10 +43,10 @@ static void test_watcher_register_duplicate_key_ignored(void)
 {
     WatcherRegistryInitialize();
 
-    Bundle *fake_bundle_a = (Bundle *) 0x1;
-    Bundle *fake_bundle_b = (Bundle *) 0x2;
+    const Rval bundle_a = { .item = (char *) "bundle_a", .type = RVAL_TYPE_SCALAR };
+    const Rval bundle_b = { .item = (char *) "bundle_b", .type = RVAL_TYPE_SCALAR };
 
-    WatcherRegister("dup-event", EVENT_FILE_DELETED, FileWatcherStateNew("/nonexistent/dup-event-a"), fake_bundle_a, 5);
+    assert_true(WatcherRegister("dup-event", EVENT_FILE_DELETED, FileWatcherStateNew("/nonexistent/dup-event-a"), bundle_a, 5));
 
     captured_err_count = 0;
     captured_err_message[0] = '\0';
@@ -64,11 +63,12 @@ static void test_watcher_register_duplicate_key_ignored(void)
     /* Registering the same key again must be rejected: an error is logged
      * (not silently swallowed) and the first registration is kept, not
      * replaced. */
-    WatcherRegister("dup-event", EVENT_FILE_DELETED, FileWatcherStateNew("/nonexistent/dup-event-b"), fake_bundle_b, 5);
+    const bool registered = WatcherRegister("dup-event", EVENT_FILE_DELETED, FileWatcherStateNew("/nonexistent/dup-event-b"), bundle_b, 5);
 
     LogSetGlobalLevel(old_level);
     LoggingPrivSetContext(NULL);
 
+    assert_false(registered);
     assert_int_equal(captured_err_count, 1);
     assert_true(strstr(captured_err_message, "dup-event") != NULL);
     assert_true(strstr(captured_err_message, "already registered") != NULL);

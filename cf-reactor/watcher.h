@@ -50,10 +50,10 @@ void WatcherRegistryClear(void);
  * @param key the events promise identifier
  * @param type the type of watcher, defined in when bodies
  * @param state the data used for by the watcher, depending on the type
- * @param bundle the bundle to run on event
+ * @param val the rval holding the bundle to run on event
  * @param interval interval between runs
  */
-void WatcherRegister(const char *key, EventType type, void *state, Bundle *bundle, time_t interval);
+bool WatcherRegister(const char *key, EventType type, void *state, Rval val, time_t interval);
 bool EventWatcherInitialize(int *fd);
 void EventWatcherHandleEvents(int fd, fd_set *readfds);
 void EventWatcherFinalize(void);

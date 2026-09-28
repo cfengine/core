@@ -34,6 +34,7 @@
 #include <sequence.h>
 #include <threaded_queue.h>
 #include <file_watcher.h>
+#include <rlist.h>
 #include <mutex.h> 
 
 /* Upper bound on how long the watcher thread ever sleeps in one go, so that
@@ -53,7 +54,8 @@ typedef struct
     time_t next_due;
 } Watcher;
 
-static void WatcherDestroy(void *item); /* defined below, next to WatcherRegister() */
+static void WatcherDestroy(void *item);
+static void DestroyRval(void *item);
 
 /* Guards `watchers` (and, for the same atomic-rebuild reason, its paired
  * `event_to_bundle`) against the watcher thread (WatcherThreadMain())
@@ -76,7 +78,7 @@ void WatcherRegistryInitialize(void)
     assert(event_to_bundle == NULL);
 
     watchers = SeqNew(4, WatcherDestroy);
-    event_to_bundle = MapNew(StringHash_untyped, StringEqual_untyped, NULL, NULL);
+    event_to_bundle = MapNew(StringHash_untyped, StringEqual_untyped, NULL, DestroyRval);
 }
 
 void WatcherRegistryFinalize(void)
@@ -97,16 +99,32 @@ void WatcherRegistryClear(void)
     watchers = SeqNew(4, WatcherDestroy);
 
     MapDestroy(event_to_bundle);
-    event_to_bundle = MapNew(StringHash_untyped, StringEqual_untyped, NULL, NULL);
+    event_to_bundle = MapNew(StringHash_untyped, StringEqual_untyped, NULL, DestroyRval);
 
     ThreadUnlock(&watchers_mutex);
 }
 
+static Rval *AllocateRval(Rval val)
+{
+    Rval *new = xmalloc(sizeof(Rval));
+    *new = RvalCopy(val);
+    return new;
+}
+
+static void DestroyRval(void *item)
+{
+    Rval *rval = item;
+    if (rval != NULL)
+    {
+        RvalDestroy(*rval);
+        free(rval);
+    }
+}
+
 // Expects interval to be strictly greater than 0, otherwise the watcher thread will busy spin
-void WatcherRegister(const char *key, EventType type, void *state, Bundle *bundle, time_t interval)
+bool WatcherRegister(const char *key, EventType type, void *state, Rval val, time_t interval)
 {
     assert(key != NULL);
-    assert(bundle != NULL);
     assert(watchers != NULL && event_to_bundle != NULL);
     assert(interval > 0);
 
@@ -135,7 +153,7 @@ void WatcherRegister(const char *key, EventType type, void *state, Bundle *bundl
         {
             destroy_state(state);
         }
-        return;
+        return false;
     }
 
     Watcher *w = xmalloc(sizeof(Watcher));
@@ -147,9 +165,10 @@ void WatcherRegister(const char *key, EventType type, void *state, Bundle *bundl
     w->destroy_state = destroy_state;
 
     SeqAppend(watchers, w);
-    MapInsert(event_to_bundle, w->key, bundle);
+    MapInsert(event_to_bundle, w->key, AllocateRval(val));
 
     ThreadUnlock(&watchers_mutex);
+    return true;
 }
 
 static void WatcherDestroy(void *item)
@@ -259,7 +278,7 @@ void EventWatcherHandleEvents(int fd, fd_set *readfds)
         const char *key = item;
 
         ThreadLock(&watchers_mutex);
-        const Bundle *bundle = MapGet(event_to_bundle, key);
+        Rval *bundle = MapGet(event_to_bundle, key);
 
         if (bundle == NULL)
         {

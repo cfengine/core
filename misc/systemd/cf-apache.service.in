@@ -12,6 +12,11 @@ ExecStart=@workdir@/httpd/bin/apachectl start
 ExecStop=@workdir@/httpd/bin/apachectl stop
 ExecReload=@workdir@/httpd/bin/apachectl graceful
 PIDFile=@workdir@/httpd/httpd.pid
+# ENT-11189: apachectl writes the PID file shortly after fork. On a busy host
+# (e.g. mid-upgrade with SELinux relabel, cf-postgres and cf-php-fpm churning)
+# the default 90s start timeout has been observed to fire while apache is still
+# coming up, leaving worker children bound to :80 and the unit in a restart loop.
+TimeoutStartSec=300
 Restart=always
 RestartSec=10
 UMask=0177

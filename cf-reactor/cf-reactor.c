@@ -40,6 +40,7 @@
 #include <signals.h>            /* GetSignalPipe, MakeSignalPipe, IsPendingTermination, HandleSignalsForDaemon, ReloadConfigRequested, ClearRequestReloadConfig */
 #include <exec_tools.h>
 #include <reactor_context.h>
+#include <reactor_transform.h>
 
 /*****************************************************************************/
 /* Globals                                                                   */
@@ -244,6 +245,11 @@ static void CheckPolicyUpdates(EvalContext *ctx, Policy **policy, GenericAgentCo
     GenericAgentDiscoverContext(ctx, config, NULL);
 
     *policy = LoadPolicy(ctx, config);
+
+    if (*policy != NULL)
+    {
+        KeepReactorPromises(ctx, *policy);
+    }
 }
 
 /*****************************************************************************/
@@ -326,6 +332,10 @@ int main(int argc, char *argv[])
      * below. */
     time_t next_tick = time(NULL) + DEFAULT_POLL_INTERVAL_SECS;
     time_t next_policy_check = time(NULL) + DEFAULT_POLICY_CHECK_INTERVAL_SECS;
+
+    // Setup event watchers from policy
+    KeepReactorPromises(ctx, policy);
+
     while (!IsPendingTermination())
     {
         int max_fd = ReactorContextSetupFileDescriptors(&reactor_ctx);

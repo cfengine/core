@@ -22,30 +22,21 @@
   included file COSL.txt.
 */
 
-#include <mod_reactor.h>
+#ifndef CFENGINE_REACTOR_TRANSFORM_H
+#define CFENGINE_REACTOR_TRANSFORM_H
 
-#include <syntax.h>
+#include <eval_context.h>
+#include <policy.h>
 
-static const ConstraintSyntax when_constraints[] =
-{
-    CONSTRAINT_SYNTAX_GLOBAL,
+/**
+ * @brief Evaluate every `bundle reactor NAME { ... }` in the given policy:
+ * keep its "meta", "vars" and "classes" promises, and register a watcher
+ * (see watcher.h) for each of its "events" promises.
+ *
+ * Safe to call again for every re-read of the policy: it first discards all
+ * previously registered watchers (see WatcherRegistryClear()), so the
+ * result always reflects only the given policy, not a stale prior one.
+ */
+void KeepReactorPromises(EvalContext *ctx, const Policy *policy);
 
-    /* Row models */
-    ConstraintSyntaxNewString("file_deleted", CF_ANYSTRING, "File to react for on deletion", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewNull()
-};
-
-static const BodySyntax when_body = BodySyntaxNew("when", when_constraints, NULL, SYNTAX_STATUS_NORMAL);
-
-static const ConstraintSyntax CF_EVENT_BODIES[] =
-{
-    ConstraintSyntaxNewBody("when", &when_body, "Event to react to", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewBundle("then", "Bundle to run on event", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewNull()
-};
-
-const PromiseTypeSyntax CF_REACTOR_PROMISE_TYPES[] =
-{
-    PromiseTypeSyntaxNew("reactor", "events", CF_EVENT_BODIES, NULL, SYNTAX_STATUS_NORMAL),
-    PromiseTypeSyntaxNewNull()
-};
+#endif

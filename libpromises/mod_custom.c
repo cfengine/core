@@ -1233,6 +1233,7 @@ bool InitializeCustomPromises()
 void FinalizeCustomPromises()
 {
     MapDestroy(custom_modules);
+    custom_modules = NULL;
 }
 
 PromiseResult EvaluateCustomPromise(EvalContext *ctx, const Promise *pp)

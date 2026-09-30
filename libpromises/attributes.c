@@ -666,6 +666,23 @@ LogLevel ActionAttributeLogLevelFromString(const char *log_level)
     }
 }
 
+int OverrideIfelapsed(int minutes)
+{
+    assert(minutes >= 0);
+
+    int prev_ifelapsed = VIFELAPSED;
+    VIFELAPSED = minutes;
+
+    Log(LOG_LEVEL_DEBUG, "Default ifelapsed set to %d (was %d)", VIFELAPSED, prev_ifelapsed);
+    return prev_ifelapsed;
+}
+
+void RestoreIfelapsed(int prev_ifelapsed)
+{
+    Log(LOG_LEVEL_DEBUG, "Default ifelapsed restored to %d (was %d)", prev_ifelapsed, VIFELAPSED);
+    VIFELAPSED = prev_ifelapsed;
+}
+
 static TransactionContext GetTransactionConstraints(const EvalContext *ctx, const Promise *pp)
 {
     TransactionContext t;

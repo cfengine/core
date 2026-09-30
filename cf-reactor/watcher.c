@@ -29,13 +29,11 @@
 #include <signals.h>            // IsPendingTermination()
 #include <logging.h>
 #include <alloc.h>
-#include <string_lib.h>         // StringHash_untyped(), StringEqual_untyped()
-#include <map.h>
+#include <string_lib.h>         // StringEqual()
 #include <sequence.h>
 #include <threaded_queue.h>
 #include <file_watcher.h>
-#include <rlist.h>
-#include <mutex.h> 
+#include <mutex.h>              // ThreadLock(), ThreadUnlock()
 
 /* Upper bound on how long the watcher thread ever sleeps in one go, so that
  * IsPendingTermination() is re-checked at least this often during shutdown,
@@ -46,27 +44,31 @@
 
 typedef struct
 {
-    char *key;
+    char *promiser; // expanded promiser of the iteration of `promise`
     WatcherCheckFn check_callback; // resolved from `type` at WatcherRegister() time
     WatcherStateDestroyFn destroy_state;
     void *state;
+    const Promise *promise; // the unexpanded events promise, owned by the policy
     time_t poll_interval_secs;
     time_t next_due;
 } Watcher;
 
 static void WatcherDestroy(void *item);
-static void DestroyRval(void *item);
 
-/* Guards `watchers` (and, for the same atomic-rebuild reason, its paired
- * `event_to_bundle`) against the watcher thread (WatcherThreadMain())
- * iterating over `watchers` concurrently with the main thread re-registering
- * watchers from a freshly (re-)read policy (WatcherRegister(),
- * WatcherRegistryClear()). */
+/* Guards `watchers` and `paused` against the watcher thread
+ * (WatcherThreadMain()) iterating over `watchers` concurrently with the main
+ * thread re-registering watchers from a freshly (re-)read policy
+ * (WatcherRegister(), WatcherRegistryClear()). */
 static pthread_mutex_t watchers_mutex = PTHREAD_MUTEX_INITIALIZER;
 static Seq *watchers = NULL;
-static Map *event_to_bundle = NULL;
+static bool paused = false;         /* see EventWatcherPause() */
 
 static WakeupChannel wakeup_channel = { .fds = { -1, -1 } };
+
+/* Watchers that fired, queued by the watcher thread for the main thread to
+ * handle. Not owned: the watcher thread only queues watchers of the registry
+ * while holding watchers_mutex, and WatcherRegistryClear() requires the queue
+ * to be empty, so the queued watchers are always registered. */
 static ThreadedQueue *event_queue = NULL;
 static StoppableThread *watcher_thread = NULL;
 
@@ -75,57 +77,56 @@ static StoppableThread *watcher_thread = NULL;
 void WatcherRegistryInitialize(void)
 {
     assert(watchers == NULL);
-    assert(event_to_bundle == NULL);
 
     watchers = SeqNew(4, WatcherDestroy);
-    event_to_bundle = MapNew(StringHash_untyped, StringEqual_untyped, NULL, DestroyRval);
 }
 
 void WatcherRegistryFinalize(void)
 {
     SeqDestroy(watchers);
     watchers = NULL;
-    MapDestroy(event_to_bundle);
-    event_to_bundle = NULL;
 }
 
 void WatcherRegistryClear(void)
 {
-    assert(watchers != NULL && event_to_bundle != NULL);
+    assert(watchers != NULL);
 
     ThreadLock(&watchers_mutex);
+
+    if (event_queue != NULL && !ThreadedQueueIsEmpty(event_queue))
+    {
+        ProgrammingError("Clearing the reactor watcher registry with events of its "
+                         "watchers still queued, call EventWatcherPause() first");
+    }
 
     SeqDestroy(watchers);
     watchers = SeqNew(4, WatcherDestroy);
 
-    MapDestroy(event_to_bundle);
-    event_to_bundle = MapNew(StringHash_untyped, StringEqual_untyped, NULL, DestroyRval);
-
     ThreadUnlock(&watchers_mutex);
 }
 
-static Rval *AllocateRval(Rval val)
+/* A watcher is identified by its events promise and the expanded promiser
+ * of the iteration: the iterations of a promise share the same (unexpanded)
+ * promise, and different promises can have the same promiser. */
+static const Watcher *FindWatcher(const Promise *pp, const char *promiser)
 {
-    Rval *new = xmalloc(sizeof(Rval));
-    *new = RvalCopy(val);
-    return new;
-}
-
-static void DestroyRval(void *item)
-{
-    Rval *rval = item;
-    if (rval != NULL)
+    for (size_t i = 0; i < SeqLength(watchers); i++)
     {
-        RvalDestroy(*rval);
-        free(rval);
+        const Watcher *w = SeqAt(watchers, i);
+        if (w->promise == pp && StringEqual(w->promiser, promiser))
+        {
+            return w;
+        }
     }
+    return NULL;
 }
 
 // Expects interval to be strictly greater than 0, otherwise the watcher thread will busy spin
-bool WatcherRegister(const char *key, EventType type, void *state, Rval val, time_t interval)
+bool WatcherRegister(const char *promiser, EventType type, void *state, const Promise *pp, time_t interval)
 {
-    assert(key != NULL);
-    assert(watchers != NULL && event_to_bundle != NULL);
+    assert(promiser != NULL);
+    assert(pp != NULL);
+    assert(watchers != NULL);
     assert(interval > 0);
 
     WatcherCheckFn check_callback = NULL;
@@ -140,14 +141,14 @@ bool WatcherRegister(const char *key, EventType type, void *state, Rval val, tim
     // TODO: add more event types
 
     default:
-        ProgrammingError("Unknown reactor event type %d for watcher '%s'", (int) type, key);
+        ProgrammingError("Unknown reactor event type %d for watcher '%s'", (int) type, promiser);
     }
 
     ThreadLock(&watchers_mutex);
 
-    if (MapHasKey(event_to_bundle, key))
+    if (FindWatcher(pp, promiser) != NULL)
     {
-        Log(LOG_LEVEL_ERR, "Reactor watcher key '%s' is already registered, ignoring the duplicate", key);
+        Log(LOG_LEVEL_ERR, "Reactor watcher '%s' is already registered, ignoring the duplicate", promiser);
         ThreadUnlock(&watchers_mutex);
         if (destroy_state != NULL)
         {
@@ -157,15 +158,15 @@ bool WatcherRegister(const char *key, EventType type, void *state, Rval val, tim
     }
 
     Watcher *w = xmalloc(sizeof(Watcher));
-    w->key = xstrdup(key);
+    w->promiser = xstrdup(promiser);
     w->state = state;
+    w->promise = pp;
     w->poll_interval_secs = interval;
     w->next_due = 0; /* due immediately on the watcher thread's first pass */
     w->check_callback = check_callback;
     w->destroy_state = destroy_state;
 
     SeqAppend(watchers, w);
-    MapInsert(event_to_bundle, w->key, AllocateRval(val));
 
     ThreadUnlock(&watchers_mutex);
     return true;
@@ -178,7 +179,7 @@ static void WatcherDestroy(void *item)
     {
         w->destroy_state(w->state);
     }
-    free(w->key);
+    free(w->promiser);
     free(w);
 }
 
@@ -199,7 +200,7 @@ static void WatcherThreadMain(StoppableThread *thread, ARG_UNUSED void *unused)
 
         ThreadLock(&watchers_mutex);
 
-        for (size_t i = 0; i < SeqLength(watchers); i++)
+        for (size_t i = 0; !paused && i < SeqLength(watchers); i++)
         {
             Watcher *w = SeqAt(watchers, i);
 
@@ -212,7 +213,7 @@ static void WatcherThreadMain(StoppableThread *thread, ARG_UNUSED void *unused)
                 w->next_due = now + w->poll_interval_secs;
                 if (fired)
                 {
-                    ThreadedQueuePush(event_queue, SafeStringDuplicate(w->key));
+                    ThreadedQueuePush(event_queue, w);
                     any_event = true;
                 }
             }
@@ -235,7 +236,7 @@ static void WatcherThreadMain(StoppableThread *thread, ARG_UNUSED void *unused)
 bool EventWatcherInitialize(int *fd)
 {
     assert(fd != NULL);
-    assert(watchers != NULL && event_to_bundle != NULL); /* WatcherRegistryInitialize() first */
+    assert(watchers != NULL); /* WatcherRegistryInitialize() first */
 
     if (!WakeupChannelOpen(&wakeup_channel))
     {
@@ -243,7 +244,7 @@ bool EventWatcherInitialize(int *fd)
         return false;
     }
 
-    event_queue = ThreadedQueueNew(16, free);
+    event_queue = ThreadedQueueNew(16, NULL);
 
     watcher_thread = StoppableThreadStart(WatcherThreadMain, NULL);
     if (watcher_thread == NULL)
@@ -261,8 +262,26 @@ bool EventWatcherInitialize(int *fd)
     return true;
 }
 
-void EventWatcherHandleEvents(int fd, fd_set *readfds)
+/* Watchers are only destroyed by the main thread (WatcherRegistryClear()),
+ * which is also the one handling events, and never while events are queued,
+ * so the queued watchers can be used without holding watchers_mutex. Their
+ * promiser and promise are never modified by the watcher thread. */
+static void HandleQueuedEvents(EvalContext *ctx, WatcherEventFn on_event)
 {
+    assert(on_event != NULL);
+
+    void *item;
+    while (ThreadedQueuePop(event_queue, &item, 0))
+    {
+        const Watcher *w = item;
+        Log(LOG_LEVEL_NOTICE, "Reactor watcher '%s' fired", w->promiser);
+        on_event(ctx, w->promise, w->promiser);
+    }
+}
+
+void EventWatcherHandleEvents(EvalContext *ctx, WatcherEventFn on_event, int fd, fd_set *readfds)
+{
+    assert(on_event != NULL);
     assert(readfds != NULL);
 
     if (!FD_ISSET(fd, readfds))
@@ -270,29 +289,34 @@ void EventWatcherHandleEvents(int fd, fd_set *readfds)
         return;
     }
 
+    /* Drain before popping, so that a wakeup for an event queued after the
+     * last pop stays in the channel for the next select() */
     WakeupChannelDrain(&wakeup_channel);
 
-    void *item;
-    while (ThreadedQueuePop(event_queue, &item, 0))
+    HandleQueuedEvents(ctx, on_event);
+}
+
+void EventWatcherPause(EvalContext *ctx, WatcherEventFn on_event)
+{
+    assert(on_event != NULL);
+
+    /* A pass of the watcher thread holds watchers_mutex, so once `paused` is
+     * set no further events are queued */
+    ThreadLock(&watchers_mutex);
+    paused = true;
+    ThreadUnlock(&watchers_mutex);
+
+    if (event_queue != NULL)
     {
-        const char *key = item;
-
-        ThreadLock(&watchers_mutex);
-        Rval *bundle = MapGet(event_to_bundle, key);
-
-        if (bundle == NULL)
-        {
-            Log(LOG_LEVEL_VERBOSE, "Reactor watcher '%s' fired but is no longer registered, ignoring", key);
-        }
-        else
-        {
-            Log(LOG_LEVEL_NOTICE, "Reactor watcher '%s' fired", key);
-            // TODO: run bundle
-        }
-
-        ThreadUnlock(&watchers_mutex);
-        free(item);
+        HandleQueuedEvents(ctx, on_event);
     }
+}
+
+void EventWatcherResume(void)
+{
+    ThreadLock(&watchers_mutex);
+    paused = false;
+    ThreadUnlock(&watchers_mutex);
 }
 
 void EventWatcherFinalize(void)

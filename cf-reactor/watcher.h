@@ -35,27 +35,61 @@ typedef enum
 typedef bool (*WatcherCheckFn)(void *state);
 typedef void (*WatcherStateDestroyFn)(void *state);
 
+/**
+ * @brief Called on the main thread for every event of a registered watcher.
+ *
+ * @param pp the (unexpanded) events promise the watcher was registered for
+ * @param promiser the expanded promiser the watcher was registered with,
+ *                 selecting the iteration of the events promise
+ * @note Called without the watcher registry locked, but it must not call
+ *       WatcherRegistryClear(), as the events of the watchers are being
+ *       handled.
+ */
+typedef void (*WatcherEventFn)(EvalContext *ctx, const Promise *pp, const char *promiser);
+
 void WatcherRegistryInitialize(void);
 void WatcherRegistryFinalize(void);
 
 /**
  * @brief Discard every currently registered watcher and start over. Call
  * this before re-registering watchers from a freshly (re-)read policy.
+ *
+ * @note No events of the watchers may be queued, i.e. once the event watcher
+ *       is initialized, call EventWatcherPause() first.
  */
 void WatcherRegistryClear(void);
 
 /**
  * @brief Register a specific watcher instance.
- * 
- * @param key the events promise identifier
+ *
+ * @param promiser the expanded promiser of the iteration of the events
+ *                 promise. Together with pp, identifies the watcher.
  * @param type the type of watcher, defined in when bodies
  * @param state the data used for by the watcher, depending on the type
- * @param val the rval holding the bundle to run on event
+ * @param pp the unexpanded events promise, passed back to the WatcherEventFn
+ *           on event. Not owned, so the registry must be cleared before the
+ *           policy holding it is destroyed.
  * @param interval interval between runs
  */
-bool WatcherRegister(const char *key, EventType type, void *state, Rval val, time_t interval);
+bool WatcherRegister(const char *promiser, EventType type, void *state, const Promise *pp, time_t interval);
 bool EventWatcherInitialize(int *fd);
-void EventWatcherHandleEvents(int fd, fd_set *readfds);
+void EventWatcherHandleEvents(EvalContext *ctx, WatcherEventFn on_event, int fd, fd_set *readfds);
+
+/**
+ * @brief Stop checking for events, and handle the events already queued, so
+ * that the watchers can be cleared (see WatcherRegistryClear()) without
+ * losing any event. Events are checked for again after EventWatcherResume().
+ *
+ * @note Only the events already detected are guaranteed to be handled:
+ *       whether an event happening while paused is detected afterwards
+ *       depends on the state the watcher is registered again with.
+ */
+void EventWatcherPause(EvalContext *ctx, WatcherEventFn on_event);
+
+/**
+ * @brief Check for events again, after EventWatcherPause().
+ */
+void EventWatcherResume(void);
 void EventWatcherFinalize(void);
 
 #endif

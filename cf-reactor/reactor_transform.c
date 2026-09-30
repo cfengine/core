@@ -35,6 +35,9 @@
 #include <watcher.h>
 #include <file_watcher.h>
 #include <agent_operations.h>   // ScheduleAgentOperations()
+#include <attributes.h>
+#include <conn_cache.h>          // ConnCache_Init(), ConnCache_Destroy()
+#include <mod_custom.h>          // Initialize/FinalizeCustomPromises()
 
 /* Promise types evaluated within `bundle reactor NAME { ... }`. */
 static const char *const REACTOR_TYPESEQUENCE[] =
@@ -213,21 +216,31 @@ static PromiseResult RunThenBundle(EvalContext *ctx, const Promise *pp)
         return PROMISE_RESULT_FAIL;
     }
 
+    /* The promise lock cache makes each promise act at most once per
+     * EvalContext, and the function cache keeps the results of functions like
+     * execresult(), but cf-reactor keeps the same EvalContext across events.
+     * Clear them so every event gets a fresh run of the bundle. */
+    EvalContextPromiseLockCacheClear(ctx);
+    EvalContextFunctionCacheClear(ctx);
 
     BundleBanner(bp, args);
     EvalContextSetBundleArgs(ctx, args);
     EvalContextStackPushBundleFrame(ctx, bp, args, false, NULL);
 
+    /* Remote copy_from needs the connection cache and custom promise types
+     * need the promise modules map. Set them up per run like in cf-agent so
+     * that no connections or promise modules are kept between events. */
+    ConnCache_Init();
+    InitializeCustomPromises();
+    PushDefaultIfElapsed(0);
     PromiseResult result = ScheduleAgentOperations(ctx, bp);
+    PopDefaultIfElapsed();
+    FinalizeCustomPromises();
+    ConnCache_Destroy();
 
     EvalContextStackPopFrame(ctx);
     EvalContextSetBundleArgs(ctx, NULL);
     EndBundleBanner(bp);
-
-    if (EvalAborted(ctx))
-    {
-        Log(LOG_LEVEL_ERR, "Eval aborted");
-    }
 
     return result;
 }

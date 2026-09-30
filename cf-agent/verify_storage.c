@@ -512,14 +512,25 @@ static PromiseResult VerifyMountPromise(EvalContext *ctx, char *name, const Attr
         if (!a->mount.unmount)
         {
             /* Ensure the mount point exists before mounting or remounting.
-             * dir is "<name>/.", so this creates the mount point directory. */
-            if (!MakeParentDirectory(dir, a->move_obstructions, NULL))
+             * dir is "<name>/.", so this creates the mount point directory.
+             *
+             * CFE-3366: creating it is a change to the system, so gate it on the
+             * promise action.  The existence check comes first so that a promise
+             * whose mount point is already there does not warn about a directory
+             * it would not have created anyway. */
+            struct stat mount_point_sb;
+            if ((stat(name, &mount_point_sb) == -1)
+                && MakingInternalChanges(ctx, pp, a, &result,
+                                         "create mount point '%s'", name))
             {
-                // Could not create parent directory, assume this is okay,
-                // verbose logging in MakeParentDirectory()
-                Log(LOG_LEVEL_DEBUG,
-                    "Could not create parent directory '%s' for mount promise",
-                    dir);
+                if (!MakeParentDirectory(dir, a->move_obstructions, NULL))
+                {
+                    // Could not create parent directory, assume this is okay,
+                    // verbose logging in MakeParentDirectory()
+                    Log(LOG_LEVEL_DEBUG,
+                        "Could not create parent directory '%s' for mount promise",
+                        dir);
+                }
             }
 
             if (already_mounted)

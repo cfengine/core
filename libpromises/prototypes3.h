@@ -41,12 +41,6 @@ const char *NameVersion(void);
 
 void yyerror(const char *s);
 
-/* agent.c */
-
-PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp);
-PromiseResult ScheduleAgentOperationsNormalOrder(EvalContext *ctx, const Bundle *bp);
-PromiseResult ScheduleAgentOperationsTopDownOrder(EvalContext *ctx, const Bundle *bp);
-
 /* Only for agent.c */
 
 void ConnectionsInit(void);

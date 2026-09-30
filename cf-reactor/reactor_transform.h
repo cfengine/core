@@ -45,9 +45,9 @@ void KeepReactorPromises(EvalContext *ctx, const Policy *policy);
  * in watcher.h): run the bundle of its 'then' attribute.
  *
  * @param pp the unexpanded events promise the watcher was registered for
- * @param key the key the watcher was registered with, selecting the
- *            iteration of the events promise to keep
+ * @param promiser the expanded promiser the watcher was registered with,
+ *                 selecting the iteration of the events promise to keep
  */
-void HandleReactorEvent(EvalContext *ctx, const Promise *pp, const char *key);
+void HandleReactorEvent(EvalContext *ctx, const Promise *pp, const char *promiser);
 
 #endif

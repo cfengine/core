@@ -35,6 +35,16 @@ typedef enum
 typedef bool (*WatcherCheckFn)(void *state);
 typedef void (*WatcherStateDestroyFn)(void *state);
 
+/**
+ * @brief Called on the main thread for every event of a registered watcher.
+ *
+ * @param pp the (unexpanded) events promise the watcher was registered for
+ * @param key the key the watcher was registered with
+ * @note Called with the watcher registry locked, so it must not call
+ *       WatcherRegister() or WatcherRegistryClear().
+ */
+typedef void (*WatcherEventFn)(EvalContext *ctx, const Promise *pp, const char *key);
+
 void WatcherRegistryInitialize(void);
 void WatcherRegistryFinalize(void);
 
@@ -46,16 +56,18 @@ void WatcherRegistryClear(void);
 
 /**
  * @brief Register a specific watcher instance.
- * 
+ *
  * @param key the events promise identifier
  * @param type the type of watcher, defined in when bodies
  * @param state the data used for by the watcher, depending on the type
- * @param val the rval holding the bundle to run on event
+ * @param pp the unexpanded events promise, passed back to the WatcherEventFn
+ *           on event. Not owned, so the registry must be cleared before the
+ *           policy holding it is destroyed.
  * @param interval interval between runs
  */
-bool WatcherRegister(const char *key, EventType type, void *state, Rval val, time_t interval);
+bool WatcherRegister(const char *key, EventType type, void *state, const Promise *pp, time_t interval);
 bool EventWatcherInitialize(int *fd);
-void EventWatcherHandleEvents(int fd, fd_set *readfds);
+void EventWatcherHandleEvents(EvalContext *ctx, WatcherEventFn on_event, int fd, fd_set *readfds);
 void EventWatcherFinalize(void);
 
 #endif

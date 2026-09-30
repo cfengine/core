@@ -33,10 +33,21 @@
  * keep its "meta", "vars" and "classes" promises, and register a watcher
  * (see watcher.h) for each of its "events" promises.
  *
- * Safe to call again for every re-read of the policy: it first discards all
- * previously registered watchers (see WatcherRegistryClear()), so the
- * result always reflects only the given policy, not a stale prior one.
+ * Expects no watchers to be registered: on re-read of the policy, the
+ * watchers of the previous policy must be discarded with
+ * WatcherRegistryClear() before that policy is destroyed, as they refer to
+ * its promises.
  */
 void KeepReactorPromises(EvalContext *ctx, const Policy *policy);
+
+/**
+ * @brief Keep the events promise of a watcher that fired (see WatcherEventFn
+ * in watcher.h): run the bundle of its 'then' attribute.
+ *
+ * @param pp the unexpanded events promise the watcher was registered for
+ * @param key the key the watcher was registered with, selecting the
+ *            iteration of the events promise to keep
+ */
+void HandleReactorEvent(EvalContext *ctx, const Promise *pp, const char *key);
 
 #endif

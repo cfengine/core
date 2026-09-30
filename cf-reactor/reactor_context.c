@@ -26,6 +26,7 @@
 #include <prototypes3.h>        /* ReactorNova*() */
 #include <signals.h>            /* GetSignalPipe() */
 #include <watcher.h>
+#include <reactor_transform.h>  /* HandleReactorEvent() */
 #include <alloc.h>
 
 #define INIT_FD_COUNT 8
@@ -186,7 +187,7 @@ static int GetWatcherFd(const ReactorContext *reactor_context)
     return 0;
 }
 
-void ReactorContextHandleEvents(ReactorContext *reactor_context, time_t *next_tick)
+void ReactorContextHandleEvents(EvalContext *ctx, ReactorContext *reactor_context, time_t *next_tick)
 {
     assert(reactor_context != NULL);
 
@@ -214,7 +215,7 @@ void ReactorContextHandleEvents(ReactorContext *reactor_context, time_t *next_ti
         while (recv(GetSignalPipe(), &buf, 1, 0) > 0) { /* drain */ }
     }
 
-    EventWatcherHandleEvents(GetWatcherFd(reactor_context), &reactor_context->readfds);
+    EventWatcherHandleEvents(ctx, HandleReactorEvent, GetWatcherFd(reactor_context), &reactor_context->readfds);
 }
 
 void ReactorContextFinalize(ReactorContext *reactor_context)

@@ -865,7 +865,7 @@ bool DiffPkgOperations()
                 {
                     MapRemove(installed, name_arch);
                 }
-                else
+                else if (inst_record != NULL)
                 {
                     /* Keeping the install message, the removal would make no change. */
                     insert_new_msg = false;

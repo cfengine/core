@@ -54,6 +54,11 @@ void WatcherRegistryFinalize(void);
  * @brief Discard every currently registered watcher and start over. Call
  * this before re-registering watchers from a freshly (re-)read policy.
  *
+ * The discarded watchers are kept until EventWatcherResume(): a watcher
+ * registered again in the meantime with the same key (see WatcherRegister())
+ * takes over the state of the discarded watcher, so that the events
+ * happening while paused are detected after EventWatcherResume().
+ *
  * @note No events of the watchers may be queued, i.e. once the event watcher
  *       is initialized, call EventWatcherPause() first.
  */
@@ -64,6 +69,10 @@ void WatcherRegistryClear(void);
  *
  * @param promiser the expanded promiser of the iteration of the events
  *                 promise. Together with pp, identifies the watcher.
+ * @param key identifies the watcher across policy reloads: watchers with the
+ *            same key watch the same thing in the same way, so the watcher
+ *            registered with the key of a watcher discarded by
+ *            WatcherRegistryClear() takes over its state
  * @param type the type of watcher, defined in when bodies
  * @param state the data used for by the watcher, depending on the type
  * @param pp the unexpanded events promise, passed back to the WatcherEventFn
@@ -71,7 +80,8 @@ void WatcherRegistryClear(void);
  *           policy holding it is destroyed.
  * @param interval interval between runs
  */
-bool WatcherRegister(const char *promiser, EventType type, void *state, const Promise *pp, time_t interval);
+bool WatcherRegister(const char *promiser, const char *key, EventType type, void *state,
+                     const Promise *pp, time_t interval);
 bool EventWatcherInitialize(int *fd);
 void EventWatcherHandleEvents(EvalContext *ctx, WatcherEventFn on_event, int fd, fd_set *readfds);
 
@@ -80,14 +90,16 @@ void EventWatcherHandleEvents(EvalContext *ctx, WatcherEventFn on_event, int fd,
  * that the watchers can be cleared (see WatcherRegistryClear()) without
  * losing any event. Events are checked for again after EventWatcherResume().
  *
- * @note Only the events already detected are guaranteed to be handled:
- *       whether an event happening while paused is detected afterwards
- *       depends on the state the watcher is registered again with.
+ * @note An event happening while paused is detected after
+ *       EventWatcherResume() if its watcher is registered again, see
+ *       WatcherRegistryClear().
  */
 void EventWatcherPause(EvalContext *ctx, WatcherEventFn on_event);
 
 /**
- * @brief Check for events again, after EventWatcherPause().
+ * @brief Check for events again, after EventWatcherPause(). The watchers
+ * discarded by WatcherRegistryClear() and not registered again are destroyed,
+ * and the registered ones are checked immediately.
  */
 void EventWatcherResume(void);
 void EventWatcherFinalize(void);

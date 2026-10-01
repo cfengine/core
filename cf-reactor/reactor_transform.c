@@ -117,6 +117,23 @@ static const Bundle *ResolveThenBundle(
     return bp;
 }
 
+/* Identifies the watcher of an iteration of an events promise across policy
+ * reloads, by what the iteration is (namespace, bundle and promiser), what it
+ * watches ('when') and what it runs ('then'). The watcher of the reloaded
+ * policy with the same key takes over the state of the previous one, see
+ * WatcherRegister(). */
+static char *EventsPromiseKey(const Promise *pp, const char *event_type, const char *watched, Rval then_rval)
+{
+    assert(pp != NULL);
+
+    const Bundle *bp = PromiseGetBundle(pp);
+    char *then = RvalToString(then_rval);
+    char *key = StringFormat("%s:%s:%s when %s(%s) then %s",
+                             bp->ns, bp->name, pp->promiser, event_type, watched, then);
+    free(then);
+    return key;
+}
+
 // Temporary limitations:
 // - 'when' body: only a single constraint, 'file_deleted', is supported (no OR-ing of constraints yet)
 // - 'then': only a single bundle is supported, not a list of bundles yet
@@ -148,7 +165,9 @@ static PromiseResult KeepEventsPromise(EvalContext *ctx, const Promise *pp)
 
     // register watcher
     Log(LOG_LEVEL_INFO, "Registering a file_deleted watcher for events promise '%s', on file '%s'", pp->promiser, path);
-    bool kept = WatcherRegister(pp->promiser, EVENT_FILE_DELETED, FileWatcherStateNew(path), pp->org_pp, 1);
+    char *key = EventsPromiseKey(pp, "file_deleted", path, then_constraint->rval);
+    bool kept = WatcherRegister(pp->promiser, key, EVENT_FILE_DELETED, FileWatcherStateNew(path), pp->org_pp, 1);
+    free(key);
 
     return (kept) ? PROMISE_RESULT_NOOP : PROMISE_RESULT_FAIL;
 }

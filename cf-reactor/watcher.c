@@ -34,6 +34,7 @@
 #include <threaded_queue.h>
 #include <file_watcher.h>
 #include <mutex.h>              // ThreadLock(), ThreadUnlock()
+#include <map.h>
 
 /* Upper bound on how long the watcher thread ever sleeps in one go, so that
  * IsPendingTermination() is re-checked at least this often during shutdown,
@@ -45,6 +46,7 @@
 typedef struct
 {
     char *promiser; // expanded promiser of the iteration of `promise`
+    char *key; // identifies the watcher across policy reloads, see WatcherRegister()
     WatcherCheckFn check_callback; // resolved from `type` at WatcherRegister() time
     WatcherStateDestroyFn destroy_state;
     void *state;
@@ -62,6 +64,13 @@ static void WatcherDestroy(void *item);
 static pthread_mutex_t watchers_mutex = PTHREAD_MUTEX_INITIALIZER;
 static Seq *watchers = NULL;
 static bool paused = false;         /* see EventWatcherPause() */
+
+/* Watchers discarded by WatcherRegistryClear(), kept until
+ * EventWatcherResume() so that the watchers registered again take over their
+ * state. Maps a watcher key to the Seq of discarded watchers with that key
+ * (identical events promises have the same key). Only used by the main
+ * thread. */
+static Map *discarded_watchers = NULL;
 
 static WakeupChannel wakeup_channel = { .fds = { -1, -1 } };
 
@@ -81,10 +90,22 @@ void WatcherRegistryInitialize(void)
     watchers = SeqNew(4, WatcherDestroy);
 }
 
+static void WatcherSeqDestroy(void *seq)
+{
+    SeqDestroy(seq);
+}
+
+static void DiscardedWatchersDestroy(void)
+{
+    MapDestroy(discarded_watchers);
+    discarded_watchers = NULL;
+}
+
 void WatcherRegistryFinalize(void)
 {
     SeqDestroy(watchers);
     watchers = NULL;
+    DiscardedWatchersDestroy();
 }
 
 void WatcherRegistryClear(void)
@@ -99,10 +120,55 @@ void WatcherRegistryClear(void)
                          "watchers still queued, call EventWatcherPause() first");
     }
 
-    SeqDestroy(watchers);
+    /* Only the watchers of the last policy can be registered again */
+    DiscardedWatchersDestroy();
+    discarded_watchers = MapNew(StringHash_untyped, StringEqual_untyped, free, WatcherSeqDestroy);
+
+    for (size_t i = 0; i < SeqLength(watchers); i++)
+    {
+        Watcher *w = SeqAt(watchers, i);
+        Seq *same_key = MapGet(discarded_watchers, w->key);
+        if (same_key == NULL)
+        {
+            same_key = SeqNew(1, WatcherDestroy);
+            MapInsert(discarded_watchers, xstrdup(w->key), same_key);
+        }
+        SeqAppend(same_key, w);
+    }
+
+    /* The watchers are now owned by discarded_watchers */
+    SeqSoftDestroy(watchers);
     watchers = SeqNew(4, WatcherDestroy);
 
     ThreadUnlock(&watchers_mutex);
+}
+
+/* Takes over the state of a discarded watcher with the same key, if any, so
+ * that the events that happened since it was discarded are detected. Returns
+ * the state to use, destroying the other. */
+static void *TakeOverDiscardedState(const char *key, void *state, WatcherStateDestroyFn destroy_state)
+{
+    if (discarded_watchers == NULL)
+    {
+        return state;
+    }
+
+    Seq *same_key = MapGet(discarded_watchers, key);
+    if (same_key == NULL || SeqLength(same_key) == 0)
+    {
+        return state;
+    }
+
+    Log(LOG_LEVEL_DEBUG, "Reactor watcher '%s' keeps its state from the previous policy", key);
+    Watcher *discarded = SeqAt(same_key, 0);
+    void *kept_state = discarded->state;
+    discarded->state = NULL;
+    SeqRemove(same_key, 0);
+    if (destroy_state != NULL)
+    {
+        destroy_state(state);
+    }
+    return kept_state;
 }
 
 /* A watcher is identified by its events promise and the expanded promiser
@@ -122,9 +188,11 @@ static const Watcher *FindWatcher(const Promise *pp, const char *promiser)
 }
 
 // Expects interval to be strictly greater than 0, otherwise the watcher thread will busy spin
-bool WatcherRegister(const char *promiser, EventType type, void *state, const Promise *pp, time_t interval)
+bool WatcherRegister(const char *promiser, const char *key, EventType type, void *state,
+                     const Promise *pp, time_t interval)
 {
     assert(promiser != NULL);
+    assert(key != NULL);
     assert(pp != NULL);
     assert(watchers != NULL);
     assert(interval > 0);
@@ -159,7 +227,8 @@ bool WatcherRegister(const char *promiser, EventType type, void *state, const Pr
 
     Watcher *w = xmalloc(sizeof(Watcher));
     w->promiser = xstrdup(promiser);
-    w->state = state;
+    w->key = xstrdup(key);
+    w->state = TakeOverDiscardedState(key, state, destroy_state);
     w->promise = pp;
     w->poll_interval_secs = interval;
     w->next_due = 0; /* due immediately on the watcher thread's first pass */
@@ -175,11 +244,13 @@ bool WatcherRegister(const char *promiser, EventType type, void *state, const Pr
 static void WatcherDestroy(void *item)
 {
     Watcher *w = item;
-    if (w->destroy_state != NULL)
+    /* No state if taken over by a watcher registered again */
+    if (w->destroy_state != NULL && w->state != NULL)
     {
         w->destroy_state(w->state);
     }
     free(w->promiser);
+    free(w->key);
     free(w);
 }
 
@@ -315,6 +386,7 @@ void EventWatcherPause(EvalContext *ctx, WatcherEventFn on_event)
 void EventWatcherResume(void)
 {
     ThreadLock(&watchers_mutex);
+    DiscardedWatchersDestroy();
     paused = false;
     ThreadUnlock(&watchers_mutex);
 }

@@ -26,6 +26,7 @@ noinst_LTLIBRARIES = libcf-reactor.la
 AM_CPPFLAGS = -I$(srcdir)/../libpromises -I$(srcdir)/../libntech/libutils \
 	-I$(srcdir)/../libcfecompat \
 	-I$(srcdir)/../libcfnet \
+	-I$(srcdir)/../libenv \
 	-I$(srcdir)/../cf-agent \
 	$(OPENSSL_CPPFLAGS) \
 	$(PCRE2_CPPFLAGS) \

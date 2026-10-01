@@ -38,6 +38,11 @@
 #include <attributes.h>
 #include <conn_cache.h>          // ConnCache_Init(), ConnCache_Destroy()
 #include <mod_custom.h>          // Initialize/FinalizeCustomPromises()
+#include <class.h>
+#include <variable.h>
+#include <scope.h>               // SpecialScopeFromString()
+#include <timeout.h>             // SetReferenceTime()
+#include <time_classes.h>        // UpdateTimeClasses()
 
 /* Promise types evaluated within `bundle reactor NAME { ... }`. */
 static const char *const REACTOR_TYPESEQUENCE[] =
@@ -48,6 +53,22 @@ static const char *const REACTOR_TYPESEQUENCE[] =
     "events",
     NULL
 };
+
+/* A global soft class, as defined once the policy is evaluated */
+typedef struct
+{
+    char *ns;
+    char *name;
+    StringSet *tags;
+    char *comment;
+} SnapshotClass;
+
+/* The global soft classes and the bundle variables defined once the policy is
+ * evaluated, see ContextSnapshotTake(). Only used from the main thread, which
+ * evaluates the policy and handles the events. */
+static Seq *snapshot_classes = NULL;            /* SnapshotClass */
+static StringSet *snapshot_class_names = NULL;  /* qualified names of snapshot_classes */
+static VariableTable *snapshot_variables = NULL;
 
 /* Resolves the agent or common bundle referred to by an events promise's
  * 'then' attribute, either `then => "name"` or `then => name(args)`. If args is
@@ -183,6 +204,223 @@ static void EvaluateReactorBundle(EvalContext *ctx, const Bundle *bp)
     EvalContextStackPopFrame(ctx);
 }
 
+/* Only these variables can be defined by a bundle run. The other special
+ * scopes are either not in the global variable table or come from the
+ * discovery of the context. */
+static bool IsBundleVariable(const VarRef *ref)
+{
+    assert(ref != NULL);
+    const SpecialScope scope = SpecialScopeFromString(ref->scope);
+    return (scope == SPECIAL_SCOPE_NONE) || (scope == SPECIAL_SCOPE_DEF);
+}
+
+/* Tags of classes and variables may be NULL */
+static StringSet *TagsCopy(const StringSet *tags)
+{
+    if (tags == NULL)
+    {
+        return NULL;
+    }
+
+    StringSet *copy = StringSetNew();
+    StringSetJoin(copy, tags, xstrdup);
+    return copy;
+}
+
+static void SnapshotClassDestroy(void *data)
+{
+    SnapshotClass *cls = data;
+    if (cls != NULL)
+    {
+        free(cls->ns);
+        free(cls->name);
+        StringSetDestroy(cls->tags);
+        free(cls->comment);
+        free(cls);
+    }
+}
+
+static bool RvalsEqual(Rval a, Rval b)
+{
+    if (a.type != b.type)
+    {
+        return false;
+    }
+
+    switch (a.type)
+    {
+    case RVAL_TYPE_SCALAR:
+        return StringEqual(RvalScalarValue(a), RvalScalarValue(b));
+    case RVAL_TYPE_LIST:
+        return RlistEqual(RvalRlistValue(a), RvalRlistValue(b));
+    case RVAL_TYPE_CONTAINER:
+        return (JsonCompare(RvalContainerValue(a), RvalContainerValue(b)) == 0);
+    case RVAL_TYPE_NOPROMISEE:
+        return true;
+    default:
+        /* Not expected in a variable, assume it changed */
+        return false;
+    }
+}
+
+/* Saves the global soft classes and the bundle variables defined by the
+ * evaluation of the policy, so that ContextSnapshotRestore() can undo what
+ * the 'then' bundle runs did to them since. The persistent classes are left
+ * out, they are reloaded from the state database instead. */
+static void ContextSnapshotTake(const EvalContext *ctx)
+{
+    SeqDestroy(snapshot_classes);
+    StringSetDestroy(snapshot_class_names);
+    snapshot_classes = SeqNew(64, SnapshotClassDestroy);
+    snapshot_class_names = StringSetNew();
+
+    ClassTableIterator *class_iter = EvalContextClassTableIteratorNewGlobal(ctx, NULL, false, true);
+    for (Class *cls = ClassTableIteratorNext(class_iter); cls != NULL;
+         cls = ClassTableIteratorNext(class_iter))
+    {
+        if (cls->tags != NULL && StringSetContains(cls->tags, "source=persistent"))
+        {
+            continue;
+        }
+
+        SnapshotClass *copy = xmalloc(sizeof(*copy));
+        copy->ns = SafeStringDuplicate(cls->ns);
+        copy->name = xstrdup(cls->name);
+        copy->tags = TagsCopy(cls->tags);
+        copy->comment = SafeStringDuplicate(cls->comment);
+        SeqAppend(snapshot_classes, copy);
+        StringSetAdd(snapshot_class_names, ClassRefToString(cls->ns, cls->name));
+    }
+    ClassTableIteratorDestroy(class_iter);
+
+    VariableTableDestroy(snapshot_variables);
+    snapshot_variables = VariableTableNew();
+
+    VariableTableIterator *var_iter = EvalContextVariableTableIteratorNew(ctx, NULL, NULL, NULL);
+    for (Variable *var = VariableTableIteratorNext(var_iter); var != NULL;
+         var = VariableTableIteratorNext(var_iter))
+    {
+        const VarRef *ref = VariableGetRef(var);
+        if (IsBundleVariable(ref))
+        {
+            const Rval rval = VariableGetRval(var, true);
+            VariableTablePut(snapshot_variables, ref, &rval, VariableGetType(var),
+                             TagsCopy(VariableGetTags(var)),
+                             SafeStringDuplicate(VariableGetComment(var)),
+                             VariableGetPromise(var));
+        }
+    }
+    VariableTableIteratorDestroy(var_iter);
+}
+
+/* Resets the global soft classes and the bundle variables to the snapshot:
+ * removes the ones defined by the previous 'then' bundle runs, defines again
+ * the ones they cancelled and sets back the values they changed. Then
+ * reloads the persistent classes that have not expired. */
+static void ContextSnapshotRestore(EvalContext *ctx)
+{
+    assert(snapshot_classes != NULL);
+    assert(snapshot_class_names != NULL);
+    assert(snapshot_variables != NULL);
+
+    /* Collect first, the tables must not change while being iterated */
+    Seq *new_classes = SeqNew(16, free);
+    ClassTableIterator *class_iter = EvalContextClassTableIteratorNewGlobal(ctx, NULL, false, true);
+    for (Class *cls = ClassTableIteratorNext(class_iter); cls != NULL;
+         cls = ClassTableIteratorNext(class_iter))
+    {
+        char *name = ClassRefToString(cls->ns, cls->name);
+        if (StringSetContains(snapshot_class_names, name))
+        {
+            free(name);
+        }
+        else
+        {
+            SeqAppend(new_classes, name);
+        }
+    }
+    ClassTableIteratorDestroy(class_iter);
+
+    for (size_t i = 0; i < SeqLength(new_classes); i++)
+    {
+        const char *name = SeqAt(new_classes, i);
+        Log(LOG_LEVEL_DEBUG, "Removing class '%s' defined by a previous events promise bundle run", name);
+        ClassRef ref = ClassRefParse(name);
+        EvalContextClassRemove(ctx, ref.ns, ref.name);
+        ClassRefDestroy(ref);
+    }
+    SeqDestroy(new_classes);
+
+    for (size_t i = 0; i < SeqLength(snapshot_classes); i++)
+    {
+        const SnapshotClass *cls = SeqAt(snapshot_classes, i);
+        if (EvalContextClassGet(ctx, cls->ns, cls->name) == NULL)
+        {
+            Log(LOG_LEVEL_DEBUG, "Defining again class '%s' cancelled by a previous events promise bundle run",
+                cls->name);
+            EvalContextClassPutSoftNSTagsSetWithComment(ctx, cls->ns, cls->name, CONTEXT_SCOPE_NAMESPACE,
+                                                        TagsCopy(cls->tags), cls->comment);
+        }
+    }
+
+    EvalContextHeapPersistentLoadAll(ctx);
+
+    Seq *new_variables = SeqNew(16, VarRefDestroy_untyped);
+    VariableTableIterator *var_iter = EvalContextVariableTableIteratorNew(ctx, NULL, NULL, NULL);
+    for (Variable *var = VariableTableIteratorNext(var_iter); var != NULL;
+         var = VariableTableIteratorNext(var_iter))
+    {
+        const VarRef *ref = VariableGetRef(var);
+        if (IsBundleVariable(ref) && (VariableTableGet(snapshot_variables, ref) == NULL))
+        {
+            SeqAppend(new_variables, VarRefCopy(ref));
+        }
+    }
+    VariableTableIteratorDestroy(var_iter);
+
+    for (size_t i = 0; i < SeqLength(new_variables); i++)
+    {
+        const VarRef *ref = SeqAt(new_variables, i);
+        if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG)
+        {
+            char *name = VarRefToString(ref, true);
+            Log(LOG_LEVEL_DEBUG, "Removing variable '%s' defined by a previous events promise bundle run", name);
+            free(name);
+        }
+        EvalContextVariableRemove(ctx, ref);
+    }
+    SeqDestroy(new_variables);
+
+    VariableTableIterator *snapshot_iter = VariableTableIteratorNew(snapshot_variables, NULL, NULL, NULL);
+    for (Variable *saved = VariableTableIteratorNext(snapshot_iter); saved != NULL;
+         saved = VariableTableIteratorNext(snapshot_iter))
+    {
+        const VarRef *ref = VariableGetRef(saved);
+        const Rval saved_rval = VariableGetRval(saved, true);
+        const DataType saved_type = VariableGetType(saved);
+
+        DataType type = CF_DATA_TYPE_NONE;
+        const void *value = EvalContextVariableGet(ctx, ref, &type, true);
+        /* A missing variable has no type, an empty list has a NULL value */
+        if ((type == saved_type) &&
+            RvalsEqual((Rval) { (void *) value, DataTypeToRvalType(type) }, saved_rval))
+        {
+            continue;
+        }
+
+        if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG)
+        {
+            char *name = VarRefToString(ref, true);
+            Log(LOG_LEVEL_DEBUG, "Setting back variable '%s' changed by a previous events promise bundle run", name);
+            free(name);
+        }
+        EvalContextVariablePutTagsSetWithComment(ctx, ref, saved_rval.item, saved_type,
+                                                 TagsCopy(VariableGetTags(saved)),
+                                                 VariableGetComment(saved));
+    }
+    VariableTableIteratorDestroy(snapshot_iter);
+}
+
 /* Runs the bundle referred to by the 'then' attribute of the (expanded)
  * events promise. */
 static PromiseResult RunThenBundle(EvalContext *ctx, const Promise *pp)
@@ -202,13 +440,6 @@ static PromiseResult RunThenBundle(EvalContext *ctx, const Promise *pp)
     {
         return PROMISE_RESULT_FAIL;
     }
-
-    /* The promise lock cache makes each promise act at most once per
-     * EvalContext, and the function cache keeps the results of functions like
-     * execresult(), but cf-reactor keeps the same EvalContext across events.
-     * Clear them so every event gets a fresh run of the bundle. */
-    EvalContextPromiseLockCacheClear(ctx);
-    EvalContextFunctionCacheClear(ctx);
 
     BundleBanner(bp, args);
     EvalContextSetBundleArgs(ctx, args);
@@ -258,6 +489,19 @@ void HandleReactorEvent(EvalContext *ctx, const Promise *pp, const char *promise
     assert(pp != NULL);
     assert(promiser != NULL);
 
+    /* cf-reactor keeps the same EvalContext across events. Before the events
+     * promise is expanded, reset it to the context the policy evaluation
+     * left: */
+    /* - without the classes and variables of the previous bundle runs */
+    ContextSnapshotRestore(ctx);
+    /* - with the time classes of now, not of the policy evaluation */
+    UpdateTimeClasses(ctx, SetReferenceTime());
+    /* - without the promise lock cache, which makes each promise act at most
+     *   once per EvalContext, and the function cache, which keeps the results
+     *   of functions like execresult() */
+    EvalContextPromiseLockCacheClear(ctx);
+    EvalContextFunctionCacheClear(ctx);
+
     ReactorEventParam event = { .promiser = promiser };
 
     EvalContextStackPushBundleFrame(ctx, PromiseGetBundle(pp), NULL, false, NULL);
@@ -289,4 +533,6 @@ void KeepReactorPromises(EvalContext *ctx, const Policy *policy)
 
         EvaluateReactorBundle(ctx, bp);
     }
+
+    ContextSnapshotTake(ctx);
 }

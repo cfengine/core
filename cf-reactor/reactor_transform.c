@@ -34,6 +34,15 @@
 #include <verify_vars.h>
 #include <watcher.h>
 #include <file_watcher.h>
+#include <agent_operations.h>   // ScheduleAgentOperations()
+#include <attributes.h>
+#include <conn_cache.h>          // ConnCache_Init(), ConnCache_Destroy()
+#include <mod_custom.h>          // Initialize/FinalizeCustomPromises()
+#include <class.h>
+#include <variable.h>
+#include <scope.h>               // SpecialScopeFromString()
+#include <timeout.h>             // SetReferenceTime()
+#include <time_classes.h>        // UpdateTimeClasses()
 
 /* Promise types evaluated within `bundle reactor NAME { ... }`. */
 static const char *const REACTOR_TYPESEQUENCE[] =
@@ -45,41 +54,84 @@ static const char *const REACTOR_TYPESEQUENCE[] =
     NULL
 };
 
-/* Checks that the bundle referred to by an events promise's 'then' attribute,
- * either `then => "name"` or `then => name(args)`, is defined as an agent or
- * common bundle. Logs an error and returns false if it is not. */
-static bool ThenBundleExists(const EvalContext *ctx, const Promise *pp, Rval then_rval, const char *key)
+/* A global soft class, as defined once the policy is evaluated */
+typedef struct
 {
-    const char *bundle_name = NULL;
+    char *ns;
+    char *name;
+    StringSet *tags;
+    char *comment;
+} SnapshotClass;
+
+/* The global soft classes and the bundle variables defined once the policy is
+ * evaluated, see ContextSnapshotTake(). Only used from the main thread, which
+ * evaluates the policy and handles the events. */
+static Seq *snapshot_classes = NULL;            /* SnapshotClass */
+static StringSet *snapshot_class_names = NULL;  /* qualified names of snapshot_classes */
+static VariableTable *snapshot_variables = NULL;
+
+/* Resolves the agent or common bundle referred to by an events promise's
+ * 'then' attribute, either `then => "name"` or `then => name(args)`. If args is
+ * not NULL, it is set to the bundle arguments (or NULL if there are none).
+ * Logs an error and returns NULL if the bundle is not found. */
+static const Bundle *ResolveThenBundle(
+    const EvalContext *ctx, const Promise *pp, Rval then_rval, const Rlist **args)
+{
+    assert(pp != NULL);
+
+    const char *name = NULL;
+    const Rlist *bundle_args = NULL;
     switch (then_rval.type)
     {
     case RVAL_TYPE_SCALAR:
-        bundle_name = RvalScalarValue(then_rval);
+        name = RvalScalarValue(then_rval);
         break;
     case RVAL_TYPE_FNCALL:
-        bundle_name = RvalFnCallValue(then_rval)->name;
+        name = RvalFnCallValue(then_rval)->name;
+        bundle_args = RvalFnCallValue(then_rval)->args;
         break;
     default:
         break;
     }
 
-    const Bundle *bundle = NULL;
-    if (bundle_name != NULL)
+    const Bundle *bp = NULL;
+    if (name != NULL)
     {
-        bundle = EvalContextResolveBundleExpression(ctx, PromiseGetPolicy(pp), bundle_name, "agent");
-        if (bundle == NULL)
+        bp = EvalContextResolveBundleExpression(ctx, PromiseGetPolicy(pp), name, "agent");
+        if (bp == NULL)
         {
-            bundle = EvalContextResolveBundleExpression(ctx, PromiseGetPolicy(pp), bundle_name, "common");
+            bp = EvalContextResolveBundleExpression(ctx, PromiseGetPolicy(pp), name, "common");
         }
     }
-    if (bundle == NULL)
+    if (bp == NULL)
     {
-        Log(LOG_LEVEL_ERR, "Reactor events promise '%s' refers to unknown bundle '%s', ignoring",
-            key, (bundle_name != NULL) ? bundle_name : "(invalid)");
-        return false;
+        Log(LOG_LEVEL_ERR, "Reactor events promise '%s' refers to unknown bundle '%s'",
+            pp->promiser, (name != NULL) ? name : "(invalid)");
+        return NULL;
     }
 
-    return true;
+    if (args != NULL)
+    {
+        *args = bundle_args;
+    }
+    return bp;
+}
+
+/* Identifies the watcher of an iteration of an events promise across policy
+ * reloads, by what the iteration is (namespace, bundle and promiser), what it
+ * watches ('when') and what it runs ('then'). The watcher of the reloaded
+ * policy with the same key takes over the state of the previous one, see
+ * WatcherRegister(). */
+static char *EventsPromiseKey(const Promise *pp, const char *event_type, const char *watched, Rval then_rval)
+{
+    assert(pp != NULL);
+
+    const Bundle *bp = PromiseGetBundle(pp);
+    char *then = RvalToString(then_rval);
+    char *key = StringFormat("%s:%s:%s when %s(%s) then %s",
+                             bp->ns, bp->name, pp->promiser, event_type, watched, then);
+    free(then);
+    return key;
 }
 
 // Temporary limitations:
@@ -90,36 +142,31 @@ static PromiseResult KeepEventsPromise(EvalContext *ctx, const Promise *pp)
 {
     assert(pp != NULL);
 
-    const Bundle *bp = PromiseGetBundle(pp);
-    char *key = StringFormat("%s:%s:%s", bp->ns, bp->name, pp->promiser);
-
     const char *path = PromiseGetConstraintAsRval(pp, "file_deleted", RVAL_TYPE_SCALAR);
     if (path == NULL)
     {
         Log(LOG_LEVEL_WARNING,
             "Reactor events promise '%s' must specify exactly one file to watch in its 'when' body, ignoring",
-            key);
-        free(key);
+            pp->promiser);
         return PROMISE_RESULT_FAIL;
     }
 
     const Constraint *then_constraint = PromiseGetConstraint(pp, "then");
     if (then_constraint == NULL)
     {
-        Log(LOG_LEVEL_ERR, "Reactor events promise '%s' does not specify a 'then' bundle, ignoring", key);
-        free(key);
+        Log(LOG_LEVEL_ERR, "Reactor events promise '%s' does not specify a 'then' bundle, ignoring", pp->promiser);
         return PROMISE_RESULT_FAIL;
     }
 
-    if (!ThenBundleExists(ctx, pp, then_constraint->rval, key))
+    if (ResolveThenBundle(ctx, pp, then_constraint->rval, NULL) == NULL)
     {
-        free(key);
         return PROMISE_RESULT_FAIL;
     }
 
     // register watcher
-    Log(LOG_LEVEL_INFO, "Registering a file_deleted watcher with key '%s', on file '%s'", key, path);
-    bool kept = WatcherRegister(key, EVENT_FILE_DELETED, FileWatcherStateNew(path), then_constraint->rval, 1);
+    Log(LOG_LEVEL_INFO, "Registering a file_deleted watcher for events promise '%s', on file '%s'", pp->promiser, path);
+    char *key = EventsPromiseKey(pp, "file_deleted", path, then_constraint->rval);
+    bool kept = WatcherRegister(pp->promiser, key, EVENT_FILE_DELETED, FileWatcherStateNew(path), pp->org_pp, 1);
     free(key);
 
     return (kept) ? PROMISE_RESULT_NOOP : PROMISE_RESULT_FAIL;
@@ -176,10 +223,316 @@ static void EvaluateReactorBundle(EvalContext *ctx, const Bundle *bp)
     EvalContextStackPopFrame(ctx);
 }
 
+/* Only these variables can be defined by a bundle run. The other special
+ * scopes are either not in the global variable table or come from the
+ * discovery of the context. */
+static bool IsBundleVariable(const VarRef *ref)
+{
+    assert(ref != NULL);
+    const SpecialScope scope = SpecialScopeFromString(ref->scope);
+    return (scope == SPECIAL_SCOPE_NONE) || (scope == SPECIAL_SCOPE_DEF);
+}
+
+/* Tags of classes and variables may be NULL */
+static StringSet *TagsCopy(const StringSet *tags)
+{
+    if (tags == NULL)
+    {
+        return NULL;
+    }
+
+    StringSet *copy = StringSetNew();
+    StringSetJoin(copy, tags, xstrdup);
+    return copy;
+}
+
+static void SnapshotClassDestroy(void *data)
+{
+    SnapshotClass *cls = data;
+    if (cls != NULL)
+    {
+        free(cls->ns);
+        free(cls->name);
+        StringSetDestroy(cls->tags);
+        free(cls->comment);
+        free(cls);
+    }
+}
+
+static bool RvalsEqual(Rval a, Rval b)
+{
+    if (a.type != b.type)
+    {
+        return false;
+    }
+
+    switch (a.type)
+    {
+    case RVAL_TYPE_SCALAR:
+        return StringEqual(RvalScalarValue(a), RvalScalarValue(b));
+    case RVAL_TYPE_LIST:
+        return RlistEqual(RvalRlistValue(a), RvalRlistValue(b));
+    case RVAL_TYPE_CONTAINER:
+        return (JsonCompare(RvalContainerValue(a), RvalContainerValue(b)) == 0);
+    case RVAL_TYPE_NOPROMISEE:
+        return true;
+    default:
+        /* Not expected in a variable, assume it changed */
+        return false;
+    }
+}
+
+/* Saves the global soft classes and the bundle variables defined by the
+ * evaluation of the policy, so that ContextSnapshotRestore() can undo what
+ * the 'then' bundle runs did to them since. The persistent classes are left
+ * out, they are reloaded from the state database instead. */
+static void ContextSnapshotTake(const EvalContext *ctx)
+{
+    SeqDestroy(snapshot_classes);
+    StringSetDestroy(snapshot_class_names);
+    snapshot_classes = SeqNew(64, SnapshotClassDestroy);
+    snapshot_class_names = StringSetNew();
+
+    ClassTableIterator *class_iter = EvalContextClassTableIteratorNewGlobal(ctx, NULL, false, true);
+    for (Class *cls = ClassTableIteratorNext(class_iter); cls != NULL;
+         cls = ClassTableIteratorNext(class_iter))
+    {
+        if (cls->tags != NULL && StringSetContains(cls->tags, "source=persistent"))
+        {
+            continue;
+        }
+
+        SnapshotClass *copy = xmalloc(sizeof(*copy));
+        copy->ns = SafeStringDuplicate(cls->ns);
+        copy->name = xstrdup(cls->name);
+        copy->tags = TagsCopy(cls->tags);
+        copy->comment = SafeStringDuplicate(cls->comment);
+        SeqAppend(snapshot_classes, copy);
+        StringSetAdd(snapshot_class_names, ClassRefToString(cls->ns, cls->name));
+    }
+    ClassTableIteratorDestroy(class_iter);
+
+    VariableTableDestroy(snapshot_variables);
+    snapshot_variables = VariableTableNew();
+
+    VariableTableIterator *var_iter = EvalContextVariableTableIteratorNew(ctx, NULL, NULL, NULL);
+    for (Variable *var = VariableTableIteratorNext(var_iter); var != NULL;
+         var = VariableTableIteratorNext(var_iter))
+    {
+        const VarRef *ref = VariableGetRef(var);
+        if (IsBundleVariable(ref))
+        {
+            const Rval rval = VariableGetRval(var, true);
+            VariableTablePut(snapshot_variables, ref, &rval, VariableGetType(var),
+                             TagsCopy(VariableGetTags(var)),
+                             SafeStringDuplicate(VariableGetComment(var)),
+                             VariableGetPromise(var));
+        }
+    }
+    VariableTableIteratorDestroy(var_iter);
+}
+
+/* Resets the global soft classes and the bundle variables to the snapshot:
+ * removes the ones defined by the previous 'then' bundle runs, defines again
+ * the ones they cancelled and sets back the values they changed. Then
+ * reloads the persistent classes that have not expired. */
+static void ContextSnapshotRestore(EvalContext *ctx)
+{
+    assert(snapshot_classes != NULL);
+    assert(snapshot_class_names != NULL);
+    assert(snapshot_variables != NULL);
+
+    /* Collect first, the tables must not change while being iterated */
+    Seq *new_classes = SeqNew(16, free);
+    ClassTableIterator *class_iter = EvalContextClassTableIteratorNewGlobal(ctx, NULL, false, true);
+    for (Class *cls = ClassTableIteratorNext(class_iter); cls != NULL;
+         cls = ClassTableIteratorNext(class_iter))
+    {
+        char *name = ClassRefToString(cls->ns, cls->name);
+        if (StringSetContains(snapshot_class_names, name))
+        {
+            free(name);
+        }
+        else
+        {
+            SeqAppend(new_classes, name);
+        }
+    }
+    ClassTableIteratorDestroy(class_iter);
+
+    for (size_t i = 0; i < SeqLength(new_classes); i++)
+    {
+        const char *name = SeqAt(new_classes, i);
+        Log(LOG_LEVEL_DEBUG, "Removing class '%s' defined by a previous events promise bundle run", name);
+        ClassRef ref = ClassRefParse(name);
+        EvalContextClassRemove(ctx, ref.ns, ref.name);
+        ClassRefDestroy(ref);
+    }
+    SeqDestroy(new_classes);
+
+    for (size_t i = 0; i < SeqLength(snapshot_classes); i++)
+    {
+        const SnapshotClass *cls = SeqAt(snapshot_classes, i);
+        if (EvalContextClassGet(ctx, cls->ns, cls->name) == NULL)
+        {
+            Log(LOG_LEVEL_DEBUG, "Defining again class '%s' cancelled by a previous events promise bundle run",
+                cls->name);
+            EvalContextClassPutSoftNSTagsSetWithComment(ctx, cls->ns, cls->name, CONTEXT_SCOPE_NAMESPACE,
+                                                        TagsCopy(cls->tags), cls->comment);
+        }
+    }
+
+    EvalContextHeapPersistentLoadAll(ctx);
+
+    Seq *new_variables = SeqNew(16, VarRefDestroy_untyped);
+    VariableTableIterator *var_iter = EvalContextVariableTableIteratorNew(ctx, NULL, NULL, NULL);
+    for (Variable *var = VariableTableIteratorNext(var_iter); var != NULL;
+         var = VariableTableIteratorNext(var_iter))
+    {
+        const VarRef *ref = VariableGetRef(var);
+        if (IsBundleVariable(ref) && (VariableTableGet(snapshot_variables, ref) == NULL))
+        {
+            SeqAppend(new_variables, VarRefCopy(ref));
+        }
+    }
+    VariableTableIteratorDestroy(var_iter);
+
+    for (size_t i = 0; i < SeqLength(new_variables); i++)
+    {
+        const VarRef *ref = SeqAt(new_variables, i);
+        if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG)
+        {
+            char *name = VarRefToString(ref, true);
+            Log(LOG_LEVEL_DEBUG, "Removing variable '%s' defined by a previous events promise bundle run", name);
+            free(name);
+        }
+        EvalContextVariableRemove(ctx, ref);
+    }
+    SeqDestroy(new_variables);
+
+    VariableTableIterator *snapshot_iter = VariableTableIteratorNew(snapshot_variables, NULL, NULL, NULL);
+    for (Variable *saved = VariableTableIteratorNext(snapshot_iter); saved != NULL;
+         saved = VariableTableIteratorNext(snapshot_iter))
+    {
+        const VarRef *ref = VariableGetRef(saved);
+        const Rval saved_rval = VariableGetRval(saved, true);
+        const DataType saved_type = VariableGetType(saved);
+
+        DataType type = CF_DATA_TYPE_NONE;
+        const void *value = EvalContextVariableGet(ctx, ref, &type, true);
+        /* A missing variable has no type, an empty list has a NULL value */
+        if ((type == saved_type) &&
+            RvalsEqual((Rval) { (void *) value, DataTypeToRvalType(type) }, saved_rval))
+        {
+            continue;
+        }
+
+        if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG)
+        {
+            char *name = VarRefToString(ref, true);
+            Log(LOG_LEVEL_DEBUG, "Setting back variable '%s' changed by a previous events promise bundle run", name);
+            free(name);
+        }
+        EvalContextVariablePutTagsSetWithComment(ctx, ref, saved_rval.item, saved_type,
+                                                 TagsCopy(VariableGetTags(saved)),
+                                                 VariableGetComment(saved));
+    }
+    VariableTableIteratorDestroy(snapshot_iter);
+}
+
+/* Runs the bundle referred to by the 'then' attribute of the (expanded)
+ * events promise. */
+static PromiseResult RunThenBundle(EvalContext *ctx, const Promise *pp)
+{
+    assert(pp != NULL);
+
+    const Constraint *then_constraint = PromiseGetConstraint(pp, "then");
+    if (then_constraint == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Reactor events promise '%s' does not specify a 'then' bundle", pp->promiser);
+        return PROMISE_RESULT_FAIL;
+    }
+
+    const Rlist *args = NULL;
+    const Bundle *bp = ResolveThenBundle(ctx, pp, then_constraint->rval, &args);
+    if (bp == NULL)
+    {
+        return PROMISE_RESULT_FAIL;
+    }
+
+    BundleBanner(bp, args);
+    EvalContextSetBundleArgs(ctx, args);
+    EvalContextStackPushBundleFrame(ctx, bp, args, false, NULL);
+
+    /* Remote copy_from needs the connection cache and custom promise types
+     * need the promise modules map. Set them up per run like in cf-agent so
+     * that no connections or promise modules are kept between events. */
+    ConnCache_Init();
+    InitializeCustomPromises();
+    PushDefaultIfElapsed(0);
+    PromiseResult result = ScheduleAgentOperations(ctx, bp);
+    PopDefaultIfElapsed();
+    FinalizeCustomPromises();
+    ConnCache_Destroy();
+
+    EvalContextStackPopFrame(ctx);
+    EvalContextSetBundleArgs(ctx, NULL);
+    EndBundleBanner(bp);
+
+    return result;
+}
+
+typedef struct
+{
+    const char *promiser;
+} ReactorEventParam;
+
+/* Promise actuator for an events promise whose watcher fired. Only acts on
+ * the iteration the watcher was registered for. */
+static PromiseResult KeepEventsPromiseOnEvent(EvalContext *ctx, const Promise *pp, void *param)
+{
+    assert(pp != NULL);
+    assert(param != NULL);
+    const ReactorEventParam *event = param;
+
+    if (!StringEqual(pp->promiser, event->promiser))
+    {
+        return PROMISE_RESULT_SKIPPED;
+    }
+
+    return RunThenBundle(ctx, pp);
+}
+
+void HandleReactorEvent(EvalContext *ctx, const Promise *pp, const char *promiser)
+{
+    assert(pp != NULL);
+    assert(promiser != NULL);
+
+    /* cf-reactor keeps the same EvalContext across events. Before the events
+     * promise is expanded, reset it to the context the policy evaluation
+     * left: */
+    /* - without the classes and variables of the previous bundle runs */
+    ContextSnapshotRestore(ctx);
+    /* - with the time classes of now, not of the policy evaluation */
+    UpdateTimeClasses(ctx, SetReferenceTime());
+    /* - without the promise lock cache, which makes each promise act at most
+     *   once per EvalContext, and the function cache, which keeps the results
+     *   of functions like execresult() */
+    EvalContextPromiseLockCacheClear(ctx);
+    EvalContextFunctionCacheClear(ctx);
+
+    ReactorEventParam event = { .promiser = promiser };
+
+    EvalContextStackPushBundleFrame(ctx, PromiseGetBundle(pp), NULL, false, NULL);
+    EvalContextStackPushBundleSectionFrame(ctx, pp->parent_section);
+    ExpandPromise(ctx, pp, KeepEventsPromiseOnEvent, &event);
+    EvalContextStackPopFrame(ctx);
+    EvalContextStackPopFrame(ctx);
+}
+
 void KeepReactorPromises(EvalContext *ctx, const Policy *policy)
 {
     assert(policy != NULL);
-    WatcherRegistryClear();
 
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
@@ -199,4 +552,6 @@ void KeepReactorPromises(EvalContext *ctx, const Policy *policy)
 
         EvaluateReactorBundle(ctx, bp);
     }
+
+    ContextSnapshotTake(ctx);
 }

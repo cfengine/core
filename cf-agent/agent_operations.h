@@ -22,41 +22,17 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_REACTOR_CONTEXT_H
-#define CFENGINE_REACTOR_CONTEXT_H
+#ifndef CFENGINE_AGENT_OPERATIONS_H
+#define CFENGINE_AGENT_OPERATIONS_H
 
-#include <platform.h>
-#include <eval_context.h>
-#include <sequence.h>
+#include <cf3.defs.h>
 
-typedef enum
-{
-  REACTOR_FD_NOVA,
-  REACTOR_FD_WATCHER
-} ReactorFdType;
+PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp);
+PromiseResult ScheduleAgentOperationsNormalOrder(EvalContext *ctx, const Bundle *bp);
+PromiseResult ScheduleAgentOperationsTopDownOrder(EvalContext *ctx, const Bundle *bp);
 
-/**
- * @brief Single file descriptor watched by daemon's select(2) loop as well as metadata of its origin
- */
-typedef struct
-{
-  ReactorFdType type;
-  int fd;
-} ReactorFd;
-
-/**
- * @brief Shared state for the cf-reactor daemon's single select(2) loop. fds is an array of ReactorFd
- */
-typedef struct
-{
-  Seq *fds;
-  fd_set readfds;
-  size_t max_nova_fds;
-} ReactorContext;
-
-bool ReactorContextInitialize(ReactorContext *reactor_context);
-int ReactorContextSetupFileDescriptors(ReactorContext *reactor_context);
-void ReactorContextHandleEvents(EvalContext *ctx, ReactorContext *reactor_context, time_t *next_tick);
-void ReactorContextFinalize(ReactorContext *reactor_context);
+extern int CFA_BACKGROUND;              /* GLOBAL_X */
+extern int CFA_BACKGROUND_LIMIT;        /* GLOBAL_P, body agent control: max_children */
+extern Item *PROCESSREFRESH;            /* GLOBAL_P, body agent control: refresh_processes */
 
 #endif

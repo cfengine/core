@@ -26,6 +26,8 @@ noinst_LTLIBRARIES = libcf-reactor.la
 AM_CPPFLAGS = -I$(srcdir)/../libpromises -I$(srcdir)/../libntech/libutils \
 	-I$(srcdir)/../libcfecompat \
 	-I$(srcdir)/../libcfnet \
+	-I$(srcdir)/../libenv \
+	-I$(srcdir)/../cf-agent \
 	$(OPENSSL_CPPFLAGS) \
 	$(PCRE2_CPPFLAGS) \
 	$(ENTERPRISE_CPPFLAGS)
@@ -48,7 +50,7 @@ libcf_reactor_la_SOURCES = \
 
 if !BUILTIN_EXTENSIONS
  bin_PROGRAMS = cf-reactor
- cf_reactor_LDADD = libcf-reactor.la
+ cf_reactor_LDADD = libcf-reactor.la ../cf-agent/libcf-agent.la
  cf_reactor_SOURCES =
 endif
 

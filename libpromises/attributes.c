@@ -666,6 +666,36 @@ LogLevel ActionAttributeLogLevelFromString(const char *log_level)
     }
 }
 
+/* Default ifelapsed saved by PushDefaultIfElapsed() */
+static bool ifelapsed_pushed = false;
+static int pushed_ifelapsed = 0;
+
+void PushDefaultIfElapsed(int minutes)
+{
+    assert(minutes >= 0);
+    if (ifelapsed_pushed)
+    {
+        ProgrammingError("PushDefaultIfElapsed() called again before PopDefaultIfElapsed()");
+    }
+
+    pushed_ifelapsed = VIFELAPSED;
+    ifelapsed_pushed = true;
+    VIFELAPSED = minutes;
+    Log(LOG_LEVEL_DEBUG, "Default ifelapsed set to %d (was %d)", VIFELAPSED, pushed_ifelapsed);
+}
+
+void PopDefaultIfElapsed(void)
+{
+    if (!ifelapsed_pushed)
+    {
+        ProgrammingError("PopDefaultIfElapsed() called without PushDefaultIfElapsed()");
+    }
+
+    Log(LOG_LEVEL_DEBUG, "Default ifelapsed restored to %d (was %d)", pushed_ifelapsed, VIFELAPSED);
+    VIFELAPSED = pushed_ifelapsed;
+    ifelapsed_pushed = false;
+}
+
 static TransactionContext GetTransactionConstraints(const EvalContext *ctx, const Promise *pp)
 {
     TransactionContext t;

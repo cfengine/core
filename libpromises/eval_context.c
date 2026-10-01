@@ -2929,6 +2929,18 @@ void EvalContextPromiseLockCacheRemove(EvalContext *ctx, const char *key)
     StringSetRemove(ctx->promise_lock_cache, key);
 }
 
+void EvalContextPromiseLockCacheClear(EvalContext *ctx)
+{
+    assert(ctx != NULL);
+    StringSetClear(ctx->promise_lock_cache);
+}
+
+void EvalContextFunctionCacheClear(EvalContext *ctx)
+{
+    assert(ctx != NULL);
+    FuncCacheMapClear(ctx->function_cache);
+}
+
 bool EvalContextFunctionCacheGet(const EvalContext *ctx,
                                  const FnCall *fp ARG_UNUSED,
                                  const Rlist *args, Rval *rval_out)

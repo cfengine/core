@@ -893,6 +893,108 @@ void EvalContextHeapPersistentLoadAll(EvalContext *ctx)
     CloseDB(dbp);
 }
 
+/*****************************************************************************/
+
+/* Whether the class is persistent, expired or not: loaded from the state
+ * database, which tags it 'source=persistent', or defined by a persistent
+ * class promise, which saves it in the database without tagging it. The keys
+ * are the class names as ClassRefToString() makes them, see
+ * EvalContextHeapPersistentSave(). dbp may be NULL if the database cannot be
+ * opened. */
+static bool IsPersistentClass(CF_DB *dbp, const Class *cls)
+{
+    assert(cls != NULL);
+
+    if (StringSetContains(cls->tags, "source=persistent"))
+    {
+        return true;
+    }
+    if (dbp == NULL)
+    {
+        return false;
+    }
+
+    char *key = ClassRefToString(cls->ns, cls->name);
+    const bool persistent = HasKeyDB(dbp, key, strlen(key) + 1);
+    free(key);
+    return persistent;
+}
+
+void EvalContextSnapshotTake(EvalContext *ctx, ClassTable **classes, VariableTable **variables)
+{
+    assert(ctx != NULL);
+    assert(classes != NULL);
+    assert(variables != NULL);
+
+    /* 1. Copy the global classes and variables, the hard classes and the
+     *    special variables too. The global variables include the variables of
+     *    every bundle, stored under the scope of their bundle. The bundle
+     *    scoped classes are not in the global table, they disappear with the
+     *    frame of their bundle, and so do the 'this', 'body' and 'edit'
+     *    variables. */
+    *classes = ClassTableCopy(ctx->global_classes);
+    *variables = VariableTableCopy(ctx->global_variables);
+
+    /* 2. Remove the persistent classes, expired or not, from both the copy and
+     *    the context: their lifetime is their TTL in the state database, not
+     *    the snapshot nor the context, which may have outlived it. Collect
+     *    first, the context must not change while being iterated. */
+    CF_DB *dbp;
+    if (!OpenDB(&dbp, dbid_state))
+    {
+        dbp = NULL;
+    }
+
+    Seq *persistent_classes = SeqNew(16, free);
+    /* ClassTableIteratorNext() does not filter the hard classes out */
+    ClassTableIterator *iter = ClassTableIteratorNew(ctx->global_classes, NULL, false, true);
+    for (const Class *cls = ClassTableIteratorNext(iter); cls != NULL;
+         cls = ClassTableIteratorNext(iter))
+    {
+        if (cls->is_soft && IsPersistentClass(dbp, cls))
+        {
+            ClassTableRemove(*classes, cls->ns, cls->name);
+            SeqAppend(persistent_classes, ClassRefToString(cls->ns, cls->name));
+        }
+    }
+    ClassTableIteratorDestroy(iter);
+
+    if (dbp != NULL)
+    {
+        CloseDB(dbp);
+    }
+
+    for (size_t i = 0; i < SeqLength(persistent_classes); i++)
+    {
+        ClassRef ref = ClassRefParse(SeqAt(persistent_classes, i));
+        ClassTableRemove(ctx->global_classes, ref.ns, ref.name);
+        ClassRefDestroy(ref);
+    }
+    SeqDestroy(persistent_classes);
+
+    /* 3. Load the persistent classes that have not expired into the context,
+     *    like an agent does when it starts. The expired ones are deleted from
+     *    the database instead. */
+    EvalContextHeapPersistentLoadAll(ctx);
+}
+
+void EvalContextSnapshotRestore(EvalContext *ctx, ClassTable *classes, VariableTable *variables)
+{
+    assert(ctx != NULL);
+    assert(classes != NULL);
+    assert(variables != NULL);
+
+    /* Replace the global classes and variables with the snapshot, which
+     * discards the ones defined, cancelled or changed since, the persistent
+     * classes too: the next snapshot loads them again from the state
+     * database, see EvalContextSnapshotTake(). */
+    ClassTableDestroy(ctx->global_classes);
+    ctx->global_classes = classes;
+
+    VariableTableDestroy(ctx->global_variables);
+    ctx->global_variables = variables;
+}
+
 void EvalContextSetNegatedClasses(EvalContext *ctx, StringSet *negated_classes)
 {
     assert(ctx != NULL);

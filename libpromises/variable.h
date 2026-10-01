@@ -73,6 +73,12 @@ bool VariableTableRemove(VariableTable *table, const VarRef *ref);
 size_t VariableTableCount(const VariableTable *table, const char *ns, const char *scope, const char *lval);
 bool VariableTableClear(VariableTable *table, const char *ns, const char *scope, const char *lval);
 
+/**
+ * @brief Deep copy of the table, with all its variables. The copied variables
+ *        refer to the same promises.
+ */
+VariableTable *VariableTableCopy(const VariableTable *table);
+
 VariableTableIterator *VariableTableIteratorNew(const VariableTable *table, const char *ns, const char *scope, const char *lval);
 VariableTableIterator *VariableTableIteratorNewFromVarRef(const VariableTable *table, const VarRef *ref);
 Variable *VariableTableIteratorNext(VariableTableIterator *iter);

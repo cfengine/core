@@ -53,6 +53,12 @@ bool ClassTableRemove(ClassTable *table, const char *ns, const char *name);
 
 bool ClassTableClear(ClassTable *table);
 
+/**
+ * @brief Deep copy of the table: all its classes, hard and soft, with their
+ *        tags and comments. The copy is owned by the caller.
+ */
+ClassTable *ClassTableCopy(const ClassTable *table);
+
 ClassTableIterator *ClassTableIteratorNew(const ClassTable *table, const char *ns, bool is_hard, bool is_soft);
 Class *ClassTableIteratorNext(ClassTableIterator *iter);
 void ClassTableIteratorDestroy(ClassTableIterator *iter);

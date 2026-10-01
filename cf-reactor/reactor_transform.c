@@ -38,6 +38,8 @@
 #include <attributes.h>
 #include <conn_cache.h>          // ConnCache_Init(), ConnCache_Destroy()
 #include <mod_custom.h>          // Initialize/FinalizeCustomPromises()
+#include <timeout.h>             // SetReferenceTime()
+#include <time_classes.h>        // UpdateTimeClasses()
 
 /* Promise types evaluated within `bundle reactor NAME { ... }`. */
 static const char *const REACTOR_TYPESEQUENCE[] =
@@ -258,6 +260,16 @@ void HandleReactorEvent(EvalContext *ctx, const Promise *pp, const char *promise
     assert(pp != NULL);
     assert(promiser != NULL);
 
+    /* cf-reactor keeps the same EvalContext across events. Like an agent run,
+     * the bundle runs see the time classes of now and the persistent classes
+     * that have not expired. The classes and variables they define, cancel or
+     * change are undone once the event is handled, except the persistent
+     * classes, which are kept in the state database. */
+    UpdateTimeClasses(ctx, SetReferenceTime());
+    ClassTable *classes = NULL;
+    VariableTable *variables = NULL;
+    EvalContextSnapshotTake(ctx, &classes, &variables);
+
     ReactorEventParam event = { .promiser = promiser };
 
     EvalContextStackPushBundleFrame(ctx, PromiseGetBundle(pp), NULL, false, NULL);
@@ -265,6 +277,8 @@ void HandleReactorEvent(EvalContext *ctx, const Promise *pp, const char *promise
     ExpandPromise(ctx, pp, KeepEventsPromiseOnEvent, &event);
     EvalContextStackPopFrame(ctx); /* bundle section */
     EvalContextStackPopFrame(ctx); /* bundle */
+
+    EvalContextSnapshotRestore(ctx, classes, variables);
 }
 
 void KeepReactorPromises(EvalContext *ctx, const Policy *policy)
@@ -289,4 +303,9 @@ void KeepReactorPromises(EvalContext *ctx, const Policy *policy)
 
         EvaluateReactorBundle(ctx, bp);
     }
+
+    /* Tag the persistent classes the evaluation defined 'source=persistent',
+     * so that the snapshots taken on events tell them apart even once another
+     * agent deleted them from the state database, see EvalContextSnapshotTake() */
+    EvalContextHeapPersistentLoadAll(ctx);
 }

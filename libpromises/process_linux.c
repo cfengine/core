@@ -63,7 +63,10 @@ static bool GetProcessStat(pid_t pid, ProcessStat *state)
             return false;
         }
 
-        assert (fd != -1 && "Unable to open /proc/<pid>/stat");
+        /* E.g. the process may have exited in the meantime */
+        Log(LOG_LEVEL_DEBUG, "Failed to open '%s' (open: %s)",
+            filename, GetErrorStr());
+        return false;
     }
 
     char stat[CF_BUFSIZE];

@@ -212,6 +212,8 @@ const char *PromiseGetNamespace(const Promise *pp);
 const Bundle *PromiseGetBundle(const Promise *pp);
 const Policy *PromiseGetPolicy(const Promise *pp);
 
+bool PromiseCheckBundleCallArity(const Promise *pp, const char *lval, Seq *errors);
+
 static inline const char *PromiseGetPromiseType(const Promise *pp)
 {
     assert(pp != NULL);

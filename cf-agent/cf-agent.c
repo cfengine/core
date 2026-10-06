@@ -1030,7 +1030,7 @@ static void KeepControlPromises(EvalContext *ctx, const Policy *policy, GenericA
                 for (const Rlist *rp = value; rp != NULL; rp = rp->next)
                 {
                     Log(LOG_LEVEL_VERBOSE, "%s", RlistScalarValue(rp));
-                    // TODO: why is this only done in verbose mode?
+                    // TODO: ENT-14709 why is this only done in verbose mode?
                     // original commit says 'optimization'.
                     if (LogGetGlobalLevel() >= LOG_LEVEL_VERBOSE)
                     {

@@ -27,8 +27,37 @@
 
 #include <cf3.defs.h>
 
+/**
+ * @brief Evaluates the promises of an agent or common bundle, like cf-agent
+ *        does, using the evaluation order selected by
+ *        EvalContextIsClassicOrder().
+ *
+ * Used by cf-agent (bundlesequence and methods promises) and cf-reactor
+ * (bundle in the 'then' attribute of an events promise). Can be called
+ * recursively through methods promises.
+ *
+ * The caller is responsible for pushing the bundle frame
+ * (EvalContextStackPushBundleFrame()) before calling, and popping it after.
+ *
+ * @param ctx The evaluation context
+ * @param bp  The bundle to evaluate
+ * @return The aggregated result of all promises evaluated in the bundle
+ */
 PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp);
+
+/**
+ * @brief Evaluates the promises of a bundle in normal order: by promise type,
+ *        in AGENT_TYPESEQUENCE order, followed by custom promise types, in
+ *        each evaluation pass.
+ * @see ScheduleAgentOperations()
+ */
 PromiseResult ScheduleAgentOperationsNormalOrder(EvalContext *ctx, const Bundle *bp);
+
+/**
+ * @brief Evaluates the promises of a bundle in top-down order: in the order
+ *        they are written in the policy, in each evaluation pass.
+ * @see ScheduleAgentOperations()
+ */
 PromiseResult ScheduleAgentOperationsTopDownOrder(EvalContext *ctx, const Bundle *bp);
 
 extern int CFA_BACKGROUND;              /* GLOBAL_X */

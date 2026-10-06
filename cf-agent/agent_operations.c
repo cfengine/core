@@ -22,12 +22,18 @@
   included file COSL.txt.
 */
 
-/* ScheduleAgentOperations() and the promise actuator it uses: this is what
- * cf-agent does with a single bundle (evaluate its promises in
- * AGENT_TYPESEQUENCE order, keeping each one with KeepAgentPromise()). It is
- * kept separate from cf-agent.c so that other components (e.g. cf-reactor,
- * running the bundle named in an events promise's "then") can run a bundle
- * the same way cf-agent does, without linking cf-agent's main(). */
+/* This file, agent_operations.c, implements ScheduleAgentOperations(), the
+ * function cf-agent uses to evaluate a single bundle and its promises, either
+ * in AGENT_TYPESEQUENCE order (normal order) or in the order they are written
+ * (top-down order). Each promise is handed to KeepAgentPromise(), which calls
+ * the Verify*() function for its promise type.
+ *
+ * It is kept separate from cf-agent.c so that other components can evaluate a
+ * bundle the same way cf-agent does, without linking cf-agent's main(), e.g.
+ * cf-reactor running the bundle named in an events promise's 'then'.
+ *
+ * TODO: ENT-14705 move this code (and the Verify*() functions it calls) from
+ * cf-agent to libpromises. */
 
 #include <platform.h>
 #include <agent_operations.h>
@@ -64,9 +70,27 @@ extern int PR_KEPT;
 extern int PR_REPAIRED;
 extern int PR_NOTKEPT;
 
+/* See the GLOBALS file for the GLOBAL_* classification. CFA_BACKGROUND_LIMIT
+ * and PROCESSREFRESH are only set by cf-agent (KeepControlPromises() in
+ * cf-agent.c), other components using this file keep the defaults below. */
+
+/* Number of files promises run in the background (forked) by
+ * ParallelFindAndVerifyFilesPromises(), also passed to EndAudit() by cf-agent.
+ * It is never decremented, so CFA_BACKGROUND_LIMIT limits the total number of
+ * backgrounded promises in the lifetime of the process, not the number of
+ * concurrent ones. GLOBAL_X: this is a counter changed during evaluation, not
+ * configuration. It is OK for cf-agent, which evaluates its policy once and
+ * exits, but in a long-running process (cf-reactor) it is never reset, so
+ * once the limit is reached all later background promises are serialized. */
 int CFA_BACKGROUND = 0; /* GLOBAL_X */
+
+/* Max number of backgrounded files promises.
+ * GLOBAL_P, body agent control: max_children */
 int CFA_BACKGROUND_LIMIT = 1; /* GLOBAL_P */
 
+/* Regexes matching the bundles before which the process table is re-read, or
+ * NULL to re-read it before every bundle.
+ * GLOBAL_P, body agent control: refresh_processes */
 Item *PROCESSREFRESH = NULL; /* GLOBAL_P */
 
 static const char *const AGENT_TYPESEQUENCE[] =
@@ -108,7 +132,7 @@ static PromiseResult DefaultVarPromiseWrapper(EvalContext *ctx, const Promise *p
 }
 
 PromiseResult ScheduleAgentOperations(EvalContext *ctx, const Bundle *bp)
-// NB - this function can be called recursively through "methods"
+// NOTE: this function can be called recursively through "methods"
 {
     if (EvalContextIsClassicOrder(ctx, bp))
     {
@@ -126,6 +150,11 @@ PromiseResult ScheduleAgentOperationsNormalOrder(EvalContext *ctx, const Bundle 
     int save_pr_notkept = PR_NOTKEPT;
     struct timespec start = BeginMeasure();
 
+    /* Clear the cached process table so that processes promises re-read it,
+     * unless refresh_processes is set and does not match this bundle. Note
+     * that cf-agent only sets PROCESSREFRESH in verbose mode (see the TODO in
+     * KeepControlPromises() in cf-agent.c), and other components never set
+     * it, so in practice the table is cleared before every bundle. */
     if (PROCESSREFRESH == NULL || (PROCESSREFRESH && IsRegexItemIn(ctx, PROCESSREFRESH, bp->name)))
     {
         ClearProcessTable();
@@ -178,7 +207,10 @@ PromiseResult ScheduleAgentOperationsNormalOrder(EvalContext *ctx, const Bundle 
             }
         }
 
-        // Custom promises are evaluated at the end of an evaluation pass:
+        // Custom promises are evaluated at the end of an evaluation pass.
+        // NewTypeContext()/DeleteTypeContext() are not called for them, they
+        // only do something for built-in promise types (guest_environments,
+        // storage and packages).
         const size_t sections = SeqLength(bp->custom_sections);
         for (size_t i = 0; i < sections; ++i)
         {
@@ -220,6 +252,11 @@ PromiseResult ScheduleAgentOperationsTopDownOrder(EvalContext *ctx, const Bundle
     int save_pr_notkept = PR_NOTKEPT;
     struct timespec start = BeginMeasure();
 
+    /* Clear the cached process table so that processes promises re-read it,
+     * unless refresh_processes is set and does not match this bundle. Note
+     * that cf-agent only sets PROCESSREFRESH in verbose mode (see the TODO in
+     * KeepControlPromises() in cf-agent.c), and other components never set
+     * it, so in practice the table is cleared before every bundle. */
     if (PROCESSREFRESH == NULL || (PROCESSREFRESH && IsRegexItemIn(ctx, PROCESSREFRESH, bp->name)))
     {
         ClearProcessTable();
@@ -228,6 +265,11 @@ PromiseResult ScheduleAgentOperationsTopDownOrder(EvalContext *ctx, const Bundle
     PromiseResult result = PROMISE_RESULT_SKIPPED;
     for (int pass = 1; pass < CF_DONEPASSES; pass++)
     {
+        // TODO: CFE-ENT-14706 NewTypeContext()/DeleteTypeContext() are not called
+        // in top-down order. In particular, ExecuteScheduledPackages() is
+        // never called here, so packages promises using package_method seem
+        // to be scheduled but never executed. Either call them for each block
+        // of promises of the same type, or remove the type contexts entirely.
         const char *last_promise_type = "";
         for (size_t ppi = 0; ppi < SeqLength(bp->all_promises); ppi++)
         {
@@ -378,8 +420,8 @@ static void LogVariableValue(const EvalContext *ctx, const Promise *pp)
             break;
         }
         default:
-            /* TODO is CF_DATA_TYPE_NONE acceptable? Today all meta variables
-             * are of this type. */
+            /* TODO: ENT-14708 is CF_DATA_TYPE_NONE acceptable? Today all meta
+             * variables are of this type. */
             /* UnexpectedError("Variable '%s' is of unknown type %d", */
             /*                 pp->promiser, type); */
             out = xstrdup("NONE");
@@ -635,6 +677,10 @@ static void DeleteTypeContext(EvalContext *ctx, TypeSequence type)
         break;
 
     case TYPE_SEQUENCE_PACKAGES:
+        /* There is no matching case in NewTypeContext(): packages promises
+         * using package_method are scheduled by VerifyPackagesPromise() and
+         * all executed here, at the end of the packages section. This does
+         * not happen in top-down order, see ScheduleAgentOperationsTopDownOrder(). */
         ExecuteScheduledPackages(ctx);
         CleanScheduledPackages();
         break;
@@ -687,7 +733,10 @@ static PromiseResult ParallelFindAndVerifyFilesPromises(EvalContext *ctx, const 
                 Log(LOG_LEVEL_VERBOSE, "Exiting backgrounded promise");
                 PromiseRef(LOG_LEVEL_VERBOSE, pp);
                 _exit(EXIT_SUCCESS);
-                // TODO: need to solve this
+                // TODO: ENT-14707 the result of the promise is lost: the child
+                // always exits with EXIT_SUCCESS, and the parent neither waits
+                // for it nor collects its result, it returns
+                // PROMISE_RESULT_SKIPPED for the backgrounded promise.
             }
         }
         else

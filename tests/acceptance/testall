@@ -256,7 +256,7 @@ usage() {
     echo "               defaults to $DEFLIBTOOL."
     echo " --include Include the file or directory given in the workdir before the test"
     echo "           starts. This option may be given several times."
-    echo " --tests=common,network,serial,timed,slow,errorexit,errorlog,libxml2,libcurl"
+    echo " --tests=common,network,serial,timed,slow,errorexit,errorlog,errorpass,libxml2,libcurl"
     echo "           This is the default value, you can also add from the following:"
     echo "           unsafe,staging"
     echo "           NOTE: 'staging' tests are not expected to pass"
@@ -345,6 +345,10 @@ runtest() {
     then
         SKIP=1
         SKIPREASON="${COLOR_WARNING}'errorexit' tests are disabled${COLOR_NORMAL}"
+    elif [ $ERRORPASS_TESTS = 0  -a  $TEST_TYPE = errorpass ]
+    then
+        SKIP=1
+        SKIPREASON="${COLOR_WARNING}'errorpass' tests are disabled${COLOR_NORMAL}"
     elif [ $ERRORLOG_TESTS = 0  -a  $TEST_TYPE = errorlog ]
     then
         SKIP=1
@@ -569,6 +573,7 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
             fi
         elif [ $TEST_TYPE = errorpass ]
         then
+            ESCAPED_TEST="$(echo "($TEST|dcs.sub.cf)" | sed -e 's/\./\\./g')"
             if [ $RETVAL != 0 ]
             then
                 RESULT=FAIL
@@ -585,7 +590,7 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
                 RESULT=Pass
                 RESULT_MSG="${COLOR_SUCCESS}Pass${COLOR_NORMAL}"
             fi
-        else # TEST_TYPE is not errorlog or errorexit
+        else # TEST_TYPE is not errorlog or errorexit or errorpass
             # We need to be careful when matching test outcomes. Because of convergence
             # passes, a test may output FAIL before it outputs Pass; in this case the
             # latter trumps the former. Also be careful when matching an [XS]FAIL; the
@@ -834,6 +839,7 @@ do
             SLOW_TESTS=0
             ERROREXIT_TESTS=0
             ERRORLOG_TESTS=0
+            ERRORPASS_TESTS=0
             SERIAL_TESTS=0
             NETWORK_TESTS=0
             LIBXML2_TESTS=0
@@ -850,6 +856,7 @@ do
                     slow)        SLOW_TESTS=1;;
                     errorexit)   ERROREXIT_TESTS=1;;
                     errorlog)    ERRORLOG_TESTS=1;;
+                    errorpass)   ERRORPASS_TESTS=1;;
                     serial)      SERIAL_TESTS=1;;
                     network)     NETWORK_TESTS=1;;
                     libxml2)     LIBXML2_TESTS=1;;

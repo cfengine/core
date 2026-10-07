@@ -323,9 +323,11 @@ runtest() {
 
     case "$TEST" in
         *.x.cf)       TEST_TYPE=errorexit &&
-                      EXTRATEXT='(should exit with non-zero, but not crash)' ;;
+                      EXTRATEXT='(should exit with non-zero, but not crash. Printing pass or fail is irrelevant)' ;;
         *.error.cf)   TEST_TYPE=errorlog &&
-                      EXTRATEXT='(should log error(s), but exit with 0)' ;;
+                      EXTRATEXT='(should log error(s), but exit with 0. Printing pass or fail is irrelevant)' ;;
+        *.error.pass.cf)  TEST_TYPE=errorpass &&
+                          EXTRATEXT='(should log error(s), print pass message and, exit with 0)' ;;
         */staging/*)  TEST_TYPE=staging   ;;
         */unsafe/*)   TEST_TYPE=unsafe    ;;
         */network/*)  TEST_TYPE=network   ;;
@@ -564,6 +566,24 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
             else
                 RESULT=FAIL
                 RESULT_MSG="${COLOR_FAILURE}FAIL (No errors printed)${COLOR_NORMAL}"
+            fi
+        elif [ $TEST_TYPE = errorpass ]
+        then
+            if [ $RETVAL != 0 ]
+            then
+                RESULT=FAIL
+                RESULT_MSG="${COLOR_FAILURE}FAIL (NON-ZERO EXIT CODE!)${COLOR_NORMAL}"
+            elif ! grep -F 'error: ' "$OUTFILE" > /dev/null
+            then
+                RESULT=FAIL
+                RESULT_MSG="${COLOR_FAILURE}FAIL (No error message!)${COLOR_NORMAL}"
+            elif ! grep -E "R: .*$ESCAPED_TEST Pass" $OUTFILE > /dev/null
+            then
+                RESULT=FAIL
+                RESULT_MSG="${COLOR_FAILURE}FAIL (Pass not printed!)${COLOR_NORMAL}"
+            else
+                RESULT=Pass
+                RESULT_MSG="${COLOR_SUCCESS}Pass${COLOR_NORMAL}"
             fi
         else # TEST_TYPE is not errorlog or errorexit
             # We need to be careful when matching test outcomes. Because of convergence

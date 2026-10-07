@@ -41,6 +41,7 @@
 #include <exec_tools.h>
 #include <reactor_context.h>
 #include <reactor_transform.h>
+#include <watcher.h>            /* WatcherRegistryClear */
 
 /*****************************************************************************/
 /* Globals                                                                   */
@@ -237,6 +238,11 @@ static void CheckPolicyUpdates(EvalContext *ctx, Policy **policy, GenericAgentCo
 
     Log(LOG_LEVEL_NOTICE, "Rereading policy file '%s'", config->input_file);
 
+    /* Registered watchers refer to promises of the policy: handle the
+     * events detected so far with the current policy, and don't detect new
+     * ones until the watchers of the new policy are registered */
+    EventWatcherPause(ctx, HandleReactorEvent);
+    WatcherRegistryClear();
     EvalContextClear(ctx);
     PolicyDestroy(*policy);
     *policy = NULL;
@@ -250,6 +256,8 @@ static void CheckPolicyUpdates(EvalContext *ctx, Policy **policy, GenericAgentCo
     {
         KeepReactorPromises(ctx, *policy);
     }
+
+    EventWatcherResume();
 }
 
 /*****************************************************************************/
@@ -377,7 +385,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-            ReactorContextHandleEvents(&reactor_ctx, &next_tick);
+            ReactorContextHandleEvents(ctx, &reactor_ctx, &next_tick);
         }
 
 

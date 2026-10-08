@@ -97,7 +97,7 @@ void *FileWatcherStateNew(const char *path)
     return (void *) fws;
 }
 
-WatcherCheckResult CheckFileDeleted(void *state)
+WatcherCheckResult FileWatcherCheckFileDeleted(void *state)
 {
     assert(state != NULL);
     FileWatcherState *fws = state;

@@ -41,7 +41,7 @@ static const BodySyntax when_body = BodySyntaxNew("when", when_constraints, NULL
 static const ConstraintSyntax CF_EVENT_BODIES[] =
 {
     ConstraintSyntaxNewBody("when", &when_body, "Event to react to", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewBundle("then", "Bundle to run on event", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBundleList("then", "Bundle or list of bundles to run in order on event", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

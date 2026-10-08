@@ -561,6 +561,7 @@ static void AddDefaultBodiesToPromise(EvalContext *ctx, Promise *promise, const 
 
 static bool EvaluateConstraintIteration(EvalContext *ctx, const Constraint *cp, Rval *rval_out)
 {
+    assert(cp != NULL);
     assert(cp->type == POLICY_ELEMENT_TYPE_PROMISE);
     const Promise *pp = cp->parent.promise;
 
@@ -569,9 +570,14 @@ static bool EvaluateConstraintIteration(EvalContext *ctx, const Constraint *cp, 
         return false;
     }
 
-    if (ExpectedDataType(cp->lval) == CF_DATA_TYPE_BUNDLE)
+    const DataType expected_type = ExpectedDataType(cp->lval);
+    if (expected_type == CF_DATA_TYPE_BUNDLE)
     {
         *rval_out = ExpandBundleReference(ctx, NULL, "this", cp->rval);
+    }
+    else if (expected_type == CF_DATA_TYPE_BUNDLE_LIST)
+    {
+        *rval_out = ExpandBundleListReference(ctx, NULL, "this", cp->rval);
     }
     else
     {

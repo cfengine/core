@@ -1,2 +1,0 @@
-    info: files promise '/tmp/TEST.cfengine' repaired, edit_xml => xml_delete_tree("<c>text content</c>", "//b")
-    info: Deleted tree '<c>text content</c>' at XPath '//b' in XML document '/tmp/TEST.cfengine'

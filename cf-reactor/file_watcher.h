@@ -29,7 +29,7 @@
 
 
 void *FileWatcherStateNew(const char *path);
-bool CheckFileDeleted(void *state);
+bool FileWatcherCheckFileDeleted(void *state);
 void DestroyFileWatcherState(void *state);
 
 #endif

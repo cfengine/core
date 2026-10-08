@@ -78,7 +78,7 @@ void *FileWatcherStateNew(const char *path)
     return (void *) fws;
 }
 
-bool CheckFileDeleted(void *state)
+WatcherCheckResult CheckFileDeleted(void *state)
 {
     assert(state != NULL);
     FileWatcherState *fws = state;
@@ -86,8 +86,8 @@ bool CheckFileDeleted(void *state)
     bool deleted_now;
     if (!FileDeleted(fws->path, &deleted_now))
     {
-        /* Unknown state, skip this check and keep last_seen as is */
-        return false;
+        /* Unknown state, keep last_seen as is */
+        return WATCHER_CHECK_ERROR;
     }
 
     const time_t now = time(NULL);
@@ -109,7 +109,7 @@ bool CheckFileDeleted(void *state)
     }
 
     fws->last_seen = deleted_now ? 0 : now;
-    return deleted;
+    return deleted ? WATCHER_CHECK_EVENT : WATCHER_CHECK_NO_EVENT;
 }
 
 void DestroyFileWatcherState(void *state)

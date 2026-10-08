@@ -27,6 +27,7 @@
 
 #include <eval_context.h>
 #include <policy.h>
+#include <watcher.h>     /* WatcherCheckResult */
 
 /**
  * @brief Evaluate every `bundle reactor NAME { ... }` in the given policy:
@@ -42,12 +43,16 @@ void KeepReactorPromises(EvalContext *ctx, const Policy *policy);
 
 /**
  * @brief Keep the events promise of a watcher that fired (see WatcherEventFn
- * in watcher.h): run the bundle of its 'then' attribute.
+ * in watcher.h): run the bundle of its 'then' attribute, and record the
+ * outcome of the bundle as the outcome of the events promise. If the watcher
+ * failed to check for its event, record a failure instead.
  *
  * @param pp the unexpanded events promise the watcher was registered for
  * @param promiser the expanded promiser the watcher was registered with,
  *                 selecting the iteration of the events promise to keep
+ * @param check whether the event happened or the watcher failed to check for
+ *              it (see WatcherEventFn)
  */
-void HandleReactorEvent(EvalContext *ctx, const Promise *pp, const char *promiser);
+void HandleReactorEvent(EvalContext *ctx, const Promise *pp, const char *promiser, WatcherCheckResult check);
 
 #endif

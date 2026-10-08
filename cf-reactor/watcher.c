@@ -51,7 +51,15 @@ typedef struct
     const Promise *promise; // the unexpanded events promise, owned by the policy
     time_t poll_interval_secs;
     time_t next_due;
+    WatcherCheckResult last_check; // only touched by the watcher thread
 } Watcher;
+
+/* Item of the event queue */
+typedef struct
+{
+    const Watcher *watcher;
+    WatcherCheckResult check; // see WatcherEventFn
+} WatcherEvent;
 
 static void WatcherDestroy(void *item);
 
@@ -65,10 +73,11 @@ static bool paused = false;         /* see EventWatcherPause() */
 
 static WakeupChannel wakeup_channel = { .fds = { -1, -1 } };
 
-/* Watchers that fired, queued by the watcher thread for the main thread to
- * handle. Not owned: the watcher thread only queues watchers of the registry
- * while holding watchers_mutex, and WatcherRegistryClear() requires the queue
- * to be empty, so the queued watchers are always registered. */
+/* Events of watchers (WatcherEvent), queued by the watcher thread for the
+ * main thread to handle. The watchers are not owned: the watcher thread only
+ * queues events of watchers of the registry while holding watchers_mutex, and
+ * WatcherRegistryClear() requires the queue to be empty, so the watchers of
+ * the queued events are always registered. */
 static ThreadedQueue *event_queue = NULL;
 static StoppableThread *watcher_thread = NULL;
 
@@ -163,6 +172,7 @@ bool WatcherRegister(const char *promiser, EventType type, void *state, const Pr
     w->promise = pp;
     w->poll_interval_secs = interval;
     w->next_due = 0; /* due immediately on the watcher thread's first pass */
+    w->last_check = WATCHER_CHECK_NO_EVENT;
     w->check_callback = check_callback;
     w->destroy_state = destroy_state;
 
@@ -209,13 +219,21 @@ static void WatcherThreadMain(StoppableThread *thread, ARG_UNUSED void *unused)
 
             if (now >= w->next_due)
             {
-                bool fired = w->check_callback(w->state);
+                WatcherCheckResult check = w->check_callback(w->state);
                 w->next_due = now + w->poll_interval_secs;
-                if (fired)
+
+                /* Only report a failing watcher once, not on every check,
+                 * until it recovers */
+                if (check == WATCHER_CHECK_EVENT ||
+                    (check == WATCHER_CHECK_ERROR && w->last_check != WATCHER_CHECK_ERROR))
                 {
-                    ThreadedQueuePush(event_queue, w);
+                    WatcherEvent *event = xmalloc(sizeof(WatcherEvent));
+                    event->watcher = w;
+                    event->check = check;
+                    ThreadedQueuePush(event_queue, event);
                     any_event = true;
                 }
+                w->last_check = check;
             }
 
             time_t until_due = (w->next_due > now) ? (w->next_due - now) : 0;
@@ -244,7 +262,7 @@ bool EventWatcherInitialize(int *fd)
         return false;
     }
 
-    event_queue = ThreadedQueueNew(16, NULL);
+    event_queue = ThreadedQueueNew(16, free);
 
     watcher_thread = StoppableThreadStart(WatcherThreadMain, NULL);
     if (watcher_thread == NULL)
@@ -264,8 +282,9 @@ bool EventWatcherInitialize(int *fd)
 
 /* Watchers are only destroyed by the main thread (WatcherRegistryClear()),
  * which is also the one handling events, and never while events are queued,
- * so the queued watchers can be used without holding watchers_mutex. Their
- * promiser and promise are never modified by the watcher thread. */
+ * so the watchers of queued events can be used without holding
+ * watchers_mutex. Their promiser and promise are never modified by the
+ * watcher thread. */
 static void HandleQueuedEvents(EvalContext *ctx, WatcherEventFn on_event)
 {
     assert(on_event != NULL);
@@ -273,9 +292,18 @@ static void HandleQueuedEvents(EvalContext *ctx, WatcherEventFn on_event)
     void *item;
     while (ThreadedQueuePop(event_queue, &item, 0))
     {
-        const Watcher *w = item;
-        Log(LOG_LEVEL_NOTICE, "Reactor watcher '%s' fired", w->promiser);
-        on_event(ctx, w->promise, w->promiser);
+        WatcherEvent *event = item;
+        const Watcher *w = event->watcher;
+        if (event->check == WATCHER_CHECK_ERROR)
+        {
+            Log(LOG_LEVEL_ERR, "Reactor watcher '%s' failed to check for its event", w->promiser);
+        }
+        else
+        {
+            Log(LOG_LEVEL_NOTICE, "Reactor watcher '%s' fired", w->promiser);
+        }
+        on_event(ctx, w->promise, w->promiser, event->check);
+        free(event);
     }
 }
 

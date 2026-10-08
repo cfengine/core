@@ -35,7 +35,7 @@
 #include <watcher.h>
 #include <file_watcher.h>
 #include <agent_operations.h>   // ScheduleAgentOperations()
-#include <attributes.h>
+#include <attributes.h>          // GetClassContextAttributes()
 #include <conn_cache.h>          // ConnCache_Init(), ConnCache_Destroy()
 #include <mod_custom.h>          // Initialize/FinalizeCustomPromises()
 #include <timeout.h>             // SetReferenceTime()
@@ -98,6 +98,18 @@ static const Bundle *ResolveThenBundle(
     return bp;
 }
 
+/* Records the outcome of an iteration of an events promise: defines the
+ * classes of its 'classes' body, and logs it like cf-agent does for its
+ * promises. */
+static void RecordEventsPromiseOutcome(EvalContext *ctx, const Promise *pp, PromiseResult result)
+{
+    assert(pp != NULL);
+
+    Attributes a = GetClassContextAttributes(ctx, pp);
+    ClassAuditLog(ctx, pp, &a, result);
+    EvalContextLogPromiseIterationOutcome(ctx, pp, result);
+}
+
 // Temporary limitations:
 // - 'when' body: only a single constraint, 'file_deleted', is supported (no OR-ing of constraints yet)
 // - 'then': only a single bundle is supported, not a list of bundles yet
@@ -152,7 +164,9 @@ static PromiseResult KeepReactorPromise(EvalContext *ctx, const Promise *pp, ARG
 
     if (StringEqual(PromiseGetPromiseType(pp), "events"))
     {
-        return KeepEventsPromise(ctx, pp);
+        PromiseResult result = KeepEventsPromise(ctx, pp);
+        RecordEventsPromiseOutcome(ctx, pp, result);
+        return result;
     }
 
     return PROMISE_RESULT_NOOP;
@@ -237,10 +251,12 @@ static PromiseResult RunThenBundle(EvalContext *ctx, const Promise *pp)
 typedef struct
 {
     const char *promiser;
+    WatcherCheckResult check;
 } ReactorEventParam;
 
-/* Promise actuator for an events promise whose watcher fired. Only acts on
- * the iteration the watcher was registered for. */
+/* Promise actuator for an events promise whose watcher fired, or failed to
+ * check for its event. Only acts on the iteration the watcher was registered
+ * for. */
 static PromiseResult KeepEventsPromiseOnEvent(EvalContext *ctx, const Promise *pp, void *param)
 {
     assert(pp != NULL);
@@ -252,10 +268,28 @@ static PromiseResult KeepEventsPromiseOnEvent(EvalContext *ctx, const Promise *p
         return PROMISE_RESULT_SKIPPED;
     }
 
-    return RunThenBundle(ctx, pp);
+    PromiseResult result;
+    switch (event->check)
+    {
+    case WATCHER_CHECK_EVENT:
+        result = RunThenBundle(ctx, pp);
+        break;
+
+    case WATCHER_CHECK_ERROR:
+        Log(LOG_LEVEL_ERR, "Reactor events promise '%s' failed to check for its event", pp->promiser);
+        result = PROMISE_RESULT_FAIL;
+        break;
+
+    default:
+        ProgrammingError("Unexpected watcher check result %d for reactor events promise '%s'",
+                         (int) event->check, pp->promiser);
+    }
+
+    RecordEventsPromiseOutcome(ctx, pp, result);
+    return result;
 }
 
-void HandleReactorEvent(EvalContext *ctx, const Promise *pp, const char *promiser)
+void HandleReactorEvent(EvalContext *ctx, const Promise *pp, const char *promiser, WatcherCheckResult check)
 {
     assert(pp != NULL);
     assert(promiser != NULL);
@@ -270,7 +304,7 @@ void HandleReactorEvent(EvalContext *ctx, const Promise *pp, const char *promise
     VariableTable *variables = NULL;
     EvalContextSnapshotTake(ctx, &classes, &variables);
 
-    ReactorEventParam event = { .promiser = promiser };
+    ReactorEventParam event = { .promiser = promiser, .check = check };
 
     EvalContextStackPushBundleFrame(ctx, PromiseGetBundle(pp), NULL, false, NULL);
     EvalContextStackPushBundleSectionFrame(ctx, pp->parent_section);

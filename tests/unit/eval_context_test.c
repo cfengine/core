@@ -244,6 +244,57 @@ static void test_secret_container_redacts_indexed_read(void)
     EvalContextDestroy(ctx);
 }
 
+/* What a "then" bundle of cf-reactor defines between the snapshot and its
+ * restoration is gone afterwards, the variables of a bundle included, as they
+ * are global. What was defined before is kept, and the persistent classes
+ * come back from the state database with the next snapshot. */
+static void test_snapshot_take_restore(void)
+{
+    EvalContext *ctx = EvalContextNew();
+
+    VarRef *before = VarRefParse("default:snapshot_bundle.before");
+    VarRef *during = VarRefParse("default:snapshot_bundle.during");
+
+    assert_true(EvalContextClassPutHard(ctx, "snapshot_hard", ""));
+    assert_true(EvalContextClassPutSoft(ctx, "snapshot_soft_before", CONTEXT_SCOPE_NAMESPACE, ""));
+    assert_true(EvalContextVariablePut(ctx, before, "old", CF_DATA_TYPE_STRING, ""));
+
+    ClassTable *classes;
+    VariableTable *variables;
+    EvalContextSnapshotTake(ctx, &classes, &variables);
+
+    /* Like a class promise with 'persistence' */
+    EvalContextHeapPersistentSave(ctx, "snapshot_persistent", 10, CONTEXT_STATE_POLICY_RESET, "");
+    assert_true(EvalContextClassPutSoft(ctx, "snapshot_persistent", CONTEXT_SCOPE_NAMESPACE, ""));
+
+    assert_true(EvalContextClassPutSoft(ctx, "snapshot_soft_during", CONTEXT_SCOPE_NAMESPACE, ""));
+    assert_true(EvalContextVariablePut(ctx, during, "new", CF_DATA_TYPE_STRING, ""));
+    assert_true(EvalContextVariablePut(ctx, before, "new", CF_DATA_TYPE_STRING, ""));
+    assert_true(EvalContextClassRemove(ctx, NULL, "snapshot_soft_before"));
+
+    EvalContextSnapshotRestore(ctx, classes, variables);
+
+    assert_true(EvalContextClassGet(ctx, NULL, "snapshot_hard") != NULL);
+    assert_true(EvalContextClassGet(ctx, NULL, "snapshot_soft_before") != NULL);
+    assert_true(EvalContextClassGet(ctx, NULL, "snapshot_soft_during") == NULL);
+    assert_true(EvalContextVariableGet(ctx, during, NULL, false) == NULL);
+    assert_string_equal("old", EvalContextVariableGet(ctx, before, NULL, false));
+
+    /* The persistent class is not in the snapshot, the next one loads it */
+    assert_true(EvalContextClassGet(ctx, NULL, "snapshot_persistent") == NULL);
+    EvalContextSnapshotTake(ctx, &classes, &variables);
+    {
+        const Class *cls = EvalContextClassGet(ctx, NULL, "snapshot_persistent");
+        assert_true(cls != NULL);
+        assert_true(StringSetContains(cls->tags, "source=persistent"));
+    }
+    EvalContextSnapshotRestore(ctx, classes, variables);
+
+    VarRefDestroy(before);
+    VarRefDestroy(during);
+    EvalContextDestroy(ctx);
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -256,6 +307,7 @@ int main()
         unit_test(test_changes_chroot),
         unit_test(test_eval_with_token_from_list),
         unit_test(test_secret_container_redacts_indexed_read),
+        unit_test(test_snapshot_take_restore),
     };
 
     int ret = run_tests(tests);

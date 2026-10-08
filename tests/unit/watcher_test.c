@@ -8,7 +8,7 @@
 #include <string.h>             /* strstr() */
 #include <stdio.h>              /* snprintf() */
 #include <stdlib.h>             /* mkdtemp() */
-#include <unistd.h>             /* close(), unlink(), rmdir() */
+#include <unistd.h>             /* close(), unlink(), rmdir(), symlink(), sleep() */
 #include <fcntl.h>              /* open() */
 
 static int captured_err_count = 0;
@@ -31,7 +31,7 @@ static const Promise dummy_promise;
 static int handled_event_count = 0;
 
 static void CountEvent(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Promise *pp,
-                       ARG_UNUSED const char *promiser)
+                       ARG_UNUSED const char *promiser, ARG_UNUSED WatcherCheckResult check)
 {
     handled_event_count++;
 }
@@ -127,13 +127,42 @@ static void test_event_watcher_lifecycle(void)
     EventWatcherFinalize();
 }
 
+/* Waits up to timeout_secs for the watcher thread to signal a queued event
+ * on fd, without handling it */
+static bool WaitForQueuedEvent(int fd, int timeout_secs)
+{
+    for (int i = 0; i < timeout_secs * 10; i++)
+    {
+        fd_set readfds;
+        FD_ZERO(&readfds);
+        FD_SET(fd, &readfds);
+        struct timeval timeout = { .tv_sec = 0, .tv_usec = 100000 };
+        if (select(fd + 1, &readfds, NULL, NULL, &timeout) > 0)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+static void HandleEvents(int fd, WatcherEventFn on_event)
+{
+    fd_set readfds;
+    FD_ZERO(&readfds);
+    FD_SET(fd, &readfds);
+    EventWatcherHandleEvents(NULL, on_event, fd, &readfds);
+}
+
 static const Promise *last_event_promise = NULL;
 
+static WatcherCheckResult last_event_check = WATCHER_CHECK_NO_EVENT;
+
 static void RecordEvent(ARG_UNUSED EvalContext *ctx, const Promise *pp,
-                        ARG_UNUSED const char *promiser)
+                        ARG_UNUSED const char *promiser, WatcherCheckResult check)
 {
     handled_event_count++;
     last_event_promise = pp;
+    last_event_check = check;
 }
 
 static void test_event_watcher_pause_handles_queued_events(void)
@@ -155,16 +184,7 @@ static void test_event_watcher_pause_handles_queued_events(void)
 
     /* Wait for the watcher thread to queue the event (it checks every
      * second), without handling it */
-    bool queued = false;
-    for (int i = 0; !queued && i < 50; i++)
-    {
-        fd_set readfds;
-        FD_ZERO(&readfds);
-        FD_SET(fd, &readfds);
-        struct timeval timeout = { .tv_sec = 0, .tv_usec = 100000 };
-        queued = (select(fd + 1, &readfds, NULL, NULL, &timeout) > 0);
-    }
-    assert_true(queued);
+    assert_true(WaitForQueuedEvent(fd, 5));
 
     /* Pausing handles the queued event, with the promise of its watcher, so
      * that the registry can be cleared without losing it */
@@ -173,12 +193,133 @@ static void test_event_watcher_pause_handles_queued_events(void)
     EventWatcherPause(NULL, RecordEvent);
     assert_int_equal(handled_event_count, 1);
     assert_true(last_event_promise == &dummy_promise);
+    assert_int_equal(last_event_check, WATCHER_CHECK_EVENT);
 
     WatcherRegistryClear();
     EventWatcherResume();
 
     EventWatcherFinalize();
     assert_int_equal(rmdir(dir), 0);
+}
+
+/* Sets up dir/loop, a symlink to itself, so that lstat() of dir/loop/file
+ * fails with ELOOP (even as root), i.e. whether the file was deleted can't
+ * be told. Unlinking the loop makes lstat() work again (ENOENT). */
+static void SetUpSymlinkLoop(char *dir, char *loop, size_t loop_size, char *path, size_t path_size)
+{
+    assert_true(mkdtemp(dir) != NULL);
+    snprintf(loop, loop_size, "%s/loop", dir);
+    assert_int_equal(symlink(loop, loop), 0);
+    snprintf(path, path_size, "%s/file", loop);
+}
+
+static void TearDownSymlinkLoop(const char *dir, const char *loop)
+{
+    unlink(loop);
+    assert_int_equal(rmdir(dir), 0);
+}
+
+static void test_check_file_deleted_error(void)
+{
+    char dir[] = "/tmp/watcher_test.XXXXXX";
+    char loop[PATH_MAX];
+    char path[PATH_MAX];
+    SetUpSymlinkLoop(dir, loop, sizeof(loop), path, sizeof(path));
+
+    const LogLevel old_level = LogGetGlobalLevel();
+    LogSetGlobalLevel(LOG_LEVEL_CRIT);
+
+    void *state = FileWatcherStateNew(path);
+    assert_int_equal(CheckFileDeleted(state), WATCHER_CHECK_ERROR);
+    DestroyFileWatcherState(state);
+
+    LogSetGlobalLevel(old_level);
+    TearDownSymlinkLoop(dir, loop);
+}
+
+static void test_check_file_deleted_logs_error_once(void)
+{
+    char dir[] = "/tmp/watcher_test.XXXXXX";
+    char loop[PATH_MAX];
+    char path[PATH_MAX];
+    SetUpSymlinkLoop(dir, loop, sizeof(loop), path, sizeof(path));
+
+    captured_err_count = 0;
+    captured_err_message[0] = '\0';
+    LoggingPrivContext log_ctx = {
+        .log_hook = CaptureErrorLogHook,
+        .force_hook_level = LOG_LEVEL_ERR,
+    };
+    LoggingPrivSetContext(&log_ctx);
+    const LogLevel old_level = LogGetGlobalLevel();
+    LogSetGlobalLevel(LOG_LEVEL_CRIT);
+
+    /* The failure at registration is logged */
+    void *state = FileWatcherStateNew(path);
+    assert_int_equal(captured_err_count, 1);
+    assert_true(strstr(captured_err_message, "Unable to lstat") != NULL);
+
+    /* The following failures are not logged again */
+    for (int i = 0; i < 3; i++)
+    {
+        assert_int_equal(CheckFileDeleted(state), WATCHER_CHECK_ERROR);
+    }
+    assert_int_equal(captured_err_count, 1);
+
+    /* Once lstat() works again, the next failure is logged again */
+    assert_int_equal(unlink(loop), 0);
+    assert_int_equal(CheckFileDeleted(state), WATCHER_CHECK_NO_EVENT);
+    assert_int_equal(symlink(loop, loop), 0);
+    assert_int_equal(CheckFileDeleted(state), WATCHER_CHECK_ERROR);
+    assert_int_equal(captured_err_count, 2);
+
+    DestroyFileWatcherState(state);
+
+    LogSetGlobalLevel(old_level);
+    LoggingPrivSetContext(NULL);
+    TearDownSymlinkLoop(dir, loop);
+}
+
+static void test_event_watcher_check_failure_reported_once(void)
+{
+    char dir[] = "/tmp/watcher_test.XXXXXX";
+    char loop[PATH_MAX];
+    char path[PATH_MAX];
+    SetUpSymlinkLoop(dir, loop, sizeof(loop), path, sizeof(path));
+
+    const LogLevel old_level = LogGetGlobalLevel();
+    LogSetGlobalLevel(LOG_LEVEL_CRIT);
+
+    WatcherRegistryInitialize();
+    assert_true(WatcherRegister("failing-event", EVENT_FILE_DELETED, FileWatcherStateNew(path), &dummy_promise, 1));
+
+    int fd = -1;
+    assert_true(EventWatcherInitialize(&fd));
+
+    /* The failing check is reported as a failure, not as an event */
+    assert_true(WaitForQueuedEvent(fd, 5));
+    handled_event_count = 0;
+    last_event_check = WATCHER_CHECK_NO_EVENT;
+    HandleEvents(fd, RecordEvent);
+    assert_int_equal(handled_event_count, 1);
+    assert_int_equal(last_event_check, WATCHER_CHECK_ERROR);
+
+    /* The following failing checks (every second) are not reported again */
+    assert_false(WaitForQueuedEvent(fd, 3));
+
+    /* Once a check succeeds again, the next failure is reported again */
+    assert_int_equal(unlink(loop), 0);
+    sleep(2);
+    assert_int_equal(symlink(loop, loop), 0);
+    assert_true(WaitForQueuedEvent(fd, 5));
+    HandleEvents(fd, RecordEvent);
+    assert_int_equal(handled_event_count, 2);
+    assert_int_equal(last_event_check, WATCHER_CHECK_ERROR);
+
+    EventWatcherFinalize();
+
+    LogSetGlobalLevel(old_level);
+    TearDownSymlinkLoop(dir, loop);
 }
 
 int main()
@@ -192,6 +333,9 @@ int main()
         unit_test(test_watcher_register_same_promiser_of_other_promise),
         unit_test(test_event_watcher_lifecycle),
         unit_test(test_event_watcher_pause_handles_queued_events),
+        unit_test(test_check_file_deleted_error),
+        unit_test(test_check_file_deleted_logs_error_once),
+        unit_test(test_event_watcher_check_failure_reported_once),
     };
 
     return run_tests(tests);

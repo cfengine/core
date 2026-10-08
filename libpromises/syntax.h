@@ -114,6 +114,7 @@ JsonElement *SyntaxToJson(void);
 
 #define ConstraintSyntaxNewBody(lval, body_syntax, description, status) { lval, CF_DATA_TYPE_BODY, .range.body_type_syntax = body_syntax, description, status }
 #define ConstraintSyntaxNewBundle(lval, description, status) { lval, CF_DATA_TYPE_BUNDLE, .range.validation_string = CF_BUNDLE, description, status }
+#define ConstraintSyntaxNewBundleList(lval, description, status) { lval, CF_DATA_TYPE_BUNDLE_LIST, .range.validation_string = CF_BUNDLE, description, status }
 
 #define BodySyntaxNew(body_type, constraints, check_fn, status) { body_type, constraints, check_fn, status }
 #define BodySyntaxNewNull() { NULL, NULL, NULL, SYNTAX_STATUS_NORMAL }

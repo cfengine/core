@@ -372,6 +372,7 @@ SyntaxTypeMatch CheckConstraintTypeMatch(const char *lval, Rval rval, DataType d
         case CF_DATA_TYPE_REAL_LIST:
         case CF_DATA_TYPE_CONTEXT_LIST:
         case CF_DATA_TYPE_OPTION_LIST:
+        case CF_DATA_TYPE_BUNDLE_LIST:
             break;
         default:
             return SYNTAX_TYPE_MATCH_ERROR_GOT_LIST;
@@ -395,9 +396,15 @@ SyntaxTypeMatch CheckConstraintTypeMatch(const char *lval, Rval rval, DataType d
 
     case RVAL_TYPE_FNCALL:
 
-        /* Fn-like objects are assumed to be parameterized bundles in these... */
+        /* Fn-like objects are parameterized bundles in bundle references... */
+        if (dt == CF_DATA_TYPE_BUNDLE || dt == CF_DATA_TYPE_BUNDLE_LIST)
+        {
+            return SYNTAX_TYPE_MATCH_OK;
+        }
 
-        checklist = SplitString("bundlesequence,edit_line,edit_xml,usebundle,service_bundle,home_bundle,then", ',');
+        /* ...and are assumed to be in these */
+
+        checklist = SplitString("bundlesequence,edit_line,edit_xml,usebundle,service_bundle,home_bundle", ',');
 
         if (!IsItemIn(checklist, lval))
         {
@@ -434,6 +441,7 @@ SyntaxTypeMatch CheckConstraintTypeMatch(const char *lval, Rval rval, DataType d
 
     case CF_DATA_TYPE_BODY:
     case CF_DATA_TYPE_BUNDLE:
+    case CF_DATA_TYPE_BUNDLE_LIST:
     case CF_DATA_TYPE_CONTAINER:
         break;
 
@@ -1011,7 +1019,9 @@ static JsonElement *ConstraintSyntaxToJson(const ConstraintSyntax *constraint_sy
     JsonObjectAppendString(json_constraint, "status", SyntaxStatusToString(constraint_syntax->status));
     JsonObjectAppendString(json_constraint, "type", DataTypeToString(constraint_syntax->dtype));
 
-    if (constraint_syntax->dtype != CF_DATA_TYPE_BODY && constraint_syntax->dtype != CF_DATA_TYPE_BUNDLE)
+    if (constraint_syntax->dtype != CF_DATA_TYPE_BODY
+        && constraint_syntax->dtype != CF_DATA_TYPE_BUNDLE
+        && constraint_syntax->dtype != CF_DATA_TYPE_BUNDLE_LIST)
     {
         JsonObjectAppendString(json_constraint, "range", constraint_syntax->range.validation_string);
     }

@@ -64,6 +64,7 @@ RvalType DataTypeToRvalType(DataType datatype)
     case CF_DATA_TYPE_OPTION_LIST:
     case CF_DATA_TYPE_REAL_LIST:
     case CF_DATA_TYPE_STRING_LIST:
+    case CF_DATA_TYPE_BUNDLE_LIST:
         return RVAL_TYPE_LIST;
 
     case CF_DATA_TYPE_CONTAINER:

@@ -257,6 +257,32 @@ bool VariableTablePut(VariableTable *table, const VarRef *ref,
     return VarMapInsert(table->vars, var->ref, var);
 }
 
+VariableTable *VariableTableCopy(const VariableTable *table)
+{
+    assert(table != NULL);
+
+    VariableTable *copy = VariableTableNew();
+
+    VariableTableIterator *iter = VariableTableIteratorNew(table, NULL, NULL, NULL);
+    for (const Variable *var = VariableTableIteratorNext(iter); var != NULL;
+         var = VariableTableIteratorNext(iter))
+    {
+        /* VariableTablePut() copies the value, but takes the tags and the
+         * comment. The tags may be NULL. */
+        StringSet *tags = NULL;
+        if (var->tags != NULL)
+        {
+            tags = StringSetNew();
+            StringSetJoin(tags, var->tags, xstrdup);
+        }
+        VariableTablePut(copy, var->ref, &var->rval, var->type, tags,
+                         SafeStringDuplicate(var->comment), var->promise);
+    }
+    VariableTableIteratorDestroy(iter);
+
+    return copy;
+}
+
 bool VariableTableClear(VariableTable *table, const char *ns, const char *scope, const char *lval)
 {
     const size_t vars_num = VarMapSize(table->vars);

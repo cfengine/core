@@ -242,6 +242,65 @@ static void test_clear(void)
     }
 }
 
+static void test_copy(void)
+{
+    VariableTable *t = ReferenceTable();
+    {
+        VarRef *ref = VarRefParse("scope1.tagged");
+        Rval rval = (Rval) { "value", RVAL_TYPE_SCALAR };
+        assert_false(VariableTablePut(t, ref, &rval, CF_DATA_TYPE_STRING,
+                                      StringSetFromString("a,b", ','),
+                                      xstrdup("a comment"), NULL));
+        VarRefDestroy(ref);
+    }
+
+    VariableTable *copy = VariableTableCopy(t);
+    assert_int_equal(VariableTableCount(t, NULL, NULL, NULL),
+                     VariableTableCount(copy, NULL, NULL, NULL));
+
+    /* Removing, replacing or adding variables in the original does not change
+     * the copy */
+    {
+        VarRef *ref = VarRefParse("scope1.lval1");
+        assert_true(VariableTableRemove(t, ref));
+        VarRefDestroy(ref);
+    }
+    {
+        VarRef *ref = VarRefParse("scope1.lval2");
+        Rval rval = (Rval) { "replaced", RVAL_TYPE_SCALAR };
+        assert_true(VariableTablePut(t, ref, &rval, CF_DATA_TYPE_STRING, NULL, NULL, NULL));
+        VarRefDestroy(ref);
+    }
+    assert_false(PutVar(t, "scope1.added"));
+    {
+        VarRef *ref = VarRefParse("scope1.added");
+        assert_true(VariableTableGet(copy, ref) == NULL);
+        VarRefDestroy(ref);
+    }
+
+    /* The copy owns its variables, it outlives the original */
+    VariableTableDestroy(t);
+
+    TestGet(copy, "scope1.lval1");
+    TestGet(copy, "scope1.lval2");
+    TestGet(copy, "scope1.array[two][three]");
+    TestGet(copy, "ns1:scope2.lval1");
+    {
+        VarRef *ref = VarRefParse("scope1.tagged");
+        Variable *v = VariableTableGet(copy, ref);
+        assert_true(v != NULL);
+        assert_string_equal("value", RvalScalarValue(v->rval));
+        assert_int_equal(CF_DATA_TYPE_STRING, v->type);
+        assert_string_equal("a comment", v->comment);
+        assert_int_equal(2, StringSetSize(v->tags));
+        assert_true(StringSetContains(v->tags, "a"));
+        assert_true(StringSetContains(v->tags, "b"));
+        VarRefDestroy(ref);
+    }
+
+    VariableTableDestroy(copy);
+}
+
 static void test_counting(void)
 {
     VariableTable *t = ReferenceTable();
@@ -383,6 +442,7 @@ int main()
         unit_test(test_clear),
         unit_test(test_counting),
         unit_test(test_iterate_indices),
+        unit_test(test_copy),
     };
 
     return run_tests(tests);

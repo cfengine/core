@@ -231,6 +231,26 @@ bool ClassTableClear(ClassTable *table)
     return has_classes;
 }
 
+ClassTable *ClassTableCopy(const ClassTable *table)
+{
+    assert(table != NULL);
+
+    ClassTable *copy = ClassTableNew();
+
+    ClassTableIterator *iter = ClassTableIteratorNew(table, NULL, true, true);
+    for (const Class *cls = ClassTableIteratorNext(iter); cls != NULL;
+         cls = ClassTableIteratorNext(iter))
+    {
+        /* The tags of a class are never NULL, see ClassInit() */
+        StringSet *tags = StringSetNew();
+        StringSetJoin(tags, cls->tags, xstrdup);
+        ClassTablePut(copy, cls->ns, cls->name, cls->is_soft, cls->scope, tags, cls->comment);
+    }
+    ClassTableIteratorDestroy(iter);
+
+    return copy;
+}
+
 ClassTableIterator *ClassTableIteratorNew(const ClassTable *table,
                                           const char *ns,
                                           bool is_hard, bool is_soft)

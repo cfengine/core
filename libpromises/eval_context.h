@@ -145,6 +145,30 @@ void EvalContextHeapPersistentSave(EvalContext *ctx, const char *name, unsigned 
 void EvalContextHeapPersistentRemove(const char *context);
 void EvalContextHeapPersistentLoadAll(EvalContext *ctx);
 
+/**
+ * @brief Save a copy of the global classes, except the persistent ones, and
+ *        of the global variables, so that EvalContextSnapshotRestore() can
+ *        undo what is evaluated in between. Then reset the persistent classes
+ *        of the context to the ones in the state database that have not
+ *        expired, as an agent starting a run does.
+ *
+ * @param classes set to the copy of the classes, owned by the caller
+ * @param variables set to the copy of the variables, owned by the caller
+ * @note The copied variables refer to the promises of the policy, so the
+ *       snapshot must be restored (or destroyed) before the policy is.
+ */
+void EvalContextSnapshotTake(EvalContext *ctx, ClassTable **classes, VariableTable **variables);
+
+/**
+ * @brief Replace the global classes and variables with the snapshot taken by
+ *        EvalContextSnapshotTake(). The persistent classes are not in it, the
+ *        next snapshot loads them again from the state database.
+ *
+ * @param classes the copy of the classes, owned by the context afterwards
+ * @param variables the copy of the variables, owned by the context afterwards
+ */
+void EvalContextSnapshotRestore(EvalContext *ctx, ClassTable *classes, VariableTable *variables);
+
 void EvalContextOverrideImmutableSet(EvalContext *ctx, bool should_override);
 bool EvalContextOverrideImmutableGet(EvalContext *ctx);
 

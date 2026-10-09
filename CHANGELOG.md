@@ -18,7 +18,6 @@
   (CFE-3988)
 - Fixed insert_lines prepending to the file instead of to the selected region
   (CFE-3987)
-- Fixed lmdb maxkeysize assertion for macos
 - Fixed macOS process start-time/state detection (process_macos.c) and the macOS ps syntax bug in mon_processes_test.c
   (ENT-14471)
 - Fixed process_select and file_select time ranges on Windows

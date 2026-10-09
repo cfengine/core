@@ -744,12 +744,21 @@ int VerifyInFstab(EvalContext *ctx, char *name, const Attributes *a, const Promi
     if (!MatchFSInFstab(mountpt))
     {
         /* CFE-90: Entry not in fstab - add it */
-        AppendItem(&FSTABLIST, fstab, NULL);
-        FSTAB_EDITS++;
-        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Adding file system entry '%s' to '%s'", fstab,
-             VFSTAB[VSYSTEMHARDCLASS]);
-        *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
-        changes += 1;
+        /* CFE-3366: gate the edit on the promise action, not just DONTDO.  The
+         * file system table is part of the system, so a dry-run (or
+         * action_policy => "warn") promise must report the edit it would make
+         * and leave the table alone. */
+        if (MakingInternalChanges(ctx, pp, a, result,
+                                  "add file system entry '%s' to '%s'",
+                                  fstab, VFSTAB[VSYSTEMHARDCLASS]))
+        {
+            AppendItem(&FSTABLIST, fstab, NULL);
+            FSTAB_EDITS++;
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Adding file system entry '%s' to '%s'", fstab,
+                 VFSTAB[VSYSTEMHARDCLASS]);
+            *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+            changes += 1;
+        }
     }
     else
     {
@@ -764,13 +773,19 @@ int VerifyInFstab(EvalContext *ctx, char *name, const Attributes *a, const Promi
         char *existing_opts = GetFstabEntryOptions(mountpt);
         if (existing_opts != NULL && !StringEqual(existing_opts, opts))
         {
-            /* Replace the entire fstab entry with the corrected options */
-            ReplaceFstabEntry(FSTABLIST, mountpt, fstab);
-            FSTAB_EDITS++;
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Updating file system entry for '%s' in '%s' (options: '%s' -> '%s')",
-                 mountpt, VFSTAB[VSYSTEMHARDCLASS], existing_opts, opts);
-            *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
-            changes += 1;
+            /* CFE-3366: gate the rewrite on the promise action - see above. */
+            if (MakingInternalChanges(ctx, pp, a, result,
+                                      "update the file system entry for '%s' in '%s' (options: '%s' -> '%s')",
+                                      mountpt, VFSTAB[VSYSTEMHARDCLASS], existing_opts, opts))
+            {
+                /* Replace the entire fstab entry with the corrected options */
+                ReplaceFstabEntry(FSTABLIST, mountpt, fstab);
+                FSTAB_EDITS++;
+                cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Updating file system entry for '%s' in '%s' (options: '%s' -> '%s')",
+                     mountpt, VFSTAB[VSYSTEMHARDCLASS], existing_opts, opts);
+                *result = PromiseResultUpdate(*result, PROMISE_RESULT_CHANGE);
+                changes += 1;
+            }
         }
         free(existing_opts);
     }
@@ -808,6 +823,16 @@ int VerifyNotInFstab(EvalContext *ctx, char *name, const Attributes *a, const Pr
     {
         if (a->mount.editfstab)
         {
+            /* CFE-3366: gate the removal on the promise action, not just
+             * DONTDO, so a dry-run (or action_policy => "warn") promise reports
+             * the entry it would remove and leaves the table alone.  Returning
+             * early keeps the platform-specific removal below unindented. */
+            if (!MakingInternalChanges(ctx, pp, a, result,
+                                       "remove the file system entry for '%s' from '%s'",
+                                       mountpt, VFSTAB[VSYSTEMHARDCLASS]))
+            {
+                return 0;
+            }
 #if defined(_AIX)
             FILE *pfp;
             char aixcomm[CF_BUFSIZE];

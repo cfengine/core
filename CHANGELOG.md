@@ -229,7 +229,7 @@
   platforms (CFE-4380)
 - Fixed bug in double expansion of foreign list variables with namespaces
   (ENT-11923)
-- Fixed bug related to failing backwards directory traversial when
+- Fixed bug related to failing backwards directory traversal when
   using forward slashes in path argument of the findfiles_up()
   policy function on Windows.
 - Fixed bug where `default:sys.fqhost` contained many spaces when domain is

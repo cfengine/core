@@ -32,20 +32,31 @@ typedef enum
   EVENT_FILE_DELETED,
 } EventType;
 
-typedef bool (*WatcherCheckFn)(void *state);
+typedef enum
+{
+  WATCHER_CHECK_NO_EVENT,
+  WATCHER_CHECK_EVENT,
+  WATCHER_CHECK_ERROR,      /* unable to tell whether the event happened */
+} WatcherCheckResult;
+
+typedef WatcherCheckResult (*WatcherCheckFn)(void *state);
 typedef void (*WatcherStateDestroyFn)(void *state);
 
 /**
- * @brief Called on the main thread for every event of a registered watcher.
+ * @brief Called on the main thread for every event of a registered watcher,
+ *        and whenever a watcher starts failing to check for its event.
  *
  * @param pp the (unexpanded) events promise the watcher was registered for
  * @param promiser the expanded promiser the watcher was registered with,
  *                 selecting the iteration of the events promise
+ * @param check WATCHER_CHECK_EVENT if the event happened, or
+ *              WATCHER_CHECK_ERROR if the watcher failed to check for it
+ *              (only reported once until a check succeeds again)
  * @note Called without the watcher registry locked, but it must not call
  *       WatcherRegistryClear(), as the events of the watchers are being
  *       handled.
  */
-typedef void (*WatcherEventFn)(EvalContext *ctx, const Promise *pp, const char *promiser);
+typedef void (*WatcherEventFn)(EvalContext *ctx, const Promise *pp, const char *promiser, WatcherCheckResult check);
 
 void WatcherRegistryInitialize(void);
 void WatcherRegistryFinalize(void);

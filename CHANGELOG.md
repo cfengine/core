@@ -1,146 +1,89 @@
 ## 3.27.2
-- Added 2 most recent self upgrade log files to cf-support collection
-  (ENT-14144)
-- Added SELinux state and Federated Reporting transport metadata to cf-support
-  (ENT-14405)
-- Added Termux for sys.os_name_human when running in Termux Linux Environment (Android)
-  (CFE-4427)
-- Added the parameters of string_mustache() to the syntax description
-  (CFE-4534)
-- Fix ipv6 mask check (CFE-2034)
-- Fixed Federated Reporting transport failing on RHEL 10 hubs
-  (ENT-14405)
-- Fixed cf-agent SIGABRT on SIGTERM during early policy validation
-  (ENT-14139)
-- Fixed cf-agent assertion failure when reading /proc/<pid>/stat
-  (CFE-4285)
-- Fixed cf-promises and cf-agent hanging when an unrelated NFS mount was stale.
-  File globs such as /var/cfengine/state/diff/*.diff no longer list or stat
-  directories outside their literal path prefix, which previously left
-  processes stuck and piling up when any mount under / was unresponsive
-  (ENT-14146)
-- Fixed daemon hang on SIGTERM during child process wait (ENT-13720)
-- Fixed insert_lines ignoring include_end_delimiter when locating the region
-  (CFE-3988)
-- Fixed insert_lines prepending to the file instead of to the selected region
-  (CFE-3987)
-- Fixed lmdb maxkeysize assertion for macos
-- Fixed macOS process start-time/state detection (process_macos.c) and the macOS ps syntax bug in mon_processes_test.c
-  (ENT-14471)
-- Fixed process_select and file_select time ranges on Windows
-- Fixed select_region failing to select an empty region at end of file
-  (CFE-2663)
-- Fixed simulate mode reporting both removal and install of the same package
-  (CFE-4742)
-- Fixed usemodule() reporting success when the module exited non-zero
-  (CFE-942)
-- Improved verbose logging for persistent classes to distinguish creating a
-  class, resetting its timer, and updating a preserved class (ENT-3868)
-- Raised cf-apache.service start timeout to avoid PID-file race
-  (ENT-11189)
-- and(), or(), concat(), ifelse(), findfiles(), mergedata() and the classmatch()
-  family reported no parameters at all. Only the leading arguments are described,
-  as bundlesmatching() and format() already do, and CF_ANYSTRING keeps the
-  argument type check they activate as permissive as it was. (CFE-4714)
-- cf-execd systemctl stop now waits for in-flight cf-agent to finish
-  (ENT-14108)
-- timer_policy support for classes: promises (CFE-4681)
+
+- Added 2 most recent self upgrade log files to `cf-support` collection (ENT-14144)
+- Added SELinux state and Federated Reporting transport metadata to `cf-support` (ENT-14405)
+- Added Termux for `sys.os_name_human` when running in Termux Linux Environment (Android) (CFE-4427)
+- Added the parameters of `string_mustache()` to the syntax description (CFE-4534)
+- IPv6 masks in `iprange()` no longer need to be a multiple of 8 bits (CFE-2034)
+- Fixed Federated Reporting transport failing on RHEL 10 hubs (ENT-14405)
+- Fixed `cf-agent` `SIGABRT` on `SIGTERM` during early policy validation (ENT-14139)
+- Fixed `cf-agent` assertion failure when reading `/proc/<pid>/stat` (CFE-4285)
+- Fixed `cf-promises` and `cf-agent` hanging when an unrelated NFS mount was stale.
+  File globs such as `/var/cfengine/state/diff/*.diff` no longer list or stat directories outside their literal path prefix, which previously left processes stuck and piling up when any mount under / was unresponsive (ENT-14146)
+- Fixed daemon hang on `SIGTERM` during child process wait (ENT-13720)
+- Fixed `insert_lines` ignoring `include_end_delimiter` when locating the region (CFE-3988)
+- Fixed `insert_lines` prepending to the file instead of to the selected region (CFE-3987)
+- Fixed `process_select` and `file_select` time ranges on Windows
+- Fixed `select_region` failing to select an empty region at end of file (CFE-2663)
+- Fixed simulate mode reporting both removal and install of the same package (CFE-4742)
+- Fixed `usemodule()` reporting success when the module exited non-zero (CFE-942)
+- Improved verbose logging for persistent classes to distinguish creating a class, resetting its timer, and updating a preserved class (ENT-3868)
+- Raised `cf-apache.service` start timeout to avoid PID-file race (ENT-11189)
+- `and()`, `or()`, `concat()`, `ifelse()`, `findfiles()`, `mergedata()` and the `classmatch()` family reported no parameters at all.
+  Only the leading arguments are described, as `bundlesmatching()` and `format()` already do. (CFE-4714)
+- `systemctl stop cf-execd` now waits for in-flight `cf-agent` to finish (ENT-14108)
+- Added `timer_policy` support for `classes` promises (CFE-4681)
 
 ## 3.27.1
 
 - Enabled `select_region` to converge across multiple passes (CFE-3866)
 - Fixed buffer overflow in the files promise
 - Fixed memory leak in `isreadable()` policy function
-- Fixed segfault when `cf-secret` print-headers is called without an encrypted file
-  (CFE-4647)
-- Fixed bug causing files promise to fail copying files on vfat file system
-  (ENT-13809)
+- Fixed segfault when `cf-secret` print-headers is called without an encrypted file (CFE-4647)
+- Fixed bug causing files promise to fail copying files on vfat file system (ENT-13809)
 
 ## 3.27.0
 
-- Added evaluation order option in body agent control (ENT-13295)
-- Added findlocalgroups() policy function (CFE-4550)
-- Added getgroupinfo() policy function (CFE-4512)
-- Added getgroups() policy function (ENT-12722)
-- Added isnewerthantime() policy function (CFE-2815)
-- Added missing recording of changes/failures when cf-agent is flipping the immutable bit
-  (ENT-13179)
-- Added policy function classfilterdata() (CFE-3421, ENT-6193)
-- Added policy function getacls() (CFE-4529)
-- Added sys.policy_version variable (ENT-4043)
-- Added sysvinit cf-php-fpm service script for Mission Portal (ENT-13234)
-- Atomic permissions during file copy
-  Temporary file is now set to promised permissions before replacing it
-  with original during remote copy from (ENT-13163)
-- Files promise can now modify immutable bit in file system attributes
-  (CFE-1840, ENT-10961)
-- Fixed assertion error in classfilterdata()
-- Fixed bug in getacls() where no ACLs caused error
-- Fixed a bug where a successful files content promise causes remaining
-  files promise attribute handling to be skipped. (CFE-4569)
-- Remote file copy with the `copy_from` attribute now only preserves
-  source file permissions if the `preserve` attribute in `body copy_from`
-  is true. Otherwise it will use the permissions of the destination file
-  if it already exists and default permissions if it does not. (ENT-11988)
-- Fixed bug where rename fails to reset temporarily cleared immutable bit
-  (ENT-13179)
-- Fixed cf-support usage of coredumpctl matching (ENT-13272)
-- Fixed crash in readyaml when parsing an empty file (CFE-4595)
-- Fixed file descriptor leak in sys.cpusockets (CFE-4536)
-- Fixed file descriptor leak when creating the am_policy_hub file
-- Fixed move_obstructions support when using content and edit_template attributes
-  (CFE-4591)
-- Fixed bug causing rendered files can result in erroneously empty files
-  as a result of promise locking (ENT-9980)
-- Removed useless output from cfengine3 init script (ENT-13234)
-- The policy profiling logic is now implemented natively within the cf-agent,
-  replacing the previous reliance on cf-agent logs and the cf-profile.pl
-  script for faster execution (ENT-8096)
-- The acl attribute of the files promise can now override the immutable
-  bit (CFE-1840, ENT-10961)
-- Classfilterdata() now supports `object_of_objects` and `object_of_arrays`.
-  The class expression can be stored in either the key to the object
-  itself, or key/index inside object (CFE-4562)
-- The content attribute of the files promise can now override the
-  immutable bit (CFE-1840, ENT-10961)
-- The copy_from attribute of the files promise can now override the
-  immutable bit (CFE-1840, ENT-10961)
-- The delete attribute of the files promise can now override the immutable
-  bit (CFE-1840, ENT-10961)
-- The edit_line and edit_xml attributes of the files promise can now
-  override the immutable bit (CFE-1840, ENT-10961)
-- The perms attribute of the files promise can now override the immutable
-  bit (CFE-1840, ENT-10961)
-- The rename attribute of the files promise can now override the immutable
-  bit. The disabled file will inherit the immutable trait of the original
-  file (CFE-1840, ENT-10961)
-- The touch attribute of the files promise can now override the
-  immutable bit (CFE-1840, ENT-10961)
-- The transformer attribute of the files promise can now override the
-  immutable bit (CFE-1840, ENT-10961)
-- Added default_directory_create_mode to body agent control (CFE-4590, ENT-13239)
-- Added cf-profile.py script for processing profiling output
-- Added evaluation_order option in body file control (CFE-4598)
-- Added tag `derived-from-file` to Alpine, Amazon Linux, Arch, Debian,
-  EOS, Fedora/Red Hat, Gentoo, Mandrake/Mandriva, Manjaro, OpenVZ,
-  Oracle Linux, Oracle VM Server/Red Hat, Red Hat, Slackware, SuSE,
-  Sun Cobalt, United Linux, VMware, Xen, have_aptitude, and other
-  OS classes/variables (CFE-4531)
-- Fixed potential buffer overflow when creating tables using the databases
-  promise type (ENT-13552)
-- Fixed buffer overflow in build XPath for edit_xml (ENT-13550)
-- Fixed buffer overflow in cf-secret when using multiple keys of different sizes
-  (ENT-13591)
+- Added `evaluation_order` option in `body agent control` (ENT-13295)
+- Added `findlocalgroups()` policy function (CFE-4550)
+- Added `getgroupinfo()` policy function (CFE-4512)
+- Added `getgroups()` policy function (ENT-12722)
+- Added `isnewerthantime()` policy function (CFE-2815)
+- Added `classfilterdata()` policy function (CFE-3421, ENT-6193)
+- Added `getacls()` policy function (CFE-4529)
+- Added `sys.policy_version` variable (ENT-4043)
+- Added missing recording of changes/failures when `cf-agent` is flipping the immutable bit (ENT-13179)
+- Added sysvinit `cf-php-fpm` service script for Mission Portal (ENT-13234)
+- Made permissions atomic during file copy.
+  Temporary file is now set to promised permissions before replacing it with original during remote copy from (ENT-13163)
+- Files promise can now modify immutable bit in file system attributes (CFE-1840, ENT-10961)
+- Fixed a bug where a successful files content promise causes remaining `files` promise attribute handling to be skipped. (CFE-4569)
+- Remote file copy with the `copy_from` attribute now only preserves source file permissions if the `preserve` attribute in `body copy_from` is true.
+  Otherwise it will use the permissions of the destination file if it already exists and default permissions if it does not. (ENT-11988)
+- Fixed bug where rename fails to reset temporarily cleared immutable bit (ENT-13179)
+- Fixed `cf-support` usage of `coredumpctl` matching (ENT-13272)
+- Fixed crash in `readyaml()` when parsing an empty file (CFE-4595)
+- Fixed file descriptor leak in `sys.cpusockets` (CFE-4536)
+- Fixed file descriptor leak when creating the `am_policy_hub` file
+- Fixed `move_obstructions` support when using `content` and `edit_template` attributes (CFE-4591)
+- Fixed bug causing rendered files can result in erroneously empty files as a result of promise locking (ENT-9980)
+- Removed useless output from `cfengine3` init script (ENT-13234)
+- The policy profiling logic is now implemented natively within `cf-agent`, replacing the previous reliance on `cf-agent` logs and the `cf-profile.pl` script for faster execution (ENT-8096)
+- The `acl` attribute of the files promise can now override the immutable bit (CFE-1840, ENT-10961)
+- `classfilterdata()` now supports `object_of_objects` and `object_of_arrays`.
+  The class expression can be stored in either the key to the object itself, or key/index inside object (CFE-4562)
+- The `content` attribute of the files promise can now override the immutable bit (CFE-1840, ENT-10961)
+- The `copy_from` attribute of the files promise can now override the immutable bit (CFE-1840, ENT-10961)
+- The `delete` attribute of the files promise can now override the immutable bit (CFE-1840, ENT-10961)
+- The `edit_line` and `edit_xml` attributes of the files promise can now override the immutable bit (CFE-1840, ENT-10961)
+- The `perms` attribute of the files promise can now override the immutable bit (CFE-1840, ENT-10961)
+- The `rename` attribute of the files promise can now override the immutable bit.
+  The disabled file will inherit the immutable trait of the original file (CFE-1840, ENT-10961)
+- The `touch` attribute of the files promise can now override the immutable bit (CFE-1840, ENT-10961)
+- The transformer attribute of the files promise can now override the immutable bit (CFE-1840, ENT-10961)
+- Added `default_directory_create_mode` to `body agent control` (CFE-4590, ENT-13239)
+- Added `cf-profile.py` script for processing profiling output
+- Added `evaluation_order` option in `body file control` (CFE-4598)
+- Added tag `derived-from-file` to Alpine, Amazon Linux, Arch, Debian, EOS, Fedora/Red Hat, Gentoo, Mandrake/Mandriva, Manjaro, OpenVZ, Oracle Linux, Oracle VM Server/Red Hat, Red Hat, Slackware, SuSE, Sun Cobalt, United Linux, VMware, Xen, have_aptitude, and other OS classes/variables (CFE-4531)
+- Fixed potential buffer overflow when creating tables using the `databases` promise type (ENT-13552)
+- Fixed buffer overflow while building XPath for `edit_xml` (ENT-13550)
+- Fixed buffer overflow in `cf-secret` when using multiple keys of different sizes (ENT-13591)
 - Fixed heap buffer overflow in files edit_line (ENT-13590)
-- Fixed json policy parsing by adding new field "evaluation_order" to the expected output
+- Fixed JSON policy parsing by adding new field `evaluation_order` to the expected output
 - Fixed length checking in StatFile (ENT-13542)
-- Fixed potential buffer overflow when computing chroot path
-  (ENT-13551)
-- Fixed potential buffer overflow when converting strings to GIDs/UIDs
-  (ENT-13551)
-- Packages promiser is now escaped when using shell commands
-  (ENT-13535)
-- Renamed changelog file to CHANGELOG.md (ENT-13497)
+- Fixed potential buffer overflow when computing `chroot` path (ENT-13551)
+- Fixed potential buffer overflow when converting strings to GIDs/UIDs (ENT-13551)
+- Packages promiser is now escaped when using shell commands (ENT-13535)
 
 **Security fixes:**
 

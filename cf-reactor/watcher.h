@@ -26,68 +26,86 @@
 #define CFENGINE_WATCHER_H
 
 #include <cf3.defs.h>   /* Bundle */
-
-typedef enum
-{
-  EVENT_FILE_DELETED,
-} EventType;
+#include <hash.h>       /* CF_HOSTKEY_STRING_SIZE */
 
 typedef bool (*WatcherCheckFn)(void *state);
 typedef void (*WatcherStateDestroyFn)(void *state);
 
 /**
+ * @brief What a watcher checks for, and how, depending on the type of event.
+ */
+typedef struct
+{
+  WatcherCheckFn check_callback; /* whether the event happened, updating state */
+  WatcherStateDestroyFn destroy_state;
+  void *state;                   /* owned by the registry once registered */
+} WatcherOptions;
+
+/**
  * @brief Called on the main thread for every event of a registered watcher.
  *
  * @param pp the (unexpanded) events promise the watcher was registered for
- * @param promiser the expanded promiser the watcher was registered with,
- *                 selecting the iteration of the events promise
+ * @param promise_hash the hash of the expanded promise the watcher was
+ *                     registered with (see WatcherPromiseHash()), selecting
+ *                     the iteration of the events promise
  * @note Called without the watcher registry locked, but it must not call
- *       WatcherRegistryClear(), as the events of the watchers are being
+ *       EventWatcherPause(), as the events of the watchers are being
  *       handled.
  */
-typedef void (*WatcherEventFn)(EvalContext *ctx, const Promise *pp, const char *promiser);
+typedef void (*WatcherEventFn)(EvalContext *ctx, const Promise *pp, const char *promise_hash);
+
+/**
+ * @brief Hash of an expanded events promise, identifying its watcher.
+ *
+ * @param pp the expanded events promise
+ * @param hash where to write the hash, of size CF_HOSTKEY_STRING_SIZE
+ */
+void WatcherPromiseHash(const Promise *pp, char *hash, size_t hash_size);
 
 void WatcherRegistryInitialize(void);
 void WatcherRegistryFinalize(void);
 
 /**
- * @brief Discard every currently registered watcher and start over. Call
- * this before re-registering watchers from a freshly (re-)read policy.
- *
- * @note No events of the watchers may be queued, i.e. once the event watcher
- *       is initialized, call EventWatcherPause() first.
- */
-void WatcherRegistryClear(void);
-
-/**
  * @brief Register a specific watcher instance.
  *
- * @param promiser the expanded promiser of the iteration of the events
- *                 promise. Together with pp, identifies the watcher.
- * @param type the type of watcher, defined in when bodies
- * @param state the data used for by the watcher, depending on the type
- * @param pp the unexpanded events promise, passed back to the WatcherEventFn
- *           on event. Not owned, so the registry must be cleared before the
- *           policy holding it is destroyed.
+ * Watchers are identified by the hash of their expanded promise (see
+ * WatcherPromiseHash()). A watcher identical to a registered one is
+ * ignored, so that the 'then' bundle isn't run twice for the same event.
+ *
+ * If a watcher of the previous policy (see EventWatcherPause()) was
+ * registered for an identical expanded promise, the new watcher takes over
+ * its state instead of opt.state, so that the events happening while paused
+ * are detected.
+ *
+ * @param pp the expanded events promise. Its hash and its unexpanded
+ *           promise (pp->org_pp) are passed back to the WatcherEventFn on
+ *           event. The unexpanded promise is not owned, so the policy
+ *           holding it must not be destroyed before EventWatcherPause().
+ * @param opt what the watcher checks for, see WatcherOptions. opt.state is
+ *            owned by the registry.
  * @param interval interval between runs
  */
-bool WatcherRegister(const char *promiser, EventType type, void *state, const Promise *pp, time_t interval);
+void WatcherRegister(const Promise *pp, WatcherOptions opt, time_t interval);
 bool EventWatcherInitialize(int *fd);
 void EventWatcherHandleEvents(EvalContext *ctx, WatcherEventFn on_event, int fd, fd_set *readfds);
 
 /**
- * @brief Stop checking for events, and handle the events already queued, so
- * that the watchers can be cleared (see WatcherRegistryClear()) without
- * losing any event. Events are checked for again after EventWatcherResume().
+ * @brief Stop checking for events, handle the events already queued, and
+ * set the registered watchers aside, so that the policy they refer to can be
+ * destroyed and the watchers of the new policy registered (see
+ * WatcherRegister()). Events are checked for again after
+ * EventWatcherResume().
  *
- * @note Only the events already detected are guaranteed to be handled:
- *       whether an event happening while paused is detected afterwards
- *       depends on the state the watcher is registered again with.
+ * @note An event happening while paused is detected after
+ *       EventWatcherResume() if a watcher for an identical promise is
+ *       registered again, see WatcherRegister().
  */
 void EventWatcherPause(EvalContext *ctx, WatcherEventFn on_event);
 
 /**
- * @brief Check for events again, after EventWatcherPause().
+ * @brief Check for events again, after EventWatcherPause(). The watchers set
+ * aside by EventWatcherPause() are destroyed, and the registered ones are
+ * checked immediately.
  */
 void EventWatcherResume(void);
 void EventWatcherFinalize(void);

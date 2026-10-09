@@ -515,6 +515,26 @@ Rval ExpandBundleReference(EvalContext *ctx,
 }
 
 /**
+ * What to do with a reference to a secret-tagged variable while expanding.
+ *
+ * DEFER keeps "$(password)" in the string, so nothing between expansion and the
+ * use of the value can leak it; the point of use calls ONLY to substitute it.
+ */
+typedef enum
+{
+    /** Substitute the value, like for any other variable. */
+    EXPAND_SECRETS_INLINE,
+    /** Leave "$(name)" in place, for the point of use to resolve. */
+    EXPAND_SECRETS_DEFER,
+    /** Substitute secrets and only secrets; leave every other reference. */
+    EXPAND_SECRETS_ONLY,
+} ExpandSecretsMode;
+
+static char *ExpandScalarInternal(const EvalContext *ctx, const char *ns,
+                                 const char *scope, const char *string,
+                                 Buffer *out, ExpandSecretsMode secrets);
+
+/**
  * Expand a #string into Buffer #out, returning the pointer to the string
  * itself, inside the Buffer #out. If #out is NULL then the buffer will be
  * created and destroyed internally.
@@ -523,6 +543,43 @@ Rval ExpandBundleReference(EvalContext *ctx,
  */
 char *ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope,
                    const char *string, Buffer *out)
+{
+    return ExpandScalarInternal(ctx, ns, scope, string, out,
+                               EXPAND_SECRETS_INLINE);
+}
+
+/**
+ * As ExpandScalar(), but leaves a secret-tagged variable's reference verbatim.
+ *
+ * The result is not final: the consumer has to call ExpandScalarSecretsOnly()
+ * to get the value in. Anything that only logs the string uses it as it is.
+ */
+char *ExpandScalarKeepSecrets(const EvalContext *ctx, const char *ns,
+                              const char *scope, const char *string,
+                              Buffer *out)
+{
+    return ExpandScalarInternal(ctx, ns, scope, string, out,
+                               EXPAND_SECRETS_DEFER);
+}
+
+/**
+ * Substitute the references ExpandScalarKeepSecrets() left behind, and nothing
+ * else -- a non-secret reference is copied through whether or not it resolves.
+ *
+ * Call it as late as possible, keep the result out of any log, and free it as
+ * soon as the value has been handed over.
+ */
+char *ExpandScalarSecretsOnly(const EvalContext *ctx, const char *ns,
+                              const char *scope, const char *string,
+                              Buffer *out)
+{
+    return ExpandScalarInternal(ctx, ns, scope, string, out,
+                               EXPAND_SECRETS_ONLY);
+}
+
+static char *ExpandScalarInternal(const EvalContext *ctx, const char *ns,
+                                 const char *scope, const char *string,
+                                 Buffer *out, ExpandSecretsMode secrets)
 {
     bool out_belongs_to_us = false;
 
@@ -553,11 +610,16 @@ char *ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope,
         ExtractScalarReference(current_item,  sp, strlen(sp), true);
         sp += BufferSize(current_item) + 2;
 
-        if (IsCf3VarString(BufferData(current_item)))
+        /* ONLY mode re-emits the reference unless it names a secret, and
+         * expanding an inner one first would re-emit a rewritten name. So a
+         * secret used as part of a variable *name* stays unresolved. */
+        if (IsCf3VarString(BufferData(current_item)) &&
+            secrets != EXPAND_SECRETS_ONLY)
         {
             Buffer *temp = BufferCopy(current_item);
             BufferClear(current_item);
-            ExpandScalar(ctx, ns, scope, BufferData(temp), current_item);
+            ExpandScalarInternal(ctx, ns, scope, BufferData(temp), current_item,
+                                secrets);
             BufferDestroy(temp);
         }
 
@@ -566,8 +628,19 @@ char *ExpandScalar(const EvalContext *ctx, const char *ns, const char *scope,
             VarRef *ref = VarRefParseFromNamespaceAndScope(
                 BufferData(current_item),
                 ns, scope, CF_NS, '.');
-            DataType value_type;
-            const void *value = EvalContextVariableGetPlaintext(ctx, ref, &value_type);
+            const bool is_secret = (secrets != EXPAND_SECRETS_INLINE) &&
+                EvalContextVariableIsTaggedSecret(ctx, ref);
+            const bool substitute = (secrets == EXPAND_SECRETS_ONLY)
+                ? is_secret
+                : !is_secret;
+
+            /* Not substituting leaves the type NONE, which falls through to
+             * the re-emit below -- the path an unresolvable variable takes. The
+             * value is never fetched, not even to be discarded. */
+            DataType value_type = CF_DATA_TYPE_NONE;
+            const void *value = substitute
+                ? EvalContextVariableGetPlaintext(ctx, ref, &value_type)
+                : NULL;
             VarRefDestroy(ref);
 
             switch (DataTypeToRvalType(value_type))

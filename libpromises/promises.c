@@ -658,6 +658,19 @@ static void DereferenceAndPutComment(Promise* pp, const char *comment)
     }
 }
 
+/**
+ * Whether this promise type fetches secret values itself, at the point of use.
+ *
+ * Its promiser keeps the references, so the lock name, $(this.promiser) and the
+ * actuator's own log lines cannot leak the value. In exchange the actuator has
+ * to resolve them before use; see RepairExec().
+ */
+static bool PromiseTypeResolvesSecretsAtUse(const Promise *pp)
+{
+    assert(pp != NULL);
+    return StringEqual(PromiseGetPromiseType(pp), "commands");
+}
+
 Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
 {
     assert(pp != NULL);
@@ -668,8 +681,18 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const Promise *pp, bool *excluded)
 
     *excluded = false;
 
-    Rval returnval = ExpandPrivateRval(ctx, PromiseGetNamespace(pp),
-                                       "this", pp->promiser, RVAL_TYPE_SCALAR);
+    Rval returnval;
+    if (PromiseTypeResolvesSecretsAtUse(pp))
+    {
+        returnval = (Rval) { ExpandScalarKeepSecrets(ctx, PromiseGetNamespace(pp),
+                                                     "this", pp->promiser, NULL),
+                             RVAL_TYPE_SCALAR };
+    }
+    else
+    {
+        returnval = ExpandPrivateRval(ctx, PromiseGetNamespace(pp),
+                                      "this", pp->promiser, RVAL_TYPE_SCALAR);
+    }
     if (returnval.item == NULL)
     {
         assert(returnval.type == RVAL_TYPE_LIST ||

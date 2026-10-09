@@ -888,7 +888,7 @@ int main(int argc, char *argv[])
     }
 
     int c = 0;
-    while ((c = getopt_long(argc - offset, argv + offset, "hMedk:o:H:", OPTIONS, NULL)) != -1)
+    while ((c = getopt_long(argc - offset, argv + offset, "hMdvIg:k:o:H:", OPTIONS, NULL)) != -1)
     {
         switch (c)
         {

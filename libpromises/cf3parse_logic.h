@@ -466,7 +466,8 @@ static SyntaxTypeMatch CheckConstraint(
                     /* For bodies and bundles definitions can be elsewhere, so
                        they are checked in PolicyCheckRunnable(). */
                     if (bs[l].dtype != CF_DATA_TYPE_BODY
-                        && bs[l].dtype != CF_DATA_TYPE_BUNDLE)
+                        && bs[l].dtype != CF_DATA_TYPE_BUNDLE
+                        && bs[l].dtype != CF_DATA_TYPE_BUNDLE_LIST)
                     {
                         return CheckConstraintTypeMatch(
                             lval,

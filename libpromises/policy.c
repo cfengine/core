@@ -579,6 +579,7 @@ static bool RvalTypeCheckDataType(RvalType rval_type, DataType expected_datatype
     case CF_DATA_TYPE_OPTION_LIST:
     case CF_DATA_TYPE_REAL_LIST:
     case CF_DATA_TYPE_STRING_LIST:
+    case CF_DATA_TYPE_BUNDLE_LIST:
         return (rval_type == RVAL_TYPE_SCALAR) || (rval_type == RVAL_TYPE_LIST);
 
     case CF_DATA_TYPE_CONTAINER:
@@ -2730,6 +2731,42 @@ static bool ValidateCustomPromise(const Promise *pp, Seq *errors)
     return valid;
 }
 
+static bool BundleCallCheckArity(const Promise *pp, const Constraint *cp, Rval rval, Seq *errors)
+{
+    if (rval.type != RVAL_TYPE_FNCALL)
+    {
+        return true;
+    }
+
+    // HACK: exploiting the fact that class-references and call-references are similar
+    FnCall *call = RvalFnCallValue(rval);
+    ClassRef ref = ClassRefParse(call->name);
+    if (!ClassRefIsQualified(ref))
+    {
+        ClassRefQualify(&ref, PromiseGetNamespace(pp));
+    }
+
+    const Bundle *callee = PolicyGetBundle(PolicyFromPromise(pp), ref.ns, "agent", ref.name);
+    if (!callee)
+    {
+        callee = PolicyGetBundle(PolicyFromPromise(pp), ref.ns, "common", ref.name);
+    }
+
+    ClassRefDestroy(ref);
+
+    if (callee)
+    {
+        if (RlistLen(call->args) != RlistLen(callee->args))
+        {
+            SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_CONSTRAINT, cp,
+                                             POLICY_ERROR_BUNDLE_CALL_ARITY,
+                                             call->name, RlistLen(callee->args), RlistLen(call->args)));
+            return false;
+        }
+    }
+    return true;
+}
+
 bool PromiseCheckBundleCallArity(const Promise *pp, const char *lval, Seq *errors)
 {
     assert(pp != NULL);
@@ -2744,34 +2781,16 @@ bool PromiseCheckBundleCallArity(const Promise *pp, const char *lval, Seq *error
         // ensure: if call and callee are resolved, then they have matching arity
         if (StringEqual(cp->lval, lval))
         {
-            if (cp->rval.type == RVAL_TYPE_FNCALL)
+            if (cp->rval.type == RVAL_TYPE_LIST)
             {
-                // HACK: exploiting the fact that class-references and call-references are similar
-                FnCall *call = RvalFnCallValue(cp->rval);
-                ClassRef ref = ClassRefParse(call->name);
-                if (!ClassRefIsQualified(ref))
+                for (const Rlist *rp = RvalRlistValue(cp->rval); rp != NULL; rp = rp->next)
                 {
-                    ClassRefQualify(&ref, PromiseGetNamespace(pp));
+                    success &= BundleCallCheckArity(pp, cp, rp->val, errors);
                 }
-
-                const Bundle *callee = PolicyGetBundle(PolicyFromPromise(pp), ref.ns, "agent", ref.name);
-                if (!callee)
-                {
-                    callee = PolicyGetBundle(PolicyFromPromise(pp), ref.ns, "common", ref.name);
-                }
-
-                ClassRefDestroy(ref);
-
-                if (callee)
-                {
-                    if (RlistLen(call->args) != RlistLen(callee->args))
-                    {
-                        SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_CONSTRAINT, cp,
-                                                         POLICY_ERROR_BUNDLE_CALL_ARITY,
-                                                         call->name, RlistLen(callee->args), RlistLen(call->args)));
-                        success = false;
-                    }
-                }
+            }
+            else
+            {
+                success &= BundleCallCheckArity(pp, cp, cp->rval, errors);
             }
         }
     }

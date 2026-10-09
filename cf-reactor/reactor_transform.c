@@ -51,9 +51,9 @@ static const char *const REACTOR_TYPESEQUENCE[] =
     NULL
 };
 
-/* Resolves the agent or common bundle referred to by an events promise's
- * 'then' attribute, either `then => "name"` or `then => name(args)`. If args is
- * not NULL, it is set to the bundle arguments (or NULL if there are none).
+/* Resolves the agent or common bundle referred to by an entry of an events
+ * promise's 'then' attribute, either "name" or name(args). If args is not
+ * NULL, it is set to the bundle arguments (or NULL if there are none).
  * Logs an error and returns NULL if the bundle is not found. */
 static const Bundle *ResolveThenBundle(
     const EvalContext *ctx, const Promise *pp, Rval then_rval, const Rlist **args)
@@ -98,10 +98,33 @@ static const Bundle *ResolveThenBundle(
     return bp;
 }
 
+/* Returns the list of bundle references of the (expanded) 'then' attribute,
+ * which is always a list after expansion, see ExpandBundleListReference().
+ * Logs an error and returns NULL if there is no 'then' attribute or it is
+ * empty. */
+static const Rlist *GetThenBundles(const Promise *pp)
+{
+    assert(pp != NULL);
+
+    const Constraint *then_constraint = PromiseGetConstraint(pp, "then");
+    if (then_constraint == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Reactor events promise '%s' does not specify a 'then' bundle", pp->promiser);
+        return NULL;
+    }
+
+    assert(then_constraint->rval.type == RVAL_TYPE_LIST);
+    const Rlist *bundles = RvalRlistValue(then_constraint->rval);
+    if (bundles == NULL)
+    {
+        Log(LOG_LEVEL_ERR, "Reactor events promise '%s' has an empty list of 'then' bundles", pp->promiser);
+    }
+    return bundles;
+}
+
 // Temporary limitations:
 // - 'when' body: only a single constraint, 'file_deleted', is supported (no OR-ing of constraints yet)
-// - 'then': only a single bundle is supported, not a list of bundles yet
-// TODO: support multiple 'when' constraints and a list of 'then' bundles
+// TODO: support multiple 'when' constraints
 static PromiseResult KeepEventsPromise(EvalContext *ctx, const Promise *pp)
 {
     assert(pp != NULL);
@@ -115,16 +138,18 @@ static PromiseResult KeepEventsPromise(EvalContext *ctx, const Promise *pp)
         return PROMISE_RESULT_FAIL;
     }
 
-    const Constraint *then_constraint = PromiseGetConstraint(pp, "then");
-    if (then_constraint == NULL)
+    const Rlist *then_bundles = GetThenBundles(pp);
+    if (then_bundles == NULL)
     {
-        Log(LOG_LEVEL_ERR, "Reactor events promise '%s' does not specify a 'then' bundle, ignoring", pp->promiser);
         return PROMISE_RESULT_FAIL;
     }
 
-    if (ResolveThenBundle(ctx, pp, then_constraint->rval, NULL) == NULL)
+    for (const Rlist *rp = then_bundles; rp != NULL; rp = rp->next)
     {
-        return PROMISE_RESULT_FAIL;
+        if (ResolveThenBundle(ctx, pp, rp->val, NULL) == NULL)
+        {
+            return PROMISE_RESULT_FAIL;
+        }
     }
 
     // register watcher
@@ -185,32 +210,18 @@ static void EvaluateReactorBundle(EvalContext *ctx, const Bundle *bp)
     EvalContextStackPopFrame(ctx);
 }
 
-/* Runs the bundle referred to by the 'then' attribute of the (expanded)
- * events promise. */
-static PromiseResult RunThenBundle(EvalContext *ctx, const Promise *pp)
+/* Runs the bundle referred to by an entry of the 'then' attribute of the
+ * (expanded) events promise. */
+static PromiseResult RunThenBundle(EvalContext *ctx, const Promise *pp, Rval then_rval)
 {
     assert(pp != NULL);
 
-    const Constraint *then_constraint = PromiseGetConstraint(pp, "then");
-    if (then_constraint == NULL)
-    {
-        Log(LOG_LEVEL_ERR, "Reactor events promise '%s' does not specify a 'then' bundle", pp->promiser);
-        return PROMISE_RESULT_FAIL;
-    }
-
     const Rlist *args = NULL;
-    const Bundle *bp = ResolveThenBundle(ctx, pp, then_constraint->rval, &args);
+    const Bundle *bp = ResolveThenBundle(ctx, pp, then_rval, &args);
     if (bp == NULL)
     {
         return PROMISE_RESULT_FAIL;
     }
-
-    /* The promise lock cache makes each promise act at most once per
-     * EvalContext, and the function cache keeps the results of functions like
-     * execresult(), but cf-reactor keeps the same EvalContext across events.
-     * Clear them so every event gets a fresh run of the bundle. */
-    EvalContextPromiseLockCacheClear(ctx);
-    EvalContextFunctionCacheClear(ctx);
 
     BundleBanner(bp, args);
     EvalContextSetBundleArgs(ctx, args);
@@ -234,6 +245,33 @@ static PromiseResult RunThenBundle(EvalContext *ctx, const Promise *pp)
     return result;
 }
 
+/* Runs the bundles referred to by the 'then' attribute of the (expanded)
+ * events promise in order, like a bundlesequence. */
+static PromiseResult RunThenBundles(EvalContext *ctx, const Promise *pp)
+{
+    assert(pp != NULL);
+
+    const Rlist *then_bundles = GetThenBundles(pp);
+    if (then_bundles == NULL)
+    {
+        return PROMISE_RESULT_FAIL;
+    }
+
+    /* The promise lock cache makes each promise act at most once per
+     * EvalContext, and the function cache keeps the results of functions like
+     * execresult(), but cf-reactor keeps the same EvalContext across events.
+     * Clear them so every event gets a fresh run of the bundles. */
+    EvalContextPromiseLockCacheClear(ctx);
+    EvalContextFunctionCacheClear(ctx);
+
+    PromiseResult result = PROMISE_RESULT_NOOP;
+    for (const Rlist *rp = then_bundles; rp != NULL; rp = rp->next)
+    {
+        result = PromiseResultUpdate(result, RunThenBundle(ctx, pp, rp->val));
+    }
+    return result;
+}
+
 typedef struct
 {
     const char *promiser;
@@ -252,7 +290,7 @@ static PromiseResult KeepEventsPromiseOnEvent(EvalContext *ctx, const Promise *p
         return PROMISE_RESULT_SKIPPED;
     }
 
-    return RunThenBundle(ctx, pp);
+    return RunThenBundles(ctx, pp);
 }
 
 void HandleReactorEvent(EvalContext *ctx, const Promise *pp, const char *promiser)

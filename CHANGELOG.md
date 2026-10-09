@@ -7,7 +7,6 @@
   (CFE-4427)
 - Added the parameters of string_mustache() to the syntax description
   (CFE-4534)
-- Bumped libntech to include PathWalk fix (3.27) (ENT-14145)
 - Fix ipv6 mask check (CFE-2034)
 - Fixed Federated Reporting transport failing on RHEL 10 hubs
   (ENT-14405)
@@ -15,6 +14,11 @@
   (ENT-14139)
 - Fixed cf-agent assertion failure when reading /proc/<pid>/stat
   (CFE-4285)
+- Fixed cf-promises and cf-agent hanging when an unrelated NFS mount was stale.
+  File globs such as /var/cfengine/state/diff/*.diff no longer list or stat
+  directories outside their literal path prefix, which previously left
+  processes stuck and piling up when any mount under / was unresponsive
+  (ENT-14146)
 - Fixed daemon hang on SIGTERM during child process wait (ENT-13720)
 - Fixed insert_lines ignoring include_end_delimiter when locating the region
   (CFE-3988)
@@ -30,8 +34,8 @@
   (CFE-4742)
 - Fixed usemodule() reporting success when the module exited non-zero
   (CFE-942)
-- Improve persistent class logging in EvalContextHeapPersistentSave
-  (ENT-3868)
+- Improved verbose logging for persistent classes to distinguish creating a
+  class, resetting its timer, and updating a preserved class (ENT-3868)
 - Raised cf-apache.service start timeout to avoid PID-file race
   (ENT-11189)
 - and(), or(), concat(), ifelse(), findfiles(), mergedata() and the classmatch()

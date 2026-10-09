@@ -33,8 +33,8 @@
   (CFE-664)
 - Fixed wording of premature error when changing into non-existent directory
   (CFE-4007)
-- Improved persistent class logging in `EvalContextHeapPersistentSave`
-  (ENT-3868)
+- Improved verbose logging for persistent classes to distinguish creating a
+  class, resetting its timer, and updating a preserved class (ENT-3868)
 - Made arguments in `getgroups()` and `getusers()` optional (ENT-9962)
 - `cf-execd` `systemctl` stop now waits for in-flight `cf-agent` to finish
   (ENT-14108)

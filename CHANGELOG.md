@@ -1,3 +1,45 @@
+## 3.24.5
+- Added 2 most recent self upgrade log files to cf-support collection
+  (ENT-14144)
+- Added SELinux state and Federated Reporting transport metadata to cf-support
+  (ENT-14405)
+- Added the parameters of string_mustache() to the syntax description
+  (CFE-4534)
+- Bumped libntech to include PathWalk fix (3.24) (ENT-14145)
+- Fix ipv6 mask check (CFE-2034)
+- Fixed Federated Reporting transport failing on RHEL 10 hubs
+  (ENT-14405)
+- Fixed cf-agent SIGABRT on SIGTERM during early policy validation
+  (ENT-14139)
+- Fixed cf-agent assertion failure when reading /proc/<pid>/stat
+  (CFE-4285)
+- Fixed daemon hang on SIGTERM during child process wait (ENT-13720)
+- Fixed insert_lines ignoring include_end_delimiter when locating the region
+  (CFE-3988)
+- Fixed insert_lines prepending to the file instead of to the selected region
+  (CFE-3987)
+- Fixed lmdb maxkeysize assertion for macos
+- Fixed macOS process start-time/state detection (process_macos.c) and the macOS ps syntax bug in mon_processes_test.c
+  (ENT-14471)
+- Fixed process_select and file_select time ranges on Windows
+- Fixed select_region failing to select an empty region at end of file
+  (CFE-2663)
+- Fixed simulate mode reporting both removal and install of the same package
+  (CFE-4742)
+- Fixed usemodule() reporting success when the module exited non-zero
+  (CFE-942)
+- Improve persistent class logging in EvalContextHeapPersistentSave
+  (ENT-3868)
+- Raised cf-apache.service start timeout to avoid PID-file race
+  (ENT-11189)
+- and(), or(), concat(), ifelse(), findfiles(), mergedata() and the classmatch()
+  family reported no parameters at all. Only the leading arguments are described,
+  as bundlesmatching() and format() already do, and CF_ANYSTRING keeps the
+  argument type check they activate as permissive as it was. (CFE-4714)
+- cf-execd systemctl stop now waits for in-flight cf-agent to finish
+  (ENT-14108)
+- timer_policy support for classes: promises (CFE-4681)
+
 ## 3.24.4
 
 - Enabled `select_region` to converge across multiple passes (CFE-3866)

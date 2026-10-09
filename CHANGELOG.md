@@ -1,88 +1,56 @@
 ## 3.24.5
-- Added 2 most recent self upgrade log files to cf-support collection
-  (ENT-14144)
-- Added SELinux state and Federated Reporting transport metadata to cf-support
-  (ENT-14405)
-- Added the parameters of string_mustache() to the syntax description
-  (CFE-4534)
-- Fix ipv6 mask check (CFE-2034)
-- Fixed Federated Reporting transport failing on RHEL 10 hubs
-  (ENT-14405)
-- Fixed cf-agent SIGABRT on SIGTERM during early policy validation
-  (ENT-14139)
-- Fixed cf-agent assertion failure when reading /proc/<pid>/stat
-  (CFE-4285)
-- Fixed cf-promises and cf-agent hanging when an unrelated NFS mount was stale.
-  File globs such as /var/cfengine/state/diff/*.diff no longer list or stat
-  directories outside their literal path prefix, which previously left
-  processes stuck and piling up when any mount under / was unresponsive
-  (ENT-14146)
+
+- Added 2 most recent self upgrade log files to `cf-support` collection (ENT-14144)
+- Added SELinux state and Federated Reporting transport metadata to `cf-support` (ENT-14405)
+- Added the parameters of `string_mustache()` to the syntax description (CFE-4534)
+- IPv6 masks in `iprange()` no longer need to be a multiple of 8 bits (CFE-2034)
+- Fixed Federated Reporting transport failing on RHEL 10 hubs (ENT-14405)
+- Fixed `cf-agent` `SIGABRT` on `SIGTERM` during early policy validation (ENT-14139)
+- Fixed `cf-agent` assertion failure when reading `/proc/<pid>/stat` (CFE-4285)
+- Fixed `cf-promises` and `cf-agent` hanging when an unrelated NFS mount was stale.
+  File globs such as `/var/cfengine/state/diff/*.diff` no longer list or stat directories outside their literal path prefix, which previously left processes stuck and piling up when any mount under / was unresponsive (ENT-14146).
 - Fixed daemon hang on SIGTERM during child process wait (ENT-13720)
-- Fixed insert_lines ignoring include_end_delimiter when locating the region
-  (CFE-3988)
-- Fixed insert_lines prepending to the file instead of to the selected region
-  (CFE-3987)
-- Fixed macOS process start-time/state detection (process_macos.c) and the macOS ps syntax bug in mon_processes_test.c
-  (ENT-14471)
-- Fixed process_select and file_select time ranges on Windows
-- Fixed select_region failing to select an empty region at end of file
-  (CFE-2663)
-- Fixed simulate mode reporting both removal and install of the same package
-  (CFE-4742)
-- Fixed usemodule() reporting success when the module exited non-zero
-  (CFE-942)
-- Improved verbose logging for persistent classes to distinguish creating a
-  class, resetting its timer, and updating a preserved class (ENT-3868)
-- Raised cf-apache.service start timeout to avoid PID-file race
-  (ENT-11189)
-- and(), or(), concat(), ifelse(), findfiles(), mergedata() and the classmatch()
-  family reported no parameters at all. Only the leading arguments are described,
-  as bundlesmatching() and format() already do, and CF_ANYSTRING keeps the
-  argument type check they activate as permissive as it was. (CFE-4714)
-- cf-execd systemctl stop now waits for in-flight cf-agent to finish
-  (ENT-14108)
-- timer_policy support for classes: promises (CFE-4681)
+- Fixed `insert_lines` ignoring `include_end_delimiter` when locating the region (CFE-3988)
+- Fixed `insert_lines` prepending to the file instead of to the selected region (CFE-3987)
+- Fixed `process_select` and `file_select` time ranges on Windows
+- Fixed `select_region` failing to select an empty region at end of file (CFE-2663)
+- Fixed simulate mode reporting both removal and install of the same package (CFE-4742)
+- Fixed `usemodule()` reporting success when the module exited non-zero (CFE-942)
+- Improved verbose logging for persistent classes to distinguish creating a class, resetting its timer, and updating a preserved class (ENT-3868)
+- Raised `cf-apache.service` start timeout to avoid PID-file race (ENT-11189)
+- `and()`, `or()`, `concat()`, `ifelse()`, `findfiles()`, `mergedata()` and the `classmatch()` family reported no parameters at all.
+  Only the leading arguments are described, as `bundlesmatching()` and `format()` already do. (CFE-4714)
+- `systemctl stop cf-execd` now waits for in-flight `cf-agent` to finish (ENT-14108)
+- `timer_policy` support for `classes` promises (CFE-4681)
 
 ## 3.24.4
 
 - Enabled `select_region` to converge across multiple passes (CFE-3866)
-- Fixed buffer overflow in build XPath for `edit_xml` (ENT-13550)
-- Fixed buffer overflow in `cf-secret` when using multiple keys of different sizes
-  (ENT-13591)
-- Fixed buffer overflow in the files promise
+- Fixed buffer overflow while building XPath for `edit_xml` (ENT-13550)
+- Fixed buffer overflow in `cf-secret` when using multiple keys of different sizes (ENT-13591)
+- Fixed buffer overflow in `files` promises
 - Fixed heap buffer overflow in files `edit_line` (ENT-13590)
 - Fixed memory leak in `isreadable()` policy function
-- Fixed potential buffer overflow when computing chroot path
-  (ENT-13551)
-- Fixed potential buffer overflow when converting strings to GIDs/UIDs
-  (ENT-13551)
-- Fixed segfault when cf-secret print-headers is called without an encrypted file
-  (CFE-4647)
-- Fixed bug causing files promise to fail copying files on vfat file system
-  (ENT-13809)
+- Fixed potential buffer overflow when computing `chroot` path (ENT-13551)
+- Fixed potential buffer overflow when converting strings to GIDs/UIDs (ENT-13551)
+- Fixed segfault when `cf-secret print-headers` is called without an encrypted file (CFE-4647)
+- Fixed bug causing files promise to fail copying files on vfat file system (ENT-13809)
 
 ## 3.24.3
 
 - Made permissions atomic during file copy:
-  The temporary file is now set to promised permissions before replacing it
-  with the original in copy_from files promises (ENT-13163)
-- Removed useless output from cfengine3 init script (ENT-13234)
-- Switched to using current process ID to investigate proc filesystem
-  to workaround in-container non-root owned symlinks (CFE-3429)
-- Added sysvinit cf-php-fpm service script for Mission Portal
-  (ENT-13234)
+  The temporary file is now set to promised permissions before replacing it with the original in `copy_from` `files` promises (ENT-13163)
+- Removed useless output from `cfengine3` init script (ENT-13234)
+- Switched to using current process ID to investigate proc filesystem to workaround in-container non-root owned symlinks (CFE-3429)
+- Added sysvinit `cf-php-fpm` service script for Mission Portal (ENT-13234)
 - Fixed bug where remote file copy always preserves source perms
-  Remote file copy with the `copy_from` attribute now only preserves
-  source file permissions if the `preserve` attribute in `body copy_from`
-  is true. Otherwise it will use the permissions of the destination file
-  if it already exists and default permissions if it does not (ENT-11988)
-- Fixed cf-support usage of coredumpctl matching (ENT-13272)
-- Fixed crash in readyaml() policy function when parsing an empty file (CFE-4595)
-- Fixed move_obstructions support when using content, and edit_template
-  (CFE-4591)
+  Remote file copy with the `copy_from` attribute now only preserves source file permissions if the `preserve` attribute in `body copy_from` is true.
+  Otherwise it will use the permissions of the destination file if it already exists and default permissions if it does not (ENT-11988)
+- Fixed `cf-support` usage of `coredumpctl` matching (ENT-13272)
+- Fixed crash in `readyaml()` policy function when parsing an empty file (CFE-4595)
+- Fixed `move_obstructions` support when using content, and `edit_template` (CFE-4591)
 - Fixed handling of promise locking with edit line
-  Fixed bug where rendered files can result in erroneously empty files
-  as a result of promise locking (ENT-9980)
+  Fixed bug where rendered files can result in erroneously empty files as a result of promise locking (ENT-9980)
 
 Security fixes:
 
@@ -91,120 +59,73 @@ Security fixes:
 
 ## 3.24.2
 
-- Adjusted cf-support for exotic UNIX platforms (ENT-9786)
-- Adjusted cf-support to not fail if core dumps are available and gdb is
+- Adjusted `cf-support` for exotic UNIX platforms (ENT-9786)
+- Adjusted `cf-support` to not fail if core dumps are available and gdb is
   missing (ENT-9786)
 - In case of LMDB migration failures, the respective database file is now
   moved to the side, and a fresh database is created.
-- cf-agent now creates backup before LMDB migration
+- `cf-agent` now creates backup before LMDB migration
 - Re-enabled DB migration support for LMDB
-- SELinux: Allow cf-serverd to set its own limits (ENT-12446)
-- Added http_port and getattr selinux permissions as needed for selinux
-  policy on rhel-8 and rhel-9 (ENT-12954)
-- Added "acknowledged" field to lastseen DB (ENT-11838)
-- Fixed issue where rhel >8 packages would not have correct openssl
-  dependency version (ENT-12587)
+- SELinux: Allow `cf-serverd` to set its own limits (ENT-12446)
+- Added `http_port` and `getattr` SELinux permissions as needed for SELinux policy on RHEL 8 and RHEL 9 (ENT-12954)
+- Added `acknowledged` field to lastseen DB (ENT-11838)
+- Fixed issue where rhel >8 packages would not have correct openssl dependency version (ENT-12587)
 - Fixed bug in parsing process_select for Windows (ENT-12751)
 - Fixed bug causing LMDB database corruption
-- Fixed incorrect exit code handling in cf-runagent (ENT-12712)
+- Fixed incorrect exit code handling in `cf-runagent` (ENT-12712)
 - Fixed possible segmentation fault when backing up LMDB databases
 
 ## 3.24.1
 
-- Fixed multiple issues in cfengine-enterprise SELinux policy which could
-  cause AVC denials / warnings for various CFEngine components.
-  (ENT-12466, ENT-12446)
-- Added logging CFEngine component related SELinux denials in cf-support
-  (ENT-12137)
-- Agent now also ignores interfaces listed in ignore_interfaces.rx when
-  looking for IPv6 interface info. Variables such as
-  `default:sys.hardware_mac[<INTERFACE>]` will no longer be defined for
-  ignored interfaces. (ENT-11840)
-- Atomic copy_from in files promise
-  Changes to `files` promise in `copy_from` attribute:
-  - The new file (i.e., `<FILENAME>.cfnew`) is now created with correct
-    permission during remote copy. Previously it would be created with
-    default permissions.
-  - The destination file (i.e., `<FILENAME>`) is no longer deleted on
-    backup during file copy. Previously it would be renamed to
-    `<FILENAME>.cfsaved`, causing the original file to dissappear. Now an
-    actual copy of the original file with the same permissions is created
-    instead.
-    As a result, there will no longer be a brief moment where the original
-    file is inaccessible. (ENT-11988)
-- commands promises with exit codes not matching any
-  `_returncodes` attributes from classes body now log and
-  error message not just an info message (CFE-4429, ENT-12103)
+- Fixed multiple issues in cfengine-enterprise SELinux policy which could cause AVC denials / warnings for various CFEngine components (ENT-12466, ENT-12446)
+- Added logging CFEngine component related SELinux denials in `cf-support` (ENT-12137)
+- Agent now also ignores interfaces listed in `ignore_interfaces.rx` when looking for IPv6 interface info.
+  Variables such as `default:sys.hardware_mac[<INTERFACE>]` will no longer be defined for ignored interfaces. (ENT-11840)
+- Changes to `files` promise in `copy_from` attribute:
+  - The new file (i.e., `<FILENAME>.cfnew`) is now created with correct permission during remote copy.
+    Previously it would be created with default permissions.
+  - The destination file (i.e., `<FILENAME>`) is no longer deleted on backup during file copy.
+    Previously it would be renamed to `<FILENAME>.cfsaved`, causing the original file to dissappear.
+    Now an actual copy of the original file with the same permissions is created instead.
+    As a result, there will no longer be a brief moment where the original file is inaccessible. (ENT-11988)
+- `commands` promises with exit codes not matching any `_returncodes` attributes from classes body now log an error message not just an info message (CFE-4429, ENT-12103)
 
 ## 3.24.0
 
-- Added a sanity check to policy parser that checks for and warns
-  in case of promise declarations with no actions. The motivation
-  for this check is to aid policy writers in detecting semantic
-  errors early. (ENT-11137)
-- Added sys.os_name_human for Alpine, postmarketOS, OpenBSD and NetBSD
+- Added a sanity check to policy parser that checks for and warns in case of promise declarations with no actions.
+  The motivation for this check is to aid policy writers in detecting semantic errors early. (ENT-11137)
+- Added `sys.os_name_human` for Alpine, postmarketOS, OpenBSD and NetBSD
 - Added warning log message when OS is not recognized (CFE-4342)
-- Adjusted locale settings in masterfiles stage common script to
-  handle more cases (ENT-11885)
-- Adjusted package module inventory to include quotes around
-  fields when needed (CFE-4341)
-- Added `sys.os_name_human` and `sys.os_version_major` variables
-  for Amazon. Additionally changed value of `sys.flavor` from
-  `AmazonLinux` to `amazon_linux_2`, so that it is similar to other
-  supported Linux distros. This change was necessary, due to the
-  fact that the `sys.os_version_major` variable is derived from
-  it. However, the `AmazonLinux` class previously derived from
-  `sys.flavor` is still defined for backwards compatibility.
-  (ENT-10817)
+- Adjusted locale settings in masterfiles stage common script to handle more cases (ENT-11885)
+- Adjusted package module inventory to include quotes around fields when needed (CFE-4341)
+- Added `sys.os_name_human` and `sys.os_version_major` variables for Amazon.
+  Additionally changed value of `sys.flavor` from `AmazonLinux` to `amazon_linux_2`, so that it is similar to other supported Linux distros.
+  This change was necessary, due to the fact that the `sys.os_version_major` variable is derived from it.
+  However, the `AmazonLinux` class previously derived from `sys.flavor` is still defined for backwards compatibility. (ENT-10817)
 - CFEngine now uses PCRE2 for regular expressions (ENT-10629)
-- CFEngine processes no longer suffer from the "Invalid argument"
-  issues when working with LMDB (ENT-11543)
-- Changed cf-apache systemd unit to reload configuration gracefully
-  (ENT-11526)
-- Changed cf-execd's sleep behavior so it attempts to wake up at
-  the beginning of every minute (ENT-11765)
-- File copying now uses more efficient implementation on Linux
-  platforms (CFE-4380)
-- Fixed bug in double expansion of foreign list variables with namespaces
-  (ENT-11923)
-- Fixed bug related to failing backwards directory traversial when
-  using forward slashes in path argument of the findfiles_up()
-  policy function on Windows.
-- Fixed bug where `default:sys.fqhost` contained many spaces when domain is
-  set in body common control (CFE-4053)
-- Fixed cf-support call to cf-promises to collect all classes and vars
-  (CFE-4300)
-- Fixed package promises with only promisers and no other attributes
-  (CFE-4315, CFE-4398, CFE-4408)
-- Modified package promise default. If platform_default is present
-  use that package module. (CFE-4315)
+- CFEngine processes no longer suffer from the "Invalid argument" issues when working with LMDB (ENT-11543)
+- Changed `cf-apache` systemd unit to reload configuration gracefully (ENT-11526)
+- Changed `cf-execd` sleep behavior so it attempts to wake up at the beginning of every minute (ENT-11765)
+- File copying now uses more efficient implementation on Linux platforms (CFE-4380)
+- Fixed bug in double expansion of foreign list variables with namespaces (ENT-11923)
+- Fixed bug related to failing backwards directory traversal when using forward slashes in path argument of the `findfiles_up()` policy function on Windows.
+- Fixed bug where `default:sys.fqhost` contained many spaces when domain is set in `body common control` (CFE-4053)
+- Fixed `cf-support` call to cf-promises to collect all classes and vars (CFE-4300)
+- Fixed package promises with only promisers and no other attributes (CFE-4315, CFE-4398, CFE-4408)
+- Modified package promise default. If platform_default is present use that package module. (CFE-4315)
 - Ownership of symlinks is now handled properly (ENT-11235)
 - SELinux no longer breaks exporting large reports as PDF (ENT-11154)
-- The `arglist` attribute in the `commands` promises now preserves
-  whitespaces in the arguments. Whitespaces are currently not preserved on
-  Windows, or if the `useshell` attribute is set to anything other than
-  `"noshell"`. (CFE-2724, CFE-4294)
-- Trailing newline on insert_tree promisers no longer removes
-  ending tag for select_xpath (CFE-3806)
-- cf-agent has two new options --no-augments and
-  --no-host-specific-data to skip loading augments
-  (def.json or def_preferred.json) and host-specific
-  data (host_specific.json), respectively (ENT-10792)
-- cf-agent now has a new option --skip-bootstrap-service-start to
-  skip starting CFEngine services during the bootstrap process
-  (ENT-11932)
-- cf-runalerts.service no longer exists, alerts are now
-  periodically run by cf-reactor (ENT-11538)
-- depth_search acting on a non-directory promiser now handles such
-  file as if the promise didn't use depth_search. A warning is issued in this case.
-  (ENT-8996)
-- masterfiles-stage.sh now supports a new --check-only option
-  (ENT-9386)
-- Added new policy variable `sys.cfengine_roles`. This
-  variable is a string list, containing "Reporting hub" if cf-hub
-  exists (hub package installed), "Policy server" if the host is
-  bootstrapped to itself (`policy_server` class defined), and just
-  "Client" if none of the other options are true.
+- The `arglist` attribute in the `commands` promises now preserves whitespaces in the arguments.
+  Whitespaces are currently not preserved on Windows, or if the `useshell` attribute is set to anything other than `"noshell"`. (CFE-2724, CFE-4294)
+- Trailing newline on insert_tree promisers no longer removes ending tag for `select_xpath` (CFE-3806)
+- `cf-agent` has two new options `--no-augments` and `--no-host-specific-data` to skip loading augments (`def.json` or `def_preferred.json`) and host-specific data (`host_specific.json`), respectively (ENT-10792)
+- `cf-agent` now has a new option `--skip-bootstrap-service-start` to skip starting CFEngine services during the bootstrap process (ENT-11932)
+- `cf-runalerts.service` no longer exists, alerts are now periodically run by `cf-reactor` (ENT-11538)
+- `depth_search` acting on a non-directory promiser now handles such
+  file as if the promise didn't use depth_search. A warning is issued in this case. (ENT-8996)
+- `masterfiles-stage.sh` now supports a new `--check-only` option (ENT-9386)
+- Added new policy variable `sys.cfengine_roles`.
+  This variable is a string list, containing "Reporting hub" if `cf-hub` exists (hub package installed), "Policy server" if the host is bootstrapped to itself (`policy_server` class defined), and just "Client" if none of the other options are true.
 - Added 2 new classes correlating to the values in `sys.cfengine_roles`:
   `cfengine_reporting_hub` and `cfengine_client`.
 

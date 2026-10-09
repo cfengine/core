@@ -414,8 +414,18 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
         if (encrypt)
         {
             memcpy(in, recvbuffer, nbytes);
-            DecryptString(recvbuffer, sizeof(recvbuffer), in, nbytes,
-                          conn->encryption_type, conn->session_key);
+            nbytes = DecryptString(recvbuffer, sizeof(recvbuffer), in, nbytes,
+                                   conn->encryption_type, conn->session_key);
+            if (nbytes <= 0 || (size_t) nbytes >= sizeof(recvbuffer))
+            {
+                Log(LOG_LEVEL_ERR,
+                    "Failed to decrypt server packet when listing directory '%s'!",
+                    dirname);
+                goto err;
+            }
+            /* ReceiveTransaction() terminates the plaintext packets, this
+             * terminates the decrypted ones. */
+            recvbuffer[nbytes] = '\0';
         }
 
         if (recvbuffer[0] == '\0')
@@ -439,9 +449,13 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
             goto err;
         }
 
-        /* Double '\0' means end of packet. */
-        for (char *sp = recvbuffer; *sp != '\0'; sp += strlen(sp) + 1)
+        /* Double '\0' means end of packet, but only the bytes we received
+         * belong to it. */
+        for (int i = 0; i < nbytes && recvbuffer[i] != '\0';
+             i += strlen(recvbuffer + i) + 1)
         {
+            const char *const sp = recvbuffer + i;
+
             if (strcmp(sp, CFD_TERMINATOR) == 0)      /* end of all packets */
             {
                 return start;

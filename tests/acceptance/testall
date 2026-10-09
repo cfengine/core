@@ -257,7 +257,7 @@ usage() {
     echo "               defaults to $DEFLIBTOOL."
     echo " --include Include the file or directory given in the workdir before the test"
     echo "           starts. This option may be given several times."
-    echo " --tests=common,network,serial,timed,slow,errorexit,errorlog,libxml2,libcurl"
+    echo " --tests=common,network,serial,timed,slow,errorexit,errorlog,errorpass,libxml2,libcurl"
     echo "           This is the default value, you can also add from the following:"
     echo "           unsafe,staging"
     echo "           NOTE: 'staging' tests are not expected to pass"
@@ -324,9 +324,11 @@ runtest() {
 
     case "$TEST" in
         *.x.cf)       TEST_TYPE=errorexit &&
-                      EXTRATEXT='(should exit with non-zero, but not crash)' ;;
+                      EXTRATEXT='(should exit with non-zero, but not crash. Printing pass or fail is irrelevant)' ;;
         *.error.cf)   TEST_TYPE=errorlog &&
-                      EXTRATEXT='(should log error(s), but exit with 0)' ;;
+                      EXTRATEXT='(should log error(s), but exit with 0. Printing pass or fail is irrelevant)' ;;
+        *.error.pass.cf)  TEST_TYPE=errorpass &&
+                          EXTRATEXT='(should log error(s), print pass message and, exit with 0)' ;;
         */staging/*)  TEST_TYPE=staging   ;;
         */unsafe/*)   TEST_TYPE=unsafe    ;;
         */network/*)  TEST_TYPE=network   ;;
@@ -344,6 +346,10 @@ runtest() {
     then
         SKIP=1
         SKIPREASON="${COLOR_WARNING}'errorexit' tests are disabled${COLOR_NORMAL}"
+    elif [ $ERRORPASS_TESTS = 0  -a  $TEST_TYPE = errorpass ]
+    then
+        SKIP=1
+        SKIPREASON="${COLOR_WARNING}'errorpass' tests are disabled${COLOR_NORMAL}"
     elif [ $ERRORLOG_TESTS = 0  -a  $TEST_TYPE = errorlog ]
     then
         SKIP=1
@@ -567,7 +573,26 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
                 RESULT=FAIL
                 RESULT_MSG="${COLOR_FAILURE}FAIL (No errors printed)${COLOR_NORMAL}"
             fi
-        else # TEST_TYPE is not errorlog or errorexit
+        elif [ $TEST_TYPE = errorpass ]
+        then
+            ESCAPED_TEST="$(echo "($TEST|dcs.sub.cf)" | sed -e 's/\./\\./g')"
+            if [ $RETVAL != 0 ]
+            then
+                RESULT=FAIL
+                RESULT_MSG="${COLOR_FAILURE}FAIL (NON-ZERO EXIT CODE!)${COLOR_NORMAL}"
+            elif ! grep -F 'error: ' "$OUTFILE" > /dev/null
+            then
+                RESULT=FAIL
+                RESULT_MSG="${COLOR_FAILURE}FAIL (No error message!)${COLOR_NORMAL}"
+            elif ! grep -E "R: .*$ESCAPED_TEST Pass" $OUTFILE > /dev/null
+            then
+                RESULT=FAIL
+                RESULT_MSG="${COLOR_FAILURE}FAIL (Pass not printed!)${COLOR_NORMAL}"
+            else
+                RESULT=Pass
+                RESULT_MSG="${COLOR_SUCCESS}Pass${COLOR_NORMAL}"
+            fi
+        else # TEST_TYPE is not errorlog or errorexit or errorpass
             # We need to be careful when matching test outcomes. Because of convergence
             # passes, a test may output FAIL before it outputs Pass; in this case the
             # latter trumps the former. Also be careful when matching an [XS]FAIL; the
@@ -816,6 +841,7 @@ do
             SLOW_TESTS=0
             ERROREXIT_TESTS=0
             ERRORLOG_TESTS=0
+            ERRORPASS_TESTS=0
             SERIAL_TESTS=0
             NETWORK_TESTS=0
             LIBXML2_TESTS=0
@@ -832,6 +858,7 @@ do
                     slow)        SLOW_TESTS=1;;
                     errorexit)   ERROREXIT_TESTS=1;;
                     errorlog)    ERRORLOG_TESTS=1;;
+                    errorpass)   ERRORPASS_TESTS=1;;
                     serial)      SERIAL_TESTS=1;;
                     network)     NETWORK_TESTS=1;;
                     libxml2)     LIBXML2_TESTS=1;;

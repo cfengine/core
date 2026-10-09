@@ -827,7 +827,10 @@ bool DiffPkgOperations()
             MapRemove(removed, name_arch);
 
             PkgOperationRecord *prev_record = MapGet(installed, name_arch);
-            if ((prev_record == NULL) || PkgVersionIsGreater(pkg_ver, prev_record->pkg_ver))
+            if ((prev_record == NULL) ||
+                (NULL_OR_EMPTY(prev_record->pkg_ver) && !NULL_OR_EMPTY(pkg_ver)) ||
+                (!NULL_OR_EMPTY(pkg_ver) && !NULL_OR_EMPTY(prev_record->pkg_ver) &&
+                 PkgVersionIsGreater(pkg_ver, prev_record->pkg_ver)))
             {
                 char *msg = GetPkgOperationMsg(CHROOT_PKG_OPERATION_CODE_INSTALL,
                                                pkg_name, pkg_arch, pkg_ver);

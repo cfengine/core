@@ -26,10 +26,11 @@
 #define CFENGINE_FILE_WATCHER_H
 
 #include <platform.h>
+#include <watcher.h>            /* WatcherCheckResult */
 
 
 void *FileWatcherStateNew(const char *path);
-bool CheckFileDeleted(void *state);
+WatcherCheckResult CheckFileDeleted(void *state);
 void DestroyFileWatcherState(void *state);
 
 #endif

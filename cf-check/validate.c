@@ -302,6 +302,16 @@ static void UpdateValidatorLastseen(
         if (direction == 'i' || direction == 'o')
         {
             KeyHostSeen data;
+            if (value.mv_size != sizeof(data))
+            {
+                ValidationError(
+                    state,
+                    "Quality-entry '%s' has wrong size (%zu bytes, expected %zu)",
+                    key_string,
+                    (size_t) value.mv_size,
+                    sizeof(data));
+                return;
+            }
             memcpy(&data, value.mv_data, sizeof(data));
 
             const time_t lastseen = data.lastseen;
@@ -355,6 +365,16 @@ static void UpdateValidatorLock(
     const char *key_string = key.mv_data;
 
     LockData lock;
+    if (value.mv_size != sizeof(lock))
+    {
+        ValidationError(
+            state,
+            "Lock-entry '%s' has wrong size (%zu bytes, expected %zu)",
+            key_string,
+            (size_t) value.mv_size,
+            sizeof(lock));
+        return;
+    }
     memcpy(&lock, value.mv_data, sizeof(lock));
     const time_t lock_time = lock.time;
     const time_t current = time(NULL);

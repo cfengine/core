@@ -1,7 +1,7 @@
 #include <test.h>
 
 #include <watcher.h>
-#include <file_watcher.h>       /* FileWatcherStateNew() */
+#include <file_watcher.h>       /* FileWatcherStateNew(), FileWatcherCheckFileDeleted() */
 #include <policy.h>             /* Promise */
 #include <logging_priv.h>       /* LoggingPrivContext, LoggingPrivSetContext() */
 
@@ -24,16 +24,91 @@ static char *CaptureErrorLogHook(ARG_UNUSED LoggingPrivContext *pctx, LogLevel l
     return (char *) message;
 }
 
-/* The registry never dereferences the promise it is given, it only hands it
- * back to the WatcherEventFn, so a dummy one is enough. */
-static const Promise dummy_promise;
+/* The registry only hashes the expanded promise it is given (its promiser
+ * here, as it has no constraints, comment or parent) and hands the
+ * unexpanded one (org_pp) back to the WatcherEventFn, so minimal promises
+ * are enough. */
+static const Promise unexpanded_promise;
+static const Promise expanded_promise = {
+    .promiser = "test-event",
+    .org_pp = &unexpanded_promise,
+};
+
+static WatcherOptions FileDeletedOptions(const char *path)
+{
+    WatcherOptions opt = {
+        .state = FileWatcherStateNew(path),
+        .check_callback = FileWatcherCheckFileDeleted,
+        .destroy_state = DestroyFileWatcherState,
+    };
+    return opt;
+}
+
+/* Creates the file 'file' in a new temporary directory dir */
+static void CreateTempFile(char *dir, char *path, size_t path_size)
+{
+    assert_true(mkdtemp(dir) != NULL);
+    snprintf(path, path_size, "%s/file", dir);
+    int file_fd = open(path, O_CREAT | O_WRONLY, 0600);
+    assert_true(file_fd >= 0);
+    close(file_fd);
+}
+
+/* Waits up to tenths/10 seconds for the watcher thread to queue an event,
+ * without handling it */
+static bool WaitForQueuedEvent(int fd, int tenths)
+{
+    for (int i = 0; i < tenths; i++)
+    {
+        fd_set readfds;
+        FD_ZERO(&readfds);
+        FD_SET(fd, &readfds);
+        struct timeval timeout = { .tv_sec = 0, .tv_usec = 100000 };
+        if (select(fd + 1, &readfds, NULL, NULL, &timeout) > 0)
+        {
+            return true;
+        }
+    }
+    return false;
+}
 
 static int handled_event_count = 0;
+static const Promise *last_event_promise = NULL;
+static char last_event_promise_hash[CF_HOSTKEY_STRING_SIZE];
+static WatcherCheckResult last_event_check = WATCHER_CHECK_NO_EVENT;
 
-static void CountEvent(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Promise *pp,
-                       ARG_UNUSED const char *promiser, ARG_UNUSED WatcherCheckResult check)
+static void RecordEvent(ARG_UNUSED EvalContext *ctx, const Promise *pp,
+                        const char *promise_hash, WatcherCheckResult check)
 {
     handled_event_count++;
+    last_event_promise = pp;
+    strlcpy(last_event_promise_hash, promise_hash, sizeof(last_event_promise_hash));
+    last_event_check = check;
+}
+
+/* Asserts that the last event was handled for the iteration `pp` */
+static void AssertLastEventFor(const Promise *pp)
+{
+    char promise_hash[CF_HOSTKEY_STRING_SIZE];
+    WatcherPromiseHash(pp, promise_hash, sizeof(promise_hash));
+    assert_true(last_event_promise == pp->org_pp);
+    assert_string_equal(last_event_promise_hash, promise_hash);
+}
+
+static void ResetRecordedEvents(void)
+{
+    handled_event_count = 0;
+    last_event_promise = NULL;
+    last_event_promise_hash[0] = '\0';
+    last_event_check = WATCHER_CHECK_NO_EVENT;
+}
+
+static void HandleEvents(int fd)
+{
+    fd_set readfds;
+    FD_ZERO(&readfds);
+    FD_SET(fd, &readfds);
+    EventWatcherHandleEvents(NULL, RecordEvent, fd, &readfds);
 }
 
 static void test_registry_initialize_finalize(void)
@@ -46,56 +121,85 @@ static void test_watcher_register_single(void)
 {
     WatcherRegistryInitialize();
 
-    assert_true(WatcherRegister("test-event", EVENT_FILE_DELETED, FileWatcherStateNew("/nonexistent/test-event"), &dummy_promise, 5));
+    WatcherRegister(&expanded_promise, FileDeletedOptions("/nonexistent/test-event"), 5);
 
     WatcherRegistryFinalize();
 }
 
-static void test_watcher_register_duplicate_ignored(void)
+static void test_watcher_register_iterations(void)
 {
     WatcherRegistryInitialize();
 
-    assert_true(WatcherRegister("dup-event", EVENT_FILE_DELETED, FileWatcherStateNew("/nonexistent/dup-event-a"), &dummy_promise, 5));
+    /* The iterations of a promise (same promise, other promisers) are
+     * different watchers */
+    const Promise iteration_a = { .promiser = "/a", .org_pp = &unexpanded_promise };
+    const Promise iteration_b = { .promiser = "/b", .org_pp = &unexpanded_promise };
+    WatcherRegister(&iteration_a, FileDeletedOptions("/nonexistent/a"), 5);
+    WatcherRegister(&iteration_b, FileDeletedOptions("/nonexistent/b"), 5);
 
-    captured_err_count = 0;
-    captured_err_message[0] = '\0';
-    /* force_hook_level makes the hook still see the error while the console
-     * level is lowered, so the expected error isn't printed. */
-    LoggingPrivContext log_ctx = {
-        .log_hook = CaptureErrorLogHook,
-        .force_hook_level = LOG_LEVEL_ERR,
+    WatcherRegistryFinalize();
+}
+
+static void test_watcher_register_identical_ignored(void)
+{
+    char dir[] = "/tmp/watcher_test.XXXXXX";
+    char path[PATH_MAX];
+    CreateTempFile(dir, path, sizeof(path));
+
+    WatcherRegistryInitialize();
+
+    /* Another promise identical to a registered one (same expanded promise,
+     * so same hash) is ignored, so that the 'then' bundle isn't run twice
+     * for the same event. The state of the ignored one is destroyed by the
+     * registry (checked by valgrind/ASan). */
+    static const Promise other_unexpanded_promise;
+    const Promise other_expanded_promise = {
+        .promiser = "test-event",
+        .org_pp = &other_unexpanded_promise,
     };
-    LoggingPrivSetContext(&log_ctx);
-    const LogLevel old_level = LogGetGlobalLevel();
-    LogSetGlobalLevel(LOG_LEVEL_CRIT);
+    WatcherRegister(&expanded_promise, FileDeletedOptions(path), 1);
+    WatcherRegister(&other_expanded_promise, FileDeletedOptions(path), 1);
 
-    /* Registering the same promise and promiser again must be rejected: an error is logged
-     * (not silently swallowed) and the first registration is kept, not
-     * replaced. */
-    const bool registered = WatcherRegister("dup-event", EVENT_FILE_DELETED, FileWatcherStateNew("/nonexistent/dup-event-b"), &dummy_promise, 5);
+    int fd = -1;
+    assert_true(EventWatcherInitialize(&fd));
 
-    LogSetGlobalLevel(old_level);
-    LoggingPrivSetContext(NULL);
+    ResetRecordedEvents();
+    assert_int_equal(unlink(path), 0);
 
-    assert_false(registered);
-    assert_int_equal(captured_err_count, 1);
-    assert_true(strstr(captured_err_message, "dup-event") != NULL);
-    assert_true(strstr(captured_err_message, "already registered") != NULL);
+    assert_true(WaitForQueuedEvent(fd, 50));
+    HandleEvents(fd);
 
-    WatcherRegistryFinalize();
+    /* Handled once, with the promise registered first */
+    assert_int_equal(handled_event_count, 1);
+    AssertLastEventFor(&expanded_promise);
+
+    EventWatcherFinalize();
+    assert_int_equal(rmdir(dir), 0);
 }
 
-static void test_watcher_register_same_promiser_of_other_promise(void)
+static void test_watcher_register_again_after_pause(void)
 {
     WatcherRegistryInitialize();
 
-    /* Watchers are identified by their promise and promiser: iterations of
-     * a promise (same promise, other promisers), and promises with the same
-     * promiser (other promises), are all different watchers */
-    static const Promise other_promise;
-    assert_true(WatcherRegister("/a", EVENT_FILE_DELETED, FileWatcherStateNew("/nonexistent/a"), &dummy_promise, 5));
-    assert_true(WatcherRegister("/b", EVENT_FILE_DELETED, FileWatcherStateNew("/nonexistent/b"), &dummy_promise, 5));
-    assert_true(WatcherRegister("/a", EVENT_FILE_DELETED, FileWatcherStateNew("/nonexistent/a"), &other_promise, 5));
+    /* Pausing sets the registered watchers aside, so the same promise can be
+     * registered again for the new policy, also without the event watcher
+     * being initialized */
+    ResetRecordedEvents();
+    WatcherRegister(&expanded_promise, FileDeletedOptions("/nonexistent/test-event"), 5);
+    EventWatcherPause(NULL, RecordEvent);
+    WatcherRegister(&expanded_promise, FileDeletedOptions("/nonexistent/test-event"), 5);
+    EventWatcherResume();
+
+    /* Paused twice in a row (e.g. a failed policy reload in between), the
+     * watchers set aside the first time are replaced by those registered
+     * since, without leaking (checked by valgrind/ASan) */
+    EventWatcherPause(NULL, RecordEvent);
+    WatcherRegister(&expanded_promise, FileDeletedOptions("/nonexistent/test-event"), 5);
+    EventWatcherPause(NULL, RecordEvent);
+    WatcherRegister(&expanded_promise, FileDeletedOptions("/nonexistent/test-event"), 5);
+    EventWatcherResume();
+
+    assert_int_equal(handled_event_count, 0);
 
     WatcherRegistryFinalize();
 }
@@ -110,16 +214,16 @@ static void test_event_watcher_lifecycle(void)
 
     fd_set readfds;
     FD_ZERO(&readfds);
-    handled_event_count = 0;
+    ResetRecordedEvents();
 
     /* fd not set: must return early without touching the wakeup channel or
      * the event queue. */
-    EventWatcherHandleEvents(NULL, CountEvent, fd, &readfds);
+    EventWatcherHandleEvents(NULL, RecordEvent, fd, &readfds);
 
     FD_SET(fd, &readfds);
     /* fd set but nothing queued: must drain the channel (no-op) and find
      * nothing to pop from the event queue. */
-    EventWatcherHandleEvents(NULL, CountEvent, fd, &readfds);
+    EventWatcherHandleEvents(NULL, RecordEvent, fd, &readfds);
     assert_int_equal(handled_event_count, 0);
 
     /* Must wake up and stop the watcher thread by itself (IsPendingTermination()
@@ -127,56 +231,14 @@ static void test_event_watcher_lifecycle(void)
     EventWatcherFinalize();
 }
 
-/* Waits up to timeout_secs for the watcher thread to signal a queued event
- * on fd, without handling it */
-static bool WaitForQueuedEvent(int fd, int timeout_secs)
-{
-    for (int i = 0; i < timeout_secs * 10; i++)
-    {
-        fd_set readfds;
-        FD_ZERO(&readfds);
-        FD_SET(fd, &readfds);
-        struct timeval timeout = { .tv_sec = 0, .tv_usec = 100000 };
-        if (select(fd + 1, &readfds, NULL, NULL, &timeout) > 0)
-        {
-            return true;
-        }
-    }
-    return false;
-}
-
-static void HandleEvents(int fd, WatcherEventFn on_event)
-{
-    fd_set readfds;
-    FD_ZERO(&readfds);
-    FD_SET(fd, &readfds);
-    EventWatcherHandleEvents(NULL, on_event, fd, &readfds);
-}
-
-static const Promise *last_event_promise = NULL;
-
-static WatcherCheckResult last_event_check = WATCHER_CHECK_NO_EVENT;
-
-static void RecordEvent(ARG_UNUSED EvalContext *ctx, const Promise *pp,
-                        ARG_UNUSED const char *promiser, WatcherCheckResult check)
-{
-    handled_event_count++;
-    last_event_promise = pp;
-    last_event_check = check;
-}
-
 static void test_event_watcher_pause_handles_queued_events(void)
 {
     char dir[] = "/tmp/watcher_test.XXXXXX";
-    assert_true(mkdtemp(dir) != NULL);
     char path[PATH_MAX];
-    snprintf(path, sizeof(path), "%s/file", dir);
-    int file_fd = open(path, O_CREAT | O_WRONLY, 0600);
-    assert_true(file_fd >= 0);
-    close(file_fd);
+    CreateTempFile(dir, path, sizeof(path));
 
     WatcherRegistryInitialize();
-    assert_true(WatcherRegister("pause-event", EVENT_FILE_DELETED, FileWatcherStateNew(path), &dummy_promise, 1));
+    WatcherRegister(&expanded_promise, FileDeletedOptions(path), 1);
 
     int fd = -1;
     assert_true(EventWatcherInitialize(&fd));
@@ -184,19 +246,135 @@ static void test_event_watcher_pause_handles_queued_events(void)
 
     /* Wait for the watcher thread to queue the event (it checks every
      * second), without handling it */
-    assert_true(WaitForQueuedEvent(fd, 5));
+    assert_true(WaitForQueuedEvent(fd, 50));
 
-    /* Pausing handles the queued event, with the promise of its watcher, so
-     * that the registry can be cleared without losing it */
-    handled_event_count = 0;
-    last_event_promise = NULL;
+    /* Pausing handles the queued event, with the unexpanded promise and the
+     * promise hash of its watcher, so that the watchers can be set aside without
+     * losing it */
+    ResetRecordedEvents();
     EventWatcherPause(NULL, RecordEvent);
     assert_int_equal(handled_event_count, 1);
-    assert_true(last_event_promise == &dummy_promise);
+    AssertLastEventFor(&expanded_promise);
     assert_int_equal(last_event_check, WATCHER_CHECK_EVENT);
 
-    WatcherRegistryClear();
     EventWatcherResume();
+
+    EventWatcherFinalize();
+    assert_int_equal(rmdir(dir), 0);
+}
+
+static void test_event_watcher_state_kept_across_pause(void)
+{
+    char dir[] = "/tmp/watcher_test.XXXXXX";
+    char path[PATH_MAX];
+    CreateTempFile(dir, path, sizeof(path));
+
+    WatcherRegistryInitialize();
+    WatcherRegister(&expanded_promise, FileDeletedOptions(path), 1);
+
+    int fd = -1;
+    assert_true(EventWatcherInitialize(&fd));
+
+    ResetRecordedEvents();
+    EventWatcherPause(NULL, RecordEvent);
+    assert_int_equal(handled_event_count, 0);
+
+    /* Deleted while the policy is reloaded: a new state would never see the
+     * file, so only the state kept from the previous watcher detects it */
+    assert_int_equal(unlink(path), 0);
+
+    /* The identical promise of the new policy, i.e. a new unexpanded
+     * promise, but the same expanded one */
+    static const Promise new_unexpanded_promise;
+    const Promise new_expanded_promise = {
+        .promiser = "test-event",
+        .org_pp = &new_unexpanded_promise,
+    };
+    WatcherRegister(&new_expanded_promise, FileDeletedOptions(path), 1);
+    EventWatcherResume();
+
+    assert_true(WaitForQueuedEvent(fd, 50));
+    HandleEvents(fd);
+
+    /* Handled with the promise of the new policy, not the destroyed one */
+    assert_int_equal(handled_event_count, 1);
+    AssertLastEventFor(&new_expanded_promise);
+
+    EventWatcherFinalize();
+    assert_int_equal(rmdir(dir), 0);
+}
+
+static void test_event_watcher_state_kept_identical_ignored(void)
+{
+    char dir[] = "/tmp/watcher_test.XXXXXX";
+    char path[PATH_MAX];
+    CreateTempFile(dir, path, sizeof(path));
+
+    WatcherRegistryInitialize();
+    WatcherRegister(&expanded_promise, FileDeletedOptions(path), 1);
+
+    int fd = -1;
+    assert_true(EventWatcherInitialize(&fd));
+
+    ResetRecordedEvents();
+    EventWatcherPause(NULL, RecordEvent);
+    assert_int_equal(unlink(path), 0);
+
+    /* Two identical promises in the new policy: the first takes over the
+     * state of the previous watcher, so the deletion is still detected, and
+     * the second is ignored */
+    static const Promise new_unexpanded_promise;
+    static const Promise other_unexpanded_promise;
+    const Promise new_expanded_promise = {
+        .promiser = "test-event",
+        .org_pp = &new_unexpanded_promise,
+    };
+    const Promise other_expanded_promise = {
+        .promiser = "test-event",
+        .org_pp = &other_unexpanded_promise,
+    };
+    WatcherRegister(&new_expanded_promise, FileDeletedOptions(path), 1);
+    WatcherRegister(&other_expanded_promise, FileDeletedOptions(path), 1);
+    EventWatcherResume();
+
+    assert_true(WaitForQueuedEvent(fd, 50));
+    HandleEvents(fd);
+
+    assert_int_equal(handled_event_count, 1);
+    AssertLastEventFor(&new_expanded_promise);
+
+    EventWatcherFinalize();
+    assert_int_equal(rmdir(dir), 0);
+}
+
+static void test_event_watcher_state_not_kept_for_other_promise(void)
+{
+    char dir[] = "/tmp/watcher_test.XXXXXX";
+    char path[PATH_MAX];
+    CreateTempFile(dir, path, sizeof(path));
+
+    WatcherRegistryInitialize();
+    WatcherRegister(&expanded_promise, FileDeletedOptions(path), 1);
+
+    int fd = -1;
+    assert_true(EventWatcherInitialize(&fd));
+
+    ResetRecordedEvents();
+    EventWatcherPause(NULL, RecordEvent);
+    assert_int_equal(unlink(path), 0);
+
+    /* A different promise in the new policy, even on the same file, starts
+     * with a new state, which never saw the file */
+    const Promise other_expanded_promise = {
+        .promiser = "other-event",
+        .org_pp = &unexpanded_promise,
+    };
+    WatcherRegister(&other_expanded_promise, FileDeletedOptions(path), 1);
+    EventWatcherResume();
+
+    /* The watcher thread checks at least every second */
+    assert_false(WaitForQueuedEvent(fd, 30));
+    assert_int_equal(handled_event_count, 0);
 
     EventWatcherFinalize();
     assert_int_equal(rmdir(dir), 0);
@@ -230,7 +408,7 @@ static void test_check_file_deleted_error(void)
     LogSetGlobalLevel(LOG_LEVEL_CRIT);
 
     void *state = FileWatcherStateNew(path);
-    assert_int_equal(CheckFileDeleted(state), WATCHER_CHECK_ERROR);
+    assert_int_equal(FileWatcherCheckFileDeleted(state), WATCHER_CHECK_ERROR);
     DestroyFileWatcherState(state);
 
     LogSetGlobalLevel(old_level);
@@ -262,15 +440,15 @@ static void test_check_file_deleted_logs_error_once(void)
     /* The following failures are not logged again */
     for (int i = 0; i < 3; i++)
     {
-        assert_int_equal(CheckFileDeleted(state), WATCHER_CHECK_ERROR);
+        assert_int_equal(FileWatcherCheckFileDeleted(state), WATCHER_CHECK_ERROR);
     }
     assert_int_equal(captured_err_count, 1);
 
     /* Once lstat() works again, the next failure is logged again */
     assert_int_equal(unlink(loop), 0);
-    assert_int_equal(CheckFileDeleted(state), WATCHER_CHECK_NO_EVENT);
+    assert_int_equal(FileWatcherCheckFileDeleted(state), WATCHER_CHECK_NO_EVENT);
     assert_int_equal(symlink(loop, loop), 0);
-    assert_int_equal(CheckFileDeleted(state), WATCHER_CHECK_ERROR);
+    assert_int_equal(FileWatcherCheckFileDeleted(state), WATCHER_CHECK_ERROR);
     assert_int_equal(captured_err_count, 2);
 
     DestroyFileWatcherState(state);
@@ -291,28 +469,28 @@ static void test_event_watcher_check_failure_reported_once(void)
     LogSetGlobalLevel(LOG_LEVEL_CRIT);
 
     WatcherRegistryInitialize();
-    assert_true(WatcherRegister("failing-event", EVENT_FILE_DELETED, FileWatcherStateNew(path), &dummy_promise, 1));
+    WatcherRegister(&expanded_promise, FileDeletedOptions(path), 1);
 
     int fd = -1;
     assert_true(EventWatcherInitialize(&fd));
 
     /* The failing check is reported as a failure, not as an event */
-    assert_true(WaitForQueuedEvent(fd, 5));
-    handled_event_count = 0;
-    last_event_check = WATCHER_CHECK_NO_EVENT;
-    HandleEvents(fd, RecordEvent);
+    assert_true(WaitForQueuedEvent(fd, 50));
+    ResetRecordedEvents();
+    HandleEvents(fd);
     assert_int_equal(handled_event_count, 1);
+    AssertLastEventFor(&expanded_promise);
     assert_int_equal(last_event_check, WATCHER_CHECK_ERROR);
 
     /* The following failing checks (every second) are not reported again */
-    assert_false(WaitForQueuedEvent(fd, 3));
+    assert_false(WaitForQueuedEvent(fd, 30));
 
     /* Once a check succeeds again, the next failure is reported again */
     assert_int_equal(unlink(loop), 0);
     sleep(2);
     assert_int_equal(symlink(loop, loop), 0);
-    assert_true(WaitForQueuedEvent(fd, 5));
-    HandleEvents(fd, RecordEvent);
+    assert_true(WaitForQueuedEvent(fd, 50));
+    HandleEvents(fd);
     assert_int_equal(handled_event_count, 2);
     assert_int_equal(last_event_check, WATCHER_CHECK_ERROR);
 
@@ -329,10 +507,14 @@ int main()
     {
         unit_test(test_registry_initialize_finalize),
         unit_test(test_watcher_register_single),
-        unit_test(test_watcher_register_duplicate_ignored),
-        unit_test(test_watcher_register_same_promiser_of_other_promise),
+        unit_test(test_watcher_register_iterations),
+        unit_test(test_watcher_register_identical_ignored),
+        unit_test(test_watcher_register_again_after_pause),
         unit_test(test_event_watcher_lifecycle),
         unit_test(test_event_watcher_pause_handles_queued_events),
+        unit_test(test_event_watcher_state_kept_across_pause),
+        unit_test(test_event_watcher_state_kept_identical_ignored),
+        unit_test(test_event_watcher_state_not_kept_for_other_promise),
         unit_test(test_check_file_deleted_error),
         unit_test(test_check_file_deleted_logs_error_once),
         unit_test(test_event_watcher_check_failure_reported_once),

@@ -139,11 +139,17 @@ static PromiseResult KeepEventsPromise(EvalContext *ctx, const Promise *pp)
         return PROMISE_RESULT_FAIL;
     }
 
+    WatcherOptions opt = {
+        .state = FileWatcherStateNew(path),
+        .check_callback = FileWatcherCheckFileDeleted,
+        .destroy_state = DestroyFileWatcherState,
+    };
+
     // register watcher
     Log(LOG_LEVEL_INFO, "Registering a file_deleted watcher for events promise '%s', on file '%s'", pp->promiser, path);
-    bool kept = WatcherRegister(pp->promiser, EVENT_FILE_DELETED, FileWatcherStateNew(path), pp->org_pp, 1);
+    WatcherRegister(pp, opt, 1);
 
-    return (kept) ? PROMISE_RESULT_NOOP : PROMISE_RESULT_FAIL;
+    return PROMISE_RESULT_NOOP;
 }
 
 static PromiseResult KeepReactorPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED void *param)
@@ -250,7 +256,7 @@ static PromiseResult RunThenBundle(EvalContext *ctx, const Promise *pp)
 
 typedef struct
 {
-    const char *promiser;
+    const char *promise_hash;
     WatcherCheckResult check;
 } ReactorEventParam;
 
@@ -263,36 +269,20 @@ static PromiseResult KeepEventsPromiseOnEvent(EvalContext *ctx, const Promise *p
     assert(param != NULL);
     const ReactorEventParam *event = param;
 
-    if (!StringEqual(pp->promiser, event->promiser))
+    char promise_hash[CF_HOSTKEY_STRING_SIZE];
+    WatcherPromiseHash(pp, promise_hash, sizeof(promise_hash));
+    if (!StringEqual(promise_hash, event->promise_hash))
     {
         return PROMISE_RESULT_SKIPPED;
     }
 
-    PromiseResult result;
-    switch (event->check)
-    {
-    case WATCHER_CHECK_EVENT:
-        result = RunThenBundle(ctx, pp);
-        break;
-
-    case WATCHER_CHECK_ERROR:
-        Log(LOG_LEVEL_ERR, "Reactor events promise '%s' failed to check for its event", pp->promiser);
-        result = PROMISE_RESULT_FAIL;
-        break;
-
-    default:
-        ProgrammingError("Unexpected watcher check result %d for reactor events promise '%s'",
-                         (int) event->check, pp->promiser);
-    }
-
-    RecordEventsPromiseOutcome(ctx, pp, result);
-    return result;
+    return RunThenBundle(ctx, pp);
 }
 
-void HandleReactorEvent(EvalContext *ctx, const Promise *pp, const char *promiser, WatcherCheckResult check)
+void HandleReactorEvent(EvalContext *ctx, const Promise *pp, const char *promise_hash, WatcherCheckResult check)
 {
     assert(pp != NULL);
-    assert(promiser != NULL);
+    assert(promise_hash != NULL);
 
     /* cf-reactor keeps the same EvalContext across events. Like an agent run,
      * the bundle runs see the time classes of now and the persistent classes
@@ -304,7 +294,7 @@ void HandleReactorEvent(EvalContext *ctx, const Promise *pp, const char *promise
     VariableTable *variables = NULL;
     EvalContextSnapshotTake(ctx, &classes, &variables);
 
-    ReactorEventParam event = { .promiser = promiser, .check = check };
+    ReactorEventParam event = { .promise_hash = promise_hash, .check = check };
 
     EvalContextStackPushBundleFrame(ctx, PromiseGetBundle(pp), NULL, false, NULL);
     EvalContextStackPushBundleSectionFrame(ctx, pp->parent_section);

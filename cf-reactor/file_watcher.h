@@ -30,7 +30,7 @@
 
 
 void *FileWatcherStateNew(const char *path);
-WatcherCheckResult CheckFileDeleted(void *state);
+WatcherCheckResult FileWatcherCheckFileDeleted(void *state);
 void DestroyFileWatcherState(void *state);
 
 #endif

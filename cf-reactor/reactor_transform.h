@@ -35,9 +35,9 @@
  * (see watcher.h) for each of its "events" promises.
  *
  * Expects no watchers to be registered: on re-read of the policy, the
- * watchers of the previous policy must be discarded with
- * WatcherRegistryClear() before that policy is destroyed, as they refer to
- * its promises.
+ * watchers of the previous policy must be set aside with
+ * EventWatcherPause() before that policy is destroyed, as they refer to its
+ * promises.
  */
 void KeepReactorPromises(EvalContext *ctx, const Policy *policy);
 
@@ -48,11 +48,12 @@ void KeepReactorPromises(EvalContext *ctx, const Policy *policy);
  * failed to check for its event, record a failure instead.
  *
  * @param pp the unexpanded events promise the watcher was registered for
- * @param promiser the expanded promiser the watcher was registered with,
- *                 selecting the iteration of the events promise to keep
+ * @param promise_hash the hash of the expanded promise the watcher was
+ *                     registered with, selecting the iteration of the events
+ *                     promise to keep
  * @param check whether the event happened or the watcher failed to check for
  *              it (see WatcherEventFn)
  */
-void HandleReactorEvent(EvalContext *ctx, const Promise *pp, const char *promiser, WatcherCheckResult check);
+void HandleReactorEvent(EvalContext *ctx, const Promise *pp, const char *promise_hash, WatcherCheckResult check);
 
 #endif

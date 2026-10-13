@@ -41,10 +41,11 @@ typedef enum
     CF_PROTOCOL_COOKIE = 3,
     CF_PROTOCOL_FILESTREAM = 4,
     CF_PROTOCOL_LEECH2 = 5,
+    CF_PROTOCOL_TRANSFUSION = 6,
 } ProtocolVersion;
 
 /* We use CF_PROTOCOL_LATEST as the default for new connections. */
-#define CF_PROTOCOL_LATEST CF_PROTOCOL_LEECH2
+#define CF_PROTOCOL_LATEST CF_PROTOCOL_TRANSFUSION
 
 static inline const char *ProtocolVersionString(const ProtocolVersion p)
 {
@@ -60,6 +61,8 @@ static inline const char *ProtocolVersionString(const ProtocolVersion p)
         return "filestream";
     case CF_PROTOCOL_LEECH2:
         return "leech2";
+    case CF_PROTOCOL_TRANSFUSION:
+        return "transfusion";
     default:
         return "undefined";
     }
@@ -98,6 +101,11 @@ static inline bool ProtocolSupportsFileStream(const ProtocolVersion p)
 static inline bool ProtocolSupportsLeech2(const ProtocolVersion p)
 {
     return (p >= CF_PROTOCOL_LEECH2);
+}
+
+static inline bool ProtocolSupportsTransfusion(const ProtocolVersion p)
+{
+    return (p >= CF_PROTOCOL_TRANSFUSION);
 }
 
 static inline bool ProtocolTerminateCSV(const ProtocolVersion p)

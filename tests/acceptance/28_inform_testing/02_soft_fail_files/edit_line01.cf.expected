@@ -1,0 +1,2 @@
+    info: files promise '/tmp/TEST.cfengine' repaired, edit_line => set_colon_field("me","6","/my/new/shell");
+    info: Set field 6 with separator ':' to value '/my/new/shell' on line 4 of '/tmp/TEST.cfengine'

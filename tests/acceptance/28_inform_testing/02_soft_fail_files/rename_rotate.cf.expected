@@ -1,0 +1,2 @@
+    info: files promise '/tmp/TEST.cfengine' repaired, rename => rotate
+    info: Rotated file '/tmp/TEST.cfengine' in 4 fifo to '/tmp/TEST.cfengine.1'

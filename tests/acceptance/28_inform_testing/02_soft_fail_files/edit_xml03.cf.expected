@@ -1,0 +1,2 @@
+    info: files promise '/tmp/TEST.cfengine' repaired, xml_insert_tree("$(xml2)", "//x")
+    info: Inserted tree '<a><b><c>text content</c></b></a>' at XPath '//x' in XML document '/tmp/TEST.cfengine'

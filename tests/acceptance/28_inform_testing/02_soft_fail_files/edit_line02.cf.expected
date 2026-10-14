@@ -1,0 +1,2 @@
+    info: files promise '/tmp/TEST.cfengine' repaired, edit_line => delete_lines_matching("foo 1");
+    info: Deleted line 'foo 1' from '/tmp/TEST.cfengine' at line 1

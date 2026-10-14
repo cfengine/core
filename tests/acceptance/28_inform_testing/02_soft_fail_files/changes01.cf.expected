@@ -1,0 +1,2 @@
+    info: files promise '/tmp/TEST.cfengine' repaired, changes => example
+    info: Detected changes for '/tmp/TEST.cfengine', md5 hash 'MD5=d41d8cd98f00b204e9800998ecf8427e', sha1 hash 'SHA=da39a3ee5e6b4b0d3255bfef95601890afd80709'

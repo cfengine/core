@@ -30,108 +30,33 @@
 #include <sys/stat.h>
 #include <errno.h>
 
-// =========== code for EVENT_FILE_DELETED event type ===========
-
-/* Minimum time between two logs of a persisting lstat() failure, since the
- * file is checked on every poll */
-#define LSTAT_ERROR_LOG_INTERVAL_SECS 60
+/* Minimum time between two logs of a persisting failure to check the file,
+ * since the file is checked on every poll */
+#define CHECK_ERROR_LOG_INTERVAL_SECS 60
 
 typedef struct
 {
     char *path;
-    time_t last_seen; /* Time the file was last observed present, 0 if absent */
-    time_t lstat_error_logged; /* Time an lstat() failure was last logged, 0 if lstat() works */
+    time_t last_checked;      /* Time of the last successful check, 0 if none yet */
+    time_t last_error_logged; /* Time the last error was logged, 0 if no errors */
+
+    /* What the last successful check observed */
+    bool last_exists;
 } FileWatcherState;
 
-/* Sets *deleted to whether the path of the watcher exists. Only
- * ENOENT/ENOTDIR mean the path genuinely doesn't exist. Any other lstat()
- * failure (e.g. EACCES, ESTALE) is a transient/permission error, in which case
- * we can't tell whether the file was deleted, so false is returned and
- * *deleted is left untouched. A persisting failure is logged at most once
- * every LSTAT_ERROR_LOG_INTERVAL_SECS.
- *
- * Doesn't follow symlinks, i.e. a dangling symlink is not considered deleted */
-static bool FileDeleted(FileWatcherState *fws, bool *deleted)
+
+void *FileWatcherStateNew(const Rlist *args)
 {
-    assert(fws != NULL);
-    assert(deleted != NULL);
+    assert(args != NULL);
+    const char *path = RlistScalarValue(args);
 
-    struct stat sb;
-    if (lstat(fws->path, &sb) == 0)
-    {
-        *deleted = false;
-        fws->lstat_error_logged = 0;
-        return true;
-    }
-
-    if (errno == ENOENT || errno == ENOTDIR)
-    {
-        *deleted = true;
-        fws->lstat_error_logged = 0;
-        return true;
-    }
-
-    const int lstat_errno = errno;
-    const time_t now = time(NULL);
-    if (fws->lstat_error_logged == 0 ||
-        now - fws->lstat_error_logged >= LSTAT_ERROR_LOG_INTERVAL_SECS)
-    {
-        Log(LOG_LEVEL_ERR, "Unable to lstat '%s' while checking for file deletion: %s",
-            fws->path, GetErrorStrFromCode(lstat_errno));
-        fws->lstat_error_logged = now;
-    }
-    return false;
-}
-
-void *FileWatcherStateNew(const char *path)
-{
-    FileWatcherState *fws = (FileWatcherState *) xmalloc(sizeof(FileWatcherState));
-
+    FileWatcherState *fws = (FileWatcherState *) xcalloc(1, sizeof(FileWatcherState));
     fws->path = xstrdup(path);
-    fws->lstat_error_logged = 0;
 
-    /* If the file's presence can't be determined, treat it as not yet seen */
-    bool deleted;
-    fws->last_seen = (FileDeleted(fws, &deleted) && !deleted) ? time(NULL) : 0;
-
-    return (void *) fws;
+    return fws;
 }
 
-WatcherCheckResult FileWatcherCheckFileDeleted(void *state)
-{
-    assert(state != NULL);
-    FileWatcherState *fws = state;
-
-    bool deleted_now;
-    if (!FileDeleted(fws, &deleted_now))
-    {
-        /* Unknown state, keep last_seen as is */
-        return WATCHER_CHECK_ERROR;
-    }
-
-    const time_t now = time(NULL);
-    const bool deleted = (fws->last_seen != 0) && deleted_now;
-
-    if (deleted)
-    {
-        char last_seen_str[26];
-        const char *last_seen_ts = cf_strtimestamp_local(fws->last_seen, last_seen_str);
-
-        char now_str[26];
-        const char *now_ts = cf_strtimestamp_local(now, now_str);
-
-        Log(LOG_LEVEL_VERBOSE,
-            "Observed deletion of file '%s' at %s (last seen present at %s)",
-            fws->path,
-            (now_ts != NULL) ? now_ts : "unknown time",
-            (last_seen_ts != NULL) ? last_seen_ts : "unknown time");
-    }
-
-    fws->last_seen = deleted_now ? 0 : now;
-    return deleted ? WATCHER_CHECK_EVENT : WATCHER_CHECK_NO_EVENT;
-}
-
-void DestroyFileWatcherState(void *state)
+void FileWatcherStateDestroy(void *state)
 {
     FileWatcherState *fws = state;
     if (fws != NULL)
@@ -139,5 +64,107 @@ void DestroyFileWatcherState(void *state)
         free(fws->path);
         free(fws);
     }
+}
+
+// =========== code shared by the file event types ===========
+
+/* Logs the failure of operation op (with errno err) on the file of the
+ * watcher. A persisting failure is logged at most once every
+ * CHECK_ERROR_LOG_INTERVAL_SECS. */
+static void LogCheckError(FileWatcherState *fws, const char *op, int err)
+{
+    assert(fws != NULL);
+
+    const time_t now = time(NULL);
+    if (fws->last_error_logged == 0 ||
+        now - fws->last_error_logged >= CHECK_ERROR_LOG_INTERVAL_SECS)
+    {
+        Log(LOG_LEVEL_ERR, "Unable to %s '%s' while checking for file events: %s",
+            op, fws->path, GetErrorStrFromCode(err));
+        fws->last_error_logged = now;
+    }
+}
+
+/* Sets *exists to whether the path of the watcher exists, and *sb to its
+ * lstat() if it does (sb may be NULL). Only ENOENT/ENOTDIR mean the path
+ * genuinely doesn't exist. Any other lstat() failure (e.g. EACCES, ESTALE) is
+ * a transient/permission error, in which case we can't tell whether the file
+ * exists, so false is returned and it is logged, see LogCheckError().
+ *
+ * Doesn't follow symlinks, i.e. a dangling symlink exists */
+static bool FileLstat(FileWatcherState *fws, bool *exists, struct stat *sb)
+{
+    assert(fws != NULL);
+    assert(exists != NULL);
+
+    struct stat buf;
+    if (lstat(fws->path, (sb != NULL) ? sb : &buf) == 0)
+    {
+        *exists = true;
+        fws->last_error_logged = 0;
+        return true;
+    }
+
+    if (errno == ENOENT || errno == ENOTDIR)
+    {
+        *exists = false;
+        fws->last_error_logged = 0;
+        return true;
+    }
+
+    LogCheckError(fws, "lstat", errno);
+    return false;
+}
+
+/* Records a successful check, at which the file existed or not and the event
+ * (e.g. "deletion") happened or not, and returns its result. The first
+ * successful check is only the reference for the next ones, so it can't
+ * fire. */
+static WatcherCheckResult FileWatcherRecordObservation(FileWatcherState *fws, bool exists,
+                                                       bool happened, const char *event)
+{
+    assert(fws != NULL);
+    assert(event != NULL);
+
+    const time_t now = time(NULL);
+    happened = happened && (fws->last_checked != 0);
+
+    if (happened)
+    {
+        char last_checked_str[26];
+        const char *last_checked_ts = cf_strtimestamp_local(fws->last_checked, last_checked_str);
+
+        char now_str[26];
+        const char *now_ts = cf_strtimestamp_local(now, now_str);
+
+        Log(LOG_LEVEL_VERBOSE,
+            "Observed %s of file '%s' at %s (last checked at %s)",
+            event,
+            fws->path,
+            (now_ts != NULL) ? now_ts : "unknown time",
+            (last_checked_ts != NULL) ? last_checked_ts : "unknown time");
+    }
+
+    fws->last_checked = now;
+    fws->last_exists = exists;
+    return happened ? WATCHER_CHECK_EVENT : WATCHER_CHECK_NO_EVENT;
+}
+
+// =========== code for the file_deleted event ===========
+
+WatcherCheckResult FileWatcherCheckFileDeleted(void *state)
+{
+    assert(state != NULL);
+    FileWatcherState *fws = state;
+
+    bool exists;
+    if (!FileLstat(fws, &exists, NULL))
+    {
+        /* Unknown state, keep the last observation as is */
+        return WATCHER_CHECK_ERROR;
+    }
+
+    bool deleted = fws->last_exists && !exists;
+    return FileWatcherRecordObservation(fws, exists, deleted, "deletion");
 }
 

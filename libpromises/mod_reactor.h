@@ -27,6 +27,8 @@
 
 #include <cf3.defs.h>
 
+#define REACTOR_FILE_DELETED "file_deleted"
+
 extern const PromiseTypeSyntax CF_REACTOR_PROMISE_TYPES[];
 
 #endif

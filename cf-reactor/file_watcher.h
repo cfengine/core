@@ -29,8 +29,8 @@
 #include <watcher.h>            /* WatcherCheckResult */
 
 
-void *FileWatcherStateNew(const char *path);
+void *FileWatcherStateNew(const Rlist *args);
 WatcherCheckResult FileWatcherCheckFileDeleted(void *state);
-void DestroyFileWatcherState(void *state);
+void FileWatcherStateDestroy(void *state);
 
 #endif

@@ -215,6 +215,8 @@ usage() {
     echo "If no test is given, all standard tests are run:"
     echo "  Tests with names of form <file>.cf are expected to run successfully"
     echo "  Tests with names of form <file>.x.cf are expected to exit with error"
+    echo "  Tests with names of form <file>.error.cf are expected to log error(s) and exit with 0"
+    echo "  Tests with names of form <file>.error.pass.cf are expected to log error(s), pass and exit with 0"
     echo "Set ${COLOR_SUCCESS}CFENGINE_COLOR=1${COLOR_NORMAL} to get ANSI color markers where appropriate."
     echo
     echo "If arguments are given, those are executed as tests"
@@ -643,8 +645,16 @@ export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP CFENGINE_TEST_OVERRIDE_EXTENSION_LIBR
                 fi
             elif grep -E "R: .*$ESCAPED_TEST Pass" $OUTFILE > /dev/null
             then
-                RESULT=Pass
-                RESULT_MSG="${COLOR_SUCCESS}Pass${COLOR_NORMAL}"
+                # Regular tests must not log errors, tests which are expected
+                # to log errors should be named *.error.cf or *.error.pass.cf
+                if grep -E '^ *error: ' $OUTFILE > /dev/null
+                then
+                    RESULT=FAIL
+                    RESULT_MSG="${COLOR_FAILURE}FAIL (Error printed)${COLOR_NORMAL}"
+                else
+                    RESULT=Pass
+                    RESULT_MSG="${COLOR_SUCCESS}Pass${COLOR_NORMAL}"
+                fi
             elif grep -E "R: .*$ESCAPED_TEST Skip/unsupported" $OUTFILE > /dev/null
             then
                 RESULT=Skip

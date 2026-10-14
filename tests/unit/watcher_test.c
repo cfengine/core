@@ -3,6 +3,7 @@
 #include <watcher.h>
 #include <file_watcher.h>       /* FileWatcherStateNew(), FileWatcherCheckFileDeleted() */
 #include <policy.h>             /* Promise */
+#include <rlist.h>              /* RlistAppendScalar() */
 #include <logging_priv.h>       /* LoggingPrivContext, LoggingPrivSetContext() */
 
 #include <string.h>             /* strstr() */
@@ -34,14 +35,22 @@ static const Promise expanded_promise = {
     .org_pp = &unexpanded_promise,
 };
 
-static WatcherOptions FileDeletedOptions(const char *path)
+/* Returns the options of a file_deleted watcher, valid until the next call
+ * (WatcherRegister() copies them) */
+static WatcherOptions *FileDeletedOptions(const char *path, time_t interval)
 {
-    WatcherOptions opt = {
-        .state = FileWatcherStateNew(path),
+    static WatcherOptions opt;
+
+    Rlist *args = NULL;
+    RlistAppendScalar(&args, path);
+    opt = (WatcherOptions) {
+        .state = FileWatcherStateNew(args),
         .check_callback = FileWatcherCheckFileDeleted,
-        .destroy_state = DestroyFileWatcherState,
+        .destroy_state = FileWatcherStateDestroy,
+        .interval = interval,
     };
-    return opt;
+    RlistDestroy(args);
+    return &opt;
 }
 
 /* Creates the file 'file' in a new temporary directory dir */
@@ -121,7 +130,7 @@ static void test_watcher_register_single(void)
 {
     WatcherRegistryInitialize();
 
-    WatcherRegister(&expanded_promise, FileDeletedOptions("/nonexistent/test-event"), 5);
+    WatcherRegister(&expanded_promise, FileDeletedOptions("/nonexistent/test-event", 5));
 
     WatcherRegistryFinalize();
 }
@@ -134,8 +143,8 @@ static void test_watcher_register_iterations(void)
      * different watchers */
     const Promise iteration_a = { .promiser = "/a", .org_pp = &unexpanded_promise };
     const Promise iteration_b = { .promiser = "/b", .org_pp = &unexpanded_promise };
-    WatcherRegister(&iteration_a, FileDeletedOptions("/nonexistent/a"), 5);
-    WatcherRegister(&iteration_b, FileDeletedOptions("/nonexistent/b"), 5);
+    WatcherRegister(&iteration_a, FileDeletedOptions("/nonexistent/a", 5));
+    WatcherRegister(&iteration_b, FileDeletedOptions("/nonexistent/b", 5));
 
     WatcherRegistryFinalize();
 }
@@ -157,8 +166,8 @@ static void test_watcher_register_identical_ignored(void)
         .promiser = "test-event",
         .org_pp = &other_unexpanded_promise,
     };
-    WatcherRegister(&expanded_promise, FileDeletedOptions(path), 1);
-    WatcherRegister(&other_expanded_promise, FileDeletedOptions(path), 1);
+    WatcherRegister(&expanded_promise, FileDeletedOptions(path, 1));
+    WatcherRegister(&other_expanded_promise, FileDeletedOptions(path, 1));
 
     int fd = -1;
     assert_true(EventWatcherInitialize(&fd));
@@ -185,18 +194,18 @@ static void test_watcher_register_again_after_pause(void)
      * registered again for the new policy, also without the event watcher
      * being initialized */
     ResetRecordedEvents();
-    WatcherRegister(&expanded_promise, FileDeletedOptions("/nonexistent/test-event"), 5);
+    WatcherRegister(&expanded_promise, FileDeletedOptions("/nonexistent/test-event", 5));
     EventWatcherPause(NULL, RecordEvent);
-    WatcherRegister(&expanded_promise, FileDeletedOptions("/nonexistent/test-event"), 5);
+    WatcherRegister(&expanded_promise, FileDeletedOptions("/nonexistent/test-event", 5));
     EventWatcherResume();
 
     /* Paused twice in a row (e.g. a failed policy reload in between), the
      * watchers set aside the first time are replaced by those registered
      * since, without leaking (checked by valgrind/ASan) */
     EventWatcherPause(NULL, RecordEvent);
-    WatcherRegister(&expanded_promise, FileDeletedOptions("/nonexistent/test-event"), 5);
+    WatcherRegister(&expanded_promise, FileDeletedOptions("/nonexistent/test-event", 5));
     EventWatcherPause(NULL, RecordEvent);
-    WatcherRegister(&expanded_promise, FileDeletedOptions("/nonexistent/test-event"), 5);
+    WatcherRegister(&expanded_promise, FileDeletedOptions("/nonexistent/test-event", 5));
     EventWatcherResume();
 
     assert_int_equal(handled_event_count, 0);
@@ -238,7 +247,7 @@ static void test_event_watcher_pause_handles_queued_events(void)
     CreateTempFile(dir, path, sizeof(path));
 
     WatcherRegistryInitialize();
-    WatcherRegister(&expanded_promise, FileDeletedOptions(path), 1);
+    WatcherRegister(&expanded_promise, FileDeletedOptions(path, 1));
 
     int fd = -1;
     assert_true(EventWatcherInitialize(&fd));
@@ -270,7 +279,7 @@ static void test_event_watcher_state_kept_across_pause(void)
     CreateTempFile(dir, path, sizeof(path));
 
     WatcherRegistryInitialize();
-    WatcherRegister(&expanded_promise, FileDeletedOptions(path), 1);
+    WatcherRegister(&expanded_promise, FileDeletedOptions(path, 1));
 
     int fd = -1;
     assert_true(EventWatcherInitialize(&fd));
@@ -290,7 +299,7 @@ static void test_event_watcher_state_kept_across_pause(void)
         .promiser = "test-event",
         .org_pp = &new_unexpanded_promise,
     };
-    WatcherRegister(&new_expanded_promise, FileDeletedOptions(path), 1);
+    WatcherRegister(&new_expanded_promise, FileDeletedOptions(path, 1));
     EventWatcherResume();
 
     assert_true(WaitForQueuedEvent(fd, 50));
@@ -311,7 +320,7 @@ static void test_event_watcher_state_kept_identical_ignored(void)
     CreateTempFile(dir, path, sizeof(path));
 
     WatcherRegistryInitialize();
-    WatcherRegister(&expanded_promise, FileDeletedOptions(path), 1);
+    WatcherRegister(&expanded_promise, FileDeletedOptions(path, 1));
 
     int fd = -1;
     assert_true(EventWatcherInitialize(&fd));
@@ -333,8 +342,8 @@ static void test_event_watcher_state_kept_identical_ignored(void)
         .promiser = "test-event",
         .org_pp = &other_unexpanded_promise,
     };
-    WatcherRegister(&new_expanded_promise, FileDeletedOptions(path), 1);
-    WatcherRegister(&other_expanded_promise, FileDeletedOptions(path), 1);
+    WatcherRegister(&new_expanded_promise, FileDeletedOptions(path, 1));
+    WatcherRegister(&other_expanded_promise, FileDeletedOptions(path, 1));
     EventWatcherResume();
 
     assert_true(WaitForQueuedEvent(fd, 50));
@@ -354,7 +363,7 @@ static void test_event_watcher_state_not_kept_for_other_promise(void)
     CreateTempFile(dir, path, sizeof(path));
 
     WatcherRegistryInitialize();
-    WatcherRegister(&expanded_promise, FileDeletedOptions(path), 1);
+    WatcherRegister(&expanded_promise, FileDeletedOptions(path, 1));
 
     int fd = -1;
     assert_true(EventWatcherInitialize(&fd));
@@ -369,7 +378,7 @@ static void test_event_watcher_state_not_kept_for_other_promise(void)
         .promiser = "other-event",
         .org_pp = &unexpanded_promise,
     };
-    WatcherRegister(&other_expanded_promise, FileDeletedOptions(path), 1);
+    WatcherRegister(&other_expanded_promise, FileDeletedOptions(path, 1));
     EventWatcherResume();
 
     /* The watcher thread checks at least every second */
@@ -407,9 +416,12 @@ static void test_check_file_deleted_error(void)
     const LogLevel old_level = LogGetGlobalLevel();
     LogSetGlobalLevel(LOG_LEVEL_CRIT);
 
-    void *state = FileWatcherStateNew(path);
+    Rlist *args = NULL;
+    RlistAppendScalar(&args, path);
+    void *state = FileWatcherStateNew(args);
+    RlistDestroy(args);
     assert_int_equal(FileWatcherCheckFileDeleted(state), WATCHER_CHECK_ERROR);
-    DestroyFileWatcherState(state);
+    FileWatcherStateDestroy(state);
 
     LogSetGlobalLevel(old_level);
     TearDownSymlinkLoop(dir, loop);
@@ -432,8 +444,13 @@ static void test_check_file_deleted_logs_error_once(void)
     const LogLevel old_level = LogGetGlobalLevel();
     LogSetGlobalLevel(LOG_LEVEL_CRIT);
 
-    /* The failure at registration is logged */
-    void *state = FileWatcherStateNew(path);
+    /* The failure of the first check is logged */
+    Rlist *args = NULL;
+    RlistAppendScalar(&args, path);
+    void *state = FileWatcherStateNew(args);
+    RlistDestroy(args);
+    assert_int_equal(captured_err_count, 0);
+    assert_int_equal(FileWatcherCheckFileDeleted(state), WATCHER_CHECK_ERROR);
     assert_int_equal(captured_err_count, 1);
     assert_true(strstr(captured_err_message, "Unable to lstat") != NULL);
 
@@ -451,7 +468,7 @@ static void test_check_file_deleted_logs_error_once(void)
     assert_int_equal(FileWatcherCheckFileDeleted(state), WATCHER_CHECK_ERROR);
     assert_int_equal(captured_err_count, 2);
 
-    DestroyFileWatcherState(state);
+    FileWatcherStateDestroy(state);
 
     LogSetGlobalLevel(old_level);
     LoggingPrivSetContext(NULL);
@@ -469,7 +486,7 @@ static void test_event_watcher_check_failure_reported_once(void)
     LogSetGlobalLevel(LOG_LEVEL_CRIT);
 
     WatcherRegistryInitialize();
-    WatcherRegister(&expanded_promise, FileDeletedOptions(path), 1);
+    WatcherRegister(&expanded_promise, FileDeletedOptions(path, 1));
 
     int fd = -1;
     assert_true(EventWatcherInitialize(&fd));

@@ -26,13 +26,20 @@
 #include <watcher.h>
 #include <logging.h>
 #include <alloc.h>
+#include <file_lib.h>           /* safe_fopen() */
+#include <hash.h>               /* HashDigestFromId() */
+#include <string_lib.h>         /* StringEqual() */
+#include <conversion.h>         /* IntFromString() */
 #include <prototypes3.h>        /* cf_strtimestamp_local() */
 #include <sys/stat.h>
 #include <errno.h>
+#include <openssl/evp.h>
 
 /* Minimum time between two logs of a persisting failure to check the file,
  * since the file is checked on every poll */
 #define CHECK_ERROR_LOG_INTERVAL_SECS 60
+
+#define CONTENT_HASH_METHOD HASH_METHOD_SHA256
 
 typedef struct
 {
@@ -42,6 +49,49 @@ typedef struct
 
     /* What the last successful check observed */
     bool last_exists;
+
+    /* What the last successful check observed, depending on the event type */
+    union
+    {
+        /* FileWatcherCheckFileModified() */
+        struct timespec mtime;
+
+        /* FileWatcherCheckFileContentModified() */
+        struct
+        {
+            bool hashed;      /* Whether it was a regular file, that was hashed */
+            unsigned char digest[EVP_MAX_MD_SIZE + 1];
+        } content;
+
+        /* FileWatcherCheckFilePermissionsChanged(), FileWatcherCheckFileTypeChanged() */
+        mode_t mode;
+
+        /* FileWatcherCheckFileOwnerChanged() */
+        struct
+        {
+            uid_t uid;
+            gid_t gid;
+        } owner;
+
+        /* FileWatcherCheckFileReplaced() */
+        struct
+        {
+            dev_t dev;
+            ino_t ino;
+        } inode;
+
+        /* FileWatcherCheckFileSizeExceeds() */
+        struct
+        {
+            off_t threshold;  /* Not observed, set when the state is created */
+            off_t size;
+        } file_size;
+    } last;
+
+    /* What the last successful check of FileWatcherCheckSymlinkTargetChanged()
+     * observed, NULL if not a symlink. Not in the union above, so that
+     * FileWatcherStateDestroy() can free it for every event type */
+    char *last_target;
 } FileWatcherState;
 
 
@@ -56,12 +106,26 @@ void *FileWatcherStateNew(const Rlist *args)
     return fws;
 }
 
+void *FileWatcherSizeStateNew(const Rlist *args)
+{
+    assert(args != NULL && args->next != NULL);
+    const char *path = RlistScalarValue(args);
+    const long size_threshold = IntFromString(RlistScalarValue(args->next));
+
+    FileWatcherState *fws = (FileWatcherState *) xcalloc(1, sizeof(FileWatcherState));
+    fws->path = xstrdup(path);
+    fws->last.file_size.threshold = size_threshold;
+
+    return fws;
+}
+
 void FileWatcherStateDestroy(void *state)
 {
     FileWatcherState *fws = state;
     if (fws != NULL)
     {
         free(fws->path);
+        free(fws->last_target);
         free(fws);
     }
 }
@@ -168,3 +232,307 @@ WatcherCheckResult FileWatcherCheckFileDeleted(void *state)
     return FileWatcherRecordObservation(fws, exists, deleted, "deletion");
 }
 
+// =========== code for the file_created event ===========
+
+WatcherCheckResult FileWatcherCheckFileCreated(void *state)
+{
+    assert(state != NULL);
+    FileWatcherState *fws = state;
+
+    bool exists;
+    if (!FileLstat(fws, &exists, NULL))
+    {
+        return WATCHER_CHECK_ERROR;
+    }
+
+    const bool created = !fws->last_exists && exists;
+    return FileWatcherRecordObservation(fws, exists, created, "creation");
+}
+
+// =========== code for the file_modified event ===========
+
+static struct timespec StatMtime(const struct stat *sb)
+{
+    assert(sb != NULL);
+
+#if defined(HAVE_STRUCT_STAT_ST_MTIM)
+    return sb->st_mtim;
+#elif defined(HAVE_STRUCT_STAT_ST_MTIMESPEC)
+    return sb->st_mtimespec;
+#else
+    return (struct timespec) { .tv_sec = sb->st_mtime, .tv_nsec = 0 };
+#endif
+}
+
+WatcherCheckResult FileWatcherCheckFileModified(void *state)
+{
+    assert(state != NULL);
+    FileWatcherState *fws = state;
+
+    bool exists;
+    struct stat sb;
+    if (!FileLstat(fws, &exists, &sb))
+    {
+        return WATCHER_CHECK_ERROR;
+    }
+
+    const struct timespec mtime = exists ? StatMtime(&sb) : (struct timespec) { 0 };
+
+    /* Only modifications of a file present at both checks */
+    const bool modified = fws->last_exists && exists &&
+        ((fws->last.mtime.tv_sec != mtime.tv_sec) ||
+         (fws->last.mtime.tv_nsec != mtime.tv_nsec));
+
+    fws->last.mtime = mtime;
+    return FileWatcherRecordObservation(fws, exists, modified, "modification");
+}
+
+// =========== code for the file_content_modified event ===========
+
+/* Hashes the content of the file into digest. Returns false and sets errno
+ * on failure. */
+static bool HashFileContent(const char *path, unsigned char digest[EVP_MAX_MD_SIZE + 1])
+{
+    assert(path != NULL);
+
+    FILE *file = safe_fopen(path, "rb");
+    if (file == NULL)
+    {
+        return false;
+    }
+
+    EVP_MD_CTX *context = EVP_MD_CTX_create();
+    if (context == NULL ||
+        EVP_DigestInit_ex(context, HashDigestFromId(CONTENT_HASH_METHOD), NULL) != 1)
+    {
+        EVP_MD_CTX_destroy(context);
+        fclose(file);
+        errno = ENOMEM;
+        return false;
+    }
+
+    unsigned char buffer[4096];
+    size_t read_count;
+    while ((read_count = fread(buffer, 1, sizeof(buffer), file)) > 0)
+    {
+        EVP_DigestUpdate(context, buffer, read_count);
+    }
+
+    const bool success = !ferror(file);
+    const int read_errno = errno;
+    fclose(file);
+
+    memset(digest, 0, EVP_MAX_MD_SIZE + 1);
+    EVP_DigestFinal_ex(context, digest, NULL);
+    EVP_MD_CTX_destroy(context);
+
+    errno = read_errno;
+    return success;
+}
+
+WatcherCheckResult FileWatcherCheckFileContentModified(void *state)
+{
+    assert(state != NULL);
+    FileWatcherState *fws = state;
+
+    bool exists;
+    struct stat sb;
+    if (!FileLstat(fws, &exists, &sb))
+    {
+        return WATCHER_CHECK_ERROR;
+    }
+
+    bool hashed = false;
+    unsigned char digest[EVP_MAX_MD_SIZE + 1] = { 0 };
+    if (exists && S_ISREG(sb.st_mode))
+    {
+        if (HashFileContent(fws->path, digest))
+        {
+            hashed = true;
+        }
+        else if (errno != ENOENT && errno != ENOTDIR) /* Not deleted since lstat() */
+        {
+            LogCheckError(fws, "hash", errno);
+            return WATCHER_CHECK_ERROR;
+        }
+    }
+
+    /* Only content changes of a regular file present at both checks */
+    const bool modified = fws->last.content.hashed && hashed &&
+        (memcmp(fws->last.content.digest, digest, sizeof(digest)) != 0);
+
+    fws->last.content.hashed = hashed;
+    memcpy(fws->last.content.digest, digest, sizeof(digest));
+    return FileWatcherRecordObservation(fws, exists, modified, "content modification");
+}
+
+// =========== code for the file_permissions_changed event ===========
+
+WatcherCheckResult FileWatcherCheckFilePermissionsChanged(void *state)
+{
+    assert(state != NULL);
+    FileWatcherState *fws = state;
+
+    bool exists;
+    struct stat sb;
+    if (!FileLstat(fws, &exists, &sb))
+    {
+        return WATCHER_CHECK_ERROR;
+    }
+
+    const mode_t mode = exists ? sb.st_mode : 0;
+
+    /* Only changes of a file present at both checks */
+    const bool changed = fws->last_exists && exists &&
+        ((fws->last.mode & 07777) != (mode & 07777));
+
+    fws->last.mode = mode;
+    return FileWatcherRecordObservation(fws, exists, changed, "permissions change");
+}
+
+// =========== code for the file_owner_changed event ===========
+
+WatcherCheckResult FileWatcherCheckFileOwnerChanged(void *state)
+{
+    assert(state != NULL);
+    FileWatcherState *fws = state;
+
+    bool exists;
+    struct stat sb;
+    if (!FileLstat(fws, &exists, &sb))
+    {
+        return WATCHER_CHECK_ERROR;
+    }
+
+    const uid_t uid = exists ? sb.st_uid : 0;
+    const gid_t gid = exists ? sb.st_gid : 0;
+
+    /* Only changes of a file present at both checks */
+    const bool changed = fws->last_exists && exists &&
+        ((fws->last.owner.uid != uid) || (fws->last.owner.gid != gid));
+
+    fws->last.owner.uid = uid;
+    fws->last.owner.gid = gid;
+    return FileWatcherRecordObservation(fws, exists, changed, "owner change");
+}
+
+// =========== code for the file_replaced event ===========
+
+WatcherCheckResult FileWatcherCheckFileReplaced(void *state)
+{
+    assert(state != NULL);
+    FileWatcherState *fws = state;
+
+    bool exists;
+    struct stat sb;
+    if (!FileLstat(fws, &exists, &sb))
+    {
+        return WATCHER_CHECK_ERROR;
+    }
+
+    const dev_t dev = exists ? sb.st_dev : 0;
+    const ino_t ino = exists ? sb.st_ino : 0;
+
+    /* Only a path present at both checks, referring to another file (e.g. an
+     * atomic rename over it) */
+    const bool replaced = fws->last_exists && exists &&
+        ((fws->last.inode.dev != dev) || (fws->last.inode.ino != ino));
+
+    fws->last.inode.dev = dev;
+    fws->last.inode.ino = ino;
+    return FileWatcherRecordObservation(fws, exists, replaced, "replacement");
+}
+
+// =========== code for the file_type_changed event ===========
+
+WatcherCheckResult FileWatcherCheckFileTypeChanged(void *state)
+{
+    assert(state != NULL);
+    FileWatcherState *fws = state;
+
+    bool exists;
+    struct stat sb;
+    if (!FileLstat(fws, &exists, &sb))
+    {
+        return WATCHER_CHECK_ERROR;
+    }
+
+    const mode_t mode = exists ? sb.st_mode : 0;
+
+    /* Only changes of a path present at both checks, e.g. a file replaced by
+     * a symlink */
+    const bool changed = fws->last_exists && exists &&
+        ((fws->last.mode & S_IFMT) != (mode & S_IFMT));
+
+    fws->last.mode = mode;
+    return FileWatcherRecordObservation(fws, exists, changed, "type change");
+}
+
+// =========== code for the symlink_target_changed event ===========
+
+WatcherCheckResult FileWatcherCheckSymlinkTargetChanged(void *state)
+{
+    assert(state != NULL);
+    FileWatcherState *fws = state;
+
+    bool exists;
+    struct stat sb;
+    if (!FileLstat(fws, &exists, &sb))
+    {
+        return WATCHER_CHECK_ERROR;
+    }
+
+    char *target = NULL;
+#ifndef __MINGW32__
+    if (exists && S_ISLNK(sb.st_mode))
+    {
+        char buf[PATH_MAX];
+        const ssize_t len = readlink(fws->path, buf, sizeof(buf) - 1);
+        if (len >= 0)
+        {
+            buf[len] = '\0';
+            target = xstrdup(buf);
+        }
+        /* Not deleted (ENOENT, ENOTDIR) or replaced by another type of file
+         * (EINVAL) since lstat() */
+        else if (errno != ENOENT && errno != ENOTDIR && errno != EINVAL)
+        {
+            LogCheckError(fws, "readlink", errno);
+            return WATCHER_CHECK_ERROR;
+        }
+    }
+#endif
+
+    /* Only target changes of a symlink present at both checks */
+    const bool changed = (fws->last_target != NULL) && (target != NULL) &&
+        !StringEqual(fws->last_target, target);
+
+    free(fws->last_target);
+    fws->last_target = target;
+    return FileWatcherRecordObservation(fws, exists, changed, "symlink target change");
+}
+
+// =========== code for the file_size_exceeds event ===========
+
+WatcherCheckResult FileWatcherCheckFileSizeExceeds(void *state)
+{
+    assert(state != NULL);
+    FileWatcherState *fws = state;
+
+    bool exists;
+    struct stat sb;
+    if (!FileLstat(fws, &exists, &sb))
+    {
+        return WATCHER_CHECK_ERROR;
+    }
+
+    const off_t size = exists ? sb.st_size : 0;
+
+    /* Only when the size grows above the threshold, including a file created
+     * above it, not every time it is checked above it */
+    const bool exceeded = fws->last_exists && (fws->last.file_size.size > fws->last.file_size.threshold);
+    const bool exceeds = exists && (size > fws->last.file_size.threshold);
+
+    fws->last.file_size.size = size;
+    return FileWatcherRecordObservation(fws, exists, !exceeded && exceeds, "size exceeding threshold");
+}

@@ -141,6 +141,12 @@ static const char *const NO_EXTRA_ARGS[] =
     NULL
 };
 
+static const char *const FILE_SIZE_EXCEEDS_ARGS[] =
+{
+    REACTOR_SIZE_THRESHOLD,
+    NULL
+};
+
 #define EventTypeNew(name, args, new_state, destroy_state, check) \
     { name, args, new_state, destroy_state, check }
 #define EventTypeNewNull() EventTypeNew(NULL, NULL, NULL, NULL, NULL)
@@ -152,6 +158,16 @@ static const char *const NO_EXTRA_ARGS[] =
 static const EventType EVENT_TABLE[] =
 {
     FileEventTypeNew(REACTOR_FILE_DELETED, FileWatcherCheckFileDeleted),
+    FileEventTypeNew(REACTOR_FILE_CREATED, FileWatcherCheckFileCreated),
+    FileEventTypeNew(REACTOR_FILE_MODIFIED, FileWatcherCheckFileModified),
+    FileEventTypeNew(REACTOR_FILE_CONTENT_MODIFIED, FileWatcherCheckFileContentModified),
+    FileEventTypeNew(REACTOR_FILE_PERMISSIONS_CHANGED, FileWatcherCheckFilePermissionsChanged),
+    FileEventTypeNew(REACTOR_FILE_OWNER_CHANGED, FileWatcherCheckFileOwnerChanged),
+    FileEventTypeNew(REACTOR_FILE_REPLACED, FileWatcherCheckFileReplaced),
+    FileEventTypeNew(REACTOR_FILE_TYPE_CHANGED, FileWatcherCheckFileTypeChanged),
+    FileEventTypeNew(REACTOR_SYMLINK_TARGET_CHANGED, FileWatcherCheckSymlinkTargetChanged),
+    EventTypeNew(REACTOR_FILE_SIZE_EXCEEDS, FILE_SIZE_EXCEEDS_ARGS,
+                 FileWatcherSizeStateNew, FileWatcherStateDestroy, FileWatcherCheckFileSizeExceeds),
     EventTypeNewNull()
 };
 

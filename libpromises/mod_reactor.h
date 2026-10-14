@@ -28,6 +28,16 @@
 #include <cf3.defs.h>
 
 #define REACTOR_FILE_DELETED "file_deleted"
+#define REACTOR_FILE_CREATED "file_created"
+#define REACTOR_FILE_MODIFIED "file_modified"
+#define REACTOR_FILE_CONTENT_MODIFIED "file_content_modified"
+#define REACTOR_FILE_PERMISSIONS_CHANGED "file_permissions_changed"
+#define REACTOR_FILE_OWNER_CHANGED "file_owner_changed"
+#define REACTOR_FILE_REPLACED "file_replaced"
+#define REACTOR_FILE_TYPE_CHANGED "file_type_changed"
+#define REACTOR_SYMLINK_TARGET_CHANGED "symlink_target_changed"
+#define REACTOR_FILE_SIZE_EXCEEDS "file_size_exceeds"
+#define REACTOR_SIZE_THRESHOLD "size_threshold"
 
 extern const PromiseTypeSyntax CF_REACTOR_PROMISE_TYPES[];
 

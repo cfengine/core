@@ -1,0 +1,41 @@
+body file control
+{
+  inputs => { "$(sys.policy_entry_dirname)/../common_soft_fail.cf.sub" };
+}
+
+bundle common testcase
+{
+  vars:
+    "filename" string => "$(this.promise_filename)";
+}
+
+bundle agent setup
+{
+  files:
+    "$(G.testroot)/TEST.source"
+      depth_search => recurse("inf"),
+      copy_from => example("$(this.promise_dirname)/test_files");
+}
+
+bundle agent main
+{
+  files:
+    "$(G.testroot)/TEST.destination"
+      depth_search => recurse("inf"),
+      copy_from => example2("$(G.testroot)/TEST.source");
+}
+
+body copy_from example(from)
+{
+  source => "$(from)";
+  compare => "digest";
+  preserve => "true";
+}
+
+body copy_from example2(from)
+{
+  source => "$(from)";
+  compare => "mtime";
+  check_root => "true";
+  copy_backup => "timestamp";
+}

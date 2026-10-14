@@ -1,0 +1,3 @@
+    info: files promise '/tmp/TEST.destination' repaired, depth_search => recurse("inf"), copy_from => example2("$(G.testroot)/TEST.source")
+    info: Replaced file '/tmp/TEST.destination/subdir/subdir-file' from 'localhost:/tmp/TEST.source/subdir/subdir-file'
+    info: Replaced file '/tmp/TEST.destination/file-perms-644' from 'localhost:/tmp/TEST.source/file-perms-644'

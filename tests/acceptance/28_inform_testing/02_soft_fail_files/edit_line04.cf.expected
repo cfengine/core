@@ -1,0 +1,2 @@
+    info: files promise '/tmp/TEST.cfengine' repaired, edit_line => regex_replace("bar","BAR");
+    info: Replaced pattern 'bar' in '/tmp/TEST.cfengine' at line 2

@@ -1,0 +1,2 @@
+    info: files promise '/tmp/TEST.cfengine' repaired, rename => newname
+    info: Renamed file '/tmp/TEST.cfengine' to 'TEST.foobar'

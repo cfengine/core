@@ -1,0 +1,2 @@
+    info: files promise '/tmp/TEST.cfengine' repaired, template_method => "inline_mustache", edit_template_string => "Hi {{{username}}}!", template_data => '{ "username": "agent" }'
+    info: Updated rendering of '/tmp/TEST.cfengine' from mustache template 'Hi {{{username}}}!'

@@ -1,0 +1,2 @@
+    info: Inserted tree '<x foo='bar'>y</x>' at XPath '//Root' in XML document'/tmp/TEST.cfengine'
+    info: files promise '/tmp/TEST.cfengine' repaired, edit_xml => xml_insert_tree("$(xml1)", "//Root")

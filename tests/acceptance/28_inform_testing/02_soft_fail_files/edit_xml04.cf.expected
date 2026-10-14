@@ -1,0 +1,2 @@
+    info: files promise '/tmp/TEST.cfengine' repaired, edit_xml => xml_set_value("foobar", "//Root")
+    info: Set text 'foobar' at XPath '//Root' in XML document '/tmp/TEST.cfengine'

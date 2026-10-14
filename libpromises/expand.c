@@ -515,6 +515,39 @@ Rval ExpandBundleReference(EvalContext *ctx,
 }
 
 /**
+ * Expand a bundle reference or a list of bundle references into a list of
+ * bundle references, like in a bundlesequence. Naked list variables (@(list))
+ * are flattened into the result. Unlike EvaluateFinalRval(), function call
+ * entries are bundle calls and are never evaluated as functions.
+ */
+Rval ExpandBundleListReference(EvalContext *ctx,
+                               const char *ns, const char *scope,
+                               Rval rval)
+{
+    // Allocates new memory for the copy
+    switch (rval.type)
+    {
+    case RVAL_TYPE_SCALAR:
+    case RVAL_TYPE_FNCALL:
+    {
+        const Rlist list = { .val = rval, .next = NULL };
+        return (Rval) { ExpandList(ctx, ns, scope, &list, true), RVAL_TYPE_LIST };
+    }
+
+    case RVAL_TYPE_LIST:
+        return (Rval) { ExpandList(ctx, ns, scope, RvalRlistValue(rval), true),
+                        RVAL_TYPE_LIST };
+
+    case RVAL_TYPE_CONTAINER:
+    case RVAL_TYPE_NOPROMISEE:
+        return RvalNew(NULL, RVAL_TYPE_NOPROMISEE);
+    }
+
+    assert(false);
+    return RvalNew(NULL, RVAL_TYPE_NOPROMISEE);
+}
+
+/**
  * Expand a #string into Buffer #out, returning the pointer to the string
  * itself, inside the Buffer #out. If #out is NULL then the buffer will be
  * created and destroyed internally.

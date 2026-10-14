@@ -285,6 +285,7 @@ static const char *const datatype_strings[] =
     [CF_DATA_TYPE_REAL_RANGE] = "rrange",
     [CF_DATA_TYPE_COUNTER] = "counter",
     [CF_DATA_TYPE_CONTAINER] = "data",
+    [CF_DATA_TYPE_BUNDLE_LIST] = "blist",
     [CF_DATA_TYPE_NONE] = "none"
 };
 

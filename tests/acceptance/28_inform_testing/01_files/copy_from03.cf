@@ -15,15 +15,22 @@ bundle agent setup
     "$(G.testroot)/TEST.source"
       depth_search => recurse("inf"),
       perms => agent_owned("0644"),
-      copy_from => example("$(this.promise_dirname)/test_files");
+      copy_from => setup_copy("$(this.promise_dirname)/test_files");
 
 }
 
+# Group is left as created, since sys.user_data[gid] is the passwd gid and
+# may differ from the agent's effective gid
 body perms agent_owned(mode)
 {
       mode   => "$(mode)";
       owners => { "$(sys.user_data[username])" };
-      groups => { "$(sys.user_data[gid])" };
+}
+
+body copy_from setup_copy(from)
+{
+  source => "$(from)";
+  compare => "digest";
 }
 
 bundle agent main

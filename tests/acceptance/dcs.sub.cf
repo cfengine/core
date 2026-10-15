@@ -1097,6 +1097,10 @@ bundle agent dcs_passif_output(wanted, unwanted, command, test)
       string => execresult($(command), "useshell"),
       meta => { "simulate_safe" };
 
+    # Indent the command output in the DEBUG report, so that errors printed
+    # by the command are not mistaken for errors of the test by testall
+    "subout_indented" string => regex_replace($(subout), "^", "  | ", "gm");
+
   classes:
     "__passif_output_unwanted" expression => regcmp($(unwanted), $(subout));
     "__passif_output_wanted" expression => regcmp($(wanted), $(subout));
@@ -1126,7 +1130,7 @@ bundle agent dcs_passif_output(wanted, unwanted, command, test)
         if => "!__passif_output_unwanted";
 
     DEBUG::
-      "$(this.bundle): the output of command '$(command)' was: '$(subout)'";
+      "$(this.bundle): the output of command '$(command)' was: '$(subout_indented)'";
 }
 
 bundle agent dcs_passif_output1(wanted, command, test)

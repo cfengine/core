@@ -53,10 +53,26 @@ bool StoppableThreadShouldStop(StoppableThread *thread);
 
 /**
  * @brief To be called from the thread routine. Sleep for up to secs seconds,
- * returning early if StoppableThreadStop() is called. Returns immediately if
- * secs <= 0 or a stop has already been requested.
+ * returning early if StoppableThreadStop() or StoppableThreadWake() is
+ * called. Returns immediately if secs <= 0, a stop has already been requested
+ * or a wakeup is pending.
  */
 void StoppableThreadSleep(StoppableThread *thread, time_t secs);
+
+/**
+ * @brief To be called from the thread routine. Like StoppableThreadSleep(),
+ * but without a timeout: sleep until StoppableThreadStop() or
+ * StoppableThreadWake() is called. Like any condition wait, it may return
+ * spuriously, so the routine must re-check its state after it returns.
+ */
+void StoppableThreadSleepUntilWoken(StoppableThread *thread);
+
+/**
+ * @brief Wake the thread up from StoppableThreadSleep() or
+ * StoppableThreadSleepUntilWoken(). If the thread isn't sleeping, its next
+ * sleep returns immediately instead, so that the wakeup isn't lost.
+ */
+void StoppableThreadWake(StoppableThread *thread);
 
 /**
  * @brief Ask the thread to stop and wait up to timeout_secs for it to return.

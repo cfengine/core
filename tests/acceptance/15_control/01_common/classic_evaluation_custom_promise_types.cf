@@ -23,14 +23,16 @@ bundle agent test
     "/tmp/dummyfile" smth => "hello";
 
   vars:
-    "content" string => readfile("/tmp/dummyfile"),
+    "content"
+      string => readfile("/tmp/dummyfile"),
       if => fileexists("/tmp/dummyfile");
 
   files:
     "/tmp/dummyfile" content => "ok";
 
   vars:
-    "content" string => readfile("/tmp/dummyfile"),
+    "content"
+      string => readfile("/tmp/dummyfile"),
       if => fileexists("/tmp/dummyfile");
 
   classes:

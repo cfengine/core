@@ -53,7 +53,8 @@ bundle agent test
       data => findfiles_up("$(G.testdir)/core/libntech/libutils/", "string.?"),
       if => isdir("$(G.testdir)/core/libntech/libutils/");
 
-    "t3" data => findfiles_up("$(G.testdir)/core/libntech/libutils/", ".git/"),
+    "t3"
+      data => findfiles_up("$(G.testdir)/core/libntech/libutils/", ".git/"),
       if => isdir("$(G.testdir)/core/libntech/libutils/");
 
     "t4"

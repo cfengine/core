@@ -78,11 +78,16 @@ bundle agent test
 bundle agent check
 {
   vars:
-    "policy" string => readfile("$(G.testdir)/lmdb_policy", 4096),
+    "policy"
+      string => readfile("$(G.testdir)/lmdb_policy", 4096),
       if => fileexists("$(G.testdir)/lmdb_policy");
-    "e1" string => readfile("$(G.testdir)/lmdb_expires1", 4096),
+
+    "e1"
+      string => readfile("$(G.testdir)/lmdb_expires1", 4096),
       if => fileexists("$(G.testdir)/lmdb_expires1");
-    "e2" string => readfile("$(G.testdir)/lmdb_expires2", 4096),
+
+    "e2"
+      string => readfile("$(G.testdir)/lmdb_expires2", 4096),
       if => fileexists("$(G.testdir)/lmdb_expires2");
 
   classes:

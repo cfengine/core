@@ -34,8 +34,10 @@ bundle agent test
     "/tmp/example" content => "fourth";
 
   vars:
-    "content" string => readfile("/tmp/example"),
+    "content"
+      string => readfile("/tmp/example"),
       if => fileexists("/tmp/example");
+
     "result" string => concat("$(result)", ", $(content)");
 
   classes:
@@ -49,7 +51,8 @@ bundle agent test
     "/tmp/otherfile" content => "something";
 
   vars:
-    "othercontent" string => readfile("/tmp/otherfile"),
+    "othercontent"
+      string => readfile("/tmp/otherfile"),
       if => fileexists("/tmp/otherfile");
 
   files:

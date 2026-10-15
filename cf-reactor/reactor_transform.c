@@ -171,8 +171,6 @@ static PromiseResult KeepEventsPromise(EvalContext *ctx, const Promise *pp)
         .interval = 1,
     };
 
-    // register watcher
-    Log(LOG_LEVEL_INFO, "Registering a file_deleted watcher for events promise '%s', on file '%s'", pp->promiser, path);
     if (!WatcherRegister(pp, &opt))
     {
         return PROMISE_RESULT_FAIL;

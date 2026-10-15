@@ -323,7 +323,7 @@ static void HandleQueuedEvents(EvalContext *ctx, WatcherEventFn on_event)
         }
         else
         {
-            Log(LOG_LEVEL_NOTICE, "Reactor watcher '%s' fired", w->promiser);
+            Log(LOG_LEVEL_VERBOSE, "Reactor watcher '%s' fired", w->promiser);
         }
         on_event(ctx, w->promise, w->promise_hash, event->check);
         free(event);

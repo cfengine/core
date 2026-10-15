@@ -121,7 +121,7 @@ static void test_watcher_register_single(void)
 {
     WatcherRegistryInitialize();
 
-    WatcherRegister(&expanded_promise, FileDeletedOptions("/nonexistent/test-event"), 5);
+    assert_true(WatcherRegister(&expanded_promise, FileDeletedOptions("/nonexistent/test-event"), 5));
 
     WatcherRegistryFinalize();
 }
@@ -157,8 +157,8 @@ static void test_watcher_register_identical_ignored(void)
         .promiser = "test-event",
         .org_pp = &other_unexpanded_promise,
     };
-    WatcherRegister(&expanded_promise, FileDeletedOptions(path), 1);
-    WatcherRegister(&other_expanded_promise, FileDeletedOptions(path), 1);
+    assert_true(WatcherRegister(&expanded_promise, FileDeletedOptions(path), 1));
+    assert_true(WatcherRegister(&other_expanded_promise, FileDeletedOptions(path), 1));
 
     int fd = -1;
     assert_true(EventWatcherInitialize(&fd));
@@ -488,8 +488,10 @@ static void test_check_file_deleted_logs_error_once(void)
     const LogLevel old_level = LogGetGlobalLevel();
     LogSetGlobalLevel(LOG_LEVEL_CRIT);
 
-    /* The failure at registration is logged */
+    /* The failure of the first check is logged */
     void *state = FileWatcherStateNew(path);
+    assert_int_equal(captured_err_count, 0);
+    assert_int_equal(FileWatcherCheckFileDeleted(state), WATCHER_CHECK_ERROR);
     assert_int_equal(captured_err_count, 1);
     assert_true(strstr(captured_err_message, "Unable to lstat") != NULL);
 
@@ -524,8 +526,11 @@ static void test_event_watcher_check_failure_reported_once(void)
     const LogLevel old_level = LogGetGlobalLevel();
     LogSetGlobalLevel(LOG_LEVEL_CRIT);
 
+    /* Registered while lstat() works, failing from then on */
     WatcherRegistryInitialize();
-    WatcherRegister(&expanded_promise, FileDeletedOptions(path), 1);
+    assert_int_equal(unlink(loop), 0);
+    assert_true(WatcherRegister(&expanded_promise, FileDeletedOptions(path), 1));
+    assert_int_equal(symlink(loop, loop), 0);
 
     int fd = -1;
     assert_true(EventWatcherInitialize(&fd));
@@ -556,6 +561,32 @@ static void test_event_watcher_check_failure_reported_once(void)
     TearDownSymlinkLoop(dir, loop);
 }
 
+static void test_watcher_register_check_failure(void)
+{
+    char dir[] = "/tmp/watcher_test.XXXXXX";
+    char loop[PATH_MAX];
+    char path[PATH_MAX];
+    SetUpSymlinkLoop(dir, loop, sizeof(loop), path, sizeof(path));
+
+    const LogLevel old_level = LogGetGlobalLevel();
+    LogSetGlobalLevel(LOG_LEVEL_CRIT);
+
+    /* Without a reference, the watcher is not registered (its state is
+     * destroyed by the registry, checked by valgrind/ASan) */
+    WatcherRegistryInitialize();
+    assert_false(WatcherRegister(&expanded_promise, FileDeletedOptions(path), 1));
+
+    /* So the watcher thread doesn't check it, and doesn't report its failure */
+    int fd = -1;
+    assert_true(EventWatcherInitialize(&fd));
+    assert_false(WaitForQueuedEvent(fd, 20));
+
+    EventWatcherFinalize();
+
+    LogSetGlobalLevel(old_level);
+    TearDownSymlinkLoop(dir, loop);
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -576,6 +607,7 @@ int main()
         unit_test(test_check_file_deleted_error),
         unit_test(test_check_file_deleted_logs_error_once),
         unit_test(test_event_watcher_check_failure_reported_once),
+        unit_test(test_watcher_register_check_failure),
     };
 
     return run_tests(tests);

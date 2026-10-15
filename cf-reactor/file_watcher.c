@@ -50,9 +50,6 @@ void *FileWatcherStateNew(const char *path)
     FileWatcherState *fws = (FileWatcherState *) xcalloc(1, sizeof(FileWatcherState));
     fws->path = xstrdup(path);
 
-    /* Check once right away, as the reference for the next checks */
-    FileWatcherCheckFileDeleted(fws);
-
     return fws;
 }
 

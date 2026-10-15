@@ -86,7 +86,9 @@ void WatcherRegistryFinalize(void);
  * If a watcher of the previous policy (see EventWatcherPause()) was
  * registered for an identical expanded promise, the new watcher takes over
  * its state instead of opt.state, so that the events happening while paused
- * are detected.
+ * are detected. Otherwise opt.state is checked once right away, as the
+ * reference for the next checks, so that only what happens from now on
+ * fires. If that check fails, the watcher is not registered.
  *
  * @param pp the expanded events promise. Its hash and its unexpanded
  *           promise (pp->org_pp) are passed back to the WatcherEventFn on
@@ -95,8 +97,10 @@ void WatcherRegistryFinalize(void);
  * @param opt what the watcher checks for, see WatcherOptions. opt.state is
  *            owned by the registry.
  * @param interval interval between runs
+ * @return false if the check of opt.state failed (WATCHER_CHECK_ERROR), in
+ *         which case the watcher is not registered, true otherwise.
  */
-void WatcherRegister(const Promise *pp, WatcherOptions opt, time_t interval);
+bool WatcherRegister(const Promise *pp, WatcherOptions opt, time_t interval);
 bool EventWatcherInitialize(int *fd);
 void EventWatcherHandleEvents(EvalContext *ctx, WatcherEventFn on_event, int fd, fd_set *readfds);
 

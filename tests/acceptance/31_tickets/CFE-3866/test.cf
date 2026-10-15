@@ -68,7 +68,9 @@ bundle agent check
     "expected" string => "[section]
 key=value
 ";
-    "actual" string => readfile("$(G.testfile)", "1000"),
+
+    "actual"
+      string => readfile("$(G.testfile)", "1000"),
       if => fileexists("$(G.testfile)");
 
   classes:

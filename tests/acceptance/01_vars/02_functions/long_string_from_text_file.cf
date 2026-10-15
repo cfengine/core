@@ -26,7 +26,9 @@ bundle agent test
 {
   vars:
     "keyfile" string => "$(G.testfile).data";
-    "keys" slist => readstringlist("$(keyfile)", "#[^\n]*", "\n", 10, 3072),
+
+    "keys"
+      slist => readstringlist("$(keyfile)", "#[^\n]*", "\n", 10, 3072),
       if => fileexists("$(keyfile)");
 }
 

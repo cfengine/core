@@ -38,7 +38,9 @@ bundle agent check
 
     Bad 3
 ";
-    "actual" string => readfile("$(init.test_file)", "inf"),
+
+    "actual"
+      string => readfile("$(init.test_file)", "inf"),
       if => fileexists("$(init.test_file)");
 
   classes:

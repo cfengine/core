@@ -58,9 +58,12 @@ bundle agent test
 bundle agent check
 {
   vars:
-    "before" string => readfile("$(G.testdir)/cancel_lmdb_before", 4096),
+    "before"
+      string => readfile("$(G.testdir)/cancel_lmdb_before", 4096),
       if => fileexists("$(G.testdir)/cancel_lmdb_before");
-    "after" string => readfile("$(G.testdir)/cancel_lmdb_after", 4096),
+
+    "after"
+      string => readfile("$(G.testdir)/cancel_lmdb_after", 4096),
       if => fileexists("$(G.testdir)/cancel_lmdb_after");
 
   classes:

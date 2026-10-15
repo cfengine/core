@@ -50,7 +50,9 @@ bundle agent check
 {
   vars:
     "expected" int => "110";
-    "actual" int => countlinesmatching(".*0123456789.*", "$(G.testfile)"),
+
+    "actual"
+      int => countlinesmatching(".*0123456789.*", "$(G.testfile)"),
       if => fileexists("$(G.testfile)");
 
   classes:

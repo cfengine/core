@@ -53,7 +53,9 @@ bundle agent check
 {
   vars:
     "expect" string => "";
-    "actual" string => readfile("$(G.testfile)", 1000),
+
+    "actual"
+      string => readfile("$(G.testfile)", 1000),
       if => fileexists("$(G.testfile)");
 
   classes:

@@ -119,15 +119,15 @@ void WatcherRegistryFinalize(void)
 }
 
 // Expects interval to be strictly greater than 0, otherwise the watcher thread will busy spin
-bool WatcherRegister(const Promise *pp, WatcherOptions opt, time_t interval)
+bool WatcherRegister(const Promise *pp, WatcherOptions *opt)
 {
     assert(pp != NULL);
     assert(pp->promiser != NULL);
-    assert(opt.check_callback != NULL);
-    assert(opt.destroy_state != NULL);
-    assert(opt.state != NULL);
+    assert(opt != NULL);
+    assert(opt->check_callback != NULL);
+    assert(opt->destroy_state != NULL);
+    assert(opt->interval > 0);
     assert(watchers != NULL);
-    assert(interval > 0);
 
     char promise_hash[CF_HOSTKEY_STRING_SIZE];
     WatcherPromiseHash(pp, promise_hash, sizeof(promise_hash));
@@ -138,14 +138,14 @@ bool WatcherRegister(const Promise *pp, WatcherOptions opt, time_t interval)
     {
         // ignore duplicates
         ThreadUnlock(&watchers_mutex);
-        opt.destroy_state(opt.state);
+        opt->destroy_state(opt->state);
         return true;
     }
 
     // Take over the state of an identical watcher
     Watcher *prev = (old_watchers != NULL) ? MapGet(old_watchers, promise_hash) : NULL;
     const bool taken_over = (prev != NULL);
-    void *state = opt.state;
+    void *state = opt->state;
     if (taken_over)
     {
         state = prev->state;
@@ -157,17 +157,17 @@ bool WatcherRegister(const Promise *pp, WatcherOptions opt, time_t interval)
     if (taken_over)
     {
         Log(LOG_LEVEL_DEBUG, "Reactor watcher '%s' takes over the state of an identical watcher", pp->promiser);
-        opt.destroy_state(opt.state);
+        opt->destroy_state(opt->state);
     }
     else
     {
         /* Without holding watchers_mutex, as the check may block (e.g.
          * lstat() on an unresponsive NFS mount). The watcher isn't registered
          * yet, so the watcher thread can't check it concurrently. */
-        if (opt.check_callback(state) == WATCHER_CHECK_ERROR)
+        if (opt->check_callback(state) == WATCHER_CHECK_ERROR)
         {
             /* No reference for the next checks, so not registered */
-            opt.destroy_state(state);
+            opt->destroy_state(state);
             return false;
         }
     }
@@ -176,11 +176,11 @@ bool WatcherRegister(const Promise *pp, WatcherOptions opt, time_t interval)
     w->promise_hash = xstrdup(promise_hash);
     w->promise = pp->org_pp;
     w->promiser = xstrdup(pp->promiser);
-    w->poll_interval_secs = interval;
+    w->poll_interval_secs = opt->interval;
     w->next_due = 0; /* due immediately on the watcher thread's first pass */
     w->last_check = WATCHER_CHECK_NO_EVENT;
-    w->check_callback = opt.check_callback;
-    w->destroy_state = opt.destroy_state;
+    w->check_callback = opt->check_callback;
+    w->destroy_state = opt->destroy_state;
     w->state = state;
 
     ThreadLock(&watchers_mutex);

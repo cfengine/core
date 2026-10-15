@@ -32,7 +32,8 @@ bundle agent test
     "lefts" string => "$(init.pair[1])";
     "lefti" int => "$(init.pair[1])";
     "rights" string => "$(init.pair[2])";
-    "rightr" real => "$(init.pair[2])";
+    "rightr" real => "$(init.pair[2])",
+      if => isvariable("init.pair[2]");
 }
 
 #######################################################

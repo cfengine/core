@@ -49,7 +49,8 @@ bundle agent check
 {
   vars:
     "expect" string => readfile("$(init.origtestdir)/demo.expected", 10000);
-    "actual" string => readfile("$(G.testfile)", 10000);
+    "actual" string => readfile("$(G.testfile)", 10000),
+      if => fileexists("$(G.testfile)");
 
   classes:
     "ok" expression => regcmp("$(expect)", "$(actual)");

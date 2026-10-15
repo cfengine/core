@@ -69,7 +69,8 @@ bundle agent test
     "num"
       int => readstringarrayidx(
         "mylines", "$(G.testfile).orig.txt", "\s*#[^\n]*", "\s*;;\s*", 50, 9999
-      );
+      ),
+      if => fileexists("$(G.testfile).orig.txt");
 
     "file"
       slist => {

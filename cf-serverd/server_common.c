@@ -415,7 +415,10 @@ void CfGetFile(ServerFileGetState *args)
 
     int fd;
     off_t n_read, total = 0, sendlen = 0, count = 0;
-    char sendbuffer[CF_BUFSIZE + 256], filename[CF_BUFSIZE - 128];
+    /* sendbuffer is zero-initialized because the access-refused and open-error
+     * paths below send args->buf_size bytes of it after writing only a short
+     * CF_FAILEDSTR, and args->buf_size is chosen by the client. */
+    char sendbuffer[CF_BUFSIZE + 256] = { 0 }, filename[CF_BUFSIZE - 128];
     struct stat sb;
     int blocksize = 2048;
 

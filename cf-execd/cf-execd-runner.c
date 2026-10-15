@@ -797,7 +797,11 @@ static void MailResult(const ExecConfig *config, const char *file)
         {
             continue;
         }
-        if (send(sd, line, n_read, 0) == -1 ||
+        /* Dot-stuff lines starting with '.' (RFC 5321, section 4.5.2), or a
+         * lone "." in the output would end the DATA section early and the
+         * remaining lines would be read by the server as SMTP commands. */
+        if ((line[0] == '.' && send(sd, ".", 1, 0) == -1) ||
+            send(sd, line, n_read, 0) == -1 ||
             send(sd, "\r\n", 2, 0) == -1)
         {
             Log(LOG_LEVEL_ERR, "Error while sending mail to mailserver "

@@ -2,6 +2,10 @@
 #
 # Test readdata() with YAML
 #
+# This is an .error.pass.cf test, because readdata() is given data in a
+# format it cannot parse on purpose (the failed_* and guess_csv
+# variables) and logs errors.
+#
 ###########################################################
 body common control
 {

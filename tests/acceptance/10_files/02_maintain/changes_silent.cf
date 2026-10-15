@@ -95,38 +95,47 @@ bundle agent check
     "n_quiet_content"
       int => countlinesmatching(
         ".*quiet_content\.txt,C,Content changed.*", "$(log)"
-      );
+      ),
+      if => fileexists("$(log)");
 
     "n_quiet_all_content"
       int => countlinesmatching(
         ".*quiet_all\.txt,C,Content changed.*", "$(log)"
-      );
+      ),
+      if => fileexists("$(log)");
 
     "n_quiet_all_stats"
-      int => countlinesmatching(".*quiet_all\.txt,S,.*", "$(log)");
+      int => countlinesmatching(".*quiet_all\.txt,S,.*", "$(log)"),
+      if => fileexists("$(log)");
 
   classes:
-    "leaked"
-      expression => isgreaterthan(
-        countlinesmatching(".*$(must_be_absent).*", "$(test.output)"), "0"
-      );
+    # The output is read only once it exists, since the functions are also
+    # evaluated before the test bundle runs
+    "output_exists" expression => fileexists("$(test.output)");
 
-    "missing"
-      expression => islessthan(
-        countlinesmatching(".*$(must_be_present).*", "$(test.output)"), "1"
-      );
+    output_exists::
+      "leaked"
+        expression => isgreaterthan(
+          countlinesmatching(".*$(must_be_absent).*", "$(test.output)"), "0"
+        );
 
-    "audit_ok"
-      and => {
-        isgreaterthan("$(n_quiet_content)", "0"),
-        isgreaterthan("$(n_quiet_all_content)", "0"),
-        isgreaterthan("$(n_quiet_all_stats)", "0"),
-      };
+      "missing"
+        expression => islessthan(
+          countlinesmatching(".*$(must_be_present).*", "$(test.output)"), "1"
+        );
 
-    "ok" and => { "!leaked", "!missing", "audit_ok" };
+    any::
+      "audit_ok"
+        and => {
+          isgreaterthan("$(n_quiet_content)", "0"),
+          isgreaterthan("$(n_quiet_all_content)", "0"),
+          isgreaterthan("$(n_quiet_all_stats)", "0"),
+        };
+
+      "ok" and => { "output_exists", "!leaked", "!missing", "audit_ok" };
 
   reports:
-    DEBUG::
+    DEBUG.output_exists::
       "silence leaked an alert matching '$(must_be_absent)'"
         if => isgreaterthan(
           countlinesmatching(".*$(must_be_absent).*", "$(test.output)"), "0"
@@ -137,6 +146,7 @@ bundle agent check
           countlinesmatching(".*$(must_be_present).*", "$(test.output)"), "1"
         );
 
+    DEBUG::
       "Output of $(this.promise_filename).sub is in '$(test.output)'";
 
     DEBUG.!audit_ok::

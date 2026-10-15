@@ -101,7 +101,8 @@ bundle agent check
 }"
 ';
 
-    "actual" string => readfile("$(G.testfile)", inf),
+    "actual"
+      string => readfile("$(G.testfile)", inf),
       if => fileexists("$(G.testfile)");
 
   classes:

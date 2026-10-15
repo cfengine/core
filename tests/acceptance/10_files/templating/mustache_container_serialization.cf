@@ -64,7 +64,9 @@ bundle edit_line readthem
 {
   vars:
     "test" slist => { @(test.test) };
-    "read_$(test)" string => readfile("$(G.testdir)/$(test)", 1k),
+
+    "read_$(test)"
+      string => readfile("$(G.testdir)/$(test)", 1k),
       if => fileexists("$(G.testdir)/$(test)");
 
   insert_lines:

@@ -40,7 +40,8 @@ bundle edit_line init_insert_lines
 bundle agent test
 {
   vars:
-    "load" data => readjson("$(G.testfile).json"),
+    "load"
+      data => readjson("$(G.testfile).json"),
       if => fileexists("$(G.testfile).json");
 
   files:

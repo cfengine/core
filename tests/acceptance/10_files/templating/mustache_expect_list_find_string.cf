@@ -85,9 +85,13 @@ bundle agent test
 
   vars:
     "template" string => "$(this.promise_filename).mustache";
-    "actual_good" string => readfile("$(G.testfile).good", 4096),
+
+    "actual_good"
+      string => readfile("$(G.testfile).good", 4096),
       if => fileexists("$(G.testfile).good");
-    "actual_bad" string => readfile("$(G.testfile).bad", 4096),
+
+    "actual_bad"
+      string => readfile("$(G.testfile).bad", 4096),
       if => fileexists("$(G.testfile).bad");
 }
 

@@ -39,7 +39,7 @@ static WatcherOptions FileDeletedOptions(const char *path)
     WatcherOptions opt = {
         .state = FileWatcherStateNew(path),
         .check_callback = FileWatcherCheckFileDeleted,
-        .destroy_state = DestroyFileWatcherState,
+        .destroy_state = FileWatcherStateDestroy,
     };
     return opt;
 }
@@ -465,7 +465,7 @@ static void test_check_file_deleted_error(void)
 
     void *state = FileWatcherStateNew(path);
     assert_int_equal(FileWatcherCheckFileDeleted(state), WATCHER_CHECK_ERROR);
-    DestroyFileWatcherState(state);
+    FileWatcherStateDestroy(state);
 
     LogSetGlobalLevel(old_level);
     TearDownSymlinkLoop(dir, loop);
@@ -507,7 +507,7 @@ static void test_check_file_deleted_logs_error_once(void)
     assert_int_equal(FileWatcherCheckFileDeleted(state), WATCHER_CHECK_ERROR);
     assert_int_equal(captured_err_count, 2);
 
-    DestroyFileWatcherState(state);
+    FileWatcherStateDestroy(state);
 
     LogSetGlobalLevel(old_level);
     LoggingPrivSetContext(NULL);

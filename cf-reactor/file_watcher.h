@@ -31,6 +31,6 @@
 
 void *FileWatcherStateNew(const char *path);
 WatcherCheckResult FileWatcherCheckFileDeleted(void *state);
-void DestroyFileWatcherState(void *state);
+void FileWatcherStateDestroy(void *state);
 
 #endif

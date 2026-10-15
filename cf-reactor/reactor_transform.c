@@ -167,7 +167,7 @@ static PromiseResult KeepEventsPromise(EvalContext *ctx, const Promise *pp)
     WatcherOptions opt = {
         .state = FileWatcherStateNew(path),
         .check_callback = FileWatcherCheckFileDeleted,
-        .destroy_state = DestroyFileWatcherState,
+        .destroy_state = FileWatcherStateDestroy,
     };
 
     // register watcher

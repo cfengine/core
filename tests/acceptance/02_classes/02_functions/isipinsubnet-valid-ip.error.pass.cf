@@ -2,6 +2,9 @@
 #
 # Test isipinsubnet()
 #
+# This is an .error.pass.cf test, because isipinsubnet() is given
+# 'not-an-ip-address' on purpose and logs an error.
+#
 #######################################################
 body common control
 {

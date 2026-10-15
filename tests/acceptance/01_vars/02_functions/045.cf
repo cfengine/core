@@ -36,7 +36,8 @@ body delete init_delete
 bundle agent test
 {
   vars:
-    "nums" rlist => readreallist("$(G.testfile)", "NoComment", "X", 5, 100);
+    "nums" rlist => readreallist("$(G.testfile)", "NoComment", "X", 5, 100),
+      if => fileexists("$(G.testfile)");
     "sum" real => sum("nums");
 }
 

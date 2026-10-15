@@ -1,3 +1,6 @@
+# This is an .error.pass.cf test, because getuid() is called for the
+# non-existent user 'nosuchuser' on purpose and logs errors (CFE-1968).
+
 body common control
 {
   inputs => { "../../default.sub.cf" };

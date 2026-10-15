@@ -1,4 +1,7 @@
 # Test that select_class is skipped when no classes are given
+#
+# This is an .error.pass.cf test, because select_class is given an empty
+# list on purpose and logs an error.
 body common control
 {
   inputs => { "../../default.sub.cf" };

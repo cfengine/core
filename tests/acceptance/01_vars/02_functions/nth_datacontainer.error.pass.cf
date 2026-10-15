@@ -2,6 +2,10 @@
 #
 # Test nth() with data container input
 #
+# This is an .error.pass.cf test, because nth() is called with keys
+# which are not valid list indices (e.g. 'foo' or '') on purpose and
+# logs errors.
+#
 #######################################################
 body common control
 {

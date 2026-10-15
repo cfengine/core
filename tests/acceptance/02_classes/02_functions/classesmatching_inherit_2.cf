@@ -59,7 +59,8 @@ bundle agent check
         "defined_classes: defined_in_second$(const.n)"
       );
 
-    "actual" string => readfile("$(common.logfile)", inf);
+    "actual" string => readfile("$(common.logfile)", inf),
+      if => fileexists("$(common.logfile)");
 
   reports:
     "$(this.promise_filename) Pass" if => strcmp($(expected), $(actual));

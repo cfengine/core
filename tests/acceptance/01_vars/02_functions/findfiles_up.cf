@@ -46,27 +46,33 @@ bundle agent test
     "t1"
       data => findfiles_up(
         "$(G.testdir)/core/libntech/libutils/", ".gitignore", "inf"
-      );
+      ),
+      if => isdir("$(G.testdir)/core/libntech/libutils/");
 
     "t2"
-      data => findfiles_up("$(G.testdir)/core/libntech/libutils/", "string.?");
+      data => findfiles_up("$(G.testdir)/core/libntech/libutils/", "string.?"),
+      if => isdir("$(G.testdir)/core/libntech/libutils/");
 
-    "t3" data => findfiles_up("$(G.testdir)/core/libntech/libutils/", ".git/");
+    "t3" data => findfiles_up("$(G.testdir)/core/libntech/libutils/", ".git/"),
+      if => isdir("$(G.testdir)/core/libntech/libutils/");
 
     "t4"
       data => findfiles_up(
         "$(G.testdir)/core/libntech/libutils/", ".git/", "1"
-      );
+      ),
+      if => isdir("$(G.testdir)/core/libntech/libutils/");
 
     "t5"
       data => findfiles_up(
         "$(G.testdir)/core/libntech/libutils/", ".git/config"
-      );
+      ),
+      if => isdir("$(G.testdir)/core/libntech/libutils/");
 
     "t6"
       data => findfiles_up(
         "$(G.testdir)/core/libntech/libutils/", "*/cf?{lex,parse}.[ly]"
-      );
+      ),
+      if => isdir("$(G.testdir)/core/libntech/libutils/");
 }
 
 bundle agent check

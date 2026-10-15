@@ -54,9 +54,12 @@ bundle agent check
   vars:
     "expect" string => "one two three test";
     "results" slist => { "resultA", "resultB", "resultC" };
-    "resultA" string => readfile("$(G.testdir)/dirA/testfa", "33");
-    "resultB" string => readfile("$(G.testdir)/dirB/testfb", "33");
-    "resultC" string => readfile("$(G.testdir)/dirC/testfc", "33");
+    "resultA" string => readfile("$(G.testdir)/dirA/testfa", "33"),
+      if => fileexists("$(G.testdir)/dirA/testfa");
+    "resultB" string => readfile("$(G.testdir)/dirB/testfb", "33"),
+      if => fileexists("$(G.testdir)/dirB/testfb");
+    "resultC" string => readfile("$(G.testdir)/dirC/testfc", "33"),
+      if => fileexists("$(G.testdir)/dirC/testfc");
 
   classes:
     "ok_A" expression => strcmp("$(expect)", "$(resultA)");

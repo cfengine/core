@@ -99,7 +99,8 @@ bundle agent check
       );
 
     "actual_$(init.tests)"
-      string => readfile("$(G.testfile).$(init.tests)", 10000);
+      string => readfile("$(G.testfile).$(init.tests)", 10000),
+      if => fileexists("$(G.testfile).$(init.tests)");
 
   classes:
     "ok_$(init.tests)"

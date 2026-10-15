@@ -26,7 +26,8 @@ bundle agent test
 {
   vars:
     "cf_promises_validated"
-      data => readjson("$(G.testfile).$(this.promiser)", 1K);
+      data => readjson("$(G.testfile).$(this.promiser)", 1K),
+      if => fileexists("$(G.testfile).$(this.promiser)");
 
     "printable" string => format("%S", "cf_promises_validated");
 

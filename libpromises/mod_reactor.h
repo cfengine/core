@@ -27,6 +27,8 @@
 
 #include <cf3.defs.h>
 
+#define REACTOR_FILE_DELETED "file_deleted"
+
 /* Range of the 'interval' attribute of the 'when' body of events promises */
 #define REACTOR_INTERVAL_RANGE "1,99999999999"
 

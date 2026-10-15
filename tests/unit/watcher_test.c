@@ -3,6 +3,7 @@
 #include <watcher.h>
 #include <file_watcher.h>       /* FileWatcherStateNew(), FileWatcherCheckFileDeleted() */
 #include <policy.h>             /* Promise */
+#include <rlist.h>              /* RlistAppendScalar() */
 #include <logging_priv.h>       /* LoggingPrivContext, LoggingPrivSetContext() */
 
 #include <string.h>             /* strstr() */
@@ -40,12 +41,15 @@ static WatcherOptions *FileDeletedOptions(const char *path, time_t interval)
 {
     static WatcherOptions opt;
 
+    Rlist *args = NULL;
+    RlistAppendScalar(&args, path);
     opt = (WatcherOptions) {
-        .state = FileWatcherStateNew(path),
+        .state = FileWatcherStateNew(args),
         .check_callback = FileWatcherCheckFileDeleted,
         .destroy_state = FileWatcherStateDestroy,
         .interval = interval,
     };
+    RlistDestroy(args);
     return &opt;
 }
 
@@ -468,7 +472,10 @@ static void test_check_file_deleted_error(void)
     const LogLevel old_level = LogGetGlobalLevel();
     LogSetGlobalLevel(LOG_LEVEL_CRIT);
 
-    void *state = FileWatcherStateNew(path);
+    Rlist *args = NULL;
+    RlistAppendScalar(&args, path);
+    void *state = FileWatcherStateNew(args);
+    RlistDestroy(args);
     assert_int_equal(FileWatcherCheckFileDeleted(state), WATCHER_CHECK_ERROR);
     FileWatcherStateDestroy(state);
 
@@ -494,7 +501,10 @@ static void test_check_file_deleted_logs_error_once(void)
     LogSetGlobalLevel(LOG_LEVEL_CRIT);
 
     /* The failure of the first check is logged */
-    void *state = FileWatcherStateNew(path);
+    Rlist *args = NULL;
+    RlistAppendScalar(&args, path);
+    void *state = FileWatcherStateNew(args);
+    RlistDestroy(args);
     assert_int_equal(captured_err_count, 0);
     assert_int_equal(FileWatcherCheckFileDeleted(state), WATCHER_CHECK_ERROR);
     assert_int_equal(captured_err_count, 1);

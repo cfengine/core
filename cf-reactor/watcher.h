@@ -35,6 +35,7 @@ typedef enum
   WATCHER_CHECK_ERROR,      /* unable to tell whether the event happened */
 } WatcherCheckResult;
 
+typedef void *(*WatcherStateNewFn)(const Rlist *args);
 typedef WatcherCheckResult (*WatcherCheckFn)(void *state);
 typedef void (*WatcherStateDestroyFn)(void *state);
 

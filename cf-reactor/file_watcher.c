@@ -45,8 +45,11 @@ typedef struct
 } FileWatcherState;
 
 
-void *FileWatcherStateNew(const char *path)
+void *FileWatcherStateNew(const Rlist *args)
 {
+    assert(args != NULL);
+    const char *path = RlistScalarValue(args);
+
     FileWatcherState *fws = (FileWatcherState *) xcalloc(1, sizeof(FileWatcherState));
     fws->path = xstrdup(path);
 

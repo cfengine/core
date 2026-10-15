@@ -33,6 +33,7 @@ static const ConstraintSyntax when_constraints[] =
 
     /* Row models */
     ConstraintSyntaxNewString("file_deleted", CF_ANYSTRING, "File to react for on deletion", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("interval", REACTOR_INTERVAL_RANGE, "Seconds between two checks for the event", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 

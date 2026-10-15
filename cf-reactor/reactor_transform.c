@@ -40,6 +40,9 @@
 #include <mod_custom.h>          // Initialize/FinalizeCustomPromises()
 #include <timeout.h>             // SetReferenceTime()
 #include <time_classes.h>        // UpdateTimeClasses()
+#include <mod_reactor.h>         // REACTOR_INTERVAL_RANGE
+#include <syntax.h>              // CheckConstraintTypeMatch()
+#include <conversion.h>
 
 /* Promise types evaluated within `bundle reactor NAME { ... }`. */
 static const char *const REACTOR_TYPESEQUENCE[] =
@@ -134,6 +137,47 @@ static const Rlist *GetThenBundles(const Promise *pp)
     return bundles;
 }
 
+#define DEFAULT_INTERVAL 1
+
+/* Sets *interval to the seconds between two checks for the event of the
+ * (expanded) events promise. The parser and cf-promises only check it if it
+ * doesn't depend on variables or body arguments, so it is checked again here
+ * the same way: logs an error and returns false if it is invalid. */
+static bool EventsPromiseGetInterval(const Promise *pp, time_t *interval)
+{
+    assert(pp != NULL);
+    assert(interval != NULL);
+
+    const Constraint *interval_con = PromiseGetConstraint(pp, "interval");
+    if (interval_con == NULL)
+    {
+        *interval = DEFAULT_INTERVAL;
+        return true;
+    }
+
+    if (interval_con->rval.type != RVAL_TYPE_SCALAR)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Reactor events promise '%s' has an invalid interval, expected a number of seconds",
+            pp->promiser);
+        return false;
+    }
+
+    const char *value = RvalScalarValue(interval_con->rval);
+    const SyntaxTypeMatch err = CheckConstraintTypeMatch(
+        interval_con->lval, interval_con->rval, CF_DATA_TYPE_INT, REACTOR_INTERVAL_RANGE, 0);
+    if (err != SYNTAX_TYPE_MATCH_OK)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Reactor events promise '%s' has an invalid interval '%s': %s",
+            pp->promiser, value, SyntaxTypeMatchToString(err));
+        return false;
+    }
+
+    *interval = (time_t) IntFromString(value);
+    return true;
+}
+
 // Temporary limitations:
 // - 'when' body: only a single constraint, 'file_deleted', is supported (no OR-ing of constraints yet)
 // TODO: support multiple 'when' constraints
@@ -164,11 +208,17 @@ static PromiseResult KeepEventsPromise(EvalContext *ctx, const Promise *pp)
         }
     }
 
+    time_t interval;
+    if (!EventsPromiseGetInterval(pp, &interval))
+    {
+        return PROMISE_RESULT_FAIL;
+    }
+
     WatcherOptions opt = {
         .state = FileWatcherStateNew(path),
         .check_callback = FileWatcherCheckFileDeleted,
         .destroy_state = FileWatcherStateDestroy,
-        .interval = 1,
+        .interval = interval,
     };
 
     if (!WatcherRegister(pp, &opt))

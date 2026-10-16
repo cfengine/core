@@ -115,19 +115,15 @@ static void RecordEventsPromiseOutcome(EvalContext *ctx, const Promise *pp, Prom
 
 /* Returns the list of bundle references of the (expanded) 'then' attribute,
  * which is always a list after expansion, see ExpandBundleListReference().
- * Logs an error and returns NULL if there is no 'then' attribute or it is
- * empty. */
+ * Logs an error and returns NULL if it is empty. */
 static const Rlist *GetThenBundles(const Promise *pp)
 {
     assert(pp != NULL);
 
+    /* A promise without 'then' is rejected by the policy checks, see
+     * EventsParseTreeCheck() */
     const Constraint *then_constraint = PromiseGetConstraint(pp, "then");
-    if (then_constraint == NULL)
-    {
-        Log(LOG_LEVEL_ERR, "Reactor events promise '%s' does not specify a 'then' bundle", pp->promiser);
-        return NULL;
-    }
-
+    assert(then_constraint != NULL);
     assert(then_constraint->rval.type == RVAL_TYPE_LIST);
     const Rlist *bundles = RvalRlistValue(then_constraint->rval);
     if (bundles == NULL)

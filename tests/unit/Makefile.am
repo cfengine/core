@@ -156,6 +156,7 @@ check_PROGRAMS = \
 	new_packages_promise_test \
 	iteration_test \
 	protocol_recv_overflow_test \
+	client_code_test \
 	watcher_test \
 	stoppable_thread_test \
 	wakeup_channel_test

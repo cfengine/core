@@ -157,6 +157,7 @@ check_PROGRAMS = \
 	iteration_test \
 	protocol_recv_overflow_test \
 	watcher_test \
+	file_watcher_test \
 	stoppable_thread_test \
 	wakeup_channel_test
 
@@ -235,6 +236,9 @@ watcher_test_SOURCES = watcher_test.c \
 	../../cf-reactor/file_watcher.c \
 	../../cf-reactor/stoppable_thread.c \
 	../../cf-reactor/wakeup_channel.c
+
+file_watcher_test_SOURCES = file_watcher_test.c \
+	../../cf-reactor/file_watcher.c
 
 stoppable_thread_test_SOURCES = stoppable_thread_test.c \
 	../../cf-reactor/stoppable_thread.c

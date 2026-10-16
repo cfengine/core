@@ -163,7 +163,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_MONITOR, GetTTYInteractive());
 
     int longopt_idx;
-    while ((c = getopt_long(argc, argv, "dvnIf:g:VSxHTKMFhC::l",
+    while ((c = getopt_long(argc, argv, "dvnIf:g:VxHTKMFhC::l",
                             OPTIONS, &longopt_idx)) != -1)
     {
         switch (c)

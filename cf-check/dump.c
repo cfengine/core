@@ -556,6 +556,12 @@ int dump_main(int argc, const char *const *const argv)
     }
 
     Seq *files = argv_to_lmdb_files(argc, argv, offset);
+    if (files == NULL || SeqLength(files) == 0)
+    {
+        printf("No database files to dump.\n");
+        return 1;
+    }
+
     const int ret = dump_dbs(files, mode, tskey_filename);
     SeqDestroy(files);
     return ret;

@@ -119,15 +119,15 @@ void WatcherRegistryFinalize(void)
 }
 
 // Expects interval to be strictly greater than 0, otherwise the watcher thread will busy spin
-void WatcherRegister(const Promise *pp, WatcherOptions opt, time_t interval)
+bool WatcherRegister(const Promise *pp, WatcherOptions *opt)
 {
     assert(pp != NULL);
     assert(pp->promiser != NULL);
-    assert(opt.check_callback != NULL);
-    assert(opt.destroy_state != NULL);
-    assert(opt.state != NULL);
+    assert(opt->check_callback != NULL);
+    assert(opt->destroy_state != NULL);
+    assert(opt->state != NULL);
+    assert(opt->interval > 0);
     assert(watchers != NULL);
-    assert(interval > 0);
     
     ThreadLock(&watchers_mutex);
     char promise_hash[CF_HOSTKEY_STRING_SIZE];
@@ -138,37 +138,41 @@ void WatcherRegister(const Promise *pp, WatcherOptions opt, time_t interval)
     {
         // ignore duplicates
         ThreadUnlock(&watchers_mutex);
-        opt.destroy_state(opt.state);
-        return;
+        opt->destroy_state(opt->state);
+        return false;
     }
 
     Watcher *w = xmalloc(sizeof(Watcher));
     w->promise_hash = xstrdup(promise_hash);
     w->promise = pp->org_pp;
     w->promiser = xstrdup(pp->promiser);
-    w->poll_interval_secs = interval;
+    w->poll_interval_secs = opt->interval;
     w->next_due = 0; /* due immediately on the watcher thread's first pass */
     w->last_check = WATCHER_CHECK_NO_EVENT;
-    w->check_callback = opt.check_callback;
-    w->destroy_state = opt.destroy_state;
+    w->check_callback = opt->check_callback;
+    w->destroy_state = opt->destroy_state;
 
     // Take over the state of an identical watcher
+    bool failed = false;
     prev = (old_watchers != NULL) ? MapGet(old_watchers, promise_hash) : NULL;
     if (prev == NULL)
     {
-        w->state = opt.state;
+        w->state = opt->state;
+        WatcherCheckResult check = w->check_callback(w->state);
+        failed = (check == WATCHER_CHECK_ERROR);
     }
     else
     {
         Log(LOG_LEVEL_DEBUG, "Reactor watcher '%s' takes over the state of an identical watcher", w->promiser);
         w->state = prev->state;
         prev->state = NULL; /* so not destroyed with prev */
-        opt.destroy_state(opt.state);
+        opt->destroy_state(opt->state);
     }
 
     MapInsert(watchers, w->promise_hash, w);
 
     ThreadUnlock(&watchers_mutex);
+    return failed;
 }
 
 static void WatcherDestroy(void *item)
@@ -304,7 +308,7 @@ static void HandleQueuedEvents(EvalContext *ctx, WatcherEventFn on_event)
         }
         else
         {
-            Log(LOG_LEVEL_NOTICE, "Reactor watcher '%s' fired", w->promiser);
+            Log(LOG_LEVEL_VERBOSE, "Reactor watcher '%s' fired", w->promiser);
         }
         on_event(ctx, w->promise, w->promise_hash, event->check);
         free(event);

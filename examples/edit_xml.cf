@@ -16,7 +16,7 @@
 # included file COSL.txt.
 ###############################################################################
 #+begin_src cfengine3
-# for more info: http://cfengine.com/docs/master/reference-promise-types-edit_xml.html
+# for more info: https://docs.cfengine.com/docs/lts/reference/promise-types/files/edit_xml/
 body common control
 {
   bundlesequence => { run };

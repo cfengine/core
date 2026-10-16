@@ -33,13 +33,16 @@
 #include <verify_classes.h>
 #include <verify_vars.h>
 #include <watcher.h>
-#include <file_watcher.h>
 #include <agent_operations.h>   // ScheduleAgentOperations()
 #include <attributes.h>          // GetClassContextAttributes()
 #include <conn_cache.h>          // ConnCache_Init(), ConnCache_Destroy()
 #include <mod_custom.h>          // Initialize/FinalizeCustomPromises()
 #include <timeout.h>             // SetReferenceTime()
 #include <time_classes.h>        // UpdateTimeClasses()
+#include <mod_reactor.h>         // REACTOR_INTERVAL_RANGE, REACTOR_FILE_DELETED
+#include <syntax.h>              // CheckConstraintTypeMatch(), PromiseTypeSyntaxGet(), BodySyntaxGetConstraintSyntax()
+#include <file_watcher.h>
+#include <conversion.h>
 
 /* Promise types evaluated within `bundle reactor NAME { ... }`. */
 static const char *const REACTOR_TYPESEQUENCE[] =
@@ -134,21 +137,177 @@ static const Rlist *GetThenBundles(const Promise *pp)
     return bundles;
 }
 
-// Temporary limitations:
-// - 'when' body: only a single constraint, 'file_deleted', is supported (no OR-ing of constraints yet)
-// TODO: support multiple 'when' constraints
+/*****************************************************************************/
+
+typedef struct
+{
+    const char *name;
+    const char *const *extra_args;
+    WatcherStateNewFn new_state;
+    WatcherStateDestroyFn destroy_state;
+    WatcherCheckFn check;
+} EventType;
+
+static const char *const NO_EXTRA_ARGS[] =
+{
+    NULL
+};
+
+#define EventTypeNew(name, args, new_state, destroy_state, check) \
+    { name, args, new_state, destroy_state, check }
+#define EventTypeNewNull() EventTypeNew(NULL, NULL, NULL, NULL, NULL)
+
+/* A file event, about the file at the path of its constraint */
+#define FileEventTypeNew(name, check) \
+    EventTypeNew(name, NO_EXTRA_ARGS, FileWatcherStateNew, FileWatcherStateDestroy, check)
+
+static const EventType EVENT_TABLE[] =
+{
+    FileEventTypeNew(REACTOR_FILE_DELETED, FileWatcherCheckFileDeleted),
+    EventTypeNewNull()
+};
+
+static const EventType *EventsPromiseGetFirstEvent(const Promise *pp, Rlist **args)
+{
+    assert(pp != NULL);
+    assert(args != NULL);
+
+    for (size_t i = 0; EVENT_TABLE[i].name != NULL; i++)
+    {
+        const Constraint *con = PromiseGetConstraint(pp, EVENT_TABLE[i].name);
+        if (con != NULL)
+        {
+            RlistAppend(args, con->rval.item, con->rval.type);
+            return &EVENT_TABLE[i];
+        }
+    }
+    Log(LOG_LEVEL_ERR,
+        "Reactor events promise '%s' does not specify an event to watch in its 'when' body",
+        pp->promiser);
+    return NULL;
+}
+
+#define DEFAULT_INTERVAL 1
+
+/* Sets *interval to the seconds between two checks for the event of the
+ * (expanded) events promise. The parser and cf-promises only check it if it
+ * doesn't depend on variables or body arguments, so it is checked again here
+ * the same way: logs an error and returns false if it is invalid. */
+static bool EventsPromiseGetInterval(const Promise *pp, time_t *interval)
+{
+    assert(pp != NULL);
+    assert(interval != NULL);
+
+    const Constraint *interval_con = PromiseGetConstraint(pp, "interval");
+    if (interval_con == NULL)
+    {
+        *interval = DEFAULT_INTERVAL;
+        return true;
+    }
+
+    if (interval_con->rval.type != RVAL_TYPE_SCALAR)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Reactor events promise '%s' has an invalid interval, expected a number of seconds",
+            pp->promiser);
+        return false;
+    }
+
+    const char *value = RvalScalarValue(interval_con->rval);
+    const SyntaxTypeMatch err = CheckConstraintTypeMatch(
+        interval_con->lval, interval_con->rval, CF_DATA_TYPE_INT, REACTOR_INTERVAL_RANGE, 0);
+    if (err != SYNTAX_TYPE_MATCH_OK)
+    {
+        Log(LOG_LEVEL_ERR,
+            "Reactor events promise '%s' has an invalid interval '%s': %s",
+            pp->promiser, value, SyntaxTypeMatchToString(err));
+        return false;
+    }
+
+    *interval = (time_t) IntFromString(value);
+    return true;
+}
+
+static bool ResolveWhenBody(const Promise *pp, WatcherOptions *opt)
+{
+    assert(pp != NULL);
+    assert(opt != NULL);
+    // Get the event and its arg
+    Rlist *args = NULL;
+    const EventType *event = EventsPromiseGetFirstEvent(pp, &args);
+
+    if (event == NULL)
+    {
+        RlistDestroy(args);
+        return false;
+    }
+
+    // If the event has additional args, add them to the list of args
+    for (const char *const *extra_arg = event->extra_args; *extra_arg != NULL; extra_arg++)
+    {
+        const Constraint *con = PromiseGetConstraint(pp, *extra_arg);
+        if (con == NULL)
+        {
+            Log(LOG_LEVEL_ERR,
+                "Constraint '%s' is required for event '%s' in events promise '%s'",
+                *extra_arg, event->name, pp->promiser);
+            RlistDestroy(args);
+            return false;
+        }
+        RlistAppend(&args, con->rval.item, con->rval.type);
+    }
+
+    // Check that other constraints are not defined in the promise, that
+    // do not belong here
+    const PromiseTypeSyntax *events_syntax = PromiseTypeSyntaxGet("reactor", "events");
+    assert(events_syntax != NULL);
+    const ConstraintSyntax *when_syntax =
+        PromiseTypeSyntaxGetConstraintSyntax(events_syntax, "when")->range.body_type_syntax->constraints;
+
+    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
+    {
+        const Constraint *cp = SeqAt(pp->conlist, i);
+        if (BodySyntaxGetConstraintSyntax(when_syntax, cp->lval) == NULL || /* not a 'when' constraint */
+            StringEqual(cp->lval, event->name) ||
+            StringEqual(cp->lval, "interval") ||
+            StringEqual(cp->lval, "meta"))                                 /* also a promise attribute */
+        {
+            continue;
+        }
+
+        bool own_arg = false;
+        for (const char *const *extra_arg = event->extra_args; *extra_arg != NULL; extra_arg++)
+        {
+            own_arg = own_arg || StringEqual(*extra_arg, cp->lval);
+        }
+        if (!own_arg)
+        {
+            Log(LOG_LEVEL_ERR,
+                "Reactor events promise '%s' cannot have both '%s' and '%s' in its 'when' body, only one event can be watched per promise",
+                pp->promiser, event->name, cp->lval);
+            RlistDestroy(args);
+            return false;
+        }
+    }
+
+    if (!EventsPromiseGetInterval(pp, &opt->interval))
+    {
+        RlistDestroy(args);
+        return false;
+    }
+
+    opt->state = event->new_state(args);
+    opt->check_callback = event->check;
+    opt->destroy_state = event->destroy_state;
+    RlistDestroy(args);
+    return true;
+}
+
+/*****************************************************************************/
+
 static PromiseResult KeepEventsPromise(EvalContext *ctx, const Promise *pp)
 {
     assert(pp != NULL);
-
-    const char *path = PromiseGetConstraintAsRval(pp, "file_deleted", RVAL_TYPE_SCALAR);
-    if (path == NULL)
-    {
-        Log(LOG_LEVEL_WARNING,
-            "Reactor events promise '%s' must specify exactly one file to watch in its 'when' body, ignoring",
-            pp->promiser);
-        return PROMISE_RESULT_FAIL;
-    }
 
     const Rlist *then_bundles = GetThenBundles(pp);
     if (then_bundles == NULL)
@@ -164,15 +323,16 @@ static PromiseResult KeepEventsPromise(EvalContext *ctx, const Promise *pp)
         }
     }
 
-    WatcherOptions opt = {
-        .state = FileWatcherStateNew(path),
-        .check_callback = FileWatcherCheckFileDeleted,
-        .destroy_state = DestroyFileWatcherState,
-    };
+    WatcherOptions opt;
+    if (!ResolveWhenBody(pp, &opt))
+    {
+        return PROMISE_RESULT_FAIL;
+    }
 
-    // register watcher
-    Log(LOG_LEVEL_INFO, "Registering a file_deleted watcher for events promise '%s', on file '%s'", pp->promiser, path);
-    WatcherRegister(pp, opt, 1);
+    if (!WatcherRegister(pp, &opt))
+    {
+        return PROMISE_RESULT_FAIL;
+    }
 
     return PROMISE_RESULT_NOOP;
 }

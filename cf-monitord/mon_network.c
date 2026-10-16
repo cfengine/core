@@ -652,13 +652,17 @@ static void GetNetworkDataFromNetstat(FILE *fp, double *cf_this, Item **in, Item
 
         // End extract type
 
+        /* CfReadLine() wraps getline(), so vbuff may be longer than any of
+         * these buffers; bound each conversion to the size of local/remote
+         * (CF_MAX_IP_LEN + CF_MAX_PORT_LEN) so an overlong field cannot
+         * overflow them. */
         switch (type)
         {
-        case cfn_new:  sscanf(vbuff, "%*s %*s %*s %s %s", local, remote);  /* linux-like */
+        case cfn_new:  sscanf(vbuff, "%*s %*s %*s %69s %69s", local, remote);  /* linux-like */
             break;
 
         case cfn_old:
-            sscanf(vbuff, "%s %s", local, remote);
+            sscanf(vbuff, "%69s %69s", local, remote);
             break;
         }
 

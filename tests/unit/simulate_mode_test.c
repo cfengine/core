@@ -27,6 +27,7 @@
 #include <eval_context.h>       /* SetChangesChroot(), ToChangesChroot() */
 #include <changes_chroot.h>     /* CHROOT_PKGS_OPS_FILE */
 #include <file_lib.h>           /* DeleteDirectoryTree() */
+#include <string_lib.h>         /* StringContains() */
 
 #include <simulate_mode.h>
 
@@ -102,6 +103,36 @@ static void test_diff_version_and_architecture(void)
     unlink(ToChangesChroot(CHROOT_PKGS_OPS_FILE));
 }
 
+/* A removal with a version and no install record to cancel is a removal to
+ * report. */
+static void test_diff_removal_with_version(void)
+{
+    write_pkgs_ops("r,foo,1.0,\r\n");
+
+    char output[4096];
+    assert_true(call_with_captured_stdout(&DiffPkgOperations, output, sizeof(output)));
+
+    assert_true(StringContains(output, "Package 'foo [1.0]' would be removed"));
+
+    unlink(ToChangesChroot(CHROOT_PKGS_OPS_FILE));
+}
+
+/* A removal with a version that differs from the recorded installation would
+ * fail, so only the installation is reported. */
+static void test_diff_removal_with_other_version_keeps_install(void)
+{
+    write_pkgs_ops("i,foo,2.0,\r\n"
+                   "r,foo,1.0,\r\n");
+
+    char output[4096];
+    assert_true(call_with_captured_stdout(&DiffPkgOperations, output, sizeof(output)));
+
+    assert_true(StringContains(output, "Package 'foo [2.0]' would be installed"));
+    assert_false(StringContains(output, "would be removed"));
+
+    unlink(ToChangesChroot(CHROOT_PKGS_OPS_FILE));
+}
+
 static void test_manifest_install_cancels_removal(void)
 {
     write_pkgs_ops("r,foo,,\r\n"
@@ -127,6 +158,8 @@ int main()
     {
         unit_test(test_diff_install_cancels_removal),
         unit_test(test_diff_version_and_architecture),
+        unit_test(test_diff_removal_with_version),
+        unit_test(test_diff_removal_with_other_version_keeps_install),
         unit_test(test_manifest_install_cancels_removal),
     };
 

@@ -113,6 +113,13 @@ case letters and underscores only. If the test is expected to generate an error
 additional '.x' suffix before '.cf' (e.g. 'string_vars.x.cf'). A crash will
 still cause a failure.
 
+Regular tests (without any special suffix) fail if they log any errors, even
+if they print the Pass message. If the test is expected to log errors (e.g. it
+contains promises which are intentionally not kept), it should have an
+additional '.error' suffix before '.cf' (e.g. 'bad_perms.error.cf'), in which
+case it passes as long as it logs at least one error and exits with 0. If it
+should also print the Pass message, use the '.error.pass.cf' suffix instead.
+
 Tests which are not expected to pass yet (e.g. there is a bug in code which
 prevents tests from passing) should be placed in 'staging' subdirectory in the
 test directory where they belong. Such test cases will be only run if --staging

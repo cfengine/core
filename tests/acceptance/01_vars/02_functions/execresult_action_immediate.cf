@@ -7,14 +7,23 @@ body common control
   version => "1.0";
 }
 
+# The 'immediate' body comes from plucked.sub.cf, which is not loaded yet when
+# the policy is pre-evaluated, so promises using it are skipped until then
+bundle common framework
+{
+  classes:
+    "framework_loaded" expression => isvariable("G.testdir");
+}
+
 bundle agent check_date(x)
 {
   vars:
     "reports_file" string => "$(G.testdir)/execresult_action_immediate_report";
 
-    "date"
-      string => execresult("date; sleep 1", "useshell"),
-      action => immediate;
+    framework_loaded::
+      "date"
+        string => execresult("date; sleep 1", "useshell"),
+        action => immediate;
 
   reports:
     "Date for ${x}: ${date}" report_to_file => "$(reports_file)";
@@ -41,7 +50,8 @@ bundle agent check
     "content"
       slist => readstringlist(
         "$(check_date.reports_file)", "", '$(const.n)', inf, inf
-      );
+      ),
+      if => fileexists("$(check_date.reports_file)");
 
     "count" int => length(content);
 

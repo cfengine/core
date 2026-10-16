@@ -2,6 +2,9 @@
 #
 # Abuse parseyaml()
 #
+# This is an .error.pass.cf test, because parseyaml() is given strings
+# which are not valid YAML containers on purpose and logs errors.
+#
 #######################################################
 body common control
 {

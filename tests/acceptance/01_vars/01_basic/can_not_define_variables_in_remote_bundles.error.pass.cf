@@ -2,6 +2,10 @@
 #
 # Test that it is invalid to define variables in remote bundles
 #
+# This is an .error.pass.cf test, because defining a variable in a
+# remote bundle is rejected with errors, which is what this test checks
+# (CFE-1915).
+#
 #######################################################
 body common control
 {

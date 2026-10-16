@@ -2,6 +2,9 @@
 #
 # Test mergejson() with mismatched datas
 #
+# This is an .error.pass.cf test, because parsejson() is given invalid
+# JSON on purpose and logs an error, so that mergedata() fails.
+#
 #######################################################
 body common control
 {

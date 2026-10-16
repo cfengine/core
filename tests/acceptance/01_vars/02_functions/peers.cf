@@ -56,10 +56,12 @@ bundle agent test
     "subtests" ilist => { "0", "1", "2", "3", "4", "5" };
 
     "peers_$(tests)_$(subtests)"
-      slist => peers("$(G.testfile).$(tests)", "#.*", $(subtests));
+      slist => peers("$(G.testfile).$(tests)", "#.*", $(subtests)),
+      if => fileexists("$(G.testfile).$(tests)");
 
     "peerleaders_$(tests)_$(subtests)"
-      slist => peerleaders("$(G.testfile).$(tests)", "#.*", $(subtests));
+      slist => peerleaders("$(G.testfile).$(tests)", "#.*", $(subtests)),
+      if => fileexists("$(G.testfile).$(tests)");
 
     "actual_peers_$(tests)_$(subtests)"
       string => format("%S", "peers_$(tests)_$(subtests)");
@@ -68,7 +70,8 @@ bundle agent test
       string => format("%S", "peerleaders_$(tests)_$(subtests)");
 
     "actual_peerleader_$(tests)_$(subtests)"
-      string => peerleader("$(G.testfile).$(tests)", "#.*", $(subtests));
+      string => peerleader("$(G.testfile).$(tests)", "#.*", $(subtests)),
+      if => fileexists("$(G.testfile).$(tests)");
 }
 
 #######################################################

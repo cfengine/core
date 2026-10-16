@@ -56,6 +56,9 @@ bundle agent check
     "result"
       string => readfile(
         "$(sys.workdir)$(const.dirsep)state$(const.dirsep)agent.log"
+      ),
+      if => fileexists(
+        "$(sys.workdir)$(const.dirsep)state$(const.dirsep)agent.log"
       );
 
   methods:

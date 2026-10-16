@@ -1,5 +1,9 @@
 # fixes https://dev.cfengine.com/issues/2504
 # using variables in string contexts
+#
+# This is an .error.pass.cf test, because the 'cf engine' class context
+# (words separated by whitespace without an operator) is invalid on
+# purpose and logs an error.
 body common control
 {
   inputs => { "../../default.sub.cf" };

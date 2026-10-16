@@ -34,11 +34,12 @@ struct StoppableThread_
     StoppableThreadFn fn;
     void *arg;
 
-    /* Protects stop_requested and exited. cond is signalled when either of
-     * them changes. */
+    /* Protects stop_requested, wake_requested and exited. cond is signalled
+     * when any of them changes. */
     pthread_mutex_t lock;
     pthread_cond_t cond;
     bool stop_requested; /* set by StoppableThreadStop() */
+    bool wake_requested; /* set by StoppableThreadWake(), reset by a sleep */
     bool exited;         /* set when fn returns */
 };
 
@@ -95,15 +96,45 @@ bool StoppableThreadShouldStop(StoppableThread *thread)
     return ret;
 }
 
-void StoppableThreadSleep(StoppableThread *thread, time_t secs)
+/* timeout is in seconds, or THREAD_BLOCK_INDEFINITELY */
+static void StoppableThreadWaitForWakeup(StoppableThread *thread, int timeout)
 {
     assert(thread != NULL);
 
     ThreadLock(&thread->lock);
-    if (!thread->stop_requested && secs > 0)
+    if (!thread->stop_requested && !thread->wake_requested)
     {
-        ThreadWait(&thread->cond, &thread->lock, (int) secs);
+        ThreadWait(&thread->cond, &thread->lock, timeout);
     }
+    /* The routine re-checks its state after any sleep, which covers the
+     * wakeup, whether it arrived before or during the sleep */
+    thread->wake_requested = false;
+    ThreadUnlock(&thread->lock);
+}
+
+void StoppableThreadSleep(StoppableThread *thread, time_t secs)
+{
+    assert(thread != NULL);
+
+    if (secs > 0)
+    {
+        StoppableThreadWaitForWakeup(thread, (int) secs);
+    }
+}
+
+void StoppableThreadSleepUntilWoken(StoppableThread *thread)
+{
+    StoppableThreadWaitForWakeup(thread, THREAD_BLOCK_INDEFINITELY);
+}
+
+void StoppableThreadWake(StoppableThread *thread)
+{
+    assert(thread != NULL);
+
+    ThreadLock(&thread->lock);
+    thread->wake_requested = true;
+    /* Broadcast, since StoppableThreadStop() may also be waiting on cond */
+    pthread_cond_broadcast(&thread->cond);
     ThreadUnlock(&thread->lock);
 }
 

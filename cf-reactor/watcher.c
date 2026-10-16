@@ -38,9 +38,10 @@
 #include <hash.h>               // HashPrintSafe()
 #include <policy.h>             // Promise
 
-/* Upper bound on how long the watcher thread ever sleeps in one go, so that
- * IsPendingTermination() is re-checked at least this often during shutdown,
- * regardless of what poll intervals watchers asked for. */
+/* Upper bound on how long the watcher thread sleeps in one go while it has
+ * watchers to check, regardless of what poll intervals they asked for. When
+ * it has none it sleeps until woken up. Either way, shutdown doesn't depend
+ * on it: EventWatcherFinalize() wakes the thread up to stop it. */
 #define MAX_WATCHER_THREAD_SLEEP_SECS 1
 
 #define WATCHER_THREAD_EXIT_TIMEOUT_SECS 5
@@ -200,6 +201,10 @@ static void WatcherThreadMain(StoppableThread *thread, ARG_UNUSED void *unused)
 
         ThreadLock(&watchers_mutex);
 
+        /* Nothing to check until EventWatcherWakeUp() or EventWatcherResume()
+         * (EventWatcherPause() empties `watchers`) wakes the thread up */
+        const bool idle = (MapSize(watchers) == 0);
+
         MapIterator it = MapIteratorInit(watchers);
         MapKeyValue *item;
         while (!paused && (item = MapIteratorNext(&it)) != NULL)
@@ -239,7 +244,14 @@ static void WatcherThreadMain(StoppableThread *thread, ARG_UNUSED void *unused)
             WakeupChannelNotify(&wakeup_channel);
         }
 
-        StoppableThreadSleep(thread, sleep_for);
+        if (idle)
+        {
+            StoppableThreadSleepUntilWoken(thread);
+        }
+        else
+        {
+            StoppableThreadSleep(thread, sleep_for);
+        }
     }
 }
 
@@ -358,6 +370,16 @@ void EventWatcherResume(void)
     old_watchers = NULL;
     paused = false;
     ThreadUnlock(&watchers_mutex);
+
+    EventWatcherWakeUp();
+}
+
+void EventWatcherWakeUp(void)
+{
+    if (watcher_thread != NULL)
+    {
+        StoppableThreadWake(watcher_thread);
+    }
 }
 
 void EventWatcherFinalize(void)

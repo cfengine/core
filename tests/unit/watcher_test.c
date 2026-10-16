@@ -263,6 +263,62 @@ static void test_event_watcher_pause_handles_queued_events(void)
     assert_int_equal(rmdir(dir), 0);
 }
 
+static void test_event_watcher_idle_woken_by_wake_up(void)
+{
+    char dir[] = "/tmp/watcher_test.XXXXXX";
+    char path[PATH_MAX];
+    CreateTempFile(dir, path, sizeof(path));
+
+    /* Without watchers, the watcher thread sleeps until woken up */
+    WatcherRegistryInitialize();
+    int fd = -1;
+    assert_true(EventWatcherInitialize(&fd));
+    sleep(1);
+
+    /* Registering a watcher doesn't wake it up, EventWatcherWakeUp() must */
+    WatcherRegister(&expanded_promise, FileDeletedOptions(path), 1);
+    assert_int_equal(unlink(path), 0);
+    assert_false(WaitForQueuedEvent(fd, 20));
+    EventWatcherWakeUp();
+    assert_true(WaitForQueuedEvent(fd, 50));
+
+    ResetRecordedEvents();
+    HandleEvents(fd);
+    assert_int_equal(handled_event_count, 1);
+    assert_int_equal(last_event_check, WATCHER_CHECK_EVENT);
+
+    EventWatcherFinalize();
+    assert_int_equal(rmdir(dir), 0);
+}
+
+static void test_event_watcher_idle_woken_by_resume(void)
+{
+    char dir[] = "/tmp/watcher_test.XXXXXX";
+    char path[PATH_MAX];
+    CreateTempFile(dir, path, sizeof(path));
+
+    WatcherRegistryInitialize();
+    int fd = -1;
+    assert_true(EventWatcherInitialize(&fd));
+    sleep(1);
+
+    /* Registering doesn't wake the watcher thread up, resuming must */
+    EventWatcherPause(NULL, RecordEvent);
+    WatcherRegister(&expanded_promise, FileDeletedOptions(path), 1);
+    assert_int_equal(unlink(path), 0);
+    assert_false(WaitForQueuedEvent(fd, 20));
+    EventWatcherResume();
+    assert_true(WaitForQueuedEvent(fd, 50));
+
+    ResetRecordedEvents();
+    HandleEvents(fd);
+    assert_int_equal(handled_event_count, 1);
+    assert_int_equal(last_event_check, WATCHER_CHECK_EVENT);
+
+    EventWatcherFinalize();
+    assert_int_equal(rmdir(dir), 0);
+}
+
 static void test_event_watcher_state_kept_across_pause(void)
 {
     char dir[] = "/tmp/watcher_test.XXXXXX";
@@ -512,6 +568,8 @@ int main()
         unit_test(test_watcher_register_again_after_pause),
         unit_test(test_event_watcher_lifecycle),
         unit_test(test_event_watcher_pause_handles_queued_events),
+        unit_test(test_event_watcher_idle_woken_by_wake_up),
+        unit_test(test_event_watcher_idle_woken_by_resume),
         unit_test(test_event_watcher_state_kept_across_pause),
         unit_test(test_event_watcher_state_kept_identical_ignored),
         unit_test(test_event_watcher_state_not_kept_for_other_promise),

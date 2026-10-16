@@ -119,6 +119,15 @@ void EventWatcherPause(EvalContext *ctx, WatcherEventFn on_event);
  * checked immediately.
  */
 void EventWatcherResume(void);
+
+/**
+ * @brief Wake the watcher thread up to check the registered watchers
+ * immediately. Without watchers, the watcher thread sleeps until woken up, so
+ * this must be called after registering watchers outside of an
+ * EventWatcherPause()/EventWatcherResume() pair (which wakes it up itself),
+ * i.e. after the watchers of the initial policy.
+ */
+void EventWatcherWakeUp(void);
 void EventWatcherFinalize(void);
 
 #endif

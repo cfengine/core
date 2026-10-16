@@ -174,6 +174,118 @@ static void test_sleep_after_stop(void)
     RoutineDataDestroy(data);
 }
 
+/* Queues for the wake tests: the routine pops from wake_go before sleeping,
+ * and pushes to wake_woken once woken up. */
+static ThreadedQueue *wake_go = NULL;
+static ThreadedQueue *wake_woken = NULL;
+
+/* Sleeps until woken up, then waits for the stop. */
+static void SleepUntilWoken(StoppableThread *thread, ARG_UNUSED void *arg)
+{
+    void *item;
+    ThreadedQueuePop(wake_go, &item, TEST_TIMEOUT_SECS);
+    StoppableThreadSleepUntilWoken(thread);
+    ThreadedQueuePush(wake_woken, thread);
+
+    while (!StoppableThreadShouldStop(thread))
+    {
+        StoppableThreadSleep(thread, 60);
+    }
+}
+
+/* Sleeps for a long time, then waits for the stop. */
+static void SleepLongThenWoken(StoppableThread *thread, ARG_UNUSED void *arg)
+{
+    void *item;
+    ThreadedQueuePop(wake_go, &item, TEST_TIMEOUT_SECS);
+    StoppableThreadSleep(thread, 60);
+    ThreadedQueuePush(wake_woken, thread);
+
+    while (!StoppableThreadShouldStop(thread))
+    {
+        StoppableThreadSleep(thread, 60);
+    }
+}
+
+static void WakeTestSetUp(void)
+{
+    wake_go = ThreadedQueueNew(1, NULL);
+    wake_woken = ThreadedQueueNew(1, NULL);
+}
+
+static void WakeTestTearDown(void)
+{
+    ThreadedQueueDestroy(wake_go);
+    wake_go = NULL;
+    ThreadedQueueDestroy(wake_woken);
+    wake_woken = NULL;
+}
+
+/* Wakes the routine up once it is (most likely) sleeping, and asserts that it
+ * returned from the sleep without a stop. */
+static void AssertWakeEndsSleep(StoppableThreadFn fn)
+{
+    WakeTestSetUp();
+
+    StoppableThread *thread = StoppableThreadStart(fn, NULL);
+    assert_true(thread != NULL);
+    ThreadedQueuePush(wake_go, thread);
+    sleep(1);
+
+    const time_t start = time(NULL);
+    StoppableThreadWake(thread);
+    void *item;
+    assert_true(ThreadedQueuePop(wake_woken, &item, TEST_TIMEOUT_SECS));
+    assert_true(time(NULL) - start < 2);
+
+    assert_true(StoppableThreadStop(thread, TEST_TIMEOUT_SECS));
+    WakeTestTearDown();
+}
+
+static void test_wake_ends_sleep_until_woken(void)
+{
+    AssertWakeEndsSleep(SleepUntilWoken);
+}
+
+static void test_wake_ends_sleep(void)
+{
+    AssertWakeEndsSleep(SleepLongThenWoken);
+}
+
+static void test_wake_before_sleep_not_lost(void)
+{
+    WakeTestSetUp();
+
+    StoppableThread *thread = StoppableThreadStart(SleepUntilWoken, NULL);
+    assert_true(thread != NULL);
+
+    /* The wakeup is sent before the routine is allowed to go to sleep, so
+     * the sleep must return straight away instead of blocking forever */
+    StoppableThreadWake(thread);
+    ThreadedQueuePush(wake_go, thread);
+    void *item;
+    assert_true(ThreadedQueuePop(wake_woken, &item, TEST_TIMEOUT_SECS));
+
+    assert_true(StoppableThreadStop(thread, TEST_TIMEOUT_SECS));
+    WakeTestTearDown();
+}
+
+static void test_stop_ends_sleep_until_woken(void)
+{
+    WakeTestSetUp();
+
+    StoppableThread *thread = StoppableThreadStart(SleepUntilWoken, NULL);
+    assert_true(thread != NULL);
+    ThreadedQueuePush(wake_go, thread);
+    sleep(1);
+
+    const time_t start = time(NULL);
+    assert_true(StoppableThreadStop(thread, TEST_TIMEOUT_SECS));
+    assert_true(time(NULL) - start < 2);
+
+    WakeTestTearDown();
+}
+
 /* State for the timeout test. It's static rather than passed through arg,
  * because the thread is abandoned and may outlive the test function. */
 static pthread_mutex_t ignore_stop_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -271,6 +383,10 @@ int main()
         unit_test(test_stop_already_returned),
         unit_test(test_sleep_non_positive),
         unit_test(test_sleep_after_stop),
+        unit_test(test_wake_ends_sleep_until_woken),
+        unit_test(test_wake_ends_sleep),
+        unit_test(test_wake_before_sleep_not_lost),
+        unit_test(test_stop_ends_sleep_until_woken),
         unit_test(test_stop_timeout),
     };
 

@@ -41,7 +41,7 @@
 #include <exec_tools.h>
 #include <reactor_context.h>
 #include <reactor_transform.h>
-#include <watcher.h>            /* EventWatcherPause, EventWatcherResume */
+#include <watcher.h>            /* EventWatcherPause, EventWatcherResume, EventWatcherWakeUp */
 
 /*****************************************************************************/
 /* Globals                                                                   */
@@ -342,6 +342,11 @@ int main(int argc, char *argv[])
 
     // Setup event watchers from policy
     KeepReactorPromises(ctx, policy);
+    // WatcherThreadMain starts with 0 watchers, so it goes to sleep
+    // KeepReactorPromises registers all the watchers, so we need to wake up
+    // the thread once at startup. When reloading the policy, it's done by 
+    // EventWatcherResume.
+    EventWatcherWakeUp();
 
     while (!IsPendingTermination())
     {

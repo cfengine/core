@@ -209,18 +209,31 @@ bool SaveAsFile(EvalContext *ctx, SaveCallbackFn callback, void *param, const ch
         }
     }
 
-    strcpy(backup, BufferData(deref_file));
+    const char *deref = BufferData(deref_file);
+
+    strlcpy(backup, deref, sizeof(backup));
 
     if (a->edits.backup == BACKUP_OPTION_TIMESTAMP)
     {
         snprintf(stamp, CF_BUFSIZE, "_%jd_%s", (intmax_t) CFSTARTTIME, CanonifyName(ctime(&stamp_now)));
-        strcat(backup, stamp);
+        strlcat(backup, stamp, sizeof(backup));
     }
 
-    strcat(backup, ".cf-before-edit");
+    if (strlcat(backup, ".cf-before-edit", sizeof(backup)) >= sizeof(backup))
+    {
+        Log(LOG_LEVEL_ERR,
+            "Filename too long to create backup for editing: %s",
+            BufferData(pretty_file));
+        goto end;
+    }
 
-    strcpy(new, BufferData(deref_file));
-    strcat(new, ".cf-after-edit");
+    if (strlcpy(new, deref, sizeof(new)) >= sizeof(new) ||
+        strlcat(new, ".cf-after-edit", sizeof(new)) >= sizeof(new))
+    {
+        Log(LOG_LEVEL_ERR, "Filename too long to edit: %s",
+            BufferData(pretty_file));
+        goto end;
+    }
     unlink(new);                /* Just in case of races */
 
     if ((*callback)(new, param, new_line_mode) == false)

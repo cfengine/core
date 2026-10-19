@@ -1,0 +1,54 @@
+# Helpers sourced by the tests. Expects CF_BINDIR and LOG to be exported by
+# run.sh.
+
+# number of log lines already consumed by wait_for_log
+log_offset=0
+
+# Wait until the reactor log contains $1 in a line after the last match, then
+# skip past that line, so that the next wait only sees newer output.
+wait_for_log() {
+    if ! match=$(timeout 60 sh -c '
+        until tail -n "+$(($2 + 1))" "$1" | grep -n -F -m 1 -- "$3"; do
+            sleep 0.1
+        done' _ "$LOG" "$log_offset" "$1")
+    then
+        echo "Timed out waiting for '$1' in reactor log:" >&2
+        cat "$LOG" >&2
+        return 1
+    fi
+    log_offset=$((log_offset + ${match%%:*}))
+}
+
+# Wait until file $1 has at least $2 lines, then fail if it has more than $2.
+wait_for_lines() {
+    if ! timeout 60 sh -c '
+        until [ "$(cat "$1" 2>/dev/null | wc -l)" -ge "$2" ]; do
+            sleep 0.1
+        done' _ "$1" "$2"
+    then
+        echo "Timed out waiting for $2 line(s) in '$1', reactor log:" >&2
+        cat "$LOG" >&2
+        return 1
+    fi
+
+    lines=$(wc -l < "$1")
+    if [ "$lines" -ne "$2" ]
+    then
+        echo "Expected $2 line(s) in '$1', got $lines" >&2
+        return 1
+    fi
+}
+
+# Start cf-reactor in the background with policy file $1, logging to $LOG.
+# It is stopped when the test exits.
+start_reactor() {
+    "$CF_BINDIR/cf-reactor" --no-fork --verbose -f "$1" >>"$LOG" 2>&1 &
+    reactor_pid=$!
+    trap stop_reactor EXIT
+}
+
+stop_reactor() {
+    echo "Exiting cf-reactor..."
+    kill -TERM "$reactor_pid" 2>/dev/null || true
+    wait "$reactor_pid" 2>/dev/null || true
+}

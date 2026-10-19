@@ -1,0 +1,7 @@
+bundle agent record_event(file, message)
+{
+  reports:
+    "$(with): $(message)"
+      with => strftime("localtime", "%Y-%m-%d %H:%M:%S", now()),
+      report_to_file => "$(file)";
+}

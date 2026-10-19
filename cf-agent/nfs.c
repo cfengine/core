@@ -449,8 +449,10 @@ bool LoadMountInfo(Seq *list)
 
         SeqDestroy(words);
 
-        // security note: buff is CF_BUFSIZE, so that is the max that can be written to buf1, buf2 or buf3
-        sscanf(vbuff, "%s%s%s", buf1, buf2, buf3);
+        // CfReadLine() wraps getline(), so vbuff may have grown past
+        // CF_BUFSIZE for a long line; bound each conversion to the size of
+        // buf1/buf2/buf3 (CF_BUFSIZE) so an overlong token cannot overflow.
+        sscanf(vbuff, "%4095s%4095s%4095s", buf1, buf2, buf3);
 
         if ((vbuff[0] == '\0') || (vbuff[0] == '\n'))
         {

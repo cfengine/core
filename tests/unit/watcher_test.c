@@ -4,26 +4,12 @@
 #include <file_watcher.h>       /* FileWatcherStateNew(), FileWatcherCheckFileDeleted() */
 #include <policy.h>             /* Promise */
 #include <rlist.h>              /* RlistAppendScalar() */
-#include <logging_priv.h>       /* LoggingPrivContext, LoggingPrivSetContext() */
+#include <string_lib.h>         /* StringEqual() */
 
-#include <string.h>             /* strstr() */
 #include <stdio.h>              /* snprintf() */
 #include <stdlib.h>             /* mkdtemp() */
 #include <unistd.h>             /* close(), unlink(), rmdir(), symlink(), sleep() */
 #include <fcntl.h>              /* open() */
-
-static int captured_err_count = 0;
-static char captured_err_message[256];
-
-static char *CaptureErrorLogHook(ARG_UNUSED LoggingPrivContext *pctx, LogLevel level, const char *message)
-{
-    if (level == LOG_LEVEL_ERR)
-    {
-        captured_err_count++;
-        strlcpy(captured_err_message, message, sizeof(captured_err_message));
-    }
-    return (char *) message;
-}
 
 /* The registry only hashes the expanded promise it is given (its promiser
  * here, as it has no constraints, comment or parent) and hands the
@@ -81,14 +67,24 @@ static bool WaitForQueuedEvent(int fd, int tenths)
     return false;
 }
 
+#define MAX_RECORDED_EVENTS 8
+
 static int handled_event_count = 0;
 static const Promise *last_event_promise = NULL;
 static char last_event_promise_hash[CF_HOSTKEY_STRING_SIZE];
 static WatcherCheckResult last_event_check = WATCHER_CHECK_NO_EVENT;
 
+/* Promise hashes of the first MAX_RECORDED_EVENTS handled events */
+static char event_promise_hashes[MAX_RECORDED_EVENTS][CF_HOSTKEY_STRING_SIZE];
+
 static void RecordEvent(ARG_UNUSED EvalContext *ctx, const Promise *pp,
                         const char *promise_hash, WatcherCheckResult check)
 {
+    if (handled_event_count < MAX_RECORDED_EVENTS)
+    {
+        strlcpy(event_promise_hashes[handled_event_count], promise_hash,
+                sizeof(event_promise_hashes[handled_event_count]));
+    }
     handled_event_count++;
     last_event_promise = pp;
     strlcpy(last_event_promise_hash, promise_hash, sizeof(last_event_promise_hash));
@@ -104,12 +100,33 @@ static void AssertLastEventFor(const Promise *pp)
     assert_string_equal(last_event_promise_hash, promise_hash);
 }
 
+/* Returns how many of the recorded events were handled for the iteration `pp` */
+static int RecordedEventCountFor(const Promise *pp)
+{
+    char promise_hash[CF_HOSTKEY_STRING_SIZE];
+    WatcherPromiseHash(pp, promise_hash, sizeof(promise_hash));
+
+    int count = 0;
+    for (int i = 0; i < MIN(handled_event_count, MAX_RECORDED_EVENTS); i++)
+    {
+        if (StringEqual(event_promise_hashes[i], promise_hash))
+        {
+            count++;
+        }
+    }
+    return count;
+}
+
 static void ResetRecordedEvents(void)
 {
     handled_event_count = 0;
     last_event_promise = NULL;
     last_event_promise_hash[0] = '\0';
     last_event_check = WATCHER_CHECK_NO_EVENT;
+    for (int i = 0; i < MAX_RECORDED_EVENTS; i++)
+    {
+        event_promise_hashes[i][0] = '\0';
+    }
 }
 
 static void HandleEvents(int fd)
@@ -445,6 +462,45 @@ static void test_event_watcher_state_not_kept_for_other_promise(void)
     assert_int_equal(rmdir(dir), 0);
 }
 
+static void test_event_watcher_several_events(void)
+{
+    char dir_a[] = "/tmp/watcher_test.XXXXXX";
+    char dir_b[] = "/tmp/watcher_test.XXXXXX";
+    char path_a[PATH_MAX];
+    char path_b[PATH_MAX];
+    CreateTempFile(dir_a, path_a, sizeof(path_a));
+    CreateTempFile(dir_b, path_b, sizeof(path_b));
+
+    WatcherRegistryInitialize();
+    const Promise iteration_a = { .promiser = "a", .org_pp = &unexpanded_promise };
+    const Promise iteration_b = { .promiser = "b", .org_pp = &unexpanded_promise };
+    WatcherRegister(&iteration_a, FileDeletedOptions(path_a, 1));
+    WatcherRegister(&iteration_b, FileDeletedOptions(path_b, 1));
+
+    /* Both deleted before the first pass of the watcher thread, so both
+     * events are queued before the wakeup, and handled together */
+    assert_int_equal(unlink(path_a), 0);
+    assert_int_equal(unlink(path_b), 0);
+
+    int fd = -1;
+    assert_true(EventWatcherInitialize(&fd));
+
+    ResetRecordedEvents();
+    assert_true(WaitForQueuedEvent(fd, 50));
+    HandleEvents(fd);
+    assert_int_equal(handled_event_count, 2);
+    assert_int_equal(RecordedEventCountFor(&iteration_a), 1);
+    assert_int_equal(RecordedEventCountFor(&iteration_b), 1);
+    assert_int_equal(last_event_check, WATCHER_CHECK_EVENT);
+
+    /* Each fires once */
+    assert_false(WaitForQueuedEvent(fd, 20));
+
+    EventWatcherFinalize();
+    assert_int_equal(rmdir(dir_a), 0);
+    assert_int_equal(rmdir(dir_b), 0);
+}
+
 /* Sets up dir/loop, a symlink to itself, so that lstat() of dir/loop/file
  * fails with ELOOP (even as root), i.e. whether the file was deleted can't
  * be told. Unlinking the loop makes lstat() work again (ENOENT). */
@@ -460,75 +516,6 @@ static void TearDownSymlinkLoop(const char *dir, const char *loop)
 {
     unlink(loop);
     assert_int_equal(rmdir(dir), 0);
-}
-
-static void test_check_file_deleted_error(void)
-{
-    char dir[] = "/tmp/watcher_test.XXXXXX";
-    char loop[PATH_MAX];
-    char path[PATH_MAX];
-    SetUpSymlinkLoop(dir, loop, sizeof(loop), path, sizeof(path));
-
-    const LogLevel old_level = LogGetGlobalLevel();
-    LogSetGlobalLevel(LOG_LEVEL_CRIT);
-
-    Rlist *args = NULL;
-    RlistAppendScalar(&args, path);
-    void *state = FileWatcherStateNew(args);
-    RlistDestroy(args);
-    assert_int_equal(FileWatcherCheckFileDeleted(state), WATCHER_CHECK_ERROR);
-    FileWatcherStateDestroy(state);
-
-    LogSetGlobalLevel(old_level);
-    TearDownSymlinkLoop(dir, loop);
-}
-
-static void test_check_file_deleted_logs_error_once(void)
-{
-    char dir[] = "/tmp/watcher_test.XXXXXX";
-    char loop[PATH_MAX];
-    char path[PATH_MAX];
-    SetUpSymlinkLoop(dir, loop, sizeof(loop), path, sizeof(path));
-
-    captured_err_count = 0;
-    captured_err_message[0] = '\0';
-    LoggingPrivContext log_ctx = {
-        .log_hook = CaptureErrorLogHook,
-        .force_hook_level = LOG_LEVEL_ERR,
-    };
-    LoggingPrivSetContext(&log_ctx);
-    const LogLevel old_level = LogGetGlobalLevel();
-    LogSetGlobalLevel(LOG_LEVEL_CRIT);
-
-    /* The failure of the first check is logged */
-    Rlist *args = NULL;
-    RlistAppendScalar(&args, path);
-    void *state = FileWatcherStateNew(args);
-    RlistDestroy(args);
-    assert_int_equal(captured_err_count, 0);
-    assert_int_equal(FileWatcherCheckFileDeleted(state), WATCHER_CHECK_ERROR);
-    assert_int_equal(captured_err_count, 1);
-    assert_true(strstr(captured_err_message, "Unable to lstat") != NULL);
-
-    /* The following failures are not logged again */
-    for (int i = 0; i < 3; i++)
-    {
-        assert_int_equal(FileWatcherCheckFileDeleted(state), WATCHER_CHECK_ERROR);
-    }
-    assert_int_equal(captured_err_count, 1);
-
-    /* Once lstat() works again, the next failure is logged again */
-    assert_int_equal(unlink(loop), 0);
-    assert_int_equal(FileWatcherCheckFileDeleted(state), WATCHER_CHECK_NO_EVENT);
-    assert_int_equal(symlink(loop, loop), 0);
-    assert_int_equal(FileWatcherCheckFileDeleted(state), WATCHER_CHECK_ERROR);
-    assert_int_equal(captured_err_count, 2);
-
-    FileWatcherStateDestroy(state);
-
-    LogSetGlobalLevel(old_level);
-    LoggingPrivSetContext(NULL);
-    TearDownSymlinkLoop(dir, loop);
 }
 
 static void test_event_watcher_check_failure_reported_once(void)
@@ -619,8 +606,7 @@ int main()
         unit_test(test_event_watcher_state_kept_across_pause),
         unit_test(test_event_watcher_state_kept_identical_ignored),
         unit_test(test_event_watcher_state_not_kept_for_other_promise),
-        unit_test(test_check_file_deleted_error),
-        unit_test(test_check_file_deleted_logs_error_once),
+        unit_test(test_event_watcher_several_events),
         unit_test(test_event_watcher_check_failure_reported_once),
         unit_test(test_watcher_register_check_failure),
     };

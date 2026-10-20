@@ -26,6 +26,15 @@
 
 #include <syntax.h>
 #include <policy.h>
+#include <rlist.h>
+#include <string_lib.h>
+
+static const char *const POLICY_ERROR_EVENTS_MISSING_ATTRIBUTE =
+    "Missing required attribute '%s' for promise type 'events'";
+static const char *const POLICY_ERROR_EVENTS_EMPTY_THEN =
+    "Empty list of bundles in attribute 'then' for promise type 'events'";
+static const char *const POLICY_ERROR_WHEN_BODY_NO_EVENT =
+    "Body when %s requires an event attribute, such as " REACTOR_FILE_DELETED;
 
 static const ConstraintSyntax when_constraints[] =
 {
@@ -37,7 +46,34 @@ static const ConstraintSyntax when_constraints[] =
     ConstraintSyntaxNewNull()
 };
 
-static const BodySyntax when_body = BodySyntaxNew("when", when_constraints, NULL, SYNTAX_STATUS_NORMAL);
+/* Checks that a 'when' body has an event attribute, i.e. any attribute other
+ * than the global ones (meta, inherit_from) and 'interval', which only sets
+ * how the event is checked for. A body inheriting from another one may get
+ * its event from it, and that one is checked on its own. */
+static bool WhenBodyCheck(const Body *body, Seq *errors)
+{
+    assert(body != NULL);
+
+    if (BodyHasConstraint(body, "inherit_from"))
+    {
+        return true;
+    }
+
+    for (size_t i = 0; i < SeqLength(body->conlist); i++)
+    {
+        const Constraint *cp = SeqAt(body->conlist, i);
+        if (!StringEqual(cp->lval, "meta") && !StringEqual(cp->lval, "interval"))
+        {
+            return true;
+        }
+    }
+
+    SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_BODY, body,
+                                     POLICY_ERROR_WHEN_BODY_NO_EVENT, body->name));
+    return false;
+}
+
+static const BodySyntax when_body = BodySyntaxNew("when", when_constraints, &WhenBodyCheck, SYNTAX_STATUS_NORMAL);
 
 static const ConstraintSyntax CF_EVENT_BODIES[] =
 {
@@ -48,7 +84,33 @@ static const ConstraintSyntax CF_EVENT_BODIES[] =
 
 static bool EventsParseTreeCheck(const Promise *pp, Seq *errors)
 {
-    return PromiseCheckBundleCallArity(pp, "then", errors);
+    bool success = true;
+
+    if (PromiseGetConstraint(pp, "when") == NULL)
+    {
+        SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_PROMISE, pp,
+                                         POLICY_ERROR_EVENTS_MISSING_ATTRIBUTE, "when"));
+        success = false;
+    }
+
+    /* Only a literally empty list can be caught here, a list made empty by an
+     * empty @(list) is caught on evaluation. */
+    const Constraint *then = PromiseGetConstraint(pp, "then");
+    if (then == NULL)
+    {
+        SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_PROMISE, pp,
+                                         POLICY_ERROR_EVENTS_MISSING_ATTRIBUTE, "then"));
+        success = false;
+    }
+    else if (then->rval.type == RVAL_TYPE_LIST && RvalRlistValue(then->rval) == NULL)
+    {
+        SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_CONSTRAINT, then,
+                                         POLICY_ERROR_EVENTS_EMPTY_THEN));
+        success = false;
+    }
+
+    success &= PromiseCheckBundleCallArity(pp, "then", errors);
+    return success;
 }
 
 const PromiseTypeSyntax CF_REACTOR_PROMISE_TYPES[] =

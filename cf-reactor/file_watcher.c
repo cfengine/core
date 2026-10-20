@@ -164,6 +164,11 @@ WatcherCheckResult FileWatcherCheckFileDeleted(void *state)
         return WATCHER_CHECK_ERROR;
     }
 
+    if (exists && !fws->last_exists)
+    {
+        Log(LOG_LEVEL_VERBOSE, "File '%s' is present, watching for its deletion", fws->path);
+    }
+
     bool deleted = fws->last_exists && !exists;
     return FileWatcherRecordObservation(fws, exists, deleted, "deletion");
 }

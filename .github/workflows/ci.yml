@@ -20,6 +20,9 @@ jobs:
   acceptance_tests:
     needs: unit_tests
     uses: ./.github/workflows/acceptance_tests.yml
+  reactor_tests:
+    needs: unit_tests
+    uses: ./.github/workflows/reactor_tests.yml
   macos_unit_tests:
     needs: unit_tests
     uses: ./.github/workflows/macos_unit_tests.yml

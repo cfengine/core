@@ -27,7 +27,9 @@
 #include <syntax.h>
 #include <policy.h>
 #include <rlist.h>
-#include <string_lib.h>
+#include <fncall.h>
+#include <class.h>              /* ClassRefParse() */
+#include <string_lib.h>         /* StringEqual(), IsStrIn() */
 
 static const char *const POLICY_ERROR_EVENTS_MISSING_ATTRIBUTE =
     "Missing required attribute '%s' for promise type 'events'";
@@ -78,9 +80,102 @@ static const BodySyntax when_body = BodySyntaxNew("when", when_constraints, &Whe
 static const ConstraintSyntax CF_EVENT_BODIES[] =
 {
     ConstraintSyntaxNewBody("when", &when_body, "Event to react to", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewBundleList("then", "Bundle or list of bundles to run in order on event", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBundleList("then", "Agent, common or reactor bundle (without events promises) or list of bundles to run in order on event", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
+
+const char *const REACTOR_THEN_BUNDLE_TYPES[] = { CF_AGENTC, CF_COMMONC, CF_REACTORC, NULL };
+
+const char *const REACTOR_EVENTS_BUNDLE_PROMISE_TYPES[] = { "meta", "vars", "classes", "events", NULL };
+
+bool BundleIsReactorEventsBundle(const Bundle *bp)
+{
+    assert(bp != NULL);
+    return StringEqual(bp->type, CF_REACTORC) && (BundleGetSection(bp, "events") != NULL);
+}
+
+static bool ReactorEventsBundleCheckSections(const Seq *sections, Seq *errors)
+{
+    bool success = true;
+    for (size_t i = 0; i < SeqLength(sections); i++)
+    {
+        const BundleSection *sp = SeqAt(sections, i);
+        if (!IsStrIn(sp->promise_type, REACTOR_EVENTS_BUNDLE_PROMISE_TYPES))
+        {
+            SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_BUNDLE_SECTION, sp,
+                                             "Promise type '%s' not supported by reactor bundles with events promises, "
+                                             "which can only have meta, vars, classes and events promises "
+                                             "(the other promise types go in reactor bundles without events promises, "
+                                             "run from the 'then' attribute of events promises)",
+                                             sp->promise_type));
+            success = false;
+        }
+    }
+    return success;
+}
+
+bool ReactorBundleCheck(const Bundle *bp, Seq *errors)
+{
+    assert(bp != NULL);
+    assert(StringEqual(bp->type, CF_REACTORC));
+
+    if (!BundleIsReactorEventsBundle(bp))
+    {
+        return true;
+    }
+
+    bool success = true;
+    success &= ReactorEventsBundleCheckSections(bp->sections, errors);
+    success &= ReactorEventsBundleCheckSections(bp->custom_sections, errors);
+    return success;
+}
+
+/* Checks that an entry of the 'then' attribute of the events promise, either
+ * "name" or name(args), does not refer to a reactor bundle with events
+ * promises, if the bundle is found. */
+static bool ThenBundleCheck(const Promise *pp, const Constraint *cp, Rval rval, Seq *errors)
+{
+    assert(pp != NULL);
+    assert(cp != NULL);
+
+    const char *name = NULL;
+    switch (rval.type)
+    {
+    case RVAL_TYPE_SCALAR:
+        name = RvalScalarValue(rval);
+        break;
+    case RVAL_TYPE_FNCALL:
+        name = RvalFnCallValue(rval)->name;
+        break;
+    default:
+        return true;
+    }
+
+    // HACK: exploiting the fact that class-references and call-references are similar
+    ClassRef ref = ClassRefParse(name);
+    if (!ClassRefIsQualified(ref))
+    {
+        ClassRefQualify(&ref, PromiseGetNamespace(pp));
+    }
+
+    const Bundle *callee = NULL;
+    for (size_t i = 0; callee == NULL && REACTOR_THEN_BUNDLE_TYPES[i] != NULL; i++)
+    {
+        callee = PolicyGetBundle(PromiseGetPolicy(pp), ref.ns, REACTOR_THEN_BUNDLE_TYPES[i], ref.name);
+    }
+
+    ClassRefDestroy(ref);
+
+    if (callee != NULL && BundleIsReactorEventsBundle(callee))
+    {
+        SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_CONSTRAINT, cp,
+                                         "Events promise cannot run reactor bundle '%s', it has events promises "
+                                         "(reactor bundles with events promises are only evaluated when cf-reactor reads the policy)",
+                                         name));
+        return false;
+    }
+    return true;
+}
 
 static bool EventsParseTreeCheck(const Promise *pp, Seq *errors)
 {
@@ -108,8 +203,19 @@ static bool EventsParseTreeCheck(const Promise *pp, Seq *errors)
                                          POLICY_ERROR_EVENTS_EMPTY_THEN));
         success = false;
     }
+    else if (then->rval.type == RVAL_TYPE_LIST)
+    {
+        for (const Rlist *rp = RvalRlistValue(then->rval); rp != NULL; rp = rp->next)
+        {
+            success &= ThenBundleCheck(pp, then, rp->val, errors);
+        }
+    }
+    else
+    {
+        success &= ThenBundleCheck(pp, then, then->rval, errors);
+    }
 
-    success &= PromiseCheckBundleCallArity(pp, "then", errors);
+    success &= PromiseCheckBundleCallArity(pp, "then", REACTOR_THEN_BUNDLE_TYPES, errors);
     return success;
 }
 

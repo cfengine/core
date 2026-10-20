@@ -17,6 +17,38 @@ static void test_lookup_promise_type_common_vars(void)
     assert_string_equal("vars", s->promise_type);
 }
 
+static void test_lookup_promise_type_reactor_events(void)
+{
+    const PromiseTypeSyntax *s = PromiseTypeSyntaxGet("reactor", "events");
+    assert_true(s);
+    assert_string_equal("reactor", s->bundle_type);
+    assert_string_equal("events", s->promise_type);
+}
+
+static void test_lookup_promise_type_reactor_files(void)
+{
+    /* Reactor bundles have the promise types of agent bundles */
+    const PromiseTypeSyntax *s = PromiseTypeSyntaxGet("reactor", "files");
+    assert_true(s);
+    assert_true(s == PromiseTypeSyntaxGet("agent", "files"));
+    assert_string_equal("agent", s->bundle_type);
+    assert_string_equal("files", s->promise_type);
+}
+
+static void test_lookup_promise_type_reactor_vars(void)
+{
+    const PromiseTypeSyntax *s = PromiseTypeSyntaxGet("reactor", "vars");
+    assert_true(s);
+    assert_string_equal("vars", s->promise_type);
+}
+
+static void test_lookup_promise_type_not_inherited(void)
+{
+    /* Only reactor bundles have the promise types of agent bundles */
+    assert_true(PromiseTypeSyntaxGet("common", "files") == NULL);
+    assert_true(PromiseTypeSyntaxGet("agent", "events") == NULL);
+}
+
 static void test_lookup_promise_type_edit_xml_build_xpath(void)
 {
     const PromiseTypeSyntax *s = PromiseTypeSyntaxGet("edit_xml", "build_xpath");
@@ -164,6 +196,10 @@ int main()
     {
         unit_test(test_lookup_promise_type_agent_vars),
         unit_test(test_lookup_promise_type_common_vars),
+        unit_test(test_lookup_promise_type_reactor_events),
+        unit_test(test_lookup_promise_type_reactor_files),
+        unit_test(test_lookup_promise_type_reactor_vars),
+        unit_test(test_lookup_promise_type_not_inherited),
         unit_test(test_lookup_promise_type_edit_xml_build_xpath),
         unit_test(test_lookup_promise_type_edit_line_delete_lines),
 

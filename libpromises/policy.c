@@ -46,6 +46,7 @@
 #include <expand.h>
 #include <file_lib.h>                   /* FileLock */
 #include <known_dirs.h>                 /* GetStateDir() */
+#include <mod_reactor.h>                /* ReactorBundleCheck() */
 
 static const char *const POLICY_ERROR_BUNDLE_NAME_RESERVED =
     "Use of a reserved container name as a bundle name \"%s\"";
@@ -731,6 +732,11 @@ static bool PolicyCheckBundle(const Bundle *bundle, Seq *errors)
 
     success &= PolicyCheckBundleSections(bundle->sections, errors);
     success &= PolicyCheckBundleSections(bundle->custom_sections, errors);
+
+    if (StringEqual(bundle->type, CF_REACTORC))
+    {
+        success &= ReactorBundleCheck(bundle, errors);
+    }
 
     return success;
 }
@@ -2762,8 +2768,11 @@ static bool ValidateCustomPromise(const Promise *pp, Seq *errors)
     return valid;
 }
 
-static bool BundleCallCheckArity(const Promise *pp, const Constraint *cp, Rval rval, Seq *errors)
+static bool BundleCallCheckArity(const Promise *pp, const Constraint *cp, Rval rval,
+                                 const char *const bundle_types[], Seq *errors)
 {
+    assert(bundle_types != NULL);
+
     if (rval.type != RVAL_TYPE_FNCALL)
     {
         return true;
@@ -2777,10 +2786,10 @@ static bool BundleCallCheckArity(const Promise *pp, const Constraint *cp, Rval r
         ClassRefQualify(&ref, PromiseGetNamespace(pp));
     }
 
-    const Bundle *callee = PolicyGetBundle(PolicyFromPromise(pp), ref.ns, "agent", ref.name);
-    if (!callee)
+    const Bundle *callee = NULL;
+    for (size_t i = 0; callee == NULL && bundle_types[i] != NULL; i++)
     {
-        callee = PolicyGetBundle(PolicyFromPromise(pp), ref.ns, "common", ref.name);
+        callee = PolicyGetBundle(PolicyFromPromise(pp), ref.ns, bundle_types[i], ref.name);
     }
 
     ClassRefDestroy(ref);
@@ -2798,10 +2807,12 @@ static bool BundleCallCheckArity(const Promise *pp, const Constraint *cp, Rval r
     return true;
 }
 
-bool PromiseCheckBundleCallArity(const Promise *pp, const char *lval, Seq *errors)
+bool PromiseCheckBundleCallArity(const Promise *pp, const char *lval,
+                                 const char *const bundle_types[], Seq *errors)
 {
     assert(pp != NULL);
     assert(lval != NULL);
+    assert(bundle_types != NULL);
 
     bool success = true;
 
@@ -2816,12 +2827,12 @@ bool PromiseCheckBundleCallArity(const Promise *pp, const char *lval, Seq *error
             {
                 for (const Rlist *rp = RvalRlistValue(cp->rval); rp != NULL; rp = rp->next)
                 {
-                    success &= BundleCallCheckArity(pp, cp, rp->val, errors);
+                    success &= BundleCallCheckArity(pp, cp, rp->val, bundle_types, errors);
                 }
             }
             else
             {
-                success &= BundleCallCheckArity(pp, cp, cp->rval, errors);
+                success &= BundleCallCheckArity(pp, cp, cp->rval, bundle_types, errors);
             }
         }
     }

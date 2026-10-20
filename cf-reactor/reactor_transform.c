@@ -39,25 +39,16 @@
 #include <mod_custom.h>          // Initialize/FinalizeCustomPromises()
 #include <timeout.h>             // SetReferenceTime()
 #include <time_classes.h>        // UpdateTimeClasses()
-#include <mod_reactor.h>         // REACTOR_INTERVAL_RANGE, REACTOR_FILE_DELETED
+#include <mod_reactor.h>         // REACTOR_INTERVAL_RANGE, REACTOR_FILE_DELETED, REACTOR_*_TYPES, BundleIsReactorEventsBundle()
 #include <syntax.h>              // CheckConstraintTypeMatch(), PromiseTypeSyntaxGet(), BodySyntaxGetConstraintSyntax()
 #include <file_watcher.h>
 #include <conversion.h>
 
-/* Promise types evaluated within `bundle reactor NAME { ... }`. */
-static const char *const REACTOR_TYPESEQUENCE[] =
-{
-    "meta",
-    "vars",
-    "classes",
-    "events",
-    NULL
-};
-
-/* Resolves the agent or common bundle referred to by an entry of an events
- * promise's 'then' attribute, either "name" or name(args). If args is not
- * NULL, it is set to the bundle arguments (or NULL if there are none).
- * Logs an error and returns NULL if the bundle is not found. */
+/* Resolves the agent, common or reactor bundle (looked up in that order)
+ * referred to by an entry of an events promise's 'then' attribute, either
+ * "name" or name(args). If args is not NULL, it is set to the bundle
+ * arguments (or NULL if there are none). Logs an error and returns NULL if
+ * the bundle is not found, or is a reactor bundle with events promises. */
 static const Bundle *ResolveThenBundle(
     const EvalContext *ctx, const Promise *pp, Rval then_rval, const Rlist **args)
 {
@@ -79,18 +70,23 @@ static const Bundle *ResolveThenBundle(
     }
 
     const Bundle *bp = NULL;
-    if (name != NULL)
+    for (size_t i = 0; name != NULL && bp == NULL && REACTOR_THEN_BUNDLE_TYPES[i] != NULL; i++)
     {
-        bp = EvalContextResolveBundleExpression(ctx, PromiseGetPolicy(pp), name, "agent");
-        if (bp == NULL)
-        {
-            bp = EvalContextResolveBundleExpression(ctx, PromiseGetPolicy(pp), name, "common");
-        }
+        bp = EvalContextResolveBundleExpression(ctx, PromiseGetPolicy(pp), name,
+                                                REACTOR_THEN_BUNDLE_TYPES[i]);
     }
     if (bp == NULL)
     {
         Log(LOG_LEVEL_ERR, "Reactor events promise '%s' refers to unknown bundle '%s'",
             pp->promiser, (name != NULL) ? name : "(invalid)");
+        return NULL;
+    }
+    if (BundleIsReactorEventsBundle(bp))
+    {
+        Log(LOG_LEVEL_ERR,
+            "Reactor events promise '%s' cannot run reactor bundle '%s', it has events promises "
+            "(reactor bundles with events promises are only evaluated when cf-reactor reads the policy)",
+            pp->promiser, bp->name);
         return NULL;
     }
 
@@ -368,6 +364,9 @@ static PromiseResult KeepEventsPromise(EvalContext *ctx, const Promise *pp)
     return PROMISE_RESULT_NOOP;
 }
 
+/* Promise actuator for the promises of a reactor bundle with events promises
+ * evaluated on policy read: keeps its meta, vars and classes promises, and
+ * registers the watcher of each iteration of its events promises. */
 static PromiseResult KeepReactorPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED void *param)
 {
     assert(param == NULL);
@@ -391,21 +390,31 @@ static PromiseResult KeepReactorPromise(EvalContext *ctx, const Promise *pp, ARG
         return result;
     }
 
+    /* Only the promise types of REACTOR_EVENTS_BUNDLE_PROMISE_TYPES are
+     * evaluated, see EvaluateReactorBundle() */
+    debug_abort_if_reached();
     return PROMISE_RESULT_NOOP;
 }
 
+/* Keeps the promises of a reactor bundle with events promises on (re)read of
+ * the policy, in the order of REACTOR_EVENTS_BUNDLE_PROMISE_TYPES: the events
+ * promises are kept last, so that they see the variables and classes defined
+ * by the bundle. */
 static void EvaluateReactorBundle(EvalContext *ctx, const Bundle *bp)
 {
     assert(bp != NULL);
+    assert(BundleIsReactorEventsBundle(bp));
+
+    BundleBanner(bp, NULL);
     EvalContextStackPushBundleFrame(ctx, bp, NULL, false, NULL);
 
-    for (int i = 0; REACTOR_TYPESEQUENCE[i] != NULL; i++)
+    for (int i = 0; REACTOR_EVENTS_BUNDLE_PROMISE_TYPES[i] != NULL; i++)
     {
-        const BundleSection *sp = BundleGetSection(bp, REACTOR_TYPESEQUENCE[i]);
+        const BundleSection *sp = BundleGetSection(bp, REACTOR_EVENTS_BUNDLE_PROMISE_TYPES[i]);
         if (sp == NULL || SeqLength(sp->promises) == 0)
         {
             Log(LOG_LEVEL_DEBUG, "No promise type %s in bundle %s",
-                REACTOR_TYPESEQUENCE[i], bp->name);
+                REACTOR_EVENTS_BUNDLE_PROMISE_TYPES[i], bp->name);
             continue;
         }
 
@@ -415,10 +424,11 @@ static void EvaluateReactorBundle(EvalContext *ctx, const Bundle *bp)
             const Promise *pp = SeqAt(sp->promises, j);
             ExpandPromise(ctx, pp, KeepReactorPromise, NULL);
         }
-        EvalContextStackPopFrame(ctx);
+        EvalContextStackPopFrame(ctx); /* bundle section */
     }
 
-    EvalContextStackPopFrame(ctx);
+    EvalContextStackPopFrame(ctx); /* bundle */
+    EndBundleBanner(bp);
 }
 
 /* Runs the bundle referred to by an entry of the 'then' attribute of the
@@ -549,7 +559,9 @@ void KeepReactorPromises(EvalContext *ctx, const Policy *policy)
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
         const Bundle *bp = SeqAt(policy->bundles, i);
-        if (!StringEqual(bp->type, CF_AGENTTYPES[AGENT_TYPE_REACTOR]))
+        /* The reactor bundles without events promises are only run from the
+         * 'then' attribute of events promises */
+        if (!BundleIsReactorEventsBundle(bp))
         {
             continue;
         }

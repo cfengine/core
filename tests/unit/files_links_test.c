@@ -25,7 +25,9 @@
 #include <test.h>
 
 #include <cf3.defs.h>
-#include <files_links.h>                                       /* ExpandLinks */
+#include <files_links.h>                             /* ExpandLinks, KillGhostLink */
+#include <attributes.h>                                            /* Attributes */
+#include <unistd.h>                                          /* symlink, unlink */
 
 /* A single path component longer than the internal node buffer
  * (CF_MAXLINKSIZE) overflowed the stack in ExpandLinks(): the parse into
@@ -44,12 +46,41 @@ static void test_expand_links_long_component(void)
     assert_false(ret);
 }
 
+/* KillGhostLink() rebuilds the absolute target of a relative symlink by
+ * appending the readlink() result onto the link's directory in a CF_BUFSIZE
+ * buffer. The append was an unbounded strcat(), so a symlink whose relative
+ * target is near CF_BUFSIZE overflowed the stack. It must bail out instead. */
+static void test_kill_ghost_link_long_target(void)
+{
+    char tmpl[] = "/tmp/cfghostXXXXXX";
+    const char *dir = mkdtemp(tmpl);
+    assert_true(dir != NULL);
+
+    char linkpath[256];
+    xsnprintf(linkpath, sizeof(linkpath), "%s/l", dir);
+
+    char target[CF_BUFSIZE];
+    memset(target, 'x', sizeof(target) - 1);
+    target[sizeof(target) - 1] = '\0';
+    assert_int_equal(symlink(target, linkpath), 0);
+
+    Attributes attr = { 0 };
+    attr.link.when_no_file = cfa_delete;
+    PromiseResult result = PROMISE_RESULT_NOOP;
+
+    assert_false(KillGhostLink(NULL, linkpath, &attr, NULL, &result));
+
+    unlink(linkpath);
+    rmdir(dir);
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
 
     const UnitTest tests[] = {
         unit_test(test_expand_links_long_component),
+        unit_test(test_kill_ghost_link_long_target),
     };
 
     return run_tests(tests);

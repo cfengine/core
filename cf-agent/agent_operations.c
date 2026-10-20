@@ -113,6 +113,7 @@ static const char *const AGENT_TYPESEQUENCE[] =
     NULL
 };
 
+static bool IsAgentPromiseType(const char *promise_type);
 static PromiseResult KeepAgentPromise(EvalContext *ctx, const Promise *pp, void *param);
 static void NewTypeContext(TypeSequence type);
 static void DeleteTypeContext(EvalContext *ctx, TypeSequence type);
@@ -273,9 +274,17 @@ PromiseResult ScheduleAgentOperationsTopDownOrder(EvalContext *ctx, const Bundle
         const char *last_promise_type = "";
         for (size_t ppi = 0; ppi < SeqLength(bp->all_promises); ppi++)
         {
-            EvalContextSetPass(ctx, pass);
             Promise *pp = SeqAt(bp->all_promises, ppi);
             BundleSection *parent_section = pp->parent_section;
+
+            /* Only evaluate the promises normal order evaluates, e.g. not the
+             * events promises of a reactor bundle (see cf-reactor) */
+            if (!IsAgentPromiseType(parent_section->promise_type))
+            {
+                continue;
+            }
+
+            EvalContextSetPass(ctx, pass);
 
             if (!StringEqual(last_promise_type, parent_section->promise_type))
             {
@@ -302,6 +311,27 @@ PromiseResult ScheduleAgentOperationsTopDownOrder(EvalContext *ctx, const Bundle
 }
 
 /*********************************************************************/
+
+/* Whether promises of the given type are evaluated by
+ * ScheduleAgentOperationsNormalOrder(): the built-in promise types of
+ * AGENT_TYPESEQUENCE and the custom promise types. */
+static bool IsAgentPromiseType(const char *promise_type)
+{
+    assert(promise_type != NULL);
+
+    if (!IsBuiltInPromiseType(promise_type))
+    {
+        return true;
+    }
+    for (int type = 0; AGENT_TYPESEQUENCE[type] != NULL; type++)
+    {
+        if (StringEqual(AGENT_TYPESEQUENCE[type], promise_type))
+        {
+            return true;
+        }
+    }
+    return false;
+}
 
 static PromiseResult DefaultVarPromise(EvalContext *ctx, const Promise *pp)
 {

@@ -230,11 +230,13 @@ static bool RelevantBundle(const char *agent, const char *blocktype)
         return true;
     }
 
-    /* Here are some additional bundle types handled by cfAgent */
+    /* Here are some additional bundle types handled by cfAgent, and by
+     * cf-reactor, which keeps files promises like cf-agent */
 
     Item *ip = SplitString("edit_line,edit_xml", ',');
 
-    if (strcmp(agent, CF_AGENTTYPES[AGENT_TYPE_AGENT]) == 0)
+    if (StringEqual(agent, CF_AGENTTYPES[AGENT_TYPE_AGENT])
+        || StringEqual(agent, CF_AGENTTYPES[AGENT_TYPE_REACTOR]))
     {
         if (IsItemIn(ip, blocktype))
         {

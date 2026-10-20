@@ -32,6 +32,10 @@
 /* Range of the 'interval' attribute of the 'when' body of events promises */
 #define REACTOR_INTERVAL_RANGE "1,99999999999"
 
+/* Types of the bundles the 'then' attribute of events promises can refer to,
+ * in order of lookup, terminated by NULL */
+extern const char *const REACTOR_THEN_BUNDLE_TYPES[];
+
 extern const PromiseTypeSyntax CF_REACTOR_PROMISE_TYPES[];
 
 #endif

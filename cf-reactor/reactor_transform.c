@@ -30,8 +30,6 @@
 #include <ornaments.h>
 #include <rlist.h>
 #include <sequence.h>
-#include <verify_classes.h>
-#include <verify_vars.h>
 #include <watcher.h>
 #include <agent_operations.h>   // ScheduleAgentOperations()
 #include <attributes.h>          // GetClassContextAttributes()
@@ -39,25 +37,16 @@
 #include <mod_custom.h>          // Initialize/FinalizeCustomPromises()
 #include <timeout.h>             // SetReferenceTime()
 #include <time_classes.h>        // UpdateTimeClasses()
-#include <mod_reactor.h>         // REACTOR_INTERVAL_RANGE, REACTOR_FILE_DELETED
+#include <mod_reactor.h>         // REACTOR_INTERVAL_RANGE, REACTOR_FILE_DELETED, REACTOR_THEN_BUNDLE_TYPES
 #include <syntax.h>              // CheckConstraintTypeMatch(), PromiseTypeSyntaxGet(), BodySyntaxGetConstraintSyntax()
 #include <file_watcher.h>
 #include <conversion.h>
 
-/* Promise types evaluated within `bundle reactor NAME { ... }`. */
-static const char *const REACTOR_TYPESEQUENCE[] =
-{
-    "meta",
-    "vars",
-    "classes",
-    "events",
-    NULL
-};
-
-/* Resolves the agent or common bundle referred to by an entry of an events
- * promise's 'then' attribute, either "name" or name(args). If args is not
- * NULL, it is set to the bundle arguments (or NULL if there are none).
- * Logs an error and returns NULL if the bundle is not found. */
+/* Resolves the agent, common or reactor bundle (looked up in that order)
+ * referred to by an entry of an events promise's 'then' attribute, either
+ * "name" or name(args). If args is not NULL, it is set to the bundle
+ * arguments (or NULL if there are none). Logs an error and returns NULL if
+ * the bundle is not found. */
 static const Bundle *ResolveThenBundle(
     const EvalContext *ctx, const Promise *pp, Rval then_rval, const Rlist **args)
 {
@@ -79,13 +68,10 @@ static const Bundle *ResolveThenBundle(
     }
 
     const Bundle *bp = NULL;
-    if (name != NULL)
+    for (size_t i = 0; name != NULL && bp == NULL && REACTOR_THEN_BUNDLE_TYPES[i] != NULL; i++)
     {
-        bp = EvalContextResolveBundleExpression(ctx, PromiseGetPolicy(pp), name, "agent");
-        if (bp == NULL)
-        {
-            bp = EvalContextResolveBundleExpression(ctx, PromiseGetPolicy(pp), name, "common");
-        }
+        bp = EvalContextResolveBundleExpression(ctx, PromiseGetPolicy(pp), name,
+                                                REACTOR_THEN_BUNDLE_TYPES[i]);
     }
     if (bp == NULL)
     {
@@ -372,57 +358,70 @@ static PromiseResult KeepEventsPromise(EvalContext *ctx, const Promise *pp)
     return PROMISE_RESULT_NOOP;
 }
 
-static PromiseResult KeepReactorPromise(EvalContext *ctx, const Promise *pp, ARG_UNUSED void *param)
+/* Promise actuator for an events promise of a reactor bundle evaluated on
+ * policy read: registers the watcher of each iteration. */
+static PromiseResult KeepEventsPromiseOnRead(EvalContext *ctx, const Promise *pp, ARG_UNUSED void *param)
 {
     assert(param == NULL);
     PromiseBanner(ctx, pp);
 
-    if (StringEqual(PromiseGetPromiseType(pp), "vars") ||
-        StringEqual(PromiseGetPromiseType(pp), "meta"))
-    {
-        return VerifyVarPromise(ctx, pp, NULL);
-    }
-
-    if (StringEqual(PromiseGetPromiseType(pp), "classes"))
-    {
-        return VerifyClassPromise(ctx, pp, NULL);
-    }
-
-    if (StringEqual(PromiseGetPromiseType(pp), "events"))
-    {
-        PromiseResult result = KeepEventsPromise(ctx, pp);
-        RecordEventsPromiseOutcome(ctx, pp, result);
-        return result;
-    }
-
-    return PROMISE_RESULT_NOOP;
+    PromiseResult result = KeepEventsPromise(ctx, pp);
+    RecordEventsPromiseOutcome(ctx, pp, result);
+    return result;
 }
 
+/* Keeps the promises of the bundle like cf-agent does, see
+ * ScheduleAgentOperations(): all of them but the events promises of a
+ * reactor bundle. The bundle frame must be pushed by the caller. */
+static PromiseResult ScheduleBundle(EvalContext *ctx, const Bundle *bp)
+{
+    assert(bp != NULL);
+
+    /* Remote copy_from needs the connection cache and custom promise types
+     * need the promise modules map. Set them up per run like in cf-agent so
+     * that no connections or promise modules are kept between runs. */
+    ConnCache_Init();
+    InitializeCustomPromises();
+    /* Every run of the bundle is a fresh run: on events, and on (re)read of
+     * the policy, its promises must not be skipped as recently kept. */
+    int prev_ifelapsed = OverrideIfelapsed(0);
+    PromiseResult result = ScheduleAgentOperations(ctx, bp);
+    RestoreIfelapsed(prev_ifelapsed);
+    FinalizeCustomPromises();
+    ConnCache_Destroy();
+
+    return result;
+}
+
+/* Keeps the promises of a reactor bundle on (re)read of the policy, and
+ * registers a watcher for each iteration of its events promises. */
 static void EvaluateReactorBundle(EvalContext *ctx, const Bundle *bp)
 {
     assert(bp != NULL);
+
+    BundleBanner(bp, NULL);
     EvalContextStackPushBundleFrame(ctx, bp, NULL, false, NULL);
 
-    for (int i = 0; REACTOR_TYPESEQUENCE[i] != NULL; i++)
-    {
-        const BundleSection *sp = BundleGetSection(bp, REACTOR_TYPESEQUENCE[i]);
-        if (sp == NULL || SeqLength(sp->promises) == 0)
-        {
-            Log(LOG_LEVEL_DEBUG, "No promise type %s in bundle %s",
-                REACTOR_TYPESEQUENCE[i], bp->name);
-            continue;
-        }
+    /* The events promises are kept last, once the other promises of the
+     * bundle are, so that they see the variables and classes defined by the
+     * bundle, and only watch for what happens after the bundle changed the
+     * system. */
+    ScheduleBundle(ctx, bp);
 
+    const BundleSection *sp = BundleGetSection(bp, "events");
+    if (sp != NULL)
+    {
         EvalContextStackPushBundleSectionFrame(ctx, sp);
-        for (size_t j = 0; j < SeqLength(sp->promises); j++)
+        for (size_t i = 0; i < SeqLength(sp->promises); i++)
         {
-            const Promise *pp = SeqAt(sp->promises, j);
-            ExpandPromise(ctx, pp, KeepReactorPromise, NULL);
+            const Promise *pp = SeqAt(sp->promises, i);
+            ExpandPromise(ctx, pp, KeepEventsPromiseOnRead, NULL);
         }
-        EvalContextStackPopFrame(ctx);
+        EvalContextStackPopFrame(ctx); /* bundle section */
     }
 
-    EvalContextStackPopFrame(ctx);
+    EvalContextStackPopFrame(ctx); /* bundle */
+    EndBundleBanner(bp);
 }
 
 /* Runs the bundle referred to by an entry of the 'then' attribute of the
@@ -442,16 +441,14 @@ static PromiseResult RunThenBundle(EvalContext *ctx, const Promise *pp, Rval the
     EvalContextSetBundleArgs(ctx, args);
     EvalContextStackPushBundleFrame(ctx, bp, args, false, NULL);
 
-    /* Remote copy_from needs the connection cache and custom promise types
-     * need the promise modules map. Set them up per run like in cf-agent so
-     * that no connections or promise modules are kept between events. */
-    ConnCache_Init();
-    InitializeCustomPromises();
-    int prev_ifelapsed = OverrideIfelapsed(0);
-    PromiseResult result = ScheduleAgentOperations(ctx, bp);
-    RestoreIfelapsed(prev_ifelapsed);
-    FinalizeCustomPromises();
-    ConnCache_Destroy();
+    /* The watchers are only registered on (re)read of the policy */
+    if (BundleGetSection(bp, "events") != NULL)
+    {
+        Log(LOG_LEVEL_VERBOSE,
+            "Skipping the events promises of bundle '%s', they are only kept when cf-reactor reads the policy",
+            bp->name);
+    }
+    PromiseResult result = ScheduleBundle(ctx, bp);
 
     EvalContextStackPopFrame(ctx); /* bundle */
     EvalContextSetBundleArgs(ctx, NULL);

@@ -37,7 +37,8 @@ static const ConstraintSyntax CF_METHOD_BODIES[] =
 
 static bool MethodsParseTreeCheck(const Promise *pp, Seq *errors)
 {
-    return PromiseCheckBundleCallArity(pp, "usebundle", errors);
+    static const char *const bundle_types[] = { CF_AGENTC, CF_COMMONC, NULL };
+    return PromiseCheckBundleCallArity(pp, "usebundle", bundle_types, errors);
 }
 
 const PromiseTypeSyntax CF_METHOD_PROMISE_TYPES[] =

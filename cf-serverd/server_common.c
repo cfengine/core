@@ -925,7 +925,7 @@ bool CompareLocalHash(const char *filename, const unsigned char digest[EVP_MAX_M
     }
 }
 
-void GetServerLiteral(EvalContext *ctx, ServerConnectionState *conn, char *sendbuffer, char *recvbuffer, int encrypted)
+void GetServerLiteral(EvalContext *ctx, ServerConnectionState *conn, char *sendbuffer, size_t sendbuffer_size, char *recvbuffer, int encrypted)
 {
     char handle[CF_BUFSIZE], out[CF_BUFSIZE];
     int cipherlen;
@@ -934,13 +934,13 @@ void GetServerLiteral(EvalContext *ctx, ServerConnectionState *conn, char *sendb
 
     if (ReturnLiteralData(ctx, handle, out))
     {
-        memset(sendbuffer, 0, CF_BUFSIZE);
-        snprintf(sendbuffer, CF_BUFSIZE, "%s", out);
+        memset(sendbuffer, 0, sendbuffer_size);
+        snprintf(sendbuffer, sendbuffer_size, "%s", out);
     }
     else
     {
-        memset(sendbuffer, 0, CF_BUFSIZE);
-        snprintf(sendbuffer, CF_BUFSIZE, "BAD: Not found");
+        memset(sendbuffer, 0, sendbuffer_size);
+        snprintf(sendbuffer, sendbuffer_size, "BAD: Not found");
     }
 
     if (encrypted)

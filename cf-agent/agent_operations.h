@@ -33,8 +33,13 @@
  *        EvalContextIsClassicOrder().
  *
  * Used by cf-agent (bundlesequence and methods promises) and cf-reactor
- * (bundle in the 'then' attribute of an events promise). Can be called
- * recursively through methods promises.
+ * (reactor bundles, and bundles in the 'then' attribute of an events
+ * promise). Can be called recursively through methods promises.
+ *
+ * Only the promise types cf-agent knows of are evaluated, i.e. the built-in
+ * promise types of agent bundles and the custom promise types, in both
+ * evaluation orders. The other promises of the bundle, e.g. the events
+ * promises of a reactor bundle, are left to the caller.
  *
  * The caller is responsible for pushing the bundle frame
  * (EvalContextStackPushBundleFrame()) before calling, and popping it after.

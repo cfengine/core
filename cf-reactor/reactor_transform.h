@@ -30,9 +30,10 @@
 #include <watcher.h>     /* WatcherCheckResult */
 
 /**
- * @brief Evaluate every `bundle reactor NAME { ... }` in the given policy:
- * keep its "meta", "vars" and "classes" promises, and register a watcher
- * (see watcher.h) for each of its "events" promises.
+ * @brief Evaluate every `bundle reactor NAME { ... }` without arguments in
+ * the given policy: keep its promises like cf-agent does (see
+ * ScheduleAgentOperations()), then register a watcher (see watcher.h) for
+ * each of its "events" promises.
  *
  * Expects no watchers to be registered: on re-read of the policy, the
  * watchers of the previous policy must be set aside with
@@ -43,9 +44,11 @@ void KeepReactorPromises(EvalContext *ctx, const Policy *policy);
 
 /**
  * @brief Keep the events promise of a watcher that fired (see WatcherEventFn
- * in watcher.h): run the bundle of its 'then' attribute, and record the
- * outcome of the bundle as the outcome of the events promise. If the watcher
- * failed to check for its event, record a failure instead.
+ * in watcher.h): run the agent, common or reactor bundles of its 'then'
+ * attribute (except the events promises of reactor bundles, which are only
+ * kept by KeepReactorPromises()), and record the outcome of the bundles as
+ * the outcome of the events promise. If the watcher failed to check for its
+ * event, record a failure instead.
  *
  * @param pp the unexpanded events promise the watcher was registered for
  * @param promise_hash the hash of the expanded promise the watcher was

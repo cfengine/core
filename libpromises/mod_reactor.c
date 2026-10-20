@@ -42,13 +42,15 @@ static const BodySyntax when_body = BodySyntaxNew("when", when_constraints, NULL
 static const ConstraintSyntax CF_EVENT_BODIES[] =
 {
     ConstraintSyntaxNewBody("when", &when_body, "Event to react to", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewBundleList("then", "Bundle or list of bundles to run in order on event", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBundleList("then", "Agent, common or reactor bundle or list of bundles to run in order on event", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 
+const char *const REACTOR_THEN_BUNDLE_TYPES[] = { CF_AGENTC, CF_COMMONC, CF_REACTORC, NULL };
+
 static bool EventsParseTreeCheck(const Promise *pp, Seq *errors)
 {
-    return PromiseCheckBundleCallArity(pp, "then", errors);
+    return PromiseCheckBundleCallArity(pp, "then", REACTOR_THEN_BUNDLE_TYPES, errors);
 }
 
 const PromiseTypeSyntax CF_REACTOR_PROMISE_TYPES[] =

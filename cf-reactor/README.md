@@ -6,6 +6,37 @@
 
 cf-reactor periodically reads the policy to set up the in-memory datastructures needed to react to events. It evaluates reactor bundles and parses events promises to create the corresponding `watchers`. These watchers stay active until the next policy read, when they are rebuilt.
 
+Reactor bundles can have every promise type of agent bundles (built-in and custom), in addition to events promises. On every policy read, each reactor bundle without arguments is evaluated like cf-agent evaluates a bundle (`ScheduleAgentOperations()`, in normal or top-down order), then its events promises are kept last, registering the watchers:
+
+```cf3
+bundle reactor set_up_events
+{
+  files:
+    "/tmp/a"
+      create => "true";
+
+  events:
+    "recreate_a"
+      when => file_deleted("/tmp/a"),
+      then => { create_file("/tmp/a"), reactor_only_print };
+}
+
+bundle reactor reactor_only_print
+{
+  reports:
+    "Only cf-reactor can see this";
+}
+
+bundle agent create_file(file)
+{
+  files:
+    "$(file)"
+      create => "true";
+}
+```
+
+Note that `reactor_only_print` above is also evaluated on every policy read, like every reactor bundle without arguments.
+
 Events promises are parsed into watcher instances, each holding: the event `key` from the events promise, an event `type` (e.g. file deletion), a `state` with whatever state the check needs (e.g. the name of the file being watched), and a `check function` that detects the event by comparing the current state to the state recorded at the last check (e.g. whether the file still exists). It returns `true` only on the specific transition being watched for, so it fires once per change and does not stay `true` afterwards.
 
 ### Events
@@ -22,7 +53,7 @@ On Linux, we could use inotify instead in the future, and let the kernel poll fo
 
 ### Running bundles
 
-On dispatch, the bundle corresponding to an event is run, however it doesn't do a full agent run.
+On dispatch, the bundles in the `then` attribute of the events promise are run in order, however it doesn't do a full agent run. They can be agent, common or reactor bundles (looked up in that order). The events promises of a reactor bundle are skipped when it runs on event: watchers are only registered on policy read.
 
 ## Implementation details
 

@@ -66,6 +66,9 @@ export CFTEST_CFSERVD=$CFTEST_PREFIX/bin/cf-test-serverd
 export CFTEST_CFMOND=$CFTEST_PREFIX/bin/cf-test-monitord
 export CFTEST_CFREACTORD=$CFTEST_PREFIX/bin/cf-test-reactor
 export CFTEST_CFAGENT=$CFTEST_PREFIX/bin/cf-test-agent
+# Don't pick up the host's /etc/default/cfengine3 or /etc/sysconfig/cfengine3.
+# The file is never created, so the init script's built-in defaults apply.
+export CFTEST_DEFAULT=$CFTEST_PREFIX/cfengine3
 export OUTFILE=$CFTEST_PREFIX/outfile
 
 rm -rf $CFTEST_PREFIX

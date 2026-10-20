@@ -115,6 +115,7 @@ if [ "$DEBIAN" = "1" ]; then
 else
     DEFAULT=/etc/sysconfig/cfengine3
 fi
+DEFAULT=${CFTEST_DEFAULT:-$DEFAULT}
 
 if [ -f $DEFAULT ]; then
     . $DEFAULT

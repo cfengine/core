@@ -53,6 +53,7 @@ fi
 CFEXECD=${CFTEST_CFEXECD:-$PREFIX/bin/cf-execd}
 CFSERVD=${CFTEST_CFSERVD:-$PREFIX/bin/cf-serverd}
 CFMOND=${CFTEST_CFMOND:-$PREFIX/bin/cf-monitord}
+CFREACTORD=${CFTEST_CFREACTORD:-$PREFIX/bin/cf-reactor}
 CFAGENT=${CFTEST_CFAGENT:-$PREFIX/bin/cf-agent}
 
 PIDFILE_TEMPLATE=$PREFIX/%s.pid
@@ -114,6 +115,7 @@ if [ "$DEBIAN" = "1" ]; then
 else
     DEFAULT=/etc/sysconfig/cfengine3
 fi
+DEFAULT=${CFTEST_DEFAULT:-$DEFAULT}
 
 if [ -f $DEFAULT ]; then
     . $DEFAULT
@@ -121,6 +123,7 @@ else
     RUN_CF_EXECD=1
     RUN_CF_SERVERD=1
     RUN_CF_MONITORD=1
+    RUN_CF_REACTOR=1
 fi
 
 # Check /sbin/startproc for SUSE
@@ -227,7 +230,7 @@ cf_get_matching_pids()
             for pid in $pids; do
                 # If the last character of the cgroup is not the root directory,
                 # then this is a container process.
-                if [ -f /proc/$pid/cgroup ] && sed 's_/\(-\|system\|user\).slice__;s_/user-[0-9]*.slice__;s_/session-[0-9]*.scope__;s_/cfengine3.service__;s_/cf-execd.service__;s_/cf-serverd.service__;s_/cf-monitord.service__' /proc/$pid/cgroup | egrep '[0-9]+:devices:/[^:]' > /dev/null; then
+                if [ -f /proc/$pid/cgroup ] && sed 's_/\(-\|system\|user\).slice__;s_/user-[0-9]*.slice__;s_/session-[0-9]*.scope__;s_/cfengine3.service__;s_/cf-execd.service__;s_/cf-serverd.service__;s_/cf-monitord.service__;s_/cf-reactor.service__' /proc/$pid/cgroup | egrep '[0-9]+:devices:/[^:]' > /dev/null; then
                     if [ $INSIDE_CONTAINER = 1 ]; then
                         echo $pid
                     fi
@@ -501,6 +504,11 @@ cf_start_core_daemons()
     if [ "$RUN_CF_MONITORD" = "1" ]; then
         cf_start_daemon "$CFMOND"
     fi
+
+    # start cf-reactor
+    if [ "$RUN_CF_REACTOR" = "1" ]; then
+        cf_start_daemon "$CFREACTORD"
+    fi
 }
 
 cf_stop_core_daemons()
@@ -549,6 +557,11 @@ cf_stop_core_daemons()
             cf_stop_daemon "$CFMOND" && any_process_present=1
         fi
 
+        # shutdown cf-reactor
+        if [ "$RUN_CF_REACTOR" = "1" ]; then
+            cf_stop_daemon "$CFREACTORD" && any_process_present=1
+        fi
+
         # In case agents were spawned just as we were trying to kill the
         # daemons, try killing those too.
         cf_stop_agents && any_process_present=1
@@ -583,6 +596,14 @@ cf_status_core_daemons()
     # status cf-monitord
     if [ "$RUN_CF_MONITORD" = "1" ]; then
         cf_status_daemon "$CFMOND"
+        if [ "$?" = "3" ]; then
+            cf_status_core_daemons_exit=3
+        fi
+    fi
+
+    # status cf-reactor
+    if [ "$RUN_CF_REACTOR" = "1" ]; then
+        cf_status_daemon "$CFREACTORD"
         if [ "$?" = "3" ]; then
             cf_status_core_daemons_exit=3
         fi

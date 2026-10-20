@@ -64,7 +64,11 @@ export CFTEST_PREFIX=/tmp/init_script_test.sh.$$
 export CFTEST_CFEXECD=$CFTEST_PREFIX/bin/cf-test-execd
 export CFTEST_CFSERVD=$CFTEST_PREFIX/bin/cf-test-serverd
 export CFTEST_CFMOND=$CFTEST_PREFIX/bin/cf-test-monitord
+export CFTEST_CFREACTORD=$CFTEST_PREFIX/bin/cf-test-reactor
 export CFTEST_CFAGENT=$CFTEST_PREFIX/bin/cf-test-agent
+# Don't pick up the host's /etc/default/cfengine3 or /etc/sysconfig/cfengine3.
+# The file is never created, so the init script's built-in defaults apply.
+export CFTEST_DEFAULT=$CFTEST_PREFIX/cfengine3
 export OUTFILE=$CFTEST_PREFIX/outfile
 
 rm -rf $CFTEST_PREFIX
@@ -94,6 +98,7 @@ set -e
 cp init_script_test_helper $CFTEST_PREFIX/bin/cf-test-execd
 cp init_script_test_helper $CFTEST_PREFIX/bin/cf-test-serverd
 cp init_script_test_helper $CFTEST_PREFIX/bin/cf-test-monitord
+cp init_script_test_helper $CFTEST_PREFIX/bin/cf-test-reactor
 cp init_script_test_helper $CFTEST_PREFIX/bin/cf-test-agent
 
 touch $CFTEST_PREFIX/inputs/promises.cf
@@ -150,6 +155,7 @@ verify_none_running()
     no_matching_pid_exists $CFTEST_PREFIX/bin/cf-test-execd
     no_matching_pid_exists $CFTEST_PREFIX/bin/cf-test-serverd
     no_matching_pid_exists $CFTEST_PREFIX/bin/cf-test-monitord
+    no_matching_pid_exists $CFTEST_PREFIX/bin/cf-test-reactor
     no_matching_pid_exists $CFTEST_PREFIX/bin/cf-test-agent
     )
 }
@@ -172,6 +178,7 @@ echo "TEST: Normal starting"
 matching_pid_exists $CFTEST_PREFIX/bin/cf-test-execd
 matching_pid_exists $CFTEST_PREFIX/bin/cf-test-serverd
 matching_pid_exists $CFTEST_PREFIX/bin/cf-test-monitord
+matching_pid_exists $CFTEST_PREFIX/bin/cf-test-reactor
 
 echo "TEST: Normal stopping"
 ../../misc/init.d/cfengine3 stop
@@ -182,6 +189,9 @@ $CFTEST_PREFIX/bin/cf-test-execd
 ../../misc/init.d/cfengine3 stop
 verify_none_running
 $CFTEST_PREFIX/bin/cf-test-monitord
+../../misc/init.d/cfengine3 stop
+verify_none_running
+$CFTEST_PREFIX/bin/cf-test-reactor
 ../../misc/init.d/cfengine3 stop
 verify_none_running
 
@@ -302,7 +312,7 @@ verify_none_running
 $CFTEST_PREFIX/bin/cf-test-execd
 ../../misc/init.d/cfengine3 status  >  $OUTFILE  \
     && retcode=$? || retcode=$?
-for i in cf-test-serverd cf-test-monitord
+for i in cf-test-serverd cf-test-monitord cf-test-reactor
 do
     cat $OUTFILE | grep "$i.*is not running"
 done
@@ -314,9 +324,10 @@ test $retcode = 3
 echo "TEST: Verify that status of all daemons works"
 $CFTEST_PREFIX/bin/cf-test-serverd
 $CFTEST_PREFIX/bin/cf-test-monitord
+$CFTEST_PREFIX/bin/cf-test-reactor
 ../../misc/init.d/cfengine3 status  >  $OUTFILE  \
     && retcode=$? || retcode=$?
-for i in cf-test-execd cf-test-serverd cf-test-monitord
+for i in cf-test-execd cf-test-serverd cf-test-monitord cf-test-reactor
 do
     cat $OUTFILE | egrep "$i.*(\.|is )running"
 done
@@ -329,7 +340,7 @@ echo "TEST: Verify that status of no daemons works"
 verify_none_running
 ../../misc/init.d/cfengine3 status  >  $OUTFILE  \
     && retcode=$? || retcode=$?
-for i in cf-test-execd cf-test-serverd cf-test-monitord
+for i in cf-test-execd cf-test-serverd cf-test-monitord cf-test-reactor
 do
     cat $OUTFILE | grep "$i.*is not running"
 done
@@ -344,7 +355,7 @@ $CFTEST_PREFIX/bin/cf-test-execd
 $CFTEST_PREFIX/bin/cf-test-execd
 ../../misc/init.d/cfengine3 status  >  $OUTFILE  \
     && retcode=$? || retcode=$?
-for i in cf-test-serverd cf-test-monitord
+for i in cf-test-serverd cf-test-monitord cf-test-reactor
 do
     cat $OUTFILE | grep "$i.*is not running"
 done
@@ -359,7 +370,7 @@ $CFTEST_PREFIX/bin/cf-test-execd
 echo 9999999 > $CFTEST_PREFIX/cf-test-execd.pid
 ../../misc/init.d/cfengine3 status  >  $OUTFILE  \
     && retcode=$? || retcode=$?
-for i in cf-test-serverd cf-test-monitord
+for i in cf-test-serverd cf-test-monitord cf-test-reactor
 do
     cat $OUTFILE | grep "$i.*is not running"
 done

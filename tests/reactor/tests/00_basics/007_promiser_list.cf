@@ -1,0 +1,30 @@
+#######################################################
+#
+# Test promiser list expansion
+#
+#######################################################
+body common control
+{
+  inputs => { "../../lib.cf" };
+  bundlesequence => { "test" };
+  version => "1.0";
+}
+
+body when deleted(file)
+{
+  file_deleted => "$(file)";
+}
+
+bundle reactor test
+{
+  vars:
+    "suffix" slist => { "A", "B" };
+    "test_$(suffix)" string => getenv("TESTFILE_$(suffix)", 999);
+    "events_file" string => getenv("EVENTS_FILE", 999);
+    "promise_name" string => basename("$(this.promise_filename)", ".cf");
+
+  events:
+    "$(promise_name)_$(suffix)"
+      when => deleted("$(test_$(suffix))"),
+      then => record_event("$(events_file)", "$(test_$(suffix)) was deleted");
+}

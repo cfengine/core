@@ -41,6 +41,11 @@
                                    copy equal to the copied template file - not the
                                    copied + edited file. */
 
+/* The ifelapsed of the promises of edit bundles: CF_EDIT_IFELAPSED, unless the
+ * default ifelapsed is lower, e.g. 0 for the bundles cf-reactor runs on events,
+ * which may happen less than a minute apart */
+#define EDIT_IFELAPSED MIN(CF_EDIT_IFELAPSED, VIFELAPSED)
+
 typedef struct
 {
     char *filename;

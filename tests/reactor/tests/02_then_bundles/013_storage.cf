@@ -1,0 +1,44 @@
+#######################################################
+#
+# Test storage promises in a "then" bundle
+#
+#######################################################
+body common control
+{
+  inputs => { "../../lib.cf" };
+  bundlesequence => { "test" };
+  version => "1.0";
+}
+
+body when deleted(file)
+{
+  file_deleted => "$(file)";
+}
+
+body volume any_free_space
+{
+  freespace => "1k";
+}
+
+bundle agent run_storage
+{
+  storage:
+    "$(sys.workdir)"
+      volume => any_free_space,
+      classes => then_outcome("storage");
+}
+
+bundle reactor test
+{
+  vars:
+    "test" string => getenv("TESTFILE", 999);
+    "events_file" string => getenv("EVENTS_FILE", 999);
+    "promise_name" string => basename("$(this.promise_filename)", ".cf");
+
+  events:
+    "$(promise_name)"
+      when => deleted("$(test)"),
+      then => {
+        "run_storage", record_then_outcome("$(events_file)", "storage")
+      };
+}

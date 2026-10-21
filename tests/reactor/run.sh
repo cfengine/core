@@ -1,14 +1,22 @@
 #!/bin/sh
 
-# Usage: run.sh
+# Usage: run.sh [--unsafe]
 #
 # Must be run from the tests/reactor directory.
+#
+# Tests in an unsafe/ directory modify the system they are running on, so they
+# are only run with --unsafe.
 #
 # The binaries are taken from $CF_BINDIR if it is set, otherwise from the
 # CFEngine build tree this directory is part of if they are built, otherwise
 # from /var/cfengine/bin.
 
 fail=0
+
+unsafe=0
+if [ "$1" = "--unsafe" ]; then
+    unsafe=1
+fi
 
 banner() {
     name=" $(basename "$(dirname "$1")")/$(basename "$1") "
@@ -52,7 +60,13 @@ for b in "$CF_REACTOR" "$CF_PROMISES"; do
 done
 echo "Using $CF_REACTOR and $CF_PROMISES"
 
-for t in "$PWD"/tests/*/*.sh; do
+for t in "$PWD"/tests/*/*.sh "$PWD"/tests/*/unsafe/*.sh; do
+    # skip the pattern itself if there are no unsafe tests
+    [ -f "$t" ] || continue
+    case "$t" in
+        */unsafe/*) [ "$unsafe" = 1 ] || continue ;;
+    esac
+
     banner "$t"
 
     # create throwaway work dir

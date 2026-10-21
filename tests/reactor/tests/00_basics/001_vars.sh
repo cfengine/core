@@ -2,7 +2,7 @@
 
 set -ex
 
-. "$(dirname "$0")/../lib.sh"
+. "$(dirname "$0")/../../lib.sh"
 
 TESTFILE="$WORKDIR/tmp/test"
 EVENTS_FILE="$WORKDIR/tmp/events"

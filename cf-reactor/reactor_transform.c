@@ -505,7 +505,25 @@ static PromiseResult KeepEventsPromiseOnEvent(EvalContext *ctx, const Promise *p
         return PROMISE_RESULT_SKIPPED;
     }
 
-    return RunThenBundles(ctx, pp);
+    PromiseResult result;
+    switch (event->check)
+    {
+    case WATCHER_CHECK_EVENT:
+        result = RunThenBundles(ctx, pp);
+        break;
+
+    case WATCHER_CHECK_ERROR:
+        /* Already logged as an error by the watcher, see HandleQueuedEvents() */
+        result = PROMISE_RESULT_FAIL;
+        break;
+
+    default:
+        ProgrammingError("Unexpected watcher check result %d for reactor events promise '%s'",
+                         (int) event->check, pp->promiser);
+    }
+
+    RecordEventsPromiseOutcome(ctx, pp, result);
+    return result;
 }
 
 void HandleReactorEvent(EvalContext *ctx, const Promise *pp, const char *promise_hash, WatcherCheckResult check)

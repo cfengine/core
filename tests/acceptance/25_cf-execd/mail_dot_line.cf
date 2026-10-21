@@ -1,0 +1,44 @@
+# Tests that a line consisting of a single "." in the agent output is
+# dot-stuffed by cf-execd, so it does not end the SMTP DATA section early.
+body common control
+{
+  inputs => { "../default.sub.cf", "mailfilter_common.cf.sub" };
+  bundlesequence => { default($(this.promise_filename)) };
+}
+
+bundle agent init
+{
+  vars:
+    "reports" slist => { "CorrectString1$(const.n).$(const.n)CorrectString2" };
+    "includes" slist => {};
+    "excludes" slist => {};
+
+  methods:
+    "any"
+      usebundle => prepare_mailfilter_test(
+        @(reports), @(includes), @(excludes)
+      );
+}
+
+bundle agent test
+{
+  meta:
+    "test_soft_fail"
+      string => "windows",
+      meta => { "ENT-10215" };
+}
+
+bundle agent check
+{
+  vars:
+    "wanted" slist => { 'CorrectString1\r
+\.\.\r
+CorrectString2' };
+    "empty_list" slist => {};
+
+  methods:
+    "any"
+      usebundle => check_cf_execd_mail(
+        @(wanted), @(empty_list), $(this.promise_filename)
+      );
+}

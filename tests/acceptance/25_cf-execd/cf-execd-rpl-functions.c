@@ -73,6 +73,11 @@ static void *FeedSmtpDirectives(void *data)
     while (!done)
     {
         COND_RECV(recvbuf);
+        if (rcvd == 0)
+        {
+            Log(LOG_LEVEL_ERR, "Connection closed before end of DATA in %s:%i", __FILE__, __LINE__);
+            return NULL;
+        }
         /* It's a sliding window:
          * For each received byte we left shift the buffer and append the new
          * byte to the end. The client waits for our reply after sending the

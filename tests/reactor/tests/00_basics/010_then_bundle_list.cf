@@ -1,0 +1,33 @@
+#######################################################
+#
+# Test an array of bundles to run on event
+#
+#######################################################
+body common control
+{
+  inputs => { "../../lib.cf" };
+  bundlesequence => { "test" };
+  version => "1.0";
+}
+
+body when deleted(file)
+{
+  file_deleted => "$(file)";
+}
+
+bundle reactor test
+{
+  vars:
+    "test" string => getenv("TESTFILE", 999);
+    "events_file" string => getenv("EVENTS_FILE", 999);
+    "promise_name" string => basename("$(this.promise_filename)", ".cf");
+
+  events:
+    "$(promise_name)"
+      when => deleted("$(test)"),
+      then => {
+        record_event("$(events_file)", "$(test) first"),
+        record_event("$(events_file)", "$(test) second"),
+        record_event("$(events_file)", "$(test) third"),
+      };
+}

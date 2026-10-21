@@ -1,0 +1,49 @@
+#######################################################
+#
+# Test that an events promise is not kept when its watcher can't be set up
+#
+#######################################################
+body common control
+{
+  inputs => { "../../lib.cf" };
+  bundlesequence => { "test" };
+  version => "1.0";
+}
+
+body when deleted(file)
+{
+  file_deleted => "$(file)";
+}
+
+body classes outcome(prefix)
+{
+  promise_kept => { "$(prefix)_kept" };
+  promise_repaired => { "$(prefix)_repaired" };
+  repair_failed => { "$(prefix)_failed" };
+  repair_denied => { "$(prefix)_failed" };
+  repair_timeout => { "$(prefix)_failed" };
+}
+
+bundle reactor test
+{
+  vars:
+    "test" string => getenv("TESTFILE", 999);
+    "check" string => getenv("CHECK_FILE", 999);
+    "events_file" string => getenv("EVENTS_FILE", 999);
+
+    # only known when running, so cf-promises can't reject it
+    "missing_bundle" string => getenv("MISSING_BUNDLE", 999);
+    "promise_name" string => basename("$(this.promise_filename)", ".cf");
+
+  events:
+    "$(promise_name)_broken"
+      when => deleted("$(test)"),
+      then => { "$(missing_bundle)" },
+      classes => outcome("broken");
+
+    # only set up if the outcome of the broken promise is as expected
+    broken_failed.!broken_kept.!broken_repaired::
+      "$(promise_name)_check"
+        when => deleted("$(check)"),
+        then => record_event("$(events_file)", "$(check) was deleted");
+}

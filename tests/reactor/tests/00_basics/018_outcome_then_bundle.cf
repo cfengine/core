@@ -1,0 +1,83 @@
+#######################################################
+#
+# Test that the outcome of an events promise on its event is the outcome of
+# its "then" bundles
+#
+#######################################################
+body common control
+{
+  inputs => { "../../lib.cf" };
+  bundlesequence => { "test" };
+  version => "1.0";
+}
+
+body when deleted(file)
+{
+  file_deleted => "$(file)";
+}
+
+# The classes defined on an event are undone once it is handled, except the
+# persistent ones, which the next events see
+body classes persistent_outcome(prefix)
+{
+  promise_repaired => { "$(prefix)_repaired" };
+  repair_failed => { "$(prefix)_failed" };
+  repair_denied => { "$(prefix)_failed" };
+  repair_timeout => { "$(prefix)_failed" };
+  persist_time => "10";
+}
+
+bundle agent fail
+{
+  commands:
+    "/bin/false";
+}
+
+bundle agent repair(file)
+{
+  files:
+    "$(file)" create => "true";
+}
+
+bundle agent record_outcomes(file)
+{
+  vars:
+    "classes"
+      slist => {
+        "failing_failed",
+        "failing_repaired",
+        "repairing_failed",
+        "repairing_repaired",
+      };
+
+  methods:
+    "$(classes)"
+      if => "$(classes)",
+      usebundle => record_event("$(file)", "$(classes)");
+}
+
+bundle reactor test
+{
+  vars:
+    "test_failing" string => getenv("TESTFILE_FAILING", 999);
+    "test_repairing" string => getenv("TESTFILE_REPAIRING", 999);
+    "created" string => getenv("CREATED_FILE", 999);
+    "check" string => getenv("CHECK_FILE", 999);
+    "events_file" string => getenv("EVENTS_FILE", 999);
+    "promise_name" string => basename("$(this.promise_filename)", ".cf");
+
+  events:
+    "$(promise_name)_failing"
+      when => deleted("$(test_failing)"),
+      then => fail,
+      classes => persistent_outcome("failing");
+
+    "$(promise_name)_repairing"
+      when => deleted("$(test_repairing)"),
+      then => repair("$(created)"),
+      classes => persistent_outcome("repairing");
+
+    "$(promise_name)_check"
+      when => deleted("$(check)"),
+      then => record_outcomes("$(events_file)");
+}

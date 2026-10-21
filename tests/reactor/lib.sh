@@ -19,6 +19,21 @@ wait_for_log() {
     log_offset=$((log_offset + ${match%%:*}))
 }
 
+# Wait until cf-reactor has registered the watchers of the policy, $1 of them.
+# The watcher thread may log before this line, so search the whole log and
+# leave the offset of wait_for_log as is.
+wait_for_watchers() {
+    if ! timeout 60 sh -c '
+        until grep -q -F -- "$2" "$1"; do
+            sleep 0.1
+        done' _ "$LOG" "verbose: cf-reactor event watcher has $1 watcher(s)"
+    then
+        echo "Timed out waiting for $1 watcher(s) in reactor log:" >&2
+        cat "$LOG" >&2
+        return 1
+    fi
+}
+
 # Wait until file $1 has at least $2 lines, then fail if it has more than $2.
 wait_for_lines() {
     if ! timeout 60 sh -c '

@@ -1,0 +1,48 @@
+#######################################################
+#
+# Test common bundle
+#
+#######################################################
+body common control
+{
+  inputs => { "../../lib.cf" };
+  bundlesequence => { "test" };
+  version => "1.0";
+}
+
+body when deleted(file)
+{
+  file_deleted => "$(file)";
+}
+
+bundle common setup(f, m)
+{
+  vars:
+    "file" string => "$(f)";
+    "msg" string => "$(m)";
+
+  classes:
+    "should_run" expression => "true";
+}
+
+bundle agent run_if(b)
+{
+  methods:
+    should_run::
+      "any" usebundle => $(b)("$(setup.file)", "$(setup.msg)");
+}
+
+bundle reactor test
+{
+  vars:
+    "test" string => getenv("TESTFILE", 999);
+    "events_file" string => getenv("EVENTS_FILE", 999);
+    "promise_name" string => basename("$(this.promise_filename)", ".cf");
+
+  events:
+    "$(promise_name)"
+      when => deleted("$(test)"),
+      then => {
+        setup("$(events_file)", "$(test) was deleted"), run_if("record_event")
+      };
+}

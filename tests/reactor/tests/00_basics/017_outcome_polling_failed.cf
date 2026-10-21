@@ -1,0 +1,60 @@
+#######################################################
+#
+# Test that an events promise is not kept when its watcher fails to check
+# for its event, and that its "then" bundles are not run
+#
+#######################################################
+body common control
+{
+  inputs => { "../../lib.cf" };
+  bundlesequence => { "test" };
+  version => "1.0";
+}
+
+body when deleted(file)
+{
+  file_deleted => "$(file)";
+}
+
+# The classes defined on an event are undone once it is handled, except the
+# persistent ones, which the next events see
+body classes persistent_outcome(prefix)
+{
+  promise_kept => { "$(prefix)_kept" };
+  promise_repaired => { "$(prefix)_repaired" };
+  repair_failed => { "$(prefix)_failed" };
+  repair_denied => { "$(prefix)_failed" };
+  repair_timeout => { "$(prefix)_failed" };
+  persist_time => "10";
+}
+
+bundle agent record_outcome(file, prefix)
+{
+  methods:
+    "$(prefix)_failed"
+      if => "$(prefix)_failed",
+      usebundle => record_event("$(file)", "$(prefix)_failed");
+
+    "not $(prefix)_failed"
+      unless => "$(prefix)_failed",
+      usebundle => record_event("$(file)", "not $(prefix)_failed");
+}
+
+bundle reactor test
+{
+  vars:
+    "test" string => getenv("TESTFILE", 999);
+    "check" string => getenv("CHECK_FILE", 999);
+    "events_file" string => getenv("EVENTS_FILE", 999);
+    "promise_name" string => basename("$(this.promise_filename)", ".cf");
+
+  events:
+    "$(promise_name)_failing"
+      when => deleted("$(test)"),
+      then => record_event("$(events_file)", "$(test) was deleted"),
+      classes => persistent_outcome("failing");
+
+    "$(promise_name)_check"
+      when => deleted("$(check)"),
+      then => record_outcome("$(events_file)", "failing");
+}

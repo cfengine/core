@@ -1,0 +1,34 @@
+#######################################################
+#
+# Test several events promise in one reactor bundle
+#
+#######################################################
+body common control
+{
+  inputs => { "../../lib.cf" };
+  bundlesequence => { "test" };
+  version => "1.0";
+}
+
+body when deleted(file)
+{
+  file_deleted => "$(file)";
+}
+
+bundle reactor test
+{
+  vars:
+    "test_A" string => getenv("TESTFILE_A", 999);
+    "test_B" string => getenv("TESTFILE_B", 999);
+    "events_file" string => getenv("EVENTS_FILE", 999);
+    "promise_name" string => basename("$(this.promise_filename)", ".cf");
+
+  events:
+    "$(promise_name)_A"
+      when => deleted("$(test_A)"),
+      then => record_event("$(events_file)", "$(test_A) was deleted");
+
+    "$(promise_name)_B"
+      when => deleted("$(test_B)"),
+      then => record_event("$(events_file)", "$(test_B) was deleted");
+}

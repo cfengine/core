@@ -1,0 +1,41 @@
+#######################################################
+#
+# Test users promises in a "then" bundle
+#
+#######################################################
+body common control
+{
+  inputs => { "../../lib.cf" };
+  bundlesequence => { "test" };
+  version => "1.0";
+}
+
+body when deleted(file)
+{
+  file_deleted => "$(file)";
+}
+
+bundle agent run_users(user)
+{
+  users:
+    # the user running the test, so that it is kept without being root
+    "$(user)"
+      policy => "present",
+      classes => then_outcome("users");
+}
+
+bundle reactor test
+{
+  vars:
+    "test" string => getenv("TESTFILE", 999);
+    "events_file" string => getenv("EVENTS_FILE", 999);
+    "user" string => getenv("TEST_USER", 999);
+    "promise_name" string => basename("$(this.promise_filename)", ".cf");
+
+  events:
+    "$(promise_name)"
+      when => deleted("$(test)"),
+      then => {
+        run_users("$(user)"), record_then_outcome("$(events_file)", "users")
+      };
+}

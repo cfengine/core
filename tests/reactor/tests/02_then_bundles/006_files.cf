@@ -1,0 +1,48 @@
+#######################################################
+#
+# Test files promises in a "then" bundle
+#
+#######################################################
+body common control
+{
+  inputs => { "../../lib.cf" };
+  bundlesequence => { "test" };
+  version => "1.0";
+}
+
+body when deleted(file)
+{
+  file_deleted => "$(file)";
+}
+
+bundle agent run_files(file, line)
+{
+  files:
+    "$(file)"
+      create => "true",
+      edit_line => insert_line("$(line)"),
+      classes => then_outcome("files");
+}
+
+bundle edit_line insert_line(line)
+{
+  insert_lines:
+    "$(line)";
+}
+
+bundle reactor test
+{
+  vars:
+    "test" string => getenv("TESTFILE", 999);
+    "events_file" string => getenv("EVENTS_FILE", 999);
+    "created" string => getenv("CREATED_FILE", 999);
+    "promise_name" string => basename("$(this.promise_filename)", ".cf");
+
+  events:
+    "$(promise_name)"
+      when => deleted("$(test)"),
+      then => {
+        run_files("$(created)", "created on event"),
+        record_then_outcome("$(events_file)", "files"),
+      };
+}

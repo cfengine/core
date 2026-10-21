@@ -54,6 +54,18 @@ wait_for_lines() {
     fi
 }
 
+# Fail unless line $2 of file $1, without the timestamp written by
+# record_event, is $3.
+check_event() {
+    line=$(sed -n "$2p" "$1" | cut -d' ' -f3-)
+    if [ "$line" != "$3" ]
+    then
+        echo "Expected line $2 of '$1' to be '$3', got '$line':" >&2
+        cat "$1" >&2
+        return 1
+    fi
+}
+
 # Start cf-reactor in the background with policy file $1, logging to $LOG.
 # It is stopped when the test exits.
 start_reactor() {

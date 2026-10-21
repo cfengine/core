@@ -1,0 +1,46 @@
+#######################################################
+#
+# Test services promises in a "then" bundle
+#
+#######################################################
+body common control
+{
+  inputs => { "../../lib.cf" };
+  bundlesequence => { "test" };
+  version => "1.0";
+}
+
+body when deleted(file)
+{
+  file_deleted => "$(file)";
+}
+
+body service_method record_service(events_file, service)
+{
+  service_bundle => record_event(
+    "$(events_file)", "services $(service) $(this.service_policy)"
+  );
+}
+
+bundle agent run_services(events_file)
+{
+  services:
+    "reactor_test_service"
+      service_policy => "start",
+      service_method => record_service(
+        "$(events_file)", "reactor_test_service"
+      );
+}
+
+bundle reactor test
+{
+  vars:
+    "test" string => getenv("TESTFILE", 999);
+    "events_file" string => getenv("EVENTS_FILE", 999);
+    "promise_name" string => basename("$(this.promise_filename)", ".cf");
+
+  events:
+    "$(promise_name)"
+      when => deleted("$(test)"),
+      then => run_services("$(events_file)");
+}

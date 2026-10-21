@@ -299,7 +299,9 @@ bool EventWatcherInitialize(int *fd)
 
     *fd = WakeupChannelReadFd(&wakeup_channel);
 
-    Log(LOG_LEVEL_VERBOSE, "Started cf-reactor event watcher with %zu watcher(s)", MapSize(watchers));
+    /* No watchers yet, they are registered from the policy afterwards and
+     * counted by EventWatcherWakeUp() */
+    Log(LOG_LEVEL_VERBOSE, "Started cf-reactor event watcher");
     return true;
 }
 
@@ -395,6 +397,12 @@ void EventWatcherResume(void)
 
 void EventWatcherWakeUp(void)
 {
+    /* Called once the watchers of the (re-)read policy are registered */
+    ThreadLock(&watchers_mutex);
+    const size_t count = MapSize(watchers);
+    ThreadUnlock(&watchers_mutex);
+    Log(LOG_LEVEL_VERBOSE, "cf-reactor event watcher has %zu watcher(s)", count);
+
     if (watcher_thread != NULL)
     {
         StoppableThreadWake(watcher_thread);

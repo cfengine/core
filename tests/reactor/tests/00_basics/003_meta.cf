@@ -1,0 +1,33 @@
+#######################################################
+#
+# Test meta promises in reactor bundle
+#
+#######################################################
+body common control
+{
+  inputs => { "../../lib.cf" };
+  bundlesequence => { "test" };
+  version => "1.0";
+}
+
+body when deleted(file)
+{
+  file_deleted => "$(file)";
+}
+
+bundle reactor test
+{
+  meta:
+    "test" string => getenv("TESTFILE", 999);
+    "events_file" string => getenv("EVENTS_FILE", 999);
+    "promise_name" string => basename("$(this.promise_filename)", ".cf");
+
+  events:
+    # only the meta variables, in the test_meta scope, so that this would
+    # fail if meta promises were evaluated like vars promises
+    "$(test_meta.promise_name)"
+      when => deleted("$(test_meta.test)"),
+      then => record_event(
+        "$(test_meta.events_file)", "$(test_meta.test) was deleted"
+      );
+}

@@ -353,7 +353,7 @@ static bool VerifyXPathBuild(EvalContext *ctx, const Attributes *attr, const Pro
     CfLock thislock;
     char lockname[CF_BUFSIZE], rawxpath[CF_BUFSIZE] = { 0 };
 
-    a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
+    a.transaction.ifelapsed = EDIT_IFELAPSED;
 
     int ret = snprintf(rawxpath, sizeof(rawxpath), "%s",
         a.xml.havebuildxpath ? a.xml.build_xpath : pp->promiser);
@@ -417,7 +417,7 @@ static PromiseResult VerifyTreeDeletions(EvalContext *ctx, const Attributes *att
     CfLock thislock;
     char lockname[CF_BUFSIZE];
 
-    a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
+    a.transaction.ifelapsed = EDIT_IFELAPSED;
 
     if (!SanityCheckTreeDeletions(&a))
     {
@@ -497,7 +497,7 @@ static PromiseResult VerifyTreeInsertions(EvalContext *ctx, const Attributes *at
     CfLock thislock;
     char lockname[CF_BUFSIZE];
 
-    a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
+    a.transaction.ifelapsed = EDIT_IFELAPSED;
 
     PromiseResult result = PROMISE_RESULT_NOOP;
     if (!SanityCheckTreeInsertions(&a, edcontext))
@@ -590,7 +590,7 @@ static PromiseResult VerifyAttributeDeletions(EvalContext *ctx, const Attributes
     CfLock thislock;
     char lockname[CF_BUFSIZE];
 
-    a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
+    a.transaction.ifelapsed = EDIT_IFELAPSED;
 
     PromiseResult result = PROMISE_RESULT_NOOP;
     if (!SanityCheckAttributeDeletions(&a))
@@ -673,7 +673,7 @@ static PromiseResult VerifyAttributeSet(EvalContext *ctx, const Attributes *attr
     CfLock thislock;
     char lockname[CF_BUFSIZE];
 
-    a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
+    a.transaction.ifelapsed = EDIT_IFELAPSED;
 
     PromiseResult result = PROMISE_RESULT_NOOP;
     if (!SanityCheckAttributeSet(&a))
@@ -756,7 +756,7 @@ static PromiseResult VerifyTextDeletions(EvalContext *ctx, const Attributes *att
     CfLock thislock;
     char lockname[CF_BUFSIZE];
 
-    a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
+    a.transaction.ifelapsed = EDIT_IFELAPSED;
 
     PromiseResult result = PROMISE_RESULT_NOOP;
     if (!SanityCheckTextDeletions(&a))
@@ -839,7 +839,7 @@ static PromiseResult VerifyTextSet(EvalContext *ctx, const Attributes *attr, con
     CfLock thislock;
     char lockname[CF_BUFSIZE];
 
-    a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
+    a.transaction.ifelapsed = EDIT_IFELAPSED;
 
     PromiseResult result = PROMISE_RESULT_NOOP;
     if (!SanityCheckTextSet(&a))
@@ -922,7 +922,7 @@ static PromiseResult VerifyTextInsertions(EvalContext *ctx, const Attributes *at
     CfLock thislock;
     char lockname[CF_BUFSIZE];
 
-    a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
+    a.transaction.ifelapsed = EDIT_IFELAPSED;
 
     PromiseResult result = PROMISE_RESULT_NOOP;
     if (!SanityCheckTextInsertions(&a))

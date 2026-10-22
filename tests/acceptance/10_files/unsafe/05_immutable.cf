@@ -57,7 +57,8 @@ bundle agent check
     "expected"
       string => "I'm immutable$(const.n)But agent can override$(const.n)";
 
-    "actual" string => readfile("$(global.testfile)");
+    "actual" string => readfile("$(global.testfile)"),
+      if => fileexists("$(global.testfile)");
 
   classes:
     "ok" expression => strcmp("$(actual)", "$(expected)");

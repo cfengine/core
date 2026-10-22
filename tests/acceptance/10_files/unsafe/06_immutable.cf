@@ -56,7 +56,8 @@ bundle agent check
     "expected"
       string => '<?xml version="1.0"?>$(const.n)<foo>But agent can override</foo>$(const.n)';
 
-    "actual" string => readfile("$(global.testfile)");
+    "actual" string => readfile("$(global.testfile)"),
+      if => fileexists("$(global.testfile)");
 
   classes:
     "ok" expression => strcmp("$(actual)", "$(expected)");
